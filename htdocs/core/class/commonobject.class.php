@@ -2530,18 +2530,18 @@ abstract class CommonObject
 
         $classfile = strtolower($subelement); $classname = ucfirst($subelement);
         if ($objecttype == 'invoice_supplier') {
-            $classfile = 'fournisseur.facture'; 
+            $classfile = 'fournisseur.facture';
             $classname='FactureFournisseur';
             $classpath = 'fourn/class';
             $module='fournisseur';
         }
         if ($objecttype == 'order_supplier')   {
-            $classfile = 'fournisseur.commande'; 
+            $classfile = 'fournisseur.commande';
             $classname='CommandeFournisseur';
             $classpath = 'fourn/class';
             $module='fournisseur';
         }
-		
+
         if (! empty($conf->$module->enabled))
         {
             $res=dol_include_once('/'.$classpath.'/'.$classfile.'.class.php');
@@ -3104,7 +3104,7 @@ abstract class CommonObject
 			if (empty($line->pa_ht) && isset($line->fk_fournprice) && !$force_price) {
 				$product = new ProductFournisseur($this->db);
 				if ($product->fetch_product_fournisseur_price($line->fk_fournprice))
-					$line->pa_ht = $product->fourn_unitprice;
+					$line->pa_ht = $product->fourn_unitprice * (1 - $product->fourn_remise_percent / 100);
 				if (isset($conf->global->MARGIN_TYPE) && $conf->global->MARGIN_TYPE == "2" && $product->fourn_unitcharges > 0)
 					$line->pa_ht += $product->fourn_unitcharges;
 			}
@@ -3232,5 +3232,17 @@ abstract class CommonObject
 		print '</tr>';
 		print '</table>';
 	}
+
+	function __clone()
+    {
+        // Force a copy of this->lines, otherwise it will point to same object.
+        if (isset($this->lines) && is_array($this->lines))
+        {
+        	for($i=0; $i < count($this->lines); $i++)
+        	{
+            	$this->lines[$i] = dol_clone($this->lines[$i]);
+        	}
+        }
+    }
 }
 ?>
