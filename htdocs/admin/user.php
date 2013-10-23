@@ -39,6 +39,8 @@ if (! $user->admin) accessforbidden();
 
 $extrafields = new ExtraFields($db);
 
+$action=GETPOST('action','alpha');
+
 
 /*
  * Action
@@ -69,6 +71,21 @@ if (preg_match('/del_(.*)/',$action,$reg))
     {
         dol_print_error($db);
     }
+}
+//Set hide closed customer into combox or select
+if ($action == 'sethideinactiveuser')
+{
+	$status = GETPOST('status','alpha');
+
+	if (dolibarr_set_const($db, "USER_HIDE_INACTIVE_IN_COMBOBOX",$status,'chaine',0,'',$conf->entity) > 0)
+	{
+		header("Location: ".$_SERVER["PHP_SELF"]);
+		exit;
+	}
+	else
+	{
+		dol_print_error($db);
+	}
 }
 
 
@@ -120,6 +137,26 @@ else
 	}
 }
 print '</td></tr>';
+
+// COMPANY_USE_SEARCH_TO_SELECT
+$var=!$var;
+print "<tr ".$bc[$var].">";
+print '<td>'.$langs->trans("HideClosedUserComboBox").'</td>';
+print '<td align="center" width="20">&nbsp;</td>';
+if (! empty($conf->global->USER_HIDE_INACTIVE_IN_COMBOBOX))
+{
+	print '<td  align="center" width="100"><a href="'.$_SERVER['PHP_SELF'].'?action=sethideinactiveuser&status=0">';
+	print img_picto($langs->trans("Activated"),'switch_on');
+	print '</a></td>';
+}
+else
+{
+	print '<td  align="center" width="100"><a href="'.$_SERVER['PHP_SELF'].'?action=sethideinactiveuser&status=1">';
+	print img_picto($langs->trans("Disabled"),'switch_off');
+	print '</a></td>';
+}
+print '</tr>';
+print '</table>';
 
 print '</table>';
 
