@@ -810,7 +810,7 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
                     minLength: this.options.minLengthToAutocomplete,
                     source: function( request, response ) {
                         var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
-                        response( select.children( "option:enabled" ).map(function() {
+                         /*response( select.children( "option:enabled" ).map(function() {
                             var text = $( this ).text();
                             if ( this.value && ( !request.term || matcher.test(text) ) )
                                 return {
@@ -823,7 +823,27 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
                                     value: text,
                                     option: this
                                 };
-                        }) );
+                        }) );*/
+                        var select_el = select.get(0); // get dom element
+                        var rep = new Array(); // response array
+                        // simple loop for the options
+                        for (var i = 0; i < select_el.length; i++) {
+                            var text = select_el.options[i].text;
+                            if ( select_el.options[i].value && ( !request.term || matcher.test(text) ) )
+                                // add element to result array
+                                rep.push({
+                                    label: text.replace(
+                                        new RegExp(
+                                            "(?![^&;]+;)(?!<[^<>]*)(" +
+                                            $.ui.autocomplete.escapeRegex(request.term) +
+                                            ")(?![^<>]*>)(?![^&;]+;)", "gi"
+                                        ), "<strong>$1</strong>" ),
+                                    value: text,
+                                    option: select_el.options[i]
+                                });
+                        }
+                        // send response
+                        response( rep );
                     },
                     select: function( event, ui ) {
                         ui.item.option.selected = true;

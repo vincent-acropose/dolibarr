@@ -211,6 +211,22 @@ if ($action == 'setprofid')
 	}
 }
 
+//Activate Set ref in list
+if ($action=="setaddrefinlist") {
+	$setaddrefinlist = GETPOST('value','int');
+	$res = dolibarr_set_const($db, "SOCIETE_ADD_REF_IN_LIST", $setaddrefinlist,'yesno',0,'',$conf->entity);
+	if (! $res > 0) $error++;
+	if (! $error)
+	{
+		$mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+	}
+	else
+	{
+		$mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+	}
+}
+
+
 //Activate ProfId mandatory
 if ($action == 'setprofidmandatory')
 {
@@ -245,6 +261,22 @@ if ($action == 'setprofidinvoicemandatory')
 	}
 }
 
+
+//Set hide closed customer into combox or select
+if ($action == 'sethideinactivethirdparty')
+{
+	$status = GETPOST('status','alpha');
+
+	if (dolibarr_set_const($db, "COMPANY_HIDE_INACTIVE_IN_COMBOBOX",$status,'chaine',0,'',$conf->entity) > 0)
+	{
+		header("Location: ".$_SERVER["PHP_SELF"]);
+		exit;
+	}
+	else
+	{
+		dol_print_error($db);
+	}
+}
 /*
  * 	View
  */
@@ -696,6 +728,23 @@ else
 print '</tr>';
 print '</form>';
 
+$var=!$var;
+print "<tr ".$bc[$var].">";
+print '<td width="80%">'.$langs->trans("AddRefInList").'</td>';
+if (!empty($conf->global->SOCIETE_ADD_REF_IN_LIST))
+{
+	print '<td align="center" colspan="2"><a href="'.$_SERVER['PHP_SELF'].'?action=setaddrefinlist&value=0">';
+	print img_picto($langs->trans("Activated"),'switch_on');
+	print '</a></td>';
+}
+else
+{
+	print '<td align="center" colspan="2"><a href="'.$_SERVER['PHP_SELF'].'?action=setaddrefinlist&value=1">';
+	print img_picto($langs->trans("Disabled"),'switch_off');
+	print '</a></td>';
+}
+print '</tr>';
+
 
 $var=!$var;
 print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
@@ -721,6 +770,24 @@ else
 	print '</td><td align="right">';
 	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
 	print "</td>";
+}
+print '</tr>';
+
+// COMPANY_USE_SEARCH_TO_SELECT
+$var=!$var;
+print "<tr ".$bc[$var].">";
+print '<td width="80%">'.$langs->trans("HideClosedThirdpartyComboBox").'</td>';
+if (! empty($conf->global->COMPANY_HIDE_INACTIVE_IN_COMBOBOX))
+{
+	print '<td align="center" colspan="2"><a href="'.$_SERVER['PHP_SELF'].'?action=sethideinactivethirdparty&status=0">';
+	print img_picto($langs->trans("Activated"),'switch_on');
+	print '</a></td>';
+}
+else
+{
+	print '<td align="center" colspan="2"><a href="'.$_SERVER['PHP_SELF'].'?action=sethideinactivethirdparty&status=1">';
+	print img_picto($langs->trans("Disabled"),'switch_off');
+	print '</a></td>';
 }
 print '</tr>';
 print '</table>';
