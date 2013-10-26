@@ -55,7 +55,7 @@ class FileUpload
 			$pathname = $regs[1];
 			$filename = $regs[2];
 		}
-
+		dol_syslog(get_class($this).':: $fk_element='.$fk_element.' $element='.$element.' $pathname='.$pathname.' $filename='.$filename);
 		$parentForeignKey = '';
 
 		// For compatibility
@@ -103,10 +103,15 @@ class FileUpload
 			$dir_output=$conf->tax->dir_output;
 		} else {
 			$dir_output=$conf->$element->dir_output;
+			if (empty($dir_output)) {
+				$dir_output=$conf->$pathname->dir_output;
+			}
 		}
 
 		dol_include_once('/'.$pathname.'/class/'.$filename.'.class.php');
 
+		dol_syslog(get_class($this).':: $dir_output='.$dir_output.' /'.$pathname.'/class/'.$filename.'.class.php');
+		
 		$classname = ucfirst($filename);
 
 		if ($element == 'order_supplier') {
