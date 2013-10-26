@@ -27,7 +27,6 @@
 
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
-require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 
 $langs->load("companies");
 $langs->load("suppliers");
@@ -48,8 +47,6 @@ $search_phonemob=GETPOST("search_phonemob");
 $search_fax=GETPOST("search_fax");
 $search_email=GETPOST("search_email");
 $search_priv=GETPOST("search_priv");
-$search_categ = GETPOST("search_categ",'int');
-$search_country     = GETPOST("search_country");
 
 $type=GETPOST("type");
 $view=GETPOST("view");
@@ -99,7 +96,6 @@ if (GETPOST('button_removefilter'))
     $search_email="";
     $search_priv="";
     $sall="";
-    $search_country='';
 }
 if ($search_priv < 0) $search_priv='';
 
@@ -113,19 +109,16 @@ $title = (! empty($conf->global->SOCIETE_ADDRESSES_MANAGEMENT) ? $langs->trans("
 llxHeader('',$title,'EN:Module_Third_Parties|FR:Module_Tiers|ES:M&oacute;dulo_Empresas');
 
 $form=new Form($db);
-$formother=new FormOther($db);
 
 $sql = "SELECT s.rowid as socid, s.nom as name,";
 $sql.= " p.rowid as cidp, p.lastname as lastname, p.firstname, p.poste, p.email,";
 $sql.= " p.phone, p.phone_mobile, p.fax, p.fk_pays, p.priv, p.tms,";
-$sql.= " cp.code as country_code, cp.libelle as countrylib, p.fk_user_modif";
+$sql.= " cp.code as country_code";
 $sql.= " FROM ".MAIN_DB_PREFIX."socpeople as p";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_pays as cp ON cp.rowid = p.fk_pays";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = p.fk_soc";
-if (! empty($search_categ)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_contact as cs ON s.rowid = cs.fk_socpeople"; // We need this table joined to the select in order to filter by categ
 if (!$user->rights->societe->client->voir && !$socid) $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON s.rowid = sc.fk_soc";
 $sql.= ' WHERE p.entity IN ('.getEntity('societe', 1).')';
-if (!empty($search_country)) $sql .= " AND cp.libelle LIKE '%".$db->escape(strtolower($search_country))."%' ";
 if (!$user->rights->societe->client->voir && !$socid) //restriction
 {
 	$sql .= " AND (sc.fk_user = " .$user->id." OR p.fk_soc IS NULL)";
@@ -145,9 +138,6 @@ else
 	if ($search_priv == '0') $sql .= " AND p.priv='0'";
 	if ($search_priv == '1') $sql .= " AND (p.priv='1' AND p.fk_user_creat=".$user->id.")";
 }
-
-if ($search_categ > 0)   $sql.= " AND cs.fk_categorie = ".$search_categ;
-if ($search_categ == -2) $sql.= " AND cs.fk_categorie IS NULL";
 
 if ($search_lastname)        // filter on lastname
 {
@@ -245,8 +235,6 @@ if ($result)
 
     $param ='&begin='.urlencode($begin).'&view='.urlencode($view).'&userid='.urlencode($userid).'&contactname='.urlencode($sall);
     $param.='&type='.urlencode($type).'&view='.urlencode($view).'&search_lastname='.urlencode($search_lastname).'&search_firstname='.urlencode($search_firstname).'&search_societe='.urlencode($search_societe).'&search_email='.urlencode($search_email);
-    $param.='&search_country='.urlencode($search_country);
-    if (!empty($search_categ)) $param.='&search_categ='.$search_categ;
 	if ($search_priv == '0' || $search_priv == '1') $param.="&search_priv=".urlencode($search_priv);
 
 	$num = $db->num_rows($result);
@@ -260,19 +248,6 @@ if ($result)
     print '<input type="hidden" name="sortfield" value="'.$sortfield.'">';
     print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
 
-    if (! empty($conf->categorie->enabled))
-    {
-    	$moreforfilter.=$langs->trans('Categories'). ': ';
-    	$moreforfilter.=$formother->select_categories(4,$search_categ,'search_categ',1);
-    	$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
-    }
-    if ($moreforfilter)
-    {
-    	print '<div class="liste_titre">';
-    	print $moreforfilter;
-    	print '</div>';
-    }
-    
     if ($sall)
     {
         print $langs->trans("Filter")." (".$langs->trans("Lastname").", ".$langs->trans("Firstname")." ".$langs->trans("or")." ".$langs->trans("EMail")."): ".$sall;
@@ -290,7 +265,6 @@ if ($result)
     print_liste_field_titre($langs->trans("PhoneMobile"),$_SERVER["PHP_SELF"],"p.phone_mob", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Fax"),$_SERVER["PHP_SELF"],"p.fax", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("EMail"),$_SERVER["PHP_SELF"],"p.email", $begin, $param, '', $sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("Country"),$_SERVER["PHP_SELF"],"country.libelle","",$param,'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("DateModificationShort"),$_SERVER["PHP_SELF"],"p.tms", $begin, $param, 'align="center"', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("ContactVisibility"),$_SERVER["PHP_SELF"],"p.priv", $begin, $param, 'align="center"', $sortfield,$sortorder);
     print '<td class="liste_titre">&nbsp;</td>';
@@ -325,10 +299,6 @@ if ($result)
     print '<td class="liste_titre">';
     print '<input class="flat" type="text" name="search_email" size="8" value="'.$search_email.'">';
     print '</td>';
-    print '<td class="liste_titre">';
-    print '<input type="text" class="flat" name="search_country" size="10" value="'.$search_country.'">';
-    print '</td>';
-    
 	print '<td class="liste_titre">&nbsp;</td>';
 	print '<td class="liste_titre" align="center">';
 	$selectarray=array('0'=>$langs->trans("ContactPublic"),'1'=>$langs->trans("ContactPrivate"));
@@ -348,7 +318,7 @@ if ($result)
 
         $var=!$var;
 
-        print "<tr ".$bc[$var].">";
+        print "<tr $bc[$var]>";
 
 		// Name
 		print '<td valign="middle">';
@@ -388,14 +358,9 @@ if ($result)
         print '<td>'.dol_print_phone($obj->fax,$obj->country_code,$obj->cidp,$obj->socid,'AC_TEL').'</td>';
         // EMail
         print '<td>'.dol_print_email($obj->email,$obj->cidp,$obj->socid,'AC_EMAIL',18).'</td>';
-        // Country
-        print '<td>'.$obj->countrylib.'</td>';
 
 		// Date
-        //Date update User update
-        $userstatic=new User($db);
-        $userstatic->fetch($obj->fk_user_modif);
-		print '<td align="center">'.dol_print_date($db->jdate($obj->tms),"day").'-'.$userstatic->getNomUrl(1).'</td>';
+		print '<td align="center">'.dol_print_date($db->jdate($obj->tms),"day").'</td>';
 
 		// Private/Public
 		print '<td align="center">'.$contactstatic->LibPubPriv($obj->priv).'</td>';
