@@ -168,7 +168,6 @@ if ($_GET["socid"])
 	$sql .= " WHERE sc.fk_soc =".$soc->id;
 	$sql .= " AND sc.fk_user = u.rowid";
 	$sql .= " ORDER BY u.lastname ASC ";
-	
 	dol_syslog('societe/commerciaux.php::list salesman sql = '.$sql,LOG_DEBUG);
 	$resql = $db->query($sql);
 	if ($resql)

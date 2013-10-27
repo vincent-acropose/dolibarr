@@ -568,6 +568,7 @@ if ($action == 'create')
 	print '<tr><td class="nowrap">'.$langs->trans("ActionOnContact").'</td><td>';
 	$form->select_contacts(GETPOST('socid','int'),GETPOST('contactid'),'contactid',1);
 	print '</td></tr>';
+		
 
 	// Project
 	if (! empty($conf->projet->enabled))
@@ -787,14 +788,12 @@ if ($id > 0)
 		{
 			print '<tr><td width="30%">'.$langs->trans("ActionOnCompany").'</td>';
 			print '<td>';
-			$events=array();
-			$events[]=array('method' => 'getContacts', 'url' => dol_buildpath('/core/ajax/contacts.php',1), 'htmlname' => 'contactid', 'params' => array('add-customer-contact' => 'disabled'));
-			print $form->select_company($act->societe->id,'socid','',1,1,0,$events);
+			print $form->select_company($act->societe->id,'socid','',1,1);
 			print '</td>';
 
 			// Contact
 			print '<td>'.$langs->trans("Contact").'</td><td width="30%">';
-			$form->select_contacts($act->societe->id, $act->contact->id,'contactid',1);
+			print $form->selectarray("contactid", (empty($act->societe->id)?array():$act->societe->contact_array()), $act->contact->id, 1);
 			print '</td></tr>';
 		}
 
