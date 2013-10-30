@@ -1867,7 +1867,6 @@ class Societe extends CommonObject
             $var = $conf->global->SOCIETE_CODECLIENT_ADDON;
 
             $mod = new $var;
-
             dol_syslog(get_class($this)."::codefournisseur_modifiable code_founisseur=".$this->code_fournisseur." module=".$var);
             if ($mod->code_modifiable_null && ! $this->code_fournisseur) return 1;
             if ($mod->code_modifiable_invalide && $this->check_codefournisseur() < 0) return 1;

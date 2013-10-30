@@ -237,7 +237,7 @@ print '<table class="liste" width="100%">'."\n";
 print '<tr class="liste_titre">';
 print_liste_field_titre($langs->trans('Ref'),$_SERVER['PHP_SELF'],'doc_number','',$param,'align="left"',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans('Date'),$_SERVER['PHP_SELF'],'datePrint','',$param,'align="center" width="150"',$sortfield,$sortorder);
-print_liste_field_titre($langs->trans('Product'),$_SERVER['PHP_SELF'],'','',$param,'align="left"',$sortfield,$sortorder);
+print_liste_field_titre($langs->trans('Product'),$_SERVER['PHP_SELF'],'d.label','',$param,'align="left"',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans('Quantity'),$_SERVER['PHP_SELF'],'prod_qty','',$param,'align="right"',$sortfield,$sortorder);
 // Filters
 print '<tr class="liste_titre">';

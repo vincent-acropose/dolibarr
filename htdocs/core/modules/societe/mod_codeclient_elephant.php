@@ -53,7 +53,7 @@ class mod_codeclient_elephant extends ModeleThirdPartyCode
 	function __construct()
 	{
 		$this->code_null = 0;
-		$this->code_modifiable = 1;
+		$this->code_modifiable = 0;
 		$this->code_modifiable_invalide = 1;
 		$this->code_modifiable_null = 1;
 		$this->code_auto = 1;

@@ -1193,7 +1193,7 @@ else
                 print $form->selectyesno("fournisseur",$object->fournisseur,1);
                 print '</td>';
                 print '<td>'.$langs->trans('SupplierCode').'</td><td>';
-
+				
                 print '<table class="nobordernopadding"><tr><td>';
                 if ((!$object->code_fournisseur || $object->code_fournisseur == -1) && $modCodeFournisseur->code_auto)
                 {
@@ -1206,7 +1206,7 @@ else
                     print '<input type="text" name="code_fournisseur" size="16" value="'.$object->code_fournisseur.'" maxlength="15">';
                 }
                 else
-              {
+                {
                     print $object->code_fournisseur;
                     print '<input type="hidden" name="code_fournisseur" value="'.$object->code_fournisseur.'">';
                 }
