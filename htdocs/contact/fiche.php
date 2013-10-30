@@ -129,6 +129,26 @@ if (empty($reshook))
         }
     }
 
+
+    // Confirmation desactivation
+    if ($action == 'disable')
+    {
+    	$object->fetch($id);
+    	$object->setstatus(0);
+    	header("Location: ".$_SERVER['PHP_SELF'].'?id='.$id);
+    	exit;
+    }
+
+    // Confirmation activation
+    if ($action == 'enable')
+    {
+    	$object->fetch($id);
+    	$object->setstatus(1);
+    	header("Location: ".$_SERVER['PHP_SELF'].'?id='.$id);
+    	exit;
+
+    }
+
     // Add contact
     if ($action == 'add' && $user->rights->societe->contact->creer)
     {
@@ -156,7 +176,7 @@ if (empty($reshook))
         $object->priv			= $_POST["priv"];
         $object->note_public	= GETPOST("note_public");
         $object->note_private	= GETPOST("note_private");
-        $object->status			= GETPOST("status",'int');
+        $object->statut			= 1; //Defult status to Actif
 
         // Note: Correct date should be completed with location to have exact GM time of birth.
         $object->birthday = dol_mktime(0,0,0,$_POST["birthdaymonth"],$_POST["birthdayday"],$_POST["birthdayyear"]);
@@ -255,7 +275,6 @@ if (empty($reshook))
             $object->priv			= $_POST["priv"];
         	$object->note_public	= GETPOST("note_public");
        		$object->note_private	= GETPOST("note_private");
-       		$object->status			= GETPOST("status",'int');
 
             // Fill array 'array_options' with data from add form
 			$ret = $extrafields->setOptionalsFromPost($extralabels,$object);
@@ -427,13 +446,7 @@ else
             print $formcompany->select_civility(isset($_POST["civilite_id"])?$_POST["civilite_id"]:$object->civilite_id);
             print '</td></tr>';
 
-            print '<tr><td>'.$langs->trans("PostOrFunction").'</td><td colspan="3"><input name="poste" type="text" size="50" maxlength="80" value="'.(isset($_POST["poste"])?$_POST["poste"]:$object->poste).'"></td>';
-
-            // Status
-            print '<tr><td>'.$langs->trans("Status").'</td><td colspan="3">';
-            print $form->selectarray('status', array('0'=>$langs->trans('Disabled'),'1'=>$langs->trans('Enabled')),1);
-            print '</td>';
-            
+            print '<tr><td>'.$langs->trans("PostOrFunction").'</td><td colspan="3"><input name="poste" type="text" size="50" maxlength="80" value="'.(isset($_POST["poste"])?$_POST["poste"]:$object->poste).'"></td>'; 
             
             $colspan=3;
             if ($conf->use_javascript_ajax && $socid > 0) $colspan=2;
@@ -660,11 +673,6 @@ else
             print '</td></tr>';
 
             print '<tr><td>'.$langs->trans("PostOrFunction").'</td><td colspan="3"><input name="poste" type="text" size="50" maxlength="80" value="'.(isset($_POST["poste"])?$_POST["poste"]:$object->poste).'"></td></tr>';
-
-            // Status
-            print '<tr><td>'.$langs->trans("Status").'</td><td colspan="3">';
-            print $form->selectarray('status', array('0'=>$langs->trans('Disabled'),'1'=>$langs->trans('Enabled')),isset($_POST["status"])?$_POST["status"]:$object->status);
-            print '</td>';
             
             // Address
             print '<tr><td>'.$langs->trans("Address");
@@ -892,11 +900,6 @@ else
         // Role
         print '<tr><td>'.$langs->trans("PostOrFunction").'</td><td colspan="3">'.$object->poste.'</td>';
         
-        // Status
-        print '<tr><td>'.$langs->trans("Status").'</td><td colspan="3">';
-        print $object->getLibStatut(3);
-        print '</td>';
-
         // Address
         print '<tr><td>'.$langs->trans("Address").'</td><td colspan="3">';
         dol_print_address($object->address,'gmap','contact',$object->id);
@@ -967,6 +970,13 @@ else
         print '<tr><td valign="top">'.$langs->trans("NotePrivate").'</td><td colspan="3">';
         print nl2br($object->note_private);
         print '</td></tr>';
+        
+        // Statut
+        print '<tr><td valign="top">'.$langs->trans("Status").'</td>';
+        print '<td>';
+        print $object->getLibStatut(5);
+        print '</td>';
+        print '</tr>'."\n";
 
         // Other attributes
         $parameters=array('socid'=>$socid, 'colspan' => ' colspan="3"');
@@ -1038,6 +1048,16 @@ else
             if ($user->rights->societe->contact->supprimer)
             {
                 print '<a class="butActionDelete" href="fiche.php?id='.$object->id.'&amp;action=delete">'.$langs->trans('Delete').'</a>';
+            }
+            // Activer
+            if ($object->statut == 0 && $user->rights->societe->contact->creer)
+            {
+                print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;action=enable">'.$langs->trans("Reactivate").'</a>';
+            }
+            // Desactiver
+            if ($object->statut == 1 && $user->rights->societe->contact->creer)
+            {
+                print '<a class="butActionDelete" href="'.$_SERVER['PHP_SELF'].'?action=disable&amp;id='.$object->id.'">'.$langs->trans("DisableUser").'</a>';
             }
 
             print "</div><br>";

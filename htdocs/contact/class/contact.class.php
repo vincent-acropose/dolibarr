@@ -58,7 +58,7 @@ class Contact extends CommonObject
 	var $country;				// Label of country
 
 	var $socid;					// fk_soc
-	var $status;				// 0=brouillon, 1=4=actif, 5=inactif
+	var $statut;				// 0=inactif, 1=actif
 
 	var $code;
 	var $email;
@@ -122,7 +122,7 @@ class Contact extends CommonObject
         $sql.= ", firstname";
         $sql.= ", fk_user_creat";
 		$sql.= ", priv";
-		$sql.= ", status";
+		$sql.= ", statut";
 		$sql.= ", canvas";
 		$sql.= ", entity";
 		$sql.= ", import_key";
@@ -134,7 +134,7 @@ class Contact extends CommonObject
         $sql.= "'".$this->db->escape($this->firstname)."',";
 		$sql.= " ".($user->id > 0 ? "'".$user->id."'":"null").",";
 		$sql.= " ".$this->priv.",";
-		$sql.= " ".$this->status.",";
+		$sql.= " ".$this->statut.",";
         $sql.= " ".(! empty($this->canvas)?"'".$this->canvas."'":"null").",";
         $sql.= " ".$conf->entity.",";
         $sql.= " ".(! empty($this->import_key)?"'".$this->import_key."'":"null");
@@ -228,7 +228,7 @@ class Contact extends CommonObject
 		$this->town=(empty($this->town)?'':$this->town);
 		$this->country_id=($this->country_id > 0?$this->country_id:$this->country_id);
 		$this->state_id=($this->state_id > 0?$this->state_id:$this->fk_departement);
-		if (empty($this->status)) $this->status = 0;
+		if (empty($this->statut)) $this->status = 0;
 
 		$this->db->begin();
 
@@ -253,7 +253,7 @@ class Contact extends CommonObject
 		$sql .= ", phone_mobile = ".(isset($this->phone_mobile)?"'".$this->db->escape($this->phone_mobile)."'":"null");
 		$sql .= ", jabberid = ".(isset($this->jabberid)?"'".$this->db->escape($this->jabberid)."'":"null");
 		$sql .= ", priv = '".$this->priv."'";
-		$sql .= ", status = '".$this->status."'";
+		$sql .= ", statut = '".$this->statut."'";
 		$sql .= ", fk_user_modif=".($user->id > 0 ? "'".$user->id."'":"NULL");
 		$sql .= ", default_lang=".($this->default_lang?"'".$this->default_lang."'":"NULL");
 		$sql .= ", no_email=".($this->no_email?"'".$this->no_email."'":"0");
@@ -494,7 +494,7 @@ class Contact extends CommonObject
 		$sql.= " c.poste, c.phone, c.phone_perso, c.phone_mobile, c.fax, c.email, c.jabberid,";
 		$sql.= " c.priv, c.note_private, c.note_public, c.default_lang, c.no_email, c.canvas,";
 		$sql.= " c.import_key,";
-		$sql.= " c.status,";
+		$sql.= " c.statut,";
 		$sql.= " p.libelle as country, p.code as country_code,";
 		$sql.= " d.nom as state, d.code_departement as state_code,";
 		$sql.= " u.rowid as user_id, u.login as user_login,";
@@ -537,6 +537,7 @@ class Contact extends CommonObject
 				$this->socid			= $obj->fk_soc;
 				$this->socname			= $obj->socname;
 				$this->poste			= $obj->poste;
+				$this->statut			= $obj->statut;
 
 				$this->phone_pro		= trim($obj->phone);
 				$this->fax				= trim($obj->fax);
@@ -547,7 +548,6 @@ class Contact extends CommonObject
 				$this->jabberid			= $obj->jabberid;
 				$this->priv				= $obj->priv;
 				$this->mail				= $obj->email;
-				$this->status			= $obj->status;
 
 				$this->birthday			= $this->db->jdate($obj->birthday);
 				$this->note				= $obj->note_private;		// deprecated
@@ -731,7 +731,7 @@ class Contact extends CommonObject
 		if (! $error)
 		{
 			// Remove category
-			$sql = "DELETE FROM ".MAIN_DB_PREFIX."categorie_contact WHERE fk_socpeople = ".$rowid;
+			$sql = "DELETE FROM ".MAIN_DB_PREFIX."categorie_contact WHERE fk_socpeople = ".$this->id;
 			dol_syslog(get_class($this)."::delete sql=".$sql);
 			$resql=$this->db->query($sql);
 			if (! $resql)
@@ -739,8 +739,7 @@ class Contact extends CommonObject
 				$error++;
 				$this->error .= $this->db->lasterror();
 				$errorflag=-1;
-				dol_syslog(get_class($this)."::delete erreur ".$errorflag." ".$this->error, LOG_ERR);
-			
+				dol_syslog(get_class($this)."::delete error ".$errorflag." ".$this->error, LOG_ERR);
 			}
 		}
 
@@ -921,7 +920,7 @@ class Contact extends CommonObject
 	 */
 	function getLibStatut($mode)
 	{
-		return $this->LibStatut($this->status,$mode);
+		return $this->LibStatut($this->statut,$mode);
 	}
 
 	/**
@@ -1035,7 +1034,58 @@ class Contact extends CommonObject
 
 		$socid = rand(1, $num_socs);
 		$this->socid = $socids[$socid];
+		$this->statut=1;
 	}
+
+	/**
+	 *  Change status of a user
+	 *
+	 *	@param	int		$statut		Status to set
+	 *  @return int     			<0 if KO, 0 if nothing is done, >0 if OK
+	 */
+	function setstatus($statut)
+	{
+		global $conf,$langs,$user;
+
+		$error=0;
+
+		// Check parameters
+		if ($this->statut == $statut) return 0;
+		else $this->statut = $statut;
+
+		$this->db->begin();
+
+		// Desactive utilisateur
+		$sql = "UPDATE ".MAIN_DB_PREFIX."socpeople";
+		$sql.= " SET statut = ".$this->statut;
+		$sql.= " WHERE rowid = ".$this->id;
+		$result = $this->db->query($sql);
+
+		dol_syslog(get_class($this)."::setstatus sql=".$sql);
+		if ($result)
+		{
+			// Appel des triggers
+			include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+			$interface=new Interfaces($this->db);
+			$result=$interface->run_triggers('CONTACT_ENABLEDISABLE',$this,$user,$langs,$conf);
+			if ($result < 0) { $error++; $this->errors=$interface->errors; }
+			// Fin appel triggers
+		}
+
+		if ($error)
+		{
+			$this->db->rollback();
+			return -$error;
+		}
+		else
+		{
+			$this->db->commit();
+			return 1;
+		}
+	}
+
+
 
 }
 ?>
+		
