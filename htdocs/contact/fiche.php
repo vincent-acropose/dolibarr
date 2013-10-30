@@ -156,6 +156,7 @@ if (empty($reshook))
         $object->priv			= $_POST["priv"];
         $object->note_public	= GETPOST("note_public");
         $object->note_private	= GETPOST("note_private");
+        $object->status			= GETPOST("status",'int');
 
         // Note: Correct date should be completed with location to have exact GM time of birth.
         $object->birthday = dol_mktime(0,0,0,$_POST["birthdaymonth"],$_POST["birthdayday"],$_POST["birthdayyear"]);
@@ -254,6 +255,7 @@ if (empty($reshook))
             $object->priv			= $_POST["priv"];
         	$object->note_public	= GETPOST("note_public");
        		$object->note_private	= GETPOST("note_private");
+       		$object->status			= GETPOST("status",'int');
 
             // Fill array 'array_options' with data from add form
 			$ret = $extrafields->setOptionalsFromPost($extralabels,$object);
@@ -427,6 +429,12 @@ else
 
             print '<tr><td>'.$langs->trans("PostOrFunction").'</td><td colspan="3"><input name="poste" type="text" size="50" maxlength="80" value="'.(isset($_POST["poste"])?$_POST["poste"]:$object->poste).'"></td>';
 
+            // Status
+            print '<tr><td>'.$langs->trans("Status").'</td><td colspan="3">';
+            print $form->selectarray('status', array('0'=>$langs->trans('Disabled'),'1'=>$langs->trans('Enabled')),1);
+            print '</td>';
+            
+            
             $colspan=3;
             if ($conf->use_javascript_ajax && $socid > 0) $colspan=2;
 
@@ -653,6 +661,11 @@ else
 
             print '<tr><td>'.$langs->trans("PostOrFunction").'</td><td colspan="3"><input name="poste" type="text" size="50" maxlength="80" value="'.(isset($_POST["poste"])?$_POST["poste"]:$object->poste).'"></td></tr>';
 
+            // Status
+            print '<tr><td>'.$langs->trans("Status").'</td><td colspan="3">';
+            print $form->selectarray('status', array('0'=>$langs->trans('Disabled'),'1'=>$langs->trans('Enabled')),isset($_POST["status"])?$_POST["status"]:$object->status);
+            print '</td>';
+            
             // Address
             print '<tr><td>'.$langs->trans("Address");
             print '</td><td colspan="2"><textarea class="flat" name="address" cols="70">'.(isset($_POST["address"])?$_POST["address"]:$object->address).'</textarea></td>';
@@ -878,6 +891,11 @@ else
 
         // Role
         print '<tr><td>'.$langs->trans("PostOrFunction").'</td><td colspan="3">'.$object->poste.'</td>';
+        
+        // Status
+        print '<tr><td>'.$langs->trans("Status").'</td><td colspan="3">';
+        print $object->getLibStatut(3);
+        print '</td>';
 
         // Address
         print '<tr><td>'.$langs->trans("Address").'</td><td colspan="3">';

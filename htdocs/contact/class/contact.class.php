@@ -113,6 +113,7 @@ class Contact extends CommonObject
         if (! empty($conf->global->MAIN_FIRST_TO_UPPER)) $this->firstname=ucwords($this->firstname);
         if (! $this->socid) $this->socid = 0;
 		if (! $this->priv) $this->priv = 0;
+		if (empty($this->status)) $this->status = 0;
 
 		$sql = "INSERT INTO ".MAIN_DB_PREFIX."socpeople (";
 		$sql.= " datec";
@@ -121,6 +122,7 @@ class Contact extends CommonObject
         $sql.= ", firstname";
         $sql.= ", fk_user_creat";
 		$sql.= ", priv";
+		$sql.= ", status";
 		$sql.= ", canvas";
 		$sql.= ", entity";
 		$sql.= ", import_key";
@@ -132,6 +134,7 @@ class Contact extends CommonObject
         $sql.= "'".$this->db->escape($this->firstname)."',";
 		$sql.= " ".($user->id > 0 ? "'".$user->id."'":"null").",";
 		$sql.= " ".$this->priv.",";
+		$sql.= " ".$this->status.",";
         $sql.= " ".(! empty($this->canvas)?"'".$this->canvas."'":"null").",";
         $sql.= " ".$conf->entity.",";
         $sql.= " ".(! empty($this->import_key)?"'".$this->import_key."'":"null");
@@ -225,6 +228,7 @@ class Contact extends CommonObject
 		$this->town=(empty($this->town)?'':$this->town);
 		$this->country_id=($this->country_id > 0?$this->country_id:$this->country_id);
 		$this->state_id=($this->state_id > 0?$this->state_id:$this->fk_departement);
+		if (empty($this->status)) $this->status = 0;
 
 		$this->db->begin();
 
@@ -249,6 +253,7 @@ class Contact extends CommonObject
 		$sql .= ", phone_mobile = ".(isset($this->phone_mobile)?"'".$this->db->escape($this->phone_mobile)."'":"null");
 		$sql .= ", jabberid = ".(isset($this->jabberid)?"'".$this->db->escape($this->jabberid)."'":"null");
 		$sql .= ", priv = '".$this->priv."'";
+		$sql .= ", status = '".$this->status."'";
 		$sql .= ", fk_user_modif=".($user->id > 0 ? "'".$user->id."'":"NULL");
 		$sql .= ", default_lang=".($this->default_lang?"'".$this->default_lang."'":"NULL");
 		$sql .= ", no_email=".($this->no_email?"'".$this->no_email."'":"0");
@@ -489,6 +494,7 @@ class Contact extends CommonObject
 		$sql.= " c.poste, c.phone, c.phone_perso, c.phone_mobile, c.fax, c.email, c.jabberid,";
 		$sql.= " c.priv, c.note_private, c.note_public, c.default_lang, c.no_email, c.canvas,";
 		$sql.= " c.import_key,";
+		$sql.= " c.status,";
 		$sql.= " p.libelle as country, p.code as country_code,";
 		$sql.= " d.nom as state, d.code_departement as state_code,";
 		$sql.= " u.rowid as user_id, u.login as user_login,";
@@ -541,6 +547,7 @@ class Contact extends CommonObject
 				$this->jabberid			= $obj->jabberid;
 				$this->priv				= $obj->priv;
 				$this->mail				= $obj->email;
+				$this->status			= $obj->status;
 
 				$this->birthday			= $this->db->jdate($obj->birthday);
 				$this->note				= $obj->note_private;		// deprecated
@@ -930,45 +937,35 @@ class Contact extends CommonObject
 
 		if ($mode == 0)
 		{
-			if ($statut==0) return $langs->trans('StatusContactDraft');
-			elseif ($statut==1) return $langs->trans('StatusContactValidated');
-			elseif ($statut==4) return $langs->trans('StatusContactValidated');
-			elseif ($statut==5) return $langs->trans('StatusContactValidated');
+			if ($statut==0) return $langs->trans('Disabled');
+			elseif ($statut==1) return $langs->trans('Enabled');
 		}
 		elseif ($mode == 1)
 		{
-			if ($statut==0) return $langs->trans('StatusContactDraftShort');
-			elseif ($statut==1) return $langs->trans('StatusContactValidatedShort');
-			elseif ($statut==4) return $langs->trans('StatusContactValidatedShort');
-			elseif ($statut==5) return $langs->trans('StatusContactValidatedShort');
+			if ($statut==0) return $langs->trans('Disabled');
+			elseif ($statut==1) return $langs->trans('Enabled');
 		}
 		elseif ($mode == 2)
 		{
-			if ($statut==0) return img_picto($langs->trans('StatusContactDraftShort'),'statut0').' '.$langs->trans('StatusContactDraft');
-			elseif ($statut==1) return img_picto($langs->trans('StatusContactValidatedShort'),'statut1').' '.$langs->trans('StatusContactValidated');
-			elseif ($statut==4) return img_picto($langs->trans('StatusContactValidatedShort'),'statut4').' '.$langs->trans('StatusContactValidated');
-			elseif ($statut==5) return img_picto($langs->trans('StatusContactValidatedShort'),'statut5').' '.$langs->trans('StatusContactValidated');
+			if ($statut==0) return img_picto($langs->trans('Disabled'),'statut1').' '.$langs->trans('Disabled');
+			elseif ($statut==1) return img_picto($langs->trans('Enabled'),'statut4').' '.$langs->trans('Enabled');
+
 		}
 		elseif ($mode == 3)
 		{
-			if ($statut==0) return img_picto($langs->trans('StatusContactDraft'),'statut0');
-			elseif ($statut==1) return img_picto($langs->trans('StatusContactValidated'),'statut1');
-			elseif ($statut==4) return img_picto($langs->trans('StatusContactValidated'),'statut4');
-			elseif ($statut==5) return img_picto($langs->trans('StatusContactValidated'),'statut5');
+			if ($statut==0) return img_picto($langs->trans('Disabled'),'statut1');
+			elseif ($statut==1) return img_picto($langs->trans('Enabled'),'statut4');
+		
 		}
 		elseif ($mode == 4)
 		{
-			if ($statut==0) return img_picto($langs->trans('StatusContactDraft'),'statut0').' '.$langs->trans('StatusContactDraft');
-			elseif ($statut==1) return img_picto($langs->trans('StatusContactValidated'),'statut1').' '.$langs->trans('StatusContactValidated');
-			elseif ($statut==4) return img_picto($langs->trans('StatusContactValidated'),'statut4').' '.$langs->trans('StatusContactValidated');
-			elseif ($statut==5) return img_picto($langs->trans('StatusContactValidated'),'statut5').' '.$langs->trans('StatusContactValidated');
+			if ($statut==0) return img_picto($langs->trans('Disabled'),'statut1').' '.$langs->trans('StatusContactDraft');
+			elseif ($statut==1) return img_picto($langs->trans('Enabled'),'statut4').' '.$langs->trans('Enabled');
 		}
 		elseif ($mode == 5)
 		{
-			if ($statut==0) return '<span class="hideonsmartphone">'.$langs->trans('StatusContactDraftShort').' </span>'.img_picto($langs->trans('StatusContactDraftShort'),'statut0');
-			elseif ($statut==1) return '<span class="hideonsmartphone">'.$langs->trans('StatusContactValidatedShort').' </span>'.img_picto($langs->trans('StatusContactValidatedShort'),'statut1');
-			elseif ($statut==4) return '<span class="hideonsmartphone">'.$langs->trans('StatusContactValidatedShort').' </span>'.img_picto($langs->trans('StatusContactValidatedShort'),'statut4');
-			elseif ($statut==5) return '<span class="hideonsmartphone">'.$langs->trans('StatusContactValidatedShort').' </span>'.img_picto($langs->trans('StatusContactValidatedShort'),'statut5');
+			if ($statut==0) return '<span class="hideonsmartphone">'.$langs->trans('Disabled').' </span>'.img_picto($langs->trans('Disabled'),'statut1');
+			elseif ($statut==1) return '<span class="hideonsmartphone">'.$langs->trans('Enabled').' </span>'.img_picto($langs->trans('Enabled'),'statut4');
 		}
 	}
 

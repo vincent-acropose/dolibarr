@@ -387,3 +387,5 @@ insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_typ
 
 DELETE FROM llx_document_model WHERE nom ='elevement' AND type='delivery';
 DELETE FROM llx_document_model WHERE nom ='' AND type='delivery';
+
+ALTER TABLE llx_socpeople ADD COLUMN status tinyint DEFAULT 1 AFTER priv;
