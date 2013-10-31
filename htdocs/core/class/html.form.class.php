@@ -898,6 +898,7 @@ class Form
         }
         $sql.= " WHERE sp.entity IN (".getEntity('societe', 1).")";
         if ($socid > 0) $sql.= " AND sp.fk_soc=".$socid;
+        if (! empty($conf->global->CONTACT_HIDE_INACTIVE_IN_COMBOBOX)) $sql.= " AND sp.statut<>0 ";
         $sql.= " ORDER BY sp.lastname ASC";
 
         dol_syslog(get_class($this)."::select_contacts sql=".$sql);
