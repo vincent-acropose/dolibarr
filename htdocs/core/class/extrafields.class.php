@@ -691,7 +691,7 @@ class ExtraFields
 				$keyList='rowid';
 
 				if (count($InfoFieldList)>=3) {
-					if (strpos($InfoFieldList[3], 'extra')!==false) {
+					if (strpos($InfoFieldList[3], 'extra.')!==false) {
 					$keyList='main.'.$InfoFieldList[2].' as rowid';
 					}else {
 						$keyList=$InfoFieldList[2].' as rowid';
