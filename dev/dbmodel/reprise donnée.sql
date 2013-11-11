@@ -85,6 +85,7 @@ ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_precision_origine varchar(25
 ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_sujets text DEFAULT NULL;
 ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_motif_inactif varchar(255) DEFAULT NULL;
 ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_anglais int(1) DEFAULT NULL;
+ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_pays int(1) DEFAULT NULL;
 
 ALTER TABLE llx_user_extrafields ADD COLUMN u_interentreprises int(1) DEFAULT NULL;
 ALTER TABLE llx_user_extrafields ADD COLUMN u_prospection int(1) DEFAULT NULL;
@@ -175,7 +176,7 @@ INSERT INTO `llx_const` (`rowid`, `name`, `entity`, `value`, `type`, `visible`, 
 (161, 'AGF_DOL_AGENDA', 1, '1', 'chaine', 0, '', '2013-07-25 19:03:02'),
 (162, 'COMPANY_USE_SEARCH_TO_SELECT', 1, '2', 'chaine', 0, '', '2013-07-25 19:03:24'),
 (163, 'CONTACT_USE_SEARCH_TO_SELECT', 1, '2', 'chaine', 0, '', '2013-07-25 19:03:26'),
-(165, 'SOCIETE_CODECOMPTA_ADDON', 1, 'mod_codecompta_aquarium', 'chaine', 0, '', '2013-07-25 19:03:30'),
+(165, 'SOCIETE_CODECOMPTA_ADDON', 1, 'mod_codecompta_panicum', 'chaine', 0, '', '2013-07-25 19:03:30'),
 (166, 'AGF_CONTACT_USE_SEARCH_TO_SELECT', 1, '1', 'chaine', 0, '', '2013-07-25 19:05:13'),
 (167, 'MAIN_USE_COMPANY_NAME_OF_CONTACT', 1, '1', 'chaine', 0, '', '2013-07-25 19:05:15'),
 (168, 'AGF_FCKEDITOR_ENABLE_TRAINING', 1, '1', 'chaine', 0, '', '2013-07-25 19:05:19'),
@@ -3107,6 +3108,10 @@ INSERT INTO `llx_rights_def` (`id`, `libelle`, `module`, `entity`, `perms`, `sub
 (103006, 'export', 'agefodd', 1, 'export', NULL, 'w', 0),
 (103007, 'agenda', 'agefodd', 1, 'agenda', NULL, 'w', 0),
 (103008, 'agendatrainer', 'agefodd', 1, 'agendatrainer', NULL, 'w', 0);
+
+
+UPDATE llx_societe SET code_fournisseur=NULL, tms=tms WHERE fournisseur=0;
+UPDATE llx_societe SET code_client=NULL, tms=tms WHERE client=0;
 
 
 
