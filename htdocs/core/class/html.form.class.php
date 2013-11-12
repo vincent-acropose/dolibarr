@@ -1196,9 +1196,10 @@ class Form
      *	@param		int		$status         -1=Return all products, 0=Products not on sell, 1=Products on sell
      *  @param      int		$finished       Filter on finished field: 2=No filter
      *  @param      int		$disableout     Disable print output
+     *  @param      int		$socid     		Product Price by customer filter
      *  @return     array    				Array of keys for json
      */
-    function select_produits_do($selected='',$htmlname='productid',$filtertype='',$limit=20,$price_level=0,$filterkey='',$status=1,$finished=2,$disableout=0)
+    function select_produits_do($selected='',$htmlname='productid',$filtertype='',$limit=20,$price_level=0,$filterkey='',$status=1,$finished=2,$disableout=0,$socid=0)
     {
         global $langs,$conf,$user,$db;
 
@@ -1222,6 +1223,7 @@ class Form
 			$sql.= " DESC LIMIT 1) as price_by_qty";
 		}
         $sql.= " FROM ".MAIN_DB_PREFIX."product as p";
+        
         // Multilang : we add translation
         if (! empty($conf->global->MAIN_MULTILANGS))
         {
