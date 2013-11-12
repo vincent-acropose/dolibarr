@@ -965,4 +965,3 @@ class ExtraFields
 		}
 	}
 }
-?>

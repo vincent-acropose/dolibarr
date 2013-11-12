@@ -1828,5 +1828,3 @@ if (! function_exists("llxFooter"))
         print "</html>\n";
     }
 }
-
-?>

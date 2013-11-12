@@ -1087,5 +1087,3 @@ class Contact extends CommonObject
 
 
 }
-?>
-		
