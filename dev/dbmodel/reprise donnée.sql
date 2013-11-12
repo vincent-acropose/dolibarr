@@ -3117,9 +3117,7 @@ UPDATE llx_societe SET client=3, tms=tms WHERE rowid IN (select fk_soc from llx_
 UPDATE llx_societe SET client=0, tms=tms WHERE client=6 AND fournisseur=0;--All Other
 
 UPDATE llx_societe SET code_fournisseur=NULL, tms=tms WHERE fournisseur=0;
-UPDATE llx_societe SET code_client=CONCAT_WS('','C', LPAD(rowid,5,'0')), tms=tms WHERE client IN (1,3);
-
-
+UPDATE llx_societe SET code_client=CONCAT_WS('','C', LPAD(rowid,5,'0')), tms=tms WHERE client IN (1,2,3);
 
 UPDATE llx_c_actioncomm SET type='systemauto' WHERE type='agefodd';
 
