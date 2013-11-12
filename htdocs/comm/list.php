@@ -251,6 +251,7 @@ if ($result)
 		$thirdpartystatic->id=$obj->rowid;
         $thirdpartystatic->name=$obj->name;
         $thirdpartystatic->client=$obj->client;
+        $thirdpartystatic->code_client=$obj->code_client;
         $thirdpartystatic->canvas=$obj->canvas;
         $thirdpartystatic->status=$obj->status;
         print $thirdpartystatic->getNomUrl(1);
