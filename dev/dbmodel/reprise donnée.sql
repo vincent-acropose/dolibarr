@@ -3109,10 +3109,19 @@ INSERT INTO `llx_rights_def` (`id`, `libelle`, `module`, `entity`, `perms`, `sub
 (103007, 'agenda', 'agefodd', 1, 'agenda', NULL, 'w', 0),
 (103008, 'agendatrainer', 'agefodd', 1, 'agendatrainer', NULL, 'w', 0);
 
+--Set prospect thirdparty with no invoicie
+UPDATE llx_societe SET client=6, tms=tms WHERE fournisseur=0;
+UPDATE llx_societe SET client=2, tms=tms WHERE rowid NOT IN (select fk_soc from llx_facture) AND fournisseur=0;--Prospect
+UPDATE llx_societe SET client=1, tms=tms WHERE rowid IN (select fk_soc from llx_facture) AND fournisseur=0;--Customer
+UPDATE llx_societe SET client=3, tms=tms WHERE rowid IN (select fk_soc from llx_facture WHERE date_valid < DATE_ADD(NOW(), INTERVAL -1 YEAR)) AND fournisseur=0;--Prospect/Customer
+UPDATE llx_societe SET client=0, tms=tms WHERE client=6 AND fournisseur=0;--All Other
 
 UPDATE llx_societe SET code_fournisseur=NULL, tms=tms WHERE fournisseur=0;
-UPDATE llx_societe SET code_client=NULL, tms=tms WHERE client=0;
+UPDATE llx_societe SET code_client=CONCAT_WS('','C', LPAD(rowid,5,'0')), tms=tms WHERE client IN (1,3);
 
+
+
+UPDATE llx_c_actioncomm SET type='systemauto' WHERE type='agefodd';
 
 
 --Remove temporarie data
