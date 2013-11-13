@@ -3121,6 +3121,8 @@ UPDATE llx_societe SET code_client=CONCAT_WS('','C', LPAD(rowid,5,'0')), tms=tms
 
 UPDATE llx_c_actioncomm SET type='systemauto' WHERE type='agefodd';
 
+UPDATE llx_c_actioncomm SET type='systemauto' WHERE code IN ('AC_FAX','AC_OTH');
+
 
 --Remove temporarie data
 ALTER TABLE llx_societe DROP INDEX idx_llx_societe_import_key;
