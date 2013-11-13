@@ -194,3 +194,6 @@ UnitPmp=Net unit VWAP
 CostPmpHT=Net total VWAP
 ProductUsedForBuild=Auto consumed by production
 ProductBuilded=Production completed
+##Price by customer
+PriceByCustomer=Price by customer
+AddCustomerPrice=Add customer price

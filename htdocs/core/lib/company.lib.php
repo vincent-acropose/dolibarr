@@ -548,6 +548,7 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
     print '<tr class="liste_titre">';
     print_liste_field_titre($langs->trans("Name"),$_SERVER["PHP_SELF"],"p.lastname","",$param,'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Poste"),$_SERVER["PHP_SELF"],"p.poste","",$param,'',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Fonction/Service"),$_SERVER["PHP_SELF"],"petx.ct_service","",$param,'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("PhonePro"),$_SERVER["PHP_SELF"],"p.phone","",$param,'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("PhoneMobile"),$_SERVER["PHP_SELF"],"p.phone_mobile","",$param,'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Fax"),$_SERVER["PHP_SELF"],"p.fax","",$param,'',$sortfield,$sortorder);
@@ -565,20 +566,12 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
     print '<input type="text" class="flat" name="search_name" size="20" value="'.$search_name.'">';
     print '</td>';
     
-    print '<td class="liste_titre">';  
-    print '</td>';
-    
-    print '<td class="liste_titre">';
-    print '</td>';
-    
-    print '<td class="liste_titre">';
-    print '</td>';
-    
-    print '<td class="liste_titre">';
-    print '</td>';
-    
-    print '<td class="liste_titre">';
-    print '</td>';
+    print '<td>&nbsp;</td>';
+    print '<td>&nbsp;</td>';
+    print '<td>&nbsp;</td>';  
+    print '<td>&nbsp;</td>';
+    print '<td>&nbsp;</td>';
+    print '<td>&nbsp;</td>';
     
     print '<td class="liste_titre">';
     print $form->selectarray('search_status', array('0'=>$langs->trans('ActivityCeased'),'1'=>$langs->trans('InActivity')),$search_status);
@@ -597,7 +590,9 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
   
 
     $sql = "SELECT p.rowid, p.lastname, p.firstname, p.fk_pays, p.poste, p.phone, p.phone_mobile, p.fax, p.email, p.statut ";
+    $sql .= ", petx.ct_service ";
     $sql .= " FROM ".MAIN_DB_PREFIX."socpeople as p";
+    $sql .= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."socpeople_extrafields as petx ON petx.fk_object=p.rowid";
     $sql .= " WHERE p.fk_soc = ".$object->id;
     if ($search_status!='') $sql .= " AND p.statut = ".$db->escape($search_status);
     if ($search_name)   $sql .= " AND (p.lastname LIKE '%".$db->escape(strtolower($search_name))."%' OR p.firstname LIKE '%".$db->escape(strtolower($search_name))."%')";
@@ -628,6 +623,15 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
             print '</td>';
 
             print '<td>'.$obj->poste.'</td>';
+                    
+            print '<td>';
+            require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+            $extrafield=new ExtraFields($db);
+            $extrafield->fetch_name_optionals_label('socpeople');
+            print $extrafield->showOutputField('ct_service',$obj->ct_service);
+            
+            print '</td>';
+            
 
             $country_code = getCountry($obj->fk_pays, 2);
 

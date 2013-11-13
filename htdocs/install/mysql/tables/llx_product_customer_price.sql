@@ -3,6 +3,7 @@
 -- Copyright (C) 2009-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
 -- Copyright (C) 2009-2013	Regis Houssin			<regis.houssin@capnetworks.com>
 -- Copyright (C) 2012		Juanjo Menent			<jmenent@2byte.es>
+-- Copyright (C) 2013		Florian Henry			<florian.henry@open-concept.pro>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -26,17 +27,16 @@ create table llx_product_customer_price
   datec					datetime,
   tms					timestamp,
   fk_product			integer,
-  fk_soc				integer,
-  fk_availability		integer,	   
-  price					double(24,8) DEFAULT 0,
-  quantity				double,
-  remise_percent		double NOT NULL DEFAULT 0,
-  remise				double NOT NULL DEFAULT 0,
-  unitprice				double(24,8) DEFAULT 0,
-  charges				double(24,8) DEFAULT 0,
-  unitcharges			double(24,8) DEFAULT 0,
-  tva_tx				double(6,3) NOT NULL,
-  info_bits				integer NOT NULL DEFAULT 0,
+  fk_soc				integer,	   
+  price						double(24,8) DEFAULT 0,
+  price_ttc					double(24,8) DEFAULT 0,
+  price_min					double(24,8) DEFAULT 0,
+  price_min_ttc				double(24,8) DEFAULT 0,
+  price_base_type			varchar(3)   DEFAULT 'HT',
+  tva_tx					double(6,3),
+  recuperableonly           integer NOT NULL DEFAULT '0',   -- Other NPR VAT
+  localtax1_tx				double(6,3)  DEFAULT 0,         -- Other local VAT 1 
+  localtax2_tx				double(6,3)  DEFAULT 0,         -- Other local VAT 2
   fk_user				integer,
   import_key			varchar(14)                  -- Import key
 )ENGINE=innodb;

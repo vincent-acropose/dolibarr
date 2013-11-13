@@ -1,6 +1,7 @@
 -- ============================================================================
 -- Copyright (C) 2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
 -- Copyright (C) 2009 Laurent Destailleur  <eldy@users.sourceforge.net>
+-- Copyright (C) 2013		Florian Henry			<florian.henry@open-concept.pro>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -20,10 +21,18 @@
 create table llx_product_customer_price_log
 (
   rowid                       integer AUTO_INCREMENT PRIMARY KEY,
+ entity				integer DEFAULT 1 NOT NULL,	   -- multi company id
   datec                       datetime,
-  fk_product_customer      integer      NOT NULL,
-  price                       double(24,8) DEFAULT 0,
-  quantity                    double,
-  fk_user                     integer
-
+  fk_product			integer,
+  fk_soc				integer,	   
+  price						double(24,8) DEFAULT 0,
+  price_ttc					double(24,8) DEFAULT 0,
+  price_min					double(24,8) DEFAULT 0,
+  price_min_ttc				double(24,8) DEFAULT 0,
+  price_base_type			varchar(3)   DEFAULT 'HT',
+  tva_tx					double(6,3),
+  recuperableonly           integer NOT NULL DEFAULT '0',   -- Other NPR VAT
+  localtax1_tx				double(6,3)  DEFAULT 0,         -- Other local VAT 1 
+  localtax2_tx				double(6,3)  DEFAULT 0,         -- Other local VAT 2
+  fk_user				integer
 )ENGINE=innodb;

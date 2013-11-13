@@ -192,3 +192,6 @@ BuildindListInfo=Nombre de produit fabricable par entrepot, si saisie à zéro o
 QtyNeed=Affectée
 UnitPmp=Prix Achat Unitaire
 CostPmpHT=Cout à l'achat HT
+##Price by customer
+PriceByCustomer=Prix par client
+AddCustomerPrice=Ajouter un prix client

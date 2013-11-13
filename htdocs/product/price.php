@@ -522,7 +522,7 @@ if (! $action || $action == 'delete')
 
 	if ($user->rights->produit->creer || $user->rights->service->creer)
 	{
-		print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=edit_price&amp;id='.$object->id.'">'.$langs->trans("UpdatePrice").'</a>';
+		print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=edit_price&amp;id='.$object->id.'">'.$langs->trans("UpdatePrice").'</a></div>';
 	}
 
 	print "\n</div>\n";
@@ -773,6 +773,28 @@ else
 {
 	dol_print_error($db);
 }
+
+if (!empty($conf->global->PRODUIT_CUSTOMER_PRICES)) {
+	
+	print_fiche_titre($langs->trans('PriceByCustomer'));
+	
+	/* ************************************************************************** */
+	/*                                                                            */
+	/* Barre d'action                                                             */
+	/*                                                                            */
+	/* ************************************************************************** */
+	
+	print "\n".'<div class="tabsAction">'."\n";
+	
+	if ($user->rights->produit->creer || $user->rights->service->creer)
+	{
+		print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=addcustomerprice&amp;id='.$object->id.'">'.$langs->trans("AddCustomerPrice").'</a></div>';
+	}else {
+		
+	}
+	print "\n</div><br>\n";
+}
+
 
 llxFooter();
 
