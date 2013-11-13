@@ -1205,6 +1205,11 @@ class Form
 
         $sql = "SELECT ";
         $sql.= " p.rowid, p.label, p.ref, p.description, p.fk_product_type, p.price, p.price_ttc, p.price_base_type, p.tva_tx, p.duration, p.stock";
+        
+        //Price by customer
+        if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES) && !empty($socid)) {
+        	$sql.=' ,pcp.rowid as idprodcustprice, pcp.price as custprice, pcp.remise_percent, pcp.remise, pcp.unitprice ';
+        }
         // Multilang : we add translation
         if (! empty($conf->global->MAIN_MULTILANGS))
         {
@@ -1230,6 +1235,11 @@ class Form
             $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product_lang as pl ON pl.fk_product = p.rowid AND pl.lang='". $langs->getDefaultLang() ."'";
         }
         $sql.= ' WHERE p.entity IN ('.getEntity('product', 1).')';
+        
+        if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES) && !empty($socid)) {
+        	$sql.=" LEFT JOIN  ".MAIN_DB_PREFIX."product_customer_price as pcp ON pcp.fk_soc=".$socid." AND pcp.fk_product=p.rowid";
+        }
+        
         if ($finished == 0)
         {
             $sql.= " AND p.finished = ".$finished;

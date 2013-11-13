@@ -1436,8 +1436,8 @@ class Societe extends CommonObject
         global $conf,$langs;
 
         $name=$this->name?$this->name:$this->nom;
-       
-		if ($conf->global->SOCIETE_ADD_REF_IN_LIST && empty($option)) {
+      
+		if ($conf->global->SOCIETE_ADD_REF_IN_LIST && (!empty($withpicto))) {
 			if (($this->client) && (! empty ( $this->code_client ))) {
 				$code = $this->code_client . ' - ';
 			}
