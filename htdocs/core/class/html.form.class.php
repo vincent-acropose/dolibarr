@@ -1143,9 +1143,10 @@ class Form
      *  @param		string		$selected_input_value	Value of preselected input text (with ajax)
      *  @param		int			$hidelabel				Hide label (0=no, 1=yes, 2=show search icon (before) and placeholder, 3 search icon after)
      *  @param		array		$ajaxoptions			Options for ajax_autocompleter
+     *  @param      int		$socid     		Product Price by customer filter
      *  @return		void
      */
-    function select_produits($selected='', $htmlname='productid', $filtertype='', $limit=20, $price_level=0, $status=1, $finished=2, $selected_input_value='', $hidelabel=0, $ajaxoptions=array())
+    function select_produits($selected='', $htmlname='productid', $filtertype='', $limit=20, $price_level=0, $status=1, $finished=2, $selected_input_value='', $hidelabel=0, $ajaxoptions=array(),$socid=0)
     {
         global $langs,$conf;
 
@@ -1164,6 +1165,12 @@ class Form
             }
             // mode=1 means customers products
             $urloption='htmlname='.$htmlname.'&outjson=1&price_level='.$price_level.'&type='.$filtertype.'&mode=1&status='.$status.'&finished='.$finished;
+            
+            //Price by customer
+            if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES) && !empty($socid)) {
+            	$urloption.='&socid='.$socid;
+            }
+            
             print ajax_autocompleter($selected, $htmlname, DOL_URL_ROOT.'/product/ajax/products.php', $urloption, $conf->global->PRODUIT_USE_SEARCH_TO_SELECT, 0, $ajaxoptions);
             if (empty($hidelabel)) print $langs->trans("RefOrLabel").' : ';
             else if ($hidelabel > 1) {
@@ -1180,7 +1187,7 @@ class Form
         }
         else
         {
-            $this->select_produits_do($selected,$htmlname,$filtertype,$limit,$price_level,'',$status,$finished,0);
+            $this->select_produits_do($selected,$htmlname,$filtertype,$limit,$price_level,'',$status,$finished,0,$socid);
         }
     }
 
@@ -1208,7 +1215,8 @@ class Form
         
         //Price by customer
         if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES) && !empty($socid)) {
-        	$sql.=' ,pcp.rowid as idprodcustprice, pcp.price as custprice, pcp.remise_percent, pcp.remise, pcp.unitprice ';
+        	$sql.=' ,pcp.rowid as idprodcustprice, pcp.price as custprice, pcp.price_ttc as custprice_ttc,';
+        	$sql.=' pcp.price_base_type as custprice_base_type, pcp.tva_tx  as custtva_tx';
         }
         // Multilang : we add translation
         if (! empty($conf->global->MAIN_MULTILANGS))
@@ -1229,6 +1237,11 @@ class Form
 		}
         $sql.= " FROM ".MAIN_DB_PREFIX."product as p";
         
+        //Price by customer
+        if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES) && !empty($socid)) {
+        	$sql.=" LEFT JOIN  ".MAIN_DB_PREFIX."product_customer_price as pcp ON pcp.fk_soc=".$socid." AND pcp.fk_product=p.rowid";
+        }
+        
         // Multilang : we add translation
         if (! empty($conf->global->MAIN_MULTILANGS))
         {
@@ -1236,9 +1249,7 @@ class Form
         }
         $sql.= ' WHERE p.entity IN ('.getEntity('product', 1).')';
         
-        if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES) && !empty($socid)) {
-        	$sql.=" LEFT JOIN  ".MAIN_DB_PREFIX."product_customer_price as pcp ON pcp.fk_soc=".$socid." AND pcp.fk_product=p.rowid";
-        }
+        
         
         if ($finished == 0)
         {
@@ -1493,6 +1504,30 @@ class Form
 		{
 			$opt.=" - ".$langs->trans("Discount")." : ".vatrate($objp->remise_percent).' %';
 			$outval.=" - ".$langs->transnoentities("Discount")." : ".vatrate($objp->remise_percent).' %';
+		}
+		
+		//Price by customer
+		if ($conf->global->PRODUIT_CUSTOMER_PRICES) {
+			if (!empty($objp->idprodcustprice)) {
+				$found = 1;
+				
+				if ($objp->custprice_base_type == 'HT')
+				{
+					$opt.= price($objp->custprice,1).' '.$currencytext.' '.$langs->trans("HT");
+					$outval.= price($objp->custprice,1).' '.$currencytextnoent.' '.$langs->transnoentities("HT");
+				}
+				else
+				{
+					$opt.= price($objp->custprice_ttc,1).' '.$currencytext.' '.$langs->trans("TTC");
+					$outval.= price($objp->custprice_ttc,1).' '.$currencytextnoent.' '.$langs->transnoentities("TTC");
+				}
+				
+				$outprice_ht=price($objp->custprice);
+				$outprice_ttc=price($objp->custprice_ttc);
+				$outpricebasetype=$objp->custprice_base_type;
+				$outtva_tx=$objp->custtva_tx;				
+			}
+			
 		}
 
         // If level no defined or multiprice not found, we used the default price

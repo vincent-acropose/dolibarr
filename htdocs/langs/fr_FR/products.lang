@@ -195,3 +195,4 @@ CostPmpHT=Cout à l'achat HT
 ##Price by customer
 PriceByCustomer=Prix par client
 AddCustomerPrice=Ajouter un prix client
+PriceByCustomerLog=Historique Prix par client

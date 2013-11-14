@@ -86,7 +86,7 @@ if (! empty($usemargins))
 	echo '<span>';
 	$filtertype='';
 	if (! empty($object->element) && $object->element == 'contrat') $filtertype='1';
-	$form->select_produits('','idprod',$filtertype,$conf->product->limit_size,$buyer->price_level);
+	$form->select_produits('','idprod',$filtertype,$conf->product->limit_size,$buyer->price_level, 1, 2, '', 3, array(),$buyer->id);
 	echo '</span>';
 
 	if (is_object($hookmanager))

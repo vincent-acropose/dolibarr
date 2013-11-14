@@ -120,6 +120,33 @@ if (! empty($action) && $action == 'fetch' && ! empty($id))
 				}
 			}
 		}
+		
+		//Price by customer
+		if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES) && !empty($socid)) {
+			
+			require_once DOL_DOCUMENT_ROOT . '/product/class/productcustomerprice.class.php';
+	
+			$prodcustprice = new Productcustomerprice ( $db );
+			
+			$filter = array (
+			't.fk_product' => $object->id,
+			't.fk_soc'=> $socid
+			);
+			
+			$result = $prodcustprice->fetch_all ( '', '', 0,0, $filter );
+			if ($result)
+			{
+				if (count($prodcustprice->lines)>0)
+				{
+					$found=true;
+					$outprice_ht=price($prodcustprice->lines[0]->price);
+					$outprice_ttc=price($prodcustprice->lines[0]->price_ttc);
+					$outpricebasetype=$prodcustprice->lines[0]->price_base_type;
+					$outtva_tx=$prodcustprice->lines[0]->tva_tx;
+				}
+			}
+		}
+		
 
 		if (! $found)
 		{
@@ -158,11 +185,11 @@ else
 	$form = new Form($db);
 	if (empty($mode) || $mode == 1)
 	{
-		$arrayresult=$form->select_produits_do("",$htmlname,$type,"",$price_level,$searchkey,$status,2,$outjson);
+		$arrayresult=$form->select_produits_do("",$htmlname,$type,"",$price_level,$searchkey,$status,2,$outjson,$socid);
 	}
 	elseif ($mode == 2)
 	{
-		$arrayresult=$form->select_produits_fournisseurs_do($socid,"",$htmlname,$type,"",$searchkey,$status,$outjson);
+		$arrayresult=$form->select_produits_fournisseurs_do($socid,"",$htmlname,$type,"",$searchkey,$status,$outjson,$socid);
 	}
 
 	$db->close();
