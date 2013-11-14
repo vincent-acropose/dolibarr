@@ -113,7 +113,7 @@ class Contact extends CommonObject
         if (! empty($conf->global->MAIN_FIRST_TO_UPPER)) $this->firstname=ucwords($this->firstname);
         if (! $this->socid) $this->socid = 0;
 		if (! $this->priv) $this->priv = 0;
-		if (empty($this->status)) $this->status = 0;
+		if (empty($this->statut)) $this->statut = 0;
 
 		$sql = "INSERT INTO ".MAIN_DB_PREFIX."socpeople (";
 		$sql.= " datec";
@@ -228,7 +228,7 @@ class Contact extends CommonObject
 		$this->town=(empty($this->town)?'':$this->town);
 		$this->country_id=($this->country_id > 0?$this->country_id:$this->country_id);
 		$this->state_id=($this->state_id > 0?$this->state_id:$this->fk_departement);
-		if (empty($this->statut)) $this->status = 0;
+		if (empty($this->statut)) $this->statut = 0;
 
 		$this->db->begin();
 
@@ -253,7 +253,7 @@ class Contact extends CommonObject
 		$sql .= ", phone_mobile = ".(isset($this->phone_mobile)?"'".$this->db->escape($this->phone_mobile)."'":"null");
 		$sql .= ", jabberid = ".(isset($this->jabberid)?"'".$this->db->escape($this->jabberid)."'":"null");
 		$sql .= ", priv = '".$this->priv."'";
-		$sql .= ", statut = '".$this->statut."'";
+		$sql .= ", statut = ".$this->statut;
 		$sql .= ", fk_user_modif=".($user->id > 0 ? "'".$user->id."'":"NULL");
 		$sql .= ", default_lang=".($this->default_lang?"'".$this->default_lang."'":"NULL");
 		$sql .= ", no_email=".($this->no_email?"'".$this->no_email."'":"0");
