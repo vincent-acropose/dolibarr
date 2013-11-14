@@ -3124,6 +3124,17 @@ UPDATE llx_c_actioncomm SET type='systemauto' WHERE type='agefodd';
 UPDATE llx_c_actioncomm SET type='systemauto' WHERE code IN ('AC_FAX','AC_OTH');
 
 
+------
+---import Agenda
+------
+--select count(*) from hisplan where session_id IS NOT NULL
+-- Match sur session id
+--Mettre dans text lib tel quel, formateur : nom, éléves : nomelv, comment :comment
+--date debut : hjour+heuredeb / date fin hjour + heurefin 
+
+--Hist mail
+--
+
 --Remove temporarie data
 ALTER TABLE llx_societe DROP INDEX idx_llx_societe_import_key;
 ALTER TABLE llx_agefodd_session DROP INDEX idx_llx_agefodd_session_import_key;
