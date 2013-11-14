@@ -3131,9 +3131,15 @@ UPDATE llx_c_actioncomm SET type='systemauto' WHERE code IN ('AC_FAX','AC_OTH');
 -- Match sur session id
 --Mettre dans text lib tel quel, formateur : nom, éléves : nomelv, comment :comment
 --date debut : hjour+heuredeb / date fin hjour + heurefin 
+--Différent de haction='Old'
+--Type=Session AGF
 
 --Hist mail
---
+--deleted IS NULL
+--Affecter à com_id
+--contact_id et account_id
+--type='Autre'
+--dater=date de fin
 
 --Remove temporarie data
 ALTER TABLE llx_societe DROP INDEX idx_llx_societe_import_key;
