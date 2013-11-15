@@ -63,8 +63,9 @@ INSERT INTO `llx_extrafields` ( `name`, `entity`, `elementtype`, `tms`, `label`,
 ( 'u_logistique', 1, 'user', '2013-11-01 22:17:14', 'Gestionnaire logistique', 'boolean', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
 ( 'u_communication', 1, 'user', '2013-11-01 22:25:03', 'Chargé de communication', 'boolean', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
 ( 'comment', 1, 'propal', '2013-09-01 11:14:27', 'Commentaire', 'text', '2000', 0, 0, 1, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-( 'cd_domaine', 1, 'agefodd_formation_catalogue', '2013-10-20 12:05:28', 'Domaine', 'select', '', 0, 0, 1, 'a:1:{s:7:"options";a:16:{s:5:"00000";s:5:"00000";s:3:"COA";s:3:"COA";s:3:"COF";s:3:"COF";s:5:"COMER";s:10:"Commercial";s:4:"COMM";s:13:"Communication";s:3:"CON";s:3:"CON";s:5:"EFPRO";s:27:"Efficacité professionnelle";s:5:"EXPAT";s:12:"Expatriation";s:3:"FOR";s:3:"FOR";s:3:"FRF";s:24:"Formations de formateurs";s:4:"JURI";s:9:"Juridique";s:6:"MARKET";s:9:"Marketing";s:4:"MGNT";s:10:"Management";s:4:"PAYS";s:14:"Expertise pays";s:2:"RH";s:19:"Ressources humaines";s:3:"SIC";s:24:"Interculturel transverse";}}');
-
+( 'cd_domaine', 1, 'agefodd_formation_catalogue', '2013-10-20 12:05:28', 'Domaine', 'select', '', 0, 0, 1, 'a:1:{s:7:"options";a:16:{s:5:"00000";s:5:"00000";s:3:"COA";s:3:"COA";s:3:"COF";s:3:"COF";s:5:"COMER";s:10:"Commercial";s:4:"COMM";s:13:"Communication";s:3:"CON";s:3:"CON";s:5:"EFPRO";s:27:"Efficacité professionnelle";s:5:"EXPAT";s:12:"Expatriation";s:3:"FOR";s:3:"FOR";s:3:"FRF";s:24:"Formations de formateurs";s:4:"JURI";s:9:"Juridique";s:6:"MARKET";s:9:"Marketing";s:4:"MGNT";s:10:"Management";s:4:"PAYS";s:14:"Expertise pays";s:2:"RH";s:19:"Ressources humaines";s:3:"SIC";s:24:"Interculturel transverse";}}'),
+('ts_prospection', 1, 'agefodd_session', '2013-11-15 12:10:59', 'Chargé de prospection', 'sellist', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:76:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra.u_prospection=1";N;}}'),
+('ts_logistique', 1, 'agefodd_session', '2013-11-15 12:11:41', ' Gestionnaire logistique', 'sellist', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:75:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra.u_logistique=1";N;}}');
 
 ALTER TABLE llx_societe_extrafields ADD COLUMN ts_partenaire text DEFAULT NULL;
 ALTER TABLE llx_societe_extrafields ADD COLUMN ts_prospection text DEFAULT NULL;
@@ -95,6 +96,9 @@ ALTER TABLE llx_user_extrafields ADD COLUMN u_communication int(1) DEFAULT NULL;
 
 ALTER TABLE llx_propal_extrafields ADD COLUMN comment text DEFAULT NULL;
 ALTER TABLE llx_agefodd_formation_catalogue_extrafields ADD COLUMN cd_domaine text DEFAULT NULL;
+
+ALTER TABLE llx_agefodd_session_extrafields ADD COLUMN ts_prospection text DEFAULT NULL;
+ALTER TABLE llx_agefodd_session_extrafields ADD COLUMN ts_logistique text DEFAULT NULL;
 
 TRUNCATE TABLE llx_const;
 INSERT INTO `llx_const` (`rowid`, `name`, `entity`, `value`, `type`, `visible`, `note`, `tms`) VALUES
