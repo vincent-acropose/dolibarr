@@ -553,6 +553,7 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
     print_liste_field_titre($langs->trans("PhoneMobile"),$_SERVER["PHP_SELF"],"p.phone_mobile","",$param,'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Fax"),$_SERVER["PHP_SELF"],"p.fax","",$param,'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("EMail"),$_SERVER["PHP_SELF"],"p.email","",$param,'',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("DateCreation"),$_SERVER["PHP_SELF"],"p.datec","",$param,'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"p.statut","",$param,'',$sortfield,$sortorder);
     print "<td>&nbsp;</td>";
     if (! empty($conf->agenda->enabled) && $user->rights->agenda->myactions->create)
@@ -569,6 +570,7 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
     print '<td>&nbsp;</td>';
     print '<td>&nbsp;</td>';
     print '<td>&nbsp;</td>';  
+    print '<td>&nbsp;</td>';
     print '<td>&nbsp;</td>';
     print '<td>&nbsp;</td>';
     print '<td>&nbsp;</td>';
@@ -589,7 +591,7 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
     print "</tr>";
   
 
-    $sql = "SELECT p.rowid, p.lastname, p.firstname, p.fk_pays, p.poste, p.phone, p.phone_mobile, p.fax, p.email, p.statut ";
+    $sql = "SELECT p.rowid, p.lastname, p.firstname, p.fk_pays, p.poste, p.phone, p.phone_mobile, p.fax, p.email, p.statut, p.datec ";
     $sql .= ", petx.ct_service ";
     $sql .= " FROM ".MAIN_DB_PREFIX."socpeople as p";
     $sql .= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."socpeople_extrafields as petx ON petx.fk_object=p.rowid";
@@ -647,6 +649,9 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
             print '</td>';
             print '<td>';
             print dol_print_email($obj->email,$obj->rowid,$object->id,'AC_EMAIL');
+            print '</td>';
+            print '<td>';
+            print dol_print_date($obj->datec,'daytextshort');
             print '</td>';
             print '<td>';
             print $contactstatic->getLibStatut(3);
