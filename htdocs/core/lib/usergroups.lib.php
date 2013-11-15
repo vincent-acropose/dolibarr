@@ -88,10 +88,12 @@ function user_prepare_head($object)
     //Info on users is visible only by internal user
     if (empty($user->societe_id))
     {
-    	$head[$h][0] = DOL_URL_ROOT.'/user/note.php?id='.$object->id;
-    	$head[$h][1] = $langs->trans("Note");
-    	$head[$h][2] = 'note';
-    	$h++;
+    	if (! empty($user->rights->user->user->creer)) {
+    		$head[$h][0] = DOL_URL_ROOT.'/user/note.php?id='.$object->id;
+    		$head[$h][1] = $langs->trans("Note");
+    		$head[$h][2] = 'note';
+    		$h++;
+    	}
 
     	$head[$h][0] = DOL_URL_ROOT.'/user/info.php?id='.$object->id;
     	$head[$h][1] = $langs->trans("Info");

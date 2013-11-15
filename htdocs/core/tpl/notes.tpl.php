@@ -34,7 +34,8 @@ elseif ($module == 'invoice_supplier')  { $permission=$user->rights->fournisseur
 elseif ($module == 'order_supplier')    { $permission=$user->rights->fournisseur->commande->creer;}
 elseif ($module == 'societe')    		{ $permission=$user->rights->societe->creer;}
 elseif ($module == 'shipping')    		{ $permission=$user->rights->expedition->creer;}
-
+print '$module='.$module;
+print '$permission='.$permission;
 if (! empty($conf->global->FCKEDITOR_ENABLE_SOCIETE)) $typeofdata='ckeditor:dolibarr_notes:100%:200::1:12:100';
 else $typeofdata='textarea:12:100';
 ?>

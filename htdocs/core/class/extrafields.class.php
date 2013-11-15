@@ -852,6 +852,9 @@ class ExtraFields
 
 				$sql = 'SELECT '.$InfoFieldList[1];
 				$sql.= ' FROM '.MAIN_DB_PREFIX .$InfoFieldList[0];
+				if (strpos($InfoFieldList[3], 'extra')!==false) {
+					$sql.= ' as main';
+				}
 				$sql.= ' WHERE '.$keyList.'=\''.$this->db->escape($value).'\'';
 				//$sql.= ' AND entity = '.$conf->entity;
 				dol_syslog(get_class($this).':showOutputField:$type=sellist sql='.$sql);
