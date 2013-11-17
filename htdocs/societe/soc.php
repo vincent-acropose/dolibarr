@@ -236,6 +236,74 @@ if (empty($reshook))
 				}
         	}
         }
+        
+        
+        if (! $error)
+        {
+        	if ($action == 'add')
+        	{
+		        if ($conf->global->MAIN_COMPANY_CONTROL_DBL && $confirm!='yes') {
+		        	 
+		        	//Control double creation
+		        	$socstatic=new Societe($db);
+		        
+		        	$result_find_dbl = $socstatic->searchByName($object->name);
+		        	if ($result_find_dbl < 0) {
+		        		setEventMessage($socstatic->error,'errors');
+		        	}else {
+		        		if (is_array($result_find_dbl) && count($result_find_dbl)>0) {
+		        
+		        			$urlconfirm='token='.GETPOST("token");
+		        			$urlconfirm.='&private='.GETPOST("private");
+		        			$urlconfirm.='&firstname='.GETPOST('firstname');
+		        			$urlconfirm.='&nom='.GETPOST('nom');
+		        			$urlconfirm.='&name='.GETPOST('name');
+		        			$urlconfirm.='&civilite_id='.GETPOST('civilite_id');
+		        			$urlconfirm.='&address='.GETPOST('address');
+		        			$urlconfirm.='&zipcode='.GETPOST('zipcode');
+		        			$urlconfirm.='&town='.GETPOST('town');
+		        			$urlconfirm.='&country_id='.GETPOST('country_id');
+		        			$urlconfirm.='&departement_id='.GETPOST('departement_id');
+		        			$urlconfirm.='&phone='.GETPOST('phone');
+		        			$urlconfirm.='&fax='.GETPOST('fax');
+		        			$urlconfirm.='&email='.GETPOST('email');
+		        			$urlconfirm.='&url='.GETPOST('url');
+		        			$urlconfirm.='&idprof1='.GETPOST('idprof1');
+		        			$urlconfirm.='&idprof2='.GETPOST('idprof2');
+		        			$urlconfirm.='&idprof3='.GETPOST('idprof3');
+		        			$urlconfirm.='&idprof4='.GETPOST('idprof4');
+		        			$urlconfirm.='&idprof5='.GETPOST('idprof5');
+		        			$urlconfirm.='&idprof6='.GETPOST('idprof6');
+		        			$urlconfirm.='&prefix_comm='.GETPOST('prefix_comm');
+		        			$urlconfirm.='&code_client='.GETPOST('code_client');
+		        			$urlconfirm.='&code_fournisseur='.GETPOST('code_fournisseur');
+		        			$urlconfirm.='&capital='.GETPOST('capital');
+		        			$urlconfirm.='&barcode='.GETPOST('barcode');
+		        			$urlconfirm.='&tva_intra='.GETPOST('tva_intra');
+		        			$urlconfirm.='&assujtva_value='.GETPOST('assujtva_value');
+		        			$urlconfirm.='&status='.GETPOST('status');
+		        			$urlconfirm.='&localtax1assuj_value='.GETPOST('localtax1assuj_value');
+		        			$urlconfirm.='&localtax2assuj_value='.GETPOST('localtax2assuj_value');
+		        			$urlconfirm.='&forme_juridique_code='.GETPOST('forme_juridique_code');
+		        			$urlconfirm.='&effectif_id='.GETPOST('effectif_id');
+		        			$urlconfirm.='&typent_id='.GETPOST('typent_id');
+		        			$urlconfirm.='&client='.GETPOST('client');
+		        			$urlconfirm.='&fournisseur='.GETPOST('fournisseur');
+		        			$urlconfirm.='&commercial_id='.GETPOST('commercial_id');
+		        			$urlconfirm.='&default_lang='.GETPOST('default_lang');
+		        			 
+		        			$need_confirm=1;
+		        			$action='create';
+		        			$error++;
+		        
+		        		}
+		        		else {
+		        			$need_confirm=0;
+		        		}
+		        	}
+		        }
+        	}
+        }
 
         if (! $error)
         {
@@ -522,6 +590,21 @@ $formadmin = new FormAdmin($db);
 $formcompany = new FormCompany($db);
 
 $countrynotdefined=$langs->trans("ErrorSetACountryFirst").' ('.$langs->trans("SeeAbove").')';
+
+
+
+if ($conf->global->MAIN_COMPANY_CONTROL_DBL && $need_confirm) {
+
+	$confirm_text=$langs->trans("ConfirmCreationOtherCustomer").' '. GETPOST('nom').'<br>';
+	
+	foreach($result_find_dbl as $find_cust) {
+		$confirm_text.=$find_cust->name.'<br>';
+	}
+	
+	$ret=$form->form_confirm($_SERVER['PHP_SELF'].'?'.$urlconfirm,$langs->trans("ConfirmCreation"),$confirm_text,"add",'','',1);
+	if ($ret == 'html') print '<br>';
+}
+
 
 if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action))
 {

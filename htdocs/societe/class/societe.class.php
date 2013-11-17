@@ -960,6 +960,7 @@ class Societe extends CommonObject
     			$sql.= ")";
     	}
 
+    	dol_syslog(get_class($this).'::searchByName sql='.$sql);
     	$res  = $this->db->query($sql);
     	if ($res)
     	{
