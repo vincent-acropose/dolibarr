@@ -201,6 +201,9 @@ if ($action == 'delete_all_price_by_qty') {
 *****************************************************/
 if ($action == 'add_customer_price_confirm' && ! $_POST["cancel"] && ($user->rights->produit->custprix || $user->rights->service->custprix))
 {
+	
+	$update_child_soc=GETPOST('updatechildprice');
+	
 	$result = $object->fetch($id);
 	
 	//add price by customer
@@ -212,7 +215,7 @@ if ($action == 'add_customer_price_confirm' && ! $_POST["cancel"] && ($user->rig
 	$prodcustprice->tva_tx=str_replace('*','',GETPOST("tva_tx"));
 	$prodcustprice->recuperableonly=(preg_match('/\*/',GETPOST("tva_tx")) ? 1 : 0);
 
-	$result = $prodcustprice->create($user);
+	$result = $prodcustprice->create($user,0,$update_child_soc);
 
 	if ($result < 0)
 	{
@@ -242,6 +245,8 @@ if ($action == 'delete_customer_price' && ($user->rights->produit->supprimer || 
 if ($action == 'update_customer_price_confirm' && ! $_POST["cancel"] && ($user->rights->produit->custprix || $user->rights->service->custprix))
 {
 	
+	$update_child_soc=GETPOST('updatechildprice');
+	
 	$prodcustprice->fetch(GETPOST('lineid','int'));
 	
 	//update price by customer
@@ -251,7 +256,7 @@ if ($action == 'update_customer_price_confirm' && ! $_POST["cancel"] && ($user->
 	$prodcustprice->tva_tx=str_replace('*','',GETPOST("tva_tx"));
 	$prodcustprice->recuperableonly=(preg_match('/\*/',GETPOST("tva_tx")) ? 1 : 0);
 
-	$result = $prodcustprice->update($user);
+	$result = $prodcustprice->update($user,0,$update_child_soc);
 
 	if ($result < 0)
 	{
@@ -930,6 +935,15 @@ if (! empty ( $conf->global->PRODUIT_CUSTOMER_PRICES )) {
 		}
 		print '</td></tr>';
 		
+		// Update all child soc
+		print '<tr><td width="15%">';
+		print $langs->trans ( 'ForceUpdateChildPriceSoc' );
+		print '</td>';
+		print '<td>';
+		print '<input type="checkbox" name="updatechildprice" value="1">';
+		print '</td>';
+		print '</tr>';
+		
 		print '</table>';
 		
 		print '<center><br><input type="submit" class="button" value="' . $langs->trans ( "Save" ) . '">&nbsp;';
@@ -995,6 +1009,15 @@ if (! empty ( $conf->global->PRODUIT_CUSTOMER_PRICES )) {
 			print '<td><input name="price_min" size="10" value="' . price ( $prodcustprice->price_min ) . '">';
 		}
 		print '</td></tr>';
+		
+		// Update all child soc
+		print '<tr><td width="15%">';
+		print $langs->trans ( 'ForceUpdateChildPriceSoc' );
+		print '</td>';
+		print '<td>';
+		print '<input type="checkbox" name="updatechildprice" value="1">';
+		print '</td>';
+		print '</tr>';
 		
 		print '</table>';
 		

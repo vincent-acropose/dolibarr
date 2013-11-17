@@ -55,6 +55,8 @@ $result = restrictedArea($user, 'societe', $socid, '&societe');
 if ($action == 'add_customer_price_confirm' && ! $_POST["cancel"] && ($user->rights->produit->custprix || $user->rights->service->custprix))
 {
 	
+	$update_child_soc=GETPOST('updatechildprice');
+	
 	//add price by customer
 	$prodcustprice->fk_soc=$socid;
 	$prodcustprice->fk_product=GETPOST('prodid','int');
@@ -64,7 +66,7 @@ if ($action == 'add_customer_price_confirm' && ! $_POST["cancel"] && ($user->rig
 	$prodcustprice->tva_tx=str_replace('*','',GETPOST("tva_tx"));
 	$prodcustprice->recuperableonly=(preg_match('/\*/',GETPOST("tva_tx")) ? 1 : 0);
 
-	$result = $prodcustprice->create($user);
+	$result = $prodcustprice->create($user,0,$update_child_soc);
 
 	if ($result < 0)
 	{
