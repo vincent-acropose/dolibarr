@@ -538,6 +538,9 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
     $param="socid=".$object->id;
     if ($search_status != '') $param.='&amp;search_status='.$search_status;
     if ($search_name != '') $param.='&amp;search_name='.urlencode($search_name);
+    $param.='#contactlist';
+    
+     print '<a name="contactlist"></a>';
     
     print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'" name="formfilter">';
     print '<input type="hidden" name="socid" value="'.$object->id.'">';

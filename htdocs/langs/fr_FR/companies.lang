@@ -403,5 +403,8 @@ MonkeyNumRefModelDesc=Renvoie le numéro sous la forme %syymm-nnnn pour les code
 # Leopard
 LeopardNumRefModelDesc=Code libre sans vérification. Peut être modifié à tout moment.
 
-ConfirmCreation=Êtes-vous sûr de vouloir crée ce tiers ?
-ConfirmCreationOtherCustomer=Il y a déja des clients dont le nom contient :
+ConfirmCreationThirdparty=Êtes-vous sûr de vouloir crée ce tiers ?
+ConfirmCreationThirdpartyOtherCustomer=Il y a des clients dont le nom contient :
+
+ConfirmCreationContact=Êtes-vous sûr de vouloir crée ce contact ?
+ConfirmCreationContactOtherContact=Il y a des contacts avec l'email :

@@ -625,6 +625,42 @@ class Contact extends CommonObject
 			return -1;
 		}
 	}
+	
+	/**
+	 * 	Search and fetch thirparties by name
+	 *
+	 * 	@param		string		$email		Email
+	 * 	@return		array		Array of thirdparties object
+	 */
+	function searchByEmail($email)
+	{
+		$contacts = array();
+	
+		// Generation requete recherche
+		$sql = "SELECT rowid FROM ".MAIN_DB_PREFIX."socpeople";
+		$sql.= " WHERE email='".trim($email)."'";
+		
+	
+		dol_syslog(get_class($this).'::searchByEmail sql='.$sql);
+		$res  = $this->db->query($sql);
+		if ($res)
+		{
+			while ($rec = $this->db->fetch_array($res))
+			{
+				$soc = new Contact($this->db);
+				$soc->fetch($rec['rowid']);
+				$contacts[] = $soc;
+			}
+	
+			return $contacts;
+		}
+		else
+		{
+			$this->error=$this->db->error().' sql='.$sql;
+			dol_syslog(get_class($this)."::searchByEmail ".$this->error, LOG_ERR);
+			return -1;
+		}
+	}
 
 
 	/**

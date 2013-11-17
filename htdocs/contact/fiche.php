@@ -152,67 +152,116 @@ if (empty($reshook))
     // Add contact
     if ($action == 'add' && $user->rights->societe->contact->creer)
     {
-        $db->begin();
+    	if ($conf->global->MAIN_CONTACT_CONTROL_DBL && $confirm!='yes') {
+    	
+    		//Control double creation
+        	$contactstatic=new Contact($db);
+        
+        	$result_find_dbl = $contactstatic->searchByEmail(GETPOST("email"));
+        	if ($result_find_dbl < 0) {
+        		setEventMessage($contactstatic->error,'errors');
+        	}else {
+        		if (is_array($result_find_dbl) && count($result_find_dbl)>0) {
+        
+        			
+        			$urlconfirm='token='.GETPOST("token");
+        			$urlconfirm.='&socid='.GETPOST("socid");
+        			$urlconfirm.='&lastname='.GETPOST("lastname");
+        			$urlconfirm.='&firstname='.GETPOST("firstname");
+        			$urlconfirm.='&civilite_id='.GETPOST("civilite_id");
+        			$urlconfirm.='&poste='.GETPOST("poste");
+        			$urlconfirm.='&address='.GETPOST("address");
+        			$urlconfirm.='&zipcode='.GETPOST("zipcode");
+        			$urlconfirm.='&town='.GETPOST("town");
+        			$urlconfirm.='&country_id='.GETPOST("country_id");
+        			$urlconfirm.='&state_id='.GETPOST("state_id");
+        			$urlconfirm.='&email='.trim(GETPOST("email"));
+        			$urlconfirm.='&phone_pro='.GETPOST("phone_pro");
+        			$urlconfirm.='&phone_perso='.GETPOST("phone_perso");
+        			$urlconfirm.='&phone_mobile='.GETPOST("phone_mobile");
+        			$urlconfirm.='&fax='.GETPOST("fax");
+        			$urlconfirm.='&jabberid='.GETPOST("jabberid");
+        			$urlconfirm.='&no_email='.GETPOST("no_email");
+        			$urlconfirm.='&priv='.GETPOST("priv");
+        			$urlconfirm.='&note_public='.GETPOST("note_public");
+        			$urlconfirm.='&note_private='.GETPOST("note_private");	 
+        			
+        			$need_confirm=1;
+        			$action='create';
+        			$error++;
+        
+        		}
+        		else {
+        			$need_confirm=0;
+        		}
+        	}
+    	}
+    	
+    	
+    	if (!$error) {
 
-        if ($canvas) $object->canvas=$canvas;
-
-        $object->socid			= $_POST["socid"];
-        $object->lastname		= $_POST["lastname"];
-        $object->firstname		= $_POST["firstname"];
-        $object->civilite_id	= $_POST["civilite_id"];
-        $object->poste			= $_POST["poste"];
-        $object->address		= $_POST["address"];
-        $object->zip			= $_POST["zipcode"];
-        $object->town			= $_POST["town"];
-        $object->country_id		= $_POST["country_id"];
-        $object->state_id       = $_POST["state_id"];
-        $object->email			= $_POST["email"];
-        $object->phone_pro		= $_POST["phone_pro"];
-        $object->phone_perso	= $_POST["phone_perso"];
-        $object->phone_mobile	= $_POST["phone_mobile"];
-        $object->fax			= $_POST["fax"];
-        $object->jabberid		= $_POST["jabberid"];
-		$object->no_email		= $_POST["no_email"];
-        $object->priv			= $_POST["priv"];
-        $object->note_public	= GETPOST("note_public");
-        $object->note_private	= GETPOST("note_private");
-        $object->statut			= 1; //Defult status to Actif
-
-        // Note: Correct date should be completed with location to have exact GM time of birth.
-        $object->birthday = dol_mktime(0,0,0,$_POST["birthdaymonth"],$_POST["birthdayday"],$_POST["birthdayyear"]);
-        $object->birthday_alert = $_POST["birthday_alert"];
-
-        // Fill array 'array_options' with data from add form
-		$ret = $extrafields->setOptionalsFromPost($extralabels,$object);
-
-        if (! $_POST["lastname"])
-        {
-            $error++; $errors[]=$langs->trans("ErrorFieldRequired",$langs->transnoentities("Lastname").' / '.$langs->transnoentities("Label"));
-            $action = 'create';
-        }
-
-        if (! $error)
-        {
-            $id =  $object->create($user);
-            if ($id <= 0)
-            {
-                $error++; $errors=array_merge($errors,($object->error?array($object->error):$object->errors));
-                $action = 'create';
-            }
-        }
-
-        if (! $error && $id > 0)
-        {
-            $db->commit();
-            if (! empty($backtopage)) $url=$backtopage;
-            else $url='fiche.php?id='.$id;
-            header("Location: ".$url);
-            exit;
-        }
-        else
-        {
-            $db->rollback();
-        }
+	        $db->begin();
+	
+	        if ($canvas) $object->canvas=$canvas;
+	
+	        $object->socid			= GETPOST("socid");
+	        $object->lastname		= GETPOST("lastname");
+	        $object->firstname		= GETPOST("firstname");
+	        $object->civilite_id	= GETPOST("civilite_id");
+	        $object->poste			= GETPOST("poste");
+	        $object->address		= GETPOST("address");
+	        $object->zip			= GETPOST("zipcode");
+	        $object->town			= GETPOST("town");
+	        $object->country_id		= GETPOST("country_id");
+	        $object->state_id       = GETPOST("state_id");
+	        $object->email			= GETPOST("email");
+	        $object->phone_pro		= GETPOST("phone_pro");
+	        $object->phone_perso	= GETPOST("phone_perso");
+	        $object->phone_mobile	= GETPOST("phone_mobile");
+	        $object->fax			= GETPOST("fax");
+	        $object->jabberid		= GETPOST("jabberid");
+			$object->no_email		= GETPOST("no_email");
+	        $object->priv			= GETPOST("priv");
+	        $object->note_public	= GETPOST("note_public");
+	        $object->note_private	= GETPOST("note_private");
+	        $object->statut			= 1; //Defult status to Actif
+	
+	        // Note: Correct date should be completed with location to have exact GM time of birth.
+	        $object->birthday = dol_mktime(0,0,0,$_POST["birthdaymonth"],$_POST["birthdayday"],$_POST["birthdayyear"]);
+	        $object->birthday_alert = $_POST["birthday_alert"];
+	
+	        // Fill array 'array_options' with data from add form
+			$ret = $extrafields->setOptionalsFromPost($extralabels,$object);
+	
+	        if (empty($object->lastname))
+	        {
+	            $error++; $errors[]=$langs->trans("ErrorFieldRequired",$langs->transnoentities("Lastname").' / '.$langs->transnoentities("Label"));
+	            $action = 'create';
+	        }
+	
+	        if (! $error)
+	        {
+	            $id =  $object->create($user);
+	            if ($id <= 0)
+	            {
+	                $error++; $errors=array_merge($errors,($object->error?array($object->error):$object->errors));
+	                $action = 'create';
+	            }
+	        }
+	
+	        if (! $error && $id > 0)
+	        {
+	            $db->commit();
+	            if (! empty($backtopage)) $url=$backtopage;
+	            else $url='fiche.php?id='.$id;
+	            header("Location: ".$url);
+	            exit;
+	        }
+	        else
+	        {
+	            $db->rollback();
+	        }
+    	}
     }
 
     if ($action == 'confirm_delete' && $confirm == 'yes' && $user->rights->societe->contact->supprimer)
@@ -307,6 +356,15 @@ llxHeader('',$langs->trans("ContactsAddresses"),$help_url);
 
 $form = new Form($db);
 $formcompany = new FormCompany($db);
+
+if ($conf->global->MAIN_CONTACT_CONTROL_DBL && $need_confirm) {
+
+	$confirm_text=$langs->trans("ConfirmCreationContactOtherContact").' '. GETPOST('email').'<br>';
+
+	$ret=$form->form_confirm($_SERVER['PHP_SELF'].'?'.$urlconfirm,$langs->trans("ConfirmCreationContact"),$confirm_text,"add",'','',1);
+	if ($ret == 'html') print '<br>';
+}
+
 
 $countrynotdefined=$langs->trans("ErrorSetACountryFirst").' ('.$langs->trans("SeeAbove").')';
 

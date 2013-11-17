@@ -595,13 +595,13 @@ $countrynotdefined=$langs->trans("ErrorSetACountryFirst").' ('.$langs->trans("Se
 
 if ($conf->global->MAIN_COMPANY_CONTROL_DBL && $need_confirm) {
 
-	$confirm_text=$langs->trans("ConfirmCreationOtherCustomer").' '. GETPOST('nom').'<br>';
+	$confirm_text=$langs->trans("ConfirmCreationThirdpartyOtherCustomer").' '. GETPOST('nom').'<br>';
 	
 	foreach($result_find_dbl as $find_cust) {
 		$confirm_text.=$find_cust->name.'<br>';
 	}
 	
-	$ret=$form->form_confirm($_SERVER['PHP_SELF'].'?'.$urlconfirm,$langs->trans("ConfirmCreation"),$confirm_text,"add",'','',1);
+	$ret=$form->form_confirm($_SERVER['PHP_SELF'].'?'.$urlconfirm,$langs->trans("ConfirmCreationThirdparty"),$confirm_text,"add",'','',1);
 	if ($ret == 'html') print '<br>';
 }
 
