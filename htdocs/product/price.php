@@ -199,7 +199,7 @@ if ($action == 'delete_all_price_by_qty') {
 /*****************************************************
  * Price by customer
 *****************************************************/
-if ($action == 'add_customer_price_confirm' && ! $_POST["cancel"] && ($user->rights->produit->creer || $user->rights->service->creer))
+if ($action == 'add_customer_price_confirm' && ! $_POST["cancel"] && ($user->rights->produit->custprix || $user->rights->service->custprix))
 {
 	$result = $object->fetch($id);
 	
@@ -239,7 +239,7 @@ if ($action == 'delete_customer_price' && ($user->rights->produit->supprimer || 
 	$action='';
 }
 
-if ($action == 'update_customer_price_confirm' && ! $_POST["cancel"] && ($user->rights->produit->creer || $user->rights->service->creer))
+if ($action == 'update_customer_price_confirm' && ! $_POST["cancel"] && ($user->rights->produit->custprix || $user->rights->service->custprix))
 {
 	
 	$prodcustprice->fetch(GETPOST('lineid','int'));
@@ -1193,7 +1193,7 @@ if (! empty ( $conf->global->PRODUIT_CUSTOMER_PRICES )) {
 		
 		print "\n" . '<div class="tabsAction">' . "\n";
 		
-		if ($user->rights->produit->creer || $user->rights->service->creer) {
+		if ($user->rights->produit->custprix || $user->rights->service->custprix) {
 			print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER ["PHP_SELF"] . '?action=add_customer_price&amp;id=' . $object->id . '">' . $langs->trans ( "AddCustomerPrice" ) . '</a></div>';
 		}
 		print "\n</div><br>\n";

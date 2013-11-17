@@ -37,6 +37,8 @@ function societe_prepare_head($object)
     global $langs, $conf, $user;
     $h = 0;
     $head = array();
+    
+    $langs->load("products");
 
     $head[$h][0] = DOL_URL_ROOT.'/societe/soc.php?socid='.$object->id;
     $head[$h][1] = $langs->trans("Card");
@@ -114,6 +116,15 @@ function societe_prepare_head($object)
         	$head[$h][2] = 'notify';
         	$h++;
         }
+    }
+    
+    if (($object->client==1 || $object->client==2 || $object->client==3) && (! empty ( $conf->global->PRODUIT_CUSTOMER_PRICES )))
+    {
+	    // price
+	    $head[$h][0] = DOL_URL_ROOT.'/societe/price.php?socid='.$object->id;
+	    $head[$h][1] = $langs->trans("CustomerPrices");
+	    $head[$h][2] = 'price';
+	    $h++;
     }
 
     // Log
@@ -542,7 +553,7 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
     
      print '<a name="contactlist"></a>';
     
-    print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'" name="formfilter">';
+    print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'#contactlist" name="formfilter">';
     print '<input type="hidden" name="socid" value="'.$object->id.'">';
     print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
     print '<input type="hidden" name="sortfield" value="'.$sortfield.'">';

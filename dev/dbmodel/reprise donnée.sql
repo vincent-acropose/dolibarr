@@ -287,7 +287,9 @@ INSERT INTO `llx_const` (`rowid`, `name`, `entity`, `value`, `type`, `visible`, 
 (540, 'MAIN_MODULE_WEBSERVICES', 1, '1', NULL, 0, NULL, '2013-11-05 17:33:25'),
 (541, 'WEBSERVICES_KEY', 1, '90c753e6c2919142caf7a63051ebc7ff', 'chaine', 0, '', '2013-11-05 17:33:30'),
 (542, 'MAIN_MODULE_HOLIDAY', 1, '1', NULL, 0, NULL, '2013-11-05 17:34:48'),
-(543, 'MAIN_MODULE_HOLIDAY_TABS_0', 1, 'user:+paidholidays:CPTitreMenu:holiday:$user->rights->holiday->write:/holiday/index.php?mainmenu=holiday&id=__ID__', 'chaine', 0, NULL, '2013-11-05 17:34:48');
+(543, 'MAIN_MODULE_HOLIDAY_TABS_0', 1, 'user:+paidholidays:CPTitreMenu:holiday:$user->rights->holiday->write:/holiday/index.php?mainmenu=holiday&id=__ID__', 'chaine', 0, NULL, '2013-11-05 17:34:48'),
+(536, 'MAIN_COMPANY_CONTROL_DBL', 1, '1', NULL, 0, NULL, '2013-11-05 17:24:49'),
+(536, 'MAIN_CONTACT_CONTROL_DBL', 1, '1', NULL, 0, NULL, '2013-11-05 17:24:49');
 
 
 
