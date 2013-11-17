@@ -49,7 +49,7 @@ class Productcustomerprice extends CommonObject {
 	var $localtax2_tx;
 	var $fk_user;
 	var $import_key;
-	var $lines=array();
+	var $lines = array ();
 
 	/**
 	 * Constructor
@@ -67,9 +67,10 @@ class Productcustomerprice extends CommonObject {
 	 *
 	 * @param User $user that creates
 	 * @param int $notrigger triggers after, 1=disable triggers
+	 * @param int $forceupdateaffiliate update price on each soc child
 	 * @return int <0 if KO, Id of created object if OK
 	 */
-	function create($user, $notrigger = 0) {
+	function create($user, $notrigger = 0, $forceupdateaffiliate = 0) {
 
 		global $conf, $langs;
 		$error = 0;
@@ -107,50 +108,38 @@ class Productcustomerprice extends CommonObject {
 			
 			// Check parameters
 			// Put here code to add control on parameters values
-			
 		
-		if ($this->price!='' || $this->price==0)
-		{
-			if ($this->price_base_type == 'TTC')
-			{
-				$this->price_ttc = price2num($this->price,'MU');
-				$this->price = price2num($this->price) / (1 + ($this->tva_tx / 100));
-				$this->price = price2num($this->price,'MU');
-		
-				if ($this->price_min!='' || $this->price_min==0)
-				{
-					$this->price_min_ttc = price2num($this->price_min,'MU');
-					$this->price_min = price2num($this->price_min) / (1 + ($this->tva_tx / 100));
-					$this->price_min = price2num($this->price_min,'MU');
+		if ($this->price != '' || $this->price == 0) {
+			if ($this->price_base_type == 'TTC') {
+				$this->price_ttc = price2num ( $this->price, 'MU' );
+				$this->price = price2num ( $this->price ) / (1 + ($this->tva_tx / 100));
+				$this->price = price2num ( $this->price, 'MU' );
+				
+				if ($this->price_min != '' || $this->price_min == 0) {
+					$this->price_min_ttc = price2num ( $this->price_min, 'MU' );
+					$this->price_min = price2num ( $this->price_min ) / (1 + ($this->tva_tx / 100));
+					$this->price_min = price2num ( $this->price_min, 'MU' );
+				} else {
+					$this->price_min = 0;
+					$this->price_min_ttc = 0;
 				}
-				else
-				{
-					$this->price_min=0;
-					$this->price_min_ttc=0;
-				}
-			}
-			else
-			{
-				$this->price = price2num($this->price,'MU');
-				$this->price_ttc = ( $this->recuperableonly != 1 ) ? price2num($this->price) * (1 + ($this->tva_tx / 100)) : $this->price;
-				$this->price_ttc = price2num($this->price_ttc,'MU');
-		
-				if ($this->price_min!='' || $this->price_min==0)
-				{
-					$this->price_min = price2num($this->price_min,'MU');
-					$this->price_min_ttc = price2num($this->price_min) * (1 + ($this->tva_tx / 100));
-					$this->price_min_ttc = price2num($this->price_min_ttc,'MU');
-					//print 'X'.$newminprice.'-'.$price_min;
-				}
-				else
-				{
-					$this->price_min=0;
-					$this->price_min_ttc=0;
+			} else {
+				$this->price = price2num ( $this->price, 'MU' );
+				$this->price_ttc = ($this->recuperableonly != 1) ? price2num ( $this->price ) * (1 + ($this->tva_tx / 100)) : $this->price;
+				$this->price_ttc = price2num ( $this->price_ttc, 'MU' );
+				
+				if ($this->price_min != '' || $this->price_min == 0) {
+					$this->price_min = price2num ( $this->price_min, 'MU' );
+					$this->price_min_ttc = price2num ( $this->price_min ) * (1 + ($this->tva_tx / 100));
+					$this->price_min_ttc = price2num ( $this->price_min_ttc, 'MU' );
+					// print 'X'.$newminprice.'-'.$price_min;
+				} else {
+					$this->price_min = 0;
+					$this->price_min_ttc = 0;
 				}
 			}
 		}
 		
-			
 		// Insert request
 		$sql = "INSERT INTO " . MAIN_DB_PREFIX . "product_customer_price(";
 		
@@ -215,6 +204,13 @@ class Productcustomerprice extends CommonObject {
 			}
 		}
 		
+		if (! $error) {
+			$result = $this->setPriceOnAffiliateThirdparty ($user, $forceupdateaffiliate );
+			if ($result < 0) {
+				$error ++;
+			}
+		}
+		
 		// Commit or rollback
 		if ($error) {
 			foreach ( $this->errors as $errmsg ) {
@@ -228,8 +224,6 @@ class Productcustomerprice extends CommonObject {
 			return $this->id;
 		}
 	}
-	
-	
 
 	/**
 	 * Load object in memory from the database
@@ -301,6 +295,7 @@ class Productcustomerprice extends CommonObject {
 	/**
 	 *
 	 *
+	 *
 	 * Load all objects in memory from database
 	 *
 	 * @param string $sortorder order
@@ -311,7 +306,7 @@ class Productcustomerprice extends CommonObject {
 	 * @param array $filter output
 	 * @return int <0 if KO, >0 if OK
 	 */
-	function fetch_all($sortorder='', $sortfield='', $limit=0, $offset=0, $filter = array()) {
+	function fetch_all($sortorder = '', $sortfield = '', $limit = 0, $offset = 0, $filter = array()) {
 
 		global $langs;
 		$sql = "SELECT";
@@ -348,29 +343,27 @@ class Productcustomerprice extends CommonObject {
 				if (strpos ( $key, 'date' )) 				// To allow $filter['YEAR(s.dated)']=>$year
 				{
 					$sql .= ' AND ' . $key . ' = \'' . $value . '\'';
-				} elseif ($key=='soc.nom') {
-					$sql .= ' AND ' . $key . ' LIKE \'%' . $value.'%\'';
-				}
-				else {
+				} elseif ($key == 'soc.nom') {
+					$sql .= ' AND ' . $key . ' LIKE \'%' . $value . '%\'';
+				} else {
 					$sql .= ' AND ' . $key . ' = ' . $value;
 				}
 			}
 		}
 		
-		if (!empty($sortfield)) {
+		if (! empty ( $sortfield )) {
 			$sql .= " ORDER BY " . $sortfield . ' ' . $sortorder;
 		}
 		if (! empty ( $limit )) {
 			$sql .= ' ' . $this->db->plimit ( $limit + 1, $offset );
 		}
 		
-		
 		dol_syslog ( get_class ( $this ) . "::fetch_all sql=" . $sql, LOG_DEBUG );
 		$resql = $this->db->query ( $sql );
 		if ($resql) {
 			
-			$this->lines=array();
-			$num = $this->db->num_rows($resql);
+			$this->lines = array ();
+			$num = $this->db->num_rows ( $resql );
 			
 			while ( $obj = $this->db->fetch_object ( $resql ) ) {
 				
@@ -397,7 +390,7 @@ class Productcustomerprice extends CommonObject {
 				$line->socname = $obj->socname;
 				$line->prodref = $obj->prodref;
 				
-				$this->lines[]=$line;
+				$this->lines [] = $line;
 			}
 			$this->db->free ( $resql );
 			
@@ -408,8 +401,7 @@ class Productcustomerprice extends CommonObject {
 			return - 1;
 		}
 	}
-	
-	
+
 	/**
 	 *
 	 *
@@ -424,11 +416,11 @@ class Productcustomerprice extends CommonObject {
 	 * @return int <0 if KO, >0 if OK
 	 */
 	function fetch_all_log($sortorder, $sortfield, $limit, $offset, $filter = array()) {
-	
+
 		global $langs;
 		$sql = "SELECT";
 		$sql .= " t.rowid,";
-	
+		
 		$sql .= " t.entity,";
 		$sql .= " t.datec,";
 		$sql .= " t.fk_product,";
@@ -452,43 +444,41 @@ class Productcustomerprice extends CommonObject {
 		$sql .= " WHERE soc.rowid=t.fk_soc ";
 		$sql .= " AND prod.rowid=t.fk_product ";
 		$sql .= " AND prod.entity IN (" . getEntity ( 'product', 1 ) . ")";
-	
+		
 		// Manage filter
 		if (count ( $filter ) > 0) {
 			foreach ( $filter as $key => $value ) {
 				if (strpos ( $key, 'date' )) 				// To allow $filter['YEAR(s.dated)']=>$year
 				{
 					$sql .= ' AND ' . $key . ' = \'' . $value . '\'';
-				} elseif ($key=='soc.nom') {
-					$sql .= ' AND ' . $key . ' LIKE \'%' . $value.'%\'';
-				}
-				else {
+				} elseif ($key == 'soc.nom') {
+					$sql .= ' AND ' . $key . ' LIKE \'%' . $value . '%\'';
+				} else {
 					$sql .= ' AND ' . $key . ' = ' . $value;
 				}
 			}
 		}
-	
-		if (!empty($sortfield)) {
+		
+		if (! empty ( $sortfield )) {
 			$sql .= " ORDER BY " . $sortfield . ' ' . $sortorder;
 		}
 		if (! empty ( $limit )) {
 			$sql .= ' ' . $this->db->plimit ( $limit + 1, $offset );
 		}
-	
-	
+		
 		dol_syslog ( get_class ( $this ) . "::fetch_all_log sql=" . $sql, LOG_DEBUG );
 		$resql = $this->db->query ( $sql );
 		if ($resql) {
-				
-			$this->lines=array();
-			$num = $this->db->num_rows($resql);
-				
+			
+			$this->lines = array ();
+			$num = $this->db->num_rows ( $resql );
+			
 			while ( $obj = $this->db->fetch_object ( $resql ) ) {
-	
+				
 				$line = new PriceByCustomerLine ();
-	
+				
 				$line->id = $obj->rowid;
-	
+				
 				$line->entity = $obj->entity;
 				$line->datec = $this->db->jdate ( $obj->datec );
 				$line->tms = $this->db->jdate ( $obj->tms );
@@ -507,11 +497,11 @@ class Productcustomerprice extends CommonObject {
 				$line->import_key = $obj->import_key;
 				$line->socname = $obj->socname;
 				$line->prodref = $obj->prodref;
-	
-				$this->lines[]=$line;
+				
+				$this->lines [] = $line;
 			}
 			$this->db->free ( $resql );
-				
+			
 			return $num;
 		} else {
 			$this->error = "Error " . $this->db->lasterror ();
@@ -525,9 +515,10 @@ class Productcustomerprice extends CommonObject {
 	 *
 	 * @param User $user that modifies
 	 * @param int $notrigger triggers after, 1=disable triggers
+	 * @param int $forceupdateaffiliate update price on each soc child
 	 * @return int <0 if KO, >0 if OK
 	 */
-	function update($user = 0, $notrigger = 0) {
+	function update($user = 0, $notrigger = 0, $forceupdateaffiliate = 0) {
 
 		global $conf, $langs;
 		$error = 0;
@@ -565,51 +556,39 @@ class Productcustomerprice extends CommonObject {
 			
 			// Check parameters
 			// Put here code to add a control on parameters values
-			
-			
 		
-		if ($this->price!='' || $this->price==0)
-		{
-			if ($this->price_base_type == 'TTC')
-			{
-				$this->price_ttc = price2num($this->price,'MU');
-				$this->price = price2num($this->price) / (1 + ($this->tva_tx / 100));
-				$this->price = price2num($this->price,'MU');
-		
-				if ($this->price_min!='' || $this->price_min==0)
-				{
-					$this->price_min_ttc = price2num($this->price_min,'MU');
-					$this->price_min = price2num($this->price_min) / (1 + ($this->tva_tx / 100));
-					$this->price_min = price2num($this->price_min,'MU');
+		if ($this->price != '' || $this->price == 0) {
+			if ($this->price_base_type == 'TTC') {
+				$this->price_ttc = price2num ( $this->price, 'MU' );
+				$this->price = price2num ( $this->price ) / (1 + ($this->tva_tx / 100));
+				$this->price = price2num ( $this->price, 'MU' );
+				
+				if ($this->price_min != '' || $this->price_min == 0) {
+					$this->price_min_ttc = price2num ( $this->price_min, 'MU' );
+					$this->price_min = price2num ( $this->price_min ) / (1 + ($this->tva_tx / 100));
+					$this->price_min = price2num ( $this->price_min, 'MU' );
+				} else {
+					$this->price_min = 0;
+					$this->price_min_ttc = 0;
 				}
-				else
-				{
-					$this->price_min=0;
-					$this->price_min_ttc=0;
-				}
-			}
-			else
-			{
-				$this->price = price2num($this->price,'MU');
-				$this->price_ttc = ( $this->recuperableonly != 1 ) ? price2num($this->price) * (1 + ($this->tva_tx / 100)) : $this->price;
-				$this->price_ttc = price2num($this->price_ttc,'MU');
-		
-				if ($this->price_min!='' || $this->price_min==0)
-				{
-					$this->price_min = price2num($this->price_min,'MU');
-					$this->price_min_ttc = price2num($this->price_min) * (1 + ($this->tva_tx / 100));
-					$this->price_min_ttc = price2num($this->price_min_ttc,'MU');
-					//print 'X'.$newminprice.'-'.$price_min;
-				}
-				else
-				{
-					$this->price_min=0;
-					$this->price_min_ttc=0;
+			} else {
+				$this->price = price2num ( $this->price, 'MU' );
+				$this->price_ttc = ($this->recuperableonly != 1) ? price2num ( $this->price ) * (1 + ($this->tva_tx / 100)) : $this->price;
+				$this->price_ttc = price2num ( $this->price_ttc, 'MU' );
+				
+				if ($this->price_min != '' || $this->price_min == 0) {
+					$this->price_min = price2num ( $this->price_min, 'MU' );
+					$this->price_min_ttc = price2num ( $this->price_min ) * (1 + ($this->tva_tx / 100));
+					$this->price_min_ttc = price2num ( $this->price_min_ttc, 'MU' );
+					// print 'X'.$newminprice.'-'.$price_min;
+				} else {
+					$this->price_min = 0;
+					$this->price_min_ttc = 0;
 				}
 			}
 		}
 		
-		//Do a copy of current record into log table
+		// Do a copy of current record into log table
 		// Insert request
 		$sql = "INSERT INTO " . MAIN_DB_PREFIX . "product_customer_price_log(";
 		
@@ -659,12 +638,11 @@ class Productcustomerprice extends CommonObject {
 			$this->errors [] = "Error " . $this->db->lasterror ();
 		}
 		
-			
 		// Update request
 		$sql = "UPDATE " . MAIN_DB_PREFIX . "product_customer_price SET";
 		
 		$sql .= " entity=" . $conf->entity . ",";
-		$sql .= " datec='" . $this->db->idate ( dol_now() ). "',";
+		$sql .= " datec='" . $this->db->idate ( dol_now () ) . "',";
 		$sql .= " tms=" . (dol_strlen ( $this->tms ) != 0 ? "'" . $this->db->idate ( $this->tms ) . "'" : 'null') . ",";
 		$sql .= " fk_product=" . (isset ( $this->fk_product ) ? $this->fk_product : "null") . ",";
 		$sql .= " fk_soc=" . (isset ( $this->fk_soc ) ? $this->fk_soc : "null") . ",";
@@ -681,8 +659,6 @@ class Productcustomerprice extends CommonObject {
 		$sql .= " import_key=" . (isset ( $this->import_key ) ? "'" . $this->db->escape ( $this->import_key ) . "'" : "null") . "";
 		
 		$sql .= " WHERE rowid=" . $this->id;
-		
-		
 		
 		dol_syslog ( get_class ( $this ) . "::update sql=" . $sql, LOG_DEBUG );
 		$resql = $this->db->query ( $sql );
@@ -705,6 +681,13 @@ class Productcustomerprice extends CommonObject {
 			}
 		}
 		
+		if (! $error) {
+			$result = $this->setPriceOnAffiliateThirdparty ($user, $forceupdateaffiliate );
+			if ($result < 0) {
+				$error ++;
+			}
+		}
+		
 		// Commit or rollback
 		if ($error) {
 			foreach ( $this->errors as $errmsg ) {
@@ -716,6 +699,105 @@ class Productcustomerprice extends CommonObject {
 		} else {
 			$this->db->commit ();
 			return 1;
+		}
+	}
+
+	/**
+	 *
+	 *
+	 * Force update price on child price
+	 * 
+	 * @param User $user that modifies
+	 * @param int $forceupdateaffiliate update price on each soc child
+	 * @return int <0 if KO, >0 if OK
+	 */
+	function setPriceOnAffiliateThirdparty($user,$forceupdateaffiliate) {
+		
+		$error=0;
+		
+		// Find all susidiaries
+		$sql = "SELECT s.rowid";
+		$sql .= " FROM " . MAIN_DB_PREFIX . "societe as s";
+		$sql .= " WHERE s.parent = " . $this->fk_soc;
+		$sql .= " AND s.entity IN (" . getEntity ( 'societe', 1 ) . ")";
+		
+		dol_syslog ( get_class ( $this ) . "::setPriceOnAffiliateThirdparty sql=" . $sql, LOG_DEBUG );
+		$resql = $this->db->query ( $sql );
+		
+		if ($resql) {
+			
+			$this->lines = array ();
+			$num = $this->db->num_rows ( $resql );
+			
+			while ( ($obj = $this->db->fetch_object ( $resql )) && (empty($error))) {
+				
+				//find if there is an existing line for the product and the subsidiaries
+				$prodsocprice=new Productcustomerprice($this->db);
+				
+				$filter = array (
+				't.fk_product' => $this->fk_product,
+				't.fk_soc'=> $obj->rowid
+				);	
+			
+				$result=$prodsocprice->fetch_all ( '', '', 0, 0, $filter );
+				if ($result < 0) {
+					$error++;
+					$this->error=$prodsocprice->error;
+				} else {
+					
+					//There is one line
+					if (count($prodsocprice->lines)>0) {
+						//If force update => Update
+						if (!empty($forceupdateaffiliate)) {
+							
+							$prodsocpriceupd=new Productcustomerprice($this->db);
+							$prodsocpriceupd->fetch($prodsocprice->lines[0]->id);
+							
+							$prodsocpriceupd->price=$this->price;
+							$prodsocpriceupd->price_min=$this->price_min;
+							$prodsocpriceupd->price_base_type=$this->price_base_type;
+							$prodsocpriceupd->tva_tx=$this->tva_tx;
+							$prodsocpriceupd->recuperableonly=$this->recuperableonly;
+								
+							$resultupd=$prodsocpriceupd->update($user,0,$forceupdateaffiliate);
+							if ($result < 0) {
+								$error++;
+								$this->error=$prodsocpriceupd->error;
+							}
+						}
+					}else {
+						//If line do not exits then create it
+						$prodsocpricenew=new Productcustomerprice($this->db);
+						$prodsocpricenew->fk_soc=$obj->rowid;
+						$prodsocpricenew->fk_product=$this->fk_product;
+						$prodsocpricenew->price=$this->price;
+						$prodsocpricenew->price_min=$this->price_min;
+						$prodsocpricenew->price_base_type=$this->price_base_type;
+						$prodsocpricenew->tva_tx=$this->tva_tx;
+						$prodsocpricenew->recuperableonly=$this->recuperableonly;
+						
+						$resultupd=$prodsocpricenew->create($user,0,$forceupdateaffiliate);
+						if ($result < 0) {
+							$error++;
+							$this->error=$prodsocpriceupd->error;
+						}
+					}
+				}
+				
+			}
+			$this->db->free ( $resql );
+			
+			
+			if (empty($error)) {
+				return 1;
+			} else {
+				return -1;
+			}
+
+		} else {
+			$this->error = "Error " . $this->db->lasterror ();
+			dol_syslog ( get_class ( $this ) . "::setPriceOnAffiliateThirdparty " . $this->error, LOG_ERR );
+			return - 1;
 		}
 	}
 

@@ -196,3 +196,4 @@ CostPmpHT=Cout à l'achat HT
 PriceByCustomer=Prix par client
 AddCustomerPrice=Ajouter un prix client
 PriceByCustomerLog=Historique Prix par client
+ForceUpdateChildPriceSoc=Force le prix pour filiales

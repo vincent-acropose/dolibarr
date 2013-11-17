@@ -1092,7 +1092,7 @@ if (! empty ( $conf->global->PRODUIT_CUSTOMER_PRICES )) {
 		// Count total nb of records
 		$nbtotalofrecords = 0;
 		if (empty ( $conf->global->MAIN_DISABLE_FULL_SCANLIST )) {
-			$nbtotalofrecords = $prodcustprice->fetch_all ( $sortorder, $sortfield, $conf->liste_limit, $offset, $filter );
+			$nbtotalofrecords = $prodcustprice->fetch_all ( '', '', 0, 0, $filter );
 		}
 		
 		$result = $prodcustprice->fetch_all ( $sortorder, $sortfield, $conf->liste_limit, $offset, $filter );
