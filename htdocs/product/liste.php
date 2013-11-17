@@ -184,8 +184,8 @@ else
 		}
 		else $sql.= " AND p.label LIKE '%".$db->escape($snom)."%'";
 }
-    if (isset($tosell) && dol_strlen($tosell) > 0) $sql.= " AND p.tosell = ".$db->escape($tosell);
-    if (isset($tobuy) && dol_strlen($tobuy) > 0)   $sql.= " AND p.tobuy = ".$db->escape($tobuy);
+    if (isset($tosell) && dol_strlen($tosell) > 0 && $tosell!=-1) $sql.= " AND p.tosell = ".$db->escape($tosell);
+    if (isset($tobuy) && dol_strlen($tobuy) > 0 && $tobuy!=-1)   $sql.= " AND p.tobuy = ".$db->escape($tobuy);
     if (dol_strlen($canvas) > 0)                    $sql.= " AND p.canvas = '".$db->escape($canvas)."'";
     if ($catid > 0)    $sql.= " AND cp.fk_categorie = ".$catid;
     if ($catid == -2)  $sql.= " AND cp.fk_categorie IS NULL";
@@ -302,8 +302,9 @@ else
     		if (empty($conf->global->PRODUIT_MULTIPRICES)) print_liste_field_titre($langs->trans("SellingPrice"), $_SERVER["PHP_SELF"], "p.price",$param,"",'align="right"',$sortfield,$sortorder);
     		print '<td class="liste_titre" align="right">'.$langs->trans("BuyingPriceMinShort").'</td>';
     		if (! empty($conf->stock->enabled) && $user->rights->stock->lire && $type != 1) print '<td class="liste_titre" align="right">'.$langs->trans("PhysicalStock").'</td>';
-    		print_liste_field_titre($langs->trans("Sell"), $_SERVER["PHP_SELF"], "p.tosell",$param,"",'align="right"',$sortfield,$sortorder);
-            print_liste_field_titre($langs->trans("Buy"), $_SERVER["PHP_SELF"], "p.tobuy",$param,"",'align="right"',$sortfield,$sortorder);
+    		print_liste_field_titre($langs->trans("Sell"), $_SERVER["PHP_SELF"], "p.tosell",$param,"",'align="center"',$sortfield,$sortorder);
+            print_liste_field_titre($langs->trans("Buy"), $_SERVER["PHP_SELF"], "p.tobuy",$param,"",'align="center"',$sortfield,$sortorder);
+            print '<td width="1%">&nbsp;</td>';
     		print "</tr>\n";
 
     		// Lignes des champs de filtre
@@ -353,8 +354,12 @@ else
     			print '</td>';
     		}
 
-    		print '<td class="liste_titre">';
-            print '&nbsp;';
+    		print '<td align="center">';  		
+            print $form->selectarray('tosell', array('0'=>$langs->trans('ProductStatusNotOnSellShort'),'1'=>$langs->trans('ProductStatusOnSellShort')),$tosell,1);
+            print '</td >';
+            
+            print '<td align="center">';
+            print $form->selectarray('tobuy', array('0'=>$langs->trans('ProductStatusNotOnBuyShort'),'1'=>$langs->trans('ProductStatusOnBuyShort')),$tobuy,1);
             print '</td>';
 
     		print '<td class="liste_titre" align="right">';
@@ -469,11 +474,13 @@ else
     			}
 
     			// Status (to buy)
-    			print '<td align="right" class="nowrap">'.$product_static->LibStatut($objp->tosell,5,0).'</td>';
+    			print '<td align="center" class="nowrap">'.$product_static->LibStatut($objp->tosell,5,0).'</td>';
 
                 // Status (to sell)
-                print '<td align="right" class="nowrap">'.$product_static->LibStatut($objp->tobuy,5,1).'</td>';
+                print '<td align="center" class="nowrap">'.$product_static->LibStatut($objp->tobuy,5,1).'</td>';
 
+                print '<td>&nbsp;</td>';
+                
                 print "</tr>\n";
     			$i++;
     		}
