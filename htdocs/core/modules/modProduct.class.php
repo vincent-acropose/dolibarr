@@ -128,7 +128,7 @@ class modProduct extends DolibarrModules
         
         $this->rights[$r][0] = 2354687;	// Must be same permission than in service module
         $this->rights[$r][1] = 'Mettre ajour les prix produits par client';
-        $this->rights[$r][2] = 'r';
+        $this->rights[$r][2] = 'w';
         $this->rights[$r][3] = 0;
         $this->rights[$r][4] = 'custprix';
         $r++;
