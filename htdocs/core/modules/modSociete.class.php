@@ -250,6 +250,14 @@ class modSociete extends DolibarrModules
 		$this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
 		$this->rights[$r][4] = 'contact';
 		$this->rights[$r][5] = 'export';
+		
+		$r++;
+		$this->rights[$r][0] = 265486;
+		$this->rights[$r][1] = 'Modifier les commercieux d\'un tiers';
+		$this->rights[$r][2] = 'r';
+		$this->rights[$r][3] = 1;
+		$this->rights[$r][4] = 'client';
+		$this->rights[$r][5] = 'comm';
 
 
 		// Exports

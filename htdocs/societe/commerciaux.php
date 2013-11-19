@@ -214,7 +214,7 @@ if ($_GET["socid"])
 	print "</div>\n";
 
 
-	if ($user->rights->societe->creer && $user->rights->societe->client->voir)
+	if ($user->rights->societe->creer && $user->rights->societe->client->comm)
 	{
 		/*
 		 * Liste

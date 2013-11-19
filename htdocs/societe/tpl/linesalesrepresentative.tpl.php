@@ -4,7 +4,7 @@
         print '<table width="100%" class="nobordernopadding"><tr><td>';
         print $langs->trans('SalesRepresentatives');
         print '<td><td align="right">';
-        if ($user->rights->societe->creer && $user->rights->societe->client->voir)
+        if ($user->rights->societe->creer && $user->rights->societe->client->comm)
         print '<a href="'.DOL_URL_ROOT.'/societe/commerciaux.php?socid='.$object->id.'">'.img_edit().'</a>';
         else
         print '&nbsp;';
