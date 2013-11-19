@@ -152,7 +152,7 @@ else
 }
 print '</td></tr>';
 
-// COMPANY_USE_SEARCH_TO_SELECT
+// USER_HIDE_INACTIVE_IN_COMBOBOX
 $var=!$var;
 print "<tr ".$bc[$var].">";
 print '<td>'.$langs->trans("HideClosedUserComboBox").'</td>';

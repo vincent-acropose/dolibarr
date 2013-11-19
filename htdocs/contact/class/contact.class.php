@@ -486,7 +486,7 @@ class Contact extends CommonObject
 
 		$langs->load("companies");
 
-		$sql = "SELECT c.rowid, c.fk_soc, c.civilite as civilite_id, c.lastname, c.firstname,";
+		$sql = "SELECT c.rowid, c.fk_soc, c.ref_ext, c.civilite as civilite_id, c.lastname, c.firstname,";
 		$sql.= " c.address, c.zip, c.town,";
 		$sql.= " c.fk_pays as country_id,";
 		$sql.= " c.fk_departement,";
@@ -516,6 +516,7 @@ class Contact extends CommonObject
 
 				$this->id				= $obj->rowid;
 				$this->ref				= $obj->rowid;
+				$this->ref_ext			= $obj->ref_ext;
 				$this->civilite_id		= $obj->civilite_id;
 				$this->lastname			= $obj->lastname;
 				$this->firstname		= $obj->firstname;

@@ -661,8 +661,27 @@ INSERT INTO `llx_categorie` (`rowid`, `entity`, `fk_parent`, `label`, `type`, `d
 (36, 1, 32, 'Formateur occasionnel', 4, '', NULL, 0, NULL),
 (37, 1, 32, 'Bénévole', 4, '', NULL, 0, NULL);
 
---Insert customer typed account into thridparty
 
+
+TRUNCATE TABLE llx_c_typent;
+INSERT INTO `llx_c_typent` (`id`, `code`, `libelle`, `active`, `module`) VALUES
+(0, 'TE_UNKNOWN', '-', 1, NULL),
+(1, 'TE_STARTUP', 'Start-up', 0, NULL),
+(2, 'TE_GROUP', 'Entreprise française', 0, NULL),
+(3, 'TE_PAY', 'Payeur', 1, NULL),
+(4, 'TE_SMALL', 'TPE', 0, NULL),
+(5, 'TE_ADMIN', 'Pouvoirs publics', 1, NULL),
+(6, 'TE_WHOLE', 'Grossiste', 0, NULL),
+(7, 'TE_RETAIL', 'Revendeur', 0, NULL),
+(8, 'TE_PRIVATE', 'Particulier', 1, NULL),
+(100, 'TE_OTHER', 'Autres', 0, NULL),
+(101, 'TE_ENT_FR', 'Entreprise française', 1, NULL),
+(102, 'TE_ENT_ET', 'Entreprise étrangère', 1, NULL),
+(103, 'TE_OPCA', 'OPCA', 1, NULL),
+(104, 'TE_FORMATION', 'Prestataire de formation', 1, NULL);
+
+
+--Insert customer typed account into thridparty
 TRUNCATE TABLE  llx_societe;
 INSERT INTO llx_societe(nom, 
 entity, 
@@ -796,7 +815,7 @@ LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=act.created_by_sf_user_id
 LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
 LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=act.modified_by_sf_user_id
 LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
-WHERE act.type NOT IN ('Z99','IND','JOU','REL','FOU');
+WHERE act.type IN ('ENT','EE','OP','PAY','PP','IND', 'PAR');
 
 --Import supplier
 INSERT INTO llx_societe(nom, 
@@ -1065,7 +1084,56 @@ LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
 LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=act.modified_by_sf_user_id
 LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
 WHERE act.id NOT IN (SELECT account_id from thirdparty WHERE account_id IS NOT NULL )
-AND act.type NOT IN ('Z99','IND','JOU','REL','FOU');
+AND act.type IN ('ENT','EE','OP','PAY','PP','IND', 'PAR');
+
+
+UPDATE llx_societe SET fk_typent=101 WHERE import_key IN (SELECT id from account where type='ENT');
+UPDATE llx_societe SET fk_typent=102 WHERE import_key IN (SELECT id from account where type='EE');
+UPDATE llx_societe SET fk_typent=103 WHERE import_key IN (SELECT id from account where type='OP');
+UPDATE llx_societe SET fk_typent=3 WHERE import_key IN (SELECT id from account where type='PAY');
+UPDATE llx_societe SET fk_typent=5 WHERE import_key IN (SELECT id from account where type='PP');
+UPDATE llx_societe SET fk_typent=8 WHERE import_key IN (SELECT id from account where type='IND');
+
+UPDATE llx_societe SET fk_prospectlevel='PL_HIGH' WHERE import_key IN (SELECT id from account where cycle_vie='01');
+UPDATE llx_societe SET fk_prospectlevel='PL_MEDIUM' WHERE import_key IN (SELECT id from account where cycle_vie='02');
+UPDATE llx_societe SET fk_prospectlevel='PL_LOW' WHERE import_key IN (SELECT id from account where cycle_vie='03');
+UPDATE llx_societe SET fk_prospectlevel='PL_NONE' WHERE import_key IN (SELECT id from account where cycle_vie='04');
+UPDATE llx_societe SET fk_prospectlevel='PL_NONE' WHERE import_key IN (SELECT id from account where cycle_vie='05');
+
+
+
+INSERT INTO llx_societe_extrafields (fk_object,ts_secteur,ts_prospection)
+SELECT 
+llx_societe.rowid,
+act.secteur,
+CASE WHEN (act.approche='MM') THEN (select rowid from llx_user where login='jandrian')
+	WHEN (act.approche='NAD') THEN (select rowid from llx_user where login='dnguyen')
+	WHEN (act.approche='MC') THEN (select rowid from llx_user where login='mclement')
+	ELSE null END
+FROM  account as act INNER JOIN llx_societe ON llx_societe.import_key=act.id AND act.secteur IS NOT NULL;
+
+UPDATE llx_societe_extrafields SET ts_secteur='AERO' WHERE ts_secteur IN ('09');
+UPDATE llx_societe_extrafields SET ts_secteur='ALIM' WHERE ts_secteur IN ('23');
+UPDATE llx_societe_extrafields SET ts_secteur='AUTO' WHERE ts_secteur IN ('18');
+UPDATE llx_societe_extrafields SET ts_secteur='BTP' WHERE ts_secteur IN ('31', '08');
+UPDATE llx_societe_extrafields SET ts_secteur='CHIM' WHERE ts_secteur IN ('21', '38', '40');
+UPDATE llx_societe_extrafields SET ts_secteur='CONS' WHERE ts_secteur IN ('26', '71');
+UPDATE llx_societe_extrafields SET ts_secteur='CONSO' WHERE ts_secteur IN ('04');
+UPDATE llx_societe_extrafields SET ts_secteur='DISTRI' WHERE ts_secteur IN ('10');
+UPDATE llx_societe_extrafields SET ts_secteur='EDUC' WHERE ts_secteur IN ('29');
+UPDATE llx_societe_extrafields SET ts_secteur='ENERG' WHERE ts_secteur IN ('15', '33', '36', '41');
+UPDATE llx_societe_extrafields SET ts_secteur='FIN' WHERE ts_secteur IN ('06', '42');
+UPDATE llx_societe_extrafields SET ts_secteur='INGEN' WHERE ts_secteur IN ('13', '37');
+UPDATE llx_societe_extrafields SET ts_secteur='LUX' WHERE ts_secteur IN ('32');
+UPDATE llx_societe_extrafields SET ts_secteur='PUB' WHERE ts_secteur IN ('12');
+UPDATE llx_societe_extrafields SET ts_secteur='SP' WHERE ts_secteur IN ('02');
+UPDATE llx_societe_extrafields SET ts_secteur='TIC' WHERE ts_secteur IN ('22', '28');
+UPDATE llx_societe_extrafields SET ts_secteur='TOURISM' WHERE ts_secteur IN ('01');
+UPDATE llx_societe_extrafields SET ts_secteur='TRANSP' WHERE ts_secteur IN ('30');
+UPDATE llx_societe_extrafields SET ts_secteur=NULL WHERE ts_secteur IN ('00', '05', '27', '34', '35', '39', '43');
+
+
+
 
 
 TRUNCATE TABLE llx_socpeople;
@@ -1128,7 +1196,7 @@ NULL,
 0,
 IFNULL(usercrea.rowid,1), 
 IFNULL(usermod.rowid,1), 
-contact.remarque,
+CONCAT_WS(' ',contact.remarque, contact.mardi),
 NULL,
 NULL,
 NULL,
@@ -1146,14 +1214,51 @@ LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
 WHERE contact.nom IS NOT NULL AND TRIM(contact.nom)<>'';
 
 
-INSERT INTO llx_socpeople_extrafields  (fk_object,ct_anglais,ct_service) 
+INSERT INTO llx_socpeople_extrafields  (fk_object,ct_anglais,ct_service, ct_magellan) 
 SELECT cont.rowid,
 CASE WHEN (contact.samedi='EN') THEN 1 ELSE 0 END,
-fonc.fonction
+fonc.fonction,
+CASE WHEN (contact.lundi='Magellan' OR contact.lundi='Cercle Magellan') THEN 1 ELSE 0 END
 FROM llx_socpeople as cont 
 INNER JOIN contact ON cont.import_key=contact.id
 LEFT OUTER JOIN ref_fonc as fonc ON fonc.fonction=contact.fonction;
- 
+
+UPDATE llx_socpeople_extrafields SET ct_service='DMA' WHERE ct_service='CDP';
+UPDATE llx_socpeople_extrafields SET ct_service='AUT' WHERE ct_service='CF';
+UPDATE llx_socpeople_extrafields SET ct_service='DFI' WHERE ct_service='COM';
+UPDATE llx_socpeople_extrafields SET ct_service='DEX' WHERE ct_service='DDI';
+UPDATE llx_socpeople_extrafields SET ct_service='DG' WHERE ct_service='DGA';
+UPDATE llx_socpeople_extrafields SET ct_service='DG' WHERE ct_service='DGN';
+UPDATE llx_socpeople_extrafields SET ct_service='DRD' WHERE ct_service='DIN';
+UPDATE llx_socpeople_extrafields SET ct_service='DJU' WHERE ct_service='DJ';
+UPDATE llx_socpeople_extrafields SET ct_service='AUT' WHERE ct_service='DMK';
+UPDATE llx_socpeople_extrafields SET ct_service='DBU' WHERE ct_service='DOP';
+UPDATE llx_socpeople_extrafields SET ct_service=null WHERE ct_service='DPE';
+UPDATE llx_socpeople_extrafields SET ct_service='DBU' WHERE ct_service='DRE';
+UPDATE llx_socpeople_extrafields SET ct_service='DG' WHERE ct_service='DST';
+UPDATE llx_socpeople_extrafields SET ct_service=null WHERE ct_service='DTC';
+UPDATE llx_socpeople_extrafields SET ct_service='AUT' WHERE ct_service='GEN';
+UPDATE llx_socpeople_extrafields SET ct_service='RMI' WHERE ct_service='INT';
+UPDATE llx_socpeople_extrafields SET ct_service='RGC' WHERE ct_service='MAG';
+UPDATE llx_socpeople_extrafields SET ct_service='AUT' WHERE ct_service='PAR';
+UPDATE llx_socpeople_extrafields SET ct_service='DG' WHERE ct_service='PDG';
+UPDATE llx_socpeople_extrafields SET ct_service='DG' WHERE ct_service='PRE';
+UPDATE llx_socpeople_extrafields SET ct_service='AUT' WHERE ct_service='RDD';
+UPDATE llx_socpeople_extrafields SET ct_service='RDI' WHERE ct_service='RDI';
+UPDATE llx_socpeople_extrafields SET ct_service='RRH' WHERE ct_service='RDP';
+UPDATE llx_socpeople_extrafields SET ct_service='DFO' WHERE ct_service='REL';
+UPDATE llx_socpeople_extrafields SET ct_service='RRH' WHERE ct_service='REP';
+UPDATE llx_socpeople_extrafields SET ct_service='RMI' WHERE ct_service='REX';
+UPDATE llx_socpeople_extrafields SET ct_service='RGC' WHERE ct_service='RGC';
+UPDATE llx_socpeople_extrafields SET ct_service='RMI' WHERE ct_service='RIM';
+UPDATE llx_socpeople_extrafields SET ct_service='DFI' WHERE ct_service='RPA';
+UPDATE llx_socpeople_extrafields SET ct_service='RRH' WHERE ct_service='RRC';
+UPDATE llx_socpeople_extrafields SET ct_service='ASS' WHERE ct_service='SEC';
+UPDATE llx_socpeople_extrafields SET ct_service='DG' WHERE ct_service='SGN';
+UPDATE llx_socpeople_extrafields SET ct_service='ASS' WHERE ct_service='STA';
+UPDATE llx_socpeople_extrafields SET ct_service='DG' WHERE ct_service='VPR';
+
+
 
 
 --update commercial on customer
@@ -1225,8 +1330,10 @@ room.modified,--tms,
 room.id -- importkey
 FROM (room
 , llx_societe as soc)
-LEFT OUTER JOIN llx_user as usercrea ON room.created_by_sf_user_id=usercrea.import_key
-LEFT OUTER JOIN llx_user as usermod ON room.modified_by_sf_user_id=usermod.import_key
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=room.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=room.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
 WHERE soc.import_key='inconnue'
 AND room.code NOT LIKE 'Z9999%';
 
@@ -1247,7 +1354,10 @@ analyt.intitule,
 CASE WHEN (analyt.intitule='NE PAS UTILISER') THEN 0 ELSE 1 END,
 NOW()
 FROM stage 
-INNER JOIN analyt ON stage.analyt=analyt.code;
+INNER JOIN analyt ON stage.analyt=analyt.code
+ORDER BY analyt.intitule;
+
+UPDATE llx_agefodd_formation_catalogue_type SET sort=rowid;
 
 --import training catalogue
 TRUNCATE TABLE llx_agefodd_formation_catalogue;
@@ -1303,8 +1413,10 @@ FROM stage
 INNER JOIN typcours ON typcours.code=stage.typcours
 LEFT OUTER JOIN trainingprogramdiscipline as but ON but.stage_id=stage.id
 LEFT OUTER JOIN matiere ON matiere.matiere=but.matiere
-LEFT OUTER JOIN llx_user as usercrea ON stage.created_by_sf_user_id=usercrea.import_key
-LEFT OUTER JOIN llx_user as usermod ON stage.modified_by_sf_user_id=usermod.import_key
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=stage.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=stage.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
 LEFT OUTER JOIN llx_agefodd_formation_catalogue_type as cattype ON cattype.code=stage.analyt
 WHERE typcours.intitule <> 'NE PAS UTILISER';
 
@@ -1672,8 +1784,10 @@ INNER JOIN convct ON sess.id=convct.session_id
 LEFT OUTER JOIN proct ON sess.id=proct.session_id 
 LEFT OUTER JOIN account ON account.id=proct.account_id
 LEFT OUTER JOIN llx_societe as soc ON soc.import_key=account.id
-LEFT OUTER JOIN llx_user as usercrea ON sess.created_by_sf_user_id=usercrea.import_key
-LEFT OUTER JOIN llx_user as usermod ON sess.modified_by_sf_user_id=usermod.import_key
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=sess.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=sess.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
 GROUP BY sess.id;
 
 
@@ -1761,8 +1875,10 @@ LEFT OUTER JOIN convct ON sess.id=convct.session_id
 LEFT OUTER JOIN proct ON sess.id=proct.session_id 
 LEFT OUTER JOIN account ON account.id=proct.account_id
 LEFT OUTER JOIN llx_societe as soc ON soc.import_key=account.id
-LEFT OUTER JOIN llx_user as usercrea ON sess.created_by_sf_user_id=usercrea.import_key
-LEFT OUTER JOIN llx_user as usermod ON sess.modified_by_sf_user_id=usermod.import_key
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=sess.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=sess.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
 WHERE convct.id IS NULL AND YEAR(sess.datdeb)>2000
 GROUP BY sess.id;
 
@@ -1948,8 +2064,11 @@ NULL,
 NULL,
 interv.id
 FROM  interv
-LEFT OUTER JOIN llx_user as usercrea ON interv.created_by_sf_user_id=usercrea.import_key
-LEFT OUTER JOIN llx_user as usermod ON interv.modified_by_sf_user_id=usermod.import_key;
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=interv.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=interv.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email;
+
 
 UPDATE llx_societe SET code_fournisseur=CONCAT_WS('','F', LPAD(rowid,5,'0')), tms=tms WHERE fournisseur=1;
 UPDATE llx_societe SET code_client=CONCAT_WS('','C', LPAD(rowid,5,'0')), tms=tms WHERE client=1;
@@ -2028,8 +2147,10 @@ interv.actif
 FROM interv
 INNER JOIN llx_societe as soc ON soc.import_key=interv.id
 LEFT OUTER JOIN llx_c_civilite as civ ON civ.code=interv.civilite
-LEFT OUTER JOIN llx_user as usercrea ON interv.created_by_sf_user_id=usercrea.import_key
-LEFT OUTER JOIN llx_user as usermod ON interv.modified_by_sf_user_id=usermod.import_key;
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=interv.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=interv.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email;
 
 --Insert Consultant categorie for contact
 TRUNCATE TABLE llx_categorie_contact;
@@ -2063,8 +2184,10 @@ IFNULL(usermod.rowid,1), --fk_user_mod
 IFNULL(interv.modified,NOW()) --tms
 FROM llx_socpeople 
 INNER JOIN interv ON interv.id=llx_socpeople.import_key
-LEFT OUTER JOIN llx_user as usercrea ON interv.created_by_sf_user_id=usercrea.import_key
-LEFT OUTER JOIN llx_user as usermod ON interv.modified_by_sf_user_id=usermod.import_key;
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=interv.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=interv.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
 
 
 --Import trainer into session
@@ -2087,8 +2210,10 @@ FROM pls
 INNER JOIN llx_agefodd_session ON llx_agefodd_session.import_key=pls.session_id
 INNER JOIN llx_socpeople ON llx_socpeople.import_key=pls.interv_id
 INNER JOIN llx_agefodd_formateur ON llx_agefodd_formateur.fk_socpeople=llx_socpeople.rowid
-LEFT OUTER JOIN llx_user as usercrea ON pls.created_by_sf_user_id=usercrea.import_key
-LEFT OUTER JOIN llx_user as usermod ON pls.modified_by_sf_user_id=usermod.import_key
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=pls.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=pls.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
 WHERE pls.status='confirmed';
 
 
@@ -2124,8 +2249,10 @@ INNER JOIN llx_socpeople ON llx_socpeople.import_key=pls.interv_id
 INNER JOIN llx_agefodd_formateur ON llx_agefodd_formateur.fk_socpeople=llx_socpeople.rowid
 INNER JOIN llx_agefodd_session_formateur ON llx_agefodd_session.rowid=llx_agefodd_session_formateur.fk_session AND llx_agefodd_formateur.rowid=llx_agefodd_session_formateur.fk_agefodd_formateur
 LEFT OUTER JOIN sesfr as coutconsultant ON coutconsultant.session_id=pls.session_id AND coutconsultant.typfr='CON' AND coutconsultant.interv_id=pls.interv_id
-LEFT OUTER JOIN llx_user as usercrea ON pls.created_by_sf_user_id=usercrea.import_key
-LEFT OUTER JOIN llx_user as usermod ON pls.modified_by_sf_user_id=usermod.import_key
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=pls.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=pls.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
 WHERE pls.status='confirmed';
 
 --import trainee
@@ -2172,8 +2299,10 @@ FROM eleves
 INNER JOIN point ON eleves.id=point.eleves_id
 INNER JOIN session as sess ON sess.id=point.session_id
 LEFT OUTER JOIN llx_societe as soc ON soc.import_key=eleves.account_id
-LEFT OUTER JOIN llx_user as usercrea ON eleves.created_by_sf_user_id=usercrea.import_key
-LEFT OUTER JOIN llx_user as usermod ON eleves.modified_by_sf_user_id=usermod.import_key;
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=eleves.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=eleves.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email;
 
 --Add trainee to session
 TRUNCATE TABLE llx_agefodd_session_stagiaire;
@@ -2202,8 +2331,10 @@ INNER JOIN point ON eleves.id=point.eleves_id
 INNER JOIN session as sess ON sess.id=point.session_id
 INNER JOIN llx_agefodd_session ON sess.id=llx_agefodd_session.import_key
 INNER JOIN llx_agefodd_stagiaire ON llx_agefodd_stagiaire.import_key=point.eleves_id
-LEFT OUTER JOIN llx_user as usercrea ON eleves.created_by_sf_user_id=usercrea.import_key
-LEFT OUTER JOIN llx_user as usermod ON eleves.modified_by_sf_user_id=usermod.import_key;
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=eleves.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=eleves.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email;
 
 --Update number of trainee per session
 UPDATE llx_agefodd_session SET nb_stagiaire=(SELECT count(rowid) FROM llx_agefodd_session_stagiaire WHERE fk_session_agefodd = llx_agefodd_session.rowid), tms=tms WHERE (llx_agefodd_session.force_nb_stagiaire=0 OR llx_agefodd_session.force_nb_stagiaire IS NULL);
@@ -2320,7 +2451,8 @@ NULL  --fk_delivery_address
 FROM proct 
 INNER JOIN llx_societe as soc ON soc.import_key=proct.account_id
 INNER JOIN prolig ON prolig.proct_id=proct.id
-LEFT OUTER JOIN llx_user as usercrea ON proct.created_by_sf_user_id=usercrea.import_key
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=proct.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
 GROUP BY proct.id;
 
 
@@ -2442,12 +2574,6 @@ INNER JOIN llx_agefodd_session ON llx_agefodd_session.import_key=sess.id
 INNER JOIN account ON account.id=proct.account_id
 INNER JOIN llx_societe ON llx_societe.import_key=account.id;
 
-
-
---------------------------------------------------------
---------------------------------------------------------
---------------------------------------------------------
---------------------------------------------------------
 
 --Import Invoice payé
 TRUNCATE TABLE llx_facture;
@@ -3637,8 +3763,11 @@ LEFT OUTER JOIN planningitem_uobject as contactsoc ON planningitem.id=contactsoc
 LEFT OUTER JOIN planningitem_uobject as contctlink ON contctlink.planningitem_uobject_id=contactsoc.id
 LEFT OUTER JOIN llx_socpeople ON llx_socpeople.import_key=contctlink.uobject_id
 LEFT OUTER JOIN llx_societe ON llx_societe.import_key=contactsoc.uobject_id
-LEFT OUTER JOIN llx_user as usercrea ON planningitem.created_by_sf_user_id=usercrea.import_key
-LEFT OUTER JOIN llx_user as usermod ON planningitem.modified_by_sf_user_id=usermod.import_key
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=planningitem.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=planningitem.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email;
+
 WHERE planningitem.planningitemtype_code='BES'
 AND llx_societe.rowid IS NOT NULL AND planningitem.deleted=0;
 
@@ -3702,8 +3831,10 @@ LEFT OUTER JOIN planningitem_uobject as contactsoc ON planningitem.id=contactsoc
 LEFT OUTER JOIN planningitem_uobject as contctlink ON contctlink.planningitem_uobject_id=contactsoc.id
 LEFT OUTER JOIN llx_socpeople ON llx_socpeople.import_key=contctlink.uobject_id
 LEFT OUTER JOIN llx_societe ON llx_societe.import_key=contactsoc.uobject_id
-LEFT OUTER JOIN llx_user as usercrea ON planningitem.created_by_sf_user_id=usercrea.import_key
-LEFT OUTER JOIN llx_user as usermod ON planningitem.modified_by_sf_user_id=usermod.import_key
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=planningitem.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=planningitem.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email;
 WHERE planningitem.planningitemtype_code='DOC'
 AND llx_societe.rowid IS NOT NULL
 AND planningitem.deleted=0;
