@@ -347,6 +347,7 @@ function ajax_combobox($htmlname, $event=array(), $minLengthToAutocomplete=0)
 							}
 						});
 						$("select#" + htmlname).html(response.value);
+						$(":button#button" + htmlname).show();
 					});
 		}
 	});';

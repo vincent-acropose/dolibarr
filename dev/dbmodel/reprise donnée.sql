@@ -35,7 +35,6 @@ ALTER TABLE llx_user ADD INDEX idx_llx_user_import_key (import_key);
 ALTER TABLE llx_socpeople ADD INDEX idx_llx_socpeople_import_key (import_key);
 
 
-
 TRUNCATE TABLE llx_extrafields;
 INSERT INTO `llx_extrafields` ( `name`, `entity`, `elementtype`, `tms`, `label`, `type`, `size`, `fieldunique`, `fieldrequired`, `pos`, `param`) VALUES
 ( 'ts_partenaire', 1, 'societe', '2013-10-27 08:52:49', 'Partenaire', 'select', '', 0, 0, 2, 'a:1:{s:7:"options";a:7:{s:0:"";N;s:4:"FORM";s:24:"Prestataire de formation";s:4:"UNIV";s:11:"Université";s:3:"MOB";s:24:"Mobilité internationale";s:5:"OUTIL";s:6:"Outils";s:3:"COM";s:13:"Communication";s:3:"AUT";s:6:"Autres";}}'),
@@ -257,7 +256,7 @@ INSERT INTO `llx_const` (`rowid`, `name`, `entity`, `value`, `type`, `visible`, 
 (498, 'MAIN_START_WEEK', 1, '1', 'chaine', 0, '', '2013-10-31 12:15:19'),
 (499, 'MAIN_SHOW_LOGO', 1, '0', 'chaine', 0, '', '2013-10-31 12:15:19'),
 (500, 'MAIN_FIRSTNAME_NAME_POSITION', 1, '0', 'chaine', 0, '', '2013-10-31 12:15:19'),
-(501, 'MAIN_THEME', 1, 'bureau2crea', 'chaine', 0, '', '2013-10-31 12:15:19'),
+(501, 'MAIN_THEME', 1, 'eldy', 'chaine', 0, '', '2013-10-31 12:15:19'),
 (502, 'MAIN_SEARCHFORM_CONTACT', 1, '1', 'chaine', 0, '', '2013-10-31 12:15:19'),
 (503, 'MAIN_SEARCHFORM_SOCIETE', 1, '1', 'chaine', 0, '', '2013-10-31 12:15:19'),
 (504, 'MAIN_SEARCHFORM_PRODUITSERVICE', 1, '0', 'chaine', 0, '', '2013-10-31 12:15:19'),
@@ -292,8 +291,8 @@ INSERT INTO `llx_const` (`rowid`, `name`, `entity`, `value`, `type`, `visible`, 
 (541, 'WEBSERVICES_KEY', 1, '90c753e6c2919142caf7a63051ebc7ff', 'chaine', 0, '', '2013-11-05 17:33:30'),
 (542, 'MAIN_MODULE_HOLIDAY', 1, '1', NULL, 0, NULL, '2013-11-05 17:34:48'),
 (543, 'MAIN_MODULE_HOLIDAY_TABS_0', 1, 'user:+paidholidays:CPTitreMenu:holiday:$user->rights->holiday->write:/holiday/index.php?mainmenu=holiday&id=__ID__', 'chaine', 0, NULL, '2013-11-05 17:34:48'),
-(536, 'MAIN_COMPANY_CONTROL_DBL', 1, '1', NULL, 0, NULL, '2013-11-05 17:24:49'),
-(536, 'MAIN_CONTACT_CONTROL_DBL', 1, '1', NULL, 0, NULL, '2013-11-05 17:24:49');
+(544, 'MAIN_COMPANY_CONTROL_DBL', 1, '1', NULL, 0, NULL, '2013-11-05 17:24:49'),
+(545, 'MAIN_CONTACT_CONTROL_DBL', 1, '1', NULL, 0, NULL, '2013-11-05 17:24:49');
 
 
 
@@ -338,7 +337,7 @@ UPDATE account SET pays=13 WHERE pays='ALGERIE';
 UPDATE account SET pays=117 WHERE pays='INDE';
 UPDATE account SET pays=17 WHERE pays='PAYS-BAS';
 UPDATE account SET pays=7 WHERE pays='ENGLAND';
-UPDATE account SET pays=7 WHERE pays='GRANDE-BRETAGNE';
+UPDATE account SET pays=7 WHERE pays IN ('GRANDE-BRETAGNE','UK');
 UPDATE account SET pays=7 WHERE pays='ANGLETERRE';
 UPDATE account SET pays=1 WHERE pays='FRA?CE';
 UPDATE account SET pays=1 WHERE pays='FRABNCE';
@@ -388,6 +387,7 @@ UPDATE account SET pays=18 WHERE pays='HONGRIE';
 UPDATE account SET pays=78 WHERE pays='CYPRUS';
 UPDATE account SET pays=165 WHERE pays='NOUVELLE CALEDONIE';
 UPDATE account SET pays=NULL WHERE pays='';
+UPDATE account SET pays=1 WHERE pays='MONTAUBAN DE BRETAGN';
 
 UPDATE interv SET pays=1 WHERE pays='FRANCE';
 UPDATE interv SET pays=5 WHERE pays='ALLEMAGNE';
@@ -419,7 +419,7 @@ UPDATE interv SET pays=13 WHERE pays='ALGERIE';
 UPDATE interv SET pays=117 WHERE pays='INDE';
 UPDATE interv SET pays=17 WHERE pays='PAYS-BAS';
 UPDATE interv SET pays=7 WHERE pays='ENGLAND';
-UPDATE interv SET pays=7 WHERE pays='GRANDE-BRETAGNE';
+UPDATE interv SET pays=7 WHERE pays IN ('GRANDE-BRETAGNE','UK');
 UPDATE interv SET pays=7 WHERE pays='ANGLETERRE';
 UPDATE interv SET pays=1 WHERE pays='FRA?CE';
 UPDATE interv SET pays=1 WHERE pays='FRABNCE';
@@ -475,6 +475,7 @@ UPDATE interv SET pays=213 WHERE pays='TAIWAN';
 UPDATE interv SET pays=118 WHERE pays='INDONESIE';
 UPDATE interv SET pays=154 WHERE pays='MEXIQUE';
 UPDATE interv SET pays=166 WHERE pays='NOUVELLE ZELANDE';
+UPDATE interv SET pays=1 WHERE pays='MONTAUBAN DE BRETAGN';
 
 
 UPDATE contact SET titre='MR' WHERE titre='M.';
@@ -492,46 +493,46 @@ UPDATE eleves SET civilite='MLE' WHERE civilite='Mlle';
 
 --Affect Charle de rostand old user to new user
 UPDATE account set com_id='dfbfc33c-039f-102c-b0fb-001aa0790251' WHERE com_id='dfbfc922-039f-102c-b0fb-001aa0790251';
-
+--Set user email to get all coherent data
+UPDATE sf_user SET email_address='mclement@akteos.fr' where id='c84283c0-039f-102c-b0fb-001aa0790251'
 
 SET foreign_key_checks = 0;
 TRUNCATE TABLE llx_user;
 INSERT INTO `llx_user` (`rowid`, `entity`, `ref_ext`, `ref_int`, `datec`, `tms`, `login`, `pass`, `pass_crypted`, `pass_temp`, `civilite`, `lastname`, `firstname`, `address`, `zip`, `town`, `fk_state`, `fk_country`, `job`, `office_phone`, `office_fax`, `user_mobile`, `email`, `signature`, `admin`, `module_comm`, `module_compta`, `fk_societe`, `fk_socpeople`, `fk_member`, `fk_user`, `note`, `datelastlogin`, `datepreviouslogin`, `egroupware_id`, `ldap_sid`, `openid`, `statut`, `photo`, `lang`, `color`, `import_key`) VALUES
-(1, 0, NULL, NULL, '2013-10-20 14:48:56', '2013-10-20 14:48:57', 'admin_akteos', 'yc382tsz', 'abda7c036c49e6a511efe382b279ecae', NULL, NULL, 'SuperAdmin', '', '', '', '', NULL, NULL, '', '', '', '', '', '', 1, 1, 1, NULL, NULL, NULL, NULL, '', '2013-11-05 12:43:39', '2013-11-05 11:51:25', NULL, '', NULL, 1, NULL, NULL, NULL, NULL),
-(2, 1, NULL, NULL, '2011-05-01 09:34:56', '2013-10-20 15:24:53', 'cmigeot', 'test', NULL, NULL, NULL, 'MIGEOT', 'Caroline', '', '', '', NULL, NULL, 'Assistante', '01 55 95 85 17', '01 55 95 85 11', '', 'cmigeot@akteos.fr', '', 0, 0, 0, NULL, NULL, NULL, 11, '', '2013-09-25 08:24:31', '2013-09-02 07:49:50', NULL, NULL, NULL, 1, NULL, NULL, NULL, 'c1b16bb9-49a6-401b-acd2-2945df7c0962'),
-(3, 1, NULL, NULL, '2009-08-07 13:25:20', '2013-11-02 09:00:32', 'jandrian', 'test', NULL, NULL, NULL, 'ANDRIAN', 'Janieva', '', '', '', NULL, NULL, 'Chargée de formation', '01 55 95 85 13', '01 55 95 85 11', '', 'jandrian@akteos.fr', 'Bien cordialement<br />\r\n<br />\r\nJanieva ANDRIAN<br />\r\n+33 (0)1 55 95 85 13<br />\r\n<br />\r\n<table border="0" cellpadding="0" cellspacing="0">\r\n	<tbody>\r\n		<tr>\r\n			<td style="width:66px;">\r\n				<a href="http://www.akteos.fr/"><img alt="Description&nbsp;: LOGO AKTEOS - Courrier electronique extra petit (48x44)_sans phrase" border="0" height="44" id="Image_x0020_4" src="cid:image001.jpg@01CED555.AE23A0B0" width="48" /></a></td>\r\n			<td style="width:255px;">\r\n				Le Leader du Management Interculturel<br />\r\n				6, rue du Quatre Septembre<br />\r\n				F - 92130 Issy les Moulineaux<br />\r\n				<a href="http://www.akteos.fr/">www.akteos.fr</a></td>\r\n		</tr>\r\n	</tbody>\r\n</table>\r\n&nbsp;<br />', 0, 0, 0, NULL, NULL, NULL, 8, '', '2013-09-21 10:29:04', '2013-08-24 21:23:35', NULL, NULL, NULL, 1, NULL, NULL, NULL, '615d09b2-66e3-4c64-98dd-4c8130f7b975'),
-(4, 1, NULL, NULL, '2010-05-06 17:57:52', '2013-10-20 15:24:53', 'ldarrieux', 'test', NULL, NULL, NULL, 'DARRIEUX', 'Laurence', '', '', '', NULL, NULL, 'Chef de projet', '01 55 95 84 66', '01 55 95 85 11', '', 'ldarrieux@akteos.fr', '', 0, 0, 0, NULL, NULL, NULL, 8, '', '2013-09-02 07:43:18', NULL, NULL, NULL, NULL, 1, NULL, NULL, NULL, '6d381997-0fee-4a14-9e39-654fb71208e6'),
-(5, 1, NULL, NULL, '2013-02-07 17:32:57', '2013-08-27 15:56:43', 'mclement', 'test', NULL, NULL, NULL, 'CLEMENT', 'Mehdi', '', '', '', NULL, NULL, 'Attaché commercial', '01 55 95 84 65', '', '', 'mclement@akteos.fr', '', 0, 0, 0, NULL, NULL, NULL, 8, '', NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, NULL, NULL),
-(6, 1, NULL, NULL, '2012-03-01 11:55:18', '2013-10-20 15:24:53', 'dnguyen', 'test', NULL, NULL, NULL, 'NGUYEN', 'David', '', '', '', NULL, NULL, 'Attaché commercial', '01 55 95 84 69', '01 55 95 85 11', '', 'dnguyen@akteos.fr', '', 0, 0, 0, NULL, NULL, NULL, 8, '', '2013-10-30 09:47:36', '2013-08-21 17:02:14', NULL, NULL, NULL, 1, NULL, NULL, NULL, '0b9cc699-eb5f-4000-a84b-6a55a84a50be'),
-(8, 1, NULL, NULL, NULL, '2013-11-01 22:31:12', 'crostand', 'test', NULL, NULL, NULL, 'ROSTAND', 'Charles', '', '', '', NULL, NULL, 'Directeur Général', '01 55 95 85 10', '01 55 95 85 11', '06 80 26 18 81', 'crostand@akteos.fr', 'Bien cordialement<br />\r\n<br />\r\nCharles Rostand<br />\r\nDirecteur G&eacute;n&eacute;ral<br />', 1, 0, 0, NULL, NULL, NULL, NULL, '', '2013-08-29 08:17:11', NULL, NULL, NULL, NULL, 1, NULL, NULL, NULL, 'c8428226-039f-102c-b0fb-001aa0790251'),
-(10, 1, NULL, NULL, NULL, '2013-10-20 15:24:53', 'lrostand', 'test', NULL, NULL, NULL, 'ROSTAND', 'Laure', '', '', '', NULL, NULL, 'Présidente', '01 55 95 85 15', '01 55 95 85 16', '06 60 34 31 10', 'lrostand@akteos.fr', 'Bien cordialement<br />\r\n<br />\r\nLaure Rostand<br />\r\nPr&eacute;sidente<br />\r\n<br />\r\n01 55 95 85 15<br />\r\n06 60 34 31 10', 1, 0, 0, NULL, NULL, NULL, NULL, '', '2013-11-04 23:49:27', '2013-11-04 23:30:46', NULL, NULL, NULL, 1, NULL, NULL, NULL, 'c8427bb4-039f-102c-b0fb-001aa0790251'),
-(11, 1, NULL, NULL, NULL, '2013-10-20 15:24:53', 'phabourdin', 'test', NULL, NULL, NULL, 'HABOURDIN', 'Pascale', '', '', '', NULL, NULL, 'Chef de Projet', '01 55 95 85 12', '01 55 95 85 11', '', 'phabourdin@akteos.fr', '', 0, 0, 0, NULL, NULL, NULL, 8, '', '2013-10-25 14:53:40', '2013-10-25 14:52:03', NULL, NULL, NULL, 1, NULL, NULL, NULL, 'c8428078-039f-102c-b0fb-001aa0790251'),
-(13, 1, NULL, NULL, '2013-08-24 08:50:48', '2013-08-27 15:55:17', 'hlefebvre', 'test', '098f6bcd4621d373cade4e832627b4f6', NULL, NULL, 'LEFEBVRE', 'Hélène', '', '', '', NULL, NULL, 'Assitante', '', '', '', '', '', 0, 1, 1, NULL, NULL, NULL, 4, '', NULL, NULL, NULL, '', NULL, 1, NULL, NULL, NULL, NULL),
-(14, 1, NULL, NULL, '2013-08-24 08:52:11', '2013-08-27 15:57:34', 'cmontaud', 'test', '098f6bcd4621d373cade4e832627b4f6', NULL, NULL, 'MONTAUD', 'Claire', '', '', '', NULL, NULL, 'Assistante', '', '', '', '', '', 0, 1, 1, NULL, NULL, NULL, 8, '', '2013-09-02 08:11:24', '2013-09-02 07:45:33', NULL, '', NULL, 1, NULL, NULL, NULL, NULL),
-(15, 1, NULL, NULL, '2013-08-24 08:53:33', '2013-08-27 15:57:56', 'ctesson', 'test', '098f6bcd4621d373cade4e832627b4f6', NULL, NULL, 'TESSON', 'Cécile', '', '', '', NULL, NULL, 'Chargée de communication', '', '', '', '', '', 0, 1, 1, NULL, NULL, NULL, 10, '', '2013-09-02 07:42:19', '2013-09-01 23:00:32', NULL, '', NULL, 1, NULL, NULL, NULL, NULL),
-(16, 1, NULL, NULL, '2010-09-07 16:09:53', '2010-09-07 16:10:03', 'EVM', 'test', NULL, NULL, NULL, 'Evenements', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '01718fa8-1e9a-4b1f-bf7d-cf9e3729cf53'),
-(17, 1, NULL, NULL, '2009-04-27 18:28:26', '2010-04-14 19:37:21', 'CB', 'test', NULL, NULL, NULL, 'Borlet', 'Christophe', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'cborlet@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '0dc9343b-6fa3-4c2b-bf7b-da4c55c08952'),
-(18, 1, NULL, NULL, '2011-03-22 09:21:11', '2011-08-31 16:17:12', 'NOMAD', 'test', NULL, NULL, NULL, 'Nomad', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'nomad@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '2225e4d8-128a-45a0-85a0-0ba49a0708f4'),
-(19, 1, NULL, NULL, '2011-05-01 09:10:49', '2012-07-26 15:21:47', 'NF', 'test', NULL, NULL, NULL, 'Forté', 'Nathalie', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'nforte@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '283f2798-80cb-49f7-a9be-513dfefdd0bd'),
-(20, 1, NULL, NULL, '2011-03-08 17:16:23', '2011-08-31 16:16:47', 'CONSEIL', 'test', NULL, NULL, NULL, 'Conseil', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'conseil@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '373377aa-daff-468e-875a-9662a2dbfaa6'),
-(21, 1, NULL, NULL, '2010-04-14 19:39:22', '2010-09-08 16:50:57', 'JBI', 'test', NULL, NULL, NULL, 'Bidou', 'Julie', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'jbidou@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '58f5ca7a-8dc8-4bd4-b5d1-1be0572706a1'),
-(22, 1, NULL, NULL, '2009-09-01 12:35:28', '2010-04-14 19:37:14', 'EH', 'test', NULL, NULL, NULL, 'Hauw', 'Elisabeth', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '6f70587b-8f8f-4b02-827e-168a097f56b9'),
-(23, 1, NULL, NULL, '2011-03-10 19:15:46', '2011-08-31 16:16:35', 'AKTEOS', 'test', NULL, NULL, NULL, 'Akteos', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'akteos@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '979c21e3-6ad2-45c0-82c0-76133a63a596'),
-(24, 1, NULL, NULL, '2009-11-22 21:33:41', '2010-09-08 16:50:50', 'JB', 'test', NULL, NULL, NULL, 'Bons', 'Julien', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'jbons@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'a32f81fb-6a39-4e71-8d15-6f4969fc1187'),
-(25, 1, NULL, NULL, '2011-01-11 15:42:01', '2011-03-28 15:40:45', 'WC', 'test', NULL, NULL, NULL, 'Cabrera', 'William', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'wcabrera@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'a72692dd-ce6e-4835-8f6b-e3697bb2f240'),
-(26, 1, NULL, NULL, '2010-11-02 08:52:37', '2011-01-11 15:41:43', 'KG', 'test', NULL, NULL, NULL, 'Gazo', 'Kevin', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'kgazo@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'a77d7323-0c45-455f-abba-d89c1d7a61b8'),
-(27, 1, NULL, NULL, NULL, '2011-08-31 16:17:28', 'SIE', 'test', NULL, NULL, NULL, 'Admin', 'Administrateur', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c8427b3c-039f-102c-b0fb-001aa0790251'),
-(28, 1, NULL, NULL, NULL, '2010-09-08 16:51:03', 'PG', 'test', NULL, NULL, NULL, 'Yon', 'Anne-Catherine', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'acyon@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c8428000-039f-102c-b0fb-001aa0790251'),
-(29, 1, NULL, NULL, NULL, '2010-09-08 16:51:23', 'VH', 'test', NULL, NULL, NULL, 'Sok', 'Many', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'msok@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c84280e6-039f-102c-b0fb-001aa0790251'),
-(30, 1, NULL, NULL, NULL, '2012-02-08 10:49:39', 'BC', 'test', NULL, NULL, NULL, 'de Carné', 'Bérengère', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'bdecarne@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c8428154-039f-102c-b0fb-001aa0790251'),
-(31, 1, NULL, NULL, NULL, '2010-04-14 19:36:57', 'JS', 'test', NULL, NULL, NULL, 'Slowikowska', 'Joanna', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c84281b8-039f-102c-b0fb-001aa0790251'),
-(32, 1, NULL, NULL, NULL, '2010-04-14 19:36:48', 'MM', 'test', NULL, NULL, NULL, 'Merchiakh', 'Marie', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c842828a-039f-102c-b0fb-001aa0790251'),
-(33, 1, NULL, NULL, NULL, '2010-04-14 19:37:02', 'JL', 'test', NULL, NULL, NULL, 'Legodec', 'Julie', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c842835c-039f-102c-b0fb-001aa0790251'),
-(34, 1, NULL, NULL, NULL, '2010-04-14 19:40:14', 'NB', 'test', NULL, NULL, NULL, 'Nadia', 'Ben Bella', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c842842e-039f-102c-b0fb-001aa0790251'),
-(35, 1, NULL, NULL, NULL, '2011-08-31 16:17:40', 'TC', 'test', NULL, NULL, NULL, 'Cordalija', 'Tima', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'tcordalija@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c8428492-039f-102c-b0fb-001aa0790251'),
-(36, 1, NULL, NULL, '2009-10-19 12:43:43', '2010-04-14 19:36:31', 'RC', 'test', NULL, NULL, NULL, 'Canet', 'Romain', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'ea94a3e2-4aac-4686-bfdb-45d620a7d23f'),
-(37, 1, NULL, NULL, '2012-06-10 16:23:15', '2012-07-26 15:21:53', 'MG', 'test', NULL, NULL, NULL, 'Gripon', 'Mathieu', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'mgripon@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'fffcb945-ee3f-4ac1-861d-bd33112cf57b');
-
+(1, 0, NULL, NULL, '2013-10-20 14:48:56', '2013-10-20 12:48:57', 'admin_akteos', 'yc382tsz', 'abda7c036c49e6a511efe382b279ecae', NULL, NULL, 'SuperAdmin', '', '', '', '', NULL, NULL, '', '', '', '', '', '', 1, 1, 1, NULL, NULL, NULL, NULL, '', '2013-11-05 12:43:39', '2013-11-05 11:51:25', NULL, '', NULL, 1, NULL, NULL, NULL, NULL),
+(2, 1, NULL, NULL, '2011-05-01 09:34:56', '2013-10-20 13:24:53', 'cmigeot', 'test', NULL, NULL, NULL, 'MIGEOT', 'Caroline', '', '', '', NULL, NULL, 'Assistante', '01 55 95 85 17', '01 55 95 85 11', '', 'cmigeot@akteos.fr', '', 0, 0, 0, NULL, NULL, NULL, 11, '', '2013-09-25 08:24:31', '2013-09-02 07:49:50', NULL, NULL, NULL, 1, NULL, NULL, NULL, 'c1b16bb9-49a6-401b-acd2-2945df7c0962'),
+(3, 1, NULL, NULL, '2009-08-07 13:25:20', '2013-11-02 08:00:32', 'jandrian', 'test', NULL, NULL, NULL, 'ANDRIAN', 'Janieva', '', '', '', NULL, NULL, 'Chargée de formation', '01 55 95 85 13', '01 55 95 85 11', '', 'jandrian@akteos.fr', 'Bien cordialement<br />\r\n<br />\r\nJanieva ANDRIAN<br />\r\n+33 (0)1 55 95 85 13<br />\r\n<br />\r\n<table border="0" cellpadding="0" cellspacing="0">\r\n	<tbody>\r\n		<tr>\r\n			<td style="width:66px;">\r\n				<a href="http://www.akteos.fr/"><img alt="Description&nbsp;: LOGO AKTEOS - Courrier electronique extra petit (48x44)_sans phrase" border="0" height="44" id="Image_x0020_4" src="cid:image001.jpg@01CED555.AE23A0B0" width="48" /></a></td>\r\n			<td style="width:255px;">\r\n				Le Leader du Management Interculturel<br />\r\n				6, rue du Quatre Septembre<br />\r\n				F - 92130 Issy les Moulineaux<br />\r\n				<a href="http://www.akteos.fr/">www.akteos.fr</a></td>\r\n		</tr>\r\n	</tbody>\r\n</table>\r\n&nbsp;<br />', 0, 0, 0, NULL, NULL, NULL, 8, '', '2013-09-21 10:29:04', '2013-08-24 21:23:35', NULL, NULL, NULL, 1, NULL, NULL, NULL, '615d09b2-66e3-4c64-98dd-4c8130f7b975'),
+(4, 1, NULL, NULL, '2010-05-06 17:57:52', '2013-10-20 13:24:53', 'ldarrieux', 'test', NULL, NULL, NULL, 'DARRIEUX', 'Laurence', '', '', '', NULL, NULL, 'Chef de projet', '01 55 95 84 66', '01 55 95 85 11', '', 'ldarrieux@akteos.fr', '', 0, 0, 0, NULL, NULL, NULL, 8, '', '2013-09-02 07:43:18', NULL, NULL, NULL, NULL, 1, NULL, NULL, NULL, '6d381997-0fee-4a14-9e39-654fb71208e6'),
+(5, 1, NULL, NULL, '2013-02-07 17:32:57', '2013-08-27 13:56:43', 'mclement', 'test', NULL, NULL, NULL, 'CLEMENT', 'Mehdi', '', '', '', NULL, NULL, 'Attaché commercial', '01 55 95 84 65', '', '', 'mclement@akteos.fr', '', 0, 0, 0, NULL, NULL, NULL, 8, '', NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, NULL, 'c84283c0-039f-102c-b0fb-001aa0790251'),
+(6, 1, NULL, NULL, '2012-03-01 11:55:18', '2013-10-20 13:24:53', 'dnguyen', 'test', NULL, NULL, NULL, 'NGUYEN', 'David', '', '', '', NULL, NULL, 'Attaché commercial', '01 55 95 84 69', '01 55 95 85 11', '', 'dnguyen@akteos.fr', '', 0, 0, 0, NULL, NULL, NULL, 8, '', '2013-10-30 09:47:36', '2013-08-21 17:02:14', NULL, NULL, NULL, 1, NULL, NULL, NULL, '0b9cc699-eb5f-4000-a84b-6a55a84a50be'),
+(8, 1, NULL, NULL, NULL, '2013-11-01 21:31:12', 'crostand', 'test', NULL, NULL, NULL, 'ROSTAND', 'Charles', '', '', '', NULL, NULL, 'Directeur Général', '01 55 95 85 10', '01 55 95 85 11', '06 80 26 18 81', 'crostand@akteos.fr', 'Bien cordialement<br />\r\n<br />\r\nCharles Rostand<br />\r\nDirecteur G&eacute;n&eacute;ral<br />', 1, 0, 0, NULL, NULL, NULL, NULL, '', '2013-08-29 08:17:11', NULL, NULL, NULL, NULL, 1, NULL, NULL, NULL, 'c8428226-039f-102c-b0fb-001aa0790251'),
+(10, 1, NULL, NULL, NULL, '2013-10-20 13:24:53', 'lrostand', 'test', NULL, NULL, NULL, 'ROSTAND', 'Laure', '', '', '', NULL, NULL, 'Présidente', '01 55 95 85 15', '01 55 95 85 16', '06 60 34 31 10', 'lrostand@akteos.fr', 'Bien cordialement<br />\r\n<br />\r\nLaure Rostand<br />\r\nPr&eacute;sidente<br />\r\n<br />\r\n01 55 95 85 15<br />\r\n06 60 34 31 10', 1, 0, 0, NULL, NULL, NULL, NULL, '', '2013-11-04 23:49:27', '2013-11-04 23:30:46', NULL, NULL, NULL, 1, NULL, NULL, NULL, 'c8427bb4-039f-102c-b0fb-001aa0790251'),
+(11, 1, NULL, NULL, NULL, '2013-10-20 13:24:53', 'phabourdin', 'test', NULL, NULL, NULL, 'HABOURDIN', 'Pascale', '', '', '', NULL, NULL, 'Chef de Projet', '01 55 95 85 12', '01 55 95 85 11', '', 'phabourdin@akteos.fr', '', 0, 0, 0, NULL, NULL, NULL, 8, '', '2013-10-25 14:53:40', '2013-10-25 14:52:03', NULL, NULL, NULL, 1, NULL, NULL, NULL, 'c8428078-039f-102c-b0fb-001aa0790251'),
+(13, 1, NULL, NULL, '2013-08-24 08:50:48', '2013-11-19 21:41:30', 'hlefebvre', 'test', '098f6bcd4621d373cade4e832627b4f6', NULL, NULL, 'LEFEBVRE', 'Hélène', '', '', '', NULL, NULL, 'Assitante', '', '', '', 'hlefebvre@akteos.fr', '', 0, 1, 1, NULL, NULL, NULL, 4, '', NULL, NULL, NULL, '', NULL, 1, NULL, NULL, NULL, '5a6c9f40-9e93-48ae-9298-cf5e0c5b104f'),
+(14, 1, NULL, NULL, '2013-08-24 08:52:11', '2013-11-19 21:41:43', 'cmontaud', 'test', '098f6bcd4621d373cade4e832627b4f6', NULL, NULL, 'MONTAUD', 'Claire', '', '', '', NULL, NULL, 'Assistante', '', '', '', 'cmontaud@akteos.fr', '', 0, 1, 1, NULL, NULL, NULL, 8, '', '2013-09-02 08:11:24', '2013-09-02 07:45:33', NULL, '', NULL, 1, NULL, NULL, NULL, '1670409a-198c-4d9a-86f9-e0d0fbf9d6cb'),
+(15, 1, NULL, NULL, '2013-08-24 08:53:33', '2013-11-19 21:41:55', 'ctesson', 'test', '098f6bcd4621d373cade4e832627b4f6', NULL, NULL, 'TESSON', 'Cécile', '', '', '', NULL, NULL, 'Chargée de communication', '', '', '', 'ctesson@akteos.fr', '', 0, 1, 1, NULL, NULL, NULL, 10, '', '2013-09-02 07:42:19', '2013-09-01 23:00:32', NULL, '', NULL, 1, NULL, NULL, NULL, 'ae0039da-2646-4883-bd4f-637a1e4744b4'),
+(16, 1, NULL, NULL, '2010-09-07 16:09:53', '2010-09-07 14:10:03', 'EVM', 'test', NULL, NULL, NULL, 'Evenements', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '01718fa8-1e9a-4b1f-bf7d-cf9e3729cf53'),
+(17, 1, NULL, NULL, '2009-04-27 18:28:26', '2010-04-14 17:37:21', 'CB', 'test', NULL, NULL, NULL, 'Borlet', 'Christophe', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'cborlet@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '0dc9343b-6fa3-4c2b-bf7b-da4c55c08952'),
+(18, 1, NULL, NULL, '2011-03-22 09:21:11', '2011-08-31 14:17:12', 'NOMAD', 'test', NULL, NULL, NULL, 'Nomad', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'nomad@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '2225e4d8-128a-45a0-85a0-0ba49a0708f4'),
+(19, 1, NULL, NULL, '2011-05-01 09:10:49', '2012-07-26 13:21:47', 'NF', 'test', NULL, NULL, NULL, 'Forté', 'Nathalie', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'nforte@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '283f2798-80cb-49f7-a9be-513dfefdd0bd'),
+(20, 1, NULL, NULL, '2011-03-08 17:16:23', '2011-08-31 14:16:47', 'CONSEIL', 'test', NULL, NULL, NULL, 'Conseil', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'conseil@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '373377aa-daff-468e-875a-9662a2dbfaa6'),
+(21, 1, NULL, NULL, '2010-04-14 19:39:22', '2010-09-08 14:50:57', 'JBI', 'test', NULL, NULL, NULL, 'Bidou', 'Julie', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'jbidou@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '58f5ca7a-8dc8-4bd4-b5d1-1be0572706a1'),
+(22, 1, NULL, NULL, '2009-09-01 12:35:28', '2010-04-14 17:37:14', 'EH', 'test', NULL, NULL, NULL, 'Hauw', 'Elisabeth', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '6f70587b-8f8f-4b02-827e-168a097f56b9'),
+(23, 1, NULL, NULL, '2011-03-10 19:15:46', '2011-08-31 14:16:35', 'AKTEOS', 'test', NULL, NULL, NULL, 'Akteos', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'akteos@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '979c21e3-6ad2-45c0-82c0-76133a63a596'),
+(24, 1, NULL, NULL, '2009-11-22 21:33:41', '2010-09-08 14:50:50', 'JB', 'test', NULL, NULL, NULL, 'Bons', 'Julien', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'jbons@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'a32f81fb-6a39-4e71-8d15-6f4969fc1187'),
+(25, 1, NULL, NULL, '2011-01-11 15:42:01', '2011-03-28 13:40:45', 'WC', 'test', NULL, NULL, NULL, 'Cabrera', 'William', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'wcabrera@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'a72692dd-ce6e-4835-8f6b-e3697bb2f240'),
+(26, 1, NULL, NULL, '2010-11-02 08:52:37', '2011-01-11 14:41:43', 'KG', 'test', NULL, NULL, NULL, 'Gazo', 'Kevin', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'kgazo@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'a77d7323-0c45-455f-abba-d89c1d7a61b8'),
+(27, 1, NULL, NULL, NULL, '2011-08-31 14:17:28', 'SIE', 'test', NULL, NULL, NULL, 'Admin', 'Administrateur', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c8427b3c-039f-102c-b0fb-001aa0790251'),
+(28, 1, NULL, NULL, NULL, '2010-09-08 14:51:03', 'PG', 'test', NULL, NULL, NULL, 'Yon', 'Anne-Catherine', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'acyon@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c8428000-039f-102c-b0fb-001aa0790251'),
+(29, 1, NULL, NULL, NULL, '2010-09-08 14:51:23', 'VH', 'test', NULL, NULL, NULL, 'Sok', 'Many', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'msok@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c84280e6-039f-102c-b0fb-001aa0790251'),
+(30, 1, NULL, NULL, NULL, '2012-02-08 09:49:39', 'BC', 'test', NULL, NULL, NULL, 'de Carné', 'Bérengère', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'bdecarne@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c8428154-039f-102c-b0fb-001aa0790251'),
+(31, 1, NULL, NULL, NULL, '2010-04-14 17:36:57', 'JS', 'test', NULL, NULL, NULL, 'Slowikowska', 'Joanna', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c84281b8-039f-102c-b0fb-001aa0790251'),
+(32, 1, NULL, NULL, NULL, '2010-04-14 17:36:48', 'MM', 'test', NULL, NULL, NULL, 'Merchiakh', 'Marie', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c842828a-039f-102c-b0fb-001aa0790251'),
+(33, 1, NULL, NULL, NULL, '2010-04-14 17:37:02', 'JL', 'test', NULL, NULL, NULL, 'Legodec', 'Julie', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c842835c-039f-102c-b0fb-001aa0790251'),
+(34, 1, NULL, NULL, NULL, '2010-04-14 17:40:14', 'NB', 'test', NULL, NULL, NULL, 'Nadia', 'Ben Bella', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c842842e-039f-102c-b0fb-001aa0790251'),
+(35, 1, NULL, NULL, NULL, '2011-08-31 14:17:40', 'TC', 'test', NULL, NULL, NULL, 'Cordalija', 'Tima', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'tcordalija@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'c8428492-039f-102c-b0fb-001aa0790251'),
+(36, 1, NULL, NULL, '2009-10-19 12:43:43', '2010-04-14 17:36:31', 'RC', 'test', NULL, NULL, NULL, 'Canet', 'Romain', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'ea94a3e2-4aac-4686-bfdb-45d620a7d23f'),
+(37, 1, NULL, NULL, '2012-06-10 16:23:15', '2012-07-26 13:21:53', 'MG', 'test', NULL, NULL, NULL, 'Gripon', 'Mathieu', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'mgripon@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 'fffcb945-ee3f-4ac1-861d-bd33112cf57b');
 
 
 --Insert inactive user
@@ -627,6 +628,38 @@ FROM sf_user
 WHERE sf_user.state='disabled';
 */
 
+
+
+--Import Category
+
+TRUNCATE TABLE `llx_categorie`;
+INSERT INTO `llx_categorie` (`rowid`, `entity`, `fk_parent`, `label`, `type`, `description`, `fk_soc`, `visible`, `import_key`) VALUES
+(1, 1, 0, 'Produit', 0, 'Tous les produits vendus par Akteos, &agrave; l&#39;exception des frais', NULL, 0, NULL),
+(3, 1, 0, 'Frais', 0, 'Tous les frais g&eacute;n&eacute;r&eacute;s par les interventions d&#39;Akteos (d&eacute;pacement, h&eacute;bergement, restauration, salle,...) &agrave; l&#39;exception des consultants, et refactur&eacute;s aux clients (en g&eacute;n&eacute;ral &agrave; l&#39;euro pr&egrave;s).', NULL, 0, NULL),
+(6, 1, 1, 'Produit pédagogique', 0, 'Tous les produits en rapport avec les formations &agrave; prendre en consid&eacute;ration pour le Bilan P&eacute;dagogique et Financier', NULL, 0, NULL),
+(7, 1, 1, 'Produit non pédagogique', 0, 'Tous les produits qui ne sont pas consid&eacute;r&eacute;s comme de la formation et ne sont pas comptabilis&eacute;s dans le Bilan P&eacute;dagogique et Financier', NULL, 0, NULL),
+(8, 1, 6, 'Conception', 0, '', NULL, 0, NULL),
+(9, 1, 6, 'Intervention', 0, '', NULL, 0, NULL),
+(10, 1, 6, 'Outil pédagogique', 0, '', NULL, 0, NULL),
+(30, 1, 31, 'Particulier', 4, '', NULL, 0, NULL),
+(12, 1, 0, 'Consultant', 1, '', NULL, 0, NULL),
+(15, 1, 12, 'Consultant Etranger', 1, '', NULL, 0, NULL),
+(16, 1, 12, 'Consultant France', 1, '', NULL, 0, NULL),
+(17, 1, 12, 'Consultant Suppléant', 1, '', NULL, 0, NULL),
+(28, 1, 31, 'Salarié bénéficiant d''un financement par l''employeur', 4, '', NULL, 0, NULL),
+(21, 1, 0, 'Logistique', 1, 'Hotel, Restaurant, Agence de voyage, Imprimeur,...', NULL, 0, NULL),
+(22, 1, 0, 'Communication', 1, '', NULL, 0, NULL),
+(23, 1, 1, 'Produit HT', 0, '', NULL, 0, NULL),
+(24, 1, 6, 'On Line', 0, '', NULL, 0, NULL),
+(25, 1, 3, 'Frais HT', 0, '', NULL, 0, NULL),
+(29, 1, 31, 'Demandeur d''emploi', 4, '', NULL, 0, NULL),
+(31, 1, 0, 'Participant', 4, '', NULL, 0, NULL),
+(32, 1, 0, 'Consultant', 4, '', NULL, 0, NULL),
+(33, 1, 32, 'Travailleur indépendant', 4, '', NULL, 0, NULL),
+(34, 1, 32, 'CDI', 4, '', NULL, 0, NULL),
+(35, 1, 32, 'CDD', 4, '', NULL, 0, NULL),
+(36, 1, 32, 'Formateur occasionnel', 4, '', NULL, 0, NULL),
+(37, 1, 32, 'Bénévole', 4, '', NULL, 0, NULL);
 
 --Insert customer typed account into thridparty
 
@@ -759,8 +792,10 @@ LEFT OUTER JOIN legacy_mvt as leg ON so.id=leg.thirdparty_id
 LEFT OUTER JOIN ref_sect ON ref_sect.code=act.secteur
 LEFT OUTER JOIN llx_c_paiement as modpay ON modpay.code = act.modreg
 LEFT OUTER JOIN llx_c_payment_term as payterm ON payterm.nbjour = act.jourreg AND payterm.active=1
-LEFT OUTER JOIN llx_user as usercrea ON act.created_by_sf_user_id=usercrea.import_key
-LEFT OUTER JOIN llx_user as usermod ON act.modified_by_sf_user_id=usermod.import_key
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=act.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=act.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
 WHERE act.type NOT IN ('Z99','IND','JOU','REL','FOU');
 
 --Import supplier
@@ -892,8 +927,10 @@ LEFT OUTER JOIN legacy_mvt as leg ON so.id=leg.thirdparty_id
 LEFT OUTER JOIN ref_sect ON ref_sect.code=act.secteur
 LEFT OUTER JOIN llx_c_paiement as modpay ON modpay.code = act.modreg
 LEFT OUTER JOIN llx_c_payment_term as payterm ON payterm.nbjour = act.jourreg AND payterm.active=1
-LEFT OUTER JOIN llx_user as usercrea ON act.created_by_sf_user_id=usercrea.import_key
-LEFT OUTER JOIN llx_user as usermod ON act.modified_by_sf_user_id=usermod.import_key
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=act.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=act.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
 WHERE act.type='FOU';
 
 --Insert prospect
@@ -1023,15 +1060,13 @@ FROM  account as act
 LEFT OUTER JOIN ref_sect ON ref_sect.code=act.secteur
 LEFT OUTER JOIN llx_c_paiement as modpay ON modpay.code = act.modreg
 LEFT OUTER JOIN llx_c_payment_term as payterm ON payterm.nbjour = act.jourreg AND payterm.active=1
-LEFT OUTER JOIN llx_user as usercrea ON act.created_by_sf_user_id=usercrea.import_key
-LEFT OUTER JOIN llx_user as usermod ON act.modified_by_sf_user_id=usermod.import_key
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=act.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=act.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
 WHERE act.id NOT IN (SELECT account_id from thirdparty WHERE account_id IS NOT NULL )
 AND act.type NOT IN ('Z99','IND','JOU','REL','FOU');
 
-
-UPDATE llx_societe SET status=2,tms=tms WHERE status=0;
-UPDATE llx_societe SET status=0,tms=tms WHERE status=1;
-UPDATE llx_societe SET status=1,tms=tms WHERE status=2; 
 
 TRUNCATE TABLE llx_socpeople;
 
@@ -1104,8 +1139,10 @@ INNER JOIN account ON contact.account_id = account.id
 INNER JOIN llx_societe as soc ON soc.import_key=account.id
 LEFT OUTER JOIN llx_c_civilite as civ ON civ.code=contact.titre
 LEFT OUTER JOIN ref_fonc as fonc ON fonc.fonction=contact.fonction
-LEFT OUTER JOIN llx_user as usercrea ON contact.created_by_sf_user_id=usercrea.import_key
-LEFT OUTER JOIN llx_user as usermod ON contact.modified_by_sf_user_id=usermod.import_key
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=contact.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=contact.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
 WHERE contact.nom IS NOT NULL AND TRIM(contact.nom)<>'';
 
 
@@ -1202,6 +1239,7 @@ DELETE fROM trainingprogramdiscipline WHERE stage_id='5d9ef8bb-a906-45d6-a39e-7c
 */
 
 --import analytics training category
+TRUNCATE TABLE llx_agefodd_formation_catalogue_type;
 INSERT INTO llx_agefodd_formation_catalogue_type (code,intitule,sort,active,tms)
 SELECT DISTINCT analyt.code,
 analyt.intitule,
@@ -1272,6 +1310,38 @@ WHERE typcours.intitule <> 'NE PAS UTILISER';
 
 UPDATE llx_agefodd_formation_catalogue SET ref=CONCAT_WS('','FOR_', date_format(datec,'%y%m'),'-', LPAD(rowid,4,'0'));
 
+
+TRUNCATE TABLE `llx_agefodd_session_admlevel`;
+INSERT INTO `llx_agefodd_session_admlevel` (`rowid`, `level_rank`, `fk_parent_level`, `indice`, `intitule`, `delais_alerte`, `fk_user_author`, `datec`, `fk_user_mod`, `tms`) VALUES
+(18, 0, 0, 100, 'CONSULTANT', -15, 1, '2013-11-19 21:53:30', 1, '2013-11-19 20:54:28'),
+(19, 1, 18, 101, 'Réservation consultant', -15, 1, '2013-11-19 21:53:43', 1, '2013-11-19 20:54:23'),
+(20, 1, 18, 102, 'Confirmation consultant envoyée', -15, 1, '2013-11-19 21:54:18', 1, '2013-11-19 20:54:18'),
+(21, 1, 18, 103, 'Support prêt ou imprimé', -1, 1, '2013-11-19 21:54:45', 1, '2013-11-19 20:54:45'),
+(22, 1, 18, 104, 'Feuilles d''émargement et d''évaluation éditées', -1, 1, '2013-11-19 21:54:57', 1, '2013-11-19 20:54:57'),
+(23, 0, 0, 200, 'LOGISTIQUE', -15, 1, '2013-11-19 21:55:10', 1, '2013-11-19 20:55:10'),
+(24, 1, 23, 201, 'Déplacements organisés', -15, 1, '2013-11-19 21:55:21', 1, '2013-11-19 20:55:21'),
+(25, 1, 23, 202, 'Réservation salle et/ou repas (option)', -15, 1, '2013-11-19 21:55:32', 1, '2013-11-19 20:55:32'),
+(26, 1, 23, 203, 'Réservation salle et/ou repas (confirmée)', -15, 1, '2013-11-19 21:55:44', 1, '2013-11-19 20:55:44'),
+(27, 0, 0, 300, 'CLIENT', -15, 1, '2013-11-19 21:55:56', 1, '2013-11-19 20:55:56'),
+(28, 1, 27, 301, 'Date confirmée', -15, 1, '2013-11-19 21:56:08', 1, '2013-11-19 20:56:08'),
+(29, 1, 27, 302, 'Lieu confirmé', -15, 1, '2013-11-19 21:56:18', 1, '2013-11-19 20:56:18'),
+(30, 1, 27, 303, 'Convention envoyée', -15, 1, '2013-11-19 21:56:33', 1, '2013-11-19 20:56:33'),
+(31, 1, 27, 304, 'Convention retournée', -10, 1, '2013-11-19 21:56:43', 1, '2013-11-19 20:56:43'),
+(32, 0, 0, 400, 'PARTICIPANT', -15, 1, '2013-11-19 21:56:53', 1, '2013-11-19 20:56:53'),
+(33, 1, 32, 401, 'Convocation participant envoyée (inscriptions RN)', -15, 1, '2013-11-19 21:57:07', 1, '2013-11-19 20:57:07'),
+(34, 1, 32, 402, 'Support et/ou attestation en ligne', -15, 1, '2013-11-19 21:57:17', 1, '2013-11-19 20:57:17'),
+(35, 0, 0, 500, 'FACTURE FOURNISSEUR (TRANSMISE ET SAISIE)', 5, 1, '2013-11-19 21:57:32', 1, '2013-11-19 20:57:32'),
+(36, 1, 35, 501, 'Agence de voyage', 5, 1, '2013-11-19 21:57:42', 1, '2013-11-19 20:57:42'),
+(37, 1, 35, 502, 'Consultant', 5, 1, '2013-11-19 21:57:52', 1, '2013-11-19 20:57:52'),
+(38, 1, 35, 503, 'Frais techniques', 5, 1, '2013-11-19 21:58:02', 1, '2013-11-19 20:58:02'),
+(39, 0, 0, 600, 'SESSION CLOTUREE', 0, 1, '2013-11-19 21:58:14', 1, '2013-11-19 20:58:14'),
+(40, 1, 39, 601, 'Feuilles d''émargement et d''évaluation scannées', 5, 1, '2013-11-19 21:58:35', 1, '2013-11-19 20:58:35'),
+(41, 1, 39, 602, 'Feuilles d''émargement et d''évaluation envoyées', 5, 1, '2013-11-19 21:58:57', 1, '2013-11-19 20:58:57'),
+(42, 1, 39, 603, 'Facture client envoyée', 5, 1, '2013-11-19 21:59:10', 1, '2013-11-19 20:59:10');
+
+
+
+
 INSERT INTO llx_agefodd_training_admlevel(fk_agefodd_training_admlevel,fk_training,level_rank,fk_parent_level,indice,intitule,delais_alerte,fk_user_author,datec,fk_user_mod) 
 SELECT DISTINCT seesadm.rowid,training.rowid, seesadm.level_rank, seesadm.fk_parent_level,seesadm.indice, seesadm.intitule,seesadm.delais_alerte,seesadm.fk_user_author,seesadm.datec,seesadm.fk_user_mod 
 FROM llx_agefodd_session_admlevel as seesadm, llx_agefodd_formation_catalogue as training;
@@ -1281,10 +1351,27 @@ UPDATE llx_agefodd_training_admlevel as ori, llx_agefodd_training_admlevel as up
 --Insert domaine extrafield
 INSERT INTO llx_agefodd_formation_catalogue_extrafields(fk_object, cd_domaine)
 SELECT llx_agefodd_formation_catalogue.rowid, 
-stage.domaine
-FROM llx_agefodd_formation_catalogue INNER JOIN stage ON llx_agefodd_formation_catalogue.import_key=stage.id;
+'DVI'
+FROM llx_agefodd_formation_catalogue INNER JOIN stage ON llx_agefodd_formation_catalogue.import_key=stage.id
+WHERE stage.domaine IN ('COMER','SIC','MARKET');
 
+INSERT INTO llx_agefodd_formation_catalogue_extrafields(fk_object, cd_domaine)
+SELECT llx_agefodd_formation_catalogue.rowid, 
+'PAYS'
+FROM llx_agefodd_formation_catalogue INNER JOIN stage ON llx_agefodd_formation_catalogue.import_key=stage.id
+WHERE stage.domaine IN ('EXPAT','PAYS');
 
+INSERT INTO llx_agefodd_formation_catalogue_extrafields(fk_object, cd_domaine)
+SELECT llx_agefodd_formation_catalogue.rowid, 
+'MAGNT'
+FROM llx_agefodd_formation_catalogue INNER JOIN stage ON llx_agefodd_formation_catalogue.import_key=stage.id
+WHERE stage.domaine IN ('RH');
+
+INSERT INTO llx_agefodd_formation_catalogue_extrafields(fk_object, cd_domaine)
+SELECT llx_agefodd_formation_catalogue.rowid, 
+'COM'
+FROM llx_agefodd_formation_catalogue INNER JOIN stage ON llx_agefodd_formation_catalogue.import_key=stage.id
+WHERE stage.domaine IN ('COMM');
 
 --import bank
 TRUNCATE TABLE llx_bank_account;
@@ -1393,129 +1480,108 @@ FROM produit;
 UPDATE llx_agefodd_formation_catalogue as cat, llx_product as prod , stage SET cat.fk_product=prod.rowid
 WHERE stage.specific_product=prod.ref AND stage.numstage=cat.ref_interne;
 */
-
+TRUNCATE TABLE `llx_product`;
 INSERT INTO `llx_product` (`rowid`, `ref`, `entity`, `ref_ext`, `datec`, `tms`, `virtual`, `fk_parent`, `label`, `description`, `note`, `customcode`, `fk_country`, `price`, `price_ttc`, `price_min`, `price_min_ttc`, `price_base_type`, `tva_tx`, `recuperableonly`, `localtax1_tx`, `localtax2_tx`, `fk_user_author`, `tosell`, `tobuy`, `fk_product_type`, `duration`, `seuil_stock_alerte`, `barcode`, `fk_barcode_type`, `accountancy_code_sell`, `accountancy_code_buy`, `partnumber`, `weight`, `weight_units`, `length`, `length_units`, `surface`, `surface_units`, `volume`, `volume_units`, `stock`, `pmp`, `canvas`, `finished`, `hidden`, `import_key`) VALUES
-(98, 'sht9_conf', 1, NULL, '2013-11-01 19:43:56', '2013-11-01 19:44:15', 0, 0, 'Conférence', '', '', '', NULL, 1600.00000000, 1600.00000000, 0.00000000, 0.00000000, 'HT', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '2h', NULL, NULL, 0, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(84, 's5_frais_tech', 1, NULL, '2013-11-01 17:36:54', '2013-11-01 17:37:33', 0, 0, 'Frais techniques', 'Salle &eacute;quip&eacute;e', '', '', NULL, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '', NULL, NULL, 0, '70801000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(90, 's9_cons', 1, NULL, '2013-11-01 17:50:10', '2013-11-01 17:50:24', 0, 0, 'Mission de conseil', '', '', '', NULL, 2000.00000000, 2392.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '1d', NULL, NULL, 0, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(100, 's6_lcp', 1, NULL, '2013-11-01 20:04:24', '2013-11-01 20:04:24', 0, 0, 'LCP', '', '', '', NULL, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '', NULL, NULL, 0, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(87, 's9_coach', 1, NULL, '2013-11-01 17:45:01', '2013-11-01 17:45:15', 0, 0, 'Coaching', '', '', '', NULL, 400.00000000, 478.40000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '2h', NULL, NULL, 0, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(88, 's9_conf', 1, NULL, '2013-11-01 17:45:52', '2013-11-01 17:46:24', 0, 0, 'Conférence', '', '', '', NULL, 1600.00000000, 1913.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '2h', NULL, NULL, 0, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(96, 's1_prepa', 1, NULL, '2013-11-01 19:35:01', '2013-11-01 21:59:30', 0, 0, 'Préparation', '', '', '', NULL, 2000.00000000, 2392.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '1d', NULL, NULL, 0, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(91, 's9_dev', 1, NULL, '2013-11-01 17:51:34', '2013-11-01 17:52:05', 0, 0, 'Développement spécifique', '', '', '', NULL, 2000.00000000, 2392.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '1d', NULL, NULL, 0, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(92, 's9_maj', 1, NULL, '2013-11-01 19:15:07', '2013-11-01 19:15:07', 0, 0, 'Majoration', '', '', '', NULL, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '', NULL, NULL, 0, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(93, 'sht1_inter', 1, NULL, '2013-11-01 19:16:32', '2013-11-01 19:31:08', 0, 0, 'Formation interentreprises', '', '', '', NULL, 1490.00000000, 1490.00000000, 0.00000000, 0.00000000, 'HT', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '2d', NULL, NULL, 0, '70611000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(94, 'sht1_intra', 1, NULL, '2013-11-01 19:24:25', '2013-11-01 19:30:57', 0, 0, 'Formation intra-entreprise', '', '', '', NULL, 2500.00000000, 2500.00000000, 0.00000000, 0.00000000, 'HT', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '1d', NULL, NULL, 0, '70611000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(95, 'sht2_pnomad', 1, NULL, '2013-11-01 19:32:10', '2013-11-01 19:32:35', 0, 0, 'Profil Nomad''', '', '', '', NULL, 100.00000000, 100.00000000, 0.00000000, 0.00000000, 'HT', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '6m', NULL, NULL, 0, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(97, 'sht5_frais', 1, NULL, '2013-11-01 19:37:35', '2013-11-01 19:37:35', 0, 0, 'Frais de mission', '', '', '', NULL, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '', NULL, NULL, 0, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(60, 's1_atelier', 1, NULL, '2013-11-01 15:53:17', '2013-11-01 16:20:22', 0, 0, 'Atelier interculturel', '', '', '', NULL, 1600.00000000, 1913.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '3h', NULL, NULL, 0, '70610000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(61, 's1_inter', 1, NULL, '2013-11-01 16:04:02', '2013-11-01 16:36:45', 0, 0, 'Formation interentreprises', '', '', '', NULL, 1490.00000000, 1782.04000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '2d', NULL, NULL, 0, '70610000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(66, 's1_intra_gr.1j', 1, NULL, '2013-11-01 16:26:46', '2013-11-01 21:57:01', 0, 0, 'Formation intra-entreprise', '', '', '', NULL, 2500.00000000, 2990.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '1d', NULL, NULL, 0, '70610000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(67, 's1_intra_gr.2j', 1, NULL, '2013-11-01 16:27:33', '2013-11-01 16:45:52', 0, 0, 'Formation intra-entreprise', '', '', '', NULL, 4900.00000000, 5860.40000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '2d', NULL, NULL, 0, '70610000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(68, 's1_intra_ind.2J', 1, NULL, '2013-11-01 16:28:29', '2013-11-01 16:43:06', 0, 0, 'Formation intra-entreprise', '', '', '', NULL, 4500.00000000, 5382.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '2d', NULL, NULL, 0, '70610000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(69, 's1_intra_ind.1j', 1, NULL, '2013-11-01 16:29:10', '2013-11-01 16:40:32', 0, 0, 'Formation intra-entreprise', '', '', '', NULL, 2300.00000000, 2750.80000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '1d', NULL, NULL, 0, '70610000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(71, 's1_team', 1, NULL, '2013-11-01 16:35:01', '2013-11-01 16:35:56', 0, 0, 'Team Building', '', '', '', NULL, 2600.00000000, 3109.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '1d', NULL, NULL, 0, '70610000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(75, 's1_xenf', 1, NULL, '2013-11-01 16:57:20', '2013-11-01 16:58:51', 0, 0, 'Formation enfant', '', '', '', NULL, 1200.00000000, 1435.20000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '3,5h', NULL, NULL, 0, '70610000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(73, 's2_pnomad', 1, NULL, '2013-11-01 16:52:09', '2013-11-01 16:53:20', 0, 0, 'Profil Nomad''', '', '', '', NULL, 100.00000000, 119.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '6m', NULL, NULL, 0, '70750000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(83, 's5_frais_mission', 1, NULL, '2013-11-01 17:35:52', '2013-11-01 17:38:28', 0, 0, 'Frais de mission', '', '', '', NULL, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '', NULL, NULL, 0, '70870000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(99, 's3_doc', 1, NULL, '2013-11-01 19:49:52', '2013-11-01 19:50:24', 0, 0, 'Documentation', '', '', '', NULL, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '', NULL, NULL, 0, '70752000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(102, 's6_rmedia', 1, NULL, '2013-11-01 20:06:51', '2013-11-01 20:06:51', 0, 0, 'Rich Media', '', '', '', NULL, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '', NULL, NULL, 0, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(103, 's6_tip', 1, NULL, '2013-11-01 20:14:57', '2013-11-01 20:15:11', 0, 0, 'The International Profilerr', '', '', '', NULL, 650.00000000, 777.40000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '', NULL, NULL, 0, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(104, 's6_webinar', 1, NULL, '2013-11-01 20:16:21', '2013-11-01 20:17:34', 0, 0, 'Webinar', '', '', '', NULL, 1500.00000000, 1794.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '2h', NULL, NULL, 0, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
-(105, 's6_nol', 1, NULL, '2013-11-01 20:18:34', '2013-11-01 20:18:47', 0, 0, 'Nomad''Online', '', '', '', NULL, 450.00000000, 538.20000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '', NULL, NULL, 0, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL);
+(154, 's01_ind.1j', 1, NULL, '2013-11-16 23:48:26', '2013-11-16 23:49:07', 0, 0, 'Formation individuelle', '', '', '', NULL, 2300.00000000, 2750.80000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '1d', NULL, NULL, 0, '70610000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(119, 's01_intra_ind.1j', 1, NULL, '2013-11-14 22:52:37', '2013-11-16 23:45:02', 0, 0, 'Formation individuelle', '', 'Formation organis&eacute;e pour une personne ou un couple', '', NULL, 2300.00000000, 2750.80000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '1d', NULL, NULL, 0, '70610000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(123, 's01_team', 1, NULL, '2013-11-14 22:59:45', '2013-11-14 22:59:58', 0, 0, 'Team Building', '', '', '', NULL, 2600.00000000, 3109.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '1d', NULL, NULL, 0, '70610000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(127, 's02_pnomad_solo', 1, NULL, '2013-11-14 23:14:20', '2013-11-14 23:14:43', 0, 0, 'Profil Nomad'' Solo', '', '', '', NULL, 100.00000000, 119.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, 1, '6m', NULL, NULL, 0, '70750000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(138, 's09_conf', 1, NULL, '2013-11-14 23:46:33', '2013-11-14 23:46:48', 0, 0, 'Conférence', '', '', '', NULL, 1600.00000000, 1913.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '2h', NULL, NULL, 0, '70620000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(141, 's09_maj', 1, NULL, '2013-11-14 23:54:44', '2013-11-14 23:55:04', 0, 0, 'Majoration', '', '', '', NULL, 2000.00000000, 2392.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '1d', NULL, NULL, 0, '70620000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(143, 's09_cons', 1, NULL, '2013-11-15 00:00:24', '2013-11-15 00:00:46', 0, 0, 'Mission de conseil', '', '', '', NULL, 2000.00000000, 2392.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '1d', NULL, NULL, 0, '70620000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(142, 's10_dev', 1, NULL, '2013-11-14 23:57:15', '2013-11-14 23:58:57', 0, 0, 'Développement d''outil', '', '', '', NULL, 2000.00000000, 2392.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '1d', NULL, NULL, 0, '70630000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(153, 'sht09_conf', 1, NULL, '2013-11-15 00:48:34', '2013-11-16 14:47:28', 0, 0, 'Conférence', '', '', '', NULL, 1600.00000000, 1600.00000000, 0.00000000, 0.00000000, 'HT', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '2h', NULL, NULL, 0, '70620900', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(151, 'sht05_frais', 1, NULL, '2013-11-15 00:42:40', '2013-11-16 14:48:34', 0, 0, 'Frais de mission', '', '', '', NULL, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '', NULL, NULL, 0, '70871000', '62265100', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(135, 's06_webinar', 1, NULL, '2013-11-14 23:38:11', '2013-11-14 23:38:28', 0, 0, 'Webinar', '', '', '', NULL, 1000.00000000, 1196.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '2h', NULL, NULL, 0, '70760000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(144, 's10_lcp_pres', 1, NULL, '2013-11-15 00:02:35', '2013-11-15 00:02:59', 0, 0, 'LCP / PRESENTIEL', 'Questionnaire par Internet<br />\r\nEnvoi d&#39;un rapport d&eacute;taill&eacute;<br />\r\nD&eacute;briefing avec un coach certifi&eacute; en pr&eacute;sentiel', '', '', NULL, 650.00000000, 777.40000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '2h', NULL, NULL, 0, '70760000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(116, 's01_atelier', 1, NULL, '2013-11-14 22:43:19', '2013-11-18 18:20:59', 0, 0, 'Atelier interculturel', '', '', '', NULL, 1600.00000000, 1913.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '3h', NULL, NULL, 0, '70610000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(120, 's01_intra_ind.2J', 1, NULL, '2013-11-14 22:54:59', '2013-11-16 23:45:20', 0, 0, 'Formation individuelle', 'Formation organis&eacute;e pour une personne ou un couple', '', '', NULL, 4500.00000000, 5382.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '2d', NULL, NULL, 0, '70610000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(118, 's01_intra_gr.2j', 1, NULL, '2013-11-14 22:50:58', '2013-11-16 23:44:33', 0, 0, 'Formation pour un groupe', '', '', '', NULL, 5000.00000000, 5980.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '2d', NULL, NULL, 0, '70610000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(117, 's01_1intra_gr.1j', 1, NULL, '2013-11-14 22:47:33', '2013-11-18 18:22:42', 0, 0, 'Formation pour un groupe', '', '', '', NULL, 2600.00000000, 3109.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '1d', NULL, NULL, 0, '70610000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(124, 's01_xenf', 1, NULL, '2013-11-14 23:01:11', '2013-11-14 23:17:17', 0, 0, 'Formation enfant', '', '', '', NULL, 1200.00000000, 1435.20000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '3h', NULL, NULL, 0, '70610000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(125, 's02_xnol', 1, NULL, '2013-11-14 23:08:10', '2013-11-14 23:09:11', 0, 0, 'Nomad Online', 'Acc&egrave;s au Profil Nomad&#39; pendant 6 mois<br />\r\nD&eacute;briefing par t&eacute;l&eacute;phone pendant 1 heure avec un consultant certifi&eacute;<br />\r\nFocus sur un pays au choix', '', '', NULL, 450.00000000, 538.20000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '6m', NULL, NULL, 0, '70750000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(130, 's05_frais_mission', 1, NULL, '2013-11-14 23:24:52', '2013-11-14 23:25:14', 0, 0, 'Frais de mission', '', '', '', NULL, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '', NULL, NULL, 0, '70870000', '62265100', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(133, 's06_tip', 1, NULL, '2013-11-14 23:31:21', '2013-11-14 23:32:35', 0, 0, 'The International Profilerr', '', '', '', NULL, 650.00000000, 777.40000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '2h', NULL, NULL, 0, '70760000', '70769000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(132, 's06_rmedia', 1, NULL, '2013-11-14 23:27:52', '2013-11-14 23:29:55', 0, 0, 'Rich Media', '', '', '', NULL, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '', NULL, NULL, 0, '70760000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(146, 's10_lcp_lic', 1, NULL, '2013-11-15 00:17:15', '2013-11-15 00:19:19', 0, 0, 'Licence LCP', '', '', '', NULL, 9000.00000000, 10764.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '1y', NULL, NULL, 0, '70760000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(147, 'sht01_inter', 1, NULL, '2013-11-15 00:27:24', '2013-11-15 00:27:45', 0, 0, 'Formation interentreprises', '', '', '', NULL, 1490.00000000, 1490.00000000, 0.00000000, 0.00000000, 'HT', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '2d', NULL, NULL, 0, '70611000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(145, 's10_lcp_tel', 1, NULL, '2013-11-15 00:07:24', '2013-11-15 00:10:16', 0, 0, 'LCP / TEL', 'Questionnaire par internet<br />\r\nEnvoi d&#39;un rapport d&eacute;taill&eacute;<br />\r\nD&eacute;briefing avec un coach certifi&eacute; par t&eacute;l&eacute;phone', '', '', NULL, 500.00000000, 598.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '2h', NULL, NULL, 0, '70760000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(126, 's02_pnomad', 1, NULL, '2013-11-14 23:12:01', '2013-11-14 23:15:50', 0, 0, 'Profil Nomad''', '', '', '', NULL, 50.00000000, 59.80000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, 1, '6m', NULL, NULL, 0, '70750000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(137, 's09_coach', 1, NULL, '2013-11-14 23:43:11', '2013-11-14 23:43:25', 0, 0, 'Coaching', '', '', '', NULL, 400.00000000, 478.40000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '1h', NULL, NULL, 0, '70620000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(129, 's06_doc', 1, NULL, '2013-11-14 23:23:27', '2013-11-14 23:23:42', 0, 0, 'Documentation', '', '', '', NULL, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '', NULL, NULL, 0, '70641000', '61800000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(131, 's05_frais_tech', 1, NULL, '2013-11-14 23:26:17', '2013-11-14 23:26:29', 0, 0, 'Frais techniques', 'Salle &eacute;quip&eacute;e', '', '', NULL, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '', NULL, NULL, 0, '70801000', '62265100', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(115, 's01_inter', 1, NULL, '2013-11-14 22:30:13', '2013-11-14 22:31:02', 0, 0, 'Formation interentreprises', '', '', '', NULL, 1490.00000000, 1782.04000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 1, 1, '2d', NULL, NULL, 0, '70610000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(149, 'sht01_intra', 1, NULL, '2013-11-15 00:35:02', '2013-11-15 00:36:11', 0, 0, 'Formation intra-entreprise', '', '', '', NULL, 2600.00000000, 2600.00000000, 0.00000000, 0.00000000, 'HT', 0.000, 0, 0.000, 0.000, 10, 1, 1, 1, '1d', NULL, NULL, 0, '70611000', '62265000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL),
+(152, 'sht02_pnomad', 1, NULL, '2013-11-15 00:45:44', '2013-11-16 14:46:06', 0, 0, 'Profil Nomad''', '', '', '', NULL, 50.00000000, 50.00000000, 0.00000000, 0.00000000, 'HT', 0.000, 0, 0.000, 0.000, 10, 1, 0, 1, '6m', NULL, NULL, 0, '70759000', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00000000, '', NULL, 0, NULL);
 
+TRUNCATE TABLE `llx_product_lang`;
 INSERT INTO `llx_product_lang` (`rowid`, `fk_product`, `lang`, `label`, `description`, `note`) VALUES
-(14, 67, 'fr_FR', 'Formation intra-entreprise', '', ''),
-(13, 66, 'fr_FR', 'Formation intra-entreprise', '', ''),
-(8, 61, 'fr_FR', 'Formation interentreprises', '', ''),
-(7, 60, 'fr_FR', 'Atelier interculturel', '', ''),
-(15, 68, 'fr_FR', 'Formation intra-entreprise', '', ''),
-(16, 69, 'fr_FR', 'Formation intra-entreprise', '', ''),
-(18, 71, 'fr_FR', 'Team Building', '', ''),
-(22, 75, 'fr_FR', 'Formation enfant', '', ''),
-(20, 73, 'fr_FR', 'Profil Nomad''', '', ''),
-(30, 83, 'fr_FR', 'Frais de mission', '', ''),
-(31, 84, 'fr_FR', 'Frais techniques', 'Salle &eacute;quip&eacute;e', ''),
-(37, 90, 'fr_FR', 'Mission de conseil', '', ''),
-(47, 100, 'fr_FR', 'LCP', '', ''),
-(34, 87, 'fr_FR', 'Coaching', '', ''),
-(35, 88, 'fr_FR', 'Conférence', '', ''),
-(43, 96, 'fr_FR', 'Préparation', '', ''),
-(38, 91, 'fr_FR', 'Développement spécifique', '', ''),
-(39, 92, 'fr_FR', 'Majoration', '', ''),
-(40, 93, 'fr_FR', 'Formation interentreprises', '', ''),
-(41, 94, 'fr_FR', 'Formation intra-entreprise', '', ''),
-(42, 95, 'fr_FR', 'Profil Nomad''', '', ''),
-(44, 97, 'fr_FR', 'Frais de mission', '', ''),
-(45, 98, 'fr_FR', 'Conférence', '', ''),
-(46, 99, 'fr_FR', 'Documentation', '', ''),
-(49, 102, 'fr_FR', 'Rich Media', '', ''),
-(50, 103, 'fr_FR', 'The International Profilerr', '', ''),
-(51, 104, 'fr_FR', 'Webinar', '', ''),
-(52, 105, 'fr_FR', 'Nomad''Online', '', '');
+(63, 116, 'fr_FR', 'Atelier interculturel', '', ''),
+(66, 119, 'fr_FR', 'Formation individuelle', '', 'Formation organis&eacute;e pour une personne ou un couple'),
+(71, 124, 'fr_FR', 'Formation enfant', '', ''),
+(74, 127, 'fr_FR', 'Profil Nomad'' Solo', '', ''),
+(72, 125, 'fr_FR', 'Nomad Online', 'Acc&egrave;s au Profil Nomad&#39; pendant 6 mois<br />\r\nD&eacute;briefing par t&eacute;l&eacute;phone pendant 1 heure avec un consultant certifi&eacute;<br />\r\nFocus sur un pays au choix', ''),
+(80, 133, 'fr_FR', 'The International Profilerr', '', ''),
+(79, 132, 'fr_FR', 'Rich Media', '', ''),
+(85, 138, 'fr_FR', 'Conférence', '', ''),
+(88, 141, 'fr_FR', 'Majoration', '', ''),
+(91, 144, 'fr_FR', 'LCP / PRESENTIEL', 'Questionnaire par Internet<br />\r\nEnvoi d&#39;un rapport d&eacute;taill&eacute;<br />\r\nD&eacute;briefing avec un coach certifi&eacute; en pr&eacute;sentiel', ''),
+(90, 143, 'fr_FR', 'Mission de conseil', '', ''),
+(89, 142, 'fr_FR', 'Développement d''outil', '', ''),
+(96, 149, 'fr_FR', 'Formation intra-entreprise', '', ''),
+(100, 153, 'fr_FR', 'Conférence', '', ''),
+(77, 130, 'fr_FR', 'Frais de mission', '', ''),
+(99, 152, 'fr_FR', 'Profil Nomad''', '', ''),
+(84, 137, 'fr_FR', 'Coaching', '', ''),
+(82, 135, 'fr_FR', 'Webinar', '', ''),
+(101, 154, 'fr_FR', 'Formation individuelle', '', ''),
+(67, 120, 'fr_FR', 'Formation individuelle', 'Formation organis&eacute;e pour une personne ou un couple', ''),
+(70, 123, 'fr_FR', 'Team Building', '', ''),
+(65, 118, 'fr_FR', 'Formation pour un groupe', '', ''),
+(64, 117, 'fr_FR', 'Formation pour un groupe', '', ''),
+(93, 146, 'fr_FR', 'Licence LCP', '', ''),
+(94, 147, 'fr_FR', 'Formation interentreprises', '', ''),
+(98, 151, 'fr_FR', 'Frais de mission', '', ''),
+(92, 145, 'fr_FR', 'LCP / TEL', 'Questionnaire par internet<br />\r\nEnvoi d&#39;un rapport d&eacute;taill&eacute;<br />\r\nD&eacute;briefing avec un coach certifi&eacute; par t&eacute;l&eacute;phone', ''),
+(73, 126, 'fr_FR', 'Profil Nomad''', '', ''),
+(76, 129, 'fr_FR', 'Documentation', '', ''),
+(78, 131, 'fr_FR', 'Frais techniques', 'Salle &eacute;quip&eacute;e', ''),
+(62, 115, 'fr_FR', 'Formation interentreprises', '', '');
 
-
+TRUNCATE tABLE `llx_product_price`;
 INSERT INTO `llx_product_price` (`rowid`, `entity`, `tms`, `fk_product`, `date_price`, `price_level`, `price`, `price_ttc`, `price_min`, `price_min_ttc`, `price_base_type`, `tva_tx`, `recuperableonly`, `localtax1_tx`, `localtax2_tx`, `fk_user_author`, `tosell`, `price_by_qty`, `import_key`) VALUES
-(113, 1, '2013-11-01 19:32:23', 95, '2013-11-01 19:32:23', 1, 50.00000000, 50.00000000, 0.00000000, 0.00000000, 'HT', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(112, 1, '2013-11-01 19:32:10', 95, '2013-11-01 19:32:10', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(108, 1, '2013-11-01 19:16:32', 93, '2013-11-01 19:16:32', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(109, 1, '2013-11-01 19:21:36', 93, '2013-11-01 19:21:36', 1, 1490.00000000, 1490.00000000, 0.00000000, 0.00000000, 'HT', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(110, 1, '2013-11-01 19:24:25', 94, '2013-11-01 19:24:25', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(111, 1, '2013-11-01 19:24:41', 94, '2013-11-01 19:24:41', 1, 2500.00000000, 2500.00000000, 0.00000000, 0.00000000, 'HT', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(107, 1, '2013-11-01 19:15:07', 92, '2013-11-01 19:15:07', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(106, 1, '2013-11-01 17:52:05', 91, '2013-11-01 17:52:05', 1, 2000.00000000, 2392.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(105, 1, '2013-11-01 17:51:34', 91, '2013-11-01 17:51:34', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(78, 1, '2013-11-01 16:52:45', 73, '2013-11-01 16:52:45', 2, 100.00000000, 119.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(93, 1, '2013-11-01 17:36:54', 84, '2013-11-01 17:36:54', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(104, 1, '2013-11-01 17:50:24', 90, '2013-11-01 17:50:24', 1, 2000.00000000, 2392.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(103, 1, '2013-11-01 17:50:10', 90, '2013-11-01 17:50:10', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(120, 1, '2013-11-01 20:04:24', 100, '2013-11-01 20:04:24', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(97, 1, '2013-11-01 17:45:01', 87, '2013-11-01 17:45:01', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(98, 1, '2013-11-01 17:45:15', 87, '2013-11-01 17:45:15', 1, 400.00000000, 478.40000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(99, 1, '2013-11-01 17:45:52', 88, '2013-11-01 17:45:52', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(100, 1, '2013-11-01 17:46:24', 88, '2013-11-01 17:46:24', 1, 1600.00000000, 1913.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(116, 1, '2013-11-01 19:37:35', 97, '2013-11-01 19:37:35', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(115, 1, '2013-11-01 19:35:01', 96, '2013-11-01 19:35:01', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(77, 1, '2013-11-01 16:52:34', 73, '2013-11-01 16:52:34', 1, 50.00000000, 59.80000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(76, 1, '2013-11-01 16:52:09', 73, '2013-11-01 16:52:09', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(81, 1, '2013-11-01 16:58:02', 75, '2013-11-01 16:58:02', 1, 1200.00000000, 1435.20000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(92, 1, '2013-11-01 17:35:52', 83, '2013-11-01 17:35:52', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(51, 1, '2013-11-01 15:53:17', 60, '2013-11-01 15:53:17', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(52, 1, '2013-11-01 15:55:02', 60, '2013-11-01 15:55:02', 1, 1900.00000000, 2272.40000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(53, 1, '2013-11-01 16:02:52', 60, '2013-11-01 16:02:52', 1, 1600.00000000, 1913.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(54, 1, '2013-11-01 16:04:02', 61, '2013-11-01 16:04:02', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(55, 1, '2013-11-01 16:04:54', 61, '2013-11-01 16:04:54', 1, 1490.00000000, 1782.04000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(80, 1, '2013-11-01 16:57:20', 75, '2013-11-01 16:57:20', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(63, 1, '2013-11-01 16:26:46', 66, '2013-11-01 16:26:46', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(64, 1, '2013-11-01 16:27:33', 67, '2013-11-01 16:27:33', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(65, 1, '2013-11-01 16:28:29', 68, '2013-11-01 16:28:29', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(66, 1, '2013-11-01 16:29:10', 69, '2013-11-01 16:29:10', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(68, 1, '2013-11-01 16:35:01', 71, '2013-11-01 16:35:01', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(69, 1, '2013-11-01 16:35:56', 71, '2013-11-01 16:35:56', 1, 2600.00000000, 3109.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(70, 1, '2013-11-01 16:39:21', 67, '2013-11-01 16:39:21', 1, 2500.00000000, 2990.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(71, 1, '2013-11-01 16:40:06', 69, '2013-11-01 16:40:06', 1, 2300.00000000, 2750.80000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(72, 1, '2013-11-01 16:43:06', 68, '2013-11-01 16:43:06', 1, 4500.00000000, 5382.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(73, 1, '2013-11-01 16:43:53', 67, '2013-11-01 16:43:53', 1, 4900.00000000, 5860.40000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(114, 1, '2013-11-01 19:32:35', 95, '2013-11-01 19:32:35', 2, 100.00000000, 100.00000000, 0.00000000, 0.00000000, 'HT', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(117, 1, '2013-11-01 19:43:56', 98, '2013-11-01 19:43:56', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(118, 1, '2013-11-01 19:44:15', 98, '2013-11-01 19:44:15', 1, 1600.00000000, 1600.00000000, 0.00000000, 0.00000000, 'HT', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(119, 1, '2013-11-01 19:49:52', 99, '2013-11-01 19:49:52', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(131, 1, '2013-11-01 21:59:04', 96, '2013-11-01 21:59:04', 1, 2000.00000000, 2392.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(130, 1, '2013-11-01 21:57:01', 66, '2013-11-01 21:57:01', 1, 2500.00000000, 2990.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(123, 1, '2013-11-01 20:06:51', 102, '2013-11-01 20:06:51', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(124, 1, '2013-11-01 20:14:57', 103, '2013-11-01 20:14:57', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(125, 1, '2013-11-01 20:15:11', 103, '2013-11-01 20:15:11', 1, 650.00000000, 777.40000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(126, 1, '2013-11-01 20:16:21', 104, '2013-11-01 20:16:21', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(127, 1, '2013-11-01 20:17:34', 104, '2013-11-01 20:17:34', 1, 1500.00000000, 1794.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(128, 1, '2013-11-01 20:18:34', 105, '2013-11-01 20:18:34', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 1, 0, NULL),
-(129, 1, '2013-11-01 20:18:47', 105, '2013-11-01 20:18:47', 1, 450.00000000, 538.20000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL);
+(145, 1, '2013-11-14 22:43:19', 116, '2013-11-14 22:43:19', 1, 1600.00000000, 1913.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
+(148, 1, '2013-11-14 22:52:37', 119, '2013-11-14 22:52:37', 1, 2300.00000000, 2750.80000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(149, 1, '2013-11-14 22:54:59', 120, '2013-11-14 22:54:59', 1, 4500.00000000, 5382.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(147, 1, '2013-11-14 22:50:58', 118, '2013-11-14 22:50:58', 1, 5000.00000000, 5980.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
+(155, 1, '2013-11-14 23:08:10', 125, '2013-11-14 23:08:10', 1, 450.00000000, 538.20000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(163, 1, '2013-11-14 23:31:21', 133, '2013-11-14 23:31:21', 1, 650.00000000, 777.40000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(162, 1, '2013-11-14 23:27:52', 132, '2013-11-14 23:27:52', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(187, 1, '2013-11-15 00:45:44', 152, '2013-11-15 00:45:44', 1, 50.00000000, 50.00000000, 0.00000000, 0.00000000, 'HT', 0.000, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(169, 1, '2013-11-14 23:46:33', 138, '2013-11-14 23:46:33', 1, 1600.00000000, 1913.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(174, 1, '2013-11-14 23:54:44', 141, '2013-11-14 23:54:44', 1, 2000.00000000, 2392.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(180, 1, '2013-11-15 00:27:24', 147, '2013-11-15 00:27:24', 1, 1490.00000000, 1490.00000000, 0.00000000, 0.00000000, 'HT', 0.000, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(177, 1, '2013-11-15 00:02:35', 144, '2013-11-15 00:02:35', 1, 650.00000000, 777.40000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(176, 1, '2013-11-15 00:00:24', 143, '2013-11-15 00:00:24', 1, 2000.00000000, 2392.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(175, 1, '2013-11-14 23:57:15', 142, '2013-11-14 23:57:15', 1, 2000.00000000, 2392.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(186, 1, '2013-11-15 00:42:40', 151, '2013-11-15 00:42:40', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(183, 1, '2013-11-15 00:35:02', 149, '2013-11-15 00:35:02', 1, 2600.00000000, 2600.00000000, 0.00000000, 0.00000000, 'HT', 0.000, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(153, 1, '2013-11-14 22:59:45', 123, '2013-11-14 22:59:45', 1, 2600.00000000, 3109.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(188, 1, '2013-11-15 00:48:34', 153, '2013-11-15 00:48:34', 1, 1600.00000000, 1600.00000000, 0.00000000, 0.00000000, 'HT', 0.000, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(160, 1, '2013-11-14 23:24:52', 130, '2013-11-14 23:24:52', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(179, 1, '2013-11-15 00:17:15', 146, '2013-11-15 00:17:15', 1, 9000.00000000, 10764.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
+(168, 1, '2013-11-14 23:43:11', 137, '2013-11-14 23:43:11', 1, 400.00000000, 478.40000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(166, 1, '2013-11-14 23:38:11', 135, '2013-11-14 23:38:11', 1, 1000.00000000, 1196.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(189, 1, '2013-11-16 23:48:26', 154, '2013-11-16 23:48:26', 1, 2300.00000000, 2750.80000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
+(146, 1, '2013-11-14 22:47:33', 117, '2013-11-14 22:47:33', 1, 2600.00000000, 3109.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 1, 0, NULL),
+(154, 1, '2013-11-14 23:01:11', 124, '2013-11-14 23:01:11', 1, 1200.00000000, 1435.20000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(157, 1, '2013-11-14 23:14:20', 127, '2013-11-14 23:14:20', 1, 100.00000000, 119.60000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(178, 1, '2013-11-15 00:07:24', 145, '2013-11-15 00:07:24', 1, 500.00000000, 598.00000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(156, 1, '2013-11-14 23:12:01', 126, '2013-11-14 23:12:01', 1, 50.00000000, 59.80000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(159, 1, '2013-11-14 23:23:27', 129, '2013-11-14 23:23:27', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(161, 1, '2013-11-14 23:26:17', 131, '2013-11-14 23:26:17', 1, 0.00000000, 0.00000000, 0.00000000, 0.00000000, '', 0.000, 0, 0.000, 0.000, 10, 0, 0, NULL),
+(144, 1, '2013-11-14 22:30:13', 115, '2013-11-14 22:30:13', 1, 1490.00000000, 1782.04000000, 0.00000000, 0.00000000, 'HT', 19.600, 0, 0.000, 0.000, 10, 0, 0, NULL);
 
-
-
-
--- le contact client qui est le « Destinataire de la convention » dans la convention. Ce serait bien qu’il apparaisse dans le tableau des sessions. En revanche les références au milieu du tableau prennent de la place et ne sont peut-être pas utiles. Je pense que nous allons surtout utiliser l’id.
--- le commercial qui est le « conseiller » dans la convention
--- le gestionnaire logistique qui est le « Type » dans la convention 
 
 --import session link with convention
 TRUNCATE TABLE llx_agefodd_session;
@@ -1700,6 +1766,64 @@ LEFT OUTER JOIN llx_user as usermod ON sess.modified_by_sf_user_id=usermod.impor
 WHERE convct.id IS NULL AND YEAR(sess.datdeb)>2000
 GROUP BY sess.id;
 
+--Import session customer contact
+TRUNCATE TABLE llx_agefodd_contact;
+INSERT INTO llx_agefodd_contact (entity,fk_socpeople,archive,fk_user_author,datec,fk_user_mod,tms)
+SELECT DISTINCT
+1,
+llx_socpeople.rowid,
+0,
+1,
+NOW(),
+1,
+NOW()
+FROM convct
+INNER JOIN contact on convct.recipient_contact_id=contact.id
+INNER JOIN llx_socpeople ON llx_socpeople.import_key=contact.id;
+
+TRUNCATE TABLE llx_agefodd_session_contact;
+INSERT INTO llx_agefodd_session_contact (fk_session_agefodd,fk_agefodd_contact,fk_user_author,datec,fk_user_mod,tms)
+SELECT DISTINCT
+llx_agefodd_session.rowid,
+llx_agefodd_contact.rowid,
+1,
+NOW(),
+1,
+NOW()
+FROM convct
+INNER JOIN llx_agefodd_session ON llx_agefodd_session.import_key=convct.session_id
+INNER JOIN contact on convct.recipient_contact_id=contact.id
+INNER JOIN llx_socpeople ON llx_socpeople.import_key=contact.id
+INNER JOIN llx_agefodd_contact ON llx_socpeople.rowid=llx_agefodd_contact.fk_socpeople;
+
+--Commerciale
+TRUNCATE TABLE llx_agefodd_session_commercial;
+INSERT INTO llx_agefodd_session_commercial (fk_session_agefodd, fk_user_com, fk_user_author,fk_user_mod, datec)
+SELECT DISTINCT
+llx_agefodd_session.rowid,
+llx_user.rowid,
+1,
+1,
+NOW()
+FROM convct
+INNER JOIN llx_agefodd_session ON llx_agefodd_session.import_key=convct.session_id
+INNER JOIN contact on convct.recipient_contact_id=contact.id
+INNER JOIN com ON com.id=convct.com_id
+INNER JOIN llx_user ON llx_user.email=com.email;
+
+
+-- le gestionnaire logistique qui est le « Type » dans la convention 
+INSERT INTO llx_agefodd_session_extrafields (fk_object,ts_logistique)
+SELECT DISTINCT
+llx_agefodd_session.rowid,
+llx_user.rowid
+FROM convct
+INNER JOIN llx_agefodd_session ON llx_agefodd_session.import_key=convct.session_id
+INNER JOIN sf_user ON sf_user.login=convct.contrat
+INNER JOIN llx_user ON llx_user.email=sf_user.email_address;
+
+
+
 --Import trainer as supplier and contact
 INSERT INTO llx_societe(nom, 
 entity, 
@@ -1830,6 +1954,13 @@ LEFT OUTER JOIN llx_user as usermod ON interv.modified_by_sf_user_id=usermod.imp
 UPDATE llx_societe SET code_fournisseur=CONCAT_WS('','F', LPAD(rowid,5,'0')), tms=tms WHERE fournisseur=1;
 UPDATE llx_societe SET code_client=CONCAT_WS('','C', LPAD(rowid,5,'0')), tms=tms WHERE client=1;
 
+--Insert Consultant categorie
+TRUNCATE TABLE llx_categorie_fournisseur;
+INSERT INTO  llx_categorie_fournisseur (fk_categorie,fk_societe)
+SELECT 
+12,
+llx_societe.rowid
+FROM llx_societe INNER JOIN interv ON interv.id=llx_societe.import_key;
 
 INSERT INTO llx_socpeople (datec,
 tms,
@@ -1900,6 +2031,14 @@ LEFT OUTER JOIN llx_c_civilite as civ ON civ.code=interv.civilite
 LEFT OUTER JOIN llx_user as usercrea ON interv.created_by_sf_user_id=usercrea.import_key
 LEFT OUTER JOIN llx_user as usermod ON interv.modified_by_sf_user_id=usermod.import_key;
 
+--Insert Consultant categorie for contact
+TRUNCATE TABLE llx_categorie_contact;
+INSERT INTO  llx_categorie_contact (fk_categorie,fk_socpeople)
+SELECT 
+32,
+llx_socpeople.rowid
+FROM llx_socpeople INNER JOIN interv ON interv.id=llx_socpeople.import_key;
+
 --Import trainer from dolibarr contact
 TRUNCATE TABLE llx_agefodd_formateur;
 INSERT INTO llx_agefodd_formateur (
@@ -1961,7 +2100,7 @@ entity,
   date_session,
   heured,
   heuref,
-  trainer_cost,
+  --trainer_cost,
   fk_actioncomm,
   fk_user_author,
   datec,
@@ -1973,7 +2112,7 @@ entity,
  pls.datec,--date_session,
  DATE_ADD(DATE(pls.datec),INTERVAL DATE_FORMAT(pls.hrdeb,'%H:%i') HOUR_MINUTE),--heured,
  DATE_ADD(DATE(pls.datec),INTERVAL DATE_FORMAT(pls.hrfin,'%H:%i') HOUR_MINUTE), --heuref,
- coutconsultant.montant/pls.nbhr,--trainer_cost,
+ --coutconsultant.montant/pls.nbhr,--trainer_cost,
  NULL,--fk_actioncomm,
  IFNULL(usercrea.rowid,1), --fk_user_author
  IFNULL(pls.created,NOW()),-- datec,
@@ -2277,22 +2416,21 @@ llx_propal.total=(SELECT SUM(total) FROM llx_propaldet WHERE llx_propaldet.fk_pr
 llx_propal.tms=llx_propal.tms;
 
 --Lier propal Session/client
-INSERT INTO llx_agefodd_facture(
-fk_commande,
-fk_facture,
-fk_propal,
-fk_session,
-fk_societe,
+TRUNCATE TABLE llx_agefodd_session_element;
+INSERT INTO llx_agefodd_session_element(
+fk_session_agefodd,
+fk_soc,
+element_type,
+fk_element,
 fk_user_author,
 datec,
 fk_user_mod,
 tms)
 SELECT 
-NULL,
-NULL,
-llx_propal.rowid,
 llx_agefodd_session.rowid,
 llx_societe.rowid,
+'propal',
+llx_propal.rowid,
 1,
 NOW(),
 1,
@@ -2403,78 +2541,6 @@ INNER JOIN llx_societe ON llx_societe.import_key=account.id
 INNER JOIN convct ON convct.id=lettrage.convct_id
 WHERE convct.supprime=0
 GROUP BY lettrage.nopfact;
-
---Import Invoice line
-INSERT INTO llx_facturedet (
-fk_facture,
-fk_parent_line,
-fk_product,
-label,
-description,
-tva_tx,
-localtax1_tx,
-localtax1_type,
-localtax2_tx,
-localtax2_type,
-qty,
-remise_percent,
-remise,
-fk_remise_except,
-subprice,
-price,
-total_ht,
-total_tva,
-total_localtax1,
-total_localtax2,
-total_ttc,
-product_type,
-date_start,
-date_end,
-info_bits,
-buy_price_ht,
-fk_product_fournisseur_price,
-fk_code_ventilation,
-special_code,
-rang,
-import_key) 
-SELECT DISTINCT
-llx_facture.rowid,  --fk_facture,
-NULL,  --fk_parent_line,
-NULL,  --fk_product,
-NULL,  --label,
-tempfact.intitule,  --description,
-tempfact.tauxtva,  --tva_tx,
-0,  --localtax1_tx,
-0,  --localtax1_type,
-0,  --localtax2_tx,
-0,  --localtax2_type,
-tempfact.nbjr,  --qty,
-0,  --remise_percent,
-0,  --remise,
-NULL,  --fk_remise_except,
-tempfact.taux,  --subprice,
-NULL,  --price,
-tempfact.montant,  --total_ht,
-tempfact.mttva,  --total_tva,
-0,  --total_localtax1,
-0,  --total_localtax2,
-tempfact.mtttc,  --total_ttc,
-1,  --product_type,
-NULL,  --date_start,
-NULL,  --date_end,
-0,  --info_bits,
-0,  --buy_price_ht,
-NULL,  --fk_product_fournisseur_price,
-0,  --fk_code_ventilation,
-0,  --special_code,
-tempfact.numlig,  --rang,
-NULL  --import_key
-FROM llx_facture
-INNER JOIN tempfact ON tempfact.numfact=llx_facture.facnumber
-INNER JOIN thirdparty ON thirdparty.id=tempfact.thirdparty_id
-INNER JOIN account ON account.id=thirdparty.account_id
-INNER JOIN llx_societe ON llx_societe.import_key=account.id
-INNER JOIN convct ON convct.id=tempfact.convct_id;
 
 --import facture impeye
 INSERT INTO llx_facture (
@@ -2670,22 +2736,20 @@ INNER JOIN llx_socpeople ON  llx_socpeople.import_key=contact.id;
 
 
 --Lier facture Session/client
-INSERT INTO llx_agefodd_facture(
-fk_commande,
-fk_facture,
-fk_propal,
-fk_session,
-fk_societe,
+INSERT INTO llx_agefodd_session_element(
+fk_session_agefodd,
+fk_soc,
+element_type,
+fk_element,
 fk_user_author,
 datec,
 fk_user_mod,
 tms)
-SELECT 
-NULL,
-llx_facture.rowid,
-NULL,
+SELECT DISTINCT
 llx_agefodd_session.rowid,
 llx_societe.rowid,
+'invoice',
+llx_facture.rowid,
 1,
 NOW(),
 1,
@@ -2697,43 +2761,12 @@ INNER JOIN session as sess ON sess.id=convct.session_id
 INNER JOIN llx_agefodd_session ON llx_agefodd_session.import_key=sess.id
 INNER JOIN account ON account.id=convct.ent_account_id
 INNER JOIN llx_societe ON llx_societe.import_key=account.id
-WHERE CONCAT(llx_agefodd_session.rowid,'&', llx_societe.rowid) NOT IN (SELECT CONCAT(fk_session, '&',fk_societe) FROM llx_agefodd_facture);
 
 
 
---Import Category
 
 
-INSERT INTO `llx_categorie` (`rowid`, `entity`, `fk_parent`, `label`, `type`, `description`, `fk_soc`, `visible`, `import_key`) VALUES
-(1, 1, 0, 'Produit', 0, 'Tous les produits vendus par Akteos, &agrave; l&#39;exception des frais', NULL, 0, NULL),
-(3, 1, 0, 'Frais', 0, 'Tous les frais g&eacute;n&eacute;r&eacute;s par les interventions d&#39;Akteos (d&eacute;pacement, h&eacute;bergement, restauration, salle,...) &agrave; l&#39;exception des consultants, et refactur&eacute;s aux clients (en g&eacute;n&eacute;ral &agrave; l&#39;euro pr&egrave;s).', NULL, 0, NULL),
-(6, 1, 1, 'Produit pédagogique', 0, 'Tous les produits en rapport avec les formations &agrave; prendre en consid&eacute;ration pour le Bilan P&eacute;dagogique et Financier', NULL, 0, NULL),
-(7, 1, 1, 'Produit non pédagogique', 0, 'Tous les produits qui ne sont pas consid&eacute;r&eacute;s comme de la formation et ne sont pas comptabilis&eacute;s dans le Bilan P&eacute;dagogique et Financier', NULL, 0, NULL),
-(8, 1, 6, 'Conception', 0, '', NULL, 0, NULL),
-(9, 1, 6, 'Intervention', 0, '', NULL, 0, NULL),
-(10, 1, 6, 'Outil pédagogique', 0, '', NULL, 0, NULL),
-(30, 1, 31, 'Particulier', 4, '', NULL, 0, NULL),
-(12, 1, 0, 'Consultant', 1, '', NULL, 0, NULL),
-(15, 1, 12, 'Consultant Etranger', 1, '', NULL, 0, NULL),
-(16, 1, 12, 'Consultant France', 1, '', NULL, 0, NULL),
-(17, 1, 12, 'Consultant Suppléant', 1, '', NULL, 0, NULL),
-(28, 1, 31, 'Salarié bénéficiant d''un financement par l''employeur', 4, '', NULL, 0, NULL),
-(21, 1, 0, 'Logistique', 1, 'Hotel, Restaurant, Agence de voyage, Imprimeur,...', NULL, 0, NULL),
-(22, 1, 0, 'Communication', 1, '', NULL, 0, NULL),
-(23, 1, 1, 'Produit HT', 0, '', NULL, 0, NULL),
-(24, 1, 6, 'On Line', 0, '', NULL, 0, NULL),
-(25, 1, 3, 'Frais HT', 0, '', NULL, 0, NULL),
-(29, 1, 31, 'Demandeur d''emploi', 4, '', NULL, 0, NULL),
-(31, 1, 0, 'Participant', 4, '', NULL, 0, NULL),
-(32, 1, 0, 'Consultant', 4, '', NULL, 0, NULL),
-(33, 1, 32, 'Travailleur indépendant', 4, '', NULL, 0, NULL),
-(34, 1, 32, 'CDI', 4, '', NULL, 0, NULL),
-(35, 1, 32, 'CDD', 4, '', NULL, 0, NULL),
-(36, 1, 32, 'Formateur occasionnel', 4, '', NULL, 0, NULL),
-(37, 1, 32, 'Bénévole', 4, '', NULL, 0, NULL);
-
-
-
+TRUNCATE tABLE `llx_categorie_product`;
 INSERT INTO `llx_categorie_product` (`fk_categorie`, `fk_product`, `import_key`) VALUES
 (24, 133, NULL),
 (24, 132, NULL),
@@ -2763,11 +2796,13 @@ INSERT INTO `llx_categorie_product` (`fk_categorie`, `fk_product`, `import_key`)
 (25, 131, NULL),
 (23, 147, NULL);
 
+TRUNCATE TABLE `llx_usergroup`;
 INSERT INTO `llx_usergroup` (`rowid`, `nom`, `entity`, `datec`, `tms`, `note`) VALUES
 (1, 'Direction', 1, '2013-10-24 07:34:32', '2013-10-24 07:34:32', ''),
 (2, 'Général', 1, '2013-10-24 07:35:41', '2013-10-24 07:35:41', ''),
 (3, 'Spécifique', 1, '2013-10-24 07:37:05', '2013-10-24 07:37:05', '');
 
+TRUNCATE TABLE `llx_usergroup_user`;
 INSERT INTO `llx_usergroup_user` (`rowid`, `entity`, `fk_user`, `fk_usergroup`) VALUES
 (7, 1, 2, 2),
 (10, 1, 3, 3),
@@ -2782,6 +2817,8 @@ INSERT INTO `llx_usergroup_user` (`rowid`, `entity`, `fk_user`, `fk_usergroup`) 
 (11, 1, 15, 3),
 (12, 1, 38, 1);
 
+
+TRUNCATE TABLE `llx_usergroup_rights`;
 INSERT INTO `llx_usergroup_rights` (`rowid`, `fk_usergroup`, `fk_id`) VALUES
 (40, 1, 11),
 (41, 1, 12),
@@ -3009,6 +3046,7 @@ INSERT INTO `llx_usergroup_rights` (`rowid`, `fk_usergroup`, `fk_id`) VALUES
 (280, 2, 103002),
 (282, 2, 103003);
 
+TRUNCATE TABLE `llx_user_rights`;
 INSERT INTO `llx_user_rights` (`rowid`, `fk_user`, `fk_id`) VALUES
 (1198, 1, 11),
 (1173, 1, 12),
@@ -3338,20 +3376,8 @@ INSERT INTO `llx_user_rights` (`rowid`, `fk_user`, `fk_id`) VALUES
 
 
 
-INSERT INTO `llx_usergroup_user` (`rowid`, `entity`, `fk_user`, `fk_usergroup`) VALUES
-(1, 1, 8, 1),
-(2, 1, 10, 1),
-(3, 1, 5, 2),
-(4, 1, 4, 2),
-(5, 1, 11, 2),
-(6, 1, 13, 2),
-(7, 1, 2, 2),
-(8, 1, 14, 2),
-(9, 1, 6, 2),
-(10, 1, 3, 3),
-(11, 1, 15, 3);
 
-
+TRUNCATE TABLE `llx_user_extrafields`;
 INSERT INTO `llx_user_extrafields` (`rowid`, `tms`, `fk_object`, `import_key`, `u_prospection`, `u_commercial`, `u_logistique`, `u_interentreprises`, `u_communication`) VALUES
 (10, '2013-11-01 22:26:31', 6, NULL, 1, 1, NULL, NULL, NULL),
 (2, '2013-11-01 22:19:19', 14, NULL, NULL, NULL, 1, NULL, NULL),
@@ -3466,14 +3492,21 @@ INSERT INTO `llx_rights_def` (`id`, `libelle`, `module`, `entity`, `perms`, `sub
 (20004, 'Définir les congés payés des utilisateurs', 'holiday', 1, 'define_holiday', NULL, 'w', 0),
 (20005, 'Voir les logs de modification des congés payés', 'holiday', 1, 'view_log', NULL, 'w', 0),
 (20006, 'Accéder au rapport mensuel des congés payés', 'holiday', 1, 'month_report', NULL, 'w', 0),
-(103001, 'Lecture', 'agefodd', 1, 'lire', NULL, 'w', 1),
-(103002, 'Modification', 'agefodd', 1, 'modifier', NULL, 'w', 0),
-(103003, 'Ajout', 'agefodd', 1, 'creer', NULL, 'w', 0),
-(103004, 'Suppression', 'agefodd', 1, 'supprimer', NULL, 'w', 0),
+(103001, 'Voir les sesisons', 'agefodd', 1, 'lire', NULL, 'w', 1),
+(103002, 'Modifier les sessions', 'agefodd', 1, 'modifier', NULL, 'w', 0),
+(103003, 'Creer les sessions', 'agefodd', 1, 'creer', NULL, 'w', 0),
+(103004, 'Suppression des sessions', 'agefodd', 1, 'supprimer', NULL, 'w', 0),
 (103005, 'Voir stats', 'agefodd', 1, 'viewstats', NULL, 'w', 0),
 (103006, 'export', 'agefodd', 1, 'export', NULL, 'w', 0),
 (103007, 'agenda', 'agefodd', 1, 'agenda', NULL, 'w', 0),
 (103008, 'agendatrainer', 'agefodd', 1, 'agendatrainer', NULL, 'w', 0),
+(103009, 'Voir les formations du catalogue', 'agefodd', 1, 'agefodd_formation_catalogue', 'lire', 'r', 1),
+(103010, 'Creer/Modifier les formations du catalogue', 'agefodd', 1, 'agefodd_formation_catalogue', 'creer', 'r', 1),
+(103011, 'Supprimer les formations du catalogue', 'agefodd', 1, 'agefodd_formation_catalogue', 'supprimer', 'r', 1),
+(103012, 'Voir les sites (lieux)', 'agefodd', 1, 'agefodd_place', 'lire', 'r', 1),
+(103013, 'Creer/Modifier les sites (lieux)', 'agefodd', 1, 'agefodd_place', 'creer', 'r', 1),
+(103014, 'Supprimer les sites (lieux)', 'agefodd', 1, 'agefodd_place', 'supprimer', 'r', 1),
+(265486, 'Modifier les commercieux d''un tiers', 'societe', 1, 'client', 'comm', 'r', 1),
 (2354687, 'Mettre ajour les prix produits par client', 'service', 1, 'custprix', NULL, 'w', 0);
 
 --Set prospect thirdparty with no invoicie
@@ -3541,6 +3574,139 @@ INSERT INTO `llx_c_effectif` (`id`, `code`, `libelle`, `active`, `module`) VALUE
 (3, 'EF100-499', '100 - 499', 1, NULL),
 (4, 'EF500-999', '500 - 999', 1, NULL),
 (6, 'EF1000-', '> 1000', 1, NULL);
+
+
+--insert event type Demande entrante
+TRUNCATE TABLE llx_actioncomm;
+INSERT INTO llx_actioncomm (
+ref_ext,
+entity,
+datep,
+datep2,
+fk_action,
+code,
+label,
+note,
+datec,
+tms,
+fk_user_author,
+fk_user_mod,
+fk_soc,
+fk_contact,
+fk_user_action,
+transparency,
+fk_user_done,
+priority,
+fulldayevent,
+punctual,
+percent,
+location,
+durationp,
+durationa,
+fk_element,
+elementtype)
+SELECT DISTINCT
+planningitem.id, --ref_ext
+1, --entity,
+IFNULL(planningitem.begin_datetime,planningitem.end_datetime), --datep,
+planningitem.end_datetime, --datep2,
+1030014, --fk_action
+'AC_ENTR', --code,
+CASE WHEN (TRIM(planningitem.summary)='') THEN 'Demande entrante (renseignements, besoins)' ELSE planningitem.summary END, --label,
+planningitem.description, --note,
+planningitem.created, --datec,
+planningitem.modified, --tms,
+IFNULL(usercrea.rowid,1), --fk_user_author
+IFNULL(usermod.rowid,1), --fk_user_mod
+llx_societe.rowid, --fk_soc,
+llx_socpeople.rowid, --fk_contact,
+IFNULL(usercrea.rowid,1), --fk_user_action,
+0, --transparency,
+IFNULL(usercrea.rowid,1), --fk_user_done,
+0, --priority,
+0, --fulldayevent,
+1, --punctual,
+-1, --percent,
+null, --location
+planningitem.end_datetime-planningitem.begin_datetime, --durationp,
+null, --durationa,
+null, --fk_element
+null --elementtype
+FROM planningitem
+LEFT OUTER JOIN planningitem_uobject as contactsoc ON planningitem.id=contactsoc.planningitem_id
+LEFT OUTER JOIN planningitem_uobject as contctlink ON contctlink.planningitem_uobject_id=contactsoc.id
+LEFT OUTER JOIN llx_socpeople ON llx_socpeople.import_key=contctlink.uobject_id
+LEFT OUTER JOIN llx_societe ON llx_societe.import_key=contactsoc.uobject_id
+LEFT OUTER JOIN llx_user as usercrea ON planningitem.created_by_sf_user_id=usercrea.import_key
+LEFT OUTER JOIN llx_user as usermod ON planningitem.modified_by_sf_user_id=usermod.import_key
+WHERE planningitem.planningitemtype_code='BES'
+AND llx_societe.rowid IS NOT NULL AND planningitem.deleted=0;
+
+--insert event type Demande entrante
+INSERT INTO llx_actioncomm (
+ref_ext,
+entity,
+datep,
+datep2,
+fk_action,
+code,
+label,
+note,
+datec,
+tms,
+fk_user_author,
+fk_user_mod,
+fk_soc,
+fk_contact,
+fk_user_action,
+transparency,
+fk_user_done,
+priority,
+fulldayevent,
+punctual,
+percent,
+location,
+durationp,
+durationa,
+fk_element,
+elementtype)
+SELECT DISTINCT
+planningitem.id, --ref_ext
+1, --entity,
+IFNULL(planningitem.begin_datetime,planningitem.end_datetime), --datep,
+planningitem.end_datetime, --datep2,
+1030011, --fk_action
+'AC_COUR', --code,
+CASE WHEN (TRIM(planningitem.summary)='') THEN 'Envoi courrier (doc, catalogue, ...)' ELSE planningitem.summary END, --label,
+planningitem.description, --note,
+planningitem.created, --datec,
+planningitem.modified, --tms,
+IFNULL(usercrea.rowid,1), --fk_user_author
+IFNULL(usermod.rowid,1), --fk_user_mod
+llx_societe.rowid, --fk_soc,
+llx_socpeople.rowid, --fk_contact,
+IFNULL(usercrea.rowid,1), --fk_user_action,
+0, --transparency,
+IFNULL(usercrea.rowid,1), --fk_user_done,
+0, --priority,
+0, --fulldayevent,
+1, --punctual,
+-1, --percent,
+null, --location
+planningitem.end_datetime-planningitem.begin_datetime, --durationp,
+null, --durationa,
+null, --fk_element
+null --elementtype
+FROM planningitem
+LEFT OUTER JOIN planningitem_uobject as contactsoc ON planningitem.id=contactsoc.planningitem_id
+LEFT OUTER JOIN planningitem_uobject as contctlink ON contctlink.planningitem_uobject_id=contactsoc.id
+LEFT OUTER JOIN llx_socpeople ON llx_socpeople.import_key=contctlink.uobject_id
+LEFT OUTER JOIN llx_societe ON llx_societe.import_key=contactsoc.uobject_id
+LEFT OUTER JOIN llx_user as usercrea ON planningitem.created_by_sf_user_id=usercrea.import_key
+LEFT OUTER JOIN llx_user as usermod ON planningitem.modified_by_sf_user_id=usermod.import_key
+WHERE planningitem.planningitemtype_code='DOC'
+AND llx_societe.rowid IS NOT NULL
+AND planningitem.deleted=0;
 ------
 ---import Agenda
 ------
