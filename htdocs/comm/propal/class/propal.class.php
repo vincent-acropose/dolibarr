@@ -1694,6 +1694,7 @@ class Propal extends CommonObject
         $sql.= " SET fk_statut = ".$statut.", note_private = '".$this->db->escape($note)."', date_cloture=".$this->db->idate($now).", fk_user_cloture=".$user->id;
         $sql.= " WHERE rowid = ".$this->id;
 
+        dol_syslog(get_class($this).'::cloture sql='.$sql);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -1767,6 +1768,7 @@ class Propal extends CommonObject
         else
         {
             $this->error=$this->db->error();
+            dol_syslog(get_class($this)."::cloture Error: $this->error");
             $this->db->rollback();
             return -1;
         }
