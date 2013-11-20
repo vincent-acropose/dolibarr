@@ -3766,8 +3766,7 @@ LEFT OUTER JOIN llx_societe ON llx_societe.import_key=contactsoc.uobject_id
 LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=planningitem.created_by_sf_user_id
 LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
 LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=planningitem.modified_by_sf_user_id
-LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email;
-
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
 WHERE planningitem.planningitemtype_code='BES'
 AND llx_societe.rowid IS NOT NULL AND planningitem.deleted=0;
 
@@ -3834,8 +3833,144 @@ LEFT OUTER JOIN llx_societe ON llx_societe.import_key=contactsoc.uobject_id
 LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=planningitem.created_by_sf_user_id
 LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
 LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=planningitem.modified_by_sf_user_id
-LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email;
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
 WHERE planningitem.planningitemtype_code='DOC'
+AND llx_societe.rowid IS NOT NULL
+AND planningitem.deleted=0;
+
+--Insert Projet
+INSERT INTO llx_actioncomm (
+ref_ext,
+entity,
+datep,
+datep2,
+fk_action,
+code,
+label,
+note,
+datec,
+tms,
+fk_user_author,
+fk_user_mod,
+fk_soc,
+fk_contact,
+fk_user_action,
+transparency,
+fk_user_done,
+priority,
+fulldayevent,
+punctual,
+percent,
+location,
+durationp,
+durationa,
+fk_element,
+elementtype)
+SELECT DISTINCT
+planningitem.id, --ref_ext
+1, --entity,
+IFNULL(planningitem.begin_datetime,planningitem.end_datetime), --datep,
+planningitem.end_datetime, --datep2,
+1030013, --fk_action
+'AC_PROJ', --code,
+CASE WHEN (TRIM(planningitem.summary)='') THEN 'Envoi courrier (doc, catalogue, ...)' ELSE LEFT(planningitem.summary,128) END, --label,
+planningitem.description, --note,
+planningitem.created, --datec,
+planningitem.modified, --tms,
+IFNULL(usercrea.rowid,1), --fk_user_author
+IFNULL(usermod.rowid,1), --fk_user_mod
+llx_societe.rowid, --fk_soc,
+llx_socpeople.rowid, --fk_contact,
+IFNULL(usercrea.rowid,1), --fk_user_action,
+0, --transparency,
+IFNULL(usercrea.rowid,1), --fk_user_done,
+0, --priority,
+0, --fulldayevent,
+1, --punctual,
+-1, --percent,
+null, --location
+planningitem.end_datetime-planningitem.begin_datetime, --durationp,
+null, --durationa,
+null, --fk_element
+null --elementtype
+FROM planningitem
+LEFT OUTER JOIN planningitem_uobject as contactsoc ON planningitem.id=contactsoc.planningitem_id
+LEFT OUTER JOIN planningitem_uobject as contctlink ON contctlink.planningitem_uobject_id=contactsoc.id
+LEFT OUTER JOIN llx_socpeople ON llx_socpeople.import_key=contctlink.uobject_id
+LEFT OUTER JOIN llx_societe ON llx_societe.import_key=contactsoc.uobject_id
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=planningitem.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=planningitem.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
+WHERE planningitem.planningitemtype_code='PROJET'
+AND llx_societe.rowid IS NOT NULL
+AND planningitem.deleted=0;
+
+
+INSERT INTO llx_actioncomm (
+ref_ext,
+entity,
+datep,
+datep2,
+fk_action,
+code,
+label,
+note,
+datec,
+tms,
+fk_user_author,
+fk_user_mod,
+fk_soc,
+fk_contact,
+fk_user_action,
+transparency,
+fk_user_done,
+priority,
+fulldayevent,
+punctual,
+percent,
+location,
+durationp,
+durationa,
+fk_element,
+elementtype)
+SELECT DISTINCT
+planningitem.id, --ref_ext
+1, --entity,
+IFNULL(planningitem.begin_datetime,planningitem.end_datetime), --datep,
+planningitem.end_datetime, --datep2,
+1030013, --fk_action
+'AC_PROJ', --code,
+CASE WHEN (TRIM(planningitem.summary)='') THEN 'Envoi courrier (doc, catalogue, ...)' ELSE LEFT(planningitem.summary,128) END, --label,
+planningitem.description, --note,
+planningitem.created, --datec,
+planningitem.modified, --tms,
+IFNULL(usercrea.rowid,1), --fk_user_author
+IFNULL(usermod.rowid,1), --fk_user_mod
+llx_societe.rowid, --fk_soc,
+llx_socpeople.rowid, --fk_contact,
+IFNULL(usercrea.rowid,1), --fk_user_action,
+0, --transparency,
+IFNULL(usercrea.rowid,1), --fk_user_done,
+0, --priority,
+0, --fulldayevent,
+1, --punctual,
+-1, --percent,
+null, --location
+planningitem.end_datetime-planningitem.begin_datetime, --durationp,
+null, --durationa,
+null, --fk_element
+null --elementtype
+FROM planningitem
+LEFT OUTER JOIN planningitem_uobject as contactsoc ON planningitem.id=contactsoc.planningitem_id
+LEFT OUTER JOIN planningitem_uobject as contctlink ON contctlink.planningitem_uobject_id=contactsoc.id
+LEFT OUTER JOIN llx_socpeople ON llx_socpeople.import_key=contctlink.uobject_id
+LEFT OUTER JOIN llx_societe ON llx_societe.import_key=contactsoc.uobject_id
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=planningitem.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=planningitem.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
+WHERE planningitem.planningitemtype_code='PROJET'
 AND llx_societe.rowid IS NOT NULL
 AND planningitem.deleted=0;
 ------
@@ -3854,7 +3989,7 @@ AND planningitem.deleted=0;
 --contact_id et account_id
 --type='Autre'
 --dater=date de fin
-
+ 
 --Remove temporarie data
 ALTER TABLE llx_societe DROP INDEX idx_llx_societe_import_key;
 ALTER TABLE llx_agefodd_session DROP INDEX idx_llx_agefodd_session_import_key;
