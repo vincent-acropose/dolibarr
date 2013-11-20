@@ -1219,7 +1219,7 @@ class Form
         //Price by customer
         if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES) && !empty($socid)) {
         	$sql.=' ,pcp.rowid as idprodcustprice, pcp.price as custprice, pcp.price_ttc as custprice_ttc,';
-        	$sql.=' pcp.price_base_type as custprice_base_type, pcp.tva_tx  as custtva_tx';
+        	$sql.=' pcp.price_base_type as custprice_base_type, pcp.tva_tx as custtva_tx';
         }
         // Multilang : we add translation
         if (! empty($conf->global->MAIN_MULTILANGS))
@@ -1510,7 +1510,7 @@ class Form
 		}
 		
 		//Price by customer
-		if ($conf->global->PRODUIT_CUSTOMER_PRICES) {
+		if (!empty($conf->global->PRODUIT_CUSTOMER_PRICES)) {
 			if (!empty($objp->idprodcustprice)) {
 				$found = 1;
 				
