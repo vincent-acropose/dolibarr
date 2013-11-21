@@ -358,20 +358,21 @@ class FormOther
         $moreforfilter.='<option value="">&nbsp;</option>';
 
         // Get list of users allowed to be viewed
-        $sql_usr = "SELECT u.rowid, u.lastname as name, u.firstname, u.login";
+       /* $sql_usr = "SELECT u.rowid, u.lastname as name, u.firstname, u.login";
         $sql_usr.= " FROM ".MAIN_DB_PREFIX."user as u";
         $sql_usr.= " WHERE u.entity IN (0,".$conf->entity.")";
         if (empty($user->rights->user->user->lire)) $sql_usr.=" AND u.fk_societe = ".($user->societe_id?$user->societe_id:0);
         // Add existing sales representatives of thirdparty of external user
         if (empty($user->rights->user->user->lire) && $user->societe_id)
         {
-            $sql_usr.=" UNION ";
-            $sql_usr.= "SELECT u2.rowid, u2.lastname as name, u2.firstname, u2.login";
+            $sql_usr.=" UNION ";*/
+            $sql_usr.= "SELECT DISTINCT u2.rowid, u2.lastname as name, u2.firstname, u2.login";
             $sql_usr.= " FROM ".MAIN_DB_PREFIX."user as u2, ".MAIN_DB_PREFIX."societe_commerciaux as sc";
             $sql_usr.= " WHERE u2.entity IN (0,".$conf->entity.")";
-            $sql_usr.= " AND u2.rowid = sc.fk_user AND sc.fk_soc=".$user->societe_id;
-        }
-        if (! empty($conf->global->USER_HIDE_INACTIVE_IN_COMBOBOX)) $sql_usr.= " AND u.statut<>0 ";
+            $sql_usr.= " AND u2.rowid = sc.fk_user ";
+            //$sql_usr.= " AND sc.fk_soc=".$user->societe_id;
+       // }
+        if (! empty($conf->global->USER_HIDE_INACTIVE_IN_COMBOBOX)) $sql_usr.= " AND u2.statut<>0 ";
         $sql_usr.= " ORDER BY name ASC";
         //print $sql_usr;exit;
 

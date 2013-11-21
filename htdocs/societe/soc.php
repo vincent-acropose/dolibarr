@@ -598,7 +598,7 @@ if ($conf->global->MAIN_COMPANY_CONTROL_DBL && $need_confirm) {
 	$confirm_text=$langs->trans("ConfirmCreationThirdpartyOtherCustomer").' '. GETPOST('nom').'<br>';
 	
 	foreach($result_find_dbl as $find_cust) {
-		$confirm_text.='<a href="'.DOL_URL_ROOT.'/societe/soc.php?socid='.$find_cust->id.'" target="_blanck">'.$find_cust->name.'</a>'.$find_cust->address.' '.$find_cust->zip.' '.$find_cust->town.'<br>';
+		$confirm_text.='<a href="'.DOL_URL_ROOT.'/societe/soc.php?socid='.$find_cust->id.'" target="_blanck">'.$find_cust->name.'</a> '.$find_cust->address.' '.$find_cust->zip.' '.$find_cust->town.' '.$find_cust->country.'<br>';
 	}
 	
 	$ret=$form->form_confirm($_SERVER['PHP_SELF'].'?'.$urlconfirm,$langs->trans("ConfirmCreationThirdparty"),$confirm_text,"add",'','',1);

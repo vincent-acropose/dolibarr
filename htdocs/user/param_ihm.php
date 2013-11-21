@@ -80,6 +80,7 @@ $formadmin=new FormAdmin($db);
  */
 if ($action == 'update' && ($caneditfield  || $user->admin))
 {
+	
     if (! $_POST["cancel"])
     {
         $tabparam=array();
@@ -103,8 +104,8 @@ if ($action == 'update' && ($caneditfield  || $user->admin))
 
         $_SESSION["mainmenu"]="";   // Le gestionnaire de menu a pu changer
 
-        header('Location: '.$_SERVER["PHP_SELF"].'?id='.$id);
-        exit;
+        //header('Location: '.$_SERVER["PHP_SELF"].'?id='.$id);
+        //exit;
     }
 }
 
@@ -258,7 +259,8 @@ else
     }
     else
     {
-        if ($user->id == $fuser->id || ! empty($user->admin))       // Si utilisateur edite = utilisateur courant (pas besoin de droits particulier car il s'agit d'une page de modif d'output et non de données) ou si admin
+    	
+        if (($user->id == $fuser->id || ! empty($user->admin))  && !empty($caneditfield))       // Si utilisateur edite = utilisateur courant (pas besoin de droits particulier car il s'agit d'une page de modif d'output et non de données) ou si admin
         {
             print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=edit&amp;id='.$fuser->id.'">'.$langs->trans("Modify").'</a>';
         }

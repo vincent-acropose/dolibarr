@@ -66,10 +66,12 @@ function user_prepare_head($object)
 		$h++;
 	}
 
-    $head[$h][0] = DOL_URL_ROOT.'/user/param_ihm.php?id='.$object->id;
-    $head[$h][1] = $langs->trans("UserGUISetup");
-    $head[$h][2] = 'guisetup';
-    $h++;
+	if (!empty($user->admin) || !empty($user->rights->user->self->creer)) {
+	    $head[$h][0] = DOL_URL_ROOT.'/user/param_ihm.php?id='.$object->id;
+	    $head[$h][1] = $langs->trans("UserGUISetup");
+	    $head[$h][2] = 'guisetup';
+	    $h++;
+	}
 
     if (! empty($conf->clicktodial->enabled))
     {

@@ -675,8 +675,11 @@ class Form
 
         // On recherche les societes
         $sql = "SELECT s.rowid, s.nom, s.client, s.fournisseur, s.code_client, s.code_fournisseur";
+        $sql .= " ,s.address, s.zip, s.town";
+         if ($conf->global->MAIN_SOC_SHOW_ADDRESS_LIST) $sql .= " , dictp.libelle as pays";
         $sql.= " FROM ".MAIN_DB_PREFIX ."societe as s";
         if (!$user->rights->societe->client->voir && !$user->societe_id) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
+        if ($conf->global->MAIN_SOC_SHOW_ADDRESS_LIST) $sql .= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."c_pays as dictp ON dictp.rowid=s.fk_pays";
         $sql.= " WHERE s.entity IN (".getEntity('societe', 1).")";
         if (! empty($user->societe_id)) $sql.= " AND s.rowid = ".$user->societe_id;
         if ($filter) $sql.= " AND (".$filter.")";
@@ -735,7 +738,6 @@ class Form
                     	$label=$obj->nom;
                     }
                     
-                    
                     if ($showtype)
                     {
                         if ($obj->client || $obj->fournisseur) $label.=' (';
@@ -744,6 +746,11 @@ class Form
                         if ($obj->fournisseur) $label.=($obj->client?', ':'').$langs->trans("Supplier");
                         if ($obj->client || $obj->fournisseur) $label.=')';
                     }
+                    
+                    if ($conf->global->MAIN_SOC_SHOW_ADDRESS_LIST) {
+                    	$label.=' '.$obj->address.'-'. $obj->zip.' '. $obj->town.' '.$obj->pays;
+                    }
+                    
                     if ($selected > 0 && $selected == $obj->rowid)
                     {
                         $out.= '<option value="'.$obj->rowid.'" selected="selected">'.$label.'</option>';
