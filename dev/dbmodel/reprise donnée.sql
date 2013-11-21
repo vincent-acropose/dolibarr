@@ -4049,3 +4049,20 @@ ALTER TABLE llx_propal DROP INDEX idx_llx_propal_import_key;
 ALTER TABLE llx_user DROP INDEX idx_llx_user_import_key;
 ALTER TABLE llx_socpeople DROP INDEX idx_llx_socpeople_import_key;
 SET foreign_key_checks = 1;
+
+
+
+-----
+
+--phabourdin=>Cmigeot
+UPDATE llx_societe_extrafields SET ts_logistique=2 WHERE fk_object IN (SELECT soc.fk_soc FROM llx_societe_commerciaux as soc WHERE fk_user=11);
+INSERT INTO llx_societe_extrafields(fk_object,ts_logistique)
+SELECT soc.fk_soc,2 FROM llx_societe_commerciaux as soc WHERE fk_user=11 AND soc.fk_soc NOT IN (SELECT fk_object FROM llx_societe_extrafields);
+--crostand=>Cmontaud
+UPDATE llx_societe_extrafields SET ts_logistique=14 WHERE fk_object IN (SELECT soc.fk_soc FROM llx_societe_commerciaux as soc WHERE fk_user=8);
+INSERT INTO llx_societe_extrafields(fk_object,ts_logistique)
+SELECT soc.fk_soc,14 FROM llx_societe_commerciaux as soc WHERE fk_user=8 AND soc.fk_soc NOT IN (SELECT fk_object FROM llx_societe_extrafields);
+--ldarrieux
+UPDATE llx_societe_extrafields SET ts_logistique=13 WHERE fk_object IN (SELECT soc.fk_soc FROM llx_societe_commerciaux as soc WHERE fk_user=4);
+INSERT INTO llx_societe_extrafields(fk_object,ts_logistique)
+SELECT soc.fk_soc,13 FROM llx_societe_commerciaux as soc WHERE fk_user=4 AND soc.fk_soc NOT IN (SELECT fk_object FROM llx_societe_extrafields);
