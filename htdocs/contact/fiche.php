@@ -360,6 +360,10 @@ $formcompany = new FormCompany($db);
 if ($conf->global->MAIN_CONTACT_CONTROL_DBL && $need_confirm) {
 
 	$confirm_text=$langs->trans("ConfirmCreationContactOtherContact").' '. GETPOST('email').'<br>';
+	
+	foreach($result_find_dbl as $find_contact) {
+		$confirm_text.='<a href="'.DOL_URL_ROOT.'/contact/fiche.php?id='.$find_contact->id.'" target="_blanck">'.$find_contact->getFullName($langs).'</a> '.$find_contact->address.' '.$find_contact->zip.' '.$find_contact->town.' '.$find_contact->country.'<br>';
+	}
 
 	$ret=$form->form_confirm($_SERVER['PHP_SELF'].'?'.$urlconfirm,$langs->trans("ConfirmCreationContact"),$confirm_text,"add",'','',1);
 	if ($ret == 'html') print '<br>';

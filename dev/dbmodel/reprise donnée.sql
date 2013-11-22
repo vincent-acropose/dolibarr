@@ -36,43 +36,41 @@ ALTER TABLE llx_socpeople ADD INDEX idx_llx_socpeople_import_key (import_key);
 
 
 TRUNCATE TABLE llx_extrafields;
-
-INSERT INTO `llx_extrafields` ( `name`, `entity`, `elementtype`, `tms`, `label`, `type`, `size`, `fieldunique`, `fieldrequired`, `pos`, `param`) VALUES
-( 'ts_partenaire', 1, 'societe', '2013-11-21 11:27:59', 'Partenaire', 'select', '', 0, 0, 2, 'a:1:{s:7:"options";a:6:{s:4:"FORM";s:24:"Prestataire de formation";s:4:"UNIV";s:11:"Université";s:3:"MOB";s:24:"Mobilité internationale";s:5:"OUTIL";s:6:"Outils";s:3:"COM";s:13:"Communication";s:3:"AUT";s:6:"Autres";}}'),
-('ts_prospection', 1, 'societe', '2013-11-05 10:24:26', 'Chargé de prospection', 'sellist', '', 0, 0, 4, 'a:1:{s:7:"options";a:1:{s:76:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra.u_prospection=1";N;}}'),
-( 'ts_secteur', 1, 'societe', '2013-11-21 11:27:52', 'Secteur d''activité', 'select', '', 0, 0, 1, 'a:1:{s:7:"options";a:18:{s:4:"AERO";s:12:"Aeronautique";s:4:"AGRO";s:16:" Agroalimentaire";s:4:"ASSO";s:11:"Association";s:4:"AUTO";s:10:"Automobile";s:3:"BTP";s:3:"BTP";s:4:"CHIM";s:6:"Chimie";s:4:"CONS";s:7:"Conseil";s:5:"CONSO";s:21:"Biens de consommation";s:6:"DISTRI";s:12:"Distribution";s:4:"EDUC";s:9:"Education";s:5:"ENERG";s:7:"Energie";s:3:"FIN";s:7:"Finance";s:3:"LUX";s:4:"Luxe";s:3:"PUB";s:13:"Communication";s:2:"SP";s:16:"Services publics";s:3:"TIC";s:12:"Informatique";s:7:"TOURISM";s:9:"Tourisme ";s:6:"TRANSP";s:9:"Transport";}}'),
-('ts_logistique', 1, 'societe', '2013-11-05 10:30:44', 'Gestionnaire logistique', 'sellist', '', 0, 0, 5, 'a:1:{s:7:"options";a:1:{s:75:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra.u_logistique=1";N;}}'),
-('ct_principal', 1, 'socpeople', '2013-10-25 14:15:30', 'Contact principal', 'boolean', '', 0, 0, 6, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-('ct_magellan', 1, 'socpeople', '2013-10-25 14:21:17', 'Membre de Magellan', 'boolean', '', 0, 0, 13, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-('ct_mailing_papier', 1, 'socpeople', '2013-10-25 14:16:12', 'Destinataire mailing papier', 'boolean', '', 0, 0, 8, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-('ct_invitation', 1, 'socpeople', '2013-10-25 14:15:52', 'Destinataire invitation', 'boolean', '', 0, 0, 7, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-( 'ct_pays', 1, 'socpeople', '2013-11-21 11:28:50', 'Zones géographiques', 'checkbox', '', 0, 0, 15, 'a:1:{s:7:"options";a:13:{i:1;s:11:"Afrique Est";i:2;s:13:"Afrique Ouest";i:3;s:11:"Afrique Sud";i:4;s:14:"Amérique Nord";i:5;s:13:"Amérique Sud";i:6;s:15:"Asie Ext Orient";i:7;s:12:"Asie Sud Est";i:8;s:7:"Balkans";i:9;s:10:"Europe Est";i:10;s:11:"Europe Nord";i:11;s:12:"Europe Ouest";i:12;s:7:"Maghreb";i:13;s:8:"Océanie";}}'),
-( 'ct_service', 1, 'socpeople', '2013-10-26 08:22:25', 'Fonction/Service', 'select', '', 0, 0, 5, 'a:1:{s:7:"options";a:28:{s:3:"DFO";s:19:"Directeur Formation";s:3:"RFO";s:21:"Responsable Formation";s:3:"AFO";s:21:" Assistante Formation";s:3:"DRH";s:29:"Directeur Ressources Humaines";s:3:"RRH";s:31:"Responsable Ressources humaines";s:3:"ARH";s:30:"Assistante Ressources Humaines";s:3:"RGC";s:33:"Responsable Gestion de carrières";s:3:"DMI";s:34:"Directeur Mobilité Internationale";s:3:"RMI";s:36:"Responsable Mobilité Internationale";s:3:"AMI";s:35:"Assistante Mobilité Internationale";s:3:"C&B";s:33:"Compensation and Benefits Manager";s:3:"ASS";s:10:"Assistante";s:3:"DDA";s:6:"Achats";s:3:"DBU";s:13:"Business Unit";s:3:"DCO";s:10:"Commercial";s:3:"DCM";s:14:" Communication";s:2:"DG";s:21:" Direction Générale";s:3:"RDI";s:10:"Diversité";s:3:"DOP";s:27:" Exploitation & Opérations";s:3:"DFI";s:7:"Finance";s:3:"DEX";s:13:"Import/Export";s:3:"DJU";s:9:"Juridique";s:3:"DLO";s:10:"Logistique";s:3:"DMA";s:9:"Marketing";s:3:"DTE";s:10:"Production";s:3:"DRD";s:26:"Recherche & Développement";s:3:"DSI";s:22:"Système d''information";s:3:"AUT";s:6:"Autres";}}'),
-( 'ct_origine', 1, 'socpeople', '2013-10-25 14:14:16', 'Origine du contact', 'select', '', 0, 0, 3, 'a:1:{s:7:"options";a:8:{s:5:"EMAIL";s:8:"Emailing";s:8:"INTERNET";s:19:"Moteur de recherche";s:9:"TELEPHONE";s:26:"Prospection téléphonique";s:9:"CATALOGUE";s:9:"Catalogue";s:14:"RECOMMANDATION";s:14:"Recommandation";s:3:"EVT";s:10:"Evènement";s:10:"PARTENAIRE";s:10:"Partenaire";s:0:"";N;}}'),
-( 'ct_email_commercial', 1, 'socpeople', '2013-10-25 14:19:53', 'Envoyer emailing commercial', 'boolean', '', 0, 0, 9, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-( 'ct_email_news', 1, 'socpeople', '2013-10-25 14:20:17', 'Envoyer emailing news', 'boolean', '', 0, 0, 10, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-( 'ct_email_invitation', 1, 'socpeople', '2013-10-25 14:20:29', 'Envoyer emailing invitation', 'boolean', '', 0, 0, 11, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-('ct_precision_origine', 1, 'socpeople', '2013-10-25 14:14:34', 'Précision sur l''origine du contact', 'varchar', '255', 0, 0, 4, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-('ct_sujets', 1, 'socpeople', '2013-11-21 11:28:29', 'Sujets d''intérêt', 'checkbox', '', 0, 0, 14, 'a:1:{s:7:"options";a:20:{i:1;s:5:"Achat";i:2;s:10:"A distance";i:3;s:10:"Changement";i:4;s:10:"Commercial";i:5;s:13:"Communication";i:6;s:8:"Conflits";i:7;s:16:"Dévpt personnel";i:8;s:10:"Diversité";i:9;s:12:"Expatriation";i:10;s:6:"Export";i:11;s:7:"Finance";i:12;s:14:"Interculturel ";i:13;s:9:"Juridique";i:14;s:10:"Management";i:15;s:9:"Marketing";i:16;s:13:"Négociation ";i:17;s:4:"Pays";i:18;s:6:"Projet";i:19;s:12:"Retour expat";i:20;s:2:"RH";}}'),
-('ct_motif_inactif', 1, 'socpeople', '2013-10-25 14:38:38', 'Commentaire', 'varchar', '255', 0, 0, 2, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-('ct_anglais', 1, 'socpeople', '2013-10-25 14:20:40', 'Langue anglaise', 'boolean', '', 0, 0, 12, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-('u_interentreprises', 1, 'user', '2013-11-01 22:24:18', 'Chargé des Interentreprises', 'boolean', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-('u_prospection', 1, 'user', '2013-10-31 16:05:18', 'Chargé de prospection', 'boolean', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-('u_commercial', 1, 'user', '2013-11-01 22:18:01', 'Commercial', 'boolean', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-('u_logistique', 1, 'user', '2013-11-01 22:17:14', 'Gestionnaire logistique', 'boolean', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-('u_communication', 1, 'user', '2013-11-01 22:25:03', 'Chargé de communication', 'boolean', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-('comment', 1, 'propal', '2013-09-01 11:14:27', 'Commentaire', 'text', '2000', 0, 0, 1, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-('cd_domaine', 1, 'agefodd_formation_catalogue', '2013-10-20 12:05:28', 'Domaine', 'select', '', 0, 0, 1, 'a:1:{s:7:"options";a:16:{s:5:"00000";s:5:"00000";s:3:"COA";s:3:"COA";s:3:"COF";s:3:"COF";s:5:"COMER";s:10:"Commercial";s:4:"COMM";s:13:"Communication";s:3:"CON";s:3:"CON";s:5:"EFPRO";s:27:"Efficacité professionnelle";s:5:"EXPAT";s:12:"Expatriation";s:3:"FOR";s:3:"FOR";s:3:"FRF";s:24:"Formations de formateurs";s:4:"JURI";s:9:"Juridique";s:6:"MARKET";s:9:"Marketing";s:4:"MGNT";s:10:"Management";s:4:"PAYS";s:14:"Expertise pays";s:2:"RH";s:19:"Ressources humaines";s:3:"SIC";s:24:"Interculturel transverse";}}'),
-('ts_prospection', 1, 'agefodd_session', '2013-11-15 12:10:59', 'Chargé de prospection', 'sellist', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:76:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra.u_prospection=1";N;}}'),
-('ts_logistique', 1, 'agefodd_session', '2013-11-15 12:11:41', ' Gestionnaire logistique', 'sellist', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:75:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra.u_logistique=1";N;}}'),
-('ct_catalogue', 1, 'socpeople', '2013-11-11 10:47:04', 'Destinataire catalogue', 'boolean', '', 0, 0, 7, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-('cd_ss_domaine', 1, 'agefodd_formation_catalogue', '2013-11-15 18:41:20', 'Sous-domaine', 'select', '', 0, 0, 2, 'a:1:{s:7:"options";a:11:{s:0:"";N;s:5:"WPAYS";s:13:"Business pays";s:5:"EXPAT";s:12:"Expatriation";s:6:"LEADER";s:10:"Leadership";s:5:"EQUIP";s:7:"Equipes";s:4:"DIST";s:19:"Travail à distance";s:3:"SIC";s:31:"Sensibilisation interculturelle";s:4:"NEGO";s:12:"Négociation";s:2:"RH";s:2:"RH";s:6:"EXPORT";s:6:"Export";s:3:"DIV";s:10:"Diversité";}}'),
-('ts_interentreprises', 1, 'agefodd_session', '2013-11-21 11:26:56', 'Chargé des Interentreprises', 'sellist', '', 0, 0, 3, 'a:1:{s:7:"options";a:1:{s:83:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra. 	u_interentreprises=1";N;}}');
+INSERT INTO `llx_extrafields` (`rowid`, `name`, `entity`, `elementtype`, `tms`, `label`, `type`, `size`, `fieldunique`, `fieldrequired`, `pos`, `param`) VALUES
+(2, 'ts_prospection', 1, 'societe', '2013-11-05 10:24:26', 'Chargé de prospection', 'sellist', '', 0, 0, 4, 'a:1:{s:7:"options";a:1:{s:76:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra.u_prospection=1";N;}}'),
+(43, 'ts_secteur', 1, 'societe', '2013-11-22 21:29:06', 'Secteur d''activité', 'select', '', 0, 0, 1, 'a:1:{s:7:"options";a:18:{s:4:"AERO";s:12:"Aeronautique";s:4:"AGRO";s:16:" Agroalimentaire";s:4:"ASSO";s:11:"Association";s:4:"AUTO";s:10:"Automobile";s:3:"BTP";s:3:"BTP";s:4:"CHIM";s:6:"Chimie";s:4:"CONS";s:7:"Conseil";s:5:"CONSO";s:21:"Biens de consommation";s:6:"DISTRI";s:12:"Distribution";s:4:"EDUC";s:9:"Education";s:5:"ENERG";s:7:"Energie";s:3:"FIN";s:7:"Finance";s:3:"LUX";s:4:"Luxe";s:3:"PUB";s:13:"Communication";s:2:"SP";s:16:"Services publics";s:3:"TIC";s:12:"Informatique";s:7:"TOURISM";s:9:"Tourisme ";s:6:"TRANSP";s:9:"Transport";}}'),
+(4, 'ts_logistique', 1, 'societe', '2013-11-05 10:30:44', 'Gestionnaire logistique', 'sellist', '', 0, 0, 5, 'a:1:{s:7:"options";a:1:{s:75:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra.u_logistique=1";N;}}'),
+(48, 'ts_interentreprises', 1, 'agefodd_session', '2013-11-22 21:30:46', 'Chargé des Interentreprises', 'sellist', '', 0, 0, 3, 'a:1:{s:7:"options";a:1:{s:81:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra.u_interentreprises=1";N;}}'),
+(6, 'ct_principal', 1, 'socpeople', '2013-10-25 14:15:30', 'Contact principal', 'boolean', '', 0, 0, 6, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(7, 'ct_magellan', 1, 'socpeople', '2013-10-25 14:21:17', 'Membre de Magellan', 'boolean', '', 0, 0, 13, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(8, 'ct_mailing_papier', 1, 'socpeople', '2013-10-25 14:16:12', 'Destinataire mailing papier', 'boolean', '', 0, 0, 8, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(9, 'ct_invitation', 1, 'socpeople', '2013-10-25 14:15:52', 'Destinataire invitation', 'boolean', '', 0, 0, 7, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(47, 'ct_pays', 1, 'socpeople', '2013-11-22 21:29:42', 'Zones géographiques', 'checkbox', '', 0, 0, 15, 'a:1:{s:7:"options";a:13:{i:1;s:11:"Afrique Est";i:2;s:13:"Afrique Ouest";i:3;s:11:"Afrique Sud";i:4;s:14:"Amérique Nord";i:5;s:13:"Amérique Sud";i:6;s:15:"Asie Ext Orient";i:7;s:12:"Asie Sud Est";i:8;s:7:"Balkans";i:9;s:10:"Europe Est";i:10;s:11:"Europe Nord";i:11;s:12:"Europe Ouest";i:12;s:7:"Maghreb";i:13;s:8:"Océanie";}}'),
+(45, 'ct_service', 1, 'socpeople', '2013-11-22 21:29:26', 'Fonction/Service', 'select', '', 0, 0, 5, 'a:1:{s:7:"options";a:28:{s:3:"DFO";s:19:"Directeur Formation";s:3:"RFO";s:21:"Responsable Formation";s:3:"AFO";s:21:" Assistante Formation";s:3:"DRH";s:29:"Directeur Ressources Humaines";s:3:"RRH";s:31:"Responsable Ressources humaines";s:3:"ARH";s:30:"Assistante Ressources Humaines";s:3:"RGC";s:33:"Responsable Gestion de carrières";s:3:"DMI";s:34:"Directeur Mobilité Internationale";s:3:"RMI";s:36:"Responsable Mobilité Internationale";s:3:"AMI";s:35:"Assistante Mobilité Internationale";s:3:"C&B";s:33:"Compensation and Benefits Manager";s:3:"ASS";s:10:"Assistante";s:3:"DDA";s:6:"Achats";s:3:"DBU";s:13:"Business Unit";s:3:"DCO";s:10:"Commercial";s:3:"DCM";s:14:" Communication";s:2:"DG";s:21:" Direction Générale";s:3:"RDI";s:10:"Diversité";s:3:"DOP";s:27:" Exploitation & Opérations";s:3:"DFI";s:7:"Finance";s:3:"DEX";s:13:"Import/Export";s:3:"DJU";s:9:"Juridique";s:3:"DLO";s:10:"Logistique";s:3:"DMA";s:9:"Marketing";s:3:"DTE";s:10:"Production";s:3:"DRD";s:26:"Recherche & Développement";s:3:"DSI";s:22:"Système d''information";s:3:"AUT";s:6:"Autres";}}'),
+(44, 'ct_origine', 1, 'socpeople', '2013-11-22 21:29:17', 'Origine du contact', 'select', '', 0, 0, 3, 'a:1:{s:7:"options";a:7:{s:5:"EMAIL";s:8:"Emailing";s:8:"INTERNET";s:19:"Moteur de recherche";s:9:"TELEPHONE";s:26:"Prospection téléphonique";s:9:"CATALOGUE";s:9:"Catalogue";s:14:"RECOMMANDATION";s:14:"Recommandation";s:3:"EVT";s:10:"Evènement";s:10:"PARTENAIRE";s:10:"Partenaire";}}'),
+(37, 'ct_email_commercial', 1, 'socpeople', '2013-11-22 07:56:13', 'Désactiver emailing commercial', 'boolean', '', 0, 0, 9, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(38, 'ct_email_news', 1, 'socpeople', '2013-11-22 07:56:34', 'Désactiver emailing news', 'boolean', '', 0, 0, 10, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(39, 'ct_email_invitation', 1, 'socpeople', '2013-11-22 07:56:57', 'Désactiver emailing invitation', 'boolean', '', 0, 0, 11, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(16, 'ct_precision_origine', 1, 'socpeople', '2013-10-25 14:14:34', 'Précision sur l''origine du contact', 'varchar', '255', 0, 0, 4, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(46, 'ct_sujets', 1, 'socpeople', '2013-11-22 21:29:35', 'Sujets d''intérêt', 'checkbox', '', 0, 0, 14, 'a:1:{s:7:"options";a:10:{i:1;s:10:"A distance";i:2;s:13:"Communication";i:3;s:10:"Diversité";i:4;s:12:"Expatriation";i:5;s:6:"Export";i:6;s:14:"Interculturel ";i:7;s:10:"Management";i:8;s:13:"Négociation ";i:9;s:4:"Pays";i:20;s:2:"RH";}}'),
+(42, 'ts_payeur', 1, 'societe', '2013-11-22 21:27:12', 'Centre Payeur', 'sellist', '', 0, 0, 6, 'a:1:{s:7:"options";a:1:{s:65:"societe:CONCAT_WS('' '',code_client,nom):rowid:fk_typent IN (3,103)";N;}}'),
+(19, 'ct_anglais', 1, 'socpeople', '2013-10-25 14:20:40', 'Langue anglaise', 'boolean', '', 0, 0, 12, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(20, 'u_interentreprises', 1, 'user', '2013-11-01 22:24:18', 'Chargé des Interentreprises', 'boolean', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(21, 'u_prospection', 1, 'user', '2013-10-31 16:05:18', 'Chargé de prospection', 'boolean', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(22, 'u_commercial', 1, 'user', '2013-11-01 22:18:01', 'Commercial', 'boolean', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(23, 'u_logistique', 1, 'user', '2013-11-01 22:17:14', 'Gestionnaire logistique', 'boolean', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(24, 'u_communication', 1, 'user', '2013-11-01 22:25:03', 'Chargé de communication', 'boolean', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(25, 'comment', 1, 'propal', '2013-09-01 11:14:27', 'Commentaire', 'text', '2000', 0, 0, 1, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(26, 'cd_domaine', 1, 'agefodd_formation_catalogue', '2013-10-20 12:05:28', 'Domaine', 'select', '', 0, 0, 1, 'a:1:{s:7:"options";a:16:{s:5:"00000";s:5:"00000";s:3:"COA";s:3:"COA";s:3:"COF";s:3:"COF";s:5:"COMER";s:10:"Commercial";s:4:"COMM";s:13:"Communication";s:3:"CON";s:3:"CON";s:5:"EFPRO";s:27:"Efficacité professionnelle";s:5:"EXPAT";s:12:"Expatriation";s:3:"FOR";s:3:"FOR";s:3:"FRF";s:24:"Formations de formateurs";s:4:"JURI";s:9:"Juridique";s:6:"MARKET";s:9:"Marketing";s:4:"MGNT";s:10:"Management";s:4:"PAYS";s:14:"Expertise pays";s:2:"RH";s:19:"Ressources humaines";s:3:"SIC";s:24:"Interculturel transverse";}}'),
+(27, 'ts_prospection', 1, 'agefodd_session', '2013-11-15 12:10:59', 'Chargé de prospection', 'sellist', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:76:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra.u_prospection=1";N;}}'),
+(28, 'ts_logistique', 1, 'agefodd_session', '2013-11-15 12:11:41', ' Gestionnaire logistique', 'sellist', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:75:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra.u_logistique=1";N;}}'),
+(29, 'ct_catalogue', 1, 'socpeople', '2013-11-11 10:47:04', 'Destinataire catalogue', 'boolean', '', 0, 0, 7, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(30, 'cd_ss_domaine', 1, 'agefodd_formation_catalogue', '2013-11-15 18:41:20', 'Sous-domaine', 'select', '', 0, 0, 2, 'a:1:{s:7:"options";a:11:{s:0:"";N;s:5:"WPAYS";s:13:"Business pays";s:5:"EXPAT";s:12:"Expatriation";s:6:"LEADER";s:10:"Leadership";s:5:"EQUIP";s:7:"Equipes";s:4:"DIST";s:19:"Travail à distance";s:3:"SIC";s:31:"Sensibilisation interculturelle";s:4:"NEGO";s:12:"Négociation";s:2:"RH";s:2:"RH";s:6:"EXPORT";s:6:"Export";s:3:"DIV";s:10:"Diversité";}}');
 ALTER TABLE llx_societe_extrafields ADD COLUMN ts_partenaire text DEFAULT NULL;
 ALTER TABLE llx_societe_extrafields ADD COLUMN ts_prospection text DEFAULT NULL;
 ALTER TABLE llx_societe_extrafields ADD COLUMN ts_secteur text DEFAULT NULL;
 ALTER TABLE llx_societe_extrafields ADD COLUMN ts_logistique text DEFAULT NULL;
-ALTER TABLE llx_societe_extrafields ADD COLUMN ts_payeur int(1) DEFAULT NULL;
+ALTER TABLE llx_societe_extrafields ADD COLUMN ts_payeur text DEFAULT NULL;
 
 ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_principal int(1) DEFAULT NULL;
 ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_magellan int(1) DEFAULT NULL;
@@ -282,7 +280,7 @@ INSERT INTO `llx_const` (`rowid`, `name`, `entity`, `value`, `type`, `visible`, 
 (553, 'MAIN_MODULE_AGEFODD_TABS_3', 1, 'thirdparty:+tabAgefodd:AgfMenuSess:agefodd@agefodd:/agefodd/session/list_soc.php?socid=__ID__', 'chaine', 0, NULL, '2013-11-20 00:28:35'),
 (554, 'MAIN_MODULE_AGEFODD_TRIGGERS', 1, '1', 'chaine', 0, NULL, '2013-11-20 00:28:35'),
 (555, 'AGF_LAST_VERION_INSTALL', 1, '2.1.8', 'chaine', 0, 'Last version installed to know change table to execute', '2013-11-20 00:28:35'),
-(556, 'AGF_DEFAULT_CREATE_CERTIF', 1, '', 'yesno', 0, 'Whenn Add a trainee defaut create sertificate', '2013-11-20 00:28:36'),
+(556, 'AGF_DEFAULT_CREATE_CERTIF', 1, '', 'yesno', 0, 'auto-add trainee certificate', '2013-11-20 00:28:36'),
 (558, 'AGF_DEFAULT_SESSION_STATUS', 1, '', '1', 0, 'Defaut status session', '2013-11-20 00:28:36'),
 (560, 'AGF_MANAGE_CURSUS', 1, '', '1', 0, 'MAnage cursus', '2013-11-20 00:28:36'),
 (561, 'AGF_CURSUS_USE_SEARCH_TO_SELECT', 1, '', '1', 0, 'Display combobox for cursus select', '2013-11-20 00:28:36'),
@@ -302,7 +300,14 @@ INSERT INTO `llx_const` (`rowid`, `name`, `entity`, `value`, `type`, `visible`, 
 (584, 'PRODUIT_MULTIPRICES', 1, '0', 'chaine', 0, '', '2013-11-20 02:13:20'),
 (585, 'PRODUIT_MULTIPRICES_LIMIT', 1, '5', 'chaine', 0, '', '2013-11-20 02:13:20'),
 (586, 'MAIN_SOC_SHOW_ADDRESS_LIST', 1, '1', 'chaine', 0, '', '2013-11-20 02:13:20');
-(586, 'AGF_ADVANCE_COST_MANAGEMENT', 1, '1', 'chaine', 0, '', '2013-11-20 02:13:20');
+(587, 'AGF_ADVANCE_COST_MANAGEMENT', 1, '1', 'chaine', 0, '', '2013-11-20 02:13:20');
+
+TRUNCATE tABLE llx_agefodd_calendrier;
+INSERT INTO `llx_agefodd_calendrier` (`rowid`, `entity`, `day_session`, `heured`, `heuref`, `fk_user_author`, `datec`, `fk_user_mod`, `tms`) VALUES
+(1, 1, 1, '09:00', '12:30', 10, '2013-11-17 00:25:47', 10, '2013-11-16 23:25:47'),
+(2, 1, 1, '13:30', '17:00', 10, '2013-11-17 00:26:24', 10, '2013-11-16 23:26:24'),
+(3, 1, 2, '09:00', '12:30', 10, '2013-11-17 00:27:13', 10, '2013-11-16 23:27:13'),
+(4, 1, 2, '13:30', '17:00', 10, '2013-11-17 00:27:32', 10, '2013-11-16 23:27:32');
 
 UPDATE account SET modreg='CHQ' WHERE modreg='CH';
 UPDATE account SET modreg='CHQ' WHERE modreg='CHG';
@@ -1432,31 +1437,31 @@ UPDATE llx_agefodd_formation_catalogue SET ref=CONCAT_WS('','FOR_', date_format(
 
 TRUNCATE TABLE `llx_agefodd_session_admlevel`;
 INSERT INTO `llx_agefodd_session_admlevel` (`rowid`, `level_rank`, `fk_parent_level`, `indice`, `intitule`, `delais_alerte`, `fk_user_author`, `datec`, `fk_user_mod`, `tms`) VALUES
-(18, 0, 0, 100, 'CONSULTANT', -15, 1, '2013-11-19 21:53:30', 1, '2013-11-19 20:54:28'),
-(19, 1, 18, 101, 'Réservation consultant', -15, 1, '2013-11-19 21:53:43', 1, '2013-11-19 20:54:23'),
-(20, 1, 18, 102, 'Confirmation consultant envoyée', -15, 1, '2013-11-19 21:54:18', 1, '2013-11-19 20:54:18'),
-(21, 1, 18, 103, 'Support prêt ou imprimé', -1, 1, '2013-11-19 21:54:45', 1, '2013-11-19 20:54:45'),
-(22, 1, 18, 104, 'Feuilles d''émargement et d''évaluation éditées', -1, 1, '2013-11-19 21:54:57', 1, '2013-11-19 20:54:57'),
-(23, 0, 0, 200, 'LOGISTIQUE', -15, 1, '2013-11-19 21:55:10', 1, '2013-11-19 20:55:10'),
-(24, 1, 23, 201, 'Déplacements organisés', -15, 1, '2013-11-19 21:55:21', 1, '2013-11-19 20:55:21'),
-(25, 1, 23, 202, 'Réservation salle et/ou repas (option)', -15, 1, '2013-11-19 21:55:32', 1, '2013-11-19 20:55:32'),
-(26, 1, 23, 203, 'Réservation salle et/ou repas (confirmée)', -15, 1, '2013-11-19 21:55:44', 1, '2013-11-19 20:55:44'),
-(27, 0, 0, 300, 'CLIENT', -15, 1, '2013-11-19 21:55:56', 1, '2013-11-19 20:55:56'),
-(28, 1, 27, 301, 'Date confirmée', -15, 1, '2013-11-19 21:56:08', 1, '2013-11-19 20:56:08'),
-(29, 1, 27, 302, 'Lieu confirmé', -15, 1, '2013-11-19 21:56:18', 1, '2013-11-19 20:56:18'),
-(30, 1, 27, 303, 'Convention envoyée', -15, 1, '2013-11-19 21:56:33', 1, '2013-11-19 20:56:33'),
-(31, 1, 27, 304, 'Convention retournée', -10, 1, '2013-11-19 21:56:43', 1, '2013-11-19 20:56:43'),
-(32, 0, 0, 400, 'PARTICIPANT', -15, 1, '2013-11-19 21:56:53', 1, '2013-11-19 20:56:53'),
-(33, 1, 32, 401, 'Convocation participant envoyée (inscriptions RN)', -15, 1, '2013-11-19 21:57:07', 1, '2013-11-19 20:57:07'),
-(34, 1, 32, 402, 'Support et/ou attestation en ligne', -15, 1, '2013-11-19 21:57:17', 1, '2013-11-19 20:57:17'),
-(35, 0, 0, 500, 'FACTURE FOURNISSEUR (TRANSMISE ET SAISIE)', 5, 1, '2013-11-19 21:57:32', 1, '2013-11-19 20:57:32'),
-(36, 1, 35, 501, 'Agence de voyage', 5, 1, '2013-11-19 21:57:42', 1, '2013-11-19 20:57:42'),
-(37, 1, 35, 502, 'Consultant', 5, 1, '2013-11-19 21:57:52', 1, '2013-11-19 20:57:52'),
-(38, 1, 35, 503, 'Frais techniques', 5, 1, '2013-11-19 21:58:02', 1, '2013-11-19 20:58:02'),
-(39, 0, 0, 600, 'SESSION CLOTUREE', 0, 1, '2013-11-19 21:58:14', 1, '2013-11-19 20:58:14'),
-(40, 1, 39, 601, 'Feuilles d''émargement et d''évaluation scannées', 5, 1, '2013-11-19 21:58:35', 1, '2013-11-19 20:58:35'),
-(41, 1, 39, 602, 'Feuilles d''émargement et d''évaluation envoyées', 5, 1, '2013-11-19 21:58:57', 1, '2013-11-19 20:58:57'),
-(42, 1, 39, 603, 'Facture client envoyée', 5, 1, '2013-11-19 21:59:10', 1, '2013-11-19 20:59:10');
+(1, 0, 0, 100, 'CONSULTANT', -15, 1, '2013-11-19 21:53:30', 1, '2013-11-19 20:54:28'),
+(2, 1, 1, 101, 'Réservation consultant', -15, 1, '2013-11-19 21:53:43', 1, '2013-11-19 20:54:23'),
+(3, 1, 1, 102, 'Confirmation consultant envoyée', -15, 1, '2013-11-19 21:54:18', 1, '2013-11-19 20:54:18'),
+(4, 1, 1, 103, 'Support prêt ou imprimé', -1, 1, '2013-11-19 21:54:45', 1, '2013-11-19 20:54:45'),
+(5, 1, 1, 104, 'Feuilles d''émargement et d''évaluation éditées', -1, 1, '2013-11-19 21:54:57', 1, '2013-11-19 20:54:57'),
+(6, 0, 0, 200, 'LOGISTIQUE', -15, 1, '2013-11-19 21:55:10', 1, '2013-11-19 20:55:10'),
+(7, 1, 6, 201, 'Déplacements organisés', -15, 1, '2013-11-19 21:55:21', 1, '2013-11-19 20:55:21'),
+(8, 1, 6, 202, 'Réservation salle et/ou repas (option)', -15, 1, '2013-11-19 21:55:32', 1, '2013-11-19 20:55:32'),
+(9, 1, 6, 203, 'Réservation salle et/ou repas (confirmée)', -15, 1, '2013-11-19 21:55:44', 1, '2013-11-19 20:55:44'),
+(10, 0, 0, 300, 'CLIENT', -15, 1, '2013-11-19 21:55:56', 1, '2013-11-19 20:55:56'),
+(11, 1, 10, 301, 'Date confirmée', -15, 1, '2013-11-19 21:56:08', 1, '2013-11-19 20:56:08'),
+(12, 1, 10, 302, 'Lieu confirmé', -15, 1, '2013-11-19 21:56:18', 1, '2013-11-19 20:56:18'),
+(13, 1, 10, 303, 'Convention envoyée', -15, 1, '2013-11-19 21:56:33', 1, '2013-11-19 20:56:33'),
+(14, 1, 10, 304, 'Convention retournée', -10, 1, '2013-11-19 21:56:43', 1, '2013-11-19 20:56:43'),
+(15, 0, 0, 400, 'PARTICIPANT', -15, 1, '2013-11-19 21:56:53', 1, '2013-11-19 20:56:53'),
+(16, 1, 15, 401, 'Convocation participant envoyée (inscriptions RN)', -15, 1, '2013-11-19 21:57:07', 1, '2013-11-19 20:57:07'),
+(17, 1, 15, 402, 'Support et/ou attestation en ligne', -15, 1, '2013-11-19 21:57:17', 1, '2013-11-19 20:57:17'),
+(18, 0, 0, 500, 'FACTURE FOURNISSEUR (TRANSMISE ET SAISIE)', 5, 1, '2013-11-19 21:57:32', 1, '2013-11-19 20:57:32'),
+(19, 1, 18, 501, 'Agence de voyage', 5, 1, '2013-11-19 21:57:42', 1, '2013-11-19 20:57:42'),
+(20, 1, 18, 502, 'Consultant', 5, 1, '2013-11-19 21:57:52', 1, '2013-11-19 20:57:52'),
+(21, 1, 18, 503, 'Frais techniques', 5, 1, '2013-11-19 21:58:02', 1, '2013-11-19 20:58:02'),
+(22, 0, 0, 600, 'SESSION CLOTUREE', 0, 1, '2013-11-19 21:58:14', 1, '2013-11-19 20:58:14'),
+(23, 1, 22, 601, 'Feuilles d''émargement et d''évaluation scannées', 5, 1, '2013-11-19 21:58:35', 1, '2013-11-19 20:58:35'),
+(24, 1, 22, 602, 'Feuilles d''émargement et d''évaluation envoyées', 5, 1, '2013-11-19 21:58:57', 1, '2013-11-19 20:58:57'),
+(25, 1, 22, 603, 'Facture client envoyée', 5, 1, '2013-11-19 21:59:10', 1, '2013-11-19 20:59:10');
 
 
 
@@ -3511,17 +3516,19 @@ INSERT INTO `llx_user_rights` (`rowid`, `fk_user`, `fk_id`) VALUES
 
 
 TRUNCATE TABLE `llx_user_extrafields`;
-INSERT INTO `llx_user_extrafields` (`rowid`, `tms`, `fk_object`, `import_key`, `u_prospection`, `u_commercial`, `u_logistique`, `u_interentreprises`, `u_communication`) VALUES
-(10, '2013-11-01 22:26:31', 6, NULL, 1, 1, NULL, NULL, NULL),
-(2, '2013-11-01 22:19:19', 14, NULL, NULL, NULL, 1, NULL, NULL),
-(4, '2013-11-01 22:20:13', 13, NULL, NULL, NULL, 1, NULL, NULL),
-(5, '2013-11-01 22:20:58', 11, NULL, NULL, 1, NULL, NULL, NULL),
-(6, '2013-11-01 22:21:44', 5, NULL, 1, 1, NULL, NULL, NULL),
-(7, '2013-11-01 22:22:12', 4, NULL, NULL, 1, NULL, NULL, NULL),
-(15, '2013-11-02 09:00:32', 3, NULL, 1, 1, NULL, 1, NULL),
-(9, '2013-11-01 22:25:31', 15, NULL, NULL, NULL, NULL, NULL, 1),
-(12, '2013-11-01 22:27:50', 2, NULL, NULL, NULL, 1, NULL, NULL),
-(13, '2013-11-01 22:31:12', 8, NULL, NULL, 1, NULL, NULL, NULL);
+INSERT INTO `llx_user_extrafields` (`rowid`, `tms`, `fk_object`, `import_key`, `u_commercial`, `u_logistique`, `u_communication`, `u_prospection`, `u_interentreprises`) VALUES
+(2, '2013-11-01 21:19:19', 14, NULL, NULL, 1, NULL, NULL, NULL),
+(4, '2013-11-01 21:20:13', 13, NULL, NULL, 1, NULL, NULL, NULL),
+(5, '2013-11-01 21:20:58', 11, NULL, 1, NULL, NULL, NULL, NULL),
+(6, '2013-11-01 21:21:44', 5, NULL, 1, NULL, NULL, 1, NULL),
+(7, '2013-11-01 21:22:12', 4, NULL, 1, NULL, NULL, NULL, NULL),
+(9, '2013-11-01 21:25:31', 15, NULL, NULL, NULL, 1, NULL, NULL),
+(10, '2013-11-01 21:26:31', 6, NULL, 1, NULL, NULL, 1, NULL),
+(12, '2013-11-01 21:27:50', 2, NULL, NULL, 1, NULL, NULL, NULL),
+(13, '2013-11-01 21:31:12', 8, NULL, 1, NULL, NULL, NULL, NULL),
+(15, '2013-11-02 08:00:32', 3, NULL, 1, NULL, NULL, 1, 1),
+(16, '2013-11-17 17:34:43', 38, NULL, NULL, NULL, NULL, NULL, NULL),
+(18, '2013-11-18 22:21:09', 23, NULL, 1, NULL, NULL, NULL, NULL);
 
 TRUNCATE TABLE llx_rights_def;
 INSERT INTO `llx_rights_def` (`id`, `libelle`, `module`, `entity`, `perms`, `subperms`, `type`, `bydefault`) VALUES
