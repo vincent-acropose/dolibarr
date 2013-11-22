@@ -40,6 +40,8 @@ $search_compta_fournisseur = GETPOST("search_compta_fournisseur");
 $search_datec              = GETPOST("search_datec");
 $search_categ              = GETPOST('search_categ','int');
 $catid                     = GETPOST("catid",'int');
+$search_status			   = GETPOST("search_status",'int');
+if ($search_status=='') $search_status=1; // always display activ customer first
 
 // Security check
 $socid = GETPOST('socid','int');
@@ -70,7 +72,7 @@ $reshook=$hookmanager->executeHooks('doActions',$parameters);    // Note that $a
 /*
  *	View
  */
-
+$form = new Form($db);
 $htmlother=new FormOther($db);
 $thirdpartystatic=new Societe($db);
 
@@ -104,6 +106,7 @@ if ($catid > 0)          $sql.= " AND cf.fk_categorie = ".$catid;
 if ($catid == -2)        $sql.= " AND cf.fk_categorie IS NULL";
 if ($search_categ > 0)   $sql.= " AND cf.fk_categorie = ".$search_categ;
 if ($search_categ == -2) $sql.= " AND cf.fk_categorie IS NULL";
+if ($search_status!='') $sql .= " AND s.status = ".$db->escape($search_status);
 // Count total nb of records
 $nbtotalofrecords = 0;
 if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST))
@@ -122,6 +125,7 @@ if ($resql)
 
 	$param = "&amp;search_nom=".$search_nom."&amp;search_code_fournisseur=".$search_code_fournisseur."&amp;search_zipcode=".$search_zipcode."&amp;search_town=".$search_town;
  	if ($search_categ != '') $param.='&amp;search_categ='.$search_categ;
+ 	if ($search_status != '') $param.='&amp;search_status='.$search_status;
 
 	print_barre_liste($langs->trans("ListOfSuppliers"), $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, '', $num, $nbtotalofrecords);
 
@@ -151,7 +155,8 @@ if ($resql)
 	print_liste_field_titre($langs->trans("SupplierCode"),$_SERVER["PHP_SELF"],"s.code_fournisseur","",$param,'align="left"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AccountancyCode"),$_SERVER["PHP_SELF"],"s.code_compta_fournisseur","",$param,'align="left"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateCreation"),$_SERVER["PHP_SELF"],"s.datec","",$param,'align="right"',$sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"s.status","",$param,'align="right"',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"s.status","",$param,'align="center"',$sortfield,$sortorder);
+    print '<td class="liste_titre" width="1%">&nbsp;</td>';
 
     $parameters=array();
     $formconfirm=$hookmanager->executeHooks('printFieldListTitle',$parameters);    // Note that $action and $object may have been modified by hook
@@ -176,6 +181,10 @@ if ($resql)
 
 	print '<td align="right" class="liste_titre">';
 	print '<input class="flat" type="text" size="10" name="search_datec" value="'.$search_datec.'">';
+	print '</td>';
+	
+	print '<td class="liste_titre" align="center">';
+	print $form->selectarray('search_status', array('0'=>$langs->trans('ActivityCeased'),'1'=>$langs->trans('InActivity')),$search_status);
 	print '</td>';
 
 	print '<td class="liste_titre" align="right"><input class="liste_titre" type="image" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'"></td>';
@@ -206,7 +215,8 @@ if ($resql)
 		print '<td align="left">'.$obj->code_compta_fournisseur.'&nbsp;</td>';
 		print '<td align="right">';
 		print dol_print_date($db->jdate($obj->datec),'day').'</td>';
-		print '<td align="right">'.$thirdpartystatic->getLibStatut(3).'</td>';
+		print '<td align="center">'.$thirdpartystatic->getLibStatut(3).'</td>';
+		print '<td></td>';
 
 		$parameters=array('obj' => $obj);
 		$formconfirm=$hookmanager->executeHooks('printFieldListValue',$parameters);    // Note that $action and $object may have been modified by hook
