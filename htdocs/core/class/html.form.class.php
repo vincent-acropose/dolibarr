@@ -677,8 +677,9 @@ class Form
         $sql = "SELECT s.rowid, s.nom, s.client, s.fournisseur, s.code_client, s.code_fournisseur";
         $sql .= " ,s.address, s.zip, s.town";
          if ($conf->global->MAIN_SOC_SHOW_ADDRESS_LIST) $sql .= " , dictp.libelle as pays";
-        $sql.= " FROM ".MAIN_DB_PREFIX ."societe as s";
+        $sql.= " FROM (".MAIN_DB_PREFIX ."societe as s";
         if (!$user->rights->societe->client->voir && !$user->societe_id) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
+        $sql.= ")";
         if ($conf->global->MAIN_SOC_SHOW_ADDRESS_LIST) $sql .= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."c_pays as dictp ON dictp.rowid=s.fk_pays";
         $sql.= " WHERE s.entity IN (".getEntity('societe', 1).")";
         if (! empty($user->societe_id)) $sql.= " AND s.rowid = ".$user->societe_id;
