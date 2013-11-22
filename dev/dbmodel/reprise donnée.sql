@@ -302,7 +302,7 @@ INSERT INTO `llx_const` (`rowid`, `name`, `entity`, `value`, `type`, `visible`, 
 (584, 'PRODUIT_MULTIPRICES', 1, '0', 'chaine', 0, '', '2013-11-20 02:13:20'),
 (585, 'PRODUIT_MULTIPRICES_LIMIT', 1, '5', 'chaine', 0, '', '2013-11-20 02:13:20'),
 (586, 'MAIN_SOC_SHOW_ADDRESS_LIST', 1, '1', 'chaine', 0, '', '2013-11-20 02:13:20');
-
+(586, 'AGF_ADVANCE_COST_MANAGEMENT', 1, '1', 'chaine', 0, '', '2013-11-20 02:13:20');
 
 UPDATE account SET modreg='CHQ' WHERE modreg='CH';
 UPDATE account SET modreg='CHQ' WHERE modreg='CHG';
