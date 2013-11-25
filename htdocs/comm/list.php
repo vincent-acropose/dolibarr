@@ -60,6 +60,9 @@ $search_sale  = GETPOST("search_sale");
 $search_categ = GETPOST("search_categ",'int');
 $catid        = GETPOST("catid",'int');
 
+$ts_logistique=GETPOST('options_ts_logistique','int');
+$ts_prospection=GETPOST('options_ts_prospection','int');
+
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
 $hookmanager->initHooks(array('customerlist'));
 
@@ -110,6 +113,9 @@ if (! empty($search_categ) || ! empty($catid)) $sql.= ' LEFT JOIN '.MAIN_DB_PREF
 $sql.= ", ".MAIN_DB_PREFIX."c_stcomm as st";
 // We'll need this table joined to the select in order to filter by sale
 if ($search_sale || !$user->rights->societe->client->voir) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
+if (! empty ( $ts_logistique ) || ! empty ( $ts_prospection )) {
+	$sql.= ", ".MAIN_DB_PREFIX."societe_extrafields as extra";
+}
 $sql.= " WHERE s.fk_stcomm = st.id";
 $sql.= " AND s.client IN (1, 3)";
 $sql.= ' AND s.entity IN ('.getEntity('societe', 1).')';
@@ -130,6 +136,15 @@ if ($search_status!='') $sql .= " AND s.status = ".$db->escape($search_status);
 if ($search_sale)
 {
 	$sql .= " AND sc.fk_user = ".$search_sale;
+}
+if (! empty ( $ts_logistique ) || ! empty ( $ts_prospection )) {
+	$sql.= " AND extra.fk_object=s.rowid";
+}
+if (! empty ( $ts_logistique )) {
+	$sql .= " AND extra.ts_logistique = ".$db->escape($ts_logistique);
+}
+if (! empty ( $ts_prospection )) {
+	$sql .= " AND extra.ts_prospection = ".$db->escape($ts_prospection);
 }
 
 // Count total nb of records
@@ -174,6 +189,17 @@ if ($result)
  	{
 	 	$moreforfilter.=$langs->trans('SalesRepresentatives'). ': ';
 		$moreforfilter.=$formother->select_salesrepresentatives($search_sale,'search_sale',$user);
+ 	}
+ 	
+ 	$extrafields = new ExtraFields ( $db );
+ 	$extralabels = $extrafields->fetch_name_optionals_label ( 'societe', true );
+ 	if (is_array($extralabels) && key_exists('ts_logistique', $extralabels)) {
+ 		$moreforfilter.=$extralabels['ts_logistique'];
+ 		$moreforfilter.=$extrafields->showInputField('ts_logistique', $ts_logistique);
+ 	}
+ 	if (is_array($extralabels) && key_exists('ts_prospection', $extralabels)) {
+ 		$moreforfilter.=$extralabels['ts_prospection'];
+ 		$moreforfilter.=$extrafields->showInputField('ts_prospection', $ts_prospection);
  	}
  	if ($moreforfilter)
 	{

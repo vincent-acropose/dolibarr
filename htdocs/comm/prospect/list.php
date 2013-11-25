@@ -63,6 +63,9 @@ if (! $sortfield) $sortfield="s.nom";
 $search_level_from = GETPOST("search_level_from","alpha");
 $search_level_to   = GETPOST("search_level_to","alpha");
 
+$ts_logistique=GETPOST('options_ts_logistique','int');
+$ts_prospection=GETPOST('options_ts_prospection','int');
+
 // If both parameters are set, search for everything BETWEEN them
 if ($search_level_from != '' && $search_level_to != '')
 {
@@ -185,6 +188,9 @@ $sql .= " FROM ".MAIN_DB_PREFIX."c_stcomm as st";
 if ($search_sale || !$user->rights->societe->client->voir) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc"; // We need this table joined to the select in order to filter by sale
 $sql.= ", ".MAIN_DB_PREFIX."societe as s";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_departements as d on (d.rowid = s.fk_departement)";
+if (! empty ( $ts_logistique ) || ! empty ( $ts_prospection )) {
+	$sql.= ", ".MAIN_DB_PREFIX."societe_extrafields as extra";
+}
 if (! empty($search_categ) || ! empty($catid)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_societe as cs ON s.rowid = cs.fk_societe"; // We need this table joined to the select in order to filter by categ
 $sql.= " WHERE s.fk_stcomm = st.id";
 $sql.= " AND s.client IN (2, 3)";
@@ -202,6 +208,17 @@ if ($search_town) $sql .= " AND s.town LIKE '%".$db->escape(strtolower($search_t
 if ($search_state) $sql .= " AND d.nom LIKE '%".$db->escape(strtolower($search_state))."%'";
 if ($search_datec) $sql .= " AND s.datec LIKE '%".$db->escape($search_datec)."%'";
 if ($search_status!='') $sql .= " AND s.status = ".$db->escape($search_status);
+
+if (! empty ( $ts_logistique ) || ! empty ( $ts_prospection )) {
+	$sql.= " AND extra.fk_object=s.rowid";
+}
+if (! empty ( $ts_logistique )) {
+	$sql .= " AND extra.ts_logistique = ".$db->escape($ts_logistique);
+}
+if (! empty ( $ts_prospection )) {
+	$sql .= " AND extra.ts_prospection = ".$db->escape($ts_prospection);
+}
+
 // Insert levels filters
 if ($search_levels)
 {
@@ -287,6 +304,17 @@ if ($resql)
 	 	$moreforfilter.=$langs->trans('SalesRepresentatives'). ': ';
 		$moreforfilter.=$formother->select_salesrepresentatives($search_sale,'search_sale',$user);
  	}
+ 	
+ 	$extrafields = new ExtraFields ( $db );
+ 	$extralabels = $extrafields->fetch_name_optionals_label ( 'societe', true );
+	if (is_array($extralabels) && key_exists('ts_logistique', $extralabels)) {
+		$moreforfilter.=$extralabels['ts_logistique'];
+		$moreforfilter.=$extrafields->showInputField('ts_logistique', $ts_logistique);
+	}
+	if (is_array($extralabels) && key_exists('ts_prospection', $extralabels)) {
+		$moreforfilter.=$extralabels['ts_prospection'];
+		$moreforfilter.=$extrafields->showInputField('ts_prospection', $ts_prospection);
+	}
  	if ($moreforfilter)
 	{
 		print '<div class="liste_titre">';
