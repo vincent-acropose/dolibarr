@@ -833,6 +833,7 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $actionstatic=new ActionComm($db);
         $userstatic=new User($db);
         $contactstatic = new Contact($db);
+        $socstatic = new Societe($db);
 
         $out.="\n";
         $out.='<table width="100%" class="noborder">';
@@ -842,6 +843,11 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $out.=$langs->trans("ActionsToDoShort");
         if (get_class($object) == 'Societe') $out.='</a>';
         $out.='</td>';
+        $out.='<td>&nbsp;</td>';
+        $out.='<td>&nbsp;</td>';
+        $out.='<td>&nbsp;</td>';
+        $out.='<td>&nbsp;</td>';
+        $out.='<td>&nbsp;</td>';
         $out.='<td colspan="5" align="right">';
 		$permok=$user->rights->agenda->myactions->create;
         if (($object->id || $objcon->id) && $permok)
@@ -864,6 +870,7 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $sql.= " a.fk_element, a.elementtype,";
         $sql.= " c.code as acode, c.libelle,";
         $sql.= " u.login, u.rowid";
+        $sql.= ", a.note, a.fk_soc, a.fk_user_action ";
         if (get_class($object) == 'Adherent') $sql.= ", m.lastname, m.firstname";
         if (get_class($object) == 'Societe')  $sql.= ", sp.lastname, sp.firstname";
         $sql.= " FROM ".MAIN_DB_PREFIX."c_actioncomm as c, ".MAIN_DB_PREFIX."user as u, ".MAIN_DB_PREFIX."actioncomm as a";
@@ -903,6 +910,8 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
                     $out.="<tr ".$bc[$var].">";
 
                     $out.='<td width="120" align="left" class="nowrap">'.dol_print_date($datep,'dayhour')."</td>\n";
+                    
+                    $out.='<td width="120" align="left" class="nowrap">'.$obj->libelle."</td>\n";
 
                     // Picto warning
                     $out.='<td width="16">';
@@ -921,6 +930,21 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
                     // Title of event
                     //$out.='<td colspan="2">'.dol_trunc($obj->label,40).'</td>';
                     $out.='<td colspan="2">'.$actionstatic->getNomUrl(1,40).'</td>';
+                    
+                    //Desc
+                    $out.='<td>'.dol_trunc($obj->note, 40).'</td>';
+                    
+                    // Soc pour cette action
+                    if (!empty($obj->fk_soc))
+                    {
+                    	$socstatic->fetch($obj->fk_soc);
+                    
+                    	$out.='<td width="120">'.$socstatic->getNomUrl(1).'</td>';
+                    }
+                    else
+                    {
+                    	$out.='<td>&nbsp;</td>';
+                    }
 
                     // Contact pour cette action
                     if (empty($objcon->id) && $obj->fk_contact > 0)
@@ -934,6 +958,12 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
                     {
                         $out.='<td>&nbsp;</td>';
                     }
+                    
+                    //User affected
+                    $out.='<td class="nowrap" width="80">';
+                    $userstatic->fetch($obj->fk_user_action);
+                    $out.=$userstatic->getLoginUrl(1);
+                    $out.='</td>';
 
                     $out.='<td width="80" class="nowrap">';
                     $userstatic->id=$obj->fk_user_author;
@@ -1003,6 +1033,7 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $sql.= " a.fk_user_author, a.fk_contact,";
         $sql.= " c.code as acode, c.libelle,";
         $sql.= " u.login, u.rowid as user_id";
+        $sql.= " ,a.fk_soc, a.fk_user_action";
         if (get_class($object) == 'Adherent') $sql.= ", m.lastname, m.firstname";
         if (get_class($object) == 'Societe')  $sql.= ", sp.lastname, sp.firstname";
         $sql.= " FROM ".MAIN_DB_PREFIX."c_actioncomm as c, ".MAIN_DB_PREFIX."user as u, ".MAIN_DB_PREFIX."actioncomm as a";
@@ -1043,7 +1074,10 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
                 		'lastname'=>$obj->lastname,
                 		'firstname'=>$obj->firstname,
                 		'fk_element'=>$obj->fk_element,
-                		'elementtype'=>$obj->elementtype
+                		'elementtype'=>$obj->elementtype,
+                		'desc'=>$obj->note,
+                		'fk_soc'=>$obj->fk_soc,
+                		'fk_user_action'=>$obj->fk_user_action
                 );
                 $numaction++;
                 $i++;
@@ -1111,6 +1145,7 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $actionstatic=new ActionComm($db);
         $userstatic=new User($db);
         $contactstatic = new Contact($db);
+        $socstatic = new Societe($db);
 
         // TODO uniformize
         $propalstatic=new Propal($db);
@@ -1125,6 +1160,11 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $out.=$langs->trans("ActionsDoneShort");
         if (get_class($object) == 'Societe') $out.='</a>';
         $out.='</td>';
+        $out.='<td>&nbsp;</td>';
+        $out.='<td>&nbsp;</td>';
+        $out.='<td>&nbsp;</td>';
+        $out.='<td>&nbsp;</td>';
+        $out.='<td>&nbsp;</td>';
         $out.='<td colspan="5" align="right">';
 		$permok=$user->rights->agenda->myactions->create;
         if ((! empty($object->id) || ! empty($objcon->id)) && $permok)
@@ -1137,17 +1177,23 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
     		$out.="</a>";
 		}
         $out.='</td>';
+        
         $out.='</tr>';
 
         foreach ($histo as $key=>$value)
         {
             $var=!$var;
             $out.="<tr ".$bc[$var].">";
-
+            
             // Champ date
             $out.='<td width="120" class="nowrap">';
             if ($histo[$key]['date']) $out.=dol_print_date($histo[$key]['date'],'dayhour');
             else if ($histo[$key]['datestart']) $out.=dol_print_date($histo[$key]['datestart'],'dayhour');
+            $out.="</td>\n";
+            
+            // Champ type
+            $out.='<td width="50" class="nowrap">';
+            $out.=$histo[$key]['libelle'];
             $out.="</td>\n";
 
             // Picto
@@ -1174,8 +1220,8 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
             }
             $out.='</td>';
 
-            // Title of event
-            //$out.='<td>'.dol_trunc($histo[$key]['note'], 40).'</td>';
+            // DEsc of event
+            $out.='<td>'.dol_trunc($histo[$key]['desc'], 40).'</td>';
 
             // Objet lie
             // TODO uniformize
@@ -1205,24 +1251,41 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
             }
             else $out.='&nbsp;';
             $out.='</td>';
+            
+            // Soc pour cette action
+            if (isset($histo[$key]['fk_soc']) && $histo[$key]['fk_soc'] > 0)
+            {
+            	$socstatic->fetch($histo[$key]['fk_soc']);
 
+            	$out.='<td width="120">'.$socstatic->getNomUrl(1).'</td>';
+            }
+            else
+            {
+            	$out.='<td>&nbsp;</td>';
+            }
+            
             // Contact pour cette action
-            if (! empty($objcon->id) && isset($histo[$key]['contact_id']) && $histo[$key]['contact_id'] > 0)
+            if (isset($histo[$key]['contact_id']) && $histo[$key]['contact_id'] > 0)
             {
                 $contactstatic->lastname=$histo[$key]['lastname'];
                 $contactstatic->firstname=$histo[$key]['firstname'];
                 $contactstatic->id=$histo[$key]['contact_id'];
-                $out.='<td width="120">'.$contactstatic->getNomUrl(1,'',10).'</td>';
+                $out.='<td width="120">'.$contactstatic->getNomUrl(1,'',20).'</td>';
             }
             else
             {
                 $out.='<td>&nbsp;</td>';
             }
+            
+            //User affected
+            $out.='<td class="nowrap" width="80">';
+            $userstatic->fetch($histo[$key]['fk_user_action']);
+            $out.=$userstatic->getLoginUrl(1);
+            $out.='</td>';
 
             // Auteur
             $out.='<td class="nowrap" width="80">';
-            $userstatic->id=$histo[$key]['userid'];
-            $userstatic->login=$histo[$key]['login'];
+            $userstatic->fetch($histo[$key]['userid']);
             $out.=$userstatic->getLoginUrl(1);
             $out.='</td>';
 
