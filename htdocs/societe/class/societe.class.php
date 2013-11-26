@@ -1598,6 +1598,7 @@ class Societe extends CommonObject
         $sql = "SELECT rowid, email, phone_mobile, lastname, firstname";
         $sql.= " FROM ".MAIN_DB_PREFIX."socpeople";
         $sql.= " WHERE fk_soc = '".$this->id."'";
+        $sql.= " AND statut<>0";
 
         $resql=$this->db->query($sql);
         if ($resql)

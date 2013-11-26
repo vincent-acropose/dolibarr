@@ -970,7 +970,7 @@ $form = new Form($db);
 $formfile = new FormFile($db);
 $bankaccountstatic=new Account($db);
 
-llxHeader('','','');
+llxHeader('',$langs->trans("SuppliersInvoices"),'EN:Suppliers_Invoices|FR:FactureFournisseur|ES:Facturas_de_proveedores');
 
 // Mode creation
 if ($action == 'create')

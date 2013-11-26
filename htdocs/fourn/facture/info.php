@@ -43,7 +43,7 @@ $result = restrictedArea($user, 'fournisseur', $facid, 'facture_fourn', 'facture
  * View
  */
 
-llxHeader();
+llxHeader('',$langs->trans("SuppliersInvoices"),'EN:Suppliers_Invoices|FR:FactureFournisseur|ES:Facturas_de_proveedores');
 
 $fac = new FactureFournisseur($db);
 $fac->fetch($_GET["facid"]);

@@ -75,7 +75,7 @@ if ($action == 'setlabel' && $user->rights->fournisseur->facture->creer)
 
 $form = new Form($db);
 
-llxHeader();
+llxHeader('',$langs->trans("SuppliersInvoices"),'EN:Suppliers_Invoices|FR:FactureFournisseur|ES:Facturas_de_proveedores');
 
 if ($id)
 {

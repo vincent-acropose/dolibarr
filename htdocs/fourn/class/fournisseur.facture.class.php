@@ -1366,22 +1366,29 @@ class FactureFournisseur extends CommonInvoice
      *	@param		int		$withpicto		0=Pas de picto, 1=Inclut le picto dans le lien, 2=Picto seul
      *	@param		string	$option			Sur quoi pointe le lien
      * 	@param		int		$max			Max length of shown ref
+     *  @param		int		$newwindows		open in new windows/tabs
      * 	@return		string					Chaine avec URL
      */
-    function getNomUrl($withpicto=0,$option='',$max=0)
+    function getNomUrl($withpicto=0,$option='',$max=0, $newwindows=0)
     {
         global $langs;
 
         $result='';
+        
+        if (!empty($newwindows)) {
+        	$target=' target="_blanck" ';
+        } else {
+        	$target='';
+        }
 
         if ($option == 'document')
         {
-            $lien = '<a href="'.DOL_URL_ROOT.'/fourn/facture/document.php?facid='.$this->id.'">';
+            $lien = '<a href="'.DOL_URL_ROOT.'/fourn/facture/document.php?facid='.$this->id.'" '.$target.'>';
             $lienfin='</a>';
         }
         else
         {
-            $lien = '<a href="'.DOL_URL_ROOT.'/fourn/facture/fiche.php?facid='.$this->id.'">';
+            $lien = '<a href="'.DOL_URL_ROOT.'/fourn/facture/fiche.php?facid='.$this->id.'" '.$target.'>';
             $lienfin='</a>';
         }
         $label=$langs->trans("ShowInvoice").': '.$this->ref;

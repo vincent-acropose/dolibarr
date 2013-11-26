@@ -100,7 +100,7 @@ else if ($action == 'confirm_deletefile' && $confirm == 'yes')
 
 $form = new Form($db);
 
-llxHeader();
+llxHeader('',$langs->trans("SuppliersInvoices"),'EN:Suppliers_Invoices|FR:FactureFournisseur|ES:Facturas_de_proveedores');
 
 if ($object->id > 0)
 {
