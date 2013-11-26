@@ -130,6 +130,7 @@ else
     $sql.= ' p.fk_product_type, p.tms as datem,';
     $sql.= ' p.duration, p.tosell, p.tobuy, p.seuil_stock_alerte,';
     $sql.= ' MIN(pfp.unitprice) as minsellprice';
+    $sql.= ' ,p.tva_tx, p.recuperableonly as tva_npr';
     $sql.= ' FROM '.MAIN_DB_PREFIX.'product as p';
     if (! empty($search_categ) || ! empty($catid)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_product as cp ON p.rowid = cp.fk_product"; // We'll need this table joined to the select in order to filter by categ
    	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON p.rowid = pfp.fk_product";
@@ -195,6 +196,7 @@ else
     $sql.= " GROUP BY p.rowid, p.ref, p.label, p.barcode, p.price, p.price_ttc, p.price_base_type,";
     $sql.= " p.fk_product_type, p.tms,";
     $sql.= " p.duration, p.tosell, p.tobuy, p.seuil_stock_alerte";
+    $sql.= ' ,p.tva_tx, p.recuperableonly';
     //if (GETPOST("toolowstock")) $sql.= " HAVING SUM(s.reel) < p.seuil_stock_alerte";    // Not used yet
     $sql.= $db->order($sortfield,$sortorder);
     $sql.= $db->plimit($limit + 1, $offset);
@@ -300,7 +302,7 @@ else
     		print_liste_field_titre($langs->trans("DateModification"), $_SERVER["PHP_SELF"], "p.tms",$param,"",'align="center"',$sortfield,$sortorder);
     		if (! empty($conf->service->enabled) && $type != 0) print_liste_field_titre($langs->trans("Duration"), $_SERVER["PHP_SELF"], "p.duration",$param,"",'align="center"',$sortfield,$sortorder);
     		if (empty($conf->global->PRODUIT_MULTIPRICES)) print_liste_field_titre($langs->trans("SellingPrice"), $_SERVER["PHP_SELF"], "p.price",$param,"",'align="right"',$sortfield,$sortorder);
-    		print '<td class="liste_titre" align="right">'.$langs->trans("BuyingPriceMinShort").'</td>';
+    		print '<td class="liste_titre" align="right">'.$langs->trans("VAT").'</td>';
     		if (! empty($conf->stock->enabled) && $user->rights->stock->lire && $type != 1) print '<td class="liste_titre" align="right">'.$langs->trans("PhysicalStock").'</td>';
     		print_liste_field_titre($langs->trans("Sell"), $_SERVER["PHP_SELF"], "p.tosell",$param,"",'align="center"',$sortfield,$sortorder);
             print_liste_field_titre($langs->trans("Buy"), $_SERVER["PHP_SELF"], "p.tobuy",$param,"",'align="center"',$sortfield,$sortorder);
@@ -440,7 +442,7 @@ else
 
     			// Better buy price
                 print  '<td align="right">';
-                if ($objp->minsellprice != '')
+               /* if ($objp->minsellprice != '')
                 {
                     //print price($objp->minsellprice).' '.$langs->trans("HT");
         			if ($product_fourn->find_min_price_product_fournisseur($objp->rowid) > 0)
@@ -452,7 +454,8 @@ else
                             else print price($product_fourn->fourn_unitprice).' '.$langs->trans("HT");
         			    }
         			}
-                }
+                }*/
+                print vatrate($objp->tva_tx.($objp->tva_npr?'*':''),true);
                 print '</td>';
 
     			// Show stock

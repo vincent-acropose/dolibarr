@@ -302,7 +302,9 @@ INSERT INTO `llx_const` (`rowid`, `name`, `entity`, `value`, `type`, `visible`, 
 (584, 'PRODUIT_MULTIPRICES', 1, '0', 'chaine', 0, '', '2013-11-20 02:13:20'),
 (585, 'PRODUIT_MULTIPRICES_LIMIT', 1, '5', 'chaine', 0, '', '2013-11-20 02:13:20'),
 (586, 'MAIN_SOC_SHOW_ADDRESS_LIST', 1, '1', 'chaine', 0, '', '2013-11-20 02:13:20'),
-(587, 'AGF_ADVANCE_COST_MANAGEMENT', 1, '1', 'chaine', 0, '', '2013-11-20 02:13:20');
+(587, 'AGF_ADVANCE_COST_MANAGEMENT', 1, '1', 'chaine', 0, '', '2013-11-20 02:13:20'),
+(588, 'AGF_NO_MANUAL_CREATION_DOC', 1, '1', 'chaine', 0, '', '2013-11-20 02:13:20'),
+(589, 'AGF_NOT_DISPLAY_WARNING_TIME_SESSION', 1, '1', 'chaine', 0, '', '2013-11-20 02:13:20');
 
 TRUNCATE tABLE llx_agefodd_calendrier;
 INSERT INTO `llx_agefodd_calendrier` (`rowid`, `entity`, `day_session`, `heured`, `heuref`, `fk_user_author`, `datec`, `fk_user_mod`, `tms`) VALUES
@@ -2460,7 +2462,9 @@ proct.dates,  --date_cloture,
  IFNULL(usercrea.rowid,1), --fk_user_author
 1,    --fk_user_valid,
 1,  --fk_user_cloture,
-CASE WHEN proct.signe THEN 2 ELSE 3 END, --fk_statut,
+CASE WHEN (proct.signe=1 AND proct.trans=1) THEN 4 --Invoiced 
+	WHEN (proct.signe=1 AND proct.trans=0) THEN 2 -- Signed not invoiced
+ELSE 3 END, --fk_statut, not signed
 0,  --price,
 NULL,  --remise_percent,
 NULL,  --remise_absolue,
