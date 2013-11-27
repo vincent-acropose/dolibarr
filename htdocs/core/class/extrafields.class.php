@@ -667,6 +667,7 @@ class ExtraFields
 		elseif ($type == 'select')
 		{
 			$out='<select class="flat" name="options_'.$key.'">';
+			$out.='<option value="">&nbsp;</option>';
 			foreach ($param['options'] as $key=>$val )
 			{
 				$out.='<option value="'.$key.'"';
