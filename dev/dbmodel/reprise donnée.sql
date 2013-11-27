@@ -1782,7 +1782,7 @@ NULL, --color,
 SUM(coutconsultant.montant),  --cost_trainer,
 SUM(coutsalle.montant), --cost_site,
 SUM(couttrip.montant), --cost_trip,
-sess.prxft, --sell_price,
+0, --sell_price,
 0, --is_date_res_site,
 NULL, --date_res_site,
 0, --is_date_res_trainer,
@@ -1875,7 +1875,7 @@ NULL, --color,
 SUM(coutconsultant.montant),  --cost_trainer,
 SUM(coutsalle.montant), --cost_site,
 SUM(couttrip.montant), --cost_trip,
-sess.prxft, --sell_price,
+0, --sell_price,
 0, --is_date_res_site,
 NULL, --date_res_site,
 0, --is_date_res_trainer,
@@ -4106,7 +4106,7 @@ SELECT soc.fk_soc,2 FROM llx_societe_commerciaux as soc WHERE fk_user=11 AND soc
 UPDATE llx_societe_extrafields SET ts_logistique=14 WHERE fk_object IN (SELECT soc.fk_soc FROM llx_societe_commerciaux as soc WHERE fk_user=8);
 INSERT INTO llx_societe_extrafields(fk_object,ts_logistique)
 SELECT soc.fk_soc,14 FROM llx_societe_commerciaux as soc WHERE fk_user=8 AND soc.fk_soc NOT IN (SELECT fk_object FROM llx_societe_extrafields);
---ldarrieux
+--ldarrieux=>Hlefebre
 UPDATE llx_societe_extrafields SET ts_logistique=13 WHERE fk_object IN (SELECT soc.fk_soc FROM llx_societe_commerciaux as soc WHERE fk_user=4);
 INSERT INTO llx_societe_extrafields(fk_object,ts_logistique)
 SELECT soc.fk_soc,13 FROM llx_societe_commerciaux as soc WHERE fk_user=4 AND soc.fk_soc NOT IN (SELECT fk_object FROM llx_societe_extrafields);
