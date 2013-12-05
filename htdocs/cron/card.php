@@ -174,7 +174,7 @@ if ($action=='activate') {
 
 if ($action=='inactive') {
 	$object->status=0;
-	//Ajout de la tache cron
+	//Adding cron task
 	$result = $object->update($user);
 
 	// test du Resultat de la requete

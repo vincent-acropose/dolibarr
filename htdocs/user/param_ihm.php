@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2005-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2005-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2010-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2013	   Florian Henry        <florian.henry@open-concept.pro.com>
  *
@@ -78,7 +78,7 @@ $formadmin=new FormAdmin($db);
 /*
  * Actions
  */
-if ($action == 'update' && ($caneditfield  || $user->admin))
+if ($action == 'update' && ($caneditfield || ! empty($user->admin)))
 {
 	
     if (! $_POST["cancel"])
@@ -104,8 +104,8 @@ if ($action == 'update' && ($caneditfield  || $user->admin))
 
         $_SESSION["mainmenu"]="";   // Le gestionnaire de menu a pu changer
 
-        //header('Location: '.$_SERVER["PHP_SELF"].'?id='.$id);
-        //exit;
+        header('Location: '.$_SERVER["PHP_SELF"].'?id='.$id);
+        exit;
     }
 }
 
@@ -259,8 +259,7 @@ else
     }
     else
     {
-    	
-        if (($user->id == $fuser->id || ! empty($user->admin))  && !empty($caneditfield))       // Si utilisateur edite = utilisateur courant (pas besoin de droits particulier car il s'agit d'une page de modif d'output et non de données) ou si admin
+    	if ($caneditfield || ! empty($user->admin))       // Si utilisateur edite = utilisateur courant (pas besoin de droits particulier car il s'agit d'une page de modif d'output et non de données) ou si admin
         {
             print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=edit&amp;id='.$fuser->id.'">'.$langs->trans("Modify").'</a>';
         }
