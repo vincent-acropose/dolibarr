@@ -149,6 +149,9 @@ if ($pid) $param.="&projectid=".$pid;
 if ($type) $param.="&type=".$type;
 if ($actioncode) $param.="&actioncode=".$actioncode;
 
+if (!empty($filterdatestart)) $param.="&dt_start_filtermonth=".GETPOST('dt_start_filtermonth','int').'&dt_start_filterday='.GETPOST('dt_start_filterday','int').'&dt_start_filteryear='.GETPOST('dt_start_filteryear','int');
+if (!empty($filterdatesend)) $param.="&dt_end_filtermonth=".GETPOST('dt_end_filtermonth','int').'&dt_end_filterday='.GETPOST('dt_end_filterday','int').'&dt_end_filteryear='.GETPOST('dt_end_filteryear','int');
+
 $sql = "SELECT s.nom as societe, s.rowid as socid, s.client,";
 $sql.= " a.id, a.datep as dp, a.datep2 as dp2,";
 $sql.= " a.fk_contact, a.note, a.label, a.percent as percent,";
@@ -222,7 +225,7 @@ if ($resql)
     $head = calendars_prepare_head('');
 
     dol_fiche_head($head, 'card', $langs->trans('Events'), 0, 'list');
-    print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,$filtera,$filtert,$filterd,$pid,$socid,-1,'',$filterdatestart,$filterdatesend);
+    print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,$filtera,$filtert,$filterd,$pid,$socid,-1,$actioncode,$filterdatestart,$filterdatesend);
     dol_fiche_end();
 
     // Add link to show birthdays
