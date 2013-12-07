@@ -526,7 +526,7 @@ INSERT INTO `llx_user` (`rowid`, `entity`, `ref_ext`, `ref_int`, `datec`, `tms`,
 (15, 1, NULL, NULL, '2013-08-24 08:53:33', '2013-11-19 21:41:55', 'ctesson', 'test', '098f6bcd4621d373cade4e832627b4f6', NULL, NULL, 'TESSON', 'Cécile', '', '', '', NULL, NULL, 'Chargée de communication', '', '', '', 'ctesson@akteos.fr', '', 0, 1, 1, NULL, NULL, NULL, 10, '', '2013-09-02 07:42:19', '2013-09-01 23:00:32', NULL, '', NULL, 1, NULL, NULL, NULL, 'ae0039da-2646-4883-bd4f-637a1e4744b4'),
 (16, 1, NULL, NULL, '2010-09-07 16:09:53', '2010-09-07 14:10:03', 'EVM', 'test', NULL, NULL, NULL, 'Evenements', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '01718fa8-1e9a-4b1f-bf7d-cf9e3729cf53'),
 (17, 1, NULL, NULL, '2009-04-27 18:28:26', '2010-04-14 17:37:21', 'CB', 'test', NULL, NULL, NULL, 'Borlet', 'Christophe', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'cborlet@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '0dc9343b-6fa3-4c2b-bf7b-da4c55c08952'),
-(18, 1, NULL, NULL, '2011-03-22 09:21:11', '2011-08-31 14:17:12', 'NOMAD', 'test', NULL, NULL, NULL, 'Nomad', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'nomad@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '2225e4d8-128a-45a0-85a0-0ba49a0708f4'),
+(18, 1, NULL, NULL, '2011-03-22 09:21:11', '2011-08-31 14:17:12', 'NOMAD', 'test', NULL, NULL, NULL, 'Nomad', NULL, NULL, NULL, NULinput_reaL, NULL, NULL, NULL, NULL, NULL, NULL, 'nomad@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '2225e4d8-128a-45a0-85a0-0ba49a0708f4'),
 (19, 1, NULL, NULL, '2011-05-01 09:10:49', '2012-07-26 13:21:47', 'NF', 'test', NULL, NULL, NULL, 'Forté', 'Nathalie', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'nforte@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '283f2798-80cb-49f7-a9be-513dfefdd0bd'),
 (20, 1, NULL, NULL, '2011-03-08 17:16:23', '2011-08-31 14:16:47', 'CONSEIL', 'test', NULL, NULL, NULL, 'Conseil', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'conseil@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '373377aa-daff-468e-875a-9662a2dbfaa6'),
 (21, 1, NULL, NULL, '2010-04-14 19:39:22', '2010-09-08 14:50:57', 'JBI', 'test', NULL, NULL, NULL, 'Bidou', 'Julie', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'jbidou@akteos.fr', NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, '58f5ca7a-8dc8-4bd4-b5d1-1be0572706a1'),
@@ -737,6 +737,21 @@ INSERT INTO `llx_c_type_contact` (`rowid`, `element`, `source`, `code`, `libelle
 (190, 'project_task', 'external', 'TASKEXECUTIVE', 'Responsable', 1, NULL),
 (191, 'project_task', 'external', 'CONTRIBUTOR', 'Intervenant', 1, NULL),
 (192, 'propal', 'external', 'SUIVIPEDAGO', 'Contact client suivi pédagogique', 1, NULL);
+
+TRUNCATE TABLE llx_c_input_reason;
+INSERT INTO `llx_c_input_reason` (`rowid`, `code`, `label`, `active`, `module`) VALUES
+(1, 'SRC_INTE', 'Internet', 1, NULL),
+(2, 'SRC_CAMP_MAIL', 'Campagne Publipostage', 1, NULL),
+(3, 'SRC_CAMP_PHO', 'Campagne Téléphonique', 1, NULL),
+(4, 'SRC_CAMP_FAX', 'Campagne Fax', 0, NULL),
+(5, 'SRC_COMM', 'Contact commercial', 1, NULL),
+(6, 'SRC_SHOP', 'Contact en magazin', 0, NULL),
+(7, 'SRC_CAMP_EMAIL', 'Campagne EMailing', 1, NULL),
+(8, 'SRC_WOM', 'Recommandation', 1, NULL),
+(9, 'SRC_PARTNER', 'Partenaire', 1, NULL),
+(10, 'SRC_EMPLOYEE', 'Employé', 0, NULL),
+(11, 'SRC_SPONSORING', 'Parrainage/Sponsoring', 0, NULL),
+(12, 'SRC_EVT', 'Evènement', 1, NULL);
 
 
 --Insert customer typed account into thridparty
@@ -3741,7 +3756,7 @@ INSERT INTO `llx_c_actioncomm` (`id`, `code`, `type`, `libelle`, `module`, `acti
 (30, 'AC_SUP_ORD', 'systemauto', 'Send supplier order by email', 'order_supplier', 0, NULL, 9),
 (31, 'AC_SUP_INV', 'systemauto', 'Send supplier invoice by email', 'invoice_supplier', 0, NULL, 7),
 (40, 'AC_OTH_AUTO', 'systemauto', 'Other (automatically inserted events)', NULL, 1, NULL, 20),
-(50, 'AC_OTH', 'systemauto', 'Other (manually inserted events)', NULL, 1, NULL, 5),
+(50, 'AC_OTH', 'system', 'Other (manually inserted events)', NULL, 1, NULL, 5),
 (1030008, 'AC_AGF_CONSE', 'systemauto', 'Send Advise document by mail', 'agefodd', 1, NULL, 80),
 (1030007, 'AC_AGF_CLOT', 'systemauto', 'Send dossier cloture by mail', 'agefodd', 1, NULL, 70),
 (1030006, 'AC_AGF_ATTES', 'systemauto', 'Send attestation by mail', 'agefodd', 1, NULL, 60),

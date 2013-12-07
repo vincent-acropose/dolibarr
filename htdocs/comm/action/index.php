@@ -1016,7 +1016,7 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
                     	$color=$event->icalcolor;
                     	$cssclass=(! empty($event->icalname)?'family_'.dol_string_nospecial($event->icalname):'family_other');
                     }
-                    else if ($event->type_code == 'BIRTHDAY')  { $numbirthday++; $colorindex=2; $cssclass='family_birthday'; }
+                    else if ($event->type_code == 'BIRTHDAY')  { $numbirthday++; $colorindex=2; $cssclass='family_birthday';}
                     else { $numother++; $cssclass='family_other'; }
                     if ($color == -1)	// Color was not forced. Set color according to color index.
                     {
@@ -1025,14 +1025,16 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
                     	if (isset($colorindexused[$idusertouse]))
                     	{
                     		$colorindex=$colorindexused[$idusertouse];	// Color already assigned to this user
+                    		//print 'isset $colorindexused[$idusertouse]='.$colorindex;
                     	}
                     	else
                     	{
+                    		//print '$nextindextouse='.$nextindextouse;
                     		$colorindex=$nextindextouse;
                     		$colorindexused[$idusertouse]=$colorindex;
                     		if (! empty($theme_datacolor[$nextindextouse+1])) $nextindextouse++;	// Prepare to use next color
                     	}
-                    	//print '|'.($color).'='.($idusertouse?$idusertouse:0).'='.$colorindex.'<br>';
+                    	//print '|$color='.$color.' $idusertouse='.($idusertouse?$idusertouse:0).' $colorindex='.$colorindex.'<br>';
 						// Define color
                     	$color=sprintf("%02x%02x%02x",$theme_datacolor[$colorindex][0],$theme_datacolor[$colorindex][1],$theme_datacolor[$colorindex][2]);
                     }

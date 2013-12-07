@@ -773,8 +773,19 @@ class ActionComm extends CommonObject
         global $langs;
 
         $result='';
+        
+        if (!empty($this->usertodo->id) && $this->libelle!='...') {
+        	$user_static = new User($this->db);
+        	$user_static->fetch($this->usertodo->id);
+        	$title = $user_static->getFullName($langs).'-';
+        }
+        
+        $title .= $this->libelle;
+        
         if ($option=='birthday') $lien = '<a '.($classname?'class="'.$classname.'" ':'').'href="'.DOL_URL_ROOT.'/contact/perso.php?id='.$this->id.'">';
-        else $lien = '<a '.($classname?'class="'.$classname.'" ':'').'href="'.DOL_URL_ROOT.'/comm/action/fiche.php?id='.$this->id.'">';
+        else $lien = '<a '.($classname?'class="'.$classname.'" ':'').'href="'.DOL_URL_ROOT.'/comm/action/fiche.php?id='.$this->id.'" title="'.$title.'" target="_blanck">';
+       
+        
         $lienfin='</a>';
         $label=$this->label;
         if (empty($label)) $label=$this->libelle;	// Fro backward compatibility

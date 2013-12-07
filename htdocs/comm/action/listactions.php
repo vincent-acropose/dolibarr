@@ -44,6 +44,10 @@ $pid=GETPOST("projectid",'int',3);
 $status=GETPOST("status",'alpha');
 $type=GETPOST('type');
 
+
+$filterdatestart=dol_mktime(0,0,0,GETPOST('dt_start_filtermonth','int'),GETPOST('dt_start_filterday','int'),GETPOST('dt_start_filteryear','int'));
+$filterdatesend=dol_mktime(0,0,0,GETPOST('dt_end_filtermonth','int'),GETPOST('dt_end_filterday','int'),GETPOST('dt_end_filteryear','int'));
+
 $filter=GETPOST("filter",'',3);
 $filtera = GETPOST("userasked","int",3)?GETPOST("userasked","int",3):GETPOST("filtera","int",3);
 $filtert = GETPOST("usertodo","int",3)?GETPOST("usertodo","int",3):GETPOST("filtert","int",3);
@@ -180,6 +184,12 @@ if ($filtera > 0 || $filtert > 0 || $filterd > 0)
 	if ($filterd > 0) $sql.= ($filtera>0||$filtert>0?" OR ":"")." a.fk_user_done = ".$filterd;
 	$sql.= ")";
 }
+if (!empty($filterdatestart)) {
+	$sql .= ' AND a.datep>=\''.$db->idate($filterdatestart).'\'';
+}
+if (!empty($filterdatesend)) {
+	$sql .= ' AND a.datep2<=\''.$db->idate($filterdatesend).'\'';
+}
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($limit + 1, $offset);
 //print $sql;
@@ -212,7 +222,7 @@ if ($resql)
     $head = calendars_prepare_head('');
 
     dol_fiche_head($head, 'card', $langs->trans('Events'), 0, 'list');
-    print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,$filtera,$filtert,$filterd,$pid,$socid,-1);
+    print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,$filtera,$filtert,$filterd,$pid,$socid,-1,'',$filterdatestart,$filterdatesend);
     dol_fiche_end();
 
     // Add link to show birthdays
@@ -234,9 +244,13 @@ if ($resql)
 
     print_barre_liste($newtitle, $page, $_SERVER["PHP_SELF"], $param,$sortfield,$sortorder,$link,$num,0,'');
     //print '<br>';
+    
+   
 
 	$i = 0;
 	print '<table class="liste" width="100%">';
+	
+	
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans("Action"),$_SERVER["PHP_SELF"],"a.label",$param,"","",$sortfield,$sortorder);
 	//print_liste_field_titre($langs->trans("Title"),$_SERVER["PHP_SELF"],"a.label",$param,"","",$sortfield,$sortorder);
@@ -246,9 +260,11 @@ if ($resql)
 	print_liste_field_titre($langs->trans("Contact"),$_SERVER["PHP_SELF"],"a.fk_contact",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("ActionUserAsk"),$_SERVER["PHP_SELF"],"ua.login",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AffectedTo"),$_SERVER["PHP_SELF"],"ut.login",$param,"","",$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("DoneBy"),$_SERVER["PHP_SELF"],"ud.login",$param,"","",$sortfield,$sortorder);
+	//print_liste_field_titre($langs->trans("DoneBy"),$_SERVER["PHP_SELF"],"ud.login",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"a.percent",$param,"",'align="right"',$sortfield,$sortorder);
 	print "</tr>\n";
+	
+
 
 	$contactstatic = new Contact($db);
 	$now=dol_now();
@@ -276,6 +292,7 @@ if ($resql)
 		//print dol_trunc($obj->label,12);
 		//print '</td>';
 
+		//Start date
 		print '<td align="center" class="nowrap">';
 		print dol_print_date($db->jdate($obj->dp),"day");
 		$late=0;
@@ -286,6 +303,7 @@ if ($resql)
 		if ($late) print img_warning($langs->trans("Late")).' ';
 		print '</td>';
 
+		//End date
 		print '<td align="center" class="nowrap">';
 		print dol_print_date($db->jdate($obj->dp2),"day");
 		print '</td>';
@@ -342,7 +360,7 @@ if ($resql)
 		print '</td>';
 
 		// User did
-		print '<td align="left">';
+		/*print '<td align="left">';
 		if ($obj->useriddone)
 		{
 			$userstatic=new User($db);
@@ -351,7 +369,7 @@ if ($resql)
 			print $userstatic->getLoginUrl(1);
 		}
 		else print '&nbsp;';
-		print '</td>';
+		print '</td>';*/
 
 		// Status/Percent
 		print '<td align="right" class="nowrap">'.$actionstatic->LibStatut($obj->percent,6).'</td>';

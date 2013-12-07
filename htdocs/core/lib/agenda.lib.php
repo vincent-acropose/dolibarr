@@ -43,7 +43,7 @@
  * @param	string	$actioncode		Preselected value of actioncode for filter on type
  * @return	void
  */
-function print_actions_filter($form, $canedit, $status, $year, $month, $day, $showbirthday, $filtera, $filtert, $filterd, $pid, $socid, $showextcals = array(), $actioncode = '') {
+function print_actions_filter($form, $canedit, $status, $year, $month, $day, $showbirthday, $filtera, $filtert, $filterd, $pid, $socid, $showextcals = array(), $actioncode = '', $filterdatestart='', $filterdatesend='') {
 
 	global $conf, $user, $langs, $db;
 	
@@ -105,6 +105,23 @@ function print_actions_filter($form, $canedit, $status, $year, $month, $day, $sh
 		print '</td></tr>';
 	}
 	
+	//Filter by periode only on list view
+	if (strpos($_SERVER ["PHP_SELF"],'listactions.php')!==false) {
+		
+		print '<tr>';
+		print '<td class="nowrap">'.$langs->trans("DateStart").'</td>';
+		print '<td class="nowrap">';
+		print $form->select_date($filterdatestart,'dt_start_filter',0,0,1);
+		print '</td>';
+		print "</tr>\n";
+		
+		print '<td class="nowrap">'.$langs->trans("DateEnd").'</td>';
+		print '<td class="nowrap">';
+		print $form->select_date($filterdatesend,'dt_end_filter',0,0,1);
+		print '</td>';
+		print "</tr>\n";
+	}
+	
 	print '</table>';
 	print '</td>';
 	
@@ -118,6 +135,8 @@ function print_actions_filter($form, $canedit, $status, $year, $month, $day, $sh
 	print '<br>';
 	print img_picto ( $langs->trans ( "ViewList" ), 'object_list', 'class="hideonsmartphone"' ) . ' <input type="submit" class="button" style="min-width:120px" name="viewlist" value="' . $langs->trans ( "ViewList" ) . '">';
 	print '</td>';
+	
+	
 	
 	// Legend
 	if ($conf->use_javascript_ajax && is_array ( $showextcals )) {
