@@ -141,8 +141,8 @@ class InterfaceAddRelanceEvent
             	
 	            	$actioncomm = new ActionComm($this->db);
 	            	$actioncomm->type_code   = 'AC_OTH';		// code of parent table llx_c_actioncomm (will be deprecated)
-	            	//$actioncomm->code='AC_OTH';
-	            	$actioncomm->label       = 'Relance Proposition Commerciale';
+	            	$actioncomm->code='AC_OTH';
+	            	$actioncomm->label       = 'Relance Proposition Commerciale '.$object->ref;
 	            	$actioncomm->note        = '';
 	            	$actioncomm->datep       = $object->array_options['options_pr_date_relance'];
 	            	$actioncomm->datef       = $object->array_options['options_pr_date_relance'];
