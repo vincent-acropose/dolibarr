@@ -1805,7 +1805,6 @@ fk_user_author,
 datec,
 fk_user_mod,
 tms,
-archive,
 status,
 duree_session,
 intitule_custo,
@@ -1843,8 +1842,7 @@ IFNULL(usercrea.rowid,1), --fk_user_author
 IFNULL(sess.created,NOW()), --datec,
 IFNULL(usermod.rowid,1), --fk_user_author
 sess.modified, --tms,
-CASE WHEN IFNULL(MAX(convct.datfin),sess.datfin)<NOW() THEN 1 ELSE 0 END, --archive
-4,--status CONVOQUE,
+CASE WHEN IFNULL(MAX(convct.datfin),sess.datfin)<NOW() THEN 4 ELSE 2 END, ----status
 cat.duree,
 cat.intitule,
 sess.id --import_key
@@ -1936,8 +1934,7 @@ IFNULL(usercrea.rowid,1), --fk_user_author
 IFNULL(sess.created,NOW()), --datec,
 IFNULL(usermod.rowid,1), --fk_user_author
 sess.modified, --tms,
-CASE WHEN IFNULL(MAX(convct.datfin),sess.datfin)<NOW() THEN 1 ELSE 0 END, --archive
-1,--status DRAFT
+CASE WHEN IFNULL(MAX(convct.datfin),sess.datfin)<NOW() THEN 4 ELSE 1 END, ----status
 sess.id --import_key
 FROM session as sess
 INNER JOIN stage ON stage.id=sess.stage_id
