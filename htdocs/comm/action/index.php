@@ -1025,11 +1025,9 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
                     	if (isset($colorindexused[$idusertouse]))
                     	{
                     		$colorindex=$colorindexused[$idusertouse];	// Color already assigned to this user
-                    		//print 'isset $colorindexused[$idusertouse]='.$colorindex;
                     	}
                     	else
                     	{
-                    		//print '$nextindextouse='.$nextindextouse;
                     		$colorindex=$nextindextouse;
                     		$colorindexused[$idusertouse]=$colorindex;
                     		if (! empty($theme_datacolor[$nextindextouse+1])) $nextindextouse++;	// Prepare to use next color

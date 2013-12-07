@@ -2184,7 +2184,7 @@ abstract class CommonObject
             if (! $resql)
             {
                 $this->error=$this->db->lasterror();
-                dol_syslog(get_class($this)."::update ".$this->error,LOG_ERR);
+                dol_syslog(get_class($this)."::insertExtraFields ".$this->error,LOG_ERR);
                 $this->db->rollback();
                 return -1;
             }

@@ -77,13 +77,24 @@ function print_actions_filter($form, $canedit, $status, $year, $month, $day, $sh
 		print $form->select_dolusers ( $filtert, 'usertodo', 1, '', ! $canedit );
 		print '</td></tr>';
 		
-		print '<tr>';
+		/*print '<tr>';
 		print '<td class="nowrap">';
 		print $langs->trans ( "or" ) . ' ' . $langs->trans ( "ActionsDoneBy" );
 		print ' &nbsp;</td><td class="nowrap">';
 		print $form->select_dolusers ( $filterd, 'userdone', 1, '', ! $canedit );
-		print '</td></tr>';
+		print '</td></tr>';*/
 		
+		include_once DOL_DOCUMENT_ROOT . '/core/class/html.formactions.class.php';
+		$formactions = new FormActions ( $db );
+		print '<tr>';
+		print '<td class="nowrap">';
+		print $langs->trans ( "Type" );
+		print ' &nbsp;</td><td class="nowrap">';
+		
+		print $formactions->select_type_actions ( $actioncode, "actioncode", '', (empty ( $conf->global->AGENDA_USE_EVENT_TYPE ) ? 1 : 0) );
+		
+		print '</td></tr>';
+	} else {
 		include_once DOL_DOCUMENT_ROOT . '/core/class/html.formactions.class.php';
 		$formactions = new FormActions ( $db );
 		print '<tr>';

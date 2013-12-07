@@ -1168,6 +1168,14 @@ else if ($action == 'update_extras')
 				if ($result < 0)
 				{
 					$error++;
+				} else {
+					// Appel des triggers
+					include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+					$interface=new Interfaces($db);
+					$result=$interface->run_triggers('PROPAL_MODIFY',$object,$user,$langs,$conf);
+					if ($result < 0) {
+						$error++;setEventMessage($interface->errors,'errors');
+					}
 				}
 			}
 		}

@@ -38,22 +38,12 @@ ALTER TABLE llx_socpeople ADD INDEX idx_llx_socpeople_import_key (import_key);
 TRUNCATE TABLE llx_extrafields;
 INSERT INTO `llx_extrafields` (`rowid`, `name`, `entity`, `elementtype`, `tms`, `label`, `type`, `size`, `fieldunique`, `fieldrequired`, `pos`, `param`) VALUES
 (2, 'ts_prospection', 1, 'societe', '2013-11-05 10:24:26', 'Chargé de prospection', 'sellist', '', 0, 0, 4, 'a:1:{s:7:"options";a:1:{s:76:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra.u_prospection=1";N;}}'),
-(43, 'ts_secteur', 1, 'societe', '2013-11-22 21:29:06', 'Secteur d''activité', 'select', '', 0, 0, 1, 'a:1:{s:7:"options";a:18:{s:4:"AERO";s:12:"Aeronautique";s:4:"AGRO";s:16:" Agroalimentaire";s:4:"ASSO";s:11:"Association";s:4:"AUTO";s:10:"Automobile";s:3:"BTP";s:3:"BTP";s:4:"CHIM";s:6:"Chimie";s:4:"CONS";s:7:"Conseil";s:5:"CONSO";s:21:"Biens de consommation";s:6:"DISTRI";s:12:"Distribution";s:4:"EDUC";s:9:"Education";s:5:"ENERG";s:7:"Energie";s:3:"FIN";s:7:"Finance";s:3:"LUX";s:4:"Luxe";s:3:"PUB";s:13:"Communication";s:2:"SP";s:16:"Services publics";s:3:"TIC";s:12:"Informatique";s:7:"TOURISM";s:9:"Tourisme ";s:6:"TRANSP";s:9:"Transport";}}'),
 (4, 'ts_logistique', 1, 'societe', '2013-11-05 10:30:44', 'Gestionnaire logistique', 'sellist', '', 0, 0, 5, 'a:1:{s:7:"options";a:1:{s:75:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra.u_logistique=1";N;}}'),
-(48, 'ts_interentreprises', 1, 'agefodd_session', '2013-11-22 21:30:46', 'Chargé des Interentreprises', 'sellist', '', 0, 0, 3, 'a:1:{s:7:"options";a:1:{s:81:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra.u_interentreprises=1";N;}}'),
 (6, 'ct_principal', 1, 'socpeople', '2013-10-25 14:15:30', 'Contact principal', 'boolean', '', 0, 0, 6, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
 (7, 'ct_magellan', 1, 'socpeople', '2013-10-25 14:21:17', 'Membre de Magellan', 'boolean', '', 0, 0, 13, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
 (8, 'ct_mailing_papier', 1, 'socpeople', '2013-10-25 14:16:12', 'Destinataire mailing papier', 'boolean', '', 0, 0, 8, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
 (9, 'ct_invitation', 1, 'socpeople', '2013-10-25 14:15:52', 'Destinataire invitation', 'boolean', '', 0, 0, 7, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-(47, 'ct_pays', 1, 'socpeople', '2013-11-22 21:29:42', 'Zones géographiques', 'checkbox', '', 0, 0, 15, 'a:1:{s:7:"options";a:13:{i:1;s:11:"Afrique Est";i:2;s:13:"Afrique Ouest";i:3;s:11:"Afrique Sud";i:4;s:14:"Amérique Nord";i:5;s:13:"Amérique Sud";i:6;s:15:"Asie Ext Orient";i:7;s:12:"Asie Sud Est";i:8;s:7:"Balkans";i:9;s:10:"Europe Est";i:10;s:11:"Europe Nord";i:11;s:12:"Europe Ouest";i:12;s:7:"Maghreb";i:13;s:8:"Océanie";}}'),
-(45, 'ct_service', 1, 'socpeople', '2013-11-22 21:29:26', 'Fonction/Service', 'select', '', 0, 0, 5, 'a:1:{s:7:"options";a:28:{s:3:"DFO";s:19:"Directeur Formation";s:3:"RFO";s:21:"Responsable Formation";s:3:"AFO";s:21:" Assistante Formation";s:3:"DRH";s:29:"Directeur Ressources Humaines";s:3:"RRH";s:31:"Responsable Ressources humaines";s:3:"ARH";s:30:"Assistante Ressources Humaines";s:3:"RGC";s:33:"Responsable Gestion de carrières";s:3:"DMI";s:34:"Directeur Mobilité Internationale";s:3:"RMI";s:36:"Responsable Mobilité Internationale";s:3:"AMI";s:35:"Assistante Mobilité Internationale";s:3:"C&B";s:33:"Compensation and Benefits Manager";s:3:"ASS";s:10:"Assistante";s:3:"DDA";s:6:"Achats";s:3:"DBU";s:13:"Business Unit";s:3:"DCO";s:10:"Commercial";s:3:"DCM";s:14:" Communication";s:2:"DG";s:21:" Direction Générale";s:3:"RDI";s:10:"Diversité";s:3:"DOP";s:27:" Exploitation & Opérations";s:3:"DFI";s:7:"Finance";s:3:"DEX";s:13:"Import/Export";s:3:"DJU";s:9:"Juridique";s:3:"DLO";s:10:"Logistique";s:3:"DMA";s:9:"Marketing";s:3:"DTE";s:10:"Production";s:3:"DRD";s:26:"Recherche & Développement";s:3:"DSI";s:22:"Système d''information";s:3:"AUT";s:6:"Autres";}}'),
-(44, 'ct_origine', 1, 'socpeople', '2013-11-22 21:29:17', 'Origine du contact', 'select', '', 0, 0, 3, 'a:1:{s:7:"options";a:7:{s:5:"EMAIL";s:8:"Emailing";s:8:"INTERNET";s:19:"Moteur de recherche";s:9:"TELEPHONE";s:26:"Prospection téléphonique";s:9:"CATALOGUE";s:9:"Catalogue";s:14:"RECOMMANDATION";s:14:"Recommandation";s:3:"EVT";s:10:"Evènement";s:10:"PARTENAIRE";s:10:"Partenaire";}}'),
-(37, 'ct_email_commercial', 1, 'socpeople', '2013-11-22 07:56:13', 'Désactiver emailing commercial', 'boolean', '', 0, 0, 9, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-(38, 'ct_email_news', 1, 'socpeople', '2013-11-22 07:56:34', 'Désactiver emailing news', 'boolean', '', 0, 0, 10, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-(39, 'ct_email_invitation', 1, 'socpeople', '2013-11-22 07:56:57', 'Désactiver emailing invitation', 'boolean', '', 0, 0, 11, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
 (16, 'ct_precision_origine', 1, 'socpeople', '2013-10-25 14:14:34', 'Précision sur l''origine du contact', 'varchar', '255', 0, 0, 4, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-(46, 'ct_sujets', 1, 'socpeople', '2013-11-22 21:29:35', 'Sujets d''intérêt', 'checkbox', '', 0, 0, 14, 'a:1:{s:7:"options";a:10:{i:1;s:10:"A distance";i:2;s:13:"Communication";i:3;s:10:"Diversité";i:4;s:12:"Expatriation";i:5;s:6:"Export";i:6;s:14:"Interculturel ";i:7;s:10:"Management";i:8;s:13:"Négociation ";i:9;s:4:"Pays";i:20;s:2:"RH";}}'),
-(42, 'ts_payeur', 1, 'societe', '2013-11-22 21:27:12', 'Centre Payeur', 'sellist', '', 0, 0, 6, 'a:1:{s:7:"options";a:1:{s:65:"societe:CONCAT_WS('' '',code_client,nom):rowid:fk_typent IN (3,103)";N;}}'),
 (19, 'ct_anglais', 1, 'socpeople', '2013-10-25 14:20:40', 'Langue anglaise', 'boolean', '', 0, 0, 12, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
 (20, 'u_interentreprises', 1, 'user', '2013-11-01 22:24:18', 'Chargé des Interentreprises', 'boolean', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
 (21, 'u_prospection', 1, 'user', '2013-10-31 16:05:18', 'Chargé de prospection', 'boolean', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
@@ -65,44 +55,65 @@ INSERT INTO `llx_extrafields` (`rowid`, `name`, `entity`, `elementtype`, `tms`, 
 (27, 'ts_prospection', 1, 'agefodd_session', '2013-11-15 12:10:59', 'Chargé de prospection', 'sellist', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:76:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra.u_prospection=1";N;}}'),
 (28, 'ts_logistique', 1, 'agefodd_session', '2013-11-15 12:11:41', ' Gestionnaire logistique', 'sellist', '', 0, 0, 0, 'a:1:{s:7:"options";a:1:{s:75:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra.u_logistique=1";N;}}'),
 (29, 'ct_catalogue', 1, 'socpeople', '2013-11-11 10:47:04', 'Destinataire catalogue', 'boolean', '', 0, 0, 7, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
-(30, 'cd_ss_domaine', 1, 'agefodd_formation_catalogue', '2013-11-15 18:41:20', 'Sous-domaine', 'select', '', 0, 0, 2, 'a:1:{s:7:"options";a:11:{s:0:"";N;s:5:"WPAYS";s:13:"Business pays";s:5:"EXPAT";s:12:"Expatriation";s:6:"LEADER";s:10:"Leadership";s:5:"EQUIP";s:7:"Equipes";s:4:"DIST";s:19:"Travail à distance";s:3:"SIC";s:31:"Sensibilisation interculturelle";s:4:"NEGO";s:12:"Négociation";s:2:"RH";s:2:"RH";s:6:"EXPORT";s:6:"Export";s:3:"DIV";s:10:"Diversité";}}'),
-(49, 'ts_partenaire', 1, 'societe', '2013-11-14 17:53:00', 'Partenaire', 'select', '', 0, 0, 2, 'a:1:{s:7:"options";a:6:{s:0:"";N;s:4:"FORM";s:24:"Prestataire de formation";s:4:"UNIV";s:11:"Université";s:3:"MOB";s:24:"Mobilité internationale";s:5:"OUTIL";s:19:"fournisseur d''outil";s:3:"COM";s:13:"Communication";}}');
+(50, 'cd_ss_domaine', 1, 'agefodd_formation_catalogue', '2013-11-23 07:34:33', 'Sous-domaine', 'select', '', 0, 0, 2, 'a:1:{s:7:"options";a:10:{s:5:"WPAYS";s:13:"Business pays";s:5:"EXPAT";s:12:"Expatriation";s:6:"LEADER";s:10:"Leadership";s:5:"EQUIP";s:7:"Equipes";s:4:"DIST";s:19:"Travail à distance";s:3:"SIC";s:31:"Sensibilisation interculturelle";s:4:"NEGO";s:12:"Négociation";s:2:"RH";s:2:"RH";s:6:"EXPORT";s:6:"Export";s:3:"DIV";s:10:"Diversité";}}'),
+(37, 'ct_email_commercial', 1, 'socpeople', '2013-11-22 07:56:13', 'Désactiver emailing commercial', 'boolean', '', 0, 0, 9, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(38, 'ct_email_news', 1, 'socpeople', '2013-11-22 07:56:34', 'Désactiver emailing news', 'boolean', '', 0, 0, 10, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(39, 'ct_email_invitation', 1, 'socpeople', '2013-11-22 07:56:57', 'Désactiver emailing invitation', 'boolean', '', 0, 0, 11, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(42, 'ts_payeur', 1, 'societe', '2013-11-22 21:27:12', 'Centre Payeur', 'sellist', '', 0, 0, 6, 'a:1:{s:7:"options";a:1:{s:65:"societe:CONCAT_WS('' '',code_client,nom):rowid:fk_typent IN (3,103)";N;}}'),
+(74, 'ts_secteur', 1, 'societe', '2013-12-07 10:42:42', 'Secteur d''activité', 'select', '', 0, 0, 1, 'a:1:{s:7:"options";a:18:{s:4:"AERO";s:13:"Aéronautique";s:4:"AGRO";s:16:" Agroalimentaire";s:4:"ASSO";s:11:"Association";s:4:"AUTO";s:10:"Automobile";s:3:"BTP";s:3:"BTP";s:4:"CHIM";s:6:"Chimie";s:4:"CONS";s:7:"Conseil";s:5:"CONSO";s:21:"Biens de consommation";s:6:"DISTRI";s:12:"Distribution";s:4:"EDUC";s:9:"Education";s:5:"ENERG";s:7:"Energie";s:3:"FIN";s:7:"Finance";s:3:"LUX";s:4:"Luxe";s:3:"PUB";s:13:"Communication";s:2:"SP";s:16:"Services publics";s:3:"TIC";s:12:"Informatique";s:7:"TOURISM";s:9:"Tourisme ";s:6:"TRANSP";s:9:"Transport";}}'),
+(77, 'ct_origine', 1, 'socpeople', '2013-12-07 12:04:24', 'Origine du contact', 'sellist', '', 0, 0, 3, 'a:1:{s:7:"options";a:1:{s:26:"c_input_reason:label:rowid";N;}}'),
+(63, 'ct_service', 1, 'socpeople', '2013-11-30 12:59:41', 'Fonction/Service', 'select', '', 0, 0, 5, 'a:1:{s:7:"options";a:29:{s:0:"";N;s:3:"DFO";s:19:"Directeur Formation";s:3:"RFO";s:21:"Responsable Formation";s:3:"AFO";s:21:" Assistante Formation";s:3:"DRH";s:29:"Directeur Ressources Humaines";s:3:"RRH";s:31:"Responsable Ressources humaines";s:3:"ARH";s:30:"Assistante Ressources Humaines";s:3:"RGC";s:33:"Responsable Gestion de carrières";s:3:"DMI";s:34:"Directeur Mobilité Internationale";s:3:"RMI";s:36:"Responsable Mobilité Internationale";s:3:"AMI";s:35:"Assistante Mobilité Internationale";s:3:"C&B";s:33:"Compensation and Benefits Manager";s:3:"ASS";s:10:"Assistante";s:3:"DDA";s:6:"Achats";s:3:"DBU";s:13:"Business Unit";s:3:"DCO";s:10:"Commercial";s:3:"DCM";s:14:" Communication";s:2:"DG";s:21:" Direction Générale";s:3:"RDI";s:10:"Diversité";s:3:"DOP";s:27:" Exploitation & Opérations";s:3:"DFI";s:7:"Finance";s:3:"DEX";s:13:"Import/Export";s:3:"DJU";s:9:"Juridique";s:3:"DLO";s:10:"Logistique";s:3:"DMA";s:9:"Marketing";s:3:"DTE";s:10:"Production";s:3:"DRD";s:26:"Recherche & Développement";s:3:"DSI";s:22:"Système d''information";s:3:"AUT";s:6:"Autres";}}'),
+(46, 'ct_sujets', 1, 'socpeople', '2013-11-22 21:29:35', 'Sujets d''intérêt', 'checkbox', '', 0, 0, 14, 'a:1:{s:7:"options";a:10:{i:1;s:10:"A distance";i:2;s:13:"Communication";i:3;s:10:"Diversité";i:4;s:12:"Expatriation";i:5;s:6:"Export";i:6;s:14:"Interculturel ";i:7;s:10:"Management";i:8;s:13:"Négociation ";i:9;s:4:"Pays";i:20;s:2:"RH";}}'),
+(47, 'ct_pays', 1, 'socpeople', '2013-11-22 21:29:42', 'Zones géographiques', 'checkbox', '', 0, 0, 15, 'a:1:{s:7:"options";a:13:{i:1;s:11:"Afrique Est";i:2;s:13:"Afrique Ouest";i:3;s:11:"Afrique Sud";i:4;s:14:"Amérique Nord";i:5;s:13:"Amérique Sud";i:6;s:15:"Asie Ext Orient";i:7;s:12:"Asie Sud Est";i:8;s:7:"Balkans";i:9;s:10:"Europe Est";i:10;s:11:"Europe Nord";i:11;s:12:"Europe Ouest";i:12;s:7:"Maghreb";i:13;s:8:"Océanie";}}'),
+(48, 'ts_interentreprises', 1, 'agefodd_session', '2013-11-22 21:30:46', 'Chargé des Interentreprises', 'sellist', '', 0, 0, 3, 'a:1:{s:7:"options";a:1:{s:81:"user:CONCAT_WS('' '',main.lastname,main.firstname):rowid:extra.u_interentreprises=1";N;}}'),
+(75, 'ts_partenaire', 1, 'societe', '2013-12-07 10:42:50', 'Partenaire', 'select', '', 0, 0, 2, 'a:1:{s:7:"options";a:5:{s:4:"FORM";s:24:"Prestataire de formation";s:4:"UNIV";s:11:"Université";s:3:"MOB";s:24:"Mobilité internationale";s:5:"OUTIL";s:19:"fournisseur d''outil";s:3:"COM";s:13:"Communication";}}'),
+(52, 'ts_date_propal', 1, 'agefodd_session', '2013-11-25 20:27:11', 'Proposition à envoyer avant le :', 'date', '', 0, 0, 4, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(55, 'pr_date_relance', 1, 'propal', '2013-11-28 15:51:12', 'Date de relance', 'date', '', 0, 0, 2, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(71, 'ct_superieur', 1, 'socpeople', '2013-12-07 10:05:36', 'Précision sur le N + 1', 'varchar', '255', 0, 0, 16, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(72, 'ct_assistant', 1, 'socpeople', '2013-12-07 10:14:42', 'Précision sur l''assistante', 'varchar', '255', 0, 0, 18, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}'),
+(69, 'ct_superieur_liste', 1, 'socpeople', '2013-12-07 10:02:47', 'N + 1', 'sellist', '', 0, 0, 15, 'a:1:{s:7:"options";a:1:{s:65:"societe:CONCAT_WS('' '',code_client,nom):rowid:fk_typent IN (3,103)";N;}}'),
+(73, 'ct_assistant_liste', 1, 'socpeople', '2013-12-07 10:16:52', 'Assitante', 'sellist', '', 0, 0, 17, 'a:1:{s:7:"options";a:1:{s:65:"societe:CONCAT_WS('' '',code_client,nom):rowid:fk_typent IN (3,103)";N;}}');
 
-ALTER TABLE llx_societe_extrafields ADD COLUMN ts_partenaire text DEFAULT NULL;
 ALTER TABLE llx_societe_extrafields ADD COLUMN ts_prospection text DEFAULT NULL;
-ALTER TABLE llx_societe_extrafields ADD COLUMN ts_secteur text DEFAULT NULL;
 ALTER TABLE llx_societe_extrafields ADD COLUMN ts_logistique text DEFAULT NULL;
-ALTER TABLE llx_societe_extrafields ADD COLUMN ts_payeur text DEFAULT NULL;
-
 ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_principal int(1) DEFAULT NULL;
 ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_magellan int(1) DEFAULT NULL;
 ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_mailing_papier int(1) DEFAULT 0;
 ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_invitation int(1) DEFAULT 0;
-ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_service text DEFAULT NULL;
-ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_origine text DEFAULT NULL;
-ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_email_commercial int(1) DEFAULT 1;
-ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_email_news int(1) DEFAULT 1;
-ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_email_invitation int(1) DEFAULT 1;
 ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_precision_origine varchar(255) DEFAULT NULL;
-ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_sujets text DEFAULT NULL;
-ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_motif_inactif varchar(255) DEFAULT NULL;
 ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_anglais int(1) DEFAULT NULL;
-ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_pays int(1) DEFAULT NULL;
-ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_catalogue int(1) DEFAULT NULL;
-
 ALTER TABLE llx_user_extrafields ADD COLUMN u_interentreprises int(1) DEFAULT NULL;
 ALTER TABLE llx_user_extrafields ADD COLUMN u_prospection int(1) DEFAULT NULL;
 ALTER TABLE llx_user_extrafields ADD COLUMN u_commercial int(1) DEFAULT NULL;
 ALTER TABLE llx_user_extrafields ADD COLUMN u_logistique int(1) DEFAULT NULL;
 ALTER TABLE llx_user_extrafields ADD COLUMN u_communication int(1) DEFAULT NULL;
-
 ALTER TABLE llx_propal_extrafields ADD COLUMN comment text DEFAULT NULL;
 ALTER TABLE llx_agefodd_formation_catalogue_extrafields ADD COLUMN cd_domaine text DEFAULT NULL;
-ALTER TABLE llx_agefodd_formation_catalogue_extrafields ADD COLUMN cd_ss_domaine text DEFAULT NULL;
-
 ALTER TABLE llx_agefodd_session_extrafields ADD COLUMN ts_prospection text DEFAULT NULL;
 ALTER TABLE llx_agefodd_session_extrafields ADD COLUMN ts_logistique text DEFAULT NULL;
+ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_catalogue int(1) DEFAULT NULL;
+ALTER TABLE llx_agefodd_formation_catalogue_extrafields ADD COLUMN cd_ss_domaine text DEFAULT NULL;
+ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_email_commercial int(1) DEFAULT 1;
+ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_email_news int(1) DEFAULT 1;
+ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_email_invitation int(1) DEFAULT 1;
+ALTER TABLE llx_societe_extrafields ADD COLUMN ts_secteur text DEFAULT NULL;
+ALTER TABLE llx_societe_extrafields ADD COLUMN ts_payeur text DEFAULT NULL;
+ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_service text DEFAULT NULL;
+ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_origine text DEFAULT NULL;
+ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_sujets text DEFAULT NULL;
+ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_pays int(1) DEFAULT NULL;
 ALTER TABLE llx_agefodd_session_extrafields ADD COLUMN ts_interentreprises text DEFAULT NULL;
+ALTER TABLE llx_societe_extrafields ADD COLUMN ts_partenaire text DEFAULT NULL;
+ALTER TABLE llx_agefodd_session_extrafields ADD COLUMN ts_date_propal date DEFAULT NULL;
+ALTER TABLE llx_propal_extrafields ADD COLUMN pr_date_relance  date DEFAULT NULL;
+ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_superieur varchar(255) DEFAULT NULL;
+ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_assistant varchar(255) DEFAULT NULL;
+ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_superieur_liste text DEFAULT NULL;
+ALTER TABLE llx_socpeople_extrafields ADD COLUMN ct_assistant_liste text DEFAULT NULL;
+
+
+
+
 
 TRUNCATE TABLE llx_const;
 INSERT INTO `llx_const` (`rowid`, `name`, `entity`, `value`, `type`, `visible`, `note`, `tms`) VALUES
