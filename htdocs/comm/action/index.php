@@ -305,6 +305,7 @@ $sql.= ' a.fk_user_author,a.fk_user_action,a.fk_user_done,';
 $sql.= ' a.priority, a.fulldayevent, a.location,';
 $sql.= ' a.fk_soc, a.fk_contact,';
 $sql.= ' ca.code';
+$sql.= ' ,a.note';
 $sql.= ' FROM ('.MAIN_DB_PREFIX.'c_actioncomm as ca,';
 $sql.= " ".MAIN_DB_PREFIX.'user as u,';
 $sql.= " ".MAIN_DB_PREFIX."actioncomm as a)";
@@ -376,6 +377,7 @@ if ($resql)
         $event->type_code=$obj->code;
         $event->libelle=$obj->label;
         $event->percentage=$obj->percent;
+        $event->note=$obj->note;
         $event->author->id=$obj->fk_user_author;
         $event->usertodo->id=$obj->fk_user_action;
         $event->userdone->id=$obj->fk_user_done;
@@ -1123,7 +1125,7 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
                         if ($event->type_code == 'ICALEVENT') print '<br>('.dol_trunc($event->icalname,$maxnbofchar).')';
 
                         // If action related to company / contact
-                        $linerelatedto='';$length=16;
+                        $linerelatedto='';$length=30;
                         if (! empty($event->societe->id) && ! empty($event->contact->id)) $length=round($length/2);
                         if (! empty($event->societe->id) && $event->societe->id > 0)
                         {

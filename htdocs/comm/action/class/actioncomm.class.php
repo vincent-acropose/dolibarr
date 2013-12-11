@@ -778,9 +778,21 @@ class ActionComm extends CommonObject
         	$user_static = new User($this->db);
         	$user_static->fetch($this->usertodo->id);
         	$title = $user_static->getFullName($langs).'-';
+        	
+        	$actionType=new CActionComm($this->db);
+        	$actionType->fetch($this->type_code);
+        	if ($actionType->libelle==$langs->trans("Action".$this->type_code)) {
+        		$label_action_type=$langs->trans("Action".$this->type_code);
+        	} else {
+        		$label_action_type=$actionType->libelle;
+        	}
         }
         
-        $title .= $this->libelle;
+        $title .= $label_action_type .' - ' .$this->libelle;
+        
+        if (!empty($this->note)) {
+        	$title .= $this->note;
+        }
         
         if ($option=='birthday') $lien = '<a '.($classname?'class="'.$classname.'" ':'').'href="'.DOL_URL_ROOT.'/contact/perso.php?id='.$this->id.'">';
         else $lien = '<a '.($classname?'class="'.$classname.'" ':'').'href="'.DOL_URL_ROOT.'/comm/action/fiche.php?id='.$this->id.'" title="'.$title.'" target="_blanck">';
@@ -804,8 +816,8 @@ class ActionComm extends CommonObject
         	$libelleshort=dol_trunc($label, $maxlength);
         }
         else
-       {
-            $libelle=$label;
+       {      	
+       	    $libelle=$label;
             $libelleshort=dol_trunc($label,$maxlength);
         }
 
