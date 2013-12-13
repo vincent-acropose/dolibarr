@@ -137,6 +137,9 @@ if (! $user->rights->societe->client->voir && ! $socid) $sql .= " sc.fk_soc, sc.
 $sql.= ' u.login';
 $sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s, '.MAIN_DB_PREFIX.'propal as p';
 if ($sall) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as pd ON p.rowid=pd.fk_propal';
+if ($sall) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'element_contact as elemcontact ON elemcontact.element_id=p.rowid';
+if ($sall) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_type_contact as typecontact ON typecontact.rowid=elemcontact.fk_c_type_contact AND typecontact.element=\'propal\'';
+if ($sall) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'socpeople as socp ON socp.rowid=elemcontact.fk_socpeople';
 $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'user as u ON p.fk_user_author = u.rowid';
 // We'll need this table joined to the select in order to filter by sale
 if ($search_sale || (! $user->rights->societe->client->voir && ! $socid)) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
@@ -167,7 +170,8 @@ if ($search_montant_ht)
 {
 	$sql.= " AND p.total_ht='".$db->escape(price2num(trim($search_montant_ht)))."'";
 }
-if ($sall) $sql.= " AND (s.nom LIKE '%".$db->escape($sall)."%' OR p.note_private LIKE '%".$db->escape($sall)."%' OR p.note_public LIKE '%".$db->escape($sall)."%' OR pd.description LIKE '%".$db->escape($sall)."%')";
+if ($sall) $sql.= " AND ((s.nom LIKE '%".$db->escape($sall)."%' OR p.note_private LIKE '%".$db->escape($sall)."%' OR p.note_public LIKE '%".$db->escape($sall)."%' OR pd.description LIKE '%".$db->escape($sall)."%')";
+if ($sall)$sql.= " OR (socp.lastname LIKE '%".$db->escape($sall)."%' OR socp.firstname LIKE '%".$db->escape($sall)."%' OR socp.email LIKE '%".$db->escape($sall)."%' OR socp.phone LIKE '%".$db->escape($sall)."%'))";
 if ($socid) $sql.= ' AND s.rowid = '.$socid;
 if ($viewstatut <> '')
 {
@@ -195,6 +199,8 @@ if ($search_user > 0)
 
 $sql.= ' ORDER BY '.$sortfield.' '.$sortorder.', p.ref DESC';
 $sql.= $db->plimit($limit + 1,$offset);
+dol_syslog('comm/propal/list.php :: sql='.$sql);
+
 $result=$db->query($sql);
 
 if ($result)
