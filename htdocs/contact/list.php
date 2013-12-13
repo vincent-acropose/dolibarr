@@ -294,7 +294,7 @@ if ($result)
     if (empty($conf->global->SOCIETE_DISABLE_CONTACTS)) print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Phone"),$_SERVER["PHP_SELF"],"p.phone", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("PhoneMobile"),$_SERVER["PHP_SELF"],"p.phone_mob", $begin, $param, '', $sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("Fax"),$_SERVER["PHP_SELF"],"p.fax", $begin, $param, '', $sortfield,$sortorder);
+   // print_liste_field_titre($langs->trans("Fax"),$_SERVER["PHP_SELF"],"p.fax", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("EMail"),$_SERVER["PHP_SELF"],"p.email", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Country"),$_SERVER["PHP_SELF"],"country.libelle","",$param,'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("DateModificationShort"),$_SERVER["PHP_SELF"],"p.tms", $begin, $param, 'align="center"', $sortfield,$sortorder);
@@ -326,9 +326,9 @@ if ($result)
     print '<td class="liste_titre">';
     print '<input class="flat" type="text" name="search_phonemob" size="8" value="'.$search_phonemob.'">';
     print '</td>';
-    print '<td class="liste_titre">';
+   /* print '<td class="liste_titre">';
     print '<input class="flat" type="text" name="search_fax" size="8" value="'.$search_fax.'">';
-    print '</td>';
+    print '</td>';*/
     print '<td class="liste_titre">';
     print '<input class="flat" type="text" name="search_email" size="8" value="'.$search_email.'">';
     print '</td>';
@@ -396,7 +396,7 @@ if ($result)
         // Phone mobile
         print '<td>'.dol_print_phone($obj->phone_mobile,$obj->country_code,$obj->cidp,$obj->socid,'AC_TEL').'</td>';
         // Fax
-        print '<td>'.dol_print_phone($obj->fax,$obj->country_code,$obj->cidp,$obj->socid,'AC_TEL').'</td>';
+        //print '<td>'.dol_print_phone($obj->fax,$obj->country_code,$obj->cidp,$obj->socid,'AC_TEL').'</td>';
         // EMail
         print '<td>'.dol_print_email($obj->email,$obj->cidp,$obj->socid,'AC_EMAIL',18).'</td>';
         // Country

@@ -55,6 +55,9 @@ $search_compta=GETPOST("search_compta");
 $search_status		= GETPOST("search_status",'int');
 if ($search_status=='') $search_status=1; // always display activ customer first
 
+$search_address=GETPOST('search_address');
+$search_phone=GETPOST('search_phone');
+
 // Load sale and categ filters
 $search_sale  = GETPOST("search_sale");
 $search_categ = GETPOST("search_categ",'int');
@@ -89,6 +92,8 @@ if (GETPOST("button_removefilter_x"))
     $search_idprof3='';
     $search_idprof4='';
     $seach_status=1;
+    $search_phone='';
+    $search_address='';
 }
 
 
@@ -106,11 +111,16 @@ llxHeader('',$langs->trans("ThirdParty"),$help_url);
 
 $sql = "SELECT s.rowid, s.nom as name, s.client, s.zip, s.town, st.libelle as stcomm, s.prefix_comm, s.code_client, s.code_compta, s.status as status,";
 $sql.= " s.datec, s.datea, s.canvas";
+$sql.= " ,s.address";
+$sql.= " ,s.phone";
+$sql.= " ,typent.libelle as typent";
+$sql.= " ,(SELECT MAX(propal.date_cloture) FROM ".MAIN_DB_PREFIX."propal as propal WHERE propal.fk_statut=2 AND propal.fk_soc=s.rowid) as lastpropalsigndt";
 // We'll need these fields in order to filter by sale (including the case where the user can only see his prospects)
 if ($search_sale) $sql .= ", sc.fk_soc, sc.fk_user";
-$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
+$sql.= " FROM (".MAIN_DB_PREFIX."societe as s";
+$sql.= ", ".MAIN_DB_PREFIX."c_stcomm as st)";
 if (! empty($search_categ) || ! empty($catid)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_societe as cs ON s.rowid = cs.fk_societe"; // We need this table joined to the select in order to filter by categ
-$sql.= ", ".MAIN_DB_PREFIX."c_stcomm as st";
+$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."c_typent as typent ON typent.id=s.fk_typent";
 // We'll need this table joined to the select in order to filter by sale
 if ($search_sale || !$user->rights->societe->client->voir) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 if (! empty ( $ts_logistique ) || ! empty ( $ts_prospection )) {
@@ -132,6 +142,9 @@ if ($search_town) $sql.= " AND s.town LIKE '%".$db->escape($search_town)."%'";
 if ($search_code)  $sql.= " AND s.code_client LIKE '%".$db->escape($search_code)."%'";
 if ($search_compta) $sql.= " AND s.code_compta LIKE '%".$db->escape($search_compta)."%'";
 if ($search_status!='') $sql .= " AND s.status = ".$db->escape($search_status);
+if ($search_phone)   $sql .= " AND s.phone LIKE '%".$db->escape(str_replace(' ', '', $search_phone))."%'";
+if ($search_address)   $sql .= " AND s.address LIKE '%".$db->escape($search_address)."%'";
+
 // Insert sale filter
 if ($search_sale)
 {
@@ -169,6 +182,8 @@ if ($result)
  	if ($search_categ != '') $param.='&amp;search_categ='.$search_categ;
  	if ($search_sale != '')	$param.='&amp;search_sale='.$search_sale;
  	if ($search_status != '') $param.='&amp;search_status='.$search_status;
+ 	if ($search_phone != '') $param.='&amp;search_phone='.$search_phone;
+ 	if ($search_address != '') $param.='&amp;search_address='.$search_address;
 
 	print_barre_liste($langs->trans("ListOfCustomers"), $page, $_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',$num,$nbtotalofrecords);
 
@@ -214,10 +229,15 @@ if ($result)
 	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","",$param,"",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Zip"),$_SERVER["PHP_SELF"],"s.zip","",$param,"",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Town"),$_SERVER["PHP_SELF"],"s.town","",$param,"",$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Address"),$_SERVER["PHP_SELF"],"s.address","",$params,'',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Phone"),$_SERVER["PHP_SELF"],"s.phone","",$params,'',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("ThirdPartyType"),$_SERVER["PHP_SELF"],"s.fk_typent","",$params,'',$sortfield,$sortorder);
+    
 	print_liste_field_titre($langs->trans("CustomerCode"),$_SERVER["PHP_SELF"],"s.code_client","",$param,"",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("AccountancyCode"),$_SERVER["PHP_SELF"],"s.code_compta","",$param,'align="left"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateCreation"),$_SERVER["PHP_SELF"],"datec","",$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"s.status","",$param,'align="center"',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Dernière prop. signée"),$_SERVER["PHP_SELF"],"","",$params,'',$sortfield,$sortorder);
     print '<td class="liste_titre" width="1%">&nbsp;</td>';
     $parameters=array();
     $formconfirm=$hookmanager->executeHooks('printFieldListTitle',$parameters);    // Note that $action and $object may have been modified by hook
@@ -238,6 +258,21 @@ if ($result)
     print '<input type="text" class="flat" name="search_town" value="'.$search_town.'" size="10">';
     print '</td>';
 
+    //Address
+    print '<td class="liste_titre">';
+    print '<input class="flat" size="10" type="text" name="search_address" value="'.$search_address.'">';
+    print '</td>';
+    
+    //Phone
+    print '<td class="liste_titre">';
+    print '<input class="flat" size="10" type="text" name="search_phone" value="'.$search_phone.'">';
+    print '</td>';
+    
+    //Type Ent
+    print '<td class="liste_titre">';
+    print '</td>';
+    
+    
     print '<td class="liste_titre">';
     print '<input type="text" class="flat" name="search_code" value="'.$search_code.'" size="10">';
     print '</td>';
@@ -252,6 +287,10 @@ if ($result)
 
     print '<td class="liste_titre" align="center">';
     print $form->selectarray('search_status', array('0'=>$langs->trans('ActivityCeased'),'1'=>$langs->trans('InActivity')),$search_status);
+    print '</td>';
+    
+    print '<td class="liste_titre" align="center">';
+    print '&nbsp;';
     print '</td>';
 
     print '<td class="liste_titre" align="right"><input class="liste_titre" type="image" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
@@ -284,11 +323,17 @@ if ($result)
 		print '</td>';
 		print '<td>'.$obj->zip.'</td>';
         print '<td>'.$obj->town.'</td>';
+        print "<td>".$obj->address."</td>\n";
+        print "<td>".dol_print_phone($obj->phone)."</td>\n";
+        print "<td>".$obj->typent."</td>\n";
         print '<td>'.$obj->code_client.'</td>';
         print '<td>'.$obj->code_compta.'</td>';
         print '<td align="right">'.dol_print_date($db->jdate($obj->datec),'day').'</td>';
         print '<td align="center">'.$thirdpartystatic->getLibStatut(3);
         print '</td>';
+        
+        print "<td>".dol_print_date($obj->lastpropalsigndt,'daytextshort')."</td>\n";
+        
         print '<td></td>';
         
 

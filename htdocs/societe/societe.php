@@ -54,6 +54,9 @@ $search_categ=trim(GETPOST("search_categ"));
 $mode=GETPOST("mode");
 $modesearch=GETPOST("mode_search");
 $search_type=trim(GETPOST('search_type'));
+$search_zip=GETPOST('search_zip');
+$search_address=GETPOST('search_address');
+$search_phone=GETPOST('search_phone');
 
 $sortfield=GETPOST("sortfield",'alpha');
 $sortorder=GETPOST("sortorder",'alpha');
@@ -164,6 +167,9 @@ if (GETPOST("button_removefilter_x"))
 	$search_idprof3='';
 	$search_idprof4='';
 	$search_type='';
+	$search_zip='';
+	$search_address='';
+	$search_phone='';
 }
 
 if ($socname)
@@ -188,12 +194,18 @@ $title=$langs->trans("ListOfThirdParties");
 $sql = "SELECT s.rowid, s.nom as name, s.town, s.datec, s.datea,status, s.code_client, s.code_fournisseur, ";
 $sql.= " st.libelle as stcomm, s.prefix_comm, s.client, s.fournisseur, s.canvas, s.status as status,";
 $sql.= " s.siren as idprof1, s.siret as idprof2, ape as idprof3, idprof4 as idprof4";
+$sql.= " ,s.zip";
+$sql.= " ,s.address";
+$sql.= " ,s.phone";
+$sql.= " ,typent.libelle as typent";
+$sql.= " ,(SELECT MAX(propal.date_cloture) FROM ".MAIN_DB_PREFIX."propal as propal WHERE propal.fk_statut=2 AND propal.fk_soc=s.rowid) as lastpropalsigndt";
 // We'll need these fields in order to filter by sale (including the case where the user can only see his prospects)
 if ($search_sale) $sql .= ", sc.fk_soc, sc.fk_user";
 // We'll need these fields in order to filter by categ
 if ($search_categ) $sql .= ", cs.fk_categorie, cs.fk_societe";
-$sql.= " FROM ".MAIN_DB_PREFIX."societe as s,";
-$sql.= " ".MAIN_DB_PREFIX."c_stcomm as st";
+$sql.= " FROM (".MAIN_DB_PREFIX."societe as s,";
+$sql.= " ".MAIN_DB_PREFIX."c_stcomm as st)";
+$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."c_typent as typent ON typent.id=s.fk_typent";
 // We'll need this table joined to the select in order to filter by sale
 if ($search_sale || (!$user->rights->societe->client->voir && !$socid)) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 // We'll need this table joined to the select in order to filter by categ
@@ -238,12 +250,15 @@ if ($search_nom)
 	$sql.= ")";
 }
 if ($search_town)   $sql .= " AND s.town LIKE '%".$db->escape($search_town)."%'";
-if ($search_idprof1) $sql .= " AND s.siren LIKE '%".$db->escape($search_idprof1)."%'";
+if ($search_zip)   $sql .= " AND s.zip LIKE '%".$db->escape($search_zip)."%'";
+if ($search_address)   $sql .= " AND s.address LIKE '%".$db->escape($search_address)."%'";
+if ($search_phone)   $sql .= " AND s.phone LIKE '%".$db->escape(str_replace(' ', '', $search_phone))."%'";
+/*if ($search_idprof1) $sql .= " AND s.siren LIKE '%".$db->escape($search_idprof1)."%'";
 if ($search_idprof2) $sql .= " AND s.siret LIKE '%".$db->escape($search_idprof2)."%'";
 if ($search_idprof3) $sql .= " AND s.ape LIKE '%".$db->escape($search_idprof3)."%'";
 if ($search_idprof4) $sql .= " AND s.idprof4 LIKE '%".$db->escape($search_idprof4)."%'";
 if ($search_idprof5) $sql .= " AND s.idprof5 LIKE '%".$db->escape($search_idprof5)."%'";
-if ($search_idprof6) $sql .= " AND s.idprof6 LIKE '%".$db->escape($search_idprof6)."%'";
+if ($search_idprof6) $sql .= " AND s.idprof6 LIKE '%".$db->escape($search_idprof6)."%'";*/
 // Filter on type of thirdparty
 if ($search_type > 0 && in_array($search_type,array('1,3','2,3'))) $sql .= " AND s.client IN (".$db->escape($search_type).")";
 if ($search_type > 0 && in_array($search_type,array('4')))         $sql .= " AND s.fournisseur = 1";
@@ -261,6 +276,7 @@ if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST))
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($conf->liste_limit+1, $offset);
 
+dol_syslog('societe.php :: sql='.$sql);
 $resql = $db->query($sql);
 if ($resql)
 {
@@ -272,6 +288,9 @@ if ($resql)
 	$params.= '&amp;search_idprof2='.$search_idprof2;
 	$params.= '&amp;search_idprof3='.$search_idprof3;
 	$params.= '&amp;search_idprof4='.$search_idprof4;
+	$params.= '&amp;search_zip='.$search_zip;
+	$params.= '&amp;search_adress='.$search_adress;
+	$params.= '&amp;search_phone='.$search_phone;
 
 	print_barre_liste($title, $page, $_SERVER["PHP_SELF"],$params,$sortfield,$sortorder,'',$num,$nbtotalofrecords);
 
@@ -326,11 +345,16 @@ if ($resql)
     // Lines of titles
     print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","",$params,"",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Zip"),$_SERVER["PHP_SELF"],"s.zip","",$params,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Town"),$_SERVER["PHP_SELF"],"s.town","",$params,'',$sortfield,$sortorder);
-	print_liste_field_titre($form->textwithpicto($langs->trans("ProfId1Short"),$textprofid[1],1,0),$_SERVER["PHP_SELF"],"s.siren","",$params,'class="nowrap"',$sortfield,$sortorder);
-	print_liste_field_titre($form->textwithpicto($langs->trans("ProfId2Short"),$textprofid[2],1,0),$_SERVER["PHP_SELF"],"s.siret","",$params,'class="nowrap"',$sortfield,$sortorder);
-	print_liste_field_titre($form->textwithpicto($langs->trans("ProfId3Short"),$textprofid[3],1,0),$_SERVER["PHP_SELF"],"s.ape","",$params,'class="nowrap"',$sortfield,$sortorder);
-	print_liste_field_titre($form->textwithpicto($langs->trans("ProfId4Short"),$textprofid[4],1,0),$_SERVER["PHP_SELF"],"s.idprof4","",$params,'class="nowrap"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Address"),$_SERVER["PHP_SELF"],"s.address","",$params,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Phone"),$_SERVER["PHP_SELF"],"s.phone","",$params,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("ThirdPartyType"),$_SERVER["PHP_SELF"],"s.fk_typent","",$params,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Dernière prop. signée"),$_SERVER["PHP_SELF"],"","",$params,'',$sortfield,$sortorder);
+	//print_liste_field_titre($form->textwithpicto($langs->trans("ProfId1Short"),$textprofid[1],1,0),$_SERVER["PHP_SELF"],"s.siren","",$params,'class="nowrap"',$sortfield,$sortorder);
+	//print_liste_field_titre($form->textwithpicto($langs->trans("ProfId2Short"),$textprofid[2],1,0),$_SERVER["PHP_SELF"],"s.siret","",$params,'class="nowrap"',$sortfield,$sortorder);
+	//print_liste_field_titre($form->textwithpicto($langs->trans("ProfId3Short"),$textprofid[3],1,0),$_SERVER["PHP_SELF"],"s.ape","",$params,'class="nowrap"',$sortfield,$sortorder);
+	//print_liste_field_titre($form->textwithpicto($langs->trans("ProfId4Short"),$textprofid[4],1,0),$_SERVER["PHP_SELF"],"s.idprof4","",$params,'class="nowrap"',$sortfield,$sortorder);
 	print '<td></td>';
 	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"s.status","",$params,'align="right"',$sortfield,$sortorder);
 	print "</tr>\n";
@@ -342,9 +366,34 @@ if ($resql)
 	print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
 	if (! empty($search_nom_only) && empty($search_nom)) $search_nom=$search_nom_only;
 	print '<input class="flat" type="text" name="search_nom" value="'.$search_nom.'">';
-	print '</td><td class="liste_titre">';
+	print '</td>';
+	//zip
+	print '<td class="liste_titre">';
+	print '<input class="flat" size="10" type="text" name="search_zip" value="'.$search_zip.'">';
+	print '</td>';
+	//Town
+	print '<td class="liste_titre">';
 	print '<input class="flat" size="10" type="text" name="search_town" value="'.$search_town.'">';
 	print '</td>';
+	
+	//Address
+	print '<td class="liste_titre">';
+	print '<input class="flat" size="10" type="text" name="search_address" value="'.$search_address.'">';
+	print '</td>';
+	
+	//Phone
+	print '<td class="liste_titre">';
+	print '<input class="flat" size="10" type="text" name="search_phone" value="'.$search_phone.'">';
+	print '</td>';
+	
+	//Type Ent
+	print '<td class="liste_titre">';
+	print '</td>';
+	
+	//Derniére prop signée
+	print '<td class="liste_titre">';
+	print '</td>';
+	/*
 	// IdProf1
 	print '<td class="liste_titre">';
 	print '<input class="flat" size="8" type="text" name="search_idprof1" value="'.$search_idprof1.'">';
@@ -361,6 +410,7 @@ if ($resql)
 	print '<td class="liste_titre">';
 	print '<input class="flat" size="8" type="text" name="search_idprof4" value="'.$search_idprof4.'">';
 	print '</td>';
+	*/
 	// Type (customer/prospect/supplier)
 	print '<td class="liste_titre" align="middle">';
 	print '<select class="flat" name="search_type">';
@@ -396,11 +446,18 @@ if ($resql)
         $companystatic->status=$obj->status;
 		print $companystatic->getNomUrl(1,'',24);
 		print "</td>\n";
+		print "<td>".$obj->zip."</td>\n";
 		print "<td>".$obj->town."</td>\n";
-		print "<td>".$obj->idprof1."</td>\n";
-		print "<td>".$obj->idprof2."</td>\n";
-		print "<td>".$obj->idprof3."</td>\n";
-		print "<td>".$obj->idprof4."</td>\n";
+		print "<td>".$obj->address."</td>\n";
+		print "<td>".dol_print_phone($obj->phone)."</td>\n";
+		print "<td>".$obj->typent."</td>\n";
+		
+		print "<td>".dol_print_date($obj->lastpropalsigndt,'daytextshort')."</td>\n";
+		
+		//print "<td>".$obj->idprof1."</td>\n";
+		//print "<td>".$obj->idprof2."</td>\n";
+		//print "<td>".$obj->idprof3."</td>\n";
+		//print "<td>".$obj->idprof4."</td>\n";
 		print '<td align="center">';
 		$s='';
 		if (($obj->client==1 || $obj->client==3) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS))
