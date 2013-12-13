@@ -975,7 +975,78 @@ SELECT DISTINCT act.nom,
 	act.disabled,
 	act.accountcode,
 	NULL,
-	LEFT(leg.piece,3),
+	NULL,
+NULL,
+CONCAT_WS(' ',act.adresse, act.adresse2),
+act.codepostal,
+act.ville,
+NULL,
+act.pays,
+act.tel,
+act.fax,
+act.siteweb,
+TRIM(act.email),
+NULL,
+0,
+NULL,
+0,
+NULL,
+act.siret,
+ref_sect.secteur,
+NULL,
+NULL, 
+NULL,
+LEFT(act.tvaintracom,20),
+NULL,
+0,
+act.remarque,
+NULL,
+NULL,
+0,
+1,
+NULL,
+NULL,
+0,
+0, 
+0,
+IFNULL(usercrea.rowid,1), 
+IFNULL(usermod.rowid,1), 
+0,
+modpay.id,
+payterm.rowid,
+act.tva,
+NULL,
+NULL,
+NULL,
+0,
+NULL,
+NULL,
+NULL,
+NULL,
+act.id
+FROM  account as act
+LEFT OUTER JOIN ref_sect ON ref_sect.code=act.secteur
+LEFT OUTER JOIN llx_c_paiement as modpay ON modpay.code = act.modreg
+LEFT OUTER JOIN llx_c_payment_term as payterm ON payterm.nbjour = act.jourreg AND payterm.active=1
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=act.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=act.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
+WHERE act.type='FOU';
+/*
+SELECT DISTINCT act.nom,
+1, 
+act.accountcode,
+act.leadcode, 
+0,
+NULL,
+act.modified,
+act.created,
+act.created,
+act.disabled,
+act.accountcode,
+NULL,
+LEFT(leg.piece,3),
 NULL,
 CONCAT_WS(' ',act.adresse, act.adresse2),
 act.codepostal,
@@ -1035,7 +1106,7 @@ LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
 LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=act.modified_by_sf_user_id
 LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
 WHERE act.type='FOU';
-
+*/
 --Insert prospect
 INSERT INTO llx_societe(nom, 
 entity, 
