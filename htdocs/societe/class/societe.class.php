@@ -960,7 +960,6 @@ class Societe extends CommonObject
     			$sql.= ")";
     	}
 
-    	dol_syslog(get_class($this).'::searchByName sql='.$sql);
     	$res  = $this->db->query($sql);
     	if ($res)
     	{
@@ -1437,8 +1436,8 @@ class Societe extends CommonObject
         global $conf,$langs;
 
         $name=$this->name?$this->name:$this->nom;
-      
-		if ($conf->global->SOCIETE_ADD_REF_IN_LIST && (!empty($withpicto))) {
+
+		if ($conf->global->SOCIETE_ADD_REF_IN_LIST) {
 			if (($this->client) && (! empty ( $this->code_client ))) {
 				$code = $this->code_client . ' - ';
 			}
@@ -1446,7 +1445,7 @@ class Societe extends CommonObject
 				$code .= $this->code_fournisseur . ' - ';
 			}
 			$name =$code.' '.$name;
-		}
+		} 
 
         $result='';
         $lien=$lienfin='';
@@ -1524,22 +1523,22 @@ class Societe extends CommonObject
         }
         if ($mode == 2)
         {
-            if ($statut==0) return img_picto($langs->trans("ActivityCeased"),'statut5').' '.$langs->trans("ActivityCeased");
+            if ($statut==0) return img_picto($langs->trans("ActivityCeased"),'statut8').' '.$langs->trans("ActivityCeased");
             if ($statut==1) return img_picto($langs->trans("InActivity"),'statut4').' '.$langs->trans("InActivity");
         }
         if ($mode == 3)
         {
-            if ($statut==0) return img_picto($langs->trans("ActivityCeased"),'statut5');
+            if ($statut==0) return img_picto($langs->trans("ActivityCeased"),'statut8');
             if ($statut==1) return img_picto($langs->trans("InActivity"),'statut4');
         }
         if ($mode == 4)
         {
-            if ($statut==0) return img_picto($langs->trans("ActivityCeased"),'statut5').' '.$langs->trans("ActivityCeased");
+            if ($statut==0) return img_picto($langs->trans("ActivityCeased"),'statut8').' '.$langs->trans("ActivityCeased");
             if ($statut==1) return img_picto($langs->trans("InActivity"),'statut4').' '.$langs->trans("InActivity");
         }
         if ($mode == 5)
         {
-            if ($statut==0) return $langs->trans("ActivityCeased").' '.img_picto($langs->trans("ActivityCeased"),'statut5');
+            if ($statut==0) return $langs->trans("ActivityCeased").' '.img_picto($langs->trans("ActivityCeased"),'statut8');
             if ($statut==1) return $langs->trans("InActivity").' '.img_picto($langs->trans("InActivity"),'statut4');
         }
     }
@@ -1598,7 +1597,6 @@ class Societe extends CommonObject
         $sql = "SELECT rowid, email, phone_mobile, lastname, firstname";
         $sql.= " FROM ".MAIN_DB_PREFIX."socpeople";
         $sql.= " WHERE fk_soc = '".$this->id."'";
-        $sql.= " AND statut<>0";
 
         $resql=$this->db->query($sql);
         if ($resql)
@@ -1859,6 +1857,7 @@ class Societe extends CommonObject
             $var = $conf->global->SOCIETE_CODECLIENT_ADDON;
 
             $mod = new $var;
+
             dol_syslog(get_class($this)."::codefournisseur_modifiable code_founisseur=".$this->code_fournisseur." module=".$var);
             if ($mod->code_modifiable_null && ! $this->code_fournisseur) return 1;
             if ($mod->code_modifiable_invalide && $this->check_codefournisseur() < 0) return 1;

@@ -149,7 +149,7 @@ else dol_print_error($db);
 // Load sale and categ filters
 $search_sale = GETPOST('search_sale');
 $search_categ = GETPOST('search_categ');
-// If the user must only see his prospect, force searching by him
+// If the internal user must only see his prospect, force searching by him
 if (!$user->rights->societe->client->voir && !$socid) $search_sale = $user->id;
 
 // List of avaible states; we'll need that for each lines (quick changing prospect states) and for search bar (filter by prospect state)
@@ -189,22 +189,21 @@ $sql.= " ,s.address";
 $sql.= " ,s.phone";
 $sql.= " ,typent.libelle as typent";
 $sql.= " ,(SELECT MAX(propal.date_cloture) FROM ".MAIN_DB_PREFIX."propal as propal WHERE propal.fk_statut=2 AND propal.fk_soc=s.rowid) as lastpropalsigndt";
-// Updated by Matelli
-if ($search_sale) $sql .= ", sc.fk_soc, sc.fk_user"; // We need these fields in order to filter by sale (including the case where the user can only see his prospects)
+if ((!$user->rights->societe->client->voir && !$socid) || $search_sale) $sql .= ", sc.fk_soc, sc.fk_user"; // We need these fields in order to filter by sale (including the case where the user can only see his prospects)
 $sql .= " FROM (".MAIN_DB_PREFIX."c_stcomm as st";
-if ($search_sale || !$user->rights->societe->client->voir) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc"; // We need this table joined to the select in order to filter by sale
 $sql.= ", ".MAIN_DB_PREFIX."societe as s)";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_departements as d on (d.rowid = s.fk_departement)";
-$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."c_typent as typent ON typent.id=s.fk_typent";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_typent as typent ON typent.id=s.fk_typent";
 if (! empty ( $ts_logistique ) || ! empty ( $ts_prospection )) {
 	$sql.= ", ".MAIN_DB_PREFIX."societe_extrafields as extra";
 }
 if (! empty($search_categ) || ! empty($catid)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_societe as cs ON s.rowid = cs.fk_societe"; // We need this table joined to the select in order to filter by categ
+if ((!$user->rights->societe->client->voir && !$socid) || $search_sale) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc"; // We need this table joined to the select in order to filter by sale
 $sql.= " WHERE s.fk_stcomm = st.id";
 $sql.= " AND s.client IN (2, 3)";
 $sql.= ' AND s.entity IN ('.getEntity('societe', 1).')';
-if ($user->societe_id) $sql.= " AND s.rowid = " .$user->societe_id;
-if ($search_sale) $sql.= " AND s.rowid = sc.fk_soc";		// Join for the needed table to filter by sale
+if ((!$user->rights->societe->client->voir && !$socid) || $search_sale) $sql.= " AND s.rowid = sc.fk_soc";
+if ($socid) $sql.= " AND s.rowid = " .$socid;
 if (isset($stcomm) && $stcomm != '') $sql.= " AND s.fk_stcomm=".$stcomm;
 if ($catid > 0)          $sql.= " AND cs.fk_categorie = ".$catid;
 if ($catid == -2)        $sql.= " AND cs.fk_categorie IS NULL";
@@ -256,7 +255,8 @@ if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST))
 
 $sql.= " ORDER BY $sortfield $sortorder, s.nom ASC";
 $sql.= $db->plimit($conf->liste_limit+1, $offset);
-dol_syslog('comm/prospect/list.php sql='.$sql,LOG_DEBUG);
+
+dol_syslog('comm/propsect/list.php: sql='.$sql,LOG_DEBUG);
 $resql = $db->query($sql);
 if ($resql)
 {

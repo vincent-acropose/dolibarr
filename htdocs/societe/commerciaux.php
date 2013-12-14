@@ -168,6 +168,7 @@ if ($_GET["socid"])
 	$sql .= " WHERE sc.fk_soc =".$soc->id;
 	$sql .= " AND sc.fk_user = u.rowid";
 	$sql .= " ORDER BY u.lastname ASC ";
+
 	dol_syslog('societe/commerciaux.php::list salesman sql = '.$sql,LOG_DEBUG);
 	$resql = $db->query($sql);
 	if ($resql)
@@ -214,7 +215,7 @@ if ($_GET["socid"])
 	print "</div>\n";
 
 
-	if ($user->rights->societe->creer && $user->rights->societe->client->comm)
+	if ($user->rights->societe->creer && $user->rights->societe->client->voir)
 	{
 		/*
 		 * Liste
@@ -227,7 +228,6 @@ if ($_GET["socid"])
 		$sql = "SELECT u.rowid, u.lastname, u.firstname, u.login";
 		$sql.= " FROM ".MAIN_DB_PREFIX."user as u";
 		$sql.= " WHERE u.entity IN (0,".$conf->entity.")";
-		if (! empty($conf->global->USER_HIDE_INACTIVE_IN_COMBOBOX)) $sql.= " AND u.statut<>0 ";
 		$sql.= " ORDER BY u.lastname ASC ";
 
 		$resql = $db->query($sql);

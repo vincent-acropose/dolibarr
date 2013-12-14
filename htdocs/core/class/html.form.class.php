@@ -675,12 +675,8 @@ class Form
 
         // On recherche les societes
         $sql = "SELECT s.rowid, s.nom, s.client, s.fournisseur, s.code_client, s.code_fournisseur";
-        $sql .= " ,s.address, s.zip, s.town";
-         if ($conf->global->MAIN_SOC_SHOW_ADDRESS_LIST) $sql .= " , dictp.libelle as pays";
-        $sql.= " FROM (".MAIN_DB_PREFIX ."societe as s";
+        $sql.= " FROM ".MAIN_DB_PREFIX ."societe as s";
         if (!$user->rights->societe->client->voir && !$user->societe_id) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
-        $sql.= ")";
-        if ($conf->global->MAIN_SOC_SHOW_ADDRESS_LIST) $sql .= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."c_pays as dictp ON dictp.rowid=s.fk_pays";
         $sql.= " WHERE s.entity IN (".getEntity('societe', 1).")";
         if (! empty($user->societe_id)) $sql.= " AND s.rowid = ".$user->societe_id;
         if ($filter) $sql.= " AND (".$filter.")";
@@ -692,27 +688,34 @@ class Form
         $resql=$this->db->query($sql);
         if ($resql)
         {
-        	$num = $this->db->num_rows($resql);
-        	
             if ($conf->use_javascript_ajax && $conf->global->COMPANY_USE_SEARCH_TO_SELECT && ! $forcecombo)
             {
                 //$minLength = (is_numeric($conf->global->COMPANY_USE_SEARCH_TO_SELECT)?$conf->global->COMPANY_USE_SEARCH_TO_SELECT:2);
                 $out.= ajax_combobox($htmlname, $event, $conf->global->COMPANY_USE_SEARCH_TO_SELECT);
- 
-                //$out.= ajax_autocompleter($selected, $htmlname, DOL_URL_ROOT.'/societe/ajax/societe.php', $urloption, $conf->global->COMPANY_USE_SEARCH_TO_SELECT, 0, $ajaxoptions);
-				/*if ($selected && empty($selected_input_value))
+				/*
+<<<<<<< HEAD
+				if ($selected && empty($selected_input_value))
                 {
                 	require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
-                	$societe = new Societe($this->db);
-                	$societe->fetch($selected);
-                	$selected_input_value=$societe->name;
+                	$product = new Product($this->db);
+                	$product->fetch($selected);
+                	$selected_input_value=$product->ref;
                 }
+=======
+				if ($selected && empty($selected_input_value))
+                {
+                	require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+                	$product = new Product($this->db);
+                	$product->fetch($selected);
+                	$selected_input_value=$product->ref;
+                }
+>>>>>>> refs/remotes/origin/3.3
                 // mode=1 means customers products
                 $ajaxoptions=array();
                 $urloption='htmlname='.$htmlname.'&outjson=1&filter='.urlencode($filter).'&showtype='.$showtype;
-				$out.=ajax_autocompleter($selected, $htmlname, DOL_URL_ROOT.'/societe/ajax/societe.php', $urloption, $conf->global->COMPANY_USE_SEARCH_TO_SELECT, 0, $ajaxoptions);
-                $out.='<input type="text" size="20" name="search_'.$htmlname.'" id="search_'.$htmlname.'" value="'.$selected_input_value.'" />';*/
-				
+				$out.=ajax_autocompleter($selected, $htmlname, DOL_URL_ROOT.'/societe/ajax/company.php', $urloption, $conf->global->COMPANY_USE_SEARCH_TO_SELECT, 0, $ajaxoptions);
+                $out.='<input type="text" size="20" name="search_'.$htmlname.'" id="search_'.$htmlname.'" value="'.$selected_input_value.'" />';
+				*/
             }
 
             $out.= '<select id="'.$htmlname.'" class="flat" name="'.$htmlname.'">';
@@ -724,21 +727,7 @@ class Form
                 while ($i < $num)
                 {
                     $obj = $this->db->fetch_object($resql);
-                    $label='';
-                    if ($conf->global->SOCIETE_ADD_REF_IN_LIST) {
-                    	if (($obj->client) && (!empty($obj->code_client))) {
-                    		$label = $obj->code_client. ' - ';
-                    	}
-                    	if (($obj->fournisseur) && (!empty($obj->code_fournisseur))) {
-                    		$label .= $obj->code_fournisseur. ' - ';
-                    	}
-                    	$label.=' '.$obj->nom;
-                    }
-                    else 
-                    {
-                    	$label=$obj->nom;
-                    }
-                    
+                    $label=$obj->nom;
                     if ($showtype)
                     {
                         if ($obj->client || $obj->fournisseur) $label.=' (';
@@ -747,11 +736,6 @@ class Form
                         if ($obj->fournisseur) $label.=($obj->client?', ':'').$langs->trans("Supplier");
                         if ($obj->client || $obj->fournisseur) $label.=')';
                     }
-                    
-                    if ($conf->global->MAIN_SOC_SHOW_ADDRESS_LIST) {
-                    	$label.=' '.$obj->address.'-'. $obj->zip.' '. $obj->town.' '.$obj->pays;
-                    }
-                    
                     if ($selected > 0 && $selected == $obj->rowid)
                     {
                         $out.= '<option value="'.$obj->rowid.'" selected="selected">'.$label.'</option>';
@@ -764,10 +748,6 @@ class Form
                 }
             }
             $out.= '</select>';
-            
-            if ($num>500 && $conf->use_javascript_ajax && $conf->global->COMPANY_USE_SEARCH_TO_SELECT && ! $forcecombo) {
-            	$out.= img_picto($langs->trans("Search"), 'search');
-            }
         }
         else
         {
@@ -776,7 +756,7 @@ class Form
 
         return $out;
     }
-    
+
 
     /**
      *    	Return HTML combo list of absolute discounts
@@ -903,7 +883,6 @@ class Form
         }
         $sql.= " WHERE sp.entity IN (".getEntity('societe', 1).")";
         if ($socid > 0) $sql.= " AND sp.fk_soc=".$socid;
-        if (! empty($conf->global->CONTACT_HIDE_INACTIVE_IN_COMBOBOX)) $sql.= " AND sp.statut<>0 ";
         $sql.= " ORDER BY sp.lastname ASC";
 
         dol_syslog(get_class($this)."::select_contacts sql=".$sql);
@@ -972,8 +951,6 @@ class Form
                     }
                     $i++;
                 }
-                
-                
             }
             else
 			{
@@ -982,10 +959,6 @@ class Form
             if ($htmlname != 'none' || $options_only)
             {
                 $out.= '</select>';
-                
-                if ($num>500 && $conf->use_javascript_ajax && $conf->global->CONTACT_USE_SEARCH_TO_SELECT && ! $forcecombo && ! $options_only) {
-                	$out.= img_picto($langs->trans("Search"), 'search');
-                }
             }
 
             $this->num = $num;
@@ -1072,7 +1045,6 @@ class Form
         if (! empty($user->societe_id)) $sql.= " AND u.fk_societe = ".$user->societe_id;
         if (is_array($exclude) && $excludeUsers) $sql.= " AND u.rowid NOT IN ('".$excludeUsers."')";
         if (is_array($include) && $includeUsers) $sql.= " AND u.rowid IN ('".$includeUsers."')";
-        if (! empty($conf->global->USER_HIDE_INACTIVE_IN_COMBOBOX)) $sql.= " AND u.statut<>0 ";
         $sql.= " ORDER BY u.lastname ASC";
 
         dol_syslog(get_class($this)."::select_dolusers sql=".$sql);
@@ -1154,10 +1126,9 @@ class Form
      *  @param		string		$selected_input_value	Value of preselected input text (with ajax)
      *  @param		int			$hidelabel				Hide label (0=no, 1=yes, 2=show search icon (before) and placeholder, 3 search icon after)
      *  @param		array		$ajaxoptions			Options for ajax_autocompleter
-     *  @param      int		$socid     		Product Price by customer filter
      *  @return		void
      */
-    function select_produits($selected='', $htmlname='productid', $filtertype='', $limit=20, $price_level=0, $status=1, $finished=2, $selected_input_value='', $hidelabel=0, $ajaxoptions=array(),$socid=0)
+    function select_produits($selected='', $htmlname='productid', $filtertype='', $limit=20, $price_level=0, $status=1, $finished=2, $selected_input_value='', $hidelabel=0, $ajaxoptions=array())
     {
         global $langs,$conf;
 
@@ -1176,12 +1147,6 @@ class Form
             }
             // mode=1 means customers products
             $urloption='htmlname='.$htmlname.'&outjson=1&price_level='.$price_level.'&type='.$filtertype.'&mode=1&status='.$status.'&finished='.$finished;
-            
-            //Price by customer
-            if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES) && !empty($socid)) {
-            	$urloption.='&socid='.$socid;
-            }
-            
             print ajax_autocompleter($selected, $htmlname, DOL_URL_ROOT.'/product/ajax/products.php', $urloption, $conf->global->PRODUIT_USE_SEARCH_TO_SELECT, 0, $ajaxoptions);
             if (empty($hidelabel)) print $langs->trans("RefOrLabel").' : ';
             else if ($hidelabel > 1) {
@@ -1198,7 +1163,7 @@ class Form
         }
         else
         {
-            $this->select_produits_do($selected,$htmlname,$filtertype,$limit,$price_level,'',$status,$finished,0,$socid);
+            $this->select_produits_do($selected,$htmlname,$filtertype,$limit,$price_level,'',$status,$finished,0);
         }
     }
 
@@ -1214,21 +1179,14 @@ class Form
      *	@param		int		$status         -1=Return all products, 0=Products not on sell, 1=Products on sell
      *  @param      int		$finished       Filter on finished field: 2=No filter
      *  @param      int		$disableout     Disable print output
-     *  @param      int		$socid     		Product Price by customer filter
      *  @return     array    				Array of keys for json
      */
-    function select_produits_do($selected='',$htmlname='productid',$filtertype='',$limit=20,$price_level=0,$filterkey='',$status=1,$finished=2,$disableout=0,$socid=0)
+    function select_produits_do($selected='',$htmlname='productid',$filtertype='',$limit=20,$price_level=0,$filterkey='',$status=1,$finished=2,$disableout=0)
     {
         global $langs,$conf,$user,$db;
 
         $sql = "SELECT ";
         $sql.= " p.rowid, p.label, p.ref, p.description, p.fk_product_type, p.price, p.price_ttc, p.price_base_type, p.tva_tx, p.duration, p.stock";
-        
-        //Price by customer
-        if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES) && !empty($socid)) {
-        	$sql.=' ,pcp.rowid as idprodcustprice, pcp.price as custprice, pcp.price_ttc as custprice_ttc,';
-        	$sql.=' pcp.price_base_type as custprice_base_type, pcp.tva_tx as custtva_tx';
-        }
         // Multilang : we add translation
         if (! empty($conf->global->MAIN_MULTILANGS))
         {
@@ -1247,21 +1205,12 @@ class Form
 			$sql.= " DESC LIMIT 1) as price_by_qty";
 		}
         $sql.= " FROM ".MAIN_DB_PREFIX."product as p";
-        
-        //Price by customer
-        if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES) && !empty($socid)) {
-        	$sql.=" LEFT JOIN  ".MAIN_DB_PREFIX."product_customer_price as pcp ON pcp.fk_soc=".$socid." AND pcp.fk_product=p.rowid";
-        }
-        
         // Multilang : we add translation
         if (! empty($conf->global->MAIN_MULTILANGS))
         {
             $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product_lang as pl ON pl.fk_product = p.rowid AND pl.lang='". $langs->getDefaultLang() ."'";
         }
         $sql.= ' WHERE p.entity IN ('.getEntity('product', 1).')';
-        
-        
-        
         if ($finished == 0)
         {
             $sql.= " AND p.finished = ".$finished;
@@ -1515,30 +1464,6 @@ class Form
 		{
 			$opt.=" - ".$langs->trans("Discount")." : ".vatrate($objp->remise_percent).' %';
 			$outval.=" - ".$langs->transnoentities("Discount")." : ".vatrate($objp->remise_percent).' %';
-		}
-		
-		//Price by customer
-		if (!empty($conf->global->PRODUIT_CUSTOMER_PRICES)) {
-			if (!empty($objp->idprodcustprice)) {
-				$found = 1;
-				
-				if ($objp->custprice_base_type == 'HT')
-				{
-					$opt.= price($objp->custprice,1).' '.$currencytext.' '.$langs->trans("HT");
-					$outval.= price($objp->custprice,1).' '.$currencytextnoent.' '.$langs->transnoentities("HT");
-				}
-				else
-				{
-					$opt.= price($objp->custprice_ttc,1).' '.$currencytext.' '.$langs->trans("TTC");
-					$outval.= price($objp->custprice_ttc,1).' '.$currencytextnoent.' '.$langs->transnoentities("TTC");
-				}
-				
-				$outprice_ht=price($objp->custprice);
-				$outprice_ttc=price($objp->custprice_ttc);
-				$outpricebasetype=$objp->custprice_base_type;
-				$outtva_tx=$objp->custtva_tx;				
-			}
-			
 		}
 
         // If level no defined or multiprice not found, we used the default price

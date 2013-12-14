@@ -115,13 +115,6 @@ class modSociete extends DolibarrModules
 		$this->const[$r][3] = "";
 		$this->const[$r][4] = 0;
 		$r++;
-		
-		$this->const[$r][0] = "SOCIETE_ADD_REF_IN_LIST";
-		$this->const[$r][1] = "yesno";
-		$this->const[$r][2] = "0";
-		$this->const[$r][3] = "Display customer ref into select list";
-		$this->const[$r][4] = 0;
-		$r++;
 
 		$this->const[$r][0] = "SOCIETE_ADD_REF_IN_LIST";
 		$this->const[$r][1] = "yesno";
@@ -250,14 +243,6 @@ class modSociete extends DolibarrModules
 		$this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
 		$this->rights[$r][4] = 'contact';
 		$this->rights[$r][5] = 'export';
-		
-		$r++;
-		$this->rights[$r][0] = 265486;
-		$this->rights[$r][1] = 'Modifier les commercieux d\'un tiers';
-		$this->rights[$r][2] = 'r';
-		$this->rights[$r][3] = 1;
-		$this->rights[$r][4] = 'client';
-		$this->rights[$r][5] = 'comm';
 
 
 		// Exports
