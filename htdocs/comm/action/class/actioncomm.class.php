@@ -790,13 +790,13 @@ class ActionComm extends CommonObject
         
         $title .= $label_action_type .' - ' .$this->libelle;
         
-        if (!empty($this->note)) {
-        	$title .= $this->note;
+        if (!empty($this->note) && !dol_textishtml($this->note)) {
+        	$title .= ($this->note);
         }
         
         if ($option=='birthday') $lien = '<a '.($classname?'class="'.$classname.'" ':'').'href="'.DOL_URL_ROOT.'/contact/perso.php?id='.$this->id.'">';
         else $lien = '<a '.($classname?'class="'.$classname.'" ':'').'href="'.DOL_URL_ROOT.'/comm/action/fiche.php?id='.$this->id.'" title="'.$title.'" target="_blanck">';
-       
+        
         
         $lienfin='</a>';
         $label=$this->label;
