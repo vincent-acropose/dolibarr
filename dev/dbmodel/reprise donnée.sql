@@ -517,7 +517,7 @@ UPDATE eleves SET civilite='MLE' WHERE civilite='Mlle';
 
 
 --Affect Charle de rostand old user to new user
-UPDATE account set com_id='dfbfc33c-039f-102c-b0fb-001aa0790251' WHERE com_id='dfbfc922-039f-102c-b0fb-001aa0790251';
+--UPDATE account set com_id='dfbfc33c-039f-102c-b0fb-001aa0790251' WHERE com_id='dfbfc922-039f-102c-b0fb-001aa0790251';
 --Set user email to get all coherent data
 UPDATE sf_user SET email_address='mclement@akteos.fr' where id='c84283c0-039f-102c-b0fb-001aa0790251'
 

@@ -70,6 +70,7 @@ $ts_logistique=GETPOST('options_ts_logistique','int');
 $ts_prospection=GETPOST('options_ts_prospection','int');
 
 $search_parent=GETPOST('search_parent','int');
+if ($search_parent==-1) $search_parent='';
 
 // If both parameters are set, search for everything BETWEEN them
 if ($search_level_from != '' && $search_level_to != '')

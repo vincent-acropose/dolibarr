@@ -68,6 +68,7 @@ if (!$user->rights->societe->client->voir && !$socid) $search_sale = $user->id;
 $ts_logistique=GETPOST('options_ts_logistique','int');
 $ts_prospection=GETPOST('options_ts_prospection','int');
 $search_parent=GETPOST('search_parent','int');
+if ($search_parent==-1) $search_parent='';
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
 $hookmanager->initHooks(array('customerlist'));
