@@ -2717,9 +2717,9 @@ INNER JOIN llx_socpeople ON  llx_socpeople.import_key=contact.id;
 
 --Update propal total amount
 UPDATE llx_propal 
-SET llx_propal.total_ht=(SELECT SUM(total_ht) FROM llx_propaldet WHERE llx_propaldet.fk_propal=llx_propal.rowid GROUP BY llx_propaldet.fk_propal),
-llx_propal.tva=(SELECT SUM(total_tva) FROM llx_propaldet WHERE llx_propaldet.fk_propal=llx_propal.rowid  GROUP BY llx_propaldet.fk_propal),
-llx_propal.total=(SELECT SUM(total) FROM llx_propaldet WHERE llx_propaldet.fk_propal=llx_propal.rowid  GROUP BY llx_propaldet.fk_propal),
+SET llx_propal.total_ht=(SELECT SUM(llx_propaldet.total_ht) FROM llx_propaldet WHERE llx_propaldet.fk_propal=llx_propal.rowid GROUP BY llx_propaldet.fk_propal),
+llx_propal.tva=(SELECT SUM(llx_propaldet.total_tva) FROM llx_propaldet WHERE llx_propaldet.fk_propal=llx_propal.rowid  GROUP BY llx_propaldet.fk_propal),
+llx_propal.total=(SELECT SUM(llx_propaldet.subprice) FROM llx_propaldet WHERE llx_propaldet.fk_propal=llx_propal.rowid  GROUP BY llx_propaldet.fk_propal),
 llx_propal.tms=llx_propal.tms;
 
 --Lier propal Session/client
@@ -3010,9 +3010,9 @@ INNER JOIN convct ON convct.id=tempfact.convct_id;
 
 --Update invoice header amount
 UPDATE llx_facture
-SET llx_facture.total_ttc=(SELECT SUM(total_ttc) FROM llx_facturedet WHERE llx_facturedet.fk_facture=llx_facture.rowid GROUP BY llx_facturedet.fk_facture),
-llx_facture.tva=(SELECT SUM(total_tva) FROM llx_facturedet WHERE llx_facturedet.fk_facture=llx_facture.rowid  GROUP BY llx_facturedet.fk_facture),
-llx_facture.total=(SELECT SUM(total) FROM llx_facturedet WHERE llx_facturedet.fk_facture=llx_facture.rowid  GROUP BY llx_facturedet.fk_facture),
+SET llx_facture.total_ttc=(SELECT SUM(llx_facturedet.total_ttc) FROM llx_facturedet WHERE llx_facturedet.fk_facture=llx_facture.rowid GROUP BY llx_facturedet.fk_facture),
+llx_facture.tva=(SELECT SUM(llx_facturedet.total_tva) FROM llx_facturedet WHERE llx_facturedet.fk_facture=llx_facture.rowid  GROUP BY llx_facturedet.fk_facture),
+llx_facture.total=(SELECT SUM(llx_facturedet.total_ht) FROM llx_facturedet WHERE llx_facturedet.fk_facture=llx_facture.rowid  GROUP BY llx_facturedet.fk_facture),
 llx_facture.tms=llx_facture.tms;
 
 

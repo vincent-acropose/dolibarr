@@ -69,6 +69,8 @@ $search_level_to   = GETPOST("search_level_to","alpha");
 $ts_logistique=GETPOST('options_ts_logistique','int');
 $ts_prospection=GETPOST('options_ts_prospection','int');
 
+$search_parent=GETPOST('search_parent','int');
+
 // If both parameters are set, search for everything BETWEEN them
 if ($search_level_from != '' && $search_level_to != '')
 {
@@ -188,12 +190,14 @@ $sql.= " d.nom as departement";
 $sql.= " ,s.address";
 $sql.= " ,s.phone";
 $sql.= " ,typent.libelle as typent";
+$sql.= " ,pays.libelle as payslib";
 $sql.= " ,(SELECT MAX(propal.date_cloture) FROM ".MAIN_DB_PREFIX."propal as propal WHERE propal.fk_statut=2 AND propal.fk_soc=s.rowid) as lastpropalsigndt";
 if ((!$user->rights->societe->client->voir && !$socid) || $search_sale) $sql .= ", sc.fk_soc, sc.fk_user"; // We need these fields in order to filter by sale (including the case where the user can only see his prospects)
 $sql .= " FROM (".MAIN_DB_PREFIX."c_stcomm as st";
 $sql.= ", ".MAIN_DB_PREFIX."societe as s)";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_departements as d on (d.rowid = s.fk_departement)";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_typent as typent ON typent.id=s.fk_typent";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_pays as pays ON pays.rowid=s.fk_pays";
 if (! empty ( $ts_logistique ) || ! empty ( $ts_prospection )) {
 	$sql.= ", ".MAIN_DB_PREFIX."societe_extrafields as extra";
 }
@@ -217,6 +221,7 @@ if ($search_datec) $sql .= " AND s.datec LIKE '%".$db->escape($search_datec)."%'
 if ($search_status!='') $sql .= " AND s.status = ".$db->escape($search_status);
 if ($search_phone)   $sql .= " AND s.phone LIKE '%".$db->escape(str_replace(' ', '', $search_phone))."%'";
 if ($search_address)   $sql .= " AND s.address LIKE '%".$db->escape($search_address)."%'";
+if ($search_parent) $sql .= " AND s.parent =".$search_parent;
 
 if (! empty ( $ts_logistique ) || ! empty ( $ts_prospection )) {
 	$sql.= " AND extra.fk_object=s.rowid";
@@ -293,6 +298,7 @@ if ($resql)
  	if ($search_status != '') $param.='&amp;search_status='.$search_status;
  	if ($search_phone != '') $param.='&amp;search_phone='.$search_phone;
  	if ($search_address != '') $param.='&amp;search_address='.$search_address;
+ 	if ($search_parent != '') $param.='&amp;search_parent='.$search_parent;
  	// $param and $urladd should have the same value
  	$urladd = $param;
 
@@ -316,6 +322,10 @@ if ($resql)
 	 	$moreforfilter.=$langs->trans('SalesRepresentatives'). ': ';
 		$moreforfilter.=$formother->select_salesrepresentatives($search_sale,'search_sale',$user);
  	}
+ 	
+ 	$moreforfilter.=$langs->trans('ParentCompany'). ': ';
+ 	$moreforfilter.=$form->select_company($search_parent,'search_parent','s.parent IS NULL',1);
+ 	
  	
  	$extrafields = new ExtraFields ( $db );
  	$extralabels = $extrafields->fetch_name_optionals_label ( 'societe', true );
@@ -341,6 +351,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans("Zip"),$_SERVER["PHP_SELF"],"s.zip","",$param,"",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Town"),$_SERVER["PHP_SELF"],"s.town","",$param,"",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Address"),$_SERVER["PHP_SELF"],"s.address","",$params,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Country"),$_SERVER["PHP_SELF"],"pays.libelle","",$params,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Phone"),$_SERVER["PHP_SELF"],"s.phone","",$params,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("ThirdPartyType"),$_SERVER["PHP_SELF"],"s.fk_typent","",$params,'',$sortfield,$sortorder);
 	//print_liste_field_titre($langs->trans("State"),$_SERVER["PHP_SELF"],"s.fk_departement","",$param,'align="center"',$sortfield,$sortorder);
@@ -371,6 +382,10 @@ if ($resql)
 	//Address
 	print '<td class="liste_titre">';
 	print '<input class="flat" size="10" type="text" name="search_address" value="'.$search_address.'">';
+	print '</td>';
+	
+	//country
+	print '<td class="liste_titre">';
 	print '</td>';
 	
 	//Phone
@@ -473,6 +488,7 @@ if ($resql)
 		
 		
 		print "<td>".$obj->address."</td>\n";
+		print "<td>".$obj->payslib."</td>\n";
 		print "<td>".dol_print_phone($obj->phone)."</td>\n";
 		print "<td>".$obj->typent."</td>\n";
 		

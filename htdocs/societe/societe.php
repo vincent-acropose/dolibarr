@@ -198,6 +198,7 @@ $sql.= " ,s.zip";
 $sql.= " ,s.address";
 $sql.= " ,s.phone";
 $sql.= " ,typent.libelle as typent";
+$sql.= " ,pays.libelle as payslib";
 $sql.= " ,(SELECT MAX(propal.date_cloture) FROM ".MAIN_DB_PREFIX."propal as propal WHERE propal.fk_statut=2 AND propal.fk_soc=s.rowid) as lastpropalsigndt";
 // We'll need these fields in order to filter by sale (including the case where the user can only see his prospects)
 if ($search_sale) $sql .= ", sc.fk_soc, sc.fk_user";
@@ -206,6 +207,7 @@ if ($search_categ) $sql .= ", cs.fk_categorie, cs.fk_societe";
 $sql.= " FROM (".MAIN_DB_PREFIX."societe as s,";
 $sql.= " ".MAIN_DB_PREFIX."c_stcomm as st)";
 $sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."c_typent as typent ON typent.id=s.fk_typent";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_pays as pays ON pays.rowid=s.fk_pays";
 // We'll need this table joined to the select in order to filter by sale
 if ($search_sale || (!$user->rights->societe->client->voir && !$socid)) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 // We'll need this table joined to the select in order to filter by categ
@@ -348,6 +350,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans("Zip"),$_SERVER["PHP_SELF"],"s.zip","",$params,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Town"),$_SERVER["PHP_SELF"],"s.town","",$params,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Address"),$_SERVER["PHP_SELF"],"s.address","",$params,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Country"),$_SERVER["PHP_SELF"],"pays.libelle","",$params,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Phone"),$_SERVER["PHP_SELF"],"s.phone","",$params,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("ThirdPartyType"),$_SERVER["PHP_SELF"],"s.fk_typent","",$params,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Dernière prop. signée"),$_SERVER["PHP_SELF"],"","",$params,'',$sortfield,$sortorder);
@@ -379,6 +382,10 @@ if ($resql)
 	//Address
 	print '<td class="liste_titre">';
 	print '<input class="flat" size="10" type="text" name="search_address" value="'.$search_address.'">';
+	print '</td>';
+	
+	//country
+	print '<td class="liste_titre">';
 	print '</td>';
 	
 	//Phone
@@ -449,6 +456,7 @@ if ($resql)
 		print "<td>".$obj->zip."</td>\n";
 		print "<td>".$obj->town."</td>\n";
 		print "<td>".$obj->address."</td>\n";
+		print "<td>".$obj->payslib."</td>\n";
 		print "<td>".dol_print_phone($obj->phone)."</td>\n";
 		print "<td>".$obj->typent."</td>\n";
 		
