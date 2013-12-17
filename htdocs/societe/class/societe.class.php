@@ -960,6 +960,7 @@ class Societe extends CommonObject
     			$sql.= ")";
     	}
 
+    	dol_syslog(get_class($this).'::searchByName sql='.$sql);
     	$res  = $this->db->query($sql);
     	if ($res)
     	{
@@ -1437,7 +1438,7 @@ class Societe extends CommonObject
 
         $name=$this->name?$this->name:$this->nom;
 
-		if ($conf->global->SOCIETE_ADD_REF_IN_LIST) {
+		if ($conf->global->SOCIETE_ADD_REF_IN_LIST && (!empty($withpicto))) {
 			if (($this->client) && (! empty ( $this->code_client ))) {
 				$code = $this->code_client . ' - ';
 			}
@@ -1597,6 +1598,7 @@ class Societe extends CommonObject
         $sql = "SELECT rowid, email, phone_mobile, lastname, firstname";
         $sql.= " FROM ".MAIN_DB_PREFIX."socpeople";
         $sql.= " WHERE fk_soc = '".$this->id."'";
+        $sql.= " AND statut<>0";
 
         $resql=$this->db->query($sql);
         if ($resql)

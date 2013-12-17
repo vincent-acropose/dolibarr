@@ -2506,6 +2506,37 @@ LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
 LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=eleves.modified_by_sf_user_id
 LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email;
 
+INSERT INTO llx_agefodd_session_stagiaire (
+fk_session_agefodd,
+fk_stagiaire,
+fk_agefodd_stagiaire_type,
+status_in_session,
+fk_user_author,
+datec,
+fk_user_mod,
+tms,
+import_key)
+SELECT DISTINCT
+llx_agefodd_session.rowid,
+llx_agefodd_stagiaire.rowid,
+1,
+3,
+ IFNULL(usercrea.rowid,1), --fk_user_author
+NOW(),
+ IFNULL(usermod.rowid,1), --fk_user_mod
+NOW(),
+NULL
+FROM eleves 
+INNER JOIN convelv ON eleves.id=convelv.eleves_id
+INNER JOIN convct ON convct.id=convelv.convct_id
+INNER JOIN session as sess ON sess.id=convct.session_id
+INNER JOIN llx_agefodd_session ON sess.id=llx_agefodd_session.import_key
+INNER JOIN llx_agefodd_stagiaire ON llx_agefodd_stagiaire.import_key=convelv.eleves_id
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=eleves.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=eleves.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email;
+
 --Update number of trainee per session
 UPDATE llx_agefodd_session SET nb_stagiaire=(SELECT count(rowid) FROM llx_agefodd_session_stagiaire WHERE fk_session_agefodd = llx_agefodd_session.rowid), tms=tms WHERE (llx_agefodd_session.force_nb_stagiaire=0 OR llx_agefodd_session.force_nb_stagiaire IS NULL);
 

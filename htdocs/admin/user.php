@@ -39,6 +39,7 @@ if (! $user->admin) accessforbidden();
 
 $extrafields = new ExtraFields($db);
 
+$action=GETPOST('action','alpha');
 
 /*
  * Action
@@ -61,6 +62,21 @@ if (preg_match('/del_(.*)/',$action,$reg))
 {
     $code=$reg[1];
     if (dolibarr_del_const($db, $code, $conf->entity) > 0)
+    {
+        header("Location: ".$_SERVER["PHP_SELF"]);
+        exit;
+    }
+    else
+    {
+        dol_print_error($db);
+    }
+}
+//Set hide closed customer into combox or select
+if ($action == 'sethideinactiveuser')
+{
+	$status = GETPOST('status','alpha');
+
+	if (dolibarr_set_const($db, "USER_HIDE_INACTIVE_IN_COMBOBOX",$status,'chaine',0,'',$conf->entity) > 0)
     {
         header("Location: ".$_SERVER["PHP_SELF"]);
         exit;
@@ -135,7 +151,7 @@ else
 }
 print '</td></tr>';
 
-// COMPANY_USE_SEARCH_TO_SELECT
+// USER_HIDE_INACTIVE_IN_COMBOBOX
 $var=!$var;
 print "<tr ".$bc[$var].">";
 print '<td>'.$langs->trans("HideClosedUserComboBox").'</td>';

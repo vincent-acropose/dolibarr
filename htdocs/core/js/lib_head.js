@@ -883,6 +883,8 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
             this.button = $( "<button type=\'button\'>&nbsp;</button>" )
                 .attr( "tabIndex", -1 )
                 .attr( "title", "Show All Items" )
+                .attr( "name", "button"+ select.attr('name'))
+                .attr( "id", "button"+ select.attr('name'))
                 .insertAfter( input )
                 .button({
                     icons: {
@@ -905,6 +907,8 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
                     input.autocomplete({ minLength: savMinLengthToAutocomplete });
                     input.focus();
                 });
+            if (select.children( "option" ).length>500) {this.button.hide();}
+            //else {this.button.show();}
         },
 
         destroy: function() {
