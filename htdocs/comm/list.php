@@ -57,6 +57,7 @@ if ($search_status=='') $search_status=1; // always display activ customer first
 
 $search_address=GETPOST('search_address');
 $search_phone=GETPOST('search_phone');
+$search_type=trim(GETPOST('search_type'));
 
 // Load sale and categ filters
 $search_sale  = GETPOST("search_sale");
@@ -101,6 +102,7 @@ if (GETPOST("button_removefilter_x"))
     $search_parent='';
     $ts_logistique='';
     $ts_prospection='';
+    $search_type='';
     
 }
 
@@ -153,6 +155,11 @@ if ($search_status!='') $sql .= " AND s.status = ".$db->escape($search_status);
 if ($search_phone)   $sql .= " AND s.phone LIKE '%".$db->escape(str_replace(' ', '', $search_phone))."%'";
 if ($search_address)   $sql .= " AND s.address LIKE '%".$db->escape($search_address)."%'";
 if ($search_parent) $sql .= " AND s.parent =".$search_parent;
+// Filter on type of thirdparty
+if ($search_type > 0 && in_array($search_type,array('1,3','2,3'))) $sql .= " AND s.client IN (".$db->escape($search_type).")";
+if ($search_type > 0 && in_array($search_type,array('4')))         $sql .= " AND s.fournisseur = 1";
+if ($search_type == '0') $sql .= " AND s.client = 0 AND s.fournisseur = 0";
+
 // Insert sale filter
 if ($search_sale)
 {
@@ -240,9 +247,10 @@ if ($result)
     print_liste_field_titre($langs->trans("Phone"),$_SERVER["PHP_SELF"],"s.phone","",$params,'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("ThirdPartyType"),$_SERVER["PHP_SELF"],"s.fk_typent","",$params,'',$sortfield,$sortorder);
     
-	print_liste_field_titre($langs->trans("CustomerCode"),$_SERVER["PHP_SELF"],"s.code_client","",$param,"",$sortfield,$sortorder);
+	//print_liste_field_titre($langs->trans("CustomerCode"),$_SERVER["PHP_SELF"],"s.code_client","",$param,"",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("AccountancyCode"),$_SERVER["PHP_SELF"],"s.code_compta","",$param,'align="left"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateCreation"),$_SERVER["PHP_SELF"],"datec","",$param,'align="right"',$sortfield,$sortorder);
+	print '<td></td>';
     print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"s.status","",$param,'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Dernière prop. signée"),$_SERVER["PHP_SELF"],"","",$params,'',$sortfield,$sortorder);
     print '<td class="liste_titre" width="1%">&nbsp;</td>';
@@ -283,19 +291,32 @@ if ($result)
     print '<td class="liste_titre">';
     print '</td>';
     
-    
+    /*
     print '<td class="liste_titre">';
     print '<input type="text" class="flat" name="search_code" value="'.$search_code.'" size="10">';
-    print '</td>';
+    print '</td>';*/
 
     print '<td align="left" class="liste_titre">';
     print '<input type="text" class="flat" name="search_compta" value="'.$search_compta.'" size="10">';
     print '</td>';
     
+    //Date creation
     print '<td class="liste_titre" align="center">';
     print '&nbsp;';
     print '</td>';
-
+    
+    // Type (customer/prospect/supplier)
+    print '<td class="liste_titre" align="middle">';
+    print '<select class="flat" name="search_type">';
+    print '<option value="-1"'.($search_type==''?' selected="selected"':'').'>&nbsp;</option>';
+    if (empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) print '<option value="1,3"'.($search_type=='1,3'?' selected="selected"':'').'>'.$langs->trans('Customer').'</option>';
+    if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS)) print '<option value="2,3"'.($search_type=='2,3'?' selected="selected"':'').'>'.$langs->trans('Prospect').'</option>';
+    //if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS)) print '<option value="3"'.($search_type=='3'?' selected="selected"':'').'>'.$langs->trans('ProspectCustomer').'</option>';
+    print '<option value="4"'.($search_type=='4'?' selected="selected"':'').'>'.$langs->trans('Supplier').'</option>';
+    print '<option value="0"'.($search_type=='0'?' selected="selected"':'').'>'.$langs->trans('Others').'</option>';
+    print '</select></td>';
+	
+	//status
     print '<td class="liste_titre" align="center">';
     print $form->selectarray('search_status', array('0'=>$langs->trans('ActivityCeased'),'1'=>$langs->trans('InActivity')),$search_status);
     print '</td>';
@@ -338,9 +359,32 @@ if ($result)
         print "<td>".$obj->payslib."</td>\n";
         print "<td>".dol_print_phone($obj->phone)."</td>\n";
         print "<td>".$obj->typent."</td>\n";
-        print '<td>'.$obj->code_client.'</td>';
+        //print '<td>'.$obj->code_client.'</td>';
         print '<td>'.$obj->code_compta.'</td>';
         print '<td align="right">'.dol_print_date($db->jdate($obj->datec),'day').'</td>';
+        
+        print '<td align="center">';
+        $s='';
+        if (($obj->client==1 || $obj->client==3) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS))
+        {
+        	$thirdpartystatic->name=$langs->trans("Customer");
+        	$s.=$thirdpartystatic->getNomUrl(0,'customer');
+        }
+        if (($obj->client==2 || $obj->client==3) && empty($conf->global->SOCIETE_DISABLE_PROSPECTS))
+        {
+        	if ($s) $s.=" / ";
+        	$thirdpartystatic->name=$langs->trans("Prospect");
+        	$s.=$thirdpartystatic->getNomUrl(0,'prospect');
+        }
+        if (! empty($conf->fournisseur->enabled) && $obj->fournisseur)
+        {
+        	if ($s) $s.=" / ";
+        	$thirdpartystatic->name=$langs->trans("Supplier");
+        	$s.=$thirdpartystatic->getNomUrl(0,'supplier');
+        }
+        print $s;
+        print '</td>';
+        
         print '<td align="center">'.$thirdpartystatic->getLibStatut(3);
         print '</td>';
         
