@@ -3055,6 +3055,7 @@ class OrderLine
             $this->fk_product       = $objp->fk_product;
             $this->product_type     = $objp->product_type;
             $this->info_bits        = $objp->info_bits;
+			$this->special_code		= $objp->special_code;
             $this->total_ht         = $objp->total_ht;
             $this->total_tva        = $objp->total_tva;
             $this->total_localtax1  = $objp->total_localtax1;
