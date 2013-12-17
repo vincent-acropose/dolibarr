@@ -2474,6 +2474,55 @@ LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
 LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=eleves.modified_by_sf_user_id
 LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email;
 
+INSERT INTO llx_agefodd_stagiaire (
+entity,
+nom,
+prenom,
+civilite,
+fk_user_author,
+fk_user_mod,
+datec,
+tms,
+fk_soc,
+fk_socpeople,
+fonction,
+tel1,
+tel2,
+mail,
+date_birth,
+place_birth,
+note,
+import_key) 
+SELECT DISTINCT
+1, --entity,
+TRIM(eleves.nom),
+IFNULL(TRIM(eleves.prenom),''),
+eleves.civilite,
+ IFNULL(usercrea.rowid,1), --fk_user_author
+ IFNULL(usermod.rowid,1), --fk_user_mod
+IFNULL(eleves.created,NOW()), --datec,
+eleves.modified, --tms,
+IFNULL(soc.rowid,(SELECT rowid from llx_societe where nom='Inconnue')), --fk_soc,
+NULL, --fk_socpeople,
+NULL, --fonction,
+eleves.telephone, --tel1,
+NULL,
+eleves.email, --mail,
+eleves.datnais, --date_birth,
+NULL, --place_birth,
+eleves.texte, --note,
+eleves.id --import_key
+FROM eleves 
+INNER JOIN convelv ON eleves.id=convelv.eleves_id
+INNER JOIN convct ON convct.id=convelv.convct_id
+INNER JOIN session as sess ON sess.id=convct.session_id
+LEFT OUTER JOIN llx_societe as soc ON soc.import_key=eleves.account_id
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=eleves.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=eleves.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
+WHERE eleves.id NOT IN (select import_key from llx_agefodd_stagiaire);
+
 --Add trainee to session
 TRUNCATE TABLE llx_agefodd_session_stagiaire;
 INSERT INTO llx_agefodd_session_stagiaire (
@@ -2486,7 +2535,7 @@ datec,
 fk_user_mod,
 tms,
 import_key)
-SELECT 
+SELECT DISTINCT
 llx_agefodd_session.rowid,
 llx_agefodd_stagiaire.rowid,
 1,
@@ -2535,7 +2584,8 @@ INNER JOIN llx_agefodd_stagiaire ON llx_agefodd_stagiaire.import_key=convelv.ele
 LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=eleves.created_by_sf_user_id
 LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
 LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=eleves.modified_by_sf_user_id
-LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email;
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
+WHERE CONCAT(llx_agefodd_session.rowid,'&',llx_agefodd_stagiaire.rowid) NOT IN (SELECT CONCAT(llx_agefodd_session_stagiaire.fk_session_agefodd,'&',llx_agefodd_session_stagiaire.fk_stagiaire) FROM llx_agefodd_session_stagiaire);
 
 --Update number of trainee per session
 UPDATE llx_agefodd_session SET nb_stagiaire=(SELECT count(rowid) FROM llx_agefodd_session_stagiaire WHERE fk_session_agefodd = llx_agefodd_session.rowid), tms=tms WHERE (llx_agefodd_session.force_nb_stagiaire=0 OR llx_agefodd_session.force_nb_stagiaire IS NULL);

@@ -99,6 +99,9 @@ if (GETPOST("button_removefilter_x"))
     $search_phone='';
     $search_address='';
     $search_parent='';
+    $ts_logistique='';
+    $ts_prospection='';
+    
 }
 
 
@@ -198,12 +201,7 @@ if ($result)
 
 	// Filter on categories
  	$moreforfilter='';
-	if (! empty($conf->categorie->enabled))
-	{
-	 	$moreforfilter.=$langs->trans('Categories'). ': ';
-		$moreforfilter.=$formother->select_categories(2,$search_categ,'search_categ',1);
-	 	$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
-	}
+	
  	// If the user can view prospects other than his'
  	if ($user->rights->societe->client->voir || $socid)
  	{

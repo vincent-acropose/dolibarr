@@ -58,6 +58,11 @@ $search_zip=GETPOST('search_zip');
 $search_address=GETPOST('search_address');
 $search_phone=GETPOST('search_phone');
 
+$ts_logistique=GETPOST('options_ts_logistique','int');
+$ts_prospection=GETPOST('options_ts_prospection','int');
+$search_parent=GETPOST('search_parent','int');
+if ($search_parent==-1) $search_parent='';
+
 $sortfield=GETPOST("sortfield",'alpha');
 $sortorder=GETPOST("sortorder",'alpha');
 $page=GETPOST("page",'int');
@@ -170,6 +175,8 @@ if (GETPOST("button_removefilter_x"))
 	$search_zip='';
 	$search_address='';
 	$search_phone='';
+	$ts_logistique='';
+	$ts_prospection='';
 }
 
 if ($socname)
@@ -208,6 +215,9 @@ $sql.= " FROM (".MAIN_DB_PREFIX."societe as s,";
 $sql.= " ".MAIN_DB_PREFIX."c_stcomm as st)";
 $sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."c_typent as typent ON typent.id=s.fk_typent";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_pays as pays ON pays.rowid=s.fk_pays";
+if (! empty ( $ts_logistique ) || ! empty ( $ts_prospection )) {
+	$sql.= ", ".MAIN_DB_PREFIX."societe_extrafields as extra";
+}
 // We'll need this table joined to the select in order to filter by sale
 if ($search_sale || (!$user->rights->societe->client->voir && !$socid)) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 // We'll need this table joined to the select in order to filter by categ
@@ -265,6 +275,17 @@ if ($search_idprof6) $sql .= " AND s.idprof6 LIKE '%".$db->escape($search_idprof
 if ($search_type > 0 && in_array($search_type,array('1,3','2,3'))) $sql .= " AND s.client IN (".$db->escape($search_type).")";
 if ($search_type > 0 && in_array($search_type,array('4')))         $sql .= " AND s.fournisseur = 1";
 if ($search_type == '0') $sql .= " AND s.client = 0 AND s.fournisseur = 0";
+if ($search_parent) $sql .= " AND s.parent =".$search_parent;
+if (! empty ( $ts_logistique ) || ! empty ( $ts_prospection )) {
+	$sql.= " AND extra.fk_object=s.rowid";
+}
+if (! empty ( $ts_logistique )) {
+	$sql .= " AND extra.ts_logistique = ".$db->escape($ts_logistique);
+}
+if (! empty ( $ts_prospection )) {
+	$sql .= " AND extra.ts_prospection = ".$db->escape($ts_prospection);
+}
+
 //print $sql;
 
 // Count total nb of records
@@ -317,6 +338,42 @@ if ($resql)
 
 	print '<form method="post" action="'.$_SERVER["PHP_SELF"].'" name="formfilter">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	
+	
+	// Filter on categories
+	$moreforfilter='';
+	if (! empty($conf->categorie->enabled))
+	{
+		$moreforfilter.=$langs->trans('Categories'). ': ';
+		$moreforfilter.=$htmlother->select_categories(2,$search_categ,'search_categ',1);
+		$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
+	}
+	// If the user can view prospects other than his'
+	if ($user->rights->societe->client->voir || $socid)
+	{
+		$moreforfilter.=$langs->trans('SalesRepresentatives'). ': ';
+		$moreforfilter.=$htmlother->select_salesrepresentatives($search_sale,'search_sale',$user);
+	}
+	
+	$moreforfilter.=$langs->trans('ParentCompany'). ': ';
+	$moreforfilter.=$form->select_company($search_parent,'search_parent','s.parent IS NULL',1);
+	
+	$extrafields = new ExtraFields ( $db );
+	$extralabels = $extrafields->fetch_name_optionals_label ( 'societe', true );
+	if (is_array($extralabels) && key_exists('ts_logistique', $extralabels)) {
+		$moreforfilter.=$extralabels['ts_logistique'];
+		$moreforfilter.=$extrafields->showInputField('ts_logistique', $ts_logistique);
+	}
+	if (is_array($extralabels) && key_exists('ts_prospection', $extralabels)) {
+		$moreforfilter.=$extralabels['ts_prospection'];
+		$moreforfilter.=$extrafields->showInputField('ts_prospection', $ts_prospection);
+	}
+	if ($moreforfilter)
+	{
+		print '<div class="liste_titre">';
+		print $moreforfilter;
+		print '</div>';
+	}
 
 	print '<table class="liste" width="100%">';
 
