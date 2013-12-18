@@ -2494,24 +2494,24 @@ place_birth,
 note,
 import_key) 
 SELECT DISTINCT
-1, --entity,
+1, 
 TRIM(eleves.nom),
 IFNULL(TRIM(eleves.prenom),''),
 eleves.civilite,
- IFNULL(usercrea.rowid,1), --fk_user_author
- IFNULL(usermod.rowid,1), --fk_user_mod
-IFNULL(eleves.created,NOW()), --datec,
-eleves.modified, --tms,
-IFNULL(soc.rowid,(SELECT rowid from llx_societe where nom='Inconnue')), --fk_soc,
-NULL, --fk_socpeople,
-NULL, --fonction,
-eleves.telephone, --tel1,
+ IFNULL(usercrea.rowid,1), 
+ IFNULL(usermod.rowid,1), 
+IFNULL(eleves.created,NOW()), 
+eleves.modified, 
+IFNULL(soc.rowid,(SELECT rowid from llx_societe where nom='Inconnue')), 
+NULL, 
+NULL, 
+eleves.telephone, 
 NULL,
-eleves.email, --mail,
-eleves.datnais, --date_birth,
-NULL, --place_birth,
-eleves.texte, --note,
-eleves.id --import_key
+eleves.email, 
+eleves.datnais, 
+NULL, 
+eleves.texte,
+eleves.id 
 FROM eleves 
 INNER JOIN convelv ON eleves.id=convelv.eleves_id
 INNER JOIN convct ON convct.id=convelv.convct_id
@@ -2570,9 +2570,9 @@ llx_agefodd_session.rowid,
 llx_agefodd_stagiaire.rowid,
 1,
 3,
- IFNULL(usercrea.rowid,1), --fk_user_author
+ IFNULL(usercrea.rowid,1), 
 NOW(),
- IFNULL(usermod.rowid,1), --fk_user_mod
+ IFNULL(usermod.rowid,1), 
 NOW(),
 NULL
 FROM eleves 
@@ -2800,7 +2800,7 @@ INNER JOIN llx_socpeople ON  llx_socpeople.import_key=contact.id;
 UPDATE llx_propal 
 SET llx_propal.total_ht=(SELECT SUM(llx_propaldet.total_ht) FROM llx_propaldet WHERE llx_propaldet.fk_propal=llx_propal.rowid GROUP BY llx_propaldet.fk_propal),
 llx_propal.tva=(SELECT SUM(llx_propaldet.total_tva) FROM llx_propaldet WHERE llx_propaldet.fk_propal=llx_propal.rowid  GROUP BY llx_propaldet.fk_propal),
-llx_propal.total=(SELECT SUM(llx_propaldet.subprice) FROM llx_propaldet WHERE llx_propaldet.fk_propal=llx_propal.rowid  GROUP BY llx_propaldet.fk_propal),
+llx_propal.total=(SELECT SUM(llx_propaldet.total_ttc) FROM llx_propaldet WHERE llx_propaldet.fk_propal=llx_propal.rowid  GROUP BY llx_propaldet.fk_propal),
 llx_propal.tms=llx_propal.tms;
 
 --Lier propal Session/client
@@ -4367,3 +4367,25 @@ SET foreign_key_checks = 1;
 --DROP TABLE `fulltext_index_fragments`, `fulltext_languages`, `fulltext_semantic_languages`, `fulltext_semantic_language_statistics_database`, `fulltext_stoplists`, `fulltext_stopwords`, `fulltext_system_stopwords`, `function_order_columns`, `grfact`, `hismail`, `hisplan`, `http_endpoints`, `identity_columns`, `impaye`, `indexes`, `index_columns`, `intchr`, `intctr`, `intdom`, `internal_tables`, `interv`, `intlang`, `intmod`, `intpays`, `intped`, `intref`, `jourf`, `jrferme`, `key_column_usage`, `key_constraints`, `key_encryptions`, `lasag_dict_1`, `lasag_dict_2`, `lasag_htreeattrvalue`, `lasag_htreesec`, `lasag_rdstate`, `lasag_system`, `legacy_factdiv`, `legacy_lettrage`, `legacy_mvt`, `legacy_tempfact`, `legacy_tempmvt`, `lettrage`, `lieuctr`, `linked_logins`, `login_token`, `master_files`;
 --DROP TABLE `referential_constraints`, `ref_act`, `ref_bil`, `ref_cont`, `ref_ctr`, `ref_ctrs`, `ref_cvie`, `ref_cvte`, `ref_dip`, `ref_dom`, `ref_fonc`, `ref_nat`, `ref_niv`, `ref_risq`, `ref_rupt`, `ref_sect`, `ref_sta1`, `ref_sta2`, `ref_sta3`, `ref_sta4`, `ref_sta5`, `ref_type`, `registered_search_properties`, `registered_search_property_lists`, `remise`, `remote_logins`, `remote_service_bindings`, `resource_governor_configuration`, `resource_governor_resource_pools`, `resource_governor_resource_pool_affinity`, `resource_governor_workload_groups`, `room`, `routes`, `routines`, `routine_columns`, `salestage`, `salestagedecision`, `scan`, `schemas`, `schemata`, `securable_classes`, `selective_xml_index_namespaces`, `selective_xml_index_paths`, `sequences`, `servers`, `server_assembly_modules`, `server_audits`, `server_audit_specifications`, `server_audit_specification_details`, `server_events`, `server_event_notifications`, `server_event_sessions`, `server_event_session_actions`, `server_event_session_events`, `server_event_session_fields`, `server_event_session_targets`, `server_file_audits`, `server_permissions`, `server_principals`, `server_principal_credentials`, `server_role_members`, `server_sql_modules`, `server_triggers`, `server_trigger_events`, `services`, `service_broker_endpoints`, `service_contracts`, `service_contract_message_usages`, `service_contract_usages`, `service_message_types`, `service_queues`, `service_queue_usages`, `sesfr`, `sesped`, `session`, `session_quota`, `sf_acls`, `sf_config`, `sf_dictionnary`, `sf_group`, `sf_pref`, `sf_roles`, `sf_user`, `sf_user_group`, `soap_endpoints`, `spatial_indexes`, `spatial_index_tessellations`, `spatial_reference_systems`, `sql_dependencies`, `sql_expression_dependencies`, `sql_logins`, `sql_modules`, `stage`, `stats`, `stats_columns`, `stock`, `suivconv`, `suivnote`, `suivstr`, `symmetric_keys`, `synonyms`, `sysaltfiles`, `syscacheobjects`, `syscharsets`, `syscolumns`, `syscomments`, `sysconfigures`, `sysconstraints`, `syscurconfigs`, `syscursorcolumns`, `syscursorrefs`, `syscursors`, `syscursortables`, `sysdatabases`, `sysdepends`, `sysdevices`, `sysfilegroups`, `sysfiles`, `sysforeignkeys`, `sysfulltextcatalogs`, `sysindexes`, `sysindexkeys`, `syslanguages`, `syslockinfo`, `syslogins`, `sysmembers`, `sysmessages`, `sysobjects`, `sysoledbusers`, `sysopentapes`, `sysperfinfo`, `syspermissions`, `sysprocesses`, `sysprotects`, `sysreferences`, `sysremotelogins`, `sysservers`, `system_columns`, `system_components_surface_area_configuration`, `system_internals_allocation_units`, `system_internals_partitions`, `system_internals_partition_columns`, `system_objects`, `system_parameters`, `system_sql_modules`, `system_views`, `systypes`, `sysusers`, `tables`, `table_constraints`, `table_privileges`, `table_types`, `tcp_endpoints`, `tempfact`, `tempmvt`, `thirdparty`, `traces`, `trace_categories`, `trace_columns`, `trace_events`, `trace_event_bindings`, `trace_subclass_values`, `trace_xe_action_map`, `trace_xe_event_map`, `trainingfilebreach`, `trainingprogramdiscipline`, `trainingprogramprice`, `transmission_queue`, `triggers`, `trigger_events`, `trigger_event_types`, `txfact`, `typcours`, `typemail`, `typenq`, `types`, `type_assembly_usages`, `typform`, `typfr`, `userprofile`, `userprofileassignment`, `userprofilegroupassignment`, `userprofileuserassignment`, `user_token`, `via_endpoints`, `views`, `view_column_usage`, `view_table_usage`, `visit`, `visit_identity`, `xfdef`, `xfdef_values`, `xml_indexes`, `xml_schema_attributes`, `xml_schema_collections`, `xml_schema_components`, `xml_schema_component_placements`, `xml_schema_elements`, `xml_schema_facets`, `xml_schema_model_groups`, `xml_schema_namespaces`, `xml_schema_types`, `xml_schema_wildcards`, `xml_schema_wildcard_namespaces`;
 --DROP TABLE `master_key_passwords`, `matiere`, `mbti`, `messages`, `message_type_xml_schema_collection_usages`, `migrate_version`, `modeche`, `modep`, `module_assembly_usages`, `mvt`, `notelv`, `numbered_procedures`, `numbered_procedure_parameters`, `objects`, `obselv`, `openkeys`, `organizationalunit`, `parameters`, `parameter_type_usages`, `parameter_xml_schema_collection_usages`, `partitions`, `partition_functions`, `partition_parameters`, `partition_range_values`, `partition_schemes`, `planning`, `planningitem`, `planningitemstatus`, `planningitemtype`, `planningitemtype_uobject`, `planningitem_uobject`, `planningitem_user`, `plan_guides`, `point`, `pointint`, `prelev`, `prelevt`, `probud`, `procedures`, `proct`, `productprice`, `produit`, `proelv`, `prolig`, `proposalsalestagehistory`, `qinter`;
+
+
+UPDATE llx_propaldet as upd, prolig as src , llx_propal as propal SET 
+upd.total_ht=src.mont,
+upd.total_tva=src.mont*0.196,
+upd.total_ttc=src.mont+src.mont*0.196
+WHERE upd.rang=src.numlig AND src.proct_id=propal.import_key AND propal.rowid=upd.fk_propal AND upd.description=src.intitule
+AND src.ctva=1;
+
+UPDATE llx_propaldet as upd, prolig as src , llx_propal as propal SET 
+upd.total_ht=src.mont,
+upd.total_tva=0,
+upd.total_ttc=src.mont
+WHERE upd.rang=src.numlig AND src.proct_id=propal.import_key AND propal.rowid=upd.fk_propal AND upd.description=src.intitule
+AND src.ctva=0;
+
+UPDATE llx_propal 
+SET llx_propal.total_ht=(SELECT SUM(llx_propaldet.total_ht) FROM llx_propaldet WHERE llx_propaldet.fk_propal=llx_propal.rowid GROUP BY llx_propaldet.fk_propal),
+llx_propal.tva=(SELECT SUM(llx_propaldet.total_tva) FROM llx_propaldet WHERE llx_propaldet.fk_propal=llx_propal.rowid  GROUP BY llx_propaldet.fk_propal),
+llx_propal.total=(SELECT SUM(llx_propaldet.total_ttc) FROM llx_propaldet WHERE llx_propaldet.fk_propal=llx_propal.rowid  GROUP BY llx_propaldet.fk_propal),
+llx_propal.tms=llx_propal.tms
+WHERE llx_propal.import_key IS NOT NULL;
