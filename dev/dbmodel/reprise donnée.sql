@@ -4389,3 +4389,223 @@ llx_propal.tva=(SELECT SUM(llx_propaldet.total_tva) FROM llx_propaldet WHERE llx
 llx_propal.total=(SELECT SUM(llx_propaldet.total_ttc) FROM llx_propaldet WHERE llx_propaldet.fk_propal=llx_propal.rowid  GROUP BY llx_propaldet.fk_propal),
 llx_propal.tms=llx_propal.tms
 WHERE llx_propal.import_key IS NOT NULL;
+
+
+
+INSERT INTO llx_facture (
+facnumber,
+entity,
+ref_ext,
+ref_int,
+ref_client,
+type,
+increment,
+fk_soc,datec,
+datef,
+date_valid,
+tms,
+paye,
+amount,
+remise_percent,
+remise_absolue,
+remise,
+close_code,
+close_note,
+tva,
+localtax1,
+localtax2,
+revenuestamp,
+total,
+total_ttc,
+fk_statut,
+fk_user_author,
+fk_user_valid,
+fk_facture_source,
+fk_projet,
+fk_account,
+fk_currency,
+fk_cond_reglement,
+fk_mode_reglement,
+date_lim_reglement,
+note_private,
+note_public,
+model_pdf,
+import_key,
+extraparams)
+SELECT 
+tempfact.numfact,  --facnumber
+1,  --entity,
+NULL,  --ref_ext,
+NULL,  --ref_int,
+NULL,  --ref_client,
+0,  --type,
+NULL,  --increment,
+llx_societe.rowid,  --fk_soc,
+IFNULL(convct.datins,NOW()),  --datec,
+IFNULL(convct.datins,NOW()),  --datef,
+IFNULL(convct.datins,NOW()),  --date_valid,
+NOW(),  --tms,
+1,  --paye,
+0,  --amount,
+NULL,  --remise_percent,
+NULL,  --remise_absolue,
+0,  --remise,
+NULL,  --close_code,
+NULL,  --close_note,
+0,  --tva,
+0,  --localtax1,
+0,  --localtax2,
+0,  --revenuestamp,
+0,  --total,
+0,  --total_ttc,
+2,  --fk_statut,
+1,  --fk_user_author,
+1,  --fk_user_valid,
+NULL,  --fk_facture_source,
+NULL,  --fk_projet,
+NULL,  --fk_account,
+NULL,  --fk_currency,
+IFNULL(llx_societe.cond_reglement,1),  --fk_cond_reglement,
+llx_societe.mode_reglement,  --fk_mode_reglement,
+MAX(tempfact.dateche),  --date_lim_reglement,
+NULL,  --note_private,
+NULL,  --note_public,
+'crabe',  --model_pdf,
+'secondimport',  --import_key,
+NULL  --extraparams
+FROM tempfact 
+INNER JOIN thirdparty ON thirdparty.id=tempfact.thirdparty_id
+INNER JOIN account ON account.id=thirdparty.account_id
+INNER JOIN llx_societe ON llx_societe.import_key=account.id
+INNER JOIN convct ON convct.id=tempfact.convct_id
+WHERE convct.supprime=0 AND tempfact.numfact NOT IN (SELECT llx_facture.facnumber FROM llx_facture)
+GROUP BY tempfact.numfact;	
+
+--Import Invoice line
+INSERT INTO llx_facturedet (
+fk_facture,
+fk_parent_line,
+fk_product,
+label,
+description,
+tva_tx,
+localtax1_tx,
+localtax1_type,
+localtax2_tx,
+localtax2_type,
+qty,
+remise_percent,
+remise,
+fk_remise_except,
+subprice,
+price,
+total_ht,
+total_tva,
+total_localtax1,
+total_localtax2,
+total_ttc,
+product_type,
+date_start,
+date_end,
+info_bits,
+buy_price_ht,
+fk_product_fournisseur_price,
+fk_code_ventilation,
+special_code,
+rang,
+import_key) 
+SELECT DISTINCT
+llx_facture.rowid,  --fk_facture,
+NULL,  --fk_parent_line,
+NULL,  --fk_product,
+NULL,  --label,
+tempfact.intitule,  --description,
+tempfact.tauxtva,  --tva_tx,
+0,  --localtax1_tx,
+0,  --localtax1_type,
+0,  --localtax2_tx,
+0,  --localtax2_type,
+tempfact.nbjr,  --qty,
+0,  --remise_percent,
+0,  --remise,
+NULL,  --fk_remise_except,
+tempfact.taux,  --subprice,
+NULL,  --price,
+tempfact.montant,  --total_ht,
+tempfact.mttva,  --total_tva,
+0,  --total_localtax1,
+0,  --total_localtax2,
+tempfact.mtttc,  --total_ttc,
+1,  --product_type,
+NULL,  --date_start,
+NULL,  --date_end,
+0,  --info_bits,
+0,  --buy_price_ht,
+NULL,  --fk_product_fournisseur_price,
+0,  --fk_code_ventilation,
+0,  --special_code,
+tempfact.numlig,  --rang,
+NULL  --import_key
+FROM llx_facture
+INNER JOIN tempfact ON tempfact.numfact=llx_facture.facnumber
+INNER JOIN thirdparty ON thirdparty.id=tempfact.thirdparty_id
+INNER JOIN account ON account.id=thirdparty.account_id
+INNER JOIN llx_societe ON llx_societe.import_key=account.id
+INNER JOIN convct ON convct.id=tempfact.convct_id
+WHERE llx_facture.import_key='secondimport';
+
+--Update invoice header amount
+UPDATE llx_facture
+SET llx_facture.total_ttc=(SELECT SUM(llx_facturedet.total_ttc) FROM llx_facturedet WHERE llx_facturedet.fk_facture=llx_facture.rowid GROUP BY llx_facturedet.fk_facture),
+llx_facture.tva=(SELECT SUM(llx_facturedet.total_tva) FROM llx_facturedet WHERE llx_facturedet.fk_facture=llx_facture.rowid  GROUP BY llx_facturedet.fk_facture),
+llx_facture.total=(SELECT SUM(llx_facturedet.total_ht) FROM llx_facturedet WHERE llx_facturedet.fk_facture=llx_facture.rowid  GROUP BY llx_facturedet.fk_facture),
+llx_facture.tms=llx_facture.tms
+WHERE llx_facture.import_key='secondimport';
+
+
+--Add invoice contact
+INSERT INTO llx_element_contact (
+datecreate,
+statut,
+element_id,
+fk_c_type_contact,
+fk_socpeople)
+SELECT DISTINCT
+NOW(),
+4,
+llx_facture.rowid,
+60,
+llx_socpeople.rowid
+FROM tempfact
+INNER JOIN llx_facture ON tempfact.numfact=llx_facture.facnumber AND llx_facture.import_key='secondimport'
+INNER JOIN convct ON convct.id=tempfact.convct_id
+INNER JOIN contact ON convct.recipient_contact_id=contact.id
+INNER JOIN llx_socpeople ON  llx_socpeople.import_key=contact.id;
+
+--Lier facture Session/client
+INSERT INTO llx_agefodd_session_element(
+fk_session_agefodd,
+fk_soc,
+element_type,
+fk_element,
+fk_user_author,
+datec,
+fk_user_mod,
+tms)
+SELECT DISTINCT
+llx_agefodd_session.rowid,
+llx_societe.rowid,
+'invoice',
+llx_facture.rowid,
+1,
+NOW(),
+1,
+NOW()
+FROM llx_facture
+INNER JOIN tempfact ON tempfact.numfact=llx_facture.facnumber
+INNER JOIN convct ON convct.id=tempfact.convct_id
+INNER JOIN session as sess ON sess.id=convct.session_id
+INNER JOIN llx_agefodd_session ON llx_agefodd_session.import_key=sess.id
+INNER JOIN account ON account.id=convct.ent_account_id
+INNER JOIN llx_societe ON llx_societe.import_key=account.id
+WHERE llx_facture.import_key='secondimport';
