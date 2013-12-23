@@ -274,6 +274,9 @@ function pdf_build_address($outputlangs,$sourcecompany,$targetcompany='',$target
 	if ($mode == 'source')
 	{
 		$stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->convToOutputCharset(dol_format_address($sourcecompany))."\n";
+		if (!empty($sourcecompany->country_code)) {
+			$stringaddress.=$outputlangs->convToOutputCharset($outputlangs->transnoentitiesnoconv("Country".$sourcecompany->country_code))."\n";
+		}
 
 		if (empty($conf->global->MAIN_PDF_DISABLESOURCEDETAILS))
 		{
@@ -300,10 +303,10 @@ function pdf_build_address($outputlangs,$sourcecompany,$targetcompany='',$target
 				$stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->convToOutputCharset(dol_format_address($targetcompany))."\n";
 			}
 			// Country
-			if (!empty($targetcontact->country_code) && $targetcontact->country_code != $sourcecompany->country_code) {
+			if (!empty($targetcontact->country_code)) {
 				$stringaddress.=$outputlangs->convToOutputCharset($outputlangs->transnoentitiesnoconv("Country".$targetcontact->country_code))."\n";
 			}
-			else if (empty($targetcontact->country_code) && !empty($targetcompany->country_code) && ($targetcompany->country_code != $sourcecompany->country_code)) {
+			else if (empty($targetcontact->country_code) && !empty($targetcompany->country_code)) {
 				$stringaddress.=$outputlangs->convToOutputCharset($outputlangs->transnoentitiesnoconv("Country".$targetcompany->country_code))."\n";
 			}
 
@@ -324,7 +327,7 @@ function pdf_build_address($outputlangs,$sourcecompany,$targetcompany='',$target
 		{
 			$stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->convToOutputCharset(dol_format_address($targetcompany))."\n";
 			// Country
-			if (!empty($targetcompany->country_code) && $targetcompany->country_code != $sourcecompany->country_code) $stringaddress.=$outputlangs->convToOutputCharset($outputlangs->transnoentitiesnoconv("Country".$targetcompany->country_code))."\n";
+			if (!empty($targetcompany->country_code)) $stringaddress.=$outputlangs->convToOutputCharset($outputlangs->transnoentitiesnoconv("Country".$targetcompany->country_code))."\n";
 
 			if (! empty($conf->global->MAIN_PDF_ADDALSOTARGETDETAILS))
 			{
