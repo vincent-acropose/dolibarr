@@ -287,7 +287,7 @@ function pdf_build_address($outputlangs,$sourcecompany,$targetcompany='',$target
 			// EMail
 			if ($sourcecompany->email) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Email").": ".$outputlangs->convToOutputCharset($sourcecompany->email);
 			// Web
-			if ($sourcecompany->url) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Web").": ".$outputlangs->convToOutputCharset($sourcecompany->url);
+			//if ($sourcecompany->url) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Web").": ".$outputlangs->convToOutputCharset($sourcecompany->url);
 		}
 	}
 
@@ -320,7 +320,7 @@ function pdf_build_address($outputlangs,$sourcecompany,$targetcompany='',$target
 				// EMail
 				if ($targetcontact->email) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Email").": ".$outputlangs->convToOutputCharset($targetcontact->email);
 				// Web
-				if ($targetcontact->url) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Web").": ".$outputlangs->convToOutputCharset($targetcontact->url);
+				//if ($targetcontact->url) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Web").": ".$outputlangs->convToOutputCharset($targetcontact->url);
 			}
 		}
 		else
@@ -338,7 +338,7 @@ function pdf_build_address($outputlangs,$sourcecompany,$targetcompany='',$target
 				// EMail
 				if ($targetcompany->email) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Email").": ".$outputlangs->convToOutputCharset($targetcompany->email);
 				// Web
-				if ($targetcompany->url) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Web").": ".$outputlangs->convToOutputCharset($targetcompany->url);
+				//if ($targetcompany->url) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Web").": ".$outputlangs->convToOutputCharset($targetcompany->url);
 			}
 		}
 
@@ -356,7 +356,7 @@ function pdf_build_address($outputlangs,$sourcecompany,$targetcompany='',$target
 			$stringaddress.="\n".$tmp.': '.$outputlangs->convToOutputCharset($targetcompany->idprof1);
 		}
 		if (! empty($conf->global->MAIN_PROFID2_IN_ADDRESS) && ! empty($targetcompany->idprof2))
-		{
+		{$pdf->SetFont('','B', $this->defaultFontSize-2);
 			$tmp=$outputlangs->transcountrynoentities("ProfId2",$targetcompany->country_code);
 			if (preg_match('/\((.+)\)/',$tmp,$reg)) $tmp=$reg[1];
 			$stringaddress.="\n".$tmp.': '.$outputlangs->convToOutputCharset($targetcompany->idprof2);
