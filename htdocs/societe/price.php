@@ -252,7 +252,7 @@ if (! empty ( $conf->global->PRODUIT_CUSTOMER_PRICES )) {
 		print '<tr>';
 		print '<td>' . $langs->trans ( 'Product' ) . '</td>';
 		print '<td>';
-		print $form->select_produits('','prodid');
+		print $form->select_produits('','prodid','',0);
 		print '</td>';
 		print '</tr>';
 		
@@ -542,7 +542,7 @@ if (! empty ( $conf->global->PRODUIT_CUSTOMER_PRICES )) {
 				
 				// Todo Edit or delete button
 				// Action
-				if ($user->rights->produit->supprimer || $user->rights->service->supprimer) {
+				if ($user->rights->produit->custprix || $user->rights->service->custprix) {
 					print '<td align="right">';
 					print '<a href="' . $_SERVER ["PHP_SELF"] . '?action=delete_customer_price&amp;socid=' . $soc->id . '&amp;lineid=' . $line->id . '">';
 					print img_delete ();
