@@ -829,7 +829,7 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
                         // simple loop for the options
                         for (var i = 0; i < select_el.length; i++) {
                             var text = select_el.options[i].text;
-                            if ( select_el.options[i].value && ( !request.term || matcher.test(text) ) )
+                            if ( select_el.options[i].value && ( !request.term || matcher.test(text) ) && !select_el.options[i].disabled )
                                 // add element to result array
                                 rep.push({
                                     label: text.replace(
