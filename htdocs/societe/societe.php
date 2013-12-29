@@ -57,6 +57,8 @@ $search_type=trim(GETPOST('search_type'));
 $search_zip=GETPOST('search_zip');
 $search_address=GETPOST('search_address');
 $search_phone=GETPOST('search_phone');
+$search_status		= GETPOST("search_status",'int');
+//if ($search_status=='') $search_status=1; // always display activ customer first
 
 $ts_logistique=GETPOST('options_ts_logistique','int');
 $ts_prospection=GETPOST('options_ts_prospection','int');
@@ -177,6 +179,7 @@ if (GETPOST("button_removefilter_x"))
 	$search_phone='';
 	$ts_logistique='';
 	$ts_prospection='';
+	$search_status='';
 }
 
 if ($socname)
@@ -263,6 +266,7 @@ if ($search_nom)
 }
 if ($search_town)   $sql .= " AND s.town LIKE '%".$db->escape($search_town)."%'";
 if ($search_zip)   $sql .= " AND s.zip LIKE '%".$db->escape($search_zip)."%'";
+if ($search_status!='') $sql .= " AND s.status = ".$db->escape($search_status);
 if ($search_address)   $sql .= " AND s.address LIKE '%".$db->escape($search_address)."%'";
 if ($search_phone)   $sql .= " AND s.phone LIKE '%".$db->escape(str_replace(' ', '', $search_phone))."%'";
 /*if ($search_idprof1) $sql .= " AND s.siren LIKE '%".$db->escape($search_idprof1)."%'";
@@ -314,6 +318,7 @@ if ($resql)
 	$params.= '&amp;search_zip='.$search_zip;
 	$params.= '&amp;search_adress='.$search_adress;
 	$params.= '&amp;search_phone='.$search_phone;
+	if ($search_status != '') $param.='&amp;search_status='.$search_status;
 
 	print_barre_liste($title, $page, $_SERVER["PHP_SELF"],$params,$sortfield,$sortorder,'',$num,$nbtotalofrecords);
 
@@ -416,7 +421,7 @@ if ($resql)
 	//print_liste_field_titre($form->textwithpicto($langs->trans("ProfId3Short"),$textprofid[3],1,0),$_SERVER["PHP_SELF"],"s.ape","",$params,'class="nowrap"',$sortfield,$sortorder);
 	//print_liste_field_titre($form->textwithpicto($langs->trans("ProfId4Short"),$textprofid[4],1,0),$_SERVER["PHP_SELF"],"s.idprof4","",$params,'class="nowrap"',$sortfield,$sortorder);
 	print '<td></td>';
-	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"s.status","",$params,'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"s.status","",$params,'align="center"',$sortfield,$sortorder);
 	print "</tr>\n";
 
 	// Lignes des champs de filtre
@@ -486,7 +491,13 @@ if ($resql)
 	print '<option value="0"'.($search_type=='0'?' selected="selected"':'').'>'.$langs->trans('Others').'</option>';
 	print '</select></td>';
 	// Status
-	print '<td class="liste_titre" align="right">';
+	
+	//status
+	print '<td class="liste_titre" align="center">';
+	print $form->selectarray('search_status', array(''=>'','0'=>$langs->trans('ActivityCeased'),'1'=>$langs->trans('InActivity')),$search_status);
+	//print '</td>';
+	
+	//print '<td class="liste_titre" align="right">';
 	print '<input type="image" class="liste_titre" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 	print '&nbsp; ';
 	print '<input type="image" class="liste_titre" name="button_removefilter" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/searchclear.png" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'" title="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">';
@@ -508,7 +519,7 @@ if ($resql)
         $companystatic->code_client=$obj->code_client;
         $companystatic->code_fournisseur=$obj->code_fournisseur;
         $companystatic->status=$obj->status;
-		print $companystatic->getNomUrl(1,'',24);
+		print $companystatic->getNomUrl(1,'',35);
 		print "</td>\n";
 		print "<td>".$obj->zip."</td>\n";
 		print "<td>".$obj->town."</td>\n";
@@ -544,7 +555,7 @@ if ($resql)
 		}
 		print $s;
 		print '</td>';
-        print '<td align="right">'.$companystatic->getLibStatut(3).'</td>';
+        print '<td align="center">'.$companystatic->getLibStatut(3).'</td>';
 
 		print '</tr>'."\n";
 		$i++;
