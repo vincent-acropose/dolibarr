@@ -1057,6 +1057,19 @@ else if ($action == 'add' && $user->rights->facture->creer)
 									}
 								}
 							}
+							
+							//If propal take contact Contact client facturation propale to add it as Contact lcient facturation
+							if ($subelement=='propal') {
+								$contact_array=$srcobject->liste_contact(-1,'external');
+								if (is_array($contact_array) && count($contact_array)>0) {
+									foreach($contact_array as $key=>$value) {
+										if ($value['code']=='BILLING') {
+											$object->add_contact($value['id'], 'BILLING');
+										}
+										
+									}
+								}
+							}
 
 							// Hooks
 							$parameters=array('objFrom'=>$srcobject);
