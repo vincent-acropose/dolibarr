@@ -156,8 +156,12 @@ if (empty($reshook))
     	
     		//Control double creation
         	$contactstatic=new Contact($db);
-        
-        	$result_find_dbl = $contactstatic->searchByEmail(GETPOST("email"));
+        	$emailtotest=GETPOST("email");
+        	if (!empty($emailtotest)) {
+        		$result_find_dbl = $contactstatic->searchByEmail($emailtotest);
+        	} else {
+        		$result_find_dbl=array();
+        	}
         	if ($result_find_dbl < 0) {
         		setEventMessage($contactstatic->error,'errors');
         	}else {
