@@ -711,6 +711,9 @@ class ExtraFields
 						$sql.= ' WHERE '.$InfoFieldList[3];
 					}
 				}
+				if (!empty($InfoFieldList[1]) && $key=='ts_payeur') {
+					$sql .= " ORDER BY nom";
+				}
 				//$sql.= ' WHERE entity = '.$conf->entity;
 
 				dol_syslog(get_class($this).'::showInputField type=sellist sql='.$sql);
