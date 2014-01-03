@@ -62,9 +62,7 @@ if (! empty($conf->accounting->enabled)) $result=restrictedArea($user,'accountin
  * View
  */
 
-$form=new Form($db);
 
-llxHeader('',$langs->trans("SellsJournal"),'');
 
 
 $year_current = strftime("%Y",dol_now());
@@ -84,16 +82,7 @@ if (empty($date_start) || empty($date_end)) // We define date_start and date_end
 	$date_start=dol_get_first_day($pastmonthyear,$pastmonth,false); $date_end=dol_get_last_day($pastmonthyear,$pastmonth,false);
 }
 
-$nom=$langs->trans("SellsJournal");
-$nomlink='';
-$periodlink='';
-$exportlink='';
-$builddate=time();
-$description=$langs->trans("DescSellsJournal").'<br>';
-if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS)) $description.= $langs->trans("DepositsAreNotIncluded");
-else  $description.= $langs->trans("DepositsAreIncluded");
-$period=$form->select_date($date_start,'date_start',0,0,0,'',1,0,1).' - '.$form->select_date($date_end,'date_end',0,0,0,'',1,0,1);
-report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportlink);
+
 
 $p = explode(":", $conf->global->MAIN_INFO_SOCIETE_COUNTRY);
 $idpays = $p[0];
@@ -113,6 +102,7 @@ $sql.= " AND f.fk_statut > 0";
 if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS)) $sql.= " AND f.type IN (0,1,2)";
 else $sql.= " AND f.type IN (0,1,2,3)";
 $sql.= " AND fd.product_type IN (0,1)";
+$sql.= " AND f.import_key IS NULL";
 if ($date_start && $date_end) $sql .= " AND f.datef >= '".$db->idate($date_start)."' AND f.datef <= '".$db->idate($date_end)."'";
 $sql.= " ORDER BY f.rowid";
 
@@ -175,11 +165,76 @@ else {
     dol_print_error($db);
 }
 
-
+// export csv
+if (GETPOST('action') == 'export_csv')
+{
+	header( 'Content-Type: text/csv' );
+	header( 'Content-Disposition: attachment;filename=journal_ventes.csv');
+	foreach ($tabfac as $key => $val)
+	{
+		$date = dol_print_date($db->jdate($val["date"]),'day');
+		print '"'.$date.'",';
+		print '"'.$val["ref"].'",';
+		foreach ($tabttc[$key] as $k => $mt)
+		{
+			print '"'.html_entity_decode($k).'","'.$langs->trans("ThirdParty").'","'.($mt>=0?price($mt):'').'","'.($mt<0?price(-$mt):'').'"';
+		}
+		print "\n";
+		// product
+		foreach ($tabht[$key] as $k => $mt)
+		{
+			if ($mt)
+			{
+				print '"'.$date.'",';
+				print '"'.$val["ref"].'",';
+				print '"'.html_entity_decode($k).'","'.$langs->trans("Products").'","'.($mt<0?price(-$mt):'').'","'.($mt>=0?price($mt):'').'"';
+				print "\n";
+			}
+		}
+		// vat
+		//var_dump($tabtva);
+		foreach ($tabtva[$key] as $k => $mt)
+		{
+			if ($mt)
+			{
+				print '"'.$date.'",';
+				print '"'.$val["ref"].'",';
+				print '"'.html_entity_decode($k).'","'.$langs->trans("VAT").'","'.($mt<0?price(-$mt):'').'","'.($mt>=0?price($mt):'').'"';
+				print "\n";
+			}
+		}
+	}
+}
+else
+{
 /*
  * Show result array
  */
 
+	$form=new Form($db);
+	
+	llxHeader('',$langs->trans("SellsJournal"),'');
+	
+	$nom=$langs->trans("SellsJournal");
+	$nomlink='';
+	$periodlink='';
+	$exportlink='';
+	$builddate=time();
+	$description=$langs->trans("DescSellsJournal").'<br>';
+	if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS)) $description.= $langs->trans("DepositsAreNotIncluded");
+	else  $description.= $langs->trans("DepositsAreIncluded");
+	$period=$form->select_date($date_start,'date_start',0,0,0,'',1,0,1).' - '.$form->select_date($date_end,'date_end',0,0,0,'',1,0,1);
+	report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportlink, array('action'=>''));
+	print '<input type="button" class="button" style="float: right;" value="Export CSV" onclick="launch_export();" />';
+	
+	print '
+	<script type="text/javascript">
+		function launch_export() {
+		    $("div.fiche div.tabBar form input[name=\"action\"]").val("export_csv");
+			$("div.fiche div.tabBar form input[type=\"submit\"]").click();
+		    $("div.fiche div.tabBar form input[name=\"action\"]").val("");
+		}
+	</script>';
 
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
@@ -263,7 +318,9 @@ foreach ($tabfac as $key => $val)
 print "</table>";
 
 
+
 // End of page
 llxFooter();
+}
 $db->close();
 ?>
