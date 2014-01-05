@@ -451,9 +451,12 @@ class pdf_azur extends ModelePDFPropales
 					$bottomlasttab=$this->page_hauteur - $heightforinfotot - $heightforfreetext - $heightforfooter + 1;
 				}
 
+			
 				// Affiche zone infos
 				$posy=$this->_tableau_info($pdf, $object, $bottomlasttab, $outputlangs);
 
+				$posyinfo = $posy;
+				
 				// Affiche zone totaux
 				//$posy=$this->_tableau_tot($pdf, $object, $deja_regle, $bottomlasttab, $outputlangs);
 				$posy=$this->_tableau_tot($pdf, $object, 0, $bottomlasttab, $outputlangs);
@@ -465,10 +468,49 @@ class pdf_azur extends ModelePDFPropales
 					$posy=$this->_tableau_versements($pdf, $object, $posy, $outputlangs);
 				}
 				*/
+				
+				$outputlangs->load('agefodd@agefodd');
+				$pdf->SetXY($this->marge_gauche, $posyinfo);
+				$pdf->SetFont ( pdf_getPDFFont ( $outputlangs ), 'I',  pdf_getPDFFontSize($outputlangs) - 3 );
+				$pdf->MultiCell(100, 3, $outputlangs->transnoentities("AgfAddCostLine"), '', 'R');
+				
+				$outputlangs->load('agefodd@agefodd');
+				$pdf->SetXY(110, $posy);
+				$pdf->SetFont ( pdf_getPDFFont ( $outputlangs ), 'I',  pdf_getPDFFontSize($outputlangs) - 3 );
+				$pdf->MultiCell(100, 10, $outputlangs->transnoentities("AgfThankReturnSignedDoc"), '', 'L');
+				
+				$outputlangs->load('agefodd@agefodd');
+				$pdf->SetXY(110, $pdf->getY());
+				$pdf->SetFont ( pdf_getPDFFont ( $outputlangs ), 'I',  pdf_getPDFFontSize($outputlangs) - 3 );
+				$pdf->MultiCell(100, 10, $outputlangs->transnoentities("AgfCancelRule"), '', 'L');
 
 				// Pied de page
 				$this->_pagefoot($pdf,$object,$outputlangs);
 				if (method_exists($pdf,'AliasNbPages')) $pdf->AliasNbPages();
+				
+				
+				/*
+				 * Page CGV
+				*/
+				if ($outputlangs->defaultlang == 'fr_FR') {
+					$infile = $logo = $conf->mycompany->dir_output . '/cgv.pdf';
+				} else {
+					$infile = $logo = $conf->mycompany->dir_output . '/cgv_en.pdf';
+				}
+				
+				if (is_file ( $infile )) {
+						
+					$count = $pdf->setSourceFile ( $infile );
+					// import all page
+					for($i = 1; $i <= $count; $i ++) {
+						// New page
+						$pdf->AddPage ();
+						$tplIdx = $pdf->importPage ( $i );
+						$pdf->useTemplate ( $tplIdx, 0, 0, $this->page_largeur );
+						if (method_exists ( $pdf, 'AliasNbPages' ))
+							$pdf->AliasNbPages ();
+					}
+				}
 
 				$pdf->Close();
 
@@ -609,7 +651,7 @@ class pdf_azur extends ModelePDFPropales
 				$posy=$pdf->GetY()+1;
 			}
 			*/
-
+			
 			// Show payment mode
 			if ($object->mode_reglement_code
 			&& $object->mode_reglement_code != 'CHQ'
@@ -668,7 +710,7 @@ class pdf_azur extends ModelePDFPropales
 					}
 				}
 			}
-
+			
 			// If payment mode not forced or forced to VIR, show payment with BAN
 			if (empty($object->mode_reglement_code) || $object->mode_reglement_code == 'VIR')
 			{
@@ -676,7 +718,6 @@ class pdf_azur extends ModelePDFPropales
 				{
 					$account = new Account($this->db);
 					$account->fetch($conf->global->FACTURE_RIB_NUMBER);
-
 					$curx=$this->marge_gauche;
 					$cury=$posy;
 
@@ -1172,6 +1213,21 @@ class pdf_azur extends ModelePDFPropales
 			$pdf->SetTextColor(0,0,60);
 			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("CustomerCode")." : " . $outputlangs->transnoentities($object->client->code_client), '', 'R');
 		}
+		
+		dol_include_once('/agefodd/class/agefodd_session_element.class.php');
+		$agf_doc=new Agefodd_session_element($this->db);
+		$agf_doc->fetch_element_by_id($object->id,'prop');
+		if (is_array($agf_doc->lines) && count($agf_doc->lines)>0) {
+			$outputlangs->load('agefodd@agefodd');
+			$posy+=4;
+			$pdf->SetXY($posx,$posy);
+			$pdf->SetTextColor(0,0,60);
+			$refdossier = '';
+			foreach($agf_doc->lines as $linedoc) {
+				$refdossier .= $linedoc->fk_session.'_'.$linedoc->socid. ' ';
+			} 
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("AgfRefDossier")." : " . $outputlangs->transnoentities($refdossier), '', 'R');
+		}
 
 		$posy+=2;
 
@@ -1187,7 +1243,7 @@ class pdf_azur extends ModelePDFPropales
 		 	if (count($arrayidcontact) > 0)
 		 	{
 		 		$object->fetch_user($arrayidcontact[0]);
-		 		$carac_emetteur .= ($carac_emetteur ? "\n" : '' ).$outputlangs->transnoentities("Name").": ".$outputlangs->convToOutputCharset($object->user->getFullName($outputlangs))."\n";
+		 		$carac_emetteur .= ($carac_emetteur ? "\n" : '' ).$outputlangs->convToOutputCharset($object->user->getFullName($outputlangs))."\n";
 		 	}
 
 		 	$carac_emetteur .= pdf_build_address($outputlangs,$this->emetteur);
@@ -1285,7 +1341,7 @@ class pdf_azur extends ModelePDFPropales
 	{
 		global $conf,$langs,$mysoc;
 		
-		//return pdf_pagefoot($pdf,$outputlangs,'PROPALE_FREE_TEXT',$this->emetteur,$this->marge_basse,$this->marge_gauche,$this->page_hauteur,$object,0,$hidefreetext);
+		//return pdf_pagefoot($pdf,$outputlangs,'PROPALE_FREE_TEXT',$this->emetteur,$this->marge_basse,$this->marge_gauche,$this->page_hauteur,$object,0,$hidefreetext);		
 		
 		// Logo en haut à gauche
 		$logo=$conf->mycompany->dir_output.'/logos/footer.jpg';
