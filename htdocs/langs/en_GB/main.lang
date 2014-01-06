@@ -2,8 +2,8 @@
 CHARSET=UTF-8
 SeparatorDecimal=.
 SeparatorThousand=,
-FormatDateShort=%d/%m/%Y
-FormatDateShortInput=%d/%m/%Y
+FormatDateShort=%Y/%m/%d
+FormatDateShortInput=%Y/%m/%d
 FormatDateShortJava=dd/MM/yyyy
 FormatDateShortJavaInput=dd/MM/yyyy
 FormatDateShortJQuery=dd/mm/yy
