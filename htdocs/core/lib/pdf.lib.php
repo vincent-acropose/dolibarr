@@ -845,12 +845,12 @@ function pdf_writeLinkedObjects(&$pdf,$object,$outputlangs,$posx,$posy,$w,$h,$al
 			$pdf->SetFont('','', $default_font_size - 2);
 			$pdf->MultiCell($w, $h, $linkedobject["ref_title"].' : '.$linkedobject["ref_value"], '', $align);
 
-			if (! empty($linkedobject["date_title"]) && ! empty($linkedobject["date_value"]))
+			/*if (! empty($linkedobject["date_title"]) && ! empty($linkedobject["date_value"]))
 			{
 				$posy+=3;
 				$pdf->SetXY($posx,$posy);
 				$pdf->MultiCell($w, $h, $linkedobject["date_title"].' : '.$linkedobject["date_value"], '', $align);
-			}
+			}*/
 		}
 	}
 

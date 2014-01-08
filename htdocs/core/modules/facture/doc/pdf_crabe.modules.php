@@ -240,11 +240,16 @@ class pdf_crabe extends ModelePDFFactures
 				$tab_top_newpage = (empty($conf->global->MAIN_PDF_DONOTREPEAT_HEAD)?42:10);
 				$tab_height = 130;
 				$tab_height_newpage = 150;
+				
+				$outputlangs->load('agefodd@agefodd');
+				$pdf->SetXY($this->marge_gauche, $tab_top - 5);
+				$pdf->SetFont ( pdf_getPDFFont ( $outputlangs ), '',  $default_font_size - 1 );
+				$pdf->MultiCell(0, 3, 'Ref:'.$outputlangs->transnoentities("AgfRecallInvoiceNum",$object->ref), '', 'L');
 
 				// Affiche notes
 				if (! empty($object->note_public))
 				{
-					$tab_top = 88;
+					$tab_top = 88 + 7;
 
 					$pdf->SetFont('','', $default_font_size - 1);
                     $pdf->writeHTMLCell(190, 3, $this->posxdesc-1, $tab_top, dol_htmlentitiesbr($object->note_public), 0, 1);
@@ -458,6 +463,8 @@ class pdf_crabe extends ModelePDFFactures
 				// Affiche zone infos
 				$posy=$this->_tableau_info($pdf, $object, $bottomlasttab, $outputlangs);
 
+				$posyinfo = $posy;
+				
 				// Affiche zone totaux
 				$posy=$this->_tableau_tot($pdf, $object, $deja_regle, $bottomlasttab, $outputlangs);
 
@@ -466,7 +473,26 @@ class pdf_crabe extends ModelePDFFactures
 				{
 					$posy=$this->_tableau_versements($pdf, $object, $posy, $outputlangs);
 				}
-
+				
+				// Show num TVA intra Sender
+				$pdf->SetXY($this->marge_gauche,$posyinfo);
+				$pdf->SetFont('','', $default_font_size - 1);
+				$pdf->MultiCell(0, 4, $outputlangs->transnoentities("VATIntraShort").': '.$outputlangs->convToOutputCharset($this->emetteur->tva_intra), 0, 'L');
+				
+				// Show num TVA intra Sender
+				$outputlangs->load('agefodd@agefodd');
+				$pdf->SetXY($this->marge_gauche,$pdf->getY());
+				$pdf->SetFont('','', $default_font_size - 1);
+				$pdf->MultiCell(0, 4, $outputlangs->transnoentities("AgfNumAct").': '.$outputlangs->convToOutputCharset($conf->global->AGF_ORGANISME_NUM), 0, 'L');
+					
+				// Show num TVA intra Sender
+				if ($outputlangs->defaultlang=='fr_FR') {
+					$outputlangs->load('agefodd@agefodd');
+					$pdf->SetXY($this->marge_gauche,$pdf->getY());
+					$pdf->SetFont('','', $default_font_size - 1);
+					$pdf->MultiCell(0, 4, $outputlangs->transnoentities("TVA acquittée d’après encaissement"), 0, 'L');
+				}
+				
 				// Pied de page
 				$this->_pagefoot($pdf,$object,$outputlangs);
 				if (method_exists($pdf,'AliasNbPages')) $pdf->AliasNbPages();
@@ -1131,6 +1157,11 @@ class pdf_crabe extends ModelePDFFactures
 
 		if (empty($hidetop))
 		{
+			$outputlangs->load('agefodd@agefodd');
+			$pdf->SetXY($this->marge_gauche, $tab_top-4);
+			$pdf->SetFont ( pdf_getPDFFont ( $outputlangs ), 'I',  pdf_getPDFFontSize($outputlangs) - 3 );
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("AgfInvoiceAsConv"), '', 'L');
+			
 			$titre = $outputlangs->transnoentities("AmountInCurrency",$outputlangs->transnoentitiesnoconv("Currency".$conf->currency));
 			$pdf->SetXY($this->page_largeur - $this->marge_droite - ($pdf->GetStringWidth($titre) + 3), $tab_top-4);
 			$pdf->MultiCell(($pdf->GetStringWidth($titre) + 3), 2, $titre);
@@ -1337,7 +1368,24 @@ class pdf_crabe extends ModelePDFFactures
 			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("CustomerCode")." : " . $outputlangs->transnoentities($object->client->code_client), '', 'R');
 		}
 
-		$posy+=1;
+		
+		
+		dol_include_once('/agefodd/class/agefodd_session_element.class.php');
+		$agf_doc=new Agefodd_session_element($this->db);
+		$agf_doc->fetch_element_by_id($object->id,'fac');
+		if (is_array($agf_doc->lines) && count($agf_doc->lines)>0) {
+			$outputlangs->load('agefodd@agefodd');
+			$posy+=4;
+			$pdf->SetXY($posx,$posy);
+			$pdf->SetTextColor(0,0,60);
+			$refdossier = '';
+			foreach($agf_doc->lines as $linedoc) {
+				$refdossier .= $linedoc->fk_session.'_'.$linedoc->socid. ' ';
+			}
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("AgfRefDossier")." : " . $outputlangs->transnoentities($refdossier), '', 'R');
+		}
+		
+		$posy+=2;
 
 		// Show list of linked objects
 		$posy = pdf_writeLinkedObjects($pdf, $object, $outputlangs, $posx, $posy, 100, 3, 'R', $default_font_size);
@@ -1373,8 +1421,6 @@ class pdf_crabe extends ModelePDFFactures
 			$pdf->SetXY($posx+2,$posy);
 			$pdf->SetFont('','', $default_font_size - 1);
 			$pdf->MultiCell(80, 4, $carac_emetteur, 0, 'L');
-
-
 
 			// If BILLING contact defined on invoice, we use it
 			$usecontact=false;
@@ -1418,10 +1464,17 @@ class pdf_crabe extends ModelePDFFactures
 			$pdf->SetXY($posx+2,$posy+3);
 			$pdf->SetFont('','B', $default_font_size);
 			$pdf->MultiCell($widthrecbox, 4, $carac_client_name, 0, 'L');
+			
+			// Show Special contact name
+			if (is_array($object->array_options) && key_exists('options_conatct_cust',$object->array_options) && !empty($object->array_options['options_conatct_cust'])) {
+				$pdf->SetXY($posx+2,$posy+6);
+				$pdf->SetFont('','', $default_font_size);
+				$pdf->MultiCell($widthrecbox, 4, $object->array_options['options_conatct_cust'], 0, 'L');
+			}
 
 			// Show recipient information
 			$pdf->SetFont('','', $default_font_size - 1);
-			$pdf->SetXY($posx+2,$posy+4+(dol_nboflines_bis($carac_client_name,50)*4));
+			$pdf->SetXY($posx+2,$posy+7+(dol_nboflines_bis($carac_client_name,50)*4));
 			$pdf->MultiCell($widthrecbox, 4, $carac_client, 0, 'L');
 		}
 
@@ -1439,7 +1492,19 @@ class pdf_crabe extends ModelePDFFactures
 	 */
 	function _pagefoot(&$pdf,$object,$outputlangs,$hidefreetext=0)
 	{
-		return pdf_pagefoot($pdf,$outputlangs,'FACTURE_FREE_TEXT',$this->emetteur,$this->marge_basse,$this->marge_gauche,$this->page_hauteur,$object,0,$hidefreetext);
+		
+		global $conf,$langs,$mysoc;
+		
+		//return pdf_pagefoot($pdf,$outputlangs,'FACTURE_FREE_TEXT',$this->emetteur,$this->marge_basse,$this->marge_gauche,$this->page_hauteur,$object,0,$hidefreetext);
+		
+		// Logo en haut à gauche
+		$logo=$conf->mycompany->dir_output.'/logos/footer.jpg';
+		
+		if (is_readable($logo))
+		{
+			$heightLogo=pdf_getHeightForLogo($logo);
+			$pdf->Image($logo,  $this->marge_gauche, $this->page_hauteur-$heightLogo-10, 0, 0, '', '', '', false, 300, '', false, false, 0, false, false, true);	// width=0 (auto)
+		}
 	}
 
 }
