@@ -242,14 +242,14 @@ class pdf_crabe extends ModelePDFFactures
 				$tab_height_newpage = 150;
 				
 				$outputlangs->load('agefodd@agefodd');
-				$pdf->SetXY($this->marge_gauche, $tab_top - 5);
-				$pdf->SetFont ( pdf_getPDFFont ( $outputlangs ), '',  $default_font_size - 1 );
+				$pdf->SetXY($this->marge_gauche, $tab_top - 8);
+				$pdf->SetFont ( pdf_getPDFFont ( $outputlangs ), 'B',  $default_font_size - 1 );
 				$pdf->MultiCell(0, 3, 'Ref:'.$outputlangs->transnoentities("AgfRecallInvoiceNum",$object->ref), '', 'L');
 
 				// Affiche notes
 				if (! empty($object->note_public))
 				{
-					$tab_top = 88 + 7;
+					$tab_top = 88;
 
 					$pdf->SetFont('','', $default_font_size - 1);
                     $pdf->writeHTMLCell(190, 3, $this->posxdesc-1, $tab_top, dol_htmlentitiesbr($object->note_public), 0, 1);
@@ -726,7 +726,7 @@ class pdf_crabe extends ModelePDFFactures
 			{
 				$pdf->SetXY($this->marge_gauche, $posy);
 				$pdf->SetTextColor(200,0,0);
-				$pdf->SetFont('','B', $default_font_size - 2);
+				$pdf->SetFont('','B', $default_font_size);
 				$pdf->MultiCell(80, 3, $outputlangs->transnoentities("ErrorNoPaiementModeConfigured"),0,'L',0);
 				$pdf->SetTextColor(0,0,0);
 
