@@ -355,6 +355,7 @@ if ($filtera > 0 || $filtert > 0 || $filterd > 0)
     if ($filterd > 0) $sql.= ($filtera>0||$filtert>0?" OR ":"")." a.fk_user_done = ".$filterd;
     $sql.= ")";
 }
+$sql.= ' AND ca.code<>"AC_AGF_SESS" AND ca.code<>"AC_AGF_SESST" ';
 // Sort on date
 $sql.= ' ORDER BY datep';
 //print $sql;

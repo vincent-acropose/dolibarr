@@ -122,13 +122,13 @@ function print_actions_filter($form, $canedit, $status, $year, $month, $day, $sh
 		print '<tr>';
 		print '<td class="nowrap">'.$langs->trans("DateStart").'</td>';
 		print '<td class="nowrap">';
-		print $form->select_date($filterdatestart,'dt_start_filter',0,0,1);
+		$form->select_date($filterdatestart,'dt_start_filter',0,0,1);
 		print '</td>';
 		print "</tr>\n";
 		
 		print '<td class="nowrap">'.$langs->trans("DateEnd").'</td>';
 		print '<td class="nowrap">';
-		print $form->select_date($filterdatesend,'dt_end_filter',0,0,1);
+		$form->select_date($filterdatesend,'dt_end_filter',0,0,1);
 		print '</td>';
 		print "</tr>\n";
 	}

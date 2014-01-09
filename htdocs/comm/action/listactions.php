@@ -173,6 +173,7 @@ $sql.= " WHERE c.id = a.fk_action";
 $sql.= ' AND a.fk_user_author = u.rowid';
 $sql.= ' AND a.entity IN ('.getEntity().')';    // To limit to entity
 if ($actioncode) $sql.=" AND c.code='".$db->escape($actioncode)."'";
+$sql.= ' AND c.code<>"AC_AGF_SESS" AND c.code<>"AC_AGF_SESST" ';
 if ($pid) $sql.=" AND a.fk_project=".$db->escape($pid);
 if (! $user->rights->societe->client->voir && ! $socid) $sql.= " AND (a.fk_soc IS NULL OR sc.fk_user = " .$user->id . ")";
 if ($socid) $sql.= " AND s.rowid = ".$socid;
@@ -223,7 +224,6 @@ if ($resql)
 
 
     $head = calendars_prepare_head('');
-
     dol_fiche_head($head, 'card', $langs->trans('Events'), 0, 'list');
     print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,$filtera,$filtert,$filterd,$pid,$socid,-1,$actioncode,$filterdatestart,$filterdatesend);
     dol_fiche_end();
