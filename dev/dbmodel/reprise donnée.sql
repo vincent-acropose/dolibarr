@@ -4609,3 +4609,352 @@ INNER JOIN llx_agefodd_session ON llx_agefodd_session.import_key=sess.id
 INNER JOIN account ON account.id=convct.ent_account_id
 INNER JOIN llx_societe ON llx_societe.import_key=account.id
 WHERE llx_facture.import_key='secondimport';
+
+
+
+
+
+
+INSERT INTO llx_actioncomm (
+ref_ext,
+entity,
+datep,
+datep2,
+fk_action,
+code,
+label,
+note,
+datec,
+tms,
+fk_user_author,
+fk_user_mod,
+fk_soc,
+fk_contact,
+fk_user_action,
+transparency,
+fk_user_done,
+priority,
+fulldayevent,
+punctual,
+percent,
+location,
+durationp,
+durationa,
+fk_element,
+elementtype)
+SELECT DISTINCT
+planningitem.id, 
+1, 
+IFNULL(planningitem.begin_datetime,planningitem.end_datetime), 
+planningitem.end_datetime,
+1, 
+'AC_TEL', 
+CASE WHEN (TRIM(planningitem.summary)='') THEN 'Appel téléphonique' ELSE LEFT(planningitem.summary,128) END, 
+planningitem.description, 
+planningitem.created, 
+planningitem.modified, 
+IFNULL(usercrea.rowid,1), 
+IFNULL(usermod.rowid,1),
+llx_societe.rowid,
+llx_socpeople.rowid, 
+IFNULL(usercrea.rowid,1), 
+0, 
+IFNULL(usercrea.rowid,1), 
+0, 
+0, 
+1, 
+-1,
+null, 
+planningitem.end_datetime-planningitem.begin_datetime, 
+null, 
+null, 
+null 
+FROM planningitem
+LEFT OUTER JOIN planningitem_uobject as contactsoc ON planningitem.id=contactsoc.planningitem_id
+LEFT OUTER JOIN planningitem_uobject as contctlink ON contctlink.planningitem_uobject_id=contactsoc.id
+LEFT OUTER JOIN llx_socpeople ON llx_socpeople.import_key=contctlink.uobject_id
+LEFT OUTER JOIN llx_societe ON llx_societe.import_key=contactsoc.uobject_id
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=planningitem.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=planningitem.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
+WHERE planningitem.planningitemtype_code IN ('PRDV','QUALIF','CONTACT','RLT INTER')
+AND llx_societe.rowid IS NOT NULL
+AND planningitem.deleted=0;
+
+
+
+
+INSERT INTO llx_actioncomm (
+ref_ext,
+entity,
+datep,
+datep2,
+fk_action,
+code,
+label,
+note,
+datec,
+tms,
+fk_user_author,
+fk_user_mod,
+fk_soc,
+fk_contact,
+fk_user_action,
+transparency,
+fk_user_done,
+priority,
+fulldayevent,
+punctual,
+percent,
+location,
+durationp,
+durationa,
+fk_element,
+elementtype)
+SELECT DISTINCT
+planningitem.id, 
+1, 
+IFNULL(planningitem.begin_datetime,planningitem.end_datetime), 
+planningitem.end_datetime,
+5, 
+'AC_RDV', 
+CASE WHEN (TRIM(planningitem.summary)='') THEN 'Rendez-vous' ELSE LEFT(planningitem.summary,128) END, 
+planningitem.description, 
+planningitem.created, 
+planningitem.modified, 
+IFNULL(usercrea.rowid,1), 
+IFNULL(usermod.rowid,1),
+llx_societe.rowid,
+llx_socpeople.rowid, 
+IFNULL(usercrea.rowid,1), 
+0, 
+IFNULL(usercrea.rowid,1), 
+0, 
+0, 
+1, 
+-1,
+null, 
+planningitem.end_datetime-planningitem.begin_datetime, 
+null, 
+null, 
+null 
+FROM planningitem
+LEFT OUTER JOIN planningitem_uobject as contactsoc ON planningitem.id=contactsoc.planningitem_id
+LEFT OUTER JOIN planningitem_uobject as contctlink ON contctlink.planningitem_uobject_id=contactsoc.id
+LEFT OUTER JOIN llx_socpeople ON llx_socpeople.import_key=contctlink.uobject_id
+LEFT OUTER JOIN llx_societe ON llx_societe.import_key=contactsoc.uobject_id
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=planningitem.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=planningitem.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
+WHERE planningitem.planningitemtype_code IN ('RDV','CRDV')
+AND llx_societe.rowid IS NOT NULL
+AND planningitem.deleted=0;
+
+
+
+INSERT INTO llx_actioncomm (
+ref_ext,
+entity,
+datep,
+datep2,
+fk_action,
+code,
+label,
+note,
+datec,
+tms,
+fk_user_author,
+fk_user_mod,
+fk_soc,
+fk_contact,
+fk_user_action,
+transparency,
+fk_user_done,
+priority,
+fulldayevent,
+punctual,
+percent,
+location,
+durationp,
+durationa,
+fk_element,
+elementtype)
+SELECT DISTINCT
+planningitem.id, 
+1, 
+IFNULL(planningitem.begin_datetime,planningitem.end_datetime), 
+planningitem.end_datetime,
+1030013, 
+'AC_PROJ', 
+CASE WHEN (TRIM(planningitem.summary)='') THEN 'Détection de projet' ELSE LEFT(planningitem.summary,128) END, 
+planningitem.description, 
+planningitem.created, 
+planningitem.modified, 
+IFNULL(usercrea.rowid,1), 
+IFNULL(usermod.rowid,1),
+llx_societe.rowid,
+llx_socpeople.rowid, 
+IFNULL(usercrea.rowid,1), 
+0, 
+IFNULL(usercrea.rowid,1), 
+0, 
+0, 
+1, 
+-1,
+null, 
+planningitem.end_datetime-planningitem.begin_datetime, 
+null, 
+null, 
+null 
+FROM planningitem
+LEFT OUTER JOIN planningitem_uobject as contactsoc ON planningitem.id=contactsoc.planningitem_id
+LEFT OUTER JOIN planningitem_uobject as contctlink ON contctlink.planningitem_uobject_id=contactsoc.id
+LEFT OUTER JOIN llx_socpeople ON llx_socpeople.import_key=contctlink.uobject_id
+LEFT OUTER JOIN llx_societe ON llx_societe.import_key=contactsoc.uobject_id
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=planningitem.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=planningitem.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
+WHERE planningitem.planningitemtype_code IN ('PROPAL')
+AND llx_societe.rowid IS NOT NULL
+AND planningitem.deleted=0;
+
+
+
+INSERT INTO llx_actioncomm (
+ref_ext,
+entity,
+datep,
+datep2,
+fk_action,
+code,
+label,
+note,
+datec,
+tms,
+fk_user_author,
+fk_user_mod,
+fk_soc,
+fk_contact,
+fk_user_action,
+transparency,
+fk_user_done,
+priority,
+fulldayevent,
+punctual,
+percent,
+location,
+durationp,
+durationa,
+fk_element,
+elementtype)
+SELECT DISTINCT
+planningitem.id, 
+1, 
+IFNULL(planningitem.begin_datetime,planningitem.end_datetime), 
+planningitem.end_datetime,
+1030021, 
+'AC_INTER', 
+CASE WHEN (TRIM(planningitem.summary)='') THEN 'Besoin Inter' ELSE LEFT(planningitem.summary,128) END, 
+planningitem.description, 
+planningitem.created, 
+planningitem.modified, 
+IFNULL(usercrea.rowid,1), 
+IFNULL(usermod.rowid,1),
+llx_societe.rowid,
+llx_socpeople.rowid, 
+IFNULL(usercrea.rowid,1), 
+0, 
+IFNULL(usercrea.rowid,1), 
+0, 
+0, 
+1, 
+-1,
+null, 
+planningitem.end_datetime-planningitem.begin_datetime, 
+null, 
+null, 
+null 
+FROM planningitem
+LEFT OUTER JOIN planningitem_uobject as contactsoc ON planningitem.id=contactsoc.planningitem_id
+LEFT OUTER JOIN planningitem_uobject as contctlink ON contctlink.planningitem_uobject_id=contactsoc.id
+LEFT OUTER JOIN llx_socpeople ON llx_socpeople.import_key=contctlink.uobject_id
+LEFT OUTER JOIN llx_societe ON llx_societe.import_key=contactsoc.uobject_id
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=planningitem.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=planningitem.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
+WHERE planningitem.planningitemtype_code IN ('INSCRIPTION INTER')
+AND llx_societe.rowid IS NOT NULL
+AND planningitem.deleted=0;
+
+
+
+INSERT INTO llx_actioncomm (
+ref_ext,
+entity,
+datep,
+datep2,
+fk_action,
+code,
+label,
+note,
+datec,
+tms,
+fk_user_author,
+fk_user_mod,
+fk_soc,
+fk_contact,
+fk_user_action,
+transparency,
+fk_user_done,
+priority,
+fulldayevent,
+punctual,
+percent,
+location,
+durationp,
+durationa,
+fk_element,
+elementtype)
+SELECT DISTINCT
+planningitem.id, 
+1, 
+IFNULL(planningitem.begin_datetime,planningitem.end_datetime), 
+planningitem.end_datetime,
+1030016, 
+'AC_DEBRIEF', 
+CASE WHEN (TRIM(planningitem.summary)='') THEN 'Debrief formation' ELSE LEFT(planningitem.summary,128) END, 
+planningitem.description, 
+planningitem.created, 
+planningitem.modified, 
+IFNULL(usercrea.rowid,1), 
+IFNULL(usermod.rowid,1),
+llx_societe.rowid,
+llx_socpeople.rowid, 
+IFNULL(usercrea.rowid,1), 
+0, 
+IFNULL(usercrea.rowid,1), 
+0, 
+0, 
+1, 
+-1,
+null, 
+planningitem.end_datetime-planningitem.begin_datetime, 
+null, 
+null, 
+null 
+FROM planningitem
+LEFT OUTER JOIN planningitem_uobject as contactsoc ON planningitem.id=contactsoc.planningitem_id
+LEFT OUTER JOIN planningitem_uobject as contctlink ON contctlink.planningitem_uobject_id=contactsoc.id
+LEFT OUTER JOIN llx_socpeople ON llx_socpeople.import_key=contctlink.uobject_id
+LEFT OUTER JOIN llx_societe ON llx_societe.import_key=contactsoc.uobject_id
+LEFT OUTER JOIN sf_user as usercreast ON usercreast.id=planningitem.created_by_sf_user_id
+LEFT OUTER JOIN llx_user as usercrea ON usercreast.email_address=usercrea.email
+LEFT OUTER JOIN sf_user as usermodst ON usermodst.id=planningitem.modified_by_sf_user_id
+LEFT OUTER JOIN llx_user as usermod ON usermodst.email_address=usermod.email
+WHERE planningitem.planningitemtype_code IN ('DEBRIEF')
+AND llx_societe.rowid IS NOT NULL
+AND planningitem.deleted=0;
