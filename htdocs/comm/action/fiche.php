@@ -638,7 +638,7 @@ if ($id > 0)
 	$act = new ActionComm($db);
 	$result=$act->fetch($id);
 	$act->fetch_optionals($id,$extralabels);
-
+	
 	if ($result < 0)
 	{
 		dol_print_error($db,$act->error);
@@ -837,7 +837,7 @@ if ($id > 0)
         $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$act,$action);    // Note that $action and $object may have been modified by hook
 		if (empty($reshook) && ! empty($extrafields->attribute_label))
 		{
-			print $actioncomm->showOptionals($extrafields,'edit');
+			print $act->showOptionals($extrafields,'edit');
 
 		}
 
@@ -1023,13 +1023,19 @@ if ($id > 0)
 		if (empty($reshook) && ! empty($extrafields->attribute_label))
 		{
 			print '<br><br><table class="border" width="100%">';
+
 			foreach($extrafields->attribute_label as $key=>$label)
 			{
 				$value=(isset($_POST["options_".$key])?$_POST["options_".$key]:(isset($act->array_options['options_'.$key])?$act->array_options['options_'.$key]:''));
+				if (in_array($extrafields->attribute_type[$key],array('date','datetime')))
+				{
+					$value = isset($_POST["options_".$key])?dol_mktime($_POST["options_".$key."hour"], $_POST["options_".$key."min"], 0, $_POST["options_".$key."month"], $_POST["options_".$key."day"], $_POST["options_".$key."year"]):$db->jdate($act->array_options['options_'.$key]);
+				}
 				print '<tr><td width="30%">'.$label.'</td><td>';
 				print $extrafields->showOutputField($key,$value);
 				print "</td></tr>\n";
 			}
+			
 			print '</table><br><br>';
 		}
 
