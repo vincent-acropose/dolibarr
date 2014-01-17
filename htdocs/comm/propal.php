@@ -1999,7 +1999,7 @@ else
 			else
 			{
 				// Add free products/services
-				$object->formAddFreeProduct(1,$mysoc,$soc);
+				//$object->formAddFreeProduct(1,$mysoc,$soc);
 
 				// Add predefined products/services
 				if (! empty($conf->product->enabled) || ! empty($conf->service->enabled))

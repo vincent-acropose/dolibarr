@@ -928,6 +928,9 @@ function pdf_getlinedesc($object,$i,$outputlangs,$hideref=0,$hidedesc=0,$issuppl
 		}
 	}
 
+	// Spécifique Travail et Associé : ne pas afficher le libellé des lignes
+	$label = '';
+
 	// Description short of product line
 	$libelleproduitservice=$label;
 
