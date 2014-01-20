@@ -63,13 +63,13 @@ class ModelePDFLabels
  *  Create a document onto disk accordign to template module
  *
  *	@param  DoliDB		$db					Database handler
- *	@param  array		$arrayofmembers		Array of members
+ *	@param  array		$arrayofrecords		Array of records
  *	@param	string		$modele				Force le modele a utiliser ('' to not force)
  *	@param	Translate	$outputlangs		Objet lang a utiliser pour traduction
  *	@param	string		$outputdir			Output directory
  *	@return int        						<0 if KO, >0 if OK
  */
-function members_label_pdf_create($db, $arrayofmembers, $modele, $outputlangs, $outputdir='')
+function members_label_pdf_create($db, $arrayofrecords, $modele, $outputlangs, $outputdir='')
 {
 	global $conf,$langs;
 	$langs->load("members");
@@ -141,7 +141,7 @@ function members_label_pdf_create($db, $arrayofmembers, $modele, $outputlangs, $
 		// We save charset_output to restore it because write_file can change it if needed for
 		// output format that does not support UTF8.
 		$sav_charset_output=$outputlangs->charset_output;
-		if ($obj->write_file($arrayofmembers, $outputlangs, $srctemplatepath, $outputdir) > 0)
+		if ($obj->write_file($arrayofrecords, $outputlangs, $srctemplatepath, $outputdir) > 0)
 		{
 			$outputlangs->charset_output=$sav_charset_output;
 			return 1;
