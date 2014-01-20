@@ -687,3 +687,5 @@ ShortThursday=J
 ShortFriday=V
 ShortSaturday=S
 ShortSunday=D
+UpdateOriginalProductLabel=Changer le libélé du produit
+HelpUpdateOriginalProductLabel=Laisse le produit affecté mais change son appelation. 
