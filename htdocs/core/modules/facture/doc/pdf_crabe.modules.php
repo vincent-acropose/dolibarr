@@ -1468,7 +1468,7 @@ class pdf_crabe extends ModelePDFFactures
 			
 			// Show Special contact name
 			if (is_array($object->array_options) && key_exists('options_conatct_cust',$object->array_options) && !empty($object->array_options['options_conatct_cust'])) {
-				$pdf->SetXY($posx+2,$posy+6);
+				$pdf->SetXY($posx+2,$posy+7);
 				$pdf->SetFont('','', $default_font_size);
 				$pdf->MultiCell($widthrecbox, 4, $object->array_options['options_conatct_cust'], 0, 'L');
 			}
