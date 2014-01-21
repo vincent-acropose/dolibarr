@@ -535,9 +535,9 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
 
     // For debugging
     //include_once(DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php');
-    //$mask='{yyyy}-{0000}';
-    //$date=dol_mktime(12, 0, 0, 1, 1, 1900);
-    //$date=dol_stringtotime('20121001');
+    //$mask='FA{yy}{mm}-{0000@99}';
+    //$date=dol_mktime(1, 0, 0, 1, 1, 2013);
+    //$date=dol_stringtotime('20130120');
 
     // Extract value for mask counter, mask raz and mask offset
     if (! preg_match('/\{(0+)([@\+][0-9\-\+\=]+)?([@\+][0-9\-\+\=]+)?\}/i',$mask,$reg)) return 'ErrorBadMask';
@@ -612,14 +612,15 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     if ($maskraz > 0)    // A reset is required
     {
     	if ($maskraz == 99) {
-			$maskraz = date('m');
+			$maskraz = date('m',$date);
 			$resetEveryMonth = true;
 		}
         if ($maskraz > 12) return 'ErrorBadMaskBadRazMonth';
 
         // Define posy, posm and reg
-        if ($maskraz > 1)
+        if ($maskraz >= 1)
         {
+        	
             if (! preg_match('/^(.*)\{(y+)\}\{(m+)\}/i',$maskwithonlyymcode)
             && ! preg_match('/^(.*)\{(m+)\}\{(y+)\}/i',$maskwithonlyymcode)) return 'ErrorCantUseRazInStartedYearIfNoYearMonthInMask';
             if (preg_match('/^(.*)\{(y+)\}\{(m+)\}/i',$maskwithonlyymcode,$reg)) { $posy=2; $posm=3; }
