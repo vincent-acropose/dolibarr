@@ -48,7 +48,6 @@ $mine = GETPOST('mode')=='mine' ? 1 : 0;
 $hookmanager->initHooks(array('projectcard'));
 
 $object = new Project($db);
-$object->public = true;
 $extrafields = new ExtraFields($db);
 $object->fetch($id,$ref);
 if ($object->id > 0)
