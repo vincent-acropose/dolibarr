@@ -1493,7 +1493,7 @@ function pdf_getLinkedObjects($object,$outputlangs)
 			$num=count($objects);
 			for ($i=0;$i<$num;$i++)
 			{
-				$linkedobjects[$objecttype]['ref_title'] = $outputlangs->transnoentities("RefProposal");
+				$linkedobjects[$objecttype]['ref_title'] = $outputlangs->transnoentities("Ref. proposition");
 				$linkedobjects[$objecttype]['ref_value'] = $outputlangs->transnoentities($objects[$i]->ref);
 				$linkedobjects[$objecttype]['date_title'] = $outputlangs->transnoentities("DatePropal");
 				$linkedobjects[$objecttype]['date_value'] = dol_print_date($objects[$i]->date,'day','',$outputlangs);

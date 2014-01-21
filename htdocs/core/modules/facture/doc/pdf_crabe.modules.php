@@ -240,11 +240,6 @@ class pdf_crabe extends ModelePDFFactures
 				$tab_top_newpage = (empty($conf->global->MAIN_PDF_DONOTREPEAT_HEAD)?42:10);
 				$tab_height = 130;
 				$tab_height_newpage = 150;
-				
-				$outputlangs->load('agefodd@agefodd');
-				$pdf->SetXY($this->marge_gauche, $tab_top - 8);
-				$pdf->SetFont ( pdf_getPDFFont ( $outputlangs ), 'B',  $default_font_size - 1 );
-				$pdf->MultiCell(0, 3, 'Ref:'.$outputlangs->transnoentities("AgfRecallInvoiceNum",$object->ref), '', 'L');
 
 				// Affiche notes
 				if (! empty($object->note_public))
@@ -476,20 +471,20 @@ class pdf_crabe extends ModelePDFFactures
 				
 				// Show num TVA intra Sender
 				$pdf->SetXY($this->marge_gauche,$posyinfo);
-				$pdf->SetFont('','', $default_font_size - 1);
+				$pdf->SetFont('','', $default_font_size - 4);
 				$pdf->MultiCell(0, 4, $outputlangs->transnoentities("VATIntraShort").': '.$outputlangs->convToOutputCharset($this->emetteur->tva_intra), 0, 'L');
 				
 				// Show num TVA intra Sender
 				$outputlangs->load('agefodd@agefodd');
 				$pdf->SetXY($this->marge_gauche,$pdf->getY());
-				$pdf->SetFont('','', $default_font_size - 1);
+				$pdf->SetFont('','', $default_font_size - 4);
 				$pdf->MultiCell(0, 4, $outputlangs->transnoentities("AgfNumAct").': '.$outputlangs->convToOutputCharset($conf->global->AGF_ORGANISME_NUM), 0, 'L');
 					
 				// Show num TVA intra Sender
 				if ($outputlangs->defaultlang=='fr_FR') {
 					$outputlangs->load('agefodd@agefodd');
 					$pdf->SetXY($this->marge_gauche,$pdf->getY());
-					$pdf->SetFont('','', $default_font_size - 1);
+					$pdf->SetFont('','', $default_font_size - 4);
 					$pdf->MultiCell(0, 4, $outputlangs->transnoentities("TVA acquittée d’après encaissement"), 0, 'L');
 				}
 				
@@ -1126,6 +1121,12 @@ class pdf_crabe extends ModelePDFFactures
 		}
 
 		$index++;
+		
+		$outputlangs->load('agefodd@agefodd');
+		$pdf->SetXY($col1x, $tab2_top + $tab2_hl * $index);
+		$pdf->SetFont ( pdf_getPDFFont ( $outputlangs ), 'B',  $default_font_size - 1 );
+		$pdf->MultiCell(0, 3, 'Ref:'.$outputlangs->transnoentities("AgfRecallInvoiceNum",$object->ref), '', 'L');
+		
 		return ($tab2_top + ($tab2_hl * $index));
 	}
 
@@ -1418,7 +1419,7 @@ class pdf_crabe extends ModelePDFFactures
 			$posy=$pdf->getY();
 
 			// Show sender information
-			$pdf->SetXY($posx+2,$posy);
+			$pdf->SetXY($posx+2,$posy+3);
 			$pdf->SetFont('','', $default_font_size - 1);
 			$pdf->MultiCell(80, 4, $carac_emetteur, 0, 'L');
 
