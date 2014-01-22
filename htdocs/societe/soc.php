@@ -664,7 +664,8 @@ else
         if (GETPOST("type")!='f')  { $object->client=3; }
         if (GETPOST("type")=='c')  { $object->client=1; }
         if (GETPOST("type")=='p')  { $object->client=2; }
-        if (! empty($conf->fournisseur->enabled) && (GETPOST("type")=='f' || GETPOST("type")==''))  { $object->fournisseur=1; }
+        if (! empty($conf->fournisseur->enabled) && (GETPOST("type")=='f'))  
+        if (GETPOST("type")==''){ $object->fournisseur=0; }
 
         $object->name				= GETPOST('nom');
         $object->firstname			= GETPOST('firstname');
