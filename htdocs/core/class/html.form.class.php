@@ -896,7 +896,8 @@ class Form
         	$sql.= " LEFT OUTER JOIN  ".MAIN_DB_PREFIX ."societe as s ON s.rowid=sp.fk_soc ";
         }
         $sql.= " WHERE sp.entity IN (".getEntity('societe', 1).")";
-        if ($socid > 0) $sql.= " AND sp.fk_soc=".$socid;
+        //if ($socid > 0) $sql.= " AND sp.fk_soc=".$socid;
+        if ($socid > 0) $sql .= " AND sp.fk_soc IN (SELECT rowid FROM  " . MAIN_DB_PREFIX . "societe WHERE parent IN (SELECT parent FROM " . MAIN_DB_PREFIX . "societe WHERE rowid=". $socid.'))';
         if (! empty($conf->global->CONTACT_HIDE_INACTIVE_IN_COMBOBOX)) $sql.= " AND sp.statut<>0 ";
         $sql.= " ORDER BY sp.lastname ASC";
 
