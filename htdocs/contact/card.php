@@ -1072,6 +1072,10 @@ else
         print '</td></tr>';
 
         // Note Private
+        print '<tr><td valign="top">'.$langs->trans("NotePrivate").'</td><td colspan="3">';
+        print nl2br($object->note_private);
+
+        // Note Private
         print '<tr><td class="tdtop">'.$langs->trans("NotePrivate").'</td><td colspan="3">';
         print nl2br($object->note_private);
 
