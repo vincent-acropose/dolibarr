@@ -899,7 +899,8 @@ class Form
         //if ($socid > 0) $sql.= " AND sp.fk_soc=".$socid;
         if ($socid > 0) {
         	$sql .= " AND (sp.fk_soc IN (SELECT rowid FROM  " . MAIN_DB_PREFIX . "societe WHERE parent IN (SELECT parent FROM " . MAIN_DB_PREFIX . "societe WHERE rowid=". $socid.'))';
-			$sql .= " OR (sp.fk_soc=" . $socid."))";
+			$sql .= " OR (sp.fk_soc=" . $socid.")";
+    		$sql .= " OR (sp.fk_soc IN (SELECT rowid FROM " . MAIN_DB_PREFIX . "societe WHERE parent=". $socid.")))";
         }
         if (! empty($conf->global->CONTACT_HIDE_INACTIVE_IN_COMBOBOX)) $sql.= " AND sp.statut<>0 ";
         $sql.= " ORDER BY sp.lastname ASC";
