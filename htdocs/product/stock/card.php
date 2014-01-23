@@ -367,6 +367,9 @@ else
 						print "<a class=\"butActionRefused\" href=\"#\">".$langs->trans("Delete")."</a>";
 				}
 			}
+			
+			$hookmanager->initHooks(array('stockcard'));
+            $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);
 
 			print "</div>";
 
