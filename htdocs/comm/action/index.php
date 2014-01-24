@@ -92,6 +92,9 @@ $langs->load("agenda");
 $langs->load("other");
 $langs->load("commercial");
 
+// SPECIFIQUE TRAVAIL ASSOCIE
+//echo 'TEST'.$status;
+if($filtert == 0 && empty($status)) $filtert = $user->id;
 
 
 /*
@@ -313,6 +316,10 @@ $sql.= ' WHERE a.fk_action = ca.id';
 $sql.= ' AND a.fk_user_author = u.rowid';
 $sql.= ' AND a.entity IN ('.getEntity().')';
 if ($actioncode) $sql.=" AND ca.code='".$db->escape($actioncode)."'";
+
+// SPECIFIQUE TRAVAIL ASSOCIE
+$sql.= " AND ca.code <> 'AC_OTH_AUTO'";
+
 if ($pid) $sql.=" AND a.fk_project=".$db->escape($pid);
 if (! $user->rights->societe->client->voir && ! $socid) $sql.= " AND (a.fk_soc IS NULL OR sc.fk_user = " .$user->id . ")";
 if ($user->societe_id) $sql.= ' AND a.fk_soc = '.$user->societe_id; // To limit to external user company
