@@ -142,6 +142,7 @@ else $sql = 'SELECT DISTINCT';
 $sql.= ' f.rowid as facid, f.facnumber, f.type, f.increment, f.total as total_ht, f.tva as total_tva, f.total_ttc,';
 $sql.= ' f.datef as df, f.date_lim_reglement as datelimite,';
 $sql.= ' f.paye as paye, f.fk_statut,';
+$sql.= ' f.ref_client, ';
 $sql.= ' s.nom, s.rowid as socid';
 if (! $sall) $sql.= ', SUM(pf.amount) as am';   // To be able to sort on status
 $sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s';
@@ -269,7 +270,7 @@ if ($resql)
     if ($moreforfilter)
     {
         print '<tr class="liste_titre">';
-        print '<td class="liste_titre" colspan="9">';
+        print '<td class="liste_titre" colspan="10">';
         print $moreforfilter;
         print '</td></tr>';
     }
@@ -279,6 +280,7 @@ if ($resql)
     print_liste_field_titre($langs->trans('Date'),$_SERVER['PHP_SELF'],'f.datef','',$param,'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("DateDue"),$_SERVER['PHP_SELF'],"f.date_lim_reglement",'',$param,'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Company'),$_SERVER['PHP_SELF'],'s.nom','',$param,'',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans('RefCustomer'),$_SERVER['PHP_SELF'],'f.ref_client','',$param,'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('AmountHT'),$_SERVER['PHP_SELF'],'f.total','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('AmountVAT'),$_SERVER['PHP_SELF'],'f.tva','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('AmountTTC'),$_SERVER['PHP_SELF'],'f.total_ttc','',$param,'align="right"',$sortfield,$sortorder);
@@ -299,6 +301,7 @@ if ($resql)
     print '</td>';
     print '<td class="liste_titre" align="left">&nbsp;</td>';
     print '<td class="liste_titre" align="left"><input class="flat" type="text" name="search_societe" value="'.$search_societe.'"></td>';
+    print '<td class="liste_titre" align="left">&nbsp;</td>';
     print '<td class="liste_titre" align="right"><input class="flat" type="text" size="10" name="search_montant_ht" value="'.$search_montant_ht.'"></td>';
     print '<td class="liste_titre" align="right">&nbsp;</td>';
     print '<td class="liste_titre" align="right"><input class="flat" type="text" size="10" name="search_montant_ttc" value="'.$search_montant_ttc.'"></td>';
@@ -368,6 +371,8 @@ if ($resql)
             print $thirdparty->getNomUrl(1,'customer');
             print '</td>';
 
+            print '<td>'.$objp->ref_client.'</td>';
+
             print '<td align="right">'.price($objp->total_ht).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
 
             print '<td align="right">'.price($objp->total_tva).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
@@ -393,7 +398,7 @@ if ($resql)
         {
             // Print total
             print '<tr class="liste_total">';
-            print '<td class="liste_total" colspan="4" align="left">'.$langs->trans('Total').'</td>';
+            print '<td class="liste_total" colspan="5" align="left">'.$langs->trans('Total').'</td>';
             print '<td class="liste_total" align="right">'.price($total_ht).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
             print '<td class="liste_total" align="right">'.price($total_tva).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
             print '<td class="liste_total" align="right">'.price($total_ttc).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
