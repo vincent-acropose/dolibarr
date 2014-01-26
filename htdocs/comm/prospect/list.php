@@ -277,7 +277,7 @@ if ($resql)
 	else
 	{
         $help_url='EN:Module_Third_Parties|FR:Module_Tiers|ES:Empresas';
-        llxHeader('',$langs->trans("ThirdParty"),$help_url);
+        llxHeader('',$langs->trans("ListOfProspects"),$help_url);
 	}
 
 	$param='&amp;stcomm='.$stcomm.'&amp;search_nom='.urlencode($search_nom).'&amp;search_zipcode='.urlencode($search_zipcode).'&amp;search_ville='.urlencode($search_ville);

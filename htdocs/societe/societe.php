@@ -416,6 +416,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans("Phone"),$_SERVER["PHP_SELF"],"s.phone","",$params,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("ThirdPartyType"),$_SERVER["PHP_SELF"],"s.fk_typent","",$params,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Dernière prop. signée"),$_SERVER["PHP_SELF"],"","",$params,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("DateCreation"),$_SERVER["PHP_SELF"],"s.datec","",$params,'',$sortfield,$sortorder);
 	//print_liste_field_titre($form->textwithpicto($langs->trans("ProfId1Short"),$textprofid[1],1,0),$_SERVER["PHP_SELF"],"s.siren","",$params,'class="nowrap"',$sortfield,$sortorder);
 	//print_liste_field_titre($form->textwithpicto($langs->trans("ProfId2Short"),$textprofid[2],1,0),$_SERVER["PHP_SELF"],"s.siret","",$params,'class="nowrap"',$sortfield,$sortorder);
 	//print_liste_field_titre($form->textwithpicto($langs->trans("ProfId3Short"),$textprofid[3],1,0),$_SERVER["PHP_SELF"],"s.ape","",$params,'class="nowrap"',$sortfield,$sortorder);
@@ -460,6 +461,10 @@ if ($resql)
 	print '</td>';
 	
 	//Derniére prop signée
+	print '<td class="liste_titre">';
+	print '</td>';
+	
+	//created date
 	print '<td class="liste_titre">';
 	print '</td>';
 	/*
@@ -527,8 +532,10 @@ if ($resql)
 		print "<td>".$obj->payslib."</td>\n";
 		print "<td>".dol_print_phone($obj->phone)."</td>\n";
 		print "<td>".$obj->typent."</td>\n";
-		
+
 		print "<td>".dol_print_date($obj->lastpropalsigndt,'daytextshort')."</td>\n";
+		
+		print "<td>".dol_print_date($obj->datec,'daytextshort')."</td>\n";
 		
 		//print "<td>".$obj->idprof1."</td>\n";
 		//print "<td>".$obj->idprof2."</td>\n";

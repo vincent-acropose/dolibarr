@@ -233,7 +233,16 @@ if (empty($reshook))
 					$error++;
 					$errors[] = $langs->trans("ErrorProdIdIsMandatory", $langs->transcountry('ProfId'.$i, $object->country_code));
 					$action = (($action=='add'||$action=='create')?'create':'edit');
-				}
+				}	
+        	}
+        	
+        	//Check typeent is filled
+        	$typent_id=GETPOST('typent_id');
+        	if (empty($typent_id)) {
+        		$langs->load("errors");
+        		$error++;
+        		$errors[] = $langs->trans("ErrorFieldRequired", $langs->trans('ThirdPartyType'));
+        		$action = (($action=='add'||$action=='create')?'create':'edit');
         	}
         }
         
@@ -991,7 +1000,7 @@ else
         print '</tr>';
 
         // Type - Size
-        print '<tr><td>'.$langs->trans("ThirdPartyType").'</td><td>'."\n";
+        print '<tr><td><span class="fieldrequired">'.$langs->trans("ThirdPartyType").'</span></td><td>'."\n";
         print $form->selectarray("typent_id",$formcompany->typent_array(0), $object->typent_id);
         if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
         print '</td>';
@@ -1441,7 +1450,7 @@ else
             }
 
             // Type - Size
-            print '<tr><td>'.$langs->trans("ThirdPartyType").'</td><td>';
+            print '<tr><td><span class="fieldrequired">'.$langs->trans("ThirdPartyType").'</span></td><td>';
             print $form->selectarray("typent_id",$formcompany->typent_array(0), $object->typent_id);
             if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
             print '</td>';

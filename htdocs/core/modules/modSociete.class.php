@@ -141,6 +141,8 @@ class modSociete extends DolibarrModules
         $this->boxes[$r][1] = "box_activity.php";
         $this->boxes[$r][2] = '(WarningUsingThisBoxSlowDown)';
         $r++;
+        $this->boxes[$r][1] = "box_clients_created.php";
+        $r++;
 
 		// Permissions
 		$this->rights = array();
