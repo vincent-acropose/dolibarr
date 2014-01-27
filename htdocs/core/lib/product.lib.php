@@ -316,6 +316,7 @@ function measuring_units_string($unit,$measuring_style='')
 		$measuring_units[0] = $langs->trans("WeightUnitkg");
 		$measuring_units[-3] = $langs->trans("WeightUnitg");
 		$measuring_units[-6] = $langs->trans("WeightUnitmg");
+		$measuring_units[-9] = $langs->trans("WeightUnitug");
         $measuring_units[99] = $langs->trans("WeightUnitpound");
 	}
 	else if ($measuring_style == 'size')
