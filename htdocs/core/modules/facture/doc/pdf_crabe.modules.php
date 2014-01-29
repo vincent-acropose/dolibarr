@@ -1381,7 +1381,7 @@ class pdf_crabe extends ModelePDFFactures
 			$pdf->SetTextColor(0,0,60);
 			$refdossier = '';
 			foreach($agf_doc->lines as $linedoc) {
-				$refdossier .= $linedoc->fk_session.'_'.$linedoc->socid. ' ';
+				$refdossier .= $linedoc->fk_session_agefodd.'_'.$linedoc->socid. ' ';
 			}
 			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("AgfRefDossier")." : " . $outputlangs->transnoentities($refdossier), '', 'R');
 		}
