@@ -944,7 +944,7 @@ class Propal extends CommonObject
         $this->date			= $now;
         $this->datep		= $now;    // deprecated
         $this->fin_validite	= $this->date + ($this->duree_validite * 24 * 3600);
-        $this->ref_client	= '';
+        //$this->ref_client	= '';
 
         // Set ref
         require_once DOL_DOCUMENT_ROOT ."/core/modules/propale/".$conf->global->PROPALE_ADDON.'.php';

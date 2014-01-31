@@ -601,7 +601,7 @@ class Facture extends CommonInvoice
 		$this->fk_facture_source  = 0;
 		$this->date_creation      = '';
 		$this->date_validation    = '';
-		$this->ref_client         = '';
+		//$this->ref_client         = '';
 		$this->close_code         = '';
 		$this->close_note         = '';
 		$this->products = $this->lines;	// Tant que products encore utilise
