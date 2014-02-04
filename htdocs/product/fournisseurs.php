@@ -64,9 +64,13 @@ if ($user->societe_id) $socid=$user->societe_id;
 $result=restrictedArea($user,'produit|service&fournisseur',$fieldvalue,'product&product','','',$fieldtype);
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
-$hookmanager->initHooks(array('pricesuppliercard','globalcard'));
+$hookmanager->initHooks(array('pricesuppliercard'));
 $product = new ProductFournisseur($db);
-$product->fetch($id,$ref);
+$product->fetch($id);
+
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$product,$action);    // Note that $action and $object may have been modified by some hooks
+$error=$hookmanager->error; $errors=$hookmanager->errors;
+
 
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
@@ -321,7 +325,7 @@ if ($id || $ref)
 				print '<form action="'.$_SERVER['PHP_SELF'].'?id='.$product->id.'" method="POST">';
 				print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 				print '<input type="hidden" name="action" value="updateprice">';
-				
+
 				dol_fiche_head();
 
 				print '<table class="border" width="100%">';
