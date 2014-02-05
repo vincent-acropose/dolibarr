@@ -1687,6 +1687,8 @@ class Propal extends CommonObject
         $this->statut = $statut;
         $error=0;
         $now=dol_now();
+        
+        $hideref=$conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_REF;
 
         $this->db->begin();
 
