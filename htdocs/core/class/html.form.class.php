@@ -1559,7 +1559,7 @@ class Form
 
         $langs->load('stocks');
 
-        $sql = "SELECT p.rowid, p.label, p.ref, p.price, p.duration,";
+        $sql = "SELECT p.rowid, p.label, p.ref, p.price, p.duration, p.accountancy_code_buy,";
         $sql.= " pfp.ref_fourn, pfp.rowid as idprodfournprice, pfp.price as fprice, pfp.quantity, pfp.remise_percent, pfp.remise, pfp.unitprice,";
         $sql.= " s.nom";
         $sql.= " FROM ".MAIN_DB_PREFIX."product as p";
@@ -1575,11 +1575,11 @@ class Form
         {
             if (! empty($conf->global->PRODUCT_DONOTSEARCH_ANYWHERE))
             {
-                $sql.=" AND (pfp.ref_fourn LIKE '".$filterkey."%' OR p.ref LIKE '".$filterkey."%' OR p.label LIKE '".$filterkey."%')";
+                $sql.=" AND (pfp.ref_fourn LIKE '".$filterkey."%' OR p.ref LIKE '".$filterkey."%' OR p.label LIKE '".$filterkey."%' OR p.accountancy_code_buy LIKE '".$filterkey."%')";
             }
             else
             {
-                $sql.=" AND (pfp.ref_fourn LIKE '%".$filterkey."%' OR p.ref LIKE '%".$filterkey."%' OR p.label LIKE '%".$filterkey."%')";
+                $sql.=" AND (pfp.ref_fourn LIKE '%".$filterkey."%' OR p.ref LIKE '%".$filterkey."%' OR p.label LIKE '%".$filterkey."%' OR p.accountancy_code_buy LIKE '%".$filterkey."%')";
             }
 
             if (! empty($conf->barcode->enabled))
@@ -1682,6 +1682,9 @@ class Form
                         $opt .= " - ".dol_trunc($objp->nom,8);
                         $outval.=" - ".dol_trunc($objp->nom,8);
                     }
+					
+						$opt .= " - Code Compta : ".$objp->accountancy_code_buy;
+                        $outval.=" - Code Compta : ".$objp->accountancy_code_buy;
                 }
                 else
                 {
