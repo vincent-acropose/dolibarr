@@ -1610,15 +1610,15 @@ class Form
             {
                 $objp = $this->db->fetch_object($result);
 
-                $outkey=$objp->idprodfournprice;
+                $outkey=($objp->idprodfournprice) ? $objp->idprodfournprice : 'p'.$objp->rowid;
                 $outref=$objp->ref;
                 $outval='';
                 $outqty=1;
 				$outdiscount=0;
-
-                $opt = '<option value="'.$objp->idprodfournprice.'"';
+				
+                $opt = '<option value="'.(($objp->idprodfournprice)?$objp->idprodfournprice:'p'.$objp->rowid).'"';
                 if ($selected && $selected == $objp->idprodfournprice) $opt.= ' selected="selected"';
-                if (empty($objp->idprodfournprice)) $opt.=' disabled="disabled"';
+                //if (empty($objp->idprodfournprice)) $opt.=' disabled="disabled"';
                 $opt.= '>';
 
                 $objRef = $objp->ref;

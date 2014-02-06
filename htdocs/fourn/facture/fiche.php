@@ -497,6 +497,7 @@ elseif ($action == 'update_line')
 
 elseif ($action == 'addline')
 {
+	//echo $id;exit;
     $ret=$object->fetch($id);
     if ($ret < 0)
     {
@@ -504,8 +505,8 @@ elseif ($action == 'addline')
         exit;
     }
     $ret=$object->fetch_thirdparty();
-
-    if (GETPOST('search_idprodfournprice') || GETPOST('idprodfournprice'))	// With combolist idprodfournprice is > 0 or -1, with autocomplete, idprodfournprice is > 0 or ''
+	//echo GETPOST('idprodfournprice'); exit;
+    if ((GETPOST('search_idprodfournprice') || GETPOST('idprodfournprice')) && strpos(GETPOST('idprodfournprice'), 'p') === FALSE && strpos(GETPOST('search_idprodfournprice'), 'p') === FALSE)	// With combolist idprodfournprice is > 0 or -1, with autocomplete, idprodfournprice is > 0 or ''
     {
     	$idprod=0;
     	$product=new Product($db);
@@ -518,7 +519,7 @@ elseif ($action == 'addline')
         {
     	    $idprod=$product->get_buyprice(GETPOST('idprodfournprice'), $_POST['qty']);    // Just to see if a price exists for the quantity. Not used to found vat
         }
-
+		
         if ($idprod > 0)
         {
             $result=$product->fetch($idprod);
@@ -535,9 +536,13 @@ elseif ($action == 'addline')
             $localtax1tx= get_localtax($tvatx, 1, $mysoc,$object->thirdparty);
             $localtax2tx= get_localtax($tvatx, 2, $mysoc,$object->thirdparty);
             $remise_percent=GETPOST('remise_percent');
+			$projectlineid = GETPOST('projectlineid');
+			
+			$pu_ht = (GETPOST('pu_ht')) ? GETPOST('pu_ht') : $product->fourn_pu ;
+			
             $type = $product->type;
 
-            $result=$object->addline($label, $product->fourn_pu, $tvatx, $localtax1tx, $localtax2tx, $_POST['qty'], $idprod, $remise_percent, '', '', 0, $npr);
+            $result=$object->addline($label, $pu_ht, $tvatx, $localtax1tx, $localtax2tx, $_POST['qty'], $idprod, $remise_percent, '', '', 0, $npr, 'HT', 0, -1,false,$projectlineid);
 
         }
         if ($idprod == -1)
@@ -547,6 +552,59 @@ elseif ($action == 'addline')
             $mesg='<div class="error">'.$langs->trans("ErrorQtyTooLowForThisSupplier").'</div>';
         }
     }
+	elseif((GETPOST('pu_ht') || GETPOST('pu_ttc')) && strpos(GETPOST('idprodfournprice'), 'p') !== FALSE){
+			
+		$idprod=0;
+    	$product=new Product($db);
+		
+		$idprod=strtr(GETPOST('idprodfournprice'),array('p'=>''));
+		
+		//echo $idprod;exit;
+        if ($idprod > 0)
+        {
+            $result=$product->fetch($idprod);
+
+            // cas special pour lequel on a les meme reference que le fournisseur
+            // $label = '['.$product->ref.'] - '. $product->libelle;
+            $label = $product->description;
+            $label.= $product->description && $_POST['np_desc'] ? "\n" : "";
+            $label.= $_POST['np_desc'];
+
+            $tvatx=GETPOST('tva_tx');
+            $npr = preg_match('/\*/', GETPOST('tva_tx')) ? 1 : 0 ;
+
+            $localtax1tx= get_localtax($tvatx, 1, $mysoc,$object->thirdparty);
+            $localtax2tx= get_localtax($tvatx, 2, $mysoc,$object->thirdparty);
+            $remise_percent=GETPOST('remise_percent');
+			$projectlineid = GETPOST('projectlineid');
+			
+            $type = $product->type;
+			
+			if (!empty(GETPOST('pu_ht')))
+            {
+                $pu_ht = price2num(GETPOST('pu_ht'));
+                $price_base_type = 'HT';
+
+                //$desc, $pu, $txtva, $qty, $fk_product=0, $remise_percent=0, $date_start='', $date_end='', $ventil=0, $info_bits='', $price_base_type='HT', $type=0)
+                $result=$object->addline($label, $pu_ht, $tvatx, $localtax1tx, $localtax2tx, $_POST['qty'], $idprod, $remise_percent, '', '', 0, $npr, $price_base_type, 0, -1,false,$projectlineid);
+            }
+            else
+            {
+                $ttc = price2num(GETPOST('pu_ttc'));
+                $pu_ht = $ttc / (1 + ($tvatx / 100));
+                $price_base_type = 'HT';
+                $result=$object->addline($label, $pu_ht, $tvatx, $localtax1tx, $localtax2tx, $_POST['qty'], $idprod, $remise_percent, '', '', 0, $npr, $price_base_type, 0, -1,false,$projectlineid);
+			}
+
+        }
+        if ($idprod == -1)
+
+        {
+            // Quantity too low
+            $langs->load("errors");
+            $mesg='<div class="error">'.$langs->trans("ErrorQtyTooLowForThisSupplier").'</div>';
+        }
+	}
     else
     {
         $npr = preg_match('/\*/', $_POST['tauxtva']) ? 1 : 0 ;
@@ -555,7 +613,8 @@ elseif ($action == 'addline')
         $localtax1tx= get_localtax($tauxtva, 1, $mysoc,$object->thirdparty);
         $localtax2tx= get_localtax($tauxtva, 2, $mysoc,$object->thirdparty);
         $remise_percent=GETPOST('remise_percent');
-
+		$projectlineid = GETPOST('projectlineid');
+		
         if (! $_POST['dp_desc'])
         {
             $mesg='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentities("Description")).'</div>';
@@ -569,14 +628,14 @@ elseif ($action == 'addline')
                 $price_base_type = 'HT';
 
                 //$desc, $pu, $txtva, $qty, $fk_product=0, $remise_percent=0, $date_start='', $date_end='', $ventil=0, $info_bits='', $price_base_type='HT', $type=0)
-                $result=$object->addline($_POST['dp_desc'], $ht, $tauxtva, $localtax1tx, $localtax2tx, $_POST['qty'], 0, $remise_percent, $datestart, $dateend, 0, $npr, $price_base_type, $type);
+                $result=$object->addline($_POST['dp_desc'], $ht, $tauxtva, $localtax1tx, $localtax2tx, $_POST['qty'], 0, $remise_percent, $datestart, $dateend, 0, $npr, $price_base_type, $type,-1,false,$projectlineid);
             }
             else
             {
                 $ttc = price2num($_POST['amountttc']);
                 $ht = $ttc / (1 + ($tauxtva / 100));
                 $price_base_type = 'HT';
-                $result=$object->addline($_POST['dp_desc'], $ht, $tauxtva,$localtax1tx, $localtax2tx, $_POST['qty'], 0, $remise_percent, $datestart, $dateend, 0, $npr, $price_base_type, $type);
+                $result=$object->addline($_POST['dp_desc'], $ht, $tauxtva,$localtax1tx, $localtax2tx, $_POST['qty'], 0, $remise_percent, $datestart, $dateend, 0, $npr, $price_base_type, $type,-1,false,$projectlineid);
             }
         }
     }
@@ -1688,6 +1747,7 @@ else
             if ($i == 0)
             {
                 print '<tr class="liste_titre"><td>'.$langs->trans('Label').'</td>';
+				print '<td align="right">'.$langs->trans('Project').'</td>';
                 print '<td align="right">'.$langs->trans('VAT').'</td>';
                 print '<td align="right">'.$langs->trans('PriceUHT').'</td>';
                 print '<td align="right">'.$langs->trans('PriceUTTC').'</td>';
@@ -1758,7 +1818,12 @@ else
                 $doleditor=new DolEditor('desc',$object->lines[$i]->description,'',128,'dolibarr_details','',false,true,$conf->global->FCKEDITOR_ENABLE_DETAILS,$nbrows,70);
                 $doleditor->Create();
                 print '</td>';
-
+				
+				//Project
+				print '<td align="right">';
+				select_projects($object->socid, $object->projectlineid, 'projectlineid');
+				print '</td>';
+				
                 // VAT
                 print '<td align="right">';
                 print $form->load_tva('tauxtva',$object->lines[$i]->tva_tx,$societe,$mysoc);
@@ -1824,7 +1889,12 @@ else
                 	$reshook=$hookmanager->executeHooks('formViewProductSupplierOptions',$parameters,$object,$action);
                 }
                 print '</td>';
-
+				
+				//Project
+				print '<td align="right">';
+				print $form->form_project($_SERVER['PHP_SELF'].'?id='.$object->id,$object->socid,$object->lines[$i]->projectlineid,'none');
+				print '</td>';
+				
                 // VAT
                 print '<td align="right">'.vatrate($object->lines[$i]->tva_tx, true, $object->lines[$i]->info_bits).'</td>';
 
@@ -1866,6 +1936,7 @@ else
             print '<td>';
             print '<a name="add"></a>'; // ancre
             print $langs->trans('AddNewLine').' - '.$langs->trans("FreeZone").'</td>';
+            print '<td align="right">'.$langs->trans('Project').'</td>';
             print '<td align="right">'.$langs->trans('VAT').'</td>';
             print '<td align="right">'.$langs->trans('PriceUHT').'</td>';
             print '<td align="right">'.$langs->trans('PriceUTTC').'</td>';
@@ -1904,6 +1975,12 @@ else
             $doleditor->Create();
 
             print '</td>';
+			
+			//Projet
+			print '<td align="right">';
+			select_projects($object->socid, '', 'projectlineid');
+			print '</td>';
+			
             print '<td align="right">';
             print $form->load_tva('tauxtva',(GETPOST('tauxtva')?GETPOST('tauxtva'):-1),$societe,$mysoc);
             print '</td>';
@@ -1926,7 +2003,7 @@ else
             if (! empty($conf->product->enabled) || ! empty($conf->service->enabled))
             {
                 print '<tr class="liste_titre">';
-                print '<td colspan="4">';
+                print '<td>';
                 print $langs->trans("AddNewLine").' - ';
                 if (! empty($conf->service->enabled))
                 {
@@ -1937,6 +2014,11 @@ else
                     print $langs->trans('RecordedProducts');
                 }
                 print '</td>';
+                
+                print '<td align="right">'.$langs->trans('Project').'</td>';
+				print '<td align="right">'.$langs->trans('VAT').'</td>';
+				print '<td align="right">'.$langs->trans('PriceUHT').'</td>';
+            	print '<td align="right">'.$langs->trans('PriceUTTC').'</td>';
                 print '<td align="right">'.$langs->trans('Qty').'</td>';
             	print '<td align="right">'.$langs->trans('ReductionShort').'</td>';
                 print '<td>&nbsp;</td>';
@@ -1959,7 +2041,7 @@ else
 
                 $var=! $var;
                 print '<tr '.$bc[$var].'>';
-                print '<td colspan="4">';
+                print '<td>';
 
                 $ajaxoptions=array(
                 		'update' => array('pqty' => 'qty', 'p_remise_percent' => 'discount'),
@@ -1982,6 +2064,21 @@ else
 				$doleditor->Create();
 
                 print '</td>';
+				
+				//Projet
+				print '<td align="right">';
+				select_projects($object->socid, '', 'projectlineid');
+				print '</td>';
+				print '<td align="right">';
+	            print $form->load_tva('tva_tx',(GETPOST('tva_tx')?GETPOST('tva_tx'):-1),$societe,$mysoc);
+	            print '</td>';
+	            print '<td align="right">';
+	            print '<input size="4" name="pu_ht" type="text">';
+	            print '</td>';
+	            print '<td align="right">';
+	            print '<input size="4" name="pu_ttc" type="text">';
+	            print '</td>';
+				
                 print '<td align="right"><input type="text" id="pqty" name="qty" value="1" size="1"></td>';
             	print '<td align="right" class="nowrap"><input size="1" id="p_remise_percent" name="remise_percent" type="text" value="'.(GETPOST('remise_percent')?GETPOST('remise_percent'):'0').'"><span class="hideonsmartphone">%</span></td>';
                 print '<td>&nbsp;</td>';

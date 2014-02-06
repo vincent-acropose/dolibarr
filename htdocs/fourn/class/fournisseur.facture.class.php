@@ -82,7 +82,7 @@ class FactureFournisseur extends CommonInvoice
 	var $thirdparty;	// To store thirdparty
 
     var $extraparams=array();
-
+	var $projectlineid;
 
     /**
 	 *	Constructor
@@ -403,7 +403,7 @@ class FactureFournisseur extends CommonInvoice
         $sql = 'SELECT f.rowid, f.description, f.pu_ht, f.pu_ttc, f.qty, f.remise_percent, f.tva_tx, f.tva';
         $sql.= ', f.localtax1_tx, f.localtax2_tx, f.total_localtax1, f.total_localtax2 ';
         $sql.= ', f.total_ht, f.tva as total_tva, f.total_ttc, f.fk_product, f.product_type, f.info_bits';
-        $sql.= ', p.rowid as product_id, p.ref as product_ref, p.label as label, p.description as product_desc';
+        $sql.= ', p.rowid as product_id, p.ref as product_ref, p.label as label, p.description as product_desc, f.projectlineid';
         $sql.= ' FROM '.MAIN_DB_PREFIX.'facture_fourn_det as f';
         $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as p ON f.fk_product = p.rowid';
         $sql.= ' WHERE fk_facture_fourn='.$this->id;
@@ -443,7 +443,8 @@ class FactureFournisseur extends CommonInvoice
                     $this->lines[$i]->total_ttc			= $obj->total_ttc;
                     $this->lines[$i]->fk_product		= $obj->fk_product;
                     $this->lines[$i]->product_type		= $obj->product_type;
-                    $this->lines[$i]->info_bits		= $obj->info_bits;
+                    $this->lines[$i]->info_bits		    = $obj->info_bits;
+					$this->lines[$i]->projectlineid		= $obj->projectlineid;
 
                     $i++;
                 }
@@ -1023,7 +1024,7 @@ class FactureFournisseur extends CommonInvoice
      *  @param		int		$notrigger			Disable triggers
      *	@return    	int             			>0 if OK, <0 if KO
      */
-    function addline($desc, $pu, $txtva, $txlocaltax1, $txlocaltax2, $qty, $fk_product=0, $remise_percent=0, $date_start='', $date_end='', $ventil=0, $info_bits='', $price_base_type='HT', $type=0, $rang=-1, $notrigger=false)
+    function addline($desc, $pu, $txtva, $txlocaltax1, $txlocaltax2, $qty, $fk_product=0, $remise_percent=0, $date_start='', $date_end='', $ventil=0, $info_bits='', $price_base_type='HT', $type=0, $rang=-1, $notrigger=false,$projectlineid=0)
     {
         dol_syslog(get_class($this)."::addline $desc,$pu,$qty,$txtva,$fk_product,$remise_percent,$date_start,$date_end,$ventil,$info_bits,$price_base_type,$type", LOG_DEBUG);
         include_once DOL_DOCUMENT_ROOT.'/core/lib/price.lib.php';
@@ -1037,6 +1038,7 @@ class FactureFournisseur extends CommonInvoice
         if (empty($txtva)) $txtva=0;
         if (empty($txlocaltax1)) $txlocaltax1=0;
         if (empty($txlocaltax2)) $txlocaltax2=0;
+		if (empty($projectlineid)) $projectlineid=0;
 
         $remise_percent=price2num($remise_percent);
         $qty=price2num($qty);
@@ -1060,7 +1062,7 @@ class FactureFournisseur extends CommonInvoice
         {
             $idligne = $this->db->last_insert_id(MAIN_DB_PREFIX.'facture_fourn_det');
 
-            $result=$this->updateline($idligne, $desc, $pu, $txtva, $txlocaltax1, $txlocaltax2, $qty, $fk_product, $price_base_type, $info_bits, $type, $remise_percent, true);
+            $result=$this->updateline($idligne, $desc, $pu, $txtva, $txlocaltax1, $txlocaltax2, $qty, $fk_product, $price_base_type, $info_bits, $type, $remise_percent, true, $projectlineid);
             if ($result > 0)
             {
                 $this->rowid = $idligne;
@@ -1112,7 +1114,7 @@ class FactureFournisseur extends CommonInvoice
      *  @param		int		$notrigger			Disable triggers
      * @return    	int           				<0 if KO, >0 if OK
      */
-    function updateline($id, $label, $pu, $vatrate, $txlocaltax1=0, $txlocaltax2=0, $qty=1, $idproduct=0, $price_base_type='HT', $info_bits=0, $type=0, $remise_percent=0, $notrigger=false)
+    function updateline($id, $label, $pu, $vatrate, $txlocaltax1=0, $txlocaltax2=0, $qty=1, $idproduct=0, $price_base_type='HT', $info_bits=0, $type=0, $remise_percent=0, $notrigger=false,$projectlineid=0)
     {
         dol_syslog(get_class($this)."::updateline $id,$label,$pu,$vatrate,$qty,$idproduct,$price_base_type,$info_bits,$type,$remise_percent", LOG_DEBUG);
         include_once DOL_DOCUMENT_ROOT.'/core/lib/price.lib.php';
@@ -1177,6 +1179,7 @@ class FactureFournisseur extends CommonInvoice
         else $sql.= ", fk_product = null";
         $sql.= ", product_type = ".$product_type;
         $sql.= ", info_bits = ".$info_bits;
+		$sql.= ", projectlineid = ".$projectlineid;
         $sql.= " WHERE rowid = ".$id;
 
         dol_syslog(get_class($this)."::updateline sql=".$sql);
