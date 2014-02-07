@@ -933,7 +933,7 @@ else if ($action == 'add' && $user->rights->facture->creer)
 							0, //info_bits
 							'HT',
 							0,
-							0, //product_type
+							1, //product_type
 							1,
 							$lines[$i]->special_code,
 							$object->origin,
