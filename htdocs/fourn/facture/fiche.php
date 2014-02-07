@@ -580,9 +580,12 @@ elseif ($action == 'addline')
 			
             $type = $product->type;
 			
-			if (!empty(GETPOST('pu_ht')))
+			$pu_ht = GETPOST('pu_ht');
+			$pu_ttc = GETPOST('pu_ttc');
+			
+			if (!empty($pu_ht))
             {
-                $pu_ht = price2num(GETPOST('pu_ht'));
+                $pu_ht = price2num($pu_ht);
                 $price_base_type = 'HT';
 
                 //$desc, $pu, $txtva, $qty, $fk_product=0, $remise_percent=0, $date_start='', $date_end='', $ventil=0, $info_bits='', $price_base_type='HT', $type=0)
@@ -590,7 +593,7 @@ elseif ($action == 'addline')
             }
             else
             {
-                $ttc = price2num(GETPOST('pu_ttc'));
+                $ttc = price2num($pu_ttc);
                 $pu_ht = $ttc / (1 + ($tvatx / 100));
                 $price_base_type = 'HT';
                 $result=$object->addline($label, $pu_ht, $tvatx, $localtax1tx, $localtax2tx, $_POST['qty'], $idprod, $remise_percent, '', '', 0, $npr, $price_base_type, 0, -1,false,$projectlineid);
