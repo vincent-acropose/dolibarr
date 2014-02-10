@@ -1824,7 +1824,7 @@ else
 				
 				//Project
 				print '<td align="right">';
-				select_projects($object->socid, $object->projectlineid, 'projectlineid');
+				select_projects(-1, $object->projectlineid, 'projectlineid',100);
 				print '</td>';
 				
                 // VAT
@@ -1981,7 +1981,7 @@ else
 			
 			//Projet
 			print '<td align="right">';
-			select_projects($object->socid, '', 'projectlineid');
+			select_projects(-1, '', 'projectlineid',100);
 			print '</td>';
 			
             print '<td align="right">';
@@ -2070,7 +2070,7 @@ else
 				
 				//Projet
 				print '<td align="right">';
-				select_projects($object->socid, '', 'projectlineid');
+				select_projects(-1, '', 'projectlineid',100);
 				print '</td>';
 				print '<td align="right">';
 	            print $form->load_tva('tva_tx',(GETPOST('tva_tx')?GETPOST('tva_tx'):-1),$societe,$mysoc);

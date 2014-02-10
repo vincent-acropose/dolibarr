@@ -215,12 +215,13 @@ function select_projects($socid=-1, $selected='', $htmlname='projectid', $maxlen
 	}
 
 	// Search all projects
-	$sql = 'SELECT p.rowid, p.ref, p.title, p.fk_soc, p.fk_statut, p.public';
+	$sql = 'SELECT p.rowid, p.ref, p.title, p.fk_soc, p.fk_statut, p.public, s.nom';
 	$sql.= ' FROM '.MAIN_DB_PREFIX .'projet as p';
+	$sql.= " LEFT JOIN llx_societe as s ON p.fk_soc = s.rowid";
 	$sql.= " WHERE p.entity = ".$conf->entity;
 	if ($projectsListId !== false) $sql.= " AND p.rowid IN (".$projectsListId.")";
 	if ($socid == 0) $sql.= " AND (p.fk_soc=0 OR p.fk_soc IS NULL)";
-	$sql.= " ORDER BY p.title ASC";
+	$sql.= " ORDER BY s.nom, p.title ASC";
 
 	dol_syslog("project.lib::select_projects sql=".$sql);
 	$resql=$db->query($sql);
@@ -242,7 +243,8 @@ function select_projects($socid=-1, $selected='', $htmlname='projectid', $maxlen
 				}
 				else
 				{
-					$labeltoshow=dol_trunc($obj->ref,18);
+					$labeltoshow=($obj->nom)?$obj->nom.' - ':'';
+					$labeltoshow.=dol_trunc($obj->ref,18);
 					//if ($obj->public) $labeltoshow.=' ('.$langs->trans("SharedProject").')';
 					//else $labeltoshow.=' ('.$langs->trans("Private").')';
 					if (!empty($selected) && $selected == $obj->rowid && $obj->fk_statut > 0)
