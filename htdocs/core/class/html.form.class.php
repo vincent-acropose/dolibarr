@@ -1634,8 +1634,8 @@ class Form
                 $outval.=$objRef;
                 if (! empty($objp->idprodfournprice)) $outval.=' ('.$objRefFourn.')';
                 $outval.=' - ';
-                $opt.=dol_trunc($objp->label,18).' - ';
-                $outval.=dol_trunc($label,18).' - ';
+                $opt.=dol_trunc($objp->label,50).' - ';
+                $outval.=dol_trunc($label,50).' - ';
 
                 if (! empty($objp->idprodfournprice))
                 {
@@ -1688,8 +1688,8 @@ class Form
                 }
                 else
                 {
-                    $opt.= $langs->trans("NoPriceDefinedForThisSupplier");
-                    $outval.=$langs->transnoentities("NoPriceDefinedForThisSupplier");
+                    //$opt.= $langs->trans("NoPriceDefinedForThisSupplier");
+                    //$outval.=$langs->transnoentities("NoPriceDefinedForThisSupplier");
                 }
                 $opt .= "</option>\n";
 
