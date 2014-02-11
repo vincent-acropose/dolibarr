@@ -178,7 +178,7 @@ if (GETPOST ( 'action' ) == 'export_csv') {
 		print '"' . $date . '",';
 		print '"' . $val ["ref"] . '",';
 		foreach ( $tabttc [$key] as $k => $mt ) {
-			print '"' . html_entity_decode ( $k ) . '","' . $langs->trans ( "ThirdParty" ) . ' ('.$tabcompany [$key] ['name'] . ')","' . ($mt >= 0 ? price ( $mt ) : '') . '","' . ($mt < 0 ? price ( - $mt ) : '') . '"';
+			print '"' . html_entity_decode ( $k ) . '","' .$tabcompany [$key] ['name'] . '","' . ($mt >= 0 ? price ( $mt ) : '') . '","' . ($mt < 0 ? price ( - $mt ) : '') . '"';
 		}
 		print "\n";
 		// product
@@ -186,7 +186,7 @@ if (GETPOST ( 'action' ) == 'export_csv') {
 			if ($mt) {
 				print '"' . $date . '",';
 				print '"' . $val ["ref"] . '",';
-				print '"' . html_entity_decode ( $k ) . '","' . $langs->trans ( "Products" ) . ' ('.$tabcompany [$key] ['name'] . ')","' . ($mt < 0 ? price ( - $mt ) : '') . '","' . ($mt >= 0 ? price ( $mt ) : '') . '"';
+				print '"' . html_entity_decode ( $k ) . '","'.$tabcompany [$key] ['name'] . '","' . ($mt < 0 ? price ( - $mt ) : '') . '","' . ($mt >= 0 ? price ( $mt ) : '') . '"';
 				print "\n";
 			}
 		}
@@ -196,7 +196,7 @@ if (GETPOST ( 'action' ) == 'export_csv') {
 			if ($mt) {
 				print '"' . $date . '",';
 				print '"' . $val ["ref"] . '",';
-				print '"' . html_entity_decode ( $k ) . '","' . $langs->trans ( "VAT" ) . ' ('.$tabcompany [$key] ['name'] . ')","' . ($mt < 0 ? price ( - $mt ) : '') . '","' . ($mt >= 0 ? price ( $mt ) : '') . '"';
+				print '"' . html_entity_decode ( $k ) . '","' .$tabcompany [$key] ['name'] . '","' . ($mt < 0 ? price ( - $mt ) : '') . '","' . ($mt >= 0 ? price ( $mt ) : '') . '"';
 				print "\n";
 			}
 		}

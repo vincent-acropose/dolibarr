@@ -160,13 +160,13 @@ if ($result) {
 // export csv
 if (GETPOST ( 'action' ) == 'export_csv') {
 	header ( 'Content-Type: text/csv' );
-	header ( 'Content-Disposition: attachment;filename=journal_ventes.csv' );
+	header ( 'Content-Disposition: attachment;filename=journal_achat.csv' );
 	foreach ( $tabfac as $key => $val ) {
 		$date = dol_print_date ( $db->jdate ( $val ["date"] ), 'day' );
 		print '"' . $date . '",';
 		print '"' . $val ["ref"] . '",';
 		foreach ( $tabttc [$key] as $k => $mt ) {
-			print '"' . html_entity_decode ( $k ) . '","' . $langs->trans ( "ThirdParty" ) . '","' . ($mt >= 0 ? price ( $mt ) : '') . '","' . ($mt < 0 ? price ( - $mt ) : '') . '"';
+			print '"' . html_entity_decode ( $k ) . '","' . $tabcompany [$key] ['name'] . '","' . ($mt >= 0 ? price ( $mt ) : '') . '","' . ($mt < 0 ? price ( - $mt ) : '') . '"';
 		}
 		print "\n";
 		// product
@@ -174,7 +174,7 @@ if (GETPOST ( 'action' ) == 'export_csv') {
 			if ($mt) {
 				print '"' . $date . '",';
 				print '"' . $val ["ref"] . '",';
-				print '"' . html_entity_decode ( $k ) . '","' . $langs->trans ( "Products" ) . '","' . ($mt < 0 ? price ( - $mt ) : '') . '","' . ($mt >= 0 ? price ( $mt ) : '') . '"';
+				print '"' . html_entity_decode ( $k ) . '","' . $tabcompany [$key] ['name'] . '","' . ($mt < 0 ? price ( - $mt ) : '') . '","' . ($mt >= 0 ? price ( $mt ) : '') . '"';
 				print "\n";
 			}
 		}
@@ -184,7 +184,7 @@ if (GETPOST ( 'action' ) == 'export_csv') {
 			if ($mt) {
 				print '"' . $date . '",';
 				print '"' . $val ["ref"] . '",';
-				print '"' . html_entity_decode ( $k ) . '","' . $langs->trans ( "VAT" ) . '","' . ($mt < 0 ? price ( - $mt ) : '') . '","' . ($mt >= 0 ? price ( $mt ) : '') . '"';
+				print '"' . html_entity_decode ( $k ) . '","' . $tabcompany [$key] ['name'] . '","' . ($mt < 0 ? price ( - $mt ) : '') . '","' . ($mt >= 0 ? price ( $mt ) : '') . '"';
 				print "\n";
 			}
 		}
