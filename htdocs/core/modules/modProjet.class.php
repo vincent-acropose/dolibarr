@@ -159,24 +159,36 @@ $r++;
 		//--------
 		$r=1;
 
+// Libellé, Date des travaux, Date de relance, segment, sous segment, Etape, Pays, Région, Province/département, ville, CA estimé, Quantités, produits, commentaires.
+
 		$this->export_code[$r]=$this->rights_class.'_'.$r;
 		$this->export_label[$r]='ProjectsAndTasksLines';	// Translation key (used only if key ExportDataset_xxx_z not found)
 		$this->export_permission[$r]=array(array("projet","export"));
 		$this->export_fields_array[$r]=array('s.rowid'=>"IdCompany",'s.nom'=>'CompanyName','s.address'=>'Address','s.zip'=>'Zip','s.town'=>'Town','s.fk_pays'=>'Country',
 				's.phone'=>'Phone','s.siren'=>'ProfId1','s.siret'=>'ProfId2','s.ape'=>'ProfId3','s.idprof4'=>'ProfId4','s.code_compta'=>'CustomerAccountancyCode','s.code_compta_fournisseur'=>'SupplierAccountancyCode',
 				'p.rowid'=>"ProjectId",'p.ref'=>"ProjectRef",'p.datec'=>"DateCreation",'p.dateo'=>"DateDebutProjet",'p.datee'=>"DateFinProjet",'p.fk_statut'=>'ProjectStatus','p.description'=>"projectNote",
-				'pt.rowid'=>'RefTask','pt.dateo'=>"TaskDateo",'pt.datee'=>"TaskDatee",'pt.duration_effective'=>"DurationEffective",'pt.progress'=>"Progress",'pt.description'=>"TaskDesc");
+				'pt.rowid'=>'RefTask','pt.dateo'=>"TaskDateo",'pt.datee'=>"TaskDatee",'pt.duration_effective'=>"DurationEffective",'pt.progress'=>"Progress",'pt.description'=>"TaskDesc"
+
+				,'p.title'=>'ProjectName', 'pex.date_travaux'=>'DateTravaux', 'pex.date_relance'=>'DateRelance', 'pex.segment'=>'Segment', 'pex.sous_segment'=>'SousSegment', 'pex.etape'=>'Etape', 'pa.libelle'=>'Pays', 'reg.nom'=>'Region', 'dep.nom'=>'Departement', 'pex.ville'=>'ville', 'pex.ca_estime'=>'CA_estime', 'pr.label'=>'Produit', 'pex.quantite'=>'quantite', 'pex.commentaire'=>'commentaire'
+);
 
 		//$this->export_TypeFields_array[$r]=array('s.rowid'=>"List:societe:nom",'s.nom'=>'Text','s.address'=>'Text','s.zip'=>'Text','s.town'=>'Text','s.fk_pays'=>'List:c_pays:libelle',
 		$this->export_TypeFields_array[$r]=array('s.nom'=>'Text','s.address'=>'Text','s.zip'=>'Text','s.town'=>'Text','s.fk_pays'=>'List:c_pays:libelle',
 				's.phone'=>'Text','s.siren'=>'Text','s.siret'=>'Text','s.ape'=>'Text','s.idprof4'=>'Text','s.code_compta'=>'Text','s.code_compta_fournisseur'=>'Text',
 				'p.rowid'=>"List:projet:ref",'p.ref'=>"Text",'p.datec'=>"Date",'p.dateo'=>"Date",'p.datee'=>"Date",'p.fk_statut'=>'Status','p.description'=>"Text",
-				'pt.dateo'=>"Date",'pt.datee'=>"Date",'pt.duration_effective'=>"Duree",'pt.duration_planned'=>"Duree",'pt.progress'=>"Number",'pt.description'=>"Text");
+				'pt.dateo'=>"Date",'pt.datee'=>"Date",'pt.duration_effective'=>"Duree",'pt.duration_planned'=>"Duree",'pt.progress'=>"Number",'pt.description'=>"Text"
+				,'p.title'=>'Text', 'pex.date_travaux'=>'Date', 'pex.date_relance'=>'Date', 'pex.segment'=>'Text', 'pex.sous_segment'=>'Text', 'pex.etape'=>'Text', 'pa.libelle'=>'Text', 'reg.nom'=>'Text', 'dep.nom'=>'Text', 'pex.ville'=>'Text', 'pex.ca_estime'=>'Number', 'pr.label'=>'Text', 'pex.quantite'=>'Number', 'pex.commentaire'=>'Text'
+
+
+);
 
 		$this->export_entities_array[$r]=array('s.rowid'=>"company",'s.nom'=>'company','s.address'=>'company','s.zip'=>'company','s.town'=>'company','s.fk_pays'=>'company',
 				's.phone'=>'company','s.siren'=>'company','s.siret'=>'company','s.ape'=>'company','s.idprof4'=>'company','s.code_compta'=>'company','s.code_compta_fournisseur'=>'company',
 				'f.rowid'=>"project",'f.ref'=>"project",'f.datec'=>"project",'f.duree'=>"project",'f.fk_statut'=>"project",'f.description'=>"project",
-				'pt.rowid'=>'task','pt.dateo'=>"task",'pt.datee'=>"task",'pt.duration_effective'=>"task",'pt.duration_planned'=>"task",'pt.progress'=>"task",'pt.description'=>"task");
+				'pt.rowid'=>'task','pt.dateo'=>"task",'pt.datee'=>"task",'pt.duration_effective'=>"task",'pt.duration_planned'=>"task",'pt.progress'=>"task",'pt.description'=>"task"
+				,'p.title'=>'project', 'pex.date_travaux'=>'project', 'pex.date_relance'=>'project', 'pex.segment'=>'project', 'pex.sous_segment'=>'project', 'pex.etape'=>'project', 'pa.libelle'=>'project', 'reg.nom'=>'project', 'dep.nom'=>'project', 'pex.ville'=>'project', 'pex.ca_estime'=>'project', 'pr.label'=>'project', 'pex.quantite'=>'project', 'pex.commentaire'=>'project'
+
+);
 
 /*		$this->export_sql_start[$r]='SELECT DISTINCT ';
 		$this->export_sql_end[$r]  =' FROM ('.MAIN_DB_PREFIX.'projet as p, '.MAIN_DB_PREFIX.'projet_task as pt, '.MAIN_DB_PREFIX.'societe as s)';
@@ -186,7 +198,14 @@ $r++;
 
 		$this->export_sql_start[$r]='SELECT DISTINCT ';
                 $this->export_sql_end[$r]  =' FROM '.MAIN_DB_PREFIX.'projet as p LEFT OUTER JOIN  '.MAIN_DB_PREFIX.'projet_task as pt ON (p.rowid = pt.fk_projet)
-		 LEFT OUTER JOIN '.MAIN_DB_PREFIX.'societe as s ON ( p.fk_soc = s.rowid )';
+		 LEFT OUTER JOIN '.MAIN_DB_PREFIX.'societe as s ON ( p.fk_soc = s.rowid )
+		 LEFT OUTER JOIN '.MAIN_DB_PREFIX.'projet_extrafields pex ON (pex.fk_object=p.rowid)
+		 LEFT OUTER JOIN '.MAIN_DB_PREFIX.'product pr ON (pr.rowid=pex.produit)
+LEFT OUTER JOIN '.MAIN_DB_PREFIX.'c_regions reg ON (reg.rowid=pex.region)
+LEFT OUTER JOIN '.MAIN_DB_PREFIX.'c_pays pa ON (pa.rowid=pex.pays)
+LEFT OUTER JOIN '.MAIN_DB_PREFIX.'c_departements dep ON (dep.rowid=pex.departement)
+
+';
                 $this->export_sql_end[$r] .=' WHERE 1 ';
                 $this->export_sql_end[$r] .=' AND p.entity = '.$conf->entity;
 
