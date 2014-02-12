@@ -122,6 +122,14 @@ class modProjet extends DolibarrModules
 		$this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
 		$this->rights[$r][4] = 'supprimer';
 
+$r++;
+		$this->rights[$r][0] = 45; // id de la permission
+		$this->rights[$r][1] = "Exporter les projets"; // libelle de la permission
+		$this->rights[$r][2] = 'd'; // type de la permission (deprecie a ce jour)
+		$this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
+		$this->rights[$r][4] = 'export';
+
+
 		$r++;
 		$this->rights[$r][0] = 141; // id de la permission
 		$this->rights[$r][1] = "Lire tous les projets et taches (y compris prives qui ne me sont pas affectes)"; // libelle de la permission
@@ -157,7 +165,7 @@ class modProjet extends DolibarrModules
 		$this->export_fields_array[$r]=array('s.rowid'=>"IdCompany",'s.nom'=>'CompanyName','s.address'=>'Address','s.zip'=>'Zip','s.town'=>'Town','s.fk_pays'=>'Country',
 				's.phone'=>'Phone','s.siren'=>'ProfId1','s.siret'=>'ProfId2','s.ape'=>'ProfId3','s.idprof4'=>'ProfId4','s.code_compta'=>'CustomerAccountancyCode','s.code_compta_fournisseur'=>'SupplierAccountancyCode',
 				'p.rowid'=>"ProjectId",'p.ref'=>"ProjectRef",'p.datec'=>"DateCreation",'p.dateo'=>"DateDebutProjet",'p.datee'=>"DateFinProjet",'p.fk_statut'=>'ProjectStatus','p.description'=>"projectNote",
-				'pt.rowid'=>'RefTask','pt.dateo'=>"TaskDateo",'pt.datee'=>"TaskDatee",'pt.duration_effective'=>"DurationEffective",'pt.duration_planned'=>"DurationPlanned",'pt.progress'=>"Progress",'pt.description'=>"TaskDesc");
+				'pt.rowid'=>'RefTask','pt.dateo'=>"TaskDateo",'pt.datee'=>"TaskDatee",'pt.duration_effective'=>"DurationEffective",'pt.progress'=>"Progress",'pt.description'=>"TaskDesc");
 
 		//$this->export_TypeFields_array[$r]=array('s.rowid'=>"List:societe:nom",'s.nom'=>'Text','s.address'=>'Text','s.zip'=>'Text','s.town'=>'Text','s.fk_pays'=>'List:c_pays:libelle',
 		$this->export_TypeFields_array[$r]=array('s.nom'=>'Text','s.address'=>'Text','s.zip'=>'Text','s.town'=>'Text','s.fk_pays'=>'List:c_pays:libelle',
@@ -170,10 +178,18 @@ class modProjet extends DolibarrModules
 				'f.rowid'=>"project",'f.ref'=>"project",'f.datec'=>"project",'f.duree'=>"project",'f.fk_statut'=>"project",'f.description'=>"project",
 				'pt.rowid'=>'task','pt.dateo'=>"task",'pt.datee'=>"task",'pt.duration_effective'=>"task",'pt.duration_planned'=>"task",'pt.progress'=>"task",'pt.description'=>"task");
 
-		$this->export_sql_start[$r]='SELECT DISTINCT ';
+/*		$this->export_sql_start[$r]='SELECT DISTINCT ';
 		$this->export_sql_end[$r]  =' FROM ('.MAIN_DB_PREFIX.'projet as p, '.MAIN_DB_PREFIX.'projet_task as pt, '.MAIN_DB_PREFIX.'societe as s)';
 		$this->export_sql_end[$r] .=' WHERE p.fk_soc = s.rowid AND p.rowid = pt.fk_projet ';
 		$this->export_sql_end[$r] .=' AND p.entity = '.$conf->entity;
+*/
+
+		$this->export_sql_start[$r]='SELECT DISTINCT ';
+                $this->export_sql_end[$r]  =' FROM '.MAIN_DB_PREFIX.'projet as p LEFT OUTER JOIN  '.MAIN_DB_PREFIX.'projet_task as pt ON (p.rowid = pt.fk_projet)
+		 LEFT OUTER JOIN '.MAIN_DB_PREFIX.'societe as s ON ( p.fk_soc = s.rowid )';
+                $this->export_sql_end[$r] .=' WHERE 1 ';
+                $this->export_sql_end[$r] .=' AND p.entity = '.$conf->entity;
+
 		$r++;
 	}
 
