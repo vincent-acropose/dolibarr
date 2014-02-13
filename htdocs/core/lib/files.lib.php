@@ -778,6 +778,7 @@ function dol_delete_file($file,$disableglob=0,$nophperrors=0,$nohook=0,$object=n
 function dol_delete_dir($dir,$nophperrors=0)
 {
     $dir_osencoded=dol_osencode($dir);
+    dol_syslog('dol_deletedir='.$dir,LOG_ALERT);
     return ($nophperrors?@rmdir($dir_osencoded):rmdir($dir_osencoded));
 }
 
