@@ -1122,10 +1122,12 @@ class pdf_crabe extends ModelePDFFactures
 
 		$index++;
 		
-		$outputlangs->load('agefodd@agefodd');
-		$pdf->SetXY($col1x, $tab2_top + $tab2_hl * $index);
-		$pdf->SetFont ( pdf_getPDFFont ( $outputlangs ), 'B',  $default_font_size - 1 );
-		$pdf->MultiCell(0, 3, 'Ref:'.$outputlangs->transnoentities("AgfRecallInvoiceNum",$object->ref), '', 'L');
+		if ($object->type != 2) {
+			$outputlangs->load('agefodd@agefodd');
+			$pdf->SetXY($col1x, $tab2_top + $tab2_hl * $index);
+			$pdf->SetFont ( pdf_getPDFFont ( $outputlangs ), 'B',  $default_font_size - 1 );
+			$pdf->MultiCell(0, 3, 'Ref:'.$outputlangs->transnoentities("AgfRecallInvoiceNum",$object->ref), '', 'L');
+		}
 		
 		return ($tab2_top + ($tab2_hl * $index));
 	}
