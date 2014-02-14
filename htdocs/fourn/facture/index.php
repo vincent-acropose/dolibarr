@@ -47,6 +47,7 @@ if ($user->societe_id > 0)
 
 $mode=GETPOST("mode");
 $modesearch=GETPOST("mode_search");
+$search_categ= GETPOST('search_categ','int');
 
 $page=GETPOST("page",'int');
 $sortorder = GETPOST("sortorder",'alpha');
@@ -107,6 +108,7 @@ $sql.= " fac.rowid as facid, fac.ref, fac.ref_supplier, fac.datef, fac.date_lim_
 $sql.= " fac.total_ht, fac.total_ttc, fac.paye as paye, fac.fk_statut as fk_statut, fac.libelle";
 if (!$user->rights->societe->client->voir && !$socid) $sql .= ", sc.fk_soc, sc.fk_user ";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."facture_fourn as fac";
+if (! empty($search_categ)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_fournisseur as cf ON fac.fk_soc = cf.fk_societe";
 if (!$user->rights->societe->client->voir && !$socid) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 $sql.= " WHERE fac.entity = ".$conf->entity;
 $sql.= " AND fac.fk_soc = s.rowid";
@@ -164,6 +166,8 @@ if (GETPOST("search_montant_ttc"))
 {
 	$sql .= " AND fac.total_ttc = '".$db->escape(price2num(GETPOST("search_montant_ttc")))."'";
 }
+if ($search_categ > 0)   $sql.= " AND cf.fk_categorie = ".$search_categ;
+if ($search_categ == -2) $sql.= " AND cf.fk_categorie IS NULL";
 
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($limit+1, $offset);
@@ -193,6 +197,24 @@ if ($resql)
 
 	print_barre_liste($langs->trans("BillsSuppliers").($socid?" $soc->nom":""),$page,"index.php",$param,$sortfield,$sortorder,'',$num);
 	print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'">';
+	
+	
+	// Filter on categories
+	$moreforfilter='';
+	if (! empty($conf->categorie->enabled))
+	{
+		$moreforfilter.=$langs->trans('Categories'). ': ';
+		$moreforfilter.=$htmlother->select_categories(1,$search_categ,'search_categ',1);
+		$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
+	}
+	if ($moreforfilter)
+	{
+		print '<div class="liste_titre">';
+		print $moreforfilter;
+		print '</div>';
+	}
+	
+	
 	print '<table class="liste" width="100%">';
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"fac.ref,fac.rowid","",$param,"",$sortfield,$sortorder);
