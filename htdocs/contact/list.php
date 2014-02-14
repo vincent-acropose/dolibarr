@@ -53,6 +53,7 @@ $search_categ = GETPOST("search_categ",'int');
 $search_country     = GETPOST("search_country");
 $search_status		= GETPOST("search_status",'int');
 if ($search_status=='') $search_status=1; // always display activ customer first
+$search_sale = GETPOST ( 'search_sale', 'int' );
 
 $type=GETPOST("type");
 $view=GETPOST("view");
@@ -104,6 +105,7 @@ if (GETPOST('button_removefilter'))
     $sall="";
     $search_country='';
     $seach_status=1;
+    $search_sale = '';
 }
 if ($search_priv < 0) $search_priv='';
 
@@ -123,16 +125,23 @@ $sql = "SELECT s.rowid as socid, s.nom as name,";
 $sql.= " p.rowid as cidp, p.lastname as lastname, p.firstname, p.poste, p.email,";
 $sql.= " p.phone, p.phone_mobile, p.fax, p.fk_pays, p.priv, p.tms,";
 $sql.= " cp.code as country_code, cp.libelle as countrylib, p.fk_user_modif, p.statut";
+$sql.= " ,extra.ct_service";
 $sql.= " FROM ".MAIN_DB_PREFIX."socpeople as p";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_pays as cp ON cp.rowid = p.fk_pays";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = p.fk_soc";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople_extrafields extra ON extra.fk_object=p.rowid";
 if (! empty($search_categ)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_contact as cs ON s.rowid = cs.fk_socpeople"; // We need this table joined to the select in order to filter by categ
-if (!$user->rights->societe->client->voir && !$socid) $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON s.rowid = sc.fk_soc";
+if ((!$user->rights->societe->client->voir && !$socid) || (!empty($search_sale))) $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON s.rowid = sc.fk_soc";
+
 $sql.= ' WHERE p.entity IN ('.getEntity('societe', 1).')';
 if (!empty($search_country)) $sql .= " AND cp.libelle LIKE '%".$db->escape(strtolower($search_country))."%' ";
 if (!$user->rights->societe->client->voir && !$socid) //restriction
 {
 	$sql .= " AND (sc.fk_user = " .$user->id." OR p.fk_soc IS NULL)";
+}
+if (!empty($search_sale)) //restriction
+{
+	$sql .= " AND (sc.fk_user = " .$search_sale." OR p.fk_soc IS NULL)";
 }
 if (! empty($userid))    // propre au commercial
 {
@@ -241,6 +250,9 @@ else
 	$sql.= " ".$db->plimit($conf->liste_limit+1, $offset);
 }
 
+$extrafields = new ExtraFields ( $db );
+$extralabels = $extrafields->fetch_name_optionals_label ( 'socpeople', true );
+
 //print $sql;
 dol_syslog("contact/list.php sql=".$sql);
 $result = $db->query($sql);
@@ -265,13 +277,17 @@ if ($result)
     print '<input type="hidden" name="view" value="'.$view.'">';
     print '<input type="hidden" name="sortfield" value="'.$sortfield.'">';
     print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
-
+    
     if (! empty($conf->categorie->enabled))
     {
     	$moreforfilter.=$langs->trans('Categories'). ': ';
     	$moreforfilter.=$formother->select_categories(4,$search_categ,'search_categ',1);
     	$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
     }
+    
+    $moreforfilter .= $langs->trans ( 'SalesRepresentatives' ) . ': ';
+    $moreforfilter .= $formother->select_salesrepresentatives ( $search_sale, 'search_sale', $user );
+    
     if ($moreforfilter)
     {
     	print '<div class="liste_titre">';
@@ -291,6 +307,7 @@ if ($result)
     print_liste_field_titre($langs->trans("Lastname"),$_SERVER["PHP_SELF"],"p.lastname", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Firstname"),$_SERVER["PHP_SELF"],"p.firstname", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("PostOrFunction"),$_SERVER["PHP_SELF"],"p.poste", $begin, $param, '', $sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Fonction/Service"),$_SERVER["PHP_SELF"],"extra.ct_service", $begin, $param, '', $sortfield,$sortorder);
     if (empty($conf->global->SOCIETE_DISABLE_CONTACTS)) print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Phone"),$_SERVER["PHP_SELF"],"p.phone", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("PhoneMobile"),$_SERVER["PHP_SELF"],"p.phone_mob", $begin, $param, '', $sortfield,$sortorder);
@@ -313,6 +330,9 @@ if ($result)
     print '</td>';
     print '<td class="liste_titre">';
     print '<input class="flat" type="text" name="search_poste" size="9" value="'.$search_poste.'">';
+    print '</td>';
+    
+    print '<td class="liste_titre">';
     print '</td>';
     if (empty($conf->global->SOCIETE_DISABLE_CONTACTS))
     {
@@ -372,9 +392,21 @@ if ($result)
 		// Firstname
         print '<td>'.dol_trunc($obj->firstname,20).'</td>';
 
+       
+        
 		// Function
         print '<td>'.dol_trunc($obj->poste,20).'</td>';
-
+        
+        // Function/service
+        print '<td>';
+        
+        
+        if (is_array ( $extralabels ) && key_exists ( 'ct_service', $extralabels )) {
+        	print $extrafields->showOutputField ( 'ct_service', $obj->ct_service );
+        }
+        
+        print '</td>';
+        
         // Company
         if (empty($conf->global->SOCIETE_DISABLE_CONTACTS))
         {
