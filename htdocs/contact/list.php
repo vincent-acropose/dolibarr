@@ -65,6 +65,8 @@ $page = GETPOST('page', 'int');
 $userid=GETPOST('userid','int');
 $begin=GETPOST('begin');
 
+$ct_service = GETPOST ( 'options_ct_service', 'alpha' );
+
 if (! $sortorder) $sortorder="ASC";
 if (! $sortfield) $sortfield="p.lastname";
 if ($page < 0) { $page = 0; }
@@ -106,6 +108,7 @@ if (GETPOST('button_removefilter'))
     $search_country='';
     $seach_status=1;
     $search_sale = '';
+    $ct_service='';
 }
 if ($search_priv < 0) $search_priv='';
 
@@ -202,6 +205,9 @@ if (strlen($search_email))      // filtre sur l'email
 {
     $sql .= " AND p.email LIKE '%".$db->escape($search_email)."%'";
 }
+if (!empty($ct_service)) {
+	$sql .= " AND extra.ct_service ='".$ct_service."'";
+}
 if ($search_status!='') $sql .= " AND p.statut = ".$db->escape($search_status);
 if ($type == "o")        // filtre sur type
 {
@@ -263,6 +269,10 @@ if ($result)
     $param ='&begin='.urlencode($begin).'&view='.urlencode($view).'&userid='.urlencode($userid).'&contactname='.urlencode($sall);
     $param.='&type='.urlencode($type).'&view='.urlencode($view).'&search_lastname='.urlencode($search_lastname).'&search_firstname='.urlencode($search_firstname).'&search_societe='.urlencode($search_societe).'&search_email='.urlencode($search_email);
     $param.='&search_country='.urlencode($search_country);
+    if (! empty ( $search_sale ))
+    	$param .= '&search_sale=' . $search_sale;
+    if (! empty ( $ct_service ))
+    	$param .= '&options_ct_service=' . $ct_service;
     if ($search_status != '') $param.='&amp;search_status='.$search_status;
     if (!empty($search_categ)) $param.='&search_categ='.$search_categ;
 	if ($search_priv == '0' || $search_priv == '1') $param.="&search_priv=".urlencode($search_priv);
@@ -333,6 +343,9 @@ if ($result)
     print '</td>';
     
     print '<td class="liste_titre">';
+    if (is_array ( $extralabels ) && key_exists ( 'ct_service', $extralabels )) {
+    	print $extrafields->showInputField ( 'ct_service', $ct_service );
+    }
     print '</td>';
     if (empty($conf->global->SOCIETE_DISABLE_CONTACTS))
     {

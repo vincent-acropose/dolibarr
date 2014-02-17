@@ -194,6 +194,7 @@ if ($resql)
 	if (GETPOST("search_societe"))      $param.='&amp;search_societe='.urlencode(GETPOST("search_societe"));
 	if (GETPOST("search_montant_ht"))   $param.='&amp;search_montant_ht='.urlencode(GETPOST("search_montant_ht"));
 	if (GETPOST("search_montant_ttc"))  $param.='&amp;search_montant_ttc='.urlencode(GETPOST("search_montant_ttc"));
+	if (!empty($search_categ))			$param.='&amp;search_categ='.urlencode($search_categ);
 
 	print_barre_liste($langs->trans("BillsSuppliers").($socid?" $soc->nom":""),$page,"index.php",$param,$sortfield,$sortorder,'',$num);
 	print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'">';
