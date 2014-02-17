@@ -139,7 +139,7 @@ if (GETPOST("search_ref_supplier"))
 if ($month > 0)
 {
 	if ($year > 0)
-	$sql.= " AND fac.datef BETWEEN '".$db->idate(dol_get_first_day($year,$month,false))."' AND '".$db->idate(dol_get_last_day($year,$month,false))."'";
+	$sql.= " AND MONTH(fac.datef) IN (".$month.") AND YEAR(fac.datef)=".$year;
 	else
 	$sql.= " AND date_format(fac.datef, '%m') = '$month'";
 }
@@ -239,7 +239,7 @@ if ($resql)
 	print '<input class="flat" size="6" type="text" name="search_ref_supplier" value="'.GETPOST("search_ref_supplier").'">';
 	print '</td>';
 	print '<td class="liste_titre" colspan="1" align="center">';
-	print '<input class="flat" type="text" size="1" maxlength="2" name="month" value="'.$month.'">';
+	print '<input class="flat" type="text" size="1" name="month" value="'.$month.'">';
 	//print '&nbsp;'.$langs->trans('Year').': ';
 	$syear = $year;
 	//if ($syear == '') $syear = date("Y");

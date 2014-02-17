@@ -30,6 +30,7 @@ require '../../main.inc.php';
 require DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.class.php';
 require DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.facture.class.php';
 require DOL_DOCUMENT_ROOT.'/fourn/class/paiementfourn.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 
 $langs->load('companies');
 $langs->load('bills');
@@ -38,6 +39,11 @@ $langs->load('banks');
 $facid=GETPOST('facid','int');
 $action=GETPOST('action','alpha');
 $socid=GETPOST('socid','int');
+
+$search_categ= GETPOST('search_categ','int');
+
+$month    = GETPOST('month','int');
+$year     = GETPOST('year','int');
 
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
@@ -178,6 +184,7 @@ if ($action == 'add_paiement')
 
 $supplierstatic=new Societe($db);
 $invoicesupplierstatic = new FactureFournisseur($db);
+$htmlother=new FormOther($db);
 
 llxHeader('',$langs->trans("SuppliersInvoices"),'EN:Suppliers_Invoices|FR:FactureFournisseur|ES:Facturas_de_proveedores');
 
@@ -199,6 +206,7 @@ if ($action == 'create' || $action == 'add_paiement')
     $sql.= ' WHERE f.fk_soc = s.rowid';
     $sql.= ' AND f.rowid = '.$facid;
     if (!$user->rights->societe->client->voir && !$socid) $sql .= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
+    
     $resql = $db->query($sql);
     if ($resql)
     {
@@ -365,6 +373,7 @@ if (empty($action))
 
     $search_ref=GETPOST('search_ref');
     $search_account=GETPOST('search_account');
+    if ($search_account == -1) {$search_account=0;}
     $search_paymenttype=GETPOST('search_paymenttype');
     $search_amount=GETPOST('search_amount');
     $search_company=GETPOST('search_company');
@@ -383,6 +392,7 @@ if (empty($action))
     $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'societe AS s ON s.rowid = f.fk_soc';
     $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'bank as b ON p.fk_bank = b.rowid';
     $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'bank_account as ba ON b.fk_account = ba.rowid';
+    if (! empty($search_categ)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_fournisseur as cf ON f.fk_soc = cf.fk_societe";
     $sql.= " WHERE f.entity = ".$conf->entity;
     if (!$user->rights->societe->client->voir) $sql .= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
     if ($socid)
@@ -410,11 +420,27 @@ if (empty($action))
     {
         $sql .= " AND s.nom LIKE '%".$db->escape($search_company)."%'";
     }
+    if ($search_categ > 0)   $sql.= " AND cf.fk_categorie = ".$search_categ;
+    if ($search_categ == -2) $sql.= " AND cf.fk_categorie IS NULL";
+    
+    if ($month > 0)
+    {
+    	if ($year > 0)
+    		$sql.= " AND MONTH(p.datep) IN (".$month.") AND YEAR(p.datep)=".$year;
+    	else
+    		$sql.= " AND date_format(p.datep, '%m') = '$month'";
+    }
+    else if ($year > 0)
+    {
+    	$sql.= " AND p.datep BETWEEN '".$db->idate(dol_get_first_day($year,1,false))."' AND '".$db->idate(dol_get_last_day($year,12,false))."'";
+    }
+    
     $sql.= " GROUP BY p.rowid, p.datep, p.amount, p.num_paiement, s.rowid, s.nom, c.libelle, ba.rowid, ba.label";
     if (!$user->rights->societe->client->voir) $sql .= ", sc.fk_soc, sc.fk_user";
     $sql.= $db->order($sortfield,$sortorder);
     $sql.= $db->plimit($limit+1, $offset);
 
+    dol_syslog("fourn/facture/paiement.php::list sql=".$sql, LOG_DEBUG);
     $resql = $db->query($sql);
     if ($resql)
     {
@@ -426,6 +452,9 @@ if (empty($action))
         $paramlist.=(! empty($search_ref)?"&search_ref=".$search_ref:"");
         $paramlist.=(! empty($search_company)?"&search_company=".$search_company:"");
         $paramlist.=(! empty($search_amount)?"&search_amount=".$search_amount:"");
+        if (!empty($search_categ))			$param.='&amp;search_categ='.urlencode($search_categ);
+        if ($month) $param.='&amp;month='.urlencode($month);
+        if ($year)  $param.='&amp;year=' .urlencode($year);
 
         print_barre_liste($langs->trans('SupplierPayments'), $page, 'paiement.php',$paramlist,$sortfield,$sortorder,'',$num);
 
@@ -433,6 +462,22 @@ if (empty($action))
         if ($errmsg) dol_htmloutput_errors($errmsg);
 
         print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'">';
+        
+        // Filter on categories
+        $moreforfilter='';
+        if (! empty($conf->categorie->enabled))
+        {
+        	$moreforfilter.=$langs->trans('Categories'). ': ';
+        	$moreforfilter.=$htmlother->select_categories(1,$search_categ,'search_categ',1);
+        	$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
+        }
+        if ($moreforfilter)
+        {
+        	print '<div class="liste_titre">';
+        	print $moreforfilter;
+        	print '</div>';
+        }
+        
         print '<table class="noborder" width="100%">';
         print '<tr class="liste_titre">';
         print_liste_field_titre($langs->trans('RefPayment'),'paiement.php','p.rowid','',$paramlist,'',$sortfield,$sortorder);
@@ -447,9 +492,15 @@ if (empty($action))
         // Lines for filters fields
         print '<tr class="liste_titre">';
         print '<td align="left">';
-        print '<input class="fat" type="text" size="4" name="search_ref" value="'.$search_ref.'">';
+        print '<input class="flat" type="text" size="4" name="search_ref" value="'.$search_ref.'">';
         print '</td>';
-        print '<td>&nbsp;</td>';
+        print '<td class="flat" align="center">';
+       	print '<input class="flat" type="text" size="1" name="month" value="'.$month.'">';
+		//print '&nbsp;'.$langs->trans('Year').': ';
+		$syear = $year;
+		//if ($syear == '') $syear = date("Y");
+		$htmlother->select_year($syear?$syear:-1,'year',1, 20, 5);
+		print '</td>';
         print '<td align="left">';
         print '<input class="fat" type="text" size="6" name="search_company" value="'.$search_company.'">';
         print '</td>';
@@ -478,7 +529,7 @@ if (empty($action))
             print '<td class="nowrap" align="center">'.dol_print_date($db->jdate($objp->dp),'day')."</td>\n";
 
             print '<td>';
-            if ($objp->socid) print '<a href="'.DOL_URL_ROOT.'/societe/soc.php?socid='.$objp->socid.'">'.img_object($langs->trans('ShowCompany'),'company').' '.dol_trunc($objp->nom,32).'</a>';
+            if ($objp->socid) print '<a href="'.DOL_URL_ROOT.'/societe/soc.php?socid='.$objp->socid.'">'.img_object($langs->trans('ShowCompany'),'company').' '.dol_trunc($objp->nom,90).'</a>';
             else print '&nbsp;';
             print '</td>';
 

@@ -728,7 +728,7 @@ class ExtraFields
 						while ($i < $num)
 						{
 							$obj = $this->db->fetch_object($resql);
-							$labeltoshow=dol_trunc($obj->$InfoFieldList[1],50);
+							$labeltoshow=dol_trunc($obj->$InfoFieldList[1],90);
 							if ($value==$obj->rowid)
 							{
 								$out.='<option value="'.$obj->rowid.'" selected="selected">'.$labeltoshow.'</option>';

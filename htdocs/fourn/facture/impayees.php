@@ -30,6 +30,7 @@ require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.facture.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 
 if (! $user->rights->facture->lire) accessforbidden();
 
@@ -39,6 +40,7 @@ $langs->load("bills");
 
 $socid=GETPOST('socid','int');
 $option = GETPOST('option');
+
 
 // Security check
 if ($user->societe_id > 0)
@@ -60,6 +62,7 @@ $title=$langs->trans("BillsSuppliersUnpaid");
 
 $facturestatic=new FactureFournisseur($db);
 $companystatic=new Societe($db);
+$htmlother=new FormOther($db);
 
 
 /***************************************************************************
@@ -76,6 +79,10 @@ $search_ref_supplier = GETPOST('search_ref_supplier','alpha');
 $search_societe = GETPOST('search_societe','alpha');
 $search_montant_ht = GETPOST('search_montant_ht','int');
 $search_montant_ttc = GETPOST('search_montant_ttc','int');
+$search_categ= GETPOST('search_categ','int');
+
+$month    = GETPOST('month','int');
+$year     = GETPOST('year','int');
 
 
 $page = GETPOST("page",'int');
@@ -98,6 +105,7 @@ if ($user->rights->fournisseur->facture->lire)
 	if (! $user->rights->societe->client->voir && ! $socid) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 	$sql.= ",".MAIN_DB_PREFIX."facture_fourn as f";
 	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."paiementfourn_facturefourn as pf ON f.rowid=pf.fk_facturefourn ";
+	if (! empty($search_categ)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_fournisseur as cf ON f.fk_soc = cf.fk_societe";
 	$sql.= " WHERE f.entity = ".$conf->entity;
 	$sql.= " AND f.fk_soc = s.rowid";
 	$sql.= " AND f.paye = 0 AND f.fk_statut = 1";
@@ -143,6 +151,21 @@ if ($user->rights->fournisseur->facture->lire)
 	{
 		$sql .= " AND f.ref_supplier LIKE '%".GETPOST('sf_re')."%'";
 	}
+	
+	if ($search_categ > 0)   $sql.= " AND cf.fk_categorie = ".$search_categ;
+	if ($search_categ == -2) $sql.= " AND cf.fk_categorie IS NULL";
+	
+	if ($month > 0)
+	{
+		if ($year > 0)
+			$sql.= " AND MONTH(f.datef) IN (".$month.") AND YEAR(f.datef)=".$year;
+		else
+			$sql.= " AND date_format(f.datef, '%m') = '$month'";
+	}
+	else if ($year > 0)
+	{
+		$sql.= " AND f.datef BETWEEN '".$db->idate(dol_get_first_day($year,1,false))."' AND '".$db->idate(dol_get_last_day($year,12,false))."'";
+	}
 
 	$sql.= " GROUP BY s.rowid, s.nom, f.rowid, f.ref, f.ref_supplier, f.total_ht, f.total_ttc, f.datef, f.date_lim_reglement, f.paye, f.fk_statut, s.rowid, s.nom";
 	if (! $user->rights->societe->client->voir && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
@@ -151,6 +174,7 @@ if ($user->rights->fournisseur->facture->lire)
 	foreach ($listfield as $key => $value) $sql.=$listfield[$key]." ".$sortorder.",";
 	$sql.= " f.ref_supplier DESC";
 
+	dol_syslog("fourn/facture/impayees.php::list sql=".$sql, LOG_DEBUG);
 	$resql = $db->query($sql);
 	if ($resql)
 	{
@@ -170,6 +194,9 @@ if ($user->rights->fournisseur->facture->lire)
 		if ($search_societe)     	$param.='&amp;search_societe='.urlencode($search_societe);
 		if ($search_montant_ht)  	$param.='&amp;search_montant_ht='.urlencode($search_montant_ht);
 		if ($search_montant_ttc) 	$param.='&amp;search_montant_ttc='.urlencode($search_montant_ttc);
+		if (!empty($search_categ))			$param.='&amp;search_categ='.urlencode($search_categ);
+		if ($month) $param.='&amp;month='.urlencode($month);
+		if ($year)  $param.='&amp;year=' .urlencode($year);
 
 		$param.=($option?"&option=".$option:"");
 		if (! empty($late)) $param.='&late='.urlencode($late);
@@ -188,6 +215,21 @@ if ($user->rights->fournisseur->facture->lire)
 		print_barre_liste('','',$_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',0);	// We don't want pagination on this page
 		$i = 0;
 		print '<form method="get" action="'.$_SERVER["PHP_SELF"].'">';
+		
+		// Filter on categories
+		$moreforfilter='';
+		if (! empty($conf->categorie->enabled))
+		{
+			$moreforfilter.=$langs->trans('Categories'). ': ';
+			$moreforfilter.=$htmlother->select_categories(1,$search_categ,'search_categ',1);
+			$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
+		}
+		if ($moreforfilter)
+		{
+			print '<div class="liste_titre">';
+			print $moreforfilter;
+			print '</div>';
+		}
 
 		print '<table class="liste" width="100%">';
 		print '<tr class="liste_titre">';
@@ -208,7 +250,13 @@ if ($user->rights->fournisseur->facture->lire)
 		print '<input class="flat" size="8" type="text" name="search_ref" value="'.$search_ref.'"></td>';
 		print '<td class="liste_titre">';
 		print '<input class="flat" size="8" type="text" name="search_ref_supplier" value="'.$search_ref_supplier.'"></td>';
-		print '<td class="liste_titre">&nbsp;</td>';
+		print '<td class="liste_titre" align="center">';
+		print '<input class="flat" type="text" size="1" name="month" value="'.$month.'">';
+		//print '&nbsp;'.$langs->trans('Year').': ';
+		$syear = $year;
+		//if ($syear == '') $syear = date("Y");
+		$htmlother->select_year($syear?$syear:-1,'year',1, 20, 5);
+		print '</td>';
 		print '<td class="liste_titre">&nbsp;</td>';
 		print '<td class="liste_titre" align="left">';
 		print '<input class="flat" type="text" size="6" name="search_societe" value="'.$search_societe.'">';
@@ -243,7 +291,7 @@ if ($user->rights->fournisseur->facture->lire)
 				print $facturestatic->getNomUrl(1);
 				print "</td>\n";
 
-				print "<td nowrap>".dol_trunc($objp->ref_supplier,12)."</td>\n";
+				print "<td nowrap>".dol_trunc($objp->ref_supplier,70)."</td>\n";
 
 				print "<td nowrap align=\"center\">".dol_print_date($db->jdate($objp->df),'day')."</td>\n";
 				print "<td nowrap align=\"center\">".dol_print_date($db->jdate($objp->datelimite),'day');
