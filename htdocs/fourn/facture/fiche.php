@@ -486,8 +486,9 @@ elseif ($action == 'update_line')
         $localtax1tx= get_localtax($_POST['tauxtva'], 1, $mysoc,$object->thirdparty);
         $localtax2tx= get_localtax($_POST['tauxtva'], 2, $mysoc,$object->thirdparty);
         $remise_percent=GETPOST('remise_percent');
+		$projectlineid = GETPOST('projectlineid');
 
-        $result=$object->updateline(GETPOST('lineid'), $label, $pu, GETPOST('tauxtva'), $localtax1tx, $localtax2tx, GETPOST('qty'), GETPOST('idprod'), $price_base_type, 0, $type, $remise_percent);
+        $result=$object->updateline(GETPOST('lineid'), $label, $pu, GETPOST('tauxtva'), $localtax1tx, $localtax2tx, GETPOST('qty'), GETPOST('idprod'), $price_base_type, 0, $type, $remise_percent,false,$projectlineid);
         if ($result >= 0)
         {
             unset($_POST['label']);
@@ -1750,7 +1751,7 @@ else
             if ($i == 0)
             {
                 print '<tr class="liste_titre"><td>'.$langs->trans('Label').'</td>';
-				print '<td align="right">'.$langs->trans('Project').'</td>';
+				//print '<td align="right">'.$langs->trans('Project').'</td>';
                 print '<td align="right">'.$langs->trans('VAT').'</td>';
                 print '<td align="right">'.$langs->trans('PriceUHT').'</td>';
                 print '<td align="right">'.$langs->trans('PriceUTTC').'</td>';
@@ -1789,7 +1790,7 @@ else
                 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
                 print '<input type="hidden" name="action" value="update_line">';
                 print '<tr '.$bc[$var].'>';
-
+				
                 // Show product and description
                 print '<td>';
                 if ((! empty($conf->product->enabled) || ! empty($conf->service->enabled)) && $object->lines[$i]->fk_product)
@@ -1806,8 +1807,10 @@ else
                 {
                     $forceall=1;	// For suppliers, we always show all types
                     print $form->select_type_of_lines($object->lines[$i]->product_type,'type',1);
-                    if ($forceall || (! empty($conf->product->enabled) && ! empty($conf->service->enabled))
-                    || (empty($conf->product->enabled) && empty($conf->service->enabled))) print '<br>';
+                    /*if ($forceall || (! empty($conf->product->enabled) && ! empty($conf->service->enabled))
+                    || (empty($conf->product->enabled) && empty($conf->service->enabled))) print '<br>';*/
+					print $langs->trans('Project').": ";
+					select_projects(-1, $object->lines[$i]->projectlineid, 'projectlineid',100); print '<br>';
                 }
 
                 if (is_object($hookmanager))
@@ -1823,9 +1826,9 @@ else
                 print '</td>';
 				
 				//Project
-				print '<td align="right">';
+				/*print '<td align="right">';
 				select_projects(-1, $object->projectlineid, 'projectlineid',100);
-				print '</td>';
+				print '</td>';*/
 				
                 // VAT
                 print '<td align="right">';
@@ -1867,6 +1870,11 @@ else
                     $text.= ' - '.$product_static->libelle;
                     $description=($conf->global->PRODUIT_DESC_IN_FORM?'':dol_htmlentitiesbr($object->lines[$i]->description));
                     print $form->textwithtooltip($text,$description,3,'','',$i);
+					
+					if($object->lines[$i]->projectlineid > 0){
+						print " - projet : ";
+						$form->form_project($_SERVER['PHP_SELF'].'?id='.$object->id,$object->socid,$object->lines[$i]->projectlineid,'none');
+					}
 
                     // Show range
                     print_date_range($date_start,$date_end);
@@ -1881,7 +1889,12 @@ else
                     if ($type==1) $text = img_object($langs->trans('Service'),'service');
                     else $text = img_object($langs->trans('Product'),'product');
                     print $text.' '.nl2br($object->lines[$i]->description);
-
+					
+					if($object->lines[$i]->projectlineid > 0){
+						print " - projet : ";
+						$form->form_project($_SERVER['PHP_SELF'].'?id='.$object->id,$object->socid,$object->lines[$i]->projectlineid,'none');
+					}
+					
                     // Show range
                     print_date_range($date_start,$date_end);
                 }
@@ -1894,9 +1907,9 @@ else
                 print '</td>';
 				
 				//Project
-				print '<td align="right">';
+				/*print '<td align="right">';
 				print $form->form_project($_SERVER['PHP_SELF'].'?id='.$object->id,$object->socid,$object->lines[$i]->projectlineid,'none');
-				print '</td>';
+				print '</td>';*/
 				
                 // VAT
                 print '<td align="right">'.vatrate($object->lines[$i]->tva_tx, true, $object->lines[$i]->info_bits).'</td>';
@@ -1939,7 +1952,7 @@ else
             print '<td>';
             print '<a name="add"></a>'; // ancre
             print $langs->trans('AddNewLine').' - '.$langs->trans("FreeZone").'</td>';
-            print '<td align="right">'.$langs->trans('Project').'</td>';
+            //print '<td align="right">'.$langs->trans('Project').'</td>';
             print '<td align="right">'.$langs->trans('VAT').'</td>';
             print '<td align="right">'.$langs->trans('PriceUHT').'</td>';
             print '<td align="right">'.$langs->trans('PriceUTTC').'</td>';
@@ -1963,8 +1976,10 @@ else
 
             $forceall=1;	// For suppliers, we always show all types
             print $form->select_type_of_lines(isset($_POST["type"])?$_POST["type"]:-1,'type',1,0,$forceall);
-            if ($forceall || (! empty($conf->product->enabled) && ! empty($conf->service->enabled))
-            || (empty($conf->product->enabled) && empty($conf->service->enabled))) print '<br>';
+            /*if ($forceall || (! empty($conf->product->enabled) && ! empty($conf->service->enabled))
+            || (empty($conf->product->enabled) && empty($conf->service->enabled)))*/ print '<br>';
+			print $langs->trans('Project').": ";
+			select_projects(-1, '', 'projectlineid',100); print '<br>';
 
             if (is_object($hookmanager))
             {
@@ -1980,9 +1995,9 @@ else
             print '</td>';
 			
 			//Projet
-			print '<td align="right">';
+			/*print '<td align="right">';
 			select_projects(-1, '', 'projectlineid',100);
-			print '</td>';
+			print '</td>';*/
 			
             print '<td align="right">';
             print $form->load_tva('tauxtva',(GETPOST('tauxtva')?GETPOST('tauxtva'):-1),$societe,$mysoc);
@@ -2018,7 +2033,7 @@ else
                 }
                 print '</td>';
                 
-                print '<td align="right">'.$langs->trans('Project').'</td>';
+                //print '<td align="right">'.$langs->trans('Project').'</td>';
 				print '<td align="right">'.$langs->trans('VAT').'</td>';
 				print '<td align="right">'.$langs->trans('PriceUHT').'</td>';
             	print '<td align="right">'.$langs->trans('PriceUTTC').'</td>';
@@ -2052,7 +2067,8 @@ else
                 		'error' => $langs->trans("NoPriceDefinedForThisSupplier")
                 );
                 $form->select_produits_fournisseurs($object->socid, '', 'idprodfournprice', '', '', $ajaxoptions);
-
+				print $langs->trans('Project').": ";
+				select_projects(-1, '', 'projectlineid',100); print '<br>';
                 if (empty($conf->global->PRODUIT_USE_SEARCH_TO_SELECT)) print '<br>';
 
                 if (is_object($hookmanager))
@@ -2069,9 +2085,9 @@ else
                 print '</td>';
 				
 				//Projet
-				print '<td align="right">';
+				/*print '<td align="right">';
 				select_projects(-1, '', 'projectlineid',100);
-				print '</td>';
+				print '</td>';*/
 				print '<td align="right">';
 	            print $form->load_tva('tva_tx',(GETPOST('tva_tx')?GETPOST('tva_tx'):-1),$societe,$mysoc);
 	            print '</td>';
