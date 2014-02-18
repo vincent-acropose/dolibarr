@@ -1802,13 +1802,15 @@ else
                     $text.= ' - '.$product_static->libelle;
                     print $text;
                     print '<br>';
+					print $langs->trans('Project').": ";
+					select_projects(-1, $object->lines[$i]->projectlineid, 'projectlineid',100); print '<br>';
                 }
                 else
                 {
                     $forceall=1;	// For suppliers, we always show all types
                     print $form->select_type_of_lines($object->lines[$i]->product_type,'type',1);
                     /*if ($forceall || (! empty($conf->product->enabled) && ! empty($conf->service->enabled))
-                    || (empty($conf->product->enabled) && empty($conf->service->enabled))) print '<br>';*/
+                    || (empty($conf->product->enabled) && empty($conf->service->enabled)))*/ print '<br>';
 					print $langs->trans('Project').": ";
 					select_projects(-1, $object->lines[$i]->projectlineid, 'projectlineid',100); print '<br>';
                 }
