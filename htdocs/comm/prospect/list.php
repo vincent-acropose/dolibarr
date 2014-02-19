@@ -447,6 +447,16 @@ if ($resql)
 		$i++;
 	}
 
+	/*
+	 * ATM AA 30/04/12
+	 * Ajout de la recherche dans les autres bases 
+	 */	
+	
+	if($search_sale!='' || $search_nom!='' || $search_town!='' || $search_code!='' || $search_compta!='') {
+		dol_include_once('/clientshare/lib/fonction.php');
+		_recherche_autre_client($db,$user,$conf,$search_sale, $search_nom, $search_town, $search_code, $search_compta, true);		
+	}
+
 	if ($num > $conf->liste_limit || $page > 0) print_barre_liste('', $page, $_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',$num,$nbtotalofrecords);
 
 	print "</table>";
