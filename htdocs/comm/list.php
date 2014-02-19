@@ -277,6 +277,18 @@ if ($result)
 		$i++;
 	}
 	//print_barre_liste($langs->trans("ListOfCustomers"), $page, $_SERVER["PHP_SELF"],'',$sortfield,$sortorder,'',$num);
+	
+	 
+	 /*
+	 * ATM AA 08/02/12
+	 * Ajout de la recherche dans les autres bases 
+	 */	
+	
+	if($search_sale!='' || $search_nom!='' || $search_town!='' || $search_code!='' || $search_compta!='') {
+		dol_include_once('/clientshare/lib/fonction.php');
+		_recherche_autre_client($db,$user,$conf,$search_sale, $search_nom, $search_ville, $search_code, $search_compta);		
+	}
+	
 	print "</table>\n";
 	print "</form>\n";
 	$db->free($result);
