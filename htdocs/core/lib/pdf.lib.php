@@ -289,6 +289,8 @@ function pdf_build_address($outputlangs,$sourcecompany,$targetcompany='',$target
 			// Web
 			//if ($sourcecompany->url) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Web").": ".$outputlangs->convToOutputCharset($sourcecompany->url);
 		}
+		
+		if ($sourcecompany->idprof1) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("SIRET").": ".$outputlangs->convToOutputCharset($sourcecompany->idprof2);
 	}
 
 	if ($mode == 'target')

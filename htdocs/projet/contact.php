@@ -266,12 +266,16 @@ if ($id > 0 || ! empty($ref))
 				print '</td>';
 
 				print '<td colspan="1">';
-				$selectedCompany = isset($_GET["newcompany"])?$_GET["newcompany"]:$project->societe->id;
-				$selectedCompany = $formcompany->selectCompaniesForNewContact($project, 'id', $selectedCompany, 'newcompany', (empty($project->societe->id)?array():array($project->societe->id)));
+				$events=array();
+				$events[]=array('method' => 'getContacts', 'url' => dol_buildpath('/core/ajax/contacts.php',1), 'htmlname' => 'contactid', 'params' => array('add-customer-contact' => 'disabled'));
+				print $form->select_company($project->societe->id,'newcompany','',1,0,0,$events);
+				//$selectedCompany = isset($_GET["newcompany"])?$_GET["newcompany"]:$project->societe->id;
+				//print $form->select_company('','newcompany','',1,1);
+				//	($project, 'id', $selectedCompany, 'newcompany', (empty($project->societe->id)?array():array($project->societe->id)));
 				print '</td>';
 
 				print '<td colspan="1">';
-				$nbofcontacts=$form->select_contacts($selectedCompany, '', 'contactid');
+				$nbofcontacts=$form->select_contacts($project->societe->id, '', 'contactid');
 				//if ($nbofcontacts == 0) print $langs->trans("NoContactDefined");
 				print '</td>';
 				print '<td>';
