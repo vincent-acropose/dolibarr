@@ -209,6 +209,8 @@ $sql.= " ,s.address";
 $sql.= " ,s.phone";
 $sql.= " ,typent.libelle as typent";
 $sql.= " ,pays.libelle as payslib";
+$sql.= " ,extra.ts_maison";
+$sql.= " ,s.siret";
 $sql.= " ,(SELECT MAX(propal.date_cloture) FROM ".MAIN_DB_PREFIX."propal as propal WHERE propal.fk_statut=2 AND propal.fk_soc=s.rowid) as lastpropalsigndt";
 // We'll need these fields in order to filter by sale (including the case where the user can only see his prospects)
 if ($search_sale) $sql .= ", sc.fk_soc, sc.fk_user";
@@ -218,15 +220,14 @@ $sql.= " FROM (".MAIN_DB_PREFIX."societe as s,";
 $sql.= " ".MAIN_DB_PREFIX."c_stcomm as st)";
 $sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."c_typent as typent ON typent.id=s.fk_typent";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_pays as pays ON pays.rowid=s.fk_pays";
-if (! empty ( $ts_logistique ) || ! empty ( $ts_prospection )) {
-	$sql.= ", ".MAIN_DB_PREFIX."societe_extrafields as extra";
-}
+$sql.= ", ".MAIN_DB_PREFIX."societe_extrafields as extra";
 // We'll need this table joined to the select in order to filter by sale
 if ($search_sale || (!$user->rights->societe->client->voir && !$socid)) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 // We'll need this table joined to the select in order to filter by categ
 if ($search_categ) $sql.= ", ".MAIN_DB_PREFIX."categorie_societe as cs";
 $sql.= " WHERE s.fk_stcomm = st.id";
 $sql.= " AND s.entity IN (".getEntity('societe', 1).")";
+$sql.= " AND extra.fk_object=s.rowid";
 if (! $user->rights->societe->client->voir && ! $socid)	$sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
 if ($socid)	$sql.= " AND s.rowid = ".$socid;
 if ($search_sale) $sql.= " AND s.rowid = sc.fk_soc";        // Join for the needed table to filter by sale
@@ -280,9 +281,6 @@ if ($search_type > 0 && in_array($search_type,array('1,3','2,3'))) $sql .= " AND
 if ($search_type > 0 && in_array($search_type,array('4')))         $sql .= " AND s.fournisseur = 1";
 if ($search_type == '0') $sql .= " AND s.client = 0 AND s.fournisseur = 0";
 if ($search_parent) $sql .= " AND s.parent =".$search_parent;
-if (! empty ( $ts_logistique ) || ! empty ( $ts_prospection )) {
-	$sql.= " AND extra.fk_object=s.rowid";
-}
 if (! empty ( $ts_logistique )) {
 	$sql .= " AND extra.ts_logistique = ".$db->escape($ts_logistique);
 }
@@ -417,6 +415,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans("ThirdPartyType"),$_SERVER["PHP_SELF"],"s.fk_typent","",$params,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Dernière prop. signée"),$_SERVER["PHP_SELF"],"","",$params,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateCreation"),$_SERVER["PHP_SELF"],"s.datec","",$params,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("SIRET"),$_SERVER["PHP_SELF"],"s.siret","",$params,'',$sortfield,$sortorder);
 	//print_liste_field_titre($form->textwithpicto($langs->trans("ProfId1Short"),$textprofid[1],1,0),$_SERVER["PHP_SELF"],"s.siren","",$params,'class="nowrap"',$sortfield,$sortorder);
 	//print_liste_field_titre($form->textwithpicto($langs->trans("ProfId2Short"),$textprofid[2],1,0),$_SERVER["PHP_SELF"],"s.siret","",$params,'class="nowrap"',$sortfield,$sortorder);
 	//print_liste_field_titre($form->textwithpicto($langs->trans("ProfId3Short"),$textprofid[3],1,0),$_SERVER["PHP_SELF"],"s.ape","",$params,'class="nowrap"',$sortfield,$sortorder);
@@ -465,6 +464,10 @@ if ($resql)
 	print '</td>';
 	
 	//created date
+	print '<td class="liste_titre">';
+	print '</td>';
+	
+	//SIRET
 	print '<td class="liste_titre">';
 	print '</td>';
 	/*
@@ -524,6 +527,7 @@ if ($resql)
         $companystatic->code_client=$obj->code_client;
         $companystatic->code_fournisseur=$obj->code_fournisseur;
         $companystatic->status=$obj->status;
+        $companystatic->array_options['options_ts_maison']=$obj->ts_maison;
 		print $companystatic->getNomUrl(1,'',35);
 		print "</td>\n";
 		print "<td>".$obj->zip."</td>\n";
@@ -536,6 +540,8 @@ if ($resql)
 		print "<td>".dol_print_date($obj->lastpropalsigndt,'daytextshort')."</td>\n";
 		
 		print "<td>".dol_print_date($obj->datec,'daytextshort')."</td>\n";
+		
+		print "<td>".$obj->siret."</td>\n";
 		
 		//print "<td>".$obj->idprof1."</td>\n";
 		//print "<td>".$obj->idprof2."</td>\n";

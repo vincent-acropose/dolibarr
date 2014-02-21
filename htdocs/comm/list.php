@@ -126,6 +126,8 @@ $sql.= " ,s.address";
 $sql.= " ,s.phone";
 $sql.= " ,typent.libelle as typent";
 $sql.= " ,pays.libelle as payslib";
+$sql.= " ,extra.ts_maison";
+$sql.= " ,s.siret";
 $sql.= " ,(SELECT MAX(propal.date_cloture) FROM ".MAIN_DB_PREFIX."propal as propal WHERE propal.fk_statut=2 AND propal.fk_soc=s.rowid) as lastpropalsigndt";
 $sql.= " FROM (".MAIN_DB_PREFIX."societe as s";
 $sql.= ", ".MAIN_DB_PREFIX."c_stcomm as st)";
@@ -133,12 +135,11 @@ if (! empty($search_categ) || ! empty($catid)) $sql.= ' LEFT JOIN '.MAIN_DB_PREF
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_typent as typent ON typent.id=s.fk_typent";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_pays as pays ON pays.rowid=s.fk_pays";
 if ((!$user->rights->societe->client->voir && !$socid) || $search_sale) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc"; // We need this table joined to the select in order to filter by sale
-if (! empty ( $ts_logistique ) || ! empty ( $ts_prospection )) {
-	$sql.= ", ".MAIN_DB_PREFIX."societe_extrafields as extra";
-}
+$sql.= ", ".MAIN_DB_PREFIX."societe_extrafields as extra";
 $sql.= " WHERE s.fk_stcomm = st.id";
 $sql.= " AND s.client IN (1, 3)";
 $sql.= ' AND s.entity IN ('.getEntity('societe', 1).')';
+$sql.= " AND extra.fk_object=s.rowid";
 if ((!$user->rights->societe->client->voir && !$socid) || $search_sale) $sql.= " AND s.rowid = sc.fk_soc";
 if ($socid) $sql.= " AND s.rowid = ".$socid;
 if ($search_sale) $sql.= " AND s.rowid = sc.fk_soc";		// Join for the needed table to filter by sale
@@ -164,9 +165,6 @@ if ($search_type == '0') $sql .= " AND s.client = 0 AND s.fournisseur = 0";
 if ($search_sale)
 {
 	$sql .= " AND sc.fk_user = ".$search_sale;
-}
-if (! empty ( $ts_logistique ) || ! empty ( $ts_prospection )) {
-	$sql.= " AND extra.fk_object=s.rowid";
 }
 if (! empty ( $ts_logistique )) {
 	$sql .= " AND extra.ts_logistique = ".$db->escape($ts_logistique);
@@ -253,6 +251,7 @@ if ($result)
 	print '<td></td>';
     print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"s.status","",$param,'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Dernière prop. signée"),$_SERVER["PHP_SELF"],"","",$params,'',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("SIRET"),$_SERVER["PHP_SELF"],"s.siret","",$params,'',$sortfield,$sortorder);
     print '<td class="liste_titre" width="1%">&nbsp;</td>';
     $parameters=array();
     $formconfirm=$hookmanager->executeHooks('printFieldListTitle',$parameters);    // Note that $action and $object may have been modified by hook
@@ -324,6 +323,11 @@ if ($result)
     print '<td class="liste_titre" align="center">';
     print '&nbsp;';
     print '</td>';
+    
+    //Siret
+    print '<td class="liste_titre" align="center">';
+    print '&nbsp;';
+    print '</td>';
 
     print '<td class="liste_titre" align="right"><input class="liste_titre" type="image" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
     print '&nbsp; ';
@@ -351,6 +355,7 @@ if ($result)
         $thirdpartystatic->code_client=$obj->code_client;
         $thirdpartystatic->canvas=$obj->canvas;
         $thirdpartystatic->status=$obj->status;
+        $thirdpartystatic->array_options['options_ts_maison']=$obj->ts_maison;
         print $thirdpartystatic->getNomUrl(1);
 		print '</td>';
 		print '<td>'.$obj->zip.'</td>';
@@ -389,6 +394,8 @@ if ($result)
         print '</td>';
         
         print "<td>".dol_print_date($obj->lastpropalsigndt,'daytextshort')."</td>\n";
+        
+        print "<td>".$obj->siret."</td>\n";
         
         print '<td></td>';
         

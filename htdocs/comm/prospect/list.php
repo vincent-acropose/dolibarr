@@ -192,6 +192,8 @@ $sql.= " ,s.address";
 $sql.= " ,s.phone";
 $sql.= " ,typent.libelle as typent";
 $sql.= " ,pays.libelle as payslib";
+$sql.= " ,extra.ts_maison";
+$sql.= " ,s.siret";
 $sql.= " ,(SELECT MAX(propal.date_cloture) FROM ".MAIN_DB_PREFIX."propal as propal WHERE propal.fk_statut=2 AND propal.fk_soc=s.rowid) as lastpropalsigndt";
 if ((!$user->rights->societe->client->voir && !$socid) || $search_sale) $sql .= ", sc.fk_soc, sc.fk_user"; // We need these fields in order to filter by sale (including the case where the user can only see his prospects)
 $sql .= " FROM (".MAIN_DB_PREFIX."c_stcomm as st";
@@ -199,14 +201,14 @@ $sql.= ", ".MAIN_DB_PREFIX."societe as s)";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_departements as d on (d.rowid = s.fk_departement)";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_typent as typent ON typent.id=s.fk_typent";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_pays as pays ON pays.rowid=s.fk_pays";
-if (! empty ( $ts_logistique ) || ! empty ( $ts_prospection )) {
-	$sql.= ", ".MAIN_DB_PREFIX."societe_extrafields as extra";
-}
+$sql.= ", ".MAIN_DB_PREFIX."societe_extrafields as extra";
+
 if (! empty($search_categ) || ! empty($catid)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_societe as cs ON s.rowid = cs.fk_societe"; // We need this table joined to the select in order to filter by categ
 if ((!$user->rights->societe->client->voir && !$socid) || $search_sale) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc"; // We need this table joined to the select in order to filter by sale
 $sql.= " WHERE s.fk_stcomm = st.id";
 $sql.= " AND s.client IN (2, 3)";
 $sql.= ' AND s.entity IN ('.getEntity('societe', 1).')';
+$sql.= " AND extra.fk_object=s.rowid";
 if ((!$user->rights->societe->client->voir && !$socid) || $search_sale) $sql.= " AND s.rowid = sc.fk_soc";
 if ($socid) $sql.= " AND s.rowid = " .$socid;
 if (isset($stcomm) && $stcomm != '') $sql.= " AND s.fk_stcomm=".$stcomm;
@@ -224,9 +226,6 @@ if ($search_phone)   $sql .= " AND s.phone LIKE '%".$db->escape(str_replace(' ',
 if ($search_address)   $sql .= " AND s.address LIKE '%".$db->escape($search_address)."%'";
 if ($search_parent) $sql .= " AND s.parent =".$search_parent;
 
-if (! empty ( $ts_logistique ) || ! empty ( $ts_prospection )) {
-	$sql.= " AND extra.fk_object=s.rowid";
-}
 if (! empty ( $ts_logistique )) {
 	$sql .= " AND extra.ts_logistique = ".$db->escape($ts_logistique);
 }
@@ -362,6 +361,7 @@ if ($resql)
 	print '<td class="liste_titre">&nbsp;</td>';
     print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"s.status","",$param,'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Dernière prop. signée"),$_SERVER["PHP_SELF"],"","",$params,'',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("SIRET"),$_SERVER["PHP_SELF"],"s.siret","",$params,'',$sortfield,$sortorder);
     print '<td class="liste_titre">&nbsp;</td>';
     
     $parameters=array();
@@ -451,6 +451,11 @@ if ($resql)
     print '<td class="liste_titre" align="center">';
     print '&nbsp;';
     print '</td>';
+    
+    //SIRET
+    print '<td class="liste_titre" align="center">';
+    print '&nbsp;';
+    print '</td>';
 
     // Print the search button
     print '<td class="liste_titre" align="right">';
@@ -482,6 +487,7 @@ if ($resql)
         $prospectstatic->code_client=$obj->code_client;
         $prospectstatic->client=$obj->client;
         $prospectstatic->fk_prospectlevel=$obj->fk_prospectlevel;
+        $prospectstatic->array_options['options_ts_maison']=$obj->ts_maison;
 		print $prospectstatic->getNomUrl(1,'prospect');
         print '</td>';
         print "<td>".$obj->zip."&nbsp;</td>";
@@ -526,6 +532,8 @@ if ($resql)
         print '</td>';
         
         print "<td>".dol_print_date($obj->lastpropalsigndt,'daytextshort')."</td>\n";
+        
+        print "<td>".$obj->siret."</td>\n";
         
         print '<td></td>';
         

@@ -74,7 +74,7 @@ if ($page == -1) {
 }
 $offset = $conf->liste_limit * $page;
 if (! $sortorder) $sortorder='DESC';
-if (! $sortfield) $sortfield='f.datef';
+if (! $sortfield) $sortfield='f.facnumber';
 $limit = $conf->liste_limit;
 
 $pageprev = $page - 1;

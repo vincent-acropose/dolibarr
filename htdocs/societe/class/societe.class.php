@@ -1445,7 +1445,16 @@ class Societe extends CommonObject
 			if (($this->fournisseur) && (! empty ( $this->code_fournisseur ))) {
 				$code .= $this->code_fournisseur . ' - ';
 			}
-			$name =$code.' '.$name;
+			
+			$mothercompany='';
+			if (is_array($this->array_options) && array_key_exists('options_ts_maison',$this->array_options)) {
+				if (!empty($this->array_options['options_ts_maison'])) {
+					$mothercompany = '<font color="red">M</font> ';
+				}
+			}
+			
+				
+			$name =$mothercompany.$code.' '.$name;
 		} 
 
         $result='';
