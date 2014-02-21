@@ -676,10 +676,12 @@ class Form
         // On recherche les societes
         $sql = "SELECT s.rowid, s.nom, s.client, s.fournisseur, s.code_client, s.code_fournisseur";
         $sql .= " ,s.address, s.zip, s.town";
+        $sql .= " ,extra.ts_maison";
          if ($conf->global->MAIN_SOC_SHOW_ADDRESS_LIST) $sql .= " , dictp.libelle as pays";
         $sql.= " FROM (".MAIN_DB_PREFIX ."societe as s";
         if (!$user->rights->societe->client->voir && !$user->societe_id) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
         $sql.= ")";
+        $sql .= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."societe_extrafields as extra ON extra.fk_object=s.rowid";
         if ($conf->global->MAIN_SOC_SHOW_ADDRESS_LIST) $sql .= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."c_pays as dictp ON dictp.rowid=s.fk_pays";
         $sql.= " WHERE s.entity IN (".getEntity('societe', 1).")";
         if (! empty($user->societe_id)) $sql.= " AND s.rowid = ".$user->societe_id;
@@ -723,9 +725,14 @@ class Form
                 {
                     $obj = $this->db->fetch_object($resql);
                     $label='';
+                    
+                    if (!empty($obj->ts_maison)) {
+                    	$label = '<font color="red">M</font> ';
+                    }
+                    
                     if ($conf->global->SOCIETE_ADD_REF_IN_LIST) {
                     	if (($obj->client) && (!empty($obj->code_client))) {
-                    		$label = $obj->code_client. ' - ';
+                    		$label .= $obj->code_client. ' - ';
                     	}
                     	if (($obj->fournisseur) && (!empty($obj->code_fournisseur))) {
                     		$label .= $obj->code_fournisseur. ' - ';
@@ -734,8 +741,11 @@ class Form
                     }
                     else 
                     {
-                    $label=$obj->nom;
+                    	$label=$obj->nom;
                     }
+                    
+                    
+                    
                     if ($showtype)
                     {
                         if ($obj->client || $obj->fournisseur) $label.=' (';
