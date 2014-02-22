@@ -72,7 +72,7 @@ if (! $sortfield)
 	if ($status == 'todo') $sortfield="a.datep";
 	if ($status == 'done') $sortfield="a.datep2";
 }
-
+$sortfield.=',a.datep2';
 // Security check
 $socid = GETPOST("socid",'int');
 if ($user->societe_id) $socid=$user->societe_id;
@@ -255,16 +255,16 @@ if ($resql)
 	
 	
 	print '<tr class="liste_titre">';
-	print_liste_field_titre($langs->trans("Action"),$_SERVER["PHP_SELF"],"a.label",$param,"","",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Action"),$_SERVER["PHP_SELF"],"a.label,a.datep2",$param,"","",$sortfield,$sortorder);
 	//print_liste_field_titre($langs->trans("Title"),$_SERVER["PHP_SELF"],"a.label",$param,"","",$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("DateStart"),$_SERVER["PHP_SELF"],"a.datep",$param,'','align="center"',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("DateEnd"),$_SERVER["PHP_SELF"],"a.datep2",$param,'','align="center"',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom",$param,"","",$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Contact"),$_SERVER["PHP_SELF"],"a.fk_contact",$param,"","",$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("ActionUserAsk"),$_SERVER["PHP_SELF"],"ua.login",$param,"","",$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("AffectedTo"),$_SERVER["PHP_SELF"],"ut.login",$param,"","",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("DateStart"),$_SERVER["PHP_SELF"],"a.datep,a.datep2",$param,'','align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("DateEnd"),$_SERVER["PHP_SELF"],"a.datep2,a.datep2",$param,'','align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom,a.datep2",$param,"","",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Contact"),$_SERVER["PHP_SELF"],"a.fk_contact,a.datep2",$param,"","",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("ActionUserAsk"),$_SERVER["PHP_SELF"],"ua.login,a.datep2",$param,"","",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("AffectedTo"),$_SERVER["PHP_SELF"],"ut.login,a.datep2",$param,"","",$sortfield,$sortorder);
 	//print_liste_field_titre($langs->trans("DoneBy"),$_SERVER["PHP_SELF"],"ud.login",$param,"","",$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"a.percent",$param,"",'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"a.percent,a.datep2",$param,"",'align="right"',$sortfield,$sortorder);
 	print "</tr>\n";
 	
 

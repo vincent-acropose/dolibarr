@@ -257,11 +257,11 @@ function select_projects($socid=-1, $selected='', $htmlname='projectid', $maxlen
 							$disabled=1;
 							$labeltoshow.=' - '.$langs->trans("Draft");
 						}
-						if ($socid > 0 && (! empty($obj->fk_soc) && $obj->fk_soc != $socid))
+						/*if ($socid > 0 && (! empty($obj->fk_soc) && $obj->fk_soc != $socid))
 						{
 							$disabled=1;
 							$labeltoshow.=' - '.$langs->trans("LinkedToAnotherCompany");
-						}
+						}*/
 
 						if ($hideunselectables && $disabled)
 						{
