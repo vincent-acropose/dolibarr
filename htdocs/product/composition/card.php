@@ -60,6 +60,12 @@ if ($id > 0 || ! empty($ref))
 	$id=$object->id;
 }
 
+// Initialize technical object to manage hooks of products. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('composedproductcard'));
+
+$parameters=array('id'=>$id, 'ref'=>$ref);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$product,$action);    // Note that $action and $object may have been modified by some hooks
+$error=$hookmanager->error; $errors=$hookmanager->errors;
 
 /*
  * Actions
@@ -442,8 +448,11 @@ if ($id > 0 || ! empty($ref))
 				print '<td colspan="'.$colspan.'">'.$langs->trans("None").'</td>';
 				print '</tr>';
 			}
+            $parameters=array('prods_arbo'=>$prods_arbo);
+            $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$product,$action);    // Note that $action and $object may have been modified by some hooks
+            $error=$hookmanager->error; $errors=$hookmanager->errors;
 
-			print '</table>';
+		    print '</table>';
 
 			/*if($user->rights->produit->creer || $user->rights->service->creer) {
 				print '<input type="submit" class="button" value="'.$langs->trans('Save').'">';

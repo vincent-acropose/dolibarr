@@ -688,4 +688,3 @@ class ProductFournisseur extends Product
 	}
 
 }
-
