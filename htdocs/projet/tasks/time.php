@@ -322,9 +322,13 @@ if ($id > 0 || ! empty($ref))
 
 			// Contributor
 			print '<td class="nowrap">';
-			$contactoftask=$object->getListContactId('internal');
+			/*$contactoftask=$object->getListContactId('internal');
 			print img_object('','user');
-			print $form->select_dolusers($_POST["userid"]?$_POST["userid"]:$user->id,'userid',0,'',0,'',$contactoftask);
+			print $form->select_dolusers($_POST["userid"]?$_POST["userid"]:$user->id,'userid',0,'',0,'',$contactoftask);*/
+			
+                        print 'Utilisateur courant<input type="hidden" name="userid" value="'.$user->id.'" />';
+
+
 			print '</td>';
 
 			// Note
