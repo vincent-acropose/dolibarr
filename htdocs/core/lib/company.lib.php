@@ -838,17 +838,20 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $out.="\n";
         $out.='<table width="100%" class="noborder">';
         $out.='<tr class="liste_titre">';
-        $out.='<td colspan="2">';
+        $out.='<td>';
         if (get_class($object) == 'Societe') $out.='<a href="'.DOL_URL_ROOT.'/comm/action/listactions.php?socid='.$object->id.'&amp;status=todo">';
         $out.=$langs->trans("ActionsToDoShort");
         if (get_class($object) == 'Societe') $out.='</a>';
         $out.='</td>';
+        $out.='<td>'.$langs->trans('Type').'</td>';
         $out.='<td>&nbsp;</td>';
-        $out.='<td>&nbsp;</td>';
-        $out.='<td>&nbsp;</td>';
-        $out.='<td>&nbsp;</td>';
-        $out.='<td>&nbsp;</td>';
-        $out.='<td colspan="5" align="right">';
+        $out.='<td>'.$langs->trans('Action').'</td>';
+        $out.='<td>'.$langs->trans('Description').'</td>';
+        $out.='<td>'.$langs->trans('Customer').'</td>';
+        $out.='<td>'.$langs->trans('Contact').'</td>';
+        $out.='<td>'.$langs->trans('ActionUserAsk').'</td>';
+        $out.='<td>'.$langs->trans('AffectedTo').'</td>';
+        $out.='<td align="right">';
 		$permok=$user->rights->agenda->myactions->create;
         if (($object->id || $objcon->id) && $permok)
 		{
@@ -929,7 +932,7 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
 
                     // Title of event
                     //$out.='<td colspan="2">'.dol_trunc($obj->label,40).'</td>';
-                    $out.='<td colspan="2">'.$actionstatic->getNomUrl(1,40).'</td>';
+                    $out.='<td>'.$actionstatic->getNomUrl(1,40).'</td>';
                     
                     //Desc
                     $out.='<td>'.dol_trunc($obj->note, 40).'</td>';
@@ -972,7 +975,7 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
                     $out.='</td>';
 
                     // Statut
-                    $out.='<td class="nowrap" width="20">'.$actionstatic->LibStatut($obj->percent,3).'</td>';
+                    $out.='<td class="nowrap" width="20" align="center">'.$actionstatic->LibStatut($obj->percent,3).'</td>';
 
                     $out.="</tr>\n";
                     $i++;
@@ -1155,17 +1158,21 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $out.="\n";
         $out.='<table class="noborder" width="100%">';
         $out.='<tr class="liste_titre">';
-        $out.='<td colspan="2">';
+        $out.='<td>';
         if (get_class($object) == 'Societe') $out.='<a href="'.DOL_URL_ROOT.'/comm/action/listactions.php?socid='.$object->id.'&amp;status=done">';
         $out.=$langs->trans("ActionsDoneShort");
         if (get_class($object) == 'Societe') $out.='</a>';
         $out.='</td>';
+        $out.='<td>'.$langs->trans('Type').'</td>';
         $out.='<td>&nbsp;</td>';
+        $out.='<td>'.$langs->trans('Action').'</td>';
+        $out.='<td>'.$langs->trans('Description').'</td>';
         $out.='<td>&nbsp;</td>';
-        $out.='<td>&nbsp;</td>';
-        $out.='<td>&nbsp;</td>';
-        $out.='<td>&nbsp;</td>';
-        $out.='<td colspan="5" align="right">';
+        $out.='<td>'.$langs->trans('Customer').'</td>';
+        $out.='<td>'.$langs->trans('Contact').'</td>';
+        $out.='<td>'.$langs->trans('ActionUserAsk').'</td>';
+        $out.='<td>'.$langs->trans('AffectedTo').'</td>';
+        $out.='<td align="right">';
 		$permok=$user->rights->agenda->myactions->create;
         if ((! empty($object->id) || ! empty($objcon->id)) && $permok)
 		{
@@ -1290,7 +1297,7 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
             $out.='</td>';
 
             // Statut
-            $out.='<td class="nowrap" width="20">'.$actionstatic->LibStatut($histo[$key]['percent'],3).'</td>';
+            $out.='<td class="nowrap" width="20" align="center">'.$actionstatic->LibStatut($histo[$key]['percent'],3).'</td>';
 
             $out.="</tr>\n";
             $i++;

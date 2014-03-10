@@ -255,12 +255,14 @@ if ($resql)
 	
 	
 	print '<tr class="liste_titre">';
-	print_liste_field_titre($langs->trans("Action"),$_SERVER["PHP_SELF"],"a.label,a.datep2",$param,"","",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Type"),$_SERVER["PHP_SELF"],"c.libelle",$param,"","",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Action"),$_SERVER["PHP_SELF"],"c.code",$param,"","",$sortfield,$sortorder);
 	//print_liste_field_titre($langs->trans("Title"),$_SERVER["PHP_SELF"],"a.label",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateStart"),$_SERVER["PHP_SELF"],"a.datep,a.datep2",$param,'','align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateEnd"),$_SERVER["PHP_SELF"],"a.datep2,a.datep2",$param,'','align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom,a.datep2",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Contact"),$_SERVER["PHP_SELF"],"a.fk_contact,a.datep2",$param,"","",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Description"),$_SERVER["PHP_SELF"],"a.note",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("ActionUserAsk"),$_SERVER["PHP_SELF"],"ua.login,a.datep2",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AffectedTo"),$_SERVER["PHP_SELF"],"ut.login,a.datep2",$param,"","",$sortfield,$sortorder);
 	//print_liste_field_titre($langs->trans("DoneBy"),$_SERVER["PHP_SELF"],"ud.login",$param,"","",$sortfield,$sortorder);
@@ -281,12 +283,22 @@ if ($resql)
 		$var=!$var;
 
 		print "<tr $bc[$var]>";
+		
+		//Type
+		print '<td>';
+		if ("Action".$obj->acode!=$langs->trans("Action".$obj->acode)) {
+			print $langs->trans("Action".$obj->acode);
+		} else {
+			print $obj->libelle;
+		}
+		print '</td>';
 
-		// Action (type)
+		// Action
 		print '<td>';
 		$actionstatic->id=$obj->id;
 		$actionstatic->type_code=$obj->acode;
 		$actionstatic->libelle=$obj->label;
+		$actionstatic->usertodo->id=$obj->useridtodo;
 		print $actionstatic->getNomUrl(1,28);
 		print '</td>';
 
@@ -337,6 +349,9 @@ if ($resql)
 			print "&nbsp;";
 		}
 		print '</td>';
+		
+		//Description
+		print '<td title="' . stripslashes ( $obj->note ) . '">' . stripslashes ( dol_trunc ( $obj->note, 60 ) ) . '</td>';
 
 		// User author
 		print '<td align="left">';
