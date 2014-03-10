@@ -992,12 +992,26 @@ else
                     // Liste des utiliseurs du groupes choisi dans la config
                     $idGroupValid = $cp->getConfCP('userGroup');
 
+                   // $validator = new UserGroup($db,$idGroupValid);
+                   // $valideur = $validator->listUsersForGroup();
+                    //print '<td>';
+                    //$form->select_users($cp->fk_validator,"valideur",1,"",0,$valideur,'');
+                    
+                    
+                    // Liste des utiliseurs du groupe choisi dans la config
                     $validator = new UserGroup($db,$idGroupValid);
-                    $valideur = $validator->listUsersForGroup();
-
+                    $excludefilter=$user->admin?'':'u.rowid <> '.$user->id;
+                    $valideurobjects = $validator->listUsersForGroup($excludefilter);
+                    $valideurarray = array();
+                    foreach($valideurobjects as $val) $valideurarray[$val->id]=$val->id;
                     print '<td>';
-                    $form->select_users($cp->fk_validator,"valideur",1,"",0,$valideur,'');
+                    print $form->select_dolusers($cp->fk_validator, "valideur", 1, "", 0, $valideurarray);	// By default, hierarchical parent
                     print '</td>';
+                    
+                    
+                    
+                    
+                   
                     print '</tr>';
                 }
 
