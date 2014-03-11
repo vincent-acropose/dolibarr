@@ -1021,10 +1021,37 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
                     }
                     else if ($event->type_code == 'BIRTHDAY')  { $numbirthday++; $colorindex=2; $cssclass='family_birthday';}
                     else { $numother++; $cssclass='family_other'; }
+                    
+                    //print '$event->type_code='.$event->type_code;
+                    if (!empty($event->type_code)) {
+                    	//Violet
+                    	if ($event->type_code=='AC_PROJ') 
+                    		$color="b400ff";
+                  
+                    	//Beige	
+                    	if ($event->type_code=='AC_NEWS')
+                    		$color="ffea94";
+                    	
+                    	//Orange
+                    	if ($event->type_code=='AC_ACTU')
+                    		$color="ff6600";
+                    	
+                    	//Bleu
+                    	if ($event->type_code=='AC_RDV')
+                    		$color="4747f9";
+                    	
+                    	//Rose
+                    	if ($event->type_code=='AC_OTH_AUTO')
+                    		$color="fb16d8";
+                    	
+                    	
+                    	
+                    } 
+                    
                     if ($color == -1)	// Color was not forced. Set color according to color index.
                     {
                     	// Define color index if not yet defined
-                    	$idusertouse=($event->usertodo->id?$event->usertodo->id:0);
+                    	/*$idusertouse=($event->usertodo->id?$event->usertodo->id:0);
                     	if (isset($colorindexused[$idusertouse]))
                     	{
                     		$colorindex=$colorindexused[$idusertouse];	// Color already assigned to this user
@@ -1037,7 +1064,8 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
                     	}
                     	//print '|$color='.$color.' $idusertouse='.($idusertouse?$idusertouse:0).' $colorindex='.$colorindex.'<br>';
 						// Define color
-                    	$color=sprintf("%02x%02x%02x",$theme_datacolor[$colorindex][0],$theme_datacolor[$colorindex][1],$theme_datacolor[$colorindex][2]);
+                    	$color=sprintf("%02x%02x%02x",$theme_datacolor[$colorindex][0],$theme_datacolor[$colorindex][1],$theme_datacolor[$colorindex][2]);*/
+                    	$color="d4d4d4";
                     }
                     $cssclass=$cssclass.' '.$cssclass.'_day_'.$ymd;
 
