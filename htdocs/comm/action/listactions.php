@@ -62,17 +62,17 @@ $limit = $conf->liste_limit;
 $offset = $limit * $page ;
 if (! $sortorder)
 {
-	$sortorder="ASC";
+	$sortorder="DESC";
 	if ($status == 'todo') $sortorder="ASC";
 	if ($status == 'done') $sortorder="DESC";
 }
 if (! $sortfield)
 {
-	$sortfield="a.percent";
+	//$sortfield="a.percent";
 	if ($status == 'todo') $sortfield="a.datep";
 	if ($status == 'done') $sortfield="a.datep2";
 }
-$sortfield.=',a.datep2';
+$sortfield.='a.datep,a.datep2';
 // Security check
 $socid = GETPOST("socid",'int');
 if ($user->societe_id) $socid=$user->societe_id;
@@ -255,7 +255,7 @@ if ($resql)
 	
 	
 	print '<tr class="liste_titre">';
-	print_liste_field_titre($langs->trans("Type"),$_SERVER["PHP_SELF"],"c.libelle",$param,"","",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Type"),$_SERVER["PHP_SELF"],"c.libelle",$param,"",'width="10%"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Action"),$_SERVER["PHP_SELF"],"c.code",$param,"","",$sortfield,$sortorder);
 	//print_liste_field_titre($langs->trans("Title"),$_SERVER["PHP_SELF"],"a.label",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateStart"),$_SERVER["PHP_SELF"],"a.datep,a.datep2",$param,'','align="center"',$sortfield,$sortorder);
@@ -351,7 +351,7 @@ if ($resql)
 		print '</td>';
 		
 		//Description
-		print '<td title="' . stripslashes ( $obj->note ) . '">' . stripslashes ( dol_trunc ( $obj->note, 60 ) ) . '</td>';
+		print '<td title="' . dol_htmlentities($obj->note,ENT_COMPAT) . '">' . dol_htmlentitiesbr( dol_trunc ( $obj->note, 60 ),  1 ) . '</td>';
 
 		// User author
 		print '<td align="left">';
