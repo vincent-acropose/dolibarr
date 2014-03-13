@@ -1888,7 +1888,7 @@ else
             // Edit line
             if ($object->statut == 0 && $action == 'edit_line' && $_GET['etat'] == '0' && $_GET['lineid'] == $object->lines[$i]->rowid)
             {
-                print '<tr '.$bc[$var].'>';
+                print '<tr id="row-'.$object->lines[$i]->id.'" '.$bc[$var].'>';
 
                 // Show product and description
                 print '<td>';
@@ -1950,7 +1950,7 @@ else
             }
             else // Affichage simple de la ligne
             {
-                print '<tr '.$bc[$var].'>';
+                print '<tr id="row-'.$object->lines[$i]->id.'" '.$bc[$var].'>';
 
                 // Show product and description
                 print '<td>';

@@ -1591,7 +1591,7 @@ elseif (! empty($object->id))
 		// Edit line
 		if ($action != 'edit_line' || $_GET['rowid'] != $line->id)
 		{
-			print '<tr '.$bc[$var].'>';
+			print '<tr id="row-'.$line->id.'" '.$bc[$var].'>';
 
 			// Show product and description
 			print '<td>';
