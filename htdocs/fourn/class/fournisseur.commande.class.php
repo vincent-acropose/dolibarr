@@ -78,6 +78,7 @@ class CommandeFournisseur extends CommonOrder
     var $user_approve_id;
 
     var $extraparams=array();
+	var $tasklineid;
 
 
     /**
@@ -1141,7 +1142,7 @@ class CommandeFournisseur extends CommonOrder
      *  @param		int		$notrigger				Disable triggers
      *	@return     int             				<=0 if KO, >0 if OK
      */
-    function addline($desc, $pu_ht, $qty, $txtva, $txlocaltax1=0, $txlocaltax2=0, $fk_product=0, $fk_prod_fourn_price=0, $fourn_ref='', $remise_percent=0, $price_base_type='HT', $pu_ttc=0, $type=0, $info_bits=0, $notrigger=false)
+    function addline($desc, $pu_ht, $qty, $txtva, $txlocaltax1=0, $txlocaltax2=0, $fk_product=0, $fk_prod_fourn_price=0, $fourn_ref='', $remise_percent=0, $price_base_type='HT', $pu_ttc=0, $type=0, $info_bits=0, $notrigger=false,$tasklineid=0)
     {
         global $langs,$mysoc;
 
@@ -1155,6 +1156,7 @@ class CommandeFournisseur extends CommonOrder
         if (empty($txlocaltax1)) $txlocaltax1=0;
         if (empty($txlocaltax2)) $txlocaltax2=0;
 		if (empty($remise_percent)) $remise_percent=0;
+		if (empty($tasklineid)) $tasklineid=0;
 
         $remise_percent=price2num($remise_percent);
         $qty=price2num($qty);
@@ -1248,7 +1250,7 @@ class CommandeFournisseur extends CommonOrder
             $sql.= " (fk_commande, label, description,";
             $sql.= " fk_product, product_type,";
             $sql.= " qty, tva_tx, localtax1_tx, localtax2_tx, localtax1_type, localtax2_type, remise_percent, subprice, ref,";
-            $sql.= " total_ht, total_tva, total_localtax1, total_localtax2, total_ttc";
+            $sql.= " total_ht, total_tva, total_localtax1, total_localtax2, fk_task, total_ttc";
             $sql.= ")";
             $sql.= " VALUES (".$this->id.", '" . $this->db->escape($label) . "','" . $this->db->escape($desc) . "',";
             if ($fk_product) { $sql.= $fk_product.","; }
@@ -1264,6 +1266,7 @@ class CommandeFournisseur extends CommonOrder
             $sql.= "'".price2num($total_tva)."',";
             $sql.= "'".price2num($total_localtax1)."',";
             $sql.= "'".price2num($total_localtax2)."',";
+			$sql.= "'".price2num($tasklineid)."',";
             $sql.= "'".price2num($total_ttc)."'";
             $sql.= ")";
 
@@ -1757,7 +1760,7 @@ class CommandeFournisseur extends CommonOrder
      *  @param		int		$notrigger			Disable triggers
      *	@return    	int             			< 0 if error, > 0 if ok
      */
-    function updateline($rowid, $desc, $pu, $qty, $remise_percent, $txtva, $txlocaltax1=0, $txlocaltax2=0, $price_base_type='HT', $info_bits=0, $type=0, $notrigger=false)
+    function updateline($rowid, $desc, $pu, $qty, $remise_percent, $txtva, $txlocaltax1=0, $txlocaltax2=0, $price_base_type='HT', $info_bits=0, $type=0, $notrigger=false,$tasklineid=0)
     {
         dol_syslog(get_class($this)."::updateline $rowid, $desc, $pu, $qty, $remise_percent, $txtva, $price_base_type, $info_bits, $type");
         include_once DOL_DOCUMENT_ROOT.'/core/lib/price.lib.php';
@@ -1828,6 +1831,7 @@ class CommandeFournisseur extends CommonOrder
             $sql.= ",total_localtax2='".price2num($total_localtax2)."'";
             $sql.= ",total_ttc='".price2num($total_ttc)."'";
             $sql.= ",product_type=".$type;
+			$sql.= ",fk_task = ".$tasklineid;
             $sql.= " WHERE rowid = ".$rowid;
 
             dol_syslog(get_class($this)."::updateline sql=".$sql);

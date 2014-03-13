@@ -491,14 +491,14 @@ class FormOther
                         if ($selectedproject == $lines[$i]->fk_project) print ' selected="selected"';
                         print '>';	// Project -> Task
                         print $langs->trans("Project").' '.$lines[$i]->projectref;
-                        if (empty($lines[$i]->public))
+                        /*if (empty($lines[$i]->public))
                         {
                             print ' ('.$langs->trans("Visibility").': '.$langs->trans("PrivateProject").')';
                         }
                         else
                         {
                             print ' ('.$langs->trans("Visibility").': '.$langs->trans("SharedProject").')';
-                        }
+                        }*/
                         //print '-'.$parent.'-'.$lines[$i]->fk_project.'-'.$lastprojectid;
                         print "</option>\n";
 
@@ -514,14 +514,14 @@ class FormOther
                     if ($lines[$i]->id == $selectedtask) print ' selected="selected"';
                     print '>';
                     print $langs->trans("Project").' '.$lines[$i]->projectref;
-                    if (empty($lines[$i]->public))
+                    /*if (empty($lines[$i]->public))
                     {
                         print ' ('.$langs->trans("Visibility").': '.$langs->trans("PrivateProject").')';
                     }
                     else
                     {
                         print ' ('.$langs->trans("Visibility").': '.$langs->trans("SharedProject").')';
-                    }
+                    }*/
                     if ($lines[$i]->id) print ' > ';
                     for ($k = 0 ; $k < $level ; $k++)
                     {
