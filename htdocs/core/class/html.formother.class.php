@@ -471,7 +471,7 @@ class FormOther
     private function _pLineSelect(&$inc, $parent, $lines, $level=0, $selectedtask=0, $selectedproject=0)
     {
         global $langs, $user, $conf;
-
+		
         $lastprojectid=0;
 
         $numlines=count($lines);
@@ -487,20 +487,20 @@ class FormOther
                     if ($lines[$i]->fk_project != $lastprojectid)
                     {
                         if ($i > 0 && $conf->browser->firefox) print '<option value="0" disabled="disabled">----------</option>';
-                        print '<option value="'.$lines[$i]->fk_project.'_0"';
+                        /*print '<option value="'.$lines[$i]->fk_project.'_0"';
                         if ($selectedproject == $lines[$i]->fk_project) print ' selected="selected"';
                         print '>';	// Project -> Task
                         print $langs->trans("Project").' '.$lines[$i]->projectref;
-                        /*if (empty($lines[$i]->public))
+                        if (empty($lines[$i]->public))
                         {
                             print ' ('.$langs->trans("Visibility").': '.$langs->trans("PrivateProject").')';
                         }
                         else
                         {
                             print ' ('.$langs->trans("Visibility").': '.$langs->trans("SharedProject").')';
-                        }*/
+                        }
                         //print '-'.$parent.'-'.$lines[$i]->fk_project.'-'.$lastprojectid;
-                        print "</option>\n";
+                        print "</option>\n";*/
 
                         $lastprojectid=$lines[$i]->fk_project;
                         $inc++;
@@ -510,7 +510,7 @@ class FormOther
                 // Print task
                 if ($lines[$i]->id > 0)
                 {
-                    print '<option value="'.$lines[$i]->fk_project.'_'.$lines[$i]->id.'"';
+                    print '<option value="'.$lines[$i]->id.'"';
                     if ($lines[$i]->id == $selectedtask) print ' selected="selected"';
                     print '>';
                     print $langs->trans("Project").' '.$lines[$i]->projectref;
@@ -527,7 +527,7 @@ class FormOther
                     {
                         print "&nbsp;&nbsp;&nbsp;";
                     }
-                    print $lines[$i]->label."</option>\n";
+                    print $lines[$i]->ref." ".$lines[$i]->label."</option>\n";
                     $inc++;
                 }
 

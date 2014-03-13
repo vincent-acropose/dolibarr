@@ -195,7 +195,7 @@ class CommandeFournisseur extends CommonOrder
 
             $sql = "SELECT l.rowid, l.ref as ref_supplier, l.fk_product, l.product_type, l.label, l.description,";
             $sql.= " l.qty,";
-            $sql.= " l.tva_tx, l.remise_percent, l.subprice,";
+            $sql.= " l.tva_tx, l.remise_percent, l.subprice, l.fk_task,";
             $sql.= " l.localtax1_tx, l. localtax2_tx, l.total_localtax1, l.total_localtax2,";
             $sql.= " l.total_ht, l.total_tva, l.total_ttc,";
             $sql.= " p.rowid as product_id, p.ref as product_ref, p.label as product_label, p.description as product_desc";
@@ -244,6 +244,7 @@ class CommandeFournisseur extends CommonOrder
                     $line->product_ref         = $objp->product_ref;     // Internal reference
                     $line->ref_fourn           = $objp->ref_supplier;    // TODO deprecated
                     $line->ref_supplier        = $objp->ref_supplier;    // Reference supplier
+                    $line->tasklineid          = $objp->fk_task;    // Reference supplier
 
                     $this->lines[$i]      = $line;
 

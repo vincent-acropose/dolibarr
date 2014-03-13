@@ -36,6 +36,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formorder.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/modules/supplier_order/modules_commandefournisseur.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.commande.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.product.class.php';
+require_once DOL_DOCUMENT_ROOT.'/projet/class/task.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/fourn.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
@@ -403,7 +404,7 @@ else if ($action == 'update_line' && $user->rights->fournisseur->commande->creer
         'HT',
         0,
         isset($_POST["type"])?$_POST["type"]:$line->product_type,
-        0, false,$tasklineid
+        false,$tasklineid
     );
     unset($_POST['qty']);
     unset($_POST['type']);
@@ -1608,7 +1609,7 @@ elseif (! empty($object->id))
 				if($object->lines[$i]->tasklineid > 0){
 					$taskstatic = new Task($db);
 					$taskstatic->fetch($object->lines[$i]->tasklineid);
-					print " - tâche : ";
+					print " - Tâche : ";
 					print $taskstatic->getNomUrl(1,'withproject');
 				}
 				//print $langs->trans('Task').": ";
@@ -1631,7 +1632,7 @@ elseif (! empty($object->id))
 				if($object->lines[$i]->tasklineid > 0){
 					$taskstatic = new Task($db);
 					$taskstatic->fetch($object->lines[$i]->tasklineid);
-					print " - tâche : ";
+					print " - Tâche : ";
 					print $taskstatic->getNomUrl(1,'withproject');
 				}
 
@@ -1696,9 +1697,9 @@ elseif (! empty($object->id))
 				$text.= ' - '.$product_static->libelle;
 				$description=($conf->global->PRODUIT_DESC_IN_FORM?'':dol_htmlentitiesbr($line->description));
 				print $form->textwithtooltip($text,$description,3,'','',$i);
-
-				print $langs->trans('Task').": ";
-				print $formother->selectProjectTasks($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0); print '<br>';
+				
+				print "<br>".$langs->trans('Task').": ";
+				print $formother->selectProjectTasks($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0);
 				
 				// Show range
 				print_date_range($date_start,$date_end);
@@ -1710,7 +1711,7 @@ elseif (! empty($object->id))
 				if (! empty($conf->product->enabled) && ! empty($conf->service->enabled)) print '<br>';
 				
 				print $langs->trans('Task').": ";
-				print $formother->selectProjectTasks($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0); print '<br>';
+				print $formother->selectProjectTasks($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0); print "<br>";
 			}
 
 			if (is_object($hookmanager))
@@ -1829,8 +1830,8 @@ elseif (! empty($object->id))
 					'error' => $langs->trans("NoPriceDefinedForThisSupplier") // translation of an error saved into var 'error'
 			);
 			$form->select_produits_fournisseurs($object->fourn_id, GETPOST('idprodfournprice'), 'idprodfournprice', '', '', $ajaxoptions);
-			//print $langs->trans('Task').": ";
-			//print $formother->selectProjectTasks($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0); print '<br>';
+			print $langs->trans('Task').": ";
+			print $formother->selectProjectTasks($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0); print '<br>';
 			if (empty($conf->global->PRODUIT_USE_SEARCH_TO_SELECT)) print '<br>';
 
 			if (is_object($hookmanager))
