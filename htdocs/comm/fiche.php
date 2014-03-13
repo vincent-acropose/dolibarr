@@ -791,7 +791,8 @@ if ($id > 0)
 				}
 				print '<td align="right" width="120">'.price($objp->total_ttc).'</td>';
 
-				print '<td align="right" class="nowrap" width="100" >'.($facturestatic->LibStatut($objp->paye,$objp->statut,5,$objp->am)).'</td>';
+				$style = ($objp->paye != 1 && $objp->date_lim_reglement < date('Y-m-d')) ? ' style="background-color: #FF0000; color: #FFFFFF;"' : '';
+				print '<td align="right" class="nowrap" width="100" '.$style.'>'.($facturestatic->LibStatut($objp->paye,$objp->statut,5,$objp->am)).'</td>';
 				print "</tr>\n";
 				$i++;
 			}

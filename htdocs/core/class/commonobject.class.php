@@ -2285,6 +2285,9 @@ abstract class CommonObject
 							$csstyle=$params['style'];
 						}
 					}
+					
+					$csstyle.=( $this->array_options["options_".$key] != '' ) ?  ' style="background-color: #FF0000; color: #FFFFFF;"' : '';
+					
 					if ( !empty($conf->global->MAIN_EXTRAFIELDS_USE_TWO_COLUMS) && ($e % 2) == 0)
 					{
 						$out .= '<tr '.$csstyle.'>';

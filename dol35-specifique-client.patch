@@ -1,0 +1,58 @@
+From dfe5a64c9c8fb6058cbc9c7d37b0e8dfcf3fe49d Mon Sep 17 00:00:00 2001
+From: Alexis Algoud <alexis@atm-consulting.fr>
+Date: Thu, 13 Mar 2014 12:02:20 +0100
+Subject: [PATCH] =?UTF-8?q?sp=C3=A9cifique=20client?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ htdocs/comm/fiche.php                    | 3 ++-
+ htdocs/commande/fiche.php                | 2 +-
+ htdocs/core/class/commonobject.class.php | 3 +++
+ 3 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/htdocs/comm/fiche.php b/htdocs/comm/fiche.php
+index 141e859..15b5664 100644
+--- a/htdocs/comm/fiche.php
++++ b/htdocs/comm/fiche.php
+@@ -795,7 +795,8 @@ if ($id > 0)
+ 				}
+ 				print '<td align="right" width="120">'.price($objp->total_ttc).'</td>';
+ 
+-				print '<td align="right" class="nowrap" width="100" >'.($facturestatic->LibStatut($objp->paye,$objp->statut,5,$objp->am)).'</td>';
++				$style = ($objp->paye != 1 && $objp->date_lim_reglement < date('Y-m-d')) ? ' style="background-color: #FF0000; color: #FFFFFF;"' : '';
++				print '<td align="right" class="nowrap" width="100" '.$style.'>'.($facturestatic->LibStatut($objp->paye,$objp->statut,5,$objp->am)).'</td>';
+ 				print "</tr>\n";
+ 				$i++;
+ 			}
+diff --git a/htdocs/commande/fiche.php b/htdocs/commande/fiche.php
+index bfafd72..22cefc4 100644
+--- a/htdocs/commande/fiche.php
++++ b/htdocs/commande/fiche.php
+@@ -1996,7 +1996,7 @@ else
+ 		print '<table class="nobordernopadding" width="100%"><tr><td class="nowrap">';
+ 		print $langs->trans('RefCustomer').'</td><td align="left">';
+ 		print '</td>';
+-		if ($action != 'refcustomer' && $object->brouillon) print '<td align="right"><a href="'.$_SERVER['PHP_SELF'].'?action=refcustomer&amp;id='.$object->id.'">'.img_edit($langs->trans('Modify')).'</a></td>';
++		if ($action != 'refcustomer') print '<td align="right"><a href="'.$_SERVER['PHP_SELF'].'?action=refcustomer&amp;id='.$object->id.'">'.img_edit($langs->trans('Modify')).'</a></td>';
+ 		print '</tr></table>';
+ 		print '</td><td colspan="3">';
+ 		if ($user->rights->commande->creer && $action == 'refcustomer')
+diff --git a/htdocs/core/class/commonobject.class.php b/htdocs/core/class/commonobject.class.php
+index dd3efee..e6178dd 100644
+--- a/htdocs/core/class/commonobject.class.php
++++ b/htdocs/core/class/commonobject.class.php
+@@ -2285,6 +2285,9 @@ abstract class CommonObject
+ 							$csstyle=$params['style'];
+ 						}
+ 					}
++					
++					$csstyle.=( $this->array_options["options_".$key] != '' ) ?  ' style="background-color: #FF0000; color: #FFFFFF;"' : '';
++					
+ 					if ( !empty($conf->global->MAIN_EXTRAFIELDS_USE_TWO_COLUMS) && ($e % 2) == 0)
+ 					{
+ 						$out .= '<tr '.$csstyle.'>';
+-- 
+1.8.1.2
+
