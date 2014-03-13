@@ -2865,6 +2865,7 @@ class Commande extends CommonOrder
      */
     function update_extrafields($user)
     {
+    	global $hookmanager;
     	// Actions on extra fields (by external module or standard code)
     	// FIXME le hook fait double emploi avec le trigger !!
     	$hookmanager->initHooks(array('orderdao'));
