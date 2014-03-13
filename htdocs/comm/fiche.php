@@ -742,6 +742,7 @@ if ($id > 0)
 		$sql = 'SELECT f.rowid as facid, f.facnumber, f.type, f.amount, f.total, f.total_ttc,';
 		$sql.= ' f.datef as df, f.datec as dc, f.paye as paye, f.fk_statut as statut,';
 		$sql.= ' s.nom, s.rowid as socid,';
+		$sql.= ' f.date_lim_reglement,';
 		$sql.= ' SUM(pf.amount) as am';
 		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s,".MAIN_DB_PREFIX."facture as f";
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'paiement_facture as pf ON f.rowid=pf.fk_facture';
