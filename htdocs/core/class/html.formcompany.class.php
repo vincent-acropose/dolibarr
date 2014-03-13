@@ -519,7 +519,7 @@ class FormCompany
 		global $conf, $langs;
 
 		// On recherche les societes
-		$sql = "SELECT s.rowid, s.nom FROM";
+		$sql = "SELECT s.rowid, CONCAT(s.nom, ' (', s.zip, ')') as 'nom' FROM";
 		$sql.= " ".MAIN_DB_PREFIX."societe as s";
 		$sql.= " WHERE s.entity IN (".getEntity('societe', 1).")";
 		if ($selected && $conf->use_javascript_ajax && ! empty($conf->global->COMPANY_USE_SEARCH_TO_SELECT)) $sql.= " AND rowid = ".$selected;
