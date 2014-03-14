@@ -432,7 +432,7 @@ class FormMail
         			if (! empty($this->withtocc) && is_array($this->withtocc))
         			{
         				$out.= " ".$langs->trans("or")." ";
-        				$out.= $form->selectarray("receivercc", $this->withto, GETPOST("receivercc"), 1);
+        				$out.= $form->selectarray("receivercc", $this->withtocc, GETPOST("receivercc"), 1);
         			}
         		}
         		$out.= "</td></tr>\n";

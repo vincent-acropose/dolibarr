@@ -935,7 +935,7 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
                     $out.='<td>'.$actionstatic->getNomUrl(1,40).'</td>';
                     
                     //Desc
-                    $out.='<td>'.dol_trunc($obj->note, 40).'</td>';
+                    $out.= '<td title="' . dol_htmlentities($obj->note,ENT_COMPAT) . '">' . dol_htmlentitiesbr( dol_trunc ( $obj->note, 60 ),  1 ) . '</td>';
                     
                     // Soc pour cette action
                     if (!empty($obj->fk_soc))
@@ -1228,7 +1228,8 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
             $out.='</td>';
 
             // DEsc of event
-            $out.='<td>'.dol_trunc($histo[$key]['desc'], 40).'</td>';
+            $out.= '<td title="' . dol_htmlentities($histo[$key]['desc'],ENT_COMPAT) . '">' . dol_htmlentitiesbr( dol_trunc ( $histo[$key]['desc'], 60 ),  1 ) . '</td>';
+            //$out.='<td>'.dol_trunc(, 40).'</td>';
 
             // Objet lie
             // TODO uniformize

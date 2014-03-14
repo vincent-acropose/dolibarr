@@ -705,14 +705,14 @@ else if ($action == "addline" && $user->rights->propal->creer)
 				elseif (! empty ( $conf->global->PRODUIT_CUSTOMER_PRICES )) {
 					require_once DOL_DOCUMENT_ROOT . '/product/class/productcustomerprice.class.php';
 					
-					$prodcustprice = new Productcustomerprice ( $db );
+					$prodcustprice = new Productcustomerprice($db);
 						
 					$filter = array (
 					't.fk_product' => $prod->id,
 					't.fk_soc'=> $object->client->id
 					);
 						
-					$result = $prodcustprice->fetch_all ( '', '', 0,0, $filter );
+					$result = $prodcustprice->fetch_all( '', '', 0,0, $filter);
 					if ($result)
 					{
 						if (count($prodcustprice->lines)>0)
@@ -2260,6 +2260,37 @@ else
 		print '<br>';
 		print_titre($langs->trans('SendPropalByMail'));
 
+		
+		
+		require_once dol_buildpath('/agefodd/class/agefodd_session_element.class.php');
+		$agf_fin = new Agefodd_session_element($db);
+		$result=$agf_fin->fetch_element_by_id($object->id,'prop');
+		if ($result<0) {
+			setEventMessage($agf_fin->error,'errors');
+		}
+		if (!empty($agf_fin->lines[0]->fk_session_agefodd)) {
+			require_once dol_buildpath('/agefodd/class/agsession.class.php');
+			$agf = new Agsession($db);
+			$result=$agf->fetch($agf_fin->lines[0]->fk_session_agefodd);
+			if ($result<0) {
+				setEventMessage($agf->error,'errors');
+			}
+			
+			require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+			$product=new Product($db);
+			$result=$product->fetch($agf->fk_product);
+			if ($result<0) {
+				setEventMessage($product->error,'errors');
+			}
+			$mailsubject=$product->libelle. ' : '. $agf->formintitule. ' - '.$langs->transnoentities('Proposal'). ' ' .$mysoc->name . ' ' . $object->ref. ' ('. dol_print_date($object->datev,'daytext') .')';
+			//Produit (sans mettre le code) : Intitulé formation (Proposition Akteos PR0000-0000 du jj/mm/an (date de la proposition)
+		}
+		
+		if (empty($mailsubject)) {
+			$mailsubject= $langs->trans('SendPropalRef','__PROPREF__');
+		}
+		//$mailsubject='';
+		
 		// Create form object
 		include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
 		$formmail = new FormMail($db);
@@ -2273,7 +2304,8 @@ else
 		$formmail->withto=GETPOST("sendto")?GETPOST("sendto"):$liste;
 		$formmail->withtocc=$liste;
 		$formmail->withtoccc=(! empty($conf->global->MAIN_EMAIL_USECCC)?$conf->global->MAIN_EMAIL_USECCC:false);
-		$formmail->withtopic=$langs->trans('SendPropalRef','__PROPREF__');
+		$formmail->withtopic=$mailsubject;
+		//$formmail->withtopic=$langs->trans('SendPropalRef','__PROPREF__');
 		$formmail->withfile=2;
 		$formmail->withbody=1;
 		$formmail->withdeliveryreceipt=1;

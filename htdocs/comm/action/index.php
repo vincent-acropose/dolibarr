@@ -66,6 +66,7 @@ if (! $user->rights->agenda->allactions->read || $filter =='mine')  // If no per
     $filterd=$user->id;
 }
 
+
 $action=GETPOST('action','alpha');
 //$year=GETPOST("year");
 $year=GETPOST("year","int")?GETPOST("year","int"):date("Y");
@@ -1149,7 +1150,17 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
 
                         // Show title
                         if ($event->type_code == 'ICALEVENT') print dol_trunc($event->libelle,$maxnbofchar);
-                        else print $event->getNomUrl(0,$maxnbofchar,'cal_event');
+                        else {
+                        	$actionType=new CActionComm($db);
+                        	$actionType->fetch($event->type_code);
+                        	if ($actionType->libelle==$langs->trans("Action".$event->type_code)) {
+                        		$label_action_type=$langs->trans("Action".$event->type_code);
+                        	} else {
+                        		$label_action_type=$actionType->libelle;
+                        	}
+                        	
+                        	print $label_action_type.'-'.$event->getNomUrl(0,$maxnbofchar,'cal_event');
+                        }
 
                         if ($event->type_code == 'ICALEVENT') print '<br>('.dol_trunc($event->icalname,$maxnbofchar).')';
 
@@ -1165,7 +1176,12 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
                                 $cachethirdparties[$event->societe->id]=$thirdparty;
                             }
                             else $thirdparty=$cachethirdparties[$event->societe->id];
-                            $linerelatedto.=$thirdparty->getNomUrl(1,'',$length);
+                            if ($showinfo) {
+                            	$linerelatedto.=$thirdparty->getNomUrl(1);
+                            } else {
+                            	$linerelatedto.=$thirdparty->getNomUrl(1,'',$length);
+                            }
+                           
                         }
                         if (! empty($event->contact->id) && $event->contact->id > 0)
                         {
@@ -1177,7 +1193,21 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
                             }
                             else $contact=$cachecontacts[$event->contact->id];
                             if ($linerelatedto) $linerelatedto.=' / ';
-                            $linerelatedto.=$contact->getNomUrl(1,'',$length);
+                            
+                            if ($showinfo) {
+                            	$linerelatedto.=$contact->getNomUrl(1);
+                            } else {
+                            	$linerelatedto.=$contact->getNomUrl(1,'',$length);
+                            }
+                            
+
+                            if ($showinfo && !empty($contact->phone_pro)) {
+                            	$linerelatedto.=' ('.$contact->phone_pro.')';
+                            }
+                            
+                            if ($showinfo && !empty($contact->email)) {
+                            	$linerelatedto.=' ('.dol_print_email($contact->email,0,0,1).')';
+                            }
                         }
                         if ($linerelatedto) print '<br>'.$linerelatedto;
                     }
@@ -1189,6 +1219,11 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
                         {
                             print '<br>';
                             print $langs->trans("Location").': '.$event->location;
+                        }
+                        
+                        if (!empty($event->note)) {
+                        	print '<br>';
+                        	print '<span title="' . dol_htmlentities($event->note,ENT_COMPAT) . '">' . dol_htmlentitiesbr( dol_trunc ( $event->note, 100 ),  1 ) . '</span>';
                         }
                     }
 
