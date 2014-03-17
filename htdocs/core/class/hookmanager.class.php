@@ -152,6 +152,7 @@ class HookManager
 		$this->resPrint=''; $this->resArray=array();
         foreach($this->hooks as $modules)    // this->hooks is an array with context as key and value is an array of modules that handle this context
         {
+        	
             if (! empty($modules))
             {
                 foreach($modules as $module => $actionclassinstance)
@@ -168,6 +169,7 @@ class HookManager
                     if ($hooktype == 'addreplace')
                     {
                     	$resaction += $actionclassinstance->$method($parameters, $object, $action, $this); // $object and $action can be changed by method ($object->id during creation for example or $action to go back to other action for example)
+                    	
                     	if ($resaction < 0 || ! empty($actionclassinstance->error) || (! empty($actionclassinstance->errors) && count($actionclassinstance->errors) > 0))
                     	{
                     		$error++;

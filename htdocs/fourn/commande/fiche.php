@@ -30,6 +30,7 @@
  */
 
 require '../../main.inc.php';
+
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formorder.class.php';
@@ -99,6 +100,9 @@ else if (! empty($socid) && $socid > 0)
 	$ret = $object->fetch_thirdparty();
 	if ($ret < 0) dol_print_error($db,$object->error);
 }
+
+$parameters=array('socid'=>$socid);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 
 /*
  * Actions
@@ -678,7 +682,6 @@ else if ($action == 'down' && $user->rights->fournisseur->commande->creer)
 else if ($action == 'builddoc' && $user->rights->fournisseur->commande->creer)	// En get ou en	post
 {
     // Build document
-
 	// Save last template used to generate document
 	if (GETPOST('model')) $object->setDocModel($user, GETPOST('model','alpha'));
 
@@ -688,12 +691,16 @@ else if ($action == 'builddoc' && $user->rights->fournisseur->commande->creer)	/
         $outputlangs = new Translate("",$conf);
         $outputlangs->setDefaultLang(GETPOST('lang_id'));
     }
+	//exit($result);
     $result=supplier_order_pdf_create($db, $object,$object->modelpdf,$outputlangs, $hidedetails, $hidedesc, $hideref);
+	
+
     if ($result	<= 0)
     {
         dol_print_error($db,$result);
         exit;
     }
+	
 }
 
 // Delete file in doc form
@@ -1595,7 +1602,7 @@ elseif (! empty($object->id))
 		// Edit line
 		if ($action != 'edit_line' || $_GET['rowid'] != $line->id)
 		{
-			print '<tr '.$bc[$var].'>';
+			print '<tr id="row-'.$line->id.'" '.$bc[$var].'>';
 
 			// Show product and description
 			print '<td>';
