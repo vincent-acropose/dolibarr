@@ -52,6 +52,9 @@ $id = GETPOST('id', 'int');
 if ($user->societe_id) $socid=$user->societe_id;
 $result=restrictedArea($user,'expedition',$id,'livraison','livraison');
 
+$object = new Livraison($db);
+$object->fetch($id);
+
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
 $hookmanager->initHooks(array('receptioncard'));
