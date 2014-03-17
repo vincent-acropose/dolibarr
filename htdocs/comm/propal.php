@@ -712,7 +712,7 @@ else if ($action == "addline" && $user->rights->propal->creer)
 					't.fk_soc'=> $object->client->id
 					);
 						
-					$result = $prodcustprice->fetch_all( '', '', 0,0, $filter);
+					$result = $prodcustprice->fetch_all( '', '', 0, 0, $filter);
 					if ($result)
 					{
 						if (count($prodcustprice->lines)>0)

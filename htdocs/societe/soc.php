@@ -385,6 +385,9 @@ if (empty($reshook))
                         }
                     }
                     // Gestion du logo de la société
+                    
+                    $object->setPaymentTerms(2);
+                    $object->setPaymentMethods(2);
                 }
                 else
 				{
