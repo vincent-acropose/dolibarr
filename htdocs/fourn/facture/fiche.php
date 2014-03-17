@@ -84,7 +84,8 @@ if ($id > 0 || ! empty($ref))
 	$ret=$object->fetch($id, $ref);
 }
 
-
+$parameters=array('socid'=>$socid);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 
 /*
  * Actions
