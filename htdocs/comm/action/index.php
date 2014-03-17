@@ -1027,7 +1027,7 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
                     if (!empty($event->type_code)) {
                     	//Violet
                     	if ($event->type_code=='AC_PROJ') 
-                    		$color="b400ff";
+                    		$color="c766ef";
                   
                     	//Beige	
                     	if ($event->type_code=='AC_NEWS')
@@ -1035,15 +1035,15 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
                     	
                     	//Orange
                     	if ($event->type_code=='AC_ACTU')
-                    		$color="ff6600";
+                    		$color="ffa76c";
                     	
                     	//Bleu
                     	if ($event->type_code=='AC_RDV')
-                    		$color="4747f9";
+                    		$color="7373ff";
                     	
                     	//Rose
                     	if ($event->type_code=='AC_OTH_AUTO')
-                    		$color="fb16d8";
+                    		$color="ff58e5";
                     	
                     	
                     	
