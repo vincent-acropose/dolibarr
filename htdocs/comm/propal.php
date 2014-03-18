@@ -712,7 +712,7 @@ else if ($action == "addline" && $user->rights->propal->creer)
 					't.fk_soc'=> $object->client->id
 					);
 						
-					$result = $prodcustprice->fetch_all( '', '', 0, 0, $filter);
+					$result = $prodcustprice->fetch_all('', '', 0, 0, $filter);
 					if ($result)
 					{
 						if (count($prodcustprice->lines)>0)
@@ -2284,12 +2284,19 @@ else
 			}
 			$mailsubject=$product->libelle. ' : '. $agf->formintitule. ' - '.$langs->transnoentities('Proposal'). ' ' .$mysoc->name . ' ' . $object->ref. ' ('. dol_print_date($object->datev,'daytext') .')';
 			//Produit (sans mettre le code) : Intitulé formation (Proposition Akteos PR0000-0000 du jj/mm/an (date de la proposition)
+			
+			$bodytext="Bonjour<BR><BR>Conformément à votre demande, j'ai le plaisir de vous adresser la proposition :<BR><BR>".$object->ref.'-'.$product->libelle.'-'.$agf->formintitule;
+			$bodytext.="<BR><BR>En espérant avoir répondu à votre attente, je reste à votre disposition pour toute information complémentaire et vous remercie de votre confiance";
+			$bodytext.="<BR><BR>".$user->signature;
+			
+			$mailmodel='';
 		}
 		
 		if (empty($mailsubject)) {
 			$mailsubject= $langs->trans('SendPropalRef','__PROPREF__');
+			$bodytext=1;
+			$mailmodel='propal_send';
 		}
-		//$mailsubject='';
 		
 		// Create form object
 		include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
@@ -2307,7 +2314,7 @@ else
 		$formmail->withtopic=$mailsubject;
 		//$formmail->withtopic=$langs->trans('SendPropalRef','__PROPREF__');
 		$formmail->withfile=2;
-		$formmail->withbody=1;
+		$formmail->withbody=$bodytext;
 		$formmail->withdeliveryreceipt=1;
 		$formmail->withcancel=1;
 
@@ -2338,7 +2345,7 @@ else
 
 		// Tableau des parametres complementaires
 		$formmail->param['action']='send';
-		$formmail->param['models']='propal_send';
+		$formmail->param['models']=$mailmodel;
 		$formmail->param['id']=$object->id;
 		$formmail->param['returnurl']=$_SERVER["PHP_SELF"].'?id='.$object->id;
 
