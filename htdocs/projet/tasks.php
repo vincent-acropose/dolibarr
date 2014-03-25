@@ -292,7 +292,7 @@ if ($action == 'create' && $user->rights->projet->creer && (empty($object->socie
 	print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td>';
 	print '<input type="text" size="25" name="label" class="flat" value="'.$label.'">';
 	print '</td></tr>';
-
+	
 	// List of projects
 	print '<tr><td class="fieldrequired">'.$langs->trans("ChildOfTask").'</td><td>';
 	print $formother->selectProjectTasks('',$projectid?$projectid:$object->id, 'task_parent', 0, 0, 1, 1);

@@ -487,7 +487,7 @@ class FormOther
                     if ($lines[$i]->fk_project != $lastprojectid)
                     {
                         if ($i > 0 && $conf->browser->firefox) print '<option value="0" disabled="disabled">----------</option>';
-                        /*print '<option value="'.$lines[$i]->fk_project.'_0"';
+                        print '<option value="'.$lines[$i]->fk_project.'_0"';
                         if ($selectedproject == $lines[$i]->fk_project) print ' selected="selected"';
                         print '>';	// Project -> Task
                         print $langs->trans("Project").' '.$lines[$i]->projectref;
@@ -500,7 +500,7 @@ class FormOther
                             print ' ('.$langs->trans("Visibility").': '.$langs->trans("SharedProject").')';
                         }
                         //print '-'.$parent.'-'.$lines[$i]->fk_project.'-'.$lastprojectid;
-                        print "</option>\n";*/
+                        print "</option>\n";
 
                         $lastprojectid=$lines[$i]->fk_project;
                         $inc++;

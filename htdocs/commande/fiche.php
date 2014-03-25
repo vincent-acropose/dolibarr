@@ -33,11 +33,13 @@
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formorder.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/modules/commande/modules_commande.php';
 require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
 require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/order.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/projet/class/task.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 if (! empty($conf->propal->enabled))
 	require DOL_DOCUMENT_ROOT.'/comm/propal/class/propal.class.php';
@@ -89,6 +91,7 @@ if ($id > 0 || ! empty($ref))
 	$ret=$object->fetch($id, $ref);
 	$ret=$object->fetch_thirdparty();
 }
+
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
 $hookmanager->initHooks(array('ordercard'));
@@ -202,7 +205,7 @@ else if ($action == 'add' && $user->rights->commande->creer)
 {
 	$datecommande  = dol_mktime(12, 0, 0, GETPOST('remonth'),  GETPOST('reday'),  GETPOST('reyear'));
 	$datelivraison = dol_mktime(12, 0, 0, GETPOST('liv_month'),GETPOST('liv_day'),GETPOST('liv_year'));
-
+	
 	if ($datecommande == '')
 	{
 		$mesg='<div class="error">'.$langs->trans('ErrorFieldRequired',$langs->transnoentities('Date')).'</div>';
@@ -599,7 +602,8 @@ else if ($action == 'addline' && $user->rights->commande->creer)
     }
 	$qty = GETPOST('qty'.$predef);
 	$remise_percent=GETPOST('remise_percent'.$predef);
-
+	$tasklineid = GETPOST('tasklineid');
+	
 	//Extrafields
 	$extrafieldsline = new ExtraFields($db);
 	$extralabelsline =$extrafieldsline->fetch_name_optionals_label($object->table_element_line);
@@ -778,6 +782,7 @@ else if ($action == 'addline' && $user->rights->commande->creer)
 		}
 		else
 		{
+			//exit('1');
 			// Insert line
 			$result = $object->addline(
 				$desc,
@@ -801,7 +806,8 @@ else if ($action == 'addline' && $user->rights->commande->creer)
 				$fournprice,
 				$buyingprice,
 				$label,
-				$array_option
+				$array_option,
+				$tasklineid
 			);
 
 			if ($result > 0)
@@ -881,7 +887,8 @@ else if ($action == 'updateligne' && $user->rights->commande->creer && GETPOST('
 	// Add buying price
 	$fournprice=(GETPOST('fournprice')?GETPOST('fournprice'):'');
 	$buyingprice=(GETPOST('buying_price')?GETPOST('buying_price'):'');
-
+	$tasklineid = GETPOST('tasklineid');
+	
 	//Extrafields Lines
 	$extrafieldsline = new ExtraFields($db);
 	$extralabelsline =$extrafieldsline->fetch_name_optionals_label($object->table_element_line);
@@ -950,7 +957,8 @@ else if ($action == 'updateligne' && $user->rights->commande->creer && GETPOST('
 			$buyingprice,
 			$label,
 			0,
-			$array_option
+			$array_option,
+			$tasklineid
 		);
 
 		if ($result >= 0)
@@ -2356,7 +2364,11 @@ else
 		}
 
 		print '<table id="tablelines" class="noborder noshadow" width="100%">';
-
+		
+		/*echo '<pre>';
+		print_r($object);
+		echo '</pre>';*/
+		
 		// Show object lines
 		if (! empty($object->lines))
 			$ret=$object->printObjectLines($action,$mysoc,$soc,$lineid,1);

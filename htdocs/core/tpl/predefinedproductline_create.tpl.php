@@ -111,6 +111,14 @@ else {
 	}
 
 	echo '<br>';
+	
+	if($object->element == "commande"){
+		global $db;
+		$formother = new FormOther($db);
+		print $langs->trans('Task').": ";
+		print $formother->selectProjectTasks('','', 'tasklineid', 1, 0);
+		echo '<br>';
+	}
 
 	// Editor wysiwyg
 	require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';

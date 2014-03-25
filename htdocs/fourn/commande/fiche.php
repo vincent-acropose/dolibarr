@@ -1841,7 +1841,7 @@ elseif (! empty($object->id))
 					'error' => $langs->trans("NoPriceDefinedForThisSupplier") // translation of an error saved into var 'error'
 			);
 			$form->select_produits_fournisseurs($object->fourn_id, GETPOST('idprodfournprice'), 'idprodfournprice', '', '', $ajaxoptions);
-			print $langs->trans('Task').": ";
+			print "<br>".$langs->trans('Task').": ";
 			print $formother->selectProjectTasks($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0); print '<br>';
 			if (empty($conf->global->PRODUIT_USE_SEARCH_TO_SELECT)) print '<br>';
 
