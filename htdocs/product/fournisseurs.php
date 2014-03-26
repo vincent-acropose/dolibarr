@@ -412,6 +412,12 @@ if ($id || $ref)
 				}
 			}
 
+			if (is_object($hookmanager))
+			{
+				$hookmanager->initHooks(array('pricesuppliercard'));
+        			$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$product,$action);
+			}
+
 			print "\n</div>\n";
 			print '<br>';
 
