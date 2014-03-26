@@ -99,7 +99,6 @@ class MenuManager
         	$leftmenu=isset($_SESSION["leftmenu"])?$_SESSION["leftmenu"]:'';
         }
         if (! empty($forceleftmenu)) $leftmenu=$forceleftmenu;
-
         require_once DOL_DOCUMENT_ROOT.'/core/class/menubase.class.php';
         $tabMenu=array();
         $menuArbo = new Menubase($this->db,'eldy');

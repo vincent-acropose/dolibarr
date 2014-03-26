@@ -530,7 +530,6 @@ class Menubase
             {
                 //$objm = $this->db->fetch_object($resql);
                 $menu = $this->db->fetch_array($resql);
-
                 // Define $right
                 $perms = true;
                 if ($menu['perms'])
