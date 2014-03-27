@@ -72,7 +72,9 @@ if (! $sortfield)
 	if ($status == 'todo') $sortfield="a.datep";
 	if ($status == 'done') $sortfield="a.datep2";
 }
-$sortfield.='a.datep,a.datep2';
+if (empty($sortfield)) {
+	$sortfield.='a.datep,a.datep2';
+}
 // Security check
 $socid = GETPOST("socid",'int');
 if ($user->societe_id) $socid=$user->societe_id;
@@ -194,7 +196,9 @@ if (!empty($filterdatestart)) {
 if (!empty($filterdatesend)) {
 	$sql .= ' AND a.datep2<=\''.$db->idate($filterdatesend).'\'';
 }
-$sql.= $db->order($sortfield,$sortorder);
+if (!empty($sortfield)) {
+	$sql.= "ORDER BY ".$sortfield." ". $sortorder;
+}
 $sql.= $db->plimit($limit + 1, $offset);
 //print $sql;
 
