@@ -3250,7 +3250,7 @@ class OrderLine extends CommonOrderLine
         $sql.= " '".price2num($this->total_ttc)."',";
         $sql.= " ".(! empty($this->date_start)?"'".$this->db->idate($this->date_start)."'":"null").',';
         $sql.= " ".(! empty($this->date_end)?"'".$this->db->idate($this->date_end)."'":"null").',';
-		$sql.= " ".(! empty($this->tasklineid)?"'".$this->tasklineid."'":"0");
+		$sql.= " ".(! empty($this->tasklineid)?$this->tasklineid:"0");
         $sql.= ')';
 
         dol_syslog(get_class($this)."::insert sql=".$sql, LOG_DEBUG);
