@@ -3200,7 +3200,7 @@ class OrderLine extends CommonOrderLine
         if (empty($this->info_bits)) $this->info_bits=0;
         if (empty($this->special_code)) $this->special_code=0;
         if (empty($this->fk_parent_line)) $this->fk_parent_line=0;
-		if (empty($this->$tasklineid)) $this->$tasklineid=0;
+		if (empty($this->tasklineid)) $this->tasklineid=0;
 		if (empty($this->pa_ht)) $this->pa_ht=0;
 
 		// si prix d'achat non renseigne et utilise pour calcul des marges alors prix achat = prix vente
