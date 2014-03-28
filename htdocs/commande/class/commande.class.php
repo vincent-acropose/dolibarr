@@ -1054,6 +1054,7 @@ class Commande extends CommonOrder
         if (empty($txlocaltax1)) $txlocaltax1=0;
         if (empty($txlocaltax2)) $txlocaltax2=0;
         if (empty($fk_parent_line) || $fk_parent_line < 0) $fk_parent_line=0;
+		if (empty($fk_task)) $fk_task=0;
 
         $remise_percent=price2num($remise_percent);
         $qty=price2num($qty);
@@ -2276,6 +2277,8 @@ class Commande extends CommonOrder
             if (empty($remise)) $remise=0;
             if (empty($remise_percent)) $remise_percent=0;
             if (empty($special_code) || $special_code == 3) $special_code=0;
+			if (empty($fk_task)) $fk_task=0;
+			
             $remise_percent=price2num($remise_percent);
             $qty=price2num($qty);
             $pu = price2num($pu);
@@ -3197,7 +3200,7 @@ class OrderLine extends CommonOrderLine
         if (empty($this->info_bits)) $this->info_bits=0;
         if (empty($this->special_code)) $this->special_code=0;
         if (empty($this->fk_parent_line)) $this->fk_parent_line=0;
-
+		if (empty($this->$tasklineid)) $this->$tasklineid=0;
 		if (empty($this->pa_ht)) $this->pa_ht=0;
 
 		// si prix d'achat non renseigne et utilise pour calcul des marges alors prix achat = prix vente
@@ -3247,7 +3250,7 @@ class OrderLine extends CommonOrderLine
         $sql.= " '".price2num($this->total_ttc)."',";
         $sql.= " ".(! empty($this->date_start)?"'".$this->db->idate($this->date_start)."'":"null").',';
         $sql.= " ".(! empty($this->date_end)?"'".$this->db->idate($this->date_end)."'":"null").',';
-		$sql.= " ".(! empty($this->tasklineid)?"'".$this->tasklineid."'":"null").',';
+		$sql.= " ".(! empty($this->tasklineid)?"'".$this->tasklineid."'":"0").',';
         $sql.= ')';
 
         dol_syslog(get_class($this)."::insert sql=".$sql, LOG_DEBUG);
@@ -3357,7 +3360,7 @@ class OrderLine extends CommonOrderLine
 		$sql.= " , date_end=".(! empty($this->date_end)?"'".$this->db->idate($this->date_end)."'":"null");
 		$sql.= " , product_type=".$this->product_type;
 		$sql.= " , fk_parent_line=".(! empty($this->fk_parent_line)?$this->fk_parent_line:"null");
-		$sql.= " , fk_task=".(! empty($this->tasklineid)?$this->tasklineid:"null");
+		$sql.= " , fk_task=".(! empty($this->tasklineid)?$this->tasklineid:"0");
 		if (! empty($this->rang)) $sql.= ", rang=".$this->rang;
 		$sql.= " WHERE rowid = ".$this->rowid;
 
