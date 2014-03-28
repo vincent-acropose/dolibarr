@@ -456,6 +456,30 @@ class FormOther
             print '<div class="warning">'.$langs->trans("NoProject").'</div>';
         }
     }
+	
+	function selectProjectTasks_specific($selectedtask='', $projectid=0, $htmlname='task_parent', $modeproject=0, $modetask=0, $mode=0, $useempty=0)
+    {
+        global $user, $langs;
+
+        require_once DOL_DOCUMENT_ROOT.'/projet/class/task.class.php';
+
+        //print $modeproject.'-'.$modetask;
+        $task=new Task($this->db);
+        $tasksarray=$task->getTasksArray($modetask?$user:0, $modeproject?$user:0, $projectid, 0, $mode);
+        if ($tasksarray)
+        {
+            print '<select class="flat" name="'.$htmlname.'">';
+            if ($useempty) print '<option value="0">&nbsp;</option>';
+            $j=0;
+            $level=0;
+            $this->_pLineSelect_specific($j, 0, $tasksarray, $level, $selectedtask, $projectid);
+            print '</select>';
+        }
+        else
+        {
+            print '<div class="warning">'.$langs->trans("NoProject").'</div>';
+        }
+    }
 
     /**
      * Write all lines of a project (if parent = 0)
@@ -513,6 +537,79 @@ class FormOther
                 if ($lines[$i]->id >= 0)
                 {
                     print '<option value="'.$lines[$i]->fk_project.'_'.$lines[$i]->id.'"';
+                    if (($lines[$i]->id == $selectedtask) || ($lines[$i]->fk_project.'_'.$lines[$i]->id == $selectedtask)) print ' selected="selected"';
+                    print '>';
+                    print $langs->trans("Project").' '.$lines[$i]->projectref;
+                    if (empty($lines[$i]->public))
+                    {
+                        print ' ('.$langs->trans("Visibility").': '.$langs->trans("PrivateProject").')';
+                    }
+                    else
+                    {
+                        print ' ('.$langs->trans("Visibility").': '.$langs->trans("SharedProject").')';
+                    }
+                    if ($lines[$i]->id) print ' > ';
+                    for ($k = 0 ; $k < $level ; $k++)
+                    {
+                        print "&nbsp;&nbsp;&nbsp;";
+                    }
+                    print $lines[$i]->ref." ".$lines[$i]->label."</option>\n";
+                    $inc++;
+                }
+
+                $level++;
+                if ($lines[$i]->id) $this->_pLineSelect($inc, $lines[$i]->id, $lines, $level, $selectedtask, $selectedproject);
+                $level--;
+            }
+        }
+    }
+
+	private function _pLineSelect_specific(&$inc, $parent, $lines, $level=0, $selectedtask=0, $selectedproject=0)
+    {
+        global $langs, $user, $conf;
+
+        $lastprojectid=0;
+
+        $numlines=count($lines);
+        print '<option value="0"> </option>';
+        for ($i = 0 ; $i < $numlines ; $i++)
+        {
+            if ($lines[$i]->fk_parent == $parent)
+            {
+                $var = !$var;
+
+				//var_dump($selectedtask."--".$selectedtask."--".$lines[$i]->fk_project."_".$lines[$i]->id);
+
+                // Break on a new project
+                if ($parent == 0)
+                {
+                    if ($lines[$i]->fk_project != $lastprojectid)
+                    {
+                        if ($i > 0 && $conf->browser->firefox) print '<option value="0" disabled="disabled">----------</option>';
+                        /*print '<option value="'.$lines[$i]->fk_project.'_0"';
+                        if ($selectedproject == $lines[$i]->fk_project) print ' selected="selected"';
+                        print '>';	// Project -> Task
+                        print $langs->trans("Project").' '.$lines[$i]->projectref;
+                        if (empty($lines[$i]->public))
+                        {
+                            print ' ('.$langs->trans("Visibility").': '.$langs->trans("PrivateProject").')';
+                        }
+                        else
+                        {
+                            print ' ('.$langs->trans("Visibility").': '.$langs->trans("SharedProject").')';
+                        }
+                        //print '-'.$parent.'-'.$lines[$i]->fk_project.'-'.$lastprojectid;
+                        print "</option>\n";*/
+
+                        $lastprojectid=$lines[$i]->fk_project;
+                        $inc++;
+                    }
+                }
+
+                // Print task
+                if ($lines[$i]->id >= 0)
+                {
+                    print '<option value="'.$lines[$i]->id.'"';
                     if (($lines[$i]->id == $selectedtask) || ($lines[$i]->fk_project.'_'.$lines[$i]->id == $selectedtask)) print ' selected="selected"';
                     print '>';
                     print $langs->trans("Project").' '.$lines[$i]->projectref;

@@ -92,7 +92,7 @@ $coldisplay=-1; // We remove first td
 	if($this->element == "commande"){
 		$formother = new FormOther($this->db);
 		print $langs->trans('Task').": ";
-		print $formother->selectProjectTasks($line->tasklineid,'', 'tasklineid', 1, 0);
+		print $formother->selectProjectTasks_specific($line->tasklineid,'', 'tasklineid', 1, 0);
 		print '<br>';
 	}
 	
