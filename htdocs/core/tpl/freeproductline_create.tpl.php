@@ -104,7 +104,7 @@ else {
 		global $db;
 		$formother = new FormOther($db);
 		print "<br>".$langs->trans('Task').": ";
-		print $formother->selectProjectTasks('','', 'tasklineid', 1, 0);
+		print $formother->selectProjectTasks_specific('','', 'tasklineid', 1, 0);
 	}
 	
 	if ((! empty($conf->product->enabled) && ! empty($conf->service->enabled)) || (empty($conf->product->enabled) && empty($conf->service->enabled))) echo '<br>';

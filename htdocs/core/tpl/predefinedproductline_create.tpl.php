@@ -116,7 +116,7 @@ else {
 		global $db;
 		$formother = new FormOther($db);
 		print $langs->trans('Task').": ";
-		print $formother->selectProjectTasks('','', 'tasklineid', 1, 0);
+		print $formother->selectProjectTasks_specific('','', 'tasklineid', 1, 0);
 		echo '<br>';
 	}
 
