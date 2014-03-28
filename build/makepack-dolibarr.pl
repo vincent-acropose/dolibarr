@@ -331,7 +331,7 @@ if ($nboftargetok) {
 	    	}
     	}
     	print 'Run git push --tags'."\n";
-    	#$ret=`git push --tags`;
+    	$ret=`git push --tags`;
     	chdir("$olddir");
 	}
 	
@@ -349,6 +349,7 @@ if ($nboftargetok) {
 	    	mkdir "$BUILDROOT/$PROJECT";
 	    	print "Copy $SOURCE into $BUILDROOT/$PROJECT\n";
 	    	$ret=`cp -pr "$SOURCE" "$BUILDROOT/$PROJECT"`;
+
 	    	print "Copy $SOURCE/build/debian/apache/.htaccess into $BUILDROOT/$PROJECT/build/debian/apache/.htaccess\n";
 	    	$ret=`cp -pr "$SOURCE/build/debian/apache/.htaccess" "$BUILDROOT/$PROJECT/build/debian/apache/.htaccess"`;
 	    }
@@ -999,7 +1000,7 @@ if ($nboftargetok) {
 				print "$command\n";	
 				my $ret=`$command 2>&1`;
 
-				$command="rsync -s -n $OPTIONUPDATEDIST -e 'ssh' \"$file\" \"".$destFolder."\"";
+				$command="rsync -s $OPTIONUPDATEDIST -e 'ssh' \"$file\" \"".$destFolder."\"";
 				print "$command\n";	
 				my $ret=`$command 2>&1`;
 				print "$ret\n";

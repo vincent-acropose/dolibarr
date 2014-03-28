@@ -1290,6 +1290,16 @@ class Facture extends CommonInvoice
 			}
 			// Fin appel triggers
 		}
+		
+		// Removed extrafields
+		if (! $error) {
+			$result=$this->deleteExtraFields();
+			if ($result < 0)
+			{
+				$error++;
+				dol_syslog(get_class($this)."::delete error deleteExtraFields ".$this->error, LOG_ERR);
+			}
+		}
 
 		if (! $error)
 		{
@@ -1509,6 +1519,7 @@ class Facture extends CommonInvoice
 			if ($close_note) $sql.= ", close_note='".$this->db->escape($close_note)."'";
 			$sql.= ' WHERE rowid = '.$this->id;
 
+			dol_syslog(get_class($this)."::set_paid sql=".$sql, LOG_DEBUG);
 			$resql = $this->db->query($sql);
 			if ($resql)
 			{
@@ -1524,8 +1535,7 @@ class Facture extends CommonInvoice
 			else
 			{
 				$error++;
-				$this->error=$this->db->error();
-				dol_print_error($this->db);
+				$this->error=$this->db->lasterror();
 			}
 
 			if (! $error)

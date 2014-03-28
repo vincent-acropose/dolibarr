@@ -30,7 +30,6 @@
  */
 
 require '../../main.inc.php';
-
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formorder.class.php';
@@ -227,7 +226,7 @@ else if ($action == 'addline' && $user->rights->fournisseur->commande->creer)
         setEventMessage($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('Type')), 'errors');
         $error++;
     }
-    if (! GETPOST('addline_predefined') && (! GETPOST('pu') || GETPOST('pu')=='')) // Unit price can be 0 but not ''
+    if (! GETPOST('addline_predefined') && ( GETPOST('pu')==='')) // Unit price can be 0 but not ''
     {
         setEventMessage($langs->trans($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('UnitPrice'))), 'errors');
         $error++;
@@ -309,7 +308,7 @@ else if ($action == 'addline' && $user->rights->fournisseur->commande->creer)
     		setEventMessage($langs->trans("ErrorQtyTooLowForThisSupplier"), 'errors');
     	}
     }
-    else
+    else if( GETPOST('pu')!=='' || GETPOST('amountttc')!=='' )
 	{
     	$type=$_POST["type"];
     	$desc=$_POST['dp_desc'];
@@ -329,7 +328,7 @@ else if ($action == 'addline' && $user->rights->fournisseur->commande->creer)
     		{
     			$price_base_type = 'HT';
     			$ht = price2num($_POST['pu']);
-    			$result=$object->addline($desc, $ht, $qty, $tva_tx, $localtax1_tx, $localtax2_tx, 0, 0, '', $remise_percent, $price_base_type, 0, $type,0, false, $tasklineid);
+    			$result=$object->addline($desc, $ht, $qty, $tva_tx, $localtax1_tx, $localtax2_tx, 0, 0, '', $remise_percent, $price_base_type, 0, $type);
     		}
     		else
     		{
@@ -682,6 +681,7 @@ else if ($action == 'down' && $user->rights->fournisseur->commande->creer)
 else if ($action == 'builddoc' && $user->rights->fournisseur->commande->creer)	// En get ou en	post
 {
     // Build document
+
 	// Save last template used to generate document
 	if (GETPOST('model')) $object->setDocModel($user, GETPOST('model','alpha'));
 
@@ -691,16 +691,12 @@ else if ($action == 'builddoc' && $user->rights->fournisseur->commande->creer)	/
         $outputlangs = new Translate("",$conf);
         $outputlangs->setDefaultLang(GETPOST('lang_id'));
     }
-	//exit($result);
     $result=supplier_order_pdf_create($db, $object,$object->modelpdf,$outputlangs, $hidedetails, $hidedesc, $hideref);
-	
-
     if ($result	<= 0)
     {
         dol_print_error($db,$result);
         exit;
     }
-	
 }
 
 // Delete file in doc form
@@ -1602,7 +1598,7 @@ elseif (! empty($object->id))
 		// Edit line
 		if ($action != 'edit_line' || $_GET['rowid'] != $line->id)
 		{
-			print '<tr id="row-'.$line->id.'" '.$bc[$var].'>';
+			print '<tr '.$bc[$var].'>';
 
 			// Show product and description
 			print '<td>';
@@ -1616,16 +1612,7 @@ elseif (! empty($object->id))
 				$text.= ' - '.$product_static->libelle;
 				$description=($conf->global->PRODUIT_DESC_IN_FORM?'':dol_htmlentitiesbr($line->description));
 				print $form->textwithtooltip($text,$description,3,'','',$i);
-				
-				if($object->lines[$i]->tasklineid > 0){
-					$taskstatic = new Task($db);
-					$taskstatic->fetch($object->lines[$i]->tasklineid);
-					print " - Tâche : ";
-					print $taskstatic->getNomUrl(1,'withproject');
-				}
-				//print $langs->trans('Task').": ";
-				//print $formother->selectProjectTasks($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0); print '<br>';
-				
+
 				// Show range
 				print_date_range($date_start,$date_end);
 
@@ -1639,16 +1626,6 @@ elseif (! empty($object->id))
 				if ($type==1) $text = img_object($langs->trans('Service'),'service');
 				else $text = img_object($langs->trans('Product'),'product');
 				print $text.' '.nl2br($line->description);
-
-				if($object->lines[$i]->tasklineid > 0){
-					$taskstatic = new Task($db);
-					$taskstatic->fetch($object->lines[$i]->tasklineid);
-					print " - Tâche : ";
-					print $taskstatic->getNomUrl(1,'withproject');
-				}
-
-				//print $langs->trans('Task').": ";
-				//print $formother->selectProjectTasks($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0); print '<br>';
 
 				// Show range
 				print_date_range($date_start,$date_end);
@@ -1708,10 +1685,7 @@ elseif (! empty($object->id))
 				$text.= ' - '.$product_static->libelle;
 				$description=($conf->global->PRODUIT_DESC_IN_FORM?'':dol_htmlentitiesbr($line->description));
 				print $form->textwithtooltip($text,$description,3,'','',$i);
-				
-				print "<br>".$langs->trans('Task').": ";
-				print $formother->selectProjectTasks($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0);
-				
+
 				// Show range
 				print_date_range($date_start,$date_end);
 				print '<br>';
@@ -1720,9 +1694,6 @@ elseif (! empty($object->id))
 			{
 				print $form->select_type_of_lines($line->product_type,'type',1);
 				if (! empty($conf->product->enabled) && ! empty($conf->service->enabled)) print '<br>';
-				
-				print $langs->trans('Task').": ";
-				print $formother->selectProjectTasks($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0); print "<br>";
 			}
 
 			if (is_object($hookmanager))
@@ -1778,10 +1749,7 @@ elseif (! empty($object->id))
 		print $form->select_type_of_lines(isset($_POST["type"])?$_POST["type"]:-1,'type',1,0,$forceall);
 		if ($forceall || (! empty($conf->product->enabled) && ! empty($conf->service->enabled))
 				|| (empty($conf->product->enabled) && empty($conf->service->enabled))) print '<br>';
-		
-		print $langs->trans('Task').": ";
-		print $formother->selectProjectTasks($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0); print '<br>';
-		
+
 		if (is_object($hookmanager))
 		{
 			$parameters=array();
@@ -1841,8 +1809,7 @@ elseif (! empty($object->id))
 					'error' => $langs->trans("NoPriceDefinedForThisSupplier") // translation of an error saved into var 'error'
 			);
 			$form->select_produits_fournisseurs($object->fourn_id, GETPOST('idprodfournprice'), 'idprodfournprice', '', '', $ajaxoptions);
-			print "<br>".$langs->trans('Task').": ";
-			print $formother->selectProjectTasks($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0); print '<br>';
+
 			if (empty($conf->global->PRODUIT_USE_SEARCH_TO_SELECT)) print '<br>';
 
 			if (is_object($hookmanager))

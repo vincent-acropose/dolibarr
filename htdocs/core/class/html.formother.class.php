@@ -471,7 +471,7 @@ class FormOther
     private function _pLineSelect(&$inc, $parent, $lines, $level=0, $selectedtask=0, $selectedproject=0)
     {
         global $langs, $user, $conf;
-		
+
         $lastprojectid=0;
 
         $numlines=count($lines);
@@ -480,6 +480,8 @@ class FormOther
             if ($lines[$i]->fk_parent == $parent)
             {
                 $var = !$var;
+
+				//var_dump($selectedtask."--".$selectedtask."--".$lines[$i]->fk_project."_".$lines[$i]->id);
 
                 // Break on a new project
                 if ($parent == 0)
@@ -508,20 +510,20 @@ class FormOther
                 }
 
                 // Print task
-                if ($lines[$i]->id > 0)
+                if ($lines[$i]->id >= 0)
                 {
-                    print '<option value="'.$lines[$i]->id.'"';
-                    if ($lines[$i]->id == $selectedtask) print ' selected="selected"';
+                    print '<option value="'.$lines[$i]->fk_project.'_'.$lines[$i]->id.'"';
+                    if (($lines[$i]->id == $selectedtask) || ($lines[$i]->fk_project.'_'.$lines[$i]->id == $selectedtask)) print ' selected="selected"';
                     print '>';
                     print $langs->trans("Project").' '.$lines[$i]->projectref;
-                    /*if (empty($lines[$i]->public))
+                    if (empty($lines[$i]->public))
                     {
                         print ' ('.$langs->trans("Visibility").': '.$langs->trans("PrivateProject").')';
                     }
                     else
                     {
                         print ' ('.$langs->trans("Visibility").': '.$langs->trans("SharedProject").')';
-                    }*/
+                    }
                     if ($lines[$i]->id) print ' > ';
                     for ($k = 0 ; $k < $level ; $k++)
                     {
