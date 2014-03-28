@@ -1035,7 +1035,7 @@ class Commande extends CommonOrder
      *	par l'appelant par la methode get_default_tva(societe_vendeuse,societe_acheteuse,produit)
      *	et le desc doit deja avoir la bonne valeur (a l'appelant de gerer le multilangue)
      */
-	function addline($desc, $pu_ht, $qty, $txtva, $txlocaltax1=0, $txlocaltax2=0, $fk_product=0, $remise_percent=0, $info_bits=0, $fk_remise_except=0, $price_base_type='HT', $pu_ttc=0, $date_start='', $date_end='', $type=0, $rang=-1, $special_code=0, $fk_parent_line=0, $fk_fournprice=null, $pa_ht=0, $label='',$array_option=0)
+	function addline($desc, $pu_ht, $qty, $txtva, $txlocaltax1=0, $txlocaltax2=0, $fk_product=0, $remise_percent=0, $info_bits=0, $fk_remise_except=0, $price_base_type='HT', $pu_ttc=0, $date_start='', $date_end='', $type=0, $rang=-1, $special_code=0, $fk_parent_line=0, $fk_fournprice=null, $pa_ht=0, $label='',$array_option=0,$fk_task='')
     {
     	global $mysoc;
     	
@@ -1142,6 +1142,7 @@ class Commande extends CommonOrder
 
             $this->line->date_start=$date_start;
             $this->line->date_end=$date_end;
+			$this->line->tasklineid= $fk_task;    // Reference supplier
 
 			// infos marge
 			$this->line->fk_fournprice = $fk_fournprice;
@@ -1475,10 +1476,9 @@ class Commande extends CommonOrder
     function fetch_lines($only_product=0)
     {
         $this->lines=array();
-
         $sql = 'SELECT l.rowid, l.fk_product, l.fk_parent_line, l.product_type, l.fk_commande, l.label as custom_label, l.description, l.price, l.qty, l.tva_tx,';
         $sql.= ' l.localtax1_tx, l.localtax2_tx, l.fk_remise_except, l.remise_percent, l.subprice, l.fk_product_fournisseur_price as fk_fournprice, l.buy_price_ht as pa_ht, l.rang, l.info_bits, l.special_code,';
-        $sql.= ' l.total_ht, l.total_ttc, l.total_tva, l.total_localtax1, l.total_localtax2, l.date_start, l.date_end,';
+        $sql.= ' l.total_ht, l.total_ttc, l.total_tva, l.total_localtax1, l.total_localtax2, l.date_start, l.date_end, l.fk_task,';
         $sql.= ' p.ref as product_ref, p.description as product_desc, p.fk_product_type, p.label as product_label';
         $sql.= ' FROM '.MAIN_DB_PREFIX.'commandedet as l';
         $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as p ON (p.rowid = l.fk_product)';
@@ -1539,6 +1539,7 @@ class Commande extends CommonOrder
 
                 $line->date_start       = $this->db->jdate($objp->date_start);
                 $line->date_end         = $this->db->jdate($objp->date_end);
+				$line->tasklineid       = $objp->fk_task;
 
                 $this->lines[$i] = $line;
 
@@ -2255,7 +2256,7 @@ class Commande extends CommonOrder
 	 *  @param		array			$array_option		extrafields array
      *  @return   	int              					< 0 if KO, > 0 if OK
      */
-	function updateline($rowid, $desc, $pu, $qty, $remise_percent, $txtva, $txlocaltax1=0,$txlocaltax2=0, $price_base_type='HT', $info_bits=0, $date_start='', $date_end='', $type=0, $fk_parent_line=0, $skip_update_total=0, $fk_fournprice=null, $pa_ht=0, $label='', $special_code=0, $array_option=0)
+	function updateline($rowid, $desc, $pu, $qty, $remise_percent, $txtva, $txlocaltax1=0,$txlocaltax2=0, $price_base_type='HT', $info_bits=0, $date_start='', $date_end='', $type=0, $fk_parent_line=0, $skip_update_total=0, $fk_fournprice=null, $pa_ht=0, $label='', $special_code=0, $array_option=0,$fk_task='')
     {
         global $conf, $mysoc;
 
@@ -2345,6 +2346,7 @@ class Commande extends CommonOrder
             $this->line->product_type=$type;
             $this->line->fk_parent_line=$fk_parent_line;
             $this->line->skip_update_total=$skip_update_total;
+			$this->line->tasklineid=$fk_task;
 
 			// infos marge
 			$this->line->fk_fournprice = $fk_fournprice;
@@ -2905,7 +2907,7 @@ class Commande extends CommonOrder
         $lines = array();
 
         $sql = 'SELECT l.rowid, l.fk_product, l.product_type, l.label as custom_label, l.description, l.price, l.qty, l.tva_tx, ';
-        $sql.= ' l.fk_remise_except, l.remise_percent, l.subprice, l.info_bits, l.rang, l.special_code, l.fk_parent_line,';
+        $sql.= ' l.fk_remise_except, l.remise_percent, l.subprice, l.info_bits, l.rang, l.special_code, l.fk_parent_line, l.fk_task';
         $sql.= ' l.total_ht, l.total_tva, l.total_ttc, l.fk_product_fournisseur_price as fk_fournprice, l.buy_price_ht as pa_ht, l.localtax1_tx, l.localtax2_tx,';
         $sql.= ' l.date_start, l.date_end,';
         $sql.= ' p.label as product_label, p.ref, p.fk_product_type, p.rowid as prodid, ';
@@ -2955,6 +2957,7 @@ class Commande extends CommonOrder
 				$this->lines[$i]->pa_ht				= $marginInfos[0];
 				$this->lines[$i]->marge_tx			= $marginInfos[1];
 				$this->lines[$i]->marque_tx			= $marginInfos[2];
+				$this->lines[$i]->tasklineid		= $obj->fk_task;
 
                 $i++;
             }
@@ -3037,6 +3040,8 @@ class OrderLine extends CommonOrderLine
     var $date_end;
 
     var $skip_update_total; // Skip update price total for special lines
+    
+    var $tasklineid;
 
 
     /**
@@ -3058,7 +3063,7 @@ class OrderLine extends CommonOrderLine
     function fetch($rowid)
     {
         $sql = 'SELECT cd.rowid, cd.fk_commande, cd.fk_parent_line, cd.fk_product, cd.product_type, cd.label as custom_label, cd.description, cd.price, cd.qty, cd.tva_tx, cd.localtax1_tx, cd.localtax2_tx,';
-        $sql.= ' cd.remise, cd.remise_percent, cd.fk_remise_except, cd.subprice,';
+        $sql.= ' cd.remise, cd.remise_percent, cd.fk_remise_except, cd.subprice, cd.fk_task,';
         $sql.= ' cd.info_bits, cd.total_ht, cd.total_tva, cd.total_localtax1, cd.total_localtax2, cd.total_ttc, cd.fk_product_fournisseur_price as fk_fournprice, cd.buy_price_ht as pa_ht, cd.rang, cd.special_code,';
         $sql.= ' p.ref as product_ref, p.label as product_libelle, p.description as product_desc,';
         $sql.= ' cd.date_start, cd.date_end';
@@ -3099,6 +3104,7 @@ class OrderLine extends CommonOrderLine
 			$this->marque_tx		= $marginInfos[2];
             $this->special_code		= $objp->special_code;
             $this->rang             = $objp->rang;
+			$this->tasklineid       = $objp->fk_task;
 
             $this->ref				= $objp->product_ref;      // deprecated
             $this->product_ref		= $objp->product_ref;
@@ -3211,7 +3217,7 @@ class OrderLine extends CommonOrderLine
         $sql.= ' tva_tx, localtax1_tx, localtax2_tx, localtax1_type, localtax2_type,';
         $sql.= ' fk_product, product_type, remise_percent, subprice, price, remise, fk_remise_except,';
         $sql.= ' special_code, rang, fk_product_fournisseur_price, buy_price_ht,';
-        $sql.= ' info_bits, total_ht, total_tva, total_localtax1, total_localtax2, total_ttc, date_start, date_end)';
+        $sql.= ' info_bits, total_ht, total_tva, total_localtax1, total_localtax2, total_ttc, date_start, date_end, fk_task)';
         $sql.= " VALUES (".$this->fk_commande.",";
         $sql.= " ".($this->fk_parent_line>0?"'".$this->fk_parent_line."'":"null").",";
         $sql.= " ".(! empty($this->label)?"'".$this->db->escape($this->label)."'":"null").",";
@@ -3240,7 +3246,8 @@ class OrderLine extends CommonOrderLine
         $sql.= " '".price2num($this->total_localtax2)."',";
         $sql.= " '".price2num($this->total_ttc)."',";
         $sql.= " ".(! empty($this->date_start)?"'".$this->db->idate($this->date_start)."'":"null").',';
-        $sql.= " ".(! empty($this->date_end)?"'".$this->db->idate($this->date_end)."'":"null");
+        $sql.= " ".(! empty($this->date_end)?"'".$this->db->idate($this->date_end)."'":"null").',';
+		$sql.= " ".(! empty($this->tasklineid)?"'".$this->tasklineid."'":"null").',';
         $sql.= ')';
 
         dol_syslog(get_class($this)."::insert sql=".$sql, LOG_DEBUG);
@@ -3350,6 +3357,7 @@ class OrderLine extends CommonOrderLine
 		$sql.= " , date_end=".(! empty($this->date_end)?"'".$this->db->idate($this->date_end)."'":"null");
 		$sql.= " , product_type=".$this->product_type;
 		$sql.= " , fk_parent_line=".(! empty($this->fk_parent_line)?$this->fk_parent_line:"null");
+		$sql.= " , fk_task=".(! empty($this->tasklineid)?$this->tasklineid:"null");
 		if (! empty($this->rang)) $sql.= ", rang=".$this->rang;
 		$sql.= " WHERE rowid = ".$this->rowid;
 
