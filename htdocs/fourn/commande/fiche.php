@@ -1834,7 +1834,7 @@ elseif (! empty($object->id))
 			$form->select_produits_fournisseurs($object->fourn_id, GETPOST('idprodfournprice'), 'idprodfournprice', '', '', $ajaxoptions);
 			
 			print '<br>'.$langs->trans('Task').": ";
- 			print $formother->selectProjectTasks_specific($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0);
+ 			print $formother->selectProjectTasks_specific($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0); print '<br>';
 			
 			if (empty($conf->global->PRODUIT_USE_SEARCH_TO_SELECT)) print '<br>';
 
