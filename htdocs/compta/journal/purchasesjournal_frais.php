@@ -99,7 +99,7 @@ else
 	$sql .= " AND f.type IN (0,1,2,3)";
 if ($date_start && $date_end)
 	$sql .= " AND f.datef >= '" . $db->idate ( $date_start ) . "' AND f.datef <= '" . $db->idate ( $date_end ) . "'";
-$sql .= " AND s.rowid IN (SELECT fk_societe FROM " . MAIN_DB_PREFIX . "categorie_fournisseur WHERE fk_categorie IN (61))";
+$sql .= " AND s.rowid IN (SELECT fk_societe FROM " . MAIN_DB_PREFIX . "categorie_fournisseur WHERE fk_categorie IN (62))";
 $sql .= " ORDER BY s.nom";
 
 dol_syslog ( "sql=" . $sql );
