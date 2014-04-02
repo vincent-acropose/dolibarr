@@ -217,14 +217,117 @@ if ($action == 'create' || $action == 'add_paiement')
             $total = $obj->total;
 
             print_fiche_titre($langs->trans('DoPayment'));
+            
+            // Add realtime total information
+            if ($conf->use_javascript_ajax)
+            {
+            	print "\n".'<script type="text/javascript" language="javascript">';
+            	print '$(document).ready(function () {
+            			setPaiementCode();
+            
+            			$("#selectpaiementcode").change(function() {
+            				setPaiementCode();
+            			});
+            
+            			function setPaiementCode()
+            			{
+            				var code = $("#selectpaiementcode option:selected").val();
+            
+                            if (code == \'CHQ\' || code == \'VIR\')
+            				{
+            					$(\'.fieldrequireddyn\').addClass(\'fieldrequired\');
+            					if ($(\'#fieldchqemetteur\').val() == \'\')
+            					{
+            						var emetteur = ('.$object->type.' == 2) ? \''.dol_escape_htmltag(MAIN_INFO_SOCIETE_NOM).'\' : jQuery(\'#thirdpartylabel\').val();
+            						$(\'#fieldchqemetteur\').val(emetteur);
+            					}
+            				}
+            				else
+            				{
+            					$(\'.fieldrequireddyn\').removeClass(\'fieldrequired\');
+            					$(\'#fieldchqemetteur\').val(\'\');
+            				}
+            			}
+            
+						function _elemToJson(selector)
+						{
+							var subJson = {};
+							$.map(selector.serializeArray(), function(n,i)
+							{
+								subJson[n["name"]] = n["value"];
+							});
+							return subJson;
+						}
+						function callForResult(imgId)
+						{
+							var json = {};
+							var form = $("#payment_form");
+            
+							json["invoice_type"] = $("#invoice_type").val();
+							json["amountPayment"] = $("#amountpayment").attr("value");
+							json["amounts"] = _elemToJson(form.find("input[name*=\"amount_\"]"));
+							json["remains"] = _elemToJson(form.find("input[name*=\"remain_\"]"));
+            
+							if (imgId != null) {
+								json["imgClicked"] = imgId;
+							}
+            
+							$.post("'.DOL_URL_ROOT.'/compta/ajaxpayment.php", json, function(data)
+							{
+								json = $.parseJSON(data);
+            
+								form.data(json);
+            
+								for (var key in json)
+								{
+									if (key == "result")	{
+										if (json["makeRed"]) {
+											$("#"+key).addClass("error");
+										} else {
+											$("#"+key).removeClass("error");
+										}
+										json[key]=json["label"]+" "+json[key];
+										$("#"+key).text(json[key]);
+									} else {
+										form.find("input[name*=\""+key+"\"]").each(function() {
+											$(this).attr("value", json[key]);
+										});
+									}
+								}
+							});
+						}
+						$("#payment_form").find("input[name*=\"amount_\"]").change(function() {
+							callForResult();
+						});
+						$("#payment_form").find("input[name*=\"amount_\"]").keyup(function() {
+							callForResult();
+						});
+			';
+            
+            	// Add user helper to input amount on invoices
+            	if (! empty($conf->global->MAIN_JS_ON_PAYMENT))
+            	{
+            		print '	$("#payment_form").find("img").click(function() {
+							callForResult(jQuery(this).attr("id"));
+						});
+            
+						$("#amountpayment").change(function() {
+							callForResult();
+						});';
+            	}
+            
+            	print '	});'."\n";
+            	print '	</script>'."\n";
+            }
 
-            print '<form name="addpaiement" action="paiement.php" method="post">';
+            print '<form id="payment_form" name="addpaiement" action="paiement.php" method="post">';
             print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
             print '<input type="hidden" name="action" value="add_paiement">';
             print '<input type="hidden" name="facid" value="'.$facid.'">';
             print '<input type="hidden" name="ref_supplier" value="'.$obj->ref_supplier.'">';
             print '<input type="hidden" name="socid" value="'.$obj->socid.'">';
             print '<input type="hidden" name="societe" value="'.$obj->nom.'">';
+            print '<input type="hidden" name="type" id="invoice_type" value="'.$object->type.'">';
 
             print '<table class="border" width="100%">';
 
@@ -254,6 +357,24 @@ if ($action == 'create' || $action == 'add_paiement')
             {
                 print '<tr><td colspan="2">&nbsp;</td></tr>';
             }
+            // Payment amount
+            if ($conf->use_javascript_ajax && !empty($conf->global->MAIN_JS_ON_PAYMENT))
+            {
+            	print '<tr><td><span class="fieldrequired">'.$langs->trans('AmountPayment').'</span></td>';
+            	print '<td>';
+            	if ($action == 'add_paiement')
+            	{
+            		print '<input id="amountpayment" name="amountpaymenthidden" size="8" type="text" value="'.(empty($_POST['amountpayment'])?'':$_POST['amountpayment']).'" disabled="disabled">';
+            		print '<input name="amountpayment" type="hidden" value="'.(empty($_POST['amountpayment'])?'':$_POST['amountpayment']).'">';
+            	}
+            	else
+            	{
+            		print '<input id="amountpayment" name="amountpayment" size="8" type="text" value="'.(empty($_POST['amountpayment'])?'':$_POST['amountpayment']).'">';
+            	}
+            	print '</td>';
+            	print '</tr>';
+            }
+            
             print '</table>';
 
 
@@ -318,9 +439,19 @@ if ($action == 'create' || $action == 'add_paiement')
 	                        }
 	                        print '<td align="right">'.price($objp->total_ttc).'</td>';
 	                        print '<td align="right">'.price($objp->am).'</td>';
-	                        print '<td align="right">'.price($objp->total_ttc - $objp->am).'</td>';
+	                        $remaintopay=$objp->total_ttc - $objp->am;
+	                        print '<td align="right">'.price($remaintopay).'</td>';
 	                        print '<td align="center">';
+	                      
 	                        $namef = 'amount_'.$objp->facid;
+	                        $nameRemain = 'remain_'.$objp->facid;
+	                        if ($conf->use_javascript_ajax && !empty($conf->global->MAIN_JS_ON_PAYMENT))
+	                        {
+	                        	print img_picto($langs->trans('AddRemind'),'rightarrow.png','id="'.$objp->facid.'"');
+	                        	print '<input type=hidden name="'.$nameRemain.'" value="'.$remaintopay.'">';
+	                        }
+
+	                        
 	                        print '<input type="text" size="8" name="'.$namef.'" value="'.GETPOST($namef).'">';
 	                        print "</td></tr>\n";
 	                        $total+=$objp->total_ht;
@@ -336,7 +467,8 @@ if ($action == 'create' || $action == 'add_paiement')
 	                        print '<td align="right"><b>'.price($total_ttc).'</b></td>';
 	                        print '<td align="right"><b>'.price($totalrecu).'</b></td>';
 	                        print '<td align="right"><b>'.price($total_ttc - $totalrecu).'</b></td>';
-	                        print '<td align="center">&nbsp;</td>';
+	                        print '<td align="center" id="result" style="font-weight: bold;"></td>';
+                   			
 	                        print "</tr>\n";
 	                    }
 	                    print "</table>\n";
