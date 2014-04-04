@@ -81,7 +81,7 @@ ConfirmClonePropal=Are you sure you want to clone the commercial proposal <b>%s<
 ConfirmReOpenProp=Are you sure you want to open back the commercial proposal <b>%s</b> ?
 ProposalsAndProposalsLines=Commercial proposal and lines
 ProposalLine=Proposal line
-AvailabilityPeriod=Availability delay
+AvailabilityPeriod=Delivery Time
 SetAvailability=Set availability delay
 AfterOrder=after order
 ##### Availability #####
