@@ -1119,7 +1119,7 @@ else if ($id || $ref)
 		if ($calculatedVolume > 0)
 		{
 			print $calculatedVolume.' ';
-			if ($volumeUnit < 50) print measuring_units_string(0,"volume");
+			if ($volumeUnit < 50) print measuring_units_string($object->height_units * 3,"volume");
 			else print measuring_units_string($volumeUnit,"volume");
 		}
 		if ($totalVolume > 0)
