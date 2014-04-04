@@ -1114,7 +1114,7 @@ else if ($id || $ref)
 		print '</td>';
 		print '<td colspan="3">';
 		$calculatedVolume=0;
-		if ($object->trueWidth && $object->trueHeight && $object->trueDepth) $calculatedVolume=($object->trueWidth * $object->trueHeight * $object->trueDepth);
+		if ($object->trueWidth && $object->trueHeight && $object->trueDepth) $calculatedVolume=round(($object->trueWidth * $object->trueHeight * $object->trueDepth),2);
 		// If sending volume not defined we use sum of products
 		if ($calculatedVolume > 0)
 		{
