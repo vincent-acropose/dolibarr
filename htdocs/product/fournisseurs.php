@@ -460,10 +460,6 @@ if ($id || $ref)
 				$product_fourn = new ProductFournisseur($db);
 				$product_fourn_list = $product_fourn->list_product_fournisseur_price($product->id, $sortfield, $sortorder);
 				
-				/*echo '<pre>';
-				print_r($product_fourn_list);
-				echo '</pre>'; exit;*/
-				
 				if (count($product_fourn_list)>0)
 				{
 					$var=true;
