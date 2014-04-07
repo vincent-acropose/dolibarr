@@ -390,7 +390,13 @@ if ($id || $ref)
 	        		print '</td>';
 					print '</tr>';
 				}
-
+				
+				if (is_object($hookmanager))
+				{
+					$parameters=array('id_fourn'=>$id_fourn,'prod_id'=>$product->id);
+				    $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);
+				}
+				
 				print '</table>';
 
 				print '<br><center><input class="button" type="submit" value="'.$langs->trans("Save").'">';
