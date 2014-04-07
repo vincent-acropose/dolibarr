@@ -293,6 +293,12 @@ if ($id || $ref)
 					print '<input type="hidden" name="id_fourn" value="'.$socid.'">';
 					print '<input type="hidden" name="ref_fourn" value="'.$product->fourn_ref.'">';
 					print '<input type="hidden" name="ref_fourn_price_id" value="'.$rowid.'">';
+					
+					if (is_object($hookmanager))
+					{
+						$parameters=array('id_fourn'=>$id_fourn,'prod_id'=>$product->id);
+					    $reshook=$hookmanager->executeHooks('formEditThirdpartyOptions',$parameters,$object,$action);
+					}
 				}
 				else
 				{
@@ -391,12 +397,6 @@ if ($id || $ref)
 					print '</tr>';
 				}
 				
-				if (is_object($hookmanager))
-				{
-					$parameters=array('id_fourn'=>$id_fourn,'prod_id'=>$product->id);
-				    $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);
-				}
-				
 				print '</table>';
 
 				print '<br><center><input class="button" type="submit" value="'.$langs->trans("Save").'">';
@@ -459,7 +459,11 @@ if ($id || $ref)
 
 				$product_fourn = new ProductFournisseur($db);
 				$product_fourn_list = $product_fourn->list_product_fournisseur_price($product->id, $sortfield, $sortorder);
-
+				
+				/*echo '<pre>';
+				print_r($product_fourn_list);
+				echo '</pre>'; exit;*/
+				
 				if (count($product_fourn_list)>0)
 				{
 					$var=true;
@@ -524,6 +528,12 @@ if ($id || $ref)
 							print $productfourn->fourn_unitcharges?price($productfourn->fourn_unitcharges) : ($productfourn->fourn_qty?price($productfourn->fourn_charges/$productfourn->fourn_qty):"&nbsp;");
 							print '</td>';
 						}
+						
+						if (is_object($hookmanager))
+						{
+							$parameters=array('lineid'=>$productfourn->product_fourn_price_id);
+						    $reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$object,$action);
+						}
 
 						// Modify-Remove
 						print '<td align="center">';
@@ -534,7 +544,7 @@ if ($id || $ref)
 						}
 
 						print '</td>';
-
+						
 						print '</tr>';
 					}
 				}
