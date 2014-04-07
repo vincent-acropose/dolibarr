@@ -548,7 +548,13 @@ if ($id > 0 || $ref)
 					$parameters=array('id_fourn'=>$id_fourn,'prod_id'=>$object->id);
 				    $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);
 				}
-
+				
+				if (is_object($hookmanager))
+				{
+					$parameters=array('id_fourn'=>$id_fourn,'prod_id'=>$product->id);
+				    $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);
+				}
+				
 				print '</table>';
 
 				dol_fiche_end();
