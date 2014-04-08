@@ -352,6 +352,9 @@ else
 			$hookmanager->initHooks(array('stockcard'));
             $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);
 
+			$hookmanager->initHooks(array('stockcard'));
+		        $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);
+
 			print "</div>";
 
 
