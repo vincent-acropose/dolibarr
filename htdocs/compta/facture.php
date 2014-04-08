@@ -51,6 +51,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 
 $langs->load('bills');
 $langs->load('companies');
+$langs->load('compta');
 $langs->load('products');
 $langs->load('banks');
 $langs->load('main');
@@ -578,14 +579,21 @@ else if ($action == 'confirm_canceled' && $confirm == 'yes')
 // Convertir en reduc
 else if ($action == 'confirm_converttoreduc' && $confirm == 'yes' && $user->rights->facture->creer)
 {
-	$db->begin();
-
 	$object->fetch($id);
 	$object->fetch_thirdparty();
 	$object->fetch_lines();
 
-	if (!empty($object->paye))	// protection against multiple submit
+	// Check if there is already a discount (protection to avoid duplicate creation when resubmit post)
+	$discountcheck=new DiscountAbsolute($db);
+	$result=$discountcheck->fetch(0,$object->id);
+
+	$canconvert=0;
+	if ($object->type == 3 && $object->paye == 1 && empty($discountcheck->id)) $canconvert=1;	// we can convert deposit into discount if deposit is payed completely and not already converted (see real condition into condition used to show button converttoreduc)
+	if ($object->type == 2 && $object->paye == 0 && empty($discountcheck->id)) $canconvert=1;	// we can convert credit note into discount if credit note is not payed back and amount of payment is 0 (see real condition into condition used to show button converttoreduc)
+	if ($canconvert)
 	{
+		$db->begin();
+
 		// Boucle sur chaque taux de tva
 		$i=0;
 		foreach($object->lines as $line)
@@ -1132,7 +1140,9 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
 	$error = 0;
 
 	// Set if we used free entry or predefined product
-	if (GETPOST('addline_libre'))
+	if (GETPOST('addline_libre')
+			|| (GETPOST('dp_desc') && ! GETPOST('addline_libre') && ! GETPOST('idprod', 'int')>0)	// we push enter onto qty field
+	)
 	{
 		$predef='';
 		$idprod=0;
@@ -1140,7 +1150,9 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
 		$price_ht = GETPOST('price_ht');
 		$tva_tx=(GETPOST('tva_tx')?GETPOST('tva_tx'):0);
 	}
-	if (GETPOST('addline_predefined'))
+	if (GETPOST('addline_predefined')
+			|| (! GETPOST('dp_desc') && ! GETPOST('addline_predefined') && GETPOST('idprod', 'int')>0)	// we push enter onto qty field
+	)
 	{
 		$predef=(($conf->global->MAIN_FEATURES_LEVEL < 2) ? '_predef' : '');
 		$idprod=GETPOST('idprod', 'int');
@@ -1980,9 +1992,10 @@ if ($action == 'update_extras')
 }
 
 
+
 /*
  * View
-*/
+ */
 
 $form = new Form($db);
 $formother=new FormOther($db);
@@ -2185,6 +2198,7 @@ if ($action == 'create')
 		$options.='</option>';
 	}
 
+	// Show link for credit note
 	$facids=$facturestatic->list_qualified_avoir_invoices($soc->id);
 	if ($facids < 0)
 	{
@@ -2613,7 +2627,7 @@ else if ($id > 0 || ! empty($ref))
 			//'text' => $langs->trans("ConfirmClone"),
 			//array('type' => 'checkbox', 'name' => 'clone_content',   'label' => $langs->trans("CloneMainAttributes"),   'value' => 1),
 			//array('type' => 'checkbox', 'name' => 'update_prices',   'label' => $langs->trans("PuttingPricesUpToDate"),   'value' => 1),
-			array('type' => 'other', 'name' => 'idwarehouse',   'label' => $label,   'value' => $formproduct->selectWarehouses(GETPOST('idwarehouse'),'idwarehouse','',1,0,0,$langs->trans("NoStockAction"))));
+			array('type' => 'other', 'name' => 'idwarehouse',   'label' => $label,   'value' => $formproduct->selectWarehouses(GETPOST('idwarehouse')?GETPOST('idwarehouse'):'ifone','idwarehouse','',1,0,0,$langs->trans("NoStockAction"))));
 			$formconfirm=$form->formconfirm($_SERVER['PHP_SELF'].'?facid='.$object->id,$langs->trans('DeleteBill'),$text,'confirm_delete',$formquestion,"yes",1);
 		}else {
 			$formconfirm=$form->formconfirm($_SERVER['PHP_SELF'].'?facid='.$object->id,$langs->trans('DeleteBill'),$text,'confirm_delete','','',1);
@@ -2674,7 +2688,7 @@ else if ($id > 0 || ! empty($ref))
 				$value = '<input type="hidden" id="idwarehouse" name="idwarehouse" value="' . key($warehouse_array) . '">';
 			} else {
 				$label = $object->type==2?$langs->trans("SelectWarehouseForStockIncrease"):$langs->trans("SelectWarehouseForStockDecrease");
-				$value = $formproduct->selectWarehouses(GETPOST('idwarehouse'),'idwarehouse','',1);
+				$value = $formproduct->selectWarehouses(GETPOST('idwarehouse')?GETPOST('idwarehouse'):'ifone','idwarehouse','',1);
 			}
 			$formquestion=array(
 			//'text' => $langs->trans("ConfirmClone"),
@@ -2717,7 +2731,7 @@ else if ($id > 0 || ! empty($ref))
 				$value = '<input type="hidden" id="idwarehouse" name="idwarehouse" value="' . key($warehouse_array) . '">';
 			} else {
 				$label=$object->type==2?$langs->trans("SelectWarehouseForStockDecrease"):$langs->trans("SelectWarehouseForStockIncrease");
-				$value = $formproduct->selectWarehouses(GETPOST('idwarehouse'),'idwarehouse','',1);
+				$value = $formproduct->selectWarehouses(GETPOST('idwarehouse')?GETPOST('idwarehouse'):'ifone','idwarehouse','',1);
 			}
 			$formquestion=array(
 			//'text' => $langs->trans("ConfirmClone"),
@@ -3592,7 +3606,10 @@ else if ($id > 0 || ! empty($ref))
 			}
 
 			// Reopen a standard paid invoice
-			if (($object->type == 0 || $object->type == 1) && ($object->statut == 2 || $object->statut == 3))				// A paid invoice (partially or completely)
+			if ((($object->type == 0 || $object->type == 1)
+				|| ($object->type == 2 && empty($discount->id))
+				|| ($object->type == 3 && empty($discount->id)))
+				 && ($object->statut == 2 || $object->statut == 3))				// A paid invoice (partially or completely)
 			{
 				if (! $objectidnext && $object->close_code != 'replaced')	// Not replaced by another invoice
 				{
@@ -3679,23 +3696,32 @@ else if ($id > 0 || ! empty($ref))
 				// For credit note only
 				if ($object->type == 2 && $object->statut == 1 && $object->paye == 0 && $user->rights->facture->paiement)
 				{
-					print '<div class="inline-block divButAction"><a class="butAction" href="paiement.php?facid='.$object->id.'&amp;action=create">'.$langs->trans('DoPaymentBack').'</a></div>';
+					if ($resteapayer == 0)
+					{
+						print '<div class="inline-block divButAction"><span class="butActionRefused" title="'.$langs->trans("DisabledBecauseRemainderToPayIsZero").'">'.$langs->trans('DoPaymentBack').'</span></div>';
+					}
+					else
+					{
+						print '<div class="inline-block divButAction"><a class="butAction" href="paiement.php?facid='.$object->id.'&amp;action=create">'.$langs->trans('DoPaymentBack').'</a></div>';
+					}
 				}
+
 				// For credit note
 				if ($object->type == 2 && $object->statut == 1 && $object->paye == 0 && $user->rights->facture->creer && $object->getSommePaiement() == 0)
 				{
 					print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?facid='.$object->id.'&amp;action=converttoreduc">'.$langs->trans('ConvertToReduc').'</a></div>';
 				}
 				// For deposit invoice
-				if ($object->type == 3 && $object->statut == 2 && $resteapayer == 0 && $user->rights->facture->creer && empty($discount->id))
+				if ($object->type == 3 && $object->paye == 1 && $resteapayer == 0 && $user->rights->facture->creer && empty($discount->id))
 				{
 					print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?facid='.$object->id.'&amp;action=converttoreduc">'.$langs->trans('ConvertToReduc').'</a></div>';
 				}
 			}
 
-			// Classify paid (if not deposit and not credit note. Such invoice are "converted")
-			if ($object->statut == 1 && $object->paye == 0 && $user->rights->facture->paiement &&
-				(($object->type != 2 && $object->type != 3 && $resteapayer <= 0) || ($object->type == 2 && $resteapayer >= 0)) )
+			// Classify paid
+			if ($object->statut == 1 && $object->paye == 0 && $user->rights->facture->paiement && (($object->type != 2 && $object->type != 3 && $resteapayer <= 0) || ($object->type == 2 && $resteapayer >= 0))
+				|| ($object->type == 3 && $object->paye == 0 && $resteapayer == 0 && $user->rights->facture->paiement && empty($discount->id))
+			)
 			{
 				print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER['PHP_SELF'].'?facid='.$object->id.'&amp;action=paid">'.$langs->trans('ClassifyPaid').'</a></div>';
 			}

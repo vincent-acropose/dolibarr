@@ -221,7 +221,6 @@ else if ($action == 'addline' && $user->rights->fournisseur->commande->creer)
     }
     if (! GETPOST('addline_predefined') && ( GETPOST('pu')==='')) // Unit price can be 0 but not ''
     {
-    	
         setEventMessage($langs->trans($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('UnitPrice'))), 'errors');
         $error++;
     }
@@ -236,10 +235,11 @@ else if ($action == 'addline' && $user->rights->fournisseur->commande->creer)
         setEventMessage($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('Qty')), 'errors');
         $error++;
     }
+
     // Ecrase $pu par celui	du produit
     // Ecrase $desc	par	celui du produit
     // Ecrase $txtva  par celui du produit
-    if ((GETPOST('addline_predefined') || GETPOST('idprodfournprice')))	// With combolist idprodfournprice is > 0 or -1. With autocomplete, idprodfournprice is > 0 or ''
+    if (GETPOST('addline_predefined') || GETPOST('idprodfournprice'))	// With combolist idprodfournprice is > 0 or -1. With autocomplete, idprodfournprice is > 0 or ''
     {
     	$idprod=0;
     	$productsupplier = new ProductFournisseur($db);
@@ -255,7 +255,6 @@ else if ($action == 'addline' && $user->rights->fournisseur->commande->creer)
 
     	if ($idprod > 0)
     	{
-    		
     		$res=$productsupplier->fetch($idprod);
 
     		$label = $productsupplier->libelle;
@@ -327,7 +326,7 @@ else if ($action == 'addline' && $user->rights->fournisseur->commande->creer)
     			$ttc = price2num($_POST['amountttc']);
     			$ht = $ttc / (1 + ($tauxtva / 100));
     			$price_base_type = 'HT';
-				$result=$object->addline($desc, $ht, $qty, $tva_tx, $localtax1_tx, $localtax2_tx, 0, 0, '', $remise_percent, $price_base_type, $ttc, $type);
+			$result=$object->addline($desc, $ht, $qty, $tva_tx, $localtax1_tx, $localtax2_tx, 0, 0, '', $remise_percent, $price_base_type, $ttc, $type);
     		}
     	}
     }
