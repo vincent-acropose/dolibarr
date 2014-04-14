@@ -18,7 +18,7 @@ TrackingNumber=Tracking number
 DeliveryNotValidated=Delivery not validated
 # merou PDF model						   
 NameAndSignature=Name and Signature : 
-ToAndDate=To___________________________________ on ____/_____/__________
+ToAndDate=Place ___________________________________ date of reception ____/_____/__________
 GoodStatusDeclaration=Have received the goods above in good condition,
 Deliverer=Deliverer : 
 Sender=Sender
