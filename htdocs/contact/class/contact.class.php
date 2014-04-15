@@ -214,7 +214,6 @@ class Contact extends CommonObject
 		$error=0;
 
 		$this->id = $id;
-
 		// Clean parameters
 		$this->lastname=trim($this->lastname)?trim($this->lastname):trim($this->lastname);
 		$this->firstname=trim($this->firstname);
@@ -256,7 +255,7 @@ class Contact extends CommonObject
 		$sql .= ", statut = ".$this->statut;
 		$sql .= ", fk_user_modif=".($user->id > 0 ? "'".$user->id."'":"NULL");
 		$sql .= ", default_lang=".($this->default_lang?"'".$this->default_lang."'":"NULL");
-		$sql .= ", no_email=".($this->no_email?"'".$this->no_email."'":"0");
+		$sql .= ", no_email=".(!empty($this->no_email)?"'".$this->no_email."'":"0");
 		$sql .= " WHERE rowid=".$id;
 
 		dol_syslog(get_class($this)."::update sql=".$sql,LOG_DEBUG);

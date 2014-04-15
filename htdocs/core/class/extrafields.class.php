@@ -577,7 +577,7 @@ class ExtraFields
 	 *  @param  string	$moreparam       To add more parametes on html input tag
 	 *  @return	void
 	 */
-	function showInputField($key,$value,$moreparam='')
+	function showInputField($key,$value,$moreparam='',$prefix='')
 	{
 		global $conf,$langs;
 
@@ -619,23 +619,23 @@ class ExtraFields
 			if(!$required && $value == '')
 				$value = '-1';
 
-			$out = $formstat->select_date($value, 'options_'.$key, $showtime, $showtime, $required, '', 1, 1, 1, 0, 1);
+			$out = $formstat->select_date($value, $prefix.'options_'.$key, $showtime, $showtime, $required, '', 1, 1, 1, 0, 1);
 			//$out='<input type="text" name="options_'.$key.'" size="'.$showsize.'" maxlength="'.$newsize.'" value="'.$value.'"'.($moreparam?$moreparam:'').'>';
 		}
 		elseif (in_array($type,array('int')))
 		{
 			$tmp=explode(',',$size);
 			$newsize=$tmp[0];
-			$out='<input type="text" class="flat" name="options_'.$key.'" size="'.$showsize.'" maxlength="'.$newsize.'" value="'.$value.'"'.($moreparam?$moreparam:'').'>';
+			$out='<input type="text" class="flat" name="'.$prefix.'options_'.$key.'" size="'.$showsize.'" maxlength="'.$newsize.'" value="'.$value.'"'.($moreparam?$moreparam:'').'>';
 		}
 		elseif ($type == 'varchar')
 		{
-			$out='<input type="text" class="flat" name="options_'.$key.'" size="'.$showsize.'" maxlength="'.$size.'" value="'.$value.'"'.($moreparam?$moreparam:'').'>';
+			$out='<input type="text" class="flat" name="'.$prefix.'options_'.$key.'" size="'.$showsize.'" maxlength="'.$size.'" value="'.$value.'"'.($moreparam?$moreparam:'').'>';
 		}
 		elseif ($type == 'text')
 		{
 			require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
-			$doleditor=new DolEditor('options_'.$key,$value,'',200,'dolibarr_notes','In',false,false,! empty($conf->fckeditor->enabled) && $conf->global->FCKEDITOR_ENABLE_SOCIETE,5,100);
+			$doleditor=new DolEditor($prefix.'options_'.$key,$value,'',200,'dolibarr_notes','In',false,false,! empty($conf->fckeditor->enabled) && $conf->global->FCKEDITOR_ENABLE_SOCIETE,5,100);
 			$out=$doleditor->Create(1);
 		}
 		elseif ($type == 'boolean')
@@ -646,27 +646,27 @@ class ExtraFields
 			} else {
 				$checked=' value="1" ';
 			}
-			$out='<input type="checkbox" class="flat" name="options_'.$key.'" '.$checked.' '.($moreparam?$moreparam:'').'>';
+			$out='<input type="checkbox" class="flat" name="'.$prefix.'options_'.$key.'" '.$checked.' '.($moreparam?$moreparam:'').'>';
 		}
 		elseif ($type == 'mail')
 		{
-			$out='<input type="text" class="flat" name="options_'.$key.'" size="32" value="'.$value.'">';
+			$out='<input type="text" class="flat" name="'.$prefix.'options_'.$key.'" size="32" value="'.$value.'">';
 		}
 		elseif ($type == 'phone')
 		{
-			$out='<input type="text" class="flat" name="options_'.$key.'"  size="20" value="'.$value.'">';
+			$out='<input type="text" class="flat" name="'.$prefix.'options_'.$key.'"  size="20" value="'.$value.'">';
 		}
 		elseif ($type == 'price')
 		{
-			$out='<input type="text" class="flat" name="options_'.$key.'"  size="6" value="'.price($value).'"> '.$langs->getCurrencySymbol($conf->currency);
+			$out='<input type="text" class="flat" name="'.$prefix.'options_'.$key.'"  size="6" value="'.price($value).'"> '.$langs->getCurrencySymbol($conf->currency);
 		}
 		elseif ($type == 'double')
 		{
-			$out='<input type="text" class="flat" name="options_'.$key.'"  size="6" value="'.price($value).'"> ';
+			$out='<input type="text" class="flat" name="'.$prefix.'options_'.$key.'"  size="6" value="'.price($value).'"> ';
 		}
 		elseif ($type == 'select')
 		{
-			$out='<select class="flat" name="options_'.$key.'">';
+			$out='<select class="flat" name="'.$prefix.'options_'.$key.'">';
 			$out.='<option value="">&nbsp;</option>';
 			foreach ($param['options'] as $key=>$val )
 			{
@@ -678,7 +678,7 @@ class ExtraFields
 		}
 		elseif ($type == 'sellist')
 		{
-			$out='<select class="flat" name="options_'.$key.'">';
+			$out='<select class="flat" name="'.$prefix.'options_'.$key.'">';
 			if (is_array($param['options']))
 			{
 				$param_list=array_keys($param['options']);
@@ -753,7 +753,7 @@ class ExtraFields
 			foreach ($param['options'] as $keyopt=>$val )
 			{
 
-				$out.='<input class="flat" type="checkbox" name="options_'.$key.'[]"';
+				$out.='<input class="flat" type="checkbox" name="'.$prefix.'options_'.$key.'[]"';
 				$out.=' value="'.$keyopt.'"';
 
 				if ((is_array($value_arr)) && in_array($keyopt,$value_arr)) {
@@ -770,7 +770,7 @@ class ExtraFields
 			$out='';
 			foreach ($param['options'] as $keyopt=>$val )
 			{
-				$out.='<input class="flat" type="radio" name="options_'.$key.'"';
+				$out.='<input class="flat" type="radio" name="'.$prefix.'options_'.$key.'"';
 				$out.=' value="'.$keyopt.'"';
 				$out.= ($value==$keyopt?'checked="checked"':'');
 				$out.='/>'.$val.'<br>';
