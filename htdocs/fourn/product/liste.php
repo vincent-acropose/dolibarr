@@ -183,6 +183,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans("BuyingPrice"),"liste.php", "ppf.price",$param,"",'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("QtyMin"),"liste.php", "ppf.qty",$param,"",'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("UnitPrice"),"liste.php", "ppf.unitprice",$param,"",'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Stock"),"liste.php", "",$param,"",'align="right"',$sortfield,$sortorder);
 	print "</tr>\n";
 
 	// Lignes des champs de filtre
@@ -202,6 +203,7 @@ if ($resql)
 	print '<td class="liste_titre">';
 	print '<input class="flat" type="text" name="snom" value="'.$snom.'">';
 	print '</td>';
+	print '<td></td>';
 	print '<td class="liste_titre" colspan="4" align="right">';
 	print '<input type="image" class="liste_titre" value="button_search" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 	print '&nbsp; ';
@@ -238,6 +240,11 @@ if ($resql)
 		print '<td align="right">'.$objp->qty.'</td>';
 
 		print '<td align="right">'.price($objp->unitprice).'</td>';
+		
+		$productstatic->fetch($productstatic->id);
+		$productstatic->load_stock();
+		
+		print '<td align="right">'.$productstatic->stock_reel.'</td>';
 
 		print "</tr>\n";
 		$i++;
