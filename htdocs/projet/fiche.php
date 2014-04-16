@@ -734,6 +734,19 @@ else
                 print '<a class="butActionRefused" href="#" title="'.$langs->trans("NotOwnerOfProject").'">'.$langs->trans('Delete').'</a>';
             }
         }
+
+ 		if ($user->rights->propal->creer)
+        {
+            if ($userDelete > 0)
+            {
+                print '<a class="butAction" href="'.dol_buildpath('/comm/propal.php',1).'?socid='.$object->socid.'&action=create&origin=project&originid='.$object->id.'">'.$langs->trans("Créer proposition").'</a>';
+            }
+            else
+            {
+                print '<a class="butActionRefused" href="#" title="'.$langs->trans("NotOwnerOfProject").'">'.$langs->trans('Delete').'</a>';
+            }
+        }
+
     }
 
     print "</div>";
