@@ -774,7 +774,7 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
 ?>
 <div id="dialog" title="<?php echo dol_escape_htmltag($langs->trans('Address')); ?>" style="display: none;"></div>
 <?php
-	print '<script type="text/javascript">
+	/*print '<script type="text/javascript">
 	$("#dialog").dialog()
 			function copyToClipboard (text) {
 			  text = text.replace(/<br \/>/g,"\n");
@@ -784,7 +784,7 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
 			  $("#coords").select();
 			  return false;
 			}
-	</script>';
+	</script>';*/
 
     return $i;
 }

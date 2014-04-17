@@ -1114,12 +1114,12 @@ else if ($id || $ref)
 		print '</td>';
 		print '<td colspan="3">';
 		$calculatedVolume=0;
-		if ($object->trueWidth && $object->trueHeight && $object->trueDepth) $calculatedVolume=($object->trueWidth * $object->trueHeight * $object->trueDepth);
+		if ($object->trueWidth && $object->trueHeight && $object->trueDepth) $calculatedVolume=round(($object->trueWidth * $object->trueHeight * $object->trueDepth),2);
 		// If sending volume not defined we use sum of products
 		if ($calculatedVolume > 0)
 		{
 			print $calculatedVolume.' ';
-			if ($volumeUnit < 50) print measuring_units_string(0,"volume");
+			if ($volumeUnit < 50) print measuring_units_string($object->height_units * 3,"volume");
 			else print measuring_units_string($volumeUnit,"volume");
 		}
 		if ($totalVolume > 0)
