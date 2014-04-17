@@ -397,7 +397,8 @@ else if ($action == 'update_line' && $user->rights->fournisseur->commande->creer
 
     $localtax1_tx=get_localtax($_POST['tva_tx'],1,$mysoc,$object->thirdparty);
     $localtax2_tx=get_localtax($_POST['tva_tx'],2,$mysoc,$object->thirdparty);
-	$tasklineid = GETPOST('tasklineid');
+	$tasklineid = GETPOST('tasklineid', 'int');
+	if(empty($tasklineid)) $tasklineid = 0;
 	
     $result	= $object->updateline(
         $_POST['elrowid'],
