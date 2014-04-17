@@ -1050,6 +1050,7 @@ if ($id > 0)
 		   (($act->author->id == $user->id || $act->usertodo->id == $user->id) && $user->rights->agenda->myactions->create))
 		{
 			print '<div class="inline-block divButAction"><a class="butAction" href="fiche.php?action=edit&id='.$act->id.'">'.$langs->trans("Modify").'</a></div>';
+			print '<div class="inline-block divButAction"><a class="butAction" href="fiche.php?action=create&originid='.$act->id.'&affectedto='.$act->usertodo->id.'&projectid='.$act->fk_project.'&socid='.$act->socid.'&contactid='.$act->contact->id.'">'.$langs->trans("Nouvel événement").'</a></div>';
 		}
 		else
 		{
