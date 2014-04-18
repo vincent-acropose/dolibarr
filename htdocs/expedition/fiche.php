@@ -639,7 +639,7 @@ if ($action == 'create')
             print '</td></tr><tr><td>';
             print $langs->trans("Width");
             print ' </td><td><input name="sizeW" size="5" value="'.GETPOST('sizeW','int').'"></td><td rowspan="3">';
-            print $formproduct->select_measuring_units("size_units","size");
+            print $formproduct->select_measuring_units("size_units","size",-2);
             print '</td></tr><tr><td>';
             print $langs->trans("Height");
             print '</td><td><input name="sizeH" size="5" value="'.GETPOST('sizeH','int').'"></td>';
