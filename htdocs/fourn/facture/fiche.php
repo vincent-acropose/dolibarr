@@ -38,6 +38,7 @@ require_once DOL_DOCUMENT_ROOT.'/fourn/class/paiementfourn.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/fourn.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 if (!empty($conf->produit->enabled))
 	require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 if (!empty($conf->projet->enabled)) {
@@ -74,6 +75,7 @@ $result = restrictedArea($user, 'fournisseur', $id, 'facture_fourn', 'facture');
 $hookmanager->initHooks(array('invoicesuppliercard'));
 
 $object=new FactureFournisseur($db);
+$extrafields = new ExtraFields($db);
 
 // Load object
 if ($id > 0 || ! empty($ref))
@@ -81,12 +83,14 @@ if ($id > 0 || ! empty($ref))
 	$ret=$object->fetch($id, $ref);
 }
 
-
+$parameters=array('socid'=>$socid);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 
 /*
  * Actions
  */
-
+ 
+ 
 // Action clone object
 if ($action == 'confirm_clone' && $confirm == 'yes')
 {
@@ -295,6 +299,13 @@ elseif ($action == 'add' && $user->rights->fournisseur->facture->creer)
     if (! $error)
     {
         $db->begin();
+		
+		// Fill array 'array_options' with data from add form
+		$extralabels=$extrafields->fetch_name_optionals_label($object->table_element);
+		$ret = $extrafields->setOptionalsFromPost($extralabels,$object);
+		
+		if($ret < 0)
+			$error++;
 
         $tmpproject = GETPOST('projectid', 'int');
 
@@ -372,7 +383,14 @@ elseif ($action == 'add' && $user->rights->fournisseur->facture->creer)
                         $date_end=$lines[$i]->date_fin_prevue;
                         if ($lines[$i]->date_fin_reel) $date_end=$lines[$i]->date_fin_reel;
                         if ($lines[$i]->date_end) $date_end=$lines[$i]->date_end;
-
+						
+						//Extrafields
+						if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED) && method_exists($lines[$i],'fetch_optionals'))
+						{
+							$lines[$i]->fetch_optionals($lines[$i]->rowid);
+							$array_option=$lines[$i]->array_options;
+						}
+						
                         $result = $object->addline(
                             $desc,
                             $lines[$i]->subprice,
@@ -440,7 +458,14 @@ elseif ($action == 'add' && $user->rights->fournisseur->facture->creer)
 
                         $product=new Product($db);
                         $product->fetch($_POST['idprod'.$i]);
-
+						
+						//Extrafields
+						if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED) && method_exists($lines[$i],'fetch_optionals'))
+						{
+							$lines[$i]->fetch_optionals($lines[$i]->rowid);
+							$array_option=$lines[$i]->array_options;
+						}
+						
                         $ret=$object->addline($label, $amount, $tauxtva, $product->localtax1_tx, $product->localtax2_tx, $qty, $fk_product, $remise_percent, '', '', '', 0, $price_base);
                         if ($ret < 0) $error++;
                     }
@@ -510,7 +535,21 @@ elseif ($action == 'update_line' && $user->rights->fournisseur->facture->creer)
             $type = $_POST["type"]?$_POST["type"]:0;
 
         }
-
+		
+		//Extrafields
+		$extrafieldsline = new ExtraFields($db);
+		$extralabelsline =$extrafieldsline->fetch_name_optionals_label($object->table_element_line);
+		$array_option = $extrafieldsline->getOptionalsFromPost($extralabelsline);
+		//Unset extrafield
+		if (is_array($extralabelsline))
+		{
+			// Get extra fields
+			foreach ($extralabelsline as $key => $value)
+			{
+				unset($_POST["options_".$key]);
+			}
+		}
+		
         $localtax1tx= get_localtax($_POST['tauxtva'], 1, $mysoc,$object->thirdparty);
         $localtax2tx= get_localtax($_POST['tauxtva'], 2, $mysoc,$object->thirdparty);
         $remise_percent=GETPOST('remise_percent');
@@ -551,7 +590,19 @@ elseif ($action == 'addline' && $user->rights->fournisseur->facture->creer)
 	}
 	$qty = GETPOST('qty'.$predef);
 	$remise_percent=GETPOST('remise_percent'.$predef);
-
+	
+	//Extrafields
+	$extrafieldsline = new ExtraFields($db);
+	$extralabelsline =$extrafieldsline->fetch_name_optionals_label($object->table_element_line);
+	$array_option = $extrafieldsline->getOptionalsFromPost($extralabelsline,$predef);
+	//Unset extrafield
+	if (is_array($extralabelsline))
+	{
+		// Get extra fields
+		foreach ($extralabelsline as $key => $value) {
+			unset($_POST["options_".$key.$predef]);
+		}
+	}
 
     $ret=$object->fetch($id);
     if ($ret < 0)
@@ -780,6 +831,30 @@ if (! empty($_POST['removedfile']))
     dol_remove_file_process($_POST['removedfile'],0);
     $action='presend';
 }
+
+if ($action == 'update_extras')
+{
+	// Fill array 'array_options' with data from add form
+	$extralabels=$extrafields->fetch_name_optionals_label($object->table_element);
+	$ret = $extrafields->setOptionalsFromPost($extralabels,$object,GETPOST('attribute'));
+	
+	if ($ret < 0) $error++;
+
+	if (! $error)
+	{
+		$result=$object->insertExtraFields();
+		/*echo '<pre>';
+		print_r($object);
+		echo '</pre>';exit;*/
+		if ($result < 0)
+		{
+			$error++;
+		}
+	}
+
+	if ($error) $action = 'edit_extras';
+}
+
 
 // Send mail
 if ($action == 'send' && ! $_POST['addfile'] && ! $_POST['removedfile'] && ! $_POST['cancel'])
@@ -1071,7 +1146,9 @@ if ($action == 'create')
     print_fiche_titre($langs->trans('NewBill'));
 
     dol_htmloutput_mesg($mesg);
-
+	
+	$extralabels=$extrafields->fetch_name_optionals_label($object->table_element);
+	
     $societe='';
     if ($_GET['socid'])
     {
@@ -1127,6 +1204,10 @@ if ($action == 'create')
             $dateinvoice=($datetmp==''?(empty($conf->global->MAIN_AUTOFILL_DATE)?-1:0):$datetmp);
             $datetmp=dol_mktime(12,0,0,$_POST['echmonth'],$_POST['echday'],$_POST['echyear']);
             $datedue=($datetmp==''?-1:$datetmp);
+			
+			//Replicate extrafields
+			$objectsrc->fetch_optionals($originid);
+			$object->array_options=$objectsrc->array_options;
         }
     }
     else
@@ -1294,6 +1375,11 @@ if ($action == 'create')
    // print '<td><textarea name="note" wrap="soft" cols="60" rows="'.ROWS_5.'"></textarea></td>';
     print '</tr>';
 
+	if (! empty($extrafields->attribute_label))
+	{
+		print $object->showOptionals($extrafields,'edit');
+	}
+	
     // Private note
     print '<tr><td>'.$langs->trans('NotePrivate').'</td>';
     print '<td>';
@@ -1410,6 +1496,9 @@ else
         $societe = new Fournisseur($db);
         $result=$societe->fetch($object->socid);
         if ($result < 0) dol_print_error($db);
+
+		// fetch optionals attributes and labels
+		$extralabels=$extrafields->fetch_name_optionals_label($object->table_element);
 
         /*
          *	View card
@@ -1810,7 +1899,55 @@ else
         // Other options
         $parameters=array('colspan' => ' colspan="4"');
         $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action); // Note that $action and $object may have been modified by hook
-
+		if (empty($reshook) && ! empty($extrafields->attribute_label))
+		{
+	
+			foreach($extrafields->attribute_label as $key=>$label)
+			{
+				if ($action == 'edit_extras') {
+					$value=(isset($_POST["options_".$key])?$_POST["options_".$key]:$object->array_options["options_".$key]);
+				} else {
+					$value=$object->array_options["options_".$key];
+				}
+				if ($extrafields->attribute_type[$key] == 'separate')
+				{
+					print $extrafields->showSeparator($key);
+				}
+				else
+				{
+					print '<tr><td';
+					if (! empty($extrafields->attribute_required[$key])) print ' class="fieldrequired"';
+					print '>'.$label.'</td><td colspan="5">';
+					// Convert date into timestamp format
+					if (in_array($extrafields->attribute_type[$key],array('date','datetime')))
+					{
+						$value = isset($_POST["options_".$key])?dol_mktime($_POST["options_".$key."hour"], $_POST["options_".$key."min"], 0, $_POST["options_".$key."month"], $_POST["options_".$key."day"], $_POST["options_".$key."year"]):$db->jdate($object->array_options['options_'.$key]);
+					}
+	
+					if ($action == 'edit_extras' && $user->rights->facture->creer && GETPOST('attribute') == $key)
+					{
+						print '<form enctype="multipart/form-data" action="'.$_SERVER["PHP_SELF"].'" method="post" name="formsoc">';
+						print '<input type="hidden" name="action" value="update_extras">';
+						print '<input type="hidden" name="attribute" value="'.$key.'">';
+						print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+						print '<input type="hidden" name="id" value="'.$object->id.'">';
+	
+						print $extrafields->showInputField($key,$value);
+	
+						print '<input type="submit" class="button" value="'.$langs->trans('Modify').'">';
+						print '</form>';
+					}
+					else
+					{
+						print $extrafields->showOutputField($key,$value);
+						if ($object->statut == 0 && $user->rights->facture->creer) print '<a href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&action=edit_extras&attribute='.$key.'">'.img_picto('','edit').' '.$langs->trans('Modify').'</a>';
+					}
+					print '</td></tr>'."\n";
+				}
+			}
+		}
+		
+		
         print '</table>';
 
         if (! empty($conf->global->MAIN_DISABLE_CONTACTS_TAB))
@@ -1889,7 +2026,7 @@ else
             // Edit line
             if ($object->statut == 0 && $action == 'edit_line' && $_GET['etat'] == '0' && $_GET['lineid'] == $object->lines[$i]->rowid)
             {
-                print '<tr '.$bc[$var].'>';
+                print '<tr id="row-'.$object->lines[$i]->id.'" '.$bc[$var].'>';
 
                 // Show product and description
                 print '<td>';
@@ -1951,7 +2088,7 @@ else
             }
             else // Affichage simple de la ligne
             {
-                print '<tr '.$bc[$var].'>';
+                print '<tr id="row-'.$object->lines[$i]->id.'" '.$bc[$var].'>';
 
                 // Show product and description
                 print '<td>';

@@ -87,7 +87,15 @@ $coldisplay=-1; // We remove first td
 	    $parameters=array('line'=>$line,'fk_parent_line'=>$fk_parent_line,'var'=>$var,'dateSelector'=>$dateSelector,'seller'=>$seller,'buyer'=>$buyer);
 	    $reshook=$hookmanager->executeHooks('formEditProductOptions',$parameters,$this,$action);
 	}
-
+	
+	//print_r($object);exit;
+	if($this->element == "commande"){
+		$formother = new FormOther($this->db);
+		print $langs->trans('Task').": ";
+		print $formother->selectProjectTasks_specific($line->tasklineid,'', 'tasklineid', 1, 0);
+		print '<br>';
+	}
+	
 	// editeur wysiwyg
 	require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
     $nbrows=ROWS_2;

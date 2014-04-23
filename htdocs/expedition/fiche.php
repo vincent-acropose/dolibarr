@@ -639,7 +639,7 @@ if ($action == 'create')
             print '</td></tr><tr><td>';
             print $langs->trans("Width");
             print ' </td><td><input name="sizeW" size="5" value="'.GETPOST('sizeW','int').'"></td><td rowspan="3">';
-            print $formproduct->select_measuring_units("size_units","size");
+            print $formproduct->select_measuring_units("size_units","size",-2);
             print '</td></tr><tr><td>';
             print $langs->trans("Height");
             print '</td><td><input name="sizeH" size="5" value="'.GETPOST('sizeH','int').'"></td>';
@@ -1114,12 +1114,12 @@ else if ($id || $ref)
 		print '</td>';
 		print '<td colspan="3">';
 		$calculatedVolume=0;
-		if ($object->trueWidth && $object->trueHeight && $object->trueDepth) $calculatedVolume=($object->trueWidth * $object->trueHeight * $object->trueDepth);
+		if ($object->trueWidth && $object->trueHeight && $object->trueDepth) $calculatedVolume=round(($object->trueWidth * $object->trueHeight * $object->trueDepth),2);
 		// If sending volume not defined we use sum of products
 		if ($calculatedVolume > 0)
 		{
 			print $calculatedVolume.' ';
-			if ($volumeUnit < 50) print measuring_units_string(0,"volume");
+			if ($volumeUnit < 50) print measuring_units_string($object->height_units * 3,"volume");
 			else print measuring_units_string($volumeUnit,"volume");
 		}
 		if ($totalVolume > 0)

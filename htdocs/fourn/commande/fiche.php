@@ -31,10 +31,12 @@
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formorder.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/modules/supplier_order/modules_commandefournisseur.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.commande.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.product.class.php';
+require_once DOL_DOCUMENT_ROOT.'/projet/class/task.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/fourn.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
@@ -73,7 +75,7 @@ $result = restrictedArea($user, 'fournisseur', $id, '', 'commande');
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
 $hookmanager->initHooks(array('ordersuppliercard'));
-
+$formother = new FormOther($db);
 $object = new CommandeFournisseur($db);
 $extrafields = new ExtraFields($db);
 
@@ -97,6 +99,9 @@ else if (! empty($socid) && $socid > 0)
 	$ret = $object->fetch_thirdparty();
 	if ($ret < 0) dol_print_error($db,$object->error);
 }
+
+$parameters=array('socid'=>$socid);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 
 /*
  * Actions
@@ -208,7 +213,9 @@ else if ($action == 'addline' && $user->rights->fournisseur->commande->creer)
 	}
 	$qty = GETPOST('qty'.$predef);
 	$remise_percent=GETPOST('remise_percent'.$predef);
-
+	$tasklineid = GETPOST('tasklineid');
+	
+	
     if (GETPOST('addline_libre') && GETPOST('pu') < 0 && $qty < 0)
     {
         setEventMessage($langs->trans('ErrorBothFieldCantBeNegative', $langs->transnoentitiesnoconv('UnitPrice'), $langs->transnoentitiesnoconv('Qty')), 'errors');
@@ -221,7 +228,6 @@ else if ($action == 'addline' && $user->rights->fournisseur->commande->creer)
     }
     if (! GETPOST('addline_predefined') && ( GETPOST('pu')==='')) // Unit price can be 0 but not ''
     {
-    	
         setEventMessage($langs->trans($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv('UnitPrice'))), 'errors');
         $error++;
     }
@@ -282,7 +288,9 @@ else if ($action == 'addline' && $user->rights->fournisseur->commande->creer)
     			$productsupplier->fourn_ref,
     			$remise_percent,
     			'HT',
-    			$type
+    			0,
+    			$type,
+    			0, false, $tasklineid
     		);
     	}
     	if ($idprod == 0)
@@ -327,7 +335,7 @@ else if ($action == 'addline' && $user->rights->fournisseur->commande->creer)
     			$ttc = price2num($_POST['amountttc']);
     			$ht = $ttc / (1 + ($tauxtva / 100));
     			$price_base_type = 'HT';
-			$result=$object->addline($desc, $ht, $qty, $tva_tx, $localtax1_tx, $localtax2_tx, 0, 0, '', $remise_percent, $price_base_type, $ttc, $type);
+    			$result=$object->addline($desc, $ht, $qty, $tva_tx, $localtax1_tx, $localtax2_tx, 0, 0, '', $remise_percent, $price_base_type, $ttc, $type,0, false, $tasklineid);
     		}
     	}
     }
@@ -389,7 +397,9 @@ else if ($action == 'update_line' && $user->rights->fournisseur->commande->creer
 
     $localtax1_tx=get_localtax($_POST['tva_tx'],1,$mysoc,$object->thirdparty);
     $localtax2_tx=get_localtax($_POST['tva_tx'],2,$mysoc,$object->thirdparty);
-
+	$tasklineid = GETPOST('tasklineid', 'int');
+	if(empty($tasklineid)) $tasklineid = 0;
+	
     $result	= $object->updateline(
         $_POST['elrowid'],
         $_POST['eldesc'],
@@ -401,7 +411,8 @@ else if ($action == 'update_line' && $user->rights->fournisseur->commande->creer
         $localtax2_tx,
         'HT',
         0,
-        isset($_POST["type"])?$_POST["type"]:$line->product_type
+        isset($_POST["type"])?$_POST["type"]:$line->product_type,
+        false,$tasklineid
     );
     unset($_POST['qty']);
     unset($_POST['type']);
@@ -1588,7 +1599,7 @@ elseif (! empty($object->id))
 		// Edit line
 		if ($action != 'edit_line' || $_GET['rowid'] != $line->id)
 		{
-			print '<tr '.$bc[$var].'>';
+			print '<tr id="row-'.$line->id.'" '.$bc[$var].'>';
 
 			// Show product and description
 			print '<td>';
@@ -1602,6 +1613,13 @@ elseif (! empty($object->id))
 				$text.= ' - '.$product_static->libelle;
 				$description=($conf->global->PRODUIT_DESC_IN_FORM?'':dol_htmlentitiesbr($line->description));
 				print $form->textwithtooltip($text,$description,3,'','',$i);
+				
+				if($object->lines[$i]->tasklineid > 0){
+ 					$taskstatic = new Task($db);
+ 					$taskstatic->fetch($object->lines[$i]->tasklineid);
+ 					print " - tâche : ";
+ 					print $taskstatic->getNomUrl(1,'withproject');
+ 				}
 
 				// Show range
 				print_date_range($date_start,$date_end);
@@ -1616,7 +1634,14 @@ elseif (! empty($object->id))
 				if ($type==1) $text = img_object($langs->trans('Service'),'service');
 				else $text = img_object($langs->trans('Product'),'product');
 				print $text.' '.nl2br($line->description);
-
+				
+				if($object->lines[$i]->tasklineid > 0){
+ 					$taskstatic = new Task($db);
+ 					$taskstatic->fetch($object->lines[$i]->tasklineid);
+ 					print " - tâche : ";
+ 					print $taskstatic->getNomUrl(1,'withproject');
+ 				}
+				
 				// Show range
 				print_date_range($date_start,$date_end);
 			}
@@ -1675,7 +1700,10 @@ elseif (! empty($object->id))
 				$text.= ' - '.$product_static->libelle;
 				$description=($conf->global->PRODUIT_DESC_IN_FORM?'':dol_htmlentitiesbr($line->description));
 				print $form->textwithtooltip($text,$description,3,'','',$i);
-
+				
+				print '<br>'.$langs->trans('Task').": ";
+ 				print $formother->selectProjectTasks_specific($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0); print '<br>';
+				
 				// Show range
 				print_date_range($date_start,$date_end);
 				print '<br>';
@@ -1684,6 +1712,9 @@ elseif (! empty($object->id))
 			{
 				print $form->select_type_of_lines($line->product_type,'type',1);
 				if (! empty($conf->product->enabled) && ! empty($conf->service->enabled)) print '<br>';
+				
+				print $langs->trans('Task').": ";
+ 				print $formother->selectProjectTasks_specific($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0); print '<br>';
 			}
 
 			if (is_object($hookmanager))
@@ -1739,7 +1770,10 @@ elseif (! empty($object->id))
 		print $form->select_type_of_lines(isset($_POST["type"])?$_POST["type"]:-1,'type',1,0,$forceall);
 		if ($forceall || (! empty($conf->product->enabled) && ! empty($conf->service->enabled))
 				|| (empty($conf->product->enabled) && empty($conf->service->enabled))) print '<br>';
-
+		
+		print $langs->trans('Task').": ";
+ 		print $formother->selectProjectTasks_specific($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0); print '<br>';
+		
 		if (is_object($hookmanager))
 		{
 			$parameters=array();
@@ -1799,7 +1833,10 @@ elseif (! empty($object->id))
 					'error' => $langs->trans("NoPriceDefinedForThisSupplier") // translation of an error saved into var 'error'
 			);
 			$form->select_produits_fournisseurs($object->fourn_id, GETPOST('idprodfournprice'), 'idprodfournprice', '', '', $ajaxoptions);
-
+			
+			print '<br>'.$langs->trans('Task').": ";
+ 			print $formother->selectProjectTasks_specific($object->lines[$i]->tasklineid,$object->fk_projet, 'tasklineid', $user->admin?0:1, 0); print '<br>';
+			
 			if (empty($conf->global->PRODUIT_USE_SEARCH_TO_SELECT)) print '<br>';
 
 			if (is_object($hookmanager))

@@ -2885,6 +2885,7 @@ abstract class CommonObject
 					}
 
 					$label = (! empty($prod->multilangs[$outputlangs->defaultlang]["label"])) ? $prod->multilangs[$outputlangs->defaultlang]["label"] : $line->product_label;
+					
 				}
 				else
 				{
@@ -2892,6 +2893,17 @@ abstract class CommonObject
 				}
 
 				$text.= ' - '.(! empty($line->label)?$line->label:$label);
+				/*echo '<pre>';
+				print_r($line);
+				echo '</pre>';
+				 exit;*/
+				if($line->tasklineid > 0){
+					global $db;
+					$taskstatic = new Task($db);
+					$taskstatic->fetch($line->tasklineid);
+					$text .= " - Tâche : ";
+					$text .= $taskstatic->getNomUrl(1,'withproject');
+				}
 				$description=(! empty($conf->global->PRODUIT_DESC_IN_FORM)?'':dol_htmlentitiesbr($line->description));
 			}
 

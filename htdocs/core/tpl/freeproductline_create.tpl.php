@@ -96,7 +96,17 @@ else {
         $parameters=array('fk_parent_line'=>GETPOST('fk_parent_line','int'));
 		$reshook=$hookmanager->executeHooks('formCreateProductOptions',$parameters,$object,$action);
 	}
-
+	
+	
+	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
+	
+	if($object->element == "commande"){
+		global $db;
+		$formother = new FormOther($db);
+		print "<br>".$langs->trans('Task').": ";
+		print $formother->selectProjectTasks_specific('','', 'tasklineid', 1, 0);
+	}
+	
 	if ((! empty($conf->product->enabled) && ! empty($conf->service->enabled)) || (empty($conf->product->enabled) && empty($conf->service->enabled))) echo '<br>';
 
 	// Editor wysiwyg

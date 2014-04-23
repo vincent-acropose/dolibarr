@@ -197,6 +197,9 @@ class pdf_rouget extends ModelePdfExpedition
 								$label.=$outputlangs->trans("SendingMethod".strtoupper($code))." :";
 								$pdf->SetFont('','B', $default_font_size - 2);
 								$pdf->writeHTMLCell(60, 4, $this->posxdesc-1, $tab_top-1, $label." ".$object->tracking_url, 0, 1, false, true, 'L');
+								
+								//$this->posxdesc += 100;
+								$tab_top += 10;
 							}
 						}
 					}

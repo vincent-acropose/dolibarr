@@ -221,7 +221,11 @@ if ($action == 'create' || $action == 'add_paiement')
             print '<input type="hidden" name="societe" value="'.$obj->nom.'">';
 
             print '<table class="border" width="100%">';
-
+			
+			$parameters=array();
+			$reshook=$hookmanager->executeHooks('formAddObjectLine',$parameters,$facture,$action);    // Note that $action and $object may have been modified by hook
+		
+			
             print '<tr class="liste_titre"><td colspan="3">'.$langs->trans('Payment').'</td>';
             print '<tr><td>'.$langs->trans('Company').'</td><td colspan="2">';
             $supplierstatic->id=$obj->socid;
@@ -319,7 +323,12 @@ if ($action == 'create' || $action == 'add_paiement')
 	                        print '<td align="center">';
 	                        $namef = 'amount_'.$objp->facid;
 	                        print '<input type="text" size="8" name="'.$namef.'" value="'.GETPOST($namef).'">';
-	                        print "</td></tr>\n";
+	                        print "</td>";
+							
+							$parameters=array();
+							$reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$objp,$action); // Note that $action and $object may have been modified by hook
+							
+	                        print "</tr>\n";
 	                        $total+=$objp->total_ht;
 	                        $total_ttc+=$objp->total_ttc;
 	                        $totalrecu+=$objp->am;
@@ -502,7 +511,10 @@ if (empty($action))
             print '<td class="nowrap">';
             print $invoicesupplierstatic->getNomUrl(1);
             print '</td>';*/
-
+			
+			$parameters=array();
+			$reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$objp,$action); // Note that $action and $object may have been modified by hook
+			
             print '</tr>';
             $i++;
         }

@@ -52,11 +52,19 @@ $id = GETPOST('id', 'int');
 if ($user->societe_id) $socid=$user->societe_id;
 $result=restrictedArea($user,'expedition',$id,'livraison','livraison');
 
+$object = new Livraison($db);
+$object->fetch($id);
 
+
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('receptioncard'));
 
 /*
  * Actions
  */
+$parameters=array();
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+
 
 if ($action == 'add')
 {
@@ -308,6 +316,11 @@ if ($action == 'create')
 		{
 			print '<tr><td colspan="3">Note : '.nl2br($commande->note)."</td></tr>";
 		}
+		
+		// Other attributes
+        $parameters=array('colspan' => ' colspan="3"');
+        $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$commande,$action);    // Note that $action and $object may have been modified by hook
+        
 		print "</table>";
 
 		/*
@@ -605,7 +618,11 @@ else
 				print '<td colspan="3"><a href="'.DOL_URL_ROOT.'/product/stock/fiche.php?id='.$entrepot->id.'">'.$entrepot->libelle.'</a></td>';
 				print '</tr>';
 			}
-
+			
+			// Other attributes
+            $parameters=array('colspan' => ' colspan="3"');
+            $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$delivery,$action);    // Note that $action and $object may have been modified by hook
+			
 			print "</table><br>\n";
 
 			/*
