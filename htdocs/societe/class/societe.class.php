@@ -1439,6 +1439,12 @@ class Societe extends CommonObject
 
         $result='';
         $lien=$lienfin='';
+		
+		if(empty($option)) {
+			if($this->client>0) $option = 'customer';
+			elseif($this->fournisseur==1) $option = 'supplier';
+		}
+		
 
         if ($option == 'customer' || $option == 'compta')
         {
