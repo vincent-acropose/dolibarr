@@ -175,7 +175,7 @@ if ($action == 'edit')
 		{
 			print "<br><b><u>".$langs->trans('Language_'.$key)." :</u></b><br>";
 			print '<table class="border" width="100%">';
-			print '<tr><td valign="top" width="15%" class="fieldrequired">'.$langs->trans('Label').'</td><td><input name="libelle-'.$key.'" size="40" value="'.$product->multilangs[$key]["label"].'"></td></tr>';
+			print '<tr><td valign="top" width="15%" class="fieldrequired">'.$langs->trans('Label').'</td><td><input name="libelle-'.$key.'" size="40" value="'.dol_escape_htmltag($product->multilangs[$key]["label"]).'"></td></tr>';
 			print '<tr><td valign="top" width="15%">'.$langs->trans('Description').'</td><td>';
 
 			$doleditor = new DolEditor("desc-$key", $product->multilangs[$key]["description"], '', 160, 'dolibarr_notes', '', false, true, $conf->global->FCKEDITOR_ENABLE_PRODUCTDESC, 3, 80);
