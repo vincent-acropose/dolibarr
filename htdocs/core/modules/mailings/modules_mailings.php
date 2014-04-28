@@ -171,7 +171,7 @@ class MailingTargets    // This can't be abstract as it is used for some method
         		$sql .= "'".$this->db->escape($targetarray['source_url'])."',";
         		$sql .= (empty($targetarray['source_id']) ? 'null' : "'".$this->db->escape($targetarray['source_id'])."'").",";
         		if (! empty($conf->global->MAILING_EMAIL_UNSUBSCRIBE)) {
-        			$sql .= "'".$this->db->escape(md5($targetarray['email'].';'.$targetarray['name'].';'.$mailing_id.';'.$conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY))."',";
+        			$sql .= "'".$this->db->escape(md5($targetarray['email'].';'.$targetarray['lastname'].';'.$mailing_id.';'.$conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY))."',";
         		}
         		$sql .= "'".$this->db->escape($targetarray['source_type'])."')";
         		$result=$this->db->query($sql);
