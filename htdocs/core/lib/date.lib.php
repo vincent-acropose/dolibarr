@@ -752,7 +752,7 @@ function num_between_day($timestampStart, $timestampEnd, $lastday=0)
 		{
 			$bit = 1;
 		}
-		$nbjours = (int) round(($timestampEnd - $timestampStart)/(60*60*24)) + 1 - $bit;
+		$nbjours = (int) floor(($timestampEnd - $timestampStart)/(60*60*24)) + 1 - $bit;
 	}
 	/*print '<BR>';
 	print '$timestampEnd='.$timestampEnd.' $timestampStart='.$timestampStart.' $bit='.$bit;
