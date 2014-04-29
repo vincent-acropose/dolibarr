@@ -783,7 +783,7 @@ else
             if (! empty($conf->mailing->enabled))
             {
                 $langs->load("mails");
-                print '<td nowrap>'.$langs->trans("NbOfEMailingsReceived").'</td>';
+                print '<td nowrap>'.$langs->trans("NbOfEMailingsSend").'</td>';
                 print '<td>'.$object->getNbOfEMailings().'</td>';
             }
             else
@@ -1002,7 +1002,7 @@ else
         if (! empty($conf->mailing->enabled))
         {
             $langs->load("mails");
-            print '<td nowrap>'.$langs->trans("NbOfEMailingsReceived").'</td>';
+            print '<td nowrap>'.$langs->trans("NbOfEMailingsSend").'</td>';
             print '<td><a href="'.DOL_URL_ROOT.'/comm/mailing/liste.php?filteremail='.urlencode($object->email).'">'.$object->getNbOfEMailings().'</a></td>';
         }
         else

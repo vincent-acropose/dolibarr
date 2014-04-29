@@ -113,6 +113,7 @@ TargetsReset=Vider liste
 ToClearAllRecipientsClickHere=Pour vider la liste des destinataires de cet emailing, cliquez sur le bouton
 ToAddRecipientsChooseHere=Pour ajouter des destinataires, choisir dans les listes ci-dessous
 NbOfEMailingsReceived=EMailings de masse reçus
+NbOfEMailingsSend=EMailings de masse envoyé(s)
 IdRecord=ID enregistrement
 DeliveryReceipt=Accusé de réception
 YouCanUseCommaSeparatorForSeveralRecipients=Vous pouvez utiliser le caractère de séparation <b>virgule</b> pour spécifier plusieurs destinataires.
