@@ -81,9 +81,10 @@ if ($action=='create')
 	$newcontact=array(
 	'lastname'=> $_GET['lastname'],
 	'firstname'=> $_GET['firstname'],
-	//'address'=>'12 rue de la fam',
-	//'zip'=>'75013',
-	//'town'=>'paris',
+	'address'=>$_GET['address'],
+	'zip'=>$_GET['zip'],
+	'town'=>$_GET['town'],
+	'country_id'=>$_GET['country_id'],
 	'socid'=> $_GET['socid'],
 	'statut'=> '1',
 	'phone_pro'=> $_GET['phone_pro'],

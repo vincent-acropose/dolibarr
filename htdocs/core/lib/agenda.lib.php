@@ -57,7 +57,7 @@ function print_actions_filter($form, $canedit, $status, $year, $month, $day, $sh
 	print '<input type="hidden" name="showbirthday" value="' . $showbirthday . '">';
 	print '<table class="nobordernopadding" width="100%">';
 	
-	print '<tr><td class="nowrap"  width="10%">';
+	print '<tr><td class="nowrap"  width="20%">';
 	
 	print '<table class="nobordernopadding">';
 	

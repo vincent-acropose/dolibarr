@@ -214,6 +214,7 @@ class Contact extends CommonObject
 		$error=0;
 
 		$this->id = $id;
+
 		// Clean parameters
 		$this->lastname=trim($this->lastname)?trim($this->lastname):trim($this->lastname);
 		$this->firstname=trim($this->firstname);
