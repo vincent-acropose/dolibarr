@@ -25,7 +25,7 @@
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/events.class.php';
 
-if (! $user->admin)
+if (! $user->admin  || $user->entity>0)
 	accessforbidden();
 
 $action=GETPOST('action', 'alpha');

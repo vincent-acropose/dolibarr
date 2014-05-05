@@ -27,7 +27,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 
 $langs->load("install");
 
-if (! $user->admin)
+if (! $user->admin  || $user->entity>0)
 	accessforbidden();
 
 $action=GETPOST('action', 'alpha');

@@ -27,7 +27,7 @@ require '../../main.inc.php';
 $langs->load("admin");
 $langs->load("other");
 
-if (! $user->admin)
+if (! $user->admin  || $user->entity>0)
 	accessforbidden();
 
 $radio_dump=GETPOST('radio_dump');

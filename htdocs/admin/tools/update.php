@@ -28,7 +28,7 @@ include_once $dolibarr_main_document_root.'/core/lib/files.lib.php';
 $langs->load("admin");
 $langs->load("other");
 
-if (! $user->admin) accessforbidden();
+if (! $user->admin  || $user->entity>0) accessforbidden();
 
 if (GETPOST('msg','alpha')) $message='<div class="error">'.GETPOST('msg','alpha').'</div>';
 

@@ -40,7 +40,7 @@ if ($page < 0) { $page = 0; }
 $limit = $conf->liste_limit;
 $offset = $limit * $page;
 
-if (! $user->admin)
+if (! $user->admin || $user->entity>0)
 	accessforbidden();
 
 
