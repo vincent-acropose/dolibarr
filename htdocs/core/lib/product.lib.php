@@ -316,16 +316,19 @@ function measuring_units_string($unit,$measuring_style='')
 		$measuring_units[0] = $langs->trans("WeightUnitkg");
 		$measuring_units[-3] = $langs->trans("WeightUnitg");
 		$measuring_units[-6] = $langs->trans("WeightUnitmg");
-        $measuring_units[99] = $langs->trans("WeightUnitpound");
+        	$measuring_units[99] = $langs->trans("WeightUnitpound");
+//		$measuring_units[98] = $langs->trans("WeightUnitml");
 	}
 	else if ($measuring_style == 'size')
 	{
 		$measuring_units[0] = $langs->trans("SizeUnitm");
+		$measuring_units[0] = 'ml';
 		$measuring_units[-1] = $langs->trans("SizeUnitdm");
 		$measuring_units[-2] = $langs->trans("SizeUnitcm");
 		$measuring_units[-3] = $langs->trans("SizeUnitmm");
         $measuring_units[98] = $langs->trans("SizeUnitfoot");
 		$measuring_units[99] = $langs->trans("SizeUnitinch");
+		$measuring_units[90] = 'yd';
 	}
 	else if ($measuring_style == 'surface')
 	{

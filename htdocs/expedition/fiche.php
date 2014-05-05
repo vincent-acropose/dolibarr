@@ -84,6 +84,8 @@ if ($id > 0 || ! empty($ref))
  * Actions
  */
 
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+
 if ($action == 'add')
 {
     $error=0;

@@ -132,6 +132,8 @@ else
     $sql.= ' p.duration, p.tosell, p.tobuy, p.seuil_stock_alerte,';
     $sql.= ' MIN(pfp.unitprice) as minsellprice';
     $sql.= ' FROM '.MAIN_DB_PREFIX.'product as p';
+	
+	if($conf->declinaison->enabled) $sql.= ' LEFT OUTER JOIN '.MAIN_DB_PREFIX.'declinaison as declinaison ON (p.rowid=declinaison.fk_declinaison)';
     if (! empty($search_categ) || ! empty($catid)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_product as cp ON p.rowid = cp.fk_product"; // We'll need this table joined to the select in order to filter by categ
    	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON p.rowid = pfp.fk_product";
 // multilang
@@ -140,6 +142,10 @@ else
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."product_lang as pl ON pl.fk_product = p.rowid AND pl.lang = '".$langs->getDefaultLang() ."'";
 	}
     $sql.= ' WHERE p.entity IN ('.getEntity('product', 1).')';
+    
+    if($conf->declinaison->enabled && $conf->global->DECLINAISON_NO_SHOW_ITEM) $sql.= ' AND declinaison.rowid IS NULL ';
+    
+	
     if ($sall)
     {
         // For natural search

@@ -311,12 +311,14 @@ PaymentConditionShortPT_ORDER=On order
 PaymentConditionPT_ORDER=On order
 PaymentConditionShortPT_5050=50-50
 PaymentConditionPT_5050=50%% in advance, 50%% on delivery
+PaymentConditionPT_BEF_DELIVERY=Before shipment
+PaymentConditionShortPT_BEF_DELIVERY=Before shipment
 FixAmount=Fix amount
 VarAmount=Variable amount (%% tot.)
 
 # PaymentType
-PaymentTypeVIR=Bank deposit
-PaymentTypeShortVIR=Bank deposit
+PaymentTypeVIR=Bank transfer
+PaymentTypeShortVIR=Bank transfer
 PaymentTypePRE=Bank's order
 PaymentTypeShortPRE=Bank's order
 PaymentTypeLIQ=Cash
@@ -331,6 +333,9 @@ PaymentTypeVAD=On line payment
 PaymentTypeShortVAD=On line payment
 PaymentTypeTRA=Bill payment
 PaymentTypeShortTRA=Bill
+PaymentTypeDOC=Cash against documents
+PaymentTypeShortDOC=Cash against documents
+
 BankDetails=Bank details
 BankCode=Bank code
 DeskCode=Desk code

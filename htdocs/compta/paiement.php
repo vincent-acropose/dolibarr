@@ -57,7 +57,21 @@ if ($user->societe_id > 0)
     $socid = $user->societe_id;
 }
 
+$object=new Facture($db);
+$extrafields = new ExtraFields($db);
 
+// Load object
+if ($facid > 0)
+{
+	$ret=$object->fetch($id);
+}
+
+ // Initialize technical object to manage hooks of paiements. Note that conf->hooks_modules contains array array
+$hookmanager = new HookManager($db);
+$hookmanager->initHooks(array('paiementcard'));
+
+$parameters=array('socid'=>$socid);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 
 /*
  * Action add_paiement et confirm_paiement
@@ -489,6 +503,9 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
 				$remaindertopay=$langs->trans('RemainderToTake');
 				if ($facture->type == 2) $remaindertopay=$langs->trans("RemainderToPayBack");
 
+		$parameters=array();
+                $reshook=$hookmanager->executeHooks('formAddObjectLine',$parameters,$facture,$action);    // Note that $action and $object may have been modified by hook
+
                 $i = 0;
                 //print '<tr><td colspan="3">';
                 print '<br>';
@@ -576,6 +593,8 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
                     }
                     print '</td>';
 
+	      	    $parameters=array();
+                    $reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$objp,$action); // Note that $action and $object may have been modified by hook
 
                     print "</tr>\n";
 
@@ -710,6 +729,10 @@ if (! GETPOST('action'))
             print '<td>'.dol_print_date($db->jdate($objp->dp))."</td>\n";
             print '<td>'.$objp->paiement_type.' '.$objp->num_paiement."</td>\n";
             print '<td align="right">'.price($objp->amount).'</td><td>&nbsp;</td>';
+
+	    $parameters=array();
+            $reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$objp,$action); // Note that $action and $object may have been modified by hook
+
             print '</tr>';
             $i++;
         }

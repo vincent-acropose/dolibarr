@@ -94,6 +94,7 @@ WeightUnitkg=kg
 WeightUnitg=g
 WeightUnitmg=mg
 WeightUnitpound=livre
+WeightUnitml=ml
 Length=Longueur
 LengthUnitm=m
 LengthUnitdm=dm

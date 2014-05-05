@@ -94,6 +94,9 @@ else if (! empty($socid) && $socid > 0)
 	if ($ret < 0) dol_print_error($db,$object->error);
 }
 
+$parameters=array('socid'=>$socid);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+
 /*
  * Actions
  */
@@ -1378,7 +1381,7 @@ elseif (! empty($object->id))
 	/*
 	 * Lines
 	*/
-	print '<table class="noborder" width="100%">';
+	print '<table id="tablelines" class="noborder" width="100%">';
 
 	$num = count($object->lines);
 	$i = 0;	$total = 0;
@@ -1421,7 +1424,7 @@ elseif (! empty($object->id))
 		// Ligne en mode visu
 		if ($action != 'editline' || $_GET['rowid'] != $line->id)
 		{
-			print '<tr '.$bc[$var].'>';
+			print '<tr id="row-'.$line->id.'" '.$bc[$var].'>';
 
 			// Show product and description
 			print '<td>';

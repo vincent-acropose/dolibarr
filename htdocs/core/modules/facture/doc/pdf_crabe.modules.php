@@ -708,9 +708,9 @@ class pdf_crabe extends ModelePDFFactures
 			}
 
 			// Show payment mode
-			if ($object->mode_reglement_code
-			&& $object->mode_reglement_code != 'CHQ'
-			&& $object->mode_reglement_code != 'VIR')
+			if ($object->mode_reglement_code)
+			//&& $object->mode_reglement_code != 'CHQ'
+			//&& $object->mode_reglement_code != 'VIR')
 			{
 				$pdf->SetFont('','B', $default_font_size - 2);
 				$pdf->SetXY($this->marge_gauche, $posy);
