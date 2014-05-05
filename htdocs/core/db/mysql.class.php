@@ -24,11 +24,12 @@
  *	\brief      	Class file to manage Dolibarr database access for a Mysql database
  */
 
+require_once DOL_DOCUMENT_ROOT .'/core/db/DoliDB.class.php';
 
 /**
  *	Class to manage Dolibarr database access for a Mysql database
  */
-class DoliDBMysql
+class DoliDBMysql extends DoliDB
 {
 	//! Database handler
 	var $db;
@@ -256,7 +257,17 @@ class DoliDBMysql
 	{
 		return explode('.',$this->getVersion());
 	}
-
+	
+	/**
+	 *	Return version of database client driver
+	 *
+	 *	@return	        string      Version string
+	 */
+	function getDriverInfo()
+	{
+		return mysqli_get_client_info();
+	}
+	
 
     /**
      *  Close database connexion
@@ -974,7 +985,7 @@ class DoliDBMysql
     {
         // cles recherchees dans le tableau des descriptions (field_desc) : type,value,attribute,null,default,extra
         // ex. : $field_desc = array('type'=>'int','value'=>'11','null'=>'not null','extra'=> 'auto_increment');
-        $sql= "ALTER TABLE ".$table." ADD ".$field_name." ";
+        $sql= "ALTER TABLE ".$table." ADD `".$field_name."` ";
         $sql.= $field_desc['type'];
         if(preg_match("/^[^\s]/i",$field_desc['value']))
         if (! in_array($field_desc['type'],array('date','datetime')))

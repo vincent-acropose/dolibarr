@@ -6,7 +6,9 @@
  * Copyright (C) 2013      Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2013      Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
  * Copyright (C) 2013      Jean Heimburger   	<jean@tiaris.info>
- * Copyright (C) 2013		Adolfo segura 		<adolfo.segura@gmail.com>
+ * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
+ * Copyright (C) 2013      Florian Henry        <florian.henry@open-concept.pro>
+ * Copyright (C) 2013      Adolfo segura        <adolfo.segura@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -131,6 +133,7 @@ else
     $sql.= ' p.fk_product_type, p.tms as datem,';
     $sql.= ' p.duration, p.tosell, p.tobuy, p.seuil_stock_alerte,';
     $sql.= ' MIN(pfp.unitprice) as minsellprice';
+    $sql .= ', p.desiredstock';
     $sql.= ' FROM '.MAIN_DB_PREFIX.'product as p';
 	
 	if($conf->declinaison->enabled) $sql.= ' LEFT OUTER JOIN '.MAIN_DB_PREFIX.'declinaison as declinaison ON (p.rowid=declinaison.fk_declinaison)';
@@ -198,6 +201,7 @@ else
     }
     if ($snom)
 	{
+		$params = array('p.label');
 		// multilang
 		if ($conf->global->MAIN_MULTILANGS) // si l'option est active
 	    {
@@ -216,6 +220,7 @@ else
     $sql.= " GROUP BY p.rowid, p.ref, p.label, p.barcode, p.price, p.price_ttc, p.price_base_type,";
     $sql.= " p.fk_product_type, p.tms,";
     $sql.= " p.duration, p.tosell, p.tobuy, p.seuil_stock_alerte";
+    $sql .= ', p.desiredstock';
     //if (GETPOST("toolowstock")) $sql.= " HAVING SUM(s.reel) < p.seuil_stock_alerte";    // Not used yet
     $sql.= $db->order($sortfield,$sortorder);
     $sql.= $db->plimit($limit + 1, $offset);
@@ -299,6 +304,13 @@ else
 
     		// Filter on categories
     	 	$moreforfilter='';
+    	 	$colspan=6;
+    	 	if (! empty($conf->barcode->enabled)) $colspan++;
+    	 	if (! empty($conf->service->enabled) && $type != 0) $colspan++;
+    	 	if (empty($conf->global->PRODUIT_MULTIPRICES)) $colspan++;
+    	 	if ($user->rights->fournisseur->lire) $colspan++;
+    	 	if (! empty($conf->stock->enabled) && $user->rights->stock->lire && $type != 1) $colspan+=2;
+    	 	
     		if (! empty($conf->categorie->enabled))
     		{
     		 	$moreforfilter.=$langs->trans('Categories'). ': ';
@@ -308,23 +320,25 @@ else
     	 	if ($moreforfilter)
     		{
     			print '<tr class="liste_titre">';
-    			print '<td class="liste_titre" colspan="9">';
+    			print '<td class="liste_titre" colspan="'.$colspan.'">';
     		    print $moreforfilter;
     		    print '</td></tr>';
     		}
 
     		// Lignes des titres
-    		print "<tr class=\"liste_titre\">";
+    		print '<tr class="liste_titre">';
     		print_liste_field_titre($langs->trans("Ref"), $_SERVER["PHP_SELF"], "p.ref",$param,"","",$sortfield,$sortorder);
     		print_liste_field_titre($langs->trans("Label"), $_SERVER["PHP_SELF"], "p.label",$param,"","",$sortfield,$sortorder);
     		if (! empty($conf->barcode->enabled)) print_liste_field_titre($langs->trans("BarCode"), $_SERVER["PHP_SELF"], "p.barcode",$param,'','',$sortfield,$sortorder);
     		print_liste_field_titre($langs->trans("DateModification"), $_SERVER["PHP_SELF"], "p.tms",$param,"",'align="center"',$sortfield,$sortorder);
     		if (! empty($conf->service->enabled) && $type != 0) print_liste_field_titre($langs->trans("Duration"), $_SERVER["PHP_SELF"], "p.duration",$param,"",'align="center"',$sortfield,$sortorder);
     		if (empty($conf->global->PRODUIT_MULTIPRICES)) print_liste_field_titre($langs->trans("SellingPrice"), $_SERVER["PHP_SELF"], "p.price",$param,"",'align="right"',$sortfield,$sortorder);
-    		print '<td class="liste_titre" align="right">'.$langs->trans("BuyingPriceMinShort").'</td>';
+    		if ($user->rights->fournisseur->lire) print '<td class="liste_titre" align="right">'.$langs->trans("BuyingPriceMinShort").'</td>';
+    		if (! empty($conf->stock->enabled) && $user->rights->stock->lire && $type != 1) print '<td class="liste_titre" align="right">'.$langs->trans("DesiredStock").'</td>';
     		if (! empty($conf->stock->enabled) && $user->rights->stock->lire && $type != 1) print '<td class="liste_titre" align="right">'.$langs->trans("PhysicalStock").'</td>';
-    		print_liste_field_titre($langs->trans("Sell"), $_SERVER["PHP_SELF"], "p.tosell",$param,"",'align="right"',$sortfield,$sortorder);
-            print_liste_field_titre($langs->trans("Buy"), $_SERVER["PHP_SELF"], "p.tobuy",$param,"",'align="right"',$sortfield,$sortorder);
+    		print_liste_field_titre($langs->trans("Sell"), $_SERVER["PHP_SELF"], "p.tosell",$param,"",'align="center"',$sortfield,$sortorder);
+            print_liste_field_titre($langs->trans("Buy"), $_SERVER["PHP_SELF"], "p.tobuy",$param,"",'align="center"',$sortfield,$sortorder);
+            print '<td width="1%">&nbsp;</td>';
     		print "</tr>\n";
 
     		// Lignes des champs de filtre
@@ -362,9 +376,11 @@ else
             }
 
     		// Minimum buying Price
-    		print '<td class="liste_titre">';
-    		print '&nbsp;';
-    		print '</td>';
+    		if ($user->rights->fournisseur->lire) {
+    			print '<td class="liste_titre">';
+    			print '&nbsp;';
+    			print '</td>';
+    		}
 
     		// Stock
     		if (! empty($conf->stock->enabled) && $user->rights->stock->lire && $type != 1)
@@ -372,15 +388,23 @@ else
     			print '<td class="liste_titre">';
     			print '&nbsp;';
     			print '</td>';
+    			//desiredstock
+    			print '<td class="liste_titre">';
+    			print '&nbsp;';
+    			print '</td>';
     		}
 
-    		print '<td class="liste_titre">';
-            print '&nbsp;';
+    		print '<td align="center">';  		
+            print $form->selectarray('tosell', array('0'=>$langs->trans('ProductStatusNotOnSellShort'),'1'=>$langs->trans('ProductStatusOnSellShort')),$tosell,1);
+            print '</td >';
+            
+            print '<td align="center">';
+            print $form->selectarray('tobuy', array('0'=>$langs->trans('ProductStatusNotOnBuyShort'),'1'=>$langs->trans('ProductStatusOnBuyShort')),$tobuy,1);
             print '</td>';
 
     		print '<td class="liste_titre" align="right">';
-    		print '<input type="image" class="liste_titre" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
-    		print '<input type="image" class="liste_titre" name="button_removefilter" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/searchclear.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+    		print '<input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+    		print '<input type="image" class="liste_titre" name="button_removefilter" src="'.img_picto($langs->trans("Search"),'searchclear.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
     		print '</td>';
     		print '</tr>';
 
@@ -455,21 +479,23 @@ else
     			}
 
     			// Better buy price
-                print  '<td align="right">';
-                if ($objp->minsellprice != '')
-                {
-                    //print price($objp->minsellprice).' '.$langs->trans("HT");
-        			if ($product_fourn->find_min_price_product_fournisseur($objp->rowid) > 0)
+    			if ($user->rights->produit->creer) {
+        			print  '<td align="right">';
+        			if ($objp->minsellprice != '')
         			{
-        			    if ($product_fourn->product_fourn_price_id > 0)
-        			    {
-        			        $htmltext=$product_fourn->display_price_product_fournisseur();
-                            if (! empty($conf->fournisseur->enabled) && $user->rights->fournisseur->lire) print $form->textwithpicto(price($product_fourn->fourn_unitprice).' '.$langs->trans("HT"),$htmltext);
-                            else print price($product_fourn->fourn_unitprice).' '.$langs->trans("HT");
-        			    }
+    					//print price($objp->minsellprice).' '.$langs->trans("HT");
+    					if ($product_fourn->find_min_price_product_fournisseur($objp->rowid) > 0)
+    					{
+    						if ($product_fourn->product_fourn_price_id > 0)
+    						{
+    							$htmltext=$product_fourn->display_price_product_fournisseur();
+    							if (! empty($conf->fournisseur->enabled) && $user->rights->fournisseur->lire) print $form->textwithpicto(price($product_fourn->fourn_unitprice).' '.$langs->trans("HT"),$htmltext);
+    							else print price($product_fourn->fourn_unitprice).' '.$langs->trans("HT");
+    						}
+    					}
         			}
-                }
-                print '</td>';
+        			print '</td>';
+    			}
 
     			// Show stock
     			if (! empty($conf->stock->enabled) && $user->rights->stock->lire && $type != 1)
@@ -478,6 +504,9 @@ else
     				{
     					$product_static->id = $objp->rowid;
     					$product_static->load_stock();
+                        print '<td align="right">';
+                        print $objp->desiredstock;
+                        print '</td>';
     					print '<td align="right">';
                         if ($product_static->stock_reel < $objp->seuil_stock_alerte) print img_warning($langs->trans("StockTooLow")).' ';
         				print $product_static->stock_reel;
@@ -490,11 +519,13 @@ else
     			}
 
     			// Status (to buy)
-    			print '<td align="right" class="nowrap">'.$product_static->LibStatut($objp->tosell,5,0).'</td>';
+    			print '<td align="center" class="nowrap">'.$product_static->LibStatut($objp->tosell,5,0).'</td>';
 
                 // Status (to sell)
-                print '<td align="right" class="nowrap">'.$product_static->LibStatut($objp->tobuy,5,1).'</td>';
+                print '<td align="center" class="nowrap">'.$product_static->LibStatut($objp->tobuy,5,1).'</td>';
 
+                print '<td>&nbsp;</td>';
+                
                 print "</tr>\n";
     			$i++;
     		}

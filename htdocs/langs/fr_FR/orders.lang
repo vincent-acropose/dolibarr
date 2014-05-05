@@ -31,6 +31,7 @@ StatusOrderValidatedShort=Validée
 StatusOrderOnProcessShort=Traitement en cours
 StatusOrderSentShort=Envoi en cours
 StatusOrderSent=Envoi en cours
+StatusOrderOnProcessShort=Réception
 StatusOrderProcessedShort=Traitée
 StatusOrderToBillShort=Délivrée
 StatusOrderToBill2Short=A facturer
@@ -70,6 +71,7 @@ CancelOrder=Annuler la commande
 AddOrder=Créer commande
 AddToMyOrders=Ajouter à mes commandes
 AddToOtherOrders=Ajouter aux autres commandes
+AddToDraftOrders=Ajouter à commande brouillon
 ShowOrder=Afficher commande
 NoOpenedOrders=Pas de commande brouillon
 NoOtherOpenedOrders=Pas d'autre commande brouillon
@@ -132,7 +134,7 @@ Error_COMMANDE_SUPPLIER_ADDON_NotDefined=Constante COMMANDE_SUPPLIER_ADDON non d
 Error_COMMANDE_ADDON_NotDefined=Constante COMMANDE_ADDON non définie
 Error_FailedToLoad_COMMANDE_SUPPLIER_ADDON_File=Échec chargement du fichier module '%s'
 Error_FailedToLoad_COMMANDE_ADDON_File=Échec chargement du fichier module '%s'
-Error_OrderNotChecked=Pas de commandes pour facturer sélectionnés
+Error_OrderNotChecked=Pas de commandes pour facturer sélectionnées
 
 # Sources
 OrderSource0=Proposition commerciale
@@ -148,6 +150,7 @@ AddDeliveryCostLine=Ajouter une ligne de frais port indiquant le poids de la com
 # Document models
 PDFEinsteinDescription=Modèle de commande complet (logo...)
 PDFEdisonDescription=Modèle de commande simple
+PDFProformaDescription=Modèle de facture proforma complet (logo…)
 # Orders modes
 OrderByMail=Courrier
 OrderByFax=Fax

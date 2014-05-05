@@ -487,6 +487,9 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
             $sql .= ' AND type = 2';		// If paying back a credit note, we show all credit notes
         }
 
+        // Sort invoices by date and serial number: the older one comes first
+        $sql.=' ORDER BY f.datef ASC, f.facnumber ASC';
+
         $resql = $db->query($sql);
         if ($resql)
         {
@@ -502,9 +505,6 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
 				if ($facture->type == 2) $alreadypayedlabel=$langs->trans("PaidBack");
 				$remaindertopay=$langs->trans('RemainderToTake');
 				if ($facture->type == 2) $remaindertopay=$langs->trans("RemainderToPayBack");
-
-		$parameters=array();
-                $reshook=$hookmanager->executeHooks('formAddObjectLine',$parameters,$facture,$action);    // Note that $action and $object may have been modified by hook
 
                 $i = 0;
                 //print '<tr><td colspan="3">';
@@ -593,8 +593,8 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
                     }
                     print '</td>';
 
-	      	    $parameters=array();
-                    $reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$objp,$action); // Note that $action and $object may have been modified by hook
+					$parameters=array();
+					$reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$objp,$action); // Note that $action and $object may have been modified by hook
 
                     print "</tr>\n";
 
@@ -729,10 +729,10 @@ if (! GETPOST('action'))
             print '<td>'.dol_print_date($db->jdate($objp->dp))."</td>\n";
             print '<td>'.$objp->paiement_type.' '.$objp->num_paiement."</td>\n";
             print '<td align="right">'.price($objp->amount).'</td><td>&nbsp;</td>';
-
-	    $parameters=array();
-            $reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$objp,$action); // Note that $action and $object may have been modified by hook
-
+			
+			$parameters=array();
+			$reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$objp,$action); // Note that $action and $object may have been modified by hook
+			
             print '</tr>';
             $i++;
         }

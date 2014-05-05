@@ -24,10 +24,6 @@
 *      \brief      Note card expedition
 */
 
-error_reporting(E_ALL);
-ini_set('display_errors', true);
-ini_set('html_errors', false);
-
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/expedition/class/expedition.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/sendings.lib.php';
@@ -88,7 +84,7 @@ if ($id > 0 || ! empty($ref))
 	$soc->fetch($object->socid);
 
 	$head=shipping_prepare_head($object);
-    dol_fiche_head($head, 'note', $langs->trans("Sending"), 0, 'sending');
+    dol_fiche_head($head, 'note', $langs->trans("Shipment"), 0, 'sending');
 
 	print '<table class="border" width="100%">';
 

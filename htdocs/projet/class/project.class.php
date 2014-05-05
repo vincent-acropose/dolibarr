@@ -53,7 +53,7 @@ class Project extends CommonObject
     var $statuts_short;
     var $statuts;
     var $oldcopy;
-    
+
 
     /**
      *  Constructor
@@ -147,7 +147,7 @@ class Project extends CommonObject
             dol_syslog(get_class($this)."::create error -2 " . $this->error, LOG_ERR);
             $error++;
         }
-        
+
         //Update extrafield
         if (!$error) {
         	if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
@@ -225,7 +225,7 @@ class Project extends CommonObject
                     }
                     // End call triggers
                 }
-                
+
                 //Update extrafield
                 if (!$error) {
                 	if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
@@ -478,10 +478,10 @@ class Project extends CommonObject
 
         $sql = "DELETE FROM " . MAIN_DB_PREFIX . "projet_task_extrafields";
         $sql.= " WHERE fk_object IN (SELECT rowid FROM " . MAIN_DB_PREFIX . "projet_task WHERE fk_projet=" . $this->id . ")";
-        
+
         dol_syslog(get_class($this) . "::delete sql=" . $sql, LOG_DEBUG);
         $resql = $this->db->query($sql);
-        
+
         $sql = "DELETE FROM " . MAIN_DB_PREFIX . "projet_task";
         $sql.= " WHERE fk_projet=" . $this->id;
 
@@ -493,13 +493,13 @@ class Project extends CommonObject
 
         dol_syslog(get_class($this) . "::delete sql=" . $sql, LOG_DEBUG);
         $resql = $this->db->query($sql);
-        
+
         $sql = "DELETE FROM " . MAIN_DB_PREFIX . "projet_extrafields";
         $sql.= " WHERE fk_object=" . $this->id;
-        
+
         dol_syslog(get_class($this) . "::delete sql=" . $sql, LOG_DEBUG);
         $resql = $this->db->query($sql);
-        
+
         if ($resql)
         {
             // We remove directory
@@ -844,7 +844,7 @@ class Project extends CommonObject
             $userAccess = 1;
         }
         else
-        {
+		{
             foreach (array('internal', 'external') as $source)
             {
                 $userRole = $this->liste_contact(4, $source);
@@ -853,7 +853,7 @@ class Project extends CommonObject
                 $nblinks = 0;
                 while ($nblinks < $num)
                 {
-                    if ($source == 'internal' && preg_match('/PROJECT/', $userRole[$nblinks]['code']) && $user->id == $userRole[$nblinks]['id'])
+                    if ($source == 'internal' && preg_match('/^PROJECT/', $userRole[$nblinks]['code']) && $user->id == $userRole[$nblinks]['id'])
                     {
                         if ($mode == 'read'   && $user->rights->projet->lire)      $userAccess++;
                         if ($mode == 'write'  && $user->rights->projet->creer)     $userAccess++;
@@ -970,11 +970,13 @@ class Project extends CommonObject
 	  *	@param	int		$fromid     	Id of object to clone
 	  *	@param	bool	$clone_contact	clone contact of project
 	  *	@param	bool	$clone_task		clone task of project
-	  *	@param	bool	$clone_file		clone file of project
+	  *	@param	bool	$clone_project_file		clone file of project
+	  *	@param	bool	$clone_task_file		clone file of task (if task are copied)
       *	@param	bool	$clone_note		clone note of project
+      *	@param	bool	$notrigger		no trigger flag
 	  * @return	int						New id of clone
 	  */
-	function createFromClone($fromid,$clone_contact=false,$clone_task=true,$clone_file=false,$clone_note=true)
+	function createFromClone($fromid,$clone_contact=false,$clone_task=true,$clone_project_file=false,$clone_task_file=false,$clone_note=true,$notrigger=0)
 	{
 		global $user,$langs,$conf;
 
@@ -1025,7 +1027,7 @@ class Project extends CommonObject
 		$clone_project->ref=$defaultref;
 
 		// Create clone
-		$result=$clone_project->create($user);
+		$result=$clone_project->create($user,$notrigger);
 
 		// Other options
 		if ($result < 0)
@@ -1088,7 +1090,7 @@ class Project extends CommonObject
 
 					foreach ($tab as $contacttoadd)
 					{
-						$clone_project->add_contact($contacttoadd['id'], $contacttoadd['code'], $contacttoadd['source']);
+						$clone_project->add_contact($contacttoadd['id'], $contacttoadd['code'], $contacttoadd['source'],$notrigger);
 						if ($clone_project->error == 'DB_ERROR_RECORD_ALREADY_EXISTS')
 						{
 							$langs->load("errors");
@@ -1108,7 +1110,7 @@ class Project extends CommonObject
 			}
 
 			//Duplicate file
-			if ($clone_file)
+			if ($clone_project_file)
 			{
 				require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
@@ -1151,7 +1153,7 @@ class Project extends CommonObject
 
 			    foreach ($tasksarray as $tasktoclone)
 			    {
-					$result_clone = $taskstatic->createFromClone($tasktoclone->id,$clone_project_id,$tasktoclone->fk_parent,true,true,false,true,true,false);
+					$result_clone = $taskstatic->createFromClone($tasktoclone->id,$clone_project_id,$tasktoclone->fk_parent,true,true,false,$clone_task_file,true,false);
 					if ($result_clone <= 0)
 				    {
 				    	$this->error.=$result_clone->error;
@@ -1181,7 +1183,7 @@ class Project extends CommonObject
 			    	{
 			    		$taskstatic->fk_task_parent=$tab_conv_child_parent[$taskstatic->fk_task_parent];
 			    	}
-			    	$res=$taskstatic->update($user);
+			    	$res=$taskstatic->update($user,$notrigger);
 			    	if ($result_clone <= 0)
 				    {
 				    	$this->error.=$taskstatic->error;
@@ -1277,79 +1279,19 @@ class Project extends CommonObject
 	    }
 	    return $result;
 	}
-	
-	 /**
-	  *    Build Select List of element associable to a project
-	  *
-	  *    @param	TableName		Table of the element to update
-	  *    @return	string			The HTML select list of element
-	  */
-	function select_element($Tablename)
-	{
 
-		$projectkey="fk_projet";
-		switch ($Tablename)
-		{
-			case "facture":
-				$sql = "SELECT rowid, facnumber as ref";
-				break;
-			case "facture_fourn":
-				$sql = "SELECT rowid, ref";
-				break;
-			case "facture_rec":
-				$sql = "SELECT rowid, titre as ref";
-				break;
-			case "actioncomm":
-				$sql = "SELECT id as rowid, label as ref";
-				$projectkey="fk_project";
-				break;
-			default:
-				$sql = "SELECT rowid, ref";
-				break;
-		}
 
-		$sql.= " FROM ".MAIN_DB_PREFIX.$Tablename;
-		$sql.= " WHERE ".$projectkey." is null";
-		if (!empty($this->societe->id)) {
-			$sql.= " AND fk_soc=".$this->societe->id;
-		} 
-		$sql.= " ORDER BY ref DESC";
-
-		dol_syslog(get_class($this).'::select_element sql='.$sql,LOG_DEBUG);
-
-		$resql=$this->db->query($sql);
-		if ($resql)
-		{
-			$num = $this->db->num_rows($resql);
-			$i = 0;
-			if ($num > 0)
-			{
-				$sellist = '<select class="flat" name="elementselect">';
-				while ($i < $num)
-				{
-					$obj = $this->db->fetch_object($resql);
-					$sellist .='<option value="'.$obj->rowid.'">'.$obj->ref.'</option>';
-					$i++;
-				}
-				$sellist .='</select>';
-			}
-			return $sellist ;
-			
-			$this->db->free($resql);
-		}
-	}
-	
 	 /**
 	  *    Associate element to a project
 	  *
-	  *    @param	TableName		Table of the element to update
-	  *    @param	ElementSelectId		Key-rowid of the line of the element to update
-	  *    @return	int				1 if OK or < 0 if KO
+	  *    @param	string	$TableName			Table of the element to update
+	  *    @param	int		$ElementSelectId	Key-rowid of the line of the element to update
+	  *    @return	int							1 if OK or < 0 if KO
 	  */
 	function update_element($TableName, $ElementSelectId)
 	{
 		$sql="UPDATE ".MAIN_DB_PREFIX.$TableName;
-		
+
 		if ($TableName=="actioncomm")
 		{
 			$sql.= " SET fk_project=".$this->id;
@@ -1360,17 +1302,17 @@ class Project extends CommonObject
 			$sql.= " SET fk_projet=".$this->id;
 			$sql.= " WHERE rowid=".$ElementSelectId;
 		}
-		
+
 		dol_syslog(get_class($this)."::update_element sql=" . $sql, LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if (!$resql) {
-			$this->error=$this->db->lasterror();	
+			$this->error=$this->db->lasterror();
 			dol_syslog(get_class($this)."::update_element error : " . $this->error, LOG_ERR);
 			return -1;
 		}else {
 			return 1;
 		}
-			
+
 	}
 }
 

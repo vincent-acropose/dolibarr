@@ -445,7 +445,7 @@ else
 				if (! empty($objp->date_end)) $type=1;
 
 				// Show line
-				print "<tr $bc[$var]>";
+				print "<tr ".$bc[$var].">";
 				if ($object->lines[$i]->fk_product > 0)
 				{
 					print '<td>';
@@ -522,7 +522,6 @@ else
 		/*
 		 *  List mode
 		 */
-
 		$sql = "SELECT s.nom, s.rowid as socid, f.titre, f.total, f.rowid as facid";
 		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s,".MAIN_DB_PREFIX."facture_rec as f";
 		$sql.= " WHERE f.fk_soc = s.rowid";
@@ -532,12 +531,13 @@ else
 		//$sql .= " ORDER BY $sortfield $sortorder, rowid DESC ";
 		//	$sql .= $db->plimit($limit + 1,$offset);
 
-		$result = $db->query($sql);
-
-		if ($result)
+		$resql = $db->query($sql);
+		if ($resql)
 		{
-			$num = $db->num_rows($result);
+			$num = $db->num_rows($resql);
 			print_barre_liste($langs->trans("RepeatableInvoices"),$page,$_SERVER['PHP_SELF'],"&socid=$socid",$sortfield,$sortorder,'',$num);
+
+			print $langs->trans("ToCreateAPredefinedInvoice").'<br><br>';
 
 			$i = 0;
 			print '<table class="noborder" width="100%">';
@@ -553,10 +553,10 @@ else
 				$var=True;
 				while ($i < min($num,$limit))
 				{
-					$objp = $db->fetch_object($result);
+					$objp = $db->fetch_object($resql);
 					$var=!$var;
 
-					print "<tr $bc[$var]>";
+					print "<tr ".$bc[$var].">";
 
 					print '<td><a href="'.$_SERVER['PHP_SELF'].'?id='.$objp->facid.'">'.img_object($langs->trans("ShowBill"),"bill").' '.$objp->titre;
 					print "</a></td>\n";
@@ -587,9 +587,10 @@ else
 					$i++;
 				}
 			}
+			else print '<tr><td>'.$langs->trans("NoneF").'</td></tr>';
 
 			print "</table>";
-			$db->free();
+			$db->free($resql);
 		}
 		else
 		{
@@ -602,5 +603,4 @@ else
 llxFooter();
 
 $db->close();
-
 ?>
