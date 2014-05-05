@@ -667,6 +667,7 @@ class ExtraFields
 		elseif ($type == 'select')
 		{
 			$out='<select class="flat" name="options_'.$key.'">';
+			$out.='<option value="">&nbsp;</option>';
 			foreach ($param['options'] as $key=>$val )
 			{
 				$out.='<option value="'.$key.'"';
@@ -686,14 +687,30 @@ class ExtraFields
 				// 0 1 : tableName
 				// 1 2 : label field name Nom du champ contenant le libelle
 				// 2 3 : key fields name (if differ of rowid)
+				// 3 4 : where clause filter on column or table extrafield, syntax field='value' or extra.field=value
 
 				$keyList='rowid';
 
-				if (count($InfoFieldList)==3)
-					$keyList=$InfoFieldList[2].' as rowid';
+				if (count($InfoFieldList)>=3) {
+					if (strpos($InfoFieldList[3], 'extra.')!==false) {
+					$keyList='main.'.$InfoFieldList[2].' as rowid';
+					}else {
+						$keyList=$InfoFieldList[2].' as rowid';
+					}
+				}
 
 				$sql = 'SELECT '.$keyList.', '.$InfoFieldList[1];
 				$sql.= ' FROM '.MAIN_DB_PREFIX .$InfoFieldList[0];
+				if (!empty($InfoFieldList[3])) {
+					
+					//We have to join on extrafield table
+					if (strpos($InfoFieldList[3], 'extra')!==false) {
+						$sql.= ' as main, '.MAIN_DB_PREFIX .$InfoFieldList[0].'_extrafields as extra';
+						$sql.= ' WHERE  extra.fk_object=main.'.$InfoFieldList[2]. ' AND '.$InfoFieldList[3];
+					}else {
+						$sql.= ' WHERE '.$InfoFieldList[3];
+					}
+				}
 				//$sql.= ' WHERE entity = '.$conf->entity;
 
 				dol_syslog(get_class($this).'::showInputField type=sellist sql='.$sql);
@@ -836,6 +853,9 @@ class ExtraFields
 
 				$sql = 'SELECT '.$InfoFieldList[1];
 				$sql.= ' FROM '.MAIN_DB_PREFIX .$InfoFieldList[0];
+				if (strpos($InfoFieldList[3], 'extra')!==false) {
+					$sql.= ' as main';
+				}
 				$sql.= ' WHERE '.$keyList.'=\''.$this->db->escape($value).'\'';
 				//$sql.= ' AND entity = '.$conf->entity;
 				dol_syslog(get_class($this).':showOutputField:$type=sellist sql='.$sql);

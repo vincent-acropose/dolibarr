@@ -603,6 +603,13 @@ class Contact extends CommonObject
 						return -1;
 					}
 				}
+				
+				require_once(DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php');
+				$extrafields=new ExtraFields($this->db);
+				$extralabels=$extrafields->fetch_name_optionals_label($this->table_element,true);
+				if (count($extralabels)>0) {
+					$this->fetch_optionals($this->id,$extralabels);
+				}
 
 				return 1;
 			}
@@ -721,6 +728,22 @@ class Contact extends CommonObject
 				$this->error=$this->db->error().' sql='.$sql;
 			}
 		}
+		
+		if (! $error)
+		{
+			// Remove category
+			$sql = "DELETE FROM ".MAIN_DB_PREFIX."categorie_contact WHERE fk_socpeople = ".$rowid;
+			dol_syslog(get_class($this)."::delete sql=".$sql);
+			$resql=$this->db->query($sql);
+			if (! $resql)
+			{
+				$error++;
+				$this->error .= $this->db->lasterror();
+				$errorflag=-1;
+				dol_syslog(get_class($this)."::delete erreur ".$errorflag." ".$this->error, LOG_ERR);
+			
+			}
+		}
 
 		if (! $error)
 		{
@@ -734,6 +757,8 @@ class Contact extends CommonObject
 				$this->error=$this->db->error().' sql='.$sql;
 			}
 		}
+		
+		
 
 		// Removed extrafields
 		 if ((! $error) && (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED))) { // For avoid conflicts if trigger used
