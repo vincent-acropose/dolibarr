@@ -31,7 +31,7 @@ $langs->load("admin");
 $langs->load("other");
 
 
-if (!$user->admin) accessforbidden();
+if (!$user->admin || $user->entity>0) accessforbidden();
 
 $upload_dir=$conf->admin->dir_temp;
 

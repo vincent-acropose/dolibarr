@@ -44,7 +44,7 @@ $confirm=GETPOST('confirm','alpha');
 $id=GETPOST('id','int');
 $rowid=GETPOST('rowid','alpha');
 
-if (!$user->admin) accessforbidden();
+if (!$user->admin || $user->entity>0) accessforbidden();
 
 $acts[0] = "activate";
 $acts[1] = "disable";

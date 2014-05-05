@@ -33,7 +33,7 @@ $langs->load("mails");
 $langs->load("other");
 $langs->load("errors");
 
-if (! $user->admin) accessforbidden();
+if (! $user->admin  || $user->entity>0) accessforbidden();
 
 $substitutionarrayfortest=array(
 '__LOGIN__' => $user->login,
