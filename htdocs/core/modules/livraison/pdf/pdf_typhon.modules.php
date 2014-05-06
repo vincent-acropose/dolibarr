@@ -202,9 +202,9 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 				$result = $expedition->fetch($object->expedition_id);
 
 				$commande = new Commande($this->db);
-				if ($expedition->origin == 'commande')
+				if ($object->origin == 'commande')
 				{
-					$commande->fetch($expedition->origin_id);
+					$commande->fetch($object->origin_id);
 				}
 				$object->commande=$commande;
 
