@@ -48,12 +48,20 @@ $action=GETPOST('action', 'alpha');
 $confirm=GETPOST('confirm', 'alpha');
 $backtourl=GETPOST('backtourl');
 
+$object = new Livraison($db);
+$object->fetch($_REQUEST['id']);
+$object->fetch_thirdparty();
+
 // Security check
 $id = GETPOST('id', 'int');
 if ($user->societe_id) $socid=$user->societe_id;
 $result=restrictedArea($user,'expedition',$id,'livraison','livraison');
 
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('receptioncard'));
 
+$parameters=array();
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 
 /*
  * Actions
@@ -432,7 +440,7 @@ if ($action == 'create')
 				print '<input name="idl'.$i.'" type="hidden" value="'.$line->id.'">';
 				print '<input name="qtyl'.$i.'" type="text" size="6" value="'.$quantite_a_livrer.'">';
 				print '</td>';
-			}
+			}			
 
 			print "</tr>\n";
 
@@ -622,6 +630,10 @@ else
 				print '<td colspan="3"><a href="'.DOL_URL_ROOT.'/product/stock/fiche.php?id='.$entrepot->id.'">'.$entrepot->libelle.'</a></td>';
 				print '</tr>';
 			}
+			
+            // Other attributes
+            $parameters=array('colspan' => ' colspan="3"');
+            $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$delivery,$action);    // Note that $action and $object may have been modified by hook			
 
 			print "</table><br>\n";
 
