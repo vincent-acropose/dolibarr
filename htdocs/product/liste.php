@@ -185,32 +185,20 @@ else
     	if ($type == 1) $sql.= " AND p.fk_product_type = '1'";
     	else $sql.= " AND p.fk_product_type <> '1'";
     }
-    if ($sref)     $sql.= " AND p.ref LIKE '%".$sref."%'";
-    if ($sbarcode) {
-
-		//If the barcode looks like an EAN13 format and the last digit is included in it,
-		//then whe look for the 12-digit too
-		//As the twelve-digit string will also hit the 13-digit code, we only look for this one
-		if (strlen($sbarcode) == 13) {
-			$sbarcode_12digit = substr($sbarcode, 0, 12);
-			$sql .=  "AND p.barcode LIKE '%".$sbarcode_12digit."%'";
-		} else {
-			$sql.= " AND p.barcode LIKE '%".$sbarcode."%'";
-		}
-        
-    }
+	if ($sref)     $sql .= natural_search('p.ref', $sref);
+    if ($sbarcode) $sql .= natural_search('p.barcode', $sbarcode);
     if ($snom)
 	{
 		$params = array('p.label');
 		// multilang
 		if ($conf->global->MAIN_MULTILANGS) // si l'option est active
-	    {
-			$sql.= " AND (p.label LIKE '%".$db->escape($snom)."%' OR (pl.label IS NOT null AND pl.label LIKE '%".$db->escape($snom)."%'))";
+		{
+			$params[] = 'pl.label';
 		}
-		else $sql.= " AND p.label LIKE '%".$db->escape($snom)."%'";
-}
-    if (isset($tosell) && dol_strlen($tosell) > 0) $sql.= " AND p.tosell = ".$db->escape($tosell);
-    if (isset($tobuy) && dol_strlen($tobuy) > 0)   $sql.= " AND p.tobuy = ".$db->escape($tobuy);
+		$sql .= natural_search($params, $snom);
+	}
+    if (isset($tosell) && dol_strlen($tosell) > 0  && $tosell!=-1) $sql.= " AND p.tosell = ".$db->escape($tosell);
+    if (isset($tobuy) && dol_strlen($tobuy) > 0  && $tobuy!=-1)   $sql.= " AND p.tobuy = ".$db->escape($tobuy);
     if (dol_strlen($canvas) > 0)                    $sql.= " AND p.canvas = '".$db->escape($canvas)."'";
     if ($catid > 0)    $sql.= " AND cp.fk_categorie = ".$catid;
     if ($catid == -2)  $sql.= " AND cp.fk_categorie IS NULL";

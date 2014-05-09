@@ -58,20 +58,19 @@ if ($user->societe_id > 0)
 }
 
 $object=new Facture($db);
-$extrafields = new ExtraFields($db);
 
 // Load object
 if ($facid > 0)
 {
-	$ret=$object->fetch($id);
+	$ret=$object->fetch($facid);
 }
 
- // Initialize technical object to manage hooks of paiements. Note that conf->hooks_modules contains array array
+// Initialize technical object to manage hooks of paiements. Note that conf->hooks_modules contains array array
 $hookmanager = new HookManager($db);
 $hookmanager->initHooks(array('paiementcard'));
 
 $parameters=array('socid'=>$socid);
-$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks 
 
 /*
  * Action add_paiement et confirm_paiement

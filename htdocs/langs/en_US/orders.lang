@@ -1,10 +1,10 @@
-# Dolibarr language file - Source file is en_US - orders
+# Dolibarr language file - en_US - orders
 CHARSET=UTF-8
 OrdersArea=Customers orders area
 SuppliersOrdersArea=Suppliers orders area
 OrderCard=Order card
 OrderId=Order Id
-Order=Order confirmation
+Order=Order
 Orders=Orders
 OrderLine=Order line
 OrderFollow=Follow up
@@ -162,8 +162,3 @@ CreateInvoiceForThisCustomer=Bill orders
 NoOrdersToInvoice=No orders billable
 CloseProcessedOrdersAutomatically=Classify "Processed" all selected orders. 
 MenuOrdersToBill2=Billables orders
-OrderCreation=Order creation
-Ordered=Ordered
-OrderCreated=Your orders have been created
-OrderFail=An error happened during your orders creation
-CreateOrders=Create orders
