@@ -141,11 +141,12 @@ if (! $sortorder) $sortorder='DESC';
 $limit = $conf->liste_limit;
 
 
-$sql = 'SELECT s.rowid, s.nom, s.town, s.client, s.code_client,';
+$sql = 'SELECT s.rowid, s.nom, s.town, s.client, s.code_client,ce.nature_machine,ce.type_machine,ce.soustype_machine,ce.dimensions_machine,ce.titledct,';
 $sql.= ' p.rowid as propalid, p.note_private, p.total_ht, p.ref, p.ref_client, p.fk_statut, p.fk_user_author, p.datep as dp, p.fin_validite as dfv,';
 if (! $user->rights->societe->client->voir && ! $socid) $sql .= " sc.fk_soc, sc.fk_user,";
 $sql.= ' u.login';
-$sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s, '.MAIN_DB_PREFIX.'propal as p';
+$sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s, '.MAIN_DB_PREFIX.'propal as p
+LEFT OUTER JOIN '.MAIN_DB_PREFIX.'propal_extrafields ce ON (ce.fk_object=p.rowid)';
 if ($sall) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as pd ON p.rowid=pd.fk_propal';
 $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'user as u ON p.fk_user_author = u.rowid';
 // We'll need this table joined to the select in order to filter by sale
@@ -272,14 +273,18 @@ if ($result)
 	if (! empty($moreforfilter))
 	{
 	    print '<tr class="liste_titre">';
-	    print '<td class="liste_titre" colspan="10">';
+	    print '<td class="liste_titre" colspan="12">';
 	    print $moreforfilter;
 	    print '</td></tr>';
 	}
 
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans('Ref'),$_SERVER["PHP_SELF"],'p.ref','',$param,'',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans('RefCustomer'),$_SERVER["PHP_SELF"],'p.ref_client','',$param,'',$sortfield,$sortorder);
+//	print_liste_field_titre($langs->trans('RefCustomer'),$_SERVER["PHP_SELF"],'p.ref_client','',$param,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans('NatureMachine'),$_SERVER["PHP_SELF"],'ce.nature_machine','',$param,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans('Titledct'),$_SERVER["PHP_SELF"],'ce.titledct','',$param,'',$sortfield,$sortorder);
+
+
 	print_liste_field_titre($langs->trans('Company'),$_SERVER["PHP_SELF"],'s.nom','',$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('Town'),$_SERVER["PHP_SELF"],'s.town','',$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('Date'),$_SERVER["PHP_SELF"],'p.datep','',$param, 'align="center"',$sortfield,$sortorder);
@@ -294,8 +299,8 @@ if ($result)
 	print '<td class="liste_titre">';
 	print '<input class="flat" size="6" type="text" name="search_ref" value="'.$search_ref.'">';
 	print '</td>';
-	print '<td class="liste_titre">';
-	print '<input class="flat" size="6" type="text" name="search_refcustomer" value="'.$search_refcustomer.'">';
+	print '<td class="liste_titre" colspan="2">';
+	//print '<input class="flat" size="6" type="text" name="search_refcustomer" value="'.$search_refcustomer.'">';
 	print '</td>';
 	print '<td class="liste_titre" align="left">';
 	print '<input class="flat" type="text" size="16" name="search_societe" value="'.$search_societe.'">';
@@ -325,6 +330,11 @@ if ($result)
 	$var=true;
 	$total=0;
 	$subtotal=0;
+
+	$resEx = $db->query("SELECT param FROM ".MAIN_DB_PREFIX."extrafields WHERE elementtype='propal' AND name='nature_machine' ");
+	$objEx = $db->fetch_object($resEx);
+
+	$TTypeMachine = unserialize($objEx->param);
 
 	while ($i < min($num,$limit))
 	{
@@ -363,8 +373,16 @@ if ($result)
 		print "</td>\n";
 
 		// Customer ref
-		print '<td class="nocellnopadd nowrap">';
+		/*print '<td class="nocellnopadd nowrap">';
 		print $objp->ref_client;
+		print '</td>';
+*/
+		print '<td  class="nobordernopadding hideonsmartphone">';
+		echo  $TTypeMachine['options'][$objp->nature_machine];
+			print '</td>';
+		
+		print '<td  class="nobordernopadding hideonsmartphone">';
+		echo  $objp->titledct;
 		print '</td>';
 
 		$url = DOL_URL_ROOT.'/comm/fiche.php?socid='.$objp->rowid;
