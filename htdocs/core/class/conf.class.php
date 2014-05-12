@@ -201,6 +201,20 @@ class Conf
 		//var_dump($this->modules);
 		//var_dump($this->modules_parts['theme']);
 
+		// If you can't set timezone of your PHP, set this constant. Better is to set it to UTC.
+		// In future, this constant will be forced to 'UTC' so PHP server timezone will not have effect anymore.
+		//$this->global->MAIN_SERVER_TZ='Europe/Paris';
+		if (! empty($this->global->MAIN_SERVER_TZ) && $this->global->MAIN_SERVER_TZ != 'auto')
+		{
+			try {
+				date_default_timezone_set($this->global->MAIN_SERVER_TZ);
+			}
+			catch(Exception $e)
+			{
+				dol_syslog("Error: Bad value for parameter MAIN_SERVER_TZ=".$this->global->MAIN_SERVER_TZ, LOG_ERR);
+			}
+		}
+
 		// Object $mc
 		if (! defined('NOREQUIREMC') && ! empty($this->multicompany->enabled))
 		{
