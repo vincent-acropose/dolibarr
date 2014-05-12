@@ -668,7 +668,7 @@ class Product extends CommonObject
 			{
 				// We remove directory
 				$ref = dol_sanitizeFileName($this->ref);
-				if ($conf->product->dir_output)
+				if ($conf->product->dir_output && !empty($ref) )
 				{
 					$dir = $conf->product->dir_output . "/" . $ref;
 					if (file_exists($dir))
