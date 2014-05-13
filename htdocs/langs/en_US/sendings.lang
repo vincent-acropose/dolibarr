@@ -63,7 +63,7 @@ ShipmentLine=Shipment line
 CarrierList=List of transporters
 
 # Sending methods
-SendingMethodCATCH=Catch by customer
+SendingMethodCATCH=Collected by customer
 SendingMethodTRANS=Transporter
 SendingMethodCOLSUI=Colissimo
 
