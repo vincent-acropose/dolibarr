@@ -160,7 +160,7 @@ class ModeleBoxes    // Can't be abtract as it is instantiated to build "empty" 
 			}
 			if (! empty($head['sublink']))
 			{
-				print ' <a href="'.$head['sublink'].'" target="_blank">'.img_picto($head['subtext'],$head['subpicto']).'</a>';
+				print ' <a href="'.$head['sublink'].'" target="_blank">'.$head['subtext'].'</a>';
 			}
 			if ($conf->use_javascript_ajax)
 			{
