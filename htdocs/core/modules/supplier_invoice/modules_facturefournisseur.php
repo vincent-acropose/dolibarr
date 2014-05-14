@@ -214,7 +214,7 @@ function supplier_invoice_pdf_create($db, $object, $modele, $outputlangs, $hided
 		$sav_charset_output=$outputlangs->charset_output;
 		if ($obj->write_file($object, $outputlangs, $srctemplatepath, $hidedetails, $hidedesc, $hideref) > 0)
 		{
-			$outputlangs->charset_output=$sav_charset_output;
+			@$outputlangs->charset_output=$sav_charset_output;
 
 			// we delete preview files
         	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';

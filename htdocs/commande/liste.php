@@ -111,10 +111,11 @@ $companystatic = new Societe($db);
 $help_url="EN:Module_Customers_Orders|FR:Module_Commandes_Clients|ES:Módulo_Pedidos_de_clientes";
 llxHeader('',$langs->trans("Orders"),$help_url);
 
-$sql = 'SELECT s.nom, s.rowid as socid, s.client, c.rowid, c.ref, c.total_ht, c.ref_client,';
+$sql = 'SELECT s.nom, s.rowid as socid, s.client,c.fk_user_author, c.rowid, c.ref, c.total_ht, c.ref_client,ce.nature_machine,ce.type_machine,ce.soustype_machine,ce.dimensions_machine,ce.titledct,';
 $sql.= ' c.date_valid, c.date_commande, c.note_private, c.date_livraison, c.fk_statut, c.facture as facturee';
 $sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s';
-$sql.= ', '.MAIN_DB_PREFIX.'commande as c';
+$sql.= ', '.MAIN_DB_PREFIX.'commande as c
+LEFT OUTER JOIN '.MAIN_DB_PREFIX.'commande_extrafields ce ON (ce.fk_object=c.rowid)';
 // We'll need this table joined to the select in order to filter by sale
 if ($search_sale > 0 || (! $user->rights->societe->client->voir && ! $socid)) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 if ($search_user > 0)
@@ -289,19 +290,22 @@ if ($resql)
 
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans('Ref'),$_SERVER["PHP_SELF"],'c.ref','',$param,'width="25%"',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans('RefCustomerOrder'),$_SERVER["PHP_SELF"],'c.ref_client','',$param,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans('NatureMachine'),$_SERVER["PHP_SELF"],'ce.nature_machine','',$param,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans('Titledct'),$_SERVER["PHP_SELF"],'ce.titledct','',$param,'',$sortfield,$sortorder);
+	//print_liste_field_titre($langs->trans('RefCustomerOrder'),$_SERVER["PHP_SELF"],'c.ref_client','',$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('Company'),$_SERVER["PHP_SELF"],'s.nom','',$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('OrderDate'),$_SERVER["PHP_SELF"],'c.date_commande','',$param, 'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('DeliveryDate'),$_SERVER["PHP_SELF"],'c.date_livraison','',$param, 'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('AmountHT'),$_SERVER["PHP_SELF"],'c.total_ht','',$param, 'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans('Author'),$_SERVER["PHP_SELF"],'c.fk_user_author','',$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('Status'),$_SERVER["PHP_SELF"],'c.fk_statut','',$param,'align="right"',$sortfield,$sortorder);
 	print '</tr>';
 	print '<tr class="liste_titre">';
-	print '<td class="liste_titre">';
+	print '<td class="liste_titre" >';
 	print '<input class="flat" size="6" type="text" name="sref" value="'.$sref.'">';
 	print '</td>';
-	print '<td class="liste_titre" align="left">';
-	print '<input class="flat" type="text" size="6" name="sref_client" value="'.$sref_client.'">';
+	print '<td class="liste_titre" align="left" colspan="2">';
+	//print '<input class="flat" type="text" size="6" name="sref_client" value="'.$sref_client.'">';
 	print '</td>';
 	print '<td class="liste_titre" align="left">';
 	print '<input class="flat" type="text" name="snom" value="'.$snom.'">';
@@ -309,13 +313,18 @@ if ($resql)
 	print '<td class="liste_titre">&nbsp;';
 	print '</td><td class="liste_titre">&nbsp;';
 	print '</td><td class="liste_titre">&nbsp;';
-	print '</td><td align="right" class="liste_titre">';
+	print '</td><td align="right" class="liste_titre" colspan="2">';
 	print '<input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'"  value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 	print '</td></tr>';
 
 	$var=true;
 	$total=0;
 	$subtotal=0;
+
+	$resEx = $db->query("SELECT param FROM ".MAIN_DB_PREFIX."extrafields WHERE elementtype='commande' AND name='nature_machine' ");
+	$objEx = $db->fetch_object($resEx);
+
+	$TTypeMachine = unserialize($objEx->param);
 
 	$generic_commande = new Commande($db);
 	while ($i < min($num,$limit))
@@ -343,8 +352,12 @@ if ($resql)
 			print '</span>';
 		}
 		print '</td>';
-
-		print '<td width="16" align="right" class="nobordernopadding hideonsmartphone">';
+		print '<td  class="nobordernopadding hideonsmartphone">';
+		//echo  $objp->nature_machine;
+		print '</td>';
+		
+		print '<td  class="nobordernopadding hideonsmartphone">';
+		echo  $objp->titledct;
 		$filename=dol_sanitizeFileName($objp->ref);
 		$filedir=$conf->commande->dir_output . '/' . dol_sanitizeFileName($objp->ref);
 		$urlsource=$_SERVER['PHP_SELF'].'?id='.$objp->rowid;
@@ -355,7 +368,16 @@ if ($resql)
 		print '</td>';
 
 		// Ref customer
-		print '<td>'.$objp->ref_client.'</td>';
+		//print '<td>'.$objp->ref_client.'</td>';
+
+		print '<td  class="nobordernopadding hideonsmartphone">';
+		echo  $TTypeMachine['options'][$objp->nature_machine];
+			print '</td>';
+		
+		print '<td  class="nobordernopadding hideonsmartphone">';
+		echo  $objp->titledct;
+		print '</td>';
+		
 
 		// Company
 		$companystatic->id=$objp->socid;
@@ -402,6 +424,11 @@ if ($resql)
 
 		// Amount HT
 		print '<td align="right" class="nowrap">'.price($objp->total_ht).'</td>';
+
+		// Author
+		$author = new User($db);
+		$author->fetch($objp->fk_user_author);
+		print '<td class="nowrap">'.$author->getNomUrl(1).'</td>';
 
 		// Statut
 		print '<td align="right" class="nowrap">'.$generic_commande->LibStatut($objp->fk_statut,$objp->facturee,5).'</td>';

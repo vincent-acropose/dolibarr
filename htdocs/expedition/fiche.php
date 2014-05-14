@@ -110,9 +110,9 @@ if ($action == 'add')
     $objectsrc = new $classname($db);
     $objectsrc->fetch($object->origin_id);
     //$object->fetch_lines();
-
+	
     $object->socid					= $objectsrc->socid;
-    $object->ref_customer			= $objectsrc->ref_client;
+    $object->ref_customer			= addslashes($objectsrc->ref_client);
     $object->date_delivery			= $date_delivery;	// Date delivery planed
     $object->fk_delivery_address	= $objectsrc->fk_delivery_address;
     $object->shipping_method_id		= GETPOST('shipping_method_id','int');

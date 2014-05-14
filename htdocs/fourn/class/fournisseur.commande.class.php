@@ -102,6 +102,7 @@ class CommandeFournisseur extends CommonOrder
         $this->statuts[6] = 'StatusOrderCanceled';
         $this->statuts[7] = 'StatusOrderCanceled';
         $this->statuts[9] = 'StatusOrderRefused';
+        $this->statuts[10] = 'StatusOrderProcessed';
     }
 
 
@@ -532,6 +533,7 @@ class CommandeFournisseur extends CommonOrder
         $statutshort[6] = 'StatusOrderCanceledShort';
         $statutshort[7] = 'StatusOrderCanceledShort';
         $statutshort[9] = 'StatusOrderRefusedShort';
+  		$statutshort[10] = 'StatusOrderProcessed';
 
         if ($mode == 0)
         {
@@ -566,6 +568,7 @@ class CommandeFournisseur extends CommonOrder
             if ($statut==5) return img_picto($langs->trans($this->statuts[$statut]),'statut6').' '.$langs->trans($this->statuts[$statut]);
             if ($statut==6 || $statut==7) return img_picto($langs->trans($this->statuts[$statut]),'statut5').' '.$langs->trans($this->statuts[$statut]);
             if ($statut==9) return img_picto($langs->trans($this->statuts[$statut]),'statut5').' '.$langs->trans($this->statuts[$statut]);
+            if ($statut==10) return img_picto($langs->trans($this->statuts[$statut]),'statut6').' '.$langs->trans($this->statuts[$statut]);
         }
         if ($mode == 5)
         {
@@ -577,7 +580,10 @@ class CommandeFournisseur extends CommonOrder
             if ($statut==5) return '<span class="hideonsmartphone">'.$langs->trans($statutshort[$statut]).' </span>'.img_picto($langs->trans($this->statuts[$statut]),'statut6');
             if ($statut==6 || $statut==7) return '<span class="hideonsmartphone">'.$langs->trans($statutshort[$statut]).' </span>'.img_picto($langs->trans($this->statuts[$statut]),'statut5');
             if ($statut==9) return '<span class="hideonsmartphone">'.$langs->trans($statutshort[$statut]).' </span>'.img_picto($langs->trans($this->statuts[$statut]),'statut5');
-        }
+            if ($statut==10) return '<span class="hideonsmartphone">'.$langs->trans($statutshort[$statut]).' </span>'.img_picto($langs->trans($this->statuts[$statut]),'statut6');
+            
+      
+	    }
     }
 
 
