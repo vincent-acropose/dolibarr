@@ -1097,7 +1097,6 @@ else if ($id || $ref)
 			print '<input id="trueWeight" name="trueWeight" value="'.$object->trueWeight.'" type="text">';
 			print $formproduct->select_measuring_units("weight_units","weight",$object->weight_units);
 			print ' <input class="button" name="modify" value="'.$langs->trans("Modify").'" type="submit">';
-			print ' <input class="button" name="cancel" value="'.$langs->trans("Cancel").'" type="submit">';
 			print '</form>';
 			
 		}
@@ -1131,7 +1130,6 @@ else if ($id || $ref)
 			print '<input id="trueHeight" name="trueHeight" value="'.$object->trueHeight.'" type="text">';
 			print $formproduct->select_measuring_units("size_units","size",$object->size_units);
 			print ' <input class="button" name="modify" value="'.$langs->trans("Modify").'" type="submit">';
-			print ' <input class="button" name="cancel" value="'.$langs->trans("Cancel").'" type="submit">';
 			print '</form>';
 			
 		}
