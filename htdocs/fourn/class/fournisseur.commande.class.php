@@ -1992,7 +1992,7 @@ class CommandeFournisseur extends CommonOrder
             $clause = " AND";
         }
         $sql.= $clause." c.entity = ".$conf->entity;
-        $sql.= " AND (c.fk_statut BETWEEN 1 AND 2)";
+        $sql.= " AND (c.fk_statut IN (1,2,3))";
         if ($user->societe_id) $sql.=" AND c.fk_soc = ".$user->societe_id;
 
         $resql=$this->db->query($sql);
