@@ -29,18 +29,23 @@ require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.commande.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formorder.class.php';
 
 $langs->load("orders");
+$langs->load("sendings");
 
 $sref=GETPOST('search_ref');
 $snom=GETPOST('search_nom');
 $suser=GETPOST('search_user');
 $sttc=GETPOST('search_ttc');
 $search_ref=GETPOST('search_ref');
+$search_refsupp=GETPOST('search_refsupp');
 $search_nom=GETPOST('search_nom');
 $search_user=GETPOST('search_user');
 $search_ttc=GETPOST('search_ttc');
 $sall=GETPOST('search_all');
+$search_status=GETPOST('search_status','int');
+if ($search_status == '') $search_status=-1;
 
 $page  = GETPOST('page','int');
 $socid = GETPOST('socid','int');
@@ -69,6 +74,7 @@ llxHeader('',$title);
 
 $commandestatic=new CommandeFournisseur($db);
 $formfile = new FormFile($db);
+$formorder = new FormOrder($db);
 
 
 if ($sortorder == "") $sortorder="DESC";
@@ -81,7 +87,7 @@ $offset = $conf->liste_limit * $page ;
  */
 
 $sql = "SELECT s.rowid as socid, s.nom, cf.date_commande as dc,";
-$sql.= " cf.rowid,cf.ref, cf.fk_statut, cf.total_ttc, cf.fk_user_author,";
+$sql.= " cf.rowid,cf.ref, cf.ref_supplier, cf.fk_statut, cf.total_ttc, cf.fk_user_author,cf.date_livraison,";
 $sql.= " u.login";
 $sql.= " FROM (".MAIN_DB_PREFIX."societe as s,";
 $sql.= " ".MAIN_DB_PREFIX."commande_fournisseur as cf";
@@ -152,6 +158,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans("Author"),$_SERVER["PHP_SELF"],"u.login","",$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AmountTTC"),$_SERVER["PHP_SELF"],"total_ttc","",$param,$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("OrderDate"),$_SERVER["PHP_SELF"],"dc","",$param,'align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans('DateDeliveryPlanned'),$_SERVER["PHP_SELF"],'cf.date_livraison','',$param, 'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"cf.fk_statut","",$param,'align="right"',$sortfield,$sortorder);
 	print "</tr>\n";
 
@@ -211,6 +218,12 @@ if ($resql)
 			print "-";
 		}
 		print '</td>';
+
+		// Delivery date
+		print '<td align="right">';
+		print dol_print_date($db->jdate($obj->date_livraison), 'day');
+		print '</td>';
+
 
 		// Statut
 		print '<td align="right">'.$commandestatic->LibStatut($obj->fk_statut, 5).'</td>';
