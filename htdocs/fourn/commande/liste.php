@@ -43,6 +43,8 @@ $search_refsupp=GETPOST('search_refsupp');
 $search_nom=GETPOST('search_nom');
 $search_user=GETPOST('search_user');
 $search_ttc=GETPOST('search_ttc');
+$search_statut=GETPOST('statut');
+
 $sall=GETPOST('search_all');
 $search_status=GETPOST('search_status','int');
 if ($search_status == '') $search_status=-1;
@@ -119,9 +121,9 @@ if ($sall)
 }
 if ($socid) $sql.= " AND s.rowid = ".$socid;
 
-if (GETPOST('statut')!='')
+if ($search_statut!='')
 {
-	$sql .= " AND fk_statut IN (".GETPOST('statut').")";
+	$sql .= " AND fk_statut IN (".$search_statut.")";
 }
 
 $sql.= " ORDER BY $sortfield $sortorder ";
@@ -149,6 +151,8 @@ if ($resql)
 	if ($search_nom)   $param.="&search_nom=".$search_nom;
 	if ($search_user)  $param.="&search_user=".$search_user;
 	if ($search_ttc)   $param.="&search_ttc=".$search_ttc;
+	if ($search_statut) $param.="&statut=".$search_statut;
+	
 	print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, '', $num,$nbtotalofrecords);
 	print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
 	print '<table class="noborder" width="100%">';
