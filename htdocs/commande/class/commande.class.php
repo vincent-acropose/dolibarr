@@ -1477,6 +1477,7 @@ class Commande extends CommonOrder
     function fetch_lines($only_product=0)
     {
         $this->lines=array();
+
         $sql = 'SELECT l.rowid, l.fk_product, l.fk_parent_line, l.product_type, l.fk_commande, l.label as custom_label, l.description, l.price, l.qty, l.tva_tx,';
         $sql.= ' l.localtax1_tx, l.localtax2_tx, l.fk_remise_except, l.remise_percent, l.subprice, l.fk_product_fournisseur_price as fk_fournprice, l.buy_price_ht as pa_ht, l.rang, l.info_bits, l.special_code,';
         $sql.= ' l.total_ht, l.total_ttc, l.total_tva, l.total_localtax1, l.total_localtax2, l.date_start, l.date_end, l.fk_task,';
@@ -2540,7 +2541,9 @@ class Commande extends CommonOrder
             while ($obj=$this->db->fetch_object($resql))
             {
                 $this->nbtodo++;
-                if ($obj->fk_statut != 3 && $this->db->jdate($obj->delivery_date) < ($now - $conf->commande->client->warning_delay)) $this->nbtodolate++;
+				
+				$date_to_test = empty($obj->delivery_date) ? $obj->datec : $obj->delivery_date; 
+                if ($obj->fk_statut != 3 && $this->db->jdate($date_to_test) < ($now - $conf->commande->client->warning_delay)) $this->nbtodolate++;
             }
             return 1;
         }
