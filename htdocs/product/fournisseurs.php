@@ -416,6 +416,12 @@ if ($id || $ref)
 					print $langs->trans("AddSupplierPrice").'</a>';
 				}
 			}
+			
+			if (is_object($hookmanager))
+			{
+				$aparameters = array();
+        		$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$product,$action);
+			}
 
 			print "\n</div>\n";
 			print '<br>';
@@ -456,7 +462,7 @@ if ($id || $ref)
 					{
 						$var=!$var;
 
-						print "<tr ".$bc[$var].">";
+						print '<tr id="row-'.$productfourn->product_fourn_price_id.'" '.$bc[$var].">";
 
 						print '<td>'.$productfourn->getSocNomUrl(1,'supplier').'</td>';
 
@@ -522,6 +528,12 @@ if ($id || $ref)
 						}
 
 						print '</td>';
+						
+						if (is_object($hookmanager))
+						{
+							$aparameters = array();
+			        		$reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$productfourn,$action);
+						}
 
 						print '</tr>';
 					}
