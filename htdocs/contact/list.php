@@ -66,6 +66,7 @@ $userid=GETPOST('userid','int');
 $begin=GETPOST('begin');
 
 $ct_service = GETPOST ( 'options_ct_service', 'alpha' );
+$ct_principal=GETPOST ( 'options_ct_principal', 'alpha' );
 
 if (! $sortorder) $sortorder="ASC";
 if (! $sortfield) $sortfield="p.lastname";
@@ -109,6 +110,7 @@ if (GETPOST('button_removefilter'))
     $seach_status=1;
     $search_sale = '';
     $ct_service='';
+    $ct_principal='';
 }
 if ($search_priv < 0) $search_priv='';
 
@@ -129,6 +131,7 @@ $sql.= " p.rowid as cidp, p.lastname as lastname, p.firstname, p.poste, p.email,
 $sql.= " p.phone, p.phone_mobile, p.fax, p.fk_pays, p.priv, p.tms,";
 $sql.= " cp.code as country_code, cp.libelle as countrylib, p.fk_user_modif, p.statut";
 $sql.= " ,extra.ct_service";
+$sql.= " ,extra.ct_principal";
 $sql.= " FROM ".MAIN_DB_PREFIX."socpeople as p";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_pays as cp ON cp.rowid = p.fk_pays";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = p.fk_soc";
@@ -208,6 +211,9 @@ if (strlen($search_email))      // filtre sur l'email
 if (!empty($ct_service)) {
 	$sql .= " AND extra.ct_service ='".$ct_service."'";
 }
+if (!empty($ct_principal)) {
+	$sql .= " AND extra.ct_principal =".$ct_principal;
+}
 if ($search_status!='') $sql .= " AND p.statut = ".$db->escape($search_status);
 if ($type == "o")        // filtre sur type
 {
@@ -273,6 +279,8 @@ if ($result)
     	$param .= '&search_sale=' . $search_sale;
     if (! empty ( $ct_service ))
     	$param .= '&options_ct_service=' . $ct_service;
+    if (! empty ( $ct_principal ))
+    	$param .= '&options_ct_service=' . $ct_principal;
     if ($search_status != '') $param.='&amp;search_status='.$search_status;
     if (!empty($search_categ)) $param.='&search_categ='.$search_categ;
 	if ($search_priv == '0' || $search_priv == '1') $param.="&search_priv=".urlencode($search_priv);
@@ -318,6 +326,7 @@ if ($result)
     print_liste_field_titre($langs->trans("Firstname"),$_SERVER["PHP_SELF"],"p.firstname", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("PostOrFunction"),$_SERVER["PHP_SELF"],"p.poste", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Fonction/Service"),$_SERVER["PHP_SELF"],"extra.ct_service", $begin, $param, '', $sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Contact principal"),$_SERVER["PHP_SELF"],"extra.ct_principal", $begin, $param, '', $sortfield,$sortorder);
     if (empty($conf->global->SOCIETE_DISABLE_CONTACTS)) print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Phone"),$_SERVER["PHP_SELF"],"p.phone", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("PhoneMobile"),$_SERVER["PHP_SELF"],"p.phone_mob", $begin, $param, '', $sortfield,$sortorder);
@@ -345,6 +354,11 @@ if ($result)
     print '<td class="liste_titre">';
     if (is_array ( $extralabels ) && key_exists ( 'ct_service', $extralabels )) {
     	print $extrafields->showInputField ( 'ct_service', $ct_service );
+    }
+    print '</td>';
+    print '<td class="liste_titre">';
+    if (is_array ( $extralabels ) && key_exists ( 'ct_principal', $extralabels )) {
+    	print $extrafields->showInputField ( 'ct_principal', $ct_principal );
     }
     print '</td>';
     if (empty($conf->global->SOCIETE_DISABLE_CONTACTS))
@@ -418,6 +432,13 @@ if ($result)
         	print $extrafields->showOutputField ( 'ct_service', $obj->ct_service );
         }
         
+        print '</td>';
+        
+        //ct_ptincipal
+        print '<td>';
+        if (is_array ( $extralabels ) && key_exists ( 'ct_principal', $extralabels )) {
+        	print $extrafields->showOutputField ( 'ct_principal', $obj->ct_principal );
+        }
         print '</td>';
         
         // Company
