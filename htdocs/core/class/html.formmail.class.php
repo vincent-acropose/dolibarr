@@ -217,7 +217,10 @@ class FormMail
      */
     function get_form($addfileaction='addfile',$removefileaction='removefile')
     {
-        global $conf, $langs, $user, $hookmanager;
+        global $conf, $user, $hookmanager;
+
+		if(empty($this->language)) global $langs;
+		else { $langs = new Translate('', $conf); $langs->setDefaultLang($this->language);  }
 
         $langs->load("other");
         $langs->load("mails");

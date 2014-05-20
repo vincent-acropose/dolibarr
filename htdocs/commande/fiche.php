@@ -2627,6 +2627,8 @@ else
 			// Cree l'objet formulaire mail
 			include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
 			$formmail = new FormMail($db);
+			
+			$formmail->language = $object->client->default_lang;
 			$formmail->fromtype = 'user';
 			$formmail->fromid   = $user->id;
 			$formmail->fromname = $user->getFullName($langs);
@@ -2637,13 +2639,24 @@ else
 			$formmail->withto=GETPOST('sendto')?GETPOST('sendto'):$liste;
 			$formmail->withtocc=$liste;
 			$formmail->withtoccc=$conf->global->MAIN_EMAIL_USECCC;
+			
+			
+			if(empty($object->client->default_lang)) {
+				$outputlangs=clone $langs;
+			}
+			else {
+				$outputlangs=new Translate('', $conf); 
+				$outputlangs->setDefaultLang($object->client->default_lang);
+				$outputlangs->load("commercial");
+			}
+			
 			if(empty($object->ref_client))
 			{
-				$formmail->withtopic=$langs->trans('SendOrderRef','__ORDERREF__');
+				$formmail->withtopic=$outputlangs->trans('SendOrderRef','__ORDERREF__');
 			}
 			else if(!empty($object->ref_client))
 			{
-				$formmail->withtopic=$langs->trans('SendOrderRef','__ORDERREF__(__REFCLIENT__)');
+				$formmail->withtopic=$outputlangs->trans('SendOrderRef','__ORDERREF__(__REFCLIENT__)');
 			}
 			$formmail->withfile=2;
 			$formmail->withbody=1;
