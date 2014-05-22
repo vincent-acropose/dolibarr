@@ -110,6 +110,7 @@ AvailabilityTypeAV_9M=9 months
 AvailabilityTypeAV_10M=10 months
 AvailabilityTypeAV_11M=11 months
 AvailabilityTypeAV_12M=12 months
+AvailabilityTypeAV-TBD=To discuss
 ##### Types de contacts #####
 TypeContact_propal_internal_SALESREPFOLL=Representative following-up proposal
 TypeContact_propal_external_BILLING=Customer invoice contact
