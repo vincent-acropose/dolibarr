@@ -843,21 +843,21 @@ else
 			{
 				print "\n\n<div class=\"tabsAction\">\n";
 
-				if (($object->statut == 0 || $object->statut == 1) && $user->rights->mailing->creer)
+				if (($object->statut == 0) && $user->rights->mailing->creer)
 				{
 					print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=edit&amp;id='.$object->id.'">'.$langs->trans("EditMailing").'</a>';
 				}
 
 				//print '<a class="butAction" href="fiche.php?action=test&amp;id='.$object->id.'">'.$langs->trans("PreviewMailing").'</a>';
 
-				if (! empty($conf->global->MAIN_USE_ADVANCED_PERMS) && ! $user->rights->mailing->mailing_advance->send)
+				/*if (! empty($conf->global->MAIN_USE_ADVANCED_PERMS) && ! $user->rights->mailing->mailing_advance->send)
 				{
 					print '<a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->transnoentitiesnoconv("NotEnoughPermissions")).'">'.$langs->trans("TestMailing").'</a>';
 				}
 				else
 				{
 					print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=test&amp;id='.$object->id.'">'.$langs->trans("TestMailing").'</a>';
-				}
+				}*/
 
 				if ($object->statut == 0)
 				{
@@ -875,7 +875,7 @@ else
 					}
 				}
 
-				if (($object->statut == 1 || $object->statut == 2) && $object->nbemail > 0 && $user->rights->mailing->valider)
+				/*if (($object->statut == 1 || $object->statut == 2) && $object->nbemail > 0 && $user->rights->mailing->valider)
 				{
 					if ($conf->global->MAILING_LIMIT_SENDBYWEB < 0 || (! empty($conf->global->MAIN_USE_ADVANCED_PERMS) && ! $user->rights->mailing->mailing_advance->send))
 					{
@@ -885,7 +885,7 @@ else
 					{
 						print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=sendall&amp;id='.$object->id.'">'.$langs->trans("SendMailing").'</a>';
 					}
-				}
+				}*/
 
 				if ($user->rights->mailing->creer)
 				{

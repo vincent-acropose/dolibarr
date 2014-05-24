@@ -220,7 +220,7 @@ if ($object->fetch($id) >= 0)
 
 	$var=!$var;
 
-	$allowaddtarget=($object->statut == 0 || $object->statut == 1);
+	$allowaddtarget=($object->statut == 0);
 
 	// Show email selectors
 	if ($allowaddtarget && $user->rights->mailing->creer)
@@ -376,7 +376,9 @@ if ($object->fetch($id) >= 0)
 		print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
 		print '<input type="hidden" name="id" value="'.$object->id.'">';
 
-		$cleartext='<br></div><div>'.$langs->trans("ToClearAllRecipientsClickHere").': '.'<input type="submit" name="clearlist" class="button" value="'.$langs->trans("TargetsReset").'">';
+		if ($allowaddtarget) {
+			$cleartext='<br></div><div>'.$langs->trans("ToClearAllRecipientsClickHere").': '.'<input type="submit" name="clearlist" class="button" value="'.$langs->trans("TargetsReset").'">';
+		}
 
 		print_barre_liste($langs->trans("MailSelectedRecipients").$cleartext,$page,$_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,"",$num,$object->nbemail,'');
 
@@ -495,7 +497,7 @@ if ($object->fetch($id) >= 0)
 				{
 					print '<td align="center">&nbsp;</td>';
 					print '<td align="right" class="nowrap">'.$langs->trans("MailingStatusNotSent");
-					if ($user->rights->mailing->creer) {
+					if ($user->rights->mailing->creer && $allowaddtarget) {
 						print '<a href="'.$_SERVER['PHP_SELF'].'?action=delete&rowid='.$obj->rowid.$param.'">'.img_delete($langs->trans("RemoveRecipient"));
 					}
 					print '</td>';
