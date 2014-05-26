@@ -579,10 +579,10 @@ if ($id > 0 || $ref)
 					}
 				}
 			}
-
+			
 			if (is_object($hookmanager))
 			{
-				$hookmanager->initHooks(array('pricesuppliercard'));
+				$aparameters = array();
         		$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$product,$action);
 			}
 
@@ -629,7 +629,7 @@ if ($id > 0 || $ref)
 					{
 						$var=!$var;
 
-						print "<tr ".$bc[$var].">";
+						print '<tr id="row-'.$productfourn->product_fourn_price_id.'" '.$bc[$var].">";
 
 						// Supplier
 						print '<td>'.$productfourn->getSocNomUrl(1,'supplier').'</td>';
@@ -709,6 +709,12 @@ if ($id > 0 || $ref)
 						}
 
 						print '</td>';
+						
+						if (is_object($hookmanager))
+						{
+							$aparameters = array();
+			        		$reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$productfourn,$action);
+						}
 
 						print '</tr>';
 					}

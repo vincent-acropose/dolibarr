@@ -403,6 +403,8 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
 	                {
 	                    $i = 0;
 	                    print '<br>';
+						$parameters=array();
+						$reshook=$hookmanager->executeHooks('formAddObjectLine',$parameters,$facture,$action);    // Note that $action and $object may have been modified by hook
 
 						if(!empty($conf->global->INVOICE_AUTO_FILLJS)){
 							//Add js for AutoFill
@@ -486,6 +488,11 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
 			                    print "</td>";
 							}
 							
+$parameters=array();
+$reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$objp,$action); // Note that $action and $object may have been modified by hook
+							
+	                       
+
 							print "</tr>\n";
 	                        $total+=$objp->total_ht;
 	                        $total_ttc+=$objp->total_ttc;
@@ -688,6 +695,10 @@ if (empty($action))
             print '</td>';*/
 
 			print '<td>&nbsp;</td>';
+
+	$parameters=array();
+	$reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$objp,$action); // Note that $action and $object may have been modified by hook
+		
             print '</tr>';
             $i++;
         }
