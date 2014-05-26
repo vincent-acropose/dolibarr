@@ -157,6 +157,119 @@ function supplier_order_pdf_create(DoliDB $db, CommandeFournisseur $object, $mod
 {
 	dol_syslog(__METHOD__ . " is deprecated", LOG_WARNING);
 
-	return $object->generateDocument($modele, $outputlangs, $hidedetails, $hidedesc, $hideref);
-}
+//<<<<<<< HEAD (upstream/3.8)
+//	return $object->generateDocument($modele, $outputlangs, $hidedetails, $hidedesc, $hideref);
+//=======
+	$error=0;
 
+	// Increase limit for PDF build
+	$err=error_reporting();
+	error_reporting(0);
+	@set_time_limit(120);
+	error_reporting($err);
+
+	$srctemplatepath='';
+
+	// Sets the model on the model name to use
+	if (! dol_strlen($modele))
+	{
+		if (! empty($conf->global->COMMANDE_SUPPLIER_ADDON_PDF))
+		{
+			$modele = $conf->global->COMMANDE_SUPPLIER_ADDON_PDF;
+		}
+		else
+		{
+			$modele = 'muscadet';
+		}
+	}
+
+	// If selected model is a filename template (then $modele="modelname:filename")
+	$tmp=explode(':',$modele,2);
+	if (! empty($tmp[1]))
+	{
+		$modele=$tmp[0];
+		$srctemplatepath=$tmp[1];
+	}
+
+	// Search template files
+	$file=''; $classname=''; $filefound=0;
+	$dirmodels=array('/');
+	if (is_array($conf->modules_parts['models'])) $dirmodels=array_merge($dirmodels,$conf->modules_parts['models']);
+	foreach($dirmodels as $reldir)
+	{
+		foreach(array('doc','pdf') as $prefix)
+		{
+			$file = $prefix."_".$modele.".modules.php";
+
+			// We check the model location
+			$file=dol_buildpath($reldir."core/modules/supplier_order/pdf/".$file,0);
+			if (file_exists($file))
+			{
+				$filefound=1;
+				$classname=$prefix.'_'.$modele;
+				break;
+			}
+		}
+		if ($filefound) break;
+	}
+
+	// Load the model
+	if ($filefound)
+	{
+		require_once $file;
+
+		$obj = new $classname($db,$object);
+
+		// Calls triggers
+		include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+		$interface=new Interfaces($db);
+		$result=$interface->run_triggers('BEFORE_ORDER_SUPPLIER_BUILDDOC',$object,$user,$langs,$conf);
+		if ($result < 0) {
+			$error++; $this->errors=$interface->errors;
+		}
+		// End calls triggers
+
+		// We save charset_output to restore it because write_file can change it if needed for
+		// output format that does not support UTF8.
+		$sav_charset_output=$outputlangs->charset_output;
+		if ($obj->write_file($object, $outputlangs, $srctemplatepath, $hidedetails, $hidedesc, $hideref) > 0)
+		{
+			$outputlangs->charset_output=$sav_charset_output;
+
+			// we delete preview files
+        	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+			dol_delete_preview($object);
+
+			// Calls triggers
+			include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+			$interface=new Interfaces($db);
+			$result=$interface->run_triggers('ORDER_SUPPLIER_BUILDDOC',$object,$user,$langs,$conf);
+			if ($result < 0) {
+				$error++; $this->errors=$interface->errors;
+			}
+			// End calls triggers
+
+			return 1;
+		}
+		else
+		{
+			$outputlangs->charset_output=$sav_charset_output;
+			dol_syslog("Erreur dans supplier_order_pdf_create");
+			dol_print_error($db,$obj->error);
+			return 0;
+		}
+	}
+	else
+	{
+		if (! $conf->global->COMMANDE_SUPPLIER_ADDON_PDF)
+		{
+			print $langs->trans("Error")." ".$langs->trans("Error_COMMANDE_SUPPLIER_ADDON_PDF_NotDefined");
+		}
+		else
+		{
+			print $langs->trans("Error")." ".$langs->trans("ErrorFileDoesNotExists",$file);
+		}
+		return 0;
+	}
+//>>>>>>> Correction pour multidevise
+}

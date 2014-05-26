@@ -273,7 +273,7 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
 
             print_fiche_titre($langs->trans('DoPayment'));
 
-            print '<form id="payment_form" name="addpaiement" action="'.$_SERVER["PHP_SELF"].'" method="POST">';
+            print '<form id="payment_form" name="addpaiement" action="paiement.php" method="post">';
             print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
             print '<input type="hidden" name="action" value="add_paiement">';
             print '<input type="hidden" name="facid" value="'.$facid.'">';
@@ -339,7 +339,6 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
 	                {
 	                    $i = 0;
 	                    print '<br>';
-
 						if(!empty($conf->global->FAC_AUTO_FILLJS)){
 							//Add js for AutoFill
 							print "\n".'<script type="text/javascript" language="javascript">';
@@ -350,7 +349,12 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
 							print '	});'."\n";
 							print '	</script>'."\n";
 						}
-						print '<table class="noborder" width="100%">';
+
+						$parameters=array();
+						$reshook=$hookmanager->executeHooks('formAddObjectLine',$parameters,$facture,$action);    // Note that $action and $object may have been modified by hook
+
+	                    print $langs->trans('Invoices').'<br>';
+	                    print '<table class="noborder" width="100%">';
 	                    print '<tr class="liste_titre">';
 	                    print '<td>'.$langs->trans('Ref').'</td>';
 	                    print '<td>'.$langs->trans('RefSupplier').'</td>';
@@ -393,7 +397,13 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
 							if(!empty($conf->global->FAC_AUTO_FILLJS))
 								print img_picto("Auto fill",'rightarrow', "class='AutoFillAmout' data-rowname='".$namef."' data-value='".($objp->total_ttc - $objp->am)."'");
 	                        print '<input type="text" size="8" name="'.$namef.'" value="'.GETPOST($namef).'">';
-							print "</td></tr>\n";
+	                        print "</td>";
+
+	                        $parameters=array();
+							$reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$objp,$action); // Note that $action and $object may have been modified by hook
+
+	                        print "</tr>\n";
+
 	                        $total+=$objp->total_ht;
 	                        $total_ttc+=$objp->total_ttc;
 	                        $totalrecu+=$objp->am;
@@ -604,8 +614,10 @@ if (empty($action))
             print '<td class="nowrap">';
             print $invoicesupplierstatic->getNomUrl(1);
             print '</td>';*/
+			
+			$parameters=array();
+			$reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$objp,$action); // Note that $action and $object may have been modified by hook
 
-			print '<td>&nbsp;</td>';
             print '</tr>';
             $i++;
         }

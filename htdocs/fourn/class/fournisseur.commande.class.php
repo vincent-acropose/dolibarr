@@ -243,7 +243,7 @@ class CommandeFournisseur extends CommonOrder
             $this->fetch_optionals($this->id,$extralabels);
 
             if ($this->statut == 0) $this->brouillon = 1;
-				
+
 				$this->lines=array();
 
             $sql = "SELECT l.rowid, l.ref as ref_supplier, l.fk_product, l.product_type, l.label, l.description,";
@@ -697,7 +697,7 @@ class CommandeFournisseur extends CommonOrder
             // Do we have to change status now ? (If double approval is required and first approval, we keep status to 1 = validated)
 			$movetoapprovestatus=true;
 			$comment='';
-			
+
             $sql = "UPDATE ".MAIN_DB_PREFIX."commande_fournisseur";
 			$sql.= " SET ref='".$this->db->escape($num)."',";
 			if (empty($secondlevel))	// standard or first level approval
@@ -706,7 +706,7 @@ class CommandeFournisseur extends CommonOrder
     	        $sql.= " fk_user_approve = ".$user->id;
     	        if (! empty($conf->global->SUPPLIER_ORDER_DOUBLE_APPROVAL) && $conf->global->MAIN_FEATURES_LEVEL > 0 && $this->total_ht >= $conf->global->SUPPLIER_ORDER_DOUBLE_APPROVAL)
     	        {
-    	        	if (empty($this->user_approve_id2)) 
+    	        	if (empty($this->user_approve_id2))
     	        	{
     	        	    $movetoapprovestatus=false;		// second level approval not done
     	        	    $comment=' (first level)';
@@ -773,7 +773,7 @@ class CommandeFournisseur extends CommonOrder
                 if (! $error)
                 {
                 	$this->ref = $this->newref;
-                	
+
                 	if ($movetoapprovestatus) $this->statut = 2;
 					else $this->statut = 1;
            			if (empty($secondlevel))	// standard or first level approval
@@ -2612,4 +2612,3 @@ class CommandeFournisseurLigne extends CommonOrderLine
         }
     }
 }
-
