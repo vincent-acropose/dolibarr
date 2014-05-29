@@ -892,7 +892,7 @@ else
 					print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=clone&amp;object=emailing&amp;id='.$object->id.'">'.$langs->trans("ToClone").'</a>';
 				}
 
-				if (($object->statut == 2 || $object->statut == 3) && $user->rights->mailing->valider)
+				/*if (($object->statut == 2 || $object->statut == 3) && $user->rights->mailing->valider)
 				{
 					if (! empty($conf->global->MAIN_USE_ADVANCED_PERMS) && ! $user->rights->mailing->mailing_advance->send)
 					{
@@ -902,7 +902,7 @@ else
 					{
 						print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=reset&amp;id='.$object->id.'">'.$langs->trans("ResetMailing").'</a>';
 					}
-				}
+				}*/
 
 				if (($object->statut <= 1 && $user->rights->mailing->creer) || $user->rights->mailing->supprimer)
 				{
