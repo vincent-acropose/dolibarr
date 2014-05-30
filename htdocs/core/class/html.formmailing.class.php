@@ -43,6 +43,13 @@ class FormMailing  extends Form
 		return 1;
 	}
 
+	/**
+	 * HTLM select dest status
+	 * @param string $selectedid
+	 * @param string $htmlname
+	 * @param number $show_empty
+	 * @return string
+	 */
 	public function select_destinaries_status($selectedid='',$htmlname='dest_status', $show_empty=0) {
 		
 		global $langs;
