@@ -2678,7 +2678,7 @@ else
 					if ($contact['libelle']==$langs->trans('TypeContact_commande_external_CUSTOMER')) {
 						$contactstatic=new Contact($db);
 						$contactstatic->fetch($contact['id']);
-						$custcontact=$contactstatic->getFullName($langs,1);
+						$custcontact=$contactstatic->getFullName($outputlangs,1);
 					}
 				}
 

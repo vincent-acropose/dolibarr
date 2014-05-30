@@ -2314,6 +2314,8 @@ else
 		// Create form object
 		include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
 		$formmail = new FormMail($db);
+		
+		$formmail->language = $object->client->default_lang;
 		$formmail->fromtype = 'user';
 		$formmail->fromid   = $user->id;
 		$formmail->fromname = $user->getFullName($langs);
@@ -2324,13 +2326,23 @@ else
 		$formmail->withto=GETPOST("sendto")?GETPOST("sendto"):$liste;
 		$formmail->withtocc=$liste;
 		$formmail->withtoccc=(! empty($conf->global->MAIN_EMAIL_USECCC)?$conf->global->MAIN_EMAIL_USECCC:false);
+		
+		if(empty($object->client->default_lang)) {
+			$outputlangs=clone $langs;
+		}
+		else {
+			$outputlangs=new Translate('', $conf); 
+			$outputlangs->setDefaultLang($object->client->default_lang);
+			$outputlangs->load("commercial");
+		}
+		
 		if(empty($object->ref_client))
 		{
-			$formmail->withtopic=$langs->trans('SendPropalRef','__PROPREF__');
+			$formmail->withtopic=$outputlangs->trans('SendPropalRef','__PROPREF__');
 		}
 		else if(!empty($object->ref_client))
 		{
-			$formmail->withtopic=$langs->trans('SendPropalRef','__PROPREF__(__REFCLIENT__)');
+			$formmail->withtopic=$outputlangs->trans('SendPropalRef','__PROPREF__(__REFCLIENT__)');
 		}
 		$formmail->withfile=2;
 		$formmail->withbody=1;
@@ -2354,7 +2366,7 @@ else
 				if ($contact['libelle']==$langs->trans('TypeContact_propal_external_CUSTOMER')) {
 					$contactstatic=new Contact($db);
 					$contactstatic->fetch($contact['id']);
-					$custcontact=$contactstatic->getFullName($langs,1);
+					$custcontact=$contactstatic->getFullName($outputlangs,1);
 				}
 			}
 

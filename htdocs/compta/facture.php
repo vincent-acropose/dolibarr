@@ -3944,6 +3944,8 @@ else if ($id > 0 || ! empty($ref))
 		// Cree l'objet formulaire mail
 		include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
 		$formmail = new FormMail($db);
+		
+		$formmail->language = $object->client->default_lang;
 		$formmail->fromtype = 'user';
 		$formmail->fromid   = $user->id;
 		$formmail->fromname = $user->getFullName($langs);
@@ -3957,13 +3959,23 @@ else if ($id > 0 || ! empty($ref))
 		$formmail->withto=GETPOST('sendto')?GETPOST('sendto'):$liste;
 		$formmail->withtocc=$liste;
 		$formmail->withtoccc=$conf->global->MAIN_EMAIL_USECCC;
+		
+		if(empty($object->client->default_lang)) {
+			$outputlangs=clone $langs;
+		}
+		else {
+			$outputlangs=new Translate('', $conf); 
+			$outputlangs->setDefaultLang($object->client->default_lang);
+			$outputlangs->load("commercial");
+		}
+		
 		if(empty($object->ref_client))
 		{
-			$formmail->withtopic=$langs->transnoentities($topicmail,'__FACREF__');
+			$formmail->withtopic=$outputlangs->transnoentities($topicmail,'__FACREF__');
 		}
 		else if(!empty($object->ref_client))
 		{
-			$formmail->withtopic=$langs->transnoentities($topicmail,'__FACREF__(__REFCLIENT__)');
+			$formmail->withtopic=$outputlangs->transnoentities($topicmail,'__FACREF__(__REFCLIENT__)');
 		}
 		$formmail->withfile=2;
 		$formmail->withbody=1;
@@ -3989,7 +4001,7 @@ else if ($id > 0 || ! empty($ref))
 
 					$contactstatic=new Contact($db);
 					$contactstatic->fetch($contact['id']);
-					$custcontact=$contactstatic->getFullName($langs,1);
+					$custcontact=$contactstatic->getFullName($outputlangs,1);
 				}
 			}
 
