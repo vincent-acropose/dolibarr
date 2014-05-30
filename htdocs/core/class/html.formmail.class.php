@@ -217,10 +217,12 @@ class FormMail
      */
     function get_form($addfileaction='addfile',$removefileaction='removefile')
     {
-        global $conf, $user, $langs, $hookmanager;
+        global $conf, $user, $langs, $outputlangs, $hookmanager;
 
         $langs->load("other");
         $langs->load("mails");
+		
+		$outputlangs->load("other");
 
         $hookmanager->initHooks(array('formmail'));
 
@@ -544,14 +546,6 @@ class FormMail
         	if (! empty($this->withbody))
         	{
         		$defaultmessage="";
-				
-				if(empty($this->language)) {
-					$outputlangs=clone $langs;
-				}
-				else {
-					$outputlangs=new Translate('', $conf); 
-					$outputlangs->setDefaultLang($this->language);
-				}
 
         		// TODO    A partir du type, proposer liste de messages dans table llx_models
         		if     ($this->param["models"]=='facture_send')	            { $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendInvoice"); }
