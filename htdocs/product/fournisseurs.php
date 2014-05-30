@@ -293,6 +293,12 @@ if ($id || $ref)
 					print '<input type="hidden" name="id_fourn" value="'.$socid.'">';
 					print '<input type="hidden" name="ref_fourn" value="'.$product->fourn_ref.'">';
 					print '<input type="hidden" name="ref_fourn_price_id" value="'.$rowid.'">';
+					
+					if (is_object($hookmanager))
+					{
+						$parameters=array('id_fourn'=>$id_fourn,'prod_id'=>$product->id);
+					    $reshook=$hookmanager->executeHooks('formEditThirdpartyOptions',$parameters,$object,$action);
+					}
 				}
 				else
 				{
