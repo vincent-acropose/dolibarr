@@ -217,10 +217,7 @@ class FormMail
      */
     function get_form($addfileaction='addfile',$removefileaction='removefile')
     {
-        global $conf, $user, $hookmanager;
-
-		if(empty($this->language)) global $langs;
-		else { $langs = new Translate('', $conf); $langs->setDefaultLang($this->language);  }
+        global $conf, $user, $langs, $hookmanager;
 
         $langs->load("other");
         $langs->load("mails");
@@ -547,17 +544,25 @@ class FormMail
         	if (! empty($this->withbody))
         	{
         		$defaultmessage="";
+				
+				if(empty($this->language)) {
+					$outputlangs=clone $langs;
+				}
+				else {
+					$outputlangs=new Translate('', $conf); 
+					$outputlangs->setDefaultLang($this->language);
+				}
 
         		// TODO    A partir du type, proposer liste de messages dans table llx_models
-        		if     ($this->param["models"]=='facture_send')	            { $defaultmessage=$langs->transnoentities("PredefinedMailContentSendInvoice"); }
-        		elseif ($this->param["models"]=='facture_relance')			{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendInvoiceReminder"); }
-        		elseif ($this->param["models"]=='propal_send')				{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendProposal"); }
-        		elseif ($this->param["models"]=='order_send')				{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendOrder"); }
-        		elseif ($this->param["models"]=='order_supplier_send')		{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendSupplierOrder"); }
-        		elseif ($this->param["models"]=='invoice_supplier_send')	{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendSupplierInvoice"); }
-        		elseif ($this->param["models"]=='shipping_send')			{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendShipping"); }
-        		elseif ($this->param["models"]=='fichinter_send')			{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendFichInter"); }
-        	    elseif ($this->param["models"]=='thirdparty')				{ $defaultmessage=$langs->transnoentities("PredefinedMailContentThirdparty"); }
+        		if     ($this->param["models"]=='facture_send')	            { $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendInvoice"); }
+        		elseif ($this->param["models"]=='facture_relance')			{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendInvoiceReminder"); }
+        		elseif ($this->param["models"]=='propal_send')				{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendProposal"); }
+        		elseif ($this->param["models"]=='order_send')				{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendOrder"); }
+        		elseif ($this->param["models"]=='order_supplier_send')		{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendSupplierOrder"); }
+        		elseif ($this->param["models"]=='invoice_supplier_send')	{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendSupplierInvoice"); }
+        		elseif ($this->param["models"]=='shipping_send')			{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendShipping"); }
+        		elseif ($this->param["models"]=='fichinter_send')			{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendFichInter"); }
+        	    elseif ($this->param["models"]=='thirdparty')				{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentThirdparty"); }
         		elseif (! is_numeric($this->withbody))						{ $defaultmessage=$this->withbody; }
 
         		// Complete substitution array
@@ -565,17 +570,17 @@ class FormMail
         		{
         			require_once DOL_DOCUMENT_ROOT.'/paypal/lib/paypal.lib.php';
 
-        			$langs->load('paypal');
+        			$outputlangs->load('paypal');
 
         			if ($this->param["models"]=='order_send')
         			{
         				$url=getPaypalPaymentUrl(0,'order',$this->substit['__ORDERREF__']);
-        				$this->substit['__PERSONALIZED__']=str_replace('\n',"\n",$langs->transnoentitiesnoconv("PredefinedMailContentLink",$url));
+        				$this->substit['__PERSONALIZED__']=str_replace('\n',"\n",$outputlangs->transnoentitiesnoconv("PredefinedMailContentLink",$url));
         			}
         			if ($this->param["models"]=='facture_send')
         			{
         				$url=getPaypalPaymentUrl(0,'invoice',$this->substit['__FACREF__']);
-        				$this->substit['__PERSONALIZED__']=str_replace('\n',"\n",$langs->transnoentitiesnoconv("PredefinedMailContentLink",$url));
+        				$this->substit['__PERSONALIZED__']=str_replace('\n',"\n",$outputlangs->transnoentitiesnoconv("PredefinedMailContentLink",$url));
         			}
         		}
 
