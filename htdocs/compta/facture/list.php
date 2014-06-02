@@ -284,6 +284,7 @@ if ($resql)
     print_liste_field_titre($langs->trans('Ref'),$_SERVER['PHP_SELF'],'f.facnumber','',$param,'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Date'),$_SERVER['PHP_SELF'],'f.datef','',$param,'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("DateDue"),$_SERVER['PHP_SELF'],"f.date_lim_reglement",'',$param,'align="center"',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Payments"),$_SERVER['PHP_SELF'],"",'',$param,'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Company'),$_SERVER['PHP_SELF'],'s.nom','',$param,'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('TypeContact_facture_external_BILLING'),$_SERVER['PHP_SELF'],'','',$param,'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('AmountHT'),$_SERVER['PHP_SELF'],'f.total','',$param,'align="right"',$sortfield,$sortorder);
@@ -291,7 +292,7 @@ if ($resql)
     print_liste_field_titre($langs->trans('AmountTTC'),$_SERVER['PHP_SELF'],'f.total_ttc','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Received'),$_SERVER['PHP_SELF'],'am','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Status'),$_SERVER['PHP_SELF'],'fk_statut,paye,am','',$param,'align="right"',$sortfield,$sortorder);
-    //print '<td class="liste_titre">&nbsp;</td>';
+    print '<td class="liste_titre">&nbsp;</td>';
     print '</tr>';
 
     // Filters lines
@@ -304,6 +305,7 @@ if ($resql)
     print '<input class="flat" type="text" size="1" maxlength="2" name="month" value="'.$month.'">';
     $formother->select_year($year?$year:-1,'year',1, 20, 5);
     print '</td>';
+    print '<td></td>';
     print '<td class="liste_titre" align="left">&nbsp;</td>';
     print '<td class="liste_titre" align="left"><input class="flat" type="text" name="search_societe" value="'.$search_societe.'"></td>';
     print '<td class="liste_titre" align="right">&nbsp;</td>';
@@ -366,6 +368,28 @@ if ($resql)
             if ($datelimit < ($now - $conf->facture->client->warning_delay) && ! $objp->paye && $objp->fk_statut == 1 && ! $paiement)
             {
                 print img_warning($langs->trans('Late'));
+            }
+            print '</td>';
+            
+            print '<td align="center" nowrap="1">';
+            if ($objp->paye==1) {
+	            // Payments already done (from payment on this invoice)
+	            $sqlpaiement = 'SELECT p.datep as dp';
+	            $sqlpaiement.= ' FROM '.MAIN_DB_PREFIX.'c_paiement as c, '.MAIN_DB_PREFIX.'paiement_facture as pf, '.MAIN_DB_PREFIX.'paiement as p';
+	            $sqlpaiement.= ' WHERE pf.fk_facture = '.$objp->facid.' AND p.fk_paiement = c.id AND pf.fk_paiement = p.rowid';
+	            $sqlpaiement.= ' ORDER BY p.datep, p.tms';
+	            
+	            $dt_pay_array=array();
+	            $resqlpaiment = $db->query($sqlpaiement);
+	            if ($resqlpaiment)
+	            {
+	            	$objpaiment = $db->fetch_object($resqlpaiment);
+	            	$dt_pay_array[]= dol_print_date($db->jdate($objpaiment->dp),'day');
+	            } else {
+	            	setEventMessage($db->lasterror(),'errors');
+	            }
+	            if (count($dt_pay_array)>0)
+	            print implode('<BR>',$dt_pay_array);
             }
             print '</td>';
 
