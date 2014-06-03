@@ -150,8 +150,8 @@ $sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s';
 $sql.= ', '.MAIN_DB_PREFIX.'facture as f';
 if (! $sall) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'paiement_facture as pf ON pf.fk_facture = f.rowid';
 else $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'facturedet as fd ON fd.fk_facture = f.rowid';
-$sql.=" LEFT JOIN ".MAIN_DB_PREFIX."element_contact as ecbilling ON ecbilling.element_id=f.rowid ";
-$sql.=" LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact as tcbilling ON tcbilling.element='facture' AND  tcbilling.source='external' AND  tcbilling.code='BILLING' AND tcbilling.rowid=ecbilling.fk_c_type_contact";
+$sql.=" LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact as tcbilling ON tcbilling.element='facture' AND  tcbilling.source='external' AND  tcbilling.code='BILLING' ";
+$sql.=" LEFT JOIN ".MAIN_DB_PREFIX."element_contact as ecbilling ON ecbilling.element_id=f.rowid AND tcbilling.rowid=ecbilling.fk_c_type_contact";
 $sql.=" LEFT JOIN ".MAIN_DB_PREFIX."socpeople as contactbilling ON contactbilling.rowid=ecbilling.fk_socpeople";
 // We'll need this table joined to the select in order to filter by sale
 if ($search_sale > 0 || (! $user->rights->societe->client->voir && ! $socid)) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
@@ -229,8 +229,8 @@ $listfield=explode(',',$sortfield);
 foreach ($listfield as $key => $value) $sql.= $listfield[$key].' '.$sortorder.',';
 $sql.= ' f.rowid DESC ';
 $sql.= $db->plimit($limit+1,$offset);
-//print $sql;
 
+dol_syslog('compta/facture/list.php:: sql='.$sql);
 $resql = $db->query($sql);
 if ($resql)
 {
@@ -275,7 +275,7 @@ if ($resql)
     if ($moreforfilter)
     {
         print '<tr class="liste_titre">';
-        print '<td class="liste_titre" colspan="10">';
+        print '<td class="liste_titre" colspan="11">';
         print $moreforfilter;
         print '</td></tr>';
     }
@@ -292,7 +292,6 @@ if ($resql)
     print_liste_field_titre($langs->trans('AmountTTC'),$_SERVER['PHP_SELF'],'f.total_ttc','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Received'),$_SERVER['PHP_SELF'],'am','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Status'),$_SERVER['PHP_SELF'],'fk_statut,paye,am','',$param,'align="right"',$sortfield,$sortorder);
-    print '<td class="liste_titre">&nbsp;</td>';
     print '</tr>';
 
     // Filters lines
@@ -403,6 +402,7 @@ if ($resql)
             print '</td>';
             
             print '<td>';
+            print $objp->contactblinngid;
             if (!empty($objp->contactblinngid)) {
 	            $contact=new Contact($db);
 	            $contact->id=$objp->contactblinngid;
@@ -437,7 +437,7 @@ if ($resql)
         {
             // Print total
             print '<tr class="liste_total">';
-            print '<td class="liste_total" colspan="5" align="left">'.$langs->trans('Total').'</td>';
+            print '<td class="liste_total" colspan="6" align="left">'.$langs->trans('Total').'</td>';
             print '<td class="liste_total" align="right">'.price($total_ht).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
             print '<td class="liste_total" align="right">'.price($total_tva).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
             print '<td class="liste_total" align="right">'.price($total_ttc).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
