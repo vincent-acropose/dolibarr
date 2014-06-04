@@ -1102,7 +1102,7 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $sql.= " u.rowid as user_id, u.login";	// User that valid action
         $sql.= " FROM ".MAIN_DB_PREFIX."mailing as m, ".MAIN_DB_PREFIX."mailing_cibles as mc, ".MAIN_DB_PREFIX."user as u";
         $sql.= " WHERE mc.email = '".$db->escape($objcon->email)."'";	// Search is done on email.
-        $sql.= " AND mc.statut = 1";
+        $sql.= " AND m.statut = 3";
         $sql.= " AND u.rowid = m.fk_user_valid";
         $sql.= " AND mc.fk_mailing=m.rowid";
         $sql.= " ORDER BY mc.date_envoi DESC, m.rowid DESC";
