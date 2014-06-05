@@ -1220,7 +1220,7 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
             }
             if (isset($histo[$key]['type']) && $histo[$key]['type']=='mailing')
             {
-                $out.='<a href="'.DOL_URL_ROOT.'/comm/mailing/fiche.php?id='.$histo[$key]['id'].'">'.img_object($langs->trans("ShowEMailing"),"email").' ';
+                $out.='<a href="'.dol_buildpath('/mailchimp/mailchimp/contact_activites.php',1).'?id='.$objcon->id.'">'.img_object($langs->trans("ShowEMailing"),"email").' ';
                 $transcode=$langs->trans("Action".$histo[$key]['acode']);
                 $libelle=($transcode!="Action".$histo[$key]['acode']?$transcode:'Send mass mailing');
                 $out.=dol_trunc($libelle,40);
