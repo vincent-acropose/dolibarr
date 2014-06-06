@@ -137,6 +137,7 @@ else
     $sql.= ' FROM '.MAIN_DB_PREFIX.'product as p';
     if (! empty($search_categ) || ! empty($catid)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_product as cp ON p.rowid = cp.fk_product"; // We'll need this table joined to the select in order to filter by categ
    	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON p.rowid = pfp.fk_product";
+	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product_extrafields as pext ON pext.fk_object = p.rowid";
 	// multilang
 	if ($conf->global->MAIN_MULTILANGS) // si l'option est active
 	{
@@ -146,7 +147,7 @@ else
 	if ($sall)
 	{
 		// For natural search
-		$params = array('p.ref', 'p.label', 'p.description', 'p.note');
+		$params = array('p.ref', 'p.label', 'p.description', 'p.note', 'pext.ref_interdacta');
 		// multilang
 		if ($conf->global->MAIN_MULTILANGS) // si l'option est active
 		{
@@ -164,7 +165,7 @@ else
     	if ($type == 1) $sql.= " AND p.fk_product_type = '1'";
     	else $sql.= " AND p.fk_product_type <> '1'";
     }
-	if ($sref)     $sql .= natural_search('p.ref', $sref);
+	if ($sref)     $sql .= natural_search(array('p.ref','pext.ref_interdacta'), $sref);
     if ($sbarcode) $sql .= natural_search('p.barcode', $sbarcode);
     if ($snom)
 	{

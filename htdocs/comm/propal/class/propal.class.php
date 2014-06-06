@@ -362,6 +362,7 @@ class Propal extends CommonObject
             $total_ht  = $tabprice[0];
             $total_tva = $tabprice[1];
             $total_ttc = $tabprice[2];
+            $pu_ht = $tabprice[3];
             $total_localtax1 = $tabprice[9];
             $total_localtax2 = $tabprice[10];
 

@@ -1337,6 +1337,7 @@ class Form
 			$sql.= " DESC LIMIT 1) as price_by_qty";
 		}
         $sql.= " FROM ".MAIN_DB_PREFIX."product as p";
+	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product_extrafields as pext ON pext.fk_object = p.rowid";
         // Multilang : we add translation
         if (! empty($conf->global->MAIN_MULTILANGS))
         {
@@ -1369,7 +1370,7 @@ class Form
             foreach ($scrit as $crit)
             {
             	if ($i > 0) $sql.=" AND ";
-                $sql.="(p.ref LIKE '".$prefix.$crit."%' OR p.label LIKE '".$prefix.$crit."%'";
+                $sql.="(p.ref LIKE '".$prefix.$crit."%' OR p.label LIKE '".$prefix.$crit."%' OR pext.ref_interdacta LIKE '".$prefix.$crit."%'";
                 if (! empty($conf->global->MAIN_MULTILANGS)) $sql.=" OR pl.label LIKE '".$prefix.$crit."%'";
                 $sql.=")";
                 $i++;
@@ -1866,6 +1867,8 @@ class Form
         $sql.= " AND p.tobuy = 1";
         $sql.= " AND s.fournisseur = 1";
         $sql.= " AND p.rowid = ".$productid;
+	// SPECIFIQUE : le fournisseur FRIMAUDEAU sert de dépannage donc ne pas afficher dans cette liste
+	$sql.= " AND s.rowid NOT IN (1654)";
         $sql.= " ORDER BY s.nom, pfp.ref_fourn DESC";
 
         dol_syslog(get_class($this)."::select_product_fourn_price sql=".$sql,LOG_DEBUG);
@@ -1892,9 +1895,10 @@ class Form
 
                     $opt = '<option value="'.$objp->idprodfournprice.'"';
                     //if there is only one supplier, preselect it
-                    if($num == 1) {
+                    if($i == 0) {
                         $opt .= ' selected="selected"';
                     }
+                    $opt.= ' qty="'.$objp->quantity.'"';
                     $opt.= '>'.$objp->nom.' - '.$objp->ref_fourn.' - ';
 
                     if ($objp->quantity == 1)
