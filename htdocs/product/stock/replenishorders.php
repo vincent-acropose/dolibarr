@@ -85,9 +85,10 @@ $offset = $conf->liste_limit * $page ;
 $sql = 'SELECT s.rowid as socid, s.nom, cf.date_creation as dc,';
 $sql.= ' cf.rowid, cf.ref, cf.fk_statut, cf.total_ht, cf.tva, cf.total_ttc, cf.fk_user_author,';
 $sql.= ' u.login';
-$sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s, '.MAIN_DB_PREFIX.'commande_fournisseur as cf';
-$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'user as u ON cf.fk_user_author = u.rowid';
+$sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s';
 $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'societe_extrafields as sext ON sext.fk_object = s.rowid';
+$sql.= ', '.MAIN_DB_PREFIX.'commande_fournisseur as cf';
+$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'user as u ON cf.fk_user_author = u.rowid';
 if (!$user->rights->societe->client->voir && !$socid) {
     $sql.= ', ' . MAIN_DB_PREFIX . 'societe_commerciaux as sc';
 }
@@ -265,6 +266,10 @@ if ($resql)
          '<input type="text" class="flat" name="search_user" value="' . $suser . '">'.
          '</td>'.
          '<td class="liste_titre">'.
+         '</td>'.
+         '<td class="liste_titre">'.
+         '</td>'.
+         '<td class="liste_titre">'.
          '<input type="text" class="flat" name="search_ttc" value="' . $sttc . '">'.
          '</td>'.
          '<td class="liste_titre">'.
@@ -312,6 +317,14 @@ if ($resql)
             print '<td>'.
                  $txt.
                  '</td>'.
+            // Amount HT
+                 '<td>'.
+                 price($obj->total_ht).
+                 '</td>';
+            // Amount VAT
+                 '<td>'.
+                 price($obj->tva).
+                 '</td>';
             // Amount
                  '<td>'.
                  price($obj->total_ttc).
