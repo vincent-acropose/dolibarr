@@ -432,16 +432,16 @@ IMG;
 		
 		$name=str_replace('.odt', '', $name);
 		if (!empty($conf->global->MAIN_DOL_SCRIPTS_ROOT)) {
-			$command = $conf->global->MAIN_DOL_SCRIPTS_ROOT.'/scripts/odt2pdf/odt2pdf.sh '.$name;
+			$command = 'sh '.$conf->global->MAIN_DOL_SCRIPTS_ROOT.'/scripts/odt2pdf/odt2pdf.sh '.$name;
 		}else {
-			$command = '../../scripts/odt2pdf/odt2pdf.sh '.$name;
+			$command = 'sh ../../../scripts/odt2pdf/odt2pdf.sh "'.$name.'"';
 		}
 		
 		
 		//$dirname=dirname($name);
 		//$command = DOL_DOCUMENT_ROOT.'/includes/odtphp/odt2pdf.sh '.$name.' '.$dirname;
 		
-		dol_syslog(get_class($this).'::exportAsAttachedPDF $execmethod='.$execmethod.' Run command='.$command,LOG_DEBUG);
+		dol_syslog(get_class($this).'::exportAsAttachedPDF dir='.__DIR__.' $execmethod='.$execmethod.' Run command='.$command,LOG_DEBUG);
 		if ($execmethod == 1)
 		{
 			exec($command, $output_arr, $retval);
