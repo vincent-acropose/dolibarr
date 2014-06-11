@@ -83,7 +83,7 @@ if (!$sortfield) {
 $offset = $conf->liste_limit * $page ;
 
 $sql = 'SELECT s.rowid as socid, s.nom, cf.date_creation as dc,';
-$sql.= ' cf.rowid, cf.ref, cf.fk_statut, cf.total_ht, cf.tva, cf.total_ttc, cf.fk_user_author, sext.franco_fourn';
+$sql.= ' cf.rowid, cf.ref, cf.fk_statut, cf.total_ht, cf.tva, cf.total_ttc, cf.fk_user_author, sext.franco_fourn,';
 $sql.= ' u.login';
 $sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s';
 $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'societe_extrafields as sext ON sext.fk_object = s.rowid';
