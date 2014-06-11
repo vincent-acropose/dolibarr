@@ -316,17 +316,17 @@ if ($resql)
             }
             print '<td>'.
                  $txt.
-                 '</td>'.
+                 '</td>';
             // Amount HT
-                 '<td>'.
+            print '<td>'.
                  price($obj->total_ht).
                  '</td>';
             // Amount VAT
-                 '<td>'.
+            print '<td>'.
                  price($obj->tva).
                  '</td>';
             // Amount
-                 '<td>'.
+            print '<td>'.
                  price($obj->total_ttc).
                  '</td>';
 
