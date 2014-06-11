@@ -83,7 +83,7 @@ if (!$sortfield) {
 $offset = $conf->liste_limit * $page ;
 
 $sql = 'SELECT s.rowid as socid, s.nom, cf.date_creation as dc,';
-$sql.= ' cf.rowid, cf.ref, cf.fk_statut, cf.total_ht, cf.tva, cf.total_ttc, cf.fk_user_author,';
+$sql.= ' cf.rowid, cf.ref, cf.fk_statut, cf.total_ht, cf.tva, cf.total_ttc, cf.fk_user_author, sext.franco_fourn';
 $sql.= ' u.login';
 $sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s';
 $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'societe_extrafields as sext ON sext.fk_object = s.rowid';
@@ -204,6 +204,16 @@ if ($resql)
     		$sortorder
     );
 	print_liste_field_titre(
+    		$langs->trans('Franco'),
+    		$_SERVER['PHP_SELF'],
+    		'sext.franco_fourn',
+    		'',
+    		'',
+    		'',
+    		$sortfield,
+    		$sortorder
+    );
+	print_liste_field_titre(
     		$langs->trans('AmountHT'),
     		$_SERVER['PHP_SELF'],
     		'cf.total_ht',
@@ -270,6 +280,8 @@ if ($resql)
          '<td class="liste_titre">'.
          '</td>'.
          '<td class="liste_titre">'.
+         '</td>'.
+         '<td class="liste_titre">'.
          '<input type="text" class="flat" name="search_ttc" value="' . $sttc . '">'.
          '</td>'.
          '<td class="liste_titre">'.
@@ -316,6 +328,10 @@ if ($resql)
             }
             print '<td>'.
                  $txt.
+                 '</td>';
+            // Franco
+            print '<td>'.
+                 price($obj->franco_fourn).
                  '</td>';
             // Amount HT
             print '<td>'.
