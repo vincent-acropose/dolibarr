@@ -474,7 +474,7 @@ class Contact extends CommonObject
 
 
 	/**
-	 *  Charge l'objet contact
+	 *  Load object contact
 	 *
 	 *  @param      int		$id          id du contact
 	 *  @param      User	$user        Utilisateur (abonnes aux alertes) qui veut les alertes de ce contact

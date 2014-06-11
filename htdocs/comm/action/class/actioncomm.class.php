@@ -816,8 +816,8 @@ class ActionComm extends CommonObject
         	$libelleshort=dol_trunc($label, $maxlength);
         }
         else
-       {      	
-       	    $libelle=$label;
+       {
+            $libelle=$label;
             $libelleshort=dol_trunc($label,$maxlength);
         }
 

@@ -36,7 +36,6 @@ class Mailing extends CommonObject
 
 	var $id;
 	var $statut;
-	
 	var $titre;
 	var $sujet;
 	var $body;

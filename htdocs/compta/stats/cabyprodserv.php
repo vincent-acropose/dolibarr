@@ -1,5 +1,6 @@
 <?php
-/* Copyright (C) 2013      Antoine Iauch        <aiauch@gpcsolutions.fr>
+/* Copyright (C) 2013 Antoine Iauch        <aiauch@gpcsolutions.fr>
+ * Copyright (C) 2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -207,6 +208,7 @@ if ($modecompta == 'CREANCES-DETTES') {
     $sql.= " GROUP BY p.rowid ";
     $sql.= "ORDER BY p.ref ";
 
+    dol_syslog("cabyprodserv sql=".$sql);
     $result = $db->query($sql);
     if ($result) {
 	$num = $db->num_rows($result);

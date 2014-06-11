@@ -73,8 +73,10 @@ $hookmanager->initHooks(array('actioncard'));
 
 
 /*
- * Action creation de l'action
+ * Actions
  */
+
+// Add action
 if ($action == 'add_action')
 {
 	$error=0;
@@ -638,7 +640,7 @@ if ($id > 0)
 	$act = new ActionComm($db);
 	$result=$act->fetch($id);
 	$act->fetch_optionals($id,$extralabels);
-	
+
 	if ($result < 0)
 	{
 		dol_print_error($db,$act->error);

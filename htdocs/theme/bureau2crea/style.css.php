@@ -2347,6 +2347,10 @@ div.other {
     margin-left: -240px;
     }
 
+form.listactionsfilter img {
+	display: none;
+    }
+
 form.listactionsfilter input[type="submit"] {
 	margin: 2px 0px;
 }

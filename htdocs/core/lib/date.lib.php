@@ -754,11 +754,7 @@ function num_between_day($timestampStart, $timestampEnd, $lastday=0)
 		}
 		$nbjours = (int) floor(($timestampEnd - $timestampStart)/(60*60*24)) + 1 - $bit;
 	}
-	/*print '<BR>';
-	print '$timestampEnd='.$timestampEnd.' $timestampStart='.$timestampStart.' $bit='.$bit;
-	print '<BR>';
-	print ($timestampEnd - $timestampStart)/(60*60*24);
-	print '<BR>';*/
+	//print ($timestampEnd - $timestampStart) - $lastday;
 	return $nbjours;
 }
 
@@ -782,11 +778,10 @@ function num_open_day($timestampStart, $timestampEnd, $inhour=0, $lastday=0, $ha
 	if (! is_int($timestampStart) && ! is_float($timestampStart)) return 'ErrorBadParameter_num_open_day';
 	if (! is_int($timestampEnd) && ! is_float($timestampEnd)) return 'ErrorBadParameter_num_open_day';
 
-	//print 'num_open_day timestampStart='.dol_print_date($timestampStart,'dayhour').' timestampEnd='.dol_print_date($timestampEnd,'dayhour').' bit='.$lastday.'<BR>';
-	//print 'num_open_day timestampStart='.$timestampStart.' timestampEnd='.$timestampEnd.' bit='.$lastday.'<BR>';
+	//print 'num_open_day timestampStart='.$timestampStart.' timestampEnd='.$timestampEnd.' bit='.$lastday;
 	if ($timestampStart < $timestampEnd)
 	{
-		//print 'num_open_day='. num_between_day($timestampStart, $timestampEnd, $lastday).' - num_public_holiday='.num_public_holiday($timestampStart, $timestampEnd);
+		//print num_between_day($timestampStart, $timestampEnd, $lastday).' - '.num_public_holiday($timestampStart, $timestampEnd);
 		$nbOpenDay = num_between_day($timestampStart, $timestampEnd, $lastday) - num_public_holiday($timestampStart, $timestampEnd, $lastday);
 		$nbOpenDay.= " " . $langs->trans("Days");
 		if ($inhour == 1 && $nbOpenDay <= 3) $nbOpenDay = $nbOpenDay*24 . $langs->trans("HourShort");

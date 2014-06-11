@@ -75,13 +75,13 @@ function members_label_pdf_create($db, $arrayofrecords, $modele, $outputlangs, $
 	$langs->load("members");
 
 	$error=0;
-	
+
 	// Increase limit for PDF build
 	$err=error_reporting();
 	error_reporting(0);
 	@set_time_limit(120);
 	error_reporting($err);
-	
+
 	$code='';
 	$srctemplatepath='';
 
@@ -99,7 +99,7 @@ function members_label_pdf_create($db, $arrayofrecords, $modele, $outputlangs, $
 	}
 	else $code=$modele;
 	$modele='standardlabel';
-	
+
 	// If selected modele is a filename template (then $modele="modelname:filename")
 	$tmp=explode(':',$modele,2);
 	if (! empty($tmp[1]))
@@ -108,7 +108,7 @@ function members_label_pdf_create($db, $arrayofrecords, $modele, $outputlangs, $
 		$srctemplatepath=$tmp[1];
 	}
 	else $srctemplatepath=$code;
-	
+
 	// Search template files
 	$file=''; $classname=''; $filefound=0;
 	$dirmodels=array('/');
@@ -118,7 +118,7 @@ function members_label_pdf_create($db, $arrayofrecords, $modele, $outputlangs, $
 		foreach(array('doc','pdf') as $prefix)
 		{
 			$file = $prefix."_".$modele.".class.php";
-	
+
 			// On verifie l'emplacement du modele
 			$file=dol_buildpath($reldir."core/modules/printsheet/doc/".$file,0);
 			if (file_exists($file))
@@ -130,14 +130,14 @@ function members_label_pdf_create($db, $arrayofrecords, $modele, $outputlangs, $
 		}
 		if ($filefound) break;
 	}
-	
+
 	// Charge le modele
 	if ($filefound)
 	{
 		require_once $file;
 
 		$obj = new $classname($db);
-	
+
 		// We save charset_output to restore it because write_file can change it if needed for
 		// output format that does not support UTF8.
 		$sav_charset_output=$outputlangs->charset_output;

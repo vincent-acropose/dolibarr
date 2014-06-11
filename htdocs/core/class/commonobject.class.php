@@ -2495,8 +2495,7 @@ abstract class CommonObject
             $subelement = $regs[2];
         }
 
-        $classpath = $element.'/class';
-       
+        $classpath = $element.'/class';      
 
         // To work with non standard path
         if ($objecttype == 'facture' || $objecttype == 'invoice') {
@@ -2545,11 +2544,10 @@ abstract class CommonObject
             $classpath = 'fourn/class';
             $module='fournisseur';
         }
-        
+
         if (! empty($conf->$module->enabled))
         {
             $res=dol_include_once('/'.$classpath.'/'.$classfile.'.class.php');
-            
             if ($res)
             {
                 $object = new $classname($this->db);
