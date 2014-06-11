@@ -83,10 +83,11 @@ if (!$sortfield) {
 $offset = $conf->liste_limit * $page ;
 
 $sql = 'SELECT s.rowid as socid, s.nom, cf.date_creation as dc,';
-$sql.= ' cf.rowid, cf.ref, cf.fk_statut, cf.total_ttc, cf.fk_user_author,';
+$sql.= ' cf.rowid, cf.ref, cf.fk_statut, cf.total_ht, cf.tva, cf.total_ttc, cf.fk_user_author,';
 $sql.= ' u.login';
 $sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s, '.MAIN_DB_PREFIX.'commande_fournisseur as cf';
 $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'user as u ON cf.fk_user_author = u.rowid';
+$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'societe_extrafields as sext ON sext.fk_object = s.rowid';
 if (!$user->rights->societe->client->voir && !$socid) {
     $sql.= ', ' . MAIN_DB_PREFIX . 'societe_commerciaux as sc';
 }
@@ -195,6 +196,26 @@ if ($resql)
     		$langs->trans('Author'),
     		$_SERVER['PHP_SELF'],
     		'u.login',
+    		'',
+    		'',
+    		'',
+    		$sortfield,
+    		$sortorder
+    );
+	print_liste_field_titre(
+    		$langs->trans('AmountHT'),
+    		$_SERVER['PHP_SELF'],
+    		'cf.total_ht',
+    		'',
+    		'',
+    		'',
+    		$sortfield,
+    		$sortorder
+    );
+	print_liste_field_titre(
+    		$langs->trans('AmountVAT'),
+    		$_SERVER['PHP_SELF'],
+    		'cf.tva',
     		'',
     		'',
     		'',
