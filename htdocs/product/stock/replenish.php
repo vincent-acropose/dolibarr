@@ -48,6 +48,7 @@ $sall = GETPOST('sall', 'alpha');
 $type = GETPOST('type','int');
 $tobuy = GETPOST('tobuy', 'int');
 $salert = GETPOST('salert', 'alpha');
+$mode = GETPOST('mode','alpha');
 
 $sortfield = GETPOST('sortfield','alpha');
 $sortorder = GETPOST('sortorder','alpha');
@@ -140,6 +141,43 @@ if ($action == 'order' && isset($_POST['valid']))
         foreach ($suppliers as $supplier)
         {
             $order = new CommandeFournisseur($db);
+            // Check if an order for the supplier exists
+            $sql = "SELECT rowid FROM ".MAIN_DB_PREFIX."commande_fournisseur";
+            $sql.= " WHERE fk_soc = ".$suppliersid[$i];
+            $sql.= " AND source = 42 AND fk_statut = 0";
+            $sql.= " ORDER BY date_creation DESC";
+            $resql = $db->query($sql);
+            if($resql && $db->num_rows($resql) > 0) {
+                $obj = $db->fetch_object($resql);
+                $order->fetch($obj->rowid);
+		foreach ($supplier['lines'] as $line) {
+	                $result = $order->addline(
+                            $line->desc,
+                            $line->subprice,
+                            $line->qty,
+                            $line->tva_tx,
+                            $line->localtax1_tx,
+                            $line->localtax2_tx,
+                            $line->fk_product,
+                            0,
+                            $line->ref_fourn,
+                            $line->remise_percent,
+                            'HT',
+                            0,
+                            $line->info_bits
+                        );
+		}
+                if ($result < 0) {
+                $fail++;
+                $msg = $langs->trans('OrderFail') . "&nbsp;:&nbsp;";
+                $msg .= $order->error;
+                setEventMessage($msg, 'errors');
+            	} else {
+			$id = $result;
+            	}
+
+            } else {
+
             $order->socid = $suppliersid[$i];
             //trick to know which orders have been generated this way
             $order->source = 42;
@@ -154,6 +192,7 @@ if ($action == 'order' && isset($_POST['valid']))
                 $msg = $langs->trans('OrderFail') . "&nbsp;:&nbsp;";
                 $msg .= $order->error;
                 setEventMessage($msg, 'errors');
+            }
             }
             $i++;
         }
@@ -191,8 +230,8 @@ $usevirtualstock=-1;
 if ($virtualdiffersfromphysical)
 {
 	$usevirtualstock=($conf->global->STOCK_USE_VIRTUAL_STOCK?1:0);
-	if (GETPOST('mode')=='virtual') $usevirtualstock=1;
-	if (GETPOST('mode')=='physical') $usevirtualstock=0;
+	if ($mode=='virtual') $usevirtualstock=1;
+	if ($mode=='physical') $usevirtualstock=0;
 }
 
 $title = $langs->trans('Status');
@@ -317,6 +356,7 @@ if ($sref || $snom || $sall || $salert || GETPOST('search', 'alpha')) {
 	$filters = '&sref=' . $sref . '&snom=' . $snom;
 	$filters .= '&sall=' . $sall;
 	$filters .= '&salert=' . $salert;
+	$filters .= '&mode=' . $mode;
 	print_barre_liste(
 		$texte,
 		$page,
@@ -332,6 +372,7 @@ if ($sref || $snom || $sall || $salert || GETPOST('search', 'alpha')) {
 	$filters .= '&fourn_id=' . $fourn_id;
 	$filters .= (isset($type)?'&type=' . $type:'');
 	$filters .=  '&salert=' . $salert;
+	$filters .= '&mode=' . $mode;
 	print_barre_liste(
 		$texte,
 		$page,
@@ -357,6 +398,7 @@ print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST" name="formulaire">'
 $param = (isset($type)? '&type=' . $type : '');
 $param .= '&fourn_id=' . $fourn_id . '&snom='. $snom . '&salert=' . $salert;
 $param .= '&sref=' . $sref;
+$param .= '&mode=' . $mode;
 
 // Lignes des titres
 print '<tr class="liste_titre">'.
@@ -648,7 +690,6 @@ $db->free($resql);
 dol_fiche_end();
 
 echo '<script src="'.dol_buildpath('/supplierorderfromorder/js/script.js',1).'" type="text/javascript"></script>';
-
 // TODO Replace this with jquery
 print '
 <script type="text/javascript">

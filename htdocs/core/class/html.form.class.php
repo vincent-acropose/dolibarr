@@ -1868,7 +1868,7 @@ class Form
         $sql.= " AND s.fournisseur = 1";
         $sql.= " AND p.rowid = ".$productid;
 	// SPECIFIQUE : le fournisseur FRIMAUDEAU sert de dépannage donc ne pas afficher dans cette liste
-	$sql.= " AND s.rowid NOT IN (1654)";
+	//$sql.= " AND s.rowid NOT IN (1654)";
         $sql.= " ORDER BY s.nom, pfp.ref_fourn DESC";
 
         dol_syslog(get_class($this)."::select_product_fourn_price sql=".$sql,LOG_DEBUG);
