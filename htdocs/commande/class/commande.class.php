@@ -3406,11 +3406,11 @@ class OrderLine extends CommonOrderLine
 
         // Mise a jour ligne en base
         $sql = "UPDATE ".MAIN_DB_PREFIX."commandedet SET";
-        $sql.= " total_ht='".price2num($this->total_ht)."'";
-        $sql.= ",total_tva='".price2num($this->total_tva)."'";
-        $sql.= ",total_localtax1='".price2num($this->total_localtax1)."'";
-        $sql.= ",total_localtax2='".price2num($this->total_localtax2)."'";
-        $sql.= ",total_ttc='".price2num($this->total_ttc)."'";
+        $sql.= " total_ht='".price2num($this->total_ht,'MT')."'";
+        $sql.= ",total_tva='".price2num($this->total_tva,'MT')."'";
+        $sql.= ",total_localtax1='".price2num($this->total_localtax1,'MT')."'";
+        $sql.= ",total_localtax2='".price2num($this->total_localtax2,'MT')."'";
+        $sql.= ",total_ttc='".price2num($this->total_ttc,'MT')."'";
         $sql.= " WHERE rowid = ".$this->rowid;
 
         dol_syslog("OrderLine::update_total sql=$sql");
