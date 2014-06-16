@@ -67,6 +67,7 @@ $begin=GETPOST('begin');
 
 $ct_service = GETPOST ( 'options_ct_service', 'alpha' );
 $ct_principal=GETPOST ( 'options_ct_principal', 'alpha' );
+$ct_catalogue=GETPOST ( 'options_ct_catalogue', 'alpha' );
 
 if (! $sortorder) $sortorder="ASC";
 if (! $sortfield) $sortfield="p.lastname";
@@ -76,9 +77,19 @@ $offset = $limit * $page;
 
 $langs->load("companies");
 $titre = (! empty($conf->global->SOCIETE_ADDRESSES_MANAGEMENT) ? $langs->trans("ListOfContacts") : $langs->trans("ListOfContactsAddresses"));
-if ($type == "c" || $type=="p")
+if ($type == "c")
 {
 	$titre.='  ('.$langs->trans("ThirdPartyCustomers").')';
+	$urlfiche="fiche.php";
+}
+else if ($type == "p")
+{
+	$titre.=' ('.$langs->trans("ThirdPartyProspects").')';
+	$urlfiche="fiche.php";
+}
+else if ($type == "cp")
+{
+	$titre.=' ('.$langs->trans("ProspectCustomer").')';
 	$urlfiche="fiche.php";
 }
 else if ($type == "f")
@@ -111,6 +122,7 @@ if (GETPOST('button_removefilter'))
     $search_sale = '';
     $ct_service='';
     $ct_principal='';
+    $ct_catalogue='';
 }
 if ($search_priv < 0) $search_priv='';
 
@@ -132,6 +144,7 @@ $sql.= " p.phone, p.phone_mobile, p.fax, p.fk_pays, p.priv, p.tms,";
 $sql.= " cp.code as country_code, cp.libelle as countrylib, p.fk_user_modif, p.statut";
 $sql.= " ,extra.ct_service";
 $sql.= " ,extra.ct_principal";
+$sql.= " ,extra.ct_catalogue";
 $sql.= " FROM ".MAIN_DB_PREFIX."socpeople as p";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_pays as cp ON cp.rowid = p.fk_pays";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = p.fk_soc";
@@ -214,6 +227,9 @@ if (!empty($ct_service)) {
 if (!empty($ct_principal)) {
 	$sql .= " AND extra.ct_principal =".$ct_principal;
 }
+if (!empty($ct_catalogue)) {
+	$sql .= " AND extra.ct_catalogue =".$ct_catalogue;
+}
 if ($search_status!='') $sql .= " AND p.statut = ".$db->escape($search_status);
 if ($type == "o")        // filtre sur type
 {
@@ -225,11 +241,15 @@ else if ($type == "f")        // filtre sur type
 }
 else if ($type == "c")        // filtre sur type
 {
-    $sql .= " AND s.client IN (1, 3)";
+    $sql .= " AND s.client IN (1)";
 }
 else if ($type == "p")        // filtre sur type
 {
-    $sql .= " AND s.client IN (2, 3)";
+    $sql .= " AND s.client IN (2)";
+}
+else if ($type == "cp")        // filtre sur type
+{
+	$sql .= " AND s.client IN (3)";
 }
 if ($sall)
 {
@@ -293,6 +313,7 @@ if ($result)
     print '<form method="post" action="'.$_SERVER["PHP_SELF"].'">';
     print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
     print '<input type="hidden" name="view" value="'.$view.'">';
+    print '<input type="hidden" name="type" value="'.$type.'">';
     print '<input type="hidden" name="sortfield" value="'.$sortfield.'">';
     print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
     
@@ -327,6 +348,7 @@ if ($result)
     print_liste_field_titre($langs->trans("PostOrFunction"),$_SERVER["PHP_SELF"],"p.poste", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Fonction/Service"),$_SERVER["PHP_SELF"],"extra.ct_service", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Contact principal"),$_SERVER["PHP_SELF"],"extra.ct_principal", $begin, $param, '', $sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Catalogue"),$_SERVER["PHP_SELF"],"extra.ct_catalogue", $begin, $param, '', $sortfield,$sortorder);
     if (empty($conf->global->SOCIETE_DISABLE_CONTACTS)) print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Phone"),$_SERVER["PHP_SELF"],"p.phone", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("PhoneMobile"),$_SERVER["PHP_SELF"],"p.phone_mob", $begin, $param, '', $sortfield,$sortorder);
@@ -359,6 +381,11 @@ if ($result)
     print '<td class="liste_titre">';
     if (is_array ( $extralabels ) && key_exists ( 'ct_principal', $extralabels )) {
     	print $extrafields->showInputField ( 'ct_principal', $ct_principal );
+    }
+    print '</td>';
+    print '<td class="liste_titre">';
+    if (is_array ( $extralabels ) && key_exists ( 'ct_catalogue', $extralabels )) {
+    	print $extrafields->showInputField ( 'ct_catalogue', $ct_catalogue );
     }
     print '</td>';
     if (empty($conf->global->SOCIETE_DISABLE_CONTACTS))
@@ -438,6 +465,13 @@ if ($result)
         print '<td>';
         if (is_array ( $extralabels ) && key_exists ( 'ct_principal', $extralabels )) {
         	print $extrafields->showOutputField ( 'ct_principal', $obj->ct_principal );
+        }
+        print '</td>';
+        
+        //ct_catalogue
+        print '<td>';
+        if (is_array ( $extralabels ) && key_exists ( 'ct_catalogue', $extralabels )) {
+        	print $extrafields->showOutputField ( 'ct_catalogue', $obj->ct_catalogue );
         }
         print '</td>';
         
