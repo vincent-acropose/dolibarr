@@ -402,7 +402,6 @@ if ($resql)
             print '</td>';
             
             print '<td>';
-            print $objp->contactblinngid;
             if (!empty($objp->contactblinngid)) {
 	            $contact=new Contact($db);
 	            $contact->id=$objp->contactblinngid;
