@@ -482,7 +482,7 @@ if ($result)
             if ($obj->socid)
             {
                 print '<a href="'.DOL_URL_ROOT.'/comm/fiche.php?socid='.$obj->socid.'">';
-                print img_object($langs->trans("ShowCompany"),"company").' '.dol_trunc($obj->name,20).'</a>';
+                print img_object($langs->trans("ShowCompany"),"company").' '.$obj->name.'</a>';
             }
             else
             {
