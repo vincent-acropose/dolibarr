@@ -1089,11 +1089,11 @@ class Commande extends CommonOrder
             $localtaxes_type=getLocalTaxesFromRate($txtva,0,$mysoc);
             
             $tabprice = calcul_price_total($qty, $pu, $remise_percent, $txtva, $txlocaltax1, $txlocaltax2, 0, $price_base_type, $info_bits, $type,'', $localtaxes_type);
-            $total_ht  = $tabprice[0];
-            $total_tva = $tabprice[1];
-            $total_ttc = $tabprice[2];
-            $total_localtax1 = $tabprice[9];
-            $total_localtax2 = $tabprice[10];
+            $total_ht  = price2num($tabprice[0],'MT');
+            $total_tva = price2num($tabprice[1],'MT');
+            $total_ttc = price2num($tabprice[2],'MT');
+            $total_localtax1 = price2num($tabprice[9],'MT');
+            $total_localtax2 = price2num($tabprice[10],'MT');
 
             // Rang to use
             $rangtouse = $rang;
