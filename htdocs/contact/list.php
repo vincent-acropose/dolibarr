@@ -347,7 +347,7 @@ if ($result)
     print_liste_field_titre($langs->trans("Firstname"),$_SERVER["PHP_SELF"],"p.firstname", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("PostOrFunction"),$_SERVER["PHP_SELF"],"p.poste", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Fonction/Service"),$_SERVER["PHP_SELF"],"extra.ct_service", $begin, $param, '', $sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("Contact principal"),$_SERVER["PHP_SELF"],"extra.ct_principal", $begin, $param, '', $sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Principal"),$_SERVER["PHP_SELF"],"extra.ct_principal", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Catalogue"),$_SERVER["PHP_SELF"],"extra.ct_catalogue", $begin, $param, '', $sortfield,$sortorder);
     if (empty($conf->global->SOCIETE_DISABLE_CONTACTS)) print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Phone"),$_SERVER["PHP_SELF"],"p.phone", $begin, $param, '', $sortfield,$sortorder);
