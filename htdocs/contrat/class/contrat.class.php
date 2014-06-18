@@ -1025,6 +1025,13 @@ class Contrat extends CommonObject
 				$result=$this->update_statut($user);
 				if ($result > 0)
 				{
+					// Appel des triggers
+					include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+					$interface=new Interfaces($this->db);
+					$result=$interface->run_triggers('LINECONTRACT_INSERT',$this,$user,$langs,$conf);
+					if ($result < 0) { $error++; $this->errors=$interface->errors; }
+					// Fin appel triggers
+					
 					$this->db->commit();
 					return 1;
 				}

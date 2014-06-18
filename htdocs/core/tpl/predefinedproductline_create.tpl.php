@@ -88,6 +88,24 @@ if (! empty($usemargins))
 	if (! empty($object->element) && $object->element == 'contrat') $filtertype='1';
 	$form->select_produits('','idprod',$filtertype,$conf->product->limit_size,$buyer->price_level);
 	echo '</span>';
+	
+	//Ajout select Hosting
+	if($conf->hosting->enabled){
+		global $db;
+
+		$resql = $db->query("SELECT rowid, label FROM ".MAIN_DB_PREFIX."host WHERE fk_soc = ".$object->fk_soc." ORDER BY label");
+
+		$THost = array();
+		
+		if($resql){
+			while($res = $db->fetch_object($resql)){
+				$THost[$res->rowid] = $res->label;
+			}
+		}
+		
+		print " - ".$langs->trans('Hosting')." : ";
+		print $form->selectarray('fk_hosting', $THost,'',1);
+	}
 
 	if (is_object($hookmanager))
 	{

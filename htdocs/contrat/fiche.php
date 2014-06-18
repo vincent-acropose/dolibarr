@@ -65,7 +65,12 @@ $usehm=(! empty($conf->global->MAIN_USE_HOURMIN_IN_DATE_RANGE)?$conf->global->MA
 $hookmanager->initHooks(array('contractcard'));
 
 $object = new Contrat($db);
+if($id){
+	$object->fetch($id);
+}
 
+$parameters=array('socid'=>$socid);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 
 /*
  * Actions
@@ -1109,6 +1114,8 @@ else
             $sql.= " cd.date_fin_validite as date_fin, cd.date_cloture as date_fin_reelle,";
             $sql.= " cd.commentaire as comment, cd.fk_product_fournisseur_price as fk_fournprice, cd.buy_price_ht as pa_ht,";
             $sql.= " p.rowid as pid, p.ref as pref, p.label as label, p.fk_product_type as ptype";
+			//Ajout select Hosting
+			if($conf->hosting->enabled) $sql.= ", fk_hosting";
             $sql.= " FROM ".MAIN_DB_PREFIX."contratdet as cd";
             $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product as p ON cd.fk_product = p.rowid";
             $sql.= " WHERE cd.rowid = ".$object->lines[$cursorline-1]->id;
@@ -1227,7 +1234,33 @@ else
                             if ($objp->statut == 4 && $db->jdate($objp->date_fin) < ($now - $conf->contrat->services->expires->warning_delay)) { print " ".img_warning($langs->trans("Late")); }
                         }
                         else print $langs->trans("Unknown");
-
+						
+						//Ajout select Hosting
+						if($conf->hosting->enabled && $objp->fk_hosting){
+							
+							dol_include_once('/hosting/class/host.class.php');
+							
+							$sql = "SELECT h.rowid, h.label, h.datec, h.actif
+									FROM ".MAIN_DB_PREFIX."host as h
+									WHERE rowid = ".$objp->fk_hosting;
+									
+							$resql2 = $db->query($sql);
+							
+							if($resql2){
+								
+								$res2 = $db->fetch_object($resql2);
+								
+								$host_static = new Host($db);
+								
+								$host_static->id=$res2->rowid;
+					            $host_static->label=$res2->label;
+					            $host_static->datec=$db->jdate($res2->datec);
+					            $host_static->actif=$res2->actif;
+								
+					            print ' - '.$host_static->getNomUrl(1).' ('.($host_static->actif ? 'actif' : 'inactif').')' ;
+							}
+						}
+						
                         print '</td>';
                         print '</tr>';
                     }
@@ -1289,6 +1322,32 @@ else
                     $form->select_date($db->jdate($objp->date_debut),"date_start_update",$usehm,$usehm,($db->jdate($objp->date_debut)>0?0:1),"update");
                     print '<br>'.$langs->trans("DateEndPlanned").' ';
                     $form->select_date($db->jdate($objp->date_fin),"date_end_update",$usehm,$usehm,($db->jdate($objp->date_fin)>0?0:1),"update");
+                    
+                    //Ajout select Hosting
+					if($conf->hosting->enabled){
+						global $db;
+				
+						$resql = $db->query("SELECT rowid, label FROM ".MAIN_DB_PREFIX."host WHERE fk_soc = ".$object->fk_soc." ORDER BY label");
+				
+						$THost = array();
+						
+						if($resql){
+							while($res = $db->fetch_object($resql)){
+								$THost[$res->rowid] = $res->label;
+							}
+						}
+						
+						$resql = $db->query("SELECT fk_hosting FROM ".MAIN_DB_PREFIX."contratdet WHERE rowid = ".$objp->rowid);
+
+						if($resql){
+							$res = $db->fetch_object($resql);
+						}
+
+						echo '<br>';
+						print $langs->trans('Hosting')." : ";
+						print $form->selectarray('fk_hosting', $THost,(($res) ? $res->fk_hosting : ''),1);
+					}
+                    
                     print '</td>';
                     print '</tr>';
 

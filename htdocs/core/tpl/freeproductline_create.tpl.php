@@ -70,7 +70,26 @@ if (! empty($conf->margin->enabled) && ! empty($object->element) && in_array($ob
 <tr <?php echo $bcnd[$var]; ?>>
 	<td<?php echo (! empty($conf->global->MAIN_VIEW_LINE_NUMBER) ? ' colspan="2"' : ''); ?>>
 		<?php
-
+			
+			//Ajout select Hosting
+			if($conf->hosting->enabled){
+				global $db;
+		
+				$resql = $db->query("SELECT rowid, label FROM ".MAIN_DB_PREFIX."host WHERE fk_soc = ".$object->fk_soc." ORDER BY label");
+		
+				$THost = array();
+				
+				if($resql){
+					while($res = $db->fetch_object($resql)){
+						$THost[$res->rowid] = $res->label;
+					}
+				}
+				
+				print " - ".$langs->trans('Hosting')." : ";
+				print $form->selectarray('fk_hosting', $THost,'',1);
+				echo '<br>';
+			}
+			
 			echo '<span>';
 			echo $form->select_type_of_lines(isset($_POST["type"])?$_POST["type"]:-1,'type',1);
 			echo '</span>';
