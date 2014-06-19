@@ -1552,7 +1552,7 @@ else
         		else
         		{
         			// Add free products/services
-        			$object->formAddFreeProduct($dateSelector,$mysoc,$object->thirdparty);
+        			//$object->formAddFreeProduct($dateSelector,$mysoc,$object->thirdparty);
 
         			// Add predefined products/services
         			if (! empty($conf->product->enabled) || ! empty($conf->service->enabled))

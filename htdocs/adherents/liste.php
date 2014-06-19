@@ -107,9 +107,10 @@ if ($sall)
         foreach ($scrit as $crit) {
             $sql.=" AND (";
             if (is_numeric($sall)) $sql.= "d.rowid = ".$sall." OR ";
-            $sql.=" d.firstname LIKE '%".$sall."%' OR d.lastname LIKE '%".$sall."%' OR d.societe LIKE '%".$sall."%'";
-            $sql.=" OR d.email LIKE '%".$sall."%' OR d.login LIKE '%".$sall."%' OR d.address LIKE '%".$sall."%'";
-            $sql.=" OR d.town LIKE '%".$sall."%' OR d.note LIKE '%".$sall."%')";
+
+            $sql.=" d.firstname LIKE '%".$db->escape($crit)."%' OR d.lastname LIKE '%".$db->escape($crit)."%' OR d.societe LIKE '%".$db->escape($crit)."%'";
+            $sql.=" OR d.email LIKE '%".$db->escape($crit)."%' OR d.login LIKE '%".$db->escape($crit)."%' OR d.address LIKE '%".$db->escape($crit)."%'";
+            $sql.=" OR d.town LIKE '%".$db->escape($crit)."%' OR d.note LIKE '%".$db->escape($crit)."%')";
         }
 }
 if ($type > 0)
@@ -127,11 +128,11 @@ if ($search_ref)
 }
 if ($search_lastname)
 {
-	$sql.= " AND (d.firstname LIKE '%".$search_lastname."%' OR d.lastname LIKE '%".$search_lastname."%')";
+	$sql.= " AND (d.firstname LIKE '%".$db->escape($search_lastname)."%' OR d.lastname LIKE '%".$db->escape($search_lastname)."%')";
 }
 if ($search_login)
 {
-	$sql.= " AND d.login LIKE '%".$search_login."%'";
+	$sql.= " AND d.login LIKE '%".$db->escape($search_login)."%'";
 }
 if ($search_email)
 {
@@ -157,7 +158,6 @@ if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST))
 // Add order and limit
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($conf->liste_limit+1, $offset);
-
 dol_syslog("get list sql=".$sql);
 $resql = $db->query($sql);
 if ($resql)
