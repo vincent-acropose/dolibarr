@@ -72,7 +72,7 @@ if (! empty($conf->margin->enabled) && ! empty($object->element) && in_array($ob
 		<?php
 			
 			//Ajout select Hosting
-			if($conf->hosting->enabled){
+			if($conf->hosting->enabled && $object->element == 'contrat'){
 				global $db;
 		
 				$resql = $db->query("SELECT rowid, label FROM ".MAIN_DB_PREFIX."host WHERE fk_soc = ".$object->fk_soc." ORDER BY label");
