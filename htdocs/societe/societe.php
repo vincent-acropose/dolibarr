@@ -359,7 +359,7 @@ if ($resql)
 	}
 	
 	$moreforfilter.=$langs->trans('ParentCompany'). ': ';
-	$moreforfilter.=$form->select_company($search_parent,'search_parent','s.parent IS NULL',1);
+	$moreforfilter.=$form->select_company($search_parent,'search_parent','extra.ts_maison=1',1);
 	
 	$extrafields = new ExtraFields ( $db );
 	$extralabels = $extrafields->fetch_name_optionals_label ( 'societe', true );
