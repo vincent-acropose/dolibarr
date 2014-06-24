@@ -233,8 +233,13 @@ if ($resql)
 
 	$head = calendars_prepare_head($param);
 
+<<<<<<< HEAD
     dol_fiche_head($head, $tabactive, $langs->trans('Agenda'), 0, 'action');
     print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,0,$filtert,0,$pid,$socid,$action,-1,$actioncode,$usergroup);
+=======
+    dol_fiche_head($head, 'card', $langs->trans('Events'), 0, 'list');
+    print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,$filtera,$filtert,$filterd,$filterg,$pid,$socid,-1);
+>>>>>>> Add group filter
     dol_fiche_end();
 
     // Add link to show birthdays

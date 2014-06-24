@@ -45,10 +45,9 @@
  * @param	int		$usergroupid	Id of group to filter on users
  * @return	void
  */
-function print_actions_filter($form, $canedit, $status, $year, $month, $day, $showbirthday, $filtera, $filtert, $filterd, $pid, $socid, $action, $showextcals=array(), $actioncode='', $usergroupid='')
-{
-	global $conf, $user, $langs, $db, $hookmanager;
-	global $begin_h, $end_h, $begin_d, $end_d;
+function print_actions_filter($form, $canedit, $status, $year, $month, $day, $showbirthday, $filtera, $filtert, $filterd, $pid, $socid, $showextcals=array(), $actioncode='', $usergroupid='') {
+    global $conf, $user, $langs, $db, $hookmanager;
+    global $begin_h, $end_h, $begin_d, $end_d;
 
 	$langs->load("companies");
 
@@ -511,4 +510,3 @@ function calendars_prepare_head($param)
 
     return $head;
 }
-
