@@ -51,6 +51,11 @@ if (empty($conf->stock->enabled))
 	accessforbidden();
 }
 
+dol_include_once('/core/class/hookmanager.class.php');
+$hookmanager=new HookManager($db);
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('ordersupplier_receptioncard'));
+
 // Recuperation	de l'id	de projet
 $projectid =	0;
 if ($_GET["projectid"]) $projectid = $_GET["projectid"];
@@ -65,6 +70,9 @@ if ($_POST["action"] ==	'dispatch' && $user->rights->fournisseur->commande->rece
 {
 	$commande = new CommandeFournisseur($db);
 	$commande->fetch($_GET["id"]);
+
+	$parameters=array('id'=>$object->id);
+	$reshook=$hookmanager->executeHooks('doActions',$parameters,$commande,$action); // Note that $action and $object may have been modified by some hooks
 
 	foreach($_POST as $key => $value)
 	{
@@ -231,7 +239,7 @@ if ($id > 0 || ! empty($ref))
 				$db->free($resql);
 			}
 
-			$sql = "SELECT l.fk_product, l.subprice, SUM(l.qty) as qty,";
+			$sql = "SELECT l.rowid, l.fk_commande, l.fk_product, l.subprice, SUM(l.qty) as qty,";
 			$sql.= " p.ref, p.label";
 			$sql.= " FROM ".MAIN_DB_PREFIX."commande_fournisseurdet as l";
 			$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product as p ON l.fk_product=p.rowid";
@@ -254,6 +262,11 @@ if ($id > 0 || ! empty($ref))
 					print '<td align="right">'.$langs->trans("QtyDispatched").'</td>';
 					print '<td align="right">'.$langs->trans("QtyDelivered").'</td>';
 					print '<td align="right">'.$langs->trans("Warehouse").'</td>';
+					print '<td align="right">'.$langs->trans("Ancien prix").'</td>';
+					print '<td align="right">'.$langs->trans("Nouveau prix").'</td>';
+					print '<td align="right">'.$langs->trans("Information").'</td>';
+					print '<td align="right">'.$langs->trans("Calcul (coeff * pa HT * TVA) ").'</td>';
+					print '<td align="right">'.$langs->trans("Coeff").'</td>';
 					print "</tr>\n";
 				}
 
@@ -305,6 +318,10 @@ if ($id > 0 || ! empty($ref))
 						{
 							print $langs->trans("NoWarehouseDefined");
 						}
+						
+						$parameters=array('id'=>$object->id);
+						$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$objp,$action); // Note that $action and $object may have been modified by some hooks
+
 						print "</td>\n";
 						print "</tr>\n";
 					}
