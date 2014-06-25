@@ -151,6 +151,7 @@ if ($id > 0 || ! empty($ref))
 			if ($num > 0)
 			{
 				$var=True;
+				$total_ht=0;
 				while ($i < $num && $i < $conf->liste_limit)
 				{
 					$objp = $db->fetch_object($result);
@@ -166,6 +167,7 @@ if ($id > 0 || ! empty($ref))
 					print "<td>".$objp->code_client."</td>\n";
 					print "<td align=\"center\">";
 					print dol_print_date($db->jdate($objp->datef),'day')."</td>";
+					$total_ht+=$objp->total_ht;
 					print "<td align=\"right\">".price($objp->total_ht)."</td>\n";
 					print '<td align="right">'.$invoicestatic->LibStatut($objp->paye,$objp->statut,5).'</td>';
 					print "</tr>\n";
@@ -177,6 +179,10 @@ if ($id > 0 || ! empty($ref))
 		{
 			dol_print_error($db);
 		}
+		print '<tr class="liste_total"><td>'.$langs->trans("TotalTTC").'</td>';
+		print '<td colspan="3">&nbsp;</td>';
+		print '<td align="right">'.price($total_ht).'</td>';
+		print '<td>&nbsp;</td></tr>';
 		print "</table>";
 		print '<br>';
 		$db->free($result);
