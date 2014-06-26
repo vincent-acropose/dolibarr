@@ -236,7 +236,7 @@ if ($id > 0 || ! empty($ref))
 				$db->free($resql);
 			}
 
-			$sql = "SELECT l.fk_product, l.subprice, l.remise_percent, SUM(l.qty) as qty,";
+			$sql = "SELECT l.fk_product, l.ref as fournref, l.subprice, l.remise_percent, SUM(l.qty) as qty,";
 			$sql.= " p.ref, p.label";
 			$sql.= " FROM ".MAIN_DB_PREFIX."commande_fournisseurdet as l";
 			$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product as p ON l.fk_product=p.rowid";
@@ -253,6 +253,7 @@ if ($id > 0 || ! empty($ref))
 				if ($num)
 				{
 					print '<tr class="liste_titre">';
+					print '<td>'.$langs->trans("SupplierRef").'</td>';
 					print '<td>'.$langs->trans("Description").'</td>';
 
 					print '<td align="right">'.$langs->trans("QtyOrdered").'</td>';
@@ -286,6 +287,8 @@ if ($id > 0 || ! empty($ref))
 							$var=!$var;
 							print "<tr ".$bc[$var].">";
 							print '<td>';
+							print $objp->fournref;
+							print '</td><td>';
 							print '<a href="'.DOL_URL_ROOT.'/product/fournisseurs.php?id='.$objp->fk_product.'">'.img_object($langs->trans("ShowProduct"),'product').' '.$objp->ref.'</a>';
 							print ' - '.$objp->label."\n";
 							// To show detail cref and description value, we must make calculation by cref
