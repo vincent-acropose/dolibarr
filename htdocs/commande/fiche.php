@@ -1484,6 +1484,17 @@ $form = new Form($db);
 $formfile = new FormFile($db);
 $formorder = new FormOrder($db);
 
+?>
+<script type="text/javascript">
+	$(document).ready(function(){
+		$('#addproduct').submit(function(){
+			if($('#search_idprod').val() != "" && $('#idprod').val() == ""){
+				return false;
+			}
+		});
+	});
+</script>
+<?php
 
 /*********************************************************************
  *
