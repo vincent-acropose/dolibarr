@@ -361,12 +361,13 @@ if ($id > 0 || ! empty($ref))
 		dol_fiche_end();
 
 		// List of already dispatching
-		$sql = "SELECT p.ref, p.label,";
+		$sql = "SELECT p.ref, p.label, cfdet.ref as fournref,";
 		$sql.= " e.rowid as warehouse_id, e.label as entrepot,";
 		$sql.= " cfd.fk_product, cfd.qty, cfd.rowid";
 		$sql.= " FROM ".MAIN_DB_PREFIX."product as p,";
 		$sql.= " ".MAIN_DB_PREFIX."commande_fournisseur_dispatch as cfd";
-		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."entrepot as e ON cfd.fk_entrepot = e.rowid";
+		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."entrepot as e ON cfd.fk_entrepot = e.rowid
+			LEFT JOIN ".MAIN_DB_PREFIX."commande_fournisseurdet cfdet ON (cfdet.fk_commande=".$commande->id." AND cfdet.fk_product=cfd.fk_product) ";
 		$sql.= " WHERE cfd.fk_commande = ".$commande->id;
 		$sql.= " AND cfd.fk_product = p.rowid";
 		$sql.= " ORDER BY cfd.rowid ASC";
@@ -386,6 +387,8 @@ if ($id > 0 || ! empty($ref))
 				print '<table class="noborder" width="100%">';
 
 				print '<tr class="liste_titre">';
+
+				print '<td>'.$langs->trans("SupplierRef").'</td>';
 				print '<td>'.$langs->trans("Description").'</td>';
 				print '<td align="right">'.$langs->trans("QtyDispatched").'</td>';
 				print '<td align="right">'.$langs->trans("Warehouse").'</td>';
@@ -397,7 +400,7 @@ if ($id > 0 || ! empty($ref))
 				{
 					$objp = $db->fetch_object($resql);
 					print "<tr ".$bc[$var].">";
-					print '<td>';
+					print '<td>'. $objp->fournref  .'</td><td>';
 					print '<a href="'.DOL_URL_ROOT.'/product/fournisseurs.php?id='.$objp->fk_product.'">'.img_object($langs->trans("ShowProduct"),'product').' '.$objp->ref.'</a>';
 					print ' - '.$objp->label;
 					print "</td>\n";
