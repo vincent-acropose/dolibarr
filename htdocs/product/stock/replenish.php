@@ -653,6 +653,7 @@ if ($num > $conf->liste_limit)
 		$filters = '&sref=' . $sref . '&snom=' . $snom;
 		$filters .= '&sall=' . $sall;
 		$filters .= '&salert=' . $salert;
+		$filters .= '&mode=' . $mode;
 		print_barre_liste(
 			'',
 			$page,
@@ -670,6 +671,7 @@ if ($num > $conf->liste_limit)
 		$filters .= '&fourn_id=' . $fourn_id;
 		$filters .= (isset($type)? '&type=' . $type : '');
 		$filters .= '&salert=' . $salert;
+		$filters .= '&mode=' . $mode;
 		print_barre_liste(
 			'',
 			$page,
