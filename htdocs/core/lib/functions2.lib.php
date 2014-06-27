@@ -516,7 +516,7 @@ function array2table($data,$tableMarkup=1,$tableoptions='',$troptions='',$tdopti
  * @param   Societe		$objsoc			The company that own the object we need a counter for
  * @param   string		$date			Date to use for the {y},{m},{d} tags.
  * @param   string		$mode           'next' for next value or 'last' for last value
- * @return 	string					    New value
+ * @return 	string					    New value (numeric) or error message
  */
 function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$mode='next')
 {
@@ -531,9 +531,9 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
 
     // For debugging
     //include_once(DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php');
-    //$mask='{yyyy}-{0000}';
+    //$mask='FA{yy}{mm}-{0000@99}';
     //$date=dol_mktime(12, 0, 0, 1, 1, 1900);
-    //$date=dol_stringtotime('20121001');
+    //$date=dol_stringtotime('20130101');
 
     // Extract value for mask counter, mask raz and mask offset
     if (! preg_match('/\{(0+)([@\+][0-9\-\+\=]+)?([@\+][0-9\-\+\=]+)?\}/i',$mask,$reg)) return 'ErrorBadMask';
@@ -541,6 +541,7 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     $maskcounter=$reg[1];
     $maskraz=-1;
     $maskoffset=0;
+    $resetEveryMonth=false;
     if (dol_strlen($maskcounter) < 3) return 'CounterMustHaveMoreThan3Digits';
 
     // Extract value for third party mask counter
@@ -603,29 +604,43 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     	$maskraz=$yearoffsettype; // For backward compatibility
     else if ($yearoffsettype === '0' || (! empty($yearoffsettype) && ! is_numeric($yearoffsettype) && $conf->global->SOCIETE_FISCAL_MONTH_START > 1))
     	$maskraz = $conf->global->SOCIETE_FISCAL_MONTH_START;
-    //print "maskraz=".$maskraz;
+    //print "maskraz=".$maskraz;	// -1=no reset
 
     if ($maskraz > 0)    // A reset is required
     {
-    	if ($maskraz == 99) $maskraz = date('m');
+    	if ($maskraz == 99) {
+			$maskraz = date('m', $date);
+			$resetEveryMonth = true;
+		}
         if ($maskraz > 12) return 'ErrorBadMaskBadRazMonth';
 
         // Define posy, posm and reg
-        if ($maskraz > 1)
+        if ($maskraz > 1)	// if reset is not first month, we need month and year into mask
         {
-            if (! preg_match('/^(.*)\{(y+)\}\{(m+)\}/i',$maskwithonlyymcode)
-            && ! preg_match('/^(.*)\{(m+)\}\{(y+)\}/i',$maskwithonlyymcode)) return 'ErrorCantUseRazInStartedYearIfNoYearMonthInMask';
             if (preg_match('/^(.*)\{(y+)\}\{(m+)\}/i',$maskwithonlyymcode,$reg)) { $posy=2; $posm=3; }
             elseif (preg_match('/^(.*)\{(m+)\}\{(y+)\}/i',$maskwithonlyymcode,$reg)) { $posy=3; $posm=2; }
+            else return 'ErrorCantUseRazInStartedYearIfNoYearMonthInMask';
+
             if (dol_strlen($reg[$posy]) < 2) return 'ErrorCantUseRazWithYearOnOneDigit';
         }
-        else
+        else // if reset is for a specific month in year, we need year
         {
-            if (! preg_match('/^(.*)\{(y+)\}/i',$maskwithonlyymcode)) return 'ErrorCantUseRazIfNoYearInMask';
-            if (preg_match('/^(.*)\{(y+)\}/i',$maskwithonlyymcode,$reg)) { $posy=2; $posm=0; }
+            if (preg_match('/^(.*)\{(m+)\}\{(y+)\}/i',$maskwithonlyymcode,$reg)) { $posy=3; $posm=2; }
+        	else if (preg_match('/^(.*)\{(y+)\}\{(m+)\}/i',$maskwithonlyymcode,$reg)) { $posy=2; $posm=3; }
+            else if (preg_match('/^(.*)\{(y+)\}/i',$maskwithonlyymcode,$reg)) { $posy=2; $posm=0; }
+            else return 'ErrorCantUseRazIfNoYearInMask';
         }
-        //print "x".$maskwithonlyymcode." ".$maskraz." ".$posy." ".$posm;
-		//var_dump($reg);
+        // Define length
+        $yearlen = $posy?dol_strlen($reg[$posy]):0;
+        $monthlen = $posm?dol_strlen($reg[$posm]):0;
+        // Define pos
+       	$yearpos = (dol_strlen($reg[1])+1);
+        $monthpos = ($yearpos+$yearlen);
+        if ($posy == 3 && $posm == 2) {		// if month is before year
+          	$monthpos = (dol_strlen($reg[1])+1);
+           	$yearpos = ($monthpos+$monthlen);
+        }
+        //print "xxx ".$maskwithonlyymcode." maskraz=".$maskraz." posy=".$posy." yearlen=".$yearlen." yearpos=".$yearpos." posm=".$posm." monthlen=".$monthlen." monthpos=".$monthpos." yearoffsettype=".$yearoffsettype." resetEveryMonth=".$resetEveryMonth."\n";
 
         // Define $yearcomp and $monthcomp (that will be use in the select where to search max number)
         $monthcomp=$maskraz;
@@ -649,24 +664,15 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
         	else if ($date >= $newyeardate && $yearoffsettype == '-') $yearoffset=-1;
         }
         // For backward compatibility
-        else if (date("m",$date) < $maskraz) { $yearoffset=-1; }	// If current month lower that month of return to zero, year is previous year
+        else if (date("m",$date) < $maskraz && empty($resetEveryMonth)) { $yearoffset=-1; }	// If current month lower that month of return to zero, year is previous year
 
-        $yearlen = dol_strlen($reg[$posy]);
         if ($yearlen == 4) $yearcomp=sprintf("%04d",date("Y",$date)+$yearoffset);
         elseif ($yearlen == 2) $yearcomp=sprintf("%02d",date("y",$date)+$yearoffset);
         elseif ($yearlen == 1) $yearcomp=substr(date("y",$date),2,1)+$yearoffset;
-        if ($monthcomp > 1)	// Test with month is useless if monthcomp = 0 or 1 (0 is same as 1) (regis: $monthcomp can't equal 0)
+        if ($monthcomp > 1 && empty($resetEveryMonth))	// Test with month is useless if monthcomp = 0 or 1 (0 is same as 1) (regis: $monthcomp can't equal 0)
         {
             if ($yearlen == 4) $yearcomp1=sprintf("%04d",date("Y",$date)+$yearoffset+1);
             elseif ($yearlen == 2) $yearcomp1=sprintf("%02d",date("y",$date)+$yearoffset+1);
-
-            $monthlen = dol_strlen($reg[$posm]);
-            $yearpos = (dol_strlen($reg[1])+1);
-            $monthpos = ($yearpos+$yearlen);
-            if ($posy == 3) {
-            	$monthpos = (dol_strlen($reg[1])+1);
-            	$yearpos = ($monthpos+$monthlen);
-            }
 
             $sqlwhere.="(";
             $sqlwhere.=" (SUBSTRING(".$field.", ".$yearpos.", ".$yearlen.") = '".$yearcomp."'";
@@ -676,13 +682,18 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
             $sqlwhere.=" AND SUBSTRING(".$field.", ".$monthpos.", ".$monthlen.") < '".str_pad($monthcomp, $monthlen, '0', STR_PAD_LEFT)."') ";
             $sqlwhere.=')';
         }
+		else if ($resetEveryMonth)
+		{
+			$sqlwhere.="(SUBSTRING(".$field.", ".$yearpos.", ".$yearlen.") = '".$yearcomp."'";
+            $sqlwhere.=" AND SUBSTRING(".$field.", ".$monthpos.", ".$monthlen.") = '".str_pad($monthcomp, $monthlen, '0', STR_PAD_LEFT)."')";
+		}
         else   // reset is done on january
         {
-            $sqlwhere.='(SUBSTRING('.$field.', '.(dol_strlen($reg[1])+1).', '.dol_strlen($reg[2]).") = '".$yearcomp."')";
+            $sqlwhere.='(SUBSTRING('.$field.', '.$yearpos.', '.$yearlen.") = '".$yearcomp."')";
         }
     }
-    //print "sqlwhere=".$sqlwhere."<br>\n";
-    //print "masktri=".$masktri." maskcounter=".$maskcounter." maskraz=".$maskraz." maskoffset=".$maskoffset." yearcomp=".$yearcomp."<br>\n";
+    //print "sqlwhere=".$sqlwhere." yearcomp=".$yearcomp."<br>\n";	// sqlwhere and yearcomp defined only if we ask a reset
+    //print "masktri=".$masktri." maskcounter=".$maskcounter." maskraz=".$maskraz." maskoffset=".$maskoffset."<br>\n";
 
     // Define $sqlstring
     $posnumstart=strpos($maskwithnocode,$maskcounter);	// Pos of counter in final string (from 0 to ...)
@@ -708,7 +719,7 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     $sql.= " FROM ".MAIN_DB_PREFIX.$table;
     $sql.= " WHERE ".$field." LIKE '".$maskLike."'";
     $sql.= " AND ".$field." NOT LIKE '%PROV%'";
-    $sql.= " AND entity IN (".getEntity($table, 1).")";
+    if ($table != 'projet_task') $sql.= " AND entity IN (".getEntity($table, 1).")";
     if ($where) $sql.=$where;
     if ($sqlwhere) $sql.=' AND '.$sqlwhere;
 
@@ -721,7 +732,10 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
         $counter = $obj->val;
     }
     else dol_print_error($db);
+
+    // Check if we must force counter to maskoffset
     if (empty($counter) || preg_match('/[^0-9]/i',$counter)) $counter=$maskoffset;
+    else if ($counter < $maskoffset && empty($conf->global->MAIN_NUMBERING_OFFSET_ONLY_FOR_FIRST)) $counter=$maskoffset;
 
     if ($mode == 'last')	// We found value for counter = last counter value. Now need to get corresponding ref of invoice.
     {
@@ -739,7 +753,7 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
         $maskLike = str_replace(dol_string_nospecial('{'.$masktri.'}'),$counterpadded,$maskLike);
         if ($maskrefclient) $maskLike = str_replace(dol_string_nospecial('{'.$maskrefclient.'}'),str_pad("",dol_strlen($maskrefclient),"_"),$maskLike);
         if ($masktype) $maskLike = str_replace(dol_string_nospecial('{'.$masktype.'}'),$masktype_value,$maskLike);
-        
+
         $ref='';
         $sql = "SELECT ".$field." as ref";
         $sql.= " FROM ".MAIN_DB_PREFIX.$table;
@@ -748,7 +762,7 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
         $sql.= " AND entity IN (".getEntity($table, 1).")";
         if ($where) $sql.=$where;
         if ($sqlwhere) $sql.=' AND '.$sqlwhere;
-        
+
         dol_syslog("functions2::get_next_value sql=".$sql);
         $resql=$db->query($sql);
         if ($resql)
@@ -763,6 +777,12 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     else if ($mode == 'next')
     {
         $counter++;
+
+        // If value for $counter has a length higher than $maskcounter chars
+        if ($counter >= pow(10, dol_strlen($maskcounter)))
+        {
+        	$counter='ErrorMaxNumberReachForThisMask';
+        }
 
         if (! empty($maskrefclient_maskcounter))
         {
@@ -805,8 +825,9 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
                 $maskrefclient_counter = $maskrefclient_obj->val;
             }
             else dol_print_error($db);
+
             if (empty($maskrefclient_counter) || preg_match('/[^0-9]/i',$maskrefclient_counter)) $maskrefclient_counter=$maskrefclient_maskoffset;
-            $maskrefclient_counter++;
+			$maskrefclient_counter++;
         }
 
         // Build numFinal
