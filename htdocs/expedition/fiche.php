@@ -129,7 +129,15 @@ if ($action == 'add')
         //if (GETPOST($qty,'int') > 0) $totalqty+=GETPOST($qty,'int');
 		$totalqty+=GETPOST($qty,'int');
     }
-
+	
+	/*echo '<pre>';
+	print_r($object);
+	echo '</pre>';
+	
+	echo '<pre>';
+	print_r($objectsrc->lines);
+	echo '</pre>';exit;*/
+	
     if ($totalqty > 0)
     {
         //var_dump($_POST);exit;
@@ -138,6 +146,17 @@ if ($action == 'add')
             $qty = "qtyl".$i;
             /*if (GETPOST($qty,'int') > 0)
             {*/
+            
+            $sql = "SELECT SUM(ed.qty) as qty_shipped";
+			$sql.= " FROM (".MAIN_DB_PREFIX."expeditiondet as ed,";
+			$sql.= " ".MAIN_DB_PREFIX."commandedet as cd)";
+			$sql.= " WHERE ed.fk_origin_line = cd.rowid";
+			$sql.= " AND cd.rowid = ".$objectsrc->lines[$i]->rowid;
+            
+			$resql = $db->query($sql);
+			$res = $db->fetch_object($resql);
+			
+			if($objectsrc->lines[$i]->qty != $res->qty_shipped){
                 $ent = "entl".$i;
                 $idl = "idl".$i;
                 $entrepot_id = is_numeric(GETPOST($ent,'int'))?GETPOST($ent,'int'):GETPOST('entrepot_id','int');
@@ -149,6 +168,7 @@ if ($action == 'add')
                     $mesg='<div class="error">'.$object->error.'</div>';
                     $error++;
                 }
+			}
             //}
         }
 
