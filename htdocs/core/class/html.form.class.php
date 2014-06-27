@@ -796,7 +796,7 @@ class Form
 
             // Construct $out and $outarray
             $out.= '<select id="'.$htmlname.'" class="flat" name="'.$htmlname.'">'."\n";
-            if ($showempty) $out.= '<option value="-1">&nbsp;</option>'."\n";
+            if ($showempty) $out.= '<option value="-1" style="height:20px;"></option>'."\n";
             $num = $this->db->num_rows($resql);
             $i = 0;
             if ($num)
