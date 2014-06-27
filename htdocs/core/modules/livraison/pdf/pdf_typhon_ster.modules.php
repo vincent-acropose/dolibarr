@@ -352,8 +352,13 @@ class pdf_typhon_ster extends ModelePDFDeliveryOrder
 					
 					// Quantity Remaining
 					//$qty = pdf_getlineqty($object, $i, $outputlangs, $hidedetails);
+					//var_dump( $object ); exit;
+					// qty already shipped
+					$resQaS = $this->db->query("SELECT SUM(qty) as qty FROM ".MAIN_DB_PREFIX."livraisondet WHERE fk_livraison!=".$object->id." AND fk_origin_line=".$object->lines[$i]->fk_origin_line);
+					$objQaS = $this->db->fetch_object($resQaS);
+	
 					$pdf->SetXY($this->posxqty, $curY);
-					$pdf->MultiCell($this->page_largeur-$this->marge_droite-$this->posxqty, 3, $object->lines[$i]->qty_asked - $object->lines[$i]->qty_shipped, 0, 'R');
+					$pdf->MultiCell($this->page_largeur-$this->marge_droite-$this->posxqty, 3, $object->lines[$i]->qty_asked - $object->lines[$i]->qty_shipped - $objQaS->qty, 0, 'R');
 					
 					/*
 					 // Remise sur ligne
