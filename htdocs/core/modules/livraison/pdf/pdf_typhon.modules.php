@@ -97,25 +97,24 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 
 		// Define position of columns
 		$this->posxdesc=$this->marge_gauche+1;
-		$this->posxcomm=112;
+		$this->posxcomm=90;
 		//$this->posxtva=112;
 		//$this->posxup=126;
-		$this->posxqty=174;
+		$this->posxqty=178;
 		//$this->posxdiscount=162;
 		//$this->postotalht=174;
-		if ($this->page_largeur < 210) // To work with US executive format
-		{
-			$this->posxcomm-=20;
-			//$this->posxtva-=20;
-			//$this->posxup-=20;
-			$this->posxqty-=20;
-			//$this->posxdiscount-=20;
-			//$this->postotalht-=20;
-		}
+		//$this->posxcomm-=20;
+		//$this->posxtva-=20;
+		//$this->posxup-=20;
+		//$this->posxqty-=20;
+		//$this->posxdiscount-=20;
+		//$this->postotalht-=20;
 
 		$this->tva=array();
 		$this->atleastoneratenotnull=0;
 		$this->atleastonediscount=0;
+		$this->posxqtyordered=$this->page_largeur - $this->marge_droite - 72;
+		$this->posxqtytoship=$this->page_largeur - $this->marge_droite;
 	}
 
 
@@ -352,10 +351,13 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 					 $pdf->SetXY($this->posxup, $curY);
 					 $pdf->MultiCell(20, 4, price($object->lines[$i]->subprice), 0, 'R', 0);
 					 */
+					$pdf->SetXY($this->posxqtyordered, $curY);
+					$pdf->MultiCell(($this->posxqtytoship - $this->posxqtyordered), 3, $object->lines[$i]->qty_asked,'','C');
+					 
 					// Quantity
 					//$qty = pdf_getlineqty($object, $i, $outputlangs, $hidedetails);
 					$pdf->SetXY($this->posxqty, $curY);
-					$pdf->MultiCell($this->page_largeur-$this->marge_droite-$this->posxqty, 3, $object->lines[$i]->qty_shipped, 0, 'R');
+					$pdf->MultiCell($this->page_largeur-$this->marge_droite-$this->posxqty, 3, $object->lines[$i]->qty_shipped, 0, 'C');
 					/*
 					 // Remise sur ligne
 					 $pdf->SetXY($this->posxdiscount, $curY);
@@ -604,7 +606,7 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 		if (empty($hidetop))
 		{
 			$pdf->SetXY($this->posxdesc-1, $tab_top+1);
-			$pdf->MultiCell($this->posxcomm - $this->posxdesc,2, $outputlangs->transnoentities("Designation"),'','L');
+			$pdf->MultiCell($this->posxcomm,2, $outputlangs->transnoentities("Designation"),'','L');
 		}
 
 		// Modif SEB pour avoir une col en plus pour les commentaires clients
@@ -612,6 +614,13 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 		if (empty($hidetop)) {
 			$pdf->SetXY($this->posxcomm, $tab_top+1);
 			$pdf->MultiCell($this->posxqty - $this->posxcomm,2, $outputlangs->transnoentities("Comments"),'','L');
+		}
+		
+		$pdf->line($this->posxqtyordered+20, $tab_top, $this->posxqtyordered+20, $tab_top + $tab_height);
+		if (empty($hidetop))
+		{
+			$pdf->SetXY($this->posxqtyordered-2, $tab_top+1);
+			$pdf->MultiCell(($this->posxqtytoship - $this->posxqtyordered), 2, $outputlangs->transnoentities("QtyOrdered"),'','C');
 		}
 
 		// Qty

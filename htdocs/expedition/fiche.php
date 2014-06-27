@@ -126,7 +126,8 @@ if ($action == 'add')
     for ($i = 0; $i < $num; $i++)
     {
         $qty = "qtyl".$i;
-        if (GETPOST($qty,'int') > 0) $totalqty+=GETPOST($qty,'int');
+        //if (GETPOST($qty,'int') > 0) $totalqty+=GETPOST($qty,'int');
+		$totalqty+=GETPOST($qty,'int');
     }
 
     if ($totalqty > 0)
@@ -135,8 +136,8 @@ if ($action == 'add')
         for ($i = 0; $i < $num; $i++)
         {
             $qty = "qtyl".$i;
-            if (GETPOST($qty,'int') > 0)
-            {
+            /*if (GETPOST($qty,'int') > 0)
+            {*/
                 $ent = "entl".$i;
                 $idl = "idl".$i;
                 $entrepot_id = is_numeric(GETPOST($ent,'int'))?GETPOST($ent,'int'):GETPOST('entrepot_id','int');
@@ -148,7 +149,7 @@ if ($action == 'add')
                     $mesg='<div class="error">'.$object->error.'</div>';
                     $error++;
                 }
-            }
+            //}
         }
 
         if (! $error)
