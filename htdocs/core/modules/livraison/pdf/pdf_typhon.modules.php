@@ -206,7 +206,7 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 					$commande->fetch($expedition->origin_id);
 				}
 				$object->commande=$commande;	// We set order of shipment onto delivery.
-
+				$object->commande->loadExpeditions();
 
 				$pdf->Open();
 				$pagenb=0;
@@ -352,7 +352,8 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 					 $pdf->MultiCell(20, 4, price($object->lines[$i]->subprice), 0, 'R', 0);
 					 */
 					$pdf->SetXY($this->posxqtyordered, $curY);
-					$pdf->MultiCell(($this->posxqtytoship - $this->posxqtyordered), 3, $object->lines[$i]->qty_asked,'','C');
+					$qtyRemaining = $object->lines[$i]->qty_asked - $object->commande->expeditions[$object->lines[$i]->fk_origin_line];
+					$pdf->MultiCell(($this->posxqtytoship - $this->posxqtyordered), 3, $qtyRemaining,'','C');
 					 
 					// Quantity
 					//$qty = pdf_getlineqty($object, $i, $outputlangs, $hidedetails);
@@ -620,7 +621,7 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 		if (empty($hidetop))
 		{
 			$pdf->SetXY($this->posxqtyordered-2, $tab_top+1);
-			$pdf->MultiCell(($this->posxqtytoship - $this->posxqtyordered), 2, $outputlangs->transnoentities("QtyOrdered"),'','C');
+			$pdf->MultiCell(($this->posxqtytoship - $this->posxqtyordered), 2, $outputlangs->transnoentities("KeepToShip"),'','C');
 		}
 
 		// Qty
