@@ -281,13 +281,17 @@ $sql.= ', p.duration, p.tobuy, p.seuil_stock_alerte';
 $sql.= ', p.desiredstock, s.fk_product';
 
 if($usevirtualstock) {
-	$sqlCommandesCli = "(SELECT SUM(cd.qty) as qty";
+	$sqlCommandesCli = "(SELECT (SUM(cd.qty) - SUM(ed.qty)) as qty";
 	$sqlCommandesCli.= " FROM ".MAIN_DB_PREFIX."commandedet as cd";
-	$sqlCommandesCli.= ", ".MAIN_DB_PREFIX."commande as c";
-	$sqlCommandesCli.= " WHERE c.rowid = cd.fk_commande";
-	$sqlCommandesCli.= " AND c.entity = ".$conf->entity;
+	$sqlCommandesCli.= " LEFT JOIN ".MAIN_DB_PREFIX."commande as c ON (c.rowid = cd.fk_commande)";
+	$sqlCommandesCli.= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as ee ON (ee.fk_source = c.rowid)";
+	$sqlCommandesCli.= " LEFT JOIN ".MAIN_DB_PREFIX."expedition as e ON (e.rowid = ee.fk_target)";
+	$sqlCommandesCli.= " LEFT JOIN ".MAIN_DB_PREFIX."expeditiondet as ed ON (ed.fk_expedition = e.rowid)";
+	$sqlCommandesCli.= " WHERE c.entity = ".$conf->entity;
 	$sqlCommandesCli.= " AND cd.fk_product = p.rowid";
-	$sqlCommandesCli.= " AND c.fk_statut in (1,2))";
+	$sqlCommandesCli.= " AND c.fk_statut in (1,2)";
+	$sqlCommandesCli.= " AND ee.sourcetype = 'commande' AND ee.targettype = 'shipping')";
+	
 	
 	$sqlCommandesFourn = "(SELECT SUM(cd.qty) as qty";
 	$sqlCommandesFourn.= " FROM ".MAIN_DB_PREFIX."commande_fournisseurdet as cd";
@@ -581,6 +585,7 @@ while ($i < min($num, $limit))
 		}
 		//depending on conf, use either physical stock or
 		//virtual stock to compute the stock to buy value
+		//echo $objp->desiredstock." * ".$stock." * ".$ordered."<br>";
 		$stocktobuy = max($objp->desiredstock - $stock - $ordered, 0);
 		$disabled = '';
 		if($ordered > 0) {
