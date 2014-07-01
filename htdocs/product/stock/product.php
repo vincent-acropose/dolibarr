@@ -288,6 +288,12 @@ if ($id > 0 || $ref)
 				if ($result < 0) dol_print_error($db,$product->error);
 				$stock_commande_client=$product->stats_commande['qty'];
 			}
+			if (! empty($conf->expedition->enabled))
+			{
+				$result=$product->load_stats_sending(0,'');
+				if ($result < 0) dol_print_error($db,$product->error);
+				$stock_sending_client=$product->stats_expedition['qty'];
+			}
 			if (! empty($conf->fournisseur->enabled))
 			{
 				$result=$product->load_stats_commande_fournisseur(0,'3');
@@ -295,8 +301,8 @@ if ($id > 0 || $ref)
 				$stock_commande_fournisseur=$product->stats_commande_fournisseur['qty'];
 			}
 
-			$product->stock_theorique=$product->stock_reel-($stock_commande_client+$stock_sending_client)+$stock_commande_fournisseur;
-
+			$product->stock_theorique=$product->stock_reel-($stock_commande_client-$stock_sending_client)+$stock_commande_fournisseur;
+			
 			// Stock theorique
 			print '<tr><td>'.$langs->trans("VirtualStock").'</td>';
 			print "<td>".$product->stock_theorique;
@@ -319,7 +325,7 @@ if ($id > 0 || $ref)
 			if (! empty($conf->commande->enabled))
 			{
 				if ($found) print '<br>'; else $found=1;
-				print $langs->trans("CustomersOrdersRunning").': '.($stock_commande_client+$stock_sending_client);
+				print $langs->trans("CustomersOrdersRunning").': '.($stock_commande_client-$stock_sending_client);
 				$result=$product->load_stats_commande(0,'0');
 				if ($result < 0) dol_print_error($db,$product->error);
 				print ' ('.$langs->trans("Draft").': '.$product->stats_commande['qty'].')';
