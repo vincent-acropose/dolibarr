@@ -562,7 +562,12 @@ while ($i < min($num, $limit))
 				dol_print_error($db,$prod->error);
 			}
 			$stock_commande_fournisseur = $prod->stats_commande_fournisseur['qty'];
-			$stock = $objp->stock_physique - $stock_commande_client + $stock_commande_fournisseur;
+
+			$result=$prod->load_stats_sending(0,'');
+			if ($result < 0) dol_print_error($db,$prod->error);
+			$stock_sending_client=$prod->stats_expedition['qty'];
+			
+			$stock = $objp->stock_physique - ($stock_commande_client - $stock_sending_client) + $stock_commande_fournisseur;
 		}
 		else
 		{
