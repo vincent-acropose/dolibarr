@@ -300,10 +300,12 @@ if ($result)
     if (! empty ( $ct_service ))
     	$param .= '&options_ct_service=' . $ct_service;
     if (! empty ( $ct_principal ))
-    	$param .= '&options_ct_service=' . $ct_principal;
+    	$param .= '&options_ct_principal=' . $ct_principal;
     if ($search_status != '') $param.='&amp;search_status='.$search_status;
     if (!empty($search_categ)) $param.='&search_categ='.$search_categ;
 	if ($search_priv == '0' || $search_priv == '1') $param.="&search_priv=".urlencode($search_priv);
+	if (! empty ( $ct_catalogue ))
+		$param .= '&options_ct_catalogue=' . $ct_catalogue;
 
 	$num = $db->num_rows($result);
     $i = 0;
