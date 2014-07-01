@@ -106,7 +106,7 @@ if ($action == 'create')
 
     // Si aucun jours ouvrés dans la demande
     $nbopenedday=num_open_day($date_debut, $date_fin, 0, 1, $halfday);
-    if($nbopenedday < 1)
+    if($nbopenedday < 0.5)
     {
         header('Location: fiche.php?action=request&error=DureeHoliday');
         exit;
@@ -199,7 +199,7 @@ if ($action == 'update')
 
             // Si pas de jours ouvrés dans la demande
             $nbopenedday=num_open_day($date_debut, $date_fin, 0, 1, $halfday);
-            if ($nbopenedday < 1)
+            if ($nbopenedday < 0.5)
             {
                 header('Location: fiche.php?id='.$_POST['holiday_id'].'&action=edit&error=DureeHoliday');
                 exit;
