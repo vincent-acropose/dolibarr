@@ -586,7 +586,7 @@ while ($i < min($num, $limit))
 		}
 		
 		$prod->load_stats_commande_fournisseur(0,'0,1,2');
-		$ordered = $product->stats_commande_fournisseur['qty'];
+		$ordered = $prod->stats_commande_fournisseur['qty'];
 		
 		
 		$warning='';
