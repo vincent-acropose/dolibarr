@@ -312,7 +312,7 @@ if ($usevirtualstock)
 	$sqlReceptionFourn.= " LEFT JOIN ".MAIN_DB_PREFIX."commande_fournisseur_dispatch as fd ON (fd.fk_commande = cf.rowid)";
 	$sqlReceptionFourn.= " WHERE cf.entity = ".$conf->entity;
 	$sqlReceptionFourn.= " AND fd.fk_product = p.rowid";
-	$sqlCommandesFourn.= " AND cf.fk_statut IN (3,4))";
+	$sqlReceptionFourn.= " AND cf.fk_statut IN (3,4))";
 	
 	$sql.= ' HAVING ((p.desiredstock > 0 AND (p.desiredstock > SUM('.$db->ifsql("s.reel IS NULL", "0", "s.reel").')';
 	$sql.= ' - ('.$sqlCommandesCli.' - '.$sqlExpeditionsCli.') + ('.$sqlCommandesFourn.' - '.$sqlReceptionFourn.')))';
