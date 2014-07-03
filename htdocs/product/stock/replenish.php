@@ -585,7 +585,8 @@ while ($i < min($num, $limit))
 			$stock = $prod->stock_reel;
 		}
 		
-		$ordered = $prod->stats_commande_fournisseur['qty']-$prod->stats_reception['qty'];
+		$prod->load_stats_commande_fournisseur(0,'0,1,2');
+		$ordered = $product->stats_commande_fournisseur['qty'];
 		
 		
 		$warning='';
@@ -600,8 +601,7 @@ while ($i < min($num, $limit))
 		$stocktobuy = max($objp->desiredstock - $stock - $ordered, 0);
 		$disabled = '';
 		if($ordered > 0) {
-			$compare = $usevirtualstock ? $stock : $stock + $ordered;
-			if($compare >= $objp->desiredstock) {
+			if($stock + $ordered >= $objp->desiredstock) {
 				$picto = img_picto('', './img/yes', '', 1);
 				$disabled = 'disabled="disabled"';
 			}
