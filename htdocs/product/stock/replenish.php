@@ -600,7 +600,8 @@ while ($i < min($num, $limit))
 		$stocktobuy = max($objp->desiredstock - $stock - $ordered, 0);
 		$disabled = '';
 		if($ordered > 0) {
-			if($ordered + $stock >= $objp->desiredstock) {
+			$compare = $usevirtualstock ? $stock : $stock + $ordered;
+			if($compare >= $objp->desiredstock) {
 				$picto = img_picto('', './img/yes', '', 1);
 				$disabled = 'disabled="disabled"';
 			}
