@@ -293,6 +293,7 @@ if ($usevirtualstock)
 	$sqlExpeditionsCli.= " FROM ".MAIN_DB_PREFIX."expedition as e";
 	$sqlExpeditionsCli.= " LEFT JOIN ".MAIN_DB_PREFIX."expeditiondet as ed ON (ed.fk_expedition = e.rowid)";
 	$sqlExpeditionsCli.= " LEFT JOIN ".MAIN_DB_PREFIX."commandedet as cd ON (cd.rowid = ed.fk_origin_line)";
+	$sqlExpeditionsCli.= " LEFT JOIN ".MAIN_DB_PREFIX."commande as c ON (c.rowid = cd.fk_commande)";
 	$sqlExpeditionsCli.= " WHERE e.entity = ".$conf->entity;
 	$sqlExpeditionsCli.= " AND cd.fk_product = p.rowid";
 	$sqlExpeditionsCli.= " AND c.fk_statut IN (1,2))";
