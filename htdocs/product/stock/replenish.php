@@ -553,10 +553,6 @@ while ($i < min($num, $limit))
 
 	if (! empty($conf->global->STOCK_SUPPORTS_SERVICES) || $objp->fk_product_type == 0)
 	{
-		$objp = $db->fetch_object($resql);
-
-	if (! empty($conf->global->STOCK_SUPPORTS_SERVICES) || $objp->fk_product_type == 0)
-	{
 		$prod->fetch($objp->rowid);
 		$prod->load_stock();
 		
