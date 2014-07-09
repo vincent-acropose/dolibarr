@@ -1370,7 +1370,7 @@ class Form
             foreach ($scrit as $crit)
             {
             	if ($i > 0) $sql.=" AND ";
-                $sql.="(p.ref LIKE '".$prefix.$crit."%' OR p.label LIKE '".$prefix.$crit."%' OR pext.ref_interdacta LIKE '".$prefix.$crit."%' OR p.barcode LIKE '".$prefix.$crit."%'";
+                $sql.="(p.ref LIKE '".$prefix.$crit."%' OR p.label LIKE '".$prefix.$crit."%' OR pext.ref_interdacta LIKE '".$prefix.$crit."%' OR pext.ref_adveo LIKE '".$prefix.$crit."%' OR p.barcode LIKE '".$prefix.$crit."%'";
                 if (! empty($conf->global->MAIN_MULTILANGS)) $sql.=" OR pl.label LIKE '".$prefix.$crit."%'";
                 $sql.=")";
                 $i++;
