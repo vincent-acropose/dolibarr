@@ -290,7 +290,7 @@ if ($id > 0 || $ref)
 			}
 			if (! empty($conf->fournisseur->enabled))
 			{
-				$result=$product->load_stats_commande_fournisseur(0,'3');
+				$result=$product->load_stats_commande_fournisseur(0,'3,4');
 				if ($result < 0) dol_print_error($db,$product->error);
 				$stock_commande_fournisseur=$product->stats_commande_fournisseur['qty'];
 			}
