@@ -327,9 +327,9 @@ class modSociete extends DolibarrModules
 		$this->export_label[$r]='ExportDataset_company_2';
 		$this->export_icon[$r]='contact';
 		$this->export_permission[$r]=array(array("societe","contact","export"));
-		$this->export_fields_array[$r]=array('c.rowid'=>"IdContact",'c.civilite'=>"CivilityCode",'c.lastname'=>'Lastname','c.firstname'=>'Firstname','c.datec'=>"DateCreation",'c.tms'=>"DateLastModification",'c.priv'=>"ContactPrivate",'c.address'=>"Address",'c.zip'=>"Zip",'c.town'=>"Town",'c.phone'=>"Phone",'c.fax'=>"Fax",'c.email'=>"EMail",'p.libelle'=>"Country",'p.code'=>"CountryCode",'s.rowid'=>"IdCompany",'s.nom'=>"CompanyName",'s.status'=>"Status",'s.code_client'=>"CustomerCode",'s.code_fournisseur'=>"SupplierCode");
-		$this->export_TypeFields_array[$r]=array('c.lastname'=>"Text",'c.firstname'=>"Text",'s.code_client'=>"Text",'s.code_fournisseur'=>"Text");
-		$this->export_entities_array[$r]=array('s.rowid'=>"company",'s.nom'=>"company",'s.code_client'=>"company",'s.code_fournisseur'=>"company");	// We define here only fields that use another picto
+		$this->export_fields_array[$r]=array('c.rowid'=>"IdContact",'c.civilite'=>"CivilityCode",'c.lastname'=>'Lastname','c.firstname'=>'Firstname','c.datec'=>"DateCreation",'c.tms'=>"DateLastModification",'c.priv'=>"ContactPrivate",'c.address'=>"Address",'c.zip'=>"Zip",'c.town'=>"Town",'c.phone'=>"Phone",'c.fax'=>"Fax",'c.email'=>"EMail",'p.libelle'=>"Country",'p.code'=>"CountryCode",'s.rowid'=>"IdCompany",'s.nom'=>"CompanyName",'s.status'=>"Status",'s.code_client'=>"CustomerCode",'s.code_fournisseur'=>"SupplierCode",'userextra.u_code'=>'Code Commerciale');
+		$this->export_TypeFields_array[$r]=array('c.lastname'=>"Text",'c.firstname'=>"Text",'s.code_client'=>"Text",'s.code_fournisseur'=>"Text",'userextra.u_code'=>"Text");
+		$this->export_entities_array[$r]=array('s.rowid'=>"company",'s.nom'=>"company",'s.code_client'=>"company",'s.code_fournisseur'=>"company",'userextra.u_code'=>"company");	// We define here only fields that use another picto
         if (empty($conf->fournisseur->enabled))
         {
             unset($this->export_fields_array[$r]['s.code_fournisseur']);
@@ -373,6 +373,9 @@ class modSociete extends DolibarrModules
 		$this->export_sql_end[$r]  =' FROM '.MAIN_DB_PREFIX.'socpeople as c';
 		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'societe as s ON c.fk_soc = s.rowid';
 		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'c_pays as p ON c.fk_pays = p.rowid';
+		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'societe_commerciaux as soccom ON soccom.fk_soc = s.rowid';
+		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'user as usercom ON soccom.fk_user = usercom.rowid';
+		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'user_extrafields as userextra ON userextra.fk_object = usercom.rowid';
 		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'socpeople_extrafields as extra ON extra.fk_object = c.rowid';
 		$this->export_sql_end[$r] .=' WHERE c.entity IN ('.getEntity("societe", 1).')';
 
