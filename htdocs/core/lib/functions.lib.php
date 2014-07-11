@@ -2585,6 +2585,9 @@ function print_barre_liste($titre, $page, $file, $options='', $sortfield='', $so
 			$nbpages=ceil($totalnboflines/$conf->liste_limit);
 			$cpt=($page-$maxnbofpage);
 			if ($cpt < 0) { $cpt=0; }
+			
+			$pagelist.'('.$totalnboflines.' '.$langs->trans('Results').')'
+			
 			$pagelist.=$langs->trans('Page');
 			if ($cpt>=1)
 			{
