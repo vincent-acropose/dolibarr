@@ -2827,7 +2827,7 @@ else if ($id > 0 || ! empty($ref))
 		if ($absolute_discount > 0)
 		{
 			print '. ';
-			if ($object->statut > 0 || $object->type == 2 || $object->type == 3)
+			if ($object->statut > 0 || $object->type == 2)
 			{
 				if ($object->statut == 0)
 				{

@@ -177,7 +177,7 @@ report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportl
 $catotal=0;
 if ($modecompta == 'CREANCES-DETTES') {
 	$sql = "SELECT DISTINCT s.rowid as socid, s.nom as name,";
-	$sql.= " sum(DISTINCT f.total) as amount, sum(DISTINCT f.total_ttc) as amount_ttc";
+	$sql.= " sum(f.total) as amount, sum(f.total_ttc) as amount_ttc";
 	$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 	$sql.= " JOIN ".MAIN_DB_PREFIX."facture as f";
 	if ($selected_cat === -2) {
