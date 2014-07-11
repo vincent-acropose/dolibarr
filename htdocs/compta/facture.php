@@ -2868,7 +2868,7 @@ else if ($id > 0 || ! empty($ref))
 		if ($absolute_creditnote > 0)
 		{
 			// If validated, we show link "add credit note to payment"
-			if ($object->statut != 1 || $object->type == 2 || $object->type == 3)
+			if ($object->statut != 1 || $object->type == 2)
 			{
 				if ($object->statut == 0 && $object->type != 3)
 				{
@@ -3560,7 +3560,7 @@ else if ($id > 0 || ! empty($ref))
 
 					// Classify paid (if not deposit and not credit note. Such invoice are "converted")
 					if ($object->statut == 1 && $object->paye == 0 && $user->rights->facture->paiement &&
-						(($object->type != 2 && $object->type != 3 && $resteapayer <= 0) || ($object->type == 2 && $resteapayer >= 0)) )
+						(($object->type != 2 && $resteapayer <= 0) || ($object->type == 2 && $resteapayer >= 0)) )
 					{
 						print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER['PHP_SELF'].'?facid='.$object->id.'&amp;action=paid">'.$langs->trans('ClassifyPaid').'</a></div>';
 					}
