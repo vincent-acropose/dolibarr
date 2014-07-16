@@ -33,6 +33,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
 
 
 $langs->load("bills");
+$langs->load("relancesmasse@relancesmasse"); // Ajout Maxime MANGIN
 
 $id = (GETPOST('facid','int') ? GETPOST('facid','int') : GETPOST('id','int'));
 $action = GETPOST('action','alpha');
@@ -129,6 +130,13 @@ if ($action == "builddoc" && $user->rights->facture->lire)
 	}
 }
 
+if (isset($_POST["boutonEmail"])) { $mesg = "";}
+
+ //Fait les relances par email
+ if ($_REQUEST["action"] == 'confirm_emailraises' && $_REQUEST["confirm"] == 'yes'){
+	$typeRelance = "facture";
+	include_once(DOL_DOCUMENT_ROOT.'/relancesmasse/relances.php');
+}
 // Remove file
 if ($action == 'remove_file')
 {
@@ -166,6 +174,12 @@ $(document).ready(function() {
 	$("#checknone").click(function() {
 		$(".checkformerge").attr('checked', false);
 	});
+	$("#checkallRaises").click(function() {
+		$(".checkforRaise").attr('checked', true);
+	});
+	$("#checknoneRaises").click(function() {
+		$(".checkforRaise").attr('checked', false);
+	});
 });
 </script>
 <?php
@@ -180,6 +194,7 @@ $now=dol_now();
 
 $search_ref = GETPOST("search_ref");
 $search_societe = GETPOST("search_societe");
+$search_mode_rglt = GETPOST("search_mode_rglt");
 $search_montant_ht = GETPOST("search_montant_ht");
 $search_montant_ttc = GETPOST("search_montant_ttc");
 $late = GETPOST("late");
@@ -200,12 +215,14 @@ $sql = "SELECT s.nom, s.rowid as socid";
 $sql.= ", f.rowid as facid, f.facnumber, f.increment, f.total as total_ht, f.tva as total_tva, f.total_ttc, f.localtax1, f.localtax2, f.revenuestamp";
 $sql.= ", f.datef as df, f.date_lim_reglement as datelimite";
 $sql.= ", f.paye as paye, f.fk_statut, f.type";
+$sql.= ", dic_p.libelle as mode_rglt";
 $sql.= ", sum(pf.amount) as am";
 if (! $user->rights->societe->client->voir && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 if (! $user->rights->societe->client->voir && ! $socid) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 $sql.= ",".MAIN_DB_PREFIX."facture as f";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."paiement_facture as pf ON f.rowid=pf.fk_facture ";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_paiement as dic_p ON f.fk_mode_reglement=dic_p.id ";
 $sql.= " WHERE f.fk_soc = s.rowid";
 $sql.= " AND f.entity = ".$conf->entity;
 $sql.= " AND f.type IN (0,1,3) AND f.fk_statut = 1";
@@ -224,6 +241,7 @@ if (GETPOST('filtre'))
 }
 if ($search_ref)         $sql .= " AND f.facnumber LIKE '%".$search_ref."%'";
 if ($search_societe)     $sql .= " AND s.nom LIKE '%".$search_societe."%'";
+if ($search_mode_rglt)   $sql .= " AND dic_p.libelle LIKE '%".$search_mode_rglt."%'";
 if ($search_montant_ht)  $sql .= " AND f.total = '".$search_montant_ht."'";
 if ($search_montant_ttc) $sql .= " AND f.total_ttc = '".$search_montant_ttc."'";
 if (GETPOST('sf_ref'))   $sql .= " AND f.facnumber LIKE '%".$db->escape(GETPOST('sf_ref'))."%'";
@@ -252,6 +270,7 @@ if ($resql)
 	$param.=(! empty($option)?"&amp;option=".$option:"");
 	if ($search_ref)         $param.='&amp;search_ref='.urlencode($search_ref);
 	if ($search_societe)     $param.='&amp;search_societe='.urlencode($search_societe);
+	if ($search_mode_rglt)     $param.='&amp;search_mode_rglt='.urlencode($search_mode_rglt);
 	if ($search_montant_ht)  $param.='&amp;search_montant_ht='.urlencode($search_montant_ht);
 	if ($search_montant_ttc) $param.='&amp;search_montant_ttc='.urlencode($search_montant_ttc);
 	if ($late)               $param.='&amp;late='.urlencode($late);
@@ -276,9 +295,10 @@ if ($resql)
 	print '<tr class="liste_titre">';
 
 	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"f.facnumber","",$param,"",$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Date"),$_SERVER["PHP_SELF"],"f.datef","",$param,'align="center"',$sortfield,$sortorder);
+	//print_liste_field_titre($langs->trans("Date"),$_SERVER["PHP_SELF"],"f.datef","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateDue"),$_SERVER["PHP_SELF"],"f.date_lim_reglement","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","",$param,"",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("PaymentMode"),$_SERVER["PHP_SELF"],"dic_p.libelle","",$param,"",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AmountHT"),$_SERVER["PHP_SELF"],"f.total","",$param,'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Taxes"),$_SERVER["PHP_SELF"],"f.tva","",$param,'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AmountTTC"),$_SERVER["PHP_SELF"],"f.total_ttc","",$param,'align="right"',$sortfield,$sortorder);
@@ -286,6 +306,9 @@ if ($resql)
 	print_liste_field_titre($langs->trans("Rest"),$_SERVER["PHP_SELF"],"am","",$param,'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"fk_statut,paye,am","",$param,'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Merge"),$_SERVER["PHP_SELF"],"","",$param,'align="center"',$sortfield,$sortorder);
+	if ($conf->relancesmasse->enabled) { // Ajout Maxime MANGIN
+		print_liste_field_titre($langs->trans("Raises"),$_SERVER["PHP_SELF"],"","",$param,'align="center"',$sortfield,$sortorder);
+	}
 	print "</tr>\n";
 
 	// Lignes des champs de filtre
@@ -294,9 +317,10 @@ if ($resql)
 	// Ref
 	print '<td class="liste_titre">';
 	print '<input class="flat" size="10" type="text" name="search_ref" value="'.$search_ref.'"></td>';
-	print '<td class="liste_titre">&nbsp;</td>';
+	//print '<td class="liste_titre">&nbsp;</td>';
 	print '<td class="liste_titre">&nbsp;</td>';
 	print '<td class="liste_titre" align="left"><input class="flat" type="text" size="10" name="search_societe" value="'.$search_societe.'"></td>';
+	print '<td class="liste_titre" align="left"><input class="flat" type="text" size="10" name="search_mode_rglt" value="'.$search_mode_rglt.'"></td>';
 	print '<td class="liste_titre" align="right"><input class="flat" type="text" size="8" name="search_montant_ht" value="'.$search_montant_ht.'"></td>';
 	print '<td class="liste_titre">&nbsp;</td>';
 	print '<td class="liste_titre" align="right"><input class="flat" type="text" size="8" name="search_montant_ttc" value="'.$search_montant_ttc.'"></td>';
@@ -308,6 +332,11 @@ if ($resql)
 	print '<td class="liste_titre" align="center">';
 	if ($conf->use_javascript_ajax) print '<a href="#" id="checkall">'.$langs->trans("All").'</a> / <a href="#" id="checknone">'.$langs->trans("None").'</a>';
 	print '</td>';
+	if ($conf->relancesmasse->enabled) { // Ajout Maxime MANGIN
+		print '<td align="center">';
+		if ($conf->use_javascript_ajax) print '<a href="#" id="checkallRaises">'.$langs->trans("All").'</a> / <a href="#" id="checknoneRaises">'.$langs->trans("None").'</a>';
+		print '</td>';
+	}
 	print "</tr>\n";
 	print '</form>';
 
@@ -363,10 +392,41 @@ if ($resql)
 
 			print "</td>\n";
 
-			print '<td nowrap align="center">'.dol_print_date($db->jdate($objp->df),'day').'</td>'."\n";
+			//print '<td nowrap align="center">'.dol_print_date($db->jdate($objp->df),'day').'</td>'."\n";
 			print '<td nowrap align="center">'.dol_print_date($db->jdate($objp->datelimite),'day').'</td>'."\n";
 
 			print '<td><a href="'.DOL_URL_ROOT.'/comm/fiche.php?socid='.$objp->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.dol_trunc($objp->nom,28).'</a></td>';
+			
+			//Mode de règlement
+			if($objp->mode_rglt == "Prélèvement"){
+				dol_include_once('/compta/prelevement/class/bonprelevement.class.php');
+				
+				$sql = "SELECT p.rowid";
+		        $sql.= " FROM ".MAIN_DB_PREFIX."prelevement_bons as p";
+		        $sql.= " , ".MAIN_DB_PREFIX."prelevement_lignes as pl";
+		        $sql.= " , ".MAIN_DB_PREFIX."prelevement_facture as pf";
+		        $sql.= " WHERE pf.fk_prelevement_lignes = pl.rowid";
+		        $sql.= " AND pl.fk_prelevement_bons = p.rowid";
+		        $sql.= " AND pf.fk_facture = ".$objp->facid;
+		        $sql.= " AND p.entity = ".$conf->entity;
+				
+				$resql2 = $db->query($sql);
+				$res2 = $db->fetch_object($resql2);
+				
+				$prelevement = new BonPrelevement($db);
+				$prelevement->fetch($res2->rowid);
+				
+				$tempstr = file_get_contents(DOL_DATA_ROOT.'/sepa/receipts/'.$prelevement->ref."/".$prelevement->ref.".xml");
+				$xml = simplexml_load_string($tempstr);
+				$date_prelevement = $xml->CstmrDrctDbtInitn->PmtInf->ReqdColltnDt;
+				$date_prelevement = explode('-', $date_prelevement);
+				$date_prelevement = $date_prelevement[2].'/'.$date_prelevement[1].'/'.$date_prelevement[0];
+
+				print '<td>'.$objp->mode_rglt.' '.(($date_prelevement != "//") ? $date_prelevement : '<img border="0" title="Aucun prélèvement" alt="Aucun prélèvement" src="'.dol_buildpath('/theme/amarok/img/warning.png',2).'">' ).'</td>';
+			}
+			else{	
+				print '<td>'.$objp->mode_rglt.'</td>';
+			}
 
 			print '<td align="right">'.price($objp->total_ht).'</td>';
 			print '<td align="right">'.price($objp->total_tva);
@@ -398,6 +458,13 @@ if ($resql)
 			else
 				print '&nbsp;';
 			print '</td>' ;
+			
+			if ($conf->relancesmasse->enabled) { // Ajout Maxime MANGIN
+				//print '<form name="sendByEmail" action="'.$_SERVER["PHP_SELF"].'" method="post">';
+				print '<td align="center">';
+				print '<input class="flat checkforRaise" type="checkbox" name="toRaise[]" value="'.$objp->facid.'">';
+				print '</td>' ;
+			}
 
 			print "</tr>\n";
 			$total_ht+=$objp->total_ht;
@@ -417,11 +484,24 @@ if ($resql)
 		print '<td align="right"><b>'.price($total_ttc - $total_paid).'</b></td>';
 		print '<td align="center">&nbsp;</td>';
 		print '<td align="center">&nbsp;</td>';
+		if ($conf->relancesmasse->enabled) { // Ajout Maxime MANGIN
+			print '<td align="center">&nbsp;</td>';
+		}
 		print "</tr>\n";
 	}
 
 	print "</table>";
 
+	
+	/*
+	 * Show button raise - Maxime MANGIN
+	 */
+	print '<div class="tabsAction">';
+	if ($conf->relancesmasse->enabled) {		
+		print '<input type="submit" class="butAction" name="boutonEmail" value="'.$langs->trans("SendRaises").'">';
+	}
+	print '</div>';
+	
 	/*
 	 * Show list of available documents
 	 */
@@ -443,6 +523,13 @@ if ($resql)
 }
 else dol_print_error($db,'');
 
+//Confirmation envoi par mail - Maxime MANGIN
+if (isset($_POST["boutonEmail"]) && ! $_REQUEST["cancel"]) {
+	$_SESSION['toRaise'] = $_POST['toRaise'];
+	$html = new Form($db);	
+	$ret = $html->form_confirm($_SERVER["PHP_SELF"]."?leftmenu=customers_bills",$langs->trans("EmailRaises"),$langs->trans("SureSendRaises"),"confirm_emailraises",'',0,1);
+	if ($ret == 'html') print '<table class="notopnoleftnoright" width="100%"><tr height="6"><td></td></tr></table>';
+}
 
 llxFooter();
 $db->close();
