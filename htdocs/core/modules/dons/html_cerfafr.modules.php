@@ -150,6 +150,8 @@ class html_cerfafr extends ModeleDon
 		        $form = str_replace('__DONATOR_TOWN__',$don->town,$form);
 		        $form = str_replace('__PAYMENTMODE_LIB__ ', $paymentmode,$form);
 		        $form = str_replace('__NOW__',dol_print_date($now,'',false,$outputlangs),$form);
+		        $form = str_replace('__SIGNATURE__','<img src="'.dol_buildpath('/core/modules/dons/signature.jpg',2).'" width="300" />',$form);
+
 		        $form = str_replace('__DonationRef__',$outputlangs->trans("DonationRef"),$form);
 		        $form = str_replace('__DonationReceipt__',$outputlangs->trans("DonationReceipt"),$form);
 		        $form = str_replace('__DonationRecipient__',$outputlangs->trans("DonationRecipient"),$form);
