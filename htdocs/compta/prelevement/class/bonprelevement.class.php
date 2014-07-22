@@ -544,6 +544,17 @@ class BonPrelevement extends CommonObject
                 $message .=$langs->trans("InfoTransData", price($this->amount), $this->methodes_trans[$this->method_trans], dol_print_date($date,'day'));
 
                 // TODO Call trigger to create a notification using notification module
+                
+	            if (! $notrigger)
+	            {
+	                // Appel des triggers
+	                include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+	                $interface=new Interfaces($this->db);
+	                $result=$interface->run_triggers('PRELEVEMENT_SET_INFO_TRANS',$this,$user,$langs,$conf);
+	                if ($result < 0) { $error++; $this->errors=$interface->errors; }
+	                // Fin appel triggers
+	            }                
+                
             }
             else
            {

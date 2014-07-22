@@ -234,10 +234,10 @@ class RejetPrelevement
 
 			require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
 
-			$subject = $langs->trans("InfoRejectSubject");
+			$subject = html_entity_decode($langs->trans("InfoRejectSubject"),ENT_QUOTES,"UTF-8");;
 			$sendto = $emuser->getFullName($langs)." <".$emuser->email.">";
 			$from = $this->user->getFullName($langs)." <".$this->user->email.">";
-			$msgishtml=0;
+			$msgishtml=1;
 
 			$arr_file = array();
 			$arr_mime = array();
