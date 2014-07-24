@@ -81,7 +81,8 @@ if ($id > 0 || ! empty($ref))
 	$ret=$object->fetch($id, $ref);
 }
 
-
+$parameters=array('socid'=>$socid);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks 
 
 /*
  * Actions
@@ -1951,7 +1952,7 @@ else
             }
             else // Affichage simple de la ligne
             {
-                print '<tr '.$bc[$var].'>';
+                print '<tr id="row-'.$object->lines[$i]->rowid.'" '.$bc[$var].'>';
 
                 // Show product and description
                 print '<td>';

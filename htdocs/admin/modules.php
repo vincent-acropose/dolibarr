@@ -85,8 +85,9 @@ foreach ($conf->file->dol_document_root as $type => $dirroot)
 	{
 		while (($file = readdir($handle))!==false)
 		{
-		    if (is_dir($dirroot.'/'.$file) && substr($file, 0, 1) <> '.' && substr($file, 0, 3) <> 'CVS' && $file != 'includes')
+		   if (is_dir($dirroot.'/'.$file) && substr($file, 0, 1) <> '.' && substr($file, 0, 3) <> 'CVS' && $file != 'includes')
 		    {
+//		 echo '!'.$dirroot . '/' . $file . '/core/modules/!',(int)is_dir($dirroot . '/' . $file . '/core/modules/'), '<br>';
 		    	if (is_dir($dirroot . '/' . $file . '/core/modules/'))
 		    	{
 		    		$modulesdir[$dirroot . '/' . $file . '/core/modules/'] = $dirroot . '/' . $file . '/core/modules/';
@@ -122,7 +123,6 @@ foreach ($modulesdir as $dir)
 		    if (is_readable($dir.$file) && substr($file, 0, 3) == 'mod'  && substr($file, dol_strlen($file) - 10) == '.class.php')
 		    {
 		        $modName = substr($file, 0, dol_strlen($file) - 10);
-
 		        if ($modName)
 		        {
 		        	if (! empty($modNameLoaded[$modName]))
