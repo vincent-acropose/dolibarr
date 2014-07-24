@@ -114,7 +114,7 @@ print '</td></tr>';
 
 print '<tr><td>'.$langs->trans("Label").'</td><td>'.$project->title.'</td></tr>';
 
-print '<tr><td>'.$langs->trans("Company").'</td><td>';
+print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
 if (! empty($project->societe->id)) print $project->societe->getNomUrl(1);
 else print '&nbsp;';
 print '</td></tr>';
@@ -209,6 +209,7 @@ foreach ($listofreferent as $key => $value)
 	$classname=$value['class'];
 	$tablename=$value['table'];
 	$qualified=$value['test'];
+	
 	if ($qualified)
 	{
 		print '<br>';
@@ -216,6 +217,10 @@ foreach ($listofreferent as $key => $value)
 		print_titre($langs->trans($title));
 		
 		$selectList=$formproject->select_element($tablename);
+		if ($selectList<0) {
+			setEventMessage($formproject->error,'errors');
+		}
+		
 		if ($selectList)
 		{
 			print '<form action="'.$_SERVER["PHP_SELF"].'?id='.$projectid.'" method="post">';
@@ -223,7 +228,7 @@ foreach ($listofreferent as $key => $value)
 			print '<input type="hidden" name="action" value="addelement">';
 			print '<table><tr><td>'.$langs->trans("SelectElement").'</td>';
 			print '<td>'.$selectList.'</td>';
-			print '<td><input type="submit" class="button" value="'.$langs->trans("AddElement").'"></td>';
+			print '<td><input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans("AddElement")).'"></td>';
 			print '</tr></table>';
 			print '</form>';
 		}
@@ -314,7 +319,7 @@ foreach ($listofreferent as $key => $value)
 				}
 				if ($key == 'invoice' && ! empty($conf->facture->enabled) && $user->rights->facture->creer)
 				{
-					print '<a class="butAction" href="'.DOL_URL_ROOT.'/compta/facture/list.php?socid='.$project->societe->id.'&amp;action=create&amp;origin='.$project->element.'&amp;originid='.$project->id.'">'.$langs->trans("AddCustomerInvoice").'</a>';
+					print '<a class="butAction" href="'.DOL_URL_ROOT.'/compta/facture.php?socid='.$project->societe->id.'&amp;action=create&amp;origin='.$project->element.'&amp;originid='.$project->id.'">'.$langs->trans("AddCustomerInvoice").'</a>';
 				}
 			}
 			if ($project->societe->fournisseur)
