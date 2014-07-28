@@ -1318,6 +1318,14 @@ class pdf_azur extends ModelePDFPropales
 			$pdf->SetXY($posx+2,$posy+3);
 			$pdf->SetFont('','B', $default_font_size);
 			$pdf->MultiCell($widthrecbox, 4, $carac_client_name, 0, 'L');
+			$posy=$pdf->getY();
+			
+			// Show Special contact name
+			if (is_array($object->array_options) && key_exists('options_pr_signataire',$object->array_options) && !empty($object->array_options['options_pr_signataire'])) {
+				$pdf->SetXY($posx+2,$posy);
+				$pdf->SetFont('','', $default_font_size);
+				$pdf->MultiCell($widthrecbox, 4, $outputlangs->convToOutputCharset(dol_html_entity_decode($object->array_options['options_pr_signataire'], ENT_COMPAT | ENT_HTML401)), 0, 'L');
+			}
 
 			// Show recipient information
 			$pdf->SetFont('','', $default_font_size - 1);
