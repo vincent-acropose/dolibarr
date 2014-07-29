@@ -48,7 +48,8 @@ llxHeader(array(),$langs->trans('CPTitreMenu'));
 print_fiche_titre($langs->trans('MenuConfCP'));
 
 $holiday = new Holiday($db);
-$listUsers = $holiday->fetchUsers(false,false);
+$listUsers = $holiday->fetchUsers(false,true);
+//var_dump($listUsers);exit;
 $userstatic=new User($db);
 
 // Si il y a une action de mise à jour
