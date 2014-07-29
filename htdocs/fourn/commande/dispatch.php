@@ -361,7 +361,7 @@ if ($id > 0 || ! empty($ref))
 		dol_fiche_end();
 
 		// List of already dispatching
-		$sql = "SELECT p.ref, p.label, cfdet.ref as fournref,";
+		$sql = "SELECT DISTINCT(p.ref), p.label, cfdet.ref as fournref,";
 		$sql.= " e.rowid as warehouse_id, e.label as entrepot,";
 		$sql.= " cfd.fk_product, cfd.qty, cfd.rowid";
 		$sql.= " FROM ".MAIN_DB_PREFIX."product as p,";
