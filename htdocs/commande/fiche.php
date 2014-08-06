@@ -1487,11 +1487,22 @@ $formorder = new FormOrder($db);
 ?>
 <script type="text/javascript">
 	$(document).ready(function(){
-		$('#addproduct').submit(function(){
+		$('#search_idprod').focus(); // Focus systématique qur la zone de recherche produot
+		$('#search_idprod').keydown(function(event) {
+			if (event.which == 13) { // Appui sur entrée dans la zone de recherche produit
+				event.preventDefault();
+				var res = $('ul.ui-autocomplete span.tag');
+				if(res.length == 1) {
+					res.click(); // Simulation de la sélection du produit si un seul résultat affiché
+					//$('#qty_predef').focus(); // Focus sur la quantité (ne fonctionne pas car Dolibarr focus sur le champs desc)
+				}
+			}
+		})
+		/*$('#addproduct').submit(function(){
 			if($('#search_idprod').val() != "" && $('#idprod').val() == ""){
 				return false;
 			}
-		});
+		});*/
 	});
 </script>
 <?php
