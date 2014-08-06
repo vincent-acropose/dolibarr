@@ -1491,11 +1491,13 @@ $formorder = new FormOrder($db);
 		$('#search_idprod').keydown(function(event) {
 			if (event.which == 13) { // Appui sur entrée dans la zone de recherche produit
 				event.preventDefault();
-				var res = $('ul.ui-autocomplete span.tag');
-				if(res.length == 1) {
-					res.click(); // Simulation de la sélection du produit si un seul résultat affiché
-					//$('#qty_predef').focus(); // Focus sur la quantité (ne fonctionne pas car Dolibarr focus sur le champs desc)
-				}
+				$(document).ajaxStop(function() {
+					var res = $('ul.ui-autocomplete span.tag:visible');
+					if(res.length == 1) {
+						res.click(); // Simulation de la sélection du produit si un seul résultat affiché
+						//$('#qty_predef').focus(); // Focus sur la quantité (ne fonctionne pas car Dolibarr focus sur le champs desc)
+					}
+				});
 			}
 		})
 		/*$('#addproduct').submit(function(){
