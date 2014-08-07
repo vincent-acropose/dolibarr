@@ -2642,7 +2642,7 @@ class Product extends CommonObject
 	 *
 	 *    @return     int             < 0 if KO, > 0 if OK
 	 */
-	function load_stock()
+	function load_stock($virtual=true)
 	{
 		$this->stock_reel = 0;
 		$this->stock_warehouse = array();
@@ -2673,7 +2673,7 @@ class Product extends CommonObject
 				}
 			}
 			$this->db->free($result);
-			$this->load_virtual_stock();
+			if($virtual) $this->load_virtual_stock();
 			return 1;
 		}
 		else
