@@ -1249,6 +1249,7 @@ else if ($id || $ref)
 			print '<td width="5" align="center">&nbsp;</td>';
 		}
 		print '<td>'.$langs->trans("Products").'</td>';
+		print '<td>'.$langs->trans("SupplierRef").'</td>';
 		print '<td align="center">'.$langs->trans("QtyOrdered").'</td>';
 		if ($object->statut <= 1)
 		{
@@ -1340,6 +1341,19 @@ else if ($id || $ref)
 				print_date_range($lines[$i]->date_start,$lines[$i]->date_end);
 				print "</td>\n";
 			}
+			
+			// Ticket 1057 : ajout ref fournisseur
+			$ref_fourn = '';
+			if($lines[$i]->fk_product > 0) {
+				$sql = "SELECT pfp.ref_fourn, s.nom FROM ".MAIN_DB_PREFIX."product_fournisseur_price pfp ";
+				$sql.= "LEFT JOIN ".MAIN_DB_PREFIX."societe s ON s.rowid = pfp.fk_soc ";
+				$sql.= "WHERE pfp.fk_product = ".$lines[$i]->fk_product." ";
+				$sql.= "AND pfp.fk_soc NOT IN (1654,1658) ";
+				$resql = $db->query($sql);
+				$res = $db->fetch_object($resql);
+				$ref_fourn = $res->nom.' - '.$res->ref_fourn;
+			}
+			print '<td align="left">'.$ref_fourn.'</td>';
 
 			// Qte commande
 			print '<td align="center">'.$lines[$i]->qty_asked.'</td>';
