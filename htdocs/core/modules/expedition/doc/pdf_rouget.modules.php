@@ -243,8 +243,22 @@ class pdf_rouget extends ModelePdfExpedition
 					$pdf->setPageOrientation('', 1, $heightforfooter+$heightforfreetext+$heightforinfotot);	// The only function to edit the bottom margin of current page to set it.
 					$pageposbefore=$pdf->getPage();
 
+					// Ticket 1057 : ajout ref fournisseur
+					$ref_fourn = '';
+					if($object->lines[$i]->fk_product > 0) {
+						$sql = "SELECT pfp.ref_fourn, s.nom FROM ".MAIN_DB_PREFIX."product_fournisseur_price pfp ";
+						$sql.= "LEFT JOIN ".MAIN_DB_PREFIX."societe s ON s.rowid = pfp.fk_soc ";
+						$sql.= "WHERE pfp.fk_product = ".$object->lines[$i]->fk_product." ";
+						$sql.= "AND pfp.fk_soc NOT IN (1654,1658) ";
+						$resql = $this->db->query($sql);
+						$res = $this->db->fetch_object($resql);
+						$ref_fourn = $res->nom.' - '.$res->ref_fourn;
+						
+						$object->lines[$i]->desc = $ref_fourn;
+					}
+
 					// Description de la ligne produit
-					pdf_writelinedesc($pdf,$object,$i,$outputlangs,$this->posxqtyordered-10,3,$this->posxdesc,$curY,0,1);
+					pdf_writelinedesc($pdf,$object,$i,$outputlangs,$this->posxqtyordered-10,3,$this->posxdesc,$curY,0,0);
 
 					$nexY = $pdf->GetY();
 					$pageposafter=$pdf->getPage();
