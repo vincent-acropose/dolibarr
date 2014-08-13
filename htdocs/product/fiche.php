@@ -313,6 +313,9 @@ if (empty($reshook))
             $originalId = $id;
             if ($object->id > 0)
             {
+            	
+				$object->fetch_optionals($object->id);
+				
                 $object->ref = GETPOST('clone_ref');
                 $object->status = 0;
                 $object->status_buy = 0;
