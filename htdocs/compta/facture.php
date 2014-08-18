@@ -1444,7 +1444,7 @@ else if ($action == 'updateligne' && $user->rights->facture->creer && $_POST['sa
 
 		$label = ((GETPOST('update_label') && GETPOST('product_label')) ? GETPOST('product_label'):'');
 
-		if ($price_min && (price2num($pu_ht)*(1-price2num(GETPOST('remise_percent'))/100) < price2num($price_min)))
+		if ($price_min && (price2num($pu_ht)*(1-price2num(GETPOST('remise_percent'))/100) < price2num($price_min)) && $object->type!=2)
 		{
 			setEventMessage($langs->trans("CantBeLessThanMinPrice", price2num($price_min,'MU')).$langs->getCurrencySymbol($conf->currency), 'errors');
 			$error++;
