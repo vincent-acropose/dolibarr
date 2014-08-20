@@ -1369,7 +1369,7 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
 		
 	    // Show menu
 	    $menumanager->atarget=$target;
-	   // $menumanager->showmenu('top');      // This contains a \n
+	    //$menumanager->showmenu('top');      // This contains a \n
 		print '<div class="tmenudiv">
 					<ul class="tmenu">
 						<li id="mainmenutd_home" class="tmenusel">
@@ -1453,7 +1453,7 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
 	    $toprightmenu.=$hookmanager->executeHooks('printTopRightMenu',$parameters);    // Note that $action and $object may have been modified by some hooks
 
 	    // Logout link
-	    //$toprightmenu.=$form->textwithtooltip('',$logouthtmltext,2,1,$logouttext,'',1);
+	    $toprightmenu.=$form->textwithtooltip('',$logouthtmltext,2,1,$logouttext,'',1);
 
 	    // Link to print main content area
 	    /*if (empty($conf->global->MAIN_PRINT_DISABLELINK) && empty($conf->browser->phone))
