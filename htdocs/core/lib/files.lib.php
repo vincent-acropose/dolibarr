@@ -1272,6 +1272,12 @@ function dol_check_secure_access_document($modulepart,$original_file,$entity,$fu
 		$accessallowed=1;
 		$original_file=$conf->mycompany->dir_output.'/logos/'.$original_file;
 	}
+	// Wrapping for some images
+	if ($modulepart == 'clinetreferencement')
+	{
+		$accessallowed=1;
+		$original_file= DOL_DATA_ROOT.'/clinetreferencement/'.$original_file;
+	}
 	// Wrapping for users photos
 	elseif ($modulepart == 'userphoto')
 	{
