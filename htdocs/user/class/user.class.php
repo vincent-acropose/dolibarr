@@ -1473,7 +1473,16 @@ class User extends CommonObject
 		// Define $urlwithroot
 		//$urlwithouturlroot=preg_replace('/'.preg_quote(DOL_URL_ROOT,'/').'$/i','',trim($dolibarr_main_url_root));
 		//$urlwithroot=$urlwithouturlroot.DOL_URL_ROOT;		// This is to use external domain name found into config file
-		$urlwithroot=DOL_MAIN_URL_ROOT;						// This is to use same domain name than current
+		/*echo '<pre>';
+		print_r($this);
+		echo '<pre>';exit;*/
+		
+		if($this->contact_id){
+			$urlwithroot=DOL_MAIN_URL_ROOT.'/custom/clinetreferencement/external.php';						// This is to use same domain name than current
+		}
+		else{
+			$urlwithroot=DOL_MAIN_URL_ROOT;
+		}
 
 		// TODO Use outputlangs to translate messages
 		if (! $changelater)
