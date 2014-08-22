@@ -38,6 +38,7 @@ if (! empty($conf->categorie->enabled))
 $langs->load("products");
 $langs->load("stocks");
 $langs->load("suppliers");
+$langs->load("categories");
 
 $action = GETPOST('action');
 $sref=GETPOST("sref");
@@ -307,7 +308,7 @@ else
     		if (! empty($conf->stock->enabled) && $user->rights->stock->lire && $type != 1) print '<td class="liste_titre" align="right">'.$langs->trans("PhysicalStock").'</td>';
     		print_liste_field_titre($langs->trans("Sell"), $_SERVER["PHP_SELF"], "p.tosell",$param,"",'align="center"',$sortfield,$sortorder);
             print_liste_field_titre($langs->trans("Buy"), $_SERVER["PHP_SELF"], "p.tobuy",$param,"",'align="center"',$sortfield,$sortorder);
-            print '<td width="1%">&nbsp;</td>';
+            print '<td>'.$langs->trans("Categories").'</td>';
     		print "</tr>\n";
 
     		// Lignes des champs de filtre
@@ -483,7 +484,28 @@ else
                 // Status (to sell)
                 print '<td align="center" class="nowrap">'.$product_static->LibStatut($objp->tobuy,5,1).'</td>';
 
-                print '<td>&nbsp;</td>';
+                //Cateogries Service
+                print '<td>';
+                $c = new Categorie($db);
+				$cats = $c->containing($objp->rowid,0);
+				if (is_array($cats) && count($cats)>0) {
+					foreach($cats as $cat) {
+						
+						$ways = $cat->print_all_ways();
+						
+						foreach ($ways as $way)
+						{
+							print img_object('','category').' '.$way."<br>";
+						
+						
+						//print $cat->label.'<br>';
+						}
+					}
+				} else {
+					print '&nbsp';
+				}
+				
+                print '</td>';
                 
                 print "</tr>\n";
     			$i++;
