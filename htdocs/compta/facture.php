@@ -746,8 +746,28 @@ else if ($action == 'add' && $user->rights->facture->creer)
 			$object->fk_facture_source	= $_POST['fac_avoir'];
 			$object->type				= 2;
 
+			//HACK FOR AKTEOS Import original invoice lines into deposit invoice
+			$sourceinvoice = new Facture($db);
+			$result = $sourceinvoice->fetch($object->fk_facture_source);
+			if ($result<0) {
+				$error++;
+				setEventMessage($sourceinvoice->error,'errors');
+			}
+			
+			if (empty($error)) {
+				if (is_array($sourceinvoice->lines) && count($sourceinvoice->lines)>0) {
+					foreach($sourceinvoice->lines as $key=>$line) {
+						$object->lines[$key]=$line;
+						$object->lines[$key]->subprice=$object->lines[$key]->subprice*-1;
+						$object->lines[$key]->total_tva=$object->lines[$key]->total_tva*-1;
+						$object->lines[$key]->total_ht=$object->lines[$key]->total_ht*-1;
+						$object->lines[$key]->total_ttc=$object->lines[$key]->total_ttc*-1;
+					}
+				}
+			}
+			
 			$id = $object->create($user);
-
+			
 			// Add predefined lines
 			for ($i = 1; $i <= $NBLINES; $i++)
 			{
