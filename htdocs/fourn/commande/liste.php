@@ -146,7 +146,7 @@ if ($resql)
 	$num = $db->num_rows($resql);
 	$i = 0;
 
-	$param="";
+	$param='&socid='.$socid;
 	if ($search_ref)   $param.="&search_ref=".$search_ref;
 	if ($search_nom)   $param.="&search_nom=".$search_nom;
 	if ($search_user)  $param.="&search_user=".$search_user;
