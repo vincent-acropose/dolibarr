@@ -126,6 +126,10 @@ function fichinter_admin_prepare_head()
     $head[$h][2] = 'attributes';
     $h++;
 
+	$head[$h][0] = DOL_URL_ROOT.'/fichinter/admin/fichinterdet_extrafields.php';
+	$head[$h][1] = $langs->trans("ExtraFields");
+    $head[$h][2] = 'attributesdet';
+    $h++;
 
 
 	complete_head_from_modules($conf,$langs,$object,$head,$h,'fichinter_admin','remove');

@@ -54,6 +54,7 @@ if (! empty($conf->global->FICHEINTER_ADDON) && is_readable(DOL_DOCUMENT_ROOT ."
 require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 
+$langs->load("bills");
 $langs->load("companies");
 $langs->load("interventions");
 
@@ -90,12 +91,14 @@ if ($id > 0 || ! empty($ref))
 	if ($ret > 0) $ret=$object->fetch_thirdparty();
 	if ($ret < 0) dol_print_error('',$object->error);
 }
-
+$permissionnote=$user->rights->ficheinter->creer;	// Used by the include of actions_setnotes.inc.php
 $reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
 
 /*
  * Actions
  */
+
+include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not includ_once
 
 if ($action == 'confirm_validate' && $confirm == 'yes' && $user->rights->ficheinter->creer)
 {
@@ -196,6 +199,13 @@ else if ($action == 'add' && $user->rights->ficheinter->creer)
 				$object->linked_objects = array_merge($object->linked_objects, $_POST['other_linked_objects']);
 			}
 
+			// Extrafields
+			$extrafields = new ExtraFields($db);
+			$extralabels = $extrafields->fetch_name_optionals_label($object->table_element);
+			$array_option = $extrafields->getOptionalsFromPost($extralabels);
+	
+	        $object->array_options = $array_option;
+
 			$id = $object->create($user);
 
 			if ($id > 0)
@@ -227,7 +237,9 @@ else if ($action == 'add' && $user->rights->ficheinter->creer)
 								// Define output language
 								if (! empty($conf->global->MAIN_MULTILANGS) && ! empty($conf->global->PRODUIT_TEXTS_IN_THIRDPARTY_LANGUAGE))
 								{
-									$prod = new Product($db, $lines[$i]->fk_product);
+									$prod = new Product($db);
+									$prod->id=$lines[$i]->fk_product;
+									$prod->getMultiLangs();
 
 									$outputlangs = $langs;
 									$newlang='';
@@ -264,12 +276,21 @@ else if ($action == 'add' && $user->rights->ficheinter->creer)
 							    $duration = 0;
 							}
 
+							$predef = '';
+							// Extrafields
+							$extrafieldsline = new ExtraFields($db);
+							$extralabelsline = $extrafieldsline->fetch_name_optionals_label($object->table_element_line);
+							$array_option = $extrafieldsline->getOptionalsFromPost($extralabelsline, $predef);
+					
+
 		                    $result = $object->addline(
 								$user,
 		                        $id,
 		                        $desc,
 					            $date_intervention,
-                 				$duration
+                 				$duration,
+								$lines[$i]->fk_product,
+            					$array_option
 		                    );
 
 							if ($result < 0)
@@ -296,6 +317,13 @@ else if ($action == 'add' && $user->rights->ficheinter->creer)
 	    }
 	    else
 	    {
+	    	// Extrafields
+			$extrafields = new ExtraFields($db);
+			$extralabels = $extrafields->fetch_name_optionals_label($object->table_element);
+			$array_option = $extrafields->getOptionalsFromPost($extralabels);
+	
+	        $object->array_options = $array_option;
+			
 			$result = $object->create($user);
 	        if ($result > 0)
 	        {
@@ -444,6 +472,12 @@ else if ($action == "addline" && $user->rights->ficheinter->creer)
 		$fk_prod=GETPOST('id_prod_service');
 		$qty = $_REQUEST['nb_prod_to_add'];
 
+		
+		// Extrafields
+		$extrafieldsline = new ExtraFields($db);
+		$extralabelsline = $extrafieldsline->fetch_name_optionals_label($object->table_element_line);
+		$array_option = $extrafieldsline->getOptionalsFromPost($extralabelsline);
+
         $result=$object->addline(
 			$user,
             $id,
@@ -451,7 +485,7 @@ else if ($action == "addline" && $user->rights->ficheinter->creer)
             $date_intervention,
             $duration,
             $fk_prod,
-            $qty
+            $array_option
         );
 
 		// Define output language
@@ -524,6 +558,13 @@ else if ($action == 'updateline' && $user->rights->ficheinter->creer && GETPOST(
     $objectline->datei		= $date_inter;
     $objectline->desc		= $desc;
     $objectline->duration	= $duration;
+	
+	// Extrafields
+	$extrafieldsline = new ExtraFields($db);
+	$extralabelsline = $extrafieldsline->fetch_name_optionals_label($object->table_element_line);
+	$array_option = $extrafieldsline->getOptionalsFromPost($extralabelsline);
+	$objectline->array_options = $array_option;
+
 	$objectline->fk_product	= $fk_product;
 	$objectline->qty		= $qty;
 	$result = $objectline->update($user);
@@ -1497,6 +1538,17 @@ else if ($id > 0 || ! empty($ref))
 				}
 
 				print '</tr>';
+
+				$line = new FichinterLigne($db);
+				$line->fetch($objp->rowid);
+				
+				$extrafieldsline = new ExtraFields($db);
+				$extralabelslines=$extrafieldsline->fetch_name_optionals_label($line->table_element);
+				
+				$line->fetch_optionals($line->rowid, $extralabelslines);
+				 
+				print $line->showOptionals($extrafieldsline, 'view', array('style'=>$bc[$var], 'colspan'=>5));
+			
 			}
 
 			// Ligne en mode update
@@ -1535,6 +1587,16 @@ else if ($id > 0 || ! empty($ref))
 				print '<td align="center" colspan="5" valign="center"><input type="submit" class="button" name="save" value="'.$langs->trans("Save").'">';
 				print '<br><input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'"></td>';
 				print '</tr>' . "\n";
+
+				$line = new FichinterLigne($db);
+				$line->fetch($objp->rowid);
+				
+				$extrafieldsline = new ExtraFields($db);
+				$extralabelslines=$extrafieldsline->fetch_name_optionals_label($line->table_element);
+				$line->fetch_optionals($line->rowid, $extralabelslines);
+				
+				print $line->showOptionals($extrafieldsline, 'edit', array('style'=>$bc[$var], 'colspan'=>5));
+			
 			}
 
 			$i++;

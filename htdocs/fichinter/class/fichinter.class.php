@@ -174,6 +174,17 @@ class Fichinter extends CommonObject
 				$resql=$this->db->query($sql);
 				if (! $resql) $error++;
 			}
+			
+			if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
+            {
+            	
+            	$result=$this->insertExtraFields();
+            	if ($result < 0)
+            	{
+            		$error++;
+            	}
+            }	
+			
 			// Add linked object
 			if (! $error && $this->origin && $this->origin_id)
 			{
@@ -812,7 +823,7 @@ class Fichinter extends CommonObject
 		if ($user->rights->ficheinter->creer)
 		{
 			$sql = "UPDATE ".MAIN_DB_PREFIX."fichinter ";
-			$sql.= " SET datei = ".$this->db->idate($date_delivery);
+			$sql.= " SET datei = '".$this->db->idate($date_delivery)."'";
 			$sql.= " WHERE rowid = ".$this->id;
 			$sql.= " AND entity = ".$conf->entity;
 			$sql.= " AND fk_statut = 0";
@@ -909,7 +920,7 @@ class Fichinter extends CommonObject
 	 *	@param      int		$duration            	Intervention duration
 	 *	@return    	int             				>0 if ok, <0 if ko
 	 */
-	function addline($user,$fichinterid, $desc, $date_intervention, $duration, $fk_product=0)
+	function addline($user,$fichinterid, $desc, $date_intervention, $duration, $fk_product=0, $array_option=0)
 	{
 		dol_syslog("Fichinter::Addline $fichinterid, $desc, $date_intervention, $duration");
 
@@ -924,10 +935,16 @@ class Fichinter extends CommonObject
 			$line->desc         = $desc;
 			$line->datei        = $date_intervention;
 			$line->duration     = $duration;
+
+			if (is_array($array_option) && count($array_option)>0) {
+				$line->array_options=$array_option;
+			}
+
 			$line->fk_product   = $fk_product ? $fk_product : 0;
 
 			$result=$line->insert($user);
-			if ($result > 0)
+			
+			if ($result >= 0)
 			{
 				$this->db->commit();
 				return 1;
@@ -1031,7 +1048,7 @@ class Fichinter extends CommonObject
 /**
  *	Classe permettant la gestion des lignes d'intervention
  */
-class FichinterLigne
+class FichinterLigne extends CommonObjectLine
 {
 	var $db;
 	var $error;
@@ -1046,6 +1063,10 @@ class FichinterLigne
 
 	var $fk_product;
 
+	public $element='fichinterdet';
+	public $table_element='fichinterdet';
+	public $fk_element='fk_fichinter';
+	
 	/**
 	 *	Constructor
 	 *
@@ -1075,6 +1096,7 @@ class FichinterLigne
 		{
 			$objp = $this->db->fetch_object($result);
 			$this->rowid          	= $objp->rowid;
+			$this->id 				= $objp->rowid;
 			$this->fk_fichinter   	= $objp->fk_fichinter;
 			$this->datei			= $this->db->jdate($objp->datei);
 			$this->desc           	= $objp->description;
@@ -1143,6 +1165,19 @@ class FichinterLigne
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
+			$this->rowid=$this->db->last_insert_id(MAIN_DB_PREFIX.'fichinterdet');	
+				
+			if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
+            {
+            	$this->id=$this->rowid;
+            	$result=$this->insertExtraFields();
+            	if ($result < 0)
+            	{
+            		$error++;
+            	}
+            }	
+				
+			
 			$result=$this->update_total();
 			if ($result > 0)
 			{
@@ -1206,6 +1241,17 @@ class FichinterLigne
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
+			
+			if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
+        	{
+        		$this->id=$this->rowid;
+        		$result=$this->insertExtraFields();
+        		if ($result < 0)
+        		{
+        			$error++;
+        		}
+        	}
+			
 			$result=$this->update_total();
 			if ($result > 0)
 			{
