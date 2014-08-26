@@ -25,13 +25,16 @@
  *	\ingroup    ficheinter
  */
 
-require '../main.inc.php';
-require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
-require_once DOL_DOCUMENT_ROOT.'/fichinter/class/fichinter.class.php';
-require_once DOL_DOCUMENT_ROOT.'/core/modules/fichinter/modules_fichinter.php';
-require_once DOL_DOCUMENT_ROOT.'/core/lib/fichinter.lib.php';
-require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
-require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcontract.class.php';
+require_once '../main.inc.php';
+dol_include_once('/core/class/html.formfile.class.php');
+dol_include_once('/fichinter/class/fichinter.class.php');
+dol_include_once('/core/modules/fichinter/modules_fichinter.php');
+dol_include_once('/core/lib/fichinter.lib.php');
+dol_include_once('/core/lib/date.lib.php');
+dol_include_once('/core/class/html.formcontract.class.php');
+dol_include_once('product/class/product.class.php');
+
+//print_r($_REQUEST);exit;
 
 if (! empty($conf->projet->enabled))
 {
@@ -88,7 +91,7 @@ if ($id > 0 || ! empty($ref))
 	if ($ret < 0) dol_print_error('',$object->error);
 }
 
-
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
 
 /*
  * Actions
@@ -415,9 +418,10 @@ else if ($action == 'setnote_private' && $user->rights->ficheinter->creer)
 // Add line
 else if ($action == "addline" && $user->rights->ficheinter->creer)
 {
-	if (!GETPOST('np_desc'))
+	if (!GETPOST('np_desc') && !GETPOST('id_prod_service'))
 	{
-		$mesg='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Description")).'</div>';
+		//$mesg='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Description")).'</div>';
+		$mesg='<div class="error">'.$langs->trans("Au moins l'un des champs '".$langs->transnoentitiesnoconv("Description")."' ou '".$langs->transnoentitiesnoconv("Produit/Service")."' doit être rempli").'</div>';
 		$error++;
 	}
 	if (!GETPOST('durationhour','int') && !GETPOST('durationmin','int'))
@@ -437,13 +441,17 @@ else if ($action == "addline" && $user->rights->ficheinter->creer)
 		$desc=GETPOST('np_desc');
 		$date_intervention = dol_mktime(GETPOST('dihour','int'), GETPOST('dimin','int'), 0, GETPOST('dimonth','int'), GETPOST('diday','int'), GETPOST('diyear','int'));
 		$duration = convertTime2Seconds(GETPOST('durationhour','int'), GETPOST('durationmin','int'));
+		$fk_prod=GETPOST('id_prod_service');
+		$qty = $_REQUEST['nb_prod_to_add'];
 
         $result=$object->addline(
 			$user,
             $id,
             $desc,
             $date_intervention,
-            $duration
+            $duration,
+            $fk_prod,
+            $qty
         );
 
 		// Define output language
@@ -510,10 +518,14 @@ else if ($action == 'updateline' && $user->rights->ficheinter->creer && GETPOST(
 	$desc		= GETPOST('np_desc');
 	$date_inter	= dol_mktime(GETPOST('dihour','int'), GETPOST('dimin','int'), 0, GETPOST('dimonth','int'), GETPOST('diday','int'), GETPOST('diyear','int'));
 	$duration	= convertTime2Seconds(GETPOST('durationhour','int'),GETPOST('durationmin','int'));
+	$qty = GETPOST('nb_prod_to_add');
+	$fk_product = GETPOST('id_prod_service');
 
     $objectline->datei		= $date_inter;
     $objectline->desc		= $desc;
     $objectline->duration	= $duration;
+	$objectline->fk_product	= $fk_product;
+	$objectline->qty		= $qty;
 	$result = $objectline->update($user);
     if ($result < 0)
     {
@@ -736,7 +748,7 @@ if ($action == 'send' && ! GETPOST('cancel','alpha') && (empty($conf->global->MA
 				$interface=new Interfaces($db);
 				$result=$interface->run_triggers('FICHINTER_SENTBYMAIL',$object,$user,$langs,$conf);
 				if ($result < 0) {
-					$error++; $object->errors=$interface->errors;
+					$error++; $this->errors=$interface->errors;
 				}
 				// Fin appel triggers
 
@@ -871,11 +883,37 @@ llxHeader('',$langs->trans("Fichinter"));
 
 if ($action == 'create')
 {
+	
+    $object->socid			= $_REQUEST['socid'];
+    //$object->duree			= GETPOST('duree','int');
+    //$object->fk_project		= GETPOST('projectid','int');
+    //$object->fk_contrat		= GETPOST('contratid','int');
+    //$object->author			= $user->id;
+    //$object->description	= GETPOST('description');
+    //$object->ref			= $ref;
+    //$object->modelpdf		= GETPOST('model','alpha');
+    //$object->note_private	= GETPOST('note_private');
+    //$object->note_public	= GETPOST('note_public');
+	
+	$id = $object->create($user);
+	
+	if($id > 0) {
+		//echo dol_buildpath("/fichinter").'?id='.$id;
+		?>
+		
+			<script language="javascript" type="text/javascript">
+				document.location.href='<?php echo dol_buildpath("/fichinter/fiche.php".'?id='.$id, 1) ?>';
+			</script>
+		
+		<?php
+		
+	}
+	
 	/*
 	 * Mode creation
 	 * Creation d'une nouvelle fiche d'intervention
 	 */
-
+/*
 	$soc=new Societe($db);
 
 	print_fiche_titre($langs->trans("AddIntervention"));
@@ -986,7 +1024,7 @@ if ($action == 'create')
             	$numprojet=select_projects(-1,$_POST["projectid"],'projectid');
             else
             	$numprojet=select_projects($societe->id,$_POST["projectid"],'projectid');
-            	*/
+            	
             $numprojet=$formproject->select_projects($soc->id,GETPOST('projectid','int'),'projectid');
             if ($numprojet==0)
             {
@@ -1083,7 +1121,7 @@ if ($action == 'create')
 
 		print '</form>';
 	}
-
+*/
 }
 else if ($id > 0 || ! empty($ref))
 {
@@ -1100,7 +1138,14 @@ else if ($id > 0 || ! empty($ref))
 	dol_htmloutput_mesg($mesg);
 
 	$head = fichinter_prepare_head($object);
+	
+	//print_fiche_titre("Fiche intervention");
+	
+	print "<br />";
+	
 
+	
+	//dol_fiche_head($head, 'card', "", 0, 'intervention');
 	dol_fiche_head($head, 'card', $langs->trans("InterventionCard"), 0, 'intervention');
 
 	// Confirmation de la suppression de la fiche d'intervention
@@ -1257,9 +1302,6 @@ else if ($id > 0 || ! empty($ref))
 	// Statut
 	print '<tr><td>'.$langs->trans("Status").'</td><td>'.$object->getLibStatut(4).'</td></tr>';
 
-    // Other attributes (TODO Move this into an include)
-    $parameters=array('colspan' => ' colspan="3"');
-    $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
 	if (empty($reshook) && ! empty($extrafields->attribute_label))
 	{
 		foreach($extrafields->attribute_label as $key=>$label)
@@ -1306,6 +1348,10 @@ else if ($id > 0 || ! empty($ref))
 		}
 	}
 
+    // Other attributes (TODO Move this into an include)
+    $parameters=array('colspan' => ' colspan="3"');
+    $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
+
 	print "</table><br>";
 
 	if (! empty($conf->global->MAIN_DISABLE_CONTACTS_TAB))
@@ -1340,9 +1386,13 @@ else if ($id > 0 || ! empty($ref))
 	/*
 	 * Lignes d'intervention
 	 */
-	$sql = 'SELECT ft.rowid, ft.description, ft.fk_fichinter, ft.duree, ft.rang,';
+	 
+	print_titre("Ajout d'une intervention, d'un Produit/Service");
+	
+	$sql = 'SELECT ft.rowid, p.ref, ft.fk_product, ft.qty, ft.description, ft.fk_fichinter, ft.duree, ft.rang,';
 	$sql.= ' ft.date as date_intervention';
 	$sql.= ' FROM '.MAIN_DB_PREFIX.'fichinterdet as ft';
+	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product p on p.rowid = ft.fk_product";
 	$sql.= ' WHERE ft.fk_fichinter = '.$object->id;
 	$sql.= ' ORDER BY ft.rang ASC, ft.rowid';
 
@@ -1358,6 +1408,8 @@ else if ($id > 0 || ! empty($ref))
 
 			print '<tr class="liste_titre">';
 			print '<td>'.$langs->trans('Description').'</td>';
+			print '<td>'.$langs->trans('Qty').'</td>';
+			//print '<td>'.$langs->trans('Type').'</td>';
 			print '<td align="center">'.$langs->trans('Date').'</td>';
 			print '<td align="right">'.$langs->trans('Duration').'</td>';
 			print '<td width="48" colspan="3">&nbsp;</td>';
@@ -1375,13 +1427,36 @@ else if ($id > 0 || ! empty($ref))
 				print '<tr '.$bc[$var].'>';
 				print '<td>';
 				print '<a name="'.$objp->rowid.'"></a>'; // ancre pour retourner sur la ligne
-				print dol_htmlentitiesbr($objp->description);
+				if($objp->fk_product != 0) {
+					
+					$prod = new Product($db);
+					$prod->fetch($objp->fk_product);
+					
+					if($prod->type == 0) print img_picto('img_prod', 'object_product.png');
+					else print img_picto('img_serv', 'object_service.png');
+					
+					print '<a href="'.dol_buildpath("product/fiche.php?id=".$objp->fk_product, 2).'">'.$objp->ref.'</a>';
+					
+					if($objp->description) print " - ".$objp->description;
+					
+				} else {
+					print dol_htmlentitiesbr($objp->description);
+				}
 
+				/*print "<td>";
+				empty($objp->fk_product) ? print "Ligne libre" : print "Produit/Service";
+				print "</td>";*/
+				print '<td>'.$objp->qty.'</td>'; // TODO Gérer les quantités dans les méthodes CRUD
+				
 				// Date
 				print '<td align="center" width="150">'.dol_print_date($db->jdate($objp->date_intervention),'dayhour').'</td>';
+				/*if($objp->fk_product == 0) print '<td align="center" width="150">'.dol_print_date($db->jdate($objp->date_intervention),'dayhour').'</td>';
+				else print '<td></td>';*/
 
 				// Duration
 				print '<td align="right" width="150">'.convertSecondToTime($objp->duree).'</td>';
+				/*if($objp->fk_product == 0) print '<td align="right" width="150">'.convertSecondToTime($objp->duree).'</td>';
+				else print '<td></td>';*/
 
 				print "</td>\n";
 
@@ -1428,15 +1503,25 @@ else if ($id > 0 || ! empty($ref))
 			if ($object->statut == 0 && $action == 'editline' && $user->rights->ficheinter->creer && GETPOST('line_id','int') == $objp->rowid)
 			{
 				print '<tr '.$bc[$var].'>';
+				
+				print '<td>';
+				$form = new Form($db);
+				$form->select_produits($objp->fk_product,'id_prod_service','',$conf->product->limit_size);
+				print '</td>';
+				
 				print '<td>';
 				print '<a name="'.$objp->rowid.'"></a>'; // ancre pour retourner sur la ligne
-
+				
 				// Editeur wysiwyg
 				require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 				$doleditor=new DolEditor('np_desc',$objp->description,'',164,'dolibarr_details','',false,true,$conf->global->FCKEDITOR_ENABLE_DETAILS,ROWS_2,70);
 				$doleditor->Create();
 				print '</td>';
-
+				
+				print '<td>';
+				print '<input type=text size="2" name="nb_prod_to_add" value="'.$objp->qty.'"/>';
+				print '</td>';
+				
 				// Date d'intervention
 				print '<td align="center" class="nowrap">';
 				$form->select_date($db->jdate($objp->date_intervention),'di',1,1,0,"date_intervention");
@@ -1466,6 +1551,12 @@ else if ($id > 0 || ! empty($ref))
 
 			print '<tr class="liste_titre">';
 			print '<td>';
+			print 'Produit/Service';
+			print '</td>';
+			print '<td>';
+			print $langs->trans('Qty');
+			print '</td>';
+			print '<td>';
 			print '<a name="add"></a>'; // ancre
 			print $langs->trans('Description').'</td>';
 			print '<td align="center">'.$langs->trans('Date').'</td>';
@@ -1478,6 +1569,16 @@ else if ($id > 0 || ! empty($ref))
 
 			print '<tr '.$bc[$var].">\n";
 			print '<td>';
+			
+			$form = new Form($db);
+			$form->select_produits('','id_prod_service','',$conf->product->limit_size);
+			
+			print '</td>';
+			print '<td>';
+			print '<input type=text size="2" name="nb_prod_to_add" value="0"/>';
+			print '</td>';
+			print '<td>';
+			
 			// editeur wysiwyg
 			require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 			$doleditor=new DolEditor('np_desc',GETPOST('np_desc','alpha'),'',100,'dolibarr_details','',false,true,$conf->global->FCKEDITOR_ENABLE_DETAILS,ROWS_2,70);
@@ -1556,7 +1657,7 @@ else if ($id > 0 || ! empty($ref))
 				$langs->load("bills");
 				if ($object->statut < 2)
 				{
-					if ($user->rights->facture->creer) print '<div class="inline-block divButAction"><a class="butAction" href="'.DOL_URL_ROOT.'/compta/facture.php?action=create&amp;origin='.$object->element.'&amp;originid='.$object->id.'&amp;socid='.$object->socid.'">'.$langs->trans("CreateBill").'</a></div>';
+					if ($user->rights->facture->creer) '';//print '<div class="inline-block divButAction"><a class="butAction" href="'.DOL_URL_ROOT.'/compta/facture.php?action=create&amp;origin='.$object->element.'&amp;originid='.$object->id.'&amp;socid='.$object->socid.'">'.$langs->trans("CreateBill").'</a></div>';
 					else print '<div class="inline-block divButAction"><a class="butActionRefused" href="#" title="'.$langs->trans("NotEnoughPermissions").'">'.$langs->trans("CreateBill").'</a></div>';
 				}
 

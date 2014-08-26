@@ -235,7 +235,7 @@ class Fichinter extends CommonObject
 		$this->db->begin();
 
 		$sql = "UPDATE ".MAIN_DB_PREFIX."fichinter SET ";
-		$sql.= ", description  = '".$this->db->escape($this->description)."'";
+		$sql.= "description  = '".$this->db->escape($this->description)."'";
 		$sql.= ", duree = ".$this->duree;
 		$sql.= ", fk_projet = ".$this->fk_project;
 		$sql.= ", note_private = ".($this->note_private?"'".$this->db->escape($this->note_private)."'":"null");
@@ -909,7 +909,7 @@ class Fichinter extends CommonObject
 	 *	@param      int		$duration            	Intervention duration
 	 *	@return    	int             				>0 if ok, <0 if ko
 	 */
-	function addline($user,$fichinterid, $desc, $date_intervention, $duration)
+	function addline($user,$fichinterid, $desc, $date_intervention, $duration, $fk_product=0)
 	{
 		dol_syslog("Fichinter::Addline $fichinterid, $desc, $date_intervention, $duration");
 
@@ -924,6 +924,7 @@ class Fichinter extends CommonObject
 			$line->desc         = $desc;
 			$line->datei        = $date_intervention;
 			$line->duration     = $duration;
+			$line->fk_product   = $fk_product ? $fk_product : 0;
 
 			$result=$line->insert($user);
 			if ($result > 0)
@@ -987,7 +988,7 @@ class Fichinter extends CommonObject
 	 */
 	function fetch_lines()
 	{
-		$sql = 'SELECT rowid, description, duree, date, rang';
+		$sql = 'SELECT rowid, fk_product, description, duree, date, rang';
 		$sql.= ' FROM '.MAIN_DB_PREFIX.'fichinterdet';
 		$sql.= ' WHERE fk_fichinter = '.$this->id;
 
@@ -1009,6 +1010,7 @@ class Fichinter extends CommonObject
 				$line->date	= $this->db->jdate($objp->date);
 				$line->rang	= $objp->rang;
 				$line->product_type = 1;
+				$line->fk_product = $objp->fk_product;
 
 				$this->lines[$i] = $line;
 
@@ -1042,6 +1044,7 @@ class FichinterLigne
 	var $duration;        // Duree de l'intervention
 	var $rang = 0;
 
+	var $fk_product;
 
 	/**
 	 *	Constructor
@@ -1061,7 +1064,7 @@ class FichinterLigne
 	 */
 	function fetch($rowid)
 	{
-		$sql = 'SELECT ft.rowid, ft.fk_fichinter, ft.description, ft.duree, ft.rang,';
+		$sql = 'SELECT ft.rowid, ft.fk_product, ft.fk_fichinter, ft.description, ft.duree, ft.rang,';
 		$sql.= ' ft.date as datei';
 		$sql.= ' FROM '.MAIN_DB_PREFIX.'fichinterdet as ft';
 		$sql.= ' WHERE ft.rowid = '.$rowid;
@@ -1077,6 +1080,7 @@ class FichinterLigne
 			$this->desc           	= $objp->description;
 			$this->duration       	= $objp->duree;
 			$this->rang           	= $objp->rang;
+			$this->fk_product      	= $objp->fk_product;
 
 			$this->db->free($result);
 			return 1;
@@ -1126,12 +1130,13 @@ class FichinterLigne
 
 		// Insertion dans base de la ligne
 		$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'fichinterdet';
-		$sql.= ' (fk_fichinter, description, date, duree, rang)';
+		$sql.= ' (fk_fichinter, description, date, duree, rang, fk_product)';
 		$sql.= " VALUES (".$this->fk_fichinter.",";
 		$sql.= " '".$this->db->escape($this->desc)."',";
 		$sql.= " '".$this->db->idate($this->datei)."',";
 		$sql.= " ".$this->duration.",";
-		$sql.= ' '.$rangToUse;
+		$sql.= ' '.$rangToUse.",";
+		$sql.= ' '.$this->fk_product;
 		$sql.= ')';
 
 		dol_syslog("FichinterLigne::insert sql=".$sql);
