@@ -1074,6 +1074,7 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
                     	//print '|'.($color).'='.($idusertouse?$idusertouse:0).'='.$colorindex.'<br>';
 						// Define color
                     	$color=sprintf("%02x%02x%02x",$theme_datacolor[$colorindex][0],$theme_datacolor[$colorindex][1],$theme_datacolor[$colorindex][2]);
+						if($color=='000000')$color='cccccc';
                     }
                     $cssclass=$cssclass.' '.$cssclass.'_day_'.$ymd;
 
