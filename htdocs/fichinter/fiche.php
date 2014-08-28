@@ -1664,6 +1664,14 @@ else if ($id > 0 || ! empty($ref))
 			print '<td align="center" valign="middle" colspan="4"><input type="submit" class="button" value="'.$langs->trans('Add').'" name="addline"></td>';
 			print '</tr>';
 
+			$lineadd = new FichinterLigne($db);
+				
+			$extrafieldsline = new ExtraFields($db);
+			$extralabelslines=$extrafieldsline->fetch_name_optionals_label($lineadd->table_element);
+	
+			print $lineadd->showOptionals($extrafieldsline, 'edit', array('style'=>$bc[$var], 'colspan'=>5));
+	
+
 			if (! $num) print '</table>';
 		}
 
