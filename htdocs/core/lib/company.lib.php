@@ -1333,10 +1333,24 @@ function show_subsidiaries($conf,$langs,$db,$object)
 
 	$i=-1;
 
-	$sql = "SELECT s.rowid, s.nom as name, s.address, s.zip, s.town, s.code_client, s.canvas";
+	$sql = "SELECT DISTINCT s.rowid, s.nom as name, s.address, s.zip, s.town, s.code_client, s.canvas, sp.lastname, sp.phone_mobile, sp.phone";
 	$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
+	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople sp on s.rowid = sp.fk_soc";
+	$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."fichinter f on s.rowid = f.fk_soc";
 	$sql.= " WHERE s.parent = ".$object->id;
 	$sql.= " AND s.entity IN (".getEntity('societe', 1).")";
+	if($_REQUEST['triParIntervention'] == "inter_effectuee")
+		$sql.= " AND f.rowid IS NOT NULL";
+	elseif($_REQUEST['triParIntervention'] == "inter_non_effectuee")
+		$sql.= " AND f.rowid IS NULL";
+		
+	if(isset($_REQUEST['search_lot']) && $_REQUEST['search_lot'] != "") $sql.= " AND s.nom LIKE '%".$_REQUEST['search_lot']."%'";
+	if(isset($_REQUEST['search_locataire']) && $_REQUEST['search_locataire'] != "") $sql.= " AND sp.lastname LIKE '%".$_REQUEST['search_locataire']."%'";
+	if(isset($_REQUEST['search_phone']) && $_REQUEST['search_phone'] != "") $sql.= " AND (sp.phone LIKE '%".$_REQUEST['search_phone']."%' OR sp.phone_mobile LIKE '%".$_REQUEST['search_phone']."%')";
+	if(isset($_REQUEST['search_address']) && $_REQUEST['search_address'] != "") $sql.= " AND s.address LIKE '%".$_REQUEST['search_address']."%'";
+	if(isset($_REQUEST['search_cp']) && $_REQUEST['search_cp'] != "") $sql.= " AND s.zip LIKE '%".$_REQUEST['search_cp']."%'";
+	if(isset($_REQUEST['search_ville']) && $_REQUEST['search_ville'] != "") $sql.= " AND s.town LIKE '%".$_REQUEST['search_ville']."%'";
+	
 	$sql.= " ORDER BY s.nom";
 
 	$result = $db->query($sql);
@@ -1345,15 +1359,58 @@ function show_subsidiaries($conf,$langs,$db,$object)
 	if ($num)
 	{
 		$socstatic = new Societe($db);
-
+		
 		print_titre($langs->trans("Subsidiaries"));
 		print "\n".'<table class="noborder" width="100%">'."\n";
 
+		print '<form name="formFilter" method="POST" action="">';
+
 		print '<tr class="liste_titre"><td>'.$langs->trans("Company").'</td>';
+		print '<td>'.$langs->trans("Contact").'</td>';
+		print '<td>'.$langs->trans("Phone").'</td>';
 		print '<td>'.$langs->trans("Address").'</td><td>'.$langs->trans("Zip").'</td>';
-		print '<td>'.$langs->trans("Town").'</td><td>'.$langs->trans("CustomerCode").'</td>';
+		print '<td>'.$langs->trans("Town").'</td>';//'<td>'.$langs->trans("CustomerCode").'</td>';
+		print '<td>'.$langs->trans("Intervention(s)").'</td>';
+		
+		print '<td>'.$langs->trans("Commentaire RDV").'</td>';
 		print "<td>&nbsp;</td>";
+		print '<td></td>';
 		print "</tr>";
+		
+		print '<tr class="liste_titre">';
+		print '<td>';
+		print '<input type="text" name="search_lot" />';
+		print '</td>';
+		print '<td>';
+		print '<input type="text" name="search_locataire" />';
+		print '</td>';
+		print '<td>';
+		print '<input type="text" name="search_phone" />';
+		print '</td>';
+		print '<td>';
+		print '<input type="text" name="search_address" />';
+		print '</td>';
+		print '<td>';
+		print '<input type="text" name="search_cp" />';
+		print '</td>';
+		print '<td>';
+		print '<input type="text" name="search_ville" />';
+		print '</td>';
+		print '<td>';
+		print '<select name="triParIntervention">';
+		print '<option value="tous">(Aucun filtre)</option>';
+		print '<option '; $_REQUEST['triParIntervention'] == "inter_effectuee" ? print 'selected="selected"' : print ""; print ' value="inter_effectuee">Programmée(s)</option>';
+		print '<option '; $_REQUEST['triParIntervention'] == "inter_non_effectuee" ? print 'selected="selected"' : print ""; print ' value="inter_non_effectuee">Non effectuée(s)</option>';
+		print '</select>';
+		print '</td>';
+		print '<td>';
+		print '<td></td>';
+		print '</td>';
+		//print '<input type="image" name="btSubFilter src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" />';
+		print '<td class="liste_titre" align="right"><input class="liste_titre" type="image" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+		print '</tr>';
+
+		print '</form>';
 
 		$i=0;
 		$var=true;
@@ -1362,6 +1419,11 @@ function show_subsidiaries($conf,$langs,$db,$object)
 		{
 			$obj = $db->fetch_object($result);
 			$var = !$var;
+			
+			// On fetch l'objet société pour récupérer l'extrafields "commentaire"
+			$soc = new Societe($db);
+			$soc->fetch($obj->rowid);
+			$soc->fetch_optionals($soc->id);
 
 			print "<tr ".$bc[$var].">";
 
@@ -1372,10 +1434,17 @@ function show_subsidiaries($conf,$langs,$db,$object)
 			print $socstatic->getNomUrl(1);
 			print '</td>';
 
+			print '<td>'.$obj->lastname.'</td>';
+			print '<td>'.$obj->phone_mobile;
+			if(!empty($obj->phone)) print " / ".$obj->phone;
+			print '</td>';
 			print '<td>'.$obj->address.'</td>';
 			print '<td>'.$obj->zip.'</td>';
 			print '<td>'.$obj->town.'</td>';
-			print '<td>'.$obj->code_client.'</td>';
+			//print '<td>'.$obj->code_client.'</td>';
+			print '<td></td>';
+			print '<td><strong>'.$soc->array_options['options_commentaire'].'</strong></td>';
+			print '<td></td>';
 
 			print '<td align="center">';
 			print '<a href="'.DOL_URL_ROOT.'/societe/soc.php?socid='.$obj->rowid.'&amp;action=edit">';

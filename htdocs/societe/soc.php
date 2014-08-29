@@ -81,10 +81,41 @@ $hookmanager->initHooks(array('thirdpartycard'));
 /*
  * Actions
  */
-
+ 
 $parameters=array('id'=>$socid, 'objcanvas'=>$objcanvas);
 $reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 $error=$hookmanager->error; $errors=array_merge($errors, (array) $hookmanager->errors);
+
+ if ($action == 'update_extras')
+{
+	$object->fetch($_REQUEST['socid']);
+	// Fill array 'array_options' with data from update form
+	$extralabels=$extrafields->fetch_name_optionals_label($object->table_element);
+	$ret = $extrafields->setOptionalsFromPost($extralabels,$object,GETPOST('attribute'));
+	if ($ret < 0) $error++;
+
+	if (! $error)
+	{
+		// Actions on extra fields (by external module or standard code)
+		// FIXME le hook fait double emploi avec le trigger !!
+		$hookmanager->initHooks(array('thirdpartycard'));
+		$parameters=array('id'=>$object->id);
+		$reshook=$hookmanager->executeHooks('insertExtraFields',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+		if (empty($reshook))
+		{
+			$result=$object->insertExtraFields();
+			if ($result < 0)
+			{
+				$error++;
+			}
+		}
+		else if ($reshook < 0) $error++;
+	}
+
+	if ($error) $action = 'edit_extras';
+}
+
+
 
 if (empty($reshook))
 {
@@ -414,12 +445,12 @@ if (empty($reshook))
 
                 	$sql = "UPDATE ".MAIN_DB_PREFIX."adherent";
                 	$sql.= " SET fk_soc = NULL WHERE fk_soc = " . $id;
-                	dol_syslog(get_class($object)."::delete sql=".$sql, LOG_DEBUG);
-                	if (! $object->db->query($sql))
+                	dol_syslog(get_class($this)."::delete sql=".$sql, LOG_DEBUG);
+                	if (! $this->db->query($sql))
                 	{
                 		$error++;
-                		$object->error .= $object->db->lasterror();
-                		dol_syslog(get_class($object)."::delete erreur -1 ".$object->error, LOG_ERR);
+                		$this->error .= $this->db->lasterror();
+                		dol_syslog(get_class($this)."::delete erreur -1 ".$this->error, LOG_ERR);
                 	}
                 }
 
@@ -1740,10 +1771,6 @@ else
         $parameters=array('socid'=>$socid, 'colspan' => ' colspan="3"', 'colspanvalue' => '3');
         $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
         print $hookmanager->resPrint;
-        if (empty($reshook) && ! empty($extrafields->attribute_label))
-        {
-        	print $object->showOptionals($extrafields);
-        }
 
         // Ban
         if (empty($conf->global->SOCIETE_DISABLE_BANKACCOUNT))
@@ -1786,6 +1813,54 @@ else
 
         // Sales representative
         include DOL_DOCUMENT_ROOT.'/societe/tpl/linesalesrepresentative.tpl.php';
+
+	if (empty($reshook) && ! empty($extrafields->attribute_label))
+	{
+		foreach($extrafields->attribute_label as $key=>$label)
+		{
+			if ($action == 'edit_extras') {
+				$value=(isset($_POST["options_".$key])?$_POST["options_".$key]:$object->array_options["options_".$key]);
+			} else {
+				$value=$object->array_options["options_".$key];
+			}
+			if ($extrafields->attribute_type[$key] == 'separate')
+			{
+				print $extrafields->showSeparator($key);
+			}
+			else
+			{
+				print '<tr><td';
+				if (! empty($extrafields->attribute_required[$key])) print ' class="fieldrequired"';
+				print '>'.$label.'</td><td colspan="3">';
+				// Convert date into timestamp format
+				if (in_array($extrafields->attribute_type[$key],array('date','datetime')))
+				{
+					$value = isset($_POST["options_".$key])?dol_mktime($_POST["options_".$key."hour"], $_POST["options_".$key."min"], 0, $_POST["options_".$key."month"], $_POST["options_".$key."day"], $_POST["options_".$key."year"]):$db->jdate($object->array_options['options_'.$key]);
+				}
+				if ($action == 'edit_extras' && $user->rights->ficheinter->creer && GETPOST('attribute') == $key)
+				{
+					print '<form enctype="multipart/form-data" action="'.$_SERVER["PHP_SELF"].'" method="post" name="formfichinter">';
+					print '<input type="hidden" name="action" value="update_extras">';
+					print '<input type="hidden" name="attribute" value="'.$key.'">';
+					print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+					print '<input type="hidden" name="socid" value="'.$object->id.'">';
+
+					print $extrafields->showInputField($key,$value);
+
+					print '<input type="submit" class="button" value="'.$langs->trans('Modify').'">';
+					print '</form>';
+				}
+				else
+				{
+					if(stripos("commentaire", $key) !== false ) print '<strong>';
+					print $extrafields->showOutputField($key,$value);
+					if(stripos("commentaire", $key) !== false ) print '</strong>';
+					if ($object->statut == 0 && $user->rights->ficheinter->creer) print '<a href="'.$_SERVER['PHP_SELF'].'?socid='.$object->id.'&action=edit_extras&attribute='.$key.'">'.img_picto('','edit').' '.$langs->trans('Modify').'</a>';
+				}
+				print '</td></tr>'."\n";
+			}
+		}
+	}
 
         // Module Adherent
         if (! empty($conf->adherent->enabled))
@@ -1959,9 +2034,30 @@ else
 
 	            print '<br>';
 	        }
-
+			
+			// Que pour les sociétés qui ne sont pas des lots :
+			/*if(empty($object->parent)) {
+			
+				print '<div class="tabsAction">';
+				
+				print '<form name="TriParInterVention" method="POST" action="">';
+				
+				print '<input class="butAction" type="SUBMIT" name="subTriInter" value="Filtrer par" />';
+				
+				print '<select name="triParIntervention">';
+				print '<option value="tous">(Aucun filtre)</option>';
+				print '<option '; $_REQUEST['triParIntervention'] == "inter_effectuee" ? print 'selected="selected"' : print ""; print ' value="inter_effectuee">Intervention(s) effectuée(s)</option>';
+				print '<option '; $_REQUEST['triParIntervention'] == "inter_non_effectuee" ? print 'selected="selected"' : print ""; print ' value="inter_non_effectuee">Intervention(s) non effectuée(s)</option>';
+				print '</select>';
+				
+				print '</form><br />';
+			
+				print "</div>";
+				
+			}*/
+		
 	        print '<div class="fichecenter"><br></div>';
-
+			
 	        // Subsidiaries list
 	        $result=show_subsidiaries($conf,$langs,$db,$object);
 
