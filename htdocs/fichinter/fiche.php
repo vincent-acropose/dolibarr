@@ -34,6 +34,9 @@ dol_include_once('/core/lib/date.lib.php');
 dol_include_once('/core/class/html.formcontract.class.php');
 dol_include_once('product/class/product.class.php');
 
+/*ini_set('display_errors', 1);
+error_reporting(E_ALL);*/
+
 //print_r($_REQUEST);exit;
 
 if (! empty($conf->projet->enabled))
@@ -98,7 +101,7 @@ $reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);   
  * Actions
  */
 
-include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not includ_once
+dol_include_once('/core/actions_setnotes.inc.php');	// Must be include, not includ_once
 
 if ($action == 'confirm_validate' && $confirm == 'yes' && $user->rights->ficheinter->creer)
 {
@@ -924,37 +927,11 @@ llxHeader('',$langs->trans("Fichinter"));
 
 if ($action == 'create')
 {
-	
-    $object->socid			= $_REQUEST['socid'];
-    //$object->duree			= GETPOST('duree','int');
-    //$object->fk_project		= GETPOST('projectid','int');
-    //$object->fk_contrat		= GETPOST('contratid','int');
-    //$object->author			= $user->id;
-    //$object->description	= GETPOST('description');
-    //$object->ref			= $ref;
-    //$object->modelpdf		= GETPOST('model','alpha');
-    //$object->note_private	= GETPOST('note_private');
-    //$object->note_public	= GETPOST('note_public');
-	
-	$id = $object->create($user);
-	
-	if($id > 0) {
-		//echo dol_buildpath("/fichinter").'?id='.$id;
-		?>
-		
-			<script language="javascript" type="text/javascript">
-				document.location.href='<?php echo dol_buildpath("/fichinter/fiche.php".'?id='.$id, 1) ?>';
-			</script>
-		
-		<?php
-		
-	}
-	
 	/*
 	 * Mode creation
 	 * Creation d'une nouvelle fiche d'intervention
 	 */
-/*
+
 	$soc=new Societe($db);
 
 	print_fiche_titre($langs->trans("AddIntervention"));
@@ -1065,11 +1042,11 @@ if ($action == 'create')
             	$numprojet=select_projects(-1,$_POST["projectid"],'projectid');
             else
             	$numprojet=select_projects($societe->id,$_POST["projectid"],'projectid');
-            	
+            	*/
             $numprojet=$formproject->select_projects($soc->id,GETPOST('projectid','int'),'projectid');
             if ($numprojet==0)
             {
-                print ' &nbsp; <a href="'.DOL_DOCUMENT_ROOT.'/projet/fiche.php?socid='.$soc->id.'&action=create">'.$langs->trans("AddProject").'</a>';
+                print ' &nbsp; <a href="'.DOL_URL_ROOT.'/projet/fiche.php?socid='.$soc->id.'&action=create">'.$langs->trans("AddProject").'</a>';
             }
             print '</td></tr>';
         }
@@ -1162,7 +1139,7 @@ if ($action == 'create')
 
 		print '</form>';
 	}
-*/
+
 }
 else if ($id > 0 || ! empty($ref))
 {
