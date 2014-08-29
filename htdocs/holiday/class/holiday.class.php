@@ -24,7 +24,7 @@
  *    \brief      Class file of the module paid holiday.
  */
 require_once DOL_DOCUMENT_ROOT .'/core/class/commonobject.class.php';
-
+require_once DOL_DOCUMENT_ROOT .'/core/class/extrafields.class.php';
 
 /**
  *	Class of the module paid holiday. Developed by Teclib ( http://www.teclib.com/ )
@@ -1067,6 +1067,8 @@ class Holiday extends CommonObject
                     while($i < $num) {
 
                         $obj = $this->db->fetch_object($resql);
+						
+						
 
                         if($i == 0) {
                             $liste.= $obj->rowid;
@@ -1088,6 +1090,7 @@ class Holiday extends CommonObject
                 }
 
             } else { // Si utilisateur du module Congés Payés
+            
                 $sql = "SELECT u.fk_user";
                 $sql.= " FROM ".MAIN_DB_PREFIX."holiday_users as u";
 
@@ -1131,13 +1134,15 @@ class Holiday extends CommonObject
             // Si c'est pour les utilisateurs de Dolibarr
             if($type) {
 
-                $sql = "SELECT u.rowid, u.lastname, u.firstname";
-                $sql.= " FROM ".MAIN_DB_PREFIX."user as u";
-                $sql.= " WHERE statut > '0'";
+                $sql = "SELECT u.rowid, u.lastname, u.firstname
+                FROM ".MAIN_DB_PREFIX."user as u
+               	LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as e ON (u.rowid = e.fk_object)
+                WHERE u.statut > '0'
+                AND e.display_in_conges = 1";
 
                 dol_syslog(get_class($this)."::fetchUsers sql=".$sql, LOG_DEBUG);
                 $resql=$this->db->query($sql);
-
+			
                 // Si pas d'erreur SQL
                 if ($resql) {
 
@@ -1147,15 +1152,15 @@ class Holiday extends CommonObject
 
                     // Boucles du listage des utilisateurs
                     while($i < $num) {
-
                         $obj = $this->db->fetch_object($resql);
 
-                        $tab_result[$i]['rowid'] = $obj->rowid;
+						$tab_result[$i]['rowid'] = $obj->rowid;
                         $tab_result[$i]['name'] = $obj->lastname;
                         $tab_result[$i]['firstname'] = $obj->firstname;
-
+						
                         $i++;
                     }
+                    
                     // Retoune le tableau des utilisateurs
                     return $tab_result;
                 }
@@ -1189,7 +1194,7 @@ class Holiday extends CommonObject
                     while($i < $num) {
 
                         $obj = $this->db->fetch_object($resql);
-
+						
                         $tab_result[$i]['rowid'] = $obj->fk_user;
                         $tab_result[$i]['name'] = $obj->lastname;
                         $tab_result[$i]['firstname'] = $obj->firstname;
