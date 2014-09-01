@@ -931,6 +931,31 @@ if ($action == 'create')
 	 * Mode creation
 	 * Creation d'une nouvelle fiche d'intervention
 	 */
+	 
+	
+	$socid_r = GETPOST('socid');
+	
+	if($socid_r>0) {
+		
+		$object->socid = $socid_r;
+		$object->array_options['options_statutmission'] = 10;
+
+		$id = $object->create($user);
+		
+		if($id > 0) {
+			//echo dol_buildpath("/fichinter").'?id='.$id;
+			?>
+			
+				<script language="javascript" type="text/javascript">
+					document.location.href='<?php echo dol_buildpath("/fichinter/fiche.php".'?id='.$id, 1) ?>';
+				</script>
+			
+			<?php
+			
+			exit;
+		}
+		
+	}
 
 	$soc=new Societe($db);
 
