@@ -1156,7 +1156,8 @@ class FichinterLigne extends CommonObject
 		$sql.= " VALUES (".$this->fk_fichinter.",";
 		$sql.= " '".$this->db->escape($this->desc)."',";
 		$sql.= " '".$this->db->idate($this->datei)."',";
-		$sql.= " ".$this->duration.",";
+		$sql.= " ".($this->duration?$this->duration:"0");
+		$sql.= ",";
 		$sql.= ' '.$rangToUse.",";
 		$sql.= ' '.$this->fk_product;
 		$sql.= ')';
