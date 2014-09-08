@@ -45,7 +45,6 @@ if ($user->societe_id > 0) accessforbidden();
 $user_id = $user->id;
 $now=dol_now();
 
-
 /*******************************************************************
  * Actions
 ********************************************************************/
@@ -606,6 +605,17 @@ $listhalfday=array('morning'=>$langs->trans("Morning"),"afternoon"=>$langs->tran
 
 
 llxHeader(array(),$langs->trans('CPTitreMenu'));
+
+?>
+
+<script>
+        $(document).ready(function() {
+                $('#valideur').val(1);
+        })
+</script>
+
+<?php
+
 
 if (empty($id) || $action == 'add' || $action == 'request')
 {
