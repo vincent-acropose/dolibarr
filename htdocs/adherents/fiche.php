@@ -280,6 +280,7 @@ if ($action == 'update' && ! $_POST["cancel"] && $user->rights->adherent->creer)
 		$object->town        = trim($_POST["town"]);
 		$object->state_id    = $_POST["state_id"];
 		$object->country_id  = $_POST["country_id"];
+		$object->state_id  = $_POST["departement_id"];
 
 		$object->phone       = trim($_POST["phone"]);
 		$object->phone_perso = trim($_POST["phone_perso"]);
