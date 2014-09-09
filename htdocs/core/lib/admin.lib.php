@@ -577,9 +577,9 @@ function listOfSessions()
                 if(! @is_dir($fullpath) && is_readable($fullpath))
                 {
                     $sessValues = file_get_contents($fullpath);	// get raw session data
-
+//print  $sessValues;
                     if (preg_match('/dol_login/i',$sessValues) && // limit to dolibarr session
-                    preg_match('/dol_entity\|s:([0-9]+):"('.$conf->entity.')"/i',$sessValues) && // limit to current entity
+              /*      preg_match('/dol_entity\|s:([0-9]+):"('.$conf->entity.')"/i',$sessValues) &&*/ // limit to current entity
                     preg_match('/dol_company\|s:([0-9]+):"('.$conf->global->MAIN_INFO_SOCIETE_NOM.')"/i',$sessValues)) // limit to company name
                     {
                         $tmp=explode('_', $file);
@@ -595,6 +595,8 @@ function listOfSessions()
             }
         }
         @closedir($dh);
+    }else{
+//print "$sessPath impossible à lire";
     }
 
     return $arrayofSessions;
