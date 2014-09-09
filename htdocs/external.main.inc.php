@@ -1433,12 +1433,12 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
 	        $logouttext .='<a href="'.DOL_URL_ROOT.'/user/logout.php"';
 	        //$logouttext .=empty($atarget?(' target="'.$atarget.'"'):'';
 	        $logouttext .='>';
-	        $logouttext .= 'Déconnection';
+	        $logouttext .= 'Déconnexion';
 	        $logouttext .='</a>';
 	    }
 	    else
 	    {
-	        $logouttext .= 'Déconnection';
+	        $logouttext .= 'Déconnexion';
 	    }
 
 	    print '<div class="login_block">'."\n";
