@@ -227,6 +227,7 @@ if ($_GET["socid"])
 		$sql = "SELECT u.rowid, u.lastname, u.firstname, u.login";
 		$sql.= " FROM ".MAIN_DB_PREFIX."user as u";
 		$sql.= " WHERE u.entity IN (0,".$conf->entity.")";
+		$sql.= " AND u.fk_societe IS NULL AND u.fk_socpeople IS NULL";
 		$sql.= " ORDER BY u.lastname ASC ";
 
 		$resql = $db->query($sql);
