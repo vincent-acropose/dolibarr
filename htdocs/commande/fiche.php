@@ -2344,7 +2344,7 @@ else
 				}
 
 				// Edit
-				if ($object->statut == 1 && $user->rights->commande->creer)
+				if ($user->rights->commande->creer)
 				{
 					print '<div class="inline-block divButAction"><a class="butAction" href="fiche.php?id='.$object->id.'&amp;action=modif">'.$langs->trans('Modify').'</a></div>';
 				}
