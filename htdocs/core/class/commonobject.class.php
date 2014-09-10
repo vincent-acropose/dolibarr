@@ -3030,11 +3030,16 @@ abstract class CommonObject
             $this->tpl['label'].= $discount->getNomUrl(0,'discount');
         }
         else if (! empty($line->fk_product))
-        {
-            $productstatic = new Product($this->db);
-            $productstatic->id = $line->fk_product;
-            $productstatic->ref = $line->ref;
-            $productstatic->type = $line->fk_product_type;
+        {$productstatic = new Product($this->db);
+			$productstatic->fetch( $line->fk_product);
+			
+			$productstatic->id = $line->fk_product;
+           
+			$line->ref = $productstatic->ref;
+			$line->product_type = $productstatic->type;
+			
+			$line->label = $productstatic->label;
+			
             $this->tpl['label'].= $productstatic->getNomUrl(1);
             $this->tpl['label'].= ' - '.(! empty($line->label)?$line->label:$line->product_label);
             // Dates

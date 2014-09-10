@@ -1020,7 +1020,7 @@ class Fichinter extends CommonObject
 				$objp = $this->db->fetch_object($resql);
 
 				$line = new FichinterLigne($this->db);
-				$line->id = $objp->rowid;
+				$line->id =$line->rowid = $objp->rowid;
 				$line->desc = $objp->description;
 				//For invoicing we calculing hours
 				$line->qty = round($objp->duree/3600,2);
@@ -1234,7 +1234,7 @@ class FichinterLigne extends CommonObject
 		$sql = "UPDATE ".MAIN_DB_PREFIX."fichinterdet SET";
 		$sql.= " description='".$this->db->escape($this->desc)."'";
 		$sql.= ",date=".$this->db->idate($this->datei);
-		$sql.= ",duree=".$this->duration;
+		$sql.= ",duree=".($this->duration?$this->duration:"0");
 		$sql.= ",rang='".$this->rang."'";
 		$sql.= " WHERE rowid = ".$this->rowid;
 
