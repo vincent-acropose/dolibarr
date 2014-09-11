@@ -611,6 +611,7 @@ llxHeader(array(),$langs->trans('CPTitreMenu'));
 <script>
         $(document).ready(function() {
                 $('#valideur').val(1);
+		$('#valideur option:not(:selected)').remove();
         })
 </script>
 
