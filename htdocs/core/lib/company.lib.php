@@ -1337,12 +1337,15 @@ function show_subsidiaries($conf,$langs,$db,$object)
 	$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople sp on s.rowid = sp.fk_soc";
 	$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."fichinter f on s.rowid = f.fk_soc";
+	$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."fichinter_extrafields fe on f.rowid = fe.fk_object";
 	$sql.= " WHERE s.parent = ".$object->id;
 	$sql.= " AND s.entity IN (".getEntity('societe', 1).")";
 	if($_REQUEST['triParIntervention'] == "inter_effectuee")
-		$sql.= " AND f.rowid IS NOT NULL";
+		//$sql.= " AND f.rowid IS NOT NULL";
+		$sql.= ' AND (fe.statutmission = "10" OR fe.statutmission = "20")';
 	elseif($_REQUEST['triParIntervention'] == "inter_non_effectuee")
-		$sql.= " AND f.rowid IS NULL";
+		//$sql.= " AND f.rowid IS NULL";
+		$sql.= ' AND (fe.statutmission = "30" OR f.rowid IS NULL)';
 		
 	if(isset($_REQUEST['search_lot']) && $_REQUEST['search_lot'] != "") $sql.= " AND s.nom LIKE '%".$_REQUEST['search_lot']."%'";
 	if(isset($_REQUEST['search_locataire']) && $_REQUEST['search_locataire'] != "") $sql.= " AND sp.lastname LIKE '%".$_REQUEST['search_locataire']."%'";
