@@ -33,6 +33,7 @@ require_once DOL_DOCUMENT_ROOT.'/fichinter/class/fichinter.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/modules/fichinter/modules_fichinter.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/fichinter.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/html.formcontract.class.php';
 
 if (! empty($conf->projet->enabled))
 {
@@ -495,6 +496,12 @@ if (empty($reshook))
 			$date_intervention = dol_mktime(GETPOST('dihour','int'), GETPOST('dimin','int'), 0, GETPOST('dimonth','int'), GETPOST('diday','int'), GETPOST('diyear','int'));
 			$duration = convertTime2Seconds(GETPOST('durationhour','int'), GETPOST('durationmin','int'));
 
+// Set into a project
+else if ($action == 'classin' && $user->rights->ficheinter->creer)
+{
+	$result=$object->setProject(GETPOST('projectid','int'));
+	if ($result < 0) dol_print_error($db,$object->error);
+}
 
 			// Extrafields
 			$extrafieldsline = new ExtraFields($db);
@@ -1340,6 +1347,9 @@ else if ($id > 0 || ! empty($ref))
 		print '</td><td colspan="3">';
 		if ($action == 'contrat')
 		{
+			print '<form method="post" action="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'">';
+			print '<input type="hidden" name="action" value="setcontrat">';
+			print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 			print '<table class="nobordernopadding" cellpadding="0" cellspacing="0">';
 			print '<tr><td>';
 			$htmlcontract= new Formcontract($db);
@@ -1348,7 +1358,7 @@ else if ($id > 0 || ! empty($ref))
 
 			print '</td>';
 			print '<td align="left"><input type="submit" class="button" value="'.$langs->trans("Modify").'"></td>';
-			print '</tr></table>';
+			print '</tr></table></form>';
 		}
 		else
 		{
