@@ -59,10 +59,10 @@ if (! empty($conf->phenix->enabled) && ! empty($conf->phenix->cookie))
 // Define url to go
 global $user;
 if($user->contact_id){
-	$url='http://www.net-referencement.net/espace-client/';					// This is to use same domain name than current
+	$url='http://gestion.net-referencement.net/espace-client/';					// This is to use same domain name than current
 }
 else{
-	$url=DOL_URL_ROOT."/index.php";
+	$url=DOL_URL_ROOT."/custom/clinetreferencement/external.php";
 }
 		// By default go to login page
 if ($urlfrom) $url=DOL_URL_ROOT.$urlfrom;
