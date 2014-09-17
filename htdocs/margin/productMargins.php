@@ -1,5 +1,6 @@
 <?php
 /* Copyright (C) 2012-2013	Christophe Battarel	<christophe.battarel@altairis.fr>
+ * Copyright (C) 2014		Ferran Marcet		<fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -163,9 +164,8 @@ print "</table>";
 print '</form>';
 
 $sql = "SELECT p.label, p.rowid, p.fk_product_type, p.ref,";
-$sql.= " d.fk_product,";
-$sql.= " f.rowid as facid, f.facnumber, f.total as total_ht,";
-$sql.= " f.datef, f.paye, f.fk_statut as statut,";
+if ($id > 0) $sql.= " d.fk_product,";
+if ($id > 0) $sql.= " f.rowid as facid, f.facnumber, f.total as total_ht, f.datef, f.paye, f.fk_statut as statut,";
 $sql.= " sum(d.total_ht) as selling_price,";
 $sql.= " sum(".$db->ifsql('d.total_ht <=0','d.qty * d.buy_price_ht * -1','d.qty * d.buy_price_ht').") as buying_price,";
 $sql.= " sum(".$db->ifsql('d.total_ht <=0','-1 * (abs(d.total_ht) - (d.buy_price_ht * d.qty))','d.total_ht - (d.buy_price_ht * d.qty)').") as marge";
@@ -187,9 +187,9 @@ if (!empty($enddate))
 $sql .= " AND d.buy_price_ht IS NOT NULL";
 if (isset($conf->global->ForceBuyingPriceIfNull) && $conf->global->ForceBuyingPriceIfNull == 1)
 	$sql .= " AND d.buy_price_ht <> 0";
-if ($id > 0)
-  $sql.= " GROUP BY p.label, p.rowid, p.fk_product_type, p.ref, d.fk_product, f.rowid, f.facnumber, f.total, f.datef, f.paye, f.fk_statut";
-$sql.= " ORDER BY ".$sortfield." ".$sortorder;
+if ($id > 0) $sql.= " GROUP BY p.label, p.rowid, p.fk_product_type, p.ref, d.fk_product, f.rowid, f.facnumber, f.total, f.datef, f.paye, f.fk_statut";
+else $sql.= " GROUP BY p.label, p.rowid, p.fk_product_type, p.ref";
+$sql.=$db->order($sortfield,$sortorder);
 // TODO: calculate total to display then restore pagination
 //$sql.= $db->plimit($conf->liste_limit +1, $offset);
 
@@ -260,13 +260,15 @@ if ($result)
 				print dol_print_date($db->jdate($objp->datef),'day')."</td>";
 			}
 			else {
+				print '<td>';
 				$product_static->type=$objp->fk_product_type;
-				$product_static->id=$objp->fk_product;
+				$product_static->id=$objp->rowid;
 				$product_static->ref=$objp->ref;
 				$product_static->libelle=$objp->label;
 				$text=$product_static->getNomUrl(1);
-				$text.= ' - '.$objp->label;
-				print "<td>".$product_static->getNomUrl(1)."</td>\n";
+				print $text.= ' - '.$objp->label;
+				print "</td>\n";
+				//print "<td>".$product_static->getNomUrl(1)."</td>\n";
 			}
 			print "<td align=\"right\">".price($pv, null, null, null, null, $rounding)."</td>\n";
 			print "<td align=\"right\">".price($pa, null, null, null, null, $rounding)."</td>\n";

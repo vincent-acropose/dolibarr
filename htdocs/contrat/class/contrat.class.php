@@ -410,7 +410,7 @@ class Contrat extends CommonObject
 		$sql.= " FROM ".MAIN_DB_PREFIX."contrat";
 		if ($ref)
 		{
-			$sql.= " WHERE ref='".$ref."'";
+			$sql.= " WHERE ref='".$this->db->escape($ref)."'";
 			$sql.= " AND entity IN (".getEntity('contract').")";
 		}
 		else $sql.= " WHERE rowid=".$id;
@@ -811,6 +811,7 @@ class Contrat extends CommonObject
 	function delete($user)
 	{
 		global $conf, $langs;
+		require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
 
 		$error=0;
 
@@ -1151,11 +1152,11 @@ class Contrat extends CommonObject
 		$this->db->begin();
 
 		// Calcul du total TTC et de la TVA pour la ligne a partir de
-		// qty, pu, remise_percent et txtva
+		// qty, pu, remise_percent et tvatx
 		// TRES IMPORTANT: C'est au moment de l'insertion ligne qu'on doit stocker
 		// la part ht, tva et ttc, et ce au niveau de la ligne qui a son propre taux tva.
 
-		$localtaxes_type=getLocalTaxesFromRate($txtva,0,$mysoc);
+		$localtaxes_type=getLocalTaxesFromRate($tvatx,0,$mysoc);
 
 		$tabprice=calcul_price_total($qty, $pu, $remise_percent, $tvatx, $localtaxtx1, $txlocaltaxtx2, 0, $price_base_type, $info_bits, 1, '', $localtaxes_type);
 		$total_ht  = $tabprice[0];
@@ -1941,7 +1942,7 @@ class ContratLigne
 		$sql.= " t.commentaire";
 		$sql.= " FROM ".MAIN_DB_PREFIX."contratdet as t";
 		if ($id)  $sql.= " WHERE t.rowid = ".$id;
-		if ($ref) $sql.= " WHERE t.rowid = '".$ref."'";
+		if ($ref) $sql.= " WHERE t.rowid = '".$this->db->escape($ref)."'";
 
 		dol_syslog(get_class($this)."::fetch sql=".$sql, LOG_DEBUG);
 		$resql=$this->db->query($sql);

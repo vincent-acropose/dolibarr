@@ -397,7 +397,7 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
         // Date payment
         print '<tr><td><span class="fieldrequired">'.$langs->trans('Date').'</span></td><td>';
         $datepayment = dol_mktime(12, 0, 0, $_POST['remonth'], $_POST['reday'], $_POST['reyear']);
-        $datepayment= ($datepayment == '' ? (empty($conf->global->MAIN_AUTOFILL_DATE)?-1:0) : $datepayment);
+        $datepayment= ($datepayment == '' ? (empty($conf->global->MAIN_AUTOFILL_DATE)?-1:'') : $datepayment);
         $form->select_date($datepayment,'','','',0,"add_paiement",1,1);
         print '</td>';
         print '<td>'.$langs->trans('Comments').'</td></tr>';
@@ -504,7 +504,11 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
 				if ($facture->type == 2) $alreadypayedlabel=$langs->trans("PaidBack");
 				$remaindertopay=$langs->trans('RemainderToTake');
 				if ($facture->type == 2) $remaindertopay=$langs->trans("RemainderToPayBack");
-
+				
+				
+				$parameters=array();
+				$reshook=$hookmanager->executeHooks('formAddObjectLine',$parameters,$facture,$action);    // Note that $action and $object may have been modified by hook
+				
                 $i = 0;
                 //print '<tr><td colspan="3">';
                 print '<br>';

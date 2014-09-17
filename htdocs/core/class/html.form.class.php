@@ -2275,8 +2275,8 @@ class Form
         dol_syslog(get_class($this)."::select_type_paiements ".$selected.", ".$htmlname.", ".$filtertype.", ".$format,LOG_DEBUG);
 
         $filterarray=array();
-        if ($filtertype == 'CRDT')  	$filterarray=array(0,2);
-        elseif ($filtertype == 'DBIT') 	$filterarray=array(1,2);
+        if ($filtertype == 'CRDT')  	$filterarray=array(0,2,3);
+        elseif ($filtertype == 'DBIT') 	$filterarray=array(1,2,3);
         elseif ($filtertype != '' && $filtertype != '-1') $filterarray=explode(',',$filtertype);
 
         $this->load_cache_types_paiements();
@@ -2614,7 +2614,7 @@ class Form
             $autoOpen=true;
             $dialogconfirm='dialog-confirm';
             $button='';
-            if (! is_int($useajax))
+            if (! is_numeric($useajax))
             {
                 $button=$useajax;
                 $useajax=1;
@@ -2755,7 +2755,7 @@ class Form
      *    Show a form to select a project
      *
      *    @param	int		$page        Page
-     *    @param	int		$socid       Id third party
+     *    @param	int		$socid       Id third party (-1=all, 0=only projects not linked to a third party, id=projects not linked or linked to third party id)
      *    @param    int		$selected    Id pre-selected project
      *    @param    string	$htmlname    Name of select field
      *    @return	void
@@ -2915,16 +2915,17 @@ class Form
     }
 
     /**
-     *    Show a form to select a date
+     *    Show a form + html select a date
      *
      *    @param	string		$page        Page
      *    @param	string		$selected    Date preselected
-     *    @param    string		$htmlname    Name of input html field
+     *    @param    string		$htmlname    Html name of date input fields or 'none'
      *    @param    int			$displayhour Display hour selector
      *    @param    int			$displaymin	 Display minutes selector
      *    @return	void
+     *    @see		select_date
      */
-    function form_date($page, $selected, $htmlname,$displayhour=0,$displaymin=0)
+    function form_date($page, $selected, $htmlname, $displayhour=0, $displaymin=0)
     {
         global $langs;
 
@@ -2999,12 +3000,13 @@ class Form
     /**
      *    Affiche formulaire de selection des modes de reglement
      *
-     *    @param	string	$page        Page
-     *    @param    int		$selected    Id mode pre-selectionne
-     *    @param    string	$htmlname    Name of select html field
+     *    @param	string	$page        	Page
+     *    @param    int		$selected    	Id mode pre-selectionne
+     *    @param    string	$htmlname    	Name of select html field
+     *    @param  	string	$filtertype		To filter on field type in llx_c_paiement (array('code'=>xx,'label'=>zz))
      *    @return	void
      */
-    function form_modes_reglement($page, $selected='', $htmlname='mode_reglement_id')
+    function form_modes_reglement($page, $selected='', $htmlname='mode_reglement_id', $filtertype='')
     {
         global $langs;
         if ($htmlname != "none")
@@ -3014,7 +3016,7 @@ class Form
             print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
             print '<table class="nobordernopadding" cellpadding="0" cellspacing="0">';
             print '<tr><td>';
-            $this->select_types_paiements($selected,$htmlname);
+            $this->select_types_paiements($selected,$htmlname,$filtertype);
             print '</td>';
             print '<td align="left"><input type="submit" class="button" value="'.$langs->trans("Modify").'"></td>';
             print '</tr></table></form>';
@@ -3057,13 +3059,13 @@ class Form
             print '<tr><td class="nowrap">';
             if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS))
             {
-                if (! $filter || $filter=="fk_facture_source IS NULL") print $langs->trans("CompanyHasAbsoluteDiscount",price($amount,1,$langs,0,0,-1,$conf->currency)).': ';    // If we want deposit to be substracted to payments only and not to total of final invoice
-                else print $langs->trans("CompanyHasCreditNote",price($amount,1,$langs,0,0,-1,$conf->currency)).': ';
+                if (! $filter || $filter=="fk_facture_source IS NULL") print $langs->trans("CompanyHasAbsoluteDiscount",price($amount,0,$langs,0,0,-1,$conf->currency)).': ';    // If we want deposit to be substracted to payments only and not to total of final invoice
+                else print $langs->trans("CompanyHasCreditNote",price($amount,0,$langs,0,0,-1,$conf->currency)).': ';
             }
             else
             {
-                if (! $filter || $filter=="fk_facture_source IS NULL OR (fk_facture_source IS NOT NULL AND description='(DEPOSIT)')") print $langs->trans("CompanyHasAbsoluteDiscount",price($amount,1,$langs,0,0,-1,$conf->currency)).': ';
-                else print $langs->trans("CompanyHasCreditNote",price($amount,1,$langs,0,0,-1,$conf->currency)).': ';
+                if (! $filter || $filter=="fk_facture_source IS NULL OR (fk_facture_source IS NOT NULL AND description='(DEPOSIT)')") print $langs->trans("CompanyHasAbsoluteDiscount",price($amount,0,$langs,0,0,-1,$conf->currency)).': ';
+                else print $langs->trans("CompanyHasCreditNote",price($amount,0,$langs,0,0,-1,$conf->currency)).': ';
             }
             $newfilter='fk_facture IS NULL AND fk_facture_line IS NULL';	// Remises disponibles
             if ($filter) $newfilter.=' AND ('.$filter.')';
@@ -3437,13 +3439,13 @@ class Form
 
 
     /**
-     *	Show a HTML widget to input a date or combo list for day, month, years and optionnaly hours and minutes
+     *	Show a HTML widget to input a date or combo list for day, month, years and optionnaly hours and minutes.
      *  Fields are preselected with :
-     *            	- set_time date (Local PHP server timestamps or date format YYYY-MM-DD or YYYY-MM-DD HH:MM)
-     *            	- local date of PHP server if set_time is ''
-     *            	- Empty (fields empty) if set_time is -1 (in this case, parameter empty must also have value 1)
+     *            	- set_time date (must be a local PHP server timestamp or string date with format 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM')
+     *            	- local date in user area, if set_time is '' (so if set_time is '', output may differs when done from two different location)
+     *            	- Empty (fields empty), if set_time is -1 (in this case, parameter empty must also have value 1)
      *
-     *	@param	timestamp	$set_time 		Pre-selected date (must be a local PHP server timestamp)
+     *	@param	timestamp	$set_time 		Pre-selected date (must be a local PHP server timestamp), -1 to keep date not preselected, '' to use current date.
      *	@param	string		$prefix			Prefix for fields name
      *	@param	int			$h				1=Show also hours
      *	@param	int			$m				1=Show also minutes
@@ -3455,6 +3457,7 @@ class Form
      * 	@param 	int			$disabled		Disable input fields
      *  @param  int			$fullday        When a checkbox with this html name is on, hour and day are set with 00:00 or 23:59
      * 	@return	mixed						Nothing or string if nooutput is 1
+     *  @see	form_date
      */
     function select_date($set_time='', $prefix='re', $h=0, $m=0, $empty=0, $form_name="", $d=1, $addnowbutton=0, $nooutput=0, $disabled=0, $fullday='')
     {
@@ -3467,7 +3470,11 @@ class Form
         if($m == '') $m=0;
         if($empty == '') $empty=0;
 
-        if (! $set_time && $empty == 0) $set_time = dol_now('tzuser');
+        if ($set_time === '' && $empty == 0)
+        {
+        	include_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
+        	$set_time = dol_now('tzuser')-(getServerTimeZoneInt('now')*3600); // set_time must be relative to PHP server timezone
+        }
 
         // Analysis of the pre-selection date
         if (preg_match('/^([0-9]+)\-([0-9]+)\-([0-9]+)\s?([0-9]+)?:?([0-9]+)?/',$set_time,$reg))
@@ -3707,7 +3714,7 @@ class Form
         }
         elseif ($typehour=='text')
         {
-        	print '<input type="text" size="3" name="'.$prefix.'hour" class="flat" value="'.((int) $hourSelected).'">';
+        	print '<input type="text" size="3" name="'.$prefix.'hour"'.($disabled?' disabled="disabled"':'').' class="flat" value="'.((int) $hourSelected).'">';
         }
         print $langs->trans('Hours'). "&nbsp;";
         print '<select class="flat" name="'.$prefix.'min"'.($disabled?' disabled="disabled"':'').'>';

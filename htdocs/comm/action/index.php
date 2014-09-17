@@ -19,9 +19,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-error_reporting(E_ALL);
-ini_set('display_errors', true);
-ini_set('html_errors', false);
 
 /**
  *  \file       htdocs/comm/action/index.php
@@ -45,6 +42,7 @@ $filter=GETPOST("filter",'',3);
 $filtera = GETPOST("userasked","int",3)?GETPOST("userasked","int",3):GETPOST("filtera","int",3);
 $filtert = GETPOST("usertodo","int",3)?GETPOST("usertodo","int",3):GETPOST("filtert","int",3);
 $filterd = GETPOST("userdone","int",3)?GETPOST("userdone","int",3):GETPOST("filterd","int",3);
+$filterg = GETPOST("groupid","int",3)?GETPOST("groupid","int",3):GETPOST("filterg","int",3);
 $showbirthday = empty($conf->use_javascript_ajax)?GETPOST("showbirthday","int"):1;
 
 
@@ -149,9 +147,11 @@ if (empty($conf->global->AGENDA_DISABLE_EXT) && $conf->global->AGENDA_EXT_NB > 0
         $source='AGENDA_EXT_SRC'.$i;
         $name='AGENDA_EXT_NAME'.$i;
         $color='AGENDA_EXT_COLOR'.$i;
+        $buggedfile='AGENDA_EXT_BUGGEDFILE'.$i;
         if (! empty($conf->global->$source) && ! empty($conf->global->$name))
         {
-        	$listofextcals[]=array('src'=>$conf->global->$source,'name'=>$conf->global->$name,'color'=>$conf->global->$color);
+        	// Note: $conf->global->buggedfile can be empty or 'uselocalandtznodaylight' or 'uselocalandtzdaylight'
+        	$listofextcals[]=array('src'=>$conf->global->$source,'name'=>$conf->global->$name,'color'=>$conf->global->$color,'buggedfile'=>(isset($conf->global->buggedfile)?$conf->global->buggedfile:0));
         }
     }
 }
@@ -277,7 +277,7 @@ $param.='&year='.$year.'&month='.$month.($day?'&day='.$day:'');
 $head = calendars_prepare_head('');
 
 dol_fiche_head($head, 'card', $langs->trans('Events'), 0, $picto);
-print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,$filtera,$filtert,$filterd,$pid,$socid,$listofextcals,$actioncode);
+print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,$filtera,$filtert,$filterd,$filterg,$pid,$socid,$listofextcals,$actioncode);
 dol_fiche_end();
 
 $link='';
@@ -315,7 +315,7 @@ $sql.= ' FROM ('.MAIN_DB_PREFIX.'c_actioncomm as ca,';
 $sql.= " ".MAIN_DB_PREFIX."actioncomm as a)";
 if (! $user->rights->societe->client->voir && ! $socid) $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON a.fk_soc = sc.fk_soc";
 $sql.= ' WHERE a.fk_action = ca.id';
-$sql.= ' AND a.entity IN ('.getEntity().')';
+$sql.= ' AND a.entity IN ('.getEntity('agenda', 1).')';
 if ($actioncode) $sql.=" AND ca.code='".$db->escape($actioncode)."'";
 if ($pid) $sql.=" AND a.fk_project=".$db->escape($pid);
 if (! $user->rights->societe->client->voir && ! $socid) $sql.= " AND (a.fk_soc IS NULL OR sc.fk_user = " .$user->id . ")";
@@ -358,6 +358,9 @@ if ($filtera > 0 || $filtert > 0 || $filterd > 0)
     if ($filterd > 0) $sql.= ($filtera>0||$filtert>0?" OR ":"")." a.fk_user_done = ".$filterd;
     $sql.= ")";
 }
+
+if ($filterg > 0) $sql.= " AND a.fk_user_action IN (SELECT fk_user FROM ".MAIN_DB_PREFIX."usergroup_user WHERE fk_usergroup=".$filterg.")";
+
 // Sort on date
 $sql.= ' ORDER BY datep';
 //print $sql;
@@ -530,9 +533,11 @@ if (count($listofextcals))
         $url=$extcal['src'];    // Example: https://www.google.com/calendar/ical/eldy10%40gmail.com/private-cde92aa7d7e0ef6110010a821a2aaeb/basic.ics
         $namecal = $extcal['name'];
         $colorcal = $extcal['color'];
-        //print "url=".$url." namecal=".$namecal." colorcal=".$colorcal;
+        $buggedfile = $extcal['buggedfile'];
+        //print "url=".$url." namecal=".$namecal." colorcal=".$colorcal." buggedfile=".$buggedfile;
         $ical=new ICal();
         $ical->parse($url);
+
         // After this $ical->cal['VEVENT'] contains array of events, $ical->cal['DAYLIGHT'] contains daylight info, $ical->cal['STANDARD'] contains non daylight info, ...
         //var_dump($ical->cal); exit;
         $icalevents=array();
@@ -646,6 +651,8 @@ if (count($listofextcals))
             // Loop on each entry into cal file to know if entry is qualified and add an ActionComm into $eventarray
             foreach($icalevents as $icalevent)
             {
+            	//var_dump($icalevent);
+
                 //print $icalevent['SUMMARY'].'->'.var_dump($icalevent).'<br>';exit;
                 if (! empty($icalevent['RRULE'])) continue;    // We found a repeatable event. It was already split into unitary events, so we discard general rule.
 
@@ -662,10 +669,34 @@ if (count($listofextcals))
                     $event->fulldayevent=true;
                     $addevent=true;
                 }
-                elseif (!is_array($icalevent['DTSTART'])) // not fullday event (DTSTART is not array)
+                elseif (!is_array($icalevent['DTSTART'])) // not fullday event (DTSTART is not array. It is a value like '19700101T000000Z' for 00:00 in greenwitch)
                 {
                     $datestart=$icalevent['DTSTART'];
                     $dateend=$icalevent['DTEND'];
+                    $addevent=true;
+                }
+                elseif (isset($icalevent['DTSTART']['unixtime']))	// File contains a local timezone + a TZ (for example when using bluemind)
+                {
+                    $datestart=$icalevent['DTSTART']['unixtime'];
+                    $dateend=$icalevent['DTEND']['unixtime'];
+                    // $buggedfile is set to uselocalandtznodaylight if conf->global->AGENDA_EXT_BUGGEDFILEx = 'uselocalandtznodaylight'
+                    if ($buggedfile === 'uselocalandtznodaylight')	// unixtime is a local date that does not take daylight into account, TZID is +1 for example for 'Europe/Paris' in summer instead of 2
+                    {
+                    	// TODO
+                    }
+                    // $buggedfile is set to uselocalandtzdaylight if conf->global->AGENDA_EXT_BUGGEDFILEx = 'uselocalandtzdaylight' (for example with bluemind)
+                    if ($buggedfile === 'uselocalandtzdaylight')	// unixtime is a local date that does take daylight into account, TZID is +2 for example for 'Europe/Paris' in summer
+                    {
+                    	$localtzs = new DateTimeZone(preg_replace('/"/','',$icalevent['DTSTART']['TZID']));
+                    	$localtze = new DateTimeZone(preg_replace('/"/','',$icalevent['DTEND']['TZID']));
+                    	$localdts = new DateTime(dol_print_date($datestart,'dayrfc','gmt'), $localtzs);
+                    	$localdte = new DateTime(dol_print_date($dateend,'dayrfc','gmt'), $localtze);
+						$tmps=-1*$localtzs->getOffset($localdts);
+						$tmpe=-1*$localtze->getOffset($localdte);
+						$datestart+=$tmps;
+						$dateend+=$tmpe;
+						//var_dump($datestart);
+                    }
                     $addevent=true;
                 }
 

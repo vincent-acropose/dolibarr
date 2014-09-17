@@ -40,8 +40,13 @@ class ProductFournisseur extends Product
     var $product_fourn_price_id;  // id of ligne product-supplier
 
     var $id;                      // product id
-    var $fourn_ref;               // ref supplier
-    var $fourn_qty;               // quantity for price
+    var $fourn_ref;               // deprecated
+    var $ref_supplier;			  // ref supplier (can be set by get_buyprice)
+    var $vatrate_supplier;		  // default vat rate for this supplier/qty/product (can be set by get_buyprice)
+
+    var $fourn_qty;               // quantity for price (can be set by get_buyprice)
+    var $fourn_pu;			       // unit price for quantity (can be set by get_buyprice)
+
     var $fourn_price;             // price for quantity
     var $fourn_remise_percent;    // discount for quantity (percent)
     var $fourn_remise;            // discount for quantity (amount)
@@ -201,6 +206,14 @@ class ProductFournisseur extends Product
 			if ($resql)
 			{
 				$this->db->commit();
+				
+				// Appel des triggers
+				include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+				$interface=new Interfaces($this->db);
+				$result=$interface->run_triggers('UPDATE_BUYPRICE',$this,$user,$langs,$conf);
+				if ($result < 0) { $error++; $this->errors=$interface->errors; }
+				// Fin appel triggers
+				
 				return 0;
 			}
 			else

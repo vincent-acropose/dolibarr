@@ -806,7 +806,7 @@ class User extends CommonObject
 
 		$sql = "SELECT login FROM ".MAIN_DB_PREFIX."user";
 		$sql.= " WHERE login ='".$this->db->escape($this->login)."'";
-		$sql.= " AND entity IN (0,".$conf->entity.")";
+		$sql.= " AND entity IN (0,".$this->db->escape($conf->entity).")";
 
 		dol_syslog(get_class($this)."::create sql=".$sql, LOG_DEBUG);
 		$resql=$this->db->query($sql);
@@ -825,7 +825,7 @@ class User extends CommonObject
 			else
 			{
 				$sql = "INSERT INTO ".MAIN_DB_PREFIX."user (datec,login,ldap_sid,entity)";
-				$sql.= " VALUES('".$this->db->idate($this->datec)."','".$this->db->escape($this->login)."','".$this->ldap_sid."',".$this->entity.")";
+				$sql.= " VALUES('".$this->db->idate($this->datec)."','".$this->db->escape($this->login)."','".$this->ldap_sid."',".$this->db->escape($this->entity).")";
 				$result=$this->db->query($sql);
 
 				dol_syslog(get_class($this)."::create sql=".$sql, LOG_DEBUG);
@@ -922,7 +922,7 @@ class User extends CommonObject
 		$this->lastname		= $contact->lastname;
 		$this->firstname	= $contact->firstname;
 		$this->email		= $contact->email;
-    $this->skype 		= $contact->skype;
+    	$this->skype 		= $contact->skype;
 		$this->office_phone	= $contact->phone_pro;
 		$this->office_fax	= $contact->fax;
 		$this->user_mobile	= $contact->phone_mobile;
@@ -1496,7 +1496,7 @@ class User extends CommonObject
 		$outputlangs->load("users");
 		$outputlangs->load("other");
 
-		$subject = $outputlangs->trans("SubjectNewPassword");
+		$subject = $outputlangs->transnoentitiesnoconv("SubjectNewPassword");
 
 		// Define $urlwithroot
 		//$urlwithouturlroot=preg_replace('/'.preg_quote(DOL_URL_ROOT,'/').'$/i','',trim($dolibarr_main_url_root));
@@ -2192,8 +2192,8 @@ class User extends CommonObject
 		// Load array[child]=parent
 		$sql = "SELECT fk_user as id_parent, rowid as id_son";
 		$sql.= " FROM ".MAIN_DB_PREFIX."user";
-		$sql.= " WHERE fk_user != 0";
-		$sql.= " AND entity = ".$conf->entity;
+		$sql.= " WHERE fk_user <> 0";
+		$sql.= " AND entity IN (".getEntity('user',1).")";
 
 		dol_syslog(get_class($this)."::load_parentof sql=".$sql);
 		$resql = $this->db->query($sql);
@@ -2222,21 +2222,29 @@ class User extends CommonObject
 	 *				fullname = nom avec chemin complet du user
 	 *				fullpath = chemin complet compose des id
 	 *
-	 *  @param      int		$markafterid      Removed all users including the leaf $markafterid in user tree.
-	 *	@return		array		      		  Array of users. this->users and this->parentof are set.
+	 *  @param      int		$deleteafterid      Removed all users including the leaf $deleteafterid (and all its child) in user tree.
+	 *	@return		array		      		  	Array of users. this->users and this->parentof are set.
 	 */
-	function get_full_tree($markafterid=0)
+	function get_full_tree($deleteafterid=0)
 	{
+		global $conf,$user;
+
 		$this->users = array();
 
 		// Init this->parentof that is array(id_son=>id_parent, ...)
 		$this->load_parentof();
-
+		
 		// Init $this->users array
-		$sql = "SELECT DISTINCT u.rowid, u.firstname, u.lastname, u.fk_user, u.login, u.statut";	// Distinct reduce pb with old tables with duplicates
+		$sql = "SELECT DISTINCT u.rowid, u.firstname, u.lastname, u.fk_user, u.login, u.statut, u.entity";	// Distinct reduce pb with old tables with duplicates
 		$sql.= " FROM ".MAIN_DB_PREFIX."user as u";
-		$sql.= " WHERE u.entity IN (".getEntity('user',1).")";
-
+		if(! empty($conf->multicompany->enabled) && $conf->entity == 1 && (! empty($conf->multicompany->transverse_mode) || (! empty($user->admin) && empty($user->entity))))
+		{
+			$sql.= " WHERE u.entity IS NOT NULL";
+		}
+		else
+		{
+			$sql.= " WHERE u.entity IN (".getEntity('user',1).")";
+		}
 		dol_syslog(get_class($this)."::get_full_tree get user list sql=".$sql, LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql)
@@ -2251,6 +2259,7 @@ class User extends CommonObject
 				$this->users[$obj->rowid]['lastname'] = $obj->lastname;
 				$this->users[$obj->rowid]['login'] = $obj->login;
 				$this->users[$obj->rowid]['statut'] = $obj->statut;
+				$this->users[$obj->rowid]['entity'] = $obj->entity;
 				$i++;
 			}
 		}
@@ -2267,14 +2276,14 @@ class User extends CommonObject
 			$this->build_path_from_id_user($key,0);	// Process a branch from the root user key (this user has no parent)
 		}
 
-		// Exclude leaf including $markafterid from tree
-		if ($markafterid)
+		// Exclude leaf including $deleteafterid from tree
+		if ($deleteafterid)
 		{
-			//print "Look to discard user ".$markafterid."\n";
-			$keyfilter1='^'.$markafterid.'$';
-			$keyfilter2='_'.$markafterid.'$';
-			$keyfilter3='^'.$markafterid.'_';
-			$keyfilter4='_'.$markafterid.'_';
+			//print "Look to discard user ".$deleteafterid."\n";
+			$keyfilter1='^'.$deleteafterid.'$';
+			$keyfilter2='_'.$deleteafterid.'$';
+			$keyfilter3='^'.$deleteafterid.'_';
+			$keyfilter4='_'.$deleteafterid.'_';
 			foreach($this->users as $key => $val)
 			{
 				if (preg_match('/'.$keyfilter1.'/',$val['fullpath']) || preg_match('/'.$keyfilter2.'/',$val['fullpath'])
@@ -2313,13 +2322,13 @@ class User extends CommonObject
 
 		// Define fullpath and fullname
 		$this->users[$id_user]['fullpath'] = '_'.$id_user;
-		$this->users[$id_user]['fullname'] = $this->users[$id_user]['label'];
+		$this->users[$id_user]['fullname'] = $this->users[$id_user]['lastname'];
 		$i=0; $cursor_user=$id_user;
 
 		while ((empty($protection) || $i < $protection) && ! empty($this->parentof[$cursor_user]))
 		{
 			$this->users[$id_user]['fullpath'] = '_'.$this->parentof[$cursor_user].$this->users[$id_user]['fullpath'];
-			$this->users[$id_user]['fullname'] = $this->users[$this->parentof[$cursor_user]]['label'].' >> '.$this->users[$id_user]['fullname'];
+			$this->users[$id_user]['fullname'] = $this->users[$this->parentof[$cursor_user]]['lastname'].' >> '.$this->users[$id_user]['fullname'];
 			$i++; $cursor_user=$this->parentof[$cursor_user];
 		}
 

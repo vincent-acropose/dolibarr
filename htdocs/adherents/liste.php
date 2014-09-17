@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2001-2003 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2002-2003 Jean-Louis Bergamo   <jlb@j1b.org>
- * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2013      Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -118,24 +118,24 @@ if ($type > 0)
 }
 if (isset($_GET["statut"]) || isset($_POST["statut"]))
 {
-	$sql.=" AND d.statut in (".$statut.")";     // Peut valoir un nombre ou liste de nombre separes par virgules
+	$sql.=" AND d.statut in (".$db->escape($statut).")";     // Peut valoir un nombre ou liste de nombre separes par virgules
 }
 if ($search_ref)
 {
-	if (is_numeric($search_ref)) $sql.= " AND (d.rowid = ".$search_ref.")";
+	if (is_numeric($search_ref)) $sql.= " AND (d.rowid = ".$db->escape($search_ref).")";
 	else $sql.=" AND 1 = 2";    // Always wrong
 }
 if ($search_lastname)
 {
-	$sql.= " AND (d.firstname LIKE '%".$search_lastname."%' OR d.lastname LIKE '%".$search_lastname."%')";
+	$sql.= " AND (d.firstname LIKE '%".$db->escape($search_lastname)."%' OR d.lastname LIKE '%".$db->escape($search_lastname)."%')";
 }
 if ($search_login)
 {
-	$sql.= " AND d.login LIKE '%".$search_login."%'";
+	$sql.= " AND d.login LIKE '%".$db->escape($search_logi)."%'";
 }
 if ($search_email)
 {
-	$sql.= " AND (d.email LIKE '%".$search_email."%')";
+	$sql.= " AND (d.email LIKE '%".$db->escape($search_email)."%')";
 }
 if ($filter == 'uptodate')
 {
@@ -183,16 +183,17 @@ if ($resql)
 	if ($type > 0)
 	{
 		$membertype=new AdherentType($db);
-		$result=$membertype->fetch($_REQUEST["type"]);
+		$result=$membertype->fetch(GETPOST("type"));
 		$titre.=" (".$membertype->libelle.")";
 	}
 
 	$param="";
-	if (isset($_GET["statut"]))       $param.="&statut=".$statut;
+	if ($statut != "") $param.="&statut=".$statut;
 	if ($search_nom)   $param.="&search_nom=".$search_nom;
 	if ($search_login) $param.="&search_login=".$search_login;
 	if ($search_email) $param.="&search_email=".$search_email;
 	if ($filter)       $param.="&filter=".$filter;
+	if ($type > 0)     $param.="&type=".$type;
 	print_barre_liste($titre,$page,$_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',$num,$nbtotalofrecords);
 
 	if ($sall)
@@ -200,7 +201,7 @@ if ($resql)
 		print $langs->trans("Filter")." (".$langs->trans("Ref").", ".$langs->trans("Lastname").", ".$langs->trans("Firstname").", ".$langs->trans("EMail").", ".$langs->trans("Address")." ".$langs->trans("or")." ".$langs->trans("Town")."): ".$sall;
 	}
 
-	print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'">';
+	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].($param?'?'.$param:'').'">';
 	print "<table class=\"noborder\" width=\"100%\">";
 
 	// Filter on categories
