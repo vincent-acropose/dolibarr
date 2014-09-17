@@ -304,6 +304,9 @@ class pdf_paiement
 	 */
 	function Body(&$pdf, $page, $lines, $outputlangs)
 	{
+		
+		global $langs;
+		
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
 
 		$pdf->SetFont('','', $default_font_size - 1);
@@ -311,6 +314,9 @@ class pdf_paiement
 		$pdf->SetFillColor(220,220,220);
 		$yp = 0;
 		$numlines=count($lines);
+		
+		$total = 0;
+		
 		for ($j = 0 ; $j < $numlines ; $j++)
 		{
 			$i = $j;
@@ -346,6 +352,8 @@ class pdf_paiement
 			// Invoice amount
 			$pdf->SetXY($this->posxinvoiceamount, $this->tab_top + 10 + $yp);
 			$pdf->MultiCell($this->posxpaymentamount- $this->posxinvoiceamount - 1, $this->line_height, $lines[$j][5], 0, 'R', 0);
+			
+			$total += price2num($lines[$j][6]);
 
 			// Payment amount
 			$pdf->SetXY($this->posxpaymentamount, $this->tab_top + 10 + $yp);
@@ -357,6 +365,19 @@ class pdf_paiement
 				$oldprowid = $lines[$j][7];
 			}
 		}
+
+		$pdf->SetXY($this->posxdate - 1, $this->tab_top + 10 + $yp);
+		$pdf->MultiCell($this->posxpaymenttype - $this->posxdate + 1, $this->line_height, $lines[$j][1], 0, 'L', 1);
+
+		$pdf->SetXY($this->posxpaymenttype, $this->tab_top + 10 + $yp);
+		$pdf->MultiCell($this->posxinvoiceamount - $this->posxpaymenttype, $this->line_height, $langs->trans("Total").' '.$lines[$j][3], 0, 'L', 1);
+
+		$pdf->SetXY($this->posxinvoiceamount, $this->tab_top + 10 + $yp);
+		$pdf->MultiCell($this->posxpaymentamount- $this->posxinvoiceamount, $this->line_height, '', 0, 'R', 1);
+
+		$pdf->SetXY($this->posxpaymentamount, $this->tab_top + 10 + $yp);
+		$pdf->MultiCell($this->page_largeur - $this->marge_droite - $this->posxpaymentamount, $this->line_height, price($total), 0, 'R', 1);
+		$yp = $yp + 5;
 	}
 
 }
