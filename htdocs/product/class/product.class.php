@@ -474,11 +474,7 @@ class Product extends CommonObject
 
 		$sql.= ", tosell = " . $this->status;
 		$sql.= ", tobuy = " . $this->status_buy;
-<<<<<<< HEAD
 		$sql.= ", finished = " . ((! isset($this->finished) || $this->finished < 0) ? "null" : (int)$this->finished);
-=======
-		$sql.= ", finished = " . ((! isset($this->finished) || $this->finished < 0) ? "null" : (int) $this->finished);
->>>>>>> 799ffc20d18d0b72cbd80605982e004d3460079a
 		$sql.= ", weight = " . ($this->weight!='' ? "'".$this->weight."'" : 'null');
 		$sql.= ", weight_units = " . ($this->weight_units!='' ? "'".$this->weight_units."'": 'null');
 		$sql.= ", length = " . ($this->length!='' ? "'".$this->length."'" : 'null');
