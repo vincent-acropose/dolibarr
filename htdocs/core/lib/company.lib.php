@@ -1342,7 +1342,7 @@ function show_subsidiaries($conf,$langs,$db,$object)
 	$sql.= " AND s.entity IN (".getEntity('societe', 1).")";
 	if($_REQUEST['triParIntervention'] == "inter_effectuee")
 		//$sql.= " AND f.rowid IS NOT NULL";
-		$sql.= ' AND (fe.statutmission = "10" OR fe.statutmission = "20")';
+		$sql.= ' AND (fe.statutmission = "10" OR fe.statutmission = "20" OR fe.statutmission = "40")';
 	elseif($_REQUEST['triParIntervention'] == "inter_non_effectuee")
 		//$sql.= " AND f.rowid IS NULL";
 		$sql.= ' AND (fe.statutmission = "30" OR f.rowid IS NULL)';
