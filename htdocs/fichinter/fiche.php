@@ -1779,7 +1779,7 @@ else if ($id > 0 || ! empty($ref))
 		/*
 		 * Linked object block
 		*/
-		$somethingshown=$object->showLinkedObjectBlock();
+		//$somethingshown=$object->showLinkedObjectBlock();
 
 		//print '</td><td valign="top" width="50%">';
 		print '</div><div class="fichehalfright"><div class="ficheaddleft">';
