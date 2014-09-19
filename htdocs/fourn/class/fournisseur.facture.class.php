@@ -518,7 +518,7 @@ class FactureFournisseur extends CommonInvoice
         if (isset($this->fk_user_valid)) $this->fk_user_valid=trim($this->fk_user_valid);
         if (isset($this->fk_facture_source)) $this->fk_facture_source=trim($this->fk_facture_source);
         if (isset($this->fk_project)) $this->fk_project=trim($this->fk_project);
-        if (isset($this->fk_cond_reglement)) $this->fk_cond_reglement=trim($this->fk_cond_reglement);
+        if (isset($this->cond_reglement_id)) $this->cond_reglement_id=trim($this->cond_reglement_id);
         if (isset($this->note_private)) $this->note=trim($this->note_private);
         if (isset($this->note_public)) $this->note_public=trim($this->note_public);
         if (isset($this->model_pdf)) $this->model_pdf=trim($this->model_pdf);
@@ -556,7 +556,7 @@ class FactureFournisseur extends CommonInvoice
         $sql.= " fk_user_valid=".(isset($this->fk_user_valid)?$this->fk_user_valid:"null").",";
         $sql.= " fk_facture_source=".(isset($this->fk_facture_source)?$this->fk_facture_source:"null").",";
         $sql.= " fk_projet=".(isset($this->fk_project)?$this->fk_project:"null").",";
-        $sql.= " fk_cond_reglement=".(isset($this->fk_cond_reglement)?$this->fk_cond_reglement:"null").",";
+        $sql.= " fk_cond_reglement=".(isset($this->cond_reglement_id)?$this->cond_reglement_id:"null").",";
         $sql.= " date_lim_reglement=".(dol_strlen($this->date_echeance)!=0 ? "'".$this->db->idate($this->date_echeance)."'" : 'null').",";
         $sql.= " note_private=".(isset($this->note_private)?"'".$this->db->escape($this->note_private)."'":"null").",";
         $sql.= " note_public=".(isset($this->note_public)?"'".$this->db->escape($this->note_public)."'":"null").",";
@@ -651,7 +651,10 @@ class FactureFournisseur extends CommonInvoice
         	$interface=new Interfaces($this->db);
         	$result=$interface->run_triggers('BILL_SUPPLIER_DELETE',$this,$user,$langs,$conf);
         	if ($result < 0) {
-        		$error++; $this->errors=$interface->errors;
+        		$error++;
+        		$this->errors=$interface->errors;
+        		$this->db->rollback();
+        	    return -1;      		
         	}
         	// Fin appel triggers
         }
@@ -1103,7 +1106,13 @@ class FactureFournisseur extends CommonInvoice
                     include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
                     $interface=new Interfaces($this->db);
                     $result=$interface->run_triggers('LINEBILL_SUPPLIER_CREATE',$this,$user,$langs,$conf);
-                    if ($result < 0) { $error++; $this->errors=$interface->errors; }
+                    if ($result < 0) 
+                    { 
+                        $error++;
+                        $this->errors=$interface->errors;
+                        $this->db->rollback();
+                        return -1;
+                    }
                     // Fin appel triggers
                 }
 
@@ -1193,6 +1202,8 @@ class FactureFournisseur extends CommonInvoice
             $product_type = $type;
         }
 
+        $this->db->begin();
+        
         $sql = "UPDATE ".MAIN_DB_PREFIX."facture_fourn_det SET";
         $sql.= " description ='".$this->db->escape($desc)."'";
         $sql.= ", pu_ht = ".price2num($pu_ht);
@@ -1228,17 +1239,26 @@ class FactureFournisseur extends CommonInvoice
                 include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
                 $interface=new Interfaces($this->db);
                 $result=$interface->run_triggers('LINEBILL_SUPPLIER_UPDATE',$this,$user,$langs,$conf);
-                if ($result < 0) { $error++; $this->errors=$interface->errors; }
+                if ($result < 0) 
+                {
+                    $error++;
+                    $this->errors=$interface->errors;
+                    $this->db->rollback();
+                    return -1;
+                }
                 // Fin appel triggers
             }
 
             // Update total price into invoice record
             $result=$this->update_price();
 
+            $this->db->commit();
+            
             return $result;
         }
         else
         {
+            $this->db->rollback();
             $this->error=$this->db->lasterror();
             dol_syslog(get_class($this)."::updateline error=".$this->error, LOG_ERR);
             return -1;
