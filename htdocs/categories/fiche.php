@@ -3,6 +3,7 @@
  * Copyright (C) 2006-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2007      Patrick Raguin	  	<patrick.raguin@gmail.com>
+ * Copyright (C) 2013      Florian Henry        <florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,9 +27,9 @@
 
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 
 $langs->load("categories");
-
 
 // Security check
 $socid=GETPOST('socid','int');
@@ -53,10 +54,15 @@ if ($origin)
 	if ($type == 1) $idSupplierOrigin 	= $origin;
 	if ($type == 2) $idCompanyOrigin 	= $origin;
 	if ($type == 3) $idMemberOrigin 	= $origin;
+	if ($type == 4) $idContactOrigin 	= $origin;
 }
 
 if ($catorigin && $type == 0) $idCatOrigin = $catorigin;
 
+$object = new Categorie($db);
+
+$extrafields = new ExtraFields($db);
+$extralabels=$extrafields->fetch_name_optionals_label($object->table_element);
 
 /*
  *	Actions
@@ -98,6 +104,11 @@ if ($action == 'add' && $user->rights->categorie->creer)
 			header("Location: ".DOL_URL_ROOT.'/categories/viewcat.php?id='.$idCatOrigin.'&type='.$type);
 			exit;
 		}
+		else if ($idContactOrigin)
+		{
+			header("Location: ".DOL_URL_ROOT.'/categories/viewcat.php?id='.$idContactOrigin.'&type='.$type);
+			exit;
+		}
 		else
 		{
 			header("Location: ".DOL_URL_ROOT.'/categories/index.php?leftmenu=cat&type='.$type);
@@ -105,7 +116,7 @@ if ($action == 'add' && $user->rights->categorie->creer)
 		}
 	}
 
-	$object = new Categorie($db);
+	
 
 	$object->label			= $label;
 	$object->description	= dol_htmlcleanlastbr($description);
@@ -114,6 +125,8 @@ if ($action == 'add' && $user->rights->categorie->creer)
 	$object->type			= $type;
 
 	if ($parent != "-1") $object->fk_parent = $parent;
+	
+	$ret = $extrafields->setOptionalsFromPost($extralabels,$object);
 
 	if (! $object->label)
 	{
@@ -125,7 +138,7 @@ if ($action == 'add' && $user->rights->categorie->creer)
 	// Create category in database
 	if (! $error)
 	{
-		$result = $object->create();
+		$result = $object->create($user);
 		if ($result > 0)
 		{
 			$action = 'confirmed';
@@ -170,6 +183,11 @@ if (($action == 'add' || $action == 'confirmed') && $user->rights->categorie->cr
 			header("Location: ".DOL_URL_ROOT.'/categories/viewcat.php?id='.$idCatOrigin.'&mesg='.urlencode($langs->trans("CatCreated")));
 			exit;
 		}
+		else if ($idContactOrigin)
+		{
+			header("Location: ".DOL_URL_ROOT.'/categories/viewcat.php?id='.$idContactOrigin.'&mesg='.urlencode($langs->trans("CatCreated")));
+			exit;
+		}
 
 		header("Location: ".DOL_URL_ROOT.'/categories/viewcat.php?id='.$result.'&type='.$type);
 		exit;
@@ -181,8 +199,9 @@ if (($action == 'add' || $action == 'confirmed') && $user->rights->categorie->cr
  * View
  */
 
-llxHeader("","",$langs->trans("Categories"));
 $form = new Form($db);
+
+llxHeader("","",$langs->trans("Categories"));
 
 if ($user->rights->categorie->creer)
 {
@@ -226,6 +245,12 @@ if ($user->rights->categorie->creer)
 		print $form->select_all_categories($type, $catorigin);
 		print '</td></tr>';
 
+		$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
+		if (empty($reshook))
+		{
+			print $object->showOptionals($extrafields,'edit');
+		}
+
 		print '</table>';
 
 		print '<center><br>';
@@ -242,4 +267,3 @@ if ($user->rights->categorie->creer)
 llxFooter();
 
 $db->close();
-?>
