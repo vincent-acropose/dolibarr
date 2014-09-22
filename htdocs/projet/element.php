@@ -183,12 +183,12 @@ $listofreferent=array(
 	'table'=>'deplacement',
 	'disableamount'=>1,
 	'test'=>$conf->deplacement->enabled),
-'agenda'=>array(
+/*'agenda'=>array(
 	'title'=>"ListActionsAssociatedProject",
 	'class'=>'ActionComm',
 	'table'=>'actioncomm',
 	'disableamount'=>1,
-	'test'=>$conf->agenda->enabled)
+	'test'=>$conf->agenda->enabled)*/
 );
 
 if ($action=="addelement")
