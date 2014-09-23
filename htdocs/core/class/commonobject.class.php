@@ -2253,6 +2253,13 @@ abstract class CommonObject
 					if($extrafields->attribute_required[$key])
 						$label = '<span class="fieldrequired">'.$label.'</span>';
 
+					if (($key=='ct_catalogue' 
+						|| $key=='ct_anglais'
+					|| $key=='ct_service') && $mode=='edit') {
+						$label='<label style="color:red">'.$label.'</label>';
+					}
+					
+					
 					$out .= '<td>'.$label.'</td>';
 					$out .='<td colspan="'.$colspan.'">';
 

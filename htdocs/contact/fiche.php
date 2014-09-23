@@ -519,7 +519,8 @@ else
 
             // Address
             if (($objsoc->typent_code == 'TE_PRIVATE' || ! empty($conf->global->CONTACT_USE_COMPANY_ADDRESS)) && dol_strlen(trim($object->address)) == 0) $object->address = $objsoc->address;	// Predefined with third party
-            print '<tr><td>'.$langs->trans("Address");
+            //print '<tr><td><label style="text-color:red">'.$langs->trans("Address");
+            print '<tr><td><label style="color:red">'.$langs->trans("Address")."</label>";
             print '</td><td colspan="'.$colspan.'"><textarea class="flat" name="address" cols="70">'.(isset($_POST["address"])?$_POST["address"]:$object->address).'</textarea></td>';
 
             if ($conf->use_javascript_ajax && $socid > 0)
@@ -746,7 +747,8 @@ else
             print '<tr><td>'.$langs->trans("PostOrFunction").'</td><td colspan="3"><input name="poste" type="text" size="50" maxlength="80" value="'.(isset($_POST["poste"])?$_POST["poste"]:$object->poste).'"></td></tr>';
             
             // Address
-            print '<tr><td>'.$langs->trans("Address");
+            //print '<tr><td>'.$langs->trans("Address");
+            print '<tr><td><label style="color:red">'.$langs->trans("Address")."</label>";
             print '</td><td colspan="2"><textarea class="flat" name="address" cols="70">'.(isset($_POST["address"])?$_POST["address"]:$object->address).'</textarea></td>';
 
             $rowspan=3;
