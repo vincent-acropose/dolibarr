@@ -161,13 +161,15 @@ else if ($action == 'setnote_private' && $user->rights->fournisseur->commande->c
 
 else if ($action == 'reopen' && $user->rights->fournisseur->commande->approuver)
 {
-    if (in_array($object->statut, array(1, 5, 6, 7, 9)))
+    if (in_array($object->statut, array(1, 5, 6, 7, 9, 3)))
     {
         if ($object->statut == 1) $newstatus=0;	// Validated->Draft
     	else if ($object->statut == 5) $newstatus=4;	// Received->Received partially
         else if ($object->statut == 6) $newstatus=2;	// Canceled->Approved
         else if ($object->statut == 7) $newstatus=3;	// Canceled->Process running
         else if ($object->statut == 9) $newstatus=1;	// Refused->Validated
+	else $newstatus=1;
+
 
         $result = $object->setStatus($user, $newstatus);
         if ($result > 0)
@@ -1476,7 +1478,8 @@ elseif (! empty($object->id))
 			else {
 				if ($object->statut == 0 && $user->rights->fournisseur->commande->creer)
 				{
-					print '<tr><td></td><td><a href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&action=edit_extras">'.img_picto('','edit').' '.$langs->trans('Modify').'</a></td></tr>';
+					print '<tr><td></td><td><a href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&action=edit_extras">'.img_picto('','edit').' '.$langs->trans('
+Modify').'</a></td></tr>';
 				}
 			}
 		}
@@ -1917,7 +1920,7 @@ elseif (! empty($object->id))
 			}
 
 			// Reopen
-			if (in_array($object->statut, array(5, 6, 7, 9)))
+			if (in_array($object->statut, array(5, 6, 7, 9, 3)))
 			{
 				if ($user->rights->fournisseur->commande->commander)
 				{
