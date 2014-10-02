@@ -1337,6 +1337,8 @@ class Form
 			$sql.= " DESC LIMIT 1) as price_by_qty";
 		}
         $sql.= " FROM ".MAIN_DB_PREFIX."product as p";
+		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product_extrafields as pex ON p.rowid = pex.fk_object";
+	
         // Multilang : we add translation
         if (! empty($conf->global->MAIN_MULTILANGS))
         {
@@ -1369,7 +1371,7 @@ class Form
             foreach ($scrit as $crit)
             {
             	if ($i > 0) $sql.=" AND ";
-                $sql.="(p.ref LIKE '".$crit."%' OR p.label LIKE '".$prefix.$crit."%'";
+                $sql.="(p.ref LIKE '".$crit."%' OR p.label LIKE '".$prefix.$crit."%' OR pex.description_complementaire LIKE '".$prefix.$crit."%' ";
                 if (! empty($conf->global->MAIN_MULTILANGS)) $sql.=" OR pl.label LIKE '".$prefix.$crit."%'";
                 $sql.=")";
                 $i++;
