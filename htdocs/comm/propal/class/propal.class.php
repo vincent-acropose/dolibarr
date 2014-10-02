@@ -8,7 +8,7 @@
  * Copyright (C) 2008      Raphael Bertrand			<raphael.bertrand@resultic.fr>
  * Copyright (C) 2010-2013 Juanjo Menent			<jmenent@2byte.es>
  * Copyright (C) 2010-2011 Philippe Grand			<philippe.grand@atoo-net.com>
- * Copyright (C) 2012      Christophe Battarel  	<christophe.battarel@altairis.fr>
+ * Copyright (C) 2012-2014 Christophe Battarel  	<christophe.battarel@altairis.fr>
  * Copyright (C) 2013      Florian Henry		  	<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -787,7 +787,10 @@ class Propal extends CommonObject
 							$fk_parent_line,
 							$this->lines[$i]->fk_fournprice,
 							$this->lines[$i]->pa_ht,
-							$this->lines[$i]->label
+							$this->lines[$i]->label,
+                            $this->lines[$i]->date_start,
+							$this->lines[$i]->date_end,
+							$this->lines[$i]->array_options
 						);
 
                         if ($result < 0)
@@ -921,6 +924,10 @@ class Propal extends CommonObject
         $now=dol_now();
 
         $this->db->begin();
+
+		// get extrafields so they will be clone
+		foreach($this->lines as $line)
+			$line->fetch_optionals($line->rowid);
 
         // Load source object
         $objFrom = dol_clone($this);
@@ -1702,7 +1709,7 @@ class Propal extends CommonObject
         $this->db->begin();
 
         $sql = "UPDATE ".MAIN_DB_PREFIX."propal";
-        $sql.= " SET fk_statut = ".$statut.", note_private = '".$this->db->escape($note)."', date_cloture=".$this->db->idate($now).", fk_user_cloture=".$user->id;
+        $sql.= " SET fk_statut = ".$statut.", note_private = '".$this->db->escape($note)."', date_cloture='".$this->db->idate($now)."', fk_user_cloture=".$user->id;
         $sql.= " WHERE rowid = ".$this->id;
 
         $resql=$this->db->query($sql);

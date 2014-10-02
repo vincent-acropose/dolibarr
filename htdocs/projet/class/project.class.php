@@ -204,9 +204,9 @@ class Project extends CommonObject
             $sql.= ", fk_soc = " . ($this->socid > 0 ? $this->socid : "null");
             $sql.= ", fk_statut = " . $this->statut;
             $sql.= ", public = " . ($this->public ? 1 : 0);
-            $sql.= ", datec=" . ($this->date_c != '' ? $this->db->idate($this->date_c) : 'null');
-            $sql.= ", dateo=" . ($this->date_start != '' ? $this->db->idate($this->date_start) : 'null');
-            $sql.= ", datee=" . ($this->date_end != '' ? $this->db->idate($this->date_end) : 'null');
+            $sql.= ", datec=" . ($this->date_c != '' ? "'".$this->db->idate($this->date_c)."'" : 'null');
+            $sql.= ", dateo=" . ($this->date_start != '' ? "'".$this->db->idate($this->date_start)."'" : 'null');
+            $sql.= ", datee=" . ($this->date_end != '' ? "'".$this->db->idate($this->date_end)."'" : 'null');
             $sql.= " WHERE rowid = " . $this->id;
 
             dol_syslog(get_class($this)."::Update sql=" . $sql, LOG_DEBUG);
@@ -247,8 +247,9 @@ class Project extends CommonObject
                 		$newdir = $conf->projet->dir_output . "/" . dol_sanitizeFileName($this->ref);
                 		if (file_exists($olddir))
                 		{
-                			$res=@dol_move($olddir, $newdir);
-                			if (! $res)
+							include_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
+							$res=dol_move($olddir, $newdir);
+							if (! $res)
                 			{
                 				$this->error='ErrorFailToMoveDir';
                 				$error++;
@@ -262,6 +263,7 @@ class Project extends CommonObject
             else
             {
                 $this->error = $this->db->lasterror();
+                $this->errors[] = $this->error;
                 dol_syslog(get_class($this)."::Update error -2 " . $this->error, LOG_ERR);
                 $result = -2;
             }
@@ -295,7 +297,7 @@ class Project extends CommonObject
         }
         else if (! empty($ref))
         {
-        	$sql.= " WHERE ref='".$ref."'";
+        	$sql.= " WHERE ref='".$this->db->escape($ref)."'";
         	$sql.= " AND entity IN (".getEntity('project').")";
         }
 
@@ -511,11 +513,10 @@ class Project extends CommonObject
 
         $sql = "DELETE FROM " . MAIN_DB_PREFIX . "projet_extrafields";
         $sql.= " WHERE fk_object=" . $this->id;
-        
 
         dol_syslog(get_class($this) . "::delete sql=" . $sql, LOG_DEBUG);
         $resql = $this->db->query($sql);
-        if (!$resql)
+        if (! $resql)
         {
         	$this->errors[] = $this->db->lasterror();
         	$error++;
@@ -556,7 +557,7 @@ class Project extends CommonObject
             	// End call triggers
             }
         }
-        
+
         if (empty($error)) {
             $this->db->commit();
             return 1;
