@@ -1593,10 +1593,10 @@ function left_menu($menu_array_before, $helppagename='', $moresearchform='', $me
 		
 		print '<div class="blockvmenupair">';
 		print 	'<div class="menu_titre">';
-		print		'<a class="vmenu" href="http://www.net-referencement.net/assistance/create_ticket.php" target="_blanck">Créer un ticket</a>';
+		print		'<a class="vmenu" href="http://gestion.net-referencement.net/custom/ticketsup/public/create_ticket.php" target="_blanck">Créer un ticket</a>';
 		print	'</div>';
 		print 	'<div class="menu_titre">';
-		print		'<a class="vmenu" href="http://www.net-referencement.net/assistance/view.php" target="_blanck">Consulter un ticket</a>';
+		print		'<a class="vmenu" href="http://gestion.net-referencement.net/custom/ticketsup/public/view.php" target="_blanck">Consulter un ticket</a>';
 		print	'</div>';
 		print '</div>';
 
