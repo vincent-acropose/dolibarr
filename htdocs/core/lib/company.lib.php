@@ -1340,13 +1340,26 @@ function show_subsidiaries($conf,$langs,$db,$object)
 	$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."fichinter_extrafields fe on f.rowid = fe.fk_object";
 	$sql.= " WHERE s.parent = ".$object->id;
 	$sql.= " AND s.entity IN (".getEntity('societe', 1).")";
-	if($_REQUEST['triParIntervention'] == "inter_effectuee")
+	if($_REQUEST['triParIntervention'] == "inter_effectuee") {
 		//$sql.= " AND f.rowid IS NOT NULL";
 		$sql.= ' AND (fe.statutmission = "10" OR fe.statutmission = "20" OR fe.statutmission = "40")';
-	elseif($_REQUEST['triParIntervention'] == "inter_non_effectuee")
+	}
+	elseif($_REQUEST['triParIntervention'] == "inter_non_effectuee") {
 		//$sql.= " AND f.rowid IS NULL";
 		$sql.= ' AND (fe.statutmission = "30" OR f.rowid IS NULL)';
-		
+		$sql.= ' AND s.rowid NOT IN (';
+		// Subquery pour récupérer toutes les sociétés dont l'id n'est pas dans ceux dont il existe une inter au statut "Terminée" (statutmission=40)
+		$sql.= "SELECT DISTINCT s.rowid";
+		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
+		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople sp on s.rowid = sp.fk_soc";
+		$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."fichinter f on s.rowid = f.fk_soc";
+		$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."fichinter_extrafields fe on f.rowid = fe.fk_object";
+		$sql.= " WHERE s.parent = ".$object->id;
+		$sql.= " AND s.entity IN (".getEntity('societe', 1).")";
+		$sql.= ' AND fe.statutmission = "40"';
+		$sql.= ')';
+	}
+
 	if(isset($_REQUEST['search_lot']) && $_REQUEST['search_lot'] != "") $sql.= " AND s.nom LIKE '%".$_REQUEST['search_lot']."%'";
 	if(isset($_REQUEST['search_locataire']) && $_REQUEST['search_locataire'] != "") $sql.= " AND sp.lastname LIKE '%".$_REQUEST['search_locataire']."%'";
 	if(isset($_REQUEST['search_phone']) && $_REQUEST['search_phone'] != "") $sql.= " AND (sp.phone LIKE '%".$_REQUEST['search_phone']."%' OR sp.phone_mobile LIKE '%".$_REQUEST['search_phone']."%')";
@@ -1357,7 +1370,8 @@ function show_subsidiaries($conf,$langs,$db,$object)
 	$sql.= " ORDER BY s.nom";
 
 	$result = $db->query($sql);
-	$num = $db->num_rows($result);
+	if($result)
+		$num = $db->num_rows($result);
 
 	if ($num)
 	{
