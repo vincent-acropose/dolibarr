@@ -314,7 +314,7 @@ PaymentConditionPT_DELIVERY=On delivery
 PaymentConditionShortPT_ORDER=On order
 PaymentConditionPT_ORDER=On order
 PaymentConditionShortPT_5050=50-50
-PaymentConditionPT_5050=50%% in advance, 50%% on delivery
+PaymentConditionPT_5050=50%% in advance, 50%% upon delivery
 PaymentConditionShort90D=90 days
 PaymentCondition90D=90 days
 PaymentConditionShort90D=90 days
@@ -324,7 +324,7 @@ PaymentConditionJALON=According to milestones
 PaymentConditionShortTBDEF=To discuss
 PaymentConditionTBDEF=To discuss
 PaymentConditionShortPT_3070=30%% advance, 70%% delivery
-PaymentConditionPT_3070=Regulation 30%% advance, 70%% upon delivery
+PaymentConditionPT_3070=30%% in advance, 70%% upon delivery
 
 FixAmount=Fix amount
 VarAmount=Variable amount (%% tot.)
