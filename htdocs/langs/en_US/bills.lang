@@ -323,8 +323,8 @@ PaymentConditionShortJALON=According to milestones
 PaymentConditionJALON=According to milestones
 PaymentConditionShortTBDEF=To discuss
 PaymentConditionTBDEF=To discuss
-PaymentConditionShortPT_3070=30% advance, 70% delivery
-PaymentConditionPT_3070=Regulation 30% advance, 70% upon delivery
+PaymentConditionShortPT_3070=30%% advance, 70%% delivery
+PaymentConditionPT_3070=Regulation 30%% advance, 70%% upon delivery
 
 FixAmount=Fix amount
 VarAmount=Variable amount (%% tot.)
