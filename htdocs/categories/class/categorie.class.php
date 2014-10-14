@@ -387,22 +387,82 @@ class Categorie
 	 * 	Link an object to the category
 	 *
 	 *	@param		Object	$obj	Object to link to category
-	 * 	@param		string	$type	Type of category
-	 * 	@return		int				1 : OK, -1 : erreur SQL, -2 : id non renseign, -3 : Already linked
+	 * 	@param		string	$type	Type of category ('member', 'customer', 'supplier', 'product', 'contact')
+	 * 	@return		int				1 : OK, -1 : erreur SQL, -2 : id not defined, -3 : Already linked
 	 */
 	function add_type($obj,$type)
 	{
-		if ($this->id == -1)
-		{
-			return -2;
-		}
+		global $user,$langs,$conf;
 
-		$sql  = "INSERT INTO ".MAIN_DB_PREFIX."categorie_".$type." (fk_categorie, fk_".($type=='fournisseur'?'societe':$type).")";
+		$error=0;
+
+		if ($this->id == -1) return -2;
+
+		// For backward compatibility
+		if ($type == 'company')  $type='societe';
+		if ($type == 'customer') $type='societe';
+		if ($type == 'supplier') $type='fournisseur';
+
+		$column_name=$type;
+        if ($type=='contact') $column_name='socpeople';
+        if ($type=='fournisseur') $column_name='societe';
+
+		$sql  = "INSERT INTO ".MAIN_DB_PREFIX."categorie_".$type." (fk_categorie, fk_".$column_name.")";
 		$sql .= " VALUES (".$this->id.", ".$obj->id.")";
 
+		dol_syslog(get_class($this).'::add_type sql='.$sql);
 		if ($this->db->query($sql))
 		{
-			return 1;
+			if (! empty($conf->global->CATEGORIE_RECURSIV_ADD))
+			{
+				$sql = 'SELECT fk_parent FROM '.MAIN_DB_PREFIX.'categorie';
+				$sql.= " WHERE rowid = ".$this->id;
+
+				dol_syslog(get_class($this)."::add_type sql=".$sql);
+				$resql=$this->db->query($sql);
+				if ($resql)
+				{
+					if ($this->db->num_rows($resql) > 0)
+					{
+						$objparent = $this->db->fetch_object($resql);
+
+						if (!empty($objparent->fk_parent))
+						{
+							$cat = new Categorie($this->db);
+							$cat->id=$objparent->fk_parent;
+							$result=$cat->add_type($obj, $type);
+							if ($result < 0)
+							{
+								$this->error=$cat->error;
+								$error++;
+							}
+						}
+					}
+				}
+				else
+				{
+					$error++;
+					$this->error=$this->db->lasterror();
+				}
+
+				if ($error)
+				{
+					return -1;
+				}
+			}
+
+			// Save object we want to link category to into category instance to provide information to trigger
+			$this->linkto=$obj;
+
+			// Appel des triggers
+			include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+			$interface=new Interfaces($this->db);
+			$result=$interface->run_triggers('CATEGORY_LINK',$this,$user,$langs,$conf);
+			if ($result < 0) { $error++; $this->errors=$interface->errors; $this->error=$interface->error; }
+			// Fin appel triggers
+
+			if (! $error) return 1;
+			else return -2;
 		}
 		else
 		{
@@ -413,7 +473,7 @@ class Categorie
 			}
 			else
 			{
-				$this->error=$this->db->error().' sql='.$sql;
+				$this->error=$this->db->lasterror();
 			}
 			return -1;
 		}
