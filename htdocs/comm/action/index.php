@@ -146,9 +146,11 @@ if (empty($conf->global->AGENDA_DISABLE_EXT) && $conf->global->AGENDA_EXT_NB > 0
         $source='AGENDA_EXT_SRC'.$i;
         $name='AGENDA_EXT_NAME'.$i;
         $color='AGENDA_EXT_COLOR'.$i;
+        $buggedfile='AGENDA_EXT_BUGGEDFILE'.$i;
         if (! empty($conf->global->$source) && ! empty($conf->global->$name))
         {
-        	$listofextcals[]=array('src'=>$conf->global->$source,'name'=>$conf->global->$name,'color'=>$conf->global->$color);
+        	// Note: $conf->global->buggedfile can be empty or 'uselocalandtznodaylight' or 'uselocalandtzdaylight'
+        	$listofextcals[]=array('src'=>$conf->global->$source,'name'=>$conf->global->$name,'color'=>$conf->global->$color,'buggedfile'=>(isset($conf->global->buggedfile)?$conf->global->buggedfile:0));
         }
     }
 }
@@ -182,18 +184,19 @@ if ($action=='show_week')
     $prev_month = $prev['prev_month'];
     $prev_day   = $prev['prev_day'];
     $first_day  = $prev['first_day'];
-
+    $first_month= $prev['first_month'];
+    $first_year = $prev['first_year'];
     $week = $prev['week'];
 
     $day = (int) $day;
-    $next = dol_get_next_week($day, $week, $month, $year);
+    $next = dol_get_next_week($first_day, $week, $first_month, $first_year);
     $next_year  = $next['year'];
     $next_month = $next['month'];
     $next_day   = $next['day'];
 
     // Define firstdaytoshow and lastdaytoshow
-    $firstdaytoshow=dol_mktime(0,0,0,$prev_month,$first_day,$prev_year);
-    $lastdaytoshow=dol_mktime(0,0,0,$next_month,$next_day,$next_year);
+    $firstdaytoshow=dol_mktime(0,0,0,$first_month,$first_day,$first_year);
+	$lastdaytoshow=dol_time_plus_duree($firstdaytoshow, 7, 'd');
 
     $max_day_in_month = date("t",dol_mktime(0,0,0,$month,1,$year));
 
@@ -527,9 +530,11 @@ if (count($listofextcals))
         $url=$extcal['src'];    // Example: https://www.google.com/calendar/ical/eldy10%40gmail.com/private-cde92aa7d7e0ef6110010a821a2aaeb/basic.ics
         $namecal = $extcal['name'];
         $colorcal = $extcal['color'];
-        //print "url=".$url." namecal=".$namecal." colorcal=".$colorcal;
+        $buggedfile = $extcal['buggedfile'];
+        //print "url=".$url." namecal=".$namecal." colorcal=".$colorcal." buggedfile=".$buggedfile;
         $ical=new ICal();
         $ical->parse($url);
+
         // After this $ical->cal['VEVENT'] contains array of events, $ical->cal['DAYLIGHT'] contains daylight info, $ical->cal['STANDARD'] contains non daylight info, ...
         //var_dump($ical->cal); exit;
         $icalevents=array();
@@ -643,6 +648,8 @@ if (count($listofextcals))
             // Loop on each entry into cal file to know if entry is qualified and add an ActionComm into $eventarray
             foreach($icalevents as $icalevent)
             {
+            	//var_dump($icalevent);
+
                 //print $icalevent['SUMMARY'].'->'.var_dump($icalevent).'<br>';exit;
                 if (! empty($icalevent['RRULE'])) continue;    // We found a repeatable event. It was already split into unitary events, so we discard general rule.
 
@@ -659,10 +666,34 @@ if (count($listofextcals))
                     $event->fulldayevent=true;
                     $addevent=true;
                 }
-                elseif (!is_array($icalevent['DTSTART'])) // not fullday event (DTSTART is not array)
+                elseif (!is_array($icalevent['DTSTART'])) // not fullday event (DTSTART is not array. It is a value like '19700101T000000Z' for 00:00 in greenwitch)
                 {
                     $datestart=$icalevent['DTSTART'];
                     $dateend=$icalevent['DTEND'];
+                    $addevent=true;
+                }
+                elseif (isset($icalevent['DTSTART']['unixtime']))	// File contains a local timezone + a TZ (for example when using bluemind)
+                {
+                    $datestart=$icalevent['DTSTART']['unixtime'];
+                    $dateend=$icalevent['DTEND']['unixtime'];
+                    // $buggedfile is set to uselocalandtznodaylight if conf->global->AGENDA_EXT_BUGGEDFILEx = 'uselocalandtznodaylight'
+                    if ($buggedfile === 'uselocalandtznodaylight')	// unixtime is a local date that does not take daylight into account, TZID is +1 for example for 'Europe/Paris' in summer instead of 2
+                    {
+                    	// TODO
+                    }
+                    // $buggedfile is set to uselocalandtzdaylight if conf->global->AGENDA_EXT_BUGGEDFILEx = 'uselocalandtzdaylight' (for example with bluemind)
+                    if ($buggedfile === 'uselocalandtzdaylight')	// unixtime is a local date that does take daylight into account, TZID is +2 for example for 'Europe/Paris' in summer
+                    {
+                    	$localtzs = new DateTimeZone(preg_replace('/"/','',$icalevent['DTSTART']['TZID']));
+                    	$localtze = new DateTimeZone(preg_replace('/"/','',$icalevent['DTEND']['TZID']));
+                    	$localdts = new DateTime(dol_print_date($datestart,'dayrfc','gmt'), $localtzs);
+                    	$localdte = new DateTime(dol_print_date($dateend,'dayrfc','gmt'), $localtze);
+						$tmps=-1*$localtzs->getOffset($localdts);
+						$tmpe=-1*$localtze->getOffset($localdte);
+						$datestart+=$tmps;
+						$dateend+=$tmpe;
+						//var_dump($datestart);
+                    }
                     $addevent=true;
                 }
 
@@ -840,39 +871,27 @@ elseif ($action == 'show_week') // View by week
     }
     echo " </tr>\n";
 
-    // In loops, tmpday contains day nb in current month (can be zero or negative for days of previous month)
-    //var_dump($eventarray);
-    //print $tmpday;
-
     echo " <tr>\n";
 
     for($iter_day = 0; $iter_day < 7; $iter_day++)
     {
-        if(($tmpday <= $max_day_in_month))
-        {
-            // Show days of the current week
-            $curtime = dol_mktime(0, 0, 0, $month, $tmpday, $year);
+        // Show days of the current week
+		$curtime = dol_time_plus_duree($firstdaytoshow, $iter_day, 'd');
+		$tmparray = dol_getdate($curtime,'fast');
+		$tmpday = $tmparray['mday'];
+		$tmpmonth = $tmparray['mon'];
+		$tmpyear = $tmparray['year'];
 
-            $style='cal_current_month';
-        	if ($iter_day == 6) $style.=' cal_other_month_right';
-            $today=0;
-            $todayarray=dol_getdate($now,'fast');
-            if ($todayarray['mday']==$tmpday && $todayarray['mon']==$month && $todayarray['year']==$year) $today=1;
-            if ($today) $style='cal_today';
+        $style='cal_current_month';
+        if ($iter_day == 6) $style.=' cal_other_month_right';
+        $today=0;
+        $todayarray=dol_getdate($now,'fast');
+        if ($todayarray['mday']==$tmpday && $todayarray['mon']==$tmpmonth && $todayarray['year']==$tmpyear) $today=1;
+        if ($today) $style='cal_today';
 
-            echo '  <td class="'.$style.' nowrap" width="14%" valign="top">';
-            show_day_events($db, $tmpday, $month, $year, $month, $style, $eventarray, 0, $maxnbofchar, $newparam, 1, 300);
-            echo "  </td>\n";
-        }
-        else
-        {
-            $style='cal_current_month';
-        	if ($iter_day == 6) $style.=' cal_other_month_right';
-            echo '  <td class="'.$style.' nowrap" width="14%" valign="top">';
-            show_day_events($db, $tmpday - $max_day_in_month, $next_month, $next_year, $month, $style, $eventarray, 0, $maxnbofchar, $newparam, 1, 300);
-            echo "</td>\n";
-        }
-        $tmpday++;
+        echo '  <td class="'.$style.'" width="14%" valign="top">';
+        show_day_events($db, $tmpday, $tmpmonth, $tmpyear, $month, $style, $eventarray, 0, $maxnbofchar, $newparam, 1, 300);
+        echo "  </td>\n";
     }
     echo " </tr>\n";
 

@@ -115,6 +115,9 @@ if ($action == 'confirm_clone' && $confirm == 'yes' && $user->rights->commande->
 	{
 		if ($object->id > 0)
 		{
+			//Because createFromClone modifies the object, we must clone it so that we can restore it later
+			$orig = dol_clone($object);
+
 			$result=$object->createFromClone($socid);
 			if ($result > 0)
 			{
@@ -123,7 +126,8 @@ if ($action == 'confirm_clone' && $confirm == 'yes' && $user->rights->commande->
 			}
 			else
 			{
-				$mesg='<div class="error">'.$object->error.'</div>';
+				setEventMessage($object->error, 'errors');
+				$object = $orig;
 				$action='';
 			}
 		}
@@ -143,7 +147,7 @@ else if ($action == 'reopen' && $user->rights->commande->creer)
 		}
 		else
 		{
-			$mesg='<div class="error">'.$object->error.'</div>';
+			setEventMessage($object->error, 'errors');
 		}
 	}
 }
@@ -157,9 +161,8 @@ else if ($action == 'confirm_delete' && $confirm == 'yes' && $user->rights->comm
 		header('Location: index.php');
 		exit;
 	}
-	else
-	{
-		$mesg='<div class="error">'.$object->error.'</div>';
+	else {
+		setEventMessage($object->error, 'errors');
 	}
 }
 
@@ -190,7 +193,7 @@ else if ($action == 'confirm_deleteline' && $confirm == 'yes' && $user->rights->
 	}
 	else
 	{
-		$mesg='<div class="error">'.$object->error.'</div>';
+		setEventMessage($object->error, 'errors');
 	}
 }
 
@@ -448,6 +451,10 @@ else if ($action == 'add' && $user->rights->commande->creer)
 else if ($action == 'classifybilled' && $user->rights->commande->creer)
 {
 	$ret=$object->classifyBilled();
+
+	if ($ret < 0) {
+		setEventMessage($object->error, 'errors');
+	}
 }
 
 // Positionne ref commande client
@@ -571,7 +578,7 @@ else if ($action == 'setnote_private' && $user->rights->commande->creer)
 else if ($action == 'addline' && $user->rights->commande->creer)
 {
 	$langs->load('errors');
-	$error = false;
+	$error = 0;
 
 	// Set if we used free entry or predefined product
 	if (GETPOST('addline_libre')
@@ -1010,8 +1017,18 @@ else if ($action == 'confirm_validate' && $confirm == 'yes' && $user->rights->co
 {
 	$idwarehouse=GETPOST('idwarehouse');
 
+    $qualified_for_stock_change=0;
+	if (empty($conf->global->STOCK_SUPPORTS_SERVICES))
+	{
+	   	$qualified_for_stock_change=$object->hasProductsOrServices(2);
+	}
+	else
+	{
+	   	$qualified_for_stock_change=$object->hasProductsOrServices(1);
+	}
+
 	// Check parameters
-	if (! empty($conf->global->STOCK_CALCULATE_ON_VALIDATE_ORDER) && $object->hasProductsOrServices(1))
+	if (! empty($conf->stock->enabled) && ! empty($conf->global->STOCK_CALCULATE_ON_VALIDATE_ORDER) && $qualified_for_stock_change)
 	{
 		if (! $idwarehouse || $idwarehouse == -1)
 		{
@@ -1046,8 +1063,18 @@ else if ($action == 'confirm_modif' && $user->rights->commande->creer)
 {
 	$idwarehouse=GETPOST('idwarehouse');
 
+    $qualified_for_stock_change=0;
+	if (empty($conf->global->STOCK_SUPPORTS_SERVICES))
+	{
+	   	$qualified_for_stock_change=$object->hasProductsOrServices(2);
+	}
+	else
+	{
+	   	$qualified_for_stock_change=$object->hasProductsOrServices(1);
+	}
+
 	// Check parameters
-	if (! empty($conf->global->STOCK_CALCULATE_ON_VALIDATE_ORDER) && $object->hasProductsOrServices(1))
+	if (! empty($conf->stock->enabled) && ! empty($conf->global->STOCK_CALCULATE_ON_VALIDATE_ORDER) && $qualified_for_stock_change)
 	{
 		if (! $idwarehouse || $idwarehouse == -1)
 		{
@@ -1084,15 +1111,27 @@ else if ($action == 'confirm_modif' && $user->rights->commande->creer)
 else if ($action == 'confirm_shipped' && $confirm == 'yes' && $user->rights->commande->cloturer)
 {
 	$result = $object->cloture($user);
-	if ($result < 0) $mesgs=$object->errors;
+	if ($result < 0) {
+		setEventMessage($object->error, 'errors');
+	}
 }
 
 else if ($action == 'confirm_cancel' && $confirm == 'yes' && $user->rights->commande->valider)
 {
 	$idwarehouse=GETPOST('idwarehouse');
 
+    $qualified_for_stock_change=0;
+	if (empty($conf->global->STOCK_SUPPORTS_SERVICES))
+	{
+	   	$qualified_for_stock_change=$object->hasProductsOrServices(2);
+	}
+	else
+	{
+	   	$qualified_for_stock_change=$object->hasProductsOrServices(1);
+	}
+
 	// Check parameters
-	if (! empty($conf->global->STOCK_CALCULATE_ON_VALIDATE_ORDER) && $object->hasProductsOrServices(1))
+	if (! empty($conf->stock->enabled) && ! empty($conf->global->STOCK_CALCULATE_ON_VALIDATE_ORDER) && $qualified_for_stock_change)
 	{
 		if (! $idwarehouse || $idwarehouse == -1)
 		{
@@ -1105,6 +1144,10 @@ else if ($action == 'confirm_cancel' && $confirm == 'yes' && $user->rights->comm
 	if (! $error)
 	{
 		$result = $object->cancel($idwarehouse);
+
+		if ($result < 0) {
+			setEventMessage($object->error, 'errors');
+		}
 	}
 }
 
@@ -1556,7 +1599,7 @@ if ($action == 'create' && $user->rights->commande->creer)
 			$demand_reason_id	= (!empty($objectsrc->demand_reason_id)?$objectsrc->demand_reason_id:(!empty($soc->demand_reason_id)?$soc->demand_reason_id:0));
 			$remise_percent		= (!empty($objectsrc->remise_percent)?$objectsrc->remise_percent:(!empty($soc->remise_percent)?$soc->remise_percent:0));
 			$remise_absolue		= (!empty($objectsrc->remise_absolue)?$objectsrc->remise_absolue:(!empty($soc->remise_absolue)?$soc->remise_absolue:0));
-			$dateinvoice		= empty($conf->global->MAIN_AUTOFILL_DATE)?-1:0;
+			$dateinvoice		= empty($conf->global->MAIN_AUTOFILL_DATE)?-1:'';
 
 			$datedelivery		= (!empty($objectsrc->date_livraison)?$objectsrc->date_livraison:'');
 
@@ -1575,7 +1618,7 @@ if ($action == 'create' && $user->rights->commande->creer)
 		$demand_reason_id   = $soc->demand_reason_id;
 		$remise_percent     = $soc->remise_percent;
 		$remise_absolue     = 0;
-		$dateinvoice        = empty($conf->global->MAIN_AUTOFILL_DATE)?-1:0;
+		$dateinvoice        = empty($conf->global->MAIN_AUTOFILL_DATE)?-1:'';
 		$projectid          = 0;
 	}
 	$absolute_discount=$soc->getAvailableDiscounts();
@@ -1651,7 +1694,7 @@ if ($action == 'create' && $user->rights->commande->creer)
 	if (empty($datedelivery))
 	{
 		if (! empty($conf->global->DATE_LIVRAISON_WEEK_DELAY)) $datedelivery = time() + ((7*$conf->global->DATE_LIVRAISON_WEEK_DELAY) * 24 * 60 * 60);
-		else $datedelivery=empty($conf->global->MAIN_AUTOFILL_DATE)?-1:0;
+		else $datedelivery=empty($conf->global->MAIN_AUTOFILL_DATE)?-1:'';
 	}
 	$form->select_date($datedelivery,'liv_','','','',"crea_commande",1,1);
 	print "</td></tr>";
@@ -1880,8 +1923,19 @@ else
 				$text.='<br>';
 				$text.=$notify->confirmMessage('ORDER_VALIDATE',$object->socid);
 			}
+
+		    $qualified_for_stock_change=0;
+			if (empty($conf->global->STOCK_SUPPORTS_SERVICES))
+			{
+			   	$qualified_for_stock_change=$object->hasProductsOrServices(2);
+			}
+			else
+			{
+			   	$qualified_for_stock_change=$object->hasProductsOrServices(1);
+			}
+
 			$formquestion=array();
-			if (! empty($conf->global->STOCK_CALCULATE_ON_VALIDATE_ORDER) && $object->hasProductsOrServices(1))
+			if (! empty($conf->stock->enabled) && ! empty($conf->global->STOCK_CALCULATE_ON_VALIDATE_ORDER) && $qualified_for_stock_change)
 			{
 				$langs->load("stocks");
 				require_once DOL_DOCUMENT_ROOT.'/product/class/html.formproduct.class.php';
@@ -1899,9 +1953,19 @@ else
 		// Confirm back to draft status
 		if ($action == 'modif')
 		{
+			$qualified_for_stock_change=0;
+			if (empty($conf->global->STOCK_SUPPORTS_SERVICES))
+			{
+			   	$qualified_for_stock_change=$object->hasProductsOrServices(2);
+			}
+			else
+			{
+			   	$qualified_for_stock_change=$object->hasProductsOrServices(1);
+			}
+
 			$text=$langs->trans('ConfirmUnvalidateOrder',$object->ref);
 			$formquestion=array();
-			if (! empty($conf->global->STOCK_CALCULATE_ON_VALIDATE_ORDER) && $object->hasProductsOrServices(1))
+			if (! empty($conf->stock->enabled) && ! empty($conf->global->STOCK_CALCULATE_ON_VALIDATE_ORDER) && $qualified_for_stock_change)
 			{
 				$langs->load("stocks");
 				require_once DOL_DOCUMENT_ROOT.'/product/class/html.formproduct.class.php';
@@ -1927,12 +1991,22 @@ else
 
 		/*
 		 * Confirmation de l'annulation
-		*/
+		 */
 		if ($action == 'cancel')
 		{
+			$qualified_for_stock_change=0;
+			if (empty($conf->global->STOCK_SUPPORTS_SERVICES))
+			{
+			   	$qualified_for_stock_change=$object->hasProductsOrServices(2);
+			}
+			else
+			{
+			   	$qualified_for_stock_change=$object->hasProductsOrServices(1);
+			}
+
 			$text=$langs->trans('ConfirmCancelOrder',$object->ref);
 			$formquestion=array();
-			if (! empty($conf->global->STOCK_CALCULATE_ON_VALIDATE_ORDER) && $object->hasProductsOrServices(1))
+			if (! empty($conf->stock->enabled) && ! empty($conf->global->STOCK_CALCULATE_ON_VALIDATE_ORDER) && $qualified_for_stock_change)
 			{
 				$langs->load("stocks");
 				require_once DOL_DOCUMENT_ROOT.'/product/class/html.formproduct.class.php';
@@ -1949,7 +2023,7 @@ else
 
 		/*
 		 * Confirmation de la suppression d'une ligne produit
-		*/
+		 */
 		if ($action == 'ask_deleteline')
 		{
 			$formconfirm=$form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('DeleteProductLine'), $langs->trans('ConfirmDeleteProductLine'), 'confirm_deleteline', '', 0, 1);

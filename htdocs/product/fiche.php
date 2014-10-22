@@ -1,12 +1,12 @@
 <?php
 /* Copyright (C) 2001-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
  * Copyright (C) 2006      Auguria SARL         <info@auguria.org>
  * Copyright (C) 2010-2011 Juanjo Menent        <jmenent@2byte.es>
- * Copyright (C) 2013      Marcos García        <marcosgdf@gmail.com>
+ * Copyright (C) 2013-2014 Marcos García        <marcosgdf@gmail.com>
  * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -122,20 +122,18 @@ if (empty($reshook))
     	exit;
     }
 
-    if ($action == 'setaccountancy_code_buy')
-    {
-        $result = $object->setValueFrom('accountancy_code_buy', GETPOST('accountancy_code_buy'));
+    if ($action == 'setaccountancy_code_buy') {
+
+	    $result = $object->setAccountancyCode('buy', GETPOST('accountancy_code_buy'));
         if ($result < 0) setEventMessage(join(',',$object->errors), 'errors');
-        else $object->accountancy_code_buy=GETPOST('accountancy_code_buy');
         $action="";
     }
 
     if ($action == 'setaccountancy_code_sell')
     {
-        $result = $object->setValueFrom('accountancy_code_sell', GETPOST('accountancy_code_sell'));
-        if ($result < 0) setEventMessage(join(',',$object->errors), 'errors');
-        else $object->accountancy_code_sell=GETPOST('accountancy_code_sell');
-        $action="";
+	    $result = $object->setAccountancyCode('sell', GETPOST('accountancy_code_sell'));
+	    if ($result < 0) setEventMessage(join(',',$object->errors), 'errors');
+	    $action="";
     }
 
     // Add a product or service
@@ -392,7 +390,7 @@ if (empty($reshook))
 
         if ($result > 0)
         {
-            header('Location: '.DOL_URL_ROOT.'/product/liste.php?delprod='.urlencode($object->ref));
+            header('Location: '.DOL_URL_ROOT.'/product/liste.php?type='.$object->type.'&delprod='.urlencode($object->ref));
             exit;
         }
         else
@@ -873,7 +871,7 @@ else
 
             $type = $langs->trans('Product');
             if ($object->isservice()) $type = $langs->trans('Service');
-            print_fiche_titre($langs->trans('Modify').' '.$type.' : '.$object->ref, "");
+            print_fiche_titre($langs->trans('Modify').' '.$type.' : '.(is_object($object->oldcopy)?$object->oldcopy->ref:$object->ref), "");
 
             // Main official, simple, and not duplicated code
             print '<form action="'.$_SERVER['PHP_SELF'].'" method="POST">'."\n";
