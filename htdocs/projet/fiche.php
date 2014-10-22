@@ -129,7 +129,7 @@ if ($action == 'add' && $user->rights->projet->creer)
         $db->begin();
 
         $object->ref             = GETPOST('ref','alpha');
-        $object->title           = GETPOST('title','alpha');
+        $object->title           = GETPOST('title');
         $object->socid           = GETPOST('socid','int');
         $object->description     = GETPOST('description','alpha');
         $object->public          = GETPOST('public','alpha');
