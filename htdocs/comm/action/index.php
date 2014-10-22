@@ -78,7 +78,7 @@ $type=GETPOST("type");
 $maxprint=(isset($_GET["maxprint"])?GETPOST("maxprint"):$conf->global->AGENDA_MAX_EVENTS_DAY_VIEW);
 $actioncode=GETPOST("actioncode","alpha",3)?GETPOST("actioncode","alpha",3):(GETPOST("actioncode")=="0"?'':(empty($conf->global->AGENDA_USE_EVENT_TYPE)?'AC_OTH':''));
 
-if (GETPOST('viewcal'))  {
+if (GETPOST('viewcal') && $action != 'show_day' && $action != 'show_week')  {
     $action='show_month'; $day='';
 }                                                   // View by month
 if (GETPOST('viewweek')) {
@@ -314,7 +314,7 @@ $sql.= " ".MAIN_DB_PREFIX."actioncomm as a)";
 if (! $user->rights->societe->client->voir && ! $socid) $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON a.fk_soc = sc.fk_soc";
 $sql.= ' WHERE a.fk_action = ca.id';
 $sql.= ' AND a.fk_user_author = u.rowid';
-$sql.= ' AND a.entity IN ('.getEntity().')';
+$sql.= ' AND a.entity IN ('.getEntity('agenda', 1).')';
 if ($actioncode) $sql.=" AND ca.code='".$db->escape($actioncode)."'";
 
 // SPECIFIQUE TRAVAIL ASSOCIE
@@ -1155,7 +1155,7 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
                                 $cachethirdparties[$event->societe->id]=$thirdparty;
                             }
                             else $thirdparty=$cachethirdparties[$event->societe->id];
-                            $linerelatedto.=$thirdparty->getNomUrl(1,'',$length);
+                            if (! empty($thirdparty->id)) $linerelatedto.=$thirdparty->getNomUrl(1,'',$length);
                         }
                         if (! empty($event->contact->id) && $event->contact->id > 0)
                         {
@@ -1167,7 +1167,7 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
                             }
                             else $contact=$cachecontacts[$event->contact->id];
                             if ($linerelatedto) $linerelatedto.=' / ';
-                            $linerelatedto.=$contact->getNomUrl(1,'',$length);
+                            if (! empty($contact->id)) $linerelatedto.=$contact->getNomUrl(1,'',$length);
                         }
                         if ($linerelatedto) print '<br>'.$linerelatedto;
                     }
