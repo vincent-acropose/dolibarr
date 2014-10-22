@@ -1665,8 +1665,27 @@ class Form
 
         if (! empty($conf->stock->enabled) && isset($objp->stock) && $objp->fk_product_type == 0)
         {
-            $opt.= ' - '.$langs->trans("Stock").':'.$objp->stock;
-            $outval.=' - '.$langs->transnoentities("Stock").':'.$objp->stock;
+            $opt.= ' - '.$langs->trans("Stock").': '.$objp->stock;
+            $outval.=' - '.$langs->transnoentities("Stock").': '.$objp->stock;
+			
+			//Ajout affichage stock "Neuf" spécifi Nomadic
+			if($conf->clinomadic->enabled){
+				dol_include_once('/product/stock/class/entrepot.class.php');
+				
+				$product = new Product($db);
+				$product->fetch($objp->rowid);
+				$product->load_stock();
+				
+				foreach($product->stock_warehouse as $idEntrepot => $object){
+					$entrepot = new Entrepot($db);
+					$entrepot->fetch($idEntrepot);
+
+					if($entrepot->libelle == "Neuf"){
+						$opt.= ' - Stock Neuf: '.$product->stock_warehouse[$idEntrepot]->real;
+            			$outval.=' - Stock Neuf: '.$product->stock_warehouse[$idEntrepot]->real;
+					}
+				}
+			}
         }
 
         if ($objp->duration)
