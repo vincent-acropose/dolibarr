@@ -785,10 +785,10 @@ function num_open_day($timestampStart, $timestampEnd, $inhour=0, $lastday=0, $ha
 		$nbOpenDay = num_between_day($timestampStart, $timestampEnd, $lastday) - num_public_holiday($timestampStart, $timestampEnd, $lastday);
 		$nbOpenDay.= " " . $langs->trans("Days");
 		if ($inhour == 1 && $nbOpenDay <= 3) $nbOpenDay = $nbOpenDay*24 . $langs->trans("HourShort");
-		print '<BR>$nbOpenDay='.$nbOpenDay;
-		print '<BR>$inhour='.$inhour;
-		print '<BR>$halfday='.$halfday;
-		print '<br>(($inhour == 1 ? 12 : 0.5) * abs($halfday))='.(($inhour == 1 ? 12 : 0.5) * abs($halfday));
+		//print '<BR>$nbOpenDay='.$nbOpenDay;
+		//print '<BR>$inhour='.$inhour;
+		//print '<BR>$halfday='.$halfday;
+		//print '<br>(($inhour == 1 ? 12 : 0.5) * abs($halfday))='.(($inhour == 1 ? 12 : 0.5) * abs($halfday));
 				
 		$return_val=$nbOpenDay - (($inhour == 1 ? 12 : 0.5) * abs($halfday));
 		//print '<BR>$nbOpenDay - (($inhour == 1 ? 12 : 0.5) * abs($halfday))='.$return_val;
