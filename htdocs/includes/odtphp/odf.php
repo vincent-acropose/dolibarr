@@ -432,7 +432,7 @@ IMG;
 		
 		$name=str_replace('.odt', '', $name);
 		if (!empty($conf->global->MAIN_DOL_SCRIPTS_ROOT)) {
-			$command = 'sh '.$conf->global->MAIN_DOL_SCRIPTS_ROOT.'/scripts/odt2pdf/odt2pdf.sh '.$name;
+			$command = 'sh '.$conf->global->MAIN_DOL_SCRIPTS_ROOT.'/scripts/odt2pdf/odt2pdf.sh "'.$name.'"';
 		}else {
 			$command = 'sh ../../../scripts/odt2pdf/odt2pdf.sh "'.$name.'"';
 		}
