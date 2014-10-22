@@ -410,7 +410,6 @@ function pdf_build_address($outputlangs,$sourcecompany,$targetcompany='',$target
 		}
 	}
 
-<<<<<<< HEAD
 	if ($mode == 'delivery')	// for a delivery address (address + phone/fax)
 	{
 		$stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->convToOutputCharset(dol_format_address($deliverycompany))."\n";
@@ -421,8 +420,6 @@ function pdf_build_address($outputlangs,$sourcecompany,$targetcompany='',$target
 		if ($deliverycompany->fax) $stringaddress .= ($stringaddress ? ($deliverycompany->phone ? " - " : "\n") : '' ).$outputlangs->transnoentities("Fax").": ".$outputlangs->convToOutputCharset($deliverycompany->fax);
 	}
 
-=======
->>>>>>> a94f7dc3ad0ca782941c5c9129828e2c32f9524d
 	return $stringaddress;
 }
 
