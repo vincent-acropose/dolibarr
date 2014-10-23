@@ -51,3 +51,4 @@ AgentContactTypeDetails=Permet de définir le type de contact associé aux factu
 
 DisplayPMPProduct=Permettre la sélection du PMP produit
 MargeUsePMPByDefault=______Utilisation du PMP par défaut
+MargeSetAuto=Affectation invisible du prix de revient

@@ -253,6 +253,29 @@ print '</tr>';
 
 $var=!$var;
 print '<tr '.$bc[$var].'>';
+print '<td>'.$langs->trans("MargeSetAuto").'</td>';
+print '<td colspan="2" align="center">';
+if (! empty($conf->use_javascript_ajax))
+{
+	print ajax_constantonoff('MARGE_SET_AUTO');
+}
+else
+{
+	if (empty($conf->global->MARGE_USE_PMP_BY_DEFAULT))
+	{
+		print '<a href="'.$_SERVER['PHP_SELF'].'?action=set_MARGE_SET_AUTO">'.img_picto($langs->trans("Disabled"),'off').'</a>';
+	}
+	else
+	{
+		print '<a href="'.$_SERVER['PHP_SELF'].'?action=del_MARGE_SET_AUTO">'.img_picto($langs->trans("Enabled"),'on').'</a>';
+	}
+}
+print '</td>';
+print '<td>Si l\'utilisateur n\'a pas les droits nécessaires, affectation invisible</td>';
+print '</tr>';
+
+$var=!$var;
+print '<tr '.$bc[$var].'>';
 print '<td>'.$langs->trans("ForceBuyingPriceIfNull").'</td>';
 print '<td colspan="2" align="center">';
 if (! empty($conf->use_javascript_ajax))
