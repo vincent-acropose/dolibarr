@@ -196,20 +196,20 @@ elseif ($action == 'confirm_paid' && $confirm == 'yes' && $user->rights->fournis
 }
 
 // Set supplier ref
-if ($action == 'setref_supplier' && $user->rights->fournisseur->commande->creer)
+if ($action == 'setref_supplier' && $user->rights->fournisseur->facture->creer)
 {
     $result=$object->setValueFrom('ref_supplier',GETPOST('ref_supplier','alpha'));
     if ($result < 0) dol_print_error($db, $object->error);
 }
 
 // conditions de reglement
-if ($action == 'setconditions' && $user->rights->fournisseur->commande->creer)
+if ($action == 'setconditions' && $user->rights->fournisseur->facture->creer)
 {
     $result=$object->setPaymentTerms(GETPOST('cond_reglement_id','int'));
 }
 
 // mode de reglement
-else if ($action == 'setmode' && $user->rights->fournisseur->commande->creer)
+else if ($action == 'setmode' && $user->rights->fournisseur->facture->creer)
 {
     $result = $object->setPaymentMethods(GETPOST('mode_reglement_id','int'));
 }
