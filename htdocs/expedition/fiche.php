@@ -162,8 +162,8 @@ if ($action == 'add')
         {
             $qty = "qtyl".$i;
 			if (! isset($batch_line[$i])) {
-				/*if (GETPOST($qty,'int') > 0)
-				{*/
+				if (GETPOST($qty,'int') > 0 || (GETPOST($qty,'int') == 0 && $conf->global->SHIPMENT_GETS_ALL_ORDER_PRODUCTS))
+				{
 					$ent = "entl".$i;
 					$idl = "idl".$i;
 					$entrepot_id = is_numeric(GETPOST($ent,'int'))?GETPOST($ent,'int'):GETPOST('entrepot_id','int');
@@ -175,16 +175,16 @@ if ($action == 'add')
 						$mesg='<div class="error">'.$object->error.'</div>';
 						$error++;
 					}
-				//}
+				}
 			} else {
-				/*if ($batch_line[$i]['qty']>0) {*/
+				if ($batch_line[$i]['qty']>0) {
 					$ret=$object->addline_batch($batch_line[$i]);
 					if ($ret < 0)
 					{
 						$mesg='<div class="error">'.$object->error.'</div>';
 						$error++;
 					}
-				/*}*/
+				}
 			}
         }
 
