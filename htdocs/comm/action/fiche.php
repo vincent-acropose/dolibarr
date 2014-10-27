@@ -305,7 +305,31 @@ if ($action == 'update')
 
 	    // Clean parameters
 		if ($aphour == -1) $aphour='0';
-		if ($apmin == -1) $apmin='0';
+		if ($apmin == -1) $apmin='0';if (empty($conf->global->SOCIETE_DISABLE_BUILDDOC)) {
+				print '<div class="fichecenter"><div class="fichehalfleft">';
+	            print '<a name="builddoc"></a>'; // ancre
+
+	            /*
+	             * Documents generes
+	             */
+	             
+	            $filedir=$conf->agenda->multidir_output[$conf->entity].'/'.$object->id;
+	            $urlsource=$_SERVER["PHP_SELF"]."?socid=".$object->id;
+				
+	            $genallowed=$user->rights->agenda->myactions->create;
+	            $delallowed=$user->rights->agenda->myactions->delete;
+
+	            $var=true;
+
+	            $somethingshown=$formfile->show_documents('agenda',$object->id,$filedir,$urlsource,$genallowed,$delallowed,'',0,0,0,0,0,'','','',$object->default_lang);
+
+				print '</div><div class="fichehalfright"><div class="ficheaddleft">';
+
+
+				print '</div></div></div>';
+
+	            print '<div style="clear:both;">&nbsp;</div>';
+	    }
 		if ($p2hour == -1) $p2hour='0';
 		if ($p2min == -1) $p2min='0';
 
@@ -1091,6 +1115,77 @@ if ($id > 0)
 	}
 
 	print '</div>';
+	
+	if ($action != 'edit')
+	{
+		
+		if (empty($conf->global->SOCIETE_DISABLE_BUILDDOC)) {
+				print '<div class="fichecenter"><div class="fichehalfleft">';
+	            print '<a name="builddoc"></a>'; // ancre
+
+	            /*
+	             * Documents generes
+	             */
+	             
+	            $filedir=$conf->agenda->multidir_output[$conf->entity].'/'.$object->id;
+	            $urlsource=$_SERVER["PHP_SELF"]."?socid=".$object->id;
+				
+	            $genallowed=$user->rights->agenda->myactions->create;
+	            $delallowed=$user->rights->agenda->myactions->delete;
+
+	            $var=true;
+
+	            $somethingshown=$formfile->show_documents('agenda',$object->id,$filedir,$urlsource,$genallowed,$delallowed,'',0,0,0,0,0,'','','',$object->default_lang);
+
+				print '</div><div class="fichehalfright"><div class="ficheaddleft">';
+
+
+				print '</div></div></div>';
+
+	            print '<div style="clear:both;">&nbsp;</div>';
+	    }
+		
+		
+		// Link to agenda views
+		print '<div id="agendaviewbutton">';
+		print '<form name="listactionsfiltermonth" action="'.DOL_URL_ROOT.'/comm/action/index.php" method="POST" style="float: left; padding-right: 10px;">';
+		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+		print '<input type="hidden" name="action" value="show_month">';
+		print '<input type="hidden" name="year" value="'.dol_print_date($object->datep,'%Y').'">';
+		print '<input type="hidden" name="month" value="'.dol_print_date($object->datep,'%m').'">';
+		print '<input type="hidden" name="day" value="'.dol_print_date($object->datep,'%d').'">';
+		//print '<input type="hidden" name="day" value="'.dol_print_date($object->datep,'%d').'">';
+		print img_picto($langs->trans("ViewCal"),'object_calendar','class="hideonsmartphone"').' <input type="submit" style="min-width: 120px" class="button" name="viewcal" value="'.$langs->trans("ViewCal").'">';
+		print '</form>'."\n";
+		print '<form name="listactionsfilterweek" action="'.DOL_URL_ROOT.'/comm/action/index.php" method="POST" style="float: left; padding-right: 10px;">';
+		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+		print '<input type="hidden" name="action" value="show_week">';
+		print '<input type="hidden" name="year" value="'.dol_print_date($object->datep,'%Y').'">';
+		print '<input type="hidden" name="month" value="'.dol_print_date($object->datep,'%m').'">';
+		print '<input type="hidden" name="day" value="'.dol_print_date($object->datep,'%d').'">';
+		//print '<input type="hidden" name="day" value="'.dol_print_date($object->datep,'%d').'">';
+		print img_picto($langs->trans("ViewCal"),'object_calendarweek','class="hideonsmartphone"').' <input type="submit" style="min-width: 120px" class="button" name="viewweek" value="'.$langs->trans("ViewWeek").'">';
+		print '</form>'."\n";
+		print '<form name="listactionsfilterday" action="'.DOL_URL_ROOT.'/comm/action/index.php" method="POST" style="float: left; padding-right: 10px;">';
+		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+		print '<input type="hidden" name="action" value="show_day">';
+		print '<input type="hidden" name="year" value="'.dol_print_date($object->datep,'%Y').'">';
+		print '<input type="hidden" name="month" value="'.dol_print_date($object->datep,'%m').'">';
+		print '<input type="hidden" name="day" value="'.dol_print_date($object->datep,'%d').'">';
+		//print '<input type="hidden" name="day" value="'.dol_print_date($object->datep,'%d').'">';
+		print img_picto($langs->trans("ViewCal"),'object_calendarday','class="hideonsmartphone"').' <input type="submit" style="min-width: 120px" class="button" name="viewday" value="'.$langs->trans("ViewDay").'">';
+		print '</form>'."\n";
+		print '<form name="listactionsfilterperuser" action="'.DOL_URL_ROOT.'/comm/action/peruser.php" method="POST" style="float: left; padding-right: 10px;">';
+		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+		print '<input type="hidden" name="action" value="show_peruser">';
+		print '<input type="hidden" name="year" value="'.dol_print_date($object->datep,'%Y').'">';
+		print '<input type="hidden" name="month" value="'.dol_print_date($object->datep,'%m').'">';
+		print '<input type="hidden" name="day" value="'.dol_print_date($object->datep,'%d').'">';
+		//print '<input type="hidden" name="day" value="'.dol_print_date($object->datep,'%d').'">';
+		print img_picto($langs->trans("ViewCal"),'object_calendarperuser','class="hideonsmartphone"').' <input type="submit" style="min-width: 120px" class="button" name="viewperuser" value="'.$langs->trans("ViewPerUser").'">';
+		print '</form>'."\n";
+		print '</div>';
+	}
 }
 
 
