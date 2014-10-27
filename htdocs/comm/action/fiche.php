@@ -34,12 +34,13 @@ require_once DOL_DOCUMENT_ROOT.'/user/class/user.class.php';
 require_once DOL_DOCUMENT_ROOT.'/comm/action/class/cactioncomm.class.php';
 require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
+dol_include_once('/core/class/html.formfile.class.php');
 if (! empty($conf->projet->enabled)) {
 	require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 }
 require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
-
+ini_set('display_errors',1);
 $langs->load("companies");
 $langs->load("commercial");
 $langs->load("other");
@@ -68,6 +69,7 @@ $cactioncomm = new CActionComm($db);
 $object = new ActionComm($db);
 $contact = new Contact($db);
 $extrafields = new ExtraFields($db);
+$formfile = new FormFile($db);
 
 // fetch optionals attributes and labels
 $extralabels=$extrafields->fetch_name_optionals_label($object->table_element);
@@ -1175,15 +1177,7 @@ if ($id > 0)
 		//print '<input type="hidden" name="day" value="'.dol_print_date($object->datep,'%d').'">';
 		print img_picto($langs->trans("ViewCal"),'object_calendarday','class="hideonsmartphone"').' <input type="submit" style="min-width: 120px" class="button" name="viewday" value="'.$langs->trans("ViewDay").'">';
 		print '</form>'."\n";
-		print '<form name="listactionsfilterperuser" action="'.DOL_URL_ROOT.'/comm/action/peruser.php" method="POST" style="float: left; padding-right: 10px;">';
-		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-		print '<input type="hidden" name="action" value="show_peruser">';
-		print '<input type="hidden" name="year" value="'.dol_print_date($object->datep,'%Y').'">';
-		print '<input type="hidden" name="month" value="'.dol_print_date($object->datep,'%m').'">';
-		print '<input type="hidden" name="day" value="'.dol_print_date($object->datep,'%d').'">';
-		//print '<input type="hidden" name="day" value="'.dol_print_date($object->datep,'%d').'">';
-		print img_picto($langs->trans("ViewCal"),'object_calendarperuser','class="hideonsmartphone"').' <input type="submit" style="min-width: 120px" class="button" name="viewperuser" value="'.$langs->trans("ViewPerUser").'">';
-		print '</form>'."\n";
+		
 		print '</div>';
 	}
 }
