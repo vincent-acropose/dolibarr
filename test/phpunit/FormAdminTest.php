@@ -17,7 +17,7 @@
  */
 
 /**
- *      \file       test/phpunit/CMailFileTest.php
+ *      \file       test/phpunit/FormAdminTest.php
  *		\ingroup    test
  *      \brief      PHPUnit test
  *		\remarks	To run this script as CLI:  phpunit filename.php
@@ -27,7 +27,7 @@ global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
 //require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
-require_once dirname(__FILE__).'/../../htdocs/core/class/CMailFile.class.php';
+require_once dirname(__FILE__).'/../../htdocs/core/class/html.formadmin.class.php';
 
 if (empty($user->id))
 {
@@ -45,7 +45,7 @@ $conf->global->MAIN_DISABLE_ALL_MAILS=1;
  * @backupStaticAttributes enabled
  * @remarks	backupGlobals must be disabled to have db,conf,user and lang not erased.
  */
-class CMailFileTest extends PHPUnit_Framework_TestCase
+class FormAdminTest extends PHPUnit_Framework_TestCase
 {
 	protected $savconf;
 	protected $savuser;
@@ -56,7 +56,7 @@ class CMailFileTest extends PHPUnit_Framework_TestCase
 	 * Constructor
 	 * We save global variables into local variables
 	 *
-	 * @return CMailFile
+	 * @return FactureTest
 	 */
 	function __construct()
 	{
@@ -103,22 +103,23 @@ class CMailFileTest extends PHPUnit_Framework_TestCase
 
 		print __METHOD__."\n";
     }
+
 	/**
 	 * End phpunit tests
 	 *
 	 * @return	void
 	 */
-    protected function tearDown()
+	protected function tearDown()
     {
     	print __METHOD__."\n";
     }
 
     /**
-     * testCMailFileText
+     * testFactureCreate
      *
-     * @return void
+     * @return int
      */
-    public function testCMailFileText()
+    public function testSelectPaperFormat()
     {
     	global $conf,$user,$langs,$db;
 		$conf=$this->savconf;
@@ -126,56 +127,12 @@ class CMailFileTest extends PHPUnit_Framework_TestCase
 		$langs=$this->savlangs;
 		$db=$this->savdb;
 
-		$localobject=new CMailFile('Test','test@test.com','from@from.com','Message txt',array(),array(),array(),'','',1,0);
+		$localobject=new FormAdmin($this->savdb);
+    	$result=$localobject->select_paper_format('','paperformat_id','A4');
 
-    	$result=$localobject->sendfile();
-        print __METHOD__." result=".$result."\n";
-    	$this->assertFalse($result);   // False because mail send disabled
-
+    	$this->assertEquals($result, '<select class="flat" id="paperformat_id" name="paperformat_id"><option value="EUA4">Format A4 - 210x297 mm</option></select>');
+    	print __METHOD__." result=".$result."\n";
     	return $result;
-    }
-
-    /**
-     * testCMailFileStatic
-     *
-     * @return string
-     */
-    public function testCMailFileStatic()
-    {
-        global $conf,$user,$langs,$db;
-        $conf=$this->savconf;
-        $user=$this->savuser;
-        $langs=$this->savlangs;
-        $db=$this->savdb;
-
-        $localobject=new CMailFile('','','','');
-
-        $src='John Doe <john@doe.com>';
-        $result=$localobject->getValidAddress($src,0);
-        print __METHOD__." result=".$result."\n";
-        $this->assertEquals($result,'John Doe <john@doe.com>');
-
-        $src='John Doe <john@doe.com>';
-        $result=$localobject->getValidAddress($src,1);
-        print __METHOD__." result=".$result."\n";
-        $this->assertEquals($result,'<john@doe.com>');
-
-        $src='John Doe <john@doe.com>';
-        $result=$localobject->getValidAddress($src,2);
-        print __METHOD__." result=".$result."\n";
-        $this->assertEquals($result,'john@doe.com');
-
-        $src='John Doe <john@doe.com>';
-        $result=$localobject->getValidAddress($src,3,0);
-        print __METHOD__." result=".$result."\n";
-        $this->assertEquals($result,'"John Doe" <john@doe.com>');
-
-        $src='John Doe <john@doe.com>';
-        $result=$localobject->getValidAddress($src,3,1);
-        print __METHOD__." result=".$result."\n";
-        $this->assertEquals($result,'"=?UTF-8?B?Sm9obiBEb2U=?=" <john@doe.com>');
-
-        return $result;
     }
 
 }
