@@ -1403,12 +1403,14 @@ class pdf_facture_acticontrole extends ModelePDFFactures
 			$soc->fetch($object->socid);
 			
 			$parent = new Societe($db);
-			$parent->fetch($soc->parent);
+			if($parent->fetch($soc->parent) > 0) {
 			
-			$object->client->address = "Chez ".$parent->name;
-			$object->client->address.= "\n".$parent->address;
-			$object->client->zip = $parent->zip;
-			$object->client->town = $parent->town;
+				$object->client->address = "Chez ".$parent->name;
+				$object->client->address.= "\n".$parent->address;
+				$object->client->zip = $parent->zip;
+				$object->client->town = $parent->town;
+				
+			}
 
 			// Show sender
 			$posy=42;
