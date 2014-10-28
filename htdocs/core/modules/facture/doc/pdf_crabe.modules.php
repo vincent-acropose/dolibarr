@@ -1279,9 +1279,9 @@ class pdf_crabe extends ModelePDFFactures
 		if ($object->ref_client)
 		{
 			$posy+=4;
-			$pdf->SetXY($posx,$posy);
+			$pdf->SetXY($posx-50,$posy);
 			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("RefCustomer")." : " . $outputlangs->convToOutputCharset($object->ref_client), '', 'R');
+			$pdf->MultiCell(150, 3, $outputlangs->transnoentities("RefCustomer")." : " . $outputlangs->convToOutputCharset($object->ref_client), '', 'R');
 		}
 
 		$objectidnext=$object->getIdReplacingInvoice('validated');
