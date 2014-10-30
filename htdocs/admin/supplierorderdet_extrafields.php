@@ -76,7 +76,7 @@ print "<br>\n";
 
 $head = supplierorder_admin_prepare_head(null);
 
-dol_fiche_head($head, 'attributeslines', $langs->trans("Orders"), 0, 'order');
+dol_fiche_head($head, 'supplierorderdet', $langs->trans("Orders"), 0, 'order');
 
 
 print $langs->trans("DefineHereComplementaryAttributes",$textobject).'<br>'."\n";
