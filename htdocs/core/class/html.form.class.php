@@ -1680,9 +1680,9 @@ class Form
 					$entrepot = new Entrepot($db);
 					$entrepot->fetch($idEntrepot);
 
-					if($entrepot->libelle == "Neuf"){
-						$opt.= ' - Stock Neuf: '.$product->stock_warehouse[$idEntrepot]->real;
-            			$outval.=' - Stock Neuf: '.$product->stock_warehouse[$idEntrepot]->real;
+					if(strpos($conf->global->SHIPPABLEORDER_SPECIFIC_WAREHOUSE, $entrepot->libelle) !== FALSE){
+						$opt.= ' - Stock Neuf: '.$object->real;
+            			$outval.=' - Stock Neuf: '.$object->real;
 					}
 				}
 			}
