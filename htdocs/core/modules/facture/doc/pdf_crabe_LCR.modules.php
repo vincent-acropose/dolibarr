@@ -36,7 +36,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
 /**
  *	Class to manage PDF invoice template Crabe
  */
-class pdf_crabe extends ModelePDFFactures
+class pdf_crabe_LCR extends ModelePDFFactures
 {
     var $db;
     var $name;
@@ -70,7 +70,7 @@ class pdf_crabe extends ModelePDFFactures
 		$langs->load("bills");
 
 		$this->db = $db;
-		$this->name = "crabe";
+		$this->name = "crabe_LCR";
 		$this->description = $langs->trans('PDFCrabeDescription');
 
 		// Dimension page pour format A4
@@ -484,7 +484,7 @@ class pdf_crabe extends ModelePDFFactures
 				$posy=$this->_tableau_info($pdf, $object, $bottomlasttab, $outputlangs);
 
 				// Affiche zone totaux
-				$posy=$this->_tableau_tot($pdf, $object, $deja_regle, $bottomlasttab, $outputlangs);
+				$posy=$this->_tableau_tot($pdf, $object, $deja_regle, $bottomlasttab-50, $outputlangs);
 
 				// Affiche zone versements
 				if ($deja_regle || $amount_credit_notes_included || $amount_deposits_included)
@@ -698,6 +698,7 @@ class pdf_crabe extends ModelePDFFactures
 		}
 
 		$posxval=52;
+		$posy -= 50;
 
 		// Show payments conditions
 		if ($object->type != 2 && ($object->cond_reglement_code || $object->cond_reglement))
@@ -824,7 +825,8 @@ class pdf_crabe extends ModelePDFFactures
 //mb Gestion LCR  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		   	if ($object->mode_reglement_code == 'LCR')
 			{
-				pdf_pagefoot($pdf,$outputlangs,'FACTURE_FREE_TEXT',$this->emetteur,($this->marge_haute)+80,$this->marge_gauche,$this->page_hauteur,$object); 
+				$posy += 50;
+				//pdf_pagefoot($pdf,$outputlangs,'FACTURE_FREE_TEXT',$this->emetteur,($this->marge_haute)+80,$this->marge_gauche,$this->page_hauteur,$object); 
 				$pdf->SetDrawColor(0,0,0);
 			/*}
 			
@@ -834,7 +836,7 @@ class pdf_crabe extends ModelePDFFactures
 				$curx=$this->marge_gauche;
 				$cury=$posy-30;			   
 				$pdf->SetFont('zapfdingbats','',20);
-				$pdf->SetXY(190, $cury-2.7);
+				$pdf->SetXY(190, $cury-5);
 				$pdf->write(3,"!");
 				$pdf->SetFont(pdf_getPDFFont($outputlangs),'',7);
 				$pdf->Line(0,$cury, 210, $cury);		
@@ -843,13 +845,13 @@ class pdf_crabe extends ModelePDFFactures
 				$pdf->Cell(100, 3, "Contre cette lettre de change", 0, 1, 'L', 0);
 				$cury+=3;
 				$pdf->SetXY(90, $cury);
-				$pdf->Cell(100, 3, "Stipul�e sans frais", 0, 1, 'L', 0);
+				$pdf->Cell(100, 3, "Stipulée sans frais", 0, 1, 'L', 0);
 				$cury+=3;
 				$pdf->SetXY(90, $cury);
-				$pdf->Cell(100, 3, "Veuillez payer la somme indiqu�e", 0, 1, 'L', 0);
+				$pdf->Cell(100, 3, "Veuillez payer la somme indiquée", 0, 1, 'L', 0);
 				$cury+=3;
 				$pdf->SetXY(90, $cury);
-				$pdf->Cell(100, 3, "Ci-dessous � l'ordre de :", 0, 0, 'L', 0);
+				$pdf->Cell(100, 3, "Ci-dessous à l'ordre de :", 0, 0, 'L', 0);
 
 
 				// Sender properties
@@ -867,7 +869,7 @@ class pdf_crabe extends ModelePDFFactures
 				$pdf->Cell(18, 0, "Code Monnaie",0,1,C);
 				$pdf->SetXY(180, $cury+5);
 				$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',14);
-				$pdf->Cell(18, 0, "�",0,0,C);
+				$pdf->Cell(18, 0, $outputlangs->trans($conf->currency),0,0,C);
 
 				//Affichage lieu / date
 				$cury+=5;
@@ -884,6 +886,7 @@ class pdf_crabe extends ModelePDFFactures
 				
 				// jolie fl�che ...
 				$curx=43;
+				$cury+=2;
 				$largeur_cadre=5;
 				$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre+5, $cury);
 				$pdf->Line($curx+$largeur_cadre+5, $cury, $curx+$largeur_cadre+5, $cury+2);
@@ -895,11 +898,11 @@ class pdf_crabe extends ModelePDFFactures
 				//Affichage toute la ligne qui commence par "montant pour contr�le" ...
 				$curx=$this->marge_gauche;
 				$cury+=5;
-				$hauteur_cadre=6;
+				$hauteur_cadre=8;
 				$largeur_cadre=27;
 				$pdf->SetXY($curx, $cury);
 				$pdf->SetFont(pdf_getPDFFont($outputlangs),'',7);
-				$pdf->Cell($largeur_cadre, 0, "Montant pour contr�le",0,0,C);
+				$pdf->Cell($largeur_cadre, 0, "Montant pour contrôle",0,0,C);
 				$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
 				$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 				$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre, $cury+$hauteur_cadre);
@@ -908,11 +911,11 @@ class pdf_crabe extends ModelePDFFactures
 				$pdf->Cell($largeur_cadre, 0, price($object->total_ttc),0,0,C);
 						
 				$curx=$curx+$largeur_cadre+5;
-				$hauteur_cadre=6;
+				$hauteur_cadre=8;
 				$largeur_cadre=25;
 				$pdf->SetXY($curx, $cury);
 				$pdf->SetFont(pdf_getPDFFont($outputlangs),'',7);
-				$pdf->Cell($largeur_cadre, 0, "Date de cr�ation",0,0,C);
+				$pdf->Cell($largeur_cadre, 0, "Date de création",0,0,C);
 				$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
 				$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 				$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre, $cury+$hauteur_cadre);
@@ -921,11 +924,11 @@ class pdf_crabe extends ModelePDFFactures
 				$pdf->Cell($largeur_cadre, 0, dol_print_date($object->date,"day",false,$outpulangs),0,0,C);
 
 				$curx=$curx+$largeur_cadre+5;
-				$hauteur_cadre=6;
+				$hauteur_cadre=8;
 				$largeur_cadre=25;
 				$pdf->SetXY($curx, $cury);
 				$pdf->SetFont(pdf_getPDFFont($outputlangs),'',7);
-				$pdf->Cell($largeur_cadre, 0, "Ech�ance",0,0,C);
+				$pdf->Cell($largeur_cadre, 0, "Echéance",0,0,C);
 				$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
 				$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 				$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre, $cury+$hauteur_cadre);
@@ -934,7 +937,7 @@ class pdf_crabe extends ModelePDFFactures
 				$pdf->Cell($largeur_cadre, 0, dol_print_date($object->date_lim_reglement,"day"),0,0,C);
 
 				$curx=$curx+$largeur_cadre+5;
-				$hauteur_cadre=6;
+				$hauteur_cadre=8;
 				$largeur_cadre=75;
 				$pdf->SetXY($curx, $cury);
 				$pdf->SetFont(pdf_getPDFFont($outputlangs),'',7);
@@ -968,7 +971,7 @@ class pdf_crabe extends ModelePDFFactures
 				$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
 
 				$curx+=3;
-				$hauteur_cadre=6;
+				$hauteur_cadre=8;
 				$largeur_cadre=30;
 				$pdf->SetXY($curx, $cury);
 				$pdf->SetFont(pdf_getPDFFont($outputlangs),'',7);
@@ -982,7 +985,7 @@ class pdf_crabe extends ModelePDFFactures
 
 				$cury=$cury+$hauteur_cadre+3;
 				$curx=20;
-				$hauteur_cadre=4;
+				$hauteur_cadre=6;
 				$largeur_cadre=70;
 				$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
 				$pdf->Line($curx, $cury, $curx+$largeur_cadre/5, $cury);
@@ -1007,7 +1010,7 @@ class pdf_crabe extends ModelePDFFactures
 				$pdf->SetXY($curx, $cury+2);
 				$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
 // MB leave blank
-				//$pdf->Cell($largeur_cadre, 0, "R�f ",0,0,C);
+				//$pdf->Cell($largeur_cadre, 0, "Réf ",0,0,C);
 
 				$curx=$curx+$largeur_cadre+10;
 				$largeur_cadre=30;
@@ -1052,7 +1055,7 @@ class pdf_crabe extends ModelePDFFactures
 							$pdf->Cell($largeur_cadre, 1, $cpt->code_banque."             ".$cpt->code_guichet."         ".$cpt->number."        ".$cpt->cle_rib,0,0,L);
 						$pdf->SetXY($curx, $cury+$hauteur_cadre-1);
 						$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
-						$pdf->Cell($largeur_cadre, 1, "Code �tablissement    Code guichet           N� de compte            Cl� RIB",0,0,L);
+						$pdf->Cell($largeur_cadre, 1, "Code établissement    Code guichet           N° de compte            Cl RIB",0,0,L);
 						$curx=150;				
 						$largeur_cadre=55;
 						$pdf->SetXY($curx, $cury);
@@ -1073,6 +1076,7 @@ class pdf_crabe extends ModelePDFFactures
 				$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
 				$pdf->Cell($largeur_cadre, 1, "Acceptation ou aval",0,0,L);
 				// jolie fl�che ...
+				$cury += 2;
 				$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre+5, $cury);
 				$pdf->Line($curx+$largeur_cadre+5, $cury, $curx+$largeur_cadre+5, $cury+2);
 				$pdf->Line($curx+$largeur_cadre+4, $cury+2, $curx+$largeur_cadre+6, $cury+2);
@@ -1083,10 +1087,10 @@ class pdf_crabe extends ModelePDFFactures
 				//Coordonn�es du tir�
 				$curx+=50;
 				$largeur_cadre=20;
-				$hauteur_cadre=4;
+				$hauteur_cadre=6;
 				$pdf->SetXY($curx, $cury);
 				$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
-				$pdf->MultiCell($largeur_cadre, $hauteur_cadre, "Nom \n et Adresse \n du tir�",0,R);
+				$pdf->MultiCell($largeur_cadre, $hauteur_cadre, "Nom \n et Adresse \n du tiré",0,R);
 				$pdf->SetXY($curx+$largeur_cadre+2, $cury);
 				$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
 				$arrayidcontact = $object->getIdContact('external','BILLING');
@@ -1097,7 +1101,7 @@ class pdf_crabe extends ModelePDFFactures
 				//N� Siren
 				$pdf->SetXY($curx, $cury+16);
 				$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
-				$pdf->MultiCell($largeur_cadre, 4, "N� SIREN du tir�",0,R);
+				$pdf->MultiCell($largeur_cadre, 4, "N° SIREN du tiré",0,R);
 				$pdf->SetXY($curx+$largeur_cadre+2, $cury+16);
 				$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
 				$pdf->MultiCell($largeur_cadre*2.5, 4, $outputlangs->convToOutputCharset($object->client->siren),1,C);
