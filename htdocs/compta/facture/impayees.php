@@ -212,7 +212,7 @@ if (! $sortorder) $sortorder="ASC";
 $limit = $conf->liste_limit;
 
 $sql = "SELECT s.nom, s.rowid as socid";
-$sql.= ", f.rowid as facid, f.facnumber, f.increment, f.total as total_ht, f.tva as total_tva, f.total_ttc, f.localtax1, f.localtax2, f.revenuestamp";
+$sql.= ", f.rowid as facid, f.facnumber,SUBSTRING(f.facnumber,-4) as numero, f.increment, f.total as total_ht, f.tva as total_tva, f.total_ttc, f.localtax1, f.localtax2, f.revenuestamp";
 $sql.= ", f.datef as df, f.date_lim_reglement as datelimite";
 $sql.= ", f.paye as paye, f.fk_statut, f.type";
 $sql.= ", dic_p.libelle as mode_rglt";
@@ -295,6 +295,7 @@ if ($resql)
 	print '<tr class="liste_titre">';
 
 	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"f.facnumber","",$param,"",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Numéro"),$_SERVER["PHP_SELF"],"numero","",$param,"",$sortfield,$sortorder);
 	//print_liste_field_titre($langs->trans("Date"),$_SERVER["PHP_SELF"],"f.datef","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateDue"),$_SERVER["PHP_SELF"],"f.date_lim_reglement","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","",$param,"",$sortfield,$sortorder);
@@ -318,6 +319,7 @@ if ($resql)
 	print '<td class="liste_titre">';
 	print '<input class="flat" size="10" type="text" name="search_ref" value="'.$search_ref.'"></td>';
 	//print '<td class="liste_titre">&nbsp;</td>';
+	print '<td class="liste_titre">&nbsp;</td>';
 	print '<td class="liste_titre">&nbsp;</td>';
 	print '<td class="liste_titre" align="left"><input class="flat" type="text" size="10" name="search_societe" value="'.$search_societe.'"></td>';
 	print '<td class="liste_titre" align="left"><input class="flat" type="text" size="10" name="search_mode_rglt" value="'.$search_mode_rglt.'"></td>';
@@ -391,11 +393,30 @@ if ($resql)
 			print '</tr></table>';
 
 			print "</td>\n";
-
+			
+			// Numéro
+			print '<td class="nobordernopadding nowrap">';
+			print (int)substr($facturestatic->ref, -4);
+			print '</td>';
+			
 			//print '<td nowrap align="center">'.dol_print_date($db->jdate($objp->df),'day').'</td>'."\n";
 			print '<td nowrap align="center">'.dol_print_date($db->jdate($objp->datelimite),'day').'</td>'."\n";
+			
+			dol_include_once('/categories/class/categorie.class.php');
+			
+			$categorie = new Categorie($db);
+			$TCats = $categorie->containing($objp->socid, 2); //type 2 = société
+			
+			foreach ($TCats as $categorie) {
+				if($categorie->label == "Confiance")
+					$confiance = true;
+			}
 
-			print '<td><a href="'.DOL_URL_ROOT.'/comm/fiche.php?socid='.$objp->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.dol_trunc($objp->nom,28).'</a></td>';
+			print '<td><a href="'.DOL_URL_ROOT.'/comm/fiche.php?socid='.$objp->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.dol_trunc($objp->nom,28).'</a>';
+			if($confiance) print img_picto('Client de confiance', 'star');
+			print '</td>';
+			
+			$confiance = FALSE;
 			
 			//Mode de règlement
 			if($objp->mode_rglt == "Prélèvement"){

@@ -139,7 +139,7 @@ $facturestatic=new Facture($db);
 
 if (! $sall) $sql = 'SELECT';
 else $sql = 'SELECT DISTINCT';
-$sql.= ' f.rowid as facid, f.facnumber, f.type, f.increment, f.total as total_ht, f.tva as total_tva, f.total_ttc,';
+$sql.= ' f.rowid as facid, f.facnumber, SUBSTRING(f.facnumber,-4) as numero, f.type, f.increment, f.total as total_ht, f.tva as total_tva, f.total_ttc,';
 $sql.= ' f.datef as df, f.date_lim_reglement as datelimite,';
 $sql.= ' f.paye as paye, f.fk_statut,';
 $sql.= ' s.nom, s.rowid as socid';
@@ -276,6 +276,7 @@ if ($resql)
 
     print '<tr class="liste_titre">';
     print_liste_field_titre($langs->trans('Ref'),$_SERVER['PHP_SELF'],'f.facnumber','',$param,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Numéro"),$_SERVER["PHP_SELF"],"numero","",$param,"",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Date'),$_SERVER['PHP_SELF'],'f.datef','',$param,'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("DateDue"),$_SERVER['PHP_SELF'],"f.date_lim_reglement",'',$param,'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Company'),$_SERVER['PHP_SELF'],'s.nom','',$param,'',$sortfield,$sortorder);
@@ -292,6 +293,7 @@ if ($resql)
     print '<td class="liste_titre" align="left">';
     print '<input class="flat" size="10" type="text" name="search_ref" value="'.$search_ref.'">';
     print '</td>';
+	print '<td class="liste_titre" align="center">&nbsp;</td>';
     print '<td class="liste_titre" align="center">';
     if (! empty($conf->global->MAIN_LIST_FILTER_ON_DAY)) print '<input class="flat" type="text" size="1" maxlength="2" name="day" value="'.$day.'">';
     print '<input class="flat" type="text" size="1" maxlength="2" name="month" value="'.$month.'">';
@@ -347,7 +349,12 @@ if ($resql)
             print '</table>';
 
             print "</td>\n";
-
+			
+			// Numéro
+			print '<td class="nobordernopadding nowrap">';
+			print (int)substr($facturestatic->ref, -4);
+			print '</td>';
+			
             // Date
             print '<td align="center" nowrap>';
             print dol_print_date($db->jdate($objp->df),'day');
