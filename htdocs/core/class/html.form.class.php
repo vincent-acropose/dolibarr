@@ -1671,6 +1671,7 @@ class Form
 			//Ajout affichage stock "Neuf" spécifi Nomadic
 			if($conf->clinomadic->enabled){
 				dol_include_once('/product/stock/class/entrepot.class.php');
+				dol_include_once('/product/class/product.class.php');
 				
 				$product = new Product($db);
 				$product->fetch($objp->rowid);

@@ -29,7 +29,7 @@ class mailing_societes extends MailingTargets
     var $name='societes';
     // CHANGE THIS: Put here a description of your selector module.
     // This label is used if no translation is found for key MailingModuleDescXXX where XXX=name is found
-    var $desc='Contacts de tiers par tiers spécifique';
+    var $desc='Tous les contacts liés à une société qui dans une période définie a eu une proposition, une commande ou une facture contenant un produit défini';
 	// CHANGE THIS: Set to 1 if selector is available for admin users only
     var $require_admin=0;
 
@@ -60,12 +60,25 @@ class mailing_societes extends MailingTargets
     function add_to_target($mailing_id,$filtersarray=array())
     {
     	global $conf, $langs;
-    	
+		
         $target = array();
 		
 		/*echo '<pre>';
 		print_r($_REQUEST);
-		echo '</pre>';exit;*/
+		echo '</pre>';*/
+		
+		if(!empty($_REQUEST['date_deb'])){
+			$TDate = explode("/", $_REQUEST['date_deb']);
+			$date_deb_temp = $TDate[2].'-'.$TDate[1].'-'.$TDate[0];
+		}
+		
+		if(!empty($_REQUEST['date_fin'])){
+			$TDate = explode("/", $_REQUEST['date_fin']);
+			$date_fin_temp = $TDate[2].'-'.$TDate[1].'-'.$TDate[0];
+		}
+		
+		$date_deb = (!empty($_REQUEST['date_deb'])) ? $date_deb_temp : '0000-00-00' ;
+		$date_fin = (!empty($_REQUEST['date_fin'])) ? $date_fin_temp : date('Y-m-d');
 		
 	    // CHANGE THIS
 	    // ----- Your code start here -----
@@ -74,15 +87,50 @@ class mailing_societes extends MailingTargets
 		$sql.= " s.nom as companyname";
 		$sql.= " FROM ".MAIN_DB_PREFIX."socpeople as c";
 		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = c.fk_soc";
+		
+		foreach($_REQUEST as $key => $value)
+		{	
+			if ($key == 'inpropales' && $_REQUEST[$key] == 1){
+				$sql.= " INNER JOIN ".MAIN_DB_PREFIX."propal as prop ON (prop.fk_soc = s.rowid AND prop.datec BETWEEN '".$date_deb."' AND '".$date_fin."')";
+				
+				$sql.= " INNER JOIN ".MAIN_DB_PREFIX."propaldet as ppd ON (ppd.fk_propal = prop.rowid";
+				
+				if (in_array('products', array_keys($_REQUEST))) $sql.= " AND ppd.fk_product=".$_REQUEST['products'];
+				
+				$sql .= ")";
+			}
+			if ($key == 'inorders' && $_REQUEST[$key] == 1){
+				$sql.= " INNER JOIN ".MAIN_DB_PREFIX."commande as cmd ON (cmd.fk_soc = s.rowid AND cmd.date_commande BETWEEN '".$date_deb."' AND '".$date_fin."')";
+				
+				$sql.= " INNER JOIN ".MAIN_DB_PREFIX."commandedet as cd ON (cd.fk_commande = cmd.rowid";
+				
+				if (in_array('products', array_keys($_REQUEST))) $sql.= " AND ppd.fk_product=".$_REQUEST['products'];
+				
+				$sql .= ")";
+			}
+			if ($key == 'ininvoices' && $_REQUEST[$key] == 1){
+				
+				$sql.= " INNER JOIN ".MAIN_DB_PREFIX."facture as fac ON (fac.fk_soc = s.rowid AND fac.datef BETWEEN '".$date_deb."' AND '".$date_fin."')";
+
+				$sql.= " INNER JOIN ".MAIN_DB_PREFIX."facturedet as fd ON (fd.fk_facture = fac.rowid";
+				
+				if (in_array('products', array_keys($_REQUEST))) $sql.= " AND ppd.fk_product=".$_REQUEST['products'];
+				
+				$sql .= ")";
+			}
+
+			
+		}
 		$sql.= " WHERE c.entity IN (".getEntity('societe', 1).")";
 		$sql.= " AND c.email <> ''";
 		$sql.= " AND c.no_email = 0";
 		$sql.= " AND c.email NOT IN (SELECT email FROM ".MAIN_DB_PREFIX."mailing_cibles WHERE fk_mailing=".$mailing_id.")";
-		foreach($filtersarray as $key)
-		{
-			if ($key == 'thirdparty') $sql.= " AND s.rowid=".$_REQUEST['thirdparty'];
-		}
+		
+		if (!empty($_REQUEST['thirdparty'])) $sql.= " AND s.rowid=".$_REQUEST['thirdparty'];
+		
 		$sql.= " ORDER BY c.email";
+		
+		//echo $sql;exit;
 		
 		// Stocke destinataires dans cibles
 		$result=$this->db->query($sql);
@@ -186,33 +234,29 @@ class mailing_societes extends MailingTargets
     {
 	    // CHANGE THIS: Optionnal
 
-        global $langs;
+        global $langs, $db;
 		$langs->load("companies");
 		$langs->load("commercial");
 		$langs->load("suppliers");
-
+		
+		define('INC_FROM_DOLIBARR',true);
+		dol_include_once('/clinomadic/config.php');
+		dol_include_once('/product/class/product.classs.php');
+		
+		$form = new Form($db);
+		$formcore = new TFormCore;
+		/* *********** 
+		 * SOCIETE
+		 * ***********/
+		
 		$s='';
-		$s.='<select name="thirdparty" class="flat">';
-		// Add prospect of a particular level
-		$sql = "SELECT rowid, nom";
-		$sql.= " FROM ".MAIN_DB_PREFIX."societe";
-		$sql.= " ORDER BY nom";
-		$resql = $this->db->query($sql);
-		if ($resql)
-		{
-			$num = $this->db->num_rows($resql);
-			if ($num) $s.='<option value="all">&nbsp;</option>';
-			else $s.='<option value="all">'.$langs->trans("ThirdPartyAllShort").'</option>';
-
-			$i = 0;
-			while ($i < $num)
-			{
-				$obj = $this->db->fetch_object($resql);
-				$s.='<option value="'.$obj->rowid.'">'.$obj->nom.'</option>';
-				$i++;
-			}
-		}
-		$s.='</select>';
+		$s.=$form->select_date('','date_deb');
+		$s.=$form->select_date('','date_fin');
+		$s.='<br>'.$form->select_thirdparty_list('','thirdparty').'<br>';
+		$s.=$form->select_produits_list('','products').'<br>';
+		$s.='Présent dans les propositions commerciales'.$formcore->checkbox1('', 'inpropales', true, true).'<br>';
+		$s.='Présent dans les commandes'.$formcore->checkbox1('', 'inorders', true, true).'<br>';
+		$s.='Présent dans les factures'.$formcore->checkbox1('', 'ininvoices', true, true).'<br>';
 		return $s;
     }
 
