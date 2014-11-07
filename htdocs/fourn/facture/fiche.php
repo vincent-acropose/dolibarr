@@ -1636,7 +1636,7 @@ else
                 {
                     $objp = $db->fetch_object($result);
                     $var=!$var;
-                    print '<tr '.$bc[$var].'>';
+                    print '<tr '.$bc[$var].' id="row-'.$object->lines[$i]->rowid.'">';
                     print '<td class="nowrap"><a href="'.DOL_URL_ROOT.'/fourn/paiement/fiche.php?id='.$objp->rowid.'">'.img_object($langs->trans('ShowPayment'),'payment').' '.dol_print_date($db->jdate($objp->dp),'day')."</a></td>\n";
                     print '<td>';
                     print $form->form_modes_reglement(null, $objp->paiement_type,'none').' '.$objp->num_paiement;
@@ -1904,7 +1904,7 @@ else
             // Edit line
             if ($object->statut == 0 && $action == 'edit_line' && $_GET['etat'] == '0' && $_GET['lineid'] == $object->lines[$i]->rowid)
             {
-                print '<tr '.$bc[$var].'>';
+                print '<tr '.$bc[$var].' id="row-'.$object->lines[$i]->rowid.'">';
 
                 // Show product and description
                 print '<td>';
@@ -1966,7 +1966,7 @@ else
             }
             else // Affichage simple de la ligne
             {
-                print '<tr '.$bc[$var].'>';
+                print '<tr '.$bc[$var].' id="row-'.$object->lines[$i]->rowid.'">';
 
                 // Show product and description
                 print '<td>';
