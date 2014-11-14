@@ -990,6 +990,7 @@ class ExtraFields
 				else
 				{
 					$translabel=$langs->trans($obj->$InfoFieldList[1]);
+					$translabel = ($translabel == "ErrorBadValueForParamNotAString") ? "" : $translabel;
 					if ($translabel!=$obj->$InfoFieldList[1]) {
 						$value=dol_trunc($translabel,18);
 					}else {
