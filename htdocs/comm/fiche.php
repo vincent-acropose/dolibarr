@@ -53,6 +53,11 @@ $id = (GETPOST('socid','int') ? GETPOST('socid','int') : GETPOST('id','int'));
 if ($user->societe_id > 0) $id=$user->societe_id;
 $result = restrictedArea($user,'societe',$id,'&societe');
 
+$hookmanager->initHooks(array('thirdpartycard_ongletclient'));
+
+$parameters=array('id'=>$socid, 'objcanvas'=>$objcanvas);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+
 $action		= GETPOST('action');
 $mode		= GETPOST("mode");
 $modesearch	= GETPOST("mode_search");
