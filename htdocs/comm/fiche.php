@@ -449,7 +449,11 @@ if ($id > 0)
 
 	// Sales representative
 	include DOL_DOCUMENT_ROOT.'/societe/tpl/linesalesrepresentative.tpl.php';
-
+	
+    // Other attributes
+    $parameters=array('colspan' => ' colspan="3"', 'colspanvalue' => '3');
+    $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
+    
     // Module Adherent
     if (! empty($conf->adherent->enabled))
     {
