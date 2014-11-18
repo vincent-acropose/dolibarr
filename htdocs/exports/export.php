@@ -80,7 +80,7 @@ $entitytolang = array(
     'member_type'  => 'MemberType',
     'subscription' => 'Subscription',
 	'tax'          => 'SocialContribution',
-    'tax_type'     => 'DictionnarySocialContributions',
+    'tax_type'     => 'DictionarySocialContributions',
 	'account'      => 'BankTransactions',
 	'payment'      => 'Payment',
 	'product'      => 'Product',
@@ -840,7 +840,8 @@ if ($step == 4 && $datatoexport)
     			if (isset($objexport->array_export_fields[0][$code]))
     			{
     				$list.=($list?', ':'');
-    				$list.=$langs->trans($objexport->array_export_fields[0][$code])."='".(isset($array_filtervalue[$code])?$array_filtervalue[$code]:'')."'";
+    				if (isset($array_filtervalue[$code]) && preg_match('/^\s*[<>]/',$array_filtervalue[$code])) $list.=$langs->trans($objexport->array_export_fields[0][$code]).(isset($array_filtervalue[$code])?$array_filtervalue[$code]:'');
+    				else $list.=$langs->trans($objexport->array_export_fields[0][$code])."='".(isset($array_filtervalue[$code])?$array_filtervalue[$code]:'')."'";
     			}
     		}
     	}
@@ -1071,7 +1072,8 @@ if ($step == 5 && $datatoexport)
     			if (isset($objexport->array_export_fields[0][$code]))
     			{
     				$list.=($list?', ':'');
-    				$list.=$langs->trans($objexport->array_export_fields[0][$code])."='".(isset($array_filtervalue[$code])?$array_filtervalue[$code]:'')."'";
+    				if (isset($array_filtervalue[$code]) && preg_match('/^\s*[<>]/',$array_filtervalue[$code])) $list.=$langs->trans($objexport->array_export_fields[0][$code]).(isset($array_filtervalue[$code])?$array_filtervalue[$code]:'');
+    				else $list.=$langs->trans($objexport->array_export_fields[0][$code])."='".(isset($array_filtervalue[$code])?$array_filtervalue[$code]:'')."'";
     			}
     		}
     	}
@@ -1166,4 +1168,3 @@ function getablenamefromfield($code,$sqlmaxforexport)
 	else return '';
 }
 
-?>

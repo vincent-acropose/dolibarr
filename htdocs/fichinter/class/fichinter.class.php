@@ -95,36 +95,28 @@ class Fichinter extends CommonObject
 		dol_syslog(get_class($this)."::create ref=".$this->ref);
 
 		// Check parameters
-		if (! is_numeric($this->duree)) {
-			$this->duree = 0;
+		if (! empty($this->ref))	// We check that ref is not already used
+		{
+			$result=self::isExistingObject($this->element, 0, $this->ref);	// Check ref is not yet used
+			if ($result > 0)
+			{
+				$this->error='ErrorRefAlreadyExists';
+				dol_syslog(get_class($this)."::create ".$this->error,LOG_WARNING);
+				$this->db->rollback();
+				return -1;
+			}
 		}
+		if (! is_numeric($this->duree)) $this->duree = 0;
+
 		if ($this->socid <= 0)
 		{
 			$this->error='ErrorBadParameterForFunc';
 			dol_syslog(get_class($this)."::create ".$this->error,LOG_ERR);
 			return -1;
 		}
-		// on verifie si la ref n'est pas utilisee
+
 		$soc = new Societe($this->db);
 		$result=$soc->fetch($this->socid);
-		if (! empty($this->ref))
-		{
-			$result=$this->verifyNumRef();	// Check ref is not yet used
-			if ($result > 0)
-			{
-				$this->error='ErrorRefAlreadyExists';
-				dol_syslog(get_class($this)."::create ".$this->error,LOG_WARNING);
-				$this->db->rollback();
-				return -3;
-			}
-			else if ($result < 0)
-			{
-				$this->error=$this->db->error();
-				dol_syslog(get_class($this)."::create ".$this->error,LOG_ERR);
-				$this->db->rollback();
-				return -2;
-			}
-		}
 
 		$now=dol_now();
 
@@ -235,7 +227,7 @@ class Fichinter extends CommonObject
 		$this->db->begin();
 
 		$sql = "UPDATE ".MAIN_DB_PREFIX."fichinter SET ";
-		$sql.= ", description  = '".$this->db->escape($this->description)."'";
+		$sql.= "description  = '".$this->db->escape($this->description)."'";
 		$sql.= ", duree = ".$this->duree;
 		$sql.= ", fk_projet = ".$this->fk_project;
 		$sql.= ", note_private = ".($this->note_private?"'".$this->db->escape($this->note_private)."'":"null");
@@ -812,7 +804,7 @@ class Fichinter extends CommonObject
 		if ($user->rights->ficheinter->creer)
 		{
 			$sql = "UPDATE ".MAIN_DB_PREFIX."fichinter ";
-			$sql.= " SET datei = ".$this->db->idate($date_delivery);
+			$sql.= " SET datei = '".$this->db->idate($date_delivery)."'";
 			$sql.= " WHERE rowid = ".$this->id;
 			$sql.= " AND entity = ".$conf->entity;
 			$sql.= " AND fk_statut = 0";
@@ -981,9 +973,9 @@ class Fichinter extends CommonObject
 	}
 
 	/**
-	 *	Load array lines
+	 *	Load array lines ->lines
 	 *
-	 *	@return		int		<0 if Ko,	>0 if OK
+	 *	@return		int		<0 if KO, >0 if OK
 	 */
 	function fetch_lines()
 	{
@@ -1355,4 +1347,3 @@ class FichinterLigne
 
 }
 
-?>

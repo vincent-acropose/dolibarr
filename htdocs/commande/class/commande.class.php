@@ -1,15 +1,15 @@
 <?php
 /* Copyright (C) 2003-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2013 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2014 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
  * Copyright (C) 2010-2013 Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2011      Jean Heimburger      <jean@tiaris.info>
- * Copyright (C) 2012      Christophe Battarel  <christophe.battarel@altairis.fr>
+ * Copyright (C) 2012-2014 Christophe Battarel  <christophe.battarel@altairis.fr>
  * Copyright (C) 2013      Florian Henry		<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU  *General Public License as published by
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
@@ -253,6 +253,7 @@ class Commande extends CommonOrder
                     if ($this->lines[$i]->fk_product > 0)
                     {
                         $mouvP = new MouvementStock($this->db);
+						$mouvP->origin = &$this;
                         // We decrement stock of product (and sub-products)
                         $result=$mouvP->livraison($user, $this->lines[$i]->fk_product, $idwarehouse, $this->lines[$i]->qty, $this->lines[$i]->subprice, $langs->trans("OrderValidatedInDolibarr",$num));
                         if ($result < 0) { $error++; }
@@ -290,6 +291,13 @@ class Commande extends CommonOrder
             }
         }
 
+        // Set new ref and current status
+        if (! $error)
+        {
+        	$this->ref = $num;
+        	$this->statut = 1;
+        }
+
         if (! $error)
         {
             // Appel des triggers
@@ -298,13 +306,6 @@ class Commande extends CommonOrder
             $result=$interface->run_triggers('ORDER_VALIDATE',$this,$user,$langs,$conf);
             if ($result < 0) { $error++; $this->errors=$interface->errors; }
             // Fin appel triggers
-        }
-
-        // Set new ref and current status
-        if (! $error)
-        {
-            $this->ref = $num;
-            $this->statut = 1;
         }
 
         if (! $error)
@@ -622,6 +623,18 @@ class Commande extends CommonOrder
         dol_syslog(get_class($this)."::create user=".$user->id);
 
         // Check parameters
+    	if (! empty($this->ref))	// We check that ref is not already used
+		{
+			$result=self::isExistingObject($this->element, 0, $this->ref);	// Check ref is not yet used
+			if ($result > 0)
+			{
+				$this->error='ErrorRefAlreadyExists';
+				dol_syslog(get_class($this)."::create ".$this->error,LOG_WARNING);
+				$this->db->rollback();
+				return -1;
+			}
+		}
+
         $soc = new Societe($this->db);
         $result=$soc->fetch($this->socid);
         if ($result < 0)
@@ -666,7 +679,7 @@ class Commande extends CommonOrder
         $sql.= ", ".($this->date_livraison?"'".$this->db->idate($this->date_livraison)."'":"null");
         $sql.= ", ".($this->fk_delivery_address>0?$this->fk_delivery_address:'NULL');
         $sql.= ", ".($this->remise_absolue>0?$this->remise_absolue:'NULL');
-        $sql.= ", '".$this->remise_percent."'";
+        $sql.= ", ".($this->remise_percent>0?$this->remise_percent:0);
         $sql.= ", ".$conf->entity;
         $sql.= ")";
 
@@ -712,7 +725,8 @@ class Commande extends CommonOrder
                         $fk_parent_line,
                         $this->lines[$i]->fk_fournprice,
                         $this->lines[$i]->pa_ht,
-                    	$this->lines[$i]->label
+                    	$this->lines[$i]->label,
+						$this->lines[$i]->array_options
                     );
                     if ($result < 0)
                     {
@@ -850,6 +864,10 @@ class Commande extends CommonOrder
 
         $this->db->begin();
 
+		// get extrafields so they will be clone
+		foreach($this->lines as $line)
+			$line->fetch_optionals($line->rowid);
+
         // Load source object
         $objFrom = dol_clone($this);
 
@@ -880,6 +898,13 @@ class Commande extends CommonOrder
         $this->date_validation    = '';
         $this->ref_client         = '';
 
+        // Set ref
+        require_once DOL_DOCUMENT_ROOT ."/core/modules/commande/".$conf->global->COMMANDE_ADDON.'.php';
+        $obj = $conf->global->COMMANDE_ADDON;
+        $modCommande = new $obj;
+        $this->ref = $modCommande->getNextValue($objsoc,$this);
+
+        
         // Create clone
         $result=$this->create($user);
         if ($result < 0) $error++;
@@ -1059,11 +1084,9 @@ class Commande extends CommonOrder
      */
 	function addline($desc, $pu_ht, $qty, $txtva, $txlocaltax1=0, $txlocaltax2=0, $fk_product=0, $remise_percent=0, $info_bits=0, $fk_remise_except=0, $price_base_type='HT', $pu_ttc=0, $date_start='', $date_end='', $type=0, $rang=-1, $special_code=0, $fk_parent_line=0, $fk_fournprice=null, $pa_ht=0, $label='',$array_option=0)
     {
-    	global $mysoc;
+    	global $mysoc, $conf, $langs;
 
-    	$commandeid=$this->id;
-
-        dol_syslog(get_class($this)."::addline commandeid=$commandeid, desc=$desc, pu_ht=$pu_ht, qty=$qty, txtva=$txtva, fk_product=$fk_product, remise_percent=$remise_percent, info_bits=$info_bits, fk_remise_except=$fk_remise_except, price_base_type=$price_base_type, pu_ttc=$pu_ttc, date_start=$date_start, date_end=$date_end, type=$type", LOG_DEBUG);
+        dol_syslog(get_class($this)."::addline commandeid=$this->id, desc=$desc, pu_ht=$pu_ht, qty=$qty, txtva=$txtva, fk_product=$fk_product, remise_percent=$remise_percent, info_bits=$info_bits, fk_remise_except=$fk_remise_except, price_base_type=$price_base_type, pu_ttc=$pu_ttc, date_start=$date_start, date_end=$date_end, type=$type", LOG_DEBUG);
 
         include_once DOL_DOCUMENT_ROOT.'/core/lib/price.lib.php';
 
@@ -1125,6 +1148,20 @@ class Commande extends CommonOrder
                 $rangtouse = $rangmax + 1;
             }
 
+			$product_type=$type;
+			if (!empty($fk_product))
+			{
+				$product=new Product($this->db);
+				$result=$product->fetch($fk_product);
+				$product_type=$product->type;
+
+				if($conf->global->STOCK_MUST_BE_ENOUGH_FOR_ORDER && $product_type == 0 && $product->stock_reel < $qty) {
+					$this->error=$langs->trans('ErrorStockIsNotEnough');
+					$this->db->rollback();
+					return -3;
+				}
+			}
+
             // TODO A virer
             // Anciens indicateurs: $price, $remise (a ne plus utiliser)
             $price = $pu;
@@ -1138,7 +1175,7 @@ class Commande extends CommonOrder
             // Insert line
             $this->line=new OrderLine($this->db);
 
-            $this->line->fk_commande=$commandeid;
+            $this->line->fk_commande=$this->id;
             $this->line->label=$label;
             $this->line->desc=$desc;
             $this->line->qty=$qty;
@@ -1148,6 +1185,7 @@ class Commande extends CommonOrder
 			$this->line->localtax1_type = $localtaxes_type[0];
 			$this->line->localtax2_type = $localtaxes_type[2];
             $this->line->fk_product=$fk_product;
+			$this->line->product_type=$product_type;
             $this->line->fk_remise_except=$fk_remise_except;
             $this->line->remise_percent=$remise_percent;
             $this->line->subprice=$pu_ht;
@@ -1184,8 +1222,7 @@ class Commande extends CommonOrder
                 if (! empty($fk_parent_line)) $this->line_order(true,'DESC');
 
                 // Mise a jour informations denormalisees au niveau de la commande meme
-                $this->id=$commandeid;	// TODO A virer
-                $result=$this->update_price(1);
+                $result=$this->update_price(1,'auto');	// This method is designed to add line from user input so total calculation must be done using 'auto' mode.
                 if ($result > 0)
                 {
                     $this->db->commit();
@@ -3494,4 +3531,3 @@ class OrderLine extends CommonOrderLine
     }
 }
 
-?>

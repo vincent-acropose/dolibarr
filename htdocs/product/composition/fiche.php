@@ -4,7 +4,7 @@
  * Copyright (C) 2005      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
- * Copyright (C) 2011      Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2011-2014 Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
 
 $langs->load("bills");
 $langs->load("products");
+$langs->load("main");
 
 $id=GETPOST('id','int');
 $ref=GETPOST('ref','alpha');
@@ -298,13 +299,17 @@ if ($id > 0 || ! empty($ref))
 		{
 		    // Price
 			print '<tr><td>'.$langs->trans("SellingPrice").'</td><td>';
+			
 			if ($object->price_base_type == 'TTC')
 			{
 				print price($object->price_ttc).' '.$langs->trans($object->price_base_type);
 			}
 			else
 			{
-				print price($object->price).' '.$langs->trans($object->price_base_type);
+				print price($object->price);
+				if (!empty($object->price_base_type)) {
+					print ' '.$langs->trans($object->price_base_type);
+				}
 			}
 			print '</td></tr>';
 
@@ -316,7 +321,10 @@ if ($id > 0 || ! empty($ref))
 			}
 			else
 			{
-				print price($object->price_min).' '.$langs->trans($object->price_base_type);
+				print price($object->price_min);
+				if (!empty($object->price_base_type)) {
+					print ' '.$langs->trans($object->price_base_type);
+				}
 			}
 			print '</td></tr>';
 		}
@@ -352,7 +360,7 @@ if ($id > 0 || ! empty($ref))
 					$productstatic->ref=$value['fullpath'];
 					print '<td>'.$productstatic->getNomUrl(1,'composition').' ('.$value['nb'].')</td>';
 					print '<td align="right">';
-					if ($product_fourn->find_min_price_product_fournisseur($productstatic->id, $value['nb']) > 0)
+					if ($product_fourn->find_min_price_product_fournisseur($productstatic->id) > 0)
 					{
 						print $langs->trans("BuyingPriceMinShort").': ';
 				    	if ($product_fourn->product_fourn_price_id > 0) print $product_fourn->display_price_product_fournisseur(0,0);
@@ -559,4 +567,3 @@ if ($id > 0 || ! empty($ref))
 llxFooter();
 
 $db->close();
-?>

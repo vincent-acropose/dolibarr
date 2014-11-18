@@ -234,7 +234,7 @@ class Link extends CommonObject
     /**
      *  Loads all links from database
      *
-     *  @param  array   &$links     array of Link objects to fill
+     *  @param  array   $links     array of Link objects to fill
      *  @param  string  $objecttype type of the associated object in dolibarr
      *  @param  int     $objectid   id of the associated object in dolibarr
      *  @param  string  $sortfield  field used to sort
@@ -266,7 +266,7 @@ class Link extends CommonObject
             {
                 while ($obj = $this->db->fetch_object($resql))
                 {
-                    $link = new Link($db);
+                    $link = new Link($this->db);
                     $link->id = $obj->rowid;
                     $link->entity = $obj->entity;
                     $link->datea = $this->db->jdate($obj->datea);

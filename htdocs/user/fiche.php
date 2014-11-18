@@ -8,7 +8,7 @@
  * Copyright (C) 2011      Herve Prot           <herve.prot@symeos.com>
  * Copyright (C) 2012      Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2013      Florian Henry        <florian.henry@open-concept.pro>
- * Copyright (C) 2013      Alexandre Spangaro   <alexandre.spangaro@gmail.com>
+ * Copyright (C) 2013-2014 Alexandre Spangaro   <alexandre.spangaro@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -238,8 +238,8 @@ if ($action == 'add' && $canadduser)
         {
             $langs->load("errors");
             $db->rollback();
-            if (is_array($object->errors) && count($object->errors)) $message='<div class="error">'.join('<br>',$langs->trans($object->errors)).'</div>';
-            else $message='<div class="error">'.$langs->trans($object->error).'</div>';
+            if (is_array($object->errors) && count($object->errors)) setEventMessage($object->errors,'errors');
+            else setEventMessage($object->error);
             $action="create";       // Go back to create page
         }
 
@@ -749,7 +749,7 @@ if (($action == 'create') || ($action == 'adduserldap'))
     if (empty($ldap_sid))    // ldap_sid is for activedirectory
     {
         require_once DOL_DOCUMENT_ROOT.'/core/lib/security2.lib.php';
-        $generated_password=getRandomPassword('');
+        $generated_password=getRandomPassword(false);
     }
     $password=$generated_password;
 
@@ -909,7 +909,7 @@ if (($action == 'create') || ($action == 'adduserldap'))
     // Multicompany
     if (! empty($conf->multicompany->enabled))
     {
-        if (empty($conf->multicompany->transverse_mode) && $conf->entity == 1 && $user->admin && ! $user->entity)
+        if (empty($conf->multicompany->transverse_mode) && $conf->entity == 1 && $user->admin && ! $user->entity && is_object($mc))
         {
             print "<tr>".'<td valign="top">'.$langs->trans("Entity").'</td>';
             print "<td>".$mc->select_entities($conf->entity);
@@ -1077,6 +1077,7 @@ else
             if (isset($conf->file->main_authentication) && preg_match('/openid/',$conf->file->main_authentication) && ! empty($conf->global->MAIN_OPENIDURL_PERUSER)) $rowspan++;
             if (! empty($conf->societe->enabled)) $rowspan++;
             if (! empty($conf->adherent->enabled)) $rowspan++;
+            if (! empty($conf->skype->enabled)) $rowspan++;
 
             // Lastname
             print '<tr><td valign="top">'.$langs->trans("Lastname").'</td>';
@@ -1879,19 +1880,23 @@ else
             print "</tr>\n";
 
 			// Accountancy code
-            print "<tr>";
-            print '<td valign="top">'.$langs->trans("AccountancyCode").'</td>';
-            print '<td>';
-            if ($caneditfield)
+            if (! empty($conf->global->USER_ENABLE_ACCOUNTANCY_CODE))	// For the moment field is not used so must not appeared.
             {
-                print '<input size="30" type="text" class="flat" name="accountancy_code" value="'.$object->accountancy_code.'">';
+	            print "<tr>";
+	            print '<td valign="top">'.$langs->trans("AccountancyCode").'</td>';
+	            print '<td>';
+	            if ($caneditfield)
+	            {
+	                print '<input size="30" type="text" class="flat" name="accountancy_code" value="'.$object->accountancy_code.'">';
+	            }
+	            else
+	            {
+	                print '<input type="hidden" name="accountancy_code" value="'.$object->accountancy_code.'">';
+	                print $object->accountancy_code;
+	            }
+	            print '</td>';
+	            print "</tr>";
             }
-            else
-            {
-                print '<input type="hidden" name="accountancy_code" value="'.$object->accountancy_code.'">';
-                print $object->accountancy_code;
-            }
-            print '</td>';
 
             // Status
             print '<tr><td valign="top">'.$langs->trans("Status").'</td>';
@@ -1989,4 +1994,3 @@ else
 
 llxFooter();
 $db->close();
-?>

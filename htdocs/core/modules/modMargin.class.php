@@ -163,4 +163,3 @@ class modMargin extends DolibarrModules
 
 }
 
-?>

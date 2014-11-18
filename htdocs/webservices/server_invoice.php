@@ -515,7 +515,7 @@ function createInvoice($authentication,$invoice)
         $newobject->date=dol_stringtotime($invoice['date'],'dayrfc');
         $newobject->note_private=$invoice['note_private'];
         $newobject->note_public=$invoice['note_public'];
-        $newobject->statut=$invoice['status'];
+        $newobject->statut=0;	// We start with status draft
         $newobject->fk_project=$invoice['project_id'];
         $newobject->date_creation=$now;
 
@@ -528,7 +528,7 @@ function createInvoice($authentication,$invoice)
         {
             // $key can be 'line' or '0','1',...
             $newline=new FactureLigne($db);
-            $newline->type=$line['type'];
+            $newline->product_type=$line['type'];
             $newline->desc=$line['desc'];
             $newline->fk_product=$line['fk_product'];
             $newline->tva_tx=$line['vat_rate'];
@@ -537,6 +537,8 @@ function createInvoice($authentication,$invoice)
             $newline->total_ht=$line['total_net'];
             $newline->total_tva=$line['total_vat'];
             $newline->total_ttc=$line['total'];
+            $newline->date_start=dol_stringtotime($line['date_start']);
+            $newline->date_end=dol_stringtotime($line['date_end']);
             $newline->fk_product=$line['product_id'];
             $newobject->lines[]=$newline;
         }
@@ -551,7 +553,7 @@ function createInvoice($authentication,$invoice)
             $error++;
         }
 
-        if ($newobject->statut == 1)   // We want invoice validated
+        if ($invoice['status'] == 1)   // We want invoice to have status validated
         {
             $result=$newobject->validate($fuser);
             if ($result < 0)
@@ -587,4 +589,3 @@ function createInvoice($authentication,$invoice)
 // Return the results.
 $server->service((isset($HTTP_RAW_POST_DATA)?$HTTP_RAW_POST_DATA:''));
 
-?>

@@ -392,7 +392,7 @@ class FormOther
                 $moreinfo=0;
                 if (! empty($conf->global->MAIN_SHOW_LOGIN))
                 {
-                	$out.=($moreinfo?' - ':' (').$obj->login;
+                	$moreforfilter.=($moreinfo?' - ':' (').$obj_usr->login;
                 	$moreinfo++;
                 }
                 if ($showstatus >= 0)
@@ -462,7 +462,7 @@ class FormOther
     /**
      * Write lines of a project (all lines of a project if parent = 0)
      *
-     * @param 	int		&$inc					Cursor counter
+     * @param 	int		$inc					Cursor counter
      * @param 	int		$parent					Id of parent task we want to see
      * @param 	array	$lines					Array of task lines
      * @param 	int		$level					Level
@@ -901,7 +901,8 @@ class FormOther
 
 
     /**
-     * 	Show a HTML Tab with boxes of a particular area including personalized choices of user
+     * 	Show a HTML Tab with boxes of a particular area including personalized choices of user.
+     *  Class 'Form' must be known.
      *
      * 	@param	   User         $user		 Object User
      * 	@param	   String       $areacode    Code of area for pages (0=value for Home page)
@@ -926,6 +927,7 @@ class FormOther
         $arrayboxtoactivatelabel=array();
         if (! empty($user->conf->$confuserzone))
         {
+        	$boxorder='';
         	$langs->load("boxes");	// Load label of boxes
         	foreach($boxactivated as $box)
         	{
@@ -934,9 +936,23 @@ class FormOther
         		if (preg_match('/graph/',$box->class)) $label.=' ('.$langs->trans("Graph").')';
         		$arrayboxtoactivatelabel[$box->id]=$label;			// We keep only boxes not shown for user, to show into combo list
         	}
+            foreach($boxidactivatedforuser as $boxid)
+        	{
+       			if (empty($boxorder)) $boxorder.='A:';
+  				$boxorder.=$boxid.',';
+        	}
 
-        	$form=new Form($db);
-            $selectboxlist=$form->selectarray('boxcombo', $arrayboxtoactivatelabel,'',1);
+        	//var_dump($boxidactivatedforuser);
+
+        	// Class Form must have been already loaded
+			$selectboxlist.='<form name="addbox" method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+			$selectboxlist.='<input type="hidden" name="addbox" value="addbox">';
+			$selectboxlist.='<input type="hidden" name="userid" value="'.$user->id.'">';
+			$selectboxlist.='<input type="hidden" name="areacode" value="'.$areacode.'">';
+			$selectboxlist.='<input type="hidden" name="boxorder" value="'.$boxorder.'">';
+			$selectboxlist.=Form::selectarray('boxcombo', $arrayboxtoactivatelabel,'',1);
+            if (empty($conf->use_javascript_ajax)) $selectboxlist.=' <input type="submit" class="button" value="'.$langs->trans("AddBox").'">';
+            $selectboxlist.='</form>';
         }
 
         // Javascript code for dynamic actions
@@ -1104,24 +1120,25 @@ class FormOther
      *  Return a HTML select list of bank accounts
      *
      *  @param  string	$htmlname          	Name of select zone
-     *  @param	string	$dictionnarytable	Dictionnary table
+     *  @param	string	$dictionarytable	Dictionary table
      *  @param	string	$keyfield			Field for key
      *  @param	string	$labelfield			Label field
      *  @param	string	$selected			Selected value
      *  @param  int		$useempty          	1=Add an empty value in list, 2=Add an empty value in list only if there is more than 2 entries.
+     *  @param  string  $moreattrib         More attributes on HTML select tag
      * 	@return	void
      */
-    function select_dictionnary($htmlname,$dictionnarytable,$keyfield='code',$labelfield='label',$selected='',$useempty=0)
+    function select_dictionary($htmlname,$dictionarytable,$keyfield='code',$labelfield='label',$selected='',$useempty=0,$moreattrib='')
     {
         global $langs, $conf;
 
         $langs->load("admin");
 
         $sql = "SELECT rowid, ".$keyfield.", ".$labelfield;
-        $sql.= " FROM ".MAIN_DB_PREFIX.$dictionnarytable;
+        $sql.= " FROM ".MAIN_DB_PREFIX.$dictionarytable;
         $sql.= " ORDER BY ".$labelfield;
 
-        dol_syslog(get_class($this)."::select_dictionnary sql=".$sql);
+        dol_syslog(get_class($this)."::select_dictionary sql=".$sql);
         $result = $this->db->query($sql);
         if ($result)
         {
@@ -1129,7 +1146,7 @@ class FormOther
             $i = 0;
             if ($num)
             {
-                print '<select id="select'.$htmlname.'" class="flat selectdictionnary" name="'.$htmlname.'"'.($moreattrib?' '.$moreattrib:'').'>';
+                print '<select id="select'.$htmlname.'" class="flat selectdictionary" name="'.$htmlname.'"'.($moreattrib?' '.$moreattrib:'').'>';
                 if ($useempty == 1 || ($useempty == 2 && $num > 1))
                 {
                     print '<option value="-1">&nbsp;</option>';
@@ -1154,7 +1171,7 @@ class FormOther
             }
             else
 			{
-                print $langs->trans("DictionnaryEmpty");
+                print $langs->trans("DictionaryEmpty");
             }
         }
         else {
@@ -1164,4 +1181,3 @@ class FormOther
 
 }
 
-?>

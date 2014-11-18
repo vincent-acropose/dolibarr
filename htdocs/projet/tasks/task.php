@@ -23,7 +23,6 @@
  *	\brief      Page of a project task
  */
 
-
 require ("../../main.inc.php");
 require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 require_once DOL_DOCUMENT_ROOT.'/projet/class/task.class.php';
@@ -84,8 +83,8 @@ if ($action == 'update' && ! $_POST["cancel"] && $user->rights->projet->creer)
 		$object->description = $_POST['description'];
 		$object->fk_task_parent = $task_parent;
 		$object->planned_workload = $planned_workload;
-		$object->date_start = dol_mktime(0,0,0,$_POST['dateomonth'],$_POST['dateoday'],$_POST['dateoyear']);
-		$object->date_end = dol_mktime(0,0,0,$_POST['dateemonth'],$_POST['dateeday'],$_POST['dateeyear']);
+		$object->date_start = dol_mktime($_POST['dateohour'],$_POST['dateomin'],0,$_POST['dateomonth'],$_POST['dateoday'],$_POST['dateoyear'],'user');
+		$object->date_end = dol_mktime($_POST['dateehour'],$_POST['dateemin'],0,$_POST['dateemonth'],$_POST['dateeday'],$_POST['dateeyear'],'user');
 		$object->progress = $_POST['progress'];
 
 		// Fill array 'array_options' with data from add form
@@ -244,6 +243,16 @@ if ($id > 0 || ! empty($ref))
 			// Statut
 			print '<tr><td>'.$langs->trans("Status").'</td><td>'.$projectstatic->getLibStatut(4).'</td></tr>';
 
+		   	// Date start
+			print '<tr><td>'.$langs->trans("DateStart").'</td><td>';
+			print dol_print_date($projectstatic->date_start,'day');
+			print '</td></tr>';
+
+			// Date end
+			print '<tr><td>'.$langs->trans("DateEnd").'</td><td>';
+			print dol_print_date($projectstatic->date_end,'day');
+			print '</td></tr>';
+
 			print '</table>';
 
 			dol_fiche_end();
@@ -325,12 +334,12 @@ if ($id > 0 || ! empty($ref))
 
 			// Date start
 			print '<tr><td>'.$langs->trans("DateStart").'</td><td>';
-			print $form->select_date($object->date_start,'dateo');
+			print $form->select_date($object->date_start,'dateo',1,1);
 			print '</td></tr>';
 
 			// Date end
 			print '<tr><td>'.$langs->trans("DateEnd").'</td><td>';
-			print $form->select_date($object->date_end?$object->date_end:-1,'datee');
+			print $form->select_date($object->date_end?$object->date_end:-1,'datee',1,1);
 			print '</td></tr>';
 
 			// Planned workload
@@ -339,7 +348,7 @@ if ($id > 0 || ! empty($ref))
 			print '</td></tr>';
 
 			// Progress
-			print '<tr><td>'.$langs->trans("Progress").'</td><td colspan="3">';
+			print '<tr><td>'.$langs->trans("ProgressDeclared").'</td><td colspan="3">';
 			print $formother->select_percent($object->progress,'progress');
 			print '</td></tr>';
 
@@ -414,12 +423,12 @@ if ($id > 0 || ! empty($ref))
 
 			// Date start
 			print '<tr><td>'.$langs->trans("DateStart").'</td><td colspan="3">';
-			print dol_print_date($object->date_start,'day');
+			print dol_print_date($object->date_start,'dayhour');
 			print '</td></tr>';
 
 			// Date end
 			print '<tr><td>'.$langs->trans("DateEnd").'</td><td colspan="3">';
-			print dol_print_date($object->date_end,'day');
+			print dol_print_date($object->date_end,'dayhour');
 			print '</td></tr>';
 
 			// Planned workload
@@ -427,9 +436,15 @@ if ($id > 0 || ! empty($ref))
 			print convertSecondToTime($object->planned_workload,'allhourmin');
 			print '</td></tr>';
 
-			// Progress
-			print '<tr><td>'.$langs->trans("Progress").'</td><td colspan="3">';
+			// Declared progress
+			print '<tr><td>'.$langs->trans("ProgressDeclared").'</td><td colspan="3">';
 			print $object->progress.' %';
+			print '</td></tr>';
+
+			// Calculated progress
+			print '<tr><td>'.$langs->trans("ProgressCalculated").'</td><td colspan="3">';
+			if ($object->planned_workload) print round(100 * $object->duration_effective / $object->planned_workload,2).' %';
+			else print '';
 			print '</td></tr>';
 
 			// Description
@@ -507,4 +522,3 @@ if ($id > 0 || ! empty($ref))
 
 llxFooter();
 $db->close();
-?>

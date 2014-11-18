@@ -2,7 +2,183 @@
 English Dolibarr ChangeLog
 --------------------------------------------------------------
 
+
+***** ChangeLog for 3.6.2 compared to 3.6.1 *****
+- Fix: fix ErrorBadValueForParamNotAString error message in price customer multiprice
+- Fix: bug 1588 : relative discount
+- Fix: label of input method not tranlated.
+- Fix: box of customer and propsects were not correctly disabled.
+- Fix: right and error management #1961
+- Fix: Fix Error when trying to clone an Order #1943
+- Fix: [ bug #1618 ] PHP Error thrown when saving a barcode
+
+***** ChangeLog for 3.6.1 compared to 3.6.* *****
+For users:
+- Fix: Can upload files on services.
+- Fix: sql errors on updat fichinter.
+- Fix: debian script syntax error.
+- Fix: error "menu param is not inside list" into pos module.
+- Fix: Salary payments are not reflected on the reporting sheets.
+- Fix: Unsubscribe emailing not working.
+- Fix: Trigger on create category call failed because user is not passed on card.
+- Fix: list event view lost type event filter.
+- Fix: Save also code event.
+- Fix: VAT payment - Add control on field date value.
+- Fix: Salaries payment - Field date value is now required and add control on it.
+- Fix: Iban was used instead of Bic into SEPA file.
+- Fix: Must unaccent strings into SEPA file.
+- Fix: Extrafield feature select from table should try to translate multiple column when not needed 
+- Fix: cents for indian ruppes are calle paisa and paise.
+- Fix: Invoices payments may be older than invoices.
+- Fix: Withdrawal total amount is double
+- Fix: [ bug #1593 ] Spanish Localtax IRPF not being calculated since 3.6.0 in supplier invoices when adding a line
+- Fix: Web service categorie WDSL declaration is correct
+- Fix: ErrorBadValueForParamNotAString was displayed in virtual product if no base price defined
+- Fix: Category creation failed and no message output
+- Fix: Lanf for Payment Type
+- Fix: PHPCheckstyle 1.5.5
+
+***** ChangeLog for 3.6 compared to 3.5.* *****
+For users:
+- New: Update ckeditor to version 4.
+- New: Add form "search customer order" on commercial main page.
+- New: Can create contract from an order.
+- New: Add list of orders products in tab "consumption" on thirdparties.
+- New: Add graph stats for suppliers orders in tab "stats" on products.
+- New: Add option MAIN_HIDE_INACTIVETAB_ON_PRINT to hide inactive tabs when you
+       use the "print" view on screen.
+- New: Add option MAIN_AUTO_TIMESTAMP_IN_PUBLIC_NOTES and MAIN_AUTO_TIMESTAMP_IN_PRIVATE_NOTES
+       to automatically add timestamp and user line into edition field when editing a note.
+- New: Add button cancel into edition of notes.
+- New: Improved Barcode module:
+       Can input barcode during product creation step.
+       Add autonumbering of barcode value for products.
+       Add a page/tool for mass barcode generation.
+- New: Improved Opensurvey module:
+       Added options to disable comments and disable public votes.
+       Limit dates use calendar popup.
+       Description of survey use wysiwig editor.
+       More information shown on result tab.
+       Renamed "survey" into "poll" (better translation).
+- New: Add filter on text and status into survey list. Can also sort on id, text and date end.
+- New: The box "balance of bank accounts" show all opened accounts.
+- New: Add option MAIN_ADD_SALE_REP_SIGNATURE_IN_NOTE to add sale represnative into public
+       note of generated documents.
+- New: Add warning if supplier payment is higher that due amount.
+- New: Increase length of url into bookmark module.
+- New: Automatic events sending mails add info about linked objects into email content. 
+- New: Price management enhancement (multiprice level, price by customer, if MAIN_FEATURES_LEVEL=2 Price by qty).
+- New: Add option MAIN_FAVICON_URL.
+- New: Created {line_price_ht_locale}, {line_price_vat_locale} and {line_price_ttc_locale} ODT tags.
+- New: Add filter on project status into task list. By default, only "opened" project are visible.
+- New: Status "validated" for project are renamed into "opened".
+- New: Add barcode fields into user database.
+- New: Add manager name (ceo, director, president...) into main company information page.
+- New: Add field url as product properties.
+- New: More options to create a credit note (can be filled autatically according to remain to pay).
+- New: Can define custom fields for categories.
+- New: Prepare generation of SEPA files into module withdrawal.
+- New: [ task #1164 ] Add "Ref. supplier" search box in supplier orders
+- New: [ task #1345 ] Can filter on status for supplier order.
+- New: Add option FACTURE_SENDBYEMAIL_FOR_ALL_STATUS to allow to send invoice by email 
+       whatever is its status.
+- New: Add filter date in bank writing list page.
+- New: Extrafields can be used as substitution key %EXTRA_XXX% into emails texts for members.
+- New: Add categories translation.
+- New: Enable option "clone target emailing".
+- New: Improved tax module: Add specific page for salaries payment	
+- New: Add composer.json file so Dolibarr can be publish onto packagist.org.
+- New: The combo list of juridical status is now sorted
+- New: [ task #926 ] Add extrafield feature on order lines.
+- New: [ task #927 ] Add extrafield feature on Proposal lines.
+- New: [ task #928 ] Add extrafield feature on invoice lines.
+- New: Paypal/paybox email sent after backcall of a payment is now a formated and translated
+       HTML content. For member subscription renewal, there is also a link to member.
+- New: When a subscription is recorded with invoice and payment:
+       - the document (PDF) of invoice is also generated.
+       - the invoice is set to status paid.
+- New: Can enter holiday for someone else if user has permission for.
+- Fix: Project Task numbering customs rule works.
+- Fix: Add actions events not implemented.
+- Fix: Price min of composition is not supplier price min by quantity.
+- Fix: [ bug #1356 ] Bank accountancy number is limited to 8 numbers.
+- Fix: [ bug #1478 ] BILL_PAYED trigger action does not intercept failure under some circumstances
+- Fix: [ bug #1479 ] Several customer invoice triggers do not intercept trigger action
+- Fix: [ bug #1477 ] Several customer invoice triggers do not show trigger error messages
+- Fix: [ bug #1471 ] Several PHP warnings when intercepting USER_CREATE trigger.
+- Fix: [ bug #1517 ] Packages sizes.
+- Fix: [ bug #1521 ] The second order's page from a provider shows all orders
+
+For translators:
+- Update language files.
+
+For developers:
+- New: Add path file of trigger into admin trigger list page.
+- New: More phpunit tests.
+- New: Payments and supplier payment pages tabs can now be extended from modules.
+- New: Add option 'aZ' into GETPOST function to check parameters contains 
+       only a to z or A to Z characters.
+- New: Opensurvey polls tab cards can now be extended from external modules.
+- New: Triggers OPENSURVEY_CREATE, OPENSURVEY_DELETE added.
+- New: Add new hook function addMoreActionsButtons to allow a module to add/replace
+       action buttons into an element.
+- New: Normalize code for barcode generation to match other modules.
+- New: Uniformize code for contacts forms.
+- New: Add some hooks for financial reports.
+- New: A module can add its own ECM view.
+- New: A module can disable a standard ECM view.
+- New: Add multilang support into product webservice.
+- New: Add hooks on project card page.
+
+WARNING: Following change may create regression for some external modules, but was necessary to make
+Dolibarr better:
+
+- The deprecated way (with 4 parameters) to declare a new tab into a module descriptor file has been
+removed. You must now use the 6 parameters way. See file modMyModule.class.php for example. 
+- Remove the javascript function ac_delay() that is not used anymore by core code.
+- Properties "dictionnaries" into module descriptor files has been renamed into "dictionaries".
+- Method form->select_currency() has been removed. Use instead print form->selectCurrency().
+- Method form->select_methodes_commande() has been renamed into english name selectInputMethod().
+- The following hooks are now 'addreplace' hooks: "formCreateThirdpartyOptions" 
+  So check that return value is 0 to keep default standard behaviour after hook or 1 to disable
+  default standard behaviour.
+- Properties "civilite_id" were renamed into "civility_id".
+- Remove add_photo_web() that is ot used anymore by core code.
+
+
+***** ChangeLog for 3.5.5 compared to 3.5.4 *****
+Fix: Holiday module was broken. Initializaion of amount of holidays failed.
+Fix: [ bug #1523 ] suite bug #1334 : filtre et ordre de tri conjoints ne s'appliquent pas.
+Fix: Fusion PDF button on unpaid invoice is no more displayed.
+Fix: Unpaid invoice launch fusion PDF action even if it is only search (with enter keyboard input instead of lens click).
+Fix: Pb when showing log list of holiday module with some mysql versions.
+Fix: Error with bad timezone pushed by some browsers.
+Fix: shipping list SQL request was not filtering on shipping element
+Fix: debian package provided by dolibarr team must use embedded libraries.
+Fix: [ bug #1528 ] Leopard Services numeration module description is not translated.
+Fix: [ bug #1523 ] suite bug #1334 : filtre et ordre de tri conjoints ne s'appliquent pas.
+Fix: [ bug #1534 ] Unknown error when deleting a product photo under special circumstances.
+Fix: Update impayees.php
+Fix: Link product, In list view and label product.
+Fix: visible task into area "time" for "My task" must limit task to tasks i am assigned to.
+Fix: When disabled, all fields to add time into task line must be disabled.
+Fix: Missing include files.lib.php in some pages that use dol_delete_recursive
+Fix: [ bug #1558 ] Product/service edit page title shows new Ref instead of old ref.
+Fix: [ bug #1553 ] Saving User displays setup removes menu.
+Fix: [ bug #1544 ] Can remove date from invoice.
+Fix: list event view lost type event filter.
+Fix: Add code save on create event.
+Fix: SQL injection.
+Fix: [ bug #1589 ] Menu type in "Edit menu" page is not translated
+Fix: [ bug #1591 ] Linked object block shows Total HT/TTC even if not having permission to read them
+Fix: [ bug #1577 ] When creating new Private individual third, selected third type is ignored
+Fix: [ bug #1555 ] Update accountancy code of products does not throw PRODUCT_MODIFY trigger
+Fix: [ bug #1548 ] Supplier payment card shows type in French
+Fix: [ bug #1546 ] Incorrect page number when searching in the list of bank transactions
+
 ***** ChangeLog for 3.5.4 compared to 3.5.3 *****
+Fix: Hide title of event when agenda module disabled.
+Fix: When using option MAIN_MAIL_ALLOW_SENDMAIL_F, a mail was sent to sender.
 Fix: Question about warehouse must not be done when module stock is disabled.
 Fix: Option STOCK_SUPPORTS_SERVICES was not correctly implemented
      (missing test at some places).
@@ -42,6 +218,9 @@ Fix: [ bug #1461 ] LINEORDER_SUPPLIER_CREATE does not intercept supplier order l
 Fix: [ bug #1484 ] BILL_SUPPLIER_PAYED trigger action does not intercept failure under some circumstances
 Fix: [ bug #1482 ] Several supplier invoice triggers do not show trigger error messages
 Fix: [ bug #1486 ] LINEBILL_SUPPLIER_CREATE and LINEBILL_SUPPLIER_UPDATE triggers do not intercept trigger action
+Fix: [ bug #1522 ] Element list into associate object into project are no more filterd by project thirdparty
+Fix: [ bug #1526 ] Thumbs of files uploaded with dots in their names do not load correctly
+Fix: Import ProfId1 to siren and ProfId2 to siret
 
 ***** ChangeLog for 3.5.3 compared to 3.5.2 *****
 Fix: Error on field accountancy code for export profile of invoices.
@@ -137,7 +316,7 @@ Fix: Link to paypal was invalid into email text.
 Fix: ref and date of supplier invoice.
 Fix: Check on bank account.
 Fix: Problem with file upload and download.
-Fix: Page load not ending when large number of thirdparies. We 
+Fix: Page load not ending when large number of thirdparties. We 
      added option MAIN_DISABLE_AJAX_COMBOX to disable javascript
      combo feature that is root cause of problem.
 Fix: [ bug #1231 ] PDF always generated in interventions
@@ -299,20 +478,13 @@ parameter. All methods addline in this case were modified to remove this paramet
 
 ***** ChangeLog for 3.4.3 compared to 3.4.2 *****
 Fix: Bad get of localtaxes into contracts add lines
-
-***** ChangeLog for 3.4.3 compared to 3.4.2 *****
-Fix: Warning into bank conciliation feature.
-Fix: Bad get of localtaxes into contracts add lines.
-Fix: Add a limit into list to avoid browser to hang when database is too large.
-Fix: [ bug #1212 ] 'jqueryFileTree.php' directory traversal vulnerability
-
-***** ChangeLog for 3.4.3 compared to 3.4.2 *****
 Fix: Warning into bank conciliation feature.
 Fix: Bad get of localtaxes into contracts add lines.
 Fix: Add a limit into list to avoid browser to hang when database is too large.
 Fix: [ bug #1212 ] 'jqueryFileTree.php' directory traversal vulnerability
 Fix: Agenda and Banks module were not working with multicompany module
 Fix: [ bug #1317 ] Removing a category does not remove all child categories
+Fix: [ bug #1380 ] Customer invoices are not grouped in company results report.
 
 ***** ChangeLog for 3.4.2 compared to 3.4.1 *****
 Fix: field's problem into company's page (RIB).
@@ -924,7 +1096,7 @@ For developers:
 - New: Support a backtopage parameter on contact creation page.
 - New: Add id on div to show logo.
 - New: Install wizard can activate a module at end of install.
-- New: Dictionnary setup works with very large external dictionnaries (Add 
+- New: Dictionary setup works with very large external dictionnaries (Add 
        page navigation).
 - New: Add api to draw graphics with javascript (using Jquery Flot).
 - New: Can add user login into menu urls added by modules.
@@ -1571,7 +1743,7 @@ For developers:
 - Add Dolibarr triggers support on payments.
 - Add Dolibarr triggers on supplier and customers orders.
 - Webcalendar triggers for actions on Member module.
-- Support optionnal new javascript popup selector for date fields.
+- Support optional new javascript popup selector for date fields.
 - Support for several RSS boxes in external RSS module. Setup easier.
 - Can attach documents on Action, Orders, Invoices, Commercial proposals.
 - Can attach contacts on proposals, orders, contracts, invoices.

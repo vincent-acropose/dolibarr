@@ -205,16 +205,25 @@ class ProductFournisseur extends Product
 			$resql = $this->db->query($sql);
 			if ($resql)
 			{
-				$this->db->commit();
-				
 				// Appel des triggers
-				include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+				include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
 				$interface=new Interfaces($this->db);
-				$result=$interface->run_triggers('UPDATE_BUYPRICE',$this,$user,$langs,$conf);
-				if ($result < 0) { $error++; $this->errors=$interface->errors; }
-				// Fin appel triggers
-				
-				return 0;
+				$result=$interface->run_triggers('SUPPLIER_PRODUCT_BUYPRICE_UPDATE',$this,$user,$langs,$conf);
+				if ($result < 0)
+				{
+					$error++; $this->error=$interface->errors;
+				}
+
+				if (empty($error))
+				{
+					$this->db->commit();
+					return 0;
+				}
+				else
+				{
+					$this->db->rollback();
+					return 1;
+				}
 			}
 			else
 			{
@@ -282,8 +291,25 @@ class ProductFournisseur extends Product
 
 		            if (! $error)
 		            {
-		                $this->db->commit();
-		                return 0;
+        				// Appel des triggers
+        				include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+        				$interface=new Interfaces($this->db);
+        				$result=$interface->run_triggers('SUPPLIER_PRODUCT_BUYPRICE_CREATE',$this,$user,$langs,$conf);
+        				if ($result < 0)
+        				{
+        					$error++; $this->error=$interface->errors;
+        				}
+
+        				if (empty($error))
+        				{
+        					$this->db->commit();
+        					return 0;
+        				}
+        				else
+        				{
+        					$this->db->rollback();
+        					return 1;
+        				}
 		            }
 		            else
 		            {
@@ -525,4 +551,3 @@ class ProductFournisseur extends Product
 
 }
 
-?>
