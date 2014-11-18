@@ -294,7 +294,7 @@ class FactureFournisseur extends CommonInvoice
         $sql.= ' s.nom as socnom, s.rowid as socid';
         $sql.= ' FROM '.MAIN_DB_PREFIX.'facture_fourn as t,'.MAIN_DB_PREFIX.'societe as s';
         if ($id)  $sql.= " WHERE t.rowid=".$id;
-        if ($ref) $sql.= " WHERE t.rowid='".$this->db->escape($ref)."'";    // ref is id (facnumber is supplier ref)
+        if ($ref) $sql.= " WHERE t.facnumber='".$this->db->escape($ref)."'";    // ref is id (facnumber is supplier ref)
         $sql.= ' AND t.fk_soc = s.rowid';
 
         dol_syslog(get_class($this)."::fetch sql=".$sql, LOG_DEBUG);
@@ -611,6 +611,13 @@ class FactureFournisseur extends CommonInvoice
         		$error++; $this->errors=$interface->errors;
         	}
         	// Fin appel triggers
+        }
+
+	if (! $error)
+        {
+        	// Delete linked object
+        	$res = $this->deleteObjectLinked();
+        	if ($res < 0) $error++;
         }
 
         if (! $error)

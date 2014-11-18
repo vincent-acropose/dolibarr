@@ -85,6 +85,7 @@ if ($mode == 'search')
 	$sql.= " OR s.code_client LIKE '%".$db->escape($socname)."%'";
 	$sql.= " OR s.email LIKE '%".$db->escape($socname)."%'";
 	$sql.= " OR s.url LIKE '%".$db->escape($socname)."%'";
+	$sql.= " OR s.siren LIKE '%".$db->escape($socname)."%'";
 
 	if (!empty($conf->barcode->enabled))
 	{
@@ -218,6 +219,7 @@ if ($search_all)
 	$sql.= " OR s.code_client LIKE '%".$db->escape($search_all)."%'";
 	$sql.= " OR s.email LIKE '%".$db->escape($search_all)."%'";
 	$sql.= " OR s.url LIKE '%".$db->escape($search_all)."%'";
+	$sql.= " OR s.siren LIKE '%".$db->escape($search_all)."%'";
 	$sql.= ")";
 }
 if ($search_nom)
@@ -227,6 +229,7 @@ if ($search_nom)
 	$sql.= " OR s.code_client LIKE '%".$db->escape($search_nom)."%'";
 	$sql.= " OR s.email LIKE '%".$db->escape($search_nom)."%'";
 	$sql.= " OR s.url LIKE '%".$db->escape($search_nom)."%'";
+	$sql.= " OR s.siren LIKE '%".$db->escape($search_nom)."%'";
 	$sql.= ")";
 }
 if ($search_ville)   $sql .= " AND s.ville LIKE '%".$db->escape($search_ville)."%'";
