@@ -93,7 +93,7 @@ if ($action == 'swapstatut' && $user->rights->projet->creer)
 {
 	if ($object->fetch($id))
 	{
-	    $result=$object->swapContactStatus(GETPOST('ligne'));
+	    $result=$object->swapContactStatus(GETPOST('ligne','int'));
 	}
 	else
 	{
@@ -105,7 +105,7 @@ if ($action == 'swapstatut' && $user->rights->projet->creer)
 if (($action == 'deleteline' || $action == 'deletecontact') && $user->rights->projet->creer)
 {
 	$object->fetch($id);
-	$result = $object->delete_contact($_GET["lineid"]);
+	$result = $object->delete_contact(GETPOST("lineid"));
 
 	if ($result >= 0)
 	{
@@ -177,7 +177,7 @@ if ($id > 0 || ! empty($ref))
 		print '<tr><td>'.$langs->trans("Label").'</td><td>'.$object->title.'</td></tr>';
 
 		// Customer
-		print "<tr><td>".$langs->trans("Company")."</td>";
+		print "<tr><td>".$langs->trans("ThirdParty")."</td>";
 		print '<td colspan="3">';
 		if ($object->societe->id > 0) print $object->societe->getNomUrl(1);
 		else print '&nbsp;';
@@ -202,7 +202,7 @@ if ($id > 0 || ! empty($ref))
 		{
 			$res=@include dol_buildpath($reldir.'/contacts.tpl.php');
 			if ($res) break;
-		}		
+		}
 	}
 	else
 	{

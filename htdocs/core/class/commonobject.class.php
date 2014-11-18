@@ -47,8 +47,8 @@ abstract class CommonObject
 
     public $array_options=array();
 
-    public $linkedObjectsIds;
-    public $linkedObjects;
+    public $linkedObjectsIds;	// Loaded by ->fetchObjectLinked
+    public $linkedObjects;		// Loaded by ->fetchObjectLinked
 
     // No constructor as it is an abstract class
 
@@ -575,6 +575,11 @@ abstract class CommonObject
         global $conf;
 
         if (empty($this->socid)) return 0;
+        
+        if (!class_exists('Societe'))
+	    require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+
+	require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 
         $thirdparty = new Societe($this->db);
         $result=$thirdparty->fetch($this->socid);
@@ -1052,7 +1057,6 @@ abstract class CommonObject
             return 0;
         }
     }
-
 
     /**
      *  Save a new position (field rang) for details lines.
@@ -1691,7 +1695,7 @@ abstract class CommonObject
      *	@param  string	$sourcetype		Object source type
      *	@param  int		$targetid		Object target id
      *	@param  string	$targettype		Object target type
-     *	@param  string	$clause			OR, AND clause
+     *	@param  string	$clause			'OR' or 'AND' clause used when both source id and target id are provided
      *	@return	void
      */
     function fetchObjectLinked($sourceid='',$sourcetype='',$targetid='',$targettype='',$clause='OR')
@@ -2002,7 +2006,7 @@ abstract class CommonObject
         $sql.= " FROM ".MAIN_DB_PREFIX.$this->table_element;
         $sql.= " WHERE entity IN (".getEntity($this->element, 1).")";
         if (! empty($id))  $sql.= " AND rowid = ".$id;
-        if (! empty($ref)) $sql.= " AND ref = '".$ref."'";
+        if (! empty($ref)) $sql.= " AND ref = '".$this->db->escape($ref)."'";
 
         $resql = $this->db->query($sql);
         if ($resql)
@@ -2083,7 +2087,7 @@ abstract class CommonObject
 
                     foreach ($tab as $key => $value)
                     {
-                    	//Test fetch_array ! is_int($key) because fetch_array seult is a mix table with Key as alpha and Key as int (depend db engine)
+                    	// Test fetch_array ! is_int($key) because fetch_array seult is a mix table with Key as alpha and Key as int (depend db engine)
                         if ($key != 'rowid' && $key != 'tms' && $key != 'fk_member' && ! is_int($key))
                         {
                             // we can add this attribute to adherent object
@@ -2359,7 +2363,8 @@ abstract class CommonObject
 
 
     /**
-     *  Function to check if an object is used by others
+     *  Function to check if an object is used by others.
+     *  Check is done into this->childtables. There is no check into llx_element_element.
      *
      *  @param	int		$id			Id of object
      *  @return	int					<0 if KO, 0 if not used, >0 if already used

@@ -360,16 +360,16 @@ if (! defined('NOLOGIN'))
         // It is not already authenticated and it requests the login / password
         include_once DOL_DOCUMENT_ROOT.'/core/lib/security2.lib.php';
 
-        $dol_dst_observed=GETPOST("dst_observed",3);
-        $dol_dst_first=GETPOST("dst_first",3);
-        $dol_dst_second=GETPOST("dst_second",3);
-        $dol_screenwidth=GETPOST("screenwidth",3);
-        $dol_screenheight=GETPOST("screenheight",3);
-        $dol_hide_topmenu=GETPOST('dol_hide_topmenu',3);
-        $dol_hide_leftmenu=GETPOST('dol_hide_leftmenu',3);
-        $dol_optimize_smallscreen=GETPOST('dol_optimize_smallscreen',3);
-        $dol_no_mouse_hover=GETPOST('dol_no_mouse_hover',3);
-        $dol_use_jmobile=GETPOST('dol_use_jmobile',3);
+        $dol_dst_observed=GETPOST("dst_observed",'int',3);
+        $dol_dst_first=GETPOST("dst_first",'int',3);
+        $dol_dst_second=GETPOST("dst_second",'int',3);
+        $dol_screenwidth=GETPOST("screenwidth",'int',3);
+        $dol_screenheight=GETPOST("screenheight",'int',3);
+        $dol_hide_topmenu=GETPOST('dol_hide_topmenu','int',3);
+        $dol_hide_leftmenu=GETPOST('dol_hide_leftmenu','int',3);
+        $dol_optimize_smallscreen=GETPOST('dol_optimize_smallscreen','int',3);
+        $dol_no_mouse_hover=GETPOST('dol_no_mouse_hover','int',3);
+        $dol_use_jmobile=GETPOST('dol_use_jmobile','int',3);
         //dol_syslog("POST key=".join(array_keys($_POST),',').' value='.join($_POST,','));
 
         // If in demo mode, we check we go to home page through the public/demo/index.php page
@@ -446,6 +446,9 @@ if (! defined('NOLOGIN'))
                 $dol_authmode=$conf->authmode;	// This properties is defined only when logged, to say what mode was successfully used
                 $dol_tz=$_POST["tz"];
                 $dol_tz_string=$_POST["tz_string"];
+                $dol_tz_string=preg_replace('/\s*\(.+\)$/','',$dol_tz_string);
+                $dol_tz_string=preg_replace('/,/','/',$dol_tz_string);
+                $dol_tz_string=preg_replace('/\s/','_',$dol_tz_string);
                 $dol_dst=0;
                 if (isset($_POST["dst_first"]) && isset($_POST["dst_second"]))
                 {
@@ -960,6 +963,7 @@ function top_htmlhead($head, $title='', $disablejs=0, $disablehead=0, $arrayofjs
         print '<meta name="robots" content="noindex,nofollow">'."\n";      // Evite indexation par robots
         print '<meta name="author" content="Dolibarr Development Team">'."\n";
         $favicon=dol_buildpath('/theme/'.$conf->theme.'/img/favicon.ico',1);
+		if (! empty($conf->global->MAIN_FAVICON_URL)) $favicon=$conf->global->MAIN_FAVICON_URL;
         print '<link rel="shortcut icon" type="image/x-icon" href="'.$favicon.'"/>'."\n";
         if (empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER)) print '<link rel="top" title="'.$langs->trans("Home").'" href="'.(DOL_URL_ROOT?DOL_URL_ROOT:'/').'">'."\n";
         if (empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER)) print '<link rel="copyright" title="GNU General Public License" href="http://www.gnu.org/copyleft/gpl.html#SEC1">'."\n";
@@ -1035,11 +1039,11 @@ function top_htmlhead($head, $title='', $disablejs=0, $disablehead=0, $arrayofjs
         $themeparam='?lang='.$langs->defaultlang.'&amp;theme='.$conf->theme.(GETPOST('optioncss')?'&amp;optioncss='.GETPOST('optioncss','alpha',1):'').'&amp;userid='.$user->id.'&amp;entity='.$conf->entity;
         $themeparam.=($ext?'&amp;'.$ext:'');
         if (! empty($_SESSION['dol_resetcache'])) $themeparam.='&amp;dol_resetcache='.$_SESSION['dol_resetcache'];
-        if (GETPOST('dol_hide_topmenu'))           { $themeparam.='&amp;dol_hide_topmenu='.GETPOST('dol_hide_topmenu'); }
-        if (GETPOST('dol_hide_leftmenu'))          { $themeparam.='&amp;dol_hide_leftmenu='.GETPOST('dol_hide_leftmenu'); }
-        if (GETPOST('dol_optimize_smallscreen'))   { $themeparam.='&amp;dol_optimize_smallscreen='.GETPOST('dol_optimize_smallscreen'); }
-        if (GETPOST('dol_no_mouse_hover'))         { $themeparam.='&amp;dol_no_mouse_hover='.GETPOST('dol_no_mouse_hover'); }
-        if (GETPOST('dol_use_jmobile'))            { $themeparam.='&amp;dol_use_jmobile='.GETPOST('dol_use_jmobile'); $conf->dol_use_jmobile=GETPOST('dol_use_jmobile'); }
+        if (GETPOST('dol_hide_topmenu'))           { $themeparam.='&amp;dol_hide_topmenu='.GETPOST('dol_hide_topmenu','int'); }
+        if (GETPOST('dol_hide_leftmenu'))          { $themeparam.='&amp;dol_hide_leftmenu='.GETPOST('dol_hide_leftmenu','int'); }
+        if (GETPOST('dol_optimize_smallscreen'))   { $themeparam.='&amp;dol_optimize_smallscreen='.GETPOST('dol_optimize_smallscreen','int'); }
+        if (GETPOST('dol_no_mouse_hover'))         { $themeparam.='&amp;dol_no_mouse_hover='.GETPOST('dol_no_mouse_hover','int'); }
+        if (GETPOST('dol_use_jmobile'))            { $themeparam.='&amp;dol_use_jmobile='.GETPOST('dol_use_jmobile','int'); $conf->dol_use_jmobile=GETPOST('dol_use_jmobile','int'); }
         //print 'themepath='.$themepath.' themeparam='.$themeparam;exit;
         print '<link rel="stylesheet" type="text/css" title="default" href="'.$themepath.$themeparam.'">'."\n";
 
@@ -1507,7 +1511,7 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
 	print '<div style="clear: both;"></div>';
     print "<!-- End top horizontal menu -->\n\n";
 
-    if (empty($conf->dol_hide_leftmenu) && (empty($conf->use_javascript_ajax) || ! empty($conf->dol_use_jmobile) || empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT))) print '<div id="id-container">';
+    if (empty($conf->dol_hide_leftmenu) && empty($conf->dol_use_jmobile) && empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print '<div id="id-container">';
 }
 
 
@@ -1538,7 +1542,7 @@ function left_menu($menu_array_before, $helppagename='', $moresearchform='', $me
 	    $hookmanager->initHooks(array('searchform','leftblock'));
 
     	if (empty($conf->dol_use_jmobile) && ! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print "\n".'<div class="ui-layout-west"> <!-- Begin left layout -->'."\n";
-		else print '<div id="id-left">';
+		else print '<div id="id-left"> <!-- Begin id-left -->';
 
 	    print "\n";
 
@@ -1716,7 +1720,7 @@ function left_menu($menu_array_before, $helppagename='', $moresearchform='', $me
 	    print $leftblock;
 
 	    if (empty($conf->dol_use_jmobile) && ! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print '</div> <!-- End left layout -->'."\n";
-	    else print '</div>';	// End div id="id-left"
+	    else print '</div> <!-- end id-left -->';	// End div id="id-left"
     }
 
     print "\n";
@@ -1737,10 +1741,7 @@ function main_area($title='')
 {
     global $conf, $langs;
 
-    if (empty($conf->dol_use_jmobile) && ! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT))
-    {
-        print '<div id="mainContent"><div class="ui-layout-center"> <!-- begin main layout -->'."\n";
-    }
+    if (empty($conf->dol_use_jmobile) && ! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print '<div id="mainContent"><div class="ui-layout-center"> <!-- begin main layout -->'."\n";
 	if (empty($conf->dol_hide_leftmenu)) print '<div id="id-right">';
 
     print "\n";
@@ -1865,18 +1866,18 @@ if (! function_exists("llxFooter"))
         }
 
         print "\n\n";
-        print '</div> <!-- end div class="fiche" -->'."\n";
+        print '</div> <!-- End div class="fiche" -->'."\n";
         if (! empty($conf->dol_use_jmobile)) print '</div>';	// end data-role="page"
 
         if (empty($conf->dol_use_jmobile) && ! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print '</div></div> <!-- end main layout -->'."\n";
-		if (empty($conf->dol_hide_leftmenu)) print '</div>'; // End div id-right
+		if (empty($conf->dol_hide_leftmenu)) print '</div> <!-- End div id-right -->'; // End div id-right
 
         print "\n";
         if ($comment) print '<!-- '.$comment.' -->'."\n";
 
         printCommonFooter($zone);
 
-        if (empty($conf->dol_hide_leftmenu)) print '</div>';	// End div container
+        if (empty($conf->dol_hide_leftmenu) && empty($conf->dol_use_jmobile) && empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print '</div> <!-- End div id-container -->'."\n";	// End div container
 
         print "</body>\n";
         print "</html>\n";

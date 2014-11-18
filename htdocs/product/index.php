@@ -20,16 +20,16 @@
 /**
  *	\file       htdocs/product/index.php
  *  \ingroup    product
- *  \brief      Page accueil des produits et services
+ *  \brief      Homepage products and services
  */
 
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 
-$type=isset($_GET["type"])?$_GET["type"]:(isset($_POST["type"])?$_POST["type"]:'');
+$type=GETPOST("type",'int');
 if ($type =='' && !$user->rights->produit->lire) $type='1';	// Force global page on service page only
-if ($type =='' && !$user->rights->service->lire) $type='0';	// Force global page on prpduct page only
+if ($type =='' && !$user->rights->service->lire) $type='0';	// Force global page on product page only
 
 // Security check
 if ($type=='0') $result=restrictedArea($user,'produit');
@@ -74,7 +74,7 @@ print '<div class="fichecenter"><div class="fichethirdleft">';
 
 
 /*
- * Zone recherche produit/service
+ * Search Area of product/service
  */
 $rowspan=2;
 if (! empty($conf->barcode->enabled)) $rowspan++;
@@ -101,7 +101,7 @@ print "</table></form><br>";
 
 
 /*
- * Nombre de produits et/ou services
+ * Number of products and/or services
  */
 $prodser = array();
 $prodser[0][0]=$prodser[0][1]=$prodser[1][0]=$prodser[1][1]=0;
@@ -261,7 +261,7 @@ else
 
 
 // TODO Move this into a page that should be available into menu "accountancy - report - turnover - per quarter"
-// Also method used for counting must provide the 2 possible methods like done by all other reports into menu "accountancy - report - turnover": 
+// Also method used for counting must provide the 2 possible methods like done by all other reports into menu "accountancy - report - turnover":
 // "commitment engagment" method and "cash accounting" method
 if ($conf->global->MAIN_FEATURES_LEVEL)
 {
@@ -283,11 +283,11 @@ $db->close();
 function activitytrim($product_type)
 {
 	global $conf,$langs,$db;
-	
-	// on affiche les 3 dernières années 
+
+	// We display the last 3 years
 	$yearofbegindate=date('Y',dol_time_plus_duree(time(), -3, "y"));
 
-	// ventilation par trimestre
+	// breakdown by quarter
 	$sql = "SELECT DATE_FORMAT(p.datep,'%Y') as annee, DATE_FORMAT(p.datep,'%m') as mois, SUM(fd.total_ht) as Mnttot";
 	$sql.= " FROM ".MAIN_DB_PREFIX."societe as s,".MAIN_DB_PREFIX."facture as f, ".MAIN_DB_PREFIX."facturedet as fd";
 	$sql.= " , ".MAIN_DB_PREFIX."paiement as p,".MAIN_DB_PREFIX."paiement_facture as pf";
@@ -311,7 +311,7 @@ function activitytrim($product_type)
 		$trim4=0;
 		$lgn = 0;
 		$num = $db->num_rows($result);
-		
+
 		if ($num > 0 )
 		{
 			print '<br>';
@@ -346,14 +346,14 @@ function activitytrim($product_type)
 					print '</tr>';
 					$lgn++;
 				}
-				// on passe à l'année suivante
+				// We go to the following year
 				$tmpyear = $objp->annee;
 				$trim1=0;
 				$trim2=0;
 				$trim3=0;
 				$trim4=0;
 			}
-			
+
 			if ($objp->mois == "01" || $objp->mois == "02" || $objp->mois == "03")
 				$trim1 += $objp->Mnttot;
 
