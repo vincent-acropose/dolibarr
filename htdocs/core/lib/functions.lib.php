@@ -453,7 +453,7 @@ function dol_escape_htmltag($stringtoescape,$keepb=0)
 	// escape quotes and backslashes, newlines, etc.
 	$tmp=dol_html_entity_decode($stringtoescape,ENT_COMPAT,'UTF-8');
 	if ($keepb) $tmp=strtr($tmp, array("\r"=>'\\r',"\n"=>'\\n'));
-	else $tmp=strtr($tmp, array("\r"=>'\\r',"\n"=>'\\n',"<b>"=>'','</b>'=>''));
+	else $tmp=strtr($tmp, array("\r"=>'\\r',"\n"=>'\\n',"<b>"=>'','</b>'=>'','"'=>'&quote;'));
 	return dol_htmlentities($tmp,ENT_COMPAT,'UTF-8');
 }
 
@@ -3673,6 +3673,7 @@ function dol_textishtml($msg,$option=0)
 		elseif (preg_match('/<(br|div|font|img|li|span|strong|table)>/i',$msg)) 	  return true;
 		elseif (preg_match('/<(br|div|font|img|li|span|strong|table)\s+[^<>\/]*>/i',$msg)) return true;
 		elseif (preg_match('/<(br|div|font|img|li|span|strong|table)\s+[^<>\/]*\/>/i',$msg)) return true;
+		elseif (preg_match('/<h[0-9]>/i',$msg))			return true;
 		elseif (preg_match('/&[A-Z0-9]{1,6};/i',$msg))	return true;    // Html entities names (http://www.w3schools.com/tags/ref_entities.asp)
 		elseif (preg_match('/&#[0-9]{2,3};/i',$msg))	return true;    // Html entities numbers (http://www.w3schools.com/tags/ref_entities.asp)
 		return false;
