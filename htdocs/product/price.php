@@ -721,6 +721,7 @@ if (! empty($conf->global->PRODUIT_MULTIPRICES))
 		else
 		{
             // TVA
+<<<<<<< HEAD
 	        print '<tr><td class="titlefield">' . $langs->trans("VATRate") . '</td><td>';
 	        if ($object->default_vat_code)
 	        {
@@ -731,6 +732,17 @@ if (! empty($conf->global->PRODUIT_MULTIPRICES))
 		}
 	   
 		print '<tr class="liste_titre"><td style="text-align: center">'.$langs->trans("PriceLevel").'</td><td style="text-align: center">'.$langs->trans("SellingPrice").'</td><td style="text-align: center">'.$langs->trans("MinPrice").'</td></tr>';
+=======
+            if ($i == 1) // We show only price for level 1
+            {
+                 print '<tr><td>'.$langs->trans("VATRate").'</td><td>'.vatrate($object->multiprices_tva_tx[1],true).'</td></tr>';
+            }
+
+            print '<tr><td>'.$langs->trans("SellingPrice").' '.$i;
+			$keyforlabel='PRODUIT_MULTIPRICES_LABEL'.$i;
+			if (! empty($conf->global->$keyforlabel)) print ' - '.$langs->trans($conf->global->$keyforlabel);
+            print '</td>';
+>>>>>>> 678c779... Ajout fonction 3.6 permettant de mettre un libellé sur les niveaux de prix
 
 		for($i = 1; $i <= $conf->global->PRODUIT_MULTIPRICES_LIMIT; $i++)
 		{
