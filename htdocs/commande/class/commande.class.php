@@ -991,7 +991,14 @@ class Commande extends CommonOrder
 				$line->pa_ht			= $marginInfos[0];
 				$line->marge_tx			= $marginInfos[1];
 				$line->marque_tx		= $marginInfos[2];
-
+				
+				//Extrafields
+				$object->lines[$i]->fetch_optionals($object->lines[$i]->rowid);
+				
+				foreach ($object->lines[$i]->array_options as $key => $value) {
+					$line->array_options[$key] = $value;
+				}
+				
                 $this->lines[$i] = $line;
             }
 
@@ -1017,7 +1024,13 @@ class Commande extends CommonOrder
             {
             	$this->linked_objects = array_merge($this->linked_objects, $object->other_linked_objects);
             }
-
+			
+			// Récupération des extrafields
+			$object->fetch_optionals($object->id);
+			foreach ($object->array_options as $key => $value) {
+				$this->array_options[$key] = $value;
+			}
+			
             $ret = $this->create($user);
 
             if ($ret > 0)
