@@ -184,6 +184,14 @@ if ($action == 'updateprice' && GETPOST('cancel') <> $langs->trans("Cancel"))
 		if (! $error)
 		{
 			$db->commit();
+			
+			// Appel des triggers
+			include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+			$interface=new Interfaces($db);
+			$result=$interface->run_triggers('UPDATE_BUYPRICE',$product,$user,$langs,$conf);
+			if ($result < 0) { $error++; $product->errors=$interface->errors; }
+			// Fin appel triggers
+			
 			$action='';
 		}
 		else
@@ -298,6 +306,12 @@ if ($id || $ref)
 					print '<input type="hidden" name="id_fourn" value="'.$socid.'">';
 					print '<input type="hidden" name="ref_fourn" value="'.$product->fourn_ref.'">';
 					print '<input type="hidden" name="ref_fourn_price_id" value="'.$rowid.'">';
+					
+					if (is_object($hookmanager))
+					{
+						$parameters=array('id_fourn'=>$id_fourn,'prod_id'=>$product->id);
+					    $reshook=$hookmanager->executeHooks('formEditThirdpartyOptions',$parameters,$object,$action);
+					}
 				}
 				else
 				{
@@ -403,7 +417,7 @@ if ($id || $ref)
 				if (is_object($hookmanager))
 				{
 					$parameters=array('id_fourn'=>$id_fourn,'prod_id'=>$product->id);
-				    $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);
+				    $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$product,$action);
 				}
 
 				print '</table>';
@@ -471,7 +485,7 @@ if ($id || $ref)
 					{
 						$var=!$var;
 
-						print "<tr ".$bc[$var].">";
+						print '<tr id="row-'.$productfourn->product_fourn_price_id.'" '.$bc[$var].'>';
 
 						print '<td>'.$productfourn->getSocNomUrl(1,'supplier').'</td>';
 
