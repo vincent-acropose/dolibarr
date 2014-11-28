@@ -86,6 +86,18 @@ $parameters=array('id'=>$socid, 'objcanvas'=>$objcanvas);
 $reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 $error=$hookmanager->error; $errors=array_merge($errors, (array) $hookmanager->errors);
 
+if ($action == 'setcustomeraddress')
+{
+	$result=$object->fetch($_REQUEST['socid']);
+	$object->address=$_POST["customeraddress"];
+	$result=$object->update($object->id);
+	if ($result < 0)
+	{
+		$mesgs[]=join(',',$object->errors);
+	}
+	$action="";
+}
+
  if ($action == 'update_extras')
 {
 	$object->fetch($_REQUEST['socid']);
@@ -1595,9 +1607,21 @@ else
         print '</tr>';
 
         // Address
-        print "<tr><td valign=\"top\">".$langs->trans('Address').'</td><td colspan="'.(2+(($showlogo || $showbarcode)?0:1)).'">';
+        /*print "<tr><td valign=\"top\">".$langs->trans('Address').'</td><td colspan="'.(2+(($showlogo || $showbarcode)?0:1)).'">';
         dol_print_address($object->address,'gmap','thirdparty',$object->id);
-        print "</td></tr>";
+        print "</td></tr>";*/
+		
+		
+		// Address (modifiable)
+		print '<tr>';
+		print '<td>';
+		print $form->editfieldkey($langs->trans('Address'),'customeraddress',$object->address,$object,$user->rights->societe->creer, 'string', '&socid='.$_REQUEST['socid']);
+		print '</td><td colspan="3">';
+		print $form->editfieldval($langs->trans('Address'),'customeraddress',$object->address,$object,$user->rights->societe->creer, 'string', '', null, null, '&socid='.$_REQUEST['socid']);
+		print '</td>';
+		print '</tr>';		
+		
+		
 
         // Zip / Town
         print '<tr><td width="25%">'.$langs->trans('Zip').' / '.$langs->trans("Town").'</td><td colspan="'.(2+(($showlogo || $showbarcode)?0:1)).'">';
