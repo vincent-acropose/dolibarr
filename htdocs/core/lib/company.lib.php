@@ -1343,10 +1343,11 @@ function show_subsidiaries($conf,$langs,$db,$object)
 	if($_REQUEST['triParIntervention'] == "inter_effectuee") {
 		//$sql.= " AND f.rowid IS NOT NULL";
 		$sql.= ' AND (fe.statutmission = "10" OR fe.statutmission = "20" OR fe.statutmission = "40")';
+		$sql.= ' AND f.fk_statut > 0';
 	}
 	elseif($_REQUEST['triParIntervention'] == "inter_non_effectuee") {
 		//$sql.= " AND f.rowid IS NULL";
-		$sql.= ' AND (fe.statutmission = "30" OR f.rowid IS NULL)';
+		$sql.= ' AND (fe.statutmission IN ("30", "25", "50") OR f.rowid IS NULL)';
 		$sql.= ' AND s.rowid NOT IN (';
 		// Subquery pour récupérer toutes les sociétés dont l'id n'est pas dans ceux dont il existe une inter au statut "Terminée" (statutmission=40)
 		$sql.= "SELECT DISTINCT s.rowid";
