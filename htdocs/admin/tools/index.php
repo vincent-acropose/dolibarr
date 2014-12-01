@@ -35,12 +35,12 @@ if (! $user->admin)
  * View
  */
 
+$form = new Form($db);
+
 $title=$langs->trans("SystemToolsArea");
 if (GETPOST('leftmenu') == 'modulesadmintools') $title=$langs->trans("ModulesSystemTools");
 
 llxHeader(array(),$title);
-
-$form = new Form($db);
 
 print_fiche_titre($title,'','setup');
 
@@ -57,4 +57,3 @@ print '<center><div class="logo_setup"></div></center>';
 
 llxFooter();
 $db->close();
-?>

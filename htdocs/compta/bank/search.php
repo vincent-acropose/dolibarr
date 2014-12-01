@@ -1,9 +1,10 @@
 <?php
 /* Copyright (C) 2001-2002  Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2008  Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copytight (C) 2005-2010  Regis Houssin        <regis.houssin@capnetworks.com>
- * Copytight (C) 2012       Vinícius Nogueira    <viniciusvgn@gmail.com>
- *
+ * Copyright (C) 2005-2010  Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2012       Vinícius Nogueira    <viniciusvgn@gmail.com>
+ * Copyright (C) 2014       Florian Henry    	 <florian.henry@open-cooncept.pro>
+ * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
@@ -29,9 +30,11 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/bank.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/bankcateg.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/html.formother.class.php';
 
 $langs->load("banks");
 $langs->load("categories");
+$langs->load("companies");
 
 // Security check
 if ($user->societe_id) $socid=$user->societe_id;
@@ -42,15 +45,21 @@ $debit=GETPOST("debit");
 $credit=GETPOST("credit");
 $type=GETPOST("type");
 $account=GETPOST("account");
-$bid=GETPOST("bid");
+$bid=GETPOST("bid","int");
+$search_dt_start = dol_mktime(0, 0, 0, GETPOST('search_start_dtmonth', 'int'), GETPOST('search_start_dtday', 'int'), GETPOST('search_start_dtyear', 'int'));
+$search_dt_end = dol_mktime(0, 0, 0, GETPOST('search_end_dtmonth', 'int'), GETPOST('search_end_dtday', 'int'), GETPOST('search_end_dtyear', 'int'));
 
 $param='';
-if ($description) $param.='&description='.$description;
-if ($type) $param.='&type='.$type;
-if ($debit) $param.='&debit='.$debit;
-if ($credit) $param.='&credit='.$credit;
-if ($account) $param.='&account='.$account;
-if ($bid)  $param.='&bid='.$bid;
+if (!empty($description)) $param.='&description='.$description;
+if (!empty($type)) $param.='&type='.$type;
+if (!empty($debit)) $param.='&debit='.$debit;
+if (!empty($credit)) $param.='&credit='.$credit;
+if (!empty($account)) $param.='&account='.$account;
+if (!empty($bid))  $param.='&bid='.$bid;
+if (dol_strlen($search_dt_start) > 0)
+	$param .= '&search_start_dtmonth=' . GETPOST('search_start_dtmonth', 'int') . '&search_start_dtday=' . GETPOST('search_start_dtday', 'int') . '&search_start_dtyear=' . GETPOST('search_start_dtyear', 'int');
+if (dol_strlen($search_dt_end) > 0)
+	$param .= '&search_end_dtmonth=' . GETPOST('search_end_dtmonth', 'int') . '&search_end_dtday=' . GETPOST('search_end_dtday', 'int') . '&search_end_dtyear=' . GETPOST('search_end_dtyear', 'int');
 
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
@@ -74,6 +83,7 @@ $bankaccountstatic=new Account($db);
 llxHeader();
 
 $form = new Form($db);
+$formother = new FormOther($db);
 
 if ($vline) $viewline = $vline;
 else $viewline = 50;
@@ -83,7 +93,7 @@ $sql.= " b.fk_account, b.fk_type,";
 $sql.= " ba.rowid as bankid, ba.ref as bankref,";
 $sql.= " bu.label as labelurl, bu.url_id";
 $sql.= " FROM ";
-if (! empty($_REQUEST["bid"])) $sql.= MAIN_DB_PREFIX."bank_class as l,";
+if ($bid) $sql.= MAIN_DB_PREFIX."bank_class as l,";
 $sql.= " ".MAIN_DB_PREFIX."bank_account as ba,";
 $sql.= " ".MAIN_DB_PREFIX."bank as b";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."bank_url as bu ON bu.fk_bank = b.rowid AND type = 'company'";
@@ -92,21 +102,28 @@ $sql.= " WHERE b.fk_account = ba.rowid";
 $sql.= " AND ba.entity = ".$conf->entity;
 if (GETPOST("req_nb"))
 {
-    $sql.= " AND b.num_chq like '%".$db->escape(GETPOST("req_nb"))."%'";
+    $sql.= " AND b.num_chq LIKE '%".$db->escape(GETPOST("req_nb"))."%'";
     $param.='&amp;req_nb='.urlencode(GETPOST("req_nb"));
 }
 if (GETPOST("thirdparty"))
 {
-    $sql.=" AND (COALESCE(s.nom,'') LIKE '%".$db->escape(GETPOST("thirdparty"))."%')";
+    $sql.=" AND s.nom LIKE '%".$db->escape(GETPOST("thirdparty"))."%'";
     $param.='&amp;thirdparty='.urlencode(GETPOST("thirdparty"));
 }
-if (! empty($_REQUEST["bid"]))
+if ($bid)
 {
-	$sql.= " AND b.rowid=l.lineid AND l.fk_categ=".$_REQUEST["bid"];
+	$sql.= " AND b.rowid=l.lineid AND l.fk_categ=".$bid;
 }
-if(! empty($type))
+if (! empty($type))
 {
-	$sql .= " AND b.fk_type = '" . $type ."' ";
+	$sql.= " AND b.fk_type = '".$db->escape($type)."' ";
+}
+//Search period criteria
+if (dol_strlen($search_dt_start)>0) {
+	$sql .= " AND b.dateo >= '" . $db->idate($search_dt_start) . "'";
+}
+if (dol_strlen($search_dt_end)>0) {
+	$sql .= " AND b.dateo <= '" . $db->idate($search_dt_end) . "'";
 }
 // Search criteria amount
 $si=0;
@@ -128,6 +145,7 @@ $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($limit+1,$offset);
 //print $sql;
 
+dol_syslog('compta/bank/search.php:: sql='.$sql);
 $resql = $db->query($sql);
 if ($resql)
 {
@@ -147,6 +165,19 @@ if ($resql)
 		print_barre_liste($langs->trans("BankTransactions"), $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, '', $num);
 	}
 
+	print '<form method="post" action="search.php" name="search_form">';
+	
+	$moreforfilter .= $langs->trans('Period') . ' ' . $langs->trans('StartDate') . ': ';
+	$moreforfilter .= $form->select_date($search_dt_start, 'search_start_dt', 0, 0, 1, "search_form", 1, 1, 1);
+	$moreforfilter .= $langs->trans('EndDate') . ':' . $form->select_date($search_dt_end, 'search_end_dt', 0, 0, 1, "search_form", 1, 1, 1);
+	
+	
+	if ($moreforfilter) {
+		print '<div class="liste_titre">';
+		print $moreforfilter;
+		print '</div>';
+	}
+	
 	print '<table class="liste" width="100%">';
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans('Ref'),$_SERVER['PHP_SELF'],'b.rowid','',$param,'',$sortfield,$sortorder);
@@ -161,7 +192,6 @@ if ($resql)
 	print '<td class="liste_titre" align="left"> &nbsp; '.$langs->trans("Account").'</td>';
 	print "</tr>\n";
 
-	print '<form method="post" action="search.php">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 	print '<tr class="liste_titre">';
 	print '<td class="liste_titre">&nbsp;</td>';
@@ -184,11 +214,13 @@ if ($resql)
 	print '<td class="liste_titre" align="right">';
 	print '<input type="hidden" name="action" value="search">';
 	if (! empty($_REQUEST['bid'])) print '<input type="hidden" name="bid" value="'.$_REQUEST["bid"].'">';
-	print '<input type="image" class="liste_titre" name="submit" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+	print '<input type="image" class="liste_titre" name="submit" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 	print '</td>';
 	print '</tr>';
 
 	// Loop on each record
+	$total_debit=0;
+	$total_credit=0;
 	while ($i < min($num,$limit))
 	{
 		$objp = $db->fetch_object($resql);
@@ -206,7 +238,7 @@ if ($resql)
 		if ($printline) {
 			$var=!$var;
 
-			print "<tr $bc[$var]>";
+			print "<tr ".$bc[$var].">";
 
 			// Ref
 			print '<td align="left" class="nowrap">';
@@ -220,14 +252,14 @@ if ($resql)
 	        print '<td align="center" class="nowrap">'.dol_print_date($db->jdate($objp->dv),"day")."</td>\n";
 
 	        // Payment type
-	        print "<td align=\"center\">";
+	        print '<td class="nowrap">';
 	        $labeltype=($langs->trans("PaymentTypeShort".$objp->fk_type)!="PaymentTypeShort".$objp->fk_type)?$langs->trans("PaymentTypeShort".$objp->fk_type):$langs->getLabelFromKey($db,$objp->fk_type,'c_paiement','code','libelle');
 	        if ($labeltype == 'SOLD') print '&nbsp;'; //$langs->trans("InitialBankBalance");
 	        else print $labeltype;
 	        print "</td>\n";
 
 	        // Num
-	        print '<td nowrap>'.($objp->num_chq?$objp->num_chq:"")."</td>\n";
+	        print '<td class="nowrap">'.($objp->num_chq?$objp->num_chq:"")."</td>\n";
 
 	        // Description
 			print "<td>";
@@ -259,10 +291,12 @@ if ($resql)
 			if ($objp->amount < 0)
 			{
 				print "<td align=\"right\">".price($objp->amount * -1)."</td><td>&nbsp;</td>\n";
+				$total_debit+=$objp->amount;
 			}
 			else
 			{
 				print "<td>&nbsp;</td><td align=\"right\">".price($objp->amount)."</td>\n";
+				$total_credit+=$objp->amount;
 			}
 
 			// Bank account
@@ -275,6 +309,15 @@ if ($resql)
 		}
 		$i++;
 	}
+	if ($num>0) {
+		print '<tr  class="liste_total">';
+		print '<td>' . $langs->trans('Total') . '</td>';
+		print '<td colspan="6"></td>';
+		print '<td  align="right">' . price($total_debit * - 1) . '</td>';
+		print '<td  align="right">' . price($total_credit) . '</td>';
+		print '<td></td>';
+		print '</tr>';
+	}
 
 	print "</table>";
 
@@ -285,7 +328,7 @@ else
 	dol_print_error($db);
 }
 
-// Si acc�s issu d'une recherche et rien de trouv�
+// If no data to display after a search
 if ($_POST["action"] == "search" && ! $num)
 {
 	print $langs->trans("NoRecordFound");
@@ -295,4 +338,3 @@ if ($_POST["action"] == "search" && ! $num)
 $db->close();
 
 llxFooter();
-?>

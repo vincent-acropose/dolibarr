@@ -76,7 +76,8 @@ $sql.= " AND pl.fk_prelevement_bons = p.rowid";
 $sql.= " AND pl.fk_soc = s.rowid";
 $sql.= " AND p.entity = ".$conf->entity;
 if ($socid) $sql.= " AND s.rowid = ".$socid;
-$sql .= " ORDER BY $sortfield $sortorder " . $db->plimit($conf->liste_limit+1, $offset);
+$sql.= " ".$db->order($sortfield, $sortorder);
+$sql.= " ".$db->plimit($conf->liste_limit+1, $offset);
 
 $result = $db->query($sql);
 if ($result)
@@ -101,7 +102,7 @@ if ($result)
 	{
 		$obj = $db->fetch_object($result);
 
-		print "<tr $bc[$var]><td>";
+		print "<tr ".$bc[$var]."><td>";
 		print $ligne->LibStatut($obj->statut,2).'&nbsp;';
 		print '<a href="'.DOL_URL_ROOT.'/compta/prelevement/ligne.php?id='.$obj->rowid.'">';
 
@@ -126,4 +127,3 @@ else
 $db->close();
 
 llxFooter();
-?>

@@ -1,5 +1,4 @@
-# Language file - fr_FR - cashdesk
-CHARSET=UTF-8
+# Language file - Source file is en_US - cashdesk
 CashDeskMenu=Point vente
 CashDesk=Caisse enregistreuse
 CashDesks=Caisse enregistreuses
@@ -38,3 +37,4 @@ ShowCompany=Voir société
 ShowStock=Voir entrepôt
 DeleteArticle=Cliquez pour enlever cet article
 FilterRefOrLabelOrBC=Recherche (Ref/Lib.)
+UserNeedPermissionToEditStockToUsePos=Vous avez demandé de réduire le stock sur création de facture, aussi l'utilisateur qui utilise le Point De Vente doit avoir la permission d'éditer le stock.

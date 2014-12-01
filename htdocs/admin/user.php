@@ -70,7 +70,21 @@ if (preg_match('/del_(.*)/',$action,$reg))
         dol_print_error($db);
     }
 }
+//Set hide closed customer into combox or select
+if ($action == 'sethideinactiveuser')
+{
+	$status = GETPOST('status','alpha');
 
+	if (dolibarr_set_const($db, "USER_HIDE_INACTIVE_IN_COMBOBOX",$status,'chaine',0,'',$conf->entity) > 0)
+	{
+		header("Location: ".$_SERVER["PHP_SELF"]);
+		exit;
+	}
+	else
+	{
+		dol_print_error($db);
+	}
+}
 
 /*
  * View
@@ -127,4 +141,3 @@ dol_fiche_end();
 
 llxFooter();
 $db->close();
-?>

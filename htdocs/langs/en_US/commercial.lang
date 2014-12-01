@@ -1,5 +1,4 @@
-# Dolibarr language file - en_US - commercial
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - commercial
 Commercial=Commercial
 CommercialArea=Commercial area
 CommercialCard=Commercial card
@@ -63,7 +62,7 @@ LastProspectContactDone=Contact done
 DateActionPlanned=Date event planned for
 DateActionDone=Date event done
 ActionAskedBy=Event reported by
-ActionAffectedTo=Event assigned to
+ActionAffectedTo=Event owned by
 ActionDoneBy=Event done by
 ActionUserAsk=Reported by
 ErrorStatusCantBeZeroIfStarted=If field '<b>Date done</b>' is filled, action is started (or finished), so field '<b>Status</b>' can't be 0%%.

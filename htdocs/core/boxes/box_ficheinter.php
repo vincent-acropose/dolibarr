@@ -17,9 +17,9 @@
 */
 
 /**
- * 		\file       htdocs/core/boxes/box_intervention.php
+ * 		\file       htdocs/core/boxes/box_ficheinter.php
  * 		\ingroup    ficheinter
- * 		\brief      Module de generation de l'affichage de la box ficheinter
+ * 		\brief      Box to show last interventions
  */
 
 include_once DOL_DOCUMENT_ROOT.'/core/boxes/modules_boxes.php';
@@ -51,12 +51,12 @@ class box_ficheinter extends ModeleBoxes
 	function loadBox($max=10)
 	{
 		global $user, $langs, $db, $conf;
-		
+
 		$this->max=$max;
 
 		include_once DOL_DOCUMENT_ROOT.'/fichinter/class/fichinter.class.php';
 		$ficheinterstatic=new Fichinter($db);
-		
+
 		$this->info_box_head = array('text' => $langs->trans("BoxTitleLastFicheInter",$max));
 
 		if ($user->rights->ficheinter->lire)
@@ -72,8 +72,10 @@ class box_ficheinter extends ModeleBoxes
 			$sql.= ", ".MAIN_DB_PREFIX."fichinter as f";
 			$sql.= " WHERE f.fk_soc = s.rowid ";
 			$sql.= " AND f.entity = ".$conf->entity;
-			if (! $user->rights->societe->client->voir)
+			if (! $user->rights->societe->client->voir && !$user->societe_id)
 				$sql .= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
+			if($user->societe_id)	$sql.= " AND s.rowid = ".$user->societe_id;
+
 			$sql.= " ORDER BY f.tms DESC";
 			$sql.= $db->plimit($max, 0);
 
@@ -93,7 +95,7 @@ class box_ficheinter extends ModeleBoxes
 
 					$ficheinterstatic->statut=$objp->fk_statut;
 					$ficheinterstatic->id=$objp->rowid;
-					
+
 					$this->info_box_contents[$i][0] = array('td' => 'align="left" width="16"',
 					'logo' => $this->boximg,
 					'url' => DOL_URL_ROOT."/fichinter/fiche.php?id=".$objp->rowid);
@@ -122,6 +124,8 @@ class box_ficheinter extends ModeleBoxes
 				}
 
 				if ($num==0) $this->info_box_contents[$i][0] = array('td' => 'align="center"','text'=>$langs->trans("NoRecordedInterventions"));
+
+				$db->free($resql);
 			}
 			else
 			{
@@ -151,4 +155,3 @@ class box_ficheinter extends ModeleBoxes
 
 }
 
-?>

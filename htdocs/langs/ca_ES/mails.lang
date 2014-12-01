@@ -1,11 +1,10 @@
-# Dolibarr language file - ca_ES - mails
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - mails
 Mailing=E-Mailing
 EMailing=E-Mailing
 Mailings=E-Mailings
 EMailings=E-Mailings
-MailCard=Fitxa E-Mailing
 AllEMailings=Tots els E-Mailings
+MailCard=Fitxa E-Mailing
 MailTargets=Destinataris
 MailRecipients=Destinataris
 MailRecipient=Destinatari
@@ -80,7 +79,16 @@ MailtoEMail=mailto email (hyperlink)
 ActivateCheckRead=Activar confirmació de lectura i opció de Desubscripció
 ActivateCheckReadKey=Clau usada per xifrar la URL de la confirmació de lectura i la funció de desubscripció
 EMailSentToNRecipients=E-Mail enviat a %s destinataris.
-# Libelle des modules de liste de destinataires mailing==
+XTargetsAdded=<b>%s</b> recipients added into target list
+EachInvoiceWillBeAttachedToEmail=A document using default invoice document template will be created and attached to each email.
+MailTopicSendRemindUnpaidInvoices=Reminder of invoice %s (%s)
+SendRemind=Send reminder by EMails
+RemindSent=%s reminder(s) sent
+AllRecipientSelectedForRemind=All thirdparties selected and if an email is set (note that one mail per invoice will be sent)
+NoRemindSent=No EMail reminder sent
+ResultOfMassSending=Result of mass EMail reminders sending
+
+# Libelle des modules de liste de destinataires mailing
 MailingModuleDescContactCompanies=Contactes de tercers (clients potencials, clients, proveïdors ...)
 MailingModuleDescDolibarrUsers=Usuaris de Dolibarr
 MailingModuleDescFundationMembers=Membres
@@ -89,6 +97,7 @@ MailingModuleDescEmailsFromUser=E-mails introduïts per l'usuari (email, cognoms
 MailingModuleDescContactsCategories=Tercers (per categoria)
 MailingModuleDescDolibarrContractsLinesExpired=Tercers amb línies de contractes de serveis expirats
 MailingModuleDescContactsByCompanyCategory=Contactes de tercers (per categoria de tercers)
+MailingModuleDescContactsByCategory=Contactes/adreces de tercers per categoria
 MailingModuleDescMembersCategories=Membres (per categoria)
 MailingModuleDescContactsByFunction=Contactes de tercers (per lloc/funció)
 LineInFile=Línea %s en archiu
@@ -105,12 +114,13 @@ SendMail=Enviar e-mail
 SentBy=Enviat por
 MailingNeedCommand=Per raons de seguretat, l'enviament d'un E-Mailing en massa es pot fer en línia de comandes. Demani al seu administrador que llanci la comanda següent per per enviar la correspondència a tots els destinataris:
 MailingNeedCommand2=Podeu enviar en línia afegint el paràmetre MAILING_LIMIT_SENDBYWEB amb un valor nombre que indica el màxim nombre d'e-mails enviats per sessió. Per això aneu a Inici - Configuració - Varis
-ConfirmSendingEmailing=Confirma l'enviament de l'e-mailing? 
+ConfirmSendingEmailing=Confirma l'enviament de l'e-mailing?
 LimitSendingEmailing=L'enviament d'un e-mailing des de les pantalles està limitat per raons de seguretat i de timeout a <b>%s</b> destinataris per sessió d'enviament.
 TargetsReset=Buidar llista
 ToClearAllRecipientsClickHere=Per buidar la llista dels destinataris d'aquest E-Mailing, feu clic al botó
 ToAddRecipientsChooseHere=Per afegir destinataris, escolliu els que figuren en les llistes a continuació
 NbOfEMailingsReceived=E-Mailings en massa rebuts
+NbOfEMailingsSend=Mass emailings sent
 IdRecord=ID registre
 DeliveryReceipt=Justificant de recepció
 YouCanUseCommaSeparatorForSeveralRecipients=Podeu usar el caràcter de separació <b>coma</b> per especificar múltiples destinataris.

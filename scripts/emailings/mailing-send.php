@@ -32,12 +32,12 @@ $path=dirname(__FILE__).'/';
 // Test if batch mode
 if (substr($sapi_type, 0, 3) == 'cgi') {
     echo "Error: You are using PHP for CGI. To execute ".$script_file." from command line, you must use PHP for CLI mode.\n";
-    exit;
+	exit(-1);
 }
 
 if (! isset($argv[1]) || ! $argv[1]) {
 	print "Usage: ".$script_file." (ID_MAILING|all)\n";
-	exit;
+	exit(-1);
 }
 $id=$argv[1];
 
@@ -45,7 +45,19 @@ require_once ($path."../../htdocs/master.inc.php");
 require_once (DOL_DOCUMENT_ROOT."/core/class/CMailFile.class.php");
 
 
-$error = 0;
+// Global variables
+$version=DOL_VERSION;
+$error=0;
+
+
+
+/*
+ * Main
+ */
+
+@set_time_limit(0);
+print "***** ".$script_file." (".$version.") pid=".getmypid()." *****\n";
+
 
 
 // We get list of emailing to process
@@ -132,20 +144,28 @@ if ($resql)
 						$other3=$other[2];
 						$other4=$other[3];
 						$other5=$other[4];
+						// Array of possible substitutions (See also fie mailing-send.php that should manage same substitutions)
 						$substitutionarray=array(
-						'__ID__' => $obj->source_id,
-						'__EMAIL__' => $obj->email,
-						'__CHECK_READ__' => '<img src="'.DOL_MAIN_URL_ROOT.'/public/emailing/mailing-read.php?tag='.$obj2->tag.'&securitykey='.urlencode($conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY).'" width="1" height="1" style="width:1px;height:1px" border="0"/>',
-						'__UNSUBSCRIBE__' => '<a href="'.DOL_MAIN_URL_ROOT.'/public/emailing/mailing-unsubscribe.php?tag='.$obj2->tag.'&unsuscrib=1&securitykey='.urlencode($conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY).'" target="_blank">'.$langs->trans("MailUnsubcribe").'</a>',
-						'__MAILTOEMAIL__' => '<a href="mailto:'.$obj2->email.'">'.$obj2->email.'</a>',
-						'__LASTNAME__' => $obj2->lastname,
-						'__FIRSTNAME__' => $obj2->firstname,
-						'__OTHER1__' => $other1,
-						'__OTHER2__' => $other2,
-						'__OTHER3__' => $other3,
-						'__OTHER4__' => $other4,
-						'__OTHER5__' => $other5
+							'__ID__' => $obj->source_id,
+							'__EMAIL__' => $obj->email,
+							'__LASTNAME__' => $obj2->lastname,
+							'__FIRSTNAME__' => $obj2->firstname,
+							'__MAILTOEMAIL__' => '<a href="mailto:'.$obj2->email.'">'.$obj2->email.'</a>',
+							'__OTHER1__' => $other1,
+							'__OTHER2__' => $other2,
+							'__OTHER3__' => $other3,
+							'__OTHER4__' => $other4,
+							'__OTHER5__' => $other5,
+							'__SIGNATURE__' => '',	// Signature is empty when ran from command line (user is a bot)
+							'__CHECK_READ__' => '<img src="'.DOL_MAIN_URL_ROOT.'/public/emailing/mailing-read.php?tag='.$obj2->tag.'&securitykey='.urlencode($conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY).'" width="1" height="1" style="width:1px;height:1px" border="0"/>',
+							'__UNSUBSCRIBE__' => '<a href="'.DOL_MAIN_URL_ROOT.'/public/emailing/mailing-unsubscribe.php?tag='.$obj2->tag.'&unsuscrib=1&securitykey='.urlencode($conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY).'" target="_blank">'.$langs->trans("MailUnsubcribe").'</a>'
 						);
+						if (! empty($conf->paypal->enabled) && ! empty($conf->global->PAYPAL_SECURITY_TOKEN))
+						{
+							$substitutionarray['__SECUREKEYPAYPAL__']=dol_hash($conf->global->PAYPAL_SECURITY_TOKEN, 2);
+							if (empty($conf->global->PAYPAL_SECURITY_TOKEN_UNIQUE)) $substitutionarray['__SECUREKEYPAYPAL_MEMBER__']=dol_hash($conf->global->PAYPAL_SECURITY_TOKEN, 2);
+							else $substitutionarray['__SECUREKEYPAYPAL_MEMBER__']=dol_hash($conf->global->PAYPAL_SECURITY_TOKEN . 'membersubscription' . $obj->source_id, 2);
+						}
 
 						complete_substitutions_array($substitutionarray,$langs);
 						$newsubject=make_substitutions($subject,$substitutionarray);
@@ -215,7 +235,7 @@ if ($resql)
 										$error++;
 									}
 
-					    //Update status communication of contact prospect
+					    			//Update status communication of contact prospect
 									$sqlx = "UPDATE ".MAIN_DB_PREFIX."societe SET fk_stcomm=2 WHERE rowid IN (SELECT sc.fk_soc FROM ".MAIN_DB_PREFIX."socpeople AS sc INNER JOIN ".MAIN_DB_PREFIX."mailing_cibles AS mc ON mc.rowid=".$obj2->rowid." AND mc.source_type = 'contact' AND mc.source_id = sc.rowid)";
 									dol_syslog("fiche.php: set prospect contact status sql=".$sql, LOG_DEBUG);
 
@@ -293,4 +313,3 @@ else
 
 
 exit($error);
-?>

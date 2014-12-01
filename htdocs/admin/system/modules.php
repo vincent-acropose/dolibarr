@@ -74,15 +74,27 @@ foreach($modulesdir as $dir)
 					else
 					{
 						// File to load
-    					include_once $dir.$file;
-
-	    				$objMod = new $modName($db);
-
-	    				$modules[$objMod->numero]=$objMod;
-	    				$modules_names[$objMod->numero]=$objMod->name;
-	    				$modules_files[$objMod->numero]=$file;
-	    				$modules_fullpath[$file]=$dir.$file;
-	    				$picto[$objMod->numero]=(isset($objMod->picto) && $objMod->picto)?$objMod->picto:'generic';
+						$res=include_once $dir.$file;
+						if (class_exists($modName))
+						{
+							try {
+	    						$objMod = new $modName($db);
+						
+			    				$modules[$objMod->numero]=$objMod;
+			    				$modules_names[$objMod->numero]=$objMod->name;
+	    						$modules_files[$objMod->numero]=$file;
+	    						$modules_fullpath[$file]=$dir.$file;
+	    						$picto[$objMod->numero]=(isset($objMod->picto) && $objMod->picto)?$objMod->picto:'generic';
+							} 
+							catch(Exception $e)
+							{
+								dol_syslog("Failed to load ".$dir.$file." ".$e->getMessage(), LOG_ERR);
+							}	
+						}
+						else
+						{
+							print "Warning bad descriptor file : ".$dir.$file." (Class ".$modName." not found into file)<br>";
+						}
 					}
     			}
     		}
@@ -94,8 +106,8 @@ print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("Modules").'</td>';
 print '<td>'.$langs->trans("Version").'</td>';
-print '<td align="center">'.$langs->trans("Id Module").'</td>';
-print '<td>'.$langs->trans("Id Permissions").'</td>';
+print '<td align="center">'.$langs->trans("IdModule").'</td>';
+print '<td>'.$langs->trans("IdPermissions").'</td>';
 print '</tr>';
 $var=false;
 $sortorder=$modules_names;
@@ -106,7 +118,7 @@ foreach($sortorder as $numero=>$name)
 	$idperms="";
 	$var=!$var;
 	// Module
-	print "<tr $bc[$var]><td width=\"300\" nowrap=\"nowrap\">";
+	print "<tr ".$bc[$var]."><td width=\"300\" nowrap=\"nowrap\">";
 	$alt=$name.' - '.$modules_files[$numero];
     if (! empty($picto[$numero]))
     {
@@ -147,4 +159,3 @@ foreach($rights_ids as $right_id)
 
 llxFooter();
 $db->close();
-?>

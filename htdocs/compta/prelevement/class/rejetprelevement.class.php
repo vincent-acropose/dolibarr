@@ -104,7 +104,7 @@ class RejetPrelevement
 		$sql.= ", '".$this->db->idate($date_rejet)."'";
 		$sql.= ", ".$motif;
 		$sql.= ", ".$user->id;
-		$sql.= ", ".$this->db->idate($now);
+		$sql.= ", '".$this->db->idate($now)."'";
 		$sql.= ", ".$facturation;
 		$sql.= ")";
 
@@ -175,6 +175,7 @@ class RejetPrelevement
 			dol_syslog("RejetPrelevement::Create set_unpaid fac ".$fac->ref);
 			$fac->set_unpaid($fac->id, $user);
 
+			//TODO: Must be managed by notifications module
 			// Send email to sender of the standing order request
 			$this->_send_email($fac);
 		}
@@ -356,4 +357,3 @@ class RejetPrelevement
 
 }
 
-?>

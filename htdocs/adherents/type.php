@@ -233,7 +233,6 @@ if (! $rowid && $action != 'create' && $action != 'edit')
 /* ************************************************************************** */
 if ($action == 'create')
 {
-	$form = new Form($db);
 	$adht = new AdherentType($db);
 
 	print_fiche_titre($langs->trans("NewMemberType"));
@@ -412,11 +411,11 @@ if ($rowid > 0)
 		}
 		if ($filter == 'uptodate')
 		{
-		    $sql.=" AND datefin >= ".$db->idate($now);
+		    $sql.=" AND datefin >= '".$db->idate($now)."'";
 		}
 		if ($filter == 'outofdate')
 		{
-		    $sql.=" AND datefin < ".$db->idate($now);
+		    $sql.=" AND datefin < '".$db->idate($now)."'";
 		}
 		// Count total nb of records
 		$nbtotalofrecords = 0;
@@ -620,8 +619,6 @@ if ($rowid > 0)
 
 	if ($action == 'edit')
 	{
-		$form = new Form($db);
-
 		$adht = new AdherentType($db);
 		$adht->id = $rowid;
 		$adht->fetch($rowid);
@@ -693,4 +690,3 @@ if ($rowid > 0)
 $db->close();
 
 llxFooter();
-?>

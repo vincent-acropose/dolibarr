@@ -3,9 +3,19 @@
 <ruleset name="Dolibarr">
 	<description>Dolibarr coding standard.</description>
 
+	<exclude-pattern>*/conf.php</exclude-pattern>
+	<exclude-pattern>*/includes/*</exclude-pattern>
+	<exclude-pattern>*/documents/*</exclude-pattern>
+	<exclude-pattern>*/custom/*</exclude-pattern>
+	<exclude-pattern>*/nltechno*</exclude-pattern>
+		
 	<!-- List of all tests -->
 
-    <rule ref="Generic.CodeAnalysis.EmptyStatement" />
+	<rule ref="Internal.NoCodeFound">
+		<severity>0</severity>
+	</rule>
+
+	<rule ref="Generic.CodeAnalysis.EmptyStatement" />
  
 	<rule ref="Generic.CodeAnalysis.EmptyStatement.NotAllowed">
 		<severity>0</severity>
@@ -13,6 +23,9 @@
 	<rule ref="Generic.CodeAnalysis.EmptyStatement.NotAllowedWarning">
 		<severity>0</severity>
 	</rule>
+
+    <!-- The closing ?> tag MUST be omitted from files containing only PHP. -->
+    <!-- <rule ref="Zend.Files.ClosingTag"/> -->
 
     <!-- <rule ref="Generic.CodeAnalysis.ForLoopShouldBeWhileLoop" /> -->
 
@@ -41,6 +54,9 @@
 		<properties> <property name="error" value="false"/> </properties>
 		</rule>
 	-->
+
+    <!-- PHP code MUST use only UTF-8 without BOM. -->
+    <rule ref="Generic.Files.ByteOrderMark"/>
 
 	<!-- Lines can be 85 chars long, but never show errors -->
 	<rule ref="Generic.Files.LineLength">
@@ -211,10 +227,14 @@
         <severity>0</severity>
 	</rule>
 	
+	<rule ref="PEAR.NamingConventions.ValidClassName.StartWithCapital">
+        <severity>0</severity>
+	</rule>
+	<!-- some phpcs have a typo error in rule, so we add it too -->
 	<rule ref="PEAR.NamingConventions.ValidClassName.StartWithCaptial">
         <severity>0</severity>
 	</rule>
-
+	
 	<rule ref="PEAR.NamingConventions.ValidFunctionName" />
 	<rule ref="PEAR.NamingConventions.ValidFunctionName.FunctionNameInvalid">
         <severity>0</severity>

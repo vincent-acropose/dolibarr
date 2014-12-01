@@ -54,7 +54,7 @@ $extralabels=$extrafields->fetch_name_optionals_label($object->table_element);
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
 $hookmanager->initHooks(array('mailingcard'));
 
-// Tableau des substitutions possibles
+// Array of possible substitutions (See also file mailing-send.php that should manage same substitutions)
 $object->substitutionarray=array(
     '__ID__' => 'IdRecord',
     '__EMAIL__' => 'EMail',
@@ -67,12 +67,14 @@ $object->substitutionarray=array(
     '__OTHER4__' => 'Other4',
     '__OTHER5__' => 'Other5',
     '__SIGNATURE__' => 'TagSignature',
-    '__CHECK_READ__' => 'TagCheckMail'
+    '__CHECK_READ__' => 'TagCheckMail',
+	'__UNSUBSCRIBE__' => 'TagUnsubscribe'
 	//,'__PERSONALIZED__' => 'Personalized'	// Hidden because not used yet
 );
-if (! empty($conf->global->MAILING_EMAIL_UNSUBSCRIBE))
+if (! empty($conf->paypal->enabled) && ! empty($conf->global->PAYPAL_SECURITY_TOKEN))
 {
-    $object->substitutionarray=array_merge($object->substitutionarray, array('__UNSUBSCRIBE__' => 'TagUnsubscribe'));
+	$object->substitutionarray['__SECUREKEYPAYPAL__']='SecureKeyPaypal';
+	if (! empty($conf->global->PAYPAL_SECURITY_TOKEN_UNIQUE)) $object->substitutionarray['__SECUREKEYPAYPAL_MEMBER__']='SecureKeyPaypalUniquePerMember';
 }
 
 $object->substitutionarrayfortest=array(
@@ -86,19 +88,12 @@ $object->substitutionarrayfortest=array(
     '__OTHER3__' => 'TESTOther3',
     '__OTHER4__' => 'TESTOther4',
     '__OTHER5__' => 'TESTOther5',
-	'__SIGNATURE__' => (($user->signature && empty($conf->global->MAIN_MAIL_DO_NOT_USE_SIGN))?$user->signature:'')
-    //,'__PERSONALIZED__' => 'TESTPersonalized'	// Not used yet
+	'__SIGNATURE__' => (($user->signature && empty($conf->global->MAIN_MAIL_DO_NOT_USE_SIGN))?$user->signature:''),
+    '__CHECK_READ__' => 'TagCheckMail',
+	'__UNSUBSCRIBE__' => 'TagUnsubscribe'
+	//,'__PERSONALIZED__' => 'TESTPersonalized'	// Not used yet
 );
-if (!empty($conf->global->MAILING_EMAIL_UNSUBSCRIBE))
-{
-    $object->substitutionarrayfortest=array_merge(
-        $object->substitutionarrayfortest,
-        array(
-            '__CHECK_READ__' => 'TESTCheckMail',
-            '__UNSUBSCRIBE__' => 'TESTUnsubscribe'
-        )
-    );
-}
+
 
 /*
  * Actions
@@ -218,21 +213,27 @@ if ($action == 'sendallconfirmed' && $confirm == 'yes')
                     $tmpfield=explode('=',$other[2],2); $other3=(isset($tmpfield[1])?$tmpfield[1]:$tmpfield[0]);
                     $tmpfield=explode('=',$other[3],2); $other4=(isset($tmpfield[1])?$tmpfield[1]:$tmpfield[0]);
                     $tmpfield=explode('=',$other[4],2); $other5=(isset($tmpfield[1])?$tmpfield[1]:$tmpfield[0]);
+                    // Array of possible substitutions (See also fie mailing-send.php that should manage same substitutions)
 					$substitutionarray=array(
 							'__ID__' => $obj->source_id,
 							'__EMAIL__' => $obj->email,
-							'__CHECK_READ__' => '<img src="'.DOL_MAIN_URL_ROOT.'/public/emailing/mailing-read.php?tag='.$obj->tag.'&securitykey='.urlencode($conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY).'" width="1" height="1" style="width:1px;height:1px" border="0"/>',
-							'__UNSUBSCRIBE__' => '<a href="'.DOL_MAIN_URL_ROOT.'/public/emailing/mailing-unsubscribe.php?tag='.$obj->tag.'&unsuscrib=1&securitykey='.urlencode($conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY).'" target="_blank">'.$langs->trans("MailUnsubcribe").'</a>',
-							'__MAILTOEMAIL__' => '<a href="mailto:'.$obj->email.'">'.$obj->email.'</a>',
 							'__LASTNAME__' => $obj->lastname,
 							'__FIRSTNAME__' => $obj->firstname,
+							'__MAILTOEMAIL__' => '<a href="mailto:'.$obj->email.'">'.$obj->email.'</a>',
 							'__OTHER1__' => $other1,
 							'__OTHER2__' => $other2,
 							'__OTHER3__' => $other3,
 							'__OTHER4__' => $other4,
-							'__OTHER5__' => $other5
+							'__OTHER5__' => $other5,
+							'__CHECK_READ__' => '<img src="'.DOL_MAIN_URL_ROOT.'/public/emailing/mailing-read.php?tag='.$obj->tag.'&securitykey='.urlencode($conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY).'" width="1" height="1" style="width:1px;height:1px" border="0"/>',
+							'__UNSUBSCRIBE__' => '<a href="'.DOL_MAIN_URL_ROOT.'/public/emailing/mailing-unsubscribe.php?tag='.$obj->tag.'&unsuscrib=1&securitykey='.urlencode($conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY).'" target="_blank">'.$langs->trans("MailUnsubcribe").'</a>'
 					);
-
+					if (! empty($conf->paypal->enabled) && ! empty($conf->global->PAYPAL_SECURITY_TOKEN))
+					{
+						$substitutionarray['__SECUREKEYPAYPAL__']=dol_hash($conf->global->PAYPAL_SECURITY_TOKEN, 2);
+						if (empty($conf->global->PAYPAL_SECURITY_TOKEN_UNIQUE)) $substitutionarray['__SECUREKEYPAYPAL_MEMBER__']=dol_hash($conf->global->PAYPAL_SECURITY_TOKEN, 2);
+						else $substitutionarray['__SECUREKEYPAYPAL_MEMBER__']=dol_hash($conf->global->PAYPAL_SECURITY_TOKEN . 'membersubscription' . $obj->source_id, 2);
+					}
 					$substitutionisok=true;
                     complete_substitutions_array($substitutionarray, $langs);
 					$newsubject=make_substitutions($subject,$substitutionarray);
@@ -700,20 +701,17 @@ else
 		// Confirmation de la validation du mailing
 		if ($action == 'valid')
 		{
-			$ret=$form->form_confirm($_SERVER["PHP_SELF"]."?id=".$object->id,$langs->trans("ValidMailing"),$langs->trans("ConfirmValidMailing"),"confirm_valid",'','',1);
-			if ($ret == 'html') print '<br>';
+			print $form->formconfirm($_SERVER["PHP_SELF"]."?id=".$object->id,$langs->trans("ValidMailing"),$langs->trans("ConfirmValidMailing"),"confirm_valid",'','',1);
 		}
 		// Confirm reset
 		else if ($action == 'reset')
 		{
-			$ret=$form->form_confirm($_SERVER["PHP_SELF"]."?id=".$object->id,$langs->trans("ResetMailing"),$langs->trans("ConfirmResetMailing",$object->ref),"confirm_reset",'','',2);
-			if ($ret == 'html') print '<br>';
+			print $form->formconfirm($_SERVER["PHP_SELF"]."?id=".$object->id,$langs->trans("ResetMailing"),$langs->trans("ConfirmResetMailing",$object->ref),"confirm_reset",'','',2);
 		}
 		// Confirm delete
 		else if ($action == 'delete')
 		{
-			$ret=$form->form_confirm($_SERVER["PHP_SELF"]."?id=".$object->id.(! empty($urlfrom) ? '&urlfrom='.urlencode($urlfrom) : ''),$langs->trans("DeleteAMailing"),$langs->trans("ConfirmDeleteMailing"),"confirm_delete",'','',1);
-			if ($ret == 'html') print '<br>';
+			print $form->formconfirm($_SERVER["PHP_SELF"]."?id=".$object->id.(! empty($urlfrom) ? '&urlfrom='.urlencode($urlfrom) : ''),$langs->trans("DeleteAMailing"),$langs->trans("ConfirmDeleteMailing"),"confirm_delete",'','',1);
 		}
 
 
@@ -734,7 +732,7 @@ else
 					// Pour des raisons de securite, on ne permet pas cette fonction via l'IHM,
 					// on affiche donc juste un message
 				    $mesgembedded.='<div class="warning">'.$langs->trans("MailingNeedCommand").'</div>';
-					$mesgembedded.='<br><textarea cols="60" rows="'.ROWS_2.'" wrap="soft">php ./scripts/emailings/mailing-send.php '.$object->id.'</textarea>';
+					$mesgembedded.='<br><textarea cols="60" rows="'.ROWS_1.'" wrap="soft">php ./scripts/emailings/mailing-send.php '.$object->id.'</textarea>';
 					$mesgembedded.='<br><br><div class="warning">'.$langs->trans("MailingNeedCommand2").'</div>';
 					$_GET["action"]='';
 				}
@@ -749,8 +747,7 @@ else
                     }
 				    $text.=$langs->trans('ConfirmSendingEmailing').'<br>';
 					$text.=$langs->trans('LimitSendingEmailing',$conf->global->MAILING_LIMIT_SENDBYWEB);
-					$ret=$form->form_confirm($_SERVER['PHP_SELF'].'?id='.$object->id,$langs->trans('SendMailing'),$text,'sendallconfirmed',$formquestion,'',1,260);
-					if ($ret == 'html') print '<br>';
+					print $form->formconfirm($_SERVER['PHP_SELF'].'?id='.$object->id,$langs->trans('SendMailing'),$text,'sendallconfirmed',$formquestion,'',1,260);
 				}
 			}
 
@@ -826,7 +823,7 @@ else
 				$formquestion=array(
 					'text' => $langs->trans("ConfirmClone"),
 				array('type' => 'checkbox', 'name' => 'clone_content',   'label' => $langs->trans("CloneContent"),   'value' => 1),
-				array('type' => 'checkbox', 'name' => 'clone_receivers', 'label' => $langs->trans("CloneReceivers").' ('.$langs->trans("FeatureNotYetAvailable").')', 'value' => 0, 'disabled' => true)
+				array('type' => 'checkbox', 'name' => 'clone_receivers', 'label' => $langs->trans("CloneReceivers"), 'value' => 0)
 				);
 				// Paiement incomplet. On demande si motif = escompte ou autre
 				print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id,$langs->trans('CloneEMailing'),$langs->trans('ConfirmCloneEMailing',$object->ref),'confirm_clone',$formquestion,'yes',2,240);
@@ -919,7 +916,11 @@ else
 				print '<br><br></div>';
 			}
 
-			if (! empty($mesgembedded)) dol_htmloutput_mesg($mesgembedded,'','warning',1);
+			if (! empty($mesgembedded)) 
+			{
+				dol_htmloutput_mesg($mesgembedded,'','warning',1);
+				print '<br>';
+			}
 
 			// Affichage formulaire de TEST
 			if ($action == 'test')
@@ -951,7 +952,7 @@ else
 				$formmail->param["mailid"]=$object->id;
 				$formmail->param["returnurl"]=$_SERVER['PHP_SELF']."?id=".$object->id;
 
-				$formmail->show_form();
+				print $formmail->get_form();
 
 				print '<br>';
 			}
@@ -997,9 +998,10 @@ else
 			print '<td colspan="3" bgcolor="'.($object->bgcolor?(preg_match('/^#/',$object->bgcolor)?'':'#').$object->bgcolor:'white').'">';
 			if (empty($object->bgcolor) || strtolower($object->bgcolor) == 'ffffff')
 			{
+				$readonly=1;
 				// Editeur wysiwyg
 				require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
-				$doleditor=new DolEditor('body',$object->body,'',320,'dolibarr_readonly','',false,true,empty($conf->global->FCKEDITOR_ENABLE_MAILING)?0:1,20,120,1);
+				$doleditor=new DolEditor('body',$object->body,'',320,'dolibarr_mailings','',false,true,empty($conf->global->FCKEDITOR_ENABLE_MAILING)?0:1,20,120,$readonly);
 				$doleditor->Create();
 			}
 			else print dol_htmlentitiesbr($object->body);
@@ -1094,7 +1096,7 @@ else
 				{
 					$out.= '<div id="attachfile_'.$key.'">';
 					$out.= img_mime($listofpaths[$key]['name']).' '.$listofpaths[$key]['name'];
-					$out.= ' <input type="image" style="border: 0px;" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/delete.png" value="'.($key+1).'" class="removedfile" id="removedfile_'.$key.'" name="removedfile_'.$key.'" />';
+					$out.= ' <input type="image" style="border: 0px;" src="'.img_picto($langs->trans("Search"),'delete.png','','',1).'" value="'.($key+1).'" class="removedfile" id="removedfile_'.$key.'" name="removedfile_'.$key.'" />';
 					$out.= '<br></div>';
 				}
 			}
@@ -1149,4 +1151,3 @@ else
 
 llxFooter();
 $db->close();
-?>

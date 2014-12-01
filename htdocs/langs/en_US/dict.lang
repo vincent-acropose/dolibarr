@@ -1,5 +1,4 @@
-# Dolibarr language file - en_US - dict
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - dict
 CountryFR=France
 CountryBE=Belgium
 CountryIT=Italy
@@ -254,7 +253,6 @@ CivilityMR=Mr.
 CivilityMLE=Ms.
 CivilityMTRE=Master
 CivilityDR=Doctor
-
 ##### Currencies #####
 Currencyeuros=Euros
 CurrencyAUD=AU Dollars
@@ -291,10 +289,10 @@ CurrencyXOF=CFA Francs BCEAO
 CurrencySingXOF=CFA Franc BCEAO
 CurrencyXPF=CFP Francs
 CurrencySingXPF=CFP Franc
-
 CurrencyCentSingEUR=cent
+CurrencyCentINR=paisa
+CurrencyCentSingINR=paise
 CurrencyThousandthSingTND=thousandth
-
 #### Input reasons #####
 DemandReasonTypeSRC_INTE=Internet
 DemandReasonTypeSRC_CAMP_MAIL=Mailing campaign
@@ -307,7 +305,6 @@ DemandReasonTypeSRC_WOM=Word of mouth
 DemandReasonTypeSRC_PARTNER=Partner
 DemandReasonTypeSRC_EMPLOYEE=Employee
 DemandReasonTypeSRC_SPONSORING=Sponsorship
-
 #### Paper formats ####
 PaperFormatEU4A0=Format 4A0
 PaperFormatEU2A0=Format 2A0

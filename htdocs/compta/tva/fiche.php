@@ -34,8 +34,6 @@ $langs->load("bills");
 $id=GETPOST("id",'int');
 $action=GETPOST('action');
 
-$mesg = '';
-
 // Security check
 $socid = isset($_GET["socid"])?$_GET["socid"]:'';
 if ($user->societe_id) $socid=$user->societe_id;
@@ -60,31 +58,61 @@ if ($_POST["cancel"] == $langs->trans("Cancel"))
 
 if ($action == 'add' && $_POST["cancel"] <> $langs->trans("Cancel"))
 {
-    $db->begin();
+    $error=0;
 
-    $datev=dol_mktime(12,0,0, $_POST["datevmonth"], $_POST["datevday"], $_POST["datevyear"]);
+	$datev=dol_mktime(12,0,0, $_POST["datevmonth"], $_POST["datevday"], $_POST["datevyear"]);
     $datep=dol_mktime(12,0,0, $_POST["datepmonth"], $_POST["datepday"], $_POST["datepyear"]);
 
-    $tva->accountid=$_POST["accountid"];
-    $tva->paymenttype=$_POST["paiementtype"];
+    $tva->accountid=GETPOST("accountid");
+    $tva->type_payment=GETPOST("type_payment");
+	$tva->num_payment=GETPOST("num_payment");
     $tva->datev=$datev;
     $tva->datep=$datep;
-    $tva->amount=$_POST["amount"];
-	$tva->label=$_POST["label"];
+    $tva->amount=GETPOST("amount");
+	$tva->label=GETPOST("label");
+	$tva->note=GETPOST("note");
+	
+	if (empty($tva->datev))
+	{
+		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("DateValue")),'errors');
+		$error++;
+	}
+	if (empty($tva->datep))
+	{
+		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("DatePayment")),'errors');
+		$error++;
+	}
+	if (empty($tva->type_payment) || $tva->type_payment < 0)
+	{
+		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("PaymentMode")),'errors');
+		$error++;
+	}
+	if (empty($tva->amount))
+	{
+		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Amount")),'errors');
+		$error++;
+	}
 
-    $ret=$tva->addPayment($user);
-    if ($ret > 0)
-    {
-        $db->commit();
-        header("Location: reglement.php");
-        exit;
-    }
-    else
-    {
-        $db->rollback();
-        $mesg='<div class="error">'.$tva->error.'</div>';
-        $action="create";
-    }
+	if (! $error)
+	{
+		$db->begin();
+
+    	$ret=$tva->addPayment($user);
+		if ($ret > 0)
+		{
+			$db->commit();
+			header("Location: reglement.php");
+			exit;
+		}
+		else
+		{
+			$db->rollback();
+			setEventMessage($tva->error, 'errors');
+			$action="create";
+		}
+	}
+
+	$action='create';
 }
 
 if ($action == 'delete')
@@ -115,18 +143,18 @@ if ($action == 'delete')
 			{
 				$tva->error=$accountline->error;
 				$db->rollback();
-				$mesg='<div class="error">'.$tva->error.'</div>';
+				setEventMessage($tva->error,'errors');
 			}
 	    }
 	    else
 	    {
 	        $db->rollback();
-	        $mesg='<div class="error">'.$tva->error.'</div>';
+	        setEventMessage($tva->error,'errors');
 	    }
 	}
 	else
 	{
-        $mesg='<div class="error">Error try do delete a line linked to a conciliated bank transaction</div>';
+        setEventMessage('Error try do delete a line linked to a conciliated bank transaction','errors');
 	}
 }
 
@@ -159,8 +187,6 @@ if ($action == 'create')
 
     print_fiche_titre($langs->trans("NewVATPayment"));
 
-    if ($mesg) print $mesg;
-
     print '<table class="border" width="100%">';
 
     print "<tr>";
@@ -184,10 +210,16 @@ if ($action == 'create')
         $form->select_comptes($_POST["accountid"],"accountid",0,"courant=1",1);  // Affiche liste des comptes courant
         print '</td></tr>';
 
-	    print '<tr><td class="fieldrequired">'.$langs->trans("PaymentMode").'</td><td>';
-	    $form->select_types_paiements($_POST["paiementtype"], "paiementtype");
-	    print "</td>\n";
-	    print "</tr>";
+		// Type payment
+		print '<tr><td class="fieldrequired">'.$langs->trans("PaymentMode").'</td><td>';
+		$form->select_types_paiements(GETPOST("type_payment"), "type_payment");
+		print "</td>\n";
+		print "</tr>";
+		
+		// Number
+		print '<tr><td>'.$langs->trans('Numero');
+		print ' <em>('.$langs->trans("ChequeOrTransferNumber").')</em>';
+		print '<td><input name="num_payment" type="text" value="'.GETPOST("num_payment").'"></td></tr>'."\n";
 	}
 
     // Other attributes
@@ -213,8 +245,6 @@ if ($action == 'create')
 
 if ($id)
 {
-    if ($mesg) print $mesg;
-
 	$h = 0;
 	$head[$h][0] = DOL_URL_ROOT.'/compta/tva/fiche.php?id='.$vatpayment->id;
 	$head[$h][1] = $langs->trans('Card');
@@ -274,9 +304,20 @@ if ($id)
 	*/
 	print "<div class=\"tabsAction\">\n";
 	if ($vatpayment->rappro == 0)
-		print '<a class="butActionDelete" href="fiche.php?id='.$vatpayment->id.'&action=delete">'.$langs->trans("Delete").'</a>';
+	{
+		if (! empty($user->rights->tax->charges->supprimer))
+		{
+			print '<a class="butActionDelete" href="fiche.php?id='.$vatpayment->id.'&action=delete">'.$langs->trans("Delete").'</a>';
+		}
+		else
+		{
+			print '<a class="butActionRefused" href="#" title="'.(dol_escape_htmltag($langs->trans("NotAllowed"))).'">'.$langs->trans("Delete").'</a>';
+		}
+	}
 	else
+	{
 		print '<a class="butActionRefused" href="#" title="'.$langs->trans("LinkedToAConcialitedTransaction").'">'.$langs->trans("Delete").'</a>';
+	}
 	print "</div>";
 }
 
@@ -284,4 +325,3 @@ if ($id)
 $db->close();
 
 llxFooter();
-?>

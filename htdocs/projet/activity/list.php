@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010      François Legastelois <flegastelois@teclib.com>
  *
@@ -56,35 +56,42 @@ if ($action == 'addtime' && $user->rights->projet->creer)
 {
     $task = new Task($db);
 
-    $timespent_duration=0;
+    $timespent_duration=array();
 
     foreach($_POST as $key => $time)
     {
-        if(intval($time)>0)
+        if (intval($time) > 0)
         {
             // Hours or minutes
-            if(preg_match("/([0-9]+)(hour|min)/",$key,$matches))
+            if (preg_match("/([0-9]+)(hour|min)/",$key,$matches))
             {
                 $id = $matches[1];
-
-                // We store HOURS in seconds
-                if($matches[2]=='hour') $timespent_duration += $time*60*60;
-
-                // We store MINUTES in seconds
-                if($matches[2]=='min') $timespent_duration += $time*60;
+				if ($id > 0)
+				{
+	                // We store HOURS in seconds
+	                if($matches[2]=='hour') $timespent_duration[$id] += $time*60*60;
+	
+	                // We store MINUTES in seconds
+	                if($matches[2]=='min') $timespent_duration[$id] += $time*60;
+				}
             }
         }
     }
 
-    if ($timespent_duration > 0)
+    if (count($timespent_duration) > 0)
     {
-        $task->fetch($id);
-        $task->timespent_duration = $timespent_duration;
-        $task->timespent_fk_user = $user->id;
-        $task->timespent_date = dol_mktime(12,0,0,$_POST["{$id}month"],$_POST["{$id}day"],$_POST["{$id}year"]);
-        $task->addTimeSpent($user);
-
-        // header to avoid submit twice on back
+    	foreach($timespent_duration as $key => $val)
+    	{
+	        $task->fetch($key);
+	        $task->timespent_duration = $val;
+	        $task->timespent_fk_user = $user->id;
+	        $task->timespent_date = dol_mktime(12,0,0,$_POST["{$key}month"],$_POST["{$key}day"],$_POST["{$key}year"]);
+	        $task->addTimeSpent($user);
+    	}
+    	
+    	setEventMessage($langs->trans("RecordSaved"));
+    	
+        // Redirect to avoid submit twice on back
         header('Location: '.$_SERVER["PHP_SELF"].'?id='.$projectid.($mode?'&mode='.$mode:''));
         exit;
     }
@@ -107,8 +114,6 @@ $title=$langs->trans("TimeSpent");
 if ($mine) $title=$langs->trans("MyTimeSpent");
 
 
-llxHeader("",$title,"");
-
 //$projectsListId = $projectstatic->getProjectsAuthorizedForUser($user,$mine,1);
 $projectsListId = $projectstatic->getProjectsAuthorizedForUser($user,0,1);  // Return all project i have permission on. I want my tasks and some of my task may be on a public projet that is not my project
 
@@ -126,7 +131,19 @@ $tasksrole=$taskstatic->getUserRolesForProjectsOrTasks(0,$user,($project->id?$pr
 //var_dump($taskrole);
 
 
+llxHeader("",$title,"");
+
 print_barre_liste($title, $page, $_SERVER["PHP_SELF"], "", $sortfield, $sortorder, "", $num);
+
+// Filter on user
+/*	dol_fiche_head('');
+	print '<table class="border" width="100%"><tr><td width="25%">'.$langs->trans("User").'</td>';
+	print '<td>';
+	if ($mine) print $user->getLoginUrl(1);
+	print '</td>';
+	print '</tr></table>';
+	dol_fiche_end();
+*/
 
 
 dol_htmloutput_mesg($mesg);
@@ -144,12 +161,23 @@ print '<td>'.$langs->trans("RefTask").'</td>';
 print '<td>'.$langs->trans("LabelTask").'</td>';
 print '<td align="center">'.$langs->trans("DateStart").'</td>';
 print '<td align="center">'.$langs->trans("DateEnd").'</td>';
+print '<td align="right">'.$langs->trans("PlannedWorkload").'</td>';
 print '<td align="right">'.$langs->trans("Progress").'</td>';
 print '<td align="right">'.$langs->trans("TimeSpent").'</td>';
 print '<td colspan="2">'.$langs->trans("AddDuration").'</td>';
 print "</tr>\n";
-projectLinesb($j, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine);
 
+// By default, we can edit only tasks we are assigned to
+$restricteditformytask=(empty($conf->global->PROJECT_TIME_ON_ALL_TASKS_MY_PROJECTS)?1:0);	 
+
+if (count($tasksarray) > 0)
+{
+	projectLinesb($j, 0, $tasksarray, $level, $projectsrole, $tasksrole, $mine, $restricteditformytask);
+}
+else
+{
+	print '<tr><td colspan="10">'.$langs->trans("NoTasks").'</td></tr>';
+}
 print "</table>";
 print '</form>';
 
@@ -157,4 +185,3 @@ print '</form>';
 llxFooter();
 
 $db->close();
-?>

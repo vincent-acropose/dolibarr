@@ -46,6 +46,8 @@ $year = GETPOST('year')>0?GETPOST('year'):$nowyear;
 $startyear=$year-1;
 $endyear=$year;
 
+$mode=GETPOST('mode');
+
 
 /*
  * View
@@ -154,7 +156,6 @@ if (! $mesg)
 $data = $stats->getAverageByMonthWithPrevYear($endyear, $startyear);
 
 $fileurl_avg='';
-if (! isset($mode)) $mode=''; // TODO $mode not defined ?
 if (!$user->rights->societe->client->voir || $user->societe_id)
 {
     $filename_avg = $dir.'/ordersaverage-'.$user->id.'-'.$year.'.png';
@@ -227,7 +228,7 @@ print '<div class="fichecenter"><div class="fichethirdleft">';
 	print '<form name="stats" method="POST" action="'.$_SERVER["PHP_SELF"].'">';
 	print '<input type="hidden" name="mode" value="'.$mode.'">';
 	print '<table class="border" width="100%">';
-	print '<tr><td class="liste_titre" colspan="2">'.$langs->trans("Filter").'</td></tr>';
+	print '<tr class="liste_titre"><td class="liste_titre" colspan="2">'.$langs->trans("Filter").'</td></tr>';
 	// Company
 	print '<tr><td align="left">'.$langs->trans("ThirdParty").'</td><td align="left">';
 	$filter='s.client in (1,2,3)';
@@ -262,19 +263,18 @@ $oldyear=0;
 foreach ($data as $val)
 {
     $year = $val['year'];
-    //print $avg; // TODO $avg not defined ?
     while (! empty($year) && $oldyear > $year+1)
     {	// If we have empty year
         $oldyear--;
         print '<tr height="24">';
-        print '<td align="center"><a href="'.$_SERVER["PHP_SELF"].'?year='.$oldyear.'&amp;mode='.$mode.'">'.$oldyear.'</a></td>';
+        print '<td align="center"><a href="'.$_SERVER["PHP_SELF"].'?year='.$oldyear.'&amp;mode='.$mode.($socid>0?'&socid='.$socid:'').($userid>0?'&userid='.$userid:'').'">'.$oldyear.'</a></td>';
         print '<td align="right">0</td>';
         print '<td align="right">0</td>';
         print '<td align="right">0</td>';
         print '</tr>';
     }
     print '<tr height="24">';
-    print '<td align="center"><a href="'.$_SERVER["PHP_SELF"].'?year='.$year.'">'.$year.'</a></td>';
+    print '<td align="center"><a href="'.$_SERVER["PHP_SELF"].'?year='.$year.($socid>0?'&socid='.$socid:'').($userid>0?'&userid='.$userid:'').'">'.$year.'</a></td>';
     print '<td align="right">'.$val['nb'].'</td>';
     print '<td align="right">'.price(price2num($val['total'],'MT'),1).'</td>';
     print '<td align="right">'.price(price2num($val['avg'],'MT'),1).'</td>';
@@ -311,4 +311,3 @@ dol_fiche_end();
 llxFooter();
 
 $db->close();
-?>

@@ -14,6 +14,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Path to WSDL is: http://localhost/dolibarr/webservices/server_productorservice.php?wsdl
  */
 
 /**
@@ -187,18 +189,6 @@ $server->wsdl->addComplexType(
     )
 );
 
-/*$server->wsdl->addComplexType(
-    'ProductsArray',
-    'complexType',
-    'array',
-    '',
-    'SOAP-ENC:Array',
-    array(),
-    array(
-        array('ref'=>'SOAP-ENC:arrayType','wsdl:arrayType'=>'tns:product[]')
-    ),
-    'tns:product'
-);*/
 $server->wsdl->addComplexType(
     'ProductsArray2',
     'complexType',
@@ -229,7 +219,7 @@ $styleuse='encoded';   // encoded/literal/literal wrapped
 $server->register(
     'getProductOrService',
     // Entry values
-    array('authentication'=>'tns:authentication','id'=>'xsd:string','ref'=>'xsd:string','ref_ext'=>'xsd:string'),
+    array('authentication'=>'tns:authentication','id'=>'xsd:string','ref'=>'xsd:string','ref_ext'=>'xsd:string','lang'=>'xsd:string'),
     // Exit values
     array('result'=>'tns:result','product'=>'tns:product'),
     $ns,
@@ -255,6 +245,34 @@ $server->register(
 
 // Register WSDL
 $server->register(
+    'updateProductOrService',
+    // Entry values
+    array('authentication'=>'tns:authentication','product'=>'tns:product'),
+    // Exit values
+    array('result'=>'tns:result','id'=>'xsd:string'),
+    $ns,
+    $ns.'#updateProductOrService',
+    $styledoc,
+    $styleuse,
+    'WS to update a product or service'
+);
+
+// Register WSDL
+$server->register(
+    'deleteProductOrService',
+    // Entry values
+    array('authentication'=>'tns:authentication','listofid'=>'xsd:string'),
+    // Exit values
+    array('result'=>'tns:result','nbdeleted'=>'xsd:int'),
+    $ns,
+    $ns.'#deleteProductOrService',
+    $styledoc,
+    $styleuse,
+    'WS to delete a product or service'
+);
+
+// Register WSDL
+$server->register(
     'getListOfProductsOrServices',
     // Entry values
     array('authentication'=>'tns:authentication','filterproduct'=>'tns:filterproduct'),
@@ -271,7 +289,7 @@ $server->register(
 $server->register(
 	'getProductsForCategory',
 	// Entry values
-	array('authentication'=>'tns:authentication','id'=>'xsd:string'),
+	array('authentication'=>'tns:authentication','id'=>'xsd:string','lang'=>'xsd:string'),
 	// Exit values
 	array('result'=>'tns:result','products'=>'tns:ProductsArray2'),
 	$ns,
@@ -289,13 +307,17 @@ $server->register(
  * @param	int			$id					Id of object
  * @param	string		$ref				Ref of object
  * @param	ref_ext		$ref_ext			Ref external of object
+ * @param   string      $lang               Lang to force
  * @return	mixed
  */
-function getProductOrService($authentication,$id='',$ref='',$ref_ext='')
+function getProductOrService($authentication,$id='',$ref='',$ref_ext='',$lang='')
 {
     global $db,$conf,$langs;
 
     dol_syslog("Function: getProductOrService login=".$authentication['login']." id=".$id." ref=".$ref." ref_ext=".$ref_ext);
+
+    $langcode=($lang?$lang:(empty($conf->global->MAIN_LANG_DEFAULT)?'auto':$conf->global->MAIN_LANG_DEFAULT));
+    $langs->setDefaultLang($langcode);
 
     if ($authentication['entity']) $conf->entity=$authentication['entity'];
 
@@ -313,17 +335,28 @@ function getProductOrService($authentication,$id='',$ref='',$ref_ext='')
 
     if (! $error)
     {
+
+    	$langcode=($lang?$lang:(empty($conf->global->MAIN_LANG_DEFAULT)?'auto':$conf->global->MAIN_LANG_DEFAULT));
+    	$langs->setDefaultLang($langcode);
+
         $fuser->getrights();
 
         if ($fuser->rights->produit->lire || $fuser->rights->service->lire)
         {
             $product=new Product($db);
             $result=$product->fetch($id,$ref,$ref_ext);
+
             if ($result > 0)
             {
+            	$product->load_stock();
+
             	$dir = (!empty($conf->product->dir_output)?$conf->product->dir_output:$conf->service->dir_output);
             	$pdir = get_exdir($product->id,2) . $product->id ."/photos/";
             	$dir = $dir . '/'. $pdir;
+
+            	if (! empty($product->multilangs[$langs->defaultlang]["label"]))     		$product->label =  $product->multilangs[$langs->defaultlang]["label"];
+            	if (! empty($product->multilangs[$langs->defaultlang]["description"]))     	$product->description =  $product->multilangs[$langs->defaultlang]["description"];
+            	if (! empty($product->multilangs[$langs->defaultlang]["note"]))     		$product->note =  $product->multilangs[$langs->defaultlang]["note"];
 
                 // Create
                 $objectresp = array(
@@ -358,8 +391,6 @@ function getProductOrService($authentication,$id='',$ref='',$ref_ext='')
 				        'localtax1_tx' => $product->localtax1_tx,
 				        'localtax2_tx' => $product->localtax2_tx,
 
-                		'price_base_type' => $product->price_base_type,
-
 				        'stock_real' => $product->stock_reel,
                 		'stock_alert' => $product->seuil_stock_alerte,
 				        'pmp' => $product->pmp,
@@ -385,7 +416,7 @@ function getProductOrService($authentication,$id='',$ref='',$ref_ext='')
     {
         $objectresp = array('result'=>array('result_code' => $errorcode, 'result_label' => $errorlabel));
     }
-
+	//var_dump($objectresp);exit;
     return $objectresp;
 }
 
@@ -500,6 +531,214 @@ function createProductOrService($authentication,$product)
 
 
 /**
+ * Update a product or service
+ *
+ * @param	array		$authentication		Array of authentication information
+ * @param	Product		$product			Product
+ * @return	array							Array result
+ */
+function updateProductOrService($authentication,$product)
+{
+    global $db,$conf,$langs;
+
+    $now=dol_now();
+
+    dol_syslog("Function: updateProductOrService login=".$authentication['login']);
+
+    if ($authentication['entity']) $conf->entity=$authentication['entity'];
+
+    // Init and check authentication
+    $objectresp=array();
+    $errorcode='';$errorlabel='';
+    $error=0;
+    $fuser=check_authentication($authentication,$error,$errorcode,$errorlabel);
+    // Check parameters
+    if ($product['price_net'] > 0) $product['price_base_type']='HT';
+    if ($product['price'] > 0)     $product['price_base_type']='TTC';
+
+    if ($product['price_net'] > 0 && $product['price'] > 0)
+    {
+        $error++; $errorcode='KO'; $errorlabel="You must choose between price or price_net to provide price.";
+    }
+
+
+    if (! $error)
+    {
+        include_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
+
+        $newobject=new Product($db);
+        $newobject->fetch($product['id']);
+
+        if (isset($product['ref']))     $newobject->ref=$product['ref'];
+        if (isset($product['ref_ext'])) $newobject->ref_ext=$product['ref_ext'];
+        $newobject->type=$product['type'];
+        $newobject->libelle=$product['label'];    // TODO deprecated
+        $newobject->label=$product['label'];
+        $newobject->description=$product['description'];
+        $newobject->note=$product['note'];
+        $newobject->status=$product['status_tosell'];
+        $newobject->status_buy=$product['status_tobuy'];
+        $newobject->price=$product['price_net'];
+        $newobject->price_ttc=$product['price'];
+        $newobject->tva_tx=$product['vat_rate'];
+        $newobject->price_base_type=$product['price_base_type'];
+        $newobject->date_creation=$now;
+
+        $newobject->stock_reel=$product['stock_real'];
+        $newobject->pmp=$product['pmp'];
+        $newobject->seuil_stock_alert=$product['stock_alert'];
+
+        $newobject->country_id=$product['country_id'];
+        if ($product['country_code']) $newobject->country_id=getCountry($product['country_code'],3);
+        $newobject->customcode=$product['customcode'];
+
+        $newobject->canvas=$product['canvas'];
+        /*foreach($product['lines'] as $line)
+        {
+            $newline=new FactureLigne($db);
+            $newline->type=$line['type'];
+            $newline->desc=$line['desc'];
+            $newline->fk_product=$line['fk_product'];
+            $newline->total_ht=$line['total_net'];
+            $newline->total_vat=$line['total_vat'];
+            $newline->total_ttc=$line['total'];
+            $newline->vat=$line['vat_rate'];
+            $newline->qty=$line['qty'];
+            $newline->fk_product=$line['product_id'];
+        }*/
+        //var_dump($product['ref_ext']);
+        //var_dump($product['lines'][0]['type']);
+
+        $db->begin();
+
+        $result=$newobject->update($newobject->id,$fuser);
+        if ($result <= 0)
+        {
+            $error++;
+        }
+
+        if (! $error)
+        {
+            $db->commit();
+            $objectresp=array('result'=>array('result_code'=>'OK', 'result_label'=>''),'id'=>$newobject->id,'ref'=>$newobject->ref);
+        }
+        else
+        {
+            $db->rollback();
+            $error++;
+            $errorcode='KO';
+            $errorlabel=$newobject->error;
+        }
+
+    }
+
+    if ($error)
+    {
+        $objectresp = array('result'=>array('result_code' => $errorcode, 'result_label' => $errorlabel));
+    }
+
+    return $objectresp;
+}
+
+
+/**
+ * Delete a product or service
+ *
+ * @param	array		$authentication		Array of authentication information
+ * @param	string		$listofidstring		List of id with comma
+ * @return	array							Array result
+ */
+function deleteProductOrService($authentication,$listofidstring)
+{
+    global $db,$conf,$langs;
+
+    $now=dol_now();
+
+    dol_syslog("Function: deleteProductOrService login=".$authentication['login']);
+
+    if ($authentication['entity']) $conf->entity=$authentication['entity'];
+
+    // Init and check authentication
+    $objectresp=array();
+    $errorcode='';$errorlabel='';
+    $error=0;
+    $fuser=check_authentication($authentication,$error,$errorcode,$errorlabel);
+
+	// User must be defined to user authenticated
+    global $user;
+    $user=$fuser;
+
+    $listofid=explode(',',trim($listofidstring));
+    $listofiddeleted=array();
+
+    // Check parameters
+    if (count($listofid) == 0 || empty($listofid[0]))
+    {
+        $error++; $errorcode='KO'; $errorlabel="List of Id of products or services to delete are required.";
+    }
+
+    if (! $error)
+    {
+    	$firsterror='';
+
+		$db->begin();
+
+    	foreach($listofid as $key => $id)
+		{
+	        $newobject=new Product($db);
+	        $result=$newobject->fetch($id);
+
+	        if ($result == 0)
+	        {
+	        	$error++;
+		        $firsterror='Product or service with id '.$id.' not found';
+		        break;
+	        }
+	        else
+			{
+		        $result=$newobject->delete();
+		        if ($result <= 0)
+		        {
+		            $error++;
+		            $firsterror=$newobject->error;
+		            break;
+		        }
+
+		        $listofiddeleted[]=$id;
+			}
+		}
+
+	    if (! $error)
+	    {
+	        $db->commit();
+            //$objectresp=array('result'=>array('result_code'=>'OK', 'result_label'=>''), 'listofid'=>$listofiddeleted);
+            $objectresp=array('result'=>array('result_code'=>'OK', 'result_label'=>''), 'nbdeleted'=>count($listofiddeleted));
+	    }
+	    else
+	    {
+	    	$db->rollback();
+	        $error++;
+	        $errorcode='KO';
+	        $errorlabel=$firsterror;
+		}
+    }
+
+    if ($error)
+    {
+        //$objectresp = array('result'=>array('result_code' => $errorcode, 'result_label' => $errorlabel), 'listofid'=>$listofiddeleted);
+        $objectresp = array('result'=>array('result_code' => $errorcode, 'result_label' => $errorlabel), 'nbdeleted'=>0);
+    }
+    else if (count($listofiddeleted) == 0)
+    {
+   		//$objectresp=array('result'=>array('result_code'=>'NOT_FOUND', 'result_label'=>'No product or service with id '.join(',',$listofid).' found'), 'listofid'=>$listofiddeleted);
+   		$objectresp=array('result'=>array('result_code'=>'NOT_FOUND', 'result_label'=>'No product or service with id '.join(',',$listofid).' found'), 'nbdeleted'=>0);
+    }
+
+    return $objectresp;
+}
+
+
+/**
  * getListOfProductsOrServices
  *
  * @param	array		$authentication		Array of authentication information
@@ -575,10 +814,20 @@ function getListOfProductsOrServices($authentication,$filterproduct)
 }
 
 
-//  return category infos and children
-function getProductsForCategory($authentication,$id)
+/**
+ * Get list of products for a category
+ *
+ * @param	array		$authentication		Array of authentication information
+ * @param	array		$id					Category id
+ * @param	$lang		$lang				Force lang
+ * @return	array							Array result
+ */
+function getProductsForCategory($authentication,$id,$lang='')
 {
 	global $db,$conf,$langs;
+
+	$langcode=($lang?$lang:(empty($conf->global->MAIN_LANG_DEFAULT)?'auto':$conf->global->MAIN_LANG_DEFAULT));
+	$langs->setDefaultLang($langcode);
 
 	dol_syslog("Function: getProductsForCategory login=".$authentication['login']." id=".$id);
 
@@ -600,6 +849,9 @@ function getProductsForCategory($authentication,$id)
 
 	if (! $error)
 	{
+		$langcode=($lang?$lang:(empty($conf->global->MAIN_LANG_DEFAULT)?'auto':$conf->global->MAIN_LANG_DEFAULT));
+		$langs->setDefaultLang($langcode);
+
 		$fuser->getrights();
 
 		if ($fuser->rights->produit->lire)
@@ -615,7 +867,7 @@ function getProductsForCategory($authentication,$id)
 				$sql .= " ORDER BY fk_".$field." ASC" ;
 
 
-				dol_syslog("GetProductsForCategory::get_type sql=".$sql);
+				dol_syslog("getProductsForCategory get id of product into category sql=".$sql);
 				$res  = $db->query($sql);
 				if ($res)
 				{
@@ -633,11 +885,11 @@ function getProductsForCategory($authentication,$id)
 						    	'id' => $obj->id,
 					   			'ref' => $obj->ref,
 					   			'ref_ext' => $obj->ref_ext,
-					    		'label' => $obj->label,
-					    		'description' => $obj->description,
+					    		'label' => ! empty($obj->multilangs[$langs->defaultlang]["label"]) ? $obj->multilangs[$langs->defaultlang]["label"] : $obj->label,
+					    		'description' => ! empty($obj->multilangs[$langs->defaultlang]["description"]) ? $obj->multilangs[$langs->defaultlang]["description"] : $obj->description,
 					    		'date_creation' => dol_print_date($obj->date_creation,'dayhourrfc'),
 					    		'date_modification' => dol_print_date($obj->date_modification,'dayhourrfc'),
-					            'note' => $obj->note,
+					            'note' => ! empty($obj->multilangs[$langs->defaultlang]["note"]) ? $obj->multilangs[$langs->defaultlang]["note"] : $obj->note,
 					            'status_tosell' => $obj->status,
 					            'status_tobuy' => $obj->status_buy,
 		                		'type' => $obj->type,
@@ -705,4 +957,3 @@ function getProductsForCategory($authentication,$id)
 // Return the results.
 $server->service($HTTP_RAW_POST_DATA);
 
-?>

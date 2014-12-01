@@ -114,8 +114,8 @@ class HookManager
      *
      * 		@param		string	$method			Name of method hooked ('doActions', 'printSearchForm', 'showInputField', ...)
      * 	    @param		array	$parameters		Array of parameters
-     * 		@param		Object	&$object		Object to use hooks on
-     * 	    @param		string	&$action		Action code on calling page ('create', 'edit', 'view', 'add', 'update', 'delete'...)
+     * 		@param		Object	$object		Object to use hooks on
+     * 	    @param		string	$action		Action code on calling page ('create', 'edit', 'view', 'add', 'update', 'delete'...)
      * 		@return		mixed					For doActions,formObjectOptions,pdf_xxx:    								Return 0 if we want to keep standard actions, >0 if if want to stop standard actions, <0 means KO.
      * 											For printSearchForm,printLeftBlock,printTopRightMenu,formAddObjectLine,...: Return HTML string. TODO Deprecated. Must always return an int and things to print into ->resprints.
      *                                          Can also return some values into an array ->results.
@@ -131,11 +131,26 @@ class HookManager
         // Define type of hook ('output', 'returnvalue' or 'addreplace'). 'addreplace' should be type for all hooks. 'output' and 'returnvalue' are deprecated.
         $hooktype='output';
         if (preg_match('/^pdf_/',$method)) $hooktype='returnvalue';	// pdf_xxx except pdf_writelinedesc are returnvalue hooks. When there is 2 hooks of this type, only last one win.
-        if (in_array($method,array('doActions','formObjectOptions','moveUploadedFile','pdf_writelinedesc','paymentsupplierinvoices','printSearchForm'))) $hooktype='addreplace';
+        if (in_array(
+        	$method,
+        	array(
+        		'addMoreActionsButtons',
+		        'addStatisticLine',
+		        'doActions',
+        		'formCreateThirdpartyOptions',
+		        'formObjectOptions',
+		        'formattachOptions',
+		        'formBuilddocLineOptions',
+		        'moveUploadedFile',
+		        'pdf_writelinedesc',
+		        'paymentsupplierinvoices',
+		        'printSearchForm'
+        		)
+        	)) $hooktype='addreplace';
 
         // Loop on each hook to qualify modules that declared context
         $modulealreadyexecuted=array();
-        $resaction=0; $error=0;
+        $resaction=0; $error=0; $result='';
 		$this->resPrint=''; $this->resArray=array();
         foreach($this->hooks as $modules)    // this->hooks is an array with context as key and value is an array of modules that handle this context
         {
@@ -143,15 +158,15 @@ class HookManager
             {
                 foreach($modules as $module => $actionclassinstance)
                 {
-                	//print "Before hook ".get_class($actionclassinstance)." method=".$method." results=".count($actionclassinstance->results)." resprints=".count($actionclassinstance->resprints)." result=".$result." resaction=".$resaction."<br>\n";
-                	 
+                	//print "Before hook ".get_class($actionclassinstance)." method=".$method." hooktype=".$hooktype." results=".count($actionclassinstance->results)." resprints=".count($actionclassinstance->resprints)." resaction=".$resaction." result=".$result."<br>\n";
+
                 	//print 'class='.get_class($actionclassinstance).' method='.$method.' action='.$action;
                 	// jump to next class if method does not exists
                     if (! method_exists($actionclassinstance,$method)) continue;
                 	// test to avoid to run twice a hook, when a module implements several active contexts
                     if (in_array($module,$modulealreadyexecuted)) continue;
                     $modulealreadyexecuted[$module]=$module;
-                    // Hooks that return int (doActions, formObjectOptions, pdf_writelinedesc, paymentsupplierinvoices)
+                    // Hooks that must return int (hooks with type 'addreplace')
                     if ($hooktype == 'addreplace')
                     {
                     	$resaction += $actionclassinstance->$method($parameters, $object, $action, $this); // $object and $action can be changed by method ($object->id during creation for example or $action to go back to other action for example)
@@ -159,19 +174,19 @@ class HookManager
                     	{
                     		$error++;
                     		$this->error=$actionclassinstance->error; $this->errors=array_merge($this->errors, (array) $actionclassinstance->errors);
-
-                    		// TODO remove this. Change must be inside the method of hook if required
+                    		// TODO dead code to remove (do not enable this, but fix hook instead)
+                    		/* Change must be inside the method of hook if required. Only hook must decide if $action must be modified or not.
                     		if ($method == 'doActions')
                     		{
                     			if ($action=='add')    $action='create';
                     			if ($action=='update') $action='edit';
-                    		}
+                    		}*/
                     	}
 
                     	if (is_array($actionclassinstance->results))  $this->resArray =array_merge($this->resArray, $actionclassinstance->results);
                     	if (! empty($actionclassinstance->resprints)) $this->resPrint.=$actionclassinstance->resprints;
                     }
-                    // Generic hooks that return a string or array (printSearchForm, printLeftBlock, printTopRightMenu, formAddObjectLine, formBuilddocOptions, ...)
+                    // Generic hooks that return a string or array (printSearchForm, printLeftBlock, formAddObjectLine, formBuilddocOptions, ...)
                     else
 					{
                     	// TODO. this should be done into the method of hook by returning nothing
@@ -181,14 +196,18 @@ class HookManager
 
                     	if (! empty($actionclassinstance->results) && is_array($actionclassinstance->results)) $this->resArray =array_merge($this->resArray, $actionclassinstance->results);
                     	if (! empty($actionclassinstance->resprints)) $this->resPrint.=$actionclassinstance->resprints;
-
-                    	// TODO. remove this. array result must be set into $actionclassinstance->results
-                    	if (is_array($result)) $this->resArray = array_merge($this->resArray, $result);
-                    	// TODO. remove this. result must not be a string. we must use $actionclassinstance->resprint to return a string
-                    	if (! is_array($result) && ! is_numeric($result)) $this->resPrint.=$result;
+                    	// TODO dead code to remove (do not enable this, but fix hook instead)
+                    	//if (is_array($result)) $this->resArray = array_merge($this->resArray, $result);
+                    	// TODO dead code to remove (do not enable this, but fix hook instead): result must not be a string. we must use $actionclassinstance->resprints to return a string
+                    	if (! is_array($result) && ! is_numeric($result))
+                    	{
+                    		//print 'Error: Bug into module '.get_class($actionclassinstance).' hook must not return a string but an int and set string into ->resprints';
+                    		dol_syslog('Error: Bug into module '.get_class($actionclassinstance).' hook must not return a string but an int and set string into ->resprints', LOG_ERR);
+                    		if (empty($actionclassinstance->resprints)) { $this->resPrint.=$result; $result=0; }
+                    	}
                     }
 
-                    //print "After hook  ".get_class($actionclassinstance)." method=".$method." results=".count($actionclassinstance->results)." resprints=".count($actionclassinstance->resprints)." result=".$result." resaction=".$resaction."<br>\n";
+                    //print "After hook  ".get_class($actionclassinstance)." method=".$method." hooktype=".$hooktype." results=".count($actionclassinstance->results)." resprints=".count($actionclassinstance->resprints)." resaction=".$resaction." result=".$result."<br>\n";
 
                     unset($actionclassinstance->results);
                     unset($actionclassinstance->resprints);
@@ -204,4 +223,3 @@ class HookManager
 
 }
 
-?>

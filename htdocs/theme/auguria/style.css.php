@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C)      2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2007-2011 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2012	   Juanjo Menent		<jmenent@2byte.es>
@@ -38,10 +38,13 @@ session_cache_limiter(FALSE);
 
 require_once '../../main.inc.php';
 
+// Load user to have $user->conf loaded (not done into main because of NOLOGIN constant defined)
+if (empty($user->id) && ! empty($_SESSION['dol_login'])) $user->fetch('',$_SESSION['dol_login']);
+
+
 // Define css type
 header('Content-type: text/css');
-// Important: Following code is to avoid page request by browser and PHP CPU at
-// each Dolibarr page access.
+// Important: Following code is to avoid page request by browser and PHP CPU at each Dolibarr page access.
 if (empty($dolibarr_nocache)) header('Cache-Control: max-age=3600, public, must-revalidate');
 else header('Cache-Control: no-cache');
 
@@ -53,28 +56,26 @@ if (GETPOST('theme')) $conf->theme=GETPOST('theme');  // If theme was forced on 
 $langs->load("main",0,1);
 $right=($langs->trans("DIRECTION")=='rtl'?'left':'right');
 $left=($langs->trans("DIRECTION")=='rtl'?'right':'left');
-$fontsize=empty($conf->dol_optimize_smallscreen)?'12':'12';
-$fontsizesmaller=empty($conf->dol_optimize_smallscreen)?'11':'11';
 
 $path='';    		// This value may be used in future for external module to overwrite theme
 $theme='auguria';	// Value of theme
 if (! empty($conf->global->MAIN_OVERWRITE_THEME_RES)) { $path='/'.$conf->global->MAIN_OVERWRITE_THEME_RES; $theme=$conf->global->MAIN_OVERWRITE_THEME_RES; }
 
-// Define image path files
+// Define image path files and other constants
 $fontlist='arial,tahoma,verdana,helvetica';    //$fontlist='Verdana,Helvetica,Arial,sans-serif';
-
+$img_liste_titre=dol_buildpath($path.'/theme/'.$theme.'/img/menus/trtitle.png',1);
+$img_head=dol_buildpath($path.'/theme/'.$theme.'/img/headbg2.jpg',1);
+$img_button=dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1);
 $dol_hide_topmenu=$conf->dol_hide_topmenu;
 $dol_hide_leftmenu=$conf->dol_hide_leftmenu;
 $dol_optimize_smallscreen=$conf->dol_optimize_smallscreen;
 $dol_no_mouse_hover=$conf->dol_no_mouse_hover;
 $dol_use_jmobile=$conf->dol_use_jmobile;
 
-$img_liste_titre=dol_buildpath($path.'/theme/'.$theme.'/img/menus/trtitle.png',1);
-$img_head=dol_buildpath($path.'/theme/'.$theme.'/img/headbg2.jpg',1);
-$img_button=dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1);
-
 $colorbacklineimpairhover='210,214,217';
 $colorbacklinepairhover='210,214,217';
+$fontsize='12';
+$fontsizesmaller='11';
 
 // No hover by default, we keep only if we set var THEME_ELDY_USE_HOVER
 if ((! empty($user->conf->THEME_ELDY_ENABLE_PERSONALIZED) && empty($user->conf->THEME_ELDY_USE_HOVER))
@@ -84,11 +85,19 @@ if ((! empty($user->conf->THEME_ELDY_ENABLE_PERSONALIZED) && empty($user->conf->
 	$colorbacklinepairhover='';
 }
 
+$colorshadowtitle='000';
+
+$usecss3=true;
+if ($conf->browser->name == 'ie' && round($conf->browser->version,2) < 10) $usecss3=false;
+elseif ($conf->browser->name == 'iceweasel') $usecss3=false;
+elseif ($conf->browser->name == 'epiphany')  $usecss3=false;
+
 print '/*'."\n";
 print 'colorbacklineimpairhover='.$colorbacklineimpairhover."\n";
 print 'colorbacklinepairhover='.$colorbacklinepairhover."\n";
 print '*/'."\n";
 
+if (! empty($conf->dol_optimize_smallscreen)) $fontsize=11;
 ?>
 
 /* ============================================================================== */
@@ -102,9 +111,7 @@ body {
 	background: #ffffff url(<?php echo $img_head; ?>) 0 0 no-repeat;
 <?php } ?>
 	color: #101010;
-	<?php if (empty($dol_use_jmobile) || 1==1) { ?>
 	font-size: <?php print $fontsize ?>px;
-	<?php } ?>
     font-family: <?php print $fontlist ?>;
     margin-top: 0;
     margin-bottom: 0;
@@ -144,6 +151,7 @@ textarea:disabled {
 input[type=checkbox] { background-color: transparent; border: none; box-shadow: none; }
 input[type=radio]    { background-color: transparent; border: none; box-shadow: none; }
 input[type=image]    { background-color: transparent; border: none; box-shadow: none; }
+input[type=text]     { min-width: 20px; }
 input:-webkit-autofill {
 	background-color: <?php echo empty($dol_use_jmobile)?'#FBFFEA':'#FFFFFF' ?> !important;
 	background-image:none !important;
@@ -219,6 +227,12 @@ div.inline-block
 .nowrap {
 	white-space: <?php print ($dol_optimize_smallscreen?'normal':'nowrap'); ?>;
 }
+.nobold {
+	font-weight: normal !important;
+}
+.nounderline {
+    text-decoration: none;
+}
 
 
 /* ============================================================================== */
@@ -229,8 +243,14 @@ div.inline-block
 <?php if (! empty($dol_optimize_smallscreen)) { ?>
 .hideonsmartphone { display: none; }
 .noenlargeonsmartphone { width : 50px !important; display: inline !important; }
+.maxwidthonsmartphone { max-width: 100px; }
+.maxwidth200onsmartphone { max-width: 200px; }
 <?php } ?>
 .linkobject { cursor: pointer; }
+<?php if (GETPOST("optioncss") == 'print') { ?>
+.hideonprint { display: none !important; }
+<?php } ?>
+
 
 /* ============================================================================== */
 /* Styles for dragging lines                                                      */
@@ -244,6 +264,7 @@ td.showDragHandle {
 }
 .tdlineupdown {
 	white-space: nowrap;
+	min-width: 10px;
 }
 
 
@@ -252,14 +273,15 @@ td.showDragHandle {
 /* ============================================================================== */
 
 #id-container {
-  display: table;
-  table-layout: fixed;
-  margin-top: 6px;
+	display: table;
+	table-layout: fixed;
+	margin-top: 6px;
+	margin-bottom: 6px;
 }
 #id-right, #id-left {
-  display: table-cell;
-  float: none;
-  vertical-align: top;
+	display: table-cell;
+	float: none;
+	vertical-align: top;
 }
 #id-<?php echo $right; ?> {
 	width: 100%;
@@ -313,6 +335,10 @@ else
 }
 ?>
 
+div#tmenu_tooltip {
+	padding-right: 100px;
+}
+
 div.tmenu {
 <?php if (GETPOST("optioncss") == 'print') {  ?>
 	display:none;
@@ -349,59 +375,8 @@ div.mainmenu {
 }
 */
 
-<?php if (empty($conf->dol_optimize_smallscreen)) { ?>
+<?php if (empty($conf->dol_optimize_smallscreen)) {
 
-/*
-div.mainmenu.home{
-	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/home.png',1); ?>);
-}
-
-div.mainmenu.companies {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/company.png',1); ?>);
-}
-
-div.mainmenu.products {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/products.png',1); ?>);
-	margin-left: 10px;
-}
-
-div.mainmenu.commercial {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/commercial.png',1); ?>);
-}
-
-div.mainmenu.accountancy {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/money.png',1); ?>);
-}
-
-div.mainmenu.project {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/project.png',1); ?>);
-}
-
-div.mainmenu.tools {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/tools.png',1); ?>);
-}
-
-div.mainmenu.members {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/members.png',1); ?>);
-}
-
-div.mainmenu.shop {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/shop.png',1); ?>);
-}
-
-div.mainmenu.agenda {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/agenda.png',1); ?>);
-}
-
-div.mainmenu.ecm {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/ecm.png',1); ?>);
-}
-
-div.mainmenu.cashdesk {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/pointofsale.png',1); ?>);
-}
-*/
-<?php
 // Add here more div for other menu entries. moduletomainmenu=array('module name'=>'name of class for div')
 
 $moduletomainmenu=array('user'=>'','syslog'=>'','societe'=>'companies','projet'=>'project','propale'=>'commercial','commande'=>'commercial',
@@ -448,7 +423,7 @@ foreach($mainmenuusedarray as $val)
 	}
 	if ($found)
 	{
-		print "/* A mainmenu entry but img file ".$val.".png not found, so we use a generic one */\n";
+		print "/* A mainmenu entry but img file ".$val.".png not found (check /".$val."/img/".$val.".png), so we use a generic one */\n";
 		print "div.mainmenu.".$val." {\n";
 		print "	background-image: url(".$url.");\n";
 		print "	height:28px;\n";
@@ -542,7 +517,7 @@ foreach($mainmenuusedarray as $val)
 /* Login */
 
 form#login {
-	margin-top: 70px;
+	margin-top: <?php echo $dol_optimize_smallscreen?'30':'60' ?>px;
 	margin-bottom: 30px;
 	font-size: 13px;
 }
@@ -576,14 +551,19 @@ form#login {
 	background-image: -ms-linear-gradient(top, rgba(240,240,240,.3) 0%, rgba(192,192,192,.3) 100%);
 	background-image: linear-gradient(top, rgba(240,240,240,.3) 0%, rgba(192,192,192,.3) 100%);
 }
+#securitycode {
+	min-width: 60px;
+}
 #img_securitycode {
 	border: 1px solid #DDDDDD;
 }
 #img_logo {
 	max-width: 200px;
+	max-height: 100px;
 }
 
 div.login_block {
+    width: 180px;
 	position: absolute;
 	<?php print $right; ?>: 5px;
 	top: 3px;
@@ -617,6 +597,14 @@ div.login a:hover {
 	color: black;
 	text-decoration:underline;
 }
+.login_block_user {
+	float: right;
+}
+.login_block_elem {
+	float: right;
+	vertical-align: top;
+	padding: 8px 0px 0px 4px !important;
+}
 
 .alogin, .alogin:hover {
 	color: #888 !important;
@@ -628,8 +616,7 @@ div.login a:hover {
 }
 
 img.login, img.printer, img.entity {
-	padding: <?php echo ($conf->dol_optimize_smallscreen?'0':'8')?>px 0px 0px 0px;
-	margin: 0px 0px 0px 8px;
+	padding: 0px 0px 0px 0px;
 	text-decoration: none;
 	color: white;
 	font-weight: bold;
@@ -642,6 +629,7 @@ img.login, img.printer, img.entity {
 
 div.vmenu, td.vmenu {
     margin-<?php print $right; ?>: 2px;
+  	margin-<?php print $left; ?>: 2px;
     padding: 0px;
     padding-bottom: 0px;
     width: 164px;
@@ -758,11 +746,8 @@ div.blockvmenuhelp
 
 div.menu_contenu {
 	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg-rubrique.png',1); ?>);
-	padding: 8px 0px 0px 0px;
+	padding: 2px 1px 1px 3px;
 	margin: 0px;
-	padding: 1px;
-
-	padding-right: 8px;
     font-size : 11px;
     font-weight:normal;
     color : #000000;
@@ -1063,17 +1048,13 @@ div.tabsAction {
 
 
 a.tabTitle {
-    background: #5088A9;
-    color: white;
+    color: #888;
 	font-family: <?php print $fontlist ?>;
     font-weight: normal;
     padding: 0px 6px;
     margin: 0px 6px;
     text-decoration: none;
     white-space: nowrap;
-    border-<?php print $right; ?>: 1px solid #555555;
-    border-<?php print $left; ?>: 1px solid #D8D8D8;
-    border-top: 1px solid #D8D8D8;
 }
 
 a.tab:link {
@@ -1106,8 +1087,8 @@ a.tab:visited {
     border-<?php print $left; ?>: 1px solid #D8D8D8;
     border-top: 1px solid #D8D8D8;
 }
-a.tab#active {
-    background: white;
+div.tabs a.tab:active, .tabactive {
+    background: white !important;
     border-bottom: #dee7ec 1px solid;
 	font-family: <?php print $fontlist ?>;
     color: #436976;
@@ -1240,9 +1221,8 @@ background-repeat: repeat-x;
 	border-collapse: collapse;
 	border: 0px;
 	margin-left: 0px;
-	spacing-left: 0px;
-	padding-left: 0px;
-	padding-right: 4px;
+	padding-<?php print $left; ?>: 0px !important;
+	padding-<?php print $right; ?>: 4px !important;
 }
 .nocellnopadd {
 list-style-type:none;
@@ -1270,22 +1250,31 @@ margin: 0px 0px 0px 0px;
 }
 
 
-table.border {
-border: 1px solid #9CACBB;
-border-collapse: collapse;
+table.border, table.dataTable, .table-border, .table-border-col, .table-key-border-col, .table-val-border-col, div.border {
+	border: 1px solid #9CACBB;
+	border-collapse: collapse;
+	padding: 1px 2px 2px 1px;			/* t r b l */
 }
 
-table.border td {
-padding: 1px 2px;
-border: 1px solid #9CACBB;
-border-collapse: collapse;
+table.border td, div.border div div.tagtd {
+	padding: 1px 2px;
+	border: 1px solid #9CACBB;
+	border-collapse: collapse;
 }
 
-td.border {
-border-top: 1px solid #000000;
-border-right: 1px solid #000000;
-border-bottom: 1px solid #000000;
-border-left: 1px solid #000000;
+td.border, div.tagtable div div.border {
+	border-top: 1px solid #000000;
+	border-right: 1px solid #000000;
+	border-bottom: 1px solid #000000;
+	border-left: 1px solid #000000;
+}
+
+.table-key-border-col {
+	width: 25%;
+	vertical-align:top;
+}
+.table-val-border-col {
+	width:auto;
 }
 
 /* Main boxes */
@@ -1376,11 +1365,9 @@ table.liste td {
 	padding-right: 2px;
 }
 
-.tagtable { display: table; }
-.tagtable form { display: table-row; }
-.tagtable form div { display: table-cell; }
-.tagtr { display: table-row; }
-.tagtd { display: table-cell; }
+.tagtable, .table-border { display: table; }
+.tagtr, .table-border-row  { display: table-row; }
+.tagtd, .table-border-col, .table-key-border-col, .table-val-border-col { display: table-cell; }
 
 tr.liste_titre, tr.liste_titre_sel, form.liste_titre, form.liste_titre_sel
 {
@@ -1388,39 +1375,81 @@ tr.liste_titre, tr.liste_titre_sel, form.liste_titre, form.liste_titre_sel
 }
 div.liste_titre, tr.liste_titre, form.liste_titre
 {
-    background: #7699A9;
+	<?php $usecss3=1; if ($usecss3) { ?>
+    background: #82c6f9;
+	background-image: -o-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: -moz-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: -webkit-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(1,150,150,0.3) 100%);
+	background-image: -ms-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: linear-gradient(bottom, rgba(1,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+    font-weight: bold;
+    border-top: 1px solid;
+    border-top-color: #57a0c9 !important;
+    border-bottom: 1px solid;
+    border-bottom-color: #57a0c9 !important;
+    <?php }	else { ?>
+	background: #82c6e9;
     background-image: url(<?php echo $img_liste_titre ?>);
+    <?php } ?>
     background-repeat: repeat-x;
     color: #FFFFFF;
     font-family: <?php print $fontlist ?>;
     /* border-bottom: 1px solid #FDFFFF; */
-    white-space: nowrap;
     text-align: <?php echo $left; ?>;
 }
 th.liste_titre, td.liste_titre
 {
-    background: #7699A9;
+	<?php $usecss3=1; if ($usecss3) { ?>
+    background: #82c6f9;
+	background-image: -o-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: -moz-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: -webkit-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(1,150,150,0.3) 100%);
+	background-image: -ms-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: linear-gradient(bottom, rgba(1,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+    font-weight: bold;
+    border-top: 1px solid #57a0c9;
+    border-bottom: 1px solid #57a0c9;
+    <?php }	else { ?>
+	background: #82c6e9;
     background-image: url(<?php echo $img_liste_titre ?>);
+    <?php } ?>
     background-repeat: repeat-x;
-    color: #FFFFFF;
     font-family: <?php print $fontlist ?>;
     font-weight: normal;
     /* border-bottom: 1px solid #FDFFFF; */
     white-space: nowrap;
 }
+th.liste_titre, td.liste_titre, th.liste_titre a, td.liste_titre a
+{
+	color: #FFFFFF !important;
+}
 th.liste_titre_sel, td.liste_titre_sel
 {
-    background: #7699A9;
+	<?php $usecss3=1; if ($usecss3) { ?>
+    background: #82c6f9;
+	background-image: -o-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: -moz-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: -webkit-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(1,150,150,0.3) 100%);
+	background-image: -ms-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: linear-gradient(bottom, rgba(1,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+    font-weight: bold;
+    border-top: 1px solid #57a0c9;
+    border-bottom: 1px solid #57a0c9;
+    <?php }	else { ?>
+	background: #82c6e9;
     background-image: url(<?php echo $img_liste_titre ?>);
+    <?php } ?>
     background-repeat: repeat-x;
-    color: #FFFFFF;
     font-family: <?php print $fontlist ?>;
     font-weight: normal;
     /* text-decoration: underline; */
     /* border-bottom: 1px solid #FDFFFF; */
     white-space: nowrap;
 }
-
+th.liste_titre_sel, td.liste_titre_sel, th.liste_titre_sel a, td.liste_titre_sel a
+{
+    color: #FFFFFF !important;
+}
 input.liste_titre {
 	background: transparent;
 	background-repeat: repeat-x;
@@ -1484,6 +1513,19 @@ div.tabBar .noborder {
  *  Boxes
  */
 
+.boxstats {
+    <?php print "float: ".$left.";\n"; ?>
+    margin: 4px;
+    padding: 4px;
+	/*-moz-box-shadow: 4px 4px 4px #DDD;
+    -webkit-box-shadow: 4px 4px 4px #DDD;
+    box-shadow: 4px 4px 4px #DDD;
+    margin-bottom: 8px !important;*/
+    border: 1px solid #AAA;
+    text-align: center;
+    border-radius: 5px;
+}
+
 .boxtable {
 -moz-box-shadow: 4px 4px 4px #CCC;
 -webkit-box-shadow: 4px 4px 4px #CCC;
@@ -1531,10 +1573,15 @@ tr.box_pair td, tr.box_impair td, td.box_pair, td.box_impair
 /*border-bottom: 1px solid white;*/
 }
 
-tr.fiche {
-font-family: <?php print $fontlist ?>;
+.formboxfilter {
+	vertical-align: middle;
+	margin-bottom: 6px;
 }
-
+.formboxfilter input[type=image]
+{
+	top: 3px;
+	position: relative;
+}
 
 
 
@@ -1604,6 +1651,9 @@ a.impayee:hover { font-weight: bold; color: #550000; }
 .product_line_stock_too_low { color: #664400; }
 
 .fieldrequired { font-weight: bold; color: #000055; }
+
+.dolgraphtitle { margin-top: 6px; margin-bottom: 4px; }
+.dolgraphtitlecssboxes { margin: 0px; }
 
 .photo {
 border: 0px;
@@ -1681,6 +1731,8 @@ opacity: 1;
 /* ============================================================================== */
 /* Calendar                                                                       */
 /* ============================================================================== */
+
+img.datecallink { padding-left: 2px !important; padding-right: 2px !important; }
 
 .ui-datepicker-trigger {
 	vertical-align: middle;
@@ -2014,8 +2066,6 @@ a.cke_dialog_ui_button
 	background-image: url(<?php echo $img_button ?>) !important;
 	background-position: bottom !important;
     border: 1px solid #ACBCBB !important;
-	padding: 0.1em 0.7em !important;
-	margin: 0em 0.5em !important;
     -moz-border-radius:0px 5px 0px 5px !important;
 	-webkit-border-radius:0px 5px 0px 5px !important;
 	border-radius:0px 5px 0px 5px !important;
@@ -2037,34 +2087,7 @@ a.cke_dialog_ui_button
     height: 72px !important;
 }
 
-/* ============================================================================== */
-/*  Table with div                                                                */
-/* ============================================================================== */
 
-div.table-border {
-	display:table;
-    width: 100%;
-    border-collapse: collapse;
-    border: 1px solid #9CACBB;
-}
-div.table-border-row {
-	display:table-row;
-}
-div.table-key-border-col {
-	display:table-cell;
-	width: 25%;
-	vertical-align:top;
-	padding: 1px 2px 1px 1px;
-	border: 1px solid #9CACBB;
-	border-collapse: collapse;
-}
-div.table-val-border-col {
-	display:table-cell;
-	width:auto;
-	padding: 1px 2px 1px 1px;
-	border: 1px solid #9CACBB;
-	border-collapse: collapse;
-}
 
 /* ============================================================================== */
 /*  Test using div instead of tables                                              */
@@ -2261,6 +2284,24 @@ div.ecmjqft {
 
 
 /* ============================================================================== */
+/*  Datatable                                                                     */
+/* ============================================================================== */
+
+.sorting_asc  { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_asc.png',1); ?>') no-repeat center right; }
+.sorting_desc { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_desc.png',1); ?>') no-repeat center right; }
+.sorting_asc_disabled  { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_asc_disabled',1); ?>') no-repeat center right; }
+.sorting_desc_disabled { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_desc_disabled',1); ?>') no-repeat center right; }
+.paginate_disabled_previous:hover, .paginate_enabled_previous:hover, .paginate_disabled_next:hover, .paginate_enabled_next:hover
+{
+	font-weight: normal;
+}
+.paginate_enabled_previous:hover, .paginate_enabled_next:hover
+{
+	text-decoration: underline !important;
+}
+
+
+/* ============================================================================== */
 /*  JMobile                                                                       */
 /* ============================================================================== */
 
@@ -2278,9 +2319,7 @@ a.ui-link, a.ui-link:hover, .ui-btn:hover, span.ui-btn-text:hover, span.ui-btn-i
 	min-width: .4em;
 	padding-left: 10px;
 	padding-right: 10px;
-	<?php if (empty($dol_use_jmobile) || 1==1) { ?>
 	font-size: <?php print $fontsize ?>px;
-	<?php } ?>
 	/* white-space: normal; */		/* Warning, enable this break the truncate feature */
 }
 .ui-select .ui-btn-icon-right .ui-btn-inner {
@@ -2367,7 +2406,41 @@ ul.ulmenu {
 .ui-mobile fieldset {
 	border-bottom: none !important;
 }
+.ui-body-c, .ui-btn-up-c, .ui-btn-hover-c {
+	border: none !important;
+}
+
+/* Style for first level menu with jmobile */
+.ui-bar-b, .lilevel0 {
+	background: #7699A9;
+	background-image: url(<?php echo $img_liste_titre; ?>);
+    background-repeat: repeat-x;
+	<?php if ($usecss3) { ?>
+	background-image: -o-linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+	background-image: -moz-linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+	background-image: -webkit-linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+	background-image: -ms-linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+	background-image: linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+    font-weight: bold;
+	<?php } ?>
+    color: #FFF !important;
+}
+.alilevel0 {
+    color: #FFF !important;
+	text-shadow: 1px 0px 1px #<?php echo $colorshadowtitle; ?>;
+}
+.alilevel1 {
+    color: #FFF !important;
+	text-shadow: 1px 0px 1px #<?php echo $colorshadowtitle; ?>;
+}
+.lilevel1 {
+	background-image: -webkit-gradient(linear,left top,left bottom,from( #eee ),to( #e1e1e1 )) !important;
+	background-image: -webkit-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: -moz-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: -ms-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: -o-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: linear-gradient( #eee,#e1e1e1 ) !important;
+}
 
 <?php
 if (is_object($db)) $db->close();
-?>

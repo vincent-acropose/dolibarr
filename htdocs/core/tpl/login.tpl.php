@@ -25,19 +25,25 @@ if (GETPOST('dol_optimize_smallscreen')) $conf->dol_optimize_smallscreen=1;
 if (GETPOST('dol_no_mouse_hover')) $conf->dol_no_mouse_hover=1;
 if (GETPOST('dol_use_jmobile')) $conf->dol_use_jmobile=1;
 
-$arrayofjs=array('/core/js/dst.js');	// Javascript code on logon page only to detect user tz, dst_observed, dst_first, dst_second
-print top_htmlhead('',$langs->trans('Login').' '.$title,0,0,$arrayofjs);
+// If we force to use jmobile, then we reenable javascript
+if (! empty($conf->dol_use_jmobile)) $conf->use_javascript_ajax=1;
+
+$arrayofjs=array('/core/js/dst.js'.(empty($conf->dol_use_jmobile)?'':'?version='.urlencode(DOL_VERSION)));					// Javascript code on logon page only to detect user tz, dst_observed, dst_first, dst_second
+$titleofloginpage=$langs->trans('Login').' '.$title;	// title is defined by dol_loginfunction in security2.lib.php
+print top_htmlhead('',$titleofloginpage,0,0,$arrayofjs);
 ?>
 <!-- BEGIN PHP TEMPLATE LOGIN.TPL.PHP -->
 
-<body class="body">
+<body class="body bodylogin">
 
+<?php if (empty($conf->dol_use_jmobile)) { ?>
 <script type="text/javascript">
 $(document).ready(function () {
 	// Set focus on correct field
 	<?php if ($focus_element) { ?>$('#<?php echo $focus_element; ?>').focus(); <?php } ?>		// Warning to use this only on visible element
 });
 </script>
+<?php } ?>
 
 <center>
 
@@ -69,7 +75,7 @@ $(document).ready(function () {
 
 <div id="login_left">
 
-<table class="left" summary="Login pass" cellpadding="2">
+<table class="left" summary="Login pass">
 <!-- Login -->
 <tr>
 <td valign="middle" class="loginfield"><strong><label for="username"><?php echo $langs->trans('Login'); ?></label></strong></td>
@@ -152,6 +158,27 @@ if ($forgetpasslink || $helpcenterlink)
 	}
 	echo '</div>';
 }
+
+if (isset($conf->file->main_authentication) && preg_match('/openid/',$conf->file->main_authentication))
+{
+	$langs->load("users");
+
+	//if (! empty($conf->global->MAIN_OPENIDURL_PERUSER)) $url=
+	echo '<br>';
+	echo '<div align="center" style="margin-top: 4px;">';
+
+	$url=$conf->global->MAIN_AUTHENTICATION_OPENID_URL;
+	if (! empty($url)) print '<a class="alogin" href="'.$url.'">'.$langs->trans("LoginUsingOpenID").'</a>';
+	else
+	{
+		$langs->load("errors");
+		print '<font class="warning">'.$langs->trans("ErrorOpenIDSetupNotComplete",'MAIN_AUTHENTICATION_OPENID_URL').'</font>';
+	}
+
+	echo '</div>';
+}
+
+
 ?>
 
 </div>
@@ -166,9 +193,9 @@ if ($forgetpasslink || $helpcenterlink)
 <?php if (! empty($_SESSION['dol_loginmesg']))
 {
 ?>
-	<center><div align="center" style="max-width: 500px; margin-left: 10px; margin-right: 10px;"><div class="error">
+	<div class="center" style="max-width: 500px; margin-left: 10px; margin-right: 10px;"><div class="error">
 	<?php echo $_SESSION['dol_loginmesg']; ?>
-	</div></div></center>
+	</div></div>
 <?php
 }
 ?>
@@ -176,16 +203,49 @@ if ($forgetpasslink || $helpcenterlink)
 <?php if ($main_home)
 {
 ?>
-	<center><div align="center" class="login_main_home" style="max-width: 80%">
+	<div class="center" class="login_main_home" style="max-width: 80%">
 	<?php echo $main_home; ?>
-	</div></center><br>
+	</div><br>
 <?php
 }
 ?>
 
+<!-- authentication mode = <?php echo $main_authentication ?> -->
+<!-- cookie name used for this session = <?php echo $session_name ?> -->
+<!-- urlfrom in this session = <?php echo isset($_SESSION["urlfrom"])?$_SESSION["urlfrom"]:''; ?> -->
+
+<!-- Common footer is not used for login page, this is same than footer but inside login tpl -->
+
+<?php if (! empty($conf->global->MAIN_HTML_FOOTER)) print $conf->global->MAIN_HTML_FOOTER; ?>
+
 <?php
-if (! empty($conf->global->MAIN_GOOGLE_AD_CLIENT) && ! empty($conf->global->MAIN_GOOGLE_AD_SLOT))
+// Google Analytics (need Google module)
+if (! empty($conf->google->enabled) && ! empty($conf->global->MAIN_GOOGLE_AN_ID))
 {
+	if (empty($conf->dol_use_jmobile))
+	{
+		print "\n";
+		print '<script type="text/javascript">'."\n";
+		print '  var _gaq = _gaq || [];'."\n";
+		print '  _gaq.push([\'_setAccount\', \''.$conf->global->MAIN_GOOGLE_AN_ID.'\']);'."\n";
+		print '  _gaq.push([\'_trackPageview\']);'."\n";
+		print ''."\n";
+		print '  (function() {'."\n";
+		print '    var ga = document.createElement(\'script\'); ga.type = \'text/javascript\'; ga.async = true;'."\n";
+		print '    ga.src = (\'https:\' == document.location.protocol ? \'https://ssl\' : \'http://www\') + \'.google-analytics.com/ga.js\';'."\n";
+		print '    var s = document.getElementsByTagName(\'script\')[0]; s.parentNode.insertBefore(ga, s);'."\n";
+		print '  })();'."\n";
+		print '</script>'."\n";
+	}
+}
+?>
+
+<?php
+// Google Adsense
+if (! empty($conf->google->enabled) && ! empty($conf->global->MAIN_GOOGLE_AD_CLIENT) && ! empty($conf->global->MAIN_GOOGLE_AD_SLOT))
+{
+	if (empty($conf->dol_use_jmobile))
+	{
 ?>
 	<div align="center"><br>
 		<script type="text/javascript"><!--
@@ -200,14 +260,9 @@ if (! empty($conf->global->MAIN_GOOGLE_AD_CLIENT) && ! empty($conf->global->MAIN
 		</script>
 	</div>
 <?php
+	}
 }
 ?>
-
-<!-- authentication mode = <?php echo $main_authentication ?> -->
-<!-- cookie name used for this session = <?php echo $session_name ?> -->
-<!-- urlfrom in this session = <?php echo $_SESSION["urlfrom"] ?> -->
-
-<?php if (! empty($conf->global->MAIN_HTML_FOOTER)) print $conf->global->MAIN_HTML_FOOTER; ?>
 
 </center>	<!-- end of center -->
 

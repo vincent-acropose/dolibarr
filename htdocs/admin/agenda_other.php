@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2008-2010	Laurent Destailleur <eldy@users.sourceforge.net>
  * Copyright (C) 2011		Regis Houssin		<regis.houssin@capnetworks.com>
- * Copyright (C) 2011-2012  Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2011-2013  Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ print "<br>\n";
 
 $head=agenda_prepare_head();
 
-dol_fiche_head($head, 'other', $langs->trans("Agenda"));
+dol_fiche_head($head, 'other', $langs->trans("Agenda"), 0, 'action');
 
 print_titre($langs->trans("OtherOptions"));
 
@@ -110,11 +110,11 @@ if ($conf->use_javascript_ajax)
 }
 else
 {
-	if($conf->global->AGENDA_USE_EVENT_TYPE == 0)
+	if (empty($conf->global->AGENDA_USE_EVENT_TYPE))
 	{
 		print '<a href="'.$_SERVER['PHP_SELF'].'?action=set_AGENDA_USE_EVENT_TYPE">'.img_picto($langs->trans("Disabled"),'off').'</a>';
 	}
-	else if($conf->global->BUSINESS_VISIBLE_TO_ALL_BY_DEFAULT == 1)
+	else
 	{
 		print '<a href="'.$_SERVER['PHP_SELF'].'?action=del_AGENDA_USE_EVENT_TYPE">'.img_picto($langs->trans("Enabled"),'on').'</a>';
 	}
@@ -127,9 +127,6 @@ dol_fiche_end();
 
 print "<br>";
 
-dol_htmloutput_mesg($mesg);
-
 llxFooter();
 
 $db->close();
-?>

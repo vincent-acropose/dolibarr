@@ -2,7 +2,8 @@
 /* Copyright (C) 2003      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2011      Dimitri Mouillard <dmouillard@teclib.com>
+ * Copyright (C) 2011      Dimitri Mouillard 	<dmouillard@teclib.com>
+ * Copyright (C) 2013      Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +23,7 @@
 /**
  * 	  \defgroup   holiday 	Module holiday
  *    \brief      Module de gestion des congés
- *    \file       htdocs/includes/modules/modHoliday.class.php
+ *    \file       htdocs/core/modules/modHoliday.class.php
  *    \ingroup    holiday
  *    \brief      Description and activation file for module holiday
  */
@@ -133,42 +134,42 @@ class modHoliday extends DolibarrModules
 		$r=0;
 
 		$this->rights[$r][0] = 20001; 				// Permission id (must not be already used)
-		$this->rights[$r][1] = 'Lire/créer/modifier ses demandes de congés payés';	// Permission label
+		$this->rights[$r][1] = 'Create/modify your own holidays';	// Permission label
 		$this->rights[$r][3] = 1; 					// Permission by default for new user (0/1)
 		$this->rights[$r][4] = 'write';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$this->rights[$r][5] = '';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$r++;
 
 		$this->rights[$r][0] = 20002; 				// Permission id (must not be already used)
-		$this->rights[$r][1] = 'Lire/créer/modifier toutes les demandes de congés payés';	// Permission label
+		$this->rights[$r][1] = 'Create/modify hollidays for everybody';	// Permission label
 		$this->rights[$r][3] = 0; 					// Permission by default for new user (0/1)
-		$this->rights[$r][4] = 'lire_tous';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
+		$this->rights[$r][4] = 'write_all';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$this->rights[$r][5] = '';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$r++;
 
 		$this->rights[$r][0] = 20003; 				// Permission id (must not be already used)
-		$this->rights[$r][1] = 'Supprimer des demandes de congés payés';	// Permission label
+		$this->rights[$r][1] = 'Delete holidays';	// Permission label
 		$this->rights[$r][3] = 0; 					// Permission by default for new user (0/1)
 		$this->rights[$r][4] = 'delete';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$this->rights[$r][5] = '';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$r++;
 
 		$this->rights[$r][0] = 20004; 				// Permission id (must not be already used)
-		$this->rights[$r][1] = 'Définir les congés payés des utilisateurs';	// Permission label
+		$this->rights[$r][1] = 'Setup holidays of users';	// Permission label
 		$this->rights[$r][3] = 0; 					// Permission by default for new user (0/1)
 		$this->rights[$r][4] = 'define_holiday';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$this->rights[$r][5] = '';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$r++;
 
 		$this->rights[$r][0] = 20005; 				// Permission id (must not be already used)
-		$this->rights[$r][1] = 'Voir les logs de modification des congés payés';	// Permission label
+		$this->rights[$r][1] = 'See logs for holidays requests';	// Permission label
 		$this->rights[$r][3] = 0; 					// Permission by default for new user (0/1)
 		$this->rights[$r][4] = 'view_log';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$this->rights[$r][5] = '';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$r++;
 
 		$this->rights[$r][0] = 20006; 				// Permission id (must not be already used)
-		$this->rights[$r][1] = 'Accéder au rapport mensuel des congés payés';	// Permission label
+		$this->rights[$r][1] = 'Read holidays monthly report';	// Permission label
 		$this->rights[$r][3] = 0; 					// Permission by default for new user (0/1)
 		$this->rights[$r][4] = 'month_report';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$this->rights[$r][5] = '';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
@@ -178,6 +179,8 @@ class modHoliday extends DolibarrModules
 		$this->menus = array();			// List of menus to add
 		$r=0;
 
+
+		/* Move to HRM menu
 		// Add here entries to declare new menus
 		$this->menu[$r]=array(	'fk_menu'=>0,			// Put 0 if this is a top menu
 								'type'=>'top',			// This is a Top menu entry
@@ -257,6 +260,7 @@ class modHoliday extends DolibarrModules
 								'target'=>'',
 								'user'=>2);				// 0=Menu for internal users, 1=external users, 2=both
 		$r++;
+*/
 
 		// Exports
 		$r=1;
@@ -286,7 +290,7 @@ class modHoliday extends DolibarrModules
 	{
 		$sql = array();
 
-		$result=$this->load_tables();
+		//$result=$this->_load_tables('');
 
 		return $this->_init($sql);
 	}
@@ -305,19 +309,5 @@ class modHoliday extends DolibarrModules
 		return $this->_remove($sql);
 	}
 
-
-	/**
-	 *	Create tables, keys and data required by module
-	 * 	Files llx_table1.sql, llx_table1.key.sql llx_data.sql with create table, create keys
-	 * 	and create data commands must be stored in directory /mymodule/sql/
-	 *	This function is called by this->init.
-	 *
-	 * 	@return		int		<=0 if KO, >0 if OK
-	 */
-	function load_tables()
-	{
-		return $this->_load_tables('');
-	}
 }
 
-?>

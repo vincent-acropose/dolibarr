@@ -47,25 +47,14 @@ $socid=0;
 if ($user->societe_id > 0) $socid=$user->societe_id;
 $result = restrictedArea($user, 'projet', $id);
 
+$permissionnote=$user->rights->projet->creer;	// Used by the include of actions_setnotes.inc.php
 
 
-/******************************************************************************/
-/*                     Actions                                                */
-/******************************************************************************/
+/*
+ * Actions
+ */
 
-if ($action == 'setnote_public' && $user->rights->projet->creer)
-{
-	$object->fetch($id);
-	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES),'_public');
-	if ($result < 0) dol_print_error($db,$object->error);
-}
-
-if ($action == 'setnote_private' && $user->rights->projet->creer)
-{
-	$object->fetch($id);
-	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_private'), ENT_QUOTES), '_private');
-	if ($result < 0) dol_print_error($db,$object->error);
-}
+include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not includ_once
 
 
 /*
@@ -115,7 +104,7 @@ if ($id > 0 || ! empty($ref))
 		print '<tr><td>'.$langs->trans("Label").'</td><td>'.$object->title.'</td></tr>';
 
 		// Third party
-		print '<tr><td>'.$langs->trans("Company").'</td><td>';
+		print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
 		if ($object->societe->id > 0) print $object->societe->getNomUrl(1);
 		else print'&nbsp;';
 		print '</td></tr>';
@@ -128,6 +117,16 @@ if ($id > 0 || ! empty($ref))
 
 		// Statut
 		print '<tr><td>'.$langs->trans("Status").'</td><td>'.$object->getLibStatut(4).'</td></tr>';
+
+	   	// Date start
+		print '<tr><td>'.$langs->trans("DateStart").'</td><td>';
+		print dol_print_date($object->date_start,'day');
+		print '</td></tr>';
+
+		// Date end
+		print '<tr><td>'.$langs->trans("DateEnd").'</td><td>';
+		print dol_print_date($object->date_end,'day');
+		print '</td></tr>';
 
 		print "</table>";
 
@@ -143,4 +142,3 @@ if ($id > 0 || ! empty($ref))
 llxFooter();
 
 $db->close();
-?>

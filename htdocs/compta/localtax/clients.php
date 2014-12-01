@@ -1,5 +1,6 @@
 <?php
 /* Copyright (C) 2011	Juanjo Menent <jmenent@2byte.es>
+ * Copyright (C) 2014	   Ferran Marcet        <fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -153,6 +154,17 @@ print "<td align=\"right\">".$vatcust."</td>";
 print "</tr>\n";
 
 $coll_list = vat_by_thirdparty($db,0,$date_start,$date_end,$modetax,'sell');
+
+$action = "tvaclient";
+$object = &$coll_list;
+$parameters["mode"] = $modetax;
+$parameters["start"] = $date_start;
+$parameters["end"] = $date_end;
+$parameters["direction"] = 'sell';
+// Initialize technical object to manage hooks of expenses. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('externalbalance'));
+$reshook=$hookmanager->executeHooks('addStatisticLine',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+
 if (is_array($coll_list))
 {
 	$var=true;
@@ -160,7 +172,7 @@ if (is_array($coll_list))
 	$i = 1;
 	foreach($coll_list as $coll)
 	{
-		if(($min == 0 or ($min > 0 && $coll->amount > $min)) && $coll->localtax2>0)
+		if(($min == 0 or ($min > 0 && $coll->amount > $min)) && $coll->localtax2!=0)
 		{
 			$var=!$var;
 			$intra = str_replace($find,$replace,$coll->tva_intra);
@@ -176,15 +188,15 @@ if (is_array($coll_list))
 				}
 			}
 			print "<tr ".$bc[$var].">";
-			print "<td nowrap>".$i."</td>";
+			print '<td class="nowrap">'.$i."</td>";
 			$company_static->id=$coll->socid;
 			$company_static->nom=$coll->nom;
-			print '<td nowrap>'.$company_static->getNomUrl(1).'</td>';
+			print '<td class="nowrap">'.$company_static->getNomUrl(1).'</td>';
 			$find = array(' ','.');
 			$replace = array('','');
-			print "<td nowrap>".$intra."</td>";
-			print "<td nowrap align=\"right\">".price($coll->amount)."</td>";
-			print "<td nowrap align=\"right\">".price($coll->localtax2)."</td>";
+			print '<td class="nowrap">'.$intra."</td>";
+			print "<td class=\"nowrap\" align=\"right\">".price($coll->amount)."</td>";
+			print "<td class=\"nowrap\" align=\"right\">".price($coll->localtax2)."</td>";
             $totalamount = $totalamount + $coll->amount;
 			$total = $total + $coll->localtax2;
 			print "</tr>\n";
@@ -194,8 +206,8 @@ if (is_array($coll_list))
     $x_coll_sum = $total;
 
 	print '<tr class="liste_total"><td align="right" colspan="3">'.$langs->trans("Total").':</td>';
-    print '<td nowrap align="right">'.price($totalamount).'</td>';
-	print '<td nowrap align="right">'.price($total).'</td>';
+    print '<td class="nowrap" align="right">'.price($totalamount).'</td>';
+	print '<td class="nowrap" align="right">'.price($total).'</td>';
 	print '</tr>';
 }
 else
@@ -222,6 +234,8 @@ print "</tr>\n";
 $company_static=new Societe($db);
 
 $coll_list = vat_by_thirdparty($db,0,$date_start,$date_end,$modetax,'buy');
+$parameters["direction"] = 'buy';
+$reshook=$hookmanager->executeHooks('addStatisticLine',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 if (is_array($coll_list))
 {
 	$var=true;
@@ -229,7 +243,7 @@ if (is_array($coll_list))
 	$i = 1;
 	foreach($coll_list as $coll)
 	{
-		if(($min == 0 or ($min > 0 && $coll->amount > $min)) && $coll->localtax2>0)
+		if(($min == 0 or ($min > 0 && $coll->amount > $min)) && $coll->localtax2!=0)
 		{
 			$var=!$var;
 			$intra = str_replace($find,$replace,$coll->tva_intra);
@@ -244,16 +258,16 @@ if (is_array($coll_list))
 					$intra = '';
 				}
 			}
-			print "<tr $bc[$var]>";
-			print "<td nowrap>".$i."</td>";
+			print "<tr ".$bc[$var].">";
+			print '<td class="nowrap">'.$i."</td>";
 			$company_static->id=$coll->socid;
 			$company_static->nom=$coll->nom;
-			print '<td nowrap>'.$company_static->getNomUrl(1).'</td>';
+			print '<td class="nowrap">'.$company_static->getNomUrl(1).'</td>';
 			$find = array(' ','.');
 			$replace = array('','');
-			print "<td nowrap>".$intra."</td>";
-			print "<td nowrap align=\"right\">".price($coll->amount)."</td>";
-			print "<td nowrap align=\"right\">".price($coll->localtax2)."</td>";
+			print '<td class="nowrap">'.$intra."</td>";
+			print "<td class=\"nowrap\" align=\"right\">".price($coll->amount)."</td>";
+			print "<td class=\"nowrap\" align=\"right\">".price($coll->localtax2)."</td>";
             $totalamount = $totalamount + $coll->amount;
 			$total = $total + $coll->localtax2;
 			print "</tr>\n";
@@ -263,8 +277,8 @@ if (is_array($coll_list))
     $x_paye_sum = $total;
 
 	print '<tr class="liste_total"><td align="right" colspan="3">'.$langs->trans("Total").':</td>';
-    print '<td nowrap align="right">'.price($totalamount).'</td>';
-	print '<td nowrap align="right">'.price($total).'</td>';
+    print '<td class="nowrap" align="right">'.price($totalamount).'</td>';
+	print '<td class="nowrap" align="right">'.price($total).'</td>';
 	print '</tr>';
 
 	print '</table>';
@@ -296,4 +310,3 @@ print '</table>';
 $db->close();
 
 llxFooter();
-?>

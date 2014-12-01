@@ -25,19 +25,23 @@ if (GETPOST('dol_optimize_smallscreen')) $conf->dol_optimize_smallscreen=1;
 if (GETPOST('dol_no_mouse_hover')) $conf->dol_no_mouse_hover=1;
 if (GETPOST('dol_use_jmobile')) $conf->dol_use_jmobile=1;
 
+// If we force to use jmobile, then we reenable javascript
+if (! empty($conf->dol_use_jmobile)) $conf->use_javascript_ajax=1;
+
 print top_htmlhead('',$langs->trans('Login').' '.$title);
 ?>
 <!-- BEGIN PHP TEMPLATE PASSWORDFORGOTTEN.TPL.PHP -->
 
-<body class="body">
+<body class="bodylogin">
 
-<!-- Javascript code on logon page only to detect user tz, dst_observed, dst_first, dst_second -->
+<?php if (empty($conf->dol_use_jmobile)) { ?>
 <script type="text/javascript">
 $(document).ready(function () {
 	// Set focus on correct field
 	<?php if ($focus_element) { ?>$('#<?php echo $focus_element; ?>').focus(); <?php } ?>		// Warning to use this only on visible element
 });
 </script>
+<?php } ?>
 
 <center>
 
@@ -45,7 +49,7 @@ $(document).ready(function () {
 <input type="hidden" name="token" value="<?php echo $_SESSION['newtoken']; ?>">
 <input type="hidden" name="action" value="buildnewpassword">
 
-<table class="login_table_title" summary="<?php echo dol_escape_htmltag($title); ?>" cellpadding="0" cellspacing="0" border="0" align="center">
+<table class="login_table_title center" summary="<?php echo dol_escape_htmltag($title); ?>">
 <tr class="vmenu"><td align="center"><?php echo $title; ?></td></tr>
 </table>
 <br>
@@ -56,7 +60,7 @@ $(document).ready(function () {
 
 <div id="login_left">
 
-<table class="left" summary="Login pass" cellpadding="2">
+<table class="left" summary="Login pass">
 
 <!-- Login -->
 <tr>
@@ -117,7 +121,7 @@ if (! empty($hookmanager->resArray['options'])) {
 	if (! empty($conf->dol_no_mouse_hover)) $moreparam.=(strpos($moreparam,'?')===false?'?':'&').'dol_no_mouse_hover='.$conf->dol_no_mouse_hover;
 	if (! empty($conf->dol_use_jmobile))    $moreparam.=(strpos($moreparam,'?')===false?'?':'&').'dol_use_jmobile='.$conf->dol_use_jmobile;
 
-	print '<a style="color: #888888; font-size: 10px" href="'.$dol_url_root.'/index.php'.$moreparam.'">('.$langs->trans('BackToLoginPage').')</a>';
+	print '<a class="alogin" href="'.$dol_url_root.'/index.php'.$moreparam.'">('.$langs->trans('BackToLoginPage').')</a>';
 	?>
 </div>
 
@@ -128,7 +132,7 @@ if (! empty($hookmanager->resArray['options'])) {
 </form>
 
 
-<center><div align="center" style="max-width: 680px; margin-left: 10px; margin-right: 10px;">
+<div class="center" style="max-width: 680px; margin-left: 10px; margin-right: 10px;">
 <?php if ($mode == 'dolibarr' || ! $disabled) { ?>
 	<font style="font-size: 12px;">
 	<?php echo $langs->trans('SendNewPasswordDesc'); ?>
@@ -138,15 +142,15 @@ if (! empty($hookmanager->resArray['options'])) {
 	<?php echo $langs->trans('AuthenticationDoesNotAllowSendNewPassword', $mode); ?>
 	</div>
 <?php } ?>
-</div></center>
+</div>
 
 
 <br>
 
 <?php if ($message) { ?>
-	<center><div align="center" style="max-width: 680px; margin-left: 10px; margin-right: 10px;"><div class="error">
-	<?php echo $message; ?>
-	</div></div></center>
+	<div class="center" style="max-width: 680px; margin-left: 10px; margin-right: 10px;">
+	<?php echo dol_htmloutput_mesg($message,'','',1); ?>
+	</div>
 <?php } ?>
 
 </center>	<!-- end of center -->

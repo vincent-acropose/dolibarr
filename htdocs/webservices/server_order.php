@@ -392,7 +392,7 @@ function getOrder($authentication,$id='',$ref='',$ref_ext='')
 					'date_creation' => $invoice->date_creation?dol_print_date($invoice->date_creation,'dayhourrfc'):'',
 					'date_validation' => $invoice->date_validation?dol_print_date($invoice->date_creation,'dayhourrfc'):'',
 					'date_modification' => $invoice->datem?dol_print_date($invoice->datem,'dayhourrfc'):'',
-								
+
 					'remise' => $order->remise,
 					'remise_percent' => $order->remise_percent,
 					'remise_absolue' => $order->remise_absolue,
@@ -407,7 +407,7 @@ function getOrder($authentication,$id='',$ref='',$ref_ext='')
 					'mode_reglement_id' => $order->mode_reglement_id,
 					'mode_reglement_code' => $order->mode_reglement_code,
 					'mode_reglement' => $order->mode_reglement,
-								
+
 					'date_livraison' => $order->date_livraison,
 					'fk_delivery_address' => $order->fk_delivery_address,
 
@@ -617,7 +617,7 @@ function createOrder($authentication,$order)
 	dol_syslog("Function: createOrder login=".$authentication['login']." socid :".$order['socid']);
 
 	if ($authentication['entity']) $conf->entity=$authentication['entity'];
-	
+
 	// Init and check authentication
 	$objectresp=array();
 	$errorcode='';$errorlabel='';
@@ -637,7 +637,7 @@ function createOrder($authentication,$order)
 		$newobject->date_lim_reglement=dol_stringtotime($order['date_due'],'dayrfc');
 		$newobject->note_private=$order['note_private'];
 		$newobject->note_public=$order['note_public'];
-		$newobject->statut=$order['status'];
+		$newobject->statut=0;	// We start with status draft
 		$newobject->facturee=$order['facturee'];
 		$newobject->fk_project=$order['project_id'];
 		$newobject->cond_reglement_id=$order['cond_reglement_id'];
@@ -669,36 +669,42 @@ function createOrder($authentication,$order)
 
 
 		$db->begin();
-
-        $result=$newobject->create($fuser,0,0);
+		dol_syslog("Webservice server_order:: order creation start", LOG_DEBUG);
+		$result=$newobject->create($fuser);
+		dol_syslog('Webservice server_order:: order creation done with $result='.$result, LOG_DEBUG);
 		if ($result < 0)
 		{
+			dol_syslog("Webservice server_order:: order creation failed", LOG_ERR);
 			$error++;
 
 		}
 
-		if ($newobject->statut == 1)   // We want order validated
+		if ($order['status'] == 1)   // We want order to have status validated
 		{
-			$result=$newobject->validate($fuser);
+			dol_syslog("Webservice server_order:: order validation start", LOG_DEBUG);
+			$result=$newobject->valid($fuser);
 			if ($result < 0)
 			{
+				dol_syslog("Webservice server_order:: order validation failed", LOG_ERR);
 				$error++;
 			}
 		}
-				
-		if (! $error)
+
+		if ($result >= 0)
 		{
+			dol_syslog("Webservice server_order:: order creation & validation succeeded, commit", LOG_DEBUG);
 			$db->commit();
 			$objectresp=array('result'=>array('result_code'=>'OK', 'result_label'=>''),'id'=>$newobject->id,'ref'=>$newobject->ref);
 		}
 		else
 		{
+			dol_syslog("Webservice server_order:: order creation or validation failed, rollback", LOG_ERR);
 			$db->rollback();
 			$error++;
 			$errorcode='KO';
 			$errorlabel=$newobject->error;
 		}
-		
+
 	}
 
 	if ($error)
@@ -796,4 +802,3 @@ function validOrder($authentication,$id='')
 // Return the results.
 $server->service((isset($HTTP_RAW_POST_DATA)?$HTTP_RAW_POST_DATA:''));
 
-?>

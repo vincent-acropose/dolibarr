@@ -2,6 +2,8 @@
 /* Copyright (C) 2003      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2014	   Ferran Marcet        <fmarcet@2byte.es>
+ * Copyright (C) 2014	   Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,7 +65,8 @@ $exportlink='';
 if ($modecompta == 'CREANCES-DETTES')
 {
 	$nom=$langs->trans("AnnualSummaryDueDebtMode");
-	$nom.='<br>('.$langs->trans("SeeReportInInputOutputMode",'<a href="'.$_SERVER["PHP_SELF"].'?year_start='.$year_start.'&modecompta=RECETTES-DEPENSES">','</a>').')';
+	$calcmode=$langs->trans("CalcModeDebt");
+	$calcmode.='<br>('.$langs->trans("SeeReportInInputOutputMode",'<a href="'.$_SERVER["PHP_SELF"].'?year_start='.$year_start.'&modecompta=RECETTES-DEPENSES">','</a>').')';
 	$period="$year_start - $year_end";
 	$periodlink=($year_start?"<a href='".$_SERVER["PHP_SELF"]."?year_start=".($year_start-1)."&modecompta=".$modecompta."'>".img_previous()."</a> <a href='".$_SERVER["PHP_SELF"]."?year_start=".($year_start+1)."&modecompta=".$modecompta."'>".img_next()."</a>":"");
 	$description=$langs->trans("RulesAmountWithTaxIncluded");
@@ -75,7 +78,8 @@ if ($modecompta == 'CREANCES-DETTES')
 }
 else {
 	$nom=$langs->trans("AnnualSummaryInputOutputMode");
-	$nom.='<br>('.$langs->trans("SeeReportInDueDebtMode",'<a href="'.$_SERVER["PHP_SELF"].'?year_start='.$year_start.'&modecompta=CREANCES-DETTES">','</a>').')';
+	$calcmode=$langs->trans("CalcModeEngagement");
+	$calcmode.='<br>('.$langs->trans("SeeReportInDueDebtMode",'<a href="'.$_SERVER["PHP_SELF"].'?year_start='.$year_start.'&modecompta=CREANCES-DETTES">','</a>').')';
 	$period="$year_start - $year_end";
 	$periodlink=($year_start?"<a href='".$_SERVER["PHP_SELF"]."?year_start=".($year_start-1)."&modecompta=".$modecompta."'>".img_previous()."</a> <a href='".$_SERVER["PHP_SELF"]."?year_start=".($year_start+1)."&modecompta=".$modecompta."'>".img_next()."</a>":"");
 	$description=$langs->trans("RulesAmountWithTaxIncluded");
@@ -83,7 +87,7 @@ else {
 	$builddate=time();
 	//$exportlink=$langs->trans("NotYetAvailable");
 }
-report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportlink,array('modecompta'=>$modecompta));
+report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportlink,array('modecompta'=>$modecompta),$calcmode);
 
 
 /*
@@ -459,8 +463,50 @@ if ($result) {
 } else {
 	dol_print_error($db);
 }
+$action = "balance";
+$object = array(&$encaiss, &$encaiss_ttc, &$decaiss, &$decaiss_ttc);
+$parameters["mode"] = $modecompta;
+// Initialize technical object to manage hooks of expenses. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('externalbalance'));
+$reshook=$hookmanager->executeHooks('addStatisticLine',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 
+/*
+ * Salaries
+ */
+$subtotal_ht = 0;
+$subtotal_ttc = 0;
+$sql = "SELECT p.label as nom, date_format(p.datep,'%Y-%m') as dm, sum(p.amount) as amount";
+$sql.= " FROM ".MAIN_DB_PREFIX."payment_salary as p";
+$sql.= " WHERE p.entity = ".$conf->entity;
+$sql.= " GROUP BY p.label, dm";
 
+dol_syslog("get social salaries payments  sql=".$sql);
+$result=$db->query($sql);
+if ($result)
+{
+	$num = $db->num_rows($result);
+	$var=false;
+	$i = 0;
+	if ($num)
+	{
+		while ($i < $num)
+		{
+			$obj = $db->fetch_object($result);
+
+			if (! isset($decaiss[$obj->dm])) $decaiss[$obj->dm]=0;
+			$decaiss[$obj->dm] += $obj->amount;
+
+			if (! isset($decaiss_ttc[$obj->dm])) $decaiss_ttc[$obj->dm]=0;
+			$decaiss_ttc[$obj->dm] += $obj->amount;
+
+			$i++;
+		}
+	}
+}
+else
+{
+	dol_print_error($db);
+}
 
 /*
  * Show result array
@@ -567,4 +613,3 @@ print "</table>";
 
 llxFooter();
 $db->close();
-?>

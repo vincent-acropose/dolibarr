@@ -50,7 +50,7 @@ if (!$user->admin) accessforbidden();
  * Actions
  */
 
-require DOL_DOCUMENT_ROOT.'/core/admin_extrafields.inc.php';
+require DOL_DOCUMENT_ROOT.'/core/actions_extrafields.inc.php';
 
 
 
@@ -121,7 +121,7 @@ if ($action != 'create' && $action != 'edit')
 
 /* ************************************************************************** */
 /*                                                                            */
-/* Creation d'un champ optionnel											  */
+/* Creation of an optional field											  */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,7 +135,7 @@ if ($action == 'create')
 
 /* ************************************************************************** */
 /*                                                                            */
-/* Edition d'un champ optionnel                                               */
+/* Edition of an optional field                                               */
 /*                                                                            */
 /* ************************************************************************** */
 if ($action == 'edit' && ! empty($attrname))
@@ -149,4 +149,3 @@ if ($action == 'edit' && ! empty($attrname))
 llxFooter();
 
 $db->close();
-?>

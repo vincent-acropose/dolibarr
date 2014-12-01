@@ -56,7 +56,7 @@ if (!$user->admin) accessforbidden();
  * Actions
  */
 
-require DOL_DOCUMENT_ROOT.'/core/admin_extrafields.inc.php';
+require DOL_DOCUMENT_ROOT.'/core/actions_extrafields.inc.php';
 
 
 
@@ -74,7 +74,7 @@ print "<br>\n";
 
 $head=agenda_prepare_head();
 
-dol_fiche_head($head, 'attributes', $langs->trans("Agenda"));
+dol_fiche_head($head, 'attributes', $langs->trans("Agenda"), 0, 'action');
 
 print $langs->trans("DefineHereComplementaryAttributes", $langs->transnoentitiesnoconv("Agenda")).'<br>'."\n";
 print '<br>';
@@ -154,4 +154,3 @@ if ($action == 'edit' && ! empty($attrname))
 llxFooter();
 
 $db->close();
-?>

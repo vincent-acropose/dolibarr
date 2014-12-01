@@ -1,20 +1,11 @@
-/*
- * Language code: sv_SV
- * Automatic generated via autotranslator.php tool
- * Generation date 2010-08-27 08:47:44
- */
-
-
-// START - Lines generated via autotranslator.php tool (2010-08-27 08:47:44).
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - categories
 Category=Kategori
 Categories=Kategorier
 Rubrique=Kategori
 Rubriques=Kategorier
 categories=kategorier
 TheCategorie=I kategorin
-NoCategoryYet=Ingen kategori av detta skapade typ
+NoCategoryYet=Ingen kategori av denna typ skapades
 In=I
 AddIn=Lägg till i
 modify=modifiera
@@ -25,6 +16,7 @@ SuppliersCategoriesArea=Leverantörer kategorier område
 CustomersCategoriesArea=Kunder kategorier område
 ThirdPartyCategoriesArea=Tredje part kategorier område
 MembersCategoriesArea=Medlemmar kategorier område
+ContactsCategoriesArea=Område för kontaktkategorier
 MainCats=Huvudkategorier
 SubCats=Underkategorier
 CatStatistics=Statistik
@@ -58,12 +50,15 @@ SupplierIsInCategories=Tredje part är att följande leverantörer kategorier
 CompanyIsInCustomersCategories=Denna tredje part äger att följande kunder / utsikter kategorier
 CompanyIsInSuppliersCategories=Denna tredje part äger att följande leverantörer kategorier
 MemberIsInCategories=Denna medlem äger till följande medlemmar kategorier
+ContactIsInCategories=Denna kontakt ingår i följande kontaktkategorier
 ProductHasNoCategory=Denna produkt / tjänst är inte på något kategorier
 SupplierHasNoCategory=Denna leverantör är inte på något kategorier
 CompanyHasNoCategory=Detta företag är inte på något kategorier
 MemberHasNoCategory=Denna medlem är inte på något kategorier
+ContactHasNoCategory=Denna kontakt tillhör inte någon kategori
 ClassifyInCategory=Klassificera i kategorin
 NoneCategory=Ingen
+NotCategorized=Utan kategori
 CategoryExistsAtSameLevel=Denna kategori finns redan med denna ref
 ReturnInProduct=Tillbaka till produkt / tjänst kort
 ReturnInSupplier=Tillbaka till leverantör kort
@@ -71,7 +66,7 @@ ReturnInCompany=Tillbaka till kund / prospektering kort
 ContentsVisibleByAll=Innehållet kommer att vara synlig för alla
 ContentsVisibleByAllShort=Innehållsförteckning synlig för alla
 ContentsNotVisibleByAllShort=Innehåll inte synlig för alla
-CategoriesTree=Kategorier träd
+CategoriesTree=Kategoriträd
 DeleteCategory=Ta bort kategori
 ConfirmDeleteCategory=Är du säker på att du vill ta bort denna kategori?
 RemoveFromCategory=Ta bort kopplingen till Categorie
@@ -86,10 +81,12 @@ CustomersCategoriesShort=Kunder kategorier
 CustomersProspectsCategoriesShort=Custo. / kommande utvecklingen. kategorier
 ProductsCategoriesShort=Produkter kategorier
 MembersCategoriesShort=Medlemmar kategorier
+ContactCategoriesShort=Kontaktkategorier
 ThisCategoryHasNoProduct=Denna kategori innehåller inte någon produkt.
 ThisCategoryHasNoSupplier=Denna kategori innehåller inte någon leverantör.
 ThisCategoryHasNoCustomer=Denna kategori innehåller inte någon kund.
 ThisCategoryHasNoMember=Denna kategori innehåller inte någon medlem.
+ThisCategoryHasNoContact=Denna kategori innehåller inte någon kontakt.
 AssignedToCustomer=Avsatta till en kund
 AssignedToTheCustomer=Avsatta till kunden
 InternalCategory=Intern kategori
@@ -99,4 +96,18 @@ CatSupList=Lista över leverantör kategorier
 CatCusList=Förteckning över kund / utsikterna kategorier
 CatProdList=Förteckning över produkter kategorier
 CatMemberList=Förteckning över medlemmar kategorier
-// STOP - Lines generated via autotranslator.php tool (2010-08-27 08:48:54).
+CatContactList=Lista över kontaktkategorier och kontakt
+CatSupLinks=Länkar mellan leverantörer och kategorier
+CatCusLinks=Länkar mellan kunder / möjliga kunder och kategorier
+CatProdLinks=Länkar mellan produkter / tjänster och kategorier
+CatMemberLinks=Länkar mellan medlemmar och kategorier
+CatProdLinks=Länkar mellan produkter / tjänster och kategorier
+CatCusLinks=Länkar mellan kunder / möjliga kunder och kategorier
+CatSupLinks=Länkar mellan leverantörer och kategorier
+DeleteFromCat=Ta bort från kategori
+DeletePicture=Ta bort bild
+ConfirmDeletePicture=Bekräfta ta bort bild?
+ExtraFieldsCategories=Extra attibut
+CategoriesSetup=Kategorier, inställningar
+CategorieRecursiv=Länka automatiskt med förälderkategori
+CategorieRecursivHelp=Om aktiverad kommer produkten även länkas till förälderkategori när den läggs i en underkategori

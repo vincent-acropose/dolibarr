@@ -60,17 +60,15 @@ print_fiche_titre($langs->trans("OrdersArea"));
 print '<div class="fichecenter"><div class="fichethirdleft">';
 
 
-/*
- * Search form
- */
+// Search customer orders
 $var=false;
 print '<table class="noborder nohover" width="100%">';
-print '<form method="post" action="liste.php">';
+print '<form method="post" action="'.DOL_URL_ROOT.'/commande/liste.php">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("SearchOrder").'</td></tr>';
 print '<tr '.$bc[$var].'><td>';
 print $langs->trans("Ref").':</td><td><input type="text" class="flat" name="sref" size=18></td><td rowspan="2"><input type="submit" value="'.$langs->trans("Search").'" class="button"></td></tr>';
-print '<tr '.$bc[$var].'><td nowrap>'.$langs->trans("Other").':</td><td><input type="text" class="flat" name="sall" size="18"></td>';
+print '<tr '.$bc[$var].'><td class="nowrap">'.$langs->trans("Other").':</td><td><input type="text" class="flat" name="sall" size="18"></td>';
 print '</tr>';
 print "</form></table><br>\n";
 
@@ -194,7 +192,7 @@ if (! empty($conf->commande->enabled))
 			{
 				$var=!$var;
 				$obj = $db->fetch_object($resql);
-				print "<tr $bc[$var]>";
+				print "<tr ".$bc[$var].">";
 				print '<td class="nowrap">';
 				print "<a href=\"fiche.php?id=".$obj->rowid."\">".img_object($langs->trans("ShowOrder"),"order").' '.$obj->ref."</a></td>";
 				print '<td><a href="'.DOL_URL_ROOT.'/comm/fiche.php?socid='.$obj->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.dol_trunc($obj->nom,24).'</a></td></tr>';
@@ -246,7 +244,7 @@ if ($resql)
 			$var=!$var;
 			$obj = $db->fetch_object($resql);
 
-			print "<tr $bc[$var]>";
+			print "<tr ".$bc[$var].">";
 			print '<td width="20%" class="nowrap">';
 
 			$commandestatic->id=$obj->rowid;
@@ -315,7 +313,7 @@ if (! empty($conf->commande->enabled))
 			{
 				$var=!$var;
 				$obj = $db->fetch_object($resql);
-				print "<tr $bc[$var]>";
+				print "<tr ".$bc[$var].">";
 				print '<td class="nowrap" width="20%">';
 
 				$commandestatic->id=$obj->rowid;
@@ -386,7 +384,7 @@ if (! empty($conf->commande->enabled))
 			{
 				$var=!$var;
 				$obj = $db->fetch_object($resql);
-				print "<tr $bc[$var]>";
+				print "<tr ".$bc[$var].">";
 				print '<td width="20%" class="nowrap">';
 
 				$commandestatic->id=$obj->rowid;
@@ -431,4 +429,3 @@ print '</div></div></div>';
 llxFooter();
 
 $db->close();
-?>

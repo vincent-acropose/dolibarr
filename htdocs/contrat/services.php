@@ -107,8 +107,8 @@ if ($search_service)  $sql.= " AND (p.ref LIKE '%".$db->escape($search_service).
 if ($socid > 0)       $sql.= " AND s.rowid = ".$socid;
 $filter_date1=dol_mktime(0,0,0,$op1month,$op1day,$op1year);
 $filter_date2=dol_mktime(0,0,0,$op2month,$op2day,$op2year);
-if (! empty($filter_op1) && $filter_op1 != -1 && $filter_date1 != '') $sql.= " AND date_ouverture_prevue ".$filter_op1." ".$db->idate($filter_date1);
-if (! empty($filter_op2) && $filter_op2 != -1 && $filter_date2 != '') $sql.= " AND date_fin_validite ".$filter_op2." ".$db->idate($filter_date2);
+if (! empty($filter_op1) && $filter_op1 != -1 && $filter_date1 != '') $sql.= " AND date_ouverture_prevue ".$filter_op1." '".$db->idate($filter_date1)."'";
+if (! empty($filter_op2) && $filter_op2 != -1 && $filter_date2 != '') $sql.= " AND date_fin_validite ".$filter_op2." '".$db->idate($filter_date2)."'";
 $sql .= $db->order($sortfield,$sortorder);
 $sql .= $db->plimit($limit + 1, $offset);
 
@@ -184,7 +184,7 @@ if ($resql)
 	$filter_date2=dol_mktime(0,0,0,$op2month,$op2day,$op2year);
 	print $form->select_date($filter_date2,'op2',0,0,1);
 	print '</td>';
-	print '<td class="liste_titre" align="right"><input class="liste_titre" type="image" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+	print '<td class="liste_titre" align="right"><input class="liste_titre" type="image" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 	print "</td>";
 	print "</tr>\n";
 	print '</form>';
@@ -274,4 +274,3 @@ else
 $db->close();
 
 llxFooter();
-?>

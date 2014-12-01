@@ -204,8 +204,8 @@ if (empty($action) || $action == 'delete_section')
 	// Confirmation de la suppression d'une ligne categorie
 	if ($action == 'delete_section')
 	{
-		$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?section='.$section, $langs->trans('DeleteSection'), $langs->trans('ConfirmDeleteSection',$ecmdir->label), 'confirm_deletesection');
-		if ($ret == 'html') print '<br>';
+		print $form->formconfirm($_SERVER["PHP_SELF"].'?section='.$section, $langs->trans('DeleteSection'), $langs->trans('ConfirmDeleteSection',$ecmdir->label), 'confirm_deletesection');
+		
 	}
 
 	// Construit fiche  rubrique
@@ -228,4 +228,3 @@ if (empty($action) || $action == 'delete_section')
 // End of page
 llxFooter();
 $db->close();
-?>

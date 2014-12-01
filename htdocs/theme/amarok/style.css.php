@@ -1,9 +1,9 @@
 <?php
-/* Copyright (C) 2012	Nicolas Péré			<nicolas@amarok2.net>
- * Copyright (C) 2012	Xavier Peyronnet		<xavier.peyronnet@free.fr>
- * Copyright (C) 2012	Regis Houssin			<regis.houssin@capnetworks.com>
- * Copyright (C) 2012	Juanjo Menent			<jmenent@2byte.es>
- * Copyright (C) 2013	Laurent Destailleur		<eldy@users.sourceforge.net>
+/* Copyright (C) 2012       Nicolas Péré			<nicolas@amarok2.net>
+ * Copyright (C) 2012       Xavier Peyronnet		<xavier.peyronnet@free.fr>
+ * Copyright (C) 2012       Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2012       Juanjo Menent			<jmenent@2byte.es>
+ * Copyright (C) 2013-2014	Laurent Destailleur		<eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,10 +44,10 @@ require_once '../../main.inc.php';
 // Load user to have $user->conf loaded (not done into main because of NOLOGIN constant defined)
 if (empty($user->id) && ! empty($_SESSION['dol_login'])) $user->fetch('',$_SESSION['dol_login']);
 
+
 // Define css type
 header('Content-type: text/css');
-// Important: Following code is to avoid page request by browser and PHP CPU at
-// each Dolibarr page access.
+// Important: Following code is to avoid page request by browser and PHP CPU at each Dolibarr page access.
 if (empty($dolibarr_nocache)) header('Cache-Control: max-age=3600, public, must-revalidate');
 else header('Cache-Control: no-cache');
 
@@ -59,18 +59,14 @@ if (GETPOST('theme')) $conf->theme=GETPOST('theme');  // If theme was forced on 
 $langs->load("main",0,1);
 $right=($langs->trans("DIRECTION")=='rtl'?'left':'right');
 $left=($langs->trans("DIRECTION")=='rtl'?'right':'left');
-$fontsize=empty($conf->dol_optimize_smallscreen)?'12':'12';
-$fontsizesmaller=empty($conf->dol_optimize_smallscreen)?'11':'11';
 
 $path='';    		// This value may be used in future for external module to overwrite theme
 $theme='amarok';	// Value of theme
 if (! empty($conf->global->MAIN_OVERWRITE_THEME_RES)) { $path='/'.$conf->global->MAIN_OVERWRITE_THEME_RES; $theme=$conf->global->MAIN_OVERWRITE_THEME_RES; }
 
-// Define image path files
+// Define image path files and other constants
 $fontlist='helvetica,arial,tahoma,verdana';    //$fontlist='Verdana,Helvetica,Arial,sans-serif';
-//'/theme/auguria/img/menus/trtitle.png';
 $img_liste_titre=dol_buildpath($path.'/theme/'.$theme.'/img/menus/trtitle.png',1);
-$img_head=dol_buildpath($path.'/theme/'.$theme.'/img/headbg2.jpg',1);
 $img_button=dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1);
 $dol_hide_topmenu=$conf->dol_hide_topmenu;
 $dol_hide_leftmenu=$conf->dol_hide_leftmenu;
@@ -113,8 +109,8 @@ $colorbacklinepair2='255,255,255';    // line pair
 $colorbacklinepairhover=(230+round(($isred+$isgreen+$isblue)/9)).','.(230+round(($isred+$isgreen+$isblue)/9)).','.(230+round(($isred+$isgreen+$isblue)/9));
 $colorbackbody='#f5f5f5';
 $colortext='40,40,40';
-$fontsize=empty($conf->dol_optimize_smallscreen)?'12':'14';
-$fontsizesmaller=empty($conf->dol_optimize_smallscreen)?'11':'14';
+$fontsize='12';
+$fontsizesmaller='11';
 
 $colorback1          =empty($user->conf->THEME_ELDY_ENABLE_PERSONALIZED)?(empty($conf->global->THEME_ELDY_TOPMENU_BACK1)?$colorback1:$conf->global->THEME_ELDY_TOPMENU_BACK1)        :(empty($user->conf->THEME_ELDY_TOPMENU_BACK1)?$colorback1:$user->conf->THEME_ELDY_TOPMENU_BACK1);
 $colorback2          =empty($user->conf->THEME_ELDY_ENABLE_PERSONALIZED)?(empty($conf->global->THEME_ELDY_TOPMENU_BACK2)?$colorback2:$conf->global->THEME_ELDY_TOPMENU_BACK2)        :(empty($user->conf->THEME_ELDY_TOPMENU_BACK2)?$colorback2:$user->conf->THEME_ELDY_TOPMENU_BACK2);
@@ -144,6 +140,7 @@ if ((! empty($user->conf->THEME_ELDY_ENABLE_PERSONALIZED) && empty($user->conf->
 	$colorbacklinepairhover='';
 }
 
+
 // Set text color to black or white
 $tmppart=explode(',',$colorback1);
 $tmpval=(! empty($tmppart[1]) ? $tmppart[1] : '');
@@ -152,6 +149,8 @@ $tmpval+=(! empty($tmppart[3]) ? $tmppart[3] : '');
 //print $tmpval;
 if ($tmpval < 340) $colortextmain='FFFFFF';
 else $colortextmain='101010';
+if ($tmpval <= 360) { $colortexttitle='FFF'; $colorshadowtitle='000'; }
+else { $colortexttitle='444'; $colorshadowtitle='FFF'; }
 
 $usecss3=true;
 if ($conf->browser->name == 'ie' && round($conf->browser->version,2) < 10) $usecss3=false;
@@ -196,9 +195,7 @@ body {
 	background-color: <?php print $colorbackbody; ?>;
 <?php } ?>
 	color:#232323;
-	<?php if (empty($dol_use_jmobile) || 1==1) { ?>
 	font-size:<?php print $fontsize ?>px;
-	<?php } ?>
    	font-family:<?php print $fontlist ?>;
     <?php print 'direction:'.$langs->trans("DIRECTION").";\n"; ?>
 }
@@ -217,7 +214,7 @@ a:hover, a:active {
 <?php if (empty($dol_use_jmobile)) { ?>
 
 input, input.flat, textarea, textarea.flat, form.flat select, select.flat {
-	padding: 1px;
+	padding: 2px;
 }
 input, textarea {
     font-size:<?php print $fontsize ?>px;
@@ -244,7 +241,6 @@ input.flat {
     border:solid 1px rgba(0,0,0,.3);
     border-top:solid 1px rgba(0,0,0,.4);
     border-bottom:solid 1px rgba(0,0,0,.2);
-    box-shadow:1px 1px 2px rgba(0,0,0,.2) inset;
 }
 
 input:disabled {background:#b6b6b6;}
@@ -252,6 +248,7 @@ input:disabled {background:#b6b6b6;}
 input[type=checkbox] { background-color: transparent; border: none; box-shadow: none; }
 input[type=radio]    { background-color: transparent; border: none; box-shadow: none; }
 input[type=image]    { background-color: transparent; border: none; box-shadow: none; }
+input[type=text]     { min-width: 20px; }
 input:-webkit-autofill {
 	background-color: <?php echo empty($dol_use_jmobile)?'#FBFFEA':'#FFFFFF' ?> !important;
 	background-image:none !important;
@@ -333,7 +330,12 @@ th .button {
 .nowrap {
 	white-space: <?php print ($dol_optimize_smallscreen?'normal':'nowrap'); ?>;
 }
-
+.nobold {
+	font-weight: normal !important;
+}
+.nounderline {
+    text-decoration: none;
+}
 
 .blockvmenubookmarks .menu_contenu {
 	background-color: transparent;
@@ -352,8 +354,12 @@ center .error { padding:8px !important; padding-left:26px !important; padding-ri
 <?php if (! empty($dol_optimize_smallscreen)) { ?>
 .hideonsmartphone { display: none; }
 .noenlargeonsmartphone { width : 50px !important; display: inline !important; }
+.maxwidthonsmartphone { max-width: 100px; }
 <?php } ?>
 .linkobject { cursor:pointer; }
+<?php if (GETPOST("optioncss") == 'print') { ?>
+.hideonprint { display: none !important; }
+<?php } ?>
 
 
 /* ============================================================================== */
@@ -368,6 +374,7 @@ td.showDragHandle {
 }
 .tdlineupdown {
 	white-space: nowrap;
+	min-width: 10px;
 }
 
 /* ============================================================================== */
@@ -462,6 +469,7 @@ form#login img  {width:auto; height:auto; opacity:.7;}
 form#login img#img_logo {
 	width:190px;
 	max-width:190px;
+	max-height:100px;
 	height:auto;
 	border-radius:6px;
 	padding:6px;
@@ -547,13 +555,14 @@ table.login_table .vmenu {
 
 div.login_block {
 	position:absolute;
-	top:5px;
-	right:10px;
+	top:0px;
+	right:8px;
 	z-index:100;
 	<?php if (GETPOST("optioncss") == 'print') {?>
 	display:none;
 	<?php } ?>
 }
+div.login_block_user, div.login_block_other { clear: both; }
 
 div.login_block a {color:rgba(255,255,255,.6);}
 div.login_block a:hover {color:#ffffff}
@@ -564,14 +573,25 @@ div.login_block table {
 
 div.login {
 	white-space:nowrap;
-	padding: <?php echo ($conf->dol_optimize_smallscreen?'0':'8')?>px 0px 0px 0px;
-	margin:0px 0px 0px 8px;
 	font-weight:bold;
+	float: right;
+}
+.login_block_user {
+	float: right;
+}
+.login_block_elem {
+	float: right;
+	vertical-align: top;
+	padding: 0px 0px 0px 8px !important;
+	height: 16px;
+}
+
+#securitycode {
+	min-width: 60px;
 }
 
 img.login, img.printer, img.entity {
-	padding: <?php echo ($conf->dol_optimize_smallscreen?'0':'8')?>px 0px 0px 0px;
-	margin:0px 0px 0px 8px;
+	margin:2px 0px 0px 0px;
 	text-decoration:none;
 	color: white;
 	font-weight:bold;
@@ -967,11 +987,11 @@ a.tab {
 	-webkit-border-top-right-radius:6px;
 }
 
-a.tab#active {
+.tabactive {
 	color:#232323;
 	font-weight:bold;
-	background-color:#ffffff;
-	<?php echo $dol_use_jmobile?'':'border-bottom:solid 1px #ffffff;'; ?>
+	background-color:#ffffff !important;
+	<?php echo $dol_use_jmobile?'':'border-bottom:solid 1px #ffffff !important;'; ?>
 }
 
 a.tab:hover {color:#333333;}
@@ -982,13 +1002,14 @@ a.tab:hover {color:#333333;}
 /* ============================================================================== */
 
 #id-container {
-  display: table;
-  table-layout: fixed;
+	margin-bottom: 6px;
+	display: table;
+	table-layout: fixed;
 }
 #id-right, #id-left {
-  display: table-cell;
-  float: none;
-  vertical-align: top;
+	display: table-cell;
+	float: none;
+	vertical-align: top;
 }
 #id-<?php echo $right; ?> {
 	width: 100%;
@@ -1108,6 +1129,13 @@ table a, div.tagtable a {
 	vertical-align:middle;
 }
 
+.paddingrightonly {
+	border-collapse: collapse;
+	border: 0px;
+	margin-left: 0px;
+	padding-<?php print $left; ?>: 0px !important;
+	padding-<?php print $right; ?>: 4px !important;
+}
 .nocellnopadd {
 	list-style-type:none;
 	margin:0px;
@@ -1138,23 +1166,27 @@ table.notopnoleftnoright {
 	margin:0px;
 }
 
-table.border {
-	border:1px solid #bbbbbb;
+table.border, table.dataTable, .table-border, .table-border-col, .table-key-border-col, .table-val-border-col, div.border {
+	border:1px solid #dddddd;
 	border-collapse:collapse;
+	padding:1px 0px;
+	padding-left:2px;
 }
 
-table.border td {
+table.border td, div.border div div.tagtd {
 	padding:1px 0px;
 	border:1px solid #dddddd;
 	border-collapse:collapse;
 	padding-left:2px;
 }
 
-/*
-td.border {
-	border:1px solid #000000;
+.table-key-border-col {
+	width: 25%;
+	vertical-align:top;
 }
-*/
+.table-val-border-col {
+	width:auto;
+}
 
 /* Main boxes */
 
@@ -1224,11 +1256,9 @@ table.liste {
 
 table.liste td {padding:1px 2px 1px 0px;}
 
-.tagtable { display: table; }
-.tagtable form { display: table-row; }
-.tagtable form div { display: table-cell; }
-.tagtr { display: table-row; }
-.tagtd { display: table-cell; }
+.tagtable, .table-border { display: table; }
+.tagtr, .table-border-row  { display: table-row; }
+.tagtd, .table-border-col, .table-key-border-col, .table-val-border-col { display: table-cell; }
 
 tr.liste_titre, tr.liste_titre_sel, form.liste_titre, form.liste_titre_sel
 {
@@ -1259,7 +1289,6 @@ tr.box_titre td.boxclose {
 tr.liste_titre td, tr.liste_titre th, form.liste_titre div {
 	padding:2px;
 	padding-left:2px !important;
-	white-space:nowrap;
 	text-shadow:1px 1px 1px #ffffff;
 }
 
@@ -1298,6 +1327,19 @@ tr.impair table.nobordernopadding td, tr.pair table.nobordernopadding td { paddi
  *  Boxes
  */
 
+.boxstats {
+    <?php print "float: ".$left.";\n"; ?>
+    margin: 4px;
+    padding: 4px;
+	/*-moz-box-shadow: 4px 4px 4px #DDD;
+    -webkit-box-shadow: 4px 4px 4px #DDD;
+    box-shadow: 4px 4px 4px #DDD;
+    margin-bottom: 8px !important;*/
+    border: 1px solid #AAA;
+    text-align: center;
+    border-radius: 5px;
+}
+
 .boxtable {
 	-moz-box-shadow: 2px 2px 2px #cccccc;
 	-webkit-box-shadow: 2px 2px 2px #cccccc;
@@ -1321,9 +1363,16 @@ tr.box_pair {
 	font-family:<?php print $fontlist ?>;
 }
 
-tr.fiche {
-	font-family:<?php print $fontlist ?>;
+.formboxfilter {
+	vertical-align: middle;
+	margin-bottom: 6px;
 }
+.formboxfilter input[type=image]
+{
+	top: 5px;
+	position: relative;
+}
+
 
 /*
  *   Ok, Warning, Error
@@ -1390,6 +1439,9 @@ div.error {
 	color:#333333;
 }
 
+.dolgraphtitle { margin-top: 6px; margin-bottom: 4px; }
+.dolgraphtitlecssboxes { margin: 0px; }
+
 #pictotitle {
 	padding-left:5px;
 	padding-right:1px;
@@ -1415,30 +1467,6 @@ div.titre {
 #divsubscribe { width: 700px; }
 #tablesubscribe { width: 100%; }
 
-div.table-border {
-	display:table;
-    width: 100%;
-    border-collapse: collapse;
-    border: 1px solid #DDD;
-}
-div.table-border-row {
-	display:table-row;
-}
-div.table-key-border-col {
-	display:table-cell;
-	width: 25%;
-	vertical-align:top;
-	padding: 1px 2px 1px 1px;
-	border: 1px solid #DDD;
-	border-collapse: collapse;
-}
-div.table-val-border-col {
-	display:table-cell;
-	width:auto;
-	padding: 1px 2px 1px 1px;
-	border: 1px solid #DDD;
-	border-collapse: collapse;
-}
 
 
 /* ============================================================================== */
@@ -1494,6 +1522,8 @@ table.valid {
 /* ============================================================================== */
 /* Calendar                                                                       */
 /* ============================================================================== */
+
+img.datecallink { padding-left: 2px !important; padding-right: 2px !important; }
 
 .ui-datepicker-title {
     margin:0 !important;
@@ -1921,7 +1951,7 @@ a.none, a.none:active, a.none:visited, a.none:hover {
 .ui-button-icon-only .ui-button-text { height:8px; }
 .ui-button-icon-only .ui-button-text, .ui-button-icons-only .ui-button-text { padding:2px 0px 6px 0px; }
 .ui-button-text { line-height:1em !important; }
-.ui-autocomplete-input { margin:0; padding:1px; }
+.ui-autocomplete-input { margin:0; }
 
 
 /* ============================================================================== */
@@ -2069,6 +2099,35 @@ div.jnotify-background {
 
 
 /* ============================================================================== */
+/*  Maps                                                                          */
+/* ============================================================================== */
+
+.divmap, #google-visualization-geomap-embed-0, #google-visualization-geomap-embed-1, google-visualization-geomap-embed-2 {
+    -moz-box-shadow: 0px 0px 10px #AAA;
+    -webkit-box-shadow: 0px 0px 10px #AAA;
+    box-shadow: 0px 0px 10px #AAA;
+}
+
+
+/* ============================================================================== */
+/*  Datatable                                                                     */
+/* ============================================================================== */
+
+.sorting_asc  { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_asc.png',1); ?>') no-repeat center right; }
+.sorting_desc { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_desc.png',1); ?>') no-repeat center right; }
+.sorting_asc_disabled  { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_asc_disabled',1); ?>') no-repeat center right; }
+.sorting_desc_disabled { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_desc_disabled',1); ?>') no-repeat center right; }
+.paginate_disabled_previous:hover, .paginate_enabled_previous:hover, .paginate_disabled_next:hover, .paginate_enabled_next:hover
+{
+	font-weight: normal;
+}
+.paginate_enabled_previous:hover, .paginate_enabled_next:hover
+{
+	text-decoration: underline !important;
+}
+
+
+/* ============================================================================== */
 /*  JMobile                                                                       */
 /* ============================================================================== */
 
@@ -2083,9 +2142,7 @@ li.ui-li-divider .ui-link {
 	padding-left: 10px;
 	padding-right: 10px;
 	white-space: normal;
-	<?php if (empty($dol_use_jmobile) || 1==1) { ?>
 	font-size: <?php print $fontsize ?>px;
-	<?php } ?>
 }
 .ui-btn-icon-right .ui-btn-inner {
 	padding-right: 34px;
@@ -2181,7 +2238,41 @@ ul.ulmenu {
 .ui-mobile fieldset {
 	border-bottom: none !important;
 }
+.ui-body-c, .ui-btn-up-c, .ui-btn-hover-c {
+	border: none !important;
+}
+
+/* Style for first level menu with jmobile */
+.ui-bar-b, .lilevel0  {
+    background: rgb(<?php echo $colorbacktitle1; ?>);
+    background-repeat: repeat-x;
+	<?php if ($usecss3) { ?>
+	background-image: -o-linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+	background-image: -moz-linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+	background-image: -webkit-linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+	background-image: -ms-linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+	background-image: linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+    font-weight: bold;
+	<?php } ?>
+    color: #<?php echo $colortexttitle; ?> !important;
+}
+.alilevel0 {
+    color: #<?php echo $colortexttitle; ?> !important;
+	text-shadow: 1px 0px 1px #<?php echo $colorshadowtitle; ?>;
+}
+.alilevel1 {
+    color: #<?php echo $colortexttitle; ?> !important;
+	text-shadow: 1px 0px 1px #<?php echo $colorshadowtitle; ?>;
+}
+.lilevel1 {
+	background-image: -webkit-gradient(linear,left top,left bottom,from( #eee ),to( #e1e1e1 )) !important;
+	background-image: -webkit-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: -moz-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: -ms-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: -o-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: linear-gradient( #eee,#e1e1e1 ) !important;
+}
+
 
 <?php
 if (is_object($db)) $db->close();
-?>

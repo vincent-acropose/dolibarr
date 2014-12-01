@@ -135,16 +135,10 @@ class doc_generic_odt extends ModeleThirdPartyDoc
 
 		$texte.= '</td>';
 
-
-		$texte.= '<td valign="top" rowspan="2">';
+		$texte.= '<td valign="top" rowspan="2" class="hideonsmartphone">';
 		$texte.= $langs->trans("ExampleOfDirectoriesForModelGen");
 		$texte.= '</td>';
 		$texte.= '</tr>';
-
-		/*$texte.= '<tr><td align="center">';
-		$texte.= '<input type="submit" class="button" value="'.$langs->trans("Modify").'" name="Button">';
-		$texte.= '</td>';
-		$texte.= '</tr>';*/
 
 		$texte.= '</table>';
 		$texte.= '</form>';
@@ -236,16 +230,22 @@ class doc_generic_odt extends ModeleThirdPartyDoc
 
 				// Open and load template
 				require_once ODTPHP_PATH.'odf.php';
-				$odfHandler = new odf(
-				    $srctemplatepath,
-				    array(
-    					'PATH_TO_TMP'	  => $conf->societe->multidir_temp[$object->entity],
-    					'ZIP_PROXY'		  => 'PclZipProxy',	// PhpZipProxy or PclZipProxy. Got "bad compression method" error when using PhpZipProxy.
-    					'DELIMITER_LEFT'  => '{',
-    					'DELIMITER_RIGHT' => '}'
-					)
-				);
-
+				try {
+					$odfHandler = new odf(
+					    $srctemplatepath,
+					    array(
+	    					'PATH_TO_TMP'	  => $conf->societe->multidir_temp[$object->entity],
+	    					'ZIP_PROXY'		  => 'PclZipProxy',	// PhpZipProxy or PclZipProxy. Got "bad compression method" error when using PhpZipProxy.
+	    					'DELIMITER_LEFT'  => '{',
+	    					'DELIMITER_RIGHT' => '}'
+						)
+					);
+				}
+				catch(Exception $e)
+				{
+					$this->error=$e->getMessage();
+					return -1;
+				}
 				//print $odfHandler->__toString()."\n";
 
 				// Make substitutions into odt of user info
@@ -293,13 +293,77 @@ class doc_generic_odt extends ModeleThirdPartyDoc
                         // setVars failed, probably because key not found
 					}
 				}
+
+
+                // Replace tags of lines for contacts
+                $contact_arrray=array();
+
+                $sql = "SELECT p.rowid";
+                $sql .= " FROM ".MAIN_DB_PREFIX."socpeople as p";
+                $sql .= " WHERE p.fk_soc = ".$object->id;
+
+                dol_syslog('doc_generic_odt :: sql='.$sql,LOG_DEBUG);
+                $result = $this->db->query($sql);
+                $num = $this->db->num_rows($result);
+
+                $var=true;
+                if ($num)
+                {
+                	$i=0;
+                	$contactstatic = new Contact($this->db);
+
+                	while($i < $num)
+                	{
+                		$obj = $this->db->fetch_object($result);
+
+                		$contact_arrray[$i] = $obj->rowid;
+                		$i++;
+                	}
+                }
+                if((is_array($contact_arrray) && count($contact_arrray) > 0))
+                {
+                	try
+                	{
+                		$listlines = $odfHandler->setSegment('companycontacts');
+
+                		foreach($contact_arrray as $array_key => $contact_id)
+                		{
+                			$res_contact = $contactstatic->fetch($contact_id);
+                			$tmparray=$this->get_substitutionarray_contact($contactstatic,$outputlangs,'contact');
+                			foreach($tmparray as $key => $val)
+                			{
+                				try
+                				{
+                					$listlines->setVars($key, $val, true, 'UTF-8');
+                				}
+                				catch(OdfException $e)
+                				{
+                				}
+                				catch(SegmentException $e)
+                				{
+                				}
+                			}
+                			$listlines->merge();
+                		}
+                		$odfHandler->mergeSegment($listlines);
+                	}
+                	catch(OdfException $e)
+                	{
+                		$this->error=$e->getMessage();
+                		dol_syslog($this->error, LOG_WARNING);
+                		//return -1;
+                	}
+                }
+
                 // Make substitutions into odt of thirdparty + external modules
 				$tmparray=$this->get_substitutionarray_thirdparty($object,$outputlangs);
                 complete_substitutions_array($tmparray, $outputlangs, $object);
+
                 // Call the ODTSubstitution hook
                 $parameters=array('file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs,'substitutionarray'=>&$tmparray);
                 $reshook=$hookmanager->executeHooks('ODTSubstitution',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
-                //var_dump($object->id); exit;
+
+                // Replace variables into document
 				foreach($tmparray as $key=>$value)
 				{
 					try {
@@ -319,7 +383,19 @@ class doc_generic_odt extends ModeleThirdPartyDoc
 					}
 				}
 
-                                // Call the beforeODTSave hook
+				// Replace labels translated
+				$tmparray=$outputlangs->get_translations_for_substitutions();
+				foreach($tmparray as $key=>$value)
+				{
+					try {
+						$odfHandler->setVars($key, $value, true, 'UTF-8');
+					}
+					catch(OdfException $e)
+					{
+					}
+				}
+
+                // Call the beforeODTSave hook
 				$parameters=array('odfHandler'=>&$odfHandler,'file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs);
 				$reshook=$hookmanager->executeHooks('beforeODTSave',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
 
@@ -339,7 +415,7 @@ class doc_generic_odt extends ModeleThirdPartyDoc
 						$this->error=$e->getMessage();
 						return -1;
 					}
-				}	
+				}
 
 				if (! empty($conf->global->MAIN_UMASK))
 				@chmod($file, octdec($conf->global->MAIN_UMASK));
@@ -361,4 +437,3 @@ class doc_generic_odt extends ModeleThirdPartyDoc
 
 }
 
-?>

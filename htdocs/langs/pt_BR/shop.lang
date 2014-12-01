@@ -1,5 +1,5 @@
-# Dolibarr language file - pt_BR rev. 0.0 - shop
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - shop
+FailedConnectDBCheckModuleSetup=Falha na conexão com banco de dados do osCommerce. Verifique a configuração do módulo
 Shop=Loja
 ShopWeb=Loja web
 LastOrders=últimos pedidos
@@ -9,5 +9,3 @@ LastCustomers=últimos clientes
 OSCommerceShop=Loja OS Commerce
 OSCommerce=OSCommerce
 AddProd=Venda em linha
-
-

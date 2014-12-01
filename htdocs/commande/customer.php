@@ -142,7 +142,7 @@ if ($resql)
 	print '</td>';
 
 	print '<td align="right" colspan="2" class="liste_titre">';
-	print '<input type="image" class="liste_titre" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" name="button_search" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+	print '<input type="image" class="liste_titre" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" name="button_search" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 	print '</td>';
 	print "</tr>\n";
 
@@ -154,9 +154,9 @@ if ($resql)
 
 		$var=!$var;
 
-		print "<tr $bc[$var]>";
+		print "<tr ".$bc[$var].">";
 		print '<td>';
-		
+
         $result='';
         $lien=$lienfin='';
         $lien = '<a href="'.dol_buildpath('/commande/orderstoinvoice.php',1).'?socid='.$obj->rowid.'">';
@@ -164,7 +164,7 @@ if ($resql)
         $name=$obj->nom;
         $result.=($lien.img_object($langs->trans("ShowCompany").': '.$name,'company').$lienfin);
         $result.=$lien.(dol_trunc($name,$maxlen)).$lienfin;
-		
+
 		print $result;
 		print '</td>';
 		print '<td>'.$obj->town.'&nbsp;</td>';
@@ -185,7 +185,7 @@ else
 	dol_print_error($db);
 }
 
+llxFooter();
+
 $db->close();
 
-llxFooter();
-?>

@@ -52,7 +52,7 @@ if (!$user->admin) accessforbidden();
 * Actions
 */
 
-require DOL_DOCUMENT_ROOT.'/core/admin_extrafields.inc.php';
+require DOL_DOCUMENT_ROOT.'/core/actions_extrafields.inc.php';
 
 
 
@@ -75,7 +75,7 @@ $head = invoice_admin_prepare_head(null);
 dol_fiche_head($head, 'attributes', $langs->trans("Invoices"), 0, 'invoice');
 
 
-print $langs->trans("DefineHereComplementaryAttributes",$textobject).'<br>'."\n";
+print $langs->trans("DefineHereComplementaryAttributes",$textobject).'<br><br>'."\n";
 
 // Load attribute_label
 $extrafields->fetch_name_optionals_label($elementtype);
@@ -146,7 +146,9 @@ if ($action == 'create')
 /* ************************************************************************** */
 if ($action == 'edit' && ! empty($attrname))
 {
-    print "<br>";
+	$langs->load("members");
+	
+	print "<br>";
     print_titre($langs->trans("FieldEdition", $attrname));
 
     require DOL_DOCUMENT_ROOT.'/core/tpl/admin_extrafields_edit.tpl.php';
@@ -155,4 +157,3 @@ if ($action == 'edit' && ! empty($attrname))
 llxFooter();
 
 $db->close();
-?>

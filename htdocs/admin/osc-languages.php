@@ -72,7 +72,7 @@ if ($resql)
 	while ($i < $num) {
 		$objp = $db->fetch_object($resql);
 		$var=!$var;
-		print "<TR $bc[$var]>";
+		print "<tr ".$bc[$var].">";
 		print "<TD>$objp->languages_id</TD>\n";
 		print "<TD>$objp->name</TD>\n";
 		print "<TD>$objp->code</TD>\n";
@@ -88,4 +88,3 @@ print "</TABLE>";
 $db->close();
 
 llxFooter();
-?>

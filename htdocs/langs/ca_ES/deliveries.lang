@@ -1,5 +1,4 @@
-# Dolibarr language file - ca_ES - deliveries
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - deliveries
 Delivery=Enviament
 Deliveries=Enviaments
 DeliveryCard=Fitxa recepció
@@ -24,3 +23,4 @@ GoodStatusDeclaration=He rebut la mercaderia en bon estat,
 Deliverer=Destinatari :
 Sender=Orige
 Recipient=Destinatari
+ErrorStockIsNotEnough=There's not enough stock

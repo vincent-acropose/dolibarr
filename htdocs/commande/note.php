@@ -50,24 +50,15 @@ if (! $object->fetch($id, $ref) > 0)
 	dol_print_error($db);
 }
 
+$permissionnote=$user->rights->commande->creer;	// Used by the include of actions_setnotes.inc.php
+
 
 /*
  * Actions
  */
 
-if ($action == 'setnote_public' && $user->rights->commande->creer)
-{
-	$object->fetch($id);
-	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES),'_public');
-	if ($result < 0) dol_print_error($db,$object->error);
-}
+include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not includ_once
 
-else if ($action == 'setnote_private' && $user->rights->commande->creer)
-{
-	$object->fetch($id);
-	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_private'), ENT_QUOTES),'_private');
-	if ($result < 0) dol_print_error($db,$object->error);
-}
 
 /*
  * View
@@ -97,7 +88,7 @@ if ($id > 0 || ! empty($ref))
 
 	// Ref commande client
 	print '<tr><td>';
-	print '<table class="nobordernopadding" width="100%"><tr><td nowrap>';
+	print '<table class="nobordernopadding" width="100%"><tr><td class="nowrap">';
 	print $langs->trans('RefCustomer').'</td><td align="left">';
 	print '</td>';
 	print '</tr></table>';
@@ -122,4 +113,3 @@ if ($id > 0 || ! empty($ref))
 
 llxFooter();
 $db->close();
-?>

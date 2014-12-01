@@ -71,12 +71,13 @@ update llx_bank set dateo = datec where datev = '1970-01-01 00:00:00' and rappro
 
 alter table llx_c_chargesociales add column actioncompta varchar(12) NOT NULL;
 insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values ( 1, 'Allocations familiales', 1,1,'TAXFAM');
-insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values ( 2, 'GSG Deductible',         1,1,'TAXCSGD');
-insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values ( 3, 'GSG/CRDS NON Deductible',0,1,'TAXCSGND');
-insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (10, 'Taxe apprenttissage',    0,1,'TAXAPP');
+insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values ( 2, 'GSG Déductible',         1,1,'TAXCSGD');
+insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values ( 3, 'GSG/CRDS NON Déductible',0,1,'TAXCSGND');
+insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (10, 'Taxe apprentissage',    0,1,'TAXAPP');
 insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (11, 'Taxe professionnelle',   0,1,'TAXPRO');
+insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (12, 'Contribution à la formation professionnelle',  1,1,'TAXOPCA');
 insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (20, 'Impots locaux/fonciers', 0,1,'TAXFON');
-insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (30, 'Assurance Sante (SECU-URSSAF)',  0,1,'TAXSECU');
+insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (30, 'Assurance Santé (SECU-URSSAF)',  0,1,'TAXSECU');
 insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (40, 'Mutuelle',                       0,1,'TAXMUT');
 insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (50, 'Assurance vieillesse (CNAV)',    0,1,'TAXRET');
 insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (60, 'Assurance Chomage (ASSEDIC)',    0,1,'TAXCHOM');
@@ -253,7 +254,7 @@ insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titr
 insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titre`, `level`, `langs`, `right`, `target`, `user`, `order`) values (108, 'home', '$leftmenu=="setup"', 100, '/admin/perms.php', 'Security', 1, 'admin', '', '', 2, 7);
 insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titre`, `level`, `langs`, `right`, `target`, `user`, `order`) values (109, 'home', '$leftmenu=="setup"', 100, '/admin/mails.php', 'Emails', 1, 'admin', '', '', 2, 8);
 insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titre`, `level`, `langs`, `right`, `target`, `user`, `order`) values (110, 'home', '$leftmenu=="setup"', 100, '/admin/limits.php', 'Limits', 1, 'admin', '', '', 2, 9);
-insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titre`, `level`, `langs`, `right`, `target`, `user`, `order`) values (111, 'home', '$leftmenu=="setup"', 100, '/admin/dict.php', 'DictionnarySetup', 1, 'admin', '', '', 2, 10);
+insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titre`, `level`, `langs`, `right`, `target`, `user`, `order`) values (111, 'home', '$leftmenu=="setup"', 100, '/admin/dict.php', 'DictionarySetup', 1, 'admin', '', '', 2, 10);
 insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titre`, `level`, `langs`, `right`, `target`, `user`, `order`) values (112, 'home', '$leftmenu=="setup"', 100, '/admin/const.php', 'OtherSetup', 1, 'admin', '', '', 2, 11);
 insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titre`, `level`, `langs`, `right`, `target`, `user`, `order`) values (200, 'home', '', 1, '/admin/system/index.php?leftmenu=system', 'SystemInfo', 0, 'admin', '', '', 2, 1);
 insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titre`, `level`, `langs`, `right`, `target`, `user`, `order`) values (201, 'home', '$leftmenu=="system"', 200, '/admin/system/dolibarr.php', 'Dolibarr', 1, 'admin', '', '', 2, 0);

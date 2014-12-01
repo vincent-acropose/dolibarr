@@ -77,7 +77,7 @@ class modMyModule extends DolibarrModules
 		//							'login' => 0,                                    	// Set this to 1 if module has its own login method directory (core/login)
 		//							'substitutions' => 0,                            	// Set this to 1 if module has its own substitution function file (core/substitutions)
 		//							'menus' => 0,                                    	// Set this to 1 if module has its own menus handler directory (core/menus)
-		//							'theme' => 0,                                    	// Set this to 1 if module has its own theme directory (core/theme)
+		//							'theme' => 0,                                    	// Set this to 1 if module has its own theme directory (theme)
 		//                        	'tpl' => 0,                                      	// Set this to 1 if module overwrite template dir (core/tpl)
 		//							'barcode' => 0,                                  	// Set this to 1 if module has its own barcode directory (core/modules/barcode)
 		//							'models' => 0,                                   	// Set this to 1 if module has its own models directory (core/modules/xxx)
@@ -97,8 +97,10 @@ class modMyModule extends DolibarrModules
 		$this->config_page_url = array("mysetuppage.php@mymodule");
 
 		// Dependencies
+		$this->hidden = false;			// A condition to hide module
 		$this->depends = array();		// List of modules id that must be enabled if this module is enabled
 		$this->requiredby = array();	// List of modules id to disable if this one is disabled
+		$this->conflictwith = array();	// List of modules id this module is in conflict with
 		$this->phpmin = array(5,0);					// Minimum version of PHP required by module
 		$this->need_dolibarr_version = array(3,0);	// Minimum version of Dolibarr required by module
 		$this->langfiles = array("mylangfile@mymodule");
@@ -113,45 +115,49 @@ class modMyModule extends DolibarrModules
 		// Array to add new pages in new tabs
 		// Example: $this->tabs = array('objecttype:+tabname1:Title1:mylangfile@mymodule:$user->rights->mymodule->read:/mymodule/mynewtab1.php?id=__ID__',  	// To add a new tab identified by code tabname1
         //                              'objecttype:+tabname2:Title2:mylangfile@mymodule:$user->rights->othermodule->read:/mymodule/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2
-        //                              'objecttype:-tabname':NU:conditiontoremove);                                                     						// To remove an existing tab identified by code tabname
+        //                              'objecttype:-tabname:NU:conditiontoremove');                                                     						// To remove an existing tab identified by code tabname
 		// where objecttype can be
-		// 'thirdparty'       to add a tab in third party view
-		// 'intervention'     to add a tab in intervention view
-		// 'order_supplier'   to add a tab in supplier order view
-		// 'invoice_supplier' to add a tab in supplier invoice view
-		// 'invoice'          to add a tab in customer invoice view
-		// 'order'            to add a tab in customer order view
-		// 'product'          to add a tab in product view
-		// 'stock'            to add a tab in stock view
-		// 'propal'           to add a tab in propal view
-		// 'member'           to add a tab in fundation member view
-		// 'contract'         to add a tab in contract view
-		// 'user'             to add a tab in user view
-		// 'group'            to add a tab in group view
-		// 'contact'          to add a tab in contact view
 		// 'categories_x'	  to add a tab in category view (replace 'x' by type of category (0=product, 1=supplier, 2=customer, 3=member)
+		// 'contact'          to add a tab in contact view
+		// 'contract'         to add a tab in contract view
+		// 'group'            to add a tab in group view
+		// 'intervention'     to add a tab in intervention view
+		// 'invoice'          to add a tab in customer invoice view
+		// 'invoice_supplier' to add a tab in supplier invoice view
+		// 'member'           to add a tab in fundation member view
+		// 'opensurveypoll'	  to add a tab in opensurvey poll view
+		// 'order'            to add a tab in customer order view
+		// 'order_supplier'   to add a tab in supplier order view
+		// 'payment'		  to add a tab in payment view
+		// 'payment_supplier' to add a tab in supplier payment view
+		// 'product'          to add a tab in product view
+		// 'propal'           to add a tab in propal view
+		// 'project'          to add a tab in project view
+		// 'stock'            to add a tab in stock view
+		// 'thirdparty'       to add a tab in third party view
+		// 'user'             to add a tab in user view
         $this->tabs = array();
 
-        // Dictionnaries
+        // Dictionaries
 	    if (! isset($conf->mymodule->enabled))
         {
         	$conf->mymodule=new stdClass();
         	$conf->mymodule->enabled=0;
         }
-		$this->dictionnaries=array();
+		$this->dictionaries=array();
         /* Example:
         if (! isset($conf->mymodule->enabled)) $conf->mymodule->enabled=0;	// This is to avoid warnings
-        $this->dictionnaries=array(
+        $this->dictionaries=array(
             'langs'=>'mylangfile@mymodule',
             'tabname'=>array(MAIN_DB_PREFIX."table1",MAIN_DB_PREFIX."table2",MAIN_DB_PREFIX."table3"),		// List of tables we want to see into dictonnary editor
             'tablib'=>array("Table1","Table2","Table3"),													// Label of tables
             'tabsql'=>array('SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table1 as f','SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table2 as f','SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table3 as f'),	// Request to select fields
             'tabsqlsort'=>array("label ASC","label ASC","label ASC"),																					// Sort order
-            'tabfield'=>array("code,label","code,label","code,label"),																					// List of fields (result of select to show dictionnary)
+            'tabfield'=>array("code,label","code,label","code,label"),																					// List of fields (result of select to show dictionary)
             'tabfieldvalue'=>array("code,label","code,label","code,label"),																				// List of fields (list of fields to edit a record)
             'tabfieldinsert'=>array("code,label","code,label","code,label"),																			// List of fields (list of fields for insert)
             'tabrowid'=>array("rowid","rowid","rowid"),																									// Name of columns with primary key (try to always name it 'rowid')
-            'tabcond'=>array($conf->mymodule->enabled,$conf->mymodule->enabled,$conf->mymodule->enabled)												// Condition to show each dictionnary
+            'tabcond'=>array($conf->mymodule->enabled,$conf->mymodule->enabled,$conf->mymodule->enabled)												// Condition to show each dictionary
         );
         */
 
@@ -242,7 +248,7 @@ class modMyModule extends DolibarrModules
 	{
 		$sql = array();
 
-		$result=$this->load_tables();
+		$result=$this->_load_tables('/mymodule/sql/');
 
 		return $this->_init($sql, $options);
 	}
@@ -262,19 +268,5 @@ class modMyModule extends DolibarrModules
 		return $this->_remove($sql, $options);
 	}
 
-
-	/**
-	 *		Create tables, keys and data required by module
-	 * 		Files llx_table1.sql, llx_table1.key.sql llx_data.sql with create table, create keys
-	 * 		and create data commands must be stored in directory /mymodule/sql/
-	 *		This function is called by this->init
-	 *
-	 * 		@return		int		<=0 if KO, >0 if OK
-	 */
-	function load_tables()
-	{
-		return $this->_load_tables('/mymodule/sql/');
-	}
 }
 
-?>

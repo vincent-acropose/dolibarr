@@ -69,16 +69,25 @@ function dol_decode($chain)
 
 
 /**
- * 	Returns a hash of a string
+ * 	Returns a hash of a string.
+ *  If constant MAIN_SECURITY_HASH_ALGO is defined, we use this function as hashing function (md5 by default)
+ *  If constant MAIN_SECURITY_SALT is defined, we use it as a salt
  *
  * 	@param 		string		$chain		String to hash
- * 	@param		int			$type		Type of hash (0:md5, 1:sha1, 2:sha1+md5)
+ * 	@param		int			$type		Type of hash (0:auto, 1:sha1, 2:sha1+md5)
  * 	@return		string					Hash of string
  */
 function dol_hash($chain,$type=0)
 {
+	global $conf;
+
+	// Salt value
+	if (! empty($conf->global->MAIN_SECURITY_SALT)) $chain=$conf->global->MAIN_SECURITY_SALT.$chain;
+
 	if ($type == 1) return sha1($chain);
 	else if ($type == 2) return sha1(md5($chain));
+	else if (! empty($conf->global->MAIN_SECURITY_HASH_ALGO) && $conf->global->MAIN_SECURITY_HASH_ALGO == 'sha1') return sha1($chain);
+	else if (! empty($conf->global->MAIN_SECURITY_HASH_ALGO) && $conf->global->MAIN_SECURITY_HASH_ALGO == 'sha1md5') return sha1(md5($chain));
 	else return md5($chain);
 }
 
@@ -88,12 +97,12 @@ function dol_hash($chain,$type=0)
  * 	If GETPOST('action') defined, we also check write and delete permission.
  *
  *	@param	User	$user      	  	User to check
- *	@param  string	$features	    Features to check (it must be module name. Examples: 'societe', 'contact', 'produit&service', ...)
- *	@param  int		$objectid      	Object ID if we want to check a particular record (optionnal) is linked to a owned thirdparty (optionnal).
- *	@param  string	$dbtablename    'TableName&SharedElement' with Tablename is table where object is stored. SharedElement is an optionnal key to define where to check entity. Not used if objectid is null (optionnal)
- *	@param  string	$feature2		Feature to check, second level of permission (optionnal)
- *  @param  string	$dbt_keyfield   Field name for socid foreign key if not fk_soc. Not used if objectid is null (optionnal)
- *  @param  string	$dbt_select     Field name for select if not rowid. Not used if objectid is null (optionnal)
+ *	@param  string	$features	    Features to check (it must be module name. Examples: 'societe', 'contact', 'produit&service', 'produit|service', ...)
+ *	@param  int		$objectid      	Object ID if we want to check a particular record (optional) is linked to a owned thirdparty (optional).
+ *	@param  string	$dbtablename    'TableName&SharedElement' with Tablename is table where object is stored. SharedElement is an optional key to define where to check entity. Not used if objectid is null (optional)
+ *	@param  string	$feature2		Feature to check, second level of permission (optional)
+ *  @param  string	$dbt_keyfield   Field name for socid foreign key if not fk_soc. Not used if objectid is null (optional)
+ *  @param  string	$dbt_select     Field name for select if not rowid. Not used if objectid is null (optional)
  *  @param	Canvas	$objcanvas		Object canvas
  * 	@return	int						Always 1, die process if not allowed
  */
@@ -114,12 +123,13 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
 
     if ($dbt_select != 'rowid' && $dbt_select != 'id') $objectid = "'".$objectid."'";
 
-    // More features to check
-    $features = explode("&", $features);
+    // Features/modules to check
+    $featuresarray = array($features);
+    if (preg_match('/&/', $features)) $featuresarray = explode("&", $features);
+    else if (preg_match('/\|/', $features)) $featuresarray = explode("|", $features);
 
     // More subfeatures to check
-    if (!empty($feature2))
-    	$feature2 = explode("&", $feature2);
+    if (! empty($feature2)) $feature2 = explode("|", $feature2);
 
     // More parameters
     $params = explode('&', $dbtablename);
@@ -129,105 +139,118 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
 	$listofmodules=explode(',',$conf->global->MAIN_MODULES_FOR_EXTERNAL);
 
 	// Check read permission from module
-    $readok=1;
-    foreach ($features as $feature)
+    $readok=1; $nbko=0;
+    foreach ($featuresarray as $feature)
     {
     	if (! empty($user->societe_id) && ! empty($conf->global->MAIN_MODULES_FOR_EXTERNAL) && ! in_array($feature,$listofmodules))	// If limits on modules for external users, module must be into list of modules for external users
     	{
-    		$readok=0;
+    		$readok=0; $nbko++;
     		continue;
     	}
 
         if ($feature == 'societe')
         {
-            if (! $user->rights->societe->lire && ! $user->rights->fournisseur->lire) $readok=0;
+            if (! $user->rights->societe->lire && ! $user->rights->fournisseur->lire) { $readok=0; $nbko++; }
         }
         else if ($feature == 'contact')
         {
-            if (! $user->rights->societe->contact->lire) $readok=0;
+            if (! $user->rights->societe->contact->lire) { $readok=0; $nbko++; }
         }
         else if ($feature == 'produit|service')
         {
-            if (! $user->rights->produit->lire && ! $user->rights->service->lire) $readok=0;
+            if (! $user->rights->produit->lire && ! $user->rights->service->lire) { $readok=0; $nbko++; }
         }
         else if ($feature == 'prelevement')
         {
-            if (! $user->rights->prelevement->bons->lire) $readok=0;
+            if (! $user->rights->prelevement->bons->lire) { $readok=0; $nbko++; }
         }
         else if ($feature == 'cheque')
         {
-            if (! $user->rights->banque->cheque) $readok=0;
+            if (! $user->rights->banque->cheque) { $readok=0; $nbko++; }
         }
         else if ($feature == 'projet')
         {
-            if (! $user->rights->projet->lire && ! $user->rights->projet->all->lire) $readok=0;
+            if (! $user->rights->projet->lire && ! $user->rights->projet->all->lire) { $readok=0; $nbko++; }
         }
         else if (! empty($feature2))	// This should be used for future changes
         {
+           	$tmpreadok=1;
         	foreach($feature2 as $subfeature)
         	{
-        		if (empty($user->rights->$feature->$subfeature->lire) && empty($user->rights->$feature->$subfeature->read)) $readok=0;
-        		else { $readok=1; break; } // For bypass the second test if the first is ok
+        		if (! empty($subfeature) && empty($user->rights->$feature->$subfeature->lire) && empty($user->rights->$feature->$subfeature->read)) { $tmpreadok=0; }
+        		else if (empty($subfeature) && empty($user->rights->$feature->lire) && empty($user->rights->$feature->read)) { $tmpreadok=0; }
+        		else { $tmpreadok=1; break; } // Break is to bypass second test if the first is ok
+        	}
+        	if (! $tmpreadok)	// We found a test on feature that is ko
+        	{
+        		$readok=0;	// All tests are ko (we manage here the and, the or will be managed later using $nbko).
+        		$nbko++;
         	}
         }
         else if (! empty($feature) && ($feature!='user' && $feature!='usergroup'))		// This is for old permissions
         {
             if (empty($user->rights->$feature->lire)
             && empty($user->rights->$feature->read)
-            && empty($user->rights->$feature->run)) $readok=0;
+            && empty($user->rights->$feature->run)) { $readok=0; $nbko++; }
         }
     }
+
+    // If a or and at least one ok
+    if (preg_match('/\|/', $features) && $nbko < count($featuresarray)) $readok=1;
 
     if (! $readok) accessforbidden();
     //print "Read access is ok";
 
     // Check write permission from module
-    $createok=1;
+    $createok=1; $nbko=0;
     if (GETPOST("action")  == 'create')
     {
-        foreach ($features as $feature)
+        foreach ($featuresarray as $feature)
         {
             if ($feature == 'contact')
             {
-                if (! $user->rights->societe->contact->creer) $createok=0;
+                if (! $user->rights->societe->contact->creer) { $createok=0; $nbko++; }
             }
             else if ($feature == 'produit|service')
             {
-                if (! $user->rights->produit->creer && ! $user->rights->service->creer) $createok=0;
+                if (! $user->rights->produit->creer && ! $user->rights->service->creer) { $createok=0; $nbko++; }
             }
             else if ($feature == 'prelevement')
             {
-                if (! $user->rights->prelevement->bons->creer) $createok=0;
+                if (! $user->rights->prelevement->bons->creer) { $createok=0; $nbko++; }
             }
             else if ($feature == 'commande_fournisseur')
             {
-                if (! $user->rights->fournisseur->commande->creer) $createok=0;
+                if (! $user->rights->fournisseur->commande->creer) { $createok=0; $nbko++; }
             }
             else if ($feature == 'banque')
             {
-                if (! $user->rights->banque->modifier) $createok=0;
+                if (! $user->rights->banque->modifier) { $createok=0; $nbko++; }
             }
             else if ($feature == 'cheque')
             {
-                if (! $user->rights->banque->cheque) $createok=0;
+                if (! $user->rights->banque->cheque) { $createok=0; $nbko++; }
             }
-            else if (! empty($feature2))	// This should be used for future changes
+            else if (! empty($feature2))	// This should be used
             {
             	foreach($feature2 as $subfeature)
             	{
-            		if (empty($user->rights->$feature->$subfeature->creer) 
+            		if (empty($user->rights->$feature->$subfeature->creer)
             		&& empty($user->rights->$feature->$subfeature->write)
-            		&& empty($user->rights->$feature->$subfeature->create)) $createok=0;
-            		else { $createok=1; break; } // For bypass the second test if the first is ok
+            		&& empty($user->rights->$feature->$subfeature->create)) { $createok=0; $nbko++; }
+            		else { $createok=1; break; } // Break to bypass second test if the first is ok
             	}
             }
-            else if (! empty($feature))		// This is for old permissions
+            else if (! empty($feature))		// This is for old permissions ('creer' or 'write')
             {
                 //print '<br>feature='.$feature.' creer='.$user->rights->$feature->creer.' write='.$user->rights->$feature->write;
                 if (empty($user->rights->$feature->creer)
-                && empty($user->rights->$feature->write)) $createok=0;
+                && empty($user->rights->$feature->write)) { $createok=0; $nbko++; }
             }
         }
+
+	    // If a or and at least one ok
+	    if (preg_match('/\|/', $features) && $nbko < count($featuresarray)) $createok=1;
 
         if (! $createok) accessforbidden();
         //print "Write access is ok";
@@ -244,10 +267,10 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
     }
 
     // Check delete permission from module
-    $deleteok=1;
+    $deleteok=1; $nbko=0;
     if ((GETPOST("action")  == 'confirm_delete' && GETPOST("confirm") == 'yes') || GETPOST("action")  == 'delete')
     {
-        foreach ($features as $feature)
+        foreach ($featuresarray as $feature)
         {
             if ($feature == 'contact')
             {
@@ -294,7 +317,9 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
             }
         }
 
-        //print "Delete access is ko";
+	    // If a or and at least one ok
+	    if (preg_match('/\|/', $features) && $nbko < count($featuresarray)) $deleteok=1;
+
         if (! $deleteok) accessforbidden();
         //print "Delete access is ok";
     }
@@ -303,7 +328,7 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
     // is linked to a company allowed to $user.
     if (! empty($objectid) && $objectid > 0)
     {
-        foreach ($features as $feature)
+        foreach ($featuresarray as $feature)
         {
             $sql='';
 
@@ -332,7 +357,7 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
                     $sql.= " AND dbt.entity IN (".getEntity($sharedelement, 1).")";
                 }
             }
-            else if (in_array($feature,$checksoc))
+            else if (in_array($feature,$checksoc))	// We check feature = checksoc
             {
                 // If external user: Check permission for external users
                 if ($user->societe_id > 0)
@@ -411,7 +436,8 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
                 // If external user: Check permission for external users
                 if ($user->societe_id > 0)
                 {
-                    $sql = "SELECT dbt.".$dbt_keyfield;
+                	if (empty($dbt_keyfield)) dol_print_error('','Param dbt_keyfield is required but not defined');
+                	$sql = "SELECT dbt.".$dbt_keyfield;
                     $sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
                     $sql.= " WHERE dbt.rowid = ".$objectid;
                     $sql.= " AND dbt.".$dbt_keyfield." = ".$user->societe_id;
@@ -419,6 +445,7 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
                 // If internal user: Check permission for internal users that are restricted on their objects
                 else if (! empty($conf->societe->enabled) && ($user->rights->societe->lire && ! $user->rights->societe->client->voir))
                 {
+                	if (empty($dbt_keyfield)) dol_print_error('','Param dbt_keyfield is required but not defined');
                     $sql = "SELECT sc.fk_soc";
                     $sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
                     $sql.= ", ".MAIN_DB_PREFIX."societe as s";
@@ -439,7 +466,7 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
                 }
             }
 
-            //print $sql."<br>";
+            //print "sql=".$sql."<br>";
             if ($sql)
             {
                 $resql=$db->query($sql);
@@ -507,4 +534,3 @@ function accessforbidden($message='',$printheader=1,$printfooter=1,$showonlymess
     exit(0);
 }
 
-?>

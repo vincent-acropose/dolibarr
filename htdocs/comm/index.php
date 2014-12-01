@@ -53,26 +53,6 @@ $now=dol_now();
  * Actions
  */
 
-if ($action == 'add_bookmark' && ! empty($socid))
-{
-	$sql = "DELETE FROM ".MAIN_DB_PREFIX."bookmark WHERE fk_soc = ".$db->escape($socid)." AND fk_user=".$user->id;
-	if (! $db->query($sql) )
-	{
-		dol_print_error($db);
-	}
-	$sql = "INSERT INTO ".MAIN_DB_PREFIX."bookmark (fk_soc, dateb, fk_user) VALUES (".$db->escape($socid).", ".$db->idate($now).",".$user->id.");";
-	if (! $db->query($sql) )
-	{
-		dol_print_error($db);
-	}
-}
-
-if ($action == 'del_bookmark' && ! empty($bid))
-{
-	$sql = "DELETE FROM ".MAIN_DB_PREFIX."bookmark WHERE rowid=".$db->escape($bid);
-	$result = $db->query($sql);
-}
-
 
 /*
  * View
@@ -89,7 +69,7 @@ print_fiche_titre($langs->trans("CustomerArea"));
 
 print '<div class="fichecenter"><div class="fichethirdleft">';
 
-// Recherche Propal
+// Search proposal
 if (! empty($conf->propal->enabled) && $user->rights->propal->lire)
 {
 	$var=false;
@@ -98,17 +78,30 @@ if (! empty($conf->propal->enabled) && $user->rights->propal->lire)
 	print '<table class="noborder nohover" width="100%">';
 	print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("SearchAProposal").'</td></tr>';
 	print '<tr '.$bc[$var].'>';
-	print '<td nowrap>'.$langs->trans("Ref").':</td><td><input type="text" class="flat" name="sf_ref" size="18"></td>';
+	print '<td class="nowrap">'.$langs->trans("Ref").':</td><td><input type="text" class="flat" name="sf_ref" size="18"></td>';
 	print '<td rowspan="2"><input type="submit" value="'.$langs->trans("Search").'" class="button"></td></tr>';
-	print '<tr '.$bc[$var].'><td nowrap>'.$langs->trans("Other").':</td><td><input type="text" class="flat" name="sall" size="18"></td>';
+	print '<tr '.$bc[$var].'><td class="nowrap">'.$langs->trans("Other").':</td><td><input type="text" class="flat" name="sall" size="18"></td>';
 	print '</tr>';
 	print "</table></form>\n";
 	print "<br>\n";
 }
 
-/*
- * Recherche Contrat
- */
+// Search customer order
+if (! empty($conf->commande->enabled) && $user->rights->commande->lire)
+{
+	$var=false;
+	print '<table class="noborder nohover" width="100%">';
+	print '<form method="post" action="'.DOL_URL_ROOT.'/commande/liste.php">';
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("SearchACustomerOrder").'</td></tr>';
+	print '<tr '.$bc[$var].'><td>';
+	print $langs->trans("Ref").':</td><td><input type="text" class="flat" name="sref" size=18></td><td rowspan="2"><input type="submit" value="'.$langs->trans("Search").'" class="button"></td></tr>';
+	print '<tr '.$bc[$var].'><td class="nowrap">'.$langs->trans("Other").':</td><td><input type="text" class="flat" name="sall" size="18"></td>';
+	print '</tr>';
+	print "</form></table><br>\n";
+}
+
+// Search contract
 if (! empty($conf->contrat->enabled) && $user->rights->contrat->lire)
 {
 	$var=false;
@@ -117,9 +110,9 @@ if (! empty($conf->contrat->enabled) && $user->rights->contrat->lire)
 	print '<table class="noborder nohover" width="100%">';
 	print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("SearchAContract").'</td></tr>';
 	print '<tr '.$bc[$var].'>';
-	print '<td nowrap>'.$langs->trans("Ref").':</td><td><input type="text" class="flat" name="search_contract" size="18"></td>';
+	print '<td class="nowrap">'.$langs->trans("Ref").':</td><td><input type="text" class="flat" name="search_contract" size="18"></td>';
 	print '<td rowspan="2"><input type="submit" value="'.$langs->trans("Search").'" class="button"></td></tr>';
-	print '<tr '.$bc[$var].'><td nowrap>'.$langs->trans("Other").':</td><td><input type="text" class="flat" name="sall" size="18"></td>';
+	print '<tr '.$bc[$var].'><td class="nowrap">'.$langs->trans("Other").':</td><td><input type="text" class="flat" name="sall" size="18"></td>';
 	print '</tr>';
 	print "</table></form>\n";
 	print "<br>";
@@ -475,7 +468,7 @@ if (! empty($conf->propal->enabled) && $user->rights->propal->lire)
 			print '<table class="noborder" width="100%">';
 			print '<tr class="liste_titre"><td colspan="5">'.$langs->trans("ProposalsOpened").' <a href="'.DOL_URL_ROOT.'/comm/propal/list.php?viewstatut=1">('.$num.')</td></tr>';
 
-			$nbofloop=min($num, (empty($conf->global->MAIN_MAXLIST_OVERLOAD)?1000:$conf->global->MAIN_MAXLIST_OVERLOAD));
+			$nbofloop=min($num, (empty($conf->global->MAIN_MAXLIST_OVERLOAD)?500:$conf->global->MAIN_MAXLIST_OVERLOAD));
 			while ($i < $nbofloop)
 			{
 				$obj = $db->fetch_object($result);
@@ -536,4 +529,3 @@ print '</div></div></div>';
 llxFooter();
 
 $db->close();
-?>

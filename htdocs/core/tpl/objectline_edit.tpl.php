@@ -2,6 +2,7 @@
 /* Copyright (C) 2010-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2012		Christophe Battarel	<christophe.battarel@altairis.fr>
+ * Copyright (C) 2013		Florian Henry		<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,54 +17,48 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- *
  * Need to have following variables defined:
+ * $object (invoice, order, ...)
  * $conf
  * $langs
  * $dateSelector
- * $this (invoice, order, ...)
- * $line defined
+ * $forceall (0 by default, 1 for supplier invoices/orders)
+ * $senderissupplier (0 by default, 1 for supplier invoices/orders)
+ * $inputalsopricewithtax (0 by default, 1 to also show column with unit price including tax)
  */
+
+
+$usemargins=0;
+if (! empty($conf->margin->enabled) && ! empty($object->element) && in_array($object->element,array('facture','propal','commande'))) $usemargins=1;
+
+global $forceall, $senderissupplier, $inputalsopricewithtax;
+if (empty($dateSelector)) $dateSelector=0;
+if (empty($forceall)) $forceall=0;
+if (empty($senderissupplier)) $senderissupplier=0;
+if (empty($inputalsopricewithtax)) $inputalsopricewithtax=0;
+
+
+// Define colspan for button Add
+$colspan = 3;	// Col total ht + col edit + col delete
+if (! empty($inputalsopricewithtax)) $colspan++;	// We add 1 if col total ttc
+if (in_array($object->element,array('propal','facture','invoice','commande','order'))) $colspan++;	// With this, there is a column move button
 ?>
 
 <!-- BEGIN PHP TEMPLATE objectline_edit.tpl.php -->
-<form action="<?php echo $_SERVER["PHP_SELF"].'?id='.$this->id.'#'.$line->id; ?>" method="POST">
-<input type="hidden" name="token" value="<?php  echo $_SESSION['newtoken']; ?>">
-<input type="hidden" name="action" value="updateligne">
-<input type="hidden" name="usenewupdatelineform" value="1" />
-<input type="hidden" name="id" value="<?php echo $this->id; ?>">
-<input type="hidden" name="lineid" value="<?php echo $line->id; ?>">
-<input type="hidden" name="special_code" value="<?php echo $line->special_code; ?>">
-<input type="hidden" id="product_type" name="type" value="<?php echo $line->product_type; ?>">
-<input type="hidden" id="product_id" name="productid" value="<?php echo (! empty($line->fk_product)?$line->fk_product:0); ?>" />
 
+<?php
+$coldisplay=-1; // We remove first td
+?>
 <tr <?php echo $bc[$var]; ?>>
-	<td<?php echo (! empty($conf->global->MAIN_VIEW_LINE_NUMBER) ? ' colspan="2"' : ''); ?>>
-	<div id="<?php echo $line->id; ?>"></div>
+	<td<?php echo (! empty($conf->global->MAIN_VIEW_LINE_NUMBER) ? ' colspan="2"' : ''); ?>><?php $coldisplay+=(! empty($conf->global->MAIN_VIEW_LINE_NUMBER))?2:1; ?>
+	<div id="line_<?php echo $line->id; ?>"></div>
 
-	<?php
-	if ($conf->global->MAIN_FEATURES_LEVEL > 1)
-	{
-		if ($line->fk_product > 0)
-		{
-			echo $text . ' - ';
-		}
-		else
-		{
-			echo $form->select_type_of_lines($line->product_type, 'type', 1, 1);
-		}
-		?>
+	<input type="hidden" name="lineid" value="<?php echo $line->id; ?>">
+	<input type="hidden" id="product_type" name="type" value="<?php echo $line->product_type; ?>">
+	<input type="hidden" id="product_id" name="productid" value="<?php echo (! empty($line->fk_product)?$line->fk_product:0); ?>" />
+	<input type="hidden" id="special_code" name="special_code" value="<?php echo $line->special_code; ?>">
 
-		<input id="product_label" name="product_label" size="40" value="<?php echo $label; ?>"<?php echo $placeholder . ((! empty($line->fk_product) && empty($line->label)) ? ' disabled="disabled"' : ''); ?>>
-		<input type="hidden" id="origin_label_cache" name="origin_label_cache" value="<?php echo $line->product_label; ?>" />
-		<span id="update_label_area" class="hideobject"><input type="checkbox" id="update_label_checkbox" name="update_label" value="1" />
-			<?php echo $form->textwithtooltip($langs->trans('UpdateOriginalProductLabel'), $langs->trans('HelpUpdateOriginalProductLabel'),1,0,'','',3); ?>
-		</span>
-		<span id="price_base_type" class="hideobject"></span>
-
-		<br>
-
-	<?php } else if ($line->fk_product > 0) { ?>
+	<?php if ($line->fk_product > 0) { ?>
 
 		<a href="<?php echo DOL_URL_ROOT.'/product/fiche.php?id='.$line->fk_product; ?>">
 		<?php
@@ -93,19 +88,19 @@
     $nbrows=ROWS_2;
     if (! empty($conf->global->MAIN_INPUT_DESC_HEIGHT)) $nbrows=$conf->global->MAIN_INPUT_DESC_HEIGHT;
     $enable=(isset($conf->global->FCKEDITOR_ENABLE_DETAILS)?$conf->global->FCKEDITOR_ENABLE_DETAILS:0);
-	$doleditor=new DolEditor('product_desc',$line->description,'',164,'dolibarr_details','',false,true,$enable,$nbrows,70);
+	$doleditor=new DolEditor('product_desc',$line->description,'',164,'dolibarr_details','',false,true,$enable,$nbrows,'98%');
 	$doleditor->Create();
 	?>
 	</td>
 
-	<td align="right"><?php echo $form->load_tva('tva_tx',$line->tva_tx,$seller,$buyer,0,$line->info_bits,$line->product_type); ?></td>
+	<td align="right"><?php $coldisplay++; ?><?php echo $form->load_tva('tva_tx',$line->tva_tx,$seller,$buyer,0,$line->info_bits,$line->product_type); ?></td>
 
-	<td align="right"><input type="text" class="flat" size="8" id="price_ht" name="price_ht" value="<?php echo price($line->subprice,0,'',0); ?>"></td>
+	<td align="right"><?php $coldisplay++; ?><input type="text" class="flat" size="8" id="price_ht" name="price_ht" value="<?php echo price($line->subprice,0,'',0); ?>"></td>
 	<?php if ($conf->global->MAIN_FEATURES_LEVEL > 1) { ?>
-	<td align="right"><input type="text" class="flat" size="8" id="price_ttc" name="price_ttc" value="<?php echo price($pu_ttc,0,'',0); ?>"></td>
+	<td align="right"><?php $coldisplay++; ?><input type="text" class="flat" size="8" id="price_ttc" name="price_ttc" value="<?php echo price($pu_ttc,0,'',0); ?>"></td>
 	<?php } ?>
 
-	<td align="right">
+	<td align="right"><?php $coldisplay++; ?>
 	<?php if (($line->info_bits & 2) != 2) {
 		// I comment this because it shows info even when not required
 		// for example always visible on invoice but must be visible only if stock module on and stock decrease option is on invoice validation and status is not validated
@@ -118,7 +113,7 @@
 	<?php } ?>
 	</td>
 
-	<td align="right" nowrap>
+	<td align="right" nowrap><?php $coldisplay++; ?>
 	<?php if (($line->info_bits & 2) != 2) { ?>
 		<input size="1" type="text" class="flat" name="remise_percent" value="<?php echo $line->remise_percent; ?>">%
 	<?php } else { ?>
@@ -126,17 +121,54 @@
 	<?php } ?>
 	</td>
 
-	<?php if (! empty($conf->margin->enabled)) { ?>
-	<td align="right">
-		<select id="fournprice" name="fournprice" class="hideobject"></select>
-		<input type="text" size="5" id="buying_price" name="buying_price" class="hideobject" value="<?php echo price($line->pa_ht,0,'',0); ?>">
-	</td>
-	<?php } ?>
+	<?php
+	if (! empty($usemargins))
+	{
+	?>
+		<td align="right"><?php $coldisplay++; ?>
+			<!-- For predef product -->
+			<?php if (! empty($conf->product->enabled) || ! empty($conf->service->enabled)) { ?>
+			<select id="fournprice_predef" name="fournprice_predef" class="flat" style="display: none;"></select>
+			<?php } ?>
+			<!-- For free product -->
+			<input type="text" size="5" id="buying_price" name="buying_price" class="hideobject" value="<?php echo price($line->pa_ht,0,'',0); ?>">
+		</td>
+	    <?php if ($user->rights->margins->creer) {
+				if (! empty($conf->global->DISPLAY_MARGIN_RATES))
+				  {
+				    $margin_rate = (isset($_POST["np_marginRate"])?$_POST["np_marginRate"]:(($line->pa_ht == 0)?'':price($line->marge_tx)));
+				    // if credit note, dont allow to modify margin
+					if ($line->subprice < 0)
+						echo '<td align="right" class="nowrap">'.$margin_rate.'<span class="hideonsmartphone">%</span></td>';
+					else
+						echo '<td align="right" class="nowrap"><input type="text" size="2" name="np_marginRate" value="'.$margin_rate.'"><span class="hideonsmartphone">%</span></td>';
+					$coldisplay++;
+				  }
+				elseif (! empty($conf->global->DISPLAY_MARK_RATES))
+				  {
+				    $mark_rate = (isset($_POST["np_markRate"])?$_POST["np_markRate"]:price($line->marque_tx));
+				    // if credit note, dont allow to modify margin
+					if ($line->subprice < 0)
+						echo '<td align="right" class="nowrap">'.$mark_rate.'<span class="hideonsmartphone">%</span></td>';
+					else
+						echo '<td align="right" class="nowrap"><input type="text" size="2" name="np_markRate" value="'.$mark_rate.'"><span class="hideonsmartphone">%</span></td>';
+					$coldisplay++;
+				  }
+			  }
+		} ?>
 
-	<td align="center" colspan="5" valign="middle">
+	<!-- colspan=4 for this td because it replace total_ht+3 td for buttons -->
+	<td align="center" colspan="<?php echo $colspan; ?>" valign="middle"><?php $coldisplay+=4; ?>
 		<input type="submit" class="button" id="savelinebutton" name="save" value="<?php echo $langs->trans("Save"); ?>"><br>
 		<input type="submit" class="button" id="cancellinebutton" name="cancel" value="<?php echo $langs->trans("Cancel"); ?>">
 	</td>
+
+	<?php
+	//Line extrafield
+	if (!empty($extrafieldsline)) {
+		print $line->showOptionals($extrafieldsline,'edit',array('style'=>$bc[$var],'colspan'=>$coldisplay));
+	}
+	?>
 </tr>
 
 <?php if (! empty($conf->service->enabled) && $line->product_type == 1 && $dateSelector)	 { ?>
@@ -152,191 +184,27 @@
 </tr>
 <?php } ?>
 
-</form>
 
 <script type="text/javascript">
-$(document).ready(function() {
 
-<?php if ($conf->global->MAIN_FEATURES_LEVEL > 1) { ?>
-
-	if ($('#product_type').val() == 0) {
-		$('#service_duration_area').hide();
-	} else if ($('#product_type').val() == 1) {
-		$('#service_duration_area').show();
-	}
-
-	if ($('#product_label').attr('disabled')) {
-		$('#update_label_area').show();
-	}
-
-	$('#update_label_checkbox').change(function() {
-		if ($(this).attr('checked')) {
-			$('#product_label').removeAttr('disabled').focus();
-		} else {
-			$('#product_label')
-				.attr('disabled','disabled')
-				.val($('#origin_label_cache').val());
-		}
-	});
-
-	$('#select_type').change(function() {
-		var type = $(this).val();
-		if (type >= 0) {
-			if (type == 0) {
-				$('#service_duration_area').hide();
-				$('#date_start').val('').trigger('change');
-				$('#date_end').val('').trigger('change');
-			} else if (type == 1) {
-				$('#service_duration_area').show();
-			}
-			var addline=false;
-			if ($('#price_ht').val().length > 0) {
-				if ($('#product_id').val() == 0) {
-					if (typeof CKEDITOR == 'object' && typeof CKEDITOR.instances != 'undefined' && CKEDITOR.instances['product_desc'] != 'undefined') {
-						var content = CKEDITOR.instances['product_desc'].getData();
-					} else {
-						var content = $('#product_desc').val();
-					}
-					if (content.length > 0) {
-						addline=true;
-					}
-				} else {
-					addline=true;
-				}
-			}
-			if (addline) {
-				$('#savelinebutton').removeAttr('disabled');
-			} else {
-				$('#savelinebutton').attr('disabled','disabled');
-			}
-		} else {
-			$('#savelinebutton').attr('disabled','disabled');
-			$('#service_duration_area').hide();
-			$('#date_start').val('').trigger('change');
-			$('#date_end').val('').trigger('change');
-		}
-	});
-
-	$('#price_ht').focusin(function() {
-		$('#price_base_type').val('HT');
-	});
-
-	$('#price_ht').bind('change keyup input', function() {
-		if ($('#price_base_type').val() == 'HT') {
-			update_price('price_ht', 'price_ttc');
-		}
-	});
-
-	$('#price_ttc').focusin(function() {
-		$('#price_base_type').val('TTC');
-	});
-
-	$('#price_ttc').bind('change keyup input', function() {
-		if ($('#price_base_type').val() == 'TTC') {
-			update_price('price_ttc', 'price_ht');
-		}
-	});
-
-	if ($('#tva_tx').val() == 0) {
-		$('#price_ttc').attr('disabled','disabled');
-	}
-
-	$('#tva_tx').change(function() {
-		if ($(this).val() == 0) {
-			$('#price_ttc').attr('disabled','disabled');
-			$('#price_ttc').val('');
-		} else {
-			$('#price_ttc').removeAttr('disabled');
-			if ($('#price_base_type').val() == 'HT') {
-				update_price('price_ht', 'price_ttc');
-			} else if ($('#price_base_type').val() == 'TTC') {
-				update_price('price_ttc', 'price_ht');
-			}
-		}
-	});
-
-	function update_price(input, output) {
-		$.post('<?php echo DOL_URL_ROOT; ?>/core/ajax/price.php', {
-			'amount': $('#' + input).val(),
-			'output': output,
-			'tva_tx': $('#tva_tx').val()
-		},
-		function(data) {
-			var addline=false;
-			if (typeof data[output] != 'undefined') {
-				// Hide price_ttc if no vat
-				if ($('#tva_tx').val() > 0 || ($('#tva_tx').val() == 0 && output == 'price_ht')) {
-					$('#' + output).val(data[output]);
-				}
-				if ($('#product_id').val() == 0 && $('#select_type').val() >= 0) {
-					if (typeof CKEDITOR == 'object' && typeof CKEDITOR.instances != 'undefined' && CKEDITOR.instances['product_desc'] != 'undefined') {
-						var content = CKEDITOR.instances['product_desc'].getData();
-					} else {
-						var content = $('#product_desc').val();
-					}
-					if (content.length > 0) {
-						addline=true;
-					}
-				} else {
-					addline=true;
-				}
-			} else {
-				$('#' + input).val('');
-				$('#' + output).val('');
-			}
-			if (addline) {
-				$('#savelinebutton').removeAttr('disabled');
-			} else {
-				$('#savelinebutton').attr('disabled','disabled');
-			}
-		}, 'json');
-	}
-
-	// Check if decription is not empty for free line
-	<?php if (! empty($conf->fckeditor->enabled) && ! empty($conf->global->FCKEDITOR_ENABLE_DETAILS)) { ?>
-	CKEDITOR.on('instanceReady', function() {
-		CKEDITOR.instances['product_desc'].on('key', function() {
-			var addline=false;
-			if ($('#product_id').val() == 0 && $('#select_type').val() >= 0 && $('#price_ht').val().length > 0) {
-				var content = CKEDITOR.instances['product_desc'].getData();
-				if (content.length > 0) {
-					addline=true;
-				}
-			} else if ($('#product_id').val() > 0 && $('#price_ht').val().length > 0) {
-				addline=true;
-			}
-			if (addline) {
-				$('#savelinebutton').removeAttr('disabled');
-			} else {
-				$('#savelinebutton').attr('disabled','disabled');
-			}
+<?php
+if (! empty($conf->margin->enabled))
+{
+?>
+	jQuery(document).ready(function()
+	{
+		/* Add rule to clear margin when we change price_ht or buying_price, so when we change sell or buy price, margin will be recalculated after submitting form */
+		jQuery("#price_ht").keyup(function() {
+			jQuery("input[name='np_marginRate']:first").val('');
+			jQuery("input[name='np_markRate']:first").val('');
 		});
-	});
-	<?php } else { ?>
-	$('#product_desc').onDelayedKeyup({
-		'handler': function() {
-			var addline=false;
-			if ($('#product_id').val() == 0 && $('#select_type').val() >= 0 && $('#price_ht').val().length > 0) {
-				var content = $('#product_desc').val();
-				if (content.length > 0) {
-					addline=true;
-				}
-			} else if ($('#product_id').val() > 0 && $('#price_ht').val().length > 0) {
-				addline=true;
-			}
-			if (addline) {
-				$('#savelinebutton').removeAttr('disabled');
-			} else {
-				$('#savelinebutton').attr('disabled','disabled');
-			}
-		}
-	});
-	<?php } ?>
+		jQuery("#buying_price").keyup(function() {
+			jQuery("input[name='np_marginRate']:first").val('');
+			jQuery("input[name='np_markRate']:first").val('');
+		});
 
-<?php } ?>
-
-	<?php if (! empty($conf->margin->enabled)) { ?>
-	$.post('<?php echo DOL_URL_ROOT; ?>/fourn/ajax/getSupplierPrices.php', {'idprod': <?php echo $line->fk_product?$line->fk_product:0; ?>}, function(data) {
+		/* Init field buying_price and fournprice */
+		$.post('<?php echo DOL_URL_ROOT; ?>/fourn/ajax/getSupplierPrices.php', {'idprod': <?php echo $line->fk_product?$line->fk_product:0; ?>}, function(data) {
 		if (data && data.length > 0) {
 			var options = '';
 			var trouve=false;
@@ -370,8 +238,118 @@ $(document).ready(function() {
 			$("#fournprice").hide();
 			$('#buying_price').show();
 		}
-	}, 'json');
-	<?php } ?>
-});
+		}, 'json');
+
+		/* Add rules to reset price_ht from margin info */
+		<?php
+		if (! empty($conf->global->DISPLAY_MARGIN_RATES))
+		{
+		?>
+			$('#savelinebutton').click(function (e) {
+				return checkEditLine(e, "marginRate");
+			});
+			$("input[name='np_marginRate']:first").blur(function(e) {
+				return checkEditLine(e, "marginRate");
+			});
+		<?php
+		}
+		if (! empty($conf->global->DISPLAY_MARK_RATES))
+		{
+		?>
+			$('#savelinebutton').click(function (e) {
+				return checkEditLine(e, "markRate");
+			});
+			$("input[name='np_markRate']:first").blur(function(e) {
+				return checkEditLine(e, "markRate");
+			});
+		<?php
+		}
+	?>
+	});
+
+
+	/* If margin rate field empty, do nothing. */
+	/* Force content of price_ht to 0 or if a discount is set recalculate it from margin rate */
+	function checkEditLine(e, npRate)
+	{
+		var buying_price = $("input[name='buying_price']:first");
+		var remise = $("input[name='remise_percent']:first");
+
+		var rate = $("input[name='"+npRate+"']:first");
+		if (rate.val() == '') return true;
+
+		if (! $.isNumeric(rate.val().replace(',','.')))
+		{
+			alert('<?php echo $langs->trans("rateMustBeNumeric"); ?>');
+			e.stopPropagation();
+			setTimeout(function () { rate.focus() }, 50);
+			return false;
+		}
+		if (npRate == "markRate" && rate.val() >= 100)
+		{
+			alert('<?php echo $langs->trans("markRateShouldBeLesserThan100"); ?>');
+			e.stopPropagation();
+			setTimeout(function () { rate.focus() }, 50);
+			return false;
+		}
+
+		var price = 0;
+		remisejs=price2numjs(remise.val());
+
+		if (remisejs != 100)
+		{
+			bpjs=price2numjs(buying_price.val());
+			ratejs=price2numjs(rate.val());
+
+			if (npRate == "marginRate")
+				price = ((bpjs * (1 + ratejs / 100)) / (1 - remisejs / 100));
+			else if (npRate == "markRate")
+				price = ((bpjs / (1 - ratejs / 100)) / (1 - remisejs / 100));
+		}
+		$("input[name='price_ht']:first").val(price);	// TODO Must use a function like php price to have here a formated value
+
+		return true;
+	}
+
+	/* Function similar to price2num in PHP */
+	function price2numjs(num)
+	{
+		if (num == '') return '';
+
+		<?php
+		$dec=','; $thousand=' ';
+		if ($langs->transnoentitiesnoconv("SeparatorDecimal") != "SeparatorDecimal")  $dec=$langs->transnoentitiesnoconv("SeparatorDecimal");
+		if ($langs->transnoentitiesnoconv("SeparatorThousand")!= "SeparatorThousand") $thousand=$langs->transnoentitiesnoconv("SeparatorThousand");
+		print "var dec='".$dec."'; var thousand='".$thousand."';\n";	// Set var in javascript
+		?>
+
+		var main_max_dec_shown = <?php echo $conf->global->MAIN_MAX_DECIMALS_SHOWN; ?>;
+		var main_rounding_unit = <?php echo $conf->global->MAIN_MAX_DECIMALS_UNIT; ?>;
+		var main_rounding_tot = <?php echo $conf->global->MAIN_MAX_DECIMALS_TOT; ?>;
+
+		var amount = num.toString();
+
+		// rounding for unit price
+		var rounding = main_rounding_unit;
+		var pos = amount.indexOf(dec);
+		var decpart = '';
+		if (pos >= 0) decpart = amount.substr(pos+1).replace('/0+$/i','');	// Supprime les 0 de fin de partie decimale
+		var nbdec = decpart.length;
+		if (nbdec > rounding) rounding = nbdec;
+	    // If rounding higher than max shown
+	    if (rounding > main_max_dec_shown) rounding = main_max_dec_shown;
+
+		if (thousand != ',' && thousand != '.') amount=amount.replace(',','.');
+		amount=amount.replace(' ','');			// To avoid spaces
+		amount=amount.replace(thousand,'');		// Replace of thousand before replace of dec to avoid pb if thousand is .
+		amount=amount.replace(dec,'.');
+
+		return parseFloat(amount).toFixed(rounding);
+	}
+
+<?php
+}
+?>
+
 </script>
 <!-- END PHP TEMPLATE objectline_edit.tpl.php -->

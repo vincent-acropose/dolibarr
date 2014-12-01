@@ -159,12 +159,14 @@ class CommActionRapport
 	/**
 	 * Write content of pages
 	 *
-	 * @param   PDF			&$pdf			Object pdf
+	 * @param   PDF			$pdf			Object pdf
      * @param	Translate   $outputlangs	Object langs
 	 * @return  int							1
 	 */
 	function _pages(&$pdf, $outputlangs)
 	{
+		global $conf;
+
 		$height=3;		// height for text separation
 		$pagenb=1;
 
@@ -253,7 +255,7 @@ class CommActionRapport
 	/**
 	 *  Show top header of page.
 	 *
-	 * 	@param	PDF			&$pdf     		Object PDF
+	 * 	@param	PDF			$pdf     		Object PDF
 	 *  @param  Translate	$outputlangs	Object lang for output
 	 * 	@param	int			$pagenb			Page nb
 	 *  @return	void
@@ -288,4 +290,3 @@ class CommActionRapport
 	}
 }
 
-?>

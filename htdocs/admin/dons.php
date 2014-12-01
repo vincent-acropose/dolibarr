@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2005-2010  Laurent Destailleur  	<eldy@users.sourceforge.net>
- * Copyright (C) 2012		Juanjo Menent			<jmenent@2byte.es>
+ * Copyright (C) 2012-2013	Juanjo Menent			<jmenent@2byte.es>
  * Copyright (C) 2013       Philippe Grand			<philippe.grand@atoo-net.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -65,13 +65,13 @@ if ($action == 'specimen')
         }
         else
         {
-            $mesg='<div class="error">'.$obj->error.'</div>';
+            setEventMessage($obj->error,'errors');
             dol_syslog($obj->error, LOG_ERR);
         }
     }
     else
     {
-        $mesg='<div class="error">'.$langs->trans("ErrorModuleNotFound").'</div>';
+        setEventMessage($langs->trans("ErrorModuleNotFound"),'errors');
         dol_syslog($langs->trans("ErrorModuleNotFound"), LOG_ERR);
     }
 }
@@ -120,18 +120,6 @@ llxHeader('',$langs->trans("DonationsSetup"),'DonConfiguration');
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
 print_fiche_titre($langs->trans("DonationsSetup"),$linkback,'setup');
-print '<br>';
-
-$h = 0;
-
-$head[$h][0] = DOL_URL_ROOT."/admin/dons.php";
-$head[$h][1] = $langs->trans("Donations");
-$head[$h][2] = 'Donation';
-$hselected=$h;
-$h++;
-
-dol_fiche_head($head, $hselected, $langs->trans("ModuleSetup"));
-
 
 // Document templates
 print '<br>';
@@ -160,13 +148,14 @@ else
     dol_print_error($db);
 }
 
-print '<table class="noborder" width=\"100%\">';
+print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("Name").'</td>';
 print '<td>'.$langs->trans("Description").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Activated").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Default").'</td>';
-print '<td align="center" width="80">'.$langs->trans("Infos").'</td>';
+print '<td align="center" width="80">'.$langs->trans("ShortInfo").'</td>';
+print '<td align="center" width="80">'.$langs->trans("Preview").'</td>';
 print "</tr>\n";
 
 clearstatcache();
@@ -206,20 +195,20 @@ if (is_resource($handle))
                     print "<td align=\"center\">\n";
                     if ($conf->global->DON_ADDON_MODEL == $name)
                     {
-                        print img_picto($langs->trans("Enabled"),'on');
+                        print img_picto($langs->trans("Enabled"),'switch_on');
                     }
                     else
                     {
                         print '&nbsp;';
                         print '</td><td align="center">';
-                        print '<a href="dons.php?action=setdoc&value='.$name.'&amp;scandir='.$module->scandir.'&amp;label='.urlencode($module->name).'">'.img_picto($langs->trans("Enabled"),'on').'</a>';
+                        print '<a href="dons.php?action=setdoc&value='.$name.'&amp;scandir='.$module->scandir.'&amp;label='.urlencode($module->name).'">'.img_picto($langs->trans("Enabled"),'switch_on').'</a>';
                     }
                     print '</td>';
                 }
                 else
                 {
                     print "<td align=\"center\">\n";
-                    print '<a href="'.$_SERVER["PHP_SELF"].'?action=set&amp;value='.$name.'&amp;scandir='.$module->scandir.'&amp;label='.urlencode($module->name).'">'.img_picto($langs->trans("Disabled"),'off').'</a>';
+                    print '<a href="'.$_SERVER["PHP_SELF"].'?action=set&amp;value='.$name.'&amp;scandir='.$module->scandir.'&amp;label='.urlencode($module->name).'">'.img_picto($langs->trans("Disabled"),'switch_off').'</a>';
                     print "</td>";
                 }
 
@@ -245,10 +234,14 @@ if (is_resource($handle))
                 $htmltooltip.='<br><br><u>'.$langs->trans("FeaturesSupported").':</u>';
                 $htmltooltip.='<br>'.$langs->trans("Logo").': '.yn($module->option_logo,1,1);
                 $htmltooltip.='<br>'.$langs->trans("MultiLanguage").': '.yn($module->option_multilang,1,1);
-                $text='<a href="'.$_SERVER["PHP_SELF"].'?action=specimen&module='.$name.'" target="specimen">'.img_object($langs->trans("Preview"),'generic').'</a>';
                 print '<td align="center">';
-                print $form->textwithpicto(' &nbsp; '.$text,$htmltooltip,-1,0);
+                print $form->textwithpicto('',$htmltooltip,-1,0);
                 print '</td>';
+				
+				// Preview
+				print '<td align="center">';
+				print '<a href="'.$_SERVER["PHP_SELF"].'?action=specimen&module='.$name.'" target="specimen">'.img_object($langs->trans("Preview"),'generic').'</a>';
+				print '</td>';
 
                 print "</tr>\n";
             }
@@ -266,4 +259,3 @@ print "<br>";
 $db->close();
 
 llxFooter();
-?>

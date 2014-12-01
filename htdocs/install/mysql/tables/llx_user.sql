@@ -24,7 +24,7 @@ create table llx_user
   entity            integer DEFAULT 1 NOT NULL, -- multi company id
 
   ref_ext			varchar(50),				-- reference into an external system (not used by dolibarr)
-  ref_int			varchar(50),				-- reference into an internal system (used by dolibarr)
+  ref_int			varchar(50),				-- reference into an internal system (deprecated)
 
   datec             datetime,
   tms               timestamp,
@@ -41,6 +41,7 @@ create table llx_user
   fk_state          integer        DEFAULT 0,            		--
   fk_country        integer        DEFAULT 0,            		--
   job				varchar(128),
+  skype             varchar(255),
   office_phone      varchar(20),
   office_fax        varchar(20),
   user_mobile       varchar(20),
@@ -53,6 +54,7 @@ create table llx_user
   fk_socpeople      integer,
   fk_member         integer,
   fk_user           integer,               -- Hierarchic parent
+  thm				double(24,8),
   note              text DEFAULT NULL,
   datelastlogin     datetime,
   datepreviouslogin datetime,
@@ -62,5 +64,10 @@ create table llx_user
   statut            tinyint DEFAULT 1,
   photo             varchar(255),     -- filename or url of photo
   lang              varchar(6),
-  color				varchar(6)
+  color				varchar(6),
+  barcode			varchar(255) DEFAULT NULL,
+  fk_barcode_type	integer      DEFAULT 0,
+  accountancy_code  varchar(24) NULL,
+  nb_holiday		integer DEFAULT 0,
+  salary			double(24,8)
 )ENGINE=innodb;

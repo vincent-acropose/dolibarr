@@ -43,6 +43,9 @@ $fieldtype = (! empty($ref) ? 'ref' : 'rowid');
 if ($user->societe_id) $socid=$user->societe_id;
 $result=restrictedArea($user,'produit|service',$fieldvalue,'product&product','','',$fieldtype);
 
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('productstatssupplyinvoice'));
+
 $mesg = '';
 
 $sortfield = GETPOST("sortfield",'alpha');
@@ -54,6 +57,7 @@ $pageprev = $page - 1;
 $pagenext = $page + 1;
 if (! $sortorder) $sortorder="DESC";
 if (! $sortfield) $sortfield="f.datef";
+
 
 
 /*
@@ -68,6 +72,10 @@ if ($id > 0 || ! empty($ref))
 {
 	$product = new Product($db);
 	$result = $product->fetch($id, $ref);
+	
+	$parameters=array('id'=>$id);
+	$reshook=$hookmanager->executeHooks('doActions',$parameters,$product,$action);    // Note that $action and $object may have been modified by some hooks
+	$error=$hookmanager->error; $errors=$hookmanager->errors;
 
     llxHeader("","",$langs->trans("CardProduct".$product->type));
 
@@ -80,6 +88,8 @@ if ($id > 0 || ! empty($ref))
 		$titre=$langs->trans("CardProduct".$product->type);
 		$picto=($product->type==1?'service':'product');
 		dol_fiche_head($head, 'referers', $titre, 0, $picto);
+		
+		$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$product,$action);    // Note that $action and $object may have been modified by hook
 
 
         print '<table class="border" width="100%">';
@@ -113,7 +123,7 @@ if ($id > 0 || ! empty($ref))
 
 
         $sql = "SELECT distinct s.nom, s.rowid as socid, s.code_client, f.ref, f.total_ht as total_ht,";
-        $sql.= " f.datef, f.paye, f.fk_statut as statut, f.rowid as facid";
+        $sql.= " f.datef, f.paye, f.fk_statut as statut, f.rowid as facid, d.qty";
         if (!$user->rights->societe->client->voir && !$socid) $sql.= ", sc.fk_soc, sc.fk_user ";
         $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
         $sql.= ", ".MAIN_DB_PREFIX."facture_fourn as f";
@@ -143,6 +153,7 @@ if ($id > 0 || ! empty($ref))
             print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","","&amp;id=".$product->id,'',$sortfield,$sortorder);
             print_liste_field_titre($langs->trans("SupplierCode"),$_SERVER["PHP_SELF"],"s.code_client","","&amp;id=".$product->id,'',$sortfield,$sortorder);
             print_liste_field_titre($langs->trans("DateInvoice"),$_SERVER["PHP_SELF"],"f.datef","","&amp;id=".$product->id,'align="center"',$sortfield,$sortorder);
+			print_liste_field_titre($langs->trans("Qty"),$_SERVER["PHP_SELF"],"d.qty","","&amp;id=".$product->id,'align="center"',$sortfield,$sortorder);
             print_liste_field_titre($langs->trans("AmountHT"),$_SERVER["PHP_SELF"],"f.total_ht","","&amp;id=".$product->id,'align="right"',$sortfield,$sortorder);
             print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"f.paye,f.fk_statut","","&amp;id=".$product->id,'align="right"',$sortfield,$sortorder);
             print "</tr>\n";
@@ -155,7 +166,7 @@ if ($id > 0 || ! empty($ref))
                     $objp = $db->fetch_object($result);
                     $var=!$var;
 
-                    print "<tr $bc[$var]>";
+                    print "<tr ".$bc[$var].">";
                     print '<td>';
                     $supplierinvoicestatic->id=$objp->facid;
                     $supplierinvoicestatic->ref=$objp->facnumber;
@@ -165,6 +176,7 @@ if ($id > 0 || ! empty($ref))
                     print "<td>".$objp->code_client."</td>\n";
                     print "<td align=\"center\">";
                     print dol_print_date($db->jdate($objp->datef))."</td>";
+					print "<td align=\"center\">".$objp->qty."</td>\n";
                     print "<td align=\"right\">".price($objp->total_ht)."</td>\n";
                     print '<td align="right">'.$supplierinvoicestatic->LibStatut($objp->paye,$objp->statut,5).'</td>';
                     print "</tr>\n";
@@ -189,4 +201,3 @@ else
 
 llxFooter();
 $db->close();
-?>

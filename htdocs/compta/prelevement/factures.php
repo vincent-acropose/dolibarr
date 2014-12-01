@@ -47,7 +47,7 @@ $page = GETPOST('page','int');
 $sortorder = ((GETPOST('sortorder','alpha')=="")) ? "DESC" : GETPOST('sortorder','alpha');
 $sortfield = ((GETPOST('sortfield','alpha')=="")) ? "p.ref" : GETPOST('sortfield','alpha');
 
-llxHeader('',$langs->trans("WithdrawalReceipts"));
+llxHeader('',$langs->trans("WithdrawalsReceipts"));
 
 if ($prev_id)
 {
@@ -56,7 +56,7 @@ if ($prev_id)
   	if ($bon->fetch($prev_id) == 0)
     {
     	$head = prelevement_prepare_head($bon);
-      	dol_fiche_head($head, 'invoices', $langs->trans("WithdrawalReceipts"), '', 'payment');
+		dol_fiche_head($head, 'invoices', $langs->trans("WithdrawalsReceipts"), '', 'payment');
 
       	print '<table class="border" width="100%">';
 
@@ -157,7 +157,7 @@ if ($result)
     {
      	$obj = $db->fetch_object($result);
 
-      	print "<tr $bc[$var]><td>";
+      	print "<tr ".$bc[$var]."><td>";
 
       	print '<a href="'.DOL_URL_ROOT.'/compta/facture.php?facid='.$obj->facid.'">';
       	print img_object($langs->trans("ShowBill"),"bill");
@@ -194,7 +194,7 @@ if ($result)
 
   	if($socid)
     {
-      	print "<tr $bc[$var]><td>";
+      	print "<tr ".$bc[$var]."><td>";
 
      	print '<td>'.$langs->trans("Total").'</td>';
 
@@ -216,4 +216,3 @@ else
 $db->close();
 
 llxFooter();
-?>

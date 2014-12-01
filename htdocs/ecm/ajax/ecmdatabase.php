@@ -16,7 +16,7 @@
  */
 
 /**
- *       \file       htdocs/ecm/ajax/ecmdatabases.php
+ *       \file       htdocs/ecm/ajax/ecmdatabase.php
  *       \brief      File to build ecm database
  */
 
@@ -183,4 +183,3 @@ if (isset($action) && ! empty($action))
 	}
 }
 
-?>

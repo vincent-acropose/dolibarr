@@ -106,11 +106,12 @@ class Translate
 			// Array force long code from first part, even if long code is defined
 			$longforshort=array('ar'=>'ar_SA');
 			if (isset($longforshort[strtolower($langpart[0])])) $srclang=$longforshort[strtolower($langpart[0])];
-			else {
+			else if (! is_numeric($langpart[1])) {		// Second part YY may be a numeric with some Chrome browser
 				$srclang=strtolower($langpart[0])."_".strtoupper($langpart[1]);
 				$longforlong=array('no_nb'=>'nb_NO');
 				if (isset($longforlong[strtolower($srclang)])) $srclang=$longforlong[strtolower($srclang)];
 			}
+			else $srclang=strtolower($langpart[0])."_".strtoupper($langpart[0]);
 		}
 		else {						// If it's for a codetouse that is a short code xx
     	    // Array to convert short lang code into long code.
@@ -343,6 +344,8 @@ class Translate
 	private function getTradFromKey($key)
 	{
 		global $db;
+
+		if (! is_string($key)) return 'ErrorBadValueForParamNotAString';	// Avoid multiple errors with code not using function correctly.
 
 		//print 'xx'.$key;
 		$newstr=$key;
@@ -642,7 +645,7 @@ class Translate
 	 *      Search into translation array, then into cache, then if still not found, search into database.
 	 *      Store key-label found into cache variable $this->cache_labels to save SQL requests to get labels.
 	 *
-	 * 		@param	DoliBD	$db				Database handler
+	 * 		@param	DoliDB	$db				Database handler
 	 * 		@param	string	$key			Translation key to get label (key in language file)
 	 * 		@param	string	$tablename		Table name without prefix
 	 * 		@param	string	$fieldkey		Field for key
@@ -658,7 +661,7 @@ class Translate
 
         //print 'param: '.$key.'-'.$keydatabase.'-'.$this->trans($key); exit;
 
-		// Check if in language array (this can call getTradFromKey)
+		// Check if a translation is available (this can call getTradFromKey)
 		if ($this->transnoentitiesnoconv($key) != $key)
 		{
 			return $this->transnoentitiesnoconv($key);    // Found in language array
@@ -702,7 +705,7 @@ class Translate
 	 */
 	function getCurrencyAmount($currency_code, $amount)
 	{
-		$symbol=$this->getCurrencSymbol($currency_code);
+		$symbol=$this->getCurrencySymbol($currency_code);
 
 		if (in_array($currency_code, array('USD'))) return $symbol.$amount;
 		else return $amount.$symbol;
@@ -721,7 +724,7 @@ class Translate
 
 		if (function_exists("mb_convert_encoding"))
 		{
-			$this->load_cache_currencies($forceloadall?'':$currency_code);
+			$this->loadCacheCurrencies($forceloadall?'':$currency_code);
 
 			if (isset($this->cache_currencies[$currency_code]) && ! empty($this->cache_currencies[$currency_code]['unicode']) && is_array($this->cache_currencies[$currency_code]['unicode']))
 			{
@@ -736,12 +739,12 @@ class Translate
 	}
 
 	/**
-	 *  Load into the cache, all currencies
+	 *  Load into the cache this->cache_currencies, all currencies
 	 *
 	 *	@param	string	$currency_code		Get only currency. Get all if ''.
 	 *  @return int             			Nb of loaded lines, 0 if already loaded, <0 if KO
 	 */
-	function load_cache_currencies($currency_code)
+	public function loadCacheCurrencies($currency_code)
 	{
 		global $db;
 
@@ -753,7 +756,7 @@ class Translate
 		if (! empty($currency_code)) $sql.=" AND code_iso = '".$currency_code."'";
 		//$sql.= " ORDER BY code_iso ASC"; // Not required, a sort is done later
 
-		dol_syslog(get_class($this).'::load_cache_currencies sql='.$sql, LOG_DEBUG);
+		dol_syslog(get_class($this).'::loadCacheCurrencies sql='.$sql, LOG_DEBUG);
 		$resql = $db->query($sql);
 		if ($resql)
 		{
@@ -784,6 +787,21 @@ class Translate
 			return -1;
 		}
 	}
+
+	/**
+	 * Return an array with content of all loaded translation keys (found into this->tab_translate)
+	 *
+	 * @return array	Array of translation keys lang_key => string_translation_loaded
+	 */
+	function get_translations_for_substitutions()
+	{
+		$substitutionarray = array();
+
+		foreach($this->tab_translate as $code => $label) {
+			$substitutionarray['lang_'.$code] = $label;
+		}
+
+		return $substitutionarray;
+	}
 }
 
-?>

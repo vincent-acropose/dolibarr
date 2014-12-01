@@ -1,5 +1,4 @@
-# Language file - ca_ES - cashdesk 
-CHARSET=UTF-8
+# Language file - Source file is en_US - cashdesk
 CashDeskMenu=TPV
 CashDesk=Terminal Punt de Venda
 CashDesks=Terminals Punt de Venda
@@ -38,3 +37,4 @@ ShowCompany=Veure empresa
 ShowStock=Veure magatzem
 DeleteArticle=Feu clic per treure aquest article
 FilterRefOrLabelOrBC=Cerca (Ref/Etiq.)
+UserNeedPermissionToEditStockToUsePos=You ask to decrease stock on invoice creation, so user that use POS need to have permission to edit stock.

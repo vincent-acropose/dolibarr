@@ -4,7 +4,7 @@
  * Copyright (C) 2005      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
- * Copyright (C) 2011      Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2011-2014 Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
 
 $langs->load("bills");
 $langs->load("products");
+$langs->load("main");
 
 $id=GETPOST('id','int');
 $ref=GETPOST('ref','alpha');
@@ -53,12 +54,19 @@ $mesg = '';
 
 $product = new Product($db);
 $productid=0;
-if ($id || $ref)
+if ($id > 0 || ! empty($ref))
 {
 	$result = $product->fetch($id,$ref);
 	$productid=$product->id;
+	$id=$product->id;
 }
 
+// Initialize technical object to manage hooks of products. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('composedproductcard'));
+
+$parameters=array('id'=>$id, 'ref'=>$ref);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$product,$action);    // Note that $action and $object may have been modified by some hooks
+$error=$hookmanager->error; $errors=$hookmanager->errors;
 
 /*
  * Actions
@@ -70,7 +78,7 @@ $cancel <> $langs->trans("Cancel") &&
 ($user->rights->produit->creer || $user->rights->service->creer))
 {
 	$error=0;
-	for($i=0;$i<$_POST["max_prod"];$i++)
+	for ($i=0; $i<$_POST["max_prod"]; $i++)
 	{
 		if ($_POST["prod_id_chk".$i] > 0)
 		{
@@ -119,6 +127,10 @@ if ($cancel == $langs->trans("Cancel"))
  * View
  */
 
+$product_fourn = new ProductFournisseur($db);
+$productstatic = new Product($db);
+$form = new Form($db);
+
 // action recherche des produits par mot-cle et/ou par categorie
 if ($action == 'search')
 {
@@ -153,11 +165,8 @@ if ($action == 'search')
 }
 //print $sql;
 
-$productstatic = new Product($db);
-$form = new Form($db);
 
 llxHeader("","",$langs->trans("CardProduct".$product->type));
-$form = new Form($db);
 
 
 dol_htmloutput_errors($mesg);
@@ -169,15 +178,13 @@ $picto=($product->type==1?'service':'product');
 dol_fiche_head($head, 'subproduct', $titre, 0, $picto);
 
 
-if ($id || $ref)
+if ($id > 0 || ! empty($ref))
 {
-	if ($result)
+/*	if ($result)
 	{
 		if ($action <> 'edit' && $action <> 'search' && $action <> 're-edit')
 		{
-			/*
-			 *  En mode visu
-			 */
+			// mode visu
 
 			print '<table class="border" width="100%">';
 
@@ -263,11 +270,11 @@ if ($id || $ref)
 			dol_fiche_end();
 		}
 	}
-
+*/
 	/*
 	 * Fiche en mode edition
 	 */
-	if (($action == 'edit' || $action == 'search' || $action == 're-edit') && ($user->rights->produit->creer || $user->rights->service->creer))
+	if ($user->rights->produit->lire || $user->rights->service->lire)
 	{
 		print '<table class="border" width="100%">';
 
@@ -288,9 +295,43 @@ if ($id || $ref)
 		print '<tr><td>'.$langs->trans("Label").'</td><td>'.$product->libelle.'</td>';
 		print '</tr>';
 
+		if (empty($conf->global->PRODUIT_MULTIPRICES))
+		{
+		    // Price
+			print '<tr><td>'.$langs->trans("SellingPrice").'</td><td>';
+			
+			if ($object->price_base_type == 'TTC')
+			{
+				print price($object->price_ttc).' '.$langs->trans($object->price_base_type);
+			}
+			else
+			{
+				print price($object->price);
+				if (!empty($object->price_base_type)) {
+					print ' '.$langs->trans($object->price_base_type);
+				}
+			}
+			print '</td></tr>';
+
+			// Price minimum
+			print '<tr><td>'.$langs->trans("MinPrice").'</td><td>';
+			if ($object->price_base_type == 'TTC')
+			{
+				print price($object->price_min_ttc).' '.$langs->trans($object->price_base_type);
+			}
+			else
+			{
+				print price($object->price_min);
+				if (!empty($object->price_base_type)) {
+					print ' '.$langs->trans($object->price_base_type);
+				}
+			}
+			print '</td></tr>';
+		}
+
 		// Number of subproducts
 		$prodsfather = $product->getFather(); //Parent Products
-		$product->get_sousproduits_arbo();
+		$product->get_sousproduits_arbo();			// Defined $product->sousprod
 		$prods_arbo=$product->get_arbo_each_prod();
 		$nbofsubproducts=count($prods_arbo);
 		print '<tr><td>'.$langs->trans("AssociatedProductsNumber").'</td><td>';
@@ -299,26 +340,59 @@ if ($id || $ref)
 		print '</tr>';
 
 		// List of subproducts
-		if(count($prods_arbo) > 0)
+		if (count($prods_arbo) > 0)
 		{
+			$atleastonenotdefined=0;
 			print '<tr><td colspan="2">';
-			print '<b>'.$langs->trans("ProductAssociationList").'</b><br>';
-			print '<table class="nobordernopadding">';
+			print $langs->trans("ProductAssociationList").'<br>';
+			print '<table class="nobordernopadding centpercent">';
 			foreach($prods_arbo as $value)
 			{
 				$productstatic->id=$value['id'];
 				$productstatic->type=$value['type'];
-				$productstatic->ref=$value['fullpath'];
-				if (! empty($conf->stock->enabled)) $productstatic->load_stock();
-				//var_dump($value);
 				//print '<pre>'.$productstatic->ref.'</pre>';
 				//print $productstatic->getNomUrl(1).'<br>';
-				//print $value[0];	// This contains a tr line.
+				//var_dump($value);
 				print '<tr>';
-				print '<td>'.$productstatic->getNomUrl(1,'composition').' ('.$value['nb'].') &nbsp &nbsp</td>';
-				if (! empty($conf->stock->enabled)) print '<td>'.$langs->trans("Stock").' : <b>'.$productstatic->stock_reel.'</b></td>';
+				if ($value['level'] <= 1)
+				{
+					$notdefined=0;
+					$productstatic->ref=$value['fullpath'];
+					print '<td>'.$productstatic->getNomUrl(1,'composition').' ('.$value['nb'].')</td>';
+					print '<td align="right">';
+					if ($product_fourn->find_min_price_product_fournisseur($productstatic->id) > 0)
+					{
+						print $langs->trans("BuyingPriceMinShort").': ';
+				    	if ($product_fourn->product_fourn_price_id > 0) print $product_fourn->display_price_product_fournisseur(0,0);
+				    	else { print $langs->trans("NotDefined"); $notdefined++; $atleastonenotdefined++; }
+					}
+					print '</td>';
+					$totalline=price2num($value['nb'] * $product_fourn->fourn_unitprice, 'MT');
+					$total+=$totalline;
+					print '<td align="right">'.($notdefined?'':price($totalline,'','',0,0,-1,$conf->currency)).'</td>';
+					if (! empty($conf->stock->enabled)) print '<td align="right">'.$langs->trans("Stock").': '.$value['stock'].'</td>';	// Real stock
+				}
+				else {
+					$productstatic->ref=$value['label'];
+					print '<td>';
+					for ($i=0; $i < $value['level']; $i++)
+					{
+						print ' &nbsp; &nbsp; ';
+					}
+					print $productstatic->getNomUrl(1,'composition').' ('.$value['nb'].')</td>';
+					print '<td><td>';
+					print '<td><td>';
+					if (! empty($conf->stock->enabled)) print '<td align="right"></td>';	// Real stock
+				}
 				print '</tr>';
 			}
+			print '<tr>';
+			print '<td colspan="2">'.$langs->trans("TotalBuyingPriceMin").': ';
+			if ($atleastonenotdefined) print $langs->trans("Unknown").' ('.$langs->trans("SomeSubProductHaveNoPrices").')';
+			print '</td>';
+			print '<td align="right">'.($atleastonenotdefined?'':price($total,'','',0,0,-1,$conf->currency)).'</td>';
+			if (! empty($conf->stock->enabled)) print '<td class="liste_total" align="right">&nbsp;</td>';
+			print '</tr>';
 			print '</table>';
 			print '</td></tr>';
 		}
@@ -331,7 +405,7 @@ if ($id || $ref)
 		if (count($prodsfather) > 0)
 		{
 			print '<tr><td colspan="2">';
-			print '<b>'.$langs->trans("ProductParentList").'</b><br>';
+			print $langs->trans("ProductParentList").'<br>';
 			print '<table class="nobordernopadding">';
 			foreach($prodsfather as $value)
 			{
@@ -346,42 +420,46 @@ if ($id || $ref)
 			print '</table>';
 			print '</td></tr>';
 		}
-
+		$parameters=array('prods_arbo'=>$prods_arbo);
+		$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$product,$action);    // Note that $action and $object may have been modified by some hooks
+		$error=$hookmanager->error; $errors=$hookmanager->errors;
 		print '</table>';
 
 		dol_fiche_end();
 
-		print '<br>';
 
-		$rowspan=1;
-		if (! empty($conf->categorie->enabled)) $rowspan++;
-
-        print_fiche_titre($langs->trans("ProductToAddSearch"),'','');
-		print '<form action="'.DOL_URL_ROOT.'/product/composition/fiche.php?id='.$id.'" method="post">';
-		print '<table class="border" width="100%"><tr><td>';
-		print '<table class="nobordernopadding">';
-
-		print '<tr><td>';
-		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-		print $langs->trans("KeywordFilter").' &nbsp; ';
-		print '</td>';
-		print '<td><input type="text" name="key" value="'.$key.'">';
-		print '<input type="hidden" name="action" value="search">';
-		print '<input type="hidden" name="id" value="'.$id.'">';
-		print '</td>';
-		print '<td rowspan="'.$rowspan.'" valign="middle">';
-		print '<input type="submit" class="button" value="'.$langs->trans("Search").'">';
-		print '</td></tr>';
-		if (! empty($conf->categorie->enabled))
+		// Form with product to add
+		if ((empty($action) || $action == 'view' || $action == 'edit' || $action == 'search' || $action == 're-edit') && ($user->rights->produit->creer || $user->rights->service->creer))
 		{
-			print '<tr><td>'.$langs->trans("CategoryFilter").' &nbsp; </td>';
-			print '<td>'.$form->select_all_categories(0, $parent).'</td></tr>';
+			print '<br>';
+
+			$rowspan=1;
+			if (! empty($conf->categorie->enabled)) $rowspan++;
+
+	        print_fiche_titre($langs->trans("ProductToAddSearch"),'','');
+			print '<form action="'.DOL_URL_ROOT.'/product/composition/fiche.php?id='.$id.'" method="POST">';
+			print '<table class="border" width="100%"><tr><td>';
+			print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+			print $langs->trans("KeywordFilter").' &nbsp; ';
+			print '</td>';
+			print '<td><input type="text" name="key" value="'.$key.'">';
+			print '<input type="hidden" name="action" value="search">';
+			print '<input type="hidden" name="id" value="'.$id.'">';
+			print '</td>';
+			print '<td rowspan="'.$rowspan.'" valign="middle">';
+			print '<input type="submit" class="button" value="'.$langs->trans("Search").'">';
+			print '</td></tr>';
+			if (! empty($conf->categorie->enabled))
+			{
+				print '<tr><td>'.$langs->trans("CategoryFilter").' &nbsp; </td>';
+				print '<td class="maxwidthonsmartphone">'.$form->select_all_categories(0, $parent).'</td></tr>';
+			}
+			print '</table>';
+			print '</form>';
 		}
 
-		print '</table>';
-		print '</td></td></table>';
-		print '</form>';
 
+		// List of products
 		if ($action == 'search')
 		{
 			print '<br>';
@@ -394,7 +472,7 @@ if ($id || $ref)
 			print '<th class="liste_titre">'.$langs->trans("Ref").'</td>';
 			print '<th class="liste_titre">'.$langs->trans("Label").'</td>';
 			print '<th class="liste_titre" align="center">'.$langs->trans("AddDel").'</td>';
-			print '<th class="liste_titre" align="right">'.$langs->trans("Quantity").'</td>';
+			print '<th class="liste_titre" align="right">'.$langs->trans("Qty").'</td>';
 			print '</tr>';
 			if ($resql)
 			{
@@ -458,7 +536,7 @@ if ($id || $ref)
 						}
 						print '<td align="center"><input type="hidden" name="prod_id_'.$i.'" value="'.$objp->rowid.'">';
 						print '<input type="checkbox" '.$addchecked.'name="prod_id_chk'.$i.'" value="'.$objp->rowid.'"></td>';
-						print '<td align="right"><input type="text" size="3" name="prod_qty_'.$i.'" value="'.$qty.'"></td>';
+						print '<td align="right"><input type="text" size="2" name="prod_qty_'.$i.'" value="'.$qty.'"></td>';
 						print '</tr>';
 					}
 					$i++;
@@ -486,28 +564,6 @@ if ($id || $ref)
 }
 
 
-
-/* ************************************************************************** */
-/*                                                                            */
-/* Barre d'action                                                             */
-/*                                                                            */
-/* ************************************************************************** */
-
-print "\n<div class=\"tabsAction\">\n";
-
-if ($action == '')
-{
-	if ($user->rights->produit->creer || $user->rights->service->creer)
-	{
-		print '<a class="butAction" href="'.DOL_URL_ROOT.'/product/composition/fiche.php?action=edit&amp;id='.$productid.'">'.$langs->trans("EditAssociate").'</a>';
-	}
-}
-
-print "\n</div>\n";
-
-
 llxFooter();
 
 $db->close();
-
-?>

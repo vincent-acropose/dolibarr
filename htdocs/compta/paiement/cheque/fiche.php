@@ -3,6 +3,7 @@
  * Copyright (C) 2007-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2009-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2011		Juanjo Menent			<jmenent@2byte.es>
+ * Copyright (C) 2013 		Philippe Grand      	<philippe.grand@atoo-net.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +61,6 @@ $offset = $limit * $page ;
 $dir=$conf->banque->dir_output.'/bordereau/';
 $filterdate=dol_mktime(0, 0, 0, GETPOST('fdmonth'), GETPOST('fdday'), GETPOST('fdyear'));
 $filteraccountid=GETPOST('accountid');
-//var_dump($_POST);
 
 $object = new RemiseCheque($db);
 
@@ -80,13 +80,55 @@ if ($action == 'setdate' && $user->rights->banque->cheque)
         $result=$object->set_date($user,$date);
         if ($result < 0)
         {
-            $mesg='<div class="error">'.$object->error.'</div>';
+			setEventMessage($object->error, 'errors');
         }
     }
     else
     {
-        $mesg='<div class="error">'.$object->error.'</div>';
+        setEventMessage($object->error, 'errors');
     }
+}
+
+/*
+ * Actions
+ */
+
+if ($action == 'setrefext' && $user->rights->banque->cheque)
+{
+    $result = $object->fetch(GETPOST('id','int'));
+    if ($result > 0)
+    {
+        $ref_ext = GETPOST('ref_ext');
+
+        $result=$object->setValueFrom('ref_ext', $ref_ext);
+        if ($result < 0)
+        {
+            setEventMessage($object->error, 'errors');
+        }
+    }
+    else
+    {
+        setEventMessage($object->error, 'errors');
+    }
+}
+
+if ($action == 'setref' && $user->rights->banque->cheque)
+{
+	$result = $object->fetch(GETPOST('id','int'));
+	if ($result > 0)
+	{
+		$number=GETPOST('number');
+
+		$result=$object->set_number($user,$number);
+		if ($result < 0)
+		{
+		    $mesg='<div class="error">'.$object->error.'</div>';
+		}
+	}
+	else
+	{
+	    $mesg='<div class="error">'.$object->error.'</div>';
+	}
 }
 
 if ($action == 'create' && $_POST["accountid"] > 0 && $user->rights->banque->cheque)
@@ -117,12 +159,12 @@ if ($action == 'create' && $_POST["accountid"] > 0 && $user->rights->banque->che
 		}
 		else
 		{
-			$mesg='<div class="error">'.$object->error.'</div>';
+			setEventMessage($object->error, 'errors');
 		}
 	}
 	else
 	{
-        $mesg=$langs->trans("ErrorSelectAtLeastOne");
+		setEventMessage($langs->trans("ErrorSelectAtLeastOne"));
 	    $action='new';
 	}
 }
@@ -138,7 +180,7 @@ if ($action == 'remove' && $id > 0 && $_GET["lineid"] > 0 && $user->rights->banq
 	}
 	else
 	{
-		$mesg='<div class="error">'.$object->error.'</div>';
+		setEventMessage($object->error, 'errors');
 	}
 }
 
@@ -153,7 +195,7 @@ if ($action == 'confirm_delete' && $confirm == 'yes' && $user->rights->banque->c
 	}
 	else
 	{
-		$mesg='<div class="error">'.$paiement->error.'</div>';
+		setEventMessage($paiement->error, 'errors');
 	}
 }
 
@@ -180,7 +222,7 @@ if ($action == 'confirm_valide' && $confirm == 'yes' && $user->rights->banque->c
 	}
 	else
 	{
-		$mesg='<div class="error">'.$paiement->error.'</div>';
+		setEventMessage($paiement->error, 'errors');
 	}
 }
 
@@ -188,10 +230,8 @@ if ($action == 'builddoc' && $user->rights->banque->cheque)
 {
 	$result = $object->fetch($id);
 
-	/*if ($_REQUEST['model'])
-	{
-		$object->setDocModel($user, $_REQUEST['model']);
-	}*/
+	// Save last template used to generate document
+	//if (GETPOST('model')) $object->setDocModel($user, GETPOST('model','alpha'));
 
     $outputlangs = $langs;
     $newlang='';
@@ -283,8 +323,8 @@ else
 	 */
 	if ($action == 'delete')
 	{
-		$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans("DeleteCheckReceipt"), $langs->trans("ConfirmDeleteCheckReceipt"), 'confirm_delete','','',1);
-		if ($ret == 'html') print '<br>';
+		print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans("DeleteCheckReceipt"), $langs->trans("ConfirmDeleteCheckReceipt"), 'confirm_delete','','',1);
+		
 	}
 
 	/*
@@ -292,8 +332,8 @@ else
 	 */
 	if ($action == 'valide')
 	{
-		$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans("ValidateCheckReceipt"), $langs->trans("ConfirmValidateCheckReceipt"), 'confirm_valide','','',1);
-		if ($ret == 'html') print '<br>';
+		print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans("ValidateCheckReceipt"), $langs->trans("ConfirmValidateCheckReceipt"), 'confirm_valide','','',1);
+		
 	}
 }
 
@@ -460,12 +500,30 @@ else
 	$accountstatic->label=$object->account_label;
 
 	print '<table class="border" width="100%">';
-	print '<tr><td width="20%">'.$langs->trans('Ref').'</td><td colspan="2" >';
+	print '<tr><td width=20%>';
 
-	print $form->showrefnav($object,'ref',$linkback, 1, 'number');
+	print '<table class="nobordernopadding" width="100%"><tr><td>';
+	print $langs->trans('Ref');
+	print '</td>';
+	if ($action != 'editref') print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=editref&amp;id='.$object->id.'">'.img_edit($langs->trans('SetRef'),1).'</a></td>';
+	print '</tr></table>';
+	print '</td><td colspan="2">';
+	if ($action == 'editref')
+	{
+		print '<form name="setdate" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'" method="post">';
+		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+		print '<input type="hidden" name="action" value="setref">';
+		print '<input type="text" name="number" value="'.$object->number.'">';
+		print '<input type="submit" class="button" value="'.$langs->trans('Modify').'">';
+		print '</form>';
+	}
+	else
+	{
+	    print $form->showrefnav($object,'ref',$linkback, 1, 'number');
+	}
 
-	print "</td>";
-	print "</tr>\n";
+	print '</td>';
+	print '</tr>';
 
 	print '<tr><td>';
 
@@ -487,6 +545,32 @@ else
     else
     {
         print $object->date_bordereau ? dol_print_date($object->date_bordereau,'day') : '&nbsp;';
+    }
+
+	print '</td>';
+	print '</tr>';
+
+	// External ref
+	print '<tr><td>';
+
+	print '<table class="nobordernopadding" width="100%"><tr><td>';
+    print $langs->trans('RefExt');
+    print '</td>';
+    if ($action != 'editrefext') print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=editrefext&amp;id='.$object->id.'">'.img_edit($langs->trans('SetRefExt'),1).'</a></td>';
+    print '</tr></table>';
+    print '</td><td colspan="2">';
+    if ($action == 'editrefext')
+    {
+        print '<form name="setrefext" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'" method="post">';
+        print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+        print '<input type="hidden" name="action" value="setrefext">';
+        print '<input type="text" name="ref_ext" value="'.$object->ref_ext.'">';
+        print '<input type="submit" class="button" value="'.$langs->trans('Modify').'">';
+        print '</form>';
+    }
+    else
+    {
+        print $object->ref_ext;
     }
 
 	print '</td>';
@@ -535,7 +619,7 @@ else
 
 		$param="&amp;id=".$object->id;
 		print '<tr class="liste_titre">';
-		print_liste_field_titre($langs->trans("Cheque"),'','','','','width="30"');
+		print_liste_field_titre($langs->trans("Cheques"),'','','','','width="30"');
 		print_liste_field_titre($langs->trans("DateChequeReceived"),$_SERVER["PHP_SELF"],"b.dateo,b.rowid", "",$param,'align="center"',$sortfield,$sortorder);
 		print_liste_field_titre($langs->trans("Numero"),$_SERVER["PHP_SELF"],"b.num_chq", "",$param,'align="center"',$sortfield,$sortorder);
 		print_liste_field_titre($langs->trans("CheckTransmitter"),$_SERVER["PHP_SELF"],"b.emetteur", "",$param,"",$sortfield,$sortorder);
@@ -553,7 +637,7 @@ else
 				$accounts[$objp->bid]=0;
 			$accounts[$objp->bid] += 1;
 
-			print "<tr $bc[$var]>";
+			print "<tr ".$bc[$var].">";
 			print '<td align="center">'.$i.'</td>';
 			print '<td align="center">'.dol_print_date($db->jdate($objp->date),'day').'</td>';	// Date operation
 			print '<td align="center">'.($objp->num_chq?$objp->num_chq:'&nbsp;').'</td>';
@@ -639,4 +723,3 @@ if ($action != 'new')
 $db->close();
 
 llxFooter();
-?>

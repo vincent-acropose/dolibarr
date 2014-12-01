@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2001-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2012 Juanjo Menent        <jmenent@2byte.es>
@@ -42,6 +42,7 @@ $ref = GETPOST('ref', 'alpha');
 $rowid=GETPOST('rowid','int');
 $action=GETPOST('action', 'alpha');
 $socid=GETPOST('socid', 'int');
+$backtopage=GETPOST('backtopage','alpha');
 $error=0; $mesg = '';
 
 // If socid provided by ajax company selector
@@ -60,6 +61,11 @@ $result=restrictedArea($user,'produit|service&fournisseur',$fieldvalue,'product&
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
 $hookmanager->initHooks(array('pricesuppliercard'));
+$product = new ProductFournisseur($db);
+$product->fetch($id,$ref);
+
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$product,$action);    // Note that $action and $object may have been modified by some hooks
+$error=$hookmanager->error; $errors=$hookmanager->errors;
 
 
 $sortfield = GETPOST("sortfield",'alpha');
@@ -72,6 +78,10 @@ if (! $sortorder) $sortorder="ASC";
 /*
  * Actions
  */
+
+$parameters=array('socid'=>$socid, 'id_prod'=>$id);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+$error=$hookmanager->error; $errors=array_merge($errors, (array) $hookmanager->errors);
 
 if ($action == 'remove_pf')
 {
@@ -99,6 +109,11 @@ if ($action == 'updateprice' && GETPOST('cancel') <> $langs->trans("Cancel"))
     $tva_tx = str_replace('*','', GETPOST('tva_tx','alpha'));
     $tva_tx = price2num($tva_tx);
 
+    if ($tva_tx == '')
+    {
+		$error++;
+		$mesg='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentities("VATRateForSupplierProduct")).'</div>';
+    }
 	if (empty($quantity))
 	{
 		$error++;
@@ -290,10 +305,14 @@ if ($id || $ref)
 					$events[]=array('method' => 'getVatRates', 'url' => dol_buildpath('/core/ajax/vatrates.php',1), 'htmlname' => 'tva_tx', 'params' => array());
 					print $form->select_company(GETPOST("id_fourn"),'id_fourn','fournisseur=1',1,0,0,$events);
 
-					if (is_object($hookmanager))
+					$parameters=array('filtre'=>"fournisseur=1",'html_name'=>'id_fourn','selected'=>GETPOST("id_fourn"),'showempty'=>1,'prod_id'=>$product->id);
+				    $reshook=$hookmanager->executeHooks('formCreateThirdpartyOptions',$parameters,$object,$action);
+					if (empty($reshook))
 					{
-						$parameters=array('filtre'=>"fournisseur=1",'html_name'=>'id_fourn','selected'=>GETPOST("id_fourn"),'showempty'=>1,'prod_id'=>$product->id);
-					    $reshook=$hookmanager->executeHooks('formCreateThirdpartyOptions',$parameters,$object,$action);
+						if (empty($form->result))
+						{
+							print ' - <a href="'.DOL_URL_ROOT.'/societe/soc.php?action=create&type=f&backtopage='.urlencode($_SERVER["PHP_SELF"].'?id='.$product->id.'&action='.$action).'">'.$langs->trans("CreateDolibarrThirdPartySupplier").'</a>';
+						}
 					}
 				}
 				print '</td></tr>';
@@ -316,7 +335,7 @@ if ($id || $ref)
 				{
 					$langs->load("propal");
 					print '<tr><td>'.$langs->trans("Availability").'</td><td>';
-					$form->select_availability($product->fk_availability,"oselDispo",1);
+					$form->selectAvailabilityDelay($product->fk_availability,"oselDispo",1);
 					print '</td></tr>'."\n";
 				}
 
@@ -353,6 +372,7 @@ if ($id || $ref)
 				if (! empty($socid))	// When update
 				{
 					$default_vat=get_default_tva($supplier, $mysoc, $product->id);
+					if (empty($default_vat)) $default_vat=$product->tva_tx;
 				}
 				print '<input type="text" class="flat" size="5" name="tva_tx" value="'.(GETPOST("tva_tx")?vatrate(GETPOST("tva_tx")):($default_vat!=''?vatrate($default_vat):'')).'">';
 				print '</td></tr>';
@@ -378,6 +398,12 @@ if ($id || $ref)
 					print '<td><input class="flat" name="charges" size="8" value="'.(GETPOST('charges')?price(GETPOST('charges')):(isset($product->fourn_charges)?price($product->fourn_charges):'')).'">';
 	        		print '</td>';
 					print '</tr>';
+				}
+
+				if (is_object($hookmanager))
+				{
+					$parameters=array('id_fourn'=>$id_fourn,'prod_id'=>$product->id);
+				    $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);
 				}
 
 				print '</table>';
@@ -502,6 +528,12 @@ if ($id || $ref)
 							print '</td>';
 						}
 
+						if (is_object($hookmanager))
+						{
+							$parameters=array('id_pfp'=>$productfourn->product_fourn_price_id,'id_fourn'=>$id_fourn,'prod_id'=>$product->id);
+						    $reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$object,$action);
+						}
+
 						// Modify-Remove
 						print '<td align="center">';
 						if ($user->rights->produit->creer || $user->rights->service->creer)
@@ -530,4 +562,3 @@ else
 // End of page
 llxFooter();
 $db->close();
-?>

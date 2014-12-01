@@ -84,13 +84,13 @@ if ($action == "save" && empty($cancel))
 
  	if (! $error)
     {
-    	$db->commit();
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+        setEventMessage($langs->trans("SetupSaved"));
+        $db->commit();
     }
     else
     {
-    	$db->rollback();
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+        setEventMessage($langs->trans("Error"),'errors');
+        $db->rollback();
     }
 }
 
@@ -137,7 +137,7 @@ print "<br>\n";
 
 $head=agenda_prepare_head();
 
-dol_fiche_head($head, 'autoactions', $langs->trans("Agenda"));
+dol_fiche_head($head, 'autoactions', $langs->trans("Agenda"), 0, 'action');
 
 print $langs->trans("AgendaAutoActionDesc")."<br>\n";
 print $langs->trans("OnlyActiveElementsAreShown").'<br>';
@@ -161,8 +161,9 @@ if (! empty($triggers))
 		if ($module == 'order_supplier' || $module == 'invoice_supplier') $module = 'fournisseur';
 		if ($module == 'shipping') $module = 'expedition_bon';
 		if ($module == 'member') $module = 'adherent';
+		if ($module == 'project') $module = 'projet';
 		//print 'module='.$module.'<br>';
-		if ($conf->$module->enabled)
+		if (! empty($conf->$module->enabled))
 		{
 			$var=!$var;
 			print '<tr '.$bc[$var].'>';
@@ -188,9 +189,6 @@ dol_fiche_end();
 
 print "<br>";
 
-dol_htmloutput_mesg($mesg);
-
 llxFooter();
 
 $db->close();
-?>

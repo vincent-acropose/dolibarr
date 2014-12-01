@@ -1,13 +1,4 @@
-/*
- * Language code: zh_CN
- * Automatic generated via autotranslator.php tool
- * Generation date 2010-06-08 21:22:55
- */
-
-
-// START - Lines generated via autotranslator.php tool (2010-06-08 21:22:55).
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - exports
 ExportsArea=出口地区
 ImportArea=进口地区
 NewExport=新的出口
@@ -17,7 +8,7 @@ ImportableDatas=导入数据集
 SelectExportDataSet=选择您要导出数据集...
 SelectImportDataSet=选择要导入的数据集...
 SelectExportFields=选择您要导出字段，或选择一个预定义的出口材
-SelectImportFields=选择源文件要导入的字段在数据库领域的目标通过移动向上和向下与%s的锚，或选择一个预定义的进口材：
+SelectImportFields=Choose source file fields you want to import and their target field in database by moving them up and down with anchor %s, or select a predefined import profile:
 NotImportedFields=田源文件不导入
 SaveExportModel=保存这个导出配置，如果你打算以后再用...
 SaveImportModel=保存这个导入配置文件，如果你打算以后再用...
@@ -54,9 +45,9 @@ FormatedExportDesc2=第一步是选择一个预定义的数据集，然后选择
 FormatedExportDesc3=当数据出口都被选中，你可以定义输出文件格式您要导出您的数据。
 Sheet=片
 NoImportableData=没有导入数据（没有定义模块，让数据导入）
-FileSuccessfullyBuilt=
-SQLUsedForExport=
-LineId=
+FileSuccessfullyBuilt=导出生成文件
+SQLUsedForExport=SQL Request used to build export file
+LineId=Id of line
 LineDescription=说明线
 LineUnitPrice=优惠价线
 LineVATRate=增值税率线
@@ -73,7 +64,7 @@ ChooseFormatOfFileToImport=选择文件格式为导入文件格式使用的象�
 ChooseFileToImport=上传文件然后点击象形%s到选择导入文件作为源文件...
 SourceFileFormat=源文件格式
 FieldsInSourceFile=在源文件中的字段
-FieldsInTargetDatabase=在Dolibarr数据库（*=强制性目标字段）
+FieldsInTargetDatabase=目标字段：Dolibarr数据库(粗体=强制)
 Field=场
 NoFields=没有字段
 MoveField=移动领域的%s的列号
@@ -90,7 +81,7 @@ DoNotImportFirstLine=不要进口源文件的第一行
 NbOfSourceLines=在源文件的行数
 NowClickToTestTheImport=检查输入你所定义的参数。如果他们是正确的，按一下按钮<b>%</b>的<b>“S”</b>来启动数据库的导入过程的模拟（无数据将在你改变，这只是一个模拟的时刻）...
 RunSimulateImportFile=启动进口仿真
-FieldNeedSource=这种感觉需要从源数据库中的数据文件
+FieldNeedSource=This field requires data from the source file
 SomeMandatoryFieldHaveNoSource=有些领域没有强制性的从数据源文件
 InformationOnSourceFile=关于源信息文件
 InformationOnTargetTables=在信息领域的目标
@@ -104,30 +95,40 @@ TooMuchErrors=还有<b>%的台词</b> ，但有错误的其他来源，但产量
 TooMuchWarnings=还有<b>%s的</b>线，警告其他来源，但产量一直有限。
 EmptyLine=空行（将被丢弃）
 CorrectErrorBeforeRunningImport=您必须先输入正确运行前确定的所有错误。
+FileWasImported=进口数量<b>%s</b>文件。
 YouCanUseImportIdToFindRecord=你可以找到所有进口领域<b>import_key</b>记录过滤您的数据库<b>='%s'的</b> 。
 NbOfLinesOK=行数没有错误，也没有警告<b>：%s的</b> 。
 NbOfLinesImported=线成功导入数<b>：%s的</b> 。
 DataComeFromNoWhere=值插入来自无处源文件。
 DataComeFromFileFieldNb=值插入来自<b>S</b>的源文件<b>%</b>来自外地的数目。
 DataComeFromIdFoundFromRef=值<b>%</b>来自外地号码文件<b>的</b> S来源将被用来找到父对象的ID使用（因此，客体<b>%s的</b>具有参考。Dolibarr从源文件必须存在到）。
+DataComeFromIdFoundFromCodeId=Code that comes from field number <b>%s</b> of source file will be used to find id of parent object to use (So the code from source file must exists into dictionary <b>%s</b>). Note that if you know id, you can also use it into source file instead of code. Import should work in both cases.
 DataIsInsertedInto=未来的数据源文件将被插入到以下领域：
 DataIDSourceIsInsertedInto=标识对象的家长发现使用源文件中的数据，将被插入到下面的字段：
+DataCodeIDSourceIsInsertedInto=ID从父行代码中发现，将被插入到下面的字段：
 SourceRequired=数据值是强制性的
 SourceExample=例如可能的数据值
-// STOP - Lines generated via autotranslator.php tool (2010-06-08 21:22:55).
-
-
-// START - Lines generated via autotranslator.php tool (2010-09-04 01:33:40).
-// Reference language: en_US -> zh_CN
-CSVFormatDesc=<b>逗号分隔值</b>文件格式（。csv格式）。 <br>这是一个文本文件格式字段被分隔在[%s]分开。如果一个字段分隔符是里面的内容发现，现场是圆形的圆字[%s]。字符转义字符是为了逃避轮[%s]。
-// STOP - Lines generated via autotranslator.php tool (2010-09-04 01:53:46).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 17:37:09).
-// Reference language: en_US -> zh_CN
-FileWasImported=进口数量<b>%s</b>文件。
-DataComeFromIdFoundFromCodeId=代码将用于从源文件中的字段数<b>%s</b>找到父对象的ID使用（因此，从源文件中的代码必须存在dictionnary <b>%s）。</b>请注意，如果你知道ID，你也可以使用到源文件，而不是代码。进口应该在这两种情况下工作。
-DataCodeIDSourceIsInsertedInto=ID从父行代码中发现，将被插入到下面的字段：
 ExampleAnyRefFoundIntoElement=任何ref元素<b>%s</b>
-ExampleAnyCodeOrIdFoundIntoDictionnary=发现任何代码（或ID）dictionnary <b>%s</b>
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 17:38:12).
+ExampleAnyCodeOrIdFoundIntoDictionary=Any code (or id) found into dictionary <b>%s</b>
+CSVFormatDesc=<b>逗号分隔值</b>文件格式（。csv格式）。 <br>这是一个文本文件格式字段被分隔在[%s]分开。如果一个字段分隔符是里面的内容发现，现场是圆形的圆字[%s]。字符转义字符是为了逃避轮[%s]。
+Excel95FormatDesc=<b>Excel</b> 文件格式 (.xls)<br>这是本地的Excel 95格式 (BIFF5).\n
+Excel2007FormatDesc=<b>Excel</b>文件格式(.XLSX)<br>这是本地的Excel 2007格式(SpreadsheetML)。
+TsvFormatDesc=<b>制表符分隔值</b>文件格式(.tsv)<br>这是一个字段之间用制表符[tab]分隔的文本文件格式。
+ExportFieldAutomaticallyAdded=Field <b>%s</b> was automatically added. It will avoid you to have similar lines to be treated as duplicate records (with this field added, all lines will own their own id and will differ).
+CsvOptions=CSV选项
+Separator=分隔符
+Enclosure=附件
+SuppliersProducts=供应商产品
+BankCode=银行代码
+DeskCode=台代码
+BankAccountNumber=帐号
+BankAccountNumberKey=关键
+SpecialCode=Special code
+ExportStringFilter=%% allows replacing one or more characters in the text
+ExportDateFilter='YYYY' 'YYYYMM' 'YYYYMMDD': filters by one year/month/day<br>'YYYY+YYYY' 'YYYYMM+YYYYMM' 'YYYYMMDD+YYYYMMDD': filters over a range of years/months/days<br>'&gt;YYYY' '&gt;YYYYMM' '&gt;YYYYMMDD': filters on the following years/months/days<br>'&lt;YYYY' '&lt;YYYYMM' '&lt;YYYYMMDD': filters on the previous years/months/days
+ExportNumericFilter='NNNNN' filters by one value<br>'NNNNN+NNNNN' filters over a range of values<br>'&gt;NNNNN' filters by lower values<br>'&gt;NNNNN' filters by higher values
+## filters
+SelectFilterFields=如果你想过滤一些值，这里只是输入值。
+FilterableFields=筛选字段
+FilteredFields=过滤字段
+FilteredFieldsValues=过滤值

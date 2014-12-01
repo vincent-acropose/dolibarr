@@ -27,14 +27,13 @@
  *	\brief      Fichier de la classe permettant de gerer une base pgsql
  */
 
+require_once DOL_DOCUMENT_ROOT .'/core/db/DoliDB.class.php';
 
 /**
  *	Class to drive a Postgresql database for Dolibarr
  */
-class DoliDBPgsql
+class DoliDBPgsql extends DoliDB
 {
-    //! Database handler
-    var $db;
     //! Database type
 	public $type='pgsql';            // Name of manager
     //! Database label
@@ -45,28 +44,11 @@ class DoliDBPgsql
     var $forcecollate='';			// Can't be static as it may be forced with a dynamic value
 	//! Version min database
 	static $versionmin=array(8,4,0);	// Version min database
-
-	//! Resultset of last request
+	//! Resultset of last query
 	private $_results;
 
-	var $connected;               // 1 si connecte, 0 sinon
-	var $database_selected;       // 1 si base selectionne, 0 sinon
-	var $database_name;			//! Nom base selectionnee
-	var $database_user;	   		//! Nom user base
-	//! >=1 if a transaction is opened, 0 otherwise
-	var $transaction_opened;
-	var $lastquery;
-	// Saved last error
-	var $lastqueryerror;
-	var $lasterror;
-	var $lasterrno;
-	
-	var $unescapeslashquot=0;              // By default we do not force the unescape of \'. This is used only to process sql with mysql escaped data.
-	var $standard_conforming_strings=1;    // Database has option standard_conforming_strings to on
-
-	var $ok;
-	var $error;
-
+	public $unescapeslashquot;
+	public $standard_conforming_strings;
 
 	/**
 	 *	Constructor.
@@ -84,6 +66,7 @@ class DoliDBPgsql
 	{
 		global $conf,$langs;
 
+        // Note that having "static" property for "$forcecharset" and "$forcecollate" will make error here in strict mode, so they are not static
 		if (! empty($conf->db->character_set)) $this->forcecharset=$conf->db->character_set;
 		if (! empty($conf->db->dolibarr_main_db_collation))	$this->forcecollate=$conf->db->dolibarr_main_db_collation;
 
@@ -178,12 +161,18 @@ class DoliDBPgsql
 		}
 		if ($line != "")
 		{
+			// group_concat support (PgSQL >= 9.1)
+			$line = preg_replace('/GROUP_CONCAT/i', 'STRING_AGG', $line);
+			$line = preg_replace('/ SEPARATOR/i', ',', $line);
+
 		    if ($type == 'auto')
 		    {
               if (preg_match('/ALTER TABLE/i',$line)) $type='dml';
               else if (preg_match('/CREATE TABLE/i',$line)) $type='dml';
               else if (preg_match('/DROP TABLE/i',$line)) $type='dml';
 		    }
+
+    		$line=preg_replace('/ as signed\)/i',' as integer)',$line);
 
 		    if ($type == 'dml')
 		    {
@@ -204,7 +193,8 @@ class DoliDBPgsql
     			}
 
     			// tinyint type conversion
-    			$line=str_replace('tinyint','smallint',$line);
+    			$line=preg_replace('/tinyint\(?[0-9]*\)?/','smallint',$line);
+    			$line=preg_replace('/tinyint/i','smallint',$line);
 
     			// nuke unsigned
     			$line=preg_replace('/(int\w+|smallint)\s+unsigned/i','\\1',$line);
@@ -228,13 +218,13 @@ class DoliDBPgsql
     			$line=preg_replace('/^float/i','numeric',$line);
     			$line=preg_replace('/(\s*)float/i','\\1numeric',$line);
 
-    			//Check tms timestamp field case (in Mysql this field is defautled to now and 
+    			//Check tms timestamp field case (in Mysql this field is defautled to now and
     			// on update defaulted by now
     			$line=preg_replace('/(\s*)tms(\s*)timestamp/i','\\1tms timestamp without time zone DEFAULT now() NOT NULL',$line);
-    			
+
     			// nuke ON UPDATE CURRENT_TIMESTAMP
     			$line=preg_replace('/(\s*)on(\s*)update(\s*)CURRENT_TIMESTAMP/i','\\1',$line);
-    			
+
     			// unique index(field1,field2)
     			if (preg_match('/unique index\s*\((\w+\s*,\s*\w+)\)/i',$line))
     			{
@@ -307,6 +297,9 @@ class DoliDBPgsql
             // To have postgresql case sensitive
             $line=str_replace(' LIKE \'',' ILIKE \'',$line);
             $line=str_replace(' LIKE BINARY \'',' LIKE \'',$line);
+
+            // Replace INSERT IGNORE into INSERT
+            $line=preg_replace('/^INSERT IGNORE/','INSERT',$line);
 
 			// Delete using criteria on other table must not declare twice the deleted table
 			// DELETE FROM tabletodelete USING tabletodelete, othertable -> DELETE FROM tabletodelete USING othertable
@@ -418,16 +411,6 @@ class DoliDBPgsql
 	}
 
 	/**
-	 * Return label of manager
-	 *
-	 * @return			string      Label
-	 */
-	function getLabel()
-	{
-		return $this->label;
-	}
-
-	/**
 	 *	Return version of database server
 	 *
 	 *	@return	        string      Version string
@@ -444,13 +427,16 @@ class DoliDBPgsql
 	}
 
 	/**
-	 *	Return version of database server into an array
+	 *	Return version of database client driver
 	 *
-	 *	@return	        array  		Version array
+	 *	@return	        string      Version string
 	 */
-	function getVersionArray()
+	function getDriverInfo()
 	{
-		return explode('.',$this->getVersion());
+		// FIXME: Dummy method
+		// TODO: Implement
+
+		return '';
 	}
 
     /**
@@ -471,81 +457,6 @@ class DoliDBPgsql
     }
 
 	/**
-	 * Start transaction
-	 *
-	 * @return	    int         1 if transaction successfuly opened or already opened, 0 if error
-	 */
-	function begin()
-	{
-		if (! $this->transaction_opened)
-		{
-			$ret=$this->query("BEGIN;");
-			if ($ret)
-			{
-				$this->transaction_opened++;
-				dol_syslog("BEGIN Transaction",LOG_DEBUG);
-				dol_syslog('',0,1);
-			}
-			return $ret;
-		}
-		else
-		{
-			$this->transaction_opened++;
-			dol_syslog('',0,1);
-			return 1;
-		}
-	}
-
-	/**
-     * Validate a database transaction
-     *
-     * @param	string	$log        Add more log to default log line
-     * @return  int         		1 if validation is OK or transaction level no started, 0 if ERROR
-	 */
-	function commit($log='')
-	{
-		dol_syslog('',0,-1);
-		if ($this->transaction_opened<=1)
-		{
-			$ret=$this->query("COMMIT;");
-			if ($ret)
-			{
-				$this->transaction_opened=0;
-				dol_syslog("COMMIT Transaction",LOG_DEBUG);
-			}
-			return $ret;
-		}
-		else
-		{
-			$this->transaction_opened--;
-			return 1;
-		}
-	}
-
-	/**
-	 * 	Annulation d'une transaction et retour aux anciennes valeurs
-	 *
-	 * 	@return	    int         1 si annulation ok ou transaction non ouverte, 0 en cas d'erreur
-	 */
-	function rollback()
-	{
-		dol_syslog('',0,-1);
-		if ($this->transaction_opened<=1)
-		{
-			$ret=$this->query("ROLLBACK;");
-			$this->transaction_opened=0;
-			dol_syslog("ROLLBACK Transaction",LOG_DEBUG);
-			return $ret;
-		}
-		else
-		{
-			$this->transaction_opened--;
-			return 1;
-		}
-	}
-
-
-	/**
 	 * Convert request to PostgreSQL syntax, execute it and return the resultset
 	 *
 	 * @param	string	$query			SQL query string
@@ -555,22 +466,27 @@ class DoliDBPgsql
 	 */
 	function query($query,$usesavepoint=0,$type='auto')
 	{
+		global $conf;
+
 		$query = trim($query);
 
 		// Convert MySQL syntax to PostgresSQL syntax
 		$query=$this->convertSQLFromMysql($query,$type,($this->unescapeslashquot && $this->standard_conforming_strings));
 		//print "After convertSQLFromMysql:\n".$query."<br>\n";
 
-		// Fix bad formed requests. If request contains a date without quotes, we fix this but this should not occurs.
-		$loop=true;
-		while ($loop)
+		if (! empty($conf->global->MAIN_DB_AUTOFIX_BAD_SQL_REQUEST))
 		{
-			if (preg_match('/([^\'])([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9])/',$query))
+			// Fix bad formed requests. If request contains a date without quotes, we fix this but this should not occurs.
+			$loop=true;
+			while ($loop)
 			{
-				$query=preg_replace('/([^\'])([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9])/','\\1\'\\2\'',$query);
-				dol_syslog("Warning: Bad formed request converted into ".$query,LOG_WARNING);
+				if (preg_match('/([^\'])([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9])/',$query))
+				{
+					$query=preg_replace('/([^\'])([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9])/','\\1\'\\2\'',$query);
+					dol_syslog("Warning: Bad formed request converted into ".$query,LOG_WARNING);
+				}
+				else $loop=false;
 			}
-			else $loop=false;
 		}
 
 		if ($usesavepoint && $this->transaction_opened)
@@ -709,37 +625,6 @@ class DoliDBPgsql
 
 
 	/**
-	 * Define sort criteria of request
-	 *
-	 * @param	string	$sortfield  List of sort fields
-	 * @param	string	$sortorder  Sort order
-	 * @return	string      		String to provide syntax of a sort sql string
-	 * TODO		Mutualized this into a mother class
-	 */
-	function order($sortfield=0,$sortorder=0)
-	{
-		if ($sortfield)
-		{
-			$return='';
-			$fields=explode(',',$sortfield);
-			foreach($fields as $val)
-			{
-				if (! $return) $return.=' ORDER BY ';
-				else $return.=',';
-
-				$return.=preg_replace('/[^0-9a-z_\.]/i','',$val);
-                if ($sortorder) $return.=' '.preg_replace('/[^0-9a-z]/i','',$sortorder);
-			}
-			return $return;
-		}
-		else
-		{
-			return '';
-		}
-	}
-
-
-	/**
 	 *   Escape a string to insert data
 	 *
 	 *   @param		string	$stringtoencode		String to escape
@@ -763,21 +648,6 @@ class DoliDBPgsql
 	}
 
 	/**
-	 *	Convert (by PHP) a PHP server TZ string date into a GM Timestamps date
-	 * 	19700101020000 -> 3600 with TZ+1
-	 *
-	 * 	@param		string	$string		Date in a string (YYYYMMDDHHMMSS, YYYYMMDD, YYYY-MM-DD HH:MM:SS)
-	 *	@return		date				Date TMS
-	 */
-	function jdate($string)
-	{
-		$string=preg_replace('/([^0-9])/i','',$string);
-		$tmp=$string.'000000';
-		$date=dol_mktime(substr($tmp,8,2),substr($tmp,10,2),substr($tmp,12,2),substr($tmp,4,2),substr($tmp,6,2),substr($tmp,0,4));
-		return $date;
-	}
-
-	/**
      *  Format a SQL IF
      *
 	 *  @param	string	$test           Test string (example: 'cd.statut=0', 'field IS NULL')
@@ -788,47 +658,6 @@ class DoliDBPgsql
 	function ifsql($test,$resok,$resko)
 	{
 		return '(CASE WHEN '.$test.' THEN '.$resok.' ELSE '.$resko.' END)';
-	}
-
-
-	/**
-	 * Renvoie la derniere requete soumise par la methode query()
-	 *
-	 * @return	    lastquery
-	 */
-	function lastquery()
-	{
-		return $this->lastquery;
-	}
-
-	/**
-	 * Renvoie la derniere requete en erreur
-	 *
-	 * @return	    string	lastqueryerror
-	 */
-	function lastqueryerror()
-	{
-		return $this->lastqueryerror;
-	}
-
-	/**
-	 * Renvoie le libelle derniere erreur
-	 *
-	 * @return	    string	lasterror
-	 */
-	function lasterror()
-	{
-		return $this->lasterror;
-	}
-
-	/**
-	 * 	Renvoie le code derniere erreur
-	 *
-	 * 	@return	    string	lasterrno
-	 */
-	function lasterrno()
-	{
-		return $this->lasterrno;
 	}
 
 	/**
@@ -860,7 +689,7 @@ class DoliDBPgsql
 			42701=> 'DB_ERROR_COLUMN_ALREADY_EXISTS',
 			'42710' => 'DB_ERROR_KEY_NAME_ALREADY_EXISTS',
 			'23505' => 'DB_ERROR_RECORD_ALREADY_EXISTS',
-			'42704' => 'DB_ERROR_NO_INDEX_TO_DROP',
+			'42704' => 'DB_ERROR_NO_INDEX_TO_DROP',		// May also be Type xxx does not exists
 			'42601' => 'DB_ERROR_SYNTAX',
 			'42P16' => 'DB_ERROR_PRIMARY_KEY_ALREADY_EXISTS',
 			1075 => 'DB_ERROR_CANT_DROP_PRIMARY_KEY',
@@ -1147,15 +976,16 @@ class DoliDBPgsql
 	/**
 	 * 	Create a user to connect to database
 	 *
-	 *	@param	string	$dolibarr_main_db_host 		Ip serveur
-	 *	@param	string	$dolibarr_main_db_user 		Nom user a creer
-	 *	@param	string	$dolibarr_main_db_pass 		Mot de passe user a creer
+	 *	@param	string	$dolibarr_main_db_host 		Ip server
+	 *	@param	string	$dolibarr_main_db_user 		Name of user to create
+	 *	@param	string	$dolibarr_main_db_pass 		Password of user to create
 	 *	@param	string	$dolibarr_main_db_name		Database name where user must be granted
 	 *	@return	int									<0 if KO, >=0 if OK
 	 */
 	function DDLCreateUser($dolibarr_main_db_host,$dolibarr_main_db_user,$dolibarr_main_db_pass,$dolibarr_main_db_name)
 	{
-		$sql = "create user \"".addslashes($dolibarr_main_db_user)."\" with password '".addslashes($dolibarr_main_db_pass)."'";
+		// Note: using ' on user does not works with pgsql
+		$sql = "CREATE USER ".$this->escape($dolibarr_main_db_user)." with password '".$this->escape($dolibarr_main_db_pass)."'";
 
 		dol_syslog(get_class($this)."::DDLCreateUser", LOG_DEBUG);	// No sql to avoid password in log
 		$resql=$this->query($sql);
@@ -1238,7 +1068,7 @@ class DoliDBPgsql
 			$sql.="(".$field_desc['value'].")";
 		}
 
-		// FIXME May not work with pgsql. May need to run a second request. If it works, just remove the FIXME tag
+		// TODO May not work with pgsql. May need to run a second request. If it works, just remove the comment
 		if ($field_desc['null'] == 'not null' || $field_desc['null'] == 'NOT NULL') $sql.=" NOT NULL";
 
 		dol_syslog($sql,LOG_DEBUG);
@@ -1397,25 +1227,45 @@ class DoliDBPgsql
 	}
 
 	/**
-	 *	Return value of server parameters
+	 * Return value of server parameters
 	 *
-	 * 	@param	string	$filter		Filter list on a particular value
-	 *	@return	string				Value for parameter
+	 * @param	string	$filter		Filter list on a particular value
+	 * @return	array				Array of key-values (key=>value)
 	 */
 	function getServerParametersValues($filter='')
 	{
 		$result=array();
 
 		$resql='select name,setting from pg_settings';
-		if ($filter) $resql.=" WHERE name = '".addslashes($filter)."'";
+		if ($filter) $resql.=" WHERE name = '".$this->escape($filter)."'";
 		$resql=$this->query($resql);
 		if ($resql)
 		{
-			$obj=$this->fetch_object($resql);
-			$result[$obj->name]=$obj->setting;
+			while ($obj=$this->fetch_object($resql)) $result[$obj->name]=$obj->setting;
 		}
 
 		return $result;
 	}
+
+	/**
+	 * Return value of server status
+	 *
+	 * @param	string	$filter		Filter list on a particular value
+	 * @return  array				Array of key-values (key=>value)
+	 */
+	function getServerStatusValues($filter='')
+	{
+		/* This is to return current running requests.
+		$sql='SELECT datname,procpid,current_query FROM pg_stat_activity ORDER BY procpid';
+        if ($filter) $sql.=" LIKE '".$this->escape($filter)."'";
+        $resql=$this->query($sql);
+        if ($resql)
+        {
+            $obj=$this->fetch_object($resql);
+            $result[$obj->Variable_name]=$obj->Value;
+        }
+		*/
+
+		return array();
+	}
 }
-?>

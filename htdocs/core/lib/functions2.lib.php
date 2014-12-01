@@ -24,6 +24,10 @@
  *					This file contains all rare functions.
  */
 
+// Enable this line to trace path when function is called.
+//print xdebug_print_function_stack('Functions2.lib was called');exit;
+
+
 /**
  * Same function than javascript unescape() function but in PHP.
  *
@@ -174,7 +178,7 @@ function dol_print_file($langs,$filename,$searchalt=0)
  *	Show informations on an object
  *  TODO Move this into html.formother
  *
- *	@param	Object	$object			Objet to show
+ *	@param	object	$object			Objet to show
  *	@return	void
  */
 function dol_print_object_info($object)
@@ -201,13 +205,15 @@ function dol_print_object_info($object)
         print $langs->trans("CreatedBy").': ';
         if (is_object($object->user_creation))
         {
-            print $object->user_creation->getNomUrl(1);
+        	if ($object->user_creation->id) print $object->user_creation->getNomUrl(1);
+        	else print $langs->trans("Unknown");
         }
         else
         {
             $userstatic=new User($db);
             $userstatic->fetch($object->user_creation);
-            print $userstatic->getNomUrl(1);
+            if ($userstatic->id) print $userstatic->getNomUrl(1);
+        	else print $langs->trans("Unknown");
         }
         print '<br>';
     }
@@ -226,13 +232,15 @@ function dol_print_object_info($object)
         print $langs->trans("ModifiedBy").': ';
         if (is_object($object->user_modification))
         {
-            print $object->user_modification->getNomUrl(1);
+        	if ($object->user_modification->id) print $object->user_modification->getNomUrl(1);
+        	else print $langs->trans("Unknown");
         }
         else
         {
             $userstatic=new User($db);
             $userstatic->fetch($object->user_modification);
-            print $userstatic->getNomUrl(1);
+            if ($userstatic->id) print $userstatic->getNomUrl(1);
+        	else print $langs->trans("Unknown");
         }
         print '<br>';
     }
@@ -251,13 +259,15 @@ function dol_print_object_info($object)
         print $langs->trans("ValidatedBy").': ';
         if (is_object($object->user_validation))
         {
-            print $object->user_validation->getNomUrl(1);
+            if ($object->user_validation->id) print $object->user_validation->getNomUrl(1);
+        	else print $langs->trans("Unknown");
         }
         else
         {
             $userstatic=new User($db);
             $userstatic->fetch($object->user_validation);
-            print $userstatic->getNomUrl(1);
+			if ($userstatic->id) print $userstatic->getNomUrl(1);
+        	else print $langs->trans("Unknown");
         }
         print '<br>';
     }
@@ -276,13 +286,15 @@ function dol_print_object_info($object)
         print $langs->trans("ApprovedBy").': ';
         if (is_object($object->user_approve))
         {
-            print $object->user_approve->getNomUrl(1);
+            if ($object->user_approve->id) print $object->user_approve->getNomUrl(1);
+        	else print $langs->trans("Unknown");
         }
         else
         {
             $userstatic=new User($db);
             $userstatic->fetch($object->user_approve);
-            print $userstatic->getNomUrl(1);
+			if ($userstatic->id) print $userstatic->getNomUrl(1);
+        	else print $langs->trans("Unknown");
         }
         print '<br>';
     }
@@ -301,13 +313,15 @@ function dol_print_object_info($object)
         print $langs->trans("ClosedBy").': ';
         if (is_object($object->user_cloture))
         {
-            print $object->user_cloture->getNomUrl(1);
+			if ($object->user_cloture->id) print $object->user_cloture->getNomUrl(1);
+        	else print $langs->trans("Unknown");
         }
         else
         {
             $userstatic=new User($db);
             $userstatic->fetch($object->user_cloture);
-            print $userstatic->getNomUrl(1);
+			if ($userstatic->id) print $userstatic->getNomUrl(1);
+        	else print $langs->trans("Unknown");
         }
         print '<br>';
     }
@@ -326,13 +340,15 @@ function dol_print_object_info($object)
         print $langs->trans("ConciliatedBy").': ';
         if (is_object($object->user_rappro))
         {
-            print $object->user_rappro->getNomUrl(1);
+			if ($object->user_rappro->id) print $object->user_rappro->getNomUrl(1);
+        	else print $langs->trans("Unknown");
         }
         else
         {
             $userstatic=new User($db);
             $userstatic->fetch($object->user_rappro);
-            print $userstatic->getNomUrl(1);
+			if ($userstatic->id) print $userstatic->getNomUrl(1);
+        	else print $langs->trans("Unknown");
         }
         print '<br>';
     }
@@ -426,7 +442,7 @@ function isValidUrl($url,$http=0,$pass=0,$port=0,$path=0,$query=0,$anchor=0)
  *	Clean an url string
  *
  *	@param	string	$url		Url
- *	@param  string	$http		1: keep http://, 0: remove also http://
+ *	@param  string	$http		1 = keep both http:// and https://, 0: remove http:// but not https://
  *	@return string				Cleaned url
  */
 function clean_url($url,$http=1)
@@ -438,7 +454,7 @@ function clean_url($url,$http=1)
     {
         $proto=$regs[1];
         $domain=$regs[2];
-        $port=$regs[3];
+        $port=isset($regs[3])?$regs[3]:'';
         //print $url." -> ".$proto." - ".$domain." - ".$port;
         //$url = dol_string_nospecial(trim($url));
         $url = trim($url);
@@ -520,7 +536,7 @@ function array2table($data,$tableMarkup=1,$tableoptions='',$troptions='',$tdopti
  * @param   Societe		$objsoc			The company that own the object we need a counter for
  * @param   string		$date			Date to use for the {y},{m},{d} tags.
  * @param   string		$mode           'next' for next value or 'last' for last value
- * @return 	string					    New value
+ * @return 	string					    New value (numeric) or error message
  */
 function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$mode='next')
 {
@@ -545,6 +561,7 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     $maskcounter=$reg[1];
     $maskraz=-1;
     $maskoffset=0;
+    $resetEveryMonth=false;
     if (dol_strlen($maskcounter) < 3) return 'CounterMustHaveMoreThan3Digits';
 
     // Extract value for third party mask counter
@@ -612,34 +629,38 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     if ($maskraz > 0)    // A reset is required
     {
     	if ($maskraz == 99) {
-			$maskraz = date('m',$date);
+			$maskraz = date('m', $date);
 			$resetEveryMonth = true;
 		}
         if ($maskraz > 12) return 'ErrorBadMaskBadRazMonth';
 
         // Define posy, posm and reg
-        if ($maskraz >= 1 && $resetEveryMonth)
+        if ($maskraz > 1)	// if reset is not first month, we need month and year into mask
         {
-            if (! preg_match('/^(.*)\{(y+)\}\{(m+)\}/i',$maskwithonlyymcode)
-            && ! preg_match('/^(.*)\{(m+)\}\{(y+)\}/i',$maskwithonlyymcode)) return 'ErrorCantUseRazInStartedYearIfNoYearMonthInMask';
             if (preg_match('/^(.*)\{(y+)\}\{(m+)\}/i',$maskwithonlyymcode,$reg)) { $posy=2; $posm=3; }
             elseif (preg_match('/^(.*)\{(m+)\}\{(y+)\}/i',$maskwithonlyymcode,$reg)) { $posy=3; $posm=2; }
+            else return 'ErrorCantUseRazInStartedYearIfNoYearMonthInMask';
+
             if (dol_strlen($reg[$posy]) < 2) return 'ErrorCantUseRazWithYearOnOneDigit';
         }
-        elseif ($maskraz > 1)
+        else // if reset is for a specific month in year, we need year
         {
-        	if (! preg_match('/^(.*)\{(y+)\}\{(m+)\}/i',$maskwithonlyymcode)
-        	&& ! preg_match('/^(.*)\{(m+)\}\{(y+)\}/i',$maskwithonlyymcode)) return 'ErrorCantUseRazInStartedYearIfNoYearMonthInMask';
-        	if (preg_match('/^(.*)\{(y+)\}\{(m+)\}/i',$maskwithonlyymcode,$reg)) { $posy=2; $posm=3; }
-        	elseif (preg_match('/^(.*)\{(m+)\}\{(y+)\}/i',$maskwithonlyymcode,$reg)) { $posy=3; $posm=2; }
-        	if (dol_strlen($reg[$posy]) < 2) return 'ErrorCantUseRazWithYearOnOneDigit';
-        	
-        } else {
-        	if (! preg_match('/^(.*)\{(y+)\}/i',$maskwithonlyymcode)) return 'ErrorCantUseRazIfNoYearInMask';
-        	if (preg_match('/^(.*)\{(y+)\}/i',$maskwithonlyymcode,$reg)) { $posy=2; $posm=0; }
+            if (preg_match('/^(.*)\{(m+)\}\{(y+)\}/i',$maskwithonlyymcode,$reg)) { $posy=3; $posm=2; }
+        	else if (preg_match('/^(.*)\{(y+)\}\{(m+)\}/i',$maskwithonlyymcode,$reg)) { $posy=2; $posm=3; }
+            else if (preg_match('/^(.*)\{(y+)\}/i',$maskwithonlyymcode,$reg)) { $posy=2; $posm=0; }
+            else return 'ErrorCantUseRazIfNoYearInMask';
         }
-        //print "x".$maskwithonlyymcode." ".$maskraz." ".$posy." ".$posm;
-		//var_dump($reg);
+        // Define length
+        $yearlen = $posy?dol_strlen($reg[$posy]):0;
+        $monthlen = $posm?dol_strlen($reg[$posm]):0;
+        // Define pos
+       	$yearpos = (dol_strlen($reg[1])+1);
+        $monthpos = ($yearpos+$yearlen);
+        if ($posy == 3 && $posm == 2) {		// if month is before year
+          	$monthpos = (dol_strlen($reg[1])+1);
+           	$yearpos = ($monthpos+$monthlen);
+        }
+        //print "xxx ".$maskwithonlyymcode." maskraz=".$maskraz." posy=".$posy." yearlen=".$yearlen." yearpos=".$yearpos." posm=".$posm." monthlen=".$monthlen." monthpos=".$monthpos." yearoffsettype=".$yearoffsettype." resetEveryMonth=".$resetEveryMonth."\n";
 
         // Define $yearcomp and $monthcomp (that will be use in the select where to search max number)
         $monthcomp=$maskraz;
@@ -665,7 +686,6 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
         // For backward compatibility
         else if (date("m",$date) < $maskraz && empty($resetEveryMonth)) { $yearoffset=-1; }	// If current month lower that month of return to zero, year is previous year
 
-        $yearlen = dol_strlen($reg[$posy]);
         if ($yearlen == 4) $yearcomp=sprintf("%04d",date("Y",$date)+$yearoffset);
         elseif ($yearlen == 2) $yearcomp=sprintf("%02d",date("y",$date)+$yearoffset);
         elseif ($yearlen == 1) $yearcomp=substr(date("y",$date),2,1)+$yearoffset;
@@ -673,14 +693,6 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
         {
             if ($yearlen == 4) $yearcomp1=sprintf("%04d",date("Y",$date)+$yearoffset+1);
             elseif ($yearlen == 2) $yearcomp1=sprintf("%02d",date("y",$date)+$yearoffset+1);
-
-            $monthlen = dol_strlen($reg[$posm]);
-            $yearpos = (dol_strlen($reg[1])+1);
-            $monthpos = ($yearpos+$yearlen);
-            if ($posy == 3) {
-            	$monthpos = (dol_strlen($reg[1])+1);
-            	$yearpos = ($monthpos+$monthlen);
-            }
 
             $sqlwhere.="(";
             $sqlwhere.=" (SUBSTRING(".$field.", ".$yearpos.", ".$yearlen.") = '".$yearcomp."'";
@@ -690,27 +702,21 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
             $sqlwhere.=" AND SUBSTRING(".$field.", ".$monthpos.", ".$monthlen.") < '".str_pad($monthcomp, $monthlen, '0', STR_PAD_LEFT)."') ";
             $sqlwhere.=')';
         }
-		else if($resetEveryMonth) {
-			$monthlen = dol_strlen($reg[$posm]);
-            $yearpos = (dol_strlen($reg[1])+1);
-            $monthpos = ($yearpos+$yearlen);
-            if ($posy == 3) {
-            	$monthpos = (dol_strlen($reg[1])+1);
-            	$yearpos = ($monthpos+$monthlen);
-            }
-			$sqlwhere.=" SUBSTRING(".$field.", ".$yearpos.", ".$yearlen.") = '".$yearcomp."'";
-            $sqlwhere.=" AND SUBSTRING(".$field.", ".$monthpos.", ".$monthlen.") = '".str_pad($monthcomp, $monthlen, '0', STR_PAD_LEFT)."' ";
+		else if ($resetEveryMonth)
+		{
+			$sqlwhere.="(SUBSTRING(".$field.", ".$yearpos.", ".$yearlen.") = '".$yearcomp."'";
+            $sqlwhere.=" AND SUBSTRING(".$field.", ".$monthpos.", ".$monthlen.") = '".str_pad($monthcomp, $monthlen, '0', STR_PAD_LEFT)."')";
 		}
         else   // reset is done on january
         {
-            $sqlwhere.='(SUBSTRING('.$field.', '.(dol_strlen($reg[1])+1).', '.dol_strlen($reg[2]).") = '".$yearcomp."')";
+            $sqlwhere.='(SUBSTRING('.$field.', '.$yearpos.', '.$yearlen.") = '".$yearcomp."')";
         }
     }
     //print "sqlwhere=".$sqlwhere." yearcomp=".$yearcomp."<br>\n";	// sqlwhere and yearcomp defined only if we ask a reset
     //print "masktri=".$masktri." maskcounter=".$maskcounter." maskraz=".$maskraz." maskoffset=".$maskoffset."<br>\n";
 
     // Define $sqlstring
-    $posnumstart=strpos($maskwithnocode,$maskcounter);	// Pos of counter in final string (from 0 to ...)
+    $posnumstart=strrpos($maskwithnocode,$maskcounter);	// Pos of counter in final string (from 0 to ...)
     if ($posnumstart < 0) return 'ErrorBadMaskFailedToLocatePosOfSequence';
     $sqlstring='SUBSTRING('.$field.', '.($posnumstart+1).', '.dol_strlen($maskcounter).')';
 
@@ -792,6 +798,12 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     {
         $counter++;
 
+        // If value for $counter has a length higher than $maskcounter chars
+        if ($counter >= pow(10, dol_strlen($maskcounter)))
+        {
+        	$counter='ErrorMaxNumberReachForThisMask';
+        }
+
         if (! empty($maskrefclient_maskcounter))
         {
             //print "maskrefclient_maskcounter=".$maskrefclient_maskcounter." maskwithnocode=".$maskwithnocode." maskrefclient=".$maskrefclient."\n<br>";
@@ -833,6 +845,7 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
                 $maskrefclient_counter = $maskrefclient_obj->val;
             }
             else dol_print_error($db);
+
             if (empty($maskrefclient_counter) || preg_match('/[^0-9]/i',$maskrefclient_counter)) $maskrefclient_counter=$maskrefclient_maskoffset;
 			$maskrefclient_counter++;
         }
@@ -1094,7 +1107,7 @@ function numero_semaine($time)
  *	Convertit une masse d'une unite vers une autre unite
  *
  *	@param	float	$weight    		Masse a convertir
- *	@param  int		&$from_unit 		Unite originale en puissance de 10
+ *	@param  int		$from_unit 		Unite originale en puissance de 10
  *	@param  int		$to_unit   		Nouvelle unite  en puissance de 10
  *	@return float	        		Masse convertie
  */
@@ -1129,7 +1142,7 @@ function weight_convert($weight,&$from_unit,$to_unit)
  *
  *	@param	DoliDB	$db         Handler database
  *	@param	Conf	$conf		Object conf
- *	@param	User	&$user      Object user
+ *	@param	User	$user      Object user
  *	@param	array	$tab        Tableau (cle=>valeur) des parametres a sauvegarder
  *	@return int         		<0 if KO, >0 if OK
  *
@@ -1207,7 +1220,7 @@ function dol_print_reduction($reduction,$langs)
     $string = '';
     if ($reduction == 100)
     {
-        $string = $langs->trans("Offered");
+        $string = $langs->transnoentities("Offered");
     }
     else
     {
@@ -1280,6 +1293,7 @@ function getListOfModels($db,$type,$maxfilenamelength=0)
     $sql.= " WHERE type = '".$type."'";
     $sql.= " AND entity IN (0,".(! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode)?"1,":"").$conf->entity.")";
 
+    dol_syslog('/core/lib/function2.lib.php::getListOfModels sql='.$sql, LOG_DEBUG);
     $resql = $db->query($sql);
     if ($resql)
     {
@@ -1311,7 +1325,7 @@ function getListOfModels($db,$type,$maxfilenamelength=0)
                     if (! $tmpdir) { unset($listofdir[$key]); continue; }
                     if (is_dir($tmpdir))
                     {
-                        $tmpfiles=dol_dir_list($tmpdir,'files',0,'\.od(s|t)$','','name',SORT_ASC,0,true); // Disable hook for the moment
+                        $tmpfiles=dol_dir_list($tmpdir,'files',0,'\.od(s|t)$','','name',SORT_ASC,0);
                         if (count($tmpfiles)) $listoffiles=array_merge($listoffiles,$tmpfiles);
                     }
                 }
@@ -1424,4 +1438,350 @@ function getSoapParams()
         );
     }
     return $params;
+}
+
+
+/**
+ * List urls of element
+ *
+ * @param 	int		$objectid		Id of record
+ * @param 	string	$objecttype		Type of object ('invoice', 'order', 'expedition_bon', ...)
+ * @param 	int		$withpicto		Picto to show
+ * @param 	string	$option			More options
+ * @return	string					URL of link to object id/type
+ */
+function dolGetElementUrl($objectid,$objecttype,$withpicto=0,$option='')
+{
+	global $db,$conf;
+
+	$ret='';
+
+	// Parse element/subelement (ex: project_task)
+	$module = $element = $subelement = $objecttype;
+	if (preg_match('/^([^_]+)_([^_]+)/i',$objecttype,$regs))
+	{
+		$module = $element = $regs[1];
+		$subelement = $regs[2];
+	}
+
+	$classpath = $element.'/class';
+
+	// To work with non standard path
+	if ($objecttype == 'facture' || $objecttype == 'invoice') {
+		$classpath = 'compta/facture/class';
+		$module='facture';
+		$subelement='facture';
+	}
+	if ($objecttype == 'commande' || $objecttype == 'order') {
+		$classpath = 'commande/class';
+		$module='commande';
+		$subelement='commande';
+	}
+	if ($objecttype == 'propal')  {
+		$classpath = 'comm/propal/class';
+	}
+	if ($objecttype == 'shipping') {
+		$classpath = 'expedition/class';
+		$subelement = 'expedition';
+		$module = 'expedition_bon';
+	}
+	if ($objecttype == 'delivery') {
+		$classpath = 'livraison/class';
+		$subelement = 'livraison';
+		$module = 'livraison_bon';
+	}
+	if ($objecttype == 'contract') {
+		$classpath = 'contrat/class';
+		$module='contrat';
+		$subelement='contrat';
+	}
+	if ($objecttype == 'member') {
+		$classpath = 'adherents/class';
+		$module='adherent';
+		$subelement='adherent';
+	}
+	if ($objecttype == 'cabinetmed_cons') {
+		$classpath = 'cabinetmed/class';
+		$module='cabinetmed';
+		$subelement='cabinetmedcons';
+	}
+	if ($objecttype == 'fichinter') {
+		$classpath = 'fichinter/class';
+		$module='ficheinter';
+		$subelement='fichinter';
+	}
+
+	//print "objecttype=".$objecttype." module=".$module." subelement=".$subelement;
+
+	$classfile = strtolower($subelement); $classname = ucfirst($subelement);
+	if ($objecttype == 'invoice_supplier') {
+		$classfile = 'fournisseur.facture';
+		$classname='FactureFournisseur';
+		$classpath = 'fourn/class';
+		$module='fournisseur';
+	}
+	if ($objecttype == 'order_supplier')   {
+		$classfile = 'fournisseur.commande';
+		$classname='CommandeFournisseur';
+		$classpath = 'fourn/class';
+		$module='fournisseur';
+	}
+
+	if (! empty($conf->$module->enabled))
+	{
+		$res=dol_include_once('/'.$classpath.'/'.$classfile.'.class.php');
+		if ($res)
+		{
+			$object = new $classname($db);
+			$res=$object->fetch($objectid);
+			if ($res > 0) $ret=$object->getNomUrl($withpicto,$option);
+			unset($object);
+		}
+	}
+	return $ret;
+}
+
+
+/**
+ * Clean corrupted tree (orphelins linked to a not existing parent), record linked to themself and child-parent loop
+ *
+ * @param	DoliDB	$db					Database handler
+ * @param	string	$tabletocleantree	Table to clean
+ * @param	string	$fieldfkparent		Field name that contains id of parent
+ * @return	int							Nb of records fixed/deleted
+ */
+function cleanCorruptedTree($db, $tabletocleantree, $fieldfkparent)
+{
+	$totalnb=0;
+	$listofid=array();
+	$listofparentid=array();
+
+	// Get list of all id in array listofid and all parents in array listofparentid
+	$sql='SELECT rowid, '.$fieldfkparent.' as parent_id FROM '.MAIN_DB_PREFIX.$tabletocleantree;
+	$resql = $db->query($sql);
+	if ($resql)
+	{
+		$num = $db->num_rows($resql);
+		$i = 0;
+		while ($i < $num)
+		{
+			$obj = $db->fetch_object($resql);
+			$listofid[]=$obj->rowid;
+			if ($obj->parent_id > 0) $listofparentid[$obj->rowid]=$obj->parent_id;
+			$i++;
+		}
+	}
+	else
+	{
+		dol_print_error($db);
+	}
+
+	if (count($listofid))
+	{
+		print 'Code requested to clean tree (may be to solve data corruption), so we check/clean orphelins and loops.'."<br>\n";
+
+		// Check loops on each other
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$tabletocleantree." SET ".$fieldfkparent." = 0 WHERE ".$fieldfkparent." = rowid";	// So we update only records linked to themself
+		dol_syslog("sql=".$sql);
+		$resql = $db->query($sql);
+		if ($resql)
+		{
+			$nb=$db->affected_rows($sql);
+			if ($nb > 0)
+			{
+				print '<br>Some record that were parent of themself were cleaned.';
+			}
+
+			$totalnb+=$nb;
+		}
+		//else dol_print_error($db);
+
+		// Check other loops
+		$listofidtoclean=array();
+		foreach($listofparentid as $id => $pid)
+		{
+			// Check depth
+			//print 'Analyse record id='.$id.' with parent '.$pid.'<br>';
+
+			$cursor=$id; $arrayidparsed=array();	// We start from child $id
+			while ($cursor > 0)
+			{
+				$arrayidparsed[$cursor]=1;
+				if ($arrayidparsed[$listofparentid[$cursor]])	// We detect a loop. A record with a parent that was already into child
+				{
+					print 'Found a loop between id '.$id.' - '.$cursor.'<br>';
+					unset($arrayidparsed);
+					$listofidtoclean[$cursor]=$id;
+					break;
+				}
+				$cursor=$listofparentid[$cursor];
+			}
+
+			if (count($listofidtoclean)) break;
+		}
+
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$tabletocleantree;
+		$sql.= " SET ".$fieldfkparent." = 0";
+		$sql.= " WHERE rowid IN (".join(',',$listofidtoclean).")";	// So we update only records detected wrong
+		dol_syslog("sql=".$sql);
+		$resql = $db->query($sql);
+		if ($resql)
+		{
+			$nb=$db->affected_rows($sql);
+			if ($nb > 0)
+			{
+				// Removed orphelins records
+				print '<br>Some records were detected to have parent that is a child, we set them as root record for id: ';
+				print join(',',$listofidtoclean);
+			}
+
+			$totalnb+=$nb;
+		}
+		//else dol_print_error($db);
+
+		// Check and clean orphelins
+		$sql = "UPDATE ".MAIN_DB_PREFIX.$tabletocleantree;
+		$sql.= " SET ".$fieldfkparent." = 0";
+		$sql.= " WHERE ".$fieldfkparent." NOT IN (".join(',',$listofid).")";	// So we update only records linked to a non existing parent
+		dol_syslog("sql=".$sql);
+		$resql = $db->query($sql);
+		if ($resql)
+		{
+			$nb=$db->affected_rows($sql);
+			if ($nb > 0)
+			{
+				// Removed orphelins records
+				print '<br>Some orphelins were found and modified to be parent so records are visible again for id: ';
+				print join(',',$listofid);
+			}
+
+			$totalnb+=$nb;
+		}
+		//else dol_print_error($db);
+
+		print '<br>We fixed '.$totalnb.' record(s). Some records may still be corrupted. New check may be required.';
+		return $totalnb;
+	}
+}
+
+/**
+ *	Get an array with properties of an element
+*
+* @param string $element_type Element type. ex : project_task or object@modulext or object_under@module
+* @return array (module, classpath, element, subelement, classfile, classname)
+*/
+function getElementProperties($element_type)
+{
+    // Parse element/subelement (ex: project_task)
+    $module = $element = $subelement = $element_type;
+
+    // If we ask an resource form external module (instead of default path)
+    if (preg_match('/^([^@]+)@([^@]+)$/i',$element_type,$regs))
+    {
+        $element = $subelement = $regs[1];
+        $module 	= $regs[2];
+    }
+
+    //print '<br />1. element : '.$element.' - module : '.$module .'<br />';
+    if ( preg_match('/^([^_]+)_([^_]+)/i',$element,$regs))
+    {
+        $module = $element = $regs[1];
+        $subelement = $regs[2];
+    }
+
+    $classfile = strtolower($subelement);
+    $classname = ucfirst($subelement);
+    $classpath = $module.'/class';
+
+    // For compat
+    if($element_type == "action") {
+        $classpath = 'comm/action/class';
+        $subelement = 'Actioncomm';
+        $module = 'agenda';
+    }
+
+    // To work with non standard path
+    if ($element_type == 'facture' || $element_type == 'invoice') {
+        $classpath = 'compta/facture/class';
+        $module='facture';
+        $subelement='facture';
+    }
+    if ($element_type == 'commande' || $element_type == 'order') {
+        $classpath = 'commande/class';
+        $module='commande';
+        $subelement='commande';
+    }
+    if ($element_type == 'propal')  {
+        $classpath = 'comm/propal/class';
+    }
+    if ($element_type == 'shipping') {
+        $classpath = 'expedition/class';
+        $subelement = 'expedition';
+        $module = 'expedition_bon';
+    }
+    if ($element_type == 'delivery') {
+        $classpath = 'livraison/class';
+        $subelement = 'livraison';
+        $module = 'livraison_bon';
+    }
+    if ($element_type == 'contract') {
+        $classpath = 'contrat/class';
+        $module='contrat';
+        $subelement='contrat';
+    }
+    if ($element_type == 'member') {
+        $classpath = 'adherents/class';
+        $module='adherent';
+        $subelement='adherent';
+    }
+    if ($element_type == 'cabinetmed_cons') {
+        $classpath = 'cabinetmed/class';
+        $module='cabinetmed';
+        $subelement='cabinetmedcons';
+    }
+    if ($element_type == 'fichinter') {
+        $classpath = 'fichinter/class';
+        $module='ficheinter';
+        $subelement='fichinter';
+    }
+    $classfile = strtolower($subelement);
+    $classname = ucfirst($subelement);
+
+    $element_properties = array(
+        'module' => $module,
+        'classpath' => $classpath,
+        'element' => $element,
+        'subelement' => $subelement,
+        'classfile' => $classfile,
+        'classname' => $classname
+    );
+    return $element_properties;
+}
+
+/**
+ * Fetch an object with element_type and its id
+ * Inclusion classes is automatic
+ *
+ * @param	int     $element_id Element id
+ * @param	string  $element_type Element type
+ * @return 	object || 0 || -1 if error
+ */
+function fetchObjectByElement($element_id,$element_type) {
+
+    global $conf;
+	global $db,$conf;
+
+    $element_prop = getElementProperties($element_type);
+    if (is_array($element_prop) && $conf->$element_prop['module']->enabled)
+    {
+        dol_include_once('/'.$element_prop['classpath'].'/'.$element_prop['classfile'].'.class.php');
+
+		$objectstat = new $element_prop['classname']($db);
+		$ret = $objectstat->fetch($element_id);
+		if ($ret >= 0)
+		{
+			return $objectstat;
+		}
+	}
+	return 0;
 }

@@ -154,7 +154,7 @@ class DiscountAbsolute
         $sql.= " amount_ht, amount_tva, amount_ttc, tva_tx,";
         $sql.= " fk_facture_source";
         $sql.= ")";
-        $sql.= " VALUES (".$this->db->idate($this->datec!=''?$this->datec:dol_now()).", ".$this->fk_soc.", ".$user->id.", '".$this->db->escape($this->description)."',";
+        $sql.= " VALUES ('".$this->db->idate($this->datec!=''?$this->datec:dol_now())."', ".$this->fk_soc.", ".$user->id.", '".$this->db->escape($this->description)."',";
         $sql.= " ".$this->amount_ht.", ".$this->amount_tva.", ".$this->amount_ttc.", ".$this->tva_tx.",";
         $sql.= " ".($this->fk_facture_source?"'".$this->fk_facture_source."'":"null");
         $sql.= ")";
@@ -188,7 +188,7 @@ class DiscountAbsolute
         // Check if we can remove the discount
         if ($this->fk_facture_source)
         {
-            $sql.="SELECT COUNT(rowid) as nb";
+            $sql="SELECT COUNT(rowid) as nb";
             $sql.=" FROM ".MAIN_DB_PREFIX."societe_remise_except";
             $sql.=" WHERE (fk_facture_line IS NOT NULL";	// Not used as absolute simple discount
             $sql.=" OR fk_facture IS NOT NULL)"; 			// Not used as credit note and not used as deposit
@@ -480,4 +480,3 @@ class DiscountAbsolute
 		$this->description    = 'Specimen discount';
 	}
 }
-?>

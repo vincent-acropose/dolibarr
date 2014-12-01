@@ -135,7 +135,7 @@ class WebservicesOtherTest extends PHPUnit_Framework_TestCase
     	$ns='http://www.dolibarr.org/ns/';
 
     	// Set the WebService URL
-    	print __METHOD__."Create nusoap_client for URL=".$WS_DOL_URL."\n";
+    	print __METHOD__." create nusoap_client for URL=".$WS_DOL_URL."\n";
     	$soapclient = new nusoap_client($WS_DOL_URL);
     	if ($soapclient)
     	{
@@ -152,28 +152,64 @@ class WebservicesOtherTest extends PHPUnit_Framework_TestCase
     	'entity'=>'');
 
     	// Test URL
-    	if ($WS_METHOD)
-    	{
-    		$parameters = array('authentication'=>$authentication);
-    		print __METHOD__."Call method ".$WS_METHOD."\n";
+    	$result='';
+    	$parameters = array('authentication'=>$authentication);
+    	print __METHOD__." call method ".$WS_METHOD."\n";
+    	try {
     		$result = $soapclient->call($WS_METHOD,$parameters,$ns,'');
-    		if (! $result)
-    		{
-    			//var_dump($soapclient);
-    			print $soapclient->error_str;
-    			print "<br>\n\n";
-    			print $soapclient->request;
-    			print "<br>\n\n";
-    			print $soapclient->response;
-    			exit;
-    		}
+    	}
+    	catch(SoapFault $exception)
+    	{
+    		echo $exception;
+    		$result=0;
+    	}
+    	if (! empty($result['faultstring']))
+    	{
+    		print $result['faultstring']."\n";
+    		$result=0;
+    	}
+    	if (! $result)
+    	{
+    		//var_dump($soapclient);
+    		print $soapclient->error_str;
+    		print "\n<br>\n";
+    		print $soapclient->request;
+    		print "\n<br>\n";
+    		print $soapclient->response;
+    		print "\n";
     	}
 
     	print __METHOD__." result=".$result."\n";
     	$this->assertEquals('OK',$result['result']['result_code']);
 
+    	// Test method that does not exists
+    	$WS_METHOD='methodthatdoesnotexists';
+    	$result='';
+    	$parameters = array('authentication'=>$authentication);
+    	print __METHOD__." call method ".$WS_METHOD."\n";
+    	try {
+    		$result = $soapclient->call($WS_METHOD,$parameters,$ns,'');
+    	}
+    	catch(SoapFault $exception)
+    	{
+    		echo $exception;
+    		$result=0;
+    	}
+    	if (! $result || ! empty($result['faultstring']))
+    	{
+    		//var_dump($soapclient);
+    		print $soapclient->error_str;
+    		print "\n<br>\n";
+    		print $soapclient->request;
+    		print "\n<br>\n";
+    		print $soapclient->response;
+    		print "\n";
+    	}
+
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals("SOAP-ENV:Client: Operation 'methodthatdoesnotexists' is not defined in the WSDL for this service", $soapclient->error_str);
+
     	return $result;
     }
 
 }
-?>

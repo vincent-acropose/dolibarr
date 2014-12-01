@@ -1,5 +1,5 @@
-# Dolibarr language file - es_ES - margins
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - marges
+
 Margin=Margen
 Margins=Márgenes
 TotalMargin=Margen total
@@ -15,11 +15,10 @@ margesSetup=Configuración de la gestión de márgenes
 MarginDetails=Detalles de márgenes realizados
 ProductMargins=Márgenes por producto
 CustomerMargins=Márgenes por cliente
-AgentMargins=Márgenes por comercial
+SalesRepresentativeMargins=Margenes por comercial
 ProductService=Producto o servicio
 AllProducts=Todos los productos y servicios
 ChooseProduct/Service=Elija el producto o servicio
-CommercialAgent=Agente comercial
 StartDate=Fecha de inicio
 EndDate=Fecha de fin
 Launch=Comenzar
@@ -34,8 +33,8 @@ MARGIN_TYPE=Tipo de margen gestionado
 MargeBrute=Margen bruto
 MargeNette=Margen neto
 MARGIN_TYPE_DETAILS=Margen bruto: Precio de venta sin IVA - Precio de compra sin IVA<br/>Margen neto: Precio de venta sin IVA - Costos
-BuyingPrice=Precio de compra
 CostPrice=Precio de compra
+BuyingCost=Costos
 UnitCharges=Carga unitaria
 Charges=Cargas
 AgentContactType=Tipo de contacto comisionado

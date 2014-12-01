@@ -274,7 +274,7 @@ function dol_imageResizeOrCrop($file, $mode, $newWidth, $newHeight, $src_x=0, $s
 			imagepng($imgThumb, $imgThumbName, $newquality);
 			break;
 		case 4:	// Bmp
-			image2wmp($imgThumb, $imgThumbName);
+			image2wbmp($imgThumb, $imgThumbName);
 			break;
 	}
 
@@ -534,7 +534,7 @@ function vignette($file, $maxWidth = 160, $maxHeight = 120, $extName='_small', $
             // Not supported by PHP GD
 			break;
 		case IMAGETYPE_WBMP:    // 15
-			image2wmp($imgThumb, $imgThumbName);
+			image2wbmp($imgThumb, $imgThumbName);
 			break;
 	}
 
@@ -658,7 +658,7 @@ function moneyMeter($actualValue=0, $pendingValue=0, $intentValue=0)
 
 	// actual
 	$sectionHeight = round(($actualValue / $maximumValue) * $height);
-	$totalHeight = $totalHeight + $sectionHeight;
+	$totalHeight = $sectionHeight;
 	if ( $sectionHeight > 0 )
 	{
 		$section = $formSection;
@@ -669,7 +669,7 @@ function moneyMeter($actualValue=0, $pendingValue=0, $intentValue=0)
 
 	// pending
 	$sectionHeight = round(($pendingValue / $maximumValue) * $height);
-	$totalHeight = $totalHeight + $sectionHeight;
+	$totalHeight += $sectionHeight;
 	if ( $sectionHeight > 0 )
 	{
 		$section = $formSection;
@@ -680,7 +680,7 @@ function moneyMeter($actualValue=0, $pendingValue=0, $intentValue=0)
 
 	// intent
 	$sectionHeight = round(($intentValue / $maximumValue) * $height);
-	$totalHeight = $totalHeight + $sectionHeight;
+	$totalHeight += $sectionHeight;
 	if ( $sectionHeight > 0 )
 	{
 		$section = $formSection;
@@ -705,4 +705,3 @@ function moneyMeter($actualValue=0, $pendingValue=0, $intentValue=0)
 	return $thermometer . $formLegenda;
 }
 
-?>

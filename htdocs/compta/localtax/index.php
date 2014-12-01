@@ -1,5 +1,6 @@
 <?php
 /* Copyright (C) 2011 		Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2014	   Ferran Marcet        <fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -83,7 +84,7 @@ function pt ($db, $sql, $date)
         $db->free($result);
     }
     else {
-        dolibar_print_error($db);
+        dol_print_error($db);
     }
 }
 
@@ -134,6 +135,15 @@ for ($m = 1 ; $m < 13 ; $m++ )
 {
     $coll_listsell = vat_by_date($db, $y, 0, 0, 0, $modetax, 'sell', $m);
     $coll_listbuy = vat_by_date($db, $y, 0, 0, 0, $modetax, 'buy', $m);
+    
+    $action = "tva";
+    $object = array(&$coll_listsell, &$coll_listbuy);
+    $parameters["mode"] = $modetax;
+    $parameters["year"] = $y;
+    $parameters["month"] = $m;
+    // Initialize technical object to manage hooks of expenses. Note that conf->hooks_modules contains array array
+    $hookmanager->initHooks(array('externalbalance'));
+    $reshook=$hookmanager->executeHooks('addStatisticLine',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 
     if (! is_array($coll_listbuy) && $coll_listbuy == -1)
     {
@@ -148,8 +158,8 @@ for ($m = 1 ; $m < 13 ; $m++ )
     }
 
     $var=!$var;
-    print "<tr $bc[$var]>";
-    print '<td nowrap>'.dol_print_date(dol_mktime(0,0,0,$m,1,$y),"%b %Y").'</td>';
+    print "<tr ".$bc[$var].">";
+    print '<td class="nowrap">'.dol_print_date(dol_mktime(0,0,0,$m,1,$y),"%b %Y").'</td>';
 
     $x_coll = 0;
     foreach($coll_listsell as $vatrate=>$val)
@@ -157,7 +167,7 @@ for ($m = 1 ; $m < 13 ; $m++ )
         $x_coll+=$val['localtax2'];
     }
     $subtotalcoll = $subtotalcoll + $x_coll;
-    print "<td nowrap align=\"right\">".price($x_coll)."</td>";
+    print "<td class=\"nowrap\" align=\"right\">".price($x_coll)."</td>";
 
     $x_paye = 0;
     foreach($coll_listbuy as $vatrate=>$val)
@@ -165,13 +175,13 @@ for ($m = 1 ; $m < 13 ; $m++ )
         $x_paye+=$val['localtax2'];
     }
     $subtotalpaye = $subtotalpaye + $x_paye;
-    print "<td nowrap align=\"right\">".price($x_paye)."</td>";
+    print "<td class=\"nowrap\" align=\"right\">".price($x_paye)."</td>";
 
     $diff = $x_coll - $x_paye;
     $total = $total + $diff;
     $subtotal = $subtotal + $diff;
 
-    print "<td nowrap align=\"right\">".price($diff)."</td>\n";
+    print "<td class=\"nowrap\" align=\"right\">".price($diff)."</td>\n";
     print "<td>&nbsp;</td>\n";
     print "</tr>\n";
 
@@ -181,7 +191,7 @@ for ($m = 1 ; $m < 13 ; $m++ )
         print '<td align="right">'.$langs->trans("SubTotal").':</td>';
         print '<td class="nowrap" align="right">'.price($subtotalcoll).'</td>';
         print '<td class="nowrap" align="right">'.price($subtotalpaye).'</td>';
-        print '<td class="nowrap" align="right">'.price($subtotalpaye).'</td>';
+        print '<td class="nowrap" align="right">'.price($subtotal).'</td>';
         print '<td>&nbsp;</td></tr>';
         $i = 0;
         $subtotalcoll=0; $subtotalpaye=0; $subtotal=0;
@@ -216,4 +226,3 @@ print '</table>';
 $db->close();
 
 llxFooter();
-?>

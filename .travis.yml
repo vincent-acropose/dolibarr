@@ -6,7 +6,7 @@
 notifications:
   email:
     on_success: never # [always|never|change] default: change
-    on_failure: always # [always|never|change] default: always
+    on_failure: change # [always|never|change] default: always
     
 services:
  - memcached # will start memcached
@@ -14,8 +14,10 @@ services:
 # This will tell travis to run phpunit
 language: php
 php:
+# - "5.2" is not supported because pyrus to install PHP_Codesniffer is not available
  - "5.3"
  - "5.4"
+ - "5.5" 
 
 env:
  - DB=mysql
@@ -25,8 +27,16 @@ before_script:
  - echo Start travis
  - echo Current dir is `pwd`
  - echo Home dir is `echo ~`
- - echo Update composer
+ - export PHPV=`phpenv version-name`
+ - echo PHP version $PHPV 
+# - echo Update composer
 # - ~/.phpenv/versions/$(phpenv version-name)/bin/composer.phar self-update 
+ - echo PHPUnit version
+ - phpunit --version
+ - echo Install phpcs then show installed rules
+ - pyrus install pear/PHP_CodeSniffer
+ - phpenv rehash
+ - phpcs -i
  - echo Create dir $(pwd)/htdocs/documents
  - sudo mkdir -p $(pwd)/htdocs/documents/admin/temp;
  - sudo touch $(pwd)/htdocs/documents/dolibarr.log;
@@ -36,10 +46,12 @@ before_script:
  - find $(pwd)/htdocs/documents -type d -exec ls -alt {} \;
  - echo Edit php.ini file
  - echo 'date.timezone = "Europe/Paris"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
- - echo "extension = apc.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
 # - echo "extension = memcache.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
  - echo "extension = memcached.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
- - echo "zend_extension_ts = xdebug.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+ - sh -c "if [ '$PHPV' = '5.3' ]; then echo 'extension = apc.so' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi"
+ - sh -c "if [ '$PHPV' = '5.4' ]; then echo 'extension = apc.so' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi"
+ - sh -c "if [ '$PHPV' = '5.3' ]; then echo 'zend_extension_ts = xdebug.so' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi"
+ - sh -c "if [ '$PHPV' = '5.4' ]; then echo 'zend_extension_ts = xdebug.so' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi"
  - cat ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
  - echo Init database
  - sh -c "if [ '$DB' = 'pgsql' ]; then psql -c 'DROP DATABASE IF EXISTS myapp_test;' -U postgres; fi"
@@ -62,7 +74,7 @@ before_script:
  - echo Show conf.php content
  - cat htdocs/conf/conf.php
  - echo Install apache server
- - sudo apt-get update > /dev/null
+ - sudo apt-get update
  - sudo apt-get install -y --force-yes apache2 libapache2-mod-php5 php5-curl php5-mysql php5-pgsql php5-intl
  - sudo sed -i -e "s,/var/www,$(pwd)/htdocs,g" /etc/apache2/sites-available/default
  - echo Show default virtual host
@@ -70,16 +82,22 @@ before_script:
  - sudo /etc/init.d/apache2 restart
  - wget http://localhost/
  - cat index.html
- 
 
 
-# Omitting "script:" will default to phpunit
-# use the $DB env variable to determine the phpunit.xml to use
-#script: phpunit -d memory_limit=-1 --configuration test/phpunit/phpunittest.xml --coverage-text test/phpunit/AllTests.php
-#script: phpunit -d memory_limit=-1 --configuration test/phpunit/phpunittest.xml --coverage-text test/phpunit/BuildDocTest.php
-#script: phpunit -d memory_limit=-1 --configuration test/phpunit/phpunittest.xml test/phpunit/WebservicesOtherTest.php
+
 script: 
-# - phpcs -s --report-summary --standard=dev/codesniffer/ruleset.xml --tab-width=4 --ignore=/build/html/,/documents/,/includes/,/test/report/ .
+ - cd htdocs/install
+ - php upgrade.php 3.4.0 3.5.0 > upgrade.log
+ - php upgrade2.php 3.4.0 3.5.0 > upgrade2.log
+ - php upgrade.php 3.5.0 3.6.0 >> upgrade.log
+ - php upgrade2.php 3.5.0 3.6.0 >> upgrade2.log
+# - cat upgrade.log
+# - cat upgrade2.log
+ - cd ../..
+ - date
+# - phpcs -p --warning-severity=0 -s --report-summary --standard=dev/codesniffer/ruleset.xml --tab-width=4 --ignore=/build/html/,/dev/vagrant/,/documents/,/includes/,/test/report/ htdocs/core/class/dolgraph.class.php 2>&1
+ - phpcs -p --warning-severity=0 -s --report-checkstyle --report-summary --standard=dev/codesniffer/ruleset.xml --tab-width=4 --ignore=/build/html/,/dev/vagrant/,/documents/,/includes/,/test/report/ . 2>&1
+ - date
  - phpunit -d memory_limit=-1 --configuration test/phpunit/phpunittest.xml test/phpunit/AllTests.php
 
 after_script:

@@ -1,5 +1,4 @@
-# Dolibarr language file - fr_FR - margins
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - marges
 
 Margin=Marge
 Margins=Marges
@@ -19,12 +18,11 @@ MarginDetails=Détails des marges réalisées
 
 ProductMargins=Marges par produit
 CustomerMargins=Marges par client
-AgentMargins=Marges par commercial
+SalesRepresentativeMargins=Marges commerciaux
 
 ProductService=Produit ou Service
 AllProducts=Tous les produits et services
 ChooseProduct/Service=Choisissez le produit ou le service
-CommercialAgent=Agent commercial
 
 StartDate=Date de début
 EndDate=Date de fin
@@ -43,8 +41,8 @@ MargeBrute=Marge brute
 MargeNette=Marge nette
 MARGIN_TYPE_DETAILS=Marge brute : Prix de vente HT - Prix d'achat HT<br/>Marge nette : Prix de vente HT - Coût de revient
 
-BuyingPrice=Prix ​​d'achat
 CostPrice=Prix de revient
+BuyingCost=Coût de revient
 UnitCharges=Charge unitaire
 Charges=Charges
 

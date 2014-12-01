@@ -44,7 +44,7 @@ if (isset($_GET["id"]) || isset($_GET["ref"]))
 }
 $fieldid = isset($_GET["ref"])?'ref':'rowid';
 if ($user->societe_id) $socid=$user->societe_id;
-$result=restrictedArea($user,'banque',$id,'bank_account','','',$fieldid);
+$result=restrictedArea($user,'banque',$id,'bank_account&bank_account','','',$fieldid);
 
 
 /*
@@ -256,7 +256,7 @@ if ($action == 'create')
 	print '<td colspan="3">';
 	$selectedcode=$account->account_currency_code;
 	if (! $selectedcode) $selectedcode=$conf->currency;
-	$form->select_currency((isset($_POST["account_currency_code"])?$_POST["account_currency_code"]:$selectedcode), 'account_currency_code');
+	print $form->selectCurrency((isset($_POST["account_currency_code"])?$_POST["account_currency_code"]:$selectedcode), 'account_currency_code');
 	//print $langs->trans("Currency".$conf->currency);
 	//print '<input type="hidden" name="account_currency_code" value="'.$conf->currency.'">';
 	print '</td></tr>';
@@ -277,7 +277,7 @@ if ($action == 'create')
 	}
 	else if (empty($selectedcode)) $selectedcode=$mysoc->country_code;
 	print $form->select_country($selectedcode,'account_country_id');
-	if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
+	if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
 	print '</td></tr>';
 
 	// State
@@ -325,7 +325,7 @@ if ($action == 'create')
 
 	print '<tr><td valign="top">'.$langs->trans("Date").'</td>';
 	print '<td colspan="3">';
-	$form->select_date(time(), 're', 0, 0, 0, 'formsoc');
+	$form->select_date('', 're', 0, 0, 0, 'formsoc');
 	print '</td></tr>';
 
 	print '<tr><td valign="top">'.$langs->trans("BalanceMinimalAllowed").'</td>';
@@ -373,8 +373,8 @@ else
 		*/
 		if ($action == 'delete')
 		{
-			$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?id='.$account->id,$langs->trans("DeleteAccount"),$langs->trans("ConfirmDeleteAccount"),"confirm_delete");
-			if ($ret == 'html') print '<br>';
+			print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$account->id,$langs->trans("DeleteAccount"),$langs->trans("ConfirmDeleteAccount"),"confirm_delete");
+
 		}
 
 		print '<table class="border" width="100%">';
@@ -531,7 +531,7 @@ else
 		print '<td colspan="3">';
 		$selectedcode=$account->account_currency_code;
 		if (! $selectedcode) $selectedcode=$conf->currency;
-		$form->select_currency((isset($_POST["account_currency_code"])?$_POST["account_currency_code"]:$selectedcode), 'account_currency_code');
+		print $form->selectCurrency((isset($_POST["account_currency_code"])?$_POST["account_currency_code"]:$selectedcode), 'account_currency_code');
 		//print $langs->trans("Currency".$conf->currency);
 		//print '<input type="hidden" name="account_currency_code" value="'.$conf->currency.'">';
 		print '</td></tr>';
@@ -550,7 +550,7 @@ else
 		if (isset($_POST["account_country_id"])) $selectedcode=$_POST["account_country_id"];
 		else if (empty($selectedcode)) $selectedcode=$mysoc->country_code;
 		print $form->select_country($selectedcode,'account_country_id');
-		if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
+		if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
 		print '</td></tr>';
 
 		// State
@@ -622,4 +622,3 @@ else
 $db->close();
 
 llxFooter();
-?>

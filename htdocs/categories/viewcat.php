@@ -27,6 +27,8 @@
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/categories.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+
 
 $langs->load("categories");
 
@@ -49,6 +51,7 @@ $result = restrictedArea($user, 'categorie', $id, '&category');
 
 $object = new Categorie($db);
 $result=$object->fetch($id);
+$object->fetch_optionals($id,$extralabels);
 if ($result <= 0)
 {
 	dol_print_error($db,$object->error);
@@ -57,6 +60,8 @@ if ($result <= 0)
 
 $type=$object->type;
 
+$extrafields = new ExtraFields($db);
+$extralabels = $extrafields->fetch_name_optionals_label($object->table_element);
 
 /*
  *	Actions
@@ -72,26 +77,33 @@ if ($id > 0 && $removeelem > 0)
 		$result = $tmpobject->fetch($removeelem);
 		$elementtype = 'product';
 	}
-	if ($type==1 && $user->rights->societe->creer)
+	else if ($type==1 && $user->rights->societe->creer)
 	{
 		$tmpobject = new Societe($db);
 		$result = $tmpobject->fetch($removeelem);
 		$elementtype = 'fournisseur';
 	}
-	if ($type==2 && $user->rights->societe->creer)
+	else if ($type==2 && $user->rights->societe->creer)
 	{
 		$tmpobject = new Societe($db);
 		$result = $tmpobject->fetch($removeelem);
 		$elementtype = 'societe';
 	}
-	if ($type == 3 && $user->rights->adherent->creer)
+	else if ($type == 3 && $user->rights->adherent->creer)
 	{
 		require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
 		$tmpobject = new Adherent($db);
 		$result = $tmpobject->fetch($removeelem);
 		$elementtype = 'member';
 	}
-	
+	else if ($type == 4 && $user->rights->societe->creer) {
+
+		require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
+		$tmpobject = new Contact($db);
+		$result = $tmpobject->fetch($removeelem);
+		$elementtype = 'contact';
+	}
+
 	$result=$object->del_type($tmpobject,$elementtype);
 	if ($result < 0) dol_print_error('',$object->error);
 }
@@ -125,6 +137,7 @@ if ($type == 0) $title=$langs->trans("ProductsCategoryShort");
 elseif ($type == 1) $title=$langs->trans("SuppliersCategoryShort");
 elseif ($type == 2) $title=$langs->trans("CustomersCategoryShort");
 elseif ($type == 3) $title=$langs->trans("MembersCategoryShort");
+elseif ($type == 4) $title=$langs->trans("ContactCategoriesShort");
 else $title=$langs->trans("Category");
 
 $head = categories_prepare_head($object,$type);
@@ -136,8 +149,7 @@ dol_fiche_head($head, 'card', $title, 0, 'category');
  */
 if ($action == 'delete')
 {
-	$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;type='.$type,$langs->trans('DeleteCategory'),$langs->trans('ConfirmDeleteCategory'),'confirm_delete');
-	if ($ret == 'html') print '<br>';
+	print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;type='.$type,$langs->trans('DeleteCategory'),$langs->trans('ConfirmDeleteCategory'),'confirm_delete');
 }
 
 print '<table border="0" width="100%" class="border">';
@@ -158,6 +170,12 @@ print '<tr><td width="20%" class="notopnoleft">';
 print $langs->trans("Description").'</td><td>';
 print nl2br($object->description);
 print '</td></tr>';
+
+$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
+if (empty($reshook) && ! empty($extrafields->attribute_label))
+{
+	print $object->showOptionals($extrafields);
+}
 
 print '</table>';
 
@@ -240,7 +258,7 @@ else
 if ($object->type == 0)
 {
 
-	$prods = $object->get_type("product","Product");
+	$prods = $object->getObjectsInCateg("product");
 	if ($prods < 0)
 	{
 		dol_print_error();
@@ -290,7 +308,7 @@ if ($object->type == 0)
 
 if ($object->type == 1)
 {
-	$socs = $object->get_type("societe","Fournisseur","fournisseur");
+	$socs = $object->getObjectsInCateg("supplier");
 	if ($socs < 0)
 	{
 		dol_print_error();
@@ -327,7 +345,7 @@ if ($object->type == 1)
 					print $langs->trans("DeleteFromCat")."</a>";
 				}
 				print '</td>';
-				
+
 				print "</tr>\n";
 			}
 		}
@@ -341,7 +359,7 @@ if ($object->type == 1)
 
 if($object->type == 2)
 {
-	$socs = $object->get_type("societe","Societe");
+	$socs = $object->getObjectsInCateg("customer");
 	if ($socs < 0)
 	{
 		dol_print_error();
@@ -358,6 +376,8 @@ if($object->type == 2)
 			$var=true;
 			foreach ($socs as $key => $soc)
 			{
+				if ($user->societe_id > 0 && $soc->id != $user->societe_id)	continue; 	// External user always see only themself
+
 				$i++;
 				$var=!$var;
 				print "\t<tr ".$bc[$var].">\n";
@@ -395,7 +415,7 @@ if ($object->type == 3)
 {
 	require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
 
-	$prods = $object->get_type("member","Adherent","","adherent");
+	$prods = $object->getObjectsInCateg("member");
 	if ($prods < 0)
 	{
 		dol_print_error($db,$object->error);
@@ -444,7 +464,59 @@ if ($object->type == 3)
 	}
 }
 
+//Categorie contact
+if($object->type == 4)
+{
+	$contacts = $object->getObjectsInCateg("contact");
+	if ($contacts < 0)
+	{
+		dol_print_error();
+	}
+	else
+	{
+		print "<br>";
+		print '<table class="noborder" width="100%">'."\n";
+		print '<tr class="liste_titre"><td colspan="2">'.$langs->trans("Contact")."</td></tr>\n";
+
+		if (count($contacts) > 0)
+		{
+			$i = 0;
+			$var=true;
+			foreach ($contacts as $key => $contact)
+			{
+				$i++;
+				$var=!$var;
+				print "\t<tr ".$bc[$var].">\n";
+				print '<td class="nowrap" valign="top">';
+				print $contact->getNomUrl(1,'category');
+				print "</td>\n";
+				// Link to delete from category
+				print '<td align="right">';
+				$typeid=$object->type;
+				$permission=0;
+				if ($typeid == 0) $permission=($user->rights->produit->creer || $user->rights->service->creer);
+				if ($typeid == 1) $permission=$user->rights->societe->creer;
+				if ($typeid == 2) $permission=$user->rights->societe->creer;
+				if ($typeid == 3) $permission=$user->rights->adherent->creer;
+				if ($typeid == 4) $permission=$user->rights->societe->creer;
+				if ($permission)
+				{
+					print "<a href= '".$_SERVER['PHP_SELF']."?".(empty($socid)?'id':'socid')."=".$object->id."&amp;type=".$typeid."&amp;removeelem=".$contact->id."'>";
+					print img_delete($langs->trans("DeleteFromCat")).' ';
+					print $langs->trans("DeleteFromCat")."</a>";
+				}
+				print '</td>';
+				print "</tr>\n";
+			}
+		}
+		else
+		{
+			print "<tr ".$bc[false]."><td>".$langs->trans("ThisCategoryHasNoContact")."</td></tr>";
+		}
+		print "</table>\n";
+	}
+}
+
 
 llxFooter();
 $db->close();
-?>

@@ -853,22 +853,22 @@ function unActivateModule($value, $requiredby=1)
 
 
 /**
- *  Add external modules to list of dictionnaries
+ *  Add external modules to list of dictionaries
  *
- * 	@param		array		&$taborder			Taborder
- * 	@param		array		&$tabname			Tabname
- * 	@param		array		&$tablib			Tablib
- * 	@param		array		&$tabsql			Tabsql
- * 	@param		array		&$tabsqlsort		Tabsqlsort
- * 	@param		array		&$tabfield			Tabfield
- * 	@param		array		&$tabfieldvalue		Tabfieldvalue
- * 	@param		array		&$tabfieldinsert	Tabfieldinsert
- * 	@param		array		&$tabrowid			Tabrowid
- * 	@param		array		&$tabcond			Tabcond
- * 	@param		array		&$tabhelp			Tabhelp
+ * 	@param		array		$taborder			Taborder
+ * 	@param		array		$tabname			Tabname
+ * 	@param		array		$tablib			Tablib
+ * 	@param		array		$tabsql			Tabsql
+ * 	@param		array		$tabsqlsort		Tabsqlsort
+ * 	@param		array		$tabfield			Tabfield
+ * 	@param		array		$tabfieldvalue		Tabfieldvalue
+ * 	@param		array		$tabfieldinsert	Tabfieldinsert
+ * 	@param		array		$tabrowid			Tabrowid
+ * 	@param		array		$tabcond			Tabcond
+ * 	@param		array		$tabhelp			Tabhelp
  * 	@return		int			1
  */
-function complete_dictionnary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsql,&$tabsqlsort,&$tabfield,&$tabfieldvalue,&$tabfieldinsert,&$tabrowid,&$tabcond,&$tabhelp)
+function complete_dictionary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsql,&$tabsqlsort,&$tabfield,&$tabfieldvalue,&$tabfieldinsert,&$tabrowid,&$tabcond,&$tabhelp)
 {
     global $db, $modules, $conf, $langs;
 
@@ -891,7 +891,7 @@ function complete_dictionnary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsq
         {
             while (($file = readdir($handle))!==false)
             {
-                if (is_dir($dirroot.'/'.$file) && substr($file, 0, 1) <> '.' && substr($file, 0, 3) <> 'CVS' && $file != 'includes')
+            	if (is_dir($dirroot.'/'.$file) && substr($file, 0, 1) <> '.' && substr($file, 0, 3) <> 'CVS' && $file != 'includes')
                 {
                     if (is_dir($dirroot . '/' . $file . '/core/modules/'))
                     {
@@ -902,7 +902,6 @@ function complete_dictionnary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsq
             closedir($handle);
         }
     }
-    //var_dump($modulesdir);
 
     foreach ($modulesdir as $dir)
     {
@@ -939,6 +938,8 @@ function complete_dictionnary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsq
                         $const_name = 'MAIN_MODULE_'.strtoupper(preg_replace('/^mod/i','',get_class($objMod)));
                         if ($objMod->version == 'development'  && $conf->global->MAIN_FEATURES_LEVEL < 2 && ! $conf->global->$const_name) $modulequalified=0;
                         if ($objMod->version == 'experimental' && $conf->global->MAIN_FEATURES_LEVEL < 1 && ! $conf->global->$const_name) $modulequalified=0;
+                        //If module is not activated disqualified
+                        if (empty($conf->global->$const_name)) $modulequalified=0;
 
                         if ($modulequalified)
                         {
@@ -961,27 +962,28 @@ function complete_dictionnary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsq
 
                             // Complete arrays
                             //&$tabname,&$tablib,&$tabsql,&$tabsqlsort,&$tabfield,&$tabfieldvalue,&$tabfieldinsert,&$tabrowid,&$tabcond
-                            //$objMod
-                            if (! empty($objMod->dictionnaries))
+                            if (empty($objMod->dictionaries) && ! empty($objMod->dictionnaries)) $objMod->dictionaries=$objMod->dictionnaries;		// For backward compatibility
+
+                            if (! empty($objMod->dictionaries))
                             {
-                                //var_dump($objMod->dictionnaries['tabname']);
+                                //var_dump($objMod->dictionaries['tabname']);
                                 $taborder[] = 0;
-                                foreach($objMod->dictionnaries['tabname'] as $val)
+                                foreach($objMod->dictionaries['tabname'] as $val)
                                 {
                                     $taborder[] = count($tabname)+1;
                                     $tabname[] = $val;
                                 }
-                                foreach($objMod->dictionnaries['tablib'] as $val) $tablib[] = $val;
-                                foreach($objMod->dictionnaries['tabsql'] as $val) $tabsql[] = $val;
-                                foreach($objMod->dictionnaries['tabsqlsort'] as $val) $tabsqlsort[] = $val;
-                                foreach($objMod->dictionnaries['tabfield'] as $val) $tabfield[] = $val;
-                                foreach($objMod->dictionnaries['tabfieldvalue'] as $val) $tabfieldvalue[] = $val;
-                                foreach($objMod->dictionnaries['tabfieldinsert'] as $val) $tabfieldinsert[] = $val;
-                                foreach($objMod->dictionnaries['tabrowid'] as $val) $tabrowid[] = $val;
-                                foreach($objMod->dictionnaries['tabcond'] as $val) $tabcond[] = $val;
-                                if (! empty($objMod->dictionnaries['tabhelp'])) foreach($objMod->dictionnaries['tabhelp'] as $val) $tabhelp[] = $val;
-                                //foreach($objMod->dictionnaries['tabsqlsort'] as $val) $tablib[] = $val;
-                                //$tabname = array_merge ($tabname, $objMod->dictionnaries['tabname']);
+                                foreach($objMod->dictionaries['tablib'] as $val) $tablib[] = $val;
+                                foreach($objMod->dictionaries['tabsql'] as $val) $tabsql[] = $val;
+                                foreach($objMod->dictionaries['tabsqlsort'] as $val) $tabsqlsort[] = $val;
+                                foreach($objMod->dictionaries['tabfield'] as $val) $tabfield[] = $val;
+                                foreach($objMod->dictionaries['tabfieldvalue'] as $val) $tabfieldvalue[] = $val;
+                                foreach($objMod->dictionaries['tabfieldinsert'] as $val) $tabfieldinsert[] = $val;
+                                foreach($objMod->dictionaries['tabrowid'] as $val) $tabrowid[] = $val;
+                                foreach($objMod->dictionaries['tabcond'] as $val) $tabcond[] = $val;
+                                if (! empty($objMod->dictionaries['tabhelp'])) foreach($objMod->dictionaries['tabhelp'] as $val) $tabhelp[] = $val;
+                                //foreach($objMod->dictionaries['tabsqlsort'] as $val) $tablib[] = $val;
+                                //$tabname = array_merge ($tabname, $objMod->dictionaries['tabname']);
                                 //var_dump($tabcond);
                                 //exit;
                             }
@@ -1019,7 +1021,7 @@ function form_constantes($tableau,$strictw3c=0)
     $form = new Form($db);
 
     if (! empty($strictw3c)) print "\n".'<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
-    	
+
     print '<table class="noborder" width="100%">';
     print '<tr class="liste_titre">';
     print '<td>'.$langs->trans("Description").'</td>';
@@ -1084,6 +1086,17 @@ function form_constantes($tableau,$strictw3c=0)
                 print '</div>';
                 //print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members/remove?adminpw=%MAILMAN_ADMINPW%&unsubscribees=%EMAIL%';
             }
+            if ($const == 'ADHERENT_MAILMAN_LISTS')
+            {
+            	print '. '.$langs->trans("Example").': <a href="#" id="exampleclick3">'.img_down().'</a><br>';
+            	print '<div id="example3" class="hidden">';
+            	print 'mymailmanlist<br>';
+            	print 'mymailmanlist1,mymailmanlist2<br>';
+            	print 'TYPE:Type1:mymailmanlist1,TYPE:Type2:mymailmanlist2<br>';
+            	if ($conf->categorie->enabled) print 'CATEG:Categ1:mymailmanlist1,CATEG:Categ2:mymailmanlist2<br>';
+            	print '</div>';
+            	//print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members/remove?adminpw=%MAILMAN_ADMINPW%&unsubscribees=%EMAIL%';
+            }
 
             print "</td>\n";
 
@@ -1137,14 +1150,14 @@ function form_constantes($tableau,$strictw3c=0)
             	print '<td align="center">';
             	print '<input type="submit" class="button" value="'.$langs->trans("Update").'" name="Button">';
 	            print "</td>";
-            }    
+            }
     	    print "</tr>\n";
             if (empty($strictw3c)) print "</form>\n";
         }
     }
     print '</table>';
 
-    if (! empty($strictw3c)) 
+    if (! empty($strictw3c))
     {
     	print '<div align="center"><input type="submit" class="button" value="'.$langs->trans("Update").'" name="update"></div>';
     	print "</form>\n";
@@ -1283,4 +1296,3 @@ function phpinfo_array()
 	return $info_arr;
 }
 
-?>
