@@ -1,15 +1,15 @@
 <?php
 /* Copyright (C) 2003-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2013 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2014 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
  * Copyright (C) 2010-2013 Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2011      Jean Heimburger      <jean@tiaris.info>
- * Copyright (C) 2012      Christophe Battarel  <christophe.battarel@altairis.fr>
+ * Copyright (C) 2012-2014 Christophe Battarel  <christophe.battarel@altairis.fr>
  * Copyright (C) 2013      Florian Henry		<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU  *General Public License as published by
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
@@ -290,6 +290,13 @@ class Commande extends CommonOrder
             }
         }
 
+        // Set new ref and current status
+        if (! $error)
+        {
+        	$this->ref = $num;
+        	$this->statut = 1;
+        }
+
         if (! $error)
         {
             // Appel des triggers
@@ -298,13 +305,6 @@ class Commande extends CommonOrder
             $result=$interface->run_triggers('ORDER_VALIDATE',$this,$user,$langs,$conf);
             if ($result < 0) { $error++; $this->errors=$interface->errors; }
             // Fin appel triggers
-        }
-
-        // Set new ref and current status
-        if (! $error)
-        {
-            $this->ref = $num;
-            $this->statut = 1;
         }
 
         if (! $error)
@@ -712,7 +712,8 @@ class Commande extends CommonOrder
                         $fk_parent_line,
                         $this->lines[$i]->fk_fournprice,
                         $this->lines[$i]->pa_ht,
-                    	$this->lines[$i]->label
+                    	$this->lines[$i]->label,
+						$this->lines[$i]->array_options
                     );
                     if ($result < 0)
                     {
@@ -849,6 +850,10 @@ class Commande extends CommonOrder
         $error=0;
 
         $this->db->begin();
+
+		// get extrafields so they will be clone
+		foreach($this->lines as $line)
+			$line->fetch_optionals($line->rowid);
 
         // Load source object
         $objFrom = dol_clone($this);

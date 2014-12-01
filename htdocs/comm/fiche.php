@@ -410,7 +410,10 @@ if ($id > 0)
 			print '<a href="'.DOL_URL_ROOT.'/comm/multiprix.php?id='.$object->id.'">'.img_edit($langs->trans("Modify")).'</a>';
 		}
 		print '</td></tr></table>';
-		print '</td><td colspan="3">'.$object->price_level."</td>";
+		print '</td><td colspan="3">'.$object->price_level;
+		$keyforlabel='PRODUIT_MULTIPRICES_LABEL'.$object->price_level;
+		if (! empty($conf->global->$keyforlabel)) print ' - '.$langs->trans($conf->global->$keyforlabel);
+		print "</td>";
 		print '</tr>';
 	}
 

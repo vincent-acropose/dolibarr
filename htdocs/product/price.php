@@ -288,7 +288,10 @@ if (! empty($conf->global->PRODUIT_MULTIPRICES))
                  print '<tr><td>'.$langs->trans("VATRate").'</td><td>'.vatrate($object->multiprices_tva_tx[1],true).'</td></tr>';
             }
 
-            print '<tr><td>'.$langs->trans("SellingPrice").' '.$i.'</td>';
+            print '<tr><td>'.$langs->trans("SellingPrice").' '.$i;
+			$keyforlabel='PRODUIT_MULTIPRICES_LABEL'.$i;
+			if (! empty($conf->global->$keyforlabel)) print ' - '.$langs->trans($conf->global->$keyforlabel);
+            print '</td>';
 
 			if ($object->multiprices_base_type["$i"] == 'TTC')
 			{
