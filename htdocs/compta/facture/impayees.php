@@ -765,7 +765,7 @@ if ($resql)
 		}
 
 		print '<tr class="liste_total">';
-		print '<td colspan="5" align="left">'.$langs->trans("Total").'</td>';
+		print '<td colspan="7" align="left">'.$langs->trans("Total").'</td>';
 		print '<td align="right"><b>'.price($total_ht).'</b></td>';
 		print '<td align="right"><b>'.price($total_tva).'</b></td>';
 		print '<td align="right"><b>'.price($total_ttc).'</b></td>';
