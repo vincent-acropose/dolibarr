@@ -3279,7 +3279,7 @@ if ($action == 'create')
 					print '</form>';
 				} else {
 					print $extrafields->showOutputField($key, $value);
-					if ($object->statut == 0 && $user->rights->facture->creer)
+					if ($user->rights->facture->creer)
 						print '<a href="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '&action=edit_extras&attribute=' . $key . '">' . img_picto('', 'edit') . ' ' . $langs->trans('Modify') . '</a>';
 				}
 				print '</td></tr>' . "\n";
