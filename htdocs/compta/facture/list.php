@@ -141,7 +141,7 @@ $facturestatic=new Facture($db);
 if (! $sall) $sql = 'SELECT';
 else $sql = 'SELECT DISTINCT';
 $sql.= ' f.rowid as facid, f.facnumber, f.ref_client, f.type, f.note_private, f.increment, f.total as total_ht, f.tva as total_tva, f.total_ttc,';
-$sql.= ' f.datef as df, f.date_lim_reglement as datelimite,';
+$sql.= ' f.datef as df, f.date_lim_reglement as datelimite, SUBSTRING(f.facnumber,-4) as numero,';
 $sql.= ' f.paye as paye, f.fk_statut,';
 $sql.= ' s.nom, s.rowid as socid, s.code_client, s.client ';
 if (! $sall) $sql.= ', SUM(pf.amount) as am';   // To be able to sort on status
@@ -296,6 +296,7 @@ if ($resql)
     print '<tr class="liste_titre">';
     print_liste_field_titre($langs->trans('Ref'),$_SERVER['PHP_SELF'],'f.facnumber','',$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('RefCustomer'),$_SERVER["PHP_SELF"],'f.ref_client','',$param,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Numéro"),$_SERVER["PHP_SELF"],"numero","",$param,"",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Date'),$_SERVER['PHP_SELF'],'f.datef','',$param,'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("DateDue"),$_SERVER['PHP_SELF'],"f.date_lim_reglement",'',$param,'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Company'),$_SERVER['PHP_SELF'],'s.nom','',$param,'',$sortfield,$sortorder);
@@ -315,6 +316,7 @@ if ($resql)
 	print '<td class="liste_titre">';
 	print '<input class="flat" size="6" type="text" name="search_refcustomer" value="'.$search_refcustomer.'">';
 	print '</td>';
+	print '<td class="liste_titre" align="center">&nbsp;</td>';
     print '<td class="liste_titre" align="center">';
     if (! empty($conf->global->MAIN_LIST_FILTER_ON_DAY)) print '<input class="flat" type="text" size="1" maxlength="2" name="day" value="'.$day.'">';
     print '<input class="flat" type="text" size="1" maxlength="2" name="month" value="'.$month.'">';
@@ -381,7 +383,12 @@ if ($resql)
 			print '<td class="nowrap">';
 			print $objp->ref_client;
 			print '</td>';
-
+			
+			// Numéro
+			print '<td class="nobordernopadding nowrap">';
+			print (int)substr($facturestatic->ref, -4);
+			print '</td>';
+			
 			// Date
             print '<td align="center" class="nowrap">';
             print dol_print_date($db->jdate($objp->df),'day');
