@@ -64,7 +64,7 @@ class mod_contract_serpis extends ModelNumRefContracts
 	 */
 	function canBeActivated()
 	{
-		global $conf,$langs;
+		global $conf,$langs,$db;
 
 		$coyymm=''; $max='';
 
@@ -144,4 +144,3 @@ class mod_contract_serpis extends ModelNumRefContracts
 	}
 
 }
-?>

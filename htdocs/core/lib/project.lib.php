@@ -78,7 +78,7 @@ function project_prepare_head($object)
 
 	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 	$upload_dir = $conf->projet->dir_output . "/" . dol_sanitizeFileName($object->ref);
-	$nbFiles = count(dol_dir_list($upload_dir,'files'));
+	$nbFiles = count(dol_dir_list($upload_dir,'files',0,'','(\.meta|_preview\.png)$'));
 	$head[$h][0] = DOL_URL_ROOT.'/projet/document.php?id='.$object->id;
 	$head[$h][1] = $langs->trans('Documents');
 	if($nbFiles > 0) $head[$h][1].= ' ('.$nbFiles.')';
@@ -185,7 +185,7 @@ function project_admin_prepare_head()
 	$head[$h][2] = 'project';
 	$h++;
 
-	complete_head_from_modules($conf,$langs,$object,$head,$h,'project_admin');
+	complete_head_from_modules($conf,$langs,null,$head,$h,'project_admin');
 
 	$head[$h][0] = DOL_URL_ROOT."/projet/admin/project_extrafields.php";
 	$head[$h][1] = $langs->trans("ExtraFieldsProject");
@@ -197,7 +197,7 @@ function project_admin_prepare_head()
 	$head[$h][2] = 'attributes_task';
 	$h++;
 
-	complete_head_from_modules($conf,$langs,$object,$head,$h,'project_admin','remove');
+	complete_head_from_modules($conf,$langs,null,$head,$h,'project_admin','remove');
 
 	return $head;
 }
@@ -206,13 +206,13 @@ function project_admin_prepare_head()
 /**
  * Show task lines with a particular parent
  *
- * @param	string	 	&$inc				Counter that count number of lines legitimate to show (for return)
+ * @param	string	 	$inc				Counter that count number of lines legitimate to show (for return)
  * @param 	int			$parent				Id of parent task to start
- * @param 	array		&$lines				Array of all tasks
- * @param 	int			&$level				Level of task
+ * @param 	array		$lines				Array of all tasks
+ * @param 	int			$level				Level of task
  * @param 	string		$var				Color
  * @param 	int			$showproject		Show project columns
- * @param	int			&$taskrole			Array of roles of user for each tasks
+ * @param	int			$taskrole			Array of roles of user for each tasks
  * @param	int			$projectsListId		List of id of project allowed to user (string separated with comma)
  * @param	int			$addordertick		Add a tick to move task
  * @return	void
@@ -310,6 +310,12 @@ function projectLinesa(&$inc, $parent, &$lines, &$level, $var, $showproject, &$t
 					else print $projectstatic->getNomUrl(1,'nolink');
 					if ($showlineingray) print '</i>';
 					print "</td>";
+
+					// Project status
+					print '<td>';
+					$projectstatic->statut=$lines[$i]->projectstatus;
+					print $projectstatic->getLibStatut(2);
+					print "</td>";
 				}
 
 				// Ref of task
@@ -342,12 +348,12 @@ function projectLinesa(&$inc, $parent, &$lines, &$level, $var, $showproject, &$t
 
 				// Date start
 				print '<td align="center">';
-				print dol_print_date($lines[$i]->date_start,'day');
+				print dol_print_date($lines[$i]->date_start,'dayhour');
 				print '</td>';
 
 				// Date end
 				print '<td align="center">';
-				print dol_print_date($lines[$i]->date_end,'day');
+				print dol_print_date($lines[$i]->date_end,'dayhour');
 				print '</td>';
 
 				// Planned Workload (in working hours)
@@ -412,7 +418,7 @@ function projectLinesa(&$inc, $parent, &$lines, &$level, $var, $showproject, &$t
 	{
 		print '<tr class="liste_total">';
 		print '<td class="liste_total">'.$langs->trans("Total").'</td>';
-		if ($showproject) print '<td></td>';
+		if ($showproject) print '<td></td><td></td>';
 		print '<td></td>';
 		print '<td></td>';
 		print '<td></td>';
@@ -437,12 +443,12 @@ function projectLinesa(&$inc, $parent, &$lines, &$level, $var, $showproject, &$t
 /**
  * Output a task line
  *
- * @param	string	   	&$inc					?
+ * @param	string	   	$inc					?
  * @param   string		$parent					?
  * @param   Object		$lines					?
- * @param   int			&$level					?
- * @param   string		&$projectsrole			?
- * @param   string		&$tasksrole				?
+ * @param   int			$level					?
+ * @param   string		$projectsrole			?
+ * @param   string		$tasksrole				?
  * @param	string		$mine					Show only task lines I am assigned to
  * @param   int			$restricteditformytask	0=No restriction, 1=Enable add time only if task is a task i am affected to
  * @return  $inc
@@ -583,10 +589,10 @@ function projectLinesb(&$inc, $parent, $lines, &$level, &$projectsrole, &$tasksr
 /**
  * Search in task lines with a particular parent if there is a task for a particular user (in taskrole)
  *
- * @param 	string	&$inc				Counter that count number of lines legitimate to show (for return)
+ * @param 	string	$inc				Counter that count number of lines legitimate to show (for return)
  * @param 	int		$parent				Id of parent task to start
- * @param 	array	&$lines				Array of all tasks
- * @param	string	&$taskrole			Array of task filtered on a particular user
+ * @param 	array	$lines				Array of all tasks
+ * @param	string	$taskrole			Array of task filtered on a particular user
  * @return	int							1 if there is
  */
 function searchTaskInChild(&$inc, $parent, &$lines, &$taskrole)
@@ -712,4 +718,3 @@ function print_projecttasks_array($db, $socid, $projectsListId, $mytasks=0)
 	print "</table>";
 }
 
-?>

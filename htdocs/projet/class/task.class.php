@@ -41,7 +41,7 @@ class Task extends CommonObject
     var $fk_task_parent;
     var $label;
     var $description;
-    var $duration_effective;
+    var $duration_effective;		// total of time spent on this task
     var $planned_workload;
     var $date_c;
     var $date_start;
@@ -536,9 +536,10 @@ class Task extends CommonObject
      * @param	int		$socid				Third party id
      * @param	int		$mode				0=Return list of tasks and their projects, 1=Return projects and tasks if exists
      * @param	string	$filteronprojref	Filter on project ref
+     * @param	string	$filteronprojstatus	Filter on project status
      * @return 	array						Array of tasks
      */
-    function getTasksArray($usert=0, $userp=0, $projectid=0, $socid=0, $mode=0, $filteronprojref='')
+    function getTasksArray($usert=0, $userp=0, $projectid=0, $socid=0, $mode=0, $filteronprojref='', $filteronprojstatus=-1)
     {
         global $conf;
 
@@ -547,7 +548,7 @@ class Task extends CommonObject
         //print $usert.'-'.$userp.'-'.$projectid.'-'.$socid.'-'.$mode.'<br>';
 
         // List of tasks (does not care about permissions. Filtering will be done later)
-        $sql = "SELECT p.rowid as projectid, p.ref, p.title as plabel, p.public,";
+        $sql = "SELECT p.rowid as projectid, p.ref, p.title as plabel, p.public, p.fk_statut,";
         $sql.= " t.rowid as taskid, t.label, t.description, t.fk_task_parent, t.duration_effective, t.progress,";
         $sql.= " t.dateo as date_start, t.datee as date_end, t.planned_workload, t.ref as ref_task,t.rang";
         if ($mode == 0)
@@ -568,6 +569,7 @@ class Task extends CommonObject
             if ($projectid) $sql.= " AND p.rowid in (".$projectid.")";
         }
         if ($filteronprojref) $sql.= " AND p.ref LIKE '%".$filteronprojref."%'";
+        if ($filteronprojstatus > -1) $sql.= " AND p.fk_statut = ".$filteronprojstatus;
         $sql.= " ORDER BY p.ref, t.rang, t.dateo";
 
         //print $sql;
@@ -601,12 +603,13 @@ class Task extends CommonObject
 
                 if (! $error)
                 {
-					$tasks[$i] = new Task($db);
+					$tasks[$i] = new Task($this->db);
                     $tasks[$i]->id				= $obj->taskid;
 					$tasks[$i]->ref				= $obj->ref_task;
                     $tasks[$i]->fk_project		= $obj->projectid;
                     $tasks[$i]->projectref		= $obj->ref;
                     $tasks[$i]->projectlabel	= $obj->plabel;
+                    $tasks[$i]->projectstatus	= $obj->fk_statut;
                     $tasks[$i]->label			= $obj->label;
                     $tasks[$i]->description		= $obj->description;
                     $tasks[$i]->fk_parent		= $obj->fk_task_parent;
@@ -765,8 +768,8 @@ class Task extends CommonObject
         dol_syslog(get_class($this)."::addTimeSpent sql=".$sql, LOG_DEBUG);
         if ($this->db->query($sql) )
         {
-            $task_id = $this->db->last_insert_id(MAIN_DB_PREFIX."projet_task_time");
-            $ret = $task_id;
+            $tasktime_id = $this->db->last_insert_id(MAIN_DB_PREFIX."projet_task_time");
+            $ret = $tasktime_id;
 
             if (! $notrigger)
             {
@@ -790,6 +793,18 @@ class Task extends CommonObject
             $sql = "UPDATE ".MAIN_DB_PREFIX."projet_task";
             $sql.= " SET duration_effective = duration_effective + '".price2num($this->timespent_duration)."'";
             $sql.= " WHERE rowid = ".$this->id;
+
+            dol_syslog(get_class($this)."::addTimeSpent sql=".$sql, LOG_DEBUG);
+            if (! $this->db->query($sql) )
+            {
+                $this->error=$this->db->lasterror();
+                dol_syslog(get_class($this)."::addTimeSpent error -2 ".$this->error, LOG_ERR);
+                $ret = -2;
+            }
+        
+            $sql = "UPDATE ".MAIN_DB_PREFIX."projet_task_time";
+            $sql.= " SET thm = (SELECT thm FROM ".MAIN_DB_PREFIX."user WHERE rowid = ".$this->timespent_fk_user.")";
+            $sql.= " WHERE rowid = ".$tasktime_id;
 
             dol_syslog(get_class($this)."::addTimeSpent sql=".$sql, LOG_DEBUG);
             if (! $this->db->query($sql) )
@@ -1143,7 +1158,7 @@ class Task extends CommonObject
 				$clone_task_dir = $conf->projet->dir_output . "/" . dol_sanitizeFileName($clone_project_ref). "/" . dol_sanitizeFileName($clone_task_ref);
 				$ori_task_dir = $conf->projet->dir_output . "/" . dol_sanitizeFileName($ori_project_ref). "/" . dol_sanitizeFileName($fromid);
 
-				$filearray=dol_dir_list($ori_task_dir,"files",0,'','\.meta$','',SORT_ASC,1);
+				$filearray=dol_dir_list($ori_task_dir,"files",0,'','(\.meta|_preview\.png)$','',SORT_ASC,1);
 				foreach($filearray as $key => $file)
 				{
 					if (!file_exists($clone_task_dir))
@@ -1301,4 +1316,3 @@ class Task extends CommonObject
 	}
 
 }
-?>

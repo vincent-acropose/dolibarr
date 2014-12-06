@@ -219,7 +219,11 @@ if (($action == 'create' || $action == 'add') && empty($mesgs))
 									$objectsrc->setStatut(3);
 								}
 								$lines = $objectsrc->lines;
-								if (empty($lines) && method_exists($objectsrc,'fetch_lines'))  $lines = $objectsrc->fetch_lines();
+								if (empty($lines) && method_exists($objectsrc, 'fetch_lines'))
+								{
+									$objectsrc->fetch_lines();
+									$lines = $objectsrc->lines;
+								}
 								$fk_parent_line=0;
 								$num=count($lines);
 								for ($i=0;$i<$num;$i++)
@@ -468,7 +472,7 @@ if ($action == 'create' && empty($mesgs))
 
 	print '</textarea></td></tr>';
 	// Private note
-	if (! $user->societe_id)
+	if (empty($user->societe_id))
 	{
 		print '<tr>';
 		print '<td class="border" valign="top">'.$langs->trans('NotePrivate').'</td>';
@@ -697,4 +701,3 @@ dol_htmloutput_mesg($mesg,$mesgs);
 
 llxFooter();
 $db->close();
-?>

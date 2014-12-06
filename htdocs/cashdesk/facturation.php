@@ -25,6 +25,15 @@
  *	\brief      Include to show main page for cashdesk module
  */
 
+
+
+
+/*
+ * View
+ */
+
+$form=new Form($db);
+
 // Get list of articles (in warehouse '$conf_fkentrepot' if defined and stock module enabled)
 if ( GETPOST('filtre') ) {
 
@@ -182,5 +191,3 @@ $obj_facturation->paiementLe('RESET');
 
 // Affichage des templates
 require ('tpl/facturation1.tpl.php');
-
-?>

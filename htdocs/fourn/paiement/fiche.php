@@ -29,6 +29,7 @@ require '../../main.inc.php';
 require DOL_DOCUMENT_ROOT.'/fourn/class/paiementfourn.class.php';
 require DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.class.php';
 require DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.facture.class.php';
+require DOL_DOCUMENT_ROOT.'/core/lib/payments.lib.php';
 
 $langs->load('bills');
 $langs->load('banks');
@@ -138,23 +139,14 @@ if ($action == 'setdatep' && ! empty($_POST['datepday']))
 
 llxHeader();
 
+$result=$object->fetch($id);
+
 $form = new Form($db);
 
-$h=0;
+$head = payment_supplier_prepare_head($object);
 
-$head[$h][0] = $_SERVER['PHP_SELF'].'?id='.$id;
-$head[$h][1] = $langs->trans('Card');
-$hselected = $h;
-$h++;
+dol_fiche_head($head, 'payment', $langs->trans('SupplierPayment'), 0, 'payment');
 
-$head[$h][0] = DOL_URL_ROOT.'/fourn/paiement/info.php?id='.$id;
-$head[$h][1] = $langs->trans('Info');
-$h++;
-
-
-dol_fiche_head($head, $hselected, $langs->trans('SupplierPayment'), 0, 'payment');
-
-$result=$object->fetch($id);
 if ($result > 0)
 {
 	/*
@@ -353,4 +345,3 @@ dol_fiche_end();
 llxFooter();
 
 $db->close();
-?>
