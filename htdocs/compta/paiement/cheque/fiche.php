@@ -348,6 +348,7 @@ if ($action == 'new')
     if ($filteraccountid > 0) $sql.=" AND ba.rowid= '".$filteraccountid."'";
 	$sql.= $db->order("b.dateo,b.rowid","ASC");
 
+	dol_syslog(__FILE__.':: list sql='.$sql,LOG_DEBUG);
 	$resql = $db->query($sql);
 	if ($resql)
 	{
@@ -525,14 +526,13 @@ else
 	$sql.= " AND b.fk_bordereau = ".$object->id;
 	$sql.= " ORDER BY $sortfield $sortorder";
 
-	dol_syslog("sql=".$sql);
+	dol_syslog(__FILE__.':: list sql='.$sql);
 	$resql = $db->query($sql);
 	if ($resql)
 	{
 		$num = $db->num_rows($resql);
 
 		print '<table class="noborder" width="100%">';
-
 		$param="&amp;id=".$object->id;
 		print '<tr class="liste_titre">';
 		print_liste_field_titre($langs->trans("Cheque"),'','','','','width="30"');
@@ -540,6 +540,7 @@ else
 		print_liste_field_titre($langs->trans("Numero"),$_SERVER["PHP_SELF"],"b.num_chq", "",$param,'align="center"',$sortfield,$sortorder);
 		print_liste_field_titre($langs->trans("CheckTransmitter"),$_SERVER["PHP_SELF"],"b.emetteur", "",$param,"",$sortfield,$sortorder);
 		print_liste_field_titre($langs->trans("Bank"),$_SERVER["PHP_SELF"],"b.banque", "",$param,"",$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("Invoice"),$_SERVER["PHP_SELF"],"", "",$param,"",$sortfield,$sortorder);
 		print_liste_field_titre($langs->trans("Amount"),$_SERVER["PHP_SELF"],"b.amount", "",$param,'align="right"',$sortfield,$sortorder);
 		print_liste_field_titre($langs->trans("LineRecord"),$_SERVER["PHP_SELF"],"b.rowid", "",$param,'align="center"',$sortfield,$sortorder);
 		print_liste_field_titre('','','');
@@ -552,6 +553,28 @@ else
 			if (! isset($accounts[$objp->bid]))
 				$accounts[$objp->bid]=0;
 			$accounts[$objp->bid] += 1;
+			
+			
+			
+			$sql_invoice = 'SELECT f.rowid, f.facnumber, f.type ';
+			$sql_invoice .= ' FROM '.MAIN_DB_PREFIX.'facture as f';
+			$sql_invoice .= ' INNER JOIN '.MAIN_DB_PREFIX.'paiement_facture  as pf ON pf.fk_facture=f.rowid ';
+			$sql_invoice .= ' INNER JOIN '.MAIN_DB_PREFIX.'paiement as p ON p.rowid=pf.fk_paiement ';
+			$sql_invoice .= ' INNER JOIN '.MAIN_DB_PREFIX.'bank as b ON p.fk_bank=b.rowid AND  b.rowid='.$objp->rowid;
+				
+			dol_syslog(__FILE__.':: list sql_invoice='.$sql_invoice,LOG_DEBUG);
+			$resql_invoice = $db->query($sql_invoice);
+			$invoice_array=array();
+			if ($resql_invoice)
+			{	
+				if ($db->num_rows($resql_invoice)>0) {
+					while($obj_invoice = $db->fetch_object($resql_invoice)) {
+						$invoice_array[$obj_invoice->rowid]=array('ref'=>$obj_invoice->facnumber, 'type'=>$obj_invoice->type);
+					}
+				}
+			}
+			
+			
 
 			print "<tr $bc[$var]>";
 			print '<td align="center">'.$i.'</td>';
@@ -559,6 +582,20 @@ else
 			print '<td align="center">'.($objp->num_chq?$objp->num_chq:'&nbsp;').'</td>';
 			print '<td>'.dol_trunc($objp->emetteur,24).'</td>';
 			print '<td>'.dol_trunc($objp->banque,24).'</td>';
+			print '<td>';
+			if (count($invoice_array)>0) {
+				require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
+				$facstat = new Facture($db);
+				
+				foreach($invoice_array as $invc_id=>$invc_ref) {
+					$facstat->id=$invc_id;
+					$facstat->ref=$invc_ref['ref'];
+					$facstat->type=$invc_ref['type'];
+					print $facstat->getNomUrl(1);
+				}
+			}
+			print '</td>';
+			var_export($invoice_array,true).'</td>';
 			print '<td align="right">'.price($objp->amount).'</td>';
 			print '<td align="center">';
 			$accountlinestatic->rowid=$objp->rowid;

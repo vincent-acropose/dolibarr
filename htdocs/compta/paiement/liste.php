@@ -176,6 +176,7 @@ if ($resql)
     print "</tr>\n";
 
     $var=true;
+    $total_amount=0;
     while ($i < min($num,$limit))
     {
         $objp = $db->fetch_object($resql);
@@ -225,7 +226,14 @@ if ($resql)
         print '</tr>';
 
         $i++;
+        $total_amount+=$objp->amount;
     }
+    
+    print '<tr class="liste_total">';
+    print '<td colspan="5" align="left">'.$langs->trans("Total").'</td>';
+    print '<td align="right"><b>'.price($total_amount).'</b></td>';
+    print "</tr>\n";
+    
     print "</table>\n";
     print "</form>\n";
 }
