@@ -98,6 +98,30 @@ if ($action == 'setcustomeraddress')
 	$action="";
 }
 
+if ($action == 'setzip')
+{
+	$result=$object->fetch($_REQUEST['socid']);
+	$object->zip=$_POST["zip"];
+	$result=$object->update($object->id);
+	if ($result < 0)
+	{
+		$mesgs[]=join(',',$object->errors);
+	}
+	$action="";
+}
+
+if ($action == 'settown')
+{
+	$result=$object->fetch($_REQUEST['socid']);
+	$object->town=$_POST["town"];
+	$result=$object->update($object->id);
+	if ($result < 0)
+	{
+		$mesgs[]=join(',',$object->errors);
+	}
+	$action="";
+}
+
  if ($action == 'update_extras')
 {
 	$object->fetch($_REQUEST['socid']);
@@ -1619,15 +1643,35 @@ else
 		print '</td><td colspan="3">';
 		print $form->editfieldval($langs->trans('Address'),'customeraddress',$object->address,$object,$user->rights->societe->creer, 'string', '', null, null, '&socid='.$_REQUEST['socid']);
 		print '</td>';
-		print '</tr>';		
+		print '</tr>';	
 		
 		
 
         // Zip / Town
-        print '<tr><td width="25%">'.$langs->trans('Zip').' / '.$langs->trans("Town").'</td><td colspan="'.(2+(($showlogo || $showbarcode)?0:1)).'">';
+       /* print '<tr><td width="25%">'.$langs->trans('Zip').' / '.$langs->trans("Town").'</td><td colspan="'.(2+(($showlogo || $showbarcode)?0:1)).'">';
         print $object->zip.($object->zip && $object->town?" / ":"").$object->town;
         print "</td>";
-        print '</tr>';
+        print '</tr>';*/	
+		
+		
+		// Zip (modifiable)
+		print '<tr>';
+		print '<td>';
+		print $form->editfieldkey($langs->trans('Zip'),'zip',$object->zip,$object,$user->rights->societe->creer, 'string', '&socid='.$_REQUEST['socid']);
+		print '</td><td colspan="3">';
+		print $form->editfieldval($langs->trans('Zip'),'zip',$object->zip,$object,$user->rights->societe->creer, 'string', '', null, null, '&socid='.$_REQUEST['socid']);
+		print '</td>';
+		print '</tr>';		
+		
+		
+		// Town (modifiable)
+		print '<tr>';
+		print '<td>';
+		print $form->editfieldkey($langs->trans('Town'),'town',$object->town,$object,$user->rights->societe->creer, 'string', '&socid='.$_REQUEST['socid']);
+		print '</td><td colspan="3">';
+		print $form->editfieldval($langs->trans('Town'),'town',$object->town,$object,$user->rights->societe->creer, 'string', '', null, null, '&socid='.$_REQUEST['socid']);
+		print '</td>';
+		print '</tr>';	
 
         // Country
         print '<tr><td>'.$langs->trans("Country").'</td><td colspan="'.(2+(($showlogo || $showbarcode)?0:1)).'" class="nowrap">';
