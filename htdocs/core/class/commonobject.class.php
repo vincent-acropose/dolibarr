@@ -3,7 +3,7 @@
  * Copyright (C) 2005-2013 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2013 Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2012      Christophe Battarel  <christophe.battarel@altairis.fr>
- * Copyright (C) 2010-2011 Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2010-2014 Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2012-2013 Christophe Battarel  <christophe.battarel@altairis.fr>
  * Copyright (C) 2011-2014 Philippe Grand	    <philippe.grand@atoo-net.com>
  * Copyright (C) 2012      Marcos García        <marcosgdf@gmail.com>
@@ -608,6 +608,8 @@ abstract class CommonObject
         global $conf;
 
         if (empty($this->socid) && empty($this->fk_soc)) return 0;
+
+	    require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 
         $thirdparty = new Societe($this->db);
         $result=$thirdparty->fetch(isset($this->socid)?$this->socid:$this->fk_soc);
@@ -2235,7 +2237,7 @@ abstract class CommonObject
             {
             	$attributeKey = substr($key,8);   // Remove 'options_' prefix
                 // Add field of attribut
-            	if ($extrafields->attribute_type[$attributeKey] != 'separate') // Only for other type of separate
+            	if (isset($extrafields->attribute_type[$attributeKey]) && $extrafields->attribute_type[$attributeKey] != 'separate') // Only for other type of separate
                 	$sql.=",".$attributeKey;
             }
             $sql .= ") VALUES (".$this->id;
@@ -2243,7 +2245,7 @@ abstract class CommonObject
             {
             	$attributeKey = substr($key,8);   // Remove 'options_' prefix
                 // Add field o fattribut
-            	if($extrafields->attribute_type[$attributeKey] != 'separate') // Only for other type of separate)
+            	if(isset($extrafields->attribute_type[$attributeKey]) && $extrafields->attribute_type[$attributeKey] != 'separate') // Only for other type of separate)
             	{
 	                if ($this->array_options[$key] != '')
 	                {
