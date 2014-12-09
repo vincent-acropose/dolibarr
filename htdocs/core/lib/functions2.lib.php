@@ -612,13 +612,13 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     if ($maskraz > 0)    // A reset is required
     {
     	if ($maskraz == 99) {
-			$maskraz = date('m');
+			$maskraz = date('m', $date);
 			$resetEveryMonth = true;
 		}
         if ($maskraz > 12) return 'ErrorBadMaskBadRazMonth';
 
         // Define posy, posm and reg
-        if ($maskraz > 1)
+        if ($maskraz > 1 || $resetEveryMonth)
         {
             if (! preg_match('/^(.*)\{(y+)\}\{(m+)\}/i',$maskwithonlyymcode)
             && ! preg_match('/^(.*)\{(m+)\}\{(y+)\}/i',$maskwithonlyymcode)) return 'ErrorCantUseRazInStartedYearIfNoYearMonthInMask';
@@ -726,7 +726,7 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     $sql.= " FROM ".MAIN_DB_PREFIX.$table;
     $sql.= " WHERE ".$field." LIKE '".$maskLike."'";
     $sql.= " AND ".$field." NOT LIKE '%PROV%'";
-    $sql.= " AND entity IN (".getEntity($table, 1).")";
+    //$sql.= " AND entity IN (".getEntity($table, 1).")";
     if ($where) $sql.=$where;
     if ($sqlwhere) $sql.=' AND '.$sqlwhere;
 

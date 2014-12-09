@@ -2308,7 +2308,7 @@ class Form
      *    @param    int		$excludeafterid 	Exclude all categories after this leaf in category tree.
      *    @return	void
      */
-    function select_all_categories($type, $selected='', $htmlname="parent", $maxlength=64, $excludeafterid=0)
+    function select_all_categories($type, $selected='', $htmlname="parent", $maxlength=128, $excludeafterid=0)
     {
         global $langs;
         $langs->load("categories");

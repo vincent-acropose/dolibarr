@@ -81,7 +81,7 @@ class Categorie
 
 		else
 		{
-			if ($label) $sql.= " WHERE label = '".$this->db->escape($label)."' AND entity=".$conf->entity;;
+			if ($label) $sql.= " WHERE label = '".$this->db->escape($label)."' AND entity IN (".getEntity('category',1).")";
 		}
 
 		dol_syslog(get_class($this)."::fetch sql=".$sql);

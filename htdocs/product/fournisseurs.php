@@ -380,6 +380,12 @@ if ($id || $ref)
 					print '</tr>';
 				}
 
+				if (is_object($hookmanager))
+{
+	$parameters=array('filtre'=>"fournisseur=1",'html_name'=>'id_fourn','selected'=>GETPOST("id_fourn"),'showempty'=>1,'prod_id'=>$product->id);
+    $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);
+}
+
 				print '</table>';
 
 				print '<br><center><input class="button" type="submit" value="'.$langs->trans("Save").'">';
@@ -501,6 +507,12 @@ if ($id || $ref)
 							print $productfourn->fourn_unitcharges?price($productfourn->fourn_unitcharges) : ($productfourn->fourn_qty?price($productfourn->fourn_charges/$productfourn->fourn_qty):"&nbsp;");
 							print '</td>';
 						}
+
+						if (is_object($hookmanager))
+{
+	$parameters=array('id_pfp'=>$productfourn->product_fourn_price_id,'id_fourn'=>$id_fourn,'prod_id'=>$product->id);
+    $reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$object,$action);
+}
 
 						// Modify-Remove
 						print '<td align="center">';
