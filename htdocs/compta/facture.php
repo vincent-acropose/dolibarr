@@ -890,7 +890,7 @@ else if ($action == 'add' && $user->rights->facture->creer)
 								$langs->trans('Deposit'),
 								$amountdeposit,		 	// subprice
 								1, 						// quantity
-								$lines [$i]->tva_tx, 0, // localtax1_tx
+								20, 0, // localtax1_tx
 								0, 						// localtax2_tx
 								0, 						// fk_product
 								0, 						// remise_percent
