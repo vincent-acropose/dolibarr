@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2010-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2010-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -210,15 +210,30 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
      */
     public function testDolHtmlCleanLastBr()
     {
+        $input="A string\n";
+        $after=dol_htmlcleanlastbr($input);
+        $this->assertEquals("A string",$after);
+
+        $input="A string first\nA string second\n";
+        $after=dol_htmlcleanlastbr($input);
+        $this->assertEquals("A string first\nA string second",$after);
+
+        $input="A string\n\n\n";
+        $after=dol_htmlcleanlastbr($input);
+        $this->assertEquals("A string",$after);
+
         $input="A string<br>";
         $after=dol_htmlcleanlastbr($input);
         $this->assertEquals("A string",$after);
+
         $input="A string first<br>\nA string second<br>";
         $after=dol_htmlcleanlastbr($input);
         $this->assertEquals("A string first<br>\nA string second",$after);
+
         $input="A string\n<br type=\"_moz\" />\n";
         $after=dol_htmlcleanlastbr($input);
         $this->assertEquals("A string",$after);
+
         $input="A string\n<br><br />\n\n";
         $after=dol_htmlcleanlastbr($input);
         $this->assertEquals("A string",$after);
@@ -280,21 +295,43 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
      */
     public function testDolHtmlEntitiesBr()
     {
-        $input="A string\nwith a é, &, < and >.";   // Text not already HTML
+    	// Text not already HTML
+
+    	$input="A string\nwith a é, &, < and >.";
         $after=dol_htmlentitiesbr($input,0);    // Add <br> before \n
         $this->assertEquals("A string<br>\nwith a &eacute;, &amp;, &lt; and &gt;.",$after);
 
-        $input="A string\nwith a é, &, < and >.";   // Text not already HTML
+        $input="A string\nwith a é, &, < and >.";
         $after=dol_htmlentitiesbr($input,1);    // Replace \n with <br>
         $this->assertEquals("A string<br>with a &eacute;, &amp;, &lt; and &gt;.",$after);
 
-        $input="A string<br>\nwith a é, &, < and >.";   // Text already HTML, so &,<,> should not be converted
+        $input="A string\nwith a é, &, < and >.\n\n";	// With some \n at end that should be cleaned
+        $after=dol_htmlentitiesbr($input,0);    // Add <br> before \n
+        $this->assertEquals("A string<br>\nwith a &eacute;, &amp;, &lt; and &gt;.",$after);
+
+        $input="A string\nwith a é, &, < and >.\n\n";	// With some \n at end that should be cleaned
+        $after=dol_htmlentitiesbr($input,1);    // Replace \n with <br>
+        $this->assertEquals("A string<br>with a &eacute;, &amp;, &lt; and &gt;.",$after);
+
+        // Text already HTML, so &,<,> should not be converted
+
+        $input="A string<br>\nwith a é, &, < and >.";
         $after=dol_htmlentitiesbr($input);
         $this->assertEquals("A string<br>\nwith a &eacute;, &, < and >.",$after);
 
-        $input="<li>\nA string with a é, &, < and >.</li>\nAnother string";   // Text already HTML, so &,<,> should not be converted
+        $input="<li>\nA string with a é, &, < and >.</li>\nAnother string";
         $after=dol_htmlentitiesbr($input);
         $this->assertEquals("<li>\nA string with a &eacute;, &, < and >.</li>\nAnother string",$after);
+
+        $input="A string<br>\nwith a é, &, < and >.<br>";	// With some <br> at end that should be cleaned
+        $after=dol_htmlentitiesbr($input);
+        $this->assertEquals("A string<br>\nwith a &eacute;, &, < and >.",$after);
+
+        $input="<li>\nA string with a é, &, < and >.</li>\nAnother string<br>";	// With some <br> at end that should be cleaned
+        $after=dol_htmlentitiesbr($input);
+        $this->assertEquals("<li>\nA string with a &eacute;, &, < and >.</li>\nAnother string",$after);
+
+        // TODO Add test with param $removelasteolbr = 0
 
         return true;
     }
@@ -327,7 +364,22 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
 
 
     /**
-     * testDolTextIsHtml
+     * testDolUnaccent
+     *
+     * @return boolean
+     */
+    public function testDolUnaccent()
+    {
+    	// Text not already HTML
+
+    	$input="A string\nwith a à ä é è ë ï ü ö ÿ, &, < and >.";
+        $after=dol_string_unaccent($input);
+        $this->assertEquals("A string\nwith a a a e e e i u o y, &, < and >.",$after);
+    }
+
+
+    /**
+     * testDolUtf8Check
      *
      * @return void
      */
@@ -395,6 +447,14 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
      */
     public function testDolMkTime()
     {
+    	global $conf;
+
+    	$savtz=date_default_timezone_get();
+
+		// Some test for UTC TZ
+    	date_default_timezone_set('UTC');
+
+    	// Check bad hours
         $result=dol_mktime(25,0,0,1,1,1970,1,1);    // Error (25 hours)
         print __METHOD__." result=".$result."\n";
         $this->assertEquals('',$result);
@@ -418,7 +478,22 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
         $result=dol_mktime(2,0,0,1,1,1970,0);                // 1970-01-01 02:00:00 = 7200 in local area Europe/Paris = 3600 GMT
         print __METHOD__." result=".$result."\n";
         $tz=getServerTimeZoneInt('winter');                  // +1 in Europe/Paris at this time (this time is winter)
-        $this->assertEquals(7200-($tz*3600),$result);        // Should be 7200 if we are at greenwich winter
+        $this->assertEquals(7200-($tz*3600),$result);        // 7200 if we are at greenwich winter, 7200-($tz*3600) at local winter
+
+        // Some test for local TZ Europe/Paris
+        date_default_timezone_set('Europe/Paris');
+
+        // Check that tz for paris in winter is used
+        $result=dol_mktime(2,0,0,1,1,1970,'server');         // 1970-01-01 02:00:00 = 7200 in local area Europe/Paris = 3600 GMT
+        print __METHOD__." result=".$result."\n";
+        $this->assertEquals(3600,$result);        			 // 7200 if we are at greenwich winter, 3600 at Europe/Paris
+
+        // Check that daylight saving time is used
+        $result=dol_mktime(2,0,0,6,1,2014,0);         		// 2014-06-01 02:00:00 = 1401588000-3600(location)-3600(daylight) in local area Europe/Paris = 1401588000 GMT
+        print __METHOD__." result=".$result."\n";
+        $this->assertEquals(1401588000-3600-3600,$result);  // 1401588000 are at greenwich summer, 1401588000-3600(location)-3600(daylight) at Europe/Paris summer
+
+        date_default_timezone_set($savtz);
     }
 
 
@@ -431,7 +506,13 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
     {
         $input="x&<b>#</b>,\"'";    // " will be converted into '
         $result=dol_escape_js($input);
-        $this->assertEquals("x&<b>#<\/b>,\'\'",$result);
+        $this->assertEquals("x&<b>#</b>,\'\'",$result,"Test mode=0");
+
+        $result=dol_escape_js($input,1);
+        $this->assertEquals("x&<b>#</b>,\"\'",$result,"Test mode=1");
+
+        $result=dol_escape_js($input,2);
+        $this->assertEquals("x&<b>#</b>,\\\"'",$result,"Test mode=2");
     }
 
 
@@ -587,30 +668,30 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
         $companyus->tva_assuj=1;
         $companyus->tva_intra='';
 
-        // Test RULE 1-2
+        // Test RULE 0 (FR-IT)
+        // Not tested
+
+        // Test RULE 1
         $vat=get_default_tva($companyfrnovat,$companymc,0);
         $this->assertEquals(0,$vat);
 
-        // Test RULE 3 (FR-FR)
+        // Test RULE 2 (FR-FR)
         $vat=get_default_tva($companyfr,$companyfr,0);
-        $this->assertEquals(19.6,$vat);
+        $this->assertEquals(20,$vat);
 
-        // Test RULE 3 (FR-MC)
+        // Test RULE 2 (FR-MC)
         $vat=get_default_tva($companyfr,$companymc,0);
-        $this->assertEquals(19.6,$vat);
+        $this->assertEquals(20,$vat);
 
-        // Test RULE 4 (FR-IT)
+        // Test RULE 3 (FR-IT)
         $vat=get_default_tva($companyfr,$companyit,0);
         $this->assertEquals(0,$vat);
 
-        // Test RULE 5 (FR-IT)
+        // Test RULE 4 (FR-IT)
         $vat=get_default_tva($companyfr,$notcompanyit,0);
-        $this->assertEquals(19.6,$vat);
+        $this->assertEquals(20,$vat);
 
-        // Test RULE 6 (FR-IT)
-        // Not tested
-
-        // Test RULE 7 (FR-US)
+        // Test RULE 5 (FR-US)
         $vat=get_default_tva($companyfr,$companyus,0);
         $this->assertEquals(0,$vat);
     }
@@ -701,5 +782,21 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
     	$this->assertEquals(0,$vat1);
     	$this->assertEquals(0,$vat2);
     }
+
+
+    /**
+     * testDolExplodeIntoArray
+     *
+     * @return	void
+     */
+    public function testDolExplodeIntoArray()
+    {
+    	$stringtoexplode='AA=B/B.CC=.EE=FF.HH=GG;.';
+    	$tmp=dolExplodeIntoArray($stringtoexplode,'.','=');
+
+        print __METHOD__." tmp=".json_encode($tmp)."\n";
+        $this->assertEquals('{"AA":"B\/B","CC":"","EE":"FF","HH":"GG;"}',json_encode($tmp));
+    }
+
 }
-?>
+

@@ -438,7 +438,7 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 				}
 
 				// Affiche zone infos
-				$posy=$this->_tableau_info($pdf, $object, $bottomlasttab, $outputlangs);
+				$this->_tableau_info($pdf, $object, $bottomlasttab, $outputlangs);
 
 				// Pied de page
 				$this->_pagefoot($pdf,$object,$outputlangs);
@@ -540,7 +540,7 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 	/**
 	 *   Show miscellaneous information (payment mode, payment term, ...)
 	 *
-	 *   @param		PDF			&$pdf     		Object PDF
+	 *   @param		PDF			$pdf     		Object PDF
 	 *   @param		Object		$object			Object to show
 	 *   @param		int			$posy			Y
 	 *   @param		Translate	$outputlangs	Langs object
@@ -567,7 +567,7 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 	/**
 	 *   Show table for lines
 	 *
-	 *   @param		PDF			&$pdf     		Object PDF
+	 *   @param		PDF			$pdf     		Object PDF
 	 *   @param		string		$tab_top		Top position of table
 	 *   @param		string		$tab_height		Height of table (rectangle)
 	 *   @param		int			$nexY			Y (not used)
@@ -626,7 +626,7 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 	/**
 	 *  Show top header of page.
 	 *
-	 *  @param	PDF			&$pdf     		Object PDF
+	 *  @param	PDF			$pdf     		Object PDF
 	 *  @param  Object		$object     	Object to show
 	 *  @param  int	    	$showaddress    0=no, 1=yes
 	 *  @param  Translate	$outputlangs	Object lang for output
@@ -685,7 +685,7 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 		$pdf->SetTextColor(0,0,60);
 		if ($object->date_valid)
 		{
-			$pdf->MultiCell(100, 4, $outputlangs->transnoentities("Date")." : " . dol_print_date(($object->date_delivery?$object->date_delivery:$date->valid),"%d %b %Y",false,$outputlangs,true), '', 'R');
+			$pdf->MultiCell(100, 4, $outputlangs->transnoentities("Date")." : " . dol_print_date($object->date_delivery,"%d %b %Y",false,$outputlangs,true), '', 'R');
 		}
 		else
 		{
@@ -842,7 +842,7 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 	/**
 	 *   	Show footer of page. Need this->emetteur object
      *
-	 *   	@param	PDF			&$pdf     			PDF
+	 *   	@param	PDF			$pdf     			PDF
 	 * 		@param	Object		$object				Object to show
 	 *      @param	Translate	$outputlangs		Object lang for output
 	 *      @param	int			$hidefreetext		1=Hide free text
@@ -855,4 +855,3 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 
 }
 
-?>

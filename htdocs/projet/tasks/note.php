@@ -80,25 +80,14 @@ if (! empty($project_ref) && ! empty($withproject))
 	}
 }
 
-$permission=($user->rights->projet->creer || $user->rights->projet->all->creer);
+$permissionnote=($user->rights->projet->creer || $user->rights->projet->all->creer);
 
 
 /*
  * Actions
  */
 
-if ($action == 'setnote_public' && ! empty($permission))
-{
-    $result=$object->update_note(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES),'_public');
-    if ($result < 0) dol_print_error($db,$object->error);
-}
-
-else if ($action == 'setnote_private' && ! empty($permission))
-{
-    $result=$object->update_note(dol_html_entity_decode(GETPOST('note_private'), ENT_QUOTES), '_private');
-    if ($result < 0) dol_print_error($db,$object->error);
-}
-
+include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';
 
 
 /*
@@ -159,6 +148,16 @@ if ($object->id > 0)
 		// Statut
 		print '<tr><td>'.$langs->trans("Status").'</td><td>'.$projectstatic->getLibStatut(4).'</td></tr>';
 
+	   	// Date start
+		print '<tr><td>'.$langs->trans("DateStart").'</td><td>';
+		print dol_print_date($projectstatic->date_start,'day');
+		print '</td></tr>';
+
+		// Date end
+		print '<tr><td>'.$langs->trans("DateEnd").'</td><td>';
+		print dol_print_date($projectstatic->date_end,'day');
+		print '</td></tr>';
+
 		print '</table>';
 
 		dol_fiche_end();
@@ -216,4 +215,3 @@ if ($object->id > 0)
 
 llxFooter();
 $db->close();
-?>

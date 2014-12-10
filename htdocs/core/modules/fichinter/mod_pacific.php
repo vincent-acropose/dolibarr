@@ -65,7 +65,7 @@ class mod_pacific extends ModeleNumRefFicheinter
 	 */
 	function canBeActivated()
 	{
-		global $langs,$conf;
+		global $langs,$conf,$db;
 
 		$langs->load("bills");
 
@@ -145,4 +145,3 @@ class mod_pacific extends ModeleNumRefFicheinter
 
 }
 
-?>

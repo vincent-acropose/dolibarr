@@ -48,7 +48,7 @@ function print_actions_filter($form, $canedit, $status, $year, $month, $day, $sh
 	global $conf, $user, $langs, $db;
 
 	// Filters
-	print '<form name="listactionsfilter" class="listactionsfilter" action="' . $_SERVER ["PHP_SELF"] . '" method="POST">';
+	print '<form name="listactionsfilter" class="listactionsfilter" action="' . $_SERVER["PHP_SELF"] . '" method="POST">';
 	print '<input type="hidden" name="token" value="' . $_SESSION ['newtoken'] . '">';
 	print '<input type="hidden" name="status" value="' . $status . '">';
 	print '<input type="hidden" name="year" value="' . $year . '">';
@@ -396,14 +396,14 @@ function agenda_prepare_head()
 	$head[$h][2] = 'other';
 	$h++;
 
-	complete_head_from_modules($conf,$langs,$object,$head,$h,'agenda_admin');
+	complete_head_from_modules($conf,$langs,null,$head,$h,'agenda_admin');
 
 	$head[$h][0] = DOL_URL_ROOT."/admin/agenda_extrafields.php";
 	$head[$h][1] = $langs->trans("ExtraFields");
 	$head[$h][2] = 'attributes';
 	$h++;
 
-	complete_head_from_modules($conf,$langs,$object,$head,$h,'agenda_admin','remove');
+	complete_head_from_modules($conf,$langs,null,$head,$h,'agenda_admin','remove');
 
 
 	return $head;
@@ -435,10 +435,15 @@ function actions_prepare_head($object)
 		$h++;
 	}
 
-	$head[$h][0] = DOL_URL_ROOT.'/comm/action/document.php?id='.$object->id;
-	$head[$h][1] = $langs->trans('Documents');
-	$head[$h][2] = 'documents';
-	$h++;
+    // Attached files
+    require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+    $upload_dir = $conf->agenda->dir_output . "/" . $object->id;
+    $nbFiles = count(dol_dir_list($upload_dir,'files',0,'','(\.meta|_preview\.png)$'));
+    $head[$h][0] = DOL_URL_ROOT.'/comm/action/document.php?id='.$object->id;
+    $head[$h][1] = $langs->trans("Documents");
+	if($nbFiles > 0) $head[$h][1].= ' ('.$nbFiles.')';
+    $head[$h][2] = 'documents';
+    $h++;
 
 	$head[$h][0] = DOL_URL_ROOT.'/comm/action/info.php?id='.$object->id;
 	$head[$h][1] = $langs->trans('Info');
@@ -484,4 +489,3 @@ function calendars_prepare_head($param)
     return $head;
 }
 
-?>
