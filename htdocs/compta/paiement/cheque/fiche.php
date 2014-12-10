@@ -362,6 +362,28 @@ if ($action == 'new')
 			$lines[$obj->bid][$i]["numero"] = $obj->num_chq;
 			$lines[$obj->bid][$i]["banque"] = $obj->banque;
 			$lines[$obj->bid][$i]["id"] = $obj->chqid;
+			
+			
+			$sql_invoice = 'SELECT f.rowid, f.facnumber, f.type ';
+			$sql_invoice .= ' FROM '.MAIN_DB_PREFIX.'facture as f';
+			$sql_invoice .= ' INNER JOIN '.MAIN_DB_PREFIX.'paiement_facture  as pf ON pf.fk_facture=f.rowid ';
+			$sql_invoice .= ' INNER JOIN '.MAIN_DB_PREFIX.'paiement as p ON p.rowid=pf.fk_paiement ';
+			$sql_invoice .= ' INNER JOIN '.MAIN_DB_PREFIX.'bank as b ON p.fk_bank=b.rowid AND  b.rowid='.$obj->chqid;
+			
+			dol_syslog(__FILE__.':: list sql_invoice='.$sql_invoice,LOG_DEBUG);
+			$resql_invoice = $db->query($sql_invoice);
+			$invoice_array=array();
+			if ($resql_invoice)
+			{
+				if ($db->num_rows($resql_invoice)>0) {
+					while($obj_invoice = $db->fetch_object($resql_invoice)) {
+						$invoice_array[$obj_invoice->rowid]=array('ref'=>$obj_invoice->facnumber, 'type'=>$obj_invoice->type);
+					}
+				}
+			}
+			
+			$lines[$obj->bid][$i]["invoice"]=$invoice_array;
+			
 			$i++;
 		}
 
@@ -404,6 +426,7 @@ if ($action == 'new')
 		print '<td style="min-width: 200px">'.$langs->trans("CheckTransmitter")."</td>\n";
 		print '<td style="min-width: 200px">'.$langs->trans("Bank")."</td>\n";
 		print '<td align="right" width="100px">'.$langs->trans("Amount")."</td>\n";
+		print '<td align="right" width="100px">'.$langs->trans("Invoice")."</td>\n";
 		print '<td align="center" width="100px">'.$langs->trans("Select")."<br>";
 		if ($conf->use_javascript_ajax) print '<a href="#" id="checkall_'.$bid.'">'.$langs->trans("All").'</a> / <a href="#" id="checknone_'.$bid.'">'.$langs->trans("None").'</a>';
 		print '</td>';
@@ -427,6 +450,20 @@ if ($action == 'new')
 			print '<td>'.$value["emetteur"]."</td>\n";
 			print '<td>'.$value["banque"]."</td>\n";
 			print '<td align="right">'.price($value["amount"]).'</td>';
+			print '<td>';
+			if (count($value['invoice'])>0) {
+				require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
+				$facstat = new Facture($db);
+			
+				foreach($value['invoice'] as $invc_id=>$invc_ref) {
+					$facstat->id=$invc_id;
+					$facstat->ref=$invc_ref['ref'];
+					$facstat->type=$invc_ref['type'];
+					print $facstat->getNomUrl(1);
+					print '<br>';
+				}
+			}
+			print '</td>';
 			print '<td align="center">';
 			print '<input id="'.$value["id"].'" class="flat checkforremise_'.$bid.'" checked="checked" type="checkbox" name="toRemise[]" value="'.$value["id"].'">';
 			print '</td>' ;
