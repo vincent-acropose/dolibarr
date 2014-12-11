@@ -1342,7 +1342,7 @@ function show_subsidiaries($conf,$langs,$db,$object)
 	$sql.= " AND s.entity IN (".getEntity('societe', 1).")";
 	if($_REQUEST['triParIntervention'] == "inter_effectuee") {
 		//$sql.= " AND f.rowid IS NOT NULL";
-		$sql.= ' AND (fe.statutmission = "10" OR fe.statutmission = "20" OR fe.statutmission = "40")';
+		$sql.= ' AND fe.statutmission IN ("10","20","40")';
 		$sql.= ' AND f.fk_statut > 0';
 	}
 	elseif($_REQUEST['triParIntervention'] == "inter_non_effectuee") {
@@ -1351,13 +1351,15 @@ function show_subsidiaries($conf,$langs,$db,$object)
 		$sql.= ' AND s.rowid NOT IN (';
 		// Subquery pour récupérer toutes les sociétés dont l'id n'est pas dans ceux dont il existe une inter au statut "Terminée" (statutmission=40)
 		$sql.= "SELECT DISTINCT s.rowid";
-		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
-		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople sp on s.rowid = sp.fk_soc";
-		$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."fichinter f on s.rowid = f.fk_soc";
-		$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."fichinter_extrafields fe on f.rowid = fe.fk_object";
-		$sql.= " WHERE s.parent = ".$object->id;
-		$sql.= " AND s.entity IN (".getEntity('societe', 1).")";
-		$sql.= ' AND fe.statutmission = "40"';
+		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s2
+		LEFT JOIN ".MAIN_DB_PREFIX."socpeople sp2 ON (s2.rowid = sp2.fk_soc)";
+		$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."fichinter f2 ON (s2.rowid = f2.fk_soc)";
+		$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."fichinter_extrafields fe2 ON (f2.rowid = fe2.fk_object)";
+		$sql.= " WHERE s2.parent = ".$object->id;
+		$sql.= " AND s2.entity IN (".getEntity('societe', 1).")";
+		$sql.= ' AND fe2.statutmission IN ("10","20", "40")
+		AND f2.datec>f.datec ';
+		
 		$sql.= ')';
 	}
 
