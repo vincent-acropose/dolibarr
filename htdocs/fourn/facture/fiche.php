@@ -1332,7 +1332,7 @@ if ($action == 'create')
 
 		$langs->load('projects');
 		print '<tr><td>' . $langs->trans('Project') . '</td><td colspan="2">';
-		$formproject->select_projects($soc->id, $projectid, 'projectid');
+		$formproject->select_projects(empty($conf->global->PROJECT_CAN_ALWAYS_LINK_TO_ALL_SUPPLIERS)?$soc->id:'-1', $projectid, 'projectid');
 		print '</td></tr>';
 	}
 
