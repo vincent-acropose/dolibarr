@@ -274,27 +274,27 @@ if ($id > 0 || ! empty($ref))
 		$param.='&amp;paiementtype='.urlencode($paiementtype);
 		$mode_search = 1;
 	}
-	
+
 	if ($req_stdt && $req_enddt)
 	{
 		$sql_rech.=" AND (b.datev BETWEEN '".$db->escape($db->idate($req_stdt))."' AND '".$db->escape($db->idate($req_enddt))."')";
 		$param.='&amp;req_stdtmonth='.$req_stdtmonth.'&amp;req_stdtyear='.$req_stdtyear.'&amp;req_stdtday='.$req_stdtday;
 		$param.='&amp;req_enddtmonth='.$req_enddtmonth.'&amp;req_enddtday='.$req_enddtday.'&amp;req_enddtyear='.$req_enddtyear;
 		$mode_search = 1;
-	} 
-	elseif ($req_stdt) 
+	}
+	elseif ($req_stdt)
 	{
 			$sql_rech.=" AND b.datev >= '".$db->escape($db->idate($req_stdt))."'";
 			$param.='&amp;req_stdtmonth='.$req_stdtmonth.'&amp;req_stdtyear='.$req_stdtyear.'&amp;req_stdtday='.$req_stdtday;
 			$mode_search = 1;
 	}
-	elseif ($req_enddt) 
+	elseif ($req_enddt)
 	{
 			$sql_rech.=" AND b.datev <= '".$db->escape($db->idate($req_enddt))."'";
 			$param.='&amp;req_enddtmonth='.$req_enddtmonth.'&amp;req_enddtday='.$req_enddtday.'&amp;req_enddtyear='.$req_enddtyear;
 			$mode_search = 1;
 	}
-	
+
 
 	$sql = "SELECT count(*) as total";
 	$sql.= " FROM ".MAIN_DB_PREFIX."bank_account as ba";
@@ -367,7 +367,7 @@ if ($id > 0 || ! empty($ref))
 	print '</table>';
 
 	dol_fiche_end();
-	
+
 
 
 	/*
@@ -378,10 +378,10 @@ if ($id > 0 || ! empty($ref))
 	{
 		print '<div class="tabsAction">';
 
-		if ($object->type != 2 && $object->rappro) 
-		{ 
+		if ($object->type != 2 && $object->rappro)
+		{
 			// If not cash account and can be reconciliate
-			if ($user->rights->banque->consolidate) 
+			if ($user->rights->banque->consolidate)
 			{
 				print '<a class="butAction" href="'.DOL_URL_ROOT.'/compta/bank/rappro.php?account='.$object->id.($vline?'&amp;vline='.$vline:'').'">'.$langs->trans("Conciliate").'</a>';
 			}
@@ -391,9 +391,9 @@ if ($id > 0 || ! empty($ref))
 			}
 		}
 
-		if ($action != 'addline') 
+		if ($action != 'addline')
 		{
-			if (empty($conf->global->BANK_DISABLE_DIRECT_INPUT)) 
+			if (empty($conf->global->BANK_DISABLE_DIRECT_INPUT))
 			{
                 if (empty($conf->accounting->enabled))
                 {
@@ -411,9 +411,9 @@ if ($id > 0 || ! empty($ref))
         }
         print '</div>';
     }
-	
+
 	print '<br>';
-		
+
 	/**
 	 * Search form
 	 */
@@ -446,7 +446,7 @@ if ($id > 0 || ! empty($ref))
 	print '<input type="hidden" name="req_enddtmonth"     value="'.$req_enddtmonth.'">';
 	print '<input type="hidden" name="req_enddtday"     value="'.$req_enddtday.'">';
 	print '<input type="hidden" name="req_enddtyear"     value="'.$req_enddtyear.'">';
-	
+
 	$navig ='<div data-role="fieldcontain">';
 	if ($limitsql > $viewline) $navig.='<a href="account.php?'.$param.'&amp;page='.($page+1).'">'.img_previous().'</a>';
 	$navig.= '<label for="negpage">'.$langs->trans("Page")."</label> "; // ' Page ';
@@ -458,14 +458,14 @@ if ($id > 0 || ! empty($ref))
 	}
 	$navig.='</div>';
 
-	
+
 	//var_dump($navig);
 
 	if ($action != 'addline' && $action != 'delete')
 	{
 		print '<div class="floatright">'.$navig.'</div>';
 	}
-	
+
 	// Form to add a transaction with no invoice
 	if ($user->rights->banque->modifier && $action == 'addline')
 	{
@@ -509,7 +509,7 @@ if ($id > 0 || ! empty($ref))
 		print '<br>';
 	}
 
-	
+
 	/*
 	 * Show list of bank transactions
 	 */
@@ -540,7 +540,7 @@ if ($id > 0 || ! empty($ref))
 	$period_filter .= $langs->trans('From').'&nbsp;'.$form->select_date($req_stdt,'req_stdt',0,0,1,null,1,1,1);
 	$period_filter .= '&nbsp;';
 	$period_filter .= $langs->trans('to').'&nbsp;'.$form->select_date($req_enddt,'req_enddt',0,0,1,null,1,1,1);
-	
+
 	print '<tr class="liste_titre">';
 	print '<td colspan="2">'.$period_filter.'</td>';
 	print '<td>';
@@ -609,7 +609,9 @@ if ($id > 0 || ! empty($ref))
 	}
 	$sql.= " WHERE b.fk_account=".$object->id;
 	$sql.= " AND b.fk_account = ba.rowid";
-	$sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
+	// Si le partage des compte bancaire est activé dans multicompany, on ne limite pas la recherche des comptes à l'entité dans laquelle on se trouve (Ticket 1573)
+	if(!$conf->global->MULTICOMPANY_BANK_ACCOUNT_SHARING_ENABLED)
+	   $sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
 	$sql.= $sql_rech;
 	$sql.= $db->order("b.datev, b.datec", "ASC");  // We add date of creation to have correct order when everything is done the same day
 	$sql.= $db->plimit($limitsql, 0);
@@ -664,7 +666,7 @@ if ($id > 0 || ! empty($ref))
 				$label=($langs->trans("PaymentTypeShort".$objp->fk_type)!="PaymentTypeShort".$objp->fk_type)?$langs->trans("PaymentTypeShort".$objp->fk_type):$objp->fk_type;
 
 				if ($objp->fk_type == 'SOLD') $label='&nbsp;';
-				if ($objp->fk_type == 'CHQ' && $objp->fk_bordereau > 0) 
+				if ($objp->fk_type == 'CHQ' && $objp->fk_bordereau > 0)
 				{
 					dol_include_once('/compta/paiement/cheque/class/remisecheque.class.php');
 					$bordereaustatic = new RemiseCheque($db);
@@ -689,7 +691,7 @@ if ($id > 0 || ! empty($ref))
 				{
 					print dol_trunc($objp->label,60);
 				}
-				
+
 				// Add links after description
 				$links = $object->get_url($objp->rowid);
 				foreach($links as $key=>$val)
