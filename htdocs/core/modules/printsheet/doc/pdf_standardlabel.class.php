@@ -3,7 +3,7 @@
  * Copyright (C) 2003 Laurent Passebecq
  * Copyright (C) 2001-2003 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2002-2003 Jean-Louis Bergamo   <jlb@j1b.org>
- * Copyright (C) 2006-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2006-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/format_cards.lib.php';
 
 
 /**
- *	Classe afin d'editer au format PDF des pages d'etiquette adresse au format Avery ou personnalise
+ *	Class to generate stick sheet with format Avery or other personalised
  */
 class pdf_standardlabel
 {
@@ -99,7 +99,7 @@ class pdf_standardlabel
 	 * Methode qui permet de modifier la taille des caracteres
 	 * Cela modiera aussi l'espace entre chaque ligne
 	 *
-	 * @param    PDF    &$pdf      PDF
+	 * @param    PDF    $pdf      PDF
 	 * @param    int    $pt        point
 	 * @return   void
 	 */
@@ -117,7 +117,7 @@ class pdf_standardlabel
 	 * - %LOGO% is replace with company logo
 	 * - %PHOTO% is replace with photo provided as parameter
 	 *
-	 * @param   PDF	    	&$pdf		    PDF
+	 * @param   PDF	    	$pdf		    PDF
 	 * @param   string		$textleft       Text left
 	 * @param   string     	$header         Header
 	 * @param   string     	$footer         Footer
@@ -292,7 +292,7 @@ class pdf_standardlabel
 	/**
 	 * Print dot line
 	 *
-	 * @param	PDF		&$pdf				PDF
+	 * @param	PDF		$pdf				PDF
 	 * @param 	int		$x1					X1
 	 * @param 	int		$y1					Y1
 	 * @param 	int		$x2					X2
@@ -333,7 +333,7 @@ class pdf_standardlabel
 	/**
 	 * Fonction realisant une croix aux 4 coins des cartes
 	 *
-	 * @param PDF	&$pdf				PDF
+	 * @param PDF	$pdf				PDF
 	 * @param int	$x1					X1
 	 * @param int	$y1					Y1
 	 * @param int	$x2					X2
@@ -373,7 +373,8 @@ class pdf_standardlabel
 	 * @param string    $dest   to
 	 * @return float    value   value after conversion
 	 */
-	function _Convert_Metric ($value, $src, $dest) {
+	function _Convert_Metric ($value, $src, $dest)
+	{
 		if ($src != $dest) {
 			$tab['in'] = 39.37008;
 			$tab['mm'] = 1000;
@@ -389,7 +390,8 @@ class pdf_standardlabel
 	 * @param  int    $pt    Point
 	 * @return int           Height chars
 	 */
-	function _Get_Height_Chars($pt) {
+	function _Get_Height_Chars($pt)
+	{
 		// Tableau de concordance entre la hauteur des caracteres et de l'espacement entre les lignes
 		$_Table_Hauteur_Chars = array(6=>2, 7=>2.5, 8=>3, 9=>3.5, 10=>4, 11=>6, 12=>7, 13=>8, 14=>9, 15=>10);
 		if (in_array($pt, array_keys($_Table_Hauteur_Chars))) {
@@ -402,7 +404,7 @@ class pdf_standardlabel
 	/**
 	 * Set format
 	 *
-	 * @param    PDF       &$pdf    PDF
+	 * @param    PDF       $pdf    PDF
 	 * @param    string    $format  Format
 	 * @return   void
 	 */
@@ -429,7 +431,7 @@ class pdf_standardlabel
      *  @param	array		$arrayofrecords  	Array of record informations (array('textleft'=>,'textheader'=>, ..., 'id'=>,'photo'=>)
      *  @param  Translate	$outputlangs     	Lang object for output language
      *  @param	string		$srctemplatepath	Full path of source filename for generator using a template file
-	 *	@param	string		$outputdir			Output directory
+	 *	@param	string		$outputdir			Output directory for pdf file
      *  @return int             				1=OK, 0=KO
      */
     function write_file($arrayofrecords,$outputlangs,$srctemplatepath,$outputdir='')
@@ -449,8 +451,10 @@ class pdf_standardlabel
         $outputlangs->load("main");
         $outputlangs->load("dict");
         $outputlangs->load("companies");
-        $outputlangs->load("members");
         $outputlangs->load("admin");
+
+        $title=$outputlangs->transnoentities('Labels');
+        $keywords=$title." ".$outputlangs->convToOutputCharset($mysoc->name);
 
         $dir = (empty($outputdir)?$conf->adherent->dir_temp:$outputdir);
         $filename='tmp_address_sheet.pdf';
@@ -474,11 +478,11 @@ class pdf_standardlabel
         }
         $pdf->SetFont(pdf_getPDFFont($outputlangs));
 
-        $pdf->SetTitle($outputlangs->transnoentities('MembersLabels'));
-        $pdf->SetSubject($outputlangs->transnoentities("MembersLabels"));
+        $pdf->SetTitle($title);
+        $pdf->SetSubject($title);
         $pdf->SetCreator("Dolibarr ".DOL_VERSION);
         $pdf->SetAuthor($outputlangs->convToOutputCharset($user->getFullName($outputlangs)));
-        $pdf->SetKeyWords($outputlangs->transnoentities('MembersLabels')." ".$outputlangs->transnoentities("Foundation")." ".$outputlangs->convToOutputCharset($mysoc->name));
+        $pdf->SetKeyWords($keywords);
         if (! empty($conf->global->MAIN_DISABLE_PDF_COMPRESSION)) $pdf->SetCompression(false);
 
         $pdf->SetMargins(0,0);
@@ -539,4 +543,3 @@ class pdf_standardlabel
         return 1;
     }
 }
-?>

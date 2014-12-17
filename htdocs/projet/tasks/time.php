@@ -50,7 +50,7 @@ $projectstatic = new Project($db);
 
 /*
  * Actions
-*/
+ */
 
 if ($action == 'addtimespent' && $user->rights->projet->creer)
 {
@@ -171,7 +171,7 @@ if (! empty($project_ref) && ! empty($withproject))
 
 /*
  * View
-*/
+ */
 
 llxHeader("",$langs->trans("Task"));
 
@@ -235,6 +235,16 @@ if ($id > 0 || ! empty($ref))
 			// Statut
 			print '<tr><td>'.$langs->trans("Status").'</td><td>'.$projectstatic->getLibStatut(4).'</td></tr>';
 
+			// Date start
+			print '<tr><td>'.$langs->trans("DateStart").'</td><td>';
+			print dol_print_date($projectstatic->date_start,'day');
+			print '</td></tr>';
+
+			// Date end
+			print '<tr><td>'.$langs->trans("DateEnd").'</td><td>';
+			print dol_print_date($projectstatic->date_end,'day');
+			print '</td></tr>';
+
 			print '</table>';
 
 			dol_fiche_end();
@@ -273,9 +283,6 @@ if ($id > 0 || ! empty($ref))
 		// Label
 		print '<tr><td>'.$langs->trans("Label").'</td><td colspan="3">'.$object->label.'</td></tr>';
 
-		// Planned workload
-		print '<tr><td>'.$langs->trans("PlannedWorkload").'</td><td colspan="3">'.convertSecondToTime($object->planned_workload,'allhourmin').'</td></tr>';
-
 		// Project
 		if (empty($withproject))
 		{
@@ -289,6 +296,30 @@ if ($id > 0 || ! empty($ref))
 			else print '&nbsp;';
 			print '</td></tr>';
 		}
+
+		// Date start
+		print '<tr><td>'.$langs->trans("DateStart").'</td><td colspan="3">';
+		print dol_print_date($object->date_start,'dayhour');
+		print '</td></tr>';
+
+		// Date end
+		print '<tr><td>'.$langs->trans("DateEnd").'</td><td colspan="3">';
+		print dol_print_date($object->date_end,'dayhour');
+		print '</td></tr>';
+
+		// Planned workload
+		print '<tr><td>'.$langs->trans("PlannedWorkload").'</td><td colspan="3">'.convertSecondToTime($object->planned_workload,'allhourmin').'</td></tr>';
+
+		// Declared progress
+		print '<tr><td>'.$langs->trans("ProgressDeclared").'</td><td colspan="3">';
+		print $object->progress.' %';
+		print '</td></tr>';
+
+		// Calculated progress
+		print '<tr><td>'.$langs->trans("ProgressCalculated").'</td><td colspan="3">';
+		if ($object->planned_workload) print round(100 * $object->duration_effective / $object->planned_workload,2).' %';
+		else print '';
+		print '</td></tr>';
 
 		print '</table>';
 
@@ -497,4 +528,3 @@ if ($id > 0 || ! empty($ref))
 
 llxFooter();
 $db->close();
-?>

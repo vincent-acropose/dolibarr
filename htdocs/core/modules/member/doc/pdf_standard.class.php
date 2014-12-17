@@ -3,7 +3,7 @@
  * Copyright (C) 2003 Laurent Passebecq
  * Copyright (C) 2001-2003 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2002-2003 Jean-Louis Bergamo   <jlb@j1b.org>
- * Copyright (C) 2006-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2006-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/format_cards.lib.php';
 
 
 /**
- *	Classe afin d'editer au format PDF des cartes de visite au format Avery ou personnalise
+ *	Class to generate stick sheet with format Avery or other personalised
  */
 class pdf_standard
 {
@@ -99,7 +99,7 @@ class pdf_standard
 	 * Methode qui permet de modifier la taille des caracteres
 	 * Cela modiera aussi l'espace entre chaque ligne
 	 *
-	 * @param    PDF    &$pdf      PDF
+	 * @param    PDF    $pdf      PDF
 	 * @param    int    $pt        point
 	 * @return   void
 	 */
@@ -118,8 +118,8 @@ class pdf_standard
 	 * - %LOGO% is replace with company logo
 	 * - %PHOTO% is replace with photo provided as parameter
 	 *
-	 * @param    PDF	    &$pdf		    PDF
-	 * @param    string     $textleft       Textleft
+	 * @param    PDF	    $pdf		    PDF
+	 * @param    string     $textleft       Text left
 	 * @param    string     $header         Header
 	 * @param    string     $footer         Footer
 	 * @param    Translate  $outputlangs    Output langs
@@ -300,7 +300,7 @@ class pdf_standard
 	/**
 	 * Print dot line
 	 *
-	 * @param PDF	&$pdf				PDF
+	 * @param PDF	$pdf				PDF
 	 * @param int	$x1					X1
 	 * @param int	$y1					Y1
 	 * @param int	$x2					X2
@@ -341,7 +341,7 @@ class pdf_standard
 	/**
 	 * Fonction realisant une croix aux 4 coins des cartes
 	 *
-	 * @param PDF	&$pdf				PDF
+	 * @param PDF	$pdf				PDF
 	 * @param int	$x1					X1
 	 * @param int	$y1					Y1
 	 * @param int	$x2					X2
@@ -412,7 +412,7 @@ class pdf_standard
 	/**
 	 * Set format
 	 *
-	 * @param    PDF       &$pdf    PDF
+	 * @param    PDF       $pdf    PDF
 	 * @param    string    $format  Format
 	 * @return   void
 	 */
@@ -440,7 +440,7 @@ class pdf_standard
 	 *	@param	array		$arrayofrecords		Array of record informations (array('textleft'=>,'textheader'=>, ...'id'=>,'photo'=>)
 	 *	@param	Translate	$outputlangs		Lang object for output language
      *  @param	string		$srctemplatepath	Full path of source filename for generator using a template file
-     *  @param	string		$mode				Tell if doc module is called for 'member, ...
+     *  @param	string		$mode				Tell if doc module is called for 'member', ...
 	 *	@return	int     						1=OK, 0=KO
 	 */
 	function write_file($arrayofrecords,$outputlangs,$srctemplatepath,$mode='member')
@@ -460,8 +460,8 @@ class pdf_standard
 		$outputlangs->load("main");
 		$outputlangs->load("dict");
 		$outputlangs->load("companies");
-		$outputlangs->load("members");
 		$outputlangs->load("admin");
+		$outputlangs->load("members");
 
 		if (empty($mode) || $mode == 'member')
 		{
@@ -562,4 +562,3 @@ class pdf_standard
 	}
 
 }
-?>

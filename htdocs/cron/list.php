@@ -100,6 +100,21 @@ if ($action == 'confirm_execute' && $confirm == "yes" && $user->rights->cron->ex
 	if ($result < 0) {
 		setEventMessage($object->error,'errors');
 	}
+	else 
+	{
+		$res = $object->reprogram_jobs($user->login);
+		if ($res > 0)
+		{
+			if ($object->lastresult > 0) setEventMessage($langs->trans("JobFinished"),'warnings');
+			else setEventMessage($langs->trans("JobFinished"),'mesgs');
+			$action='';
+		}
+		else
+		{
+			setEventMessage($object->error,'errors');
+			$action='';
+		}
+	}
 
 	header("Location: ".DOL_URL_ROOT.'/cron/list.php?status=-1');		// Make a call to avoid to run twice job when using back
 	exit;
@@ -123,13 +138,13 @@ print $langs->trans('CronInfo');
 if ($action == 'delete')
 {
 	print $form->formconfirm($_SERVER['PHP_SELF']."?id=".$id.'&status='.$status,$langs->trans("CronDelete"),$langs->trans("CronConfirmDelete"),"confirm_delete",'','',1);
-	
+
 }
 
 if ($action == 'execute')
 {
 	print $form->formconfirm($_SERVER['PHP_SELF']."?id=".$id.'&status='.$status,$langs->trans("CronExecute"),$langs->trans("CronConfirmExecute"),"confirm_execute",'','',1);
-	
+
 }
 
 // liste des jobs creer
@@ -218,13 +233,13 @@ if (count($object->lines) > 0)
 			print $langs->trans('CronObject').':'. $line->objectname.'<BR>';
 			print $langs->trans('CronMethod').':'. $line->methodename;
 			if(!empty($line->params)) {
-				print '<BR/>'.$langs->trans('CronArgs').':'. $line->params;
+				print '<br>'.$langs->trans('CronArgs').':'. $line->params;
 			}
 
 		}elseif ($line->jobtype=='command') {
 			print $langs->trans('CronCommand').':'. dol_trunc($line->command);
 			if(!empty($line->params)) {
-				print '<BR/>'.$langs->trans('CronArgs').':'. $line->params;
+				print '<br>'.$langs->trans('CronArgs').':'. $line->params;
 			}
 		}
 		print '</td>';
@@ -317,4 +332,3 @@ dol_print_cron_urls();
 llxFooter();
 
 $db->close();
-?>

@@ -110,7 +110,7 @@ class pdf_muscadet extends ModelePDFSuppliersOrders
 		$this->posxdiscount=162;
 		$this->postotalht=174;
 		//if (! empty($conf->global->MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT)) $this->posxtva=$this->posxup;
-		$this->posxpicture=$this->posxtva - (empty($conf->global->MAIN_DOCUMENTS_WITH_PICTURE_WIDTH)?16:$conf->global->MAIN_DOCUMENTS_WITH_PICTURE_WIDTH);	// width of images
+		$this->posxpicture=$this->posxtva - (empty($conf->global->MAIN_DOCUMENTS_WITH_PICTURE_WIDTH)?20:$conf->global->MAIN_DOCUMENTS_WITH_PICTURE_WIDTH);	// width of images
 		if ($this->page_largeur < 210) // To work with US executive format
 		{
 			$this->posxpicture-=20;
@@ -132,17 +132,17 @@ class pdf_muscadet extends ModelePDFSuppliersOrders
     /**
      *  Function to build pdf onto disk
      *
-     *  @param		int		$object				Id of object to generate
-     *  @param		object	$outputlangs		Lang output object
-     *  @param		string	$srctemplatepath	Full path of source filename for generator using a template file
-     *  @param		int		$hidedetails		Do not show line details
-     *  @param		int		$hidedesc			Do not show desc
-     *  @param		int		$hideref			Do not show ref
-     *  @return     int             			1=OK, 0=KO
+     *  @param		CommandeFournisseur	$object				Id of object to generate
+     *  @param		Translate			$outputlangs		Lang output object
+     *  @param		string				$srctemplatepath	Full path of source filename for generator using a template file
+     *  @param		int					$hidedetails		Do not show line details
+     *  @param		int					$hidedesc			Do not show desc
+     *  @param		int					$hideref			Do not show ref
+     *  @return		int										1=OK, 0=KO
      */
 	function write_file($object,$outputlangs='',$srctemplatepath='',$hidedetails=0,$hidedesc=0,$hideref=0)
 	{
-		global $user,$langs,$conf,$hookmanager;
+		global $user,$langs,$conf,$hookmanager,$mysoc;
 
 		if (! is_object($outputlangs)) $outputlangs=$langs;
 		// For backward compatibility with FPDF, force output charset to ISO, because FPDF expect text to be encoded in ISO
@@ -174,8 +174,10 @@ class pdf_muscadet extends ModelePDFSuppliersOrders
 			else
 			{
 				$objectref = dol_sanitizeFileName($object->ref);
+				$objectrefsupplier = dol_sanitizeFileName($object->ref_supplier);
 				$dir = $conf->fournisseur->commande->dir_output . '/'. $objectref;
 				$file = $dir . "/" . $objectref . ".pdf";
+				if (! empty($conf->global->SUPPLIER_REF_IN_NAME)) $file = $dir . "/" . $objectref . ($objectrefsupplier?"_".$objectrefsupplier:"").".pdf";
 			}
 
 			if (! file_exists($dir))
@@ -519,7 +521,7 @@ class pdf_muscadet extends ModelePDFSuppliersOrders
 	/**
 	 *  Show payments table
 	 *
-	 *  @param	PDF			&$pdf     		Object PDF
+	 *  @param	PDF			$pdf     		Object PDF
 	 *  @param  Object		$object			Object order
 	 *	@param	int			$posy			Position y in PDF
 	 *	@param	Translate	$outputlangs	Object langs for output
@@ -534,7 +536,7 @@ class pdf_muscadet extends ModelePDFSuppliersOrders
 	/**
 	 *   Show miscellaneous information (payment mode, payment term, ...)
 	 *
-	 *   @param		PDF			&$pdf     		Object PDF
+	 *   @param		PDF			$pdf     		Object PDF
 	 *   @param		Object		$object			Object to show
 	 *   @param		int			$posy			Y
 	 *   @param		Translate	$outputlangs	Langs object
@@ -597,7 +599,7 @@ class pdf_muscadet extends ModelePDFSuppliersOrders
 	/**
 	 *	Show total to pay
 	 *
-	 *	@param	PDF			&$pdf           Object PDF
+	 *	@param	PDF			$pdf           Object PDF
 	 *	@param  Facture		$object         Object invoice
 	 *	@param  int			$deja_regle     Montant deja regle
 	 *	@param	int			$posy			Position depart
@@ -800,7 +802,7 @@ class pdf_muscadet extends ModelePDFSuppliersOrders
     /**
 	 *   Show table for lines
 	 *
-	 *   @param		PDF			&$pdf     		Object PDF
+	 *   @param		PDF			$pdf     		Object PDF
 	 *   @param		string		$tab_top		Top position of table
 	 *   @param		string		$tab_height		Height of table (rectangle)
 	 *   @param		int			$nexY			Y (not used)
@@ -895,7 +897,7 @@ class pdf_muscadet extends ModelePDFSuppliersOrders
 	/**
 	 *  Show top header of page.
 	 *
-	 *  @param	PDF			&$pdf     		Object PDF
+	 *  @param	PDF			$pdf     		Object PDF
 	 *  @param  Object		$object     	Object to show
 	 *  @param  int	    	$showaddress    0=no, 1=yes
 	 *  @param  Translate	$outputlangs	Object lang for output
@@ -1087,7 +1089,7 @@ class pdf_muscadet extends ModelePDFSuppliersOrders
 	/**
 	 *   	Show footer of page. Need this->emetteur object
      *
-	 *   	@param	PDF			&$pdf     			PDF
+	 *   	@param	PDF			$pdf     			PDF
 	 * 		@param	Object		$object				Object to show
 	 *      @param	Translate	$outputlangs		Object lang for output
 	 *      @param	int			$hidefreetext		1=Hide free text
@@ -1100,4 +1102,3 @@ class pdf_muscadet extends ModelePDFSuppliersOrders
 
 }
 
-?>

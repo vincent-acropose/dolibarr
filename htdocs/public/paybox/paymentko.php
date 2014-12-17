@@ -74,13 +74,12 @@ if (! empty($conf->global->PAYBOX_PAYONLINE_SENDEMAIL))
 {
 	$sendto=$conf->global->PAYBOX_PAYONLINE_SENDEMAIL;
 	$from=$conf->global->MAILING_EMAIL_FROM;
+
+	$urlback=$_SERVER["REQUEST_URI"];
+	$topic='['.$conf->global->MAIN_APPLICATION_TITLE.'] '.$langs->transnoentitiesnoconv("NewPayboxPaymentFailed");
+	$content=$langs->transnoentitiesnoconv("NewPayboxPaymentFailed")."\n".$fulltag;
 	require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-	$mailfile = new CMailFile(
-		'['.$conf->global->MAIN_APPLICATION_TITLE.'] '.$langs->transnoentitiesnoconv("NewPayboxPaymentFailed"),
-		$sendto,
-		$from,
-		$langs->transnoentitiesnoconv("NewPayboxPaymentFailed")."\n".$fulltag
-	);
+	$mailfile = new CMailFile($topic, $sendto, $from, $content);
 
 	$result=$mailfile->sendfile();
 	if ($result)
@@ -101,7 +100,7 @@ llxHeaderPayBox($langs->trans("PaymentForm"));
 print '<span id="dolpaymentspan"></span>'."\n";
 print '<div id="dolpaymentdiv" align="center">'."\n";
 
-print $langs->trans("YourPaymentHasNotBeenRecorded")."<br>\n";
+print $langs->trans("YourPaymentHasNotBeenRecorded")."<br><br>\n";
 
 if (! empty($conf->global->PAYBOX_MESSAGE_KO)) print $conf->global->PAYBOX_MESSAGE_KO;
 
@@ -114,4 +113,3 @@ html_print_paybox_footer($mysoc,$langs);
 llxFooterPayBox();
 
 $db->close();
-?>

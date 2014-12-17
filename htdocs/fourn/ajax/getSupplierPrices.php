@@ -121,4 +121,3 @@ if (! empty($idprod))
 
 echo json_encode($prices);
 
-?>

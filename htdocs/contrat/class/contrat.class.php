@@ -1,12 +1,12 @@
 <?php
 /* Copyright (C) 2003		Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012	Destailleur Laurent		<eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2014	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2006		Andre Cianfarani		<acianfa@free.fr>
  * Copyright (C) 2008		Raphael Bertrand		<raphael.bertrand@resultic.fr>
  * Copyright (C) 2010-2013	Juanjo Menent			<jmenent@2byte.es>
- * Copyright (C) 2013       Christophe Battarel  <christophe.battarel@altairis.fr>
- * Copyright (C) 2013       Florian Henry		  	<florian.henry@open-concept.pro>
+ * Copyright (C) 2013		Christophe Battarel		<christophe.battarel@altairis.fr>
+ * Copyright (C) 2013		Florian Henry			<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
  */
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/price.lib.php';
 require_once(DOL_DOCUMENT_ROOT ."/margin/lib/margins.lib.php");
 
 /**
@@ -40,6 +41,7 @@ class Contrat extends CommonObject
 	public $table_element='contrat';
 	public $table_element_line='contratdet';
 	public $fk_element='fk_contrat';
+	protected $ismultientitymanaged = 1;	// 0=No test on entity, 1=Test with field entity, 2=Test with link by societe
 
 	var $id;
 	var $ref;
@@ -410,7 +412,7 @@ class Contrat extends CommonObject
 		$sql.= " FROM ".MAIN_DB_PREFIX."contrat";
 		if ($ref)
 		{
-			$sql.= " WHERE ref='".$ref."'";
+			$sql.= " WHERE ref='".$this->db->escape($ref)."'";
 			$sql.= " AND entity IN (".getEntity('contract').")";
 		}
 		else $sql.= " WHERE rowid=".$id;
@@ -447,6 +449,14 @@ class Contrat extends CommonObject
 				$this->extraparams				= (array) json_decode($result["extraparams"], true);
 
 				$this->db->free($resql);
+
+				// Retreive all extrafield for thirdparty
+				// fetch optionals attributes and labels
+				require_once(DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php');
+				$extrafields=new ExtraFields($this->db);
+				$extralabels=$extrafields->fetch_name_optionals_label($this->table_element,true);
+				$this->fetch_optionals($this->id,$extralabels);
+
 
 				return $this->id;
 			}
@@ -718,8 +728,8 @@ class Contrat extends CommonObject
 		$sql = "INSERT INTO ".MAIN_DB_PREFIX."contrat (datec, fk_soc, fk_user_author, date_contrat,";
 		$sql.= " fk_commercial_signature, fk_commercial_suivi, fk_projet,";
 		$sql.= " ref, entity, note_private, note_public)";
-		$sql.= " VALUES (".$this->db->idate($now).",".$this->socid.",".$user->id;
-		$sql.= ",".$this->db->idate($this->date_contrat);
+		$sql.= " VALUES ('".$this->db->idate($now)."',".$this->socid.",".$user->id;
+		$sql.= ", '".$this->db->idate($this->date_contrat)."'";
 		$sql.= ",".($this->commercial_signature_id>0?$this->commercial_signature_id:"NULL");
 		$sql.= ",".($this->commercial_suivi_id>0?$this->commercial_suivi_id:"NULL");
 		$sql.= ",".($this->fk_project>0?$this->fk_project:"NULL");
@@ -752,6 +762,19 @@ class Contrat extends CommonObject
 			// Insert contacts commerciaux ('SALESREPFOLL','contrat')
 			$result=$this->add_contact($this->commercial_suivi_id,'SALESREPFOLL','internal');
 			if ($result < 0) $error++;
+
+
+			if (! $error)
+			{
+				if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
+				{
+					$result=$this->insertExtraFields();
+					if ($result < 0)
+					{
+						$error++;
+					}
+				}
+			}
 
 			if (! $error)
 			{
@@ -1690,7 +1713,7 @@ class Contrat extends CommonObject
 		$this->id=0;
 		$this->specimen=1;
 
-		$this->ref = 'DOLIBARR';
+		$this->ref = 'SPECIMEN';
 		$this->socid = 1;
 		$this->statut= 0;
 		$this->date_contrat = dol_now();
@@ -1942,7 +1965,7 @@ class ContratLigne
 		$sql.= " t.commentaire";
 		$sql.= " FROM ".MAIN_DB_PREFIX."contratdet as t";
 		if ($id)  $sql.= " WHERE t.rowid = ".$id;
-		if ($ref) $sql.= " WHERE t.rowid = '".$ref."'";
+		if ($ref) $sql.= " WHERE t.rowid = '".$this->db->escape($ref)."'";
 
 		dol_syslog(get_class($this)."::fetch sql=".$sql, LOG_DEBUG);
 		$resql=$this->db->query($sql);
@@ -2208,4 +2231,3 @@ class ContratLigne
 }
 
 
-?>

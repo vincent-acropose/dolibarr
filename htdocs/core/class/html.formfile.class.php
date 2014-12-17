@@ -258,8 +258,10 @@ class FormFile
      */
     function showdocuments($modulepart,$modulesubdir,$filedir,$urlsource,$genallowed,$delallowed=0,$modelselected='',$allowgenifempty=1,$forcenomultilang=0,$iconPDF=0,$maxfilenamelength=28,$noform=0,$param='',$title='',$buttonlabel='',$codelang='',$morepicto='')
     {
-        global $langs,$conf,$user,$hookmanager;
-        global $bc;
+        global $langs, $conf, $user, $hookmanager;
+        global $form, $bc;
+
+        if (! is_object($form)) $form=new Form($this->db);
 
         // filedir = $conf->...->dir_ouput."/".get_exdir(id)
         include_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
@@ -448,7 +450,6 @@ class FormFile
 
             $headershown=1;
 
-            $form = new Form($this->db);
             $buttonlabeltoshow=$buttonlabel;
             if (empty($buttonlabel)) $buttonlabel=$langs->trans('Generate');
 
@@ -530,7 +531,7 @@ class FormFile
         // Get list of files
         if (! empty($filedir))
         {
-            $file_list=dol_dir_list($filedir,'files',0,'','\.meta$','date',SORT_DESC);
+            $file_list=dol_dir_list($filedir,'files',0,'','(\.meta|_preview\.png)$','date',SORT_DESC);
 
             // Affiche en-tete tableau si non deja affiche
             if (! empty($file_list) && ! $headershown)
@@ -802,9 +803,8 @@ class FormFile
 					if (empty($useinecm))
 					{
 						$fileinfo = pathinfo($file['name']);
-
 						print '<td align="center">';
-						$minifile=$fileinfo['filename'].'_mini.'.$fileinfo['extension'];	// Thumbs are created with filename in lower case
+						$minifile=$fileinfo['filename'].'_mini.'.strtolower($fileinfo['extension']);	// Thumbs are created with filename in lower case
 						if (image_format_supported($file['name']) > 0) print '<img border="0" height="'.$maxheightmini.'" src="'.DOL_URL_ROOT.'/viewimage.php?modulepart='.$modulepart.'&file='.urlencode($relativepath.'thumbs/'.$minifile).'" title="">';
 						else print '&nbsp;';
 						print '</td>';
@@ -1148,7 +1148,7 @@ class FormFile
                 print '</td>';
                 print '<td align="center">' . dol_print_date(dol_now(), "dayhour", "tzuser") . '</td>';
                 print '<td align="right"></td>';
-                print '<td align="right" colspan="2">';
+                print '<td align="right">';
                 print '<input type="submit" name="save" class="button" value="' . dol_escape_htmltag($langs->trans('Save')) . '">';
                 print '<input type="submit" name="cancel" class="button" value="' . dol_escape_htmltag($langs->trans('Cancel')) . '">';
                 print '</td>';
@@ -1163,7 +1163,7 @@ class FormFile
                 print '<td align="right"></td>';
                 print '<td align="center">' . dol_print_date($link->datea, "dayhour", "tzuser") . '</td>';
                 print '<td align="center"></td>';
-                print '<td align="right" colspan="2">';
+                print '<td align="right">';
                 print '<a href="' . $_SERVER['PHP_SELF'] . '?action=update&linkid=' . $link->id . $param . '" class="editfilelink" >' . img_edit() . '</a>';	// id= is included into $param
                 if ($permtodelete) {
                     print ' &nbsp; <a href="'. $_SERVER['PHP_SELF'] .'?action=delete&linkid=' . $link->id . $param . '" class="deletefilelink">' . img_delete() . '</a>';	// id= is included into $param
@@ -1176,7 +1176,7 @@ class FormFile
         }
         if ($nboflinks == 0)
         {
-            print '<tr ' . $bc[$var] . '><td colspan="4">';
+            print '<tr ' . $bc[$var] . '><td colspan="5">';
             print $langs->trans("NoLinkFound");
             print '</td></tr>';
         }
@@ -1189,4 +1189,3 @@ class FormFile
 
 }
 
-?>
