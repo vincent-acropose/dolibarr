@@ -1432,6 +1432,15 @@ class pdf_crabe extends ModelePDFFactures
 			{
 				$usecontact=true;
 				$result=$object->fetch_contact($arrayidcontact[0]);
+				
+				if (!empty($object->contact->socid)) {
+					$socstatictva=new Societe($this->db);
+					$socstatictva->fetch($object->contact->socid);
+					if (!empty($socstatictva->tva_intra)) {
+						$object->client->tva_intra=$socstatictva->tva_intra;
+					}
+				}
+				
 			}
 
 			// Recipient name
