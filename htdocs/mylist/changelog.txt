@@ -1,0 +1,37 @@
+Update Mylist 1.0.x to 1.1.x
+add new fields on mylist table 
+	- querydo		text NULL DEFAULT NULL
+	- elementtab	varchar(50) NULL DEFAULT NULL
+on each list, edit a fields and update it
+
+New changes on 1.1.5
+	add delete myList feature
+	
+New changes on 1.2.1
+	fix some bug
+	limit max = 100 by default
+	
+New changes on 1.2.2
+	fix some Xml import error 
+	Improvement of array of fields managment
+	
+New changes on 1.2.3
+	filter error when name of fields have space
+	better managment of bill statut
+
+New changes on 1.2.4
+	fix : ORDER BY in sql query work 
+	add : add "with" on fields columns
+	fix : 0-key error after delete fields
+	add : default display length is changeable in admin module
+	
+New changes on 1.3.0
+	add : new commun top menu with other patas-tools
+
+New changes on 1.3.1
+	add : new percent type of fields
+	add : add currency for price type
+	add : add category (product and society) tabs feature
+
+New changes on 1.3.2
+	fix : error on null element (leftjoin)
