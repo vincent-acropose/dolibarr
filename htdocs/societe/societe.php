@@ -537,9 +537,9 @@ if ($resql)
 		print "<td>".dol_print_phone($obj->phone)."</td>\n";
 		print "<td>".$obj->typent."</td>\n";
 
-		print "<td>".dol_print_date($obj->lastpropalsigndt,'daytextshort')."</td>\n";
+		print "<td>".dol_print_date($db->jdate($obj->lastpropalsigndt),'daytextshort')."</td>\n";
 		
-		print "<td>".dol_print_date($obj->datec,'daytextshort')."</td>\n";
+		print "<td>".dol_print_date($db->jdate($obj->datec),'daytextshort')."</td>\n";
 		
 		print "<td>".$obj->siret."</td>\n";
 		
