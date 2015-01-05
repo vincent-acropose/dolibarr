@@ -1249,17 +1249,19 @@ else if ($id > 0 || ! empty($ref))
 	print "<tr><td>".$langs->trans("Company")."</td><td>".$object->client->getNomUrl(1)."</td></tr>";
 
 	// Duration
-	print '<tr><td>'.$langs->trans("TotalDuration").'</td>';
+	// TODO Masqué suite demande PR1012-0630
+	/*print '<tr><td>'.$langs->trans("TotalDuration").'</td>';
 	print '<td>'.convertSecondToTime($object->duree, 'all', $conf->global->MAIN_DURATION_OF_WORKDAY).'</td>';
-	print '</tr>';
+	print '</tr>';*/
 
 	// Description (must be a textarea and not html must be allowed (used in list view)
-	print '<tr><td valign="top">';
+	// TODO Masqué suite demande PR1012-0630
+	/*print '<tr><td valign="top">';
 	print $form->editfieldkey("Description",'description',$object->description,$object,$user->rights->ficheinter->creer,'textarea');
 	print '</td><td colspan="3">';
 	print $form->editfieldval("Description",'description',$object->description,$object,$user->rights->ficheinter->creer,'textarea:8:80');
 	print '</td>';
-	print '</tr>';
+	print '</tr>';*/
 
 	// Project
 	if (! empty($conf->projet->enabled))

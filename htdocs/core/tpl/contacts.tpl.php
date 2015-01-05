@@ -77,7 +77,7 @@ $userstatic=new User($db);
 
 	<?php $var=!$var; ?>
 
-	<form class="tagtr pair" action="<?php echo $_SERVER["PHP_SELF"].'?id='.$object->id; ?>" method="POST">
+	<form id="formContact" class="tagtr pair" action="<?php echo $_SERVER["PHP_SELF"].'?id='.$object->id; ?>" method="POST">
 	<input type="hidden" name="token" value="<?php echo $_SESSION['newtoken']; ?>" />
 	<input type="hidden" name="id" value="<?php echo $object->id; ?>" />
 	<input type="hidden" name="action" value="addcontact" />
