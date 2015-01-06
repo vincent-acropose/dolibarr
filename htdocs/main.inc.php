@@ -261,7 +261,6 @@ if (! empty($conf->file->main_force_https))
     }
 }
 
-
 // Loading of additional presentation includes
 if (! defined('NOREQUIREHTML')) require_once DOL_DOCUMENT_ROOT .'/core/class/html.form.class.php';	    // Need 660ko memory (800ko in 2.2)
 if (! defined('NOREQUIREAJAX') && $conf->use_javascript_ajax) require_once DOL_DOCUMENT_ROOT.'/core/lib/ajax.lib.php';	// Need 22ko memory
@@ -691,6 +690,12 @@ if (! defined('NOLOGIN'))
         $conf->theme=$user->conf->MAIN_THEME;
         $conf->css  = "/theme/".$conf->theme."/style.css.php";
     }
+}
+
+//si utilisateur externe on le jette
+if($user->societe_id > 0){
+	header('Location: '.dol_buildpath('/clinetreferencement/external.php',1));
+    exit;
 }
 
 // Case forcing style from url
