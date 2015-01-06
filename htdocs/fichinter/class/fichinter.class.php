@@ -718,6 +718,18 @@ class Fichinter extends CommonObject
         require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
 		$error=0;
+		
+		if (! $notrigger)
+		{
+			// Appel des triggers
+			include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+			$interface=new Interfaces($this->db);
+			$result=$interface->run_triggers('BEFORE_FICHINTER_DELETE',$this,$user,$langs,$conf);
+			if ($result < 0) {
+				$error++; $this->errors=$interface->errors;
+			}
+			// Fin appel triggers
+		}
 
 		$this->db->begin();
 
@@ -738,7 +750,7 @@ class Fichinter extends CommonObject
 			$this->db->rollback();
 			return -1;
 		}
-
+		
 		$sql = "DELETE FROM ".MAIN_DB_PREFIX."fichinterdet";
 		$sql.= " WHERE fk_fichinter = ".$this->id;
 
