@@ -26,6 +26,12 @@ if (! class_exists('FormCompany')) {
 	require DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
 }
 
+dol_include_once("/cliacticontrole/lib/cliacticontrole.lib.php");
+
+global $user;
+
+$TUsersToExclude = _get_list_users_to_exclude($user->id);
+
 $module = $object->element;
 
 // Special cases
@@ -69,7 +75,17 @@ $userstatic=new User($db);
 	<input type="hidden" name="source" value="internal" />
 		<div class="nowrap tagtd"><?php echo img_object('','user').' '.$langs->trans("Users"); ?></div>
 		<div class="tagtd"><?php echo $conf->global->MAIN_INFO_SOCIETE_NOM; ?></div>
-		<div class="tagtd maxwidthonsmartphone"><?php echo $form->select_dolusers($user->id, 'userid', 0, (! empty($userAlreadySelected)?$userAlreadySelected:null), 0, null, null, 0, 56); ?></div>
+		<div class="tagtd maxwidthonsmartphone">
+			<?php
+				if(_user_est_dans_groupe($user)) {
+					//echo "1";
+					echo $form->select_dolusers($user->id, 'userid', 0, $TUsersToExclude, 0, null, null, 0, 56);
+				} else {
+					echo $form->select_dolusers($user->id, 'userid', 0, (! empty($userAlreadySelected)?$userAlreadySelected:null), 0, null, null, 0, 56);
+					//echo "2";
+				}
+			?>
+		</div>
 		<div class="tagtd maxwidthonsmartphone"><?php echo $formcompany->selectTypeContact($object, '', 'type','internal'); ?></div>
 		<div class="tagtd">&nbsp;</div>
 		<div class="tagtd" align="right"><input type="submit" class="button" value="<?php echo $langs->trans("Add"); ?>"></div>
