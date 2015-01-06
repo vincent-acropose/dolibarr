@@ -47,6 +47,13 @@ function print_actions_filter($form, $canedit, $status, $year, $month, $day, $sh
 
 	global $conf, $user, $langs, $db;
 
+	dol_include_once("/cliacticontrole/lib/cliacticontrole.lib.php");
+	
+	if(_user_est_dans_groupe($user))
+		$TUsersToExclude = _get_list_users_to_exclude($user->id);
+	else
+		$TUsersToExclude = array();
+
 	// Filters
 	print '<form name="listactionsfilter" class="listactionsfilter" action="' . $_SERVER ["PHP_SELF"] . '" method="POST">';
 	print '<input type="hidden" name="token" value="' . $_SESSION ['newtoken'] . '">';
@@ -67,7 +74,7 @@ function print_actions_filter($form, $canedit, $status, $year, $month, $day, $sh
 		print '<td class="nowrap">';
 		print $langs->trans("ActionsAskedBy");
 		print ' &nbsp;</td><td class="nowrap maxwidthonsmartphone">';
-		print $form->select_dolusers($filtera, 'userasked', 1, '', ! $canedit);
+		print $form->select_dolusers($filtera, 'userasked', 1, (count($TUsersToExclude) > 0) ? $TUsersToExclude : '', ! $canedit);
 		print '</td>';
 		print '</tr>';
 
@@ -75,7 +82,7 @@ function print_actions_filter($form, $canedit, $status, $year, $month, $day, $sh
 		print '<td class="nowrap">';
 		print $langs->trans("or") . ' ' . $langs->trans("ActionsToDoBy");
 		print ' &nbsp;</td><td class="nowrap maxwidthonsmartphone">';
-		print $form->select_dolusers($filtert, 'usertodo', 1, '', ! $canedit);
+		print $form->select_dolusers($filtert, 'usertodo', 1, (count($TUsersToExclude) > 0) ? $TUsersToExclude : '', ! $canedit);
 		print '</td></tr>';
 
 		print '<tr>';
