@@ -693,7 +693,9 @@ if (! defined('NOLOGIN'))
 }
 
 //si utilisateur externe on le jette
-if($user->societe_id > 0){
+$TAllowed = array(dol_buildpath('/user/logout.php',1),dol_buildpath('/document.php',1));
+
+if($user->societe_id > 0 && !in_array($_SERVER['PHP_SELF'],$TAllowed)){
 	header('Location: '.dol_buildpath('/clinetreferencement/external.php',1));
     exit;
 }
