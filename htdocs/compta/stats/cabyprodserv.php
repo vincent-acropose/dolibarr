@@ -176,8 +176,8 @@ if ($modecompta == 'CREANCES-DETTES') {
     $sql = "SELECT DISTINCT p.rowid as rowid, p.ref as ref, p.label as label,";
     $sql.= " sum(l.total_ht) as amount, sum(l.total_ttc) as amount_ttc";
     $sql.= " FROM ".MAIN_DB_PREFIX."product as p";
-    $sql.= " JOIN ".MAIN_DB_PREFIX."facturedet as l";
-    $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."facture as f ON l.fk_facture = f.rowid";
+    $sql.= " INNER JOIN ".MAIN_DB_PREFIX."facturedet as l ON l.fk_product = p.rowid";
+    $sql.= " INNER JOIN ".MAIN_DB_PREFIX."facture as f ON l.fk_facture = f.rowid";
     if ($selected_cat === -2) {
 	$sql.=" LEFT OUTER JOIN ".MAIN_DB_PREFIX."categorie_product as cp ON p.rowid = cp.fk_product";
     }
@@ -188,15 +188,14 @@ if ($modecompta == 'CREANCES-DETTES') {
 	}
 	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."categorie_product as cp ON cp.fk_categorie = c.rowid";
     }
-    $sql.= " WHERE l.fk_product = p.rowid";
-    $sql.= " AND f.fk_statut in (1,2)";
+    $sql.= " WHERE f.fk_statut in (1,2)";
     if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS)) {
 	$sql.= " AND f.type IN (0,1,2)";
     } else {
 	$sql.= " AND f.type IN (0,1,2,3)";
     }
     if ($date_start && $date_end) {
-	$sql.= " AND f.datef >= '".$db->idate($date_start)."' AND f.datef <= '".$db->idate($date_end)."'";
+	$sql.= " AND f.date_valid >= '".$db->idate($date_start)."' AND f.date_valid <= '".$db->idate($date_end)."'";
     }
     if ($selected_cat === -2) {
 	$sql.=" AND cp.fk_product is null";
