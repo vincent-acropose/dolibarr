@@ -195,7 +195,7 @@ if ($modecompta == 'CREANCES-DETTES') {
 	$sql.= " AND f.type IN (0,1,2,3)";
     }
     if ($date_start && $date_end) {
-	$sql.= " AND f.date_valid >= '".$db->idate($date_start)."' AND f.date_valid <= '".$db->idate($date_end)."'";
+	$sql.= " AND f.datef >= '".$db->idate($date_start)."' AND f.datef <= '".$db->idate($date_end)."'";
     }
     if ($selected_cat === -2) {
 	$sql.=" AND cp.fk_product is null";
