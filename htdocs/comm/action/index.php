@@ -32,6 +32,7 @@ require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/agenda.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
 if (! empty($conf->projet->enabled)) {
 	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 }
@@ -96,7 +97,7 @@ $langs->load("agenda");
 $langs->load("other");
 $langs->load("commercial");
 
-
+$hookmanager->initHooks(array('agendacolor_card'));
 
 /*
  * Actions
@@ -980,7 +981,7 @@ llxFooter();
  */
 function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventarray, $maxprint=0, $maxnbofchar=16, $newparam='', $showinfo=0, $minheight=60)
 {
-    global $user, $conf, $langs;
+    global $user, $conf, $langs, $hookmanager;
     global $filter, $filtera, $filtert, $filterd, $status, $actioncode;	// Filters used into search form
     global $theme_datacolor;
     global $cachethirdparties, $cachecontacts, $colorindexused;
@@ -1074,6 +1075,11 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
                     	//print '|'.($color).'='.($idusertouse?$idusertouse:0).'='.$colorindex.'<br>';
 						// Define color
                     	$color=sprintf("%02x%02x%02x",$theme_datacolor[$colorindex][0],$theme_datacolor[$colorindex][1],$theme_datacolor[$colorindex][2]);
+						
+						$parameters['color'] = &$color;
+						$reshook=$hookmanager->executeHooks('setEventColor',$parameters,$event,$action);    // Note that $action and $object may have been modified by some hooks
+						$error=$hookmanager->error; $errors=$hookmanager->errors;
+						
                     }
                     $cssclass=$cssclass.' '.$cssclass.'_day_'.$ymd;
 
