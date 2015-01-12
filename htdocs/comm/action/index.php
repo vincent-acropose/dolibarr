@@ -1076,9 +1076,13 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
 						// Define color
                     	$color=sprintf("%02x%02x%02x",$theme_datacolor[$colorindex][0],$theme_datacolor[$colorindex][1],$theme_datacolor[$colorindex][2]);
 						
+						$affiche_event = true;
 						$parameters['color'] = &$color;
+						$parameters['affiche_event'] = &$affiche_event;
 						$reshook=$hookmanager->executeHooks('setEventColor',$parameters,$event,$action);    // Note that $action and $object may have been modified by some hooks
 						$error=$hookmanager->error; $errors=$hookmanager->errors;
+						
+						if(!$parameters['affiche_event']) continue;
 						
                     }
                     $cssclass=$cssclass.' '.$cssclass.'_day_'.$ymd;
