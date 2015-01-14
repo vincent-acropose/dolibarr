@@ -535,7 +535,8 @@ else
 				$order->fetch($expedition->origin_id);
 				print '<td colspan="3">';
 				print $order->getNomUrl(1,'commande');
-				print "</td>\n";
+				print "</td>\n";$parameters=array('colspan' => ' colspan="3"');
+	$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$delivery,$action);
 				print '</tr>';
 			}
 			if ($typeobject == 'propal' && $expedition->origin_id && ! empty($conf->propal->enabled))
@@ -638,6 +639,9 @@ else
 				print '<td colspan="3"><a href="'.DOL_URL_ROOT.'/product/stock/card.php?id='.$entrepot->id.'">'.$entrepot->libelle.'</a></td>';
 				print '</tr>';
 			}
+
+			$parameters=array('colspan' => ' colspan="3"');
+			$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$delivery,$action);
 
 			print "</table><br>\n";
 
@@ -744,7 +748,7 @@ else
 			{
 				print '<div class="tabsAction">';
 
-				if ($object->statut == 0 && $num_prod > 0) 
+				if ($object->statut == 0 && $num_prod > 0)
 				{
 					if ((empty($conf->global->MAIN_USE_ADVANCED_PERMS) && ! empty($user->rights->expedition->livraison->creer))
 						|| (! empty($conf->global->MAIN_USE_ADVANCED_PERMS) && ! empty($user->rights->expedition->livraison_advance->validate)))
