@@ -79,6 +79,16 @@ class FormProjets
 		if ($socid == 0) $sql.= " AND (p.fk_soc=0 OR p.fk_soc IS NULL)";
 		if ($socid > 0)  $sql.= " AND (p.fk_soc=".$socid." OR p.fk_soc IS NULL)";
 		$sql.= " ORDER BY p.ref ASC";
+		
+		// New Project List for ATM
+		$sql = 'SELECT p.rowid, p.ref, p.title, p.fk_soc, p.fk_statut, p.public, s.nom';
+		$sql.= ' FROM '.MAIN_DB_PREFIX .'projet as p';
+		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX .'societe s ON p.fk_soc = s.rowid';
+		$sql.= " WHERE p.entity = ".$conf->entity;
+		if ($projectsListId !== false) $sql.= " AND p.rowid IN (".$projectsListId.")";
+		if ($socid == 0) $sql.= " AND (p.fk_soc=0 OR p.fk_soc IS NULL)";
+		if ($socid > 0)  $sql.= " AND (p.fk_soc=".$socid." OR p.fk_soc IS NULL)";
+		$sql.= " ORDER BY s.nom, p.ref ASC";
 
 		dol_syslog(get_class($this)."::select_projects sql=".$sql,LOG_DEBUG);
 		$resql=$this->db->query($sql);
@@ -104,7 +114,8 @@ class FormProjets
 					}
 					else
 					{
-						$labeltoshow=dol_trunc($obj->ref,18);
+						//$labeltoshow=dol_trunc($obj->ref,18);
+						$labeltoshow=$obj->nom.' - '.$obj->ref;
 						//if ($obj->public) $labeltoshow.=' ('.$langs->trans("SharedProject").')';
 						//else $labeltoshow.=' ('.$langs->trans("Private").')';
 						if (!empty($selected) && $selected == $obj->rowid && $obj->fk_statut > 0)
