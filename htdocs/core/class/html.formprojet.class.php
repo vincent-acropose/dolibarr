@@ -86,8 +86,6 @@ class FormProjets
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX .'societe s ON p.fk_soc = s.rowid';
 		$sql.= " WHERE p.entity = ".$conf->entity;
 		if ($projectsListId !== false) $sql.= " AND p.rowid IN (".$projectsListId.")";
-		if ($socid == 0) $sql.= " AND (p.fk_soc=0 OR p.fk_soc IS NULL)";
-		if ($socid > 0)  $sql.= " AND (p.fk_soc=".$socid." OR p.fk_soc IS NULL)";
 		$sql.= " ORDER BY s.nom, p.ref ASC";
 
 		dol_syslog(get_class($this)."::select_projects sql=".$sql,LOG_DEBUG);
