@@ -131,8 +131,8 @@ class FormProjets
 							}
 							if ($socid > 0 && (! empty($obj->fk_soc) && $obj->fk_soc != $socid))
 							{
-								$disabled=1;
-								$labeltoshow.=' - '.$langs->trans("LinkedToAnotherCompany");
+								//$disabled=1;
+								//$labeltoshow.=' - '.$langs->trans("LinkedToAnotherCompany");
 							}
 
 							if ($hideunselectables && $disabled)
