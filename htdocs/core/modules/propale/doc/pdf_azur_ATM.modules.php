@@ -631,6 +631,19 @@ class pdf_azur_ATM extends ModelePDFPropales
 		}
 
 		$posxval=52;
+		
+		$pdf->SetFont('','B', $default_font_size - 2);
+		$pdf->SetXY($this->marge_gauche, $posy);
+		$titre = $outputlangs->transnoentities("Conditions de commande").':';
+		$pdf->MultiCell(80, 4, $titre, 0, 'L');
+		$pdf->SetFont('','', $default_font_size - 2);
+		$pdf->SetXY($posxval, $posy);
+		$percent_acompte = 30;
+		$mt_acompte = $object->total_ttc * $percent_acompte / 100;
+		$txt = 'A réception de cette proposition signée et d\'un acompte de 30%, soit '.price($mt_acompte).' €';
+		$pdf->MultiCell(60, 4, $txt, 0, 'L');
+
+        $posy=$pdf->GetY()+1;
 
         // Show shipping date
         if (! empty($object->date_livraison))
