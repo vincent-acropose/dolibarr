@@ -496,6 +496,8 @@ function pdf_watermark(&$pdf, $outputlangs, $h, $w, $unit, $text)
 function pdf_bank(&$pdf,$outputlangs,$curx,$cury,$account,$onlynumber=0,$default_font_size=10)
 {
 	global $mysoc, $conf;
+	
+	$onlyIBANandBIC = $conf->global->PDF_RIB_ONLY_IBAN_AND_BIC;
 
 	$diffsizetitle=(empty($conf->global->PDF_DIFFSIZE_TITLE)?3:$conf->global->PDF_DIFFSIZE_TITLE);
 	$diffsizecontent=(empty($conf->global->PDF_DIFFSIZE_CONTENT)?4:$conf->global->PDF_DIFFSIZE_CONTENT);
@@ -515,7 +517,7 @@ function pdf_bank(&$pdf,$outputlangs,$curx,$cury,$account,$onlynumber=0,$default
 	$usedetailedbban=$account->useDetailedBBAN();
 
 	//$onlynumber=0; $usedetailedbban=0; // For tests
-	if ($usedetailedbban)
+	if ($usedetailedbban && !$onlyIBANandBIC)
 	{
 		$savcurx=$curx;
 
@@ -591,7 +593,7 @@ function pdf_bank(&$pdf,$outputlangs,$curx,$cury,$account,$onlynumber=0,$default
 		$curx=$savcurx;
 		$cury+=10;
 	}
-	else
+	else if(!$onlyIBANandBIC)
 	{
 		$pdf->SetFont('','B',$default_font_size - $diffsizecontent);
 		$pdf->SetXY($curx, $cury);
@@ -614,7 +616,7 @@ function pdf_bank(&$pdf,$outputlangs,$curx,$cury,$account,$onlynumber=0,$default
 
 	$pdf->SetFont('','',$default_font_size - $diffsizecontent);
 
-	if (empty($onlynumber) && ! empty($account->domiciliation))
+	if (empty($onlynumber) && ! empty($account->domiciliation) && !$onlyIBANandBIC)
 	{
 		$pdf->SetXY($curx, $cury);
 		$val=$outputlangs->transnoentities("Residence").': ' . $outputlangs->convToOutputCharset($account->domiciliation);
