@@ -113,17 +113,17 @@ class FormProjets
 					else
 					{
 						//$labeltoshow=dol_trunc($obj->ref,18);
-						$labeltoshow=$obj->nom.' - '.$obj->ref;
+						$labeltoshow=$obj->nom.' - '.$obj->ref.' - '.$obj->title;
 						//if ($obj->public) $labeltoshow.=' ('.$langs->trans("SharedProject").')';
 						//else $labeltoshow.=' ('.$langs->trans("Private").')';
 						if (!empty($selected) && $selected == $obj->rowid && $obj->fk_statut > 0)
 						{
-							$out.= '<option value="'.$obj->rowid.'" selected="selected">'.$labeltoshow.' - '.dol_trunc($obj->title,$maxlength).'</option>';
+							$out.= '<option value="'.$obj->rowid.'" selected="selected">'.$labeltoshow.'</option>';
 						}
 						else
 						{
 							$disabled=0;
-							$labeltoshow.=' '.dol_trunc($obj->title,$maxlength);
+							//$labeltoshow.=' '.dol_trunc($obj->title,$maxlength);
 							if (! $obj->fk_statut > 0)
 							{
 								$disabled=0;
