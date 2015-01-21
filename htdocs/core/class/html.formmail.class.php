@@ -472,7 +472,8 @@ class FormMail
         		}
         		else
         		{
-        			$out.= $form->selectyesno('deliveryreceipt', (isset($_POST["deliveryreceipt"])?$_POST["deliveryreceipt"]:0), 1);
+        			//$out.= $form->selectyesno('deliveryreceipt', (isset($_POST["deliveryreceipt"])?$_POST["deliveryreceipt"]:0), 1);
+					$out.= $form->selectyesno('deliveryreceipt', 1, 1);
         		}
 
         		$out.= "</td></tr>\n";
