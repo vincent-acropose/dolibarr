@@ -198,6 +198,18 @@ if ($search_user > 0)
 
 
 $sql.= ' ORDER BY '.$sortfield.' '.$sortorder.', p.ref DESC';
+
+
+if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST)) {
+	dol_syslog('comm/propal/list.php :: sql='.$sql);
+	$result=$db->query($sql);
+	if ($result)
+	{
+		$nbtotalofrecords = $db->num_rows($result);
+	}
+}
+
+
 $sql.= $db->plimit($limit + 1,$offset);
 dol_syslog('comm/propal/list.php :: sql='.$sql);
 
@@ -225,7 +237,7 @@ if ($result)
 	if ($search_user > 0)    $param.='&search_user='.$search_user;
 	if ($search_sale > 0)    $param.='&search_sale='.$search_sale;
 	if ($search_montant_ht)  $param.='&search_montant_ht='.$search_montant_ht;
-	print_barre_liste($langs->trans('ListOfProposals').' '.($socid?'- '.$soc->nom:''), $page, $_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',$num);
+	print_barre_liste($langs->trans('ListOfProposals').' '.($socid?'- '.$soc->nom:''), $page, $_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',$num,$nbtotalofrecords);
 
 	// Lignes des champs de filtre
 	print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'">';
