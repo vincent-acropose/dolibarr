@@ -75,13 +75,13 @@ class box_activity extends ModeleBoxes
 
 		include_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 
-		$nbofyears=2;
+		$nbofyears=1;
 		if (! empty($conf->global->MAIN_BOX_ACTIVITY_DURATION)) $nbofyears=$conf->global->MAIN_BOX_ACTIVITY_DURATION;
 		$textHead = $langs->trans("Activity").' ('.$nbofyears.' '.$langs->trans("DurationYears").')';
 		$this->info_box_head = array('text' => $textHead, 'limit'=> dol_strlen($textHead));
 
 		// compute the year limit to show
-		$tmpdate= dol_time_plus_duree(dol_now(), -1*$nbofyears, "y");
+		//$tmpdate= dol_time_plus_duree(dol_now(), -1*$nbofyears, "y");
 
 		// list the summary of the bills
 		if (! empty($conf->facture->enabled) && $user->rights->facture->lire)
@@ -97,10 +97,11 @@ class box_activity extends ModeleBoxes
 			if (!$user->rights->societe->client->voir && !$user->societe_id) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
 			if($user->societe_id)	$sql.= " AND s.rowid = ".$user->societe_id;
 			$sql.= " AND f.fk_soc = s.rowid";
-			$sql.= " AND f.datef >= '".$db->idate($tmpdate)."' AND paye=1";
+			$sql.= " AND YEAR(f.datef)=".dol_print_date(dol_now(),'%Y')." AND paye=1";
 			$sql.= " GROUP BY f.fk_statut";
 			$sql.= " ORDER BY f.fk_statut DESC";
 
+			dol_syslog(get_class($this).'::loadBox '.$boxlabel.' sql='.$sql);
 			$result = $db->query($sql);
 			if ($result)
 			{
@@ -191,7 +192,7 @@ class box_activity extends ModeleBoxes
 			$sql.= " AND c.fk_soc = s.rowid";
 			if (!$user->rights->societe->client->voir && !$user->societe_id) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
 			if($user->societe_id)	$sql.= " AND s.rowid = ".$user->societe_id;
-			$sql.= " AND c.date_commande >= '".$db->idate($tmpdate)."'";
+			$sql.= " AND YEAR(c.date_commande)=".dol_print_date(dol_now(),'%Y');
 			$sql.= " AND c.facture=0";
 			$sql.= " GROUP BY c.fk_statut";
 			$sql.= " ORDER BY c.fk_statut DESC";
@@ -242,7 +243,9 @@ class box_activity extends ModeleBoxes
 			$sql.= " AND p.fk_soc = s.rowid";
 			if (!$user->rights->societe->client->voir && !$user->societe_id) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
 			if($user->societe_id)	$sql.= " AND s.rowid = ".$user->societe_id;
-			$sql.= " AND p.datep >= '".$db->idate($tmpdate)."'";
+			
+			$sql.= " AND YEAR(p.datep)=".dol_print_date(dol_now(),'%Y');
+			//$sql.= " AND p.datep >= '".$db->idate($tmpdate)."'";
 			$sql.= " AND p.date_cloture IS NULL"; // just unclosed
 			$sql.= " GROUP BY p.fk_statut";
 			$sql.= " ORDER BY p.fk_statut DESC";

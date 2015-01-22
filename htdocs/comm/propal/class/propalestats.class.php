@@ -162,6 +162,27 @@ class PropaleStats extends Stats
 
 		return $this->_getAverageByMonth($year, $sql);
 	}
+	
+	/**
+	 * Return the propals amount average by month for a year
+	 *
+	 * @param	int		$year	year for stats
+	 * @return	array			array with number by month
+	 */
+	function getStatusNbByYear($year)
+	{
+		global $user;
+	
+		$sql = "SELECT date_format(p.datep,'%m') as dm, COUNT()";
+		$sql.= " FROM ".$this->from;
+		if (!$user->rights->societe->client->voir && !$this->socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
+		$sql.= " WHERE p.datep BETWEEN '".$this->db->idate(dol_get_first_day($year))."' AND '".$this->db->idate(dol_get_last_day($year))."'";
+		$sql.= " AND ".$this->where;
+		$sql.= " GROUP BY dm";
+		$sql.= $this->db->order('dm','DESC');
+	
+		return $this->_getNbByYear($year, $sql);
+	}
 
 	/**
 	 *	Return nb, total and average

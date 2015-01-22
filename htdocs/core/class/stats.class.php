@@ -140,6 +140,42 @@ abstract class Stats
 
 		return $data;
 	}
+	
+	/**
+	 * Return average of entity by month for several years
+	 *
+	 * @param	int		$endyear		Start year
+	 * @param	int		$startyear		End year
+	 * @return 	array					Array of values
+	 */
+	function getStatusNbWithPrevYear($endyear,$startyear)
+	{
+		if ($startyear > $endyear) return -1;
+	
+		$datay=array();
+	
+		$year=$startyear;
+		while($year <= $endyear)
+		{
+			$datay[$year] = $this->getStatusNb($year);
+			$year++;
+		}
+	
+		$data = array();
+	
+		for ($i = 0 ; $i < 12 ; $i++)
+		{
+		$data[$i][]=$datay[$endyear][$i][0];
+		$year=$startyear;
+		while($year <= $endyear)
+		{
+		$data[$i][]=$datay[$year][$i][1];
+		$year++;
+		}
+		}
+	
+		return $data;
+	}
 
 
 	/**

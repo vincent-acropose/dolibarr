@@ -193,7 +193,51 @@ if (! $mesg)
 
     $px3->draw($filename_avg,$fileurl_avg);
 }
+/*
+$data = $stats->getStatusNbWithPrevYear($endyear, $startyear);
 
+$fileurl_avg='';
+if (! isset($mode)) $mode=''; // TODO $mode not defined ?
+if (!$user->rights->societe->client->voir || $user->societe_id)
+{
+	$filename_avg = $dir.'/ordersaverage-'.$user->id.'-'.$year.'.png';
+	if ($mode == 'customer') $fileurl_avg = DOL_URL_ROOT.'/viewimage.php?modulepart=orderstats&file=ordersaverage-'.$user->id.'-'.$year.'.png';
+	if ($mode == 'supplier') $fileurl_avg = DOL_URL_ROOT.'/viewimage.php?modulepart=orderstatssupplier&file=ordersaverage-'.$user->id.'-'.$year.'.png';
+}
+else
+{
+	$filename_avg = $dir.'/ordersaverage-'.$year.'.png';
+	if ($mode == 'customer') $fileurl_avg = DOL_URL_ROOT.'/viewimage.php?modulepart=orderstats&file=ordersaverage-'.$year.'.png';
+	if ($mode == 'supplier') $fileurl_avg = DOL_URL_ROOT.'/viewimage.php?modulepart=orderstatssupplier&file=ordersaverage-'.$year.'.png';
+}
+
+$px4 = new DolGraph();
+$mesg = $px4->isGraphKo();
+if (! $mesg)
+{
+	$px4->SetData($data);
+	$i=$startyear;
+	$legend=array();
+	while ($i <= $endyear)
+	{
+		$legend[]=$i;
+		$i++;
+	}
+	$px4->SetLegend($legend);
+	$px4->SetYLabel($langs->trans("AmountAverage"));
+	$px4->SetMaxValue($px3->GetCeilMaxValue());
+	$px4->SetMinValue($px3->GetFloorMinValue());
+	$px4->SetWidth($WIDTH);
+	$px4->SetHeight($HEIGHT);
+	$px4->SetShading(3);
+	$px4->SetHorizTickIncrement(1);
+	$px4->SetPrecisionY(0);
+	$px4->mode='depth';
+	$px4->SetTitle($langs->trans("Nombre par status"));
+
+	$px4->draw($filename_avg,$fileurl_avg);
+}
+*/
 
 // Show array
 $data = $stats->getAllByYear();
