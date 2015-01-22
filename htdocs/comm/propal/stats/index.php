@@ -193,22 +193,22 @@ if (! $mesg)
 
     $px3->draw($filename_avg,$fileurl_avg);
 }
-/*
+
 $data = $stats->getStatusNbWithPrevYear($endyear, $startyear);
 
-$fileurl_avg='';
+$fileurl_nbstatus='';
 if (! isset($mode)) $mode=''; // TODO $mode not defined ?
 if (!$user->rights->societe->client->voir || $user->societe_id)
 {
-	$filename_avg = $dir.'/ordersaverage-'.$user->id.'-'.$year.'.png';
-	if ($mode == 'customer') $fileurl_avg = DOL_URL_ROOT.'/viewimage.php?modulepart=orderstats&file=ordersaverage-'.$user->id.'-'.$year.'.png';
-	if ($mode == 'supplier') $fileurl_avg = DOL_URL_ROOT.'/viewimage.php?modulepart=orderstatssupplier&file=ordersaverage-'.$user->id.'-'.$year.'.png';
+    $filename_nbstatus = $dir.'/ordersnbstatus-'.$user->id.'-'.$year.'.png';
+    if ($mode == 'customer') $fileurl_nbstatus = DOL_URL_ROOT.'/viewimage.php?modulepart=orderstats&file=ordersnbstatus-'.$user->id.'-'.$year.'.png';
+    if ($mode == 'supplier') $fileurl_nbstatus = DOL_URL_ROOT.'/viewimage.php?modulepart=orderstatssupplier&file=ordersnbstatus-'.$user->id.'-'.$year.'.png';
 }
 else
 {
-	$filename_avg = $dir.'/ordersaverage-'.$year.'.png';
-	if ($mode == 'customer') $fileurl_avg = DOL_URL_ROOT.'/viewimage.php?modulepart=orderstats&file=ordersaverage-'.$year.'.png';
-	if ($mode == 'supplier') $fileurl_avg = DOL_URL_ROOT.'/viewimage.php?modulepart=orderstatssupplier&file=ordersaverage-'.$year.'.png';
+    $filename_nbstatus = $dir.'/ordersnbstatus-'.$year.'.png';
+    if ($mode == 'customer') $fileurl_nbstatus = DOL_URL_ROOT.'/viewimage.php?modulepart=orderstats&file=ordersnbstatus-'.$year.'.png';
+    if ($mode == 'supplier') $fileurl_nbstatus = DOL_URL_ROOT.'/viewimage.php?modulepart=orderstatssupplier&file=ordersnbstatus-'.$year.'.png';
 }
 
 $px4 = new DolGraph();
@@ -224,9 +224,9 @@ if (! $mesg)
 		$i++;
 	}
 	$px4->SetLegend($legend);
-	$px4->SetYLabel($langs->trans("AmountAverage"));
-	$px4->SetMaxValue($px3->GetCeilMaxValue());
-	$px4->SetMinValue($px3->GetFloorMinValue());
+	$px4->SetYLabel($langs->trans("Nb"));
+	$px4->SetMaxValue($px4->GetCeilMaxValue());
+	$px4->SetMinValue($px4->GetFloorMinValue());
 	$px4->SetWidth($WIDTH);
 	$px4->SetHeight($HEIGHT);
 	$px4->SetShading(3);
@@ -235,9 +235,9 @@ if (! $mesg)
 	$px4->mode='depth';
 	$px4->SetTitle($langs->trans("Nombre par status"));
 
-	$px4->draw($filename_avg,$fileurl_avg);
+	$px4->draw($filename_nbstatus,$fileurl_nbstatus);
 }
-*/
+
 
 // Show array
 $data = $stats->getAllByYear();
@@ -341,6 +341,8 @@ else {
     print $px2->show();
     print "<br>\n";
     print $px3->show();
+    print "<br>\n";
+    print $px4->show();
 }
 print '</td></tr></table>';
 

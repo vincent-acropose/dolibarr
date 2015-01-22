@@ -164,26 +164,68 @@ class PropaleStats extends Stats
 	}
 	
 	/**
-	 * Return the propals amount average by month for a year
+	 * Return average of entity by month for several years
 	 *
-	 * @param	int		$year	year for stats
-	 * @return	array			array with number by month
+	 * @param	int		$endyear		Start year
+	 * @param	int		$startyear		End year
+	 * @return 	array					Array of values
 	 */
-	function getStatusNbByYear($year)
+	function getStatusNbWithPrevYear($endyear,$startyear)
 	{
-		global $user;
 	
-		$sql = "SELECT date_format(p.datep,'%m') as dm, COUNT()";
-		$sql.= " FROM ".$this->from;
-		if (!$user->rights->societe->client->voir && !$this->socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
-		$sql.= " WHERE p.datep BETWEEN '".$this->db->idate(dol_get_first_day($year))."' AND '".$this->db->idate(dol_get_last_day($year))."'";
-		$sql.= " AND ".$this->where;
-		$sql.= " GROUP BY dm";
-		$sql.= $this->db->order('dm','DESC');
+		require_once DOL_DOCUMENT_ROOT.'/comm/propal/class/propal.class.php';
 	
-		return $this->_getNbByYear($year, $sql);
+		if ($startyear > $endyear)
+			return - 1;
+	
+		$propal = new Propal($this->db);
+	
+		$datay = array ();
+	
+		$result=array();
+		foreach($propal->labelstatut_short as $idstatus=>$labelstatus) {
+			
+			$sql = "SELECT date_format(p.datep,'%Y') as dm, COUNT( DISTINCT p.rowid) as nb";
+			$sql.= " FROM ".$this->from;
+			if (!$user->rights->societe->client->voir && !$this->socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
+			$sql.= " WHERE p.datep BETWEEN '".$this->db->idate(dol_get_first_day($startyear))."' AND '".$this->db->idate(dol_get_last_day($endyear))."'";
+			$sql.= " AND  p.fk_statut=".$idstatus;
+			$sql.= " GROUP BY date_format(p.datep,'%Y') ";
+			$sql.= $this->db->order('dm','ASC');
+			
+			
+			dol_syslog(get_class($this)."::getStatusNbWithPrevYear sql=".$sql);
+			$resql=$this->db->query($sql);
+			if ($resql)
+			{
+				$num = $this->db->num_rows($resql);
+				$i = 0;
+				while ($row = $this->db->fetch_object($resql))
+				{
+					$result[$idstatus][$row->dm] = $row->nb;
+				}
+				$this->db->free($resql);
+			}
+		}
+		
+		
+		foreach($propal->labelstatut_short as $idstatus=>$labelstatus) {
+			$year=$startyear;
+			$datay=array(0=>$labelstatus);
+			while($year <= $endyear)
+			{
+				$datay[]=$result[$idstatus][$year];
+				
+			
+				$year ++;
+			}
+			$data[]=$datay;
+			
+		}
+	
+		return $data;
 	}
-
+	
 	/**
 	 *	Return nb, total and average
 	 *
