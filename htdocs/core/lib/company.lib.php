@@ -1374,7 +1374,7 @@ function show_subsidiaries($conf,$langs,$db,$object)
 		AND f.fk_statut > 0 ';
 		$sql.= ' AND s.rowid NOT IN (';
 		// Subquery pour récupérer toutes les sociétés dont l'id n'est pas dans ceux dont il existe une inter au statut "Terminée" (statutmission=40)
-		$sql.= "SELECT DISTINCT s.rowid";
+		$sql.= "SELECT DISTINCT s2.rowid";
 		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s2
 		LEFT JOIN ".MAIN_DB_PREFIX."socpeople sp2 ON (s2.rowid = sp2.fk_soc)";
 		$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."fichinter f2 ON (s2.rowid = f2.fk_soc)";
@@ -1395,7 +1395,7 @@ function show_subsidiaries($conf,$langs,$db,$object)
 	if(isset($_REQUEST['search_ville']) && $_REQUEST['search_ville'] != "") $sql.= " AND s.town LIKE '%".$_REQUEST['search_ville']."%'";
 	
 	$sql.= " ORDER BY s.nom";
-
+//print $sql;
 	$result = $db->query($sql);
 	if($result)
 		$num = $db->num_rows($result);
