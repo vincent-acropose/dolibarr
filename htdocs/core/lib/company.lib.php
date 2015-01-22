@@ -1341,13 +1341,37 @@ function show_subsidiaries($conf,$langs,$db,$object)
 	$sql.= " WHERE s.parent = ".$object->id;
 	$sql.= " AND s.entity IN (".getEntity('societe', 1).")";
 	if($_REQUEST['triParIntervention'] == "inter_effectuee") {
+		/*
+		 * 
+		 * Pour rappel :
+
+			- "Programmée(s)" : tiers avec interventions terminées / A faire / Envoyées
+			- "Non effectuées" : tiers avec interventions A reprogrammer ou tiers avec aucun inter
+			
+			Exemple en prod :
+			
+			Client "Residence 200" id 187456 - Lot 317 id 192202
+			Pour ce lot il existe une interventions A reprogrammer, mais quand on clique sur "non effectuées", il n'apparait pas.
+		 * 
+		 * 
+10,A faire
+20,Envoyée
+25,A annuler
+30,A reprogrammer
+40,Terminée
+50,Annulée
+		 * 
+		 */
+		
+		
 		//$sql.= " AND f.rowid IS NOT NULL";
 		$sql.= ' AND fe.statutmission IN ("10","20","40")';
 		$sql.= ' AND f.fk_statut > 0';
 	}
 	elseif($_REQUEST['triParIntervention'] == "inter_non_effectuee") {
 		//$sql.= " AND f.rowid IS NULL";
-		$sql.= ' AND (fe.statutmission IN ("30", "25", "50") OR f.rowid IS NULL)';
+		$sql.= ' AND (fe.statutmission IN ("30", "25", "50") OR f.rowid IS NULL)
+		AND f.fk_statut > 0 ';
 		$sql.= ' AND s.rowid NOT IN (';
 		// Subquery pour récupérer toutes les sociétés dont l'id n'est pas dans ceux dont il existe une inter au statut "Terminée" (statutmission=40)
 		$sql.= "SELECT DISTINCT s.rowid";
@@ -1357,7 +1381,7 @@ function show_subsidiaries($conf,$langs,$db,$object)
 		$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."fichinter_extrafields fe2 ON (f2.rowid = fe2.fk_object)";
 		$sql.= " WHERE s2.parent = ".$object->id;
 		$sql.= " AND s2.entity IN (".getEntity('societe', 1).")";
-		$sql.= ' AND fe2.statutmission IN ("10","20", "40")
+		$sql.= ' AND fe2.statutmission IN ("10","20", "40") AND f2.fk_statut>0
 		AND f2.datec>f.datec ';
 		
 		$sql.= ')';
