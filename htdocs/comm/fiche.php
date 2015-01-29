@@ -477,7 +477,7 @@ if ($id > 0)
 
 
 	// Nbre max d'elements des petites listes
-	$MAXLIST=4;
+	$MAXLIST=10;
 	$tableaushown=1;
 
 	// Lien recap
