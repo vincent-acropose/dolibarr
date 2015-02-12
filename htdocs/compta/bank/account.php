@@ -470,7 +470,7 @@ if ($id > 0 || ! empty($ref))
 	$sql.= " AND b.fk_account = ba.rowid";
 	$sql.= " AND ba.entity = ".$conf->entity;
 	$sql.= $sql_rech;
-	$sql.= $db->order("b.datev, b.datec", "ASC");  // We add date of creation to have correct order when everything is done the same day
+	$sql.= $db->order("b.datev, b.datec", "DESC");  // We add date of creation to have correct order when everything is done the same day
 	$sql.= $db->plimit($limitsql, 0);
 
 	dol_syslog("account.php get transactions - sql=".$sql, LOG_DEBUG);
