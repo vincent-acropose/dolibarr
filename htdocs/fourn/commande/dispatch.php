@@ -322,6 +322,12 @@ if ($id > 0 || ! empty($ref))
 							print "</td>\n";
 							print "</tr>\n";
 						}
+
+						if($products_dispatched[$objp->fk_product]>0) {
+							$products_dispatched[$objp->fk_product]-=$objp->qty;
+							if($products_dispatched[$objp->fk_product]<0)$products_dispatched[$objp->fk_product] = 0;
+						}
+						
 					}
 					$i++;
 				}
