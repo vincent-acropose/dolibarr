@@ -76,9 +76,10 @@ if ($_POST["action"] ==	'dispatch' && $user->rights->fournisseur->commande->rece
 			$qty = "qty_".$reg[1];
 			$ent = "entrepot_".$reg[1];
 			$pu = "pu_".$reg[1];	// This is unit price including discount
+			$fk_commandefourndet = "fk_commandefourndet_".$reg[1];
 			if ($_POST[$ent] > 0)
 			{
-				$result = $commande->DispatchProduct($user, $_POST[$prod], $_POST[$qty], $_POST[$ent], $_POST[$pu], $_POST["comment"]);
+				$result = $commande->DispatchProduct($user, $_POST[$prod], $_POST[$qty], $_POST[$ent], $_POST[$pu], $_POST["comment"], $_POST[$fk_commandefourndet]);
 			}
 			else
 			{
@@ -221,22 +222,23 @@ if ($id > 0 || ! empty($ref))
 			print '<input type="hidden" name="action" value="dispatch">';
 			print '<table class="noborder" width="100%">';
 
-			$sql = "SELECT cfd.fk_product, sum(cfd.qty) as qty";
+			$sql = "SELECT l.rowid, cfd.fk_product, sum(cfd.qty) as qty";
 			$sql.= " FROM ".MAIN_DB_PREFIX."commande_fournisseur_dispatch as cfd";
+			$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."commande_fournisseurdet as l on (l.rowid = cfd.fk_commandefourndet)";
 			$sql.= " WHERE cfd.fk_commande = ".$commande->id;
-			$sql.= " GROUP BY cfd.fk_product";
+			$sql.= " GROUP BY l.rowid";
 
 			$resql = $db->query($sql);
 			if ($resql)
 			{
 				while ( $row = $db->fetch_row($resql) )
 				{
-					$products_dispatched[$row[0]] = $row[1];
+					$products_dispatched[$row[0]] = $row[2];
 				}
 				$db->free($resql);
 			}
 
-			$sql = "SELECT l.fk_product, l.subprice, l.remise_percent, SUM(l.qty) as qty,";
+			$sql = "SELECT l.rowid, l.fk_product, l.subprice, l.remise_percent, SUM(l.qty) as qty,";
 			$sql.= " p.ref, p.label";
 			$sql.= " FROM ".MAIN_DB_PREFIX."commande_fournisseurdet as l";
 			$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product as p ON l.fk_product=p.rowid";
@@ -277,7 +279,7 @@ if ($id > 0 || ! empty($ref))
 					}
 					else
 					{
-						$remaintodispatch=($objp->qty - $products_dispatched[$objp->fk_product]);	// Calculation of dispatched
+						$remaintodispatch=($objp->qty - $products_dispatched[$objp->rowid]);	// Calculation of dispatched
 						if ($remaintodispatch < 0) $remaintodispatch=0;
 						if ($remaintodispatch)
 						{
@@ -292,6 +294,8 @@ if ($id > 0 || ! empty($ref))
 							//print ($objp->cref?' ('.$objp->cref.')':'');
 							//if ($objp->description) print '<br>'.nl2br($objp->description);
 							print '<input name="product_'.$i.'" type="hidden" value="'.$objp->fk_product.'">'."\n";
+							
+							print '<input name="fk_commandefourndet_'.$i.'" type="hidden" value="'.$objp->rowid.'">'."\n";
 
 	                        $up_ht_disc=$objp->subprice;
     	                    if (! empty($objp->remise_percent) && empty($conf->global->STOCK_EXCLUDE_DISCOUNT_FOR_PMP)) $up_ht_disc=price2num($up_ht_disc * (100 - $objp->remise_percent) / 100, 'MU');
@@ -300,7 +304,7 @@ if ($id > 0 || ! empty($ref))
 							print "</td>\n";
 
 							print '<td align="right">'.$objp->qty.'</td>';
-							print '<td align="right">'.$products_dispatched[$objp->fk_product].'</td>';
+							print '<td align="right">'.$products_dispatched[$objp->rowid].'</td>';
 
 							// Dispatch
 							print '<td align="right"><input name="qty_'.$i.'" type="text" size="8" value="'.($remaintodispatch).'"></td>';
@@ -321,11 +325,6 @@ if ($id > 0 || ! empty($ref))
 							}
 							print "</td>\n";
 							print "</tr>\n";
-						}
-
-						if($products_dispatched[$objp->fk_product]>0) {
-							$products_dispatched[$objp->fk_product]-=$objp->qty;
-							if($products_dispatched[$objp->fk_product]<0)$products_dispatched[$objp->fk_product] = 0;
 						}
 						
 					}

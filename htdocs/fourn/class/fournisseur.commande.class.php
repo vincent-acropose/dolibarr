@@ -1352,7 +1352,7 @@ class CommandeFournisseur extends CommonOrder
      * @param	string		$comment	Comment for stock movement
      * @return 	int						<0 if KO, >0 if OK
      */
-    function DispatchProduct($user, $product, $qty, $entrepot, $price=0, $comment='')
+    function DispatchProduct($user, $product, $qty, $entrepot, $price=0, $comment='', $fk_commandefourndet='')
     {
         global $conf;
         $error = 0;
@@ -1372,8 +1372,8 @@ class CommandeFournisseur extends CommonOrder
             $this->db->begin();
 
             $sql = "INSERT INTO ".MAIN_DB_PREFIX."commande_fournisseur_dispatch ";
-            $sql.= " (fk_commande,fk_product, qty, fk_entrepot, fk_user, datec) VALUES ";
-            $sql.= " ('".$this->id."','".$product."','".$qty."',".($entrepot>0?"'".$entrepot."'":"null").",'".$user->id."','".$this->db->idate($now)."')";
+            $sql.= " (fk_commande,fk_product, qty, fk_entrepot, fk_user, datec, fk_commandefourndet) VALUES ";
+            $sql.= " ('".$this->id."','".$product."','".$qty."',".($entrepot>0?"'".$entrepot."'":"null").",'".$user->id."','".$this->db->idate($now)."','".$fk_commandefourndet."')";
 
             dol_syslog(get_class($this)."::DispatchProduct sql=".$sql);
             $resql = $this->db->query($sql);
