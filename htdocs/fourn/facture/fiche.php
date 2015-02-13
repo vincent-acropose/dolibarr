@@ -184,7 +184,7 @@ elseif ($action == 'confirm_paid' && $confirm == 'yes' && $user->rights->fournis
 }
 
 // Set supplier ref
-if ($action == 'setref_supplier' && $user->rights->fournisseur->commande->creer)
+if ($action == 'setref_supplier' && $user->rights->fournisseur->facture->creer)
 {
     $result=$object->setValueFrom('ref_supplier',GETPOST('ref_supplier','alpha'));
     if ($result < 0) dol_print_error($db, $object->error);
