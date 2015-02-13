@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2006-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2006-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2006-2010 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,8 @@ $langs->load('users');
 
 $id=GETPOST('id','int');
 $search_project=GETPOST('search_project');
+if (! isset($_GET['search_status']) && ! isset($_POST['search_status'])) $search_status=1;
+else $search_status=GETPOST('search_status');
 
 
 // Security check
@@ -41,9 +43,9 @@ $socid=0;
 if ($user->societe_id > 0) $socid = $user->societe_id;
 if (!$user->rights->projet->lire) accessforbidden();
 
-$sortfield = isset($_GET["sortfield"])?$_GET["sortfield"]:$_POST["sortfield"];
-$sortorder = isset($_GET["sortorder"])?$_GET["sortorder"]:$_POST["sortorder"];
-$page = isset($_GET["page"])? $_GET["page"]:$_POST["page"];
+$sortfield = GETPOST("sortfield");
+$sortorder = GETPOST("sortorder");
+$page = GETPOST("page");
 $page = is_numeric($page) ? $page : 0;
 $page = $page == -1 ? 0 : $page;
 
@@ -85,18 +87,18 @@ $projectsListId = $projectstatic->getProjectsAuthorizedForUser($user,$mine,1,$so
 
 // Get list of tasks in tasksarray and taskarrayfiltered
 // We need all tasks (even not limited to a user because a task to user can have a parent that is not affected to him).
-$tasksarray=$taskstatic->getTasksArray(0, 0, $projectstatic->id, $socid, 0, $search_project);
+$tasksarray=$taskstatic->getTasksArray(0, 0, $projectstatic->id, $socid, 0, $search_project, $search_status);
 // We load also tasks limited to a particular user
 $tasksrole=($mine ? $taskstatic->getUserRolesForProjectsOrTasks(0,$user,$projectstatic->id,0) : '');
 
 print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
 print '<input type="hidden" name="mode" value="'.GETPOST('mode').'">';
-
 print '<table class="noborder" width="100%">';
 
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("Project").'</td>';
-print '<td width="80">'.$langs->trans("RefTask").'</td>';
+print '<td>'.$langs->trans("ProjectStatus").'</td>';
+print '<td>'.$langs->trans("RefTask").'</td>';
 print '<td>'.$langs->trans("LabelTask").'</td>';
 print '<td align="center">'.$langs->trans("DateStart").'</td>';
 print '<td align="center">'.$langs->trans("DateEnd").'</td>';
@@ -113,6 +115,11 @@ print '<tr class="liste_titre">';
 print '<td class="liste_titre">';
 print '<input type="text" class="flat" name="search_project" value="'.$search_project.'" size="8">';
 print '</td>';
+print '<td class="liste_titre">';
+$listofstatus=array(-1=>'&nbsp;');
+foreach($projectstatic->statuts_short as $key => $val) $listofstatus[$key]=$langs->trans($val);
+print $form->selectarray('search_status', $listofstatus, $search_status);
+print '</td>';
 print '<td class="liste_titre" colspan="7">';
 print '&nbsp;';
 print '</td>';
@@ -121,9 +128,10 @@ print "</tr>\n";
 
 if (count($tasksarray) > (empty($conf->global->PROJECT_LIMIT_TASK_PROJECT_AREA)?1000:$conf->global->PROJECT_LIMIT_TASK_PROJECT_AREA))
 {
+	$langs->load("errors");
 	print '<tr '.$bc[0].'>';
 	print '<td colspan="9">';
-	print $langs->trans("TooManyDataPleaseUseMoreFilters");
+	print $langs->trans("WarningTooManyDataPleaseUseMoreFilters");
 	print '</td></tr>';
 }
 else
@@ -153,4 +161,3 @@ if ($user->rights->projet->creer)
 llxFooter();
 
 $db->close();
-?>

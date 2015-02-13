@@ -81,6 +81,8 @@ class ExportExcel2007 extends ExportExcel
      */
 	function close_file()
 	{
+		global $conf;
+
 		if (! empty($conf->global->MAIN_USE_PHP_WRITEEXCEL))
     	{
 	        $this->workbook->close();
@@ -98,4 +100,3 @@ class ExportExcel2007 extends ExportExcel
 
 }
 
-?>

@@ -28,7 +28,7 @@
 /**
  * Show indent and picto of a tree line. Return array with information of line.
  *
- * @param	array	&$fulltree		Array of entries in correct order
+ * @param	array	$fulltree		Array of entries in correct order
  * @param 	string	$key			Key of entry into fulltree to show picto
  * @param	int		$silent			Do not output indent and picto, returns only value
  * @return	array					array(0 or 1 if at least one of this level after, 0 or 1 if at least one of higher level after, nbofdirinsub, nbofdocinsub)
@@ -102,6 +102,7 @@ function tree_showpad(&$fulltree,$key,$silent=0)
  *  $arrayofjs=array('/includes/jquery/plugins/jquerytreeview/jquery.treeview.js',
  *                   '/includes/jquery/plugins/jquerytreeview/lib/jquery.cookie.js');
  *	$arrayofcss=array('/includes/jquery/plugins/jquerytreeview/jquery.treeview.css');
+ *  TODO Replace with jstree plugin instead of treeview plugin.
  *
  *  @param	array	$tab    		Array of all elements
  *  @param  int	    $pere   		Array with parent ids ('rowid'=>,'mainmenu'=>,'leftmenu'=>,'fk_mainmenu=>,'fk_leftmenu=>)
@@ -164,4 +165,3 @@ function tree_recur($tab, $pere, $rang, $iddivjstree='iddivjstree')
 	if (empty($pere['rowid'])) print '</ul>';
 }
 
-?>

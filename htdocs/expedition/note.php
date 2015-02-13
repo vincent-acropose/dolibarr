@@ -72,29 +72,19 @@ if ($id > 0 || ! empty($ref))
     }
 }
 
-
-/******************************************************************************/
-/*                     Actions                                                */
-/******************************************************************************/
-
-if ($action == 'setnote_public')
-{
-	$object->fetch($id);
-	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES),'_public');
-	if ($result < 0) dol_print_error($db,$object->error);
-}
-
-else if ($action == 'setnote_private')
-{
-	$object->fetch($id);
-	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_private'), ENT_QUOTES),'_private');
-	if ($result < 0) dol_print_error($db,$object->error);
-}
+$permissionnote=$user->rights->expedition->creer;	// Used by the include of actions_setnotes.inc.php
 
 
-/******************************************************************************/
-/* Affichage fiche                                                            */
-/******************************************************************************/
+/*
+ * Actions
+ */
+
+include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not includ_once
+
+
+/*
+ * View
+ */
 
 llxHeader();
 
@@ -176,4 +166,3 @@ if ($id > 0 || ! empty($ref))
 llxFooter();
 
 $db->close();
-?>

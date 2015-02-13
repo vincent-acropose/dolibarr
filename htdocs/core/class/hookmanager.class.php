@@ -114,8 +114,8 @@ class HookManager
      *
      * 		@param		string	$method			Name of method hooked ('doActions', 'printSearchForm', 'showInputField', ...)
      * 	    @param		array	$parameters		Array of parameters
-     * 		@param		Object	&$object		Object to use hooks on
-     * 	    @param		string	&$action		Action code on calling page ('create', 'edit', 'view', 'add', 'update', 'delete'...)
+     * 		@param		Object	$object		Object to use hooks on
+     * 	    @param		string	$action		Action code on calling page ('create', 'edit', 'view', 'add', 'update', 'delete'...)
      * 		@return		mixed					For doActions,formObjectOptions,pdf_xxx:    								Return 0 if we want to keep standard actions, >0 if if want to stop standard actions, <0 means KO.
      * 											For printSearchForm,printLeftBlock,printTopRightMenu,formAddObjectLine,...: Return HTML string. TODO Deprecated. Must always return an int and things to print into ->resprints.
      *                                          Can also return some values into an array ->results.
@@ -131,11 +131,14 @@ class HookManager
         // Define type of hook ('output', 'returnvalue' or 'addreplace'). 'addreplace' should be type for all hooks. 'output' and 'returnvalue' are deprecated.
         $hooktype='output';
         if (preg_match('/^pdf_/',$method)) $hooktype='returnvalue';	// pdf_xxx except pdf_writelinedesc are returnvalue hooks. When there is 2 hooks of this type, only last one win.
+        if ($method =='insertExtraFields') $hooktype='returnvalue';
         if (in_array(
         	$method,
         	array(
+        		'addMoreActionsButtons',
 		        'addStatisticLine',
 		        'doActions',
+        		'formCreateThirdpartyOptions',
 		        'formObjectOptions',
 		        'formattachOptions',
 		        'formBuilddocLineOptions',
@@ -164,7 +167,7 @@ class HookManager
                 	// test to avoid to run twice a hook, when a module implements several active contexts
                     if (in_array($module,$modulealreadyexecuted)) continue;
                     $modulealreadyexecuted[$module]=$module;
-                    // Hooks that return int (doActions, formObjectOptions, pdf_writelinedesc, paymentsupplierinvoices)
+                    // Hooks that must return int (hooks with type 'addreplace')
                     if ($hooktype == 'addreplace')
                     {
                     	$resaction += $actionclassinstance->$method($parameters, $object, $action, $this); // $object and $action can be changed by method ($object->id during creation for example or $action to go back to other action for example)
@@ -221,4 +224,3 @@ class HookManager
 
 }
 
-?>

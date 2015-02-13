@@ -174,7 +174,7 @@ class RssParser
      * 	@param	string	$urlRSS		Url to parse
      * 	@param	int		$maxNb		Max nb of records to get (0 for no limit)
      * 	@param	int		$cachedelay	0=No cache, nb of seconds we accept cache files (cachedir must also be defined)
-     * 	@param	strnig	$cachedir	Directory where to save cache file
+     * 	@param	string	$cachedir	Directory where to save cache file
      *	@return	int					<0 if KO, >0 if OK
      */
     public function parser($urlRSS, $maxNb=0, $cachedelay=60, $cachedir='')
@@ -258,7 +258,7 @@ class RssParser
 	            if (!is_resource($xmlparser)) {
 	                $this->error="ErrorFailedToCreateParser"; return -1;
 	            }
-	
+
 	            xml_set_object($xmlparser, $this);
 	            xml_set_element_handler($xmlparser, 'feed_start_element', 'feed_end_element');
 	            xml_set_character_data_handler($xmlparser, 'feed_cdata');
@@ -268,7 +268,7 @@ class RssParser
 	            //var_dump($rss->_format);exit;
 	        }
         }
-        
+
         // If $rss loaded
         if ($rss)
         {
@@ -452,7 +452,7 @@ class RssParser
      *
      * 	@param	string		$p			Start
      *  @param	string		$element	Tag
-     *  @param	array		&$attrs		Attributes of tags
+     *  @param	array		$attrs		Attributes of tags
      *  @return	void
      */
     function feed_start_element($p, $element, &$attrs)
@@ -644,7 +644,7 @@ class RssParser
     /**
      * 	To concat 2 string with no warning if an operand is not defined
      *
-     * 	@param	string	&$str1		Str1
+     * 	@param	string	$str1		Str1
      *  @param	string	$str2		Str2
      *  @return	string				String cancatenated
      */
@@ -722,7 +722,7 @@ class RssParser
 /**
  * Function to convert an XML object into an array
  *
- * @param	string	$xml		Xml
+ * @param	SimpleXMLElement	$xml		Xml
  * @return	void
  */
 function xml2php($xml)
@@ -775,4 +775,3 @@ function xml2php($xml)
 
 }
 
-?>

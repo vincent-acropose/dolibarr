@@ -79,7 +79,7 @@ print '<br>';
 
 $head=agenda_prepare_head();
 
-dol_fiche_head($head, 'xcal', $langs->trans("Agenda"));
+dol_fiche_head($head, 'xcal', $langs->trans("Agenda"), 0, 'action');
 
 print $langs->trans("AgendaSetupOtherDesc")."<br>\n";
 print "<br>\n";
@@ -196,4 +196,3 @@ if (! empty($conf->use_javascript_ajax))
 
 llxFooter();
 $db->close();
-?>
