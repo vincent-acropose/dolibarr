@@ -1535,11 +1535,11 @@ class Form
 			else if ($objp->stock <= 0) $opt.= ' class="product_line_stock_too_low"';
         }
         $opt.= '>';
-        $opt.= $objp->ref.' - '.dol_trunc($label,32).' - ';
+        $opt.= $objp->ref.' - '.dol_trunc($label,80).' - ';
 
         $objRef = $objp->ref;
         if (! empty($filterkey) && $filterkey != '') $objRef=preg_replace('/('.preg_quote($filterkey).')/i','<strong>$1</strong>',$objRef,1);
-        $outval.=$objRef.' - '.dol_trunc($label,32).' - ';
+        $outval.=$objRef.' - '.dol_trunc($label,80).' - ';
 
         $found=0;
 

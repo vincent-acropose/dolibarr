@@ -229,9 +229,13 @@ else
 }
 $sql.= ' ORDER BY ';
 $listfield=explode(',',$sortfield);
-foreach ($listfield as $key => $value) $sql.= $listfield[$key].' '.$sortorder.',';
-$sql.= ' f.rowid DESC ';
-
+if(empty($listfield)) {
+	$sql.=' f.ref DESC ';
+}
+else{
+	foreach ($listfield as $key => $value) $sql.= $listfield[$key].' '.$sortorder.',';
+	$sql.= ' f.rowid DESC ';
+}
 $nbtotalofrecords = 0;
 if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST))
 {

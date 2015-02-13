@@ -1656,6 +1656,8 @@ class Societe extends CommonObject
     {
         global $conf,$langs;
 
+$maxlen=255;
+
         $name=$this->name?$this->name:$this->nom;
 
 		if ($conf->global->SOCIETE_ADD_REF_IN_LIST && (!empty($withpicto))) {
