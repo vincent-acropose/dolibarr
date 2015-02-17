@@ -82,6 +82,17 @@ if ($action == 'setnote_public')
 	$object->fetch($id);
 	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES),'_public');
 	if ($result < 0) dol_print_error($db,$object->error);
+	
+	//on copie-colle la note dans la réception si elle existe
+	$object->fetchObjectLinked();
+	foreach($object->linkedObjectsIds as $type => $TId){
+		if($type === "delivery"){
+			$delivery = new Livraison($db);
+			$delivery->fetch($TId[0]);
+			$result=$delivery->update_note(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES),'_public');
+			if ($result < 0) dol_print_error($db,$delivery->error);
+		}
+	}
 }
 
 else if ($action == 'setnote_private')
@@ -89,6 +100,17 @@ else if ($action == 'setnote_private')
 	$object->fetch($id);
 	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_private'), ENT_QUOTES),'_private');
 	if ($result < 0) dol_print_error($db,$object->error);
+	
+	//on copie-colle la note dans la réception si elle existe
+	$object->fetchObjectLinked();
+	foreach($object->linkedObjectsIds as $type => $TId){
+		if($type === "delivery"){
+			$delivery = new Livraison($db);
+			$delivery->fetch($TId[0]);
+			$result=$delivery->update_note(dol_html_entity_decode(GETPOST('note_private'), ENT_QUOTES),'_private');
+			if ($result < 0) dol_print_error($db,$delivery->error);
+		}
+	}
 }
 
 
