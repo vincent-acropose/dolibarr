@@ -157,7 +157,7 @@ else if ($action == 'setnote_private' && $user->rights->fournisseur->commande->c
 	if ($result < 0) dol_print_error($db,$object->error);
 }
 
-else if ($action == 'reopen' && $user->rights->fournisseur->commande->approuver)
+else if ($action == 'reopen' && $user->rights->fournisseur->commande->valider)
 {
     if (in_array($object->statut, array(1, 5, 6, 7, 9)))
     {
