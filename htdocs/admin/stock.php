@@ -78,6 +78,11 @@ if($action == 'USE_VIRTUAL_STOCK') {
     $res = dolibarr_set_const($db, "USE_VIRTUAL_STOCK", GETPOST('USE_VIRTUAL_STOCK','alpha'),'chaine',0,'',$conf->entity);
 }
 
+
+if($action == 'INDEPENDANT_SUBPRODUCT_STOCK') {
+    $res = dolibarr_set_const($db, "INDEPENDANT_SUBPRODUCT_STOCK", GETPOST('INDEPENDANT_SUBPRODUCT_STOCK','alpha'),'chaine',0,'',$conf->entity);
+}
+
 if($action)
 {
 	if (! $res > 0) $error++;
@@ -267,6 +272,26 @@ print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">'
 print '</form>';
 print "</td>\n";
 print "</tr>\n";
+
+if($conf->global->PRODUIT_SOUSPRODUITS) {
+
+	$var=!$var;
+	
+	print "<tr ".$bc[$var].">";
+	print '<td width="60%">'.$langs->trans("IndependantSubProductStock").'</td>';
+	
+	print '<td width="160" align="right">';
+	print "<form method=\"post\" action=\"stock.php\">";
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print "<input type=\"hidden\" name=\"action\" value=\"INDEPENDANT_SUBPRODUCT_STOCK\">";
+	print $form->selectyesno("INDEPENDANT_SUBPRODUCT_STOCK",$conf->global->INDEPENDANT_SUBPRODUCT_STOCK,1);
+	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+	print '</form>';
+	print "</td>\n";
+	print "</tr>\n";
+	
+}
+
 print '</table>';
 
 $db->close();
