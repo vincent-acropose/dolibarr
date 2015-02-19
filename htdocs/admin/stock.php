@@ -324,14 +324,16 @@ if (! empty($conf->global->STOCK_CALCULATE_ON_SHIPMENT)
 	|| ! empty($conf->global->STOCK_CALCULATE_ON_SUPPLIER_DISPATCH_ORDER)
 	) $virtualdiffersfromphysical=1;		// According to increase/decrease stock options, virtual and physical stock may differs.
 
+print '<br>';
+print '<table class="noborder" width="100%">';
+print '<tr class="liste_titre">';
+print "  <td>".$langs->trans("RuleForStockReplenishment")." ".img_help('help',$langs->trans("VirtualDiffersFromPhysical"))."</td>\n";
+print "  <td align=\"right\" width=\"160\">&nbsp;</td>\n";
+print '</tr>'."\n";
+
 if ($virtualdiffersfromphysical)
 {
-	print '<br>';
-	print '<table class="noborder" width="100%">';
-	print '<tr class="liste_titre">';
-	print "  <td>".$langs->trans("RuleForStockReplenishment")." ".img_help('help',$langs->trans("VirtualDiffersFromPhysical"))."</td>\n";
-	print "  <td align=\"right\" width=\"160\">&nbsp;</td>\n";
-	print '</tr>'."\n";
+
 	$var = !$var;
 	print "<tr ".$bc[$var].">";
 	print '<td width="60%">'.$langs->trans("UseVirtualStockByDefault").'</td>';
@@ -344,9 +346,29 @@ if ($virtualdiffersfromphysical)
 	print '</form>';
 	print "</td>\n";
 	print "</tr>\n";
-	print '</table>';
+
 }
 
+if($conf->global->PRODUIT_SOUSPRODUITS) {
+
+	$var=!$var;
+
+	print "<tr ".$bc[$var].">";
+	print '<td width="60%">'.$langs->trans("IndependantSubProductStock").'</td>';
+
+	print '<td width="160" align="right">';
+	print "<form method=\"post\" action=\"stock.php\">";
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print "<input type=\"hidden\" name=\"action\" value=\"INDEPENDANT_SUBPRODUCT_STOCK\">";
+	print $form->selectyesno("INDEPENDANT_SUBPRODUCT_STOCK",$conf->global->INDEPENDANT_SUBPRODUCT_STOCK,1);
+	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+	print '</form>';
+	print "</td>\n";
+	print "</tr>\n";
+
+}
+
+print '</table>';
 
 $var=true;
 print '<table class="noborder" width="100%">';
@@ -374,13 +396,13 @@ print '<br>';
 
 /* I keep the option/feature, but hidden to end users for the moment. If feature is used by module, no need to have users see it.
 If not used by a module, I still need to understand in which case user may need this now we can set rule on product page.
-if ($conf->global->PRODUIT_SOUSPRODUITS) 
+if ($conf->global->PRODUIT_SOUSPRODUITS)
 {
 	$var=!$var;
-	
+
 	print "<tr ".$bc[$var].">";
 	print '<td width="60%">'.$langs->trans("IndependantSubProductStock").'</td>';
-	
+
 	print '<td width="160" align="right">';
 	print "<form method=\"post\" action=\"stock.php\">";
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
