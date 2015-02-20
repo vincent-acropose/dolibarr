@@ -92,6 +92,14 @@ if ($sall) {
 $sql.= " GROUP BY c.rowid, c.ref, c.datec, c.date_contrat, c.statut,";
 $sql.= " s.nom, s.rowid";
 $sql.= " ORDER BY $sortfield $sortorder";
+
+$nbtotalofrecords = 0;
+if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST))
+{
+        $result = $db->query($sql);
+        $nbtotalofrecords = $db->num_rows($result);
+}
+
 $sql.= $db->plimit($conf->liste_limit + 1, $offset);
 
 $resql=$db->query($sql);
@@ -100,7 +108,8 @@ if ($resql)
     $num = $db->num_rows($resql);
     $i = 0;
 
-    print_barre_liste($langs->trans("ListOfContracts"), $page, $_SERVER["PHP_SELF"], '&search_contract='.$search_contract.'&search_nom='.$search_nom, $sortfield, $sortorder,'',$num);
+  //print_barre_liste($langs->trans('BillsCustomers').' '.($socid?' '.$soc->nom:''),$page,$_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',$num,$nbtotalofrecords);
+    print_barre_liste($langs->trans("ListOfContracts"), $page, $_SERVER["PHP_SELF"], '&search_contract='.$search_contract.'&search_nom='.$search_nom, $sortfield, $sortorder,'',$num,$nbtotalofrecords);
 
     print '<table class="liste" width="100%">';
 
