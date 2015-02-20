@@ -76,7 +76,7 @@ if ($page == -1) {
 }
 $offset = $conf->liste_limit * $page;
 if (! $sortorder) $sortorder='DESC';
-if (! $sortfield) $sortfield='f.datef';
+if (! $sortfield) $sortfield='f.datef,f.facnumber';
 $limit = $conf->liste_limit;
 
 $pageprev = $page - 1;
@@ -230,12 +230,13 @@ else
 $sql.= ' ORDER BY ';
 $listfield=explode(',',$sortfield);
 if(empty($listfield)) {
-	$sql.=' f.ref DESC ';
+	$sql.=' f.facnumber DESC ';
 }
 else{
 	foreach ($listfield as $key => $value) $sql.= $listfield[$key].' '.$sortorder.',';
 	$sql.= ' f.rowid DESC ';
 }
+//print $sql;
 $nbtotalofrecords = 0;
 if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST))
 {
