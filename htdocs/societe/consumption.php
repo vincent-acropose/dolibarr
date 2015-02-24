@@ -172,7 +172,7 @@ if ($type_element == 'invoice')
 	$tables_from = MAIN_DB_PREFIX."facture as f,".MAIN_DB_PREFIX."facturedet as d";
 	$where = " WHERE f.fk_soc = s.rowid AND s.rowid = ".$socid;
 	$where.= " AND d.fk_facture = f.rowid";
-	$where.= " AND f.entity = ".$conf->entity;
+	$where.= " AND f.entity = ".$conf->entity." AND d.special_code != 104777";
 	$dateprint = 'f.datef';
 	$doc_number='f.facnumber';
 	$thirdTypeSelect='customer';
@@ -185,7 +185,7 @@ if ($type_element == 'order')
 	$tables_from = MAIN_DB_PREFIX."commande as c,".MAIN_DB_PREFIX."commandedet as d";
 	$where = " WHERE c.fk_soc = s.rowid AND s.rowid = ".$socid;
 	$where.= " AND d.fk_commande = c.rowid";
-	$where.= " AND c.entity = ".$conf->entity;
+	$where.= " AND c.entity = ".$conf->entity." AND d.special_code != 104777";
 	$dateprint = 'c.datef';
 	$doc_number='c.ref';
 	$thirdTypeSelect='customer';
