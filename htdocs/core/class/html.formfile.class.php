@@ -76,7 +76,7 @@ class FormFile
         global $conf,$langs, $hookmanager;
         $hookmanager->initHooks(array('formfile'));
 
-        
+
         if (! empty($conf->browser->layout) && $conf->browser->layout != 'classic') $useajax=0;
 
 		if ((! empty($conf->global->MAIN_USE_JQUERY_FILEUPLOAD) && $useajax) || ($useajax==2))
@@ -823,7 +823,7 @@ class FormFile
 	                {
 	                    $relativepath=preg_replace('/^.*\/produit\//','',$file['path']).'/';
 	                }
-					
+
 					$var=!$var;
 					print '<tr '.$bc[$var].'>';
 					print '<td>';
@@ -1301,4 +1301,3 @@ class FormFile
     }
 
 }
-

@@ -509,7 +509,7 @@ foreach ($listofreferent as $key => $value)
 		$idtofilterthirdparty=0;
 		if (! in_array($tablename, array('facture_fourn', 'commande_fourn'))) $idtofilterthirdparty=$object->thirdparty->id;
 
-        	if (empty($conf->global->PROJECT_LINK_DISABLE)) 
+        	if (empty($conf->global->PROJECT_LINK_DISABLE))
         	{
 			$selectList=$formproject->select_element($tablename, $idtofilterthirdparty, 'minwidth200');
 			if (! $selectList || ($selectList<0))
