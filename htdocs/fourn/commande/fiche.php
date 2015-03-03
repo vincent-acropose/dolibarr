@@ -1499,7 +1499,7 @@ elseif (! empty($object->id))
 			}
 			else
 			{
-				if ($object->statut == 0 && $user->rights->fournisseur->commande->creer)
+				if ($user->rights->fournisseur->commande->creer)
 				{
 					print '<tr><td></td><td><a href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&action=edit_extras">'.img_picto('','edit').' '.$langs->trans('Modify').'</a></td></tr>';
 				}
