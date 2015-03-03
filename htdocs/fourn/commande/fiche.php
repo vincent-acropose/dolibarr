@@ -10,7 +10,6 @@
  *
  * This	program	is free	software; you can redistribute it and/or modify
  * it under	the	terms of the GNU General Public	License	as published by
- * the Free	Software Foundation; either	version	2 of the License, or
  * (at your	option)	any	later version.
  *
  * This	program	is distributed in the hope that	it will	be useful,
@@ -104,6 +103,9 @@ $permissionnote=$user->rights->fournisseur->commande->creer;	// Used by the incl
 /*
  * Actions
  */
+
+$parameters = array('socid' => $socid);
+$reshook = $hookmanager->executeHooks('doActions', $parameters, $object, $action);
 
 include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not includ_once
 
