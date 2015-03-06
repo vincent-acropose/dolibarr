@@ -120,7 +120,7 @@ class Facture extends CommonInvoice
      */
     function __construct($db)
     {
-        $this->db = $db;
+        $this->db = &$db;
     }
 
     /**
