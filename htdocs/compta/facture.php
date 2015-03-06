@@ -869,6 +869,7 @@ if (empty($reshook)) {
 								if ($result > 0)
 								{
 									$totalamount = 0;
+									$iFirstLine = -1;
 									$lines = $srcobject->lines;
 									$numlines=count($lines);
 									for ($i=0; $i<$numlines; $i++)
@@ -877,6 +878,7 @@ if (empty($reshook)) {
 										if (empty($lines[$i]->qty)) $qualified=0;	// We discard qty=0, it is an option
 										if (! empty($lines[$i]->special_code)) $qualified=0;	// We discard special_code (frais port, ecotaxe, option, ...)
 										if ($qualified) $totalamount += $lines[$i]->total_ht;
+										if ($qualified && $iFirstLine == -1) $iFirstLine = $i;
 									}
 
 									if ($totalamount != 0) {
@@ -892,19 +894,19 @@ if (empty($reshook)) {
 									$langs->trans('Deposit'),
 									$amountdeposit,		 	// subprice
 									1, 						// quantity
-									$lines [$i]->tva_tx, 0, // localtax1_tx
+									$lines [$iFirstLine]->tva_tx, 0, // localtax1_tx
 									0, 						// localtax2_tx
 									0, 						// fk_product
 									0, 						// remise_percent
 									0, 						// date_start
 									0, 						// date_end
-									0, $lines [$i]->info_bits, // info_bits
+									0, $lines [$iFirstLine]->info_bits, // info_bits
 									0, 						// info_bits
 									'HT',
 									0,
 									0, 						// product_type
 									1,
-									$lines [$i]->special_code,
+									0,
 									$object->origin,
 									0,
 									0,
