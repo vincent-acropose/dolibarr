@@ -116,7 +116,7 @@ class FormProjets
 						$labeltoshow=$obj->nom.' - '.$obj->ref.' - '.$obj->title;
 						//if ($obj->public) $labeltoshow.=' ('.$langs->trans("SharedProject").')';
 						//else $labeltoshow.=' ('.$langs->trans("Private").')';
-						if (!empty($selected) && $selected == $obj->rowid && $obj->fk_statut > 0)
+						if (!empty($selected) && $selected == $obj->rowid)
 						{
 							$out.= '<option value="'.$obj->rowid.'" selected="selected">'.$labeltoshow.'</option>';
 						}
