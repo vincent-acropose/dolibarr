@@ -1605,6 +1605,7 @@ class Facture extends CommonInvoice
 	            // Call trigger
 	            $result=$this->call_trigger('BILL_PAYED',$user);
 	            if ($result < 0) $error++;
+               
 	            // End call triggers
 			}
 			else
