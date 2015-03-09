@@ -1466,22 +1466,24 @@ class pdf_crabe_ATM extends ModelePDFFactures
 
 	// SPECIFIQUE ATM
 	function add_infos_prelevement(&$object) {
-		global $conf, $db;
+		global $conf;
 		if(!$conf->sepa->enabled || $object->mode_reglement_id != 3) return false;
 		
-		$sql = "SELECT datedeal, rum FROM ".MAIN_DB_PREFIX."sepa 
+		$db = $this->db;
+		
+		$sql = "SELECT dateedeal, rum FROM ".MAIN_DB_PREFIX."sepa 
 				WHERE active = 1
 				AND idclient = ".$object->socid;
 		
 		$resql = $db->query($sql);
 		
 		if($objp = $db->fetch_object($resql)) {
-			$datedeal = $objp->datedeal;
+			$dateedeal = $objp->dateedeal;
 			$rum = $objp->rum;
 			
 			$label = "N° ICS : ".$conf->global->PRELEVEMENT_NUMERO_NATIONAL_EMETTEUR_SEPA;
 			$label.= " - N° RUM : ".$rum;
-			$label.= " - Date signature mandat : ".$datedeal;
+			$label.= " - Date signature mandat : ".dol_print_date($db->jdate($dateedeal), 'day');
 			
 			$label.= "\n\n" . $conf->global->FACTURE_FREE_TEXT;
 			
