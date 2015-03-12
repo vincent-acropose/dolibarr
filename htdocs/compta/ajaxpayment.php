@@ -54,16 +54,28 @@ $amountPayment = $amountPayment!='' ? 	( is_numeric(price2num($amountPayment))	?
 // Clean checkamounts
 foreach ($amounts as $key => $value)
 {
-	$value = price2num($value);
-	$amounts[$key]=$value;
-	if (empty($value)) unset($amounts[$key]);
+	if(!strstr($key, 'devise')){
+		$value = price2num($value);
+		$amounts[$key]=$value;
+		if (empty($value)) unset($amounts[$key]);
+	}
+	else{
+		unset($amounts[$key]);
+	}
 }
 // Clean remains
 foreach ($remains as $key => $value)
 {
-	$value = price2num($value);
-	$remains[$key]=(($invoice_type)==2?-1:1)*$value;
-	if (empty($value)) unset($remains[$key]);
+
+	if(!strstr($key, 'devise')){	
+		$value = price2num($value);
+		$remains[$key]=(($invoice_type)==2?-1:1)*$value;
+		if (empty($value)) unset($remains[$key]);
+	}
+	else{
+		unset($remains[$key]);
+	}
+
 }
 
 // Treatment

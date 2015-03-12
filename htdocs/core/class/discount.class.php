@@ -164,6 +164,15 @@ class DiscountAbsolute
         if ($resql)
         {
             $this->id=$this->db->last_insert_id(MAIN_DB_PREFIX."societe_remise_except");
+		if (! $notrigger)
+	        {
+	            // Appel des triggers
+	            dol_include_once('/core/class/interfaces.class.php');
+	            $interface=new Interfaces($this->db);
+	            $result=$interface->run_triggers('DISCOUNT_CREATE',$this,$user,$langs,$conf);
+	            if ($result < 0) { $error++; $this->errors=$interface->errors; }
+	            // Fin appel triggers
+	        }
             return $this->id;
         }
         else
