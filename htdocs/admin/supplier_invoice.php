@@ -200,7 +200,7 @@ print "<br>";
 
 $head = supplierorder_admin_prepare_head(null);
 
-dol_fiche_head($head, 'invoice', $langs->trans("ModuleSetup"));
+dol_fiche_head($head, 'invoice', $langs->trans("Suppliers"), 0, 'company');
 
 
 // Supplier invoice numbering module
@@ -474,4 +474,3 @@ print '</form>';
 
 $db->close();
 llxFooter();
-?>

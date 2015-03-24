@@ -108,6 +108,47 @@ UPDATE llx_product p SET p.stock= (SELECT SUM(ps.reel) FROM llx_product_stock ps
 -- VMYSQL DELETE from llx_menu where module = 'margins' and url = '/margin/index.php' and not exists (select * from llx_const where name = 'MAIN_MODULE_MARGIN' or name = 'MAIN_MODULE_MARGINS');
 
 
+ALTER TABLE llx_product_fournisseur_price DROP COLUMN fk_product_fournisseur;
+ALTER TABLE llx_product_fournisseur_price DROP FOREIGN KEY fk_product_fournisseur;
+
+
+-- Fix: deprecated tag to new one
+update llx_opensurvey_sondage set format = 'D' where format = 'D+';
+update llx_opensurvey_sondage set format = 'A' where format = 'A+';
+update llx_opensurvey_sondage set tms = now();
+
+-- ALTER TABLE llx_facture_fourn ALTER COLUMN fk_cond_reglement DROP NOT NULL;
+
+
+update llx_product set barcode = null where barcode in ('', '-1', '0');
+update llx_societe set barcode = null where barcode in ('', '-1', '0');
+
+
+-- Sequence to removed duplicated values of barcode in llx_product. Use serveral times if you still have duplicate.
+drop table tmp_product_double;
+--select barcode, max(rowid) as max_rowid, count(rowid) as count_rowid from llx_product where barcode is not null group by barcode having count(rowid) >= 2;
+create table tmp_product_double as (select barcode, max(rowid) as max_rowid, count(rowid) as count_rowid from llx_product where barcode is not null group by barcode having count(rowid) >= 2);
+--select * from tmp_product_double;
+update llx_product set barcode = null where (rowid, barcode) in (select max_rowid, barcode from tmp_product_double);
+drop table tmp_product_double;
+
+
+-- Sequence to removed duplicated values of barcode in llx_societe. Use serveral times if you still have duplicate.
+drop table tmp_societe_double;
+--select barcode, max(rowid) as max_rowid, count(rowid) as count_rowid from llx_societe where barcode is not null group by barcode having count(rowid) >= 2;
+create table tmp_societe_double as (select barcode, max(rowid) as max_rowid, count(rowid) as count_rowid from llx_societe where barcode is not null group by barcode having count(rowid) >= 2);
+--select * from tmp_societe_double;
+update llx_societe set barcode = null where (rowid, barcode) in (select max_rowid, barcode from tmp_societe_double);
+drop table tmp_societe_double;
+
+
+UPDATE llx_projet_task SET fk_task_parent = 0 WHERE fk_task_parent = rowid
+
+
+UPDATE llx_actioncomm set fk_user_action = fk_user_done where fk_user_done > 0 and (fk_user_action is null or fk_user_action = 0);
+UPDATE llx_actioncomm set fk_user_action = fk_user_author where fk_user_author > 0 and (fk_user_action is null or fk_user_action = 0);
+
+
 -- Requests to clean old tables or fields
 
 -- DROP TABLE llx_c_methode_commande_fournisseur;
@@ -115,8 +156,14 @@ UPDATE llx_product p SET p.stock= (SELECT SUM(ps.reel) FROM llx_product_stock ps
 -- DROP TABLE llx_cond_reglement;
 -- DROP TABLE llx_expedition_methode;
 -- DROP TABLE llx_product_fournisseur;
--- ALTER TABLE llx_product_fournisseur_price DROP COLUMN fk_product_fournisseur;
-ALTER TABLE llx_product_fournisseur_price DROP FOREIGN KEY fk_product_fournisseur;
+
+-- To replace amount on all invoice and lines when forgetting to apply a 20% vat
+-- update llx_facturedet set tva_tx = 20 where tva_tx = 0;
+-- update llx_facturedet set total_ht = round(total_ttc / 1.2, 5) where total_ht = total_ttc;
+-- update llx_facturedet set total_tva = total_ttc - total_ht where total_vat = 0;
+-- update llx_facture set total = round(total_ttc / 1.2, 5) where total_ht = total_ttc;
+-- update llx_facture set tva = total_ttc - total where tva = 0;
 
 
-UPDATE llx_projet_task SET fk_task_parent = 0 WHERE fk_task_parent = rowid
+
+

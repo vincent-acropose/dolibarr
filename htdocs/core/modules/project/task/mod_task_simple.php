@@ -67,7 +67,7 @@ class mod_task_simple extends ModeleNumRefTask
      */
     function canBeActivated()
     {
-    	global $conf,$langs;
+    	global $conf,$langs,$db;
 
         $coyymm=''; $max='';
 
@@ -152,4 +152,3 @@ class mod_task_simple extends ModeleNumRefTask
     }
 }
 
-?>

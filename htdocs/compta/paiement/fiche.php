@@ -3,6 +3,7 @@
  * Copyright (C) 2004-2011 Laurent Destailleur   <eldy@users.sourceforge.net>
  * Copyright (C) 2005      Marc Barilley / Ocebo <marc@ocebo.com>
  * Copyright (C) 2005-2012 Regis Houssin         <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013		Marcos García		<marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +30,7 @@ require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 require_once DOL_DOCUMENT_ROOT .'/core/modules/facture/modules_facture.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/payments.lib.php';
 if (! empty($conf->banque->enabled)) require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
 $langs->load('bills');
@@ -47,6 +49,9 @@ $mesg='';
 
 $object = new Paiement($db);
 
+
+$hookmanager = new HookManager($db);
+$hookmanager->initHooks(array('viewpaiementcard'));
 
 /*
  * Actions
@@ -173,19 +178,9 @@ if ($result <= 0)
 
 $form = new Form($db);
 
-$h=0;
+$head = payment_prepare_head($object);
 
-$head[$h][0] = $_SERVER['PHP_SELF'].'?id='.$id;
-$head[$h][1] = $langs->trans("Card");
-$hselected = $h;
-$h++;
-
-$head[$h][0] = DOL_URL_ROOT.'/compta/paiement/info.php?id='.$id;
-$head[$h][1] = $langs->trans("Info");
-$h++;
-
-
-dol_fiche_head($head, $hselected, $langs->trans("PaymentCustomerInvoice"), 0, 'payment');
+dol_fiche_head($head, 'payment', $langs->trans("PaymentCustomerInvoice"), 0, 'payment');
 
 /*
  * Confirmation de la suppression du paiement
@@ -277,6 +272,9 @@ if (! empty($conf->banque->enabled))
     }
 }
 
+$parameters=array();
+$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action); // Note that $action and $object may have been modified by hook
+
 print '</table>';
 
 
@@ -316,7 +314,7 @@ if ($resql)
 		{
 			$objp = $db->fetch_object($resql);
 			$var=!$var;
-			print '<tr '.$bc[$var].'>';
+			print '<tr id="row-'.$objp->facid.'" '.$bc[$var].'>';
 
             $invoice=new Facture($db);
             $invoice->fetch($objp->facid);
@@ -357,6 +355,9 @@ if ($resql)
 			}
 			$total = $total + $objp->amount;
 			$i++;
+				
+			$parameters=array();
+			$reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$objp,$action); // Note that $action and $object may have been modified by hook
 		}
 	}
 	$var=!$var;
@@ -409,4 +410,3 @@ print '</div>';
 llxFooter();
 
 $db->close();
-?>

@@ -172,9 +172,9 @@ function dol_shutdown()
  *  Return value of a param into GET or POST supervariable
  *
  *  @param	string	$paramname   Name of parameter to found
- *  @param	string	$check	     Type of check (''=no check,  'int'=check it's numeric, 'alpha'=check it's alpha only, 'array'=check it's array)
+ *  @param	string	$check	     Type of check (''=no check,  'int'=check it's numeric, 'alpha'=check it's text and sign, 'aZ'=check it's a-z only, 'array'=check it's array)
  *  @param	int		$method	     Type of method (0 = get then post, 1 = only get, 2 = only post, 3 = post then get, 4 = post then get then cookie)
- *  @return string      		 Value found, or '' if check fails
+ *  @return string||string[]      		 Value found, or '' if check fails
  */
 function GETPOST($paramname,$check='',$method=0)
 {
@@ -198,6 +198,13 @@ function GETPOST($paramname,$check='',$method=0)
 			if (preg_match('/"/',$out)) $out='';
 			else if (preg_match('/\.\.\//',$out)) $out='';
 		}
+		elseif ($check == 'aZ')
+		{
+			$out=trim($out);
+			// '"' is dangerous because param in url can close the href= or src= and add javascript functions.
+			// '../' is dangerous because it allows dir transversals
+			if (preg_match('/[^a-z]+/i',$out)) $out='';
+		}
 		elseif ($check == 'array')
 		{
 			if (! is_array($out) || empty($out)) $out=array();
@@ -217,7 +224,8 @@ function GETPOST($paramname,$check='',$method=0)
  */
 function dol_getprefix()
 {
-	return dol_hash($_SERVER["SERVER_NAME"].$_SERVER["DOCUMENT_ROOT"].DOL_DOCUMENT_ROOT.DOL_URL_ROOT);
+	if (isset($_SERVER["SERVER_NAME"]) && isset($_SERVER["DOCUMENT_ROOT"])) return dol_hash($_SERVER["SERVER_NAME"].$_SERVER["DOCUMENT_ROOT"].DOL_DOCUMENT_ROOT.DOL_URL_ROOT);
+	else return dol_hash(DOL_DOCUMENT_ROOT.DOL_URL_ROOT);
 }
 
 /**
@@ -309,16 +317,12 @@ function dol_buildpath($path, $type=0)
  *
  * 	@param	object	$object		Object to clone
  *	@return object				Object clone
+ *  @deprecated Dolibarr no longer supports PHP4, you can now use native function
  */
 function dol_clone($object)
 {
 	dol_syslog("Functions.lib::dol_clone Clone object");
 
-	// We create dynamically a clone function, making a =
-	if (version_compare(phpversion(), '5.0') < 0 && ! function_exists('clone'))
-	{
-		eval('function clone($object){return($object);}');
-	}
 	$myclone=clone($object);
 	return $myclone;
 }
@@ -369,38 +373,43 @@ function dol_string_unaccent($str)
 {
 	if (utf8_check($str))
 	{
+		// See http://www.utf8-chartable.de/
 		$string = rawurlencode($str);
 		$replacements = array(
-		'%C3%80' => 'A','%C3%81' => 'A',
-		'%C3%88' => 'E','%C3%89' => 'E',
-		'%C3%8C' => 'I','%C3%8D' => 'I',
-		'%C3%92' => 'O','%C3%93' => 'O',
-		'%C3%99' => 'U','%C3%9A' => 'U',
-		'%C3%A0' => 'a','%C3%A1' => 'a','%C3%A2' => 'a',
+		'%C3%80' => 'A','%C3%81' => 'A','%C3%82' => 'A','%C3%83' => 'A','%C3%84' => 'A','%C3%85' => 'A',
+		'%C3%88' => 'E','%C3%89' => 'E','%C3%8A' => 'E','%C3%8B' => 'E',
+		'%C3%8C' => 'I','%C3%8D' => 'I','%C3%8E' => 'I','%C3%8F' => 'I',
+		'%C3%92' => 'O','%C3%93' => 'O','%C3%94' => 'O','%C3%95' => 'O','%C3%96' => 'O',
+		'%C3%99' => 'U','%C3%9A' => 'U','%C3%9B' => 'U','%C3%9C' => 'U',
+		'%C3%A0' => 'a','%C3%A1' => 'a','%C3%A2' => 'a','%C3%A3' => 'a','%C3%A4' => 'a','%C3%A5' => 'a',
+		'%C3%A7' => 'c',
 		'%C3%A8' => 'e','%C3%A9' => 'e','%C3%AA' => 'e','%C3%AB' => 'e',
-		'%C3%AC' => 'i','%C3%AD' => 'i','%C3%AE' => 'i',
-		'%C3%B2' => 'o','%C3%B3' => 'o',
-		'%C3%B9' => 'u','%C3%BA' => 'u'
+		'%C3%AC' => 'i','%C3%AD' => 'i','%C3%AE' => 'i','%C3%AF' => 'i',
+		'%C3%B1' => 'n',
+		'%C3%B2' => 'o','%C3%B3' => 'o','%C3%B4' => 'o','%C3%B5' => 'o','%C3%B6' => 'o',
+		'%C3%B9' => 'u','%C3%BA' => 'u','%C3%BB' => 'u','%C3%BC' => 'u',
+		'%C3%BF' => 'y'
 		);
 		$string=strtr($string, $replacements);
 		return rawurldecode($string);
 	}
 	else
 	{
+		// See http://www.ascii-code.com/
 		$string = strtr(
 			$str,
-			"\xC0\xC1\xC2\xC3\xC5\xC7
+			"\xC0\xC1\xC2\xC3\xC4\xC5\xC7
 			\xC8\xC9\xCA\xCB\xCC\xCD\xCE\xCF\xD0\xD1
 			\xD2\xD3\xD4\xD5\xD8\xD9\xDA\xDB\xDD
-			\xE0\xE1\xE2\xE3\xE5\xE7\xE8\xE9\xEA\xEB
+			\xE0\xE1\xE2\xE3\xE4\xE5\xE7\xE8\xE9\xEA\xEB
 			\xEC\xED\xEE\xEF\xF0\xF1\xF2\xF3\xF4\xF5\xF8
-			\xF9\xFA\xFB\xFD\xFF",
-			"AAAAAC
+			\xF9\xFA\xFB\xFC\xFD\xFF",
+			"AAAAAAC
 			EEEEIIIIDN
 			OOOOOUUUY
-			aaaaaceeee
+			aaaaaaceeee
 			iiiidnooooo
-			uuuyy"
+			uuuuyy"
 		);
 		$string = strtr($string, array("\xC4"=>"Ae", "\xC6"=>"AE", "\xD6"=>"Oe", "\xDC"=>"Ue", "\xDE"=>"TH", "\xDF"=>"ss", "\xE4"=>"ae", "\xE6"=>"ae", "\xF6"=>"oe", "\xFC"=>"ue", "\xFE"=>"th"));
 		return $string;
@@ -430,13 +439,19 @@ function dol_string_nospecial($str,$newstr='_',$badchars='')
 /**
  *  Returns text escaped for inclusion into javascript code
  *
- *  @param       string		$stringtoescape		String to escape
- *  @return      string     		 			Escaped string
+ *  @param      string		$stringtoescape		String to escape
+ *  @param		string		$mode				0=Escape also ' and " into ', 1=Escape ' but not " for usage into 'string', 2=Escape " but not ' for usage into "string", 3=Escape ' and " with \
+ *  @return     string     		 				Escaped string. Both ' and " are escaped into ' if they are escaped.
  */
-function dol_escape_js($stringtoescape)
+function dol_escape_js($stringtoescape, $mode=0)
 {
 	// escape quotes and backslashes, newlines, etc.
-	$substitjs=array("&#039;"=>"\\'",'\\'=>'\\\\',"'"=>"\\'",'"'=>"\\'","\r"=>'\\r',"\n"=>'\\n','</'=>'<\/');
+	$substitjs=array("&#039;"=>"\\'",'\\'=>'\\\\',"\r"=>'\\r',"\n"=>'\\n');
+	//$substitjs['</']='<\/';	// We removed this. Should be useless.
+	if (empty($mode)) { $substitjs["'"]="\\'"; $substitjs['"']="\\'"; }
+	else if ($mode == 1) $substitjs["'"]="\\'";
+	else if ($mode == 2) { $substitjs['"']='\\"'; }
+	else if ($mode == 3) { $substitjs["'"]="\\'"; $substitjs['"']="\\\""; }
 	return strtr($stringtoescape, $substitjs);
 }
 
@@ -447,13 +462,15 @@ function dol_escape_js($stringtoescape)
  *  @param      string		$stringtoescape		String to escape
  *  @param		int			$keepb				Do not clean b tags
  *  @return     string     				 		Escaped string
+ *
+ *  @see		dol_string_nohtmltag
  */
 function dol_escape_htmltag($stringtoescape,$keepb=0)
 {
 	// escape quotes and backslashes, newlines, etc.
 	$tmp=dol_html_entity_decode($stringtoescape,ENT_COMPAT,'UTF-8');
 	if ($keepb) $tmp=strtr($tmp, array("\r"=>'\\r',"\n"=>'\\n'));
-	else $tmp=strtr($tmp, array("\r"=>'\\r',"\n"=>'\\n',"<b>"=>'','</b>'=>''));
+	else $tmp=strtr($tmp, array("\r"=>'\\r',"\n"=>'\\n',"<b>"=>'','</b>'=>'','"'=>'&quote;'));
 	return dol_htmlentities($tmp,ENT_COMPAT,'UTF-8');
 }
 
@@ -572,9 +589,9 @@ function dol_syslog($message, $level = LOG_INFO, $ident = 0, $suffixinfilename='
  *	@param	array	$links				Array of tabs
  *	@param	string	$active     		Active tab name (document', 'info', 'ldap', ....)
  *	@param  string	$title      		Title
- *	@param  int		$notab				0=Add tab header, 1=no tab header
+ *	@param  int		$notab				0=Add tab header, 1=no tab header. If you set this to 1, using dol_fiche_end() to close tab is not required.
  * 	@param	string	$picto				Add a picto on tab title
- *	@param	int		$pictoisfullpath	If 1, image path is a full path. If you set this to 1, you can use url returned by dol_build_path('/mymodyle/img/myimg.png',1) for $picto.
+ *	@param	int		$pictoisfullpath	If 1, image path is a full path. If you set this to 1, you can use url returned by dol_buildpath('/mymodyle/img/myimg.png',1) for $picto.
  * 	@return	void
  */
 function dol_fiche_head($links=array(), $active='0', $title='', $notab=0, $picto='', $pictoisfullpath=0)
@@ -588,9 +605,9 @@ function dol_fiche_head($links=array(), $active='0', $title='', $notab=0, $picto
  *	@param	array	$links				Array of tabs
  *	@param	int		$active     		Active tab name
  *	@param  string	$title      		Title
- *	@param  int		$notab				0=Add tab header, 1=no tab header
+ *	@param  int		$notab				0=Add tab header, 1=no tab header. If you set this to 1, using dol_fiche_end() to close tab is not required.
  * 	@param	string	$picto				Add a picto on tab title
- *	@param	int		$pictoisfullpath	If 1, image path is a full path. If you set this to 1, you can use url returned by dol_build_path('/mymodyle/img/myimg.png',1) for $picto.
+ *	@param	int		$pictoisfullpath	If 1, image path is a full path. If you set this to 1, you can use url returned by dol_buildpath('/mymodyle/img/myimg.png',1) for $picto.
  * 	@return	void
  */
 function dol_get_fiche_head($links=array(), $active='0', $title='', $notab=0, $picto='', $pictoisfullpath=0)
@@ -622,7 +639,9 @@ function dol_get_fiche_head($links=array(), $active='0', $title='', $notab=0, $p
 	// Show tabs
 	for ($i = 0 ; $i <= $maxkey ; $i++)
 	{
-		$out.='<div class="inline-block tabsElem">';
+		$isactive=(is_numeric($active) && $i == $active) || (! is_numeric($active) && $active == $links[$i][2]);
+
+		$out.='<div class="inline-block tabsElem'.((! $isactive && ! empty($conf->global->MAIN_HIDE_INACTIVETAB_ON_PRINT))?' hideonprint':'').'">';
 		if (isset($links[$i][2]) && $links[$i][2] == 'image')
 		{
 			if (!empty($links[$i][0]))
@@ -637,10 +656,9 @@ function dol_get_fiche_head($links=array(), $active='0', $title='', $notab=0, $p
 		else if (! empty($links[$i][1]))
 		{
 			//print "x $i $active ".$links[$i][2]." z";
-			if ((is_numeric($active) && $i == $active)
-			|| (! is_numeric($active) && $active == $links[$i][2]))
+			if ($isactive)
 			{
-				$out.='<a data-role="button" id="active" class="tab inline-block" href="'.$links[$i][0].'">'.$links[$i][1].'</a>'."\n";
+				$out.='<a data-role="button"'.(! empty($links[$i][2])?' id="'.$links[$i][2].'"':'').' class="tabactive tab inline-block" href="'.$links[$i][0].'">'.$links[$i][1].'</a>'."\n";
 			}
 			else
 			{
@@ -701,10 +719,13 @@ function dol_bc($var,$moreclass='')
  *      @param  Object		$object         A company or contact object
  * 	    @param	int			$withcountry	1=Add country into address string
  *      @param	string		$sep			Separator to use to build string
+ *      @param	Tranlsate	$outputlangs	Object lang that contains language for text translation.
  *      @return string          			Formated string
  */
-function dol_format_address($object,$withcountry=0,$sep="\n")
+function dol_format_address($object,$withcountry=0,$sep="\n",$outputlangs='')
 {
+	global $conf,$langs;
+
 	$ret='';
 	$countriesusingstate=array('AU','US','IN','GB','ES','UK','TR');
 
@@ -748,8 +769,8 @@ function dol_format_address($object,$withcountry=0,$sep="\n")
 			$ret.=", ".$object->state;
 		}
 	}
-
-	if ($withcountry) $ret.=($object->country?$sep.$object->country:'');
+	if (! is_object($outputlangs)) $outputlangs=$langs;
+	if ($withcountry) $ret.=($object->country_code?$sep.$outputlangs->convToOutputCharset($outputlangs->transnoentitiesnoconv("Country".$object->country_code)):'');
 
 	return $ret;
 }
@@ -777,7 +798,7 @@ function dol_strftime($fmt, $ts=false, $is_gmt=false)
  * 	Return charset is always UTF-8, except if encodetoouput is defined. In this case charset is output charset
  *
  *	@param	int			$time			GM Timestamps date
- *	@param	string		$format      	Output date format
+ *	@param	string		$format      	Output date format (tag of strftime function)
  *										"%d %b %Y",
  *										"%d/%m/%Y %H:%M",
  *										"%d/%m/%Y %H:%M:%S",
@@ -987,7 +1008,7 @@ function dol_getdate($timestamp,$fast=false)
  *	@param	int			$month			Month (1 to 12)
  *	@param	int			$day			Day (1 to 31)
  *	@param	int			$year			Year
- *	@param	int			$gm				true or 1=Input informations are GMT values, false or 0 or 'server' = local to server TZ, 'user' = local to user TZ
+ *	@param	mixed		$gm				True or 1 or 'gmt'=Input informations are GMT values, False or 0 or 'server' = local to server TZ, 'user' = local to user TZ
  *	@param	int			$check			0=No check on parameters (Can use day 32, etc...)
  *	@return	int							Date as a timestamp, '' if error
  * 	@see 								dol_print_date, dol_stringtotime, dol_getdate
@@ -1013,18 +1034,11 @@ function dol_mktime($hour,$minute,$second,$month,$day,$year,$gm=false,$check=1)
 		if ($second< 0 || $second > 60) return '';
 	}
 
-	if (method_exists('DateTime','getTimestamp') && empty($conf->global->MAIN_OLD_DATE))
+	if (method_exists('DateTime','getTimestamp'))
 	{
 		if (empty($gm) || $gm === 'server')
 		{
-			// If you can't set timezone of your PHP, set this constant. Better is to set it to UTC.
-			// In future, this constant will be forced to 'UTC' so PHP server timezone will not have effect anymore.
-			if (! empty($conf->global->MAIN_SERVER_TZ))
-			{
-				if ($conf->global->MAIN_SERVER_TZ != 'auto') $default_timezone=$conf->global->MAIN_SERVER_TZ;
-				else $default_timezone=@date_default_timezone_get();
-			}
-			else $default_timezone=@date_default_timezone_get();
+			$default_timezone=@date_default_timezone_get();
 			$localtz = new DateTimeZone($default_timezone);
 		}
 		else if ($gm === 'user')
@@ -1040,14 +1054,20 @@ function dol_mktime($hour,$minute,$second,$month,$day,$year,$gm=false,$check=1)
 				$default_timezone=@date_default_timezone_get();
 			}
 		}
-		else $localtz = new DateTimeZone('UTC');
+		
+		if (empty($localtz)) {
+			$localtz = new DateTimeZone('UTC');
+		}
+		
 		$dt = new DateTime(null,$localtz);
 		$dt->setDate($year,$month,$day);
 		$dt->setTime((int) $hour, (int) $minute, (int) $second);
-		$date=$dt->getTimestamp();
+		$date=$dt->getTimestamp();	// should include daylight saving time
 	}
 	else
 	{
+		dol_print_error('','PHP version must be 5.3+');
+		/*
 		$usealternatemethod=false;
 		if ($year <= 1970) $usealternatemethod=true;		// <= 1970
 		if ($year >= 2038) $usealternatemethod=true;		// >= 2038
@@ -1059,7 +1079,7 @@ function dol_mktime($hour,$minute,$second,$month,$day,$year,$gm=false,$check=1)
 		else
 		{
 			$date=mktime($hour,$minute,$second,$month,$day,$year);
-		}
+		}*/
 	}
 	return $date;
 }
@@ -1165,7 +1185,7 @@ function dol_print_url($url,$target='_blank',$max=32)
  * @param	string		$email			EMail to show (only email, without 'Name of recipient' before)
  * @param 	int			$cid 			Id of contact if known
  * @param 	int			$socid 			Id of third party if known
- * @param 	int			$addlink		0=no link to create action
+ * @param 	int			$addlink		0=no link, 1=email has a html email link (+ link to create action if constant AGENDA_ADDACTIONFOREMAIL is on)
  * @param	int			$max			Max number of characters to show
  * @param	int			$showinvalid	Show warning if syntax email is wrong
  * @return	string						HTML Link
@@ -1214,11 +1234,11 @@ function dol_print_email($email,$cid=0,$socid=0,$addlink=0,$max=64,$showinvalid=
  * Show Skype link
  *
  * @param	string		$skype			Skype to show (only skype, without 'Name of recipient' before)
- * @param int 			$cid 			Id of contact if known
+ * @param int 			$cid 			  Id of contact if known
  * @param int 			$socid 			Id of third party if known
  * @param int 			$addlink		0=no link to create action
- * @param	int			  $max			Max number of characters to show
- * @return	string						HTML Link
+ * @param	int			  $max			  Max number of characters to show
+ * @return	string						  HTML Link
  */
 function dol_print_skype($skype,$cid=0,$socid=0,$addlink=0,$max=64)
 {
@@ -1232,9 +1252,12 @@ function dol_print_skype($skype,$cid=0,$socid=0,$addlink=0,$max=64)
 	{
 		$newskype='<a href="skype:';
 		$newskype.=dol_trunc($skype,$max);
-		$newskype.='" alt="'.$langs->trans("Call").'&nbsp;'.$skype.'" title="'.$langs->trans("Call").'&nbsp;'.$skype.'">';
-    $newskype.='<img src="../theme/'.$conf->theme.'/img/object_skype.png" border="0">&nbsp;';
+		$newskype.='?call" alt="'.$langs->trans("Call").'&nbsp;'.$skype.'" title="'.$langs->trans("Call").'&nbsp;'.$skype.'">';
+    $newskype.='<img src="../theme/common/skype_callbutton.png" border="0">&nbsp;';
+		$newskype.='</a>&nbsp;<a href="skype:';
 		$newskype.=dol_trunc($skype,$max);
+		$newskype.='?chat" alt="'.$langs->trans("Chat").'&nbsp;'.$skype.'" title="'.$langs->trans("Chat").'&nbsp;'.$skype.'">';
+    $newskype.='<img src="../theme/common/skype_chatbutton.png" border="0">&nbsp;';
 		$newskype.='</a>';
 
 		if (($cid || $socid) && ! empty($conf->agenda->enabled) && $user->rights->agenda->myactions->create)
@@ -1428,7 +1451,7 @@ function dol_print_address($address, $htmlid, $mode, $id)
 	{
         if ($hookmanager) {
             $parameters = array('element' => $mode, 'id' => $id);
-            $reshook = $hookmanager->executeHooks('printAddress', $parameters, $address, $action);
+            $reshook = $hookmanager->executeHooks('printAddress', $parameters, $address);
             print $hookmanager->resPrint;
         }
         if (empty($reshook)) {
@@ -2234,10 +2257,10 @@ function info_admin($text, $infoonimgalt = 0, $nodiv=0)
 
 	if ($infoonimgalt)
 	{
-		return img_picto($text, 'star', 'class="hideonsmartphone"');
+		return img_picto($text, 'info', 'class="hideonsmartphone"');
 	}
 
-	return ($nodiv?'':'<div class="info hideonsmartphone">').img_picto($langs->trans('InfoAdmin'), 'star', 'class="hideonsmartphone"').' '.$text.($nodiv?'':'</div>');
+	return ($nodiv?'':'<div class="info hideonsmartphone">').img_picto($langs->trans('InfoAdmin'), 'info', 'class="hideonsmartphone"').' '.$text.($nodiv?'':'</div>');
 }
 
 
@@ -2247,10 +2270,10 @@ function info_admin($text, $infoonimgalt = 0, $nodiv=0)
  *	Toutefois, il faut essayer de ne l'appeler qu'au sein de pages php, les classes devant
  *	renvoyer leur erreur par l'intermediaire de leur propriete "error".
  *
- *	@param	 DoliDB	$db      	Database handler
- *	@param  string	$error		String or array of errors strings to show
- *	@return void
- *  @see    dol_htmloutput_errors
+ *	@param	 	DoliDB	$db      	Database handler
+ *	@param  	mixed	$error		String or array of errors strings to show
+ *	@return 	void
+ *  @see    	dol_htmloutput_errors
  */
 function dol_print_error($db='',$error='')
 {
@@ -2419,8 +2442,8 @@ function getTitleFieldOfList($name, $thead=0, $file="", $field="", $begin="", $m
 
 	// If field is used as sort criteria we use a specific class
 	// Example if (sortfield,field)=("nom","xxx.nom") or (sortfield,field)=("nom","nom")
-	if ($field && ($sortfield == $field || $sortfield == preg_replace("/^[^\.]+\./","",$field))) $out.= '<'.$tag.' class="liste_titre_sel'.($field?' nowrap':'').'" '. $moreattrib.'>';
-	else $out.= '<'.$tag.' class="liste_titre'.($field?' nowrap':'').'" '. $moreattrib.'>';
+	if ($field && ($sortfield == $field || $sortfield == preg_replace("/^[^\.]+\./","",$field))) $out.= '<'.$tag.' class="liste_titre_sel" '. $moreattrib.'>';
+	else $out.= '<'.$tag.' class="liste_titre" '. $moreattrib.'>';
 
 	if (! empty($conf->dol_optimize_smallscreen) && empty($thead) && $field)    // If this is a sort field
 	{
@@ -2448,7 +2471,7 @@ function getTitleFieldOfList($name, $thead=0, $file="", $field="", $begin="", $m
 		if (! preg_match('/^&/',$options)) $options='&'.$options;
 
 		//print "&nbsp;";
-		$out.= '<img width="2" src="'.DOL_URL_ROOT.'/theme/common/transparent.png" alt="">';
+		$out.= '<img width="2" src="'.DOL_URL_ROOT.'/theme/common/transparent.png" alt=""><span class="nowrap">';
 
 		if (! $sortorder || $field != $sortfield)
 		{
@@ -2466,6 +2489,8 @@ function getTitleFieldOfList($name, $thead=0, $file="", $field="", $begin="", $m
 				$out.= '<a href="'.$file.'?sortfield='.$field.'&sortorder=desc&begin='.$begin.$options.'">'.img_up("Z-A",0).'</a>';
 			}
 		}
+
+		$out.= '</span>';
 	}
 	$out.='</'.$tag.'>';
 
@@ -2633,11 +2658,11 @@ function print_barre_liste($titre, $page, $file, $options='', $sortfield='', $so
 /**
  *	Fonction servant a afficher les fleches de navigation dans les pages de listes
  *
- *	@param	int		$page				Numero of page
- *	@param	string	$file				Lien
- *	@param	string	$options         	Autres parametres d'url a propager dans les liens ("" par defaut)
- *	@param	int		$nextpage	    	Faut-il une page suivante
- *	@param	string	$betweenarrows		HTML Content to show between arrows
+ *	@param	int				$page				Number of page
+ *	@param	string			$file				Lien
+ *	@param	string			$options         	Autres parametres d'url a propager dans les liens ("" par defaut)
+ *	@param	boolean|int		$nextpage	    	Do we show a next page button
+ *	@param	string			$betweenarrows		HTML Content to show between arrows
  *	@return	void
  */
 function print_fleche_navigation($page,$file,$options='',$nextpage=0,$betweenarrows='')
@@ -2698,7 +2723,7 @@ function vatrate($rate,$addpercent=false,$info_bits=0,$usestarfornpr=0)
  *		@param	int			$trunc			1=Truncate if there is too much decimals (default), 0=Does not truncate
  *		@param	int			$rounding		Minimum number of decimal to show. If 0, no change, if -1, we use min($conf->global->MAIN_MAX_DECIMALS_UNIT,$conf->global->MAIN_MAX_DECIMALS_TOTAL)
  *		@param	int			$forcerounding	Force the number of decimal to forcerounding decimal (-1=do not force)
- *		@param	string		$currency_code	To add currency symbol (''=add nothing, 'XXX'=add currency symbols for XXX currency)
+ *		@param	string		$currency_code	To add currency symbol (''=add nothing, 'auto'=Use default currency, 'XXX'=add currency symbols for XXX currency)
  *		@return	string						Chaine avec montant formate
  *
  *		@see	price2num					Revert function of price
@@ -2722,6 +2747,7 @@ function price($amount, $form=0, $outlangs='', $trunc=1, $rounding=-1, $forcerou
 	if ($outlangs->transnoentitiesnoconv("SeparatorDecimal") != "SeparatorDecimal")  $dec=$outlangs->transnoentitiesnoconv("SeparatorDecimal");
 	if ($outlangs->transnoentitiesnoconv("SeparatorThousand")!= "SeparatorThousand") $thousand=$outlangs->transnoentitiesnoconv("SeparatorThousand");
 	if ($thousand == 'None') $thousand='';
+	else if ($thousand == 'Space') $thousand=' ';
 	//print "outlangs=".$outlangs->defaultlang." amount=".$amount." html=".$form." trunc=".$trunc." nbdecimal=".$nbdecimal." dec='".$dec."' thousand='".$thousand."'<br>";
 
 	//print "amount=".$amount."-";
@@ -2760,6 +2786,8 @@ function price($amount, $form=0, $outlangs='', $trunc=1, $rounding=-1, $forcerou
 	$cursymbolbefore=$cursymbolafter='';
 	if ($currency_code)
 	{
+		if ($currency_code == 'auto') $currency_code=$conf->currency;
+
 		$listofcurrenciesbefore=array('USD');
 		if (in_array($currency_code,$listofcurrenciesbefore)) $cursymbolbefore.=$outlangs->getCurrencySymbol($currency_code);
 		else $cursymbolafter.=$outlangs->getCurrencySymbol($currency_code);
@@ -2795,6 +2823,7 @@ function price2num($amount,$rounding='',$alreadysqlnb=0)
 	if ($langs->transnoentitiesnoconv("SeparatorDecimal") != "SeparatorDecimal")  $dec=$langs->transnoentitiesnoconv("SeparatorDecimal");
 	if ($langs->transnoentitiesnoconv("SeparatorThousand")!= "SeparatorThousand") $thousand=$langs->transnoentitiesnoconv("SeparatorThousand");
 	if ($thousand == 'None') $thousand='';
+	elseif ($thousand == 'Space') $thousand=' ';
 	//print "amount=".$amount." html=".$form." trunc=".$trunc." nbdecimal=".$nbdecimal." dec='".$dec."' thousand='".$thousand."'<br>";
 
 	// Convert value to universal number format (no thousand separator, '.' as decimal separator)
@@ -3142,66 +3171,68 @@ function get_default_tva($thirdparty_seller, $thirdparty_buyer, $idprod=0, $idpr
 	// Spécifique Bourguignon, ticket 1927
 	if($thirdparty_buyer->tva_assuj == "0") return 0;
 
-	dol_syslog("get_default_tva: seller use vat=".$thirdparty_seller->tva_assuj.", seller country=".$thirdparty_seller->country_code.", seller in cee=".$thirdparty_seller->isInEEC().", buyer country=".$thirdparty_buyer->country_code.", buyer in cee=".$thirdparty_buyer->isInEEC().", idprod=".$idprod.", idprodfournprice=".$idprodfournprice.", SERVICE_ARE_ECOMMERCE_200238EC=".(! empty($conf->global->SERVICES_ARE_ECOMMERCE_200238EC)?$conf->global->SERVICES_ARE_ECOMMERCE_200238EC:''));
+	// Note: possible values for tva_assuj are 0/1 or franchise/reel
+	$seller_use_vat=((is_numeric($thirdparty_seller->tva_assuj) && ! $thirdparty_seller->tva_assuj) || (! is_numeric($thirdparty_seller->tva_assuj) && $thirdparty_seller->tva_assuj=='franchise'))?0:1;
+
+	$seller_country_code=$thirdparty_seller->country_code;
+	$seller_in_cee=$thirdparty_seller->isInEEC();
+
+	$buyer_country_code=$thirdparty_buyer->country_code;
+	$buyer_in_cee=$thirdparty_buyer->isInEEC();
+
+	dol_syslog("get_default_tva: seller use vat=".$seller_use_vat.", seller country=".$seller_country_code.", seller in cee=".$seller_in_cee.", buyer country=".$buyer_country_code.", buyer in cee=".$buyer_in_cee.", idprod=".$idprod.", idprodfournprice=".$idprodfournprice.", SERVICE_ARE_ECOMMERCE_200238EC=".(! empty($conf->global->SERVICES_ARE_ECOMMERCE_200238EC)?$conf->global->SERVICES_ARE_ECOMMERCE_200238EC:''));
 
 	// If services are eServices according to EU Council Directive 2002/38/EC (http://ec.europa.eu/taxation_customs/taxation/vat/traders/e-commerce/article_1610_en.htm)
 	// we use the buyer VAT.
 	if (! empty($conf->global->SERVICE_ARE_ECOMMERCE_200238EC))
 	{
-		//print "eee".$thirdparty_buyer->isACompany();exit;
-		if (! $thirdparty_seller->isInEEC() && $thirdparty_buyer->isInEEC() && ! $thirdparty_buyer->isACompany())
+		if (! $seller_in_cee && $buyer_in_cee && ! $thirdparty_buyer->isACompany())
 		{
-			//print 'VATRULE 6';
+			//print 'VATRULE 0';
 			return get_product_vat_for_country($idprod,$thirdparty_buyer,$idprodfournprice);
 		}
 	}
 
-	// Si vendeur non assujeti a TVA (tva_assuj vaut 0/1 ou franchise/reel)
-	if (is_numeric($thirdparty_seller->tva_assuj) && ! $thirdparty_seller->tva_assuj)
+	// If seller does not use VAT
+	if (! $seller_use_vat)
 	{
 		//print 'VATRULE 1';
 		return 0;
 	}
-	if (! is_numeric($thirdparty_seller->tva_assuj) && $thirdparty_seller->tva_assuj=='franchise')
-	{
-		//print 'VATRULE 2';
-		return 0;
-	}
 
-	//if (is_object($thirdparty_buyer) && ($thirdparty_seller->country_id == $thirdparty_buyer->country_id) && ($thirdparty_buyer->tva_assuj == 1 || $thirdparty_buyer->tva_assuj == 'reel'))
 	// Le test ci-dessus ne devrait pas etre necessaire. Me signaler l'exemple du cas juridique concerne si le test suivant n'est pas suffisant.
 
 	// Si le (pays vendeur = pays acheteur) alors la TVA par defaut=TVA du produit vendu. Fin de regle.
-	if (($thirdparty_seller->country_code == $thirdparty_buyer->country_code)
-	|| (in_array($thirdparty_seller->country_code,array('FR,MC')) && in_array($thirdparty_buyer->country_code,array('FR','MC')))) // Warning ->country_code not always defined
+	if (($seller_country_code == $buyer_country_code)
+	|| (in_array($seller_country_code,array('FR,MC')) && in_array($buyer_country_code,array('FR','MC')))) // Warning ->country_code not always defined
 	{
-		//print 'VATRULE 3';
+		//print 'VATRULE 2';
 		return get_product_vat_for_country($idprod,$thirdparty_seller,$idprodfournprice);
 	}
 
 	// Si (vendeur et acheteur dans Communaute europeenne) et (bien vendu = moyen de transports neuf comme auto, bateau, avion) alors TVA par defaut=0 (La TVA doit etre paye par l'acheteur au centre d'impots de son pays et non au vendeur). Fin de regle.
-	// Non gere
+	// Not supported
 
 	// Si (vendeur et acheteur dans Communaute europeenne) et (acheteur = entreprise) alors TVA par defaut=0. Fin de regle
 	// Si (vendeur et acheteur dans Communaute europeenne) et (acheteur = particulier) alors TVA par defaut=TVA du produit vendu. Fin de regle
-	if (($thirdparty_seller->isInEEC() && $thirdparty_buyer->isInEEC()))
+	if (($seller_in_cee && $buyer_in_cee))
 	{
 		$isacompany=$thirdparty_buyer->isACompany();
 		if ($isacompany)
 		{
-			//print 'VATRULE 4';
+			//print 'VATRULE 3';
 			return 0;
 		}
 		else
 		{
-			//print 'VATRULE 5';
+			//print 'VATRULE 4';
 			return get_product_vat_for_country($idprod,$thirdparty_seller,$idprodfournprice);
 		}
 	}
 
 	// Sinon la TVA proposee par defaut=0. Fin de regle.
 	// Rem: Cela signifie qu'au moins un des 2 est hors Communaute europeenne et que le pays differe
-	//print 'VATRULE 7';
+	//print 'VATRULE 5';
 	return 0;
 }
 
@@ -3428,6 +3459,8 @@ function picto_required()
  *	@param	string	$removelinefeed		Replace also all lines feeds by a space, otherwise only last one are removed
  *  @param  string	$pagecodeto      	Encoding of input/output string
  *	@return string	    				String cleaned
+ *
+ * 	@see		dol_escape_htmltag
  */
 function dol_string_nohtmltag($StringHtml,$removelinefeed=1,$pagecodeto='UTF-8')
 {
@@ -3475,32 +3508,34 @@ function dol_nl2br($stringtoencode,$nl2brmode=0,$forxml=false)
  *	This function is called to encode a string into a HTML string but differs from htmlentities because
  * 	all entities but &,<,> are converted. This permits to encode special chars to entities with no double
  *  encoding for already encoded HTML strings.
- * 	This function also remove last CR/BR.
+ * 	This function also remove last EOL or BR if $removelasteolbr=1 (default).
  *  For PDF usage, you can show text by 2 ways:
  *              - writeHTMLCell -> param must be encoded into HTML.
  *              - MultiCell -> param must not be encoded into HTML.
  *              Because writeHTMLCell convert also \n into <br>, if function
- *              is used to build PDF, nl2brmode must be 1
+ *              is used to build PDF, nl2brmode must be 1.
  *
  *	@param	string	$stringtoencode		String to encode
  *	@param	int		$nl2brmode			0=Adding br before \n, 1=Replacing \n by br (for use with FPDF writeHTMLCell function for example)
  *  @param  string	$pagecodefrom       Pagecode stringtoencode is encoded
+ *  @param	int		$removelasteolbr	1=Remove last br or lasts \n (default), 0=Do nothing
  *  @return	string						String encoded
  */
-function dol_htmlentitiesbr($stringtoencode,$nl2brmode=0,$pagecodefrom='UTF-8')
+function dol_htmlentitiesbr($stringtoencode,$nl2brmode=0,$pagecodefrom='UTF-8',$removelasteolbr=1)
 {
+	$newstring=$stringtoencode;
 	if (dol_textishtml($stringtoencode))
 	{
-		$newstring=$stringtoencode;
 		$newstring=preg_replace('/<br(\s[\sa-zA-Z_="]*)?\/?>/i','<br>',$newstring);	// Replace "<br type="_moz" />" by "<br>". It's same and avoid pb with FPDF.
-		$newstring=preg_replace('/<br>$/i','',$newstring);	// Remove last <br>
+		if ($removelasteolbr) $newstring=preg_replace('/<br>$/i','',$newstring);	// Remove last <br> (remove only last one)
 		$newstring=strtr($newstring,array('&'=>'__and__','<'=>'__lt__','>'=>'__gt__','"'=>'__dquot__'));
 		$newstring=dol_htmlentities($newstring,ENT_COMPAT,$pagecodefrom);	// Make entity encoding
 		$newstring=strtr($newstring,array('__and__'=>'&','__lt__'=>'<','__gt__'=>'>','__dquot__'=>'"'));
 	}
 	else
 	{
-		$newstring=dol_nl2br(dol_htmlentities($stringtoencode,ENT_COMPAT,$pagecodefrom),$nl2brmode);
+		if ($removelasteolbr) $newstring=preg_replace('/(\r\n|\r|\n)$/i','',$newstring);	// Remove last \n (may remove several)
+		$newstring=dol_nl2br(dol_htmlentities($newstring,ENT_COMPAT,$pagecodefrom),$nl2brmode);
 	}
 	// Other substitutions that htmlentities does not do
 	//$newstring=str_replace(chr(128),'&euro;',$newstring);	// 128 = 0x80. Not in html entity table.     // Seems useles with TCPDF. Make bug with UTF8 languages
@@ -3743,7 +3778,7 @@ function make_substitutions($chaine,$substitutionarray)
 /**
  *  Complete the $substitutionarray with more entries
  *
- *  @param  array		&$substitutionarray		Array substitution old value => new value value
+ *  @param  array		$substitutionarray		Array substitution old value => new value value
  *  @param  Translate	$outputlangs            If we want substitution from special constants, we provide a language
  *  @param  Object		$object                 If we want substitution from special constants, we provide data in a source object
  *  @param  Mixed		$parameters       		Add more parameters (useful to pass product lines)
@@ -4082,10 +4117,10 @@ function dol_htmloutput_errors($mesgstring='', $mesgarray='', $keepembedded=0)
  *  or descending output and uses optionally natural case insensitive sorting (which
  *  can be optionally case sensitive as well).
  *
- *  @param      array		&$array      		Array to sort (array of array('key','otherkey1','otherkey2'...))
+ *  @param      array		$array      		Array to sort (array of array('key','otherkey1','otherkey2'...))
  *  @param      string		$index				Key in array to use for sorting criteria
  *  @param      int			$order				Sort order
- *  @param      int			$natsort			1=use "natural" sort (natsort), 0=use "standard sort (asort)
+ *  @param      int			$natsort			1=use "natural" sort (natsort), 0=use "standard" sort (asort)
  *  @param      int			$case_sensitive		1=sort is case sensitive, 0=not case sensitive
  *  @return     array							Sorted array
  */
@@ -4303,8 +4338,8 @@ function picto_from_langcode($codelang)
  *  @param	Conf		$conf           Object conf
  *  @param  Translate	$langs          Object langs
  *  @param  Object		$object         Object object
- *  @param  array		&$head          Object head
- *  @param  int			&$h             New position to fill
+ *  @param  array		$head          Object head
+ *  @param  int			$h             New position to fill
  *  @param  string		$type           Value for object where objectvalue can be
  *                              		'thirdparty'       to add a tab in third party view
  *		                              	'intervention'     to add a tab in intervention view
@@ -4318,6 +4353,7 @@ function picto_from_langcode($codelang)
  *                              		'group'            to add a tab in group view
  * 		        	                    'member'           to add a tab in fundation member view
  *      		                        'categories_x'	   to add a tab in category view ('x': type of category (0=product, 1=supplier, 2=customer, 3=member)
+ *      								'ecm'			   to add a tab for another ecm view
  *  @param  string		$mode  	        'add' to complete head, 'remove' to remove entries
  *	@return	void
  */
@@ -4338,28 +4374,35 @@ function complete_head_from_modules($conf,$langs,$object,&$head,&$h,$type,$mode=
 					if (verifCond($values[4]))
 					{
 						if ($values[3]) $langs->load($values[3]);
+						if (preg_match('/SUBSTITUTION_([^_]+)/i',$values[2],$reg))
+						{
+							$substitutionarray=array();
+							complete_substitutions_array($substitutionarray,$langs,$object);
+							$label=make_substitutions($reg[1], $substitutionarray);
+						}
+						else $label=$langs->trans($values[2]);
+
 						$head[$h][0] = dol_buildpath(preg_replace('/__ID__/i', ((is_object($object) && ! empty($object->id))?$object->id:''), $values[5]), 1);
-						$head[$h][1] = $langs->trans($values[2]);
+						$head[$h][1] = $label;
 						$head[$h][2] = str_replace('+','',$values[1]);
 						$h++;
 					}
 				}
-				else if (count($values) == 5)       // new declaration
+				else if (count($values) == 5)       // deprecated
 				{
 					if ($values[0] != $type) continue;
 					if ($values[3]) $langs->load($values[3]);
+					if (preg_match('/SUBSTITUTION_([^_]+)/i',$values[2],$reg))
+					{
+						$substitutionarray=array();
+						complete_substitutions_array($substitutionarray,$langs,$object);
+						$label=make_substitutions($reg[1], $substitutionarray);
+					}
+					else $label=$langs->trans($values[2]);
+
 					$head[$h][0] = dol_buildpath(preg_replace('/__ID__/i', ((is_object($object) && ! empty($object->id))?$object->id:''), $values[4]), 1);
-					$head[$h][1] = $langs->trans($values[2]);
+					$head[$h][1] = $label;
 					$head[$h][2] = str_replace('+','',$values[1]);
-					$h++;
-				}
-				else if (count($values) == 4)   // old declaration, for backward compatibility
-				{
-					if ($values[0] != $type) continue;
-					if ($values[2]) $langs->load($values[2]);
-					$head[$h][0] = dol_buildpath(preg_replace('/__ID__/i', ((is_object($object) && ! empty($object->id))?$object->id:''), $values[3]), 1);
-					$head[$h][1] = $langs->trans($values[1]);
-					$head[$h][2] = 'tab'.$values[1];
 					$h++;
 				}
 			}
@@ -4473,6 +4516,34 @@ function printCommonFooter($zone='private')
 }
 
 /**
+ * Split a string with 2 keys into key array.
+ * For example: "A=1;B=2;C=2" is exploded into array('A'=>1,'B'=>2,'C'=>3)
+ *
+ * @param 	string	$string		String to explode
+ * @param 	string	$delimiter	Delimiter between each couple of data
+ * @param 	string	$kv			Delimiter between key and value
+ * @return	array				Array of data exploded
+ */
+function dolExplodeIntoArray($string, $delimiter = ';', $kv = '=')
+{
+	if ($a = explode($delimiter, $string))
+	{
+		foreach ($a as $s) { // each part
+			if ($s) {
+				if ($pos = strpos($s, $kv)) { // key/value delimiter
+					$ka[trim(substr($s, 0, $pos))] = trim(substr($s, $pos + strlen($kv)));
+				} else { // key delimiter not found
+					$ka[] = trim($s);
+				}
+			}
+		}
+		return $ka;
+	}
+	return array();
+}
+
+
+/**
  *	Convert an array with RGB value into hex RGB value
  *
  *  @param	array	$arraycolor			Array
@@ -4544,5 +4615,3 @@ function natural_search($fields, $value)
     }
     return " AND " . ($end > 1? '(' : '') . $res;
 }
-
-?>

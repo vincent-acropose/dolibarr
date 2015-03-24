@@ -54,6 +54,13 @@ if ($user->societe_id) $socid=$user->societe_id;
 $result=restrictedArea($user,'expedition',$id,'livraison','livraison');
 
 
+$object = new Livraison($db);
+$object->fetch($id);
+$object->fetch_thirdparty();
+
+$hookmanager->initHooks(array('receptioncard'));
+$parameters=array();
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 
 /*
  * Actions
@@ -185,7 +192,7 @@ if ($action == 'builddoc')	// En get ou en post
 	$object = new Livraison($db);
 	$object->fetch($id);
 	$object->fetch_thirdparty();
-	
+
 	// Save last template used to generate document
 	if (GETPOST('model')) $object->setDocModel($user, GETPOST('model','alpha'));
 
@@ -317,7 +324,8 @@ if ($action == 'create')
 		 */
 		print '<br><table class="noborder" width="100%">';
 
-		$lines = $commande->fetch_lines(1);
+		$commande->fetch_lines(1);
+		$lines = $commande->lines;
 
 		// Lecture des livraisons deja effectuees
 		$commande->livraison_array();
@@ -515,7 +523,7 @@ else
 			if (($delivery->origin == 'shipment' || $delivery->origin == 'expedition') && $delivery->origin_id > 0)
 			{
 				$linkback = '<a href="'.DOL_URL_ROOT.'/expedition/liste.php">'.$langs->trans("BackToList").'</a>';
-				
+
 				// Ref
 				print '<tr><td width="20%">'.$langs->trans("RefSending").'</td>';
 				print '<td colspan="3">';
@@ -523,8 +531,8 @@ else
 				//print $form->showrefnav($expedition, 'refshipment', $linkback, 1, 'ref', 'ref');
 				print $form->showrefnav($expedition, 'refshipment', $linkback, 0, 'ref', 'ref');
 				print '</td></tr>';
-			}			
-				
+			}
+
 			// Ref
 			print '<tr><td width="20%">'.$langs->trans("Ref").'</td>';
 			print '<td colspan="3">'.$delivery->ref.'</td></tr>';
@@ -542,7 +550,8 @@ else
 				$order->fetch($expedition->origin_id);
 				print '<td colspan="3">';
 				print $order->getNomUrl(1,'commande');
-				print "</td>\n";
+				print "</td>\n";$parameters=array('colspan' => ' colspan="3"');
+	$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$delivery,$action); 
 				print '</tr>';
 			}
 			if ($typeobject == 'propal' && $expedition->origin_id && ! empty($conf->propal->enabled))
@@ -623,8 +632,11 @@ else
 				print '</tr>';
 			}
 
-			print "</table><br>\n";
+			$parameters=array('colspan' => ' colspan="3"');
+			$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$delivery,$action); 
 
+			print "</table><br>\n";
+			
 			/*
 			 * Lignes produits
 			 */
@@ -807,4 +819,3 @@ else
 
 llxFooter();
 $db->close();
-?>

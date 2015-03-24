@@ -42,6 +42,7 @@ $filter=GETPOST("filter",'',3);
 $filtera = GETPOST("userasked","int",3)?GETPOST("userasked","int",3):GETPOST("filtera","int",3);
 $filtert = GETPOST("usertodo","int",3)?GETPOST("usertodo","int",3):GETPOST("filtert","int",3);
 $filterd = GETPOST("userdone","int",3)?GETPOST("userdone","int",3):GETPOST("filterd","int",3);
+$filterg = GETPOST("groupid","int",3)?GETPOST("groupid","int",3):GETPOST("filterg","int",3);
 $showbirthday = empty($conf->use_javascript_ajax)?GETPOST("showbirthday","int"):1;
 
 
@@ -277,7 +278,7 @@ $param.='&year='.$year.'&month='.$month.($day?'&day='.$day:'');
 $head = calendars_prepare_head('');
 
 dol_fiche_head($head, 'card', $langs->trans('Events'), 0, $picto);
-print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,$filtera,$filtert,$filterd,$pid,$socid,$listofextcals,$actioncode);
+print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,$filtera,$filtert,$filterd,$filterg,$pid,$socid,$listofextcals,$actioncode);
 dol_fiche_end();
 
 $link='';
@@ -358,6 +359,9 @@ if ($filtera > 0 || $filtert > 0 || $filterd > 0)
     if ($filterd > 0) $sql.= ($filtera>0||$filtert>0?" OR ":"")." a.fk_user_done = ".$filterd;
     $sql.= ")";
 }
+
+if ($filterg > 0) $sql.= " AND a.fk_user_action IN (SELECT fk_user FROM ".MAIN_DB_PREFIX."usergroup_user WHERE fk_usergroup=".$filterg.")";
+
 // Sort on date
 $sql.= ' ORDER BY datep';
 //print $sql;
@@ -955,7 +959,7 @@ llxFooter();
  * @param   int		$year            Year
  * @param   int		$monthshown      Current month shown in calendar view
  * @param   string	$style           Style to use for this day
- * @param   array	&$eventarray     Array of events
+ * @param   array	$eventarray     Array of events
  * @param   int		$maxprint        Nb of actions to show each day on month view (0 means no limit)
  * @param   int		$maxnbofchar     Nb of characters to show for event line
  * @param   string	$newparam        Parameters on current URL
@@ -1253,4 +1257,3 @@ function dol_color_minus($color, $minus)
 	return $newcolor;
 }
 
-?>

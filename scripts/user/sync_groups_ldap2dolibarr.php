@@ -253,4 +253,3 @@ function dolValidElement($element)
 	return (trim($element) != '');
 }
 
-?>

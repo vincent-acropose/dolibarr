@@ -180,13 +180,12 @@ if ($_GET["action"] == 'create')
 
 	print "<tr class=\"liste_titre\"><td colspan=\"3\">Charge</td>";
 
-	print '<tr><td>'.$langs->trans("Ref").'</td><td colspan="2">';
-	print '<a href="'.DOL_URL_ROOT.'/compta/sociales/charges.php?id='.$chid.'">'.$chid.'</a></td></tr>';
+	print '<tr><td>'.$langs->trans("Ref").'</td><td colspan="2"><a href="'.DOL_URL_ROOT.'/compta/sociales/charges.php?id='.$chid.'">'.$chid.'</a></td></tr>';
 	print '<tr><td>'.$langs->trans("Type")."</td><td colspan=\"2\">".$charge->type_libelle."</td></tr>\n";
 	print '<tr><td>'.$langs->trans("Period")."</td><td colspan=\"2\">".dol_print_date($charge->periode,'day')."</td></tr>\n";
 	print '<tr><td>'.$langs->trans("Label").'</td><td colspan="2">'.$charge->lib."</td></tr>\n";
 	print '<tr><td>'.$langs->trans("DateDue")."</td><td colspan=\"2\">".dol_print_date($charge->date_ech,'day')."</td></tr>\n";
-	print '<tr><td>'.$langs->trans("AmountTTC")."</td><td colspan=\"2\"><b>".price($charge->amount).'</b> '.$langs->trans("Currency".$conf->currency).'</td></tr>';
+	print '<tr><td>'.$langs->trans("Amount")."</td><td colspan=\"2\">".price($charge->amount,0,$outputlangs,1,-1,-1,$conf->currency).'</td></tr>';
 
 	$sql = "SELECT sum(p.amount) as total";
 	$sql.= " FROM ".MAIN_DB_PREFIX."paiementcharge as p";
@@ -198,12 +197,12 @@ if ($_GET["action"] == 'create')
 		$sumpaid = $obj->total;
 		$db->free();
 	}
-	print '<tr><td>'.$langs->trans("AlreadyPaid").'</td><td colspan="2"><b>'.price($sumpaid).'</b> '.$langs->trans("Currency".$conf->currency).'</td></tr>';
-	print "<tr><td valign=\"top\">".$langs->trans("RemainderToPay").'</td><td colspan="2"><b>'.price($total - $sumpaid).'</b> '.$langs->trans("Currency".$conf->currency).'</td></tr>';
+	print '<tr><td>'.$langs->trans("AlreadyPaid").'</td><td colspan="2">'.price($sumpaid,0,$outputlangs,1,-1,-1,$conf->currency).'</td></tr>';
+	print '<tr><td valign="top">'.$langs->trans("RemainderToPay").'</td><td colspan="2">'.price($total-$sumpaid,0,$outputlangs,1,-1,-1,$conf->currency).'</td></tr>';
 
 	print '<tr class="liste_titre">';
-
 	print "<td colspan=\"3\">".$langs->trans("Payment").'</td>';
+	print '</tr>';
 
 	print '<tr><td class="fieldrequired">'.$langs->trans("Date").'</td><td colspan="2">';
 	$datepaye = dol_mktime(12, 0, 0, $_POST["remonth"], $_POST["reday"], $_POST["reyear"]);
@@ -223,9 +222,11 @@ if ($_GET["action"] == 'create')
 	$form->select_comptes(isset($_POST["accountid"])?$_POST["accountid"]:$charge->accountid, "accountid", 0, '',1);  // Show opend bank account list
 	print '</td></tr>';
 
+	// Number
 	print '<tr><td>'.$langs->trans('Numero');
 	print ' <em>('.$langs->trans("ChequeOrTransferNumber").')</em>';
-	print '<td colspan="2"><input name="num_paiement" type="text"></td></tr>'."\n";
+	print '</td>';
+	print '<td colspan="2"><input name="num_paiement" type="text" value="'.GETPOST('num_paiement').'"></td></tr>'."\n";
 
 	print '<tr>';
 	print '<td valign="top">'.$langs->trans("Comments").'</td>';
@@ -246,10 +247,10 @@ if ($_GET["action"] == 'create')
 	print '<tr class="liste_titre">';
 	//print '<td>'.$langs->trans("SocialContribution").'</td>';
 	print '<td align="left">'.$langs->trans("DateDue").'</td>';
-	print '<td align="right">'.$langs->trans("AmountTTC").'</td>';
+	print '<td align="right">'.$langs->trans("Amount").'</td>';
 	print '<td align="right">'.$langs->trans("AlreadyPaid").'</td>';
 	print '<td align="right">'.$langs->trans("RemainderToPay").'</td>';
-	print '<td align="right">'.$langs->trans("Amount").'</td>';
+	print '<td align="center">'.$langs->trans("Amount").'</td>';
 	print "</tr>\n";
 
 	$var=True;
@@ -258,14 +259,11 @@ if ($_GET["action"] == 'create')
 
 	while ($i < $num)
 	{
-		//$objp = $db->fetch_object($result);
 		$objp = $charge;
 
 		$var=!$var;
 
 		print "<tr ".$bc[$var].">";
-
-		//print '<td>'.$charge->getNomUrl(1)."</td>\n";
 
 		if ($objp->date_ech > 0)
 		{
@@ -280,9 +278,9 @@ if ($_GET["action"] == 'create')
 
 		print '<td align="right">'.price($sumpaid)."</td>";
 
-		print '<td align="right">'.price($objp->amount-$sumpaid)."</td>";
+		print '<td align="right">'.price($objp->amount - $sumpaid)."</td>";
 
-		print '<td align="right">';
+		print '<td align="center">';
 		if ($sumpaid < $objp->amount)
 		{
 			$namef = "amount_".$objp->id;
@@ -304,7 +302,7 @@ if ($_GET["action"] == 'create')
 	{
 		// Print total
 		print "<tr ".$bc[!$var].">";
-		print '<td colspan="2" align="left">'.$langs->trans("TotalTTC").':</td>';
+		print '<td colspan="2" align="left">'.$langs->trans("Total").':</td>';
 		print "<td align=\"right\"><b>".price($total_ttc)."</b></td>";
 		print "<td align=\"right\"><b>".price($totalrecu)."</b></td>";
 		print "<td align=\"right\"><b>".price($total_ttc - $totalrecu)."</b></td>";
@@ -315,19 +313,17 @@ if ($_GET["action"] == 'create')
 	print "</table>";
 
 	print '<br><center>';
-	//print '<tr><td colspan="3" align="center">';
+
 	print '<input type="submit" class="button" name="save" value="'.$langs->trans("Save").'">';
 	print '&nbsp; &nbsp;';
 	print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'">';
 
 	print '</center>';
-	//print '</td></tr>';
+
 	print "</form>\n";
-	//    }
 }
 
 
 $db->close();
 
 llxFooter();
-?>

@@ -68,7 +68,6 @@ $limit = $conf->liste_limit;
 
 
 // Get object canvas (By default, this is not defined, so standard usage of dolibarr)
-//$object->getCanvas($id);
 $canvas=GETPOST("canvas");
 $objcanvas='';
 if (! empty($canvas))
@@ -269,7 +268,7 @@ else
     	}
     	else
     	{
-    		print '<form action="liste.php" method="post" name="formulaire">';
+    		print '<form action="'.$_SERVER["PHP_SELF"].'" method="post" name="formulaire">';
     		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
     		print '<input type="hidden" name="action" value="list">';
     		print '<input type="hidden" name="sortfield" value="'.$sortfield.'">';
@@ -325,12 +324,16 @@ else
     		print '<td class="liste_titre" align="left">';
     		print '<input class="flat" type="text" name="snom" size="12" value="'.$snom.'">';
     		print '</td>';
+			
+			// Barcode
     		if (! empty($conf->barcode->enabled))
     		{
     			print '<td class="liste_titre">';
     			print '<input class="flat" type="text" name="sbarcode" size="6" value="'.$sbarcode.'">';
     			print '</td>';
     		}
+			
+			// Date modification
     		print '<td class="liste_titre">';
     		print '&nbsp;';
     		print '</td>';
@@ -364,7 +367,7 @@ else
     			print '<td class="liste_titre">';
     			print '&nbsp;';
     			print '</td>';
-    			//desiredstock
+    			// Desired stock
     			print '<td class="liste_titre">';
     			print '&nbsp;';
     			print '</td>';
@@ -430,7 +433,7 @@ else
     				print '<td>'.$objp->barcode.'</td>';
     			}
 
-    			// Date
+    			// Modification Date
     			print '<td align="center">'.dol_print_date($db->jdate($objp->datem),'day')."</td>\n";
 
     			// Duration
@@ -459,7 +462,8 @@ else
     			}
 
     			// Better buy price
-    			if ($user->rights->produit->creer) {
+    			if ($user->rights->fournisseur->lire)
+    			{
         			print  '<td align="right">';
         			if ($objp->minsellprice != '')
         			{
@@ -491,10 +495,6 @@ else
                         if ($product_static->stock_reel < $objp->seuil_stock_alerte) print img_warning($langs->trans("StockTooLow")).' ';
         				print $product_static->stock_reel;
     					print '</td>';
-    				}
-    				else
-    				{
-    					print '<td>&nbsp;</td>';
     				}
     			}
 
@@ -531,4 +531,3 @@ else
 
 llxFooter();
 $db->close();
-?>

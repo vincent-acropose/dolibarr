@@ -128,6 +128,16 @@ print '</td></tr>';
 // Statut
 print '<tr><td>'.$langs->trans("Status").'</td><td>'.$project->getLibStatut(4).'</td></tr>';
 
+// Date start
+print '<tr><td>'.$langs->trans("DateStart").'</td><td>';
+print dol_print_date($object->date_start,'day');
+print '</td></tr>';
+
+// Date end
+print '<tr><td>'.$langs->trans("DateEnd").'</td><td>';
+print dol_print_date($object->date_end,'day');
+print '</td></tr>';
+
 print '</table>';
 
 print '</div>';
@@ -151,6 +161,7 @@ $listofreferent=array(
 'invoice'=>array(
 	'title'=>"ListInvoicesAssociatedProject",
 	'class'=>'Facture',
+	'margin'=>'add',
 	'table'=>'facture',
 	'test'=>$conf->facture->enabled && $user->rights->facture->lire),
 'invoice_predefined'=>array(
@@ -166,6 +177,7 @@ $listofreferent=array(
 'invoice_supplier'=>array(
 	'title'=>"ListSupplierInvoicesAssociatedProject",
 	'class'=>'FactureFournisseur',
+	'margin'=>'minus',
 	'table'=>'facture_fourn',
 	'test'=>$conf->fournisseur->enabled && $user->rights->fournisseur->facture->lire),
 'contract'=>array(
@@ -183,6 +195,7 @@ $listofreferent=array(
 	'title'=>"ListTripAssociatedProject",
 	'class'=>'Deplacement',
 	'table'=>'deplacement',
+	'margin'=>'minus',
 	'disableamount'=>1,
 	'test'=>$conf->deplacement->enabled && $user->rights->deplacement->lire),
 'agenda'=>array(
@@ -199,7 +212,7 @@ if ($action=="addelement")
 	$elementselectid = GETPOST("elementselect");
 	$result=$project->update_element($tablename, $elementselectid);
 	if ($result<0) {
-		setEventMessage($mailchimp->error,'errors');
+		setEventMessage($project->error,'errors');
 	}
 }
 
@@ -231,7 +244,7 @@ foreach ($listofreferent as $key => $value)
 			print '</form>';
 		}
 		print '<table class="noborder" width="100%">';
-
+		
 		print '<tr class="liste_titre">';
 		print '<td width="100">'.$langs->trans("Ref").'</td>';
 		print '<td width="100" align="center">'.$langs->trans("Date").'</td>';
@@ -240,7 +253,7 @@ foreach ($listofreferent as $key => $value)
 		if (empty($value['disableamount'])) print '<td align="right" width="120">'.$langs->trans("AmountTTC").'</td>';
 		print '<td align="right" width="200">'.$langs->trans("Status").'</td>';
 		print '</tr>';
-		$elementarray = $project->get_element_list($key);
+		$elementarray = $project->get_element_list($key, $tablename);
 		if (count($elementarray)>0 && is_array($elementarray))
 		{
 			$var=true;
@@ -254,6 +267,12 @@ foreach ($listofreferent as $key => $value)
 				$element->fetch_thirdparty();
 				//print $classname;
 
+				$qualifiedfortotal=true;
+				if ($key == 'invoice')
+				{
+					if ($element->close_code == 'replaced') $qualifiedfortotal=false;	// Replacement invoice
+				}
+				
 				$var=!$var;
 				print "<tr ".$bc[$var].">";
 
@@ -275,18 +294,35 @@ foreach ($listofreferent as $key => $value)
 				print '</td>';
 
                 // Amount
-				if (empty($value['disableamount'])) print '<td align="right">'.(isset($element->total_ht)?price($element->total_ht):'&nbsp;').'</td>';
+				if (empty($value['disableamount'])) 
+				{
+					print '<td align="right">';
+					if (! $qualifiedfortotal) print '<strike>';
+					print (isset($element->total_ht)?price($element->total_ht):'&nbsp;');
+					if (! $qualifiedfortotal) print '</strike>';
+					print '</td>';
+				}
 
                 // Amount
-				if (empty($value['disableamount'])) print '<td align="right">'.(isset($element->total_ttc)?price($element->total_ttc):'&nbsp;').'</td>';
+				if (empty($value['disableamount'])) 
+				{
+					print '<td align="right">';
+					if (! $qualifiedfortotal) print '<strike>';
+					print (isset($element->total_ttc)?price($element->total_ttc):'&nbsp;');
+					if (! $qualifiedfortotal) print '</strike>';
+					print '</td>';
+				}
 
 				// Status
 				print '<td align="right">'.$element->getLibStatut(5).'</td>';
 
 				print '</tr>';
 
-				$total_ht = $total_ht + $element->total_ht;
-				$total_ttc = $total_ttc + $element->total_ttc;
+				if ($qualifiedfortotal)
+				{
+					$total_ht = $total_ht + $element->total_ht;
+					$total_ttc = $total_ttc + $element->total_ttc;
+				}
 			}
 
 			print '<tr class="liste_total"><td colspan="3">'.$langs->trans("Number").': '.$i.'</td>';
@@ -337,7 +373,78 @@ foreach ($listofreferent as $key => $value)
 	}
 }
 
+$langs->load('margins');
+
+// Margin display of the project
+print_titre($langs->trans("Margins"));
+print '<table class="noborder">';
+print '<tr class="liste_titre">';
+print '<td align="left" width="200">'.$langs->trans("Element").'</td>';
+print '<td align="right" width="100">'.$langs->trans("Number").'</td>';
+print '<td align="right" width="100">'.$langs->trans("AmountHT").'</td>';
+print '<td align="right" width="100">'.$langs->trans("AmountTTC").'</td>';
+print '</tr>';
+
+
+foreach ($listofreferent as $key => $value)
+{
+	$title=$value['title'];
+	$classname=$value['class'];
+	$tablename=$value['table'];
+	$qualified=$value['test'];
+	$margin = $value['margin'];
+	if (isset($margin))
+	{
+		$elementarray = $project->get_element_list($key, $tablename);
+		if (count($elementarray)>0 && is_array($elementarray))
+		{
+			$var=true;
+			$total_ht = 0;
+			$total_ttc = 0;
+			$num=count($elementarray);
+			for ($i = 0; $i < $num; $i++)
+			{
+				$element = new $classname($db);
+				$element->fetch($elementarray[$i]);
+				$element->fetch_thirdparty();
+				//print $classname;
+				if ($qualified)
+				{
+					$total_ht = $total_ht + $element->total_ht;
+					$total_ttc = $total_ttc + $element->total_ttc;
+				}
+			}
+
+			print '<tr >';
+			print '<td align="left" >'.$classname.'</td>';
+			print '<td align="right">'.$i.'</td>';
+			print '<td align="right">'.price($total_ht).'</td>';
+			print '<td align="right">'.price($total_ttc).'</td>';
+			print '</tr>';
+			if ($margin=="add")
+			{
+				$margin_ht+= $total_ht;
+				$margin_ttc+= $total_ttc;
+			}
+			else
+			{
+				$margin_ht-= $total_ht;
+				$margin_ttc-= $total_ttc;
+			}
+		}
+
+	}
+}
+// and the margin amount total
+print '<tr class="liste_total">';
+print '<td align="right" colspan=2 >'.$langs->trans("Total").'</td>';
+print '<td align="right" >'.price($margin_ht).'</td>';
+print '<td align="right" >'.price($margin_ttc).'</td>';
+print '</tr>';
+
+print "</table>";
+
+
 llxFooter();
 
 $db->close();
-?>

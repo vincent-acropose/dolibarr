@@ -2,7 +2,7 @@
 #----------------------------------------------------------------------------
 # \file         build/makepack-dolibarr.pl
 # \brief        Dolibarr package builder (tgz, zip, rpm, deb, exe, aps)
-# \author       (c)2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
+# \author       (c)2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
 #
 # This is list of constant you can set to have generated packages moved into a specific dir: 
 #DESTIBETARC='/media/HDDATA1_LD/Mes Sites/Web/Dolibarr/dolibarr.org/files/lastbuild'
@@ -20,7 +20,8 @@ $RPMSUBVERSION="auto";	# auto use value found into BUILD
 
 @LISTETARGET=("TGZ","ZIP","RPM_GENERIC","RPM_FEDORA","RPM_MANDRIVA","RPM_OPENSUSE","DEB","APS","EXEDOLIWAMP","SNAPSHOT");   # Possible packages
 %REQUIREMENTPUBLISH=(
-"SF"=>"git ssh rsync"
+"SF"=>"git ssh rsync",
+"ASSO"=>"git ssh rsync"
 );
 %REQUIREMENTTARGET=(                            # Tool requirement for each package
 "TGZ"=>"tar",
@@ -58,7 +59,8 @@ $DIR||='.'; $DIR =~ s/([^\/\\])[\\\/]+$/$1/;
 
 $SOURCE="$DIR/..";
 $DESTI="$SOURCE/build";
-$PUBLISH="eldy,dolibarr\@frs.sourceforge.net:/home/frs/project/dolibarr";
+$PUBLISHSTABLE="eldy,dolibarr\@frs.sourceforge.net:/home/frs/project/dolibarr";
+$PUBLISHBETARC="ldestailleur\@asso.dolibarr.org:/home/dolibarr/dolibarr.org/files";
 if (! $ENV{"DESTIBETARC"} || ! $ENV{"DESTISTABLE"})
 {
     print "Error: Missing environment variables.\n";
@@ -116,7 +118,7 @@ $BUILDROOT="$TEMP/buildroot";
 $result = open( IN, "<" . $SOURCE . "/htdocs/filefunc.inc.php" );
 if ( !$result ) { die "Error: Can't open descriptor file " . $SOURCE . "/htdocs/filefunc.inc.php\n"; }
 while (<IN>) {
-	if ( $_ =~ /define\('DOL_VERSION','([\d\.]+)'\)/ ) { $PROJVERSION = $1; break; }
+	if ( $_ =~ /define\('DOL_VERSION','([\d\.a-z\-]+)'\)/ ) { $PROJVERSION = $1; break; }
 }
 close IN;
 ($MAJOR,$MINOR,$BUILD)=split(/\./,$PROJVERSION,3);
@@ -174,15 +176,15 @@ for (0..@ARGV-1) {
 }
 if ($ENV{"DESTIBETARC"} && $BUILD =~ /[a-z]/i)   { $DESTI = $ENV{"DESTIBETARC"}; }	# Force output dir if env DESTIBETARC is defined
 if ($ENV{"DESTISTABLE"} && $BUILD =~ /^[0-9]+$/) { $DESTI = $ENV{"DESTISTABLE"}; }	# Force output dir if env DESTISTABLE is defined
-if ($ENV{"PUBLISHBETARC"} && $BUILD =~ /[a-z]/i)   { $PUBLISH = $ENV{"PUBLISHBETARC"}; }	# Force target site for publishing if env PUBLISHBETARC is defined
-if ($ENV{"PUBLISHSTABLE"} && $BUILD =~ /^[0-9]+$/) { $PUBLISH = $ENV{"PUBLISHSTABLE"}; }	# Force target site for publishing if env PUBLISHSTABLE is defined
+if ($ENV{"PUBLISHBETARC"} && $BUILD =~ /[a-z]/i)   { $PUBLISHBETARC = $ENV{"PUBLISHBETARC"}; }	# Force target site for publishing if env PUBLISHBETARC is defined
+if ($ENV{"PUBLISHSTABLE"} && $BUILD =~ /^[0-9]+$/) { $PUBLISHSTABLE = $ENV{"PUBLISHSTABLE"}; }	# Force target site for publishing if env PUBLISHSTABLE is defined
 
 print "Makepack version $VERSION\n";
 print "Building/publishing package name: $PROJECT\n";
 print "Building/publishing package version: $MAJOR.$MINOR.$BUILD\n";
 print "Source directory (SOURCE): $SOURCE\n";
 print "Target directory (DESTI) : $DESTI\n";
-print "Publishing target (PUBLISH): $PUBLISH\n";
+#print "Publishing target (PUBLISH): $PUBLISH\n";
 
 
 # Choose package targets
@@ -190,24 +192,27 @@ print "Publishing target (PUBLISH): $PUBLISH\n";
 if ($target) {
 	if ($target eq "ALL") { 
 		foreach my $key (@LISTETARGET) {
-	    	if ($key ne 'SNAPSHOT' && $key ne 'SF') { $CHOOSEDTARGET{$key}=1; }
+	    	if ($key ne 'SNAPSHOT' && $key ne 'SF' && $key ne 'ASSO') { $CHOOSEDTARGET{$key}=1; }
 		}
 	}
-	if ($target ne "ALL" && $target ne "SF") { $CHOOSEDTARGET{uc($target)}=1; }
+	if ($target ne "ALL" && $target ne "SF" && $target ne "ASSO") { $CHOOSEDTARGET{uc($target)}=1; }
 	if ($target eq "SF") { $CHOOSEDPUBLISH{"SF"}=1; }
+	if ($target eq "ASSO") { $CHOOSEDPUBLISH{"ASSO"}=1; }
 }
 else {
     my $found=0;
     my $NUM_SCRIPT;
    	my $cpt=0;
     while (! $found) {
-    	printf(" %2d - %-12s    (%s)\n",$cpt,"ALL (1..9)","Need ".join(",",values %REQUIREMENTTARGET));
+    	printf(" %2d - %-14s  (%s)\n",$cpt,"ALL (1..9)","Need ".join(",",values %REQUIREMENTTARGET));
     	foreach my $target (@LISTETARGET) {
     		$cpt++;
-    		printf(" %2d - %-12s    (%s)\n",$cpt,$target,"Need ".$REQUIREMENTTARGET{$target});
+    		printf(" %2d - %-14s  (%s)\n",$cpt,$target,"Need ".$REQUIREMENTTARGET{$target});
     	}
+    	$cpt=98;
+    	printf(" %2d - %-14s  (%s)\n",$cpt,"ASSO (publish)","Need ".join(",",values %REQUIREMENTPUBLISH));
     	$cpt=99;
-    	printf(" %2d - %-12s    (%s)\n",$cpt,"SF (publish)","Need ".join(",",values %REQUIREMENTPUBLISH));
+    	printf(" %2d - %-14s  (%s)\n",$cpt,"SF (publish)","Need ".join(",",values %REQUIREMENTPUBLISH));
     
     	# Ask which target to build
     	print "Choose one package number or several separated with space (0 - ".$cpt."): ";
@@ -224,19 +229,25 @@ else {
     	}
     }
     print "\n";
-    if ($NUM_SCRIPT eq "99") {
-   		$CHOOSEDPUBLISH{"SF"}=1;
+    if ($NUM_SCRIPT eq "98") {
+   		$CHOOSEDPUBLISH{"ASSO"}=1;
     }
-    else {
-	    if ($NUM_SCRIPT eq "0") {
-	    	foreach my $key (@LISTETARGET) {
-	    		if ($key ne 'SNAPSHOT' && $key ne 'SF') { $CHOOSEDTARGET{$key}=1; }
-	        }
+    else 
+    {
+    	if ($NUM_SCRIPT eq "99") {
+	   		$CHOOSEDPUBLISH{"SF"}=1;
 	    }
 	    else {
-	   		foreach my $num (split(/\s+/,$NUM_SCRIPT)) {
-	   			$CHOOSEDTARGET{$LISTETARGET[$num-1]}=1;
-	   		}
+		    if ($NUM_SCRIPT eq "0") {
+		    	foreach my $key (@LISTETARGET) {
+		    		if ($key ne 'SNAPSHOT' && $key ne 'ASSO' && $key ne 'SF') { $CHOOSEDTARGET{$key}=1; }
+		        }
+		    }
+		    else {
+		   		foreach my $num (split(/\s+/,$NUM_SCRIPT)) {
+		   			$CHOOSEDTARGET{$LISTETARGET[$num-1]}=1;
+		   		}
+		    }
 	    }
     }
 }
@@ -301,10 +312,8 @@ foreach my $target (keys %CHOOSEDTARGET) {
 }
 foreach my $target (keys %CHOOSEDPUBLISH) {
     if ($CHOOSEDPUBLISH{$target} < 0) { next; }
-	if ($target eq 'SF')
-	{
-		$nbofpublishneedtag++;
-	}
+	if ($target eq 'ASSO') { $nbofpublishneedtag++; }
+	if ($target eq 'SF') { $nbofpublishneedtag++; }
 	$nboftargetok++;
 }
 
@@ -350,24 +359,22 @@ if ($nboftargetok) {
 	    	print "Copy $SOURCE into $BUILDROOT/$PROJECT\n";
 	    	$ret=`cp -pr "$SOURCE" "$BUILDROOT/$PROJECT"`;
 
-	    	print "Copy $SOURCE/build/debian/apache/.htaccess into $BUILDROOT/$PROJECT/build/debian/apache/.htaccess\n";
-	    	$ret=`cp -pr "$SOURCE/build/debian/apache/.htaccess" "$BUILDROOT/$PROJECT/build/debian/apache/.htaccess"`;
+	    	#print "Copy $SOURCE/build/debian/apache/.htaccess into $BUILDROOT/$PROJECT/build/debian/apache/.htaccess\n";
+	    	#$ret=`cp -pr "$SOURCE/build/debian/apache/.htaccess" "$BUILDROOT/$PROJECT/build/debian/apache/.htaccess"`;
 	    }
 	    print "Clean $BUILDROOT\n";
 	    $ret=`rm -f  $BUILDROOT/$PROJECT/.buildpath`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/.cache`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/.externalToolBuilders`;
-	    $ret=`rm -fr $BUILDROOT/$PROJECT/.git`;
-	    $ret=`rm -f  $BUILDROOT/$PROJECT/.gitmodules`;
-        $ret=`rm -f  $BUILDROOT/$PROJECT/.gitignore`;
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/.git*`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/.project`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/.settings`;
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/.scrutinizer.yml`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/.travis.yml`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/.tx`;
 	    $ret=`rm -f  $BUILDROOT/$PROJECT/build.xml`;
 	    $ret=`rm -f  $BUILDROOT/$PROJECT/quickbuild.xml`;
         $ret=`rm -f  $BUILDROOT/$PROJECT/pom.xml`;
-        $ret=`rm -f  $BUILDROOT/$PROJECT/README.md`;
         
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/build/html`;
         $ret=`rm -f  $BUILDROOT/$PROJECT/build/Doli*-*`;
@@ -409,6 +416,7 @@ if ($nboftargetok) {
         $ret=`rm -fr $BUILDROOT/$PROJECT/dev/spec`;
         $ret=`rm -fr $BUILDROOT/$PROJECT/dev/test`;
         $ret=`rm -fr $BUILDROOT/$PROJECT/dev/uml`;
+        $ret=`rm -fr $BUILDROOT/$PROJECT/dev/vagrant`;
         $ret=`rm -fr $BUILDROOT/$PROJECT/dev/xdebug`;
         $ret=`rm -f  $BUILDROOT/$PROJECT/dev/dolibarr_changes.txt`;
         $ret=`rm -f  $BUILDROOT/$PROJECT/dev/README`;
@@ -446,14 +454,15 @@ if ($nboftargetok) {
         $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/ckeditor/adapters`;		# Keep this removal in case we embed libraries
         #$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/ckeditor/_source`;		# _source must be kept into tarball
    	    
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/jquery/plugins/datatables/extras/TableTools/swf`;	# Source of this flash is not available
 	    $ret=`rm -f  $BUILDROOT/$PROJECT/htdocs/includes/jquery/plugins/multiselect/MIT-LICENSE.txt`;
         $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/nusoap/lib/Mail`;
         $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/nusoap/samples`;
         $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/phpexcel/license.txt`;
         $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/phpexcel/PHPExcel/Shared/PDF`;
         $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/phpexcel/PHPExcel/Shared/PCLZip`;
-        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/tcpdf/fonts/dejavu-fonts-ttf-2.33`;
-        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/tcpdf/fonts/freefont-20100919`;
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/tcpdf/fonts/dejavu-fonts-ttf-*`;
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/tcpdf/fonts/freefont-*`;
         $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/tcpdf/fonts/utils`;
 	    $ret=`rm -f  $BUILDROOT/$PROJECT/htdocs/includes/tcpdf/LICENSE.TXT`;
         $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/savant`;
@@ -602,9 +611,6 @@ if ($nboftargetok) {
 
             print "Version is $MAJOR.$MINOR.$REL1-$RPMSUBVERSION\n";
 
-            #print "Create directory $RPMDIR\n";
-            #$ret=`mkdir -p "$RPMDIR"`;
-
     		print "Remove target ".$FILENAMERPM."...\n";
     		unlink("$NEWDESTI/".$FILENAMERPM);
     		print "Remove target ".$FILENAMETGZ2."-".$RPMSUBVERSION.".src.rpm...\n";
@@ -612,13 +618,13 @@ if ($nboftargetok) {
 
     		print "Create directory $BUILDROOT/$FILENAMETGZ2\n";
     		$ret=`rm -fr $BUILDROOT/$FILENAMETGZ2`;
+    		
             print "Copy $BUILDROOT/$PROJECT to $BUILDROOT/$FILENAMETGZ2\n";
     		$cmd="cp -pr '$BUILDROOT/$PROJECT' '$BUILDROOT/$FILENAMETGZ2'";
             $ret=`$cmd`;
 
-			# Set owners
-            #print "Set owners on files/dir\n";
-		    #$ret=`chown -R root.root $BUILDROOT/$FILENAMETGZ2`;
+            # Removed files we don't need
+            $ret=`rm -fr $BUILDROOT/$FILENAMETGZ2/htdocs/includes/ckeditor/_source`;
 
             print "Set permissions on files/dir\n";
 		    $ret=`chmod -R 755 $BUILDROOT/$FILENAMETGZ2`;
@@ -688,6 +694,8 @@ if ($nboftargetok) {
     		unlink("$NEWDESTI/${FILENAMEDEB}.tar.gz");
     		print "Remove target ${FILENAMEDEB}.changes...\n";
     		unlink("$NEWDESTI/${FILENAMEDEB}.changes");
+    		print "Remove target ${FILENAMEDEB}.debian.tar.gz...\n";
+    		unlink("$NEWDESTI/${FILENAMEDEB}.debian.tar.gz");
     		print "Remove target ${FILENAMEDEBNATIVE}.orig.tar.gz...\n";
     		unlink("$NEWDESTI/${FILENAMEDEBNATIVE}.orig.tar.gz");
 
@@ -717,7 +725,7 @@ if ($nboftargetok) {
             $ret=`rm -f  $BUILDROOT/$PROJECT.tmp/build/debian/copyright`;
             $ret=`rm -f  $BUILDROOT/$PROJECT.tmp/build/debian/dolibarr.config`;
             $ret=`rm -f  $BUILDROOT/$PROJECT.tmp/build/debian/dolibarr.desktop`;
-            $ret=`rm -f  $BUILDROOT/$PROJECT.tmp/build/debian/dolibarr.doc-base`;
+            $ret=`rm -f  $BUILDROOT/$PROJECT.tmp/build/debian/dolibarr.docs`;
             $ret=`rm -f  $BUILDROOT/$PROJECT.tmp/build/debian/dolibarr.install`;
             $ret=`rm -f  $BUILDROOT/$PROJECT.tmp/build/debian/dolibarr.lintian-overrides`;
             $ret=`rm -f  $BUILDROOT/$PROJECT.tmp/build/debian/dolibarr.postrm`;
@@ -725,6 +733,7 @@ if ($nboftargetok) {
             $ret=`rm -f  $BUILDROOT/$PROJECT.tmp/build/debian/dolibarr.templates`;
             $ret=`rm -f  $BUILDROOT/$PROJECT.tmp/build/debian/dolibarr.templates.futur`;
             $ret=`rm -f  $BUILDROOT/$PROJECT.tmp/build/debian/rules`;
+            $ret=`rm -f  $BUILDROOT/$PROJECT.tmp/build/debian/README.Debian`;
             $ret=`rm -f  $BUILDROOT/$PROJECT.tmp/build/debian/README.howto`;
             $ret=`rm -f  $BUILDROOT/$PROJECT.tmp/build/debian/watch`;
             $ret=`rm -fr $BUILDROOT/$PROJECT.tmp/build/doap`;
@@ -735,6 +744,19 @@ if ($nboftargetok) {
             $ret=`rm -fr $BUILDROOT/$PROJECT.tmp/build/perl`;
             $ret=`rm -fr $BUILDROOT/$PROJECT.tmp/build/rpm`;
             $ret=`rm -fr $BUILDROOT/$PROJECT.tmp/build/zip`;
+            # Removed duplicate license files
+            $ret=`rm -fr $BUILDROOT/$PROJECT.tmp/htdocs/includes/ckeditor/_source/LICENSE.md`;
+            $ret=`rm -fr $BUILDROOT/$PROJECT.tmp/htdocs/includes/ckeditor/_source/plugins/scayt/LICENSE.md`;
+            $ret=`rm -fr $BUILDROOT/$PROJECT.tmp/htdocs/includes/ckeditor/_source/plugins/wsc/LICENSE.md`;
+            $ret=`rm -fr $BUILDROOT/$PROJECT.tmp/htdocs/includes/ckeditor/LICENSE.md`;
+            $ret=`rm -fr $BUILDROOT/$PROJECT.tmp/htdocs/includes/ckeditor/plugins/scayt/LICENSE.md`;
+            $ret=`rm -fr $BUILDROOT/$PROJECT.tmp/htdocs/includes/ckeditor/plugins/wsc/LICENSE.md`;
+            $ret=`rm -fr $BUILDROOT/$PROJECT.tmp/htdocs/includes/jquery/plugins/flot/LICENSE.txt`;
+            $ret=`rm -fr $BUILDROOT/$PROJECT.tmp/htdocs/includes/tcpdf/fonts/dejavu-fonts-ttf-2.34/LICENSE`;
+            $ret=`rm -fr $BUILDROOT/$PROJECT.tmp/htdocs/includes/tcpdf/fonts/freefont-20120503/COPYING`;
+            # Removed files we don't need
+            $ret=`rm -fr $BUILDROOT/$PROJECT.tmp/htdocs/includes/ckeditor/_source`;
+            
             # Rename upstream changelog to match debian rules
 			$ret=`mv $BUILDROOT/$PROJECT.tmp/ChangeLog $BUILDROOT/$PROJECT.tmp/changelog`;
 			
@@ -748,11 +770,10 @@ if ($nboftargetok) {
             $ret=`cp -f  "$SOURCE/build/debian/control"        "$BUILDROOT/$PROJECT.tmp/debian"`;
             $ret=`cp -f  "$SOURCE/build/debian/copyright"      "$BUILDROOT/$PROJECT.tmp/debian"`;
             $ret=`cp -f  "$SOURCE/build/debian/dolibarr.desktop"        	"$BUILDROOT/$PROJECT.tmp/debian"`;
-            $ret=`cp -f  "$SOURCE/build/debian/dolibarr.doc-base"        	"$BUILDROOT/$PROJECT.tmp/debian"`;
+            $ret=`cp -f  "$SOURCE/build/debian/dolibarr.docs"        		"$BUILDROOT/$PROJECT.tmp/debian"`;
             $ret=`cp -f  "$SOURCE/build/debian/dolibarr.install" 	        "$BUILDROOT/$PROJECT.tmp/debian"`;
             $ret=`cp -f  "$SOURCE/build/debian/dolibarr.lintian-overrides"  "$BUILDROOT/$PROJECT.tmp/debian"`;
             $ret=`cp -f  "$SOURCE/build/debian/dolibarr.xpm"  		      	"$BUILDROOT/$PROJECT.tmp/debian"`;
-            $ret=`cp -f  "$SOURCE/build/debian/README.source"  "$BUILDROOT/$PROJECT.tmp/debian"`;
             $ret=`cp -f  "$SOURCE/build/debian/rules"          "$BUILDROOT/$PROJECT.tmp/debian"`;
             $ret=`cp -f  "$SOURCE/build/debian/watch"          "$BUILDROOT/$PROJECT.tmp/debian"`;
             $ret=`cp -fr "$SOURCE/build/debian/patches"        "$BUILDROOT/$PROJECT.tmp/debian"`;
@@ -829,6 +850,7 @@ if ($nboftargetok) {
             $ret=`mv $BUILDROOT/*_all.deb "$NEWDESTI/"`;
             $ret=`mv $BUILDROOT/*.dsc "$NEWDESTI/"`;
             $ret=`mv $BUILDROOT/*.orig.tar.gz "$NEWDESTI/"`;
+            $ret=`mv $BUILDROOT/*.debian.tar.gz "$NEWDESTI/"`;
             $ret=`mv $BUILDROOT/*.changes "$NEWDESTI/"`;
         	next;
         }
@@ -889,8 +911,6 @@ if ($nboftargetok) {
             close SPECFROM;
             close SPECTO;
             print "Version set to $MAJOR.$MINOR.$newbuild\n";
-            #$cmd="cp -pr \"$BUILDROOT/$PROJECT/build/aps/configure\" \"$BUILDROOT/$PROJECT.tmp/$PROJECT/scripts/configure\"";
-            #$ret=`$cmd`;
             $cmd="cp -pr \"$BUILDROOT/$PROJECT/build/aps/configure.php\" \"$BUILDROOT/$PROJECT.tmp/$PROJECT/scripts/configure.php\"";
             $ret=`$cmd`;
             $cmd="cp -pr \"$BUILDROOT/$PROJECT/doc/images\" \"$BUILDROOT/$PROJECT.tmp/$PROJECT/images\"";
@@ -929,8 +949,12 @@ if ($nboftargetok) {
  
  			$SOURCEBACK=$SOURCE;
  			$SOURCEBACK =~ s/\//\\/g;
-    		print "Compil exe $FILENAMEEXEDOLIWAMP.exe file from iss file \"$SOURCEBACK\\build\\exe\\doliwamp\\doliwamp.iss\"\n";
-    		$cmd= "ISCC.exe \"$SOURCEBACK\\build\\exe\\doliwamp\\doliwamp.iss\"";
+
+    		print "Prepare file \"$SOURCEBACK\\build\\exe\\doliwamp\\doliwamp.tmp.iss from \"$SOURCEBACK\\build\\exe\\doliwamp\\doliwamp.iss\"\n";
+    		$ret=`cat "$SOURCE/build/exe/doliwamp/doliwamp.iss" | sed -e 's/__FILENAMEEXEDOLIWAMP__/$FILENAMEEXEDOLIWAMP/g' > "$SOURCE/build/exe/doliwamp/doliwamp.tmp.iss"`;
+
+    		print "Compil exe $FILENAMEEXEDOLIWAMP.exe file from iss file \"$SOURCEBACK\\build\\exe\\doliwamp\\doliwamp.tmp.iss\"\n";
+    		$cmd= "ISCC.exe \"$SOURCEBACK\\build\\exe\\doliwamp\\doliwamp.tmp.iss\"";
 			print "$cmd\n";
 			$ret= `$cmd`;
 			#print "$ret\n";
@@ -940,6 +964,9 @@ if ($nboftargetok) {
     		rename("$SOURCE/build/$FILENAMEEXEDOLIWAMP.exe","$NEWDESTI/$FILENAMEEXEDOLIWAMP.exe");
             print "Move $SOURCE/build/$FILENAMEEXEDOLIWAMP.exe to $NEWDESTI/$FILENAMEEXEDOLIWAMP.exe\n";
             $ret=`mv "$SOURCE/build/$FILENAMEEXEDOLIWAMP.exe" "$NEWDESTI/$FILENAMEEXEDOLIWAMP.exe"`;
+            
+            $ret=`rm "$SOURCE/build/exe/doliwamp/doliwamp.tmp.iss"`;
+            
     		next;
     	}
     }
@@ -951,7 +978,7 @@ if ($nboftargetok) {
         if ($CHOOSEDPUBLISH{$target} < 0) { next; }
     
 		print "\nList of files to publish\n";
-    	%filestoscan=(
+    	%filestoscansf=(
     		"$DESTI/package_rpm_generic/$FILENAMERPM"=>'Dolibarr installer for Fedora-Redhat-Mandriva-Opensuse (DoliRpm)',
     		"$DESTI/package_debian-ubuntu/${FILENAMEDEB}_all.deb"=>'Dolibarr installer for Debian-Ubuntu (DoliDeb)',
     		"$DESTI/package_windows/$FILENAMEEXEDOLIWAMP.exe"=>'Dolibarr installer for Windows (DoliWamp)',
@@ -959,7 +986,7 @@ if ($nboftargetok) {
     		"$DESTI/standard/$FILENAMETGZ.zip"=>'Dolibarr ERP-CRM'
     	);
     	use POSIX qw/strftime/;
-    	foreach my $file (sort keys %filestoscan)
+    	foreach my $file (sort keys %filestoscansf)
     	{
     		$found=0;
     		my $filesize = -s $file;
@@ -970,10 +997,14 @@ if ($nboftargetok) {
     		print "\n";
     	}
 
-    	if ($target eq 'SF') 
+    	if ($target eq 'SF' || $target eq 'ASSO') 
     	{
     		print "\n";
     		
+    		if ($target eq 'SF') { $PUBLISH = $PUBLISHSTABLE; }
+			if ($target eq 'ASSO' && $BUILD =~ /[a-z]/i)   { $PUBLISH = $PUBLISHBETARC.'/lastbuild'; }
+			if ($target eq 'ASSO' && $BUILD =~ /^[0-9]+$/) { $PUBLISH = $PUBLISHBETARC.'/stable'; }
+			
     		$NEWPUBLISH=$PUBLISH;
     		print "Publish to target $NEWPUBLISH. Click enter or CTRL+C...\n";
 
@@ -983,6 +1014,8 @@ if ($nboftargetok) {
 
 			print "Create empty dir /tmp/emptydir. We need it to create target dir using rsync.\n";
             $ret=`mkdir -p "/tmp/emptydir/"`;
+            
+            %filestoscan=%filestoscansf;
             
 	    	foreach my $file (sort keys %filestoscan)
 	    	{
@@ -1008,6 +1041,7 @@ if ($nboftargetok) {
 				#$command="ssh eldy,dolibarr\@frs.sourceforge.net mkdir -p \"$destFolder\"";
 				#print "$command\n";	
 				#my $ret=`$command 2>&1`;
+
 				$command="rsync -s -e 'ssh' --recursive /tmp/emptydir/ \"".$destFolder."\"";
 				print "$command\n";	
 				my $ret=`$command 2>&1`;

@@ -25,7 +25,8 @@
 
 
 /**
- *	Get value of an HTML field, do Ajax process and show result
+ *	Get value of an HTML field, do Ajax process and show result.
+ *  The HTML field must be an input text with id=search_$htmlname.
  *
  *  @param	string	$selected           Preselecte value
  *	@param	string	$htmlname           HTML name of input field
@@ -54,11 +55,12 @@ function ajax_autocompleter($selected, $htmlname, $url, $urloption='', $minLengt
 						$("#'.$htmlname.'").val("");
 					});
 					$("input#search_'.$htmlname.'").change(function() {
-						//console.log(\'keyup\');
+						//console.log(\'change\');
 						$("#'.$htmlname.'").trigger("change");
 					});
 					// Check when keyup
-					$("input#search_'.$htmlname.'").onDelayedKeyup({ handler: function() {
+					$("input#search_'.$htmlname.'").keyup(function() {
+							//console.log(\'keyup\');
 						    if ($(this).val().length == 0)
 						    {
 	                            $("#search_'.$htmlname.'").val("");
@@ -91,7 +93,6 @@ function ajax_autocompleter($selected, $htmlname, $url, $urloption='', $minLengt
 	    							});
 	    						}
 						    }
-						}
                     });
     				$("input#search_'.$htmlname.'").autocomplete({
     					source: function( request, response ) {
@@ -120,17 +121,20 @@ function ajax_autocompleter($selected, $htmlname, $url, $urloption='', $minLengt
 						},
 						dataType: "json",
     					minLength: '.$minLength.',
-    					select: function( event, ui ) {
+    					select: function( event, ui ) {		// Function ran when new value is selected into javascript combo
 							//console.log(\'set value of id with \'+ui.item.id);
-    						$("#'.$htmlname.'").val(ui.item.id).trigger("change");
+    						$("#'.$htmlname.'").val(ui.item.id).trigger("change");	// Select new value
     						// Disable an element
     						if (options.option_disabled) {
     							if (ui.item.disabled) {
     								$("#" + options.option_disabled).attr("disabled", "disabled");
     								if (options.error) {
-    									$.jnotify(options.error, "error", true);
+    									$.jnotify(options.error, "error", true);		// Output with jnotify the error message
     								}
-    							} else {
+    								if (options.warning) {
+    									$.jnotify(options.warning, "warning", false);		// Output with jnotify the warning message
+    								}
+							} else {
     								$("#" + options.option_disabled).removeAttr("disabled");
     							}
     						}
@@ -162,6 +166,7 @@ function ajax_autocompleter($selected, $htmlname, $url, $urloption='', $minLengt
 									}
     							});
     						}
+    						$("#search_'.$htmlname.'").trigger("change");	// To tell that input text field was modified
     					}
 					}).data( "autocomplete" )._renderItem = function( ul, item ) {
 						return $( "<li></li>" )
@@ -169,6 +174,7 @@ function ajax_autocompleter($selected, $htmlname, $url, $urloption='', $minLengt
 						.append( \'<a><span class="tag">\' + item.label + "</span></a>" )
 						.appendTo(ul);
 					};
+
   				});';
 	$script.= '</script>';
 
@@ -268,7 +274,7 @@ function ajax_dialog($title,$message,$w=350,$h=150)
 {
 	global $langs;
 
-	$msg.= '<div id="dialog-info" title="'.dol_escape_htmltag($title).'">';
+	$msg= '<div id="dialog-info" title="'.dol_escape_htmltag($title).'">';
 	$msg.= $message;
 	$msg.= '</div>'."\n";
     $msg.= '<script type="text/javascript">
@@ -293,14 +299,16 @@ function ajax_dialog($title,$message,$w=350,$h=150)
 }
 
 /**
- * 	Convert a html select field into an ajax combobox
+ * Convert a html select field into an ajax combobox.
+ * Use ajax_combobox() only for small combo list! If not, use instead ajax_autocompleter().
+ * TODO: It is used when COMPANY_USE_SEARCH_TO_SELECT and CONTACT_USE_SEARCH_TO_SELECT are set by html.formcompany.class.php. Should use ajax_autocompleter instead like done by html.form.class.php for select_produits.
  *
- * 	@param	string	$htmlname					Name of html select field
- * 	@param	array	$event						Event options. Example: array(array('method'=>'getContacts', 'url'=>dol_buildpath('/core/ajax/contacts.php',1), 'htmlname'=>'contactid', 'params'=>array('add-customer-contact'=>'disabled')))
- *  @param  int		$minLengthToAutocomplete	Minimum length of input string to start autocomplete
- *  @return	string								Return html string to convert a select field into a combo
+ * @param	string	$htmlname					Name of html select field
+ * @param	array	$events						Event options. Example: array(array('method'=>'getContacts', 'url'=>dol_buildpath('/core/ajax/contacts.php',1), 'htmlname'=>'contactid', 'params'=>array('add-customer-contact'=>'disabled')))
+ * @param  	int		$minLengthToAutocomplete	Minimum length of input string to start autocomplete
+ * @return	string								Return html string to convert a select field into a combo
  */
-function ajax_combobox($htmlname, $event=array(), $minLengthToAutocomplete=0)
+function ajax_combobox($htmlname, $events=array(), $minLengthToAutocomplete=0)
 {
 	global $conf;
 
@@ -326,7 +334,7 @@ function ajax_combobox($htmlname, $event=array(), $minLengthToAutocomplete=0)
     	$("#'.$htmlname.'").combobox({
     		minLengthToAutocomplete : '.$minLengthToAutocomplete.',
     		selected : function(event,ui) {
-    			var obj = '.json_encode($event).';
+    			var obj = '.json_encode($events).';
     			$.each(obj, function(key,values) {
     				if (values.method.length) {
     					getMethod(values);
@@ -340,11 +348,13 @@ function ajax_combobox($htmlname, $event=array(), $minLengthToAutocomplete=0)
 			var method = obj.method;
 			var url = obj.url;
 			var htmlname = obj.htmlname;
+			var showempty = obj.showempty;
     		$.getJSON(url,
 					{
 						action: method,
 						id: id,
-						htmlname: htmlname
+						htmlname: htmlname,
+						showempty: showempty
 					},
 					function(response) {
 						$.each(obj.params, function(key,action) {
@@ -367,7 +377,8 @@ function ajax_combobox($htmlname, $event=array(), $minLengthToAutocomplete=0)
 						}
 					});
 		}
-	});';
+
+	});'."\n";
     $msg.= "</script>\n";
 
     return $msg;
@@ -432,4 +443,3 @@ function ajax_constantonoff($code, $input=array(), $entity=null, $revertonoff=0,
 	return $out;
 }
 
-?>

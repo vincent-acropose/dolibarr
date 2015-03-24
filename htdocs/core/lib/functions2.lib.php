@@ -454,7 +454,7 @@ function clean_url($url,$http=1)
     {
         $proto=$regs[1];
         $domain=$regs[2];
-        $port=$regs[3];
+        $port=isset($regs[3])?$regs[3]:'';
         //print $url." -> ".$proto." - ".$domain." - ".$port;
         //$url = dol_string_nospecial(trim($url));
         $url = trim($url);
@@ -716,7 +716,7 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     //print "masktri=".$masktri." maskcounter=".$maskcounter." maskraz=".$maskraz." maskoffset=".$maskoffset."<br>\n";
 
     // Define $sqlstring
-    $posnumstart=strpos($maskwithnocode,$maskcounter);	// Pos of counter in final string (from 0 to ...)
+    $posnumstart=strrpos($maskwithnocode,$maskcounter);	// Pos of counter in final string (from 0 to ...)
     if ($posnumstart < 0) return 'ErrorBadMaskFailedToLocatePosOfSequence';
     $sqlstring='SUBSTRING('.$field.', '.($posnumstart+1).', '.dol_strlen($maskcounter).')';
 
@@ -738,8 +738,8 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     $sql = "SELECT MAX(".$sqlstring.") as val";
     $sql.= " FROM ".MAIN_DB_PREFIX.$table;
     $sql.= " WHERE ".$field." LIKE '".$maskLike."'";
-    $sql.= " AND ".$field." NOT LIKE '%PROV%'";
-    if ($table != 'projet_task') $sql.= " AND entity IN (".getEntity($table, 1).")";
+    $sql.= " AND ".$field." NOT LIKE '(PROV%)'";
+    $sql.= " AND entity IN (".getEntity($table, 1).")";
     if ($where) $sql.=$where;
     if ($sqlwhere) $sql.=' AND '.$sqlwhere;
 
@@ -1107,7 +1107,7 @@ function numero_semaine($time)
  *	Convertit une masse d'une unite vers une autre unite
  *
  *	@param	float	$weight    		Masse a convertir
- *	@param  int		&$from_unit 		Unite originale en puissance de 10
+ *	@param  int		$from_unit 		Unite originale en puissance de 10
  *	@param  int		$to_unit   		Nouvelle unite  en puissance de 10
  *	@return float	        		Masse convertie
  */
@@ -1142,7 +1142,7 @@ function weight_convert($weight,&$from_unit,$to_unit)
  *
  *	@param	DoliDB	$db         Handler database
  *	@param	Conf	$conf		Object conf
- *	@param	User	&$user      Object user
+ *	@param	User	$user      Object user
  *	@param	array	$tab        Tableau (cle=>valeur) des parametres a sauvegarder
  *	@return int         		<0 if KO, >0 if OK
  *
@@ -1220,7 +1220,7 @@ function dol_print_reduction($reduction,$langs)
     $string = '';
     if ($reduction == 100)
     {
-        $string = $langs->trans("Offered");
+        $string = $langs->transnoentities("Offered");
     }
     else
     {
@@ -1662,4 +1662,126 @@ function cleanCorruptedTree($db, $tabletocleantree, $fieldfkparent)
 		print '<br>We fixed '.$totalnb.' record(s). Some records may still be corrupted. New check may be required.';
 		return $totalnb;
 	}
+}
+
+/**
+ *	Get an array with properties of an element
+*
+* @param string $element_type Element type. ex : project_task or object@modulext or object_under@module
+* @return array (module, classpath, element, subelement, classfile, classname)
+*/
+function getElementProperties($element_type)
+{
+    // Parse element/subelement (ex: project_task)
+    $module = $element = $subelement = $element_type;
+
+    // If we ask an resource form external module (instead of default path)
+    if (preg_match('/^([^@]+)@([^@]+)$/i',$element_type,$regs))
+    {
+        $element = $subelement = $regs[1];
+        $module 	= $regs[2];
+    }
+
+    //print '<br />1. element : '.$element.' - module : '.$module .'<br />';
+    if ( preg_match('/^([^_]+)_([^_]+)/i',$element,$regs))
+    {
+        $module = $element = $regs[1];
+        $subelement = $regs[2];
+    }
+
+    $classfile = strtolower($subelement);
+    $classname = ucfirst($subelement);
+    $classpath = $module.'/class';
+
+    // For compat
+    if($element_type == "action") {
+        $classpath = 'comm/action/class';
+        $subelement = 'Actioncomm';
+        $module = 'agenda';
+    }
+
+    // To work with non standard path
+    if ($element_type == 'facture' || $element_type == 'invoice') {
+        $classpath = 'compta/facture/class';
+        $module='facture';
+        $subelement='facture';
+    }
+    if ($element_type == 'commande' || $element_type == 'order') {
+        $classpath = 'commande/class';
+        $module='commande';
+        $subelement='commande';
+    }
+    if ($element_type == 'propal')  {
+        $classpath = 'comm/propal/class';
+    }
+    if ($element_type == 'shipping') {
+        $classpath = 'expedition/class';
+        $subelement = 'expedition';
+        $module = 'expedition_bon';
+    }
+    if ($element_type == 'delivery') {
+        $classpath = 'livraison/class';
+        $subelement = 'livraison';
+        $module = 'livraison_bon';
+    }
+    if ($element_type == 'contract') {
+        $classpath = 'contrat/class';
+        $module='contrat';
+        $subelement='contrat';
+    }
+    if ($element_type == 'member') {
+        $classpath = 'adherents/class';
+        $module='adherent';
+        $subelement='adherent';
+    }
+    if ($element_type == 'cabinetmed_cons') {
+        $classpath = 'cabinetmed/class';
+        $module='cabinetmed';
+        $subelement='cabinetmedcons';
+    }
+    if ($element_type == 'fichinter') {
+        $classpath = 'fichinter/class';
+        $module='ficheinter';
+        $subelement='fichinter';
+    }
+    $classfile = strtolower($subelement);
+    $classname = ucfirst($subelement);
+
+    $element_properties = array(
+        'module' => $module,
+        'classpath' => $classpath,
+        'element' => $element,
+        'subelement' => $subelement,
+        'classfile' => $classfile,
+        'classname' => $classname
+    );
+    return $element_properties;
+}
+
+/**
+ * Fetch an object with element_type and its id
+ * Inclusion classes is automatic
+ *
+ * @param	int     $element_id Element id
+ * @param	string  $element_type Element type
+ * @return 	object || 0 || -1 if error
+ */
+function fetchObjectByElement($element_id,$element_type) {
+
+    global $conf;
+	global $db,$conf;
+
+    $element_prop = getElementProperties($element_type);
+    if (is_array($element_prop) && $conf->$element_prop['module']->enabled)
+    {
+        dol_include_once('/'.$element_prop['classpath'].'/'.$element_prop['classfile'].'.class.php');
+
+		$objectstat = new $element_prop['classname']($db);
+		$ret = $objectstat->fetch($element_id);
+		if ($ret >= 0)
+		{
+			return $objectstat;
+		}
+	}
+	return 0;
 }

@@ -72,6 +72,8 @@ if ($id > 0 || ! empty($ref))
     }
 }
 
+$permissionnote=$user->rights->expedition->creer;	// Used by the include of actions_setnotes.inc.php
+
 
 /******************************************************************************/
 /*                     Actions                                                */
@@ -117,7 +119,6 @@ else if ($action == 'setnote_private')
 /******************************************************************************/
 /* Affichage fiche                                                            */
 /******************************************************************************/
-
 llxHeader();
 
 $form = new Form($db);
@@ -198,4 +199,3 @@ if ($id > 0 || ! empty($ref))
 llxFooter();
 
 $db->close();
-?>
