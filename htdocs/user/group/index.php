@@ -100,7 +100,7 @@ if ($resql)
         $obj = $db->fetch_object($resql);
         $var=!$var;
 
-        print "<tr $bc[$var]>";
+        print "<tr ".$bc[$var].">";
         print '<td><a href="fiche.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowGroup"),"group").' '.$obj->nom.'</a>';
         if (! $obj->entity)
         {
@@ -114,7 +114,7 @@ if ($resql)
             print '<td align="center">'.$mc->label.'</td>';
         }
         print '<td align="center">'.$obj->nb.'</td>';
-        print '<td align="right" nowrap="nowrap">'.dol_print_date($db->jdate($obj->datec),"dayhour").'</td>';
+        print '<td align="right" class="nowrap">'.dol_print_date($db->jdate($obj->datec),"dayhour").'</td>';
         print "</tr>\n";
         $i++;
     }
@@ -129,4 +129,3 @@ else
 
 llxFooter();
 $db->close();
-?>

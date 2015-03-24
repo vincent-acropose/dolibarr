@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2001-2003 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2013 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,18 +20,25 @@
 /**
  *	    \file       htdocs/compta/bank/releve.php
  *      \ingroup    banque
- *		\brief      Page d'affichage d'un releve
+ *		\brief      Page to show a bank receipt report
  */
 
-require 'pre.inc.php';
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/lib/bank.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/sociales/class/chargesociales.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/tva/class/tva.class.php';
+require_once DOL_DOCUMENT_ROOT.'/fourn/class/paiementfourn.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
-$action=GETPOST('action', 'alpha');
-
-$langs->load("companies");
 $langs->load("banks");
+$langs->load("categories");
+$langs->load("companies");
 $langs->load("bills");
 
+$action=GETPOST('action', 'alpha');
 $id=GETPOST('account');
 $ref=GETPOST('ref');
 $dvid=GETPOST('dvid');
@@ -75,6 +82,14 @@ $pagenext = $page + 1;
 llxHeader();
 
 $form = new Form($db);
+$societestatic=new Societe($db);
+$chargestatic=new ChargeSociales($db);
+$memberstatic=new Adherent($db);
+$paymentstatic=new Paiement($db);
+$paymentsupplierstatic=new PaiementFourn($db);
+$paymentvatstatic=new TVA($db);
+$bankstatic=new Account($db);
+$banklinestatic=new AccountLine($db);
 
 
 // Load account
@@ -84,7 +99,7 @@ if ($id > 0 || ! empty($ref))
 	$acct->fetch($id, $ref);
 }
 
-if (! isset($num))
+if (empty($num))
 {
 	/*
 	 *	Vue liste tous releves confondus
@@ -130,7 +145,7 @@ if (! isset($num))
 		print_barre_liste('', $page, $_SERVER["PHP_SELF"], "&amp;account=".$acct->id, $sortfield, $sortorder,'',$numrows);
 
 		print '<table class="noborder" width="100%">';
-		print "<tr class=\"liste_titre\">";
+		print '<tr class="liste_titre">';
 		print '<td>'.$langs->trans("AccountStatement").'</td></tr>';
 
 		//while ($i < min($numrows,$conf->liste_limit))   // retrait de la limite tant qu'il n'y a pas de pagination
@@ -144,7 +159,7 @@ if (! isset($num))
 			}
 			else
 			{
-				print "<tr $bc[$var]><td><a href=\"releve.php?num=$objp->numr&amp;account=".$acct->id."\">$objp->numr</a></td></tr>\n";
+				print '<tr '.$bc[$var].'><td><a href="releve.php?num='.$objp->numr.'&amp;account='.$acct->id.'">'.$objp->numr.'</a></td></tr>'."\n";
 			}
 			$i++;
 		}
@@ -251,16 +266,19 @@ else
 	}
 
 	// Recherche les ecritures pour le releve
-	$sql = "SELECT b.rowid, b.dateo as do, b.datev as dv";
-	$sql.= ", b.amount, b.label, b.rappro, b.num_releve, b.num_chq, b.fk_type";
-	$sql.= " FROM ".MAIN_DB_PREFIX."bank as b";
+	$sql = "SELECT b.rowid, b.dateo as do, b.datev as dv,";
+	$sql.= " b.amount, b.label, b.rappro, b.num_releve, b.num_chq, b.fk_type,";
+	$sql.= " ba.rowid as bankid, ba.ref as bankref, ba.label as banklabel";
+	$sql.= " FROM ".MAIN_DB_PREFIX."bank_account as ba";
+	$sql.= ", ".MAIN_DB_PREFIX."bank as b";
 	$sql.= " WHERE b.num_releve='".$db->escape($num)."'";
 	if (!isset($num))	$sql.= " OR b.num_releve is null";
 	$sql.= " AND b.fk_account = ".$acct->id;
-	$sql.= " ORDER BY b.datev ASC";
+	$sql.= " AND b.fk_account = ba.rowid";
+	$sql.= $db->order("b.datev, b.datec", "ASC");  // We add date of creation to have correct order when everything is done the same day
 
+	dol_syslog("sql=".$sql);
 	$result = $db->query($sql);
-
 	if ($result)
 	{
 		$var=True;
@@ -277,13 +295,13 @@ else
 			$total = $total + $objp->amount;
 
 			$var=!$var;
-			print "<tr $bc[$var]>";
+			print "<tr ".$bc[$var].">";
 
 			// Date operation
-			print '<td nowrap="nowrap" align="center">'.dol_print_date($db->jdate($objp->do),"day").'</td>';
+			print '<td class="nowrap" align="center">'.dol_print_date($db->jdate($objp->do),"day").'</td>';
 
 			// Date de valeur
-			print '<td align="center" valign="center" nowrap="nowrap">';
+			print '<td align="center" valign="center" class="nowrap">';
 			print '<a href="releve.php?action=dvprev&amp;num='.$num.'&amp;account='.$acct->id.'&amp;dvid='.$objp->rowid.'">';
 			print img_previous().'</a> ';
 			print dol_print_date($db->jdate($objp->dv),"day") .' ';
@@ -291,10 +309,15 @@ else
 			print img_next().'</a>';
 			print "</td>\n";
 
-			// Num cheque
-			print '<td nowrap="nowrap">'.$objp->fk_type.' '.($objp->num_chq?$objp->num_chq:'').'</td>';
+			// Type and num
+            if ($objp->fk_type == 'SOLD') {
+                $type_label='&nbsp;';
+            } else {
+                $type_label=($langs->trans("PaymentTypeShort".$objp->fk_type)!="PaymentTypeShort".$objp->fk_type)?$langs->trans("PaymentTypeShort".$objp->fk_type):$objp->fk_type;
+            }
+			print '<td class="nowrap">'.$type_label.' '.($objp->num_chq?$objp->num_chq:'').'</td>';
 
-			// Libelle
+			// Description
 			print '<td valign="center"><a href="'.DOL_URL_ROOT.'/compta/bank/ligne.php?rowid='.$objp->rowid.'&amp;account='.$acct->id.'">';
 			$reg=array();
 			preg_match('/\((.+)\)/i',$objp->label,$reg);	// Si texte entoure de parenthese on tente recherche de traduction
@@ -313,18 +336,60 @@ else
 				else print '<br>';
 				if ($links[$key]['type']=='payment')
 				{
-					print '<a href="'.DOL_URL_ROOT.'/compta/paiement/fiche.php?id='.$links[$key]['url_id'].'">';
-					print img_object($langs->trans('ShowPayment'),'payment').' ';
-					print $langs->trans("Payment");
+					$paymentstatic->id=$links[$key]['url_id'];
+					$paymentstatic->ref=$langs->trans("Payment");
+					print ' '.$paymentstatic->getNomUrl(1);
+					$newline=0;
+				}
+				elseif ($links[$key]['type']=='payment_supplier')
+				{
+					$paymentsupplierstatic->id=$links[$key]['url_id'];
+					$paymentsupplierstatic->ref=$langs->trans("Payment");;
+					print ' '.$paymentsupplierstatic->getNomUrl(1);
+					$newline=0;
+				}
+				elseif ($links[$key]['type']=='payment_sc')
+				{
+					print '<a href="'.DOL_URL_ROOT.'/compta/payment_sc/fiche.php?id='.$links[$key]['url_id'].'">';
+					print ' '.img_object($langs->trans('ShowPayment'),'payment').' ';
+					print $langs->trans("SocialContributionPayment");
 					print '</a>';
 					$newline=0;
 				}
-				elseif ($links[$key]['type']=='payment_supplier') {
-					print '<a href="'.DOL_URL_ROOT.'/fourn/paiement/fiche.php?id='.$links[$key]['url_id'].'">';
-					print img_object($langs->trans('ShowPayment'),'payment').' ';
-					print $langs->trans("Payment");
-					print '</a>';
-					$newline=0;
+				elseif ($links[$key]['type']=='payment_vat')
+				{
+					$paymentvatstatic->id=$links[$key]['url_id'];
+					$paymentvatstatic->ref=$langs->trans("Payment");
+					print ' '.$paymentvatstatic->getNomUrl(1);
+				}
+				elseif ($links[$key]['type']=='banktransfert') {
+					// Do not show link to transfer since there is no transfer card (avoid confusion). Can already be accessed from transaction detail.
+					if ($objp->amount > 0)
+					{
+						$banklinestatic->fetch($links[$key]['url_id']);
+						$bankstatic->id=$banklinestatic->fk_account;
+						$bankstatic->label=$banklinestatic->bank_account_label;
+						print ' ('.$langs->trans("from").' ';
+						print $bankstatic->getNomUrl(1,'transactions');
+						print ' '.$langs->trans("toward").' ';
+						$bankstatic->id=$objp->bankid;
+						$bankstatic->label=$objp->bankref;
+						print $bankstatic->getNomUrl(1,'');
+						print ')';
+					}
+					else
+					{
+						$bankstatic->id=$objp->bankid;
+						$bankstatic->label=$objp->bankref;
+						print ' ('.$langs->trans("from").' ';
+						print $bankstatic->getNomUrl(1,'');
+						print ' '.$langs->trans("toward").' ';
+						$banklinestatic->fetch($links[$key]['url_id']);
+						$bankstatic->id=$banklinestatic->fk_account;
+						$bankstatic->label=$banklinestatic->bank_account_label;
+						print $bankstatic->getNomUrl(1,'transactions');
+						print ')';
+					}
 				}
 				elseif ($links[$key]['type']=='company') {
 					print '<a href="'.DOL_URL_ROOT.'/societe/soc.php?socid='.$links[$key]['url_id'].'">';
@@ -333,34 +398,19 @@ else
 					print '</a>';
 					$newline=0;
 				}
-				else if ($links[$key]['type']=='sc') {
-					print '<a href="'.DOL_URL_ROOT.'/compta/sociales/charges.php?id='.$links[$key]['url_id'].'">';
-					print img_object($langs->trans('ShowBill'),'bill').' ';
-					print $langs->trans("SocialContribution");
-					print '</a>';
-					$newline=0;
-				}
-				else if ($links[$key]['type']=='payment_sc') {
-					print '<a href="'.DOL_URL_ROOT.'/compta/sociales/xxx.php?id='.$links[$key]['url_id'].'">';
-					print img_object($langs->trans('ShowPayment'),'payment').' ';
-					print $langs->trans("SocialContributionPayment");
-					print '</a>';
-					$newline=0;
-				}
-				else if ($links[$key]['type']=='member') {
+				elseif ($links[$key]['type']=='member') {
 					print '<a href="'.DOL_URL_ROOT.'/adherents/fiche.php?rowid='.$links[$key]['url_id'].'">';
 					print img_object($langs->trans('ShowMember'),'user').' ';
 					print $links[$key]['label'];
 					print '</a>';
 					$newline=0;
 				}
-				else if ($links[$key]['type']=='banktransfert') {
-					/*	print '<a href="'.DOL_URL_ROOT.'/compta/bank/ligne.php?rowid='.$links[$key]['url_id'].'">';
-					 print img_object($langs->trans('ShowTransaction'),'payment').' ';
-					 print $langs->trans("TransactionOnTheOtherAccount");
-					 print '</a>';
-					 $newline=0;
-					 */
+				elseif ($links[$key]['type']=='sc') {
+					print '<a href="'.DOL_URL_ROOT.'/compta/sociales/charges.php?id='.$links[$key]['url_id'].'">';
+					print img_object($langs->trans('ShowBill'),'bill').' ';
+					print $langs->trans("SocialContribution");
+					print '</a>';
+					$newline=0;
 				}
 				else {
 					print '<a href="'.$links[$key]['url'].$links[$key]['url_id'].'">';
@@ -441,4 +491,3 @@ else
 $db->close();
 
 llxFooter();
-?>

@@ -29,7 +29,7 @@ class box_bookmarks extends ModeleBoxes
 {
 	var $boxcode="bookmarks";
 	var $boximg="object_bookmark";
-	var $boxlabel;
+	var $boxlabel="BoxMyLastBookmarks";
 	var $depends = array("bookmark");
 
 	var $db;
@@ -38,16 +38,6 @@ class box_bookmarks extends ModeleBoxes
 	var $info_box_head = array();
 	var $info_box_contents = array();
 
-	/**
-     *  Constructor
-	 */
-	function __construct()
-	{
-		global $langs;
-		$langs->load("boxes");
-
-		$this->boxlabel=$langs->transnoentitiesnoconv("BoxMyLastBookmarks");
-	}
 
 	/**
      *  Load data for box to show them later
@@ -57,7 +47,7 @@ class box_bookmarks extends ModeleBoxes
 	 */
 	function loadBox($max=5)
 	{
-		global $user, $langs, $db;
+		global $user, $langs, $db, $conf;
 		$langs->load("boxes");
 
 		$this->max=$max;
@@ -80,11 +70,11 @@ class box_bookmarks extends ModeleBoxes
 			$sql = "SELECT b.title, b.url, b.target, b.favicon";
 			$sql.= " FROM ".MAIN_DB_PREFIX."bookmark as b";
 			$sql.= " WHERE fk_user = ".$user->id;
+            $sql.= " AND b.entity = ".$conf->entity;
 			$sql.= $db->order("position","ASC");
 			$sql.= $db->plimit($max, 0);
 
 			$result = $db->query($sql);
-
 			if ($result)
 			{
 				$num = $db->num_rows($result);
@@ -113,6 +103,8 @@ class box_bookmarks extends ModeleBoxes
 					if ($user->rights->bookmark->creer) $mytxt.=' '.$langs->trans("ClickToAdd");
 					$this->info_box_contents[$i][0] = array('td' => 'align="center" colspan="2"', 'url'=> DOL_URL_ROOT.'/bookmarks/liste.php', 'text'=>$mytxt);
 				}
+
+				$db->free($result);
 			}
 			else
 			{
@@ -141,4 +133,3 @@ class box_bookmarks extends ModeleBoxes
 
 }
 
-?>

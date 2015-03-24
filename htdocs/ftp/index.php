@@ -23,7 +23,7 @@
  *	\author		Laurent Destailleur
  */
 
-require 'pre.inc.php';	// We use pre.inc.php to have a dynamic menu
+require('../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/treeview.lib.php';
@@ -71,7 +71,7 @@ $ftp_user=$conf->global->$s_ftp_user;
 $ftp_password=$conf->global->$s_ftp_password;
 $ftp_passive=$conf->global->$s_ftp_passive;
 
-$conn_id=0;	// FTP connection ID
+$conn_id=null;	// FTP connection ID
 
 
 
@@ -403,15 +403,15 @@ else
 		// Confirm remove file
 		if ($_GET['action'] == 'delete')
 		{
-			$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?numero_ftp='.$numero_ftp.'&section='.urlencode($_REQUEST["section"]).'&file='.urlencode($_GET["file"]), $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile','','',1);
-			if ($ret == 'html') print '<br>';
+			print $form->formconfirm($_SERVER["PHP_SELF"].'?numero_ftp='.$numero_ftp.'&section='.urlencode($_REQUEST["section"]).'&file='.urlencode($_GET["file"]), $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile','','',1);
+			
 		}
 
 		// Confirmation de la suppression d'une ligne categorie
 		if ($_GET['action'] == 'delete_section')
 		{
-			$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?numero_ftp='.$numero_ftp.'&section='.urlencode($_REQUEST["section"]).'&file='.urlencode($_GET["file"]), $langs->trans('DeleteSection'), $langs->trans('ConfirmDeleteSection',$ecmdir->label), 'confirm_deletesection','','',1);
-			if ($ret == 'html') print '<br>';
+			print $form->formconfirm($_SERVER["PHP_SELF"].'?numero_ftp='.$numero_ftp.'&section='.urlencode($_REQUEST["section"]).'&file='.urlencode($_GET["file"]), $langs->trans('DeleteSection'), $langs->trans('ConfirmDeleteSection',$ecmdir->label), 'confirm_deletesection','','',1);
+			
 		}
 
 		print $langs->trans("Server").': <b>'.$ftp_server.'</b><br>';
@@ -542,28 +542,28 @@ else
 				if ($is_directory) print '</a>';
 				print '</td>';
 				// Size
-				print '<td align="center" nowrap="nowrap">';
+				print '<td align="center" class="nowrap">';
 				if (! $is_directory && ! $is_link) print $vals[4];
 				else print '&nbsp;';
 				print '</td>';
 				// Date
-				print '<td align="center" nowrap="nowrap">';
+				print '<td align="center" class="nowrap">';
 				print $vals[5].' '.$vals[6].' '.$vals[7];
 				print '</td>';
 				// User
-				print '<td align="center" nowrap="nowrap">';
+				print '<td align="center" class="nowrap">';
 				print $vals[2];
 				print '</td>';
 				// Group
-				print '<td align="center" nowrap="nowrap">';
+				print '<td align="center" class="nowrap">';
 				print $vals[3];
 				print '</td>';
 				// Permissions
-				print '<td align="center" nowrap="nowrap">';
+				print '<td align="center" class="nowrap">';
 				print $vals[0];
 				print '</td>';
 				// Action
-				print '<td align="right" width="64" nowrap="nowrap">';
+				print '<td align="right" width="64" class="nowrap">';
 				if ($is_directory)
 				{
 					if ($file != '..') print '<a href="'.$_SERVER["PHP_SELF"].'?action=delete_section&numero_ftp='.$numero_ftp.'&section='.urlencode($section).'&file='.urlencode($file).'">'.img_delete().'</a>';
@@ -713,4 +713,3 @@ function ftp_isdir($connect_id,$dir)
 	}
 }
 
-?>

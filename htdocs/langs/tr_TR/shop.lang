@@ -1,14 +1,5 @@
-﻿/*
- * Language code: tr_TR
- * Manually generated
- * Generation date 2012-06-10 22:05:26
- */
-
-
-// START - Lines generated manually (2012-06-10 22:05:26).
-# Dolibarr language file - TR - shop 
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - shop
+FailedConnectDBCheckModuleSetup=Oscommerce veritabanına bağlantıda hata oluştu. Modül kurulumunu kontrol ediniz.
 Shop=Mağaza
 ShopWeb=Web Mağazası
 LastOrders=Son siparişler

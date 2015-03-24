@@ -2,6 +2,7 @@
 /* Copyright (C) 2001-2002	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2013       Florian Henry		  	<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +30,9 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/dons/class/don.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
-if (! empty($conf->projet->enabled)) require_once DOL_DOCUMENT_ROOT.'/core/lib/project.lib.php';
+if (! empty($conf->projet->enabled)) {
+	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
+}
 
 $langs->load("companies");
 $langs->load("donations");
@@ -50,8 +53,6 @@ $donation_date=dol_mktime(12, 0, 0, GETPOST('remonth'), GETPOST('reday'), GETPOS
 $result = restrictedArea($user, 'don', $id);
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
-include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
-$hookmanager=new HookManager($db);
 $hookmanager->initHooks(array('doncard'));
 
 
@@ -87,22 +88,21 @@ if ($action == 'update')
 	{
 		$don->fetch($id);
 
-		$don->prenom      = $_POST["prenom"];
-		$don->nom         = $_POST["nom"];
+		$don->firstname   = $_POST["firstname"];
+		$don->lastname    = $_POST["lastname"];
 		$don->societe     = $_POST["societe"];
-		$don->adresse     = $_POST["adresse"];
+		$don->address     = $_POST["address"];
 		$don->amount      = price2num($_POST["amount"]);
-		$don->cp          = $_POST["zipcode"];
-		$don->ville       = $_POST["town"];
+		$don->town        = $_POST["town"];
         $don->zip         = $_POST["zipcode"];
-        $don->town        = $_POST["town"];
+        $don->country     = $_POST["country"];
 		$don->email       = $_POST["email"];
 		$don->date        = $donation_date;
 		$don->note        = $_POST["note"];
-		$don->pays        = $_POST["pays"];
 		$don->public      = $_POST["public"];
 		$don->fk_project  = $_POST["projectid"];
-		$don->note        = $_POST["comment"];
+		$don->note_private= GETPOST("note_private");
+		$don->note_public = GETPOST("note_public");
 		$don->modepaiementid = $_POST["modepaiement"];
 
 		if ($don->update($user) > 0)
@@ -139,22 +139,21 @@ if ($action == 'add')
 
 	if (! $error)
 	{
-		$don->prenom      = $_POST["prenom"];
-		$don->nom         = $_POST["nom"];
+		$don->firstname   = $_POST["firstname"];
+		$don->lastname    = $_POST["lastname"];
 		$don->societe     = $_POST["societe"];
-		$don->adresse     = $_POST["adresse"];
+		$don->address     = $_POST["address"];
 		$don->amount      = price2num($_POST["amount"]);
-		$don->cp          = $_POST["zipcode"];
-		$don->ville       = $_POST["town"];
+		$don->town        = $_POST["town"];
         $don->zip         = $_POST["zipcode"];
         $don->town        = $_POST["town"];
+        $don->country     = $_POST["country"];
 		$don->email       = $_POST["email"];
 		$don->date        = $donation_date;
-		$don->note        = $_POST["note"];
-		$don->pays        = $_POST["pays"];
+		$don->note_private= GETPOST("note_private");
+		$don->note_public = GETPOST("note_public");
 		$don->public      = $_POST["public"];
 		$don->fk_project  = $_POST["projectid"];
-		$don->note        = $_POST["comment"];
 		$don->modepaiementid = $_POST["modepaiement"];
 
 		if ($don->create($user) > 0)
@@ -218,33 +217,26 @@ if ($action == 'set_encaisse')
  */
 if ($action == 'builddoc')
 {
-	$donation = new Don($db);
-	$donation->fetch($id);
+	$object = new Don($db);
+	$object->fetch($id);
 
-	if ($_REQUEST['model'])
-	{
-		$donation->setDocModel($user, $_REQUEST['model']);
-	}
+	// Save last template used to generate document
+	if (GETPOST('model')) $object->setDocModel($user, GETPOST('model','alpha'));
 
 	// Define output language
 	$outputlangs = $langs;
 	$newlang='';
 	if ($conf->global->MAIN_MULTILANGS && empty($newlang) && ! empty($_REQUEST['lang_id'])) $newlang=$_REQUEST['lang_id'];
-	if ($conf->global->MAIN_MULTILANGS && empty($newlang)) $newlang=$donation->client->default_lang;
+	if ($conf->global->MAIN_MULTILANGS && empty($newlang)) $newlang=$object->client->default_lang;
 	if (! empty($newlang))
 	{
 		$outputlangs = new Translate("",$conf);
 		$outputlangs->setDefaultLang($newlang);
 	}
-	$result=don_create($db, $donation->id, '', $donation->modelpdf, $outputlangs);
+	$result=don_create($db, $object->id, '', $object->modelpdf, $outputlangs);
 	if ($result <= 0)
 	{
 		dol_print_error($db,$result);
-		exit;
-	}
-	else
-	{
-		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$donation->id.(empty($conf->global->MAIN_JUMP_TAG)?'':'#builddoc'));
 		exit;
 	}
 }
@@ -288,7 +280,7 @@ if ($action == 'create')
 	print '</td>';
 
     print '<td rowspan="'.$nbrows.'" valign="top">'.$langs->trans("Comments").' :<br>';
-    print "<textarea name=\"comment\" wrap=\"soft\" cols=\"40\" rows=\"15\">".$_POST["comment"]."</textarea></td>";
+    print "<textarea name=\"note_private\" wrap=\"soft\" cols=\"40\" rows=\"15\">".GETPOST("note_private")."</textarea></td>";
     print "</tr>";
 
     // Amount
@@ -299,19 +291,19 @@ if ($action == 'create')
 	print "</td></tr>\n";
 
 	print "<tr>".'<td>'.$langs->trans("Company").'</td><td><input type="text" name="societe" value="'.$_POST["societe"].'" size="40"></td></tr>';
-	print "<tr>".'<td>'.$langs->trans("Firstname").'</td><td><input type="text" name="prenom" value="'.$_POST["prenom"].'" size="40"></td></tr>';
-	print "<tr>".'<td>'.$langs->trans("Lastname").'</td><td><input type="text" name="nom" value="'.$_POST["nom"].'" size="40"></td></tr>';
+	print "<tr>".'<td>'.$langs->trans("Firstname").'</td><td><input type="text" name="firstname" value="'.$_POST["firstname"].'" size="40"></td></tr>';
+	print "<tr>".'<td>'.$langs->trans("Lastname").'</td><td><input type="text" name="lastname" value="'.$_POST["lastname"].'" size="40"></td></tr>';
 	print "<tr>".'<td>'.$langs->trans("Address").'</td><td>';
-	print '<textarea name="adresse" wrap="soft" cols="40" rows="3">'.$_POST["adresse"].'</textarea></td></tr>';
+	print '<textarea name="address" wrap="soft" cols="40" rows="3">'.$_POST["address"].'</textarea></td></tr>';
 
     // Zip / Town
     print '<tr><td>'.$langs->trans("Zip").' / '.$langs->trans("Town").'</td><td>';
-	print $formcompany->select_ziptown((isset($_POST["zipcode"])?$_POST["zipcode"]:$don->zip),'zipcode',array('town','selectcountry_id','departement_id'),6);
+	print $formcompany->select_ziptown((isset($_POST["zipcode"])?$_POST["zipcode"]:$don->zip),'zipcode',array('town','selectcountry_id','state_id'),6);
     print ' ';
-    print $formcompany->select_ziptown((isset($_POST["town"])?$_POST["town"]:$don->town),'town',array('zipcode','selectcountry_id','departement_id'));
+    print $formcompany->select_ziptown((isset($_POST["town"])?$_POST["town"]:$don->town),'town',array('zipcode','selectcountry_id','state_id'));
     print '</tr>';
 
-	print "<tr>".'<td>'.$langs->trans("Country").'</td><td><input type="text" name="pays" value="'.$_POST["pays"].'" size="40"></td></tr>';
+	print "<tr>".'<td>'.$langs->trans("Country").'</td><td><input type="text" name="country" value="'.$_POST["country"].'" size="40"></td></tr>';
 	print "<tr>".'<td>'.$langs->trans("EMail").'</td><td><input type="text" name="email" value="'.$_POST["email"].'" size="40"></td></tr>';
 
     print "<tr><td>".$langs->trans("PaymentMode")."</td><td>\n";
@@ -320,9 +312,12 @@ if ($action == 'create')
 
 	if (! empty($conf->projet->enabled))
     {
+    	
+    	$formproject=new FormProjets($db);
+    	
         // Si module projet actif
         print "<tr><td>".$langs->trans("Project")."</td><td>";
-        select_projects('',$_POST["projectid"],"projectid");
+        $formproject->select_projects('',$_POST["projectid"],"projectid");
         print "</td></tr>\n";
     }
 
@@ -376,7 +371,7 @@ if (! empty($id) && $action == 'edit')
 	print '</td>';
 
     print '<td rowspan="'.$nbrows.'" valign="top">'.$langs->trans("Comments").' :<br>';
-    print "<textarea name=\"comment\" wrap=\"soft\" cols=\"40\" rows=\"15\">".$don->note."</textarea></td>";
+    print "<textarea name=\"note_private\" wrap=\"soft\" cols=\"40\" rows=\"15\">".$don->note_private."</textarea></td>";
     print "</tr>";
 
 	// Amount
@@ -389,19 +384,19 @@ if (! empty($id) && $action == 'edit')
 
 	$langs->load("companies");
 	print "<tr>".'<td>'.$langs->trans("Company").'</td><td><input type="text" name="societe" size="40" value="'.$don->societe.'"></td></tr>';
-	print "<tr>".'<td>'.$langs->trans("Firstname").'</td><td><input type="text" name="prenom" size="40" value="'.$don->prenom.'"></td></tr>';
-	print "<tr>".'<td>'.$langs->trans("Lastname").'</td><td><input type="text" name="nom" size="40" value="'.$don->nom.'"></td></tr>';
+	print "<tr>".'<td>'.$langs->trans("Firstname").'</td><td><input type="text" name="firstname" size="40" value="'.$don->firstname.'"></td></tr>';
+	print "<tr>".'<td>'.$langs->trans("Lastname").'</td><td><input type="text" name="lastname" size="40" value="'.$don->lastname.'"></td></tr>';
 	print "<tr>".'<td>'.$langs->trans("Address").'</td><td>';
-	print '<textarea name="adresse" wrap="soft" cols="40" rows="'.ROWS_3.'">'.$don->adresse.'</textarea></td></tr>';
+	print '<textarea name="address" wrap="soft" cols="40" rows="'.ROWS_3.'">'.$don->address.'</textarea></td></tr>';
 
     // Zip / Town
     print '<tr><td>'.$langs->trans("Zip").' / '.$langs->trans("Town").'</td><td>';
-    print $formcompany->select_ziptown((isset($_POST["zipcode"])?$_POST["zipcode"]:$don->zip),'zipcode',array('town','selectcountry_id','departement_id'),6);
+    print $formcompany->select_ziptown((isset($_POST["zipcode"])?$_POST["zipcode"]:$don->zip),'zipcode',array('town','selectcountry_id','state_id'),6);
     print ' ';
-    print $formcompany->select_ziptown((isset($_POST["town"])?$_POST["town"]:$don->town),'town',array('zipcode','selectcountry_id','departement_id'));
+    print $formcompany->select_ziptown((isset($_POST["town"])?$_POST["town"]:$don->town),'town',array('zipcode','selectcountry_id','state_id'));
     print '</tr>';
 
-	print "<tr>".'<td>'.$langs->trans("Country").'</td><td><input type="text" name="pays" size="40" value="'.$don->pays.'"></td></tr>';
+	print "<tr>".'<td>'.$langs->trans("Country").'</td><td><input type="text" name="country" size="40" value="'.$don->country.'"></td></tr>';
 	print "<tr>".'<td>'.$langs->trans("EMail").'</td><td><input type="text" name="email" size="40" value="'.$don->email.'"></td></tr>';
 
     print "<tr><td>".$langs->trans("PaymentMode")."</td><td>\n";
@@ -417,9 +412,11 @@ if (! empty($id) && $action == 'edit')
     // Project
     if (! empty($conf->projet->enabled))
     {
+    	$formproject=new FormProjets($db);
+    	
         $langs->load('projects');
         print '<tr><td>'.$langs->trans('Project').'</td><td>';
-        select_projects(-1, (isset($_POST["projectid"])?$_POST["projectid"]:$don->fk_project), 'projectid');
+        $formproject->select_projects(-1, (isset($_POST["projectid"])?$_POST["projectid"]:$don->fk_project), 'projectid');
         print '</td></tr>';
     }
 
@@ -476,24 +473,24 @@ if (! empty($id) && $action != 'edit')
 	print "</td>";
 
     print '<td rowspan="'.$nbrows.'" valign="top" width="50%">'.$langs->trans("Comments").' :<br>';
-	print nl2br($don->note).'</td></tr>';
+	print nl2br($don->note_private).'</td></tr>';
 
-    print "<tr>".'<td>'.$langs->trans("Amount").'</td><td>'.price($don->amount).' '.$langs->trans("Currency".$conf->currency).'</td></tr>';
+    print "<tr>".'<td>'.$langs->trans("Amount").'</td><td>'.price($don->amount,0,$langs,0,0,-1,$conf->currency).'</td></tr>';
 
 	print "<tr><td>".$langs->trans("PublicDonation")."</td><td>";
 	print yn($don->public);
 	print "</td></tr>\n";
 
 	print "<tr>".'<td>'.$langs->trans("Company").'</td><td>'.$don->societe.'</td></tr>';
-	print "<tr>".'<td>'.$langs->trans("Firstname").'</td><td>'.$don->prenom.'</td></tr>';
-	print "<tr>".'<td>'.$langs->trans("Lastname").'</td><td>'.$don->nom.'</td></tr>';
-	print "<tr>".'<td>'.$langs->trans("Address").'</td><td>'.dol_nl2br($don->adresse).'</td></tr>';
+	print "<tr>".'<td>'.$langs->trans("Firstname").'</td><td>'.$don->firstname.'</td></tr>';
+	print "<tr>".'<td>'.$langs->trans("Lastname").'</td><td>'.$don->lastname.'</td></tr>';
+	print "<tr>".'<td>'.$langs->trans("Address").'</td><td>'.dol_nl2br($don->address).'</td></tr>';
 
 	// Zip / Town
-	print "<tr>".'<td>'.$langs->trans("Zip").' / '.$langs->trans("Town").'</td><td>'.$don->cp.($don->cp && $don->ville?' / ':'').$don->ville.'</td></tr>';
+	print "<tr>".'<td>'.$langs->trans("Zip").' / '.$langs->trans("Town").'</td><td>'.$don->zip.($don->zip && $don->town?' / ':'').$don->town.'</td></tr>';
 
 	// Country
-	print "<tr>".'<td>'.$langs->trans("Country").'</td><td>'.$don->pays.'</td></tr>';
+	print "<tr>".'<td>'.$langs->trans("Country").'</td><td>'.$don->country.'</td></tr>';
 
 	// EMail
 	print "<tr>".'<td>'.$langs->trans("EMail").'</td><td>'.dol_print_email($don->email).'</td></tr>';
@@ -529,36 +526,36 @@ if (! empty($id) && $action != 'edit')
 	 */
 	print '<div class="tabsAction">';
 
-	print '<a class="butAction" href="fiche.php?action=edit&rowid='.$don->id.'">'.$langs->trans('Modify').'</a>';
+	print '<div class="inline-block divButAction"><a class="butAction" href="fiche.php?action=edit&rowid='.$don->id.'">'.$langs->trans('Modify').'</a></div>';
 
 	if ($don->statut == 0)
 	{
-		print '<a class="butAction" href="fiche.php?rowid='.$don->id.'&action=valid_promesse">'.$langs->trans("ValidPromess").'</a>';
+		print '<div class="inline-block divButAction"><a class="butAction" href="fiche.php?rowid='.$don->id.'&action=valid_promesse">'.$langs->trans("ValidPromess").'</a></div>';
 	}
 
     if (($don->statut == 0 || $don->statut == 1) && $resteapayer == 0 && $don->paye == 0)
     {
-        print "<a class=\"butAction\" href=\"fiche.php?rowid=$don->id&action=set_cancel\">".$langs->trans("ClassifyCanceled")."</a>";
+        print '<div class="inline-block divButAction"><a class="butAction" href="fiche.php?rowid='.$don->id.'&action=set_cancel">'.$langs->trans("ClassifyCanceled")."</a></div>";
     }
 
 	// TODO Gerer action emettre paiement
 	if ($don->statut == 1 && $resteapayer > 0)
 	{
-		print "<a class=\"butAction\" href=\"paiement.php?facid=$facid&action=create\">".$langs->trans("DoPayment")."</a>";
+		print '<div class="inline-block divButAction"><a class="butAction" href="paiement.php?rowid='.$don->id.'&action=create">'.$langs->trans("DoPayment")."</a></div>";
 	}
 
 	if ($don->statut == 1 && $resteapayer == 0 && $don->paye == 0)
 	{
-		print "<a class=\"butAction\" href=\"fiche.php?rowid=$don->id&action=set_paid\">".$langs->trans("ClassifyPaid")."</a>";
+		print '<div class="inline-block divButAction"><a class="butAction" href="fiche.php?rowid='.$don->id.'&action=set_paid">'.$langs->trans("ClassifyPaid")."</a></div>";
 	}
 
 	if ($user->rights->don->supprimer)
 	{
-		print "<a class=\"butActionDelete\" href=\"fiche.php?rowid=$don->id&action=delete\">".$langs->trans("Delete")."</a>";
+		print '<div class="inline-block divButAction"><a class="butActionDelete" href="fiche.php?rowid='.$don->id.'&action=delete">'.$langs->trans("Delete")."</a></div>";
 	}
 	else
 	{
-		print "<a class=\"butActionRefused\" href=\"#\">".$langs->trans("Delete")."</a>";
+		print '<div class="inline-block divButAction"><a class="butActionRefused" href="#">'.$langs->trans("Delete")."</a></div>";
 	}
 
 	print "</div>";
@@ -591,4 +588,3 @@ if (! empty($id) && $action != 'edit')
 
 llxFooter();
 $db->close();
-?>

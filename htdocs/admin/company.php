@@ -1,8 +1,8 @@
 <?php
 /* Copyright (C) 2001-2007	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
- * Copyright (C) 2004-2012	Laurent Destailleur		<eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2013	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
- * Copyright (C) 2010		Juanjo Menent			<jmenent@2byte.es>
+ * Copyright (C) 2010-2013	Juanjo Menent			<jmenent@2byte.es>
  * Copyright (C) 2011		Philippe Grand			<philippe.grand@atoo-net.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -41,8 +41,7 @@ $langs->load("companies");
 
 if (! $user->admin) accessforbidden();
 
-$message='';
-
+$error=0;
 
 /*
  * Actions
@@ -61,14 +60,14 @@ if ( ($action == 'update' && empty($_POST["cancel"]))
         $mysoc->country_label=$tmparray['label'];
 
         $s=$mysoc->country_id.':'.$mysoc->country_code.':'.$mysoc->country_label;
-        dolibarr_set_const($db, "MAIN_INFO_SOCIETE_PAYS", $s,'chaine',0,'',$conf->entity);
+        dolibarr_set_const($db, "MAIN_INFO_SOCIETE_COUNTRY", $s,'chaine',0,'',$conf->entity);
     }
 
     dolibarr_set_const($db, "MAIN_INFO_SOCIETE_NOM",$_POST["nom"],'chaine',0,'',$conf->entity);
-    dolibarr_set_const($db, "MAIN_INFO_SOCIETE_ADRESSE",$_POST["address"],'chaine',0,'',$conf->entity);
-    dolibarr_set_const($db, "MAIN_INFO_SOCIETE_VILLE",$_POST["ville"],'chaine',0,'',$conf->entity);
-    dolibarr_set_const($db, "MAIN_INFO_SOCIETE_CP",$_POST["cp"],'chaine',0,'',$conf->entity);
-    dolibarr_set_const($db, "MAIN_INFO_SOCIETE_DEPARTEMENT",$_POST["departement_id"],'chaine',0,'',$conf->entity);
+    dolibarr_set_const($db, "MAIN_INFO_SOCIETE_ADDRESS",$_POST["address"],'chaine',0,'',$conf->entity);
+    dolibarr_set_const($db, "MAIN_INFO_SOCIETE_TOWN",$_POST["town"],'chaine',0,'',$conf->entity);
+    dolibarr_set_const($db, "MAIN_INFO_SOCIETE_ZIP",$_POST["zipcode"],'chaine',0,'',$conf->entity);
+    dolibarr_set_const($db, "MAIN_INFO_SOCIETE_STATE",$_POST["state_id"],'chaine',0,'',$conf->entity);
     dolibarr_set_const($db, "MAIN_MONNAIE",$_POST["currency"],'chaine',0,'',$conf->entity);
     dolibarr_set_const($db, "MAIN_INFO_SOCIETE_TEL",$_POST["tel"],'chaine',0,'',$conf->entity);
     dolibarr_set_const($db, "MAIN_INFO_SOCIETE_FAX",$_POST["fax"],'chaine',0,'',$conf->entity);
@@ -122,22 +121,25 @@ if ( ($action == 'update' && empty($_POST["cancel"]))
                 }
                 else if (preg_match('/^ErrorFileIsInfectedWithAVirus/',$result))
                 {
+                	$error++;
                     $langs->load("errors");
                     $tmparray=explode(':',$result);
-                    $message .= '<div class="error">'.$langs->trans('ErrorFileIsInfectedWithAVirus',$tmparray[1]).'</div>';
+                    setEventMessage($langs->trans('ErrorFileIsInfectedWithAVirus',$tmparray[1]),'errors');
                 }
                 else
                 {
-                    $message .= '<div class="error">'.$langs->trans("ErrorFailedToSaveFile").'</div>';
+                	$error++;
+                    setEventMessage($langs->trans("ErrorFailedToSaveFile"),'errors');
                 }
             }
             else
             {
-                $message .= '<div class="error">'.$langs->trans("ErrorOnlyPngJpgSupported").'</div>';
+            	$error++;
+                setEventMessage($langs->trans("ErrorOnlyPngJpgSupported"),'errors');
             }
         }
     }
-
+    dolibarr_set_const($db, "MAIN_INFO_SOCIETE_MANAGERS",$_POST["MAIN_INFO_SOCIETE_MANAGERS"],'chaine',0,'',$conf->entity);
     dolibarr_set_const($db, "MAIN_INFO_CAPITAL",$_POST["capital"],'chaine',0,'',$conf->entity);
     dolibarr_set_const($db, "MAIN_INFO_SOCIETE_FORME_JURIDIQUE",$_POST["forme_juridique_code"],'chaine',0,'',$conf->entity);
     dolibarr_set_const($db, "MAIN_INFO_SIREN",$_POST["siren"],'chaine',0,'',$conf->entity);
@@ -157,7 +159,7 @@ if ( ($action == 'update' && empty($_POST["cancel"]))
     dolibarr_set_const($db, "FACTURE_LOCAL_TAX1_OPTION",$_POST["optionlocaltax1"],'chaine',0,'',$conf->entity);
     dolibarr_set_const($db, "FACTURE_LOCAL_TAX2_OPTION",$_POST["optionlocaltax2"],'chaine',0,'',$conf->entity);
 
-    if ($action != 'updateedit' && ! $message)
+    if ($action != 'updateedit' && ! $error)
     {
         header("Location: ".$_SERVER["PHP_SELF"]);
         exit;
@@ -198,13 +200,15 @@ if ($action == 'addthumb')
         }
         else
         {
-            $message .= '<div class="error">'.$langs->trans("ErrorImageFormatNotSupported").'</div>';
+        	$error++;
+            setEventMessage($langs->trans("ErrorImageFormatNotSupported"),'errors');
             dol_syslog($langs->transnoentities("ErrorImageFormatNotSupported"),LOG_WARNING);
         }
     }
     else
     {
-        $message .= '<div class="error">'.$langs->trans("ErrorFileDoesNotExists",$_GET["file"]).'</div>';
+    	$error++;
+        setEventMessage($langs->trans("ErrorFileDoesNotExists",$_GET["file"]),'errors');
         dol_syslog($langs->transnoentities("ErrorFileDoesNotExists",$_GET["file"]),LOG_WARNING);
     }
 }
@@ -268,7 +272,7 @@ if ($action == 'edit' || $action == 'updateedit')
     $var=true;
 
     print '<table class="noborder" width="100%">';
-    print '<tr class="liste_titre"><td width="35%">'.$langs->trans("CompanyInfo").'</td><td>'.$langs->trans("Value").'</td></tr>'."\n";
+    print '<tr class="liste_titre"><th width="35%">'.$langs->trans("CompanyInfo").'</th><th>'.$langs->trans("Value").'</th></tr>'."\n";
 
     $var=!$var;
     print '<tr '.$bc[$var].'><td class="fieldrequired">'.$langs->trans("CompanyName").'</td><td>';
@@ -276,32 +280,32 @@ if ($action == 'edit' || $action == 'updateedit')
 
     $var=!$var;
     print '<tr '.$bc[$var].'><td>'.$langs->trans("CompanyAddress").'</td><td>';
-    print '<textarea name="address" cols="80" rows="'.ROWS_3.'">'. ($conf->global->MAIN_INFO_SOCIETE_ADRESSE?$conf->global->MAIN_INFO_SOCIETE_ADRESSE:$_POST["address"]) . '</textarea></td></tr>'."\n";
+    print '<textarea name="address" cols="80" rows="'.ROWS_3.'">'. ($conf->global->MAIN_INFO_SOCIETE_ADDRESS?$conf->global->MAIN_INFO_SOCIETE_ADDRESS:$_POST["address"]) . '</textarea></td></tr>'."\n";
 
     $var=!$var;
     print '<tr '.$bc[$var].'><td>'.$langs->trans("CompanyZip").'</td><td>';
-    print '<input name="cp" value="'. ($conf->global->MAIN_INFO_SOCIETE_CP?$conf->global->MAIN_INFO_SOCIETE_CP:$_POST["cp"]) . '" size="10"></td></tr>'."\n";
+    print '<input name="zipcode" value="'. ($conf->global->MAIN_INFO_SOCIETE_ZIP?$conf->global->MAIN_INFO_SOCIETE_ZIP:$_POST["zipcode"]) . '" size="10"></td></tr>'."\n";
 
     $var=!$var;
     print '<tr '.$bc[$var].'><td>'.$langs->trans("CompanyTown").'</td><td>';
-    print '<input name="ville" size="30" value="'. ($conf->global->MAIN_INFO_SOCIETE_VILLE?$conf->global->MAIN_INFO_SOCIETE_VILLE:$_POST["ville"]) . '"></td></tr>'."\n";
+    print '<input name="town" size="30" value="'. ($conf->global->MAIN_INFO_SOCIETE_TOWN?$conf->global->MAIN_INFO_SOCIETE_TOWN:$_POST["town"]) . '"></td></tr>'."\n";
 
     // Country
     $var=!$var;
-    print '<tr '.$bc[$var].'><td class="fieldrequired">'.$langs->trans("Country").'</td><td>';
-    //if (empty($pays_selected)) $pays_selected=substr($langs->defaultlang,-2);    // Par defaut, pays de la localisation
+    print '<tr '.$bc[$var].'><td class="fieldrequired">'.$langs->trans("Country").'</td><td class="maxwidthonsmartphone">';
+    //if (empty($country_selected)) $country_selected=substr($langs->defaultlang,-2);    // Par defaut, pays de la localisation
     print $form->select_country($mysoc->country_id,'country_id');
-    if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
+    if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
     print '</td></tr>'."\n";
 
     $var=!$var;
-    print '<tr '.$bc[$var].'><td>'.$langs->trans("State").'</td><td>';
-    $formcompany->select_departement($conf->global->MAIN_INFO_SOCIETE_DEPARTEMENT,$mysoc->country_code,'departement_id');
+    print '<tr '.$bc[$var].'><td>'.$langs->trans("State").'</td><td class="maxwidthonsmartphone">';
+    $formcompany->select_departement($conf->global->MAIN_INFO_SOCIETE_STATE,$mysoc->country_code,'state_id');
     print '</td></tr>'."\n";
 
     $var=!$var;
     print '<tr '.$bc[$var].'><td>'.$langs->trans("CompanyCurrency").'</td><td>';
-    $form->select_currency($conf->currency,"currency");
+    print $form->selectCurrency($conf->currency,"currency");
     print '</td></tr>'."\n";
 
     $var=!$var;
@@ -336,7 +340,7 @@ if ($action == 'edit' || $action == 'updateedit')
 
     // Logo
     $var=!$var;
-    print '<tr '.$bc[$var].'><td>'.$langs->trans("Logo").' (png,jpg)</td><td>';
+    print '<tr'.dol_bc($var,'hideonsmartphone').'><td>'.$langs->trans("Logo").' (png,jpg)</td><td>';
     print '<table width="100%" class="nocellnopadd"><tr class="nocellnopadd"><td valign="middle" class="nocellnopadd">';
     print '<input type="file" class="flat" name="logo" size="50">';
     print '</td><td valign="middle" align="right">';
@@ -366,12 +370,17 @@ if ($action == 'edit' || $action == 'updateedit')
 
     print '<br>';
 
-    // Identifiants de la societe (propre au pays)
+    // Identifiants de la societe (country-specific)
     print '<table class="noborder" width="100%">';
     print '<tr class="liste_titre"><td>'.$langs->trans("CompanyIds").'</td><td>'.$langs->trans("Value").'</td></tr>';
     $var=true;
 
     $langs->load("companies");
+
+    // Managing Director(s)
+    $var=!$var;
+    print '<tr '.$bc[$var].'><td width="35%">'.$langs->trans("ManagingDirectors").'</td><td>';
+    print '<input name="MAIN_INFO_SOCIETE_MANAGERS" size="80" value="' . $conf->global->MAIN_INFO_SOCIETE_MANAGERS . '"></td></tr>';
 
     // Capital
     $var=!$var;
@@ -383,7 +392,7 @@ if ($action == 'edit' || $action == 'updateedit')
     print '<tr '.$bc[$var].'><td>'.$langs->trans("JuridicalStatus").'</td><td>';
     if ($mysoc->country_code)
     {
-        $formcompany->select_forme_juridique($conf->global->MAIN_INFO_SOCIETE_FORME_JURIDIQUE,$mysoc->country_code);
+        print $formcompany->select_juridicalstatus($conf->global->MAIN_INFO_SOCIETE_FORME_JURIDIQUE,$mysoc->country_code);
     }
     else
     {
@@ -496,9 +505,7 @@ if ($action == 'edit' || $action == 'updateedit')
     print '</table>';
 
 
-    /*
-     *  Debut d'annee fiscale
-     */
+    // Fiscal year start
     print '<br>';
     print '<table class="noborder" width="100%">';
     print '<tr class="liste_titre">';
@@ -513,9 +520,7 @@ if ($action == 'edit' || $action == 'updateedit')
     print "</table>";
 
 
-    /*
-     *  Options fiscale
-     */
+    // Fiscal options
     print '<br>';
     print '<table class="noborder" width="100%">';
     print '<tr class="liste_titre">';
@@ -525,7 +530,7 @@ if ($action == 'edit' || $action == 'updateedit')
     $var=true;
 
     $var=!$var;
-    print "<tr ".$bc[$var]."><td width=\"140\"><label><input type=\"radio\" name=\"optiontva\" value=\"reel\"".($conf->global->FACTURE_TVAOPTION != "franchise"?" checked":"")."> ".$langs->trans("VATIsUsed")."</label></td>";
+    print "<tr ".$bc[$var]."><td width=\"140\"><label><input type=\"radio\" name=\"optiontva\" value=\"1\"".(empty($conf->global->FACTURE_TVAOPTION)?"":" checked")."> ".$langs->trans("VATIsUsed")."</label></td>";
     print '<td colspan="2">';
     print "<table>";
     print "<tr><td>".$langs->trans("VATIsUsedDesc")."</td></tr>";
@@ -534,7 +539,7 @@ if ($action == 'edit' || $action == 'updateedit')
     print "</td></tr>\n";
 
     $var=!$var;
-    print "<tr ".$bc[$var]."><td width=\"140\"><label><input type=\"radio\" name=\"optiontva\" value=\"franchise\"".($conf->global->FACTURE_TVAOPTION == "franchise"?" checked":"")."> ".$langs->trans("VATIsNotUsed")."</label></td>";
+    print "<tr ".$bc[$var]."><td width=\"140\"><label><input type=\"radio\" name=\"optiontva\" value=\"0\"".(empty($conf->global->FACTURE_TVAOPTION)?" checked":"")."> ".$langs->trans("VATIsNotUsed")."</label></td>";
     print '<td colspan="2">';
     print "<table>";
     print "<tr><td>".$langs->trans("VATIsNotUsedDesc")."</td></tr>";
@@ -547,7 +552,7 @@ if ($action == 'edit' || $action == 'updateedit')
     /*
      *  Local Taxes
      */
-    if ($mysoc->hasLocalTax(1))
+    if ($mysoc->useLocalTax(1))
     {
         // Local Tax 1
         print '<br>';
@@ -557,9 +562,9 @@ if ($action == 'edit' || $action == 'updateedit')
         print '<td align="right">&nbsp;</td>';
         print "</tr>\n";
         $var=true;
-
         $var=!$var;
-        print "<tr ".$bc[$var]."><td width=\"140\"><label><input type=\"radio\" name=\"optionlocaltax1\" value=\"localtax1on\"".($conf->global->FACTURE_LOCAL_TAX1_OPTION != "localtax1off"?" checked":"")."> ".$langs->transcountry("LocalTax1IsUsed",$mysoc->country_code)."</label></td>";
+        // Note: When option is not set, it must not appears as set on on, because there is no default value for this option
+        print "<tr ".$bc[$var]."><td width=\"140\"><label><input type=\"radio\" name=\"optionlocaltax1\" value=\"localtax1on\"".(($conf->global->FACTURE_LOCAL_TAX1_OPTION == '1' || $conf->global->FACTURE_LOCAL_TAX1_OPTION == "localtax1on")?" checked":"")."> ".$langs->transcountry("LocalTax1IsUsed",$mysoc->country_code)."</label></td>";
         print '<td colspan="2">';
         print "<table>";
         print "<tr><td>".$langs->transcountry("LocalTax1IsUsedDesc",$mysoc->country_code)."</td></tr>";
@@ -579,7 +584,7 @@ if ($action == 'edit' || $action == 'updateedit')
         print "</td></tr>\n";
         print "</table>";
 	}
-    if ($mysoc->hasLocalTax(2))
+    if ($mysoc->useLocalTax(2))
     {
         // Local Tax 2
         print '<br>';
@@ -591,7 +596,8 @@ if ($action == 'edit' || $action == 'updateedit')
         $var=true;
 
         $var=!$var;
-        print "<tr ".$bc[$var]."><td width=\"140\"><label><input type=\"radio\" name=\"optionlocaltax2\" value=\"localtax2on\"".($conf->global->FACTURE_LOCAL_TAX2_OPTION != "localtax2off"?" checked":"")."> ".$langs->transcountry("LocalTax2IsUsed",$mysoc->country_code)."</label></td>";
+        // Note: When option is not set, it must not appears as set on on, because there is no default value for this option
+        print "<tr ".$bc[$var]."><td width=\"140\"><label><input type=\"radio\" name=\"optionlocaltax2\" value=\"localtax2on\"".(($conf->global->FACTURE_LOCAL_TAX2_OPTION == '1' || $conf->global->FACTURE_LOCAL_TAX2_OPTION == "localtax2on")?" checked":"")."> ".$langs->transcountry("LocalTax2IsUsed",$mysoc->country_code)."</label></td>";
         print '<td colspan="2">';
         print "<table>";
         print "<tr><td>".$langs->transcountry("LocalTax2IsUsedDesc",$mysoc->country_code)."</td></tr>";
@@ -628,8 +634,6 @@ else
      * Show parameters
      */
 
-    dol_htmloutput_mesg($message);
-
     // Actions buttons
     //print '<div class="tabsAction">';
     //print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=edit">'.$langs->trans("Modify").'</a>';
@@ -646,13 +650,13 @@ else
     print '</td></tr>';
 
     $var=!$var;
-    print '<tr '.$bc[$var].'><td width="35%">'.$langs->trans("CompanyAddress").'</td><td>' . nl2br($conf->global->MAIN_INFO_SOCIETE_ADRESSE) . '</td></tr>';
+    print '<tr '.$bc[$var].'><td width="35%">'.$langs->trans("CompanyAddress").'</td><td>' . nl2br(empty($conf->global->MAIN_INFO_SOCIETE_ADDRESS)?'':$conf->global->MAIN_INFO_SOCIETE_ADDRESS) . '</td></tr>';
 
     $var=!$var;
-    print '<tr '.$bc[$var].'><td width="35%">'.$langs->trans("CompanyZip").'</td><td>' . $conf->global->MAIN_INFO_SOCIETE_CP . '</td></tr>';
+    print '<tr '.$bc[$var].'><td width="35%">'.$langs->trans("CompanyZip").'</td><td>' . (empty($conf->global->MAIN_INFO_SOCIETE_ZIP)?'':$conf->global->MAIN_INFO_SOCIETE_ZIP) . '</td></tr>';
 
     $var=!$var;
-    print '<tr '.$bc[$var].'><td width="35%">'.$langs->trans("CompanyTown").'</td><td>' . $conf->global->MAIN_INFO_SOCIETE_VILLE . '</td></tr>';
+    print '<tr '.$bc[$var].'><td width="35%">'.$langs->trans("CompanyTown").'</td><td>' . (empty($conf->global->MAIN_INFO_SOCIETE_TOWN)?'':$conf->global->MAIN_INFO_SOCIETE_TOWN) . '</td></tr>';
 
     $var=!$var;
     print '<tr '.$bc[$var].'><td>'.$langs->trans("CompanyCountry").'</td><td>';
@@ -667,14 +671,14 @@ else
 
     $var=!$var;
     print '<tr '.$bc[$var].'><td>'.$langs->trans("State").'</td><td>';
-    if (! empty($conf->global->MAIN_INFO_SOCIETE_DEPARTEMENT)) print getState($conf->global->MAIN_INFO_SOCIETE_DEPARTEMENT);
+    if (! empty($conf->global->MAIN_INFO_SOCIETE_STATE)) print getState($conf->global->MAIN_INFO_SOCIETE_STATE);
     else print '&nbsp;';
     print '</td></tr>';
 
     $var=!$var;
     print '<tr '.$bc[$var].'><td width="35%">'.$langs->trans("CompanyCurrency").'</td><td>';
     print currency_name($conf->currency,1);
-    print ' ('.getCurrencySymbol($conf->currency).')';
+    print ' ('.$langs->getCurrencySymbol($conf->currency).')';
     print '</td></tr>';
 
     $var=!$var;
@@ -731,12 +735,17 @@ else
     print '<br>';
 
 
-    // Identifiants de la societe (propre au pays)
+    // Identifiants de la societe (country-specific)
     print '<form name="formsoc" method="post">';
     print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
     print '<table class="noborder" width="100%">';
     print '<tr class="liste_titre"><td>'.$langs->trans("CompanyIds").'</td><td>'.$langs->trans("Value").'</td></tr>';
     $var=true;
+
+    // Managing Director(s)
+    $var=!$var;
+    print '<tr '.$bc[$var].'><td width="35%">'.$langs->trans("ManagingDirectors").'</td><td>';
+    print $conf->global->MAIN_INFO_SOCIETE_MANAGERS . '</td></tr>';
 
     // Capital
     $var=!$var;
@@ -860,7 +869,7 @@ else
             }
             else
             {
-                $s.='<a href="'.$langs->transcountry("VATIntraCheckURL",$soc->id_pays).'" target="_blank">'.img_picto($langs->trans("VATIntraCheckableOnEUSite"),'help').'</a>';
+                $s.='<a href="'.$langs->transcountry("VATIntraCheckURL",$soc->id_country).'" target="_blank">'.img_picto($langs->trans("VATIntraCheckableOnEUSite"),'help').'</a>';
             }
         }
         print $s;
@@ -904,7 +913,7 @@ else
     $var=true;
 
     $var=!$var;
-    print "<tr ".$bc[$var]."><td width=\"140\"><label><input ".$bc[$var]." type=\"radio\" name=\"optiontva\" disabled value=\"reel\"".($conf->global->FACTURE_TVAOPTION != "franchise"?" checked":"")."> ".$langs->trans("VATIsUsed")."</label></td>";
+    print "<tr ".$bc[$var]."><td width=\"140\"><label><input ".$bc[$var]." type=\"radio\" name=\"optiontva\" disabled value=\"1\"".(empty($conf->global->FACTURE_TVAOPTION)?"":" checked")."> ".$langs->trans("VATIsUsed")."</label></td>";
     print '<td colspan="2">';
     print "<table>";
     print "<tr><td>".$langs->trans("VATIsUsedDesc")."</td></tr>";
@@ -913,7 +922,7 @@ else
     print "</td></tr>\n";
 
     $var=!$var;
-    print "<tr ".$bc[$var]."><td width=\"140\"><label><input ".$bc[$var]." type=\"radio\" name=\"optiontva\" disabled value=\"franchise\"".($conf->global->FACTURE_TVAOPTION == "franchise"?" checked":"")."> ".$langs->trans("VATIsNotUsed")."</label></td>";
+    print "<tr ".$bc[$var]."><td width=\"140\"><label><input ".$bc[$var]." type=\"radio\" name=\"optiontva\" disabled value=\"0\"".(empty($conf->global->FACTURE_TVAOPTION)?" checked":"")."> ".$langs->trans("VATIsNotUsed")."</label></td>";
     print '<td colspan="2">';
     print "<table>";
     print "<tr><td>".$langs->trans("VATIsNotUsedDesc")."</td></tr>";
@@ -927,7 +936,7 @@ else
     /*
      *  Local Taxes
      */
-    if ($mysoc->hasLocalTax(1))
+    if ($mysoc->useLocalTax(1))
     {
         // Local Tax 1
         print '<br>';
@@ -939,7 +948,7 @@ else
         $var=true;
 
         $var=!$var;
-        print "<tr ".$bc[$var]."><td width=\"140\"><label><input ".$bc[$var]." type=\"radio\" name=\"optionlocaltax1\" disabled value=\"localtax1on\"".($conf->global->FACTURE_LOCAL_TAX1_OPTION != "localtax1off"?" checked":"")."> ".$langs->transcountry("LocalTax1IsUsed",$mysoc->country_code)."</label></td>";
+        print "<tr ".$bc[$var]."><td width=\"140\"><label><input ".$bc[$var]." type=\"radio\" name=\"optionlocaltax1\" disabled value=\"localtax1on\"".(($conf->global->FACTURE_LOCAL_TAX1_OPTION == '1' || $conf->global->FACTURE_LOCAL_TAX1_OPTION == "localtax1on")?" checked":"")."> ".$langs->transcountry("LocalTax1IsUsed",$mysoc->country_code)."</label></td>";
         print '<td colspan="2">';
         print "<table>";
         print "<tr><td>".$langs->transcountry("LocalTax1IsUsedDesc",$mysoc->country_code)."</td></tr>";
@@ -960,7 +969,7 @@ else
 
         print "</table>";
 	}
-    if ($mysoc->hasLocalTax(2))
+    if ($mysoc->useLocalTax(2))
     {
         // Local Tax 2
         print '<br>';
@@ -972,7 +981,7 @@ else
         $var=true;
 
         $var=!$var;
-        print "<tr ".$bc[$var]."><td width=\"140\"><label><input ".$bc[$var]." type=\"radio\" name=\"optionlocaltax2\" disabled value=\"localtax2on\"".($conf->global->FACTURE_LOCAL_TAX2_OPTION != "localtax2off"?" checked":"")."> ".$langs->transcountry("LocalTax2IsUsed",$mysoc->country_code)."</label></td>";
+        print "<tr ".$bc[$var]."><td width=\"140\"><label><input ".$bc[$var]." type=\"radio\" name=\"optionlocaltax2\" disabled value=\"localtax2on\"".(($conf->global->FACTURE_LOCAL_TAX2_OPTION == '1' || $conf->global->FACTURE_LOCAL_TAX2_OPTION == "localtax2on")?" checked":"")."> ".$langs->transcountry("LocalTax2IsUsed",$mysoc->country_code)."</label></td>";
         print '<td colspan="2">';
         print "<table>";
         print "<tr><td>".$langs->transcountry("LocalTax2IsUsedDesc",$mysoc->country_code)."</td></tr>";
@@ -997,7 +1006,7 @@ else
 
     // Actions buttons
     print '<div class="tabsAction">';
-    print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=edit">'.$langs->trans("Modify").'</a>';
+    print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=edit">'.$langs->trans("Modify").'</a></div>';
     print '</div>';
 
     print '<br>';
@@ -1007,4 +1016,3 @@ else
 llxFooter();
 
 $db->close();
-?>

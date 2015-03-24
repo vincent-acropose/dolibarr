@@ -27,12 +27,11 @@
 define("NOLOGIN",1);		// This means this output page does not require to be logged.
 define("NOCSRFCHECK",1);	// We accept to go on this page from external web site.
 
-// For MultiCompany module
-$entity=(! empty($_GET['entity']) ? (int) $_GET['entity'] : 1);
-if (is_int($entity))
-{
-	define("DOLENTITY", $entity);
-}
+// For MultiCompany module.
+// Do not use GETPOST here, function is not defined and define must be done before including main.inc.php
+// TODO This should be useless. Because entity must be retreive from object ref and not from url.
+$entity=(! empty($_GET['entity']) ? (int) $_GET['entity'] : (! empty($_POST['entity']) ? (int) $_POST['entity'] : 1));
+if (is_numeric($entity)) define("DOLENTITY", $entity);
 
 require '../../main.inc.php';
 
@@ -92,7 +91,7 @@ $filter=GETPOST('filter');
 $statut=GETPOST('statut');
 
 if (! $sortorder) {  $sortorder="ASC"; }
-if (! $sortfield) {  $sortfield="nom"; }
+if (! $sortfield) {  $sortfield="lastname"; }
 
 
 /*
@@ -101,14 +100,14 @@ if (! $sortfield) {  $sortfield="nom"; }
 
 llxHeaderVierge($langs->trans("ListOfValidatedPublicMembers"));
 
-$sql = "SELECT rowid, prenom, nom, societe, cp as zip, ville as town, email, naiss, photo";
+$sql = "SELECT rowid, firstname, lastname, societe, zip, town, email, birth, photo";
 $sql.= " FROM ".MAIN_DB_PREFIX."adherent";
 $sql.= " WHERE entity = ".$entity;
 $sql.= " AND statut = 1";
 $sql.= " AND public = 1";
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($conf->liste_limit+1, $offset);
-//$sql = "SELECT d.rowid, d.prenom, d.nom, d.societe, cp, ville, d.email, t.libelle as type, d.morphy, d.statut, t.cotisation";
+//$sql = "SELECT d.rowid, d.firstname, d.lastname, d.societe, zip, town, d.email, t.libelle as type, d.morphy, d.statut, t.cotisation";
 //$sql .= " FROM ".MAIN_DB_PREFIX."adherent as d, ".MAIN_DB_PREFIX."adherent_type as t";
 //$sql .= " WHERE d.fk_adherent_type = t.rowid AND d.statut = $statut";
 //$sql .= " ORDER BY $sortfield $sortorder " . $db->plimit($conf->liste_limit, $offset);
@@ -124,13 +123,13 @@ if ($result)
 	print '<table class="noborder" width="100%">';
 
 	print '<tr class="liste_titre">';
-	print '<td><a href="'.$_SERVER["PHP_SELF"].'?page='.$page.'&sortorder=ASC&sortfield=prenom">'.$langs->trans("Firstname").'</a>';
-	print ' <a href="'.$_SERVER['PHP_SELF'].'?page='.$page.'&sortorder=ASC&sortfield=nom">'.$langs->trans("Lastname").'</a>';
+	print '<td><a href="'.$_SERVER["PHP_SELF"].'?page='.$page.'&sortorder=ASC&sortfield=firstname">'.$langs->trans("Firstname").'</a>';
+	print ' <a href="'.$_SERVER['PHP_SELF'].'?page='.$page.'&sortorder=ASC&sortfield=lastname">'.$langs->trans("Lastname").'</a>';
 	print ' / <a href="'.$_SERVER["PHP_SELF"].'?page='.$page.'&sortorder=ASC&sortfield=societe">'.$langs->trans("Company").'</a></td>'."\n";
-	//print_liste_field_titre($langs->trans("DateToBirth"),"public_list.php","naiss",'',$param,$sortfield,$sortorder); // est-ce nécessaire ??
+	//print_liste_field_titre($langs->trans("DateToBirth"),"public_list.php","birth",'',$param,$sortfield,$sortorder); // est-ce nécessaire ??
 	print_liste_field_titre($langs->trans("EMail"),"public_list.php","email",'',$param,$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Zip"),"public_list.php","cp","",$param,$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Town"),"public_list.php","ville","",$param,$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Zip"),"public_list.php","zip","",$param,$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Town"),"public_list.php","town","",$param,$sortfield,$sortorder);
 	print "<td>".$langs->trans("Photo")."</td>\n";
 	print "</tr>\n";
 
@@ -139,9 +138,9 @@ if ($result)
 	{
 		$objp = $db->fetch_object($result);
 		$var=!$var;
-		print "<tr $bc[$var]>";
-		print '<td><a href="public_card.php?id='.$objp->rowid.'">'.$objp->prenom.' '.$objp->nom.($objp->societe?' / '.$objp->societe:'').'</a></td>'."\n";
-		//print "<td>$objp->naiss</td>\n"; // est-ce nécessaire ??
+		print "<tr ".$bc[$var].">";
+		print '<td><a href="public_card.php?id='.$objp->rowid.'">'.dolGetFirstLastname($obj->firstname, $obj->lastname).($objp->societe?' / '.$objp->societe:'').'</a></td>'."\n";
+		//print "<td>$objp->birth</td>\n"; // est-ce nécessaire ??
 		print '<td>'.$objp->email.'</td>'."\n";
 		print '<td>'.$objp->zip.'</td>'."\n";
 		print '<td>'.$objp->town.'</td>'."\n";
@@ -170,4 +169,3 @@ else
 $db->close();
 
 llxFooterVierge();
-?>

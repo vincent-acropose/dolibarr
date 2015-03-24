@@ -39,15 +39,15 @@ create table llx_bank_account
   country_iban		varchar(2),					-- deprecated
   cle_iban			varchar(2),
   domiciliation		varchar(255),
-  fk_departement	integer        DEFAULT NULL,
+  state_id			integer        DEFAULT NULL,
   fk_pays			integer        NOT NULL,
   proprio			varchar(60),
-  adresse_proprio	varchar(255),
+  owner_address     varchar(255),
   courant			smallint DEFAULT 0 NOT NULL,
   clos				smallint DEFAULT 0 NOT NULL,
   rappro			smallint DEFAULT 1,
   url				varchar(128),
-  account_number	varchar(8),
+  account_number	varchar(24),				-- bank accountancy number
   currency_code		varchar(3) NOT NULL,
   min_allowed		integer DEFAULT 0,
   min_desired		integer DEFAULT 0,

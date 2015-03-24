@@ -17,8 +17,9 @@
  */
 
 /**
- * This page is called each time we press a key in the code
- * search form to show product combo list.
+ *	\file       htdocs/cashdesk/facturation_dhtml.php
+ *	\ingroup    cashdesk
+ *	\brief      This page is called each time we press a key in the code search form to show product combo list.
  */
 
 
@@ -107,4 +108,3 @@ if (dol_strlen($_GET["code"]) >= 0)	// If search criteria is on char length at l
 	}
 
 }
-?>

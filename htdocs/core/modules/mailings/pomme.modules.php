@@ -77,13 +77,15 @@ class mailing_pomme extends MailingTargets
 	}
 
 
-	/*
-	 *		\brief		Return here number of distinct emails returned by your selector.
-	 *					For example if this selector is used to extract 500 different
-	 *					emails from a text file, this function must return 500.
-	 *		\return		int
-	 */
-	function getNbOfRecipients()
+    /**
+     *	Return here number of distinct emails returned by your selector.
+     *	For example if this selector is used to extract 500 different
+     *	emails from a text file, this function must return 500.
+     *
+     *	@param	string	$sql		SQL request to use to count
+     *	@return	int					Number of recipients
+     */
+	function getNbOfRecipients($sql='')
 	{
 		global $conf;
 
@@ -141,15 +143,17 @@ class mailing_pomme extends MailingTargets
 	function add_to_target($mailing_id,$filtersarray=array())
 	{
 		global $conf, $langs;
-
+		$langs->load("companies");
+		
 		$cibles = array();
 
-		// La requete doit retourner: id, email, fk_contact, name, firstname
+		// La requete doit retourner: id, email, fk_contact, lastname, firstname
 		$sql = "SELECT u.rowid as id, u.email as email, null as fk_contact,";
-		$sql.= " u.name as name, u.firstname as firstname, u.login, u.office_phone";
+		$sql.= " u.lastname as lastname, u.firstname as firstname, u.civilite as civility_id, u.login, u.office_phone";
 		$sql.= " FROM ".MAIN_DB_PREFIX."user as u";
-		$sql.= " WHERE u.email != ''"; // u.email IS NOT NULL est implicite dans ce test
+		$sql.= " WHERE u.email <> ''"; // u.email IS NOT NULL est implicite dans ce test
 		$sql.= " AND u.entity IN (0,".$conf->entity.")";
+		$sql.= " AND u.email NOT IN (SELECT email FROM ".MAIN_DB_PREFIX."mailing_cibles WHERE fk_mailing=".$mailing_id.")";
 		foreach($filtersarray as $key)
 		{
 			if ($key == '1') $sql.= " AND u.statut=1";
@@ -176,11 +180,11 @@ class mailing_pomme extends MailingTargets
 					$cibles[$j] = array(
                     			'email' => $obj->email,
                     			'fk_contact' => $obj->fk_contact,
-                    			'name' => $obj->name,
+                    			'lastname' => $obj->lastname,
                     			'firstname' => $obj->firstname,
                     			'other' =>
 					            ($langs->transnoentities("Login").'='.$obj->login).';'.
-//                                ($langs->transnoentities("UserTitle").'='.$obj->civilite).';'.
+                                ($langs->transnoentities("UserTitle").'='.$obj->civility_id).';'.
 					            ($langs->transnoentities("PhonePro").'='.$obj->office_phone),
                                 'source_url' => $this->url($obj->id),
                                 'source_id' => $obj->id,
@@ -205,4 +209,3 @@ class mailing_pomme extends MailingTargets
 
 }
 
-?>

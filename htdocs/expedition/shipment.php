@@ -29,25 +29,11 @@ require_once DOL_DOCUMENT_ROOT.'/expedition/class/expedition.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/html.formproduct.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/order.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/sendings.lib.php';
-if (! empty($conf->projet->enabled))
-	require DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
-if (! empty($conf->stock->enabled))
-	require DOL_DOCUMENT_ROOT.'/product/stock/class/entrepot.class.php';
-if (! empty($conf->propal->enabled)) {
-	if (! class_exists('Propal')) {
-		require DOL_DOCUMENT_ROOT.'/comm/propal/class/propal.class.php';
-	}
-}
-if (! empty($conf->commande->enabled)) {
-	if (! class_exists('Commande')) {
-		require DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
-	}
-}
-if (! empty($conf->product->enabled) || ! empty($conf->service->enabled)) {
-	if (! class_exists('Product')) {
-		require DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
-	}
-}
+require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
+if (! empty($conf->projet->enabled)) require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
+if (! empty($conf->stock->enabled))  require_once DOL_DOCUMENT_ROOT.'/product/stock/class/entrepot.class.php';
+if (! empty($conf->propal->enabled)) require_once DOL_DOCUMENT_ROOT.'/comm/propal/class/propal.class.php';
+if (! empty($conf->product->enabled) || ! empty($conf->service->enabled)) 	require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 
 $langs->load('orders');
 $langs->load("companies");
@@ -166,8 +152,8 @@ if ($id > 0 || ! empty($ref))
 		 */
 		if ($action == 'cloture')
 		{
-			$ret=$form->form_confirm($_SERVER['PHP_SELF']."?id=".$id,$langs->trans("CloseShipment"),$langs->trans("ConfirmCloseShipment"),"confirm_cloture");
-			if ($ret == 'html') print '<br>';
+			print $form->formconfirm($_SERVER['PHP_SELF']."?id=".$id,$langs->trans("CloseShipment"),$langs->trans("ConfirmCloseShipment"),"confirm_cloture");
+
 		}
 
 		// Onglet commande
@@ -185,7 +171,7 @@ if ($id > 0 || ! empty($ref))
 
 		// Ref commande client
 		print '<tr><td>';
-		print '<table class="nobordernopadding" width="100%"><tr><td nowrap>';
+		print '<table class="nobordernopadding" width="100%"><tr><td class="nowrap">';
 		print $langs->trans('RefCustomer').'</td><td align="left">';
 		print '</td>';
 		if ($action != 'RefCustomerOrder' && $commande->brouillon) print '<td align="right"><a href="'.$_SERVER['PHP_SELF'].'?action=RefCustomerOrder&amp;id='.$commande->id.'">'.img_edit($langs->trans('Modify')).'</a></td>';
@@ -214,7 +200,7 @@ if ($id > 0 || ! empty($ref))
 
 		// Discounts for third party
 		print '<tr><td>'.$langs->trans('Discounts').'</td><td colspan="3">';
-		if ($soc->remise_client) print $langs->trans("CompanyHasRelativeDiscount",$soc->remise_client);
+		if ($soc->remise_percent) print $langs->trans("CompanyHasRelativeDiscount",$soc->remise_percent);
 		else print $langs->trans("CompanyHasNoRelativeDiscount");
 		print '. ';
 		$absolute_discount=$soc->getAvailableDiscounts('','fk_facture_source IS NULL');
@@ -423,7 +409,11 @@ if ($id > 0 || ! empty($ref))
 					if (! empty($conf->global->MAIN_MULTILANGS) && ! empty($conf->global->PRODUIT_TEXTS_IN_THIRDPARTY_LANGUAGE))
 					{
 						$commande->fetch_thirdparty();
-						$prod = new Product($db, $objp->fk_product);
+
+						$prod = new Product($db);
+						$prod->id=$objp->fk_product;
+						$prod->getMultiLangs();
+
 						$outputlangs = $langs;
 						$newlang='';
 						if (empty($newlang) && ! empty($_REQUEST['lang_id'])) $newlang=$_REQUEST['lang_id'];
@@ -509,6 +499,7 @@ if ($id > 0 || ! empty($ref))
 				{
 					$product = new Product($db);
 					$product->fetch($objp->fk_product);
+					$product->load_stock();
 				}
 
 				if ($objp->fk_product > 0 && $type == 0 && ! empty($conf->stock->enabled))
@@ -671,4 +662,3 @@ if ($id > 0 || ! empty($ref))
 llxFooter();
 
 $db->close();
-?>

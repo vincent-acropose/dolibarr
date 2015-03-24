@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2006	Roman Ozana			<ozana@omdesign.cz>
  * Copyright (C) 2011	Juanjo Menent		<jmenent@2byte.es>
- * Copyright (C) 2012	Laurent Destailleur	<eldy@users.sourceforge.net>
+ * Copyright (C) 2013	Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2012	Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -55,9 +55,14 @@ class ICal
     function read_file($file)
     {
         $this->file = $file;
-        $file_text = join("", file($file)); //load file
-        $file_text = preg_replace("/[\r\n]{1,} ([:;])/","\\1",$file_text);
+        $file_text='';
 
+        $tmparray=file($file);
+        if (is_array($tmparray))
+        {
+        	$file_text = join("", $tmparray); //load file
+        	$file_text = preg_replace("/[\r\n]{1,} /","",$file_text);
+        }
         return $file_text; // return all text
     }
 
@@ -109,6 +114,7 @@ class ICal
             {
                 // get Key and Value VCALENDAR:Begin -> Key = VCALENDAR, Value = begin
                 list($key, $value) = $this->retun_key_value($text);
+				//var_dump($text.' -> '.$key.' - '.$value);
 
                 switch ($text) // search special string
                 {
@@ -159,6 +165,8 @@ class ICal
                 }
             }
         }
+
+        //var_dump($this->cal);
         return $this->cal;
     }
 
@@ -230,6 +238,7 @@ class ICal
      */
     function retun_key_value($text)
     {
+    	/*
         preg_match("/([^:]+)[:]([\w\W]+)/", $text, $matches);
 
         if (empty($matches))
@@ -240,8 +249,8 @@ class ICal
         {
             $matches = array_splice($matches, 1, 2);
             return $matches;
-        }
-
+        }*/
+		return explode(':',$text,2);
     }
 
     /**
@@ -264,7 +273,7 @@ class ICal
      * Return Unix time from ical date time fomrat (YYYYMMDD[T]HHMMSS[Z] or YYYYMMDD[T]HHMMSS)
      *
      * @param 	string		$ical_date		String date
-     * @return 	timestamp
+     * @return 	int
      */
     function ical_date_to_unix($ical_date)
     {
@@ -389,4 +398,3 @@ class ICal
         return $this->cal;
     }
 }
-?>

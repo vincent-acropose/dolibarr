@@ -26,7 +26,7 @@ create table llx_propal
   entity				integer DEFAULT 1 NOT NULL,		-- multi company id
 
   ref_ext				varchar(255),					-- reference into an external system (not used by dolibarr)
-  ref_int				varchar(255),					-- reference into an internal system (used by dolibarr)
+  ref_int				varchar(255),					-- reference into an internal system (used by dolibarr to store extern id like paypal info)
   ref_client			varchar(255),					-- customer proposal number
 
   fk_soc				integer,
@@ -53,11 +53,11 @@ create table llx_propal
   total					double(24,8) DEFAULT 0,			-- montant total ttc apres remise globale
 
   fk_account			integer,						-- bank account
-  fk_currency			varchar(2),						-- currency code
+  fk_currency			varchar(3),						-- currency code
   fk_cond_reglement		integer,						-- condition de reglement (30 jours, fin de mois ...)
   fk_mode_reglement		integer,						-- mode de reglement (Virement, Prelevement)
  
-  note					text,
+  note_private			text,
   note_public			text,
   model_pdf				varchar(255),
   date_livraison		date DEFAULT NULL,				-- delivery date
@@ -65,6 +65,6 @@ create table llx_propal
   fk_input_reason		integer,
   import_key			varchar(14),
   extraparams			varchar(255),					-- for stock other parameters with json format
-  fk_adresse_livraison	integer							-- delivery address (deprecated)
+  fk_delivery_address	integer							-- delivery address (deprecated)
   
 )ENGINE=innodb;

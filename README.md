@@ -2,6 +2,7 @@
 
 Dolibarr ERP & CRM is a modern software to manage your company or foundation activity (contacts, suppliers, invoices, orders, stocks, agenda, ...).It's an opensource software (wrote with PHP language) designed for small and medium companies, foundation and freelances. You can freely install, use and distribute it as a standalone application or as a web application to use it from every internet access and media.
 
+![ScreenShot](http://www.dolibarr.org/images/dolibarr_screenshot1_640x400.png)
 
 
 ## LICENSE
@@ -12,9 +13,9 @@ Dolibarr is released under the terms of the GNU General Public License as publis
 
 ## INSTALL
 
-If you have no technical knowledge, and you are looking for an autoinstaller to install Dolibarr ERP/CRM in few clicks, you must download DoliWamp (the all-in-one package of Dolibarr for Windows), DoliDeb (the all-in-one package of Dolibarr for Debian or Ubuntu) or DoliRpm (the all-in-one package of Dolibarr for Fedora, Redhat, Opensue, Mandriva or Mageia).
+If you have no technical knowledge, and you are looking for an autoinstaller to install Dolibarr ERP/CRM in few clicks, you must download DoliWamp (the all-in-one package of Dolibarr for Windows), DoliDeb (the all-in-one package of Dolibarr for Debian or Ubuntu) or DoliRpm (the all-in-one package of Dolibarr for Fedora, Redhat, Opensuse, Mandriva or Mageia).
 
-You can download this at: [Official website] (http://www.dolibarr.org/downloads/)
+You can download this at: [Official website] (<http://www.dolibarr.org/downloads/>)
 
 If you already have installed a Web server and a Mysql database, you can install the standard version like this:
 
@@ -75,59 +76,76 @@ See ChangeLog file found into package.
 
 ### Main modules/features:
 
-- Products and services catalog
-- Customers, Prospects or Suppliers directory
-- Address book
-- Stock management
-- Bank accounts management
-- Orders management with PDF export
-- Commercial proposals management with PDF export
-- Contracts management
-- Invoices management with PDF export
-- Payments management
-- Standing orders management
-- Shipping management
-- ECM (Electronic Content Management)
-- EMailings
-- Agenda with ical,vcal export for third tools integration
-- Management of foundation members
-- Donation management
+- Customers, Prospects or Suppliers directory.
+- Products and services catalog.
+- Bank accounts management.
+- Orders management.
+- Commercial proposals management.
+- Contracts management.
+- Invoices management.
+- Payments management.
+- Standing orders management.
+- Stock management.
+- Shipping management.
+- PDF or ODT generation for invoice, proposals, orders...
+- Agenda with ical,vcal export for third tools integration.
+- EDM (Electronic Document Management).
+- Foundations members management.
+- Employee's holidays management.
+- Mass Emailing.
+- Realize surveys.
+- Point of Sale.
 
 ### Other modules:
 
-- Bookmarks management
-- Can reports Dolibarr events inside Webcalendar or Phenix
-- Data export tools
-- LDAP connectivity
-- Third parties or products categories 
-- ClickToDial phone numbers
-- RSS
+- Bookmarks management.
+- Donations management.
+- Reporting.
+- Data export/import.
+- Third parties or products categories. 
+- LDAP connectivity.
+- ClickToDial integration.
+- RSS integration.
+- Can be extended with a lot of other external modules available onto DoliStore.com.
 
-### Miscellanous:
+### Miscellaneous:
 
-- Mutli-user, with several permissions levels for each feature.
-- Serveral menu managers (can be used by internal users, as a back-office, with a particular menu, or by external users, as a front-office, with another menu and permissions).
+- Multi-user, with several permissions levels for each feature.
 - Very user friendly and easy to use.
-- Optional WYSIWYG forms, optional Ajax forms.
-- Several skins.
-- Code is highly customizable (a lot of use of modules and submodules).
-- Works with Mysql 4.1 or higher, or PostgreSql 8.14 or higher.
-- Works with PHP 5.0 or higher.
-- An easy to understand and maintain code (PHP with no heavy frameworks).
-- A trigger architecture to allow you to make Dolibarr business events run PHP code to update your own information system.
-- "NPR VAT Rate" (French particularity for managing VAT in DOM-TOM called "Non Perçue Récupérable").
-
+- Highly customizable: Enable only modules you need, user personalized fields, choose your skin, several menu managers (can be used by internal users as a back-office with a particular menu, or by external users as a front-office with another one).
+- Works with PHP 5.3+, MySql 4.1 or PostgreSQL 8.1.
+- Require PHP and Mysql or Postgresql (See exatc versions on http://wiki.dolibarr.org/index.php/Prerequisite).
+- Compatible with all Cloud solutions that match MySql, PHP or PostgreSQL prerequisites.
+- An easy to understand, maintain and code interfaces with your own system information (PHP with no heavy frameworks, trigger and hook architecture).
+- Support countries specific features:
+   Spanish Tax RE and ISPF.
+   French NPR VAT rate (VAT called "Non Perçue Récupérable" for DOM-TOM).
+   Canadian double taxes (federal/province) and other countries using cumulative VAT.
+   Tunisian tax stamp.  
+   Compatible with European directives (2006/112/CE ... 2010/45/UE) (http://europa.eu/legislation_summaries/taxation/l31057_en.htm)
+   ...
 
 
 ## WHAT DOLIBARR CAN'T DO YET (TODO LIST)
 
 This is features that Dolibarr does not support completely yet:
 
-- No accountancy (only bank management).
+- No double party accountancy (only bank and treasury management).
 - Dolibarr manage one currency at once (mono-currency).
-- Dolibarr manage one company/foundation (mono-company). If you want to manage several companies or foundations, you must install several time the software (on same server or not). Another solution is to extend Dolibarr with the addon Module MultiCompany that allows to manage several companies in one Dolibarr instance (one database but with a logical isolation of datas).
-- Does not support double VAT (Federal / provincial) for Canada.
-- Dolibarr does not contains Payroll module.
+- Dolibarr manage one master activity (mono-company). If you want to manage several companies or foundations, you must install several time the software (on same server or not). Another solution is to extend Dolibarr with the addon Module MultiCompany that allows to manage several companies in one Dolibarr instance (one database but with a logical isolation of datas).
 - Tasks on module project can't have dependencies between each other.
+- Dolibarr does not contains Payroll module.
 - Dolibarr does not include any Webmail.
 - Dolibarr can't do coffee (not yet).
+
+
+## SOCIAL NETWORKS
+
+Follow Dolibarr project on
+
+Facebook: <https://www.facebook.com/dolibarr>
+
+Google+: <https://plus.google.com/+DolibarrOrg>
+
+Twitter: <http://www.twitter.com/dolibarr>
+

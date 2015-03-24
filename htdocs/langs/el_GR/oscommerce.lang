@@ -1,7 +1,6 @@
-# Dolibarr language file - en_US - oscommerce
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - oscommerce
 OSCommerce=OS Commerce
-OSCommerceSetup=OS Commerce module setup
+OSCommerceSetup=OS Commerce εγκατάσταση μονάδας
 OSCommerceSetupSaved=OS Commerce setup saved
 OSCommerceServer=OS Commerce server host/ip
 OSCommerceDatabaseName=OS Commerce database name

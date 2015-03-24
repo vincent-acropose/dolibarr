@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C)      2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2007-2011 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2012	   Juanjo Menent		<jmenent@2byte.es>
@@ -38,10 +38,13 @@ session_cache_limiter(FALSE);
 
 require_once '../../main.inc.php';
 
+// Load user to have $user->conf loaded (not done into main because of NOLOGIN constant defined)
+if (empty($user->id) && ! empty($_SESSION['dol_login'])) $user->fetch('',$_SESSION['dol_login']);
+
+
 // Define css type
 header('Content-type: text/css');
-// Important: Following code is to avoid page request by browser and PHP CPU at
-// each Dolibarr page access.
+// Important: Following code is to avoid page request by browser and PHP CPU at each Dolibarr page access.
 if (empty($dolibarr_nocache)) header('Cache-Control: max-age=3600, public, must-revalidate');
 else header('Cache-Control: no-cache');
 
@@ -53,20 +56,26 @@ if (GETPOST('theme')) $conf->theme=GETPOST('theme');  // If theme was forced on 
 $langs->load("main",0,1);
 $right=($langs->trans("DIRECTION")=='rtl'?'left':'right');
 $left=($langs->trans("DIRECTION")=='rtl'?'right':'left');
-$fontsize=empty($conf->browser->phone)?'12':'12';
-$fontsizesmaller=empty($conf->browser->phone)?'11':'11';
 
-$path='';    // This value may be used in future for external module to overwrite theme
+$path='';    		// This value may be used in future for external module to overwrite theme
+$theme='auguria';	// Value of theme
+if (! empty($conf->global->MAIN_OVERWRITE_THEME_RES)) { $path='/'.$conf->global->MAIN_OVERWRITE_THEME_RES; $theme=$conf->global->MAIN_OVERWRITE_THEME_RES; }
 
-// Define image path files
+// Define image path files and other constants
 $fontlist='arial,tahoma,verdana,helvetica';    //$fontlist='Verdana,Helvetica,Arial,sans-serif';
-//'/theme/auguria/img/menus/trtitle.png';
-$img_liste_titre=dol_buildpath($path.'/theme/auguria/img/menus/trtitle.png',1);
-$img_head=dol_buildpath($path.'/theme/auguria/img/headbg2.jpg',1);
-$img_button=dol_buildpath($path.'/theme/auguria/img/button_bg.png',1);
+$img_liste_titre=dol_buildpath($path.'/theme/'.$theme.'/img/menus/trtitle.png',1);
+$img_head=dol_buildpath($path.'/theme/'.$theme.'/img/headbg2.jpg',1);
+$img_button=dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1);
+$dol_hide_topmenu=$conf->dol_hide_topmenu;
+$dol_hide_leftmenu=$conf->dol_hide_leftmenu;
+$dol_optimize_smallscreen=$conf->dol_optimize_smallscreen;
+$dol_no_mouse_hover=$conf->dol_no_mouse_hover;
+$dol_use_jmobile=$conf->dol_use_jmobile;
 
 $colorbacklineimpairhover='210,214,217';
 $colorbacklinepairhover='210,214,217';
+$fontsize='12';
+$fontsizesmaller='11';
 
 // No hover by default, we keep only if we set var THEME_ELDY_USE_HOVER
 if ((! empty($user->conf->THEME_ELDY_ENABLE_PERSONALIZED) && empty($user->conf->THEME_ELDY_USE_HOVER))
@@ -76,11 +85,19 @@ if ((! empty($user->conf->THEME_ELDY_ENABLE_PERSONALIZED) && empty($user->conf->
 	$colorbacklinepairhover='';
 }
 
+$colorshadowtitle='000';
+
+$usecss3=true;
+if ($conf->browser->name == 'ie' && round($conf->browser->version,2) < 10) $usecss3=false;
+elseif ($conf->browser->name == 'iceweasel') $usecss3=false;
+elseif ($conf->browser->name == 'epiphany')  $usecss3=false;
+
 print '/*'."\n";
 print 'colorbacklineimpairhover='.$colorbacklineimpairhover."\n";
 print 'colorbacklinepairhover='.$colorbacklinepairhover."\n";
 print '*/'."\n";
 
+if (! empty($conf->dol_optimize_smallscreen)) $fontsize=11;
 ?>
 
 /* ============================================================================== */
@@ -105,6 +122,8 @@ body {
 
 a:link, a:visited, a:hover, a:active { font-family: <?php print $fontlist ?>; font-weight: bold; color: #000000; text-decoration: none; }
 
+<?php if (empty($dol_use_jmobile)) { ?>
+
 input:focus, textarea:focus, button:focus, select:focus {
     box-shadow: 0 0 4px #8091BF;
 }
@@ -117,6 +136,9 @@ input, input.flat, textarea, textarea.flat, form.flat select, select.flat {
     padding: 1px 1px 1px 1px;
     margin: 0px 0px 0px 0px;
 }
+
+<?php } ?>
+
 select.flat, form.flat select {
 	font-weight: normal;
 }
@@ -126,6 +148,23 @@ input:disabled {
 textarea:disabled {
 	background:#ddd;
 }
+input[type=checkbox] { background-color: transparent; border: none; box-shadow: none; }
+input[type=radio]    { background-color: transparent; border: none; box-shadow: none; }
+input[type=image]    { background-color: transparent; border: none; box-shadow: none; }
+input[type=text]     { min-width: 20px; }
+input:-webkit-autofill {
+	background-color: <?php echo empty($dol_use_jmobile)?'#FBFFEA':'#FFFFFF' ?> !important;
+	background-image:none !important;
+	-webkit-box-shadow: 0 0 0 50px <?php echo empty($dol_use_jmobile)?'#FBFFEA':'#FFFFFF' ?> inset;
+}
+::-webkit-input-placeholder { color:#ccc; }
+::-moz-placeholder { color:#ccc; } /* firefox 19+ */
+:-ms-input-placeholder { color:#ccc; } /* ie */
+input:-moz-placeholder { color:#ccc; }
+
+<?php if (! empty($dol_use_jmobile)) { ?>
+legend { margin-bottom: 8px; }
+<?php } ?>
 .button {
     font-family: <?php print $fontlist ?>;
 	border: 1px solid #ACBCBB;
@@ -161,11 +200,38 @@ div.float
 {
     float:<?php print $left; ?>;
 }
+div.floatright
+{
+    float:<?php print $right; ?>;
+}
+div.inline-block
+{
+	display:inline-block;
+}
+
 .valignmiddle {
 	vertical-align: middle;
 }
 .centpercent {
 	width: 100%;
+}
+.center {
+    text-align: center;
+}
+.left {
+	text-align: <?php print $left; ?>;
+}
+.right {
+	text-align: <?php print $right; ?>;
+}
+.nowrap {
+	white-space: <?php print ($dol_optimize_smallscreen?'normal':'nowrap'); ?>;
+}
+.nobold {
+	font-weight: normal !important;
+}
+.nounderline {
+    text-decoration: none;
 }
 
 
@@ -174,10 +240,17 @@ div.float
 /* ============================================================================== */
 
 .hideobject { display: none; }
-<?php if (! empty($conf->browser->phone)) { ?>
+<?php if (! empty($dol_optimize_smallscreen)) { ?>
 .hideonsmartphone { display: none; }
+.noenlargeonsmartphone { width : 50px !important; display: inline !important; }
+.maxwidthonsmartphone { max-width: 100px; }
+.maxwidth200onsmartphone { max-width: 200px; }
 <?php } ?>
 .linkobject { cursor: pointer; }
+<?php if (GETPOST("optioncss") == 'print') { ?>
+.hideonprint { display: none !important; }
+<?php } ?>
+
 
 /* ============================================================================== */
 /* Styles for dragging lines                                                      */
@@ -191,6 +264,7 @@ td.showDragHandle {
 }
 .tdlineupdown {
 	white-space: nowrap;
+	min-width: 10px;
 }
 
 
@@ -198,9 +272,24 @@ td.showDragHandle {
 /* Styles de positionnement des zones                                             */
 /* ============================================================================== */
 
+#id-container {
+	display: table;
+	table-layout: fixed;
+	margin-top: 6px;
+	margin-bottom: 6px;
+}
+#id-right, #id-left {
+	display: table-cell;
+	float: none;
+	vertical-align: top;
+}
+#id-<?php echo $right; ?> {
+	width: 100%;
+}
+
 div.fiche {
-	margin-<?php print $left; ?>: <?php print empty($conf->browser->phone)?'10':'2'; ?>px;
-	margin-<?php print $right; ?>: <?php print empty($conf->browser->phone)?'8':''; ?>px;
+	margin-<?php print $left; ?>: <?php print empty($conf->dol_optimize_smallscreen)?'10':'2'; ?>px;
+	margin-<?php print $right; ?>: <?php print empty($conf->dol_optimize_smallscreen)?'8':''; ?>px;
 }
 
 div.fichecenter {
@@ -208,23 +297,24 @@ div.fichecenter {
 	clear: both;	/* This is to have div fichecenter that are true rectangles */
 }
 div.fichethirdleft {
-	<?php if (empty($conf->browser->phone)) { print "float: ".$left.";\n"; } ?>
-	<?php if (empty($conf->browser->phone)) { print "width: 35%;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "float: ".$left.";\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "width: 35%;\n"; } ?>
 }
 div.fichetwothirdright {
-	<?php if (empty($conf->browser->phone)) { print "float: ".$left.";\n"; } ?>
-	<?php if (empty($conf->browser->phone)) { print "width: 65%;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "float: ".$left.";\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "width: 65%;\n"; } ?>
 }
 div.fichehalfleft {
-	<?php if (empty($conf->browser->phone)) { print "float: ".$left.";\n"; } ?>
-	<?php if (empty($conf->browser->phone)) { print "width: 50%;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "float: ".$left.";\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "width: 50%;\n"; } ?>
 }
 div.fichehalfright {
-	<?php if (empty($conf->browser->phone)) { print "float: ".$left.";\n"; } ?>
-	<?php if (empty($conf->browser->phone)) { print "width: 50%;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "float: ".$left.";\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "width: 50%;\n"; } ?>
 }
 div.ficheaddleft {
-	<?php if (empty($conf->browser->phone)) { print "padding-left: 10px;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen))   { print "padding-left: 16px;\n"; }
+	else print "margin-top: 10px;\n"; ?>
 }
 
 
@@ -233,7 +323,7 @@ div.ficheaddleft {
 /* ============================================================================== */
 
 <?php
-if (! empty($conf->browser->phone))
+if (! empty($conf->dol_optimize_smallscreen))
 {
 	$minwidthtmenu=70;
 	$heightmenu=39;
@@ -244,6 +334,10 @@ else
 	$heightmenu=39;
 }
 ?>
+
+div#tmenu_tooltip {
+	padding-right: 100px;
+}
 
 div.tmenu {
 <?php if (GETPOST("optioncss") == 'print') {  ?>
@@ -261,7 +355,7 @@ div.tmenu {
     font-weight: normal;
     height: <?php print $heightmenu; ?>px;
     background: #7FAEC6;
-    background-image: url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/table_bg.gif',1); ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/table_bg.gif',1); ?>);
 /*    background-position: center bottom; */
     color: #000000;
     text-decoration: none;
@@ -281,59 +375,8 @@ div.mainmenu {
 }
 */
 
-<?php if (empty($conf->browser->phone)) { ?>
+<?php if (empty($conf->dol_optimize_smallscreen)) {
 
-/*
-div.mainmenu.home{
-	background-image: url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/home.png',1); ?>);
-}
-
-div.mainmenu.companies {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/company.png',1); ?>);
-}
-
-div.mainmenu.products {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/products.png',1); ?>);
-	margin-left: 10px;
-}
-
-div.mainmenu.commercial {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/commercial.png',1); ?>);
-}
-
-div.mainmenu.accountancy {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/money.png',1); ?>);
-}
-
-div.mainmenu.project {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/project.png',1); ?>);
-}
-
-div.mainmenu.tools {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/tools.png',1); ?>);
-}
-
-div.mainmenu.members {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/members.png',1); ?>);
-}
-
-div.mainmenu.shop {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/shop.png',1); ?>);
-}
-
-div.mainmenu.agenda {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/agenda.png',1); ?>);
-}
-
-div.mainmenu.ecm {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/ecm.png',1); ?>);
-}
-
-div.mainmenu.cashdesk {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/pointofsale.png',1); ?>);
-}
-*/
-<?php
 // Add here more div for other menu entries. moduletomainmenu=array('module name'=>'name of class for div')
 
 $moduletomainmenu=array('user'=>'','syslog'=>'','societe'=>'companies','projet'=>'project','propale'=>'commercial','commande'=>'commercial',
@@ -374,13 +417,13 @@ foreach($mainmenuusedarray as $val)
 	// Img file not found
 	if (! $found && $generic <= 4)
 	{
-		$url=dol_buildpath($path.'/theme/auguria/img/menus/generic'.$generic.".png",1);
+		$url=dol_buildpath($path.'/theme/'.$theme.'/img/menus/generic'.$generic.".png",1);
 		$found=1;
 		$generic++;
 	}
 	if ($found)
 	{
-		print "/* A mainmenu entry but img file ".$val.".png not found, so we use a generic one */\n";
+		print "/* A mainmenu entry but img file ".$val.".png not found (check /".$val."/img/".$val.".png), so we use a generic one */\n";
 		print "div.mainmenu.".$val." {\n";
 		print "	background-image: url(".$url.");\n";
 		print "	height:28px;\n";
@@ -399,7 +442,7 @@ foreach($mainmenuusedarray as $val)
 	font-size: 10px;	/* To reduce to have more entries */
 	font-family:Tahoma,sans-serif;
 	text-transform:uppercase;
-	background: url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/topmenu_bg.png',1) ?>) repeat-x bottom left;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/topmenu_bg.png',1) ?>) repeat-x bottom left;
 }
 
 .tmenu ul{
@@ -434,7 +477,7 @@ foreach($mainmenuusedarray as $val)
 
 .tmenu ul li a:hover{
 	color:#fff;
-	background:transparent url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/topmenu_bg_over.gif',1); ?>) repeat-x bottom left;
+	background:transparent url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/topmenu_bg_over.gif',1); ?>) repeat-x bottom left;
 }
 
 .tmenu ul li a:hover span{
@@ -445,7 +488,7 @@ foreach($mainmenuusedarray as $val)
 
 .tmenu ul li a.tmenusel{
 	color:#fff;
-	background: url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/topmenu_left.gif',1); ?>) no-repeat top left;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/topmenu_left.gif',1); ?>) no-repeat top left;
 	line-height:305%;
 }
 
@@ -453,7 +496,7 @@ foreach($mainmenuusedarray as $val)
 	display:block;
 	padding:4px 8px 0 0;
 	width:auto;
-	background: url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/topmenu_right.png',1); ?>) no-repeat top right;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/topmenu_right.png',1); ?>) no-repeat top right;
 	height:33px;
 }
 
@@ -474,12 +517,12 @@ foreach($mainmenuusedarray as $val)
 /* Login */
 
 form#login {
-	margin-top: 70px;
+	margin-top: <?php echo $dol_optimize_smallscreen?'30':'60' ?>px;
 	margin-bottom: 30px;
 	font-size: 13px;
 }
 .login_table_title {
-	width: 540px;
+	max-width: 540px;
 	color: #888888;
 	text-shadow: 1px 1px 1px #FFF;
 }
@@ -488,7 +531,9 @@ form#login {
 }
 .login_table {
 	padding:12px;
-	width: 540px;
+	margin-left: 10px;
+	margin-right: 10px;
+	max-width: 540px;
 	border: 1px solid #C0C0C0;
 	background-color: #E0E0E0;
 
@@ -506,14 +551,19 @@ form#login {
 	background-image: -ms-linear-gradient(top, rgba(240,240,240,.3) 0%, rgba(192,192,192,.3) 100%);
 	background-image: linear-gradient(top, rgba(240,240,240,.3) 0%, rgba(192,192,192,.3) 100%);
 }
+#securitycode {
+	min-width: 60px;
+}
 #img_securitycode {
 	border: 1px solid #DDDDDD;
 }
 #img_logo {
 	max-width: 200px;
+	max-height: 100px;
 }
 
 div.login_block {
+    width: 180px;
 	position: absolute;
 	<?php print $right; ?>: 5px;
 	top: 3px;
@@ -527,9 +577,16 @@ div.login_block table {
 	display: inline;
 }
 
+div#login_left, div#login_right {
+	display: inline-block;
+	min-width: 220px;
+	text-align: center;
+	vertical-align: middle;
+}
+
 div.login {
 	white-space:nowrap;
-    padding: <?php echo ($conf->browser->phone?'0':'8')?>px 0px 0px 0px;
+    padding: <?php echo ($conf->dol_optimize_smallscreen?'0':'8')?>px 0px 0px 0px;
 	margin: 0px 0px 0px 8px;
 	font-weight: bold;
 }
@@ -540,10 +597,26 @@ div.login a:hover {
 	color: black;
 	text-decoration:underline;
 }
+.login_block_user {
+	float: right;
+}
+.login_block_elem {
+	float: right;
+	vertical-align: top;
+	padding: 8px 0px 0px 4px !important;
+}
+
+.alogin, .alogin:hover {
+	color: #888 !important;
+	font-weight: normal !important;
+	font-size: <?php echo $fontsizesmaller; ?>px !important;
+}
+.alogin:hover {
+	text-decoration:underline !important;
+}
 
 img.login, img.printer, img.entity {
-	padding: <?php echo ($conf->browser->phone?'0':'8')?>px 0px 0px 0px;
-	margin: 0px 0px 0px 8px;
+	padding: 0px 0px 0px 0px;
 	text-decoration: none;
 	color: white;
 	font-weight: bold;
@@ -554,8 +627,9 @@ img.login, img.printer, img.entity {
 /* Menu gauche                                                                    */
 /* ============================================================================== */
 
-td.vmenu {
+div.vmenu, td.vmenu {
     margin-<?php print $right; ?>: 2px;
+  	margin-<?php print $left; ?>: 2px;
     padding: 0px;
     padding-bottom: 0px;
     width: 164px;
@@ -571,9 +645,10 @@ a.vmenu:link, a.vmenu:visited, a.vmenu:hover, a.vmenu:active { font-size:<?php p
 font.vmenudisabled  { font-size:<?php print $fontsize ?>px; font-family: <?php print $fontlist ?>; text-align: <?php print $left; ?>; font-weight: normal; color: #D0D0D0; margin: 1px 1px 1px 5px; }
 a.vmenu:hover { color: #CCDDEE; }
 
-a.vsmenu:link, a.vsmenu:visited, a.vsmenu:hover, a.vsmenu:active { font-size:<?php print $fontsize ?>px; font-family: <?php print $fontlist ?>; text-align: <?php print $left; ?>; font-weight: normal; color: #202020; margin: 1px 1px 1px 5px; }
-font.vsmenudisabled { font-size:<?php print $fontsize ?>px; font-family: <?php print $fontlist ?>; text-align: <?php print $left; ?>; font-weight: normal; color: #93a5aa; margin: 1px 1px 1px 5px; }
+a.vsmenu:link, a.vsmenu:visited, a.vsmenu:hover, a.vsmenu:active { font-size:<?php print $fontsize ?>px; font-family: <?php print $fontlist ?>; text-align: <?php print $left; ?>; font-weight: normal; color: #202020; }
+font.vsmenudisabled { font-size:<?php print $fontsize ?>px; font-family: <?php print $fontlist ?>; text-align: <?php print $left; ?>; font-weight: normal; color: #93a5aa; }
 a.vsmenu:hover { color: #556677; }
+font.vsmenudisabledmargin { margin: 1px 1px 1px 5px; }
 
 a.help:link, a.help:visited, a.help:hover, a.help:active { font-size:<?php print $fontsizesmaller ?>px; font-family: <?php print $fontlist ?>; text-align: <?php print $left; ?>; font-weight: normal; }
 
@@ -610,7 +685,7 @@ div.blockvmenuimpair form a.vmenu, div.blockvmenupair form a.vmenu
 
 div.menu_titre
 {
-	background: url(<?php echo dol_buildpath($path.'/theme/auguria/img/bg-titre-rubrique.png',1); ?>);
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg-titre-rubrique.png',1); ?>);
 	padding: 0px;
 	padding-top:5px;
 	padding-left:0px;
@@ -651,7 +726,7 @@ div.blockvmenubookmarks
 
 div.blockvmenuhelp
 {
-<?php if (empty($conf->browser->phone)) { ?>
+<?php if (empty($conf->dol_optimize_smallscreen)) { ?>
 	text-align: center;
 	border-spacing: 0px;
     width: 162px;
@@ -670,12 +745,9 @@ div.blockvmenuhelp
 }
 
 div.menu_contenu {
-	background: url(<?php echo dol_buildpath($path.'/theme/auguria/img/bg-rubrique.png',1); ?>);
-	padding: 8px 0px 0px 0px;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg-rubrique.png',1); ?>);
+	padding: 2px 1px 1px 3px;
 	margin: 0px;
-	padding: 1px;
-
-	padding-right: 8px;
     font-size : 11px;
     font-weight:normal;
     color : #000000;
@@ -683,7 +755,7 @@ div.menu_contenu {
 }
 
 div.menu_end {
-	background: url(<?php echo dol_buildpath($path.'/theme/auguria/img/bg-bas-rubrique.png',1); ?>);
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg-bas-rubrique.png',1); ?>);
 /*	border-top: 1px solid #436981; */
 	margin: 0px;
 	padding: 0px;
@@ -870,7 +942,7 @@ img.toolbarbutton {
 }
 
 .ui-layout-north {
-	height: <?php print (empty($conf->browser->phone)?'42':'42'); ?>px !important;
+	height: <?php print (empty($conf->dol_optimize_smallscreen)?'42':'42'); ?>px !important;
 }
 
 /* ECM */
@@ -965,7 +1037,7 @@ div.tabBar {
     border-bottom: 1px solid #555555;
     border-left: 1px solid #D0D0D0;
     border-top: 1px solid #D8D8D8;
-    background: #dee7ec url(<?php echo dol_buildpath($path.'/theme/auguria/img/tab_background.png',1) ?>) repeat-x;
+    background: #dee7ec url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/tab_background.png',1) ?>) repeat-x;
 }
 
 div.tabsAction {
@@ -976,17 +1048,13 @@ div.tabsAction {
 
 
 a.tabTitle {
-    background: #5088A9;
-    color: white;
+    color: #888;
 	font-family: <?php print $fontlist ?>;
     font-weight: normal;
     padding: 0px 6px;
     margin: 0px 6px;
     text-decoration: none;
     white-space: nowrap;
-    border-<?php print $right; ?>: 1px solid #555555;
-    border-<?php print $left; ?>: 1px solid #D8D8D8;
-    border-top: 1px solid #D8D8D8;
 }
 
 a.tab:link {
@@ -1019,8 +1087,8 @@ a.tab:visited {
     border-<?php print $left; ?>: 1px solid #D8D8D8;
     border-top: 1px solid #D8D8D8;
 }
-a.tab#active {
-    background: white;
+div.tabs a.tab:active, .tabactive {
+    background: white !important;
     border-bottom: #dee7ec 1px solid;
 	font-family: <?php print $fontlist ?>;
     color: #436976;
@@ -1080,6 +1148,8 @@ span.tabspan {
 /* ============================================================================== */
 /* Boutons actions                                                                */
 /* ============================================================================== */
+
+div.divButAction { margin-bottom: 1.4em; }
 
 .butAction, .butAction:link, .butAction:visited, .butAction:hover, .butAction:active, .butActionDelete, .butActionDelete:link, .butActionDelete:visited, .butActionDelete:hover, .butActionDelete:active {
 	font-family: <?php print $fontlist ?>;
@@ -1141,7 +1211,7 @@ span.butAction, span.butActionDelete {
 }
 /*
 #undertopmenu {
-background-image: url("<?php echo dol_buildpath($path.'/theme/auguria/img/gradient.gif',1); ?>");
+background-image: url("<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/gradient.gif',1); ?>");
 background-repeat: repeat-x;
 }
 */
@@ -1151,9 +1221,8 @@ background-repeat: repeat-x;
 	border-collapse: collapse;
 	border: 0px;
 	margin-left: 0px;
-	spacing-left: 0px;
-	padding-left: 0px;
-	padding-right: 4px;
+	padding-<?php print $left; ?>: 0px !important;
+	padding-<?php print $right; ?>: 4px !important;
 }
 .nocellnopadd {
 list-style-type:none;
@@ -1181,27 +1250,36 @@ margin: 0px 0px 0px 0px;
 }
 
 
-table.border {
-border: 1px solid #9CACBB;
-border-collapse: collapse;
+table.border, table.dataTable, .table-border, .table-border-col, .table-key-border-col, .table-val-border-col, div.border {
+	border: 1px solid #9CACBB;
+	border-collapse: collapse;
+	padding: 1px 2px 2px 1px;			/* t r b l */
 }
 
-table.border td {
-padding: 1px 2px;
-border: 1px solid #9CACBB;
-border-collapse: collapse;
+table.border td, div.border div div.tagtd {
+	padding: 1px 2px;
+	border: 1px solid #9CACBB;
+	border-collapse: collapse;
 }
 
-td.border {
-border-top: 1px solid #000000;
-border-right: 1px solid #000000;
-border-bottom: 1px solid #000000;
-border-left: 1px solid #000000;
+td.border, div.tagtable div div.border {
+	border-top: 1px solid #000000;
+	border-right: 1px solid #000000;
+	border-bottom: 1px solid #000000;
+	border-left: 1px solid #000000;
+}
+
+.table-key-border-col {
+	width: 25%;
+	vertical-align:top;
+}
+.table-val-border-col {
+	width:auto;
 }
 
 /* Main boxes */
 
-table.noborder {
+table.noborder, div.noborder {
     border-collapse: collapse;
     border-top-color: #FEFEFE;
 
@@ -1227,7 +1305,7 @@ table.noborder {
     box-shadow: 4px 4px 4px #CCC;
 }
 
-table.noborder tr {
+table.noborder tr, div.noborder form {
     border-top-color: #FEFEFE;
 
     border-right-width: 1px;
@@ -1240,7 +1318,7 @@ table.noborder tr {
 	height: 20px;
 }
 
-table.noborder td {
+table.noborder td, div.noborder form div {
 	padding: 1px 2px 2px 1px;			/* t r b l */
 }
 
@@ -1287,54 +1365,104 @@ table.liste td {
 	padding-right: 2px;
 }
 
-div.liste_titre, tr.liste_titre
+.tagtable, .table-border { display: table; }
+.tagtr, .table-border-row  { display: table-row; }
+.tagtd, .table-border-col, .table-key-border-col, .table-val-border-col { display: table-cell; }
+
+tr.liste_titre, tr.liste_titre_sel, form.liste_titre, form.liste_titre_sel
 {
     height: 24px;
-    background: #7699A9;
+}
+div.liste_titre, tr.liste_titre, form.liste_titre
+{
+	<?php $usecss3=1; if ($usecss3) { ?>
+    background: #82c6f9;
+	background-image: -o-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: -moz-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: -webkit-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(1,150,150,0.3) 100%);
+	background-image: -ms-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: linear-gradient(bottom, rgba(1,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+    font-weight: bold;
+    border-top: 1px solid;
+    border-top-color: #57a0c9 !important;
+    border-bottom: 1px solid;
+    border-bottom-color: #57a0c9 !important;
+    <?php }	else { ?>
+	background: #82c6e9;
     background-image: url(<?php echo $img_liste_titre ?>);
+    <?php } ?>
     background-repeat: repeat-x;
     color: #FFFFFF;
     font-family: <?php print $fontlist ?>;
     /* border-bottom: 1px solid #FDFFFF; */
-    white-space: nowrap;
     text-align: <?php echo $left; ?>;
 }
 th.liste_titre, td.liste_titre
 {
-    background: #7699A9;
+	<?php $usecss3=1; if ($usecss3) { ?>
+    background: #82c6f9;
+	background-image: -o-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: -moz-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: -webkit-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(1,150,150,0.3) 100%);
+	background-image: -ms-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: linear-gradient(bottom, rgba(1,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+    font-weight: bold;
+    border-top: 1px solid #57a0c9;
+    border-bottom: 1px solid #57a0c9;
+    <?php }	else { ?>
+	background: #82c6e9;
     background-image: url(<?php echo $img_liste_titre ?>);
+    <?php } ?>
     background-repeat: repeat-x;
-    color: #FFFFFF;
     font-family: <?php print $fontlist ?>;
     font-weight: normal;
     /* border-bottom: 1px solid #FDFFFF; */
     white-space: nowrap;
 }
+th.liste_titre, td.liste_titre, th.liste_titre a, td.liste_titre a
+{
+	color: #FFFFFF !important;
+}
 th.liste_titre_sel, td.liste_titre_sel
 {
-    background: #7699A9;
+	<?php $usecss3=1; if ($usecss3) { ?>
+    background: #82c6f9;
+	background-image: -o-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: -moz-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: -webkit-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(1,150,150,0.3) 100%);
+	background-image: -ms-linear-gradient(bottom, rgba(100,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+	background-image: linear-gradient(bottom, rgba(1,100,100,0.3) 0%, rgba(150,150,150,0.3) 100%);
+    font-weight: bold;
+    border-top: 1px solid #57a0c9;
+    border-bottom: 1px solid #57a0c9;
+    <?php }	else { ?>
+	background: #82c6e9;
     background-image: url(<?php echo $img_liste_titre ?>);
+    <?php } ?>
     background-repeat: repeat-x;
-    color: #FFFFFF;
     font-family: <?php print $fontlist ?>;
     font-weight: normal;
     /* text-decoration: underline; */
     /* border-bottom: 1px solid #FDFFFF; */
     white-space: nowrap;
 }
+th.liste_titre_sel, td.liste_titre_sel, th.liste_titre_sel a, td.liste_titre_sel a
+{
+    color: #FFFFFF !important;
+}
 input.liste_titre {
-background: transparent;
-background-repeat: repeat-x;
-border: 0px;
+	background: transparent;
+	background-repeat: repeat-x;
+	border: 0px;
 }
 
-tr.liste_total td {
-border-top: 1px solid #DDDDDD;
-background: #F0F0F0;
-background-repeat: repeat-x;
-color: #332266;
-font-weight: normal;
-white-space: nowrap;
+tr.liste_total td, form.liste_total div {
+	border-top: 1px solid #DDDDDD;
+	background: #F0F0F0;
+	background-repeat: repeat-x;
+	color: #332266;
+	font-weight: normal;
+	white-space: nowrap;
 }
 
 
@@ -1385,6 +1513,19 @@ div.tabBar .noborder {
  *  Boxes
  */
 
+.boxstats {
+    <?php print "float: ".$left.";\n"; ?>
+    margin: 4px;
+    padding: 4px;
+	/*-moz-box-shadow: 4px 4px 4px #DDD;
+    -webkit-box-shadow: 4px 4px 4px #DDD;
+    box-shadow: 4px 4px 4px #DDD;
+    margin-bottom: 8px !important;*/
+    border: 1px solid #AAA;
+    text-align: center;
+    border-radius: 5px;
+}
+
 .boxtable {
 -moz-box-shadow: 4px 4px 4px #CCC;
 -webkit-box-shadow: 4px 4px 4px #CCC;
@@ -1432,10 +1573,15 @@ tr.box_pair td, tr.box_impair td, td.box_pair, td.box_impair
 /*border-bottom: 1px solid white;*/
 }
 
-tr.fiche {
-font-family: <?php print $fontlist ?>;
+.formboxfilter {
+	vertical-align: middle;
+	margin-bottom: 6px;
 }
-
+.formboxfilter input[type=image]
+{
+	top: 3px;
+	position: relative;
+}
 
 
 
@@ -1505,6 +1651,9 @@ a.impayee:hover { font-weight: bold; color: #550000; }
 .product_line_stock_too_low { color: #664400; }
 
 .fieldrequired { font-weight: bold; color: #000055; }
+
+.dolgraphtitle { margin-top: 6px; margin-bottom: 4px; }
+.dolgraphtitlecssboxes { margin: 0px; }
 
 .photo {
 border: 0px;
@@ -1582,6 +1731,8 @@ opacity: 1;
 /* ============================================================================== */
 /* Calendar                                                                       */
 /* ============================================================================== */
+
+img.datecallink { padding-left: 2px !important; padding-right: 2px !important; }
 
 .ui-datepicker-trigger {
 	vertical-align: middle;
@@ -1685,12 +1836,15 @@ td.hidden {
 /*  Module agenda                                                                 */
 /* ============================================================================== */
 
+table.cal_month    { border-spacing: 0px; }
 .cal_other_month   { background: #DDDDDD; border: solid 1px #ACBCBB; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
 .cal_past_month    { background: #EEEEEE; border: solid 1px #ACBCBB; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
 .cal_current_month { background: #FFFFFF; border: solid 1px #ACBCBB; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
 .cal_today         { background: #FFFFFF; border: solid 2px #6C7C7B; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
 table.cal_event    { border-collapse: collapse; margin-bottom: 1px; }
 table.cal_event td { border: 0px; padding-<?php print $left; ?>: 0px; padding-<?php print $right; ?>: 2px; padding-top: 0px; padding-bottom: 0px; }
+ul.cal_event       { padding-right: 2px; padding-top: 1px; border: none; list-style-type: none; margin: 0 auto; padding-left: 0px; padding-start: 0px; -khtml-padding-start: 0px; -o-padding-start: 0px; -webkit-padding-start: 0px; -webkit-padding-start: 0px; }
+li.cal_event       { border: none; list-style-type: none; }
 .cal_event a:link    { color: #111111; font-size: 11px; font-weight: normal !important; }
 .cal_event a:visited { color: #111111; font-size: 11px; font-weight: normal !important; }
 .cal_event a:active  { color: #111111; font-size: 11px; font-weight: normal !important; }
@@ -1702,7 +1856,7 @@ table.cal_event td { border: 0px; padding-<?php print $left; ?>: 0px; padding-<?
 /* ============================================================================== */
 
 .ui-widget { font-family: Verdana,Arial,sans-serif; font-size: 0.9em; }
-.ui-autocomplete-loading { background: white url(<?php echo dol_buildpath($path.'/theme/auguria/img/working.gif',1) ?>) right center no-repeat; }
+.ui-autocomplete-loading { background: white url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/working.gif',1) ?>) right center no-repeat; }
 
 
 /* ============================================================================== */
@@ -1710,12 +1864,12 @@ table.cal_event td { border: 0px; padding-<?php print $left; ?>: 0px; padding-<?
 /* ============================================================================== */
 
 .editkey_textarea, .editkey_ckeditor, .editkey_string, .editkey_email, .editkey_numeric, .editkey_select, .editkey_autocomplete {
-	background: url(<?php echo dol_buildpath($path.'/theme/auguria/img/edit.png',1) ?>) right top no-repeat;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/edit.png',1) ?>) right top no-repeat;
 	cursor: pointer;
 }
 
 .editkey_datepicker {
-	background: url(<?php echo dol_buildpath($path.'/theme/auguria/img/calendar.png',1) ?>) right center no-repeat;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/calendar.png',1) ?>) right center no-repeat;
 	cursor: pointer;
 }
 
@@ -1739,113 +1893,9 @@ table.cal_event td { border: 0px; padding-<?php print $left; ?>: 0px; padding-<?
 /* ============================================================================== */
 
 /* CSS for treeview */
-
-/* Lien plier /deplier tout */
-.arbre-switch {
-    text-align: right;
-    padding: 0 5px;
-    margin: 0 0 -18px 0;
-}
-
-/* Arbre */
-ul.arbre {
-    padding: 5px 10px;
-}
-/* strong : A modifier en fonction de la balise choisie */
-ul.arbre strong {
-    font-weight: normal;
-    padding: 0 0 0 20px;
-    margin: 0 0 0 -7px;
-    background-image: url(<?php echo dol_buildpath($path.'/theme/common/treemenu/branch.gif',1); ?>);
-    background-repeat: no-repeat;
-    background-position: 1px 50%;
-}
-ul.arbre strong.arbre-plier {
-    background-image: url(<?php echo dol_buildpath($path.'/theme/common/treemenu/plus.gif',1); ?>);
-    cursor: pointer;
-}
-ul.arbre strong.arbre-deplier {
-    background-image: url(<?php echo dol_buildpath($path.'/theme/common/treemenu/minus.gif',1); ?>);
-    cursor: pointer;
-}
-ul.arbre ul {
-    padding: 0;
-    margin: 0;
-}
-ul.arbre li {
-    padding: 0;
-    margin: 0;
-    list-style: none;
-}
-/* This is to create an indent */
-ul.arbre li li {
-    margin: 0 0 0 16px;
-}
-/* Classe pour masquer */
-.hide {
-    display: none;
-}
-
-img.menuNew
-{
-	display:block;
-	border:0px;
-}
-
-img.menuEdit
-{
-	border: 0px;
-	display: block;
-}
-
-img.menuDel
-{
-	display:none;
-	border: 0px;
-}
-
-div.menuNew
-{
-	margin-top:-20px;
-	margin-<?php print $left; ?>:270px;
-	height:20px;
-	padding:0px;
-	width:30px;
-	position:relative;
-}
-
-div.menuEdit
-{
-	margin-top:-15px;
-	margin-<?php print $left; ?>:250px;
-	height:20px;
-	padding:0px;
-	width:30px;
-	position:relative;
-
-}
-
-div.menuDel
-{
-	margin-top:-20px;
-	margin-<?php print $left; ?>:290px;
-	height:20px;
-	padding:0px;
-	width:30px;
-	position:relative;
-
-}
-
-div.menuFleche
-{
-	margin-top:-16px;
-	margin-<?php print $left; ?>:320px;
-	height:20px;
-	padding:0px;
-	width:30px;
-	position:relative;
-
-}
+.treeview ul { background-color: transparent !important; margin-top: 0; }
+.treeview li { background-color: transparent !important; padding: 0 0 0 16px !important; min-height: 20px; }
+.treeview .hover { color: black !important; }
 
 
 /* ============================================================================== */
@@ -1991,7 +2041,7 @@ A.none, A.none:active, A.none:visited, A.none:hover {
     font-family:<?php echo $fontlist; ?>;
     font-size:<?php echo $fontsize; ?>px;
 }
-.ui-button { margin-left: -1px; }
+.ui-button { margin-left: -1px; padding-top: 1px; }
 .ui-button-icon-only .ui-button-text { height: 8px; }
 .ui-button-icon-only .ui-button-text, .ui-button-icons-only .ui-button-text { padding: 2px 0px 6px 0px; }
 .ui-button-text
@@ -2016,8 +2066,6 @@ a.cke_dialog_ui_button
 	background-image: url(<?php echo $img_button ?>) !important;
 	background-position: bottom !important;
     border: 1px solid #ACBCBB !important;
-	padding: 0.1em 0.7em !important;
-	margin: 0em 0.5em !important;
     -moz-border-radius:0px 5px 0px 5px !important;
 	-webkit-border-radius:0px 5px 0px 5px !important;
 	border-radius:0px 5px 0px 5px !important;
@@ -2039,34 +2087,7 @@ a.cke_dialog_ui_button
     height: 72px !important;
 }
 
-/* ============================================================================== */
-/*  Table with div                                                                */
-/* ============================================================================== */
 
-div.table-border {
-	display:table;
-    width: 100%;
-    border-collapse: collapse;
-    border: 1px solid #9CACBB;
-}
-div.table-border-row {
-	display:table-row;
-}
-div.table-key-border-col {
-	display:table-cell;
-	width: 25%;
-	vertical-align:top;
-	padding: 1px 2px 1px 1px;
-	border: 1px solid #9CACBB;
-	border-collapse: collapse;
-}
-div.table-val-border-col {
-	display:table-cell;
-	width:auto;
-	padding: 1px 2px 1px 1px;
-	border: 1px solid #9CACBB;
-	border-collapse: collapse;
-}
 
 /* ============================================================================== */
 /*  Test using div instead of tables                                              */
@@ -2082,7 +2103,7 @@ div.tablelines {
 div.thead {
 	height: 24px;
 	background: #7699A9;
-	background-image: url(<?php echo dol_buildpath($path.'/theme/auguria/img/menus/trtitle.png',1); ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/trtitle.png',1); ?>);
 	background-repeat: repeat-x;
 	color: #FFFFFF;
 	font-family: <?php print $fontlist ?>;
@@ -2245,7 +2266,7 @@ div.ecmjqft {
 	bottom: 4px !important;
 <?php } ?>
 	text-align: center;
-	min-width: 500px;
+	min-width: <?php echo $dol_optimize_smallscreen?'200':'480'; ?>px;
 	width: auto;
 	padding-left: 10px !important;
 	padding-right: 10px !important;
@@ -2261,6 +2282,165 @@ div.ecmjqft {
     box-shadow: 0px 0px 10px #AAA;
 }
 
+
+/* ============================================================================== */
+/*  Datatable                                                                     */
+/* ============================================================================== */
+
+.sorting_asc  { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_asc.png',1); ?>') no-repeat center right; }
+.sorting_desc { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_desc.png',1); ?>') no-repeat center right; }
+.sorting_asc_disabled  { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_asc_disabled',1); ?>') no-repeat center right; }
+.sorting_desc_disabled { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_desc_disabled',1); ?>') no-repeat center right; }
+.paginate_disabled_previous:hover, .paginate_enabled_previous:hover, .paginate_disabled_next:hover, .paginate_enabled_next:hover
+{
+	font-weight: normal;
+}
+.paginate_enabled_previous:hover, .paginate_enabled_next:hover
+{
+	text-decoration: underline !important;
+}
+
+
+/* ============================================================================== */
+/*  JMobile                                                                       */
+/* ============================================================================== */
+
+li.ui-li-divider .ui-link {
+	color: #FFF !important;
+}
+.ui-btn {
+	margin: 0.1em 2px
+}
+a.ui-link, a.ui-link:hover, .ui-btn:hover, span.ui-btn-text:hover, span.ui-btn-inner:hover {
+	text-decoration: none !important;
+}
+
+.ui-btn-inner {
+	min-width: .4em;
+	padding-left: 10px;
+	padding-right: 10px;
+	font-size: <?php print $fontsize ?>px;
+	/* white-space: normal; */		/* Warning, enable this break the truncate feature */
+}
+.ui-select .ui-btn-icon-right .ui-btn-inner {
+	padding-right: 36px;
+}
+.ui-select .ui-btn-icon-left .ui-btn-inner {
+	padding-left: 36px;
+}
+
+.fiche .ui-controlgroup {
+	margin: 0px;
+	padding-bottom: 0px;
+}
+div.ui-controlgroup-controls div.tabsElem
+{
+	margin-top: 2px;
+}
+div.ui-controlgroup-controls div.tabsElem a
+{
+	-moz-box-shadow: 0 -3px 6px rgba(0,0,0,.2);
+	-webkit-box-shadow: 0 -3px 6px rgba(0,0,0,.2);
+	box-shadow: 0 -3px 6px rgba(0,0,0,.2);
+	border: none;
+}
+a.tab span.ui-btn-inner
+{
+	border: none;
+	padding: 0;
+}
+
+.ui-body-c {
+	border: 1px solid #CCC;
+	text-shadow: none;
+}
+.ui-link {
+	color: rgb(<?php print $colortext; ?>) !important;
+}
+
+a.ui-link {
+	word-wrap: break-word;
+}
+
+/* force wrap possible onto field overflow does not works */
+.formdoc .ui-btn-inner
+{
+	white-space: normal;
+	overflow: hidden;
+	text-overflow: hidden;
+}
+
+/* Warning: setting this may make screen not beeing refreshed after a combo selection */
+.ui-body-c {
+	background: #fff;
+}
+
+div.ui-radio
+{
+	display: inline-block;
+}
+.ui-checkbox input, .ui-radio input {
+	height: auto;
+	width: auto;
+	margin: 4px;
+	position: static;
+}
+div.ui-checkbox label+input, div.ui-radio label+input {
+	position: absolute;
+}
+
+.ui-mobile fieldset
+{
+	padding-bottom: 10px; margin-bottom: 4px; border-bottom: 1px solid #AAAAAA !important;
+}
+
+
+ul.ulmenu {
+	border-radius: 0;
+	-webkit-border-radius: 0;
+}
+
+.ui-field-contain label.ui-input-text {
+	vertical-align: middle !important;
+}
+.ui-mobile fieldset {
+	border-bottom: none !important;
+}
+.ui-body-c, .ui-btn-up-c, .ui-btn-hover-c {
+	border: none !important;
+}
+
+/* Style for first level menu with jmobile */
+.ui-bar-b, .lilevel0 {
+	background: #7699A9;
+	background-image: url(<?php echo $img_liste_titre; ?>);
+    background-repeat: repeat-x;
+	<?php if ($usecss3) { ?>
+	background-image: -o-linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+	background-image: -moz-linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+	background-image: -webkit-linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+	background-image: -ms-linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+	background-image: linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+    font-weight: bold;
+	<?php } ?>
+    color: #FFF !important;
+}
+.alilevel0 {
+    color: #FFF !important;
+	text-shadow: 1px 0px 1px #<?php echo $colorshadowtitle; ?>;
+}
+.alilevel1 {
+    color: #FFF !important;
+	text-shadow: 1px 0px 1px #<?php echo $colorshadowtitle; ?>;
+}
+.lilevel1 {
+	background-image: -webkit-gradient(linear,left top,left bottom,from( #eee ),to( #e1e1e1 )) !important;
+	background-image: -webkit-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: -moz-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: -ms-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: -o-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: linear-gradient( #eee,#e1e1e1 ) !important;
+}
+
 <?php
 if (is_object($db)) $db->close();
-?>

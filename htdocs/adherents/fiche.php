@@ -4,7 +4,8 @@
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2012      Marcos García        <marcosgdf@gmail.com>
- * Copyright (C) 2012      Philippe Grand       <philippe.grand@atoo-net.com>
+ * Copyright (C) 2012-2013 Philippe Grand       <philippe.grand@atoo-net.com>
+ * Copyright (C) 2014      Alexandre Spangaro   <alexandre.spangaro@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,8 +65,11 @@ if (! empty($conf->mailmanspip->enabled))
 $object = new Adherent($db);
 $extrafields = new ExtraFields($db);
 
+// fetch optionals attributes and labels
+$extralabels=$extrafields->fetch_name_optionals_label($object->table_element);
+
 // Get object canvas (By default, this is not defined, so standard usage of dolibarr)
-$object->getCanvas($socid);
+$object->getCanvas($rowid);
 $canvas = $object->canvas?$object->canvas:GETPOST("canvas");
 $objcanvas='';
 if (! empty($canvas))
@@ -98,17 +102,15 @@ if ($rowid > 0)
 	}
 }
 
-// Define variables to know what current user can do on members
+// Define variables to determine what the current user can do on the members
 $canaddmember=$user->rights->adherent->creer;
-// Define variables to know what current user can do on properties of a member
+// Define variables to determine what the current user can do on the properties of a member
 if ($rowid)
 {
 	$caneditfieldmember=$user->rights->adherent->creer;
 }
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
-include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
-$hookmanager=new HookManager($db);
 $hookmanager->initHooks(array('membercard'));
 
 
@@ -116,592 +118,568 @@ $hookmanager->initHooks(array('membercard'));
  * 	Actions
 */
 
-$parameters=array('socid'=>$socid, 'objcanvas'=>$objcanvas);
+$parameters=array('rowid'=>$rowid, 'objcanvas'=>$objcanvas);
 $reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 
-if ($action == 'setuserid' && ($user->rights->user->self->creer || $user->rights->user->user->creer))
-{
-	$error=0;
-	if (empty($user->rights->user->user->creer))	// If can edit only itself user, we can link to itself only
-	{
-		if ($userid != $user->id && $userid != $object->user_id)
-		{
-			$error++;
-			$mesg='<div class="error">'.$langs->trans("ErrorUserPermissionAllowsToLinksToItselfOnly").'</div>';
-		}
-	}
+if (empty($reshook)) {
 
-	if (! $error)
+	if ($action == 'setuserid' && ($user->rights->user->self->creer || $user->rights->user->user->creer))
 	{
-		if ($userid != $object->user_id)	// If link differs from currently in database
+		$error=0;
+		if (empty($user->rights->user->user->creer))	// If can edit only itself user, we can link to itself only
 		{
-			$result=$object->setUserId($userid);
-			if ($result < 0) dol_print_error($object->db,$object->error);
-			$action='';
-		}
-	}
-}
-
-if ($action == 'setsocid')
-{
-	$error=0;
-	if (! $error)
-	{
-		if ($socid != $object->fk_soc)	// If link differs from currently in database
-		{
-			$sql ="SELECT rowid FROM ".MAIN_DB_PREFIX."adherent";
-			$sql.=" WHERE fk_soc = '".$socid."'";
-			$sql.=" AND entity = ".$conf->entity;
-			$resql = $db->query($sql);
-			if ($resql)
+			if ($userid != $user->id && $userid != $object->user_id)
 			{
-				$obj = $db->fetch_object($resql);
-				if ($obj && $obj->rowid > 0)
-				{
-					$othermember=new Adherent($db);
-					$othermember->fetch($obj->rowid);
-					$thirdparty=new Societe($db);
-					$thirdparty->fetch($socid);
-					$error++;
-					$errmsg='<div class="error">'.$langs->trans("ErrorMemberIsAlreadyLinkedToThisThirdParty",$othermember->getFullName($langs),$othermember->login,$thirdparty->name).'</div>';
-				}
+				$error++;
+				$mesg='<div class="error">'.$langs->trans("ErrorUserPermissionAllowsToLinksToItselfOnly").'</div>';
 			}
+		}
 
-			if (! $error)
+		if (! $error)
+		{
+			if ($userid != $object->user_id)	// If link differs from currently in database
 			{
-				$result=$object->setThirdPartyId($socid);
+				$result=$object->setUserId($userid);
 				if ($result < 0) dol_print_error($object->db,$object->error);
 				$action='';
 			}
 		}
 	}
-}
 
-// Create user from a member
-if ($action == 'confirm_create_user' && $confirm == 'yes' && $user->rights->user->user->creer)
-{
-	if ($result > 0)
+	if ($action == 'setsocid')
 	{
-		// Creation user
-		$nuser = new User($db);
-		$result=$nuser->create_from_member($object,GETPOST('login'));
-
-		if ($result < 0)
+		$error=0;
+		if (! $error)
 		{
-			$langs->load("errors");
-			$errmsg=$langs->trans($nuser->error);
-		}
-	}
-	else
-	{
-		$errmsg=$object->error;
-	}
-}
-
-// Create third party from a member
-if ($action == 'confirm_create_thirdparty' && $confirm == 'yes' && $user->rights->societe->creer)
-{
-	if ($result > 0)
-	{
-		// Creation user
-		$company = new Societe($db);
-		$result=$company->create_from_member($object,GETPOST('companyname'));
-
-		if ($result < 0)
-		{
-			$langs->load("errors");
-			$errmsg=$langs->trans($company->error);
-			$errmsgs=$company->errors;
-		}
-	}
-	else
-	{
-		$errmsg=$object->error;
-	}
-}
-
-if ($action == 'confirm_sendinfo' && $confirm == 'yes')
-{
-	if ($object->email)
-	{
-		$from=$conf->email_from;
-		if (! empty($conf->global->ADHERENT_MAIL_FROM)) $from=$conf->global->ADHERENT_MAIL_FROM;
-
-		$result=$object->send_an_email($langs->transnoentitiesnoconv("ThisIsContentOfYourCard")."\n\n%INFOS%\n\n",$langs->transnoentitiesnoconv("CardContent"));
-
-		$langs->load("mails");
-		$mesg=$langs->trans("MailSuccessfulySent", $from, $object->email);
-	}
-}
-
-if ($action == 'update' && ! $_POST["cancel"] && $user->rights->adherent->creer)
-{
-	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-
-	$datenaiss='';
-	if (isset($_POST["naissday"]) && $_POST["naissday"]
-			&& isset($_POST["naissmonth"]) && $_POST["naissmonth"]
-			&& isset($_POST["naissyear"]) && $_POST["naissyear"])
-	{
-		$datenaiss=dol_mktime(12, 0, 0, $_POST["naissmonth"], $_POST["naissday"], $_POST["naissyear"]);
-	}
-
-	// Create new object
-	if ($result > 0)
-	{
-		$object->oldcopy=dol_clone($object);
-
-		// Change values
-		$object->civilite_id = trim($_POST["civilite_id"]);
-		$object->prenom      = trim($_POST["prenom"]);     // deprecated
-		$object->nom         = trim($_POST["nom"]);        // deprecated
-		$object->firstname   = trim($_POST["prenom"]);
-		$object->lastname    = trim($_POST["nom"]);
-		$object->login       = trim($_POST["login"]);
-		$object->pass        = trim($_POST["pass"]);
-
-		$object->societe     = trim($_POST["societe"]);
-		$object->adresse     = trim($_POST["address"]);    // deprecated
-		$object->address     = trim($_POST["address"]);
-		$object->cp          = trim($_POST["zipcode"]);    // deprecated
-		$object->zip         = trim($_POST["zipcode"]);
-		$object->ville       = trim($_POST["town"]);       // deprecated
-		$object->town        = trim($_POST["town"]);
-		$object->state_id    = $_POST["departement_id"];
-		$object->country_id  = $_POST["country_id"];
-		$object->fk_departement = $_POST["departement_id"];   // deprecated
-		$object->pays_id     = $_POST["country_id"];   // deprecated
-
-		$object->phone       = trim($_POST["phone"]);
-		$object->phone_perso = trim($_POST["phone_perso"]);
-		$object->phone_mobile= trim($_POST["phone_mobile"]);
-		$object->email       = trim($_POST["email"]);
-		$object->naiss       = $datenaiss;
-
-		$object->typeid      = $_POST["typeid"];
-		//$object->note        = trim($_POST["comment"]);
-		$object->morphy      = $_POST["morphy"];
-
-		$object->amount      = $_POST["amount"];
-
-		if (GETPOST('deletephoto')) $object->photo='';
-		elseif (! empty($_FILES['photo']['name'])) $object->photo  = dol_sanitizeFileName($_FILES['photo']['name']);
-
-		// Get status and public property
-		$object->statut      = $_POST["statut"];
-		$object->public      = $_POST["public"];
-
-		// Get extra fields
-		foreach($_POST as $key => $value)
-		{
-			if (preg_match("/^options_/",$key))
+			if ($socid != $object->fk_soc)	// If link differs from currently in database
 			{
-				$object->array_options[$key]=$_POST[$key];
-			}
-		}
-
-		// Check if we need to also synchronize user information
-		$nosyncuser=0;
-		if ($object->user_id)	// If linked to a user
-		{
-			if ($user->id != $object->user_id && empty($user->rights->user->user->creer)) $nosyncuser=1;		// Disable synchronizing
-		}
-
-		// Check if we need to also synchronize password information
-		$nosyncuserpass=0;
-		if ($object->user_id)	// If linked to a user
-		{
-			if ($user->id != $object->user_id && empty($user->rights->user->user->password)) $nosyncuserpass=1;	// Disable synchronizing
-		}
-
-		$result=$object->update($user,0,$nosyncuser,$nosyncuserpass);
-		if ($result >= 0 && ! count($object->errors))
-		{
-			$dir= $conf->adherent->dir_output . '/' . get_exdir($object->id,2,0,1).'/photos';
-			$file_OK = is_uploaded_file($_FILES['photo']['tmp_name']);
-			if ($file_OK)
-			{
-				if (GETPOST('deletephoto'))
+				$sql ="SELECT rowid FROM ".MAIN_DB_PREFIX."adherent";
+				$sql.=" WHERE fk_soc = '".$socid."'";
+				$sql.=" AND entity = ".$conf->entity;
+				$resql = $db->query($sql);
+				if ($resql)
 				{
-					$fileimg=$conf->adherent->dir_output.'/'.get_exdir($object->id,2,0,1).'/photos/'.$object->photo;
-					$dirthumbs=$conf->adherent->dir_output.'/'.get_exdir($object->id,2,0,1).'/photos/thumbs';
-					dol_delete_file($fileimg);
-					dol_delete_dir_recursive($dirthumbs);
+					$obj = $db->fetch_object($resql);
+					if ($obj && $obj->rowid > 0)
+					{
+						$othermember=new Adherent($db);
+						$othermember->fetch($obj->rowid);
+						$thirdparty=new Societe($db);
+						$thirdparty->fetch($socid);
+						$error++;
+						$errmsg='<div class="error">'.$langs->trans("ErrorMemberIsAlreadyLinkedToThisThirdParty",$othermember->getFullName($langs),$othermember->login,$thirdparty->name).'</div>';
+					}
 				}
 
-				if (image_format_supported($_FILES['photo']['name']) > 0)
+				if (! $error)
 				{
-					dol_mkdir($dir);
+					$result=$object->setThirdPartyId($socid);
+					if ($result < 0) dol_print_error($object->db,$object->error);
+					$action='';
+				}
+			}
+		}
+	}
 
-					if (@is_dir($dir))
+	// Create user from a member
+	if ($action == 'confirm_create_user' && $confirm == 'yes' && $user->rights->user->user->creer)
+	{
+		if ($result > 0)
+		{
+			// Creation user
+			$nuser = new User($db);
+			$result=$nuser->create_from_member($object,GETPOST('login'));
+
+			if ($result < 0)
+			{
+				$langs->load("errors");
+				$errmsg=$langs->trans($nuser->error);
+			}
+		}
+		else
+		{
+			$errmsg=$object->error;
+		}
+	}
+
+	// Create third party from a member
+	if ($action == 'confirm_create_thirdparty' && $confirm == 'yes' && $user->rights->societe->creer)
+	{
+		if ($result > 0)
+		{
+			// Creation user
+			$company = new Societe($db);
+			$result=$company->create_from_member($object,GETPOST('companyname'));
+
+			if ($result < 0)
+			{
+				$langs->load("errors");
+				$errmsg=$langs->trans($company->error);
+				$errmsgs=$company->errors;
+			}
+		}
+		else
+		{
+			$errmsg=$object->error;
+		}
+	}
+
+	if ($action == 'confirm_sendinfo' && $confirm == 'yes')
+	{
+		if ($object->email)
+		{
+			$from=$conf->email_from;
+			if (! empty($conf->global->ADHERENT_MAIL_FROM)) $from=$conf->global->ADHERENT_MAIL_FROM;
+
+			$result=$object->send_an_email($langs->transnoentitiesnoconv("ThisIsContentOfYourCard")."\n\n%INFOS%\n\n",$langs->transnoentitiesnoconv("CardContent"));
+
+			$langs->load("mails");
+			$mesg=$langs->trans("MailSuccessfulySent", $from, $object->email);
+		}
+	}
+
+	if ($action == 'update' && ! $_POST["cancel"] && $user->rights->adherent->creer)
+	{
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+
+		$birthdate='';
+		if (isset($_POST["birthday"]) && $_POST["birthday"]
+				&& isset($_POST["birthmonth"]) && $_POST["birthmonth"]
+				&& isset($_POST["birthyear"]) && $_POST["birthyear"])
+		{
+			$birthdate=dol_mktime(12, 0, 0, $_POST["birthmonth"], $_POST["birthday"], $_POST["birthyear"]);
+		}
+		$lastname=$_POST["lastname"];
+		$firstname=$_POST["firstname"];
+		$morphy=$morphy=$_POST["morphy"];;
+		if ($morphy != 'mor' && empty($lastname)) {
+			$error++;
+			$langs->load("errors");
+			$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentities("Lastname"))."<br>\n";
+		}
+		if ($morphy != 'mor' && (!isset($firstname) || $firstname=='')) {
+			$error++;
+			$langs->load("errors");
+			$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentities("Firstname"))."<br>\n";
+		}
+
+		// Create new object
+		if ($result > 0 && ! $error)
+		{
+			$object->oldcopy=dol_clone($object);
+
+			// Change values
+			$object->civility_id = trim($_POST["civility_id"]);
+			$object->firstname   = trim($_POST["firstname"]);
+			$object->lastname    = trim($_POST["lastname"]);
+			$object->login       = trim($_POST["login"]);
+			$object->pass        = trim($_POST["pass"]);
+
+			$object->societe     = trim($_POST["societe"]);
+			$object->company     = trim($_POST["societe"]);
+
+			$object->address     = trim($_POST["address"]);
+			$object->zip         = trim($_POST["zipcode"]);
+			$object->town        = trim($_POST["town"]);
+			$object->state_id    = $_POST["state_id"];
+			$object->country_id  = $_POST["country_id"];
+
+			$object->phone       = trim($_POST["phone"]);
+			$object->phone_perso = trim($_POST["phone_perso"]);
+			$object->phone_mobile= trim($_POST["phone_mobile"]);
+			$object->email       = trim($_POST["email"]);
+			$object->skype       = trim($_POST["skype"]);
+			$object->birth       = $birthdate;
+
+			$object->typeid      = $_POST["typeid"];
+			//$object->note        = trim($_POST["comment"]);
+			$object->morphy      = $_POST["morphy"];
+
+			$object->amount      = $_POST["amount"];
+
+			if (GETPOST('deletephoto')) $object->photo='';
+			elseif (! empty($_FILES['photo']['name'])) $object->photo  = dol_sanitizeFileName($_FILES['photo']['name']);
+
+			// Get status and public property
+			$object->statut      = $_POST["statut"];
+			$object->public      = $_POST["public"];
+
+			// Fill array 'array_options' with data from add form
+			$ret = $extrafields->setOptionalsFromPost($extralabels,$object);
+
+			// Check if we need to also synchronize user information
+			$nosyncuser=0;
+			if ($object->user_id)	// If linked to a user
+			{
+				if ($user->id != $object->user_id && empty($user->rights->user->user->creer)) $nosyncuser=1;		// Disable synchronizing
+			}
+
+			// Check if we need to also synchronize password information
+			$nosyncuserpass=0;
+			if ($object->user_id)	// If linked to a user
+			{
+				if ($user->id != $object->user_id && empty($user->rights->user->user->password)) $nosyncuserpass=1;	// Disable synchronizing
+			}
+
+			$result=$object->update($user,0,$nosyncuser,$nosyncuserpass);
+			if ($result >= 0 && ! count($object->errors))
+			{
+				// Logo/Photo save
+				$dir= $conf->adherent->dir_output . '/' . get_exdir($object->id,2,0,1).'/photos';
+				$file_OK = is_uploaded_file($_FILES['photo']['tmp_name']);
+				if ($file_OK)
+				{
+					if (GETPOST('deletephoto'))
 					{
-						$newfile=$dir.'/'.dol_sanitizeFileName($_FILES['photo']['name']);
-						if (! dol_move_uploaded_file($_FILES['photo']['tmp_name'],$newfile,1,0,$_FILES['photo']['error']) > 0)
-						{
-							$message .= '<div class="error">'.$langs->trans("ErrorFailedToSaveFile").'</div>';
-						}
-						else
-						{
-							// Create small thumbs for company (Ratio is near 16/9)
-							// Used on logon for example
-							$imgThumbSmall = vignette($newfile, $maxwidthsmall, $maxheightsmall, '_small', $quality);
+						require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
+						$fileimg=$conf->adherent->dir_output.'/'.get_exdir($object->id,2,0,1).'/photos/'.$object->photo;
+						$dirthumbs=$conf->adherent->dir_output.'/'.get_exdir($object->id,2,0,1).'/photos/thumbs';
+						dol_delete_file($fileimg);
+						dol_delete_dir_recursive($dirthumbs);
+					}
 
-							// Create mini thumbs for company (Ratio is near 16/9)
-							// Used on menu or for setup page for example
-							$imgThumbMini = vignette($newfile, $maxwidthmini, $maxheightmini, '_mini', $quality);
+					if (image_format_supported($_FILES['photo']['name']) > 0)
+					{
+						dol_mkdir($dir);
+
+						if (@is_dir($dir))
+						{
+							$newfile=$dir.'/'.dol_sanitizeFileName($_FILES['photo']['name']);
+							if (! dol_move_uploaded_file($_FILES['photo']['tmp_name'],$newfile,1,0,$_FILES['photo']['error']) > 0)
+							{
+								$message .= '<div class="error">'.$langs->trans("ErrorFailedToSaveFile").'</div>';
+							}
+							else
+							{
+								// Create small thumbs for company (Ratio is near 16/9)
+								// Used on logon for example
+								$imgThumbSmall = vignette($newfile, $maxwidthsmall, $maxheightsmall, '_small', $quality);
+
+								// Create mini thumbs for company (Ratio is near 16/9)
+								// Used on menu or for setup page for example
+								$imgThumbMini = vignette($newfile, $maxwidthmini, $maxheightmini, '_mini', $quality);
+							}
 						}
+					}
+					else
+					{
+						$errmsgs[] = "ErrorBadImageFormat";
 					}
 				}
 				else
 				{
-					$errmsgs[] = "ErrorBadImageFormat";
-				}
-			}
-
-			// Rajoute l'utilisateur dans les divers abonnements (mailman, spip, etc...)
-			if (($object->oldcopy->email != $object->email) || ($object->oldcopy->typeid != $object->typeid))
-			{
-				if ($object->oldcopy->email != $object->email)    // If email has changed we delete mailman subscription for old email
-				{
-					if ($object->oldcopy->del_to_abo() < 0)
+					switch($_FILES['photo']['error'])
 					{
-						// error
-						$errmsgs[]= $langs->trans("FailedToCleanMailmanList").': '.$object->error."<br>\n";
+						case 1: //uploaded file exceeds the upload_max_filesize directive in php.ini
+						case 2: //uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the html form
+							$errors[] = "ErrorFileSizeTooLarge";
+							break;
+						case 3: //uploaded file was only partially uploaded
+							$errors[] = "ErrorFilePartiallyUploaded";
+							break;
 					}
 				}
-				if ($object->add_to_abo() < 0)    // We add subscription if new email or new type (new type may means more mailing-list to subscribe)
+
+	            $rowid=$object->id;
+				$action='';
+
+				if (! empty($backtopage))
 				{
-					// error
-					$errmsgs[]= $langs->trans("FailedToAddToMailmanList").': '.$object->error."<br>\n";
+					header("Location: ".$backtopage);
+					exit;
 				}
 			}
+			else
+			{
+				if ($object->error) $errmsg=$object->error;
+				else $errmsgs=$object->errors;
+				$action='';
+			}
+		}
+		else
+		{
+			$action='edit';
+		}
+	}
 
-			$rowid=$object->id;
-			$action='';
+	if ($action == 'add' && $user->rights->adherent->creer)
+	{
+		if ($canvas) $object->canvas=$canvas;
+		$birthdate='';
+		if (isset($_POST["birthday"]) && $_POST["birthday"]
+				&& isset($_POST["birthmonth"]) && $_POST["birthmonth"]
+				&& isset($_POST["birthyear"]) && $_POST["birthyear"])
+		{
+			$birthdate=dol_mktime(12, 0, 0, $_POST["birthmonth"], $_POST["birthday"], $_POST["birthyear"]);
+		}
+		$datecotisation='';
+		if (isset($_POST["reday"]) && isset($_POST["remonth"]) && isset($_POST["reyear"]))
+		{
+			$datecotisation=dol_mktime(12, 0, 0, $_POST["remonth"], $_POST["reday"], $_POST["reyear"]);
+		}
 
+		$typeid=$_POST["typeid"];
+		$civility_id=$_POST["civility_id"];
+		$lastname=$_POST["lastname"];
+		$firstname=$_POST["firstname"];
+		$societe=$_POST["societe"];
+		$address=$_POST["address"];
+		$zip=$_POST["zipcode"];
+		$town=$_POST["town"];
+		$state_id=$_POST["state_id"];
+		$country_id=$_POST["country_id"];
+
+		$phone=$_POST["phone"];
+		$phone_perso=$_POST["phone_perso"];
+		$phone_mobile=$_POST["phone_mobile"];
+		$skype=$_POST["member_skype"];
+		$email=$_POST["member_email"];
+		$login=$_POST["member_login"];
+		$pass=$_POST["password"];
+		$photo=$_POST["photo"];
+		//$comment=$_POST["comment"];
+		$morphy=$_POST["morphy"];
+		$cotisation=$_POST["cotisation"];
+		$public=$_POST["public"];
+
+		$userid=$_POST["userid"];
+		$socid=$_POST["socid"];
+
+		$object->civility_id = $civility_id;
+		$object->firstname   = $firstname;
+		$object->lastname    = $lastname;
+		$object->societe     = $societe;
+		$object->address     = $address;
+		$object->zip         = $zip;
+		$object->town        = $town;
+		$object->state_id    = $state_id;
+		$object->country_id  = $country_id;
+		$object->phone       = $phone;
+		$object->phone_perso = $phone_perso;
+		$object->phone_mobile= $phone_mobile;
+		$object->skype       = $skype;
+		$object->email       = $email;
+		$object->login       = $login;
+		$object->pass        = $pass;
+		$object->naiss       = $birthdate;
+		$object->photo       = $photo;
+		$object->typeid      = $typeid;
+		//$object->note        = $comment;
+		$object->morphy      = $morphy;
+		$object->user_id     = $userid;
+		$object->fk_soc      = $socid;
+		$object->public      = $public;
+
+		// Fill array 'array_options' with data from add form
+		$ret = $extrafields->setOptionalsFromPost($extralabels,$object);
+
+		// Check parameters
+		if (empty($morphy) || $morphy == "-1") {
+			$error++;
+			$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Nature"))."<br>\n";
+		}
+		// Test si le login existe deja
+		if (empty($conf->global->ADHERENT_LOGIN_NOT_REQUIRED))
+		{
+			if (empty($login)) {
+				$error++;
+				$errmsg .= $langs->trans("ErrorFieldRequired",$langs->trans("Login"))."<br>\n";
+			}
+			else {
+				$sql = "SELECT login FROM ".MAIN_DB_PREFIX."adherent WHERE login='".$db->escape($login)."'";
+				$result = $db->query($sql);
+				if ($result) {
+					$num = $db->num_rows($result);
+				}
+				if ($num) {
+					$error++;
+					$langs->load("errors");
+					$errmsg .= $langs->trans("ErrorLoginAlreadyExists",$login)."<br>\n";
+				}
+			}
+			if (empty($pass)) {
+				$error++;
+				$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentities("Password"))."<br>\n";
+			}
+		}
+		if ($morphy != 'mor' && empty($lastname)) {
+			$error++;
+			$langs->load("errors");
+			$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentities("Lastname"))."<br>\n";
+		}
+		if ($morphy != 'mor' && (!isset($firstname) || $firstname=='')) {
+			$error++;
+			$langs->load("errors");
+			$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentities("Firstname"))."<br>\n";
+		}
+		if (! ($typeid > 0)) {	// Keep () before !
+			$error++;
+			$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Type"))."<br>\n";
+		}
+		if ($conf->global->ADHERENT_MAIL_REQUIRED && ! isValidEMail($email)) {
+			$error++;
+			$langs->load("errors");
+			$errmsg .= $langs->trans("ErrorBadEMail",$email)."<br>\n";
+		}
+		$public=0;
+		if (isset($public)) $public=1;
+
+		if (! $error)
+		{
+			$db->begin();
+
+			// Email a peu pres correct et le login n'existe pas
+			$result=$object->create($user);
+			if ($result > 0)
+			{
+				$db->commit();
+				$rowid=$object->id;
+				$action='';
+			}
+			else
+			{
+				$db->rollback();
+
+				if ($object->error) $errmsg=$object->error;
+				else $errmsgs=$object->errors;
+
+				$action = 'create';
+			}
+		}
+		else {
+			$action = 'create';
+		}
+	}
+
+	if ($user->rights->adherent->supprimer && $action == 'confirm_delete' && $confirm == 'yes')
+	{
+		$result=$object->delete($rowid);
+		if ($result > 0)
+		{
 			if (! empty($backtopage))
 			{
 				header("Location: ".$backtopage);
 				exit;
 			}
+			else
+			{
+				header("Location: liste.php");
+				exit;
+			}
 		}
 		else
 		{
-			if ($object->error) $errmsg=$object->error;
-			else $errmsgs=$object->errors;
-			$action='';
-		}
-	}
-}
-
-if ($action == 'add' && $user->rights->adherent->creer)
-{
-	if ($canvas) $object->canvas=$canvas;
-	$datenaiss='';
-	if (isset($_POST["naissday"]) && $_POST["naissday"]
-			&& isset($_POST["naissmonth"]) && $_POST["naissmonth"]
-			&& isset($_POST["naissyear"]) && $_POST["naissyear"])
-	{
-		$datenaiss=dol_mktime(12, 0, 0, $_POST["naissmonth"], $_POST["naissday"], $_POST["naissyear"]);
-	}
-	$datecotisation='';
-	if (isset($_POST["reday"]) && isset($_POST["remonth"]) && isset($_POST["reyear"]))
-	{
-		$datecotisation=dol_mktime(12, 0, 0, $_POST["remonth"], $_POST["reday"], $_POST["reyear"]);
-	}
-
-	$typeid=$_POST["typeid"];
-	$civilite_id=$_POST["civilite_id"];
-	$nom=$_POST["nom"];
-	$prenom=$_POST["prenom"];
-	$societe=$_POST["societe"];
-	$address=$_POST["address"];
-	$zip=$_POST["zipcode"];
-	$town=$_POST["town"];
-	$state_id=$_POST["departement_id"];
-	$country_id=$_POST["country_id"];
-
-	$phone=$_POST["phone"];
-	$phone_perso=$_POST["phone_perso"];
-	$phone_mobile=$_POST["phone_mobile"];
-	$email=$_POST["member_email"];
-	$login=$_POST["member_login"];
-	$pass=$_POST["password"];
-	$photo=$_POST["photo"];
-	//$comment=$_POST["comment"];
-	$morphy=$_POST["morphy"];
-	$cotisation=$_POST["cotisation"];
-	$public=$_POST["public"];
-
-	$userid=$_POST["userid"];
-	$socid=$_POST["socid"];
-
-	$object->civilite_id = $civilite_id;
-	$object->prenom      = $prenom;    // deprecated
-	$object->nom         = $nom;       // deprecated
-	$object->firstname   = $prenom;
-	$object->lastname    = $nom;
-	$object->societe     = $societe;
-	$object->adresse     = $address; // deprecated
-	$object->address     = $address;
-	$object->cp          = $zip;     // deprecated
-	$object->zip         = $zip;
-	$object->ville       = $town;    // deprecated
-	$object->town        = $town;
-	$object->fk_departement = $state_id;
-	$object->state_id    = $state_id;
-	$object->pays_id     = $country_id;
-	$object->country_id  = $country_id;
-	$object->phone       = $phone;
-	$object->phone_perso = $phone_perso;
-	$object->phone_mobile= $phone_mobile;
-	$object->email       = $email;
-	$object->login       = $login;
-	$object->pass        = $pass;
-	$object->naiss       = $datenaiss;
-	$object->photo       = $photo;
-	$object->typeid      = $typeid;
-	//$object->note        = $comment;
-	$object->morphy      = $morphy;
-	$object->user_id     = $userid;
-	$object->fk_soc      = $socid;
-	$object->public      = $public;
-
-	// Get extra fields
-	foreach($_POST as $key => $value)
-	{
-		if (preg_match("/^options_/",$key))
-		{
-			$object->array_options[$key]=$_POST[$key];
+			$errmesg=$object->error;
 		}
 	}
 
-	// Check parameters
-	if (empty($morphy) || $morphy == "-1") {
-		$error++;
-		$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Nature"))."<br>\n";
-	}
-	// Test si le login existe deja
-	if (empty($conf->global->ADHERENT_LOGIN_NOT_REQUIRED))
+	if ($user->rights->adherent->creer && $action == 'confirm_valid' && $confirm == 'yes')
 	{
-		if (empty($login)) {
-			$error++;
-			$errmsg .= $langs->trans("ErrorFieldRequired",$langs->trans("Login"))."<br>\n";
-		}
-		else {
-			$sql = "SELECT login FROM ".MAIN_DB_PREFIX."adherent WHERE login='".$db->escape($login)."'";
-			$result = $db->query($sql);
-			if ($result) {
-				$num = $db->num_rows($result);
-			}
-			if ($num) {
-				$error++;
-				$langs->load("errors");
-				$errmsg .= $langs->trans("ErrorLoginAlreadyExists",$login)."<br>\n";
-			}
-		}
-		if (empty($pass)) {
-			$error++;
-			$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentities("Password"))."<br>\n";
-		}
-	}
-	if (empty($nom)) {
-		$error++;
-		$langs->load("errors");
-		$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentities("Lastname"))."<br>\n";
-	}
-	if ($morphy != 'mor' && (!isset($prenom) || $prenom=='')) {
-		$error++;
-		$langs->load("errors");
-		$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentities("Firstname"))."<br>\n";
-	}
-	if (! ($typeid > 0)) {	// Keep () before !
-		$error++;
-		$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Type"))."<br>\n";
-	}
-	if ($conf->global->ADHERENT_MAIL_REQUIRED && ! isValidEMail($email)) {
-		$error++;
-		$langs->load("errors");
-		$errmsg .= $langs->trans("ErrorBadEMail",$email)."<br>\n";
-	}
-	$public=0;
-	if (isset($public)) $public=1;
+		$error=0;
 
-	if (! $error)
-	{
 		$db->begin();
 
-		// Email a peu pres correct et le login n'existe pas
-		$result=$object->create($user);
-		if ($result > 0)
+		$adht = new AdherentType($db);
+		$adht->fetch($object->typeid);
+
+		$result=$object->validate($user);
+
+		if ($result >= 0 && ! count($object->errors))
+		{
+			// Send confirmation Email (selon param du type adherent sinon generique)
+			if ($object->email && GETPOST("send_mail"))
+			{
+				$result=$object->send_an_email($adht->getMailOnValid(),$conf->global->ADHERENT_MAIL_VALID_SUBJECT,array(),array(),array(),"","",0,2);
+				if ($result < 0)
+				{
+					$error++;
+					$errmsg.=$object->error;
+				}
+			}
+		}
+		else
+		{
+			$error++;
+			if ($object->error) $errmsg=$object->error;
+			else $errmsgs=$object->errors;
+		}
+
+		if (! $error)
 		{
 			$db->commit();
-			$rowid=$object->id;
-			$action='';
 		}
 		else
 		{
 			$db->rollback();
-
-			if ($object->error) $errmsg=$object->error;
-			else $errmsgs=$object->errors;
-
-			$action = 'create';
 		}
+		$action='';
 	}
-	else {
-		$action = 'create';
-	}
-}
 
-if ($user->rights->adherent->supprimer && $action == 'confirm_delete' && $confirm == 'yes')
-{
-	$result=$object->delete($rowid);
-	if ($result > 0)
+	if ($user->rights->adherent->supprimer && $action == 'confirm_resign')
 	{
-		if (! empty($backtopage))
+		if ($confirm == 'yes')
+		{
+			$adht = new AdherentType($db);
+			$adht->fetch($object->typeid);
+
+			$result=$object->resiliate($user);
+
+			if ($result >= 0 && ! count($object->errors))
+			{
+				if ($object->email && GETPOST("send_mail"))
+				{
+					$result=$object->send_an_email($adht->getMailOnResiliate(),$conf->global->ADHERENT_MAIL_RESIL_SUBJECT,array(),array(),array(),"","",0,-1);
+				}
+				if ($result < 0)
+				{
+					$errmsg.=$object->error;
+				}
+			}
+			else
+			{
+				if ($object->error) $errmsg=$object->error;
+				else $errmsgs=$object->errors;
+				$action='';
+			}
+		}
+		if (! empty($backtopage) && ! $errmsg)
 		{
 			header("Location: ".$backtopage);
 			exit;
 		}
-		else
-		{
-			header("Location: liste.php");
-			exit;
-		}
 	}
-	else
+
+	// SPIP Management
+	if ($user->rights->adherent->supprimer && $action == 'confirm_del_spip' && $confirm == 'yes')
 	{
-		$errmesg=$object->error;
-	}
-}
-
-if ($user->rights->adherent->creer && $action == 'confirm_valid' && $confirm == 'yes')
-{
-	$error=0;
-
-	$db->begin();
-
-	$adht = new AdherentType($db);
-	$adht->fetch($object->typeid);
-
-	$result=$object->validate($user);
-
-	if ($result >= 0 && ! count($object->errors))
-	{
-		// Send confirmation Email (selon param du type adherent sinon generique)
-		if ($object->email && ! empty($_POST["send_mail"]))
+		if (! count($object->errors))
 		{
-			$result=$object->send_an_email($adht->getMailOnValid(),$conf->global->ADHERENT_MAIL_VALID_SUBJECT,array(),array(),array(),"","",0,2);
-			if ($result < 0)
+			if (!$mailmanspip->del_to_spip($object))
 			{
-				$error++;
-				$errmsg.=$object->error;
+				$errmsg.= $langs->trans('DeleteIntoSpipError').': '.$mailmanspip->error."<BR>\n";
 			}
 		}
+	}
 
-		// Add user to other systems (mailman, spip, etc...)
-		// TODO Move this into trigger on validate action
-		if (! $error && $object->add_to_abo() < 0)
+	if ($user->rights->adherent->creer && $action == 'confirm_add_spip' && $confirm == 'yes')
+	{
+		if (! count($object->errors))
 		{
-			$langs->load("errors");
-			$error++;
-			$errmsg.= $langs->trans("ErrorFailedToAddToMailmanList").': '.$object->error." ".join(',',$object->errors)."<br>\n";
-		}
-	}
-	else
-	{
-		$error++;
-		if ($object->error) $errmsg=$object->error;
-		else $errmsgs=$object->errors;
-	}
-
-	if (! $error)
-	{
-		$db->commit();
-	}
-	else
-	{
-		$db->rollback();
-	}
-	$action='';
-}
-
-if ($user->rights->adherent->supprimer && $action == 'confirm_resign')
-{
-	if ($confirm == 'yes')
-	{
-		$adht = new AdherentType($db);
-		$adht->fetch($object->typeid);
-
-		$result=$object->resiliate($user);
-
-		if ($result >= 0 && ! count($object->errors))
-		{
-			if ($object->email && $_POST["send_mail"])
+			if (!$mailmanspip->add_to_spip($object))
 			{
-				$result=$object->send_an_email($adht->getMailOnResiliate(),$conf->global->ADHERENT_MAIL_RESIL_SUBJECT,array(),array(),array(),"","",0,-1);
-			}
-			if ($result < 0)
-			{
-				$errmsg.=$object->error;
-			}
-
-			// supprime l'utilisateur des divers abonnements ..
-			if ($object->del_to_abo() < 0)
-			{
-				// error
-				$errmsg.=$langs->trans("FaildToRemoveFromMailmanList").': '.$object->error."<br>\n";
+				$errmsg.= $langs->trans('AddIntoSpipError').': '.$mailmanspip->error."<BR>\n";
 			}
 		}
-		else
-		{
-			if ($object->error) $errmsg=$object->error;
-			else $errmsgs=$object->errors;
-			$action='';
-		}
-	}
-	if (! empty($backtopage) && ! $errmsg)
-	{
-		header("Location: ".$backtopage);
-		exit;
 	}
 }
-
-// SPIP Management
-if ($user->rights->adherent->supprimer && $action == 'confirm_del_spip' && $confirm == 'yes')
-{
-	if (! count($object->errors))
-	{
-		if (!$mailmanspip->del_to_spip($object))
-		{
-			$errmsg.= $langs->trans('DeleteIntoSpipError').': '.$mailmanspip->error."<BR>\n";
-		}
-	}
-}
-
-if ($user->rights->adherent->creer && $action == 'confirm_add_spip' && $confirm == 'yes')
-{
-	if (! count($object->errors))
-	{
-		if (!$mailmanspip->add_to_spip($object))
-		{
-			$errmsg.= $langs->trans('AddIntoSpipError').': '.$mailmanspip->error."<BR>\n";
-		}
-	}
-}
-
 
 
 /*
  * View
-*/
+ */
 
 $form = new Form($db);
 $formcompany = new FormCompany($db);
-
-// fetch optionals attributes and labels
-$extralabels=$extrafields->fetch_name_optionals_label('member');
 
 $help_url='EN:Module_Foundations|FR:Module_Adh&eacute;rents|ES:M&oacute;dulo_Miembros';
 llxHeader('',$langs->trans("Member"),$help_url);
@@ -713,13 +691,14 @@ if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action))
 	// -----------------------------------------
 	// When used with CANVAS
 	// -----------------------------------------
-	if (empty($object->error) && $socid)
+	if (empty($object->error) && $rowid)
 	{
 		$object = new Adherent($db);
-		$object->fetch($socid);
+		$result=$object->fetch($rowid);
+		if ($result <= 0) dol_print_error('',$object->error);
 	}
-	$objcanvas->assign_values($action, $socid);	// Set value for templates
-	$objcanvas->display_canvas($action);		// Show template
+   	$objcanvas->assign_values($action, $object->id, $object->ref);	// Set value for templates
+    $objcanvas->display_canvas($action);							// Show template
 }
 else
 {
@@ -731,19 +710,17 @@ else
 	{
 		/* ************************************************************************** */
 		/*                                                                            */
-		/* Fiche creation                                                             */
+		/* Creation card                                                              */
 		/*                                                                            */
 		/* ************************************************************************** */
 		$object->canvas=$canvas;
-		$object->fk_departement = GETPOST('departement_id', 'int');
+		$object->state_id = GETPOST('state_id', 'int');
 
 		// We set country_id, country_code and country for the selected country
 		$object->country_id=GETPOST('country_id','int')?GETPOST('country_id','int'):$mysoc->country_id;
 		if ($object->country_id)
 		{
 			$tmparray=getCountry($object->country_id,'all');
-			$object->pays_code=$tmparray['code'];
-			$object->pays=$tmparray['code'];
 			$object->country_code=$tmparray['code'];
 			$object->country=$tmparray['label'];
 		}
@@ -821,22 +798,25 @@ else
 
 		// Civility
 		print '<tr><td>'.$langs->trans("UserTitle").'</td><td>';
-		print $formcompany->select_civility(GETPOST('civilite_id','int')?GETPOST('civilite_id','int'):$object->civilite_id,'civilite_id').'</td>';
+		print $formcompany->select_civility(GETPOST('civility_id','int')?GETPOST('civility_id','int'):$object->civility_id,'civility_id').'</td>';
 		print '</tr>';
 
 		// Lastname
-		print '<tr><td id="tdlastname">'.$langs->trans("Lastname").'</td><td><input type="text" name="nom" value="'.(GETPOST('nom','alpha')?GETPOST('nom','alpha'):$object->lastname).'" size="40"></td>';
+		print '<tr><td id="tdlastname">'.$langs->trans("Lastname").'</td><td><input type="text" name="lastname" value="'.(GETPOST('lastname','alpha')?GETPOST('lastname','alpha'):$object->lastname).'" size="40"></td>';
 		print '</tr>';
 
 		// Firstname
-		print '<tr><td id="tdfirstname">'.$langs->trans("Firstname").'</td><td><input type="text" name="prenom" size="40" value="'.(GETPOST('prenom','alpha')?GETPOST('prenom','alpha'):$object->firstname).'"></td>';
+		print '<tr><td id="tdfirstname">'.$langs->trans("Firstname").'</td><td><input type="text" name="firstname" size="40" value="'.(GETPOST('firstname','alpha')?GETPOST('firstname','alpha'):$object->firstname).'"></td>';
 		print '</tr>';
+
+		// EMail
+		print '<tr><td>'.($conf->global->ADHERENT_MAIL_REQUIRED?'<span class="fieldrequired">':'').$langs->trans("EMail").($conf->global->ADHERENT_MAIL_REQUIRED?'</span>':'').'</td><td><input type="text" name="member_email" size="40" value="'.(GETPOST('member_email','alpha')?GETPOST('member_email','alpha'):$object->email).'"></td></tr>';
 
 		// Password
 		if (empty($conf->global->ADHERENT_LOGIN_NOT_REQUIRED))
 		{
 			require_once DOL_DOCUMENT_ROOT.'/core/lib/security2.lib.php';
-			$generated_password=getRandomPassword('');
+			$generated_password=getRandomPassword(false);
 			print '<tr><td><span class="fieldrequired">'.$langs->trans("Password").'</span></td><td>';
 			print '<input size="30" maxsize="32" type="text" name="password" value="'.$generated_password.'">';
 			print '</td></tr>';
@@ -849,16 +829,16 @@ else
 
 		// Zip / Town
 		print '<tr><td>'.$langs->trans("Zip").' / '.$langs->trans("Town").'</td><td>';
-		print $formcompany->select_ziptown((GETPOST('zipcode','alpha')?GETPOST('zipcode','alpha'):$object->zip),'zipcode',array('town','selectcountry_id','departement_id'),6);
+		print $formcompany->select_ziptown((GETPOST('zipcode','alpha')?GETPOST('zipcode','alpha'):$object->zip),'zipcode',array('town','selectcountry_id','state_id'),6);
 		print ' ';
-		print $formcompany->select_ziptown((GETPOST('town','alpha')?GETPOST('town','alpha'):$object->town),'town',array('zipcode','selectcountry_id','departement_id'));
+		print $formcompany->select_ziptown((GETPOST('town','alpha')?GETPOST('town','alpha'):$object->town),'town',array('zipcode','selectcountry_id','state_id'));
 		print '</td></tr>';
 
 		// Country
 		$object->country_id=$object->country_id?$object->country_id:$mysoc->country_id;
 		print '<tr><td width="25%">'.$langs->trans('Country').'</td><td>';
 		print $form->select_country(GETPOST('country_id','alpha')?GETPOST('country_id','alpha'):$object->country_id,'country_id');
-		if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
+		if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
 		print '</td></tr>';
 
 		// State
@@ -867,7 +847,7 @@ else
 			print '<tr><td>'.$langs->trans('State').'</td><td>';
 			if ($object->country_id)
 			{
-				print $formcompany->select_state(GETPOST('departement_id','int')?GETPOST('departement_id','int'):$object->fk_departement,$object->country_code);
+				print $formcompany->select_state(GETPOST('state_id','int')?GETPOST('state_id','int'):$object->state_id,$object->country_code);
 			}
 			else
 			{
@@ -885,12 +865,15 @@ else
 		// Tel mobile
 		print '<tr><td>'.$langs->trans("PhoneMobile").'</td><td><input type="text" name="phone_mobile" size="20" value="'.(GETPOST('phone_mobile','alpha')?GETPOST('phone_mobile','alpha'):$object->phone_mobile).'"></td></tr>';
 
-		// EMail
-		print '<tr><td>'.($conf->global->ADHERENT_MAIL_REQUIRED?'<span class="fieldrequired">':'').$langs->trans("EMail").($conf->global->ADHERENT_MAIL_REQUIRED?'</span>':'').'</td><td><input type="text" name="member_email" size="40" value="'.(GETPOST('member_email','alpha')?GETPOST('member_email','alpha'):$object->email).'"></td></tr>';
+	    // Skype
+	    if (! empty($conf->skype->enabled))
+	    {
+			print '<tr><td>'.$langs->trans("Skype").'</td><td><input type="text" name="member_skype" size="40" value="'.(GETPOST('member_skype','alpha')?GETPOST('member_skype','alpha'):$object->skype).'"></td></tr>';
+	    }
 
 		// Birthday
 		print "<tr><td>".$langs->trans("Birthday")."</td><td>\n";
-		$form->select_date(($object->naiss ? $object->naiss : -1),'naiss','','',1,'formsoc');
+		$form->select_date(($object->birth ? $object->birth : -1),'birth','','',1,'formsoc');
 		print "</td></tr>\n";
 
 		// Profil public
@@ -903,15 +886,7 @@ else
 		$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
 		if (empty($reshook) && ! empty($extrafields->attribute_label))
 		{
-			foreach($extrafields->attribute_label as $key=>$label)
-			{
-				$value=(isset($_POST["options_".$key])?GETPOST('options_'.$key,'alpha'):(isset($object->array_options["options_".$key])?$object->array_options["options_".$key]:''));
-           		print '<tr><td';
-           		if (! empty($extrafields->attribute_required[$key])) print ' class="fieldrequired"';
-           		print '>'.$label.'</td><td>';
-				print $extrafields->showInputField($key,$value);
-				print '</td></tr>'."\n";
-			}
+			print $object->showOptionals($extrafields,'edit');
 		}
 
 		/*
@@ -925,7 +900,7 @@ else
 
 		// Login Dolibarr
 		print '<tr><td>'.$langs->trans("LinkedToDolibarrUser").'</td><td class="valeur">';
-		print $form->select_users($object->user_id,'userid',1);
+		print $form->select_dolusers($object->user_id,'userid',1);
 		print '</td></tr>';
 		*/
 
@@ -959,9 +934,10 @@ else
 		$adht->fetch($object->typeid);
 
 		// We set country_id, and country_code, country of the chosen country
-		if (isset($_POST["pays"]) || $object->country_id)
+		$country=GETPOST('country','int');
+		if (!empty($country) || $object->country_id)
 		{
-			$sql = "SELECT rowid, code, libelle as label from ".MAIN_DB_PREFIX."c_pays where rowid = ".(isset($_POST["pays"])?$_POST["pays"]:$object->country_id);
+			$sql = "SELECT rowid, code, libelle as label from ".MAIN_DB_PREFIX."c_pays where rowid = ".(!empty($country)?$country:$object->country_id);
 			$resql=$db->query($sql);
 			if ($resql)
 			{
@@ -971,9 +947,6 @@ else
 			{
 				dol_print_error($db);
 			}
-			$object->pays_id=$obj->rowid;
-			$object->pays_code=$obj->code;
-			$object->pays=$langs->trans("Country".$obj->code)?$langs->trans("Country".$obj->code):$obj->label;
 			$object->country_id=$obj->rowid;
 			$object->country_code=$obj->code;
 			$object->country=$langs->trans("Country".$obj->code)?$langs->trans("Country".$obj->code):$obj->label;
@@ -1046,7 +1019,7 @@ else
 		print $form->selectarray("morphy", $morphys, isset($_POST["morphy"])?$_POST["morphy"]:$object->morphy);
 		print "</td>";
 		// Photo
-		print '<td align="center" valign="middle" width="25%" rowspan="'.$rowspan.'">';
+		print '<td align="center" class="hideonsmartphone" valign="middle" width="25%" rowspan="'.$rowspan.'">';
 		print $form->showphoto('memberphoto',$object)."\n";
 		if ($caneditfieldmember)
 		{
@@ -1075,19 +1048,22 @@ else
 		// Company
 		print '<tr><td id="tdcompany">'.$langs->trans("Company").'</td><td><input type="text" name="societe" size="40" value="'.(isset($_POST["societe"])?$_POST["societe"]:$object->societe).'"></td></tr>';
 
-		// Civilite
+		// Civility
 		print '<tr><td width="20%">'.$langs->trans("UserTitle").'</td><td width="35%">';
-		print $formcompany->select_civility(isset($_POST["civilite_id"])?$_POST["civilite_id"]:$object->civilite_id)."\n";
+		print $formcompany->select_civility(isset($_POST["civility_id"])?$_POST["civility_id"]:$object->civility_id)."\n";
 		print '</td>';
 		print '</tr>';
 
-		// Name
-		print '<tr><td id="tdlastname">'.$langs->trans("Lastname").'</td><td><input type="text" name="nom" size="40" value="'.(isset($_POST["nom"])?$_POST["nom"]:$object->lastname).'"></td>';
+		// Lastname
+		print '<tr><td id="tdlastname">'.$langs->trans("Lastname").'</td><td><input type="text" name="lastname" size="40" value="'.(isset($_POST["lastname"])?$_POST["lastname"]:$object->lastname).'"></td>';
 		print '</tr>';
 
 		// Firstname
-		print '<tr><td id="tdfirstname">'.$langs->trans("Firstname").'</td><td><input type="text" name="prenom" size="40" value="'.(isset($_POST["prenom"])?$_POST["prenom"]:$object->firstname).'"></td>';
+		print '<tr><td id="tdfirstname">'.$langs->trans("Firstname").'</td><td><input type="text" name="firstname" size="40" value="'.(isset($_POST["firstname"])?$_POST["firstname"]:$object->firstname).'"></td>';
 		print '</tr>';
+
+		// EMail
+		print '<tr><td>'.($conf->global->ADHERENT_MAIL_REQUIRED?'<span class="fieldrequired">':'').$langs->trans("EMail").($conf->global->ADHERENT_MAIL_REQUIRED?'</span>':'').'</td><td><input type="text" name="email" size="40" value="'.(isset($_POST["email"])?$_POST["email"]:$object->email).'"></td></tr>';
 
 		// Password
 		if (empty($conf->global->ADHERENT_LOGIN_NOT_REQUIRED))
@@ -1102,23 +1078,23 @@ else
 
 		// Zip / Town
 		print '<tr><td>'.$langs->trans("Zip").' / '.$langs->trans("Town").'</td><td>';
-		print $formcompany->select_ziptown((isset($_POST["zipcode"])?$_POST["zipcode"]:$object->zip),'zipcode',array('town','selectcountry_id','departement_id'),6);
+		print $formcompany->select_ziptown((isset($_POST["zipcode"])?$_POST["zipcode"]:$object->zip),'zipcode',array('town','selectcountry_id','state_id'),6);
 		print ' ';
-		print $formcompany->select_ziptown((isset($_POST["town"])?$_POST["town"]:$object->town),'town',array('zipcode','selectcountry_id','departement_id'));
+		print $formcompany->select_ziptown((isset($_POST["town"])?$_POST["town"]:$object->town),'town',array('zipcode','selectcountry_id','state_id'));
 		print '</td></tr>';
 
 		// Country
 		//$object->country_id=$object->country_id?$object->country_id:$mysoc->country_id;    // In edit mode we don't force to company country if not defined
 		print '<tr><td width="25%">'.$langs->trans('Country').'</td><td>';
 		print $form->select_country(isset($_POST["country_id"])?$_POST["country_id"]:$object->country_id,'country_id');
-		if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
+		if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
 		print '</td></tr>';
 
 		// State
 		if (empty($conf->global->MEMBER_DISABLE_STATE))
 		{
 			print '<tr><td>'.$langs->trans('State').'</td><td>';
-			print $formcompany->select_state($object->fk_departement,isset($_POST["country_id"])?$_POST["country_id"]:$object->country_id);
+			print $formcompany->select_state($object->state_id,isset($_POST["country_id"])?$_POST["country_id"]:$object->country_id);
 			print '</td></tr>';
 		}
 
@@ -1131,12 +1107,15 @@ else
 		// Tel mobile
 		print '<tr><td>'.$langs->trans("PhoneMobile").'</td><td><input type="text" name="phone_mobile" size="20" value="'.(isset($_POST["phone_mobile"])?$_POST["phone_mobile"]:$object->phone_mobile).'"></td></tr>';
 
-		// EMail
-		print '<tr><td>'.($conf->global->ADHERENT_MAIL_REQUIRED?'<span class="fieldrequired">':'').$langs->trans("EMail").($conf->global->ADHERENT_MAIL_REQUIRED?'</span>':'').'</td><td><input type="text" name="email" size="40" value="'.(isset($_POST["email"])?$_POST["email"]:$object->email).'"></td></tr>';
+	    // Skype
+	    if (! empty($conf->skype->enabled))
+	    {
+			    print '<tr><td>'.$langs->trans("Skype").'</td><td><input type="text" name="skype" size="40" value="'.(isset($_POST["skype"])?$_POST["skype"]:$object->skype).'"></td></tr>';
+	    }
 
-		// Date naissance
+		// Birthday
 		print "<tr><td>".$langs->trans("Birthday")."</td><td>\n";
-		$form->select_date(($object->naiss ? $object->naiss : -1),'naiss','','',1,'formsoc');
+		$form->select_date(($object->birth ? $object->birth : -1),'birth','','',1,'formsoc');
 		print "</td></tr>\n";
 
 		// Profil public
@@ -1149,15 +1128,7 @@ else
 		$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
 		if (empty($reshook) && ! empty($extrafields->attribute_label))
 		{
-			foreach($extrafields->attribute_label as $key=>$label)
-			{
-				$value=(isset($_POST["options_".$key])?$_POST["options_".$key]:$object->array_options["options_".$key]);
-           		print '<tr><td';
-           		if (! empty($extrafields->attribute_required[$key])) print ' class="fieldrequired"';
-           		print '>'.$label.'</td><td>';
-				print $extrafields->showInputField($key,$value);
-				print '</td></tr>'."\n";
-			}
+			print $object->showOptionals($extrafields,'edit');
 		}
 
 		// Third party Dolibarr
@@ -1256,8 +1227,7 @@ else
 				if ($object->fk_soc > 0) $text.=$langs->trans("UserWillBeExternalUser");
 				else $text.=$langs->trans("UserWillBeInternalUser");
 			}
-			$ret=$form->form_confirm($_SERVER["PHP_SELF"]."?rowid=".$object->id,$langs->trans("CreateDolibarrLogin"),$text,"confirm_create_user",$formquestion,'yes');
-			if ($ret == 'html') print '<br>';
+			print $form->formconfirm($_SERVER["PHP_SELF"]."?rowid=".$object->id,$langs->trans("CreateDolibarrLogin"),$text,"confirm_create_user",$formquestion,'yes');
 		}
 
 		// Confirm create third party
@@ -1276,8 +1246,7 @@ else
 			// Create a form array
 			$formquestion=array(		array('label' => $langs->trans("NameToCreate"), 'type' => 'text', 'name' => 'companyname', 'value' => $name));
 
-			$ret=$form->form_confirm($_SERVER["PHP_SELF"]."?rowid=".$object->id,$langs->trans("CreateDolibarrThirdParty"),$langs->trans("ConfirmCreateThirdParty"),"confirm_create_thirdparty",$formquestion,1);
-			if ($ret == 'html') print '<br>';
+			print $form->formconfirm($_SERVER["PHP_SELF"]."?rowid=".$object->id,$langs->trans("CreateDolibarrThirdParty"),$langs->trans("ConfirmCreateThirdParty"),"confirm_create_thirdparty",$formquestion,1);
 		}
 
 		// Confirm validate member
@@ -1307,10 +1276,10 @@ else
 			// Cree un tableau formulaire
 			$formquestion=array();
 			if ($object->email) $formquestion[]=array('type' => 'checkbox', 'name' => 'send_mail', 'label' => $label,  'value' => ($conf->global->ADHERENT_DEFAULT_SENDINFOBYMAIL?true:false));
-			if (! empty($conf->global->ADHERENT_USE_MAILMAN)) {
+			if (! empty($conf->mailman->enabled) && ! empty($conf->global->ADHERENT_USE_MAILMAN)) {
 				$formquestion[]=array('type'=>'other','label'=>$langs->transnoentitiesnoconv("SynchroMailManEnabled"),'value'=>'');
 			}
-			if (! empty($conf->global->ADHERENT_USE_SPIP))    {
+			if (! empty($conf->mailman->enabled) && ! empty($conf->global->ADHERENT_USE_SPIP))    {
 				$formquestion[]=array('type'=>'other','label'=>$langs->transnoentitiesnoconv("SynchroSpipEnabled"),'value'=>'');
 			}
 			print $form->formconfirm("fiche.php?rowid=".$rowid,$langs->trans("ValidateMember"),$langs->trans("ConfirmValidateMember"),"confirm_valid",$formquestion,1);
@@ -1350,8 +1319,7 @@ else
 			$formquestion=array();
 			if ($object->email) $formquestion[]=array('type' => 'checkbox', 'name' => 'send_mail', 'label' => $label, 'value' => (! empty($conf->global->ADHERENT_DEFAULT_SENDINFOBYMAIL)?'true':'false'));
 			if ($backtopage)    $formquestion[]=array('type' => 'hidden', 'name' => 'backtopage', 'value' => ($backtopage != '1' ? $backtopage : $_SERVER["HTTP_REFERER"]));
-			$ret=$form->form_confirm("fiche.php?rowid=".$rowid,$langs->trans("ResiliateMember"),$langs->trans("ConfirmResiliateMember"),"confirm_resign",$formquestion);
-			if ($ret == 'html') print '<br>';
+			print $form->formconfirm("fiche.php?rowid=".$rowid,$langs->trans("ResiliateMember"),$langs->trans("ConfirmResiliateMember"),"confirm_resign",$formquestion);
 		}
 
 		// Confirm remove member
@@ -1359,31 +1327,29 @@ else
 		{
 			$formquestion=array();
 			if ($backtopage) $formquestion[]=array('type' => 'hidden', 'name' => 'backtopage', 'value' => ($backtopage != '1' ? $backtopage : $_SERVER["HTTP_REFERER"]));
-			$ret=$form->form_confirm("fiche.php?rowid=".$rowid,$langs->trans("DeleteMember"),$langs->trans("ConfirmDeleteMember"),"confirm_delete",$formquestion,0,1);
-			if ($ret == 'html') print '<br>';
+			print $form->formconfirm("fiche.php?rowid=".$rowid,$langs->trans("DeleteMember"),$langs->trans("ConfirmDeleteMember"),"confirm_delete",$formquestion,0,1);
 		}
 
 		/*
 		 * Confirm add in spip
-		*/
+		 */
 		if ($action == 'add_spip')
 		{
-			$ret=$form->form_confirm("fiche.php?rowid=".$rowid, $langs->trans('AddIntoSpip'), $langs->trans('AddIntoSpipConfirmation'), 'confirm_add_spip');
-			if ($ret == 'html') print '<br>';
+			print $form->formconfirm("fiche.php?rowid=".$rowid, $langs->trans('AddIntoSpip'), $langs->trans('AddIntoSpipConfirmation'), 'confirm_add_spip');
 		}
 
 		/*
 		 * Confirm removed from spip
-		*/
+		 */
 		if ($action == 'del_spip')
 		{
-			$ret=$form->form_confirm("fiche.php?rowid=$rowid", $langs->trans('DeleteIntoSpip'), $langs->trans('DeleteIntoSpipConfirmation'), 'confirm_del_spip');
-			if ($ret == 'html') print '<br>';
+			print $form->formconfirm("fiche.php?rowid=$rowid", $langs->trans('DeleteIntoSpip'), $langs->trans('DeleteIntoSpipConfirmation'), 'confirm_del_spip');
 		}
 
 		$rowspan=17;
 		if (empty($conf->global->ADHERENT_LOGIN_NOT_REQUIRED)) $rowspan++;
 		if (! empty($conf->societe->enabled)) $rowspan++;
+		if (! empty($conf->skype->enabled)) $rowspan++;
 
 		print '<table class="border" width="100%">';
 
@@ -1395,7 +1361,7 @@ else
 		print $form->showrefnav($object, 'rowid', $linkback);
 		print '</td></tr>';
 
-		$showphoto='<td rowspan="'.$rowspan.'" align="center" valign="middle" width="25%">';
+		$showphoto='<td rowspan="'.$rowspan.'" align="center" class="hideonsmartphone" valign="middle" width="25%">';
 		$showphoto.=$form->showphoto('memberphoto',$object);
 		$showphoto.='</td>';
 
@@ -1403,6 +1369,7 @@ else
 		if (empty($conf->global->ADHERENT_LOGIN_NOT_REQUIRED))
 		{
 			print '<tr><td>'.$langs->trans("Login").' / '.$langs->trans("Id").'</td><td class="valeur">'.$object->login.'&nbsp;</td>';
+			// Photo
 			print $showphoto; $showphoto='';
 			print '</tr>';
 		}
@@ -1422,12 +1389,15 @@ else
 		print '<tr><td>'.$langs->trans("UserTitle").'</td><td class="valeur">'.$object->getCivilityLabel().'&nbsp;</td>';
 		print '</tr>';
 
-		// Name
+		// Lastname
 		print '<tr><td>'.$langs->trans("Lastname").'</td><td class="valeur">'.$object->lastname.'&nbsp;</td>';
 		print '</tr>';
 
 		// Firstname
 		print '<tr><td>'.$langs->trans("Firstname").'</td><td class="valeur">'.$object->firstname.'&nbsp;</td></tr>';
+
+		// EMail
+		print '<tr><td>'.$langs->trans("EMail").'</td><td class="valeur">'.dol_print_email($object->email,0,$object->fk_soc,1).'</td></tr>';
 
 		// Password
 		if (empty($conf->global->ADHERENT_LOGIN_NOT_REQUIRED))
@@ -1441,7 +1411,7 @@ else
 		print '</td></tr>';
 
 		// Zip / Town
-		print '<tr><td nowrap="nowrap">'.$langs->trans("Zip").' / '.$langs->trans("Town").'</td><td class="valeur">'.$object->zip.(($object->zip && $object->town)?' / ':'').$object->town.'</td></tr>';
+		print '<tr><td class="nowrap">'.$langs->trans("Zip").' / '.$langs->trans("Town").'</td><td class="valeur">'.$object->zip.(($object->zip && $object->town)?' / ':'').$object->town.'</td></tr>';
 
 		// Country
 		print '<tr><td>'.$langs->trans("Country").'</td><td class="valeur">';
@@ -1451,7 +1421,7 @@ else
 		print '</td></tr>';
 
 		// State
-		print '<tr><td>'.$langs->trans('State').'</td><td class="valeur">'.$object->departement.'</td>';
+		print '<tr><td>'.$langs->trans('State').'</td><td class="valeur">'.$object->state.'</td>';
 
 		// Tel pro.
 		print '<tr><td>'.$langs->trans("PhonePro").'</td><td class="valeur">'.dol_print_phone($object->phone,$object->country_code,0,$object->fk_soc,1).'</td></tr>';
@@ -1462,11 +1432,14 @@ else
 		// Tel mobile
 		print '<tr><td>'.$langs->trans("PhoneMobile").'</td><td class="valeur">'.dol_print_phone($object->phone_mobile,$object->country_code,0,$object->fk_soc,1).'</td></tr>';
 
-		// EMail
-		print '<tr><td>'.$langs->trans("EMail").'</td><td class="valeur">'.dol_print_email($object->email,0,$object->fk_soc,1).'</td></tr>';
+    	// Skype
+		if (! empty($conf->skype->enabled))
+		{
+			print '<tr><td>'.$langs->trans("Skype").'</td><td class="valeur">'.dol_print_skype($object->skype,0,$object->fk_soc,1).'</td></tr>';
+		}
 
-		// Date naissance
-		print '<tr><td>'.$langs->trans("Birthday").'</td><td class="valeur">'.dol_print_date($object->naiss,'day').'</td></tr>';
+		// Birthday
+		print '<tr><td>'.$langs->trans("Birthday").'</td><td class="valeur">'.dol_print_date($object->birth,'day').'</td></tr>';
 
 		// Public
 		print '<tr><td>'.$langs->trans("Public").'</td><td class="valeur">'.yn($object->public).'</td></tr>';
@@ -1479,13 +1452,7 @@ else
 		$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
 		if (empty($reshook) && ! empty($extrafields->attribute_label))
 		{
-			foreach($extrafields->attribute_label as $key=>$label)
-			{
-				$value=$object->array_options["options_$key"];
-				print "<tr><td>".$label."</td><td>";
-				print $extrafields->showOutputField($key,$value);
-				print "</td></tr>\n";
-			}
+			print $object->showOptionals($extrafields);
 		}
 
 		// Third party Dolibarr
@@ -1574,11 +1541,11 @@ else
 			// Modify
 			if ($user->rights->adherent->creer)
 			{
-				print "<a class=\"butAction\" href=\"fiche.php?rowid=$rowid&action=edit\">".$langs->trans("Modify")."</a>";
+				print '<div class="inline-block divButAction"><a class="butAction" href="fiche.php?rowid='.$rowid.'&action=edit">'.$langs->trans("Modify")."</a></div>";
 			}
 			else
 			{
-				print "<font class=\"butActionRefused\" href=\"#\" title=\"".dol_escape_htmltag($langs->trans("NotEnoughPermissions"))."\">".$langs->trans("Modify")."</font>";
+				print '<div class="inline-block divButAction"><font class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("NotEnoughPermissions")).'">'.$langs->trans("Modify").'</font></div>';
 			}
 
 			// Valider
@@ -1586,11 +1553,11 @@ else
 			{
 				if ($user->rights->adherent->creer)
 				{
-					print "<a class=\"butAction\" href=\"fiche.php?rowid=$rowid&action=valid\">".$langs->trans("Validate")."</a>\n";
+					print '<div class="inline-block divButAction"><a class="butAction" href="fiche.php?rowid='.$rowid.'&action=valid">'.$langs->trans("Validate")."</a></div>\n";
 				}
 				else
 				{
-					print "<font class=\"butActionRefused\" href=\"#\" title=\"".dol_escape_htmltag($langs->trans("NotEnoughPermissions"))."\">".$langs->trans("Validate")."</font>";
+					print '<div class="inline-block divButAction"><font class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("NotEnoughPermissions")).'">'.$langs->trans("Validate").'</font></div>';
 				}
 			}
 
@@ -1599,11 +1566,11 @@ else
 			{
 				if ($user->rights->adherent->creer)
 				{
-					print "<a class=\"butAction\" href=\"fiche.php?rowid=$rowid&action=valid\">".$langs->trans("Reenable")."</a>\n";
+					print '<div class="inline-block divButAction"><a class="butAction" href="fiche.php?rowid='.$rowid.'&action=valid">'.$langs->trans("Reenable")."</a></div>\n";
 				}
 				else
 				{
-					print "<font class=\"butActionRefused\" href=\"#\" title=\"".dol_escape_htmltag($langs->trans("NotEnoughPermissions"))."\">".$langs->trans("Reenable")."</font>";
+					print '<div class="inline-block divButAction"><font class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("NotEnoughPermissions")).'">'.$langs->trans("Reenable")."</font></div>";
 				}
 			}
 
@@ -1612,17 +1579,17 @@ else
 			{
 				if ($object->statut >= 1)
 				{
-					if ($object->email) print "<a class=\"butAction\" href=\"fiche.php?rowid=$object->id&action=sendinfo\">".$langs->trans("SendCardByMail")."</a>\n";
-					else print "<a class=\"butActionRefused\" href=\"#\" title=\"".dol_escape_htmltag($langs->trans("NoEMail"))."\">".$langs->trans("SendCardByMail")."</a>\n";
+					if ($object->email) print '<div class="inline-block divButAction"><a class="butAction" href="fiche.php?rowid='.$object->id.'&action=sendinfo">'.$langs->trans("SendCardByMail")."</a></div>\n";
+					else print '<div class="inline-block divButAction"><a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("NoEMail")).'">'.$langs->trans("SendCardByMail")."</a></div>\n";
 				}
 				else
 				{
-					print "<font class=\"butActionRefused\" href=\"#\" title=\"".dol_escape_htmltag($langs->trans("ValidateBefore"))."\">".$langs->trans("SendCardByMail")."</font>";
+					print '<div class="inline-block divButAction"><font class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("ValidateBefore")).'">'.$langs->trans("SendCardByMail")."</font></div>";
 				}
 			}
 			else
 			{
-				print "<font class=\"butActionRefused\" href=\"#\" title=\"".dol_escape_htmltag($langs->trans("NotEnoughPermissions"))."\">".$langs->trans("SendCardByMail")."</font>";
+				print '<div class="inline-block divButAction"><font class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("NotEnoughPermissions")).'">'.$langs->trans("SendCardByMail")."</font></div>";
 			}
 
 			// Resilier
@@ -1630,11 +1597,11 @@ else
 			{
 				if ($user->rights->adherent->supprimer)
 				{
-					print "<a class=\"butAction\" href=\"fiche.php?rowid=$rowid&action=resign\">".$langs->trans("Resiliate")."</a>\n";
+					print '<div class="inline-block divButAction"><a class="butAction" href="fiche.php?rowid='.$rowid.'&action=resign">'.$langs->trans("Resiliate")."</a></div>\n";
 				}
 				else
 				{
-					print "<font class=\"butActionRefused\" href=\"#\" title=\"".dol_escape_htmltag($langs->trans("NotEnoughPermissions"))."\">".$langs->trans("Resiliate")."</font>";
+					print '<div class="inline-block divButAction"><font class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("NotEnoughPermissions")).'">'.$langs->trans("Resiliate")."</font></div>";
 				}
 			}
 
@@ -1643,12 +1610,12 @@ else
 			{
 				if ($user->rights->societe->creer)
 				{
-					if ($object->statut != -1) print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?rowid='.$object->id.'&amp;action=create_thirdparty">'.$langs->trans("CreateDolibarrThirdParty").'</a>';
-					else print '<a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("ValidateBefore")).'">'.$langs->trans("CreateDolibarrThirdParty").'</a>';
+					if ($object->statut != -1) print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?rowid='.$object->id.'&amp;action=create_thirdparty">'.$langs->trans("CreateDolibarrThirdParty").'</a></div>';
+					else print '<div class="inline-block divButAction"><a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("ValidateBefore")).'">'.$langs->trans("CreateDolibarrThirdParty").'</a></div>';
 				}
 				else
 				{
-					print "<font class=\"butActionRefused\" href=\"#\" title=\"".dol_escape_htmltag($langs->trans("NotEnoughPermissions"))."\">".$langs->trans("CreateDolibarrThirdParty")."</font>";
+					print '<div class="inline-block divButAction"><font class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("NotEnoughPermissions")).'">'.$langs->trans("CreateDolibarrThirdParty")."</font></div>";
 				}
 			}
 
@@ -1657,23 +1624,23 @@ else
 			{
 				if ($user->rights->user->user->creer)
 				{
-					if ($object->statut != -1) print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?rowid='.$object->id.'&amp;action=create_user">'.$langs->trans("CreateDolibarrLogin").'</a>';
-					else print '<a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("ValidateBefore")).'">'.$langs->trans("CreateDolibarrLogin").'</a>';
+					if ($object->statut != -1) print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?rowid='.$object->id.'&amp;action=create_user">'.$langs->trans("CreateDolibarrLogin").'</a></div>';
+					else print '<div class="inline-block divButAction"><a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("ValidateBefore")).'">'.$langs->trans("CreateDolibarrLogin").'</a></div>';
 				}
 				else
 				{
-					print "<font class=\"butActionRefused\" href=\"#\" title=\"".dol_escape_htmltag($langs->trans("NotEnoughPermissions"))."\">".$langs->trans("CreateDolibarrLogin")."</font>";
+					print '<div class="inline-block divButAction"><font class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("NotEnoughPermissions")).'">'.$langs->trans("CreateDolibarrLogin")."</font></div>";
 				}
 			}
 
 			// Delete
 			if ($user->rights->adherent->supprimer)
 			{
-				print "<a class=\"butActionDelete\" href=\"fiche.php?rowid=$object->id&action=delete\">".$langs->trans("Delete")."</a>\n";
+				print '<div class="inline-block divButAction"><a class="butActionDelete" href="fiche.php?rowid='.$object->id.'&action=delete">'.$langs->trans("Delete")."</a></div>\n";
 			}
 			else
 			{
-				print "<font class=\"butActionRefused\" href=\"#\" title=\"".dol_escape_htmltag($langs->trans("NotEnoughPermissions"))."\">".$langs->trans("Delete")."</font>";
+				print '<div class="inline-block divButAction"><font class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("NotEnoughPermissions")).'">'.$langs->trans("Delete")."</font></div>";
 			}
 
 			// Action SPIP
@@ -1683,21 +1650,22 @@ else
 
 				if ($isinspip == 1)
 				{
-					print "<a class=\"butAction\" href=\"fiche.php?rowid=$object->id&action=del_spip\">".$langs->trans("DeleteIntoSpip")."</a>\n";
+					print '<div class="inline-block divButAction"><a class="butAction" href="fiche.php?rowid='.$object->id.'&action=del_spip">'.$langs->trans("DeleteIntoSpip")."</a></div>\n";
 				}
 				if ($isinspip == 0)
 				{
-					print "<a class=\"butAction\" href=\"fiche.php?rowid=$object->id&action=add_spip\">".$langs->trans("AddIntoSpip")."</a>\n";
-				}
-				if ($isinspip == -1)
-				{
-					print '<br><br><font class="error">'.$langs->trans('SPIPConnectionFailed').': '.$mailmanspip->error.'</font>';
+					print '<div class="inline-block divButAction"><a class="butAction" href="fiche.php?rowid='.$object->id.'&action=add_spip">'.$langs->trans("AddIntoSpip")."</a></div>\n";
 				}
 			}
 
 		}
 
 		print '</div>';
+
+		if ($isinspip == -1)
+		{
+			print '<br><br><font class="error">'.$langs->trans('SPIPConnectionFailed').': '.$mailmanspip->error.'</font>';
+		}
 		print "<br>\n";
 
 	}
@@ -1706,4 +1674,3 @@ else
 llxFooter();
 
 $db->close();
-?>

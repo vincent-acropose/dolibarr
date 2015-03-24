@@ -42,6 +42,7 @@ class DolEditor
 	var $cols;
 	var $height;
 	var $width;
+	var $readonly;
 
 
     /**
@@ -51,7 +52,7 @@ class DolEditor
      *      @param 	string	$content		        Content of WYSIWIG field
      *      @param	int		$width					Width in pixel of edit area (auto by default)
      *      @param 	int		$height			        Height in pixel of edit area (200px by default)
-     *      @param 	string	$toolbarname	        Name of bar set to use ('Full', 'dolibarr_notes', 'dolibarr_details', 'dolibarr_mailings')
+     *      @param 	string	$toolbarname	        Name of bar set to use ('Full', 'dolibarr_notes[_encoded]', 'dolibarr_details[_encoded]', 'dolibarr_mailings[_encoded]', ')
      *      @param  string	$toolbarlocation       	Where bar is stored :
      *                       		             	'In' each window has its own toolbar
      *                              		      	'Out:name' share toolbar into the div called 'name'
@@ -59,27 +60,28 @@ class DolEditor
 	 *		@param	int		$uselocalbrowser		Enabled to add links to local object with local browser. If false, only external images can be added in content.
 	 *      @param  int		$okforextendededitor    True=Allow usage of extended editor tool (like fckeditor)
      *      @param  int		$rows                   Size of rows for textarea tool
-	 *      @param  int		$cols                   Size of cols for textarea tool
+	 *      @param  int		$cols                   Size of cols for textarea tool (textarea number of cols or %)
+	 *      @param	int		$readonly				0=Read/Edit, 1=Read only
 	 */
-    function __construct($htmlname,$content,$width='',$height=200,$toolbarname='Basic',$toolbarlocation='In',$toolbarstartexpanded=false,$uselocalbrowser=true,$okforextendededitor=true,$rows=0,$cols=0)
+    function __construct($htmlname,$content,$width='',$height=200,$toolbarname='Basic',$toolbarlocation='In',$toolbarstartexpanded=false,$uselocalbrowser=true,$okforextendededitor=true,$rows=0,$cols=0,$readonly=0)
     {
     	global $conf,$langs;
 
-    	dol_syslog(get_class($this)."::DolEditor htmlname=".$htmlname." toolbarname=".$toolbarname);
+    	dol_syslog(get_class($this)."::DolEditor htmlname=".$htmlname." width=".$width." height=".$height." toolbarname=".$toolbarname);
 
     	if (! $rows) $rows=round($height/20);
     	if (! $cols) $cols=($width?round($width/6):80);
+		$shorttoolbarname=preg_replace('/_encoded$/','',$toolbarname);
 
         // Name of extended editor to use (FCKEDITOR_EDITORNAME can be 'ckeditor' or 'fckeditor')
         $defaulteditor='ckeditor';
         $this->tool=empty($conf->global->FCKEDITOR_EDITORNAME)?$defaulteditor:$conf->global->FCKEDITOR_EDITORNAME;
         $this->uselocalbrowser=$uselocalbrowser;
+        $this->readonly=$readonly;
 
         // Check if extended editor is ok. If not we force textarea
-        if (empty($conf->fckeditor->enabled) || ! $okforextendededitor)
-        {
-            $this->tool = 'textarea';
-        }
+        if (empty($conf->fckeditor->enabled) || ! $okforextendededitor) $this->tool = 'textarea';
+        //if ($conf->browser->phone) $this->tool = 'textarea';
 
         // Define content and some properties
         if ($this->tool == 'ckeditor')
@@ -97,7 +99,7 @@ class DolEditor
         	$this->editor->Value	= $content;
         	$this->editor->Height   = $height;
         	if (! empty($width)) $this->editor->Width = $width;
-        	$this->editor->ToolbarSet = $toolbarname;
+        	$this->editor->ToolbarSet = $shorttoolbarname;
         	$this->editor->Config['AutoDetectLanguage'] = 'true';
         	$this->editor->Config['ToolbarLocation'] = $toolbarlocation ? $toolbarlocation : 'In';
         	$this->editor->Config['ToolbarStartExpanded'] = $toolbarstartexpanded;
@@ -124,10 +126,10 @@ class DolEditor
         {
     	    $this->content				= $content;
     	    $this->htmlname 			= $htmlname;
-    	    $this->toolbarname			= $toolbarname;
+    	    $this->toolbarname			= $shorttoolbarname;
     	    $this->toolbarstartexpanded = $toolbarstartexpanded;
             $this->rows					= max(ROWS_3,$rows);
-            $this->cols					= max(40,$cols);
+            $this->cols					= (preg_match('/%/',$cols)?$cols:max(40,$cols));	// If $cols is a percent, we keep it, otherwise, we take max
             $this->height				= $height;
             $this->width				= $width;
     	}
@@ -144,7 +146,7 @@ class DolEditor
      */
     function Create($noprint=0,$morejs='')
     {
-    	global $conf;
+    	global $conf,$langs;
 
         $found=0;
 		$out='';
@@ -157,7 +159,8 @@ class DolEditor
         if (in_array($this->tool,array('textarea','ckeditor')))
         {
             $found=1;
-            $out.= '<textarea id="'.$this->htmlname.'" name="'.$this->htmlname.'" rows="'.$this->rows.'" cols="'.$this->cols.'" class="flat">';
+            //$out.= '<textarea id="'.$this->htmlname.'" name="'.$this->htmlname.'" rows="'.$this->rows.'" cols="'.$this->cols.'"'.($this->readonly?' disabled="disabled"':'').' class="flat">';
+            $out.= '<textarea id="'.$this->htmlname.'" name="'.$this->htmlname.'" rows="'.$this->rows.'"'.(preg_match('/%/',$this->cols)?' style="width: '.$this->cols.'"':' cols="'.$this->cols.'"').' class="flat">';
             $out.= $this->content;
             $out.= '</textarea>';
 
@@ -166,9 +169,9 @@ class DolEditor
             	if (! defined('REQUIRE_CKEDITOR')) define('REQUIRE_CKEDITOR','1');
 
             	//$skin='kama';
-            	//$skin='office2003';
-            	//$skin='v2';
-            	$skin='kama';
+            	$skin='moono'; 	// default with cdeditor 4
+
+            	$htmlencode_force=preg_match('/_encoded$/',$this->toolbarname)?'true':'false';
 
             	$out.= '<script type="text/javascript">
             			$(document).ready(function () {
@@ -176,12 +179,17 @@ class DolEditor
                             /* should be editor=CKEDITOR.replace but what if serveral editors ? */
                             CKEDITOR.replace(\''.$this->htmlname.'\',
             					{
+            						/* property:xxx is same than CKEDITOR.config.property = xxx */
             						customConfig : ckeditorConfig,
+            						readOnly : '.($this->readonly?'true':'false').',
+                            		htmlEncodeOutput :'.$htmlencode_force.',
             						toolbar: \''.$this->toolbarname.'\',
             						toolbarStartupExpanded: '.($this->toolbarstartexpanded ? 'true' : 'false').',
             						width: '.($this->width ? '\''.$this->width.'\'' : '\'\'').',
             						height: '.$this->height.',
                                     skin: \''.$skin.'\',
+                                    language: \''.$langs->defaultlang.'\',
+                                    textDirection: \''.$langs->trans("DIRECTION").'\',
                                     on :
                                             {
                                                 instanceReady : function( ev )
@@ -207,13 +215,13 @@ class DolEditor
                     //$out.= '    filebrowserImageUploadUrl : \''.DOL_URL_ROOT.'/includes/fckeditor/editor/filemanagerdol/connectors/php/upload.php?Type=Image\',';
                     $out.= "\n";
                     // To use filemanager with ckfinder (Non free) and ckfinder directory is inside htdocs/includes
-/*                  $out.= '    filebrowserBrowseUrl : \''.DOL_URL_ROOT.'/includes/ckfinder/ckfinder.html\',
+					/* $out.= '    filebrowserBrowseUrl : \''.DOL_URL_ROOT.'/includes/ckfinder/ckfinder.html\',
                                filebrowserImageBrowseUrl : \''.DOL_URL_ROOT.'/includes/ckfinder/ckfinder.html?Type=Images\',
                                filebrowserFlashBrowseUrl : \''.DOL_URL_ROOT.'/includes/ckfinder/ckfinder.html?Type=Flash\',
                                filebrowserUploadUrl : \''.DOL_URL_ROOT.'/includes/ckfinder/core/connector/php/connector.php?command=QuickUpload&type=Files\',
                                filebrowserImageUploadUrl : \''.DOL_URL_ROOT.'/includes/ckfinder/core/connector/php/connector.php?command=QuickUpload&type=Images\',
                                filebrowserFlashUploadUrl : \''.DOL_URL_ROOT.'/includes/ckfinder/core/connector/php/connector.php?command=QuickUpload&type=Flash\','."\n";
-*/
+					*/
                     $out.= '    filebrowserWindowWidth : \'900\',
                                filebrowserWindowHeight : \'500\',
                                filebrowserImageWindowWidth : \'900\',
@@ -236,4 +244,3 @@ class DolEditor
 
 }
 
-?>

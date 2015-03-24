@@ -32,7 +32,7 @@ class box_services_expired extends ModeleBoxes
 
     var $boxcode="expiredservices";     // id of box
     var $boximg="object_contract";
-    var $boxlabel;
+    var $boxlabel="BoxOldestExpiredServices";
     var $depends = array("contrat");	// conf->propal->enabled
 
     var $db;
@@ -41,18 +41,6 @@ class box_services_expired extends ModeleBoxes
     var $info_box_head = array();
     var $info_box_contents = array();
 
-
-    /**
-     *  Constructor
-     */
-    function __construct()
-    {
-    	global $langs;
-
-    	$langs->load("contracts");
-
-    	$this->boxlabel=$langs->transnoentitiesnoconv("BoxOldestExpiredServices");
-    }
 
     /**
      *  Load data for box to show them later
@@ -131,6 +119,8 @@ class box_services_expired extends ModeleBoxes
     			}
 
     			if ($num==0) $this->info_box_contents[$i][0] = array('td' => 'align="center"','text'=>$langs->trans("NoExpiredServices"));
+
+				$db->free($resql);
     		}
     		else
     		{
@@ -162,4 +152,3 @@ class box_services_expired extends ModeleBoxes
 
  }
 
-?>

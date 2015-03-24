@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2002-2003 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2002-2003 Jean-Louis Bergamo   <jlb@j1b.org>
- * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Sebastien Di Cintio  <sdicintio@ressource-toi.org>
  * Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
  * Copyright (C) 2009      Regis Houssin        <regis.houssin@capnetworks.com>
@@ -24,10 +24,11 @@
 /**
  *	\file       htdocs/mailmanspip/class/mailmanspip.class.php
  *	\ingroup    member
- *	\brief      File of class to manage members of a foundation
+ *	\brief      File of class to manage mailman and spip actions
  */
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
+require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 
@@ -39,6 +40,11 @@ class MailmanSpip
 {
     var $db;
     var $error;
+
+    var $mladded_ok;
+    var $mladded_ko;
+    var $mlremoved_ok;
+    var $mlremoved_ko;
 
 
     /**
@@ -137,7 +143,8 @@ class MailmanSpip
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FAILONERROR, true);
         @curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, empty($conf->global->MAIN_USE_CONNECT_TIMEOUT)?5:$conf->global->MAIN_USE_CONNECT_TIMEOUT);
+        curl_setopt($ch, CURLOPT_TIMEOUT, empty($conf->global->MAIN_USE_RESPONSE_TIMEOUT)?30:$conf->global->MAIN_USE_RESPONSE_TIMEOUT);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         $result = curl_exec($ch);
@@ -176,7 +183,7 @@ class MailmanSpip
                     require_once DOL_DOCUMENT_ROOT.'/core/lib/security2.lib.php';
                     $mdpass=dol_hash($object->pass);
                     $htpass=crypt($object->pass,makesalt());
-                    $query = "INSERT INTO spip_auteurs (nom, email, login, pass, htpass, alea_futur, statut) VALUES(\"".$object->firstname." ".$object->lastname."\",\"".$object->email."\",\"".$object->login."\",\"$mdpass\",\"$htpass\",FLOOR(32000*RAND()),\"1comite\")";
+                    $query = "INSERT INTO spip_auteurs (nom, email, login, pass, htpass, alea_futur, statut) VALUES(\"".dolGetFirstLastname($object->firstname,$object->lastname)."\",\"".$object->email."\",\"".$object->login."\",\"$mdpass\",\"$htpass\",FLOOR(32000*RAND()),\"1comite\")";
 
                     $result = $mydb->query($query);
 
@@ -299,6 +306,9 @@ class MailmanSpip
 
         dol_syslog(get_class($this)."::add_to_mailman");
 
+        $this->mladded_ok=array();
+        $this->mladded_ko=array();
+
         if (! function_exists("curl_init"))
         {
             $langs->load("errors");
@@ -306,44 +316,51 @@ class MailmanSpip
             return -1;
         }
 
-        if (! empty($conf->global->ADHERENT_MAILMAN_URL))
+        if ($conf->adherent->enabled)	// Synchro for members
         {
-            if ($listes == '' && ! empty($conf->global->ADHERENT_MAILMAN_LISTS))
-            {
-                $lists=explode(',',$conf->global->ADHERENT_MAILMAN_LISTS);
-            }
-            else
-            {
-                $lists=explode(',',$listes);
-            }
-            foreach ($lists as $list)
-            {
-                // Filter on type something (ADHERENT_MAILMAN_LISTS = "filtervalue:mailinglist1,filtervalue2:mailinglist2,mailinglist3")
-                $tmp=explode(':',$list);
-                if (! empty($tmp[1]))
-                {
-                    $list=$tmp[1];
-                    if ($object->element == 'member' && $object->type != $tmp[0])    // Filter on member type label
-                    {
-                        dol_syslog("We ignore list ".$list." because object member type ".$object->type." does not match ".$tmp[0], LOG_DEBUG);
-                        continue;
-                    }
-                }
+	        if (! empty($conf->global->ADHERENT_MAILMAN_URL))
+	        {
+	            if ($listes == '' && ! empty($conf->global->ADHERENT_MAILMAN_LISTS)) $lists=explode(',',$conf->global->ADHERENT_MAILMAN_LISTS);
+	            else $lists=explode(',',$listes);
 
-                //We call Mailman to subscribe the user
-                $result = $this->callMailman($object, $conf->global->ADHERENT_MAILMAN_URL, $list);
+	            $categstatic=new Categorie($this->db);
 
-				if ($result === false)
-				{
-				    return -2;
-				}
-            }
-            return count($lists);
-        }
-        else
-        {
-            $this->error="ADHERENT_MAILMAN_URL not defined";
-            return -1;
+	            foreach ($lists as $list)
+	            {
+	                // Filter on type something (ADHERENT_MAILMAN_LISTS = "mailinglist0,TYPE:typevalue:mailinglist1,CATEG:categvalue:mailinglist2")
+	                $tmp=explode(':',$list);
+	                if (! empty($tmp[2]))
+	                {
+	                    $list=$tmp[2];
+	                    if ($object->element == 'member' && $tmp[0] == 'TYPE' && $object->type != $tmp[1])    // Filter on member type label
+	                    {
+	                        dol_syslog("We ignore list ".$list." because object member type ".$object->type." does not match ".$tmp[1], LOG_DEBUG);
+	                        continue;
+	                    }
+	                    if ($object->element == 'member' && $tmp[0] == 'CATEG' && ! in_array($tmp[1], $categstatic->containing($object->id, 'member', 'label')))    // Filter on member category
+	                    {
+	                        dol_syslog("We ignore list ".$list." because object member is not into category ".$tmp[1], LOG_DEBUG);
+	                        continue;
+	                    }
+	                }
+
+	                //We call Mailman to subscribe the user
+	                $result = $this->callMailman($object, $conf->global->ADHERENT_MAILMAN_URL, $list);
+
+					if ($result === false)
+					{
+						$this->mladded_ko[$list]=$object->email;
+					    return -2;
+					}
+					else $this->mladded_ok[$list]=$object->email;
+	            }
+	            return count($lists);
+	        }
+	        else
+	       {
+	            $this->error="ADHERENT_MAILMAN_URL not defined";
+	            return -1;
+	        }
         }
     }
 
@@ -359,46 +376,64 @@ class MailmanSpip
     {
         global $conf,$langs,$user;
 
-        if (! empty($conf->global->ADHERENT_MAILMAN_UNSUB_URL))
-        {
-            if ($listes=='' && ! empty($conf->global->ADHERENT_MAILMAN_LISTS))
-            {
-                $lists=explode(',',$conf->global->ADHERENT_MAILMAN_LISTS);
-            }
-            else
-            {
-                $lists=explode(',',$listes);
-            }
-            foreach ($lists as $list)
-            {
-                // Filter on type something (ADHERENT_MAILMAN_LISTS = "filtervalue:mailinglist1,filtervalue2:mailinglist2,mailinglist3")
-                $tmp=explode(':',$list);
-                if (! empty($tmp[1]))
-                {
-                    $list=$tmp[1];
-                	if ($object->element == 'member' && $object->type != $tmp[1])    // Filter on member type label
-                    {
-                        dol_syslog("We ignore list ".$list." because object member type ".$object->type." does not match ".$tmp[0], LOG_DEBUG);
-                    	continue;
-                    }
-                }
+        dol_syslog(get_class($this)."::del_to_mailman");
 
-                //We call Mailman to unsubscribe the user
-                $result = $this->callMailman($object, $conf->global->ADHERENT_MAILMAN_UNSUB_URL, $list);
+        $this->mlremoved_ok=array();
+        $this->mlremoved_ko=array();
 
-				if ($result === false)
-				{
-				    return -2;
-				}
-            }
-            return count($lists);
-        }
-        else
+        if (! function_exists("curl_init"))
         {
-            $this->error="ADHERENT_MAILMAN_UNSUB_URL not defined";
+            $langs->load("errors");
+            $this->error=$langs->trans("ErrorFunctionNotAvailableInPHP","curl_init");
             return -1;
+        }
+
+        if ($conf->adherent->enabled)	// Synchro for members
+        {
+	        if (! empty($conf->global->ADHERENT_MAILMAN_UNSUB_URL))
+	        {
+	            if ($listes=='' && ! empty($conf->global->ADHERENT_MAILMAN_LISTS)) $lists=explode(',',$conf->global->ADHERENT_MAILMAN_LISTS);
+	            else $lists=explode(',',$listes);
+
+	            $categstatic=new Categorie($this->db);
+
+	            foreach ($lists as $list)
+	            {
+	            	// Filter on type something (ADHERENT_MAILMAN_LISTS = "mailinglist0,TYPE:typevalue:mailinglist1,CATEG:categvalue:mailinglist2")
+	            	$tmp=explode(':',$list);
+	            	if (! empty($tmp[2]))
+	            	{
+	            		$list=$tmp[2];
+	            		if ($object->element == 'member' && $tmp[0] == 'TYPE' && $object->type != $tmp[1])    // Filter on member type label
+	            		{
+	            			dol_syslog("We ignore list ".$list." because object member type ".$object->type." does not match ".$tmp[1], LOG_DEBUG);
+	            			continue;
+	            		}
+	            		if ($object->element == 'member' && $tmp[0] == 'CATEG' && ! in_array($tmp[1], $categstatic->containing($object->id, 'member', 'label')))    // Filter on member category
+	            		{
+	            			dol_syslog("We ignore list ".$list." because object member is not into category ".$tmp[1], LOG_DEBUG);
+	            			continue;
+	            		}
+	            	}
+
+	                //We call Mailman to unsubscribe the user
+	                $result = $this->callMailman($object, $conf->global->ADHERENT_MAILMAN_UNSUB_URL, $list);
+
+					if ($result === false)
+					{
+						$this->mlremoved_ko[$list]=$object->email;
+					    return -2;
+					}
+					else $this->mlremoved_ok[$list]=$object->email;
+	            }
+	            return count($lists);
+	        }
+	        else
+			{
+	            $this->error="ADHERENT_MAILMAN_UNSUB_URL not defined";
+	            return -1;
+	        }
         }
     }
 
 }
-?>

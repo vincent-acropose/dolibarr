@@ -39,6 +39,8 @@ class mailing_thirdparties_services_expired extends MailingTargets
      */
     function __construct($db)
     {
+    	global $conf;
+    	
         $this->db=$db;
 
         $this->arrayofproducts=array();
@@ -46,7 +48,7 @@ class mailing_thirdparties_services_expired extends MailingTargets
         // List of services
         $sql = "SELECT ref FROM ".MAIN_DB_PREFIX."product";
         $sql.= " WHERE entity IN (".getEntity('product', 1).")";
-        $sql.= " AND fk_product_type = 1";
+        if (empty($conf->global->CONTRACT_SUPPORT_PRODUCTS)) $sql.= " AND fk_product_type = 1";	// By default, only services
         $sql.= " ORDER BY ref";
         $result=$this->db->query($sql);
         if ($result)
@@ -100,6 +102,7 @@ class mailing_thirdparties_services_expired extends MailingTargets
         $sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."contrat as c";
         $sql.= ", ".MAIN_DB_PREFIX."contratdet as cd, ".MAIN_DB_PREFIX."product as p";
         $sql.= " WHERE s.entity IN (".getEntity('societe', 1).")";
+        $sql.= " AND s.email NOT IN (SELECT email FROM ".MAIN_DB_PREFIX."mailing_cibles WHERE fk_mailing=".$mailing_id.")";
         $sql.= " AND s.rowid = c.fk_soc AND cd.fk_contrat = c.rowid AND s.email != ''";
         $sql.= " AND cd.statut= 4 AND cd.fk_product=p.rowid AND p.ref = '".$product."'";
         $sql.= " AND cd.date_fin_validite < '".$this->db->idate($now)."'";
@@ -122,7 +125,8 @@ class mailing_thirdparties_services_expired extends MailingTargets
                 {
                     $cibles[$j] = array(
 					'email' => $obj->email,
-					'name' => $obj->name,
+					'lastname' => $obj->name,	// For thirdparties, lastname must be name
+                    'firstname' => '',			// For thirdparties, firstname is ''
 					'other' =>
                     ('StartDate='.dol_print_date($this->db->jdate($obj->date_ouverture),'day')).';'.
                     ('EndDate='.dol_print_date($this->db->jdate($obj->date_fin_validite),'day')).';'.
@@ -141,8 +145,8 @@ class mailing_thirdparties_services_expired extends MailingTargets
         }
         else
         {
-            dol_syslog($this->db->error());
-            $this->error=$this->db->error();
+            dol_syslog($this->db->lasterror());
+            $this->error=$this->db->lasterror();
             return -1;
         }
 
@@ -175,11 +179,10 @@ class mailing_thirdparties_services_expired extends MailingTargets
      *	For example if this selector is used to extract 500 different
      *	emails from a text file, this function must return 500.
      *
-     *	@param	int		$filter		Filter
-     *	@param	string	$option		Option
+     *	@param	string	$sql		SQL request to use to count
      *	@return	int					Number of recipients
      */
-    function getNbOfRecipients($filter=1,$option='')
+    function getNbOfRecipients($sql='')
     {
         $now=dol_now();
 
@@ -193,7 +196,7 @@ class mailing_thirdparties_services_expired extends MailingTargets
         $sql.= " AND cd.statut= 4 AND cd.fk_product=p.rowid";
         $sql.= " AND p.ref IN ('".join("','",$this->arrayofproducts)."')";
         $sql.= " AND cd.date_fin_validite < '".$this->db->idate($now)."'";
-        //print $sql;
+
         $a=parent::getNbOfRecipients($sql);
 
         return $a;
@@ -239,4 +242,3 @@ class mailing_thirdparties_services_expired extends MailingTargets
 
 }
 
-?>

@@ -33,7 +33,7 @@ class box_services_contracts extends ModeleBoxes
 {
 	var $boxcode="lastproductsincontract";
 	var $boximg="object_product";
-	var $boxlabel;
+	var $boxlabel="BoxLastProductsInContract";
 	var $depends = array("service","contrat");
 
 	var $db;
@@ -42,16 +42,6 @@ class box_services_contracts extends ModeleBoxes
 	var $info_box_head = array();
 	var $info_box_contents = array();
 
-	/**
-     *  Constructor
-	 */
-	function __construct()
-	{
-		global $langs;
-		$langs->load("boxes");
-
-		$this->boxlabel=$langs->transnoentitiesnoconv("BoxLastProductsInContract");
-	}
 
 	/**
 	 *  Load data into info_box_contents array to show array later.
@@ -149,6 +139,8 @@ class box_services_contracts extends ModeleBoxes
 					$i++;
 				}
 				if ($num==0) $this->info_box_contents[$i][0] = array('td' => 'align="center"','text'=>$langs->trans("NoContractedProducts"));
+
+				$db->free($result);
 			}
 			else
 			{
@@ -178,4 +170,3 @@ class box_services_contracts extends ModeleBoxes
 
 }
 
-?>

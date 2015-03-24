@@ -33,7 +33,7 @@ class box_commandes extends ModeleBoxes
 {
     var $boxcode="lastcustomerorders";
     var $boximg="object_order";
-    var $boxlabel;
+    var $boxlabel="BoxLastCustomerOrders";
     var $depends = array("commande");
 
 	var $db;
@@ -42,16 +42,6 @@ class box_commandes extends ModeleBoxes
     var $info_box_head = array();
     var $info_box_contents = array();
 
-    /**
-     *  Constructor
-     */
-    function __construct()
-    {
-        global $langs;
-        $langs->load("boxes");
-
-        $this->boxlabel=$langs->transnoentitiesnoconv("BoxLastCustomerOrders");
-    }
 
     /**
      *  Load data for box to show them later
@@ -87,7 +77,6 @@ class box_commandes extends ModeleBoxes
             $sql.= $db->plimit($max, 0);
 
             $result = $db->query($sql);
-
             if ($result)
             {
                 $num = $db->num_rows($result);
@@ -126,6 +115,8 @@ class box_commandes extends ModeleBoxes
                 }
 
                 if ($num==0) $this->info_box_contents[$i][0] = array('td' => 'align="center"','text'=>$langs->trans("NoRecordedOrders"));
+
+				$db->free($result);
             }
             else {
                 $this->info_box_contents[0][0] = array(	'td' => 'align="left"',
@@ -153,4 +144,3 @@ class box_commandes extends ModeleBoxes
 
 }
 
-?>

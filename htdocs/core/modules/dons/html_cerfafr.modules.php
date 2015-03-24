@@ -140,13 +140,14 @@ class html_cerfafr extends ModeleDon
 		        $form = str_replace('__CURRENCY__',$outputlangs->transnoentitiesnoconv("Currency".$conf->currency),$form);
 		        $form = str_replace('__CURRENCYCODE__',$conf->currency,$form);
 		        $form = str_replace('__MAIN_INFO_SOCIETE_NOM__',$mysoc->name,$form);
-		        $form = str_replace('__MAIN_INFO_SOCIETE_ADRESSE__',$mysoc->address,$form);
-		        $form = str_replace('__MAIN_INFO_SOCIETE_CP__',$mysoc->zip,$form);
-		        $form = str_replace('__MAIN_INFO_SOCIETE_VILLE__',$mysoc->town,$form);
-		        $form = str_replace('__DONATOR_NAME__',$don->nom,$form);
-		        $form = str_replace('__DONATOR_ADDRESS__',$don->adresse,$form);
-		        $form = str_replace('__DONATOR_ZIP__',$don->cp,$form);
-		        $form = str_replace('__DONATOR_TOWN__',$don->ville,$form);
+		        $form = str_replace('__MAIN_INFO_SOCIETE_ADDRESS__',$mysoc->address,$form);
+		        $form = str_replace('__MAIN_INFO_SOCIETE_ZIP__',$mysoc->zip,$form);
+		        $form = str_replace('__MAIN_INFO_SOCIETE_TOWN__',$mysoc->town,$form);
+		        $form = str_replace('__DONATOR_FIRSTNAME__',$don->firstname,$form);
+            	$form = str_replace('__DONATOR_LASTNAME__',$don->lastname,$form);
+		        $form = str_replace('__DONATOR_ADDRESS__',$don->address,$form);
+		        $form = str_replace('__DONATOR_ZIP__',$don->zip,$form);
+		        $form = str_replace('__DONATOR_TOWN__',$don->town,$form);
 		        $form = str_replace('__PAYMENTMODE_LIB__ ', $paymentmode,$form);
 		        $form = str_replace('__NOW__',dol_print_date($now,'',false,$outputlangs),$form);
 		        $form = str_replace('__DonationRef__',$outputlangs->trans("DonationRef"),$form);
@@ -193,4 +194,3 @@ class html_cerfafr extends ModeleDon
     }
 }
 
-?>

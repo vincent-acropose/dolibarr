@@ -7,6 +7,8 @@
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2005      Lionel Cousteix      <etm_ltd@tiscali.co.uk>
  * Copyright (C) 2011      Herve Prot           <herve.prot@symeos.com>
+ * Copyright (C) 2013-2014 Philippe Grand       <philippe.grand@atoo-net.com>
+ * Copyright (C) 2013      Alexandre Spangaro   <alexandre.spangaro@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,12 +47,11 @@ class User extends CommonObject
 	var $ref_ext;
 	var $ldap_sid;
 	var $search_sid;
-	var $nom;		// TODO deprecated
-	var $prenom;	// TODO deprecated
 	var $lastname;
 	var $firstname;
 	var $note;
 	var $email;
+  var $skype;
 	var $job;
 	var $signature;
 	var $office_phone;
@@ -75,11 +76,12 @@ class User extends CommonObject
 	var $contact_id;
 
 	var $fk_member;
+	var $fk_user;
 
-	var $webcal_login;
-	var $phenix_login;
-	var $phenix_pass;
-	var $phenix_pass_crypted;
+	var $clicktodial_url;
+	var $clicktodial_login;
+	var $clicktodial_password;
+	var $clicktodial_poste;
 
 	var $datelastlogin;
 	var $datepreviouslogin;
@@ -91,9 +93,14 @@ class User extends CommonObject
 	var $all_permissions_are_loaded;	/**< \private all_permissions_are_loaded */
 	private $_tab_loaded=array();		// Array of cache of already loaded permissions
 
-	var $conf;           // To store personal config
-	var $oldcopy;                // To contains a clone of this when we need to save old properties of object
+	var $conf;           			// To store personal config
+	var $oldcopy;                	// To contains a clone of this when we need to save old properties of object
 
+	var $users;						// To store all tree of users hierarchy
+	var $parentof;					// To store an array of all parents for all ids.
+
+	var $accountancy_code;				// Accountancy code in prevision of the complete accountancy module
+	var $thm;							// Average cost of employee
 
 
 	/**
@@ -136,10 +143,10 @@ class User extends CommonObject
 		$login=trim($login);
 
 		// Get user
-		$sql = "SELECT u.rowid, u.name, u.firstname, u.email, u.job, u.signature, u.office_phone, u.office_fax, u.user_mobile,";
-		$sql.= " u.admin, u.login, u.webcal_login, u.phenix_login, u.phenix_pass, u.note,";
+		$sql = "SELECT u.rowid, u.lastname, u.firstname, u.email, u.job, u.skype, u.signature, u.office_phone, u.office_fax, u.user_mobile,";
+		$sql.= " u.admin, u.login, u.note,";
 		$sql.= " u.pass, u.pass_crypted, u.pass_temp,";
-		$sql.= " u.fk_societe, u.fk_socpeople, u.fk_member, u.ldap_sid,";
+		$sql.= " u.fk_societe, u.fk_socpeople, u.fk_member, u.fk_user, u.ldap_sid,";
 		$sql.= " u.statut, u.lang, u.entity,";
 		$sql.= " u.datec as datec,";
 		$sql.= " u.tms as datem,";
@@ -147,16 +154,18 @@ class User extends CommonObject
 		$sql.= " u.datepreviouslogin as datep,";
 		$sql.= " u.photo as photo,";
 		$sql.= " u.openid as openid,";
+		$sql.= " u.accountancy_code,";
+		$sql.= " u.thm,";
 		$sql.= " u.ref_int, u.ref_ext";
 		$sql.= " FROM ".MAIN_DB_PREFIX."user as u";
 
-		if (! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode))
+		if ((empty($conf->multicompany->enabled) || empty($conf->multicompany->transverse_mode)) && (! empty($user->entity)))
 		{
-			$sql.= " WHERE u.entity IS NOT NULL";
+			$sql.= " WHERE u.entity IN (0,".$conf->entity.")";
 		}
 		else
 		{
-			$sql.= " WHERE u.entity IN (0,".$conf->entity.")";
+			$sql.= " WHERE u.entity IS NOT NULL";
 		}
 
 		if ($sid)    // permet une recherche du user par son SID ActiveDirectory ou Samba
@@ -186,9 +195,7 @@ class User extends CommonObject
 				$this->ref_ext 		= $obj->ref_ext;
 
 				$this->ldap_sid 	= $obj->ldap_sid;
-				$this->nom 			= $obj->name;		// TODO deprecated
-				$this->lastname		= $obj->name;
-				$this->prenom 		= $obj->firstname;	// TODO deprecated
+				$this->lastname		= $obj->lastname;
 				$this->firstname 	= $obj->firstname;
 
 				$this->login		= $obj->login;
@@ -200,6 +207,7 @@ class User extends CommonObject
 				$this->office_fax   = $obj->office_fax;
 				$this->user_mobile  = $obj->user_mobile;
 				$this->email		= $obj->email;
+				$this->skype		= $obj->skype;
 				$this->job			= $obj->job;
 				$this->signature	= $obj->signature;
 				$this->admin		= $obj->admin;
@@ -209,20 +217,25 @@ class User extends CommonObject
 				$this->openid		= $obj->openid;
 				$this->lang			= $obj->lang;
 				$this->entity		= $obj->entity;
+				$this->accountancy_code		= $obj->accountancy_code;
+				$this->thm			= $obj->thm;
 
 				$this->datec				= $this->db->jdate($obj->datec);
 				$this->datem				= $this->db->jdate($obj->datem);
 				$this->datelastlogin		= $this->db->jdate($obj->datel);
 				$this->datepreviouslogin	= $this->db->jdate($obj->datep);
 
-				$this->webcal_login         = $obj->webcal_login;
-				$this->phenix_login         = $obj->phenix_login;
-				$this->phenix_pass_crypted  = $obj->phenix_pass;
 				$this->societe_id           = $obj->fk_societe;
 				$this->contact_id           = $obj->fk_socpeople;
 				$this->fk_member            = $obj->fk_member;
+				$this->fk_user        		= $obj->fk_user;
 
-				if (! $this->lang) $this->lang='fr_FR';
+				// Retreive all extrafield for thirdparty
+				// fetch optionals attributes and labels
+				require_once(DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php');
+				$extrafields=new ExtraFields($this->db);
+				$extralabels=$extrafields->fetch_name_optionals_label($this->table_element,true);
+				$this->fetch_optionals($this->id,$extralabels);
 
 				$this->db->free($result);
 			}
@@ -478,6 +491,7 @@ class User extends CommonObject
 	 *  Clear all permissions array of user
 	 *
 	 *  @return	void
+	 *  @see	getrights
 	 */
 	function clearrights()
 	{
@@ -493,6 +507,7 @@ class User extends CommonObject
 	 *
 	 *	@param  string	$moduletag    Limit permission for a particular module ('' by default means load all permissions)
 	 *	@return	void
+	 *  @see	clearrights
 	 */
 	function getrights($moduletag='')
 	{
@@ -794,7 +809,7 @@ class User extends CommonObject
 
 		$sql = "SELECT login FROM ".MAIN_DB_PREFIX."user";
 		$sql.= " WHERE login ='".$this->db->escape($this->login)."'";
-		$sql.= " AND entity IN (0,".$conf->entity.")";
+		$sql.= " AND entity IN (0,".$this->db->escape($conf->entity).")";
 
 		dol_syslog(get_class($this)."::create sql=".$sql, LOG_DEBUG);
 		$resql=$this->db->query($sql);
@@ -813,7 +828,7 @@ class User extends CommonObject
 			else
 			{
 				$sql = "INSERT INTO ".MAIN_DB_PREFIX."user (datec,login,ldap_sid,entity)";
-				$sql.= " VALUES('".$this->db->idate($this->datec)."','".$this->db->escape($this->login)."','".$this->ldap_sid."',".$this->entity.")";
+				$sql.= " VALUES('".$this->db->idate($this->datec)."','".$this->db->escape($this->login)."','".$this->ldap_sid."',".$this->db->escape($this->entity).")";
 				$result=$this->db->query($sql);
 
 				dol_syslog(get_class($this)."::create sql=".$sql, LOG_DEBUG);
@@ -907,14 +922,18 @@ class User extends CommonObject
 
 		// Positionne parametres
 		$this->admin		= 0;
-		$this->nom			= $contact->nom;			// TODO deprecated
-		$this->prenom		= $contact->prenom;	// TODO deprecated
 		$this->lastname		= $contact->lastname;
 		$this->firstname	= $contact->firstname;
 		$this->email		= $contact->email;
+    	$this->skype 		= $contact->skype;
 		$this->office_phone	= $contact->phone_pro;
 		$this->office_fax	= $contact->fax;
 		$this->user_mobile	= $contact->phone_mobile;
+		$this->address      = $contact->address;
+		$this->zip          = $contact->zip;
+		$this->town         = $contact->town;
+		$this->state_id     = $contact->state_id;
+		$this->country_id   = $contact->country_id;
 
 		if (empty($login)) $login=strtolower(substr($contact->firstname, 0, 4)) . strtolower(substr($contact->lastname, 0, 4));
 		$this->login = $login;
@@ -977,42 +996,57 @@ class User extends CommonObject
 
 		// Positionne parametres
 		$this->admin = 0;
-		$this->lastname = $member->lastname;
-		$this->firstname = $member->firstname;
-		$this->email = $member->email;
-		$this->pass = $member->pass;
+		$this->lastname     = $member->lastname;
+		$this->firstname    = $member->firstname;
+		$this->email        = $member->email;
+		$this->fk_member    = $member->id;
+		$this->pass         = $member->pass;
+		$this->address      = $member->address;
+		$this->zip          = $member->zip;
+		$this->town         = $member->town;
+		$this->state_id     = $member->state_id;
+		$this->country_id   = $member->country_id;
 
 		if (empty($login)) $login=strtolower(substr($member->firstname, 0, 4)) . strtolower(substr($member->lastname, 0, 4));
 		$this->login = $login;
 
 		$this->db->begin();
 
-		// Cree et positionne $this->id
+		// Create and set $this->id
 		$result=$this->create($user);
 		if ($result > 0)
 		{
-			$result=$this->setPassword($user,$this->pass);
+			$newpass=$this->setPassword($user,$this->pass);
+			if (is_numeric($newpass) && $newpass < 0) $result=-2;
 
-			$sql = "UPDATE ".MAIN_DB_PREFIX."user";
-			$sql.= " SET fk_member=".$member->id;
-			if ($member->fk_soc) $sql.= ", fk_societe=".$member->fk_soc;
-			$sql.= " WHERE rowid=".$this->id;
-
-			dol_syslog(get_class($this)."::create_from_member sql=".$sql, LOG_DEBUG);
-			$resql=$this->db->query($sql);
-			if ($resql)
+			if ($result > 0 && $member->fk_soc)	// If member is linked to a thirdparty
 			{
-				$this->db->commit();
-				return $this->id;
-			}
-			else
-			{
-				$this->error=$this->db->error();
-				dol_syslog(get_class($this)."::create_from_member - 1 - ".$this->error, LOG_ERR);
+				$sql = "UPDATE ".MAIN_DB_PREFIX."user";
+				$sql.= " SET fk_societe=".$member->fk_soc;
+				$sql.= " WHERE rowid=".$this->id;
 
-				$this->db->rollback();
-				return -1;
+				dol_syslog(get_class($this)."::create_from_member sql=".$sql, LOG_DEBUG);
+				$resql=$this->db->query($sql);
+				if ($resql)
+				{
+					$this->db->commit();
+					return $this->id;
+				}
+				else
+				{
+					$this->error=$this->db->lasterror();
+					dol_syslog(get_class($this)."::create_from_member - 1 - ".$this->error, LOG_ERR);
+
+					$this->db->rollback();
+					return -1;
+				}
 			}
+		}
+
+		if ($result > 0)
+		{
+			$this->db->commit();
+			return $this->id;
 		}
 		else
 		{
@@ -1020,7 +1054,7 @@ class User extends CommonObject
 			dol_syslog(get_class($this)."::create_from_member - 2 - ".$this->error, LOG_ERR);
 
 			$this->db->rollback();
-			return $result;
+			return -2;
 		}
 	}
 
@@ -1068,7 +1102,7 @@ class User extends CommonObject
 	}
 
 	/**
-	 *  	Update a user into databse (and also password if this->pass is defined)
+	 *  	Update a user into database (and also password if this->pass is defined)
 	 *
 	 *		@param	User	$user				User qui fait la mise a jour
 	 *    	@param  int		$notrigger			1 ne declenche pas les triggers, 0 sinon
@@ -1078,7 +1112,7 @@ class User extends CommonObject
 	 */
 	function update($user,$notrigger=0,$nosyncmember=0,$nosyncmemberpass=0)
 	{
-		global $conf, $langs;
+		global $conf, $langs, $hookmanager;
 
 		$nbrowsaffected=0;
 		$error=0;
@@ -1086,8 +1120,6 @@ class User extends CommonObject
 		dol_syslog(get_class($this)."::update notrigger=".$notrigger.", nosyncmember=".$nosyncmember.", nosyncmemberpass=".$nosyncmemberpass);
 
 		// Clean parameters
-		$this->nom          = trim($this->nom);		// deprecated
-		$this->prenom       = trim($this->prenom);  // deprecated
 		$this->lastname     = trim($this->lastname);
 		$this->firstname    = trim($this->firstname);
 		$this->login        = trim($this->login);
@@ -1096,17 +1128,16 @@ class User extends CommonObject
 		$this->office_fax   = trim($this->office_fax);
 		$this->user_mobile  = trim($this->user_mobile);
 		$this->email        = trim($this->email);
+		$this->skype        = trim($this->skype);
 		$this->job    		= trim($this->job);
 		$this->signature    = trim($this->signature);
 		$this->note         = trim($this->note);
 		$this->openid       = trim(empty($this->openid)?'':$this->openid);    // Avoid warning
-		$this->webcal_login = trim($this->webcal_login);
-		$this->phenix_login = trim($this->phenix_login);
-		if ($this->phenix_pass != $this->phenix_pass_crypted)
-		{
-			$this->phenix_pass  = dol_hash(trim($this->phenix_pass));
-		}
 		$this->admin        = $this->admin?$this->admin:0;
+		$this->address		= empty($this->address)?'':$this->address;
+		$this->zip			= empty($this->zip)?'':$this->zip;
+		$this->town			= empty($this->town)?'':$this->town;
+		$this->accountancy_code = trim($this->accountancy_code);
 
 		// Check parameters
 		if (! empty($conf->global->USER_MAIL_REQUIRED) && ! isValidEMail($this->email))
@@ -1120,22 +1151,28 @@ class User extends CommonObject
 
 		// Mise a jour autres infos
 		$sql = "UPDATE ".MAIN_DB_PREFIX."user SET";
-		$sql.= " name = '".$this->db->escape($this->lastname)."'";
+		$sql.= " lastname = '".$this->db->escape($this->lastname)."'";
 		$sql.= ", firstname = '".$this->db->escape($this->firstname)."'";
 		$sql.= ", login = '".$this->db->escape($this->login)."'";
 		$sql.= ", admin = ".$this->admin;
+		$sql.= ", address = '".$this->db->escape($this->address)."'";
+		$sql.= ", zip = '".$this->db->escape($this->zip)."'";
+		$sql.= ", town = '".$this->db->escape($this->town)."'";
+		$sql.= ", fk_state = ".((! empty($this->state_id) && $this->state_id > 0)?"'".$this->db->escape($this->state_id)."'":"null");
+		$sql.= ", fk_country = ".((! empty($this->country_id) && $this->country_id > 0)?"'".$this->db->escape($this->country_id)."'":"null");
 		$sql.= ", office_phone = '".$this->db->escape($this->office_phone)."'";
 		$sql.= ", office_fax = '".$this->db->escape($this->office_fax)."'";
 		$sql.= ", user_mobile = '".$this->db->escape($this->user_mobile)."'";
 		$sql.= ", email = '".$this->db->escape($this->email)."'";
+		$sql.= ", skype = '".$this->db->escape($this->skype)."'";
 		$sql.= ", job = '".$this->db->escape($this->job)."'";
 		$sql.= ", signature = '".$this->db->escape($this->signature)."'";
-		$sql.= ", webcal_login = '".$this->db->escape($this->webcal_login)."'";
-		$sql.= ", phenix_login = '".$this->db->escape($this->phenix_login)."'";
-		$sql.= ", phenix_pass = '".$this->db->escape($this->phenix_pass)."'";
+		$sql.= ", accountancy_code = '".$this->db->escape($this->accountancy_code)."'";
+		$sql.= ", thm = ".(isset($this->thm)?$this->thm:"null");	// If not set, we use null
 		$sql.= ", note = '".$this->db->escape($this->note)."'";
 		$sql.= ", photo = ".($this->photo?"'".$this->db->escape($this->photo)."'":"null");
 		$sql.= ", openid = ".($this->openid?"'".$this->db->escape($this->openid)."'":"null");
+		$sql.= ", fk_user = ".($this->fk_user > 0?"'".$this->db->escape($this->fk_user)."'":"null");
 		$sql.= ", entity = '".$this->entity."'";
 		$sql.= " WHERE rowid = ".$this->id;
 
@@ -1183,8 +1220,6 @@ class User extends CommonObject
 
 					if ($result >= 0)
 					{
-						$adh->prenom=$this->firstname;    // deprecated
-						$adh->nom=$this->lastname;        // deprecated
 						$adh->firstname=$this->firstname;
 						$adh->lastname=$this->lastname;
 						$adh->login=$this->login;
@@ -1192,6 +1227,7 @@ class User extends CommonObject
 						$adh->societe=(empty($adh->societe) && $this->societe_id ? $this->societe_id : $adh->societe);
 
 						$adh->email=$this->email;
+						$adh->skype=$this->skype;
 						$adh->phone=$this->office_phone;
 						$adh->phone_mobile=$this->user_mobile;
 
@@ -1217,8 +1253,6 @@ class User extends CommonObject
 			}
 
 			// Actions on extra fields (by external module or standard code)
-			include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
-			$hookmanager=new HookManager($this->db);
 			$hookmanager->initHooks(array('userdao'));
 			$parameters=array('socid'=>$this->id);
 			$reshook=$hookmanager->executeHooks('insertExtraFields',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
@@ -1269,7 +1303,7 @@ class User extends CommonObject
 	}
 
 	/**
-	 *    Mise e jour en base de la date de deniere connexion d'un utilisateur
+	 *    Mise a jour en base de la date de derniere connexion d'un utilisateur
 	 *	  Fonction appelee lors d'une nouvelle connexion
 	 *
 	 *    @return     <0 si echec, >=0 si ok
@@ -1322,7 +1356,7 @@ class User extends CommonObject
 		// If new password not provided, we generate one
 		if (! $password)
 		{
-			$password=getRandomPassword('');
+			$password=getRandomPassword(false);
 		}
 
 		// Crypte avec md5
@@ -1445,7 +1479,6 @@ class User extends CommonObject
 
 		require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
 
-		$subject = $langs->trans("SubjectNewPassword");
 		$msgishtml=0;
 
 		// Define $msg
@@ -1462,35 +1495,41 @@ class User extends CommonObject
 			$outputlangs=$langs;
 		}
 
+		$outputlangs->load("main");
+		$outputlangs->load("errors");
+		$outputlangs->load("users");
+		$outputlangs->load("other");
+
+		$subject = $outputlangs->transnoentitiesnoconv("SubjectNewPassword");
+
 		// Define $urlwithroot
 		//$urlwithouturlroot=preg_replace('/'.preg_quote(DOL_URL_ROOT,'/').'$/i','',trim($dolibarr_main_url_root));
 		//$urlwithroot=$urlwithouturlroot.DOL_URL_ROOT;		// This is to use external domain name found into config file
 		$urlwithroot=DOL_MAIN_URL_ROOT;						// This is to use same domain name than current
 
-		// TODO Use outputlangs to translate messages
 		if (! $changelater)
 		{
-			$mesg.= "A request to change your Dolibarr password has been received.\n";
-			$mesg.= "This is your new keys to login:\n\n";
-			$mesg.= $langs->trans("Login")." : $this->login\n";
-			$mesg.= $langs->trans("Password")." : $password\n\n";
+			$mesg.= $outputlangs->transnoentitiesnoconv("RequestToResetPasswordReceived").".\n";
+			$mesg.= $outputlangs->transnoentitiesnoconv("NewKeyIs")." :\n\n";
+			$mesg.= $outputlangs->transnoentitiesnoconv("Login")." = ".$this->login."\n";
+			$mesg.= $outputlangs->transnoentitiesnoconv("Password")." = ".$password."\n\n";
 			$mesg.= "\n";
 			$url = $urlwithroot;
-			$mesg.= 'Click here to go to Dolibarr: '.$url."\n\n";
+			$mesg.= $outputlangs->transnoentitiesnoconv("ClickHereToGoTo", $conf->global->MAIN_APPLICATION_TITLE).': '.$url."\n\n";
 			$mesg.= "--\n";
-			$mesg.= $user->getFullName($langs);	// Username that make then sending
+			$mesg.= $user->getFullName($outputlangs);	// Username that make then sending
 		}
 		else
 		{
-			$mesg.= "A request to change your Dolibarr password has been received.\n";
-			$mesg.= "Your new key to login will be:\n\n";
-			$mesg.= $langs->trans("Login")." : $this->login\n";
-			$mesg.= $langs->trans("Password")." : $password\n\n";
+			$mesg.= $outputlangs->transnoentitiesnoconv("RequestToResetPasswordReceived")."\n";
+			$mesg.= $outputlangs->transnoentitiesnoconv("NewKeyWillBe")." :\n\n";
+			$mesg.= $outputlangs->transnoentitiesnoconv("Login")." = ".$this->login."\n";
+			$mesg.= $outputlangs->transnoentitiesnoconv("Password")." = ".$password."\n\n";
 			$mesg.= "\n";
-			$mesg.= "You must click on the folowing link to validate its change.\n";
+			$mesg.= $outputlangs->transnoentitiesnoconv("YouMustClickToChange")." :\n";
 			$url = $urlwithroot.'/user/passwordforgotten.php?action=validatenewpassword&username='.$this->login."&passwordmd5=".dol_hash($password);
 			$mesg.= $url."\n\n";
-			$mesg.= "If you didn't ask anything, just forget this email\n\n";
+			$mesg.= $outputlangs->transnoentitiesnoconv("ForgetIfNothing")."\n\n";
 			dol_syslog(get_class($this)."::send_password url=".$url);
 		}
         $mailfile = new CMailFile(
@@ -1537,7 +1576,7 @@ class User extends CommonObject
 	 */
 	function fetch_clicktodial()
 	{
-		$sql = "SELECT login, pass, poste ";
+		$sql = "SELECT url, login, pass, poste ";
 		$sql.= " FROM ".MAIN_DB_PREFIX."user_clicktodial as u";
 		$sql.= " WHERE u.fk_user = ".$this->id;
 
@@ -1548,6 +1587,7 @@ class User extends CommonObject
 			{
 				$obj = $this->db->fetch_object($resql);
 
+				$this->clicktodial_url = $obj->url;
 				$this->clicktodial_login = $obj->login;
 				$this->clicktodial_password = $obj->pass;
 				$this->clicktodial_poste = $obj->poste;
@@ -1577,26 +1617,28 @@ class User extends CommonObject
 		$sql = "DELETE FROM ".MAIN_DB_PREFIX."user_clicktodial";
 		$sql .= " WHERE fk_user = ".$this->id;
 
+		dol_syslog(get_class($this).'::update_clicktodial sql='.$sql);
 		$result = $this->db->query($sql);
 
 		$sql = "INSERT INTO ".MAIN_DB_PREFIX."user_clicktodial";
-		$sql .= " (fk_user,login,pass,poste)";
+		$sql .= " (fk_user,url,login,pass,poste)";
 		$sql .= " VALUES (".$this->id;
-		$sql .= ", '". $this->clicktodial_login ."'";
-		$sql .= ", '". $this->clicktodial_password ."'";
-		$sql .= ", '". $this->clicktodial_poste."')";
+		$sql .= ", '". $this->db->escape($this->clicktodial_url) ."'";
+		$sql .= ", '". $this->db->escape($this->clicktodial_login) ."'";
+		$sql .= ", '". $this->db->escape($this->clicktodial_password) ."'";
+		$sql .= ", '". $this->db->escape($this->clicktodial_poste) ."')";
 
+		dol_syslog(get_class($this).'::update_clicktodial sql='.$sql);
 		$result = $this->db->query($sql);
-
 		if ($result)
 		{
 			$this->db->commit();
-			return 0;
+			return 1;
 		}
 		else
 		{
 			$this->db->rollback();
-			$this->error=$this->db->error();
+			$this->error=$this->db->lasterror();
 			return -1;
 		}
 	}
@@ -1724,8 +1766,8 @@ class User extends CommonObject
 	}
 
 	/**
-	 *  Return a link to the user card (with optionnaly the picto)
-	 * 	Use this->id,this->nom, this->prenom
+	 *  Return a link to the user card (with optionaly the picto)
+	 * 	Use this->id,this->lastname, this->firstname
 	 *
 	 *	@param	int		$withpicto		Include picto in link (0=No picto, 1=Inclut le picto dans le lien, 2=Picto seul)
 	 *	@param	string	$option			On what the link point to
@@ -1740,14 +1782,11 @@ class User extends CommonObject
 		$lien = '<a href="'.DOL_URL_ROOT.'/user/fiche.php?id='.$this->id.'">';
 		$lienfin='</a>';
 
-		if ($option == 'xxx')
+		if ($withpicto)
 		{
-			$lien = '<a href="'.DOL_URL_ROOT.'/user/fiche.php?id='.$this->id.'">';
-			$lienfin='</a>';
+			$result.=($lien.img_object($langs->trans("ShowUser"),'user').$lienfin);
+			if ($withpicto != 2) $result.=' ';
 		}
-
-		if ($withpicto) $result.=($lien.img_object($langs->trans("ShowUser"),'user').$lienfin);
-		if ($withpicto && $withpicto != 2) $result.=' ';
 		$result.=$lien.$this->getFullName($langs).$lienfin;
 		return $result;
 	}
@@ -1782,7 +1821,7 @@ class User extends CommonObject
 	/**
 	 *  Retourne le libelle du statut d'un user (actif, inactif)
 	 *
-	 *  @param	int		$mode          0=libelle long, 1=libelle court, 2=Picto + Libelle court, 3=Picto, 4=Picto + Libelle long
+	 *  @param	int		$mode          0=libelle long, 1=libelle court, 2=Picto + Libelle court, 3=Picto, 4=Picto + Libelle long, 5=Libelle court + Picto
 	 *  @return	string 			       Label of status
 	 */
 	function getLibStatut($mode=0)
@@ -1839,7 +1878,7 @@ class User extends CommonObject
 	/**
 	 *	Retourne chaine DN complete dans l'annuaire LDAP pour l'objet
 	 *
-	 *	@param	string	$info		Info string loaded by _load_ldap_info
+	 *	@param	array	$info		Info array loaded by _load_ldap_info
 	 *	@param	int		$mode		0=Return full DN (uid=qqq,ou=xxx,dc=aaa,dc=bbb)
 	 *								1=
 	 *								2=Return key only (uid=qqq)
@@ -1884,7 +1923,7 @@ class User extends CommonObject
 			$soc = new Societe($this->db);
 			$soc->fetch($this->societe_id);
 
-			$info["o"] = $soc->nom;
+			$info["o"] = $soc->lastname;
 			if ($soc->client == 1)      $info["businessCategory"] = "Customers";
 			if ($soc->client == 2)      $info["businessCategory"] = "Prospects";
 			if ($soc->fournisseur == 1) $info["businessCategory"] = "Suppliers";
@@ -1897,6 +1936,7 @@ class User extends CommonObject
 		if ($this->office_fax && ! empty($conf->global->LDAP_FIELD_FAX))	     $info[$conf->global->LDAP_FIELD_FAX] = $this->office_fax;
 		if ($this->note && ! empty($conf->global->LDAP_FIELD_DESCRIPTION))    $info[$conf->global->LDAP_FIELD_DESCRIPTION] = $this->note;
 		if ($this->email && ! empty($conf->global->LDAP_FIELD_MAIL))          $info[$conf->global->LDAP_FIELD_MAIL] = $this->email;
+    if ($this->skype && ! empty($conf->global->LDAP_FIELD_SKYPE))          $info[$conf->global->LDAP_FIELD_SKYPE] = $this->skype;
 
 		if ($conf->global->LDAP_SERVER_TYPE == 'egroupware')
 		{
@@ -1938,32 +1978,36 @@ class User extends CommonObject
 	{
 		global $user,$langs;
 
+		$now=dol_now();
+
 		// Initialise parametres
 		$this->id=0;
 		$this->ref = 'SPECIMEN';
 		$this->specimen=1;
 
-		$this->nom='DOLIBARR';        // deprecated
-		$this->prenom='SPECIMEN';     // deprecated
 		$this->lastname='DOLIBARR';
 		$this->firstname='SPECIMEN';
 		$this->note='This is a note';
 		$this->email='email@specimen.com';
+    $this->skype='tom.hanson';
 		$this->office_phone='0999999999';
 		$this->office_fax='0999999998';
 		$this->user_mobile='0999999997';
 		$this->admin=0;
 		$this->login='dolibspec';
 		$this->pass='dolibspec';
-		$this->datec=time();
-		$this->datem=time();
-		$this->webcal_login='dolibspec';
+		//$this->pass_indatabase='dolibspec';									Set after a fetch
+		//$this->pass_indatabase_crypted='e80ca5a88c892b0aaaf7e154853bccab';	Set after a fetch
+		$this->datec=$now;
+		$this->datem=$now;
 
-		$this->datelastlogin=time();
-		$this->datepreviouslogin=time();
+		$this->datelastlogin=$now;
+		$this->datepreviouslogin=$now;
 		$this->statut=1;
 
-		$this->societe_id = 1;
+		//$this->societe_id = 1;	For external users
+		//$this->contact_id = 1;	For external users
+		$this->entity = 1;
 	}
 
 	/**
@@ -2071,6 +2115,272 @@ class User extends CommonObject
 		}
 	}
 
+	/**
+	 *  Update user using data from the LDAP
+	 *
+	 *  @param	ldapuser	$ldapuser	Ladp User
+	 *
+	 *  @return int  				<0 if KO, >0 if OK
+	 */
+	function update_ldap2dolibarr(&$ldapuser)
+	{
+		// TODO: Voir pourquoi le update met à jour avec toutes les valeurs vide (global $user écrase ?)
+		global $user, $conf;
+
+		$this->firstname=$ldapuser->{$conf->global->LDAP_FIELD_FIRSTNAME};
+		$this->lastname=$ldapuser->{$conf->global->LDAP_FIELD_NAME};
+		$this->login=$ldapuser->{$conf->global->LDAP_FIELD_LOGIN};
+		$this->pass=$ldapuser->{$conf->global->LDAP_FIELD_PASSWORD};
+		$this->pass_indatabase_crypted=$ldapuser->{$conf->global->LDAP_FIELD_PASSWORD_CRYPTED};
+
+		$this->office_phone=$ldapuser->{$conf->global->LDAP_FIELD_PHONE};
+		$this->user_mobile=$ldapuser->{$conf->global->LDAP_FIELD_MOBILE};
+		$this->office_fax=$ldapuser->{$conf->global->LDAP_FIELD_FAX};
+		$this->email=$ldapuser->{$conf->global->LDAP_FIELD_MAIL};
+		$this->skype=$ldapuser->{$conf->global->LDAP_FIELD_SKYPE};
+		$this->ldap_sid=$ldapuser->{$conf->global->LDAP_FIELD_SID};
+
+		$this->job=$ldapuser->{$conf->global->LDAP_FIELD_TITLE};
+		$this->note=$ldapuser->{$conf->global->LDAP_FIELD_DESCRIPTION};
+
+		$result = $this->update($user);
+
+		dol_syslog(get_class($this)."::update_ldap2dolibarr result=".$result, LOG_DEBUG);
+
+		return $result;
+	}
+
+
+	/**
+	 * Return and array with all instanciated children users of current user
+	 *
+	 * @return	void
+	 */
+	function get_children()
+	{
+		$sql = "SELECT rowid FROM ".MAIN_DB_PREFIX."user";
+		$sql.= " WHERE fk_user = ".$this->id;
+
+		dol_syslog(get_class($this)."::get_children result=".$result, LOG_DEBUG);
+		$res  = $this->db->query($sql);
+		if ($res)
+		{
+			$users = array ();
+			while ($rec = $this->db->fetch_array($res))
+			{
+				$user = new User($this->db);
+				$user->fetch($rec['rowid']);
+				$users[] = $user;
+			}
+			return $users;
+		}
+		else
+		{
+			dol_print_error($this->db);
+			return -1;
+		}
+	}
+
+
+	/**
+	 * 	Load this->parentof that is array(id_son=>id_parent, ...)
+	 *
+	 *	@return		int		<0 if KO, >0 if OK
+	 */
+	private function load_parentof()
+	{
+		global $conf;
+
+		$this->parentof=array();
+
+		// Load array[child]=parent
+		$sql = "SELECT fk_user as id_parent, rowid as id_son";
+		$sql.= " FROM ".MAIN_DB_PREFIX."user";
+		$sql.= " WHERE fk_user <> 0";
+		$sql.= " AND entity IN (".getEntity('user',1).")";
+
+		dol_syslog(get_class($this)."::load_parentof sql=".$sql);
+		$resql = $this->db->query($sql);
+		if ($resql)
+		{
+			while ($obj= $this->db->fetch_object($resql))
+			{
+				$this->parentof[$obj->id_son]=$obj->id_parent;
+			}
+			return 1;
+		}
+		else
+		{
+			dol_print_error($this->db);
+			return -1;
+		}
+	}
+
+	/**
+	 * 	Reconstruit l'arborescence hierarchique des users sous la forme d'un tableau
+	 *	Renvoi un tableau de tableau('id','id_parent',...) trie selon arbre et avec:
+	 *				id = id du user
+	 *				name = nom du user
+	 *				fullname = nom avec chemin complet du user
+	 *				fullpath = chemin complet compose des id
+	 *
+	 *  @param      int		$deleteafterid      Removed all users including the leaf $deleteafterid (and all its child) in user tree.
+	 *	@return		array		      		  	Array of users. this->users and this->parentof are set.
+	 */
+	function get_full_tree($deleteafterid=0)
+	{
+		global $conf,$user;
+
+		$this->users = array();
+
+		// Init this->parentof that is array(id_son=>id_parent, ...)
+		$this->load_parentof();
+
+		// Init $this->users array
+		$sql = "SELECT DISTINCT u.rowid, u.firstname, u.lastname, u.fk_user, u.login, u.statut, u.entity";	// Distinct reduce pb with old tables with duplicates
+		$sql.= " FROM ".MAIN_DB_PREFIX."user as u";
+		if(! empty($conf->multicompany->enabled) && $conf->entity == 1 && (! empty($conf->multicompany->transverse_mode) || (! empty($user->admin) && empty($user->entity))))
+		{
+			$sql.= " WHERE u.entity IS NOT NULL";
+		}
+		else
+		{
+			$sql.= " WHERE u.entity IN (".getEntity('user',1).")";
+		}
+		dol_syslog(get_class($this)."::get_full_tree get user list sql=".$sql, LOG_DEBUG);
+		$resql = $this->db->query($sql);
+		if ($resql)
+		{
+			$i=0;
+			while ($obj = $this->db->fetch_object($resql))
+			{
+				$this->users[$obj->rowid]['rowid'] = $obj->rowid;
+				$this->users[$obj->rowid]['id'] = $obj->rowid;
+				$this->users[$obj->rowid]['fk_user'] = $obj->fk_user;
+				$this->users[$obj->rowid]['firstname'] = $obj->firstname;
+				$this->users[$obj->rowid]['lastname'] = $obj->lastname;
+				$this->users[$obj->rowid]['login'] = $obj->login;
+				$this->users[$obj->rowid]['statut'] = $obj->statut;
+				$this->users[$obj->rowid]['entity'] = $obj->entity;
+				$i++;
+			}
+		}
+		else
+		{
+			dol_print_error($this->db);
+			return -1;
+		}
+
+		// We add the fullpath property to each elements of first level (no parent exists)
+		dol_syslog(get_class($this)."::get_full_tree call to build_path_from_id_user", LOG_DEBUG);
+		foreach($this->users as $key => $val)
+		{
+			$this->build_path_from_id_user($key,0);	// Process a branch from the root user key (this user has no parent)
+		}
+
+		// Exclude leaf including $deleteafterid from tree
+		if ($deleteafterid)
+		{
+			//print "Look to discard user ".$deleteafterid."\n";
+			$keyfilter1='^'.$deleteafterid.'$';
+			$keyfilter2='_'.$deleteafterid.'$';
+			$keyfilter3='^'.$deleteafterid.'_';
+			$keyfilter4='_'.$deleteafterid.'_';
+			foreach($this->users as $key => $val)
+			{
+				if (preg_match('/'.$keyfilter1.'/',$val['fullpath']) || preg_match('/'.$keyfilter2.'/',$val['fullpath'])
+					|| preg_match('/'.$keyfilter3.'/',$val['fullpath']) || preg_match('/'.$keyfilter4.'/',$val['fullpath']))
+				{
+					unset($this->users[$key]);
+				}
+			}
+		}
+
+		dol_syslog(get_class($this)."::get_full_tree dol_sort_array", LOG_DEBUG);
+		$this->users=dol_sort_array($this->users, 'fullname', 'asc', true, false);
+
+		//$this->debug_users();
+
+		return $this->users;
+	}
+
+	/**
+	 * 	Return list of all childs users in herarchy.
+	 *
+	 *	@return		array		      		  	Array of user id lower than user. This overwrite this->users.
+	 */
+	function getAllChildIds()
+	{
+		// Init this->users
+		$this->get_full_tree();
+
+		$idtoscan=$this->id;
+		$childids=array();
+
+		dol_syslog("Build childid for id = ".$idtoscan);
+		foreach($this->users as $id => $val)
+		{
+			//var_dump($val['fullpath']);
+			if (preg_match('/_'.$idtoscan.'_/', $val['fullpath'])) $childids[$val['id']]=$val['id'];
+		}
+
+		return $childids;
+	}
+
+	/**
+	 *	For user id_user and its childs available in this->users, define property fullpath and fullname
+	 *
+	 * 	@param		int		$id_user		id_user entry to update
+	 * 	@param		int		$protection		Deep counter to avoid infinite loop
+	 *	@return		void
+	 */
+	function build_path_from_id_user($id_user,$protection=1000)
+	{
+		dol_syslog(get_class($this)."::build_path_from_id_user id_user=".$id_user." protection=".$protection, LOG_DEBUG);
+
+		if (! empty($this->users[$id_user]['fullpath']))
+		{
+			// Already defined
+			dol_syslog(get_class($this)."::build_path_from_id_user fullpath and fullname already defined", LOG_WARNING);
+			return;
+		}
+
+		// Define fullpath and fullname
+		$this->users[$id_user]['fullpath'] = '_'.$id_user;
+		$this->users[$id_user]['fullname'] = $this->users[$id_user]['lastname'];
+		$i=0; $cursor_user=$id_user;
+
+		while ((empty($protection) || $i < $protection) && ! empty($this->parentof[$cursor_user]))
+		{
+			$this->users[$id_user]['fullpath'] = '_'.$this->parentof[$cursor_user].$this->users[$id_user]['fullpath'];
+			$this->users[$id_user]['fullname'] = $this->users[$this->parentof[$cursor_user]]['lastname'].' >> '.$this->users[$id_user]['fullname'];
+			$i++; $cursor_user=$this->parentof[$cursor_user];
+		}
+
+		// We count number of _ to have level
+		$this->users[$id_user]['level']=dol_strlen(preg_replace('/[^_]/i','',$this->users[$id_user]['fullpath']));
+
+		return;
+	}
+
+	/**
+	 *	Affiche contenu de $this->users
+	 *
+	 *	@return	void
+	 */
+	function debug_users()
+	{
+		// Affiche $this->users
+		foreach($this->users as $key => $val)
+		{
+			print 'id: '.$this->users[$key]['id'];
+			print ' name: '.$this->users[$key]['name'];
+			print ' parent: '.$this->users[$key]['fk_user'];
+			print ' fullpath: '.$this->users[$key]['fullpath'];
+			print ' fullname: '.$this->users[$key]['fullname'];
+			print "<br>\n";
+		}
+	}
+
 }
 
-?>

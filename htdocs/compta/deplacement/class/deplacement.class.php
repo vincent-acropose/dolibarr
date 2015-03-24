@@ -2,6 +2,7 @@
 /* Copyright (C) 2003		Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2009-2012	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2013       Florian Henry		  	<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +27,7 @@
 require_once DOL_DOCUMENT_ROOT .'/core/class/commonobject.class.php';
 
 /**
- *      \class      Deplacement
- *      \brief      Class to manage trips and working credit notes
+ *		Class to manage trips and working credit notes
  */
 class Deplacement extends CommonObject
 {
@@ -63,6 +63,9 @@ class Deplacement extends CommonObject
 	function __construct($db)
 	{
 		$this->db = $db;
+
+        $this->statuts_short = array(0 => 'Draft', 1 => 'Validated', 2 => 'Closed');
+        $this->statuts = array(0 => 'Draft', 1 => 'Validated', 2 => 'Closed');
 
 		return 1;
 	}
@@ -101,7 +104,7 @@ class Deplacement extends CommonObject
 		$sql.= ", fk_user_author";
 		$sql.= ", fk_user";
 		$sql.= ", type";
-		$sql.= ", note";
+		$sql.= ", note_private";
 		$sql.= ", note_public";
 		$sql.= ", fk_projet";
 		$sql.= ", fk_soc";
@@ -195,7 +198,7 @@ class Deplacement extends CommonObject
 		$sql .= " , fk_user = ".$this->fk_user;
 		$sql .= " , fk_user_modif = ".$user->id;
 		$sql .= " , fk_soc = ".($this->socid > 0?$this->socid:'null');
-		$sql .= " , note = ".($this->note_private?"'".$this->db->escape($this->note_private)."'":"null");
+		$sql .= " , note_private = ".($this->note_private?"'".$this->db->escape($this->note_private)."'":"null");
 		$sql .= " , note_public = ".($this->note_public?"'".$this->db->escape($this->note_public)."'":"null");
 		$sql .= " , fk_projet = ".($this->fk_project>0?$this->fk_project:0);
 		$sql .= " WHERE rowid = ".$this->id;
@@ -223,7 +226,7 @@ class Deplacement extends CommonObject
 	*/
 	function fetch($id)
 	{
-		$sql = "SELECT rowid, fk_user, type, fk_statut, km, fk_soc, dated, note, note_public, fk_projet, extraparams";
+		$sql = "SELECT rowid, fk_user, type, fk_statut, km, fk_soc, dated, note_private, note_public, fk_projet, extraparams";
 		$sql.= " FROM ".MAIN_DB_PREFIX."deplacement";
 		$sql.= " WHERE rowid = ".$id;
 
@@ -241,7 +244,7 @@ class Deplacement extends CommonObject
 			$this->km			= $obj->km;
 			$this->type			= $obj->type;
 			$this->statut	    = $obj->fk_statut;
-			$this->note_private	= $obj->note;
+			$this->note_private	= $obj->note_private;
 			$this->note_public	= $obj->note_public;
 			$this->fk_project	= $obj->fk_projet;
 
@@ -326,7 +329,6 @@ class Deplacement extends CommonObject
 		}
 		if ($mode == 4)
 		{
-			//if ($statut==0 && ! empty($this->statuts_short[$statut])) return img_picto($langs->trans($this->statuts_short[$statut]),'statut0').' '.$langs->trans($this->statuts[$statut]);
 			if ($statut==0 && ! empty($this->statuts_short[$statut])) return img_picto($langs->trans($this->statuts_short[$statut]),'statut0').' '.$langs->trans($this->statuts[$statut]);
 			if ($statut==1 && ! empty($this->statuts_short[$statut])) return img_picto($langs->trans($this->statuts_short[$statut]),'statut4').' '.$langs->trans($this->statuts[$statut]);
 		}
@@ -447,4 +449,3 @@ class Deplacement extends CommonObject
 
 }
 
-?>

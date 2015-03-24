@@ -28,7 +28,7 @@ create table llx_facture
   entity				integer  DEFAULT 1 NOT NULL,			-- multi company id
 
   ref_ext				varchar(255),							-- reference into an external system (not used by dolibarr)
-  ref_int				varchar(255),							-- reference into an internal system (used by dolibarr)
+  ref_int				varchar(255),							-- reference into an internal system (used by dolibarr to store extern id like paypal info)
   ref_client			varchar(255),							-- reference for customer
 
   type					smallint DEFAULT 0 NOT NULL,			-- type of invoice
@@ -47,11 +47,12 @@ create table llx_facture
   close_code			varchar(16),							-- Code motif cloture sans paiement complet
   close_note			varchar(128),							-- Commentaire cloture sans paiement complet
 
-  tva					double(24,8)     DEFAULT 0,				-- montant tva apres remise totale
-  localtax1				double(24,8)     DEFAULT 0,				-- amount localtax1
-  localtax2				double(24,8)     DEFAULT 0,				-- amount localtax2	
-  total					double(24,8)     DEFAULT 0,				-- montant total ht apres remise totale
-  total_ttc				double(24,8)     DEFAULT 0,				-- montant total ttc apres remise totale
+  tva					double(24,8)     DEFAULT 0,				-- amount total tva apres remise totale
+  localtax1				double(24,8)     DEFAULT 0,				-- amount total localtax1
+  localtax2				double(24,8)     DEFAULT 0,				-- amount total localtax2	
+  revenuestamp          double(24,8)     DEFAULT 0,				-- amount total revenuestamp
+  total					double(24,8)     DEFAULT 0,				-- amount total ht apres remise totale
+  total_ttc				double(24,8)     DEFAULT 0,				-- amount total ttc apres remise totale
 
   fk_statut				smallint DEFAULT 0 NOT NULL,
 
@@ -62,12 +63,12 @@ create table llx_facture
   fk_projet				integer DEFAULT NULL,					-- projet auquel est associee la facture
 
   fk_account			integer,								-- bank account
-  fk_currency			varchar(2),								-- currency code
+  fk_currency			varchar(3),								-- currency code
   fk_cond_reglement		integer  DEFAULT 1 NOT NULL,			-- condition de reglement (30 jours, fin de mois ...)
   fk_mode_reglement		integer,								-- mode de reglement (Virement, Prelevement)
   date_lim_reglement	date,									-- date limite de reglement
 
-  note					text,
+  note_private			text,
   note_public			text,
   model_pdf				varchar(255),
   import_key			varchar(14),

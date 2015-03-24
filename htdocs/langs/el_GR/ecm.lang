@@ -1,5 +1,4 @@
-# Dolibarr language file - el_GR - ecm
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - ecm
 MenuECM=Έγγραφα
 DocsMine=Τα Έγγραφά Μου
 DocsGenerated=Generated documents
@@ -24,10 +23,10 @@ ECMNewDocument=Νέο Έγγραφο
 ECMCreationDate=Ημερομηνία Δημιουργίας
 ECMNbOfFilesInDir=Number of files in directory
 ECMNbOfSubDir=Number of sub-directories
-ECMNbOfFilesInSubDir=Nunber of iles in sub-directories
+ECMNbOfFilesInSubDir=Αριθμός αρχείων σε υπο-καταλόγους
 ECMCreationUser=Δημιουργός
-ECMArea=ECM area
-ECMAreaDesc=The ECM (Electronic Content Management) area allows you to save, share and search quickly all kind of documents in Dolibarr.
+ECMArea=EDM περιοχή
+ECMAreaDesc=Η EDM (Ηλεκτρονική Διαχείρισης Εγγράφων) περιοχή σας επιτρέπει να αποθηκεύετε, να μοιράζεστε και να αναζητήσετε γρήγορα όλα τα είδη των εγγράφων Dolibarr.
 ECMAreaDesc2=* Automatic directories are filled automatically when adding documents from card of an element.<br>* Manual directories can be used to save documents not linked to a particular element.
 ECMSectionWasRemoved=Directory <b>%s</b> has been deleted.
 ECMDocumentsSection=Document of directory
@@ -36,12 +35,14 @@ ECMSearchByEntity=Search by object
 ECMSectionOfDocuments=Directories of documents
 ECMTypeManual=Χειροκίνητα
 ECMTypeAuto=Αυτόματα
+ECMDocsBySocialContributions=Έγγραφα που συνδέονται με τις κοινωνικές εισφορές
 ECMDocsByThirdParties=Έγγραφα συνδεδεμένα με στοιχεία
-ECMDocsByProposal=Έγγραφα συνδεδεμένα με προτάσεις
+ECMDocsByProposals=Έγγραφα που σχετίζονται με τις προτάσεις
 ECMDocsByOrders=Έγγραφα συνδεδεμένα με παραγγελίες πελατών
 ECMDocsByContracts=Έγγραφα συνδεδεμένα με συμβόλαια
 ECMDocsByInvoices=Έγγραφα συνδεδεμένα με τιμολόγια πελατών
 ECMDocsByProducts=Έγγραφα συνδεδεμένα με προϊόντα
+ECMDocsByProjects=Έγγραφα που συνδέονται με σχέδια
 ECMNoDirectoryYet=Δεν δημιουργήθηκε φάκελος
 ShowECMSection=Εμφάνιση φακέλου
 DeleteSection=Διαγραφή φακέλου
@@ -50,9 +51,5 @@ ECMDirectoryForFiles=Relative directory for files
 CannotRemoveDirectoryContainsFiles=Removed not possible because it contains some files
 ECMFileManager=Διαχειριστής Αρχείων
 ECMSelectASection=Select a directory on left tree...
+DirNotSynchronizedSyncFirst=Αυτός ο κατάλογος φαίνεται να δημιουργήθηκαν ή τροποποιήθηκαν εκτός μονάδας ECM. Θα πρέπει να κάνετε κλικ στο πλήκτρο "Ανανέωση" πρώτα να συγχρονίσετε δίσκο και τη βάση δεδομένων για να πάρει το περιεχόμενο του καταλόγου αυτού.
 
-
-// START - Lines generated via autotranslator.php tool (2011-06-26 15:35:22).
-// Reference language: en_US -> el_GR
-ECMDocsByProposals=Έγγραφα που σχετίζονται με τις προτάσεις
-// STOP - Lines generated via autotranslator.php tool (2011-06-26 15:37:32).

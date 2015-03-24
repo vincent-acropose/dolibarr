@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2005-2010  Laurent Destailleur  	<eldy@users.sourceforge.net>
- * Copyright (C) 2012		Juanjo Menent			<jmenent@2byte.es>
+ * Copyright (C) 2012-2013	Juanjo Menent			<jmenent@2byte.es>
+ * Copyright (C) 2013       Philippe Grand			<philippe.grand@atoo-net.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +48,7 @@ if ($action == 'specimen')
     $don = new Don($db);
     $don->initAsSpecimen();
 
-    // Charge le modele
+    // Search template files
     $dir = DOL_DOCUMENT_ROOT . "/core/modules/dons/";
     $file = $modele.".modules.php";
     if (file_exists($dir.$file))
@@ -64,77 +65,49 @@ if ($action == 'specimen')
         }
         else
         {
-            $mesg='<div class="error">'.$obj->error.'</div>';
+            setEventMessage($obj->error,'errors');
             dol_syslog($obj->error, LOG_ERR);
         }
     }
     else
     {
-        $mesg='<div class="error">'.$langs->trans("ErrorModuleNotFound").'</div>';
+        setEventMessage($langs->trans("ErrorModuleNotFound"),'errors');
         dol_syslog($langs->trans("ErrorModuleNotFound"), LOG_ERR);
     }
 }
 
-if ($action == 'setdoc')
+// Set default model
+else if ($action == 'setdoc')
 {
-	$value = GETPOST('value','alpha');
-	$label = GETPOST('label','alpha');
-	$scandir = GETPOST('scandir','alpha');
-	
-    $db->begin();
+	if (dolibarr_set_const($db, "DON_ADDON_MODEL",$value,'chaine',0,'',$conf->entity))
+	{
+		// La constante qui a ete lue en avant du nouveau set
+		// on passe donc par une variable pour avoir un affichage coherent
+		$conf->global->DON_ADDON_MODEL = $value;
+	}
 
-    if (dolibarr_set_const($db, "DON_ADDON_MODEL",$value,'chaine',0,'',$conf->entity))
-    {
-        $conf->global->DON_ADDON_MODEL = $value;
-    }
-
-    // On active le modele
-    $type='donation';
-    $sql_del = "DELETE FROM ".MAIN_DB_PREFIX."document_model";
-    $sql_del.= " WHERE nom = '".$db->escape($value)."' AND type = '".$type."'";
-    $result1=$db->query($sql_del);
-
-    $sql = "INSERT INTO ".MAIN_DB_PREFIX."document_model (nom, type, entity, libelle, description)";
-    $sql.= " VALUES ('".$db->escape($value)."', '".$type."', ".$conf->entity.", ";
-    $sql.= ($label?"'".$db->escape($label)."'":'null').", ";
-    $sql.= (! empty($scandir)?"'".$db->escape($scandir)."'":"null");
-    $sql.= ")";
-    $result2=$db->query($sql);
-    if ($result1 && $result2)
-    {
-        $db->commit();
-    }
-    else
-    {
-        $db->rollback();
-    }
+	// On active le modele
+	$ret = delDocumentModel($value, $type);
+	if ($ret > 0)
+	{
+		$ret = addDocumentModel($value, $type, $label, $scandir);
+	}
 }
 
-if ($action == 'set')
+// Activate a model
+else if ($action == 'set')
 {
-	$value = GETPOST('value','alpha');
-	$label = GETPOST('label','alpha');
-	$scandir = GETPOST('scandir','alpha');
-	
-    $type='donation';
-    $sql = "INSERT INTO ".MAIN_DB_PREFIX."document_model (nom, type, entity, libelle, description)";
-    $sql.= " VALUES ('".$db->escape($value)."','".$type."',".$conf->entity.", ";
-    $sql.= ($label?"'".$db->escape($label)."'":'null').", ";
-    $sql.= (! empty($scandir)?"'".$db->escape($scandir)."'":"null");
-    $sql.= ")";
-    $resql=$db->query($sql);
+	$ret = addDocumentModel($value, $type, $label, $scandir);
 }
 
-if ($action == 'del')
+else if ($action == 'del')
 {
-	$value = GETPOST('value','alpha');
-	
-    $type='donation';
-    $sql = "DELETE FROM ".MAIN_DB_PREFIX."document_model";
-    $sql .= "  WHERE nom = '".$value."' AND type = '".$type."'";
-    $resql=$db->query($sql);
+	$ret = delDocumentModel($value, $type);
+	if ($ret > 0)
+	{
+        if ($conf->global->DON_ADDON_MODEL == "$value") dolibarr_del_const($db, 'DON_ADDON_MODEL',$conf->entity);
+	}
 }
-
 
 /*
  * View
@@ -147,7 +120,6 @@ llxHeader('',$langs->trans("DonationsSetup"),'DonConfiguration');
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
 print_fiche_titre($langs->trans("DonationsSetup"),$linkback,'setup');
-
 
 // Document templates
 print '<br>';
@@ -176,13 +148,14 @@ else
     dol_print_error($db);
 }
 
-print '<table class="noborder" width=\"100%\">';
+print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("Name").'</td>';
 print '<td>'.$langs->trans("Description").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Activated").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Default").'</td>';
-print '<td align="center" width="80">'.$langs->trans("Infos").'</td>';
+print '<td align="center" width="80">'.$langs->trans("ShortInfo").'</td>';
+print '<td align="center" width="80">'.$langs->trans("Preview").'</td>';
 print "</tr>\n";
 
 clearstatcache();
@@ -222,20 +195,20 @@ if (is_resource($handle))
                     print "<td align=\"center\">\n";
                     if ($conf->global->DON_ADDON_MODEL == $name)
                     {
-                        print img_picto($langs->trans("Enabled"),'on');
+                        print img_picto($langs->trans("Enabled"),'switch_on');
                     }
                     else
                     {
                         print '&nbsp;';
                         print '</td><td align="center">';
-                        print '<a href="dons.php?action=setdoc&value='.$name.'&amp;scandir='.$module->scandir.'&amp;label='.urlencode($module->name).'">'.img_picto($langs->trans("Enabled"),'on').'</a>';
+                        print '<a href="dons.php?action=setdoc&value='.$name.'&amp;scandir='.$module->scandir.'&amp;label='.urlencode($module->name).'">'.img_picto($langs->trans("Enabled"),'switch_on').'</a>';
                     }
                     print '</td>';
                 }
                 else
                 {
                     print "<td align=\"center\">\n";
-                    print '<a href="'.$_SERVER["PHP_SELF"].'?action=set&amp;value='.$name.'&amp;scandir='.$module->scandir.'&amp;label='.urlencode($module->name).'">'.img_picto($langs->trans("Disabled"),'off').'</a>';
+                    print '<a href="'.$_SERVER["PHP_SELF"].'?action=set&amp;value='.$name.'&amp;scandir='.$module->scandir.'&amp;label='.urlencode($module->name).'">'.img_picto($langs->trans("Disabled"),'switch_off').'</a>';
                     print "</td>";
                 }
 
@@ -261,10 +234,14 @@ if (is_resource($handle))
                 $htmltooltip.='<br><br><u>'.$langs->trans("FeaturesSupported").':</u>';
                 $htmltooltip.='<br>'.$langs->trans("Logo").': '.yn($module->option_logo,1,1);
                 $htmltooltip.='<br>'.$langs->trans("MultiLanguage").': '.yn($module->option_multilang,1,1);
-                $text='<a href="'.$_SERVER["PHP_SELF"].'?action=specimen&module='.$name.'" target="specimen">'.img_object($langs->trans("Preview"),'generic').'</a>';
                 print '<td align="center">';
-                print $form->textwithpicto(' &nbsp; '.$text,$htmltooltip,-1,0);
+                print $form->textwithpicto('',$htmltooltip,-1,0);
                 print '</td>';
+				
+				// Preview
+				print '<td align="center">';
+				print '<a href="'.$_SERVER["PHP_SELF"].'?action=specimen&module='.$name.'" target="specimen">'.img_object($langs->trans("Preview"),'generic').'</a>';
+				print '</td>';
 
                 print "</tr>\n";
             }
@@ -282,4 +259,3 @@ print "<br>";
 $db->close();
 
 llxFooter();
-?>

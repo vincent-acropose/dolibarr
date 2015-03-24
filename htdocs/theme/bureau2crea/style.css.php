@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2004-2010	Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2004-2014	Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2006		Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2007-2010	Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2011		Philippe Grand       <philippe.grand@atoo-net.com>
@@ -17,6 +17,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * FIXME: This is a bugged theme:
+ * No wrapping of top menu entries when window not large enough
+ * Not compatible with jmobile
  */
 
 /**
@@ -39,10 +43,13 @@ session_cache_limiter(FALSE);
 
 require_once '../../main.inc.php';
 
+// Load user to have $user->conf loaded (not done into main because of NOLOGIN constant defined)
+if (empty($user->id) && ! empty($_SESSION['dol_login'])) $user->fetch('',$_SESSION['dol_login']);
+
+
 // Define css type
 header('Content-type: text/css');
-// Important: Following code is to avoid page request by browser and PHP CPU at
-// each Dolibarr page access.
+// Important: Following code is to avoid page request by browser and PHP CPU at each Dolibarr page access.
 if (empty($dolibarr_nocache)) header('Cache-Control: max-age=3600, public, must-revalidate');
 else header('Cache-Control: no-cache');
 
@@ -54,12 +61,25 @@ if (GETPOST('theme')) $conf->theme=GETPOST('theme');  // If theme was forced on 
 $langs->load("main",0,1);
 $right=($langs->trans("DIRECTION")=='rtl'?'left':'right');
 $left=($langs->trans("DIRECTION")=='rtl'?'right':'left');
-$fontsize=empty($conf->browser->phone)?'12':'12';
-$fontsizesmaller=empty($conf->browser->phone)?'11':'11';
 
-$fontlist='arial,tahoma,verdana,helvetica';
-//$fontlist='Verdana,Helvetica,Arial,sans-serif';
 
+$path='';    			// This value may be used in future for external module to overwrite theme
+$theme='bureau2crea';	// Value of theme
+if (! empty($conf->global->MAIN_OVERWRITE_THEME_RES)) { $path='/'.$conf->global->MAIN_OVERWRITE_THEME_RES; $theme=$conf->global->MAIN_OVERWRITE_THEME_RES; }
+
+// Define image path files and other constants
+$fontlist='arial, sans-serif, verdana, helvetica';
+$dol_hide_topmenu=$conf->dol_hide_topmenu;
+$dol_hide_leftmenu=$conf->dol_hide_leftmenu;
+$dol_optimize_smallscreen=$conf->dol_optimize_smallscreen;
+$dol_no_mouse_hover=$conf->dol_no_mouse_hover;
+$dol_use_jmobile=$conf->dol_use_jmobile;
+
+$colorshadowtitle='000';
+$fontsize='12';
+$fontsizesmaller='11';
+
+if (! empty($conf->dol_optimize_smallscreen)) $fontsize=11;
 ?>
 
 /* ============================================================================== */
@@ -69,8 +89,8 @@ $fontlist='arial,tahoma,verdana,helvetica';
 body {
 /*	background-color: #FFFFFF; */
 	color: #101010;
-	font-size: 12px;
-    font-family: arial, sans-serif, verdana, helvetica;
+	font-size: <?php print $fontsize ?>px;
+    font-family: <?php print $fontlist ?>;
     margin-top: 0;
     margin-bottom: 0;
     margin-right: 0;
@@ -126,7 +146,7 @@ input, input.flat, textarea, textarea.flat, form.flat select, select.flat {
 	font-family: <?php print $fontlist ?>;
 	background: #FDFDFD;
     border: 1px solid #ACBCBB;
-    padding: 0px 0px 0px 0px;
+    padding: 1px;
     margin: 0px 0px 0px 0px;
 }
 select.flat, form.flat select {
@@ -139,8 +159,18 @@ textarea:disabled {
 	background:#ddd;
 }
 
+input[type=checkbox] { background-color: transparent; border: none; box-shadow: none; }
+input[type=radio]    { background-color: transparent; border: none; box-shadow: none; }
+input[type=image]    { background-color: transparent; border: none; box-shadow: none; }
+input[type=text]     { min-width: 20px; }
+input:-webkit-autofill {
+	background-color: <?php echo empty($dol_use_jmobile)?'#FBFFEA':'#FFFFFF' ?> !important;
+	background-image:none !important;
+	-webkit-box-shadow: 0 0 0 50px <?php echo empty($dol_use_jmobile)?'#FBFFEA':'#FFFFFF' ?> inset;
+}
+
 input.button[type=submit] {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_btnGreen.jpg' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_btnGreen.jpg',1); ?>);
     display: block;
     height: 18px;
     line-height: 16px;
@@ -153,11 +183,19 @@ input.button[type=submit] {
     font-size: 10px;
     display: inline;
 }
+::-webkit-input-placeholder { color:#ccc; }
+::-moz-placeholder { color:#ccc; } /* firefox 19+ */
+:-ms-input-placeholder { color:#ccc; } /* ie */
+input:-moz-placeholder { color:#ccc; }
+
+<?php if (! empty($dol_use_jmobile)) { ?>
+legend { margin-bottom: 8px; }
+<?php } ?>
 
 .button {
     font-family: <?php print $fontlist ?>;
 	border: 0px;
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/button_bg.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1); ?>);
 	background-position: bottom;
     padding: 0px 2px 0px 2px;
     margin: 0px 0px 0px 0px;
@@ -166,7 +204,7 @@ input.button[type=submit] {
     font-family: <?php print $fontlist ?>;
 	color: #222244;
 	border: 0px;
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/button_bg.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1); ?>);
 	background-position: bottom;
     padding: 0px 2px 0px 2px;
     margin: 0px 0px 0px 0px;
@@ -174,7 +212,7 @@ input.button[type=submit] {
 .buttonajax {
     font-family: <?php print $fontlist ?>;
 	border: 0px;
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/button_bg.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1); ?>);
 	background-position: bottom;
     padding: 0px 0px 0px 0px;
     margin: 0px 0px 0px 0px;
@@ -183,11 +221,42 @@ form {
     padding: 0em 0em 0em 0em;
     margin: 0em 0em 0em 0em;
 }
+div.float
+{
+    float:<?php print $left; ?>;
+}
+div.floatright
+{
+    float:<?php print $right; ?>;
+}
+div.inline-block
+{
+	display:inline-block;
+}
+
 .valignmiddle {
 	vertical-align: middle;
 }
 .centpercent {
 	width: 100%;
+}
+.center {
+    text-align: center;
+}
+.left {
+	text-align: <?php print $left; ?>;
+}
+.right {
+	text-align: <?php print $right; ?>;
+}
+.nowrap {
+	white-space: <?php print ($dol_optimize_smallscreen?'normal':'nowrap'); ?>;
+}
+.nobold {
+	font-weight: normal !important;
+}
+.nounderline {
+    text-decoration: none;
 }
 
 
@@ -196,10 +265,17 @@ form {
 /* ============================================================================== */
 
 .hideobject { display: none; }
-<?php if (! empty($conf->browser->phone)) { ?>
+<?php if (! empty($dol_optimize_smallscreen)) { ?>
 .hideonsmartphone { display: none; }
+.noenlargeonsmartphone { width : 50px !important; display: inline !important; }
+.maxwidthonsmartphone { max-width: 100px; }
+.maxwidth200onsmartphone { max-width: 200px; }
 <?php } ?>
 .linkobject { cursor: pointer; }
+<?php if (GETPOST("optioncss") == 'print') { ?>
+.hideonprint { display: none !important; }
+<?php } ?>
+
 
 /* ============================================================================== */
 /* Styles for dragging lines                                                      */
@@ -213,6 +289,7 @@ td.showDragHandle {
 }
 .tdlineupdown {
 	white-space: nowrap;
+	min-width: 10px;
 }
 
 
@@ -220,22 +297,28 @@ td.showDragHandle {
 /* Styles de positionnement des zones                                             */
 /* ============================================================================== */
 
+#id-container {
+	margin-bottom: 8px;
+	display: table;
+ 	table-layout: fixed;
+}
+#id-right, #id-left {
+	display: table-cell;
+	float: none;
+	vertical-align: top;
+}
+#id-<?php echo $right; ?> {
+	width: 100%;
+}
+
 div.leftContent {
 	margin-left: 20px !important;
     width: 220px !important;
 }
 
-div.vmenu {
-	position: relative;
-    float: left;
-    margin: 0px;
-    width: 180px;
-    margin-left: 10px;
-}
-
 div.fiche {
-	margin-<?php print $left; ?>: <?php print empty($conf->browser->phone)?'10':'2'; ?>px;
-	margin-<?php print $right; ?>: <?php print empty($conf->browser->phone)?'10':''; ?>px;
+	margin-<?php print $left; ?>: <?php print empty($conf->dol_optimize_smallscreen)?'10':'2'; ?>px;
+	margin-<?php print $right; ?>: <?php print empty($conf->dol_optimize_smallscreen)?'10':''; ?>px;
     padding: 0px;
     position: relative;
     height: auto;
@@ -246,23 +329,24 @@ div.fichecenter {
 	clear: both;	/* This is to have div fichecenter that are true rectangles */
 }
 div.fichethirdleft {
-	<?php if (empty($conf->browser->phone)) { print "float: ".$left.";\n"; } ?>
-	<?php if (empty($conf->browser->phone)) { print "width: 35%;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "float: ".$left.";\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "width: 35%;\n"; } ?>
 }
 div.fichetwothirdright {
-	<?php if (empty($conf->browser->phone)) { print "float: ".$left.";\n"; } ?>
-	<?php if (empty($conf->browser->phone)) { print "width: 65%;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "float: ".$right.";\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "width: 65%;\n"; } ?>
 }
 div.fichehalfleft {
-	<?php if (empty($conf->browser->phone)) { print "float: ".$left.";\n"; } ?>
-	<?php if (empty($conf->browser->phone)) { print "width: 50%;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "float: ".$left.";\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "width: 50%;\n"; } ?>
 }
 div.fichehalfright {
-	<?php if (empty($conf->browser->phone)) { print "float: ".$left.";\n"; } ?>
-	<?php if (empty($conf->browser->phone)) { print "width: 50%;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "float: ".$right.";\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "width: 50%;\n"; } ?>
 }
 div.ficheaddleft {
-	<?php if (empty($conf->browser->phone)) { print "padding-left: 6px;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen))   { print "padding-left: 16px;\n"; }
+	else print "margin-top: 10px;\n"; ?>
 }
 
 
@@ -280,7 +364,7 @@ div.ficheaddleft {
 /* ============================================================================== */
 
 <?php
-if (! empty($conf->browser->phone))
+if (! empty($conf->dol_optimize_smallscreen))
 {
 	$minwidthtmenu=70;
 	$heightmenu=39;
@@ -291,6 +375,12 @@ else
 	$heightmenu=39;
 }
 ?>
+
+/* This theme is bugged. If width not large enough, menu are not wrapped on next line
+div#tmenu_tooltip {
+	padding-right: 100px;
+}
+*/
 
 div.tmenu {
 <?php if (GETPOST("optioncss") == 'print') {  ?>
@@ -303,7 +393,7 @@ div.tmenu {
     padding: 0px;
     margin: 5px 0px 10px 0px;
     font-size: 13px;
-    background-image : url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_mainNav.jpg' ?>);
+    background-image : url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_mainNav.jpg',1); ?>);
     background-repeat: no-repeat;
     background-color: #996644;
     height: 22px;
@@ -324,63 +414,8 @@ div.mainmenu {
 }
 */
 
-<?php if (empty($conf->browser->phone)) { ?>
+<?php if (empty($conf->dol_optimize_smallscreen)) {
 
-/*
-div.mainmenu.home{
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/home.png' ?>);
-}
-
-div.mainmenu.companies {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/company.png' ?>);
-}
-
-div.mainmenu.products {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/products.png' ?>);
-	margin-left: 10px;
-}
-
-div.mainmenu.commercial {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/commercial.png' ?>);
-}
-
-div.mainmenu.accountancy {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/money.png' ?>);
-}
-
-div.mainmenu.bank {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/bank.png' ?>);
-}
-
-div.mainmenu.project {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/project.png' ?>);
-}
-
-div.mainmenu.tools {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/tools.png' ?>);
-}
-
-div.mainmenu.members {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/members.png' ?>);
-}
-
-div.mainmenu.shop {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/shop.png' ?>);
-}
-
-div.mainmenu.agenda {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/agenda.png' ?>);
-}
-
-div.mainmenu.ecm {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/ecm.png' ?>);
-}
-
-div.mainmenu.cashdesk {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/pointofsale.png' ?>);
-}
-*/
-<?php
 // Add here more div for other menu entries. moduletomainmenu=array('module name'=>'name of class for div')
 
 $moduletomainmenu=array('user'=>'','syslog'=>'','societe'=>'companies','projet'=>'project','propale'=>'commercial','commande'=>'commercial',
@@ -413,7 +448,7 @@ foreach($mainmenuusedarray as $val)
 	{
 		if (file_exists($dirroot."/".$val."/img/".$val.".png"))
 		{
-			$url=DOL_URL_ROOT.'/'.$val.'/img/'.$val.'.png';
+			$url=dol_buildpath($path.'/'.$val.'/img/'.$val.'.png',1);
 			$found=1;
 			break;
 		}
@@ -421,13 +456,13 @@ foreach($mainmenuusedarray as $val)
 	// Img file not found
 	if (! $found && $generic <= 4)
 	{
-		$url=DOL_URL_ROOT."/theme/bureau2crea/img/menus/generic".$generic.".png";
+		$url=dol_buildpath($path.'/theme/'.$theme.'/img/menus/generic'.$generic.'.png',1);
 		$found=1;
 		$generic++;
 	}
 	if ($found)
 	{
-		print "/* A mainmenu entry but img file ".$val.".png not found, so we use a generic one */\n";
+		print "/* A mainmenu entry but img file ".$val.".png not found (check /".$val."/img/".$val.".png), so we use a generic one */\n";
 		print "div.mainmenu.".$val." {\n";
 		print "	background-image: url(".$url.");\n";
 		print "	height:28px;\n";
@@ -451,7 +486,6 @@ ul.tmenu {
 
 li.tmenu, li.tmenusel {
 	float: <?php print $left; ?>;
-	height: 22px;
 	position:relative;
 	display: block;
 	padding: 0px;
@@ -470,10 +504,9 @@ li.tmenu span, li.tmenusel span {
 li.tmenu a, li.tmenusel a {
 	position: relative;
 	display: block;
-    height: 22px;
     font-size: 12px;
     font-family: Geneva, Verdana, sans-serif;
-    line-height: 22px;
+    line-height: 20px;
     color: #FFF;
     font-weight: normal;
     float: <?php print $left; ?>;
@@ -496,7 +529,7 @@ li.tmenu .tmenusel, li.tmenusel .tmenusel {
 }
 
 li.tmenusel {
-    background-image : url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_tmenusel_btnD.jpg' ?>);
+    background-image : url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_tmenusel_btnD.jpg',1); ?>);
     background-position: right;
 }
 
@@ -516,12 +549,14 @@ li.tmenu a.tmenudisabled {
 /* Login */
 
 form#login {
-	margin-top: 70px;
+	margin-top: <?php echo $dol_optimize_smallscreen?'30':'60' ?>px;
 	margin-bottom: 30px;
 	font-size: 13px;
 }
 .login_table_title {
-	width: 540px;
+	margin-left: 10px;
+	margin-right: 10px;
+	max-width: 540px;
 	color: #888888;
 	text-shadow: 1px 1px 1px #FFF;
 }
@@ -529,8 +564,10 @@ form#login {
 	text-shadow: 1px 1px 1px #FFF;
 }
 .login_table {
+	margin-left: 10px;
+	margin-right: 10px;
 	padding:12px;
-	width: 540px;
+	max-width: 540px;
 	border: 1px solid #C0C0C0;
 	background-color: #E0E0E0;
 
@@ -548,14 +585,19 @@ form#login {
 	background-image: -ms-linear-gradient(top, rgba(240,240,240,.3) 0%, rgba(192,192,192,.3) 100%);
 	background-image: linear-gradient(top, rgba(240,240,240,.3) 0%, rgba(192,192,192,.3) 100%);
 }
+#securitycode {
+	min-width: 60px;
+}
 #img_securitycode {
 	border: 1px solid #DDDDDD;
 }
 #img_logo {
 	max-width: 200px;
+	max-height: 100px;
 }
 
 div.login_block {
+    width: 180px;
 	position: absolute;
 	<?php print $right; ?>: 5px;
 	top: 2px;
@@ -570,9 +612,16 @@ div.login_block table {
 	display: inline;
 }
 
+div#login_left, div#login_right {
+	display: inline-block;
+	min-width: 220px;
+	text-align: center;
+	vertical-align: middle;
+}
+
 div.login {
 	white-space:nowrap;
-	padding: <?php echo ($conf->browser->phone?'0':'8')?>px 0px 0px 0px;
+	padding: <?php echo ($conf->dol_optimize_smallscreen?'0':'8')?>px 0px 0px 0px;
 	margin: 0px 0px 0px 8px;
 	font-weight: bold;
 }
@@ -583,9 +632,26 @@ div.login a:hover {
 	color: black;
 	text-decoration:underline;
 }
+.login_block_user {
+	float: right;
+}
+.login_block_elem {
+	float: right;
+	vertical-align: top;
+	padding: 8px 0px 0px 4px !important;
+}
+
+.alogin, .alogin:hover {
+	color: #888 !important;
+	font-weight: normal !important;
+	font-size: <?php echo $fontsizesmaller; ?>px !important;
+}
+.alogin:hover {
+	text-decoration:underline !important;
+}
 
 img.login, img.printer, img.entity {
-	padding: <?php echo ($conf->browser->phone?'0':'8')?>px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
 	margin: 0px 0px 0px 8px;
 	text-decoration: none;
 	color: white;
@@ -596,16 +662,25 @@ img.login, img.printer, img.entity {
 /* ============================================================================== */
 /* Menu gauche                                                                    */
 /* ============================================================================== */
-.vmenu{
-margin: 0;
-position: relative;
-width: 180px;
+
+.vmenu {
+	margin: 0;
+	position: relative;
+	width: 180px;
 }
 <?php if (GETPOST("optioncss") == 'print') { ?>
 .vmenu {
 	display: none;
 }
 <?php } ?>
+
+div.vmenu {
+	position: relative;
+    float: left;
+    margin: 0px;
+    width: 180px;
+    margin-left: 10px;
+}
 
 a.vmenu:link        { font-size:12px; text-align:left; font-weight: normal; color: #FFFFFF; margin: 1px 1px 1px 4px; }
 a.vmenu:visited     { font-size:12px; text-align:left; font-weight: normal; color: #FFFFFF; margin: 1px 1px 1px 4px; }
@@ -617,7 +692,8 @@ a.vsmenu:link       { font-size:11px; text-align:left; font-weight: normal; colo
 a.vsmenu:visited    { font-size:11px; text-align:left; font-weight: normal; color: #202020; margin: 1px 1px 1px 4px; }
 a.vsmenu:active     { font-size:11px; text-align:left; font-weight: normal; color: RGB(94,148,181); margin: 1px 1px 1px 4px; }
 a.vsmenu:hover      { font-size:11px; text-align:left; font-weight: normal; color: #7F0A29; margin: 1px 1px 1px 4px; }
-font.vsmenudisabled { font-size:11px; text-align:left; font-weight: normal; color: #202020; margin: 1px 1px 1px 4px; }
+font.vsmenudisabled { font-size:11px; text-align:left; font-weight: normal; color: #202020; }
+font.vsmenudisabledmargin { margin: 1px 1px 1px 4px; }
 
 a.help:link         { font-size: 10px; font-weight: bold; background: #FFFFFF; border: 1px solid #8CACBB; color: #68ACCF; padding: 0em 0.7em; margin: 0em 0.5em; text-decoration: none; white-space: nowrap; }
 a.help:visited      { font-size: 10px; font-weight: bold; background: #FFFFFF; border: 1px solid #8CACBB; color: #68ACCF; padding: 0em 0.7em; margin: 0em 0.5em; text-decoration: none; white-space: nowrap; }
@@ -631,7 +707,7 @@ div.blockvmenupair
 	border-spacing: 0px;
 	padding: 0px;
 	width: 100%;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_leftCategorie.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_leftCategorie.jpg',1); ?>);
     background-position: top right;
     background-repeat: no-repeat;
 
@@ -642,7 +718,7 @@ div.blockvmenuimpair
 	border-spacing: 0px;
 	padding: 0px;
 	width: 100%;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_leftCategorie.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_leftCategorie.jpg',1); ?>);
     background-position: top right;
     background-repeat: no-repeat;
 
@@ -686,8 +762,7 @@ div.blockvmenusearch
 {
 	margin: 3px 0px 15px 0px;
 	padding: 25px 0px 2px 2px;
-	width: 180px;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_leftMenu.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_leftMenu.jpg',1); ?>);
     background-position: top right;
     background-repeat: no-repeat;
 }
@@ -713,7 +788,7 @@ div.blockvmenusearch div.menu_titre {
 {
 	padding-top: 1px;
 	padding-bottom: 1px;
-	height: 16px;
+	min-height: 14px;
 }
 
 div.blockvmenubookmarks
@@ -722,7 +797,7 @@ div.blockvmenubookmarks
 	border-spacing: 0px;
 	padding: 0px;
 	width: 100%;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_leftCategorie.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_leftCategorie.jpg',1); ?>);
     background-position: top right;
     background-repeat: no-repeat;
     margin-bottom: 15px;
@@ -730,7 +805,7 @@ div.blockvmenubookmarks
 
 div.blockvmenuhelp
 {
-<?php if (empty($conf->browser->phone)) { ?>
+<?php if (empty($conf->dol_optimize_smallscreen)) { ?>
 	text-align: center;
 	border-spacing: 0px;
     width: 162px;
@@ -820,7 +895,7 @@ td.photo {
 /* ============================================================================== */
 
 .toolbar {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/tmenu2.png' ?>) !important;
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$conf->theme.'/img/tmenu2.png',1); ?>) !important;
     background-repeat: repeat-x !important;
     border: 1px solid #BBB !important;
 }
@@ -876,7 +951,7 @@ img.toolbarbutton {
  *  RESIZER-BARS
  */
 .ui-layout-resizer  { /* all 'resizer-bars' */
-	width: 8px !important;
+	width: <?php echo (empty($conf->dol_optimize_smallscreen)?'8':'24'); ?>px !important;
 }
 .ui-layout-resizer-hover    {   /* affects both open and closed states */
 }
@@ -885,7 +960,7 @@ img.toolbarbutton {
 /*.ui-layout-resizer-open-hover ,*/ /* hover-color to 'resize' */
 .ui-layout-resizer-dragging {   /* resizer beging 'dragging' */
     background: #DDD;
-    width: 8px;
+    width: <?php echo (empty($conf->dol_optimize_smallscreen)?'8':'24'); ?>px;
 }
 .ui-layout-resizer-dragging {   /* CLONED resizer being dragged */
     border-left:  1px solid #BBB;
@@ -951,7 +1026,7 @@ img.toolbarbutton {
 }
 
 .ui-layout-north {
-	height: <?php print (empty($conf->browser->phone)?'40':'40'); ?>px !important;
+	height: <?php print (empty($conf->dol_optimize_smallscreen)?'40':'40'); ?>px !important;
 }
 
 /* ECM */
@@ -998,6 +1073,8 @@ img.toolbarbutton {
     border:         1px solid #BBB;
     border-width:   0;
     }
+.ecm-layout-resizer-closed {
+}
 
 .ecm-in-layout-center {
     border-left: 1px !important;
@@ -1023,7 +1100,7 @@ div.tabs {
     margin: 0px 0px 10px 0px;
     text-align: left;
     width: 100%;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_navHorizontal.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_navHorizontal.jpg',1); ?>);
     height: 25px;
     background-repeat: repeat-x;
     background-position: left;
@@ -1058,30 +1135,15 @@ div.tabs a.tab {
     color: #FFFFFF;
     text-decoration: none;
     position: relative;
-    float: left;
     padding: 0px 10px 0px 10px;
 }
 
-div.tabs a.tab#active {
-    background-color: #FFF;
+div.tabs a.tab:active, .tabactive {
+    background-color: #888 !important;
     color: #D45416;
     border-bottom: 0px;
     background-image: none;
 
-}
-
-div.tabs a.tab span {
-	padding: 0px 10px 0px 10px;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_ssmenu_btnG.jpg' ?>);
-    background-position: left;
-    background-repeat: no-repeat;
-    display: block;
-    height: 18px;
-    width: auto;
-}
-
-div.tabs a.tab#active span {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_ssmenusel_btnG.jpg' ?>);
 }
 
 div.tabs a.tab:hover {
@@ -1096,10 +1158,10 @@ div.tabs a.tab:hover {
     text-align: <?php print $left; ?>;
 }
 
+*/
+
 div.tabBar {
-    color: #234046;
     margin: 0px 0px 10px 0px;
-    background: #dee7ec url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/tab_background.png' ?>) repeat-x;
 }
 
 div.tabsAction {
@@ -1108,7 +1170,7 @@ div.tabsAction {
     text-align: right;
 }
 
-
+/*
 a.tabTitle {
     background: #5088A9;
     color: white;
@@ -1215,19 +1277,18 @@ span.tabspan {
 /* Boutons actions                                                                */
 /* ============================================================================== */
 
-/* Nouvelle syntaxe a utiliser */
+div.divButAction { margin-bottom: 1.4em; }
 
 .butAction, .butAction:link, .butAction:visited, .butAction:hover, .butAction:active, .butActionDelete, .butActionDelete:link, .butActionDelete:visited, .butActionDelete:hover, .butActionDelete:active {
 	font-family:"Trebuchet MS",Arial,Helvetica,sans-serif;
 	font-weight: bold;
-	background: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_btnBlue.jpg' ?>) repeat-x;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_btnBlue.jpg',1); ?>) repeat-x;
 	color: #FFF !important;
 	padding: 0px 10px 0px 10px;
 	margin: 0px 10px 0px 10px;
 	text-decoration: none;
 	white-space: nowrap;
-    float: right;
-    font-size: 10px;
+    font-size: 12px;
     height: 18px;
     line-height: 18px;
     cursor: pointer;
@@ -1238,7 +1299,7 @@ span.tabspan {
 }
 
 .butActionDelete    {
-	background: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_btnRed.jpg' ?>) repeat-x !important;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_btnRed.jpg',1); ?>) repeat-x !important;
     color: #FFF;
 }
 
@@ -1251,14 +1312,13 @@ span.tabspan {
 .butActionRefused {
 	font-family:"Trebuchet MS",Arial,Helvetica,sans-serif;
 	font-weight: bold;
-	background: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_btnBlue.jpg' ?>) repeat-x;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_btnBlue.jpg',1); ?>) repeat-x;
 	color: #AAA !important;
 	padding: 0px 10px 0px 10px;
 	margin: 0px 10px 0px 10px;
 	text-decoration: none;
 	white-space: nowrap;
-    float: right;
-    font-size: 10px;
+    font-size: 12px;
     height: 18px;
     line-height: 18px;
     margin-bottom: 10px;
@@ -1286,11 +1346,18 @@ span.butAction, span.butActionDelete {
 
 /*
 #undertopmenu {
-background-image: url("<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/gradient.gif' ?>");
+background-image: url("<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/gradient.gif',1); ?>");
 background-repeat: repeat-x;
 }
 */
 
+.paddingrightonly {
+	border-collapse: collapse;
+	border: 0px;
+	margin-left: 0px;
+	padding-<?php print $left; ?>: 0px !important;
+	padding-<?php print $right; ?>: 4px !important;
+}
 .nocellnopadd {
 list-style-type:none;
 margin: 0px;
@@ -1321,48 +1388,58 @@ margin: 0px 0px 0px 0px;
 }
 
 
-table.border {
--webkit-box-shadow: #CCCCCC 2px 4px 2px;
-border: 2px solid #BBBBBB;
-border-collapse: collapse;
-padding: 10px;
-border-spacing: 2px;
+table.border, table.dataTable, .table-border, .table-border-col, .table-key-border-col, .table-val-border-col, div.border {
+	border-collapse: collapse;
+	padding: 10px;
+	border-spacing: 2px;
+	border: 1px solid #EFEFEF;
 }
-
+table.border, table.dataTable, .table-border {
+	-webkit-box-shadow: #CCCCCC 2px 4px 2px;
+	border: 2px solid #BBBBBB;
+}
 table.border.formdoc {
-padding: 0px;
-border-collapse: collapse;
-border: 1px solid #666;
+	padding: 0px;
+	border-collapse: collapse;
+	border: 1px solid #666;
 }
 
 table.border.formdoc td {
-margin: 0px;
-padding: 0px;
-border: none;
+	margin: 0px;
+	padding: 0px;
+	border: none;
 }
 
-table.border td {
-padding: 4px;
-border: 1px solid #EFEFEF;
-border-spacing: 0px;
-/*border-collapse: collapse;*/
-margin: 0px;
+table.border td, div.border div div.tagtd {
+	padding: 4px;
+	border: 1px solid #EFEFEF;
+	border-spacing: 0px;
+	/*border-collapse: collapse;*/
+	margin: 0px;
 }
 
 table.border table td {
-border: none;
+	border: none;
 }
 
-td.border {
-border-top: 1px solid #000000;
-border-right: 1px solid #000000;
-border-bottom: 1px solid #000000;
-border-left: 1px solid #000000;
+td.border, div.tagtable div div.border {
+	border-top: 1px solid #000000;
+	border-right: 1px solid #000000;
+	border-bottom: 1px solid #000000;
+	border-left: 1px solid #000000;
+}
+
+.table-key-border-col {
+	width: 25%;
+	vertical-align:top;
+}
+.table-val-border-col {
+	width:auto;
 }
 
 /* Main boxes */
 
-table.noborder {
+table.noborder, div.noborder form {
 	/*box-shadow: 2px 4px 2px #CCCCCC;
 	-moz-box-shadow: 2px 4px 2px #CCCCCC;
 	-webkit-box-shadow: 2px 4px 2px #CCCCCC; */
@@ -1371,10 +1448,10 @@ table.noborder {
 
 }
 
-table.noborder tr {
+table.noborder tr, div.noborder form {
 }
 
-table.noborder td {
+table.noborder td, div.noborder div {
 }
 
 table.nobordernopadding {
@@ -1393,7 +1470,7 @@ table.nobordernopadding td {
 /* For lists */
 
 table.liste {
-    /*background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_centerBlock-title.jpg' ?>);*/
+    /*background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_centerBlock-title.jpg',1); ?>);*/
     background-repeat: no-repeat;
     background-position: top right;
     vertical-align: text-top;
@@ -1404,13 +1481,17 @@ padding: 0px 5px;
 }
 
 table.noborder {
-    /*background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_centerBlock-title.jpg' ?>);*/
+    /*background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_centerBlock-title.jpg',1); ?>);*/
     background-repeat: no-repeat;
     background-position: top right;
     vertical-align: text-top;
 }
 
-tr.liste_titre {
+.tagtable, .table-border { display: table; }
+.tagtr, .table-border-row  { display: table-row; }
+.tagtd, .table-border-col, .table-key-border-col, .table-val-border-col { display: table-cell; }
+
+tr.liste_titre, form.liste_titre {
     height: 25px;
     background-repeat: no-repeat;
     background-color: #C8C8C8;
@@ -1419,11 +1500,7 @@ tr.liste_titre {
     font-weight: normal;
     /* text-decoration: underline; */
     /* border-bottom: 1px solid #FDFFFF; */
-    white-space: nowrap;
-}
-
-tr.liste_titre {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_centerBlock-title.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_centerBlock-title2.jpg',1); ?>);
     background-position: top right;
 }
 
@@ -1431,28 +1508,24 @@ th.liste_titre_sel, td.liste_titre_sel, th.liste_titre {
     color: #FFFFFF !important;
 }
 
-tr.liste_titre {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_centerBlock-title2.jpg' ?>);
-}
-
-tr.liste_total {
-height: 25px;
-border-top: 1px solid #333;
+tr.liste_total, form.liste_total {
+	height: 25px;
+	border-top: 1px solid #333;
 }
 
 div#stats {
 }
 
-div.liste_titre, tr.liste_titre {
+div.liste_titre, tr.liste_titre, form.liste_titre {
     text-align: <?php echo $left; ?>;
 }
 
-div.liste_titre a, tr.liste_titre a {
-color: #333333;
-margin: 0px 5px;
+div.liste_titre a, tr.liste_titre a, form.liste_titre a {
+	color: #333333;
+	margin: 0px 5px;
 }
 
-div.liste_titre td, tr.liste_titre td {
+div.liste_titre td, tr.liste_titre td, form.liste_titre div {
 	padding: 0px 5px;
     vertical-align: middle;
     background: none !important;
@@ -1464,18 +1537,17 @@ div.liste_titre, th.liste_titre, td.liste_titre
     color: #333333;
     font-family: <?php print $fontlist ?>;
     font-weight: normal;
-    white-space: nowrap;
     background-image: none;
     background: none;
 }
 
-div.liste_titre input.button, tr.liste_titre input.button {
+div.liste_titre input.button, tr.liste_titre input.button, form.liste_titre input.button {
 	float: left;
     position: relative;
     /*margin: 30px 10px 10px 0px;*/
 }
 
-th.liste_titre_sel, td.liste_titre_sel
+th.liste_titre_sel, td.liste_titre_sel, div.liste_titre_sel
 {
     background: #505050;
     background-repeat: repeat-x;
@@ -1484,7 +1556,6 @@ th.liste_titre_sel, td.liste_titre_sel
     font-weight: normal;
     /* text-decoration: underline; */
     /* border-bottom: 1px solid #FDFFFF; */
-    white-space: nowrap;
 }
 
 input.liste_titre {
@@ -1493,48 +1564,46 @@ input.liste_titre {
     border: 0px;
 }
 
-tr.liste_total td {
-border-top: 1px solid #DDDDDD;
-background: #F0F0F0;
-/* background-image: url(<?php echo DOL_URL_ROOT.'/theme/login_background.png' ?>); */
-background-repeat: repeat-x;
-color: #332266;
-font-weight: normal;
-white-space: nowrap;
-padding: 5px;
+tr.liste_total td, form.liste_total div {
+	border-top: 1px solid #DDDDDD;
+	background: #F0F0F0;
+	background-repeat: repeat-x;
+	color: #332266;
+	font-weight: normal;
+	padding: 5px;
 }
 
 .impair {
-background: #eaeaea;
-font-family: <?php print $fontlist ?>;
-border: 0px;
+	background: #eaeaea;
+	font-family: <?php print $fontlist ?>;
+	border: 0px;
 }
 
 .impair:hover {
-background: #c0c4c7;
-border: 0px;
+	background: #c0c4c7;
+	border: 0px;
 }
 
-tr.impair td.nohover {
-background: #eaeaea;
+tr.impair td.nohover, form.impair div.nohover {
+	background: #eaeaea;
 }
 
 .pair	{
-background: #FFFFFF;
-font-family: <?php print $fontlist ?>;
-border: 0px;
+	background: #FFFFFF;
+	font-family: <?php print $fontlist ?>;
+	border: 0px;
 }
 
 .pair:hover {
-background: #c0c4c7;
-border: 0px;
+	background: #c0c4c7;
+	border: 0px;
 }
 
 tr.pair td.nohover {
 	background: #FFFFFF;
 }
 
-.pair td, .impair td
+.pair td, .impair td, .pair div, .impair div
 {
 	padding: 2px 3px !important;
 }
@@ -1550,6 +1619,19 @@ tr.pair td.nohover {
  *  Boxes
  */
 
+.boxstats {
+    <?php print "float: ".$left.";\n"; ?>
+    margin: 4px;
+    padding: 4px;
+	/*-moz-box-shadow: 4px 4px 4px #DDD;
+    -webkit-box-shadow: 4px 4px 4px #DDD;
+    box-shadow: 4px 4px 4px #DDD;
+    margin-bottom: 8px !important;*/
+    border: 1px solid #AAA;
+    text-align: center;
+    border-radius: 5px;
+}
+
 .box {
 	padding-right: 0px;
 	padding-left: 0px;
@@ -1559,13 +1641,12 @@ tr.pair td.nohover {
 tr.box_titre {
 	height: 24px;
 	background: #7699A9;
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/trtitle.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/trtitle.png',1); ?>);
 	background-repeat: repeat-x;
 	color: #FFFFFF;
 	font-family: <?php print $fontlist ?>, sans-serif;
 	font-weight: normal;
 	border-bottom: 1px solid #FDFFFF;
-	white-space: nowrap;
   -moz-border-radius-topleft:6px;
   -moz-border-radius-topright:6px;
 }
@@ -1586,10 +1667,15 @@ background: #f4f4f4;
 font-family: <?php print $fontlist ?>;
 }
 
-tr.fiche {
-font-family: <?php print $fontlist ?>;
+.formboxfilter {
+	vertical-align: middle;
+	margin-bottom: 6px;
 }
-
+.formboxfilter input[type=image]
+{
+	top: 3px;
+	position: relative;
+}
 
 
 
@@ -1666,6 +1752,9 @@ a.impayee:hover { font-weight: bold; color: #550000; }
 
 .fieldrequired { font-weight: bold; color: #000055; }
 
+.dolgraphtitle { margin-top: 6px; margin-bottom: 4px; }
+.dolgraphtitlecssboxes { margin: 0px; }
+
 .photo {
 border: 0px;
 /* filter:alpha(opacity=55); */
@@ -1673,7 +1762,7 @@ border: 0px;
 }
 
 div.titre {
-	font-family: "Trebuchet MS",Arial,Helvetica,sans-serif;
+	font-family: <?php print $fontlist ?>;
 	font-weight: normal;
 	color: #842F00;
     font-size: 16px;
@@ -1748,6 +1837,8 @@ opacity: 1;
 /* Calendar                                                                       */
 /* ============================================================================== */
 
+img.datecallink { padding-left: 2px !important; padding-right: 2px !important; padding-bottom: 2px !important; }
+
 .ui-datepicker-trigger {
 	vertical-align: middle;
 	cursor: pointer;
@@ -1772,15 +1863,16 @@ table.dp {
 /* Barre titre */
 .dpHead,.tpHead,.tpHour td:Hover .tpHead{
 	font-weight:bold;
-	background-color:#b3c5cc;
-	color:white;
+	background-color:#BB6644;
+	color:white !important;
 	font-size:11px;
 	cursor:auto;
+	text-align: center;
 }
 /* Barre navigation */
 .dpButtons,.tpButtons {
 	text-align:center;
-	background-color:#617389;
+	background-color:#BB6644;
 	color:#FFFFFF;
 	font-weight:bold;
 	border: 1px outset black;
@@ -1791,16 +1883,14 @@ table.dp {
 .dpExplanation{ font-weight:normal; font-size:11px;}
 .dpWeek td{text-align:center}
 
-.dpToday,.dpReg,.dpSelected{
-	cursor:pointer;
-}
+.dpToday,.dpReg,.dpSelected { cursor:pointer; }
 .dpToday{font-weight:bold; color:black; background-color:#DDDDDD;}
 .dpReg:Hover,.dpToday:Hover{background-color:black;color:white}
 
 /* Jour courant */
-.dpSelected{background-color:#0B63A2;color:white;font-weight:bold; }
+.dpSelected {background-color:#BB6644;color:white;font-weight:bold; }
 
-.tpHour{border-top:1px solid #DDDDDD; border-right:1px solid #DDDDDD;}
+.tpHour {border-top:1px solid #DDDDDD; border-right:1px solid #DDDDDD;}
 .tpHour td {border-left:1px solid #DDDDDD; border-bottom:1px solid #DDDDDD; cursor:pointer;}
 .tpHour td:Hover {background-color:black;color:white;}
 
@@ -1847,12 +1937,19 @@ td.hidden {
 /*  Module agenda                                                                 */
 /* ============================================================================== */
 
-.cal_other_month   { background: #DDDDDD; border: solid 1px #ACBCBB; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
-.cal_past_month    { background: #EEEEEE; border: solid 1px #ACBCBB; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
-.cal_current_month { background: #FFFFFF; border: solid 1px #ACBCBB; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
-.cal_today         { background: #FFFFFF; border: solid 2px #6C7C7B; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
+table.cal_month    { border-spacing: 0px; }
+.cal_current_month { border-top: 0; border-left: solid 1px #E0E0E0; border-right: 0; border-bottom: solid 1px #E0E0E0; }
+.cal_other_month   { border-top: 0; border-left: solid 1px #C0C0C0; border-right: 0; border-bottom: solid 1px #C0C0C0; }
+.cal_current_month_right { border-right: solid 1px #E0E0E0; }
+.cal_other_month_right   { border-right: solid 1px #C0C0C0; }
+.cal_other_month   { background: #DDDDDD; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
+.cal_past_month    { background: #EEEEEE; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
+.cal_current_month { background: #FFFFFF; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
+.cal_today         { background: #FFFFFF; border: solid 2px #C0C0C0; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
 table.cal_event    { border-collapse: collapse; margin-bottom: 1px; }
 table.cal_event td { border: 0px; padding-<?php print $left; ?>: 0px; padding-<?php print $right; ?>: 2px; padding-top: 0px; padding-bottom: 0px; }
+ul.cal_event       { padding-right: 2px; padding-top: 1px; border: none; list-style-type: none; margin: 0 auto; padding-left: 0px; padding-start: 0px; -khtml-padding-start: 0px; -o-padding-start: 0px; -webkit-padding-start: 0px; -webkit-padding-start: 0px; }
+li.cal_event       { border: none; list-style-type: none; }
 .cal_event a:link    { color: #111111; font-size: 11px; font-weight: normal !important; }
 .cal_event a:visited { color: #111111; font-size: 11px; font-weight: normal !important; }
 .cal_event a:active  { color: #111111; font-size: 11px; font-weight: normal !important; }
@@ -1863,21 +1960,42 @@ table.cal_event td { border: 0px; padding-<?php print $left; ?>: 0px; padding-<?
 /*  Ajax - Liste deroulante de l'autocompletion                                   */
 /* ============================================================================== */
 
-.ui-widget { font-family: Verdana,Arial,sans-serif; font-size: 0.9em; }
-.ui-autocomplete-loading { background: white url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/working.gif' ?>) right center no-repeat; }
-
+.ui-autocomplete-loading { background: white url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/working.gif',1); ?>) right center no-repeat; }
+.ui-autocomplete {
+	       position:absolute;
+	       width:auto;
+	       font-size: 1.0em;
+	       background-color:white;
+	       border:1px solid #888;
+	       margin:0px;
+	       padding:0px;
+	     }
+.ui-autocomplete ul {
+	       list-style-type:none;
+	       margin:0px;
+	       padding:0px;
+	     }
+.ui-autocomplete ul li.selected { background-color: #D3E5EC;}
+.ui-autocomplete ul li {
+	       list-style-type:none;
+	       display:block;
+	       margin:0;
+	       padding:2px;
+	       height:18px;
+	       cursor:pointer;
+	     }
 
 /* ============================================================================== */
 /*  jQuery - jeditable                                                            */
 /* ============================================================================== */
 
 .editkey_textarea, .editkey_ckeditor, .editkey_string, .editkey_email, .editkey_numeric, .editkey_select, .editkey_autocomplete {
-	background: url(<?php echo dol_buildpath($path.'/theme/bureau2crea/img/edit.png',1) ?>) right top no-repeat;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/edit.png',1) ?>) right top no-repeat;
 	cursor: pointer;
 }
 
 .editkey_datepicker {
-	background: url(<?php echo dol_buildpath($path.'/theme/bureau2crea/img/calendar.png',1) ?>) right center no-repeat;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/calendar.png',1) ?>) right center no-repeat;
 	cursor: pointer;
 }
 
@@ -1901,113 +2019,9 @@ table.cal_event td { border: 0px; padding-<?php print $left; ?>: 0px; padding-<?
 /* ============================================================================== */
 
 /* CSS for treeview */
-
-/* Lien plier /deplier tout */
-.arbre-switch {
-    text-align: right;
-    padding: 0 5px;
-    margin: 0 0 -18px 0;
-}
-
-/* Arbre */
-ul.arbre {
-    padding: 5px 10px;
-}
-/* strong : A modifier en fonction de la balise choisie */
-ul.arbre strong {
-    font-weight: normal;
-    padding: 0 0 0 20px;
-    margin: 0 0 0 -7px;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/common/treemenu/branch.gif' ?>);
-    background-repeat: no-repeat;
-    background-position: 1px 50%;
-}
-ul.arbre strong.arbre-plier {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/common/treemenu/plus.gif' ?>);
-    cursor: pointer;
-}
-ul.arbre strong.arbre-deplier {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/common/treemenu/minus.gif' ?>);
-    cursor: pointer;
-}
-ul.arbre ul {
-    padding: 0;
-    margin: 0;
-}
-ul.arbre li {
-    padding: 0;
-    margin: 0;
-    list-style: none;
-}
-/* This is to create an indent */
-ul.arbre li li {
-    margin: 0 0 0 16px;
-}
-/* Classe pour masquer */
-.hide {
-    display: none;
-}
-
-img.menuNew
-{
-	display:block;
-	border:0px;
-}
-
-img.menuEdit
-{
-	border: 0px;
-	display: block;
-}
-
-img.menuDel
-{
-	display:none;
-	border: 0px;
-}
-
-div.menuNew
-{
-	margin-top:-20px;
-	margin-<?php print $left; ?>:270px;
-	height:20px;
-	padding:0px;
-	width:30px;
-	position:relative;
-}
-
-div.menuEdit
-{
-	margin-top:-15px;
-	margin-<?php print $left; ?>:250px;
-	height:20px;
-	padding:0px;
-	width:30px;
-	position:relative;
-
-}
-
-div.menuDel
-{
-	margin-top:-20px;
-	margin-<?php print $left; ?>:290px;
-	height:20px;
-	padding:0px;
-	width:30px;
-	position:relative;
-
-}
-
-div.menuFleche
-{
-	margin-top:-16px;
-	margin-<?php print $left; ?>:320px;
-	height:20px;
-	padding:0px;
-	width:30px;
-	position:relative;
-
-}
+.treeview ul { background-color: transparent !important; margin-top: 0; }
+.treeview li { background-color: transparent !important; padding: 0 0 0 16px !important; min-height: 20px; }
+.treeview .hover { color: black !important; }
 
 
 /* ============================================================================== */
@@ -2144,18 +2158,26 @@ A.none, A.none:active, A.none:visited, A.none:hover {
     line-height:1.5;
     zoom:1;
     font-weight: normal;
-    font-family:Verdana,Arial,sans-serif;
+    font-family:<?php echo $fontlist; ?>;
     font-size:1em;
 }
-
-div.tabsAction {
-	margin-top: 10px;
+.ui-widget {
+    font-family:<?php echo $fontlist; ?>;
+    font-size:<?php echo $fontsize; ?>px;
 }
+.ui-button { margin-left: -1px; padding-top: 1px; }
+.ui-button-icon-only .ui-button-text { height: 8px; }
+.ui-button-icon-only .ui-button-text, .ui-button-icons-only .ui-button-text { padding: 2px 0px 6px 0px; }
+.ui-button-text
+{
+    line-height: 1em !important;
+}
+.ui-autocomplete-input { margin: 0; padding: 1px; }
+
 
 table.noborder {
 	margin-bottom: 10px;
     position: relative;
-    float: left;
     border: none;
 }
 
@@ -2178,11 +2200,9 @@ span.cke_skin_kama { padding: 0 !important; }
 a.cke_dialog_ui_button
 {
     font-family: <?php print $fontlist ?> !important;
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/button_bg.png' ?>) !important;
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1); ?>) !important;
 	background-position: bottom !important;
     border: 1px solid #ACBCBB !important;
-	padding: 0.1em 0.7em !important;
-	margin: 0em 0.5em !important;
     -moz-border-radius:0px 5px 0px 5px !important;
 	-webkit-border-radius:0px 5px 0px 5px !important;
 	border-radius:0px 5px 0px 5px !important;
@@ -2202,47 +2222,13 @@ a.cke_dialog_ui_button
 
 
 /* ============================================================================== */
-/*  Table with div                                                                */
-/* ============================================================================== */
-
-div.table-border {
-	display:table;
-    width: 100%;
-    border-collapse: collapse;
-    border: 1px solid #9CACBB;
-}
-div.table-border-row {
-	display:table-row;
-}
-div.table-key-border-col {
-	display:table-cell;
-	width: 25%;
-	vertical-align:top;
-	padding: 1px 2px 1px 1px;
-	border: 1px solid #9CACBB;
-	border-collapse: collapse;
-}
-div.table-val-border-col {
-	display:table-cell;
-	width:auto;
-	padding: 1px 2px 1px 1px;
-	border: 1px solid #9CACBB;
-	border-collapse: collapse;
-}
-
-
-/* ============================================================================== */
 /*  Login                                                                   */
 /* ============================================================================== */
 
 #login {
-	position: relative;
     display: block;
-    width: 480px;
     height: auto;
     top: 20px;
-    left: 50%;
-    margin-left: -240px;
     margin-bottom: 30px;
     }
 
@@ -2270,7 +2256,7 @@ div#parameterBox {
     height: auto;
     border: 1px solid #666;
     border-top: 2px solid #842F00;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_connectionBox.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_connectionBox.jpg',1); ?>);
     background-repeat: no-repeat;
     background-position: top center;
     }
@@ -2453,7 +2439,7 @@ div.ecmjqft {
 /* Core Styles */
 .ecmjqft LI.directory { font-weight:normal; background: url(<?php echo dol_buildpath($path.'/theme/common/treemenu/folder2.png',1); ?>) left top no-repeat; }
 .ecmjqft LI.expanded { font-weight:normal; background: url(<?php echo dol_buildpath($path.'/theme/common/treemenu/folder2-expanded.png',1); ?>) left top no-repeat; }
-.ecmjqft LI.wait { font-weight:normal; background: url(<?php echo dol_buildpath('/theme/eldy/img/working.gif',1); ?>) left top no-repeat; }
+.ecmjqft LI.wait { font-weight:normal; background: url(<?php echo dol_buildpath('/theme/'.$theme.'/img/working.gif',1); ?>) left top no-repeat; }
 
 
 /* ============================================================================== */
@@ -2467,13 +2453,164 @@ div.ecmjqft {
 	bottom: 4px !important;
 <?php } ?>
 	text-align: center;
-	min-width: 500px;
+	min-width: <?php echo $dol_optimize_smallscreen?'200':'480'; ?>px;
 	width: auto;
 	padding-left: 10px !important;
 	padding-right: 10px !important;
 }
 
 
+/* ============================================================================== */
+/*  Maps                                                                          */
+/* ============================================================================== */
+
+.divmap, #google-visualization-geomap-embed-0, #google-visualization-geomap-embed-1, google-visualization-geomap-embed-2 {
+    -moz-box-shadow: 0px 0px 10px #AAA;
+    -webkit-box-shadow: 0px 0px 10px #AAA;
+    box-shadow: 0px 0px 10px #AAA;
+}
+
+
+/* ============================================================================== */
+/*  Datatable                                                                     */
+/* ============================================================================== */
+
+.sorting_asc  { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_asc.png',1); ?>') no-repeat center right; }
+.sorting_desc { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_desc.png',1); ?>') no-repeat center right; }
+.sorting_asc_disabled  { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_asc_disabled',1); ?>') no-repeat center right; }
+.sorting_desc_disabled { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_desc_disabled',1); ?>') no-repeat center right; }
+.paginate_disabled_previous:hover, .paginate_enabled_previous:hover, .paginate_disabled_next:hover, .paginate_enabled_next:hover
+{
+	font-weight: normal;
+}
+.paginate_enabled_previous:hover, .paginate_enabled_next:hover
+{
+	text-decoration: underline !important;
+}
+
+
+/* ============================================================================== */
+/*  JMobile                                                                       */
+/* ============================================================================== */
+
+li.ui-li-divider .ui-link {
+	color: #FFF !important;
+}
+.ui-btn {
+	margin: 0.1em 2px
+}
+a.ui-link, a.ui-link:hover, .ui-btn:hover, span.ui-btn-text:hover, span.ui-btn-inner:hover {
+	text-decoration: none !important;
+}
+
+.ui-btn-inner {
+	padding-left: 10px;
+	padding-right: 10px;
+	/* white-space: normal; */		/* Warning, enable this break the truncate feature */
+}
+.ui-select .ui-btn-icon-right .ui-btn-inner {
+	padding-right: 36px;
+}
+.ui-select .ui-btn-icon-left .ui-btn-inner {
+	padding-left: 36px;
+}
+
+.fiche .ui-controlgroup {
+	margin: 0px;
+	padding-bottom: 0px;
+}
+div.ui-controlgroup-controls div.tabsElem
+{
+	margin-top: 2px;
+}
+div.ui-controlgroup-controls div.tabsElem a
+{
+	-moz-box-shadow: 0 -3px 6px rgba(0,0,0,.2);
+	-webkit-box-shadow: 0 -3px 6px rgba(0,0,0,.2);
+	box-shadow: 0 -3px 6px rgba(0,0,0,.2);
+	border: none;
+}
+a.tab span.ui-btn-inner
+{
+	border: none;
+	padding: 0;
+}
+
+.ui-body-c {
+	border: 1px solid #CCC;
+	text-shadow: none;
+}
+.ui-link {
+	color: rgb(<?php print $colortext; ?>) !important;
+}
+
+a.ui-link {
+	word-wrap: break-word;
+}
+
+/* force wrap possible onto field overflow does not works */
+.formdoc .ui-btn-inner
+{
+	white-space: normal;
+	overflow: hidden;
+	text-overflow: hidden;
+}
+
+/* Warning: setting this may make screen not beeing refreshed after a combo selection */
+.ui-body-c {
+	background: #fff;
+}
+
+div.ui-radio
+{
+	display: inline-block;
+}
+.ui-checkbox input, .ui-radio input {
+	height: auto;
+	width: auto;
+	margin: 4px;
+	position: static;
+}
+div.ui-checkbox label+input, div.ui-radio label+input {
+	position: absolute;
+}
+
+.ui-mobile fieldset
+{
+	padding-bottom: 10px; margin-bottom: 4px; border-bottom: 1px solid #AAAAAA !important;
+}
+
+ul.ulmenu {
+	border-radius: 0;
+	-webkit-border-radius: 0;
+}
+.ui-body-c, .ui-btn-up-c, .ui-btn-hover-c {
+	border: none !important;
+}
+
+/* Style for first level menu with jmobile */
+.ui-bar-b, .lilevel0 {
+    background: rgb(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_centerBlock-title2.jpg',1); ?>);
+    background-repeat: repeat-x;
+    color: #<?php echo $colortexttitle; ?> !important;
+}
+.alilevel0 {
+    color: #<?php echo $colortexttitle; ?> !important;
+	text-shadow: 1px 0px 1px #<?php echo $colorshadowtitle; ?>;
+}
+.alilevel1 {
+    color: #<?php echo $colortexttitle; ?> !important;
+	text-shadow: 1px 0px 1px #<?php echo $colorshadowtitle; ?>;
+}
+.lilevel1 {
+	background-image: -webkit-gradient(linear,left top,left bottom,from( #eee ),to( #e1e1e1 )) !important;
+	background-image: -webkit-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: -moz-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: -ms-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: -o-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: linear-gradient( #eee,#e1e1e1 ) !important;
+}
+
+
 <?php
 if (is_object($db)) $db->close();
-?>

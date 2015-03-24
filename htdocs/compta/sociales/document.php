@@ -1,10 +1,11 @@
 <?php
 /* Copyright (C) 2003-2007 Rodolphe Quiedeville  <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2010 Laurent Destailleur   <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2014 Laurent Destailleur   <eldy@users.sourceforge.net>
  * Copyright (C) 2005      Marc Barilley / Ocebo <marc@ocebo.com>
  * Copyright (C) 2005-2009 Regis Houssin         <regis.houssin@capnetworks.com>
  * Copyright (C) 2005      Simon TOSSER          <simon@kornog-computing.com>
  * Copyright (C) 2011      Juanjo Menent         <jmenent@2byte.es>
+ * Copyright (C) 2013      Cédric Salvador       <csalvador@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +41,7 @@ $langs->load("bills");
 
 $id = GETPOST('id','int');
 $action = GETPOST("action");
+$confirm = GETPOST('confirm', 'alpha');
 
 // Security check
 if ($user->societe_id) $socid=$user->societe_id;
@@ -61,7 +63,7 @@ if (! $sortfield) $sortfield="name";
 
 
 $object = new ChargeSociales($db);
-$object->fetch($id);
+if ($id > 0) $object->fetch($id);
 
 $upload_dir = $conf->tax->dir_output.'/'.dol_sanitizeFileName($object->ref);
 $modulepart='tax';
@@ -71,18 +73,7 @@ $modulepart='tax';
  * Actions
  */
 
-if (GETPOST("sendit") && ! empty($conf->global->MAIN_UPLOAD_DOC))
-{
-	dol_add_file_process($upload_dir,0,1,'userfile');
-}
-
-if ($action == 'delete')
-{
-	$file = $upload_dir . '/' . GETPOST("urlfile");	// Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
-	$ret=dol_delete_file($file);
-	if ($ret) setEventMessage($langs->trans("FileWasRemoved", GETPOST('urlfile')));
-	else setEventMessage($langs->trans("ErrorFailToDeleteFile", GETPOST('urlfile')), 'errors');
-}
+include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_pre_headers.tpl.php';
 
 
 /*
@@ -96,13 +87,15 @@ llxHeader("",$langs->trans("SocialContribution"),$help_url);
 
 if ($object->id)
 {
+	$alreadypayed=$object->getSommePaiement();
+	
     $head=tax_prepare_head($object, $user);
 
     dol_fiche_head($head, 'documents',  $langs->trans("SocialContribution"), 0, 'bill');
 
 
     // Construit liste des fichiers
-    $filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+    $filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
     $totalsize=0;
     foreach($filearray as $key => $file)
     {
@@ -158,10 +151,10 @@ if ($object->id)
     }
 
     // Amount
-    print '<tr><td>'.$langs->trans("AmountTTC").'</td><td>'.price($object->amount).'</td></tr>';
+    print '<tr><td>'.$langs->trans("AmountTTC").'</td><td>'.price($object->amount,0,$outputlangs,1,-1,-1,$conf->currency).'</td></tr>';
 
     // Status
-    print '<tr><td>'.$langs->trans("Status").'</td><td>'.$object->getLibStatut(4).'</td></tr>';
+    print '<tr><td>'.$langs->trans("Status").'</td><td>'.$object->getLibStatut(4,$alreadypayed).'</td></tr>';
 
     print '<tr><td>'.$langs->trans("NbOfAttachedFiles").'</td><td colspan="3">'.count($filearray).'</td></tr>';
     print '<tr><td>'.$langs->trans("TotalSizeOfAttachedFiles").'</td><td colspan="3">'.$totalsize.' '.$langs->trans("bytes").'</td></tr>';
@@ -169,24 +162,17 @@ if ($object->id)
 
     print '</div>';
 
-
-    // Affiche formulaire upload
-   	$formfile=new FormFile($db);
-   	$formfile->form_attach_new_file(DOL_URL_ROOT.'/compta/sociales/document.php?id='.$object->id,'',0,0,$user->rights->tax->charges->creer);
-
-
-   	// List of document
-   	//$param='&id='.$object->id;
-   	$formfile->list_of_documents($filearray,$object,'tax',$param);
-
+    $modulepart = 'tax';
+    $permission = $user->rights->tax->charges->creer;
+    $param = '&id=' . $object->id;
+    include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_post_headers.tpl.php';
 }
 else
 {
-    print $langs->trans("UnkownError");
+    print $langs->trans("ErrorUnknown");
 }
 
 
 llxFooter();
 
 $db->close();
-?>

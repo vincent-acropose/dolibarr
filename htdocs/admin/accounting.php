@@ -2,7 +2,7 @@
 /* Copyright (C) 2004      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2011-2012 Juanjo Menent	      <jmenent@2byte.es>
+ * Copyright (C) 2011-2013 Juanjo Menent	      <jmenent@2byte.es>
  * Copyright (C) 2011-2012 Alexandre Spangaro   <alexandre.spangaro@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -48,11 +48,11 @@ if ($action == 'setcomptamode')
 
  	if (! $error)
     {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+        setEventMessage($langs->trans("SetupSaved"));
     }
     else
     {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+        setEventMessage($langs->trans("Error"),'errors');
     }
 
 }
@@ -67,11 +67,11 @@ if ($action == 'setchart')
 
  	if (! $error)
     {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+        setEventMessage($langs->trans("SetupSaved"));
     }
     else
     {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+        setEventMessage($langs->trans("Error"),'errors');
     }
 }
 
@@ -88,11 +88,11 @@ if ($action == 'update' || $action == 'add')
 
  	if (! $error)
     {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+        setEventMessage($langs->trans("SetupSaved"));
     }
     else
     {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+        setEventMessage($langs->trans("Error"),'errors');
     }
 }
 
@@ -212,26 +212,6 @@ $list=array('COMPTA_PRODUCT_BUY_ACCOUNT','COMPTA_PRODUCT_SOLD_ACCOUNT','COMPTA_S
 'COMPTA_VAT_ACCOUNT','COMPTA_ACCOUNT_CUSTOMER','COMPTA_ACCOUNT_SUPPLIER'
 );
 
-/*$sql = "SELECT rowid, name, value, type, note";
-$sql.= " FROM ".MAIN_DB_PREFIX."const";
-$sql.= " WHERE name LIKE 'COMPTA_%'";
-$sql.= " AND name NOT IN ('COMPTA_MODE')";
-$sql.= " AND entity = ".$conf->entity;
-$result = $db->query($sql);
-if ($result)
-{
-	$num = $db->num_rows($result);
-	$i = 0;
-
-	while ($i < $num)
-	{
-		$obj = $db->fetch_object($result);
-		$var=!$var;
-		$list[$obj->name]=$obj->value;
-		$i++;
-	}
-}*/
-
 $num=count($list);
 if ($num)
 {
@@ -275,9 +255,6 @@ if ($num)
 	print "</table>\n";
 }
 
-dol_htmloutput_mesg($mesg);
-
 $db->close();
 
 llxFooter();
-?>

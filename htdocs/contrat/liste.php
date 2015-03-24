@@ -2,6 +2,7 @@
 /* Copyright (C) 2001-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,9 +66,9 @@ llxHeader();
 
 $sql = 'SELECT';
 $sql.= ' SUM('.$db->ifsql("cd.statut=0",1,0).') as nb_initial,';
-$sql.= ' SUM('.$db->ifsql("cd.statut=4 AND (cd.date_fin_validite IS NULL OR cd.date_fin_validite >= ".$db->idate($now).")",1,0).') as nb_running,';
-$sql.= ' SUM('.$db->ifsql("cd.statut=4 AND (cd.date_fin_validite IS NOT NULL AND cd.date_fin_validite < ".$db->idate($now).")",1,0).') as nb_expired,';
-$sql.= ' SUM('.$db->ifsql("cd.statut=4 AND (cd.date_fin_validite IS NOT NULL AND cd.date_fin_validite < ".$db->idate($now - $conf->contrat->services->expires->warning_delay).")",1,0).') as nb_late,';
+$sql.= ' SUM('.$db->ifsql("cd.statut=4 AND (cd.date_fin_validite IS NULL OR cd.date_fin_validite >= '".$db->idate($now)."')",1,0).') as nb_running,';
+$sql.= ' SUM('.$db->ifsql("cd.statut=4 AND (cd.date_fin_validite IS NOT NULL AND cd.date_fin_validite < '".$db->idate($now)."')",1,0).') as nb_expired,';
+$sql.= ' SUM('.$db->ifsql("cd.statut=4 AND (cd.date_fin_validite IS NOT NULL AND cd.date_fin_validite < '".$db->idate($now - $conf->contrat->services->expires->warning_delay)."')",1,0).') as nb_late,';
 $sql.= ' SUM('.$db->ifsql("cd.statut=5",1,0).') as nb_closed,';
 $sql.= " c.rowid as cid, c.ref, c.datec, c.date_contrat, c.statut,";
 $sql.= " s.nom, s.rowid as socid";
@@ -79,9 +80,15 @@ $sql.= " WHERE c.fk_soc = s.rowid ";
 $sql.= " AND c.entity = ".$conf->entity;
 if ($socid) $sql.= " AND s.rowid = ".$socid;
 if (!$user->rights->societe->client->voir && !$socid) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
-if ($search_nom)      $sql.= " AND s.nom LIKE '%".$db->escape($search_nom)."%'";
-if ($search_contract) $sql.= " AND c.rowid = '".$db->escape($search_contract)."'";
-if ($sall)            $sql.= " AND (s.nom LIKE '%".$db->escape($sall)."%' OR cd.label LIKE '%".$db->escape($sall)."%' OR cd.description LIKE '%".$db->escape($sall)."%')";
+if ($search_nom) {
+    $sql .= natural_search('s.nom', $search_nom);
+}
+if ($search_contract) {
+    $sql .= natural_search(array('c.rowid', 'c.ref'), $search_contract);
+}
+if ($sall) {
+    $sql .= natural_search(array('s.nom', 'cd.label', 'cd.description'), $sall);
+}
 $sql.= " GROUP BY c.rowid, c.ref, c.datec, c.date_contrat, c.statut,";
 $sql.= " s.nom, s.rowid";
 $sql.= " ORDER BY $sortfield $sortorder";
@@ -122,7 +129,7 @@ if ($resql)
     print '</td>';
     print '<td class="liste_titre">&nbsp;</td>';
     //print '<td class="liste_titre">&nbsp;</td>';
-    print '<td colspan="4" class="liste_titre" align="right"><input class="liste_titre" type="image" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+    print '<td colspan="4" class="liste_titre" align="right"><input class="liste_titre" type="image" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
     print "</td>";
     print "</tr>\n";
     print '</form>';
@@ -133,7 +140,7 @@ if ($resql)
         $obj = $db->fetch_object($resql);
         $var=!$var;
         print '<tr '.$bc[$var].'>';
-        print '<td nowrap="nowrap"><a href="fiche.php?id='.$obj->cid.'">';
+        print '<td class="nowrap"><a href="fiche.php?id='.$obj->cid.'">';
         print img_object($langs->trans("ShowContract"),"contract").' '.(isset($obj->ref) ? $obj->ref : $obj->cid) .'</a>';
         if ($obj->nb_late) print img_warning($langs->trans("Late"));
         print '</td>';
@@ -160,4 +167,3 @@ else
 
 llxFooter();
 $db->close();
-?>

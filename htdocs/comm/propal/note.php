@@ -3,6 +3,7 @@
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013      Florian Henry		  	<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +21,7 @@
 
 /**
  *	\file       htdocs/comm/propal/note.php
- *	\ingroup    propale
+ *	\ingroup    propal
  *	\brief      Fiche d'information sur une proposition commerciale
  */
 
@@ -43,23 +44,15 @@ $result = restrictedArea($user, 'propale', $id, 'propal');
 $object = new Propal($db);
 
 
+
 /******************************************************************************/
 /*                     Actions                                                */
 /******************************************************************************/
 
-if ($action == 'setnote_public' && $user->rights->propale->creer)
-{
-	$object->fetch($id);
-	$result=$object->update_note_public(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES));
-	if ($result < 0) dol_print_error($db,$object->error);
-}
+$permissionnote=$user->rights->propale->creer;	// Used by the include of actions_setnotes.inc.php
 
-else if ($action == 'setnote' && $user->rights->propale->creer)
-{
-	$object->fetch($id);
-	$result=$object->update_note(dol_html_entity_decode(GETPOST('note'), ENT_QUOTES));
-	if ($result < 0) dol_print_error($db,$object->error);
-}
+include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not includ_once
+
 
 
 /******************************************************************************/
@@ -95,7 +88,7 @@ if ($id > 0 || ! empty($ref))
 
 			// Ref client
 			print '<tr><td>';
-			print '<table class="nobordernopadding" width="100%"><tr><td nowrap>';
+			print '<table class="nobordernopadding" width="100%"><tr><td class="nowrap">';
 			print $langs->trans('RefCustomer').'</td><td align="left">';
 			print '</td>';
 			print '</tr></table>';
@@ -112,7 +105,7 @@ if ($id > 0 || ! empty($ref))
 
 			// Ligne info remises tiers
 			print '<tr><td>'.$langs->trans('Discounts').'</td><td colspan="3">';
-			if ($societe->remise_client) print $langs->trans("CompanyHasRelativeDiscount",$societe->remise_client);
+			if ($societe->remise_percent) print $langs->trans("CompanyHasRelativeDiscount",$societe->remise_percent);
 			else print $langs->trans("CompanyHasNoRelativeDiscount");
 			$absolute_discount=$societe->getAvailableDiscounts();
 			print '. ';
@@ -156,4 +149,3 @@ if ($id > 0 || ! empty($ref))
 
 llxFooter();
 $db->close();
-?>

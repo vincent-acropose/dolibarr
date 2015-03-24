@@ -1,12 +1,4 @@
-/*
-* Language code: de_DE
-* Manually translated by modula71.de
-* Generation date 2012-05-23
-* QA release date 2012-05-27
-*/
-
-CHARSET=UTF-8
-
+# Dolibarr language file - Source file is en_US - banks
 Bank=Bank
 Banks=Banken
 MenuBankCash=Finanzen
@@ -27,6 +19,8 @@ SavingAccount=Sparkonto
 SavingAccounts=Sparkonten
 ErrorBankLabelAlreadyExists=Kontenbezeichnung existiert bereits
 BankBalance=Kontostand
+BankBalanceBefore=Bilanz vor
+BankBalanceAfter=Bilanz nach
 BalanceMinimalAllowed=Mindestbestand
 BalanceMinimalDesired=Gewünschter Mindestbestand
 InitialBankBalance=Eröffnungsbestand
@@ -34,6 +28,7 @@ EndBankBalance=Endbestand
 CurrentBalance=Aktueller Kontostand
 FutureBalance=Zukünftiger Kontostand
 ShowAllTimeBalance=Zeige Kontostand seit Eröffnung
+AllTime=Vom start
 Reconciliation=Zahlungsabgleich
 RIB=Kontonummer
 IBAN=IBAN
@@ -110,6 +105,7 @@ ConciliatedBy=Ausgeglichen durch
 DateConciliating=Ausgleichsdatum
 BankLineConciliated=Transaktion ausgeglichen
 CustomerInvoicePayment=Kundenzahlung
+CustomerInvoicePaymentBack=Kunden Rückzahlung
 SupplierInvoicePayment=Lieferantenzahlung
 WithdrawalPayment=Entnahme Zahlung
 SocialContributionPayment=Sozialbeitragszahlung
@@ -137,15 +133,28 @@ CashBudget=Bargeldbestand
 PlannedTransactions=Geplante Transaktionen
 Graph=Grafiken
 ExportDataset_banque_1=Bankbewegungen und Kontoauszug
+ExportDataset_banque_2=Deposit slip
 TransactionOnTheOtherAccount=Transaktion auf dem anderem Konto
 TransactionWithOtherAccount=Konto Transaktion
 PaymentNumberUpdateSucceeded=Zahlungsnummer erfolgreich aktualisiert
 PaymentNumberUpdateFailed=Zahlungsnummer konnte nicht aktualisiert werden
 PaymentDateUpdateSucceeded=Zahlungsdatum erfolgreich aktualisiert
 PaymentDateUpdateFailed=Zahlungsdatum konnte nicht aktualisiert werden
+Transactions=Transaktionen
 BankTransactionLine=Banküberweisung
 AllAccounts=Alle Finanzkonten
 BackToAccount=Zurück zum Konto
 ShowAllAccounts=Alle Finanzkonten
 FutureTransaction=Zukünftige Transaktionen.
 SelectChequeTransactionAndGenerate=Schecks auswählen/filtern um Sie in den Einzahlungsbeleg zu integrieren und auf "Erstellen" klicken.
+InputReceiptNumber=Wählen Sie den zugehörigen Buchungssatz zum Konsolidieren. Verwenden Sie einen numerischen Ausdruck (z.B. YYYYMM)
+EventualyAddCategory=Wenn möglich Kategorie angeben, worin die Daten eingeordnet werden
+ToConciliate=Konsolidieren?
+ThenCheckLinesAndConciliate=Dann die Zeilen im Bankauszug prüfen und Klicken
+BankDashboard=Bankkonten Zusammenfassung
+DefaultRIB=Standart Bankkonto-Nummer
+AllRIB=Alle Bankkonto-Nummern
+LabelRIB=Bankkonto-Nummer Bezeichnung
+NoBANRecord=Keine Bankkonto-Nummern Einträge
+DeleteARib=Lösche Bankkonto-Nummern Eintrag
+ConfirmDeleteRib=Möchten Sie diesen Bankkonto-Nummern Eintrag wirklich löschen?

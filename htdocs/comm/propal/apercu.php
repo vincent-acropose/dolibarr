@@ -80,7 +80,7 @@ if ($id > 0 || ! empty($ref))
 
 		// Ref client
 		print '<tr><td>';
-		print '<table class="nobordernopadding" width="100%"><tr><td nowrap>';
+		print '<table class="nobordernopadding" width="100%"><tr><td class="nowrap">';
 		print $langs->trans('RefCustomer').'</td><td align="left">';
 		print '</td>';
 		print '</tr></table>';
@@ -97,7 +97,7 @@ if ($id > 0 || ! empty($ref))
 
 		// Ligne info remises tiers
 		print '<tr><td>'.$langs->trans('Discounts').'</td><td colspan="5">';
-		if ($soc->remise_client) print $langs->trans("CompanyHasRelativeDiscount",$soc->remise_client);
+		if ($soc->remise_percent) print $langs->trans("CompanyHasRelativeDiscount",$soc->remise_percent);
 		else print $langs->trans("CompanyHasNoRelativeDiscount");
 		$absolute_discount=$soc->getAvailableDiscounts();
 		print '. ';
@@ -126,10 +126,10 @@ if ($id > 0 || ! empty($ref))
         $relativepath = $objectref.'/'.$objectref.'.pdf';
         $relativepathdetail = $objectref.'/'.$objectref.'-detail.pdf';
 
-		// Chemin vers png apercus
-		$fileimage = $file.".png";          // Si PDF d'1 page
-		$fileimagebis = $file."-0.png";     // Si PDF de plus d'1 page
-        $relativepathimage = $relativepath.'.png';
+        // Define path to preview pdf file (preview precompiled "file.ext" are "file.ext_preview.png")
+        $fileimage = $file.'_preview.png';          	// If PDF has 1 page
+        $fileimagebis = $file.'_preview-0.pdf.png';     // If PDF has more than one page
+        $relativepathimage = $relativepath.'_preview.png';
 
 		$var=true;
 
@@ -140,9 +140,9 @@ if ($id > 0 || ! empty($ref))
 			print_titre($langs->trans("Documents"));
 			print '<table class="border" width="100%">';
 
-			print "<tr $bc[$var]><td>".$langs->trans("Propal")." PDF</td>";
+			print "<tr ".$bc[$var]."><td>".$langs->trans("Propal")." PDF</td>";
 
-			print '<td><a href="'.DOL_URL_ROOT . '/document.php?modulepart=propal&file='.urlencode($relativepath).'">'.$object->ref.'.pdf</a></td>';
+			print '<td><a data-ajax="false" href="'.DOL_URL_ROOT . '/document.php?modulepart=propal&file='.urlencode($relativepath).'">'.$object->ref.'.pdf</a></td>';
 
 			print '<td align="right">'.dol_print_size(dol_filesize($file)).'</td>';
 			print '<td align="right">'.dol_print_date(dol_filemtime($file),'dayhour').'</td>';
@@ -155,7 +155,7 @@ if ($id > 0 || ! empty($ref))
 			{
 				if (class_exists("Imagick"))
 				{
-					$ret = dol_convert_file($file);
+					$ret = dol_convert_file($file,'png',$fileimage);
 					if ($ret < 0) $error++;
 				}
 				else
@@ -173,6 +173,8 @@ if ($id > 0 || ! empty($ref))
 		print '<td align="right" colspan="2"><b>'.price($object->price).'</b></td>';
 		print '<td>'.$langs->trans("Currency".$conf->currency).'</td></tr>';
 		print '</table>';
+
+		dol_fiche_end();
 	}
 	else
 	{
@@ -207,4 +209,3 @@ print '</div>';
 $db->close();
 
 llxFooter();
-?>

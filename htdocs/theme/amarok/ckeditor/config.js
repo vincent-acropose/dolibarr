@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright (c) 2003-2010, CKSource - Frederico Knabben. All rights reserved.
 For licensing, see LICENSE.html or http://ckeditor.com/license
 */
@@ -54,7 +54,7 @@ CKEDITOR.editorConfig = function( config )
 	 	['Bold','Italic','Underline','Strike','Subscript','Superscript','-','TextColor','RemoveFormat'],
 	 	['NumberedList','BulletedList','Outdent','Indent'],
 	 	['JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock'],
-	 	['Link','Unlink','Anchor','Image','Table','SpecialChar']
+	 	['Link','Unlink','Anchor','Image','Table','HorizontalRule','SpecialChar']
 	 ];
 	
 	config.toolbar_dolibarr_notes =
@@ -66,7 +66,7 @@ CKEDITOR.editorConfig = function( config )
 	 	['Bold','Italic','Underline','Strike','Subscript','Superscript','-','TextColor','RemoveFormat'],
 	 	['NumberedList','BulletedList','Outdent','Indent'],
 	 	['JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock'],
-	    ['Link','Unlink','Image','Table','SpecialChar']
+	    ['Link','Unlink','Image','Table','HorizontalRule','SpecialChar']
 	];
 	
 	config.toolbar_dolibarr_details =
@@ -79,4 +79,12 @@ CKEDITOR.editorConfig = function( config )
 	 	['JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock'],
 	    ['SpecialChar']
 	];
+	
+	// Used for mailing fields
+	config.toolbar_dolibarr_readonly =
+	[
+	 	['Source','Maximize'],
+	 	['Find']
+	];	
+	
 };

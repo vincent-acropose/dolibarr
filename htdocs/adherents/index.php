@@ -27,6 +27,7 @@
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
 require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent_type.class.php';
+require_once DOL_DOCUMENT_ROOT.'/adherents/class/cotisation.class.php';
 
 $langs->load("companies");
 $langs->load("members");
@@ -47,7 +48,6 @@ $subscriptionstatic=new Cotisation($db);
 
 print_fiche_titre($langs->trans("MembersArea"));
 
-print '<table border="0" width="100%" class="notopnoleftnoright">';
 
 $var=True;
 
@@ -101,8 +101,8 @@ $now=dol_now();
 $sql = "SELECT count(*) as somme , d.fk_adherent_type";
 $sql.= " FROM ".MAIN_DB_PREFIX."adherent as d, ".MAIN_DB_PREFIX."adherent_type as t";
 $sql.= " WHERE d.entity IN (".getEntity().")";
-//$sql.= " AND d.statut = 1 AND ((t.cotisation = 0 AND d.datefin IS NULL) OR d.datefin >= ".$db->idate($now).')';
-$sql.= " AND d.statut = 1 AND d.datefin >= ".$db->idate($now);
+//$sql.= " AND d.statut = 1 AND ((t.cotisation = 0 AND d.datefin IS NULL) OR d.datefin >= '".$db->idate($now)."')";
+$sql.= " AND d.statut = 1 AND d.datefin >= '".$db->idate($now)."'";
 $sql.= " AND t.rowid = d.fk_adherent_type";
 $sql.= " GROUP BY d.fk_adherent_type";
 
@@ -122,7 +122,8 @@ if ($result)
 }
 
 
-print '<tr><td width="30%" class="notopnoleft" valign="top">';
+//print '<tr><td width="30%" class="notopnoleft" valign="top">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
 
 
 // Formulaire recherche adherent
@@ -134,15 +135,15 @@ print '<tr class="liste_titre">';
 print '<td colspan="3">'.$langs->trans("SearchAMember").'</td>';
 print "</tr>\n";
 $var=false;
-print "<tr $bc[$var]>";
+print "<tr ".$bc[$var].">";
 print '<td>';
 print $langs->trans("Ref").':</td><td><input type="text" name="search_ref" class="flat" size="16">';
 print '</td><td rowspan="3"><input class="button" type="submit" value="'.$langs->trans("Search").'"></td></tr>';
-print "<tr $bc[$var]>";
+print "<tr ".$bc[$var].">";
 print '<td>';
-print $langs->trans("Name").':</td><td><input type="text" name="search_nom" class="flat" size="16">';
+print $langs->trans("Name").':</td><td><input type="text" name="search_lastname" class="flat" size="16">';
 print '</td></tr>';
-print "<tr $bc[$var]>";
+print "<tr ".$bc[$var].">";
 print '<td>';
 print $langs->trans("Other").':</td><td><input type="text" name="sall" class="flat" size="16">';
 print '</td></tr>';
@@ -195,7 +196,9 @@ if ($conf->use_javascript_ajax)
     print '</table>';
 }
 
-print '</td><td class="notopnoleftnoright" valign="top">';
+
+//print '</td><td class="notopnoleftnoright" valign="top">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
 
 
 $var=true;
@@ -205,7 +208,7 @@ $var=true;
  */
 $max=5;
 
-$sql = "SELECT a.rowid, a.statut, a.nom as lastname, a.prenom as firstname, a.societe as company, a.fk_soc,";
+$sql = "SELECT a.rowid, a.statut, a.lastname, a.firstname, a.societe as company, a.fk_soc,";
 $sql.= " a.tms as datem, datefin as date_end_subscription,";
 $sql.= " ta.rowid as typeid, ta.libelle, ta.cotisation";
 $sql.= " FROM ".MAIN_DB_PREFIX."adherent as a, ".MAIN_DB_PREFIX."adherent_type as ta";
@@ -234,11 +237,14 @@ if ($resql)
 			$staticmember->id=$obj->rowid;
 			$staticmember->lastname=$obj->lastname;
 			$staticmember->firstname=$obj->firstname;
-			if (! empty($obj->fk_soc)) {
-				$staticmember->socid = $obj->fk_soc;
+			if (! empty($obj->fk_soc))
+			{
+				$staticmember->fk_soc = $obj->fk_soc;
 				$staticmember->fetch_thirdparty();
 				$staticmember->name=$staticmember->thirdparty->name;
-			} else {
+			}
+			else
+			{
 				$staticmember->name=$obj->company;
 			}
 			$staticmember->ref=$staticmember->getFullName($langs);
@@ -265,7 +271,7 @@ else
  */
 $max=5;
 
-$sql = "SELECT a.rowid, a.statut, a.nom as lastname, a.prenom as firstname, a.societe as company, a.fk_soc,";
+$sql = "SELECT a.rowid, a.statut, a.lastname, a.firstname, a.societe as company, a.fk_soc,";
 $sql.= " datefin as date_end_subscription,";
 $sql.= " c.rowid as cid, c.tms as datem, c.datec as datec, c.dateadh as date_start, c.datef as date_end, c.cotisation";
 $sql.= " FROM ".MAIN_DB_PREFIX."adherent as a, ".MAIN_DB_PREFIX."cotisation as c";
@@ -335,7 +341,7 @@ print "</tr>\n";
 foreach ($AdherentType as $key => $adhtype)
 {
 	$var=!$var;
-	print "<tr $bc[$var]>";
+	print "<tr ".$bc[$var].">";
 	print '<td>'.$adhtype->getNomUrl(1, dol_size(32)).'</td>';
 	print '<td align="right">'.(isset($MemberToValidate[$key]) && $MemberToValidate[$key] > 0?$MemberToValidate[$key]:'').' '.$staticmember->LibStatut(-1,$adhtype->cotisation,0,3).'</td>';
 	print '<td align="right">'.(isset($MembersValidated[$key]) && ($MembersValidated[$key]-(isset($MemberUpToDate[$key])?$MemberUpToDate[$key]:0) > 0) ? $MembersValidated[$key]-(isset($MemberUpToDate[$key])?$MemberUpToDate[$key]:0):'').' '.$staticmember->LibStatut(1,$adhtype->cotisation,0,3).'</td>';
@@ -361,13 +367,13 @@ $Number=array();
 $tot=0;
 $numb=0;
 
-$sql = "SELECT c.cotisation, c.dateadh";
+$sql = "SELECT c.cotisation, c.dateadh as dateh";
 $sql.= " FROM ".MAIN_DB_PREFIX."adherent as d, ".MAIN_DB_PREFIX."cotisation as c";
 $sql.= " WHERE d.entity IN (".getEntity().")";
 $sql.= " AND d.rowid = c.fk_adherent";
 if(isset($date_select) && $date_select != '')
 {
-	$sql .= " AND dateadh LIKE '$date_select%'";
+	$sql .= " AND c.dateadh LIKE '".$date_select."%'";
 }
 $result = $db->query($sql);
 if ($result)
@@ -377,7 +383,7 @@ if ($result)
 	while ($i < $num)
 	{
 		$objp = $db->fetch_object($result);
-		$year=dol_print_date($db->jdate($objp->dateadh),"%Y");
+		$year=dol_print_date($db->jdate($objp->dateh),"%Y");
 		$Total[$year]=(isset($Total[$year])?$Total[$year]:0)+$objp->cotisation;
 		$Number[$year]=(isset($Number[$year])?$Number[$year]:0)+1;
 		$tot+=$objp->cotisation;
@@ -399,7 +405,7 @@ krsort($Total);
 foreach ($Total as $key=>$value)
 {
 	$var=!$var;
-	print "<tr $bc[$var]>";
+	print "<tr ".$bc[$var].">";
 	print "<td><a href=\"cotisations.php?date_select=$key\">$key</a></td>";
 	print "<td align=\"right\">".$Number[$key]."</td>";
 	print "<td align=\"right\">".price($value)."</td>";
@@ -416,10 +422,9 @@ print "<td align=\"right\">".price(price2num($numb>0?($tot/$numb):0,'MT'))."</td
 print "</tr>\n";
 print "</table><br>\n";
 
-print '</td></tr>';
-print '</table>';
+//print '</td></tr></table>';
+print '</div></div></div>';
 
 
 llxFooter();
 $db->close();
-?>

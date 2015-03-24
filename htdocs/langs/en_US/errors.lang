@@ -1,9 +1,7 @@
-# Dolibarr language file - en_US - errors
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - errors
 
 # No errors
 NoErrorCommitIsDone=No error, we commit
-
 # Errors
 Error=Error
 Errors=Errors
@@ -27,8 +25,11 @@ ErrorFromToAccountsMustDiffers=Source and targets bank accounts must be differen
 ErrorBadThirdPartyName=Bad value for third party name
 ErrorProdIdIsMandatory=The %s is mandatory
 ErrorBadCustomerCodeSyntax=Bad syntax for customer code
+ErrorBadBarCodeSyntax=Bad syntax for bar code
 ErrorCustomerCodeRequired=Customer code required
+ErrorBarCodeRequired=Bar code required
 ErrorCustomerCodeAlreadyUsed=Customer code already used
+ErrorBarCodeAlreadyUsed=Bar code already used
 ErrorPrefixRequired=Prefix required
 ErrorUrlNotValid=The website address is incorrect
 ErrorBadSupplierCodeSyntax=Bad syntax for supplier code
@@ -38,6 +39,7 @@ ErrorBadParameters=Bad parameters
 ErrorBadValueForParameter=Wrong value '%s' for parameter incorrect '%s'
 ErrorBadImageFormat=Image file has not a supported format
 ErrorBadDateFormat=Value '%s' has wrong date format
+ErrorWrongDate=Date is not correct!
 ErrorFailedToWriteInDir=Failed to write in directory %s
 ErrorFoundBadEmailInFile=Found incorrect email syntax for %s lines in file (example line %s with email=%s)
 ErrorUserCannotBeDelete=User can not be deleted. May be it is associated on Dolibarr entities.
@@ -58,22 +60,28 @@ ErrorUploadBlockedByAddon=Upload blocked by a PHP/Apache plugin.
 ErrorFileSizeTooLarge=File size is too large.
 ErrorSizeTooLongForIntType=Size too long for int type (%s digits maximum)
 ErrorSizeTooLongForVarcharType=Size too long for string type (%s chars maximum)
+ErrorNoValueForSelectType=Please fill value for select list
+ErrorNoValueForCheckBoxType=Please fill value for checkbox list
+ErrorNoValueForRadioType=Please fill value for radio list
+ErrorBadFormatValueList=The list value cannot have more than one come : <u>%s</u>, but need at least one: llave,valores
 ErrorFieldCanNotContainSpecialCharacters=Field <b>%s</b> must not contains special characters.
+ErrorFieldCanNotContainSpecialNorUpperCharacters=Field <b>%s</b> must not contains special characters, nor upper case characters.
 ErrorNoAccountancyModuleLoaded=No accountancy module activated
-ErrorExportDuplicateProfil=This profil name already exists for this export set.
+ErrorExportDuplicateProfil=This profile name already exists for this export set.
 ErrorLDAPSetupNotComplete=Dolibarr-LDAP matching is not complete.
 ErrorLDAPMakeManualTest=A .ldif file has been generated in directory %s. Try to load it manually from command line to have more information on errors.
 ErrorCantSaveADoneUserWithZeroPercentage=Can't save an action with "statut not started" if field "done by" is also filled.
 ErrorRefAlreadyExists=Ref used for creation already exists.
 ErrorPleaseTypeBankTransactionReportName=Please type bank receipt name where transaction is reported (Format YYYYMM or YYYYMMDD) 
 ErrorRecordHasChildren=Failed to delete records since it has some childs.
+ErrorRecordIsUsedCantDelete=Can't delete record. It is already used or included into other object.
 ErrorModuleRequireJavascript=Javascript must not be disabled to have this feature working. To enable/disable Javascript, go to menu Home->Setup->Display.
 ErrorPasswordsMustMatch=Both typed passwords must match each other
 ErrorContactEMail=A technical error occured. Please, contact administrator to following email <b>%s</b> en provide the error code <b>%s</b> in your message, or even better by adding a screen copy of this page.
 ErrorWrongValueForField=Wrong value for field number <b>%s</b> (value '<b>%s</b>' does not match regex rule <b>%s</b>)
 ErrorFieldValueNotIn=Wrong value for field number <b>%s</b> (value '<b>%s</b>' is not a value available into field <b>%s</b> of table <b>%s</b>)
 ErrorFieldRefNotIn=Wrong value for field number <b>%s</b> (value '<b>%s</b>' is not a <b>%s</b> existing ref)
-ErrorsOnXLines=Errors on <b>%s</b> source lines
+ErrorsOnXLines=Errors on <b>%s</b> source record(s)
 ErrorFileIsInfectedWithAVirus=The antivirus program was not able to validate the file (file might be infected by a virus)
 ErrorSpecialCharNotAllowedForField=Special characters are not allowed for field "%s"
 ErrorDatabaseParameterWrong=Database setup parameter '<b>%s</b>' has a value not compatible to use Dolibarr (must have value '<b>%s</b>').
@@ -113,9 +121,20 @@ ErrNoZipEngine=No engine to unzip %s file in this PHP
 ErrorFileMustBeADolibarrPackage=The file %s must be a Dolibarr zip package
 ErrorFileRequired=It takes a package Dolibarr file
 ErrorPhpCurlNotInstalled=The PHP CURL is not installed, this is essential to talk with Paypal
-ErrorFailedToAddToMailmanList=Failed to add record to Mailman list or SPIP base
-ErrorNewVaueCantMatchOldValue=New value can't be equal to old one
+ErrorFailedToAddToMailmanList=Failed to add record %s to Mailman list %s or SPIP base
+ErrorFailedToRemoveToMailmanList=Failed to remove record %s to Mailman list %s or SPIP base
+ErrorNewValueCantMatchOldValue=New value can't be equal to old one
 ErrorFailedToValidatePasswordReset=Failed to reinit password. May be the reinit was already done (this link can be used only one time). If not, try to restart the reinit process.
+ErrorToConnectToMysqlCheckInstance=Connect to database fails. Check Mysql server is running (in most cases, you can launch it from command line with 'sudo /etc/init.d/mysql start').
+ErrorFailedToAddContact=Failed to add contact
+ErrorDateMustBeBeforeToday=The date can not be greater than today
+ErrorPaymentModeDefinedToWithoutSetup=A payment mode was set to type %s but setup of module Invoice was not completed to define information to show for this payment mode.
+ErrorPHPNeedModule=Error, your PHP must have module <b>%s</b> installed to use this feature.
+ErrorOpenIDSetupNotComplete=You setup Dolibarr config file to allow OpenID authentication, but URL of OpenID service is not defined into constant %s
+ErrorWarehouseMustDiffers=Source and target warehouses must differs
+ErrorBadFormat=Bad format!
+ErrorMemberNotLinkedToAThirpartyLinkOrCreateFirst=Error, this member is not yet linked to any thirdparty. Link member to an existing third party or create a new thirdparty before creating subscription with invoice.
+ErrorThereIsSomeDeliveries=Error, there is some deliveries linked to this shipment. Deletion refused.
 
 # Warnings
 WarningMandatorySetupNotComplete=Mandatory setup parameters are not yet defined
@@ -125,8 +144,14 @@ WarningBuildScriptNotRunned=Script <b>%s</b> was not yet ran to build graphics, 
 WarningBookmarkAlreadyExists=A bookmark with this title or this target (URL) already exists.
 WarningPassIsEmpty=Warning, database password is empty. This is a security hole. You should add a password to your database and change your conf.php file to reflect this.
 WarningConfFileMustBeReadOnly=Warning, your config file (<b>htdocs/conf/conf.php</b>) can be overwritten by the web server. This is a serious security hole. Modify permissions on file to be in read only mode for operating system user used by Web server. If you use Windows and FAT format for your disk, you must know that this file system does not allow to add permissions on file, so can't be completely safe.
-WarningsOnXLines=Warnings on <b>%s</b> source lines
+WarningsOnXLines=Warnings on <b>%s</b> source record(s)
 WarningNoDocumentModelActivated=No model, for document generation, has been activated. A model will be choosed by default until you check your module setup.
 WarningLockFileDoesNotExists=Warning, once setup is finished, you must disable install/migrate tools by adding a file <b>install.lock</b> into directory <b>%s</b>. Missing this file is a security hole. 
 WarningUntilDirRemoved=All security warnings (visible by admin users only) will remain active as long as the vulnerability is present (or that constant MAIN_REMOVE_INSTALL_WARNING is added in Setup->Other setup).
 WarningCloseAlways=Warning, closing is done even if amount differs between source and target elements. Enable this feature with caution.
+WarningUsingThisBoxSlowDown=Warning, using this box slow down seriously all pages showing the box.
+WarningClickToDialUserSetupNotComplete=Setup of ClickToDial information for your user are not complete (see tab ClickToDial onto your user card).
+WarningNotRelevant=Irrelevant operation for this dataset
+WarningFeatureDisabledWithDisplayOptimizedForBlindNoJs=Feature disabled when display setup is optimized for blind person or text browsers.
+WarningPaymentDateLowerThanInvoiceDate=Payment date (%s) is earlier than invoice date (%s) for invoice %s. 
+WarningTooManyDataPleaseUseMoreFilters=Too many data. Please use more filters

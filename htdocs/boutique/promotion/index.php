@@ -82,7 +82,7 @@ if ($resql)
       $objp = $dbosc->fetch_object($i);
       $var=!$var;
 
-      print "<tr $bc[$var]>";
+      print "<tr ".$bc[$var].">";
       print '<td>'.$objp->products_model."</td>";
       print '<td>'.$objp->products_name."</td>";
 
@@ -117,4 +117,3 @@ $dbosc->close();
 
 llxFooter();
 
-?>

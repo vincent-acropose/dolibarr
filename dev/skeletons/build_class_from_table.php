@@ -1,6 +1,6 @@
 #!/usr/bin/php
 <?php
-/* Copyright (C) 2008-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2008-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,10 +50,16 @@ print "***** $script_file ($version) *****\n";
 // -------------------- START OF BUILD_CLASS_FROM_TABLE SCRIPT --------------------
 
 // Check parameters
-if (! isset($argv[1]))
+if (! isset($argv[1]) || (isset($argv[2]) && ! isset($argv[6])))
 {
-    print "Usage: $script_file tablename\n";
+    print "Usage: $script_file tablename [server port databasename user pass]\n";
     exit;
+}
+
+if (isset($argv[2]) && isset($argv[3]) && isset($argv[4]) && isset($argv[5]) && isset($argv[6]))
+{
+	print 'Use specific database ids'."\n";
+	$db=getDoliDBInstance('mysqli',$argv[2],$argv[5],$argv[6],$argv[4],$argv[3]);
 }
 
 if ($db->type != 'mysql' && $db->type != 'mysqli')
@@ -120,7 +126,7 @@ else
 }
 //var_dump($property);
 
-// Define substitute select parameters
+// Define substitute fetch/select parameters
 $varpropselect="\n";
 $cleanparam='';
 $i=0;
@@ -184,7 +190,7 @@ $varprop="\n";
 $cleanparam='';
 foreach($property as $key => $prop)
 {
-	if ($prop['field'] != 'rowid')
+	if ($prop['field'] != 'rowid' && $prop['field'] != 'id')
 	{
 		$varprop.="\tvar \$".$prop['field'];
 		if ($prop['istime']) $varprop.="=''";
@@ -201,7 +207,7 @@ $varprop="\n";
 $cleanparam='';
 foreach($property as $key => $prop)
 {
-	if ($prop['field'] != 'rowid' && ! $prop['istime'])
+	if ($prop['field'] != 'rowid' && $prop['field'] != 'id' && ! $prop['istime'])
 	{
 		$varprop.="\t\tif (isset(\$this->".$prop['field'].")) \$this->".$prop['field']."=trim(\$this->".$prop['field'].");";
 		$varprop.="\n";
@@ -283,7 +289,7 @@ $i=0;
 foreach($property as $key => $prop)
 {
 	$i++;
-	if ($prop['field'] != 'rowid')
+	if ($prop['field'] != 'rowid' && $prop['field'] != 'id')
 	{
 		$varprop.="\t\t\$sql.= \" ";
 		$varprop.=$prop['field'].'=';
@@ -313,7 +319,7 @@ foreach($property as $key => $prop)
 $targetcontent=preg_replace('/\$sql.= " field1=".\(isset\(\$this->field1\)\?"\'".\$this->db->escape\(\$this->field1\)."\'":"null"\).",";/', $varprop, $targetcontent);
 $targetcontent=preg_replace('/\$sql.= " field2=".\(isset\(\$this->field2\)\?"\'".\$this->db->escape\(\$this->field2\)."\'":"null"\)."";/', '', $targetcontent);
 
-// Substitute select parameters
+// Substitute fetch/select parameters
 $targetcontent=preg_replace('/\$sql\.= " t\.field1,";/', $varpropselect, $targetcontent);
 $targetcontent=preg_replace('/\$sql\.= " t\.field2";/', '', $targetcontent);
 
@@ -324,7 +330,7 @@ $i=0;
 foreach($property as $key => $prop)
 {
 	$i++;
-	if ($prop['field'] != 'rowid')
+	if ($prop['field'] != 'rowid' && $prop['field'] != 'id')
 	{
 		$varprop.="\t\t\t\t\$this->".$prop['field']." = ";
 		if ($prop['istime']) $varprop.='$this->db->jdate(';
@@ -343,7 +349,7 @@ $varprop="\n";
 $cleanparam='';
 foreach($property as $key => $prop)
 {
-	if ($prop['field'] != 'rowid')
+	if ($prop['field'] != 'rowid' && $prop['field'] != 'id')
 	{
 		$varprop.="\t\t\$this->".$prop['field']."='';";
 		$varprop.="\n";
@@ -445,6 +451,10 @@ $targetcontent=preg_replace('/Put here some comments/','Initialy built by build_
 // Substitute table name
 $targetcontent=preg_replace('/MAIN_DB_PREFIX."mytable/', 'MAIN_DB_PREFIX."'.$tablenoprefix, $targetcontent);
 
+// Substitute fetch/select parameters
+$targetcontent=preg_replace('/\$sql\.= " t\.field1,";/', $varpropselect, $targetcontent);
+$targetcontent=preg_replace('/\$sql\.= " t\.field2";/', '', $targetcontent);
+
 // Build file
 $fp=fopen($outfile,"w");
 if ($fp)
@@ -458,6 +468,5 @@ else $error++;
 
 // -------------------- END OF BUILD_CLASS_FROM_TABLE SCRIPT --------------------
 
-print "You can now rename generated files by removing the 'out.' prefix in their name and store them in a directory of your choice.\n";
+print "You can now rename generated files by removing the 'out.' prefix in their name and store them into directory /yourmodule/class.\n";
 return $error;
-?>

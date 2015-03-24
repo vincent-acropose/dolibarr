@@ -1,7 +1,9 @@
 <?php
 /* Copyright (c) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (c) 2005-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (c) 2005-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (c) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2012	   Florian Henry		<florian.henry@open-concept.pro>
+ * Copyright (C) 2014	   Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +29,7 @@ if (! empty($conf->ldap->enabled)) require_once (DOL_DOCUMENT_ROOT."/core/class/
 
 
 /**
- *	\class      UserGroup
- *	\brief      Class to manage user groups
+ *	Class to manage user groups
  */
 class UserGroup extends CommonObject
 {
@@ -66,18 +67,24 @@ class UserGroup extends CommonObject
 	/**
 	 *	Charge un objet group avec toutes ces caracteristiques (excpet ->members array)
 	 *
-	 *	@param      int		$id     id du groupe a charger
-	 *	@return		int				<0 if KO, >0 if OK
+	 *	@param      int		$id			id du groupe a charger
+	 *	@param      string	$groupname	nom du groupe a charger
+	 *	@return		int					<0 if KO, >0 if OK
 	 */
-	function fetch($id)
+	function fetch($id='', $groupname='')
 	{
 		global $conf;
 
-		$this->id = $id;
-
 		$sql = "SELECT g.rowid, g.entity, g.nom as name, g.note, g.datec, g.tms as datem";
 		$sql.= " FROM ".MAIN_DB_PREFIX."usergroup as g";
-		$sql.= " WHERE g.rowid = ".$this->id;
+		if ($groupname)
+		{
+			$sql.= " WHERE g.nom = '".$this->db->escape($groupname)."'";
+		}
+		else
+		{
+			$sql.= " WHERE g.rowid = ".$id;
+		}
 
 		dol_syslog(get_class($this)."::fetch sql=".$sql);
 		$result = $this->db->query($sql);
@@ -90,8 +97,8 @@ class UserGroup extends CommonObject
 				$this->id = $obj->rowid;
 				$this->ref = $obj->rowid;
 				$this->entity = $obj->entity;
-				$this->nom  = $obj->name;        // depecated
 				$this->name = $obj->name;
+				$this->nom = $obj->name; //Deprecated
 				$this->note = $obj->note;
 				$this->datec = $obj->datec;
 				$this->datem = $obj->datem;
@@ -169,21 +176,25 @@ class UserGroup extends CommonObject
 	}
 
 	/**
-	 * 	Return array of users id for group
+	 * 	Return array of users id for group this->id (or all if this->id not defined)
 	 *
-	 * 	@return		array of users
+	 * 	@param	string	$excludefilter		Filter to exclude
+	 *  @param	int		$mode				0=Return array of user instance, 1=Return array of users id only
+	 * 	@return	array 						Array of users
 	 */
-	function listUsersForGroup()
+	function listUsersForGroup($excludefilter='', $mode=0)
 	{
 		global $conf, $user;
 
 		$ret=array();
 
-		$sql = "SELECT u.rowid, ug.entity as usergroup_entity";
-		$sql.= " FROM ".MAIN_DB_PREFIX."user as u,";
-		$sql.= " ".MAIN_DB_PREFIX."usergroup_user as ug";
-		$sql.= " WHERE ug.fk_user = u.rowid";
-		$sql.= " AND ug.fk_usergroup = ".$this->id;
+		$sql = "SELECT u.rowid";
+		if (! empty($this->id)) $sql.= ", ug.entity as usergroup_entity";
+		$sql.= " FROM ".MAIN_DB_PREFIX."user as u";
+		if (! empty($this->id)) $sql.= ", ".MAIN_DB_PREFIX."usergroup_user as ug";
+		$sql.= " WHERE 1 = 1";
+		if (! empty($this->id)) $sql.= " AND ug.fk_user = u.rowid";
+		if (! empty($this->id)) $sql.= " AND ug.fk_usergroup = ".$this->id;
 		if (! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
 		{
 			$sql.= " AND u.entity IS NOT NULL";
@@ -192,24 +203,31 @@ class UserGroup extends CommonObject
 		{
 			$sql.= " AND u.entity IN (0,".$conf->entity.")";
 		}
+		if (! empty($excludefilter)) $sql.=' AND ('.$excludefilter.')';
 
 		dol_syslog(get_class($this)."::listUsersForGroup sql=".$sql,LOG_DEBUG);
-		$result = $this->db->query($sql);
-		if ($result)
+		$resql = $this->db->query($sql);
+		if ($resql)
 		{
-			while ($obj = $this->db->fetch_object($result))
+			while ($obj = $this->db->fetch_object($resql))
 			{
 				if (! array_key_exists($obj->rowid, $ret))
 				{
-					$newuser=new User($this->db);
-					$newuser->fetch($obj->rowid);
-					$ret[$obj->rowid]=$newuser;
+					if ($mode != 1)
+					{
+						$newuser=new User($this->db);
+						$newuser->fetch($obj->rowid);
+						$ret[$obj->rowid]=$newuser;
+					}
+					else $ret[$obj->rowid]=$obj->rowid;
 				}
-
-				$ret[$obj->rowid]->usergroup_entity[]=$obj->usergroup_entity;
+				if ($mode != 1 && ! empty($obj->usergroup_entity))
+				{
+					$ret[$obj->rowid]->usergroup_entity[]=$obj->usergroup_entity;
+				}
 			}
 
-			$this->db->free($result);
+			$this->db->free($resql);
 
 			return $ret;
 		}
@@ -268,7 +286,7 @@ class UserGroup extends CommonObject
 
 			// Pour compatibilite, si lowid = 0, on est en mode ajout de tout
 			// TODO A virer quand sera gere par l'appelant
-			if (substr($rid,-1,1) == 0) $whereforadd="module='$module'";
+			//if (substr($rid,-1,1) == 0) $whereforadd="module='$module'";
 		}
 		else {
 			// Where pour la liste des droits a ajouter
@@ -368,7 +386,7 @@ class UserGroup extends CommonObject
 
 			// Pour compatibilite, si lowid = 0, on est en mode suppression de tout
 			// TODO A virer quand sera gere par l'appelant
-			if (substr($rid,-1,1) == 0) $wherefordel="module='$module'";
+			//if (substr($rid,-1,1) == 0) $wherefordel="module='$module'";
 		}
 		else {
 			// Where pour la liste des droits a supprimer
@@ -560,11 +578,10 @@ class UserGroup extends CommonObject
 		$error=0;
 		$now=dol_now();
 
-		$entity=$conf->entity;
-		if(! empty($conf->multicompany->enabled) && $conf->entity == 1)
-		{
-			$entity=$this->entity;
-		}
+		if (! isset($this->entity)) $this->entity=$conf->entity;	// If not defined, we use default value
+
+		$entity=$this->entity;
+		if (! empty($conf->multicompany->enabled) && $conf->entity == 1) $entity=$this->entity;
 
 		$sql = "INSERT INTO ".MAIN_DB_PREFIX."usergroup (";
 		$sql.= "datec";
@@ -573,10 +590,10 @@ class UserGroup extends CommonObject
 		$sql.= ") VALUES (";
 		$sql.= "'".$this->db->idate($now)."'";
 		$sql.= ",'".$this->db->escape($this->nom)."'";
-		$sql.= ",".$entity;
+		$sql.= ",".$this->db->escape($entity);
 		$sql.= ")";
 
-		dol_syslog("UserGroup::Create sql=".$sql, LOG_DEBUG);
+		dol_syslog(get_class($this)."::create sql=".$sql, LOG_DEBUG);
 		$result=$this->db->query($sql);
 		if ($result)
 		{
@@ -599,7 +616,7 @@ class UserGroup extends CommonObject
 		else
 		{
 			$this->error=$this->db->lasterror();
-			dol_syslog("UserGroup::Create ".$this->error,LOG_ERR);
+			dol_syslog(get_class($this)."::create ".$this->error,LOG_ERR);
 			return -1;
 		}
 	}
@@ -624,7 +641,7 @@ class UserGroup extends CommonObject
 
 		$sql = "UPDATE ".MAIN_DB_PREFIX."usergroup SET ";
 		$sql.= " nom = '" . $this->db->escape($this->nom) . "'";
-		$sql.= ", entity = " . $entity;
+		$sql.= ", entity = " . $this->db->escape($entity);
 		$sql.= ", note = '" . $this->db->escape($this->note) . "'";
 		$sql.= " WHERE rowid = " . $this->id;
 
@@ -656,7 +673,7 @@ class UserGroup extends CommonObject
 	/**
 	 *	Retourne chaine DN complete dans l'annuaire LDAP pour l'objet
 	 *
-	 *	@param		string	$info		Info string loaded by _load_ldap_info
+	 *	@param		array	$info		Info array loaded by _load_ldap_info
 	 *	@param		int		$mode		0=Return full DN (uid=qqq,ou=xxx,dc=aaa,dc=bbb)
 	 *									1=Return DN without key inside (ou=xxx,dc=aaa,dc=bbb)
 	 *									2=Return key only (uid=qqq)
@@ -733,4 +750,3 @@ class UserGroup extends CommonObject
 	}
 }
 
-?>

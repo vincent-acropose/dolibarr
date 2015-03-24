@@ -24,14 +24,16 @@
  *  \brief      Page to list withdraw requests
  */
 
-require '../bank/pre.inc.php';
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/modules/modPrelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
+$langs->load("banks");
+$langs->load("categories");
 $langs->load("widthdrawals");
 $langs->load("companies");
-$langs->load("categories");
 
 // Security check
 $socid = GETPOST('socid','int');
@@ -112,7 +114,7 @@ if ($resql)
 	print '<form action="'.$_SERVER["PHP_SELF"].'" method="GET">';
 	print '<td class="liste_titre"><input type="text" class="flat" name="search_facture" size="12" value="'.GETPOST('search_facture','alpha').'"></td>';
 	print '<td class="liste_titre"><input type="text" class="flat" name="search_societe" size="18" value="'.GETPOST('search_societe','alpha').'"></td>';
-	print '<td colspan="2" class="liste_titre" align="right"><input type="image" class="liste_titre" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" name="button_search" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'"></td>';
+	print '<td colspan="2" class="liste_titre" align="right"><input type="image" class="liste_titre" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" name="button_search" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'"></td>';
 	print '</tr>';
 	print '</form>';
 
@@ -157,4 +159,3 @@ else
 
 
 llxFooter();
-?>

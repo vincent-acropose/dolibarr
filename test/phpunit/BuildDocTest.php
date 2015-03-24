@@ -26,7 +26,7 @@
 
 global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
 require_once dirname(__FILE__).'/../../htdocs/compta/facture/class/facture.class.php';
 require_once dirname(__FILE__).'/../../htdocs/fourn/class/fournisseur.facture.class.php';
@@ -44,8 +44,8 @@ require_once dirname(__FILE__).'/../../htdocs/core/modules/propale/doc/pdf_azur.
 require_once dirname(__FILE__).'/../../htdocs/core/modules/commande/doc/pdf_einstein.modules.php';
 require_once dirname(__FILE__).'/../../htdocs/core/modules/project/pdf/pdf_baleine.modules.php';
 require_once dirname(__FILE__).'/../../htdocs/core/modules/fichinter/doc/pdf_soleil.modules.php';
-require_once dirname(__FILE__).'/../../htdocs/core/modules/expedition/doc/pdf_expedition_merou.modules.php';
-require_once dirname(__FILE__).'/../../htdocs/core/modules/expedition/doc/pdf_expedition_rouget.modules.php';
+require_once dirname(__FILE__).'/../../htdocs/core/modules/expedition/doc/pdf_merou.modules.php';
+require_once dirname(__FILE__).'/../../htdocs/core/modules/expedition/doc/pdf_rouget.modules.php';
 // Mother classes of pdf generators
 require_once dirname(__FILE__).'/../../htdocs/core/modules/facture/modules_facture.php';
 require_once dirname(__FILE__).'/../../htdocs/core/modules/supplier_invoice/modules_facturefournisseur.php';
@@ -221,7 +221,7 @@ class BuildDocTest extends PHPUnit_Framework_TestCase
     	$newlangs5=new Translate("",$conf);
     	$newlangs5->setDefaultLang('ru_RU');
     	$localobject->modelpdf='crabe';
-    	$result=facture_pdf_create($db, $localobject, $localobject->modelpdf, $newlangs);
+    	$result=facture_pdf_create($db, $localobject, $localobject->modelpdf, $newlangs5);
     	$this->assertLessThan($result, 0);
     	print __METHOD__." result=".$result."\n";
 
@@ -376,7 +376,7 @@ class BuildDocTest extends PHPUnit_Framework_TestCase
         $langs=$this->savlangs;
         $db=$this->savdb;
 
-        $conf->fichinter->dir_output.='/temp';
+        $conf->ficheinter->dir_output.='/temp';
         $localobject=new Fichinter($this->savdb);
         $localobject->initAsSpecimen();
 
@@ -424,4 +424,3 @@ class BuildDocTest extends PHPUnit_Framework_TestCase
         return 0;
     }
 }
-?>

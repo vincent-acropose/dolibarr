@@ -3,6 +3,7 @@
  * Copyright (C) 2005-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2011      Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2013      Florian Henry		<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,14 +25,17 @@
  *	\brief      Prelevement index page
  */
 
-require '../bank/pre.inc.php';
+
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/bonprelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/prelevement.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
-$langs->load("withdrawals");
+$langs->load("banks");
 $langs->load("categories");
+$langs->load("withdrawals");
 
 // Security check
 $socid = GETPOST('socid','int');
@@ -61,9 +65,9 @@ if (prelevement_check_config() < 0)
 
 print_fiche_titre($langs->trans("CustomersStandingOrdersArea"));
 
-print '<table border="0" width="100%" class="notopnoleftnoright">';
 
-print '<tr><td valign="top" width="30%" class="notopnoleft">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
+
 
 $thirdpartystatic=new Societe($db);
 $invoicestatic=new Facture($db);
@@ -80,66 +84,12 @@ print $bprev->NbFactureAPrelever();
 print '</a>';
 print '</td></tr>';
 $var=!$var;
-print '<tr class="liste_total"><td>'.$langs->trans("AmountToWithdraw").'</td>';
+print '<tr '.$bc[$var].'><td>'.$langs->trans("AmountToWithdraw").'</td>';
 print '<td align="right">';
-print price($bprev->SommeAPrelever());
+print price($bprev->SommeAPrelever(),'','',1,-1,-1,'auto');
 print '</td></tr></table><br>';
 
-print '</td><td valign="top" width="70%">';
 
-
-
-/*
- * Withdraw receipts
- */
-$limit=5;
-$sql = "SELECT p.rowid, p.ref, p.amount, p.datec, p.statut";
-$sql.= " FROM ".MAIN_DB_PREFIX."prelevement_bons as p";
-$sql.= " ORDER BY datec DESC";
-$sql.= $db->plimit($limit);
-
-$result = $db->query($sql);
-if ($result)
-{
-    $num = $db->num_rows($result);
-    $i = 0;
-    $var=True;
-
-    print"\n<!-- debut table -->\n";
-    print '<table class="noborder" width="100%">';
-    print '<tr class="liste_titre"><td>'.$langs->trans("LastWithdrawalReceipt",$limit).'</td>';
-    print '<td>'.$langs->trans("Date").'</td>';
-    print '<td align="right">'.$langs->trans("Amount").'</td>';
-    print '<td align="right">'.$langs->trans("Status").'</td>';
-    print '</tr>';
-
-    while ($i < min($num,$limit))
-    {
-        $obj = $db->fetch_object($result);
-        $var=!$var;
-
-        print "<tr ".$bc[$var].">";
-
-        print "<td>";
-        $bprev->id=$obj->rowid;
-        $bprev->ref=$obj->ref;
-        $bprev->statut=$obj->statut;
-        print $bprev->getNomUrl(1);
-        print "</td>\n";
-        print '<td>'.dol_print_date($db->jdate($obj->datec),"dayhour")."</td>\n";
-        print '<td align="right">'.price($obj->amount)."</td>\n";
-        print '<td align="right">'.$bprev->getLibStatut(3)."</td>\n";
-
-        print "</tr>\n";
-        $i++;
-    }
-    print "</table><br>";
-    $db->free($result);
-}
-else
-{
-    dol_print_error($db);
-}
 
 /*
  * Invoices waiting for withdraw
@@ -218,7 +168,64 @@ else
 }
 
 
-print '</td></tr></table>';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
+
+
+/*
+ * Withdraw receipts
+ */
+$limit=5;
+$sql = "SELECT p.rowid, p.ref, p.amount, p.datec, p.statut";
+$sql.= " FROM ".MAIN_DB_PREFIX."prelevement_bons as p";
+$sql.= " ORDER BY datec DESC";
+$sql.= $db->plimit($limit);
+
+$result = $db->query($sql);
+if ($result)
+{
+    $num = $db->num_rows($result);
+    $i = 0;
+    $var=True;
+
+    print"\n<!-- debut table -->\n";
+    print '<table class="noborder" width="100%">';
+    print '<tr class="liste_titre"><td>'.$langs->trans("LastWithdrawalReceipt",$limit).'</td>';
+    print '<td>'.$langs->trans("Date").'</td>';
+    print '<td align="right">'.$langs->trans("Amount").'</td>';
+    print '<td align="right">'.$langs->trans("Status").'</td>';
+    print '</tr>';
+
+    while ($i < min($num,$limit))
+    {
+        $obj = $db->fetch_object($result);
+        $var=!$var;
+
+        print "<tr ".$bc[$var].">";
+
+        print "<td>";
+        $bprev->id=$obj->rowid;
+        $bprev->ref=$obj->ref;
+        $bprev->statut=$obj->statut;
+        print $bprev->getNomUrl(1);
+        print "</td>\n";
+        print '<td>'.dol_print_date($db->jdate($obj->datec),"dayhour")."</td>\n";
+        print '<td align="right">'.price($obj->amount)."</td>\n";
+        print '<td align="right">'.$bprev->getLibStatut(3)."</td>\n";
+
+        print "</tr>\n";
+        $i++;
+    }
+    print "</table><br>";
+    $db->free($result);
+}
+else
+{
+    dol_print_error($db);
+}
+
+
+print '</div></div></div>';
 
 llxFooter();
-?>
+
+$db->close();

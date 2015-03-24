@@ -2,6 +2,7 @@
 /* Copyright (C) 2005-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2007      Rodolphe Quiedeville <rodolphe@quiedeville.org>
+ * Copyright (C) 2013	   Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +32,7 @@ if (!$user->admin) accessforbidden();
 $langs->load("admin");
 $langs->load("other");
 
-$error=0; $mesg='';
+$error=0;
 $action = GETPOST("action");
 
 $syslogModules = array();
@@ -98,24 +99,24 @@ if ($action == 'set')
 					if ($_POST[$option['constant']])
 					{
 						dolibarr_del_const($db, $option['constant'], 0);
-						dolibarr_set_const($db, $option['constant'], $_POST[$option['constant']], 'chaine');
+						dolibarr_set_const($db, $option['constant'], $_POST[$option['constant']], 'chaine',0, '', 0);
 					}
 				}
 			}
 		}
 	}
 
-	dolibarr_set_const($db, 'SYSLOG_HANDLERS', json_encode($activeModules), 'chaine');
+	dolibarr_set_const($db, 'SYSLOG_HANDLERS', json_encode($activeModules), 'chaine',0,'',0);
 
     if (! $error)
 	{
 		$db->commit();
-		$mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+		setEventMessage($langs->trans("SetupSaved"));
 	}
 	else
 	{
 		$db->rollback();
-		if (empty($mesg)) $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+		setEventMessage($langs->trans("Error"),'errors');
 	}
 
 }
@@ -129,12 +130,12 @@ if ($action == 'setlevel')
 
 	if (! $res > 0) $error++;
 	if (! $error)
-    {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
-    }
-    else
-    {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+	{
+		setEventMessage($langs->trans("SetupSaved"));
+	}
+	else
+	{
+		setEventMessage($langs->trans("Error"),'errors');
 	}
 }
 
@@ -192,7 +193,7 @@ foreach ($syslogModules as $moduleName)
 	print $module->getName();
 	print '</td>';
 
-	print '<td nowrap="nowrap">';
+	print '<td class="nowrap">';
 	$setuparray=$module->configure();
 	if ($setuparray)
 	{
@@ -249,9 +250,6 @@ print '</td></tr>';
 print '</table>';
 print "</form>\n";
 
-dol_htmloutput_mesg($mesg);
-
 llxFooter();
 
 $db->close();
-?>

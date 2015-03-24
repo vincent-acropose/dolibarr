@@ -32,7 +32,7 @@ require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 // Security check
 $orderid = GETPOST('orderid');
 if ($user->societe_id) $socid=$user->societe_id;
-$result = restrictedArea($user, 'commande_fournisseur', $orderid,'');
+$result = restrictedArea($user, 'fournisseur', $orderid, '', 'commande');
 
 $langs->load("suppliers");
 $langs->load("orders");
@@ -64,7 +64,7 @@ print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("SearchOrder").'</td></tr>';
 print '<tr '.$bc[$var].'><td>';
 print $langs->trans("Ref").':</td><td><input type="text" class="flat" name="search_ref" size=18></td><td rowspan="2"><input type="submit" value="'.$langs->trans("Search").'" class="button"></td></tr>';
-print '<tr '.$bc[$var].'><td nowrap>'.$langs->trans("Other").':</td><td><input type="text" class="flat" name="search_all" size="18"></td>';
+print '<tr '.$bc[$var].'><td class="nowrap">'.$langs->trans("Other").':</td><td><input type="text" class="flat" name="search_all" size="18"></td>';
 print '</tr>';
 print "</form></table><br>\n";
 
@@ -182,7 +182,7 @@ if ($resql)
         $row = $db->fetch_row($resql);
         $var=!$var;
 
-        print "<tr $bc[$var]>";
+        print "<tr ".$bc[$var].">";
         print '<td>'.$langs->trans($commandestatic->statuts[$row[1]]).'</td>';
         print '<td align="right"><a href="liste.php?statut='.$row[1].'">'.$row[0].' '.$commandestatic->LibStatut($row[1],3).'</a></td>';
 
@@ -230,8 +230,8 @@ if (! empty($conf->fournisseur->enabled))
             {
                 $var=!$var;
                 $obj = $db->fetch_object($resql);
-                print "<tr $bc[$var]>";
-                print '<td nowrap="nowrap">';
+                print "<tr ".$bc[$var].">";
+                print '<td class="nowrap">';
                 print "<a href=\"fiche.php?id=".$obj->rowid."\">".img_object($langs->trans("ShowOrder"),"order").' '.$obj->ref."</a></td>";
                 print '<td><a href="'.DOL_URL_ROOT.'/fourn/fiche.php?socid='.$obj->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.dol_trunc($obj->nom,24).'</a></td></tr>';
                 $i++;
@@ -245,7 +245,7 @@ if (! empty($conf->fournisseur->enabled))
 /*
  * List of users allowed
  */
-$sql = "SELECT u.rowid, u.name, u.firstname";
+$sql = "SELECT u.rowid, u.lastname, u.firstname";
 $sql.= " FROM ".MAIN_DB_PREFIX."user as u,";
 $sql.= " ".MAIN_DB_PREFIX."user_rights as ur";
 $sql.= ", ".MAIN_DB_PREFIX."rights_def as rd";
@@ -273,10 +273,10 @@ if ($resql)
         $obj = $db->fetch_object($resql);
         $var=!$var;
 
-        print "<tr $bc[$var]>";
+        print "<tr ".$bc[$var].">";
         print '<td>';
         $userstatic->id=$obj->rowid;
-        $userstatic->lastname=$obj->name;
+        $userstatic->lastname=$obj->lastname;
         $userstatic->firstname=$obj->firstname;
         print $userstatic->getNomUrl(1);
         print '</td>';
@@ -329,22 +329,22 @@ if ($resql)
             $var=!$var;
             $obj = $db->fetch_object($resql);
 
-            print "<tr $bc[$var]>";
-            print '<td width="20%" nowrap="nowrap">';
+            print "<tr ".$bc[$var].">";
+            print '<td width="20%" class="nowrap">';
 
             $commandestatic->id=$obj->rowid;
             $commandestatic->ref=$obj->ref;
 
             print '<table class="nobordernopadding"><tr class="nocellnopadd">';
-            print '<td width="96" class="nobordernopadding" nowrap="nowrap">';
+            print '<td width="96" class="nobordernopadding nowrap">';
             print $commandestatic->getNomUrl(1);
             print '</td>';
 
-            print '<td width="16" class="nobordernopadding" nowrap="nowrap">';
+            print '<td width="16" class="nobordernopadding nowrap">';
             print '&nbsp;';
             print '</td>';
 
-            print '<td width="16" align="right" class="nobordernopadding">';
+            print '<td width="16" align="right" class="nobordernopadding hideonsmartphone">';
             $filename=dol_sanitizeFileName($obj->ref);
             $filedir=$conf->commande->dir_output . '/' . dol_sanitizeFileName($obj->ref);
             $urlsource=$_SERVER['PHP_SELF'].'?id='.$obj->rowid;
@@ -397,22 +397,22 @@ while ($i < $num)
 {
 $var=!$var;
 $obj = $db->fetch_object($resql);
-print "<tr $bc[$var]>";
-print '<td nowrap="nowrap">';
+print "<tr ".$bc[$var].">";
+print '<td class="nowrap">';
 
 $commandestatic->id=$obj->rowid;
 $commandestatic->ref=$obj->ref;
 
 print '<table class="nobordernopadding"><tr class="nocellnopadd">';
-print '<td width="96" class="nobordernopadding" nowrap="nowrap">';
+print '<td width="96" class="nobordernopadding nowrap">';
 print $commandestatic->getNomUrl(1);
 print '</td>';
 
-print '<td width="16" class="nobordernopadding" nowrap="nowrap">';
+print '<td width="16" class="nobordernopadding nowrap">';
 print '&nbsp;';
 print '</td>';
 
-print '<td width="16" align="right" class="nobordernopadding">';
+print '<td width="16" align="right" class="nobordernopadding hideonsmartphone">';
 $filename=dol_sanitizeFileName($obj->ref);
 $filedir=$conf->commande->dir_output . '/' . dol_sanitizeFileName($obj->ref);
 $urlsource=$_SERVER['PHP_SELF'].'?id='.$obj->rowid;
@@ -439,4 +439,3 @@ print '</td></tr></table>';
 llxFooter();
 
 $db->close();
-?>

@@ -68,7 +68,7 @@ if ($sall)
     $sql.= " OR e.description LIKE '%".$db->escape($sall)."%'";
     $sql.= " OR e.lieu LIKE '%".$db->escape($sall)."%'";
     $sql.= " OR e.address LIKE '%".$db->escape($sall)."%'";
-    $sql.= " OR e.ville LIKE '%".$db->escape($sall)."%')";
+    $sql.= " OR e.town LIKE '%".$db->escape($sall)."%')";
 }
 $sql.= " GROUP BY e.rowid, e.label, e.statut, e.lieu";
 $sql.= $db->order($sortfield,$sortorder);
@@ -103,17 +103,17 @@ if ($result)
         while ($i < min($num,$limit))
         {
             $objp = $db->fetch_object($result);
-            print "<tr $bc[$var]>";
+            print "<tr ".$bc[$var].">";
             print '<td><a href="fiche.php?id='.$objp->ref.'">'.img_object($langs->trans("ShowWarehouse"),'stock').' '.$objp->label.'</a></td>';
             print '<td>'.$objp->lieu.'</td>';
             // PMP value
             print '<td align="right">';
-            if (price2num($objp->estimatedvalue,'MT')) print price(price2num($objp->estimatedvalue,'MT'));
+            if (price2num($objp->estimatedvalue,'MT')) print price(price2num($objp->estimatedvalue,'MT'),1);
             else print '';
             print '</td>';
             // Selling value
             print '<td align="right">';
-            if (empty($conf->global->PRODUIT_MULTIPRICES)) print price(price2num($objp->sellvalue,'MT'));
+            if (empty($conf->global->PRODUIT_MULTIPRICES)) print price(price2num($objp->sellvalue,'MT'),1);
             else print $langs->trans("Variable");
             print '</td>';
             // Status
@@ -127,8 +127,8 @@ if ($result)
 
         print '<tr class="liste_total">';
         print '<td colspan="2" align="right">'.$langs->trans("Total").'</td>';
-        print '<td align="right">'.price(price2num($total,'MT')).' '.$langs->trans('Currency'.$conf->currency).'</td>';
-        print '<td align="right">'.price(price2num($totalsell,'MT')).' '.$langs->trans('Currency'.$conf->currency).'</td>';
+        print '<td align="right">'.price(price2num($total,'MT'),1,$langs,0,0,-1,$conf->currency).'</td>';
+        print '<td align="right">'.price(price2num($totalsell,'MT'),1,$langs,0,0,-1,$conf->currency).'</td>';
         print '<td align="right">&nbsp;</td>';
         print "</tr>\n";
 
@@ -158,7 +158,7 @@ else
     dol_print_error($db);
 }
 
-$db->close();
 
 llxFooter();
-?>
+
+$db->close();

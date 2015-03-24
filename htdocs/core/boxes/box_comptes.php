@@ -2,6 +2,7 @@
 /* Copyright (C) 2005      Christophe
  * Copyright (C) 2005-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013	   Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,27 +34,29 @@ class box_comptes extends ModeleBoxes
 {
 	var $boxcode="currentaccounts";
 	var $boximg="object_bill";
-	var $boxlabel;
+	var $boxlabel="BoxCurrentAccounts";
 	var $depends = array("banque");     // Box active if module banque active
 
 	var $db;
 	var $param;
 	var $enabled = 1;
-	
+
 	var $info_box_head = array();
 	var $info_box_contents = array();
 
-	
+
 	/**
 	 *  Constructor
+	 *
+	 *  @param  DoliDB	$db      	Database handler
+     *  @param	string	$param		More parameters
 	 */
-	function __construct()
+	function __construct($db,$param='')
 	{
-		global $conf, $langs, $user;
-		$langs->load("boxes");
+		global $conf, $user;
 
-		$this->boxlabel=$langs->transnoentitiesnoconv('BoxCurrentAccounts');
-		
+		$this->db = $db;
+
 		// disable module for such cases
 		$listofmodulesforexternal=explode(',',$conf->global->MAIN_MODULES_FOR_EXTERNAL);
 		if (! in_array('banque',$listofmodulesforexternal) && ! empty($user->societe_id)) $this->enabled=0;	// disabled for external users
@@ -77,17 +80,17 @@ class box_comptes extends ModeleBoxes
 		{
 			$sql = "SELECT rowid, ref, label, bank, number, courant, clos, rappro, url,";
 			$sql.= " code_banque, code_guichet, cle_rib, bic, iban_prefix,";
-			$sql.= " domiciliation, proprio, adresse_proprio,";
+			$sql.= " domiciliation, proprio, owner_address,";
 			$sql.= " account_number, currency_code,";
 			$sql.= " min_allowed, min_desired, comment";
 			$sql.= " FROM ".MAIN_DB_PREFIX."bank_account";
 			$sql.= " WHERE entity = ".$conf->entity;
 			$sql.= " AND clos = 0";
-			$sql.= " AND courant = 1";
+			//$sql.= " AND courant = 1";
 			$sql.= " ORDER BY label";
 			$sql.= $db->plimit($max, 0);
 
-			dol_syslog("Box_comptes::loadBox sql=".$sql);
+			dol_syslog(get_class($this)."::loadBox sql=".$sql);
 			$result = $db->query($sql);
 			if ($result)
 			{
@@ -120,7 +123,7 @@ class box_comptes extends ModeleBoxes
 					);
 
 					$this->info_box_contents[$i][3] = array('td' => 'align="right"',
-					'text' => price($solde).' '.$langs->trans("Currency".$objp->currency_code)
+					'text' => price($solde, 0, $langs, 0, 0, -1, $objp->currency_code)
 					);
 
 					$listofcurrencies[$objp->currency_code]=1;
@@ -139,11 +142,13 @@ class box_comptes extends ModeleBoxes
 					$this->info_box_contents[$i][2] = array('td' => 'align="right" class="liste_total"',
 					'text' => '&nbsp;'
 					);
-					$totalamount=price($solde_total).' '.$langs->trans("Currency".$conf->currency);
+					$totalamount=price($solde_total,0,$langs,0,0,-1,$conf->currency);
 					$this->info_box_contents[$i][3] = array('td' => 'align="right" class="liste_total"',
 					'text' => $totalamount
 					);
 				}
+
+				$db->free($result);
 			}
 			else {
 				$this->info_box_contents[0][0] = array(	'td' => 'align="left"',
@@ -172,4 +177,3 @@ class box_comptes extends ModeleBoxes
 
 }
 
-?>

@@ -1,5 +1,4 @@
-# Dolibarr language file - ca_ES - orders
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - orders
 OrdersArea=Àrea comandes de clients
 SuppliersOrdersArea=Àrea comandes a proveïdors
 OrderCard=Fitxa comanda
@@ -28,11 +27,12 @@ SuppliersOrdersToProcess=Comandes a proveïdors a processar
 StatusOrderCanceledShort=Anul·lada
 StatusOrderDraftShort=Esborrany
 StatusOrderValidatedShort=Validada
-StatusOrderOnProcessShort=Per rebre
 StatusOrderSentShort=Expedició en curs
 StatusOrderSent=Enviament en curs
+StatusOrderOnProcessShort=En procés
 StatusOrderProcessedShort=Processada
-StatusOrderToBillShort=A facturar
+StatusOrderToBillShort=Emès
+StatusOrderToBill2Short=A facturar
 StatusOrderApprovedShort=Aprovada
 StatusOrderRefusedShort=Rebutjada
 StatusOrderToProcessShort=A processar
@@ -43,7 +43,8 @@ StatusOrderDraft=Esborrany (a validar)
 StatusOrderValidated=Validada
 StatusOrderOnProcess=Pendent de rebre
 StatusOrderProcessed=Processada
-StatusOrderToBill=A facturar
+StatusOrderToBill=Emès
+StatusOrderToBill2=A facturar
 StatusOrderApproved=Aprovada
 StatusOrderRefused=Rebutjada
 StatusOrderReceivedPartially=Rebuda parcialment
@@ -51,10 +52,10 @@ StatusOrderReceivedAll=Rebuda
 ShippingExist=Existeix una expedició
 DraftOrWaitingApproved=Esborrany o aprovat encara no controlat
 DraftOrWaitingShipped=Esborrany o validada encara no expedida
-SearchOrder=Cercar una comanda
 MenuOrdersToBill=Comandes a facturar
-Sending=Enviament
-Sendings=Enviaments
+MenuOrdersToBill2=Comandes facturables
+SearchOrder=Cercar una comanda
+# SearchACustomerOrder=Search a customer order
 ShipProduct=Enviar producte
 Discount=Descompte
 CreateOrder=Crear comanda
@@ -67,9 +68,11 @@ CancelOrder=Anul·lar la comanda
 AddOrder=Crear comanda
 AddToMyOrders=afegir a les meves comandes
 AddToOtherOrders=Afegir a altres comandes
+AddToDraftOrders=Afegir a comanda esborrany
 ShowOrder=Mostrar comanda
 NoOpenedOrders=Cap comanda esborrany
 NoOtherOpenedOrders=Cap altra comanda esborrany
+NoDraftOrders=Sense comandes esborrany
 OtherOrders=Altres comandes
 LastOrders=Les %s darreres comandes
 LastModifiedOrders=Les %s darreres comandes modificades
@@ -82,8 +85,8 @@ NumberOfOrdersByMonth=Nombre de comandes per mes
 AmountOfOrdersByMonthHT=Import total de comandes per mes (Sense IVA)
 ListOfOrders=Llistat de comandes
 CloseOrder=Tancar comanda
-ConfirmCloseOrder=Esteu segur de voler tancar aquesta comanda? Un cop tancat, haurà de facturar-se
-ConfirmCloseOrderIfSending=Esteu segur de voler tancar aquesta comanda? No ha de tancar una comanda que encara no té els seus productes enviats
+ConfirmCloseOrder=Esteu segur que voleu classificar aquesta comanda com a enviat? Un cop enviat una comanda, només podrà facturar-se
+ConfirmCloseOrderIfSending=Esteu segur que voleu tancar aquesta comanda? Només hauria de tancar una comanda quan aquesta hagi estat enviada completament.
 ConfirmDeleteOrder=Esteu segur de voler eliminar aquest comanda?
 ConfirmValidateOrder=Esteu segur de voler validar aquesta comanda sota la referència <b>%s</b> ?
 ConfirmUnvalidateOrder=Esteu segur de voler restaurar la comanda <b>%s</b> a l'estat esborrany?
@@ -98,6 +101,7 @@ RelatedOrders=Comandes adjuntes
 OnProcessOrders=Comandes en procés
 RefOrder=Ref. comanda
 RefCustomerOrder=Ref. comanda client
+CustomerOrder=Comada de client
 RefCustomerOrderShort=Ref. com. client
 SendOrderByMail=Enviar comanda per e-mail
 ActionsOnOrder=Esdeveniments sobre la comanda
@@ -111,7 +115,6 @@ PaymentOrderRef=Pagament comanda %s
 CloneOrder=Clonar comanda
 ConfirmCloneOrder=Esteu segur de voler clonar aquesta comanda <b>%s</b>?
 DispatchSupplierOrder=Recepció de la comanda a proveïdor %s
-DateDeliveryPlanned=Data prevista de lliurament
 ##### Types de contacts #####
 TypeContact_commande_internal_SALESREPFOLL=Responsable seguiment comanda client
 TypeContact_commande_internal_SHIPPING=Responsable enviament comanda client
@@ -130,6 +133,7 @@ Error_FailedToLoad_COMMANDE_SUPPLIER_ADDON_File=Error en la càrrega de l'arxiu 
 Error_FailedToLoad_COMMANDE_ADDON_File=Error en la càrrega de l'arxiu mòdul '%s'
 Error_OrderNotChecked=No s'han seleccionat comandes a facturar
 
+
 # Sources
 OrderSource0=Pressupost
 OrderSource1=Internet
@@ -140,19 +144,25 @@ OrderSource5=Comercial
 OrderSource6=Revistes
 QtyOrdered=Qt. demanda
 AddDeliveryCostLine=Afegir una línia de despeses de ports indicant el pes de la comanda
-SetDemandReason=Indicar origen de la comanda
-CreateInvoiceForThisCustomer=Facturar comandes
-NoOrdersToInvoice=Sense comandes facturables
-CloseProcessedOrdersAutomatically=Classificar automàticament com "Processades" les comandes seleccionades.
-MenuOrdersToBill2=Comandes facturables
 
-# Document models
+# Documents models
 PDFEinsteinDescription=Model de comanda complet (logo...)
 PDFEdisonDescription=Model de comanda simple
-
+# PDFProformaDescription=A complete proforma invoice (logo…)
 # Orders modes
 OrderByMail=Correu
 OrderByFax=Fax
 OrderByEMail=E-Mail
 OrderByWWW=En línia
 OrderByPhone=Telèfon
+
+CreateInvoiceForThisCustomer=Facturar comandes
+NoOrdersToInvoice=Sense comandes facturables
+CloseProcessedOrdersAutomatically=Classificar automàticament com "Processades" les comandes seleccionades.
+MenuOrdersToBill2=Comandes facturables
+OrderCreation=Creació comanda
+Ordered=Comandat
+OrderCreated=Les seves comandes han estat creats
+OrderFail=S'ha produït un error durant la creació de les seves comandes
+CreateOrders=Crear comandes
+# ToBillSeveralOrderSelectCustomer=To create an invoice for several orders, click first onto customer, then choose "%s".

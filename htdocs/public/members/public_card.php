@@ -27,12 +27,11 @@
 define("NOLOGIN",1);		// This means this output page does not require to be logged.
 define("NOCSRFCHECK",1);	// We accept to go on this page from external web site.
 
-// For MultiCompany module
-$entity=(! empty($_GET['entity']) ? (int) $_GET['entity'] : 1);
-if (is_int($entity))
-{
-	define("DOLENTITY", $entity);
-}
+// For MultiCompany module.
+// Do not use GETPOST here, function is not defined and define must be done before including main.inc.php
+// TODO This should be useless. Because entity must be retreive from object ref and not from url.
+$entity=(! empty($_GET['entity']) ? (int) $_GET['entity'] : (! empty($_POST['entity']) ? (int) $_POST['entity'] : 1));
+if (is_numeric($entity)) define("DOLENTITY", $entity);
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
@@ -69,7 +68,7 @@ $extrafields = new ExtraFields($db);
 llxHeaderVierge($langs->trans("MemberCard"));
 
 // fetch optionals attributes and labels
-$extralabels=$extrafields->fetch_name_optionals_label('member');
+$extralabels=$extrafields->fetch_name_optionals_label('adherent');
 if ($id > 0)
 {
 	$res=$object->fetch($id);
@@ -93,9 +92,9 @@ if ($id > 0)
 		print '<tr><td>'.$langs->trans("Company").'</td><td class="valeur">'.$object->societe.'&nbsp;</td></tr>';
 		print '<tr><td>'.$langs->trans("Address").'</td><td class="valeur">'.nl2br($object->address).'&nbsp;</td></tr>';
 		print '<tr><td>'.$langs->trans("Zip").' '.$langs->trans("Town").'</td><td class="valeur">'.$object->zip.' '.$object->town.'&nbsp;</td></tr>';
-		print '<tr><td>'.$langs->trans("Country").'</td><td class="valeur">'.$object->pays.'&nbsp;</td></tr>';
+		print '<tr><td>'.$langs->trans("Country").'</td><td class="valeur">'.$object->country.'&nbsp;</td></tr>';
 		print '<tr><td>'.$langs->trans("EMail").'</td><td class="valeur">'.$object->email.'&nbsp;</td></tr>';
-		print '<tr><td>'.$langs->trans("Birthday").'</td><td class="valeur">'.$object->naiss.'&nbsp;</td></tr>';
+		print '<tr><td>'.$langs->trans("Birthday").'</td><td class="valeur">'.$object->birth.'&nbsp;</td></tr>';
 
 		if (isset($object->photo) && $object->photo !='')
 		{
@@ -155,4 +154,3 @@ function llxFooterVierge()
 	print "</html>\n";
 }
 
-?>

@@ -1,6 +1,7 @@
 <?php
-/* Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013      Juanjo Menent 		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,27 +83,27 @@ else if (preg_match('/del_(.*)/',$action,$reg))
 else if ($action == 'MAIN_SESSION_TIMEOUT')
 {
     if (! dolibarr_set_const($db, "MAIN_SESSION_TIMEOUT", $_POST["MAIN_SESSION_TIMEOUT"],'chaine',0,'',$conf->entity)) dol_print_error($db);
-    else $mesg=$langs->trans("RecordModifiedSuccessfully");
+    else setEventMessage($langs->trans("RecordModifiedSuccessfully"));
 }
 else if ($action == 'MAIN_UPLOAD_DOC')
 {
     if (! dolibarr_set_const($db, 'MAIN_UPLOAD_DOC',$_POST["MAIN_UPLOAD_DOC"],'chaine',0,'',$conf->entity)) dol_print_error($db);
-    else $mesg=$langs->trans("RecordModifiedSuccessfully");
+    else setEventMessage($langs->trans("RecordModifiedSuccessfully"));
 }
 else if ($action == 'MAIN_UMASK')
 {
     if (! dolibarr_set_const($db, "MAIN_UMASK", $_POST["MAIN_UMASK"],'chaine',0,'',$conf->entity)) dol_print_error($db);
-    else $mesg=$langs->trans("RecordModifiedSuccessfully");
+    else setEventMessage($langs->trans("RecordModifiedSuccessfully"));
 }
 else if ($action == 'MAIN_ANTIVIRUS_COMMAND')
 {
     if (! dolibarr_set_const($db, "MAIN_ANTIVIRUS_COMMAND", $_POST["MAIN_ANTIVIRUS_COMMAND"],'chaine',0,'',$conf->entity)) dol_print_error($db);
-    else $mesg=$langs->trans("RecordModifiedSuccessfully");
+    else setEventMessage($langs->trans("RecordModifiedSuccessfully"));
 }
 else if ($action == 'MAIN_ANTIVIRUS_PARAM')
 {
     if (! dolibarr_set_const($db, "MAIN_ANTIVIRUS_PARAM", $_POST["MAIN_ANTIVIRUS_PARAM"],'chaine',0,'',$conf->entity)) dol_print_error($db);
-    else $mesg=$langs->trans("RecordModifiedSuccessfully");
+    else setEventMessage($langs->trans("RecordModifiedSuccessfully"));
 }
 
 // Delete file
@@ -123,11 +124,11 @@ else if ($action == 'delete')
 
 $form = new Form($db);
 
-llxHeader('',$langs->trans("Miscellanous"));
+llxHeader('',$langs->trans("Miscellaneous"));
 
 print_fiche_titre($langs->trans("SecuritySetup"),'','setup');
 
-print $langs->trans("MiscellanousDesc")."<br>\n";
+print $langs->trans("MiscellaneousDesc")."<br>\n";
 print "<br>\n";
 
 $head=security_prepare_head();
@@ -146,14 +147,15 @@ print '<td width="100">&nbsp;</td>';
 print "</tr>\n";
 
 $var=!$var;
-if (empty($conf->global->MAIN_SESSION_TIMEOUT)) $conf->global->MAIN_SESSION_TIMEOUT=ini_get("session.gc_maxlifetime");
+$sessiontimeout=ini_get("session.gc_maxlifetime");
+if (empty($conf->global->MAIN_SESSION_TIMEOUT)) $conf->global->MAIN_SESSION_TIMEOUT=$sessiontimeout;
 print '<form action="'.$_SERVER["PHP_SELF"].'?action=MAIN_SESSION_TIMEOUT" method="POST">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<tr '.$bc[$var].'>';
 print '<td>'.$langs->trans("SessionTimeOut").'</td><td align="right">';
 print $form->textwithpicto('',$langs->trans("SessionExplanation",ini_get("session.gc_probability"),ini_get("session.gc_divisor")));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_SESSION_TIMEOUT" type="text" size="6" value="'.htmlentities($conf->global->MAIN_SESSION_TIMEOUT).'"> '.strtolower($langs->trans("Seconds"));
 print '</td>';
 print '<td align="right">';
@@ -200,7 +202,6 @@ if (function_exists("imagecreatefrompng"))
 }
 else
 {
-    $form = new Form($db);
     $desc = $form->textwithpicto('',$langs->transnoentities("EnableGDLibraryDesc"),1,'warning');
     print $desc;
 }
@@ -250,7 +251,7 @@ $max=@ini_get('upload_max_filesize');
 if ($max) print ' '.$langs->trans("MustBeLowerThanPHPLimit",$max*1024,$langs->trans("Kb")).'.';
 else print ' '.$langs->trans("NoMaxSizeByPHPLimit").'.';
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_UPLOAD_DOC" type="text" size="6" value="'.htmlentities($conf->global->MAIN_UPLOAD_DOC).'"> '.$langs->trans("Kb");
 print '</td>';
 print '<td align="right">';
@@ -265,7 +266,7 @@ print '<tr '.$bc[$var].'>';
 print '<td>'.$langs->trans("UMask").'</td><td align="right">';
 print $form->textwithpicto('',$langs->trans("UMaskExplanation"));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_UMASK" type="text" size="6" value="'.htmlentities($conf->global->MAIN_UMASK).'">';
 print '</td>';
 print '<td align="right">';
@@ -326,7 +327,7 @@ dol_fiche_end();
 // Form to test upload
 print '<br>';
 $formfile=new FormFile($db);
-$formfile->form_attach_new_file($_SERVER['PHP_SELF'], $langs->trans("FormToTestFileUploadForm"), 0, 0, 1);
+$formfile->form_attach_new_file($_SERVER['PHP_SELF'], $langs->trans("FormToTestFileUploadForm"), 0, 0, 1, 50, '', '', 1, '', 0);
 
 // List of document
 $filearray=dol_dir_list($upload_dir, "files", 0, '', '', 'name', SORT_ASC, 1);
@@ -335,4 +336,3 @@ $formfile->list_of_documents($filearray, '', 'admin_temp', '');
 
 llxFooter();
 $db->close();
-?>

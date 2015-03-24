@@ -25,7 +25,7 @@
 
 global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
 require_once dirname(__FILE__).'/../../htdocs/core/lib/date.lib.php';
 
@@ -150,6 +150,18 @@ class DateLibTest extends PHPUnit_Framework_TestCase
     	print __METHOD__." result=".$result."\n";
 		$this->assertEquals(1,$result);
 
+		// With different date before and after sunlight hour (day to change sunlight hour is 2014-03-30)
+		$date1=dol_mktime(0, 0, 0, 3, 28, 2014, true);
+		$date2=dol_mktime(0, 0, 0, 3, 31, 2014, true);
+
+		$result=num_between_day($date1,$date2,1);
+    	print __METHOD__." result=".$result."\n";
+		$this->assertEquals(4,$result);
+
+		$result=num_between_day($date1,$date2,0);
+    	print __METHOD__." result=".$result."\n";
+		$this->assertEquals(3,$result);
+
 		return $result;
     }
 
@@ -217,6 +229,26 @@ class DateLibTest extends PHPUnit_Framework_TestCase
        	print __METHOD__." result=".$result."\n";
     	$this->assertEquals('1970-01-01 00:00:00',$result);
 
+    	// Check %Y-%m-%d %H:%M:%S format
+    	$result=dol_print_date(16725225600,'%Y-%m-%d %H:%M:%S',true);	// http://www.epochconverter.com/
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals('2500-01-01 00:00:00',$result);
+
+    	// Check %Y-%m-%d %H:%M:%S format
+    	$result=dol_print_date(-1830384000,'%Y-%m-%d %H:%M:%S',true);	// http://www.epochconverter.com/
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals('1912-01-01 00:00:00',$result);	// dol_print_date use TZ (good) but epoch converter does not use it.
+
+    	// Check %Y-%m-%d %H:%M:%S format
+    	$result=dol_print_date(-11676096000,'%Y-%m-%d %H:%M:%S',true);	// http://www.epochconverter.com/
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals('1600-01-01 00:00:00',$result);
+
+    	// test with negative timezone
+    	$result=dol_print_date(-1,'%Y-%m-%d %H:%M:%S',true);	// http://www.epochconverter.com/
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals('1969-12-31 23:59:59',$result);
+
     	// Check dayhour format for fr_FR
     	$outputlangs=new Translate('',$conf);
     	$outputlangs->setDefaultLang('fr_FR');
@@ -238,7 +270,7 @@ class DateLibTest extends PHPUnit_Framework_TestCase
     	// Check %a and %b format for en_US
     	$result=dol_print_date(0,'%a %b',true,$outputlangs);
     	print __METHOD__." result=".$result."\n";
-    	$this->assertEquals('Thu jan',$result);
+    	$this->assertEquals('Thu Jan',$result);
 
     	return $result;
     }
@@ -281,7 +313,17 @@ class DateLibTest extends PHPUnit_Framework_TestCase
         $langs=$this->savlangs;
         $db=$this->savdb;
 
-        $stime='1970-01-01T02:00:00Z';
+		$stime='19700102';
+		$result=dol_stringtotime($stime);
+		print __METHOD__." result=".$result."\n";
+		$this->assertEquals(86400,$result);
+
+		$stime='1970-01-01T02:00:00Z';
+        $result=dol_stringtotime($stime);
+    	print __METHOD__." result=".$result."\n";
+		$this->assertEquals(7200,$result);
+
+        $stime='1970-01-01 02:00:00';
         $result=dol_stringtotime($stime);
     	print __METHOD__." result=".$result."\n";
 		$this->assertEquals(7200,$result);
@@ -296,27 +338,7 @@ class DateLibTest extends PHPUnit_Framework_TestCase
 		print __METHOD__." result=".$result."\n";
 		$this->assertEquals(7200,$result);
 
-		$stime='19700101';
-		$result=dol_stringtotime($stime);
-		print __METHOD__." result=".$result."\n";
-		$this->assertEquals(0,$result);
-
         return $result;
     }
 
-    /**
-	 *	testDolGetFirstDay
-	 *
-	 *	@return	void
-     */
-    public function testDolGetFirstDay()
-    {
-        global $conf,$user,$langs,$db;
-        $conf=$this->savconf;
-        $user=$this->savuser;
-        $langs=$this->savlangs;
-        $db=$this->savdb;
-
-    }
 }
-?>

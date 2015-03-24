@@ -1,12 +1,12 @@
-# Dolibarr language file - en_FR - dict
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - dict
 CountryFR=France
 CountryBE=Belgique
 CountryIT=Italie
 CountryES=Espagne
 CountryDE=Allemagne
 CountryCH=Suisse
-CountryGB=Royaume-Uni
+CountryGB=Grande-Bretagne
+CountryUK=Royaume-Uni
 CountryIE=Irlande
 CountryCN=Chine
 CountryTN=Tunisie
@@ -274,16 +274,12 @@ CurrencyMAD=Dirham
 CurrencySingMAD=Dirham
 CurrencyMGA=Ariary
 CurrencySingMGA=Ariary
-CurrencyMUR=Roupies mauritiennes
-CurrencySingMUR=Roupie mauritienne
+CurrencyMUR=Roupies mauriciennes
+CurrencySingMUR=Roupie mauriciennes
 CurrencyNOK=Couronnes norvégiennes
 CurrencySingNOK=Couronne norvégienne
-CurrencySUR=Roubles
-CurrencySingSUR=Rouble
 CurrencyTND=Dinars tunisiens
 CurrencySingTND=Dinar tunisien
-CurrencyTRL=Livres turques
-CurrencySingTRL=Livre turque
 CurrencyUSD=Dollars US
 CurrencySingUSD=Dollar US
 CurrencyUAH=Hryvnia
@@ -298,14 +294,14 @@ CurrencySingXPF=Franc CFP
 CurrencyCentSingEUR=centime
 CurrencyThousandthSingTND=millime
 
-#### Input reasons ####
+#### Input reasons #####
 DemandReasonTypeSRC_INTE=Internet
 DemandReasonTypeSRC_CAMP_MAIL=Campagne Publipostage
 DemandReasonTypeSRC_CAMP_EMAIL=Campagne EMailing
 DemandReasonTypeSRC_CAMP_PHO=Campagne Téléphonique
 DemandReasonTypeSRC_CAMP_FAX=Campagne Fax
 DemandReasonTypeSRC_COMM=Contact commercial
-DemandReasonTypeSRC_SHOP=Contact en magazin
+DemandReasonTypeSRC_SHOP=Contact en boutique
 DemandReasonTypeSRC_WOM=Bouche à oreille
 DemandReasonTypeSRC_PARTNER=Partenaire
 DemandReasonTypeSRC_EMPLOYEE=Employé

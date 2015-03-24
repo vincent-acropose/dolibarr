@@ -4,6 +4,7 @@
  * Copyright (C) 2005		Simon TOSSER			<simon@kornog-computing.com>
  * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2007		Franky Van Liedekerke	<franky.van.liedekerke@telenet.be>
+ * Copyright (C) 2013       Florian Henry		  	<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,9 +42,11 @@ if (! empty($conf->stock->enabled))
 $langs->load("sendings");
 $langs->load("bills");
 $langs->load('deliveries');
+$langs->load('orders');
 
 $action=GETPOST('action', 'alpha');
 $confirm=GETPOST('confirm', 'alpha');
+$backtourl=GETPOST('backtourl');
 
 // Security check
 $id = GETPOST('id', 'int');
@@ -147,13 +150,31 @@ if ($action == 'confirm_delete' && $confirm == 'yes' && $user->rights->expeditio
 	if ($result > 0)
 	{
 		$db->commit();
-		header("Location: ".DOL_URL_ROOT.'/expedition/index.php');
+		if (! empty($backtourl)) header("Location: ".$backtourl);
+		else header("Location: ".DOL_URL_ROOT.'/expedition/index.php');
 		exit;
 	}
 	else
 	{
 		$db->rollback();
 	}
+}
+
+if ($action == 'setdate_livraison' && $user->rights->expedition->livraison->creer)
+{
+	$object = new Livraison($db);
+	$object->fetch($id);
+	$object->fetch_thirdparty();
+
+	//print "x ".$_POST['liv_month'].", ".$_POST['liv_day'].", ".$_POST['liv_year'];
+    $datedelivery=dol_mktime(GETPOST('liv_hour','int'), GETPOST('liv_min','int'), 0, GETPOST('liv_month','int'), GETPOST('liv_day','int'), GETPOST('liv_year','int'));
+
+    $object->fetch($id);
+    $result=$object->set_date_livraison($user,$datedelivery);
+    if ($result < 0)
+    {
+        $mesg='<div class="error">'.$object->error.'</div>';
+    }
 }
 
 /*
@@ -165,15 +186,13 @@ if ($action == 'builddoc')	// En get ou en post
 	$object->fetch($id);
 	$object->fetch_thirdparty();
 
-	if ($_REQUEST['model'])
-	{
-		$object->setDocModel($user, $_REQUEST['model']);
-	}
+	// Save last template used to generate document
+	if (GETPOST('model')) $object->setDocModel($user, GETPOST('model','alpha'));
 
 	// Define output language
 	$outputlangs = $langs;
 	$newlang='';
-	if ($conf->global->MAIN_MULTILANGS && empty($newlang) && ! empty($_REQUEST['lang_id'])) $newlang=$_REQUEST['lang_id'];
+	if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id')) $newlang=GETPOST('lang_id');
 	if ($conf->global->MAIN_MULTILANGS && empty($newlang)) $newlang=$object->client->default_lang;
 	if (! empty($newlang))
 	{
@@ -298,7 +317,8 @@ if ($action == 'create')
 		 */
 		print '<br><table class="noborder" width="100%">';
 
-		$lines = $commande->fetch_lines(1);
+		$commande->fetch_lines(1);
+		$lines = $commande->lines;
 
 		// Lecture des livraisons deja effectuees
 		$commande->livraison_array();
@@ -326,7 +346,7 @@ if ($action == 'create')
 
 			$line = $commande->lines[$i];
 			$var=!$var;
-			print "<tr $bc[$var]>\n";
+			print "<tr ".$bc[$var].">\n";
 			if ($line->fk_product > 0)
 			{
 				$product->fetch($line->fk_product);
@@ -447,11 +467,13 @@ else
 		$result = $delivery->fetch($id);
 		$delivery->fetch_thirdparty();
 
+		// Origin of a 'livraison' (delivery) is ALWAYS 'expedition' (shipment).
+		// However, origin of shipment in future may differs (commande, proposal, ...)
+
 		$expedition=new Expedition($db);
 		$result = $expedition->fetch($delivery->origin_id);
-		$typeobject = $expedition->origin;
-
-		if ($delivery->origin_id)
+		$typeobject = $expedition->origin;	// example: commande
+		if ($delivery->origin_id > 0)
 		{
 			$delivery->fetch_origin();
 		}
@@ -462,7 +484,7 @@ else
 			$soc->fetch($delivery->socid);
 
 			$head=delivery_prepare_head($delivery);
-			dol_fiche_head($head, 'delivery', $langs->trans("Sending"), 0, 'sending');
+			dol_fiche_head($head, 'delivery', $langs->trans("Shipment"), 0, 'sending');
 
 			/*
 			 * Confirmation de la suppression
@@ -470,19 +492,18 @@ else
 			 */
 			if ($action == 'delete')
 			{
-				$expedition_id = $_GET["expid"];
-				$ret=$form->form_confirm($_SERVER['PHP_SELF'].'?id='.$delivery->id.'&amp;expid='.$expedition_id,$langs->trans("DeleteDeliveryReceipt"),$langs->trans("DeleteDeliveryReceiptConfirm",$delivery->ref),'confirm_delete','','',1);
-				if ($ret == 'html') print '<br>';
+				$expedition_id = GETPOST("expid");
+				print $form->formconfirm($_SERVER['PHP_SELF'].'?id='.$delivery->id.'&expid='.$expedition_id.'&backtourl='.urlencode($backtourl),$langs->trans("DeleteDeliveryReceipt"),$langs->trans("DeleteDeliveryReceiptConfirm",$delivery->ref),'confirm_delete','','',1);
+
 			}
 
 			/*
 			 * Confirmation de la validation
-			 *
 			 */
 			if ($action == 'valid')
 			{
-				$ret=$form->form_confirm($_SERVER['PHP_SELF'].'?id='.$delivery->id,$langs->trans("ValidateDeliveryReceipt"),$langs->trans("ValidateDeliveryReceiptConfirm",$delivery->ref),'confirm_valid','','',1);
-				if ($ret == 'html') print '<br>';
+				print $form->formconfirm($_SERVER['PHP_SELF'].'?id='.$delivery->id,$langs->trans("ValidateDeliveryReceipt"),$langs->trans("ValidateDeliveryReceiptConfirm",$delivery->ref),'confirm_valid','','',1);
+
 			}
 
 
@@ -490,6 +511,20 @@ else
 			 *   Livraison
 			 */
 			print '<table class="border" width="100%">';
+
+			// Shipment
+			if (($delivery->origin == 'shipment' || $delivery->origin == 'expedition') && $delivery->origin_id > 0)
+			{
+				$linkback = '<a href="'.DOL_URL_ROOT.'/expedition/liste.php">'.$langs->trans("BackToList").'</a>';
+
+				// Ref
+				print '<tr><td width="20%">'.$langs->trans("RefSending").'</td>';
+				print '<td colspan="3">';
+				// Nav is hidden because on a delivery receipt of a shipment, if we go on next shipment, we may find no tab (a shipment may not have delivery receipt yet)
+				//print $form->showrefnav($expedition, 'refshipment', $linkback, 1, 'ref', 'ref');
+				print $form->showrefnav($expedition, 'refshipment', $linkback, 0, 'ref', 'ref');
+				print '</td></tr>';
+			}
 
 			// Ref
 			print '<tr><td width="20%">'.$langs->trans("Ref").'</td>';
@@ -533,10 +568,46 @@ else
 			print '</tr>';
 
 			// Date delivery real / Received
-			// TODO Can edit this date, even if delivery validated.
-			print '<tr><td>'.$langs->trans("DateReceived").'</td>';
-			print '<td colspan="3">'.dol_print_date($delivery->date_delivery,'daytext')."</td>\n";
+			print '<tr><td height="10">';
+			print '<table class="nobordernopadding" width="100%"><tr><td>';
+			print $langs->trans('DateReceived');
+			print '</td>';
+
+			if ($action != 'editdate_livraison') print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=editdate_livraison&amp;id='.$delivery->id.'">'.img_edit($langs->trans('SetDeliveryDate'),1).'</a></td>';
+			print '</tr></table>';
+			print '</td><td colspan="2">';
+			if ($action == 'editdate_livraison')
+			{
+				print '<form name="setdate_livraison" action="'.$_SERVER["PHP_SELF"].'?id='.$delivery->id.'" method="post">';
+				print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+				print '<input type="hidden" name="action" value="setdate_livraison">';
+				$form->select_date($delivery->date_delivery?$delivery->date_delivery:-1,'liv_',1,1,'',"setdate_livraison");
+				print '<input type="submit" class="button" value="'.$langs->trans('Modify').'">';
+				print '</form>';
+			}
+			else
+			{
+				print $delivery->date_delivery ? dol_print_date($delivery->date_delivery,'dayhourtext') : '&nbsp;';
+			}
+			print '</td>';
 			print '</tr>';
+
+			// Note Public
+            print '<tr><td>'.$langs->trans("NotePublic").'</td>';
+            print '<td colspan="3">';
+            print nl2br($delivery->note_public);
+            /*$doleditor = new DolEditor('note_public', $object->note_public, '', 80, 'dolibarr_notes', 'In', 0, false, true, ROWS_3, 70);
+            print $doleditor->Create(1);*/
+            print "</td></tr>";
+
+			// Note Private
+            print '<tr><td>'.$langs->trans("NotePrivate").'</td>';
+            print '<td colspan="3">';
+            print nl2br($delivery->note_private);
+            /*$doleditor = new DolEditor('note_pprivate', $object->note_private, '', 80, 'dolibarr_notes', 'In', 0, false, true, ROWS_3, 70);
+            print $doleditor->Create(1);*/
+            print "</td></tr>";
+
 
 			// Statut
 			print '<tr><td>'.$langs->trans("Status").'</td>';
@@ -579,7 +650,7 @@ else
 			{
 				$var=!$var;
 
-				print "<tr $bc[$var]>";
+				print "<tr ".$bc[$var].">";
 				if ($delivery->lines[$i]->fk_product > 0)
 				{
 					$product = new Product($db);
@@ -668,7 +739,7 @@ else
 				{
 					if ($conf->expedition_bon->enabled)
 					{
-						print '<a class="butActionDelete" href="fiche.php?id='.$delivery->id.'&amp;expid='.$delivery->expedition_id.'&amp;action=delete">'.$langs->trans("Delete").'</a>';
+						print '<a class="butActionDelete" href="fiche.php?id='.$delivery->id.'&amp;expid='.$delivery->origin_id.'&amp;action=delete&amp;backtourl='.urlencode(DOL_URL_ROOT.'/expedition/fiche.php?id='.$delivery->origin_id).'">'.$langs->trans("Delete").'</a>';
 					}
 					else
 					{
@@ -694,6 +765,18 @@ else
 			$delallowed=$user->rights->expedition->livraison->supprimer;
 
 			$somethingshown=$formfile->show_documents('livraison',$deliveryref,$filedir,$urlsource,$genallowed,$delallowed,$delivery->modelpdf,1,0,0,28,0,'','','',$soc->default_lang);
+
+			/*
+		 	 * Linked object block (of linked shipment)
+		 	 */
+			if ($delivery->origin == 'expedition')
+			{
+				$shipment = new Expedition($db);
+				$shipment->fetch($delivery->origin_id);
+
+				$somethingshown=$shipment->showLinkedObjectBlock();
+			}
+
 			if ($genallowed && ! $somethingshown) $somethingshown=1;
 
 			print '</td><td valign="top" width="50%">';
@@ -725,4 +808,3 @@ else
 
 llxFooter();
 $db->close();
-?>

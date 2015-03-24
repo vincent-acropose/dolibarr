@@ -33,7 +33,7 @@ class box_propales extends ModeleBoxes
 {
     var $boxcode="lastpropals";
     var $boximg="object_propal";
-    var $boxlabel;
+    var $boxlabel="BoxLastProposals";
     var $depends = array("propal");	// conf->propal->enabled
 
     var $db;
@@ -42,17 +42,6 @@ class box_propales extends ModeleBoxes
     var $info_box_head = array();
     var $info_box_contents = array();
 
-
-    /**
-     *  Constructor
-     */
-    function __construct()
-    {
-    	global $langs;
-      $langs->load("boxes");
-
-      $this->boxlabel=$langs->transnoentitiesnoconv("BoxLastProposals");
-    }
 
     /**
 	 *  Load data into info_box_contents array to show array later.
@@ -86,7 +75,6 @@ class box_propales extends ModeleBoxes
         $sql.= $db->plimit($max, 0);
 
         $result = $db->query($sql);
-
         if ($result)
         {
         	$num = $db->num_rows($result);
@@ -131,6 +119,8 @@ class box_propales extends ModeleBoxes
         	}
 
         	if ($num==0) $this->info_box_contents[$i][0] = array('td' => 'align="center"','text'=>$langs->trans("NoRecordedProposals"));
+
+			$db->free($result);
         }
         else
         {
@@ -160,4 +150,3 @@ class box_propales extends ModeleBoxes
 
 }
 
-?>

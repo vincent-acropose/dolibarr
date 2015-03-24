@@ -250,20 +250,22 @@ function run_sql($sqlfile,$silent=1,$entity='',$usesavepoint=1,$handler='',$oker
             $newsql=preg_replace('/__ENTITY__/i',(!empty($entity)?$entity:$conf->entity),$sql);
 
             // Ajout trace sur requete (eventuellement a commenter si beaucoup de requetes)
-            if (! $silent) print '<tr><td valign="top">'.$langs->trans("Request").' '.($i+1)." sql='".$newsql."'</td></tr>\n";
+            if (! $silent) print '<tr><td valign="top">'.$langs->trans("Request").' '.($i+1)." sql='".dol_htmlentities($newsql,ENT_NOQUOTES)."'</td></tr>\n";
             dol_syslog('Admin.lib::run_sql Request '.($i+1).' sql='.$newsql, LOG_DEBUG);
+			$sqlmodified=0;
 
             // Replace for encrypt data
-            if (preg_match_all('/__ENCRYPT\(\'([A-Za-z0-9_\"\[\]]+)\'\)__/i',$newsql,$reg))
+            if (preg_match_all('/__ENCRYPT\(\'([^\']+)\'\)__/i',$newsql,$reg))
             {
                 $num=count($reg[0]);
 
-                for($i=0;$i<$num;$i++)
+                for($j=0;$j<$num;$j++)
                 {
-                    $from 	= $reg[0][$i];
-                    $to		= $db->encrypt($reg[1][$i],1);
+                    $from 	= $reg[0][$j];
+                    $to		= $db->encrypt($reg[1][$j],1);
                     $newsql	= str_replace($from,$to,$newsql);
                 }
+                $sqlmodified++;
             }
 
             // Replace for decrypt data
@@ -271,12 +273,13 @@ function run_sql($sqlfile,$silent=1,$entity='',$usesavepoint=1,$handler='',$oker
             {
                 $num=count($reg[0]);
 
-                for($i=0;$i<$num;$i++)
+                for($j=0;$j<$num;$j++)
                 {
-                    $from 	= $reg[0][$i];
-                    $to		= $db->decrypt($reg[1][$i]);
+                    $from 	= $reg[0][$j];
+                    $to		= $db->decrypt($reg[1][$j]);
                     $newsql	= str_replace($from,$to,$newsql);
                 }
+                $sqlmodified++;
             }
 
             // Replace __x__ with rowid of insert nb x
@@ -294,8 +297,10 @@ function run_sql($sqlfile,$silent=1,$entity='',$usesavepoint=1,$handler='',$oker
                 $from='__'.$cursor.'__';
                 $to=$listofinsertedrowid[$cursor];
                 $newsql=str_replace($from,$to,$newsql);
-                dol_syslog('Admin.lib::run_sql New Request '.($i+1).' (replacing '.$from.' to '.$to.') sql='.$newsql, LOG_DEBUG);
+                $sqlmodified++;
             }
+
+            if ($sqlmodified) dol_syslog('Admin.lib::run_sql New Request '.($i+1).' sql='.$newsql, LOG_DEBUG);
 
             $result=$db->query($newsql,$usesavepoint);
             if ($result)
@@ -519,7 +524,7 @@ function security_prepare_head()
     $h++;
 
     $head[$h][0] = DOL_URL_ROOT."/admin/security_other.php";
-    $head[$h][1] = $langs->trans("Miscellanous");
+    $head[$h][1] = $langs->trans("Miscellaneous");
     $head[$h][2] = 'misc';
     $h++;
 
@@ -552,7 +557,13 @@ function listOfSessions()
     global $conf;
 
     $arrayofSessions = array();
-    $sessPath = ini_get("session.save_path").'/';
+    // session.save_path can be returned empty so we set a default location and work from there
+    $sessPath = '/tmp';
+    $iniPath = ini_get("session.save_path");
+    if ($iniPath) {
+        $sessPath = $iniPath;
+    }
+    $sessPath .= '/'; // We need the trailing slash
     dol_syslog('admin.lib:listOfSessions sessPath='.$sessPath);
 
     $dh = @opendir(dol_osencode($sessPath));
@@ -840,22 +851,22 @@ function unActivateModule($value, $requiredby=1)
 
 
 /**
- *  Add external modules to list of dictionnaries
+ *  Add external modules to list of dictionaries
  *
- * 	@param		array		&$taborder			Taborder
- * 	@param		array		&$tabname			Tabname
- * 	@param		array		&$tablib			Tablib
- * 	@param		array		&$tabsql			Tabsql
- * 	@param		array		&$tabsqlsort		Tabsqlsort
- * 	@param		array		&$tabfield			Tabfield
- * 	@param		array		&$tabfieldvalue		Tabfieldvalue
- * 	@param		array		&$tabfieldinsert	Tabfieldinsert
- * 	@param		array		&$tabrowid			Tabrowid
- * 	@param		array		&$tabcond			Tabcond
- * 	@param		array		&$tabhelp			Tabhelp
+ * 	@param		array		$taborder			Taborder
+ * 	@param		array		$tabname			Tabname
+ * 	@param		array		$tablib			Tablib
+ * 	@param		array		$tabsql			Tabsql
+ * 	@param		array		$tabsqlsort		Tabsqlsort
+ * 	@param		array		$tabfield			Tabfield
+ * 	@param		array		$tabfieldvalue		Tabfieldvalue
+ * 	@param		array		$tabfieldinsert	Tabfieldinsert
+ * 	@param		array		$tabrowid			Tabrowid
+ * 	@param		array		$tabcond			Tabcond
+ * 	@param		array		$tabhelp			Tabhelp
  * 	@return		int			1
  */
-function complete_dictionnary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsql,&$tabsqlsort,&$tabfield,&$tabfieldvalue,&$tabfieldinsert,&$tabrowid,&$tabcond,&$tabhelp)
+function complete_dictionary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsql,&$tabsqlsort,&$tabfield,&$tabfieldvalue,&$tabfieldinsert,&$tabrowid,&$tabcond,&$tabhelp)
 {
     global $db, $modules, $conf, $langs;
 
@@ -878,7 +889,7 @@ function complete_dictionnary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsq
         {
             while (($file = readdir($handle))!==false)
             {
-                if (is_dir($dirroot.'/'.$file) && substr($file, 0, 1) <> '.' && substr($file, 0, 3) <> 'CVS' && $file != 'includes')
+            	if (is_dir($dirroot.'/'.$file) && substr($file, 0, 1) <> '.' && substr($file, 0, 3) <> 'CVS' && $file != 'includes')
                 {
                     if (is_dir($dirroot . '/' . $file . '/core/modules/'))
                     {
@@ -889,7 +900,6 @@ function complete_dictionnary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsq
             closedir($handle);
         }
     }
-    //var_dump($modulesdir);
 
     foreach ($modulesdir as $dir)
     {
@@ -926,6 +936,8 @@ function complete_dictionnary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsq
                         $const_name = 'MAIN_MODULE_'.strtoupper(preg_replace('/^mod/i','',get_class($objMod)));
                         if ($objMod->version == 'development'  && $conf->global->MAIN_FEATURES_LEVEL < 2 && ! $conf->global->$const_name) $modulequalified=0;
                         if ($objMod->version == 'experimental' && $conf->global->MAIN_FEATURES_LEVEL < 1 && ! $conf->global->$const_name) $modulequalified=0;
+                        //If module is not activated disqualified
+                        if (empty($conf->global->$const_name)) $modulequalified=0;
 
                         if ($modulequalified)
                         {
@@ -948,27 +960,28 @@ function complete_dictionnary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsq
 
                             // Complete arrays
                             //&$tabname,&$tablib,&$tabsql,&$tabsqlsort,&$tabfield,&$tabfieldvalue,&$tabfieldinsert,&$tabrowid,&$tabcond
-                            //$objMod
-                            if (! empty($objMod->dictionnaries))
+                            if (empty($objMod->dictionaries) && ! empty($objMod->dictionnaries)) $objMod->dictionaries=$objMod->dictionnaries;		// For backward compatibility
+
+                            if (! empty($objMod->dictionaries))
                             {
-                                //var_dump($objMod->dictionnaries['tabname']);
+                                //var_dump($objMod->dictionaries['tabname']);
                                 $taborder[] = 0;
-                                foreach($objMod->dictionnaries['tabname'] as $val)
+                                foreach($objMod->dictionaries['tabname'] as $val)
                                 {
                                     $taborder[] = count($tabname)+1;
                                     $tabname[] = $val;
                                 }
-                                foreach($objMod->dictionnaries['tablib'] as $val) $tablib[] = $val;
-                                foreach($objMod->dictionnaries['tabsql'] as $val) $tabsql[] = $val;
-                                foreach($objMod->dictionnaries['tabsqlsort'] as $val) $tabsqlsort[] = $val;
-                                foreach($objMod->dictionnaries['tabfield'] as $val) $tabfield[] = $val;
-                                foreach($objMod->dictionnaries['tabfieldvalue'] as $val) $tabfieldvalue[] = $val;
-                                foreach($objMod->dictionnaries['tabfieldinsert'] as $val) $tabfieldinsert[] = $val;
-                                foreach($objMod->dictionnaries['tabrowid'] as $val) $tabrowid[] = $val;
-                                foreach($objMod->dictionnaries['tabcond'] as $val) $tabcond[] = $val;
-                                if (! empty($objMod->dictionnaries['tabhelp'])) foreach($objMod->dictionnaries['tabhelp'] as $val) $tabhelp[] = $val;
-                                //foreach($objMod->dictionnaries['tabsqlsort'] as $val) $tablib[] = $val;
-                                //$tabname = array_merge ($tabname, $objMod->dictionnaries['tabname']);
+                                foreach($objMod->dictionaries['tablib'] as $val) $tablib[] = $val;
+                                foreach($objMod->dictionaries['tabsql'] as $val) $tabsql[] = $val;
+                                foreach($objMod->dictionaries['tabsqlsort'] as $val) $tabsqlsort[] = $val;
+                                foreach($objMod->dictionaries['tabfield'] as $val) $tabfield[] = $val;
+                                foreach($objMod->dictionaries['tabfieldvalue'] as $val) $tabfieldvalue[] = $val;
+                                foreach($objMod->dictionaries['tabfieldinsert'] as $val) $tabfieldinsert[] = $val;
+                                foreach($objMod->dictionaries['tabrowid'] as $val) $tabrowid[] = $val;
+                                foreach($objMod->dictionaries['tabcond'] as $val) $tabcond[] = $val;
+                                if (! empty($objMod->dictionaries['tabhelp'])) foreach($objMod->dictionaries['tabhelp'] as $val) $tabhelp[] = $val;
+                                //foreach($objMod->dictionaries['tabsqlsort'] as $val) $tablib[] = $val;
+                                //$tabname = array_merge ($tabname, $objMod->dictionaries['tabname']);
                                 //var_dump($tabcond);
                                 //exit;
                             }
@@ -996,20 +1009,22 @@ function complete_dictionnary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsq
  *	Show array with constants to edit
  *
  *	@param	array	$tableau		Array of constants
+ *	@param	int		$strictw3c		Respect W3C (no form into table)
  *	@return	void
  */
-function form_constantes($tableau)
+function form_constantes($tableau,$strictw3c=0)
 {
     global $db,$bc,$langs,$conf,$_Avery_Labels;
 
     $form = new Form($db);
 
+    if (! empty($strictw3c)) print "\n".'<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
+
     print '<table class="noborder" width="100%">';
     print '<tr class="liste_titre">';
     print '<td>'.$langs->trans("Description").'</td>';
     print '<td>'.$langs->trans("Value").'*</td>';
-    print '<td>&nbsp;</td>';
-    print '<td align="center" width="80">'.$langs->trans("Action").'</td>';
+    if (empty($strictw3c)) print '<td align="center" width="80">'.$langs->trans("Action").'</td>';
     print "</tr>\n";
     $var=true;
 
@@ -1039,17 +1054,17 @@ function form_constantes($tableau)
             	$obj = (object) array('rowid'=>'','name'=>'','value'=>'','type'=>'','note'=>'');
             }
 
-            print "\n".'<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
+            if (empty($strictw3c)) print "\n".'<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
 
             print "<tr ".$bc[$var].">";
 
-            // Affiche nom constante
+            // Show constant
             print '<td>';
             print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
             print '<input type="hidden" name="action" value="update">';
-            print '<input type="hidden" name="rowid" value="'.$obj->rowid.'">';
-            print '<input type="hidden" name="constname" value="'.$const.'">';
-            print '<input type="hidden" name="constnote" value="'.nl2br(dol_escape_htmltag($obj->note)).'">';
+            print '<input type="hidden" name="rowid'.(empty($strictw3c)?'':'[]').'" value="'.$obj->rowid.'">';
+            print '<input type="hidden" name="constname'.(empty($strictw3c)?'':'[]').'" value="'.$const.'">';
+            print '<input type="hidden" name="constnote'.(empty($strictw3c)?'':'[]').'" value="'.nl2br(dol_escape_htmltag($obj->note)).'">';
 
             print $langs->trans('Desc'.$const);
 
@@ -1069,9 +1084,21 @@ function form_constantes($tableau)
                 print '</div>';
                 //print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members/remove?adminpw=%MAILMAN_ADMINPW%&unsubscribees=%EMAIL%';
             }
+            if ($const == 'ADHERENT_MAILMAN_LISTS')
+            {
+            	print '. '.$langs->trans("Example").': <a href="#" id="exampleclick3">'.img_down().'</a><br>';
+            	print '<div id="example3" class="hidden">';
+            	print 'mymailmanlist<br>';
+            	print 'mymailmanlist1,mymailmanlist2<br>';
+            	print 'TYPE:Type1:mymailmanlist1,TYPE:Type2:mymailmanlist2<br>';
+            	if ($conf->categorie->enabled) print 'CATEG:Categ1:mymailmanlist1,CATEG:Categ2:mymailmanlist2<br>';
+            	print '</div>';
+            	//print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members/remove?adminpw=%MAILMAN_ADMINPW%&unsubscribees=%EMAIL%';
+            }
 
             print "</td>\n";
 
+            // Value
             if ($const == 'ADHERENT_CARD_TYPE' || $const == 'ADHERENT_ETIQUETTE_TYPE')
             {
                 print '<td>';
@@ -1082,55 +1109,57 @@ function form_constantes($tableau)
                 {
                     $arrayoflabels[$codecards]=$_Avery_Labels[$codecards]['name'];
                 }
-                print $form->selectarray('constvalue',$arrayoflabels,($obj->value?$obj->value:'CARD'),1,0,0);
-                print '</td><td>';
+                print $form->selectarray('constvalue'.(empty($strictw3c)?'':'[]'),$arrayoflabels,($obj->value?$obj->value:'CARD'),1,0,0);
                 print '<input type="hidden" name="consttype" value="yesno">';
                 print '</td>';
             }
             else
             {
                 print '<td>';
-                //print 'aa'.$const;
                 if (in_array($const,array('ADHERENT_CARD_TEXT','ADHERENT_CARD_TEXT_RIGHT','ADHERENT_ETIQUETTE_TEXT')))
                 {
-                    print '<textarea class="flat" name="constvalue" cols="50" rows="5" wrap="soft">'."\n";
+                    print '<textarea class="flat" name="constvalue'.(empty($strictw3c)?'':'[]').'" cols="50" rows="5" wrap="soft">'."\n";
                     print $obj->value;
                     print "</textarea>\n";
-                    print '</td><td>';
                     print '<input type="hidden" name="consttype" value="texte">';
                 }
                 else if (in_array($const,array('ADHERENT_AUTOREGISTER_NOTIF_MAIL','ADHERENT_AUTOREGISTER_MAIL','ADHERENT_MAIL_VALID','ADHERENT_MAIL_COTIS','ADHERENT_MAIL_RESIL')))
                 {
                     require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
-                    $doleditor=new DolEditor('constvalue_'.$const,$obj->value,'',160,'dolibarr_notes','',false,false,$conf->fckeditor->enabled,5,60);
+                    $doleditor=new DolEditor('constvalue_'.$const.(empty($strictw3c)?'':'[]'),$obj->value,'',160,'dolibarr_notes','',false,false,$conf->fckeditor->enabled,5,60);
                     $doleditor->Create();
-
-                    print '</td><td>';
-                    print '<input type="hidden" name="consttype" value="texte">';
+                    print '<input type="hidden" name="consttype'.(empty($strictw3c)?'':'[]').'" value="texte">';
                 }
                 else if ($obj->type == 'yesno')
                 {
-                    print $form->selectyesno('constvalue',$obj->value,1);
-                    print '</td><td>';
-                    print '<input type="hidden" name="consttype" value="yesno">';
+                    print $form->selectyesno('constvalue'.(empty($strictw3c)?'':'[]'),$obj->value,1);
+                    print '<input type="hidden" name="consttype'.(empty($strictw3c)?'':'[]').'" value="yesno">';
                 }
                 else
                 {
-                    print '<input type="text" class="flat" size="48" name="constvalue" value="'.dol_escape_htmltag($obj->value).'">';
-                    print '</td><td>';
-                    print '<input type="hidden" name="consttype" value="chaine">';
+                    print '<input type="text" class="flat" size="48" name="constvalue'.(empty($strictw3c)?'':'[]').'" value="'.dol_escape_htmltag($obj->value).'">';
+                    print '<input type="hidden" name="consttype'.(empty($strictw3c)?'':'[]').'" value="chaine">';
                 }
                 print '</td>';
             }
-            print '<td align="center">';
-            print '<input type="submit" class="button" value="'.$langs->trans("Update").'" name="Button"> &nbsp;';
-            // print '<a href="adherent.php?name='.$const.'&action=unset">'.img_delete().'</a>';
-            print "</td>";
-            print "</tr>\n";
-            print "</form>\n";
+            // Submit
+            if (empty($strictw3c))
+            {
+            	print '<td align="center">';
+            	print '<input type="submit" class="button" value="'.$langs->trans("Update").'" name="Button">';
+	            print "</td>";
+            }
+    	    print "</tr>\n";
+            if (empty($strictw3c)) print "</form>\n";
         }
     }
     print '</table>';
+
+    if (! empty($strictw3c))
+    {
+    	print '<div align="center"><input type="submit" class="button" value="'.$langs->trans("Update").'" name="update"></div>';
+    	print "</form>\n";
+    }
 }
 
 
@@ -1147,19 +1176,21 @@ function showModulesExludedForExternal($modules)
 	$text=$langs->trans("OnlyFollowingModulesAreOpenedToExternalUsers");
 	$listofmodules=explode(',',$conf->global->MAIN_MODULES_FOR_EXTERNAL);
 	$i=0;
-	foreach($modules as $module)
-	{
-		$moduleconst=$module->const_name;
-		$modulename=strtolower($module->name);
-		//print 'modulename='.$modulename;
+	if (!empty($modules)) {
+		foreach($modules as $module)
+		{
+			$moduleconst=$module->const_name;
+			$modulename=strtolower($module->name);
+			//print 'modulename='.$modulename;
 
-		//if (empty($conf->global->$moduleconst)) continue;
-		if (! in_array($modulename,$listofmodules)) continue;
+			//if (empty($conf->global->$moduleconst)) continue;
+			if (! in_array($modulename,$listofmodules)) continue;
 
-		if ($i > 0) $text.=', ';
-		else $text.=' ';
-		$i++;
-		$text .= $langs->trans('Module'.$module->numero.'Name');
+			if ($i > 0) $text.=', ';
+			else $text.=' ';
+			$i++;
+			$text .= $langs->trans('Module'.$module->numero.'Name');
+		}
 	}
 	return img_picto($langs->trans('InfoAdmin'), 'star').' '.$text;
 }
@@ -1263,4 +1294,3 @@ function phpinfo_array()
 	return $info_arr;
 }
 
-?>

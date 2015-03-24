@@ -42,8 +42,11 @@ llxHeader("",$langs->trans("Stocks"),$help_url);
 
 print_fiche_titre($langs->trans("StocksArea"));
 
-print '<table border="0" width="100%" class="notopnoleftnoright">';
-print '<tr><td valign="top" width="30%" class="notopnoleft">';
+
+//print '<table border="0" width="100%" class="notopnoleftnoright">';
+//print '<tr><td valign="top" width="30%" class="notopnoleft">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
+
 
 /*
  * Zone recherche entrepot
@@ -85,7 +88,7 @@ if ($result)
         {
             $objp = $db->fetch_object($result);
             $var=!$var;
-            print "<tr $bc[$var]>";
+            print "<tr ".$bc[$var].">";
             print "<td><a href=\"fiche.php?id=$objp->rowid\">".img_object($langs->trans("ShowStock"),"stock")." ".$objp->label."</a></td>\n";
             print '<td align="right">'.$entrepot->LibStatut($objp->statut,5).'</td>';
             print "</tr>\n";
@@ -101,7 +104,10 @@ else
     dol_print_error($db);
 }
 
-print '</td><td valign="top" width="70%" class="notopnoleftnoright">';
+
+//print '</td><td valign="top" width="70%" class="notopnoleftnoright">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
+
 
 // Last movements
 $max=10;
@@ -138,7 +144,7 @@ if ($resql)
 	{
 		$objp = $db->fetch_object($resql);
 		$var=!$var;
-		print "<tr $bc[$var]>";
+		print "<tr ".$bc[$var].">";
 		print '<td>'.dol_print_date($db->jdate($objp->datem),'dayhour').'</td>';
 		print "<td><a href=\"../fiche.php?id=$objp->rowid\">";
 		print img_object($langs->trans("ShowProduct"),"product").' '.$objp->produit;
@@ -157,10 +163,9 @@ if ($resql)
 	print "</table>";
 }
 
-print '</td></tr></table>';
+//print '</td></tr></table>';
+print '</div></div></div>';
 
 llxFooter();
 
 $db->close();
-
-?>

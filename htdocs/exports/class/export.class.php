@@ -34,7 +34,9 @@ class Export
 	var $array_export_code=array();             // Tableau de "idmodule_numlot"
 	var $array_export_module=array();           // Tableau de "nom de modules"
 	var $array_export_label=array();            // Tableau de "libelle de lots"
-	var $array_export_sql=array();              // Tableau des "requetes sql"
+	var $array_export_sql_start=array();        // Tableau des "requetes sql"
+	var $array_export_sql_end=array();          // Tableau des "requetes sql"
+	var $array_export_sql_order=array();        // Tableau des "requetes sql"
 	var $array_export_fields=array();           // Tableau des listes de champ+libelle a exporter
 	var $array_export_TypeFields=array();		// Tableau des listes de champ+Type de filtre
 	var $array_export_FilterValue=array();		// Tableau des listes de champ+Valeur a filtrer
@@ -177,6 +179,7 @@ class Export
 									// Requete sql du dataset
 									$this->array_export_sql_start[$i]=$module->export_sql_start[$r];
 									$this->array_export_sql_end[$i]=$module->export_sql_end[$r];
+									$this->array_export_sql_order[$i]=$module->export_sql_order[$r];
 									//$this->array_export_sql[$i]=$module->export_sql[$r];
 
 									dol_syslog(get_class($this)."::load_arrays loaded for module ".$modulename." with index ".$i.", dataset=".$module->export_code[$r].", nb of fields=".(! empty($module->export_fields_code[$r])?count($module->export_fields_code[$r]):''));
@@ -200,8 +203,8 @@ class Export
 	 *      Arrays this->array_export_xxx are already loaded for required datatoexport
 	 *
 	 *      @param      int		$indice				Indice of export
-	 *      @param      array	$array_selected     Filter on array of fields to export
-	 *      @param      array	$array_filterValue  Filter on array of fields to export
+	 *      @param      array	$array_selected     Filter fields on array of fields to export
+	 *      @param      array	$array_filterValue  Filter records on array of value for fields
 	 *      @return		string						SQL String. Example "select s.rowid as r_rowid, s.status as s_status from ..."
 	 */
 	function build_sql($indice, $array_selected, $array_filterValue)
@@ -217,23 +220,29 @@ class Export
 
 			if ($i > 0) $sql.=', ';
 			else $i++;
-			$newfield=$key.' as '.str_replace(array('.', '-'),'_',$key);;
+
+			if (strpos($key, ' as ')===false) {
+				$newfield=$key.' as '.str_replace(array('.', '-'),'_',$key);
+			} else {
+				$newfield=$key;
+			}
 
 			$sql.=$newfield;
 		}
 		$sql.=$this->array_export_sql_end[$indice];
 
 		//construction du filtrage si le parametrage existe
-		if (is_array($array_filterValue))
+		if (is_array($array_filterValue) && !empty($array_filterValue))
 		{
 			$sqlWhere='';
 			// pour ne pas a gerer le nombre de condition
 			foreach ($array_filterValue as $key => $value)
 			{
-				$sqlWhere.=" and ".$this->build_filterQuery($this->array_export_TypeFields[0][$key], $key, $array_filterValue[$key]);
+				if ($value != '') $sqlWhere.=" and ".$this->build_filterQuery($this->array_export_TypeFields[$indice][$key], $key, $array_filterValue[$key]);
 			}
 			$sql.=$sqlWhere;
 		}
+		$sql.=$this->array_export_sql_order[$indice];
 
 		return $sql;
 	}
@@ -243,7 +252,7 @@ class Export
 	 *
 	 *      @param		string	$TypeField		Type of Field to filter
 	 *      @param		string	$NameField		Name of the field to filter
-	 *      @param		string	$ValueField		Initial value of the field to filter
+	 *      @param		string	$ValueField		Value of the field for filter. Must not be ''
 	 *      @return		string					sql string of then field ex : "field='xxx'>"
 	 */
 	function build_filterQuery($TypeField, $NameField, $ValueField)
@@ -318,7 +327,7 @@ class Export
 	 */
 	function conditionDate($Field, $Value, $Sens)
 	{
-		// FIXME date_format is forbidden, not performant and no portable. Use instead BETWEEN
+		// TODO date_format is forbidden, not performant and not portable. Use instead BETWEEN
 		if (strlen($Value)==4) $Condition=" date_format(".$Field.",'%Y') ".$Sens." ".$Value;
 		elseif (strlen($Value)==6) $Condition=" date_format(".$Field.",'%Y%m') ".$Sens." '".$Value."'";
 		else  $Condition=" date_format(".$Field.",'%Y%m%d') ".$Sens." ".$Value;
@@ -421,30 +430,25 @@ class Export
 	 *
 	 *      @param		string	$TypeField		Type of Field to filter
 	 *      @return		string					html string of the input field ex : "<input type=text name=... value=...>"
-	 *      TODO replace by translation
 	 */
 	function genDocFilter($TypeField)
 	{
+        global $langs;
+
 		$szMsg='';
 		$InfoFieldList = explode(":", $TypeField);
 		// build the input field on depend of the type of file
 		switch ($InfoFieldList[0]) {
 			case 'Text':
-				$szMsg="% permet de remplacer un ou plusieurs caract&egrave;res dans la chaine";
+				$szMsg= $langs->trans('ExportStringFilter');
 				break;
 			case 'Date':
-				$szMsg ="'AAAA' 'AAAAMM' 'AAAAMMJJ' : filtre sur une ann&eacute;e/mois/jour <br>";
-				$szMsg.="'AAAA+AAAA' 'AAAAMM+AAAAMM' 'AAAAMMJJ+AAAAMMJJ': filtre sur une plage d'ann&eacute;e/mois/jour <br>";
-				$szMsg.="'&gt;AAAA' '&gt;AAAAMM' '&gt;AAAAMMJJ' filtre sur les ann&eacute;e/mois/jour suivants <br>";
-				$szMsg.="'&lsaquo;AAAA' '&lsaquo;AAAAMM' '&lsaquo;AAAAMMJJ' filtre sur les ann&eacute;e/mois/jour pr&eacute;c&eacute;dent <br>";
+				$szMsg = $langs->trans('ExportDateFilter');
 				break;
 			case 'Duree':
 				break;
 			case 'Numeric':
-				$szMsg ="'NNNNN' filtre sur une valeur <br>";
-				$szMsg.="'NNNNN+NNNNN' filtre sur une plage de valeur<br>";
-				$szMsg.="'&lsaquo;NNNNN' filtre sur les valeurs inf&eacute;rieurs<br>";
-				$szMsg.="'&gt;NNNNN' filtre sur les valeurs sup&eacute;rieurs<br>";
+				$szMsg = $langs->trans('ExportNumericFilter');
 				break;
 			case 'Boolean':
 				break;
@@ -464,7 +468,7 @@ class Export
 	 *      @param      string		$datatoexport       Name of dataset to export
 	 *      @param      array		$array_selected     Filter on array of fields to export
 	 *      @param      array		$array_filterValue  Filter on array of fields with a filter
-	 *      @param		string		$sqlquery			If set, transmit a sql query instead of building it from arrays
+	 *      @param		string		$sqlquery			If set, transmit the sql request for select (otherwise, sql request is generated from arrays)
 	 *      @return		int								<0 if KO, >0 if OK
 	 */
 	function build_file($user, $model, $datatoexport, $array_selected, $array_filterValue, $sqlquery = '')
@@ -474,10 +478,10 @@ class Export
 		$indice=0;
 		asort($array_selected);
 
-		dol_syslog("Export::build_file ".$model.", ".$datatoexport.", ".implode(",", $array_selected));
+		dol_syslog(get_class($this)."::".__FUNCTION__." ".$model.", ".$datatoexport.", ".implode(",", $array_selected));
 
 		// Check parameters or context properties
-		if (! is_array($this->array_export_fields[$indice]))
+		if (empty($this->array_export_fields) || ! is_array($this->array_export_fields))
 		{
 			$this->error="ErrorBadParameter";
 			return -1;
@@ -491,11 +495,31 @@ class Export
 		$objmodel = new $classname($this->db);
 
 		if (! empty($sqlquery)) $sql = $sqlquery;
-        else $sql=$this->build_sql($indice, $array_selected, $array_filterValue);
+        else
+		{
+			// Define value for indice from $datatoexport
+			$foundindice=0;
+			foreach($this->array_export_code as $key => $dataset)
+			{
+				if ($datatoexport == $dataset)
+				{
+					$indice=$key;
+					$foundindice++;
+					//print "Found indice = ".$indice." for dataset=".$datatoexport."\n";
+					break;
+				}
+			}
+			if (empty($foundindice))
+			{
+				$this->error="ErrorBadParameter can't find dataset ".$datatoexport." into preload arrays this->array_export_code";
+				return -1;
+			}
+        	$sql=$this->build_sql($indice, $array_selected, $array_filterValue);
+		}
 
 		// Run the sql
 		$this->sqlusedforexport=$sql;
-		dol_syslog("Export::build_file sql=".$sql);
+		dol_syslog(get_class($this)."::".__FUNCTION__." sql=".$sql);
 		$resql = $this->db->query($sql);
 		if ($resql)
 		{
@@ -516,7 +540,7 @@ class Export
 				$objmodel->write_header($outputlangs);
 
 				// Genere ligne de titre
-				$objmodel->write_title($this->array_export_fields[$indice],$array_selected,$outputlangs);
+				$objmodel->write_title($this->array_export_fields[$indice],$array_selected,$outputlangs,$this->array_export_TypeFields[$indice]);
 
 				$var=true;
 
@@ -547,8 +571,7 @@ class Export
 						}
 					}
 					// end of special operation processing
-
-					$objmodel->write_record($array_selected,$objp,$outputlangs);
+					$objmodel->write_record($array_selected,$objp,$outputlangs,$this->array_export_TypeFields[$indice]);
 				}
 
 				// Genere en-tete
@@ -732,7 +755,7 @@ class Export
 		global $conf, $langs;
 
 		$sql = "SELECT em.rowid, em.field, em.label, em.type, em.filter";
-		$sql.= " FROM ".MAIN_DB_PREFIX."export_model";
+		$sql.= " FROM ".MAIN_DB_PREFIX."export_model as em";
 		$sql.= " ORDER BY rowid";
 
 		$result = $this->db->query($sql);
@@ -778,4 +801,3 @@ class Export
 
 }
 
-?>

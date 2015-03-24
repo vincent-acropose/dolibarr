@@ -71,12 +71,13 @@ update llx_bank set dateo = datec where datev = '1970-01-01 00:00:00' and rappro
 
 alter table llx_c_chargesociales add column actioncompta varchar(12) NOT NULL;
 insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values ( 1, 'Allocations familiales', 1,1,'TAXFAM');
-insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values ( 2, 'GSG Deductible',         1,1,'TAXCSGD');
-insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values ( 3, 'GSG/CRDS NON Deductible',0,1,'TAXCSGND');
-insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (10, 'Taxe apprenttissage',    0,1,'TAXAPP');
+insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values ( 2, 'GSG Déductible',         1,1,'TAXCSGD');
+insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values ( 3, 'GSG/CRDS NON Déductible',0,1,'TAXCSGND');
+insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (10, 'Taxe apprentissage',    0,1,'TAXAPP');
 insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (11, 'Taxe professionnelle',   0,1,'TAXPRO');
+insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (12, 'Contribution à la formation professionnelle',  1,1,'TAXOPCA');
 insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (20, 'Impots locaux/fonciers', 0,1,'TAXFON');
-insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (30, 'Assurance Sante (SECU-URSSAF)',  0,1,'TAXSECU');
+insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (30, 'Assurance Santé (SECU-URSSAF)',  0,1,'TAXSECU');
 insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (40, 'Mutuelle',                       0,1,'TAXMUT');
 insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (50, 'Assurance vieillesse (CNAV)',    0,1,'TAXRET');
 insert into llx_c_chargesociales (id, libelle, deductible, active, actioncompta) values (60, 'Assurance Chomage (ASSEDIC)',    0,1,'TAXCHOM');
@@ -143,8 +144,8 @@ alter table llx_categorie ADD type int not null default '0';
 -- V4 ALTER TABLE llx_categorie DROP INDEX uk_categorie_ref;
 
 create table `llx_categorie_societe` (
-  `fk_categorie` int(11) not null,
-  `fk_societe` int(11) not null,
+  `fk_categorie` integer not null,
+  `fk_societe` integer not null,
   UNIQUE KEY `fk_categorie` (`fk_categorie`,`fk_societe`),
   KEY `fk_societe` (`fk_societe`)
 ) ENGINE=innodb;
@@ -154,8 +155,8 @@ alter table `llx_categorie_societe` add constraint `fk_categorie_societe_categor
 alter table `llx_categorie_societe` add constraint `fk_categorie_societe_fk_soc` foreign key(`fk_societe`) REFERENCES `llx_societe` (`rowid`);
 
 create table `llx_categorie_product` (
-  `fk_categorie` int(11) not null,
-  `fk_product` int(11) not null,
+  `fk_categorie` integer not null,
+  `fk_product` integer not null,
   PRIMARY KEY  (`fk_categorie`,`fk_product`),
   KEY `idx_categorie_product_fk_categorie` (`fk_categorie`),
   KEY `idx_categorie_product_fk_product` (`fk_product`)
@@ -169,24 +170,24 @@ alter table `llx_categorie_product`
 -- Ajout gestion du droit de pret
 drop table if exists `llx_droitpret_rapport`;
 create table `llx_droitpret_rapport` (
-  `rowid` int(11) NOT NULL auto_increment,
+  `rowid` integer NOT NULL auto_increment,
   `date_envoie` datetime NOT NULL,
   `format` varchar(10) NOT NULL,
   `date_debut` datetime NOT NULL,
   `date_fin` datetime NOT NULL,
   `fichier` varchar(255) NOT NULL,
-  `nbfact` int(11) NOT NULL,
+  `nbfact` integer NOT NULL,
   PRIMARY KEY  (`rowid`)
 ) ENGINE=innodb;
 
 
 -- Gestion des menu
 CREATE TABLE `llx_menu` (
-  `rowid` int(11) NOT NULL,
+  `rowid` integer NOT NULL,
   `menu_handler` varchar(16) NOT NULL default 'auguria',
   `type` enum('top','left') NOT NULL default 'left',
   `mainmenu` varchar(100) NOT NULL,
-  `fk_menu` int(11) NOT NULL,
+  `fk_menu` integer NOT NULL,
   `order` tinyint(4) NOT NULL,
   `url` varchar(255) NOT NULL,
   `target` varchar(100) NULL,
@@ -200,15 +201,15 @@ CREATE TABLE `llx_menu` (
 ) ENGINE=innodb;
 
 create table `llx_menu_constraint` (
-  `rowid` int(11) NOT NULL,
+  `rowid` integer NOT NULL,
   `action` varchar(255) NOT NULL,
   PRIMARY KEY  (`rowid`)
 ) ENGINE=innodb;
 
 create table `llx_menu_const` (
-  `rowid` int(11) NOT NULL auto_increment,
-  `fk_menu` int(11) NOT NULL,
-  `fk_constraint` int(11) NOT NULL,
+  `rowid` integer NOT NULL auto_increment,
+  `fk_menu` integer NOT NULL,
+  `fk_constraint` integer NOT NULL,
   `user` tinyint(4) NOT NULL default '2',
   PRIMARY KEY  (`rowid`)
 ) ENGINE=innodb;
@@ -253,7 +254,7 @@ insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titr
 insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titre`, `level`, `langs`, `right`, `target`, `user`, `order`) values (108, 'home', '$leftmenu=="setup"', 100, '/admin/perms.php', 'Security', 1, 'admin', '', '', 2, 7);
 insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titre`, `level`, `langs`, `right`, `target`, `user`, `order`) values (109, 'home', '$leftmenu=="setup"', 100, '/admin/mails.php', 'Emails', 1, 'admin', '', '', 2, 8);
 insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titre`, `level`, `langs`, `right`, `target`, `user`, `order`) values (110, 'home', '$leftmenu=="setup"', 100, '/admin/limits.php', 'Limits', 1, 'admin', '', '', 2, 9);
-insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titre`, `level`, `langs`, `right`, `target`, `user`, `order`) values (111, 'home', '$leftmenu=="setup"', 100, '/admin/dict.php', 'DictionnarySetup', 1, 'admin', '', '', 2, 10);
+insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titre`, `level`, `langs`, `right`, `target`, `user`, `order`) values (111, 'home', '$leftmenu=="setup"', 100, '/admin/dict.php', 'DictionarySetup', 1, 'admin', '', '', 2, 10);
 insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titre`, `level`, `langs`, `right`, `target`, `user`, `order`) values (112, 'home', '$leftmenu=="setup"', 100, '/admin/const.php', 'OtherSetup', 1, 'admin', '', '', 2, 11);
 insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titre`, `level`, `langs`, `right`, `target`, `user`, `order`) values (200, 'home', '', 1, '/admin/system/index.php?leftmenu=system', 'SystemInfo', 0, 'admin', '', '', 2, 1);
 insert into `llx_menu` (`rowid`, `mainmenu`, `leftmenu`, `fk_menu`, `url`, `titre`, `level`, `langs`, `right`, `target`, `user`, `order`) values (201, 'home', '$leftmenu=="system"', 200, '/admin/system/dolibarr.php', 'Dolibarr', 1, 'admin', '', '', 2, 0);

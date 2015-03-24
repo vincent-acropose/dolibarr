@@ -43,6 +43,7 @@ class mod_codeclient_monkey extends ModeleThirdPartyCode
 
 	var $prefixcustomer='CU';
 	var $prefixsupplier='SU';
+	var $prefixIsRequired; // Le champ prefix du tiers doit etre renseigne quand on utilise {pre}
 
 
 	/**
@@ -57,12 +58,13 @@ class mod_codeclient_monkey extends ModeleThirdPartyCode
 		$this->code_modifiable_invalide = 1;
 		$this->code_modifiable_null = 1;
 		$this->code_auto = 1;
+		$this->prefixIsRequired = 0;
 	}
 
 
 	/**		Return description of module
 	 *
-	 * 		@param	string	$langs		Object langs
+	 * 		@param	Translate	$langs	Object langs
 	 * 		@return string      		Description of module
 	 */
 	function info($langs)
@@ -117,7 +119,7 @@ class mod_codeclient_monkey extends ModeleThirdPartyCode
 
 		// D'abord on recupere la valeur max (reponse immediate car champ indexe)
 		$posindice=8;
-        $sql = "SELECT MAX(SUBSTRING(".$field." FROM ".$posindice.")) as max";   // This is standard SQL
+        $sql = "SELECT MAX(CAST(SUBSTRING(".$field." FROM ".$posindice.") AS SIGNED)) as max";   // This is standard SQL
 		$sql.= " FROM ".MAIN_DB_PREFIX."societe";
 		$sql.= " WHERE ".$field." LIKE '".$prefix."____-%'";
 		$sql.= " AND entity IN (".getEntity('societe', 1).")";
@@ -137,7 +139,9 @@ class mod_codeclient_monkey extends ModeleThirdPartyCode
 
 		$date	= dol_now();
 		$yymm	= strftime("%y%m",$date);
-		$num	= sprintf("%04s",$max+1);
+
+		if ($max >= (pow(10, 4) - 1)) $num=$max+1;	// If counter > 9999, we do not format on 4 chars, we take number as it is
+		else $num = sprintf("%04s",$max+1);
 
 		dol_syslog(get_class($this)."::getNextValue return ".$prefix.$yymm."-".$num);
 		return $prefix.$yymm."-".$num;
@@ -148,7 +152,7 @@ class mod_codeclient_monkey extends ModeleThirdPartyCode
 	 * 	Check validity of code according to its rules
 	 *
 	 *	@param	DoliDB		$db		Database handler
-	 *	@param	string		&$code	Code to check/correct
+	 *	@param	string		$code	Code to check/correct
 	 *	@param	Societe		$soc	Object third party
 	 *  @param  int		  	$type   0 = customer/prospect , 1 = supplier
 	 *  @return int					0 if OK
@@ -265,4 +269,3 @@ class mod_codeclient_monkey extends ModeleThirdPartyCode
 
 }
 
-?>

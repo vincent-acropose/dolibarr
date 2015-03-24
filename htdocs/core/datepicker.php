@@ -39,6 +39,7 @@ require_once '../main.inc.php';
 
 if (GETPOST('lang')) $langs->setDefaultLang(GETPOST('lang'));	// If language was forced on URL by the main.inc.php
 $langs->load("main");
+$langs->load("agenda");
 $right=($langs->trans("DIRECTION")=='rtl'?'left':'right');
 $left=($langs->trans("DIRECTION")=='rtl'?'right':'left');
 
@@ -57,7 +58,7 @@ if (GETPOST('mode') && GETPOST('mode') == 'test')
 }
 else
 {
-	print '<title>Calendar</title>';
+	print '<title>'.$langs->trans("Calendar").'</title>';
 }
 
 // Define tradMonths javascript array (we define this in datapicker AND in parent page to avoid errors with IE8)
@@ -224,16 +225,16 @@ function displayBox($selectedDate,$month,$year)
 		if($thedate==$selDate) $dayclass="dpSelected";
 		elseif($thedate==$today) $dayclass="dpToday";
 
-		if ($langs->trans("FormatDateShortJava")=="FormatDateShortJava")
+		if ($langs->trans("FormatDateShortJavaInput")=="FormatDateShortJavaInput")
 		{
-		    print "ERROR FormatDateShortJava not defined for language ".$langs->defaultlang;
+		    print "ERROR FormatDateShortJavaInput not defined for language ".$langs->defaultlang;
 		    exit;
 		}
 
 		// Sur click dans calendrier, appelle fonction dpClickDay
 		echo "<TD class=\"".$dayclass."\"";
 		echo " onMouseOver=\"dpHighlightDay(".$mydate["year"].",parseInt('".dol_print_date($thedate,"%m")."',10),".$mydate["mday"].",tradMonths)\"";
-		echo " onClick=\"dpClickDay(".$mydate["year"].",parseInt('".dol_print_date($thedate,"%m")."',10),".$mydate["mday"].",'".$langs->trans("FormatDateShortJava")."')\"";
+		echo " onClick=\"dpClickDay(".$mydate["year"].",parseInt('".dol_print_date($thedate,"%m")."',10),".$mydate["mday"].",'".$langs->trans("FormatDateShortJavaInput")."')\"";
 		echo ">".sprintf("%02s",$mydate["mday"])."</TD>";
 		$cols++;
 
@@ -278,4 +279,3 @@ function displayBox($selectedDate,$month,$year)
 		<?php
 }//end function
 
-?>

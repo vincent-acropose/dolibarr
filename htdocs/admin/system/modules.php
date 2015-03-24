@@ -47,9 +47,11 @@ print "<br>\n";
 $modules = array();
 $modules_names = array();
 $modules_files = array();
+$modules_fullpath = array();
 $modulesdir = dolGetModulesDirs();
 
 // Load list of modules
+$i=0;
 foreach($modulesdir as $dir)
 {
 	$handle=@opendir(dol_osencode($dir));
@@ -63,13 +65,37 @@ foreach($modulesdir as $dir)
 
     			if ($modName)
     			{
-    				include_once $dir.$file;
-    				$objMod = new $modName($db);
-
-    				$modules[$objMod->numero]=$objMod;
-    				$modules_names[$objMod->numero]=$objMod->name;
-    				$modules_files[$objMod->numero]=$file;
-    				$picto[$objMod->numero]=(isset($objMod->picto) && $objMod->picto)?$objMod->picto:'generic';
+    				//print 'xx'.$dir.$file.'<br>';
+					if (in_array($file, $modules_files))
+					{
+						// File duplicate
+						print "Warning duplicate file found : ".$file." (Found ".$dir.$file.", already found ".$modules_fullpath[$file].")<br>";
+					}
+					else
+					{
+						// File to load
+						$res=include_once $dir.$file;
+						if (class_exists($modName))
+						{
+							try {
+	    						$objMod = new $modName($db);
+						
+			    				$modules[$objMod->numero]=$objMod;
+			    				$modules_names[$objMod->numero]=$objMod->name;
+	    						$modules_files[$objMod->numero]=$file;
+	    						$modules_fullpath[$file]=$dir.$file;
+	    						$picto[$objMod->numero]=(isset($objMod->picto) && $objMod->picto)?$objMod->picto:'generic';
+							} 
+							catch(Exception $e)
+							{
+								dol_syslog("Failed to load ".$dir.$file." ".$e->getMessage(), LOG_ERR);
+							}	
+						}
+						else
+						{
+							print "Warning bad descriptor file : ".$dir.$file." (Class ".$modName." not found into file)<br>";
+						}
+					}
     			}
     		}
     	}
@@ -80,8 +106,8 @@ print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("Modules").'</td>';
 print '<td>'.$langs->trans("Version").'</td>';
-print '<td align="center">'.$langs->trans("Id Module").'</td>';
-print '<td>'.$langs->trans("Id Permissions").'</td>';
+print '<td align="center">'.$langs->trans("IdModule").'</td>';
+print '<td>'.$langs->trans("IdPermissions").'</td>';
 print '</tr>';
 $var=false;
 $sortorder=$modules_names;
@@ -92,7 +118,7 @@ foreach($sortorder as $numero=>$name)
 	$idperms="";
 	$var=!$var;
 	// Module
-	print "<tr $bc[$var]><td width=\"300\" nowrap=\"nowrap\">";
+	print "<tr ".$bc[$var]."><td width=\"300\" nowrap=\"nowrap\">";
 	$alt=$name.' - '.$modules_files[$numero];
     if (! empty($picto[$numero]))
     {
@@ -127,11 +153,9 @@ sort($rights_ids);
 $old='';
 foreach($rights_ids as $right_id)
 {
-	if ($old == $right_id)
-		print "Warning duplicate id on permission : ".$right_id."<br>";
+	if ($old == $right_id) print "Warning duplicate id on permission : ".$right_id."<br>";
 	$old = $right_id;
 }
 
 llxFooter();
 $db->close();
-?>

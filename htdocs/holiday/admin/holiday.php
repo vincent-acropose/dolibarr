@@ -1,7 +1,7 @@
 <?php
-/* Copyright (C) 2012	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2011	Dimitri Mouillard	<dmouillard@teclib.com>
- * Copyright (C) 2012	Regis Houssin		<regis.houssin@capnetworks.com>
+/* Copyright (C) 2012-2103 Laurent Destailleur	<eldy@users.sourceforge.net>
+ * Copyright (C) 2011	   Dimitri Mouillard	<dmouillard@teclib.com>
+ * Copyright (C) 2012	   Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +20,9 @@
 /**
  * 	Page module configuration paid holiday.
  *
- *   	\file       holiday.php
- *		\ingroup    holiday
- *		\brief      Page module configuration paid holiday.
+ *  \file       holiday.php
+ *	\ingroup    holiday
+ *	\brief      Page module configuration paid holiday.
  */
 
 require '../../main.inc.php';
@@ -60,18 +60,18 @@ $cp = new Holiday($db);
 if ($action == "add")
 {
     $message = '';
-    $error = false;
+    $error = 0;
 
     // Option du groupe de validation
-    if (!$cp->updateConfCP('userGroup',$_POST['userGroup']))
+    /*if (!$cp->updateConfCP('userGroup',$_POST['userGroup']))
     {
-        $error = true;
-    }
+        $error++;
+    }*/
 
     // Option du délai pour faire une demande de congés payés
     if (!$cp->updateConfCP('delayForRequest',$_POST['delayForRequest']))
     {
-        $error = true;
+        $error++;
     }
 
     // Option du nombre de jours à ajouter chaque mois
@@ -79,67 +79,69 @@ if ($action == "add")
 
     if(!$cp->updateConfCP('nbHolidayEveryMonth',$nbHolidayEveryMonth))
     {
-        $error = true;
+        $error++;
     }
 
     // Option du nombre de jours pour un mariage
     $OptMariageCP = price2num($_POST['OptMariage'],5);
 
     if(!$cp->updateConfCP('OptMariage',$OptMariageCP)) {
-        $error = true;
+        $error++;
     }
 
     // Option du nombre de jours pour un décés d'un proche
     $OptDecesProcheCP = price2num($_POST['OptDecesProche'],5);
 
     if(!$cp->updateConfCP('OptDecesProche',$OptDecesProcheCP)) {
-        $error = true;
+        $error++;
     }
 
     // Option du nombre de jours pour un mariage d'un enfant
     $OptMariageProcheCP = price2num($_POST['OptMariageProche'],5);
 
     if(!$cp->updateConfCP('OptMariageProche',$OptMariageProcheCP)) {
-        $error = true;
+        $error++;
     }
 
     // Option du nombre de jours pour un décés d'un parent
     $OptDecesParentsCP = price2num($_POST['OptDecesParents'],5);
 
     if(!$cp->updateConfCP('OptDecesParents',$OptDecesParentsCP)) {
-        $error = true;
+        $error++;
     }
 
     // Option pour avertir le valideur si délai de demande incorrect
     if(isset($_POST['AlertValidatorDelay'])) {
         if(!$cp->updateConfCP('AlertValidatorDelay','1')) {
-            $error = true;
+            $error++;
         }
     } else {
         if(!$cp->updateConfCP('AlertValidatorDelay','0')) {
-            $error = true;
+            $error++;
         }
     }
 
     // Option pour avertir le valideur si solde des congés de l'utilisateur inccorect
     if(isset($_POST['AlertValidatorSolde'])) {
         if(!$cp->updateConfCP('AlertValidatorSolde','1')) {
-            $error = true;
+            $error++;
         }
     } else {
         if(!$cp->updateConfCP('AlertValidatorSolde','0')) {
-            $error = true;
+            $error++;
         }
     }
 
     // Option du nombre de jours à déduire pour 1 jour de congés
     $nbHolidayDeducted = price2num($_POST['nbHolidayDeducted'],2);
 
-    if(!$cp->updateConfCP('nbHolidayDeducted',$nbHolidayDeducted)) {
-        $error = true;
+    if(!$cp->updateConfCP('nbHolidayDeducted',$nbHolidayDeducted))
+    {
+        $error++;
     }
 
-    if ($error) {
+    if ($error)
+    {
         $message = '<div class="error">'.$langs->trans('ErrorUpdateConfCP').'</div>';
     } else {
         $message = '<div class="ok">'.$langs->trans('UpdateConfCPOK').'</div>';
@@ -151,8 +153,8 @@ if ($action == "add")
 
     $result = $db->query($sql);
     $num = $db->num_rows($sql);
-
-    if($num < 1) {
+    if($num < 1)
+    {
         $cp->createCPusers();
         $message.= '<br /><div class="warning">'.$langs->trans('AddCPforUsers').'</div>';
     }
@@ -202,7 +204,7 @@ elseif ($action == 'create_event')
 }
 elseif($action == 'event' && isset($_POST['update_event']))
 {
-    $error = false;
+    $error = 0;
 
     $eventId = array_keys($_POST['update_event']);
     $eventId = $eventId[0];
@@ -213,19 +215,21 @@ elseif($action == 'event' && isset($_POST['update_event']))
     $eventValue = $optValue;
     $eventValue = $eventValue[$eventId];
 
-    if(!empty($eventName)) {
+    if (!empty($eventName))
+    {
         $eventName = trim($eventName);
     } else {
-        $error = true;
+        $error++;
     }
 
-    if(!empty($eventValue)) {
+    if (!empty($eventValue))
+    {
         $eventValue = price2num($eventValue,2);
     } else {
-        $error = true;
+        $error++;
     }
 
-    if(!$error)
+    if (!$error)
     {
         // Mise à jour des congés de l'utilisateur
         $update = $cp->updateEventCP($eventId,$eventName,$eventValue);
@@ -276,16 +280,17 @@ print '</tr>';
 
 $var=true;
 
-$var=!$var;
+/*$var=!$var;
 print '<tr '.$bc[$var].'>'."\n";
-print '<td style="padding:5px; width: 40%;">'.$langs->trans('GroupToValidateCP').'</td>'."\n";
+print '<td style="padding:5px;">'.$langs->trans('GroupToValidateCP').'</td>'."\n";
 print '<td style="padding:5px;">'.$cp->selectUserGroup('userGroup').'</td>'."\n";
 print '</tr>'."\n";
+*/
 
 $var=!$var;
 print '<tr '.$bc[$var].'>'."\n";
 print '<td style="padding:5px;">'.$langs->trans('DelayForSubmitCP').'</td>'."\n";
-print '<td style="padding:5px;"><input class="flat" type="text" name="delayForRequest" value="'.$cp->getConfCP('delayForRequest').'" size="2" /> '.$langs->trans('Jours').'</td>'."\n";
+print '<td style="padding:5px;"><input class="flat" type="text" name="delayForRequest" value="'.$cp->getConfCP('delayForRequest').'" size="2" /> '.$langs->trans('DurationDays').'</td>'."\n";
 print '</tr>'."\n";
 
 $var=!$var;
@@ -303,25 +308,13 @@ print '</tr>'."\n";
 $var=!$var;
 print '<tr '.$bc[$var].'>'."\n";
 print '<td style="padding:5px;">'.$langs->trans('nbHolidayEveryMonthCP').'</td>'."\n";
-print '<td style="padding:5px;"><input class="flat" type="text" name="nbHolidayEveryMonth" value="'.$cp->getConfCP('nbHolidayEveryMonth').'" size="5"/> '.$langs->trans('Jours').'</td>'."\n";
+print '<td style="padding:5px;"><input class="flat" type="text" name="nbHolidayEveryMonth" value="'.$cp->getConfCP('nbHolidayEveryMonth').'" size="5"/> '.$langs->trans('DurationDays').'</td>'."\n";
 print '</tr>'."\n";
 
 $var=!$var;
 print '<tr '.$bc[$var].'>'."\n";
 print '<td style="padding:5px;">'.$langs->trans('nbHolidayDeductedCP').'</td>'."\n";
-print '<td style="padding:5px;"><input class="flat" type="text" name="nbHolidayDeducted" value="'.$cp->getConfCP('nbHolidayDeducted').'" size="2"/> '.$langs->trans('Jours').'</td>'."\n";
-print '</tr>'."\n";
-
-$var=!$var;
-print '<tr '.$bc[$var].'>'."\n";
-print '<td style="padding:5px;">'.$langs->trans('nbUserCP').'</td>'."\n";
-print '<td style="padding:5px;"><input class="flat" type="text" name="nbUser" value="'.$cp->getConfCP('nbUser').'" disabled="disabled" size="4"/></td>'."\n";
-print '</tr>'."\n";
-
-$var=!$var;
-print '<tr '.$bc[$var].'>'."\n";
-print '<td style="padding:5px;">'.$langs->trans('LastUpdateCP').'</td>'."\n";
-print '<td style="padding:5px;"><input class="flat" type="text" name="lastUpdate" value="'.dol_print_date($db->jdate($cp->getConfCP('lastUpdate')),'dayhour','tzuser').'" disabled="disabled"/></td>'."\n";
+print '<td style="padding:5px;"><input class="flat" type="text" name="nbHolidayDeducted" value="'.$cp->getConfCP('nbHolidayDeducted').'" size="2"/> '.$langs->trans('DurationDays').'</td>'."\n";
 print '</tr>'."\n";
 
 print '</tbody>'."\n";
@@ -331,6 +324,18 @@ print '<div align="center"><input type="submit" value="'.$langs->trans("ConfirmC
 print '</form>'."\n\n";
 
 dol_fiche_end();
+
+
+/*$var=!$var;
+print $langs->trans('nbUserCP').': '."\n";
+print $cp->getConfCP('nbUser')."<br>\n";
+*/
+
+$var=!$var;
+print $langs->trans('LastUpdateCP').': '."\n";
+if ($cp->getConfCP('lastUpdate')) print dol_print_date($db->jdate($cp->getConfCP('lastUpdate')),'dayhour','tzuser');
+else print $langs->trans('None');
+print "<br>\n";
 
 print '<br>';
 
@@ -366,7 +371,7 @@ if($cp_events == 1) {
 
         print '<tr '.$bc[$var].'>'."\n";
         print '<td><input class="flat" type="text" size="40" name="optName['.$infos_event['rowid'].']" value="'.$infos_event['name'].'" /></td>'."\n";
-        print '<td><input class="flat" type="text" size="2" name="optValue['.$infos_event['rowid'].']" value="'.$infos_event['value'].'" /> '.$langs->trans('Jours').'</td>'."\n";
+        print '<td><input class="flat" type="text" size="2" name="optValue['.$infos_event['rowid'].']" value="'.$infos_event['value'].'" /> '.$langs->trans('DurationDays').'</td>'."\n";
         print '<td><input type="submit" class="button" name="update_event['.$infos_event['rowid'].']" value="'.dol_escape_htmltag($langs->trans("Save")).'"/></td>'."\n";
         print '<td width="20px" align="right"><input type="image" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/delete.png" name="delete_event['.$infos_event['rowid'].']" style="border:0;"/></td>'."\n";
         print '</tr>';
@@ -399,7 +404,7 @@ print '</tr>';
 
 print '<tr class="pair">';
 print '<td><input class="flat" type="text" size="40" name="optName" value="'.(is_array($optName)?'':$optName).'" /></td>'."\n";
-print '<td><input class="flat" type="text" size="2" name="optValue" value="'.(is_array($optValue)?'':$optValue).'" /> '.$langs->trans('Jours').'</td>'."\n";
+print '<td><input class="flat" type="text" size="2" name="optValue" value="'.(is_array($optValue)?'':$optValue).'" /> '.$langs->trans('DurationDays').'</td>'."\n";
 print '<td><input type="submit" class="button" name="button" value="'.$langs->trans('CreateEventCP').'" /></td>'."\n";
 print '</tr>'."\n";
 

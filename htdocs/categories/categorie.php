@@ -2,9 +2,10 @@
 /* Copyright (C) 2001-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2005      Brice Davoleau       <brice.davoleau@gmail.com>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2006-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2006-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2007      Patrick Raguin  		<patrick.raguin@gmail.com>
  * Copyright (C) 2010      Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2013      Florian Henry        <florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +37,6 @@ $socid	= GETPOST('socid','int');
 $id		= GETPOST('id','int');
 $ref	= GETPOST('ref');
 $type	= GETPOST('type');
-$mesg	= GETPOST('mesg');
 
 $removecat = GETPOST('removecat','int');
 $parent=GETPOST('parent','int');
@@ -79,90 +79,138 @@ if ($id || $ref)
 		$dbtablename = 'adherent';
 		$fieldid = ! empty($ref)?'ref':'rowid';
 	}
+	elseif ($type == 4) {
+		$elementtype = 'societe';
+		$objecttype = 'contact';
+		$objectid = isset($id)?$id:(isset($ref)?$ref:'');
+		$dbtablename = 'socpeople&societe';
+		$fieldid = ! empty($ref)?'ref':'rowid';
+	}
 }
 
 // Security check
 if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user,$objecttype,$objectid,$dbtablename,'','',$fieldid);
 
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('categorycard'));
+
 
 /*
  *	Actions
  */
 
-//Suppression d'un objet d'une categorie
-if ($removecat > 0)
+$parameters=array('id'=>$socid);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+$error=$hookmanager->error; $errors=array_merge($errors, (array) $hookmanager->errors);
+
+if (empty($reshook))
 {
-	if ($type==0 && ($user->rights->produit->creer || $user->rights->service->creer))
+	// Remove element from category
+	if ($removecat > 0)
 	{
-		require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
-		$object = new Product($db);
-		$result = $object->fetch($id, $ref);
-		$elementtype = 'product';
-	}
-	if ($type==1 && $user->rights->societe->creer)
-	{
-		$object = new Societe($db);
-		$result = $object->fetch($objectid);
-	}
-	if ($type==2 && $user->rights->societe->creer)
-	{
-		$object = new Societe($db);
-		$result = $object->fetch($objectid);
-	}
-	if ($type == 3 && $user->rights->adherent->creer)
-	{
-		require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
-		$object = new Adherent($db);
-		$result = $object->fetch($objectid);
-	}
-	$cat = new Categorie($db);
-	$result=$cat->fetch($removecat);
+		if ($type==0 && ($user->rights->produit->creer || $user->rights->service->creer))
+		{
+			require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+			$object = new Product($db);
+			$result = $object->fetch($id, $ref);
+			$elementtype = 'product';
+		}
+		if ($type==1 && $user->rights->societe->creer)
+		{
+			require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.class.php';
+			$object = new Fournisseur($db);
+			$result = $object->fetch($objectid);
+			$elementtype = 'fournisseur';
+		}
+		if ($type==2 && $user->rights->societe->creer)
+		{
+			$object = new Societe($db);
+			$result = $object->fetch($objectid);
+			$elementtype = 'societe';
+		}
+		if ($type == 3 && $user->rights->adherent->creer)
+		{
+			require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
+			$object = new Adherent($db);
+			$result = $object->fetch($objectid);
+			$elementtype = 'member';
+		}
+		if ($type == 4 && $user->rights->societe->creer)
+		{
+			require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
+			$object = new Contact($db);
+			$result = $object->fetch($objectid);
+			$elementtype = 'contact';
+		}
+		$cat = new Categorie($db);
+		$result=$cat->fetch($removecat);
 
-	$result=$cat->del_type($object,$elementtype);
-}
+		$result=$cat->del_type($object,$elementtype);
+		if ($result < 0)
+		{
+			setEventMessage($cat->error,'errors');
+			setEventMessage($cat->errors,'errors');
+		}
+	}
 
-// Add object into a category
-if ($parent > 0)
-{
-	if ($type==0 && ($user->rights->produit->creer || $user->rights->service->creer))
+	// Add object into a category
+	if ($parent > 0)
 	{
-		require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
-		$object = new Product($db);
-		$result = $object->fetch($id, $ref);
-		$elementtype = 'product';
-	}
-	if ($type==1 && $user->rights->societe->creer)
-	{
-		$object = new Societe($db);
-		$result = $object->fetch($objectid);
-		$elementtype = 'fournisseur';
-	}
-	if ($type==2 && $user->rights->societe->creer)
-	{
-		$object = new Societe($db);
-		$result = $object->fetch($objectid);
-		$elementtype = 'societe';
-	}
-	if ($type==3 && $user->rights->adherent->creer)
-	{
-		require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
-		$object = new Adherent($db);
-		$result = $object->fetch($objectid);
-		$elementtype = 'member';
-	}
-	$cat = new Categorie($db);
-	$result=$cat->fetch($parent);
+		if ($type==0 && ($user->rights->produit->creer || $user->rights->service->creer))
+		{
+			require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+			$object = new Product($db);
+			$result = $object->fetch($id, $ref);
+			$elementtype = 'product';
+		}
+		if ($type==1 && $user->rights->societe->creer)
+		{
+			require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.class.php';
+			$object = new Fournisseur($db);
+			$result = $object->fetch($objectid);
+			$elementtype = 'fournisseur';
+		}
+		if ($type==2 && $user->rights->societe->creer)
+		{
+			$object = new Societe($db);
+			$result = $object->fetch($objectid);
+			$elementtype = 'societe';
+		}
+		if ($type==3 && $user->rights->adherent->creer)
+		{
+			require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
+			$object = new Adherent($db);
+			$result = $object->fetch($objectid);
+			$elementtype = 'member';
+		}
+		if ($type == 4 && $user->rights->societe->creer)
+		{
+			require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
+			$object = new Contact($db);
+			$result = $object->fetch($objectid);
+			$elementtype = 'contact';
+		}
+		$cat = new Categorie($db);
+		$result=$cat->fetch($parent);
 
-	$result=$cat->add_type($object,$elementtype);
-	if ($result >= 0)
-	{
-		$mesg='<div class="ok">'.$langs->trans("WasAddedSuccessfully",$cat->label).'</div>';
-	}
-	else
-	{
-		if ($cat->error == 'DB_ERROR_RECORD_ALREADY_EXISTS') $mesg='<div class="error">'.$langs->trans("ObjectAlreadyLinkedToCategory").'</div>';
-		else $mesg=$langs->trans("Error").' '.$cat->error;
+		$result=$cat->add_type($object,$elementtype);
+		if ($result >= 0)
+		{
+			setEventMessage($langs->trans("WasAddedSuccessfully",$cat->label));
+		}
+		else
+		{
+			if ($cat->error == 'DB_ERROR_RECORD_ALREADY_EXISTS')
+			{
+				setEventMessage($langs->trans("ObjectAlreadyLinkedToCategory"),'warnings');
+			}
+			else
+			{
+				setEventMessage($cat->error,'errors');
+				setEventMessage($cat->errors,'errors');
+			}
+		}
 	}
 }
 
@@ -230,54 +278,47 @@ if ($socid)
 	}
 
 	// Address
-	print '<tr><td valign="top">'.$langs->trans('Address').'</td><td colspan="3">'.nl2br($soc->address).'</td></tr>';
+	print '<tr><td valign="top">'.$langs->trans('Address').'</td><td colspan="3">';
+    print dol_print_address($soc->address,'gmap','thirdparty',$object->id);
+    print '</td></tr>';
 
 	// Zip / Town
-	print '<tr><td width="25%">'.$langs->trans('Zip').'</td><td width="25%">'.$soc->cp."</td>";
-	print '<td width="25%">'.$langs->trans('Town').'</td><td width="25%">'.$soc->ville."</td></tr>";
+	print '<tr><td width="25%">'.$langs->trans('Zip').'</td><td width="25%">'.$soc->zip."</td>";
+	print '<td width="25%">'.$langs->trans('Town').'</td><td width="25%">'.$soc->town."</td></tr>";
 
 	// Country
-	if ($soc->pays)
+	if ($soc->country)
 	{
 		print '<tr><td>'.$langs->trans('Country').'</td><td colspan="3">';
 		$img=picto_from_langcode($soc->country_code);
 		print ($img?$img.' ':'');
-		print $soc->pays;
+		print $soc->country;
 		print '</td></tr>';
 	}
 
-	// Phone
-	print '<tr><td>'.$langs->trans('Phone').'</td><td>'.dol_print_phone($soc->tel,$soc->country_code,0,$soc->id,'AC_TEL').'</td>';
-	print '<td>'.$langs->trans('Fax').'</td><td>'.dol_print_phone($soc->fax,$soc->country_code,0,$soc->id,'AC_FAX').'</td></tr>';
-
 	// EMail
-	print '<tr><td>'.$langs->trans('EMail').'</td><td>';
+	print '<tr><td>'.$langs->trans('EMail').'</td><td colspan="3">';
 	print dol_print_email($soc->email,0,$soc->id,'AC_EMAIL');
-	print '</td>';
+	print '</td></tr>';
 
 	// Web
-	print '<td>'.$langs->trans('Web').'</td><td>';
+	print '<tr><td>'.$langs->trans('Web').'</td><td colspan="3">';
 	print dol_print_url($soc->url);
 	print '</td></tr>';
 
-	// Assujeti a TVA ou pas
-	print '<tr>';
-	print '<td nowrap="nowrap">'.$langs->trans('VATIsUsed').'</td><td colspan="3">';
-	print yn($soc->tva_assuj);
-	print '</td>';
-	print '</tr>';
+	// Phone
+	print '<tr><td>'.$langs->trans('Phone').'</td><td>'.dol_print_phone($soc->phone,$soc->country_code,0,$soc->id,'AC_TEL').'</td>';
+	print '<td>'.$langs->trans('Fax').'</td><td>'.dol_print_phone($soc->fax,$soc->country_code,0,$soc->id,'AC_FAX').'</td></tr>';
 
 	print '</table>';
 
 	dol_fiche_end();
 
-	dol_htmloutput_mesg($mesg);
-
-	if ($soc->client) formCategory($db,$soc,2,$socid);
+	if ($soc->client) formCategory($db,$soc,2,$socid,$user->rights->societe->creer);
 
 	if ($soc->client && $soc->fournisseur) print '<br><br>';
 
-	if ($soc->fournisseur) formCategory($db,$soc,1,$socid);
+	if ($soc->fournisseur) formCategory($db,$soc,1,$socid,$user->rights->societe->creer);
 }
 else if ($id || $ref)
 {
@@ -286,12 +327,12 @@ else if ($id || $ref)
 		$langs->load("products");
 
 		/*
-		 * Fiche categorie de produit
+		 *  Category card for product
 		 */
 		require_once DOL_DOCUMENT_ROOT.'/core/lib/product.lib.php';
 		require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 
-		// Produit
+		// Product
 		$product = new Product($db);
 		$result = $product->fetch($id, $ref);
 
@@ -331,9 +372,7 @@ else if ($id || $ref)
 
 		dol_fiche_end();
 
-		dol_htmloutput_mesg($mesg);
-
-		formCategory($db,$product,0);
+		formCategory($db,$product,0,$socid,($user->rights->produit->creer || $user->rights->service->creer));
 	}
 
 	if ($type == 3)
@@ -341,7 +380,7 @@ else if ($id || $ref)
 		$langs->load("members");
 
 		/*
-		 * Fiche categorie d'adherent
+		 *  Category card for member
 		 */
 		require_once DOL_DOCUMENT_ROOT.'/core/lib/member.lib.php';
 		require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
@@ -371,7 +410,7 @@ else if ($id || $ref)
 		// Ref
 		print '<tr><td width="20%">'.$langs->trans("Ref").'</td>';
 		print '<td class="valeur">';
-		print $form->showrefnav($member,'rowid');
+		print $form->showrefnav($member,'id');
 		print '</td></tr>';
 
         // Login
@@ -397,12 +436,12 @@ else if ($id || $ref)
         print '<tr><td>'.$langs->trans("UserTitle").'</td><td class="valeur">'.$member->getCivilityLabel().'&nbsp;</td>';
         print '</tr>';
 
-        // Nom
-		print '<tr><td>'.$langs->trans("Lastname").'</td><td class="valeur">'.$member->nom.'&nbsp;</td>';
+        // Lastname
+		print '<tr><td>'.$langs->trans("Lastname").'</td><td class="valeur">'.$member->lastname.'&nbsp;</td>';
 		print '</tr>';
 
-		// Prenom
-		print '<tr><td>'.$langs->trans("Firstname").'</td><td class="valeur">'.$member->prenom.'&nbsp;</td>';
+		// Firstname
+		print '<tr><td>'.$langs->trans("Firstname").'</td><td class="valeur">'.$member->firstname.'&nbsp;</td>';
 		print '</tr>';
 
 		// Status
@@ -412,23 +451,168 @@ else if ($id || $ref)
 
 		dol_fiche_end();
 
-		dol_htmloutput_mesg($mesg);
+		formCategory($db,$member,3,0,$user->rights->adherent->creer);
+	}
+	if ($type == 4)
+	{
+		$langs->load("contact");
 
-		formCategory($db,$member,3);
+		/*
+		 * Category card for contact
+		 */
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/contact.lib.php';
+		require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
+
+		// Produit
+		$object = new Contact($db);
+		$result = $object->fetch($id, $ref);
+		$object->fetch_thirdparty();
+
+		llxHeader("","",$langs->trans("Contact"));
+
+
+		$head=contact_prepare_head($object, $user);
+		$titre=$langs->trans("ContactsAddresses");
+		$picto='contact';
+		dol_fiche_head($head, 'category', $titre,0,$picto);
+
+		$rowspan=5;
+		if (! empty($conf->societe->enabled)) $rowspan++;
+
+		print '<table class="border" width="100%">';
+
+		// Ref
+		print '<tr><td width="20%">'.$langs->trans("Ref").'</td>';
+		print '<td class="valeur">';
+		print $form->showrefnav($object,'rowid');
+		print '</td></tr>';
+
+	  // Name
+        print '<tr><td width="20%">'.$langs->trans("Lastname").' / '.$langs->trans("Label").'</td><td width="30%">'.$object->lastname.'</td>';
+        print '<td width="20%">'.$langs->trans("Firstname").'</td><td width="30%">'.$object->firstname.'</td></tr>';
+
+        // Company
+        if (empty($conf->global->SOCIETE_DISABLE_CONTACTS))
+        {
+            print '<tr><td>'.$langs->trans("Company").'</td><td colspan="3">';
+            if (!empty($object->thirdparty->id))
+            {
+                print $object->thirdparty->getNomUrl(1);
+            }
+            else
+            {
+                print $langs->trans("ContactNotLinkedToCompany");
+            }
+            print '</td></tr>';
+        }
+
+        // Civility
+        print '<tr><td width="15%">'.$langs->trans("UserTitle").'</td><td colspan="3">';
+        print $object->getCivilityLabel();
+        print '</td></tr>';
+
+        // Role
+        print '<tr><td>'.$langs->trans("PostOrFunction").'</td><td colspan="3">'.$object->poste.'</td>';
+
+        // Address
+        print '<tr><td>'.$langs->trans("Address").'</td><td colspan="3">';
+        dol_print_address($object->address,'gmap','contact',$object->id);
+        print '</td></tr>';
+
+        // Zip/Town
+        print '<tr><td>'.$langs->trans("Zip").' / '.$langs->trans("Town").'</td><td colspan="3">';
+        print $object->zip;
+        if ($object->zip) print '&nbsp;';
+        print $object->town.'</td></tr>';
+
+        // Country
+        print '<tr><td>'.$langs->trans("Country").'</td><td colspan="3">';
+        $img=picto_from_langcode($object->country_code);
+        if ($img) print $img.' ';
+        print $object->country;
+        print '</td></tr>';
+
+        // State
+        if (empty($conf->global->SOCIETE_DISABLE_STATE))
+        {
+            print '<tr><td>'.$langs->trans('State').'</td><td colspan="3">'.$object->state.'</td>';
+        }
+
+        // Phone
+        print '<tr><td>'.$langs->trans("PhonePro").'</td><td>'.dol_print_phone($object->phone_pro,$object->country_code,$object->id,$object->socid,'AC_TEL').'</td>';
+        print '<td>'.$langs->trans("PhonePerso").'</td><td>'.dol_print_phone($object->phone_perso,$object->country_code,$object->id,$object->socid,'AC_TEL').'</td></tr>';
+
+        print '<tr><td>'.$langs->trans("PhoneMobile").'</td><td>'.dol_print_phone($object->phone_mobile,$object->country_code,$object->id,$object->socid,'AC_TEL').'</td>';
+        print '<td>'.$langs->trans("Fax").'</td><td>'.dol_print_phone($object->fax,$object->country_code,$object->id,$object->socid,'AC_FAX').'</td></tr>';
+
+        // Email
+        print '<tr><td>'.$langs->trans("EMail").'</td><td>'.dol_print_email($object->email,$object->id,$object->socid,'AC_EMAIL').'</td>';
+        if (! empty($conf->mailing->enabled))
+        {
+            $langs->load("mails");
+            print '<td class="nowrap">'.$langs->trans("NbOfEMailingsReceived").'</td>';
+            print '<td><a href="'.DOL_URL_ROOT.'/comm/mailing/liste.php?filteremail='.urlencode($object->email).'">'.$object->getNbOfEMailings().'</a></td>';
+        }
+        else
+        {
+            print '<td colspan="2">&nbsp;</td>';
+        }
+        print '</tr>';
+
+        // Instant message and no email
+        print '<tr><td>'.$langs->trans("IM").'</td><td>'.$object->jabberid.'</td>';
+        if (!empty($conf->mailing->enabled))
+        {
+        	print '<td>'.$langs->trans("No_Email").'</td><td>'.yn($object->no_email).'</td>';
+        }
+        else
+       {
+	       	print '<td colspan="2">&nbsp;</td>';
+        }
+        print '</tr>';
+
+        print '<tr><td>'.$langs->trans("ContactVisibility").'</td><td colspan="3">';
+        print $object->LibPubPriv($object->priv);
+        print '</td></tr>';
+
+        // Note Public
+        print '<tr><td valign="top">'.$langs->trans("NotePublic").'</td><td colspan="3">';
+        print nl2br($object->note_public);
+        print '</td></tr>';
+
+        // Note Private
+        print '<tr><td valign="top">'.$langs->trans("NotePrivate").'</td><td colspan="3">';
+        print nl2br($object->note_private);
+        print '</td></tr>';
+
+        // Other attributes
+        $parameters=array('socid'=>$socid, 'colspan' => ' colspan="3"');
+        $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
+        if (empty($reshook) && ! empty($extrafields->attribute_label))
+        {
+        	print $object->showOptionals($extrafields);
+        }
+
+		print '</table>';
+
+		dol_fiche_end();
+
+		formCategory($db,$object,4,$socid, $user->rights->societe->creer);
 	}
 }
 
 
 /**
- * 	Function to output a HTML select for a category
+ * 	Function to output a form to add object into a category
  *
- * 	@param		DoliDb		$db			Database handler
- * 	@param		Object		$object		Object we want to see categories it can be classified into
- * 	@param		int			$typeid		Type of category (0, 1, 2, 3)
- *  @param		int			$socid		Id thirdparty
+ * 	@param		DoliDb		$db					Database handler
+ * 	@param		Object		$object				Object we want to see categories it can be classified into
+ * 	@param		int			$typeid				Type of category (0, 1, 2, 3)
+ *  @param		int			$socid				Id thirdparty
+ *  @param		string		$showclassifyform	1=Add form to 'Classify', 0=Do not show form to 'Classify'
  *  @return		int			0
  */
-function formCategory($db,$object,$typeid,$socid=0)
+function formCategory($db,$object,$typeid,$socid=0,$showclassifyform=1)
 {
 	global $user,$langs,$form,$bc;
 
@@ -436,34 +620,39 @@ function formCategory($db,$object,$typeid,$socid=0)
 	if ($typeid == 1) $title = $langs->trans("SuppliersCategoriesShort");
 	if ($typeid == 2) $title = $langs->trans("CustomersProspectsCategoriesShort");
 	if ($typeid == 3) $title = $langs->trans("MembersCategoriesShort");
+	if ($typeid == 4) $title = $langs->trans("ContactCategoriesShort");
 
-	// Formulaire ajout dans une categorie
 	print '<br>';
 	print_fiche_titre($title,'','');
-	print '<form method="post" action="'.DOL_URL_ROOT.'/categories/categorie.php">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="typeid" value="'.$typeid.'">';
-	print '<input type="hidden" name="type" value="'.$typeid.'">';
-	print '<input type="hidden" name="id" value="'.$object->id.'">';
-	print '<table class="noborder" width="100%">';
-	print '<tr class="liste_titre"><td width="40%">';
-	print $langs->trans("ClassifyInCategory").' &nbsp;';
-	print $form->select_all_categories($typeid);
-	print '</td><td>';
-	print '<input type="submit" class="button" value="'.$langs->trans("Classify").'"></td>';
-	if ($user->rights->categorie->creer)
+
+	// Form to add record into a category
+	if ($showclassifyform)
 	{
-		print '<td align="right">';
-		print '<a href="'.DOL_URL_ROOT.'/categories/fiche.php?action=create&amp;origin='.$object->id.'&type='.$typeid.'&urlfrom='.urlencode($_SERVER["PHP_SELF"].'?'.(($typeid==1||$typeid==2)?'socid':'id').'='.$object->id.'&type='.$typeid).'">';
-		print $langs->trans("CreateCat").' ';
-		print img_picto($langs->trans("Create"),'filenew');
-		print "</a>";
-		print '</td>';
+		print '<form method="post" action="'.DOL_URL_ROOT.'/categories/categorie.php">';
+		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+		print '<input type="hidden" name="typeid" value="'.$typeid.'">';
+		print '<input type="hidden" name="type" value="'.$typeid.'">';
+		print '<input type="hidden" name="id" value="'.$object->id.'">';
+		print '<table class="noborder" width="100%">';
+		print '<tr class="liste_titre"><td width="40%">';
+		print $langs->trans("ClassifyInCategory").' &nbsp;';
+		print $form->select_all_categories($typeid,'auto');
+		print '</td><td>';
+		print '<input type="submit" class="button" value="'.$langs->trans("Classify").'"></td>';
+		if ($user->rights->categorie->creer)
+		{
+			print '<td align="right">';
+			print '<a href="'.DOL_URL_ROOT.'/categories/fiche.php?action=create&amp;origin='.$object->id.'&type='.$typeid.'&urlfrom='.urlencode($_SERVER["PHP_SELF"].'?'.(($typeid==1||$typeid==2)?'socid':'id').'='.$object->id.'&type='.$typeid).'">';
+			print $langs->trans("CreateCat").' ';
+			print img_picto($langs->trans("Create"),'filenew');
+			print "</a>";
+			print '</td>';
+		}
+		print '</tr>';
+		print '</table>';
+		print '</form>';
+		print '<br>';
 	}
-	print '</tr>';
-	print '</table>';
-	print '</form>';
-	print '<br/>';
 
 
 	$c = new Categorie($db);
@@ -475,6 +664,7 @@ function formCategory($db,$object,$typeid,$socid=0)
 		if ($typeid == 1) $title=$langs->trans("CompanyIsInSuppliersCategories");
 		if ($typeid == 2) $title=$langs->trans("CompanyIsInCustomersCategories");
 		if ($typeid == 3) $title=$langs->trans("MemberIsInCategories");
+		if ($typeid == 4) $title=$langs->trans("ContactIsInCategories");
 		print "\n";
 		print '<table class="noborder" width="100%">';
 		print '<tr class="liste_titre"><td colspan="2">'.$title.':</td></tr>';
@@ -495,13 +685,14 @@ function formCategory($db,$object,$typeid,$socid=0)
 				//print $c->getNomUrl(1);
 				print img_object('','category').' '.$way."</td>";
 
-				// Lien supprimer
+				// Link to delete from category
 				print '<td align="right">';
 				$permission=0;
 				if ($typeid == 0) $permission=($user->rights->produit->creer || $user->rights->service->creer);
 				if ($typeid == 1) $permission=$user->rights->societe->creer;
 				if ($typeid == 2) $permission=$user->rights->societe->creer;
 				if ($typeid == 3) $permission=$user->rights->adherent->creer;
+				if ($typeid == 4) $permission=$user->rights->societe->creer;
 				if ($permission)
 				{
 					print "<a href= '".$_SERVER['PHP_SELF']."?".(empty($socid)?'id':'socid')."=".$object->id."&amp;type=".$typeid."&amp;removecat=".$cat->id."'>";
@@ -529,6 +720,7 @@ function formCategory($db,$object,$typeid,$socid=0)
 		if ($typeid == 1) $title=$langs->trans("CompanyHasNoCategory");
 		if ($typeid == 2) $title=$langs->trans("CompanyHasNoCategory");
 		if ($typeid == 3) $title=$langs->trans("MemberHasNoCategory");
+		if ($typeid == 4) $title=$langs->trans("ContactHasNoCategory");
 		print $title;
 		print "<br/>";
 	}
@@ -537,5 +729,5 @@ function formCategory($db,$object,$typeid,$socid=0)
 
 
 llxFooter();
+
 $db->close();
-?>

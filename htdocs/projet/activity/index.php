@@ -65,8 +65,9 @@ else
 	else print $langs->trans("TasksPublicDesc").'<br><br>';
 }
 
-print '<table border="0" width="100%" class="notopnoleftnoright">';
-print '<tr><td width="30%" valign="top" class="notopnoleft">';
+
+print '<div class="fichecenter"><div class="fichethirdleft">';
+
 
 print_projecttasks_array($db,$socid,$projectsListId,$mine);
 
@@ -99,7 +100,7 @@ if ( $resql )
 	while ($row = $db->fetch_object($resql))
 	{
 		$var=!$var;
-		print "<tr $bc[$var]>";
+		print "<tr ".$bc[$var].">";
 		print '<td>';
 		$projectstatic->id=$row->rowid;
 		$projectstatic->ref=$row->ref;
@@ -154,7 +155,7 @@ if ( $resql )
 	while ($row = $db->fetch_object($resql))
 	{
 		$var=!$var;
-		print "<tr $bc[$var]>";
+		print "<tr ".$bc[$var].">";
 		print '<td>';
 		$projectstatic->id=$row->rowid;
 		$projectstatic->ref=$row->ref;
@@ -180,7 +181,8 @@ print "</table>";
 }
 
 
-print '</td><td width="70%" valign="top" class="notopnoleftright">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
+
 
 // TODO Do not use week function to be compatible with all database
 if ($db->type != 'pgsql')
@@ -193,7 +195,7 @@ print '<td>'.$langs->trans("ActivityOnProjectThisWeek").'</td>';
 print '<td align="right">'.$langs->trans("Time").'</td>';
 print "</tr>\n";
 
-$sql = "SELECT p.rowid, p.ref, p.title, sum(tt.task_duration) as nb";
+$sql = "SELECT p.rowid, p.ref, p.title, SUM(tt.task_duration) as nb";
 $sql.= " FROM ".MAIN_DB_PREFIX."projet as p";
 $sql.= " , ".MAIN_DB_PREFIX."projet_task as t";
 $sql.= " , ".MAIN_DB_PREFIX."projet_task_time as tt";
@@ -246,7 +248,7 @@ print '<td>'.$langs->trans("ActivityOnProjectThisMonth").': '.dol_print_date($no
 print '<td align="right">'.$langs->trans("Time").'</td>';
 print "</tr>\n";
 
-$sql = "SELECT p.rowid, p.ref, p.title, sum(tt.task_duration) as nb";
+$sql = "SELECT p.rowid, p.ref, p.title, SUM(tt.task_duration) as nb";
 $sql.= " FROM ".MAIN_DB_PREFIX."projet as p";
 $sql.= ", ".MAIN_DB_PREFIX."projet_task as t";
 $sql.= ", ".MAIN_DB_PREFIX."projet_task_time as tt";
@@ -265,7 +267,7 @@ if ( $resql )
 
 	while ($row = $db->fetch_object($resql))
 	{
-		print "<tr $bc[$var]>";
+		print "<tr ".$bc[$var].">";
 		print '<td>';
 		$projectstatic->id=$row->rowid;
 		$projectstatic->ref=$row->ref;
@@ -281,6 +283,10 @@ else
 {
 	dol_print_error($db);
 }
+print '<tr class="liste_total">';
+print '<td>'.$langs->trans('Total').'</td>';
+print '<td align="right">'.convertSecondToTime($total).'</td>';
+print "</tr>\n";
 print "</table>";
 
 /* Affichage de la liste des projets de l'annee */
@@ -290,7 +296,7 @@ print '<td>'.$langs->trans("ActivityOnProjectThisYear").': '.strftime("%Y", $now
 print '<td align="right">'.$langs->trans("Time").'</td>';
 print "</tr>\n";
 
-$sql = "SELECT p.rowid, p.ref, p.title, sum(tt.task_duration) as nb";
+$sql = "SELECT p.rowid, p.ref, p.title, SUM(tt.task_duration) as nb";
 $sql.= " FROM ".MAIN_DB_PREFIX."projet as p";
 $sql.= ", ".MAIN_DB_PREFIX."projet_task as t";
 $sql.= ", ".MAIN_DB_PREFIX."projet_task_time as tt";
@@ -308,7 +314,7 @@ if ( $resql )
 {
 	while ($row = $db->fetch_object($resql))
 	{
-		print "<tr $bc[$var]>";
+		print "<tr ".$bc[$var].">";
 		print '<td>';
 		$projectstatic->id=$row->rowid;
 		$projectstatic->ref=$row->ref;
@@ -324,11 +330,16 @@ else
 {
 	dol_print_error($db);
 }
+print '<tr class="liste_total">';
+print '<td>'.$langs->trans('Total').'</td>';
+print '<td align="right">'.convertSecondToTime($total).'</td>';
+print "</tr>\n";
 print "</table>";
 
-print '</td></tr></table>';
+
+print '</div></div></div>';
+
 
 llxFooter();
 
 $db->close();
-?>

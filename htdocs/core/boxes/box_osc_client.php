@@ -32,7 +32,7 @@ class box_osc_clients extends ModeleBoxes
 {
     var $boxcode="nbofcustomers";
     var $boximg="object_company";
-    var $boxlabel;
+    var $boxlabel="BoxNbOfCustomers";
     var $depends = array("boutique");
 
 	var $db;
@@ -41,16 +41,6 @@ class box_osc_clients extends ModeleBoxes
     var $info_box_head = array();
     var $info_box_contents = array();
 
-    /**
-     *  Constructor
-     */
-    function __construct()
-    {
-        global $langs;
-        $langs->load("boxes");
-
-        $this->boxlabel=$langs->transnoentitiesnoconv("BoxNbOfCustomers");
-    }
 
     /**
 	 *  Load data into info_box_contents array to show array later.
@@ -90,6 +80,8 @@ class box_osc_clients extends ModeleBoxes
                     'url' => DOL_URL_ROOT."/boutique/client/index.php");
                     $i++;
                 }
+
+				$db->free($resql);
             }
             else {
                 $this->info_box_contents[0][0] = array( 'td' => 'align="left"',
@@ -118,4 +110,3 @@ class box_osc_clients extends ModeleBoxes
 
 }
 
-?>

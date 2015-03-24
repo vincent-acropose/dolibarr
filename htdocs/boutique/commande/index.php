@@ -69,7 +69,7 @@ if ($resql)
     {
       $objp = $dbosc->fetch_object($resql);
       $var=!$var;
-      print "<tr $bc[$var]>";
+      print "<tr ".$bc[$var].">";
 
       print '<td><a href="fiche.php?id='.$objp->orders_id.'"><img src="/theme/'.$conf->theme.'/img/filenew.png" border="0" alt="Fiche">&nbsp;';
       print $objp->orders_id ."</a></td><td>";
@@ -90,4 +90,3 @@ else
 $dbosc->close();
 
 llxFooter();
-?>

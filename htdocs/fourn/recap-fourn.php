@@ -90,7 +90,7 @@ if ($socid > 0)
 
         print '<table class="noborder" width="100%">';
 
-        $sql = "SELECT s.nom, s.rowid as socid, f.facnumber, f.amount, f.datef as df,";
+        $sql = "SELECT s.nom, s.rowid as socid, f.ref_supplier, f.amount, f.datef as df,";
         $sql.= " f.paye as paye, f.fk_statut as statut, f.rowid as facid,";
         $sql.= " u.login, u.rowid as userid";
         $sql.= " FROM ".MAIN_DB_PREFIX."societe as s,".MAIN_DB_PREFIX."facture_fourn as f,".MAIN_DB_PREFIX."user as u";
@@ -136,7 +136,7 @@ if ($socid > 0)
                 $totalpaye = $fac->getSommePaiement();
 
                 $var=!$var;
-                print "<tr $bc[$var]>";
+                print "<tr ".$bc[$var].">";
 
                 print "<td align=\"center\">".dol_print_date($fac->date)."</td>\n";
                 print "<td><a href=\"facture/fiche.php?facid=$fac->id\">".img_object($langs->trans("ShowBill"),"bill")." ".$fac->ref."</a></td>\n";
@@ -149,7 +149,7 @@ if ($socid > 0)
                 print '<td align="right">'.price($solde)."</td>\n";
 
                 // Author
-                print '<td nowrap="nowrap" width="50"><a href="'.DOL_URL_ROOT.'/user/fiche.php?id='.$objf->userid.'">'.img_object($langs->trans("ShowUser"),'user').' '.$objf->login.'</a></td>';
+                print '<td class="nowrap" width="50"><a href="'.DOL_URL_ROOT.'/user/fiche.php?id='.$objf->userid.'">'.img_object($langs->trans("ShowUser"),'user').' '.$objf->login.'</a></td>';
 
                 print "</tr>\n";
 
@@ -172,7 +172,7 @@ if ($socid > 0)
                     {
                         $objp = $db->fetch_object($resqlp);
                         //$var=!$var;
-                        print "<tr $bc[$var]>";
+                        print "<tr ".$bc[$var].">";
                         print '<td align="center">'.dol_print_date($db->jdate($objp->dp))."</td>\n";
                         print '<td>';
                         print '&nbsp; &nbsp; &nbsp; '; // Decalage
@@ -184,7 +184,7 @@ if ($socid > 0)
                         print '<td align="right">'.price($solde)."</td>\n";
 
                         // Auteur
-                        print '<td nowrap="nowrap" width="50"><a href="'.DOL_URL_ROOT.'/user/fiche.php?id='.$objp->userid.'">'.img_object($langs->trans("ShowUser"),'user').' '.$objp->login.'</a></td>';
+                        print '<td class="nowrap" width="50"><a href="'.DOL_URL_ROOT.'/user/fiche.php?id='.$objp->userid.'">'.img_object($langs->trans("ShowUser"),'user').' '.$objp->login.'</a></td>';
 
                         print '</tr>';
 
@@ -217,4 +217,3 @@ else
 $db->close();
 
 llxFooter();
-?>

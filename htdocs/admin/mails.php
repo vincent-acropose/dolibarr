@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2007-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2009-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013	   Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +33,16 @@ $langs->load("mails");
 $langs->load("other");
 $langs->load("errors");
 
+$action=GETPOST('action','alpha');
+
 if (! $user->admin) accessforbidden();
+
+$usersignature=$user->signature;
+// For action = test or send, we ensure that content is not html, even for signature, because this we want a test with NO html.
+if ($action == 'test' || $action == 'send')
+{
+	$usersignature=dol_string_nohtmltag($usersignature);
+}
 
 $substitutionarrayfortest=array(
 '__LOGIN__' => $user->login,
@@ -40,13 +50,11 @@ $substitutionarrayfortest=array(
 '__EMAIL__' => 'TESTEMail',
 '__LASTNAME__' => 'TESTLastname',
 '__FIRSTNAME__' => 'TESTFirstname',
-'__SIGNATURE__' => (($user->signature && empty($conf->global->MAIN_MAIL_DO_NOT_USE_SIGN))?$user->signature:''),
+'__SIGNATURE__' => (($user->signature && empty($conf->global->MAIN_MAIL_DO_NOT_USE_SIGN))?$usersignature:''),
 //'__PERSONALIZED__' => 'TESTPersonalized'	// Hiden because not used yet
 );
 complete_substitutions_array($substitutionarrayfortest, $langs);
 
-$action=GETPOST('action');
-$message='';
 
 
 /*
@@ -127,14 +135,6 @@ if (! empty($_POST['removedfile']) || ! empty($_POST['removedfilehtml']))
 }
 
 /*
- * Cancel
- */
-if (($action == 'send' || $action == 'sendhtml') && GETPOST('cancel'))
-{
-    $message='';
-}
-
-/*
  * Send mail
  */
 if (($action == 'send' || $action == 'sendhtml') && ! GETPOST('addfile') && ! GETPOST('addfilehtml') && ! GETPOST('removedfile') && ! GETPOST('cancel'))
@@ -153,6 +153,11 @@ if (($action == 'send' || $action == 'sendhtml') && ! GETPOST('addfile') && ! GE
 	$body       = $_POST['message'];
 	$deliveryreceipt= $_POST["deliveryreceipt"];
 
+	//Check if we have to decode HTML
+	if (!empty($conf->global->FCKEDITOR_ENABLE_MAILING) && dol_textishtml(dol_html_entity_decode($body, ENT_COMPAT | ENT_HTML401))) {
+		$body=dol_html_entity_decode($body, ENT_COMPAT | ENT_HTML401);
+	}
+
 	// Create form object
 	include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
 	$formmail = new FormMail($db);
@@ -164,13 +169,13 @@ if (($action == 'send' || $action == 'sendhtml') && ! GETPOST('addfile') && ! GE
 
 	if (empty($_POST["frommail"]))
 	{
-		$message='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentities("MailFrom")).'</div>';
+		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("MailFrom")),'errors');
 		$action='test';
 		$error++;
 	}
 	if (empty($sendto))
 	{
-		$message='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentities("MailTo")).'</div>';
+		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("MailTo")),'errors');
 		$action='test';
 		$error++;
 	}
@@ -204,11 +209,11 @@ if (($action == 'send' || $action == 'sendhtml') && ! GETPOST('addfile') && ! GE
 
 		if ($result)
 		{
-			$message='<div class="ok">'.$langs->trans("MailSuccessfulySent",$mailfile->getValidAddress($email_from,2),$mailfile->getValidAddress($sendto,2)).'</div>';
+			setEventMessage($langs->trans("MailSuccessfulySent",$mailfile->getValidAddress($email_from,2),$mailfile->getValidAddress($sendto,2)));
 		}
 		else
 		{
-			$message='<div class="error">'.$langs->trans("ResultKo").'<br>'.$mailfile->error.' '.$result.'</div>';
+			setEventMessage($langs->trans("ResultKo").'<br>'.$mailfile->error.' '.$result,'errors');
 		}
 
 		$action='';
@@ -244,8 +249,6 @@ print_fiche_titre($langs->trans("EMailsSetup"),'','setup');
 
 print $langs->trans("EMailsDesc")."<br>\n";
 print "<br>\n";
-
-dol_htmloutput_mesg($message);
 
 // List of sending methods
 $listofmethods=array();
@@ -426,7 +429,7 @@ if ($action == 'edit')
 		// SuperAdministrator access only
 		if (empty($conf->multicompany->enabled) || ($user->admin && !$user->entity))
 		{
-			print '<input class="flat" name="MAIN_MAIL_SMTPS_PW" size="32" value="' . $mainsmtppw . '">';
+			print '<input class="flat" type="password" name="MAIN_MAIL_SMTPS_PW" size="32" value="' . $mainsmtppw . '">';
 		}
 		else
 		{
@@ -591,7 +594,7 @@ else
 
 	print '</table>';
 
-    if ($conf->global->MAIN_MAIL_SENDMODE == 'mail')
+    if ($conf->global->MAIN_MAIL_SENDMODE == 'mail' && empty($conf->global->MAIN_FIX_FOR_BUGGED_MTA))
     {
         print '<br>';
         /*
@@ -678,7 +681,7 @@ else
 		$formmail->withtopic=(isset($_POST['subject'])?$_POST['subject']:$langs->trans("Test"));
 		$formmail->withtopicreadonly=0;
 		$formmail->withfile=2;
-		$formmail->withbody=(isset($_POST['message'])?$_POST['message']:($action == 'testhtml'?$langs->trans("PredefinedMailTestHtml"):$langs->trans("PredefinedMailTest")));
+		$formmail->withbody=(isset($_POST['message'])?$_POST['message']:($action == 'testhtml'?$langs->transnoentities("PredefinedMailTestHtml"):$langs->transnoentities("PredefinedMailTest")));
 		$formmail->withbodyreadonly=0;
 		$formmail->withcancel=1;
 		$formmail->withdeliveryreceipt=1;
@@ -698,7 +701,7 @@ else
 			$formmail->clear_attached_files();
 		}
 
-		$formmail->show_form(($action == 'testhtml'?'addfilehtml':'addfile'),($action == 'testhtml'?'removefilehtml':'removefile'));
+		print $formmail->get_form(($action == 'testhtml'?'addfilehtml':'addfile'),($action == 'testhtml'?'removefilehtml':'removefile'));
 
 		print '<br>';
 	}
@@ -708,4 +711,3 @@ else
 llxFooter();
 
 $db->close();
-?>

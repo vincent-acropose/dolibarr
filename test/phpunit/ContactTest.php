@@ -25,10 +25,16 @@
 
 global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
 require_once dirname(__FILE__).'/../../htdocs/contact/class/contact.class.php';
 $langs->load("dict");
+
+if ($langs->defaultlang != 'en_US')
+{
+	print "Error: Default language for company to run tests must be set to en_US or auto. Current is ".$langs->defaultlang."\n";
+	exit;
+}
 
 if (empty($user->id))
 {
@@ -183,8 +189,8 @@ class ContactTest extends PHPUnit_Framework_TestCase
 
 		$localobject->oldcopy=dol_clone($localobject);
 
-		$localobject->note='New note after update';
-		//$localobject->note_public='New note public after update';
+		$localobject->note_private='New private note after update';
+		$localobject->note_public='New public note after update';
 		$localobject->lastname='New name';
 		$localobject->firstname='New firstname';
 		$localobject->address='New address';
@@ -199,23 +205,26 @@ class ContactTest extends PHPUnit_Framework_TestCase
 		$localobject->email='newemail@newemail.com';
 		$localobject->jabberid='New im id';
 		$localobject->default_lang='es_ES';
+		
 		$result=$localobject->update($localobject->id,$user);
     	print __METHOD__." id=".$localobject->id." result=".$result."\n";
     	$this->assertLessThan($result, 0, 'Contact::update error');
-		$result=$localobject->update_note($localobject->note);
+		
+    	$result=$localobject->update_note($localobject->note_private,'_private');
     	print __METHOD__." id=".$localobject->id." result=".$result."\n";
     	$this->assertLessThan($result, 0, 'Contact::update_note error');
-		//$result=$localobject->update_note_public($localobject->note_public);
-    	//print __METHOD__." id=".$localobject->id." result=".$result."\n";
-    	//$this->assertLessThan($result, 0);
+		
+    	$result=$localobject->update_note_public($localobject->note_public);
+		print __METHOD__." id=".$localobject->id." result=".$result."\n";
+    	$this->assertLessThan($result, 0, 'Contact::update_note_public error');
 
 		$newobject=new Contact($this->savdb);
     	$result=$newobject->fetch($localobject->id);
         print __METHOD__." id=".$localobject->id." result=".$result."\n";
     	$this->assertLessThan($result, 0, 'Contact::fetch error');
 
-    	print __METHOD__." old=".$localobject->note." new=".$newobject->note."\n";
-    	$this->assertEquals($localobject->note, $newobject->note);
+    	print __METHOD__." old=".$localobject->note_private." new=".$newobject->note_private."\n";
+    	$this->assertEquals($localobject->note_private, $newobject->note_private);
     	//print __METHOD__." old=".$localobject->note_public." new=".$newobject->note_public."\n";
     	//$this->assertEquals($localobject->note_public, $newobject->note_public);
     	print __METHOD__." old=".$localobject->lastname." new=".$newobject->lastname."\n";
@@ -390,9 +399,8 @@ class ContactTest extends PHPUnit_Framework_TestCase
         $localobjectadd->town='New town';
         $result=$localobjectadd->getFullAddress(1);
         print __METHOD__." id=".$localobjectadd->id." result=".$result."\n";
-        $this->assertContains("New address\nNew zip New town\nUnited States", $result);
+        $this->assertContains("New address\nNew town, New zip\nUnited States", $result);
 
         return $localobjectadd->id;
     }
 }
-?>

@@ -23,16 +23,18 @@
  *	\brief      Prelevement statistics
  */
 
-require '../bank/pre.inc.php';
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/lib/prelevement.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/bonprelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/ligneprelevement.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+
+$langs->load("banks");
+$langs->load("categories");
+$langs->load("withdrawals");
 
 // Security check
 if ($user->societe_id > 0) accessforbidden();
-
-$langs->load("withdrawals");
-$langs->load("categories");
 
 // Get supervariables
 $prev_id = GETPOST('id','int');
@@ -42,7 +44,7 @@ $page = GETPOST('page','int');
  * View
  */
 
-llxHeader('',$langs->trans("WithdrawalReceipt"));
+llxHeader('',$langs->trans("WithdrawalsReceipts"));
 
 if ($prev_id)
 {
@@ -51,24 +53,24 @@ if ($prev_id)
 	if ($bon->fetch($prev_id) == 0)
 	{
 		$head = prelevement_prepare_head($bon);
-		dol_fiche_head($head, 'statistics', $langs->trans("WithdrawalReceipt"), '', 'payment');
+		dol_fiche_head($head, 'statistics', $langs->trans("WithdrawalsReceipts"), '', 'payment');
 
 		print '<table class="border" width="100%">';
 
 		print '<tr><td width="20%">'.$langs->trans("Ref").'</td><td>'.$bon->getNomUrl(1).'</td></tr>';
 		print '<tr><td width="20%">'.$langs->trans("Date").'</td><td>'.dol_print_date($bon->datec,'day').'</td></tr>';
 		print '<tr><td width="20%">'.$langs->trans("Amount").'</td><td>'.price($bon->amount).'</td></tr>';
-	
+
 		// Status
 		print '<tr><td width="20%">'.$langs->trans('Status').'</td>';
 		print '<td>'.$bon->getLibStatut(1).'</td>';
 		print '</tr>';
-	
+
 		if($bon->date_trans <> 0)
 		{
 			$muser = new User($db);
 			$muser->fetch($bon->user_trans);
-	
+
 			print '<tr><td width="20%">'.$langs->trans("TransData").'</td><td>';
 			print dol_print_date($bon->date_trans,'day');
 			print ' '.$langs->trans("By").' '.$muser->getFullName($langs).'</td></tr>';
@@ -82,19 +84,19 @@ if ($prev_id)
 			print dol_print_date($bon->date_credit,'day');
 			print '</td></tr>';
 		}
-	
+
 		print '</table>';
-	
+
 		print '<br>';
-	
+
 		print '<table class="border" width="100%"><tr><td width="20%">';
 		print $langs->trans("WithdrawalFile").'</td><td>';
 		$relativepath = 'receipts/'.$bon->ref;
-		print '<a href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
+		print '<a data-ajax="false" href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
 		print '</td></tr></table>';
-	
+
 		dol_fiche_end();
-		
+
 	}
 	else
 	{
@@ -130,7 +132,7 @@ if ($prev_id)
 		{
 			$row = $db->fetch_row($resql);
 
-			print "<tr $bc[$var]><td>";
+			print "<tr ".$bc[$var]."><td>";
 
 			print $ligne->LibStatut($row[1],1);
 
@@ -159,4 +161,3 @@ if ($prev_id)
 $db->close();
 
 llxFooter();
-?>

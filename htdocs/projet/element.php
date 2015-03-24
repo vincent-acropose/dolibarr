@@ -26,6 +26,7 @@
 
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/project.lib.php';
 if (! empty($conf->propal->enabled))      require_once DOL_DOCUMENT_ROOT.'/comm/propal/class/propal.class.php';
 if (! empty($conf->facture->enabled))     require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
@@ -46,8 +47,10 @@ if (! empty($conf->commande->enabled)) 	$langs->load("orders");
 if (! empty($conf->propal->enabled))   	$langs->load("propal");
 if (! empty($conf->ficheinter->enabled))	$langs->load("interventions");
 
-$projectid=GETPOST('id');
-$ref=GETPOST('ref');
+$projectid=GETPOST('id','int');
+$ref=GETPOST('ref','alpha');
+$action=GETPOST('action','alpha');
+
 if ($projectid == '' && $ref == '')
 {
 	dol_print_error('','Bad parameter');
@@ -62,6 +65,8 @@ if ($ref)
 {
     $project->fetch(0,$ref);
     $projectid=$project->id;
+}else {
+	$project->fetch($projectid);
 }
 
 // Security check
@@ -78,11 +83,12 @@ $help_url="EN:Module_Projects|FR:Module_Projets|ES:M&oacute;dulo_Proyectos";
 llxHeader("",$langs->trans("Referers"),$help_url);
 
 $form = new Form($db);
+$formproject=new FormProjets($db);
 
 $userstatic=new User($db);
 
 $project = new Project($db);
-$project->fetch($_GET["id"],$_GET["ref"]);
+$project->fetch($projectid,$ref);
 $project->societe->fetch($project->societe->id);
 
 // To verify role of users
@@ -108,7 +114,7 @@ print '</td></tr>';
 
 print '<tr><td>'.$langs->trans("Label").'</td><td>'.$project->title.'</td></tr>';
 
-print '<tr><td>'.$langs->trans("Company").'</td><td>';
+print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
 if (! empty($project->societe->id)) print $project->societe->getNomUrl(1);
 else print '&nbsp;';
 print '</td></tr>';
@@ -121,6 +127,16 @@ print '</td></tr>';
 
 // Statut
 print '<tr><td>'.$langs->trans("Status").'</td><td>'.$project->getLibStatut(4).'</td></tr>';
+
+// Date start
+print '<tr><td>'.$langs->trans("DateStart").'</td><td>';
+print dol_print_date($project->date_start,'day');
+print '</td></tr>';
+
+// Date end
+print '<tr><td>'.$langs->trans("DateEnd").'</td><td>';
+print dol_print_date($project->date_end,'day');
+print '</td></tr>';
 
 print '</table>';
 
@@ -135,60 +151,100 @@ $listofreferent=array(
 'propal'=>array(
 	'title'=>"ListProposalsAssociatedProject",
 	'class'=>'Propal',
-	'test'=>$conf->propal->enabled),
+	'table'=>'propal',
+	'test'=>$conf->propal->enabled && $user->rights->propale->lire),
 'order'=>array(
 	'title'=>"ListOrdersAssociatedProject",
 	'class'=>'Commande',
-	'test'=>$conf->commande->enabled),
+	'table'=>'commande',
+	'test'=>$conf->commande->enabled && $user->rights->commande->lire),
 'invoice'=>array(
 	'title'=>"ListInvoicesAssociatedProject",
 	'class'=>'Facture',
-	'test'=>$conf->facture->enabled),
+	'margin'=>'add',
+	'table'=>'facture',
+	'test'=>$conf->facture->enabled && $user->rights->facture->lire),
 'invoice_predefined'=>array(
 	'title'=>"ListPredefinedInvoicesAssociatedProject",
 	'class'=>'FactureRec',
-	'test'=>$conf->facture->enabled),
+	'table'=>'facture_rec',
+	'test'=>$conf->facture->enabled && $user->rights->facture->lire),
 'order_supplier'=>array(
 	'title'=>"ListSupplierOrdersAssociatedProject",
 	'class'=>'CommandeFournisseur',
-	'test'=>$conf->fournisseur->enabled),
+	'table'=>'commande_fournisseur',
+	'test'=>$conf->fournisseur->enabled && $user->rights->fournisseur->commande->lire),
 'invoice_supplier'=>array(
 	'title'=>"ListSupplierInvoicesAssociatedProject",
 	'class'=>'FactureFournisseur',
-	'test'=>$conf->fournisseur->enabled),
+	'margin'=>'minus',
+	'table'=>'facture_fourn',
+	'test'=>$conf->fournisseur->enabled && $user->rights->fournisseur->facture->lire),
 'contract'=>array(
 	'title'=>"ListContractAssociatedProject",
 	'class'=>'Contrat',
-	'test'=>$conf->contrat->enabled),
+	'table'=>'contrat',
+	'test'=>$conf->contrat->enabled && $user->rights->contrat->lire),
 'intervention'=>array(
 	'title'=>"ListFichinterAssociatedProject",
 	'class'=>'Fichinter',
+	'table'=>'fichinter',
 	'disableamount'=>1,
-	'test'=>$conf->ficheinter->enabled),
+	'test'=>$conf->ficheinter->enabled && $user->rights->ficheinter->lire),
 'trip'=>array(
 	'title'=>"ListTripAssociatedProject",
 	'class'=>'Deplacement',
+	'table'=>'deplacement',
+	'margin'=>'minus',
 	'disableamount'=>1,
-	'test'=>$conf->deplacement->enabled),
+	'test'=>$conf->deplacement->enabled && $user->rights->deplacement->lire),
 'agenda'=>array(
 	'title'=>"ListActionsAssociatedProject",
 	'class'=>'ActionComm',
-    'disableamount'=>1,
-	'test'=>$conf->agenda->enabled)
+	'table'=>'actioncomm',
+	'disableamount'=>1,
+	'test'=>$conf->agenda->enabled && $user->rights->agenda->allactions->lire)
 );
+
+if ($action=="addelement")
+{
+	$tablename = GETPOST("tablename");
+	$elementselectid = GETPOST("elementselect");
+	$result=$project->update_element($tablename, $elementselectid);
+	if ($result<0) {
+		setEventMessage($project->error,'errors');
+	}
+}
 
 foreach ($listofreferent as $key => $value)
 {
 	$title=$value['title'];
 	$classname=$value['class'];
+	$tablename=$value['table'];
 	$qualified=$value['test'];
+
 	if ($qualified)
 	{
 		print '<br>';
 
 		print_titre($langs->trans($title));
-		print '<table class="noborder" width="100%">';
 
+		$selectList=$formproject->select_element($tablename,$project->societe->id);
+
+		if (!$selectList || ($selectList<0)) {
+			setEventMessage($formproject->error,'errors');
+		} else {
+			print '<form action="'.$_SERVER["PHP_SELF"].'?id='.$projectid.'" method="post">';
+			print '<input type="hidden" name="tablename" value="'.$tablename.'">';
+			print '<input type="hidden" name="action" value="addelement">';
+			print '<table><tr><td>'.$langs->trans("SelectElement").'</td>';
+			print '<td>'.$selectList.'</td>';
+			print '<td><input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans("AddElement")).'"></td>';
+			print '</tr></table>';
+			print '</form>';
+		}
+		print '<table class="noborder" width="100%">';
+		
 		print '<tr class="liste_titre">';
 		print '<td width="100">'.$langs->trans("Ref").'</td>';
 		print '<td width="100" align="center">'.$langs->trans("Date").'</td>';
@@ -197,7 +253,7 @@ foreach ($listofreferent as $key => $value)
 		if (empty($value['disableamount'])) print '<td align="right" width="120">'.$langs->trans("AmountTTC").'</td>';
 		print '<td align="right" width="200">'.$langs->trans("Status").'</td>';
 		print '</tr>';
-		$elementarray = $project->get_element_list($key);
+		$elementarray = $project->get_element_list($key, $tablename);
 		if (count($elementarray)>0 && is_array($elementarray))
 		{
 			$var=true;
@@ -211,8 +267,14 @@ foreach ($listofreferent as $key => $value)
 				$element->fetch_thirdparty();
 				//print $classname;
 
+				$qualifiedfortotal=true;
+				if ($key == 'invoice')
+				{
+					if ($element->close_code == 'replaced') $qualifiedfortotal=false;	// Replacement invoice
+				}
+				
 				$var=!$var;
-				print "<tr $bc[$var]>";
+				print "<tr ".$bc[$var].">";
 
 				// Ref
 				print '<td align="left">';
@@ -223,6 +285,7 @@ foreach ($listofreferent as $key => $value)
 				$date=$element->date;
 				if (empty($date)) $date=$element->datep;
 				if (empty($date)) $date=$element->date_contrat;
+				if (empty($date)) $date=$element->datev; //Fiche inter
 				print '<td align="center">'.dol_print_date($date,'day').'</td>';
 
 				// Third party
@@ -231,18 +294,35 @@ foreach ($listofreferent as $key => $value)
 				print '</td>';
 
                 // Amount
-				if (empty($value['disableamount'])) print '<td align="right">'.(isset($element->total_ht)?price($element->total_ht):'&nbsp;').'</td>';
+				if (empty($value['disableamount'])) 
+				{
+					print '<td align="right">';
+					if (! $qualifiedfortotal) print '<strike>';
+					print (isset($element->total_ht)?price($element->total_ht):'&nbsp;');
+					if (! $qualifiedfortotal) print '</strike>';
+					print '</td>';
+				}
 
                 // Amount
-				if (empty($value['disableamount'])) print '<td align="right">'.(isset($element->total_ttc)?price($element->total_ttc):'&nbsp;').'</td>';
+				if (empty($value['disableamount'])) 
+				{
+					print '<td align="right">';
+					if (! $qualifiedfortotal) print '<strike>';
+					print (isset($element->total_ttc)?price($element->total_ttc):'&nbsp;');
+					if (! $qualifiedfortotal) print '</strike>';
+					print '</td>';
+				}
 
 				// Status
 				print '<td align="right">'.$element->getLibStatut(5).'</td>';
 
 				print '</tr>';
 
-				$total_ht = $total_ht + $element->total_ht;
-				$total_ttc = $total_ttc + $element->total_ttc;
+				if ($qualifiedfortotal)
+				{
+					$total_ht = $total_ht + $element->total_ht;
+					$total_ttc = $total_ttc + $element->total_ttc;
+				}
 			}
 
 			print '<tr class="liste_total"><td colspan="3">'.$langs->trans("Number").': '.$i.'</td>';
@@ -265,7 +345,7 @@ foreach ($listofreferent as $key => $value)
 			{
 				if ($key == 'propal' && ! empty($conf->propal->enabled) && $user->rights->propale->creer)
 				{
-					print '<a class="butAction" href="'.DOL_URL_ROOT.'/comm/addpropal.php?socid='.$project->societe->id.'&amp;action=create&amp;origin='.$project->element.'&amp;originid='.$project->id.'">'.$langs->trans("AddProp").'</a>';
+					print '<a class="butAction" href="'.DOL_URL_ROOT.'/comm/propal.php?socid='.$project->societe->id.'&amp;action=create&amp;origin='.$project->element.'&amp;originid='.$project->id.'">'.$langs->trans("AddProp").'</a>';
 				}
 				if ($key == 'order' && ! empty($conf->commande->enabled) && $user->rights->commande->creer)
 				{
@@ -273,7 +353,7 @@ foreach ($listofreferent as $key => $value)
 				}
 				if ($key == 'invoice' && ! empty($conf->facture->enabled) && $user->rights->facture->creer)
 				{
-					print '<a class="butAction" href="'.DOL_URL_ROOT.'/compta/facture/list.php?socid='.$project->societe->id.'&amp;action=create&amp;origin='.$project->element.'&amp;originid='.$project->id.'">'.$langs->trans("AddCustomerInvoice").'</a>';
+					print '<a class="butAction" href="'.DOL_URL_ROOT.'/compta/facture.php?socid='.$project->societe->id.'&amp;action=create&amp;origin='.$project->element.'&amp;originid='.$project->id.'">'.$langs->trans("AddCustomerInvoice").'</a>';
 				}
 			}
 			if ($project->societe->fournisseur)
@@ -293,7 +373,78 @@ foreach ($listofreferent as $key => $value)
 	}
 }
 
+$langs->load('margins');
+
+// Margin display of the project
+print_titre($langs->trans("Margins"));
+print '<table class="noborder">';
+print '<tr class="liste_titre">';
+print '<td align="left" width="200">'.$langs->trans("Element").'</td>';
+print '<td align="right" width="100">'.$langs->trans("Number").'</td>';
+print '<td align="right" width="100">'.$langs->trans("AmountHT").'</td>';
+print '<td align="right" width="100">'.$langs->trans("AmountTTC").'</td>';
+print '</tr>';
+
+
+foreach ($listofreferent as $key => $value)
+{
+	$title=$value['title'];
+	$classname=$value['class'];
+	$tablename=$value['table'];
+	$qualified=$value['test'];
+	$margin = $value['margin'];
+	if (isset($margin))
+	{
+		$elementarray = $project->get_element_list($key, $tablename);
+		if (count($elementarray)>0 && is_array($elementarray))
+		{
+			$var=true;
+			$total_ht = 0;
+			$total_ttc = 0;
+			$num=count($elementarray);
+			for ($i = 0; $i < $num; $i++)
+			{
+				$element = new $classname($db);
+				$element->fetch($elementarray[$i]);
+				$element->fetch_thirdparty();
+				//print $classname;
+				if ($qualified)
+				{
+					$total_ht = $total_ht + $element->total_ht;
+					$total_ttc = $total_ttc + $element->total_ttc;
+				}
+			}
+
+			print '<tr >';
+			print '<td align="left" >'.$classname.'</td>';
+			print '<td align="right">'.$i.'</td>';
+			print '<td align="right">'.price($total_ht).'</td>';
+			print '<td align="right">'.price($total_ttc).'</td>';
+			print '</tr>';
+			if ($margin=="add")
+			{
+				$margin_ht+= $total_ht;
+				$margin_ttc+= $total_ttc;
+			}
+			else
+			{
+				$margin_ht-= $total_ht;
+				$margin_ttc-= $total_ttc;
+			}
+		}
+
+	}
+}
+// and the margin amount total
+print '<tr class="liste_total">';
+print '<td align="right" colspan=2 >'.$langs->trans("Total").'</td>';
+print '<td align="right" >'.price($margin_ht).'</td>';
+print '<td align="right" >'.price($margin_ttc).'</td>';
+print '</tr>';
+
+print "</table>";
+
+
 llxFooter();
 
 $db->close();
-?>

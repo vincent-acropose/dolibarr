@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2002-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2003      Xavier Dutoit        <doli@sydesy.com>
- * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Sebastien Di Cintio  <sdicintio@ressource-toi.org>
  * Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
  * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
@@ -29,7 +29,7 @@
  *  \brief      File that include conf.php file and commons lib like functions.lib.php
  */
 
-if (! defined('DOL_VERSION')) define('DOL_VERSION','3.3.0');
+if (! defined('DOL_VERSION')) define('DOL_VERSION','3.6.3');
 if (! defined('EURO')) define('EURO',chr(128));
 
 // Define syslog constants
@@ -68,7 +68,8 @@ $conffiletoshow = "htdocs/conf/conf.php";
 
 
 // Include configuration
-$result=@include_once $conffile;
+$result=@include_once $conffile;	// Keep @ because with some error reporting this break the redirect
+
 if (! $result && ! empty($_SERVER["GATEWAY_INTERFACE"]))    // If install not done and we are in a web session
 {
 	header("Location: install/index.php");
@@ -106,6 +107,7 @@ if (empty($dolibarr_main_db_cryptkey)) $dolibarr_main_db_cryptkey='';
 if (empty($dolibarr_main_limit_users)) $dolibarr_main_limit_users=0;
 if (empty($dolibarr_mailing_limit_sendbyweb)) $dolibarr_mailing_limit_sendbyweb=0;
 if (empty($dolibarr_strict_mode)) $dolibarr_strict_mode=0; // For debug in php strict mode
+// TODO Multicompany Remove this. Useless.
 if (empty($multicompany_transverse_mode)) $multicompany_transverse_mode=0;
 if (empty($multicompany_force_entity)) $multicompany_force_entity=0; // To force entity in login page
 
@@ -143,60 +145,44 @@ if (empty($dolibarr_main_data_root))
 define('DOL_CLASS_PATH', 'class/');									// Filesystem path to class dir (defined only for some code that want to be compatible with old versions without this parameter)
 define('DOL_DATA_ROOT', $dolibarr_main_data_root);					// Filesystem data (documents)
 define('DOL_DOCUMENT_ROOT', $dolibarr_main_document_root);			// Filesystem core php (htdocs)
-if (! empty($dolibarr_main_document_root_alt))
-{
-	define('DOL_DOCUMENT_ROOT_ALT', $dolibarr_main_document_root_alt);	// Filesystem paths to alternate core php (alternate htdocs)
-}
-// Define DOL_MAIN_URL_ROOT and DOL_URL_ROOT
+// Try to autodetect DOL_MAIN_URL_ROOT and DOL_URL_ROOT.
+// Note: autodetect works only in case 1, 2, 3 and 4 of phpunit test CoreTest.php. For case 5, 6, only setting value into conf.php will works.
 $tmp='';
 $found=0;
-$real_dolibarr_main_document_root=str_replace('\\','/',realpath($dolibarr_main_document_root));
-$pathroot=$_SERVER["DOCUMENT_ROOT"];
-$paths=explode('/',str_replace('\\','/',$_SERVER["SCRIPT_NAME"]));
+$real_dolibarr_main_document_root=str_replace('\\','/',realpath($dolibarr_main_document_root));	// A) Value found into config file, to say where are store htdocs files. Ex: C:/xxx/dolibarr, C:/xxx/dolibarr/htdocs
+$pathroot=$_SERVER["DOCUMENT_ROOT"];															// B) Value reported by web server setup, to say where is root of web server instance. Ex: C:/xxx/dolibarr, C:/xxx/dolibarr/htdocs
+$paths=explode('/',str_replace('\\','/',$_SERVER["SCRIPT_NAME"]));								// C) Value reported by web server, to say full path on filesystem of a file. Ex: /dolibarr/htdocs/admin/system/phpinfo.php
+// Try to detect if $_SERVER["DOCUMENT_ROOT"]+start of $_SERVER["SCRIPT_NAME"] is $dolibarr_main_document_root. If yes, relative url to add before dol files is this start part.
 $concatpath='';
-foreach($paths as $tmppath)
+foreach($paths as $tmppath)	// We check to find (B+start of C)=A
 {
-    if ($tmppath) $concatpath.='/'.$tmppath;
+    if (empty($tmppath)) continue;
+    $concatpath.='/'.$tmppath;
+    //if ($tmppath) $concatpath.='/'.$tmppath;
     //print $_SERVER["SCRIPT_NAME"].'-'.$pathroot.'-'.$concatpath.'-'.$real_dolibarr_main_document_root.'-'.realpath($pathroot.$concatpath).'<br>';
     if ($real_dolibarr_main_document_root == @realpath($pathroot.$concatpath))    // @ avoid warning when safe_mode is on.
     {
-        $tmp3=$concatpath;
-        //print "Found relative url = ".$tmp3;
+        //print "Found relative url = ".$concatpath;
+    	$tmp3=$concatpath;
         $found=1;
         break;
     }
     //else print "Not found yet for concatpath=".$concatpath."<br>\n";
 }
-
-if (! $found)	// If autodetect fails (Ie: when using apache alias that point outside default DOCUMENT_ROOT.
-{
-	$tmp=$dolibarr_main_url_root;
-}
+if (! $found) $tmp=$dolibarr_main_url_root; // If autodetect fails (Ie: when using apache alias that point outside default DOCUMENT_ROOT).
 else $tmp='http'.(((empty($_SERVER["HTTPS"]) || $_SERVER["HTTPS"] != 'on') && (empty($_SERVER["SERVER_PORT"])||$_SERVER["SERVER_PORT"]!=443))?'':'s').'://'.$_SERVER["SERVER_NAME"].((empty($_SERVER["SERVER_PORT"])||$_SERVER["SERVER_PORT"]==80||$_SERVER["SERVER_PORT"]==443)?'':':'.$_SERVER["SERVER_PORT"]).($tmp3?(preg_match('/^\//',$tmp3)?'':'/').$tmp3:'');
-//print "tmp1=".$tmp1." tmp2=".$tmp2." tmp3=".$tmp3." tmp=".$tmp;
-
+//print "tmp1=".$tmp1." tmp2=".$tmp2." tmp3=".$tmp3." tmp=".$tmp."\n";
 if (! empty($dolibarr_main_force_https)) $tmp=preg_replace('/^http:/i','https:',$tmp);
 define('DOL_MAIN_URL_ROOT', $tmp);											// URL absolute root (https://sss/dolibarr, ...)
 $uri=preg_replace('/^http(s?):\/\//i','',constant('DOL_MAIN_URL_ROOT'));	// $uri contains url without http*
-$suburi = strstr($uri, '/');												// $suburi contains url without domain
+$suburi = strstr($uri, '/');												// $suburi contains url without domain:port
 if ($suburi == '/') $suburi = '';											// If $suburi is /, it is now ''
 define('DOL_URL_ROOT', $suburi);											// URL relative root ('', '/dolibarr', ...)
-// Define DOL_MAIN_URL_ROOT_ALT and DOL_URL_ROOT_ALT
-if (! empty($dolibarr_main_url_root_alt))
-{
-    $altpart=str_replace($dolibarr_main_url_root,'',$dolibarr_main_url_root_alt);
-    if (! preg_match('/^\//',$altpart) && ! empty($altpart)) { $tmp_alt=$dolibarr_main_url_root_alt; }	// Manage case url=http://localhost/aaa and url_alt=http://localhost/aaabbb
-    else $tmp_alt=$tmp.((preg_match('/\/$/',$tmp)||preg_match('/^\//',$altpart))?'':'/').$altpart;
-	//$tmp_alt=$dolibarr_main_url_root_alt;
-    define('DOL_MAIN_URL_ROOT_ALT', $tmp_alt);           							// URL absolute root (https://sss/dolibarr/custom, ...)
-	$uri=preg_replace('/^http(s?):\/\//i','',constant('DOL_MAIN_URL_ROOT_ALT'));    // $uri contains url without http*
-	$suburi = strstr($uri, '/');        											// $suburi contains url without domain
-	if ($suburi == '/') $suburi = '';   											// If $suburi is /, it is now ''
-	define('DOL_URL_ROOT_ALT', $suburi);    										// URL relative root ('', '/dolibarr/custom', ...)
-}
-// Define prefix
+
+//print DOL_MAIN_URL_ROOT.'-'.DOL_URL_ROOT."\n";
+
+// Define prefix MAIN_DB_PREFIX
 define('MAIN_DB_PREFIX',$dolibarr_main_db_prefix);
-//print DOL_URL_ROOT.'-'.DOL_URL_ROOT_ALT;
 
 
 /*
@@ -220,10 +206,6 @@ if (! defined('JS_JQUERY_FLOT'))       { define('JS_JQUERY_FLOT',       (!isset(
 // Other required path
 if (! defined('DOL_DEFAULT_TTF'))      { define('DOL_DEFAULT_TTF',      (!isset($dolibarr_font_DOL_DEFAULT_TTF))?DOL_DOCUMENT_ROOT.'/includes/fonts/Aerial.ttf':(empty($dolibarr_font_DOL_DEFAULT_TTF)?'':$dolibarr_font_DOL_DEFAULT_TTF)); }
 if (! defined('DOL_DEFAULT_TTF_BOLD')) { define('DOL_DEFAULT_TTF_BOLD', (!isset($dolibarr_font_DOL_DEFAULT_TTF_BOLD))?DOL_DOCUMENT_ROOT.'/includes/fonts/AerialBd.ttf':(empty($dolibarr_font_DOL_DEFAULT_TTF_BOLD)?'':$dolibarr_font_DOL_DEFAULT_TTF_BOLD)); }
-// Old path to root deprecated (no more used).
-//if (! defined('ARTICHOW_FONT'))        { define('ARTICHOW_FONT',        (!isset($dolibarr_font_DOL_DEFAULT_TTF_BOLD))?DOL_DOCUMENT_ROOT.'/includes/fonts':dirname($dolibarr_font_DOL_DEFAULT_TTF_BOLD)); }
-//if (! defined('ARTICHOW_FONT_NAMES'))  { define('ARTICHOW_FONT_NAMES',  (!isset($dolibarr_font_DOL_DEFAULT_TTF_BOLD))?'Aerial,AerialBd,AerialBdIt,AerialIt':'DejaVuSans,DejaVuSans-Bold,DejaVuSans-BoldOblique,DejaVuSans-Oblique'); }
-//if (! defined('ARTICHOW_PATH'))        { define('ARTICHOW_PATH',        (!isset($dolibarr_lib_ARTICHOW))?DOL_DOCUMENT_ROOT.'/includes/artichow/':(empty($dolibarr_lib_ARTICHOW)?'':$dolibarr_lib_ARTICHOW.'/')); }
 
 
 /*
@@ -238,6 +220,7 @@ if (! file_exists(DOL_DOCUMENT_ROOT ."/core/lib/functions.lib.php"))
 	print "Please run dolibarr setup by calling page <b>/install</b>.<br>\n";
 	exit;
 }
+
 
 // Included by default
 include_once DOL_DOCUMENT_ROOT .'/core/lib/functions.lib.php';
@@ -256,4 +239,3 @@ if (preg_match('/crypted:/i',$dolibarr_main_db_pass) || ! empty($dolibarr_main_d
 	else $dolibarr_main_db_pass = dol_decode($dolibarr_main_db_encrypted_pass);
 }
 
-?>

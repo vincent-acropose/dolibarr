@@ -63,6 +63,7 @@ if ($user->id == $id && (empty($conf->global->MAIN_USE_ADVANCED_PERMS) || $user-
 	$feature2='';
 	$canreaduser=1;
 }
+
 $result = restrictedArea($user, 'user', $id, '&user', $feature2);
 if ($user->id <> $id && ! $canreaduser) accessforbidden();
 
@@ -75,7 +76,7 @@ if ($action == 'addrights' && $caneditperms)
 {
     $edituser = new User($db);
 	$edituser->fetch($id);
-    //$edituser->addrights($rights, $module, '', $entity); // FIXME unused for the moment
+    //$edituser->addrights($rights, $module, '', $entity); // TODO unused for the moment
     $edituser->addrights($rights, $module);
 
 	// Si on a touche a ses propres droits, on recharge
@@ -83,6 +84,7 @@ if ($action == 'addrights' && $caneditperms)
 	{
 		$user->clearrights();
 		$user->getrights();
+		$menumanager->loadMenu();
 	}
 }
 
@@ -90,7 +92,7 @@ if ($action == 'delrights' && $caneditperms)
 {
     $edituser = new User($db);
 	$edituser->fetch($id);
-    //$edituser->delrights($rights, $module, '', $entity); // FIXME unused for the moment
+    //$edituser->delrights($rights, $module, '', $entity); // TODO unused for the moment
     $edituser->delrights($rights, $module);
 
 	// Si on a touche a ses propres droits, on recharge
@@ -98,6 +100,7 @@ if ($action == 'delrights' && $caneditperms)
 	{
 		$user->clearrights();
 		$user->getrights();
+		$menumanager->loadMenu();
 	}
 }
 
@@ -174,17 +177,21 @@ $sql = "SELECT r.id, r.libelle, r.module";
 $sql.= " FROM ".MAIN_DB_PREFIX."rights_def as r,";
 $sql.= " ".MAIN_DB_PREFIX."user_rights as ur";
 $sql.= " WHERE ur.fk_id = r.id";
-if (! empty($conf->multicompany->enabled)) {
+if (! empty($conf->multicompany->enabled))
+{
 	if (1==2 && ! empty($conf->multicompany->transverse_mode)) {
-		$sql.= " AND r.entity = ".(GETPOST('entity','int')?GETPOST('entity','int'):$conf->entity); // FIXME unused for the moment
+		$sql.= " AND r.entity = ".(GETPOST('entity','int')?GETPOST('entity','int'):$conf->entity); // TODO unused for the moment
 	} else {
 		$sql.= " AND r.entity = ".(! empty($fuser->entity) ? $fuser->entity : $conf->entity);
 	}
-} else {
+}
+else
+{
 	$sql.= " AND r.entity = ".$conf->entity;
 }
 $sql.= " AND ur.fk_user = ".$fuser->id;
 
+dol_syslog("get user perms sql=".$sql);
 $result=$db->query($sql);
 if ($result)
 {
@@ -220,6 +227,7 @@ if (! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transv
 $sql.= " AND gr.fk_usergroup = gu.fk_usergroup";
 $sql.= " AND gu.fk_user = ".$fuser->id;
 
+dol_syslog("get user perms sql=".$sql);
 $result=$db->query($sql);
 if ($result)
 {
@@ -256,20 +264,19 @@ print '</tr>'."\n";
 
 // Lastname
 print '<tr><td width="25%" valign="top">'.$langs->trans("Lastname").'</td>';
-print '<td>'.$fuser->nom.'</td>';
+print '<td>'.$fuser->lastname.'</td>';
 print '</tr>'."\n";
 
 // Firstname
 print '<tr><td width="25%" valign="top">'.$langs->trans("Firstname").'</td>';
-print '<td>'.$fuser->prenom.'</td>';
+print '<td>'.$fuser->firstname.'</td>';
 print '</tr>'."\n";
 
 print '</table><br>';
 
 if ($user->admin) print info_admin($langs->trans("WarningOnlyPermissionOfActivatedModules"), 0, 1).'<br>';
 // Show warning about external users
-print showModulesExludedForExternal($modules).'<br>'."\n";
-print "<br>\n";
+if (empty($user->societe_id)) print showModulesExludedForExternal($modules).'<br><br>'."\n";
 
 // For multicompany transversal mode
 if (! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode))
@@ -332,9 +339,9 @@ if ($result)
         	{
         		// On affiche ligne pour modifier droits
         		print '<tr '. $bc[$var].'>';
-        		print '<td nowrap="nowrap">'.img_object('',$picto).' '.$objMod->getName();
+        		print '<td class="nowrap">'.img_object('',$picto).' '.$objMod->getName();
         		print '<a name="'.$objMod->getName().'">&nbsp;</a></td>';
-        		print '<td align="center" nowrap="nowrap">';
+        		print '<td align="center" class="nowrap">';
         		print '<a title="'.dol_escape_htmltag($langs->trans("All")).'" alt="'.dol_escape_htmltag($langs->trans("All")).'" href="perms.php?id='.$fuser->id.'&amp;action=addrights&amp;entity='.$entity.'&amp;module='.$obj->module.'#'.$objMod->getName().'">'.$langs->trans("All")."</a>";
         		print '/';
         		print '<a title="'.dol_escape_htmltag($langs->trans("None")).'" alt="'.dol_escape_htmltag($langs->trans("None")).'" href="perms.php?id='.$fuser->id.'&amp;action=delrights&amp;entity='.$entity.'&amp;module='.$obj->module.'#'.$objMod->getName().'">'.$langs->trans("None")."</a>";
@@ -356,7 +363,7 @@ if ($result)
         	{
         		print '<td align="center">'.img_picto($langs->trans("Administrator"),'star').'</td>';
         	}
-        	print '<td align="center" nowrap="nowrap">';
+        	print '<td align="center" class="nowrap">';
         	print img_picto($langs->trans("Active"),'tick');
         	print '</td>';
         }
@@ -366,7 +373,7 @@ if ($result)
         	{
         		print '<td align="center"><a href="perms.php?id='.$fuser->id.'&amp;action=delrights&amp;rights='.$obj->id.'#'.$objMod->getName().'">'.img_edit_remove($langs->trans("Remove")).'</a></td>';
         	}
-        	print '<td align="center" nowrap="nowrap">';
+        	print '<td align="center" class="nowrap">';
         	print img_picto($langs->trans("Active"),'tick');
         	print '</td>';
         }
@@ -381,7 +388,7 @@ if ($result)
 	        		print $form->textwithtooltip($langs->trans("Inherited"),$langs->trans("PermissionInheritedFromAGroup"));
 	        		print '</td>';
 	        	}
-	        	print '<td align="center" nowrap="nowrap">';
+	        	print '<td align="center" class="nowrap">';
 	        	print img_picto($langs->trans("Active"),'tick');
 	        	print '</td>';
 	        }
@@ -422,4 +429,3 @@ dol_fiche_end();
 llxFooter();
 
 $db->close();
-?>

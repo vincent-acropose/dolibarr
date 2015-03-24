@@ -1,9 +1,9 @@
 <?php
 /* Copyright (C) 2001-2002	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2001-2002	Jean-Louis Bergamo		<jlb@j1b.org>
- * Copyright (C) 2006-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
+ * Copyright (C) 2006-2013	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2012		Regis Houssin			<regis.houssin@capnetworks.com>
- * Copyright (C) 2012		J. Fernando Lagrange 		<fernando@demo-tic.org>
+ * Copyright (C) 2012		J. Fernando Lagrange    <fernando@demo-tic.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,12 +38,11 @@
 define("NOLOGIN",1);		// This means this output page does not require to be logged.
 define("NOCSRFCHECK",1);	// We accept to go on this page from external web site.
 
-// For MultiCompany module
+// For MultiCompany module.
+// Do not use GETPOST here, function is not defined and define must be done before including main.inc.php
+// TODO This should be useless. Because entity must be retreive from object ref and not from url.
 $entity=(! empty($_GET['entity']) ? (int) $_GET['entity'] : (! empty($_POST['entity']) ? (int) $_POST['entity'] : 1));
-if (is_int($entity))
-{
-	define("DOLENTITY", $entity);
-}
+if (is_numeric($entity)) define("DOLENTITY", $entity);
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
@@ -71,9 +70,11 @@ if (empty($conf->adherent->enabled)) accessforbidden('',1,1,1);
 
 if (empty($conf->global->MEMBER_ENABLE_PUBLIC))
 {
-    print $langs->trans("Auto subscription form for public visitors has no been enabled");
+    print $langs->trans("Auto subscription form for public visitors has not been enabled");
     exit;
 }
+
+$extrafields = new ExtraFields($db);
 
 
 /**
@@ -182,12 +183,12 @@ if ($action == 'add')
         $error+=1;
         $errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv('Nature'))."<br>\n";
     }
-    if (empty($_POST["nom"]))
+    if (empty($_POST["lastname"]))
     {
         $error+=1;
         $errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Lastname"))."<br>\n";
     }
-    if (empty($_POST["prenom"]))
+    if (empty($_POST["firstname"]))
     {
         $error+=1;
         $errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Firstname"))."<br>\n";
@@ -223,9 +224,9 @@ if ($action == 'add')
         $adh = new Adherent($db);
         $adh->statut      = -1;
         $adh->public      = $_POST["public"];
-        $adh->prenom      = $_POST["prenom"];
-        $adh->nom         = $_POST["nom"];
-        $adh->civilite_id = $_POST["civilite_id"];
+        $adh->firstname   = $_POST["firstname"];
+        $adh->lastname    = $_POST["lastname"];
+        $adh->civility_id = $_POST["civility_id"];
         $adh->societe     = $_POST["societe"];
         $adh->address     = $_POST["address"];
         $adh->zip         = $_POST["zipcode"];
@@ -243,15 +244,14 @@ if ($action == 'add')
         $adh->typeid      = $_POST["type"];
         $adh->note        = $_POST["comment"];
         $adh->morphy      = $_POST["morphy"];
-        $adh->naiss       = $birthday;
+        $adh->birth       = $birthday;
 
-        foreach($_POST as $key => $value){
-            if (preg_match("/^options_/",$key)){
-                $adh->array_options[$key]=$_POST[$key];
-            }
-        }
 
-        $result=$adh->create($user->id);
+        // Fill array 'array_options' with data from add form
+        $extralabels=$extrafields->fetch_name_optionals_label($adh->table_element);
+        $ret = $extrafields->setOptionalsFromPost($extralabels,$adh);
+
+        $result=$adh->create($user);
         if ($result > 0)
         {
 			require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
@@ -360,8 +360,7 @@ if ($action == 'added')
 $form = new Form($db);
 $formcompany = new FormCompany($db);
 $adht = new AdherentType($db);
-$extrafields = new ExtraFields($db);
-$extrafields->fetch_name_optionals_label('member');    // fetch optionals attributes and labels
+$extrafields->fetch_name_optionals_label('adherent');    // fetch optionals attributes and labels
 
 
 llxHeaderVierge($langs->trans("NewSubscription"));
@@ -446,11 +445,11 @@ else
 }
 // Civility
 print '<tr><td>'.$langs->trans('UserTitle').'</td><td>';
-print $formcompany->select_civility(GETPOST('civilite_id'),'civilite_id').'</td></tr>'."\n";
+print $formcompany->select_civility(GETPOST('civility_id'),'civility_id').'</td></tr>'."\n";
 // Lastname
-print '<tr><td>'.$langs->trans("Lastname").' <FONT COLOR="red">*</FONT></td><td><input type="text" name="nom" size="40" value="'.dol_escape_htmltag(GETPOST('nom')).'"></td></tr>'."\n";
+print '<tr><td>'.$langs->trans("Lastname").' <FONT COLOR="red">*</FONT></td><td><input type="text" name="lastname" size="40" value="'.dol_escape_htmltag(GETPOST('lastname')).'"></td></tr>'."\n";
 // Firstname
-print '<tr><td>'.$langs->trans("Firstname").' <FONT COLOR="red">*</FONT></td><td><input type="text" name="prenom" size="40" value="'.dol_escape_htmltag(GETPOST('prenom')).'"></td></tr>'."\n";
+print '<tr><td>'.$langs->trans("Firstname").' <FONT COLOR="red">*</FONT></td><td><input type="text" name="firstname" size="40" value="'.dol_escape_htmltag(GETPOST('firstname')).'"></td></tr>'."\n";
 // Company
 print '<tr id="trcompany" class="trcompany"><td>'.$langs->trans("Company").'</td><td><input type="text" name="societe" size="40" value="'.dol_escape_htmltag(GETPOST('societe')).'"></td></tr>'."\n";
 // Address
@@ -521,7 +520,7 @@ print '</tr>'."\n";
 // Add specific fields used by Dolibarr foundation for example
 if (! empty($conf->global->MEMBER_NEWFORM_DOLIBARRTURNOVER))
 {
-    $arraybudget=array('50'=>'<= 100 000','100'=>'<= 200 000','200'=>'<= 500 000','400'=>'<= 1 500 000','750'=>'<= 3 000 000','1500'=>'<= 5 000 000','2000'=>'5 000 000+');
+    $arraybudget=array('50'=>'<= 100 000','100'=>'<= 200 000','200'=>'<= 500 000','300'=>'<= 1 500 000','600'=>'<= 3 000 000','1000'=>'<= 5 000 000','2000'=>'5 000 000+');
     print '<tr id="trbudget" class="trcompany"><td>'.$langs->trans("TurnoverOrBudget").' <FONT COLOR="red">*</FONT></td><td>';
     print $form->selectarray('budget', $arraybudget, GETPOST('budget'), 1);
     print ' € or $';
@@ -576,7 +575,7 @@ if (! empty($conf->global->MEMBER_NEWFORM_AMOUNT)
         $amount=GETPOST('amount')?GETPOST('amount'):$conf->global->MEMBER_NEWFORM_AMOUNT;
     }
     // $conf->global->MEMBER_NEWFORM_PAYONLINE is 'paypal' or 'paybox'
-    print '<tr><td>'.$langs->trans("Subscription").'</td><td nowrap="nowrap">';
+    print '<tr><td>'.$langs->trans("Subscription").'</td><td class="nowrap">';
     if (! empty($conf->global->MEMBER_NEWFORM_EDITAMOUNT))
     {
         print '<input type="text" name="amount" id="amount" class="flat amount" size="6" value="'.$amount.'">';
@@ -607,4 +606,3 @@ print
 llxFooterVierge();
 
 $db->close();
-?>

@@ -4,7 +4,7 @@
  * Copyright (C) 2005		Eric Seigne					<eric.seigne@ryxeo.com>
  * Copyright (C) 2005-2012	Regis Houssin				<regis.houssin@capnetworks.com>
  * Copyright (C) 2008		Raphael Bertrand (Resultic)	<raphael.bertrand@resultic.fr>
- * Copyright (C) 2012		Juanjo Menent				<jmenent@2byte.es>
+ * Copyright (C) 2012-2013  Juanjo Menent				<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,16 +28,21 @@
 
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/invoice.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 
 $langs->load("admin");
 $langs->load("errors");
 $langs->load('other');
+$langs->load('bills');
 
 if (! $user->admin) accessforbidden();
 
 $action = GETPOST('action','alpha');
 $value = GETPOST('value','alpha');
+$label = GETPOST('label','alpha');
+$scandir = GETPOST('scandir','alpha');
+$type='invoice';
 
 
 /*
@@ -47,21 +52,27 @@ $value = GETPOST('value','alpha');
 if ($action == 'updateMask')
 {
     $maskconstinvoice=GETPOST('maskconstinvoice','alpha');
+    $maskconstreplacement=GETPOST('maskconstreplacement','alpha');
     $maskconstcredit=GETPOST('maskconstcredit','alpha');
+	$maskconstdeposit=GETPOST('maskconstdeposit','alpha');
     $maskinvoice=GETPOST('maskinvoice','alpha');
+    $maskreplacement=GETPOST('maskreplacement','alpha');
     $maskcredit=GETPOST('maskcredit','alpha');
+	$maskdeposit=GETPOST('maskdeposit','alpha');
     if ($maskconstinvoice) $res = dolibarr_set_const($db,$maskconstinvoice,$maskinvoice,'chaine',0,'',$conf->entity);
+    if ($maskconstreplacement) $res = dolibarr_set_const($db,$maskconstreplacement,$maskreplacement,'chaine',0,'',$conf->entity);
     if ($maskconstcredit)  $res = dolibarr_set_const($db,$maskconstcredit,$maskcredit,'chaine',0,'',$conf->entity);
+	if ($maskconstdeposit)  $res = dolibarr_set_const($db,$maskconstdeposit,$maskdeposit,'chaine',0,'',$conf->entity);
 
 	if (! $res > 0) $error++;
 
  	if (! $error)
     {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+        setEventMessage($langs->trans("SetupSaved"));
     }
     else
     {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+        setEventMessage($langs->trans("Error"),'errors');
     }
 }
 
@@ -99,13 +110,13 @@ if ($action == 'specimen')
     	}
     	else
     	{
-    		$mesg='<font class="error">'.$module->error.'</font>';
+    		setEventMessage($module->error,'errors');
     		dol_syslog($module->error, LOG_ERR);
     	}
     }
     else
     {
-    	$mesg='<font class="error">'.$langs->trans("ErrorModuleNotFound").'</font>';
+    	setEventMessage($langs->trans("ErrorModuleNotFound"),'errors');
     	dol_syslog($langs->trans("ErrorModuleNotFound"), LOG_ERR);
     }
 }
@@ -127,86 +138,48 @@ if ($action == 'setModuleOptions')
 
  	if (! $error)
     {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+        setEventMessage($langs->trans("SetupSaved"));
     }
     else
     {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+        setEventMessage($langs->trans("Error"),'errors');
     }
 }
 
-if ($action == 'set')
+// Activate a model
+else if ($action == 'set')
 {
-	$label = GETPOST('label','alpha');
-	$scandir = GETPOST('scandir','alpha');
-
-    $type='invoice';
-    $sql = "INSERT INTO ".MAIN_DB_PREFIX."document_model (nom, type, entity, libelle, description)";
-    $sql.= " VALUES ('".$db->escape($value)."','".$type."',".$conf->entity.", ";
-    $sql.= ($label?"'".$db->escape($label)."'":'null').", ";
-    $sql.= (! empty($scandir)?"'".$db->escape($scandir)."'":"null");
-    $sql.= ")";
-    if ($db->query($sql))
-    {
-
-    }
+	$ret = addDocumentModel($value, $type, $label, $scandir);
 }
 
-if ($action == 'del')
+else if ($action == 'del')
 {
-    $type='invoice';
-    $sql = "DELETE FROM ".MAIN_DB_PREFIX."document_model";
-    $sql.= " WHERE nom = '".$db->escape($value)."'";
-    $sql.= " AND type = '".$type."'";
-    $sql.= " AND entity = ".$conf->entity;
-
-    if ($db->query($sql))
-    {
+	$ret = delDocumentModel($value, $type);
+	if ($ret > 0)
+	{
         if ($conf->global->FACTURE_ADDON_PDF == "$value") dolibarr_del_const($db, 'FACTURE_ADDON_PDF',$conf->entity);
-    }
+	}
 }
 
-if ($action == 'setdoc')
+// Set default model
+else if ($action == 'setdoc')
 {
-	$label = GETPOST('label','alpha');
-	$scandir = GETPOST('scandir','alpha');
-
-    $db->begin();
-
-    if (dolibarr_set_const($db, "FACTURE_ADDON_PDF",$value,'chaine',0,'',$conf->entity))
-    {
-        $conf->global->FACTURE_ADDON_PDF = $value;
-    }
-
-    // On active le modele
-    $type='invoice';
-
-    $sql_del = "DELETE FROM ".MAIN_DB_PREFIX."document_model";
-    $sql_del.= " WHERE nom = '".$db->escape($value)."'";
-    $sql_del.= " AND type = '".$type."'";
-    $sql_del.= " AND entity = ".$conf->entity;
-    dol_syslog("Delete from model table ".$sql_del);
-    $result1=$db->query($sql_del);
-
-    $sql = "INSERT INTO ".MAIN_DB_PREFIX."document_model (nom, type, entity, libelle, description)";
-    $sql.= " VALUES ('".$value."', '".$type."', ".$conf->entity.", ";
-    $sql.= ($label?"'".$db->escape($label)."'":'null').", ";
-    $sql.= (! empty($scandir)?"'".$scandir."'":"null");
-    $sql.= ")";
-    dol_syslog("Insert into model table ".$sql);
-    $result2=$db->query($sql);
-    if ($result1 && $result2)
-    {
-        $db->commit();
-    }
-    else
-    {
-        dol_syslog("Error ".$db->lasterror(), LOG_ERR);
-        $db->rollback();
-    }
+	if (dolibarr_set_const($db, "FACTURE_ADDON_PDF",$value,'chaine',0,'',$conf->entity))
+	{
+		// La constante qui a ete lue en avant du nouveau set
+		// on passe donc par une variable pour avoir un affichage coherent
+		$conf->global->FACTURE_ADDON_PDF = $value;
+	}
+	
+	// On active le modele
+	$ret = delDocumentModel($value, $type);
+	if ($ret > 0)
+	{
+		$ret = addDocumentModel($value, $type, $label, $scandir);
+	}
 }
 
-if ($action == 'setmod')
+else if ($action == 'setmod')
 {
     // TODO Verifier si module numerotation choisi peut etre active
     // par appel methode canBeActivated
@@ -226,11 +199,11 @@ if ($action == 'setribchq')
 
  	if (! $error)
     {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+        setEventMessage($langs->trans("SetupSaved"));
     }
     else
     {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+        setEventMessage($langs->trans("Error"),'errors');
     }
 }
 
@@ -244,11 +217,11 @@ if ($action == 'set_FACTURE_DRAFT_WATERMARK')
 
  	if (! $error)
     {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+        setEventMessage($langs->trans("SetupSaved"));
     }
     else
     {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+        setEventMessage($langs->trans("Error"),'errors');
     }
 }
 
@@ -262,11 +235,11 @@ if ($action == 'set_FACTURE_FREE_TEXT')
 
  	if (! $error)
     {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+        setEventMessage($langs->trans("SetupSaved"));
     }
     else
     {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+        setEventMessage($langs->trans("Error"),'errors');
     }
 }
 
@@ -280,11 +253,11 @@ if ($action == 'setforcedate')
 
  	if (! $error)
     {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+        setEventMessage($langs->trans("SetupSaved"));
     }
     else
     {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+        setEventMessage($langs->trans("Error"),'errors');
     }
 }
 
@@ -304,6 +277,8 @@ $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToM
 print_fiche_titre($langs->trans("BillsSetup"),$linkback,'setup');
 print '<br>';
 
+$head = invoice_admin_prepare_head(null);
+dol_fiche_head($head, 'general', $langs->trans("Invoices"), 0, 'invoice');
 
 /*
  *  Numbering module
@@ -315,9 +290,9 @@ print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("Name").'</td>';
 print '<td>'.$langs->trans("Description").'</td>';
-print '<td nowrap="nowrap">'.$langs->trans("Example").'</td>';
+print '<td class="nowrap">'.$langs->trans("Example").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Status").'</td>';
-print '<td align="center" width="16">'.$langs->trans("Infos").'</td>';
+print '<td align="center" width="16">'.$langs->trans("ShortInfo").'</td>';
 print '</tr>'."\n";
 
 clearstatcache();
@@ -344,6 +319,11 @@ foreach ($dirmodels as $reldir)
                         $filebis = $file."/".$file.".modules.php";
                         $classname = "mod_facture_".$file;
                     }
+                    // Check if there is a filter on country
+                    preg_match('/\-(.*)_(.*)$/',$classname,$reg);
+                    if (! empty($reg[2]) && $reg[2] != strtoupper($mysoc->country_code)) continue;
+                    
+                    $classname = preg_replace('/\-.*$/','',$classname);
                     if (! class_exists($classname) && is_readable($dir.$filebis) && (preg_match('/mod_/',$filebis) || preg_match('/mod_/',$classname)) && substr($filebis, dol_strlen($filebis)-3, 3) == 'php')
                     {
                         // Chargement de la classe de numerotation
@@ -359,7 +339,7 @@ foreach ($dirmodels as $reldir)
                         {
                             $var = !$var;
                             print '<tr '.$bc[$var].'><td width="100">';
-                            echo preg_replace('/mod_facture_/','',preg_replace('/\.php$/','',$file));
+                            echo preg_replace('/\-.*$/','',preg_replace('/mod_facture_/','',preg_replace('/\.php$/','',$file)));
                             print "</td><td>\n";
 
                             print $module->info();
@@ -367,7 +347,7 @@ foreach ($dirmodels as $reldir)
                             print '</td>';
 
                             // Show example of numbering module
-                            print '<td nowrap="nowrap">';
+                            print '<td class="nowrap">';
                             $tmp=$module->getExample();
                             if (preg_match('/^Error/',$tmp)) print '<div class="error">'.$langs->trans($tmp).'</div>';
                             elseif ($tmp=='NotConfigured') print $langs->trans($tmp);
@@ -406,12 +386,43 @@ foreach ($dirmodels as $reldir)
                                     $htmltooltip.=$langs->trans($module->error).'<br>';
                                 }
                             }
+                            // Example for remplacement
+                            $facture->type=1;
+                            $nextval=$module->getNextValue($mysoc,$facture);
+                            if ("$nextval" != $langs->trans("NotAvailable"))	// Keep " on nextval
+                            {
+                            	$htmltooltip.=$langs->trans("NextValueForReplacements").': ';
+                            	if ($nextval)
+                            	{
+                            		$htmltooltip.=$nextval.'<br>';
+                            	}
+                            	else
+                            	{
+                            		$htmltooltip.=$langs->trans($module->error).'<br>';
+                            	}
+                            }
+                            
                             // Example for credit invoice
                             $facture->type=2;
                             $nextval=$module->getNextValue($mysoc,$facture);
                             if ("$nextval" != $langs->trans("NotAvailable"))	// Keep " on nextval
                             {
                                 $htmltooltip.=$langs->trans("NextValueForCreditNotes").': ';
+                                if ($nextval)
+                                {
+                                    $htmltooltip.=$nextval.'<br>';
+                                }
+                                else
+                                {
+                                    $htmltooltip.=$langs->trans($module->error).'<br>';
+                                }
+                            }
+                            // Example for deposit invoice
+                            $facture->type=3;
+                            $nextval=$module->getNextValue($mysoc,$facture);
+                            if ("$nextval" != $langs->trans("NotAvailable"))	// Keep " on nextval
+                            {
+                                $htmltooltip.=$langs->trans("NextValueForDeposit").': ';
                                 if ($nextval)
                                 {
                                     $htmltooltip.=$nextval;
@@ -482,7 +493,8 @@ print '<td>'.$langs->trans("Name").'</td>';
 print '<td>'.$langs->trans("Description").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Status").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Default").'</td>';
-print '<td align="center" width="32" colspan="2">'.$langs->trans("Infos").'</td>';
+print '<td align="center" width="32">'.$langs->trans("ShortInfo").'</td>';
+print '<td align="center" width="32">'.$langs->trans("Preview").'</td>';
 print "</tr>\n";
 
 clearstatcache();
@@ -634,7 +646,7 @@ if (! empty($conf->banque->enabled))
     $sql.= " FROM ".MAIN_DB_PREFIX."bank_account";
     $sql.= " WHERE clos = 0";
     $sql.= " AND courant = 1";
-    $sql.= " AND entity = ".$conf->entity;
+    $sql.= " AND entity IN (".getEntity('bank_account', 1).")";
     $resql=$db->query($sql);
     if ($resql)
     {
@@ -679,7 +691,7 @@ $sql = "SELECT rowid, label";
 $sql.= " FROM ".MAIN_DB_PREFIX."bank_account";
 $sql.= " WHERE clos = 0";
 $sql.= " AND courant = 1";
-$sql.= " AND entity = ".$conf->entity;
+$sql.= " AND entity IN (".getEntity('bank_account', 1).")";
 $var=True;
 $resql=$db->query($sql);
 if ($resql)
@@ -776,10 +788,6 @@ print "</table>\n";
 
 //dol_fiche_end();
 
-dol_htmloutput_mesg($mesg);
-
-
 llxFooter();
 
 $db->close();
-?>

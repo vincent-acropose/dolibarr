@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2005-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2005-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,9 +52,33 @@ $template_dir = DOL_DOCUMENT_ROOT.'/core/tpl/';
 $interfaces = new Interfaces($db);
 $triggers = $interfaces->getTriggersList(0,'priority');
 
-include $template_dir.'triggers.tpl.php';
+print '<table class="noborder">
+<tr class="liste_titre">
+<td colspan="2">'.$langs->trans("File").'</td>
+<td align="center">'.$langs->trans("Active").'</td>
+<td align="center">&nbsp;</td>
+</tr>
+';
+
+$var=True;
+foreach ($triggers as $trigger)
+{
+	$var=!$var;
+	print '<tr '.$bc[$var].'>';
+	print '<td valign="top" width="14" align="center">'.$trigger['picto'].'</td>';
+	print '<td valign="top">'.$trigger['file'].'</td>';
+	print '<td valign="top" align="center">'.$trigger['status'].'</td>';
+	print '<td valign="top">';
+	$text=$trigger['info'];
+	$text.="<br>\n<strong>".$langs->trans("File")."</strong>:<br>\n".$trigger['relpath'];
+	//$text.="\n".$langs->trans("ExternalModule",$trigger['isocreorexternal']);
+	print $form->textwithpicto('', $text);
+	print '</td>';
+	print '</tr>';
+}
+
+print '</table>';
 
 llxFooter();
 
 $db->close();
-?>

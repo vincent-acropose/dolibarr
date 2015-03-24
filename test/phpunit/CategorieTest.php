@@ -25,7 +25,7 @@
 
 global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
 require_once dirname(__FILE__).'/../../htdocs/categories/class/categorie.class.php';
 require_once dirname(__FILE__).'/../../htdocs/product/class/product.class.php';
@@ -184,16 +184,23 @@ class CategorieTest extends PHPUnit_Framework_TestCase
         print __METHOD__." catid=".$catid."\n";
         $this->assertGreaterThan(0, $catid);
 
-        // Category
+        // Try to create product linked to category
 		$localobject2=new Product($this->savdb);
     	$localobject2->initAsSpecimen();
     	$localobject2->ref.='-CATEG';
     	$localobject2->tva_npr=1;
-    	$localobject2->catid=$catid;
     	$result=$localobject2->create($user);
+    	$cat = new Categorie($this->savdb);
+    	$cat->id = $catid;
+    	$result=$cat->add_type($localobject2,"product");
 
-        print __METHOD__." result=".$result."\n";
+    	print __METHOD__." result=".$result."\n";
     	$this->assertGreaterThan(0, $result);
+
+    	// Get list of categories for product
+    	$localcateg=new Categorie($this->savdb);
+    	$listofcateg=$localcateg->containing($localobject2->id, 'product', 'label');
+    	$this->assertTrue(in_array('Specimen Category for product',$listofcateg), 'Categ not found linked to product when it should');
 
     	return $id;
     }
@@ -276,10 +283,6 @@ class CategorieTest extends PHPUnit_Framework_TestCase
         print __METHOD__." retarray size=".count($retarray)."\n";
         $this->assertTrue(is_array($retarray));
 
-        $retarray=$localobject->is_fille($localobject2);
-        print __METHOD__." retarry size=".count($retarray)."\n";
-        $this->assertFalse($retarray);
-
         return $localobject->id;
     }
 
@@ -333,4 +336,3 @@ class CategorieTest extends PHPUnit_Framework_TestCase
     }
 
 }
-?>

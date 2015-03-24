@@ -16,6 +16,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Upgrade scripts can be ran from command line with syntax:
+ *
+ * cd htdocs/install
+ * php upgrade.php 3.4.0 3.5.0
+ * php upgrade2.php 3.4.0 3.5.0
+ *
+ * Return code is 0 if OK, >0 if error
  */
 
 /**
@@ -106,6 +114,10 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
     $conf->db->pass = $dolibarr_main_db_pass;
 
     $db=getDoliDBInstance($conf->db->type,$conf->db->host,$conf->db->user,$conf->db->pass,$conf->db->name,$conf->db->port);
+
+    // Create the global $hookmanager object
+    include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
+    $hookmanager=new HookManager($db);
 
     if ($db->connected != 1)
     {
@@ -325,11 +337,20 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
         if (versioncompare($versiontoarray,$afterversionarray) >= 0 && versioncompare($versiontoarray,$beforeversionarray) <= 0)
         {
         	migrate_categorie_association($db,$langs,$conf);
+        }
 
-        	// Reload modules
+		// Script for VX (X<3.4) -> V3.4
+		// No specific scripts
+
+        // Tasks to do always and only into last targeted version
+        $afterversionarray=explode('.','3.4.9');	// target is after this
+        $beforeversionarray=explode('.','3.5.9');	// target is before this
+        if (versioncompare($versiontoarray,$afterversionarray) >= 0 && versioncompare($versiontoarray,$beforeversionarray) <= 0)
+        {
+        	// Reload modules (this must be always and only into last targeted version)
         	migrate_reload_modules($db,$langs,$conf);
 
-        	// Reload menus
+        	// Reload menus (this must be always and only into last targeted version)
         	migrate_reload_menu($db,$langs,$conf,$versionto);
         }
 
@@ -1155,7 +1176,7 @@ function migrate_paiementfourn_facturefourn($db,$langs,$conf)
 
                         if ($nb == 0)
                         {
-                            print '<tr><td colspan="4" nowrap="nowrap"><b>'.$langs->trans('SuppliersInvoices').'</b></td></tr>';
+                            print '<tr><td colspan="4" class="nowrap"><b>'.$langs->trans('SuppliersInvoices').'</b></td></tr>';
                             print '<tr><td>fk_paiementfourn</td><td>fk_facturefourn</td><td>'.$langs->trans('Amount').'</td><td>&nbsp;</td></tr>';
                         }
 
@@ -1438,7 +1459,7 @@ function migrate_price_propal($db,$langs,$conf)
 }
 
 /**
- * Mise a jour des totaux lignes de propal
+ * Update total of contract lines
  *
  * @param	DoliDB		$db		Database handler
  * @param	Translate	$langs	Object langs
@@ -1448,6 +1469,10 @@ function migrate_price_propal($db,$langs,$conf)
 function migrate_price_contrat($db,$langs,$conf)
 {
     $db->begin();
+
+   	$tmpmysoc=new Societe($db);
+	$tmpmysoc->setMysoc($conf);
+    if (empty($tmpmysoc->country_id)) $tmpmysoc->country_id=0;	// Ti not have this set to '' or will make sql syntax error.
 
     print '<tr><td colspan="4">';
 
@@ -1485,7 +1510,7 @@ function migrate_price_contrat($db,$langs,$conf)
                 //$contratligne->fetch($rowid); Non requis car le update_total ne met a jour que chp redefinis
                 $contratligne->rowid=$rowid;
 
-                $result=calcul_price_total($qty,$pu,$remise_percent,$txtva,0,0,0,'HT',$info_bits,0);
+                $result=calcul_price_total($qty,$pu,$remise_percent,$txtva,0,0,0,'HT',$info_bits,0,$tmpmysoc);
                 $total_ht  = $result[0];
                 $total_tva = $result[1];
                 $total_ttc = $result[2];
@@ -2544,7 +2569,7 @@ function migrate_project_user_resp($db,$langs,$conf)
                     $sql2.= ", fk_c_type_contact";
                     $sql2.= ", fk_socpeople";
                     $sql2.= ") VALUES (";
-                    $sql2.= $db->idate(dol_now());
+                    $sql2.= "'".$db->idate(dol_now())."'";
                     $sql2.= ", '4'";
                     $sql2.= ", ".$obj->rowid;
                     $sql2.= ", '160'";
@@ -2639,7 +2664,7 @@ function migrate_project_task_actors($db,$langs,$conf)
                     $sql2.= ", fk_c_type_contact";
                     $sql2.= ", fk_socpeople";
                     $sql2.= ") VALUES (";
-                    $sql2.= $db->idate(dol_now());
+                    $sql2.= "'".$db->idate(dol_now())."'";
                     $sql2.= ", '4'";
                     $sql2.= ", ".$obj->fk_projet_task;
                     $sql2.= ", '180'";
@@ -3517,6 +3542,10 @@ function migrate_delete_old_files($db,$langs,$conf)
     DOL_DOCUMENT_ROOT.'/core/menus/smartphone/iphone.lib.php',
     DOL_DOCUMENT_ROOT.'/core/menus/smartphone/iphone_backoffice.php',
     DOL_DOCUMENT_ROOT.'/core/menus/smartphone/iphone_frontoffice.php',
+    DOL_DOCUMENT_ROOT.'/core/menus/standard/auguria_backoffice.php',
+    DOL_DOCUMENT_ROOT.'/core/menus/standard/auguria_frontoffice.php',
+    DOL_DOCUMENT_ROOT.'/core/menus/standard/eldy_backoffice.php',
+    DOL_DOCUMENT_ROOT.'/core/menus/standard/eldy_frontoffice.php',
     DOL_DOCUMENT_ROOT.'/core/modules/mailings/dolibarr_services_expired.modules.php',
     DOL_DOCUMENT_ROOT.'/core/modules/mailings/peche.modules.php',
     DOL_DOCUMENT_ROOT.'/core/modules/mailings/poire.modules.php',
@@ -3606,7 +3635,7 @@ function migrate_reload_modules($db,$langs,$conf)
         if ($res) {
             $mod=new modAgenda($db);
             $mod->remove('noboxes');
-            $mod->init('noboxes');
+            $mod->init('newboxdefonly');
         }
     }
     if (! empty($conf->global->MAIN_MODULE_SOCIETE))
@@ -3616,7 +3645,7 @@ function migrate_reload_modules($db,$langs,$conf)
         if ($res) {
             $mod=new modSociete($db);
             $mod->remove('noboxes');
-            $mod->init('noboxes');
+            $mod->init('newboxdefonly');
         }
     }
     if (! empty($conf->global->MAIN_MODULE_PRODUIT))    // Permission has changed into 2.7
@@ -3626,7 +3655,7 @@ function migrate_reload_modules($db,$langs,$conf)
         if ($res) {
             $mod=new modProduct($db);
             //$mod->remove('noboxes');
-            $mod->init('noboxes');
+            $mod->init('newboxdefonly');
         }
     }
     if (! empty($conf->global->MAIN_MODULE_SERVICE))    // Permission has changed into 2.7
@@ -3636,7 +3665,7 @@ function migrate_reload_modules($db,$langs,$conf)
             $res=@include_once DOL_DOCUMENT_ROOT.'/core/modules/modService.class.php';
             $mod=new modService($db);
             //$mod->remove('noboxes');
-            $mod->init('noboxes');
+            $mod->init('newboxdefonly');
         }
     }
     if (! empty($conf->global->MAIN_MODULE_COMMANDE))   // Permission has changed into 2.9
@@ -3646,7 +3675,7 @@ function migrate_reload_modules($db,$langs,$conf)
             $res=@include_once DOL_DOCUMENT_ROOT.'/core/modules/modCommande.class.php';
             $mod=new modCommande($db);
             //$mod->remove('noboxes');
-            $mod->init('noboxes');
+            $mod->init('newboxdefonly');
         }
     }
     if (! empty($conf->global->MAIN_MODULE_FACTURE))    // Permission has changed into 2.9
@@ -3656,7 +3685,7 @@ function migrate_reload_modules($db,$langs,$conf)
             $res=@include_once DOL_DOCUMENT_ROOT.'/core/modules/modFacture.class.php';
             $mod=new modFacture($db);
             //$mod->remove('noboxes');
-            $mod->init('noboxes');
+            $mod->init('newboxdefonly');
         }
     }
     if (! empty($conf->global->MAIN_MODULE_FOURNISSEUR))    // Permission has changed into 2.9
@@ -3666,7 +3695,7 @@ function migrate_reload_modules($db,$langs,$conf)
         if ($res) {
             $mod=new modFournisseur($db);
             //$mod->remove('noboxes');
-            $mod->init('noboxes');
+            $mod->init('newboxdefonly');
         }
     }
 
@@ -3677,7 +3706,7 @@ function migrate_reload_modules($db,$langs,$conf)
         if ($res) {
             $mod=new modUser($db);
             //$mod->remove('noboxes');  // We need to remove because id of module has changed
-            $mod->init('noboxes');
+            $mod->init('newboxdefonly');
         }
     }
     if (! empty($conf->global->MAIN_MODULE_DEPLACEMENT))    // Permission has changed into 3.0
@@ -3687,7 +3716,7 @@ function migrate_reload_modules($db,$langs,$conf)
         if ($res) {
             $mod=new modDeplacement($db);
             //$mod->remove('noboxes');	// We need to remove because a permission id has been removed
-            $mod->init('noboxes');
+            $mod->init('newboxdefonly');
         }
     }
     if (! empty($conf->global->MAIN_MODULE_DON))    // Permission has changed into 3.0
@@ -3697,7 +3726,7 @@ function migrate_reload_modules($db,$langs,$conf)
         if ($res) {
             $mod=new modDon($db);
             //$mod->remove('noboxes');	// We need to remove because a permission id has been removed
-            $mod->init('noboxes');
+            $mod->init('newboxdefonly');
         }
     }
     if (! empty($conf->global->MAIN_MODULE_ECM))    // Permission has changed into 3.0 and 3.1
@@ -3707,7 +3736,7 @@ function migrate_reload_modules($db,$langs,$conf)
             $res=@include_once DOL_DOCUMENT_ROOT.'/core/modules/modECM.class.php';
             $mod=new modECM($db);
             $mod->remove('noboxes');	// We need to remove because a permission id has been removed
-            $mod->init('noboxes');
+            $mod->init('newboxdefonly');
         }
     }
     if (! empty($conf->global->MAIN_MODULE_PAYBOX))    // Permission has changed into 3.0
@@ -3717,7 +3746,7 @@ function migrate_reload_modules($db,$langs,$conf)
         if ($res) {
             $mod=new modPaybox($db);
             $mod->remove('noboxes');  // We need to remove because id of module has changed
-            $mod->init('noboxes');
+            $mod->init('newboxdefonly');
         }
     }
 
@@ -3793,4 +3822,3 @@ update llx_facture set paye=1, fk_statut=2 where close_code is null
 and rowid in (...)
 */
 
-?>

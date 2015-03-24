@@ -31,7 +31,7 @@ require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.facture.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
 
-if (! $user->rights->facture->lire) accessforbidden();
+if (! $user->rights->fournisseur->facture->lire) accessforbidden();
 
 $langs->load("companies");
 $langs->load("bills");
@@ -89,7 +89,7 @@ if (! $sortorder) $sortorder="ASC";
 if ($user->rights->fournisseur->facture->lire)
 {
 	$sql = "SELECT s.rowid as socid, s.nom,";
-	$sql.= " f.rowid as ref, f.facnumber, f.total_ht, f.total_ttc,";
+	$sql.= " f.rowid, f.ref, f.ref_supplier, f.total_ht, f.total_ttc,";
 	$sql.= " f.datef as df, f.date_lim_reglement as datelimite, ";
 	$sql.= " f.paye as paye, f.rowid as facid, f.fk_statut";
 	$sql.= " ,sum(pf.amount) as am";
@@ -121,7 +121,7 @@ if ($user->rights->fournisseur->facture->lire)
 	}
 	if ($search_ref_supplier)
 	{
-		$sql .= " AND f.facnumber LIKE '%".$search_ref_supplier."%'";
+		$sql .= " AND f.ref_supplier LIKE '%".$search_ref_supplier."%'";
 	}
 
 	if ($search_societe)
@@ -141,14 +141,13 @@ if ($user->rights->fournisseur->facture->lire)
 
 	if (dol_strlen(GETPOST('sf_re')) > 0)
 	{
-		$sql .= " AND f.facnumber LIKE '%".GETPOST('sf_re')."%'";
+		$sql .= " AND f.ref_supplier LIKE '%".GETPOST('sf_re')."%'";
 	}
-	$sql.= " GROUP BY f.facnumber, f.rowid, f.total_ht, f.total_ttc, f.datef, f.date_lim_reglement, f.paye, f.fk_statut, s.rowid, s.nom";
 
-	$sql.= " ORDER BY ";
-	$listfield=explode(',',$sortfield);
-	foreach ($listfield as $key => $value) $sql.=$listfield[$key]." ".$sortorder.",";
-	$sql.= " f.facnumber DESC";
+	$sql.= " GROUP BY s.rowid, s.nom, f.rowid, f.ref, f.ref_supplier, f.total_ht, f.total_ttc, f.datef, f.date_lim_reglement, f.paye, f.fk_statut, s.rowid, s.nom";
+	if (! $user->rights->societe->client->voir && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
+	$sql.=$db->order($sortfield,$sortorder);
+	if (! in_array("f.ref_supplier",explode(',',$sortfield))) $sql.= ", f.ref_supplier DESC";
 
 	$resql = $db->query($sql);
 	if ($resql)
@@ -191,7 +190,7 @@ if ($user->rights->fournisseur->facture->lire)
 		print '<table class="liste" width="100%">';
 		print '<tr class="liste_titre">';
 		print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"f.rowid","",$param,"",$sortfield,$sortorder);
-		print_liste_field_titre($langs->trans("RefSupplier"),$_SERVER["PHP_SELF"],"f.facnumber","",$param,"",$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("RefSupplier"),$_SERVER["PHP_SELF"],"f.ref_supplier","",$param,"",$sortfield,$sortorder);
 		print_liste_field_titre($langs->trans("Date"),$_SERVER["PHP_SELF"],"f.datef","",$param,'align="center"',$sortfield,$sortorder);
 		print_liste_field_titre($langs->trans("DateDue"),$_SERVER["PHP_SELF"],"f.date_lim_reglement","",$param,'align="center"',$sortfield,$sortorder);
 		print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","",$param,"",$sortfield,$sortorder);
@@ -216,7 +215,7 @@ if ($user->rights->fournisseur->facture->lire)
 		print '</td><td class="liste_titre" align="right">';
 		print '<input class="flat" type="text" size="8" name="search_montant_ttc" value="'.$search_montant_ttc.'">';
 		print '</td><td class="liste_titre" colspan="2" align="right">';
-		print '<input type="image" class="liste_titre" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+		print '<input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 		print '</td>';
 		print "</tr>\n";
 
@@ -236,16 +235,16 @@ if ($user->rights->fournisseur->facture->lire)
 				print "<tr ".$bc[$var].">";
 				$classname = "impayee";
 
-				print '<td nowrap>';
+				print '<td class="nowrap">';
 				$facturestatic->id=$objp->facid;
 				$facturestatic->ref=$objp->ref;
 				print $facturestatic->getNomUrl(1);
 				print "</td>\n";
 
-				print "<td nowrap>".dol_trunc($objp->facnumber,12)."</td>\n";
+				print '<td class="nowrap">'.dol_trunc($objp->ref_supplier,12)."</td>\n";
 
-				print "<td nowrap align=\"center\">".dol_print_date($db->jdate($objp->df),'day')."</td>\n";
-				print "<td nowrap align=\"center\">".dol_print_date($db->jdate($objp->datelimite),'day');
+				print '<td class="nowrap" align="center">'.dol_print_date($db->jdate($objp->df),'day')."</td>\n";
+				print '<td class="nowrap" align="center">'.dol_print_date($db->jdate($objp->datelimite),'day');
 				if ($objp->datelimite && $db->jdate($objp->datelimite) < ($now - $conf->facture->fournisseur->warning_delay) && ! $objp->paye && $objp->fk_statut == 1) print img_warning($langs->trans("Late"));
 				print "</td>\n";
 
@@ -260,7 +259,7 @@ if ($user->rights->fournisseur->facture->lire)
 				print "<td align=\"right\">".price($objp->am)."</td>";
 
 				// Affiche statut de la facture
-				print '<td align="right" nowrap="nowrap">';
+				print '<td align="right" class="nowrap">';
 				print $facturestatic->LibStatut($objp->paye,$objp->fk_statut,5,$objp->am);
 				print '</td>';
 
@@ -297,4 +296,3 @@ if ($user->rights->fournisseur->facture->lire)
 // End of page
 $db->close();
 llxFooter();
-?>

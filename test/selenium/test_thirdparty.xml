@@ -33,12 +33,12 @@
 </tr>
 <tr>
 	<td>selectAndWait</td>
-	<td>pays_id</td>
+	<td>country_id</td>
 	<td>label=FR - France</td>
 </tr>
 <tr>
 	<td>select</td>
-	<td>departement_id</td>
+	<td>state_id</td>
 	<td>label=01 - Ain</td>
 </tr>
 <tr>

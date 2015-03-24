@@ -25,7 +25,7 @@
 
 global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
 require_once dirname(__FILE__).'/../../htdocs/compta/facture/class/facture.class.php';
 require_once dirname(__FILE__).'/../../htdocs/product/class/product.class.php';
@@ -129,10 +129,16 @@ class PdfDocTest extends PHPUnit_Framework_TestCase
 		$langs=$this->savlangs;
 		$db=$this->savdb;
 
+		$localproduct=new Product($this->savdb);
+		$localproduct->fetch(0,'PIDRESS');
+		$product_id=$localproduct->id;
+		if ($product_id <= 0) { print "\n".__METHOD__." A product with ref PIDRESS must exists into database"; die(); }
+
 		$localobject=new Facture($this->savdb);
 		$localobject->initAsSpecimen();
 		$localobject->lines=array();
-		$localobject->lines[0]->fk_product=1;
+		$localobject->lines[0]=new FactureLigne($this->savdb);
+		$localobject->lines[0]->fk_product=$product_id;
 		$localobject->lines[0]->label='Label 1';
 		$localobject->lines[0]->desc="This is a description with a é accent\n(Country of origin: France)";
 
@@ -162,4 +168,3 @@ class PdfDocTest extends PHPUnit_Framework_TestCase
     	$this->assertEquals($result,10.4);
     }
 }
-?>

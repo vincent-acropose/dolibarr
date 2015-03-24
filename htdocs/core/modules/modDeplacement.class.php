@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2005-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2005-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -44,7 +44,7 @@ class modDeplacement extends DolibarrModules
 		$this->db = $db;
 		$this->numero = 75 ;
 
-		$this->family = "financial";
+		$this->family = "hr";
 		// Module label (no space allowed), used if translation string 'ModuleXXXName' not found (where XXX is value of numeric property 'numero' of module)
 		$this->name = preg_replace('/^mod/i','',get_class($this));
 		$this->description = "Gestion des notes de frais et deplacements";		// Si traduction Module75Desc non trouvee
@@ -89,24 +89,12 @@ class modDeplacement extends DolibarrModules
 		$this->rights[2][3] = 0;
 		$this->rights[2][4] = 'creer';
 
-    $this->rights[3][0] = 173;
+    	$this->rights[3][0] = 173;
 		$this->rights[3][1] = 'Supprimer les deplacements';
 		$this->rights[3][2] = 'd';
 		$this->rights[3][3] = 0;
 		$this->rights[3][4] = 'supprimer';
-/*
-		$this->rights[4][0] = 174;
-		$this->rights[4][1] = 'Bloquer les deplacements';
-		$this->rights[4][2] = 'a';
-		$this->rights[4][3] = 0;
-		$this->rights[4][4] = 'valider';
 
-		$this->rights[5][0] = 175;
-		$this->rights[5][1] = 'Debloquer les deplacements';
-		$this->rights[5][2] = 'a';
-		$this->rights[5][3] = 0;
-		$this->rights[5][4] = 'unvalidate';
-*/
 		$this->rights[6][0] = 178;
 		$this->rights[6][1] = 'Exporter les deplacements';
 		$this->rights[6][2] = 'd';
@@ -120,9 +108,9 @@ class modDeplacement extends DolibarrModules
 		$this->export_code[$r]='trips_'.$r;
 		$this->export_label[$r]='ListTripsAndExpenses';
 		$this->export_permission[$r]=array(array("deplacement","export"));
-        $this->export_fields_array[$r]=array('u.login'=>'Login','u.name'=>'Lastname','u.firstname'=>'Firstname','d.rowid'=>"TripId",'d.type'=>"Type",'d.km'=>"FeesKilometersOrAmout",'d.dated'=>"Date",'d.note'=>'NotePrivate','d.note_public'=>'NotePublic','s.nom'=>'ThirdParty');
-        $this->export_TypeFields_array[$r]=array('u.rowid'=>'List:user:name','u.login'=>'Text','u.name'=>'Text','u.firstname'=>'Text','d.type'=>"Text",'d.km'=>"Number",'d.dated'=>"Date",'d.note'=>'Text','d.note_public'=>'Text','s.rowid'=>"List:societe:CompanyName",'s.nom'=>'Text');
-        $this->export_entities_array[$r]=array('u.login'=>'user','u.name'=>'user','u.firstname'=>'user','d.rowid'=>"trip",'d.type'=>"trip",'d.km'=>"trip",'d.dated'=>"trip",'d.note'=>'trip','d.note_public'=>'trip','s.nom'=>'company');
+        $this->export_fields_array[$r]=array('u.login'=>'Login','u.lastname'=>'Lastname','u.firstname'=>'Firstname','d.rowid'=>"TripId",'d.type'=>"Type",'d.km'=>"FeesKilometersOrAmout",'d.dated'=>"Date",'d.note_private'=>'NotePrivate','d.note_public'=>'NotePublic','s.nom'=>'ThirdParty');
+        $this->export_TypeFields_array[$r]=array('u.rowid'=>'List:user:name','u.login'=>'Text','u.lastname'=>'Text','u.firstname'=>'Text','d.type'=>"Text",'d.km'=>"Number",'d.dated'=>"Date",'d.note_private'=>'Text','d.note_public'=>'Text','s.rowid'=>"List:societe:CompanyName",'s.nom'=>'Text');
+        $this->export_entities_array[$r]=array('u.login'=>'user','u.lastname'=>'user','u.firstname'=>'user','d.rowid'=>"trip",'d.type'=>"trip",'d.km'=>"trip",'d.dated'=>"trip",'d.note_private'=>'trip','d.note_public'=>'trip','s.nom'=>'company');
         $this->export_dependencies_array[$r]=array('trip'=>'d.rowid'); // To add unique key if we ask a field of a child to avoid the DISTINCT to discard them
 
 		$this->export_sql_start[$r]='SELECT DISTINCT ';
@@ -168,4 +156,3 @@ class modDeplacement extends DolibarrModules
     }
 
 }
-?>

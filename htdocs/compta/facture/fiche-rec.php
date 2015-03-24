@@ -1,7 +1,9 @@
 <?php
 /* Copyright (C) 2002-2003 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013      Florian Henry		<florian.henry@open-concept.pro>
+ * Copyright (C) 2013      Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +31,8 @@ require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 
 $langs->load('bills');
+$langs->load('compta');
+$langs->load('products');
 
 // Security check
 $id=(GETPOST('facid','int')?GETPOST('facid','int'):GETPOST('id','int'));
@@ -64,7 +68,7 @@ if ($action == 'add')
 {
 	if (! GETPOST('titre'))
 	{
-		setEventMessage($langs->trans("ErrorFieldRequired",$langs->trans("Title")), 'errors');
+		setEventMessage($langs->transnoentities("ErrorFieldRequired",$langs->trans("Title")), 'errors');
 		$action = "create";
 		$error++;
 	}
@@ -72,7 +76,7 @@ if ($action == 'add')
 	if (! $error)
 	{
 		$object->titre = GETPOST('titre', 'alpha');
-		$object->note  = GETPOST('note');
+		$object->note_private  = GETPOST('note_private');
 		$object->usenewprice = GETPOST('usenewprice');
 
 		if ($object->create($user, $id) > 0)
@@ -105,6 +109,7 @@ if ($action == 'delete' && $user->rights->facture->supprimer)
 llxHeader('',$langs->trans("RepeatableInvoices"),'ch-facture.html#s-fac-facture-rec');
 
 $form = new Form($db);
+$companystatic = new Societe($db);
 
 /*
  * Create mode
@@ -137,13 +142,13 @@ if ($action == 'create')
 		print '</td></tr>';
 
 		// Title
-		print '<tr><td>'.$langs->trans("Title").'</td><td>';
+		print '<tr><td class="fieldrequired">'.$langs->trans("Title").'</td><td>';
 		print '<input class="flat" type="text" name="titre" size="24" value="'.$_POST["titre"].'">';
 		print '</td>';
 
 		// Note
 		print '<td rowspan="'.$rowspan.'" valign="top">';
-		print '<textarea class="flat" name="note" wrap="soft" cols="60" rows="'.ROWS_4.'"></textarea>';
+		print '<textarea class="flat" name="note_private" wrap="soft" cols="60" rows="'.ROWS_4.'"></textarea>';
 		print '</td></tr>';
 
 		// Author
@@ -363,7 +368,13 @@ else
 			$author = new User($db);
 			$author->fetch($object->user_author);
 
-			dol_fiche_head($head, 'compta', $langs->trans("PredefinedInvoices"),0,'company');	// Add a div
+			$head=array();
+			$h=0;
+			$head[$h][0] = $_SERVER["PHP_SELF"].'?id='.$object->id;
+			$head[$h][1] = $langs->trans("CardBill");
+			$head[$h][2] = 'card';
+
+			dol_fiche_head($head, 'card', $langs->trans("PredefinedInvoices"),0,'bill');	// Add a div
 
 			print '<table class="border" width="100%">';
 
@@ -376,13 +387,13 @@ else
 			print "<tr><td>".$langs->trans("Author").'</td><td colspan="3">'.$author->getFullName($langs)."</td></tr>";
 
 			print '<tr><td>'.$langs->trans("AmountHT").'</td>';
-			print '<td align="right" colspan="2"><b>'.price($object->total_ht).'</b></td>';
-			print '<td>'.$langs->trans("Currency".$conf->currency).'</td></tr>';
+			print '<td colspan="3"><b>'.price($object->total_ht,'',$langs,1,-1,-1,$conf->currency).'</b></td>';
+			print '</tr>';
 
-			print '<tr><td>'.$langs->trans("AmountVAT").'</td><td align="right" colspan="2">'.price($object->total_tva).'</td>';
-			print '<td>'.$langs->trans("Currency".$conf->currency).'</td></tr>';
-			print '<tr><td>'.$langs->trans("AmountTTC").'</td><td align="right" colspan="2">'.price($object->total_ttc).'</td>';
-			print '<td>'.$langs->trans("Currency".$conf->currency).'</td></tr>';
+			print '<tr><td>'.$langs->trans("AmountVAT").'</td><td colspan="3">'.price($object->total_tva,'',$langs,1,-1,-1,$conf->currency).'</td>';
+			print '</tr>';
+			print '<tr><td>'.$langs->trans("AmountTTC").'</td><td colspan="3">'.price($object->total_ttc,'',$langs,1,-1,-1,$conf->currency).'</td>';
+			print '</tr>';
 
 			// Payment term
 			print '<tr><td>'.$langs->trans("PaymentConditions").'</td><td colspan="3">';
@@ -394,7 +405,7 @@ else
 			$form->form_modes_reglement($_SERVER['PHP_SELF'].'?id='.$object->id, $object->mode_reglement_id,'none');
 			print "</td></tr>";
 
-			print '<tr><td>'.$langs->trans("Note").'</td><td colspan="3">'.nl2br($object->note)."</td></tr>";
+			print '<tr><td>'.$langs->trans("Note").'</td><td colspan="3">'.nl2br($object->note_private)."</td></tr>";
 
 			print "</table>";
 
@@ -436,7 +447,7 @@ else
 				if (! empty($objp->date_end)) $type=1;
 
 				// Show line
-				print "<tr $bc[$var]>";
+				print "<tr ".$bc[$var].">";
 				if ($object->lines[$i]->fk_product > 0)
 				{
 					print '<td>';
@@ -513,7 +524,6 @@ else
 		/*
 		 *  List mode
 		 */
-
 		$sql = "SELECT s.nom, s.rowid as socid, f.titre, f.total, f.rowid as facid";
 		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s,".MAIN_DB_PREFIX."facture_rec as f";
 		$sql.= " WHERE f.fk_soc = s.rowid";
@@ -523,12 +533,13 @@ else
 		//$sql .= " ORDER BY $sortfield $sortorder, rowid DESC ";
 		//	$sql .= $db->plimit($limit + 1,$offset);
 
-		$result = $db->query($sql);
-
-		if ($result)
+		$resql = $db->query($sql);
+		if ($resql)
 		{
-			$num = $db->num_rows($result);
+			$num = $db->num_rows($resql);
 			print_barre_liste($langs->trans("RepeatableInvoices"),$page,$_SERVER['PHP_SELF'],"&socid=$socid",$sortfield,$sortorder,'',$num);
+
+			print $langs->trans("ToCreateAPredefinedInvoice").'<br><br>';
 
 			$i = 0;
 			print '<table class="noborder" width="100%">';
@@ -544,14 +555,17 @@ else
 				$var=True;
 				while ($i < min($num,$limit))
 				{
-					$objp = $db->fetch_object($result);
+					$objp = $db->fetch_object($resql);
 					$var=!$var;
 
-					print "<tr $bc[$var]>";
+					print "<tr ".$bc[$var].">";
 
 					print '<td><a href="'.$_SERVER['PHP_SELF'].'?id='.$objp->facid.'">'.img_object($langs->trans("ShowBill"),"bill").' '.$objp->titre;
 					print "</a></td>\n";
-					print '<td><a href="../fiche.php?socid='.$objp->socid.'">'.$objp->nom.'</a></td>';
+
+					$companystatic->id=$objp->socid;
+					$companystatic->name=$objp->nom;
+					print '<td>'.$companystatic->getNomUrl(1,'customer').'</td>';
 
 					print '<td align="right">'.price($objp->total).'</td>'."\n";
 
@@ -575,9 +589,10 @@ else
 					$i++;
 				}
 			}
+			else print '<tr><td>'.$langs->trans("NoneF").'</td></tr>';
 
 			print "</table>";
-			$db->free();
+			$db->free($resql);
 		}
 		else
 		{
@@ -590,5 +605,3 @@ else
 llxFooter();
 
 $db->close();
-
-?>

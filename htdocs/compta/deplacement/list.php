@@ -56,13 +56,14 @@ $search_ref=GETPOST('search_ref','alpha');
  */
 
 $tripandexpense_static=new Deplacement($db);
+$userstatic = new User($db);
 
 llxHeader();
 
 $sql = "SELECT s.nom, s.rowid as socid,";				// Ou
 $sql.= " d.rowid, d.type, d.dated as dd, d.km,";		// Comment
 $sql.= " d.fk_statut,";
-$sql.= " u.name, u.firstname";							// Qui
+$sql.= " u.lastname, u.firstname";							// Qui
 $sql.= " FROM ".MAIN_DB_PREFIX."user as u";
 $sql.= ", ".MAIN_DB_PREFIX."deplacement as d";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON d.fk_soc = s.rowid";
@@ -93,7 +94,7 @@ if ($resql)
     print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"d.rowid","","&socid=$socid",'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Type"),$_SERVER["PHP_SELF"],"d.type","","&socid=$socid",'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Date"),$_SERVER["PHP_SELF"],"d.dated","","&socid=$socid",'',$sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("Person"),$_SERVER["PHP_SELF"],"u.name","","&socid=$socid",'',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Person"),$_SERVER["PHP_SELF"],"u.lastname","","&socid=$socid",'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","","&socid=$socid",'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("FeesKilometersOrAmout"),$_SERVER["PHP_SELF"],"d.km","","&socid=$socid",'align="right"',$sortfield,$sortorder);
     print_liste_field_titre('',$_SERVER["PHP_SELF"], '');
@@ -119,7 +120,7 @@ if ($resql)
     print '<td class="liste_titre" align="right">';
     print '&nbsp;';
     print '</td>';
-    print '<td class="liste_titre" align="right"><input type="image" class="liste_titre" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+    print '<td class="liste_titre" align="right"><input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
     print "</td></tr>\n";
 
     $var=true;
@@ -132,12 +133,23 @@ if ($resql)
 
         $var=!$var;
         print '<tr '.$bc[$var].'>';
+        // Id
         print '<td><a href="fiche.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowTrip"),"trip").' '.$obj->rowid.'</a></td>';
+        // Type
         print '<td>'.$langs->trans($obj->type).'</td>';
+        // Date
         print '<td>'.dol_print_date($db->jdate($obj->dd),'day').'</td>';
-        print '<td align="left"><a href="'.DOL_URL_ROOT.'/user/fiche.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowUser"),"user").' '.$obj->firstname.' '.$obj->name.'</a></td>';
+        // User
+        print '<td align="left">';
+        $userstatic->id = $obj->rowid;
+        $userstatic->lastname = $obj->lastname;
+        $userstatic->firstname = $obj->firstname;
+        print $userstatic->getNomUrl(1);
+        print '</td>';
+
         if ($obj->socid) print '<td>'.$soc->getNomUrl(1).'</td>';
         else print '<td>&nbsp;</td>';
+
         print '<td align="right">'.$obj->km.'</td>';
 
         $tripandexpense_static->statut=$obj->fk_statut;
@@ -158,4 +170,3 @@ else
 $db->close();
 
 llxFooter();
-?>

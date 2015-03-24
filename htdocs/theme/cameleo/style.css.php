@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C)      2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2007-2011 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2011 Herve Prot           <herve.prot@symeos.com>
@@ -20,7 +20,7 @@
  */
 
 /**
- *		\file       htdocs/theme/eldy/style.css.php
+ *		\file       htdocs/theme/cameleo/style.css.php
  *		\brief      Fichier de style CSS du theme Cameleo
  */
 
@@ -39,28 +39,42 @@ session_cache_limiter(FALSE);
 
 require_once '../../main.inc.php';
 
+// Load user to have $user->conf loaded (not done into main because of NOLOGIN constant defined)
+if (empty($user->id) && ! empty($_SESSION['dol_login'])) $user->fetch('',$_SESSION['dol_login']);
+
+
 // Define css type
 header('Content-type: text/css');
-// Important: Following code is to avoid page request by browser and PHP CPU at
-// each Dolibarr page access.
+// Important: Following code is to avoid page request by browser and PHP CPU at each Dolibarr page access.
 if (empty($dolibarr_nocache)) header('Cache-Control: max-age=3600, public, must-revalidate');
 else header('Cache-Control: no-cache');
 
 // On the fly GZIP compression for all pages (if browser support it). Must set the bit 3 of constant to 1.
 if (isset($conf->global->MAIN_OPTIMIZE_SPEED) && ($conf->global->MAIN_OPTIMIZE_SPEED & 0x04)) { ob_start("ob_gzhandler"); }
 
-if (! empty($_GET["lang"])) $langs->setDefaultLang($_GET["lang"]);	// If language was forced on URL
-if (! empty($_GET["theme"])) $conf->theme=$_GET["theme"];  // If theme was forced on URL
+if (GETPOST('lang')) $langs->setDefaultLang(GETPOST('lang'));	// If language was forced on URL
+if (GETPOST('theme')) $conf->theme=GETPOST('theme');  // If theme was forced on URL
 $langs->load("main",0,1);
 $right=($langs->trans("DIRECTION")=='rtl'?'left':'right');
 $left=($langs->trans("DIRECTION")=='rtl'?'right':'left');
-$fontsize=empty($conf->browser->phone)?'12':'12';
-$fontsizesmaller=empty($conf->browser->phone)?'11':'11';
 
+// Define image path files and other constants
 $fontlist='arial,tahoma,verdana,helvetica';
-//$fontlist='Verdana,Helvetica,Arial,sans-serif';
+$dol_hide_topmenu=$conf->dol_hide_topmenu;
+$dol_hide_leftmenu=$conf->dol_hide_leftmenu;
+$dol_optimize_smallscreen=$conf->dol_optimize_smallscreen;
+$dol_no_mouse_hover=$conf->dol_no_mouse_hover;
+$dol_use_jmobile=$conf->dol_use_jmobile;
 
+$path='';    		// This value may be used in future for external module to overwrite theme
+$theme='cameleo';	// Value of theme
+if (! empty($conf->global->MAIN_OVERWRITE_THEME_RES)) { $path='/'.$conf->global->MAIN_OVERWRITE_THEME_RES; $theme=$conf->global->MAIN_OVERWRITE_THEME_RES; }
 
+$colorshadowtitle='000';
+$fontsize='12';
+$fontsizesmaller='11';
+
+if (! empty($conf->dol_optimize_smallscreen)) $fontsize=11;
 ?>
 
 /* ============================================================================== */
@@ -71,7 +85,7 @@ body {
 <?php if (GETPOST("optioncss") == 'print') {  ?>
 	background-color: #FFFFFF;
 <?php } else { ?>
-	/*background: #ffffff url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/headbg2.jpg' ?>) 0 0 no-repeat;*/
+	/*background: #ffffff url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/headbg2.jpg',1); ?>) 0 0 no-repeat;*/
 <?php } ?>
 	color: #101010;
 	font-size: <?php print $fontsize ?>px;
@@ -87,6 +101,8 @@ body {
 a:link, a:visited, a:active { font-family: <?php print $fontlist ?>; font-weight: bold; color: blue; text-decoration: none; }
 a:hover { font-family: <?php print $fontlist ?>; font-weight: bold; color: #A51B00; text-decoration: none; }
 
+<?php if (empty($dol_use_jmobile)) { ?>
+
 input:focus, textarea:focus, button:focus, select:focus {
     box-shadow: 0 0 4px #8091BF;
 }
@@ -96,9 +112,11 @@ input, input.flat, textarea, textarea.flat, form.flat select, select.flat {
 	font-family: <?php print $fontlist ?>;
 	background: #FDFDFD;
     border: 1px solid #ACBCBB;
-    padding: 1px 1px 1px 1px;
+    padding: 2px;
     margin: 0px 0px 0px 0px;
 }
+<?php } ?>
+
 select.flat, form.flat select {
 	font-weight: normal;
 }
@@ -107,6 +125,16 @@ input:disabled {
 }
 textarea:disabled {
 	background:#ddd;
+}
+
+input[type=checkbox] { background-color: transparent; border: none; box-shadow: none; }
+input[type=radio]    { background-color: transparent; border: none; box-shadow: none; }
+input[type=image]    { background-color: transparent; border: none; box-shadow: none; }
+input[type=text]     { min-width: 20px; }
+input:-webkit-autofill {
+	background-color: <?php echo empty($dol_use_jmobile)?'#FBFFEA':'#FFFFFF' ?> !important;
+	background-image:none !important;
+	-webkit-box-shadow: 0 0 0 50px <?php echo empty($dol_use_jmobile)?'#FBFFEA':'#FFFFFF' ?> inset;
 }
 
 input.button[type=submit] {
@@ -120,22 +148,29 @@ input.button[type=submit] {
 	/*border: 2px solid #063953;*/
 	color: #FFF;
 	padding: 0px 10px 0px 10px;
-	margin: 0px 10px 0px 10px;
 	text-decoration: none;
 	white-space: nowrap;
     /*display: block;
     height: 18px;*/
     vertical-align: top;
-    font-family: "Trebuchet MS",Arial,Helvetica,sans-serif;
+    font-family: <?php print $fontlist ?>;
     line-height: 14px;
     cursor: pointer;
     font-size: 11px;
     font-weight: bold;
 }
+::-webkit-input-placeholder { color:#ccc; }
+::-moz-placeholder { color:#ccc; } /* firefox 19+ */
+:-ms-input-placeholder { color:#ccc; } /* ie */
+input:-moz-placeholder { color:#ccc; }
+
+<?php if (! empty($dol_use_jmobile)) { ?>
+legend { margin-bottom: 8px; }
+<?php } ?>
 
 .button {
     font-family: <?php print $fontlist ?>;
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/button_bg.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1); ?>);
 	background-position: bottom;
     border: 1px solid #ACBCBB;
     padding: 0px 2px 0px 2px;
@@ -144,7 +179,7 @@ input.button[type=submit] {
 .button:focus  {
     font-family: <?php print $fontlist ?>;
 	color: #222244;
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/button_bg.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1); ?>);
 	background-position: bottom;
     border: 1px solid #ACBCBB;
     padding: 0px 2px 0px 2px;
@@ -153,7 +188,7 @@ input.button[type=submit] {
 .buttonajax {
     font-family: <?php print $fontlist ?>;
 	border: 0px;
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/button_bg.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1); ?>);
 	background-position: bottom;
     padding: 0px 0px 0px 0px;
     margin: 0px 0px 0px 0px;
@@ -166,11 +201,38 @@ div.float
 {
     float:<?php print $left; ?>;
 }
+div.floatright
+{
+    float:<?php print $right; ?>;
+}
+div.inline-block
+{
+	display:inline-block;
+}
+
 .valignmiddle {
 	vertical-align: middle;
 }
 .centpercent {
 	width: 100%;
+}
+.center {
+    text-align: center;
+}
+.left {
+	text-align: <?php print $left; ?>;
+}
+.right {
+	text-align: <?php print $right; ?>;
+}
+.nowrap {
+	white-space: <?php print ($dol_optimize_smallscreen?'normal':'nowrap'); ?>;
+}
+.nobold {
+	font-weight: normal !important;
+}
+.nounderline {
+    text-decoration: none;
 }
 
 
@@ -179,10 +241,17 @@ div.float
 /* ============================================================================== */
 
 .hideobject { display: none; }
-<?php if (! empty($conf->browser->phone)) { ?>
+<?php if (! empty($dol_optimize_smallscreen)) { ?>
 .hideonsmartphone { display: none; }
+.noenlargeonsmartphone { width : 50px !important; display: inline !important; }
+.maxwidthonsmartphone { max-width: 100px; }
+.maxwidth200onsmartphone { max-width: 200px; }
 <?php } ?>
 .linkobject { cursor: pointer; }
+<?php if (GETPOST("optioncss") == 'print') { ?>
+.hideonprint { display: none !important; }
+<?php } ?>
+
 
 /* ============================================================================== */
 /* Styles for dragging lines                                                      */
@@ -196,21 +265,36 @@ td.showDragHandle {
 }
 .tdlineupdown {
 	white-space: nowrap;
+	min-width: 10px;
 }
 
 
 /* ============================================================================== */
 /* Styles de positionnement des zones                                             */
 /* ============================================================================== */
+
+#id-container {
+	margin-bottom: 8px;
+	display: table;
+  	table-layout: fixed;
+}
+#id-right, #id-left {
+	display: table-cell;
+	float: none;
+	vertical-align: top;
+}
+#id-<?php echo $right; ?> {
+	width: 100%;
+}
+
 div.leftContent {
 	margin-left: 0px !important;
-        width: 200px !important;
         background-color: #FFF;
 }
 
 div.fiche {
-	margin-<?php print $left; ?>: <?php print empty($conf->browser->phone)?'5':'2'; ?>px;
-	margin-<?php print $right; ?>: <?php print empty($conf->browser->phone)?'5':''; ?>px;
+	margin-<?php print $left; ?>: <?php print empty($conf->dol_optimize_smallscreen)?'5':'2'; ?>px;
+	margin-<?php print $right; ?>: <?php print empty($conf->dol_optimize_smallscreen)?'5':''; ?>px;
 }
 
 div.fichecenter {
@@ -218,23 +302,24 @@ div.fichecenter {
 	clear: both;	/* This is to have div fichecenter that are true rectangles */
 }
 div.fichethirdleft {
-	<?php if (empty($conf->browser->phone)) { print "float: ".$left.";\n"; } ?>
-	<?php if (empty($conf->browser->phone)) { print "width: 35%;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "float: ".$left.";\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "width: 35%;\n"; } ?>
 }
 div.fichetwothirdright {
-	<?php if (empty($conf->browser->phone)) { print "float: ".$left.";\n"; } ?>
-	<?php if (empty($conf->browser->phone)) { print "width: 65%;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "float: ".$left.";\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "width: 65%;\n"; } ?>
 }
 div.fichehalfleft {
-	<?php if (empty($conf->browser->phone)) { print "float: ".$left.";\n"; } ?>
-	<?php if (empty($conf->browser->phone)) { print "width: 50%;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "float: ".$left.";\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "width: 50%;\n"; } ?>
 }
 div.fichehalfright {
-	<?php if (empty($conf->browser->phone)) { print "float: ".$left.";\n"; } ?>
-	<?php if (empty($conf->browser->phone)) { print "width: 50%;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "float: ".$left.";\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "width: 50%;\n"; } ?>
 }
 div.ficheaddleft {
-	<?php if (empty($conf->browser->phone)) { print "padding-left: 6px;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen))   { print "padding-left: 16px;\n"; }
+	else print "margin-top: 10px;\n"; ?>
 }
 
 
@@ -243,7 +328,7 @@ div.ficheaddleft {
 /* ============================================================================== */
 
 <?php
-if (! empty($conf->browser->phone))
+if (! empty($conf->dol_optimize_smallscreen))
 {
 	$minwidthtmenu=0;
 	$heightmenu=19;
@@ -254,6 +339,10 @@ else
 	$heightmenu=47;
 }
 ?>
+
+div#tmenu_tooltip {
+	padding-right: 100px;
+}
 
 div.tmenu {
 <?php if (GETPOST("optioncss") == 'print') {  ?>
@@ -268,9 +357,9 @@ div.tmenu {
     padding: 0px 0px 0px 0px;	/* t r b l */
     margin: 0px 0px 5px 0px;	/* t r b l */
     font-weight: normal;
-    height: 47px;
+    height: 44px;
     background: #FFF;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/bg_tmenu.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_tmenu.jpg',1); ?>);
     background-position: center bottom;
     border-bottom: 2px solid #A51B00;
     color: #000;
@@ -305,7 +394,7 @@ a.tmenu:link, a.tmenu:visited, a.tmenu:hover, a.tmenu:active {
 	padding: 0px 10px 0px 10px;
 	/*margin: 0px 1px 0px 1px;*/
 	font-weight: bold;
-        font-family: "Trebuchet MS",Arial,Helvetica,sans-serif;
+        font-family: <?php print $fontlist ?>;
 	white-space: nowrap;
         height: 20px;
     -moz-border-radius-topleft:8px;
@@ -345,7 +434,7 @@ a.tmenusel:link, a.tmenusel:visited, a.tmenusel:hover, a.tmenusel:active {
         color: #FFF;
         font-weight: bold;
         height: 20px;
-        font-family: "Trebuchet MS",Arial,Helvetica,sans-serif;
+        font-family: <?php print $fontlist ?>;
         padding: 0px 10px 0px 10px;
         -moz-border-radius-topleft:8px;
     -moz-border-radius-topright:8px;
@@ -390,46 +479,42 @@ div.mainmenu {
 	margin-left: 0px;
 }
 
-<?php if (empty($conf->browser->phone)) { ?>
+<?php if (empty($conf->dol_optimize_smallscreen)) { ?>
 
 div.mainmenu.agenda {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/menus/agenda.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/agenda.png',1); ?>);
 }
 
 div.mainmenu.cashdesk {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/menus/pointofsale.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/pointofsale.png',1); ?>);
 }
 
 div.mainmenu.accountancy {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/menus/money.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/money.png',1); ?>);
 }
 
 div.mainmenu.bank {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/menus/bank.png' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/bank.png',1); ?>);
 }
 
 div.mainmenu.companies {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/menus/company.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/company.png',1); ?>);
 }
 
 div.mainmenu.commercial {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/menus/commercial.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/commercial.png',1); ?>);
 }
 
 div.mainmenu.externalsite {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/eldy/img/menus/externalsite.png',1) ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/eldy/img/menus/externalsite.png',1); ?>);
 }
 
 div.mainmenu.ftp {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/menus/tools.png' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/tools.png',1); ?>);
 }
 
 div.mainmenu.ecm {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/menus/ecm.png' ?>);
-}
-
-div.mainmenu.home{
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/menus/home.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/ecm.png',1); ?>);
 }
 
 div.mainmenu.gravatar {
@@ -438,29 +523,37 @@ div.mainmenu.gravatar {
 div.mainmenu.geopipmaxmind {
 }
 
+div.mainmenu.home{
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/home.png',1); ?>);
+}
+
+div.mainmenu.hrm {
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/holiday.png',1) ?>);
+}
+
 div.mainmenu.members {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/menus/members.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/members.png',1); ?>);
 }
 
 div.mainmenu.products {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/menus/products.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/products.png',1); ?>);
 	margin-left: 10px;
 }
 
 div.mainmenu.project {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/menus/project.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/project.png',1); ?>);
 }
 
 div.mainmenu.tools {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/menus/tools.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/tools.png',1); ?>);
 }
 
 div.mainmenu.shop {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/menus/shop.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/shop.png',1); ?>);
 }
 
 div.mainmenu.google {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/menus/globe.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/globe.png',1); ?>);
 }
 
 <?php
@@ -501,12 +594,12 @@ foreach($mainmenuusedarray as $val)
 	// Img file not found
 	if (! $url && $generic <= 4)
 	{
-		$url=DOL_URL_ROOT."/theme/cameleo/img/menus/generic".$generic.".png";
+		$url=dol_buildpath($path.'/theme/'.$theme.'/img/menus/generic'.$generic.'.png',1);
 		$generic++;
 	}
 	if ($url)
 	{
-		print "/* A mainmenu entry but img file ".$val.".png not found, so we use a generic one */\n";
+		print "/* A mainmenu entry but img file ".$val.".png not found (check /".$val."/img/".$val.".png), so we use a generic one */\n";
 		print "div.mainmenu.".$val." {\n";
 		print "	background-image: url(".$url.");\n";
 		print "	height:28px;\n";
@@ -530,12 +623,12 @@ foreach($mainmenuusedarray as $val)
 /* Login */
 
 form#login {
-	margin-top: 70px;
+	margin-top: <?php echo $dol_optimize_smallscreen?'30':'60' ?>px;
 	margin-bottom: 30px;
 	font-size: 13px;
 }
 .login_table_title {
-	width: 540px;
+	max-width: 540px;
 	color: #888888;
 	text-shadow: 1px 1px 1px #FFF;
 }
@@ -543,8 +636,10 @@ form#login {
 	text-shadow: 1px 1px 1px #FFF;
 }
 .login_table {
+	margin-left: 10px;
+	margin-right: 10px;
 	padding:12px;
-	width: 540px;
+	max-width: 540px;
 	border: 1px solid #C0C0C0;
 	background-color: #E0E0E0;
 
@@ -562,14 +657,19 @@ form#login {
 	background-image: -ms-linear-gradient(top, rgba(240,240,240,.3) 0%, rgba(192,192,192,.3) 100%);
 	background-image: linear-gradient(top, rgba(240,240,240,.3) 0%, rgba(192,192,192,.3) 100%);
 }
+#securitycode {
+	min-width: 60px;
+}
 #img_securitycode {
 	border: 1px solid #DDDDDD;
 }
 #img_logo {
 	max-width: 200px;
+	max-height: 100px;
 }
 
 div.login_block {
+    width: 180px;
 	position: absolute;
 	<?php print $right; ?>: 5px;
 	top: 3px;
@@ -583,9 +683,16 @@ div.login_block table {
 	display: inline;
 }
 
+div#login_left, div#login_right {
+	display: inline-block;
+	min-width: 220px;
+	text-align: center;
+	vertical-align: middle;
+}
+
 div.login {
 	white-space:nowrap;
-    padding: <?php echo ($conf->browser->phone?'0':'8')?>px 0px 0px 0px;
+    padding: <?php echo ($conf->dol_optimize_smallscreen?'0':'8')?>px 0px 0px 0px;
     margin: 0px 0px 0px 8px;
 	font-weight: bold;
 }
@@ -596,10 +703,27 @@ div.login a:hover {
 	color: black;
 	text-decoration:underline;
 }
+.login_block_user {
+	float: right;
+}
+.login_block_elem {
+	float: right;
+	vertical-align: top;
+	padding: 8px 0px 0px 4px !important;
+}
+
+.alogin, .alogin:hover {
+	color: #888 !important;
+	font-weight: normal !important;
+	font-size: <?php echo $fontsizesmaller; ?>px !important;
+}
+.alogin:hover {
+	text-decoration:underline !important;
+}
 
 img.login, img.printer, img.entity {
-	padding: <?php echo ($conf->browser->phone?'0':'8')?>px 0px 0px 0px;
-	margin: 0px 0px 0px 8px;
+	padding: 0px 0px 0px 0px;
+	margin: 0px 0px 0px 4px;
 	text-decoration: none;
 	color: white;
 	font-weight: bold;
@@ -610,7 +734,7 @@ img.login, img.printer, img.entity {
 /* Menu gauche                                                                    */
 /* ============================================================================== */
 
-td.vmenu {
+div.vmenu, td.vmenu {
     margin-<?php print $right; ?>: 2px;
     padding: 0px;
     padding-bottom: 0px;
@@ -634,12 +758,13 @@ a.vsmenu:link       { font-size:11px; text-align:left; font-weight: normal; colo
 a.vsmenu:visited    { font-size:11px; text-align:left; font-weight: normal; color: #202020; margin: 1px 1px 1px 4px; }
 a.vsmenu:active     { font-size:11px; text-align:left; font-weight: normal; color: RGB(94,148,181); margin: 1px 1px 1px 4px; }
 a.vsmenu:hover      { font-size:11px; text-align:left; font-weight: normal; color: #7F0A29; margin: 1px 1px 1px 4px; }
-font.vsmenudisabled { font-size:11px; text-align:left; font-weight: normal; color: #202020; margin: 1px 1px 1px 4px; }
+font.vsmenudisabled { font-size:11px; text-align:left; font-weight: normal; color: #202020; }
+font.vsmenudisabledmargin { margin: 1px 1px 1px 4px; }
 
-a.help:link         { font-size: 10px; font-weight: bold; background: #FFFFFF; border: 1px solid #8CACBB; color: #68ACCF; padding: 0em 0.7em; margin: 0em 0.5em; text-decoration: none; white-space: nowrap; }
-a.help:visited      { font-size: 10px; font-weight: bold; background: #FFFFFF; border: 1px solid #8CACBB; color: #68ACCF; padding: 0em 0.7em; margin: 0em 0.5em; text-decoration: none; white-space: nowrap; }
-a.help:active       { font-size: 10px; font-weight: bold; background: #FFFFFF; border: 1px solid #8CACBB; color: #6198BA; padding: 0em 0.7em; margin: 0em 0.5em; text-decoration: none; white-space: nowrap; }
-a.help:hover        { font-size: 10px; font-weight: bold; background: #FFFFFF; border: 1px solid #8CACBB; color: #6198BA; padding: 0em 0.7em; margin: 0em 0.5em; text-decoration: none; white-space: nowrap; }
+a.help:link         { font-size: 10px; font-weight: bold; background: #FFFFFF; color: #AAACAF; padding: 0em 0.7em; margin: 0em 0.5em; text-decoration: none; white-space: nowrap; }
+a.help:visited      { font-size: 10px; font-weight: bold; background: #FFFFFF; color: #AAACAF; padding: 0em 0.7em; margin: 0em 0.5em; text-decoration: none; white-space: nowrap; }
+a.help:active       { font-size: 10px; font-weight: bold; background: #FFFFFF; color: #9998A0; padding: 0em 0.7em; margin: 0em 0.5em; text-decoration: none; white-space: nowrap; }
+a.help:hover        { font-size: 10px; font-weight: bold; background: #FFFFFF; color: #9998A0; padding: 0em 0.7em; margin: 0em 0.5em; text-decoration: none; white-space: nowrap; }
 
 
 div.blockvmenupair
@@ -648,7 +773,7 @@ div.blockvmenupair
 	border-spacing: 0px;
 	padding: 0px;
 	width: 100%;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/bg_leftCategorie2.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_leftCategorie2.jpg',1); ?>);
     background-position: top right;
     background-repeat: no-repeat;
 
@@ -660,7 +785,7 @@ div.blockvmenuimpair
 	border-spacing: 0px;
 	padding: 0px;
 	width: 100%;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/bg_leftCategorie2.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_leftCategorie2.jpg',1); ?>);
     background-position: top right;
     background-repeat: no-repeat;
 
@@ -703,7 +828,7 @@ div.menu_titre
 
 div.menu_titre a.vmenu {
 	font-weight: bold;
-    font-family: "Trebuchet MS",Arial,Helvetica,sans-serif;
+    font-family: <?php print $fontlist ?>;
     font-size: 12px;
 }
 
@@ -712,8 +837,7 @@ div.blockvmenusearch
 {
     margin: 3px 0px 15px 0px;
     padding: 25px 0px 2px 2px;
-    width: 200px;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/bg_leftMenu.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_leftMenu.jpg',1); ?>);
     background-position: top right;
     background-repeat: no-repeat;
 }
@@ -749,7 +873,7 @@ div.blockvmenubookmarks
 	border-spacing: 0px;
 	padding: 0px;
 	width: 100%;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/bg_leftCategorie.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_leftCategorie.jpg',1); ?>);
     background-position: top left;
     background-repeat: no-repeat;
     margin-bottom: 15px;
@@ -757,7 +881,7 @@ div.blockvmenubookmarks
 
 div.blockvmenuhelp
 {
-<?php if (empty($conf->browser->phone)) { ?>
+<?php if (empty($conf->dol_optimize_smallscreen)) { ?>
 	text-align: center;
 	border-spacing: 0px;
     width: 162px;
@@ -855,7 +979,6 @@ td.photo {
 /* ============================================================================== */
 
 .toolbar {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/tmenu2.png' ?>) !important;
     background-repeat: repeat-x !important;
     border: 1px solid #BBB !important;
 }
@@ -986,7 +1109,7 @@ img.toolbarbutton {
 }
 
 .ui-layout-north {
-	height: <?php print (empty($conf->browser->phone)?'54':'21'); ?>px !important;
+	height: <?php print (empty($conf->dol_optimize_smallscreen)?'54':'21'); ?>px !important;
 }
 
 /* ECM */
@@ -1058,7 +1181,7 @@ div.tabs {
     text-align: left;
     vertical-align: bottom;
     width: 100%;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/bg_tmenu.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_tmenu.jpg',1); ?>);
     height: 24px;
     border-bottom: 2px solid #A51B00;
     background-repeat: repeat-x;
@@ -1083,7 +1206,7 @@ div.tabs a.tab {
 	width: auto;
     font-size: 11px;
     font-weight: bold;
-    font-family: "Trebuchet MS",Arial,Helvetica,sans-serif;
+    font-family: <?php print $fontlist ?>;
     height: 18px;
     background-position: right;
     line-height: 18px;
@@ -1113,8 +1236,8 @@ background: linear-gradient(top, #fceabb 0%,#fccd4d 50%,#FFA820 87%,#fbdf93 100%
 }
 
 
-div.tabs a.tab#active {
-    color: #FFF;
+div.tabs a.tab:active, .tabactive {
+    color: #FFF !important;
     padding: 0px 6px 0px 6px;
     -moz-border-radius-topleft:8px;
     -moz-border-radius-topright:8px;
@@ -1146,14 +1269,14 @@ div.tabBar {
     padding-left: 4px;
     padding-right: 4px;
     padding-bottom: 4px;
-    margin: 6px 0px 6px 0px;
+    margin: 6px 0px 20px 0px;
     -moz-border-radius:8px;
     border-radius:8px;
     border-right: 1px solid #555555;
     border-bottom: 1px solid #555555;
     border-left: 1px solid #D0D0D0;
     border-top: 1px solid #D8D8D8;
-    /*background: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/tab_background.png' ?>) repeat-x;*/
+    /*background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/tab_background.png',1); ?>) repeat-x;*/
     background: #FEF4AE; /* old browsers */
 }
 
@@ -1189,12 +1312,12 @@ span.tabspan {
 /* Boutons actions                                                                */
 /* ============================================================================== */
 
-/* Nouvelle syntaxe a utiliser */
+div.divButAction { margin-bottom: 1.4em; }
 
-.butAction:link, .butAction:visited, .butAction:hover, .butAction:active, .butActionDelete, .butActionRefused, .butActionDelete:link, .butActionDelete:visited, .butActionDelete:hover, .butActionDelete:active {
-	font-family:"Trebuchet MS",Arial,Helvetica,sans-serif;
+.butAction, .butAction:link, .butAction:visited, .butAction:hover, .butAction:active, .butActionDelete, .butActionRefused, .butActionDelete:link, .butActionDelete:visited, .butActionDelete:hover, .butActionDelete:active {
+	font-family: <?php print $fontlist ?>;
 	font-weight: bold;
-	/*background: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_btnBlue.jpg' ?>) repeat-x;*/
+	/*background: url(<?php echo dol_buildpath($path.'/theme/bureau2crea/img/bg_btnBlue.jpg',1); ?>) repeat-x;*/
         background: #A81E00;
         -moz-border-radius:8px;
         border-radius:8px;
@@ -1234,7 +1357,7 @@ span.tabspan {
 
 .butActionRefused {
     background: #FFe7ec;
-	color: #666;
+	color: #aaa !important;
 }
 
 <?php if (! empty($conf->global->MAIN_BUTTON_HIDE_UNAUTHORIZED)) { ?>
@@ -1258,12 +1381,19 @@ span.butAction, span.butActionDelete {
 
 /*
 #undertopmenu {
-background-image: url("<?php echo DOL_URL_ROOT.'/theme/cameleo/img/gradient.gif' ?>");
+background-image: url("<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/gradient.gif',1); ?>");
 background-repeat: repeat-x;
 }
 */
 
 
+.paddingrightonly {
+	border-collapse: collapse;
+	border: 0px;
+	margin-left: 0px;
+	padding-<?php print $left; ?>: 0px !important;
+	padding-<?php print $right; ?>: 4px !important;
+}
 .nocellnopadd {
 list-style-type:none;
 margin: 0px;
@@ -1291,28 +1421,37 @@ margin: 0px 0px 0px 0px;
 }
 
 
-table.border {
-border: 1px solid #9CACBB;
-border-collapse: collapse;
+table.border, table.dataTable, .table-border, .table-border-col, .table-key-border-col, .table-val-border-col, div.border {
+	border: 1px solid #9CACBB;
+	border-collapse: collapse;
+	padding: 1px 2px;
 }
 
-table.border td {
-padding: 1px 2px;
-border: 1px solid #9CACBB;
-border-collapse: collapse;
+table.border td, div.border div div.tagtd {
+	padding: 1px 2px;
+	border: 1px solid #9CACBB;
+	border-collapse: collapse;
 }
 
-td.border {
-border-top: 1px solid #000000;
-border-right: 1px solid #000000;
-border-bottom: 1px solid #000000;
-border-left: 1px solid #000000;
+td.border, div.tagtable div div.border {
+	border-top: 1px solid #000000;
+	border-right: 1px solid #000000;
+	border-bottom: 1px solid #000000;
+	border-left: 1px solid #000000;
+}
+
+.table-key-border-col {
+	width: 25%;
+	vertical-align:top;
+}
+.table-val-border-col {
+	width:auto;
 }
 
 /* Main boxes */
 
-table.noborder {
-    background: #FFF url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/bg_liste_titremenu.jpg' ?>);
+table.noborder, div.noborder {
+    background: #FFF url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_liste_titremenu.jpg',1); ?>);
     background-repeat: repeat-x;
     background-position: top right;
     vertical-align: text-top;
@@ -1329,10 +1468,10 @@ table.noborder {
     /*border-collapse: collapse;*/
 }
 
-table.noborder tr {
+table.noborder tr, div.noborder form {
 }
 
-table.noborder td {
+table.noborder td, div.noborder form div {
 }
 
 #graph {
@@ -1349,13 +1488,13 @@ padding: 0px 0px;
 }
 table.nobordernopadding td {
 border: 0px;
-padding: 0px 0px !important;
+padding: 0px 0px;
 }
 
 /* For lists */
 
 table.liste {
-background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/bg_liste_titremenu.jpg' ?>);
+background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_liste_titremenu.jpg',1); ?>);
 background-repeat: repeat-x;
 background-position: top right;
     vertical-align: text-top;
@@ -1376,45 +1515,52 @@ table.liste td {
     padding-right: 2px;
 }
 
-div.liste_titre, tr.liste_titre {
-    height: 20px;
+.tagtable, .table-border { display: table; }
+.tagtr, .table-border-row  { display: table-row; }
+.tagtd, .table-border-col, .table-key-border-col, .table-val-border-col { display: table-cell; }
+
+tr.liste_titre, tr.liste_titre_sel, form.liste_titre, form.liste_titre_sel
+{
+    height: 20px !important;
+}
+div.liste_titre, tr.liste_titre, form.liste_titre {
     color: #842F00;
     font-weight: bold;
-    font-family: "Trebuchet MS",Arial,Helvetica,sans-serif;
+    font-family: <?php print $fontlist ?>;
     /*border-bottom: 1px solid #FDFFFF;*/
     border-radius: 8px;
-    line-height: 18px;
     padding-left: 10px;
     padding-right: 10px;
-    white-space: nowrap;
+    white-space: <?php echo $dol_optimize_smallscreen?'normal':'nowrap'; ?>;
     text-align: <?php echo $left; ?>;
 }
-th.liste_titre, td.liste_titre
+th.liste_titre, td.liste_titre, form.liste_titre div
 {
 	padding-left: 6px;
 	padding-right: 6px;
-    	/*vertical-align: text-top;*/
+    white-space: <?php echo $dol_optimize_smallscreen?'normal':'nowrap'; ?>;
+    vertical-align: middle;
 }
-th.liste_titre_sel, td.liste_titre_sel
+th.liste_titre_sel, td.liste_titre_sel, form.liste_titre_sel div
 {
     background-position: top right;
     color: #A51B00;
     font-weight: bold;
-    white-space: nowrap;
+    white-space: <?php echo $dol_optimize_smallscreen?'normal':'nowrap'; ?>;
+    vertical-align: middle;
 }
 
 input.liste_titre {
 background: #FFF;
-/*background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/bg_centerBlock-title.jpg' ?>);
+/*background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_centerBlock-title.jpg',1); ?>);
 background-repeat: no-repeat;
 background-position: top right;*/
 border: 0px;
 }
 
-tr.liste_total td {
+tr.liste_total td, form.liste_total div {
 border-top: 1px solid #DDDDDD;
 background: #F0F0F0;
-/* background-image: url(<?php echo DOL_URL_ROOT.'/theme/login_background.png' ?>); */
 background-repeat: repeat-x;
 color: #332266;
 font-weight: normal;
@@ -1433,6 +1579,10 @@ background: #c0c4c7;
 border: 0px;
 }
 
+tr.impair td.nohover, form.impair div.nohover {
+	background: #eaeaea;
+}
+
 .pair	{
 background: #FFFFFF;
 font-family: <?php print $fontlist ?>;
@@ -1442,6 +1592,10 @@ border: 0px;
 .pair:hover {
 background: #c0c4c7;
 border: 0px;
+}
+
+tr.pair td.nohover {
+	background: #FFFFFF;
 }
 
 .pair td, .impair td {
@@ -1459,6 +1613,20 @@ border: 0px;
  *  Boxes
  */
 
+.boxstats {
+    <?php print "float: ".$left.";\n"; ?>
+    margin: 4px;
+    padding: 4px;
+	/*-moz-box-shadow: 4px 4px 4px #DDD;
+    -webkit-box-shadow: 4px 4px 4px #DDD;
+    box-shadow: 4px 4px 4px #DDD;
+    margin-bottom: 8px !important;*/
+    background: #FFFFFF;
+    border: 1px solid #AAA;
+    text-align: center;
+    border-radius: 5px;
+}
+
 .box {
 	padding-right: 0px;
 	padding-left: 0px;
@@ -1469,7 +1637,7 @@ tr.box_titre {
 	background-repeat: repeat-x;
 	color: #842F00;
 	font-weight: normal;
-	font-family: "Trebuchet MS",Arial,Helvetica,sans-serif;
+	font-family: <?php print $fontlist ?>;
 	white-space: nowrap;
   -moz-border-radius-topleft:6px;
   -moz-border-radius-topright:6px;
@@ -1492,6 +1660,10 @@ background: #c0c4c7;
 border: 0px;
 }
 
+tr.box_impair .nohover {
+background: #eaeaea;
+}
+
 tr.box_pair {
 /* background: #d0d4d7; */
 background: #f4f4f4;
@@ -1503,10 +1675,15 @@ background: #c0c4c7;
 border: 0px;
 }
 
-tr.fiche {
-font-family: <?php print $fontlist ?>;
+.formboxfilter {
+	vertical-align: middle;
+	margin-bottom: 6px;
 }
-
+.formboxfilter input[type=image]
+{
+	top: 4px;
+	position: relative;
+}
 
 
 
@@ -1574,6 +1751,9 @@ a.impayee:hover { font-weight: bold; color: #550000; }
 
 .fieldrequired { font-weight: bold; color: #000055; }
 
+.dolgraphtitle { margin-top: 6px; margin-bottom: 4px; }
+.dolgraphtitlecssboxes { margin: 0px; }
+
 .photo {
 border: 0px;
 /* filter:alpha(opacity=55); */
@@ -1581,12 +1761,11 @@ border: 0px;
 }
 
 div.titre {
-	font-family: "Trebuchet MS",Arial,Helvetica,sans-serif;
+	font-family: <?php print $fontlist ?>;
 	font-weight: normal;
 	color: #842F00;
-    font-size: 20px;
+    font-size: 16px;
 	text-decoration: none;
-    margin-left: 20px;
 }
 
 #dolpaymenttable { width: 600px; font-size: 13px; }
@@ -1652,6 +1831,8 @@ border-radius:6px;
 /* ============================================================================== */
 /* Calendar                                                                       */
 /* ============================================================================== */
+
+img.datecallink { padding-left: 2px !important; padding-right: 2px !important; }
 
 .ui-datepicker-trigger {
 	vertical-align: middle;
@@ -1781,12 +1962,19 @@ td.hidden {
 /*  Module agenda                                                                 */
 /* ============================================================================== */
 
-.cal_other_month   { background: #DDDDDD; border: solid 1px #ACBCBB; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
-.cal_past_month    { background: #EEEEEE; border: solid 1px #ACBCBB; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
-.cal_current_month { background: #FFFFFF; border: solid 1px #ACBCBB; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
-.cal_today         { background: #FFFFFF; border: solid 2px #6C7C7B; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
+table.cal_month    { border-spacing: 0px; }
+.cal_current_month { border-top: 0; border-left: solid 1px #E0E0E0; border-right: 0; border-bottom: solid 1px #E0E0E0; }
+.cal_other_month   { border-top: 0; border-left: solid 1px #C0C0C0; border-right: 0; border-bottom: solid 1px #C0C0C0; }
+.cal_current_month_right { border-right: solid 1px #E0E0E0; }
+.cal_other_month_right   { border-right: solid 1px #C0C0C0; }
+.cal_other_month   { background: #DDDDDD; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
+.cal_past_month    { background: #EEEEEE; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
+.cal_current_month { background: #FFFFFF; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
+.cal_today         { background: #FFFFFF; border: solid 2px #C0C0C0; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
 table.cal_event    { border-collapse: collapse; margin-bottom: 1px; }
 table.cal_event td { border: 0px; padding-<?php print $left; ?>: 0px; padding-<?php print $right; ?>: 2px; padding-top: 0px; padding-bottom: 0px; }
+ul.cal_event       { padding-right: 2px; padding-top: 1px; border: none; list-style-type: none; margin: 0 auto; padding-left: 0px; padding-start: 0px; -khtml-padding-start: 0px; -o-padding-start: 0px; -webkit-padding-start: 0px; -webkit-padding-start: 0px; }
+li.cal_event       { border: none; list-style-type: none; }
 .cal_event a:link    {font-size: 11px; font-weight: bold !important; }
 .cal_event a:visited {font-size: 11px; font-weight: bold !important; }
 .cal_event a:active  {font-size: 11px; font-weight: bold !important; }
@@ -1797,7 +1985,7 @@ table.cal_event td { border: 0px; padding-<?php print $left; ?>: 0px; padding-<?
 /*  Ajax - Liste deroulante de l'autocompletion                                   */
 /* ============================================================================== */
 
-.ui-autocomplete-loading { background: white url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/working.gif' ?>) right center no-repeat; }
+.ui-autocomplete-loading { background: white url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/working.gif',1); ?>) right center no-repeat; }
 .ui-autocomplete {
 	       position:absolute;
 	       width:auto;
@@ -1827,12 +2015,12 @@ table.cal_event td { border: 0px; padding-<?php print $left; ?>: 0px; padding-<?
 /* ============================================================================== */
 
 .editkey_textarea, .editkey_ckeditor, .editkey_string, .editkey_email, .editkey_numeric, .editkey_select, .editkey_autocomplete {
-	background: url(<?php echo dol_buildpath($path.'/theme/cameleo/img/edit.png',1) ?>) right top no-repeat;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/edit.png',1) ?>) right top no-repeat;
 	cursor: pointer;
 }
 
 .editkey_datepicker {
-	background: url(<?php echo dol_buildpath($path.'/theme/cameleo/img/calendar.png',1) ?>) right center no-repeat;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/calendar.png',1) ?>) right center no-repeat;
 	cursor: pointer;
 }
 
@@ -1856,113 +2044,9 @@ table.cal_event td { border: 0px; padding-<?php print $left; ?>: 0px; padding-<?
 /* ============================================================================== */
 
 /* CSS for treeview */
-
-/* Lien plier /deplier tout */
-.arbre-switch {
-    text-align: right;
-    padding: 0 5px;
-    margin: 0 0 -18px 0;
-}
-
-/* Arbre */
-ul.arbre {
-    padding: 5px 10px;
-}
-/* strong : A modifier en fonction de la balise choisie */
-ul.arbre strong {
-    font-weight: normal;
-    padding: 0 0 0 20px;
-    margin: 0 0 0 -7px;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/common/treemenu/branch.gif' ?>);
-    background-repeat: no-repeat;
-    background-position: 1px 50%;
-}
-ul.arbre strong.arbre-plier {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/common/treemenu/plus.gif' ?>);
-    cursor: pointer;
-}
-ul.arbre strong.arbre-deplier {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/common/treemenu/minus.gif' ?>);
-    cursor: pointer;
-}
-ul.arbre ul {
-    padding: 0;
-    margin: 0;
-}
-ul.arbre li {
-    padding: 0;
-    margin: 0;
-    list-style: none;
-}
-/* This is to create an indent */
-ul.arbre li li {
-    margin: 0 0 0 16px;
-}
-/* Classe pour masquer */
-.hide {
-    display: none;
-}
-
-img.menuNew
-{
-	display:block;
-	border:0px;
-}
-
-img.menuEdit
-{
-	border: 0px;
-	display: block;
-}
-
-img.menuDel
-{
-	display:none;
-	border: 0px;
-}
-
-div.menuNew
-{
-	margin-top:-20px;
-	margin-<?php print $left; ?>:270px;
-	height:20px;
-	padding:0px;
-	width:30px;
-	position:relative;
-}
-
-div.menuEdit
-{
-	margin-top:-15px;
-	margin-<?php print $left; ?>:250px;
-	height:20px;
-	padding:0px;
-	width:30px;
-	position:relative;
-
-}
-
-div.menuDel
-{
-	margin-top:-20px;
-	margin-<?php print $left; ?>:290px;
-	height:20px;
-	padding:0px;
-	width:30px;
-	position:relative;
-
-}
-
-div.menuFleche
-{
-	margin-top:-16px;
-	margin-<?php print $left; ?>:320px;
-	height:20px;
-	padding:0px;
-	width:30px;
-	position:relative;
-
-}
+.treeview ul { background-color: transparent !important; margin-top: 0; }
+.treeview li { background-color: transparent !important; padding: 0 0 0 16px !important; min-height: 20px; }
+.treeview .hover { color: black !important; }
 
 
 /* ============================================================================== */
@@ -1993,7 +2077,7 @@ div.menuFleche
 {
 	background:#F0F0F0;
 	font-weight:normal;
-	font-family:sans-serif;
+	font-family: <?php print $fontlist ?>;
 	border-style:ridge;
 	border: 1px solid;
 	border-spacing: 0px;
@@ -2106,7 +2190,7 @@ A.none, A.none:active, A.none:visited, A.none:hover {
     font-family:<?php echo $fontlist; ?>;
     font-size:<?php echo $fontsize; ?>px;
 }
-.ui-button { margin-left: -1px; }
+.ui-button { margin-left: -1px; padding-top: 1px; }
 .ui-button-icon-only .ui-button-text { height: 8px; }
 .ui-button-icon-only .ui-button-text, .ui-button-icons-only .ui-button-text { padding: 2px 0px 6px 0px; }
 .ui-button-text
@@ -2130,11 +2214,9 @@ span.cke_skin_kama { padding: 0 !important; }
 a.cke_dialog_ui_button
 {
     font-family: <?php print $fontlist ?> !important;
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/cameleo/img/button_bg.png' ?>) !important;
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1); ?>) !important;
 	background-position: bottom !important;
     border: 1px solid #ACBCBB !important;
-	padding: 0.1em 0.7em !important;
-	margin: 0em 0.5em !important;
     -moz-border-radius:0px 5px 0px 5px !important;
 	-webkit-border-radius:0px 5px 0px 5px !important;
 	border-radius:0px 5px 0px 5px !important;
@@ -2150,37 +2232,6 @@ a.cke_dialog_ui_button
 .template-upload {
     height: 72px !important;
 }
-
-
-/* ============================================================================== */
-/*  Table with div                                                                */
-/* ============================================================================== */
-
-div.table-border {
-	display:table;
-    width: 100%;
-    border-collapse: collapse;
-    border: 1px solid #9CACBB;
-}
-div.table-border-row {
-	display:table-row;
-}
-div.table-key-border-col {
-	display:table-cell;
-	width: 25%;
-	vertical-align:top;
-	padding: 1px 2px 1px 1px;
-	border: 1px solid #9CACBB;
-	border-collapse: collapse;
-}
-div.table-val-border-col {
-	display:table-cell;
-	width:auto;
-	padding: 1px 2px 1px 1px;
-	border: 1px solid #9CACBB;
-	border-collapse: collapse;
-}
-
 
 
 /* ============================================================================== */
@@ -2282,7 +2333,7 @@ div.ecmjqft {
 /* Core Styles */
 .ecmjqft LI.directory { font-weight:normal; background: url(<?php echo dol_buildpath($path.'/theme/common/treemenu/folder2.png',1); ?>) left top no-repeat; }
 .ecmjqft LI.expanded { font-weight:normal; background: url(<?php echo dol_buildpath($path.'/theme/common/treemenu/folder2-expanded.png',1); ?>) left top no-repeat; }
-.ecmjqft LI.wait { font-weight:normal; background: url(<?php echo dol_buildpath('/theme/cameleo/img/working.gif',1); ?>) left top no-repeat; }
+.ecmjqft LI.wait { font-weight:normal; background: url(<?php echo dol_buildpath('/theme/'.$theme.'/img/working.gif',1); ?>) left top no-repeat; }
 
 
 
@@ -2297,13 +2348,181 @@ div.ecmjqft {
 	bottom: 4px !important;
 <?php } ?>
 	text-align: center;
-	min-width: 500px;
+	min-width: <?php echo $dol_optimize_smallscreen?'200':'480'; ?>px;
 	width: auto;
 	padding-left: 10px !important;
 	padding-right: 10px !important;
 }
 
 
+/* ============================================================================== */
+/*  Maps                                                                          */
+/* ============================================================================== */
+
+.divmap, #google-visualization-geomap-embed-0, #google-visualization-geomap-embed-1, google-visualization-geomap-embed-2 {
+    -moz-box-shadow: 0px 0px 10px #AAA;
+    -webkit-box-shadow: 0px 0px 10px #AAA;
+    box-shadow: 0px 0px 10px #AAA;
+}
+
+
+/* ============================================================================== */
+/*  Datatable                                                                     */
+/* ============================================================================== */
+
+.sorting_asc  { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_asc.png',1); ?>') no-repeat center right; }
+.sorting_desc { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_desc.png',1); ?>') no-repeat center right; }
+.sorting_asc_disabled  { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_asc_disabled',1); ?>') no-repeat center right; }
+.sorting_desc_disabled { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_desc_disabled',1); ?>') no-repeat center right; }
+.paginate_disabled_previous:hover, .paginate_enabled_previous:hover, .paginate_disabled_next:hover, .paginate_enabled_next:hover
+{
+	font-weight: normal;
+}
+.paginate_enabled_previous:hover, .paginate_enabled_next:hover
+{
+	text-decoration: underline !important;
+}
+
+
+/* ============================================================================== */
+/*  JMobile                                                                       */
+/* ============================================================================== */
+
+li.ui-li-divider .ui-link {
+	color: #FFF !important;
+}
+.ui-btn {
+	margin: 0.1em 2px
+}
+a.ui-link, a.ui-link:hover, .ui-btn:hover, span.ui-btn-text:hover, span.ui-btn-inner:hover {
+	text-decoration: none !important;
+}
+
+.ui-btn-inner {
+	min-width: .4em;
+	padding-left: 10px;
+	padding-right: 10px;
+	font-size: <?php print $fontsize ?>px;
+	/* white-space: normal; */		/* Warning, enable this break the truncate feature */
+}
+.ui-select .ui-btn-icon-right .ui-btn-inner {
+	padding-right: 36px;
+}
+.ui-select .ui-btn-icon-left .ui-btn-inner {
+	padding-left: 36px;
+}
+
+.fiche .ui-controlgroup {
+	margin: 0px;
+	padding-bottom: 0px;
+}
+div.ui-controlgroup-controls div.tabsElem
+{
+	margin-top: 2px;
+}
+div.ui-controlgroup-controls div.tabsElem a
+{
+	-moz-box-shadow: 0 -3px 6px rgba(0,0,0,.2);
+	-webkit-box-shadow: 0 -3px 6px rgba(0,0,0,.2);
+	box-shadow: 0 -3px 6px rgba(0,0,0,.2);
+	border: none;
+}
+a.tab span.ui-btn-inner
+{
+	border: none;
+	padding: 0;
+}
+
+.ui-body-c {
+	border: 1px solid #CCC;
+	text-shadow: none;
+}
+.ui-link {
+	color: rgb(<?php print $colortext; ?>) !important;
+}
+
+a.ui-link {
+	word-wrap: break-word;
+}
+
+/* force wrap possible onto field overflow does not works */
+.formdoc .ui-btn-inner
+{
+	white-space: normal;
+	overflow: hidden;
+	text-overflow: hidden;
+}
+
+/* Warning: setting this may make screen not beeing refreshed after a combo selection */
+.ui-body-c {
+	background: #fff;
+}
+
+div.ui-radio
+{
+	display: inline-block;
+}
+.ui-checkbox input, .ui-radio input {
+	height: auto;
+	width: auto;
+	margin: 4px;
+	position: static;
+}
+div.ui-checkbox label+input, div.ui-radio label+input {
+	position: absolute;
+}
+
+.ui-mobile fieldset
+{
+	padding-bottom: 10px; margin-bottom: 4px; border-bottom: 1px solid #AAAAAA !important;
+}
+
+ul.ulmenu {
+	border-radius: 0;
+	-webkit-border-radius: 0;
+}
+
+.ui-field-contain label.ui-input-text {
+	vertical-align: middle !important;
+}
+.ui-mobile fieldset {
+	border-bottom: none !important;
+}
+
+/* Style for first level menu with jmobile */
+.ui-bar-b, .lilevel0 {
+    background: rgb(<?php echo $colorbacktitle1; ?>);
+    background-repeat: repeat-x;
+	<?php if ($usecss3) { ?>
+	background-image: -o-linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+	background-image: -moz-linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+	background-image: -webkit-linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+	background-image: -ms-linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+	background-image: linear-gradient(bottom, rgba(0,0,0,0.3) 0%, rgba(250,250,250,0.3) 100%);
+    font-weight: bold;
+	<?php } ?>
+    color: #<?php echo $colortexttitle; ?> !important;
+}
+.ui-body-c, .ui-btn-up-c, .ui-btn-hover-c {
+	border: none !important;
+}
+.alilevel0 {
+    color: #<?php echo $colortexttitle; ?> !important;
+	text-shadow: 1px 0px 1px #<?php echo $colorshadowtitle; ?>;
+}
+.alilevel1 {
+    color: #<?php echo $colortexttitle; ?> !important;
+	text-shadow: 1px 0px 1px #<?php echo $colorshadowtitle; ?>;
+}
+.lilevel1 {
+	background-image: -webkit-gradient(linear,left top,left bottom,from( #eee ),to( #e1e1e1 )) !important;
+	background-image: -webkit-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: -moz-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: -ms-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: -o-linear-gradient( #eee,#e1e1e1 ) !important;
+	background-image: linear-gradient( #eee,#e1e1e1 ) !important;
+}
+
+
 <?php
 if (is_object($db)) $db->close();
-?>

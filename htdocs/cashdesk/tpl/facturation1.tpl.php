@@ -22,6 +22,8 @@ $langs->load("main");
 $langs->load("bills");
 $langs->load("cashdesk");
 
+// Object $form must de defined
+
 ?>
 
 <script type="text/javascript" src="javascript/facturation1.js"></script>
@@ -35,7 +37,7 @@ $langs->load("cashdesk");
 		<input type="hidden" name="hdnSource" value="NULL" />
 
 		<table>
-			<tr><th class="label1"><?php echo $langs->trans("Code"); ?></th><th class="label1"><?php echo $langs->trans("Designation"); ?></th></tr>
+			<tr><th class="label1"><?php echo $langs->trans("FilterRefOrLabelOrBC"); ?></th><th class="label1"><?php echo $langs->trans("Designation"); ?></th></tr>
 			<tr>
 			<!-- Affichage de la reference et de la designation -->
 			<td><input class="texte_ref" type="text" id ="txtRef" name="txtRef" value="<?php echo $obj_facturation->ref() ?>"
@@ -62,43 +64,24 @@ $langs->load("cashdesk");
 						$id = $obj_facturation->id();
 
 						// Si trop d'articles ont ete trouves, on n'affiche que les X premiers (defini dans le fichier de configuration) ...
-						if ( $nbr_enreg > $conf_taille_listes ) {
 
-							for ($i = 0; $i < $conf_taille_listes; $i++) {
+						$nbtoshow = $nbr_enreg;
+						if (! empty($conf_taille_listes) && $nbtoshow > $conf_taille_listes) $nbtoshow = $conf_taille_listes;
 
-								if ( $id == $tab_designations[$i]['rowid'] )
-									$selected = 'selected="selected"';
-								else
-									$selected = '';
+						for ($i = 0; $i < $nbtoshow; $i++)
+						{
+							if ( $id == $tab_designations[$i]['rowid'] )
+								$selected = 'selected="selected"';
+							else
+								$selected = '';
 
-								$label = $tab_designations[$i]['label'];
+							$label = $tab_designations[$i]['label'];
 
-								print '<option '.$selected.' value="'.$tab_designations[$i]['rowid'].'">'.dol_trunc($tab_designations[$i]['ref'],7).' - '.dol_trunc($label,35,'middle');
-								if (! empty($conf->stock->enabled) && !empty($conf_fkentrepot) && $tab_designations[$i]['fk_product_type']==0) print ' ('.$langs->trans("CashDeskStock").': '.$tab_designations[$i]['reel'].')';
-								print '</option>'."\n				";
-
-							}
-
-						// ... sinon on affiche tout
-						} else {
-
-							for ($i = 0; $i < $nbr_enreg; $i++) {
-
-								if ( $id == $tab_designations[$i]['rowid'] )
-									$selected = 'selected="selected"';
-								else
-									$selected = '';
-
-								$label = $tab_designations[$i]['label'];
-
-								print '<option '.$selected.' value="'.$tab_designations[$i]['rowid'].'">'.dol_trunc($tab_designations[$i]['ref'],7).' - '.dol_trunc($label,35,'middle');
-								if (! empty($conf->stock->enabled) && !empty($conf_fkentrepot) && $tab_designations[$i]['fk_product_type']==0) print ' ('.$langs->trans("CashDeskStock").': '.(empty($tab_designations[$i]['reel'])?0:$tab_designations[$i]['reel']).')';
-								print '</option>'."\n				";
-
-							}
+							print '<option '.$selected.' value="'.$tab_designations[$i]['rowid'].'">'.dol_trunc($tab_designations[$i]['ref'],7).' - '.dol_trunc($label,35,'middle');
+							if (! empty($conf->stock->enabled) && !empty($conf_fkentrepot) && $tab_designations[$i]['fk_product_type']==0) print ' ('.$langs->trans("CashDeskStock").': '.(empty($tab_designations[$i]['reel'])?0:$tab_designations[$i]['reel']).')';
+							print '</option>'."\n";
 
 						}
-
 					?>
 				</select>
 			</td>
@@ -214,11 +197,10 @@ $langs->load("cashdesk");
 			<tr>
 				<td>
 				<input class="bouton_mode_reglement" type="submit" name="btnModeReglement" value="<?php echo $langs->trans("Reported"); ?>" onclick="javascript: verifClic('DIF');" />
-				<?php echo $langs->trans("DateEcheance"); ?> :
-<?php
-    $form=new Form($db);
-    print $form->select_date(-1,'txtDatePaiement');
-?>
+				<?php
+				echo $langs->trans("DateEcheance").' :';
+				print $form->select_date(-1,'txtDatePaiement');
+				?>
 <!-- <input class="texte2" type="text" id="txtDatePaiement" name="txtDatePaiement" value="" />
 				<input class="bouton_cal" type="image" src="img/calendrier.png" id="btnCalendrier" value="..." title="<?php echo $langs->trans("CalTip"); ?>" />
  -->

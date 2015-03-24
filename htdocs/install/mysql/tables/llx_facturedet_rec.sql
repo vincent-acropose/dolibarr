@@ -30,9 +30,9 @@ create table llx_facturedet_rec
   description		text,
   tva_tx			double(6,3) DEFAULT 19.6,		-- taux tva
   localtax1_tx      double(6,3) DEFAULT 0,    		-- localtax1 rate
-  localtax1_type	varchar(1)	NULL, 				-- localtax1 type
+  localtax1_type	varchar(10)	NULL, 				-- localtax1 type
   localtax2_tx      double(6,3) DEFAULT 0,    		-- localtax2 rate
-  localtax2_type	varchar(1)	NULL, 				-- localtax2 type
+  localtax2_type	varchar(10)	NULL, 				-- localtax2 type
   qty				real,							-- quantity
   remise_percent	real DEFAULT 0,					-- pourcentage de remise
   remise			real DEFAULT 0,					-- montant de la remise
@@ -43,6 +43,7 @@ create table llx_facturedet_rec
   total_localtax1	double(24,8) DEFAULT 0,			-- Total LocalTax1 for total quantity of line
   total_localtax2	double(24,8) DEFAULT 0,			-- total LocalTax2 for total quantity of line
   total_ttc			double(24,8),					-- Total TTC de la ligne toute quantity et incluant remise ligne et globale
+  info_bits			integer    DEFAULT 0,			-- TVA NPR ou non
   special_code		integer UNSIGNED DEFAULT 0,		-- code pour les lignes speciales
   rang				integer    DEFAULT 0			-- ordre d'affichage
   

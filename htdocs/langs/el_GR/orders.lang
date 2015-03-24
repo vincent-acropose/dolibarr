@@ -1,8 +1,8 @@
-# Dolibarr language file - el_GR - orders
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - orders
 OrdersArea=Περιοχή παραγγελιών πελατών
 SuppliersOrdersArea=Περιοχή παραγγελιών προμηθευτών
 OrderCard=Καρτέλα παραγγελίας
+OrderId=Id Παραγγελία
 Order=Παραγγελία
 Orders=Παραγγελίες
 OrderLine=Γραμμή Παραγγελίας
@@ -27,9 +27,12 @@ SuppliersOrdersToProcess=Παραγγελίες προμηθευτών προς 
 StatusOrderCanceledShort=Ακυρωμένη
 StatusOrderDraftShort=Προσχέδιο
 StatusOrderValidatedShort=Επικυρωμένη
+StatusOrderSentShort=Αποστολή στη διαδικασία
+StatusOrderSent=Αποστολή σε εξέλιξη
 StatusOrderOnProcessShort=Σε εξέλιξη
 StatusOrderProcessedShort=Ολοκληρωμένη
 StatusOrderToBillShort=Για πληρωμή
+StatusOrderToBill2Short=Προς τιμολόγηση
 StatusOrderApprovedShort=Εγγεκριμένη
 StatusOrderRefusedShort=Αρνήθηκε
 StatusOrderToProcessShort=Προς επεξεργασία
@@ -41,32 +44,37 @@ StatusOrderValidated=Επικυρωμένη
 StatusOrderOnProcess=Σε εξέλιξη
 StatusOrderProcessed=Ολοκληρωμένη
 StatusOrderToBill=Προς πληρωμή
+StatusOrderToBill2=Προς τιμολόγηση
 StatusOrderApproved=Εγγεκριμένη
 StatusOrderRefused=Αρνήθηκε
 StatusOrderReceivedPartially=Λήφθηκε μερικώς
 StatusOrderReceivedAll=Λήφθηκε πλήρως
+ShippingExist=Μια αποστολή, υπάρχει
 DraftOrWaitingApproved=Draft or approved not yet ordered
 DraftOrWaitingShipped=Draft or validated not yet shipped
 MenuOrdersToBill=Παραγγελίες προς χρέωση
+MenuOrdersToBill2=Παραγγελίες για τιμολόγηση
 SearchOrder=Εύρεση παραγγελίας
-Sending=Αποστολή
-Sendings=Αποστολές
+# SearchACustomerOrder=Search a customer order
 ShipProduct=Ship product
 Discount=Έκπτωση
 CreateOrder=Δημιουργία παραγγελίας
 RefuseOrder=Άρνηση παραγγελίας
 ApproveOrder=Αποδοχή παραγγελίας
 ValidateOrder=Επικύρωση παραγγελίας
+UnvalidateOrder=Για Unvalidate
 DeleteOrder=Διαγραφή παραγγελίας
 CancelOrder=Ακύρωση παραγγελίας
 AddOrder=Προσθήκη παραγγελίας
 AddToMyOrders=Προσθήκη στις παραγγελίες μου
 AddToOtherOrders=Προσθήκη στις άλλες παραγγελίες
+AddToDraftOrders=Προσθήκη στο σχέδιο παραγγελιας
 ShowOrder=Εμφανιση παραγγελίας
 NoOpenedOrders=Δεν υπάρχουν ανοιχτές παραγγελίες
 NoOtherOpenedOrders=Δεν υπάρχουν άλλες ανοιχτές παραγγελίες
+NoDraftOrders=Δεν υπάρχουν προσχέδια παραγγελιών
 OtherOrders=Άλλες παραγγελίες
-LastOrders= %s τελευταίες παραγγελίες
+LastOrders=%s τελευταίες παραγγελίες
 LastModifiedOrders=Τελευταίες %s τροποποιημένες παραγγελίες
 LastClosedOrders=Τελυταίες %s κλειστές παραγγελίες
 AllOrders=Όλες οι παραγγελίες
@@ -74,16 +82,18 @@ NbOfOrders=Πλήθος παραγγελιών
 OrdersStatistics=Στατιστικά παραγγελιών
 OrdersStatisticsSuppliers=Supplier order's statistics
 NumberOfOrdersByMonth=Πλήθος παραγγελιών ανά μήνα
-AmountOfOrdersByMonthHT=amount of orders by month (net of tax)
+AmountOfOrdersByMonthHT=Ποσό των παραγγελιών ανά μήνα (μετά από φόρους)
 ListOfOrders=Λίστα παραγγελιών
 CloseOrder=Κλείσιμο Παραγγελίας
 ConfirmCloseOrder=Είστε σίγουροι ότι θέλετε να κλείσετε την παραγγελία; Μόλις κλείσει θα μπορεί μόνο να πληρωθεί.
 ConfirmCloseOrderIfSending=Είστε σίγουροι ότι θέλετε να κλείσετε την παραγγελία; Μια παραγγελία πρέπει να κλείνει μόλις ολοκληρωθούν όλες οι μεταφορές.
 ConfirmDeleteOrder=Είστε σίγουροι ότι θέλετε να διαγράψετε την παραγγελία;
 ConfirmValidateOrder=Είστε σίγουροι ότι θέλετε να επικυρώσετε την παραγγελία στο όνομα <b>%s</b> ;
+ConfirmUnvalidateOrder=Είστε βέβαιοι ότι θέλετε να επαναφέρετε <b>%s</b> για το καθεστώς του σχεδίου;
 ConfirmCancelOrder=Είστε σίγουροι ότι θέλετε να ακυρώσετε την παραγγελία;
 ConfirmMakeOrder=Are you sure you want to confirm you made this order on <b>%s</b> ?
 GenerateBill=Δημιουργία τιμολογίου
+ClassifyShipped=Χαρακτηρισμός ως παραδοτέο
 ClassifyBilled=Χαρακτηρισμός "Τιμολογημένη"
 ComptaCard=Λογιστική κάρτα
 DraftOrders=Προσχέδια παραγγελιών
@@ -116,12 +126,14 @@ TypeContact_order_supplier_internal_SHIPPING=Representative following-up shippin
 TypeContact_order_supplier_external_BILLING=Supplier invoice contact
 TypeContact_order_supplier_external_SHIPPING=Supplier shipping contact
 TypeContact_order_supplier_external_CUSTOMER=Supplier contact following-up order
-=
+
 Error_COMMANDE_SUPPLIER_ADDON_NotDefined=Constant COMMANDE_SUPPLIER_ADDON not defined
 Error_COMMANDE_ADDON_NotDefined=Constant COMMANDE_ADDON not defined
 Error_FailedToLoad_COMMANDE_SUPPLIER_ADDON_File=Failed to load module file '%s'
 Error_FailedToLoad_COMMANDE_ADDON_File=Failed to load module file '%s'
-=
+Error_OrderNotChecked=Δεν υπάρχουν παραγγελίες στο επιλεγμένο τιμολόγιο
+
+
 # Sources
 OrderSource0=Εμπορική πρόταση
 OrderSource1=Internet
@@ -132,26 +144,25 @@ OrderSource5=Commercial
 OrderSource6=Store
 QtyOrdered=Qty ordered
 AddDeliveryCostLine=Add a delivery cost line indicating the weight of the order
-=
+
 # Documents models
 PDFEinsteinDescription=Ολοκληρωμένο πρότυπο παραγγελίας (λογότυπο...)
 PDFEdisonDescription=Απλό πρότυπο παραγγελίας
-
-
-// START - Lines generated via autotranslator.php tool (2011-06-26 15:35:22).
-// Reference language: en_US -> el_GR
-StatusOrderSentShort=Αποστολή στη διαδικασία
+PDFProformaDescription=Ένα πλήρες προτιμολόγιο (λογότυπο ...)
+# Orders modes
 OrderByMail=Ταχυδρομείο
 OrderByFax=Φαξ
 OrderByEMail=EMail
 OrderByWWW=Online
 OrderByPhone=Τηλέφωνο
-// STOP - Lines generated via autotranslator.php tool (2011-06-26 15:41:22).
 
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 16:06:57).
-// Reference language: en_US -> el_GR
-ShippingExist=Μια αποστολή, υπάρχει
-UnvalidateOrder=Για Unvalidate
-ConfirmUnvalidateOrder=Είστε βέβαιοι ότι θέλετε να επαναφέρετε <b>%s</b> για το καθεστώς του σχεδίου;
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 16:07:17).
+CreateInvoiceForThisCustomer=Τιμολογημένες παραγγελίες
+NoOrdersToInvoice=Δεν υπάρχουν τιμολογημένες παραγγελίες
+CloseProcessedOrdersAutomatically=Χαρακτηρίστε σε «εξέλιξη» όλες τις επιλεγμένες παραγγελίες.
+MenuOrdersToBill2=Παραγγελίες για τιμολόγηση
+OrderCreation=Δημιουργία Παραγγελίας
+Ordered=Παραγγελια
+OrderCreated=Οι παραγγελίες σας έχουν δημιουργηθεί
+OrderFail=Ένα σφάλμα συνέβη κατά τη διάρκεια την δημιουργία τις παραγγελίες
+CreateOrders=Δημιουργία παραγγελιών
+# ToBillSeveralOrderSelectCustomer=To create an invoice for several orders, click first onto customer, then choose "%s".

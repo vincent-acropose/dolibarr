@@ -2,6 +2,7 @@
 /* Copyright (C) 2001-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C)      2014 Charles-Fr BENKE     <charles.fr@benke.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,15 +21,16 @@
 /**
  *	\file       htdocs/product/index.php
  *  \ingroup    product
- *  \brief      Page accueil des produits et services
+ *  \brief      Homepage products and services
  */
 
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 
-$type=isset($_GET["type"])?$_GET["type"]:(isset($_POST["type"])?$_POST["type"]:'');
+$type=GETPOST("type",'int');
 if ($type =='' && !$user->rights->produit->lire) $type='1';	// Force global page on service page only
-if ($type =='' && !$user->rights->service->lire) $type='0';	// Force global page on prpduct page only
+if ($type =='' && !$user->rights->service->lire) $type='0';	// Force global page on product page only
 
 // Security check
 if ($type=='0') $result=restrictedArea($user,'produit');
@@ -66,12 +68,12 @@ llxHeader("",$langs->trans("ProductsAndServices"),$helpurl);
 
 print_fiche_titre($transAreaType);
 
-print '<table border="0" width="100%" class="notopnoleftnoright">';
 
-print '<tr><td valign="top" width="30%" class="notopnoleft">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
+
 
 /*
- * Zone recherche produit/service
+ * Search Area of product/service
  */
 $rowspan=2;
 if (! empty($conf->barcode->enabled)) $rowspan++;
@@ -98,7 +100,7 @@ print "</table></form><br>";
 
 
 /*
- * Nombre de produits et/ou services
+ * Number of products and/or services
  */
 $prodser = array();
 $prodser[0][0]=$prodser[0][1]=$prodser[1][0]=$prodser[1][1]=0;
@@ -110,8 +112,9 @@ $sql.= " GROUP BY p.fk_product_type, p.tosell, p.tobuy";
 $result = $db->query($sql);
 while ($objp = $db->fetch_object($result))
 {
-	$status=1;
-	if (! $objp->tosell && ! $objp->tobuy) $status=0;
+	$status=2;
+	if (! $objp->tosell && ! $objp->tobuy) $status=0;	// To sell OR to buy
+	if ((! $objp->tosell && $objp->tobuy) || ($objp->tosell && ! $objp->tobuy)) $status=1;
 	$prodser[$objp->fk_product_type][$status]=$objp->total;
 }
 
@@ -119,44 +122,111 @@ print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre"><td colspan="2">'.$langs->trans("Statistics").'</td></tr>';
 if (! empty($conf->product->enabled))
 {
-	$statProducts = "<tr $bc[0]>";
+	$statProducts = "<tr ".$bc[0].">";
 	$statProducts.= '<td><a href="liste.php?type=0&amp;tosell=0&amp;tobuy=0">'.$langs->trans("ProductsNotOnSell").'</a></td><td align="right">'.round($prodser[0][0]).'</td>';
 	$statProducts.= "</tr>";
-	$statProducts.= "<tr $bc[1]>";
-	$statProducts.= '<td><a href="liste.php?type=0&amp;tosell=1">'.$langs->trans("ProductsOnSell").'</a></td><td align="right">'.round($prodser[0][1]).'</td>';
+	$statProducts.= "<tr ".$bc[1].">";
+	$statProducts.= '<td><a href="liste.php?type=0">'.$langs->trans("ProductsOnSell").'</a></td><td align="right">'.round($prodser[0][1]).'</td>';
 	$statProducts.= "</tr>";
+	$statProducts.= "<tr ".$bc[0].">";
+	$statProducts.= '<td><a href="liste.php?type=0&amp;tosell=1&amp;tobuy=1">'.$langs->trans("ProductsOnSellAndOnBuy").'</a></td><td align="right">'.round($prodser[0][2]).'</td>';
+	$statProducts.= "</tr>";
+
 }
 if (! empty($conf->service->enabled))
 {
-	$statServices = "<tr $bc[0]>";
+	$statServices = "<tr ".$bc[1].">";
 	$statServices.= '<td><a href="liste.php?type=1&amp;tosell=0&amp;tobuy=0">'.$langs->trans("ServicesNotOnSell").'</a></td><td align="right">'.round($prodser[1][0]).'</td>';
 	$statServices.= "</tr>";
-	$statServices.= "<tr $bc[1]>";
-	$statServices.= '<td><a href="liste.php?type=1&amp;tosell=1">'.$langs->trans("ServicesOnSell").'</a></td><td align="right">'.round($prodser[1][1]).'</td>';
+	$statServices.= "<tr ".$bc[0].">";
+	$statServices.= '<td><a href="liste.php?type=1">'.$langs->trans("ServicesOnSell").'</a></td><td align="right">'.round($prodser[1][1]).'</td>';
 	$statServices.= "</tr>";
+	$statServices.= "<tr ".$bc[1].">";
+	$statServices.= '<td><a href="liste.php?type=1&amp;tosell=1&amp;tobuy=1">'.$langs->trans("ServicesOnSellAndOnBuy").'</a></td><td align="right">'.round($prodser[1][2]).'</td>';
+	$statServices.= "</tr>";
+
 }
 $total=0;
 if ($type == '0')
 {
 	print $statProducts;
-	$total=round($prodser[0][0])+round($prodser[0][1]);
+	$total=round($prodser[0][0])+round($prodser[0][1])+round($prodser[0][2]);
 }
 else if ($type == '1')
 {
 	print $statServices;
-	$total=round($prodser[1][0])+round($prodser[1][1]);
+	$total=round($prodser[1][0])+round($prodser[1][1])+round($prodser[1][2]);
 }
 else
 {
 	print $statProducts.$statServices;
-	$total=round($prodser[1][0])+round($prodser[1][1])+round($prodser[0][0])+round($prodser[0][1]);
+	$total=round($prodser[1][0])+round($prodser[1][1])+round($prodser[1][2])+round($prodser[0][0])+round($prodser[0][1])+round($prodser[0][2]);
 }
 print '<tr class="liste_total"><td>'.$langs->trans("Total").'</td><td align="right">';
 print $total;
 print '</td></tr>';
 print '</table>';
 
-print '</td><td valign="top" width="70%" class="notopnoleftnoright">';
+if (! empty($conf->categorie->enabled) && ! empty($conf->global->CATEGORY_GRAPHSTATS_ON_PRODUCTS))
+{
+	require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
+	print '<br>';
+	print '<table class="noborder" width="100%">';
+	print '<tr class="liste_titre"><th colspan="2">'.$langs->trans("Categories").'</th></tr>';
+	print '<tr><td align="center">';
+	$sql = "SELECT c.label, count(*) as nb";
+	$sql.= " FROM ".MAIN_DB_PREFIX."categorie_product as cs";
+	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."categorie as c ON cs.fk_categorie = c.rowid";
+	$sql.= " WHERE c.type = 0";
+	$sql.= " AND c.entity IN (".getEntity('category',1).")";
+	$sql.= " GROUP BY c.label";
+	$total=0;
+	$result = $db->query($sql);
+	if ($result)
+	{
+		$num = $db->num_rows($result);
+		$i=0;
+		if (! empty($conf->use_javascript_ajax))
+		{
+			$dataseries=array();
+			$rest=0;
+			$nbmax=10;
+			while ($i < $num)
+			{
+				$obj = $db->fetch_object($result);
+				if ($i < $nbmax)
+					$dataseries[]=array('label'=>$obj->label,'data'=>round($obj->nb));
+				else
+					$rest+=$obj->nb;
+				$total+=$obj->nb;
+				$i++;
+			}
+			if ($i > $nbmax)
+				$dataseries[]=array('label'=>$langs->trans("Other"),'data'=>round($rest));
+			$data=array('series'=>$dataseries);
+			dol_print_graph('statscategproduct',300,180,$data,1,'pie',0);
+		}
+		else
+		{
+			$var=true;
+			while ($i < $num)
+			{
+				$obj = $db->fetch_object($result);
+				$var=!$var;
+				print '<tr $bc[$var]><td>'.$obj->label.'</td><td>'.$obj->nb.'</td></tr>';
+				$total+=$obj->nb;
+				$i++;
+			}
+		}
+	}
+	print '</td></tr>';
+	print '<tr class="liste_total"><td>'.$langs->trans("Total").'</td><td align="right">';
+	print $total;
+	print '</td></tr>';
+	print '</table>';
+}
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
+
 
 /*
  * Last modified products
@@ -215,7 +285,7 @@ if ($result)
 
 			$var=!$var;
 			print "<tr ".$bc[$var].">";
-			print '<td nowrap="nowrap">';
+			print '<td class="nowrap">';
 			$product_static->id=$objp->rowid;
 			$product_static->ref=$objp->ref;
 			$product_static->type=$objp->fk_product_type;
@@ -233,10 +303,10 @@ if ($result)
     			else print price($objp->price).' '.$langs->trans("HT");
     			print '</td>';
 			}
-			print '<td align="right" nowrap="nowrap">';
+			print '<td align="right" class="nowrap">';
 			print $product_static->LibStatut($objp->tosell,5,0);
 			print "</td>";
-            print '<td align="right" nowrap="nowrap">';
+            print '<td align="right" class="nowrap">';
             print $product_static->LibStatut($objp->tobuy,5,1);
             print "</td>";
 			print "</tr>\n";
@@ -253,9 +323,126 @@ else
 	dol_print_error($db);
 }
 
-print '</td></tr></table>';
+
+// TODO Move this into a page that should be available into menu "accountancy - report - turnover - per quarter"
+// Also method used for counting must provide the 2 possible methods like done by all other reports into menu "accountancy - report - turnover":
+// "commitment engagment" method and "cash accounting" method
+if ($conf->global->MAIN_FEATURES_LEVEL)
+{
+	if (! empty($conf->product->enabled)) activitytrim(0);
+	if (! empty($conf->service->enabled)) activitytrim(1);
+}
+
+
+print '</div></div></div>';
 
 llxFooter();
 
 $db->close();
-?>
+
+
+
+
+function activitytrim($product_type)
+{
+	global $conf,$langs,$db;
+
+	// We display the last 3 years
+	$yearofbegindate=date('Y',dol_time_plus_duree(time(), -3, "y"));
+
+	// breakdown by quarter
+	$sql = "SELECT DATE_FORMAT(p.datep,'%Y') as annee, DATE_FORMAT(p.datep,'%m') as mois, SUM(fd.total_ht) as Mnttot";
+	$sql.= " FROM ".MAIN_DB_PREFIX."societe as s,".MAIN_DB_PREFIX."facture as f, ".MAIN_DB_PREFIX."facturedet as fd";
+	$sql.= " , ".MAIN_DB_PREFIX."paiement as p,".MAIN_DB_PREFIX."paiement_facture as pf";
+	$sql.= " WHERE f.fk_soc = s.rowid";
+	$sql.= " AND f.rowid = fd.fk_facture";
+	$sql.= " AND pf.fk_facture = f.rowid";
+	$sql.= " AND pf.fk_paiement= p.rowid";
+	$sql.= " AND fd.product_type=".$product_type;
+	$sql.= " AND s.entity = ".$conf->entity;
+	$sql.= " AND p.datep >= '".$db->idate(dol_get_first_day($yearofbegindate),1)."'";
+	$sql.= " GROUP BY annee, mois ";
+	$sql.= " ORDER BY annee, mois ";
+
+	$result = $db->query($sql);
+	if ($result)
+	{
+		$tmpyear=$beginyear;
+		$trim1=0;
+		$trim2=0;
+		$trim3=0;
+		$trim4=0;
+		$lgn = 0;
+		$num = $db->num_rows($result);
+
+		if ($num > 0 )
+		{
+			print '<br>';
+			print '<table class="noborder" width="75%">';
+
+			if ($product_type==0)
+				print '<tr class="liste_titre"><td  align=left>'.$langs->trans("ProductSellByQuarterHT").'</td>';
+			else
+				print '<tr class="liste_titre"><td  align=left>'.$langs->trans("ServiceSellByQuarterHT").'</td>';
+			print '<td align=right>'.$langs->trans("Quarter1").'</td>';
+			print '<td align=right>'.$langs->trans("Quarter2").'</td>';
+			print '<td align=right>'.$langs->trans("Quarter3").'</td>';
+			print '<td align=right>'.$langs->trans("Quarter4").'</td>';
+			print '<td align=right>'.$langs->trans("Total").'</td>';
+			print '</tr>';
+		}
+		$i = 0;
+
+		while ($i < $num)
+		{
+			$objp = $db->fetch_object($result);
+			if ($tmpyear != $objp->annee)
+			{
+				if ($trim1+$trim2+$trim3+$trim4 > 0)
+				{
+					print '<tr ><td align=left>'.$tmpyear.'</td>';
+					print '<td align=right>'.price($trim1).'</td>';
+					print '<td align=right>'.price($trim2).'</td>';
+					print '<td align=right>'.price($trim3).'</td>';
+					print '<td align=right>'.price($trim4).'</td>';
+					print '<td align=right>'.price($trim1+$trim2+$trim3+$trim4).'</td>';
+					print '</tr>';
+					$lgn++;
+				}
+				// We go to the following year
+				$tmpyear = $objp->annee;
+				$trim1=0;
+				$trim2=0;
+				$trim3=0;
+				$trim4=0;
+			}
+
+			if ($objp->mois == "01" || $objp->mois == "02" || $objp->mois == "03")
+				$trim1 += $objp->Mnttot;
+
+			if ($objp->mois == "04" || $objp->mois == "05" || $objp->mois == "06")
+				$trim2 += $objp->Mnttot;
+
+			if ($objp->mois == "07" || $objp->mois == "08" || $objp->mois == "09")
+				$trim3 += $objp->Mnttot;
+
+			if ($objp->mois == "10" || $objp->mois == "11" || $objp->mois == "12")
+				$trim4 += $objp->Mnttot;
+
+			$i++;
+		}
+		if ($trim1+$trim2+$trim3+$trim4 > 0)
+		{
+			print '<tr ><td align=left>'.$tmpyear.'</td>';
+			print '<td align=right>'.price($trim1).'</td>';
+			print '<td align=right>'.price($trim2).'</td>';
+			print '<td align=right>'.price($trim3).'</td>';
+			print '<td align=right>'.price($trim4).'</td>';
+			print '<td align=right>'.price($trim1+$trim2+$trim3+$trim4).'</td>';
+			print '</tr>';
+		}
+		if ($num > 0 )
+			print '</table>';
+	}
+}
+

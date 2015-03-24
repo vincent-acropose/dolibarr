@@ -60,7 +60,6 @@ llxHeader('',$langs->trans("ListOfFees"),$help_url);
 
 
 
-
 $totalnb=0;
 $sql = "SELECT count(d.rowid) as nb, sum(d.km) as km, d.type";
 $sql.= " FROM ".MAIN_DB_PREFIX."deplacement as d";
@@ -90,13 +89,11 @@ if ($result)
 
 print_fiche_titre($langs->trans("ExpensesArea"));
 
-print '<table width="100%" class="notopnoleftnoright">';
 
-// Left area
-print '<tr><td class="notopnoleft" width="30%" valign="top">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
 
 
-
+// Statistics
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print '<td colspan="4">'.$langs->trans("Statistics").'</td>';
@@ -124,14 +121,15 @@ print '</tr>';
 print '</table>';
 
 
-// Right area
-print '</td><td valign="top">';
+
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
+
 
 $max=10;
 
 $langs->load("boxes");
 
-$sql = "SELECT u.rowid as uid, u.name, u.firstname, d.rowid, d.dated as date, d.tms as dm, d.km, d.fk_statut";
+$sql = "SELECT u.rowid as uid, u.lastname, u.firstname, d.rowid, d.dated as date, d.tms as dm, d.km, d.fk_statut";
 $sql.= " FROM ".MAIN_DB_PREFIX."deplacement as d, ".MAIN_DB_PREFIX."user as u";
 if (!$user->rights->societe->client->voir && !$user->societe_id) $sql.= ", ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 $sql.= " WHERE u.rowid = d.fk_user";
@@ -168,7 +166,7 @@ if ($result)
             $deplacementstatic->ref=$obj->rowid;
             $deplacementstatic->id=$obj->rowid;
             $userstatic->id=$obj->uid;
-            $userstatic->lastname=$obj->name;
+            $userstatic->lastname=$obj->lastname;
             $userstatic->firstname=$obj->firstname;
             print '<tr '.$bc[$var].'>';
             print '<td>'.$deplacementstatic->getNomUrl(1).'</td>';
@@ -191,7 +189,9 @@ if ($result)
 else dol_print_error($db);
 
 
+print '</div></div></div>';
+
+
 llxFooter();
 
 $db->close();
-?>

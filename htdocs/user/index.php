@@ -41,6 +41,7 @@ if ($user->societe_id > 0)
 
 $sall=GETPOST('sall','alpha');
 $search_user=GETPOST('search_user','alpha');
+$search_statut=GETPOST('search_statut','alpha');
 
 $sortfield = GETPOST('sortfield','alpha');
 $sortorder = GETPOST('sortorder','alpha');
@@ -55,17 +56,18 @@ if (! $sortorder) $sortorder="ASC";
 
 $userstatic=new User($db);
 $companystatic = new Societe($db);
+$form = new Form($db);
 
 
 /*
  * View
  */
 
-llxHeader();
+llxHeader('',$langs->trans("ListOfUsers"));
 
-print_fiche_titre($langs->trans("ListOfUsers"));
+print_fiche_titre($langs->trans("ListOfUsers"), '<form action="'.DOL_URL_ROOT.'/user/hierarchy.php" method="POST"><input type="submit" class="button" style="width:120px" name="viewcal" value="'.dol_escape_htmltag($langs->trans("HierarchicView")).'"></form>');
 
-$sql = "SELECT u.rowid, u.name, u.firstname, u.admin, u.fk_societe, u.login,";
+$sql = "SELECT u.rowid, u.lastname, u.firstname, u.admin, u.fk_societe, u.login,";
 $sql.= " u.datec,";
 $sql.= " u.tms as datem,";
 $sql.= " u.datelastlogin,";
@@ -79,14 +81,18 @@ if(! empty($conf->multicompany->enabled) && $conf->entity == 1 && (! empty($conf
 }
 else
 {
-	$sql.= " WHERE u.entity IN (0,".$conf->entity.")";
+	$sql.= " WHERE u.entity IN (".getEntity('user',1).")";
 }
 if (! empty($socid)) $sql.= " AND u.fk_societe = ".$socid;
 if (! empty($search_user))
 {
-    $sql.= " AND (u.login LIKE '%".$db->escape($search_user)."%' OR u.name LIKE '%".$db->escape($search_user)."%' OR u.firstname LIKE '%".$db->escape($search_user)."%')";
+    $sql.= " AND (u.login LIKE '%".$db->escape($search_user)."%' OR u.lastname LIKE '%".$db->escape($search_user)."%' OR u.firstname LIKE '%".$db->escape($search_user)."%')";
 }
-if ($sall) $sql.= " AND (u.login LIKE '%".$db->escape($sall)."%' OR u.name LIKE '%".$db->escape($sall)."%' OR u.firstname LIKE '%".$db->escape($sall)."%' OR u.email LIKE '%".$db->escape($sall)."%' OR u.note LIKE '%".$db->escape($sall)."%')";
+if ($search_statut != '' && $search_statut >= 0)
+{
+	$sql.= " AND (u.statut=".$search_statut.")";
+}
+if ($sall) $sql.= " AND (u.login LIKE '%".$db->escape($sall)."%' OR u.lastname LIKE '%".$db->escape($sall)."%' OR u.firstname LIKE '%".$db->escape($sall)."%' OR u.email LIKE '%".$db->escape($sall)."%' OR u.note LIKE '%".$db->escape($sall)."%')";
 $sql.=$db->order($sortfield,$sortorder);
 
 $result = $db->query($sql);
@@ -95,16 +101,36 @@ if ($result)
     $num = $db->num_rows($result);
     $i = 0;
 
-    $param="search_user=$search_user&amp;sall=$sall";
+    print '<form method="POST" id="searchFormList" action="'.$_SERVER["PHP_SELF"].'">'."\n";
+
+    $param="search_user=".$search_user."&sall=".$sall;
+    $param.="&search_statut=".$search_statut;
+
     print '<table class="noborder" width="100%">';
     print '<tr class="liste_titre">';
     print_liste_field_titre($langs->trans("Login"),"index.php","u.login",$param,"","",$sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("LastName"),"index.php","u.name",$param,"","",$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("LastName"),"index.php","u.lastname",$param,"","",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("FirstName"),"index.php","u.firstname",$param,"","",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Company"),"index.php","u.fk_societe",$param,"","",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("DateCreation"),"index.php","u.datec",$param,"",'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("LastConnexion"),"index.php","u.datelastlogin",$param,"",'align="center"',$sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("Status"),"index.php","u.statut",$param,"",'align="right"',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Status"),"index.php","u.statut",$param,"",'align="center"',$sortfield,$sortorder);
+    print '<td width="1%">&nbsp;</td>';
+    print "</tr>\n";
+
+    //SearchBar
+    print '<tr class="liste_titre">';
+    print '<td colspan="6">&nbsp;</td>';
+
+	// Status
+    print '<td>';
+    print $form->selectarray('search_statut', array('-1'=>'','0'=>$langs->trans('Disabled'),'1'=>$langs->trans('Enabled')),$search_statut);
+    print '</td>';
+
+    print '<td class="liste_titre" align="right">';
+    print '<input class="liste_titre" type="image" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+    print '</td>';
+
     print "</tr>\n";
     $var=True;
     while ($i < $num)
@@ -112,7 +138,7 @@ if ($result)
         $obj = $db->fetch_object($result);
         $var=!$var;
 
-        print "<tr $bc[$var]>";
+        print "<tr ".$bc[$var].">";
         print '<td><a href="fiche.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowUser"),"user").' '.$obj->login.'</a>';
         if (! empty($conf->multicompany->enabled) && $obj->admin && ! $obj->entity)
         {
@@ -123,7 +149,7 @@ if ($result)
         	print img_picto($langs->trans("Administrator"),'star');
         }
         print '</td>';
-        print '<td>'.ucfirst($obj->name).'</td>';
+        print '<td>'.ucfirst($obj->lastname).'</td>';
         print '<td>'.ucfirst($obj->firstname).'</td>';
         print "<td>";
         if ($obj->fk_societe)
@@ -161,18 +187,20 @@ if ($result)
         print '</td>';
 
         // Date creation
-        print '<td nowrap="nowrap" align="center">'.dol_print_date($db->jdate($obj->datec),"dayhour").'</td>';
+        print '<td class="nowrap" align="center">'.dol_print_date($db->jdate($obj->datec),"dayhour").'</td>';
 
         // Date last login
-        print '<td nowrap="nowrap" align="center">'.dol_print_date($db->jdate($obj->datelastlogin),"dayhour").'</td>';
+        print '<td class="nowrap" align="center">'.dol_print_date($db->jdate($obj->datelastlogin),"dayhour").'</td>';
 
 		// Statut
 		$userstatic->statut=$obj->statut;
-        print '<td width="100" align="right">'.$userstatic->getLibStatut(5).'</td>';
+                print '<td width="100" align="center">'.$userstatic->getLibStatut(5).'</td>';
+        print '<td>&nbsp;</td>';
         print "</tr>\n";
         $i++;
     }
     print "</table>";
+    print "</form>\n";
     $db->free($result);
 }
 else
@@ -183,4 +211,3 @@ else
 llxFooter();
 
 $db->close();
-?>

@@ -81,9 +81,14 @@ function member_prepare_head($object)
     // $this->tabs = array('entity:-tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to remove a tab
     complete_head_from_modules($conf,$langs,$object,$head,$h,'member');
 
+    $nbNote = 0;
+    if(!empty($object->note)) $nbNote++;
+    if(!empty($object->note_private)) $nbNote++;
+    if(!empty($object->note_public)) $nbNote++;
     $head[$h][0] = DOL_URL_ROOT.'/adherents/note.php?id='.$object->id;
 	$head[$h][1] = $langs->trans("Note");
 	$head[$h][2] = 'note';
+    if($nbNote > 0) $head[$h][1].= ' ('.$nbNote.')';
 	$h++;
 
     $head[$h][0] = DOL_URL_ROOT.'/adherents/document.php?id='.$object->id;
@@ -116,7 +121,7 @@ function member_admin_prepare_head()
     $head = array();
 
     $head[$h][0] = DOL_URL_ROOT.'/adherents/admin/adherent.php';
-    $head[$h][1] = $langs->trans("Miscellanous");
+    $head[$h][1] = $langs->trans("Miscellaneous");
     $head[$h][2] = 'general';
     $h++;
 
@@ -127,8 +132,13 @@ function member_admin_prepare_head()
     complete_head_from_modules($conf,$langs,'',$head,$h,'member_admin');
 
     $head[$h][0] = DOL_URL_ROOT.'/adherents/admin/adherent_extrafields.php';
-    $head[$h][1] = $langs->trans("ExtraFields");
+    $head[$h][1] = $langs->trans("ExtraFieldsMember");
     $head[$h][2] = 'attributes';
+    $h++;
+
+    $head[$h][0] = DOL_URL_ROOT.'/adherents/admin/adherent_type_extrafields.php';
+    $head[$h][1] = $langs->trans("ExtraFieldsMemberType");
+    $head[$h][2] = 'attributes_type';
     $h++;
 
     $head[$h][0] = DOL_URL_ROOT.'/adherents/admin/public.php';
@@ -164,6 +174,11 @@ function member_stats_prepare_head($object)
     $head[$h][1] = $langs->trans("Country");
     $head[$h][2] = 'statscountry';
     $h++;
+    
+    $head[$h][0] = DOL_URL_ROOT.'/adherents/stats/geo.php?mode=memberbyregion';
+    $head[$h][1] = $langs->trans("Region");
+    $head[$h][2] = 'statsregion';
+    $h++;
 
     $head[$h][0] = DOL_URL_ROOT.'/adherents/stats/geo.php?mode=memberbystate';
     $head[$h][1] = $langs->trans("State");
@@ -190,4 +205,3 @@ function member_stats_prepare_head($object)
 
     return $head;
 }
-?>

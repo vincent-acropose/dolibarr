@@ -117,7 +117,7 @@ if (file_exists($fullpathselecteddir))
     	        // Loop on all database entries (sqltree) to find the one matching the subdir found into dir to scan
 		        foreach($sqltree as $key => $tmpval)
 		        {
-    	            //print "-- key=".$key." - ".$val['fullrelativename']." vs ".(($selecteddir != '/'?$selecteddir.'/':'').$file).'<br>';
+    	            //print "-- key=".$key." - ".$tmpval['fullrelativename']." vs ".(($selecteddir != '/'?$selecteddir.'/':'').$file)."<br>\n";
 		        	if ($tmpval['fullrelativename'] == (($selecteddir != '/'?$selecteddir.'/':'').$file))		// We found equivalent record into database
 		            {
 		                $val=$tmpval;
@@ -207,6 +207,7 @@ if (file_exists($fullpathselecteddir))
     		// Enable jquery handlers on new generated HTML objects
             print '<script type="text/javascript">';
             print 'jQuery(".classfortooltip").tipTip({ maxWidth: "600px", edgeOffset: 10, delay: 50, fadeIn: 50, fadeOut: 50});';
+			// TODO Remove this. Is replaced with function as 3rd parameter of fileTree
             print 'jQuery(".fmdirlia").click(function(e) {
             			id=jQuery(this).attr(\'id\').substr(12);
             			jQuery("#formuserfile_section_dir").val(jQuery(this).attr(\'rel\'));
@@ -221,10 +222,9 @@ if (file_exists($fullpathselecteddir))
     else print "PermissionDenied";
 }
 
-// This ajax service is called only when a directory $selecteddir is opened but not closed.
+// This ajax service is called only when a directory $selecteddir is opened but not when closed.
 //print '<script language="javascript">';
 //print "loadandshowpreview('".dol_escape_js($selecteddir)."');";
 //print '</script>';
 
 if (is_object($db)) $db->close();
-?>

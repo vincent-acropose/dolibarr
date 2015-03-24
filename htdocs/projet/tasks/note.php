@@ -52,6 +52,8 @@ if ($id > 0 || ! empty($ref))
 	{
 		$projectstatic->fetch($object->fk_project);
 		if (! empty($projectstatic->socid)) $projectstatic->societe->fetch($projectstatic->socid);
+
+		$object->project = dol_clone($projectstatic);
 	}
 	else
 	{
@@ -78,25 +80,14 @@ if (! empty($project_ref) && ! empty($withproject))
 	}
 }
 
-$permission=($user->rights->projet->creer || $user->rights->projet->all->creer);
+$permissionnote=($user->rights->projet->creer || $user->rights->projet->all->creer);
 
 
 /*
  * Actions
  */
 
-if ($action == 'setnote_public' && ! empty($permission))
-{
-    $result=$object->update_note_public(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES));
-    if ($result < 0) dol_print_error($db,$object->error);
-}
-
-else if ($action == 'setnote_private' && ! empty($permission))
-{
-    $result=$object->update_note(dol_html_entity_decode(GETPOST('note_private'), ENT_QUOTES));
-    if ($result < 0) dol_print_error($db,$object->error);
-}
-
+include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';
 
 
 /*
@@ -142,7 +133,7 @@ if ($object->id > 0)
 		print '<tr><td>'.$langs->trans("Label").'</td><td>'.$projectstatic->title.'</td></tr>';
 
 		// Company
-		print '<tr><td>'.$langs->trans("Company").'</td><td>';
+		print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
 		if (! empty($projectstatic->societe->id)) print $projectstatic->societe->getNomUrl(1);
 		else print '&nbsp;';
 		print '</td>';
@@ -156,6 +147,16 @@ if ($object->id > 0)
 
 		// Statut
 		print '<tr><td>'.$langs->trans("Status").'</td><td>'.$projectstatic->getLibStatut(4).'</td></tr>';
+
+	   	// Date start
+		print '<tr><td>'.$langs->trans("DateStart").'</td><td>';
+		print dol_print_date($projectstatic->date_start,'day');
+		print '</td></tr>';
+
+		// Date end
+		print '<tr><td>'.$langs->trans("DateEnd").'</td><td>';
+		print dol_print_date($projectstatic->date_end,'day');
+		print '</td></tr>';
 
 		print '</table>';
 
@@ -180,7 +181,7 @@ if ($object->id > 0)
 	    $object->next_prev_filter=" fk_projet in (".$projectsListId.")";
 	}
 	else $object->next_prev_filter=" fk_projet = ".$projectstatic->id;
-	print $form->showrefnav($object,'id',$linkback,1,'rowid','ref','',$param);
+	print $form->showrefnav($object,'ref',$linkback,1,'ref','ref','',$param);
 	print '</td></tr>';
 
 	// Label
@@ -194,7 +195,7 @@ if ($object->id > 0)
 		print '</td></tr>';
 
 		// Third party
-		print '<tr><td>'.$langs->trans("Company").'</td><td>';
+		print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
 		if ($projectstatic->societe->id > 0) print $projectstatic->societe->getNomUrl(1);
 		else print'&nbsp;';
 		print '</td></tr>';
@@ -214,4 +215,3 @@ if ($object->id > 0)
 
 llxFooter();
 $db->close();
-?>

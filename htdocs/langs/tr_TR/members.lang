@@ -1,23 +1,16 @@
-﻿/*
- * Language code: tr_TR
- * Manually generated
- * Generation date 2012-07-24 12:07:26
- */
-
-// START - Lines generated manually (2012-07-24 12:07:26).
-// Reference language: en_US->tr_TR - members
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - members
 MembersArea=Üye alanı
 PublicMembersArea=Genel üye alanı
 MemberCard=Üye kartı
-SubscriptionCard=Abonelik kartı
+SubscriptionCard=Abone kartı
 Member=Üye
 Members=Üyeler
 MemberAccount=Üye girişi
 ShowMember=Üye kartı göster
 UserNotLinkedToMember=Kullanıcı herhangi bir üyeye bağlı değil
+ThirdpartyNotLinkedToMember=Üçüncü parti bir üyeye bağlantılı değil
 MembersTickets=Üye Biletleri
-FundationMembers=Kurum üyeleri
+FundationMembers=Dernek üyeleri
 Attributs=Öznitelikleri
 ErrorMemberTypeNotDefined=Üye türü tanımlanmamış
 ListOfPublicMembers=Genel üyelerinin listesi
@@ -31,7 +24,7 @@ SetLinkToUser=Bir Dolibarr kullanıcısına bağlantı
 SetLinkToThirdParty=Bir Dolibarr üçüncü partisine bağlantı
 MembersCards=Üye kartvizitleri
 MembersList=Üyelerin listesi
-(MembersListToValid=Taslak üye listesi (doğrulaacak)
+MembersListToValid=Taslak üye listesi (doğrulanacak)
 MembersListValid=Geçerli üye listesi
 MembersListUpToDate=Güncel abonelikleri ile geçerli üye listesi
 MembersListNotUpToDate=Abonelik tarihleri geçmiş geçerli üye listesi
@@ -83,7 +76,7 @@ EditMember=Üye düzenle
 SubscriptionEndDate=Abonelik bitiş tarihi
 MembersTypeSetup=Üye türü kurulumu
 NewSubscription=Yeni abonelik
-NewSubscriptionDesc=Bu form aboneliğinizi kuruma yeni bir üye olarak kaydetmenize olanak verir. Abonelik yenilemek istiyorsanız (Zaten üyeyseniz), kurum yönetimine %s epostası ile başvurun.
+NewSubscriptionDesc=Bu form aboneliğinizi derneğe yeni bir üye olarak kaydetmenize olanak verir. Abonelik yenilemek istiyorsanız (Zaten üyeyseniz), dernek yönetimine %s epostası ile başvurun.
 Subscription=Abonelik
 Subscriptions=Abonelikler
 SubscriptionLate=Gecikmiş
@@ -93,7 +86,6 @@ SubscriptionNotReceivedShort=Hiç alınmadı
 ListOfSubscriptions=Abonelikler listesi
 SendCardByMail=Kartı Eposta ile gönder
 AddMember=Üye ekle
-MemberType=Üyelik türü
 NoTypeDefinedGoToSetup=Hiçbir üyelik türü tanımlanmamıştır. Kurulum  - Üye türlerine git
 NewMemberType=Yeni üye türü
 WelcomeEMail=Hoşgeldiniz e-postası
@@ -117,20 +109,15 @@ ConfirmValidateMember=Bu üyeliği doğrulamak istediğinizden emin misiniz?
 FollowingLinksArePublic=Aşağıdaki bağlantılar açık sayfalar olup herhangi bir Dolibarr izni ile korunmamaktadır. Onlar biçimlendirilmiş sayfalar olmayıp üye veritabanının nasıl listelendiğine örnek olarak verilmiştir.
 PublicMemberList=Genel üye listesi
 BlankSubscriptionForm=Genel oto-abonelik formu
-"BlankSubscriptionFormDesc=Dolibarr size dış ziyaretçilerin kurum üyeliği istemesine izin veren genel bir URL sağlar. Eğer bir çevrimiçi ödeme modülü etkinse ayrıca bir ödeme formu da otomatik olarak sağlanacaktır.
-"
-"EnablePublicSubscriptionForm=Genel oto-üyelik formunu etkinleştirin
-"
+BlankSubscriptionFormDesc=Dolibarr size, dış ziyaretçilerin derneğe üye olmayı istemelerini sağlayan genel bir URL sağlayabilir. Eğer çevrimiçi bir ödeme modülü etkinse, bir ödeme formu kendiliğinden sağlanacaktır.
+EnablePublicSubscriptionForm=Genel oto-üyelik formunu etkinleştir
 MemberPublicLinks=Genel bağlantılar/sayfalar
 ExportDataset_member_1=Üyeler ve abonelikleri
-"ImportDataset_member_1=Üyeler
-"
+ImportDataset_member_1=Üye
 LastMembers=Son % s üye
-"LastMembersModified=Son değiştirilen % s üye olarak
-"
+LastMembersModified=Son değiştirilen %s üye
 LastSubscriptionsModified=Sondeğiştirilen  %s abonelik
 AttributeName=Öznitelik adı
-FieldEdition=%s Alanının düzenlenmesi
 String=Söz dizesi
 Text=Metin
 Int=Int
@@ -142,6 +129,8 @@ AddSubscription=Abonelik ekle
 ShowSubscription=Abonelik göster
 MemberModifiedInDolibarr=Üyelik Dolibarr'da değiştirilmiş
 SendAnEMailToMember=Üyelere bilgi e-postası gönder
+DescADHERENT_AUTOREGISTER_NOTIF_MAIL_SUBJECT=Bir ziyaretçinin oto-kayıt yapması durumunda alınacak e-postanın konusu
+DescADHERENT_AUTOREGISTER_NOTIF_MAIL=Bir ziyaretçinin oto-kayıt yapması durumunda alınacak e-posta
 DescADHERENT_AUTOREGISTER_MAIL_SUBJECT=Üye oto-abonelik Eposta konusu
 DescADHERENT_AUTOREGISTER_MAIL=Üye oto-aboneliği Epostası
 DescADHERENT_MAIL_VALID_SUBJECT=Üye doğrulama Epostası konusu
@@ -152,20 +141,21 @@ DescADHERENT_MAIL_RESIL_SUBJECT=Üyelik sonlandırma Epostası konusu
 DescADHERENT_MAIL_RESIL=Üyelik sonlandırma Epostası
 DescADHERENT_MAIL_FROM=Otomatik epostalar için Eposta gönderen
 DescADHERENT_ETIQUETTE_TYPE=Etiket sayfası biçimi
+DescADHERENT_ETIQUETTE_TEXT=Üye adres sayfalarına yazılan metin
 DescADHERENT_CARD_TYPE=Kart sayfası biçimi
 DescADHERENT_CARD_HEADER_TEXT=Üyelik kartlarının en üstüne basılacak metin
 DescADHERENT_CARD_TEXT=Üyelik kartlarına basılacak metin (sola yanaşık)
 DescADHERENT_CARD_TEXT_RIGHT=Üyelik kartlarına basılacak metin (sağa yanaşık)
 DescADHERENT_CARD_FOOTER_TEXT=Üyelik kartlarının en altına basılacak metin
-DescADHERENT_MAILMAN_LISTS=Yeni üyelerin otomatik kayıt listesi (leri) (virgül ile ayrılmış)
-GlobalConfigUsedIfNotDefined=Tanımlanan metin yoksa kurum modülü kurulumunda tanımlanan metin kullanılacaktır
+GlobalConfigUsedIfNotDefined=Tanımlanan metin yoksa Dernek modülü kurulumunda tanımlanan metin kullanılacaktır
 MayBeOverwrited=Bu metin üyenin türü için tanımlanan değerin üzerine yazılabilir
 ShowTypeCard='%s' türünü göster
 HTPasswordExport=htpassword dosyası oluşturulması
 NoThirdPartyAssociatedToMember=Bu üye ile ilintili üçüncü parti yok
 ThirdPartyDolibarr=Dolibarr üçüncü partisi
-MembersAndSubscriptions=Üyeler ve abonelikler
+MembersAndSubscriptions= Üyeler ve abonelikler
 MoreActions=Kayıt üzerinde tamamlayıcı işlem
+MoreActionsOnSubscription=Tamamlayıcı işlem, bir abonelik kaydı yapılırken varsayılan olarak önerilen
 MoreActionBankDirect=Hesap üzerinde doğrudan bir işlem kaydı oluşturun
 MoreActionBankViaInvoice=Hesaba bir fatura ve ödeme oluştur
 MoreActionInvoiceOnly=Ödeme yapılmamış bir fatura oluştur
@@ -177,10 +167,11 @@ DocForLabels=Adres çizelgeleri oluştur (Çıkış formatı için gerçek ayar 
 SubscriptionPayment=Abonelik ödemesi
 LastSubscriptionDate=Son abonelik tarihi
 LastSubscriptionAmount=Son abonelik tutarı
-"MembersStatisticsByCountries=Ülkelere göre üyelik istatistikleri
-"
+MembersStatisticsByCountries=Ülkeye göre üye istatistikleri
 MembersStatisticsByState=Eyalete/ile göre üyelik istatistikleri
 MembersStatisticsByTown=İlçelere göre üyelik istatistikleri
+MembersStatisticsByRegion=Bölgeye göre üye istatistikleri
+MemberByRegion=Bölgeye göre üyeler
 NbOfMembers=Üye sayısı
 NoValidatedMemberYet=Doğrulanmamış üye bulunmadı
 MembersByCountryDesc=Bu ekran ülkelere göre üyelik istatisklerini görüntüler. Grafik eğer internet hizmeti çalışıyor ise sadece  google çevrimiçi grafik hizmetince sağlanır.
@@ -197,7 +188,7 @@ NewMemberForm=Yeni üyelik formu
 SubscriptionsStatistics=Abonelik istatistikleri
 NbOfSubscriptions=Abonelik sayısı
 AmountOfSubscriptions=Abonelik tutarı
-TurnoverOrBudget=Ciro (bir firma için) veya Bütçe (bir kurum için)
+TurnoverOrBudget=Ciro (bir firma için) veya Bütçe (bir dernek için)
 DefaultAmount=Varsayılan abonelik tutarı
 CanEditAmount=Ziyaretçi kendi abonelik tutarını seçebeilir/düzenleyebilir
 MEMBER_NEWFORM_PAYONLINE=Entegre çevrimiçi ödeme sayfasına atla
@@ -205,5 +196,10 @@ Associations=Dernekler
 Collectivités=Kurumlar
 Particuliers=Kişisel
 Entreprises=Firmalar
-"DOLIBARRFOUNDATION_PAYMENT_FORM=Banka havalesi ile abonelik ödemesi yapmak için, <a target=""_blank"" href=""http://wiki.dolibarr.org/index.php/Subscribe#To_subscribe_making_a_bank_transfer"">http://wiki.dolibarr.org/index.php/Subscribe</a> sayfasına bakın . <br> Kredi Kartı veya Paypal ile ödeme yapmak için, bu sayfanın alt kısmındaki düğmeyi tıklatın. <br>
-"
+DOLIBARRFOUNDATION_PAYMENT_FORM=Banka havalesi ile abonelik ödemenizi yapmak için bu sayfaya bakın <a target="_blank" href="http://wiki.dolibarr.org/index.php/Subscribe#To_subscribe_making_a_bank_transfer">http://wiki.dolibarr.org/index.php/Subscribe</a>.<br>Krdei Kart ya da Paypal ile ödemek için bu sayfanın altındaki düğmeye tıklayın.<br>
+ByProperties=Özelliklere göre
+MembersStatisticsByProperties=Özelliklere göre üye istatistikleri
+MembersByNature=Doğal üyeler
+VATToUseForSubscriptions=Abonelikler için kullanılacak KDV oranı
+NoVatOnSubscription=Abonelikler için KDV yok
+MEMBER_PAYONLINE_SENDEMAIL=Dolibarr'ın bir doğrulanmış abonelik ödeme onayını almasıyla gönderilecek uyarı epostası

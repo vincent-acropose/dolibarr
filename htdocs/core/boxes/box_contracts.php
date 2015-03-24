@@ -31,7 +31,7 @@ class box_contracts extends ModeleBoxes
 {
     var $boxcode="lastcontracts";
     var $boximg="object_contract";
-    var $boxlabel;
+    var $boxlabel="BoxLastContracts";
     var $depends = array("contrat");	// conf->contrat->enabled
 
     var $db;
@@ -40,18 +40,6 @@ class box_contracts extends ModeleBoxes
     var $info_box_head = array();
     var $info_box_contents = array();
 
-
-    /**
-     *  Constructor
-     */
-    function __construct()
-    {
-    	global $langs;
-
-    	$langs->load("boxes");
-
-    	$this->boxlabel=$langs->transnoentitiesnoconv("BoxLastContracts");
-    }
 
     /**
      *  Load data for box to show them later
@@ -126,7 +114,7 @@ class box_contracts extends ModeleBoxes
     				$this->info_box_contents[$i][4] = array('td' => 'align="right"',
     				'text' => dol_print_date($datec,'day'));
 
-    				$this->info_box_contents[$i][5] = array('td' => 'align="right" nowrap="nowrap"',
+    				$this->info_box_contents[$i][5] = array('td' => 'align="right" class="nowrap"',
     				'text' => $contractstatic->getLibStatut(6),
     				'asis'=>1
     				);
@@ -135,6 +123,8 @@ class box_contracts extends ModeleBoxes
     			}
 
     			if ($num==0) $this->info_box_contents[$i][0] = array('td' => 'align="center"','text'=>$langs->trans("NoRecordedContracts"));
+
+				$db->free($resql);
     		}
     		else
     		{
@@ -164,4 +154,3 @@ class box_contracts extends ModeleBoxes
 
 }
 
-?>

@@ -4,6 +4,7 @@
  * Copyright (C) 2005      Simon Tosser         <simon@kornog-computing.com>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010	   Pierre Morin         <pierre.morin@auguria.net>
+ * Copyright (C) 2013      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -139,8 +140,7 @@ if (! dol_is_dir($upload_dir))
 print '<!-- TYPE='.$type.' -->'."\n";
 print '<!-- Page called with mode='.(isset($mode)?$mode:'').' type='.$type.' module='.$module.' url='.$_SERVER["PHP_SELF"].'?'.$_SERVER["QUERY_STRING"].' -->'."\n";
 
-$param='';
-$param.=($sortfield?'&sortfield='.$sortfield:'').($sortorder?'&sortorder='.$sortorder:'');
+$param=($sortfield?'&sortfield='.$sortfield:'').($sortorder?'&sortorder='.$sortorder:'');
 $url=DOL_URL_ROOT.'/ecm/index.php';
 
 // Dir scan
@@ -149,139 +149,107 @@ if ($type == 'directory')
     $formfile=new FormFile($db);
 
     $maxlengthname=40;
+    $excludefiles = array('^SPECIMEN\.pdf$','^\.','(\.meta|_preview\.png)$','^temp$','^payments$','^CVS$','^thumbs$');
+    $sorting = (strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC);
 
     // Right area. If module is defined, we are in automatic ecm.
-    if ($module == 'company')  // Auto area for suppliers invoices
-    {
-        $upload_dir = $conf->societe->dir_output; // TODO change for multicompany sharing
-        $filearray=dol_dir_list($upload_dir,"files",1,'',array('^SPECIMEN\.pdf$','^\.','\.meta$','^temp$','^payments$','^CVS$','^thumbs$'),$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+    $automodules = array('company', 'invoice', 'invoice_supplier', 'propal', 'order', 'order_supplier', 'contract', 'product', 'tax', 'project');
 
-        $param.='&module='.$module;
-        $textifempty=($section?$langs->trans("NoFileFound"):($showonrightsize=='featurenotyetavailable'?$langs->trans("FeatureNotYetAvailable"):$langs->trans("NoFileFound")));
-
-        $formfile->list_of_autoecmfiles($upload_dir,$filearray,$module,$param,1,'',$user->rights->ecm->upload,1,$textifempty,$maxlengthname,$url);
-    }
-    else if ($module == 'invoice')  // Auto area for suppliers invoices
-    {
-        $upload_dir = $conf->facture->dir_output;
-        $filearray=dol_dir_list($upload_dir,"files",1,'',array('^SPECIMEN\.pdf$','^\.','\.meta$','^temp$','^payments$','^CVS$','^thumbs$'),$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
-
-        $param.='&module='.$module;
-        $textifempty=($section?$langs->trans("NoFileFound"):($showonrightsize=='featurenotyetavailable'?$langs->trans("FeatureNotYetAvailable"):$langs->trans("NoFileFound")));
-
-        $formfile->list_of_autoecmfiles($upload_dir,$filearray,$module,$param,1,'',$user->rights->ecm->upload,1,$textifempty,$maxlengthname,$url);
-    }
-    else if ($module == 'invoice_supplier')  // Auto area for suppliers invoices
+    // TODO change for multicompany sharing
+    // Auto area for suppliers invoices
+    if ($module == 'company') $upload_dir = $conf->societe->dir_output;
+    // Auto area for suppliers invoices
+    else if ($module == 'invoice') $upload_dir = $conf->facture->dir_output;
+    // Auto area for suppliers invoices
+    else if ($module == 'invoice_supplier')
     {
         $relativepath='facture';
         $upload_dir = $conf->fournisseur->dir_output.'/'.$relativepath;
-        $filearray=dol_dir_list($upload_dir,"files",1,'',array('^SPECIMEN\.pdf$','^\.','\.meta$','^temp$','^CVS$','^thumbs$'),$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
-        $param.='&module='.$module;
-        $textifempty=($section?$langs->trans("NoFileFound"):($showonrightsize=='featurenotyetavailable'?$langs->trans("FeatureNotYetAvailable"):$langs->trans("NoFileFound")));
-        $formfile->list_of_autoecmfiles($upload_dir,$filearray,$module,$param,1,'',$user->rights->ecm->upload,1,$textifempty,$maxlengthname,$url);
     }
-    else if ($module == 'propal')  // Auto area for customers orders
-    {
-        $upload_dir = $conf->propal->dir_output;
-        $filearray=dol_dir_list($upload_dir,"files",1,'',array('^SPECIMEN\.pdf$','^\.','\.meta$','^temp$','^payments$','^CVS$','^thumbs$'),$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
-
-        $param.='&module='.$module;
-        $textifempty=($section?$langs->trans("NoFileFound"):($showonrightsize=='featurenotyetavailable'?$langs->trans("FeatureNotYetAvailable"):$langs->trans("NoFileFound")));
-
-        $formfile->list_of_autoecmfiles($upload_dir,$filearray,$module,$param,1,'',$user->rights->ecm->upload,1,$textifempty,$maxlengthname,$url);
-    }
-    else if ($module == 'order')  // Auto area for customers orders
-    {
-        $upload_dir = $conf->commande->dir_output;
-        $filearray=dol_dir_list($upload_dir,"files",1,'',array('^SPECIMEN\.pdf$','^\.','\.meta$','^temp$','^payments$','^CVS$','^thumbs$'),$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
-
-        $param.='&module='.$module;
-        $textifempty=($section?$langs->trans("NoFileFound"):($showonrightsize=='featurenotyetavailable'?$langs->trans("FeatureNotYetAvailable"):$langs->trans("NoFileFound")));
-
-        $formfile->list_of_autoecmfiles($upload_dir,$filearray,$module,$param,1,'',$user->rights->ecm->upload,1,$textifempty,$maxlengthname,$url);
-    }
-    else if ($module == 'order_supplier')  // Auto area for suppliers orders
+    // Auto area for customers orders
+    else if ($module == 'propal') $upload_dir = $conf->propal->dir_output;
+    // Auto area for customers orders
+    else if ($module == 'order') $upload_dir = $conf->commande->dir_output;
+    // Auto area for suppliers orders
+    else if ($module == 'order_supplier')
     {
         $relativepath='commande';
         $upload_dir = $conf->fournisseur->dir_output.'/'.$relativepath;
-        $filearray=dol_dir_list($upload_dir,"files",1,'',array('^SPECIMEN\.pdf$','^\.','\.meta$','^temp$','^payments$','^CVS$','^thumbs$'),$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
-
-        $param.='&module='.$module;
-        $textifempty=($section?$langs->trans("NoFileFound"):($showonrightsize=='featurenotyetavailable'?$langs->trans("FeatureNotYetAvailable"):$langs->trans("NoFileFound")));
-
-        $formfile->list_of_autoecmfiles($upload_dir,$filearray,$module,$param,1,'',$user->rights->ecm->upload,1,$textifempty,$maxlengthname,$url);
     }
-    else if ($module == 'contract')  // Auto area for suppliers invoices
+    // Auto area for suppliers invoices
+    else if ($module == 'contract') $upload_dir = $conf->contrat->dir_output;
+    // Auto area for products
+    else if ($module == 'product') $upload_dir = $conf->product->dir_output;
+    // Auto area for suppliers invoices
+    else if ($module == 'tax') $upload_dir = $conf->tax->dir_output;
+    // Auto area for projects
+    else if ($module == 'project') $upload_dir = $conf->projet->dir_output;
+
+    if (in_array($module, $automodules))
     {
-        $upload_dir = $conf->contrat->dir_output;
-        $filearray=dol_dir_list($upload_dir,"files",1,'',array('^SPECIMEN\.pdf$','^\.','\.meta$','^temp$','^CVS$','^thumbs$'),$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
-
         $param.='&module='.$module;
         $textifempty=($section?$langs->trans("NoFileFound"):($showonrightsize=='featurenotyetavailable'?$langs->trans("FeatureNotYetAvailable"):$langs->trans("NoFileFound")));
 
+        $filearray=dol_dir_list($upload_dir,"files",1,'', $excludefiles, $sortfield, $sorting,1);
         $formfile->list_of_autoecmfiles($upload_dir,$filearray,$module,$param,1,'',$user->rights->ecm->upload,1,$textifempty,$maxlengthname,$url);
     }
-    else if ($module == 'product')  // Auto area for products
-    {
-        $upload_dir = $conf->product->dir_output;
-        $filearray=dol_dir_list($upload_dir,"files",1,'',array('^SPECIMEN\.pdf$','^\.','\.meta$','^temp$','^CVS$','^thumbs$'),$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
-
-        $param.='&module='.$module;
-        $textifempty=($section?$langs->trans("NoFileFound"):($showonrightsize=='featurenotyetavailable'?$langs->trans("FeatureNotYetAvailable"):$langs->trans("NoFileFound")));
-
-        $formfile->list_of_autoecmfiles($upload_dir,$filearray,$module,$param,1,'',$user->rights->ecm->upload,1,$textifempty,$maxlengthname,$url);
-    }
-    else if ($module == 'tax')  // Auto area for suppliers invoices
-    {
-        $upload_dir = $conf->tax->dir_output;
-        $filearray=dol_dir_list($upload_dir,"files",1,'',array('^SPECIMEN\.pdf$','^\.','\.meta$','^temp$','^CVS$','^thumbs$'),$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
-
-        $param.='&module='.$module;
-        $textifempty=($section?$langs->trans("NoFileFound"):($showonrightsize=='featurenotyetavailable'?$langs->trans("FeatureNotYetAvailable"):$langs->trans("NoFileFound")));
-
-        $formfile->list_of_autoecmfiles($upload_dir,$filearray,$module,$param,1,'',$user->rights->ecm->upload,1,$textifempty,$maxlengthname,$url);
-    }
-    else    // Manual area
+    //Manual area
+    else
     {
         $relativepath=$ecmdir->getRelativePath();
         $upload_dir = $conf->ecm->dir_output.'/'.$relativepath;
 
-        $filearray=dol_dir_list($upload_dir,"files",0,'',array('^\.','\.meta$','^temp$','^CVS$'),$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
-
-        if ($section) $param.='&section='.$section;
-        $textifempty=($section?$langs->trans("NoFileFound"):($showonrightsize=='featurenotyetavailable'?$langs->trans("FeatureNotYetAvailable"):$langs->trans("ECMSelectASection")));
         // If $section defined with value 0
         if ($section === '0')
         {
-        	$filearray=array();
-        	$textifempty='<br><div align="center"><font class="warning">'.$langs->trans("DirNotSynchronizedSyncFirst").'</font></div><br>';
+            $filearray=array();
+            $textifempty='<br><div align="center"><font class="warning">'.$langs->trans("DirNotSynchronizedSyncFirst").'</font></div><br>';
         }
+        else $filearray=dol_dir_list($upload_dir,"files",0,'',array('^\.','(\.meta|_preview\.png)$','^temp$','^CVS$'),$sortfield, $sorting,1);
+
+        if ($section)
+        {
+            $param.='&section='.$section;
+            $textifempty = $langs->trans('NoFileFound');
+        }
+        else $textifempty=($showonrightsize=='featurenotyetavailable'?$langs->trans("FeatureNotYetAvailable"):$langs->trans("ECMSelectASection"));
+
         $formfile->list_of_documents($filearray,'','ecm',$param,1,$relativepath,$user->rights->ecm->upload,1,$textifempty,$maxlengthname,'',$url);
     }
-
 }
 
-if (! empty($conf->use_javascript_ajax) && empty($conf->global->MAIN_ECM_DISABLE_JS))
+
+if ($section)
 {
-    if ($section)
-    {
-    	$param.=($param?'?':'').(preg_replace('/^&/','',$param));
+	$useajax=1;
+	if (! empty($conf->dol_use_jmobile)) $useajax=0;
+	if (empty($conf->use_javascript_ajax)) $useajax=0;
+	if (! empty($conf->global->MAIN_ECM_DISABLE_JS)) $useajax=0;
 
-        require_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php';
-        $useglobalvars=1;
-        $form = new Form($db);
-        $formquestion=array('urlfile'=>array('type'=>'hidden','value'=>'','name'=>'urlfile'));
-        print $form->formconfirm($url,$langs->trans("DeleteFile"),$langs->trans("ConfirmDeleteFile"),'confirm_deletefile',$formquestion,"no",'deletefile');
+	$param.=($param?'?':'').(preg_replace('/^&/','',$param));
 
-        // Enable jquery handlers on new generated HTML objects
-        print '<script type="text/javascript">'."\n";
-        print 'jQuery(document).ready(function() {'."\n";
-        print 'jQuery(".deletefilelink").click(function(e) { jQuery("#urlfile").val(jQuery(this).attr("rel")); jQuery("#dialog-confirm-deletefile").dialog("open"); return false; });'."\n";
-        print '});'."\n";
-        print '</script>'."\n";
-    }
+	if ($useajax || $action == 'delete')
+	{
+		$urlfile='';
+		if ($action == 'delete') $urlfile=GETPOST('urlfile');
+
+		require_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php';
+		$useglobalvars=1;
+		$form = new Form($db);
+		$formquestion=array('urlfile'=>array('type'=>'hidden','value'=>$urlfile,'name'=>'urlfile'));
+		print $form->formconfirm($url,$langs->trans("DeleteFile"),$langs->trans("ConfirmDeleteFile"),'confirm_deletefile',$formquestion,"no",($useajax?'deletefile':0));
+	}
+
+	if ($useajax)
+	{
+		// Enable jquery handlers on new generated HTML objects
+		print '<script type="text/javascript">'."\n";
+		print 'jQuery(document).ready(function() {'."\n";
+		print 'jQuery(".deletefilelink").click(function(e) { jQuery("#urlfile").val(jQuery(this).attr("rel")); jQuery("#dialog-confirm-deletefile").dialog("open"); return false; });'."\n";
+		print '});'."\n";
+		print '</script>'."\n";
+	}
 }
 
 // Close db if mode is not noajax
 if ((! isset($mode) || $mode != 'noajax') && is_object($db)) $db->close();
-?>

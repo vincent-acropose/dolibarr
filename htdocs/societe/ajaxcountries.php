@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
  * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013      Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,8 +47,6 @@ top_httphead();
 
 print '<!-- Ajax page called with url '.$_SERVER["PHP_SELF"].'?'.$_SERVER["QUERY_STRING"].' -->'."\n";
 
-//print '<body id="mainbody">';
-
 dol_syslog(join(',',$_POST));
 
 // Generation liste des pays
@@ -65,18 +64,15 @@ if (! empty($country))
 	if ($resql)
 	{
 		print '<ul>';
-		while($pays = $db->fetch_object($resql))
+		while($country = $db->fetch_object($resql))
 		{
 			print '<li>';
 			// Si traduction existe, on l'utilise, sinon on prend le libellé par défaut
-			print ($pays->code && $langs->trans("Country".$pays->code)!="Country".$pays->code?$langs->trans("Country".$pays->code):($pays->libelle!='-'?$pays->libelle:'&nbsp;'));
-			print '<span class="informal" style="display:none">'.$pays->rowid.'-idcache</span>';
+			print ($country->code && $langs->trans("Country".$country->code)!="Country".$country->code?$langs->trans("Country".$country->code):($country->libelle!='-'?$country->libelle:'&nbsp;'));
+			print '<span class="informal" style="display:none">'.$country->rowid.'-idcache</span>';
 			print '</li>';
 		}
 		print '</ul>';
 	}
 }
 
-//print "</body>";
-//print "</html>";
-?>

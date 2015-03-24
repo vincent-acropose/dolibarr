@@ -30,6 +30,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 
 $langs->load("admin");
+$langs->load('other');
 
 $action=GETPOST('action','alpha');
 $value=GETPOST('value','alpha');
@@ -67,18 +68,36 @@ if ($action == 'setcodecompta')
 	}
 }
 
-if ($action == 'COMPANY_USE_SEARCH_TO_SELECT')
+if ($action == 'updateoptions')
 {
-	$companysearch = GETPOST('activate_COMPANY_USE_SEARCH_TO_SELECT','alpha');
-	$res = dolibarr_set_const($db, "COMPANY_USE_SEARCH_TO_SELECT", $companysearch,'chaine',0,'',$conf->entity);
-	if (! $res > 0) $error++;
-	if (! $error)
-    {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
-    }
-    else
-    {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+	if (GETPOST('COMPANY_USE_SEARCH_TO_SELECT'))
+	{
+		$companysearch = GETPOST('activate_COMPANY_USE_SEARCH_TO_SELECT','alpha');
+		$res = dolibarr_set_const($db, "COMPANY_USE_SEARCH_TO_SELECT", $companysearch,'chaine',0,'',$conf->entity);
+		if (! $res > 0) $error++;
+		if (! $error)
+	    {
+	        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+	    }
+	    else
+	    {
+	        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+		}
+	}
+	
+	if (GETPOST('CONTACT_USE_SEARCH_TO_SELECT'))
+	{
+		$contactsearch = GETPOST('activate_CONTACT_USE_SEARCH_TO_SELECT','alpha');
+		$res = dolibarr_set_const($db, "CONTACT_USE_SEARCH_TO_SELECT", $contactsearch,'chaine',0,'',$conf->entity);
+		if (! $res > 0) $error++;
+		if (! $error)
+		{
+			$mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+		}
+		else
+		{
+			$mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+		}
 	}
 }
 
@@ -195,7 +214,23 @@ if ($action == 'setprofid')
 	}
 }
 
-//Activate ProfId
+//Activate Set ref in list
+if ($action=="setaddrefinlist") {
+	$setaddrefinlist = GETPOST('value','int');
+	$res = dolibarr_set_const($db, "SOCIETE_ADD_REF_IN_LIST", $setaddrefinlist,'yesno',0,'',$conf->entity);
+	if (! $res > 0) $error++;
+	if (! $error)
+	{
+		$mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+	}
+	else
+	{
+		$mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+	}
+}
+
+
+//Activate ProfId mandatory
 if ($action == 'setprofidmandatory')
 {
 	$status = GETPOST('status','alpha');
@@ -212,6 +247,38 @@ if ($action == 'setprofidmandatory')
 	}
 }
 
+//Activate ProfId invoice mandatory
+if ($action == 'setprofidinvoicemandatory')
+{
+	$status = GETPOST('status','alpha');
+
+	$idprof="SOCIETE_IDPROF".$value."_INVOICE_MANDATORY";
+	if (dolibarr_set_const($db, $idprof,$status,'chaine',0,'',$conf->entity) > 0)
+	{
+		header("Location: ".$_SERVER["PHP_SELF"]);
+		exit;
+	}
+	else
+	{
+		dol_print_error($db);
+	}
+}
+
+//Set hide closed customer into combox or select
+if ($action == 'sethideinactivethirdparty')
+{
+	$status = GETPOST('status','alpha');
+
+	if (dolibarr_set_const($db, "COMPANY_HIDE_INACTIVE_IN_COMBOBOX",$status,'chaine',0,'',$conf->entity) > 0)
+	{
+		header("Location: ".$_SERVER["PHP_SELF"]);
+		exit;
+	}
+	else
+	{
+		dol_print_error($db);
+	}
+}
 
 /*
  * 	View
@@ -235,8 +302,7 @@ dol_fiche_head($head, 'general', $langs->trans("ThirdParties"), 0, 'company');
 dol_htmloutput_mesg($mesg);
 
 
-$dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
-
+$dirsociete=array_merge(array('/core/modules/societe/'),$conf->modules_parts['societe']);
 
 // Module to manage customer/supplier code
 
@@ -248,7 +314,7 @@ print '  <td>'.$langs->trans("Name").'</td>';
 print '  <td>'.$langs->trans("Description").'</td>';
 print '  <td>'.$langs->trans("Example").'</td>';
 print '  <td align="center" width="80">'.$langs->trans("Status").'</td>';
-print '  <td align="center" width="60">'.$langs->trans("Infos").'</td>';
+print '  <td align="center" width="60">'.$langs->trans("ShortInfo").'</td>';
 print "</tr>\n";
 
 $var = true;
@@ -284,7 +350,7 @@ foreach ($dirsociete as $dirroot)
     			print '<tr '.$bc[$var].'>'."\n";
     			print '<td width="140">'.$modCodeTiers->nom.'</td>'."\n";
     			print '<td>'.$modCodeTiers->info($langs).'</td>'."\n";
-    			print '<td nowrap="nowrap">'.$modCodeTiers->getExample($langs).'</td>'."\n";
+    			print '<td class="nowrap">'.$modCodeTiers->getExample($langs).'</td>'."\n";
 
     			if ($conf->global->SOCIETE_CODECLIENT_ADDON == "$file")
     			{
@@ -330,7 +396,7 @@ print '<td width="140">'.$langs->trans("Name").'</td>';
 print '<td>'.$langs->trans("Description").'</td>';
 print '<td>'.$langs->trans("Example").'</td>';
 print '<td align="center" width="80">'.$langs->trans("Status").'</td>';
-print '<td align="center" width="60">&nbsp;</td>';
+print '<td align="center" width="60">'.$langs->trans("ShortInfo").'</td>';
 print "</tr>\n";
 
 foreach ($dirsociete as $dirroot)
@@ -361,7 +427,7 @@ foreach ($dirsociete as $dirroot)
     			print '<td>'.$modCodeCompta->nom."</td><td>\n";
     			print $modCodeCompta->info($langs);
     			print '</td>';
-    			print '<td nowrap="nowrap">'.$modCodeCompta->getExample($langs)."</td>\n";
+    			print '<td class="nowrap">'.$modCodeCompta->getExample($langs)."</td>\n";
 
     			if ($conf->global->SOCIETE_CODECOMPTA_ADDON == "$file")
     			{
@@ -422,7 +488,8 @@ print '<tr class="liste_titre">';
 print '<td width="140">'.$langs->trans("Name").'</td>';
 print '<td>'.$langs->trans("Description").'</td>';
 print '<td align="center" width="80">'.$langs->trans("Status").'</td>';
-print '<td align="center" width="60">'.$langs->trans("Infos").'</td>';
+print '<td align="center" width="60">'.$langs->trans("ShortInfo").'</td>';
+print '<td align="center" width="60">'.$langs->trans("Preview").'</td>';
 print "</tr>\n";
 
 foreach ($dirsociete as $dirroot)
@@ -506,9 +573,13 @@ foreach ($dirsociete as $dirroot)
 					}
 					$htmltooltip.='<br><br><u>'.$langs->trans("FeaturesSupported").':</u>';
 					$htmltooltip.='<br>'.$langs->trans("WatermarkOnDraft").': '.yn((! empty($module->option_draft_watermark)?$module->option_draft_watermark:''), 1, 1);
+					
+					print '<td align="center" class="nowrap">';
+					print $form->textwithpicto('',$htmltooltip,1,0);
+					print '</td>';
 
-
-					print '<td align="center" nowrap="nowrap">';
+					// Preview
+					print '<td align="center" class="nowrap">';
 					if ($module->type == 'pdf')
 					{
 						$linkspec='<a href="'.$_SERVER["PHP_SELF"].'?action=specimen&module='.$name.'">'.img_object($langs->trans("Preview"),'bill').'</a>';
@@ -517,7 +588,7 @@ foreach ($dirsociete as $dirroot)
 					{
 						$linkspec=img_object($langs->trans("PreviewNotAvailable"),'generic');
 					}
-					print $form->textwithpicto(' &nbsp; '.$linkspec,$htmltooltip,1,0);
+					print $linkspec;
 					print '</td>';
 
 					print "</tr>\n";
@@ -540,6 +611,7 @@ print '<td>'.$langs->trans("Name").'</td>';
 print '<td>'.$langs->trans("Description").'</td>';
 print '<td align="center">'.$langs->trans("MustBeUnique").'</td>';
 print '<td align="center">'.$langs->trans("MustBeMandatory").'</td>';
+print '<td align="center">'.$langs->trans("MustBeInvoiceMandatory").'</td>';
 print "</tr>\n";
 
 $profid[0][0]=$langs->trans("ProfId1");
@@ -572,8 +644,10 @@ while ($i < $nbofloop)
 	
 		$idprof_unique ='SOCIETE_IDPROF'.($i+1).'_UNIQUE';
 		$idprof_mandatory ='SOCIETE_IDPROF'.($i+1).'_MANDATORY';
+		$idprof_invoice_mandatory ='SOCIETE_IDPROF'.($i+1).'_INVOICE_MANDATORY';
 		$verif=(empty($conf->global->$idprof_unique)?false:true);
 		$mandatory=(empty($conf->global->$idprof_mandatory)?false:true);
+		$invoice_mandatory=(empty($conf->global->$idprof_invoice_mandatory)?false:true);
 	
 		if ($verif)
 		{
@@ -600,6 +674,20 @@ while ($i < $nbofloop)
 			print img_picto($langs->trans("Disabled"),'switch_off');
 			print '</a></td>';
 		}
+		
+		if ($invoice_mandatory)
+		{
+			print '<td align="center"><a href="'.$_SERVER['PHP_SELF'].'?action=setprofidinvoicemandatory&value='.($i+1).'&status=0">';
+			print img_picto($langs->trans("Activated"),'switch_on');
+			print '</a></td>';
+		}
+		else
+		{
+			print '<td align="center"><a href="'.$_SERVER['PHP_SELF'].'?action=setprofidinvoicemandatory&value='.($i+1).'&status=1">';
+			print img_picto($langs->trans("Disabled"),'switch_off');
+			print '</a></td>';
+		}
+		
 		print "</tr>\n";
 	}
 	$i++;
@@ -613,6 +701,11 @@ print_titre($langs->trans("Other"));
 // Autres options
 $form=new Form($db);
 $var=true;
+
+print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+print '<input type="hidden" name="action" value="updateoptions">';
+
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print "<td>".$langs->trans("Parameters")."</td>\n";
@@ -621,14 +714,11 @@ print '<td width="80">&nbsp;</td></tr>'."\n";
 
 // Utilisation formulaire Ajax sur choix societe
 $var=!$var;
-print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-print '<input type="hidden" name="action" value="COMPANY_USE_SEARCH_TO_SELECT">';
 print "<tr ".$bc[$var].">";
-print '<td width="80%">'.$langs->trans("UseSearchToSelectCompany").'</td>';
+print '<td width="80%">'.$form->textwithpicto($langs->trans("UseSearchToSelectCompany"),$langs->trans('UseSearchToSelectCompanyTooltip'),1).' </td>';
 if (! $conf->use_javascript_ajax)
 {
-	print '<td nowrap="nowrap" align="right" colspan="2">';
+	print '<td class="nowrap" align="right" colspan="2">';
 	print $langs->trans("NotAvailableWhenAjaxDisabled");
 	print "</td>";
 }
@@ -642,13 +732,79 @@ else
 	);
 	print $form->selectarray("activate_COMPANY_USE_SEARCH_TO_SELECT",$arrval,$conf->global->COMPANY_USE_SEARCH_TO_SELECT);
 	print '</td><td align="right">';
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+	print '<input type="submit" class="button" name="COMPANY_USE_SEARCH_TO_SELECT" value="'.$langs->trans("Modify").'">';
 	print "</td>";
 }
 print '</tr>';
-print '</form>';
+
+$var=!$var;
+print "<tr ".$bc[$var].">";
+print '<td width="80%">'.$form->textwithpicto($langs->trans("UseSearchToSelectContact"),$langs->trans('UseSearchToSelectContactTooltip'),1).'</td>';
+if (! $conf->use_javascript_ajax)
+{
+	print '<td class="nowrap" align="right" colspan="2">';
+	print $langs->trans("NotAvailableWhenAjaxDisabled");
+	print "</td>";
+}
+else
+{
+	print '<td width="60" align="right">';
+	$arrval=array('0'=>$langs->trans("No"),
+	'1'=>$langs->trans("Yes").' ('.$langs->trans("NumberOfKeyToSearch",1).')',
+	'2'=>$langs->trans("Yes").' ('.$langs->trans("NumberOfKeyToSearch",2).')',
+	'3'=>$langs->trans("Yes").' ('.$langs->trans("NumberOfKeyToSearch",3).')',
+	);
+	print $form->selectarray("activate_CONTACT_USE_SEARCH_TO_SELECT",$arrval,$conf->global->CONTACT_USE_SEARCH_TO_SELECT);
+	print '</td><td align="right">';
+	print '<input type="submit" class="button" name="CONTACT_USE_SEARCH_TO_SELECT" value="'.$langs->trans("Modify").'">';
+	print "</td>";
+}
+print '</tr>';
+
+
+$var=!$var;
+print "<tr ".$bc[$var].">";
+print '<td width="80%">'.$langs->trans("AddRefInList").'</td>';
+print '<td>&nbsp</td>';
+print '<td align="center">';
+if (!empty($conf->global->SOCIETE_ADD_REF_IN_LIST))
+{
+	print '<a href="'.$_SERVER['PHP_SELF'].'?action=setaddrefinlist&value=0">';
+	print img_picto($langs->trans("Activated"),'switch_on');
+
+}
+else
+{
+	print '<a href="'.$_SERVER['PHP_SELF'].'?action=setaddrefinlist&value=1">';
+	print img_picto($langs->trans("Disabled"),'switch_off');
+}
+print '</a></td>';
+print '</tr>';
+
+
+/*
+// COMPANY_USE_SEARCH_TO_SELECT
+$var=!$var;
+print "<tr ".$bc[$var].">";
+print '<td width="80%">'.$langs->trans("HideClosedThirdpartyComboBox").'</td>';
+if (! empty($conf->global->COMPANY_HIDE_INACTIVE_IN_COMBOBOX))
+{
+	print '<td align="center"><a href="'.$_SERVER['PHP_SELF'].'?action=sethideinactivethirdparty&status=0">';
+	print img_picto($langs->trans("Activated"),'switch_on');
+	print '</a></td>';
+}
+else
+{
+	print '<td align="center"><a href="'.$_SERVER['PHP_SELF'].'?action=sethideinactivethirdparty&status=1">';
+	print img_picto($langs->trans("Disabled"),'switch_off');
+	print '</a></td>';
+}
+print '</tr>';
+*/
 
 print '</table>';
+
+print '</form>';
 
 
 dol_fiche_end();
@@ -656,4 +812,3 @@ dol_fiche_end();
 $db->close();
 
 llxFooter();
-?>

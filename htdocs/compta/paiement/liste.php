@@ -2,6 +2,8 @@
 /* Copyright (C) 2001-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
+ * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +30,7 @@ require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
 $langs->load("bills");
+$langs->load("compta");
 
 // Security check
 $facid =GETPOST('facid','int');
@@ -51,6 +54,8 @@ $limit = $conf->liste_limit;
 if (! $sortorder) $sortorder="DESC";
 if (! $sortfield) $sortfield="p.rowid";
 
+$search_ref = GETPOST("search_ref",'int');
+$search_account = GETPOST("search_account",'int');
 
 
 
@@ -58,7 +63,7 @@ if (! $sortfield) $sortfield="p.rowid";
  * 	View
  */
 
-llxHeader('',$langs->trans("ListPayment"));
+llxHeader('', $langs->trans('ListPayment'));
 
 $form=new Form($db);
 
@@ -107,12 +112,14 @@ else
         if ($userid == -1) $sql.= " AND f.fk_user_author IS NULL";
         else  $sql.= " AND f.fk_user_author = ".$userid;
     }
+
+
     // Search criteria
-    if (GETPOST("search_ref"))         		$sql .=" AND p.rowid=".GETPOST("search_ref",'int');
-    if (GETPOST("search_account") > 0)      $sql .=" AND b.fk_account=".GETPOST("search_account",'int');
-    if (GETPOST("search_paymenttype") > 0)  $sql .=" AND c.code='".GETPOST("search_paymenttype",'int')."'";
-    if (GETPOST("search_amount"))      		$sql .=" AND p.amount=".price2num(GETPOST("search_amount"));
-    if (GETPOST("search_company"))     		$sql .=" AND s.nom LIKE '%".$db->escape(GETPOST("search_company"))."%'";
+    if ($search_ref)         		$sql .=" AND p.rowid=".$search_ref;
+    if ($search_account > 0)      $sql .=" AND b.fk_account=".$search_account;
+    if (GETPOST("search_paymenttype") != "")  $sql .=" AND c.code='".$db->escape(GETPOST("search_paymenttype"))."'";
+    if (GETPOST("search_amount"))      		$sql .=" AND p.amount='".$db->escape(price2num(GETPOST("search_amount")))."'";
+    if (GETPOST("search_company"))     		$sql .= natural_search('s.nom', GETPOST('search_company'));
 }
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($limit+1, $offset);
@@ -127,7 +134,7 @@ if ($resql)
 
     $paramlist='';
     $paramlist.=(GETPOST("orphelins")?"&orphelins=1":"");
-    $paramlist.=($_REQUEST["search_ref"]?"&search_ref=".$_REQUEST["search_ref"]:"");
+    $paramlist.=($search_ref?"&search_ref=".$search_ref:"");
     $paramlist.=($_REQUEST["search_company"]?"&search_company=".$_REQUEST["search_company"]:"");
     $paramlist.=($_REQUEST["search_amount"]?"&search_amount=".$_REQUEST["search_amount"]:"");
 
@@ -152,7 +159,7 @@ if ($resql)
     // Lines for filters fields
     print '<tr class="liste_titre">';
     print '<td align="left">';
-    print '<input class="fat" type="text" size="4" name="search_ref" value="'.$_REQUEST["search_ref"].'">';
+    print '<input class="fat" type="text" size="4" name="search_ref" value="'.$search_ref.'">';
     print '</td>';
     print '<td>&nbsp;</td>';
     print '<td align="left">';
@@ -166,7 +173,7 @@ if ($resql)
     print '</td>';
     print '<td align="right">';
     print '<input class="fat" type="text" size="4" name="search_amount" value="'.$_REQUEST["search_amount"].'">';
-    print '<input type="image" class="liste_titre" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+    print '<input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
     print '</td>';
     if (! empty($conf->global->BILL_ADD_PAYMENT_VALIDATION))
     {
@@ -180,7 +187,7 @@ if ($resql)
     {
         $objp = $db->fetch_object($resql);
         $var=!$var;
-        print "<tr $bc[$var]>";
+        print "<tr ".$bc[$var].">";
 
         print '<td width="40">';
         $paymentstatic->id=$objp->rowid;
@@ -237,4 +244,3 @@ else
 $db->close();
 
 llxFooter();
-?>

@@ -3,6 +3,7 @@
  * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010      Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,48 +61,32 @@ if (! $sortfield) $sortfield="name";
 
 
 $upload_dir = $conf->adherent->dir_output . "/" . get_exdir($id,2,0,1) . '/' . $id;
-
-
-
+$form = new Form($db);
+$object=new Adherent($db);
+$membert=new AdherentType($db);
+$result=$object->fetch($id);
+if ($result < 0)
+{
+	dol_print_error($db);
+	exit;
+}
 /*
  * Actions
  */
 
-// Envoie fichier
-if (GETPOST('sendit') && ! empty($conf->global->MAIN_UPLOAD_DOC))
-{
-	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-
-	dol_add_file_process($upload_dir,0,1,'userfile');
-}
-
-// Suppression fichier
-if ($action == 'confirm_deletefile' && $confirm == 'yes')
-{
-    $langs->load("other");
-	$file = $upload_dir . "/" . GETPOST('urlfile');	// Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
-	$ret=dol_delete_file($file);
-	if ($ret) setEventMessage($langs->trans("FileWasRemoved", GETPOST('urlfile')));
-	else setEventMessage($langs->trans("ErrorFailToDeleteFile", GETPOST('urlfile')), 'errors');
-    header('Location: '.$_SERVER["PHP_SELF"].'?id='.$id);
-    exit;
-}
+include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_pre_headers.tpl.php';
 
 
 /*
  * View
  */
 
-$form = new Form($db);
-$member=new Adherent($db);
-$membert=new AdherentType($db);
 
 llxHeader();
 
 if ($id > 0)
 {
-    $result=$member->fetch($id);
-    $result=$membert->fetch($member->typeid);
+    $result=$membert->fetch($object->typeid);
 	if ($result > 0)
 	{
 		/*
@@ -110,7 +95,7 @@ if ($id > 0)
 		if (! empty($conf->notification->enabled))
 			$langs->load("mails");
 
-		$head = member_prepare_head($member);
+		$head = member_prepare_head($object);
 
 		$form=new Form($db);
 
@@ -118,7 +103,7 @@ if ($id > 0)
 
 
 		// Construit liste des fichiers
-		$filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+		$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
 		$totalsize=0;
 		foreach($filearray as $key => $file)
 		{
@@ -133,19 +118,19 @@ if ($id > 0)
         // Ref
         print '<tr><td width="20%">'.$langs->trans("Ref").'</td>';
         print '<td class="valeur">';
-        print $form->showrefnav($member, 'rowid', $linkback);
+        print $form->showrefnav($object, 'rowid', $linkback);
         print '</td></tr>';
 
         // Login
         if (empty($conf->global->ADHERENT_LOGIN_NOT_REQUIRED))
         {
-            print '<tr><td>'.$langs->trans("Login").' / '.$langs->trans("Id").'</td><td class="valeur">'.$member->login.'&nbsp;</td></tr>';
+            print '<tr><td>'.$langs->trans("Login").' / '.$langs->trans("Id").'</td><td class="valeur">'.$object->login.'&nbsp;</td></tr>';
         }
 
         // Morphy
-        print '<tr><td>'.$langs->trans("Nature").'</td><td class="valeur" >'.$member->getmorphylib().'</td>';
+        print '<tr><td>'.$langs->trans("Nature").'</td><td class="valeur" >'.$object->getmorphylib().'</td>';
         /*print '<td rowspan="'.$rowspan.'" align="center" valign="middle" width="25%">';
-        print $form->showphoto('memberphoto',$member);
+        print $form->showphoto('memberphoto',$object);
         print '</td>';*/
         print '</tr>';
 
@@ -153,22 +138,22 @@ if ($id > 0)
         print '<tr><td>'.$langs->trans("Type").'</td><td class="valeur">'.$membert->getNomUrl(1)."</td></tr>\n";
 
         // Company
-        print '<tr><td>'.$langs->trans("Company").'</td><td class="valeur">'.$member->societe.'</td></tr>';
+        print '<tr><td>'.$langs->trans("Company").'</td><td class="valeur">'.$object->societe.'</td></tr>';
 
         // Civility
-        print '<tr><td>'.$langs->trans("UserTitle").'</td><td class="valeur">'.$member->getCivilityLabel().'&nbsp;</td>';
+        print '<tr><td>'.$langs->trans("UserTitle").'</td><td class="valeur">'.$object->getCivilityLabel().'&nbsp;</td>';
         print '</tr>';
 
-        // Nom
-        print '<tr><td>'.$langs->trans("Lastname").'</td><td class="valeur">'.$member->lastname.'&nbsp;</td>';
+        // Lastname
+        print '<tr><td>'.$langs->trans("Lastname").'</td><td class="valeur">'.$object->lastname.'&nbsp;</td>';
         print '</tr>';
 
-        // Prenom
-        print '<tr><td>'.$langs->trans("Firstname").'</td><td class="valeur">'.$member->firstname.'&nbsp;</td>';
+        // Firstname
+        print '<tr><td>'.$langs->trans("Firstname").'</td><td class="valeur">'.$object->firstname.'&nbsp;</td>';
         print '</tr>';
 
         // Status
-        print '<tr><td>'.$langs->trans("Status").'</td><td class="valeur">'.$member->getLibStatut(4).'</td></tr>';
+        print '<tr><td>'.$langs->trans("Status").'</td><td class="valeur">'.$object->getLibStatut(4).'</td></tr>';
 
     	// Nbre fichiers
 		print '<tr><td>'.$langs->trans("NbOfAttachedFiles").'</td><td colspan="3">'.count($filearray).'</td></tr>';
@@ -180,24 +165,10 @@ if ($id > 0)
 
 		print '</div>';
 
-		/*
-		 * Confirmation suppression fichier
-		 */
-		if ($action == 'delete')
-		{
-			$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?id='.$member->id.'&urlfile='.urlencode(GETPOST("urlfile")), $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile', '', 0, 1);
-			if ($ret == 'html') print '<br>';
-		}
-
-
-		// Affiche formulaire upload
-		$formfile=new FormFile($db);
-		$formfile->form_attach_new_file(DOL_URL_ROOT.'/adherents/document.php?id='.$member->id,'',0,0,$user->rights->adherent->creer,50,$object);
-
-
-		// List of document
-		$formfile->list_of_documents($filearray,$member,'member','', 0, get_exdir($member->id,2,0,1).'/'.$member->id.'/');
-
+		$modulepart = 'member';
+		$permission = $user->rights->adherent->creer;
+		$param = '&id=' . $object->id;
+		include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_post_headers.tpl.php';
 		print "<br><br>";
 	}
 	else
@@ -214,4 +185,3 @@ else
 
 llxFooter();
 $db->close();
-?>

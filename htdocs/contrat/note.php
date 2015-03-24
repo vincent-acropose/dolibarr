@@ -43,28 +43,20 @@ $result=restrictedArea($user,'contrat',$id);
 $object = new Contrat($db);
 $object->fetch($id,$ref);
 
+$permissionnote=$user->rights->contrat->creer;	// Used by the include of actions_setnotes.inc.php
 
-/******************************************************************************/
-/*                     Actions                                                */
-/******************************************************************************/
 
-if ($action == 'setnote_public' && $user->rights->contrat->creer)
-{
-	$result=$object->update_note_public(dol_html_entity_decode(dol_htmlcleanlastbr(GETPOST('note_public')), ENT_QUOTES));
-	if ($result < 0) dol_print_error($db,$object->error);
-}
+/*
+ * Actions
+ */
 
-else if ($action == 'setnote' && $user->rights->contrat->creer)
-{
-	$result=$object->update_note(dol_html_entity_decode(dol_htmlcleanlastbr(GETPOST('note')), ENT_QUOTES));
-	if ($result < 0) dol_print_error($db,$object->error);
-}
+include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not includ_once
 
 
 
-/******************************************************************************/
-/* Affichage fiche                                                            */
-/******************************************************************************/
+/*
+ * View
+ */
 
 llxHeader();
 
@@ -96,7 +88,7 @@ if ($id > 0 || ! empty($ref))
 
 	// Ligne info remises tiers
     print '<tr><td>'.$langs->trans('Discount').'</td><td>';
-	if ($object->thirdparty->remise_client) print $langs->trans("CompanyHasRelativeDiscount",$object->thirdparty->remise_client);
+	if ($object->thirdparty->remise_percent) print $langs->trans("CompanyHasRelativeDiscount",$object->thirdparty->remise_percent);
 	else print $langs->trans("CompanyHasNoRelativeDiscount");
 	$absolute_discount=$object->thirdparty->getAvailableDiscounts();
 	print '. ';
@@ -118,4 +110,3 @@ if ($id > 0 || ! empty($ref))
 
 llxFooter();
 $db->close();
-?>

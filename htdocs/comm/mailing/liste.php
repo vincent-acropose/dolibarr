@@ -121,7 +121,7 @@ if ($result)
 	print '<td class="liste_titre">&nbsp;</td>';
 	if (! $filteremail) print '<td class="liste_titre">&nbsp;</td>';
 	print '<td class="liste_titre">&nbsp;</td>';
-	print '<td class="liste_titre" align="right"><input class="liste_titre" type="image" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+	print '<td class="liste_titre" align="right"><input class="liste_titre" type="image" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 	print "</td>";
 	print "</tr>\n";
 	print '</form>';
@@ -136,7 +136,7 @@ if ($result)
 
 		$var=!$var;
 
-		print "<tr $bc[$var]>";
+		print "<tr ".$bc[$var].">";
 		print '<td><a href="'.DOL_URL_ROOT.'/comm/mailing/fiche.php?id='.$obj->rowid.'">';
 		print img_object($langs->trans("ShowEMail"),"email").' '.stripslashes($obj->rowid).'</a></td>';
 		print '<td>'.$obj->titre.'</td>';
@@ -161,10 +161,10 @@ if ($result)
 			print '</td>';
 		}
 		// Last send
-		print '<td align="center" nowrap="nowrap">'.dol_print_date($db->jdate($obj->date_envoi),'day').'</td>';
+		print '<td align="center" class="nowrap">'.dol_print_date($db->jdate($obj->date_envoi),'day').'</td>';
 		print '</td>';
 		// Status
-		print '<td align="right" nowrap="nowrap">';
+		print '<td align="right" class="nowrap">';
 		if ($filteremail)
 		{
 			if ($obj->sendstatut==-1) print $langs->trans("MailingStatusError").' '.img_error();
@@ -189,4 +189,3 @@ else
 llxFooter();
 
 $db->close();
-?>

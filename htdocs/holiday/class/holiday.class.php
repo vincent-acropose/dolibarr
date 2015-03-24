@@ -1,7 +1,8 @@
 <?php
-/* Copyright (C) 2011	Dimitri Mouillard	<dmouillard@teclib.com>
- * Copyright (C) 2012	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2012	Regis Houssin		<regis.houssin@capnetworks.com>
+/* Copyright (C) 2011	   Dimitri Mouillard	<dmouillard@teclib.com>
+ * Copyright (C) 2012-2014 Laurent Destailleur	<eldy@users.sourceforge.net>
+ * Copyright (C) 2012	   Regis Houssin		<regis.houssin@capnetworks.com>
+ * Copyright (C) 2013      Florian Henry        <florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,10 +44,12 @@ class Holiday extends CommonObject
     var $fk_user;
     var $date_create='';
     var $description;
-    var $date_debut='';
-    var $date_fin='';
+    var $date_debut='';			// Date start in PHP server TZ
+    var $date_fin='';			// Date end in PHP server TZ
+    var $date_debut_gmt='';		// Date start in GMT
+    var $date_fin_gmt='';		// Date end in GMT
     var $halfday='';
-    var $statut='';
+    var $statut='';			// 1=draft, 2=validated, 3=approved
     var $fk_validator;
     var $date_valid='';
     var $fk_user_valid;
@@ -76,7 +79,7 @@ class Holiday extends CommonObject
 
 
     /**
-     * updateSold
+     * updateSold. Update sold and check table of users for holidays is complete. If not complete.
      *
      * @return	int			Return 1
      */
@@ -86,7 +89,7 @@ class Holiday extends CommonObject
 	    $this->updateSoldeCP();
 
 	    // Vérifie le nombre d'utilisateur et mets à jour si besoin
-	    $this->verifNbUsers($this->countActiveUsers(),$this->getConfCP('nbUser'));
+	    $this->verifNbUsers($this->countActiveUsersWithoutCP(),$this->getConfCP('nbUser'));
 	    return 1;
     }
 
@@ -123,7 +126,7 @@ class Holiday extends CommonObject
         // User
         $sql.= "'".$this->fk_user."',";
         $sql.= " '".$this->db->idate($now)."',";
-        $sql.= " '".addslashes($this->description)."',";
+        $sql.= " '".$this->db->escape($this->description)."',";
         $sql.= " '".$this->db->idate($this->date_debut)."',";
         $sql.= " '".$this->db->idate($this->date_fin)."',";
         $sql.= " ".$this->halfday.",";
@@ -177,7 +180,6 @@ class Holiday extends CommonObject
 
         $sql = "SELECT";
         $sql.= " cp.rowid,";
-
         $sql.= " cp.fk_user,";
         $sql.= " cp.date_create,";
         $sql.= " cp.description,";
@@ -192,8 +194,9 @@ class Holiday extends CommonObject
         $sql.= " cp.fk_user_refuse,";
         $sql.= " cp.date_cancel,";
         $sql.= " cp.fk_user_cancel,";
-        $sql.= " cp.detail_refuse";
-
+        $sql.= " cp.detail_refuse,";
+        $sql.= " cp.note_private,";
+        $sql.= " cp.note_public";
         $sql.= " FROM ".MAIN_DB_PREFIX."holiday as cp";
         $sql.= " WHERE cp.rowid = ".$id;
 
@@ -213,6 +216,8 @@ class Holiday extends CommonObject
                 $this->description = $obj->description;
                 $this->date_debut = $this->db->jdate($obj->date_debut);
                 $this->date_fin = $this->db->jdate($obj->date_fin);
+                $this->date_debut_gmt = $this->db->jdate($obj->date_debut,1);
+                $this->date_fin_gmt = $this->db->jdate($obj->date_fin,1);
                 $this->halfday = $obj->halfday;
                 $this->statut = $obj->statut;
                 $this->fk_validator = $obj->fk_validator;
@@ -223,6 +228,8 @@ class Holiday extends CommonObject
                 $this->date_cancel = $this->db->jdate($obj->date_cancel);
                 $this->fk_user_cancel = $obj->fk_user_cancel;
                 $this->detail_refuse = $obj->detail_refuse;
+                $this->note_private = $obj->note_private;
+                $this->note_public = $obj->note_public;
             }
             $this->db->free($resql);
 
@@ -265,10 +272,17 @@ class Holiday extends CommonObject
         $sql.= " cp.fk_user_refuse,";
         $sql.= " cp.date_cancel,";
         $sql.= " cp.fk_user_cancel,";
-        $sql.= " cp.detail_refuse";
+        $sql.= " cp.detail_refuse,";
 
-        $sql.= " FROM ".MAIN_DB_PREFIX."holiday as cp";
-        $sql.= " WHERE cp.fk_user = '".$user_id."'";
+		$sql.= " uu.lastname as user_lastname,";
+        $sql.= " uu.firstname as user_firstname,";
+
+        $sql.= " ua.lastname as validator_lastname,";
+        $sql.= " ua.firstname as validator_firstname";
+
+        $sql.= " FROM ".MAIN_DB_PREFIX."holiday as cp, ".MAIN_DB_PREFIX."user as uu, ".MAIN_DB_PREFIX."user as ua";
+		$sql.= " WHERE cp.fk_user = uu.rowid AND cp.fk_validator = ua.rowid "; // Hack pour la recherche sur le tableau
+        $sql.= " AND cp.fk_user = '".$user_id."'";
 
         // Filtre de séléction
         if(!empty($filter)) {
@@ -307,6 +321,8 @@ class Holiday extends CommonObject
                 $tab_result[$i]['description'] = $obj->description;
                 $tab_result[$i]['date_debut'] = $this->db->jdate($obj->date_debut);
                 $tab_result[$i]['date_fin'] = $this->db->jdate($obj->date_fin);
+                $tab_result[$i]['date_debut_gmt'] = $this->db->jdate($obj->date_debut,1);
+                $tab_result[$i]['date_fin_gmt'] = $this->db->jdate($obj->date_fin,1);
                 $tab_result[$i]['halfday'] = $obj->halfday;
                 $tab_result[$i]['statut'] = $obj->statut;
                 $tab_result[$i]['fk_validator'] = $obj->fk_validator;
@@ -317,6 +333,12 @@ class Holiday extends CommonObject
                 $tab_result[$i]['date_cancel'] = $this->db->jdate($obj->date_cancel);
                 $tab_result[$i]['fk_user_cancel'] = $obj->fk_user_cancel;
                 $tab_result[$i]['detail_refuse'] = $obj->detail_refuse;
+
+                $tab_result[$i]['user_firstname'] = $obj->user_firstname;
+                $tab_result[$i]['user_lastname'] = $obj->user_lastname;
+
+                $tab_result[$i]['validator_firstname'] = $obj->validator_firstname;
+                $tab_result[$i]['validator_lastname'] = $obj->validator_lastname;
 
                 $i++;
             }
@@ -364,10 +386,10 @@ class Holiday extends CommonObject
         $sql.= " cp.fk_user_cancel,";
         $sql.= " cp.detail_refuse,";
 
-        $sql.= " uu.name as user_lastname,";
+        $sql.= " uu.lastname as user_lastname,";
         $sql.= " uu.firstname as user_firstname,";
 
-        $sql.= " ua.name as validator_lastname,";
+        $sql.= " ua.lastname as validator_lastname,";
         $sql.= " ua.firstname as validator_firstname";
 
         $sql.= " FROM ".MAIN_DB_PREFIX."holiday as cp, ".MAIN_DB_PREFIX."user as uu, ".MAIN_DB_PREFIX."user as ua";
@@ -410,6 +432,8 @@ class Holiday extends CommonObject
                 $tab_result[$i]['description'] = $obj->description;
                 $tab_result[$i]['date_debut'] = $this->db->jdate($obj->date_debut);
                 $tab_result[$i]['date_fin'] = $this->db->jdate($obj->date_fin);
+                $tab_result[$i]['date_debut_gmt'] = $this->db->jdate($obj->date_debut,1);
+                $tab_result[$i]['date_fin_gmt'] = $this->db->jdate($obj->date_fin,1);
                 $tab_result[$i]['halfday'] = $obj->halfday;
                 $tab_result[$i]['statut'] = $obj->statut;
                 $tab_result[$i]['fk_validator'] = $obj->fk_validator;
@@ -457,7 +481,7 @@ class Holiday extends CommonObject
         // Update request
         $sql = "UPDATE ".MAIN_DB_PREFIX."holiday SET";
 
-        $sql.= " description= '".addslashes($this->description)."',";
+        $sql.= " description= '".$this->db->escape($this->description)."',";
 
         if(!empty($this->date_debut)) {
             $sql.= " date_debut = '".$this->db->idate($this->date_debut)."',";
@@ -511,7 +535,7 @@ class Holiday extends CommonObject
             $sql.= " fk_user_cancel = NULL,";
         }
         if(!empty($this->detail_refuse)) {
-            $sql.= " detail_refuse = '".addslashes($this->detail_refuse)."'";
+            $sql.= " detail_refuse = '".$this->db->escape($this->detail_refuse)."'";
         } else {
             $sql.= " detail_refuse = NULL";
         }
@@ -678,8 +702,8 @@ class Holiday extends CommonObject
 		if ($mode == 0)
 		{
             if ($statut == 1) return $langs->trans('DraftCP');
-            if ($statut == 2) return $langs->trans('ToValidateCP');
-            if ($statut == 3) return $langs->trans('ValidateCP');
+            if ($statut == 2) return $langs->trans('ToReviewCP');
+            if ($statut == 3) return $langs->trans('ApprovedCP');
             if ($statut == 4) return $langs->trans('CancelCP');
             if ($statut == 5) return $langs->trans('RefuseCP');
 		}
@@ -688,8 +712,8 @@ class Holiday extends CommonObject
 			$pictoapproved='statut6';
 			if (! empty($startdate) && $startdate > dol_now()) $pictoapproved='statut4';
 			if ($statut == 1) return img_picto($langs->trans('DraftCP'),'statut0').' '.$langs->trans('DraftCP');				// Draft
-			if ($statut == 2) return img_picto($langs->trans('ToValidateCP'),'statut1').' '.$langs->trans('ToValidateCP');		// Waiting approval
-			if ($statut == 3) return img_picto($langs->trans('ValidateCP'),$pictoapproved).' '.$langs->trans('ValidateCP');
+			if ($statut == 2) return img_picto($langs->trans('ToReviewCP'),'statut1').' '.$langs->trans('ToReviewCP');		// Waiting approval
+			if ($statut == 3) return img_picto($langs->trans('ApprovedCP'),$pictoapproved).' '.$langs->trans('ApprovedCP');
 			if ($statut == 4) return img_picto($langs->trans('CancelCP'),'statut5').' '.$langs->trans('CancelCP');
 			if ($statut == 5) return img_picto($langs->trans('RefuseCP'),'statut5').' '.$langs->trans('RefuseCP');
 		}
@@ -698,8 +722,8 @@ class Holiday extends CommonObject
 			$pictoapproved='statut6';
 			if (! empty($startdate) && $startdate > dol_now()) $pictoapproved='statut4';
 			if ($statut == 1) return $langs->trans('DraftCP').' '.img_picto($langs->trans('DraftCP'),'statut0');				// Draft
-			if ($statut == 2) return $langs->trans('ToValidateCP').' '.img_picto($langs->trans('ToValidateCP'),'statut1');		// Waiting approval
-			if ($statut == 3) return $langs->trans('ValidateCP').' '.img_picto($langs->trans('ValidateCP'),$pictoapproved);
+			if ($statut == 2) return $langs->trans('ToReviewCP').' '.img_picto($langs->trans('ToReviewCP'),'statut1');		// Waiting approval
+			if ($statut == 3) return $langs->trans('ApprovedCP').' '.img_picto($langs->trans('ApprovedCP'),$pictoapproved);
 			if ($statut == 4) return $langs->trans('CancelCP').' '.img_picto($langs->trans('CancelCP'),'statut5');
 			if ($statut == 5) return $langs->trans('RefuseCP').' '.img_picto($langs->trans('RefuseCP'),'statut5');
 		}
@@ -719,7 +743,7 @@ class Holiday extends CommonObject
         global $langs;
 
         // Liste des statuts
-        $name = array('DraftCP','ToValidateCP','ValidateCP','CancelCP','RefuseCP');
+        $name = array('DraftCP','ToReviewCP','ApprovedCP','CancelCP','RefuseCP');
         $nb = count($name)+1;
 
         // Select HTML
@@ -855,11 +879,11 @@ class Holiday extends CommonObject
      *
      *	@param		int		$userID		Id of user
      *	@param		int		$nbHoliday	Nb of days
-     *  @return     void
+     *  @return     int					0=Nothing done, 1=OK, -1=KO
      */
     function updateSoldeCP($userID='',$nbHoliday='')
     {
-        global $user;
+        global $user, $langs;
 
         if (empty($userID) && empty($nbHoliday))
         {
@@ -870,7 +894,7 @@ class Holiday extends CommonObject
             $month = date('m',$now);
             $lastUpdate = $this->getConfCP('lastUpdate');
             $monthLastUpdate = $lastUpdate[4].$lastUpdate[5];
-			//print 'month: '.$month.' '.$lastUpdate.' '.$monthLastUpdate;
+			//print 'month: '.$month.' '.$lastUpdate.' '.$monthLastUpdate;exit;
 
             // Si la date du mois n'est pas la même que celle sauvegardée, on met à jour le timestamp
             if ($month != $monthLastUpdate)
@@ -891,13 +915,13 @@ class Holiday extends CommonObject
 
                 $i = 0;
 
-                while($i < $nbUser)
+                while ($i < $nbUser)
                 {
                     $now_holiday = $this->getCPforUser($users[$i]['rowid']);
                     $new_solde = $now_holiday + $this->getConfCP('nbHolidayEveryMonth');
 
                     // On ajoute la modification dans le LOG
-                    $this->addLogCP($user->id,$users[$i]['rowid'],'Event : Mise à jour mensuelle',$new_solde);
+                    $this->addLogCP($user->id,$users[$i]['rowid'], $langs->trans('HolidaysMonthlyUpdate'),$new_solde);
 
                     $i++;
                 }
@@ -906,11 +930,18 @@ class Holiday extends CommonObject
                 $sql2.= " nb_holiday = nb_holiday + ".$nb_holiday;
 
                 dol_syslog(get_class($this).'::updateSoldeCP sql='.$sql2);
-                $this->db->query($sql2);
+                $result= $this->db->query($sql2);
+
+	            if ($result) return 1;
+    	        else return -1;
             }
-        } else {
+
+            return 0;
+        }
+        else
+        {
             // Mise à jour pour un utilisateur
-            $nbHoliday = number_format($nbHoliday,2,'.','');
+            $nbHoliday = price2num($nbHoliday,2);
 
             // Mise à jour pour un utilisateur
             $sql = "UPDATE ".MAIN_DB_PREFIX."holiday_users SET";
@@ -918,7 +949,10 @@ class Holiday extends CommonObject
             $sql.= " WHERE fk_user = '".$userID."'";
 
 			dol_syslog(get_class($this).'::updateSoldeCP sql='.$sql);
-            $this->db->query($sql);
+            $result = $this->db->query($sql);
+
+            if ($result) return 1;
+            else return -1;
         }
 
     }
@@ -957,25 +991,31 @@ class Holiday extends CommonObject
      */
     function createCPusers($single=false,$userid='')
     {
-        // Si c'est l'ensemble des utilisateurs à ajoutés
-        if(!$single)
+        // Si c'est l'ensemble des utilisateurs à ajouter
+        if (! $single)
         {
         	dol_syslog(get_class($this).'::createCPusers');
-            foreach($this->fetchUsers(false,true) as $users) {
+        	$arrayofusers = $this->fetchUsers(false,true);
+
+            foreach($arrayofusers as $users)
+            {
                 $sql = "INSERT INTO ".MAIN_DB_PREFIX."holiday_users";
                 $sql.= " (fk_user, nb_holiday)";
                 $sql.= " VALUES ('".$users['rowid']."','0')";
 
-                $this->db->query($sql);
+                $resql=$this->db->query($sql);
+                if (! $resql) dol_print_error($this->db);
             }
-        } else {
+        }
+        else
+		{
             $sql = "INSERT INTO ".MAIN_DB_PREFIX."holiday_users";
             $sql.= " (fk_user, nb_holiday)";
             $sql.= " VALUES ('".$userid."','0')";
 
-            $this->db->query($sql);
+            $resql=$this->db->query($sql);
+            if (! $resql) dol_print_error($this->db);
         }
-
     }
 
     /**
@@ -1022,7 +1062,7 @@ class Holiday extends CommonObject
      *    uniquement pour vérifier si il existe de nouveau utilisateur
      *
      *    @param      boolean	$liste	    si vrai retourne une liste, si faux retourne un array
-     *    @param      boolean   $type		si vrai retourne pour Dolibarr si faux retourne pour CP
+     *    @param      boolean   $type		si vrai retourne pour Dolibarr, si faux retourne pour CP
      *    @return     string      			retourne un tableau de tout les utilisateurs actifs
      */
     function fetchUsers($liste=true,$type=true)
@@ -1035,7 +1075,7 @@ class Holiday extends CommonObject
 
                 $sql = "SELECT u.rowid";
                 $sql.= " FROM ".MAIN_DB_PREFIX."user as u";
-                $sql.= " WHERE statut > '0'";
+                $sql.= " WHERE statut > 0";
 
                 dol_syslog(get_class($this)."::fetchUsers sql=".$sql, LOG_DEBUG);
                 $resql=$this->db->query($sql);
@@ -1115,9 +1155,9 @@ class Holiday extends CommonObject
             // Si c'est pour les utilisateurs de Dolibarr
             if($type) {
 
-                $sql = "SELECT u.rowid, u.name, u.firstname";
+                $sql = "SELECT u.rowid, u.lastname, u.firstname";
                 $sql.= " FROM ".MAIN_DB_PREFIX."user as u";
-                $sql.= " WHERE statut > '0'";
+                $sql.= " WHERE statut > 0";
 
                 dol_syslog(get_class($this)."::fetchUsers sql=".$sql, LOG_DEBUG);
                 $resql=$this->db->query($sql);
@@ -1135,7 +1175,7 @@ class Holiday extends CommonObject
                         $obj = $this->db->fetch_object($resql);
 
                         $tab_result[$i]['rowid'] = $obj->rowid;
-                        $tab_result[$i]['name'] = $obj->name;
+                        $tab_result[$i]['name'] = $obj->lastname;
                         $tab_result[$i]['firstname'] = $obj->firstname;
 
                         $i++;
@@ -1154,7 +1194,7 @@ class Holiday extends CommonObject
                 // Si c'est pour les utilisateurs du module Congés Payés
             } else {
 
-                $sql = "SELECT cpu.fk_user, u.name, u.firstname";
+                $sql = "SELECT cpu.fk_user, u.lastname, u.firstname";
                 $sql.= " FROM ".MAIN_DB_PREFIX."holiday_users as cpu,";
                 $sql.= " ".MAIN_DB_PREFIX."user as u";
                 $sql.= " WHERE cpu.fk_user = u.rowid";
@@ -1175,7 +1215,7 @@ class Holiday extends CommonObject
                         $obj = $this->db->fetch_object($resql);
 
                         $tab_result[$i]['rowid'] = $obj->fk_user;
-                        $tab_result[$i]['name'] = $obj->name;
+                        $tab_result[$i]['name'] = $obj->lastname;
                         $tab_result[$i]['firstname'] = $obj->firstname;
 
                         $i++;
@@ -1203,7 +1243,23 @@ class Holiday extends CommonObject
 
         $sql = "SELECT count(u.rowid) as compteur";
         $sql.= " FROM ".MAIN_DB_PREFIX."user as u";
-        $sql.= " WHERE statut > '0'";
+		$sql.= " WHERE u.statut > 0";
+
+        $result = $this->db->query($sql);
+        $objet = $this->db->fetch_object($result);
+        return $objet->compteur;
+
+    }
+    /**
+     *	Compte le nombre d'utilisateur actifs dans Dolibarr sans CP
+     *
+     *  @return     int      retourne le nombre d'utilisateur
+     */
+    function countActiveUsersWithoutCP() {
+
+        $sql = "SELECT count(u.rowid) as compteur";
+        $sql.= " FROM ".MAIN_DB_PREFIX."user as u LEFT OUTER JOIN ".MAIN_DB_PREFIX."holiday_users hu ON (hu.fk_user=u.rowid)";
+		$sql.= " WHERE u.statut > 0 AND hu.fk_user IS NULL ";
 
         $result = $this->db->query($sql);
         $objet = $this->db->fetch_object($result);
@@ -1214,57 +1270,63 @@ class Holiday extends CommonObject
     /**
      *  Compare le nombre d'utilisateur actif de Dolibarr à celui des utilisateurs des congés payés
      *
-     *  @param    int	$userDolibarr	nombre d'utilisateur actifs dans Dolibarr
-     *  @param    int	$userCP    		nombre d'utilisateur actifs dans le module congés payés
+     *  @param    int	$userDolibarrWithoutCP	Number of active users in Dolibarr without holidays
+     *  @param    int	$userCP    				Number of active users into table of holidays
      *  @return   void
      */
-    function verifNbUsers($userDolibarr,$userCP) {
+    function verifNbUsers($userDolibarrWithoutCP,$userCP) {
 
     	if (empty($userCP)) $userCP=0;
-    	dol_syslog(get_class($this).'::verifNbUsers userDolibarr='.$userDolibarr.' userCP='.$userCP);
+    	dol_syslog(get_class($this).'::verifNbUsers userDolibarr='.$userDolibarrWithoutCP.' userCP='.$userCP);
 
-        // Si il y a plus d'utilisateur Dolibarr que dans le module CP
-        if ($userDolibarr > $userCP)
+        // On vérifie les users Dolibarr sans CP
+        if ($userDolibarrWithoutCP > 0)
         {
-            $this->updateConfCP('nbUser',$userDolibarr);
+        	$this->db->begin();
+
+            $this->updateConfCP('nbUser',$userDolibarrWithoutCP);
 
             $listUsersCP = $this->fetchUsers(true,false);
 
             // On séléctionne les utilisateurs qui ne sont pas déjà dans le module
-            $sql = "SELECT u.rowid, u.name, u.firstname";
+            $sql = "SELECT u.rowid, u.lastname, u.firstname";
             $sql.= " FROM ".MAIN_DB_PREFIX."user as u";
-            $sql.= " WHERE u.rowid NOT IN(".$listUsersCP.")";
+            if ($listUsersCP != '') $sql.= " WHERE u.rowid NOT IN(".$listUsersCP.")";
 
-            $result = $this->db->query($sql);
-
-            // Si pas d'erreur SQL
-            if($result) {
-
+            $resql = $this->db->query($sql);
+            if ($resql)
+            {
                 $i = 0;
                 $num = $this->db->num_rows($resql);
 
-                while($i < $num) {
-
+                while($i < $num)
+                {
                     $obj = $this->db->fetch_object($resql);
+					$uid = $obj->rowid;
 
                     // On ajoute l'utilisateur
-                    $this->createCPusers(true,$obj->rowid);
+					//print "Add user rowid = ".$uid." into database holiday";
+
+                    $result = $this->createCPusers(true,$uid);
 
                     $i++;
                 }
 
-
+				$this->db->commit();
             } else {
                 // Erreur SQL
                 $this->error="Error ".$this->db->lasterror();
                 dol_syslog(get_class($this)."::verifNbUsers ".$this->error, LOG_ERR);
+                $this->db->rollback();
                 return -1;
             }
 
         } else {
-            // Si il y a moins d'utilisateur Dolibarr que dans le module CP
+        	$this->db->begin();
 
-            $this->updateConfCP('nbUser',$userDolibarr);
+        	// Si il y a moins d'utilisateur Dolibarr que dans le module CP
+
+            $this->updateConfCP('nbUser',$userDolibarrWithoutCP);
 
             $listUsersDolibarr = $this->fetchUsers(true,true);
 
@@ -1285,17 +1347,18 @@ class Holiday extends CommonObject
 
                     $obj = $this->db->fetch_object($resql);
 
-                    // On ajoute l'utilisateur
+                    // On supprime l'utilisateur
                     $this->deleteCPuser($obj->fk_user);
 
                     $i++;
                 }
 
-
+				$this->db->commit();
             } else {
                 // Erreur SQL
                 $this->error="Error ".$this->db->lasterror();
                 dol_syslog(get_class($this)."::verifNbUsers ".$this->error, LOG_ERR);
+                $this->db->rollback();
                 return -1;
             }
         }
@@ -1378,7 +1441,7 @@ class Holiday extends CommonObject
 
         $sql.= ") VALUES (";
 
-        $sql.= " '".addslashes($this->optName)."',";
+        $sql.= " '".$this->db->escape($this->optName)."',";
         $sql.= " '".$this->optValue."'";
         $sql.= ")";
 
@@ -1425,7 +1488,7 @@ class Holiday extends CommonObject
     function updateEventCP($rowid, $name, $value) {
 
         $sql = "UPDATE ".MAIN_DB_PREFIX."holiday_events SET";
-        $sql.= " name = '".addslashes($name)."', value = '".$value."'";
+        $sql.= " name = '".$this->db->escape($name)."', value = '".$value."'";
         $sql.= " WHERE rowid = '".$rowid."'";
 
         $result = $this->db->query($sql);
@@ -1548,7 +1611,7 @@ class Holiday extends CommonObject
      */
     function addLogCP($fk_user_action,$fk_user_update,$type,$new_solde) {
 
-        global $conf, $langs, $db;
+        global $conf, $langs;
 
         $error=0;
 
@@ -1570,7 +1633,7 @@ class Holiday extends CommonObject
         $sql.= " NOW(), ";
         $sql.= " '".$fk_user_action."',";
         $sql.= " '".$fk_user_update."',";
-        $sql.= " '".addslashes($type)."',";
+        $sql.= " '".$this->db->escape($type)."',";
         $sql.= " '".$prev_solde."',";
         $sql.= " '".$new_solde."'";
         $sql.= ")";
@@ -1628,59 +1691,59 @@ class Holiday extends CommonObject
         $sql.= " cpl.new_solde";
 
         $sql.= " FROM ".MAIN_DB_PREFIX."holiday_logs as cpl";
-        $sql.= " WHERE cpl.rowid > '0'"; // Hack pour la recherche sur le tableau
+        $sql.= " WHERE cpl.rowid > 0"; // To avoid error with other search and criteria
 
         // Filtrage de séléction
         if(!empty($filter)) {
-            $sql.= $filter;
+            $sql.= " ".$filter;
         }
 
         // Ordre d'affichage
         if(!empty($order)) {
-            $sql.= $order;
+            $sql.= " ".$order;
         }
 
         dol_syslog(get_class($this)."::fetchLog sql=".$sql, LOG_DEBUG);
         $resql=$this->db->query($sql);
 
         // Si pas d'erreur SQL
-      		if ($resql) {
+  		if ($resql) {
 
-      		    $i = 0;
-      		    $tab_result = $this->logs;
-      		    $num = $this->db->num_rows($resql);
+  		    $i = 0;
+  		    $tab_result = $this->logs;
+  		    $num = $this->db->num_rows($resql);
 
-      		    // Si pas d'enregistrement
-      		    if(!$num) {
+  		    // Si pas d'enregistrement
+  		    if(!$num) {
                 return 2;
-      		    }
+  		    }
 
-      		    // On liste les résultats et on les ajoutent dans le tableau
-      		    while($i < $num) {
+  		    // On liste les résultats et on les ajoutent dans le tableau
+  		    while($i < $num) {
 
-      		        $obj = $this->db->fetch_object($resql);
+  		        $obj = $this->db->fetch_object($resql);
 
-      		        $tab_result[$i]['rowid'] = $obj->rowid;
-      		        $tab_result[$i]['date_action'] = $obj->date_action;
-      		        $tab_result[$i]['fk_user_action'] = $obj->fk_user_action;
-      		        $tab_result[$i]['fk_user_update'] = $obj->fk_user_update;
-      		        $tab_result[$i]['type_action'] = $obj->type_action;
-      		        $tab_result[$i]['prev_solde'] = $obj->prev_solde;
-      		        $tab_result[$i]['new_solde'] = $obj->new_solde;
+  		        $tab_result[$i]['rowid'] = $obj->rowid;
+  		        $tab_result[$i]['date_action'] = $obj->date_action;
+  		        $tab_result[$i]['fk_user_action'] = $obj->fk_user_action;
+  		        $tab_result[$i]['fk_user_update'] = $obj->fk_user_update;
+  		        $tab_result[$i]['type_action'] = $obj->type_action;
+  		        $tab_result[$i]['prev_solde'] = $obj->prev_solde;
+  		        $tab_result[$i]['new_solde'] = $obj->new_solde;
 
-      		        $i++;
-      		    }
-      		    // Retourne 1 et ajoute le tableau à la variable
-      		    $this->logs = $tab_result;
-      		    return 1;
-      		}
-      		else
-      		{
-      		    // Erreur SQL
-      		    $this->error="Error ".$this->db->lasterror();
-      		    dol_syslog(get_class($this)."::fetchLog ".$this->error, LOG_ERR);
-      		    return -1;
-      		}
+  		        $i++;
+  		    }
+  		    // Retourne 1 et ajoute le tableau à la variable
+  		    $this->logs = $tab_result;
+  		    return 1;
+  		}
+  		else
+  		{
+  		    // Erreur SQL
+  		    $this->error="Error ".$this->db->lasterror();
+  		    dol_syslog(get_class($this)."::fetchLog ".$this->error, LOG_ERR);
+  		    return -1;
+  		}
     }
 
     /**
@@ -1707,4 +1770,3 @@ class Holiday extends CommonObject
     }
 
 }
-?>

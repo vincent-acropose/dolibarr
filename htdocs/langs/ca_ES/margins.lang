@@ -1,17 +1,14 @@
-# Dolibarr language file - ca_ES - margins
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - marges
 
-Module59000Name=Marges
-Module59000Desc=Gestió de marges comercials
 Margin=Marge
 Margins=Marges
 TotalMargin=Marge total
 MarginOnProducts=Marge / Productes
 MarginOnServices=Marge / Serveis
-MarginRate=Taxa de marge
-MarkRate=Taxa de marca
-DisplayMarginRates=Mostrar les taxes de marge
-DisplayMarkRates=Mostrar les taxes de marca
+MarginRate=Marge sobre cost
+MarkRate=Marge sobre venda
+DisplayMarginRates=Mostrar els marges sobre cost
+DisplayMarkRates=Mostrar els marges sobre venda
 InputPrice=Introduir un preu
 
 margin=Gestió de marges
@@ -21,12 +18,11 @@ MarginDetails=Detalls de marges realitzats
 
 ProductMargins=Marges per producte
 CustomerMargins=Marges per client
-AgentMargins=Marges per comercial
+SalesRepresentativeMargins=Sales representative margins
 
 ProductService=Producte o servei
 AllProducts=Tots els productes i serveis
 ChooseProduct/Service=Trieu el producte o servei
-CommercialAgent=Agent comercial
 
 StartDate=Data d'inici
 EndDate=Data de fi
@@ -45,6 +41,7 @@ MargeBrute=Marge brut
 MargeNette=Marge net
 MARGIN_TYPE_DETAILS=Marge brut: Preu de venda sense IVA - Preu de compra sense IVA <br/> Marge net: Preu de venda sense IVA - Costos
 
+CostPrice=Preu de compra
 BuyingCost=Costos
 UnitCharges=Càrrega unitària
 Charges=Càrreges

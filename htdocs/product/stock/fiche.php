@@ -39,6 +39,7 @@ $action=GETPOST('action');
 
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
+$id = GETPOST("id",'int');
 if (! $sortfield) $sortfield="p.ref";
 if (! $sortorder) $sortorder="DESC";
 
@@ -47,6 +48,8 @@ $mesg = '';
 // Security check
 $result=restrictedArea($user,'stock');
 
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('warehousecard'));
 
 
 /*
@@ -64,9 +67,6 @@ if ($action == 'add' && $user->rights->stock->creer)
 	$object->statut      = $_POST["statut"];
 	$object->lieu        = $_POST["lieu"];
 	$object->address     = $_POST["address"];
-	$object->cp          = $_POST["zipcode"];
-	$object->ville       = $_POST["town"];
-	$object->pays_id     = $_POST["country_id"];
 	$object->zip         = $_POST["zipcode"];
 	$object->town        = $_POST["town"];
 	$object->country_id  = $_POST["country_id"];
@@ -110,37 +110,31 @@ if ($action == 'confirm_delete' && $_REQUEST["confirm"] == 'yes' && $user->right
 if ($action == 'update' && $_POST["cancel"] <> $langs->trans("Cancel"))
 {
 	$object = new Entrepot($db);
-	if ($object->fetch($_POST["id"]))
+	if ($object->fetch($id))
 	{
 		$object->libelle     = $_POST["libelle"];
 		$object->description = $_POST["desc"];
 		$object->statut      = $_POST["statut"];
 		$object->lieu        = $_POST["lieu"];
 		$object->address     = $_POST["address"];
-		$object->cp          = $_POST["zipcode"];
-		$object->ville       = $_POST["town"];
-		$object->pays_id     = $_POST["country_id"];
 		$object->zip         = $_POST["zipcode"];
 		$object->town        = $_POST["town"];
 		$object->country_id  = $_POST["country_id"];
 
-		if ( $object->update($_POST["id"], $user) > 0)
+		if ( $object->update($id, $user) > 0)
 		{
 			$action = '';
-			$_GET["id"] = $_POST["id"];
 			//$mesg = '<div class="ok">Fiche mise a jour</div>';
 		}
 		else
 		{
 			$action = 'edit';
-			$_GET["id"] = $_POST["id"];
 			$mesg = '<div class="error">'.$object->error.'</div>';
 		}
 	}
 	else
 	{
 		$action = 'edit';
-		$_GET["id"] = $_POST["id"];
 		$mesg = '<div class="error">'.$object->error.'</div>';
 	}
 }
@@ -148,7 +142,6 @@ if ($action == 'update' && $_POST["cancel"] <> $langs->trans("Cancel"))
 if ($_POST["cancel"] == $langs->trans("Cancel"))
 {
 	$action = '';
-	$_GET["id"] = $_POST["id"];
 }
 
 
@@ -197,15 +190,15 @@ if ($action == 'create')
 
 	// Zip / Town
 	print '<tr><td>'.$langs->trans('Zip').'</td><td>';
-	print $formcompany->select_ziptown($object->zip,'zipcode',array('town','selectcountry_id','departement_id'),6);
+	print $formcompany->select_ziptown($object->zip,'zipcode',array('town','selectcountry_id','state_id'),6);
 	print '</td><td>'.$langs->trans('Town').'</td><td>';
-	print $formcompany->select_ziptown($object->town,'town',array('zipcode','selectcountry_id','departement_id'));
+	print $formcompany->select_ziptown($object->town,'town',array('zipcode','selectcountry_id','state_id'));
 	print '</td></tr>';
 
 	// Country
 	print '<tr><td width="25%">'.$langs->trans('Country').'</td><td colspan="3">';
 	print $form->select_country($object->country_id?$object->country_id:$mysoc->country_code,'country_id');
-	if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
+	if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
 	print '</td></tr>';
 
 	print '<tr><td>'.$langs->trans("Status").'</td><td colspan="3">';
@@ -223,12 +216,13 @@ if ($action == 'create')
 }
 else
 {
-	if ($_GET["id"])
+    $id=GETPOST("id",'int');
+	if ($id)
 	{
 		dol_htmloutput_mesg($mesg);
 
 		$object = new Entrepot($db);
-		$result = $object->fetch($_GET["id"]);
+		$result = $object->fetch($id);
 		if ($result < 0)
 		{
 			dol_print_error($db);
@@ -246,9 +240,7 @@ else
 			// Confirm delete third party
 			if ($action == 'delete')
 			{
-				$form = new Form($db);
-				$ret=$form->form_confirm($_SERVER["PHP_SELF"]."?id=".$object->id,$langs->trans("DeleteAWarehouse"),$langs->trans("ConfirmDeleteWarehouse",$object->libelle),"confirm_delete",'',0,2);
-				if ($ret == 'html') print '<br>';
+				print $form->formconfirm($_SERVER["PHP_SELF"]."?id=".$object->id,$langs->trans("DeleteAWarehouse"),$langs->trans("ConfirmDeleteWarehouse",$object->libelle),"confirm_delete",'',0,2);
 			}
 
 			print '<table class="border" width="100%">';
@@ -270,21 +262,30 @@ else
 			print $object->address;
 			print '</td></tr>';
 
-			// Ville
+			// Town
 			print '<tr><td width="25%">'.$langs->trans('Zip').'</td><td width="25%">'.$object->zip.'</td>';
 			print '<td width="25%">'.$langs->trans('Town').'</td><td width="25%">'.$object->town.'</td></tr>';
 
 			// Country
 			print '<tr><td>'.$langs->trans('Country').'</td><td colspan="3">';
-			$img=picto_from_langcode($object->country_code);
-			print ($img?$img.' ':'');
+			if (! empty($object->country_code)) 
+			{
+				$img=picto_from_langcode($object->country_code);
+				print ($img?$img.' ':'');
+			}
 			print $object->country;
 			print '</td></tr>';
 
-			// Statut
+			// Status
 			print '<tr><td>'.$langs->trans("Status").'</td><td colspan="3">'.$object->getLibStatut(4).'</td></tr>';
 
+        	$calcproductsunique=$object->nb_different_products();
 			$calcproducts=$object->nb_products();
+
+	        // Total nb of different products
+	        print '<tr><td valign="top">'.$langs->trans("NumberOfDifferentProducts").'</td><td colspan="3">';
+	        print empty($calcproductsunique['nb'])?'0':$calcproductsunique['nb'];
+	        print "</td></tr>";
 
 			// Nb of products
 			print '<tr><td valign="top">'.$langs->trans("NumberOfProducts").'</td><td colspan="3">';
@@ -335,19 +336,24 @@ else
 
 			print "<div class=\"tabsAction\">\n";
 
-			if ($action == '')
+			$parameters=array();
+			$reshook=$hookmanager->executeHooks('addMoreActionsButtons',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
+			if (empty($reshook))
 			{
-				if ($user->rights->stock->creer)
-				print "<a class=\"butAction\" href=\"fiche.php?action=edit&id=".$object->id."\">".$langs->trans("Modify")."</a>";
-				else
-				print "<a class=\"butActionRefused\" href=\"#\">".$langs->trans("Modify")."</a>";
-
-				if ($user->rights->stock->supprimer)
-				print "<a class=\"butActionDelete\" href=\"fiche.php?action=delete&id=".$object->id."\">".$langs->trans("Delete")."</a>";
-				else
-				print "<a class=\"butActionRefused\" href=\"#\">".$langs->trans("Delete")."</a>";
+				if (empty($action))
+				{
+					if ($user->rights->stock->creer)
+						print "<a class=\"butAction\" href=\"fiche.php?action=edit&id=".$object->id."\">".$langs->trans("Modify")."</a>";
+					else
+						print "<a class=\"butActionRefused\" href=\"#\">".$langs->trans("Modify")."</a>";
+	
+					if ($user->rights->stock->supprimer)
+						print "<a class=\"butActionDelete\" href=\"fiche.php?action=delete&id=".$object->id."\">".$langs->trans("Delete")."</a>";
+					else
+						print "<a class=\"butActionRefused\" href=\"#\">".$langs->trans("Delete")."</a>";
+				}
 			}
-
+			
 			print "</div>";
 
 
@@ -360,13 +366,13 @@ else
 
 			print '<table class="noborder" width="100%">';
 			print "<tr class=\"liste_titre\">";
-			print_liste_field_titre($langs->trans("Product"),"", "p.ref","&amp;id=".$_GET['id'],"","",$sortfield,$sortorder);
-			print_liste_field_titre($langs->trans("Label"),"", "p.label","&amp;id=".$_GET['id'],"","",$sortfield,$sortorder);
-            print_liste_field_titre($langs->trans("Units"),"", "ps.reel","&amp;id=".$_GET['id'],"",'align="right"',$sortfield,$sortorder);
-            print_liste_field_titre($langs->trans("AverageUnitPricePMPShort"),"", "ps.pmp","&amp;id=".$_GET['id'],"",'align="right"',$sortfield,$sortorder);
-			print_liste_field_titre($langs->trans("EstimatedStockValueShort"),"", "","&amp;id=".$_GET['id'],"",'align="right"',$sortfield,$sortorder);
-            if (empty($conf->global->PRODUIT_MULTIPRICES)) print_liste_field_titre($langs->trans("SellPriceMin"),"", "p.price","&amp;id=".$_GET['id'],"",'align="right"',$sortfield,$sortorder);
-            if (empty($conf->global->PRODUIT_MULTIPRICES)) print_liste_field_titre($langs->trans("EstimatedStockValueSellShort"),"", "","&amp;id=".$_GET['id'],"",'align="right"',$sortfield,$sortorder);
+			print_liste_field_titre($langs->trans("Product"),"", "p.ref","&amp;id=".$id,"","",$sortfield,$sortorder);
+			print_liste_field_titre($langs->trans("Label"),"", "p.label","&amp;id=".$id,"","",$sortfield,$sortorder);
+            print_liste_field_titre($langs->trans("Units"),"", "ps.reel","&amp;id=".$id,"",'align="right"',$sortfield,$sortorder);
+            print_liste_field_titre($langs->trans("AverageUnitPricePMPShort"),"", "ps.pmp","&amp;id=".$id,"",'align="right"',$sortfield,$sortorder);
+			print_liste_field_titre($langs->trans("EstimatedStockValueShort"),"", "","&amp;id=".$id,"",'align="right"',$sortfield,$sortorder);
+            if (empty($conf->global->PRODUIT_MULTIPRICES)) print_liste_field_titre($langs->trans("SellPriceMin"),"", "p.price","&amp;id=".$id,"",'align="right"',$sortfield,$sortorder);
+            if (empty($conf->global->PRODUIT_MULTIPRICES)) print_liste_field_titre($langs->trans("EstimatedStockValueSellShort"),"", "","&amp;id=".$id,"",'align="right"',$sortfield,$sortorder);
 			if ($user->rights->stock->mouvement->creer) print '<td>&nbsp;</td>';
 			if ($user->rights->stock->creer)            print '<td>&nbsp;</td>';
 			print "</tr>";
@@ -435,11 +441,11 @@ else
                     {
                         $pricemin=$objp->price;
                         print '<td align="right">';
-                        print price(price2num($pricemin,'MU'));
+                        print price(price2num($pricemin,'MU'),1);
                         print '</td>';
                         // Total sell min
                         print '<td align="right">';
-                        print price(price2num($pricemin*$objp->value,'MT'));
+                        print price(price2num($pricemin*$objp->value,'MT'),1);
                         print '</td>';
                     }
                     $totalvaluesell+=price2num($pricemin*$objp->value,'MT');
@@ -518,15 +524,15 @@ else
 
 			// Zip / Town
 			print '<tr><td>'.$langs->trans('Zip').'</td><td>';
-			print $formcompany->select_ziptown($object->zip,'zipcode',array('town','selectcountry_id','departement_id'),6);
+			print $formcompany->select_ziptown($object->zip,'zipcode',array('town','selectcountry_id','state_id'),6);
 			print '</td><td>'.$langs->trans('Town').'</td><td>';
-			print $formcompany->select_ziptown($object->town,'town',array('zipcode','selectcountry_id','departement_id'));
+			print $formcompany->select_ziptown($object->town,'town',array('zipcode','selectcountry_id','state_id'));
 			print '</td></tr>';
 
 			// Country
 			print '<tr><td width="25%">'.$langs->trans('Country').'</td><td colspan="3">';
 			print $form->select_country($object->country_id?$object->country_id:$mysoc->country_code,'country_id');
-			if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
+			if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
 			print '</td></tr>';
 
 			print '<tr><td width="20%">'.$langs->trans("Status").'</td><td colspan="3">';
@@ -551,4 +557,3 @@ else
 llxFooter();
 
 $db->close();
-?>

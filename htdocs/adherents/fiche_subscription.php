@@ -291,8 +291,7 @@ if ($rowid && $action != 'edit')
         //$formquestion['text']='<b>'.$langs->trans("ThisWillAlsoDeleteBankRecord").'</b>';
 		$text=$langs->trans("ConfirmDeleteSubscription");
 		if (! empty($conf->banque->enabled) && ! empty($conf->global->ADHERENT_BANK_USE)) $text.='<br>'.img_warning().' '.$langs->trans("ThisWillAlsoDeleteBankRecord");
-		$ret=$form->form_confirm($_SERVER["PHP_SELF"]."?rowid=".$subscription->id,$langs->trans("DeleteSubscription"),$text,"confirm_delete",$formquestion,0,1);
-        if ($ret == 'html') print '<br>';
+		print $form->formconfirm($_SERVER["PHP_SELF"]."?rowid=".$subscription->id,$langs->trans("DeleteSubscription"),$text,"confirm_delete",$formquestion,0,1);
     }
 
     print '<form action="'.$_SERVER["PHP_SELF"].'" method="post">';
@@ -371,18 +370,18 @@ if ($rowid && $action != 'edit')
 	{
 		if (! $bankline->rappro)
 		{
-			print "<a class=\"butAction\" href=\"".$_SERVER["PHP_SELF"]."?rowid=".$subscription->id."&action=edit\">".$langs->trans("Modify")."</a>";
+			print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"]."?rowid=".$subscription->id."&action=edit\">".$langs->trans("Modify")."</a></div>";
 		}
 		else
 		{
-			print "<a class=\"butActionRefused\" title=\"".$langs->trans("BankLineConciliated")."\" href=\"#\">".$langs->trans("Modify")."</a>";
+			print '<div class="inline-block divButAction"><a class="butActionRefused" title="'.$langs->trans("BankLineConciliated")."\" href=\"#\">".$langs->trans("Modify")."</a></div>";
 		}
 	}
 
     // Supprimer
     if ($user->rights->adherent->cotisation->creer)
     {
-        print "<a class=\"butActionDelete\" href=\"".$_SERVER["PHP_SELF"]."?rowid=".$subscription->id."&action=delete\">".$langs->trans("Delete")."</a>\n";
+        print '<div class="inline-block divButAction"><a class="butActionDelete" href="'.$_SERVER["PHP_SELF"]."?rowid=".$subscription->id."&action=delete\">".$langs->trans("Delete")."</a></div>\n";
     }
 
     print '</div>';
@@ -394,4 +393,3 @@ if ($rowid && $action != 'edit')
 $db->close();
 
 llxFooter();
-?>

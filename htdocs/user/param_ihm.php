@@ -1,6 +1,7 @@
 <?php
-/* Copyright (C) 2005-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2005-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2010-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013	   Florian Henry        <florian.henry@open-concept.pro.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,7 +78,7 @@ $formadmin=new FormAdmin($db);
 /*
  * Actions
  */
-if ($action == 'update' && ($caneditfield  || $user->admin))
+if ($action == 'update' && ($caneditfield || ! empty($user->admin)))
 {
     if (! $_POST["cancel"])
     {
@@ -85,8 +86,6 @@ if ($action == 'update' && ($caneditfield  || $user->admin))
 
         if ($_POST["check_MAIN_LANG_DEFAULT"]=="on") $tabparam["MAIN_LANG_DEFAULT"]=$_POST["main_lang_default"];
         else $tabparam["MAIN_LANG_DEFAULT"]='';
-
-        $tabparam["MAIN_MENU_STANDARD"]=$_POST["MAIN_MENU_STANDARD"];
 
         if ($_POST["check_SIZE_LISTE_LIMIT"]=="on") $tabparam["MAIN_SIZE_LISTE_LIMIT"]=$_POST["main_size_liste_limit"];
         else $tabparam["MAIN_SIZE_LISTE_LIMIT"]='';
@@ -99,8 +98,6 @@ if ($action == 'update' && ($caneditfield  || $user->admin))
         $tabparam["MAIN_SEARCHFORM_PRODUITSERVICE"]=$_POST["main_searchform_produitservice"];
 
         $result=dol_set_user_param($db, $conf, $fuser, $tabparam);
-
-        $_SESSION["mainmenu"]="";   // Le gestionnaire de menu a pu changer
 
         header('Location: '.$_SERVER["PHP_SELF"].'?id='.$id);
         exit;
@@ -118,6 +115,16 @@ llxHeader();
 $head = user_prepare_head($fuser);
 
 $title = $langs->trans("User");
+
+if ($action == 'edit')
+{
+	print '<form method="post" action="'.$_SERVER["PHP_SELF"].'">';
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print '<input type="hidden" name="action" value="update">';
+	print '<input type="hidden" name="id" value="'.$id.'">';
+}
+
+
 dol_fiche_head($head, 'guisetup', $title, 0, 'user');
 
 
@@ -130,14 +137,14 @@ print $form->showrefnav($fuser,'id','',$user->rights->user->user->lire || $user-
 print '</td>';
 print '</tr>';
 
-// Nom
+// LastName
 print '<tr><td width="25%" valign="top">'.$langs->trans("LastName").'</td>';
-print '<td colspan="2">'.$fuser->nom.'</td>';
+print '<td colspan="2">'.$fuser->lastname.'</td>';
 print "</tr>\n";
 
-// Prenom
+// FirstName
 print '<tr><td width="25%" valign="top">'.$langs->trans("FirstName").'</td>';
-print '<td colspan="2">'.$fuser->prenom.'</td>';
+print '<td colspan="2">'.$fuser->firstname.'</td>';
 print "</tr>\n";
 
 print '</table><br>';
@@ -157,11 +164,6 @@ if ($action == 'edit')
 	});
 	</script>';
 
-	print '<form method="post" action="'.$_SERVER["PHP_SELF"].'">';
-    print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-    print '<input type="hidden" name="action" value="update">';
-    print '<input type="hidden" name="id" value="'.$id.'">';
-
     clearstatcache();
     $var=true;
 
@@ -176,7 +178,7 @@ if ($action == 'edit')
     print $s?$s.' ':'';
     print ($conf->global->MAIN_LANG_DEFAULT=='auto'?$langs->trans("AutoDetectLang"):$langs->trans("Language_".$conf->global->MAIN_LANG_DEFAULT));
     print '</td>';
-    print '<td align="left" nowrap="nowrap" width="20%"><input '.$bc[$var].' name="check_MAIN_LANG_DEFAULT" id="check_MAIN_LANG_DEFAULT" type="checkbox" '.(! empty($fuser->conf->MAIN_LANG_DEFAULT)?" checked":"");
+    print '<td align="left" class="nowrap" width="20%"><input '.$bc[$var].' name="check_MAIN_LANG_DEFAULT" id="check_MAIN_LANG_DEFAULT" type="checkbox" '.(! empty($fuser->conf->MAIN_LANG_DEFAULT)?" checked":"");
     print ! empty($dolibarr_main_demo)?' disabled="disabled"':'';	// Disabled for demo
     print '> '.$langs->trans("UsePersonalValue").'</td>';
     print '<td>';
@@ -187,23 +189,25 @@ if ($action == 'edit')
     $var=!$var;
     print '<tr '.$bc[$var].'><td>'.$langs->trans("MaxSizeList").'</td>';
     print '<td>'.$conf->global->MAIN_SIZE_LISTE_LIMIT.'</td>';
-    print '<td align="left" nowrap="nowrap" width="20%"><input '.$bc[$var].' name="check_SIZE_LISTE_LIMIT" id="check_SIZE_LISTE_LIMIT" type="checkbox" '.(! empty($fuser->conf->MAIN_SIZE_LISTE_LIMIT)?" checked":"");
+    print '<td align="left" class="nowrap" width="20%"><input '.$bc[$var].' name="check_SIZE_LISTE_LIMIT" id="check_SIZE_LISTE_LIMIT" type="checkbox" '.(! empty($fuser->conf->MAIN_SIZE_LISTE_LIMIT)?" checked":"");
     print ! empty($dolibarr_main_demo)?' disabled="disabled"':'';	// Disabled for demo
     print '> '.$langs->trans("UsePersonalValue").'</td>';
-    print '<td><input class="flat" name="main_size_liste_limit" id="main_size_liste_limit" size="4" value="' . (! empty($fuser->conf->SIZE_LISTE_LIMIT)?$fuser->conf->SIZE_LISTE_LIMIT:'') . '"></td></tr>';
+    print '<td><input class="flat" name="main_size_liste_limit" id="main_size_liste_limit" size="4" value="' . (! empty($fuser->conf->MAIN_SIZE_LISTE_LIMIT)?$fuser->conf->MAIN_SIZE_LISTE_LIMIT:'') . '"></td></tr>';
 
     print '</table><br>';
 
     // Theme
     show_theme($fuser,(($user->admin || empty($dolibarr_main_demo))?1:0),true);
 
-    print '</div>';
+    dol_fiche_end();
+
 
     print '<center>';
     print '<input type="submit" class="button" name="save" value="'.$langs->trans("Save").'">';
     print ' &nbsp; &nbsp; ';
     print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'">';
     print '</center>';
+
     print '</form>';
 
 }
@@ -221,7 +225,7 @@ else
     print ($s?$s.' ':'');
     print (isset($conf->global->MAIN_LANG_DEFAULT) && $conf->global->MAIN_LANG_DEFAULT=='auto'?$langs->trans("AutoDetectLang"):$langs->trans("Language_".$conf->global->MAIN_LANG_DEFAULT));
     print '</td>';
-    print '<td align="left" nowrap="nowrap" width="20%"><input '.$bc[$var].' type="checkbox" disabled '.(! empty($fuser->conf->MAIN_LANG_DEFAULT)?" checked":"").'> '.$langs->trans("UsePersonalValue").'</td>';
+    print '<td align="left" class="nowrap" width="20%"><input '.$bc[$var].' type="checkbox" disabled '.(! empty($fuser->conf->MAIN_LANG_DEFAULT)?" checked":"").'> '.$langs->trans("UsePersonalValue").'</td>';
     print '<td>';
     $s=(isset($fuser->conf->MAIN_LANG_DEFAULT) ? picto_from_langcode($fuser->conf->MAIN_LANG_DEFAULT) : '');
     print ($s?$s.' ':'');
@@ -231,7 +235,7 @@ else
     $var=!$var;
     print '<tr '.$bc[$var].'><td>'.$langs->trans("MaxSizeList").'</td>';
     print '<td>'.(! empty($conf->global->MAIN_SIZE_LISTE_LIMIT)?$conf->global->MAIN_SIZE_LISTE_LIMIT:'&nbsp;').'</td>';
-    print '<td align="left" nowrap="nowrap" width="20%"><input '.$bc[$var].' type="checkbox" disabled '.(! empty($fuser->conf->MAIN_SIZE_LISTE_LIMIT)?" checked":"").'> '.$langs->trans("UsePersonalValue").'</td>';
+    print '<td align="left" class="nowrap" width="20%"><input '.$bc[$var].' type="checkbox" disabled '.(! empty($fuser->conf->MAIN_SIZE_LISTE_LIMIT)?" checked":"").'> '.$langs->trans("UsePersonalValue").'</td>';
     print '<td>' . (! empty($fuser->conf->MAIN_SIZE_LISTE_LIMIT)?$fuser->conf->MAIN_SIZE_LISTE_LIMIT:'&nbsp;') . '</td></tr>';
 
     print '</table><br>';
@@ -240,7 +244,8 @@ else
     // Skin
     show_theme($fuser,0,true);
 
-    print '</div>';
+    dol_fiche_end();
+
 
     print '<div class="tabsAction">';
     if (empty($user->admin) && ! empty($dolibarr_main_demo))
@@ -249,7 +254,7 @@ else
     }
     else
     {
-        if ($user->id == $fuser->id || ! empty($user->admin))       // Si utilisateur edite = utilisateur courant (pas besoin de droits particulier car il s'agit d'une page de modif d'output et non de données) ou si admin
+        if ($caneditfield || ! empty($user->admin))       // Si utilisateur edite = utilisateur courant (pas besoin de droits particulier car il s'agit d'une page de modif d'output et non de données) ou si admin
         {
             print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=edit&amp;id='.$fuser->id.'">'.$langs->trans("Modify").'</a>';
         }
@@ -267,4 +272,3 @@ dol_fiche_end();
 
 llxFooter();
 $db->close();
-?>

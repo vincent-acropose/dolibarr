@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2003-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/infobox.class.php';
 include_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 
 $langs->load("admin");
+$langs->load("boxes");
 
 if (! $user->admin) accessforbidden();
 
@@ -35,9 +36,8 @@ $rowid = GETPOST('rowid','int');
 $action = GETPOST('action','alpha');
 $errmesg='';
 
-// Definition des positions possibles pour les boites
-$pos_array = array(0);                             // Positions possibles pour une boite (0,1,2,...)
-$pos_name = array(0=>$langs->trans("Home"));       // Nom des positions 0=Homepage, 1=...
+// Define possible position of boxes
+$pos_name = getStaticMember('InfoBox','listOfPages');
 $boxes = array();
 
 
@@ -57,7 +57,7 @@ if ($action == 'add')
 
     $db->begin();
 
-	// Initialize distinctfkuser with all already existing values of fk_user (user that use a personalized view of boxes for pos)
+	// Initialize distinct fkuser with all already existing values of fk_user (user that use a personalized view of boxes for page "pos")
 	$distinctfkuser=array();
 	if (! $error)
 	{
@@ -85,14 +85,31 @@ if ($action == 'add')
 		}
 	}
 
+	$distinctfkuser['0']='0';	// Add entry for fk_user = 0. We must use string as key and val
+
 	foreach($distinctfkuser as $fk_user)
 	{
-	    if (! $error && $fk_user != 0)    // We will add fk_user = 0 later.
+	    if (! $error && $fk_user != '')
 	    {
+	    	$nbboxonleft=$nbboxonright=0;
+	    	$sql = "SELECT box_order FROM ".MAIN_DB_PREFIX."boxes WHERE position = ".GETPOST("pos","alpha")." AND fk_user = ".$fk_user." AND entity = ".$conf->entity;
+	        dol_syslog("boxes.php activate box sql=".$sql);
+	        $resql = $db->query($sql);
+	        if ($resql)
+	        {
+	        	while($obj = $db->fetch_object($resql))
+	        	{
+					$boxorder=$obj->box_order;
+					if (preg_match('/A/',$boxorder)) $nbboxonleft++;
+					if (preg_match('/B/',$boxorder)) $nbboxonright++;
+	        	}
+	        }
+	        else dol_print_error($db);
+
 	        $sql = "INSERT INTO ".MAIN_DB_PREFIX."boxes (";
 	        $sql.= "box_id, position, box_order, fk_user, entity";
 	        $sql.= ") values (";
-	        $sql.= GETPOST("boxid","int").", ".GETPOST("pos","alpha").", 'A01', ".$fk_user.", ".$conf->entity;
+	        $sql.= GETPOST("boxid","int").", ".GETPOST("pos","alpha").", '".(($nbboxonleft > $nbboxonright) ? 'B01' : 'A01')."', ".$fk_user.", ".$conf->entity;
 	        $sql.= ")";
 
 	        dol_syslog("boxes.php activate box sql=".$sql);
@@ -103,24 +120,6 @@ if ($action == 'add')
 	            $error++;
 	        }
 	    }
-	}
-
-	// If value 0 was not included, we add it.
-	if (! $error)
-	{
-	    $sql = "INSERT INTO ".MAIN_DB_PREFIX."boxes (";
-	    $sql.= "box_id, position, box_order, fk_user, entity";
-	    $sql.= ") values (";
-	    $sql.= GETPOST("boxid","int").", ".GETPOST("pos","alpha").", 'A01', 0, ".$conf->entity;
-	    $sql.= ")";
-
-	    dol_syslog("boxes.php activate box sql=".$sql);
-	    $resql = $db->query($sql);
-        if (! $resql)
-        {
-		    $errmesg=$db->lasterror();
-            $error++;
-        }
 	}
 
 	if (! $error)
@@ -236,12 +235,14 @@ $sql.= " AND b.box_id = bd.rowid";
 $sql.= " AND b.fk_user=0";
 $sql.= " ORDER by b.position, b.box_order";
 
+dol_syslog("Search available boxes sql=".$sql, LOG_DEBUG);
 $resql = $db->query($sql);
 if ($resql)
 {
 	$num = $db->num_rows($resql);
 	$i = 0;
 	$decalage=0;
+	$var=false;
 	while ($i < $num)
 	{
 		$var = ! $var;
@@ -313,7 +314,7 @@ if ($resql)
 }
 
 
-// Available boxes
+// Available boxes to activate
 $boxtoadd=InfoBox::listBoxes($db,'available',-1,null,$actives);
 
 print "<br>\n";
@@ -344,13 +345,22 @@ foreach($boxtoadd as $box)
     print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
     print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
     print '<tr '.$bc[$var].'>';
-    print '<td>'.img_object("",$logo).' '.$box->boxlabel.'</td>';
-    print '<td>' . ($box->note?$box->note:'&nbsp;') . '</td>';
+    print '<td>'.img_object("",$logo).' '.$langs->transnoentitiesnoconv($box->boxlabel);
+    if (! empty($box->class) && preg_match('/graph_/',$box->class)) print ' ('.$langs->trans("Graph").')';
+    print '</td>';
+    print '<td>';
+    if ($box->note == '(WarningUsingThisBoxSlowDown)')
+    {
+    	$langs->load("errors");
+    	print $langs->trans("WarningUsingThisBoxSlowDown");
+    }
+	else print ($box->note?$box->note:'&nbsp;');
+    print '</td>';
     print '<td>' . $box->sourcefile . '</td>';
 
     // Pour chaque position possible, on affiche un lien d'activation si boite non deja active pour cette position
     print '<td>';
-    print $form->selectarray("pos",$pos_name);
+    print $form->selectarray("pos",$pos_name,0,0,0,0,'',1);
     print '<input type="hidden" name="action" value="add">';
     print '<input type="hidden" name="boxid" value="'.$box->box_id.'">';
     print ' <input type="submit" class="button" name="button" value="'.$langs->trans("Activate").'">';
@@ -396,9 +406,18 @@ foreach($boxactivated as $key => $box)
 
     print "\n".'<!-- Box '.$box->boxcode.' -->'."\n";
 	print '<tr '.$bc[$var].'>';
-	print '<td>'.img_object("",$logo).' '.$box->boxlabel.'</td>';
-	print '<td>' . ($box->note?$box->note:'&nbsp;') . '</td>';
-	print '<td align="center">' . (isset($pos_name[$box->position])?$pos_name[$box->position]:'') . '</td>';
+	print '<td>'.img_object("",$logo).' '.$langs->transnoentitiesnoconv($box->boxlabel);
+	if (! empty($box->class) && preg_match('/graph_/',$box->class)) print ' ('.$langs->trans("Graph").')';
+	print '</td>';
+	print '<td>';
+	if ($box->note == '(WarningUsingThisBoxSlowDown)')
+	{
+		$langs->load("errors");
+		print img_warning('',0).' '.$langs->trans("WarningUsingThisBoxSlowDown");
+	}
+	else print ($box->note?$box->note:'&nbsp;');
+	print '</td>';
+	print '<td align="center">' . (empty($pos_name[$box->position])?'':$langs->trans($pos_name[$box->position])) . '</td>';
 	$hasnext=($key < (count($boxactivated)-1));
 	$hasprevious=($key != 0);
 	print '<td align="center">'.($key+1).'</td>';
@@ -449,4 +468,3 @@ print '</table>';
 llxFooter();
 
 $db->close();
-?>

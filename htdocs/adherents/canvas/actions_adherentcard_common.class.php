@@ -17,14 +17,13 @@
  */
 
 /**
- *	\file       htdocs/contact/canvas/actions_adherentcard_common.class.php
- *	\ingroup    thirdparty
+ *	\file       htdocs/adherents/canvas/actions_adherentcard_common.class.php
+ *	\ingroup    adherent
  *	\brief      Fichier de la classe Adherent card controller (common)
  */
 
 /**
- *	\class      ActionsAdherentCardCommon
- *	\brief      Classe permettant la gestion des adherents par defaut
+ *	Class to maage members using default canvas
  */
 abstract class ActionsAdherentCardCommon
 {
@@ -47,7 +46,8 @@ abstract class ActionsAdherentCardCommon
 	/**
 	 * 	Instantiation of DAO class
 	 *
-	 * 	@return	void
+	 * 	@return	int		0
+	 *  @deprecated		Using getInstanceDao should not be used.
 	 */
 	private function getInstanceDao()
 	{
@@ -66,6 +66,7 @@ abstract class ActionsAdherentCardCommon
 	            }
 	        }
 		}
+		return 0;
 	}
 
 	/**
@@ -93,7 +94,7 @@ abstract class ActionsAdherentCardCommon
     /**
      *  Load data control
      *
-	 *  @param	string	&$action    Type of action
+	 *  @param	string	$action    Type of action
 	 *  @param	int		$id			Id of object
      *	@return	void
      */
@@ -227,7 +228,7 @@ abstract class ActionsAdherentCardCommon
 	/**
      *  Set content of ->tpl array, to use into template
      *
-     *  @param	string		&$action    Type of action
+     *  @param	string		$action    Type of action
      *  @param	int			$id			Id
      *  @return	string					HTML output
      */
@@ -272,7 +273,7 @@ abstract class ActionsAdherentCardCommon
         	}
 
         	// Civility
-        	$this->tpl['select_civility'] = $formcompany->select_civility($this->object->civilite_id);
+        	$this->tpl['select_civility'] = $formcompany->select_civility($this->object->civility_id);
 
         	// Predefined with third party
         	if ((isset($objsoc->typent_code) && $objsoc->typent_code == 'TE_PRIVATE'))
@@ -286,10 +287,10 @@ abstract class ActionsAdherentCardCommon
         	}
 
             // Zip
-            $this->tpl['select_zip'] = $formcompany->select_ziptown($this->object->zip,'zipcode',array('town','selectcountry_id','departement_id'),6);
+            $this->tpl['select_zip'] = $formcompany->select_ziptown($this->object->zip,'zipcode',array('town','selectcountry_id','state_id'),6);
 
             // Town
-            $this->tpl['select_town'] = $formcompany->select_ziptown($this->object->town,'town',array('zipcode','selectcountry_id','departement_id'));
+            $this->tpl['select_town'] = $formcompany->select_ziptown($this->object->town,'town',array('zipcode','selectcountry_id','state_id'));
 
             if (dol_strlen(trim($this->object->country_id)) == 0) $this->object->country_id = $objsoc->country_id;
 
@@ -297,10 +298,10 @@ abstract class ActionsAdherentCardCommon
             $this->tpl['select_country'] = $form->select_country($this->object->country_id,'country_id');
             $countrynotdefined = $langs->trans("ErrorSetACountryFirst").' ('.$langs->trans("SeeAbove").')';
 
-            if ($user->admin) $this->tpl['info_admin'] = info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
+            if ($user->admin) $this->tpl['info_admin'] = info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
 
             // State
-            if ($this->object->country_id) $this->tpl['select_state'] = $formcompany->select_state($this->object->fk_departement,$this->object->country_code);
+            if ($this->object->country_id) $this->tpl['select_state'] = $formcompany->select_state($this->object->state_id,$this->object->country_code);
             else $this->tpl['select_state'] = $countrynotdefined;
 
             // Physical or Moral
@@ -364,12 +365,12 @@ abstract class ActionsAdherentCardCommon
 
         if ($action == 'create_user')
         {
-        	// Full firstname and name separated with a dot : firstname.name
+        	// Full firstname and lastname separated with a dot : firstname.lastname
         	include_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
             require_once DOL_DOCUMENT_ROOT.'/core/lib/security2.lib.php';
-        	$login=dol_buildlogin($this->object->nom, $this->object->prenom);
+        	$login=dol_buildlogin($this->object->lastname, $this->object->firstname);
 
-       		$generated_password=getRandomPassword('');
+       		$generated_password=getRandomPassword(false);
         	$password=$generated_password;
 
         	// Create a form array
@@ -394,16 +395,14 @@ abstract class ActionsAdherentCardCommon
         $this->object->old_firstname 		= 	$_POST["old_firstname"];
 
         $this->object->fk_soc				=	$_POST["fk_soc"];
-        $this->object->name					=	$_POST["name"];
+        $this->object->lastname				=	$_POST["lastname"];
         $this->object->firstname			= 	$_POST["firstname"];
-        $this->object->civilite_id			= 	$_POST["civilite_id"];
+        $this->object->civility_id			= 	$_POST["civility_id"];
         $this->object->address				=	$_POST["address"];
         $this->object->zip					=	$_POST["zipcode"];
         $this->object->town					=	$_POST["town"];
-        $this->object->fk_pays				=	$_POST["country_id"]?$_POST["country_id"]:$mysoc->country_id;
-        $this->object->fk_departement		=	$_POST["departement_id"];
         $this->object->country_id			=	$_POST["country_id"]?$_POST["country_id"]:$mysoc->country_id;
-        $this->object->state_id        		=	$_POST["departement_id"];
+        $this->object->state_id        		=	$_POST["state_id"];
         $this->object->phone_perso			= 	$_POST["phone_perso"];
         $this->object->phone_mobile			= 	$_POST["phone_mobile"];
         $this->object->email				=	$_POST["email"];
@@ -423,8 +422,6 @@ abstract class ActionsAdherentCardCommon
             {
                 dol_print_error($this->db);
             }
-            $this->object->pays_code	=	$obj->code;
-            $this->object->pays			=	$langs->trans("Country".$obj->code)?$langs->trans("Country".$obj->code):$obj->libelle;
             $this->object->country_code	=	$obj->code;
             $this->object->country		=	$langs->trans("Country".$obj->code)?$langs->trans("Country".$obj->code):$obj->libelle;
         }
@@ -432,4 +429,3 @@ abstract class ActionsAdherentCardCommon
 
 }
 
-?>

@@ -1,10 +1,13 @@
 <?php
 /* Copyright (C) 2002-2004 Rodolphe Quiedeville        <rodolphe@quiedeville.org>
  * Copyright (C) 2004      Benoit Mortier              <benoit.mortier@opensides.be>
- * Copyright (C) 2004-2010 Laurent Destailleur         <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2013 Laurent Destailleur         <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin               <regis.houssin@capnetworks.com>
  * Copyright (C) 2007      Franky Van Liedekerke       <franky.van.liedekerker@telenet.be>
  * Copyright (C) 2008      Raphael Bertrand (Resultic) <raphael.bertrand@resultic.fr>
+ * Copyright (C) 2013      Florian Henry		  	       <florian.henry@open-concept.pro>
+ * Copyright (C) 2013      Alexandre Spangaro 	       <alexandre.spangaro@gmail.com>
+ * Copyright (C) 2013      Juanjo Menent	 	       <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,18 +38,15 @@ class Contact extends CommonObject
 {
 	public $element='contact';
 	public $table_element='socpeople';
+	protected $ismultientitymanaged = 1;	// 0=No test on entity, 1=Test with field entity, 2=Test with link by societe
 
 	var $id;
-	var $civilite_id;  // In fact we stor civility_code
+    var $ref_ext;
+	var $civility_id;  // In fact we store civility_code
     var $lastname;
-	var $name;         // TODO deprecated
-	var $nom;          // TODO deprecated
 	var $firstname;
-	var $prenom;       // TODO deprecated
 	var $address;
-	var $cp;	       // TODO deprecated
 	var $zip;
-	var $ville;	       // TODO deprecated
 	var $town;
 
 	var $fk_departement;		// deprecated
@@ -56,21 +56,31 @@ class Contact extends CommonObject
 	var $state_code;		    // Code of department
 	var $state;			        // Label of department
 
-	var $fk_pays;				// deprecated
-	var $pays_code;				// deprecated
-	var $pays;					// deprecated
 	var $country_id;			// Id of country
 	var $country_code;			// Code of country
 	var $country;				// Label of country
 
+    var $poste;                 // Position
+
 	var $socid;					// fk_soc
-	var $status;				// 0=brouillon, 1=4=actif, 5=inactif
+	var $statut;				// 0=inactif, 1=actif
 
 	var $code;
 	var $email;
+	var $skype;
+    var $jabberid;
+	var $phone_pro;
+	var $phone_perso;
+	var $phone_mobile;
+    var $fax;
+
+    var $priv;
+
 	var $birthday;
 	var $default_lang;
-    var $note;                  // Private note
+    var $note_public;           // Public note
+	var $note;                  // deprecated
+	var $note_private;			// Private note
     var $no_email;				// 1=Don't send e-mail to this contact, 0=do
 
 	var $ref_facturation;       // Nb de reference facture pour lequel il est contact
@@ -82,7 +92,7 @@ class Contact extends CommonObject
 	var $user_login;
 	var $import_key;
 
-	var $oldcopy;		// To contains a clone of this when we need to save old properties of object
+	var $oldcopy;				// To contains a clone of this when we need to save old properties of object
 
 
 	/**
@@ -93,6 +103,7 @@ class Contact extends CommonObject
 	function __construct($db)
 	{
 		$this->db = $db;
+		$this->statut = 1;	// By default, status is enabled
 	}
 
 	/**
@@ -111,22 +122,25 @@ class Contact extends CommonObject
 		$this->db->begin();
 
 		// Clean parameters
-		$this->lastname=$this->lastname?trim($this->lastname):$this->name;
+		$this->lastname=$this->lastname?trim($this->lastname):trim($this->name);
         $this->firstname=trim($this->firstname);
         if (! empty($conf->global->MAIN_FIRST_TO_UPPER)) $this->lastname=ucwords($this->lastname);
         if (! empty($conf->global->MAIN_FIRST_TO_UPPER)) $this->firstname=ucwords($this->firstname);
-        if (! $this->socid) $this->socid = 0;
-		if (! $this->priv) $this->priv = 0;
+        if (empty($this->socid)) $this->socid = 0;
+		if (empty($this->priv)) $this->priv = 0;
+		if (empty($this->statut)) $this->statut = 0; // This is to convert '' into '0' to avoid bad sql request
 
 		$sql = "INSERT INTO ".MAIN_DB_PREFIX."socpeople (";
 		$sql.= " datec";
 		$sql.= ", fk_soc";
-        $sql.= ", name";
+        $sql.= ", lastname";
         $sql.= ", firstname";
         $sql.= ", fk_user_creat";
 		$sql.= ", priv";
+		$sql.= ", statut";
 		$sql.= ", canvas";
 		$sql.= ", entity";
+		$sql.= ",ref_ext";
 		$sql.= ", import_key";
 		$sql.= ") VALUES (";
 		$sql.= "'".$this->db->idate($now)."',";
@@ -136,8 +150,10 @@ class Contact extends CommonObject
         $sql.= "'".$this->db->escape($this->firstname)."',";
 		$sql.= " ".($user->id > 0 ? "'".$user->id."'":"null").",";
 		$sql.= " ".$this->priv.",";
+		$sql.= " ".$this->statut.",";
         $sql.= " ".(! empty($this->canvas)?"'".$this->canvas."'":"null").",";
         $sql.= " ".$conf->entity.",";
+	$sql.= "'".$this->db->escape($this->ref_ext)."',";
         $sql.= " ".(! empty($this->import_key)?"'".$this->import_key."'":"null");
 		$sql.= ")";
 
@@ -210,51 +226,57 @@ class Contact extends CommonObject
 	 */
 	function update($id, $user=0, $notrigger=0, $action='update')
 	{
-		global $conf, $langs;
+		global $conf, $langs, $hookmanager;
 
 		$error=0;
 
 		$this->id = $id;
 
 		// Clean parameters
-		$this->lastname=trim($this->lastname)?trim($this->lastname):trim($this->name);
+		$this->lastname=trim($this->lastname)?trim($this->lastname):trim($this->lastname);
 		$this->firstname=trim($this->firstname);
 		$this->email=trim($this->email);
 		$this->phone_pro=trim($this->phone_pro);
 		$this->phone_perso=trim($this->phone_perso);
 		$this->phone_mobile=trim($this->phone_mobile);
+		$this->jabberid=trim($this->jabberid);
+		$this->skype=trim($this->skype);
 		$this->fax=trim($this->fax);
-		$this->zip=($this->zip?$this->zip:$this->cp);
-		$this->town=($this->town?$this->town:$this->ville);
-		$this->country_id=($this->country_id > 0?$this->country_id:$this->fk_pays);
+		$this->zip=(empty($this->zip)?'':$this->zip);
+		$this->town=(empty($this->town)?'':$this->town);
+		$this->country_id=($this->country_id > 0?$this->country_id:$this->country_id);
 		$this->state_id=($this->state_id > 0?$this->state_id:$this->fk_departement);
+		if (empty($this->statut)) $this->statut = 0;
 
 		$this->db->begin();
 
 		$sql = "UPDATE ".MAIN_DB_PREFIX."socpeople SET ";
 		if ($this->socid > 0) $sql .= " fk_soc='".$this->db->escape($this->socid)."',";
 		else if ($this->socid == -1) $sql .= " fk_soc=null,";
-		$sql .= "  civilite='".$this->db->escape($this->civilite_id)."'";
-		$sql .= ", name='".$this->db->escape($this->lastname)."'";
+		$sql .= "  civilite='".$this->db->escape($this->civility_id)."'";
+		$sql .= ", lastname='".$this->db->escape($this->lastname)."'";
 		$sql .= ", firstname='".$this->db->escape($this->firstname)."'";
 		$sql .= ", address='".$this->db->escape($this->address)."'";
-		$sql .= ", cp='".$this->db->escape($this->zip)."'";
-		$sql .= ", ville='".$this->db->escape($this->town)."'";
+		$sql .= ", zip='".$this->db->escape($this->zip)."'";
+		$sql .= ", town='".$this->db->escape($this->town)."'";
 		$sql .= ", fk_pays=".($this->country_id>0?$this->country_id:'NULL');
 		$sql .= ", fk_departement=".($this->state_id>0?$this->state_id:'NULL');
 		$sql .= ", poste='".$this->db->escape($this->poste)."'";
 		$sql .= ", fax='".$this->db->escape($this->fax)."'";
 		$sql .= ", email='".$this->db->escape($this->email)."'";
-		$sql .= ", note='".$this->db->escape($this->note)."'";
-		$sql .= ", phone = '".$this->db->escape($this->phone_pro)."'";
-		$sql .= ", phone_perso = '".$this->db->escape($this->phone_perso)."'";
-		$sql .= ", phone_mobile = '".$this->db->escape($this->phone_mobile)."'";
-		$sql .= ", jabberid = '".$this->db->escape($this->jabberid)."'";
+		$sql .= ", skype='".$this->db->escape($this->skype)."'";
+		$sql .= ", note_private = ".(isset($this->note_private)?"'".$this->db->escape($this->note_private)."'":"null");
+		$sql .= ", note_public = ".(isset($this->note_public)?"'".$this->db->escape($this->note_public)."'":"null");
+		$sql .= ", phone = ".(isset($this->phone_pro)?"'".$this->db->escape($this->phone_pro)."'":"null");
+		$sql .= ", phone_perso = ".(isset($this->phone_perso)?"'".$this->db->escape($this->phone_perso)."'":"null");
+		$sql .= ", phone_mobile = ".(isset($this->phone_mobile)?"'".$this->db->escape($this->phone_mobile)."'":"null");
+		$sql .= ", jabberid = ".(isset($this->jabberid)?"'".$this->db->escape($this->jabberid)."'":"null");
 		$sql .= ", priv = '".$this->priv."'";
-		$sql .= ", fk_user_modif=".($user->id > 0 ? "'".$user->id."'":"null");
-		$sql .= ", default_lang=".($this->default_lang?"'".$this->default_lang."'":"null");
-		$sql .= ", no_email=".($this->no_email?"'".$this->no_email."'":"null");
-		$sql .= " WHERE rowid=".$id;
+		$sql .= ", statut = ".$this->statut;
+		$sql .= ", fk_user_modif=".($user->id > 0 ? "'".$user->id."'":"NULL");
+		$sql .= ", default_lang=".($this->default_lang?"'".$this->default_lang."'":"NULL");
+		$sql .= ", no_email=".($this->no_email?"'".$this->no_email."'":"0");
+		$sql .= " WHERE rowid=".$this->db->escape($id);
 
 		dol_syslog(get_class($this)."::update sql=".$sql,LOG_DEBUG);
 		$result = $this->db->query($sql);
@@ -266,8 +288,6 @@ class Contact extends CommonObject
 		    unset($this->state);
 
 		    // Actions on extra fields (by external module or standard code)
-		    include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
-		    $hookmanager=new HookManager($this->db);
 		    $hookmanager->initHooks(array('contactdao'));
 		    $parameters=array('socid'=>$this->id);
 		    $reshook=$hookmanager->executeHooks('insertExtraFields',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
@@ -368,14 +388,15 @@ class Contact extends CommonObject
 			if ($soc->fournisseur == 1) $info["businessCategory"] = "Suppliers";
 		}
 		if ($this->address && ! empty($conf->global->LDAP_CONTACT_FIELD_ADDRESS)) $info[$conf->global->LDAP_CONTACT_FIELD_ADDRESS] = $this->address;
-		if ($this->cp && ! empty($conf->global->LDAP_CONTACT_FIELD_ZIP))          $info[$conf->global->LDAP_CONTACT_FIELD_ZIP] = $this->cp;
-		if ($this->ville && ! empty($conf->global->LDAP_CONTACT_FIELD_TOWN))      $info[$conf->global->LDAP_CONTACT_FIELD_TOWN] = $this->ville;
+		if ($this->zip && ! empty($conf->global->LDAP_CONTACT_FIELD_ZIP))          $info[$conf->global->LDAP_CONTACT_FIELD_ZIP] = $this->zip;
+		if ($this->town && ! empty($conf->global->LDAP_CONTACT_FIELD_TOWN))      $info[$conf->global->LDAP_CONTACT_FIELD_TOWN] = $this->town;
 		if ($this->country_code && ! empty($conf->global->LDAP_CONTACT_FIELD_COUNTRY))      $info[$conf->global->LDAP_CONTACT_FIELD_COUNTRY] = $this->country_code;
 		if ($this->phone_pro && ! empty($conf->global->LDAP_CONTACT_FIELD_PHONE)) $info[$conf->global->LDAP_CONTACT_FIELD_PHONE] = $this->phone_pro;
 		if ($this->phone_perso && ! empty($conf->global->LDAP_CONTACT_FIELD_HOMEPHONE)) $info[$conf->global->LDAP_CONTACT_FIELD_HOMEPHONE] = $this->phone_perso;
 		if ($this->phone_mobile && ! empty($conf->global->LDAP_CONTACT_FIELD_MOBILE)) $info[$conf->global->LDAP_CONTACT_FIELD_MOBILE] = $this->phone_mobile;
 		if ($this->fax && ! empty($conf->global->LDAP_CONTACT_FIELD_FAX))	    $info[$conf->global->LDAP_CONTACT_FIELD_FAX] = $this->fax;
-		if ($this->note && ! empty($conf->global->LDAP_CONTACT_FIELD_DESCRIPTION)) $info[$conf->global->LDAP_CONTACT_FIELD_DESCRIPTION] = $this->note;
+    if ($this->skype && ! empty($conf->global->LDAP_CONTACT_FIELD_SKYPE))	    $info[$conf->global->LDAP_CONTACT_FIELD_SKYPE] = $this->skype;
+		if ($this->note_private && ! empty($conf->global->LDAP_CONTACT_FIELD_DESCRIPTION)) $info[$conf->global->LDAP_CONTACT_FIELD_DESCRIPTION] = $this->note_private;
 		if ($this->email && ! empty($conf->global->LDAP_CONTACT_FIELD_MAIL))     $info[$conf->global->LDAP_CONTACT_FIELD_MAIL] = $this->email;
 
 		if ($conf->global->LDAP_SERVER_TYPE == 'egroupware')
@@ -423,7 +444,7 @@ class Contact extends CommonObject
 		$sql = "UPDATE ".MAIN_DB_PREFIX."socpeople SET";
 		$sql.= " birthday=".($this->birthday ? "'".$this->db->idate($this->birthday)."'" : "null");
 		if ($user) $sql .= ", fk_user_modif=".$user->id;
-		$sql.= " WHERE rowid=".$id;
+		$sql.= " WHERE rowid=".$this->db->escape($id);
 
 		dol_syslog(get_class($this)."::update_perso this->birthday=".$this->birthday." - sql=".$sql);
 		$resql = $this->db->query($sql);
@@ -437,13 +458,13 @@ class Contact extends CommonObject
 		if ($this->birthday_alert)
 		{
 			//check existing
-			$sql_check = "SELECT * FROM ".MAIN_DB_PREFIX."user_alert WHERE type=1 AND fk_contact=".$id." AND fk_user=".$user->id;
+			$sql_check = "SELECT * FROM ".MAIN_DB_PREFIX."user_alert WHERE type=1 AND fk_contact=".$this->db->escape($id)." AND fk_user=".$user->id;
 			$result_check = $this->db->query($sql_check);
 			if (! $result_check || ($this->db->num_rows($result_check)<1))
 			{
 				//insert
 				$sql = "INSERT INTO ".MAIN_DB_PREFIX."user_alert(type,fk_contact,fk_user) ";
-				$sql.= "VALUES (1,".$id.",".$user->id.")";
+				$sql.= "VALUES (1,".$this->db->escape($id).",".$user->id.")";
 				$result = $this->db->query($sql);
 				if (! $result)
 				{
@@ -459,7 +480,7 @@ class Contact extends CommonObject
 		else
 		{
 			$sql = "DELETE FROM ".MAIN_DB_PREFIX."user_alert ";
-			$sql.= "WHERE type=1 AND fk_contact=".$id." AND fk_user=".$user->id;
+			$sql.= "WHERE type=1 AND fk_contact=".$this->db->escape($id)." AND fk_user=".$user->id;
 			$result = $this->db->query($sql);
 			if (! $result)
 			{
@@ -473,36 +494,39 @@ class Contact extends CommonObject
 
 
 	/**
-	 *  Charge l'objet contact
+	 *  Load object contact
 	 *
 	 *  @param      int		$id          id du contact
 	 *  @param      User	$user        Utilisateur (abonnes aux alertes) qui veut les alertes de ce contact
+         *  @param      string          $ref_ext        External reference, not given by Dolibarr
 	 *  @return     int     		    -1 if KO, 0 if OK but not found, 1 if OK
 	 */
-	function fetch($id, $user=0)
+	function fetch($id, $user=0, $ref_ext='')
 	{
+		dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
 		global $langs;
 
 		$langs->load("companies");
 
-		$sql = "SELECT c.rowid, c.fk_soc, c.civilite as civilite_id, c.name as lastname, c.firstname,";
-		$sql.= " c.address, c.cp as zip, c.ville as town,";
+		$sql = "SELECT c.rowid, c.fk_soc, c.ref_ext, c.civilite as civility_id, c.lastname, c.firstname,";
+		$sql.= " c.address, c.statut, c.zip, c.town,";
 		$sql.= " c.fk_pays as country_id,";
 		$sql.= " c.fk_departement,";
 		$sql.= " c.birthday,";
-		$sql.= " c.poste, c.phone, c.phone_perso, c.phone_mobile, c.fax, c.email, c.jabberid,";
-		$sql.= " c.priv, c.note, c.default_lang, c.no_email, c.canvas,";
+		$sql.= " c.poste, c.phone, c.phone_perso, c.phone_mobile, c.fax, c.email, c.jabberid, c.skype,";
+		$sql.= " c.priv, c.note_private, c.note_public, c.default_lang, c.no_email, c.canvas,";
 		$sql.= " c.import_key,";
 		$sql.= " p.libelle as country, p.code as country_code,";
 		$sql.= " d.nom as state, d.code_departement as state_code,";
 		$sql.= " u.rowid as user_id, u.login as user_login,";
-		$sql.= " s.nom as socname, s.address as socaddress, s.cp as soccp, s.ville as soccity, s.default_lang as socdefault_lang";
+		$sql.= " s.nom as socname, s.address as socaddress, s.zip as soccp, s.town as soccity, s.default_lang as socdefault_lang";
 		$sql.= " FROM ".MAIN_DB_PREFIX."socpeople as c";
 		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_pays as p ON c.fk_pays = p.rowid";
 		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_departements as d ON c.fk_departement = d.rowid";
 		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."user as u ON c.rowid = u.fk_socpeople";
 		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON c.fk_soc = s.rowid";
-		$sql.= " WHERE c.rowid = ". $id;
+		if ($id) $sql.= " WHERE c.rowid = ". $id;
+		elseif ($ref_ext) $sql .= " WHERE c.ref_ext = '".$this->db->escape($ref_ext)."'";
 
 		dol_syslog(get_class($this)."::fetch sql=".$sql);
 		$resql=$this->db->query($sql);
@@ -514,18 +538,12 @@ class Contact extends CommonObject
 
 				$this->id				= $obj->rowid;
 				$this->ref				= $obj->rowid;
-				$this->civilite_id		= $obj->civilite_id;
+				$this->ref_ext			= $obj->ref_ext;
+				$this->civility_id		= $obj->civility_id;
 				$this->lastname			= $obj->lastname;
-				$this->name				= $obj->lastname;       // TODO deprecated
 				$this->firstname		= $obj->firstname;
-				$this->nom				= $obj->lastname;		// TODO deprecated
-				$this->prenom			= $obj->firstname;		// TODO deprecated
-
 				$this->address			= $obj->address;
-				$this->adresse			= $obj->address; 		// TODO deprecated
-				$this->cp				= $obj->zip;			// TODO deprecated
 				$this->zip				= $obj->zip;
-				$this->ville			= $obj->town;			// TODO deprecated
 				$this->town				= $obj->town;
 
 				$this->fk_departement	= $obj->fk_departement;    // deprecated
@@ -535,16 +553,14 @@ class Contact extends CommonObject
 				$this->departement		= $obj->state;	           // deprecated
 				$this->state			= $obj->state;
 
-				$this->fk_pays			= $obj->country_id;
 				$this->country_id 		= $obj->country_id;
-				$this->pays_code		= $obj->country_id?$obj->country_code:'';
 				$this->country_code		= $obj->country_id?$obj->country_code:'';
-				$this->pays				= ($obj->country_id > 0)?$langs->transnoentitiesnoconv("Country".$obj->country_code):'';
 				$this->country			= ($obj->country_id > 0)?$langs->transnoentitiesnoconv("Country".$obj->country_code):'';
 
 				$this->socid			= $obj->fk_soc;
 				$this->socname			= $obj->socname;
 				$this->poste			= $obj->poste;
+				$this->statut			= $obj->statut;
 
 				$this->phone_pro		= trim($obj->phone);
 				$this->fax				= trim($obj->fax);
@@ -553,11 +569,14 @@ class Contact extends CommonObject
 
 				$this->email			= $obj->email;
 				$this->jabberid			= $obj->jabberid;
+        $this->skype			= $obj->skype;
 				$this->priv				= $obj->priv;
 				$this->mail				= $obj->email;
 
 				$this->birthday			= $this->db->jdate($obj->birthday);
-				$this->note				= $obj->note;
+				$this->note				= $obj->note_private;		// deprecated
+				$this->note_private		= $obj->note_private;
+				$this->note_public		= $obj->note_public;
 				$this->default_lang		= $obj->default_lang;
 				$this->no_email			= $obj->no_email;
 				$this->user_id			= $obj->user_id;
@@ -594,7 +613,7 @@ class Contact extends CommonObject
 				{
 					$sql = "SELECT fk_user";
 					$sql .= " FROM ".MAIN_DB_PREFIX."user_alert";
-					$sql .= " WHERE fk_user = ".$user->id." AND fk_contact = ".$id;
+					$sql .= " WHERE fk_user = ".$user->id." AND fk_contact = ".$this->db->escape($id);
 
 					$resql=$this->db->query($sql);
 					if ($resql)
@@ -688,7 +707,7 @@ class Contact extends CommonObject
 
 		$error=0;
 
-		$this->old_name           = $obj->name;
+		$this->old_lastname       = $obj->lastname;
 		$this->old_firstname      = $obj->firstname;
 
 		$this->db->begin();
@@ -735,6 +754,21 @@ class Contact extends CommonObject
 
 		if (! $error)
 		{
+			// Remove category
+			$sql = "DELETE FROM ".MAIN_DB_PREFIX."categorie_contact WHERE fk_socpeople = ".$this->id;
+			dol_syslog(get_class($this)."::delete sql=".$sql);
+			$resql=$this->db->query($sql);
+			if (! $resql)
+			{
+				$error++;
+				$this->error .= $this->db->lasterror();
+				$errorflag=-1;
+				dol_syslog(get_class($this)."::delete error ".$errorflag." ".$this->error, LOG_ERR);
+			}
+		}
+
+		if (! $error)
+		{
 			$sql = "DELETE FROM ".MAIN_DB_PREFIX."socpeople";
 			$sql .= " WHERE rowid=".$this->id;
 			dol_syslog(get_class($this)."::delete sql=".$sql);
@@ -745,7 +779,7 @@ class Contact extends CommonObject
 				$this->error=$this->db->error().' sql='.$sql;
 			}
 		}
-		
+
 		// Removed extrafields
 		 if ((! $error) && (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED))) { // For avoid conflicts if trigger used
 			$result=$this->deleteExtraFields($this);
@@ -790,7 +824,7 @@ class Contact extends CommonObject
 		$sql = "SELECT c.rowid, c.datec as datec, c.fk_user_creat,";
 		$sql.= " c.tms as tms, c.fk_user_modif";
 		$sql.= " FROM ".MAIN_DB_PREFIX."socpeople as c";
-		$sql.= " WHERE c.rowid = ".$id;
+		$sql.= " WHERE c.rowid = ".$this->db->escape($id);
 
 		$resql=$this->db->query($sql);
 		if ($resql)
@@ -858,7 +892,7 @@ class Contact extends CommonObject
 
 	/**
 	 *  Return name of contact with link (and eventually picto)
-	 *	Use $this->id, $this->name, $this->firstname, this->civilite_id
+	 *	Use $this->id, $this->lastname, $this->firstname, this->civility_id
 	 *
 	 *	@param		int			$withpicto		Include picto with link
 	 *	@param		string		$option			Where the link point to
@@ -885,64 +919,30 @@ class Contact extends CommonObject
 		return $result;
 	}
 
-
-    /**
-     * 	Return full address of contact
-     *
-     * 	@param		int			$withcountry		1=Add country into address string
-     *  @param		string		$sep				Separator to use to build string
-     *	@return		string							Full address string
-     */
-    function getFullAddress($withcountry=0,$sep="\n")
-    {
-        $ret='';
-        if ($withcountry && $this->country_id && (empty($this->country_code) || empty($this->country)))
-        {
-            require_once DOL_DOCUMENT_ROOT .'/core/lib/company.lib.php';
-            $tmparray=getCountry($this->country_id,'all');
-            $this->country_code=$tmparray['code'];
-            $this->country     =$tmparray['label'];
-        }
-
-        if (in_array($this->country_code,array('US')))
-        {
-	        $ret.=($this->address?$this->address.$sep:'');
-	        $ret.=trim($this->zip.' '.$this->town);
-	        if ($withcountry) $ret.=($this->country?$sep.$this->country:'');
-        }
-        else
-        {
-	        $ret.=($this->address?$this->address.$sep:'');
-	        $ret.=trim($this->zip.' '.$this->town);
-	        if ($withcountry) $ret.=($this->country?$sep.$this->country:'');
-        }
-        return trim($ret);
-    }
-
-
 	/**
-	 *    Return label of a civility contact
+	 *    Return civility label of contact
 	 *
-	 *    @return     string      Translated name of civility
+	 *    @return	string      			Translated name of civility
 	 */
 	function getCivilityLabel()
 	{
 		global $langs;
 		$langs->load("dict");
 
-		$code=$this->civilite_id;
-        return $langs->trans("Civility".$code)!="Civility".$code ? $langs->trans("Civility".$code) : '';
+		$code=(! empty($this->civility_id)?$this->civility_id:(! empty($this->civility_id)?$this->civility_id:''));
+		if (empty($code)) return '';
+        return $langs->getLabelFromKey($this->db, "Civility".$code, "c_civilite", "code", "civilite", $code);
 	}
 
 	/**
-	 *  Retourne le libelle du statut du contact
+	 *	Return label of contact status
 	 *
-	 *  @param      int			$mode       0=libelle long, 1=libelle court, 2=Picto + Libelle court, 3=Picto, 4=Picto + Libelle long, 5=Libelle court + Picto
-	 *  @return     string      			Libelle
+	 *	@param      int			$mode       0=libelle long, 1=libelle court, 2=Picto + Libelle court, 3=Picto, 4=Picto + Libelle long, 5=Libelle court + Picto
+	 * 	@return 	string					Label of contact status
 	 */
 	function getLibStatut($mode)
 	{
-		return $this->LibStatut($this->status,$mode);
+		return $this->LibStatut($this->statut,$mode);
 	}
 
 	/**
@@ -952,51 +952,40 @@ class Contact extends CommonObject
 	 *  @param      int			$mode       0=libelle long, 1=libelle court, 2=Picto + Libelle court, 3=Picto, 4=Picto + Libelle long, 5=Libelle court + Picto
 	 *  @return     string					Libelle
 	 */
-	function LibStatut($statut, $mode)
+	function LibStatut($statut,$mode)
 	{
 		global $langs;
 
 		if ($mode == 0)
 		{
-			if ($statut==0) return $langs->trans('StatusContactDraft');
-			elseif ($statut==1) return $langs->trans('StatusContactValidated');
-			elseif ($statut==4) return $langs->trans('StatusContactValidated');
-			elseif ($statut==5) return $langs->trans('StatusContactValidated');
+			if ($statut==0 || $statut==5) return $langs->trans('Disabled');
+			elseif ($statut==1 || $statut==4) return $langs->trans('Enabled');
 		}
 		elseif ($mode == 1)
 		{
-			if ($statut==0) return $langs->trans('StatusContactDraftShort');
-			elseif ($statut==1) return $langs->trans('StatusContactValidatedShort');
-			elseif ($statut==4) return $langs->trans('StatusContactValidatedShort');
-			elseif ($statut==5) return $langs->trans('StatusContactValidatedShort');
+			if ($statut==0 || $statut==5) return $langs->trans('Disabled');
+			elseif ($statut==1 || $statut==4) return $langs->trans('Enabled');
 		}
 		elseif ($mode == 2)
 		{
-			if ($statut==0) return img_picto($langs->trans('StatusContactDraftShort'),'statut0').' '.$langs->trans('StatusContactDraft');
-			elseif ($statut==1) return img_picto($langs->trans('StatusContactValidatedShort'),'statut1').' '.$langs->trans('StatusContactValidated');
-			elseif ($statut==4) return img_picto($langs->trans('StatusContactValidatedShort'),'statut4').' '.$langs->trans('StatusContactValidated');
-			elseif ($statut==5) return img_picto($langs->trans('StatusContactValidatedShort'),'statut5').' '.$langs->trans('StatusContactValidated');
+			if ($statut==0 || $statut==5) return img_picto($langs->trans('Disabled'),'statut5').' '.$langs->trans('Disabled');
+			elseif ($statut==1 || $statut==4) return img_picto($langs->trans('Enabled'),'statut4').' '.$langs->trans('Enabled');
+
 		}
 		elseif ($mode == 3)
 		{
-			if ($statut==0) return img_picto($langs->trans('StatusContactDraft'),'statut0');
-			elseif ($statut==1) return img_picto($langs->trans('StatusContactValidated'),'statut1');
-			elseif ($statut==4) return img_picto($langs->trans('StatusContactValidated'),'statut4');
-			elseif ($statut==5) return img_picto($langs->trans('StatusContactValidated'),'statut5');
+			if ($statut==0 || $statut==5) return img_picto($langs->trans('Disabled'),'statut5');
+			elseif ($statut==1 || $statut==4) return img_picto($langs->trans('Enabled'),'statut4');
 		}
 		elseif ($mode == 4)
 		{
-			if ($statut==0) return img_picto($langs->trans('StatusContactDraft'),'statut0').' '.$langs->trans('StatusContactDraft');
-			elseif ($statut==1) return img_picto($langs->trans('StatusContactValidated'),'statut1').' '.$langs->trans('StatusContactValidated');
-			elseif ($statut==4) return img_picto($langs->trans('StatusContactValidated'),'statut4').' '.$langs->trans('StatusContactValidated');
-			elseif ($statut==5) return img_picto($langs->trans('StatusContactValidated'),'statut5').' '.$langs->trans('StatusContactValidated');
+			if ($statut==0) return img_picto($langs->trans('Disabled'),'statut5').' '.$langs->trans('StatusContactDraft');
+			elseif ($statut==1 || $statut==4) return img_picto($langs->trans('Enabled'),'statut4').' '.$langs->trans('Enabled');
 		}
 		elseif ($mode == 5)
 		{
-			if ($statut==0) return $langs->trans('StatusContactDraftShort').' '.img_picto($langs->trans('StatusContactDraftShort'),'statut0');
-			elseif ($statut==1) return $langs->trans('StatusContactValidatedShort').' '.img_picto($langs->trans('StatusContactValidatedShort'),'statut1');
-			elseif ($statut==4) return $langs->trans('StatusContactValidatedShort').' '.img_picto($langs->trans('StatusContactValidatedShort'),'statut4');
-			elseif ($statut==5) return $langs->trans('StatusContactValidatedShort').' '.img_picto($langs->trans('StatusContactValidatedShort'),'statut5');
+			if ($statut==0 || $statut==5) return '<span class="hideonsmartphone">'.$langs->trans('Disabled').' </span>'.img_picto($langs->trans('Disabled'),'statut5');
+			elseif ($statut==1 || $statut==4) return '<span class="hideonsmartphone">'.$langs->trans('Enabled').' </span>'.img_picto($langs->trans('Enabled'),'statut4');
 		}
 	}
 
@@ -1026,21 +1015,14 @@ class Contact extends CommonObject
 	{
 		global $user,$langs;
 
-		// Charge tableau des id de societe socids
-		$socids = array();
-		$sql = "SELECT rowid FROM ".MAIN_DB_PREFIX."societe LIMIT 10";
+		// Get first id of existing company and save it into $socid
+		$socid = 0;
+		$sql = "SELECT rowid FROM ".MAIN_DB_PREFIX."societe ORDER BY rowid LIMIT 1";
 		$resql = $this->db->query($sql);
 		if ($resql)
 		{
-			$num_socs = $this->db->num_rows($resql);
-			$i = 0;
-			while ($i < $num_socs)
-			{
-				$i++;
-
-				$row = $this->db->fetch_row($resql);
-				$socids[$i] = $row[0];
-			}
+			$obj = $this->db->fetch_object($resql);
+			if ($obj) $socid=$obj->rowid;
 		}
 
 		// Initialise parameters
@@ -1048,16 +1030,72 @@ class Contact extends CommonObject
 		$this->specimen=1;
 		$this->lastname = 'DOLIBARR';
 		$this->firstname = 'SPECIMEN';
-		$this->address = '61 jump street';
-		$this->zip = '75000';
-		$this->town = 'Paris';
+		$this->address = '21 jump street';
+		$this->zip = '99999';
+		$this->town = 'MyTown';
 		$this->country_id = 1;
 		$this->country_code = 'FR';
 		$this->country = 'France';
 		$this->email = 'specimen@specimen.com';
-		$socid = rand(1, $num_socs);
-		$this->socid = $socids[$socid];
+    	$this->skype = 'tom.hanson';
+
+		$this->phone_pro = '0909090901';
+		$this->phone_perso = '0909090902';
+		$this->phone_mobile = '0909090903';
+		$this->fax = '0909090909';
+
+		$this->note_public='This is a comment (public)';
+		$this->note_private='This is a comment (private)';
+
+		$this->socid = $socid;
+		$this->statut=1;
+	}
+
+	/**
+	 *  Change status of a user
+	 *
+	 *	@param	int		$statut		Status to set
+	 *  @return int     			<0 if KO, 0 if nothing is done, >0 if OK
+	 */
+	function setstatus($statut)
+	{
+		global $conf,$langs,$user;
+
+		$error=0;
+
+		// Check parameters
+		if ($this->statut == $statut) return 0;
+		else $this->statut = $statut;
+
+		$this->db->begin();
+
+		// Desactive utilisateur
+		$sql = "UPDATE ".MAIN_DB_PREFIX."socpeople";
+		$sql.= " SET statut = ".$this->statut;
+		$sql.= " WHERE rowid = ".$this->id;
+		$result = $this->db->query($sql);
+
+		dol_syslog(get_class($this)."::setstatus sql=".$sql);
+		if ($result)
+		{
+			// Appel des triggers
+			include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+			$interface=new Interfaces($this->db);
+			$result=$interface->run_triggers('CONTACT_ENABLEDISABLE',$this,$user,$langs,$conf);
+			if ($result < 0) { $error++; $this->errors=$interface->errors; }
+			// Fin appel triggers
+		}
+
+		if ($error)
+		{
+			$this->db->rollback();
+			return -$error;
+		}
+		else
+		{
+			$this->db->commit();
+			return 1;
+		}
 	}
 
 }
-?>

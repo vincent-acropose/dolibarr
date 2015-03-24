@@ -155,7 +155,7 @@ abstract class CommonInvoice extends CommonObject
 	 *  Return label of object status
 	 *
 	 *  @param      int		$mode            0=long label, 1=short label, 2=Picto + short label, 3=Picto, 4=Picto + long label, 5=short label + picto
-	 *  @param      int		$alreadypaid     0=No payment already done, 1=Some payments already done
+	 *  @param      double	$alreadypaid     0=No payment already done, >0=Some payments were already done (we recommand to put here amount payed if you have it, 1 otherwise)
 	 *  @return     string			         Label
 	 */
 	function getLibStatut($mode=0,$alreadypaid=-1)
@@ -166,27 +166,27 @@ abstract class CommonInvoice extends CommonObject
 	/**
 	 *	Renvoi le libelle d'un statut donne
 	 *
-	 *	@param    	int  	$paye          	Etat paye
-	 *	@param      int		$statut        	Id statut
-	 *	@param      int		$mode          	0=libelle long, 1=libelle court, 2=Picto + Libelle court, 3=Picto, 4=Picto + Libelle long, 5=Libelle court + Picto
-	 *	@param		double	$alreadypaid	Montant deja paye
+	 *	@param    	int  	$paye          	Status field paye
+	 *	@param      int		$status        	Id status
+	 *	@param      int		$mode          	0=long label, 1=short label, 2=Picto + short label, 3=Picto, 4=Picto + long label, 5=short label + picto
+	 *	@param		double	$alreadypaid	0=No payment already done, >0=Some payments were already done (we recommand to put here amount payed if you have it, 1 otherwise)
 	 *	@param		int		$type			Type facture
 	 *	@return     string        			Libelle du statut
 	 */
-	function LibStatut($paye,$statut,$mode=0,$alreadypaid=-1,$type=0)
+	function LibStatut($paye,$status,$mode=0,$alreadypaid=-1,$type=0)
 	{
 		global $langs;
 		$langs->load('bills');
 
-		//print "$paye,$statut,$mode,$alreadypaid,$type";
+		//print "$paye,$status,$mode,$alreadypaid,$type";
 		if ($mode == 0)
 		{
 			$prefix='';
 			if (! $paye)
 			{
-				if ($statut == 0) return $langs->trans('Bill'.$prefix.'StatusDraft');
-				if (($statut == 3 || $statut == 2) && $alreadypaid <= 0) return $langs->trans('Bill'.$prefix.'StatusClosedUnpaid');
-				if (($statut == 3 || $statut == 2) && $alreadypaid > 0) return $langs->trans('Bill'.$prefix.'StatusClosedPaidPartially');
+				if ($status == 0) return $langs->trans('Bill'.$prefix.'StatusDraft');
+				if (($status == 3 || $status == 2) && $alreadypaid <= 0) return $langs->trans('Bill'.$prefix.'StatusClosedUnpaid');
+				if (($status == 3 || $status == 2) && $alreadypaid > 0) return $langs->trans('Bill'.$prefix.'StatusClosedPaidPartially');
 				if ($alreadypaid <= 0) return $langs->trans('Bill'.$prefix.'StatusNotPaid');
 				return $langs->trans('Bill'.$prefix.'StatusStarted');
 			}
@@ -202,9 +202,9 @@ abstract class CommonInvoice extends CommonObject
 			$prefix='Short';
 			if (! $paye)
 			{
-				if ($statut == 0) return $langs->trans('Bill'.$prefix.'StatusDraft');
-				if (($statut == 3 || $statut == 2) && $alreadypaid <= 0) return $langs->trans('Bill'.$prefix.'StatusCanceled');
-				if (($statut == 3 || $statut == 2) && $alreadypaid > 0) return $langs->trans('Bill'.$prefix.'StatusClosedPaidPartially');
+				if ($status == 0) return $langs->trans('Bill'.$prefix.'StatusDraft');
+				if (($status == 3 || $status == 2) && $alreadypaid <= 0) return $langs->trans('Bill'.$prefix.'StatusCanceled');
+				if (($status == 3 || $status == 2) && $alreadypaid > 0) return $langs->trans('Bill'.$prefix.'StatusClosedPaidPartially');
 				if ($alreadypaid <= 0) return $langs->trans('Bill'.$prefix.'StatusNotPaid');
 				return $langs->trans('Bill'.$prefix.'StatusStarted');
 			}
@@ -220,9 +220,9 @@ abstract class CommonInvoice extends CommonObject
 			$prefix='Short';
 			if (! $paye)
 			{
-				if ($statut == 0) return img_picto($langs->trans('BillStatusDraft'),'statut0').' '.$langs->trans('Bill'.$prefix.'StatusDraft');
-				if (($statut == 3 || $statut == 2) && $alreadypaid <= 0) return img_picto($langs->trans('StatusCanceled'),'statut5').' '.$langs->trans('Bill'.$prefix.'StatusCanceled');
-				if (($statut == 3 || $statut == 2) && $alreadypaid > 0) return img_picto($langs->trans('BillStatusClosedPaidPartially'),'statut7').' '.$langs->trans('Bill'.$prefix.'StatusClosedPaidPartially');
+				if ($status == 0) return img_picto($langs->trans('BillStatusDraft'),'statut0').' '.$langs->trans('Bill'.$prefix.'StatusDraft');
+				if (($status == 3 || $status == 2) && $alreadypaid <= 0) return img_picto($langs->trans('StatusCanceled'),'statut5').' '.$langs->trans('Bill'.$prefix.'StatusCanceled');
+				if (($status == 3 || $status == 2) && $alreadypaid > 0) return img_picto($langs->trans('BillStatusClosedPaidPartially'),'statut7').' '.$langs->trans('Bill'.$prefix.'StatusClosedPaidPartially');
 				if ($alreadypaid <= 0) return img_picto($langs->trans('BillStatusNotPaid'),'statut1').' '.$langs->trans('Bill'.$prefix.'StatusNotPaid');
 				return img_picto($langs->trans('BillStatusStarted'),'statut3').' '.$langs->trans('Bill'.$prefix.'StatusStarted');
 			}
@@ -238,9 +238,9 @@ abstract class CommonInvoice extends CommonObject
 			$prefix='Short';
 			if (! $paye)
 			{
-				if ($statut == 0) return img_picto($langs->trans('BillStatusDraft'),'statut0');
-				if (($statut == 3 || $statut == 2) && $alreadypaid <= 0) return img_picto($langs->trans('BillStatusCanceled'),'statut5');
-				if (($statut == 3 || $statut == 2) && $alreadypaid > 0) return img_picto($langs->trans('BillStatusClosedPaidPartially'),'statut7');
+				if ($status == 0) return img_picto($langs->trans('BillStatusDraft'),'statut0');
+				if (($status == 3 || $status == 2) && $alreadypaid <= 0) return img_picto($langs->trans('BillStatusCanceled'),'statut5');
+				if (($status == 3 || $status == 2) && $alreadypaid > 0) return img_picto($langs->trans('BillStatusClosedPaidPartially'),'statut7');
 				if ($alreadypaid <= 0) return img_picto($langs->trans('BillStatusNotPaid'),'statut1');
 				return img_picto($langs->trans('BillStatusStarted'),'statut3');
 			}
@@ -253,11 +253,12 @@ abstract class CommonInvoice extends CommonObject
 		}
 		if ($mode == 4)
 		{
+			$prefix='';
 			if (! $paye)
 			{
-				if ($statut == 0) return img_picto($langs->trans('BillStatusDraft'),'statut0').' '.$langs->trans('BillStatusDraft');
-				if (($statut == 3 || $statut == 2) && $alreadypaid <= 0) return img_picto($langs->trans('BillStatusCanceled'),'statut5').' '.$langs->trans('Bill'.$prefix.'StatusCanceled');
-				if (($statut == 3 || $statut == 2) && $alreadypaid > 0) return img_picto($langs->trans('BillStatusClosedPaidPartially'),'statut7').' '.$langs->trans('Bill'.$prefix.'StatusClosedPaidPartially');
+				if ($status == 0) return img_picto($langs->trans('BillStatusDraft'),'statut0').' '.$langs->trans('BillStatusDraft');
+				if (($status == 3 || $status == 2) && $alreadypaid <= 0) return img_picto($langs->trans('BillStatusCanceled'),'statut5').' '.$langs->trans('Bill'.$prefix.'StatusCanceled');
+				if (($status == 3 || $status == 2) && $alreadypaid > 0) return img_picto($langs->trans('BillStatusClosedPaidPartially'),'statut7').' '.$langs->trans('Bill'.$prefix.'StatusClosedPaidPartially');
 				if ($alreadypaid <= 0) return img_picto($langs->trans('BillStatusNotPaid'),'statut1').' '.$langs->trans('BillStatusNotPaid');
 				return img_picto($langs->trans('BillStatusStarted'),'statut3').' '.$langs->trans('BillStatusStarted');
 			}
@@ -273,20 +274,94 @@ abstract class CommonInvoice extends CommonObject
 			$prefix='Short';
 			if (! $paye)
 			{
-				if ($statut == 0) return $langs->trans('Bill'.$prefix.'StatusDraft').' '.img_picto($langs->trans('BillStatusDraft'),'statut0');
-				if (($statut == 3 || $statut == 2) && $alreadypaid <= 0) return $langs->trans('Bill'.$prefix.'StatusCanceled').' '.img_picto($langs->trans('BillStatusCanceled'),'statut5');
-				if (($statut == 3 || $statut == 2) && $alreadypaid > 0) return $langs->trans('Bill'.$prefix.'StatusClosedPaidPartially').' '.img_picto($langs->trans('BillStatusClosedPaidPartially'),'statut7');
-				if ($alreadypaid <= 0) return $langs->trans('Bill'.$prefix.'StatusNotPaid').' '.img_picto($langs->trans('BillStatusNotPaid'),'statut1');
-				return $langs->trans('Bill'.$prefix.'StatusStarted').' '.img_picto($langs->trans('BillStatusStarted'),'statut3');
+				if ($status == 0) return '<span class="hideonsmartphone">'.$langs->trans('Bill'.$prefix.'StatusDraft').' </span>'.img_picto($langs->trans('BillStatusDraft'),'statut0');
+				if (($status == 3 || $status == 2) && $alreadypaid <= 0) return '<span class="hideonsmartphone">'.$langs->trans('Bill'.$prefix.'StatusCanceled').' </span>'.img_picto($langs->trans('BillStatusCanceled'),'statut5');
+				if (($status == 3 || $status == 2) && $alreadypaid > 0) return '<span class="hideonsmartphone">'.$langs->trans('Bill'.$prefix.'StatusClosedPaidPartially').' </span>'.img_picto($langs->trans('BillStatusClosedPaidPartially'),'statut7');
+				if ($alreadypaid <= 0) return '<span class="hideonsmartphone">'.$langs->trans('Bill'.$prefix.'StatusNotPaid').' </span>'.img_picto($langs->trans('BillStatusNotPaid'),'statut1');
+				return '<span class="hideonsmartphone">'.$langs->trans('Bill'.$prefix.'StatusStarted').' </span>'.img_picto($langs->trans('BillStatusStarted'),'statut3');
 			}
 			else
 			{
-				if ($type == 2) return $langs->trans('Bill'.$prefix.'StatusPaidBackOrConverted').' '.img_picto($langs->trans('BillStatusPaidBackOrConverted'),'statut6');
-				elseif ($type == 3) return $langs->trans('Bill'.$prefix.'StatusConverted').' '.img_picto($langs->trans('BillStatusConverted'),'statut6');
-				else return $langs->trans('Bill'.$prefix.'StatusPaid').' '.img_picto($langs->trans('BillStatusPaid'),'statut6');
+				if ($type == 2) return '<span class="hideonsmartphone">'.$langs->trans('Bill'.$prefix.'StatusPaidBackOrConverted').' </span>'.img_picto($langs->trans('BillStatusPaidBackOrConverted'),'statut6');
+				elseif ($type == 3) return '<span class="hideonsmartphone">'.$langs->trans('Bill'.$prefix.'StatusConverted').' </span>'.img_picto($langs->trans('BillStatusConverted'),'statut6');
+				else return '<span class="hideonsmartphone">'.$langs->trans('Bill'.$prefix.'StatusPaid').' </span>'.img_picto($langs->trans('BillStatusPaid'),'statut6');
 			}
 		}
 	}
+
+	/**
+	 *	Renvoi une date limite de reglement de facture en fonction des
+	 *	conditions de reglements de la facture et date de facturation
+	 *
+	 *	@param      string	$cond_reglement   	Condition of payment (code or id) to use. If 0, we use current condition.
+	 *	@return     date     			       	Date limite de reglement si ok, <0 si ko
+	 */
+	function calculate_date_lim_reglement($cond_reglement=0)
+	{
+		if (! $cond_reglement) $cond_reglement=$this->cond_reglement_code;
+		if (! $cond_reglement) $cond_reglement=$this->cond_reglement_id;
+
+		$cdr_nbjour=0; $cdr_fdm=0; $cdr_decalage=0;
+
+		$sqltemp = 'SELECT c.fdm,c.nbjour,c.decalage';
+		$sqltemp.= ' FROM '.MAIN_DB_PREFIX.'c_payment_term as c';
+		if (is_numeric($cond_reglement)) $sqltemp.= " WHERE c.rowid=".$cond_reglement;
+		else $sqltemp.= " WHERE c.code='".$this->db->escape($cond_reglement)."'";
+
+		dol_syslog(get_class($this).'::calculate_date_lim_reglement sql='.$sqltemp);
+		$resqltemp=$this->db->query($sqltemp);
+		if ($resqltemp)
+		{
+			if ($this->db->num_rows($resqltemp))
+			{
+				$obj = $this->db->fetch_object($resqltemp);
+				$cdr_nbjour = $obj->nbjour;
+				$cdr_fdm = $obj->fdm;
+				$cdr_decalage = $obj->decalage;
+			}
+		}
+		else
+		{
+			$this->error=$this->db->error();
+			return -1;
+		}
+		$this->db->free($resqltemp);
+
+		/* Definition de la date limite */
+
+		// 1 : ajout du nombre de jours
+		$datelim = $this->date + ($cdr_nbjour * 3600 * 24);
+
+		// 2 : application de la regle "fin de mois"
+		if ($cdr_fdm)
+		{
+			$mois=date('m', $datelim);
+			$annee=date('Y', $datelim);
+			if ($mois == 12)
+			{
+				$mois = 1;
+				$annee += 1;
+			}
+			else
+			{
+				$mois += 1;
+			}
+			// On se deplace au debut du mois suivant, et on retire un jour
+			$datelim=dol_mktime(12,0,0,$mois,1,$annee);
+			$datelim -= (3600 * 24);
+		}
+
+		// 3 : application du decalage
+		$datelim += ($cdr_decalage * 3600 * 24);
+
+		return $datelim;
+	}
 }
 
-?>
+/**
+ *	Parent class of all other business classes for details of elements (invoices, contracts, proposals, orders, ...)
+ */
+abstract class CommonInvoiceLine extends CommonObject
+{
+}
+

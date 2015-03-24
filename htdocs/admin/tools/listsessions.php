@@ -104,23 +104,24 @@ print_barre_liste($langs->trans("Sessions"), $page, $_SERVER["PHP_SELF"],"",$sor
 $savehandler=ini_get("session.save_handler");
 $savepath=ini_get("session.save_path");
 $openbasedir=ini_get("open_basedir");
+$phparray=phpinfo_array();
+$suhosin=empty($phparray['suhosin']["suhosin.session.encrypt"]["local"])?'':$phparray['suhosin']["suhosin.session.encrypt"]["local"];
 
 print '<b>'.$langs->trans("SessionSaveHandler").'</b>: '.$savehandler.'<br>';
 print '<b>'.$langs->trans("SessionSavePath").'</b>: '.$savepath.'<br>';
 if ($openbasedir) print '<b>'.$langs->trans("OpenBaseDir").'</b>: '.$openbasedir.'<br>';
+if ($suhosin) print '<b>'.$langs->trans("SuhosinSessionEncrypt").'</b>: '.$suhosin.'<br>';
 print '<br>';
 
 if ($action == 'purge')
 {
 	$formquestion=array();
-	$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?noparam=noparam', $langs->trans('PurgeSessions'), $langs->trans('ConfirmPurgeSessions'),'confirm_purge',$formquestion,'no',2);
-	if ($ret == 'html') print '<br>';
+	print $form->formconfirm($_SERVER["PHP_SELF"].'?noparam=noparam', $langs->trans('PurgeSessions'), $langs->trans('ConfirmPurgeSessions'),'confirm_purge',$formquestion,'no',2);
 }
 else if ($action == 'lock')
 {
 	$formquestion=array();
-	$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?noparam=noparam', $langs->trans('LockNewSessions'), $langs->trans('ConfirmLockNewSessions',$user->login),'confirm_lock',$formquestion,'no',1);
-	if ($ret == 'html') print '<br>';
+	print $form->formconfirm($_SERVER["PHP_SELF"].'?noparam=noparam', $langs->trans('LockNewSessions'), $langs->trans('ConfirmLockNewSessions',$user->login),'confirm_lock',$formquestion,'no',1);
 }
 
 if ($savehandler == 'files')
@@ -142,22 +143,22 @@ if ($savehandler == 'files')
 	{
 		$var=!$var;
 
-		print "<tr $bc[$var]>";
+		print "<tr ".$bc[$var].">";
 
 		// Login
 		print '<td>'.$sessionentry['login'].'</td>';
 
 		// ID
-		print '<td align="left" nowrap="nowrap">';
+		print '<td align="left" class="nowrap">';
 		if ("$key" == session_id()) print $form->textwithpicto($key,$langs->trans("YourSession"));
 		else print $key;
 		print '</td>';
 
 		// Date creation
-		print '<td align="left" nowrap="nowrap">'.dol_print_date($sessionentry['creation'],'%Y-%m-%d %H:%M:%S').'</td>';
+		print '<td align="left" class="nowrap">'.dol_print_date($sessionentry['creation'],'%Y-%m-%d %H:%M:%S').'</td>';
 
 		// Date modification
-		print '<td align="left" nowrap="nowrap">'.dol_print_date($sessionentry['modification'],'%Y-%m-%d %H:%M:%S').'</td>';
+		print '<td align="left" class="nowrap">'.dol_print_date($sessionentry['modification'],'%Y-%m-%d %H:%M:%S').'</td>';
 
 		// Age
 		print '<td>'.$sessionentry['age'].'</td>';
@@ -213,4 +214,3 @@ print '<br>';
 
 llxFooter();
 $db->close();
-?>

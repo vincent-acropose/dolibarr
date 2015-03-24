@@ -13,8 +13,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 /**
@@ -107,56 +106,41 @@ $server->wsdl->addComplexType(
     'tns:categorie'
 );
 
-/*
- * Tableau des catégories
-
-$server->wsdl->addComplexType(
-    'categories',
-    'complexType',
-    'array',
-    '',
-    'SOAP-ENC:Array',
-    array(),
-    array(
-        array('id'=>'SOAP-ENC:arrayType','wsdl:arrayType'=>'tns:categorie[]')
-    ),
-    'tns:categories'
-);
+ /*
+  * Image of product
  */
-
-/*
- * Les photos  de la catégorie (un tableau indéxé qui contient les images avec leur vignette)
+ $server->wsdl->addComplexType(
+ 		'PhotosArray',
+ 		'complexType',
+ 		'array',
+ 		'sequence',
+ 		'',
+ 		array(
+ 				'image' => array(
+ 						'name' => 'image',
+ 						'type' => 'tns:image',
+ 						'minOccurs' => '0',
+ 						'maxOccurs' => 'unbounded'
+ 				)
+ 		)
+ );
+ 
+ /*
+  * An image
  */
-$server->wsdl->addComplexType(
-	'PhotosArray',
-    'complexType',
-    'array',
-    '',
-    'SOAP-ENC:Array',
-    array(),
-    array(
-        array('ref'=>'SOAP-ENC:arrayType','wsdl:arrayType'=>'tns:image[]')
-    ),
-	''
-);
-
-/*
- * Une photo ( nom image / nom_vignette )
- */
-$server->wsdl->addComplexType(
- 	'image',
- 	'complexType',
- 	'array',
- 	'',
- 	'SOAP-ENC:Array',
- 	array(),
- 	array(
-	 	'photo' => array('name'=>'photo','type'=>'xsd:string'),
-	 	'photo_vignette' => array('name'=>'photo_vignette','type'=>'xsd:string'),
-	 	'imgWidth' => array('name'=>'imgWidth','type'=>'xsd:string'),
-	 	'imgHeight' => array('name'=>'imgHeight','type'=>'xsd:string')
-	)
-);
+ $server->wsdl->addComplexType(
+ 		'image',
+ 		'complexType',
+ 		'struct',
+ 		'all',
+ 		'',
+ 		array(
+ 				'photo' => array('name'=>'photo','type'=>'xsd:string'),
+ 				'photo_vignette' => array('name'=>'photo_vignette','type'=>'xsd:string'),
+ 				'imgWidth' => array('name'=>'imgWidth','type'=>'xsd:string'),
+ 				'imgHeight' => array('name'=>'imgHeight','type'=>'xsd:string')
+ 		)
+ );
 
 /*
  * Retour
@@ -303,4 +287,3 @@ function getCategory($authentication,$id)
 // Return the results.
 $server->service($HTTP_RAW_POST_DATA);
 
-?>

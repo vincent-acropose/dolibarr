@@ -89,7 +89,7 @@ ALTER TABLE llx_commande CHANGE COLUMN fk_demand_reason fk_input_reason integer 
 ALTER TABLE llx_propal CHANGE COLUMN fk_demand_reason fk_input_reason integer NULL DEFAULT NULL;
 ALTER TABLE llx_commande_fournisseur CHANGE COLUMN fk_methode_commande fk_input_method integer NULL DEFAULT 0;
 
-INSERT INTO llx_const (name, value, type, note, visible) values ('PRODUCT_CODEPRODUCT_ADDON','mod_codeproduct_leopard','yesno','Module to control product codes',0);
+INSERT INTO llx_const (name, value, type, note, visible) values (__ENCRYPT('PRODUCT_CODEPRODUCT_ADDON')__, __ENCRYPT('mod_codeproduct_leopard')__, 'yesno', 'Module to control product codes', 0);
 
 ALTER TABLE llx_c_barcode_type ADD UNIQUE INDEX uk_c_barcode_type(code, entity);
 
@@ -311,7 +311,7 @@ UPDATE llx_c_tva set localtax1 = 1, localtax1_type = '4', localtax2 = 0.4, local
 ALTER TABLE llx_c_tva DROP COLUMN accountancy_code;
 ALTER TABLE llx_c_tva ADD COLUMN accountancy_code_sell varchar(15) DEFAULT NULL AFTER active;
 ALTER TABLE llx_c_tva ADD COLUMN accountancy_code_buy varchar(15) DEFAULT NULL AFTER accountancy_code_sell;
-ALTER TABLE llx_c_chargessociales ADD COLUMN accountancy_code varchar(15) DEFAULT NULL AFTER code;
+ALTER TABLE llx_c_chargesociales ADD COLUMN accountancy_code varchar(15) DEFAULT NULL AFTER code;
 
 -- Tables for accountancy expert
 DROP TABLE llx_accountingaccount;
@@ -848,6 +848,8 @@ ALTER TABLE llx_product_price_by_qty ADD CONSTRAINT fk_product_price_by_qty_fk_p
 
 ALTER TABLE llx_product_price_by_qty ADD remise_percent DOUBLE NOT NULL DEFAULT '0' AFTER price_ttc;
 ALTER TABLE llx_product_price_by_qty ADD remise DOUBLE NOT NULL DEFAULT '0' AFTER remise_percent;
+ALTER TABLE llx_product_price_by_qty ADD unitprice DOUBLE (24,8) NOT NULL DEFAULT '0' AFTER qty_min;
+ALTER TABLE llx_product_price_by_qty CHANGE qty_min quantity DOUBLE NULL DEFAULT NULL;
 
 -- Change index name to be compliant with SQL standard, index name must be unique in database schema
 ALTER TABLE llx_c_actioncomm DROP INDEX code;
@@ -872,7 +874,7 @@ INSERT INTO llx_c_actioncomm (id, code, type, libelle, module, position) values 
 UPDATE llx_c_actioncomm SET libelle = 'Other (manually inserted events)' WHERE code = 'AC_OTH';
 UPDATE llx_c_actioncomm SET active = 0 WHERE code in ('AC_PROP', 'AC_COM', 'AC_FAC', 'AC_SHIP', 'AC_SUP_ORD', 'AC_SUP_INV');
 
--- Update dictionnary of table llx_c_paper_format
+-- Update dictionary of table llx_c_paper_format
 DELETE FROM llx_c_paper_format;
 
 -- Europe
@@ -923,3 +925,10 @@ DELETE FROM llx_c_action_trigger WHERE elementtype='withdraw';
 UPDATE llx_c_action_trigger SET code='FICHINTER_VALIDATE' WHERE code='FICHEINTER_VALIDATE';
 
 UPDATE llx_c_departements SET ncc='ALAVA', nom='Álava' WHERE code_departement='01' AND fk_region=419;
+
+ALTER TABLE llx_product_fournisseur_price DROP FOREIGN KEY fk_product_fournisseur;
+
+UPDATE llx_const SET name = __ENCRYPT('PRODUIT_MULTI_PRICES')__ WHERE __DECRYPT('name')__ = 'PRODUIT_MUTLI_PRICES';
+
+DELETE FROM llx_const WHERE entity <> 0 AND __DECRYPT('name')__ IN ('SYSLOG_HANDLERS','SYSLOG_LEVEL');
+UPDATE llx_const SET entity = 0 WHERE __DECRYPT('name')__ = 'SYSLOG_FILE';

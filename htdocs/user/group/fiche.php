@@ -3,6 +3,7 @@
  * Copyright (C) 2005-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2011      Herve Prot           <herve.prot@symeos.com>
+ * Copyright (C) 2012	   Florian Henry		<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -215,6 +216,8 @@ if ($action == 'create')
 
     if ($message) { print $message."<br>"; }
 
+    print dol_set_focus('#nom');
+
     print '<form action="'.$_SERVER["PHP_SELF"].'" method="post">';
     print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
     print '<input type="hidden" name="action" value="add">';
@@ -222,7 +225,7 @@ if ($action == 'create')
     print '<table class="border" width="100%">';
 
 	print "<tr>".'<td valign="top" class="fieldrequired">'.$langs->trans("Name").'</td>';
-	print '<td class="valeur"><input size="30" type="text" name="nom" value=""></td></tr>';
+	print '<td class="valeur"><input size="30" type="text" id="nom" name="nom" value=""></td></tr>';
 
 	// Multicompany
 	if (! empty($conf->multicompany->enabled))
@@ -275,8 +278,7 @@ else
 		 */
 		if ($action == 'delete')
 		{
-			$ret=$form->form_confirm($_SERVER['PHP_SELF']."?id=".$object->id,$langs->trans("DeleteAGroup"),$langs->trans("ConfirmDeleteGroup",$object->name),"confirm_delete", '',0,1);
-			if ($ret == 'html') print '<br>';
+			print $form->formconfirm($_SERVER['PHP_SELF']."?id=".$object->id,$langs->trans("DeleteAGroup"),$langs->trans("ConfirmDeleteGroup",$object->name),"confirm_delete", '',0,1);
 		}
 
 		/*
@@ -296,7 +298,7 @@ else
 
 			// Name
 			print '<tr><td width="25%" valign="top">'.$langs->trans("Name").'</td>';
-			print '<td width="75%" class="valeur">'.$object->nom;
+			print '<td width="75%" class="valeur">'.$object->name;
 			if (empty($object->entity))
 			{
 				print img_picto($langs->trans("GlobalGroup"),'redstar');
@@ -418,7 +420,7 @@ else
             	{
             		$var=!$var;
 
-            		print "<tr $bc[$var]>";
+            		print "<tr ".$bc[$var].">";
             		print '<td>';
             		print '<a href="'.DOL_URL_ROOT.'/user/fiche.php?id='.$useringroup->id.'">'.img_object($langs->trans("ShowUser"),"user").' '.$useringroup->login.'</a>';
             		if ($useringroup->admin  && ! $useringroup->entity) print img_picto($langs->trans("SuperAdministrator"),'redstar');
@@ -478,7 +480,7 @@ else
 
             print '<table class="border" width="100%">';
             print '<tr><td width="25%" valign="top" class="fieldrequired">'.$langs->trans("Name").'</td>';
-            print '<td width="75%" class="valeur"><input size="15" type="text" name="group" value="'.$object->nom.'">';
+            print '<td width="75%" class="valeur"><input size="15" type="text" name="group" value="'.$object->name.'">';
             print "</td></tr>\n";
 
             // Multicompany
@@ -517,4 +519,3 @@ else
 
 llxFooter();
 $db->close();
-?>

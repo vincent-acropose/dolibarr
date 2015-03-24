@@ -57,7 +57,7 @@ if ($action == 'addcontact' && $user->rights->contrat->creer)
     if ($result > 0 && $id > 0)
     {
     	$contactid = (GETPOST('userid') ? GETPOST('userid') : GETPOST('contactid'));
-  		$result = $result = $object->add_contact($contactid, $_POST["type"], $_POST["source"]);
+  		$result = $object->add_contact($contactid, $_POST["type"], $_POST["source"]);
     }
 
 	if ($result >= 0)
@@ -157,7 +157,7 @@ if ($id > 0 || ! empty($ref))
 
 		// Ligne info remises tiers
 	    print '<tr><td>'.$langs->trans('Discount').'</td><td>';
-		if ($object->thirdparty->remise_client) print $langs->trans("CompanyHasRelativeDiscount",$object->thirdparty->remise_client);
+		if ($object->thirdparty->remise_percent) print $langs->trans("CompanyHasRelativeDiscount",$object->thirdparty->remise_percent);
 		else print $langs->trans("CompanyHasNoRelativeDiscount");
 		$absolute_discount=$object->thirdparty->getAvailableDiscounts();
 		print '. ';
@@ -169,9 +169,9 @@ if ($id > 0 || ! empty($ref))
 		print "</table>";
 
 		print '</div>';
-		
+
 		print '<br>';
-		
+
 		// Contacts lines
 		include DOL_DOCUMENT_ROOT.'/core/tpl/contacts.tpl.php';
 
@@ -185,4 +185,3 @@ if ($id > 0 || ! empty($ref))
 
 llxFooter();
 $db->close();
-?>

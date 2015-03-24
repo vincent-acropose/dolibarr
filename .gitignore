@@ -3,7 +3,7 @@ htdocs/conf/conf.php.old
 documents/
 custom/
 custom2/
-test/
+test/report/
 nbproject
 default.properties
 .settings/
@@ -13,3 +13,11 @@ dolibarr_install.log
 doxygen_warnings.log
 /.project
 .DS_Store
+.idea
+*.iml
+Thumbs.db
+# Vagrant generated files
+.vagrant
+/index.html
+/phpmyadmin
+/xhprof

@@ -135,9 +135,10 @@ class FormActions
      *  @param	Object	$object			Object
      *  @param  string	$typeelement	'invoice','propal','order','invoice_supplier','order_supplier','fichinter'
      *	@param	int		$socid			socid of user
+     *  @param	int		$forceshowtitle	Show title even if there is no actions to show
      *	@return	int						<0 if KO, >=0 if OK
      */
-    function showactions($object,$typeelement,$socid=0)
+    function showactions($object,$typeelement,$socid=0,$forceshowtitle=0)
     {
         global $langs,$conf,$user;
         global $bc;
@@ -148,7 +149,7 @@ class FormActions
 		if (! is_array($listofactions)) dol_print_error($this->db,'FailedToGetActions');
 
         $num = count($listofactions);
-        if ($num)
+        if ($num || $forceshowtitle)
         {
         	if ($typeelement == 'invoice')   $title=$langs->trans('ActionsOnBill');
         	elseif ($typeelement == 'invoice_supplier' || $typeelement == 'supplier_invoice') $title=$langs->trans('ActionsOnBill');
@@ -187,10 +188,15 @@ class FormActions
 				print '<td>'.$ref.'</td>';
         		print '<td>'.$label.'</td>';
         		print '<td>'.dol_print_date($action->datep,'day').'</td>';
-        		$userstatic->id = $action->author->id;
-        		$userstatic->firstname = $action->author->firstname;
-        		$userstatic->lastname = $action->author->lastname;
-        		print '<td>'.$userstatic->getNomUrl(1).'</td>';
+        		print '<td>';
+        		if (! empty($action->author->id))
+        		{
+        			$userstatic->id = $action->author->id;
+        			$userstatic->firstname = $action->author->firstname;
+        			$userstatic->lastname = $action->author->lastname;
+        			print $userstatic->getNomUrl(1);
+        		}
+        		print '</td>';
         		print '</tr>';
         	}
         	print '</table>';
@@ -203,28 +209,32 @@ class FormActions
     /**
      *  Output list of type of event
      *
-     *  @param	string		$selected       Type pre-selectionne
+     *  @param	string		$selected       Type pre-selected (can be 'manual', 'auto' or 'AC_xxx'
      *  @param  string		$htmlname       Nom champ formulaire
      *  @param	string		$excludetype	Type to exclude
-     *  @param	string		$onlyautoornot	Group list by auto events or not
+     *  @param	string		$onlyautoornot	Group list by auto events or not: We keep only the 2 generic lines (AC_OTH and AC_OTH_AUTO)
      * 	@return	void
      */
     function select_type_actions($selected='',$htmlname='actioncode',$excludetype='',$onlyautoornot=0)
     {
-        global $langs,$user;
+        global $langs,$user,$form;
 
+        if (! is_object($form)) $form=new Form($db);
+        
         require_once DOL_DOCUMENT_ROOT.'/comm/action/class/cactioncomm.class.php';
         require_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php';
         $caction=new CActionComm($this->db);
-        $form=new Form($this->db);
 
-       	// Suggest a list with manual event or all auto events
+       	// Suggest a list with manual events or all auto events
        	$arraylist=$caction->liste_array(1, 'code', $excludetype, $onlyautoornot);
        	array_unshift($arraylist,'&nbsp;');     // Add empty line at start
        	//asort($arraylist);
 
+       	if ($selected == 'manual') $selected='AC_OTH';
+       	if ($selected == 'auto')   $selected='AC_OTH_AUTO';
+
         print $form->selectarray($htmlname, $arraylist, $selected);
-        if ($user->admin && empty($onlyautoornot)) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
+        if ($user->admin && empty($onlyautoornot)) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
     }
 
 }

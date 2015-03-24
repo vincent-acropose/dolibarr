@@ -25,7 +25,7 @@
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/product.lib.php';
-require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
+require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.commande.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 
 $langs->load("orders");
@@ -40,6 +40,9 @@ $fieldvalue = (! empty($id) ? $id : (! empty($ref) ? $ref : ''));
 $fieldtype = (! empty($ref) ? 'ref' : 'rowid');
 if ($user->societe_id) $socid=$user->societe_id;
 $result=restrictedArea($user,'produit|service',$fieldvalue,'product&product','','',$fieldtype);
+
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('productstatssupplyorder'));
 
 $mesg = '';
 
@@ -64,6 +67,10 @@ if ($id > 0 || ! empty($ref))
 {
 	$product = new Product($db);
 	$result = $product->fetch($id, $ref);
+	
+	$parameters=array('id'=>$id);
+	$reshook=$hookmanager->executeHooks('doActions',$parameters,$product,$action);    // Note that $action and $object may have been modified by some hooks
+	$error=$hookmanager->error; $errors=$hookmanager->errors;
 
 	llxHeader("","",$langs->trans("CardProduct".$product->type));
 
@@ -73,6 +80,8 @@ if ($id > 0 || ! empty($ref))
 		$titre=$langs->trans("CardProduct".$product->type);
 		$picto=($product->type==1?'service':'product');
 		dol_fiche_head($head, 'referers', $titre, 0, $picto);
+		
+		$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$product,$action);    // Note that $action and $object may have been modified by hook
 
 		print '<table class="border" width="100%">';
 
@@ -102,7 +111,7 @@ if ($id > 0 || ! empty($ref))
 
 		$sql = "SELECT distinct s.nom, s.rowid as socid, s.code_client,";
 		$sql.= " c.rowid, c.total_ht as total_ht, c.ref,";
-		$sql.= " c.date_commande, c.fk_statut as statut, c.rowid as commandeid";
+		$sql.= " c.date_commande, c.fk_statut as statut, c.rowid as commandeid, d.qty";
 		if (!$user->rights->societe->client->voir && !$socid) $sql .= ", sc.fk_soc, sc.fk_user ";
 		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 		$sql.= ", ".MAIN_DB_PREFIX."commande_fournisseur as c";
@@ -132,12 +141,13 @@ if ($id > 0 || ! empty($ref))
 			print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","","&amp;id=".$product->id,'',$sortfield,$sortorder);
 			print_liste_field_titre($langs->trans("SupplierCode"),$_SERVER["PHP_SELF"],"s.code_client","","&amp;id=".$product->id,'',$sortfield,$sortorder);
 			print_liste_field_titre($langs->trans("OrderDate"),$_SERVER["PHP_SELF"],"c.date_commande","","&amp;id=".$product->id,'align="center"',$sortfield,$sortorder);
+			print_liste_field_titre($langs->trans("Qty"),$_SERVER["PHP_SELF"],"d.qty","","&amp;id=".$product->id,'align="center"',$sortfield,$sortorder);
 			print_liste_field_titre($langs->trans("AmountHT"),$_SERVER["PHP_SELF"],"c.total_ht","","&amp;id=".$product->id,'align="right"',$sortfield,$sortorder);
 			print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"c.fk_statut","","&amp;id=".$product->id,'align="right"',$sortfield,$sortorder);
 			print "</tr>\n";
 
-			$commandestatic=new Commande($db);
-
+			$commandestatic=new CommandeFournisseur($db);
+			
 			if ($num > 0)
 			{
 				$var=True;
@@ -145,17 +155,20 @@ if ($id > 0 || ! empty($ref))
 				{
 					$objp = $db->fetch_object($result);
 					$var=!$var;
+					
+					$commandestatic->id=$objp->commandeid;
+					$commandestatic->ref=$objp->ref;
+					$commandestatic->statut=$objp->statut;
 
-					print "<tr $bc[$var]>";
-					print '<td><a href="'.DOL_URL_ROOT.'/fourn/commande/fiche.php?id='.$objp->commandeid.'">'.img_object($langs->trans("ShowOrder"),"order").' ';
-					print $objp->ref;
+					print "<tr ".$bc[$var].">";
+					print '<td>'.$commandestatic->getNomUrl(1)."</td>\n";
 					print "</a></td>\n";
 					print '<td><a href="'.DOL_URL_ROOT.'/fourn/fiche.php?socid='.$objp->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.dol_trunc($objp->nom,44).'</a></td>';
 					print "<td>".$objp->code_client."</td>\n";
-					print "<td align=\"center\">";
-					print dol_print_date($db->jdate($objp->date_commande))."</td>";
-					print "<td align=\"right\">".price($objp->total_ht)."</td>\n";
-					print '<td align="right">'.$commandestatic->LibStatut($objp->statut,$objp->facture,5).'</td>';
+					print '<td align="center">'.dol_print_date($db->jdate($objp->date_commande))."</td>";
+					print "<td align=\"center\">".$objp->qty."</td>\n";
+					print '<td align="right">'.price($objp->total_ht)."</td>\n";
+					print '<td align="right">'.$commandestatic->getLibStatut(4).'</td>';
 					print "</tr>\n";
 					$i++;
 				}
@@ -178,4 +191,3 @@ else
 
 llxFooter();
 $db->close();
-?>

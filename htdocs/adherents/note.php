@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2004      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2007 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 /**
  *      \file       htdocs/adherents/note.php
  *      \ingroup    member
- *      \brief      Fiche de notes sur un adherent
+ *      \brief      Tabe for note of a member
 */
 
 require '../main.inc.php';
@@ -54,7 +54,7 @@ if ($action == 'update' && $user->rights->adherent->creer && ! $_POST["cancel"])
 {
 	$db->begin();
 
-	$res=$object->update_note($_POST["note"],$user);
+	$res=$object->update_note(dol_html_entity_decode(GETPOST('note'), ENT_QUOTES));
 	if ($res < 0)
 	{
 		setEventMessage($object->error, 'errors');
@@ -167,7 +167,7 @@ if ($id)
 
     if ($user->rights->adherent->creer && $action != 'edit')
     {
-        print "<a class=\"butAction\" href=\"note.php?id=".$object->id."&amp;action=edit\">".$langs->trans('Modify')."</a>";
+        print '<div class="inline-block divButAction"><a class="butAction" href="note.php?id='.$object->id.'&amp;action=edit">'.$langs->trans('Modify')."</a></div>";
     }
 
     print "</div>";
@@ -178,4 +178,3 @@ if ($id)
 
 llxFooter();
 $db->close();
-?>

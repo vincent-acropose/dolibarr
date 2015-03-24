@@ -24,15 +24,18 @@
  *     \brief      Page liste des factures prelevees
  */
 
-require '../bank/pre.inc.php';
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/lib/prelevement.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/bonprelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/rejetprelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
-$langs->load("companies");
+$langs->load("banks");
 $langs->load("categories");
+$langs->load("companies");
 $langs->load('withdrawals');
+$langs->load('bills');
 
 // Securite acces client
 if ($user->societe_id > 0) accessforbidden();
@@ -44,7 +47,7 @@ $page = GETPOST('page','int');
 $sortorder = ((GETPOST('sortorder','alpha')=="")) ? "DESC" : GETPOST('sortorder','alpha');
 $sortfield = ((GETPOST('sortfield','alpha')=="")) ? "p.ref" : GETPOST('sortfield','alpha');
 
-llxHeader('',$langs->trans("WithdrawalReceipt"));
+llxHeader('',$langs->trans("WithdrawalsReceipts"));
 
 if ($prev_id)
 {
@@ -53,7 +56,7 @@ if ($prev_id)
   	if ($bon->fetch($prev_id) == 0)
     {
     	$head = prelevement_prepare_head($bon);
-      	dol_fiche_head($head, 'invoices', $langs->trans("WithdrawalReceipt"), '', 'payment');
+		dol_fiche_head($head, 'invoices', $langs->trans("WithdrawalsReceipts"), '', 'payment');
 
       	print '<table class="border" width="100%">';
 
@@ -92,7 +95,7 @@ if ($prev_id)
 		print '<table class="border" width="100%"><tr><td width="20%">';
 		print $langs->trans("WithdrawalFile").'</td><td>';
 		$relativepath = 'receipts/'.$bon->ref;
-		print '<a href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
+		print '<a data-ajax="false" href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
 		print '</td></tr></table>';
 	
 		dol_fiche_end();
@@ -154,7 +157,7 @@ if ($result)
     {
      	$obj = $db->fetch_object($result);
 
-      	print "<tr $bc[$var]><td>";
+      	print "<tr ".$bc[$var]."><td>";
 
       	print '<a href="'.DOL_URL_ROOT.'/compta/facture.php?facid='.$obj->facid.'">';
       	print img_object($langs->trans("ShowBill"),"bill");
@@ -191,7 +194,7 @@ if ($result)
 
   	if($socid)
     {
-      	print "<tr $bc[$var]><td>";
+      	print "<tr ".$bc[$var]."><td>";
 
      	print '<td>'.$langs->trans("Total").'</td>';
 
@@ -213,4 +216,3 @@ else
 $db->close();
 
 llxFooter();
-?>

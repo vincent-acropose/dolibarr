@@ -32,7 +32,7 @@ class box_fournisseurs extends ModeleBoxes
 {
     var $boxcode="lastsuppliers";
     var $boximg="object_company";
-    var $boxlabel;
+    var $boxlabel="BoxLastSuppliers";
     var $depends = array("fournisseur");
 
 	var $db;
@@ -41,16 +41,6 @@ class box_fournisseurs extends ModeleBoxes
     var $info_box_head = array();
     var $info_box_contents = array();
 
-    /**
-     *  Constructor
-     */
-    function __construct()
-    {
-        global $langs;
-        $langs->load("boxes");
-
-        $this->boxlabel=$langs->transnoentitiesnoconv("BoxLastSuppliers");
-    }
 
     /**
 	 *  Load data into info_box_contents array to show array later.
@@ -112,6 +102,8 @@ class box_fournisseurs extends ModeleBoxes
                 }
 
                 if ($num==0) $this->info_box_contents[$i][0] = array('td' => 'align="center"','text'=>$langs->trans("NoRecordedSuppliers"));
+
+				$db->free($result);
             }
             else {
                 $this->info_box_contents[0][0] = array( 'td' => 'align="left"',
@@ -140,4 +132,3 @@ class box_fournisseurs extends ModeleBoxes
 
 }
 
-?>

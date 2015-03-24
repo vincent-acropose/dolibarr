@@ -49,11 +49,20 @@ abstract class CommonDocGenerator
         return array(
             'myuser_lastname'=>$user->lastname,
             'myuser_firstname'=>$user->firstname,
+            'myuser_fullname'=>$user->getFullName($outputlangs,1),
             'myuser_login'=>$user->login,
             'myuser_phone'=>$user->office_phone,
-            'myuser_fax'=>$user->office_fax,
+       		'myuser_address'=>$user->address,
+       		'myuser_zip'=>$user->zip,
+       		'myuser_town'=>$user->town,
+       		'myuser_country'=>$user->country,
+        	'myuser_country_code'=>$user->country_code,
+       		'myuser_state'=>$user->state,
+        	'myuser_state_code'=>$user->state_code,
+        	'myuser_fax'=>$user->office_fax,
             'myuser_mobile'=>$user->user_mobile,
             'myuser_email'=>$user->email,
+        	'myuser_logo'=>$user->photo,
             'myuser_web'=>''	// url not exist in $user object
         );
     }
@@ -100,6 +109,7 @@ abstract class CommonDocGenerator
             'mycompany_state_code'=>$mysoc->state_code,
         	'mycompany_web'=>$mysoc->url,
             'mycompany_juridicalstatus'=>$mysoc->forme_juridique,
+            'mycompany_managers'=>$mysoc->managers,
             'mycompany_capital'=>$mysoc->capital,
             'mycompany_barcode'=>$mysoc->barcode,
             'mycompany_idprof1'=>$mysoc->idprof1,
@@ -109,7 +119,10 @@ abstract class CommonDocGenerator
             'mycompany_idprof5'=>$mysoc->idprof5,
             'mycompany_idprof6'=>$mysoc->idprof6,
         	'mycompany_vatnumber'=>$mysoc->tva_intra,
-            'mycompany_note'=>$mysoc->note
+            // Only private not exists for "mysoc"
+        	'mycompany_note'=>$mysoc->note_private
+            //'mycompany_note_private'=>$mysoc->note_private,
+        	//'mycompany_note_public'=>$mysoc->note_public,
         );
     }
 
@@ -129,12 +142,12 @@ abstract class CommonDocGenerator
         {
         	$object->country=$outputlangs->transnoentitiesnoconv("Country".$object->country_code);
         }
-        if (empty($mysoc->state) && ! empty($mysoc->state_code))
+        if (empty($object->state) && ! empty($object->state_code))
         {
         	$object->state=getState($object->state_code,0);
         }
 
-        return array(
+        $array_thirdparty = array(
             'company_name'=>$object->name,
             'company_email'=>$object->email,
             'company_phone'=>$object->phone,
@@ -161,9 +174,389 @@ abstract class CommonDocGenerator
             'company_idprof4'=>$object->idprof4,
             'company_idprof5'=>$object->idprof5,
             'company_idprof6'=>$object->idprof6,
-        	'company_note'=>$object->note
+            'company_note_public'=>$object->note_public,
+            'company_note_private'=>$object->note_private,
+            'company_default_bank_iban'=>$object->bank_account->iban,
+            'company_default_bank_bic'=>$object->bank_account->bic
         );
+
+        // Retrieve extrafields
+        if(is_array($object->array_options) && count($object->array_options))
+        {
+        	require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+        	$extrafields = new ExtraFields($this->db);
+        	$extralabels = $extrafields->fetch_name_optionals_label('societe',true);
+        	$object->fetch_optionals($object->id,$extralabels);
+
+        	foreach($extrafields->attribute_label as $key=>$label)
+        	{
+        		if($extrafields->attribute_type[$key] == 'price')
+        		{
+        			$object->array_options['options_'.$key] = price($object->array_options['options_'.$key],0,$outputlangs,0,0,-1,$conf->currency);
+        		}
+        		else if($extrafields->attribute_type[$key] == 'select')
+        		{
+        			$object->array_options['options_'.$key] = $extrafields->attribute_param[$key]['options'][$object->array_options['options_'.$key]];
+        		}
+        		$array_thirdparty = array_merge($array_thirdparty, array ('company_options_'.$key => $object->array_options ['options_' . $key]));
+			}
+		}
+		return $array_thirdparty;
+	}
+
+	/**
+	 * Define array with couple subtitution key => subtitution value
+	 *
+	 * @param	Object 		$object        	contact
+	 * @param	Translate 	$outputlangs   	object for output
+	 * @param   array_key	$array_key	    Name of the key for return array
+	 * @return	array of substitution key->code
+	 */
+	function get_substitutionarray_contact($object, $outputlangs, $array_key = 'object') {
+		global $conf;
+
+		if(empty($object->country) && ! empty($object->country_code))
+		{
+			$object->country = $outputlangs->transnoentitiesnoconv("Country" . $object->country_code);
+		}
+		if(empty($object->state) && ! empty($object->state_code))
+		{
+			$object->state = getState($object->state_code, 0);
+		}
+
+		$array_contact = array (
+		    $array_key . '_fullname' => $object->getFullName($outputlangs, 1),
+            $array_key . '_lastname' => $object->lastname,
+            $array_key . '_firstname' => $object->firstname,
+            $array_key . '_address' => $object->address,
+            $array_key . '_zip' => $object->zip,
+            $array_key . '_town' => $object->town,
+            $array_key . '_state_id' => $object->state_id,
+            $array_key . '_state_code' => $object->state_code,
+            $array_key . '_state' => $object->state,
+            $array_key . '_country_id' => $object->country_id,
+            $array_key . '_country_code' => $object->country_code,
+            $array_key . '_country' => $object->country,
+            $array_key . '_poste' => $object->poste,
+            $array_key . '_socid' => $object->socid,
+            $array_key . '_statut' => $object->statut,
+            $array_key . '_code' => $object->code,
+            $array_key . '_email' => $object->email,
+            $array_key . '_jabberid' => $object->jabberid,
+            $array_key . '_phone_pro' => $object->phone_pro,
+            $array_key . '_phone_perso' => $object->phone_perso,
+            $array_key . '_phone_mobile' => $object->phone_mobile,
+            $array_key . '_fax' => $object->fax,
+            $array_key . '_birthday' => $object->birthday,
+            $array_key . '_default_lang' => $object->default_lang,
+            $array_key . '_note_public' => $object->note_public,
+            $array_key . '_note_private' => $object->note_private
+		);
+
+		// Retrieve extrafields
+		require_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
+		$extrafields = new ExtraFields($this->db);
+		$extralabels = $extrafields->fetch_name_optionals_label('socpeople', true);
+		$object->fetch_optionals($object->id, $extralabels);
+
+		foreach($extrafields->attribute_label as $key => $label)
+		{
+			if ($extrafields->attribute_type[$key] == 'price')
+			{
+				$object->array_options['options_' . $key] = price($object->array_options ['options_' . $key], 0, $outputlangs, 0, 0, - 1, $conf->currency);
+			}
+			elseif($extrafields->attribute_type[$key] == 'select')
+			{
+				$object->array_options['options_' . $key] = $extrafields->attribute_param[$key]['options'][$object->array_options['options_' . $key]];
+			}
+			$array_contact = array_merge($array_contact, array($array_key.'_options_' . $key => $object->array_options['options_'. $key]));
+		}
+		return $array_contact;
+	}
+
+
+    /**
+     * Define array with couple subtitution key => subtitution value
+     *
+     * @param   Translate	$outputlangs    Language object for output
+     * @return	array						Array of substitution key->code
+     */
+    function get_substitutionarray_other($outputlangs)
+    {
+    	global $conf;
+
+    	$now=dol_now('gmt');	// gmt
+    	$array_other = array(
+   			'current_date'=>dol_print_date($now,'day','tzuser'),
+   			'current_datehour'=>dol_print_date($now,'dayhour','tzuser'),
+   			'current_server_date'=>dol_print_date($now,'day','tzserver'),
+   			'current_server_datehour'=>dol_print_date($now,'dayhour','tzserver'),
+    	);
+
+    	return $array_other;
     }
+
+
+
+	/**
+	 * Define array with couple substitution key => substitution value
+	 *
+	 * @param   Object			$object             Main object to use as data source
+	 * @param   Translate		$outputlangs        Lang object to use for output
+     * @param   array_key		$array_key	        Name of the key for return array
+	 * @return	array								Array of substitution
+	 */
+	function get_substitutionarray_object($object,$outputlangs,$array_key='object')
+	{
+		global $conf;
+
+		$sumpayed=''; $alreadypayed='';
+		if ($object->element == 'facture')
+		{
+			$invoice_source=new Facture($this->db);
+			if ($object->fk_facture_source > 0)
+			{
+				$invoice_source->fetch($object->fk_facture_source);
+			}
+			$sumpayed = $object->getSommePaiement();
+			$alreadypayed=price($sumpayed,0,$outputlangs);
+		}
+
+		$resarray=array(
+		$array_key.'_id'=>$object->id,
+		$array_key.'_ref'=>$object->ref,
+		$array_key.'_ref_ext'=>$object->ref_ext,
+		$array_key.'_ref_customer'=>$object->ref_client,
+		$array_key.'_ref_supplier'=>(! empty($object->ref_fournisseur)?$object->ref_fournisseur:''),
+		$array_key.'_source_invoice_ref'=>$invoice_source->ref,
+        $array_key.'_hour'=>dol_print_date($object->date,'hour'),
+		$array_key.'_date'=>dol_print_date($object->date,'day'),
+		$array_key.'_date_rfc'=>dol_print_date($object->date,'dayrfc'),
+		$array_key.'_date_limit'=>(! empty($object->date_lim_reglement)?dol_print_date($object->date_lim_reglement,'day'):''),
+	    $array_key.'_date_end'=>(! empty($object->fin_validite)?dol_print_date($object->fin_validite,'day'):''),
+		$array_key.'_date_creation'=>dol_print_date($object->date_creation,'day'),
+		$array_key.'_date_modification'=>(! empty($object->date_modification)?dol_print_date($object->date_modification,'day'):''),
+		$array_key.'_date_validation'=>(! empty($object->date_validation)?dol_print_date($object->date_validation,'dayhour'):''),
+		$array_key.'_date_delivery_planed'=>(! empty($object->date_livraison)?dol_print_date($object->date_livraison,'day'):''),
+		$array_key.'_date_close'=>(! empty($object->date_cloture)?dol_print_date($object->date_cloture,'dayhour'):''),
+		$array_key.'_payment_mode_code'=>$object->mode_reglement_code,
+		$array_key.'_payment_mode'=>($outputlangs->transnoentitiesnoconv('PaymentType'.$object->mode_reglement_code)!='PaymentType'.$object->mode_reglement_code?$outputlangs->transnoentitiesnoconv('PaymentType'.$object->mode_reglement_code):$object->mode_reglement),
+		$array_key.'_payment_term_code'=>$object->cond_reglement_code,
+		$array_key.'_payment_term'=>($outputlangs->transnoentitiesnoconv('PaymentCondition'.$object->cond_reglement_code)!='PaymentCondition'.$object->cond_reglement_code?$outputlangs->transnoentitiesnoconv('PaymentCondition'.$object->cond_reglement_code):$object->cond_reglement),
+
+		$array_key.'_total_ht_locale'=>price($object->total_ht, 0, $outputlangs),
+		$array_key.'_total_vat_locale'=>price($object->total_tva, 0, $outputlangs),
+		$array_key.'_total_localtax1_locale'=>price($object->total_localtax1, 0, $outputlangs),
+		$array_key.'_total_localtax2_locale'=>price($object->total_localtax2, 0, $outputlangs),
+		$array_key.'_total_ttc_locale'=>price($object->total_ttc, 0, $outputlangs),
+		$array_key.'_total_discount_ht_locale' => price($object->getTotalDiscount(), 0, $outputlangs),
+		$array_key.'_total_ht'=>price2num($object->total_ht),
+		$array_key.'_total_vat'=>price2num($object->total_tva),
+		$array_key.'_total_localtax1'=>price2num($object->total_localtax1),
+		$array_key.'_total_localtax2'=>price2num($object->total_localtax2),
+		$array_key.'_total_ttc'=>price2num($object->total_ttc),
+		$array_key.'_total_discount_ht' => price2num($object->getTotalDiscount()),
+
+		$array_key.'_note_private'=>$object->note,
+		$array_key.'_note'=>$object->note_public,
+		// Payments
+		$array_key.'_already_payed_locale'=>price($alreadypayed, 0, $outputlangs),
+		$array_key.'_remain_to_pay_locale'=>price($object->total_ttc - $sumpayed, 0, $outputlangs),
+		$array_key.'_already_payed'=>$alreadypayed,
+		$array_key.'_remain_to_pay'=>price2num($object->total_ttc - $sumpayed)
+		);
+
+		// Add vat by rates
+		foreach ($object->lines as $line)
+		{
+			if (empty($resarray[$array_key.'_total_vat_'.$line->tva_tx])) $resarray[$array_key.'_total_vat_'.$line->tva_tx]=0;
+			$resarray[$array_key.'_total_vat_'.$line->tva_tx]+=$line->total_tva;
+			$resarray[$array_key.'_total_vat_locale_'.$line->tva_tx]=price($resarray[$array_key.'_total_vat_'.$line->tva_tx]);
+		}
+
+		// Retrieve extrafields
+		if (is_array($object->array_options) && count($object->array_options))
+		{
+			$extrafieldkey=$object->element;
+
+			require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+			$extrafields = new ExtraFields($this->db);
+			$extralabels = $extrafields->fetch_name_optionals_label($extrafieldkey,true);
+			$object->fetch_optionals($object->id,$extralabels);
+
+			$resarray = $this->fill_substitutionarray_with_extrafields($object,$resarray,$extrafields,$array_key=$array_key,$outputlangs);
+		}
+		return $resarray;
+	}
+
+	/**
+	 *	Define array with couple substitution key => substitution value
+	 *
+	 *	@param  array			$line				Array of lines
+	 *	@param  Translate		$outputlangs        Lang object to use for output
+	 *  @return	array								Return a substitution array
+	 */
+	function get_substitutionarray_lines($line,$outputlangs)
+	{
+		global $conf;
+
+		return array(
+			'line_fulldesc'=>doc_getlinedesc($line,$outputlangs),
+			'line_product_ref'=>$line->product_ref,
+			'line_product_label'=>$line->product_label,
+			'line_desc'=>$line->desc,
+			'line_vatrate'=>vatrate($line->tva_tx,true,$line->info_bits),
+			'line_up'=>price2num($line->subprice),
+			'line_up_locale'=>price($line->subprice, 0, $outputlangs),
+			'line_qty'=>$line->qty,
+			'line_discount_percent'=>($line->remise_percent?$line->remise_percent.'%':''),
+			'line_price_ht'=>price2num($line->total_ht),
+			'line_price_ttc'=>price2num($line->total_ttc),
+			'line_price_vat'=>price2num($line->total_tva),
+			'line_price_ht_locale'=>price($line->total_ht, 0, $outputlangs),
+			'line_price_ttc_locale'=>price($line->total_ttc, 0, $outputlangs),
+			'line_price_vat_locale'=>price($line->total_tva, 0, $outputlangs),
+			'line_date_start'=>$line->date_start,
+			'line_date_start_rfc'=>dol_print_date($line->date_start,'rfc'),
+			'line_date_end'=>$line->date_end,
+			'line_date_end_rfc'=>dol_print_date($line->date_end,'rfc')
+		);
+	}
+
+    /**
+     * Define array with couple substitution key => substitution value
+     *
+     * @param   Object			$object             Main object to use as data source
+     * @param   Translate		$outputlangs        Lang object to use for output
+     * @param   array_key		$array_key	        Name of the key for return array
+     * @return	array								Array of substitution
+     */
+    function get_substitutionarray_shipment($object,$outputlangs,$array_key='object')
+    {
+    	global $conf;
+		dol_include_once('/core/lib/product.lib.php');
+		$object->list_delivery_methods($object->shipping_method_id);
+		$calculatedVolume=($object->trueWidth * $object->trueHeight * $object->trueDepth);
+
+    	$array_shipment=array(
+	    	$array_key.'_id'=>$object->id,
+	    	$array_key.'_ref'=>$object->ref,
+	    	$array_key.'_ref_ext'=>$object->ref_ext,
+	    	$array_key.'_ref_customer'=>$object->ref_customer,
+	    	$array_key.'_date_delivery'=>dol_print_date($object->date_delivery,'day'),
+	    	$array_key.'_hour_delivery'=>dol_print_date($object->date_delivery,'hour'),
+	    	$array_key.'_date_creation'=>dol_print_date($object->date_creation,'day'),
+	    	$array_key.'_total_ht'=>price($object->total_ht),
+	    	$array_key.'_total_vat'=>price($object->total_tva),
+	    	$array_key.'_total_ttc'=>price($object->total_ttc),
+	    	$array_key.'_total_discount_ht' => price($object->getTotalDiscount()),
+	    	$array_key.'_note_private'=>$object->note_private,
+	    	$array_key.'_note'=>$object->note_public,
+	    	$array_key.'_tracking_number'=>$object->tracking_number,
+	    	$array_key.'_tracking_url'=>$object->tracking_url,
+	    	$array_key.'_shipping_method'=>$object->listmeths[0]['libelle'],
+	    	$array_key.'_weight'=>$object->trueWeight.' '.measuring_units_string($object->weight_units, 'weight'),
+	    	$array_key.'_width'=>$object->trueWidth.' '.measuring_units_string($object->width_units, 'size'),
+	    	$array_key.'_height'=>$object->trueHeight.' '.measuring_units_string($object->height_units, 'size'),
+	    	$array_key.'_depth'=>$object->trueDepth.' '.measuring_units_string($object->depth_units, 'size'),
+	    	$array_key.'_size'=>$calculatedVolume.' '.measuring_units_string(0, 'volume'),
+    	);
+
+    	// Add vat by rates
+    	foreach ($object->lines as $line)
+    	{
+    		if (empty($array_shipment[$array_key.'_total_vat_'.$line->tva_tx])) $array_shipment[$array_key.'_total_vat_'.$line->tva_tx]=0;
+    		$array_shipment[$array_key.'_total_vat_'.$line->tva_tx]+=$line->total_tva;
+    	}
+
+    	// Retrieve extrafields
+    	/*if(is_array($object->array_options) && count($object->array_options))
+    	{
+    		require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+    		$extrafields = new ExtraFields($this->db);
+    		$extralabels = $extrafields->fetch_name_optionals_label('shipment',true);
+    		$object->fetch_optionals($object->id,$extralabels);
+
+    		$array_shipment = $this->fill_substitutionarray_with_extrafields($object,$array_shipment,$extrafields,$array_key,$outputlangs);
+    	}*/
+    	return $array_shipment;
+    }
+
+
+    /**
+     *	Define array with couple substitution key => substitution value
+     *
+     *	@param  array			$line				Array of lines
+     *	@param  Translate		$outputlangs        Lang object to use for output
+     *	@return	array								Substitution array
+     */
+    function get_substitutionarray_shipment_lines($line,$outputlangs)
+    {
+    	global $conf;
+		dol_include_once('/core/lib/product.lib.php');
+
+    	return array(
+	    	'line_fulldesc'=>doc_getlinedesc($line,$outputlangs),
+	    	'line_product_ref'=>$line->product_ref,
+	    	'line_product_label'=>$line->product_label,
+	    	'line_desc'=>$line->desc,
+	    	'line_vatrate'=>vatrate($line->tva_tx,true,$line->info_bits),
+	    	'line_up'=>price($line->subprice),
+	    	'line_qty'=>$line->qty,
+	    	'line_qty_shipped'=>$line->qty_shipped,
+	    	'line_qty_asked'=>$line->qty_asked,
+	    	'line_discount_percent'=>($line->remise_percent?$line->remise_percent.'%':''),
+	    	'line_price_ht'=>price($line->total_ht),
+	    	'line_price_ttc'=>price($line->total_ttc),
+	    	'line_price_vat'=>price($line->total_tva),
+	    	'line_weight'=>empty($line->weight) ? '' : $line->weight*$line->qty_shipped.' '.measuring_units_string($line->weight_units, 'weight'),
+	    	'line_length'=>empty($line->length) ? '' : $line->length*$line->qty_shipped.' '.measuring_units_string($line->length_units, 'size'),
+	    	'line_surface'=>empty($line->surface) ? '' : $line->surface*$line->qty_shipped.' '.measuring_units_string($line->surface_units, 'surface'),
+	    	'line_volume'=>empty($line->volume) ? '' : $line->volume*$line->qty_shipped.' '.measuring_units_string($line->volume_units, 'volume'),
+    	);
+    }
+
+    /**
+     *	Fill array with couple extrafield key => extrafield value
+     *
+     *	@param  Object			$object				Object with extrafields (must have $object->array_options filled)
+     *	@param  array			$array_to_fill      Substitution array
+     *  @param  Extrafields		$extrafields        Extrafields object
+     *  @param  string			$array_key	        Name of the key for return array
+     *  @param  Translate		$outputlangs        Lang object to use for output
+     *	@return	array								Substitution array
+     */
+	function fill_substitutionarray_with_extrafields($object,$array_to_fill,$extrafields,$array_key,$outputlangs)
+	{
+		global $conf;
+		foreach($extrafields->attribute_label as $key=>$label)
+		{
+			if($extrafields->attribute_type[$key] == 'price')
+			{
+				$object->array_options['options_'.$key] = price2num($object->array_options['options_'.$key]);
+				$object->array_options['options_'.$key.'_currency'] = price($object->array_options['options_'.$key],0,$outputlangs,0,0,-1,$conf->currency);
+				//Add value to store price with currency
+				$array_to_fill=array_merge($array_to_fill,array($array_key.'_options_'.$key.'_currency' => $object->array_options['options_'.$key.'_currency']));
+			}
+			else if($extrafields->attribute_type[$key] == 'select')
+			{
+				$object->array_options['options_'.$key] = $extrafields->attribute_param[$key]['options'][$object->array_options['options_'.$key]];
+			}
+			else if($extrafields->attribute_type[$key] == 'date')
+			{
+				$object->array_options['options_'.$key] = (strlen($object->array_options['options_'.$key])>0?dol_print_date($object->array_options['options_'.$key],'day'):'');
+			}
+			else if($extrafields->attribute_type[$key] == 'datetime')
+			{
+				$object->array_options['options_'.$key] = ($object->array_options['options_'.$key]!="0000-00-00 00:00:00"?dol_print_date($object->array_options['options_'.$key],'dayhour'):'');
+			}
+			$array_to_fill=array_merge($array_to_fill,array($array_key.'_options_'.$key => $object->array_options['options_'.$key]));
+		}
+
+		return $array_to_fill;
+
+	}
+
 
 	/**
 	 * Rect pdf
@@ -186,4 +579,3 @@ abstract class CommonDocGenerator
     }
 }
 
-?>

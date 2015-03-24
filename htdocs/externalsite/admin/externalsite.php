@@ -77,6 +77,7 @@ llxHeader();
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
 print_fiche_titre($langs->trans("ExternalSiteSetup"),$linkback,'setup');
+print '<br>';
 
 print $langs->trans("Module100Desc")."<br>\n";
 print '<br>';
@@ -126,4 +127,3 @@ dol_htmloutput_mesg($mesg);
 llxFooter();
 
 $db->close();
-?>

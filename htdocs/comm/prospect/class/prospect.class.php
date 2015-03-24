@@ -81,6 +81,7 @@ class Prospect extends Societe
                 if ($obj->client == 1 || $obj->client == 3) $this->nb["customers"]+=$obj->nb;
                 if ($obj->client == 2 || $obj->client == 3) $this->nb["prospects"]+=$obj->nb;
             }
+            $this->db->free($resql);
             return 1;
         }
         else
@@ -148,9 +149,9 @@ class Prospect extends Societe
 	 *
 	 *  @return     string        Libelle
 	 */
-	function getLibLevel()
+	function getLibProspLevel()
 	{
-		return $this->LibLevel($this->fk_prospectlevel);
+		return $this->LibProspLevel($this->fk_prospectlevel);
 	}
 
 	/**
@@ -159,7 +160,7 @@ class Prospect extends Societe
 	 *  @param	int		$fk_prospectlevel   	Prospect level
 	 *  @return string        					Libelle du niveau
 	 */
-	function LibLevel($fk_prospectlevel)
+	function LibProspLevel($fk_prospectlevel)
 	{
 		global $langs;
 
@@ -172,4 +173,3 @@ class Prospect extends Societe
 		return $lib;
 	}
 }
-?>

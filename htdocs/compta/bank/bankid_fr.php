@@ -24,15 +24,18 @@
  *  \brief      Fiche creation compte bancaire
  */
 
-require 'pre.inc.php';
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/lib/bank.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
 $langs->load("banks");
+$langs->load("categories");
 $langs->load("bills");
 
 $action=GETPOST('action');
-$id=GETPOST('id');
+$id=GETPOST('id','int');
+$ref=GETPOST('ref');
 
 // Security check
 if (isset($_GET["id"]) || isset($_GET["ref"]))
@@ -41,7 +44,7 @@ if (isset($_GET["id"]) || isset($_GET["ref"]))
 }
 $fieldid = isset($_GET["ref"])?'ref':'rowid';
 if ($user->societe_id) $socid=$user->societe_id;
-$result=restrictedArea($user,'banque',$id,'bank_account','','',$fieldid);
+$result=restrictedArea($user,'banque',$id,'bank_account&bank_account','','',$fieldid);
 
 
 /*
@@ -64,9 +67,9 @@ if ($action == 'update' && ! $_POST["cancel"])
 	$account->iban_prefix     = trim($_POST["iban_prefix"]);	// deprecated
 	$account->domiciliation   = trim($_POST["domiciliation"]);
 	$account->proprio 	      = trim($_POST["proprio"]);
-	$account->adresse_proprio = trim($_POST["adresse_proprio"]);
-	$account->fk_departement  = trim($_POST["fk_departement"]);
-	//$account->fk_pays         = trim($_POST["fk_pays"]);		// We do not change this.
+	$account->owner_address   = trim($_POST["owner_address"]);
+	$account->state_id  	  = trim($_POST["state_id"]);
+	//$account->country_id       = trim($_POST["country_id"]);		// We do not change this.
 
 	if ($account->id)
 	{
@@ -86,8 +89,9 @@ if ($action == 'update' && ! $_POST["cancel"])
 if ($action == 'confirm_delete' && $_POST["confirm"] == "yes" && $user->rights->banque->configurer)
 {
 	// Modification
-	$account = new Account($db, $_GET["id"]);
-	$account->delete($_GET["id"]);
+	$account = new Account($db);
+	$account->fetch($id);
+	$account->delete();
 
 	header("Location: ".DOL_URL_ROOT."/compta/bank/index.php");
 	exit;
@@ -128,8 +132,8 @@ if (($_GET["id"] || $_GET["ref"]) && $action != 'edit')
 	// Confirmation de la suppression
 	if ($action == 'delete')
 	{
-		$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?id='.$account->id,$langs->trans("DeleteAccount"),$langs->trans("ConfirmDeleteAccount"),"confirm_delete");
-		if ($ret == 'html') print '<br>';
+		print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$account->id,$langs->trans("DeleteAccount"),$langs->trans("ConfirmDeleteAccount"),"confirm_delete");
+
 	}
 
 
@@ -169,38 +173,71 @@ if (($_GET["id"] || $_GET["ref"]) && $action != 'edit')
 	    print '<tr><td valign="top">'.$langs->trans("BankAccountCountry").'</td><td colspan="3">';
 	    $img=picto_from_langcode($account->country_code);
 	    print $img?$img.' ':'';
-	    print getCountry($account->getCountryCode(),0,$db);
+	    print getCountry($account->getCountryCode(), 0, $db);
 	    print "</td></tr>\n";
 
 		print '<tr><td valign="top">'.$langs->trans("BankName").'</td>';
 		print '<td colspan="3">'.$account->bank.'</td></tr>';
 
-		if ($account->useDetailedBBAN() == 1)
+		// Show fields of bank account
+		$fieldlists='BankCode DeskCode AccountNumber BankAccountNumberKey';
+		if (! empty($conf->global->BANK_SHOW_ORDER_OPTION))
 		{
-			print '<tr><td>'.$langs->trans("BankCode").'</td>';
-			print '<td colspan="3">'.$account->code_banque.'</td>';
-			print '</tr>';
-
-			print '<tr><td>'.$langs->trans("DeskCode").'</td>';
-			print '<td colspan="3">'.$account->code_guichet.'</td>';
-			print '</tr>';
+			if (is_numeric($conf->global->BANK_SHOW_ORDER_OPTION))
+			{
+				if ($conf->global->BANK_SHOW_ORDER_OPTION == '1') $fieldlists='BankCode DeskCode BankAccountNumberKey AccountNumber';
+			}
+			else $fieldlists=$conf->global->BANK_SHOW_ORDER_OPTION;
 		}
-        if ($account->useDetailedBBAN() == 2)
-        {
-            print '<tr><td>'.$langs->trans("BankCode").'</td>';
-            print '<td colspan="3">'.$account->code_banque.'</td>';
-            print '</tr>';
-        }
+		$fieldlistsarray=explode(' ',$fieldlists);
 
-		print '<tr><td>'.$langs->trans("BankAccountNumber").'</td>';
-		print '<td colspan="3">'.$account->number.'</td>';
-		print '</tr>';
-
-		if ($account->useDetailedBBAN() == 1)
+		foreach($fieldlistsarray as $val)
 		{
-			print '<tr><td>'.$langs->trans("BankAccountNumberKey").'</td>';
-			print '<td colspan="3">'.$account->cle_rib.'</td>';
-			print '</tr>';
+			if ($val == 'BankCode')
+			{
+				if ($account->useDetailedBBAN() == 1)
+				{
+					print '<tr><td>'.$langs->trans("BankCode").'</td>';
+					print '<td colspan="3">'.$account->code_banque.'</td>';
+					print '</tr>';
+				}
+			}
+			if ($val == 'DeskCode')
+			{
+				if ($account->useDetailedBBAN() == 1)
+				{
+					print '<tr><td>'.$langs->trans("DeskCode").'</td>';
+					print '<td colspan="3">'.$account->code_guichet.'</td>';
+					print '</tr>';
+				}
+			}
+
+			if ($val == 'BankCode')
+			{
+				if ($account->useDetailedBBAN() == 2)
+		        {
+		            print '<tr><td>'.$langs->trans("BankCode").'</td>';
+		            print '<td colspan="3">'.$account->code_banque.'</td>';
+		            print '</tr>';
+		        }
+			}
+
+			if ($val == 'AccountNumber')
+			{
+				print '<tr><td>'.$langs->trans("BankAccountNumber").'</td>';
+				print '<td colspan="3">'.$account->number.'</td>';
+				print '</tr>';
+			}
+
+			if ($val == 'BankAccountNumberKey')
+			{
+				if ($account->useDetailedBBAN() == 1)
+				{
+					print '<tr><td>'.$langs->trans("BankAccountNumberKey").'</td>';
+					print '<td colspan="3">'.$account->cle_rib.'</td>';
+					print '</tr>';
+				}
+			}
 		}
 
 		$ibankey="IBANNumber";
@@ -223,7 +260,7 @@ if (($_GET["id"] || $_GET["ref"]) && $action != 'edit')
 		print "</td></tr>\n";
 
 		print '<tr><td valign="top">'.$langs->trans("BankAccountOwnerAddress").'</td><td colspan="3">';
-		print nl2br($account->adresse_proprio);
+		print nl2br($account->owner_address);
 		print "</td></tr>\n";
 
 	}
@@ -308,38 +345,77 @@ if ($_GET["id"] && $action == 'edit' && $user->rights->banque->configurer)
 
 	if ($account->type == 0 || $account->type == 1)
 	{
+		print '<tr><td valign="top">'.$langs->trans("BankAccountCountry").'</td><td colspan="3">';
+	    $img=picto_from_langcode($account->country_code);
+	    print $img?$img.' ':'';
+		print getCountry($account->getCountryCode(), 0, $db);
+		print "</td></tr>\n";
+
 		// If bank account
 		print '<tr><td valign="top">'.$langs->trans("BankName").'</td>';
 		print '<td colspan="3"><input size="30" type="text" class="flat" name="bank" value="'.$account->bank.'"></td>';
 		print '</tr>';
 
-		// BBAN
-		if ($account->useDetailedBBAN()  == 1)
+		// Show fields of bank account
+		$fieldlists='BankCode DeskCode AccountNumber BankAccountNumberKey';
+		if (! empty($conf->global->BANK_SHOW_ORDER_OPTION))
 		{
-			print '<tr><td>'.$langs->trans("BankCode").'</td>';
-			print '<td><input size="8" type="text" class="flat" name="code_banque" value="'.$account->code_banque.'"></td>';
-			print '</tr>';
-
-			print '<tr><td>'.$langs->trans("DeskCode").'</td>';
-			print '<td><input size="8" type="text" class="flat" name="code_guichet" value="'.$account->code_guichet.'"></td>';
-			print '</tr>';
+			if (is_numeric($conf->global->BANK_SHOW_ORDER_OPTION))
+			{
+				if ($conf->global->BANK_SHOW_ORDER_OPTION == '1') $fieldlists='BankCode DeskCode BankAccountNumberKey AccountNumber';
+			}
+			else $fieldlists=$conf->global->BANK_SHOW_ORDER_OPTION;
 		}
-        if ($account->useDetailedBBAN()  == 2)
-        {
-            print '<tr><td>'.$langs->trans("BankCode").'</td>';
-            print '<td><input size="8" type="text" class="flat" name="code_banque" value="'.$account->code_banque.'"></td>';
-            print '</tr>';
-        }
+		$fieldlistsarray=explode(' ',$fieldlists);
 
-		print '<td>'.$langs->trans("BankAccountNumber").'</td>';
-		print '<td><input size="18" type="text" class="flat" name="number" value="'.$account->number.'"></td>';
-		print '</tr>';
-
-		if ($account->useDetailedBBAN() == 1)
+		foreach($fieldlistsarray as $val)
 		{
-			print '<td>'.$langs->trans("BankAccountNumberKey").'</td>';
-			print '<td><input size="3" type="text" class="flat" name="cle_rib" value="'.$account->cle_rib.'"></td>';
-			print '</tr>';
+			if ($val == 'BankCode')
+			{
+				if ($account->useDetailedBBAN()  == 1)
+				{
+					print '<tr><td>'.$langs->trans("BankCode").'</td>';
+					print '<td><input size="8" type="text" class="flat" name="code_banque" value="'.$account->code_banque.'"></td>';
+					print '</tr>';
+				}
+			}
+
+			if ($val == 'DeskCode')
+			{
+				if ($account->useDetailedBBAN()  == 1)
+				{
+					print '<tr><td>'.$langs->trans("DeskCode").'</td>';
+					print '<td><input size="8" type="text" class="flat" name="code_guichet" value="'.$account->code_guichet.'"></td>';
+					print '</tr>';
+				}
+			}
+
+			if ($val == 'BankCode')
+			{
+				if ($account->useDetailedBBAN()  == 2)
+		        {
+		            print '<tr><td>'.$langs->trans("BankCode").'</td>';
+		            print '<td><input size="8" type="text" class="flat" name="code_banque" value="'.$account->code_banque.'"></td>';
+		            print '</tr>';
+		        }
+			}
+
+			if ($val == 'AccountNumber')
+			{
+				print '<td>'.$langs->trans("BankAccountNumber").'</td>';
+				print '<td><input size="18" type="text" class="flat" name="number" value="'.$account->number.'"></td>';
+				print '</tr>';
+			}
+
+			if ($val == 'BankAccountNumberKey')
+			{
+				if ($account->useDetailedBBAN() == 1)
+				{
+					print '<td>'.$langs->trans("BankAccountNumberKey").'</td>';
+					print '<td><input size="3" type="text" class="flat" name="cle_rib" value="'.$account->cle_rib.'"></td>';
+					print '</tr>';
+				}
+			}
 		}
 
 		$ibankey="IBANNumber";
@@ -349,35 +425,35 @@ if ($_GET["id"] && $action == 'edit' && $user->rights->banque->configurer)
 
 		// IBAN
 		print '<tr><td valign="top">'.$langs->trans($ibankey).'</td>';
-		print '<td colspan="3"><input size="26" type="text" class="flat" name="iban_prefix" value="'.$account->iban_prefix.'"></td></tr>';
+		print '<td colspan="3"><input size="34" maxlength="34" type="text" class="flat" name="iban_prefix" value="'.$account->iban_prefix.'"></td></tr>';
 
 		print '<tr><td valign="top">'.$langs->trans($bickey).'</td>';
-		print '<td colspan="3"><input size="12" maxlength="11" type="text" class="flat" name="bic" value="'.$account->bic.'"></td></tr>';
+		print '<td colspan="3"><input size="11" maxlength="11" type="text" class="flat" name="bic" value="'.$account->bic.'"></td></tr>';
 
 		print '<tr><td valign="top">'.$langs->trans("BankAccountDomiciliation").'</td><td colspan="3">';
 		print "<textarea class=\"flat\" name=\"domiciliation\" rows=\"2\" cols=\"40\">";
 		print $account->domiciliation;
 		print "</textarea></td></tr>";
 
-		print '<tr><td valign="top">'.$langs->trans("BankAccountCountry").'</td><td colspan="3">';
-		print getCountry($account->getCountryCode());
-		print "</td></tr>\n";
-
 		print '<tr><td valign="top">'.$langs->trans("BankAccountOwner").'</td>';
 		print '<td colspan="3"><input size="30" type="text" class="flat" name="proprio" value="'.$account->proprio.'">';
 		print '</td></tr>';
 
 		print '<tr><td valign="top">'.$langs->trans("BankAccountOwnerAddress").'</td><td colspan="3">';
-		print "<textarea class=\"flat\" name=\"adresse_proprio\" rows=\"2\" cols=\"40\">";
-		print $account->adresse_proprio;
+		print "<textarea class=\"flat\" name=\"owner_address\" rows=\"2\" cols=\"40\">";
+		print $account->owner_address;
 		print "</textarea></td></tr>";
 
 	}
 
-	print '<tr><td align="center" colspan="4"><input value="'.$langs->trans("Save").'" type="submit" class="button">';
-	print ' &nbsp; <input name="cancel" value="'.$langs->trans("Cancel").'" type="submit" class="button">';
-	print '</td></tr>';
 	print '</table>';
+
+	print '<br>';
+
+	print '<div align="center">';
+	print '<input value="'.$langs->trans("Save").'" type="submit" class="button">';
+	print ' &nbsp; <input name="cancel" value="'.$langs->trans("Cancel").'" type="submit" class="button">';
+	print '</div>';
 
 	print '</form>';
 }
@@ -386,4 +462,3 @@ if ($_GET["id"] && $action == 'edit' && $user->rights->banque->configurer)
 llxFooter();
 
 $db->close();
-?>

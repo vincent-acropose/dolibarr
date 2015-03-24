@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2003-2004 Rodolphe Quiedeville  <rodolphe@quiedeville.org>
  * Copyright (C) 2003      Jean-Louis Bergamo    <jlb@j1b.org>
- * Copyright (C) 2004-2012 Laurent Destailleur   <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2013 Laurent Destailleur   <eldy@users.sourceforge.net>
  * Copyright (C) 2007      Franky Van Liedekerke <franky.van.liedekerke@telenet.be>
  * Copyright (C) 2005-2007 Regis Houssin         <regis.houssin@capnetworks.com>
  *
@@ -44,7 +44,7 @@ print '<div style="padding-left: 30px;">'.img_picto_common('', 'dolibarr_box.png
 
 print $langs->trans("Version").' / '.$langs->trans("DolibarrLicense").':';
 print '<ul>';
-print '<li>'.DOL_VERSION.' / <a href="http://www.gnu.org/copyleft/gpl.html">GNU-GPL</a></li>';
+print '<li>'.DOL_VERSION.' / <a href="http://www.gnu.org/copyleft/gpl.html">GNU-GPL v3+</a></li>';
 print '</ul>';
 
 //print "<br>\n";
@@ -105,31 +105,31 @@ $url='http://wiki.dolibarr.org/index.php/Subscribe';
 if (preg_match('/^fr_/i',$langs->getDefaultLang())) $url='http://wiki.dolibarr.org/index.php/Adh%C3%A9rer';
 if (preg_match('/^es_/i',$langs->getDefaultLang())) $url='http://wiki.dolibarr.org/index.php/Subscribirse';
 print '<li><a href="'.$url.'" target="_blank">'.$langs->trans("SubscribeToFoundation").'</a></li>';
+
+print '<li><a href="http://facebook.com/dolibarr" target="_blank">FaceBook</a></li>';
+print '<li><a href="http://twitter.com/dolibarr" target="_blank">Twitter</a></li>';
+print '<li><a href="http://plus.google.com/+DolibarrOrg" target="_blank">Google Plus page</a></li>';
+
 print '</ul>';
 
 
-print $langs->trans("OfficialWebHostingService").':';
-$url='http://wiki.dolibarr.org/index.php/Cloud_Solutions'; $title=$langs->trans('List');
+print $langs->trans("OtherResources").':';
+print '<ul>';
+
+$url='http://saas.dolibarr.org'; $title=$langs->trans("OfficialWebHostingService");
 if (preg_match('/^fr_/i',$langs->getDefaultLang())) $url='http://wiki.dolibarr.org/index.php/Solutions_de_Cloud';
 if (preg_match('/^es_/i',$langs->getDefaultLang())) $url='http://wiki.dolibarr.org/index.php/Soluciones_en_la_Nube';
-print '<ul>';
 print '<li>';
 print '<a target="_blank" href="'.$url.'">'.$title.'</a>';
 print '</li>';
+$url='http://partners.dolibarr.org'; $title=$langs->trans("ReferencedPreferredPartners");
+print '<li>';
+print '<a target="_blank" href="'.$url.'">'.$title.'</a>';
+print '</li>';
+
 print '</ul>';
 
 
 llxFooter();
 
 $db->close();
-?>
-
-
-
-
-
-
-
-
-
-

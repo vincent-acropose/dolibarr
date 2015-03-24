@@ -46,9 +46,9 @@ top_httphead();
 
 if (! empty($idprod))
 {
-	$sql = "SELECT p.rowid, p.label, p.ref, p.price, p.duration,";
+	$sql = "SELECT p.rowid, p.label, p.ref, p.price, p.duration, s.rowid as idsoc,";
 	$sql.= " pfp.ref_fourn,";
-	$sql.= " pfp.rowid as idprodfournprice, pfp.price as fprice, pfp.quantity, pfp.unitprice, pfp.charges, pfp.unitcharges,";
+	$sql.= " pfp.rowid as idprodfournprice, pfp.price as fprice, pfp.remise_percent, pfp.quantity, pfp.unitprice, pfp.charges, pfp.unitcharges,";
 	$sql.= " s.nom";
 	$sql.= " FROM ".MAIN_DB_PREFIX."product_fournisseur_price as pfp";
 	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product as p ON p.rowid = pfp.fk_product";
@@ -71,42 +71,44 @@ if (! empty($idprod))
 			while ($i < $num)
 			{
 				$objp = $db->fetch_object($result);
+				
+				if($conf->multidevise->enabled){
+
+					$resql = $db->query("SELECT s.devise_code FROM ".MAIN_DB_PREFIX."societe as s WHERE rowid = ".$objp->idsoc);
+					$res = $db->fetch_object($resql);
+					$currency = $res->devise_code;
+				}
+				else{
+					$currency = $conf->currency;
+				}
+
+				$price = $objp->fprice * (1 - $objp->remise_percent / 100);
+				$unitprice = $objp->unitprice * (1 - $objp->remise_percent / 100);
 
 				$title = $objp->nom.' - '.$objp->ref_fourn.' - ';
 
 				if ($objp->quantity == 1)
 				{
-					$title.= price($objp->fprice);
-					$title.= getCurrencySymbol($conf->currency)."/";
-
-					$price = $objp->fprice;
+					$title.= price($price,0,$langs,0,0,-1,$currency)."/";
 				}
+				$title.= $objp->quantity.' '.($objp->quantity == 1 ? $langs->trans("Unit") : $langs->trans("Units"));
 
-				$title.= $objp->quantity.' ';
-
-				if ($objp->quantity == 1)
-				{
-					$title.= strtolower($langs->trans("Unit"));
-				}
-				else
-				{
-					$title.= strtolower($langs->trans("Units"));
-				}
 				if ($objp->quantity > 1)
 				{
 					$title.=" - ";
-					$title.= price($objp->unitprice).getCurrencySymbol($conf->currency)."/".strtolower($langs->trans("Unit"));
+					$title.= price($unitprice,0,$langs,0,0,-1,$currency)."/".$langs->trans("Unit");
 
-					$price = $objp->unitprice;
+					$price = $unitprice;
 				}
-				if ($objp->unitcharges > 0 && ($conf->global->MARGIN_TYPE == "2")) {
+				if ($objp->unitcharges > 0 && ($conf->global->MARGIN_TYPE == "2"))
+				{
 					$title.=" + ";
-					$title.= price($objp->unitcharges).getCurrencySymbol($conf->currency);
+					$title.= price($objp->unitcharges,0,$langs,0,0,-1,$currency);
 					$price += $objp->unitcharges;
 				}
 				if ($objp->duration) $label .= " - ".$objp->duration;
 
-				$label = price($price).getCurrencySymbol($conf->currency)."/".strtolower($langs->trans("Unit"));
+				$label = price($price,0,$langs,0,0,-1,$currency)."/".$langs->trans("Unit");
 
 				$prices[] = array("id" => $objp->idprodfournprice, "price" => price($price,0,'',0), "label" => $label, "title" => $title);
 				$i++;
@@ -115,8 +117,7 @@ if (! empty($idprod))
 			$db->free($result);
 		}
 	}
-
-	echo json_encode($prices);
 }
 
-?>
+echo json_encode($prices);
+

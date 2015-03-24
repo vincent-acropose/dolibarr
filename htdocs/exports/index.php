@@ -51,9 +51,8 @@ print $langs->trans("FormatedExportDesc2").' ';
 print $langs->trans("FormatedExportDesc3").'<br>';
 print '<br>';
 
-print '<table class="notopnoleftnoright" width="100%">';
 
-print '<tr><td valign="top" width="70%" class="notopnoleft">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
 
 
 // List export set
@@ -109,9 +108,9 @@ if (count($export->array_export_code))
 	*/
 }
 print '</center>';
+print '<br>';
 
-
-print '</td><td valign="top" width="30%" class="notopnoleftnoright">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
 
 
 // List of available export format
@@ -130,24 +129,28 @@ $liste=$model->liste_modeles($db);    // This is not a static method for exports
 $var=true;
 foreach($liste as $key => $val)
 {
+    if (preg_match('/__\(Disabled\)__/',$liste[$key]))
+    {
+    	$liste[$key]=preg_replace('/__\(Disabled\)__/','('.$langs->transnoentitiesnoconv("Disabled").')',$liste[$key]);
+    }
+
 	$var=!$var;
 	print '<tr '.$bc[$var].'>';
 	print '<td width="16">'.img_picto_common($model->getDriverLabelForKey($key),$model->getPictoForKey($key)).'</td>';
 	$text=$model->getDriverDescForKey($key);
-	print '<td>'.$form->textwithpicto($model->getDriverLabelForKey($key),$text).'</td>';
+	$label=$liste[$key];
+	print '<td>'.$form->textwithpicto($label,$text).'</td>';
 	print '<td>'.$model->getLibLabelForKey($key).'</td>';
-	print '<td nowrap="nowrap" align="right">'.$model->getLibVersionForKey($key).'</td>';
+	print '<td class="nowrap" align="right">'.$model->getLibVersionForKey($key).'</td>';
 	print '</tr>';
 }
 
 print '</table>';
 
 
-print '</td></tr>';
-print '</table>';
+print '</div></div></div>';
 
 
 llxFooter();
 
 $db->close();
-?>

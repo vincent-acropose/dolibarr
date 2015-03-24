@@ -25,7 +25,7 @@
 
 global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
 require_once dirname(__FILE__).'/../../htdocs/core/lib/price.lib.php';
 require_once dirname(__FILE__).'/../../htdocs/compta/facture/class/facture.class.php';
@@ -200,13 +200,15 @@ class PricesTest extends PHPUnit_Framework_TestCase
 		$this->savlangs=$langs;
 		$this->savdb=$db;
 
+		$conf->global->MAIN_ROUNDOFTOTAL_NOT_TOTALOFROUND=0;
+
 		// Two lines of 1.24 give 2.48 HT and 2.72 TTC with standard vat rounding mode
 		$localobject=new Facture($this->savdb);
         $localobject->initAsSpecimen('nolines');
         $invoiceid=$localobject->create($user);
 
-        $localobject->addline($invoiceid,'Desc',1.24,1,10,0,0,0,0,'','',0,0,0,'HT');
-        $localobject->addline($invoiceid,'Desc',1.24,1,10,0,0,0,0,'','',0,0,0,'HT');
+        $localobject->addline('Desc',1.24,1,10,0,0,0,0,'','',0,0,0,'HT');
+        $localobject->addline('Desc',1.24,1,10,0,0,0,0,'','',0,0,0,'HT');
 
         $newlocalobject=new Facture($this->savdb);
         $newlocalobject->fetch($invoiceid);
@@ -221,8 +223,8 @@ class PricesTest extends PHPUnit_Framework_TestCase
         $localobject->initAsSpecimen('nolines');
         $invoiceid=$localobject->create($user);
 
-        $localobject->addline($invoiceid,'Desc',1.24,1,10,0,0,0,0,'','',0,0,0,'HT');
-        $localobject->addline($invoiceid,'Desc',1.24,1,10,0,0,0,0,'','',0,0,0,'HT');
+        $localobject->addline('Desc',1.24,1,10,0,0,0,0,'','',0,0,0,'HT');
+        $localobject->addline('Desc',1.24,1,10,0,0,0,0,'','',0,0,0,'HT');
 
         $newlocalobject=new Facture($this->savdb);
         $newlocalobject->fetch($invoiceid);
@@ -233,4 +235,3 @@ class PricesTest extends PHPUnit_Framework_TestCase
     }
 
 }
-?>

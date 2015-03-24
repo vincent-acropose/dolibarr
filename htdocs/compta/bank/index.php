@@ -23,10 +23,11 @@
  *       \brief      Home page of bank module
  */
 
-require 'pre.inc.php';
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/lib/bank.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/tva/class/tva.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/sociales/class/chargesociales.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
 $langs->load("banks");
 $langs->load("categories");
@@ -58,7 +59,7 @@ $accounts = array();
 
 $sql  = "SELECT rowid, courant, rappro";
 $sql.= " FROM ".MAIN_DB_PREFIX."bank_account";
-$sql.= " WHERE entity = ".$conf->entity;
+$sql.= " WHERE entity IN (".getEntity('bank_account', 1).")";
 if ($statut != 'all') $sql.= " AND clos = 0";
 $sql.= $db->order('label', 'ASC');
 
@@ -89,7 +90,7 @@ print '<td align="center" width="70">'.$langs->trans("Status").'</td>';
 print '<td align="right" width="100">'.$langs->trans("BankBalance").'</td>';
 print "</tr>\n";
 
-$total = 0; $found = 0;
+$total = array(); $found = 0;
 $var=true;
 foreach ($accounts as $key=>$type)
 {
@@ -118,24 +119,27 @@ foreach ($accounts as $key=>$type)
 		print '</td>';
 		print '<td align="center">'.$acc->getLibStatut(2).'</td>';
 		print '<td align="right">';
-		print '<a href="account.php?account='.$acc->id.'">'.price($solde).'</a>';
+		print '<a href="account.php?account='.$acc->id.'">'.price($solde, 0, $langs, 0, 0, -1, $acc->currency_code).'</a>';
 		print '</td>';
 		print '</tr>';
 
-		$total += $solde;
+		$total[$acc->currency_code] += $solde;
 	}
 }
 if (! $found) print '<tr '.$bc[$var].'><td colspan="6">'.$langs->trans("None").'</td></tr>';
 // Total
-print '<tr class="liste_total"><td colspan="5" class="liste_total">'.$langs->trans("Total").'</td><td align="right" class="liste_total">'.price($total).'</td></tr>';
+foreach ($total as $key=>$solde)
+{
+	print '<tr class="liste_total"><td colspan="5" class="liste_total">'.$langs->trans("Total ").$key.'</td><td align="right" class="liste_total">'.price($solde, 0, $langs, 0, 0, -1, $key).'</td></tr>';
+}
 
-
-//print '<tr><td colspan="5">&nbsp;</td></tr>';
-
+print '</table>';
+print '<br>';
 
 /*
  * Comptes caisse/liquide (courant = 2)
  */
+print '<table class="liste" width="100%">';
 print '<tr class="liste_titre"><td width="30%">'.$langs->trans("CashAccounts").'</td><td width="20%">&nbsp;</td>';
 print '<td align="left">&nbsp;</td>';
 print '<td align="left" width="100">&nbsp;</td>';
@@ -143,7 +147,7 @@ print '<td align="center" width="70">'.$langs->trans("Status").'</td>';
 print '<td align="right" width="100">'.$langs->trans("BankBalance").'</td>';
 print "</tr>\n";
 
-$total = 0; $found = 0;
+$total = array(); $found = 0;
 $var=true;
 foreach ($accounts as $key=>$type)
 {
@@ -164,35 +168,37 @@ foreach ($accounts as $key=>$type)
 		print '<td>&nbsp;</td>';
 		print '<td align="center">'.$acc->getLibStatut(2).'</td>';
 		print '<td align="right">';
-		print '<a href="account.php?account='.$acc->id.'">'.price($solde).'</a>';
+		print '<a href="account.php?account='.$acc->id.'">'.price($solde, 0, $langs, 0, 0, -1, $acc->currency_code).'</a>';
 		print '</td>';
 		print '</tr>';
 
-		$total += $solde;
+		$total[$acc->currency_code] += $solde;
 	}
 }
 if (! $found) print '<tr '.$bc[$var].'><td colspan="6">'.$langs->trans("None").'</td></tr>';
 // Total
-print '<tr class="liste_total"><td colspan="5" class="liste_total">'.$langs->trans("Total").'</td><td align="right" class="liste_total">'.price($total).'</td></tr>';
+foreach ($total as $key=>$solde)
+{
+	print '<tr class="liste_total"><td colspan="5" class="liste_total">'.$langs->trans("Total ").$key.'</td><td align="right" class="liste_total">'.price($solde, 0, $langs, 0, 0, -1, $key).'</td></tr>';
+}
 
-
-
-//print '<tr><td colspan="5">&nbsp;</td></tr>';
-
+print '</table>';
+print '<br>';
 
 /*
  * Comptes placements (courant = 0)
  */
+print '<table class="liste" width="100%">';
 print '<tr class="liste_titre">';
 print '<td width="30%">'.$langs->trans("SavingAccounts").'</td>';
 print '<td width="20%">'.$langs->trans("Bank").'</td>';
 print '<td align="left">'.$langs->trans("Numero").'</td>';
-print '<td align="center" width="100">'.$langs->trans("TransactionsToConciliate").'</td>';
+print '<td align="center">'.$langs->trans("TransactionsToConciliate").'</td>';
 print '<td align="center" width="70">'.$langs->trans("Status").'</td>';
 print '<td align="right" width="100">'.$langs->trans("BankBalance").'</td>';
 print "</tr>\n";
 
-$total = 0; $found = 0;
+$total = array(); $found = 0;
 $var=true;
 foreach ($accounts as $key=>$type)
 {
@@ -221,18 +227,19 @@ foreach ($accounts as $key=>$type)
 		print '</td>';
 		print '<td align="center">'.$acc->getLibStatut(2).'</td>';
 		print '<td align="right">';
-		print '<a href="account.php?account='.$acc->id.'">'.price($solde).'</a>';
+		print '<a href="account.php?account='.$acc->id.'">'.price($solde, 0, $langs, 0, 0, -1, $acc->currency_code).'</a>';
 		print '</td>';
 		print '</tr>';
 
-		$total += $solde;
+		$total[$acc->currency_code] += $solde;
 	}
 }
 if (! $found) print '<tr '.$bc[$var].'><td colspan="6">'.$langs->trans("None").'</td></tr>';
 // Total
-print '<tr class="liste_total"><td colspan="5" class="liste_total">'.$langs->trans("Total").'</td><td align="right" class="liste_total">'.price($total).'</td></tr>';
-
-
+foreach ($total as $key=>$solde)
+{
+	print '<tr class="liste_total"><td colspan="5" class="liste_total">'.$langs->trans("Total ").$key.'</td><td align="right" class="liste_total">'.price($solde, 0, $langs, 0, 0, -1, $key).'</td></tr>';
+}
 
 print "</table>";
 
@@ -240,15 +247,15 @@ print "</table>";
 /*
  * Boutons d'actions
  */
-print "<br><div class=\"tabsAction\">\n";
-if ($user->rights->banque->configurer) {
+
+print '<div class="tabsAction">'."\n";
+if ($user->rights->banque->configurer)
+{
 	print '<a class="butAction" href="fiche.php?action=create">'.$langs->trans("NewFinancialAccount").'</a>';
-	print '<a class="butAction" href="categ.php">'.$langs->trans("Rubriques").'</a>';
 }
-print "</div>";
+print '</div>';
 
 
 llxFooter();
 
 $db->close();
-?>

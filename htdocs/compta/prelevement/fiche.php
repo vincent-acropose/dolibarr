@@ -23,16 +23,19 @@
  *	\brief      Fiche prelevement
  */
 
-require '../bank/pre.inc.php';
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/lib/prelevement.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/bonprelevement.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+
+$langs->load("banks");
+$langs->load("categories");
 
 if (!$user->rights->prelevement->bons->lire)
 accessforbidden();
 
 $langs->load("bills");
 $langs->load("withdrawals");
-$langs->load("categories");
 
 
 // Security check
@@ -130,7 +133,7 @@ if ($action == 'infocredit' && $user->rights->prelevement->bons->credit)
 $bon = new BonPrelevement($db,"");
 $form = new Form($db);
 
-llxHeader('',$langs->trans("WithdrawalReceipt"));
+llxHeader('',$langs->trans("WithdrawalsReceipts"));
 
 
 if ($id > 0)
@@ -138,7 +141,7 @@ if ($id > 0)
 	$bon->fetch($id);
 
 	$head = prelevement_prepare_head($bon);
-	dol_fiche_head($head, 'prelevement', $langs->trans("WithdrawalReceipt"), '', 'payment');
+	dol_fiche_head($head, 'prelevement', $langs->trans("WithdrawalsReceipts"), '', 'payment');
 
 	if (GETPOST('error','alpha')!='')
 	{
@@ -147,8 +150,8 @@ if ($id > 0)
 
 	/*if ($action == 'credite')
 	{
-		$ret=$form->form_confirm("fiche.php?id=".$bon->id,$langs->trans("ClassCredited"),$langs->trans("ClassCreditedConfirm"),"confirm_credite",'',1,1);
-		if ($ret == 'html') print '<br>';
+		print $form->formconfirm("fiche.php?id=".$bon->id,$langs->trans("ClassCredited"),$langs->trans("ClassCreditedConfirm"),"confirm_credite",'',1,1);
+
 	}*/
 
 	print '<table class="border" width="100%">';
@@ -188,7 +191,7 @@ if ($id > 0)
 	print '<table class="border" width="100%"><tr><td width="20%">';
 	print $langs->trans("WithdrawalFile").'</td><td>';
 	$relativepath = 'receipts/'.$bon->ref;
-	print '<a href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
+	print '<a data-ajax="false" href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
 	print '</td></tr></table>';
 
 	dol_fiche_end();
@@ -262,4 +265,3 @@ if ($id > 0)
 llxFooter();
 
 $db->close();
-?>

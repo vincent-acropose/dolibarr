@@ -33,24 +33,30 @@ class box_clients extends ModeleBoxes
 {
 	var $boxcode="lastcustomers";
 	var $boximg="object_company";
-	var $boxlabel;
+	var $boxlabel="BoxLastCustomers";
 	var $depends = array("societe");
 
 	var $db;
-	var $param;
+	var $enabled = 1;
 
 	var $info_box_head = array();
 	var $info_box_contents = array();
 
-	/**
-     *  Constructor
-	 */
-	function __construct()
-	{
-		global $langs;
-		$langs->load("boxes");
 
-		$this->boxlabel=$langs->transnoentitiesnoconv("BoxLastCustomers");
+	/**
+	 *  Constructor
+	 *
+	 *  @param  DoliDB	$db      	Database handler
+     *  @param	string	$param		More parameters
+	 */
+	function __construct($db,$param='')
+	{
+		global $conf, $user;
+
+		$this->db = $db;
+
+		// disable box for such cases
+		if (! empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) $this->enabled=0;	// disabled by this option
 	}
 
 	/**
@@ -116,6 +122,8 @@ class box_clients extends ModeleBoxes
 				}
 
 				if ($num==0) $this->info_box_contents[$i][0] = array('td' => 'align="center"','text'=>$langs->trans("NoRecordedCustomers"));
+
+				$db->free($result);
 			}
 			else {
 				$this->info_box_contents[0][0] = array(	'td' => 'align="left"',
@@ -144,4 +152,3 @@ class box_clients extends ModeleBoxes
 
 }
 
-?>

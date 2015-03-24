@@ -63,8 +63,8 @@ llxHeader('',$langs->trans("ListOfSubscriptions"),'EN:Module_Foundations|FR:Modu
 
 if ($msg)	print $msg.'<br>';
 
-// Liste des cotisations
-$sql = "SELECT d.rowid, d.login, d.prenom as firstname, d.nom as lastname, d.societe,";
+// List of subscriptions
+$sql = "SELECT d.rowid, d.login, d.firstname, d.lastname, d.societe,";
 $sql.= " c.rowid as crowid, c.cotisation,";
 $sql.= " c.dateadh,";
 $sql.= " c.datef,";
@@ -75,7 +75,7 @@ $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."bank as b ON c.fk_bank=b.rowid";
 $sql.= " WHERE d.rowid = c.fk_adherent";
 if (isset($date_select) && $date_select != '')
 {
-    $sql.= " AND dateadh LIKE '$date_select%'";
+    $sql.= " AND c.dateadh LIKE '".$date_select."%'";
 }
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($conf->liste_limit+1, $offset);
@@ -88,6 +88,8 @@ if ($result)
 
     $title=$langs->trans("ListOfSubscriptions");
     if (! empty($date_select)) $title.=' ('.$langs->trans("Year").' '.$date_select.')';
+
+    $param="";
     $param.="&amp;statut=$statut&amp;date_select=$date_select";
     print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder,'',$num);
 
@@ -96,7 +98,7 @@ if ($result)
 
     print '<tr class="liste_titre">';
     print_liste_field_titre($langs->trans("Ref"),"cotisations.php","c.rowid",$param,"","",$sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("Name"),"cotisations.php","d.nom",$param,"","",$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Name"),"cotisations.php","d.lastname",$param,"","",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Login"),"cotisations.php","d.login",$param,"","",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Label"),"cotisations.php","c.note",$param,"",'align="left"',$sortfield,$sortorder);
     if (! empty($conf->banque->enabled))
@@ -136,12 +138,12 @@ if ($result)
             print "<form method=\"post\" action=\"cotisations.php\">";
             print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
         }
-        print "<tr $bc[$var]>";
+        print "<tr ".$bc[$var].">";
 
         // Ref
         print '<td>'.$cotisation->getNomUrl(1).'</td>';
 
-        // Nom
+        // Lastname
         print '<td>'.$adherent->getNomUrl(1).'</td>';
 
         // Login
@@ -169,7 +171,6 @@ if ($result)
                 {
                     print '<input type="hidden" name="action" value="2bank">';
                     print '<input type="hidden" name="rowid" value="'.$objp->crowid.'">';
-                    $form = new Form($db);
                     $form->select_comptes('','accountid',0,'',1);
                     print '<br>';
                     $form->select_types_paiements('','paymenttypeid');
@@ -230,4 +231,3 @@ else
 $db->close();
 
 llxFooter();
-?>

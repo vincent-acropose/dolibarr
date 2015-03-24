@@ -23,12 +23,16 @@
  *	\brief      Page graph des transactions bancaires
  */
 
-require 'pre.inc.php';
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/lib/bank.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/dolgraph.class.php';
 
 $langs->load("banks");
+$langs->load("categories");
+
+$WIDTH=DolGraph::getDefaultGraphSizeForStats('width',768);
+$HEIGHT=DolGraph::getDefaultGraphSizeForStats('height',200);
 
 // Security check
 if (isset($_GET["account"]) || isset($_GET["ref"]))
@@ -37,7 +41,7 @@ if (isset($_GET["account"]) || isset($_GET["ref"]))
 }
 $fieldid = isset($_GET["ref"])?'ref':'rowid';
 if ($user->societe_id) $socid=$user->societe_id;
-$result=restrictedArea($user,'banque',$id,'bank_account','','',$fieldid);
+$result=restrictedArea($user,'banque',$id,'bank_account&bank_account','','',$fieldid);
 
 $account=$_GET["account"];
 $mode='standard';
@@ -82,11 +86,7 @@ if ($result < 0)
 }
 else
 {
-	// Definition de $width et $height
-	$width = 768;
-	$height = 200;
-
-	// Calcul de $min et $max
+	// Calcul $min and $max
 	$sql = "SELECT MIN(b.datev) as min, MAX(b.datev) as max";
 	$sql.= " FROM ".MAIN_DB_PREFIX."bank as b";
 	$sql.= ", ".MAIN_DB_PREFIX."bank_account as ba";
@@ -202,6 +202,7 @@ else
 				$datas[$i] = $solde + $subtotal;
 			}
 			$datamin[$i] = $acct->min_desired;
+			$dataall[$i] = $acct->min_allowed;
 			//$labels[$i] = strftime("%d",$day);
 			$labels[$i] = $xday;
 
@@ -227,21 +228,24 @@ else
 		$graph_datas=array();
 		foreach($datas as $i => $val)
 		{
-			if ($acct->min_desired) $graph_datas[$i]=array(isset($labels[$i])?$labels[$i]:'',$datas[$i],$datamin[$i]);
-			else $graph_datas[$i]=array(isset($labels[$i])?$labels[$i]:'',$datas[$i]);
+			$graph_datas[$i]=array(isset($labels[$i])?$labels[$i]:'',$datas[$i]);
+			if ($acct->min_desired) array_push($graph_datas[$i],$datamin[$i]);
+			if ($acct->min_allowed) array_push($graph_datas[$i],$dataall[$i]);
 		}
 
 		$px1 = new DolGraph();
 		$px1->SetData($graph_datas);
-		if ($acct->min_desired) $px1->SetLegend(array($langs->transnoentities("Balance"),$langs->transnoentities("BalanceMinimalDesired")));
-		else $px1->SetLegend(array($langs->transnoentities("Balance")));
+		$arraylegends=array($langs->transnoentities("Balance"));
+		if ($acct->min_desired) array_push($arraylegends,$langs->transnoentities("BalanceMinimalDesired"));
+		if ($acct->min_allowed) array_push($arraylegends,$langs->transnoentities("BalanceMinimalAllowed"));
+		$px1->SetLegend($arraylegends);
 		$px1->SetLegendWidthMin(180);
 		$px1->SetMaxValue($px1->GetCeilMaxValue()<0?0:$px1->GetCeilMaxValue());
 		$px1->SetMinValue($px1->GetFloorMinValue()>0?0:$px1->GetFloorMinValue());
 		$px1->SetTitle($title);
-		$px1->SetWidth($width);
-		$px1->SetHeight($height);
-		$px1->SetType(array('lines','lines'));
+		$px1->SetWidth($WIDTH);
+		$px1->SetHeight($HEIGHT);
+		$px1->SetType(array('lines','lines','lines'));
 		$px1->setBgColor('onglet');
 		$px1->setBgColorGrid(array(255,255,255));
 		$px1->SetHorizTickIncrement(1);
@@ -253,6 +257,7 @@ else
 		unset($px1);
 		unset($datas);
 		unset($datamin);
+		unset($dataall);
 		unset($labels);
 		unset($amounts);
 	}
@@ -319,6 +324,7 @@ else
 		$labels = array();
 		$datas = array();
 		$datamin = array();
+		$dataall = array();
 
 		$subtotal = 0;
 		$now = time();
@@ -340,6 +346,7 @@ else
 				$datas[$i] = $solde + $subtotal;
 			}
 			$datamin[$i] = $acct->min_desired;
+			$dataall[$i] = $acct->min_allowed;
 			if ($xday == '15')
 			{
 				$labels[$i] = dol_print_date($day,"%b");
@@ -358,20 +365,23 @@ else
 		$graph_datas=array();
 		foreach($datas as $i => $val)
 		{
-			if ($acct->min_desired) $graph_datas[$i]=array(isset($labels[$i])?$labels[$i]:'',$datas[$i],$datamin[$i]);
-			else $graph_datas[$i]=array(isset($labels[$i])?$labels[$i]:'',$datas[$i]);
+			$graph_datas[$i]=array(isset($labels[$i])?$labels[$i]:'',$datas[$i]);
+			if ($acct->min_desired) array_push($graph_datas[$i],$datamin[$i]);
+			if ($acct->min_allowed) array_push($graph_datas[$i],$dataall[$i]);
 		}
 		$px2 = new DolGraph();
 		$px2->SetData($graph_datas);
-		if ($acct->min_desired) $px2->SetLegend(array($langs->transnoentities("Balance"),$langs->transnoentities("BalanceMinimalDesired")));
-		else $px2->SetLegend(array($langs->transnoentities("Balance")));
+		$arraylegends=array($langs->transnoentities("Balance"));
+		if ($acct->min_desired) array_push($arraylegends,$langs->transnoentities("BalanceMinimalDesired"));
+		if ($acct->min_allowed) array_push($arraylegends,$langs->transnoentities("BalanceMinimalAllowed"));
+		$px2->SetLegend($arraylegends);
 		$px2->SetLegendWidthMin(180);
 		$px2->SetMaxValue($px2->GetCeilMaxValue()<0?0:$px2->GetCeilMaxValue());
 		$px2->SetMinValue($px2->GetFloorMinValue()>0?0:$px2->GetFloorMinValue());
 		$px2->SetTitle($title);
-		$px2->SetWidth($width);
-		$px2->SetHeight($height);
-		$px2->SetType(array('lines','lines'));
+		$px2->SetWidth($WIDTH);
+		$px2->SetHeight($HEIGHT);
+		$px2->SetType(array('lines','lines','lines'));
 		$px2->setBgColor('onglet');
 		$px2->setBgColorGrid(array(255,255,255));
 		$px2->SetHideXGrid(true);
@@ -385,6 +395,7 @@ else
 		unset($graph_datas);
 		unset($datas);
 		unset($datamin);
+		unset($dataall);
 		unset($labels);
 		unset($amounts);
 	}
@@ -430,7 +441,8 @@ else
 		$labels = array();
 		$datas = array();
 		$datamin = array();
-
+		$dataall = array();
+		
 		$subtotal = 0;
 
 		$day = $min;
@@ -450,6 +462,7 @@ else
 				$datas[$i] = '' + $solde + $subtotal;
 			}
 			$datamin[$i] = $acct->min_desired;
+			$dataall[$i] = $acct->min_allowed;
 			if (substr($textdate,6,2) == '01' || $i == 0)
 			{
 				$labels[$i] = substr($textdate,4,2);
@@ -467,20 +480,24 @@ else
 		$graph_datas=array();
 		foreach($datas as $i => $val)
 		{
-			if ($acct->min_desired) $graph_datas[$i]=array(isset($labels[$i])?$labels[$i]:'',$datas[$i],$datamin[$i]);
-			else $graph_datas[$i]=array(isset($labels[$i])?$labels[$i]:'',$datas[$i]);
+			$graph_datas[$i]=array(isset($labels[$i])?$labels[$i]:'',$datas[$i]);
+			if ($acct->min_desired) array_push($graph_datas[$i],$datamin[$i]);
+			if ($acct->min_allowed) array_push($graph_datas[$i],$dataall[$i]);
 		}
+		
 		$px3 = new DolGraph();
 		$px3->SetData($graph_datas);
-		if ($acct->min_desired) $px3->SetLegend(array($langs->transnoentities("Balance"),$langs->transnoentities("BalanceMinimalDesired")));
-		else $px3->SetLegend(array($langs->transnoentities("Balance")));
+		$arraylegends=array($langs->transnoentities("Balance"));
+		if ($acct->min_desired) array_push($arraylegends,$langs->transnoentities("BalanceMinimalDesired"));
+		if ($acct->min_allowed) array_push($arraylegends,$langs->transnoentities("BalanceMinimalAllowed"));
+		$px3->SetLegend($arraylegends);
 		$px3->SetLegendWidthMin(180);
 		$px3->SetMaxValue($px3->GetCeilMaxValue()<0?0:$px3->GetCeilMaxValue());
 		$px3->SetMinValue($px3->GetFloorMinValue()>0?0:$px3->GetFloorMinValue());
 		$px3->SetTitle($title);
-		$px3->SetWidth($width);
-		$px3->SetHeight($height);
-		$px3->SetType(array('lines','lines'));
+		$px3->SetWidth($WIDTH);
+		$px3->SetHeight($HEIGHT);
+		$px3->SetType(array('lines','lines','lines'));
 		$px3->setBgColor('onglet');
 		$px3->setBgColorGrid(array(255,255,255));
 		$px3->SetPrecisionY(0);
@@ -492,6 +509,7 @@ else
 		unset($graph_datas);
 		unset($datas);
 		unset($datamin);
+		unset($dataall);
 		unset($labels);
 		unset($amounts);
 	}
@@ -605,8 +623,8 @@ else
 		$px4->SetMaxValue($px4->GetCeilMaxValue()<0?0:$px4->GetCeilMaxValue());
 		$px4->SetMinValue($px4->GetFloorMinValue()>0?0:$px4->GetFloorMinValue());
 		$px4->SetTitle($title);
-		$px4->SetWidth($width);
-		$px4->SetHeight($height);
+		$px4->SetWidth($WIDTH);
+		$px4->SetHeight($HEIGHT);
 		$px4->SetType(array('bars','bars'));
 		$px4->SetShading(3);
 		$px4->setBgColor('onglet');
@@ -714,8 +732,8 @@ else
 		$px5->SetMaxValue($px5->GetCeilMaxValue()<0?0:$px5->GetCeilMaxValue());
 		$px5->SetMinValue($px5->GetFloorMinValue()>0?0:$px5->GetFloorMinValue());
 		$px5->SetTitle($title);
-		$px5->SetWidth($width);
-		$px5->SetHeight($height);
+		$px5->SetWidth($WIDTH);
+		$px5->SetHeight($HEIGHT);
 		$px5->SetType(array('bars','bars'));
 		$px5->SetShading(3);
 		$px5->setBgColor('onglet');
@@ -867,4 +885,3 @@ print "\n</div>\n";
 llxFooter();
 
 $db->close();
-?>

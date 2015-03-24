@@ -2,6 +2,7 @@
 /* Copyright (C) 2001-2003	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2013		Cédric Salvador			<csalvador@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +61,7 @@ llxHeader('',$langs->trans("Donations"),'EN:Module_Donations|FR:Module_Dons|ES:M
 $donationstatic=new Don($db);
 
 // Genere requete de liste des dons
-$sql = "SELECT d.rowid, d.datedon, d.prenom, d.nom, d.societe,";
+$sql = "SELECT d.rowid, d.datedon, d.firstname, d.lastname, d.societe,";
 $sql.= " d.amount, d.fk_statut as statut, ";
 $sql.= " p.rowid as pid, p.ref, p.title, p.public";
 $sql.= " FROM ".MAIN_DB_PREFIX."don as d LEFT JOIN ".MAIN_DB_PREFIX."projet AS p";
@@ -75,11 +76,11 @@ if (trim($search_ref) != '')
 }
 if (trim($search_company) != '')
 {
-    $sql.= ' AND d.societe LIKE \'%'.$db->escape(trim($search_company)) . '%\'';
+    $sql .= natural_search('d.societe', $search_company);
 }
 if (trim($search_name) != '')
 {
-    $sql.= ' AND d.nom LIKE \'%'.$db->escape(trim($search_name)) . '%\' OR d.prenom LIKE \'%'.$db->escape(trim($search_name)) . '%\'';
+    $sql .= natural_search(array('d.lastname', 'd.firstname'), $search_name);
 }
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($limit+1, $offset);
@@ -109,7 +110,7 @@ if ($resql)
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"d.rowid","&page=$page&statut=$statut","","",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"d.societe","&page=$page&statut=$statut","","",$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Name"),$_SERVER["PHP_SELF"],"d.nom","&page=$page&statut=$statut","","",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Name"),$_SERVER["PHP_SELF"],"d.lastname","&page=$page&statut=$statut","","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Date"),$_SERVER["PHP_SELF"],"d.datedon","&page=$page&statut=$statut","",'align="center"',$sortfield,$sortorder);
 	if (! empty($conf->projet->enabled))
 	{
@@ -143,7 +144,7 @@ if ($resql)
     print '<td class="liste_titre" align="right">';
     print '&nbsp;';
     print '</td>';
-    print '<td class="liste_titre" align="right"><input type="image" class="liste_titre" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+    print '<td class="liste_titre" align="right"><input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
     print "</td></tr>\n";
 
 	$var=True;
@@ -154,8 +155,8 @@ if ($resql)
 		print "<tr ".$bc[$var].">";
 		$donationstatic->id=$objp->rowid;
 		$donationstatic->ref=$objp->rowid;
-		$donationstatic->nom=$objp->nom;
-		$donationstatic->prenom=$objp->prenom;
+		$donationstatic->lastname=$objp->lastname;
+		$donationstatic->firstname=$objp->firstname;
 		print "<td>".$donationstatic->getNomUrl(1)."</td>\n";
         print "<td>".$objp->societe."</td>\n";
 		print "<td>".$donationstatic->getFullName($langs)."</td>\n";
@@ -194,4 +195,3 @@ else
 $db->close();
 
 llxFooter();
-?>

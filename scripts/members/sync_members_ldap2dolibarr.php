@@ -31,15 +31,8 @@ $path=dirname(__FILE__).'/';
 // Test if batch mode
 if (substr($sapi_type, 0, 3) == 'cgi') {
     echo "Error: You are using PHP for CGI. To execute ".$script_file." from command line, you must use PHP for CLI mode.\n";
-    exit;
+	exit(-1);
 }
-
-// Main
-$version='1.14';
-@set_time_limit(0);
-$error=0;
-$forcecommit=0;
-
 
 require_once($path."../../htdocs/master.inc.php");
 require_once(DOL_DOCUMENT_ROOT."/core/lib/date.lib.php");
@@ -47,9 +40,24 @@ require_once(DOL_DOCUMENT_ROOT."/core/class/ldap.class.php");
 require_once(DOL_DOCUMENT_ROOT."/adherents/class/adherent.class.php");
 require_once(DOL_DOCUMENT_ROOT."/adherents/class/cotisation.class.php");
 
-
 $langs->load("main");
 $langs->load("errors");
+
+
+// Global variables
+$version=DOL_VERSION;
+$error=0;
+$forcecommit=0;
+
+
+
+/*
+ * Main
+ */
+
+@set_time_limit(0);
+print "***** ".$script_file." (".$version.") pid=".getmypid()." *****\n";
+dol_syslog($script_file." launched with arg ".join(',',$argv));
 
 // List of fields to get from LDAP
 $required_fields = array(
@@ -87,11 +95,9 @@ $required_fields=array_unique(array_values(array_filter($required_fields, "dolVa
 
 if ($argv[3]) $conf->global->LDAP_SERVER_HOST=$argv[2];
 
-print "***** $script_file ($version) *****\n";
-
 if (! isset($argv[2]) || ! is_numeric($argv[2])) {
     print "Usage:  $script_file (nocommitiferror|commitiferror) id_member_type [ldapserverhost]\n";
-    exit;
+	exit(-1);
 }
 $typeid=$argv[2];
 if ($argv[1] == 'commitiferror') $forcecommit=1;
@@ -116,17 +122,22 @@ print "----- Options:\n";
 print "commitiferror=".$forcecommit."\n";
 print "Mapped LDAP fields=".join(',',$required_fields)."\n";
 print "\n";
-print "Press a key to confirm...";
-$input = trim(fgets(STDIN));
-print "Hit Enter to continue or CTRL+C to stop...\n";
-$input = trim(fgets(STDIN));
 
-
+// Check parameters
 if (empty($conf->global->LDAP_MEMBER_DN))
 {
-	print $langs->trans("Error").': '.$langs->trans("LDAP setup for members not defined inside Dolibarr");
-	exit(1);
+	print $langs->trans("Error").': '.$langs->trans("LDAP setup for members not defined inside Dolibarr")."\n";
+	exit(-1);
 }
+if ($typeid <= 0)
+{
+	print $langs->trans("Error").': Parameter id_member_type is not a valid ref of an existing member type'."\n";
+	exit(-2);
+}
+
+
+print "Hit Enter to continue or CTRL+C to stop...\n";
+$input = trim(fgets(STDIN));
 
 
 // Charge tableau de correspondance des pays
@@ -159,7 +170,7 @@ if ($resql)
 else
 {
 	dol_print_error($db);
-	exit;
+	exit(-1);
 }
 
 
@@ -185,25 +196,17 @@ if ($result >= 0)
 			$member = new Adherent($db);
 
 			// Propriete membre
-			$member->prenom=$ldapuser[$conf->global->LDAP_FIELD_FIRSTNAME];    // deprecated
-			$member->nom=$ldapuser[$conf->global->LDAP_FIELD_NAME];            // deprecated
 			$member->firstname=$ldapuser[$conf->global->LDAP_FIELD_FIRSTNAME];
 			$member->lastname=$ldapuser[$conf->global->LDAP_FIELD_NAME];
 			$member->login=$ldapuser[$conf->global->LDAP_FIELD_LOGIN];
 			$member->pass=$ldapuser[$conf->global->LDAP_FIELD_PASSWORD];
 
 			//$member->societe;
-			$member->adresse=$ldapuser[$conf->global->LDAP_FIELD_ADDRESS];   // deprecated
 			$member->address=$ldapuser[$conf->global->LDAP_FIELD_ADDRESS];
-			$member->cp=$ldapuser[$conf->global->LDAP_FIELD_ZIP];            // deprecated
 			$member->zip=$ldapuser[$conf->global->LDAP_FIELD_ZIP];
-			$member->ville=$ldapuser[$conf->global->LDAP_FIELD_TOWN];        // deprecated
 			$member->town=$ldapuser[$conf->global->LDAP_FIELD_TOWN];
-			$member->pays=$ldapuser[$conf->global->LDAP_FIELD_COUNTRY];	     // deprecated
 			$member->country=$ldapuser[$conf->global->LDAP_FIELD_COUNTRY];
-			$member->pays_id=$countries[$hashlib2rowid[strtolower($member->country)]]['rowid'];    // deprecated
 			$member->country_id=$countries[$hashlib2rowid[strtolower($member->country)]]['rowid'];
-			$member->pays_code=$countries[$hashlib2rowid[strtolower($member->country)]]['code'];   // deprecated
 			$member->country_code=$countries[$hashlib2rowid[strtolower($member->country)]]['code'];
 
 			$member->phone=$ldapuser[$conf->global->LDAP_FIELD_PHONE];
@@ -215,7 +218,7 @@ if ($result >= 0)
 			$member->morphy='phy';
 			$member->photo='';
 			$member->public=1;
-			$member->naiss=dol_stringtotime($ldapuser[$conf->global->LDAP_FIELD_BIRTHDATE]);
+			$member->birth=dol_stringtotime($ldapuser[$conf->global->LDAP_FIELD_BIRTHDATE]);
 
 			$member->statut=-1;
 			if (isset($ldapuser[$conf->global->LDAP_FIELD_MEMBER_STATUS]))
@@ -320,7 +323,7 @@ else
 }
 
 
-return $error;
+exit($error);
 
 
 /**
@@ -334,4 +337,3 @@ function dolValidElement($element)
 	return (trim($element) != '');
 }
 
-?>

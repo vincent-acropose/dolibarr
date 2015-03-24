@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2005-2012	Regis Houssin	<regis.houssin@capnetworks.com>
  * Copyright (C) 2011-2012	Juanjo Menent	<jmenent@2byte.es>
+ * Copyright (C) 2013       Florian Henry		  	<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,22 +41,13 @@ $result = restrictedArea($user, 'ficheinter', $id, 'fichinter');
 $object = new Fichinter($db);
 $object->fetch($id,$ref);
 
+$permissionnote=$user->rights->ficheinter->creer;	// Used by the include of actions_setnotes.inc.php
 
 /*
  * Actions
  */
 
-if ($action == 'setnote_public' && $user->rights->ficheinter->creer)
-{
-	$result=$object->update_note_public(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES));
-	if ($result < 0) dol_print_error($db,$object->error);
-}
-
-else if ($action == 'setnote_private' && $user->rights->ficheinter->creer)
-{
-	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_private'), ENT_QUOTES));
-	if ($result < 0) dol_print_error($db,$object->error);
-}
+include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not includ_once
 
 
 /*
@@ -99,4 +91,3 @@ if ($id > 0 || ! empty($ref))
 
 llxFooter();
 $db->close();
-?>
