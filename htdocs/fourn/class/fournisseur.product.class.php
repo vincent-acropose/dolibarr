@@ -116,16 +116,36 @@ class ProductFournisseur extends Product
         global $conf;
 
         $this->db->begin();
+		
+		$error = '';
+		// Appel des triggers
+		include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+		$interface=new Interfaces($this->db);
+		$result=$interface->run_triggers('SUPPLIER_PRODUCT_BUYPRICE_REMOVE',$this,$user,$langs,$conf);
+		if ($result < 0)
+		{
+			$error++; $this->error=$interface->errors;
+		}
 
         $sql = "DELETE FROM ".MAIN_DB_PREFIX."product_fournisseur_price";
         $sql.= " WHERE rowid = ".$rowid;
 
         dol_syslog(get_class($this)."::remove_product_fournisseur_price sql=".$sql);
         $resql = $this->db->query($sql);
+		
         if ($resql)
         {
-            $this->db->commit();
-            return 1;
+			if (empty($error))
+			{
+				$this->db->commit();
+            	return 1;
+			}
+			else
+			{
+				$this->db->rollback();
+				return 0;
+			}
+            
         }
         else
         {
