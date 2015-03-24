@@ -570,7 +570,7 @@ if ($id > 0)
 
 		$sql = "SELECT s.nom, s.rowid,";
 		$sql.= " c.rowid as cid, c.total_ht, c.ref, c.fk_statut, c.facture,";
-		$sql.= " c.date_commande as dc";
+		$sql.= " c.date_commande as dc, c.ref_client ";
 		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."commande as c";
 		$sql.= " WHERE c.fk_soc = s.rowid ";
 		$sql.= " AND s.rowid = ".$object->id;
@@ -616,7 +616,7 @@ if ($id > 0)
 				$objp = $db->fetch_object($resql);
 				$var=!$var;
 				print "<tr ".$bc[$var].">";
-				print '<td class="nowrap"><a href="'.DOL_URL_ROOT.'/commande/fiche.php?id='.$objp->cid.'">'.img_object($langs->trans("ShowOrder"),"order").' '.$objp->ref."</a>\n";
+				print '<td class="nowrap"><a href="'.DOL_URL_ROOT.'/commande/fiche.php?id='.$objp->cid.'">'.img_object($langs->trans("ShowOrder"),"order").' '.$objp->ref."</a> - ".$objp->ref_client."\n";
 				print '</td><td align="right" width="80">'.dol_print_date($db->jdate($objp->dc),'day')."</td>\n";
 				print '<td align="right" style="min-width: 60px">'.price($objp->total_ht).'</td>';
 				print '<td align="right" style="min-width: 60px" class="nowrap">'.$commande_static->LibStatut($objp->fk_statut,$objp->facture,5).'</td></tr>';
