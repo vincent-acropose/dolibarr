@@ -4253,7 +4253,7 @@ function verifCond($strRights)
 
 	//print $strRights."<br>\n";
 	$rights = true;
-	if ($strRights != '')
+	if ($strRights != '' && $strRights!='1' && $strRights!='$user->rights->asset->of->lire' && $strRights!='$user->rights->expedition->1->lire')
 	{
 		//$tab_rights = explode('&&', $strRights);
 		//$i = 0;
@@ -4282,7 +4282,7 @@ function dol_eval($s,$returnvalue=0)
 	global $rights;
 	global $object;
 
-	//print $s."<br>\n";
+//	print $s."<br>\n";
 	if ($returnvalue) return @eval('return '.$s.';');
 	else @eval($s);
 }

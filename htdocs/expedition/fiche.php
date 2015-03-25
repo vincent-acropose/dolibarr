@@ -117,7 +117,8 @@ if ($action == 'add')
     $object->ref_customer			= $objectsrc->ref_client;
     $object->date_delivery			= $date_delivery;	// Date delivery planed
     $object->fk_delivery_address	= $objectsrc->fk_delivery_address;
-    $object->shipping_method_id		= GETPOST('shipping_method_id','int');
+	if(!$reshook) // Si reshook = 1 ça veut dire que $deja_fait du doAction de clibourguignon = 1, donc que $object->shipping_method_id a déjà été calculé et qu'il faut plus y toucher 
+    	$object->shipping_method_id		= GETPOST('shipping_method_id','int');
     $object->tracking_number		= GETPOST('tracking_number','alpha');
     $object->ref_int				= GETPOST('ref_int','alpha');
     $object->note_private			= GETPOST('note_private');

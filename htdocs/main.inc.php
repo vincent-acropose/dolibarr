@@ -725,7 +725,7 @@ if (! empty($conf->browser->phone))
 // If we force to use jmobile, then we reenable javascript
 if (! empty($conf->dol_use_jmobile)) $conf->use_javascript_ajax=1;
 // Disabled bugged themes
-if (! empty($conf->dol_use_jmobile) && in_array($conf->theme,array('bureau2crea','cameleo')))
+if (! empty($conf->dol_use_jmobile) && in_array($conf->theme,array('bureau2crea','cameleo','amarok')))
 {
 	$conf->theme='eldy';
 	$conf->css  =  "/theme/".$conf->theme."/style.css.php";
@@ -860,9 +860,11 @@ if (! defined('NOREQUIREMENU'))
 			$file_menu='eldy_menu.php';
 			include_once DOL_DOCUMENT_ROOT."/core/menus/standard/".$file_menu;
 		}
+
 	}
 	$menumanager = new MenuManager($db, empty($user->societe_id)?0:1);
 	$menumanager->loadMenu();
+
 }
 
 
@@ -890,7 +892,6 @@ if (! function_exists("llxHeader"))
 	function llxHeader($head = '', $title='', $help_url='', $target='', $disablejs=0, $disablehead=0, $arrayofjs='', $arrayofcss='', $morequerystring='')
 	{
 	    global $conf;
-
 	    // html header
 		top_htmlhead($head, $title, $disablejs, $disablehead, $arrayofjs, $arrayofcss);
 
