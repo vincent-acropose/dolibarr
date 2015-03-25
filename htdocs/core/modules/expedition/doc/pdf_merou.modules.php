@@ -235,7 +235,7 @@ class pdf_merou extends ModelePdfExpedition
 					$pageposbefore=$pdf->getPage();
 
 					// Description de la ligne produit
-					$libelleproduitservice = pdf_writelinedesc($pdf,$object,$i,$outputlangs,90,3,50,$curY,0,1);
+					$libelleproduitservice = pdf_writelinedesc($pdf,$object,$i,$outputlangs,90,3,50,$curY,0,0);
 
 					$nexY = $pdf->GetY();
 					$pageposafter=$pdf->getPage();

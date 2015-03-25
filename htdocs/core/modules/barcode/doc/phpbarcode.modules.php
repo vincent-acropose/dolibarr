@@ -111,7 +111,7 @@ class modPhpbarcode extends ModeleBarCode
 	 *	@param	string		$scale			Scale
 	 *	@return	int							<0 if KO, >0 if OK
      */
-	function buildBarCode($code,$encoding,$readable='Y',$scale=1)
+	function buildBarCode($code,$encoding,$readable='Y',$scale=3)
 	{
 		global $_GET,$_SERVER;
 		global $conf;
