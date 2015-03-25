@@ -63,7 +63,6 @@ class FormProduct
 		global $conf, $langs;
 
 		if (empty($fk_product) && count($this->cache_warehouses)) return 0;    // Cache already loaded and we do not want a list with information specific to a product
-
 		$sql = "SELECT e.rowid, e.label";
 		if ($fk_product) $sql.= ", ps.reel";
 		$sql.= " FROM ".MAIN_DB_PREFIX."entrepot as e";
@@ -72,7 +71,7 @@ class FormProduct
 			$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product_stock as ps on ps.fk_entrepot = e.rowid";
 			$sql.= " AND ps.fk_product = '".$fk_product."'";
 		}
-		$sql.= " WHERE e.entity = ".$conf->entity;
+		$sql.= " WHERE e.entity IN (".getEntity('product',true).')';
 		$sql.= " AND e.statut = 1";
 		$sql.= " ORDER BY e.label";
 
