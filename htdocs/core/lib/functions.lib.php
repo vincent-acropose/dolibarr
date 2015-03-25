@@ -3167,6 +3167,9 @@ function get_default_tva($thirdparty_seller, $thirdparty_buyer, $idprod=0, $idpr
 
 	if (!is_object($thirdparty_seller)) return -1;
 	if (!is_object($thirdparty_buyer)) return -1;
+	
+	// Spécifique Bourguignon, ticket 1927
+	if($thirdparty_buyer->tva_assuj == "0") return 0;
 
 	// Note: possible values for tva_assuj are 0/1 or franchise/reel
 	$seller_use_vat=((is_numeric($thirdparty_seller->tva_assuj) && ! $thirdparty_seller->tva_assuj) || (! is_numeric($thirdparty_seller->tva_assuj) && $thirdparty_seller->tva_assuj=='franchise'))?0:1;
@@ -4250,7 +4253,7 @@ function verifCond($strRights)
 
 	//print $strRights."<br>\n";
 	$rights = true;
-	if ($strRights != '')
+	if ($strRights != '' && $strRights!='1' && $strRights!='$user->rights->asset->of->lire' && $strRights!='$user->rights->expedition->1->lire')
 	{
 		//$tab_rights = explode('&&', $strRights);
 		//$i = 0;
@@ -4279,7 +4282,7 @@ function dol_eval($s,$returnvalue=0)
 	global $rights;
 	global $object;
 
-	//print $s."<br>\n";
+//	print $s."<br>\n";
 	if ($returnvalue) return @eval('return '.$s.';');
 	else @eval($s);
 }

@@ -999,6 +999,7 @@ class Facture extends CommonInvoice
 				$line->localtax2_type   = $objp->localtax2_type;
 				$line->remise_percent   = $objp->remise_percent;
 				$line->fk_remise_except = $objp->fk_remise_except;
+				$line->price            = $objp->price;
 				$line->fk_product       = $objp->fk_product;
 				$line->date_start       = $this->db->jdate($objp->date_start);
 				$line->date_end         = $this->db->jdate($objp->date_end);

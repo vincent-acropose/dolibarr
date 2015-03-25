@@ -79,17 +79,21 @@ $object = new Societe($db);
 $parameters = array('socid' => $id);
 $reshook = $hookmanager->executeHooks('doActions', $parameters, $object, $action); // Note that $action and $object may have been modified by some
 
+//Some actions show a "cancel" input submit button with name="cancel"
+$cancelbutton = GETPOST('cancel');
 
 if ($action == 'setcustomeraccountancycode')
 {
-	$result=$object->fetch($id);
-	$object->code_compta=$_POST["customeraccountancycode"];
-	$result=$object->update($object->id,$user,1,1,0);
-	if ($result < 0)
-	{
-		$mesgs[]=join(',',$object->errors);
+	if (!$cancelbutton) {
+		$result=$object->fetch($id);
+		$object->code_compta=$_POST["customeraccountancycode"];
+		$result=$object->update($object->id,$user,1,1,0);
+		if ($result < 0)
+		{
+			$mesgs[]=join(',',$object->errors);
+		}
+		$action="";
 	}
-	$action="";
 }
 
 // conditions de reglement
@@ -139,10 +143,14 @@ if ($action == 'cstc')
 // Update communication level
 if ($action == 'setOutstandingBill')
 {
-	$object->fetch($id);
-	$object->outstanding_limit=GETPOST('OutstandingBill');
-	$result=$object->set_OutstandingBill($user);
-	if ($result < 0) setEventMessage($object->error,'errors');
+	if (!$cancelbutton) {
+		$object->fetch($id);
+		$object->outstanding_limit = GETPOST('OutstandingBill');
+		$result = $object->set_OutstandingBill($user);
+		if ($result < 0) {
+			setEventMessage($object->error, 'errors');
+		}
+	}
 }
 
 
@@ -481,7 +489,7 @@ if ($id > 0)
 
 
 	// Nbre max d'elements des petites listes
-	$MAXLIST=4;
+	$MAXLIST=10;
 	$tableaushown=1;
 
 	// Lien recap
@@ -562,7 +570,7 @@ if ($id > 0)
 
 		$sql = "SELECT s.nom, s.rowid,";
 		$sql.= " c.rowid as cid, c.total_ht, c.ref, c.fk_statut, c.facture,";
-		$sql.= " c.date_commande as dc";
+		$sql.= " c.date_commande as dc, c.ref_client ";
 		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."commande as c";
 		$sql.= " WHERE c.fk_soc = s.rowid ";
 		$sql.= " AND s.rowid = ".$object->id;
@@ -608,7 +616,7 @@ if ($id > 0)
 				$objp = $db->fetch_object($resql);
 				$var=!$var;
 				print "<tr ".$bc[$var].">";
-				print '<td class="nowrap"><a href="'.DOL_URL_ROOT.'/commande/fiche.php?id='.$objp->cid.'">'.img_object($langs->trans("ShowOrder"),"order").' '.$objp->ref."</a>\n";
+				print '<td class="nowrap"><a href="'.DOL_URL_ROOT.'/commande/fiche.php?id='.$objp->cid.'">'.img_object($langs->trans("ShowOrder"),"order").' '.$objp->ref."</a> - ".$objp->ref_client."\n";
 				print '</td><td align="right" width="80">'.dol_print_date($db->jdate($objp->dc),'day')."</td>\n";
 				print '<td align="right" style="min-width: 60px">'.price($objp->total_ht).'</td>';
 				print '<td align="right" style="min-width: 60px" class="nowrap">'.$commande_static->LibStatut($objp->fk_statut,$objp->facture,5).'</td></tr>';
