@@ -5,7 +5,7 @@ DIRECTION=ltr
 # stsongstdlight or cid0cs are for simplified Chinese
 # To read Chinese pdf with Linux: sudo apt-get install poppler-data
 FONTFORPDF=helvetica
-FONTSIZEFORPDF=10
+FONTSIZEFORPDF =9
 SeparatorDecimal=,
 SeparatorThousand=Space
 FormatDateShort=%d/%m/%Y
