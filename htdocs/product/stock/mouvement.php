@@ -477,6 +477,12 @@ if ($resql)
         $arrayofuniqueproduct[$objp->rowid]=$objp->produit;
 		if(!empty($objp->fk_origin)) {
 			$origin = $movement->get_origin($objp->fk_origin, $objp->origintype);
+			if($objp->origintype === 'shipping') {
+				$query = 'SELECT s.rowid, s.nom FROM '.MAIN_DB_PREFIX.'expedition e LEFT JOIN '.MAIN_DB_PREFIX.'societe s ON (s.rowid = e.fk_soc) WHERE e.rowid = '.$objp->fk_origin;
+				$resqll = $db->query($query);
+				$res = $db->fetch_object($resqll);
+				if($res->rowid > 0) $origin.= ' : <a href="'.dol_buildpath('/societe/soc.php?socid='.$res->rowid, 2).'" >'.$res->nom.'</a>';
+			}
 		} else {
 			$origin = '';
 		}
