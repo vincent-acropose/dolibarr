@@ -130,12 +130,12 @@ print '<tr><td>'.$langs->trans("Status").'</td><td>'.$project->getLibStatut(4).'
 
 // Date start
 print '<tr><td>'.$langs->trans("DateStart").'</td><td>';
-print dol_print_date($object->date_start,'day');
+print dol_print_date($project->date_start,'day');
 print '</td></tr>';
 
 // Date end
 print '<tr><td>'.$langs->trans("DateEnd").'</td><td>';
-print dol_print_date($object->date_end,'day');
+print dol_print_date($project->date_end,'day');
 print '</td></tr>';
 
 print '</table>';
@@ -360,11 +360,11 @@ foreach ($listofreferent as $key => $value)
 			{
 				if ($key == 'order_supplier' && ! empty($conf->fournisseur->enabled) && $user->rights->fournisseur->commande->creer)
 				{
-					print '<a class="butAction" href="'.DOL_URL_ROOT.'/fourn/facture/fiche.php?socid='.$project->societe->id.'&amp;action=create&amp;origin='.$project->element.'&amp;originid='.$project->id.'">'.$langs->trans("AddSupplierInvoice").'</a>';
+					print '<a class="butAction" href="'.DOL_URL_ROOT.'/fourn/commande/fiche.php?socid='.$project->societe->id.'&amp;action=create&amp;origin='.$project->element.'&amp;originid='.$project->id.'">'.$langs->trans("AddSupplierOrder").'</a>';
 				}
 				if ($key == 'invoice_supplier' && ! empty($conf->fournisseur->enabled) && $user->rights->fournisseur->facture->creer)
 				{
-					print '<a class="butAction" href="'.DOL_URL_ROOT.'/fourn/commande/fiche.php?socid='.$project->societe->id.'&amp;action=create&amp;origin='.$project->element.'&amp;originid='.$project->id.'">'.$langs->trans("AddSupplierOrder").'</a>';
+					print '<a class="butAction" href="'.DOL_URL_ROOT.'/fourn/facture/fiche.php?socid='.$project->societe->id.'&amp;action=create&amp;origin='.$project->element.'&amp;originid='.$project->id.'">'.$langs->trans("AddSupplierInvoice").'</a>';
 				}
 			}
 		}
