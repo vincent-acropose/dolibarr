@@ -619,7 +619,7 @@ if ($id > 0 || ! empty($ref))
 				{
 					print '<td>'.$langs->trans("WarehouseSource").'</td>';
 					print '<td>';
-					print $formproduct->selectWarehouses(-1,'entrepot_id','',1);
+					print $formproduct->selectWarehouses('ifone','entrepot_id','',1);
 					if (count($formproduct->cache_warehouses) <= 0)
 					{
 						print ' &nbsp; '.$langs->trans("WarehouseSourceNotDefined").' <a href="'.DOL_URL_ROOT.'/product/stock/fiche.php?action=create">'.$langs->trans("AddOne").'</a>';
