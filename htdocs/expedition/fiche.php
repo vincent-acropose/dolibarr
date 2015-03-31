@@ -781,6 +781,11 @@ if ($action == 'create')
 
                 $line = $object->lines[$indiceAsked];
                 $var=!$var;
+				
+				if($line->special_code != 0) {
+					$indiceAsked++;
+					continue;
+				}
 
                 // Show product and description
                 $type=$line->product_type?$line->product_type:$line->fk_product_type;
