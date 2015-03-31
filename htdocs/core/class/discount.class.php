@@ -274,6 +274,8 @@ class DiscountAbsolute
      */
     function link_to_invoice($rowidline,$rowidinvoice)
     {
+    	global $user,$langs,$conf;
+		
         // Check parameters
         if (! $rowidline && ! $rowidinvoice)
         {
@@ -297,6 +299,15 @@ class DiscountAbsolute
         {
             $this->fk_facture_source=$rowidline;
             $this->fk_facture=$rowidinvoice;
+			
+			// Appel des triggers
+			include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+			$interface=new Interfaces($this->db);
+			$result=$interface->run_triggers('DISCOUNT_LINK_TO_INVOICE',$this,$user,$langs,$conf);
+			if ($result < 0) {
+				dol_syslog(get_class($this)."::link_to_invoice - error ".$interface->errors, LOG_ERR);
+			}
+			
             return 1;
         }
         else
@@ -316,6 +327,8 @@ class DiscountAbsolute
      */
     function unlink_invoice()
     {
+    	global $user,$langs,$conf;
+		
         $sql ="UPDATE ".MAIN_DB_PREFIX."societe_remise_except";
         $sql.=" SET fk_facture_line = NULL, fk_facture = NULL";
         $sql.=" WHERE rowid = ".$this->id;
@@ -324,6 +337,14 @@ class DiscountAbsolute
         $resql = $this->db->query($sql);
         if ($resql)
         {
+        	// Appel des triggers
+			include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+			$interface=new Interfaces($this->db);
+			$result=$interface->run_triggers('DISCOUNT_UNLINK_INVOICE',$this,$user,$langs,$conf);
+			if ($result < 0) {
+				dol_syslog(get_class($this)."::unlink_invoice - error ".$interface->errors, LOG_ERR);
+			}
+			
             return 1;
         }
         else
