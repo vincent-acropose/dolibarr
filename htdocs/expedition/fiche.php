@@ -859,6 +859,7 @@ if ($action == 'create')
                     $stock = $product->stock_warehouse[GETPOST('entrepot_id','int')]->real;
                     $stock+=0;  // Convertit en numerique
                     $defaultqty=min($quantityToBeDelivered, $stock);
+					$defaultqty=$quantityToBeDelivered;
                     if (($line->product_type == 1 && empty($conf->global->STOCK_SUPPORTS_SERVICES)) || $defaultqty < 0) $defaultqty=0;
                 }
 
