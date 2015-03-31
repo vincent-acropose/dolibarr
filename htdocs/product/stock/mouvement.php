@@ -478,10 +478,9 @@ if ($resql)
 		if(!empty($objp->fk_origin)) {
 			$origin = $movement->get_origin($objp->fk_origin, $objp->origintype);
 			if($objp->origintype === 'shipping') {
-				$new_db = new DoliDBMysqli($dolibarr_main_db_type, $dolibarr_main_db_host, $dolibarr_main_db_user, $dolibarr_main_db_pass, $dolibarr_main_db_name, $dolibarr_main_db_port);
-				$sql = 'SELECT s.rowid, s.nom FROM '.MAIN_DB_PREFIX.'expedition e LEFT JOIN '.MAIN_DB_PREFIX.'societe s ON (s.rowid = e.fk_soc) WHERE e.rowid = '.$objp->fk_origin;
-				$resqll = $new_db->query($sql);
-				$res = $new_db->fetch_object($resqll);
+				$query = 'SELECT s.rowid, s.nom FROM '.MAIN_DB_PREFIX.'expedition e LEFT JOIN '.MAIN_DB_PREFIX.'societe s ON (s.rowid = e.fk_soc) WHERE e.rowid = '.$objp->fk_origin;
+				$resqll = $db->query($query);
+				$res = $db->fetch_object($resqll);
 				if($res->rowid > 0) $origin.= ' : <a href="'.dol_buildpath('/societe/soc.php?socid='.$res->rowid, 2).'" >'.$res->nom.'</a>';
 			}
 		} else {
