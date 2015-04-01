@@ -325,7 +325,8 @@ class modSociete extends DolibarrModules {
 				's.fk_prospectlevel' => 'ProspectLevel',
 				'st.code' => 'ProspectStatus',
 				'd.nom' => 'State',
-				'userextra.u_code' => 'Code Commerciale'
+				'userextra.u_code' => 'Code Commerciale',
+				'sp.nom' => "ParentCompany",
 		);
 		if (! empty($conf->global->SOCIETE_USEPREFIX))
 			$this->export_fields_array[$r]['s.prefix'] = 'Prefix';
@@ -368,6 +369,7 @@ class modSociete extends DolibarrModules {
 				'st.code' => 'List:c_stcomm:libelle:code',
 				'd.nom' => 'Text',
 				'userextra.u_code' => "Text",
+				'sp.nom' => "Text",
 		);
 		$this->export_entities_array[$r] = array (); // We define here only fields that use another picto
 		                                          // Add extra fields
@@ -414,6 +416,7 @@ class modSociete extends DolibarrModules {
 		$this->export_sql_end[$r] .= ' LEFT JOIN ' . MAIN_DB_PREFIX . 'societe_commerciaux as soccom ON soccom.fk_soc = s.rowid';
 		$this->export_sql_end[$r] .= ' LEFT JOIN ' . MAIN_DB_PREFIX . 'user as usercom ON soccom.fk_user = usercom.rowid';
 		$this->export_sql_end[$r] .= ' LEFT JOIN ' . MAIN_DB_PREFIX . 'user_extrafields as userextra ON userextra.fk_object = usercom.rowid';
+		$this->export_sql_end[$r] .= ' LEFT JOIN ' . MAIN_DB_PREFIX . 'societe as sp ON s.parent = sp.rowid';
 		$this->export_sql_end[$r] .= ' WHERE s.entity IN (' . getEntity('societe', 1) . ')';
 		
 		// Export list of contacts and attributes
@@ -452,7 +455,8 @@ class modSociete extends DolibarrModules {
 				's.code_client' => "CustomerCode",
 				's.code_fournisseur' => "SupplierCode",
 				't.libelle' => "ThirdPartyType",
-				'userextra.u_code' => 'Code Commerciale' 
+				'userextra.u_code' => 'Code Commerciale',
+				'sp.nom' => "ParentCompany",
 		);
 		$this->export_TypeFields_array[$r] = array (
 				'c.lastname' => "Text",
@@ -463,7 +467,9 @@ class modSociete extends DolibarrModules {
 				's.status' => "Boolean",
 				'userextra.u_code' => "Text",
 				'c.statut' => "Boolean",
-				't.libelle' => "Text" 
+				't.libelle' => "Text",
+				's.nom' => "Text",
+				'sp.nom' => "Text",
 		);
 		$this->export_entities_array[$r] = array (
 				's.rowid' => "company",
@@ -473,7 +479,8 @@ class modSociete extends DolibarrModules {
 				's.status' => "company",
 				'userextra.u_code' => "company",
 				't.libelle' => "company",
-				'userextra.u_code' => "company" 
+				'userextra.u_code' => "company",
+				'sp.nom' => "company",
 		); // We define here only fields that use another picto
 		if (empty($conf->fournisseur->enabled)) {
 			unset($this->export_fields_array[$r]['s.code_fournisseur']);
@@ -520,6 +527,7 @@ class modSociete extends DolibarrModules {
 		$this->export_sql_end[$r] .= ' LEFT JOIN ' . MAIN_DB_PREFIX . 'user as usercom ON soccom.fk_user = usercom.rowid';
 		$this->export_sql_end[$r] .= ' LEFT JOIN ' . MAIN_DB_PREFIX . 'user_extrafields as userextra ON userextra.fk_object = usercom.rowid';
 		$this->export_sql_end[$r] .= ' LEFT JOIN ' . MAIN_DB_PREFIX . 'socpeople_extrafields as extra ON extra.fk_object = c.rowid';
+		$this->export_sql_end[$r] .= ' LEFT JOIN ' . MAIN_DB_PREFIX . 'societe as sp ON s.parent = sp.rowid';
 		$this->export_sql_end[$r] .= ' WHERE c.entity IN (' . getEntity("societe", 1) . ')';
 		
 		// Imports
