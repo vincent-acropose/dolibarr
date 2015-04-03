@@ -58,3 +58,4 @@ DefaultModelAskPriceSupplierClosed=Modèle par défaut lors de la clôture d'une
 AskpricesupplierDescRefFourn=Référence fournisseur à saisir après réponse pour la convertion
 CloseAs=Clôturer au statut
 AskpricesupplierErrorRefCheck=Une ou plusieurs référence fournisseurs sont manquantes.
+SelectSupplier=Sélectionner un fournisseur
