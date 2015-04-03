@@ -814,11 +814,11 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     //print "masktri=".$masktri." maskcounter=".$maskcounter." maskraz=".$maskraz." maskoffset=".$maskoffset."<br>\n";
 
     // Define $sqlstring
-    if (function_exists('mb_strrpos')) 
+    if (function_exists('mb_strrpos'))
     	{
     	$posnumstart=mb_strrpos($maskwithnocode,$maskcounter, 'UTF-8');
-	} 
-	else 
+	}
+	else
 	{
     	$posnumstart=strrpos($maskwithnocode,$maskcounter);
 	}	// Pos of counter in final string (from 0 to ...)
@@ -1491,7 +1491,7 @@ function getListOfModels($db,$type,$maxfilenamelength=0)
 /**
  * This function evaluates a string that should be a valid IPv4
  * Note: For ip 169.254.0.0, it returns 0 with some PHP (5.6.24) and 2 with some minor patchs of PHP (5.6.25). See https://github.com/php/php-src/pull/1954.
- *   
+ *
  * @param	string $ip IP Address
  * @return	int 0 if not valid or reserved range, 1 if valid and public IP, 2 if valid and private range IP
  */
@@ -1961,5 +1961,3 @@ function colorStringToArray($stringcolor,$colorifnotfound=array(88,88,88))
 	}
 	return array(hexdec($reg[1]),hexdec($reg[2]),hexdec($reg[3]));
 }
-
-

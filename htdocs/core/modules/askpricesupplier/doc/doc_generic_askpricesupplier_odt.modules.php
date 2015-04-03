@@ -483,4 +483,3 @@ class doc_generic_askpricesupplier_odt extends ModelePDFAskPriceSupplier
 	}
 
 }
-

@@ -294,7 +294,6 @@ if ($result)
 	$syear = $year;
 	$formother->select_year($syear,'year',1, 20, 5);
 	print '</td>';
-
 	// Amount
 	print '<td class="liste_titre" align="right">';
 	print '<input class="flat" type="text" size="10" name="search_montant_ht" value="'.$search_montant_ht.'">';
@@ -353,7 +352,6 @@ if ($result)
 		print '</td></tr></table>';
 
 		print "</td>\n";
-
 		$url = DOL_URL_ROOT.'/comm/card.php?socid='.$objp->rowid;
 
 		// Company
@@ -364,12 +362,10 @@ if ($result)
 		print '<td>';
 		print $companystatic->getNomUrl(1,'customer');
 		print '</td>';
-
 		// Date askprice
 		print '<td align="center">';
 		print dol_print_date($db->jdate($objp->dp), 'day');
 		print "</td>\n";
-
 		print '<td align="right">'.price($objp->total_ht)."</td>\n";
 
 		$userstatic->id=$objp->fk_user_author;

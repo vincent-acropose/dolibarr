@@ -48,7 +48,11 @@ $savingdocmask='';
 if (empty($conf->global->MAIN_DISABLE_SUGGEST_REF_AS_PREFIX))
 {
 	//var_dump($modulepart);
+<<<<<<< HEAD
 	if (in_array($modulepart,array('facture_fournisseur','commande_fournisseur','facture','commande','propal','askpricesupplier','ficheinter','contract','project','project_task','expensereport')))
+=======
+	if (in_array($modulepart,array('facture_fournisseur','commande_fournisseur','facture','commande','propal','askpricesupplier','ficheinter','contract','project','project_task')))
+>>>>>>> NEW : Intégration du module "Demande de prix fournisseur". PS dsl pour le commit de bourrin
 	{
 		$savingdocmask=dol_sanitizeFileName($object->ref).'-__file__';
 	}

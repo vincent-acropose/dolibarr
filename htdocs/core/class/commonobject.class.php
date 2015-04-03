@@ -488,7 +488,7 @@ abstract class CommonObject
         }
 
         $datecreate = dol_now();
-        
+
         $this->db->begin();
 
         // Insertion dans la base
@@ -506,9 +506,9 @@ abstract class CommonObject
             if (! $notrigger)
             {
             	$result=$this->call_trigger(strtoupper($this->element).'_ADD_CONTACT', $user);
-	            if ($result < 0) 
-	            { 
-	                $this->db->rollback(); 
+	            if ($result < 0)
+	            {
+	                $this->db->rollback();
 	                return -1;
 	            }
             }
@@ -1086,7 +1086,7 @@ abstract class CommonObject
 		if (!empty($id) && !empty($field) && !empty($table)) {
 	        $sql = "SELECT ".$field." FROM ".MAIN_DB_PREFIX.$table;
 	        $sql.= " WHERE rowid = ".$id;
-	
+
 	        dol_syslog(get_class($this).'::getValueFrom', LOG_DEBUG);
 	        $resql = $this->db->query($sql);
 	        if ($resql)
@@ -2893,6 +2893,11 @@ abstract class CommonObject
 			print '<td align="right"><span id="title_fourn_ref">'.$langs->trans("AskPriceSupplierRefFourn").'</span></td>';
 		}
 
+		if ($this->element == 'askpricesupplier')
+		{
+			print '<td align="right"><span id="title_fourn_ref">'.$langs->trans("AskPriceSupplierRefFourn").'</span></td>';
+		}
+
 		// VAT
 		print '<td align="right" width="50">'.$langs->trans('VAT').'</td>';
 
@@ -3053,7 +3058,7 @@ abstract class CommonObject
 				$text.= ' - '.(! empty($line->label)?$line->label:$label);
 				$description.=(! empty($conf->global->PRODUIT_DESC_IN_FORM)?'':dol_htmlentitiesbr($line->description));	// Description is what to show on popup. We shown nothing if already into desc.
 			}
-			
+
 			$line->pu_ttc = price2num($line->subprice * (1 + ($line->tva_tx/100)), 'MU');
 
 			// Output template part (modules that overwrite templates must declare this into descriptor)
@@ -3493,7 +3498,7 @@ abstract class CommonObject
                     return -1;
                 }
             }
-    
+
 			// We save charset_output to restore it because write_file can change it if needed for
 			// output format that does not support UTF8.
 			$sav_charset_output=$outputlangs->charset_output;

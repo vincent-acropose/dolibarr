@@ -211,6 +211,10 @@ else {
 	</td>
 
 	<?php if ($object->element == 'askpricesupplier') { ?>
+		<td align="right"><input id="fourn_ref" name="fourn_ref" class="flat" value="" size="12"></td>
+	<?php } ?>
+
+	<?php if ($object->element == 'askpricesupplier') { ?>
 		<td class="nobottom" align="right"><input id="fourn_ref" name="fourn_ref" class="flat" value="" size="12"></td>
 	<?php } ?>
 

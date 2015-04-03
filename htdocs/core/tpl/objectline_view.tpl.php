@@ -53,7 +53,7 @@ if (empty($usemargins)) $usemargins=0;
 	<td align="center"><?php $coldisplay++; ?><?php echo ($i+1); ?></td>
 	<?php } ?>
 	<td><?php $coldisplay++; ?><div id="line_<?php echo $line->id; ?>"></div>
-	<?php 
+	<?php
 	if (($line->info_bits & 2) == 2) {
 	?>
 		<a href="<?php echo DOL_URL_ROOT.'/comm/remx.php?id='.$this->socid; ?>">
@@ -93,7 +93,7 @@ if (empty($usemargins)) $usemargins=0;
 		if ($line->fk_product > 0)
 		{
 			echo $form->textwithtooltip($text,$description,3,'','',$i,0,(!empty($line->fk_parent_line)?img_picto('', 'rightarrow'):''));
-			
+
 			// Show range
 			echo get_date_range($line->date_start, $line->date_end);
 
@@ -124,9 +124,17 @@ if (empty($usemargins)) $usemargins=0;
 	}
 	?>
 	</td>
+<<<<<<< HEAD
 	<?php if ($object->element == 'askpricesupplier') { ?>
 		<td align="right"><?php echo $line->ref_fourn; ?></td>
 	<?php } ?>
+=======
+
+	<?php if ($object->element == 'askpricesupplier') { ?>
+		<td align="right"><?php echo $line->ref_fourn; ?></td>
+	<?php } ?>
+
+>>>>>>> NEW : Intégration du module "Demande de prix fournisseur". PS dsl pour le commit de bourrin
 	<td align="right" class="nowrap"><?php $coldisplay++; ?><?php echo vatrate($line->tva_tx,'%',$line->info_bits); ?></td>
 
 	<td align="right" class="nowrap"><?php $coldisplay++; ?><?php echo price($line->subprice); ?></td>

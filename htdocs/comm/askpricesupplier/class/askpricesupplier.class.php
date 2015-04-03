@@ -121,6 +121,7 @@ class AskPriceSupplier extends CommonObject
 	 */
     var $total;
 
+
     var $cond_reglement_id;
     var $cond_reglement_code;
     var $fk_account;				// Id of bank account
@@ -2953,4 +2954,3 @@ class AskPriceSupplierLine  extends CommonObject
     }
 
 }
-

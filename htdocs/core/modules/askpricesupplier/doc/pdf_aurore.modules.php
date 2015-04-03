@@ -1266,7 +1266,6 @@ class pdf_aurore extends ModelePDFAskPriceSupplier
 		$pdf->SetTextColor(0,0,60);
 		$pdf->MultiCell(100, 3, $outputlangs->transnoentities("AskPriceSupplierDate")." : " . dol_print_date($object->date_livraison,"day",false,$outputlangs,true), '', 'R');
 */
-
 		if ($object->client->code_client)
 		{
 			$posy+=4;
@@ -1390,4 +1389,3 @@ class pdf_aurore extends ModelePDFAskPriceSupplier
 	}
 
 }
-

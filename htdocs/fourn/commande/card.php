@@ -74,6 +74,10 @@ $lineid = GETPOST('lineid', 'int');
 $origin = GETPOST('origin', 'alpha');
 $originid = (GETPOST('originid', 'int') ? GETPOST('originid', 'int') : GETPOST('origin_id', 'int')); // For backward compatibility
 
+//Askpricesupplier
+$origin = GETPOST('origin', 'alpha');
+$originid = GETPOST('originid', 'int');
+
 //PDF
 $hidedetails = (GETPOST('hidedetails','int') ? GETPOST('hidedetails','int') : (! empty($conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_DETAILS) ? 1 : 0));
 $hidedesc 	 = (GETPOST('hidedesc','int') ? GETPOST('hidedesc','int') : (! empty($conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_DESC) ?  1 : 0));
@@ -707,7 +711,7 @@ if (empty($reshook))
 	    $result	= $object->commande($user, $_REQUEST["datecommande"],	$_REQUEST["methode"], $_REQUEST['comment']);
 	    if ($result > 0)
 	    {
-	        if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) 
+	        if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE))
 	        {
                	$outputlangs = $langs;
 	        	$newlang = '';
@@ -1621,7 +1625,7 @@ if ($action=='create')
 	print "</form>\n";
 
 	// Show origin lines
-	if (! empty($origin) && ! empty($originid) && is_object($objectsrc)) 
+	if (! empty($origin) && ! empty($originid) && is_object($objectsrc))
 	{
 		$title = $langs->trans('ProductsAndServices');
 		print load_fiche_titre($title,'','');
@@ -1681,7 +1685,7 @@ elseif (! empty($object->id))
 		$object->date_commande=dol_now();
 
 		// We check if number is temporary number
-		if (preg_match('/^[\(]?PROV/i',$object->ref) || empty($object->ref)) // empty should not happened, but when it occurs, the test save life 
+		if (preg_match('/^[\(]?PROV/i',$object->ref) || empty($object->ref)) // empty should not happened, but when it occurs, the test save life
 		{
 		    $newref = $object->getNextNumRef($object->thirdparty);
 		}

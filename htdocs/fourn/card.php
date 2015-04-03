@@ -417,7 +417,7 @@ if ($object->id > 0)
 			$object_count = $db->fetch_object($resql);
 			$num = $object_count->total;
 		}
-		
+
 		$sql  = "SELECT p.rowid,p.ref, p.date_commande as dc, p.fk_statut, p.total_ht, p.tva as total_tva, p.total_ttc";
 		$sql.= " FROM ".MAIN_DB_PREFIX."commande_fournisseur as p ";
 		$sql.= " WHERE p.fk_soc =".$object->id;
@@ -586,7 +586,6 @@ if ($object->id > 0)
 		$langs->load("askpricesupplier");
 		print '<a class="butAction" href="'.DOL_URL_ROOT.'/comm/askpricesupplier/card.php?action=create&socid='.$object->id.'">'.$langs->trans("AddAskPriceSupplier").'</a>';
 	}
-
 	if ($user->rights->fournisseur->facture->creer)
 	{
 		if (! empty($orders2invoice) && $orders2invoice > 0) print '<div class="inline-block divButAction"><a class="butAction" href="'.DOL_URL_ROOT.'/fourn/commande/orderstoinvoice.php?socid='.$object->id.'">'.$langs->trans("CreateInvoiceForThisCustomer").'</a></div>';

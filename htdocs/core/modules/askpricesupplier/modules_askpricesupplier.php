@@ -23,8 +23,8 @@
 /**
  *  \file       htdocs/core/modules/propale/modules_propale.php
  *  \ingroup    propale
- *  \brief      Fichier contenant la classe mere de generation des propales en PDF
- *  			et la classe mere de numerotation des propales
+ *  \brief      Fichier contenant la classe mere de generation des demandes de prix en PDF
+ *  			et la classe mere de numerotation des demandes de prix
  */
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commondocgenerator.class.php';
@@ -165,4 +165,3 @@ function askpricesupplier_pdf_create(DoliDB $db, AskPriceSupplier $object, $mode
 
 	return $object->generateDocument($modele, $outputlangs, $hidedetails, $hidedesc, $hideref);
 }
-
