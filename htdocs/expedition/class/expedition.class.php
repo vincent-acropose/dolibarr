@@ -565,6 +565,7 @@ class Expedition extends CommonObject
 		$sql.= " ref='".$numref."'";
 		$sql.= ", fk_statut = 1";
 		$sql.= ", date_valid = '".$this->db->idate($now)."'";
+		$sql.= ", date_delivery = '".$this->db->idate($now)."'";
 		$sql.= ", fk_user_valid = ".$user->id;
 		$sql.= " WHERE rowid = ".$this->id;
 

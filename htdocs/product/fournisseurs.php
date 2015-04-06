@@ -64,6 +64,9 @@ $hookmanager->initHooks(array('pricesuppliercard'));
 $product = new ProductFournisseur($db);
 $product->fetch($id,$ref);
 
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$product,$action);    // Note that $action and $object may have been modified by some hooks
+$error=$hookmanager->error; $errors=$hookmanager->errors;
+
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
 
@@ -297,12 +300,6 @@ if ($id || $ref)
 					print '<input type="hidden" name="id_fourn" value="'.$socid.'">';
 					print '<input type="hidden" name="ref_fourn" value="'.$product->fourn_ref.'">';
 					print '<input type="hidden" name="ref_fourn_price_id" value="'.$rowid.'">';
-					
-					if (is_object($hookmanager))
-					{
-						$parameters=array('id_fourn'=>$id_fourn,'prod_id'=>$product->id);
-					    $reshook=$hookmanager->executeHooks('formEditThirdpartyOptions',$parameters,$object,$action);
-					}
 				}
 				else
 				{
@@ -437,12 +434,6 @@ if ($id || $ref)
 				}
 			}
 
-			if (is_object($hookmanager))
-			{
-				$hookmanager->initHooks(array('pricesuppliercard'));
-        			$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$product,$action);
-			}
-
 			print "\n</div>\n";
 			print '<br>';
 
@@ -537,12 +528,6 @@ if ($id || $ref)
 							print '<td align="right">';
 							print $productfourn->fourn_unitcharges?price($productfourn->fourn_unitcharges) : ($productfourn->fourn_qty?price($productfourn->fourn_charges/$productfourn->fourn_qty):"&nbsp;");
 							print '</td>';
-						}
-						
-						if (is_object($hookmanager))
-						{
-							$parameters=array('lineid'=>$productfourn->product_fourn_price_id);
-						    $reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$object,$action);
 						}
 
 						if (is_object($hookmanager))
