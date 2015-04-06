@@ -131,6 +131,7 @@ class HookManager
         // Define type of hook ('output', 'returnvalue' or 'addreplace'). 'addreplace' should be type for all hooks. 'output' and 'returnvalue' are deprecated.
         $hooktype='output';
         if (preg_match('/^pdf_/',$method)) $hooktype='returnvalue';	// pdf_xxx except pdf_writelinedesc are returnvalue hooks. When there is 2 hooks of this type, only last one win.
+        if ($method =='insertExtraFields') $hooktype='returnvalue';
         if (in_array(
         	$method,
         	array(
@@ -183,7 +184,7 @@ class HookManager
                     		}*/
                     	}
 
-                    	if (is_array($actionclassinstance->results))  $this->resArray =array_merge($this->resArray, $actionclassinstance->results);
+                    	if (isset($actionclassinstance->results) && is_array($actionclassinstance->results))  $this->resArray =array_merge($this->resArray, $actionclassinstance->results);
                     	if (! empty($actionclassinstance->resprints)) $this->resPrint.=$actionclassinstance->resprints;
                     }
                     // Generic hooks that return a string or array (printSearchForm, printLeftBlock, formAddObjectLine, formBuilddocOptions, ...)

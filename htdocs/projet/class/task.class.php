@@ -287,8 +287,8 @@ class Task extends CommonObject
         $sql.= " description=".(isset($this->description)?"'".$this->db->escape($this->description)."'":"null").",";
         $sql.= " duration_effective=".(isset($this->duration_effective)?$this->duration_effective:"null").",";
         $sql.= " planned_workload=".(isset($this->planned_workload)?$this->planned_workload:"0").",";
-        $sql.= " dateo=".($this->date_start!=''?$this->db->idate($this->date_start):'null').",";
-        $sql.= " datee=".($this->date_end!=''?$this->db->idate($this->date_end):'null').",";
+        $sql.= " dateo=".($this->date_start!=''?"'".$this->db->idate($this->date_start)."'":'null').",";
+        $sql.= " datee=".($this->date_end!=''?"'".$this->db->idate($this->date_end)."'":'null').",";
         $sql.= " progress=".$this->progress.",";
         $sql.= " rang=".((!empty($this->rang))?$this->rang:"0");
         $sql.= " WHERE rowid=".$this->id;
@@ -1022,7 +1022,8 @@ class Task extends CommonObject
 
 		$error=0;
 
-		$now=dol_now();
+		//Use 00:00 of today if time is use on task.
+		$now=dol_mktime(0,0,0,dol_print_date(dol_now(),'%m'),dol_print_date(dol_now(),'%d'),dol_print_date(dol_now(),'%Y'));
 
 		$datec = $now;
 
