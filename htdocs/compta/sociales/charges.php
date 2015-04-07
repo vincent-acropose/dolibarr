@@ -96,7 +96,7 @@ if ($action == 'add' && $user->rights->tax->charges->creer)
 		$mesg='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentities("Type")).'</div>';
 		$action = 'create';
 	}
-	elseif (! empty($amount))
+	elseif (empty($amount))
 	{
 		$mesg='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentities("Amount")).'</div>';
 		$action = 'create';
