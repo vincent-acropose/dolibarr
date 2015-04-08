@@ -2,8 +2,8 @@
 Delivery=Livraison
 Deliveries=Livraisons
 DeliveryCard=Fiche réception
-DeliveryOrder=Bon de réception
-DeliveryOrders=Bons de réception
+DeliveryOrder=Bon de livraison
+DeliveryOrders=Bons de livraison
 DeliveryDate=Date de livraison
 DeliveryDateShort=Date réc.
 CreateDeliveryOrder=Générer bon de réception
@@ -15,7 +15,7 @@ DeleteDeliveryReceipt=Supprimer le bon de livraison
 DeleteDeliveryReceiptConfirm=Êtes-vous sûr de vouloir supprimer ce bon de livraison <b>%s</b> ?
 DeliveryMethod=Méthode de livraison
 TrackingNumber=Numéro de suivi
-DeliveryNotValidated=Bon de réception non validé
+DeliveryNotValidated=Bon de livraison non validé
 # merou PDF model
 NameAndSignature=Nom et Signature :
 ToAndDate=A___________________________________ le ____/_____/__________
