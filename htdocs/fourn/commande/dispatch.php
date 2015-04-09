@@ -53,6 +53,12 @@ if (empty($conf->stock->enabled))
 	accessforbidden();
 }
 
+dol_include_once('/core/class/hookmanager.class.php');
+$hookmanager=new HookManager($db);
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('ordersupplier_receptioncard'));
+
+
 // Recuperation	de l'id	de projet
 $projectid =	0;
 if ($_GET["projectid"]) $projectid = GETPOST("projectid",'int');
@@ -67,6 +73,11 @@ if ($_POST["action"] ==	'dispatch' && $user->rights->fournisseur->commande->rece
 {
 	$commande = new CommandeFournisseur($db);
 	$commande->fetch($id);
+
+	//$parameters=array('id'=>$object->id);
+	$paramaters = array();
+    $reshook=$hookmanager->executeHooks('doActions',$parameters,$commande,$action); // Note that $action and $object may have been modified by some hooks
+	
 
 	$db->begin();
 
@@ -269,7 +280,8 @@ if ($id > 0 || ! empty($ref))
 				$db->free($resql);
 			}
 
-			$sql = "SELECT l.fk_product, l.subprice, l.remise_percent, SUM(l.qty) as qty,";
+			//$sql = "SELECT l.fk_product, l.subprice, l.remise_percent, SUM(l.qty) as qty,";
+		 	$sql = "SELECT l.rowid, l.fk_commande, l.fk_product, l.subprice, SUM(l.qty) as qty,";
 			$sql.= " p.ref, p.label,  p.tobatch";
 			$sql.= " FROM ".MAIN_DB_PREFIX."commande_fournisseurdet as l";
 			$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product as p ON l.fk_product=p.rowid";
@@ -292,6 +304,15 @@ if ($id > 0 || ! empty($ref))
 					print '<td align="right">'.$langs->trans("QtyDispatched").'</td>';
 					print '<td align="right">'.$langs->trans("QtyDelivered").'</td>';
 					print '<td align="right">'.$langs->trans("Warehouse").'</td>';
+					
+					//Dev spé
+					print '<td align="right">'.$langs->trans("Ancien prix").'</td>';
+                    print '<td align="right">'.$langs->trans("Nouveau prix").'</td>';
+                    print '<td align="right">'.$langs->trans("Information").'</td>';
+                    print '<td align="right">'.$langs->trans("Calcul (coeff * pa HT * TVA) ").'</td>';
+                    print '<td align="right">'.$langs->trans("Coeff").'</td>';
+					//Fin Dev spé
+					
 					print "</tr>\n";
 					if (!empty($conf->productbatch->enabled)) {
 						print '<tr class="liste_titre">';
@@ -384,6 +405,14 @@ if ($id > 0 || ! empty($ref))
 							{
 								print $langs->trans("NoWarehouseDefined");
 							}
+							
+							//Dev spé
+							//$parameters=array('id'=>$object->id);
+							$objp->fk_commande = $commande->id;
+							$parameters = array();
+		                  	$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$objp,$action); // Note that $action and $object may have been modified by some hooks
+							//Fin Dev spé
+							
 							print "</td>\n";
 							print "</tr>\n";
 						}
