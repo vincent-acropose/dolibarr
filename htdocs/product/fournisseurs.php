@@ -372,7 +372,7 @@ if ($id || $ref)
 				print '<tr><td class="fieldrequired">'.$langs->trans("PriceQtyMin").'</td>';
 				print '<td><input class="flat" name="price" size="8" value="'.(GETPOST('price')?price(GETPOST('price')):(isset($product->fourn_price)?price($product->fourn_price):'')).'">';
 				print '&nbsp;';
-				print $form->select_PriceBaseType((GETPOST('price_base_type')?GETPOST('price_base_type'):$product->price_base_type), "price_base_type");
+				print $form->select_PriceBaseType((GETPOST('price_base_type')?GETPOST('price_base_type'):'HT'), "price_base_type"); // Toujours le prix HT qui est stocké :/
 				print '</td></tr>';
 
 				// Discount qty min
