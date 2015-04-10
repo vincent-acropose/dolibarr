@@ -58,7 +58,13 @@ $shipment=new Expedition($db);
 $helpurl='EN:Module_Shipments|FR:Module_Exp&eacute;ditions|ES:M&oacute;dulo_Expediciones';
 llxHeader('',$langs->trans('ListOfSendings'),$helpurl);
 
-$sql = "SELECT e.rowid, e.ref, e.date_delivery as date_expedition, l.date_delivery as date_livraison, e.fk_statut";
+$sql = "SELECT DISTINCT e.rowid, e.ref, e.date_delivery as date_expedition, 
+	(SELECT l.date_delivery 
+		FROM ".MAIN_DB_PREFIX."livraison l,".MAIN_DB_PREFIX."element_element as ee 
+		WHERE l.rowid = ee.fk_target AND ee.targettype = 'delivery' 
+		AND e.rowid = ee.fk_source AND ee.sourcetype = 'shipping'
+	ORDER BY l.date_delivery DESC LIMIT 1)  as date_livraison
+, e.fk_statut";
 $sql.= ", s.nom as socname, s.rowid as socid";
 $sql.= " FROM (".MAIN_DB_PREFIX."expedition as e";
 if (!$user->rights->societe->client->voir && !$socid)	// Internal user with no permission to see all
@@ -67,8 +73,7 @@ if (!$user->rights->societe->client->voir && !$socid)	// Internal user with no p
 }
 $sql.= ")";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = e.fk_soc";
-$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as ee ON e.rowid = ee.fk_source AND ee.sourcetype = 'shipping'";
-$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."livraison as l ON l.rowid = ee.fk_target AND ee.targettype = 'delivery'";
+//$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as ee ON (e.rowid = ee.fk_source AND ee.sourcetype = 'shipping')";
 $sql.= " WHERE e.entity = ".$conf->entity;
 if (!$user->rights->societe->client->voir && !$socid)	// Internal user with no permission to see all
 {
