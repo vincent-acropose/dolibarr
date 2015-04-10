@@ -390,16 +390,19 @@ if ($id > 0 || ! empty($ref))
 
 							// Dispatch
 							print '<td align="right"><input name="qty'.$suffix.'" type="text" size="8" value="'.($remaintodispatch).'"></td>';
+			
+			//Dev spé -- dsl pour le code de ... c'est un truc à mettre en conf			
+			$default_warehouse = $conf->entity == 1 ? 1 : 3;
 
 							// Warehouse
 							print '<td align="right">';
 							if (count($listwarehouses)>1)
 							{
-								print $form->selectarray("entrepot".$suffix, $listwarehouses, '', 1, 0, 0, '', 0, 0, $disabled);
+								print $form->selectarray("entrepot".$suffix, $listwarehouses, $default_warehouse, 1, 0, 0, '', 0, 0, $disabled);
 							}
 							elseif  (count($listwarehouses)==1)
 							{
-								print $form->selectarray("entrepot".$suffix, $listwarehouses, '', 0, 0, 0, '', 0, 0, $disabled);
+								print $form->selectarray("entrepot".$suffix, $listwarehouses, $default_warehouse, 0, 0, 0, '', 0, 0, $disabled);
 							}
 							else
 							{
