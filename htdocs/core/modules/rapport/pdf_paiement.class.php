@@ -215,7 +215,7 @@ class pdf_paiement
 		// New page
 		$pdf->AddPage();
 		$pagenb++;
-		$this->_pagehead($pdf, $pages, 1, $outputlangs);
+		$this->_pagehead($pdf, 1, 1, $outputlangs);
 		$pdf->SetFont('','', 9);
 		$pdf->MultiCell(0, 3, '');		// Set interline to 3
 		$pdf->SetTextColor(0,0,0);
