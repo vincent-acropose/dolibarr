@@ -204,15 +204,32 @@ if (($action == 'create' || $action == 'add') && empty($mesgs))
 								$db->rollback();
 							}
 						}
-
+						
+						$iterateur = 0;
+						
 						while ($ii < $nn)
 						{
+							
+							$iterateur++;
+							
 							include_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
 							$objectsrc = new Commande($db);
 							dol_syslog("Try to find source object origin=".$object->origin." originid=".$object->origin_id." to add lines");
 							$result=$objectsrc->fetch($orders_id[$ii]);
 							if ($result > 0)
 							{
+								
+								if($conf->subtotal->enabled) {
+									
+									dol_include_once('/subtotal/class/actions_subtotal.class.php');
+									
+									$TSubTotal = new ActionsSubtotal();								
+									if(method_exists($TSubTotal, 'addSubTotalLine')) {
+										$TSubTotal->addSubTotalLine($object, 'Commande : "'.$objectsrc->ref.'", Réf. client : "'.$objectsrc->ref_client.'"', 1);
+									}
+
+								}
+								
 								if ($closeOrders) 
 								{
 									$objectsrc->classifyBilled();
@@ -222,6 +239,7 @@ if (($action == 'create' || $action == 'add') && empty($mesgs))
 								if (empty($lines) && method_exists($objectsrc,'fetch_lines'))  $lines = $objectsrc->fetch_lines();
 								$fk_parent_line=0;
 								$num=count($lines);
+								
 								for ($i=0;$i<$num;$i++)
 								{
 									$desc=($lines[$i]->desc?$lines[$i]->desc:$lines[$i]->libelle);
@@ -285,7 +303,7 @@ if (($action == 'create' || $action == 'add') && empty($mesgs))
 												'HT',
 												0,
 												$product_type,
-												$lines[$i]->rang,
+												$iterateur+1,
 												$lines[$i]->special_code,
 												$object->origin,
 												$lines[$i]->rowid,
@@ -309,6 +327,9 @@ if (($action == 'create' || $action == 'add') && empty($mesgs))
 											$fk_parent_line = $result;
 										}
 									}
+
+									$iterateur++;
+									
 								}
 							}
 							else
