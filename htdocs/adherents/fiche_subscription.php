@@ -43,11 +43,17 @@ $typeid=isset($_GET["typeid"])?$_GET["typeid"]:$_POST["typeid"];
 if (! $user->rights->adherent->cotisation->lire)
 	 accessforbidden();
 
-
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('subscriptionmembercard'));
 /*
  * 	Actions
  */
+$subscription->fetch($rowid);
+ 
+$parameters=array('rowid'=>$rowid);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$subscription,$action);    // Note that $action and $object may have been modified by some hooks
 
+ 
 if ($user->rights->adherent->cotisation->creer && $_REQUEST["action"] == 'update' && ! $_POST["cancel"])
 {
 	// Charge objet actuel
@@ -238,7 +244,11 @@ if ($user->rights->adherent->cotisation->creer && $action == 'edit')
 	    	print '</td></tr>';
 	    }
 	}
-
+	
+	// Other attributes
+	$parameters = array();
+	$reshook = $hookmanager->executeHooks('formObjectOptions', $parameters, $subscription, $action); // Note that $action and $object may have been modified by
+	
 	print '<tr><td colspan="3" align="center">';
 	print '<input type="submit" class="button" name="submit" value="'.$langs->trans("Save").'">';
 	print ' &nbsp; &nbsp; &nbsp; ';
@@ -352,7 +362,10 @@ if ($rowid && $action != 'edit')
 	    	print '</td></tr>';
 	    }
 	}
-
+	
+	// Other attributes
+	$parameters = array();
+	$reshook = $hookmanager->executeHooks('formObjectOptions', $parameters, $subscription, $action); // Note that $action and $object may have been modified by
 
     print "</table>\n";
     print '</form>';
@@ -366,6 +379,8 @@ if ($rowid && $action != 'edit')
      */
     print '<div class="tabsAction">';
 
+	$parameters = array();
+	$reshook = $hookmanager->executeHooks('addMoreActionsButtons', $parameters, $subscription, $action); // Note that $action and $object may have been
     if ($user->rights->adherent->cotisation->creer)
 	{
 		if (! $bankline->rappro)
