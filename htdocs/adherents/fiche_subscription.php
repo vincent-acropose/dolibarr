@@ -48,6 +48,7 @@ $permissionnote = $user->rights->adherent->cotisation->creer; // Used by the inc
 $permissiondellink=$user->rights->adherent->cotisation->creer;	// Used by the include of actions_dellink.inc.php
 $permissiontoedit = $user->rights->adherent->cotisation->creer; // Used by the include of actions_lineupdonw.inc.php
 
+$hookmanager->initHooks(array('subscriptionmembercard'));
 
 /*
  * 	Actions
@@ -61,6 +62,10 @@ include DOL_DOCUMENT_ROOT.'/core/actions_dellink.inc.php';		// Must be include, 
 
 //include DOL_DOCUMENT_ROOT.'/core/actions_lineupdown.inc.php';	// Must be include, not include_once
 
+$subscription->fetch($rowid);
+ 
+$parameters=array('rowid'=>$rowid);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$subscription,$action);    // Note that $action and $object may have been modified by some hooks
 
 if ($user->rights->adherent->cotisation->creer && $_REQUEST["action"] == 'update' && ! $_POST["cancel"])
 {
@@ -264,6 +269,10 @@ if ($user->rights->adherent->cotisation->creer && $action == 'edit')
 	
 	dol_fiche_end();
 	
+	$parameters = array();
+	$reshook = $hookmanager->executeHooks('formObjectOptions', $parameters, $subscription, $action); // Note that $action and $object may have been modified by
+
+
     print '<div class="center">';
     print '<input type="submit" class="button" name="submit" value="'.$langs->trans("Save").'">';
 	print ' &nbsp; &nbsp; &nbsp; ';
@@ -371,6 +380,9 @@ if ($rowid && $action != 'edit')
 	    	print '</td></tr>';
 	    }
 	}
+// Other attributes
+	$parameters = array();
+	$reshook = $hookmanager->executeHooks('formObjectOptions', $parameters, $subscription, $action); // Note that $action and $object may have been modified by
 
 
     print "</table>\n";
@@ -384,6 +396,8 @@ if ($rowid && $action != 'edit')
      */
     print '<div class="tabsAction">';
 
+	$parameters = array();
+	$reshook = $hookmanager->executeHooks('addMoreActionsButtons', $parameters, $subscription, $action); // Note that $action and $object may have been
     if ($user->rights->adherent->cotisation->creer)
 	{
 		if (! $bankline->rappro)
