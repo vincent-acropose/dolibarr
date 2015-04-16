@@ -894,7 +894,7 @@ if (! empty ( $conf->global->PRODUIT_CUSTOMER_PRICES )) {
 		print '<tr>';
 		print '<td>' . $langs->trans ( 'ThirdParty' ) . '</td>';
 		print '<td>';
-		print $form->select_company ( '', 'socid', 's.rowid NOT IN (SELECT fk_soc FROM ' . MAIN_DB_PREFIX . 'product_customer_price)', 1 );
+		print $form->select_company ( '', 'socid', 's.rowid NOT IN (SELECT fk_soc FROM ' . MAIN_DB_PREFIX . 'product_customer_price WHERE fk_product='.$object->id.')', 1 );
 		print '</td>';
 		print '</tr>';
 		
