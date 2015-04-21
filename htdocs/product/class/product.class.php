@@ -3453,7 +3453,7 @@ class Product extends CommonObject
 	 *    @return     int                  < 0 if KO, > 0 if OK
 	 *    @see		  load_virtual_stock, getBatchInfo
 	 */
-	function load_stock($option='')
+	function load_stock($option='physical')
 	{
 		$this->stock_reel = 0;
 		$this->stock_warehouse = array();
@@ -3489,7 +3489,7 @@ class Product extends CommonObject
 
 			if (! preg_match('/novirtual/', $option)) 
 			{
-			    $this->load_virtual_stock();		// This also load stats_commande_fournisseur, ...
+			    $this->load_virtual_stock($option);		// This also load stats_commande_fournisseur, ...
 			}
 
 			return 1;
@@ -3508,7 +3508,7 @@ class Product extends CommonObject
 	 *    @return   int             < 0 if KO, > 0 if OK
 	 *    @see		load_stock, getBatchInfo
 	 */
-    function load_virtual_stock()
+    function load_virtual_stock($mode='')
     {
         global $conf;
 
@@ -3531,7 +3531,10 @@ class Product extends CommonObject
         }
         if (! empty($conf->fournisseur->enabled))
         {
-            $result=$this->load_stats_commande_fournisseur(0,'1,2,3,4');
+            if($mode == 'virtual') $result=$this->load_stats_commande_fournisseur(0,'0,1,2,3');
+            else $result=$this->load_stats_commande_fournisseur(0,'3');
+	    
+	    $result=$this->load_stats_commande_fournisseur(0,'1,2,3,4');
             if ($result < 0) dol_print_error($this->db,$this->error);
             $stock_commande_fournisseur=$this->stats_commande_fournisseur['qty'];
 
