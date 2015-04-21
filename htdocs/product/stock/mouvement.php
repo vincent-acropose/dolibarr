@@ -88,8 +88,11 @@ if ($action == "correct_stock" && ! $_POST["cancel"])
         $product = new Product($db);
         $result=$product->fetch($product_id);
 
+		$author = new User($db);
+		$author->fetch($_POST['author']);
+		
         $result=$product->correct_stock(
-            $user,
+            $author,
             $id,
             $_POST["nbpiece"],
             $_POST["mouvement"],
@@ -309,6 +312,14 @@ if ($resql)
         print '<input type="hidden" name="action" value="correct_stock">';
         print '<table class="border" width="100%">';
 
+		// User
+		print '<tr>';
+        print '<td width="20%">' . $langs->trans("User") . '</td>';
+        print '<td colspan="4">';
+        print $form->select_users($user->id, 'author');
+        print '</td>';
+        print '</tr>';
+		
         // Warehouse
         print '<tr>';
         print '<td width="20%">'.$langs->trans("Product").'</td>';
