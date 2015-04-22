@@ -90,6 +90,9 @@ if ($action == 'setdesiredstock')
 // Correct stock
 if ($action == "correct_stock" && ! $cancel)
 {
+	$author = new User($db);
+	$author->fetch($_POST['author']);
+
 	if (! (GETPOST("id_entrepot") > 0))
 	{
 		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Warehouse")), 'errors');
@@ -128,7 +131,7 @@ if ($action == "correct_stock" && ! $cancel)
 				$d_eatby=dol_mktime(12, 0, 0, $_POST['eatbymonth'], $_POST['eatbyday'], $_POST['eatbyyear']);
 				$d_sellby=dol_mktime(12, 0, 0, $_POST['sellbymonth'], $_POST['sellbyday'], $_POST['sellbyyear']);
 				$result=$product->correct_stock_batch(
-					$user,
+					$author,
 					GETPOST("id_entrepot"),
 					GETPOST("nbpiece"),
 					GETPOST("mouvement"),
@@ -140,7 +143,7 @@ if ($action == "correct_stock" && ! $cancel)
 				);		// We do not change value of stock for a correction
 			} else {
 			$result=$product->correct_stock(
-	    		$user,
+	    		$author,
 	    		GETPOST("id_entrepot"),
 	    		GETPOST("nbpiece"),
 	    		GETPOST("mouvement"),
@@ -425,9 +428,17 @@ if ($id > 0 || $ref)
 		print '<input type="hidden" name="action" value="correct_stock">';
 		print '<table class="border" width="100%">';
 
+		// User
+		print '<tr>';
+        print '<td width="20%">' . $langs->trans("User") . '</td>';
+        print '<td colspan="5">';
+        print $form->select_users($user->id, 'author');
+        print '</td>';
+        print '</tr>';
+		
 		// Warehouse
 		print '<tr>';
-		print '<td width="20%" class="fieldrequired" colspan="2">'.$langs->trans("Warehouse").'</td>';
+		print '<td width="20%" class="fieldrequired">'.$langs->trans("Warehouse").'</td>';
 		print '<td width="20%">';
 		print $formproduct->selectWarehouses(($_GET["dwid"]?$_GET["dwid"]:GETPOST('id_entrepot')),'id_entrepot','',1);
 		print '</td>';
@@ -441,7 +452,7 @@ if ($id > 0 || $ref)
 
 		// Label
 		print '<tr>';
-		print '<td width="20%" colspan="2">'.$langs->trans("Label").'</td>';
+		print '<td width="20%">'.$langs->trans("Label").'</td>';
 		print '<td colspan="2">';
 		print '<input type="text" name="label" size="40" value="'.GETPOST("label").'">';
 		print '</td>';
