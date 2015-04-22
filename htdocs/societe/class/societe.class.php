@@ -557,6 +557,26 @@ class Societe extends CommonObject
             $result = -2;
         }
 
+        if (! $this->address)
+        {
+            $this->errors[] = 'ErrorBadAddress';
+            $result = -2;
+        }
+        
+        if (! $this->town)
+        {
+            $this->errors[] = 'ErrorBadTown';
+            $result = -2;
+        }
+        
+        
+        if (! $this->country_id)
+        {
+            $this->errors[] = 'ErrorBadCountry';
+            $result = -2;
+        }
+        
+
         if ($this->client)
         {
             $rescode = $this->check_codeclient();

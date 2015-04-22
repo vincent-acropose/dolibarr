@@ -213,6 +213,30 @@ class Contact extends CommonObject
 		}
 	}
 
+
+    function verify()
+    {
+        global $langs;
+        
+        $this->errors=array();
+
+        $result = 0;
+
+        if (! $this->lastname)
+        {
+            $this->errors[] = $langs->trans("ErrorFieldRequired",$langs->transnoentities("Name").' / '.$langs->transnoentities("Label"));
+            $result = -2;
+        }
+        
+        if(!$this->civility_id) {
+           $this->errors[] = 'ErrorBadCivility';
+           $result = -2; 
+        }
+
+
+        return $result;
+    }
+
 	/**
 	 *      Update informations into database
 	 *
@@ -245,6 +269,10 @@ class Contact extends CommonObject
 		$this->country_id=($this->country_id > 0?$this->country_id:$this->country_id);
 		$this->state_id=($this->state_id > 0?$this->state_id:$this->fk_departement);
 		if (empty($this->statut)) $this->statut = 0;
+
+        $result = $this->verify();
+
+        if($result<0) return $result;
 
 		$this->db->begin();
 

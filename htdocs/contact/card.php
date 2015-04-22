@@ -261,12 +261,7 @@ if (empty($reshook))
 
     if ($action == 'update' && ! $_POST["cancel"] && $user->rights->societe->contact->creer)
     {
-        if (empty($_POST["lastname"]))
-        {
-            $error++; $errors=array($langs->trans("ErrorFieldRequired",$langs->transnoentities("Name").' / '.$langs->transnoentities("Label")));
-            $action = 'edit';
-        }
-
+       
         if (! $error)
         {
         	$contactid=GETPOST("contactid",'int');

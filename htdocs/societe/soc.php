@@ -897,7 +897,7 @@ else
         }
 
         // Address
-        print '<tr><td valign="top"><label for="address">'.$langs->trans('Address').'</label></td>';
+        print '<tr><td valign="top" class="fieldrequired"><label for="address">'.$langs->trans('Address').'</label></td>';
 	    print '<td colspan="3"><textarea name="address" id="address" cols="40" rows="3" wrap="soft">';
         print $object->address;
         print '</textarea></td></tr>';
@@ -1391,7 +1391,7 @@ else
             print '</td></tr>';
 
             // Address
-            print '<tr><td valign="top"><label for="address">'.$langs->trans('Address').'</label></td>';
+            print '<tr><td valign="top" class="fieldrequired"><label for="address">'.$langs->trans('Address').'</label></td>';
 	        print '<td colspan="3"><textarea name="address" id="address" cols="40" rows="3" wrap="soft">';
             print $object->address;
             print '</textarea></td></tr>';
@@ -1399,7 +1399,7 @@ else
             // Zip / Town
             print '<tr><td><label for="zipcode">'.$langs->trans('Zip').'</label></td><td>';
             print $formcompany->select_ziptown($object->zip,'zipcode',array('town','selectcountry_id','state_id'),6);
-            print '</td><td><label for="town">'.$langs->trans('Town').'</label></td><td>';
+            print '</td><td class="fieldrequired"><label for="town">'.$langs->trans('Town').'</label></td><td>';
             print $formcompany->select_ziptown($object->town,'town',array('zipcode','selectcountry_id','state_id'));
             print '</td></tr>';
 
