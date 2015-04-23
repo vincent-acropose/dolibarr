@@ -481,7 +481,7 @@ function show_projects($conf,$langs,$db,$object,$backtopage='')
             $num = $db->num_rows($result);
 
             print '<tr class="liste_titre">';
-            print '<td>'.$langs->trans("Ref").'</td><td>'.$langs->trans("Status").'</td><td>'.$langs->trans("Name").'</td><td align="center">'.$langs->trans("DateStart").'</td><td align="center">'.$langs->trans("DateEnd").'</td>';
+            print '<td>'.$langs->trans("Ref").'</td><td>'.$langs->trans("Name").'</td><td align="center">'.$langs->trans("DateStart").'</td><td align="center">'.$langs->trans("DateEnd").'</td><td>'.$langs->trans("Status").'</td>';
             print '</tr>';
 
             if ($num > 0)
@@ -507,14 +507,14 @@ function show_projects($conf,$langs,$db,$object,$backtopage='')
 
                         // Ref
                         print '<td><a href="'.DOL_URL_ROOT.'/projet/card.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowProject"),($obj->public?'projectpub':'project'))." ".$obj->ref.'</a></td>';
-						// Status
-						print '<td>'.$projectstatic->LibStatut($obj->fk_statut, 5).'</td>';
                         // Label
                         print '<td>'.$obj->title.'</td>';
                         // Date start
                         print '<td align="center">'.dol_print_date($db->jdate($obj->do),"day").'</td>';
                         // Date end
                         print '<td align="center">'.dol_print_date($db->jdate($obj->de),"day").'</td>';
+						// Status
+						print '<td>'.$projectstatic->LibStatut($obj->fk_statut, 5).'</td>';
 
                         print '</tr>';
                     }
