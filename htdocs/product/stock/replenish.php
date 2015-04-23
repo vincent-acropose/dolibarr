@@ -27,6 +27,7 @@ require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.commande.class.php';
+require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.product.class.php';
 require_once './lib/replenishment.lib.php';
 
 $langs->load("products");
@@ -145,7 +146,7 @@ if ($action == 'order' && isset($_POST['valid']))
         foreach ($suppliers as $supplier)
         {
             $order = new CommandeFournisseur($db);
-             // Check if an order for the supplier exists
+            // Check if an order for the supplier exists
             $sql = "SELECT rowid FROM ".MAIN_DB_PREFIX."commande_fournisseur";
             $sql.= " WHERE fk_soc = ".$suppliersid[$i];
             $sql.= " AND source = 42 AND fk_statut = 0";
@@ -218,7 +219,6 @@ if ($action == 'order' && isset($_POST['valid']))
         setEventMessage($langs->trans('SelectProductWithNotNullQty'), 'warnings');
     }
 }
-
 
 /*
  * View
@@ -311,8 +311,8 @@ if ($usevirtualstock)
 	$sqlCommandesFourn.= " WHERE c.rowid = cd.fk_commande";
 	$sqlCommandesFourn.= " AND c.entity = ".$conf->entity;
 	$sqlCommandesFourn.= " AND cd.fk_product = p.rowid";
-	$sqlCommandesFourn.= " AND c.fk_statut IN (3,4))";
-	
+	$sqlCommandesFourn.= " AND c.fk_statut IN (0,3,4))";
+
 	$sqlReceptionFourn = "(SELECT ".$db->ifsql("SUM(fd.qty) IS NULL", "0", "SUM(fd.qty)")." as qty";
 	$sqlReceptionFourn.= " FROM ".MAIN_DB_PREFIX."commande_fournisseur as cf";
 	$sqlReceptionFourn.= " LEFT JOIN ".MAIN_DB_PREFIX."commande_fournisseur_dispatch as fd ON (fd.fk_commande = cf.rowid)";
@@ -475,6 +475,7 @@ print '<td class="liste_titre">&nbsp;</td>'.
 print '</tr>';
 
 $prod = new Product($db);
+$productFournisseur = new ProductFournisseur($db);
 
 $var = True;
 while ($i < ($limit ? min($num, $limit) : $num))
@@ -484,7 +485,7 @@ while ($i < ($limit ? min($num, $limit) : $num))
 	if (! empty($conf->global->STOCK_SUPPORTS_SERVICES) || $objp->fk_product_type == 0)
 	{
 		$prod->fetch($objp->rowid);
-		$prod->load_stock();
+		$prod->load_stock($mode);
 		
 		// Multilangs
 		if (! empty($conf->global->MAIN_MULTILANGS))
@@ -522,10 +523,19 @@ while ($i < ($limit ? min($num, $limit) : $num))
 		{
 			$warning = img_warning($langs->trans('StockTooLow')) . ' ';
 		}
-
+		
+		$productFournisseur->fetch($prod->id);
+		$TProductFournisseur = $productFournisseur->list_product_fournisseur_price($prod->id);
+		$qty_fourn = 0;
+		if(count($TProductFournisseur)  == 1){
+			$qty_fourn = $TProductFournisseur[0]->fourn_qty;
+		}
+		/*echo '<pre>';
+		print_r($TProductFournisseur);*/
 		//depending on conf, use either physical stock or
 		//virtual stock to compute the stock to buy value
 		$stocktobuy = max(max($objp->desiredstock, $objp->alertstock) - $stock - $ordered, 0);
+		$stocktobuy = max($stocktobuy, $qty_fourn);
 		$disabled = '';
 		if($ordered > 0) {
 			$compare = $usevirtualstock ? $stock : $stock + $ordered;
@@ -588,7 +598,6 @@ while ($i < ($limit ? min($num, $limit) : $num))
 	$i++;
 }
 print '</table>';
-
 
 $value=$langs->trans("CreateOrders");
 print '<div class="center"><input class="button" type="submit" name="valid" value="'.$value.'"></div>';

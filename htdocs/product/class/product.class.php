@@ -4,9 +4,9 @@
  * Copyright (C) 2005-2013 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
  * Copyright (C) 2007-2011 Jean Heimburger      <jean@tiaris.info>
- * Copyright (C) 2010-2013 Juanjo Menent        <jmenent@2byte.es>
- * Copyright (C) 2013-2014 Cedric GROSS	        <c.gross@kreiz-it.fr>
- * Copyright (C) 2013-2014 Marcos García        <marcosgdf@gmail.com>
+ * Copyright (C) 2010-2011 Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2013	   Cedric GROSS	        <c.gross@kreiz-it.fr>
+ * Copyright (C) 2013      Marcos García        <marcosgdf@gmail.com>
  * Copyright (C) 2011-2014 Alexandre Spangaro   <alexandre.spangaro@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -2659,7 +2659,7 @@ class Product extends CommonObject
 	function getFather()
 	{
 
-		$sql = "SELECT p.label as label,p.rowid,pa.fk_product_pere as id,p.fk_product_type";
+		$sql = "SELECT p.ref, p.label as label,p.rowid,pa.fk_product_pere as id,p.fk_product_type";
 		$sql.= " FROM ".MAIN_DB_PREFIX."product_association as pa,";
 		$sql.= " ".MAIN_DB_PREFIX."product as p";
 		$sql.= " WHERE p.rowid = pa.fk_product_pere";
@@ -2672,6 +2672,7 @@ class Product extends CommonObject
 			while ($record = $this->db->fetch_array($res))
 			{
 				$prods[$record['id']]['id'] =  $record['rowid'];
+				$prods[$record['id']]['ref'] =  $record['ref'];
 				$prods[$record['id']]['label'] =  $this->db->escape($record['label']);
 				$prods[$record['id']]['fk_product_type'] =  $record['fk_product_type'];
 			}
@@ -2986,7 +2987,7 @@ class Product extends CommonObject
 	 *
 	 *    @return     int             < 0 if KO, > 0 if OK
 	 */
-	function load_stock()
+	function load_stock($mode='physical')
 	{
 		$this->stock_reel = 0;
 		$this->stock_warehouse = array();
@@ -3019,7 +3020,7 @@ class Product extends CommonObject
 				}
 			}
 			$this->db->free($result);
-			$this->load_virtual_stock();
+			$this->load_virtual_stock($mode);
 			return 1;
 		}
 		else
@@ -3034,7 +3035,7 @@ class Product extends CommonObject
 	 *
 	 *    @return     int             < 0 if KO, > 0 if OK
 	 */
-	function load_virtual_stock()
+	function load_virtual_stock($mode='physical')
 	{
 		global $conf;
 
@@ -3057,7 +3058,8 @@ class Product extends CommonObject
 			}
 			if (! empty($conf->fournisseur->enabled))
 			{
-				$result=$this->load_stats_commande_fournisseur(0,'3');
+				if($mode == 'virtual') $result=$this->load_stats_commande_fournisseur(0,'0,1,2,3');
+				else $result=$this->load_stats_commande_fournisseur(0,'3');
 				if ($result < 0) dol_print_error($db,$this->error);
 				$stock_commande_fournisseur=$this->stats_commande_fournisseur['qty'];
 

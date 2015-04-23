@@ -34,6 +34,9 @@ English Dolibarr ChangeLog
 - Fix: [ bug #2543 ] Untranslated "Contract" origin string when creating an invoice from a contract
 - Fix: [ bug #2534 ] SQL error when editing a supplier invoice line
 - Fix: [ bug #2535 ] Untranslated string in "Linked objects" page of a project
+- Fix: [ bug #2545 ] Missing object_margin.png in Amarok theme
+- Fix: [ bug #2542 ] Contracts store localtax preferences
+- Fix: Bad permission assignments for stock movements actions
 
 ***** ChangeLog for 3.6.2 compared to 3.6.1 *****
 - Fix: fix ErrorBadValueForParamNotAString error message in price customer multiprice.
@@ -195,6 +198,11 @@ Fix: [ bug #1757 ] Sorting breaks product/service statistics
 Fix: [ bug #1797 ] Tulip supplier invoice module takes creation date instead of invoice date
 Fix: [ bug #1792 ] Users are not allowed to see margins module index page when no product view permission is enabled
 Fix: [ bug #1846 ] Browser IE11 not detected
+Fix: [ bug #1906 ] Deplacement does not allow translated decimal format
+Fix: [ bug #1905 ] Custom deplacement types do not get translated in deplacement card
+Fix: [ bug #2583 ] Unable to create a bank transfer with localized numbers
+Fix: [ bug #2577 ] Incorrect invoice status in "Linked objects" page of a project
+Fix: [ bug #2576 ] Unable to edit a dictionary entry that has # in its ref
 
 ***** ChangeLog for 3.5.6 compared to 3.5.5 *****
 Fix: Avoid missing class error for fetch_thirdparty method #1973
