@@ -892,13 +892,20 @@ class Contact extends CommonObject
 		global $langs;
 
 		$result='';
-
-		$lien = '<a href="'.DOL_URL_ROOT.'/contact/card.php?id='.$this->id.$moreparam.'">';
+		
+		$TTitle = array();
+		if(!empty($this->phone_pro)) $TTitle[] = 'Tél. pro : '.$this->phone_pro;
+		if(!empty($this->phone_mobile)) $TTitle[] = 'Tél. portable : '.$this->phone_mobile;
+		if(!empty($this->phone_perso)) $TTitle[] = 'Tél. perso. : '.$this->phone_perso;
+		if(!empty($this->email)) $TTitle[] = 'Mail : '.$this->email;
+		$title = 'title="'.implode("\n", $TTitle).'"';
+		
+		$lien = '<a '.$title.' href="'.DOL_URL_ROOT.'/contact/card.php?id='.$this->id.$moreparam.'">';
 		$lienfin='</a>';
 
 		if ($option == 'xxx')
 		{
-			$lien = '<a href="'.DOL_URL_ROOT.'/contact/card.php?id='.$this->id.$moreparam.'">';
+			$lien = '<a '.$title.' href="'.DOL_URL_ROOT.'/contact/card.php?id='.$this->id.$moreparam.'">';
 			$lienfin='</a>';
 		}
 

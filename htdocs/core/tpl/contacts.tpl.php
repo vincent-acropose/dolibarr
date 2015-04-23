@@ -172,6 +172,9 @@ $userstatic=new User($db);
 		</div>
 		<div class="tagtd">
 			<?php
+			
+			$contactstatic->fetch($tab[$i]['id']);
+			
 			if ($tab[$i]['source']=='internal')
 			{
 				$userstatic->id=$tab[$i]['id'];
