@@ -108,7 +108,7 @@ if (empty($reshook)) {
 	    $npr = preg_match('/\*/', $_POST['tva_tx']) ? 1 : 0 ;
 	    $tva_tx = str_replace('*','', GETPOST('tva_tx','alpha'));
 	    $tva_tx = price2num($tva_tx);
-
+		
 	    if ($tva_tx == '')
 	    {
 			$error++;
@@ -137,6 +137,7 @@ if (empty($reshook)) {
 
 		$product = new ProductFournisseur($db);
 		$result=$product->fetch($id);
+		
 		if ($result <= 0)
 		{
 		    $error++;
@@ -150,6 +151,7 @@ if (empty($reshook)) {
 			if (! $error)
 			{
 				$ret=$product->add_fournisseur($user, $id_fourn, $ref_fourn, $quantity);    // This insert record with no value for price. Values are update later with update_buyprice
+				
 				if ($ret == -3)
 				{
 					$error++;
@@ -185,6 +187,20 @@ if (empty($reshook)) {
 			{
 				$db->commit();
 				$action='';
+				
+				if (!empty($conf->climetiffiot->enabled)) {
+					$conditionnement = GETPOST('conditionnement');
+					
+					if (!empty($conditionnement) && $conditionnement > 0) {
+						$sql = '
+							UPDATE ' . MAIN_DB_PREFIX . 'product_fournisseur_price
+							SET conditionnement = ' . $conditionnement . '
+							WHERE rowid = ' . $product->product_fourn_price_id . ';
+						';
+						
+						$result = $db->query($sql);
+					}
+				}
 			}
 			else
 			{
@@ -398,7 +414,28 @@ if ($id || $ref)
 	        		print '</td>';
 					print '</tr>';
 				}
-
+				
+				// Metiffiot : Conditionnement
+				if (!empty($conf->climetiffiot->enabled)) {
+					$objet = null;
+					if ($rowid) {
+						$sql = '
+							SELECT conditionnement
+							FROM ' . MAIN_DB_PREFIX . 'product_fournisseur_price
+							WHERE rowid = ' . $rowid . ';
+						';
+						
+						$statement = $db->query($sql);
+						$objet = $db->fetch_object($statement);
+					}
+					
+					print '<tr>';
+					print '<td>Conditionnement</td>';
+					print '<td><input class="flat" name="conditionnement" size="6" value="'.(!empty($objet) ? $objet->conditionnement : 1) . '">';
+	        		print '</td>';
+					print '</tr>';		
+				}
+				
 				if (is_object($hookmanager))
 				{
 					$parameters=array('id_fourn'=>$id_fourn,'prod_id'=>$product->id);
@@ -456,6 +493,10 @@ if ($id || $ref)
 				print '<td class="liste_titre" align="right">'.$langs->trans("DiscountQtyMin").'</td>';
 				// Charges ????
 				if (! empty($conf->margin->enabled)) print '<td align="right">'.$langs->trans("UnitCharges").'</td>';
+				
+				// Metiffiot
+				if (!empty($conf->climetiffiot->enabled))  print '<td align="right">Conditionnement</td>';
+				
 				print '<td class="liste_titre"></td>';
 				print "</tr>\n";
 
@@ -524,6 +565,23 @@ if ($id || $ref)
 						{
 							print '<td align="right">';
 							print $productfourn->fourn_unitcharges?price($productfourn->fourn_unitcharges) : ($productfourn->fourn_qty?price($productfourn->fourn_charges/$productfourn->fourn_qty):"&nbsp;");
+							print '</td>';
+						}
+						
+						// Metiffiot : Conditionnement
+						if (!empty($conf->climetiffiot->enabled)) {
+							// Récupération du conditionnement
+							$sql = '
+								SELECT conditionnement 
+								FROM ' . MAIN_DB_PREFIX . 'product_fournisseur_price 
+								WHERE rowid = ' . $productfourn->product_fourn_price_id . '
+							';
+							
+							$statement = $db->query($sql);
+							$obj = $db->fetch_object($statement);
+							
+							print '<td align="right">';
+							print $obj->conditionnement;
 							print '</td>';
 						}
 
