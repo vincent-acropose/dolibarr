@@ -470,7 +470,7 @@ function show_projects($conf,$langs,$db,$object,$backtopage='')
         print_fiche_titre($langs->trans("ProjectsDedicatedToThisThirdParty"),$buttoncreate,'');
         print "\n".'<table class="noborder" width=100%>';
 
-        $sql  = "SELECT p.rowid,p.title,p.ref,p.public, p.dateo as do, p.datee as de";
+        $sql  = "SELECT p.rowid,p.fk_statut,p.title,p.ref,p.public, p.dateo as do, p.datee as de";
         $sql .= " FROM ".MAIN_DB_PREFIX."projet as p";
         $sql .= " WHERE p.fk_soc = ".$object->id;
         $sql .= " ORDER BY p.dateo DESC";
@@ -481,7 +481,7 @@ function show_projects($conf,$langs,$db,$object,$backtopage='')
             $num = $db->num_rows($result);
 
             print '<tr class="liste_titre">';
-            print '<td>'.$langs->trans("Ref").'</td><td>'.$langs->trans("Name").'</td><td align="center">'.$langs->trans("DateStart").'</td><td align="center">'.$langs->trans("DateEnd").'</td>';
+            print '<td>'.$langs->trans("Ref").'</td><td>'.$langs->trans("Status").'</td><td>'.$langs->trans("Name").'</td><td align="center">'.$langs->trans("DateStart").'</td><td align="center">'.$langs->trans("DateEnd").'</td>';
             print '</tr>';
 
             if ($num > 0)
@@ -507,6 +507,8 @@ function show_projects($conf,$langs,$db,$object,$backtopage='')
 
                         // Ref
                         print '<td><a href="'.DOL_URL_ROOT.'/projet/card.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowProject"),($obj->public?'projectpub':'project'))." ".$obj->ref.'</a></td>';
+						// Status
+						print '<td>'.$projectstatic->LibStatut($obj->fk_statut, 5).'</td>';
                         // Label
                         print '<td>'.$obj->title.'</td>';
                         // Date start
