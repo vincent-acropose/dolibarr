@@ -1169,7 +1169,6 @@ UPDATE llx_bank_url set url = REPLACE( url, 'fiche.php', 'card.php');
 
 -- Add id commandefourndet in llx_commande_fournisseur_dispatch to correct /fourn/commande/dispatch.php display when several times same product in supplier order
 ALTER TABLE llx_commande_fournisseur_dispatch ADD COLUMN fk_commandefourndet INTEGER NOT NULL DEFAULT 0 AFTER fk_product;
-
 -- Module AskPriceSupplier --
 CREATE TABLE llx_askpricesupplier (
   rowid integer NOT NULL AUTO_INCREMENT PRIMARY KEY,
