@@ -468,7 +468,7 @@ else
             }
 
             // Civility
-            print '<tr><td width="15%"><label for="civility_id">'.$langs->trans("UserTitle").'</label></td><td colspan="3">';
+            print '<tr><td width="15%"  class="fieldrequired"><label for="civility_id">'.$langs->trans("UserTitle").'</label></td><td colspan="3">';
             print $formcompany->select_civility(GETPOST("civility_id",'alpha')?GETPOST("civility_id",'alpha'):$object->civility_id);
             print '</td></tr>';
 
@@ -695,7 +695,7 @@ else
             }
 
             // Civility
-            print '<tr><td><label for="civility_id">'.$langs->trans("UserTitle").'</label></td><td colspan="3">';
+            print '<tr><td class="fieldrequired"><label for="civility_id">'.$langs->trans("UserTitle").'</label></td><td colspan="3">';
             print $formcompany->select_civility(isset($_POST["civility_id"])?$_POST["civility_id"]:$object->civility_id);
             print '</td></tr>';
 
