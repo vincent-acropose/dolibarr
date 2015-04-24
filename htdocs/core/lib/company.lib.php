@@ -82,10 +82,24 @@ function societe_prepare_head(Societe $object)
     //show categorie tab
     if (! empty($conf->categorie->enabled)  && ! empty($user->rights->categorie->lire))
     {
+    	$nbCateg = 0;
+		$sql = 'SELECT (SELECT count(*)
+				FROM '.MAIN_DB_PREFIX.'categorie_societe
+				WHERE fk_societe = '.$object->id.')
+				+
+				(SELECT count(*)
+				FROM '.MAIN_DB_PREFIX.'categorie_fournisseur
+				WHERE fk_societe = '.$object->id.') as res';
+		
+		$resql = $db->query($sql);
+		$res = $db->fetch_object($resql);
+		$nbCateg = $res->res;
+		
         $type = 2;
         if ($object->fournisseur) $type = 1;
         $head[$h][0] = DOL_URL_ROOT.'/categories/categorie.php?socid='.$object->id."&type=".$type;
         $head[$h][1] = $langs->trans('Categories');
+		if ($nbCateg > 0) $head[$h][1].= ' <span class="badge">'.$nbCateg.'</span>';
         $head[$h][2] = 'category';
         $h++;
     }

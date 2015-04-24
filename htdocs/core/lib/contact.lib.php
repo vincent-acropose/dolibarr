@@ -30,7 +30,7 @@
  */
 function contact_prepare_head(Contact $object)
 {
-	global $langs, $conf, $user;
+	global $db, $langs, $conf, $user;
 
 	$h = 0;
 	$head = array();
@@ -74,9 +74,21 @@ function contact_prepare_head(Contact $object)
     
     if (! empty($conf->categorie->enabled)  && ! empty($user->rights->categorie->lire))
     {
+    	
+		$nbCateg = 0;
+		
+		$sql = 'SELECT count(*) as res
+				FROM '.MAIN_DB_PREFIX.'categorie_contact
+				WHERE fk_socpeople = '.$object->id;
+		
+		$resql = $db->query($sql);
+		$res = $db->fetch_object($resql);
+		$nbCateg = $res->res;
+		
     	$type = 4;
     	$head[$h][0] = DOL_URL_ROOT.'/categories/categorie.php?id='.$object->id."&type=".$type;
     	$head[$h][1] = $langs->trans('Categories');
+		if ($nbCateg > 0) $head[$h][1].= ' <span class="badge">'.$nbCateg.'</span>';
     	$head[$h][2] = 'category';
     	$h++;
     }

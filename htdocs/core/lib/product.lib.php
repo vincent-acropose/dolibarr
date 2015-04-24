@@ -33,7 +33,7 @@
  */
 function product_prepare_head($object, $user)
 {
-	global $langs, $conf;
+	global $db, $langs, $conf;
 	$langs->load("products");
 
 	$h = 0;
@@ -60,8 +60,19 @@ function product_prepare_head($object, $user)
 	// Show category tab
 	if (! empty($conf->categorie->enabled) && $user->rights->categorie->lire)
 	{
+		
+		$nbCateg = 0;
+		$sql = 'SELECT count(*) as res
+				FROM '.MAIN_DB_PREFIX.'categorie_product
+				WHERE fk_product = '.$object->id;
+		
+		$resql = $db->query($sql);
+		$res = $db->fetch_object($resql);
+		$nbCateg = $res->res;
+		
 		$head[$h][0] = DOL_URL_ROOT."/categories/categorie.php?id=".$object->id.'&type=0';
 		$head[$h][1] = $langs->trans('Categories');
+		if ($nbCateg > 0) $head[$h][1].= ' <span class="badge">'.$nbCateg.'</span>';
 		$head[$h][2] = 'category';
 		$h++;
 	}
