@@ -114,6 +114,40 @@ if ($action == 'add')
 		setEventMessage($langs->trans("Error").($obj->error?' '.$obj->error:''),'errors');
 	}
 }
+else if($action=='exportlist') {
+    
+    $sql = base64_decode(GETPOST('sql'));
+    
+    $resql=$db->query($sql);
+    
+    $first = true;
+    $f1  =tmpfile();
+    $tmpName = tempnam(sys_get_temp_dir(), 'data');
+    $f1 = fopen($tmpName, 'w');
+    
+    while($obj=$db->fetch_object($resql)) {
+        
+        if($first) {
+            $first = false;
+            $THeader=array();
+            foreach($obj as $head=>$dummy) {
+                $THeader[] = $head;
+            }
+           fputcsv($f1, $THeader,";",'"');
+        }
+        
+        fputcsv($f1,  (array) $obj,";",'"');
+    }
+   
+    header('Content-Type: application/csv');
+    header('Content-Disposition: attachment; filename=liste.csv');
+    header('Pragma: no-cache');
+    
+    readfile($tmpName);
+    
+    exit;
+}
+
 
 if (GETPOST('clearlist'))
 {
@@ -346,6 +380,8 @@ if ($object->fetch($id) >= 0)
 					}
 					print '</td>';
 
+        
+
 					if ($allowaddtarget) print '</form>';
 
 					print "</tr>\n";
@@ -372,21 +408,23 @@ if ($object->fetch($id) >= 0)
 	if ($resql)
 	{
 		$num = $db->num_rows($resql);
+        
+       
 
 		$param = "&amp;id=".$object->id;
 		if ($search_lastname)  $param.= "&amp;search_lastname=".urlencode($search_lastname);
 		if ($search_firstname) $param.= "&amp;search_firstname=".urlencode($search_firstname);
 		if ($search_email)     $param.= "&amp;search_email=".urlencode($search_email);
 
-		print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
-		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-		print '<input type="hidden" name="sortfield" value="'.$sortfield.'">';
-		print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
-		print '<input type="hidden" name="id" value="'.$object->id.'">';
+        print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+        print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+        print '<input type="hidden" name="sortfield" value="'.$sortfield.'">';
+        print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
+        print '<input type="hidden" name="id" value="'.$object->id.'">';
 
-		if ($allowaddtarget) {
-			$cleartext='<br></div><div>'.$langs->trans("ToClearAllRecipientsClickHere").': '.'<input type="submit" name="clearlist" class="button" value="'.$langs->trans("TargetsReset").'">';
-		}
+        if ($allowaddtarget) {
+            $cleartext='<br></div><div>'.$langs->trans("ToClearAllRecipientsClickHere").': '.'<input type="submit" name="clearlist" class="button" value="'.$langs->trans("TargetsReset").'">';
+        }
 
 		print_barre_liste($langs->trans("MailSelectedRecipients").$cleartext,$page,$_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,"",$num,$object->nbemail,'');
 
@@ -550,6 +588,19 @@ if ($object->fetch($id) >= 0)
 		print "</table><br>";
 
 		print '</form>';
+
+        if($num ) {
+            print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+            print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+            print '<input type="hidden" name="sql" value="'.base64_encode($sql).'">';
+            print '<input type="hidden" name="id" value="'.$object->id.'">';
+            print '<input type="hidden" name="action" value="exportlist">';
+    
+            print ''.$langs->trans("Exporter la liste").': '.'<input type="submit" name="exportlist" class="button" value="'.$langs->trans("Export").'" />';
+            
+            print '</form>';
+            
+        }
 
 		$db->free($resql);
 	}
