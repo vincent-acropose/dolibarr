@@ -91,6 +91,7 @@ DoNotShowMyTasksOnly=Voir aussi les tâches qui ne me sont pas affectées
 ShowMyTasksOnly=Ne voir que les tâches qui me sont affectées
 TaskRessourceLinks=Affectation ressources
 ProjectsDedicatedToThisThirdParty=Projets dédiés à ce tiers
+ProjectsWhereThirdPartyIsContact=Projets pour lesquels ce tiers a un contact lié
 NoTasks=Aucune tâche pour ce projet
 LinkedToAnotherCompany=Liés à autre société
 TaskIsNotAffectedToYou=Tâche qui ne vous sont pas affectées

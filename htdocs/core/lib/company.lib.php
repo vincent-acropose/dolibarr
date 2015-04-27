@@ -555,6 +555,115 @@ function show_projects($conf,$langs,$db,$object,$backtopage='')
 }
 
 
+
+/**
+ * 		Show html area for list of projects where third party is linked by "Contact/Adresses" tab
+ *
+ *		@param	Conf		$conf			Object conf
+ * 		@param	Translate	$langs			Object langs
+ * 		@param	DoliDB		$db				Database handler
+ * 		@param	Object		$object			Third party object
+ *      @param  string		$backtopage		Url to go once contact is created
+ *      @return	void
+ */
+function show_projects_linked($conf,$langs,$db,$object,$backtopage='')
+{
+    global $user;
+    global $bc;
+
+    $i = -1 ;
+
+    if (! empty($conf->projet->enabled) && $user->rights->projet->lire)
+    {
+        $langs->load("projects");
+
+        $buttoncreate='';
+        /*if (! empty($conf->projet->enabled) && $user->rights->projet->creer)
+        {
+            //$buttoncreate='<a class="butAction" href="'.DOL_URL_ROOT.'/projet/card.php?socid='.$object->id.'&action=create&amp;backtopage='.urlencode($backtopage).'">'.$langs->trans("AddProject").'</a>';
+			$buttoncreate='<a class="addnewrecord" href="'.DOL_URL_ROOT.'/projet/card.php?socid='.$object->id.'&amp;action=create&amp;backtopage='.urlencode($backtopage).'">'.$langs->trans("AddProject");
+			if (empty($conf->dol_optimize_smallscreen)) $buttoncreate.=' '.img_picto($langs->trans("AddProject"),'filenew');
+			$buttoncreate.='</a>'."\n";
+        }*/
+
+        print "\n";
+        print_fiche_titre($langs->trans("ProjectsWhereThirdPartyIsContact"),$buttoncreate,'');
+        print "\n".'<table class="noborder" width=100%>';
+
+        $sql  = "SELECT DISTINCT(p.rowid),p.fk_statut,p.title,p.ref,p.public, p.dateo as do, p.datee as de";
+        $sql .= " FROM ".MAIN_DB_PREFIX."projet as p";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_contact ec ON (ec.element_id = p.rowid)";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople sp ON (sp.rowid = ec.fk_socpeople)";
+        $sql .= " WHERE sp.fk_soc = ".$_REQUEST['socid'];
+        $sql .= " AND ec.fk_c_type_contact IN(170, 171)"; // Chef de projet et contributeur côté contacts tiers pour les projets
+		$sql .= " ORDER BY p.dateo DESC";
+
+        $result=$db->query($sql);
+        if ($result)
+        {
+            $num = $db->num_rows($result);
+
+            print '<tr class="liste_titre">';
+            print '<td>'.$langs->trans("Ref").'</td><td>'.$langs->trans("Name").'</td><td align="center">'.$langs->trans("DateStart").'</td><td align="center">'.$langs->trans("DateEnd").'</td><td>'.$langs->trans("Status").'</td>';
+            print '</tr>';
+
+            if ($num > 0)
+            {
+                require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
+
+                $projectstatic = new Project($db);
+
+                $i=0;
+                $var=false;
+                while ($i < $num)
+                {
+                    $obj = $db->fetch_object($result);
+                    $projectstatic->fetch($obj->rowid);
+
+                    // To verify role of users
+                    $userAccess = $projectstatic->restrictedProjectArea($user);
+
+                    if ($user->rights->projet->lire && $userAccess > 0)
+                    {
+                        $var = !$var;
+                        print "<tr ".$bc[$var].">";
+
+                        // Ref
+                        print '<td><a href="'.DOL_URL_ROOT.'/projet/card.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowProject"),($obj->public?'projectpub':'project'))." ".$obj->ref.'</a></td>';
+                        // Label
+                        print '<td>'.$obj->title.'</td>';
+                        // Date start
+                        print '<td align="center">'.dol_print_date($db->jdate($obj->do),"day").'</td>';
+                        // Date end
+                        print '<td align="center">'.dol_print_date($db->jdate($obj->de),"day").'</td>';
+						// Status
+						print '<td>'.$projectstatic->LibStatut($obj->fk_statut, 5).'</td>';
+
+                        print '</tr>';
+                    }
+                    $i++;
+                }
+            }
+            else
+			{
+                $var = false;
+            	print '<tr '.$bc[$var].'><td colspan="4">'.$langs->trans("None").'</td></tr>';
+            }
+            $db->free($result);
+        }
+        else
+        {
+            dol_print_error($db);
+        }
+        print "</table>";
+
+        print "<br>\n";
+    }
+
+    return $i;
+}
+
+
 /**
  * 		Show html area for list of contacts
  *

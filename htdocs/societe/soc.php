@@ -2241,6 +2241,9 @@ else
 
 	        // Projects list
 	        $result=show_projects($conf,$langs,$db,$object,$_SERVER["PHP_SELF"].'?socid='.$object->id);
+			
+			// Projects linked in "Contacts/Adresses" tab
+			$result=show_projects_linked($conf,$langs,$db,$object,$_SERVER["PHP_SELF"].'?socid='.$object->id);
 		}
     }
 
