@@ -470,6 +470,10 @@ class ActionComm extends CommonObject
 
                 $this->fk_element			= $obj->fk_element;
                 $this->elementtype			= $obj->elementtype;
+                
+                
+                $this->oldcopy = clone $this;
+                
             }
             $this->db->free($resql);
         }
@@ -691,6 +695,7 @@ class ActionComm extends CommonObject
 
             if (! $error && ! $notrigger)
             {
+                
                 // Call trigger
                 $result=$this->call_trigger('ACTION_MODIFY',$user);
                 if ($result < 0) { $error++; }
