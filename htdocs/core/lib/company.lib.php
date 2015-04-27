@@ -590,9 +590,10 @@ function show_projects_linked($conf,$langs,$db,$object,$backtopage='')
         print_fiche_titre($langs->trans("ProjectsWhereThirdPartyIsContact"),$buttoncreate,'');
         print "\n".'<table class="noborder" width=100%>';
 
-        $sql  = "SELECT DISTINCT(p.rowid),p.fk_statut,p.title,p.ref,p.public, p.dateo as do, p.datee as de";
+        $sql  = "SELECT p.rowid,sp.rowid as id_contact,p.fk_statut,p.title,p.ref,p.public, p.dateo as do, p.datee as de, ctc.code";
         $sql .= " FROM ".MAIN_DB_PREFIX."projet as p";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_contact ec ON (ec.element_id = p.rowid)";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact ctc ON (ctc.rowid = ec.fk_c_type_contact)";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople sp ON (sp.rowid = ec.fk_socpeople)";
         $sql .= " WHERE sp.fk_soc = ".$_REQUEST['socid'];
         $sql .= " AND ec.fk_c_type_contact IN(170, 171)"; // Chef de projet et contributeur côté contacts tiers pour les projets
@@ -604,12 +605,13 @@ function show_projects_linked($conf,$langs,$db,$object,$backtopage='')
             $num = $db->num_rows($result);
 
             print '<tr class="liste_titre">';
-            print '<td>'.$langs->trans("Ref").'</td><td>'.$langs->trans("Name").'</td><td align="center">'.$langs->trans("DateStart").'</td><td align="center">'.$langs->trans("DateEnd").'</td><td>'.$langs->trans("Status").'</td>';
+            print '<td>'.$langs->trans("Ref").'</td><td>'.$langs->trans("Name").'</td><td>'.$langs->trans("Contact").'</td><td>'.$langs->trans("ContactType").'</td><td align="center">'.$langs->trans("DateStart").'</td><td align="center">'.$langs->trans("DateEnd").'</td><td>'.$langs->trans("Status").'</td>';
             print '</tr>';
 
             if ($num > 0)
             {
                 require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
+				dol_include_once('/contact/class/contact.class.php');
 
                 $projectstatic = new Project($db);
 
@@ -619,7 +621,9 @@ function show_projects_linked($conf,$langs,$db,$object,$backtopage='')
                 {
                     $obj = $db->fetch_object($result);
                     $projectstatic->fetch($obj->rowid);
-
+					$c = new Contact($db);
+					$c->fetch($obj->id_contact);
+					
                     // To verify role of users
                     $userAccess = $projectstatic->restrictedProjectArea($user);
 
@@ -632,6 +636,10 @@ function show_projects_linked($conf,$langs,$db,$object,$backtopage='')
                         print '<td><a href="'.DOL_URL_ROOT.'/projet/card.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowProject"),($obj->public?'projectpub':'project'))." ".$obj->ref.'</a></td>';
                         // Label
                         print '<td>'.$obj->title.'</td>';
+                        // Label
+                        print '<td>'.$c->getNomUrl(1).'</td>';
+                        // Type contact
+                        print '<td>'.$langs->trans('TypeContact_project_external_'.$obj->code).'</td>'; //PROJECTLEADER
                         // Date start
                         print '<td align="center">'.dol_print_date($db->jdate($obj->do),"day").'</td>';
                         // Date end
