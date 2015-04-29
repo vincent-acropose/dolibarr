@@ -778,6 +778,100 @@ if ($id > 0)
 			dol_print_error($db);
 		}
 	}
+	
+	/*
+	 *   Last invoices linked to session payed buy funders
+	 */
+	if (! empty($conf->facture->enabled) && $user->rights->facture->lire)
+	{
+		$facturestatic = new Facture($db);
+	
+		$sql = '(SELECT DISTINCT f.rowid as facid, f.facnumber, f.type, f.amount, f.total, f.total_ttc ';
+		$sql.= ' ,f.datef as df, f.datec as dc, f.paye as paye, f.fk_statut as statut ';
+		$sql.= ', sopca.fk_soc_OPCA, sess.rowid as sessid ';
+		$sql.= 'FROM '.MAIN_DB_PREFIX.'facture as f ';
+		$sql.= ' INNER JOIN '.MAIN_DB_PREFIX.'agefodd_session_element as se ON se.fk_element=f.rowid AND element_type=\'invoice\' ';
+		$sql.= ' INNER JOIN '.MAIN_DB_PREFIX.'societe as soc ON soc.rowid=f.fk_soc ';
+		$sql.= ' INNER JOIN '.MAIN_DB_PREFIX.'agefodd_session as sess ON sess.rowid=se.fk_session_agefodd ';
+		$sql.= ' INNER JOIN '.MAIN_DB_PREFIX.'agefodd_session_stagiaire as sessta ON sessta.fk_session_agefodd=sess.rowid ';
+		$sql.= ' INNER JOIN '.MAIN_DB_PREFIX.'agefodd_stagiaire as sta on sta.rowid=sessta.fk_stagiaire ';
+		$sql.= ' INNER JOIN '.MAIN_DB_PREFIX.'agefodd_opca as sopca on sopca.fk_session_trainee=sessta.rowid ';
+		$sql.= ' WHERE (sopca.fk_soc_trainee='.$object->id.')) ';
+		$sql.= ' UNION ';
+		$sql.= ' (SELECT DISTINCT f.rowid as facid, f.facnumber, f.type, f.amount, f.total, f.total_ttc ';
+		$sql.= ' ,f.datef as df, f.datec as dc, f.paye as paye, f.fk_statut as statut ';
+		$sql.= ' , sess.fk_soc_OPCA, sess.rowid as sessid ';
+		$sql.= ' FROM '.MAIN_DB_PREFIX.'facture as f ';
+		$sql.= ' INNER JOIN '.MAIN_DB_PREFIX.'agefodd_session_element as se ON se.fk_element=f.rowid AND element_type=\'invoice\'  ';
+		$sql.= ' INNER JOIN '.MAIN_DB_PREFIX.'societe as soc ON soc.rowid=f.fk_soc ';
+		$sql.= ' INNER JOIN '.MAIN_DB_PREFIX.'agefodd_session as sess ON sess.rowid=se.fk_session_agefodd AND sess.fk_soc_OPCA=se.fk_soc ';
+		$sql.= ' WHERE (sess.fk_soc='.$object->id.'))';
+
+	
+	
+		$resql=$db->query($sql);
+		if ($resql)
+		{
+			$var=true;
+			$num = $db->num_rows($resql);
+			$i = 0;
+			if ($num > 0)
+			{
+				dol_include_once('/agefodd/class/agsession.class.php');
+				print '<table class="noborder" width="100%">';
+	
+				$tableaushown=1;
+				print '<tr class="liste_titre">';
+				print '<td colspan="6"><table width="100%" class="nobordernopadding"><tr><td>'.$langs->trans("LastCustomersSessionBills",($num<=$MAXLIST?"":$MAXLIST)).'</td><td align="right"></td>';
+				print '<td width="20px" align="right"></td>';
+				print '</tr></table></td>';
+				print '</tr>';
+			}
+	
+			while ($i < $num && $i < $MAXLIST)
+			{
+				$objp = $db->fetch_object($resql);
+				$var=!$var;
+				print "<tr $bc[$var]>";
+				print '<td class="nowrap">';
+				$socstatic=new Societe($db);
+				$socstatic->fetch($objp->fk_soc_OPCA);
+				print $socstatic->getNomUrl(0);
+				print '</td>';
+				print '<td class="nowrap">';
+				$sessstatic=new Agsession($db);
+				$sessstatic->fetch($objp->fk_soc_OPCA);
+				print $sessstatic->getNomUrl(1);
+				print '</td>';
+				print '<td class="nowrap">';
+				$facturestatic->id=$objp->facid;
+				$facturestatic->ref=$objp->facnumber;
+				$facturestatic->type=$objp->type;
+				print $facturestatic->getNomUrl(1);
+				print '</td>';
+				if ($objp->df > 0)
+				{
+					print '<td align="right" width="80">'.dol_print_date($db->jdate($objp->df),'day').'</td>';
+				}
+				else
+				{
+					print '<td align="right"><b>!!!</b></td>';
+				}
+				print '<td align="right" width="120">'.price($objp->total_ttc).'</td>';
+	
+				print '<td align="right" class="nowrap" width="100" >'.($facturestatic->LibStatut($objp->paye,$objp->statut,5,$objp->am)).'</td>';
+				print "</tr>\n";
+				$i++;
+			}
+			$db->free($resql);
+	
+			if ($num > 0) print "</table>";
+		}
+		else
+		{
+			dol_print_error($db);
+		}
+	}
 
 	print '</div></div></div>';
 	print '<div style="clear:both"></div>';
