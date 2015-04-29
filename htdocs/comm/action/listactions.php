@@ -106,6 +106,17 @@ if (GETPOST("viewcal") || GETPOST("viewweek") || GETPOST("viewday"))
 	header("Location: ".DOL_URL_ROOT.'/comm/action/index.php?'.$param);
 	exit;
 }
+if ($action=='switchstatus') {
+	$newpercent=GETPOST('newpercent');
+	$switchid=GETPOST('switchid');
+	$sql='UPDATE '.MAIN_DB_PREFIX.'actioncomm SET percent='.$newpercent.' WHERE id='.$switchid;
+	dol_syslog(__FILE__."::switchstatus sql=".$sql);
+	$result=$db->query($sql);
+	if (!$result)
+	{
+		setEventMessage('Error'.$db->lasterror(),'errors');
+	}
+}
 
 
 
@@ -230,6 +241,19 @@ if ($resql)
     $head = calendars_prepare_head('');
     dol_fiche_head($head, 'card', $langs->trans('Events'), 0, 'list');
     print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,$filtera,$filtert,$filterd,$pid,$socid,-1,$actioncode,$filterdatestart,$filterdatesend);
+    
+    
+    if ($action=='switchstatus') {
+    	print '<script type="text/javascript">
+					jQuery(document).ready(function () {
+						jQuery(function() {
+							var documentBody = (($.browser.chrome)||($.browser.safari)) ? document.body : document.documentElement;
+		    				 $(documentBody).animate({scrollTop: $("#actid_' . $switchid . '").offset().top-20}, 500,\'easeInOutCubic\');
+						});
+					});
+					</script> ';
+    }
+    
     dol_fiche_end();
 
     // Add link to show birthdays
@@ -261,6 +285,7 @@ if ($resql)
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans("Type"),$_SERVER["PHP_SELF"],"c.libelle",$param,"",'width="10%"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Action"),$_SERVER["PHP_SELF"],"c.code",$param,"","",$sortfield,$sortorder);
+	
 	//print_liste_field_titre($langs->trans("Title"),$_SERVER["PHP_SELF"],"a.label",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateStart"),$_SERVER["PHP_SELF"],"a.datep,a.datep2",$param,'','align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateEnd"),$_SERVER["PHP_SELF"],"a.datep2,a.datep2",$param,'','align="center"',$sortfield,$sortorder);
@@ -270,6 +295,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans("ActionUserAsk"),$_SERVER["PHP_SELF"],"ua.login,a.datep2",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AffectedTo"),$_SERVER["PHP_SELF"],"ut.login,a.datep2",$param,"","",$sortfield,$sortorder);
 	//print_liste_field_titre($langs->trans("DoneBy"),$_SERVER["PHP_SELF"],"ud.login",$param,"","",$sortfield,$sortorder);
+	print '<th class="liste_titre">'.$langs->trans('ChangeStatusTo').'</th>';
 	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"a.percent,a.datep2",$param,"",'align="right"',$sortfield,$sortorder);
 	print "</tr>\n";
 	
@@ -304,8 +330,10 @@ if ($resql)
 		$actionstatic->libelle=$obj->label;
 		$actionstatic->usertodo->id=$obj->useridtodo;
 		print $actionstatic->getNomUrl(1,28);
+		print '<a name="actid_'.$obj->id.'" id="actid_'.$obj->id.'"/>';
 		print '</td>';
-
+		
+		
 		// Titre
 		//print '<td>';
 		//print dol_trunc($obj->label,12);
@@ -392,6 +420,37 @@ if ($resql)
 		}
 		else print '&nbsp;';
 		print '</td>';*/
+		
+		//Add link to update action status
+		print '<td>';
+		$listofstatus = array(
+				'-1' => $langs->trans("ActionNotApplicable"),
+				'0' => $langs->trans("ActionRunningNotStarted"),
+				'50' => $langs->trans("ActionRunningShort"),
+				'100' => $langs->trans("ActionDoneShort")
+		);
+		$html_change_act_status='';
+		foreach($listofstatus as $key=>$text) {
+			$html_change_act_status.='<a href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=switchstatus&newpercent='.$key.'&switchid='.$obj->id.'"';
+			switch ($key) {
+				case -1 :
+					$html_change_act_status.= 'title="'.$langs->trans('ChangeStatusTo',$text).'">'.img_picto($langs->trans('StatusNotApplicable'),'statut9');
+					break;
+				case 0 :
+					$html_change_act_status.= 'title="'.$langs->trans('ChangeStatusTo',$text).'">'.img_picto($langs->trans('StatusActionToDo'),'statut1');
+					break;
+				case 50 :
+					$html_change_act_status.= 'title="'.$langs->trans('ChangeStatusTo',$text).'">'.img_picto($langs->trans('StatusActionInProcess'),'statut3');
+					break;
+				case 100 :
+					$html_change_act_status.= 'title="'.$langs->trans('ChangeStatusTo',$text).'">'.img_picto($langs->trans('StatusActionDone'),'statut6');
+					break;
+			}
+			$html_change_act_status.='</a>&nbsp;&nbsp;';
+		}
+		print $html_change_act_status;
+		
+		print '</td>';
 
 		// Status/Percent
 		print '<td align="right" class="nowrap">'.$actionstatic->LibStatut($obj->percent,6).'</td>';
