@@ -201,6 +201,14 @@ if (empty($reshook))
         	}
     	}
     	
+    	$country_id=GETPOST('country_id');
+    	if (empty($country_id)) {
+    		$langs->load("errors");
+    		$error++;
+    		$errors[] = $langs->trans("ErrorFieldRequired", $langs->trans('Country'));
+    		$action = (($action=='add'||$action=='create')?'create':'edit');
+    	}
+    	
     	
     	if (!$error) {
 
@@ -293,6 +301,12 @@ if (empty($reshook))
         {
             $error++; $errors=array($langs->trans("ErrorFieldRequired",$langs->transnoentities("Name").' / '.$langs->transnoentities("Label")));
             $action = 'edit';
+        }
+        
+        if (empty($_POST["country_id"]))
+        {
+        	$error++; $errors=array($langs->trans("ErrorFieldRequired",$langs->transnoentities("Country")));
+        	$action = 'edit';
         }
 
         if (! $error)
@@ -543,7 +557,7 @@ else
             print '</td></tr>';
 
             // Country
-            print '<tr><td>'.$langs->trans("Country").'</td><td colspan="'.$colspan.'">';
+            print '<tr><td class="fieldrequired">'.$langs->trans("Country").'</td><td colspan="'.$colspan.'">';
             print $form->select_country((isset($_POST["country_id"])?$_POST["country_id"]:$object->country_id),'country_id');
             if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
             print '</td></tr>';
@@ -765,7 +779,7 @@ else
             print '</td></tr>';
 
             // Country
-            print '<tr><td>'.$langs->trans("Country").'</td><td colspan="2">';
+            print '<tr><td class="fieldrequired">'.$langs->trans("Country").'</td><td colspan="2">';
             print $form->select_country(isset($_POST["country_id"])?$_POST["country_id"]:$object->country_id,'country_id');
             if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
             print '</td></tr>';

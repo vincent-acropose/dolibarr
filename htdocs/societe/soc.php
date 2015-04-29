@@ -244,6 +244,14 @@ if (empty($reshook))
         		$errors[] = $langs->trans("ErrorFieldRequired", $langs->trans('ThirdPartyType'));
         		$action = (($action=='add'||$action=='create')?'create':'edit');
         	}
+        	
+        	$country_id=GETPOST('country_id');
+        	if (empty($country_id)) {
+        		$langs->load("errors");
+        		$error++;
+        		$errors[] = $langs->trans("ErrorFieldRequired", $langs->trans('Country'));
+        		$action = (($action=='add'||$action=='create')?'create':'edit');
+        	}
         }
         
         
@@ -984,7 +992,7 @@ else
         print '</td></tr>';
 
         // Country
-        print '<tr><td width="25%">'.$langs->trans('Country').'</td><td colspan="3">';
+        print '<tr><td width="25%" class="fieldrequired">'.$langs->trans('Country').'</td><td colspan="3">';
         print $form->select_country((GETPOST('country_id')!=''?GETPOST('country_id'):$object->country_id),'country_id');
         if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
         print '</td></tr>';
@@ -1403,7 +1411,7 @@ else
             print '</td></tr>';
 
             // Country
-            print '<tr><td>'.$langs->trans('Country').'</td><td colspan="3">';
+            print '<tr><td class="fieldrequired">'.$langs->trans('Country').'</td><td colspan="3">';
             print $form->select_country((GETPOST('country_id')!=''?GETPOST('country_id'):$object->country_id),'country_id');
             if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
             print '</td></tr>';
