@@ -559,7 +559,19 @@ if (empty($reshook))
     // Set parent company
     if ($action == 'set_thirdparty' && $user->rights->societe->creer)
     {
-    	$result = $object->set_parent(GETPOST('editparentcompany','int'));
+    	$error_mother=0;
+    	$parent_id=GETPOST('editparentcompany','int');
+    	$socstatic=new Societe($db);
+    	if (!empty($parent_id)) {
+    		$socstatic->fetch($parent_id);
+    		if ($socstatic->parent==$object->id) {
+    			$error_mother++;
+    			setEventMessage($langs->trans('MotherSelectedIsItSelfChildOfCurrent'),'errors');
+    		}
+    	}
+    	if (empty($error_mother)) {
+    		$result = $object->set_parent($parent_id);
+    	}
     }
 
     /*

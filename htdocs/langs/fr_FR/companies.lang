@@ -412,3 +412,4 @@ UpdateAdressContact=MAJ l'adresse des contact avec celle du tier
 SelectContactToUpdateAdress=Selectionner les contacts à mettre à jour
 ConfirmUpdateContactAdress=Confirmer la mise à jour
 LastCustomersSessionBills=Factures de session payées par des tiers
+MotherSelectedIsItSelfChildOfCurrent=Vous ne pouvez choirisr ce tier comme maison mére, car elle a comme maison mére le tier que vous modifiez
