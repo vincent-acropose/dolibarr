@@ -408,3 +408,6 @@ ConfirmCreationThirdpartyOtherCustomer=Il y a des clients dont le nom contient :
 
 ConfirmCreationContact=Êtes-vous sûr de vouloir crée ce contact ?
 ConfirmCreationContactOtherContact=Il y a des contacts avec l'email :
+UpdateAdressContact=MAJ l'adresse des contact avec celle du tier
+SelectContactToUpdateAdress=Selectionner les contacts à mettre à jour
+ConfirmUpdateContactAdress=Confirmer la mise à jour
