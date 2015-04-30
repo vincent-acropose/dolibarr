@@ -38,7 +38,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 if (! empty($conf->adherent->enabled)) require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
-
+//exit('la');
 $langs->load("companies");
 $langs->load("commercial");
 $langs->load("bills");
@@ -170,7 +170,6 @@ if (empty($reshook))
         // Fill array 'array_options' with data from add form
         $ret = $extrafields->setOptionalsFromPost($extralabels,$object);
 
-
         if (GETPOST('deletephoto')) $object->logo = '';
         else if (! empty($_FILES['photo']['name'])) $object->logo = dol_sanitizeFileName($_FILES['photo']['name']);
 
@@ -222,16 +221,18 @@ if (empty($reshook))
 				}
 
 				$idprof_mandatory ='SOCIETE_IDPROF'.($i).'_MANDATORY';
-
+/*
 				if (! $vallabel && ! empty($conf->global->$idprof_mandatory))
 				{
 					$langs->load("errors");
 					$error++;
 					$errors[] = $langs->trans("ErrorProdIdIsMandatory", $langs->transcountry('ProfId'.$i, $object->country_code));
+//var_dump($conf->global->$idprof_mandatory, $idprof_mandatory);
 					$action = (($action=='add'||$action=='create')?'create':'edit');
-				}
+				}*/
         	}
         }
+//exit($error.'la');
 
         if (! $error)
         {
@@ -341,7 +342,7 @@ if (empty($reshook))
                 {
                     $error = $object->error; $errors = $object->errors;
                 }
-
+//var_dump($errors);exit;
                 // Logo/Photo save
                 $dir     = $conf->societe->multidir_output[$object->entity]."/".$object->id."/logos";
                 $file_OK = is_uploaded_file($_FILES['photo']['tmp_name']);
