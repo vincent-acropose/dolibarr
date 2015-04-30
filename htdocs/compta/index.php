@@ -229,7 +229,7 @@ if (! empty($conf->facture->enabled) && $user->rights->facture->lire)
 				$companystatic->id=$obj->socid;
 				$companystatic->nom=$obj->nom;
 				$companystatic->client=1;
-				print $companystatic->getNomUrl(1,'',16);
+				print $companystatic->getNomUrl(1,'',44);
 				print '</td>';
 				print '<td align="right" class="nowrap">'.price($obj->total_ttc).'</td>';
 				print '</tr>';
@@ -298,7 +298,7 @@ if (! empty($conf->fournisseur->enabled) && $user->rights->fournisseur->facture-
 				$companystatic->id=$obj->socid;
 				$companystatic->nom=$obj->nom;
 				$companystatic->client=1;
-				print $companystatic->getNomUrl(1,'',16);
+				print $companystatic->getNomUrl(1,'',44);
 				print '</td>';
 				print '<td align="right">'.price($obj->total_ttc).'</td>';
 				print '</tr>';

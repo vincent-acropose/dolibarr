@@ -1327,7 +1327,7 @@ function show_subsidiaries($conf,$langs,$db,$object)
 
 	$i=-1;
 
-	$sql = "SELECT s.rowid, s.nom as name, s.address, s.zip, s.town, s.code_client, s.canvas";
+	$sql = "SELECT s.rowid, s.nom as name, s.address, s.zip, s.town, s.code_client, s.canvas,s.client";
 	$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 	$sql.= " WHERE s.parent = ".$object->id;
 	$sql.= " AND s.entity IN (".getEntity('societe', 1).")";
@@ -1363,6 +1363,8 @@ function show_subsidiaries($conf,$langs,$db,$object)
 			$socstatic->id = $obj->rowid;
 			$socstatic->name = $obj->name;
 			$socstatic->canvas = $obj->canvas;
+			$socstatic->code_client=$obj->code_client;
+			$socstatic->client=$obj->client;
 			print $socstatic->getNomUrl(1);
 			print '</td>';
 
