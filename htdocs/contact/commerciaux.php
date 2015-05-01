@@ -126,7 +126,7 @@ if ($socpeople_id)
 
 	print '<table class="border" width="100%">';
 
-    print '<tr><td width="20%">'.$langs->trans('ContactName').'</td>';
+    print '<tr><td width="20%">'.$langs->trans('Lastname').' / '.$langs->trans("Label").'</td>';
     print '<td colspan="3">';
     print $form->showrefnav($contact,'id','',($user->contact_id?0:1),'rowid','lastname');
     print '</td></tr>';
