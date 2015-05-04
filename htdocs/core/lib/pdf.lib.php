@@ -1586,7 +1586,8 @@ function pdf_getLinkedObjects($object,$outputlangs)
 				$linkedobjects[$objecttype]['date_value'] = dol_print_date($objects[$i]->date,'day','',$outputlangs);
 			}
 		}
-		else if ($objecttype == 'shipping')
+		// Inutile pour Epoxy car références expédition dans les titres
+		/*else if ($objecttype == 'shipping')
 		{
 			$outputlangs->load('orders');
 			$outputlangs->load('sendings');
@@ -1604,7 +1605,7 @@ function pdf_getLinkedObjects($object,$outputlangs)
 				$linkedobjects[$objecttype]['date_value'] = dol_print_date($order->date,'day','',$outputlangs);
 				$linkedobjects[$objecttype]['date_value'].= ' / ' . dol_print_date($objects[$i]->date_delivery,'day','',$outputlangs);
 			}
-		}
+		}*/
 		else if ($objecttype == 'contrat')
 		{
 			$outputlangs->load('contracts');
