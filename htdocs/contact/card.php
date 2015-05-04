@@ -852,7 +852,7 @@ else
             }
             else print $langs->trans("NoDolibarrAccess");
             print '</td></tr>';
-
+			
             print '</table><br>';
 
             print '<center>';
@@ -1072,7 +1072,10 @@ else
         }
         else print $langs->trans("NoDolibarrAccess");
         print '</td></tr>';
-
+		
+		// Sales representative
+    	include DOL_DOCUMENT_ROOT.'/contact/tpl/linesalesrepresentative.tpl.php';
+			
         print "</table>";
 
         print "</div>";
