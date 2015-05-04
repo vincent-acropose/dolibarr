@@ -203,6 +203,14 @@ class pdf_rouget extends ModelePdfExpedition
 								$tab_top_alt += 7;
 							}
 						}
+					} else if ($object->shipping_method_id > 0) {
+						$code=$outputlangs->getLabelFromKey($this->db,$object->shipping_method_id,'c_shipment_mode','rowid','code');
+						$label = $outputlangs->trans("SendingMethod".strtoupper($code));
+						
+						$pdf->SetFont('','B', $default_font_size - 2);
+						$pdf->writeHTMLCell(60, 4, $this->posxdesc-1, $tab_top-1, $label, 0, 1, false, true, 'L');
+
+						$tab_top_alt += 4;
 					}
 
 					// Affiche notes
@@ -661,4 +669,3 @@ class pdf_rouget extends ModelePdfExpedition
 	}
 
 }
-
