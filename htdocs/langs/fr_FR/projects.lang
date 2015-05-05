@@ -127,6 +127,7 @@ AddElement=Link to element
 UnlinkElement=Délier l'élément
 # Documents models
 DocumentModelBaleine=Modèle de rapport de projet complet (logo...)
+DocumentModelBaleineAcropose=Modèle de rapport de projet complet spécifique acropose (logo...)
 PlannedWorkload = Charge de travail prévue
 WorkloadOccupation= Pourcentage affectation
 ProjectReferers=Objets associés
