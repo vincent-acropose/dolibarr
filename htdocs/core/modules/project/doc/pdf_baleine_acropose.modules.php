@@ -28,6 +28,7 @@ require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 require_once DOL_DOCUMENT_ROOT.'/projet/class/task.class.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 require_once DOL_DOCUMENT_ROOT.'/comm/propal/class/propal.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
@@ -302,7 +303,50 @@ class pdf_baleine_acropose extends ModelePDFProjects
 						$pdf->MultiCell(60, 3, ($soc_propal->id > 0) ? $soc_propal->name : '(aucun)', 0, 'L', false, 1, '', '', true, 0, true); // Tous les paramètres pour le dernier : ishtml
 						
 						$pdf->SetXY($this->posxref+$taillSeparateur*2, $curY);
-						$pdf->MultiCell(60, 3, $p->getLibStatut($p->statut), 0, 'L', false, 1, '', '', true, 0, true); // Tous les paramètres pour le dernier : ishtml
+						$pdf->MultiCell(60, 3, $p->getLibStatut(), 0, 'L', false, 1, '', '', true, 0, true); // Tous les paramètres pour le dernier : ishtml
+						
+						$nexY += 5;
+						
+					}
+					
+					$tab_top += $array_size + 10;
+
+					$nexY=$tab_top+7;
+
+				}
+				
+				$TFactures = $object->get_element_list('facture', 'facture');
+				
+				if(!empty($TFactures)) {
+					
+					$taillSeparateur = 60;
+					
+					$array_size = 20;
+					$nb_factures = count($TFactures);
+					if($nb_factures > 2) $array_size += ($nb_factures-2) * 5;
+					
+					$this->_tableau_factures($pdf, $tab_top, $array_size, 0, $outputlangs, 0, 1, $taillSeparateur);
+					
+					foreach($TFactures as $id_facture) {
+						
+						$fact = new Facture($db);
+						$fact->fetch($id_facture);
+						
+						if(!empty($fact->socid)) {
+							$soc_fact = new Societe($db);
+							$soc_fact->fetch($f->socid);
+						}
+						
+						$curY = $nexY;
+						
+						$pdf->SetXY($this->posxref, $curY);
+						$pdf->MultiCell(60, 3, $fact->ref, 0, 'L');
+						
+						$pdf->SetXY($this->posxref+$taillSeparateur, $curY);
+						$pdf->MultiCell(60, 3, ($soc_propal->id > 0) ? $soc_propal->name : '(aucun)', 0, 'L', false, 1, '', '', true, 0, true); // Tous les paramètres pour le dernier : ishtml
+						
+						$pdf->SetXY($this->posxref+$taillSeparateur*2, $curY);
+						$pdf->MultiCell(60, 3, $fact->getLibStatut(), 0, 'L', false, 1, '', '', true, 0, true); // Tous les paramètres pour le dernier : ishtml
 						
 						$nexY += 5;
 						
@@ -561,7 +605,7 @@ class pdf_baleine_acropose extends ModelePDFProjects
 	{
 		global $conf,$mysoc;
 		
-		$outputlangs->load('propal@propal');
+		$outputlangs->load('propal');
 		
 		// $tab_height = Taille du tableau (plus petit car ne va contenir que les contacts)
 		
@@ -578,7 +622,51 @@ class pdf_baleine_acropose extends ModelePDFProjects
 		$pdf->SetFont('','', $default_font_size);
 
 		$pdf->SetXY($this->posxref-1, $tab_top+1);
-		$pdf->MultiCell(80,2, $outputlangs->trans("Proposal"),'','L');
+		$pdf->MultiCell(80,2, $outputlangs->transnoentities("RefProposal"),'','L');
+
+		$pdf->SetXY($this->posxref-1+$taille_separateur, $tab_top+1);
+		$pdf->MultiCell(80,2, $outputlangs->transnoentities("ThirdParty"),'','L');
+
+		$pdf->SetXY($this->posxref-1+$taille_separateur*2, $tab_top+1);
+		$pdf->MultiCell(80,2, $outputlangs->transnoentities("Status"),'','L');
+
+	}
+
+
+	/**
+	 *   Show table for lines
+	 *
+	 *   @param		PDF			$pdf     		Object PDF
+	 *   @param		string		$tab_top		Top position of table
+	 *   @param		string		$tab_height		Height of table (rectangle)
+	 *   @param		int			$nexY			Y
+	 *   @param		Translate	$outputlangs	Langs object
+	 *   @param		int			$hidetop		Hide top bar of array
+	 *   @param		int			$hidebottom		Hide bottom bar of array
+	 *   @return	void
+	 */
+	function _tableau_factures(&$pdf, $tab_top, $tab_height, $nexY, $outputlangs, $hidetop=0, $hidebottom=0, $taille_separateur=45)
+	{
+		global $conf,$mysoc;
+		
+		$outputlangs->load('compta');
+		
+		// $tab_height = Taille du tableau (plus petit car ne va contenir que les contacts)
+		
+        $default_font_size = pdf_getPDFFontSize($outputlangs);
+
+		$pdf->SetDrawColor(128,128,128);
+		
+		// Rect prend une longueur en 3eme param
+		$pdf->Rect($this->marge_gauche, $tab_top, $this->page_largeur-$this->marge_gauche-$this->marge_droite, $tab_height);
+		// line prend une position y en 3eme param
+		$pdf->line($this->marge_gauche, $tab_top+6, $this->page_largeur-$this->marge_droite, $tab_top+6);
+
+		$pdf->SetTextColor(0,0,0);
+		$pdf->SetFont('','', $default_font_size);
+
+		$pdf->SetXY($this->posxref-1, $tab_top+1);
+		$pdf->MultiCell(80,2, $outputlangs->transnoentities("InvoiceRef"),'','L');
 
 		$pdf->SetXY($this->posxref-1+$taille_separateur, $tab_top+1);
 		$pdf->MultiCell(80,2, $outputlangs->transnoentities("ThirdParty"),'','L');
