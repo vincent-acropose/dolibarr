@@ -27,6 +27,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/modules/project/modules_project.php';
 require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 require_once DOL_DOCUMENT_ROOT.'/projet/class/task.class.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+require_once DOL_DOCUMENT_ROOT.'/comm/propal/class/propal.class.php';
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
@@ -221,12 +222,18 @@ class pdf_baleine_acropose extends ModelePDFProjects
 					
 					$taillSeparateur = 40;
 					
-					$this->_tableau_contacts($pdf, $tab_top, $this->page_hauteur - $tab_top - $heightforfooter, 0, $outputlangs, 0, 1, $taillSeparateur);
+					$array_size = 20;
+					$nb_contacts = count($TContacts);
+					if($nb_contacts > 2) $array_size += ($nb_contacts-2) * 5;
+					
+					$this->_tableau_contacts($pdf, $tab_top, $array_size, 0, $outputlangs, 0, 1, $taillSeparateur);
 					
 					foreach($TContacts as $TData) {
 						
+						$curY = $nexY;
+						
 						$is_a_contact = false;
-						//var_dump($TData);exit;
+						
 						if($TData['source'] === 'external') {
 							
 							$is_a_contact = true;
@@ -242,24 +249,69 @@ class pdf_baleine_acropose extends ModelePDFProjects
 						$pdf->SetXY($this->posxref, $curY);
 						$pdf->MultiCell(60, 3, $TData['lastname'].' '.$TData['firstname'], 0, 'L');
 						$pdf->SetXY($this->posxref+$taillSeparateur, $curY);
-						$pdf->MultiCell(60, 3, ($TData['source'] === 'internal') ? $langs->trans('User') : $langs->trans('ThirdPartyContact'), 0, 'L');
-						$pdf->SetXY($this->posxref+$taillSeparateur*2, $curY);
+						/*$pdf->MultiCell(60, 3, ($TData['source'] === 'internal') ? $langs->trans('User') : $langs->trans('ThirdPartyContact'), 0, 'L');
+						$pdf->SetXY($this->posxref+$taillSeparateur*2, $curY);*/
 						$pdf->MultiCell(60, 3, $is_a_contact ? $soc->name : 'Acropose', 0, 'L');
-						$pdf->SetXY($this->posxref+$taillSeparateur*3, $curY);
+						$pdf->SetXY($this->posxref+$taillSeparateur*2, $curY);
 						$pdf->MultiCell(60, 3, $TData['libelle'], 0, 'L');
+						$pdf->SetXY($this->posxref+$taillSeparateur*3, $curY);
+						$pdf->MultiCell(60, 3, $contactstatic->mail, 0, 'L');
+						/*$pdf->SetXY($this->posxref+$taillSeparateur*3, $curY);
+						$pdf->MultiCell(60, 3, $is_a_contact ? $langs->transnoentitiesnoconv($contactstatic->LibStatut($TData['status'],0)) : '', 0, 'L', false, 1, '', '', true, 0, true); Tous les paramètres pour le dernier : ishtml*/
 						$pdf->SetXY($this->posxref+$taillSeparateur*4, $curY);
-						$pdf->MultiCell(60, 3, $is_a_contact ? $langs->transnoentitiesnoconv($contactstatic->LibStatut($TData['status'],0)) : '', 0, 'L', false, 1, '', '', true, 0, true); // Tous les paramètres pour le dernier : ishtml
+						$pdf->MultiCell(60, 3, $is_a_contact ? $contactstatic->phone_pro : '', 0, 'L', false, 1, '', '', true, 0, true); // Tous les paramètres pour le dernier : ishtml
 						
-						$curY += 5;
+						$nexY += 5;
 						
 					}
 					
-					$tab_top = 100;
+					$tab_top += $array_size + 10;
 					
-					$iniY+=$tab_top/2;
-					$curY+=$tab_top/2;
-					$nexY+=$tab_top/2;
+					$nexY=$tab_top+7;
+
+				}
 				
+				$TPropals = $object->get_element_list('propal', 'propal');
+				
+				if(!empty($TPropals)) {
+					
+					$taillSeparateur = 60;
+					
+					$array_size = 20;
+					$nb_propals = count($TPropals);
+					if($nb_propals > 2) $array_size += ($nb_propals-2) * 5;
+					
+					$this->_tableau_propals($pdf, $tab_top, $array_size, 0, $outputlangs, 0, 1, $taillSeparateur);
+					
+					foreach($TPropals as $id_propal) {
+						
+						$p = new Propal($db);
+						$p->fetch($id_propal);
+						
+						if(!empty($p->socid)) {
+							$soc_propal = new Societe($db);
+							$soc_propal->fetch($p->socid);
+						}
+						
+						$curY = $nexY;
+						
+						$pdf->SetXY($this->posxref, $curY);
+						$pdf->MultiCell(60, 3, $p->ref, 0, 'L');
+						
+						$pdf->SetXY($this->posxref+$taillSeparateur, $curY);
+						$pdf->MultiCell(60, 3, ($soc_propal->id > 0) ? $soc_propal->name : '(aucun)', 0, 'L', false, 1, '', '', true, 0, true); // Tous les paramètres pour le dernier : ishtml
+						
+						$pdf->SetXY($this->posxref+$taillSeparateur*2, $curY);
+						$pdf->MultiCell(60, 3, $p->getLibStatut($p->statut), 0, 'L', false, 1, '', '', true, 0, true); // Tous les paramètres pour le dernier : ishtml
+						
+						$nexY += 5;
+						
+					}
+					
+					$tab_top += $array_size + 10;
+
+					$nexY=$tab_top+7;
+
 				}
 				
 				// Boucle sur les lignes
@@ -421,19 +473,19 @@ class pdf_baleine_acropose extends ModelePDFProjects
 		$pdf->SetTextColor(0,0,0);
 		$pdf->SetFont('','', $default_font_size);
 
-		$pdf->SetXY($this->posxref-1, $tab_top+2);
+		$pdf->SetXY($this->posxref-1, $tab_top+1);
 		$pdf->MultiCell(80,2, $outputlangs->transnoentities("Tasks"),'','L');
 
-		$pdf->SetXY($this->posxlabel, $tab_top+2);
+		$pdf->SetXY($this->posxlabel, $tab_top+1);
 		$pdf->MultiCell(80,2, $outputlangs->transnoentities("Label"),'','L');
 
-		$pdf->SetXY($this->posxprogress-15, $tab_top+2);
+		$pdf->SetXY($this->posxprogress-15, $tab_top+1);
 		$pdf->MultiCell(80,2, $outputlangs->transnoentities("ProgressDeclared"),'','L');
 
-		$pdf->SetXY($this->posxdatestart, $tab_top+2);
+		$pdf->SetXY($this->posxdatestart, $tab_top+1);
 		$pdf->MultiCell(80,2, $outputlangs->transnoentities("DateStart"),'','L');
 
-		$pdf->SetXY($this->posxdateend, $tab_top+2);
+		$pdf->SetXY($this->posxdateend, $tab_top+1);
 		$pdf->MultiCell(80,2, $outputlangs->transnoentities("DateEnd"),'','L');
 
 	}
@@ -455,7 +507,7 @@ class pdf_baleine_acropose extends ModelePDFProjects
 	{
 		global $conf,$mysoc;
 
-		$tab_height = 40; // Taille du tableau (plus petit car ne va contenir que les contacts)
+		// $tab_height = Taille du tableau (plus petit car ne va contenir que les contacts)
 		
         $default_font_size = pdf_getPDFFontSize($outputlangs);
 
@@ -469,19 +521,69 @@ class pdf_baleine_acropose extends ModelePDFProjects
 		$pdf->SetTextColor(0,0,0);
 		$pdf->SetFont('','', $default_font_size);
 
-		$pdf->SetXY($this->posxref-1, $tab_top+2);
+		$pdf->SetXY($this->posxref-1, $tab_top+1);
 		$pdf->MultiCell(80,2, $outputlangs->transnoentities("Contacts"),'','L');
 
-		$pdf->SetXY($this->posxref-1+$taille_separateur, $tab_top+2);
-		$pdf->MultiCell(80,2, $outputlangs->transnoentities("Origine"),'','L');
+		/*$pdf->SetXY($this->posxref-1+$taille_separateur, $tab_top+2);
+		$pdf->MultiCell(80,2, $outputlangs->transnoentities("Origine"),'','L');*/
 
-		$pdf->SetXY($this->posxref-1+$taille_separateur*2, $tab_top+2);
+		$pdf->SetXY($this->posxref-1+$taille_separateur, $tab_top+1);
 		$pdf->MultiCell(80,2, $outputlangs->transnoentities("ThirdParty"),'','L');
 
-		$pdf->SetXY($this->posxref-1+$taille_separateur*3, $tab_top+2);
+		$pdf->SetXY($this->posxref-1+$taille_separateur*2, $tab_top+1);
 		$pdf->MultiCell(80,2, $outputlangs->transnoentities("ContactType"),'','L');
 
-		$pdf->SetXY($this->posxref-1+$taille_separateur*4, $tab_top+2);
+		/*$pdf->SetXY($this->posxref-1+$taille_separateur*3, $tab_top+2);
+		$pdf->MultiCell(80,2, $outputlangs->transnoentities("Status"),'','L');*/
+
+		$pdf->SetXY($this->posxref-1+$taille_separateur*3, $tab_top+1);
+		$pdf->MultiCell(80,2, $outputlangs->transnoentities("Email"),'','L');
+
+		$pdf->SetXY($this->posxref-1+$taille_separateur*4, $tab_top+1);
+		$pdf->MultiCell(80,2, $outputlangs->transnoentities("Phone"),'','L');
+
+	}
+
+
+	/**
+	 *   Show table for lines
+	 *
+	 *   @param		PDF			$pdf     		Object PDF
+	 *   @param		string		$tab_top		Top position of table
+	 *   @param		string		$tab_height		Height of table (rectangle)
+	 *   @param		int			$nexY			Y
+	 *   @param		Translate	$outputlangs	Langs object
+	 *   @param		int			$hidetop		Hide top bar of array
+	 *   @param		int			$hidebottom		Hide bottom bar of array
+	 *   @return	void
+	 */
+	function _tableau_propals(&$pdf, $tab_top, $tab_height, $nexY, $outputlangs, $hidetop=0, $hidebottom=0, $taille_separateur=45)
+	{
+		global $conf,$mysoc;
+		
+		$outputlangs->load('propal@propal');
+		
+		// $tab_height = Taille du tableau (plus petit car ne va contenir que les contacts)
+		
+        $default_font_size = pdf_getPDFFontSize($outputlangs);
+
+		$pdf->SetDrawColor(128,128,128);
+		
+		// Rect prend une longueur en 3eme param
+		$pdf->Rect($this->marge_gauche, $tab_top, $this->page_largeur-$this->marge_gauche-$this->marge_droite, $tab_height);
+		// line prend une position y en 3eme param
+		$pdf->line($this->marge_gauche, $tab_top+6, $this->page_largeur-$this->marge_droite, $tab_top+6);
+
+		$pdf->SetTextColor(0,0,0);
+		$pdf->SetFont('','', $default_font_size);
+
+		$pdf->SetXY($this->posxref-1, $tab_top+1);
+		$pdf->MultiCell(80,2, $outputlangs->trans("Proposal"),'','L');
+
+		$pdf->SetXY($this->posxref-1+$taille_separateur, $tab_top+1);
+		$pdf->MultiCell(80,2, $outputlangs->transnoentities("ThirdParty"),'','L');
+
+		$pdf->SetXY($this->posxref-1+$taille_separateur*2, $tab_top+1);
 		$pdf->MultiCell(80,2, $outputlangs->transnoentities("Status"),'','L');
 
 	}
