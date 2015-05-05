@@ -79,9 +79,9 @@ class pdf_baleine_acropose extends ModelePDFProjects
 		// Defini position des colonnes
 		$this->posxref=$this->marge_gauche+1;
 		$this->posxlabel=$this->marge_gauche+25;
-		$this->posxprogress=$this->marge_gauche+140;
-		$this->posxdatestart=$this->marge_gauche+150;
-		$this->posxdateend=$this->marge_gauche+170;
+		$this->posxprogress=$this->marge_gauche+130;
+		$this->posxdatestart=$this->marge_gauche+152;
+		$this->posxdateend=$this->marge_gauche+172;
 	}
 
 
@@ -423,6 +423,18 @@ class pdf_baleine_acropose extends ModelePDFProjects
 
 		$pdf->SetXY($this->posxref-1, $tab_top+2);
 		$pdf->MultiCell(80,2, $outputlangs->transnoentities("Tasks"),'','L');
+
+		$pdf->SetXY($this->posxlabel, $tab_top+2);
+		$pdf->MultiCell(80,2, $outputlangs->transnoentities("Label"),'','L');
+
+		$pdf->SetXY($this->posxprogress-15, $tab_top+2);
+		$pdf->MultiCell(80,2, $outputlangs->transnoentities("ProgressDeclared"),'','L');
+
+		$pdf->SetXY($this->posxdatestart, $tab_top+2);
+		$pdf->MultiCell(80,2, $outputlangs->transnoentities("DateStart"),'','L');
+
+		$pdf->SetXY($this->posxdateend, $tab_top+2);
+		$pdf->MultiCell(80,2, $outputlangs->transnoentities("DateEnd"),'','L');
 
 	}
 
