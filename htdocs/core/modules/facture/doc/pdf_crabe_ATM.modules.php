@@ -493,10 +493,12 @@ class pdf_crabe_ATM extends ModelePDFFactures
 				}
 
 				// Spécifique ATM : ajout des infos de prélèvement
+				$freetext = $conf->global->FACTURE_FREE_TEXT;
 				$this->add_infos_prelevement($object);
 
 				// Pied de page
 				$this->_pagefoot($pdf,$object,$outputlangs);
+				$conf->global->FACTURE_FREE_TEXT = $freetext;
 				if (method_exists($pdf,'AliasNbPages')) $pdf->AliasNbPages();
 
 				$pdf->Close();
