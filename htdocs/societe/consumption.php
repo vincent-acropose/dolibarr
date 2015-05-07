@@ -259,7 +259,7 @@ if ($type_element == 'supplier_order')
 
 $sql = $sql_select;
 $sql.= ' d.description as description,';
-if ($type_element != 'fichinter') $sql.= ' d.label, d.fk_product as product_id, d.fk_product as fk_product, d.info_bits, d.date_start, d.date_end, d.qty, d.qty as prod_qty,';
+if ($type_element != 'fichinter') $sql.= ' d.label, d.fk_product as product_id, d.fk_product as fk_product, d.info_bits, d.date_start, d.date_end, d.qty, d.qty as prod_qty, d.subprice as pu_ht, d.total_ht as total_ht,';
 if ($type_element != 'fichinter') $sql.= ' p.ref as ref, p.rowid as prod_id, p.rowid as fk_product, p.fk_product_type as prod_type, p.fk_product_type as fk_product_type,';
 $sql.= " s.rowid as socid ";
 if ($type_element != 'fichinter') $sql.= ", p.ref as prod_ref, p.label as product_label";
@@ -306,6 +306,8 @@ print_liste_field_titre($langs->trans('Date'),$_SERVER['PHP_SELF'],'dateprint','
 print_liste_field_titre($langs->trans('Status'),$_SERVER['PHP_SELF'],'fk_status','',$param,'align="center"',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans('Product'),$_SERVER['PHP_SELF'],'','',$param,'align="left"',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans('Quantity'),$_SERVER['PHP_SELF'],'prod_qty','',$param,'align="right"',$sortfield,$sortorder);
+print_liste_field_titre($langs->trans('UnitPrice'),$_SERVER['PHP_SELF'],'subprice','',$param,'align="right"',$sortfield,$sortorder);
+print_liste_field_titre($langs->trans('TotalHT'),$_SERVER['PHP_SELF'],'total_ht','',$param,'align="right"',$sortfield,$sortorder);
 // Filters
 print '<tr class="liste_titre">';
 print '<td class="liste_titre" align="left">';
@@ -319,6 +321,10 @@ print '<td class="liste_titre" align="center">';
 print '</td>';
 print '<td class="liste_titre" align="left">';
 print '<input class="flat" type="text" name="sprod_fulldescr" size="15" value="'.dol_escape_htmltag($sprod_fulldescr).'">';
+print '</td>';
+print '<td>';
+print '</td>';
+print '<td>';
 print '</td>';
 print '<td class="liste_titre" align="right">';
 print '<input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
@@ -490,6 +496,10 @@ if ($sql_select)
 		//print '<td align="left">'.$prodreftxt.'</td>';
 
 		print '<td align="right">'.$objp->prod_qty.'</td>';
+
+		print '<td align="right">'.price($objp->pu_ht).'</td>';
+
+		print '<td align="right">'.price($objp->total_ht).'</td>';
 
 		print "</tr>\n";
 		$i++;
