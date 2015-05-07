@@ -302,7 +302,7 @@ function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $uselocalt
 	dol_syslog('Price.lib::calcul_price_total MAIN_ROUNDING_RULE_TOT='.$conf->global->MAIN_ROUNDING_RULE_TOT.' pu='.$pu.' qty='.$qty.' price_base_type='.$price_base_type.' total_ht='.$result[0].'-total_vat='.$result[1].'-total_ttc='.$result[2]);
 
 
-	foreach($result as &$val) { $val = round($val,2); }
+	//foreach($result as &$val) { $val = round($val,2); }
 
 	return $result;
 }
