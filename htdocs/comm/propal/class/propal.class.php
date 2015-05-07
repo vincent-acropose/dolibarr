@@ -2611,8 +2611,10 @@ class Propal extends CommonObject
      */
     function getNomUrl($withpicto=0,$option='', $get_params='')
     {
-        global $langs;
-
+        global $langs, $db;
+		
+		dol_include_once('/projet/class/projet.class.php');
+		
         $result='';
         if ($option == '')
         {
@@ -2634,10 +2636,22 @@ class Propal extends CommonObject
 
         $picto='propal';
         $label=$langs->trans("ShowPropal").': '.$this->ref;
-
+		
+		$this->fetch($this->id);
+		
+		$p = new Project($db);
+		$p->fetch($this->fk_project);
+		if($p->id > 0) $TContacts = $p->liste_contact(-1,'external');
+		
+		if(!empty($TContacts)) {
+			foreach($TContacts as $TData) {
+				if($TData['code'] === 'PRESCRIPTOR') $prescriptor = ' <FONT COLOR="green" >P</FONT>';
+			}
+		}
+		
         if ($withpicto) $result.=($lien.img_object($label,$picto).$lienfin);
         if ($withpicto && $withpicto != 2) $result.=' ';
-        $result.=$lien.$this->ref.$lienfin;
+        $result.=$lien.$this->ref.$prescriptor.$lienfin;
         return $result;
     }
 
