@@ -3290,6 +3290,7 @@ class Propal extends CommonObject
     function getNomUrl($withpicto=0, $option='', $get_params='', $notooltip=0, $save_lastsearch_value=-1)
     {
         global $langs, $conf, $user;
+		dol_include_once('/projet/class/project.class.php');
 
         if (! empty($conf->dol_no_mouse_hover)) $notooltip=1;   // Force disable tooltips
 
@@ -3344,6 +3345,21 @@ class Propal extends CommonObject
             $linkclose.=' class="classfortooltip"';
         }
 
+	$this->fetch($this->id);
+		
+	$p = new Project($db);
+	$p->fetch($this->fk_project);
+	if($p->id > 0) $TContacts = $p->liste_contact(-1,'external');
+	$prescriptor='';
+	if(!empty($TContacts)) {
+		foreach($TContacts as $TData) {
+			if($TData['code'] === 'PRESCRIPTOR') {
+				$prescriptor = ' <FONT COLOR="green" >P</FONT>';
+				break;
+			}
+		}
+	}
+
         $linkstart = '<a href="'.$url.'"';
         $linkstart.=$linkclose.'>';
         $linkend='</a>';
@@ -3352,7 +3368,7 @@ class Propal extends CommonObject
             $result.=($linkstart.img_object(($notooltip?'':$label), $this->picto, ($notooltip?'':'class="classfortooltip"'), 0, 0, $notooltip?0:1).$linkend);
         if ($withpicto && $withpicto != 2)
             $result.=' ';
-        $result.=$linkstart.$this->ref.$linkend;
+        $result.=$linkstart.$this->ref.$prescriptor.$linkend;
         return $result;
     }
 
