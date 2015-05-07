@@ -2613,7 +2613,7 @@ class Propal extends CommonObject
     {
         global $langs, $db;
 		
-		dol_include_once('/projet/class/projet.class.php');
+		dol_include_once('/projet/class/project.class.php');
 		
         $result='';
         if ($option == '')
