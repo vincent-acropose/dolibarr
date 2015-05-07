@@ -494,7 +494,11 @@ else
     					print '<td align="right">';
                         if ($product_static->stock_reel < $objp->seuil_stock_alerte) print img_warning($langs->trans("StockTooLow")).' ';
         				print $product_static->stock_reel;
-    					print '</td>';
+						// Spécifique Lebrun : affichage du stock de l'entrepôt "Favars"
+						if(!empty($product_static->stock_warehouse[1]->real)) {
+							print ' ('.$product_static->stock_warehouse[1]->real.')';
+						}
+						print '</td>';
     				}
     			}
 
