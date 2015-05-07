@@ -286,9 +286,11 @@ if ($id > 0 || $ref)
 		}
 
 		// PMP
-		print '<tr><td>'.$langs->trans("AverageUnitPricePMP").'</td>';
-		print '<td>'.price($product->pmp).' '.$langs->trans("HT").'</td>';
-		print '</tr>';
+		if ($user->rights->fournisseur->lire) {
+			print '<tr><td>'.$langs->trans("AverageUnitPricePMP").'</td>';
+			print '<td>'.price($product->pmp).' '.$langs->trans("HT").'</td>';
+			print '</tr>';
+		}
 
         // Sell price
         print '<tr><td>'.$langs->trans("SellPriceMin").'</td>';
@@ -565,8 +567,10 @@ if (empty($action) && $product->id)
 print '<br><table class="noborder" width="100%">';
 print '<tr class="liste_titre"><td width="40%" colspan="4">'.$langs->trans("Warehouse").'</td>';
 print '<td align="right">'.$langs->trans("NumberOfUnit").'</td>';
-print '<td align="right">'.$langs->trans("AverageUnitPricePMPShort").'</td>';
-print '<td align="right">'.$langs->trans("EstimatedStockValueShort").'</td>';
+if ($user->rights->fournisseur->lire) {
+	print '<td align="right">'.$langs->trans("AverageUnitPricePMPShort").'</td>';
+	print '<td align="right">'.$langs->trans("EstimatedStockValueShort").'</td>';
+}
 print '<td align="right">'.$langs->trans("SellPriceMin").'</td>';
 print '<td align="right">'.$langs->trans("EstimatedStockValueSellShort").'</td>';
 print '</tr>';
@@ -606,8 +610,10 @@ if ($resql)
 		print '<td colspan="4">'.$entrepotstatic->getNomUrl(1).'</td>';
 		print '<td align="right">'.$obj->reel.($obj->reel<0?' '.img_warning():'').'</td>';
 		// PMP
-		print '<td align="right">'.(price2num($obj->pmp)?price2num($obj->pmp,'MU'):'').'</td>'; // Ditto : Show PMP from movement or from product
-		print '<td align="right">'.(price2num($obj->pmp)?price(price2num($obj->pmp*$obj->reel,'MT')):'').'</td>'; // Ditto : Show PMP from movement or from product
+		if ($user->rights->fournisseur->lire) {
+			print '<td align="right">'.(price2num($obj->pmp)?price2num($obj->pmp,'MU'):'').'</td>'; // Ditto : Show PMP from movement or from product
+			print '<td align="right">'.(price2num($obj->pmp)?price(price2num($obj->pmp*$obj->reel,'MT')):'').'</td>'; // Ditto : Show PMP from movement or from product
+		}
         // Sell price
 		print '<td align="right">';
         if (empty($conf->global->PRODUIT_MULTI_PRICES)) print price(price2num($product->price,'MU'),1);
@@ -640,12 +646,14 @@ if ($resql)
 else dol_print_error($db);
 print '<tr class="liste_total"><td align="right" class="liste_total" colspan="4">'.$langs->trans("Total").':</td>';
 print '<td class="liste_total" align="right">'.$total.'</td>';
-print '<td class="liste_total" align="right">';
-print ($totalwithpmp?price($totalvalue/$totalwithpmp):'&nbsp;');
-print '</td>';
-print '<td class="liste_total" align="right">';
-print price(price2num($totalvalue,'MT'),1);
-print '</td>';
+if ($user->rights->fournisseur->lire) {
+	print '<td class="liste_total" align="right">';
+	print ($totalwithpmp?price($totalvalue/$totalwithpmp):'&nbsp;');
+	print '</td>';
+	print '<td class="liste_total" align="right">';
+	print price(price2num($totalvalue,'MT'),1);
+	print '</td>';
+}
 print '<td class="liste_total" align="right">';
 if (empty($conf->global->PRODUIT_MULTI_PRICES)) print ($total?price($totalvaluesell/$total,1):'&nbsp;');
 else print $langs->trans("Variable");

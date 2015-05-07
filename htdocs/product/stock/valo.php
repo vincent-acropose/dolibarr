@@ -90,7 +90,7 @@ if ($result)
     print "<tr class=\"liste_titre\">";
     print_liste_field_titre($langs->trans("Ref"),"valo.php", "e.label","","","",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("LocationSummary"),"valo.php", "e.lieu","","","",$sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("EstimatedStockValue"),"valo.php", "e.valo_pmp",'','','align="right"',$sortfield,$sortorder);
+    if ($user->rights->fournisseur->lire) print_liste_field_titre($langs->trans("EstimatedStockValue"),"valo.php", "e.valo_pmp",'','','align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("EstimatedStockValueSell"),"", "",'','','align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Status"),"valo.php", "e.statut",'','','align="right"',$sortfield,$sortorder);
     print "</tr>\n";
@@ -107,10 +107,12 @@ if ($result)
             print '<td><a href="fiche.php?id='.$objp->ref.'">'.img_object($langs->trans("ShowWarehouse"),'stock').' '.$objp->label.'</a></td>';
             print '<td>'.$objp->lieu.'</td>';
             // PMP value
-            print '<td align="right">';
-            if (price2num($objp->estimatedvalue,'MT')) print price(price2num($objp->estimatedvalue,'MT'),1);
-            else print '';
-            print '</td>';
+            if ($user->rights->fournisseur->lire) {
+	            print '<td align="right">';
+	            if (price2num($objp->estimatedvalue,'MT')) print price(price2num($objp->estimatedvalue,'MT'),1);
+	            else print '';
+	            print '</td>';
+			}
             // Selling value
             print '<td align="right">';
             if (empty($conf->global->PRODUIT_MULTIPRICES)) print price(price2num($objp->sellvalue,'MT'),1);
@@ -127,7 +129,7 @@ if ($result)
 
         print '<tr class="liste_total">';
         print '<td colspan="2" align="right">'.$langs->trans("Total").'</td>';
-        print '<td align="right">'.price(price2num($total,'MT'),1,$langs,0,0,-1,$conf->currency).'</td>';
+        if ($user->rights->fournisseur->lire) print '<td align="right">'.price(price2num($total,'MT'),1,$langs,0,0,-1,$conf->currency).'</td>';
         print '<td align="right">'.price(price2num($totalsell,'MT'),1,$langs,0,0,-1,$conf->currency).'</td>';
         print '<td align="right">&nbsp;</td>';
         print "</tr>\n";

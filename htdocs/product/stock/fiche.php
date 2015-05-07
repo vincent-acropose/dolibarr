@@ -293,9 +293,11 @@ else
 			print "</td></tr>";
 
 			// Value
-			print '<tr><td valign="top">'.$langs->trans("EstimatedStockValueShort").'</td><td colspan="3">';
-			print empty($calcproducts['value'])?'0':$calcproducts['value'];
-			print "</td></tr>";
+			if ($user->rights->fournisseur->lire) {
+				print '<tr><td valign="top">'.$langs->trans("EstimatedStockValueShort").'</td><td colspan="3">';
+				print empty($calcproducts['value'])?'0':$calcproducts['value'];
+				print "</td></tr>";
+			}
 
 			// Last movement
 			$sql = "SELECT max(m.datem) as datem";
@@ -369,8 +371,8 @@ else
 			print_liste_field_titre($langs->trans("Product"),"", "p.ref","&amp;id=".$id,"","",$sortfield,$sortorder);
 			print_liste_field_titre($langs->trans("Label"),"", "p.label","&amp;id=".$id,"","",$sortfield,$sortorder);
             print_liste_field_titre($langs->trans("Units"),"", "ps.reel","&amp;id=".$id,"",'align="right"',$sortfield,$sortorder);
-            print_liste_field_titre($langs->trans("AverageUnitPricePMPShort"),"", "ps.pmp","&amp;id=".$id,"",'align="right"',$sortfield,$sortorder);
-			print_liste_field_titre($langs->trans("EstimatedStockValueShort"),"", "","&amp;id=".$id,"",'align="right"',$sortfield,$sortorder);
+            if ($user->rights->fournisseur->lire) print_liste_field_titre($langs->trans("AverageUnitPricePMPShort"),"", "ps.pmp","&amp;id=".$id,"",'align="right"',$sortfield,$sortorder);
+			if ($user->rights->fournisseur->lire) print_liste_field_titre($langs->trans("EstimatedStockValueShort"),"", "","&amp;id=".$id,"",'align="right"',$sortfield,$sortorder);
             if (empty($conf->global->PRODUIT_MULTIPRICES)) print_liste_field_titre($langs->trans("SellPriceMin"),"", "p.price","&amp;id=".$id,"",'align="right"',$sortfield,$sortorder);
             if (empty($conf->global->PRODUIT_MULTIPRICES)) print_liste_field_titre($langs->trans("EstimatedStockValueSellShort"),"", "","&amp;id=".$id,"",'align="right"',$sortfield,$sortorder);
 			if ($user->rights->stock->mouvement->creer) print '<td>&nbsp;</td>';
@@ -430,11 +432,13 @@ else
 					print '<td align="right">'.$objp->value.'</td>';
 					$totalunit+=$objp->value;
 
-                    // Price buy PMP
-					print '<td align="right">'.price(price2num($objp->pmp,'MU')).'</td>';
-                    // Total PMP
-					print '<td align="right">'.price(price2num($objp->pmp*$objp->value,'MT')).'</td>';
-					$totalvalue+=price2num($objp->pmp*$objp->value,'MT');
+					if ($user->rights->fournisseur->lire) {
+	                    // Price buy PMP
+						print '<td align="right">'.price(price2num($objp->pmp,'MU')).'</td>';
+	                    // Total PMP
+						print '<td align="right">'.price(price2num($objp->pmp*$objp->value,'MT')).'</td>';
+						$totalvalue+=price2num($objp->pmp*$objp->value,'MT');
+					}
 
                     // Price sell min
                     if (empty($conf->global->PRODUIT_MULTIPRICES))
@@ -471,15 +475,15 @@ else
 
 				print '<tr class="liste_total"><td class="liste_total" colspan="2">'.$langs->trans("Total").'</td>';
 				print '<td class="liste_total" align="right">'.$totalunit.'</td>';
-				print '<td class="liste_total">&nbsp;</td>';
-                print '<td class="liste_total" align="right">'.price(price2num($totalvalue,'MT')).'</td>';
+				if ($user->rights->fournisseur->lire) {
+					print '<td class="liste_total">&nbsp;</td>';
+					print '<td class="liste_total" align="right">'.price(price2num($totalvalue,'MT')).'</td>';
+				}
                 if (empty($conf->global->PRODUIT_MULTIPRICES))
                 {
                     print '<td class="liste_total">&nbsp;</td>';
                     print '<td class="liste_total" align="right">'.price(price2num($totalvaluesell,'MT')).'</td>';
                 }
-                print '<td class="liste_total">&nbsp;</td>';
-				print '<td class="liste_total">&nbsp;</td>';
 				print '</tr>';
 
 			}
