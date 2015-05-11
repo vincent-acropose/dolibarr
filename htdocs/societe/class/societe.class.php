@@ -1754,7 +1754,24 @@ class Societe extends CommonObject
 
         if ($withpicto) $result.=($lien.img_object($langs->trans("ShowCompany").': '.$name,'company').$lienfin);
         if ($withpicto && $withpicto != 2) $result.=' ';
-        $result.=$lien.($maxlen?dol_trunc($name,$maxlen):$name).$lienfin;
+		
+		$nom_url = ($maxlen?dol_trunc($name,$maxlen):$name);
+		
+		if((strpos($nom_url, 'Client') === false) && (strpos($nom_url, 'Fournisseur') === false) && (strpos($nom_url, 'Prospect') === false)) {
+			
+			$this->fetch($this->id);
+			
+			$balise_color_deb = '<FONT color=';
+			$balise_color_fin = '</FONT>';
+			
+			if($this->array_options['options_indice_confiance'] === 'vert') $balise_color_deb.= '"green">';
+			elseif($this->array_options['options_indice_confiance'] === 'orange') $balise_color_deb.= '"orange">';
+			elseif($this->array_options['options_indice_confiance'] === 'rouge') $balise_color_deb.= '"red">';
+			else $balise_color_deb = $balise_color_fin = '';
+			
+		}
+		
+        $result.=$lien.$balise_color_deb.$nom_url.$balise_color_fin.$lienfin;
 
         return $result;
     }
