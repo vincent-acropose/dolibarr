@@ -1652,10 +1652,10 @@ abstract class CommonObject
             {
                 $sql = 'UPDATE '.MAIN_DB_PREFIX.$this->table_element.' SET';
                 $sql .= " ".$fieldht."='".price2num($this->total_ht)."',";
-                $sql .= " ".$fieldtva."='".price2num(round($this->total_tva))."',";
+                $sql .= " ".$fieldtva."='".price2num($this->total_tva)."',";
                 $sql .= " ".$fieldlocaltax1."='".price2num($this->total_localtax1)."',";
                 $sql .= " ".$fieldlocaltax2."='".price2num($this->total_localtax2)."',";
-                $sql .= " ".$fieldttc."='".price2num(round($this->total_ttc))."'";
+                $sql .= " ".$fieldttc."='".price2num($this->total_ttc)."'";
                 $sql .= ' WHERE rowid = '.$this->id;
 
                 //print "xx".$sql;
