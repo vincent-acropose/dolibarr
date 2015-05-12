@@ -291,7 +291,7 @@ if ($result)
 			$product_static->type=$objp->fk_product_type;
 			print $product_static->getNomUrl(1,'',16);
 			print "</td>\n";
-			print '<td>'.dol_trunc($objp->label,$conf->global->PRODUCT_MAX_LENGTH_COMBO).'</td>';
+			print '<td>'.dol_trunc($objp->label,empty($conf->global->PRODUCT_MAX_LENGTH_LIST) ? 32 : $conf->global->PRODUCT_MAX_LENGTH_LIST).'</td>';
 			print "<td>";
 			print dol_print_date($db->jdate($objp->datem),'day');
 			print "</td>";
