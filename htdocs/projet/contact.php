@@ -40,6 +40,9 @@ $action = GETPOST('action','alpha');
 $mine   = GETPOST('mode')=='mine' ? 1 : 0;
 //if (! $user->rights->projet->all->lire) $mine=1;	// Special for projects
 
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('contactprojectcard','globalcard'));
+
 $object = new Project($db);
 if ($id > 0 || ! empty($ref))
 {
@@ -58,6 +61,10 @@ $result = restrictedArea($user, 'projet', $id);
  * Actions
  */
 
+$parameters=array('id'=>$socid, 'objcanvas'=>$objcanvas);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+ 
 // Add new contact
 if ($action == 'addcontact' && $user->rights->projet->creer)
 {
@@ -197,6 +204,10 @@ if ($id > 0 || ! empty($ref))
 	print '<tr><td>'.$langs->trans("DateEnd").'</td><td>';
 	print dol_print_date($object->date_end,'day');
 	print '</td></tr>';
+
+    // Other options
+    $parameters=array();
+    $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action); // Note that $action and $object may have been modified by hook
 
 	print "</table>";
 
