@@ -2000,8 +2000,8 @@ class Form
                 $outval.=$objRef;
                 if (! empty($objp->idprodfournprice)) $outval.=' ('.$objRefFourn.')';
                 $outval.=' - ';
-                $opt.=dol_trunc($objp->label,18).' - ';
-                $outval.=dol_trunc($label,18).' - ';
+                $opt.=dol_trunc($objp->label,$conf->global->PRODUCT_MAX_LENGTH_COMBO).' - ';
+                $outval.=dol_trunc($label,$conf->global->PRODUCT_MAX_LENGTH_COMBO).' - ';
 
                 if (! empty($objp->idprodfournprice))
                 {
