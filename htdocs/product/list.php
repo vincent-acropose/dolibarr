@@ -425,7 +425,7 @@ else
     			print "</td>\n";
 
     			// Label
-    			print '<td>'.dol_trunc($objp->label,40).'</td>';
+    			print '<td>'.dol_trunc($objp->label,$conf->global->PRODUCT_MAX_LENGTH_COMBO).'</td>';
 
     			// Barcode
     			if (! empty($conf->barcode->enabled))
