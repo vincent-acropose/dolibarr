@@ -1757,15 +1757,15 @@ class Societe extends CommonObject
 		
 		$nom_url = ($maxlen?dol_trunc($name,$maxlen):$name);
 		
-		if((strpos($nom_url, 'Client') === false) && (strpos($nom_url, 'Fournisseur') === false) && (strpos($nom_url, 'Prospect') === false)) {
+		if((strpos($nom_url, 'Client') === false) && (strpos($nom_url, 'Fournisseur') === false) && (strpos($nom_url, 'Prospect') === false)) { // Uniquement pour les liens sur le nom de la société
 			
 			$this->fetch($this->id);
 			
 			$balise_color_deb = '<FONT color=';
 			$balise_color_fin = '</FONT>';
 			
-			if($this->array_options['options_indice_confiance'] === 'vert') $balise_color_deb.= '"green">';
-			elseif($this->array_options['options_indice_confiance'] === 'orange') $balise_color_deb.= '"orange">';
+			/*if($this->array_options['options_indice_confiance'] === 'vert') $balise_color_deb.= '"green">';
+			else*/if($this->array_options['options_indice_confiance'] === 'orange') $balise_color_deb.= '"orange">';
 			elseif($this->array_options['options_indice_confiance'] === 'rouge') $balise_color_deb.= '"red">';
 			else $balise_color_deb = $balise_color_fin = '';
 			
