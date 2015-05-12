@@ -596,7 +596,7 @@ function show_projects_linked($conf,$langs,$db,$object,$backtopage='')
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact ctc ON (ctc.rowid = ec.fk_c_type_contact)";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople sp ON (sp.rowid = ec.fk_socpeople)";
         $sql .= " WHERE sp.fk_soc = ".$_REQUEST['socid'];
-        $sql .= " AND ec.fk_c_type_contact IN(170, 171)"; // Chef de projet et contributeur côté contacts tiers pour les projets
+        $sql .= " AND ctc.element = 'project'";
 		$sql .= " ORDER BY p.dateo DESC";
 
         $result=$db->query($sql);
