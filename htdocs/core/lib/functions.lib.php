@@ -2729,7 +2729,7 @@ function print_barre_liste($titre, $page, $file, $options='', $sortfield='', $so
 	if ($sortfield) $options .= "&amp;sortfield=".$sortfield;
 	if ($sortorder) $options .= "&amp;sortorder=".$sortorder;
 	// Show navigation bar
-	$pagelist = '';
+	$pagelist = ' '.$totalnboflines.' '.$langs->trans('Cards');
 	if ($page > 0 || $num > $conf->liste_limit)
 	{
 		if ($totalnboflines)
