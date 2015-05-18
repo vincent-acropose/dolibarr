@@ -219,7 +219,6 @@ if (empty($reshook)) {
             $action='create';
         }
     }
-
     /*
      * Build a receiving receipt
      */
@@ -256,7 +255,7 @@ if (empty($reshook)) {
         if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE))
         {
             $ret=$object->fetch($id);    // Reload to get new records
-            $result=expedition_pdf_create($db,$object,$object->modelpdf,$outputlangs);
+            $result=expedition_pdf_create($db,$object,$object->modelpdf,$outputlangs, $hidedetails, $hidedesc, $hideref);
         }
         if ($result < 0)
         {
@@ -356,7 +355,7 @@ if (empty($reshook)) {
             $outputlangs = new Translate("",$conf);
             $outputlangs->setDefaultLang($newlang);
         }
-        $result=expedition_pdf_create($db,$object,$object->modelpdf,$outputlangs);
+        $result=expedition_pdf_create($db,$object,$object->modelpdf,$outputlangs, $hidedetails, $hidedesc, $hideref);
         if ($result <= 0)
         {
             dol_print_error($db,$result);
@@ -706,6 +705,14 @@ if ($action == 'create')
             print "<tr><td>".$langs->trans("TrackingNumber")."</td>";
             print '<td colspan="3">';
             print '<input name="tracking_number" size="20" value="'.GETPOST('tracking_number','alpha').'">';
+            print "</td></tr>\n";
+            
+            // Document model
+            print "<tr><td>".$langs->trans("Model")."</td>";
+            print '<td colspan="3">';
+			include_once DOL_DOCUMENT_ROOT . '/core/modules/expedition/modules_expedition.php';
+			$liste = ModelePdfExpedition::liste_modeles($db);
+			print $form->selectarray('model', $liste, $conf->global->EXPEDITION_ADDON_PDF);
             print "</td></tr>\n";
 
             // Other attributes
