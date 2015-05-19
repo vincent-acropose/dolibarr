@@ -1655,7 +1655,9 @@ class Societe extends CommonObject
     function getNomUrl($withpicto=0,$option='',$maxlen=0)
     {
         global $conf,$langs;
-
+		
+		$this->fetch($this->id);
+		
         $name=$this->name?$this->name:$this->nom;
 
 		if ($conf->global->SOCIETE_ADD_REF_IN_LIST && (!empty($withpicto))) {
