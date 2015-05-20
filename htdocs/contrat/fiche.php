@@ -1894,7 +1894,10 @@ $(document).ready(function() {
 <?php
 }
 
-if ($action == 'create' && !empty(GETPOST('origin')) && !empty(GETPOST('originid'))) {
+$origin = GETPOST('origin');
+$originid = GETPOST('originid');
+
+if ($action == 'create' && !empty($origin) && $originid > 0) {
 ?>
 <script>
 	$(document).ready(function() {
