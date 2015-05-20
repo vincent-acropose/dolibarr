@@ -176,8 +176,6 @@ class Expedition extends CommonObject
 
 		$now=dol_now();
 
-		if (empty($this->model_pdf)) $this->model_pdf=$conf->global->EXPEDITION_ADDON_PDF;
-
 		require_once DOL_DOCUMENT_ROOT .'/product/stock/class/mouvementstock.class.php';
 		$error = 0;
 
@@ -1543,6 +1541,8 @@ class Expedition extends CommonObject
 		if ($this->db->query($sql) )
 		{
 			//TODO: Option to set order billed if 100% of order is shipped
+			$this->billed=1;
+			$this->db->commit();
 			return 1;
 		}
 		else
