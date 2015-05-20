@@ -256,13 +256,84 @@ if ($action == 'add' && $user->rights->contrat->creer)
 	                	$lines = $srcobject->lines;
 	                }
 
+					$selected_lines = GETPOST('selected_lines');
 	                $fk_parent_line=0;
 	                $num=count($lines);
 
+					if (!empty($selected_lines)) {
+						foreach ($selected_lines as $i) {
+							$product_type=($lines[$i]->product_type?$lines[$i]->product_type:0);
+
+							if ($product_type == 1) { //only services	// TODO Exclude also deee
+								// service prédéfini
+								if ($lines[$i]->fk_product > 0)
+								{
+									$product_static = new Product($db);
+	
+									// Define output language
+									if (! empty($conf->global->MAIN_MULTILANGS) && ! empty($conf->global->PRODUIT_TEXTS_IN_THIRDPARTY_LANGUAGE))
+									{
+										$prod = new Product($db);
+										$prod->id=$lines[$i]->fk_product;
+										$prod->getMultiLangs();
+	
+										$outputlangs = $langs;
+										$newlang='';
+										if (empty($newlang) && GETPOST('lang_id')) $newlang=GETPOST('lang_id');
+										if (empty($newlang)) $newlang=$srcobject->client->default_lang;
+										if (! empty($newlang))
+										{
+											$outputlangs = new Translate("",$conf);
+											$outputlangs->setDefaultLang($newlang);
+										}
+	
+										$label = (! empty($prod->multilangs[$outputlangs->defaultlang]["libelle"])) ? $prod->multilangs[$outputlangs->defaultlang]["libelle"] : $lines[$i]->product_label;
+									}
+									else
+									{
+										$label = $lines[$i]->product_label;
+									}
+	
+									if ($conf->global->PRODUIT_DESC_IN_FORM)
+										$desc .= ($lines[$i]->desc && $lines[$i]->desc!=$lines[$i]->libelle)?dol_htmlentitiesbr($lines[$i]->desc):'';
+								}
+								else {
+								    $desc = dol_htmlentitiesbr($lines[$i]->desc);
+						        }
+	
+			                    $result = $object->addline(
+					                $desc,
+					                $lines[$i]->subprice,
+					                $lines[$i]->qty,
+					                $lines[$i]->tva_tx,
+					                $lines[$i]->localtax1_tx,
+					                $lines[$i]->localtax2_tx,
+					                $lines[$i]->fk_product,
+					                $lines[$i]->remise_percent,
+					                $lines[$i]->date_start,
+					                $lines[$i]->date_end,
+					                'HT',
+					                0,
+					                $lines[$i]->info_bits,
+				                    $lines[$i]->fk_fournprice,
+				                    $lines[$i]->pa_ht
+			                    );
+	
+			                    if ($result < 0)
+			                    {
+			                        $error++;
+			                        break;
+			                    }
+	
+							}
+						}
+					}
+					
+					/*
 	                for ($i=0;$i<$num;$i++)
 	                {
-	                    $product_type=($lines[$i]->product_type?$lines[$i]->product_type:0);
-
+		                $product_type=($lines[$i]->product_type?$lines[$i]->product_type:0);
+	
 						if ($product_type == 1) { //only services	// TODO Exclude also deee
 							// service prédéfini
 							if ($lines[$i]->fk_product > 0)
@@ -324,8 +395,9 @@ if ($action == 'add' && $user->rights->contrat->creer)
 		                        break;
 		                    }
 
-						}
+						}    
 	                }
+					*/
 	            }
 	            else
 	            {
@@ -949,6 +1021,26 @@ if ($action == 'create')
         print '</td></tr>';
     }
 
+	// Lignes à reporter dans le contrat
+	if (!empty($objectsrc)) {
+		print '<tr>';
+		print '<td>Lignes à reporter</td>';
+	    print '<td>';
+		print '<div id="select-propal-lines"></div>';
+	    /*print '<table>';
+	    print '<tbody>';
+		foreach ($objectsrc->lines as $line) {
+			print '<tr>';
+			print '<td><input type="checkbox" name="selected_lines" value="' .  $line->rowid . '"/></td>';
+			print '<td>' . $line->product_ref . ' ' . $line->product_label . '</td>';
+			print '</tr>';
+		}
+		print '</tbody>';
+	    print '</table>';*/
+	    print '</td>';
+	    print '</tr>';
+	}
+		
     // Other attributes
     $parameters=array('objectsrc' => $objectsrc,'colspan' => ' colspan="3"');
     $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
@@ -1799,5 +1891,40 @@ $(document).ready(function() {
 });
 </script>
 
+<?php
+}
+
+if ($action == 'create' && !empty(GETPOST('origin')) && !empty(GETPOST('originid'))) {
+?>
+<script>
+	$(document).ready(function() {
+		var origin = $("input[name='origin']").val();
+		var originid = $("input[name='originid']").val();
+
+		if (origin == 'propal' && originid > 0) {
+			$(function() {
+				$.ajax({
+					type: "GET",
+					url: "<?php echo DOL_URL_ROOT . '/comm/propal.php'; ?>?id=" + originid,
+					dataType: "html",
+					success: function(data) {
+						var out = "";
+						
+						var counter = 0;
+						
+						$(data).find('#tablelines tr[id^="row-"]').each(function(loop, item){
+							out += '<tr><td><input type="checkbox" name="selected_lines[]" value="' + counter + '" /></td>' + $(item).html() + '</tr>';
+							counter++;
+						});
+		 
+		 				data = out;
+		 				
+						$("#select-propal-lines").html(data);
+					}
+				});
+			});
+		}
+	});
+</script>
 <?php
 }
