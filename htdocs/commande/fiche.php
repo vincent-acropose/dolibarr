@@ -1197,7 +1197,8 @@ if ($action == 'send' && ! GETPOST('addfile') && ! GETPOST('removedfile') && ! G
 			$from = GETPOST('fromname') . ' <' . GETPOST('frommail') . '>';
 			$replyto = GETPOST('replytoname') . ' <' . GETPOST('replytomail') . '>';
 			$message = GETPOST('message');
-			$sendtocc = GETPOST('sendtocc');
+			$receivercc = GETPOST('receivercc');
+			$sendtocc = ($receivercc!=='') ? $receivercc : $_POST['sendtocc'];
 			$deliveryreceipt = GETPOST('deliveryreceipt');
 
 			if ($action == 'send') {
