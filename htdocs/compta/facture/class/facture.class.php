@@ -2554,7 +2554,7 @@ class Facture extends CommonInvoice
 			}
 			else
 			{
-				dol_print_error($db,"Facture::getNextNumRef ".$obj->error);
+				//dol_print_error($db,"Facture::getNextNumRef ".$obj->error);
 				return "";
 			}
 		}
