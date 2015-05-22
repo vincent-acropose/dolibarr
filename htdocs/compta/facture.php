@@ -2122,7 +2122,8 @@ if ($action == 'create')
 
 		$langs->load('projects');
 		print '<tr><td>' . $langs->trans('Project') . '</td><td colspan="2">';
-		$formproject->select_projects($soc->id, $projectid, 'projectid');
+		//$formproject->select_projects($soc->id, $projectid, 'projectid');
+		$formproject->select_projects(-1, $projectid, 'projectid');
 		print '</td></tr>';
 	}
 

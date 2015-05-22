@@ -1421,7 +1421,8 @@ if ($action == 'create' && $user->rights->commande->creer) {
 		$formproject = new FormProjets($db);
 
 		print '<tr><td>' . $langs->trans('Project') . '</td><td colspan="2">';
-		$numprojet = $formproject->select_projects($soc->id, $projectid);
+		//$numprojet = $formproject->select_projects($soc->id, $projectid);
+		$numprojet = $formproject->select_projects(-1, $projectid);
 		if ($numprojet == 0) {
 			print ' &nbsp; <a href="' . DOL_URL_ROOT . '/projet/card.php?socid=' . $soc->id . '&action=create">' . $langs->trans("AddProject") . '</a>';
 		}
