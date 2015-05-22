@@ -51,6 +51,8 @@ $socid=0;
 if (! empty($user->societe_id)) $socid=$user->societe_id;
 $result=restrictedArea($user,'commande',$id);
 
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('shipmentcard','globalcard'));
 
 /*
  * Actions
@@ -128,6 +130,10 @@ if ($action == 'setshippingmethod' && $user->rights->commande->creer) {
 /*
  * View
  */
+
+$parameters=array('id'=>$socid, 'objcanvas'=>$objcanvas);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 
 $form = new Form($db);
 $formfile = new FormFile($db);
