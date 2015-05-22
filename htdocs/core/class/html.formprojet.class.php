@@ -56,7 +56,7 @@ class FormProjets
 	 */
 	function select_projects($socid=-1, $selected='', $htmlname='projectid', $maxlength=16, $option_only=0, $show_empty=1, $discard_closed=0)
 	{
-		global $user,$conf,$langs;
+		global $db, $user,$conf,$langs;
 
 		require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 
@@ -162,8 +162,24 @@ class FormProjets
 			if (empty($option_only)) {
 				$out.= '</select>';
 			}
-			print $out;
-
+			
+			//print $out;
+			
+			
+			// Autocomplétion
+			if(isset($selected)) {
+				
+				$p = new Project($db);
+				$p->fetch($selected);
+				$selected_value = $p->ref;
+				
+			}
+			
+			print ajax_autocompleter($selected, $htmlname, DOL_URL_ROOT.'/projet/ajax/projects.php', $urloption, 1);
+			print '<input type="text" size="20" name="search_'.$htmlname.'" id="search_'.$htmlname.'" value="'.$selected_value.'"'.$placeholder.' />';
+			
+			
+			
 			$this->db->free($resql);
 			return $num;
 		}

@@ -1971,9 +1971,11 @@ if ($action == 'create' && $user->rights->commande->creer) {
 			print '</td><td colspan="3">';
 			// print "$object->id, $object->socid, $object->fk_project";
 			if ($action == 'classify') {
-				$form->form_project($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->socid, $object->fk_project, 'projectid');
+				//$form->form_project($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->socid, $object->fk_project, 'projectid');
+				$form->form_project($_SERVER['PHP_SELF'] . '?id=' . $object->id, -1, $object->fk_project, 'projectid');
 			} else {
-				$form->form_project($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->socid, $object->fk_project, 'none');
+				//$form->form_project($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->socid, $object->fk_project, 'none');
+				$form->form_project($_SERVER['PHP_SELF'] . '?id=' . $object->id, -1, $object->fk_project, 'none');
 			}
 			print '</td></tr>';
 		}
