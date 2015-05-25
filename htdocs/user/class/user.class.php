@@ -736,6 +736,14 @@ class User extends CommonObject
 			$error++;
         	$this->error = $this->db->lasterror();
 		}
+		
+		// Remove sales_representatives
+		$sql = "DELETE FROM ".MAIN_DB_PREFIX."socpeople_sales_representatives WHERE fk_user  = ".$this->id;
+		if (! $error && ! $this->db->query($sql))
+		{
+			$error++;
+        	$this->error = $this->db->lasterror();
+		}
 
 		// If contact, remove link
 		if ($this->contact_id)
