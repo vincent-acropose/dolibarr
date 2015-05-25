@@ -147,10 +147,21 @@ if (! empty($search_categ)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_conta
 if (!$user->rights->societe->client->voir && !$socid) $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON s.rowid = sc.fk_soc";
 $sql.= ' WHERE p.entity IN ('.getEntity('societe', 1).')';
 if ((!$user->rights->societe->contact->lire && !$socid) || $search_sale) $sql.= " AND p.rowid = ssr.fk_socpeople";
+
 if (!$user->rights->societe->client->voir && !$socid) //restriction
 {
 	$sql .= " AND (sc.fk_user = " .$user->id." OR p.fk_soc IS NULL)";
 }
+
+if(empty($user->rights->societe->client->voir)) //if empty then show only contacts are not linked to salesrep or linked to him
+{
+	$sql.= ' AND (
+		p.rowid NOT IN (SELECT fk_socpeople FROM '.MAIN_DB_PREFIX.'socpeople_sales_representatives)
+		OR
+		p.rowid IN (SELECT fk_socpeople FROM '.MAIN_DB_PREFIX.'socpeople_sales_representatives WHERE fk_user = '.$user->id.')
+	)';
+}
+
 if (! empty($userid))    // propre au commercial
 {
     $sql .= " AND p.fk_user_creat=".$db->escape($userid);

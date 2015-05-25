@@ -674,6 +674,16 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
     $sql .= " WHERE p.fk_soc = ".$object->id;
     if ($search_status!='' && $search_status != '-1') $sql .= " AND p.statut = ".$db->escape($search_status);
     if ($search_name)       $sql .= " AND (p.lastname LIKE '%".$db->escape($search_name)."%' OR p.firstname LIKE '%".$db->escape($search_name)."%')";
+
+	if (empty($user->rights->societe->client->voir)) //if empty then show only contacts are not linked to salesrep or linked to him
+	{
+		$sql.= ' AND (
+			p.rowid NOT IN (SELECT fk_socpeople FROM '.MAIN_DB_PREFIX.'socpeople_sales_representatives)
+			OR
+			p.rowid IN (SELECT fk_socpeople FROM '.MAIN_DB_PREFIX.'socpeople_sales_representatives WHERE fk_user = '.$user->id.')
+		)';
+	}
+	
     $sql.= " ORDER BY $sortfield $sortorder";
 
     dol_syslog('core/lib/company.lib.php :: show_contacts', LOG_DEBUG);
