@@ -57,6 +57,7 @@ $search_status		= GETPOST("search_status",'int');
 
 // Load sale and categ filters
 $search_sale  = GETPOST("search_sale");
+$search_country_id  = GETPOST("search_country_id");
 $search_categ = GETPOST("search_categ",'int');
 $catid        = GETPOST("catid",'int');
 // If the internal user must only see his customers, force searching by him
@@ -78,6 +79,7 @@ if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'e
 if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both test are required to be compatible with all browsers
 {
 	$search_sale="";
+	$search_country_id="";
 	$search_categ="";
 	$catid="";
     $search_company="";
@@ -114,6 +116,7 @@ $sql.= ' AND s.entity IN ('.getEntity('societe', 1).')';
 if ((!$user->rights->societe->client->voir && !$socid) || $search_sale) $sql.= " AND s.rowid = sc.fk_soc";
 if ($socid) $sql.= " AND s.rowid = ".$socid;
 if ($search_sale) $sql.= " AND s.rowid = sc.fk_soc";		// Join for the needed table to filter by sale
+if ($search_country_id) $sql.= " AND s.fk_pays = ".$search_country_id;
 if ($catid > 0)          $sql.= " AND cs.fk_categorie = ".$catid;
 if ($catid == -2)        $sql.= " AND cs.fk_categorie IS NULL";
 if ($search_categ > 0)   $sql.= " AND cs.fk_categorie = ".$search_categ;
@@ -176,6 +179,11 @@ if ($result)
  	{
 	 	$moreforfilter.=$langs->trans('SalesRepresentatives'). ': ';
 		$moreforfilter.=$formother->select_salesrepresentatives($search_sale,'search_sale',$user);
+		
+		$moreforfilter.='&nbsp;&nbsp;&nbsp;&nbsp;';
+		
+		$moreforfilter.=$langs->trans('Country'). ': ';
+		$moreforfilter.=$form->select_country(($search_country_id!=''?$search_country_id:''), 'search_country_id');
  	}
  	if ($moreforfilter)
 	{

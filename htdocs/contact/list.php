@@ -60,7 +60,7 @@ $search_priv=GETPOST("search_priv");
 $search_categ=GETPOST("search_categ",'int');
 $search_status=GETPOST("search_status",'int');
 if ($search_status=='') $search_status=1; // always display activ customer first
-
+$search_country_id=GETPOST('search_country_id', 'int');
 
 $type=GETPOST("type");
 $view=GETPOST("view");
@@ -104,6 +104,7 @@ else if ($type == "o")
 if (GETPOST('button_removefilter_x') || GETPOST('button_removefilter'))	// Both tests are required to be compatible with all browsers
 {
 	$search_sale="";
+	$search_country_id="";
     $search_firstlast_only="";
     $search_lastname="";
     $search_firstname="";
@@ -157,6 +158,7 @@ if (! empty($userid))    // propre au commercial
 }
 
 if ($search_sale) $sql.= " AND p.rowid = ssr.fk_socpeople";		// Join for the needed table to filter by sale
+if ($search_country_id) $sql.= " AND p.fk_pays = ".$search_country_id;		
 
 // Filter to exclude not owned private contacts
 if ($search_priv != '0' && $search_priv != '1')
@@ -301,6 +303,11 @@ if ($result)
  	{
 	 	$moreforfilter.=$langs->trans('SalesRepresentatives'). ': ';
 		$moreforfilter.=$formother->select_salesrepresentatives($search_sale,'search_sale',$user);
+		
+		$moreforfilter.='&nbsp;&nbsp;&nbsp;&nbsp;';
+		
+		$moreforfilter.=$langs->trans('Country'). ': ';
+		$moreforfilter.=$form->select_country(($search_country_id!=''?$search_country_id:''), 'search_country_id');
  	}
     if ($moreforfilter)
     {
