@@ -737,10 +737,10 @@ class InterfaceActionsAuto
 					$date_relance = $now + ((3600 * 24) * 7);
 
 					$relance = new ActionComm($this->db);
-					$relance->type_code = $object->actiontypecode;
-					$relance->code='AC_'.$action;
-					$relance->label       = '[RELANCE] ' . $object->actionmsg2;
-					$relance->note        = '[RELANCE]<br /><br />' . $object->actionmsg;
+					$relance->type_code   = $object->actiontypecode;
+					$relance->code		  = 'AC_' . action;
+					$relance->label       = 'Relance suite devis du ' . date('d/m');
+					$relance->note        = 'Relance par mail suite devis ' . $object->ref . ' envoyé le ' . date('d/m/Y') . '.';
 					$relance->datep       = $date_relance;
 					$relance->datef       = $date_relance;
 					$relance->durationp   = 0;
