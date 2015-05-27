@@ -1569,9 +1569,17 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 			$replyto = $_POST['replytoname'] . ' <' . $_POST['replytomail'] . '>';
 			$message = $_POST['message'];
 			$receivercc = GETPOST('receivercc');
-			$sendtocc = ($receivercc!=='') ? $receivercc : $_POST ['sendtocc'];
+			
+			// Si le destinataire est la société
+			if ($receivercc == 'thirdparty') {
+				$receivercc = $object->client->email;
+			} else if (is_numeric($receivercc) && $receivercc > 0) {
+				$receivercc = $object->client->contact_get_property($receivercc, 'email');
+			}
+			
+			$sendtocc = (!empty($receivercc) && $receivercc != -1) ? $receivercc : $_POST ['sendtocc'];
 			$deliveryreceipt = $_POST['deliveryreceipt'];
-
+			
 			if ($action == 'send') {
 				if (dol_strlen($_POST['subject']))
 					$subject = $_POST['subject'];
@@ -2403,7 +2411,7 @@ if ($action == 'create')
 	}
 
 	// fetch optionals attributes and labels
-	$extralabels = $extrafields->fetch_name_optionals_label($object->table_element);
+	//$extralabels = $extrafields->fetch_name_optionals_label($object->table_element);
 
 	if ($user->societe_id > 0 && $user->societe_id != $object->socid)
 		accessforbidden('', 0);
