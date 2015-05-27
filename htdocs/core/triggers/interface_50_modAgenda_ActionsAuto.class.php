@@ -728,10 +728,36 @@ class InterfaceActionsAuto
 
 			$actioncomm->fk_element  = $object->id;
 			$actioncomm->elementtype = $object->element;
-
+			
 			$ret=$actioncomm->add($user);       // User qui saisit l'action
+			
 			if ($ret > 0)
 			{
+				if ($action == 'PROPAL_SENTBYMAIL') {
+					$date_relance = $now + ((3600 * 24) * 7);
+
+					$relance = new ActionComm($this->db);
+					$relance->type_code = $object->actiontypecode;
+					$relance->code='AC_'.$action;
+					$relance->label       = '[RELANCE] ' . $object->actionmsg2;
+					$relance->note        = '[RELANCE]<br /><br />' . $object->actionmsg;
+					$relance->datep       = $date_relance;
+					$relance->datef       = $date_relance;
+					$relance->durationp   = 0;
+					$relance->punctual    = 1;
+					$relance->percentage  = 0;   // Not applicable
+					$relance->contact     = $contactforaction;
+					$relance->societe     = $societeforaction;
+					$relance->author      = $user;   // User saving action
+					$relance->usertodo    = $user;	// User action is assigned to (owner of action)
+					$relance->userdone    = $user;	// User doing action (deprecated, not used anymore)
+		
+					$relance->fk_element  = $object->id;
+					$relance->elementtype = $object->element;
+				
+					$ret = $relance->add($user);
+				}
+				
 				$_SESSION['LAST_ACTION_CREATED'] = $ret;
 				return 1;
 			}
