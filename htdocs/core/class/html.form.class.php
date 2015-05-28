@@ -2092,7 +2092,9 @@ class Form
 	private function constructProductListOption(&$objp, &$opt, &$optJson, $price_level, $selected, $hidepriceinlabel=0)
 	{
 		global $langs,$conf,$user,$db;
-
+		
+		dol_include_once('/categories/class/categorie.class.php');
+		
         $outkey='';
         $outval='';
         $outref='';
@@ -2287,6 +2289,20 @@ class Form
                 $outval.=' - '.$outdurationvalue.' '.$langs->transnoentities($key);
             }
         }
+
+		$c = new Categorie($db);
+		$cats = $c->containing($objp->rowid,0);
+		
+		$cat_lib = '';
+		$TCategs = array();
+		
+		if(!empty($cats)) {
+			foreach($cats as $categ) {
+				$TCategs[] = $categ->label;
+			}
+			$cat_lib = implode(' - ', $TCategs);
+			if(!empty($cat_lib)) $outval.= ' | '.count($TCategs).' catégorie(s) : '.$cat_lib;
+		}
 
         $opt.= "</option>\n";
 		$optJson = array('key'=>$outkey, 'value'=>$outref, 'label'=>$outval, 'label2'=>$outlabel, 'desc'=>$outdesc, 'type'=>$outtype, 'price_ht'=>$outprice_ht, 'price_ttc'=>$outprice_ttc, 'pricebasetype'=>$outpricebasetype, 'tva_tx'=>$outtva_tx, 'qty'=>$outqty, 'discount'=>$outdiscount, 'duration_value'=>$outdurationvalue, 'duration_unit'=>$outdurationunit);
