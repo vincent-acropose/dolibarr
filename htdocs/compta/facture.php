@@ -2411,7 +2411,7 @@ if ($action == 'create')
 	}
 
 	// fetch optionals attributes and labels
-	//$extralabels = $extrafields->fetch_name_optionals_label($object->table_element);
+	$extralabels = $extrafields->fetch_name_optionals_label($object->table_element);
 
 	if ($user->societe_id > 0 && $user->societe_id != $object->socid)
 		accessforbidden('', 0);

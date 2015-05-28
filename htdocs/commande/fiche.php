@@ -1198,7 +1198,15 @@ if ($action == 'send' && ! GETPOST('addfile') && ! GETPOST('removedfile') && ! G
 			$replyto = GETPOST('replytoname') . ' <' . GETPOST('replytomail') . '>';
 			$message = GETPOST('message');
 			$receivercc = GETPOST('receivercc');
-			$sendtocc = ($receivercc!=='') ? $receivercc : $_POST['sendtocc'];
+			
+			// Si le destinataire est la société
+			if ($receivercc == 'thirdparty') {
+				$receivercc = $object->client->email;
+			} else if (is_numeric($receivercc) && $receivercc > 0) {
+				$receivercc = $object->client->contact_get_property($receivercc, 'email');
+			}
+			
+			$sendtocc = (!empty($receivercc) && $receivercc != -1) ? $receivercc : $_POST ['sendtocc'];
 			$deliveryreceipt = GETPOST('deliveryreceipt');
 
 			if ($action == 'send') {
