@@ -1075,6 +1075,11 @@ function pdf_getlinedesc($object,$i,$outputlangs,$hideref=0,$hidedesc=0,$issuppl
 		//print $libelleproduitservice;
 	}
 
+	if (! empty($object->lines[$i]->description))
+	{
+		$libelleproduitservice.="__N__<i>".$object->lines[$i]->description.'</i>';
+	}
+
 	// Now we convert \n into br
 	if (dol_textishtml($libelleproduitservice)) $libelleproduitservice=preg_replace('/__N__/','<br>',$libelleproduitservice);
 	else $libelleproduitservice=preg_replace('/__N__/',"\n",$libelleproduitservice);
