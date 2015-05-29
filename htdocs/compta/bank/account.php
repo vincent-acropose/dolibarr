@@ -97,6 +97,13 @@ if ($action == 'add' && $id && ! isset($_POST["cancel"]) && $user->rights->banqu
 	$num_chq=$_POST["num_chq"];
 	$label=$_POST["label"];
 	$cat1=$_POST["cat1"];
+	$idtier=GETPOST('tier');
+	
+	if($idtier){
+		$societe = new Societe($db);
+		$societe->fetch($idtier);
+		$tier = $societe->name;
+	}
 
 	if (! $dateop)    $mesg=$langs->trans("ErrorFieldRequired",$langs->trans("Date"));
 	if (! $operation) $mesg=$langs->trans("ErrorFieldRequired",$langs->trans("Type"));
@@ -105,7 +112,11 @@ if ($action == 'add' && $id && ! isset($_POST["cancel"]) && $user->rights->banqu
 	if (! $mesg)
 	{
 		$object->fetch($id);
-		$insertid = $object->addline($dateop, $operation, $label, $amount, $num_chq, $cat1, $user);
+		$insertid = $object->addline($dateop, $operation, $label, $amount, $num_chq, $cat1, $user,$tier);
+		
+		if($tier){
+			$object->add_url_line($insertid,$idtier,DOL_URL_ROOT.'/comm/fiche.php?socid=',$tier,'company');
+		}
 		if ($insertid > 0)
 		{
 			setEventMessage($langs->trans("RecordSaved"));
@@ -362,7 +373,8 @@ if ($id > 0 || ! empty($ref))
 		print '<td>&nbsp;</td>';
 		print '<td>'.$langs->trans("Type").'</td>';
 		print '<td>'.$langs->trans("Numero").'</td>';
-		print '<td colspan="2">'.$langs->trans("Description").'</td>';
+		print '<td colspan="1">'.$langs->trans("Description").'</td>';
+		print '<td align="left">'.$langs->trans("Tiers").'</td>';
 		print '<td align=right>'.$langs->trans("Debit").'</td>';
 		print '<td align=right>'.$langs->trans("Credit").'</td>';
 		print '<td colspan="2" align="center">&nbsp;</td>';
@@ -376,13 +388,19 @@ if ($id > 0 || ! empty($ref))
 		$form->select_types_paiements((GETPOST('operation')?GETPOST('operation'):($object->courant == 2 ? 'LIQ' : '')),'operation','1,2',2,1);
 		print '</td><td>';
 		print '<input name="num_chq" class="flat" type="text" size="4" value="'.GETPOST("num_chq").'"></td>';
-		print '<td colspan="2">';
+		print '<td colspan="1">';
 		print '<input name="label" class="flat" type="text" size="24"  value="'.GETPOST("label").'">';
 		if ($nbcategories)
 		{
 			print '<br>'.$langs->trans("Category").': <select class="flat" name="cat1">'.$options.'</select>';
 		}
 		print '</td>';
+		$form = new Form($db);
+		//Ajout société saisissable
+		print '<td align="left">';
+		print $form->select_company('', 'tier', 's.client = 1 OR s.client = 3', 1);
+		print '</td>';
+		
 		print '<td align=right><input name="debit" class="flat" type="text" size="4" value="'.GETPOST("debit").'"></td>';
 		print '<td align=right><input name="credit" class="flat" type="text" size="4" value="'.GETPOST("credit").'"></td>';
 		print '<td colspan="2" align="center">';
