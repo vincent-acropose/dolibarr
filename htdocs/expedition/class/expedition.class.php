@@ -590,6 +590,12 @@ class Expedition extends CommonObject
 			$sql.= " WHERE ed.fk_expedition = ".$this->id;
 			$sql.= " AND cd.rowid = ed.fk_origin_line";
 
+			//Si on ne veux pas de mvt de stock pour les services
+			if ($conf->global->NO_MVT_STOCK_SUPPORTS_SERVICE)
+			{
+				$sql.= ' AND cd.product_type <> 1';
+			}
+			
 			dol_syslog(get_class($this)."::valid select details sql=".$sql);
 			$resql=$this->db->query($sql);
 			if ($resql)
@@ -944,6 +950,12 @@ class Expedition extends CommonObject
 			$sql.= " WHERE ed.fk_expedition = ".$this->id;
 			$sql.= " AND cd.rowid = ed.fk_origin_line";
 
+			//Si on ne veux pas de mvt de stock pour les services
+			if ($conf->global->NO_MVT_STOCK_SUPPORTS_SERVICE)
+			{
+				$sql.= ' AND cd.product_type <> 1';
+			}
+			
 			dol_syslog(get_class($this)."::delete select details sql=".$sql);
 			$resql=$this->db->query($sql);
 			if ($resql)
