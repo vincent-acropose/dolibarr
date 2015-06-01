@@ -166,6 +166,13 @@ class Contact extends CommonObject
 			if (! $error)
 			{
                 $result=$this->update($this->id, $user, 1, 'add');
+                
+                // Ajout du commercial affecte
+                if ($this->commercial_id != '' && $this->commercial_id != -1)
+                {
+                    $this->add_commercial($user, $this->commercial_id);
+                }
+				
                 if ($result < 0)
                 {
                     $error++;

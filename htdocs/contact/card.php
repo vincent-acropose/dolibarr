@@ -194,6 +194,9 @@ if (empty($reshook))
         $object->note_private	= GETPOST("note_private");
         $object->statut			= 1; //Defult status to Actif
 
+        //commercial par défaut
+        $object->commercial_id  = GETPOST('commercial_id', 'int');
+        
         // Note: Correct date should be completed with location to have exact GM time of birth.
         $object->birthday = dol_mktime(0,0,0,GETPOST("birthdaymonth",'int'),GETPOST("birthdayday",'int'),GETPOST("birthdayyear",'int'));
         $object->birthday_alert = GETPOST("birthday_alert",'alpha');
@@ -571,6 +574,16 @@ else
             $selectarray=array('0'=>$langs->trans("ContactPublic"),'1'=>$langs->trans("ContactPrivate"));
             print $form->selectarray('priv',$selectarray,(GETPOST("priv",'alpha')?GETPOST("priv",'alpha'):$object->priv),0);
             print '</td></tr>';
+
+			if ($user->rights->societe->client->voir)
+	        {
+	            // Assign a Name
+	            print '<tr>';
+	            print '<td><label for="commercial_id">'.$langs->trans("AllocateCommercial").'</label></td>';
+	            print '<td colspan="3" class="maxwidthonsmartphone">';
+	            $form->select_users((! empty($object->commercial_id)?$object->commercial_id:$user->id),'commercial_id',1); // Add current user by default
+	            print '</td></tr>';
+	        }
 
             // Other attributes
             $parameters=array('colspan' => ' colspan="3"');
