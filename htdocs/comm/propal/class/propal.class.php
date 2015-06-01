@@ -1149,7 +1149,7 @@ class Propal extends CommonObject
                 $clonedObj->mode_reglement_id	= (! empty($objsoc->mode_reglement_id) ? $objsoc->mode_reglement_id : 0);
                 $clonedObj->fk_delivery_address	= '';
 
-                /*if (!empty($conf->projet->enabled))
+                if (!empty($conf->projet->enabled))
                 {
                     $project = new Project($db);
     				if ($this->fk_project > 0 && $project->fetch($this->fk_project)) {
@@ -1158,8 +1158,8 @@ class Propal extends CommonObject
     				} else {
     					$clonedObj->fk_project = '';
     				}
-                }*/
-                $clonedObj->fk_project = '';    // A cloned proposal is set by default to no project.
+                }
+//                $clonedObj->fk_project = '';    // A cloned proposal is set by default to no project.
             }
 
             // reset ref_client
