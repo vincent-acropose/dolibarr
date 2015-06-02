@@ -44,11 +44,13 @@ function product_prepare_head($object, $user)
 	$head[$h][2] = 'card';
 	$h++;
 
+	/*
 	$head[$h][0] = DOL_URL_ROOT."/product/price.php?id=".$object->id;
 	$head[$h][1] = $langs->trans("CustomerPrices");
 	$head[$h][2] = 'price';
 	$h++;
-
+	*/
+	
 	if (! empty($conf->fournisseur->enabled) && $user->rights->fournisseur->lire)
 	{
 		$head[$h][0] = DOL_URL_ROOT."/product/fournisseurs.php?id=".$object->id;

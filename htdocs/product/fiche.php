@@ -36,6 +36,7 @@ require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/canvas.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/html.formproduct.class.php';
+require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/genericobject.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/product.lib.php';
@@ -1433,6 +1434,19 @@ else
 
             // Description
             print '<tr><td valign="top">'.$langs->trans("Description").'</td><td colspan="2">'.(dol_textishtml($object->description)?$object->description:dol_nl2br($object->description,1,true)).'</td></tr>';
+
+			// Affichage du niveau de risque
+			$c = new Categorie($db);
+			$TCategories = $c->containing($object->id, 'product');
+			
+			if (!empty($TCategories)) {
+				$categorie = $TCategories[0];
+				$risque = $categorie->array_options['options_niveau_de_risque'];
+				print '<tr>
+					<td valign="top">'.$langs->trans("RiskLevel").'</td>
+					<td>' . $risque . ' (' . $categorie->description . ')</td>
+				</tr>';
+			}
 
             // Public URL
             print '<tr><td valign="top">'.$langs->trans("PublicUrl").'</td><td colspan="2">';

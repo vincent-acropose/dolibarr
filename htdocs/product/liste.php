@@ -306,8 +306,6 @@ else
     		print_liste_field_titre($langs->trans("Label"), $_SERVER["PHP_SELF"], "p.label",$param,"","",$sortfield,$sortorder);
     		if (! empty($conf->barcode->enabled)) print_liste_field_titre($langs->trans("BarCode"), $_SERVER["PHP_SELF"], "p.barcode",$param,'','',$sortfield,$sortorder);
     		print_liste_field_titre($langs->trans("DateModification"), $_SERVER["PHP_SELF"], "p.tms",$param,"",'align="center"',$sortfield,$sortorder);
-    		if (! empty($conf->service->enabled) && $type != 0) print_liste_field_titre($langs->trans("Duration"), $_SERVER["PHP_SELF"], "p.duration",$param,"",'align="center"',$sortfield,$sortorder);
-    		if (empty($conf->global->PRODUIT_MULTIPRICES)) print_liste_field_titre($langs->trans("SellingPrice"), $_SERVER["PHP_SELF"], "p.price",$param,"",'align="right"',$sortfield,$sortorder);
     		if ($user->rights->fournisseur->lire) print '<td class="liste_titre" align="right">'.$langs->trans("BuyingPriceMinShort").'</td>';
     		if (! empty($conf->stock->enabled) && $user->rights->stock->lire && $type != 1) print '<td class="liste_titre" align="right">'.$langs->trans("DesiredStock").'</td>';
     		if (! empty($conf->stock->enabled) && $user->rights->stock->lire && $type != 1) print '<td class="liste_titre" align="right">'.$langs->trans("PhysicalStock").'</td>';
@@ -337,22 +335,6 @@ else
     		print '<td class="liste_titre">';
     		print '&nbsp;';
     		print '</td>';
-
-    		// Duration
-    		if (! empty($conf->service->enabled) && $type != 0)
-    		{
-    			print '<td class="liste_titre">';
-    			print '&nbsp;';
-    			print '</td>';
-    		}
-
-    		// Sell price
-            if (empty($conf->global->PRODUIT_MULTIPRICES))
-            {
-        		print '<td class="liste_titre">';
-        		print '&nbsp;';
-        		print '</td>';
-            }
 
     		// Minimum buying Price
     		if ($user->rights->fournisseur->lire) {
@@ -425,7 +407,7 @@ else
     			print "</td>\n";
 
     			// Label
-    			print '<td>'.dol_trunc($objp->label,40).'</td>';
+    			print '<td>'.dol_trunc($objp->label,150).'</td>';
 
     			// Barcode
     			if (! empty($conf->barcode->enabled))
@@ -435,31 +417,6 @@ else
 
     			// Modification Date
     			print '<td align="center">'.dol_print_date($db->jdate($objp->datem),'day')."</td>\n";
-
-    			// Duration
-    			if (! empty($conf->service->enabled) && $type != 0)
-    			{
-    				print '<td align="center">';
-    				if (preg_match('/([0-9]+)[a-z]/i',$objp->duration))
-    				{
-	    				if (preg_match('/([0-9]+)y/i',$objp->duration,$regs)) print $regs[1].' '.$langs->trans("DurationYear");
-	    				elseif (preg_match('/([0-9]+)m/i',$objp->duration,$regs)) print $regs[1].' '.$langs->trans("DurationMonth");
-	    				elseif (preg_match('/([0-9]+)w/i',$objp->duration,$regs)) print $regs[1].' '.$langs->trans("DurationWeek");
-	    				elseif (preg_match('/([0-9]+)d/i',$objp->duration,$regs)) print $regs[1].' '.$langs->trans("DurationDay");
-	    				//elseif (preg_match('/([0-9]+)h/i',$objp->duration,$regs)) print $regs[1].' '.$langs->trans("DurationHour");
-	    				else print $objp->duration;
-    				}
-    				print '</td>';
-    			}
-
-    			// Sell price
-    			if (empty($conf->global->PRODUIT_MULTIPRICES))
-    			{
-    			    print '<td align="right">';
-        			if ($objp->price_base_type == 'TTC') print price($objp->price_ttc).' '.$langs->trans("TTC");
-        			else print price($objp->price).' '.$langs->trans("HT");
-        			print '</td>';
-    			}
 
     			// Better buy price
     			if ($user->rights->fournisseur->lire)
