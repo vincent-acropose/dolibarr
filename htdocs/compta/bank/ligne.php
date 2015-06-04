@@ -36,6 +36,7 @@ if (! empty($conf->adherent->enabled)) $langs->load("members");
 
 
 $id = (GETPOST('id','int') ? GETPOST('id','int') : GETPOST('account','int'));
+$idTier = GETPOST('tier');
 $ref = GETPOST('ref','alpha');
 $action=GETPOST('action','alpha');
 $confirm=GETPOST('confirm','alpha');
@@ -116,6 +117,21 @@ if ($user->rights->banque->modifier && $action == "update")
 		}
 
 		$db->begin();
+
+		if ($id && $idTier)
+		{
+			$societe = new Societe($db);
+			$societe->fetch($idTier);
+			$tier = $societe->name;
+			if($tier)
+			{
+				$account = new Account($db);
+				$account->fetch($id);
+				$sql = 'DELETE FROM '.MAIN_DB_PREFIX.'bank_url WHERE fk_bank='.$rowid.' AND type="company"';
+				$db->query($sql);
+				$account->add_url_line($rowid,$idTier,DOL_URL_ROOT.'/comm/fiche.php?socid=',$tier,'company');
+			}
+		}
 
 		$amount = price2num($_POST['amount']);
 		$dateop = dol_mktime(12,0,0,$_POST["dateomonth"],$_POST["dateoday"],$_POST["dateoyear"]);
@@ -318,6 +334,7 @@ if ($result)
                     print '</a>';
                 }
                 else if ($links[$key]['type']=='company') {
+                	$fk_soc = $links[$key]['url_id'];
                     print '<a href="'.DOL_URL_ROOT.'/societe/soc.php?socid='.$links[$key]['url_id'].'">';
                     print img_object($langs->trans('ShowCompany'),'company').' ';
                     print $links[$key]['label'];
@@ -524,6 +541,15 @@ if ($result)
             print '</td>';
         }
         print "</tr>";
+
+		if ($user->rights->banque->modifier)
+        {
+			print "<tr><td>Tiers</td>";
+            print '<td colspan="3">';
+			print $form->select_company((isset($fk_soc) ? $fk_soc : ''), 'tier', 's.client = 1 OR s.client = 3', 1);
+			print '</td>';
+			print '</tr>';
+		}
 
         print "</table>";
         print "</form>";
