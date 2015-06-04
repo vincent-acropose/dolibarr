@@ -546,7 +546,7 @@ if ($result)
         {
 			print "<tr><td>Tiers</td>";
             print '<td colspan="3">';
-			print $form->select_company((isset($fk_soc) ? $fk_soc : ''), 'tier', 's.client = 1 OR s.client = 3', 1);
+			print $form->select_company((isset($fk_soc) ? $fk_soc : ''), 'tier', '', 1);
 			print '</td>';
 			print '</tr>';
 		}

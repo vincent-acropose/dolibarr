@@ -398,7 +398,7 @@ if ($id > 0 || ! empty($ref))
 		$form = new Form($db);
 		//Ajout société saisissable
 		print '<td align="left">';
-		print $form->select_company('', 'tier', 's.client = 1 OR s.client = 3', 1);
+		print $form->select_company('', 'tier', '', 1);
 		print '</td>';
 		
 		print '<td align=right><input name="debit" class="flat" type="text" size="4" value="'.GETPOST("debit").'"></td>';
