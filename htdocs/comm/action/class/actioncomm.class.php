@@ -950,11 +950,27 @@ class ActionComm extends CommonObject
      */
     function getNomUrl($withpicto=0,$maxlength=0,$classname='',$option='',$overwritepicto=0)
     {
-        global $conf,$langs;
-
+        global $db, $conf,$langs;
+		
+		dol_include_once('/societe/class/societe.class.php');
+		
+		$third_name = '';
+		if($this->socid > 0) {
+			$s = new Societe($db);
+			$s->fetch($this->socid);
+			$third_name = 'title="Tiers : '.$s->name.'"';
+		} 
+		
         $result='';
-        if ($option=='birthday') $lien = '<a '.($classname?'class="'.$classname.'" ':'').'href="'.DOL_URL_ROOT.'/contact/perso.php?id='.$this->id.'">';
-        else $lien = '<a '.($classname?'class="'.$classname.'" ':'').'href="'.DOL_URL_ROOT.'/comm/action/card.php?id='.$this->id.'">';
+        if ($option=='birthday') {
+        	$lien = '<a ';
+			$lien.= $third_name;
+        	$lien.= ' '.($classname?'class="'.$classname.'" ':'').'href="'.DOL_URL_ROOT.'/contact/perso.php?id='.$this->id.'">';
+		} else {
+			$lien = '<a ';
+			$lien.= $third_name;
+			$lien.= ' '.($classname?'class="'.$classname.'" ':'').'href="'.DOL_URL_ROOT.'/comm/action/card.php?id='.$this->id.'">';
+		}
         $lienfin='</a>';
         $label=$this->label;
         if (empty($label)) $label=$this->libelle;	// For backward compatibility
