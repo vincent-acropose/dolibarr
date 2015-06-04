@@ -24,6 +24,7 @@ ProductAccountancyBuyCode=Code comptable (achat)
 ProductAccountancySellCode=Code comptable (vente)
 ProductOrService=Produit ou Service
 ProductsAndServices=Produits et Services
+ProductsAndServicesInChildrenCategories=Produits et Services des catégories enfantes
 ProductsOrServices=Produits ou Services
 ProductsOnSaleOnly=Uniquement produits en vente
 ProductsOnPurchaseOnly=Produits seulement en achat
