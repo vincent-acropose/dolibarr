@@ -1113,6 +1113,14 @@ class ActionComm extends CommonObject
     {
 		global $conf, $langs, $user, $hookmanager;
 
+		dol_include_once('/societe/class/societe.class.php');
+		$third_name = '';
+		if($this->socid > 0) {
+			$s = new Societe($db);
+			$s->fetch($this->socid);
+			$third_name = 'title="Tiers : '.$s->name.'"';
+		} 
+		
 		if (! empty($conf->dol_no_mouse_hover)) $notooltip=1;   // Force disable tooltips
 
 		$label = $this->label;
@@ -1170,7 +1178,7 @@ class ActionComm extends CommonObject
 		else
 			$url = DOL_URL_ROOT.'/comm/action/card.php?id='.$this->id;
 
-		$linkstart = '<a href="'.$url.'"';
+		$linkstart = '<a href="'.$url.'" '.(empty($third_name) ? '' : $third_name);
 		$linkstart.=$linkclose.'>';
 		$linkend='</a>';
 
