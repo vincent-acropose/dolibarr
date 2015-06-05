@@ -791,7 +791,7 @@ class Form
         $outarray=array();
 
         // On recherche les societes
-        $sql = "SELECT s.rowid, s.nom as name, s.client, s.fournisseur, s.code_client, s.code_fournisseur";
+        $sql = "SELECT s.rowid, s.nom as name, s.client, s.fournisseur, s.code_client, s.code_fournisseur, s.zip, s.town";
         $sql.= " FROM ".MAIN_DB_PREFIX ."societe as s";
         if (!$user->rights->societe->client->voir && !$user->societe_id) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
         $sql.= " WHERE s.entity IN (".getEntity('societe', 1).")";
@@ -921,7 +921,9 @@ class Form
                     {
                     	$label=$obj->name;
                     }
-
+					
+					if(!empty($obj->zip) || !empty($obj->town)) $label.= ' ('.$obj->zip.' '.$obj->town.')';
+					
                     if ($showtype)
                     {
                         if ($obj->client || $obj->fournisseur) $label.=' (';
