@@ -78,8 +78,8 @@ if (!$user->rights->societe->client->voir && !$socid)	// Internal user with no p
 }
 $sql.= ")";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = e.fk_soc";
-$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as ee ON e.rowid = ee.fk_source AND ee.sourcetype = 'shipping'";
-$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."livraison as l ON l.rowid = ee.fk_target AND ee.targettype = 'delivery'";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as ee ON e.rowid = ee.fk_source AND ee.sourcetype = 'shipping' AND ee.targettype = 'delivery'";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."livraison as l ON l.rowid = ee.fk_target";
 $sql.= " WHERE e.entity = ".$conf->entity;
 if (!$user->rights->societe->client->voir && !$socid)	// Internal user with no permission to see all
 {
@@ -117,14 +117,14 @@ if ($resql)
 	print '<table class="noborder" width="100%">';
 
 	print '<tr class="liste_titre">';
-	print_liste_field_titre($langs->trans("Ref"),"ship2bill.php","e.ref","",$param,'',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Company"),"ship2bill.php","s.nom", "", $param,'align="left"',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("DateDeliveryPlanned"),"ship2bill.php","e.date_delivery","",$param, 'align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"e.ref","",$param,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom", "", $param,'align="left"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("DateDeliveryPlanned"),$_SERVER["PHP_SELF"],"e.date_delivery","",$param, 'align="center"',$sortfield,$sortorder);
 	if($conf->livraison_bon->enabled) {
-		print_liste_field_titre($langs->trans("DeliveryOrder"),"ship2bill.php","e.date_expedition","",$param, '',$sortfield,$sortorder);
-		print_liste_field_titre($langs->trans("DateReceived"),"ship2bill.php","e.date_expedition","",$param, 'align="center"',$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("DeliveryOrder"),$_SERVER["PHP_SELF"],"e.date_expedition","",$param, '',$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("DateReceived"),$_SERVER["PHP_SELF"],"e.date_expedition","",$param, 'align="center"',$sortfield,$sortorder);
 	}
-	print_liste_field_titre($langs->trans("Status"),"ship2bill.php","e.fk_statut","",$param,'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"e.fk_statut","",$param,'align="right"',$sortfield,$sortorder);
 	print '<td class="liste_titre">&nbsp;</td>';
 	print "</tr>\n";
 
@@ -185,6 +185,14 @@ if ($resql)
 		}*/
 		print "</td>\n";
 		if($conf->livraison_bon->enabled) {
+		    $shipment->fetchObjectLinked($shipment->id,$shipment->element);
+            $receiving=(! empty($shipment->linkedObjects['delivery'][0])?$shipment->linkedObjects['delivery'][0]:'');
+            
+            // Ref
+            print '<td>';
+            print !empty($receiving) ? $receiving->getNomUrl($db) : '';
+            print '</td>';
+            
 			// Date real
 			print "<td align=\"center\">";
 			print dol_print_date($db->jdate($objp->date_livraison),"day");

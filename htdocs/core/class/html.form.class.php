@@ -204,7 +204,7 @@ class Form
             else
 			{
 				if ($typeofdata == 'email')   $ret.=dol_print_email($value,0,0,0,0,1);
-                elseif ($typeofdata == 'amount')   $ret.=($value != '' ? price($value,'',$langs,0,0,-1,$conf->currency) : '');
+                elseif ($typeofdata == 'amount')   $ret.=($value != '' ? price($value,'',$langs,0,-1,-1,$conf->currency) : '');
                 elseif (preg_match('/^text/',$typeofdata) || preg_match('/^note/',$typeofdata))  $ret.=dol_htmlentitiesbr($value);
                 elseif ($typeofdata == 'day' || $typeofdata == 'datepicker') $ret.=dol_print_date($value,'day');
                 elseif ($typeofdata == 'datehourpicker') $ret.=dol_print_date($value,'dayhour');
@@ -4175,7 +4175,7 @@ class Form
         	$out='<!-- JS CODE TO ENABLE '.$tmpplugin.' for id '.$htmlname.' -->
         			<script type="text/javascript">
         				$(document).ready(function () {
-        					$(\'#'.$htmlname.'\').'.$tmpplugin.'({
+        					$(\'#'.$htmlname.'\').'.$tmpplugin.'({width:"resolve"
         				});
         			});
         		   </script>';
@@ -4321,7 +4321,7 @@ class Form
         }
         else
        {
-       		$selected=($useempty?'':' selected="selected"');
+       		$selected=(($useempty && $value != '0' && $value != 'no')?'':' selected="selected"');
             $resultyesno .= '<option value="'.$yes.'">'.$langs->trans("Yes").'</option>'."\n";
             $resultyesno .= '<option value="'.$no.'"'.$selected.'>'.$langs->trans("No").'</option>'."\n";
         }

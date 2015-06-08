@@ -1,6 +1,6 @@
 <?php
-/* Copyright (C) 2007-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2007-2009 Regis Houssin        <regis.houssin@capnetworks.com>
+/* Copyright (C) 2007-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2007-2015 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2011 Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -36,9 +36,6 @@
 function check_user_password_dolibarr($usertotest,$passwordtotest,$entitytotest=1)
 {
 	global $db,$conf,$langs;
-	global $mc;
-
-	dol_syslog("functions_dolibarr::check_user_password_dolibarr usertotest=".$usertotest);
 
 	// Force master entity in transversal mode
 	$entity=$entitytotest;
@@ -48,6 +45,8 @@ function check_user_password_dolibarr($usertotest,$passwordtotest,$entitytotest=
 
 	if (! empty($usertotest))
 	{
+		dol_syslog("functions_dolibarr::check_user_password_dolibarr usertotest=".$usertotest." passwordtotest=".preg_replace('/./','*',$passwordtotest)." entitytotest=".$entitytotest);
+
 		// If test username/password asked, we define $test=false and $login var if ok, set $_SESSION["dol_loginmesg"] if ko
 		$table = MAIN_DB_PREFIX."user";
 		$usernamecol1 = 'login';
@@ -59,8 +58,8 @@ function check_user_password_dolibarr($usertotest,$passwordtotest,$entitytotest=
 		$sql.=' WHERE ('.$usernamecol1." = '".$db->escape($usertotest)."'";
 		if (preg_match('/@/',$usertotest)) $sql.=' OR '.$usernamecol2." = '".$db->escape($usertotest)."'";
 		$sql.=') AND '.$entitycol." IN (0," . ($entity ? $entity : 1) . ")";
+		$sql.=' AND statut = 1';
 
-		dol_syslog("functions_dolibarr::check_user_password_dolibarr", LOG_DEBUG);
 		$resql=$db->query($sql);
 		if ($resql)
 		{
@@ -99,12 +98,6 @@ function check_user_password_dolibarr($usertotest,$passwordtotest,$entitytotest=
 					}
 				}
 
-				if ($passok && ! empty($obj->entity) && (! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode)))
-				{
-					$ret=$mc->checkRight($obj->rowid, $entitytotest);
-					if ($ret < 0) $passok=false;
-				}
-
 				// Password ok ?
 				if ($passok)
 				{
@@ -112,11 +105,28 @@ function check_user_password_dolibarr($usertotest,$passwordtotest,$entitytotest=
 				}
 				else
 				{
-					dol_syslog("functions_dolibarr::check_user_password_dolibarr Authentification ko bad password pour '".$usertotest."'");
+					dol_syslog("functions_dolibarr::check_user_password_dolibarr Authentification ko bad password for '".$usertotest."'");
 					sleep(1);
 					$langs->load('main');
 					$langs->load('errors');
 					$_SESSION["dol_loginmesg"]=$langs->trans("ErrorBadLoginPassword");
+				}
+
+				// We must check entity
+				if ($passok && ! empty($conf->multicompany->enabled))	// We must check entity
+				{
+					global $mc;
+
+					if (! isset($mc)) $conf->multicompany->enabled = false; 	// Global not available, disable $conf->multicompany->enabled for safety
+					else
+					{
+						$ret = $mc->checkRight($obj->rowid, $entitytotest);
+						if ($ret < 0)
+						{
+							dol_syslog("functions_dolibarr::check_user_password_dolibarr Authentification ko entity '" . $entitytotest . "' not allowed for user '" . $obj->rowid . "'");
+							$login = ''; // force authentication failure
+						}
+					}
 				}
 			}
 			else

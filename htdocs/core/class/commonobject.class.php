@@ -3,7 +3,7 @@
  * Copyright (C) 2005-2013 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2013 Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2012      Christophe Battarel  <christophe.battarel@altairis.fr>
- * Copyright (C) 2010-2014 Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2010-2015 Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2012-2013 Christophe Battarel  <christophe.battarel@altairis.fr>
  * Copyright (C) 2011-2014 Philippe Grand	    <philippe.grand@atoo-net.com>
  * Copyright (C) 2012-2014 Marcos García        <marcosgdf@gmail.com>
@@ -36,7 +36,7 @@ abstract class CommonObject
 {
     public $db;
     public $error;
-    public $errors;
+    public $errors=array();			// Array use for errors
     public $canvas;                // Contains canvas name if it is
 	public $context=array();		// Use to pass context information
 
@@ -3242,13 +3242,13 @@ abstract class CommonObject
 	/**
 	 * Common function for all objects extending CommonObject for generating documents
 	 *
-	 * @param string $modelspath Relative folder where models are placed
-	 * @param string $modele Model to use
-	 * @param Translate $outputlangs Language to use
-	 * @param int $hidedetails 1 to hide details. 0 by default
-	 * @param int $hidedesc 1 to hide product description. 0 by default
-	 * @param int $hideref 1 to hide product reference. 0 by default
-	 * @return int 1 if OK -1 if not OK
+	 * @param 	string 		$modelspath Relative folder where models are placed
+	 * @param 	string 		$modele Model to use
+	 * @param 	Translate 	$outputlangs Language to use
+	 * @param 	int 		$hidedetails 1 to hide details. 0 by default
+	 * @param 	int 		$hidedesc 1 to hide product description. 0 by default
+	 * @param 	int 		$hideref 1 to hide product reference. 0 by default
+	 * @return 	int 		1 if OK -1 if KO
 	 */
 	protected function commonGenerateDocument($modelspath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref)
 	{

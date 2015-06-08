@@ -2,7 +2,7 @@
 #----------------------------------------------------------------------------
 # \file         build/makepack-dolibarr.pl
 # \brief        Dolibarr package builder (tgz, zip, rpm, deb, exe, aps)
-# \author       (c)2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
+# \author       (c)2004-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
 #
 # This is list of constant you can set to have generated packages moved into a specific dir: 
 #DESTIBETARC='/media/HDDATA1_LD/Mes Sites/Web/Dolibarr/dolibarr.org/files/lastbuild'
@@ -15,8 +15,12 @@
 
 use Cwd;
 
+
+# Change this to defined target for option 98 and 99
 $PROJECT="dolibarr";
-$RPMSUBVERSION="auto";	# auto use value found into BUILD
+$PUBLISHSTABLE="eldy,dolibarr\@frs.sourceforge.net:/home/frs/project/dolibarr";
+$PUBLISHBETARC="ldestailleur\@asso.dolibarr.org:/home/dolibarr/dolibarr.org/httpdocs/files";
+
 
 @LISTETARGET=("TGZ","ZIP","RPM_GENERIC","RPM_FEDORA","RPM_MANDRIVA","RPM_OPENSUSE","DEB","APS","EXEDOLIWAMP","SNAPSHOT");   # Possible packages
 %REQUIREMENTPUBLISH=(
@@ -41,6 +45,7 @@ $RPMSUBVERSION="auto";	# auto use value found into BUILD
 "makensis.exe"=>"NSIS"
 );
 
+$RPMSUBVERSION="auto";	# auto use value found into BUILD
 if (-d "/usr/src/redhat")   { $RPMDIR="/usr/src/redhat"; } # redhat
 if (-d "/usr/src/packages") { $RPMDIR="/usr/src/packages"; } # opensuse
 if (-d "/usr/src/RPM")      { $RPMDIR="/usr/src/RPM"; } # mandrake
@@ -59,8 +64,6 @@ $DIR||='.'; $DIR =~ s/([^\/\\])[\\\/]+$/$1/;
 
 $SOURCE="$DIR/..";
 $DESTI="$SOURCE/build";
-$PUBLISHSTABLE="eldy,dolibarr\@frs.sourceforge.net:/home/frs/project/dolibarr";
-$PUBLISHBETARC="ldestailleur\@asso.dolibarr.org:/home/dolibarr/dolibarr.org/files";
 if (! $ENV{"DESTIBETARC"} || ! $ENV{"DESTISTABLE"})
 {
 	print "Error: Missing environment variables.\n";
@@ -204,18 +207,21 @@ else {
 	my $NUM_SCRIPT;
 	my $cpt=0;
 	while (! $found) {
-		printf(" %2d - %-14s  (%s)\n",$cpt,"ALL (1..9)","Need ".join(",",values %REQUIREMENTTARGET));
+		$cpt=0;
+		printf(" %2d - %-14s  (%s)\n",$cpt,"ALL (1..10)","Need ".join(",",values %REQUIREMENTTARGET));
+		$cpt++;
+		printf(" %2d - %-14s\n",$cpt,"Generate check file");
 		foreach my $target (@LISTETARGET) {
 			$cpt++;
 			printf(" %2d - %-14s  (%s)\n",$cpt,$target,"Need ".$REQUIREMENTTARGET{$target});
 		}
 		$cpt=98;
-		printf(" %2d - %-14s  (%s)\n",$cpt,"ASSO (publish)","Need ".join(",",values %REQUIREMENTPUBLISH));
+		printf(" %2d - %-14s  (%s)\n",$cpt,"ASSO (publish)","Need ".$REQUIREMENTPUBLISH{"ASSO"});
 		$cpt=99;
-		printf(" %2d - %-14s  (%s)\n",$cpt,"SF (publish)","Need ".join(",",values %REQUIREMENTPUBLISH));
+		printf(" %2d - %-14s  (%s)\n",$cpt,"SF (publish)","Need ".$REQUIREMENTPUBLISH{"SF"});
 	
 		# Ask which target to build
-		print "Choose one package number or several separated with space (0 - ".$cpt."): ";
+		print "Choose one target number or several separated with space (0 - ".$cpt."): ";
 		$NUM_SCRIPT=<STDIN>; 
 		chomp($NUM_SCRIPT);
 		if ($NUM_SCRIPT !~ /^[0-9\s]+$/)
@@ -232,30 +238,30 @@ else {
 	if ($NUM_SCRIPT eq "98") {
 		$CHOOSEDPUBLISH{"ASSO"}=1;
 	}
-	else 
-	{
-		if ($NUM_SCRIPT eq "99") {
-			$CHOOSEDPUBLISH{"SF"}=1;
+	elsif ($NUM_SCRIPT eq "99") {
+		$CHOOSEDPUBLISH{"SF"}=1;
+	}
+	elsif ($NUM_SCRIPT eq "0") {
+		$CHOOSEDTARGET{"-CHKSUM"}=1;
+		foreach my $key (@LISTETARGET) {
+			if ($key ne 'SNAPSHOT' && $key ne 'ASSO' && $key ne 'SF') { $CHOOSEDTARGET{$key}=1; }
 		}
-		else {
-			if ($NUM_SCRIPT eq "0") {
-				foreach my $key (@LISTETARGET) {
-					if ($key ne 'SNAPSHOT' && $key ne 'ASSO' && $key ne 'SF') { $CHOOSEDTARGET{$key}=1; }
-				}
-			}
-			else {
-				foreach my $num (split(/\s+/,$NUM_SCRIPT)) {
-					$CHOOSEDTARGET{$LISTETARGET[$num-1]}=1;
-				}
-			}
+	}
+	elsif ($NUM_SCRIPT eq "1") {
+		$CHOOSEDTARGET{"-CHKSUM"}=1
+	}
+	else {
+		foreach my $num (split(/\s+/,$NUM_SCRIPT)) {
+			$CHOOSEDTARGET{$LISTETARGET[$num-2]}=1;
 		}
 	}
 }
 
+
 # Test if requirement is ok
 #--------------------------
 $atleastonerpm=0;
-foreach my $target (keys %CHOOSEDTARGET) {
+foreach my $target (sort keys %CHOOSEDTARGET) {
 	if ($target =~ /RPM/i)
 	{
 		if ($atleastonerpm && ($DESTI eq "$SOURCE/build"))
@@ -297,20 +303,32 @@ foreach my $target (keys %CHOOSEDTARGET) {
 
 print "\n";
 
-# Check if there is at least on target to build
+# Build xml check file
+#-----------------------
+if ($CHOOSEDTARGET{'-CHKSUM'})
+{
+   	print 'Create xml check file with md5 checksum with command php '.$SOURCE.'/build/generate_filecheck_xml.php release='.$MAJOR.'.'.$MINOR.'.'.$BUILD."\n";
+  	$ret=`php $SOURCE/build/generate_filecheck_xml.php release=$MAJOR.$MINOR.$BUILD`;
+  	print $ret."\n";
+}
+
+
+#print join(',',sort keys %CHOOSEDTARGET)."\n";
+
+# Check if there is at least one target to build
 #----------------------------------------------
 $nboftargetok=0;
 $nboftargetneedbuildroot=0;
 $nbofpublishneedtag=0;
-foreach my $target (keys %CHOOSEDTARGET) {
+foreach my $target (sort keys %CHOOSEDTARGET) {
 	if ($CHOOSEDTARGET{$target} < 0) { next; }
-	if ($target ne 'EXE' && $target ne 'EXEDOLIWAMP') 
+	if ($target ne 'EXE' && $target ne 'EXEDOLIWAMP' && $target ne '-CHKSUM') 
 	{
 		$nboftargetneedbuildroot++;
 	}
 	$nboftargetok++;
 }
-foreach my $target (keys %CHOOSEDPUBLISH) {
+foreach my $target (sort keys %CHOOSEDPUBLISH) {
 	if ($CHOOSEDPUBLISH{$target} < 0) { next; }
 	if ($target eq 'ASSO') { $nbofpublishneedtag++; }
 	if ($target eq 'SF') { $nbofpublishneedtag++; }
@@ -365,6 +383,7 @@ if ($nboftargetok) {
 		print "Clean $BUILDROOT\n";
 		$ret=`rm -f  $BUILDROOT/$PROJECT/.buildpath`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/.cache`;
+		$ret=`rm -fr $BUILDROOT/$PROJECT/.editorconfig`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/.externalToolBuilders`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/.git*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/.project`;
@@ -373,7 +392,6 @@ if ($nboftargetok) {
 		$ret=`rm -fr $BUILDROOT/$PROJECT/.travis.yml`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/.tx`;
 		$ret=`rm -f  $BUILDROOT/$PROJECT/build.xml`;
-		$ret=`rm -f  $BUILDROOT/$PROJECT/quickbuild.xml`;
 		$ret=`rm -f  $BUILDROOT/$PROJECT/pom.xml`;
 		
 		$ret=`rm -fr $BUILDROOT/$PROJECT/build/html`;
@@ -432,52 +450,61 @@ if ($nboftargetok) {
 		$ret=`rm -f  $BUILDROOT/$PROJECT/doc/images/dolibarr_screenshot11.png`;
 		$ret=`rm -f  $BUILDROOT/$PROJECT/doc/images/dolibarr_screenshot12.png`;
 
+		# Security to avoid to package data files 
 		$ret=`rm -fr $BUILDROOT/$PROJECT/document`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/documents`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/document`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/documents`;
+		# Removed known external modules to avoir any error when packaging on test env 
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/ancotec*`;
-		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/bootstrap*`;
-		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/custom*`;
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/calling*`;
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/bootstrap*`;
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/custom*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/factory*`;
+		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/management*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/multicompany*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/nltechno*`;
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/oscim*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/pos*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/public/test`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/teclib*`;
+		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/timesheet*`;
+		# Removed other test files
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/themes/oblyon*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/themes/eldy/*.new`;
-		$ret=`rm -fr $BUILDROOT/$PROJECT/test`;
-		$ret=`rm -fr $BUILDROOT/$PROJECT/Thumbs.db $BUILDROOT/$PROJECT/*/Thumbs.db $BUILDROOT/$PROJECT/*/*/Thumbs.db $BUILDROOT/$PROJECT/*/*/*/Thumbs.db $BUILDROOT/$PROJECT/*/*/*/*/Thumbs.db`;
-		$ret=`rm -f  $BUILDROOT/$PROJECT/.cvsignore $BUILDROOT/$PROJECT/*/.cvsignore $BUILDROOT/$PROJECT/*/*/.cvsignore $BUILDROOT/$PROJECT/*/*/*/.cvsignore $BUILDROOT/$PROJECT/*/*/*/*/.cvsignore $BUILDROOT/$PROJECT/*/*/*/*/*/.cvsignore $BUILDROOT/$PROJECT/*/*/*/*/*/*/.cvsignore`;
-		$ret=`rm -f  $BUILDROOT/$PROJECT/.gitignore $BUILDROOT/$PROJECT/*/.gitignore $BUILDROOT/$PROJECT/*/*/.gitignore $BUILDROOT/$PROJECT/*/*/*/.gitignore $BUILDROOT/$PROJECT/*/*/*/*/.gitignore $BUILDROOT/$PROJECT/*/*/*/*/*/.gitignore $BUILDROOT/$PROJECT/*/*/*/*/*/*/.gitignore`;
-		$ret=`rm -f  $BUILDROOT/$PROJECT/htdocs/includes/geoip/sample*.*`;
-		$ret=`rm -f  $BUILDROOT/$PROJECT/htdocs/includes/jquery/plugins/jqueryFileTree/connectors/jqueryFileTree.pl`;    # Avoid errors into rpmlint
-		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/jquery/plugins/template`;  # Package not valid for most linux distributions (errors reported into compile.js). Package should be embed by modules to avoid problems.
-		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/phpmailer`;                # Package not valid for most linux distributions (errors reported into file LICENSE). Package should be embed by modules to avoid problems.
-		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/ckeditor/adapters`;		# Keep this removal in case we embed libraries
-		#$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/ckeditor/_source`;		# _source must be kept into tarball due to debian policies
-		
-		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/jquery/plugins/datatables/extras/TableTools/swf`;	# Source of this flash is not available
-		$ret=`rm -f  $BUILDROOT/$PROJECT/htdocs/includes/jquery/plugins/multiselect/MIT-LICENSE.txt`;
-		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/nusoap/lib/Mail`;
-		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/nusoap/samples`;
-		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/phpexcel/license.txt`;
-		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/phpexcel/PHPExcel/Shared/PDF`;
-		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/phpexcel/PHPExcel/Shared/PCLZip`;
-		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/tcpdf/fonts/dejavu-fonts-ttf-*`;
-		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/tcpdf/fonts/freefont-*`;
-		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/tcpdf/fonts/utils`;
-		$ret=`rm -f  $BUILDROOT/$PROJECT/htdocs/includes/tcpdf/LICENSE.TXT`;
-		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/savant`;
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/public/test`;
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/test`;
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/Thumbs.db $BUILDROOT/$PROJECT/*/Thumbs.db $BUILDROOT/$PROJECT/*/*/Thumbs.db $BUILDROOT/$PROJECT/*/*/*/Thumbs.db $BUILDROOT/$PROJECT/*/*/*/*/Thumbs.db`;
+	    $ret=`rm -f  $BUILDROOT/$PROJECT/.cvsignore $BUILDROOT/$PROJECT/*/.cvsignore $BUILDROOT/$PROJECT/*/*/.cvsignore $BUILDROOT/$PROJECT/*/*/*/.cvsignore $BUILDROOT/$PROJECT/*/*/*/*/.cvsignore $BUILDROOT/$PROJECT/*/*/*/*/*/.cvsignore $BUILDROOT/$PROJECT/*/*/*/*/*/*/.cvsignore`;
+	    $ret=`rm -f  $BUILDROOT/$PROJECT/.gitignore $BUILDROOT/$PROJECT/*/.gitignore $BUILDROOT/$PROJECT/*/*/.gitignore $BUILDROOT/$PROJECT/*/*/*/.gitignore $BUILDROOT/$PROJECT/*/*/*/*/.gitignore $BUILDROOT/$PROJECT/*/*/*/*/*/.gitignore $BUILDROOT/$PROJECT/*/*/*/*/*/*/.gitignore`;
+   	    $ret=`rm -f  $BUILDROOT/$PROJECT/htdocs/includes/geoip/sample*.*`;
+        $ret=`rm -f  $BUILDROOT/$PROJECT/htdocs/includes/jquery/plugins/jqueryFileTree/connectors/jqueryFileTree.pl`;    # Avoid errors into rpmlint
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/jquery/plugins/template`;  # Package not valid for most linux distributions (errors reported into compile.js). Package should be embed by modules to avoid problems.
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/phpmailer`;                # Package not valid for most linux distributions (errors reported into file LICENSE). Package should be embed by modules to avoid problems.
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/ckeditor/adapters`;		# Keep this removal in case we embed libraries
+        #$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/ckeditor/_source`;		# _source must be kept into tarball
+   	    
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/jquery/plugins/datatables/extras/TableTools/swf`;	# Source of this flash is not available
+	    $ret=`rm -f  $BUILDROOT/$PROJECT/htdocs/includes/jquery/plugins/multiselect/MIT-LICENSE.txt`;
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/nusoap/lib/Mail`;
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/nusoap/samples`;
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/phpexcel/license.txt`;
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/phpexcel/PHPExcel/Shared/PDF`;
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/phpexcel/PHPExcel/Shared/PCLZip`;
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/tcpdf/fonts/dejavu-fonts-ttf-*`;
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/tcpdf/fonts/freefont-*`;
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/tcpdf/fonts/utils`;
+	    $ret=`rm -f  $BUILDROOT/$PROJECT/htdocs/includes/tcpdf/LICENSE.TXT`;
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/savant`;
 	}
 
 	# Build package for each target
 	#------------------------------
-	foreach my $target (keys %CHOOSEDTARGET) 
+	foreach my $target (sort keys %CHOOSEDTARGET) 
 	{
 		if ($CHOOSEDTARGET{$target} < 0) { next; }
-	
+		if ($target eq '-CHKSUM') { next; }
+		
 		print "\nBuild package for target $target\n";
 
 		if ($target eq 'SNAPSHOT') 
@@ -649,6 +676,11 @@ if ($nboftargetok) {
 			if ($target =~ /MAND/i) { $BUILDFICSRC="${FILENAME}_mandriva.spec"; }
 			if ($target =~ /OPEN/i) { $BUILDFICSRC="${FILENAME}_opensuse.spec"; }
 			
+			use Date::Language;
+			$lang=Date::Language->new('English');
+			$datestring = $lang->time2str("%a %b %e %Y", time);
+    		$changelogstring="* ".$datestring." Laurent Destailleur $MAJOR.$MINOR.$REL1-$RPMSUBVERSION\n- Upstream release\n";
+
 			print "Generate file $BUILDROOT/$BUILDFIC from $SOURCE/build/rpm/${BUILDFICSRC}\n";
 			open (SPECFROM,"<$SOURCE/build/rpm/${BUILDFICSRC}") || die "Error";
 			open (SPECTO,">$BUILDROOT/$BUILDFIC") || die "Error";
@@ -656,6 +688,7 @@ if ($nboftargetok) {
 				$_ =~ s/__FILENAMETGZ__/$FILENAMETGZ/;
 				$_ =~ s/__VERSION__/$MAJOR.$MINOR.$REL1/;
 				$_ =~ s/__RELEASE__/$RPMSUBVERSION/;
+                $_ =~ s/__CHANGELOGSTRING__/$changelogstring/;
 				print SPECTO $_;
 			}
 			close SPECFROM;
@@ -948,10 +981,10 @@ if ($nboftargetok) {
 			mkdir($DESTI.'/package_windows');
 			if (-d $DESTI.'/package_windows') { $NEWDESTI=$DESTI.'/package_windows'; } 
 
-     		print "Remove target $FILENAMEEXEDOLIWAMP.exe...\n";
+     		print "Remove target $NEWDESTI/$FILENAMEEXEDOLIWAMP.exe...\n";
     		unlink "$NEWDESTI/$FILENAMEEXEDOLIWAMP.exe";
  
- 			print "Check that in your Wine setup, you create a Z: drive that point to your /tmp directory.\n";
+ 			print "Check that in your Wine setup, you create a Z: drive that point to your / directory.\n";
 
  			$SOURCEBACK=$SOURCE;
  			$SOURCEBACK =~ s/\//\\/g;
@@ -979,7 +1012,7 @@ if ($nboftargetok) {
 
 	# Publish package for each target
 	#--------------------------------
-	foreach my $target (keys %CHOOSEDPUBLISH) 
+	foreach my $target (sort keys %CHOOSEDPUBLISH) 
 	{
 		if ($CHOOSEDPUBLISH{$target} < 0) { next; }
 	
@@ -1030,9 +1063,16 @@ if ($nboftargetok) {
 				if (! $filesize) { next; }
 
 				print "\n";
-				print "Publish file ".$file." to ".$filestoscan{$file}."\n";
-				
-				$destFolder="$NEWPUBLISH/$filestoscan{$file}/".$MAJOR.'.'.$MINOR.'.'.$BUILD;
+	    		
+	    		if ($target eq 'SF') { 
+	    			$destFolder="$NEWPUBLISH/$filestoscan{$file}/".$MAJOR.'.'.$MINOR.'.'.$BUILD;
+		    		print "Publish file ".$file." to $NEWPUBLISH/".$filestoscan{$file}."\n";
+	    		}
+	    		else
+	    		{
+	    			$destFolder="$NEWPUBLISH";
+		    		print "Publish file ".$file." to $NEWPUBLISH\n";
+	    		}
 
 				# mkdir	   
 				#my $ssh = Net::SSH::Perl->new("frs.sourceforge.net");
@@ -1062,7 +1102,8 @@ if ($nboftargetok) {
 }
 
 print "\n----- Summary -----\n";
-foreach my $target (keys %CHOOSEDTARGET) {
+foreach my $target (sort keys %CHOOSEDTARGET) {
+	if ($target eq '-CHKSUM') { print "Checksum was generated"; next; }
 	if ($CHOOSEDTARGET{$target} < 0) {
 		print "Package $target not built (bad requirement).\n";
 	} else {

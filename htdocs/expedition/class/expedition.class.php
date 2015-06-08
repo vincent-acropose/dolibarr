@@ -3,7 +3,7 @@
  * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2007		Franky Van Liedekerke	<franky.van.liedekerke@telenet.be>
  * Copyright (C) 2006-2012	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2011-2013	Juanjo Menent			<jmenent@2byte.es>
+ * Copyright (C) 2011-2015	Juanjo Menent			<jmenent@2byte.es>
  * Copyright (C) 2013       Florian Henry		  	<florian.henry@open-concept.pro>
  * Copyright (C) 2014		Cedric GROSS			<c.gross@kreiz-it.fr>
  * Copyright (C) 2014       Marcos García           <marcosgdf@gmail.com>
@@ -177,8 +177,6 @@ class Expedition extends CommonObject
 		global $conf, $langs;
 
 		$now=dol_now();
-
-		if (empty($this->model_pdf)) $this->model_pdf=$conf->global->EXPEDITION_ADDON_PDF;
 
 		require_once DOL_DOCUMENT_ROOT .'/product/stock/class/mouvementstock.class.php';
 		$error = 0;
@@ -1037,7 +1035,7 @@ class Expedition extends CommonObject
 								}
 								if (file_exists($dir))
 								{
-									if (!dol_delete_dir($dir))
+									if (!dol_delete_dir_recursive($dir))
 									{
 										$this->error=$langs->trans("ErrorCanNotDeleteDir",$dir);
 										return 0;
@@ -1600,13 +1598,16 @@ class Expedition extends CommonObject
 	}
 
 	/**
-	 * 	Cree un bon d'expedition sur disque
+	 *  Create a document onto disk according to template module.
 	 *
-	 * 	@param	string		$modele			Force le modele a utiliser ('' to not force)
-	 * 	@param	Translate	$outputlangs	Objet lang a utiliser pour traduction
-	 *  @return int             			<=0 if KO, >0 if OK
+	 *  @param	    string		$modele			Force the model to using ('' to not force)
+	 *  @param		Translate	$outputlangs	object lang to use for translations
+	 *  @param      int			$hidedetails    Hide details of lines
+	 *  @param      int			$hidedesc       Hide description
+	 *  @param      int			$hideref        Hide ref
+	 * 	@return 	int 						1 if OK -1 if KO
 	 */
-	public function generateDocument($modele, $outputlangs)
+	public function generateDocument($modele, $outputlangs,$hidedetails=0, $hidedesc=0, $hideref=0)
 	{
 		global $conf,$user,$langs;
 
@@ -1629,7 +1630,7 @@ class Expedition extends CommonObject
 
 		$this->fetch_origin();
 
-		return $this->commonGenerateDocument($modelpath, $modele, $outputlangs, 0, 0, 0);
+		return $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref);
 	}
 
 }

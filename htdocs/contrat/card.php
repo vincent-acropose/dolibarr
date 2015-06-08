@@ -36,8 +36,8 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/contract.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/contrat/class/contrat.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/modules/contract/modules_contract.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
-require_once DOL_DOCUMENT_ROOT . '/core/class/html.formfile.class.php';
-if (! empty($conf->produit->enabled) || ! empty($conf->service->enabled))  require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
+require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 if (! empty($conf->propal->enabled))  require_once DOL_DOCUMENT_ROOT.'/comm/propal/class/propal.class.php';
 if (! empty($conf->projet->enabled)) {
 	require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
@@ -73,7 +73,7 @@ $object = new Contrat($db);
 $extrafields = new ExtraFields($db);
 
 // Load object
-if ($id > 0 || ! empty($ref)) {
+if ($id > 0 || ! empty($ref) && $action!='add') {
 	$ret = $object->fetch($id, $ref);
 	if ($ret > 0)
 		$ret = $object->fetch_thirdparty();
@@ -201,6 +201,13 @@ if ($action == 'add' && $user->rights->contrat->creer)
 		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Customer")),'errors');
 		$action='create';
 		$error++;
+	}
+
+	// Fill array 'array_options' with data from add form
+	$ret = $extrafields->setOptionalsFromPost($extralabels, $object);
+	if ($ret < 0) {
+		$error ++;
+		$action = 'create';
 	}
 
 	if (! $error)
@@ -352,11 +359,6 @@ if ($action == 'add' && $user->rights->contrat->creer)
 	    }
 	    else
 	    {
-
-	    	// Fill array 'array_options' with data from add form
-	    	$ret = $extrafields->setOptionalsFromPost($extralabels, $object);
-			if ($ret < 0) $error++;
-
 	        $result = $object->create($user);
 	        if ($result > 0)
 	        {
@@ -703,20 +705,19 @@ else if ($action == 'confirm_move' && $confirm == 'yes' && $user->rights->contra
 	// Fill array 'array_options' with data from update form
 	$extralabels = $extrafields->fetch_name_optionals_label($object->table_element);
 	$ret = $extrafields->setOptionalsFromPost($extralabels, $object, GETPOST('attribute'));
-	if ($ret < 0) $error++;
+	if ($ret < 0)
+		$error ++;
 
-	if (! $error)
-	{
-		$result = $object->insertExtraFields();
-		if ($result < 0)
-		{
-			$error++;
-		}
-	}
-	else if ($reshook < 0) $error++;
+	if (! $error) {
 
-	if ($error)
-	{
+			$result = $object->insertExtraFields();
+			if ($result < 0) {
+				$error ++;
+			}
+		} else if ($reshook < 0)
+			$error ++;
+
+	if ($error) {
 		$action = 'edit_extras';
 		setEventMessage($object->error,'errors');
 	}
@@ -1239,9 +1240,7 @@ else
          * Lines of contracts
          */
 
-	    if ($conf->product->enabled || $conf->service->enabled) {
-			$productstatic=new Product($db);
-	    }
+		$productstatic=new Product($db);
 
         $usemargins=0;
 		if (! empty($conf->margin->enabled) && ! empty($object->element) && in_array($object->element,array('facture','propal','commande'))) $usemargins=1;
@@ -1301,19 +1300,28 @@ else
                         $productstatic->id=$objp->fk_product;
                         $productstatic->type=$objp->ptype;
                         $productstatic->ref=$objp->pref;
-                        print $productstatic->getNomUrl(1,'',20);
+                        $text = $productstatic->getNomUrl(1,'',20);
                         if ($objp->label)
                         {
-                        	print ' - ';
+                        	$text .= ' - ';
                         	$productstatic->ref=$objp->label;
-                        	print $productstatic->getNomUrl(0,'',16);
+                        	$text .= $productstatic->getNomUrl(0,'',16);
                         }
-                        if (! empty($conf->global->PRODUIT_DESC_IN_FORM) && !empty($objp->description))
-                            print '<br>'.dol_nl2br($objp->description);
+                        $description = $objp->description;
+
+	                    // Add description in form
+						if (! empty($conf->global->PRODUIT_DESC_IN_FORM))
+						{
+							$text .= (! empty($objp->description) && $objp->description!=$objp->product_label)?'<br>'.dol_htmlentitiesbr($objp->description):'';
+							$description = '';	// Already added into main visible desc
+						}
+
+                        echo $form->textwithtooltip($text,$description,3,'','',$cursorline,0,(!empty($line->fk_parent_line)?img_picto('', 'rightarrow'):''));
+
                         print '</td>';
                     }
                     else
-                    {
+					{
                         print "<td>".dol_htmlentitiesbr($objp->description)."</td>\n";
                     }
                     // TVA
