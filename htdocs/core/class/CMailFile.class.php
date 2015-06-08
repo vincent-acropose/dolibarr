@@ -169,7 +169,8 @@ class CMailFile
 				dol_syslog("CMailFile::CMailfile: filename_list[$i]=".$filename_list[$i].", mimetype_list[$i]=".$mimetype_list[$i]." mimefilename_list[$i]=".$mimefilename_list[$i], LOG_DEBUG);
 			}
 		}
-
+		
+		//echo $addr_cc;exit;
 		// Add autocopy to
 		if (! empty($conf->global->MAIN_MAIL_AUTOCOPY_TO)) $addr_bcc.=($addr_bcc?', ':'').$conf->global->MAIN_MAIL_AUTOCOPY_TO;
 
@@ -189,11 +190,12 @@ class CMailFile
 			$this->addr_from = $from;
 			$this->errors_to = $errors_to;
 			$this->addr_to = $to;
-			$this->addr_cc = $addr_cc;
-			$this->addr_bcc = $addr_bcc;
+			//echo $addr_cc." ".$addr_bcc;
+			if($addr_cc > 0) $this->addr_cc = $addr_cc;
+			if($addr_bcc > 0) $this->addr_bcc = $addr_bcc;
 			$this->deliveryreceipt = $deliveryreceipt;
 			$smtp_headers = $this->write_smtpheaders();
-
+			
 			// Define mime_headers
 			$mime_headers = $this->write_mimeheaders($filename_list, $mimefilename_list);
 
@@ -238,6 +240,7 @@ class CMailFile
 			$this->message = 'This is a message with multiple parts in MIME format.'.$this->eol;
 			$this->message.= $text_body . $images_encoded . $files_encoded;
 			$this->message.= "--" . $this->mixed_boundary . "--" . $this->eol;
+			
 		}
 		else if ($conf->global->MAIN_MAIL_SENDMODE == 'smtps')
 		{
@@ -283,9 +286,9 @@ class CMailFile
 				}
 			}
 
-			$smtps->setCC($addr_cc);
-			$smtps->setBCC($addr_bcc);
-			$smtps->setErrorsTo($errors_to);
+			if($addr_cc  > 0) $smtps->setCC($addr_cc);
+			if($addr_bcc  > 0) $smtps->setBCC($addr_bcc);
+			if($errors_to  > 0) $smtps->setErrorsTo($errors_to);
 			$smtps->setDeliveryReceipt($deliveryreceipt);
 
 			$this->smtps=$smtps;
@@ -335,9 +338,9 @@ class CMailFile
 				}
 			}
 
-			$smtps->setCC($addr_cc);
-			$smtps->setBCC($addr_bcc);
-			$smtps->setErrorsTo($errors_to);
+			if($addr_cc  > 0) $smtps->setCC($addr_cc);
+			if($addr_bcc  > 0) $smtps->setBCC($addr_bcc);
+			if($errors_to  > 0) $smtps->setErrorsTo($errors_to);
 			$smtps->setDeliveryReceipt($deliveryreceipt);
 
 			$this->smtps=$smtps;
@@ -349,7 +352,10 @@ class CMailFile
 
 			return 'Bad value for MAIN_MAIL_SENDMODE constant';
 		}
-
+		
+		/*echo '<pre>';
+		var_dump($this);exit;*/
+		
 	}
 
 
