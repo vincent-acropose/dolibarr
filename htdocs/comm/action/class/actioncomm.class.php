@@ -1114,12 +1114,38 @@ class ActionComm extends CommonObject
 		global $conf, $langs, $user, $hookmanager;
 
 		dol_include_once('/societe/class/societe.class.php');
-		$third_name = '';
+		dol_include_once('/projet/class/project.class.php');
+		dol_include_once('/core/class/html.form.class.php');
+		dol_include_once('/comm/action/class/cactioncomm.class.php');
+
+		$f = new Form($db);
+		
+		$this->fetch($this->id);
+		
+		if(!empty($this->type_id)) {
+			$c_action = new CActionComm($db);
+			$c_action->fetch($this->type_id);
+			$note_to_add.= 'Type : '.$langs->trans('Action'.$c_action->code);
+		}
+		
+
 		if($this->socid > 0) {
 			$s = new Societe($db);
 			$s->fetch($this->socid);
-			$third_name = 'title="Tiers : '.$s->name.'"';
+			if(!empty($note_to_add)) $note_to_add.= '<br/>';
+			$note_to_add .= 'Tiers : '.$s->name;
 		} 
+		
+		if($this->fk_project > 0) {
+			$p = new Project($db);
+			$p->fetch($this->fk_project);
+			if(!empty($note_to_add)) $note_to_add.= '<br/>';
+			$note_to_add.= 'Projet : '.$p->ref;
+		}
+
+		if(!empty($note_to_add)) $note_to_add.= '<br/>';
+		if(!empty($this->note)) $note_to_add.= 'Description : '.$this->note;
+		$note_to_add = strtr($note_to_add, array("\n" => '<br>'));
 		
 		if (! empty($conf->dol_no_mouse_hover)) $notooltip=1;   // Force disable tooltips
 
@@ -1207,7 +1233,12 @@ class ActionComm extends CommonObject
             $result.=$linkstart.img_object(($notooltip?'':$langs->trans("ShowAction").': '.$libelle), ($overwritepicto?$overwritepicto:'action'), ($notooltip?'class="valigntextbottom"':'class="classfortooltip valigntextbottom"'), 0, 0, $notooltip?0:1).$linkend;
         }
         if ($withpicto==1) $result.=' ';
-        $result.=$linkstart.$libelleshort.$linkend;
+		
+		
+	$result.=$lien.$libelleshort.$linkend;
+	
+	$result = $f->textwithtooltip($result, $note_to_add, 1, 0, '', '', 3);
+		
         return $result;
     }
 
