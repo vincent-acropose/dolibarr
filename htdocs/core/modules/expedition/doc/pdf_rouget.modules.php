@@ -254,7 +254,8 @@ class pdf_rouget extends ModelePdfExpedition
 						$res = $this->db->fetch_object($resql);
 						$ref_fourn = $res->nom.' - '.$res->ref_fourn;
 						
-						$object->lines[$i]->desc = $ref_fourn;
+						//Ticket 2379 : ajout description ligne
+						$object->lines[$i]->desc = $object->lines[$i]->description.'<br>'.$ref_fourn;
 					}
 
 					// Description de la ligne produit
