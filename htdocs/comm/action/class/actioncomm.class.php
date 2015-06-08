@@ -1019,22 +1019,47 @@ class ActionComm extends CommonObject
         global $db, $conf,$langs;
 		
 		dol_include_once('/societe/class/societe.class.php');
+		dol_include_once('/projet/class/project.class.php');
+		dol_include_once('/core/class/html.form.class.php');
+		dol_include_once('/comm/action/class/cactioncomm.class.php');
 		
-		$third_name = '';
+		$f = new Form($db);
+		
+		$this->fetch($this->id);
+		
+		if(!empty($this->type_id)) {
+			$c_action = new CActionComm($db);
+			$c_action->fetch($this->type_id);
+			$note_to_add.= 'Type : '.$langs->trans('Action'.$c_action->code);
+		}
+		
 		if($this->socid > 0) {
 			$s = new Societe($db);
 			$s->fetch($this->socid);
-			$third_name = 'title="Tiers : '.$s->name.'"';
-		} 
+			//$note_to_add = 'title="Tiers : '.$s->name.'"';
+			if(!empty($note_to_add)) $note_to_add.= '<br/>';
+			$note_to_add .= 'Tiers : '.$s->name;
+		}
+		
+		if($this->fk_project > 0) {
+			$p = new Project($db);
+			$p->fetch($this->fk_project);
+			if(!empty($note_to_add)) $note_to_add.= '<br/>';
+			$note_to_add.= 'Projet : '.$p->ref;
+		}
+
+		if(!empty($note_to_add)) $note_to_add.= '<br/>';
+		if(!empty($this->note)) $note_to_add.= 'Description : '.$this->note;
+		$note_to_add = strtr($note_to_add, array("\n" => '<br>'));
 		
         $result='';
         if ($option=='birthday') {
         	$lien = '<a ';
-			$lien.= $third_name;
+			//$lien.= $third_name;
         	$lien.= ' '.($classname?'class="'.$classname.'" ':'').'href="'.DOL_URL_ROOT.'/contact/perso.php?id='.$this->id.'">';
 		} else {
 			$lien = '<a ';
-			$lien.= $third_name;
+			//$lien.= $third_name;
 			$lien.= ' '.($classname?'class="'.$classname.'" ':'').'href="'.DOL_URL_ROOT.'/comm/action/card.php?id='.$this->id.'">';
 		}
         $lienfin='</a>';
@@ -1064,7 +1089,12 @@ class ActionComm extends CommonObject
             $result.=$lien.img_object($langs->trans("ShowAction").': '.$libelle,($overwritepicto?$overwritepicto:'action')).$lienfin;
         }
         if ($withpicto==1) $result.=' ';
-        $result.=$lien.$libelleshort.$lienfin;
+		
+		
+		$result.=$lien.$libelleshort.$lienfin;
+		
+		$result = $f->textwithtooltip($result, $note_to_add, 1, 0, '', '', 3);
+		
         return $result;
     }
 
