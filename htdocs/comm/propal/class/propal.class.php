@@ -984,7 +984,8 @@ class Propal extends CommonObject
                 $this->socid 				= $objsoc->id;
                 $this->cond_reglement_id	= (! empty($objsoc->cond_reglement_id) ? $objsoc->cond_reglement_id : 0);
                 $this->mode_reglement_id	= (! empty($objsoc->mode_reglement_id) ? $objsoc->mode_reglement_id : 0);
-                $this->fk_project			= '';
+				// ATTENTION, spécifique acropose, il faut que l'on puisse toujours récupérer le fk_project de la propal de départ, dans tous les cas
+               	// $this->fk_project			= $objFrom->fk_project;
                 $this->fk_delivery_address	= '';
             }
 

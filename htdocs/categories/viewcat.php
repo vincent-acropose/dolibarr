@@ -280,10 +280,52 @@ else
 	print "</table>\n";
 }
 
+function get_products_categs_enfantes(&$cat, &$TProdsInOtherCategs) {
+	
+	$filles = $cat->get_filles();
+	if(!empty($filles)) {
+		foreach($filles as $cat_fille) {
+			$TProds = $cat_fille->getObjectsInCateg("product");
+			$TProdsInOtherCategs = array_merge($TProdsInOtherCategs, $TProds);
+			get_products_categs_enfantes($cat_fille, $TProdsInOtherCategs);
+		}
+	}
+	
+}
+
+function delete_doublons(&$TProducts) {
+	
+	global $db;
+	
+	if(empty($TProducts)) return 0;
+	
+	// On récupère les ID de tous les produits car array_unique marche que sur des chaines ou des nombres
+	foreach($TProducts as $p) {
+		$TIDProducts[] = $p->id;
+	}
+	
+	// On supprime les doublons
+	$TIDProducts = array_unique($TIDProducts);
+	
+	// On vide le tableau de départ
+	$TProducts = array();
+	
+	// On remplit de nouvea le tableau avec les produits de départ sans les doublons
+	foreach($TIDProducts as $id_p) {
+		$p = new Product($db);
+		$p->fetch($id_p);
+		$TProducts[] = $p;
+	}
+	
+}
+
 // List of products or services (type is type of category)
 if ($object->type == 0)
 {
 	$prods = $object->getObjectsInCateg("product");
+	$TProdsInOtherCategs = array();
+	get_products_categs_enfantes($object, $TProdsInOtherCategs);
+	delete_doublons($TProdsInOtherCategs);
 	if ($prods < 0)
 	{
 		dol_print_error();
@@ -342,6 +384,40 @@ if ($object->type == 0)
 					print img_delete($langs->trans("DeleteFromCat")).' ';
 					print $langs->trans("DeleteFromCat")."</a>";
 				}
+				print '</td>';
+				print "</tr>\n";
+			}
+		}
+		else
+		{
+			print "<tr ".$bc[false].'><td colspan="2">'.$langs->trans("ThisCategoryHasNoProduct")."</td></tr>";
+		}
+		print "</table>\n";
+		
+		
+		print "<br>";
+		print "<table class='noborder' width='100%'>\n";
+		print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("ProductsAndServicesInChildrenCategories")."</td></tr>\n";
+
+		if (count($TProdsInOtherCategs) > 0)
+		{
+			$var=true;
+			foreach ($TProdsInOtherCategs as $prod)
+			{
+				$var=!$var;
+				print "\t<tr ".$bc[$var].">\n";
+				print '<td class="nowrap" valign="top">';
+				print $prod->getNomUrl(1,'category');
+				print "</td>\n";
+				print '<td valign="top">'.$prod->libelle."</td>\n";
+				// Link to delete from category
+				print '<td align="right">';
+				$typeid=$object->type;
+				$permission=0;
+				if ($typeid == 0) $permission=($user->rights->produit->creer || $user->rights->service->creer);
+				if ($typeid == 1) $permission=$user->rights->societe->creer;
+				if ($typeid == 2) $permission=$user->rights->societe->creer;
+				if ($typeid == 3) $permission=$user->rights->adherent->creer;
 				print '</td>';
 				print "</tr>\n";
 			}
