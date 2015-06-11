@@ -482,8 +482,15 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
         $sql = 'SELECT f.rowid as facid, f.facnumber, f.total_ttc, f.type, ';
         $sql.= ' f.datef as df';
         $sql.= ' FROM '.MAIN_DB_PREFIX.'facture as f';
+		$sql.= ' INNER JOIN ' . MAIN_DB_PREFIX . 'societe as s ON s.rowid = f.fk_soc';
         $sql.= ' WHERE f.entity = '.$conf->entity;
-        $sql.= ' AND f.fk_soc = '.$facture->socid;
+		
+		if (!empty($facture->client->code_compta)) {
+			$sql.= ' AND s.code_compta = '.$facture->client->code_compta;
+		} else {
+			$sql.= ' AND s.rowid = '.$facture->socid;
+		}
+		
         $sql.= ' AND f.paye = 0';
         $sql.= ' AND f.fk_statut = 1'; // Statut=0 => not validated, Statut=2 => canceled
         if ($facture->type != 2)
@@ -699,6 +706,7 @@ if (! GETPOST('action'))
     $sql.= ' FROM '.MAIN_DB_PREFIX.'paiement as p, '.MAIN_DB_PREFIX.'facture as f, '.MAIN_DB_PREFIX.'c_paiement as c';
     $sql.= ' WHERE p.fk_facture = f.rowid AND p.fk_paiement = c.id';
     $sql.= ' AND f.entity = '.$conf->entity;
+  
     if ($socid)
     {
         $sql.= ' AND f.fk_soc = '.$socid;
