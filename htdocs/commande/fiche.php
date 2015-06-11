@@ -2165,9 +2165,42 @@ if ($action == 'create' && $user->rights->commande->creer) {
 		// Total TTC
 		print '<tr><td>' . $langs->trans('AmountTTC') . '</td><td align="right">' . price($object->total_ttc, 1, '', 1, - 1, - 1, $conf->currency) . '</td></tr>';
 
-		// Statut
-		print '<tr><td>' . $langs->trans('Status') . '</td><td>' . $object->getLibStatut(4) . '</td></tr>';
+		if ($conf->clivici->enabled && $object->total_ht > 0) {
+			// Récupérer la somme des factures liées à la commande
+			$object->fetchObjectLinked($object->id, 'commande', '', 'facture');
+			
+			$sum = 0;
+			if (!empty($object->linkedObjects['facture'])) {
+				foreach ($object->linkedObjects['facture'] as $facture) {
+					if ($facture->statut > 0) {
+						$sum += $facture->total_ht;
+					}
+				}	
+			}
 
+			if ($sum > 0) {
+				// Si la somme des factures est égale au montant de la commande,
+				// on affiche la commande "Facturée"
+				if ($sum >= $object->total_ht) {
+					$etat = 'Facturée';
+				}
+				
+				// Si il y a une facture mais qu'elle n'est pas égale au montant de la commande,
+				// on affiche la commande "Facturée partiellement"
+				if ($sum < $object->total_ht) {
+					$etat = 'Facturée partiellement';
+				}
+			}
+		}
+		
+		if ($conf->clivici->enabled && $sum > 0) {
+			// Statut
+			print '<tr><td>' . $langs->trans('Status') . '</td><td>' . $object->getLibStatut(4) . ' (' . $etat . ')</td></tr>';
+		} else {
+			// Statut
+			print '<tr><td>' . $langs->trans('Status') . '</td><td>' . $object->getLibStatut(4) . '</td></tr>';
+		}
+		
 		print '</table><br>';
 		print "\n";
 
