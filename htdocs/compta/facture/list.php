@@ -290,10 +290,11 @@ if ($resql)
         $moreforfilter.=$langs->trans('LinkedToSpecificUsers'). ': ';
         $moreforfilter.=$form->select_dolusers($search_user,'search_user',1);
     }
+		
     if ($moreforfilter)
     {
         print '<tr class="liste_titre">';
-        print '<td class="liste_titre" colspan="10">';
+        print '<td class="liste_titre" colspan="11">';
         print $moreforfilter;
         print '</td></tr>';
     }
@@ -309,6 +310,8 @@ if ($resql)
     print_liste_field_titre($langs->trans('AmountTTC'),$_SERVER['PHP_SELF'],'f.total_ttc','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Received'),$_SERVER['PHP_SELF'],'am','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Status'),$_SERVER['PHP_SELF'],'fk_statut,paye,am','',$param,'align="right"',$sortfield,$sortorder);
+    if ($conf->exportcompta->enabled) print_liste_field_titre('Comptabilisé',$_SERVER['PHP_SELF'],'date_compta','',$param,'align="right"',$sortfield,$sortorder);
+	
     //print '<td class="liste_titre">&nbsp;</td>';
     print '</tr>';
 
@@ -331,6 +334,7 @@ if ($resql)
     print '<td class="liste_titre" align="right">&nbsp;</td>';
     print '<td class="liste_titre" align="right"><input class="flat" type="text" size="10" name="search_montant_ttc" value="'.$search_montant_ttc.'"></td>';
     print '<td class="liste_titre" align="right">&nbsp;</td>';
+	if ($conf->exportcompta->enabled) print '<td class="liste_titre" align="right">&nbsp;</td>';
     print '<td class="liste_titre" align="right"><input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
     print "</td></tr>\n";
 
@@ -421,7 +425,20 @@ if ($resql)
             print '<td align="right" class="nowrap">';
             print $facturestatic->LibStatut($objp->paye,$objp->fk_statut,5,$paiement,$objp->type);
             print "</td>";
-            //print "<td>&nbsp;</td>";
+			
+			$facturestatic->fetch_optionals($facturestatic->id);
+			
+			if ($conf->exportcompta->enabled) {
+				$date_compta = $facturestatic->array_options['options_date_compta'];
+				
+				if (!empty($date_compta)) {
+					$date_compta = date('d/m/Y H:i', strtotime($date_compta));
+					print '<td align="center">' . img_picto('Comptabilisé (' . $date_compta . ')','statut4') . '</td>';
+				} else {
+					print '<td align="center">' . img_picto('Non comptabilisé','statut5') . '</td>';
+				}
+			}
+			
             print "</tr>\n";
             $total_ht+=$objp->total_ht;
             $total_tva+=$objp->total_tva;
