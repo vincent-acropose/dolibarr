@@ -436,8 +436,19 @@ if (empty($reshook)) {
 				$message = $_POST ['message'];
 				
 				$receivercc = GETPOST('receivercc');
-				$sendtocc = ($receivercc!=='') ? $receivercc : $_POST ['sendtocc'];
 				
+				// Si le destinataire est la société
+				if ($receivercc == 'thirdparty') {
+					$receivercc = $object->client->email;
+				} else if (is_numeric($receivercc) && $receivercc > 0) {
+					$receivercc = $object->client->contact_get_property($receivercc, 'email');
+				} else {
+					$receivercc = '';
+				}
+
+				$sendtocc = ($receivercc!=='') ? $receivercc : $_POST ['sendtocc'];
+				$sendtocc = ($sendtocc) ? $sendtocc : '';
+
 				$deliveryreceipt = $_POST ['deliveryreceipt'];
 
 				if (dol_strlen($_POST ['subject']))
