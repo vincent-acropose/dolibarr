@@ -184,7 +184,7 @@ else {
 	<td align="right"><?php
 	if (GETPOST('prod_entry_mode') != 'predef')
 	{
-		if ($seller->tva_assuj == "0") echo '<input type="hidden" name="tva_tx" value="0">0';
+		if ($seller->tva_assuj == "0") echo '<input type="hidden" name="tva_tx" value="0"> '.vatrate(0, true);
 		else echo $form->load_tva('tva_tx', (isset($_POST["tva_tx"])?$_POST["tva_tx"]:-1), $seller, $buyer);
 	}
 	?>
@@ -201,9 +201,9 @@ else {
 	<?php } ?>
 	</td>
 	<?php } ?>
-	<td align="right"><input type="text" size="2" name="qty" class="flat" value="<?php echo (isset($_POST["qty"])?$_POST["qty"]:1); ?>">
+	<td align="right"><input type="text" size="2" id="qty" name="qty" class="flat" value="<?php echo (isset($_POST["qty"])?$_POST["qty"]:1); ?>">
 	</td>
-	<td align="right" class="nowrap"><input type="text" size="1" class="flat" value="<?php echo (isset($_POST["remise_percent"])?$_POST["remise_percent"]:$buyer->remise_percent); ?>" name="remise_percent"><span class="hideonsmartphone">%</span></td>
+	<td align="right" class="nowrap"><input type="text" size="1" id="remise_percent" name="remise_percent" class="flat" value="<?php echo (isset($_POST["remise_percent"])?$_POST["remise_percent"]:$buyer->remise_percent); ?>"><span class="hideonsmartphone">%</span></td>
 
 	<?php
 	if (! empty($usemargins))
