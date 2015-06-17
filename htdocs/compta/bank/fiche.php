@@ -205,7 +205,7 @@ $formcompany = new FormCompany($db);
 
 $countrynotdefined=$langs->trans("ErrorSetACountryFirst").' ('.$langs->trans("SeeAbove").')';
 
-llxHeader();
+llxHeader('',$langs->trans("FinancialAccount").'-'.$langs->trans("AccountCard"));
 
 
 // Creation

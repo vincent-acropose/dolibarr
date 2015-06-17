@@ -889,6 +889,7 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
         if (get_class($object) == 'Societe'  && $object->id) $sql.= " AND a.fk_soc = ".$object->id;
         if (! empty($objcon->id)) $sql.= " AND a.fk_contact = ".$objcon->id;
         $sql.= " AND c.id=a.fk_action";
+        $sql.= " AND (c.module<>'agefodd' OR c.module IS NULL)";
         $sql.= " AND ((a.percent >= 0 AND a.percent < 100) OR (a.percent = -1 AND a.datep > '".$db->idate($now)."'))";
         $sql.= " ORDER BY a.datep DESC, a.id DESC";
 
@@ -935,7 +936,7 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
                     $out.='<td>'.$actionstatic->getNomUrl(1,40).'</td>';
                     
                     //Desc
-                    $out.= '<td title="' . dol_htmlentities($obj->note,ENT_COMPAT) . '">' . dol_htmlentitiesbr( dol_trunc ( $obj->note, 60 ),  1 ) . '</td>';
+                    $out.= '<td>' . dol_htmlentitiesbr( dol_trunc ( $obj->note, 60 ),  1 ) . '</td>';
                     
                     // Soc pour cette action
                     if (!empty($obj->fk_soc))
@@ -1049,6 +1050,7 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
         if (get_class($object) == 'Societe'  && $object->id) $sql.= " AND a.fk_soc = ".$object->id;
         if (is_object($objcon) && $objcon->id) $sql.= " AND a.fk_contact = ".$objcon->id;
         $sql.= " AND c.id=a.fk_action";
+        $sql.= " AND (c.module<>'agefodd' OR c.module IS NULL)";
         $sql.= " AND (a.percent = 100 OR (a.percent = -1 AND a.datep <= '".$db->idate($now)."'))";
         $sql.= " ORDER BY a.datep DESC, a.id DESC";
 
@@ -1092,7 +1094,7 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
         }
     }
 
-    if (! empty($conf->mailing->enabled) && ! empty($objcon->email))
+    /*if (! empty($conf->mailing->enabled) && ! empty($objcon->email))
     {
         $langs->load("mails");
 
@@ -1136,7 +1138,7 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
         {
             dol_print_error($db);
         }
-    }
+    }*/
 
 
     if (! empty($conf->agenda->enabled) || (! empty($conf->mailing->enabled) && ! empty($objcon->email)))
@@ -1228,7 +1230,7 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
             $out.='</td>';
 
             // DEsc of event
-            $out.= '<td title="' . dol_htmlentities($histo[$key]['desc'],ENT_COMPAT) . '">' . dol_htmlentitiesbr( dol_trunc ( $histo[$key]['desc'], 60 ),  1 ) . '</td>';
+            $out.= '<td>' . dol_htmlentitiesbr( dol_trunc ( $histo[$key]['desc'], 60 ),  1 ) . '</td>';
             //$out.='<td>'.dol_trunc(, 40).'</td>';
 
             // Objet lie
