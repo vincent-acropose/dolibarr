@@ -118,6 +118,9 @@ class FormProduct
 
 		dol_syslog(get_class($this)."::selectWarehouses $selected, $htmlname, $filtertype, $empty, $disabled, $fk_product",LOG_DEBUG);
 
+
+		if($selected<0)$selected = 3;
+
 		$this->loadWarehouses($fk_product);
 		$nbofwarehouses=count($this->cache_warehouses);
 		
