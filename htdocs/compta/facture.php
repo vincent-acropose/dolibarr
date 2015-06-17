@@ -872,17 +872,21 @@ if (empty($reshook)) {
 									$totalamount = 0;
 									$lines = $srcobject->lines;
 									$numlines=count($lines);
+									$totalamount = 0;
+									$iFirstLine = -1;
+									
 									for ($i=0; $i<$numlines; $i++)
 									{
 										$qualified=1;
 										if (empty($lines[$i]->qty)) $qualified=0;	// We discard qty=0, it is an option
 										if (! empty($lines[$i]->special_code)) $qualified=0;	// We discard special_code (frais port, ecotaxe, option, ...)
 										if ($qualified) $totalamount += $lines[$i]->total_ht;
+										if ($qualified && $iFirstLine == -1) $iFirstLine = $i;
 									}
-
+									
 									if ($totalamount != 0) {
 										$amountdeposit = ($totalamount * $valuedeposit) / 100;
-									}
+									}	
 								} else {
 									$mesgs [] = $srcobject->error;
 									$error ++;
@@ -893,19 +897,19 @@ if (empty($reshook)) {
 									$langs->trans('Deposit'),
 									$amountdeposit,		 	// subprice
 									1, 						// quantity
-									$lines [$i]->tva_tx, 0, // localtax1_tx
+									$lines [$iFirstLine]->tva_tx, 0, // localtax1_tx
 									0, 						// localtax2_tx
 									0, 						// fk_product
 									0, 						// remise_percent
 									0, 						// date_start
 									0, 						// date_end
-									0, $lines [$i]->info_bits, // info_bits
+									0, $lines [$iFirstLine]->info_bits, // info_bits
 									0, 						// info_bits
 									'HT',
 									0,
 									0, 						// product_type
 									1,
-									$lines [$i]->special_code,
+									0,
 									$object->origin,
 									0,
 									0,
@@ -948,7 +952,7 @@ if (empty($reshook)) {
 										$discount->amount_ht = abs($lines [$i]->total_ht);
 										$discount->amount_tva = abs($lines [$i]->total_tva);
 										$discount->amount_ttc = abs($lines [$i]->total_ttc);
-										$discount->tva_tx = $lines [$i]->tva_tx;
+										$discount->tva_tx = 20; //$lines [$i]->tva_tx;
 										$discount->fk_user = $user->id;
 										$discount->description = $desc;
 										$discountid = $discount->create($user);
@@ -996,7 +1000,7 @@ if (empty($reshook)) {
 										$localtax1_tx = get_localtax($lines[$i]->tva_tx, 1, $object->client);
 										$localtax2_tx = get_localtax($lines[$i]->tva_tx, 2, $object->client);
 
-										$result = $object->addline($desc, $lines [$i]->subprice, $lines [$i]->qty, $lines [$i]->tva_tx, $localtax1_tx, $localtax2_tx, $lines [$i]->fk_product, $lines [$i]->remise_percent, $date_start, $date_end, 0, $lines [$i]->info_bits, $lines [$i]->fk_remise_except, 'HT', 0, $product_type, $lines [$i]->rang, $lines [$i]->special_code, $object->origin, $lines [$i]->rowid, $fk_parent_line, $lines [$i]->fk_fournprice, $lines [$i]->pa_ht, $label, $array_option);
+										$result = $object->addline($desc, $lines [$i]->subprice, $lines [$i]->qty, 20, $localtax1_tx, $localtax2_tx, $lines [$i]->fk_product, $lines [$i]->remise_percent, $date_start, $date_end, 0, $lines [$i]->info_bits, $lines [$i]->fk_remise_except, 'HT', 0, $product_type, $lines [$i]->rang, $lines [$i]->special_code, $object->origin, $lines [$i]->rowid, $fk_parent_line, $lines [$i]->fk_fournprice, $lines [$i]->pa_ht, $label, $array_option);
 
 										if ($result > 0) {
 											$lineid = $result;
