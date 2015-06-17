@@ -62,14 +62,17 @@ require DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
 
 $arrayresult = array();
 
+$searh_key = GETPOST('projectid');
+if(empty($searh_key)) $searh_key = GETPOST('fk_project');
+
 $sql = 'SELECT rowid, ref, title
 		FROM '.MAIN_DB_PREFIX.'projet
 		WHERE fk_statut > 0 
 		AND 
 		(
-			title LIKE "%'.GETPOST('projectid').'%"
+			title LIKE "%'.$searh_key.'%"
 			OR
-			ref LIKE "%'.GETPOST('projectid').'%"
+			ref LIKE "%'.$searh_key.'%"
 		)
 		';
 
