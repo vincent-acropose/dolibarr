@@ -490,7 +490,9 @@ class Paiement extends CommonObject
                                 );
                                 if ($result <= 0) dol_print_error($this->db);
                                 $linkaddedforthirdparty[$fac->thirdparty->id]=$fac->thirdparty->id;  // Mark as done for this thirdparty
-                            }
+                            	
+                            	break; // Vici : On se limite au premier tiers
+							}
                         }
                         if ($mode == 'payment_supplier')
                         {
