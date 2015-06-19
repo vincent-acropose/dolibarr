@@ -486,7 +486,8 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
         $sql.= ' WHERE f.entity = '.$conf->entity;
 		
 		if (!empty($facture->client->code_compta)) {
-			$sql.= ' AND s.code_compta = '.$facture->client->code_compta;
+			$sql.= ' AND (s.code_compta = '.$facture->client->code_compta . ' ';
+			$sql.= ' OR s.nom LIKE "' . $facture->client->nom . '%")';
 		} else {
 			$sql.= ' AND s.rowid = '.$facture->socid;
 		}
@@ -531,6 +532,7 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
                 print '<table class="noborder" width="100%">';
                 print '<tr class="liste_titre">';
                 print '<td>'.$arraytitle.'</td>';
+				print '<td>Société</td>';
                 print '<td align="center">'.$langs->trans('Date').'</td>';
                 print '<td align="right">'.$langs->trans('AmountTTC').'</td>';
                 print '<td align="right">'.$alreadypayedlabel.'</td>';
@@ -564,6 +566,12 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
                     print $invoice->getNomUrl(1,'');
                     print "</td>\n";
 
+					// Société
+					$societe = new Societe($db);
+					$societe->fetch($invoice->socid);
+					
+					print '<td>' . $societe->getNomUrl(1) . '</td>';
+					
                     // Date
                     print '<td align="center">'.dol_print_date($db->jdate($objp->df),'day')."</td>\n";
 
