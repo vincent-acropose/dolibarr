@@ -445,15 +445,25 @@ class BonPrelevement extends CommonObject
                             $fac = new Facture($this->db);
                             $fac->fetch($facs[$i][0]);
                             $amounts[$fac->id] = $facs[$i][1];
-                            $result = $fac->set_paid($user);
+							
+							$totalpaye  = $fac->getSommePaiement();
+							$totalcreditnotes = $fac->getSumCreditNotesUsed();
+							$totaldeposits = $fac->getSumDepositsUsed();
+							$alreadypayed = $totalpaye + $totalcreditnotes + $totaldeposits;
+							
+							if ($alreadypayed + $facs[$i][1] >= $fac->total_ttc) {
+								$result = $fac->set_paid($user);
+							}
                         }
+						
                         $paiement = new Paiement($this->db);
                         $paiement->datepaye     = $date ;
                         $paiement->amounts      = $amounts;
                         $paiement->paiementid   = 3; //
                         $paiement->num_paiement = $this->ref ;
-
+						
                         $paiement_id = $paiement->create($user);
+						
                         if ($paiement_id < 0)
                         {
                             dol_syslog(get_class($this)."::set_credite AddPayment Error");
@@ -652,7 +662,7 @@ class BonPrelevement extends CommonObject
     {
         global $conf;
 
-        $sql = "SELECT sum(f.total_ttc) as nb";
+        $sql = "SELECT sum(pfd.amount) as nb";
         $sql.= " FROM ".MAIN_DB_PREFIX."facture as f,";
         $sql.= " ".MAIN_DB_PREFIX."prelevement_facture_demande as pfd";
         //$sql.= " ,".MAIN_DB_PREFIX."c_paiement as cp";
@@ -911,7 +921,7 @@ class BonPrelevement extends CommonObject
 					dol_syslog("Erreur recherche reference");
 				}
 
-				$ref = "T".$ref.str_pad(dol_substr("00".intval($row[0])+1),2,"0",STR_PAD_LEFT);
+				$ref = "T".$ref.str_pad("00".intval($row[0])+1,2,"0",STR_PAD_LEFT);
 
 				$filebonprev = $ref;
 
