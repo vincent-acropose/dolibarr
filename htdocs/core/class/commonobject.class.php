@@ -2314,7 +2314,7 @@ abstract class CommonObject
 						$value=$this->array_options["options_".$key];
 						break;
 					case "edit":
-						$value=(isset($_POST["options_".$key])?$_POST["options_".$key]:$this->array_options["options_".$key]);
+						$value=(GETPOST("options_".$key) ? GETPOST("options_".$key) : $this->array_options["options_".$key]);
 						break;
 				}
 				if ($extrafields->attribute_type[$key] == 'separate')

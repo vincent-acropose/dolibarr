@@ -83,6 +83,7 @@ DoStandingOrdersBeforePayments=Cet onglet permet de faire une demande de prélè
 WithdrawalFile=Fichier de prélèvement
 SetToStatusSent=Mettre au statut "Fichier envoyé"
 ThisWillAlsoAddPaymentOnInvoice=Ceci créera également les paiements sur les factures et les classera payées
+MakeWithdrawRequestAmount=Montant de la demande de prélèvement : 
 
 ### Notifications
 InfoCreditSubject=Crédit prélèvement %s à la banque

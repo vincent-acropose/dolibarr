@@ -2554,7 +2554,7 @@ class Facture extends CommonInvoice
 			}
 			else
 			{
-				dol_print_error($db,"Facture::getNextNumRef ".$obj->error);
+				//dol_print_error($db,"Facture::getNextNumRef ".$obj->error);
 				return "";
 			}
 		}
@@ -2864,7 +2864,7 @@ class Facture extends CommonInvoice
 	function demande_prelevement($user)
 	{
 		dol_syslog(get_class($this)."::demande_prelevement", LOG_DEBUG);
-
+		
 		if ($this->statut > 0 && $this->paye == 0)
 		{
 	        require_once DOL_DOCUMENT_ROOT . '/societe/class/companybankaccount.class.php';
@@ -2894,35 +2894,43 @@ class Facture extends CommonInvoice
                     // For example print 239.2 - 229.3 - 9.9; does not return 0.
                     //$resteapayer=bcadd($this->total_ttc,$totalpaye,$conf->global->MAIN_MAX_DECIMALS_TOT);
                     //$resteapayer=bcadd($resteapayer,$totalavoir,$conf->global->MAIN_MAX_DECIMALS_TOT);
-                    $resteapayer = price2num($this->total_ttc - $totalpaye - $totalcreditnotes - $totaldeposits,'MT');
+                    
+                    //$resteapayer = price2num($this->total_ttc - $totalpaye - $totalcreditnotes - $totaldeposits,'MT');
 
-                    $sql = 'INSERT INTO '.MAIN_DB_PREFIX.'prelevement_facture_demande';
-                    $sql .= ' (fk_facture, amount, date_demande, fk_user_demande, code_banque, code_guichet, number, cle_rib)';
-                    $sql .= ' VALUES ('.$this->id;
-                    $sql .= ",'".price2num($resteapayer)."'";
-                    $sql .= ",'".$this->db->idate($now)."'";
-                    $sql .= ",".$user->id;
-                    $sql .= ",'".$bac->code_banque."'";
-                    $sql .= ",'".$bac->code_guichet."'";
-                    $sql .= ",'".$bac->number."'";
-                    $sql .= ",'".$bac->cle_rib."')";
-
-                    dol_syslog(get_class($this)."::demande_prelevement sql=".$sql);
-                    if ($this->db->query($sql))
-                    {
-                        return 1;
-                    }
-                    else
-                  {
-                        $this->error=$this->db->lasterror();
-                        dol_syslog(get_class($this).'::demandeprelevement Erreur');
-                        return -1;
-                    }
+                    $amount = GETPOST('withdraw_request_amount');
+					
+					if (is_numeric($amount) && $amount != 0) {
+						$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'prelevement_facture_demande';
+	                    $sql .= ' (fk_facture, amount, date_demande, fk_user_demande, code_banque, code_guichet, number, cle_rib)';
+	                    $sql .= ' VALUES ('.$this->id;
+	                    $sql .= ",'".price2num($amount)."'";
+	                    $sql .= ",'".$this->db->idate($now)."'";
+	                    $sql .= ",".$user->id;
+	                    $sql .= ",'".$bac->code_banque."'";
+	                    $sql .= ",'".$bac->code_guichet."'";
+	                    $sql .= ",'".$bac->number."'";
+	                    $sql .= ",'".$bac->cle_rib."')";
+	
+	                    dol_syslog(get_class($this)."::demande_prelevement sql=".$sql);
+	                    if ($this->db->query($sql))
+	                    {
+	                        return 1;
+	                    }
+	                    else
+	                  	{
+	                        $this->error=$this->db->lasterror();
+	                        dol_syslog(get_class($this).'::demandeprelevement Erreur');
+	                        return -1;
+	                    }
+					} else {
+						$this->error="Unable to create request for nil amount.";
+                   		dol_syslog(get_class($this).'::demandeprelevement Impossible de creer une demande avec un montant nul.');
+					}
                 }
                 else
                 {
                     $this->error="A request already exists";
-                    dol_syslog(get_class($this).'::demandeprelevement Impossible de creer une demande, demande deja en cours');
+                    dol_syslog(get_class($this).'::demandeprelevement Impossible de creer une demande, demande deja en cours.');
                 }
             }
             else

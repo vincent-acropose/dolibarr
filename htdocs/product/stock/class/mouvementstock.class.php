@@ -88,155 +88,160 @@ class MouvementStock
 		}
 		$product->load_stock();
 		
+		$TChilds = $product->getChildsArbo($product->id);
+		
 		// Define if we must make the stock change (If product type is a service or if stock is used also for services)
 		$movestock=0;
 		if ($product->type != 1 || ! empty($conf->global->STOCK_SUPPORTS_SERVICES)) $movestock=1;
 
 		if ($movestock && $entrepot_id > 0)	// Change stock for current product, change for subproduct is done after
 		{
-			if(!empty($this->origin)) {
-				$origintype = $this->origin->element;
-				$fk_origin = $this->origin->id;
-			} else {
-				$origintype = '';
-				$fk_origin = 0;
-			}
-			
-			$sql = "INSERT INTO ".MAIN_DB_PREFIX."stock_mouvement";
-			$sql.= " (datem, fk_product, fk_entrepot, value, type_mouvement, fk_user_author, label, price, fk_origin, origintype)";
-			$sql.= " VALUES ('".$this->db->idate($now)."', ".$fk_product.", ".$entrepot_id.", ".$qty.", ".$type.",";
-			$sql.= " ".$user->id.",";
-			$sql.= " '".$this->db->escape($label)."',";
-			$sql.= " '".price2num($price)."',";
-			$sql.= " '".$fk_origin."',";
-			$sql.= " '".$origintype."'";
-			$sql.= ")";
-
-			dol_syslog(get_class($this)."::_create sql=".$sql, LOG_DEBUG);
-			$resql = $this->db->query($sql);
-			if ($resql)
-			{
-				$mvid = $this->db->last_insert_id(MAIN_DB_PREFIX."stock_mouvement");
-			}
-			else
-			{
-				$this->error=$this->db->lasterror();
-				dol_syslog(get_class($this)."::_create ".$this->error, LOG_ERR);
-				$error = -1;
-			}
-
-			// Define current values for qty and pmp
-			$oldqty=$product->stock_reel;
-			$oldqtywarehouse=0;
-			$oldpmp=$product->pmp;
-			$oldpmpwarehouse=0;
-
-			// Test if there is already a record for couple (warehouse / product)
-			$num = 0;
-			if (! $error)
-			{
-				$sql = "SELECT rowid, reel, pmp FROM ".MAIN_DB_PREFIX."product_stock";
-				$sql.= " WHERE fk_entrepot = ".$entrepot_id." AND fk_product = ".$fk_product;
-
-				dol_syslog(get_class($this)."::_create sql=".$sql);
-				$resql=$this->db->query($sql);
+			// If product has childs, decrement or not the parent product (depending on the configuration)
+			if ((!empty($TChilds) && empty($conf->global->NOT_DECREMENT_PARENT_STOCK)) || empty($TChilds)) {
+				if(!empty($this->origin)) {
+					$origintype = $this->origin->element;
+					$fk_origin = $this->origin->id;
+				} else {
+					$origintype = '';
+					$fk_origin = 0;
+				}
+				
+				$sql = "INSERT INTO ".MAIN_DB_PREFIX."stock_mouvement";
+				$sql.= " (datem, fk_product, fk_entrepot, value, type_mouvement, fk_user_author, label, price, fk_origin, origintype)";
+				$sql.= " VALUES ('".$this->db->idate($now)."', ".$fk_product.", ".$entrepot_id.", ".$qty.", ".$type.",";
+				$sql.= " ".$user->id.",";
+				$sql.= " '".$this->db->escape($label)."',";
+				$sql.= " '".price2num($price)."',";
+				$sql.= " '".$fk_origin."',";
+				$sql.= " '".$origintype."'";
+				$sql.= ")";
+	
+				dol_syslog(get_class($this)."::_create sql=".$sql, LOG_DEBUG);
+				$resql = $this->db->query($sql);
 				if ($resql)
 				{
-					$obj = $this->db->fetch_object($resql);
-					if ($obj)
-					{
-						$num = 1;
-						$oldqtywarehouse = $obj->reel;
-						$oldpmpwarehouse = $obj->pmp;
-						$fk_product_stock = $obj->rowid;
-					}
-					$this->db->free($resql);
+					$mvid = $this->db->last_insert_id(MAIN_DB_PREFIX."stock_mouvement");
 				}
 				else
 				{
 					$this->error=$this->db->lasterror();
-					dol_syslog(get_class($this)."::_create echec update ".$this->error, LOG_ERR);
-					$error = -2;
+					dol_syslog(get_class($this)."::_create ".$this->error, LOG_ERR);
+					$error = -1;
 				}
-			}
-
-			// Calculate new PMP.
-			if (! $error)
-			{
-				$newpmp=0;
-				$newpmpwarehouse=0;
-				// Note: PMP is calculated on stock input only (type = 0 or 3). If type == 0 or 3, qty should be > 0.
-				// Note: Price should always be >0 or 0. PMP should be always >0 (calculated on input)
-				if (($type == 0 || $type == 3) && $price > 0)
+	
+				// Define current values for qty and pmp
+				$oldqty=$product->stock_reel;
+				$oldqtywarehouse=0;
+				$oldpmp=$product->pmp;
+				$oldpmpwarehouse=0;
+	
+				// Test if there is already a record for couple (warehouse / product)
+				$num = 0;
+				if (! $error)
 				{
-					$oldqtytouse=($oldqty >= 0?$oldqty:0);
-					// We make a test on oldpmp>0 to avoid to use normal rule on old data with no pmp field defined
-					if ($oldpmp > 0) $newpmp=price2num((($oldqtytouse * $oldpmp) + ($qty * $price)) / ($oldqtytouse + $qty), 'MU');
-					else $newpmp=$price;
-					$oldqtywarehousetouse=($oldqtywarehouse >= 0?$oldqtywarehouse:0);
-					if ($oldpmpwarehouse > 0) $newpmpwarehouse=price2num((($oldqtywarehousetouse * $oldpmpwarehouse) + ($qty * $price)) / ($oldqtywarehousetouse + $qty), 'MU');
-					else $newpmpwarehouse=$price;
-
-					//print "oldqtytouse=".$oldqtytouse." oldpmp=".$oldpmp." oldqtywarehousetouse=".$oldqtywarehousetouse." oldpmpwarehouse=".$oldpmpwarehouse." ";
-					//print "qty=".$qty." newpmp=".$newpmp." newpmpwarehouse=".$newpmpwarehouse;
-					//exit;
-				}
-				else
-				{
-					$newpmp = $oldpmp;
-					$newpmpwarehouse = $oldpmpwarehouse;
-				}
-			}
-
-			// Update denormalized value of stock in product_stock and product
-			if (! $error)
-			{
-				if ($num > 0)
-				{
-					$sql = "UPDATE ".MAIN_DB_PREFIX."product_stock SET pmp = ".$newpmpwarehouse.", reel = reel + ".$qty;
+					$sql = "SELECT rowid, reel, pmp FROM ".MAIN_DB_PREFIX."product_stock";
 					$sql.= " WHERE fk_entrepot = ".$entrepot_id." AND fk_product = ".$fk_product;
+	
+					dol_syslog(get_class($this)."::_create sql=".$sql);
+					$resql=$this->db->query($sql);
+					if ($resql)
+					{
+						$obj = $this->db->fetch_object($resql);
+						if ($obj)
+						{
+							$num = 1;
+							$oldqtywarehouse = $obj->reel;
+							$oldpmpwarehouse = $obj->pmp;
+							$fk_product_stock = $obj->rowid;
+						}
+						$this->db->free($resql);
+					}
+					else
+					{
+						$this->error=$this->db->lasterror();
+						dol_syslog(get_class($this)."::_create echec update ".$this->error, LOG_ERR);
+						$error = -2;
+					}
 				}
-				else
+	
+				// Calculate new PMP.
+				if (! $error)
 				{
-					$sql = "INSERT INTO ".MAIN_DB_PREFIX."product_stock";
-					$sql.= " (pmp, reel, fk_entrepot, fk_product) VALUES ";
-					$sql.= " (".$newpmpwarehouse.", ".$qty.", ".$entrepot_id.", ".$fk_product.")";
+					$newpmp=0;
+					$newpmpwarehouse=0;
+					// Note: PMP is calculated on stock input only (type = 0 or 3). If type == 0 or 3, qty should be > 0.
+					// Note: Price should always be >0 or 0. PMP should be always >0 (calculated on input)
+					if (($type == 0 || $type == 3) && $price > 0)
+					{
+						$oldqtytouse=($oldqty >= 0?$oldqty:0);
+						// We make a test on oldpmp>0 to avoid to use normal rule on old data with no pmp field defined
+						if ($oldpmp > 0) $newpmp=price2num((($oldqtytouse * $oldpmp) + ($qty * $price)) / ($oldqtytouse + $qty), 'MU');
+						else $newpmp=$price;
+						$oldqtywarehousetouse=($oldqtywarehouse >= 0?$oldqtywarehouse:0);
+						if ($oldpmpwarehouse > 0) $newpmpwarehouse=price2num((($oldqtywarehousetouse * $oldpmpwarehouse) + ($qty * $price)) / ($oldqtywarehousetouse + $qty), 'MU');
+						else $newpmpwarehouse=$price;
+	
+						//print "oldqtytouse=".$oldqtytouse." oldpmp=".$oldpmp." oldqtywarehousetouse=".$oldqtywarehousetouse." oldpmpwarehouse=".$oldpmpwarehouse." ";
+						//print "qty=".$qty." newpmp=".$newpmp." newpmpwarehouse=".$newpmpwarehouse;
+						//exit;
+					}
+					else
+					{
+						$newpmp = $oldpmp;
+						$newpmpwarehouse = $oldpmpwarehouse;
+					}
 				}
-
-				dol_syslog(get_class($this)."::_create sql=".$sql);
-				$resql=$this->db->query($sql);
-				if (! $resql)
+	
+				// Update denormalized value of stock in product_stock and product
+				if (! $error)
 				{
-					$this->error=$this->db->lasterror();
-					dol_syslog(get_class($this)."::_create ".$this->error, LOG_ERR);
-					$error = -3;
-				} else if(empty($fk_product_stock)){
-					$fk_product_stock = $this->db->last_insert_id(MAIN_DB_PREFIX."product_stock");
+					if ($num > 0)
+					{
+						$sql = "UPDATE ".MAIN_DB_PREFIX."product_stock SET pmp = ".$newpmpwarehouse.", reel = reel + ".$qty;
+						$sql.= " WHERE fk_entrepot = ".$entrepot_id." AND fk_product = ".$fk_product;
+					}
+					else
+					{
+						$sql = "INSERT INTO ".MAIN_DB_PREFIX."product_stock";
+						$sql.= " (pmp, reel, fk_entrepot, fk_product) VALUES ";
+						$sql.= " (".$newpmpwarehouse.", ".$qty.", ".$entrepot_id.", ".$fk_product.")";
+					}
+	
+					dol_syslog(get_class($this)."::_create sql=".$sql);
+					$resql=$this->db->query($sql);
+					if (! $resql)
+					{
+						$this->error=$this->db->lasterror();
+						dol_syslog(get_class($this)."::_create ".$this->error, LOG_ERR);
+						$error = -3;
+					} else if(empty($fk_product_stock)){
+						$fk_product_stock = $this->db->last_insert_id(MAIN_DB_PREFIX."product_stock");
+					}
+	
+					}
+	
+				// Update detail stock for sell-by date
+				if (($product->hasbatch()) && (! $error) && (! $skip_sellby)){
+					$param_batch=array('fk_product_stock' =>$fk_product_stock, 'eatby'=>$eatby,'sellby'=>$sellby,'batchnumber'=>$batch);
+					$result=$this->_create_batch($param_batch, $qty);
+					if ($result<0) $error++;
 				}
-
-				}
-
-			// Update detail stock for sell-by date
-			if (($product->hasbatch()) && (! $error) && (! $skip_sellby)){
-				$param_batch=array('fk_product_stock' =>$fk_product_stock, 'eatby'=>$eatby,'sellby'=>$sellby,'batchnumber'=>$batch);
-				$result=$this->_create_batch($param_batch, $qty);
-				if ($result<0) $error++;
-			}
-
-			if (! $error)
-			{
-				$sql = "UPDATE ".MAIN_DB_PREFIX."product SET pmp = ".$newpmp.", stock = ".$this->db->ifsql("stock IS NULL", 0, "stock") . " + ".$qty;
-				$sql.= " WHERE rowid = ".$fk_product;
-				// May be this request is better:
-				// UPDATE llx_product p SET p.stock= (SELECT SUM(ps.reel) FROM llx_product_stock ps WHERE ps.fk_product = p.rowid);
-
-				dol_syslog(get_class($this)."::_create sql=".$sql);
-				$resql=$this->db->query($sql);
-				if (! $resql)
+	
+				if (! $error)
 				{
-					$this->error=$this->db->lasterror();
-					dol_syslog(get_class($this)."::_create ".$this->error, LOG_ERR);
-					$error = -4;
+					$sql = "UPDATE ".MAIN_DB_PREFIX."product SET pmp = ".$newpmp.", stock = ".$this->db->ifsql("stock IS NULL", 0, "stock") . " + ".$qty;
+					$sql.= " WHERE rowid = ".$fk_product;
+					// May be this request is better:
+					// UPDATE llx_product p SET p.stock= (SELECT SUM(ps.reel) FROM llx_product_stock ps WHERE ps.fk_product = p.rowid);
+	
+					dol_syslog(get_class($this)."::_create sql=".$sql);
+					$resql=$this->db->query($sql);
+					if (! $resql)
+					{
+						$this->error=$this->db->lasterror();
+						dol_syslog(get_class($this)."::_create ".$this->error, LOG_ERR);
+						$error = -4;
+					}
 				}
 			}
 		}
