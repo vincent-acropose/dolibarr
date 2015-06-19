@@ -34,6 +34,10 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
 
+if ($conf->clivici->enabled) {
+	dol_include_once('/clivici/lib/clivici.lib.php');
+}
+
 $langs->load('orders');
 $langs->load('deliveries');
 $langs->load('companies');
@@ -295,6 +299,9 @@ if ($resql)
 	print_liste_field_titre($langs->trans('DeliveryDate'),$_SERVER["PHP_SELF"],'c.date_livraison','',$param, 'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('AmountHT'),$_SERVER["PHP_SELF"],'c.total_ht','',$param, 'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('Status'),$_SERVER["PHP_SELF"],'c.fk_statut','',$param,'align="right"',$sortfield,$sortorder);
+	if ($conf->clivici->enabled) {
+		print_liste_field_titre('');	
+	}
 	print '</tr>';
 	print '<tr class="liste_titre">';
 	print '<td class="liste_titre">';
@@ -315,6 +322,7 @@ if ($resql)
     print '<input class="flat" type="text" size="1" maxlength="2" name="deliverymonth" value="'.$deliverymonth.'">';
     $formother->select_year($deliveryyear?$deliveryyear:-1,'deliveryyear',1, 20, 5);
 	print '</td><td class="liste_titre">&nbsp;';
+	print '</td><td class="liste_titre">&nbsp;';
 	print '</td><td align="right" class="liste_titre">';
 	print '<input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'"  value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 	print '</td></tr>';
@@ -333,6 +341,7 @@ if ($resql)
 
 		$generic_commande->id=$objp->rowid;
 		$generic_commande->ref=$objp->ref;
+		$generic_commande->total_ht = $objp->total_ht;
 
 		print '<table class="nobordernopadding"><tr class="nocellnopadd">';
 		print '<td class="nobordernopadding nowrap">';
@@ -400,6 +409,10 @@ if ($resql)
 		// Statut
 		print '<td align="right" class="nowrap">'.$generic_commande->LibStatut($objp->fk_statut,$objp->facturee,5).'</td>';
 
+		if ($conf->clivici->enabled) {
+			print '<td align="center">' . get_etat_commande($generic_commande) . '</td>';
+		}
+		
 		print '</tr>';
 
 		$total+=$objp->total_ht;
@@ -423,6 +436,10 @@ if ($resql)
 	print '</form>'."\n";
 
 	print '<br>'.img_help(1,'').' '.$langs->trans("ToBillSeveralOrderSelectCustomer", $langs->transnoentitiesnoconv("CreateInvoiceForThisCustomer")).'<br>';
+	
+	if ($conf->clivici->enabled) {
+		print '<br /><strong>F</strong> = Facturée<br /><strong>FP</strong> = Facturée Partiellement';	
+	}
 	
 	$db->free($resql);
 }
