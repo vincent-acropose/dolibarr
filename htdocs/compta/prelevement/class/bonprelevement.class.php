@@ -461,6 +461,7 @@ class BonPrelevement extends CommonObject
                         $paiement->amounts      = $amounts;
                         $paiement->paiementid   = 3; //
                         $paiement->num_paiement = $this->ref ;
+						$paiement->id_prelevement = $this->id ;
 						
                         $paiement_id = $paiement->create($user);
 						
