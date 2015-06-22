@@ -186,8 +186,8 @@ class pdf_rouget extends ModelePdfExpedition
 					$tab_top_alt = $tab_top;
 
 					$tab_top_alt = $pdf->GetY();
-					//$tab_top_alt += 1;
-
+					$tab_top_alt += 1;
+				
 					// Tracking number
 					if (! empty($object->tracking_number))
 					{
@@ -214,7 +214,7 @@ class pdf_rouget extends ModelePdfExpedition
 						$pdf->SetFont('','B', $default_font_size - 2);
 						$pdf->writeHTMLCell(60, 4, $this->posxdesc-1, $tab_top, $label, 0, 1, false, true, 'L');
 
-						$tab_top_alt += 4;
+						$tab_top_alt = $pdf->GetY();
 					}
 
 					// Notes
