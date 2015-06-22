@@ -117,10 +117,11 @@ $head = mailmanspip_admin_prepare_head();
 
 dol_fiche_head($head, 'spip', $langs->trans("Setup"), 0, 'user');
 
+$var=true;
+
 /*
  * Spip
  */
-$var=!$var;
 if (! empty($conf->global->ADHERENT_USE_SPIP))
 {
     //$lien=img_picto($langs->trans("Active"),'tick').' ';
@@ -156,4 +157,3 @@ dol_fiche_end();
 llxFooter();
 
 $db->close();
-?>

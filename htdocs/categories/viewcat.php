@@ -27,16 +27,18 @@
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/categories.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+
 
 $langs->load("categories");
 
-$mesg = '';
 $id=GETPOST('id','int');
 $ref=GETPOST('ref');
 $type=GETPOST('type');
 $action=GETPOST('action');
 $confirm=GETPOST('confirm');
 $removeelem = GETPOST('removeelem','int');
+$elemid=GETPOST('elemid');
 
 if ($id == "")
 {
@@ -49,6 +51,7 @@ $result = restrictedArea($user, 'categorie', $id, '&category');
 
 $object = new Categorie($db);
 $result=$object->fetch($id);
+$object->fetch_optionals($id,$extralabels);
 if ($result <= 0)
 {
 	dol_print_error($db,$object->error);
@@ -57,6 +60,8 @@ if ($result <= 0)
 
 $type=$object->type;
 
+$extrafields = new ExtraFields($db);
+$extralabels = $extrafields->fetch_name_optionals_label($object->table_element);
 
 /*
  *	Actions
@@ -92,13 +97,13 @@ if ($id > 0 && $removeelem > 0)
 		$elementtype = 'member';
 	}
 	else if ($type == 4 && $user->rights->societe->creer) {
-		
+
 		require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 		$tmpobject = new Contact($db);
 		$result = $tmpobject->fetch($removeelem);
 		$elementtype = 'contact';
 	}
-	
+
 	$result=$object->del_type($tmpobject,$elementtype);
 	if ($result < 0) dol_print_error('',$object->error);
 }
@@ -112,8 +117,35 @@ if ($user->rights->categorie->supprimer && $action == 'confirm_delete' && $confi
 	}
 	else
 	{
-		$mesg='<div class="error">'.$object->error.'</div>';
+		setEventMessage($object->error, 'errors');
 	}
+}
+
+if ($type==0 && $elemid && $action == 'addintocategory' && ($user->rights->produit->creer || $user->rights->service->creer))
+{
+	require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+	$newobject = new Product($db);
+	$result = $newobject->fetch($elemid);
+	$elementtype = 'product';
+	
+	// TODO Add into categ
+	$result=$object->add_type($newobject,$elementtype);
+	if ($result >= 0)
+	{
+		setEventMessage($langs->trans("WasAddedSuccessfully",$newobject->ref));
+	}
+	else
+	{
+		if ($cat->error == 'DB_ERROR_RECORD_ALREADY_EXISTS')
+		{
+			setEventMessage($langs->trans("ObjectAlreadyLinkedToCategory"),'warnings');
+		}
+		else
+		{
+			setEventMessages($object->error,$object->errors,'errors');
+		}
+	}
+	
 }
 
 
@@ -125,8 +157,6 @@ if ($user->rights->categorie->supprimer && $action == 'confirm_delete' && $confi
 $form = new Form($db);
 
 llxHeader("","",$langs->trans("Categories"));
-
-dol_htmloutput_mesg($mesg);
 
 if ($type == 0) $title=$langs->trans("ProductsCategoryShort");
 elseif ($type == 1) $title=$langs->trans("SuppliersCategoryShort");
@@ -142,6 +172,7 @@ dol_fiche_head($head, 'card', $title, 0, 'category');
 /*
  * Confirmation suppression
  */
+
 if ($action == 'delete')
 {
 	print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;type='.$type,$langs->trans('DeleteCategory'),$langs->trans('ConfirmDeleteCategory'),'confirm_delete');
@@ -165,6 +196,12 @@ print '<tr><td width="20%" class="notopnoleft">';
 print $langs->trans("Description").'</td><td>';
 print nl2br($object->description);
 print '</td></tr>';
+
+$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
+if (empty($reshook) && ! empty($extrafields->attribute_label))
+{
+	print $object->showOptionals($extrafields);
+}
 
 print '</table>';
 
@@ -204,7 +241,7 @@ else
 	print "<tr class='liste_titre'><td colspan='2'>".$langs->trans("SubCats").'</td><td align="right">';
 	if ($user->rights->categorie->creer)
 	{
-		print "<a href='".DOL_URL_ROOT."/categories/fiche.php?action=create&amp;catorigin=".$object->id."&amp;socid=".$object->socid."&amp;type=".$type."&amp;urlfrom=".urlencode($_SERVER["PHP_SELF"].'?id='.$object->id.'&type='.$type)."'>";
+		print "<a href='".DOL_URL_ROOT."/categories/card.php?action=create&amp;catorigin=".$object->id."&amp;socid=".$object->socid."&amp;type=".$type."&amp;urlfrom=".urlencode($_SERVER["PHP_SELF"].'?id='.$object->id.'&type='.$type)."'>";
 		print img_picto($langs->trans("Create"),'filenew');
 		print "</a>";
 	}
@@ -243,17 +280,39 @@ else
 	print "</table>\n";
 }
 
-// List of products
+// List of products or services (type is type of category)
 if ($object->type == 0)
 {
-
-	$prods = $object->get_type("product","Product");
+	$prods = $object->getObjectsInCateg("product");
 	if ($prods < 0)
 	{
 		dol_print_error();
 	}
 	else
 	{
+		$showclassifyform=1; $typeid=0;
+		
+		// Form to add record into a category
+		if ($showclassifyform)
+		{
+			print '<br>';
+			print '<form method="post" action="'.$_SERVER["PHP_SELF"].'">';
+			print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+			print '<input type="hidden" name="typeid" value="'.$typeid.'">';
+			print '<input type="hidden" name="type" value="'.$typeid.'">';
+			print '<input type="hidden" name="id" value="'.$object->id.'">';
+			print '<input type="hidden" name="action" value="addintocategory">';
+			print '<table class="noborder" width="100%">';
+			print '<tr class="liste_titre"><td width="40%">';
+			print $langs->trans("AddProductServiceIntoCategory").' &nbsp;';
+			print $form->select_produits('','elemid','',0,0,-1,2,'',1);
+			print '</td><td>';
+			print '<input type="submit" class="button" value="'.$langs->trans("ClassifyInCategory").'"></td>';
+			print '</tr>';
+			print '</table>';
+			print '</form>';
+		}
+		
 		print "<br>";
 		print "<table class='noborder' width='100%'>\n";
 		print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("ProductsAndServices")."</td></tr>\n";
@@ -297,7 +356,7 @@ if ($object->type == 0)
 
 if ($object->type == 1)
 {
-	$socs = $object->get_type("societe","Fournisseur","fournisseur");
+	$socs = $object->getObjectsInCateg("supplier");
 	if ($socs < 0)
 	{
 		dol_print_error();
@@ -334,7 +393,7 @@ if ($object->type == 1)
 					print $langs->trans("DeleteFromCat")."</a>";
 				}
 				print '</td>';
-				
+
 				print "</tr>\n";
 			}
 		}
@@ -348,7 +407,7 @@ if ($object->type == 1)
 
 if($object->type == 2)
 {
-	$socs = $object->get_type("societe","Societe");
+	$socs = $object->getObjectsInCateg("customer");
 	if ($socs < 0)
 	{
 		dol_print_error();
@@ -404,7 +463,7 @@ if ($object->type == 3)
 {
 	require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
 
-	$prods = $object->get_type("member","Adherent","","adherent");
+	$prods = $object->getObjectsInCateg("member");
 	if ($prods < 0)
 	{
 		dol_print_error($db,$object->error);
@@ -456,7 +515,7 @@ if ($object->type == 3)
 //Categorie contact
 if($object->type == 4)
 {
-	$contacts = $object->get_type("socpeople","Contact",'contact',"socpeople");
+	$contacts = $object->getObjectsInCateg("contact");
 	if ($contacts < 0)
 	{
 		dol_print_error();
@@ -508,5 +567,5 @@ if($object->type == 4)
 
 
 llxFooter();
+
 $db->close();
-?>

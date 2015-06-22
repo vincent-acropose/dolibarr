@@ -160,8 +160,8 @@ done >>%{name}.lang
 %_datadir/dolibarr/htdocs/adherents
 %_datadir/dolibarr/htdocs/admin
 %_datadir/dolibarr/htdocs/asterisk
+%_datadir/dolibarr/htdocs/barcode
 %_datadir/dolibarr/htdocs/bookmarks
-%_datadir/dolibarr/htdocs/boutique
 %_datadir/dolibarr/htdocs/cashdesk
 %_datadir/dolibarr/htdocs/categories
 %_datadir/dolibarr/htdocs/comm
@@ -194,6 +194,7 @@ done >>%{name}.lang
 %_datadir/dolibarr/htdocs/product
 %_datadir/dolibarr/htdocs/projet
 %_datadir/dolibarr/htdocs/public
+%_datadir/dolibarr/htdocs/resource
 %_datadir/dolibarr/htdocs/societe
 %_datadir/dolibarr/htdocs/support
 %_datadir/dolibarr/htdocs/theme
@@ -331,14 +332,4 @@ fi
 
 # version x.y.z-0.1.a for alpha, x.y.z-0.2.b for beta, x.y.z-0.3 for release
 %changelog
-* Fri May 2 2014 Laurent Destailleur 3.5.3-0.3
-- Upstream release
-
-* Fri Feb 14 2014 Laurent Destailleur 3.5.2-0.3
-- Upstream release
-
-* Fri Feb 7 2014 Laurent Destailleur 3.5.1-0.3
-- Upstream release
-
-* Mon Dec 30 2013 Laurent Destailleur 3.5.0-0.3
-- Initial version (#723326)
+__CHANGELOGSTRING__

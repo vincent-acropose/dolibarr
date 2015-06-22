@@ -63,7 +63,7 @@ llxHeader('',$langs->trans("ListOfSubscriptions"),'EN:Module_Foundations|FR:Modu
 
 if ($msg)	print $msg.'<br>';
 
-// Liste des cotisations
+// List of subscriptions
 $sql = "SELECT d.rowid, d.login, d.firstname, d.lastname, d.societe,";
 $sql.= " c.rowid as crowid, c.cotisation,";
 $sql.= " c.dateadh,";
@@ -75,7 +75,7 @@ $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."bank as b ON c.fk_bank=b.rowid";
 $sql.= " WHERE d.rowid = c.fk_adherent";
 if (isset($date_select) && $date_select != '')
 {
-    $sql.= " AND dateadh LIKE '$date_select%'";
+    $sql.= " AND c.dateadh LIKE '".$date_select."%'";
 }
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($conf->liste_limit+1, $offset);
@@ -97,17 +97,17 @@ if ($result)
     print '<table class="noborder" width="100%">';
 
     print '<tr class="liste_titre">';
-    print_liste_field_titre($langs->trans("Ref"),"cotisations.php","c.rowid",$param,"","",$sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("Name"),"cotisations.php","d.lastname",$param,"","",$sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("Login"),"cotisations.php","d.login",$param,"","",$sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("Label"),"cotisations.php","c.note",$param,"",'align="left"',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"c.rowid",$param,"","",$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Name"),$_SERVER["PHP_SELF"],"d.lastname",$param,"","",$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Login"),$_SERVER["PHP_SELF"],"d.login",$param,"","",$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Label"),$_SERVER["PHP_SELF"],"c.note",$param,"",'align="left"',$sortfield,$sortorder);
     if (! empty($conf->banque->enabled))
     {
-        print_liste_field_titre($langs->trans("Account"),"cotisations.php","b.fk_account",$pram,"","",$sortfield,$sortorder);
+        print_liste_field_titre($langs->trans("Account"),$_SERVER["PHP_SELF"],"b.fk_account",$pram,"","",$sortfield,$sortorder);
     }
-    print_liste_field_titre($langs->trans("Date"),"cotisations.php","c.dateadh",$param,"",'align="center"',$sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("DateEnd"),"cotisations.php","c.datef",$param,"",'align="center"',$sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("Amount"),"cotisations.php","c.cotisation",$param,"",'align="right"',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Date"),$_SERVER["PHP_SELF"],"c.dateadh",$param,"",'align="center"',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("DateEnd"),$_SERVER["PHP_SELF"],"c.datef",$param,"",'align="center"',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Amount"),$_SERVER["PHP_SELF"],"c.cotisation",$param,"",'align="right"',$sortfield,$sortorder);
     print "</tr>\n";
 
     // Static objects
@@ -231,4 +231,3 @@ else
 $db->close();
 
 llxFooter();
-?>

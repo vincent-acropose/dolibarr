@@ -13,7 +13,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 /**
@@ -46,10 +45,10 @@ top_httphead();
 
 if (! empty($idprod))
 {
-	$sql = "SELECT p.rowid, p.label, p.ref, p.price, p.duration,";
+	$sql = "SELECT p.rowid, p.label, p.ref, p.price, p.duration, s.rowid as idsoc,";
 	$sql.= " pfp.ref_fourn,";
 	$sql.= " pfp.rowid as idprodfournprice, pfp.price as fprice, pfp.remise_percent, pfp.quantity, pfp.unitprice, pfp.charges, pfp.unitcharges,";
-	$sql.= " s.nom";
+	$sql.= " s.nom as name";
 	$sql.= " FROM ".MAIN_DB_PREFIX."product_fournisseur_price as pfp";
 	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product as p ON p.rowid = pfp.fk_product";
 	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = pfp.fk_soc";
@@ -58,7 +57,7 @@ if (! empty($idprod))
 	$sql.= " AND s.fournisseur = 1";
 	$sql.= " ORDER BY s.nom, pfp.ref_fourn DESC";
 
-	dol_syslog("Ajax::getSupplierPrices sql=".$sql, LOG_DEBUG);
+	dol_syslog("Ajax::getSupplierPrices", LOG_DEBUG);
 	$result=$db->query($sql);
 
 	if ($result)
@@ -71,34 +70,44 @@ if (! empty($idprod))
 			while ($i < $num)
 			{
 				$objp = $db->fetch_object($result);
+				
+				if($conf->multidevise->enabled){
+
+					$resql = $db->query("SELECT s.devise_code FROM ".MAIN_DB_PREFIX."societe as s WHERE rowid = ".$objp->idsoc);
+					$res = $db->fetch_object($resql);
+					$currency = $res->devise_code;
+				}
+				else{
+					$currency = $conf->currency;
+				}
 
 				$price = $objp->fprice * (1 - $objp->remise_percent / 100);
 				$unitprice = $objp->unitprice * (1 - $objp->remise_percent / 100);
 
-				$title = $objp->nom.' - '.$objp->ref_fourn.' - ';
+				$title = $objp->name.' - '.$objp->ref_fourn.' - ';
 
 				if ($objp->quantity == 1)
 				{
-					$title.= price($price,0,$langs,0,0,-1,$conf->currency)."/";
+					$title.= price($price,0,$langs,0,0,-1,$currency)."/";
 				}
 				$title.= $objp->quantity.' '.($objp->quantity == 1 ? $langs->trans("Unit") : $langs->trans("Units"));
 
 				if ($objp->quantity > 1)
 				{
 					$title.=" - ";
-					$title.= price($unitprice,0,$langs,0,0,-1,$conf->currency)."/".$langs->trans("Unit");
+					$title.= price($unitprice,0,$langs,0,0,-1,$currency)."/".$langs->trans("Unit");
 
 					$price = $unitprice;
 				}
 				if ($objp->unitcharges > 0 && ($conf->global->MARGIN_TYPE == "2"))
 				{
 					$title.=" + ";
-					$title.= price($objp->unitcharges,0,$langs,0,0,-1,$conf->currency);
+					$title.= price($objp->unitcharges,0,$langs,0,0,-1,$currency);
 					$price += $objp->unitcharges;
 				}
 				if ($objp->duration) $label .= " - ".$objp->duration;
 
-				$label = price($price,0,$langs,0,0,-1,$conf->currency)."/".$langs->trans("Unit");
+				$label = price($price,0,$langs,0,0,-1,$currency)."/".$langs->trans("Unit");
 
 				$prices[] = array("id" => $objp->idprodfournprice, "price" => price($price,0,'',0), "label" => $label, "title" => $title);
 				$i++;
@@ -111,4 +120,3 @@ if (! empty($idprod))
 
 echo json_encode($prices);
 
-?>

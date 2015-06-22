@@ -91,7 +91,7 @@ function compare($x, $y)
  */
 function revcompare($x, $y)
 {
-	global $sortby, $langs;
+	global $sortby;
 
 	if ( $x[$sortby] == $y[$sortby] )
 	return 0;
@@ -350,4 +350,3 @@ print "<br><br>";
 llxFooter();
 
 $db->close();
-?>

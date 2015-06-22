@@ -47,13 +47,13 @@ class box_bookmarks extends ModeleBoxes
 	 */
 	function loadBox($max=5)
 	{
-		global $user, $langs, $db;
+		global $user, $langs, $db, $conf;
 		$langs->load("boxes");
 
 		$this->max=$max;
 
 		$this->info_box_head = array('text' => $langs->trans("BoxMyLastBookmarks",$max),
-                                     'sublink' => DOL_URL_ROOT.'/bookmarks/liste.php');
+                                     'sublink' => DOL_URL_ROOT.'/bookmarks/list.php');
 		if ($user->rights->bookmark->creer)
 		{
 			$this->info_box_head['subpicto']='object_bookmark';
@@ -70,6 +70,7 @@ class box_bookmarks extends ModeleBoxes
 			$sql = "SELECT b.title, b.url, b.target, b.favicon";
 			$sql.= " FROM ".MAIN_DB_PREFIX."bookmark as b";
 			$sql.= " WHERE fk_user = ".$user->id;
+            $sql.= " AND b.entity = ".$conf->entity;
 			$sql.= $db->order("position","ASC");
 			$sql.= $db->plimit($max, 0);
 
@@ -100,7 +101,7 @@ class box_bookmarks extends ModeleBoxes
 				{
 					$mytxt=$langs->trans("NoRecordedBookmarks");
 					if ($user->rights->bookmark->creer) $mytxt.=' '.$langs->trans("ClickToAdd");
-					$this->info_box_contents[$i][0] = array('td' => 'align="center" colspan="2"', 'url'=> DOL_URL_ROOT.'/bookmarks/liste.php', 'text'=>$mytxt);
+					$this->info_box_contents[$i][0] = array('td' => 'align="center" colspan="2"', 'url'=> DOL_URL_ROOT.'/bookmarks/list.php', 'text'=>$mytxt);
 				}
 
 				$db->free($result);
@@ -132,4 +133,3 @@ class box_bookmarks extends ModeleBoxes
 
 }
 
-?>

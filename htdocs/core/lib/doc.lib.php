@@ -152,4 +152,3 @@ function doc_getlinedesc($line,$outputlangs,$hideref=0,$hidedesc=0,$issupplierli
 	return $libelleproduitservice;
 }
 
-?>

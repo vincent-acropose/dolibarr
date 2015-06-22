@@ -3,6 +3,7 @@
  * Copyright (C) 2006-2007	Yannick Warnier		<ywarnier@beeznest.org>
  * Copyright (C) 2011		Regis Houssin		<regis.houssin@capnetworks.com>
  * Copyright (C) 2012		Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2015       Marcos García       <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,10 +29,10 @@
 /**
  * Prepare array with list of tabs
  *
- * @param   Object	$object		Object related to tabs
- * @return  array				Array of tabs to shoc
+ * @param   ChargeSociales	$object		Object related to tabs
+ * @return  array				Array of tabs to show
  */
-function tax_prepare_head($object)
+function tax_prepare_head(ChargeSociales $object)
 {
     global $langs, $conf;
 
@@ -51,7 +52,7 @@ function tax_prepare_head($object)
 
 	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 	$upload_dir = $conf->tax->dir_output . "/" . dol_sanitizeFileName($object->ref);
-	$nbFiles = count(dol_dir_list($upload_dir,'files'));
+	$nbFiles = count(dol_dir_list($upload_dir,'files',0,'','(\.meta|_preview\.png)$'));
 	$head[$h][0] = DOL_URL_ROOT.'/compta/sociales/document.php?id='.$object->id;
 	$head[$h][1] = $langs->trans("Documents");
 	if($nbFiles > 0) $head[$h][1].= ' ('.$nbFiles.')';
@@ -86,26 +87,18 @@ function vat_by_thirdparty($db, $y, $date_start, $date_end, $modetax, $direction
     global $conf;
 
     $list=array();
-    //print "xx".$conf->global->MAIN_MODULE_ACCOUNTING;
-    //print "xx".$conf->global->MAIN_MODULE_COMPTABILITE;
 
     if ($direction == 'sell')
     {
         $invoicetable='facture';
-        $invoicedettable='facturedet';
-        $fk_facture='fk_facture';
-        $total_tva='total_tva';
-        $total_localtax1='total_localtax1';
-        $total_localtax2='total_localtax2';
+        $total_ht='total';
+        $total_tva='tva';
     }
     if ($direction == 'buy')
     {
         $invoicetable='facture_fourn';
-        $invoicedettable='facture_fourn_det';
-        $fk_facture='fk_facture_fourn';
-        $total_tva='tva';
-        $total_localtax1='total_localtax1';
-        $total_localtax2='total_localtax2';
+        $total_ht='total_ht';
+        $total_tva='total_tva';
     }
 
     // Define sql request
@@ -124,12 +117,11 @@ function vat_by_thirdparty($db, $y, $date_start, $date_end, $modetax, $direction
         }
         if (! empty($conf->global->MAIN_MODULE_COMPTABILITE))
         {
-            $sql = "SELECT s.rowid as socid, s.nom as nom, s.siren as tva_intra, s.tva_assuj as assuj,";
-            $sql.= " sum(fd.total_ht) as amount, sum(fd.".$total_tva.") as tva,";
-            $sql.= " sum(fd.".$total_localtax1.") as localtax1,";
-            $sql.= " sum(fd.".$total_localtax2.") as localtax2";
+            $sql = "SELECT s.rowid as socid, s.nom as name, s.siren as tva_intra, s.tva_assuj as assuj,";
+            $sql.= " sum(f.$total_ht) as amount, sum(f.".$total_tva.") as tva,";
+            $sql.= " sum(f.localtax1) as localtax1,";
+            $sql.= " sum(f.localtax2) as localtax2";
             $sql.= " FROM ".MAIN_DB_PREFIX.$invoicetable." as f,";
-            $sql.= " ".MAIN_DB_PREFIX.$invoicedettable." as fd,";
             $sql.= " ".MAIN_DB_PREFIX."societe as s";
             $sql.= " WHERE f.entity = " . $conf->entity;
             $sql.= " AND f.fk_statut in (1,2)"; // Validated or paid (partially or completely)
@@ -146,7 +138,7 @@ function vat_by_thirdparty($db, $y, $date_start, $date_end, $modetax, $direction
                 $sql.= " AND f.datef <= '".$db->idate(dol_get_last_day($y,12,false))."'";
             }
             if ($date_start && $date_end) $sql.= " AND f.datef >= '".$db->idate($date_start)."' AND f.datef <= '".$db->idate($date_end)."'";
-            $sql.= " AND s.rowid = f.fk_soc AND f.rowid = fd.".$fk_facture;
+            $sql.= " AND s.rowid = f.fk_soc";
             $sql.= " GROUP BY s.rowid, s.nom, s.tva_intra, s.tva_assuj";
         }
     }
@@ -194,7 +186,7 @@ function vat_by_thirdparty($db, $y, $date_start, $date_end, $modetax, $direction
     if ($sql == 'TODO') return -2;
     if ($sql != 'TODO')
     {
-        dol_syslog("Tax.lib:thirdparty sql=".$sql);
+        dol_syslog("Tax.lib:thirdparty", LOG_DEBUG);
         $resql = $db->query($sql);
         if ($resql)
         {
@@ -366,7 +358,7 @@ function vat_by_date($db, $y, $q, $date_start, $date_end, $modetax, $direction, 
     if ($sql == 'TODO') return -2;
     if ($sql != 'TODO')
     {
-        dol_syslog("Tax.lib.php::vat_by_date sql=".$sql);
+        dol_syslog("Tax.lib.php::vat_by_date", LOG_DEBUG);
 
         $resql = $db->query($sql);
         if ($resql)
@@ -516,7 +508,7 @@ function vat_by_date($db, $y, $q, $date_start, $date_end, $modetax, $direction, 
                 $sql.= " AND pa.datep <= '".$db->idate(dol_get_last_day($y,12,false))."'";
             }
             if ($q) $sql.= " AND (date_format(pa.datep,'%m') > ".(($q-1)*3)." AND date_format(pa.datep,'%m') <= ".($q*3).")";
-            if ($date_start && $date_end) $sql.= " AND pa.datep >= ".$db->idate($date_start)." AND pa.datep <= ".$db->idate($date_end);
+            if ($date_start && $date_end) $sql.= " AND pa.datep >= '".$db->idate($date_start)."' AND pa.datep <= '".$db->idate($date_end)."'";
             $sql.= " AND (d.product_type = 1";                              // Limit to services
             $sql.= " OR d.date_start is NOT null OR d.date_end IS NOT NULL)";       // enhance detection of service
             $sql.= " ORDER BY d.rowid, d.".$fk_facture.", pf.rowid";
@@ -531,7 +523,7 @@ function vat_by_date($db, $y, $q, $date_start, $date_end, $modetax, $direction, 
     if ($sql == 'TODO') return -2; // -2 = Feature not yet available
     if ($sql != 'TODO')
     {
-        dol_syslog("Tax.lib.php::vat_by_date sql=".$sql);
+        dol_syslog("Tax.lib.php::vat_by_date", LOG_DEBUG);
         $resql = $db->query($sql);
         if ($resql)
         {
@@ -588,4 +580,3 @@ function vat_by_date($db, $y, $q, $date_start, $date_end, $modetax, $direction, 
     return $list;
 }
 
-?>

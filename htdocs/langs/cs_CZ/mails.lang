@@ -79,6 +79,14 @@ MailtoEMail=Hyper odkaz na e-mail
 ActivateCheckRead=Nechá se použít &quot;&quot; Unsubcribe odkaz
 ActivateCheckReadKey=Tlačítko slouží pro šifrování URL využití pro &quot;přečtení&quot; a &quot;Unsubcribe&quot; funkce
 EMailSentToNRecipients=Email byl odeslán na %s příjemcům.
+XTargetsAdded=<b>%s</b> recipients added into target list
+EachInvoiceWillBeAttachedToEmail=A document using default invoice document template will be created and attached to each email.
+MailTopicSendRemindUnpaidInvoices=Reminder of invoice %s (%s)
+SendRemind=Send reminder by EMails
+RemindSent=%s reminder(s) sent
+AllRecipientSelectedForRemind=All thirdparties selected and if an email is set (note that one mail per invoice will be sent)
+NoRemindSent=No EMail reminder sent
+ResultOfMassSending=Result of mass EMail reminders sending
 
 # Libelle des modules de liste de destinataires mailing
 MailingModuleDescContactCompanies=Kontakty / adresy všech třetích stran (zákazník, vyhlídka, dodavatel, ...)
@@ -92,8 +100,6 @@ MailingModuleDescContactsByCompanyCategory=Kontakty / adresy třetích stran (t�
 MailingModuleDescContactsByCategory=Kontakty / adresy třetích stran podle kategorie
 MailingModuleDescMembersCategories=Členy Nadace (podle kategorií)
 MailingModuleDescContactsByFunction=Kontakty / adresy třetím stranám (podle pozice / funkce)
-
-
 LineInFile=Linka %s v souboru
 RecipientSelectionModules=Definované požadavky na výběr příjemce
 MailSelectedRecipients=Vybrané příjemci
@@ -109,11 +115,12 @@ SentBy=Odesílatel:
 MailingNeedCommand=Z bezpečnostních důvodů, odesílání e-mailem, je lepší, když provádí z příkazového řádku. Máte-li jeden, požádejte správce serveru spustit následující příkaz pro odeslání e-mailem všem příjemcům:
 MailingNeedCommand2=Však můžete zaslat on-line přidáním parametru MAILING_LIMIT_SENDBYWEB s hodnotou max počet e-mailů, které chcete poslat zasedání. K tomu, přejděte na doma - Nastavení - Ostatní.
 ConfirmSendingEmailing=Pokud nemůžete nebo raději posílat je s www prohlížeče, prosím, potvrzujete, že jste jisti, že chcete poslat e-mailem teď z vašeho prohlížeče?
-LimitSendingEmailing=Poznámka: Na řádek odeslání emailings jsou omezeny na bezpečnost a časový limit důvody k <b>%s</b> příjemce zasláním relace.
+LimitSendingEmailing=Note: Sending of emailings from web interface is done in several times for security and timeout reasons, <b>%s</b> recipients at a time for each sending session.
 TargetsReset=Vymazat seznam
 ToClearAllRecipientsClickHere=Klikněte zde pro vymazání seznamu příjemců tohoto rozesílání
 ToAddRecipientsChooseHere=Přidejte příjemce výběrem ze seznamu
 NbOfEMailingsReceived=Hromadné emailings obdržel
+NbOfEMailingsSend=Mass emailings sent
 IdRecord=ID záznamu
 DeliveryReceipt=Potvrzení o doručení
 YouCanUseCommaSeparatorForSeveralRecipients=Můžete použít <b>čárkový</b> oddělovač zadat více příjemců.
@@ -121,12 +128,16 @@ TagCheckMail=Sledování zásilek otevření
 TagUnsubscribe=Odhlásit odkaz
 TagSignature=Podpis zasílání uživatele
 TagMailtoEmail=E-mail příjemce
-
 # Module Notifications
 Notifications=Upozornění
 NoNotificationsWillBeSent=Žádné oznámení e-mailem jsou plánovány pro tuto událost a společnost
 ANotificationsWillBeSent=1 bude zaslán e-mailem
 SomeNotificationsWillBeSent=%s oznámení bude zasláno e-mailem
-AddNewNotification=Aktivace nové e-mailové oznámení žádosti
-ListOfActiveNotifications=Vypsat všechny aktivní požadavky oznamování e-mailů
+AddNewNotification=Activate a new email notification target
+ListOfActiveNotifications=List all active email notification targets
 ListOfNotificationsDone=Vypsat všechny e-maily odesílané oznámení
+MailSendSetupIs=Configuration of email sending has been setup to '%s'. This mode can't be used to send mass emailing.
+MailSendSetupIs2=You must first go, with an admin account, into menu %sHome - Setup - EMails%s to change parameter <strong>'%s'</strong> to use mode '%s'. With this mode, you can enter setup of the SMTP server provided by your Internet Service Provider and use Mass emailing feature.
+MailSendSetupIs3=If you have any questions on how to setup your SMTP server, you can ask to %s.
+YouCanAlsoUseSupervisorKeyword=You can also add the keyword <strong>__SUPERVISOREMAIL__</strong> to have email being sent to the supervisor of user (works only if an email is defined for this supervisor)
+NbOfTargetedContacts=Current number of targeted contact emails

@@ -128,7 +128,7 @@ class Ldap
 		$this->attr_firstname  = $conf->global->LDAP_FIELD_FIRSTNAME;
 		$this->attr_mail       = $conf->global->LDAP_FIELD_MAIL;
 		$this->attr_phone      = $conf->global->LDAP_FIELD_PHONE;
-    $this->attr_skype      = $conf->global->LDAP_FIELD_SKYPE;
+		$this->attr_skype      = $conf->global->LDAP_FIELD_SKYPE;
 		$this->attr_fax        = $conf->global->LDAP_FIELD_FAX;
 		$this->attr_mobile     = $conf->global->LDAP_FIELD_MOBILE;
 	}
@@ -151,9 +151,19 @@ class Ldap
 		$connected=0;
 		$this->bind=0;
 
+		// Check parameters
+		if (count($this->server) == 0 || empty($this->server[0]))
+		{
+			$this->error='LDAP setup (file conf.php) is not complete';
+			$return=-1;
+			dol_syslog(get_class($this)."::connect_bind ".$this->error, LOG_WARNING);
+		}
+
+		// Loop on each ldap server
 		foreach ($this->server as $key => $host)
 		{
 			if ($connected) break;
+			if (empty($host)) continue;
 
 			if (preg_match('/^ldap/',$host))
 			{
@@ -166,12 +176,15 @@ class Ldap
 
 			if (is_resource($this->connection))
 			{
+				// Execute the ldap_set_option here (after connect and before bind)
 				$this->setVersion();
+				ldap_set_option($this->connection, LDAP_OPT_SIZELIMIT, 0); // no limit here. should return true.
+
 
 				if ($this->serverType == "activedirectory")
 				{
 					$result=$this->setReferrals();
-					dol_syslog(get_class($this)."::connect_bind try bindauth for activedirectory on ".$host." user=".$this->searchUser,LOG_DEBUG);
+					dol_syslog(get_class($this)."::connect_bind try bindauth for activedirectory on ".$host." user=".$this->searchUser." password=".preg_replace('/./','*',$this->searchPassword),LOG_DEBUG);
 					$this->result=$this->bindauth($this->searchUser,$this->searchPassword);
 					if ($this->result)
 					{
@@ -189,7 +202,7 @@ class Ldap
 					// Try in auth mode
 					if ($this->searchUser && $this->searchPassword)
 					{
-						dol_syslog(get_class($this)."::connect_bind try bindauth on ".$host." user=".$this->searchUser,LOG_DEBUG);
+						dol_syslog(get_class($this)."::connect_bind try bindauth on ".$host." user=".$this->searchUser." password=".preg_replace('/./','*',$this->searchPassword),LOG_DEBUG);
 						$this->result=$this->bindauth($this->searchUser,$this->searchPassword);
 						if ($this->result)
 						{
@@ -359,10 +372,10 @@ class Ldap
 	 * 	Add a LDAP entry
 	 *	Ldap object connect and bind must have been done
 	 *
-	 *	@param	string	$dn			DN entry key
-	 *	@param	string	$info		Attributes array
-	 *	@param	User	$user		Objet user that create
-	 *	@return	int					<0 if KO, >0 if OK
+	 *	@param	string		$dn			DN entry key
+	 *	@param	array		$info		Attributes array
+	 *	@param	User		$user		Objet user that create
+	 *	@return	int						<0 if KO, >0 if OK
 	 */
 	function add($dn, $info, $user)
 	{
@@ -413,7 +426,7 @@ class Ldap
 	 *	Ldap object connect and bind must have been done
 	 *
 	 *	@param	string		$dn			DN entry key
-	 *	@param	string		$info		Attributes array
+	 *	@param	array		$info		Attributes array
 	 *	@param	string		$user		Objet user that modify
 	 *	@return	int						<0 if KO, >0 if OK
 	 */
@@ -465,7 +478,7 @@ class Ldap
 	 *	Ldap object connect and bind must have been done
 	 *
 	 *  @param	string		$dn			DN entry key
-	 *  @param  string		$info		Attributes array
+	 *  @param  array		$info		Attributes array
 	 *  @param  User		$user		Objet user that update
 	 * 	@param	string		$olddn		Old DN entry key (before update)
 	 *	@return	int						<0 if KO, >0 if OK
@@ -552,9 +565,9 @@ class Ldap
 	/**
 	 * 	Build a LDAP message
 	 *
-	 *	@param	string	$dn			DN entry key
-	 *	@param	string	$info		Attributes array
-	 *	@return	string				Content of file
+	 *	@param	string		$dn			DN entry key
+	 *	@param	array		$info		Attributes array
+	 *	@return	string					Content of file
 	 */
 	function dump_content($dn, $info)
 	{
@@ -594,9 +607,9 @@ class Ldap
 	/**
 	 * 	Dump a LDAP message to ldapinput.in file
 	 *
-	 *	@param	string	$dn			DN entry key
-	 *	@param	string	$info		Attributes array
-	 *	@return	int					<0 if KO, >0 if OK
+	 *	@param	string		$dn			DN entry key
+	 *	@param	array		$info		Attributes array
+	 *	@return	int						<0 if KO, >0 if OK
 	 */
 	function dump($dn, $info)
 	{
@@ -631,10 +644,10 @@ class Ldap
 	 * 	Add a LDAP attribute in entry
 	 *	Ldap object connect and bind must have been done
 	 *
-	 *	@param	string	$dn			DN entry key
-	 *	@param	string	$info		Attributes array
-	 *	@param	User	$user		Objet user that create
-	 *	@return	int					<0 if KO, >0 if OK
+	 *	@param	string		$dn			DN entry key
+	 *	@param	array		$info		Attributes array
+	 *	@param	User		$user		Objet user that create
+	 *	@return	int						<0 if KO, >0 if OK
 	 */
 	function addAttribute($dn, $info, $user)
 	{
@@ -683,10 +696,10 @@ class Ldap
 	 * 	Update a LDAP attribute in entry
 	 *	Ldap object connect and bind must have been done
 	 *
-	 *	@param	string	$dn			DN entry key
-	 *	@param	string	$info		Attributes array
-	 *	@param	User	$user		Objet user that create
-	 *	@return	int					<0 if KO, >0 if OK
+	 *	@param	string		$dn			DN entry key
+	 *	@param	array		$info		Attributes array
+	 *	@param	User		$user		Objet user that create
+	 *	@return	int						<0 if KO, >0 if OK
 	 */
 	function updateAttribute($dn, $info, $user)
 	{
@@ -735,10 +748,10 @@ class Ldap
 	 * 	Delete a LDAP attribute in entry
 	 *	Ldap object connect and bind must have been done
 	 *
-	 *	@param	string	$dn			DN entry key
-	 *	@param	string	$info		Attributes array
-	 *	@param	User	$user		Objet user that create
-	 *	@return	int					<0 if KO, >0 if OK
+	 *	@param	string		$dn			DN entry key
+	 *	@param	array		$info		Attributes array
+	 *	@param	User		$user		Objet user that create
+	 *	@return	int						<0 if KO, >0 if OK
 	 */
 	function deleteAttribute($dn, $info, $user)
 	{
@@ -788,7 +801,7 @@ class Ldap
 	 *
 	 *	@param	string	$dn			DN entry key
 	 *	@param	string	$filter		Filter
-	 *	@return	int					<0 if KO, >0 if OK
+	 *	@return	int|false|array					<0 or false if KO, array if OK
 	 */
 	function getAttribute($dn,$filter)
 	{
@@ -837,6 +850,7 @@ class Ldap
 	 */
 	function getAttributeValues($filterrecord,$attribute)
 	{
+		$attributes=array();
 		$attributes[0] = $attribute;
 
 		// We need to search for this user in order to get their entry.
@@ -1065,9 +1079,9 @@ class Ldap
 		$subcount = hexdec(substr($hex_sid,2,2));    // Get count of sub-auth entries
 		$auth = hexdec(substr($hex_sid,4,12));      // SECURITY_NT_AUTHORITY
 		$result = "$rev-$auth";
-		for ($x=0;$x < $subcount; $x++) {
-			$subauth[$x] = hexdec($this->littleEndian(substr($hex_sid,16+($x*8),8)));  // get all SECURITY_NT_AUTHORITY
-			$result .= "-".$subauth[$x];
+		for ($x=0;$x < $subcount; $x++)
+		{
+			$result .= "-".hexdec($this->littleEndian(substr($hex_sid,16+($x*8),8)));  // get all SECURITY_NT_AUTHORITY
 		}
 		return $result;
 	}
@@ -1080,9 +1094,9 @@ class Ldap
 	 *	car conflit majuscule-minuscule. A n'utiliser que pour les pages
 	 *	'Fiche LDAP' qui affiche champ lisibles par defaut.
 	 *
-	 * 	@param	string	$checkDn		DN de recherche (Ex: ou=users,cn=my-domain,cn=com)
-	 * 	@param 	string	$filter			Filtre de recherche (ex: (sn=nom_personne) )
-	 *	@return	array					Tableau des reponses (cle en minuscule-valeur)
+	 * 	@param	string		$checkDn		DN de recherche (Ex: ou=users,cn=my-domain,cn=com)
+	 * 	@param 	string		$filter			Search filter (ex: (sn=nom_personne) )
+	 *	@return	array|int					Array with answers (key lowercased - value)
 	 */
 	function search($checkDn, $filter)
 	{
@@ -1370,4 +1384,3 @@ class Ldap
 }
 
 
-?>

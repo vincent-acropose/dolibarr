@@ -71,6 +71,8 @@ class AllTests
 		$suite->addTestSuite('DateLibTest');
 		//require_once dirname(__FILE__).'/DateLibTzFranceTest.php';
 		//$suite->addTestSuite('DateLibTzFranceTest');
+		require_once dirname(__FILE__).'/MarginsLibTest.php';
+		$suite->addTestSuite('MarginsLibTest');
 		require_once dirname(__FILE__).'/FilesLibTest.php';
 		$suite->addTestSuite('FilesLibTest');
 		require_once dirname(__FILE__).'/JsonLibTest.php';
@@ -86,6 +88,8 @@ class AllTests
 
 		require_once dirname(__FILE__).'/LangTest.php';
 		$suite->addTestSuite('LangTest');
+		require_once dirname(__FILE__).'/SqlTest.php';
+		$suite->addTestSuite('SqlTest');
 
         require_once dirname(__FILE__).'/SecurityTest.php';
         $suite->addTestSuite('SecurityTest');
@@ -119,14 +123,21 @@ class AllTests
         require_once dirname(__FILE__).'/DiscountTest.php';
         $suite->addTestSuite('DiscountTest');
 
+        require_once dirname(__FILE__).'/ContratTest.php';
+        $suite->addTestSuite('ContratTest');
+
+        require_once dirname(__FILE__).'/FichinterTest.php';
+        $suite->addTestSuite('FichinterTest');
+
+        require_once dirname(__FILE__).'/PropalTest.php';
+        $suite->addTestSuite('PropalTest');
+
         require_once dirname(__FILE__).'/CommandeTest.php';
         $suite->addTestSuite('CommandeTest');
 
         require_once dirname(__FILE__).'/CommandeFournisseurTest.php';
         $suite->addTestSuite('CommandeFournisseurTest');
 
-        require_once dirname(__FILE__).'/ContratTest.php';
-        $suite->addTestSuite('ContratTest');
         require_once dirname(__FILE__).'/FactureTest.php';
         $suite->addTestSuite('FactureTest');
         require_once dirname(__FILE__).'/FactureRecTest.php';
@@ -135,24 +146,32 @@ class AllTests
         $suite->addTestSuite('FactureTestRounding');
         require_once dirname(__FILE__).'/FactureFournisseurTest.php';
         $suite->addTestSuite('FactureFournisseurTest');
-        require_once dirname(__FILE__).'/PropalTest.php';
-        $suite->addTestSuite('PropalTest');
+
 		require_once dirname(__FILE__).'/UserTest.php';
         $suite->addTestSuite('UserTest');
 		require_once dirname(__FILE__).'/UserGroupTest.php';
         $suite->addTestSuite('UserGroupTest');
         require_once dirname(__FILE__).'/BankAccountTest.php';
         $suite->addTestSuite('BankAccountTest');
-		require_once dirname(__FILE__).'/CompanyBankAccountTest.php';
+        require_once dirname(__FILE__).'/CompanyBankAccountTest.php';
         $suite->addTestSuite('CompanyBankAccountTest');
+        require_once dirname(__FILE__).'/BonPrelevementTest.php';
+        $suite->addTestSuite('BonPrelevementTest');
+
         require_once dirname(__FILE__).'/ChargeSocialesTest.php';
         $suite->addTestSuite('ChargeSocialesTest');
         require_once dirname(__FILE__).'/HolidayTest.php';
         $suite->addTestSuite('HolidayTest');
-
+        require_once dirname(__FILE__).'/EntrepotTest.php';
+        $suite->addTestSuite('EntrepotTest');
+        require_once dirname(__FILE__).'/MouvementStockTest.php';
+        $suite->addTestSuite('MouvementStockTest');
+        
         require_once dirname(__FILE__).'/CategorieTest.php';
         $suite->addTestSuite('CategorieTest');
 
+        require_once dirname(__FILE__).'/WebservicesProductsTest.php';
+        $suite->addTestSuite('WebservicesProductsTest');
         require_once dirname(__FILE__).'/WebservicesInvoicesTest.php';
         $suite->addTestSuite('WebservicesInvoicesTest');
         require_once dirname(__FILE__).'/WebservicesOrdersTest.php';
@@ -178,8 +197,13 @@ class AllTests
         require_once dirname(__FILE__).'/ModulesTest.php';  // At end because it's the longer
         $suite->addTestSuite('ModulesTest');
 
+
+        // GUI
+        require_once dirname(__FILE__).'/FormAdminTest.php';
+		$suite->addTestSuite('FormAdminTest');
+
+
         return $suite;
     }
 }
 
-?>

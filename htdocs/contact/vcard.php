@@ -75,7 +75,7 @@ if ($company->id)
 	if (! $contact->zip)        $v->setAddress("", "", $company->address, $company->town, "", $company->zip, $company->country_code, "WORK;POSTAL");
 	if ($company->email != $contact->email) $v->setEmail($company->email,'internet');
 	// Si contact lie a un tiers non de type "particulier"
-	if ($contact->typent_code != 'TE_PRIVATE') $v->setOrg($company->nom);
+	if ($contact->typent_code != 'TE_PRIVATE') $v->setOrg($company->name);
 }
 
 // Personal informations
@@ -101,4 +101,3 @@ header("Content-Type: text/x-vcard; name=\"".$filename."\"");
 
 print $output;
 
-?>

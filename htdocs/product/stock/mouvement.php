@@ -1,7 +1,8 @@
 <?php
-/* Copyright (C) 2001-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
+/* Copyright (C) 2001-2006	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
+ * Copyright (C) 2004-2013	Laurent Destailleur		<eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2014	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2015		Juanjo Menent			<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +61,7 @@ $offset = $conf->liste_limit * $page;
 if (! $sortfield) $sortfield="m.datem";
 if (! $sortorder) $sortorder="DESC";
 
-if (GETPOST("button_removefilter"))
+if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both test are required to be compatible with all browsers
 {
     $year='';
     $month='';
@@ -120,7 +121,7 @@ $formproduct=new FormProduct($db);
 
 $sql = "SELECT p.rowid, p.ref as product_ref, p.label as produit, p.fk_product_type as type,";
 $sql.= " e.label as stock, e.rowid as entrepot_id,";
-$sql.= " m.rowid as mid, m.value, m.datem, m.fk_user_author, m.label,";
+$sql.= " m.rowid as mid, m.value, m.datem, m.fk_user_author, m.label, m.fk_origin, m.origintype,";
 $sql.= " u.login";
 $sql.= " FROM (".MAIN_DB_PREFIX."entrepot as e,";
 $sql.= " ".MAIN_DB_PREFIX."product as p,";
@@ -213,7 +214,7 @@ if ($resql)
 
         print '<table class="border" width="100%">';
 
-        $linkback = '<a href="'.DOL_URL_ROOT.'/adherents/liste.php">'.$langs->trans("BackToList").'</a>';
+        $linkback = '<a href="'.DOL_URL_ROOT.'/adherents/list.php">'.$langs->trans("BackToList").'</a>';
 
         // Ref
         print '<tr><td width="25%">'.$langs->trans("Ref").'</td><td colspan="3">';
@@ -387,7 +388,7 @@ if ($resql)
     {
         print "<div class=\"tabsAction\">\n";
 
-        if ($user->rights->stock->creer)
+        if ($user->rights->stock->mouvement->creer)
         {
             print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$id.'&action=correction">'.$langs->trans("StockCorrection").'</a>';
         }
@@ -406,8 +407,8 @@ if ($resql)
     if ($search_product_ref) $param.='&search_product_ref='.urlencode($search_product_ref);
     if ($search_product)   $param.='&search_product='.urlencode($search_product);
     if ($search_warehouse) $param.='&search_warehouse='.urlencode($search_warehouse);
-    if ($sref) $param.='&sref='.urlencode($sref);
-    if ($snom) $param.='&snom='.urlencode($snom);
+    if (!empty($sref)) $param.='&sref='.urlencode($sref); // FIXME $sref is not defined
+    if (!empty($snom)) $param.='&snom='.urlencode($snom); // FIXME $snom is not defined
     if ($search_user)    $param.='&search_user='.urlencode($search_user);
     if ($idproduct > 0)  $param.='&idproduct='.$idproduct;
     if ($id) print_barre_liste($texte, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder,'',$num,0,'');
@@ -418,6 +419,7 @@ if ($resql)
     //print_liste_field_titre($langs->trans("Id"),$_SERVER["PHP_SELF"], "m.rowid","",$param,"",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Date"),$_SERVER["PHP_SELF"], "m.datem","",$param,"",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("LabelMovement"),$_SERVER["PHP_SELF"], "m.label","",$param,"",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Source"),$_SERVER["PHP_SELF"], "m.label","",$param,"",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("ProductRef"),$_SERVER["PHP_SELF"], "p.ref","",$param,"",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("ProductLabel"),$_SERVER["PHP_SELF"], "p.ref","",$param,"",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Warehouse"),$_SERVER["PHP_SELF"], "","",$param,"",$sortfield,$sortorder);	// We are on a specific warehouse card, no filter on other should be possible
@@ -440,6 +442,10 @@ if ($resql)
     print '<td class="liste_titre" align="left">';
     print '<input class="flat" type="text" size="10" name="search_movement" value="'.$search_movement.'">';
     print '</td>';
+    // Origin of movement
+    print '<td class="liste_titre" align="left">';
+    print '&nbsp; ';
+    print '</td>';
     // Product Ref
     print '<td class="liste_titre" align="left">';
     print '<input class="flat" type="text" size="6" name="search_product_ref" value="'.($idproduct?$product->ref:$search_product_ref).'">';
@@ -456,7 +462,6 @@ if ($resql)
     print '</td>';
     print '<td class="liste_titre" align="right">';
     print '<input type="image" class="liste_titre" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" name="button_search" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
-    print '&nbsp; ';
     print '<input type="image" class="liste_titre" src="'.img_picto($langs->trans("Search"),'searchclear.png','','',1).'" name="button_removefilter" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'" title="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">';
     print '</td>';
     print "</tr>\n";
@@ -470,6 +475,11 @@ if ($resql)
         $objp = $db->fetch_object($resql);
 
         $arrayofuniqueproduct[$objp->rowid]=$objp->produit;
+		if(!empty($objp->fk_origin)) {
+			$origin = $movement->get_origin($objp->fk_origin, $objp->origintype);
+		} else {
+			$origin = '';
+		}
 
         $var=!$var;
         print "<tr ".$bc[$var].">";
@@ -479,6 +489,8 @@ if ($resql)
         print '<td>'.dol_print_date($db->jdate($objp->datem),'dayhour').'</td>';
         // Label of movement
         print '<td>'.$objp->label.'</td>';
+		// Origin of movement
+        print '<td>'.$origin.'</td>';
 		// Product ref
         print '<td>';
         $productstatic->id=$objp->rowid;
@@ -525,8 +537,8 @@ if ($resql)
     		$productidselected=$key;
     		$productlabelselected=$val;
     	}
-		$datebefore=dol_get_first_day($year, $month?$month:1, true);
-		$dateafter=dol_get_last_day($year, $month?$month:12, true);
+		$datebefore=dol_get_first_day($year?$year:strftime("%Y",time()), $month?$month:1, true);
+		$dateafter=dol_get_last_day($year?$year:strftime("%Y",time()), $month?$month:12, true);
     	$balancebefore=$movement->calculateBalanceForProductBefore($productidselected, $datebefore);
     	$balanceafter=$movement->calculateBalanceForProductBefore($productidselected, $dateafter);
 
@@ -557,4 +569,3 @@ llxFooter();
 
 $db->close();
 
-?>

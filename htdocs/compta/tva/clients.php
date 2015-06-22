@@ -3,6 +3,7 @@
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2006      Yannick Warnier      <ywarnier@beeznest.org>
+ * Copyright (C) 2014	   Ferran Marcet        <fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +35,7 @@ $langs->load("bills");
 $langs->load("compta");
 $langs->load("companies");
 $langs->load("products");
+$langs->load("other");
 
 // Date range
 $year=GETPOST("year");
@@ -109,10 +111,10 @@ $fsearch.='  <input type="text" name="min" id="min" value="'.$min.'" size="6">';
 // Affiche en-tete du rapport
 if ($modetax==1)	// Calculate on invoice for goods and services
 {
-    $nom=$langs->trans("VATReportByCustomersInDueDebtMode");
+    $name=$langs->trans("VATReportByCustomersInDueDebtMode");
 	$calcmode=$langs->trans("CalcModeVATDebt");
     $calcmode.='<br>('.$langs->trans("TaxModuleSetupToModifyRules",DOL_URL_ROOT.'/admin/taxes.php').')';
-    //$nom.='<br>('.$langs->trans("SeeVATReportInInputOutputMode",'<a href="'.$_SERVER["PHP_SELF"].'?year='.$year_start.'&modetax=0">','</a>').')';
+    //$name.='<br>('.$langs->trans("SeeVATReportInInputOutputMode",'<a href="'.$_SERVER["PHP_SELF"].'?year='.$year_start.'&modetax=0">','</a>').')';
     $period=$form->select_date($date_start,'date_start',0,0,0,'',1,0,1).' - '.$form->select_date($date_end,'date_end',0,0,0,'',1,0,1);
     //$periodlink=($year_start?"<a href='".$_SERVER["PHP_SELF"]."?year=".($year_start-1)."&modetax=".$modetax."'>".img_previous()."</a> <a href='".$_SERVER["PHP_SELF"]."?year=".($year_start+1)."&modetax=".$modetax."'>".img_next()."</a>":"");
     $description=$langs->trans("RulesVATDueServices");
@@ -137,10 +139,10 @@ if ($modetax==1)	// Calculate on invoice for goods and services
 }
 if ($modetax==0) 	// Invoice for goods, payment for services
 {
-    $nom=$langs->trans("VATReportByCustomersInInputOutputMode");
+    $name=$langs->trans("VATReportByCustomersInInputOutputMode");
     $calcmode=$langs->trans("CalcModeVATEngagement");
     $calcmode.='<br>('.$langs->trans("TaxModuleSetupToModifyRules",DOL_URL_ROOT.'/admin/taxes.php').')';
-    //$nom.='<br>('.$langs->trans("SeeVATReportInDueDebtMode",'<a href="'.$_SERVER["PHP_SELF"].'?year='.$year_start.'&modetax=1">','</a>').')';
+    //$name.='<br>('.$langs->trans("SeeVATReportInDueDebtMode",'<a href="'.$_SERVER["PHP_SELF"].'?year='.$year_start.'&modetax=1">','</a>').')';
     $period=$form->select_date($date_start,'date_start',0,0,0,'',1,0,1).' - '.$form->select_date($date_end,'date_end',0,0,0,'',1,0,1);
     //$periodlink=($year_start?"<a href='".$_SERVER["PHP_SELF"]."?year=".($year_start-1)."&modetax=".$modetax."'>".img_previous()."</a> <a href='".$_SERVER["PHP_SELF"]."?year=".($year_start+1)."&modetax=".$modetax."'>".img_next()."</a>":"");
     $description=$langs->trans("RulesVATInServices");
@@ -164,7 +166,7 @@ if ($modetax==0) 	// Invoice for goods, payment for services
 	$amountsup=$langs->trans("AmountHT");
 	if ($mysoc->tva_assuj) $vatsup.=' ('.$langs->trans("ToGetBack").')';
 }
-report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportlink,array(),$calcmode);
+report_header($name,$nomlink,$period,$periodlink,$description,$builddate,$exportlink,array(),$calcmode);
 
 $vatcust=$langs->trans("VATReceived");
 $vatsup=$langs->trans("VATPaid");
@@ -185,6 +187,17 @@ print "<td align=\"right\">".$vatcust."</td>";
 print "</tr>\n";
 
 $coll_list = vat_by_thirdparty($db,0,$date_start,$date_end,$modetax,'sell');
+
+$action = "tvaclient";
+$object = &$coll_list;
+$parameters["mode"] = $modetax;
+$parameters["start"] = $date_start;
+$parameters["end"] = $date_end;
+$parameters["direction"] = 'sell';
+// Initialize technical object to manage hooks of expenses. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('externalbalance'));
+$reshook=$hookmanager->executeHooks('addStatisticLine',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+
 if (is_array($coll_list))
 {
 	$var=true;
@@ -211,7 +224,7 @@ if (is_array($coll_list))
 			print "<tr ".$bc[$var].">";
 			print '<td class="nowrap">'.$i."</td>";
 			$company_static->id=$coll->socid;
-			$company_static->nom=$coll->nom;
+			$company_static->name=$coll->name;
 			$company_static->client=1;
 			print '<td class="nowrap">'.$company_static->getNomUrl(1,'customer').'</td>';
 			$find = array(' ','.');
@@ -263,6 +276,9 @@ print "</tr>\n";
 $company_static=new Societe($db);
 
 $coll_list = vat_by_thirdparty($db,0,$date_start,$date_end,$modetax,'buy');
+
+$parameters["direction"] = 'buy';
+$reshook=$hookmanager->executeHooks('addStatisticLine',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 if (is_array($coll_list))
 {
 	$var=true;
@@ -289,7 +305,7 @@ if (is_array($coll_list))
 			print "<tr ".$bc[$var].">";
 			print '<td class="nowrap">'.$i."</td>";
 			$company_static->id=$coll->socid;
-			$company_static->nom=$coll->nom;
+			$company_static->name=$coll->name;
 			$company_static->fournisseur=1;
 			print '<td class="nowrap">'.$company_static->getNomUrl(1,'supplier').'</td>';
 			$find = array(' ','.');
@@ -339,4 +355,3 @@ print '</table>';
 llxFooter();
 
 $db->close();
-?>

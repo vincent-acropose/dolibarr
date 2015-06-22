@@ -25,56 +25,80 @@
 require_once DOL_DOCUMENT_ROOT . '/fourn/class/fournisseur.commande.class.php';
 
 /**
- * dispatched
- * 
- * @param 	int	$order_id	Id of order
- * @return	boolean			
+ * Check if there is still some dispatching of stock to do.
+ *
+ * @param 	int		$order_id		Id of order to check
+ * @return	boolean					True = There is some dispatching to do, False = All dispatching is done (may be we receive more) or is not required
  */
-function dispatched($order_id)
+function dolDispatchToDo($order_id)
 {
     global $db;
-    $sql = 'SELECT fk_product, SUM(qty) from llx_commande_fournisseur_dispatch';
-    $sql .= ' WHERE fk_commande = ' . $order_id . ' GROUP BY fk_product';
-    $sql .= ' ORDER by fk_product';
-    $resql = $db->query($sql);
+
     $dispatched = array();
     $ordered = array();
-    if($resql && $db->num_rows($resql)) 
-    {
-        while($res = $db->fetch_object($resql))
-            $dispatched[] = $res;
-    }
-    $sql = 'SELECT fk_product, SUM(qty) from llx_commande_fournisseurdet';
-    $sql .= ' WHERE fk_commande = ' . $order_id . ' GROUP BY fk_product';
-    $sql .= ' ORDER by fk_product';
+
+    // Count nb of quantity dispatched per product
+    $sql = 'SELECT fk_product, SUM(qty) FROM ' . MAIN_DB_PREFIX . 'commande_fournisseur_dispatch';
+    $sql.= ' WHERE fk_commande = ' . $order_id;
+    $sql.= ' GROUP BY fk_product';
+    $sql.= ' ORDER by fk_product';
     $resql = $db->query($sql);
-    if($resql && $db->num_rows($resql)) {
-        while($res = $db->fetch_object($resql))
-            $ordered[] = $res;
+    if ($resql && $db->num_rows($resql))
+    {
+        while ($obj = $db->fetch_object($resql))
+            $dispatched[$obj->fk_product] = $obj;
     }
-    return $dispatched == $ordered;
+
+    // Count nb of quantity to dispatch per product
+    $sql = 'SELECT fk_product, SUM(qty) FROM ' . MAIN_DB_PREFIX . 'commande_fournisseurdet';
+    $sql.= ' WHERE fk_commande = ' . $order_id;
+    $sql.= ' AND fk_product > 0';
+    if (empty($conf->global->STOCK_SUPPORTS_SERVICES)) $sql.= ' AND product_type = 0';
+    $sql.= ' GROUP BY fk_product';
+    $sql.= ' ORDER by fk_product';
+    $resql = $db->query($sql);
+    if ($resql && $db->num_rows($resql))
+    {
+        while ($obj = $db->fetch_object($resql))
+            $ordered[$obj->fk_product] = $obj;
+    }
+
+    $todispatch=0;
+    foreach ($ordered as $key => $val)
+    {
+		if ($ordered[$key] > $dispatched[$key]) $todispatch++;
+    }
+
+    return ($todispatch ? true : false);
+    //return true;
 }
 
 /**
  * dispatchedOrders
- * 
- * @return Ambigous <string, multitype:NULL >
+ *
+ * @return string		Array of id of orders wit all dispathing already done or not required
  */
 function dispatchedOrders()
 {
     global $db;
+
     $sql = 'SELECT rowid FROM ' . MAIN_DB_PREFIX . 'commande_fournisseur';
     $resql = $db->query($sql);
-    $res = array();
-    if ($resql && $db->num_rows($resql) > 0) {
-        while ($obj = $db->fetch_object($resql)) {
-            if (dispatched($obj->rowid)) {
-                $res[] = $obj->rowid;
+    $resarray = array();
+    if ($resql && $db->num_rows($resql) > 0)
+    {
+        while ($obj = $db->fetch_object($resql))
+        {
+            if (! dolDispatchToDo($obj->rowid))
+            {
+                $resarray[] = $obj->rowid;
             }
         }
     }
-    if ($res) {
-        $res = '(' . implode(',', $res) . ')';
+
+    if (count($resarray))
+    {
+        $res = '(' . implode(',', $resarray) . ')';
     } else {
         //hack to make sure ordered SQL request won't syntax error
         $res = '(0)';
@@ -84,48 +108,52 @@ function dispatchedOrders()
 
 /**
  * ordered
- * 
+ *
  * @param 	int		$product_id		Product id
  * @return	void
  */
 function ordered($product_id)
 {
-    global $db, $langs, $conf;
-    $sql = 'SELECT DISTINCT cfd.fk_product, SUM(cfd.qty) FROM';
-    $sql .= ' ' . MAIN_DB_PREFIX . 'commande_fournisseurdet as cfd ';
-    $sql .= ' LEFT JOIN ' . MAIN_DB_PREFIX . 'commande_fournisseur as cf';
-    $sql .= ' ON cfd.fk_commande = cf.rowid WHERE';
-    if ($conf->global->STOCK_CALCULATE_ON_SUPPLIER_VALIDATE_ORDER) {
-        $sql .= ' cf.fk_statut < 3';
-    } else if ($conf->global->STOCK_CALCULATE_ON_SUPPLIER_DISPATCH_ORDER) {
-        $sql .= ' cf.fk_statut < 6 AND cf.rowid NOT IN ' . dispatchedOrders();
-    } else {
-        $sql .= ' cf.fk_statut < 5';
-    } 
-    $sql .= ' AND cfd.fk_product = ' . $product_id;
-    $sql .= ' GROUP BY cfd.fk_product';
+	global $db, $langs, $conf;
 
-    $resql = $db->query($sql);
-    if ($resql) {
-        $exists = $db->num_rows($resql);
-        if ($exists) {
-            $obj = $db->fetch_array($resql);
-            return $obj['SUM(cfd.qty)']; //. ' ' . img_picto('','tick');
-        } else {
-            return null;//img_picto('', 'stcomm-1');
-        }
-    } else {
-        $error = $db->lasterror();
-        dol_print_error($db);
-        dol_syslog('replenish.php: ' . $error, LOG_ERR);
+	$sql = 'SELECT DISTINCT cfd.fk_product, SUM(cfd.qty) as qty FROM';
+	$sql .= ' ' . MAIN_DB_PREFIX . 'commande_fournisseurdet as cfd ';
+	$sql .= ' LEFT JOIN ' . MAIN_DB_PREFIX . 'commande_fournisseur as cf';
+	$sql .= ' ON cfd.fk_commande = cf.rowid WHERE';
+	if ($conf->global->STOCK_CALCULATE_ON_SUPPLIER_VALIDATE_ORDER) {
+		$sql .= ' cf.fk_statut < 3';
+	} else if ($conf->global->STOCK_CALCULATE_ON_SUPPLIER_DISPATCH_ORDER) {
+		$sql .= ' cf.fk_statut < 6 AND cf.rowid NOT IN ' . dispatchedOrders();
+	} else {
+		$sql .= ' cf.fk_statut < 5';
+	}
+	$sql .= ' AND cfd.fk_product = ' . $product_id;
+	$sql .= ' GROUP BY cfd.fk_product';
 
-        return $langs->trans('error');
-    }
+	$resql = $db->query($sql);
+	if ($resql)
+	{
+		$exists = $db->num_rows($resql);
+		if ($exists)
+		{
+			$obj = $db->fetch_array($resql);
+			return $obj['qty']; //. ' ' . img_picto('','tick');
+		} else {
+			return null; //img_picto('', 'stcomm-1');
+		}
+	}
+	else
+	{
+		$error = $db->lasterror();
+		dol_print_error($db);
+
+		return $langs->trans('error');
+	}
 }
 
 /**
  * getProducts
- * 
+ *
  * @param 	int		$order_id		Order id
  * @return	void
  */
@@ -145,4 +173,3 @@ function getProducts($order_id)
     return $products;
 }
 
-?>
