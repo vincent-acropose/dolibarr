@@ -41,7 +41,7 @@ if (! empty($conf->comptabilite->enabled)) $result=restrictedArea($user,'compta'
 if (! empty($conf->accounting->enabled)) $result=restrictedArea($user,'accounting','','','comptarapport');
 
 // Define modecompta ('CREANCES-DETTES' or 'RECETTES-DEPENSES')
-$modecompta = $conf->global->ACCOUNTING_MODE;
+$modecompta = $conf->global->COMPTA_MODE;
 if (GETPOST("modecompta")) $modecompta=GETPOST("modecompta");
 
 $sortorder=isset($_GET["sortorder"])?$_GET["sortorder"]:$_POST["sortorder"];
@@ -250,7 +250,7 @@ if ($modecompta == 'CREANCES-DETTES')
 	// Category filter
 	print '<tr class="liste_titre">';
 	print '<td>';
-	print $langs->trans("Category") . ': ' . $formother->select_categories(Categorie::TYPE_PRODUCT, $selected_cat, 'search_categ', true);
+	print $langs->trans("Category") . ': ' . $formother->select_categories(0, $selected_cat, 'search_categ', true);
 	print ' ';
 	print $langs->trans("SubCats") . '? ';
 	print '<input type="checkbox" name="subcat" value="yes"';
