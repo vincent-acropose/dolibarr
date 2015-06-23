@@ -670,9 +670,15 @@ class pdf_azur_ATM extends ModelePDFPropales
 		$pdf->MultiCell(80, 4, $titre, 0, 'L');
 		$pdf->SetFont('','', $default_font_size - 2);
 		$pdf->SetXY($posxval, $posy);
-		$percent_acompte = 30;
-		$mt_acompte = $object->total_ttc * $percent_acompte / 100;
-		$txt = 'A réception de cette proposition signée et d\'un acompte de 30%, soit '.price($mt_acompte).' €';
+		
+		if($object->total_ht <= 500) {
+			$txt = 'A réception de cette proposition signée et de son règlement, soit '.price($object->total_ttc).' €';
+		} else {
+			$percent_acompte = 30;
+			$mt_acompte = $object->total_ttc * $percent_acompte / 100;
+			$txt = 'A réception de cette proposition signée et d\'un acompte de 30%, soit '.price($mt_acompte).' €';
+		}
+		
 		$pdf->MultiCell(60, 4, $txt, 0, 'L');
 
         $posy=$pdf->GetY()+1;
