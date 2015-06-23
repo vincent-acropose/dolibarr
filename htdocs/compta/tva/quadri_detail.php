@@ -402,7 +402,7 @@ else
 				$ratiopaymentinvoice=1;
 				if ($modetax == 0)
 				{
-					if (isset($fields['payment_amount']) && $fields['ftotal_ttc']) $ratiopaymentinvoice=($fields['payment_amount']/$fields['ftotal_ttc']);
+					if (isset($fields['payment_amount']) && $fields['ftotal_ttc'] != 0) $ratiopaymentinvoice=($fields['payment_amount']/$fields['ftotal_ttc']);
 					print '<td class="nowrap" align="right">';
 					//print $fields['totalht']."-".$fields['payment_amount']."-".$fields['ftotal_ttc'];
 					if ($fields['payment_amount'] && $fields['ftotal_ttc'])
