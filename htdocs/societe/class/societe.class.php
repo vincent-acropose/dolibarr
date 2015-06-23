@@ -569,6 +569,12 @@ class Societe extends CommonObject
             $result = -2;
         }
         
+       if (! $this->zip)
+        {
+            $this->errors[] = 'ErrorBadZip';
+            $result = -2;
+        }
+        
         
         if (! $this->country_id)
         {
