@@ -1573,7 +1573,21 @@ if (empty($reshook)) {
 				$from = $_POST['fromname'] . ' <' . $_POST['frommail'] . '>';
 				$replyto = $_POST['replytoname'] . ' <' . $_POST['replytomail'] . '>';
 				$message = $_POST['message'];
-				$sendtocc = $_POST['sendtocc'];
+				
+				$receivercc = GETPOST('receivercc');
+			
+				// Si le destinataire est la société
+				if ($receivercc == 'thirdparty') {
+					$receivercc = $object->client->email;
+				} else if (is_numeric($receivercc) && $receivercc > 0) {
+					$receivercc = $object->client->contact_get_property($receivercc, 'email');
+				} else {
+					$receivercc = '';
+				}
+				
+				$sendtocc = ($receivercc!=='') ? $receivercc : $_POST ['sendtocc'];
+				$sendtocc = ($sendtocc) ? $sendtocc : '';
+
 				$deliveryreceipt = $_POST['deliveryreceipt'];
 
 				if ($action == 'send') {
@@ -3658,7 +3672,7 @@ if ($action == 'create')
 		include_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
 		$fileparams = dol_most_recent_file($conf->facture->dir_output . '/' . $ref, preg_quote($ref, '/'));
 		$file = $fileparams ['fullname'];
-
+		
 		// Build document if it not exists
 		if (! $file || ! is_readable($file)) {
 			// Define output language
