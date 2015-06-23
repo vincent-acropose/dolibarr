@@ -225,6 +225,13 @@ class ExportTsv extends ModeleExports
             // Translation newvalue
 			if (preg_match('/^\((.*)\)$/i',$newvalue,$reg)) $newvalue=$outputlangs->transnoentities($reg[1]);
 
+			if (preg_match('/^Select:/i', $typefield, $reg) && $typefield = substr($typefield, 7))
+			{
+				$array = unserialize($typefield);
+				$array = $array['options'];
+				$newvalue = $array[$newvalue];
+			}
+			
 			$newvalue=$this->tsv_clean($newvalue,$outputlangs->charset_output);
 
 			fwrite($this->handle,$newvalue.$this->separator);
