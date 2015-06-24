@@ -502,6 +502,8 @@ elseif ($action == 'update_line' && $user->rights->fournisseur->facture->creer)
             $pu=$_POST['puttc'];
             $price_base_type='TTC';
         }
+		// Spécifique pour gérer manuellement les écart de TVA
+		$tva_mt = GETPOST('tva_mt');
 
         if (GETPOST('idprod'))
         {
@@ -528,7 +530,7 @@ elseif ($action == 'update_line' && $user->rights->fournisseur->facture->creer)
 		    $remise_percent = 0;
 	    }
 
-        $result=$object->updateline(GETPOST('lineid'), $label, $pu, GETPOST('tauxtva'), $localtax1_tx, $localtax2_tx, GETPOST('qty'), GETPOST('idprod'), $price_base_type, 0, $type, $remise_percent);
+        $result=$object->updateline(GETPOST('lineid'), $label, $pu, GETPOST('tauxtva'), $localtax1_tx, $localtax2_tx, GETPOST('qty'), GETPOST('idprod'), $price_base_type, 0, $type, $remise_percent, false, $tva_mt);
         if ($result >= 0)
         {
             unset($_POST['label']);
@@ -558,6 +560,7 @@ elseif ($action == 'addline' && $user->rights->fournisseur->facture->creer)
 	// Set if we used free entry or predefined product
 	$predef='';
 	$product_desc=(GETPOST('dp_desc')?GETPOST('dp_desc'):'');
+	$price_ttc = price2num(GETPOST('price_ttc'), 'MU');
 	if (GETPOST('prod_entry_mode') == 'free')
 	{
 		$idprod=0;
@@ -628,9 +631,15 @@ elseif ($action == 'addline' && $user->rights->fournisseur->facture->creer)
             $localtax2_tx= get_localtax($tvatx, 2, $mysoc,$object->thirdparty);
 
             $type = $productsupplier->type;
+			
+			// if price ht is forced
+			if (! empty($price_ttc)) {
+				$pu_ttc = price2num($price_ttc, 'MU');
+				$pu_ht = price2num($pu_ttc / (1 + ($tva_tx / 100)), 'MU');
+			}
 
             // TODO Save the product supplier ref into database into field ref_supplier (must rename field ref into ref_supplier first)
-            $result=$object->addline($desc, $productsupplier->fourn_pu, $tvatx, $localtax1_tx, $localtax2_tx, $qty, $idprod, $remise_percent, '', '', 0, $npr);
+            $result=$object->addline($desc, $pu_ttc, $tvatx, $localtax1_tx, $localtax2_tx, $qty, $idprod, $remise_percent, '', '', 0, $npr, 'TTC');
         }
     	if ($idprod == -2 || $idprod == 0)
         {
@@ -1992,12 +2001,14 @@ else
                 // VAT
                 print '<td align="right">';
                 print $form->load_tva('tauxtva',$object->lines[$i]->tva_tx,$societe,$mysoc);
+				// Spécifique pour gérer manuellement les écart de TVA
+				print '<br><input type="text" name="tva_mt" size="5" value="'.price($object->lines[$i]->tva).'">';
                 print '</td>';
 
                 // Unit price
-                print '<td align="right" class="nowrap"><input size="4" name="puht" type="text" value="'.price($object->lines[$i]->pu_ht).'"></td>';
+                print '<td align="right" class="nowrap"><input size="5" name="puht" type="text" value="'.price($object->lines[$i]->pu_ht).'"></td>';
 
-                print '<td align="right" class="nowrap"><input size="4" name="puttc" type="text" value=""></td>';
+                print '<td align="right" class="nowrap"><input size="5" name="puttc" type="text" value=""></td>';
 
                 print '<td align="right"><input size="1" name="qty" type="text" value="'.$object->lines[$i]->qty.'"></td>';
 

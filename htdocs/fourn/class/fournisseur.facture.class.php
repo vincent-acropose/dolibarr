@@ -1178,7 +1178,7 @@ class FactureFournisseur extends CommonInvoice
      *  @param		int		$notrigger			Disable triggers
      * @return    	int           				<0 if KO, >0 if OK
      */
-    function updateline($id, $desc, $pu, $vatrate, $txlocaltax1=0, $txlocaltax2=0, $qty=1, $idproduct=0, $price_base_type='HT', $info_bits=0, $type=0, $remise_percent=0, $notrigger=false)
+    function updateline($id, $desc, $pu, $vatrate, $txlocaltax1=0, $txlocaltax2=0, $qty=1, $idproduct=0, $price_base_type='HT', $info_bits=0, $type=0, $remise_percent=0, $notrigger=false, $tva_mt = 0)
     {
         dol_syslog(get_class($this)."::updateline $id,$desc,$pu,$vatrate,$qty,$idproduct,$price_base_type,$info_bits,$type,$remise_percent", LOG_DEBUG);
         include_once DOL_DOCUMENT_ROOT.'/core/lib/price.lib.php';
@@ -1216,6 +1216,14 @@ class FactureFournisseur extends CommonInvoice
         $total_localtax1 = $tabprice[9];
         $total_localtax2 = $tabprice[10];
         if (empty($info_bits)) $info_bits=0;
+		//echo '<pre>';print_r($tabprice);
+		// Spécifique pour gérer manuellement les écart de TVA
+		if(!empty($tva_mt)) {
+			$total_tva = $tva_mt;
+			$total_ttc = $total_ht + $total_tva;
+			$pu_ht = $total_ht / $qty;
+			$pu_ttc = $total_ttc / $qty;
+		}
 
         if ($idproduct)
         {
@@ -1276,7 +1284,7 @@ class FactureFournisseur extends CommonInvoice
             }
 
             // Update total price into invoice record
-            $result=$this->update_price('','auto');
+            $result=$this->update_price('','none');
 
             $this->db->commit();
             

@@ -511,12 +511,12 @@ function setforpredef() {
 	jQuery("#prod_entry_mode_free").attr('checked',false);
 	jQuery("#prod_entry_mode_predef").attr('checked',true);
 	jQuery("#price_ht").hide();
-	jQuery("#price_ttc").hide();	// May no exists
+	//jQuery("#price_ttc").hide();	// May no exists
 	jQuery("#tva_tx").hide();
 	jQuery("#buying_price").show();
 	jQuery("#title_vat").hide();
 	jQuery("#title_up_ht").hide();
-	jQuery("#title_up_ttc").hide();
+	//jQuery("#title_up_ttc").hide();
 	jQuery("#np_marginRate").hide();	// May no exists
 	jQuery("#np_markRate").hide();	// May no exists
 	jQuery(".np_marginRate").hide();	// May no exists
