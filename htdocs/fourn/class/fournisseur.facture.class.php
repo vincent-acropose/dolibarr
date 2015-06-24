@@ -1186,6 +1186,7 @@ class FactureFournisseur extends CommonInvoice
         $pu = price2num($pu);
         $qty  = price2num($qty);
 		$remise_percent=price2num($remise_percent);
+		$tva_mt=price2num($tva_mt);
 
         // Check parameters
         if (! is_numeric($pu) || ! is_numeric($qty)) return -1;
