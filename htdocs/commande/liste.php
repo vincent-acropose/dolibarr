@@ -51,6 +51,12 @@ $socid=GETPOST('socid','int');
 $search_user=GETPOST('search_user','int');
 $search_sale=GETPOST('search_sale','int');
 
+$fromLeftMenu = GETPOST('mode_search', 'alpha');
+if ($fromLeftMenu == 'ref_or_customerref')
+{
+	$sref = $sref_client = GETPOST('search_ref', 'alpha');
+}
+
 // Security check
 $id = (GETPOST('orderid')?GETPOST('orderid'):GETPOST('id','int'));
 if ($user->societe_id) $socid=$user->societe_id;
@@ -128,7 +134,15 @@ $sql.= ' AND c.entity = '.$conf->entity;
 if ($socid)	$sql.= ' AND s.rowid = '.$socid;
 if (!$user->rights->societe->client->voir && !$socid) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
 if ($sref) {
-	$sql .= natural_search('c.ref', $sref);
+	if ($fromLeftMenu == 'ref_or_customerref')
+	{
+		$sql.= ' AND ( c.ref LIKE \'%'.$db->escape($sref).'%\'';
+		$sql.= ' OR c.ref_client LIKE \'%'.$db->escape($sref).'%\' )';
+	}
+	else 
+	{
+		$sql .= natural_search('c.ref', $sref);
+	}
 }
 if ($sall)
 {
@@ -190,7 +204,7 @@ if (!empty($snom))
 {
 	$sql .= natural_search('s.nom', $snom);
 }
-if (!empty($sref_client))
+if (!empty($sref_client) && empty($fromLeftMenu))
 {
 	$sql.= ' AND c.ref_client LIKE \'%'.$db->escape($sref_client).'%\'';
 }
