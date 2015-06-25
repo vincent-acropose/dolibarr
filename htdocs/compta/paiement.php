@@ -189,36 +189,48 @@ if ($action == 'confirm_paiement' && $confirm == 'yes')
     		$error++;
     	}
     }
+	
+	$TAmountsByCustomer = array();
+	foreach($amounts as $id_fac => $amount) {
+		if($amount <= 0) continue;
+		$f = new Facture($db);
+		$f->fetch($id_fac);
+		$TAmountsByCustomer[$f->socid][$id_fac] = $amount;
+	}
 
-    // Creation of payment line
-    $paiement = new Paiement($db);
-    $paiement->datepaye     = $datepaye;
-    $paiement->amounts      = $amounts;   // Array with all payments dispatching
-    $paiement->paiementid   = dol_getIdFromCode($db,$_POST['paiementcode'],'c_paiement');
-    $paiement->num_paiement = $_POST['num_paiement'];
-    $paiement->note         = $_POST['comment'];
+	foreach($TAmountsByCustomer as $amounts_by_customer){
 
-    if (! $error)
-    {
-    	$paiement_id = $paiement->create($user, (GETPOST('closepaidinvoices')=='on'?1:0));
-    	if ($paiement_id < 0)
-        {
-            setEventMessage($paiement->error, 'errors');
-            $error++;
-        }
-    }
+	    // Creation of payment line
+	    $paiement = new Paiement($db);
+	    $paiement->datepaye     = $datepaye;
+	    $paiement->amounts      = $amounts_by_customer;   // Array with all payments dispatching
+	    $paiement->paiementid   = dol_getIdFromCode($db,$_POST['paiementcode'],'c_paiement');
+	    $paiement->num_paiement = $_POST['num_paiement'];
+	    $paiement->note         = $_POST['comment'];
+	
+	    if (! $error)
+	    {
+	    	$paiement_id = $paiement->create($user, (GETPOST('closepaidinvoices')=='on'?1:0));
+	    	if ($paiement_id < 0)
+	        {
+	            setEventMessage($paiement->error, 'errors');
+	            $error++;
+	        }
+	    }
+	
+	    if (! $error)
+	    {
+	    	$label='(CustomerInvoicePayment)';
+	    	if (GETPOST('type') == 2) $label='(CustomerInvoicePaymentBack)';
+	        $result=$paiement->addPaymentToBank($user,'payment',$label,GETPOST('accountid'),GETPOST('chqemetteur'),GETPOST('chqbank'));
+	        if ($result < 0)
+	        {
+	            setEventMessage($paiement->error, 'errors');
+	            $error++;
+	        }
+	    }
 
-    if (! $error)
-    {
-    	$label='(CustomerInvoicePayment)';
-    	if (GETPOST('type') == 2) $label='(CustomerInvoicePaymentBack)';
-        $result=$paiement->addPaymentToBank($user,'payment',$label,GETPOST('accountid'),GETPOST('chqemetteur'),GETPOST('chqbank'));
-        if ($result < 0)
-        {
-            setEventMessage($paiement->error, 'errors');
-            $error++;
-        }
-    }
+	}
 
     if (! $error)
     {
