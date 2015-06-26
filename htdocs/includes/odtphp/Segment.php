@@ -74,13 +74,73 @@ class Segment implements IteratorAggregate, Countable
     {
         return new RecursiveIteratorIterator(new SegmentIterator($this->children), 1);
     }
+    
+    public function merge()
+    {
+        $this->xmlParsed .= $this->xml;
+        foreach($this->vars as $key => $value)
+        {
+            dol_syslog("Zvariable".$key." ".$value."/variable");
+            // If value is true (not 0 nor false nor null nor empty string)
+            if($value)
+            {
+                // Remove the IF tag
+                $reg = '@\[!--\sIF\s' . $key . '\s--\]@smU';
+                $this->xmlParsed = preg_replace($reg, '', $this->xmlParsed);
+ 
+                // Remove everything between the ELSE tag (if it exists) and the ENDIF tag
+                $reg = '@(\[!--\sELSE\s' . $key . '\s--\](.*))?\[!--\sENDIF\s' . $key . '\s--\]@smU'; // U modifier = all quantifiers are non-greedy
+                $this->xmlParsed = preg_replace($reg, '', $this->xmlParsed);
+            }
+            // Else the value is false, then two cases: no ELSE and we're done, or there is at least one place where there is an ELSE clause, then we replace it
+            else
+            {
+                // Find all conditional blocks for this variable: from IF to ELSE and to ENDIF
+                $reg = '@\[!--\sIF\s' . $key . '\s--\](.*)(\[!--\sELSE\s' . $key . '\s--\](.*))?\[!--\sENDIF\s' . $key . '\s--\]@smU'; // U modifier = all quantifiers are non-greedy
+ 
+                preg_match_all($reg, $this->xmlParsed, $matches, PREG_SET_ORDER);
+ 
+                foreach($matches as $match)
+                { // For each match, if there is an ELSE clause, we replace the whole block by the value in the ELSE clause
+                    if (!empty($match[3])) $this->xmlParsed = str_replace($match[0], $match[3], $this->xmlParsed);
+                }
+                // Cleanup the other conditional blocks (all the others where there were no ELSE clause, we can just remove them altogether)
+                $this->xmlParsed = preg_replace($reg, '', $this->xmlParsed);
+            }
+        }
+ 
+        $this->xmlParsed = str_replace(array_keys($this->vars), array_values($this->vars), $this->xmlParsed);
+        if ($this->hasChildren())
+        {
+            foreach ($this->children as $child)
+            {
+                $this->xmlParsed = str_replace($child->xml, ($child->xmlParsed=="")?$child->merge():$child->xmlParsed, $this->xmlParsed);
+                $child->xmlParsed = '';
+            }
+        }
+        $reg = "/\[!--\sBEGIN\s$this->name\s--\](.*)\[!--\sEND\s$this->name\s--\]/sm";
+        $this->xmlParsed = preg_replace($reg, '$1', $this->xmlParsed);
+        $this->file->open($this->odf->getTmpfile());
+        foreach ($this->images as $imageKey => $imageValue) {
+            if ($this->file->getFromName('Pictures/' . $imageValue) === false) {
+                // Add the image inside the ODT document
+                $this->file->addFile($imageKey, 'Pictures/' . $imageValue);
+                // Add the image to the Manifest (which maintains a list of images, necessary to avoid "Corrupt ODT file. Repair?" when opening the file with LibreOffice)
+                $this->odf->addImageToManifest($imageValue);
+            }
+        }
+ 
+        $this->file->close();
+        return $this->xmlParsed;
+    }
+
     /**
      * Replace variables of the template in the XML code
      * All the children are also called
      *
      * @return string
      */
-    public function merge()
+    /*public function merge()
     {
         $this->xmlParsed .= str_replace(array_keys($this->vars), array_values($this->vars), $this->xml);
         if ($this->hasChildren()) {
@@ -102,7 +162,7 @@ class Segment implements IteratorAggregate, Countable
         }
         $this->file->close();
         return $this->xmlParsed;
-    }
+    }*/
     /**
      * Analyse the XML code in order to find children
      *
