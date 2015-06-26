@@ -1154,10 +1154,10 @@ if (empty($reshook)) {
 					// We define price for product
 					if (! empty($conf->global->PRODUIT_MULTIPRICES) && ! empty($object->client->price_level))
 					{
-						$pu_ht = $prod->multiprices[$object->client->price_level];
-						$pu_ttc = $prod->multiprices_ttc[$object->client->price_level];
-						$price_min = $prod->multiprices_min[$object->client->price_level];
-						$price_base_type = $prod->multiprices_base_type[$object->client->price_level];
+						$pu_ht 			 = price2num($prod->multiprices[$object->client->price_level], 'MT');
+						$pu_ttc 		 = price2num($prod->multiprices_ttc[$object->client->price_level], 'MT');
+						$price_min   	 = price2num($prod->multiprices_min[$object->client->price_level], 'MT');
+						$price_base_type = price2num($prod->multiprices_base_type[$object->client->price_level], 'MT');
 						if (isset($prod->multiprices_tva_tx[$object->client->price_level])) $tva_tx=$prod->multiprices_tva_tx[$object->client->price_level];
 						if (isset($prod->multiprices_recuperableonly[$object->client->price_level])) $tva_npr=$prod->multiprices_recuperableonly[$object->client->price_level];
 					}
@@ -1173,14 +1173,14 @@ if (empty($reshook)) {
 						if ($result >= 0) {
 							if (count($prodcustprice->lines) > 0) {
 								$found = true;
-								$pu_ht = price($prodcustprice->lines[0]->price);
-								$pu_ttc = price($prodcustprice->lines[0]->price_ttc);
+								$pu_ht 			 = price2num($prodcustprice->lines[0]->price, 'MT');
+								$pu_ttc 		 = price2num($prodcustprice->lines[0]->price_ttc, 'MT');
 								$price_base_type = $prodcustprice->lines[0]->price_base_type;
-								$prod->tva_tx = $prodcustprice->lines[0]->tva_tx;
+								$prod->tva_tx 	 = $prodcustprice->lines[0]->tva_tx;
 							}else {
-								$pu_ht = $prod->price;
-								$pu_ttc = $prod->price_ttc;
-								$price_min = $prod->price_min;
+								$pu_ht 			 = price2num($prod->price, 'MT');
+								$pu_ttc 		 = price2num($prod->price_ttc, 'MT');
+								$price_min 		 = price2num($prod->price_min, 'MT');
 								$price_base_type = $prod->price_base_type;
 							}
 						} else {
@@ -1189,9 +1189,9 @@ if (empty($reshook)) {
 					}
 					else
 					{
-						$pu_ht = $prod->price;
-						$pu_ttc = $prod->price_ttc;
-						$price_min = $prod->price_min;
+						$pu_ht 			 = price2num($prod->price, 'MT');
+						$pu_ttc 		 = price2num($prod->price_ttc, 'MT');
+						$price_min 		 = price2num($prod->price_min, 'MT');
 						$price_base_type = $prod->price_base_type;
 					}
 

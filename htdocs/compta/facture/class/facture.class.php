@@ -1975,8 +1975,8 @@ class Facture extends CommonInvoice
 
 		$remise_percent=price2num($remise_percent);
 		$qty=price2num($qty);
-		$pu_ht=price2num($pu_ht);
-		$pu_ttc=price2num($pu_ttc);
+		$pu_ht=price2num($pu_ht, 'MT');
+		$pu_ttc=price2num($pu_ttc, 'MT');
 		$pa_ht=price2num($pa_ht);
 		$txtva=price2num($txtva);
 		$txlocaltax1=price2num($txlocaltax1);
@@ -2007,12 +2007,12 @@ class Facture extends CommonInvoice
 
 			$tabprice = calcul_price_total($qty, $pu, $remise_percent, $txtva, $txlocaltax1, $txlocaltax2, 0, $price_base_type, $info_bits, $type, $mysoc, $localtaxes_type);
 
-			$total_ht  = $tabprice[0];
-			$total_tva = $tabprice[1];
-			$total_ttc = $tabprice[2];
-			$total_localtax1 = $tabprice[9];
-			$total_localtax2 = $tabprice[10];
-			$pu_ht = $tabprice[3];
+			$total_ht  = price2num($tabprice[0], 'MT');
+			$total_tva = price2num($tabprice[1], 'MT');
+			$total_ttc = price2num($tabprice[2], 'MT');
+			$total_localtax1 = price2num($tabprice[9], 'MT');
+			$total_localtax2 = price2num($tabprice[10], 'MT');
+			$pu_ht = price2num($tabprice[3], 'MT');
 
 			// Rang to use
 			$rangtouse = $rang;
@@ -2147,13 +2147,13 @@ class Facture extends CommonInvoice
 			if (empty($fk_parent_line) || $fk_parent_line < 0) $fk_parent_line=0;
 			if (empty($special_code) || $special_code == 3) $special_code=0;
 
-			$remise_percent	= price2num($remise_percent);
-			$qty			= price2num($qty);
-			$pu 			= price2num($pu);
-			$pa_ht			= price2num($pa_ht);
-			$txtva			= price2num($txtva);
-			$txlocaltax1	= price2num($txlocaltax1);
-			$txlocaltax2	= price2num($txlocaltax2);
+			$remise_percent	= price2num($remise_percent, 'MT');
+			$qty			= $qty;
+			$pu 			= price2num($pu, 'MT');
+			$pa_ht			= price2num($pa_ht, 'MT');
+			$txtva			= price2num($txtva, 'MT');
+			$txlocaltax1	= price2num($txlocaltax1, 'MT');
+			$txlocaltax2	= price2num($txlocaltax2, 'MT');
 
 			// Check parameters
 			if ($type < 0) return -1;
@@ -2164,15 +2164,15 @@ class Facture extends CommonInvoice
 
 			$localtaxes_type=getLocalTaxesFromRate($txtva,0,$mysoc);
 
-			$tabprice=calcul_price_total($qty, $pu, $remise_percent, $txtva, $txlocaltax1, $txlocaltax2, 0, $price_base_type, $info_bits, $type,'',$localtaxes_type);
-			$total_ht  = $tabprice[0];
-			$total_tva = $tabprice[1];
-			$total_ttc = $tabprice[2];
-			$total_localtax1=$tabprice[9];
-			$total_localtax2=$tabprice[10];
-			$pu_ht  = $tabprice[3];
-			$pu_tva = $tabprice[4];
-			$pu_ttc = $tabprice[5];
+			$tabprice = calcul_price_total($qty, $pu, $remise_percent, $txtva, $txlocaltax1, $txlocaltax2, 0, $price_base_type, $info_bits, $type,'',$localtaxes_type);
+			$total_ht  		 = price2num($tabprice[0], 'MT');
+			$total_tva 		 = price2num($tabprice[1], 'MT');
+			$total_ttc 		 = price2num($tabprice[2], 'MT');
+			$total_localtax1 = price2num($tabprice[9], 'MT'); 
+			$total_localtax2 = price2num($tabprice[10], 'MT'); 
+			$pu_ht  		 = price2num($tabprice[3], 'MT'); 
+			$pu_tva 		 = price2num($tabprice[4], 'MT'); 
+			$pu_ttc 		 = price2num($tabprice[5], 'MT'); 
 
 			// Update line into database
 			$this->line=new FactureLigne($this->db);
