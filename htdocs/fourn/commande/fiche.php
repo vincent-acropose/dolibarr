@@ -610,9 +610,12 @@ else if ($action == 'confirm_clone' && $confirm == 'yes' && $user->rights->fourn
 			}
 			else
 			{
-				setEventMessage($object->error, 'errors');
+				setEventMessage($object->errors, 'errors');
 				$action='';
 			}
+			
+			header("Location: ".$_SERVER['PHP_SELF'].'?id='.GETPOST('id'));
+			exit;
 		}
 	}
 }
