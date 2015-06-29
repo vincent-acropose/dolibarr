@@ -984,8 +984,8 @@ class CommandeFournisseur extends CommonOrder
         $sql.= " VALUES (";
         $sql.= "''";
         $sql.= ", '".$this->ref_supplier."'";
-        $sql.= ", '".$this->note_private."'";
-        $sql.= ", '".$this->note_public."'";
+        $sql.= ", '".$this->db->escape($this->note_private)."'";
+        $sql.= ", '".$this->db->escape($this->note_public)."'";
         $sql.= ", ".$conf->entity;
         $sql.= ", ".$this->socid;
         $sql.= ", '".$this->db->idate($now)."'";
@@ -1475,6 +1475,19 @@ class CommandeFournisseur extends CommonOrder
     {
         if ($this->statut == 0)
         {
+			global $conf, $langs, $user;
+			// Appel des triggers
+			
+			if(!$notrigger){
+				include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+				$interface=new Interfaces($this->db);
+				$result = $interface->run_triggers('LINEORDER_SUPPLIER_DELETE',$this,$user,$langs,$conf);
+				if ($result < 0) {
+					$error++; $this->errors=$interface->errors;
+				}
+				// Fin appel triggers
+			}
+
             $sql = "DELETE FROM ".MAIN_DB_PREFIX."commande_fournisseurdet WHERE rowid = ".$idligne;
             $resql=$this->db->query($sql);
 

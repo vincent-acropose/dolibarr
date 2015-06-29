@@ -47,6 +47,8 @@ $mesg='';
 
 $object = new Paiement($db);
 
+$hookmanager = new HookManager($db);
+$hookmanager->initHooks(array('viewpaiementcard'));
 
 /*
  * Actions
@@ -277,6 +279,9 @@ if (! empty($conf->banque->enabled))
     }
 }
 
+$parameters=array();
+$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action); // Note that $action and $object may have been modified by hook
+
 print '</table>';
 
 
@@ -289,7 +294,7 @@ $sql = 'SELECT f.rowid as facid, f.facnumber, f.type, f.total_ttc, f.paye, f.fk_
 $sql.= ' FROM '.MAIN_DB_PREFIX.'paiement_facture as pf,'.MAIN_DB_PREFIX.'facture as f,'.MAIN_DB_PREFIX.'societe as s';
 $sql.= ' WHERE pf.fk_facture = f.rowid';
 $sql.= ' AND f.fk_soc = s.rowid';
-$sql.= ' AND f.entity = '.$conf->entity;
+$sql.= ' AND f.entity  IN('.$conf->entity.')';
 $sql.= ' AND pf.fk_paiement = '.$object->id;
 $resql=$db->query($sql);
 if ($resql)
@@ -316,7 +321,7 @@ if ($resql)
 		{
 			$objp = $db->fetch_object($resql);
 			$var=!$var;
-			print '<tr '.$bc[$var].'>';
+			print '<tr '.$bc[$var].' id="row-'.$objp->facid.'">';
 
             $invoice=new Facture($db);
             $invoice->fetch($objp->facid);
@@ -357,6 +362,9 @@ if ($resql)
 			}
 			$total = $total + $objp->amount;
 			$i++;
+			
+			$parameters=array();
+			$reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$objp,$action); // Note that $action and $object may have been modified by hook
 		}
 	}
 	$var=!$var;

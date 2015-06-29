@@ -1719,7 +1719,10 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 			$from = $_POST['fromname'] . ' <' . $_POST['frommail'] .'>';
 			$replyto = $_POST['replytoname']. ' <' . $_POST['replytomail'].'>';
 			$message = $_POST['message'];
-			$sendtocc = $_POST['sendtocc'];
+			
+			$receivercc = $_POST['receivercc'];
+			$sendtocc = ($receivercc!=='') ? $receivercc : $_POST ['sendtocc'];
+			
 			$deliveryreceipt = $_POST['deliveryreceipt'];
 
 			if ($action == 'send')
