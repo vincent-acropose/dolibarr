@@ -93,6 +93,11 @@ function ajax_autocompleter($selected, $htmlname, $url, $urloption='', $minLengt
 						    }
 						}
                     });
+					$("input#search_'.$htmlname.'").keypress(function(e) {
+						if (e.which === 13) {
+							e.preventDefault();
+						}
+					});
     				$("input#search_'.$htmlname.'").autocomplete({
     					source: function( request, response ) {
     						$.get("'.$url.($urloption?'?'.$urloption:'').'", { '.$htmlname.': request.term }, function(data){
