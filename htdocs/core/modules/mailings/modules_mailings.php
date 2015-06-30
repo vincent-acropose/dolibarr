@@ -152,7 +152,7 @@ class MailingTargets    // This can't be abstract as it is used for some method
         $num = count($cibles);
         foreach ($cibles as $targetarray)
         {
-        	if (! empty($targetarray['email'])) // avoid empty email address
+        	if (! empty($targetarray['email']) || !empty($conf->global->MAILING_ADD_EMPTY_CONTACT)) // avoid empty email address
         	{
         		$sql = "INSERT INTO ".MAIN_DB_PREFIX."mailing_cibles";
         		$sql.= " (fk_mailing,";
