@@ -323,6 +323,13 @@ class ExportExcel extends ModeleExports
 			{
 				$newvalue=$outputlangs->convToOutputCharset($newvalue);
 			}
+			
+			if (preg_match('/^Select:/i', $typefield, $reg) && $typefield = substr($typefield, 7))
+			{
+				$array = unserialize($typefield);
+				$array = $array['options'];
+				$newvalue = $array[$newvalue];
+			}
 
 			if (preg_match('/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$/i',$newvalue))
 			{
