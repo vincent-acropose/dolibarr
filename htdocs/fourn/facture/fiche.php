@@ -153,6 +153,9 @@ elseif ($action == 'confirm_valid' && $confirm == 'yes' && $user->rights->fourni
             setEventMessage($object->errors,'errors');
         }
     }
+
+	$result=supplier_invoice_pdf_create($db, $object, $object->modelpdf, $langs, $hidedetails, $hidedesc, $hideref);
+
 }
 
 elseif ($action == 'confirm_delete' && $confirm == 'yes' && $user->rights->fournisseur->facture->supprimer)
