@@ -141,7 +141,7 @@ if ($resql)
     print '</td>';
     print '<td class="liste_titre">&nbsp;</td>';
     //print '<td class="liste_titre">&nbsp;</td>';
-	print '<td>&nbsp;</td>';
+	if ($conf->clivici->enabled) print '<td>&nbsp;</td>';
 	print '<td colspan="4" class="liste_titre" align="right"><input class="liste_titre" type="image" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
     print "</td>";
     print "</tr>\n";
