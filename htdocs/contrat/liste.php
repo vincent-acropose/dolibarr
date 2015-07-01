@@ -72,10 +72,12 @@ $sql.= ' SUM('.$db->ifsql("cd.statut=4 AND (cd.date_fin_validite IS NOT NULL AND
 $sql.= ' SUM('.$db->ifsql("cd.statut=5",1,0).') as nb_closed,';
 $sql.= " c.rowid as cid, c.ref, c.datec, c.date_contrat, c.statut,";
 $sql.= " s.nom, s.rowid as socid";
+if ($conf->clivici->enabled) $sql .= ', increase_rate';
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 if (!$user->rights->societe->client->voir && !$socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 $sql.= ", ".MAIN_DB_PREFIX."contrat as c";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."contratdet as cd ON c.rowid = cd.fk_contrat";
+if ($conf->clivici->enabled) $sql .= ' INNER JOIN ' . MAIN_DB_PREFIX . 'contrat_extrafields as ce ON ce.fk_object = c.rowid';
 $sql.= " WHERE c.fk_soc = s.rowid ";
 $sql.= " AND c.entity = ".$conf->entity;
 if ($socid) $sql.= " AND s.rowid = ".$socid;
@@ -125,6 +127,7 @@ if ($resql)
     print '<td class="liste_titre" width="16">'.$staticcontratligne->LibStatut(4,3,0).'</td>';
     print '<td class="liste_titre" width="16">'.$staticcontratligne->LibStatut(4,3,1).'</td>';
     print '<td class="liste_titre" width="16">'.$staticcontratligne->LibStatut(5,3).'</td>';
+	if ($conf->clivici->enabled) print '<td class="liste_titre" align="center">Taux</td>';
     print "</tr>\n";
 
     print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
@@ -140,6 +143,7 @@ if ($resql)
     //print '<td class="liste_titre">&nbsp;</td>';
     print '<td colspan="4" class="liste_titre" align="right"><input class="liste_titre" type="image" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
     print "</td>";
+	print '<td>&nbsp;</td>';
     print "</tr>\n";
     print '</form>';
 
@@ -161,6 +165,7 @@ if ($resql)
         print '<td align="center">'.($obj->nb_running>0?$obj->nb_running:'').'</td>';
         print '<td align="center">'.($obj->nb_expired>0?$obj->nb_expired:'').'</td>';
         print '<td align="center">'.($obj->nb_closed>0 ?$obj->nb_closed:'').'</td>';
+		if ($conf->clivici->enabled) print '<td align="center">' . $obj->increase_rate . '%</td>';
         print "</tr>\n";
         $i++;
     }
