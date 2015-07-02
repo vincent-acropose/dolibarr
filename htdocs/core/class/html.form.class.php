@@ -203,7 +203,7 @@ class Form
             else
 			{
 				if ($typeofdata == 'email')   $ret.=dol_print_email($value,0,0,0,0,1);
-                elseif ($typeofdata == 'amount')   $ret.=($value != '' ? price($value,'',$langs,0,0,-1,$conf->currency) : '');
+                elseif ($typeofdata == 'amount')   $ret.=($value != '' ? price($value,'',$langs,0,-1,-1,$conf->currency) : '');
                 elseif (preg_match('/^text/',$typeofdata) || preg_match('/^note/',$typeofdata))  $ret.=dol_htmlentitiesbr($value);
                 elseif ($typeofdata == 'day' || $typeofdata == 'datepicker') $ret.=dol_print_date($value,'day');
                 elseif ($typeofdata == 'datehourpicker') $ret.=dol_print_date($value,'dayhour');
@@ -4172,7 +4172,7 @@ class Form
                 {
                     global $dolibarr_main_url_root;
                     $ret.='<!-- Put link to gravatar -->';
-                    $ret.='<img alt="Photo found on Gravatar" title="Photo Gravatar.com - email '.$email.'" border="0" width="'.$width.'" src="http://www.gravatar.com/avatar/'.dol_hash($email).'?s='.$width.'&d='.urlencode(dol_buildpath('/theme/common/nophoto.jpg',2)).'">';
+                    $ret.='<img alt="Photo found on Gravatar" title="Photo Gravatar.com - email '.$email.'" border="0" width="'.$width.'" src="https://www.gravatar.com/avatar/'.dol_hash($email).'?s='.$width.'&d='.urlencode(dol_buildpath('/theme/common/nophoto.jpg',2)).'">';
                 }
                 else
                 {
