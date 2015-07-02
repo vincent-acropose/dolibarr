@@ -860,9 +860,11 @@ if (! defined('NOREQUIREMENU'))
 			$file_menu='eldy_menu.php';
 			include_once DOL_DOCUMENT_ROOT."/core/menus/standard/".$file_menu;
 		}
+
 	}
 	$menumanager = new MenuManager($db, empty($user->societe_id)?0:1);
 	$menumanager->loadMenu();
+
 }
 
 
@@ -890,7 +892,6 @@ if (! function_exists("llxHeader"))
 	function llxHeader($head = '', $title='', $help_url='', $target='', $disablejs=0, $disablehead=0, $arrayofjs='', $arrayofcss='', $morequerystring='')
 	{
 	    global $conf;
-
 	    // html header
 		top_htmlhead($head, $title, $disablejs, $disablehead, $arrayofjs, $arrayofcss);
 
