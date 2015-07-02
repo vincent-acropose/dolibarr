@@ -93,17 +93,14 @@ if ($action == 'order' && isset($_POST['valid']))
         $suppliers = array();
         for ($i = 0; $i < $linecount; $i++)
         {
-        	
             if (GETPOST($i, 'alpha') === 'on' && GETPOST('fourn' . $i, 'int') > 0)
             {
             	//one line
                 $box = $i;
                 $supplierpriceid = GETPOST('fourn'.$i, 'int');
-				
                 //get all the parameters needed to create a line
                 $qty = GETPOST('tobuy'.$i, 'int');
                 $desc = GETPOST('desc'.$i, 'alpha');
-				
                 $sql = 'SELECT fk_product, fk_soc, ref_fourn';
                 $sql .= ', tva_tx, unitprice FROM ';
                 $sql .= MAIN_DB_PREFIX . 'product_fournisseur_price';
@@ -115,7 +112,6 @@ if ($action == 'order' && isset($_POST['valid']))
                 	{
 	                    //might need some value checks
 	                    $obj = $db->fetch_object($resql);
-
 	                    $line = new CommandeFournisseurLigne($db);
 	                    $line->qty = $qty;
 	                    $line->desc = $desc;
@@ -141,17 +137,17 @@ if ($action == 'order' && isset($_POST['valid']))
             }
             unset($_POST[$i]);
         }
-		
+
         //we now know how many orders we need and what lines they have
         $i = 0;
         $orders = array();
-        //$suppliersid = array_keys($suppliers);
-        foreach ($suppliers as $fk_soc => $supplier)
+        $suppliersid = array_keys($suppliers);
+        foreach ($suppliers as $supplier)
         {
             $order = new CommandeFournisseur($db);
             // Check if an order for the supplier exists
             $sql = "SELECT rowid FROM ".MAIN_DB_PREFIX."commande_fournisseur";
-            $sql.= " WHERE fk_soc = ".$fk_soc;
+            $sql.= " WHERE fk_soc = ".$suppliersid[$i];
             $sql.= " AND source = 42 AND fk_statut = 0";
             $sql.= " ORDER BY date_creation DESC";
             $resql = $db->query($sql);
@@ -184,7 +180,7 @@ if ($action == 'order' && isset($_POST['valid']))
                     $id = $result;
                 }
             } else {
-                $order->socid = $fk_soc;
+                $order->socid = $suppliersid[$i];
                 //trick to know which orders have been generated this way
                 $order->source = 42;
                 foreach ($supplier['lines'] as $line) {
@@ -199,6 +195,7 @@ if ($action == 'order' && isset($_POST['valid']))
                     $msg .= $order->error;
                     setEventMessage($msg, 'errors');
                 }
+                $i++;
             }
         }
 
