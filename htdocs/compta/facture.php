@@ -738,7 +738,7 @@ if (empty($reshook)) {
 				}*/
 			}
 		}
-
+		
 		// Standard invoice or Deposit invoice created from a Predefined invoice
 		if (($_POST['type'] == 0 || $_POST['type'] == 3) && $_POST['fac_rec'] > 0)
 		{
@@ -995,8 +995,16 @@ if (empty($reshook)) {
 										// View third's localtaxes for now
 										$localtax1_tx = get_localtax($lines[$i]->tva_tx, 1, $object->client);
 										$localtax2_tx = get_localtax($lines[$i]->tva_tx, 2, $object->client);
-
-										$result = $object->addline($desc, $lines [$i]->subprice, $lines [$i]->qty, $lines [$i]->tva_tx, $localtax1_tx, $localtax2_tx, $lines [$i]->fk_product, $lines [$i]->remise_percent, $date_start, $date_end, 0, $lines [$i]->info_bits, $lines [$i]->fk_remise_except, 'HT', 0, $product_type, $lines [$i]->rang, $lines [$i]->special_code, $object->origin, $lines [$i]->rowid, $fk_parent_line, $lines [$i]->fk_fournprice, $lines [$i]->pa_ht, $label, $array_option);
+										
+										if ($origin == 'shipping' && !empty($lines[$i]->line_id)) {
+											$origin_id = $lines[$i]->line_id;
+											$origin_label = 'ExpeditionLigne';
+										} else {
+											$origin_id = $lines[$i]->rowid;
+											$origin_label = $origin;
+										}
+										
+										$result = $object->addline($desc, $lines [$i]->subprice, $lines [$i]->qty, $lines [$i]->tva_tx, $localtax1_tx, $localtax2_tx, $lines [$i]->fk_product, $lines [$i]->remise_percent, $date_start, $date_end, 0, $lines [$i]->info_bits, $lines [$i]->fk_remise_except, 'HT', 0, $product_type, $lines [$i]->rang, $lines [$i]->special_code, $origin_label, $origin_id, $fk_parent_line, $lines [$i]->fk_fournprice, $lines [$i]->pa_ht, $label, $array_option);
 
 										if ($result > 0) {
 											$lineid = $result;
