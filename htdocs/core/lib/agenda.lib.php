@@ -103,7 +103,7 @@ function print_actions_filter($form, $canedit, $status, $year, $month, $day, $sh
 		print '<td class="nowrap">';
 		print $langs->trans("ThirdParty").' &nbsp; ';
 		print '</td><td class="nowrap maxwidthonsmartphone">';
-		print $form->select_thirdparty($socid, 'socid');
+		print $form->select_thirdparty($socid, 'socid', '', 0);
 		print '</td></tr>';
 	}
 
