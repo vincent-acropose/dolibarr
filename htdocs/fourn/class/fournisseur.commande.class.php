@@ -1932,7 +1932,7 @@ class CommandeFournisseur extends CommonOrder
      *	@param	string	$comment	Comment
      *	@return	int					<0 if KO, >0 if OK
      */
-    function Livraison($user, $date, $type, $comment)
+    function Livraison($user, $date, $type, $comment, $notrigger=false)
     {
     	global $conf, $langs;
 
@@ -1999,7 +1999,19 @@ class CommandeFournisseur extends CommonOrder
                 dol_syslog(get_class($this)."::Livraison", LOG_DEBUG);
                 $resql=$this->db->query($sql);
                 if ($resql)
-                {
+                {	
+		        	if(! $notrigger) {
+		                global $conf, $langs, $user;
+						// Call trigger
+						$result=$this->call_trigger('ORDERSUPPLIER_ADD_LIVRAISON',$user);
+						if ($result < 0)
+		                {
+		                    $this->db->rollback();
+		                    return -1;
+		                }
+						// End call triggers
+		            }
+					
                     $result = 0;
                     $old_statut = $this->statut;
                     $this->statut = $statut;
