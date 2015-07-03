@@ -184,7 +184,7 @@ else {
 	<td align="right"><?php
 	if (GETPOST('prod_entry_mode') != 'predef')
 	{
-		if ($seller->tva_assuj == "0") echo '<input type="hidden" name="tva_tx" value="0">0';
+		if ($seller->tva_assuj == "0") echo '<input type="hidden" name="tva_tx" value="0"> '.vatrate(0, true);
 		else echo $form->load_tva('tva_tx', (isset($_POST["tva_tx"])?$_POST["tva_tx"]:-1), $seller, $buyer);
 	}
 	?>
@@ -515,7 +515,7 @@ function setforpredef() {
 	jQuery("#tva_tx").hide();
 	jQuery("#buying_price").show();
 	jQuery("#title_vat").hide();
-	jQuery("#title_up_ht").hide();
+	//jQuery("#title_up_ht").hide();
 	jQuery("#title_up_ttc").hide();
 	jQuery("#np_marginRate").hide();	// May no exists
 	jQuery("#np_markRate").hide();	// May no exists
