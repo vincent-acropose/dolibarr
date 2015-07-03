@@ -64,7 +64,9 @@ if (isset($_FILES['userfile']) && $_FILES['userfile']['size'] > 0 && GETPOST('se
 
 if ($action == 'confirm_delete' && $_GET["file"] && $confirm == 'yes' && ($user->rights->produit->creer || $user->rights->service->creer))
 {
-	$object->delete_photo($dir."/".$_GET["file"]);
+	$fk_entity = GETPOST('entity', 'int');
+	if ($fk_entity) $object->delete_photo($conf->{$object->element}->multidir_output[$fk_entity]."/".$_GET["file"]);
+	else $object->delete_photo($dir."/".$_GET["file"]);
 }
 
 if ($action == 'addthumb' && $_GET["file"])
@@ -96,7 +98,7 @@ if ($object->id)
 	*/
 	if ($action == 'delete')
 	{
-		print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&file='.$_GET["file"], $langs->trans('DeletePicture'), $langs->trans('ConfirmDeletePicture'), 'confirm_delete', '', 0, 1);
+		print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&entity='.GETPOST('entity', 'int').'&file='.$_GET["file"], $langs->trans('DeletePicture'), $langs->trans('ConfirmDeletePicture'), 'confirm_delete', '', 0, 1);
 
 	}
 
@@ -174,7 +176,20 @@ if ($object->id)
 		$maxWidth = 160;
 		$maxHeight = 120;
 
-		print $object->show_photos($dir,1,1000,$nbbyrow,1,1);
+		if (! empty($conf->product->multidir_output))
+		{
+			foreach ($conf->product->multidir_output as $fk_entity => $sdir)
+			{
+				print $object->show_photos($sdir,1,1000,$nbbyrow,1,1,$maxHeight,$maxWidth,$fk_entity);
+			}
+		}	
+		else
+		{
+			foreach ($conf->service->multidir_output as $fk_entity => $sdir)
+			{
+				print $object->show_photos($sdir,1,1000,$nbbyrow,1,1,$maxHeight,$maxWidth,$fk_entity);
+			}
+		} 
 
 		if ($object->nbphoto < 1)
 		{
