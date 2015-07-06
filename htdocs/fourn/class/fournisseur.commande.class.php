@@ -1128,7 +1128,7 @@ class CommandeFournisseur extends CommonOrder
         $this->ref_supplier       = '';
 
 		foreach ($this->lines as $line) {
-			$product = new Product($db);
+			$product = new Product($this->db);
 			$product->fetch($line->fk_product);
 
 			if ($product->id > 0 && !$product->status_buy) {
