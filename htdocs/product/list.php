@@ -181,7 +181,20 @@ else
     if (dol_strlen($canvas) > 0)                    $sql.= " AND p.canvas = '".$db->escape($canvas)."'";
     if ($catid > 0)    $sql.= " AND cp.fk_categorie = ".$catid;
     if ($catid == -2)  $sql.= " AND cp.fk_categorie IS NULL";
-    if ($search_categ > 0)   $sql.= " AND cp.fk_categorie = ".$db->escape($search_categ);
+    
+    if ($search_categ > 0)  {
+        
+         $cat = new Categorie($db);
+         $cat->fetch($search_categ);
+        
+         $TCat = get_categs_enfants($cat);
+         $TCat[] = $search_categ;
+        
+         $sql.= " AND cp.fk_categorie IN (".implode(',', $TCat).')';
+    
+    }
+    
+    
     if ($search_categ == -2) $sql.= " AND cp.fk_categorie IS NULL";
     if ($fourn_id > 0) $sql.= " AND pfp.fk_soc = ".$fourn_id;
     $sql.= " GROUP BY p.rowid, p.ref, p.label, p.barcode, p.price, p.price_ttc, p.price_base_type,";
@@ -557,3 +570,20 @@ else
 
 llxFooter();
 $db->close();
+
+
+function get_categs_enfants(&$cat) {
+    
+    $TCat = array();
+    
+    $filles = $cat->get_filles();
+    if(!empty($filles)) {
+        foreach($filles as &$cat_fille) {
+            $TCat[] = $cat_fille->id;
+            
+            get_categs_enfants($cat_fille);
+        }
+    }
+    
+    return $TCat;
+}
