@@ -545,7 +545,11 @@ if ($id > 0 || $ref)
 		print '<td colspan="2">';
 		print '<input type="text" name="label" size="40" value="'.GETPOST("label").'">';
 		print '</td>';
-		print '<td width="20%">'.$langs->trans("UnitPurchaseValue").'</td><td width="20%"><input class="flat" name="price" id="unitprice" size="10" value="'.GETPOST("unitprice").'"></td>';
+
+		$pmp = GETPOST("unitprice");
+		if(empty($pmp)) $pmp = $product->pmp;
+
+		print '<td width="20%">'.$langs->trans("UnitPurchaseValue").'</td><td width="20%"><input class="flat" name="price" id="unitprice" size="10" value="'.price($pmp).'"></td>';
 		print '</tr>';
 
 		//eat-by date
