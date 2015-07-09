@@ -147,7 +147,7 @@ abstract class ModeleNumRefPropales
  *  Create a document onto disk according to template module.
  *
  * 	@param	    DoliDB		$db  			Database handler
- * 	@param	    Object		$object			Object proposal
+ * 	@param	    object		$object			Object proposal
  * 	@param	    string		$modele			Force model to use ('' to not force)
  * 	@param		Translate	$outputlangs	Object langs to use for output
  *  @param      int			$hidedetails    Hide details of lines
@@ -214,7 +214,14 @@ function propale_pdf_create($db, $object, $modele, $outputlangs, $hidedetails=0,
 
 		$obj = new $classname($db);
 		//$obj->message = $message;
-
+		
+		// Appel des triggers
+		include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+		$interface=new Interfaces($db);
+		$result=$interface->run_triggers('BEFORE_PROPAL_BUILDDOC',$object,$user,$langs,$conf);
+		if ($result < 0) { $error++; $this->errors=$interface->errors; }
+		// Fin appel triggers
+		
 		// We save charset_output to restore it because write_file can change it if needed for
 		// output format that does not support UTF8.
 		$sav_charset_output=$outputlangs->charset_output;
@@ -233,7 +240,7 @@ function propale_pdf_create($db, $object, $modele, $outputlangs, $hidedetails=0,
 			include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
 			$interface=new Interfaces($db);
 			$result=$interface->run_triggers('PROPAL_BUILDDOC',$object,$user,$langs,$conf);
-			if ($result < 0) { $error++; $this->errors=$interface->errors; }
+			if ($result < 0) { $error++; $obj->errors=$interface->errors; }
 			// Fin appel triggers
 
 			return 1;
@@ -253,4 +260,3 @@ function propale_pdf_create($db, $object, $modele, $outputlangs, $hidedetails=0,
 	}
 }
 
-?>
