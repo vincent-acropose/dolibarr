@@ -1527,7 +1527,7 @@ else if ($id || $ref)
 			}
 		}
 
-		if ($user->rights->expedition->supprimer)
+		if ($user->rights->expedition->supprimer && ! $object->billed)
 		{
 			print '<a class="butActionDelete" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=delete">'.$langs->trans("Delete").'</a>';
 		}
