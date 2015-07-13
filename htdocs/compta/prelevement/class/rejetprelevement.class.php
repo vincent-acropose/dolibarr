@@ -71,7 +71,7 @@ class RejetPrelevement
 	 * @param 	User		$user				User object
 	 * @param 	int			$id					Id
 	 * @param 	string		$motif				Motif
-	 * @param 	timestamp	$date_rejet			Date rejet
+	 * @param 	int	$date_rejet			Date rejet
 	 * @param 	int			$bonid				Bon id
 	 * @param 	int			$facturation		Facturation
 	 * @return	void
@@ -104,7 +104,7 @@ class RejetPrelevement
 		$sql.= ", '".$this->db->idate($date_rejet)."'";
 		$sql.= ", ".$motif;
 		$sql.= ", ".$user->id;
-		$sql.= ", ".$this->db->idate($now);
+		$sql.= ", '".$this->db->idate($now)."'";
 		$sql.= ", ".$facturation;
 		$sql.= ")";
 
@@ -156,7 +156,7 @@ class RejetPrelevement
 			}
 			else
 			{
-				$result=$pai->addPaymentToBank($user,'payment','(InvoiceRefused)',$bankaccount);
+				$result=$pai->addPaymentToBank($user,'payment','(InvoiceRefused)',$bankaccount,'','');
 				if ($result < 0)
 				{
 					dol_syslog("RejetPrelevement::Create AddPaymentToBan Error");
@@ -173,7 +173,8 @@ class RejetPrelevement
 			}
 			//Tag invoice as unpaid
 			dol_syslog("RejetPrelevement::Create set_unpaid fac ".$fac->ref);
-			$fac->set_unpaid($fac->id, $user);
+
+			$fac->set_unpaid($user);
 
 			//TODO: Must be managed by notifications module
 			// Send email to sender of the standing order request
@@ -194,7 +195,7 @@ class RejetPrelevement
 	}
 
 	/**
-	 *  Envoi mail
+	 *  Send email to all users that has asked the withdraw request
 	 *
 	 * 	@param	Facture		$fac			Invoice object
 	 * 	@return	void
@@ -244,7 +245,7 @@ class RejetPrelevement
 			$arr_mime = array();
 			$arr_name = array();
 			$facref = $fac->ref;
-			$socname = $soc->nom;
+			$socname = $soc->name;
 			$amount = price($fac->total_ttc);
 			$userinfo = $this->user->getFullName($langs);
 
@@ -271,7 +272,7 @@ class RejetPrelevement
 	/**
 	 *    Retrieve the list of invoices
 	 *
-	 *    @return	void
+	 *    @return	array
 	 */
 	private function getListInvoices()
 	{
@@ -317,7 +318,7 @@ class RejetPrelevement
 	 *    Retrieve withdrawal object
 	 *
 	 *    @param    int		$rowid       id of invoice to retrieve
-	 *    @return	void
+	 *    @return	int
 	 */
 	function fetch($rowid)
 	{
@@ -357,4 +358,3 @@ class RejetPrelevement
 
 }
 
-?>

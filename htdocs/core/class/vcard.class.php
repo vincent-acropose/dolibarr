@@ -306,7 +306,7 @@ class vCard
     /**
      *  permet d'obtenir une vcard
      *
-     *  @return	void
+     *  @return	string
      */
     function getVCard()
     {
@@ -334,4 +334,3 @@ class vCard
     }
 
 }
-?>

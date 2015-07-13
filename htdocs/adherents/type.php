@@ -51,6 +51,12 @@ $pagenext = $page + 1;
 if (! $sortorder) {  $sortorder="DESC"; }
 if (! $sortfield) {  $sortfield="d.lastname"; }
 
+$label=GETPOST("libelle","alpha");
+$cotisation=GETPOST("cotisation","int");
+$vote=GETPOST("vote","int");
+$comment=GETPOST("comment");
+$mail_valid=GETPOST("mail_valid");
+
 // Security check
 $result=restrictedArea($user,'adherent',$rowid,'adherent_type');
 
@@ -70,7 +76,7 @@ if (GETPOST('button_removefilter'))
 
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
-$hookmanager->initHooks(array('membertypecard'));
+$hookmanager->initHooks(array('membertypecard','globalcard'));
 
 /*
  *	Actions
@@ -81,18 +87,19 @@ if ($action == 'add' && $user->rights->adherent->configurer)
 	{
 		$adht = new AdherentType($db);
 
-		$adht->libelle     = trim($_POST["libelle"]);
-		$adht->cotisation  = trim($_POST["cotisation"]);
-		$adht->note        = trim($_POST["comment"]);
-		$adht->mail_valid  = trim($_POST["mail_valid"]);
-		$adht->vote        = trim($_POST["vote"]);
+		$adht->libelle     = trim($label);
+		$adht->cotisation  = trim($cotisation);
+		$adht->note        = trim($comment);
+		$adht->mail_valid  = trim($mail_valid);
+		$adht->vote        = trim($vote);
 
 		// Fill array 'array_options' with data from add form
 		$ret = $extrafields->setOptionalsFromPost($extralabels,$adht);
+		if ($ret < 0) $error++;
 
 		if ($adht->libelle)
 		{
-			$id=$adht->create($user->id);
+			$id=$adht->create($user);
 			if ($id > 0)
 			{
 				header("Location: ".$_SERVER["PHP_SELF"]);
@@ -117,17 +124,18 @@ if ($action == 'update' && $user->rights->adherent->configurer)
 	if ($_POST["button"] != $langs->trans("Cancel"))
 	{
 		$adht = new AdherentType($db);
-		$adht->id          = $_POST["rowid"];
-		$adht->libelle     = trim($_POST["libelle"]);
-		$adht->cotisation  = trim($_POST["cotisation"]);
-		$adht->note        = trim($_POST["comment"]);
-		$adht->mail_valid  = trim($_POST["mail_valid"]);
-		$adht->vote        = trim($_POST["vote"]);
+		$adht->id          = $rowid;
+		$adht->libelle     = trim($label);
+		$adht->cotisation  = trim($cotisation);
+		$adht->note        = trim($comment);
+		$adht->mail_valid  = trim($mail_valid);
+		$adht->vote        = trim($vote);
 
 		// Fill array 'array_options' with data from add form
 		$ret = $extrafields->setOptionalsFromPost($extralabels,$adht);
+		if ($ret < 0) $error++;
 
-		$adht->update($user->id);
+		$adht->update($user);
 
 		header("Location: ".$_SERVER["PHP_SELF"]."?rowid=".$_POST["rowid"]);
 		exit;
@@ -194,7 +202,7 @@ if (! $rowid && $action != 'create' && $action != 'edit')
 			$var=!$var;
 			print "<tr ".$bc[$var].">";
 			print '<td><a href="'.$_SERVER["PHP_SELF"].'?rowid='.$objp->rowid.'">'.img_object($langs->trans("ShowType"),'group').' '.$objp->rowid.'</a></td>';
-			print '<td>'.$objp->libelle.'</td>';
+			print '<td>'.dol_escape_htmltag($objp->libelle).'</td>';
 			print '<td align="center">'.yn($objp->cotisation).'</td>';
 			print '<td align="center">'.yn($objp->vote).'</td>';
 			print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=edit&rowid='.$objp->rowid.'">'.img_edit().'</a></td>';
@@ -236,8 +244,6 @@ if ($action == 'create')
 	$adht = new AdherentType($db);
 
 	print_fiche_titre($langs->trans("NewMemberType"));
-
-	if ($mesg) print '<div class="error">'.$mesg.'</div>';
 
 	print '<form action="'.$_SERVER['PHP_SELF'].'" method="POST">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
@@ -314,7 +320,7 @@ if ($rowid > 0)
 		print '</td></tr>';
 
 		// Label
-		print '<tr><td width="15%">'.$langs->trans("Label").'</td><td>'.$adht->libelle.'</td></tr>';
+		print '<tr><td width="15%">'.$langs->trans("Label").'</td><td>'.dol_escape_htmltag($adht->libelle).'</td></tr>';
 
 		print '<tr><td>'.$langs->trans("SubscriptionRequired").'</td><td>';
 		print yn($adht->cotisation);
@@ -355,7 +361,7 @@ if ($rowid > 0)
 		}
 
 		// Add
-		print '<div class="inline-block divButAction"><a class="butAction" href="fiche.php?action=create&typeid='.$adht->id.'">'.$langs->trans("AddMember").'</a></div>';
+		print '<div class="inline-block divButAction"><a class="butAction" href="card.php?action=create&typeid='.$adht->id.'">'.$langs->trans("AddMember").'</a></div>';
 
 		// Delete
 		if ($user->rights->adherent->configurer)
@@ -366,7 +372,7 @@ if ($rowid > 0)
 		print "</div>";
 
 
-		// Show list of members (nearly same code than in page liste.php)
+		// Show list of members (nearly same code than in page list.php)
 
 		$membertypestatic=new AdherentType($db);
 
@@ -411,11 +417,11 @@ if ($rowid > 0)
 		}
 		if ($filter == 'uptodate')
 		{
-		    $sql.=" AND datefin >= ".$db->idate($now);
+		    $sql.=" AND datefin >= '".$db->idate($now)."'";
 		}
 		if ($filter == 'outofdate')
 		{
-		    $sql.=" AND datefin < ".$db->idate($now);
+		    $sql.=" AND datefin < '".$db->idate($now)."'";
 		}
 		// Count total nb of records
 		$nbtotalofrecords = 0;
@@ -491,15 +497,15 @@ if ($rowid > 0)
 			print '<tr class="liste_titre">';
 
 			print '<td class="liste_titre" align="left">';
-			print '<input class="flat" type="text" name="search_lastname" value="'.$search_lastname.'" size="12"></td>';
+			print '<input class="flat" type="text" name="search_lastname" value="'.dol_escape_htmltag($search_lastname).'" size="12"></td>';
 
 			print '<td class="liste_titre" align="left">';
-			print '<input class="flat" type="text" name="search_login" value="'.$search_login.'" size="7"></td>';
+			print '<input class="flat" type="text" name="search_login" value="'.dol_escape_htmltag($search_login).'" size="7"></td>';
 
 			print '<td class="liste_titre">&nbsp;</td>';
 
 			print '<td class="liste_titre" align="left">';
-			print '<input class="flat" type="text" name="search_email" value="'.$search_email.'" size="12"></td>';
+			print '<input class="flat" type="text" name="search_email" value="'.dol_escape_htmltag($search_email).'" size="12"></td>';
 
 			print '<td class="liste_titre">&nbsp;</td>';
 
@@ -528,11 +534,11 @@ if ($rowid > 0)
 		        print '<tr '.$bc[$var].'>';
 		        if ($objp->societe != '')
 		        {
-		            print '<td><a href="fiche.php?rowid='.$objp->rowid.'">'.img_object($langs->trans("ShowMember"),"user").' '.$adh->getFullName($langs,0,-1,20).' / '.dol_trunc($objp->societe,12).'</a></td>'."\n";
+		            print '<td><a href="card.php?rowid='.$objp->rowid.'">'.img_object($langs->trans("ShowMember"),"user").' '.$adh->getFullName($langs,0,-1,20).' / '.dol_trunc($objp->societe,12).'</a></td>'."\n";
 		        }
 		        else
 		        {
-		            print '<td><a href="fiche.php?rowid='.$objp->rowid.'">'.img_object($langs->trans("ShowMember"),"user").' '.$adh->getFullName($langs,0,-1,32).'</a></td>'."\n";
+		            print '<td><a href="card.php?rowid='.$objp->rowid.'">'.img_object($langs->trans("ShowMember"),"user").' '.$adh->getFullName($langs,0,-1,32).'</a></td>'."\n";
 		        }
 
 		        // Login
@@ -561,7 +567,7 @@ if ($rowid > 0)
 		        if ($datefin)
 		        {
 			        print '<td align="center" class="nowrap">';
-		            if ($datefin < time() && $objp->statut > 0)
+		            if ($datefin < dol_now() && $objp->statut > 0)
 		            {
 		                print dol_print_date($datefin,'day')." ".img_warning($langs->trans("SubscriptionLate"));
 		            }
@@ -590,12 +596,12 @@ if ($rowid > 0)
 		        print '<td align="center">';
 				if ($user->rights->adherent->creer)
 				{
-					print '<a href="fiche.php?rowid='.$objp->rowid.'&action=edit&return=liste.php">'.img_edit().'</a>';
+					print '<a href="card.php?rowid='.$objp->rowid.'&action=edit&return=list.php">'.img_edit().'</a>';
 				}
 				print '&nbsp;';
 				if ($user->rights->adherent->supprimer)
 				{
-					print '<a href="fiche.php?rowid='.$objp->rowid.'&action=resign&return=liste.php">'.img_picto($langs->trans("Resiliate"),'disable.png').'</a>';
+					print '<a href="card.php?rowid='.$objp->rowid.'&action=resign&return=list.php">'.img_picto($langs->trans("Resiliate"),'disable.png').'</a>';
 		        }
 				print "</td>";
 
@@ -641,7 +647,7 @@ if ($rowid > 0)
 
 		print '<tr><td width="15%">'.$langs->trans("Ref").'</td><td>'.$adht->id.'</td></tr>';
 
-		print '<tr><td>'.$langs->trans("Label").'</td><td><input type="text" name="libelle" size="40" value="'.$adht->libelle.'"></td></tr>';
+		print '<tr><td>'.$langs->trans("Label").'</td><td><input type="text" name="libelle" size="40" value="'.dol_escape_htmltag($adht->libelle).'"></td></tr>';
 
 		print '<tr><td>'.$langs->trans("SubscriptionRequired").'</td><td>';
 		print $form->selectyesno("cotisation",$adht->cotisation,1);
@@ -687,7 +693,7 @@ if ($rowid > 0)
 	}
 }
 
-$db->close();
 
 llxFooter();
-?>
+
+$db->close();

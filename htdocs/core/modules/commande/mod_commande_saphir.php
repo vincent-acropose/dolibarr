@@ -121,7 +121,7 @@ class mod_commande_saphir extends ModeleNumRefCommandes
 			return 0;
 		}
 
-		$numFinal=get_next_value($db,$mask,'commande','ref','',$objsoc->code_client,$object->date);
+		$numFinal=get_next_value($db,$mask,'commande','ref','',$objsoc,$object->date);
 
 		return  $numFinal;
 	}
@@ -141,4 +141,3 @@ class mod_commande_saphir extends ModeleNumRefCommandes
 
 }
 
-?>

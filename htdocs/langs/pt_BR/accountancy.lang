@@ -1,0 +1,17 @@
+# Dolibarr language file - Source file is en_US - accountancy
+Accounting=Contabilidade
+Globalparameters=Parametros globais
+Menuaccount=Contas contábeis
+ConfigAccountingExpert=Configuração do módulo especialista em contabilidade
+Journaux=Jornais
+JournalFinancial=Jornais financeiros
+Selectmodelcsv=Escolha um modelo de exportação
+SelectedLines=Linhas selecionadas
+ACCOUNTING_SEPARATORCSV=Separator CSV
+ACCOUNTING_PRODUCT_BUY_ACCOUNT=Codigo contavel padrao para compra de produtos
+ACCOUNTING_PRODUCT_SOLD_ACCOUNT=Codigo contavel padrao para venda de produtos
+ACCOUNTING_SERVICE_BUY_ACCOUNT=Codigo contavel padrao para compra de servicos
+ACCOUNTING_SERVICE_SOLD_ACCOUNT=Codigo contavel padrao para venda de serviços
+Docref=Referência
+Code_tiers=Cliente/Fornecedor
+NewAccountingMvt=Nova movimentação

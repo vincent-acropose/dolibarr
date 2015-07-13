@@ -69,7 +69,7 @@ $error=0;
  */
 
 @set_time_limit(0);
-print "***** ".$script_file." (".$version.") pid=".getmypid()." *****\n";
+print "***** ".$script_file." (".$version.") pid=".dol_getmypid()." *****\n";
 
 // Check security key
 if ($key != $conf->global->CRON_KEY)
@@ -127,9 +127,9 @@ if(is_array($object->lines) && (count($object->lines)>0))
 		// Loop over job
 		foreach($object->lines as $line)
 		{
-
-			//If date_next_jobs is less of current dat, execute the program, and store the execution time of the next execution in database
-			if (($line->datenextrun < $now) && $line->dateend < $now){
+			//If date_next_jobs is less of current date, execute the program, and store the execution time of the next execution in database
+			if (($line->datenextrun < $now) && (empty($line->datestart) || $line->datestart <= $now) && (empty($line->dateend) || $line->dateend >= $now))
+			{
 				$cronjob=new Cronjob($db);
 				$result=$cronjob->fetch($line->id);
 				if ($result<0) {
@@ -160,4 +160,3 @@ if(is_array($object->lines) && (count($object->lines)>0))
 $db->close();
 
 exit(0);
-?>

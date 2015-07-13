@@ -31,9 +31,12 @@ before_script:
  - echo PHP version $PHPV 
 # - echo Update composer
 # - ~/.phpenv/versions/$(phpenv version-name)/bin/composer.phar self-update 
+ - echo PHPUnit version
+ - phpunit --version
  - echo Install phpcs then show installed rules
  - pyrus install pear/PHP_CodeSniffer
  - phpenv rehash
+ - phpcs --version
  - phpcs -i
  - echo Create dir $(pwd)/htdocs/documents
  - sudo mkdir -p $(pwd)/htdocs/documents/admin/temp;
@@ -51,6 +54,8 @@ before_script:
  - sh -c "if [ '$PHPV' = '5.3' ]; then echo 'zend_extension_ts = xdebug.so' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi"
  - sh -c "if [ '$PHPV' = '5.4' ]; then echo 'zend_extension_ts = xdebug.so' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi"
  - cat ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+ - echo Mysql version
+ - mysql --version
  - echo Init database
  - sh -c "if [ '$DB' = 'pgsql' ]; then psql -c 'DROP DATABASE IF EXISTS myapp_test;' -U postgres; fi"
  - sh -c "if [ '$DB' = 'pgsql' ]; then psql -c 'CREATE DATABASE myapp_test;' -U postgres; fi"
@@ -80,17 +85,27 @@ before_script:
  - sudo /etc/init.d/apache2 restart
  - wget http://localhost/
  - cat index.html
- 
+
 
 
 script: 
-# - phpunit -d memory_limit=-1 --configuration test/phpunit/phpunittest.xml --coverage-text test/phpunit/AllTests.php
-# - phpunit -d memory_limit=-1 --configuration test/phpunit/phpunittest.xml --coverage-text test/phpunit/BuildDocTest.php
-# - phpunit -d memory_limit=-1 --configuration test/phpunit/phpunittest.xml test/phpunit/WebservicesOtherTest.php
-# - phpcs --warning-severity=0 -s --report-checkstyle --report-summary --standard=dev/codesniffer/ruleset.xml --tab-width=4 --ignore=/build/html/,/documents/,/includes/,/test/report/ htdocs/core/class/dolgraph.class.php
- - phpcs --warning-severity=0 -s --report-checkstyle --report-summary --standard=dev/codesniffer/ruleset.xml --tab-width=4 --ignore=/build/html/,/documents/,/includes/,/test/report/ . 
-# - phpcs --warning-severity=0 -s --report-summary --standard=dev/codesniffer/ruleset.xml --tab-width=4 --ignore=/build/html/,/documents/,/includes/,/test/report/ .
+ - cd htdocs/install
+ - date
+# - php upgrade.php 3.4.0 3.5.0 ignoredbversion > upgrade.log
+# - php upgrade2.php 3.4.0 3.5.0 ignoredbversion > upgrade2.log
+ - php upgrade.php 3.5.0 3.6.0 ignoredbversion >> upgrade.log
+ - php upgrade2.php 3.5.0 3.6.0 ignoredbversion >> upgrade2.log
+ - php upgrade.php 3.6.0 3.7.0 ignoredbversion >> upgrade.log
+# - cat upgrade360370.log
+ - php upgrade2.php 3.6.0 3.7.0 ignoredbversion >> upgrade2.log
+# - cat upgrade2.log
+ - cd ../..
+ - date
  - phpunit -d memory_limit=-1 --configuration test/phpunit/phpunittest.xml test/phpunit/AllTests.php
+ - date
+# - phpcs -p --warning-severity=0 -s --report-summary --standard=dev/codesniffer/ruleset.xml --tab-width=4 --ignore=/build/html/,/dev/vagrant/,/documents/,/includes/,/test/report/ htdocs/core/class/dolgraph.class.php 2>&1
+ - phpcs -p --warning-severity=0 -s --report-checkstyle --report-summary --standard=dev/codesniffer/ruleset.xml --tab-width=4 --ignore=/htdocs/conf/conf.php,/build/html/,/dev/vagrant/,/documents/,/includes/,/test/report/ . 2>&1
+ - date
 
 after_script:
 # - echo Output dolibarr log file; cat $(pwd)/htdocs/documents/dolibarr.log

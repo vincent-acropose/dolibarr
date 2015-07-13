@@ -3,6 +3,7 @@
  * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2014      Jean-François Ferry  <jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,7 +66,9 @@ if ($id > 0)
 
 if (isset($_FILES['userfile']) && $_FILES['userfile']['size'] > 0 && $_POST["sendit"] && ! empty($conf->global->MAIN_UPLOAD_DOC))
 {
-    if ($object->id) $result = $object->add_photo($upload_dir, $_FILES['userfile']);
+    if ($object->id) {
+	    $object->add_photo($upload_dir, $_FILES['userfile']);
+    }
 }
 
 if ($action == 'confirm_delete' && $_GET["file"] && $confirm == 'yes' && $user->rights->categorie->creer)
@@ -240,7 +243,7 @@ if ($object->id)
 			// Si fichier vignette disponible, on l'utilise, sinon on utilise photo origine
 			if ($obj['photo_vignette'])
 			{
-				$filename='thumbs/'.$obj['photo_vignette'];
+				$filename=$obj['photo_vignette'];
 			}
 			else
 			{
@@ -264,11 +267,11 @@ if ($object->id)
 			// On propose la generation de la vignette si elle n'existe pas et si la taille est superieure aux limites
 			if (!$obj['photo_vignette'] && preg_match('/(\.bmp|\.gif|\.jpg|\.jpeg|\.png)$/i',$obj['photo']) && ($object->imgWidth > $maxWidth || $object->imgHeight > $maxHeight))
 			{
-				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->entity.'&amp;action=addthumb&amp;type='.$type.'&amp;file='.urlencode($pdir.$viewfilename).'">'.img_picto($langs->trans('GenerateThumb'),'refresh').'&nbsp;&nbsp;</a>';
+				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=addthumb&amp;type='.$type.'&amp;file='.urlencode($pdir.$viewfilename).'">'.img_picto($langs->trans('GenerateThumb'),'refresh').'&nbsp;&nbsp;</a>';
 			}
 			if ($user->rights->categorie->creer)
 			{
-				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->entity.'&amp;action=delete&amp;type='.$type.'&amp;file='.urlencode($pdir.$viewfilename).'">';
+				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=delete&amp;type='.$type.'&amp;file='.urlencode($pdir.$viewfilename).'">';
 				print img_delete().'</a>';
 			}
 			if ($nbbyrow) print '</td>';
@@ -300,4 +303,3 @@ else
 
 llxFooter();
 $db->close();
-?>

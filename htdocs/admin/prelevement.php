@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2005-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2013 Juanjo Menent        <jmenent@2byte.es>
  *
@@ -51,8 +51,11 @@ if ($action == "set")
         if (! $res > 0) $error++;
     }
 
+    $res = dolibarr_set_const($db, "PRELEVEMENT_ICS", GETPOST("PRELEVEMENT_ICS"),'chaine',0,'',$conf->entity);
+    if (! $res > 0) $error++;
+
     $id=GETPOST('PRELEVEMENT_ID_BANKACCOUNT','int');
-    $account = new Account($db, $id);
+    $account = new Account($db);
 
     if($account->fetch($id)>0)
     {
@@ -119,16 +122,6 @@ $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToM
 print_fiche_titre($langs->trans("WithdrawalsSetup"),$linkback,'setup');
 print '<br>';
 
-$h = 0;
-
-$head[$h][0] = DOL_URL_ROOT."/admin/prelevement.php";
-$head[$h][1] = $langs->trans("Withdrawals");
-$head[$h][2] = 'Withdrawal';
-$hselected=$h;
-$h++;
-
-dol_fiche_head($head, $hselected, $langs->trans("ModuleSetup"));
-
 print '<form method="post" action="prelevement.php?action=set">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 
@@ -156,8 +149,15 @@ print '</tr>';
 // Bank account (from Banks module)
 print '<tr class="impair"><td>'.$langs->trans("BankToReceiveWithdraw").'</td>';
 print '<td align="left">';
-print $form->select_comptes($conf->global->PRELEVEMENT_ID_BANKACCOUNT,'PRELEVEMENT_ID_BANKACCOUNT',0,"courant=1",1);
+$form->select_comptes($conf->global->PRELEVEMENT_ID_BANKACCOUNT,'PRELEVEMENT_ID_BANKACCOUNT',0,"courant=1",1);
 print '</td></tr>';
+
+// ICS
+print '<tr class="pair"><td>'.$langs->trans("ICS").'</td>';
+print '<td align="left">';
+print '<input type="text" name="PRELEVEMENT_ICS" value="'.$conf->global->PRELEVEMENT_ICS.'" size="9" ></td>';
+print '</td></tr>';
+
 print '</table>';
 print '<br>';
 
@@ -287,4 +287,3 @@ if (! empty($conf->global->MAIN_MODULE_NOTIFICATION))
 $db->close();
 
 llxFooter();
-?>

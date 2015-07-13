@@ -26,7 +26,7 @@
  *
  * @param	string	$url 				URL to call.
  * @param	string	$postorget			'POST', 'GET', 'HEAD'
- * @param	string	$param				Paraemeters of URL (x=value1&y=value2)
+ * @param	string	$param				Parameters of URL (x=value1&y=value2)
  * @param	string	$followlocation		1=Follow location, 0=Do not follow
  * @param	array	$addheaders			Array of string to add into header. Example: ('Accept: application/xrds+xml', ....)
  * @return	array						Returns an associative array containing the response from the server array('content'=>response,'curl_error_no'=>errno,'curl_error_msg'=>errmsg...)
@@ -52,7 +52,6 @@ function getURLContent($url,$postorget='GET',$param='',$followlocation=1,$addhea
      exit;*/
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_VERBOSE, 1);
-    curl_setopt($ch, CURLOPT_SSLVERSION, 3); // Force SSLv3
 	curl_setopt($ch, CURLOPT_USERAGENT, 'Dolibarr geturl function');
 
 	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, ($followlocation?true:false));
@@ -71,6 +70,13 @@ function getURLContent($url,$postorget='GET',$param='',$followlocation=1,$addhea
     {
     	curl_setopt($ch, CURLOPT_POST, 1);	// POST
     	curl_setopt($ch, CURLOPT_POSTFIELDS, $param);	// Setting param x=a&y=z as POST fields
+    }
+    else if ($postorget == 'PUT')
+    {
+    	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT'); // HTTP request is 'PUT'
+    	if ( ! is_array($param) )
+		parse_str($param, $array_param);
+    	curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($array_param));	// Setting param x=a&y=z as PUT fields	
     }
     else if ($postorget == 'HEAD')
     {
@@ -124,4 +130,3 @@ function getURLContent($url,$postorget='GET',$param='',$followlocation=1,$addhea
     return $rep;
 }
 
-?>

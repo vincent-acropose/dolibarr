@@ -534,7 +534,8 @@ IMG;
 				header('Content-Disposition: attachment; filename="'.$name.'.pdf"');
 				readfile("$name.pdf");
 			}
-			unlink("$name.odt");
+			if (!empty($conf->global->MAIN_ODT_AS_PDF_DEL_SOURCE))
+				unlink("$name.odt");
 		} else {
 			dol_syslog(get_class($this).'::exportAsAttachedPDF $ret_val='.$retval, LOG_DEBUG);
 			dol_syslog(get_class($this).'::exportAsAttachedPDF $output_arr='.var_export($output_arr,true), LOG_DEBUG);
@@ -609,6 +610,21 @@ IMG;
 			closedir($handle);
 		}
 	}
+
+	/**
+	 * return the value present on odt in [valuename][/valuename]
+	 * @param string $value name balise in the template
+	 * @return string the value inside the balise
+	 *
+	 */
+	public function getvalue($valuename)
+	{
+		$searchreg="/\\[".$valuename."\\](.*)\\[\\/".$valuename."\\]/";
+		preg_match($searchreg, $this->contentXml, $matches); 
+		$this->contentXml = preg_replace($searchreg, "", $this->contentXml);
+		return  $matches[1];
+	}
+
 }
 
 ?>

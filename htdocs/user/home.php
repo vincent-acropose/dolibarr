@@ -26,7 +26,7 @@ require '../main.inc.php';
 if (! $user->rights->user->user->lire && ! $user->admin)
 {
 	// Redirection vers la page de l'utilisateur
-	header("Location: fiche.php?id=".$user->id);
+	header("Location: card.php?id=".$user->id);
 	exit;
 }
 
@@ -129,7 +129,7 @@ if ($resql)
 		$var=!$var;
 
 		print "<tr ".$bc[$var].">";
-		print '<td><a href="'.DOL_URL_ROOT.'/user/fiche.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowUser"),"user").' '.dolGetFirstLastname($obj->firstname,$obj->lastname).'</a>';
+		print '<td><a href="'.DOL_URL_ROOT.'/user/card.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowUser"),"user").' '.dolGetFirstLastname($obj->firstname,$obj->lastname).'</a>';
 		if (! empty($conf->multicompany->enabled) && $obj->admin && ! $obj->entity)
 		{
 			print img_picto($langs->trans("SuperAdministrator"),'redstar');
@@ -148,26 +148,30 @@ if ($resql)
             $companystatic->canvas=$obj->canvas;
             print $companystatic->getNomUrl(1);
 		}
-		else if (! empty($conf->multicompany->enabled))
-        {
-        	if ($obj->admin && ! $obj->entity)
-        	{
-        		print $langs->trans("AllEntities");
-        	}
-        	else
-        	{
-        		$mc->getInfo($obj->entity);
-        		print $mc->label;
-        	}
-        }
-		else if ($obj->ldap_sid)
-		{
-			print $langs->trans("DomainUser");
-		}
 		else
 		{
 			print $langs->trans("InternalUser");
 		}
+		if ($obj->ldap_sid)
+		{
+			print ' ('.$langs->trans("DomainUser").')';
+		}
+        // TODO This should be done with a hook
+        if (is_object($mc))
+        {
+			if (! empty($conf->multicompany->enabled))
+	        {
+	        	if (empty($obj->entity))
+	        	{
+	        		print ' ('.$langs->trans("AllEntities").')';
+	        	}
+	        	else
+	        	{
+	        		$mc->getInfo($obj->entity);
+	        		print ' ('.$mc->label.')';
+	        	}
+	        }
+        }
 		print '</td>';
 		print '<td align="right">'.dol_print_date($db->jdate($obj->datec),'dayhour').'</td>';
         print '<td align="right">';
@@ -196,7 +200,7 @@ if ($canreadperms)
 {
 	$max=5;
 
-	$sql = "SELECT g.rowid, g.nom, g.note, g.entity, g.datec";
+	$sql = "SELECT g.rowid, g.nom as name, g.note, g.entity, g.datec";
 	$sql.= " FROM ".MAIN_DB_PREFIX."usergroup as g";
 	if(! empty($conf->multicompany->enabled) && $conf->entity == 1 && ($conf->multicompany->transverse_mode || ($user->admin && ! $user->entity)))
 	{
@@ -226,7 +230,7 @@ if ($canreadperms)
 			$var=!$var;
 
 			print "<tr ".$bc[$var].">";
-			print '<td><a href="'.DOL_URL_ROOT.'/user/group/fiche.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowGroup"),"group").' '.$obj->nom.'</a>';
+			print '<td><a href="'.DOL_URL_ROOT.'/user/group/card.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowGroup"),"group").' '.$obj->name.'</a>';
 			if (! $obj->entity)
 			{
 				print img_picto($langs->trans("GlobalGroup"),'redstar');
@@ -259,4 +263,3 @@ print '</div></div></div>';
 llxFooter();
 
 $db->close();
-?>

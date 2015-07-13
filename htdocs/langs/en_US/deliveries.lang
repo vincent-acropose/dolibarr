@@ -23,3 +23,6 @@ GoodStatusDeclaration=Have received the goods above in good condition,
 Deliverer=Deliverer : 
 Sender=Sender
 Recipient=Recipient
+ErrorStockIsNotEnough=There's not enough stock
+Shippable=Shippable
+NonShippable=Not Shippable

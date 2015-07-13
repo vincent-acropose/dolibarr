@@ -150,6 +150,18 @@ class DateLibTest extends PHPUnit_Framework_TestCase
     	print __METHOD__." result=".$result."\n";
 		$this->assertEquals(1,$result);
 
+		// With different date before and after sunlight hour (day to change sunlight hour is 2014-03-30)
+		$date1=dol_mktime(0, 0, 0, 3, 28, 2014, true);
+		$date2=dol_mktime(0, 0, 0, 3, 31, 2014, true);
+
+		$result=num_between_day($date1,$date2,1);
+    	print __METHOD__." result=".$result."\n";
+		$this->assertEquals(4,$result);
+
+		$result=num_between_day($date1,$date2,0);
+    	print __METHOD__." result=".$result."\n";
+		$this->assertEquals(3,$result);
+
 		return $result;
     }
 
@@ -301,15 +313,6 @@ class DateLibTest extends PHPUnit_Framework_TestCase
         $langs=$this->savlangs;
         $db=$this->savdb;
 
-		$conf->global->MAIN_OLD_DATE=1;
-
-		$stime='19700102';
-		$result=dol_stringtotime($stime);
-		print __METHOD__." result=".$result."\n";
-		$this->assertEquals(86400,$result);
-
-		$conf->global->MAIN_OLD_DATE=0;
-
 		$stime='19700102';
 		$result=dol_stringtotime($stime);
 		print __METHOD__." result=".$result."\n";
@@ -338,5 +341,24 @@ class DateLibTest extends PHPUnit_Framework_TestCase
         return $result;
     }
 
+    /**
+     * testDolGetFirstDayWeek
+     *
+     * @return int
+     */
+    public function testDolGetFirstDayWeek()
+    {
+    	global $conf;
+
+    	$day=3; $month=2; $year=2015;
+    	$conf->global->MAIN_START_WEEK = 1;	// start on monday
+   		$prev = dol_get_first_day_week($day, $month, $year);
+		$this->assertEquals(2, (int) $prev['first_day']);		// monday for month 2, year 2014 is the 2
+
+    	$day=3; $month=2; $year=2015;
+    	$conf->global->MAIN_START_WEEK = 0;	// start on sunday
+   		$prev = dol_get_first_day_week($day, $month, $year);
+		$this->assertEquals(1, (int) $prev['first_day']);		// sunday for month 2, year 2015 is the 1st
+    }
+
 }
-?>

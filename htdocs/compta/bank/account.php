@@ -5,7 +5,8 @@
  * Copyright (C) 2004      Christophe Combelles <ccomb@free.fr>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2011 Juanjo Menent        <jmenent@@2byte.es>
- * Copyright (C) 2012      Marcos García         <marcosgdf@gmail.com>
+ * Copyright (C) 2012-2014 Marcos García        <marcosgdf@gmail.com>
+ * Copyright (C) 2011-2014 Alexandre Spangaro   <alexandre.spangaro@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,16 +31,19 @@
 require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/lib/bank.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+require_once DOL_DOCUMENT_ROOT.'/user/class/user.class.php';
 require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/sociales/class/chargesociales.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/tva/class/tva.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/salaries/class/paymentsalary.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/paiementfourn.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
 $langs->load("banks");
 $langs->load("categories");
 $langs->load("bills");
+$langs->load("companies");
 
 $id = (GETPOST('id','int') ? GETPOST('id','int') : GETPOST('account','int'));
 $ref = GETPOST('ref','alpha');
@@ -68,8 +72,6 @@ if ($negpage)
     if ($page > GETPOST("nbpage")) $page = GETPOST("nbpage");
 }
 
-$mesg='';
-
 $object = new Account($db);
 
 /*
@@ -79,6 +81,8 @@ $dateop=-1;
 
 if ($action == 'add' && $id && ! isset($_POST["cancel"]) && $user->rights->banque->modifier)
 {
+	$error = 0;
+
 	if (price2num($_POST["credit"]) > 0)
 	{
 		$amount = price2num($_POST["credit"]);
@@ -94,11 +98,20 @@ if ($action == 'add' && $id && ! isset($_POST["cancel"]) && $user->rights->banqu
 	$label=$_POST["label"];
 	$cat1=$_POST["cat1"];
 
-	if (! $dateop)    $mesg=$langs->trans("ErrorFieldRequired",$langs->trans("Date"));
-	if (! $operation) $mesg=$langs->trans("ErrorFieldRequired",$langs->trans("Type"));
-	if (! $amount)    $mesg=$langs->trans("ErrorFieldRequired",$langs->trans("Amount"));
+	if (! $dateop) {
+		$error++;
+		setEventMessage($langs->trans("ErrorFieldRequired",$langs->trans("Date")), 'errors');
+	}
+	if (! $operation) {
+		$error++;
+		setEventMessage($langs->trans("ErrorFieldRequired",$langs->trans("Type")), 'errors');
+	}
+	if (! $amount) {
+		$error++;
+		setEventMessage($langs->trans("ErrorFieldRequired",$langs->trans("Amount")), 'errors');
+	}
 
-	if (! $mesg)
+	if (! $error)
 	{
 		$object->fetch($id);
 		$insertid = $object->addline($dateop, $operation, $label, $amount, $num_chq, $cat1, $user);
@@ -110,7 +123,7 @@ if ($action == 'add' && $id && ! isset($_POST["cancel"]) && $user->rights->banqu
 		}
 		else
 		{
-			$mesg=$object->error;
+			setEventMessage($object->error, 'errors');
 		}
 	}
 	else
@@ -133,11 +146,13 @@ if ($action == 'confirm_delete' && $confirm == 'yes' && $user->rights->banque->m
 llxHeader();
 
 $societestatic=new Societe($db);
+$userstatic=new User($db);
 $chargestatic=new ChargeSociales($db);
 $memberstatic=new Adherent($db);
 $paymentstatic=new Paiement($db);
 $paymentsupplierstatic=new PaiementFourn($db);
 $paymentvatstatic=new TVA($db);
+$paymentsalstatic=new PaymentSalary($db);
 $bankstatic=new Account($db);
 $banklinestatic=new AccountLine($db);
 
@@ -235,7 +250,7 @@ if ($id > 0 || ! empty($ref))
 	$sql.= " AND ba.entity = ".$conf->entity;
 	$sql.= $sql_rech;
 
-	dol_syslog("account.php count transactions - sql=".$sql, LOG_DEBUG);
+	dol_syslog("account.php count transactions -", LOG_DEBUG);
 	$result=$db->query($sql);
 	if ($result)
 	{
@@ -253,17 +268,22 @@ if ($id > 0 || ! empty($ref))
 	//Total pages
 	$totalPages = ceil($total_lines/$viewline);
 
-	if ($page > 0)
-	{
-		$limitsql = ($totalPages - $page) * $viewline;
-		if ($limitsql < $viewline) $limitsql = $viewline;
-		$nbline = $limitsql;
-	}
-	else
-	{
+	if ($totalPages == 0) {
 		$page = 0;
-		$limitsql = $nbline;
+	} else {
+
+		if ($page > 0) {
+			$limitsql = ($totalPages - $page) * $viewline;
+			if ($limitsql < $viewline) {
+				$limitsql = $viewline;
+			}
+			$nbline = $limitsql;
+		} else {
+			$page = 0;
+			$limitsql = $nbline;
+		}
 	}
+
 	//print $limitsql.'-'.$page.'-'.$viewline;
 
 	// Onglets
@@ -288,8 +308,6 @@ if ($id > 0 || ! empty($ref))
 	print '</table>';
 
 	print '<br>';
-
-	dol_htmloutput_errors($mesg);
 
 	/**
 	 * Search form
@@ -414,7 +432,7 @@ if ($id > 0 || ! empty($ref))
 	print '<td>';
 	//$filtertype=array('TIP'=>'TIP','PRE'=>'PRE',...)
 	$filtertype='';
-	print $form->select_types_paiements($paiementtype,'paiementtype',$filtertype,2,1,1,8);
+	$form->select_types_paiements($paiementtype,'paiementtype',$filtertype,2,1,1,8);
 	print '</td>';
 	print '<td><input type="text" class="flat" name="req_nb" value="'.$req_nb.'" size="2"></td>';
 	print '<td><input type="text" class="flat" name="req_desc" value="'.$req_desc.'" size="24"></td>';
@@ -458,8 +476,13 @@ if ($id > 0 || ! empty($ref))
 	}
 	if ($mode_search && ! empty($conf->tax->enabled))
 	{
+		// VAT
 		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."bank_url as bu2 ON bu2.fk_bank = b.rowid AND bu2.type='payment_vat'";
 		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."tva as t ON bu2.url_id = t.rowid";
+
+		// Salary payment
+		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."bank_url as bu3 ON bu3.fk_bank = b.rowid AND bu3.type='payment_salary'";
+		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."payment_salary as sal ON bu3.url_id = sal.rowid";
 	}
 	if ($mode_search && ! empty($conf->adherent->enabled))
 	{
@@ -469,12 +492,14 @@ if ($id > 0 || ! empty($ref))
 	}
 	$sql.= " WHERE b.fk_account=".$object->id;
 	$sql.= " AND b.fk_account = ba.rowid";
+	// Si le partage des compte bancaire est activé dans multicompany, on ne limite pas la recherche des comptes à l'entité dans laquelle on se trouve (Ticket 1573)
+	if(!$conf->global->MULTICOMPANY_BANK_ACCOUNT_SHARING_ENABLED)
 	$sql.= " AND ba.entity = ".$conf->entity;
 	$sql.= $sql_rech;
 	$sql.= $db->order("b.datev, b.datec", "ASC");  // We add date of creation to have correct order when everything is done the same day
 	$sql.= $db->plimit($limitsql, 0);
 
-	dol_syslog("account.php get transactions - sql=".$sql, LOG_DEBUG);
+	dol_syslog("account.php get transactions -", LOG_DEBUG);
 	$result = $db->query($sql);
 	if ($result)
 	{
@@ -566,7 +591,7 @@ if ($id > 0 || ! empty($ref))
 					}
 					elseif ($links[$key]['type']=='payment_sc')
 					{
-						print '<a href="'.DOL_URL_ROOT.'/compta/payment_sc/fiche.php?id='.$links[$key]['url_id'].'">';
+						print '<a href="'.DOL_URL_ROOT.'/compta/payment_sc/card.php?id='.$links[$key]['url_id'].'">';
 						print ' '.img_object($langs->trans('ShowPayment'),'payment').' ';
 						//print $langs->trans("SocialContributionPayment");
 						print '</a>';
@@ -576,6 +601,12 @@ if ($id > 0 || ! empty($ref))
 						$paymentvatstatic->id=$links[$key]['url_id'];
 						$paymentvatstatic->ref=$links[$key]['url_id'];
 						print ' '.$paymentvatstatic->getNomUrl(2);
+					}
+					elseif ($links[$key]['type']=='payment_salary')
+					{
+						$paymentsalstatic->id=$links[$key]['url_id'];
+						$paymentsalstatic->ref=$links[$key]['url_id'];
+						print ' '.$paymentsalstatic->getNomUrl(2);
 					}
 					elseif ($links[$key]['type']=='banktransfert')
 					{
@@ -609,6 +640,10 @@ if ($id > 0 || ! empty($ref))
 						//var_dump($links);
 					}
 					elseif ($links[$key]['type']=='company')
+					{
+
+					}
+					elseif ($links[$key]['type']=='user')
 					{
 
 					}
@@ -647,8 +682,14 @@ if ($id > 0 || ! empty($ref))
 					if ($links[$key]['type']=='company')
 					{
 						$societestatic->id=$links[$key]['url_id'];
-						$societestatic->nom=$links[$key]['label'];
+						$societestatic->name=$links[$key]['label'];
 						print $societestatic->getNomUrl(1,'',16);
+					}
+					else if ($links[$key]['type']=='user')
+					{
+						$userstatic->id=$links[$key]['url_id'];
+						$userstatic->lastname=$links[$key]['label'];
+						print $userstatic->getNomUrl(1,'');
 					}
 					else if ($links[$key]['type']=='sc')
 					{
@@ -757,8 +798,8 @@ if ($id > 0 || ! empty($ref))
 			print '<tr class="liste_total"><td align="left" colspan="8">';
 			if ($sep > 0) print '&nbsp;';	// If we had at least one line in future
 			else print $langs->trans("CurrentBalance");
-			print '</td>';
-			print '<td align="right" nowrap><b>'.price($total).'</b></td>';
+			print ' '.$object->currency_code.'</td>';
+			print '<td align="right" nowrap><b>'.price($total, 0, $langs, 0, 0, -1, $object->currency_code).'</b></td>';
 			print '<td>&nbsp;</td>';
 			print '</tr>';
 		}
@@ -828,4 +869,3 @@ else
 llxFooter();
 
 $db->close();
-?>

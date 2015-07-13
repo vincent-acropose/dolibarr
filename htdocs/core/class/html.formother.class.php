@@ -164,12 +164,12 @@ class FormOther
         global $langs;
 
         $sql = "SELECT e.rowid, e.code, e.libelle, e.price, e.organization,";
-        $sql.= " p.libelle as pays";
-        $sql.= " FROM ".MAIN_DB_PREFIX."c_ecotaxe as e,".MAIN_DB_PREFIX."c_pays as p";
-        $sql.= " WHERE e.active = 1 AND e.fk_pays = p.rowid";
-        $sql.= " ORDER BY pays, e.organization ASC, e.code ASC";
+        $sql.= " c.label as country";
+        $sql.= " FROM ".MAIN_DB_PREFIX."c_ecotaxe as e,".MAIN_DB_PREFIX."c_country as c";
+        $sql.= " WHERE e.active = 1 AND e.fk_pays = c.rowid";
+        $sql.= " ORDER BY country, e.organization ASC, e.code ASC";
 
-    	dol_syslog(get_class($this).'::select_ecotaxes sql='.$sql);
+    	dol_syslog(get_class($this).'::select_ecotaxes', LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -223,11 +223,11 @@ class FormOther
     	$out='';
 
     	$sql = "SELECT r.taux";
-    	$sql.= " FROM ".MAIN_DB_PREFIX."c_revenuestamp as r,".MAIN_DB_PREFIX."c_pays as p";
-    	$sql.= " WHERE r.active = 1 AND r.fk_pays = p.rowid";
-    	$sql.= " AND p.code = '".$country_code."'";
+    	$sql.= " FROM ".MAIN_DB_PREFIX."c_revenuestamp as r,".MAIN_DB_PREFIX."c_country as c";
+    	$sql.= " WHERE r.active = 1 AND r.fk_pays = c.rowid";
+    	$sql.= " AND c.code = '".$country_code."'";
 
-    	dol_syslog(get_class($this).'::select_revenue_stamp sql='.$sql);
+    	dol_syslog(get_class($this).'::select_revenue_stamp', LOG_DEBUG);
     	$resql=$this->db->query($sql);
     	if ($resql)
     	{
@@ -307,6 +307,7 @@ class FormOther
      * @param  string	$htmlname      	Name of combo list
      * @param	int		$nocateg		Show also an entry "Not categorized"
      * @return string		        	Html combo list code
+     * @see	select_all_categories
      */
     function select_categories($type,$selected=0,$htmlname='search_categ',$nocateg=0)
     {
@@ -318,7 +319,7 @@ class FormOther
         $tab_categs = $static_categs->get_full_arbo($type);
 
         // Print a select with each of them
-        $moreforfilter ='<select class="flat" name="'.$htmlname.'">';
+        $moreforfilter ='<select class="flat" id="select_categ_'.$htmlname.'" name="'.$htmlname.'">';
         $moreforfilter.='<option value="">&nbsp;</option>';	// Should use -1 to say nothing
 
         if (is_array($tab_categs))
@@ -355,15 +356,29 @@ class FormOther
         global $conf,$langs;
         $langs->load('users');
 
+        $out = '';
+        $nodatarole = '';
+        // Enhance with select2
+        if ($conf->use_javascript_ajax)
+        {
+            include_once DOL_DOCUMENT_ROOT . '/core/lib/ajax.lib.php';
+            $htmlforcombo = ajax_combobox($htmlname);
+            if ($htmlforcombo)
+            {
+            	$out.= $htmlforcombo;
+            	$nodatarole=' data-role="none"';
+            }
+        }
         // Select each sales and print them in a select input
-        $moreforfilter ='<select class="flat" name="'.$htmlname.'">';
-        $moreforfilter.='<option value="">&nbsp;</option>';
+        $out.='<select class="flat" id="'.$htmlname.'" name="'.$htmlname.'"'.$nodatarole.'>';
+        $out.='<option value="">&nbsp;</option>';
 
         // Get list of users allowed to be viewed
         $sql_usr = "SELECT u.rowid, u.lastname, u.firstname, u.statut, u.login";
         $sql_usr.= " FROM ".MAIN_DB_PREFIX."user as u";
         $sql_usr.= " WHERE u.entity IN (0,".$conf->entity.")";
-        if (empty($user->rights->user->user->lire)) $sql_usr.=" AND u.fk_societe = ".($user->societe_id?$user->societe_id:0);
+        if (empty($user->rights->user->user->lire)) $sql_usr.=" AND u.rowid = ".$user->id;
+        if (! empty($user->societe_id)) $sql_usr.=" AND u.fk_societe = ".$user->societe_id;
         // Add existing sales representatives of thirdparty of external user
         if (empty($user->rights->user->user->lire) && $user->societe_id)
         {
@@ -381,34 +396,35 @@ class FormOther
         {
             while ($obj_usr = $this->db->fetch_object($resql_usr))
             {
-                $moreforfilter.='<option value="'.$obj_usr->rowid.'"';
 
-                if ($obj_usr->rowid == $selected) $moreforfilter.=' selected="selected"';
+                $out.='<option value="'.$obj_usr->rowid.'"';
 
-                $moreforfilter.='>';
-                $moreforfilter.=dolGetFirstLastname($obj_usr->firstname,$obj_usr->lastname);
+                if ($obj_usr->rowid == $selected) $out.=' selected="selected"';
+
+                $out.='>';
+                $out.=dolGetFirstLastname($obj_usr->firstname,$obj_usr->lastname);
                 // Complete name with more info
                 $moreinfo=0;
                 if (! empty($conf->global->MAIN_SHOW_LOGIN))
                 {
-                	$out.=($moreinfo?' - ':' (').$obj->login;
-                	$moreinfo++;
+                    $out.=($moreinfo?' - ':' (').$obj_usr->login;
+                    $moreinfo++;
                 }
                 if ($showstatus >= 0)
                 {
 					if ($obj_usr->statut == 1 && $showstatus == 1)
 					{
-						$moreforfilter.=($moreinfo?' - ':' (').$langs->trans('Enabled');
+						$out.=($moreinfo?' - ':' (').$langs->trans('Enabled');
 	                	$moreinfo++;
 					}
 					if ($obj_usr->statut == 0)
 					{
-						$moreforfilter.=($moreinfo?' - ':' (').$langs->trans('Disabled');
+						$out.=($moreinfo?' - ':' (').$langs->trans('Disabled');
                 		$moreinfo++;
 					}
 				}
-				$moreforfilter.=($moreinfo?')':'');
-                $moreforfilter.='</option>';
+				$out.=($moreinfo?')':'');
+                $out.='</option>';
             }
             $this->db->free($resql_usr);
         }
@@ -416,9 +432,9 @@ class FormOther
         {
             dol_print_error($this->db);
         }
-        $moreforfilter.='</select>';
+        $out.='</select>';
 
-        return $moreforfilter;
+        return $out;
     }
 
     /**
@@ -461,7 +477,7 @@ class FormOther
     /**
      * Write lines of a project (all lines of a project if parent = 0)
      *
-     * @param 	int		&$inc					Cursor counter
+     * @param 	int		$inc					Cursor counter
      * @param 	int		$parent					Id of parent task we want to see
      * @param 	array	$lines					Array of task lines
      * @param 	int		$level					Level
@@ -490,7 +506,7 @@ class FormOther
                 {
                     if ($lines[$i]->fk_project != $lastprojectid)	// Break found on project
                     {
-                        if ($i > 0 && $conf->browser->firefox) print '<option value="0" disabled="disabled">----------</option>';
+                        if ($i > 0) print '<option value="0" disabled="disabled">----------</option>';
                         print '<option value="'.$lines[$i]->fk_project.'_0"';
                         if ($selectedproject == $lines[$i]->fk_project) print ' selected="selected"';
                         print '>';	// Project -> Task
@@ -558,29 +574,29 @@ class FormOther
      *
      *		@param	string		$set_color		Pre-selected color
      *		@param	string		$prefix			Name of HTML field
-     *		@param	string		$form_name		Name of form
+     *		@param	string		$form_name		Deprecated. Not used.
      * 		@param	int			$showcolorbox	1=Show color code and color box, 0=Show only color code
      * 		@param 	array		$arrayofcolors	Array of colors. Example: array('29527A','5229A3','A32929','7A367A','B1365F','0D7813')
      * 		@return	void
      * 		@deprecated
      */
-    function select_color($set_color='', $prefix='f_color', $form_name='objForm', $showcolorbox=1, $arrayofcolors='')
+    function select_color($set_color='', $prefix='f_color', $form_name='', $showcolorbox=1, $arrayofcolors='')
     {
     	print $this->selectColor($set_color, $prefix, $form_name, $showcolorbox, $arrayofcolors);
     }
 
     /**
-     *		Output a HTML code to select a color
+     *		Output a HTML code to select a color. Field will return an hexa color like '334455'.
      *
      *		@param	string		$set_color		Pre-selected color
      *		@param	string		$prefix			Name of HTML field
-     *		@param	string		$form_name		Name of form
+     *		@param	string		$form_name		Deprecated. Not used.
      * 		@param	int			$showcolorbox	1=Show color code and color box, 0=Show only color code
      * 		@param 	array		$arrayofcolors	Array of colors. Example: array('29527A','5229A3','A32929','7A367A','B1365F','0D7813')
      * 		@param	string		$morecss		Add css style into input field
-     * 		@return	void
+     * 		@return	string
      */
-    function selectColor($set_color='', $prefix='f_color', $form_name='objForm', $showcolorbox=1, $arrayofcolors='', $morecss='')
+    function selectColor($set_color='', $prefix='f_color', $form_name='', $showcolorbox=1, $arrayofcolors='', $morecss='')
     {
         global $langs,$conf;
 
@@ -708,7 +724,7 @@ class FormOther
      *    	@param	string		$selected          Preselected value
      *    	@param  string		$htmlname          Nom de la zone select
      *    	@param  int			$useempty          Affiche valeur vide dans liste
-     *    	@return	void
+     *    	@return	string
      */
     function select_dayofweek($selected='',$htmlname='weekid',$useempty=0)
     {
@@ -749,7 +765,7 @@ class FormOther
      *    	@param	string		$selected          Preselected value
      *    	@param  string		$htmlname          Nom de la zone select
      *    	@param  int			$useempty          Affiche valeur vide dans liste
-     *    	@return	void
+     *    	@return	string
      */
     function select_month($selected='',$htmlname='monthid',$useempty=0)
     {
@@ -759,7 +775,7 @@ class FormOther
 
         $montharray = monthArray($langs);	// Get array
 
-        $select_month = '<select class="flat" name="'.$htmlname.'">';
+        $select_month = '<select class="flat" name="'.$htmlname.'" id="'.$htmlname.'">';
         if ($useempty)
         {
             $select_month .= '<option value="0">&nbsp;</option>';
@@ -791,7 +807,7 @@ class FormOther
      *  @param	int			$offset			Offset
      *  @param	int			$invert			Invert
      *  @param	string		$option			Option
-     *  @return	void
+     *  @return	string
      */
     function select_year($selected='',$htmlname='yearid',$useempty=0, $min_year=10, $max_year=5, $offset=0, $invert=0, $option='')
     {
@@ -900,7 +916,8 @@ class FormOther
 
 
     /**
-     * 	Show a HTML Tab with boxes of a particular area including personalized choices of user
+     * 	Show a HTML Tab with boxes of a particular area including personalized choices of user.
+     *  Class 'Form' must be known.
      *
      * 	@param	   User         $user		 Object User
      * 	@param	   String       $areacode    Code of area for pages (0=value for Home page)
@@ -925,6 +942,7 @@ class FormOther
         $arrayboxtoactivatelabel=array();
         if (! empty($user->conf->$confuserzone))
         {
+        	$boxorder='';
         	$langs->load("boxes");	// Load label of boxes
         	foreach($boxactivated as $box)
         	{
@@ -933,9 +951,23 @@ class FormOther
         		if (preg_match('/graph/',$box->class)) $label.=' ('.$langs->trans("Graph").')';
         		$arrayboxtoactivatelabel[$box->id]=$label;			// We keep only boxes not shown for user, to show into combo list
         	}
+            foreach($boxidactivatedforuser as $boxid)
+        	{
+       			if (empty($boxorder)) $boxorder.='A:';
+  				$boxorder.=$boxid.',';
+        	}
 
-        	$form=new Form($db);
-            $selectboxlist=$form->selectarray('boxcombo', $arrayboxtoactivatelabel,'',1);
+        	//var_dump($boxidactivatedforuser);
+
+        	// Class Form must have been already loaded
+			$selectboxlist.='<form name="addbox" method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+			$selectboxlist.='<input type="hidden" name="addbox" value="addbox">';
+			$selectboxlist.='<input type="hidden" name="userid" value="'.$user->id.'">';
+			$selectboxlist.='<input type="hidden" name="areacode" value="'.$areacode.'">';
+			$selectboxlist.='<input type="hidden" name="boxorder" value="'.$boxorder.'">';
+			$selectboxlist.=Form::selectarray('boxcombo', $arrayboxtoactivatelabel,'',1);
+            if (empty($conf->use_javascript_ajax)) $selectboxlist.=' <input type="submit" class="button" value="'.$langs->trans("AddBox").'">';
+            $selectboxlist.='</form>';
         }
 
         // Javascript code for dynamic actions
@@ -1016,6 +1048,7 @@ class FormOther
         if ($nbboxactivated)
         {
         	$langs->load("boxes");
+			$langs->load("projects");
 
         	$emptybox=new ModeleBoxes($db);
 
@@ -1103,24 +1136,25 @@ class FormOther
      *  Return a HTML select list of bank accounts
      *
      *  @param  string	$htmlname          	Name of select zone
-     *  @param	string	$dictionnarytable	Dictionnary table
+     *  @param	string	$dictionarytable	Dictionary table
      *  @param	string	$keyfield			Field for key
      *  @param	string	$labelfield			Label field
      *  @param	string	$selected			Selected value
      *  @param  int		$useempty          	1=Add an empty value in list, 2=Add an empty value in list only if there is more than 2 entries.
+     *  @param  string  $moreattrib         More attributes on HTML select tag
      * 	@return	void
      */
-    function select_dictionnary($htmlname,$dictionnarytable,$keyfield='code',$labelfield='label',$selected='',$useempty=0)
+    function select_dictionary($htmlname,$dictionarytable,$keyfield='code',$labelfield='label',$selected='',$useempty=0,$moreattrib='')
     {
         global $langs, $conf;
 
         $langs->load("admin");
 
         $sql = "SELECT rowid, ".$keyfield.", ".$labelfield;
-        $sql.= " FROM ".MAIN_DB_PREFIX.$dictionnarytable;
+        $sql.= " FROM ".MAIN_DB_PREFIX.$dictionarytable;
         $sql.= " ORDER BY ".$labelfield;
 
-        dol_syslog(get_class($this)."::select_dictionnary sql=".$sql);
+        dol_syslog(get_class($this)."::select_dictionary", LOG_DEBUG);
         $result = $this->db->query($sql);
         if ($result)
         {
@@ -1128,7 +1162,7 @@ class FormOther
             $i = 0;
             if ($num)
             {
-                print '<select id="select'.$htmlname.'" class="flat selectdictionnary" name="'.$htmlname.'"'.($moreattrib?' '.$moreattrib:'').'>';
+                print '<select id="select'.$htmlname.'" class="flat selectdictionary" name="'.$htmlname.'"'.($moreattrib?' '.$moreattrib:'').'>';
                 if ($useempty == 1 || ($useempty == 2 && $num > 1))
                 {
                     print '<option value="-1">&nbsp;</option>';
@@ -1153,7 +1187,7 @@ class FormOther
             }
             else
 			{
-                print $langs->trans("DictionnaryEmpty");
+                print $langs->trans("DictionaryEmpty");
             }
         }
         else {
@@ -1163,4 +1197,3 @@ class FormOther
 
 }
 
-?>

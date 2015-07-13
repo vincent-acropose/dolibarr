@@ -79,18 +79,18 @@ class box_comptes extends ModeleBoxes
 		if ($user->rights->banque->lire)
 		{
 			$sql = "SELECT rowid, ref, label, bank, number, courant, clos, rappro, url,";
-			$sql.= " code_banque, code_guichet, cle_rib, bic, iban_prefix,";
+			$sql.= " code_banque, code_guichet, cle_rib, bic, iban_prefix as iban,";
 			$sql.= " domiciliation, proprio, owner_address,";
 			$sql.= " account_number, currency_code,";
 			$sql.= " min_allowed, min_desired, comment";
 			$sql.= " FROM ".MAIN_DB_PREFIX."bank_account";
 			$sql.= " WHERE entity = ".$conf->entity;
 			$sql.= " AND clos = 0";
-			$sql.= " AND courant = 1";
+			//$sql.= " AND courant = 1";
 			$sql.= " ORDER BY label";
 			$sql.= $db->plimit($max, 0);
 
-			dol_syslog(get_class($this)."::loadBox sql=".$sql);
+			dol_syslog(get_class($this)."::loadBox", LOG_DEBUG);
 			$result = $db->query($sql);
 			if ($result)
 			{
@@ -177,4 +177,3 @@ class box_comptes extends ModeleBoxes
 
 }
 
-?>

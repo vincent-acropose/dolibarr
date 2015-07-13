@@ -1159,7 +1159,7 @@ class SMTPs
 		$this->_msgContent[$strType]['data']     = $strContent;
 
 		if ( $this->getMD5flag() )
-		$this->_msgContent[$strType]['md5']      = dol_hash($strContent);
+		$this->_msgContent[$strType]['md5']      = dol_hash($strContent, 3);
 		//}
 	}
 
@@ -1206,11 +1206,8 @@ class SMTPs
 		{
 			// Since this is an actual multi-part message
 			// We need to define a content message Boundary
-			// NOTE: This was 'multipart/alternative', but Windows based
-			//       mail servers have issues with this.
-			/*
-			 * TODO  Investigate "nested" boundary message parts
-			*/
+			// NOTE: This was 'multipart/alternative', but Windows based mail servers have issues with this.
+
 			//$content = 'Content-Type: multipart/related; boundary="' . $this->_getBoundary() . '"'   . "\r\n";
 			$content = 'Content-Type: multipart/mixed; boundary="' . $this->_getBoundary('mixed') . '"'   . "\r\n";
 
@@ -1332,7 +1329,7 @@ class SMTPs
 			$this->_msgContent['attachment'][$strFileName]['data']     = $strContent;
 
 			if ( $this->getMD5flag() )
-			$this->_msgContent['attachment'][$strFileName]['md5']      = dol_hash($strContent);
+			$this->_msgContent['attachment'][$strFileName]['md5']      = dol_hash($strContent, 3);
 		}
 	}
 
@@ -1359,7 +1356,7 @@ class SMTPs
 			$this->_msgContent['image'][$strImageName]['data']     = $strContent;
 
 			if ( $this->getMD5flag() )
-			$this->_msgContent['image'][$strImageName]['md5']      = dol_hash($strContent);
+			$this->_msgContent['image'][$strImageName]['md5']      = dol_hash($strContent, 3);
 		}
 	}
 	// END DOL_CHANGE LDR
@@ -1490,8 +1487,8 @@ class SMTPs
 	function _setBoundary()
 	{
 		$this->_smtpsBoundary = "multipart_x." . time() . ".x_boundary";
-		$this->_smtpsRelatedBoundary = 'mul_'.dol_hash(uniqid("dolibarr2"));
-		$this->_smtpsAlternativeBoundary = 'mul_'.dol_hash(uniqid("dolibarr3"));
+		$this->_smtpsRelatedBoundary = 'mul_'.dol_hash(uniqid("dolibarr2"), 3);
+		$this->_smtpsAlternativeBoundary = 'mul_'.dol_hash(uniqid("dolibarr3"), 3);
 	}
 
 	/**
@@ -1803,4 +1800,3 @@ class SMTPs
  *
  */
 
-?>

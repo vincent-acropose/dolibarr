@@ -1,18 +1,14 @@
-/*
- * Language code: sk_SK
- * Automatic generated via autotranslator.php tool
- * Generation date 2013-11-08 23:25:26
- */
-
-
-// START - Lines generated via autotranslator.php tool (2013-11-08 23:25:26).
-// Reference language: en_US -> sk_SK
+# Dolibarr language file - Source file is en_US - printipp
 PrintIPPSetup=Nastavenie modulu Priama tlač
-PrintIPPDesc=Ce modul Permet d'un ajouter Bouton d'dojem priame des dokumenty vers votre imprimante. Il requiert un systeme Linux Equipe de poháre.
-PRINTIPP_ENABLED=Zobraziť Piktogram &quot;Priama tlač&quot; do zoznamu dokumentov
+PrintIPPDesc=Tento modul pridá tlačítko na priamu tlač dokumentov. Vyžaduje si Linuxový systém s nainštalovaným serverom CUPS.
+PRINTIPP_ENABLED=Zobraziť ikonu "Priama tlač" v zoznamoch dokumentov
 PRINTIPP_HOST=Tlačový server
-PRINTIPP_PORT=Prístav
-PRINTIPP_USER=Prihlásenie
+PRINTIPP_PORT=Port
+PRINTIPP_USER=Prihlasovacie meno
 PRINTIPP_PASSWORD=Heslo
-NoPrinterFound=Žiadne tlačiarne nájdené (skontrolujte poháre Nasta)
-// STOP - Lines generated via autotranslator.php tool (2013-11-08 23:48:51).
+NoPrinterFound=Nenašli sa žiadne tlačiarne (skontrolujte nastavenia CUPS)
+FileWasSentToPrinter=Súbor %s bol odoslaný na tlač
+NoDefaultPrinterDefined=Nie je nastavená predvolená tlačiareň
+DefaultPrinter=Predvolená tlačiareň
+Printer=Tlačiareň
+CupsServer=Server CUPS

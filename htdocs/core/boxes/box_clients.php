@@ -37,11 +37,27 @@ class box_clients extends ModeleBoxes
 	var $depends = array("societe");
 
 	var $db;
-	var $param;
+	var $enabled = 1;
 
 	var $info_box_head = array();
 	var $info_box_contents = array();
 
+
+	/**
+	 *  Constructor
+	 *
+	 *  @param  DoliDB	$db      	Database handler
+     *  @param	string	$param		More parameters
+	 */
+	function __construct($db,$param='')
+	{
+		global $conf, $user;
+
+		$this->db = $db;
+
+		// disable box for such cases
+		if (! empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) $this->enabled=0;	// disabled by this option
+	}
 
 	/**
      *  Load data for box to show them later
@@ -63,7 +79,7 @@ class box_clients extends ModeleBoxes
 
 		if ($user->rights->societe->lire)
 		{
-			$sql = "SELECT s.nom, s.rowid as socid, s.datec, s.tms, s.status";
+			$sql = "SELECT s.nom as name, s.rowid as socid, s.datec, s.tms, s.status";
 			$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 			if (!$user->rights->societe->client->voir && !$user->societe_id) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 			$sql.= " WHERE s.client IN (1, 3)";
@@ -73,12 +89,12 @@ class box_clients extends ModeleBoxes
 			$sql.= " ORDER BY s.tms DESC";
 			$sql.= $db->plimit($max, 0);
 
-			dol_syslog(get_class($this)."::loadBox sql=".$sql,LOG_DEBUG);
+			dol_syslog(get_class($this)."::loadBox", LOG_DEBUG);
 			$result = $db->query($sql);
 			if ($result)
 			{
 				$num = $db->num_rows($result);
-                if (empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) $url= DOL_URL_ROOT."/comm/fiche.php?socid=";
+                if (empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) $url= DOL_URL_ROOT."/comm/card.php?socid=";
                 else $url= DOL_URL_ROOT."/societe/soc.php?socid=";
 
 				$i = 0;
@@ -93,7 +109,7 @@ class box_clients extends ModeleBoxes
                     'url' => $url.$objp->socid);
 
 					$this->info_box_contents[$i][1] = array('td' => 'align="left"',
-                    'text' => $objp->nom,
+                    'text' => $objp->name,
                     'url' => $url.$objp->socid);
 
 					$this->info_box_contents[$i][2] = array('td' => 'align="right"',
@@ -136,4 +152,3 @@ class box_clients extends ModeleBoxes
 
 }
 
-?>

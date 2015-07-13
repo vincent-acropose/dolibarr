@@ -43,28 +43,20 @@ $result=restrictedArea($user,'contrat',$id);
 $object = new Contrat($db);
 $object->fetch($id,$ref);
 
+$permissionnote=$user->rights->contrat->creer;	// Used by the include of actions_setnotes.inc.php
 
-/******************************************************************************/
-/*                     Actions                                                */
-/******************************************************************************/
 
-if ($action == 'setnote_public' && $user->rights->contrat->creer)
-{
-	$result=$object->update_note(dol_html_entity_decode(dol_htmlcleanlastbr(GETPOST('note_public')), ENT_QUOTES),'_public');
-	if ($result < 0) dol_print_error($db,$object->error);
-}
+/*
+ * Actions
+ */
 
-else if ($action == 'setnote_private' && $user->rights->contrat->creer)
-{
-	$result=$object->update_note(dol_html_entity_decode(dol_htmlcleanlastbr(GETPOST('note_private')), ENT_QUOTES),'_private');
-	if ($result < 0) dol_print_error($db,$object->error);
-}
+include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not includ_once
 
 
 
-/******************************************************************************/
-/* Affichage fiche                                                            */
-/******************************************************************************/
+/*
+ * View
+ */
 
 llxHeader();
 
@@ -72,8 +64,6 @@ $form = new Form($db);
 
 if ($id > 0 || ! empty($ref))
 {
-	dol_htmloutput_mesg($mesg);
-
     $object->fetch_thirdparty();
 
     $head = contract_prepare_head($object);
@@ -85,7 +75,7 @@ if ($id > 0 || ! empty($ref))
 
     print '<table class="border" width="100%">';
 
-    $linkback = '<a href="'.DOL_URL_ROOT.'/contrat/liste.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
+    $linkback = '<a href="'.DOL_URL_ROOT.'/contrat/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
     // Reference
 	print '<tr><td width="25%">'.$langs->trans('Ref').'</td><td colspan="5">'.$form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref', '').'</td></tr>';
@@ -118,4 +108,3 @@ if ($id > 0 || ! empty($ref))
 
 llxFooter();
 $db->close();
-?>

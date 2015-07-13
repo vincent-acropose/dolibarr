@@ -46,7 +46,6 @@ class Export
 
 	// To store export modules
 	var $hexa;
-	var $hexafilter;
 	var $hexafiltervalue;
 	var $datatoexport;
 	var $model_name;
@@ -328,7 +327,7 @@ class Export
 	function conditionDate($Field, $Value, $Sens)
 	{
 		// TODO date_format is forbidden, not performant and not portable. Use instead BETWEEN
-		if (strlen($Value)==4) $Condition=" date_format(".$Field.",'%Y') ".$Sens." ".$Value;
+		if (strlen($Value)==4) $Condition=" date_format(".$Field.",'%Y') ".$Sens." '".$Value."'";
 		elseif (strlen($Value)==6) $Condition=" date_format(".$Field.",'%Y%m') ".$Sens." '".$Value."'";
 		else  $Condition=" date_format(".$Field.",'%Y%m%d') ".$Sens." ".$Value;
 		return $Condition;
@@ -337,13 +336,15 @@ class Export
 	/**
 	 *      Build an input field used to filter the query
 	 *
-	 *      @param		string	$TypeField		Type of Field to filter
+	 *      @param		string	$TypeField		Type of Field to filter. Example: Text, List:c_country:label:rowid, List:c_stcom:label:code, Number, Boolean
 	 *      @param		string	$NameField		Name of the field to filter
 	 *      @param		string	$ValueField		Initial value of the field to filter
 	 *      @return		string					html string of the input field ex : "<input type=text name=... value=...>"
 	 */
 	function build_filterField($TypeField, $NameField, $ValueField)
 	{
+		global $langs;
+		
 		$szFilterField='';
 		$InfoFieldList = explode(":", $TypeField);
 
@@ -354,7 +355,7 @@ class Export
 			case 'Date':
 			case 'Duree':
 			case 'Numeric':
-				$szFilterField='<input type="text" name='.$NameField." value='".$ValueField."'>";
+				$szFilterField='<input type="text" name="'.$NameField.'" value="'.$ValueField.'">';
 				break;
 			case 'Boolean':
 				$szFilterField='<select name="'.$NameField.'" class="flat">';
@@ -375,12 +376,14 @@ class Export
 				// 0 : Type du champ
 				// 1 : Nom de la table
 				// 2 : Nom du champ contenant le libelle
-				// 3 : Nom du champ contenant la cle (si different de rowid)
+				// 3 : Name of field with key (if it is not "rowid"). Used this field as key for combo list.
 				if (count($InfoFieldList)==4)
 					$keyList=$InfoFieldList[3];
 				else
 					$keyList='rowid';
-				$sql = 'SELECT '.$keyList.' as rowid, '.$InfoFieldList[2];
+				$sql = 'SELECT '.$keyList.' as rowid, '.$InfoFieldList[2].' as label'.(empty($InfoFieldList[3])?'':', '.$InfoFieldList[3].' as code');
+				if ($InfoFieldList[1] == 'c_stcomm') $sql = 'SELECT id as id, '.$keyList.' as rowid, '.$InfoFieldList[2].' as label'.(empty($InfoFieldList[3])?'':', '.$InfoFieldList[3].' as code');
+				if ($InfoFieldList[1] == 'c_country') $sql = 'SELECT '.$keyList.' as rowid, '.$InfoFieldList[2].' as label, code as code';
 				$sql.= ' FROM '.MAIN_DB_PREFIX .$InfoFieldList[1];
 
 				$resql = $this->db->query($sql);
@@ -396,14 +399,25 @@ class Export
 						while ($i < $num)
 						{
 							$obj = $this->db->fetch_object($resql);
-							if ($obj->$InfoFieldList[2] == '-')
+							if ($obj->label == '-')
 							{
 								// Discard entry '-'
 								$i++;
 								continue;
 							}
-
-							$labeltoshow=dol_trunc($obj->$InfoFieldList[2],18);
+							//var_dump($InfoFieldList[1]);
+							$labeltoshow=dol_trunc($obj->label,18);
+							if ($InfoFieldList[1] == 'c_stcomm') 
+							{
+								$langs->load("companies");
+								$labeltoshow=(($langs->trans("StatusProspect".$obj->id) != "StatusProspect".$obj->id)?$langs->trans("StatusProspect".$obj->id):$obj->label);
+							}
+							if ($InfoFieldList[1] == 'c_country') 
+							{
+								//var_dump($sql);
+								$langs->load("dict");
+								$labeltoshow=(($langs->trans("Country".$obj->code) != "Country".$obj->code)?$langs->trans("Country".$obj->code):$obj->label);
+							}
 							if (!empty($ValueField) && $ValueField == $obj->rowid)
 							{
 								$szFilterField.='<option value="'.$obj->rowid.'" selected="selected">'.$labeltoshow.'</option>';
@@ -417,8 +431,9 @@ class Export
 					}
 					$szFilterField.="</select>";
 
-					$this->db->free();
+					$this->db->free($resql);
 				}
+				else dol_print_error($this->db);
 				break;
 		}
 
@@ -519,7 +534,7 @@ class Export
 
 		// Run the sql
 		$this->sqlusedforexport=$sql;
-		dol_syslog(get_class($this)."::".__FUNCTION__." sql=".$sql);
+		dol_syslog(get_class($this)."::".__FUNCTION__."", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql)
 		{
@@ -592,7 +607,6 @@ class Export
 		else
 		{
 			$this->error=$this->db->error()." - sql=".$sql;
-			dol_syslog("Export::build_file Error: ".$this->error, LOG_ERR);
 			return -1;
 		}
 	}
@@ -612,9 +626,6 @@ class Export
 		$this->db->begin();
 
 		$filter='';
-		if (! empty($this->hexafilter) && ! empty($this->hexafiltervalue)) {
-			$filter = json_encode(array('field' => $this->hexafilter, 'value' => $this->hexafiltervalue));
-		}
 
 		$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'export_model (';
 		$sql.= 'label,';
@@ -623,12 +634,12 @@ class Export
 		$sql.= 'filter';
 		$sql.= ') VALUES (';
 		$sql.= "'".$this->db->escape($this->model_name)."',";
-		$sql.= "'".$this->datatoexport."',";
-		$sql.= "'".$this->hexa."',";
-		$sql.= (! empty($filter)?"'".$filter."'":"null");
+		$sql.= "'".$this->db->escape($this->datatoexport)."',";
+		$sql.= "'".$this->db->escape($this->hexa)."',";
+		$sql.= "'".$this->db->escape($this->hexafiltervalue)."'";
 		$sql.= ")";
 
-		dol_syslog("Export::create sql=".$sql, LOG_DEBUG);
+		dol_syslog(get_class($this)."::create", LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
@@ -639,7 +650,6 @@ class Export
 		{
 			$this->error=$this->db->lasterror();
 			$this->errno=$this->db->lasterrno();
-			dol_syslog("Export::create error ".$this->error, LOG_ERR);
 			$this->db->rollback();
 			return -1;
 		}
@@ -653,11 +663,11 @@ class Export
 	 */
 	function fetch($id)
 	{
-		$sql = 'SELECT em.rowid, em.field, em.label, em.type, em.filter';
+		$sql = 'SELECT em.rowid, em.label, em.type, em.field, em.filter';
 		$sql.= ' FROM '.MAIN_DB_PREFIX.'export_model as em';
 		$sql.= ' WHERE em.rowid = '.$id;
 
-		dol_syslog("Export::fetch sql=".$sql, LOG_DEBUG);
+		dol_syslog("Export::fetch", LOG_DEBUG);
 		$result = $this->db->query($sql);
 		if ($result)
 		{
@@ -665,13 +675,11 @@ class Export
 			if ($obj)
 			{
 				$this->id				= $obj->rowid;
-				$this->hexa				= $obj->field;
 				$this->model_name		= $obj->label;
 				$this->datatoexport		= $obj->type;
-
-				$filter					= json_decode($obj->filter, true);
-				$this->hexafilter		= (isset($filter['field'])?$filter['field']:'');
-				$this->hexafiltervalue	= (isset($filter['value'])?$filter['value']:'');
+				
+				$this->hexa				= $obj->field;
+				$this->hexafiltervalue	= $obj->filter;
 
 				return 1;
 			}
@@ -706,7 +714,7 @@ class Export
 
 		$this->db->begin();
 
-		dol_syslog(get_class($this)."::delete sql=".$sql);
+		dol_syslog(get_class($this)."::delete", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if (! $resql) { $error++; $this->errors[]="Error ".$this->db->lasterror(); }
 
@@ -801,4 +809,3 @@ class Export
 
 }
 
-?>

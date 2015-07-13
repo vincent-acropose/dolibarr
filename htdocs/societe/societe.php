@@ -3,7 +3,7 @@
  * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2012      Marcos García        <marcosgdf@gmail.com>
- * Copyright (C) 2013      Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
+ * Copyright (C) 2013-2015 Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -153,7 +153,7 @@ llxHeader('',$langs->trans("ThirdParty"),$help_url);
 
 
 // Do we click on purge search criteria ?
-if (GETPOST("button_removefilter_x"))
+if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both test are required to be compatible with all browsers
 {
     $search_categ='';
     $search_sale='';
@@ -187,7 +187,7 @@ if ($socname)
  */
 $title=$langs->trans("ListOfThirdParties");
 
-$sql = "SELECT s.rowid, s.nom as name, s.barcode, s.town, s.datec, s.datea, s.code_client, s.code_fournisseur, ";
+$sql = "SELECT s.rowid, s.nom as name, s.barcode, s.town, s.datec, s.code_client, s.code_fournisseur, ";
 $sql.= " st.libelle as stcomm, s.prefix_comm, s.client, s.fournisseur, s.canvas, s.status as status,";
 $sql.= " s.siren as idprof1, s.siret as idprof2, ape as idprof3, idprof4 as idprof4";
 // We'll need these fields in order to filter by sale (including the case where the user can only see his prospects)
@@ -210,12 +210,12 @@ if (! $user->rights->fournisseur->lire) $sql.=" AND (s.fournisseur <> 1 OR s.cli
 // Insert sale filter
 if ($search_sale)
 {
-    $sql .= " AND sc.fk_user = ".$search_sale;
+    $sql .= " AND sc.fk_user = ".$db->escape($search_sale);
 }
 // Insert categ filter
 if ($search_categ)
 {
-    $sql .= " AND cs.fk_categorie = ".$search_categ;
+    $sql .= " AND cs.fk_categorie = ".$db->escape($search_categ);
 }
 if ($search_nom_only)
 {
@@ -272,19 +272,19 @@ if ($resql)
 	$num = $db->num_rows($resql);
 	$i = 0;
 
-	$params = "&amp;socname=".$socname."&amp;search_nom=".$search_nom."&amp;search_town=".$search_town;
-	$params.= ($sbarcode?"&amp;sbarcode=".$sbarcode:"");
-	$params.= '&amp;search_idprof1='.$search_idprof1;
-	$params.= '&amp;search_idprof2='.$search_idprof2;
-	$params.= '&amp;search_idprof3='.$search_idprof3;
-	$params.= '&amp;search_idprof4='.$search_idprof4;
+	$params = "&amp;socname=".htmlspecialchars($socname)."&amp;search_nom=".htmlspecialchars($search_nom)."&amp;search_town=".htmlspecialchars($search_town);
+	$params.= ($sbarcode?"&amp;sbarcode=".htmlspecialchars($sbarcode):"");
+	$params.= '&amp;search_idprof1='.htmlspecialchars($search_idprof1);
+	$params.= '&amp;search_idprof2='.htmlspecialchars($search_idprof2);
+	$params.= '&amp;search_idprof3='.htmlspecialchars($search_idprof3);
+	$params.= '&amp;search_idprof4='.htmlspecialchars($search_idprof4);
 
 	print_barre_liste($title, $page, $_SERVER["PHP_SELF"],$params,$sortfield,$sortorder,'',$num,$nbtotalofrecords);
 
     // Show delete result message
     if (GETPOST('delsoc'))
     {
-        dol_htmloutput_mesg($langs->trans("CompanyDeleted",GETPOST('delsoc')),'','ok');
+	    setEventMessage($langs->trans("CompanyDeleted",GETPOST('delsoc')));
     }
 
 	$langs->load("other");
@@ -348,34 +348,34 @@ if ($resql)
 	print '<input type="hidden" name="sortfield" value="'.$sortfield.'">';
 	print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
 	if (! empty($search_nom_only) && empty($search_nom)) $search_nom=$search_nom_only;
-	print '<input class="flat" type="text" name="search_nom" value="'.$search_nom.'">';
+	print '<input class="flat" type="text" name="search_nom" value="'.htmlspecialchars($search_nom).'">';
 	print '</td>';
 	// Barcode
 	if (! empty($conf->barcode->enabled))
 	{
-    	print '<td class="liste_titre">';
-    	print '<input class="flat" type="text" name="sbarcode" size="6" value="'.$sbarcode.'">';
-    	print '</td>';
+		print '<td class="liste_titre">';
+		print '<input class="flat" type="text" name="sbarcode" size="6" value="'.htmlspecialchars($sbarcode).'">';
+		print '</td>';
     }
 	// Town
 	print '<td class="liste_titre">';
-	print '<input class="flat" size="10" type="text" name="search_town" value="'.$search_town.'">';
+	print '<input class="flat" size="10" type="text" name="search_town" value="'.htmlspecialchars($search_town).'">';
 	print '</td>';
 	// IdProf1
 	print '<td class="liste_titre">';
-	print '<input class="flat" size="4" type="text" name="search_idprof1" value="'.$search_idprof1.'">';
+	print '<input class="flat" size="4" type="text" name="search_idprof1" value="'.htmlspecialchars($search_idprof1).'">';
 	print '</td>';
 	// IdProf2
 	print '<td class="liste_titre">';
-	print '<input class="flat" size="4" type="text" name="search_idprof2" value="'.$search_idprof2.'">';
+	print '<input class="flat" size="4" type="text" name="search_idprof2" value="'.htmlspecialchars($search_idprof2).'">';
 	print '</td>';
 	// IdProf3
 	print '<td class="liste_titre">';
-	print '<input class="flat" size="4" type="text" name="search_idprof3" value="'.$search_idprof3.'">';
+	print '<input class="flat" size="4" type="text" name="search_idprof3" value="'.htmlspecialchars($search_idprof3).'">';
 	print '</td>';
 	// IdProf4
 	print '<td class="liste_titre">';
-	print '<input class="flat" size="4" type="text" name="search_idprof4" value="'.$search_idprof4.'">';
+	print '<input class="flat" size="4" type="text" name="search_idprof4" value="'.htmlspecialchars($search_idprof4).'">';
 	print '</td>';
 	// Type (customer/prospect/supplier)
 	print '<td class="liste_titre" align="middle">';
@@ -466,4 +466,3 @@ llxFooter();
 
 $db->close();
 
-?>

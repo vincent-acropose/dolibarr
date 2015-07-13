@@ -38,7 +38,7 @@ $action=GETPOST('action','alpha');
 $update=GETPOST('update','alpha');
 $delete=GETPOST('delete');	// Do not use alpha here
 $debug=GETPOST('debug','int');
-$consts=GETPOST('const');
+$consts=GETPOST('const','array');
 $constname=GETPOST('constname','alpha');
 $constvalue=GETPOST('constvalue');
 $constnote=GETPOST('constnote','alpha');
@@ -229,11 +229,11 @@ $sql.= ", note";
 $sql.= ", entity";
 $sql.= " FROM ".MAIN_DB_PREFIX."const";
 $sql.= " WHERE entity IN (".$user->entity.",".$conf->entity.")";
-if (empty($user->entity) && $debug) {} // to force for superadmin
-elseif ($user->entity || empty($conf->multicompany->enabled)) $sql.= " AND visible = 1";
+if ((empty($user->entity) || $user->admin) && $debug) {} // to force for superadmin
+else $sql.= " AND visible = 1";			// We must always have this. Otherwise, array is too large and submitting data fails due to apache POST or GET limits
 $sql.= " ORDER BY entity, name ASC";
 
-dol_syslog("Const::listConstant sql=".$sql);
+dol_syslog("Const::listConstant", LOG_DEBUG);
 $result = $db->query($sql);
 if ($result)
 {
@@ -260,7 +260,7 @@ if ($result)
 
 		// Note
 		print '<td>';
-		print '<input type="text" id="note_'.$i.'"class="flat inputforupdate" size="40" name="const['.$i.'][note]" value="'.htmlspecialchars($obj->note,1).'">';
+		print '<input type="text" id="note_'.$i.'" class="flat inputforupdate" size="40" name="const['.$i.'][note]" value="'.htmlspecialchars($obj->note,1).'">';
 		print '</td>';
 
 		// Entity limit to superadmin
@@ -280,7 +280,6 @@ if ($result)
 		if ($conf->use_javascript_ajax)
 		{
 			print '<input type="checkbox" class="flat checkboxfordelete" id="check_'.$i.'" name="const['.$i.'][check]" value="1">';
-			print ' &nbsp; ';
 		}
 		else
 		{
@@ -313,4 +312,3 @@ print "</form>\n";
 llxFooter();
 
 $db->close();
-?>
