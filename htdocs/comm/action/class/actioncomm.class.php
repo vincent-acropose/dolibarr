@@ -1028,9 +1028,10 @@ class ActionComm extends CommonObject
 		$this->fetch($this->id);
 		
 		if(!empty($this->type_id)) {
-			$c_action = new CActionComm($db);
-			$c_action->fetch($this->type_id);
+			//$c_action = new CActionComm($db);
+			//$c_action->fetch($this->type_id);
 			$note_to_add.= 'Type : '.$langs->trans('Action'.$c_action->code);
+			//$note_to_add.= 'Type : '.$this->type;
 		}
 		
 		if($this->socid > 0) {
