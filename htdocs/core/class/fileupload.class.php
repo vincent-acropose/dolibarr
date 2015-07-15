@@ -101,6 +101,10 @@ class FileUpload
 		elseif ($element == 'chargesociales') {
 			$pathname = 'compta/sociales'; $filename='chargesociales';
 			$dir_output=$conf->tax->dir_output;
+		}
+		elseif ($element == 'deplacement') {
+			$pathname = 'compta/deplacement'; $filename='deplacement';
+			$dir_output=$conf->deplacement->multidir_output[$conf->entity];
 		} else {
 			$dir_output=$conf->$element->dir_output;
 		}
