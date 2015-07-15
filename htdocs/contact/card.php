@@ -200,8 +200,12 @@ if (empty($reshook))
 
         // Fill array 'array_options' with data from add form
 		$ret = $extrafields->setOptionalsFromPost($extralabels,$object);
-		if ($ret < 0) $error++;
-
+		if ($ret < 0) 
+		{
+			$error++;
+			$action = 'create';
+		}
+		
         if (! GETPOST("lastname"))
         {
             $error++; $errors[]=$langs->trans("ErrorFieldRequired",$langs->transnoentities("Lastname").' / '.$langs->transnoentities("Label"));
@@ -765,7 +769,7 @@ else
             print '</tr>';
 
             // Jabberid
-            print '<tr><td><label for="jabberid">'.$langs->trans("Jabberid").'</label></td>';
+            print '<tr><td><label for="jabberid">'.$langs->trans("IM").'</label></td>';
 	        print '<td><input name="jabberid" id="jabberid" type="text" size="40" maxlength="80" value="'.(isset($_POST["jabberid"])?$_POST["jabberid"]:$object->jabberid).'"></td>';
             if (! empty($conf->mailing->enabled))
             {
