@@ -84,7 +84,7 @@ llxHeader('',$langs->trans("ListOfSubscriptions"),'EN:Module_Foundations|FR:Modu
 
 
 // List of subscriptions
-$sql = "SELECT d.rowid, d.login, d.firstname, d.lastname, d.societe,";
+$sql = "SELECT d.rowid, d.login, d.firstname, d.lastname, d.societe as company,";
 $sql.= " c.rowid as crowid, c.cotisation,";
 $sql.= " c.dateadh,";
 $sql.= " c.datef,";
@@ -231,6 +231,9 @@ if ($result)
         $adherent->id=$objp->rowid;
         $adherent->login=$objp->login;
 
+		$adherent->societe = $adherent->company = $objp->company;
+		$companyname = $objp->company;
+
         $var=!$var;
 
         print "<tr ".$bc[$var].">";
@@ -239,7 +242,11 @@ if ($result)
         print '<td>'.$cotisation->getNomUrl(1).'</td>';
 
         // Lastname
-        print '<td>'.$adherent->getNomUrl(1).'</td>';
+		print '<td><a href="'.dol_buildpath('/adherents/fiche.php?rowid='.$adherent->id, 2).'">'.img_object($langs->trans("ShowMember"),'user');
+		print ((! empty($adherent->lastname) || ! empty($adherent->firstname)) ? dol_trunc($adherent->ref) : '');
+		print (((! empty($adherent->lastname) || ! empty($adherent->firstname)) && ! empty($adherent->company)) ? ' / ' : '');
+		print (! empty($adherent->company) ? dol_trunc($adherent->company, 32) : '');
+		print "</a></td>";
 
         // Login
         print '<td>'.$adherent->login.'</td>';
