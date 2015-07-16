@@ -1,0 +1,25 @@
+# Dolibarr language file - en_US - Importateur
+CHARSET=UTF-8
+ImportTool=Import tool
+ImportCreate=only Create
+ImportMaj=only Update
+ImportDel=Delete
+ImportFirstLine=Do not treat first line
+ImportVerif=Verify file
+ImportFile=Treat file
+ImportFileName=File to process
+NonTraite= Line not processed 
+SocImportErr=Error creating thirdParty 
+ProdExist= Product already exists 
+SocExist= Thirdparty allready exists
+NomSocOblig=Thirdparty name is required
+FourNotFound= Supplier not found
+ImportThirtdparty=Import Thirdparties
+ImportContact=Import Contacts
+ImportProduct=Import Products
+ImportStock=Import Stocks
+Importtarif=Import Supplier prices.
+ImportActions=Import Actions 
+ImportPrix=Import Prices
+CatExist=Category exists
+ImportCategorie=Import Categories

@@ -1,0 +1,48 @@
+# <one line to give the program's name and a brief idea of what it does.>
+# Copyright (C) <year>  <name of author>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#
+# Generic
+#
+
+# Module label 'ModuleXXXName'
+# (where XXX is value of numeric property 'numero' of module)
+Module103987Name = Express Delivery
+# Module description 'ModuleXXXDesc'
+# (where XXX is value of numeric property 'numero' of module)
+Module103987Desc = Allow express Delivery process on order card and rapid search on SH and BL
+
+#
+# Admin page
+#
+ExpressDeliverySetup = Setup
+Settings = Settings
+ExpressDeliverySetupPage = Setup
+ExpressDeliveryNothingToSetup=No Specific setup
+
+#
+# About page
+#
+About = About
+ExpressDeliveryAbout = About
+ExpressDeliveryAboutPage = Express delivery pages
+
+#
+# Module
+#
+ExpressDeliveryBtn=Express BL
+ExpressDelivery=Express BL
+ExpressDeliveryNoStock=Some product are not in stock do you confirm BL creation ?

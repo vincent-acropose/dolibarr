@@ -1,0 +1,104 @@
+# Dolibarr language file - it_IT - ultimatepdf
+CHARSET=UTF-8
+Module300100Name=Ultimatepdf
+Module300100Desc=Gestione dei modelli Pdf
+
+##### Moduli #####
+PdfDesignsManagement=Gestione dei modelli Pdf
+PDFUltimate_propal1Description=Modello di proposta commerciale completo (logo...)
+PDFUltimate_propal2Description=Modello di proposta commerciale completo (columns: Discount, UP with discount...)
+PDFUltimate_order1Description=Modello ordine completo (logo...)
+PDFUltimate_order2Description=Modello ordine completo (colonnes: Remise, Prix unitaire remisé...)
+PDFUltimate_invoice1Description=Modello fattura PDF completa (modello con LCR)
+PDFUltimate_invoice2Description=Modello fattura PDF completa (columns: Discount, UP with discount...)
+DocumentDesignUltimate_shipment=Bolla di spedizione completa
+DocumentDesignUltimate_receipt=Modello di bollettino di ricezione/spedizione completo (logo...)
+UltimatepdfSetup=Ultimatepdf configurazione del modulo
+BackgroundColorByDefault=Couleur de fond des blocs 
+BorderColorByDefault=Colore del bordo
+TextcolorByDefault=Colore del testo
+SetBorderToDashDotted=Impostazione linea di contorno
+ContinuousLine=Linea continua
+DottedLine=Linea tratteggiata
+DoNotRepeatHeadInsideUltimatepdf=Ne pas répéter l'entête s'il y a plusieurs pages
+SetFontToWhatYouWant=Choisissez la font de votre choix
+SetFontToWhatYouWantDescription=Utilisez par exemple la font DejaVuSans pour une langue nécessitant de l'UTF8 (ex:Le cyrillique).<br>N'oubliez pas de ré-enregistrer votre modèle (Clic sur l'icône en haut à droite, retrouvez votre modèle dans la boîte de dialogue, puis OK) sinon le changement ne serait pas pris en compte.<br><img src="../img/demo4.png">
+SelectWithRef=Display the reference column
+SelectWithRefDescription=N'oubliez pas de ré-enregistrer votre modèle (Clic sur l'icône en haut à droite, retrouvez votre modèle dans la boîte de dialogue, puis OK) sinon le changement ne serait pas pris en compte.
+SelectWithoutVatDescription=N'oubliez pas de ré-enregistrer votre modèle (Clic sur l'icône en haut à droite, retrouvez votre modèle dans la boîte de dialogue, puis OK) sinon le changement ne serait pas pris en compte.
+DesignsManagement=Gestione dei modelli
+UltimatepdfDesigns=Modelli
+UltimatepdfMiscellaneous=Réglages divers
+UltimatepdfSpecificInvoices=Réglages spécifiques aux factures
+UltimatepdfSpecificOrders=Réglages spécifiques aux commandes
+UltimatepdfSpecificProposals=Réglages spécifiques aux Propales
+UseBackGround=Afficher une image de fond sur vos documents
+UseBackGroundDescription=Renseignez ce champ avec le nom court d'une image (exemple :"myimage.jpg) qui aura préalablement été placée dans le dossier "documents/mycompany/logos". Cela ajoutera cette image de fond dans vos PDF.
+MasterDesign=modello principale
+MasterDesignDesc=Modello predefinito
+HideBydefaultProductDetailsInsideUltimatepdf=Nasconde i dati delle seguenti colonne ( TotIVA, Prezzo, Qt, Sconto, Totale).
+HideByDefaultProductDescInsideUltimatepdf=Nasconde il contenuto della colonna descrizione
+HideByDefaultProductRefInsideUltimatepdf=Nasconde i codice prodotto nella colonna descrizione.
+HideByDefaultProductTvaInsideUltimatepdf=Nasconde il valore e la colonna IVA.
+HideBydefaultProductPUHTInsideUltimatepdf=Nasconde il campo costo unitario.
+HideBydefaultProductQtyInsideUltimatepdf=Nasconde il campo Quantità.
+HideBydefaultProductTHTInsideUltimatepdf=Nasconde il campo costo totale.
+HideByDefaultBankDetailsInsidePropalUltimatepdf=Masquer la partie RIB du compte bancaire dans les propales
+HideByDefaultBankDetailsInsideOrderUltimatepdf=Masquer la partie RIB du compte bancaire dans les commandes.
+HideByDefaultBankDetailsInsideInvoiceUltimatepdf=Masquer la partie RIB du compte bancaire dans les factures.
+ShowByDefaultDashBetweenLinesInsideUltimatepdf=Aggiunge una linea tratteggiata tra le righe prodotti/servizi.
+ShowByDefaultPhotosInsidePropalUltimatepdf=Mostra una diapositiva del prodotto nel modulo proposta commerciale
+ShowByDefaultPhotosInsideOrderUltimatepdf=Afficher les vignettes photos des produits dans vos Commandes
+ShowByDefaultPhotosInsideInvoiceUltimatepdf=View thumbnail images of your products within your Invoices
+ShowByDefaultFoldMarkInsideUltimatepdf=Afficher une marque de pliage au tiers de la page pour faciliter l'envoi sous pli.
+ShowByDefaultSaleRepSignatureInsideUltimatepdf=Afficher la signature du représentant en charge dans le bloc note publique.
+ShowByDefaultAgreementBlockInsideUltimatepdf=Afficher le bloc : " Bon pour accord "
+ShowByDefaultBarcodeAtTopInsideOrdersUltimatepdf=Afficher le code-barres du tiers en haut de vos commandes.
+ShowByDefaultBarcodeAtBottomInsideOrdersUltimatepdf=Afficher le code-barres du tiers en bas de vos commandes.
+ShowByDefaultBarcodeAtTopInsideInvoicesUltimatepdf=Afficher le code-barres du tiers en haut de vos factures.
+ShowByDefaultBarcodeAtBottomInsideInvoicesUltimatepdf=Afficher le code-barres du tiers en bas de vos factures.
+ShowByDefaultBarcodeAtTopInsidePropalUltimatepdf=Afficher le code-barres du tiers en haut de vos propositions commerciales.
+ShowByDefaultBarcodeAtBottomInsidePropalUltimatepdf=Afficher le code-barres du tiers en bas de vos propositions commerciales.
+HideTvaIntraWithinAddress=Masquer le numéro de TVA dans les blocs d'adresse
+ShowAlsoTargetDetails=Afficher les coordonnées téléphonique, fax et email si adresse d'un contact utilisée
+SetHeightForFreeText=Changez la hauteur de l'espace réservé au bloc de texte libre
+AddDesign=Aggiungere un modello
+EditDesign=Editer un modèle
+DesignInfo=Parameters
+PuAfter=UP with discount
+PDFColumnForging=Règle de fabrication des colonnes
+SwitchToAnotherDesign=Selezionare un'altro modello
+SelectADesign=Seleziona un modello
+SelectAnOtherlogo=Scegli un nuovo logo
+OtherlogoDescription=Assegna un URL valido, esempio : http://www.dolibarr.fr/templates/dolibarr/images/bg2.png . N'oubliez pas de ré-enregistrer votre modèle (Clic sur l'icône en haut à droite, retrouvez votre modèle dans la boîte de dialogue, puis OK) sinon le changement ne serait pas pris en compte.
+MoreModules=D'autres modules du même auteur sont disponibles sur la place de marché officielle DoliStore...
+MoreModulesLink=<a target="_blank" href="http://www.dolistore.com/search.php?search_query=atoo.net">Cliquez ici pour en voir la liste</a>
+
+##### Elenco #####
+DocLCR1=Contro fattura
+DocLCR2=Convenuto gratis
+DocLCR3=Siete pregati di pagare per la somma indicata
+DocLCR4=arrotondamento :
+DocLCR5=Valuta
+DocLCR6=Controllo quantità
+DocLCR7=Data di creazione
+DocLCR8=Scadenza
+DocLCR9=solo LCR
+DocLCR10=Importo
+DocLCR11=Codice Azienda
+DocLCR12=Codice Filiale
+DocLCR13=N° del conto
+DocLCR14=Chiave RIB
+DocLCR15=Domiciliazione bancaria
+DocLCR16=Accettazione o approvazione
+DocLCR17=trattario
+DocLCR18=N° SIREN del trattario
+DocLCR19=Firma del trattario
+DocLCR20=non scrivere al disotto di questa linea
+
+##### Ordine #####
+DocORDER1=Come convenuto :
+DocORDER2=La firma del cliente sull'offerta avrà valore di accettazione.
+DocORDER3=Li ___ / ___ / ______ in ________________
+DocORDER4=Timbro e firma del cliente
+DocORDER5=timbro e firma del venditore

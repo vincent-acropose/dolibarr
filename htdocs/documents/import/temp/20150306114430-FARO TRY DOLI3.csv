@@ -1,0 +1,2 @@
+Id* (pr.fk_product);Base du prix (pr.price_base_type);Niveau de prix (pr.price_level);HT (pr.price);TTC (pr.price_ttc);Prix de vente min. (HT) (pr.price_min);Prix de vente min. (TTC) (pr.price_min_ttc);Taux TVA (pr.tva_tx);Date création* (pr.date_price)
+1640;HT;1;97,3;116,76;;;20;2015-02-01

@@ -1,0 +1,14 @@
+{
+    "name": "rdoursenaud/mymodule",
+    "type": "project",
+    "description": "A Dolibarr module template",
+    "keywords": ["dolibarr","template"],
+    "homepage": "https://github.com/rdoursenaud/dolibarr-module-template",
+    "license": "GPL-3.0+",
+    "support": {
+        "issues": "https://github.com/rdoursenaud/dolibarr-module-template/issues"
+    },
+    "require": {
+        "php": ">=5.3.0"
+    }
+}

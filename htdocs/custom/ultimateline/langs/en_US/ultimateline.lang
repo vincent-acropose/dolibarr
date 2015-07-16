@@ -1,0 +1,32 @@
+# Dolibarr language file - en_US - UltimateLine
+CHARSET=UTF-8
+Module300000Name=UltimateLine
+Module300000Desc=Calculation and automatic addition of terminal lines to invoices based on services defined for the associated products (carbon tax, reduction ...)
+
+UltimatelineSetup=UltimateLine module Setup 
+UltimateLineSettingsDescription=Final line services setup
+SetNewServiceData=Define a service as a final line
+ChooseAService=Select a service to use as a final line service
+ChooseType=Associated with products/services as
+DefineValue=Value to apply
+Affect=Assign
+RateOnPrice=Rate on the price (in percentage)
+ValueOnPrice=Fixed amount added to the price
+SelectAUltimateService=Select a final line service
+UltimatelineServiceInfo=Firstly create one or more services in the module Products/Services
+ServiceDataDetails=Details and setting of a final line service
+NoServiceAvailable=No corresponding service
+NoProductAvailable=No corresponding product
+UltimateLineSettingsDetails=Details of a final line service
+SeeDetails=Display
+UltimateDetails=Details of the final line service
+ServiceRef=Reference of the Service
+ServiceLabel=Wording of the Service
+ServiceType=Type of the Service
+ServiceValue=Value of the Service
+LinkedServices=Related product
+TargetServices=Combinable products
+Apply=Apply
+MoreModules=Other modules of same author are available on the official DoliStore market place...
+MoreModulesLink=<a target="_blank" href="http://www.dolistore.com/search.php?search_query=atoo.net">Click here to see full list</a>  
+AddAllProduct=Add all products

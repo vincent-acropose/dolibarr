@@ -1,0 +1,22 @@
+# Dolibarr language file - fr_FR - Importateur
+CHARSET=UTF-8
+ImportTool=Importateur
+ImportCreate=Création seulement
+ImportMaj=Mise à jour seulement
+ImportDel=Suppression
+ImportFirstLine=Ne pas traiter le première ligne
+ImportVerif=Vérifier le fichier
+ImportFile=Traiter le fichier
+ImportFileName=Nom du fichier à traiter
+NonTraite= Ligne non traitée 
+SocImportErr=Erreur création Société 
+ProdExist= Produit existe déjà 
+SocExist= Société existe déjà
+NomSocOblig=Nom société est obligatoire
+FourNotFound= Fournisseur non trouvé
+ImportThirtdparty=Import des Tiers
+ImportContact=Import des Contacts
+ImportProduct=Import des Produits
+ImportStock=Import des Stocks
+Importtarif=Import Prix Fourn.
+ImportActions=Import Actions 

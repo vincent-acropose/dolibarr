@@ -1,0 +1,2 @@
+Produit* (sp.fk_product);Fournisseur* (sp.fk_soc);RÃ©f. produit fournisseur (sp.ref_fourn);QuantitÃ© minimum* (sp.quantity);Taux TVA (sp.tva_tx);Prix quantitÃ© min. HT* (sp.price);Prix unitaire HT* (sp.unitprice);Remise par dÃ©faut quantitÃ© min. (sp.remise_percent)
+EN-GU10-5W-BN;ENEORA SUPPLY;FR-14/00010;1;20;5;5;0

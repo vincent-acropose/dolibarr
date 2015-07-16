@@ -1,0 +1,27 @@
+--------------------------------------------------------------
+English 2Masorders ChangeLog
+--------------------------------------------------------------
+***** ChangeLog for 3.5.4 compared to 3.5.3 *****
+New: Compatibility with multicompany
+
+***** ChangeLog for 3.5.3 compared to 3.5.2 *****
+Fix: Bug with some invoices numeration
+
+***** ChangeLog for 3.5.2 compared to 3.5.1 *****
+Fix: Bug in supplier orders facturation
+
+***** ChangeLog for 3.5.1 compared to 3.5 *****
+Fix: Bug when haundred of orders
+
+***** ChangeLog for 3.5 compared to 3.4 *****
+New: Send invoices by mail automatically
+New: Generate pdf automatically
+New: Massive facturation of supplier orders and proposals
+New: No compatibility with multicompany
+
+***** ChangeLog for 3.4 compared to 3.3 *****
+New: Delivery date filter
+New: Compatibility with Dolibarr 3.4
+
+***** ChangeLog for 3.3 *****
+New: Module develop 

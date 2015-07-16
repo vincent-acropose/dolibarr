@@ -1,0 +1,15 @@
+Module104777Name = Sous-Total
+Module104777Desc = Permet l'ajout de titre et de sous-totaux sur les propositions commerciales, commandes et factures
+title=Titre du groupement
+subtitle=Titre du sous-groupement
+AddTitle = Ajouter un titre
+SubSubTotal = Sous-sous-total
+AddSubTotal = Ajouter un sous-total
+AddSubTitle = Ajouter un sous-titre
+AddSubSubTotal = Ajouter un sous-sous-total
+HideInnerLines = Cacher le détail des ensembles
+SubTotalhidedetails = Cacher le prix des lignes des ensembles
+YourTitleLabel=Saisissez votre titre
+deleteWithAllLines=Supprimer avec toutes les lignes contenues
+ConfirmDeleteAllThisLines=Confirmez-vous la suppression de %s lignes ?
+AddBreakPageBefore=Ajouter un saut de page avant.

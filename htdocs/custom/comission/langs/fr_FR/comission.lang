@@ -1,0 +1,51 @@
+# Simple comission module
+# Copyright (C) 2013  Florian Henry   <florian.henry@open-concept.pro>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#
+# Générique
+#
+
+# Module label 'ModuleXXXName'
+# (where XXX is value of numeric property 'numero' of module)
+Module103045Name = Comission
+# Module description 'ModuleXXXDesc'
+# (where XXX is value of numeric property 'numero' of module)
+Module103045Desc = Gestion simple d'apporteur d'affaire
+
+#
+# Page d'administration
+#
+ComissionSetup = Configuration du module mon module
+Settings = Réglages
+ComissionSetupPage = Les apporteur d'affaire s'ajoute dans le dictionnaire Comission - Apporteur d'affaire<BR>L'export par apporteurs est disponible dans Export
+
+#
+# Page À propos
+#
+About = À propos
+ComissionAbout = À propos de mon module
+ComissionAboutPage = Page à propos de mon module
+
+#
+# Dict
+#
+ComSalesman=Comission - Apporteur d'affaire
+
+#
+# Export
+#
+ExportComission = Facture client par apporteur d'affaire
+ComSalesManName=Apporteur d'affaire

@@ -1,0 +1,2 @@
+Product* (ps.fk_product),Entrepôt* (ps.fk_entrepot),Stock* (ps.reel),PMP (ps.pmp)
+46,1,210,0

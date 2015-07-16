@@ -1,0 +1,2 @@
+﻿Produit* (sp.fk_product);Fournisseur* (sp.fk_soc);Réf. produit fournisseur (sp.ref_fourn);Quantité minimum* (sp.quantity);Taux TVA (sp.tva_tx);Prix quantité min. HT* (sp.price);Prix unitaire HT* (sp.unitprice);Remise par défaut quantité min. (sp.remise_percent)
+ZC228_REFLEKTOR;ELKOVO ;ZC228_REFLEKTOR;1;20; 57.60 ; 57.60 ;0

@@ -1,0 +1,32 @@
+# Dolibarr language file - es_ES - UltimateLine
+CHARSET=UTF-8
+Module300000Name=UltimateLine
+Module300000Desc=Cálculo y adición automática de líneas a las facturas de servicios definidos para los productos asociados (impuesto sobre el carbono, descuentos, etc)
+
+UltimatelineSetup=Configuración del módulo UltimateLine
+UltimateLineSettingsDescription=Configuración de servicios
+SetNewServiceData=Definir un servicio como de línea final
+ChooseAService=Seleccione un servicio a usar como servicio de línea final
+ChooseType=Asociado a productos/servicios como
+DefineValue=Valor a aplicar
+Affect=Afecta
+RateOnPrice=Tasa sobre el precio (en porcentaje)
+ValueOnPrice=Importe fijo añadido al precio
+SelectAUltimateService=Seleccione un servicio de línea final
+UltimatelineServiceInfo=En primer lugar cree un servicio o servicios en el módulo de Productos/Servicios
+ServiceDataDetails=Detalles y configuración de un servicio de línea final
+NoServiceAvailable=Sin servicios disponibles
+NoProductAvailable=Sin servicios disponibles
+UltimateLineSettingsDetails=Detalles de un servicio de línea final
+SeeDetails=Mostrar
+UltimateDetails=Detalles de servicio de línea final
+ServiceRef=Referencia del servicio
+ServiceLabel=Etiqueta del servicio
+ServiceType=Tipo del servicio
+ServiceValue=Valor del servicio
+LinkedServices=Producto asociado
+TargetServices=Productos asociables
+Apply=Aplicar
+MoreModules=Otros módulos del mismo autor están disponibles en la tienda oficial DoliStore oficial...
+MoreModulesLink=<a target="_blank" href="http://www.dolistore.com/search.php?search_query=atoo.net">Haga clic aquí para verlos</a>
+AddAllProduct=Asociado todos los productos
