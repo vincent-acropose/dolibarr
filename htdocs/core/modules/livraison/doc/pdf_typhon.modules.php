@@ -631,6 +631,7 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 			$pdf->SetXY($this->posxcomm, $tab_top+1);
 			$pdf->MultiCell($this->posxqty - $this->posxcomm,2, $outputlangs->transnoentities("Comments"),'','L');
 		}
+		 $pdf->SetFont('','', $default_font_size - 3);
 
 		// Qty
 		$pdf->line($this->posxqty, $tab_top, $this->posxqty, $tab_top + $tab_height);
@@ -643,7 +644,7 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 		$pdf->line($this->posxremainingqty, $tab_top, $this->posxremainingqty, $tab_top + $tab_height);
 		if (empty($hidetop)) {
 			$pdf->SetXY($this->posxremainingqty, $tab_top+1);
-			$pdf->MultiCell($this->page_largeur-$this->marge_droite-$this->posxremainingqty, 2, $outputlangs->transnoentities("KeepToShip"),'','R');
+			$pdf->MultiCell($this->page_largeur-$this->marge_droite-$this->posxremainingqty, 2, $outputlangs->transnoentities("Reste"),'','R');
 		}
 	}
 
