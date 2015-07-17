@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2010 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  */
 
 /**
- *      \file       test/phpunit/ImportTest.php
+ *      \file       test/phpunit/SqlTest.php
  *		\ingroup    test
  *      \brief      PHPUnit test
  *		\remarks	To run this script as CLI:  phpunit filename.php
@@ -27,6 +27,8 @@ global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
 //require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
+require_once dirname(__FILE__).'/../../htdocs/core/lib/security.lib.php';
+require_once dirname(__FILE__).'/../../htdocs/core/lib/security2.lib.php';
 
 if (! defined('NOREQUIREUSER'))  define('NOREQUIREUSER','1');
 if (! defined('NOREQUIREDB'))    define('NOREQUIREDB','1');
@@ -39,6 +41,14 @@ if (! defined('NOREQUIREHTML'))  define('NOREQUIREHTML','1'); // If we don't nee
 if (! defined('NOREQUIREAJAX'))  define('NOREQUIREAJAX','1');
 if (! defined("NOLOGIN"))        define("NOLOGIN",'1');       // If this page is public (can be called outside logged session)
 
+if (empty($user->id))
+{
+    print "Load permissions for admin user nb 1\n";
+    $user->fetch(1);
+    $user->getrights();
+}
+$conf->global->MAIN_DISABLE_ALL_MAILS=1;
+
 
 /**
  * Class for PHPUnit tests
@@ -47,7 +57,7 @@ if (! defined("NOLOGIN"))        define("NOLOGIN",'1');       // If this page is
  * @backupStaticAttributes enabled
  * @remarks	backupGlobals must be disabled to have db,conf,user and lang not erased.
  */
-class ImportTest extends PHPUnit_Framework_TestCase
+class SqlTest extends PHPUnit_Framework_TestCase
 {
 	protected $savconf;
 	protected $savuser;
@@ -58,7 +68,7 @@ class ImportTest extends PHPUnit_Framework_TestCase
 	 * Constructor
 	 * We save global variables into local variables
 	 *
-	 * @return ImportTest
+	 * @return SecurityTest
 	 */
 	function __construct()
 	{
@@ -78,14 +88,14 @@ class ImportTest extends PHPUnit_Framework_TestCase
   	public static function setUpBeforeClass()
     {
     	global $conf,$user,$langs,$db;
-		//$db->begin();	// This is to have all actions inside a transaction even if test launched without suite.
+		$db->begin();	// This is to have all actions inside a transaction even if test launched without suite.
 
     	print __METHOD__."\n";
     }
     public static function tearDownAfterClass()
     {
     	global $conf,$user,$langs,$db;
-		//$db->rollback();
+		$db->rollback();
 
 		print __METHOD__."\n";
     }
@@ -105,6 +115,7 @@ class ImportTest extends PHPUnit_Framework_TestCase
 
 		print __METHOD__."\n";
     }
+
 	/**
 	 * End phpunit tests
 	 *
@@ -115,23 +126,74 @@ class ImportTest extends PHPUnit_Framework_TestCase
     	print __METHOD__."\n";
     }
 
+    /**
+     * testSql
+     *
+     * @return string
+     */
+    public function testSql()
+    {
+    	global $conf,$user,$langs,$db;
+		$conf=$this->savconf;
+		$user=$this->savuser;
+		$langs=$this->savlangs;
+		$db=$this->savdb;
+
+		$filesarray = scandir(DOL_DOCUMENT_ROOT.'/install/mysql/tables');
+		foreach($filesarray as $key => $file)
+		{
+			if (! preg_match('/\.sql$/',$file)) continue;
+
+			print 'Check sql file '.$file."\n";
+			$filecontent=file_get_contents(DOL_DOCUMENT_ROOT.'/install/mysql/tables/'.$file);
+
+			$result=strpos($filecontent,'`');
+			print __METHOD__." Result for checking we don't have back quote = ".$result."\n";
+			$this->assertTrue($result===false, 'Found ON back quote. Bad.');
+
+			$result=strpos($filecontent,'int(');
+			print __METHOD__." Result for checking we don't have 'int(' instead of 'integer' = ".$result."\n";
+			$this->assertTrue($result===false, 'Found int(x) instead of integer. Bad.');
+
+			$result=strpos($filecontent,'ON DELETE CASCADE');
+			print __METHOD__." Result for checking we don't have 'ON DELETE CASCADE' = ".$result."\n";
+			$this->assertTrue($result===false, 'Found ON DELETE CASCADE. Bad.');
+		}
+
+        return;
+    }
 
     /**
-     * testImportSample1
+     * testInitData
      *
-     * @return boolean
+     * @return string
      */
-    public function testImportSample1()
+    public function testInitData()
     {
-        $file=dirname(__FILE__).'/Example_import_company_1.csv';
+    	global $conf,$user,$langs,$db;
+		$conf=$this->savconf;
+		$user=$this->savuser;
+		$langs=$this->savlangs;
+		$db=$this->savdb;
 
-        // TODO
-        // Run import on file and check the record with field "auto" are filled
-        // according to option
+		$filesarray = scandir(DOL_DOCUMENT_ROOT.'/../dev/initdata');
+		foreach($filesarray as $key => $file)
+		{
+			if (! preg_match('/\.sql$/',$file)) continue;
 
+			print 'Check sql file '.$file."\n";
+			$filecontent=file_get_contents(DOL_DOCUMENT_ROOT.'/../dev/initdata/'.$file);
 
-		return true;
+			$result=strpos($filecontent,'@gmail.com');
+			print __METHOD__." Result for checking we don't have personal data = ".$result."\n";
+			$this->assertTrue($result===false, 'Found a bad key into file '.$file);
+
+			$result=strpos($filecontent,'eldy@');
+			print __METHOD__." Result for checking we don't have personal data = ".$result."\n";
+			$this->assertTrue($result===false, 'Found a bad key into file '.$file);
+		}
+
+        return;
     }
 
 }
-?>

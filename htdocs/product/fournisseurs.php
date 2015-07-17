@@ -60,6 +60,11 @@ $result=restrictedArea($user,'produit|service&fournisseur',$fieldvalue,'product&
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
 $hookmanager->initHooks(array('pricesuppliercard'));
+$product = new ProductFournisseur($db);
+$product->fetch($id);
+
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$product,$action);    // Note that $action and $object may have been modified by some hooks
+$error=$hookmanager->error; $errors=$hookmanager->errors;
 
 
 $sortfield = GETPOST("sortfield",'alpha');
@@ -411,6 +416,12 @@ if ($id || $ref)
 					print $langs->trans("AddSupplierPrice").'</a>';
 				}
 			}
+			
+			if (is_object($hookmanager))
+			{
+				$aparameters = array();
+        		$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$product,$action);
+			}
 
 			print "\n</div>\n";
 			print '<br>';
@@ -451,7 +462,7 @@ if ($id || $ref)
 					{
 						$var=!$var;
 
-						print "<tr ".$bc[$var].">";
+						print '<tr id="row-'.$productfourn->product_fourn_price_id.'" '.$bc[$var].">";
 
 						print '<td>'.$productfourn->getSocNomUrl(1,'supplier').'</td>';
 
@@ -517,6 +528,12 @@ if ($id || $ref)
 						}
 
 						print '</td>';
+						
+						if (is_object($hookmanager))
+						{
+							$aparameters = array();
+			        		$reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$productfourn,$action);
+						}
 
 						print '</tr>';
 					}

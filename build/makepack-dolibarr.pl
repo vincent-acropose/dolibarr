@@ -509,12 +509,13 @@ if ($nboftargetok) {
 			$ret=`rm -fr $BUILDROOT/$FILENAMETGZ/htdocs/includes/ckeditor/_source`;	# We can't remove it with exclude file, we need it for some tarball packages
 			
     		print "Compress $FILENAMETGZ into $FILENAMETGZ.tgz...\n";
-   		    $cmd="tar --exclude-vcs --exclude-from \"$BUILDROOT/$PROJECT/build/tgz/tar_exclude.txt\" --directory \"$BUILDROOT\" --mode=go-w --group=500 --owner=500 -czvf \"$FILENAMETGZ.tgz\" $FILENAMETGZ";
+   		    $cmd="tar --exclude-vcs --exclude-from \"$BUILDROOT/$PROJECT/build/tgz/tar_exclude.txt\" --directory \"$BUILDROOT\" --mode=go-w --group=500 --owner=500 -czvf \"$BUILDROOT/$FILENAMETGZ.tgz\" $FILENAMETGZ";
+   		    print "$cmd\n";
    		    $ret=`$cmd`;
 
     		# Move to final dir
-       		print "Move $FILENAMETGZ.tgz to $NEWDESTI/$FILENAMETGZ.tgz\n";
-       		$ret=`mv "$FILENAMETGZ.tgz" "$NEWDESTI/$FILENAMETGZ.tgz"`;
+       		print "Move $BUILDROOT/$FILENAMETGZ.tgz to $NEWDESTI/$FILENAMETGZ.tgz\n";
+       		$ret=`mv "$BUILDROOT/$FILENAMETGZ.tgz" "$NEWDESTI/$FILENAMETGZ.tgz"`;
     		next;
     	}
 
@@ -956,12 +957,15 @@ if ($nboftargetok) {
     		"$DESTI/standard/$FILENAMETGZ.tgz"=>'Dolibarr ERP-CRM',
     		"$DESTI/standard/$FILENAMETGZ.zip"=>'Dolibarr ERP-CRM'
     	);
+    	use POSIX qw/strftime/;
     	foreach my $file (sort keys %filestoscan)
     	{
     		$found=0;
     		my $filesize = -s $file;
+    		my $filedate = (stat $file)[9];
     		print $file." ".($filesize?"(found)":"(not found)");
     		print ($filesize?" - ".$filesize:"");
+    		print ($filedate?" - ".strftime("%Y-%m-%d %H:%M:%S",localtime($filedate)):"");
     		print "\n";
     	}
 
