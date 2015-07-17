@@ -2614,7 +2614,7 @@ class Form
             $autoOpen=true;
             $dialogconfirm='dialog-confirm';
             $button='';
-            if (! is_int($useajax))
+            if (! is_numeric($useajax))
             {
                 $button=$useajax;
                 $useajax=1;
@@ -2755,7 +2755,7 @@ class Form
      *    Show a form to select a project
      *
      *    @param	int		$page        Page
-     *    @param	int		$socid       Id third party
+     *    @param	int		$socid       Id third party (-1=all, 0=only projects not linked to a third party, id=projects not linked or linked to third party id)
      *    @param    int		$selected    Id pre-selected project
      *    @param    string	$htmlname    Name of select field
      *    @return	void
@@ -3469,7 +3469,7 @@ class Form
         if($m == '') $m=0;
         if($empty == '') $empty=0;
 
-        if ($set_time === '' && $empty == 0) 
+        if ($set_time === '' && $empty == 0)
         {
         	include_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
         	$set_time = dol_now('tzuser')-(getServerTimeZoneInt('now')*3600); // set_time must be relative to PHP server timezone
@@ -3713,7 +3713,7 @@ class Form
         }
         elseif ($typehour=='text')
         {
-        	print '<input type="text" size="3" name="'.$prefix.'hour" class="flat" value="'.((int) $hourSelected).'">';
+        	print '<input type="text" size="3" name="'.$prefix.'hour"'.($disabled?' disabled="disabled"':'').' class="flat" value="'.((int) $hourSelected).'">';
         }
         print $langs->trans('Hours'). "&nbsp;";
         print '<select class="flat" name="'.$prefix.'min"'.($disabled?' disabled="disabled"':'').'>';

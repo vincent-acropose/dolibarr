@@ -749,7 +749,7 @@ else
             $doleditor = new DolEditor('note_public', $object->note_public, '', 80, 'dolibarr_notes', 'In', 0, false, true, ROWS_3, 70);
             print $doleditor->Create(1);
             print '</td></tr>';
-           
+
             // Note Private
             print '<tr><td valign="top">'.$langs->trans("NotePrivate").'</td><td colspan="3">';
             $doleditor = new DolEditor('note_private', $object->note_private, '', 80, 'dolibarr_notes', 'In', 0, false, true, ROWS_3, 70);
@@ -969,12 +969,12 @@ else
 
         // Note Public
         print '<tr><td valign="top">'.$langs->trans("NotePublic").'</td><td colspan="3">';
-        print nl2br($object->note_public);
+        print $object->note_public;
         print '</td></tr>';
-        
+
         // Note Private
         print '<tr><td valign="top">'.$langs->trans("NotePrivate").'</td><td colspan="3">';
-        print nl2br($object->note_private);
+        print $object->note_private;
 
 	 	// Statut
 		print '<tr><td valign="top">'.$langs->trans("Status").'</td>';
@@ -1068,11 +1068,14 @@ else
             print "</div><br>";
         }
 
-        print load_fiche_titre($langs->trans("TasksHistoryForThisContact"),'','');
+		if (! empty($conf->agenda->enabled))
+		{
+        	print load_fiche_titre($langs->trans("TasksHistoryForThisContact"),'','');
 
-        print show_actions_todo($conf,$langs,$db,$objsoc,$object);
+        	print show_actions_todo($conf,$langs,$db,$objsoc,$object);
 
-        print show_actions_done($conf,$langs,$db,$objsoc,$object);
+        	print show_actions_done($conf,$langs,$db,$objsoc,$object);
+		}
     }
 }
 

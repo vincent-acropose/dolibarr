@@ -736,7 +736,7 @@ if ($action == 'send' && ! GETPOST('cancel','alpha') && (empty($conf->global->MA
 				$interface=new Interfaces($db);
 				$result=$interface->run_triggers('FICHINTER_SENTBYMAIL',$object,$user,$langs,$conf);
 				if ($result < 0) {
-					$error++; $this->errors=$interface->errors;
+					$error++; $object->errors=$interface->errors;
 				}
 				// Fin appel triggers
 
@@ -990,7 +990,7 @@ if ($action == 'create')
             $numprojet=$formproject->select_projects($soc->id,GETPOST('projectid','int'),'projectid');
             if ($numprojet==0)
             {
-                print ' &nbsp; <a href="'.DOL_DOCUMENT_ROOT.'/projet/fiche.php?socid='.$soc->id.'&action=create">'.$langs->trans("AddProject").'</a>';
+                print ' &nbsp; <a href="'.dol_buildpath('/projet/fiche.php',1).'?socid='.$soc->id.'&action=create">'.$langs->trans("AddProject").'</a>';
             }
             print '</td></tr>';
         }

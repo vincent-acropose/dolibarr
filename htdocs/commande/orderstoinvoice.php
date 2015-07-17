@@ -303,7 +303,7 @@ if (($action == 'create' || $action == 'add') && empty($mesgs))
 												'HT',
 												0,
 												$product_type,
-												$iterateur+1,
+												$ii,
 												$lines[$i]->special_code,
 												$object->origin,
 												$lines[$i]->rowid,
@@ -394,7 +394,7 @@ if ($action == 'create' && empty($mesgs))
 		$remise_percent 	= $soc->remise_percent;
 	}
 	$remise_absolue 	= 0;
-	$dateinvoice		= empty($conf->global->MAIN_AUTOFILL_DATE)?-1:0;
+	$dateinvoice		= empty($conf->global->MAIN_AUTOFILL_DATE)?-1:'';
 
 	$absolute_discount=$soc->getAvailableDiscounts();
 	print '<form name="add" action="'.$_SERVER["PHP_SELF"].'" method="POST">';
