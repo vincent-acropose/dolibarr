@@ -252,6 +252,7 @@ if (empty($reshook)) {
 		$lastname=$_POST["lastname"];
 		$firstname=$_POST["firstname"];
 		$morphy=$_POST["morphy"];
+		$societe = trim($_POST["societe"]);
 		if ($morphy != 'mor' && empty($lastname)) {
 			$error++;
 			$langs->load("errors");
@@ -263,8 +264,7 @@ if (empty($reshook)) {
 			$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentities("Firstname"))."<br>\n";
 		}
 		
-		$fk_soc = GETPOST('societe', 'int');
-		if ($morphy == 'mor' && (empty($fk_soc) || $fk_soc == -1))
+		if ($morphy == 'mor' && empty($societe))
 		{
 			$error++;
 			$langs->load("errors");
@@ -283,10 +283,8 @@ if (empty($reshook)) {
 			$object->login       = trim($_POST["login"]);
 			$object->pass        = trim($_POST["pass"]);
 
-			$soc = new Societe($db);
-			$soc->fetch($fk_soc);
-			$object->societe     = $soc->name;
-			$object->company     = trim($_POST["societe"]);
+			$object->societe     = $societe;
+			$object->company     = $societe;
 
 			$object->address     = trim($_POST["address"]);
 			$object->zip         = trim($_POST["zipcode"]);
@@ -434,10 +432,7 @@ if (empty($reshook)) {
 		$firstname=$_POST["firstname"];
 		
 		//$societe=$_POST["societe"];
-		$fk_soc = GETPOST('societe', 'int');
-		$soc = new Societe($db);
-		$soc->fetch($fk_soc);
-		$societe = $soc->name;
+		$societe = GETPOST('societe', 'alpha');
 		
 		$address=$_POST["address"];
 		$zip=$_POST["zipcode"];
@@ -815,11 +810,8 @@ else
 		print "</td>\n";
 
 		// Company
-		$soc = new Societe($db);
-		$soc->fetch(null, (GETPOST('societe','alpha')?GETPOST('societe','alpha'):$object->societe));
-		$select = $form->select_thirdparty_list($soc->id, 'societe', '', 1);
-		print '<tr><td id="tdcompany">'.$langs->trans("Company").'</td><td>'.$select.'</td></tr>';
-		
+		print '<tr><td id="tdcompany">'.$langs->trans("Company").'</td><td><input type="text" name="societe" size="40" value="'.(GETPOST('societe','alpha')?GETPOST('societe','alpha'):$object->societe).'"></td></tr>';
+
 		// Civility
 		print '<tr><td>'.$langs->trans("UserTitle").'</td><td>';
 		print $formcompany->select_civility(GETPOST('civility_id','int')?GETPOST('civility_id','int'):$object->civility_id,'civility_id').'</td>';
@@ -1070,10 +1062,7 @@ else
 		print "</td></tr>";
 		
 		// Company
-		$soc = new Societe($db);
-		$soc->fetch(null, (isset($_POST["societe"])?$_POST["societe"]:$object->societe));
-		$select = $form->select_thirdparty_list($soc->id, 'societe', '', 1);
-		print '<tr><td id="tdcompany">'.$langs->trans("Company").'</td><td>'.$select.'</td></tr>';
+		print '<tr><td id="tdcompany">'.$langs->trans("Company").'</td><td><input type="text" name="societe" size="40" value="'.(isset($_POST["societe"])?$_POST["societe"]:$object->societe).'"></td></tr>';
 
 		// Civility
 		print '<tr><td width="20%">'.$langs->trans("UserTitle").'</td><td width="35%">';
