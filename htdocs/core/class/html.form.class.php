@@ -1057,10 +1057,10 @@ class Form
                     {
                     	$label=$obj->name;
                     }
-
-					if(!empty($obj->name_alias)) {
-						$label.=' ('.$obj->name_alias.')';
-					}
+				if(!empty($obj->ref_ext)) $label .= ' - '.$obj->ref_ext;
+				if(!empty($obj->name_alias)) {
+					$label.=' ('.$obj->name_alias.')';
+				}
 
                     if ($showtype)
                     {
