@@ -1501,14 +1501,6 @@ function dol_check_secure_access_document($modulepart,$original_file,$entity,$fu
 			$accessallowed=1;
 		}
 		$original_file=$conf->societe->multidir_output[$entity].'/'.$original_file;
-		
-		if (!is_file($original_file)) {
-			foreach ($conf->societe->multidir_output as $fk_entity => $sdir) {
-				$original_file = $sdir.'/'.$original_file;
-				
-				if (is_file($original_file)) break;
-			}
-		}
 		$sqlprotectagainstexternals = "SELECT rowid as fk_soc FROM ".MAIN_DB_PREFIX."societe WHERE rowid='".$db->escape($refname)."' AND entity IN (".getEntity('societe', 1).")";
 	}
 
