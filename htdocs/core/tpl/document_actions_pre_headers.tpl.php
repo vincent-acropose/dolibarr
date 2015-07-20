@@ -50,7 +50,12 @@ if ($action == 'confirm_deletefile' && $confirm == 'yes')
 			$file = $upload_dir . "/" . $urlfile;
 		}
         $linkid = GETPOST('linkid', 'int');	// Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
-
+		
+		if (GETPOST('entity')) {
+			$upload_dir = $conf->societe->multidir_output[GETPOST('entity')];
+			$file = $upload_dir . '/' . $object->id . '/' . $urlfile;
+		}
+		
         if ($urlfile)
         {
             $ret = dol_delete_file($file, 0, 0, 0, $object);
