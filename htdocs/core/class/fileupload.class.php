@@ -140,10 +140,16 @@ class FileUpload
 		} else if ($element == 'project_task') {
 			$object_ref = $object->project->ref . '/' . $object_ref;
 		}
+		
+		$upload_dir = $dir_output . '/' . $object_ref . '/';
+
+		if (!empty(GETPOST('entity'))) {
+			$upload_dir = $conf->{$object->element}->multidir_output[GETPOST('entity')] . '/' . $object_ref . '/';	
+		}
 
 		$this->options = array(
 				'script_url' => $_SERVER['PHP_SELF'],
-				'upload_dir' => $dir_output . '/' . $object_ref . '/',
+				'upload_dir' => $upload_dir,
 				'upload_url' => DOL_URL_ROOT.'/document.php?modulepart='.$element.'&attachment=1&file=/'.$object_ref.'/',
 				'param_name' => 'files',
 				// Set the following option to 'POST', if your server does not support
