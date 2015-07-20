@@ -143,7 +143,9 @@ class FileUpload
 		
 		$upload_dir = $dir_output . '/' . $object_ref . '/';
 
-		if (!empty(GETPOST('entity'))) {
+		$entity = ($_REQUEST['entity'] ? $_REQUEST['entity'] : $conf->entity);
+		
+		if (empty($entity) !== false) {
 			$upload_dir = $conf->{$object->element}->multidir_output[GETPOST('entity')] . '/' . $object_ref . '/';	
 		}
 
