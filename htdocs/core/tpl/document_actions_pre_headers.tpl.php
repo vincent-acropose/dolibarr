@@ -53,7 +53,7 @@ if ($action == 'confirm_deletefile' && $confirm == 'yes')
 		
 		if (GETPOST('entity')) {
 			foreach ($conf->societe->multidir_output as $fk_entity => $sdir) {
-				$file = $sdir . '/' . $object->id . '/' . $urlfile;
+				$file = $sdir . '/' . $urlfile;
 			
 				if (is_file($file)) break;
 			}
