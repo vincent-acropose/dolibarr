@@ -99,7 +99,11 @@ if ($object->id)
 
 
 	// Construit liste des fichiers
-	$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+	$filearray = array();
+	foreach ($conf->societe->multidir_output as $fk_entity => $sdir) {
+		$filearray = array_merge($filearray, dol_dir_list($sdir . '/' . $object->id,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1));
+	}
+
 	$totalsize=0;
 	foreach($filearray as $key => $file)
 	{
