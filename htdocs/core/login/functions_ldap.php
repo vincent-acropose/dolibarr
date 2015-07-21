@@ -43,6 +43,32 @@ function check_user_password_ldap($usertotest,$passwordtotest,$entitytotest)
 	global $dolibarr_main_auth_ldap_filter;
 	global $dolibarr_main_auth_ldap_debug;
 
+	/*
+	 * Auth spec solystic 
+	 */
+
+	if(empty($passwordtotest)) return false;
+
+	$login = $usertotest;
+	
+	$user = new User($db);
+	$user->fetch('', $login);
+
+	$ldap_host = 'VDC01';
+    $ldap = ldap_connect($ldap_host);
+
+    ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION,3);
+    ldap_set_option($ldap, LDAP_OPT_REFERRALS,0);
+
+	if(empty($user->array_options['options_userdn'])) return false;
+
+    if(ldap_bind($ldap, $user->array_options['options_userdn'], $passwordtotest)) {
+    	return true;
+    }
+
+	return false;
+
+
 	// Force master entity in transversal mode
 	$entity=$entitytotest;
 	if (! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode)) $entity=1;
