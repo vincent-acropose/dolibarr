@@ -46,24 +46,24 @@ function check_user_password_ldap($usertotest,$passwordtotest,$entitytotest)
 	/*
 	 * Auth spec solystic 
 	 */
-
+//var_dump($usertotest,$passwordtotest);
 	if(empty($passwordtotest)) return false;
 
 	$login = $usertotest;
 	
 	$user = new User($db);
-	$user->fetch('', $login);
+	if($user->fetch('', $login)<0) return false;
 
 	$ldap_host = 'VDC01';
     $ldap = ldap_connect($ldap_host);
 
     ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION,3);
     ldap_set_option($ldap, LDAP_OPT_REFERRALS,0);
-
+//var_dump($user);
 	if(empty($user->array_options['options_userdn'])) return false;
-
+//exit('la');
     if(ldap_bind($ldap, $user->array_options['options_userdn'], $passwordtotest)) {
-    	return true;
+    	return $login;
     }
 
 	return false;
