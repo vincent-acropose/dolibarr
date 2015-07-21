@@ -114,6 +114,13 @@ class modProjet extends DolibarrModules
 		$this->const[$r][2] = "DOL_DATA_ROOT/doctemplates/tasks";
 		$this->const[$r][3] = "";
 		$this->const[$r][4] = 0;
+		$r++;
+
+		$this->const[$r][0] = "MAIN_SEARCHFORM_PROJECT";
+		$this->const[$r][1] = "yesno";
+		$this->const[$r][2] = "1";
+		$this->const[$r][3] = "Show form for quick company search";
+		$this->const[$r][4] = 0;
 
 		// Boxes
 		$this->boxes = array();

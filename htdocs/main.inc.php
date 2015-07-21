@@ -1571,6 +1571,12 @@ function left_menu($menu_array_before, $helppagename='', $moresearchform='', $me
 	        $searchform.=printSearchForm(DOL_URL_ROOT.'/adherents/list.php', DOL_URL_ROOT.'/adherents/list.php', img_object('','user').' '.$langs->trans("Members"), 'member', 'sall', 'M', 'sallsearchleftm');
 	    }
 
+	    if (! empty($conf->projet->enabled) && ! empty($conf->global->MAIN_SEARCHFORM_PROJECT) && $user->rights->projet->lire)
+	    {
+	        $langs->load("projects");
+	        $searchform.=printSearchForm(DOL_URL_ROOT.'/projet/list.php', DOL_URL_ROOT.'/projet/list.php', img_object('','project').' '.$langs->trans("Projects"), 'project', 'search_all', 'Pj', 'sallsearchleftm');
+	    }
+
 	    // Execute hook printSearchForm
 	    $parameters=array();
 	    $reshook=$hookmanager->executeHooks('printSearchForm',$parameters);    // Note that $action and $object may have been modified by some hooks

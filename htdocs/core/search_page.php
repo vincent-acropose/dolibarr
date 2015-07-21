@@ -104,6 +104,13 @@ if (! empty($conf->adherent->enabled) && ! empty($conf->global->MAIN_SEARCHFORM_
 	$nbofsearch++;
 }
 
+if (! empty($conf->projet->enabled) && ! empty($conf->global->MAIN_SEARCHFORM_PROJECT) && $user->rights->projet->lire)
+{
+	$langs->load("projects");
+	$searchform.=printSearchForm(DOL_URL_ROOT.'/projet/list.php', DOL_URL_ROOT.'/projet/list.php', img_object('','project').' '.$langs->trans("Projects"), 'project', 'search_all', 'sall'.rand(0,10));
+	$nbofsearch++;
+}
+
 // Execute hook printSearchForm
 $parameters=array();
 $reshook=$hookmanager->executeHooks('printSearchForm',$parameters);
