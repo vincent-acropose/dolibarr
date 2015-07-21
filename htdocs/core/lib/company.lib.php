@@ -1044,7 +1044,7 @@ function show_addresses($conf,$langs,$db,$object,$backtopage='')
  */
 function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
 {
-    global $bc,$user;
+    global $bc,$user,$conf;
 
     // Check parameters
     if (! is_object($object)) dol_print_error('','BadParameter');
@@ -1062,15 +1062,22 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $out.="\n";
         $out.='<table width="100%" class="noborder">';
         $out.='<tr class="liste_titre">';
-        $out.='<td colspan="3">';
+		if($conf->global->AGENDA_USE_EVENT_TYPE) $out.='<td colspan="3">';
+		else $out.='<td colspan="2">';
         if (get_class($object) == 'Societe') $out.='<a href="'.DOL_URL_ROOT.'/comm/action/listactions.php?socid='.$object->id.'&amp;status=todo">';
         $out.=$langs->trans("ActionsToDoShort");
         if (get_class($object) == 'Societe') $out.='</a>';
         $out.='</td>';
-		$out.='<td>';
-		$out.=$langs->trans("Type");
-		$out.='</td>';
-        $out.='<td colspan="4" align="right">';
+		
+		if($conf->global->AGENDA_USE_EVENT_TYPE) {
+			$out.='<td>';
+			$out.=$langs->trans("Type");
+			$out.='</td>';
+			$out.='<td colspan="4" align="right">';
+		} else {
+			$out.='<td colspan="5" align="right">';
+		}
+        
         $out.='</td>';
         $out.='</tr>';
 
@@ -1150,10 +1157,11 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
                     //$out.='<td colspan="2">'.dol_trunc($obj->label,40).'</td>';
                     $out.='<td>'.$actionstatic->getNomUrl(1,40).'</td>';
 					
-					$out.= '<td>';
-					$out.=$actionstatic->type;
-					$out.='</td>';
-
+					if($conf->global->AGENDA_USE_EVENT_TYPE) {
+						$out.= '<td>';
+						$out.=$actionstatic->type;
+						$out.='</td>';
+					}
                     // Contact pour cette action
                     if (empty($objcon->id) && $obj->fk_contact > 0)
                     {
@@ -1214,7 +1222,7 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
  */
 function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
 {
-    global $bc,$user;
+    global $bc,$user,$conf;
 
     // Check parameters
     if (! is_object($object)) dol_print_error('','BadParameter');
@@ -1353,15 +1361,22 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $out.="\n";
         $out.='<table class="noborder" width="100%">';
         $out.='<tr class="liste_titre">';
-        $out.='<td colspan="3">';
+		if($conf->global->AGENDA_USE_EVENT_TYPE) $out.='<td colspan="3">';
+		else $out.='<td colspan="2">';
         if (get_class($object) == 'Societe') $out.='<a href="'.DOL_URL_ROOT.'/comm/action/listactions.php?socid='.$object->id.'&amp;status=done">';
         $out.=$langs->trans("ActionsDoneShort");
         if (get_class($object) == 'Societe') $out.='</a>';
         $out.='</td>';
-		$out.='<td>';
-		$out.=$langs->trans("Type");
-		$out.='</td>';
-        $out.='<td colspan="4" align="right">';
+		
+		if($conf->global->AGENDA_USE_EVENT_TYPE) {
+			$out.='<td>';
+			$out.=$langs->trans("Type");
+			$out.='</td>';
+			$out.='<td colspan="4" align="right">';
+		} else {
+			$out.='<td colspan="5" align="right">';
+		}
+        
         $out.='</td>';
         $out.='</tr>';
 
@@ -1405,10 +1420,12 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
                 $out.=dol_trunc($libelle,40);
             }
             $out.='</td>';
-			$out.='<td>';
-			$out.=$actionstatic->type;
-			$out.='</td>';
 			
+			if($conf->global->AGENDA_USE_EVENT_TYPE) {
+				$out.='<td>';
+				$out.=$actionstatic->type;
+				$out.='</td>';
+			}
             // Title of event
             //$out.='<td>'.dol_trunc($histo[$key]['note'], 40).'</td>';
 
