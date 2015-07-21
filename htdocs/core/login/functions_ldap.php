@@ -63,7 +63,7 @@ function check_user_password_ldap($usertotest,$passwordtotest,$entitytotest)
 	if(empty($user->array_options['options_userdn'])) return false;
 
     if(ldap_bind($ldap, $user->array_options['options_userdn'], $passwordtotest)) {
-    	return true;
+    	return $login;
     }
 
 	return false;
