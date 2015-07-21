@@ -225,7 +225,11 @@ if ($action == 'setdoc')
 		$ret = addDocumentModel($value, $type, $label, $scandir);
 	}
 }
-
+else if ($action == 'useMaskOnClone')
+{
+	$usemask = GETPOST('activate_useMaskOnClone','alpha');
+	$res = dolibarr_set_const($db, "PRODUIT_USE_MASK_ON_CLONE", $usemask,'chaine',0,'',$conf->entity);
+}
 
 if ($action == 'set')
 {
@@ -650,6 +654,21 @@ print $form->selectyesno("activate_units",$conf->global->PRODUCT_USE_UNITS,1);
 print '</td>';
 print '</tr>';
 */
+
+// Pouvoir utiliser la numérotation configurée dans le masque produit lors du  clonage d'un produit
+$var=!$var;
+print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+print '<input type="hidden" name="action" value="useMaskOnClone">';
+print '<tr '.$bc[$var].'>';
+print '<td>'.$langs->trans("UseMaskOnClone", $conf->service->enabled ? '/service' : '').'</td>';
+print '<td width="60" align="right">';
+print $form->selectyesno("activate_useMaskOnClone",$conf->global->PRODUIT_USE_MASK_ON_CLONE,1);
+print '</td><td align="right">';
+print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+print '</td>';
+print '</tr>';
+print '</form>';
 
 // View product description in thirdparty language
 if (! empty($conf->global->MAIN_MULTILANGS))

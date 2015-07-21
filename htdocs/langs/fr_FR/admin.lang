@@ -1375,6 +1375,7 @@ ServiceSetup=Configuration du module Services
 ProductServiceSetup=Configuration des modules Produits et Services
 NumberOfProductShowInSelect=Nombre maximum de produits dans les listes déroulantes (0=aucune limite)
 ViewProductDescInFormAbility=Visualisation des descriptions produits dans les formulaires (sinon en tant que bulle d'aide)
+UseMaskOnClone=Utiliser la prochaine référence lors du clonage d'un produit%s (disponible si le masque est configuré ci-dessus)
 MergePropalProductCard=Ajoute dans l'onglet Fichiers joints des produits/services, une option pour fusionner le document PDF du produit au PDF des propositions Azur si le produit/services est inclut dans la proposition.
 ViewProductDescInThirdpartyLanguageAbility=Visualisation des descriptions de produits dans la langue du tiers
 UseSearchToSelectProductTooltip=Si vous avez un nombre important de produits (>100 000), vous pourrez améliorer les performances en positionnant la constante PRODUCT_DONOTSEARCH_ANYWHERE à 1 dans Configuration->Divers. La recherche sera alors limité au début des chaines.
