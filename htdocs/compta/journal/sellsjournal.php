@@ -196,6 +196,7 @@ print "</tr>\n";
 
 $var=true;
 
+$TTotal=array();
 $invoicestatic=new Facture($db);
 $companystatic=new Client($db);
 
@@ -246,13 +247,32 @@ foreach ($tabfac as $key => $val)
 				print "<td>".$invoicestatic->getNomUrl(1)."</td>";
 				print "<td>".$k."</td><td>".$line['label']."</td>";
 
+				if(!isset($TTotal[$k])) {
+					$TTotal[$k] = array(
+						'debit' => 0,
+						'credit' => 0
+					);
+				}
+				
 				if (isset($line['inv']))
 				{
+					if ($mt >= 0) {
+						$TTotal[$k]['debit'] += $mt;
+					} else {
+						$TTotal[$k]['credit'] += -$mt;
+					}
+					
 					print '<td align="right">'.($mt>=0?price($mt):'')."</td>";
 					print '<td align="right">'.($mt<0?price(-$mt):'')."</td>";
 				}
 				else
 				{
+					if ($mt < 0) {
+						$TTotal[$k]['debit'] += -$mt;
+					} else {
+						$TTotal[$k]['credit'] += $mt;
+					}
+					
 					print '<td align="right">'.($mt<0?price(-$mt):'')."</td>";
 	    			print '<td align="right">'.($mt>=0?price($mt):'')."</td>";
 				}
@@ -263,6 +283,21 @@ foreach ($tabfac as $key => $val)
 	}
 
 	$var = !$var;
+}
+
+print '<tr class="liste_titre"><td colspan="6">Totaux</td></tr>';
+
+$var = false;
+foreach ($TTotal as $code => $mt) {
+	$var = !$var;
+	
+	print '<tr '.$bc[$var].' style="font-weight:bold;">
+		<td colspan="2">&nbsp</td>
+		<td>'.$code.'</td>
+		<td>&nbsp</td>
+		<td align="right">'.($mt['debit'] != 0 ? price($mt['debit']) : '').'</td>
+		<td align="right">'.($mt['credit'] != 0 ? price($mt['credit']) : '').'</td>
+	</tr>';	
 }
 
 print "</table>";
