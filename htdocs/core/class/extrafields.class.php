@@ -569,6 +569,8 @@ class ExtraFields
 					$this->attribute_unique[$tab->name]=$tab->fieldunique;
 					$this->attribute_required[$tab->name]=$tab->fieldrequired;
 					$this->attribute_param[$tab->name]=unserialize($tab->param);
+					if(!empty($this->attribute_param[$tab->name]['options'])) asort($this->attribute_param[$tab->name]['options'], SORT_NATURAL);
+					//var_dump($this->attribute_param[$tab->name]);
 					$this->attribute_pos[$tab->name]=$tab->pos;
 					$this->attribute_alwayseditable[$tab->name]=$tab->alwayseditable;
 				}
@@ -581,8 +583,6 @@ class ExtraFields
 
 		return $array_name_label;
 	}
-
-
 	/**
 	 * Return HTML string to put an input field into a page
 	 *
