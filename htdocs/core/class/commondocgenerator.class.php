@@ -49,7 +49,7 @@ abstract class CommonDocGenerator
         return array(
             'myuser_lastname'       => (!empty($user->lastname) ? $user->lastname : ''),
             'myuser_firstname'      => (!empty($user->firstname) ? $user->firstname : ''),
-            'myuser_fullname'       => (!empty($user->getFullName($outputlangs,1)) ? $user->getFullName($outputlangs,1) : ''),
+            'myuser_fullname'       => $user->getFullName($outputlangs,1),
             'myuser_login'          => (!empty($user->login) ? $user->login : ''),
             'myuser_phone'          => (!empty($user->office_phone) ? $user->office_phone : ''),
             'myuser_address'        => (!empty($user->address) ? $user->address : ''),
