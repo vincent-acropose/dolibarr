@@ -184,9 +184,15 @@ class pdf_rouget extends ModelePdfExpedition
 				{
 					$tab_top = 88;
 					$tab_top_alt = $tab_top;
-
-					$tab_top_alt = $pdf->GetY();
-					$tab_top_alt += 1;
+					
+					if (! empty($object->tracking_number)) {
+						if($object->shipping_method_id < 1) {
+							$pdf->SetFont('','B', $default_font_size - 2);
+							$pdf->writeHTMLCell(60, 4, $this->posxdesc-1, $tab_top-1, $outputlangs->transnoentities("TrackingNumber")." : " . $object->tracking_number, 0, 1, false, true, 'L');
+						}
+						$tab_top_alt = $pdf->GetY();
+						$tab_top_alt += 1;
+					}
 				
 					// Tracking number
 					if (! empty($object->tracking_number))
