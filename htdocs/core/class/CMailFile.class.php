@@ -189,8 +189,8 @@ class CMailFile
 			$this->addr_from = $from;
 			$this->errors_to = $errors_to;
 			$this->addr_to = $to;
-			if (empty($this->addr_cc) === false) $this->addr_cc = $addr_cc;
-			if (empty($this->addr_bcc) === false) $this->addr_bcc = $addr_bcc;
+			$this->addr_cc = $addr_cc;
+			$this->addr_bcc = $addr_bcc;
 			$this->deliveryreceipt = $deliveryreceipt;
 			$smtp_headers = $this->write_smtpheaders();
 
@@ -283,9 +283,9 @@ class CMailFile
 				}
 			}
 
-			if (empty($addr_cc) === false) $smtps->setCC($addr_cc);
-			if (empty($addr_bcc) === false) $smtps->setBCC($addr_bcc);
-			if (empty($errors_to) === false) $smtps->setErrorsTo($errors_to);
+			$smtps->setCC($addr_cc);
+			$smtps->setBCC($addr_bcc);
+			$smtps->setErrorsTo($errors_to);
 			$smtps->setDeliveryReceipt($deliveryreceipt);
 
 			$this->smtps=$smtps;
