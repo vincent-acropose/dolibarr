@@ -435,8 +435,13 @@ if ($result)
     print "</table>";
 
     print '</form>';
-
-    if ($num > $limit) print_barre_liste('', $page, $_SERVER["PHP_SELF"], '&amp;begin='.$begin.'&amp;view='.$view.'&amp;userid='.$userid, $sortfield, $sortorder, '', $num, $nbtotalofrecords, '');
+	
+	$params = '&amp;begin='.$begin.'&amp;view='.$view.'&amp;userid='.$userid;
+	if ($type) {
+		$params.= '&type=' . $type;
+	}
+	
+    if ($num > $limit) print_barre_liste('', $page, $_SERVER["PHP_SELF"], $params, $sortfield, $sortorder, '', $num, $nbtotalofrecords, '');
 
     $db->free($result);
 }
