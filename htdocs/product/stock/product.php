@@ -272,7 +272,7 @@ if ($id > 0 || $ref)
         // Real stock
         $product->load_stock();
 		print '<tr><td>'.$langs->trans("PhysicalStock").'</td>';
-		print '<td>'.$product->stock_reel;
+		print '<td>'.round($product->stock_reel, 4);
 		if ($product->seuil_stock_alerte && ($product->stock_reel < $product->seuil_stock_alerte)) print ' '.img_warning($langs->trans("StockLowerThanLimit"));
 		print '</td>';
 		print '</tr>';
@@ -299,7 +299,7 @@ if ($id > 0 || $ref)
 
 			// Stock theorique
 			print '<tr><td>'.$langs->trans("VirtualStock").'</td>';
-			print "<td>".$product->stock_theorique;
+			print "<td>".round($product->stock_theorique, 3);
 			if ($product->stock_theorique < $product->seuil_stock_alerte)
 			{
 				print ' '.img_warning($langs->trans("StockLowerThanLimit"));
@@ -554,7 +554,7 @@ if ($resql)
 		$entrepotstatic->libelle=$obj->label;
 		print '<tr '.$bc[$var].'>';
 		print '<td>'.$entrepotstatic->getNomUrl(1).'</td>';
-		print '<td align="right">'.$obj->reel.($obj->reel<0?' '.img_warning():'').'</td>';
+		print '<td align="right">'.round($obj->reel, 3).($obj->reel<0?' '.img_warning():'').'</td>';
 		// PMP
 		print '<td align="right">'.(price2num($obj->pmp)?price2num($obj->pmp,'MU'):'').'</td>'; // Ditto : Show PMP from movement or from product
 		print '<td align="right">'.(price2num($obj->pmp)?price(price2num($obj->pmp*$obj->reel,'MT')):'').'</td>'; // Ditto : Show PMP from movement or from product
@@ -577,7 +577,7 @@ if ($resql)
 }
 else dol_print_error($db);
 print '<tr class="liste_total"><td align="right" class="liste_total">'.$langs->trans("Total").':</td>';
-print '<td class="liste_total" align="right">'.$total.'</td>';
+print '<td class="liste_total" align="right">'.round($total, 3).'</td>';
 print '<td class="liste_total" align="right">';
 print ($totalwithpmp?price($totalvalue/$totalwithpmp):'&nbsp;');
 print '</td>';
