@@ -59,7 +59,7 @@ function contact_prepare_head(Contact $object)
 	$head[$h][1] = $langs->trans("ExportImport");
 	$head[$h][2] = 'exportimport';
 	$h++;
-
+	
     // Show more tabs from modules
     // Entries must be declared in modules descriptor with line
     // $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab

@@ -912,7 +912,15 @@ else
 
         print '<table class="border" width="100%">';
 
-        $linkback = '<a href="'.DOL_URL_ROOT.'/contact/list.php">'.$langs->trans("BackToList").'</a>';
+		$object->fetch_thirdparty();
+		
+		$linkback = '<a href="'.DOL_URL_ROOT.'/contact/list.php">'.$langs->trans("BackToList").'</a>';
+		
+		if (!empty($object->thirdparty)) {
+			if ($object->thirdparty->client == '2') {
+				$linkback = '<a href="'.DOL_URL_ROOT.'/contact/list.php?leftmenu=contacts&type=p">'.$langs->trans("BackToList").'</a>';
+			}
+		}
 
         // Ref
         print '<tr><td width="20%">'.$langs->trans("Ref").'</td><td colspan="3">';
