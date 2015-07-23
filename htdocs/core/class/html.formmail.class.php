@@ -548,7 +548,7 @@ class FormMail
         		// TODO    A partir du type, proposer liste de messages dans table llx_models
         		if     ($this->param["models"]=='facture_send')	            { $defaultmessage=$langs->transnoentities("PredefinedMailContentSendInvoice"); }
         		elseif ($this->param["models"]=='facture_relance')			{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendInvoiceReminder"); }
-        		elseif ($this->param["models"]=='propal_send')				{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendProposal"); }
+        		elseif ($this->param["models"]=='propal_send')				{ if ($conf->entity == 1) { $defaultmessage=$langs->transnoentities("PredefinedMailContentSendProposal1"); } else { $defaultmessage=$langs->transnoentities("PredefinedMailContentSendProposal"); } }
         		elseif ($this->param["models"]=='order_send')				{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendOrder"); }
         		elseif ($this->param["models"]=='order_supplier_send')		{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendSupplierOrder"); }
         		elseif ($this->param["models"]=='invoice_supplier_send')	{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendSupplierInvoice"); }
