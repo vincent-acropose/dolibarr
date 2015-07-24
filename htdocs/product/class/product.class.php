@@ -2008,15 +2008,15 @@ class Product extends CommonObject
 					$pFather->id = $fatherData['id'];  
 					$qtyCoef = $fatherData['qty'];
 
-					if($fatherData['incdec']) {
-						$pFather->load_stats_commande($socid, $filtrestatut);
+					
+					$pFather->load_stats_commande($socid, $filtrestatut);
 						
-						$this->stats_commande['customers']+=$pFather->stats_commande['customers'];
-						$this->stats_commande['nb']+=$pFather->stats_commande['nb'];
-						$this->stats_commande['rows']+=$pFather->stats_commande['rows'];
-						$this->stats_commande['qty']+=$pFather->stats_commande['qty'] * $qtyCoef;
+					$this->stats_commande['customers']+=$pFather->stats_commande['customers'];
+					$this->stats_commande['nb']+=$pFather->stats_commande['nb'];
+					$this->stats_commande['rows']+=$pFather->stats_commande['rows'];
+					$this->stats_commande['qty']+=$pFather->stats_commande['qty'] * $qtyCoef;
 						
-					}
+					
 					
 					
 				}
