@@ -827,7 +827,8 @@ class Form
                     }
                     else
                     {
-                    	$label=$obj->nom.' - '.$obj->ref_ext;
+                    	$label=$obj->nom;
+						if (!empty($obj->ref_ext)) $label .= ' - '.$obj->ref_ext;
                     }
 
                     if ($showtype)
