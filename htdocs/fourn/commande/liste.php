@@ -84,7 +84,7 @@ $offset = $conf->liste_limit * $page ;
  * Mode Liste
  */
 
-$sql = "SELECT s.rowid as socid, s.nom, cf.date_commande as dc,";
+$sql = "SELECT s.rowid as socid, s.nom, cf.date_commande as dc, cf.date_livraison as dlc,";
 $sql.= " cf.rowid,cf.ref, cf.ref_supplier, cf.fk_statut, cf.total_ttc, cf.fk_user_author,";
 $sql.= " u.login";
 $sql.= " FROM (".MAIN_DB_PREFIX."societe as s,";
@@ -165,9 +165,10 @@ if ($resql)
 	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"cf.ref","",$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("RefSupplier"),$_SERVER["PHP_SELF"],"cf.ref_supplier","",$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","",$param,'',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Author"),$_SERVER["PHP_SELF"],"u.login","",$param,'',$sortfield,$sortorder);
+	//print_liste_field_titre($langs->trans("Author"),$_SERVER["PHP_SELF"],"u.login","",$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AmountTTC"),$_SERVER["PHP_SELF"],"total_ttc","",$param,$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("OrderDate"),$_SERVER["PHP_SELF"],"dc","",$param,'align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("OrderDateDelivery"),$_SERVER["PHP_SELF"],"dlc","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"cf.fk_statut","",$param,'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre('');
 	print "</tr>\n";
@@ -177,8 +178,9 @@ if ($resql)
 	print '<td class="liste_titre"><input type="text" class="flat" name="search_ref" value="'.$search_ref.'"></td>';
 	print '<td class="liste_titre"><input type="text" class="flat" name="search_refsupp" value="'.$search_refsupp.'"></td>';
 	print '<td class="liste_titre"><input type="text" class="flat" name="search_nom" value="'.$search_nom.'"></td>';
-	print '<td class="liste_titre"><input type="text" class="flat" name="search_user" value="'.$search_user.'"></td>';
+	//print '<td class="liste_titre"><input type="text" class="flat" name="search_user" value="'.$search_user.'"></td>';
 	print '<td class="liste_titre"><input type="text" class="flat" name="search_ttc" value="'.$search_ttc.'"></td>';
+	print '<td class="liste_titre">&nbsp;</td>';
 	print '<td class="liste_titre">&nbsp;</td>';
 	print '<td class="liste_titre" align="right">';
 	$formorder->selectSupplierOrderStatus($search_status,1,'search_status');
@@ -216,12 +218,12 @@ if ($resql)
 		print $obj->nom.'</a></td>'."\n";
 
 		// Author
-		$userstatic->id=$obj->fk_user_author;
+		/*$userstatic->id=$obj->fk_user_author;
 		$userstatic->login=$obj->login;
 		print "<td>";
 		if ($userstatic->id) print $userstatic->getLoginUrl(1);
 		else print "&nbsp;";
-		print "</td>";
+		print "</td>";*/
 
 		// Amount
 		print '<td align="right" width="100">'.price($obj->total_ttc)."</td>";
@@ -231,6 +233,18 @@ if ($resql)
 		if ($obj->dc)
 		{
 			print dol_print_date($db->jdate($obj->dc),"day");
+		}
+		else
+		{
+			print "-";
+		}
+		print '</td>';
+		
+		// Date delivery
+		print "<td align=\"center\" width=\"100\">";
+		if ($obj->dlc)
+		{
+			print dol_print_date($db->jdate($obj->dlc),"day");
 		}
 		else
 		{

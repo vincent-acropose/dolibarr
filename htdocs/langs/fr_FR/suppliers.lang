@@ -9,6 +9,7 @@ History=Historique
 ListOfSuppliers=Liste des fournisseurs
 ShowSupplier=Afficher fournisseur
 OrderDate=Date de commande
+OrderDateDelivery=Date de livraison
 BuyingPrice=Prix d'achat
 BuyingPriceMin=Prix d'achat minimum
 BuyingPriceMinShort=Prix achat min.
