@@ -2567,7 +2567,9 @@ abstract class CommonObject
 		print '<td align="right" width="80"><label for="price_ht">'.$langs->trans('PriceUHT').'</label></td>';
 
 		if ($inputalsopricewithtax) print '<td align="right" width="80">&nbsp;</td>';
-
+		
+		if($conf->cliefef->enabled) print '<td width="10"></td>';
+		
 		// Qty
 		print '<td align="right" width="50"><label for="qty">'.$langs->trans('Qty').'</label></td>';
 
