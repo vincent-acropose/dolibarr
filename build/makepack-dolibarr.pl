@@ -456,13 +456,14 @@ if ($nboftargetok) {
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/document`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/documents`;
 		# Removed known external modules to avoir any error when packaging on test env 
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/custom/*`;	# For custom we want to keep dir
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/ancotec*`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/calling*`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/bootstrap*`;
-	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/custom*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/factory*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/management*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/multicompany*`;
+		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/ndf*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/nltechno*`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/oscim*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/pos*`;
