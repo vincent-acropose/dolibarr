@@ -1444,7 +1444,7 @@ else
 				$risque = $categorie->array_options['options_niveau_de_risque'];
 				print '<tr>
 					<td valign="top">'.$langs->trans("RiskLevel").'</td>
-					<td>' . $risque . ' (' . $categorie->description . ')</td>
+					<td>' . $risque . ' (' .  $categorie->label . ' - ' . $categorie->description . ')</td>
 				</tr>';
 			}
 
