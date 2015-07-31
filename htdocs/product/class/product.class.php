@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2001-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2013 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2015 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
  * Copyright (C) 2007-2011 Jean Heimburger      <jean@tiaris.info>
  * Copyright (C) 2010-2011 Juanjo Menent        <jmenent@2byte.es>
@@ -1482,7 +1482,7 @@ class Product extends CommonObject
 				$this->date_modification		= $obj->tms;
 				$this->import_key				= $obj->import_key;
 				$this->entity					= $obj->entity;
-				
+
 				$this->ref_ext					= $obj->ref_ext;
 
 				$this->db->free($resql);
@@ -2987,7 +2987,7 @@ class Product extends CommonObject
 	 *
 	 *    @return     int             < 0 if KO, > 0 if OK
 	 */
-	function load_stock()
+	function load_stock($mode='physical')
 	{
 		$this->stock_reel = 0;
 		$this->stock_warehouse = array();
@@ -3020,7 +3020,7 @@ class Product extends CommonObject
 				}
 			}
 			$this->db->free($result);
-			$this->load_virtual_stock();
+			$this->load_virtual_stock($mode);
 			return 1;
 		}
 		else
@@ -3035,7 +3035,7 @@ class Product extends CommonObject
 	 *
 	 *    @return     int             < 0 if KO, > 0 if OK
 	 */
-	function load_virtual_stock()
+	function load_virtual_stock($mode='physical')
 	{
 		global $conf;
 
@@ -3058,7 +3058,8 @@ class Product extends CommonObject
 			}
 			if (! empty($conf->fournisseur->enabled))
 			{
-				$result=$this->load_stats_commande_fournisseur(0,'3');
+				if($mode == 'virtual') $result=$this->load_stats_commande_fournisseur(0,'0,1,2,3');
+				else $result=$this->load_stats_commande_fournisseur(0,'3');
 				if ($result < 0) dol_print_error($db,$this->error);
 				$stock_commande_fournisseur=$this->stats_commande_fournisseur['qty'];
 
@@ -3197,7 +3198,7 @@ class Product extends CommonObject
 
     				if (! utf8_check($file)) $file=utf8_encode($file);	// To be sure file is stored in UTF8 in memory
 
-    				if (dol_is_file($dir.$file) && preg_match('/(\.jpg|\.bmp|\.gif|\.png|\.tiff)$/i', $dir.$file))
+    				if (dol_is_file($dir.$file) && preg_match('/(\.jp(e?)g|\.bmp|\.gif|\.png|\.tiff)$/i', $dir.$file))
     				{
     					$nbphoto++;
     					$photo = $file;
@@ -3377,7 +3378,7 @@ class Product extends CommonObject
 		$filename = preg_replace('/'.preg_quote($dir,'/').'/i','',$file); // Nom du fichier
 
 		// On efface l'image d'origine
-		dol_delete_file($file);
+		dol_delete_file($file, 0, 0, 0, $this); // For triggers
 
 		// Si elle existe, on efface la vignette
 		if (preg_match('/(\.jpg|\.bmp|\.gif|\.png|\.tiff)$/i',$filename,$regs))
