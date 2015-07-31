@@ -668,7 +668,7 @@ if ($id > 0)
 				$objp = $db->fetch_object($resql);
 				$var=!$var;
 				print "<tr ".$bc[$var].">";
-				print '<td class="nowrap"><a href="'.DOL_URL_ROOT.'/expedition/card.php?id='.$objp->eid.'">'.img_object($langs->trans("ShowShipping"),"shipping").' '.$objp->ref."</a>\n";
+				print '<td class="nowrap"><a href="'.DOL_URL_ROOT.'/expedition/card.php?id='.$objp->eid.'">'.img_object($langs->trans("ShowShipping"),"sending").' '.$objp->ref."</a>\n";
 				print '</td><td align="right" width="80">'.dol_print_date($db->jdate($objp->dd),'day')."</td>\n";
 				print '<td align="right" style="min-width: 60px"></td>';
 				print '<td align="right" style="min-width: 60px" class="nowrap">'.$expedition_static->LibStatut($objp->fk_statut,5).'</td></tr>';
