@@ -39,10 +39,12 @@ if (! empty($conf->commande->enabled)) require_once DOL_DOCUMENT_ROOT.'/commande
 if (! empty($conf->contrat->enabled)) require_once DOL_DOCUMENT_ROOT.'/contrat/class/contrat.class.php';
 if (! empty($conf->adherent->enabled)) require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
 if (! empty($conf->ficheinter->enabled)) require_once DOL_DOCUMENT_ROOT.'/fichinter/class/fichinter.class.php';
+if (! empty($conf->expedition->enabled)) require_once DOL_DOCUMENT_ROOT.'/expedition/class/expedition.class.php';
 
 $langs->load("companies");
 if (! empty($conf->contrat->enabled))  $langs->load("contracts");
 if (! empty($conf->commande->enabled)) $langs->load("orders");
+if (! empty($conf->expedition->enabled))  $langs->load("sendings");
 if (! empty($conf->facture->enabled)) $langs->load("bills");
 if (! empty($conf->projet->enabled))  $langs->load("projects");
 if (! empty($conf->ficheinter->enabled)) $langs->load("interventions");
@@ -612,6 +614,64 @@ if ($id > 0)
 				print '</td><td align="right" width="80">'.dol_print_date($db->jdate($objp->dc),'day')."</td>\n";
 				print '<td align="right" style="min-width: 60px">'.price($objp->total_ht).'</td>';
 				print '<td align="right" style="min-width: 60px" class="nowrap">'.$commande_static->LibStatut($objp->fk_statut,$objp->facture,5).'</td></tr>';
+				$i++;
+			}
+			$db->free($resql);
+
+			if ($num >0) print "</table>";
+		}
+		else
+		{
+			dol_print_error($db);
+		}
+	}
+
+	/*
+	 * Last shippings
+	 */
+	if (! empty($conf->expedition->enabled) && $user->rights->expedition->lire)
+	{
+		$expedition_static=new Expedition($db);
+
+		$sql = "SELECT s.nom, s.rowid,";
+		$sql.= " e.rowid as eid, e.ref, e.fk_statut, ";
+		$sql.= " e.date_delivery as dd";
+		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."expedition as e, ".MAIN_DB_PREFIX."expeditiondet as ed";
+		$sql.= " WHERE e.fk_soc = s.rowid ";
+		$sql.= " AND ed.fk_expedition = e.rowid ";
+		$sql.= " AND s.rowid = ".$object->id;
+		$sql.= " AND e.entity = ".$conf->entity;
+		$sql.= " ORDER BY e.date_delivery DESC";
+		
+		$resql=$db->query($sql);
+		if ($resql)
+		{
+			$var=true;
+			$num = $db->num_rows($resql);
+
+			if ($num > 0)
+			{
+				print '<table class="noborder" width="100%">';
+
+				print '<tr class="liste_titre">';
+				print '<td colspan="4"><table width="100%" class="nobordernopadding"><tr><td>'.$langs->trans("LastSendings",($num<=$MAXLIST?"":$MAXLIST)).'</td><td align="right"><a href="'.DOL_URL_ROOT.'/expedition/list.php?socid='.$object->id.'">'.$langs->trans("AllSendings").' ('.$num.')</a></td>';
+				print '<td width="20px" align="right"><a href="'.DOL_URL_ROOT.'/expedition/stats/index.php?socid='.$object->id.'">'.img_picto($langs->trans("Statistics"),'stats').'</a></td>';
+				//if($num2 > 0) print '<td width="20px" align="right"><a href="'.DOL_URL_ROOT.'/commande/orderstoinvoice.php?socid='.$object->id.'">'.img_picto($langs->trans("CreateInvoiceForThisCustomer"),'object_bill').'</a></td>';
+				//else print '<td width="20px" align="right"><a href="#">'.img_picto($langs->trans("NoOrdersToInvoice"),'object_bill').'</a></td>';
+				print '</tr></table></td>';
+				print '</tr>';
+			}
+
+			$i = 0;
+			while ($i < $num && $i < $MAXLIST)
+			{
+				$objp = $db->fetch_object($resql);
+				$var=!$var;
+				print "<tr ".$bc[$var].">";
+				print '<td class="nowrap"><a href="'.DOL_URL_ROOT.'/expedition/card.php?id='.$objp->eid.'">'.img_object($langs->trans("ShowShipping"),"shipping").' '.$objp->ref."</a>\n";
+				print '</td><td align="right" width="80">'.dol_print_date($db->jdate($objp->dd),'day')."</td>\n";
+				print '<td align="right" style="min-width: 60px"></td>';
+				print '<td align="right" style="min-width: 60px" class="nowrap">'.$expedition_static->LibStatut($objp->fk_statut,5).'</td></tr>';
 				$i++;
 			}
 			$db->free($resql);

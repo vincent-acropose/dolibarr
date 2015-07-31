@@ -32,6 +32,7 @@ $langs->load('companies');
 // Security check
 $expeditionid = GETPOST('id','int');
 if ($user->societe_id) $socid=$user->societe_id;
+if (GETPOST('socid')) $socid= GETPOST('socid');
 $result = restrictedArea($user, 'expedition',$expeditionid,'');
 
 $search_ref_exp = GETPOST("search_ref_exp");
