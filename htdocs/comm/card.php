@@ -641,7 +641,7 @@ if ($id > 0)
 		$sql.= " AND ed.fk_expedition = e.rowid ";
 		$sql.= " AND s.rowid = ".$object->id;
 		$sql.= " AND e.entity = ".$conf->entity;
-		$sql.= " ORDER BY e.date_delivery DESC";
+		$sql.= " ORDER BY e.date_creation DESC";
 		
 		$resql=$db->query($sql);
 		if ($resql)
