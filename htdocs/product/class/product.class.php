@@ -1716,6 +1716,32 @@ class Product extends CommonObject
 			$this->stats_commande['nb']=$obj->nb;
 			$this->stats_commande['rows']=$obj->nb_rows;
 			$this->stats_commande['qty']=$obj->qty?$obj->qty:0;
+
+			// if it's a virtual product, maybe it is in order by extension			
+			$TFather = $this->getFather();
+			if(is_array($TFather) && !empty($TFather)) {
+				
+				foreach($TFather as &$fatherData) {
+					
+					$pFather = new Product($this->db);
+					$pFather->id = $fatherData['id'];  
+					$qtyCoef = $fatherData['qty'];
+
+					
+					$pFather->load_stats_commande($socid, $filtrestatut);
+						
+					$this->stats_commande['customers']+=$pFather->stats_commande['customers'];
+					$this->stats_commande['nb']+=$pFather->stats_commande['nb'];
+					$this->stats_commande['rows']+=$pFather->stats_commande['rows'];
+					$this->stats_commande['qty']+=$pFather->stats_commande['qty'] * $qtyCoef;
+						
+					
+					
+					
+				}
+				
+			}
+			
 			return 1;
 		}
 		else
@@ -2659,7 +2685,7 @@ class Product extends CommonObject
 	function getFather()
 	{
 
-		$sql = "SELECT p.ref, p.label as label,p.rowid,pa.fk_product_pere as id,p.fk_product_type";
+		$sql = "SELECT p.ref, p.label as label,p.rowid,pa.fk_product_pere as id, pa.qty,p.fk_product_type";
 		$sql.= " FROM ".MAIN_DB_PREFIX."product_association as pa,";
 		$sql.= " ".MAIN_DB_PREFIX."product as p";
 		$sql.= " WHERE p.rowid = pa.fk_product_pere";
@@ -2674,6 +2700,7 @@ class Product extends CommonObject
 				$prods[$record['id']]['id'] =  $record['rowid'];
 				$prods[$record['id']]['ref'] =  $record['ref'];
 				$prods[$record['id']]['label'] =  $this->db->escape($record['label']);
+				$prods[$record['id']]['qty'] = $record['qty'];
 				$prods[$record['id']]['fk_product_type'] =  $record['fk_product_type'];
 			}
 			return $prods;
@@ -2987,7 +3014,7 @@ class Product extends CommonObject
 	 *
 	 *    @return     int             < 0 if KO, > 0 if OK
 	 */
-	function load_stock()
+	function load_stock($mode='physical')
 	{
 		$this->stock_reel = 0;
 		$this->stock_warehouse = array();
@@ -3020,7 +3047,7 @@ class Product extends CommonObject
 				}
 			}
 			$this->db->free($result);
-			$this->load_virtual_stock();
+			$this->load_virtual_stock($mode);
 			return 1;
 		}
 		else
@@ -3035,7 +3062,7 @@ class Product extends CommonObject
 	 *
 	 *    @return     int             < 0 if KO, > 0 if OK
 	 */
-	function load_virtual_stock()
+	function load_virtual_stock($mode='physical')
 	{
 		global $conf;
 
