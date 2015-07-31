@@ -1104,6 +1104,7 @@ class Expedition extends CommonObject
 				$line = new ExpeditionLigne($this->db);
 				$obj = $this->db->fetch_object($resql);
 
+				$line->rowid			= $obj->line_id;
                 $line->line_id          = $obj->line_id;
 				$line->fk_origin_line 	= $obj->fk_origin_line;
 				$line->origin_line_id 	= $obj->fk_origin_line;	    // TODO deprecated
