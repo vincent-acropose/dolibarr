@@ -135,3 +135,4 @@ SearchAProject=Search a project
 ProjectMustBeValidatedFirst=Project must be validated first
 ProjectDraft=Draft projects
 FirstAddRessourceToAllocateTime=Associate a ressource to allocate time
+UseSearchToSelectProject=Use auto-complete field for project selection

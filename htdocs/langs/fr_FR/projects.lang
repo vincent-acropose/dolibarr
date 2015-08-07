@@ -144,3 +144,4 @@ InputPerDay=Saisie par jour
 InputPerWeek=Saisie par semaine
 InputPerAction=Saisie par action
 TimeAlreadyRecorded=Temps consommé déjà enregistré pour cette tâche/jour et utilisateur %s
+UseSearchToSelectProject=Utiliser un champ avec auto-complétion pour choisir les projets (plutôt qu'une liste déroulante)
