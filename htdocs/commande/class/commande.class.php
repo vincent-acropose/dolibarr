@@ -3,7 +3,7 @@
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2014 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
- * Copyright (C) 2010-2014 Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2010-2015 Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2011      Jean Heimburger      <jean@tiaris.info>
  * Copyright (C) 2012-2014 Christophe Battarel  <christophe.battarel@altairis.fr>
  * Copyright (C) 2013      Florian Henry		<florian.henry@open-concept.pro>
@@ -60,7 +60,7 @@ class Commande extends CommonOrder
     var $ref_int;
     var $contactid;
     var $fk_project;
-    var $statut;		// -1=Canceled, 0=Draft, 1=Validated, (2=Accepted/On process not managed for customer orders), 3=Closed (Sent/Received, billed or not)
+    var $statut;		// -1=Canceled, 0=Draft, 1=Validated, (2=Accepted/On process not managed for customer orders), 3=Closed (Delivered=Sent/Received, billed or not)
     var $facturee;		// deprecated
     var $billed;		// billed or not
 
@@ -109,6 +109,11 @@ class Commande extends CommonOrder
     // Pour board
     var $nbtodo;
     var $nbtodolate;
+
+     /**
+     * ERR Not engouch stock
+     */
+    const STOCK_NOT_ENOUGH_FOR_ORDER = -3;
 
 
     /**
@@ -294,7 +299,7 @@ class Commande extends CommonOrder
             // Rename directory if dir was a temporary ref
             if (preg_match('/^[\(]?PROV/i', $this->ref))
             {
-            	// On renomme repertoire ($this->ref = ancienne ref, $numfa = nouvelle ref)
+            	// On renomme repertoire ($this->ref = ancienne ref, $num = nouvelle ref)
                 // in order not to lose the attachments
                 $oldref = dol_sanitizeFileName($this->ref);
                 $newref = dol_sanitizeFileName($num);
@@ -432,7 +437,7 @@ class Commande extends CommonOrder
         global $conf,$langs;
         $error=0;
 
-        if ($this->statut != 3)
+        if ($this->statut != -1 && $this->statut != 3)
         {
         	dol_syslog(get_class($this)."::set_reopen order has not status closed", LOG_WARNING);
             return 0;
@@ -456,7 +461,7 @@ class Commande extends CommonOrder
         else
         {
             $error++;
-            $this->error=$this->db->error();
+            $this->error=$this->db->lasterror();
             dol_print_error($this->db);
         }
 
@@ -745,8 +750,11 @@ class Commande extends CommonOrder
                     );
                     if ($result < 0)
                     {
-                        $this->error=$this->db->lasterror();
-                        dol_print_error($this->db);
+                    	if ($result != self::STOCK_NOT_ENOUGH_FOR_ORDER)
+                    	{
+                        	$this->error=$this->db->lasterror();
+                        	dol_print_error($this->db);
+                    	}
                         $this->db->rollback();
                         return -1;
                     }
@@ -968,7 +976,9 @@ class Commande extends CommonOrder
      */
     function createFromProposal($object)
     {
-        global $conf,$user,$langs,$hookmanager;
+        global $db, $conf,$user,$langs,$hookmanager;
+
+		dol_include_once('/core/class/extrafields.class.php');
 
         $error=0;
 
@@ -1038,9 +1048,15 @@ class Commande extends CommonOrder
 
             // get extrafields from original line
 			$object->fetch_optionals($object->id);
-			foreach($object->array_options as $options_key => $value)
-				$this->array_options[$options_key] = $value;
-
+			
+			$e = new ExtraFields($db);
+			$element_extrafields = $e->fetch_name_optionals_label($this->element);
+			
+			foreach($object->array_options as $options_key => $value) {
+				if(array_key_exists(str_replace('options_', '', $options_key), $element_extrafields)){
+					$this->array_options[$options_key] = $value;
+				}
+			}
             // Possibility to add external linked objects with hooks
             $this->linked_objects[$this->origin] = $this->origin_id;
             if (is_array($object->other_linked_objects) && ! empty($object->other_linked_objects))
@@ -1185,10 +1201,12 @@ class Commande extends CommonOrder
 				$result=$product->fetch($fk_product);
 				$product_type=$product->type;
 
-				if($conf->global->STOCK_MUST_BE_ENOUGH_FOR_ORDER && $product_type == 0 && $product->stock_reel < $qty) {
+				if($conf->global->STOCK_MUST_BE_ENOUGH_FOR_ORDER && $product_type == 0 && $product->stock_reel < $qty)
+				{
 					$this->error=$langs->trans('ErrorStockIsNotEnough');
+					dol_syslog(get_class($this)."::addline error=Product ".$product->ref.": ".$this->error, LOG_ERR);
 					$this->db->rollback();
-					return -3;
+					return self::STOCK_NOT_ENOUGH_FOR_ORDER;
 				}
 			}
 
@@ -2355,7 +2373,7 @@ class Commande extends CommonOrder
     {
         global $conf, $mysoc;
 
-        dol_syslog(get_class($this)."::updateline $rowid, $desc, $pu, $qty, $remise_percent, $txtva, $txlocaltax1, $txlocaltax2, $price_base_type, $info_bits, $date_start, $date_end, $type");
+        dol_syslog(get_class($this)."::updateline id=$rowid, desc=$desc, pu=$pu, qty=$qty, remise_percent=$remise_percent, txtva=$txtva, txlocaltax1=$txlocaltax1, txlocaltax2=$txlocaltax2, price_base_type=$price_base_type, info_bits=$info_bits, date_start=$date_start, date_end=$date_end, type=$type, fk_parent_line=$fk_parent_line, pa_ht=$pa_ht, special_code=$special_code");
         include_once DOL_DOCUMENT_ROOT.'/core/lib/price.lib.php';
 
         if (! empty($this->brouillon))
@@ -2386,7 +2404,7 @@ class Commande extends CommonOrder
 
             $localtaxes_type=getLocalTaxesFromRate($txtva,0,$this->thirdparty, $mysoc);
 
-            $tabprice=calcul_price_total($qty, $pu, $remise_percent, $txtva, $txlocaltax1, $txlocaltax2, 0, $price_base_type, $info_bits, $type, '', $localtaxes_type);
+            $tabprice=calcul_price_total($qty, $pu, $remise_percent, $txtva, $txlocaltax1, $txlocaltax2, 0, $price_base_type, $info_bits, $type, $mysoc, $localtaxes_type);
             $total_ht  = $tabprice[0];
             $total_tva = $tabprice[1];
             $total_ttc = $tabprice[2];

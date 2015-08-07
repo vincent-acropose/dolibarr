@@ -10,7 +10,7 @@
  * Copyright (C) 2013		Cédric Salvador			<csalvador@gpcsolutions.fr>
  * Copyright (C) 2011-2014	Alexandre Spangaro		<alexandre.spangaro@gmail.com>
  * Copyright (C) 2014		Cédric Gross			<c.gross@kreiz-it.fr>
- * Copyright (C) 2014		Ferran Marcet			<fmarcet@2byte.es>
+ * Copyright (C) 2014-2015	Ferran Marcet			<fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -820,8 +820,13 @@ else
 		if (! empty($conf->barcode->enabled) && ! empty($conf->global->BARCODE_PRODUCT_ADDON_NUM))
 		{
 			$module=strtolower($conf->global->BARCODE_PRODUCT_ADDON_NUM);
-        	$result=dol_include_once('/core/modules/barcode/'.$module.'.php');
-        	if ($result > 0)
+			$dirbarcode=array_merge(array('/core/modules/barcode/'),$conf->modules_parts['barcode']);
+            foreach ($dirbarcode as $dirroot)
+            {
+                $res=dol_include_once($dirroot.$module.'.php');
+                if ($res) break;
+            }
+        	if ($res > 0)
         	{
 				$modBarCodeProduct =new $module();
         	}
@@ -1080,7 +1085,7 @@ else
             print_fiche_titre($langs->trans('Modify').' '.$type.' : '.(is_object($object->oldcopy)?$object->oldcopy->ref:$object->ref), "");
 
             // Main official, simple, and not duplicated code
-            print '<form action="'.$_SERVER['PHP_SELF'].'" method="POST">'."\n";
+            print '<form action="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'" method="POST">'."\n";
             print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
             print '<input type="hidden" name="action" value="update">';
             print '<input type="hidden" name="id" value="'.$object->id.'">';

@@ -88,7 +88,9 @@ $coldisplay=-1; // We remove first td
     $nbrows=ROWS_2;
     if (! empty($conf->global->MAIN_INPUT_DESC_HEIGHT)) $nbrows=$conf->global->MAIN_INPUT_DESC_HEIGHT;
     $enable=(isset($conf->global->FCKEDITOR_ENABLE_DETAILS)?$conf->global->FCKEDITOR_ENABLE_DETAILS:0);
-	$doleditor=new DolEditor('product_desc',$line->description,'',164,'dolibarr_details','',false,true,$enable,$nbrows,'98%');
+	$toolbarname='dolibarr_details';
+	if (! empty($conf->global->FCKEDITOR_ENABLE_DETAILS_FULL)) $toolbarname='dolibarr_notes';
+	$doleditor=new DolEditor('product_desc',$line->description,'',164,$toolbarname,'',false,true,$enable,$nbrows,'98%');
 	$doleditor->Create();
 	?>
 	</td>
@@ -250,10 +252,10 @@ if (! empty($conf->margin->enabled))
 		{
 		?>
 			$('#savelinebutton').click(function (e) {
-				return checkEditLine(e, "marginRate");
+				return checkEditLine(e, "np_marginRate");
 			});
 			$("input[name='np_marginRate']:first").blur(function(e) {
-				return checkEditLine(e, "marginRate");
+				return checkEditLine(e, "np_marginRate");
 			});
 		<?php
 		}
@@ -261,10 +263,10 @@ if (! empty($conf->margin->enabled))
 		{
 		?>
 			$('#savelinebutton').click(function (e) {
-				return checkEditLine(e, "markRate");
+				return checkEditLine(e, "np_markRate");
 			});
 			$("input[name='np_markRate']:first").blur(function(e) {
-				return checkEditLine(e, "markRate");
+				return checkEditLine(e, "np_markRate");
 			});
 		<?php
 		}

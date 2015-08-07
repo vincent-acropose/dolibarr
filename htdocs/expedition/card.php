@@ -136,6 +136,7 @@ if (empty($reshook))
 
 	    $object->socid					= $objectsrc->socid;
 	    $object->ref_customer			= $objectsrc->ref_client;
+	    $object->model_pdf				= GETPOST('model');
 	    $object->date_delivery			= $date_delivery;	// Date delivery planed
 	    $object->fk_delivery_address	= $objectsrc->fk_delivery_address;
 	    $object->shipping_method_id		= GETPOST('shipping_method_id','int');
@@ -380,7 +381,7 @@ if (empty($reshook))
 	        $outputlangs = new Translate("",$conf);
 	        $outputlangs->setDefaultLang($newlang);
 	    }
-		$result = $object->generateDocument($object->modelpdf, $outputlangs);
+		$result = $object->generateDocument($object->modelpdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
 	    if ($result <= 0)
 	    {
 	        dol_print_error($db,$result);
@@ -720,6 +721,14 @@ if ($action == 'create')
             print "<tr><td>".$langs->trans("TrackingNumber")."</td>";
             print '<td colspan="3">';
             print '<input name="tracking_number" size="20" value="'.GETPOST('tracking_number','alpha').'">';
+            print "</td></tr>\n";
+
+            // Document model
+            print "<tr><td>".$langs->trans("Model")."</td>";
+            print '<td colspan="3">';
+			include_once DOL_DOCUMENT_ROOT . '/core/modules/expedition/modules_expedition.php';
+			$liste = ModelePdfExpedition::liste_modeles($db);
+			print $form->selectarray('model', $liste, $conf->global->EXPEDITION_ADDON_PDF);
             print "</td></tr>\n";
 
             // Other attributes
@@ -1612,7 +1621,7 @@ else if ($id || $ref)
 	{
 		$ref = dol_sanitizeFileName($object->ref);
 		include_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-		$fileparams = dol_most_recent_file($conf->expedition->dir_output . '/sending/' . $ref, preg_quote($ref,'/'));
+		$fileparams = dol_most_recent_file($conf->expedition->dir_output . '/sending/' . $ref, preg_quote($ref, '/').'([^\-])+');
 		$file=$fileparams['fullname'];
 
 		// Define output language
@@ -1639,7 +1648,7 @@ else if ($id || $ref)
 				dol_print_error($db,$result);
 				exit;
 			}
-			$fileparams = dol_most_recent_file($conf->expedition->dir_output . '/sending/' . $ref, preg_quote($ref,'/'));
+			$fileparams = dol_most_recent_file($conf->expedition->dir_output . '/sending/' . $ref, preg_quote($ref, '/').'([^\-])+');
 			$file=$fileparams['fullname'];
 		}
 

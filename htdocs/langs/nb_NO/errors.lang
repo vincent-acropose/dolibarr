@@ -1,11 +1,11 @@
 # Dolibarr language file - Source file is en_US - errors
 
 # No errors
-NoErrorCommitIsDone=No error, we commit
+NoErrorCommitIsDone=Ingen feil funnet
 # Errors
 Error=Feil
 Errors=Feil
-ErrorButCommitIsDone=Errors found but we validate despite this
+ErrorButCommitIsDone=Valider selv om feil ble funnet
 ErrorBadEMail=E-post %s er feil
 ErrorBadUrl=Url %s er feil
 ErrorLoginAlreadyExists=brukernavnet %s eksisterer allerede.
@@ -25,7 +25,7 @@ ErrorFromToAccountsMustDiffers=Kilde og målkonto må være forskjellig.
 ErrorBadThirdPartyName=Ugyldig verdi for tredjepartens navn
 ErrorProdIdIsMandatory=The %s is mandatory
 ErrorBadCustomerCodeSyntax=Ugyldig syntaks for kundekode
-ErrorBadBarCodeSyntax=Bad syntax for bar code
+ErrorBadBarCodeSyntax=Bad syntax for bar code. May be you set a bad barcode type or you defined a barcode mask for numbering that does not match value scanned.
 ErrorCustomerCodeRequired=Kundekode påkrevet
 ErrorBarCodeRequired=Bar code required
 ErrorCustomerCodeAlreadyUsed=Kundekoden er allerede benyttet
@@ -79,7 +79,7 @@ ErrorModuleRequireJavascript=Javascript må ikke deaktiveres å ha denne funksjo
 ErrorPasswordsMustMatch=Begge har skrevet passord må samsvare med hverandre
 ErrorContactEMail=En teknisk feil oppsto. Vennligst kontakt administrator for å følge e <b>%s</b> no gi feilmeldingsnumrene <b>%s</b> i meldingen, eller enda bedre ved å legge til en skjerm kopi av denne siden.
 ErrorWrongValueForField=Feil verdi for feltet tall <b>%s</b> (verdien <b>«%s"</b> samsvarer ikke med regex regel <b>%s)</b>
-ErrorFieldValueNotIn=Feil verdi for feltnummer <b>%s</b> (verdien <b>«%s&quot;</b> er ikke en verdi tilgjengelig i felten <b>%s</b> av tabellen <b>%s)</b>
+ErrorFieldValueNotIn=Wrong value for field number <b>%s</b> (value '<b>%s</b>' is not a value available into field <b>%s</b> of table <b>%s</b> = <b>%s</b>)
 ErrorFieldRefNotIn=Feil verdi for feltnummer <b>%s</b> (verdi <b>'%s</b> &quot;er ikke en <b>%s</b> eksisterende ref)
 ErrorsOnXLines=Feil på <b>%s</b> kilde linjer
 ErrorFileIsInfectedWithAVirus=Det antivirus programmet var ikke i stand til å validere filen (filen kan være infisert av et virus)
@@ -149,17 +149,27 @@ ErrorPriceExpression6=Wrong number of arguments (%s given, %s expected)
 ErrorPriceExpression8=Unexpected operator '%s'
 ErrorPriceExpression9=An unexpected error occured
 ErrorPriceExpression10=Iperator '%s' lacks operand
-ErrorPriceExpression11=Expecting '%s'
-ErrorPriceExpression14=Division by zero
-ErrorPriceExpression17=Undefined variable '%s'
-ErrorPriceExpression19=Expression not found
-ErrorPriceExpression20=Empty expression
-ErrorPriceExpression21=Empty result '%s'
-ErrorPriceExpression22=Negative result '%s'
-ErrorPriceExpressionInternal=Internal error '%s'
-ErrorPriceExpressionUnknown=Unknown error '%s'
+ErrorPriceExpression11=Forventet '%s'
+ErrorPriceExpression14=Delt på null
+ErrorPriceExpression17=Udefinert variabel '%s'
+ErrorPriceExpression19=Uttrykk ikke funnet
+ErrorPriceExpression20=Tomt uttrykk
+ErrorPriceExpression21=Tomt resultat '%s'
+ErrorPriceExpression22=Negativt resultat '%s'
+ErrorPriceExpressionInternal=Intern feil '%s'
+ErrorPriceExpressionUnknown=Ukjent feil '%s'
 ErrorSrcAndTargetWarehouseMustDiffers=Source and target warehouses must differs
-ErrorTryToMakeMoveOnProductRequiringBatchData=Error, trying to make a stock movement without batch/serial information, on a product requiring batch/serial information
+ErrorTryToMakeMoveOnProductRequiringBatchData=Error, trying to make a stock movement without lot/serial information, on a product requiring lot/serial information
+ErrorCantSetReceptionToTotalDoneWithReceptionToApprove=All recorded receptions must first be verified (approved or denied) before being allowed to do this action
+ErrorCantSetReceptionToTotalDoneWithReceptionDenied=All recorded receptions must first be verified (approved) before being allowed to do this action
+ErrorGlobalVariableUpdater0=HTTP request failed with error '%s'
+ErrorGlobalVariableUpdater1=Invalid JSON format '%s'
+ErrorGlobalVariableUpdater2=Missing parameter '%s'
+ErrorGlobalVariableUpdater3=The requested data was not found in result
+ErrorGlobalVariableUpdater4=SOAP client failed with error '%s'
+ErrorGlobalVariableUpdater5=No global variable selected
+ErrorFieldMustBeANumeric=Field <b>%s</b> must be a numeric value
+ErrorFieldMustBeAnInteger=Field <b>%s</b> must be an integer
 
 # Warnings
 WarningMandatorySetupNotComplete=Mandatory setup parameters are not yet defined

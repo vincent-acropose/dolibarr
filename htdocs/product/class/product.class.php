@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2001-2007	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2004-2014	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2005-2014	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2015	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2006		Andre Cianfarani		<acianfa@free.fr>
  * Copyright (C) 2007-2011	Jean Heimburger			<jean@tiaris.info>
  * Copyright (C) 2010-2013	Juanjo Menent			<jmenent@2byte.es>
@@ -1423,7 +1423,6 @@ class Product extends CommonObject
 			else if ($ref_ext) $sql.= " AND ref_ext = '".$this->db->escape($ref_ext)."'";
 		}
 
-		dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ( $resql )
 		{
@@ -2170,7 +2169,7 @@ class Product extends CommonObject
 		$sql = "SELECT sum(d.qty), date_format(c.date_commande, '%Y%m')";
 		if ($mode == 'bynumber') $sql.= ", count(DISTINCT c.rowid)";
 		$sql.= " FROM ".MAIN_DB_PREFIX."commande_fournisseurdet as d, ".MAIN_DB_PREFIX."commande_fournisseur as c, ".MAIN_DB_PREFIX."societe as s";
-		if (!$user->rights->fournisseur->lire && !$socid) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
+		if (!$user->rights->societe->client->voir && !$socid) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 		$sql.= " WHERE c.rowid = d.fk_commande";
 		$sql.= " AND d.fk_product =".$this->id;
 		$sql.= " AND c.fk_soc = s.rowid";
@@ -3149,8 +3148,11 @@ class Product extends CommonObject
 	{
 		include_once DOL_DOCUMENT_ROOT .'/core/lib/files.lib.php';
 
+		global $conf;
+
 		$dir = $sdir;
-		if (! empty($conf->global->PRODUCT_USE_OLD_PATH_FOR_PHOTO)) $dir .= '/'. get_exdir($this->id,2) . $this->id ."/photos";
+		if (! empty($conf->global->PRODUCT_USE_OLD_PATH_FOR_PHOTO)) $dir .= '/'. get_exdir($this->id,2) . $this->id ."/photos/";
+		else $dir .= '/'.dol_sanitizeFileName($this->ref).'/';
 
 		$nbphoto=0;
 
@@ -3413,12 +3415,18 @@ class Product extends CommonObject
 		$filename = preg_replace('/'.preg_quote($dir,'/').'/i','',$file); // Nom du fichier
 
 		// On efface l'image d'origine
-		dol_delete_file($file);
+		dol_delete_file($file, 0, 0, 0, $this); // For triggers
 
 		// Si elle existe, on efface la vignette
 		if (preg_match('/('.$this->regeximgext.')$/i',$filename,$regs))
 		{
 			$photo_vignette=preg_replace('/'.$regs[0].'/i','',$filename).'_small'.$regs[0];
+			if (file_exists(dol_osencode($dirthumb.$photo_vignette)))
+			{
+				dol_delete_file($dirthumb.$photo_vignette);
+			}
+
+			$photo_vignette=preg_replace('/'.$regs[0].'/i','',$filename).'_mini'.$regs[0];
 			if (file_exists(dol_osencode($dirthumb.$photo_vignette)))
 			{
 				dol_delete_file($dirthumb.$photo_vignette);

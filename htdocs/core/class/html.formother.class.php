@@ -362,8 +362,12 @@ class FormOther
         if ($conf->use_javascript_ajax)
         {
             include_once DOL_DOCUMENT_ROOT . '/core/lib/ajax.lib.php';
-            $out.= ajax_combobox($htmlname);
-            $nodatarole=' data-role="none"';
+            $htmlforcombo = ajax_combobox($htmlname);
+            if ($htmlforcombo)
+            {
+            	$out.= $htmlforcombo;
+            	$nodatarole=' data-role="none"';
+            }
         }
         // Select each sales and print them in a select input
         $out.='<select class="flat" id="'.$htmlname.'" name="'.$htmlname.'"'.$nodatarole.'>';
@@ -582,7 +586,7 @@ class FormOther
     }
 
     /**
-     *		Output a HTML code to select a color
+     *		Output a HTML code to select a color. Field will return an hexa color like '334455'.
      *
      *		@param	string		$set_color		Pre-selected color
      *		@param	string		$prefix			Name of HTML field

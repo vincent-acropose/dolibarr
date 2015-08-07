@@ -3,7 +3,7 @@
  * Copyright (C) 2002-2003 Jean-Louis Bergamo   <jlb@j1b.org>
  * Copyright (C) 2004-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
- * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2015 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2005      Lionel Cousteix      <etm_ltd@tiscali.co.uk>
  * Copyright (C) 2011      Herve Prot           <herve.prot@symeos.com>
  * Copyright (C) 2012      Juanjo Menent        <jmenent@2byte.es>
@@ -213,7 +213,7 @@ if ($action == 'add' && $canadduser)
         $ret = $extrafields->setOptionalsFromPost($extralabels,$object);
 		if ($ret < 0) $error++;
 
-        // If multicompany is off, admin users must all be on entity 0.
+        // Set entity property
         $entity=GETPOST('entity','int');
         if (! empty($conf->multicompany->enabled))
         {
@@ -984,7 +984,7 @@ if (($action == 'create') || ($action == 'adduserldap'))
     print '<input size="8" type="text" name="weeklyhours" value="'.GETPOST('weeklyhours').'">';
     print '</td>';
     print "</tr>\n";
-	
+
 	// Accountancy code
 	if ($conf->salaries->enabled)
 	{
@@ -1337,7 +1337,7 @@ else
 				print '<tr><td valign="top">'.$langs->trans("AccountancyCode").'</td>';
 				print '<td colspan="2">'.$object->accountancy_code.'</td>';
 			}
-				
+
 			// Color user
 			if (! empty($conf->agenda->enabled))
             {
@@ -1425,7 +1425,7 @@ else
 	            if (! empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode) && $conf->entity == 1 && $user->admin && ! $user->entity)
 	            {
 	            	print '<tr><td valign="top">'.$langs->trans("Entity").'</td><td width="75%" class="valeur">';
-	            	if ($object->admin && ! $object->entity)
+	            	if (empty($object->entity))
 	            	{
 	            		print $langs->trans("AllEntities");
 	            	}
@@ -2049,7 +2049,7 @@ else
 				}
 				print '</td>';
 				print "</tr>";
-			}	
+			}
 
 			// User color
 			if (! empty($conf->agenda->enabled))
@@ -2119,7 +2119,7 @@ else
             	if (empty($conf->multicompany->transverse_mode) && $conf->entity == 1 && $user->admin && ! $user->entity)
             	{
             		print "<tr>".'<td valign="top">'.$langs->trans("Entity").'</td>';
-            		print "<td>".$mc->select_entities($object->entity);
+            		print "<td>".$mc->select_entities($object->entity, 'entity', '', 0, 1);		// last parameter 1 means, show also a choice 0=>'all entities'
             		print "</td></tr>\n";
             	}
             	else

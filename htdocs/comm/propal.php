@@ -567,7 +567,6 @@ if (empty($reshook))
 	include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
 
 
-
 	// Go back to draft
 	if ($action == 'modif' && $user->rights->propal->creer)
 	{
@@ -839,7 +838,8 @@ if (empty($reshook))
 	}
 
 	// Mise a jour d'une ligne dans la propale
-	else if ($action == 'updateligne' && $user->rights->propal->creer && GETPOST('save') == $langs->trans("Save")) {
+	else if ($action == 'updateligne' && $user->rights->propal->creer && GETPOST('save'))
+	{
 		// Define info_bits
 		$info_bits = 0;
 		if (preg_match('/\*/', GETPOST('tva_tx')))
@@ -851,8 +851,8 @@ if (empty($reshook))
 		// Define vat_rate
 		$vat_rate = (GETPOST('tva_tx') ? GETPOST('tva_tx') : 0);
 		$vat_rate = str_replace('*', '', $vat_rate);
-		$localtax1_rate = get_localtax($vat_rate, 1, $object->thirdparty);
-		$localtax2_rate = get_localtax($vat_rate, 2, $object->thirdparty);
+		$localtax1_rate = get_localtax($vat_rate, 1, $object->thirdparty, $mysoc);
+		$localtax2_rate = get_localtax($vat_rate, 2, $object->thirdparty, $mysoc);
 		$pu_ht = GETPOST('price_ht');
 
 		// Add buying price
@@ -947,7 +947,8 @@ if (empty($reshook))
 		}
 	}
 
-	else if ($action == 'updateligne' && $user->rights->propal->creer && GETPOST('cancel') == $langs->trans('Cancel')) {
+	else if ($action == 'updateligne' && $user->rights->propal->creer && GETPOST('cancel'))
+	{
 		header('Location: ' . $_SERVER['PHP_SELF'] . '?id=' . $object->id); // Pour reaffichage de la fiche en cours d'edition
 		exit();
 	}
@@ -2193,7 +2194,7 @@ if ($action == 'create')
 
 		$ref = dol_sanitizeFileName($object->ref);
 		include_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
-		$fileparams = dol_most_recent_file($conf->propal->dir_output . '/' . $ref, preg_quote($ref, '/'));
+		$fileparams = dol_most_recent_file($conf->propal->dir_output . '/' . $ref, preg_quote($ref, '/').'([^\-])+');
 		$file = $fileparams ['fullname'];
 
 		// Define output language
@@ -2218,7 +2219,7 @@ if ($action == 'create')
 				dol_print_error($db, $result);
 				exit();
 			}
-			$fileparams = dol_most_recent_file($conf->propal->dir_output . '/' . $ref, preg_quote($ref, '/'));
+			$fileparams = dol_most_recent_file($conf->propal->dir_output . '/' . $ref, preg_quote($ref, '/').'([^\-])+');
 			$file = $fileparams ['fullname'];
 		}
 
