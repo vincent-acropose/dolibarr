@@ -85,83 +85,137 @@ class FormProjets
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
-			if (empty($option_only)) {
-				$out.= '<select class="flat" name="'.$htmlname.'">';
-			}
-			if (!empty($show_empty)) {
-				$out.= '<option value="0">&nbsp;</option>';
-			}
 			$num = $this->db->num_rows($resql);
 			$i = 0;
-			if ($num)
-			{
-				while ($i < $num)
-				{
-					$obj = $this->db->fetch_object($resql);
-					// If we ask to filter on a company and user has no permission to see all companies and project is linked to another company, we hide project.
-					if ($socid > 0 && (empty($obj->fk_soc) || $obj->fk_soc == $socid) && ! $user->rights->societe->lire)
-					{
-						// Do nothing
+
+			if ($conf->global->PROJECT_USE_SEARCH_TO_SELECT) {
+				$projects = array();
+				$selected_project = null;
+
+				// Construct projects array
+				if ($num) {
+					while ($i < $num) {
+						$obj = $this->db->fetch_object($resql);
+
+						$projects[] = array(
+							'label' => utf8_encode($obj->title),
+							'value' => $obj->rowid
+						);
+
+						if (!empty($selected) && $obj->rowid == $selected) {
+							$selected_project = $obj;
+						}
+
+						$i++;
 					}
-					else
+				}
+
+				// Form fields
+				$out .= '
+					<input type="hidden" id="hid_project_id" name="' . $htmlname . '" value="' . ($selected ? $selected_project->rowid : '') . '" />
+					<input type="text" id="txt_project_id" value="' . ($selected ? $selected_project->title : '') .'" />
+				';
+
+				// Autocompletion script
+				$out .= '
+				<script>
+						var availableTags = ' . json_encode($projects) . ';
+
+					    $( "#txt_project_id" ).autocomplete({
+					      source: availableTags,
+								minLength: ' . $conf->global->PROJECT_USE_SEARCH_TO_SELECT . ',
+					      select: function(event, ui) {
+					      	event.preventDefault();
+
+					      	$("#hid_project_id").val(ui.item.value);
+					      	$(this).val(ui.item.label);
+					      }
+					    });
+
+					    $("#txt_project_id").on("input", function() {
+					    	$("#hid_project_id").val("");
+					    });
+					</script>
+				';
+			} else {
+				if (empty($option_only)) {
+					$out.= '<select class="flat" name="'.$htmlname.'">';
+				}
+				if (!empty($show_empty)) {
+					$out.= '<option value="0">&nbsp;</option>';
+				}
+
+				if ($num)
+				{
+					while ($i < $num)
 					{
-						if ($discard_closed == 1 && $obj->fk_statut == 2)
+						$obj = $this->db->fetch_object($resql);
+						// If we ask to filter on a company and user has no permission to see all companies and project is linked to another company, we hide project.
+						if ($socid > 0 && (empty($obj->fk_soc) || $obj->fk_soc == $socid) && ! $user->rights->societe->lire)
 						{
-							$i++;
-							continue;
-						}
-
-						$labeltoshow=dol_trunc($obj->ref,18);
-						//if ($obj->public) $labeltoshow.=' ('.$langs->trans("SharedProject").')';
-						//else $labeltoshow.=' ('.$langs->trans("Private").')';
-						$labeltoshow.=' '.dol_trunc($obj->title,$maxlength);
-
-						$disabled=0;
-						if ($obj->fk_statut == 0)
-						{
-							$disabled=1;
-							$labeltoshow.=' - '.$langs->trans("Draft");
-						}
-						else if ($obj->fk_statut == 2)
-						{
-							if ($discard_closed == 2) $disabled=1;
-							$labeltoshow.=' - '.$langs->trans("Closed");
-						}
-						else if ($socid > 0 && (! empty($obj->fk_soc) && $obj->fk_soc != $socid))
-						{
-							$disabled=1;
-							$labeltoshow.=' - '.$langs->trans("LinkedToAnotherCompany");
-						}
-						
-						if (!empty($selected) && $selected == $obj->rowid && $obj->fk_statut > 0)
-						{
-							$out.= '<option value="'.$obj->rowid.'" selected="selected">'.$labeltoshow.'</option>';
+							// Do nothing
 						}
 						else
 						{
-							if ($hideunselectables && $disabled)
+							if ($discard_closed == 1 && $obj->fk_statut == 2)
 							{
-								$resultat='';
+								$i++;
+								continue;
+							}
+
+							$labeltoshow=dol_trunc($obj->ref,18);
+							//if ($obj->public) $labeltoshow.=' ('.$langs->trans("SharedProject").')';
+							//else $labeltoshow.=' ('.$langs->trans("Private").')';
+							$labeltoshow.=' '.dol_trunc($obj->title,$maxlength);
+
+							$disabled=0;
+							if ($obj->fk_statut == 0)
+							{
+								$disabled=1;
+								$labeltoshow.=' - '.$langs->trans("Draft");
+							}
+							else if ($obj->fk_statut == 2)
+							{
+								if ($discard_closed == 2) $disabled=1;
+								$labeltoshow.=' - '.$langs->trans("Closed");
+							}
+							else if ($socid > 0 && (! empty($obj->fk_soc) && $obj->fk_soc != $socid))
+							{
+								$disabled=1;
+								$labeltoshow.=' - '.$langs->trans("LinkedToAnotherCompany");
+							}
+
+							if (!empty($selected) && $selected == $obj->rowid && $obj->fk_statut > 0)
+							{
+								$out.= '<option value="'.$obj->rowid.'" selected="selected">'.$labeltoshow.'</option>';
 							}
 							else
 							{
-								$resultat='<option value="'.$obj->rowid.'"';
-								if ($disabled) $resultat.=' disabled="disabled"';
-								//if ($obj->public) $labeltoshow.=' ('.$langs->trans("Public").')';
-								//else $labeltoshow.=' ('.$langs->trans("Private").')';
-								$resultat.='>';
-								$resultat.=$labeltoshow;
-								$resultat.='</option>';
+								if ($hideunselectables && $disabled)
+								{
+									$resultat='';
+								}
+								else
+								{
+									$resultat='<option value="'.$obj->rowid.'"';
+									if ($disabled) $resultat.=' disabled="disabled"';
+									//if ($obj->public) $labeltoshow.=' ('.$langs->trans("Public").')';
+									//else $labeltoshow.=' ('.$langs->trans("Private").')';
+									$resultat.='>';
+									$resultat.=$labeltoshow;
+									$resultat.='</option>';
+								}
+								$out.= $resultat;
 							}
-							$out.= $resultat;
 						}
+						$i++;
 					}
-					$i++;
+				}
+				if (empty($option_only)) {
+					$out.= '</select>';
 				}
 			}
-			if (empty($option_only)) {
-				$out.= '</select>';
-			}
+
 			print $out;
 
 			$this->db->free($resql);

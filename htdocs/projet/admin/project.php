@@ -285,6 +285,12 @@ else if ($action == 'setmodtask')
 	dolibarr_set_const($db, "PROJECT_TASK_ADDON",$value,'chaine',0,'',$conf->entity);
 }
 
+else if ($action == 'usesearchtoselectproject')
+{
+	$usesearch = GETPOST('activate_usesearchtoselectproject','alpha');
+	$res = dolibarr_set_const($db, "PROJECT_USE_SEARCH_TO_SELECT", $usesearch,'chaine',0,'',$conf->entity);
+}
+
 
 /*
  * View
@@ -816,6 +822,42 @@ foreach ($dirmodels as $reldir)
 }
 
 print '</table><br/>';
+
+print "<table class=\"noborder\" width=\"100%\">\n";
+print "<tr class=\"liste_titre\">\n";
+print '  <td>'.$langs->trans("Parameters")."</td>\n";
+print "  <td>".$langs->trans("Value")."</td>\n";
+print '  <td></td>';
+print "</tr>\n";
+
+clearstatcache();
+
+$var=!$var;
+print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+print '<input type="hidden" name="action" value="usesearchtoselectproject">';
+print '<tr '.$bc[$var].'>';
+print '<td>'.$langs->trans("UseSearchToSelectProject").'</td>';
+if (empty($conf->use_javascript_ajax)) {
+	print '<td class="nowrap" align="right" colspan="2">';
+	print $langs->trans("NotAvailableWhenAjaxDisabled");
+	print '</td>';
+} else {
+	print '<td width="60" align="right">';
+	$arrval=array('0'=>$langs->trans("No"),
+	'1'=>$langs->trans("Yes").' ('.$langs->trans("NumberOfKeyToSearch",1).')',
+		'2'=>$langs->trans("Yes").' ('.$langs->trans("NumberOfKeyToSearch",2).')',
+		'3'=>$langs->trans("Yes").' ('.$langs->trans("NumberOfKeyToSearch",3).')',
+	);
+	print $form->selectarray("activate_usesearchtoselectproject",$arrval,$conf->global->PROJECT_USE_SEARCH_TO_SELECT);
+	print '</td><td align="right">';
+	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+	print '</td>';
+}
+print '</tr>';
+print '</form>';
+
+print '</table><br />';
 
 $db->close();
 
