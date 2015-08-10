@@ -3193,7 +3193,9 @@ class Product extends CommonObject
 			$handle=opendir($dir_osencoded);
             if (is_resource($handle))
             {
-    			while (($file = readdir($handle)) != false)
+            	$TFile = scandir($dir_osencoded);
+    			//while (($file = readdir($handle)) != false)
+    			foreach ($TFile as $file)
     			{
     				$photo='';
 
