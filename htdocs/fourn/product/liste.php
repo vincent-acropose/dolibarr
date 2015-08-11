@@ -172,6 +172,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans("Supplier"),$_SERVER["PHP_SELF"], "ppf.fk_soc",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("BuyingPrice"),$_SERVER["PHP_SELF"], "ppf.price",$param,"",'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("QtyMin"),$_SERVER["PHP_SELF"], "ppf.quantity",$param,"",'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("RealStock"),$_SERVER["PHP_SELF"], "ppf.quantity",$param,"",'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("UnitPrice"),$_SERVER["PHP_SELF"], "ppf.unitprice",$param,"",'align="right"',$sortfield,$sortorder);
 	print "</tr>\n";
 
@@ -185,6 +186,8 @@ if ($resql)
 	print '</td>';
 	print '<td class="liste_titre">';
 	print '<input class="flat" type="text" name="snom" value="'.$snom.'">';
+	print '</td>';
+	print '<td>';
 	print '</td>';
 	print '<td class="liste_titre" colspan="4" align="right">';
 	print '<input type="image" class="liste_titre" value="button_search" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
@@ -205,6 +208,8 @@ if ($resql)
 		$productstatic->id=$objp->rowid;
 		$productstatic->ref=$objp->ref;
 		$productstatic->type=$objp->fk_product_type;
+		$productstatic->fetch($productstatic->id);
+		$productstatic->load_stock();
 		print $productstatic->getNomUrl(1,'supplier');
 		print '</td>';
 
@@ -221,6 +226,8 @@ if ($resql)
 		print '<td align="right">'.price($objp->price).'</td>';
 
 		print '<td align="right">'.$objp->qty.'</td>';
+
+		print '<td align="right">'.$productstatic->stock_reel.'</td>';
 
 		print '<td align="right">'.price($objp->unitprice).'</td>';
 
