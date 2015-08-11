@@ -32,6 +32,7 @@ require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.class.php';
 
 $langs->load("products");
+$langs->load("stocks");
 $langs->load("suppliers");
 
 if (!$user->rights->produit->lire && !$user->rights->service->lire) accessforbidden();
