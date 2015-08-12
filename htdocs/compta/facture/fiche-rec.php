@@ -507,6 +507,11 @@ else
 			 */
 			print '<div class="tabsAction">';
 
+			if ($object->statut == 0 && $user->rights->facture->creer)
+			{
+			    echo '<div class="inline-block divButAction"><a class="butAction" href="'.DOL_URL_ROOT.'/compta/facture.php?action=create&amp;socid='.$object->thirdparty->id.'&amp;fac_rec='.$object->id.'">'.$langs->trans("CreateBill").'</a></div>';
+			}
+
 			if ($object->statut == 0 && $user->rights->facture->supprimer)
 			{
 				print '<a class="butActionDelete" href="'.$_SERVER['PHP_SELF'].'?action=delete&id='.$object->id.'">'.$langs->trans('Delete').'</a>';
