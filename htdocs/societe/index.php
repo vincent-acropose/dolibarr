@@ -325,7 +325,7 @@ if ($result)
             $i++;
         }
 
-        $db->free();
+        $db->free($result);
 
         print "</table>\n";
         print "<!-- End last thirdparties modified -->\n";
