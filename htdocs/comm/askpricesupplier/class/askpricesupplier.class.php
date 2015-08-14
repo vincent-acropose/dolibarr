@@ -1638,9 +1638,8 @@ class AskPriceSupplier extends CommonObject
 			if ($product->subprice <= 0)
 				continue;
 
-			$idProductFourn = $this->find_min_price_product_fournisseur($product->fk_product, $product->qty, $this->socid);
-			$res = $productsupplier->fetch_product_fournisseur_price($idProductFourn);
-
+			$idProductFourn = $productsupplier->find_min_price_product_fournisseur($product->fk_product, $product->qty);
+			if ($idProductFourn > 0) $productsupplier->fetch($idProductFourn);
 			if ($res > 0) {
 				if ($productsupplier->fourn_qty == $product->qty) {
 					$this->updatePriceFournisseur($productsupplier->product_fourn_price_id, $product, $user);

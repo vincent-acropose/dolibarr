@@ -124,17 +124,10 @@ if (empty($usemargins)) $usemargins=0;
 	}
 	?>
 	</td>
-<<<<<<< HEAD
-	<?php if ($object->element == 'askpricesupplier') { ?>
-		<td align="right"><?php echo $line->ref_fourn; ?></td>
-	<?php } ?>
-=======
 
 	<?php if ($object->element == 'askpricesupplier') { ?>
 		<td align="right"><?php echo $line->ref_fourn; ?></td>
 	<?php } ?>
-
->>>>>>> NEW : Intégration du module "Demande de prix fournisseur". PS dsl pour le commit de bourrin
 	<td align="right" class="nowrap"><?php $coldisplay++; ?><?php echo vatrate($line->tva_tx,'%',$line->info_bits); ?></td>
 
 	<td align="right" class="nowrap"><?php $coldisplay++; ?><?php echo price($line->subprice); ?></td>
