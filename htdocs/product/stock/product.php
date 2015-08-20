@@ -280,9 +280,15 @@ if ($id > 0 || $ref)
 		// Calculating a theorical value of stock if stock increment is done on real sending
 		if (! empty($conf->global->STOCK_CALCULATE_ON_SHIPMENT))
 		{
+			
+			$formule = $product->stock_reel." - ( ".$product->stats_commande['qty']." - ".$product->stats_expedition['qty']." ) + ( ".$product->stats_commande_fournisseur['qty']." - ".$product->stats_reception['qty']." )";
+			$legende = "stock physique - ( quantités commandes validées - quantités déjà expédiées) + (quantités commandes fournisseur validées - quantités déjà réceptionnées)";
+			
+			//$html->textwithpicto($form->texte('', 'lot_number', $asset->lot_number, 100,255,'','','à saisir'), $langs->trans('CreateAssetFromProductNumLot'), 1, 'help', '', 0, 3)
+				
 			// Stock theorique
 			print '<tr><td>'.$langs->trans("VirtualStock").'</td>';
-			print "<td>".$product->stock_theorique;
+			print "<td>".$product->stock_theorique." ".$form->textwithpicto('',$formule."<br>".$legende, 1, 'help', '', 0, 3);
 			if ($product->stock_theorique < $product->seuil_stock_alerte)
 			{
 				print ' '.img_warning($langs->trans("StockLowerThanLimit"));
