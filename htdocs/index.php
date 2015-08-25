@@ -424,7 +424,7 @@ if (! empty($conf->facture->enabled) && $user->rights->facture->lire)
     $board->load_board($user);
     $board->warning_delay=$conf->facture->client->warning_delay/60/60/24;
     $board->label=$langs->trans("CustomerBillsUnpaid");
-    $board->url=DOL_URL_ROOT.'/compta/facture/impayees.php';
+    $board->url=DOL_URL_ROOT.'/compta/facture/impayees.php?option=late';
     $board->img=img_object($langs->trans("Bills"),"bill");
     $rowspan++;
     $dashboardlines[]=$board;
