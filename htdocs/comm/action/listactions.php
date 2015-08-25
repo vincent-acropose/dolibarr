@@ -171,6 +171,10 @@ $listofextcals=array();
 }
 */
 
+$now=dol_now();
+$delay_warning=$conf->global->MAIN_DELAY_ACTIONS_TODO*24*60*60;
+$late_only = GETPOST('lateonly');
+	
 $param='';
 if ($actioncode || isset($_GET['actioncode']) || isset($_POST['actioncode'])) $param.="&actioncode=".$actioncode;
 if ($status || isset($_GET['status']) || isset($_POST['status'])) $param.="&status=".$status;
@@ -181,6 +185,7 @@ if ($showbirthday) $param.="&showbirthday=1";
 if ($pid) $param.="&projectid=".$pid;
 if ($type) $param.="&type=".$type;
 if ($usergroup) $param.="&usergroup=".$usergroup;
+if ($late_only) $param.="&lateonly=1";
 
 $sql = "SELECT";
 if ($usergroup > 0) $sql.=" DISTINCT";
@@ -224,6 +229,21 @@ if ($filtert > 0 || $usergroup > 0)
 if ($dateselect > 0) $sql.= " AND ((a.datep2 >= '".$db->idate($dateselect)."' AND a.datep <= '".$db->idate($dateselect+3600*24-1)."') OR (a.datep2 IS NULL AND a.datep > '".$db->idate($dateselect-3600)."' AND a.datep <= '".$db->idate($dateselect+3600*24-1)."'))";
 if ($datestart > 0) $sql.= " AND a.datep BETWEEN '".$db->idate($datestart)."' AND '".$db->idate($datestart+3600*24-1)."'";
 if ($dateend > 0) $sql.= " AND a.datep2 BETWEEN '".$db->idate($dateend)."' AND '".$db->idate($dateend+3600*24-1)."'";
+
+if ($late_only) {
+	//if ($obj->percent == 0 && $obj->dp && $db->jdate($obj->dp) < ($now - $delay_warning)) $late=1;
+	$sql .= " AND ((a.percent = 0 AND a.datep IS NOT NULL AND UNIX_TIMESTAMP(a.datep) < " . ($now - $delay_warning) . ")";
+	
+	//if ($obj->percent == 0 && ! $obj->dp && $obj->dp2 && $db->jdate($obj->dp) < ($now - $delay_warning)) $late=1;
+	$sql .= " OR (a.percent = 0 AND a.datep IS NULL AND a.datep2 IS NOT NULL AND UNIX_TIMESTAMP(a.datep2) < " . ($now - $delay_warning) . ")";
+	
+	//if ($obj->percent > 0 && $obj->percent < 100 && $obj->dp2 && $db->jdate($obj->dp2) < ($now - $delay_warning)) $late=1;
+	$sql .= " OR (a.percent > 0 AND a.percent < 100 AND a.datep2 IS NOT NULL AND UNIX_TIMESTAMP(a.datep2) < " . ($now - $delay_warning) . ")";
+	
+	//if ($obj->percent > 0 && $obj->percent < 100 && ! $obj->dp2 && $obj->dp && $db->jdate($obj->dp) < ($now - $delay_warning)) $late=1;
+	$sql .= " OR (a.percent > 0 AND a.percent < 100 AND a.datep2 IS NULL AND a.datep IS NOT NULL AND UNIX_TIMESTAMP(a.datep) < " . ($now - $delay_warning) . "))";	
+}
+
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($limit + 1, $offset);
 //print $sql;
@@ -286,7 +306,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans("ActionsOwnedBy"),$_SERVER["PHP_SELF"],"",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AffectedTo"),$_SERVER["PHP_SELF"],"ut.login",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DoneBy"),$_SERVER["PHP_SELF"],"ud.login",$param,"","",$sortfield,$sortorder);
-		
+	
 	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"a.percent",$param,"",'align="right"',$sortfield,$sortorder);
 	print "</tr>\n";
 
@@ -302,15 +322,14 @@ if ($resql)
 	print '<td class="liste_titre"></td>';
 	//print '<td class="liste_titre"></td>';
 	print '<td class="liste_titre"></td>';
+	print '<td class="liste_titre"></td>';
+	print '<td class="liste_titre"></td>';
 	print '<td class="liste_titre" align="right"><input class="liste_titre" type="image" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
-	print '<input type="image" class="liste_titre" name="button_removefilter" src="'.img_picto($langs->trans("Search"),'searchclear.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'" title="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">';
+		print '<input type="image" class="liste_titre" name="button_removefilter" src="'.img_picto($langs->trans("Search"),'searchclear.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'" title="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">';
     print '</td>';
 	print "</tr>\n";
 
 	$contactstatic = new Contact($db);
-	$now=dol_now();
-	$delay_warning=$conf->global->MAIN_DELAY_ACTIONS_TODO*24*60*60;
-	$late_only = GETPOST('lateonly');
 
 	$var=true;
 	while ($i < min($num,$limit))
@@ -322,11 +341,6 @@ if ($resql)
 		if ($obj->percent == 0 && ! $obj->dp && $obj->dp2 && $db->jdate($obj->dp) < ($now - $delay_warning)) $late=1;
 		if ($obj->percent > 0 && $obj->percent < 100 && $obj->dp2 && $db->jdate($obj->dp2) < ($now - $delay_warning)) $late=1;
 		if ($obj->percent > 0 && $obj->percent < 100 && ! $obj->dp2 && $obj->dp && $db->jdate($obj->dp) < ($now - $delay_warning)) $late=1;
-		
-		if (!$late && $late_only) {
-			$i++;
-			continue;
-		}
 	
         // Discard auto action if option is on
         if (! empty($conf->global->AGENDA_ALWAYS_HIDE_AUTO) && $obj->type_code == 'AC_OTH_AUTO')
