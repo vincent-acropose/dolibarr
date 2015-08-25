@@ -118,6 +118,8 @@ if ($mode == 'search')
  */
 
 $now=dol_now();
+$late_only = GETPOST('lateonly');
+
 $form=new Form($db);
 $htmlother=new FormOther($db);
 $formfile = new FormFile($db);
@@ -187,6 +189,11 @@ if ($search_amount_no_tax)
 if ($search_amount_all_tax)
 {
 	$sql .= " AND fac.total_ttc = '".$db->escape(price2num($search_amount_all_tax))."'";
+}
+
+if ($late_only) {
+	//if (($obj->paye == 0) && ($obj->fk_statut > 0) && $obj->date_echeance && $db->jdate($obj->date_echeance) < ($now - $conf->facture->fournisseur->warning_delay)) print img_picto($langs->trans("Late"),"warning");
+	$sql .= " AND (fac.paye = 0 AND fac.fk_statut > 0 AND UNIX_TIMESTAMP(fac.date_lim_reglement) < " . ($now - $conf->facture->fournisseur->warning_delay) . ")";
 }
 
 $nbtotalofrecords = 0;
