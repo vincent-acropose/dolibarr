@@ -130,6 +130,7 @@ $formpropal = new FormPropal($db);
 $companystatic=new Societe($db);
 
 $now=dol_now();
+$late_only = GETPOST('lateonly');
 
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
@@ -213,6 +214,10 @@ if ($search_user > 0)
     $sql.= " AND c.fk_c_type_contact = tc.rowid AND tc.element='propal' AND tc.source='internal' AND c.element_id = p.rowid AND c.fk_socpeople = ".$search_user;
 }
 
+if ($late_only) {
+	//($objp->fk_statut == 1 && $db->jdate($objp->dfv) < ($now - $conf->propal->cloture->warning_delay))
+	$sql .= " AND (p.fk_statut = 1 AND UNIX_TIMESTAMP(p.fin_validite) < " . ($now - $conf->propal->cloture->warning_delay) . ")";	
+}
 
 $sql.= ' ORDER BY '.$sortfield.' '.$sortorder.', p.ref DESC';
 
@@ -250,6 +255,8 @@ if ($result)
 	if ($search_montant_ht)  $param.='&search_montant_ht='.$search_montant_ht;
 	if ($search_author)  	 $param.='&search_author='.$search_author;
 	if ($search_town)		 $param.='&search_town='.$search_town;
+	if ($late_only)			 $param.='&lateonly=1';
+	
 	print_barre_liste($langs->trans('ListOfProposals').' '.($socid?'- '.$soc->name:''), $page, $_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',$num,$nbtotalofrecords);
 
 	// Lignes des champs de filtre
@@ -342,6 +349,9 @@ if ($result)
 	{
 		$objp = $db->fetch_object($result);
 		$now = dol_now();
+		
+		$late = ($objp->fk_statut == 1 && $db->jdate($objp->dfv) < ($now - $conf->propal->cloture->warning_delay));
+		
 		$var=!$var;
 		print '<tr '.$bc[$var].'>';
 		print '<td class="nowrap">';
@@ -355,7 +365,7 @@ if ($result)
 		print '</td>';
 
 		print '<td style="min-width: 20px" class="nobordernopadding nowrap">';
-		if ($objp->fk_statut == 1 && $db->jdate($objp->dfv) < ($now - $conf->propal->cloture->warning_delay)) print img_warning($langs->trans("Late"));
+		if ($late) print img_warning($langs->trans("Late"));
 		if (! empty($objp->note_private))
 		{
 			print ' <span class="note">';
