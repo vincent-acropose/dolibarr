@@ -101,6 +101,7 @@ if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'e
  */
 
 $now=dol_now();
+$late_only = GETPOST('lateonly');
 
 $form = new Form($db);
 $formother = new FormOther($db);
@@ -197,6 +198,10 @@ if ($search_sale > 0) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$sear
 if ($search_user > 0)
 {
     $sql.= " AND ec.fk_c_type_contact = tc.rowid AND tc.element='commande' AND tc.source='internal' AND ec.element_id = c.rowid AND ec.fk_socpeople = ".$search_user;
+}
+
+if ($late_only) {
+	$sql .= " AND (c.fk_statut IN (1, 2) AND GREATEST(IFNULL(UNIX_TIMESTAMP(c.date_commande), 0), IFNULL(UNIX_TIMESTAMP(c.date_livraison), 0)) < " . ($now - $conf->commande->client->warning_delay) . ")";
 }
 
 $sql.= ' ORDER BY '.$sortfield.' '.$sortorder;
@@ -325,7 +330,6 @@ if ($resql)
 	$total=0;
 	$subtotal=0;
     $productstat_cache=array();
-	$late_only = GETPOST('lateonly');
 
     $generic_commande = new Commande($db);
     $generic_product = new Product($db);
@@ -333,11 +337,6 @@ if ($resql)
         $objp = $db->fetch_object($resql);
         
 		$late = (($objp->fk_statut > 0) && ($objp->fk_statut < 3) && max($db->jdate($objp->date_commande),$db->jdate($objp->date_delivery)) < ($now - $conf->commande->client->warning_delay));
-		
-		if (!$late && $late_only) {
-			$i++;
-			continue;
-		}
 		
         $var=!$var;
         print '<tr '.$bc[$var].'>';
