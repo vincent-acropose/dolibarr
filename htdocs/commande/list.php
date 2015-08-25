@@ -325,11 +325,20 @@ if ($resql)
 	$total=0;
 	$subtotal=0;
     $productstat_cache=array();
+	$late_only = GETPOST('lateonly');
 
     $generic_commande = new Commande($db);
     $generic_product = new Product($db);
     while ($i < min($num,$limit)) {
         $objp = $db->fetch_object($resql);
+        
+		$late = (($objp->fk_statut > 0) && ($objp->fk_statut < 3) && max($db->jdate($objp->date_commande),$db->jdate($objp->date_delivery)) < ($now - $conf->commande->client->warning_delay));
+		
+		if (!$late && $late_only) {
+			$i++;
+			continue;
+		}
+		
         $var=!$var;
         print '<tr '.$bc[$var].'>';
         print '<td class="nowrap">';
@@ -416,7 +425,7 @@ if ($resql)
 
         // warning late icon
 		print '<td style="min-width: 20px" class="nobordernopadding nowrap">';
-		if (($objp->fk_statut > 0) && ($objp->fk_statut < 3) && max($db->jdate($objp->date_commande),$db->jdate($objp->date_delivery)) < ($now - $conf->commande->client->warning_delay))
+		if ($late)
 			print img_picto($langs->trans("Late"),"warning");
 		if(!empty($objp->note_private))
 		{

@@ -98,7 +98,7 @@ $offset = $conf->liste_limit * $page ;
  * Mode Liste
  */
 
-$sql = "SELECT s.rowid as socid, s.nom as name, cf.date_commande as dc,";
+$sql = "SELECT s.rowid as socid, s.nom as name, cf.date_commande as dc, cf.date_creation,";
 $sql.= " cf.rowid,cf.ref, cf.ref_supplier, cf.fk_statut, cf.total_ttc, cf.fk_user_author,cf.date_livraison,";
 $sql.= " u.login";
 $sql.= " FROM (".MAIN_DB_PREFIX."societe as s,";
@@ -146,6 +146,18 @@ if ($search_status >= 0)
 	else $sql.=" AND cf.fk_statut = ".$search_status;
 }
 
+$late_only = GETPOST('lateonly');
+$now=dol_now();
+
+if ($late_only) {
+	$sql .= " AND cf.fk_statut IN (1, 2)";
+	$sql .= " AND ((cf.date_livraison IS NOT NULL AND UNIX_TIMESTAMP(cf.date_livraison) < " . ($now - $conf->commande->fournisseur->warning_delay) . ")";
+	$sql .= " OR (cf.date_creation IS NOT NULL AND UNIX_TIMESTAMP(cf.date_creation) < " . ($now - $conf->commande->fournisseur->warning_delay) . ") AND cf.date_livraison IS NULL)";
+}
+
+//(!empty($obj->date_livraison) ? $obj->date_livraison : $obj->datec)
+//$db->jdate($date_to_test) < ($now - $conf->commande->fournisseur->warning_delay
+
 $sql.= $db->order($sortfield,$sortorder);
 
 $nbtotalofrecords = 0;
@@ -173,6 +185,10 @@ if ($resql)
 	if ($socid)					$param.="&socid=".$socid;
 	if ($search_status >= 0)  	$param.="&search_status=".$search_status;
 
+	if ($late_only) {
+		$param .= '&lateonly=1';
+	}
+	
 	print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, '', $num, $nbtotalofrecords);
 	print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
 	print '<table class="noborder" width="100%">';
@@ -205,13 +221,17 @@ if ($resql)
 	print "</td></tr>\n";
 
 	$var=true;
-
+	
 	$userstatic = new User($db);
 	$objectstatic=new CommandeFournisseur($db);
 
 	while ($i < min($num,$conf->liste_limit))
 	{
 		$obj = $db->fetch_object($resql);
+		
+		$date_to_test = (!empty($obj->date_livraison) ? $obj->date_livraison : $obj->date_creation);
+        $late = (!empty($date_to_test) && ($obj->fk_statut == 1 || $obj->fk_statut == 2) && $db->jdate($date_to_test) < ($now - $conf->commande->fournisseur->warning_delay));
+
 		$var=!$var;
 
 		print "<tr ".$bc[$var].">";
@@ -221,6 +241,9 @@ if ($resql)
 		$filename=dol_sanitizeFileName($obj->ref);
 		$filedir=$conf->fournisseur->dir_output.'/commande' . '/' . dol_sanitizeFileName($obj->ref);
 		print $formfile->getDocumentsLink($objectstatic->element, $filename, $filedir);
+		if ($late) {
+			print ' ' . img_picto($langs->trans("Late"),"warning");
+		}
 		print '</td>'."\n";
 
 		// Ref Supplier
@@ -258,8 +281,7 @@ if ($resql)
 		print '<td align="right">';
 		print dol_print_date($db->jdate($obj->date_livraison), 'day');
 		print '</td>';
-
-
+				
 		// Statut
 		print '<td align="right" colspan="2">'.$commandestatic->LibStatut($obj->fk_statut, 5).'</td>';
 

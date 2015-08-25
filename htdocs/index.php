@@ -345,7 +345,7 @@ if (! empty($conf->fournisseur->enabled) && $user->rights->fournisseur->commande
     $board->load_board($user);
     $board->warning_delay=$conf->commande->fournisseur->warning_delay/60/60/24;
     $board->label=$langs->trans("SuppliersOrdersToProcess");
-    $board->url=DOL_URL_ROOT.'/fourn/commande/index.php';
+    $board->url=DOL_URL_ROOT.'/fourn/commande/list.php?leftmenu=orders_suppliers';
     $board->img=img_object($langs->trans("Orders"),"order");
     $rowspan++;
     $dashboardlines[]=$board;
@@ -512,7 +512,7 @@ foreach($dashboardlines as $key => $board)
     print '<tr '.$bc[$var].'><td width="16">'.$board->img.'</td><td>'.$board->label.'</td>';
     print '<td align="right"><a href="'.$board->url.'">'.$board->nbtodo.'</a></td>';
     print '<td align="right">';
-    print '<a href="'.$board->url.'">';
+    print '<a href="'.$board->url . (strpos($board->url,'?') !== false ? '&' : '?') . 'lateonly=1">';
     print $board->nbtodolate;
     print '</a></td>';
     print '<td align="left">';
