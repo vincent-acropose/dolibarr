@@ -2075,7 +2075,21 @@ else
 		$reshook=$hookmanager->executeHooks('addMoreActionsButtons',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
 		if (empty($reshook))
 		{
-	        if (! empty($object->email))
+			// Récupération des contacts
+			$hasMail = !empty($object->email);
+			
+			if (!$hasMail) {
+				$TContacts = $object->contact_array_objects();
+				
+				foreach ($TContacts as $contact) {
+					if (!empty($contact->email)) {
+						$hasMail = true;
+						break;
+					}
+				}
+			}
+			
+	        if ($hasMail)
 	        {
 	        	$langs->load("mails");
 	        	print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER['PHP_SELF'].'?socid='.$object->id.'&amp;action=presend&amp;mode=init">'.$langs->trans('SendMail').'</a></div>';
