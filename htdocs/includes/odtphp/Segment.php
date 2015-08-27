@@ -110,6 +110,10 @@ class Segment implements IteratorAggregate, Countable
         }
  
         $this->xmlParsed = str_replace(array_keys($this->vars), array_values($this->vars), $this->xmlParsed);
+		
+		$reg = '/(<text:p text:style-name=".{1,3}"><\/text:p>)/';
+		$this->xmlParsed = preg_replace($reg, '', $this->xmlParsed);
+		
         if ($this->hasChildren())
         {
             foreach ($this->children as $child)
