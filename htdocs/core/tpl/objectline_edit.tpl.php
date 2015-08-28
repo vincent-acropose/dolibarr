@@ -92,6 +92,10 @@ $coldisplay=-1; // We remove first td
 	if (! empty($conf->global->FCKEDITOR_ENABLE_DETAILS_FULL)) $toolbarname='dolibarr_notes';
 	$doleditor=new DolEditor('product_desc',$line->description,'',164,$toolbarname,'',false,true,$enable,$nbrows,'98%');
 	$doleditor->Create();
+	
+	$reshook=$hookmanager->executeHooks('editObjectLineProducts', $parameters, $line, $action);    // Note that $action and $object may have been modified by some hooks
+	
+	
 	?>
 	</td>
 
