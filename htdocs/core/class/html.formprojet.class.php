@@ -98,7 +98,7 @@ class FormProjets
 						$obj = $this->db->fetch_object($resql);
 
 						$projects[] = array(
-							'label' => utf8_encode($obj->title),
+							'label' => $obj->title,
 							'value' => $obj->rowid
 						);
 
