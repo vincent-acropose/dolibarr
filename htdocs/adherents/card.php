@@ -1248,6 +1248,9 @@ else
 				$name=$object->societe;
 			}
 
+			// Spécifique CAPAUNORD, le nom du tiers = nom de la société
+			$name=$object->societe;
+
 			// Create a form array
 			$formquestion=array(		array('label' => $langs->trans("NameToCreate"), 'type' => 'text', 'name' => 'companyname', 'value' => $name));
 
