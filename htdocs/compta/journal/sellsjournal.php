@@ -195,7 +195,7 @@ print '<td>'.$langs->trans('Type').'</td><td align="right">'.$langs->trans('Debi
 print "</tr>\n";
 
 $var=true;
-
+$TTotal=array();
 $invoicestatic=new Facture($db);
 $companystatic=new Client($db);
 
@@ -234,6 +234,8 @@ foreach ($tabfac as $key => $val)
 		)
 	);
 
+	
+
 	foreach ($lines as $line)
 	{
 		foreach ($line['var'] as $k => $mt)
@@ -246,13 +248,19 @@ foreach ($tabfac as $key => $val)
 				print "<td>".$invoicestatic->getNomUrl(1)."</td>";
 				print "<td>".$k."</td><td>".$line['label']."</td>";
 
+				if(!isset($TTotal[$k]))$TTotal[$k] = 0;
+				
+
+				$TTotal[$k]+=$mt;
 				if (isset($line['inv']))
 				{
+					
 					print '<td align="right">'.($mt>=0?price($mt):'')."</td>";
 					print '<td align="right">'.($mt<0?price(-$mt):'')."</td>";
 				}
 				else
 				{
+					
 					print '<td align="right">'.($mt<0?price(-$mt):'')."</td>";
 	    			print '<td align="right">'.($mt>=0?price($mt):'')."</td>";
 				}
@@ -263,6 +271,18 @@ foreach ($tabfac as $key => $val)
 	}
 
 	$var = !$var;
+}
+
+foreach($TTotal as $code=>$mt) {
+	
+	print '<tr style="font-weight:bold;">
+		<td colspan="2">&nbsp</td>
+		<td>'.$code.'</td>
+		<td>&nbsp</td>
+		<td align="right">'.($mt<0?price($mt):'').'</td>
+		<td align="right">'.($mt>=0?price($mt):'').'</td>
+	</tr>';
+	
 }
 
 print "</table>";

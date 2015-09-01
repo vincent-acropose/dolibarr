@@ -2290,6 +2290,8 @@ class Form
 
         $this->load_cache_conditions_paiements();
 
+		if($selected<=0)$selected = 6;
+
         print '<select class="flat" name="'.$htmlname.'">';
         if ($addempty) print '<option value="0">&nbsp;</option>';
         foreach($this->cache_conditions_paiements as $id => $arrayconditions)

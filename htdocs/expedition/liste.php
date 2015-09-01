@@ -58,12 +58,17 @@ $shipment=new Expedition($db);
 $helpurl='EN:Module_Shipments|FR:Module_Exp&eacute;ditions|ES:M&oacute;dulo_Expediciones';
 llxHeader('',$langs->trans('ListOfSendings'),$helpurl);
 
-$sql = "SELECT DISTINCT e.rowid, e.ref, e.date_delivery as date_expedition, 
+$sql = "SELECT DISTINCT e.rowid, e.ref, e.date_delivery as date_expedition,  
 	(SELECT l.date_delivery 
 		FROM ".MAIN_DB_PREFIX."livraison l,".MAIN_DB_PREFIX."element_element as ee 
 		WHERE l.rowid = ee.fk_target AND ee.targettype = 'delivery' 
 		AND e.rowid = ee.fk_source AND ee.sourcetype = 'shipping'
 	ORDER BY l.date_delivery DESC LIMIT 1)  as date_livraison
+,	(SELECT l.ref 
+		FROM ".MAIN_DB_PREFIX."livraison l,".MAIN_DB_PREFIX."element_element as ee 
+		WHERE l.rowid = ee.fk_target AND ee.targettype = 'delivery' 
+		AND e.rowid = ee.fk_source AND ee.sourcetype = 'shipping'
+	ORDER BY l.date_delivery DESC LIMIT 1)  as ref_livraison
 , e.fk_statut";
 $sql.= ", s.nom as socname, s.rowid as socid";
 $sql.= " FROM (".MAIN_DB_PREFIX."expedition as e";
@@ -128,6 +133,9 @@ if ($resql)
 		$shipment->id=$objp->rowid;
 		$shipment->ref=$objp->ref;
 		print $shipment->getNomUrl(1);
+		
+		print ' '.$objp->ref_livraison;
+		
 		print "</td>\n";
 		// Third party
 		print '<td>';
