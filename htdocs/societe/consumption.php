@@ -54,6 +54,7 @@ $limit = $conf->liste_limit;
 // Search fields
 $sref=GETPOST("sref");
 $sprod_fulldescr=GETPOST("sprod_fulldescr");
+$sprod_user=GETPOST("sprod_user");
 $month	= GETPOST('month','int');
 $year	= GETPOST('year','int');
 
@@ -62,12 +63,13 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
 {
     $sref='';
     $sprod_fulldescr='';
+	$sprod_user='';
     $year='';
     $month='';
 }
 // Customer or supplier selected in drop box
 $thirdTypeSelect = GETPOST("third_select_id");
-$type_element = GETPOST('type_element')?GETPOST('type_element'):$type_element;
+$type_element = GETPOST('type_element')?GETPOST('type_element'):'invoice';
 
 
 $langs->load("companies");
@@ -197,9 +199,9 @@ if ($type_element == 'invoice')
 { 	// Customer : show products from invoices
 	require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 	$documentstatic=new Facture($db);
-	$sql_select = 'SELECT f.rowid as doc_id, f.facnumber as doc_number, f.type as doc_type, f.datef as dateprint, f.fk_statut as status, ';
-	$tables_from = MAIN_DB_PREFIX."facture as f,".MAIN_DB_PREFIX."facturedet as d";
-	$where = " WHERE f.fk_soc = s.rowid AND s.rowid = ".$socid;
+	$sql_select = 'SELECT f.rowid as doc_id, f.facnumber as doc_number, f.type as doc_type, f.datef as dateprint, f.fk_statut as status, u.firstname, u.lastname,  ';
+	$tables_from = MAIN_DB_PREFIX."facture as f,".MAIN_DB_PREFIX."facturedet as d, ".MAIN_DB_PREFIX."facturedet_extrafields as dex,  ".MAIN_DB_PREFIX."user as u ";
+	$where = " WHERE f.fk_soc = s.rowid AND dex.fk_object=f.rowid AND (dex.fk_user=u.rowid OR dex.fk_user=0) AND s.rowid = ".$socid;
 	$where.= " AND d.fk_facture = f.rowid";
 	$where.= " AND f.entity = ".$conf->entity;
 	$dateprint = 'f.datef';
@@ -257,6 +259,7 @@ if ($type_element == 'supplier_order')
 	$thirdTypeSelect='supplier';
 }
 
+
 $sql = $sql_select;
 $sql.= ' d.description as description,';
 if ($type_element != 'fichinter') $sql.= ' d.label, d.fk_product as product_id, d.fk_product as fk_product, d.info_bits, d.date_start, d.date_end, d.qty, d.qty as prod_qty,';
@@ -264,8 +267,9 @@ if ($type_element != 'fichinter') $sql.= ' p.ref as ref, p.rowid as prod_id, p.r
 $sql.= " s.rowid as socid ";
 if ($type_element != 'fichinter') $sql.= ", p.ref as prod_ref, p.label as product_label";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".$tables_from;
-if ($type_element != 'fichinter') $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as p ON d.fk_product = p.rowid ';
+if ($type_element != 'fichinter') $sql.= ', '.MAIN_DB_PREFIX.'product as p ';
 $sql.= $where;
+if ($type_element != 'fichinter') $sql.= ' AND d.fk_product = p.rowid ';
 if ($month > 0) {
 	if ($year > 0) {
 		$start = dol_mktime(0, 0, 0, $month, 1, $year);
@@ -281,12 +285,13 @@ if ($month > 0) {
 }
 if ($sref) $sql.= " AND ".$doc_number." LIKE '%".$sref."%'";
 if ($sprod_fulldescr) $sql.= " AND (d.description LIKE '%".$sprod_fulldescr."%' OR p.label LIKE '%".$sprod_fulldescr."%')";
+if ($sprod_user) $sql.= " AND (CONCAT(u.firstname,' ',u.lastname) LIKE '%".$sprod_user."%')";
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($limit + 1, $offset);
 //print $sql;
 
 // Define type of elements
-$typeElementString = $form->selectarray("type_element", $elementTypeArray, GETPOST('type_element'), 2);
+$typeElementString = $form->selectarray("type_element", $elementTypeArray, $type_element, 2);
 $button = '<input type="submit" class="button" name="button_third" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 $param="&amp;sref=".$sref."&amp;month=".$month."&amp;year=".$year."&amp;sprod_fulldescr=".$sprod_fulldescr."&amp;socid=".$socid."&amp;type_element=".$type_element;
 
@@ -305,6 +310,7 @@ print_liste_field_titre($langs->trans('Ref'),$_SERVER['PHP_SELF'],'doc_number','
 print_liste_field_titre($langs->trans('Date'),$_SERVER['PHP_SELF'],'dateprint','',$param,'align="center" width="150"',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans('Status'),$_SERVER['PHP_SELF'],'fk_status','',$param,'align="center"',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans('Product'),$_SERVER['PHP_SELF'],'','',$param,'align="left"',$sortfield,$sortorder);
+print_liste_field_titre($langs->trans('Esthéticienne'),$_SERVER['PHP_SELF'],'','',$param,'align="left"',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans('Quantity'),$_SERVER['PHP_SELF'],'prod_qty','',$param,'align="right"',$sortfield,$sortorder);
 // Filters
 print '<tr class="liste_titre">';
@@ -320,6 +326,9 @@ print '</td>';
 print '<td class="liste_titre" align="left">';
 print '<input class="flat" type="text" name="sprod_fulldescr" size="15" value="'.dol_escape_htmltag($sprod_fulldescr).'">';
 print '</td>';
+print '<td class="liste_titre" align="left">';
+print '<input class="flat" type="text" name="sprod_user" size="15" value="'.dol_escape_htmltag($sprod_user).'">'; 
+print '</td>';
 print '<td class="liste_titre" align="right">';
 print '<input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 print '<input type="image" class="liste_titre" name="button_removefilter" src="'.img_picto($langs->trans("Search"),'searchclear.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("resetFilters")).'" title="'.dol_escape_htmltag($langs->trans("resetFilters")).'">';
@@ -333,6 +342,7 @@ if ($sql_select)
 	$i = 0;
 	while (($objp = $db->fetch_object($resql)) && $i < $conf->liste_limit )
 	{
+		$documentstatic->fetch($objp->doc_id);		
 		$documentstatic->id=$objp->doc_id;
 		$documentstatic->ref=$objp->doc_number;
 		$documentstatic->type=$objp->type;
@@ -488,7 +498,8 @@ if ($sql_select)
 		print '</td>';
 
 		//print '<td align="left">'.$prodreftxt.'</td>';
-
+		print '<td align="right">'.$objp->firstname.' '.$objp->lastname.'</td>';
+		
 		print '<td align="right">'.$objp->prod_qty.'</td>';
 
 		print "</tr>\n";
