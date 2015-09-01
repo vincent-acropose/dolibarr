@@ -38,6 +38,8 @@ if (empty($forceall)) $forceall=0;
 if (empty($senderissupplier)) $senderissupplier=0;
 if (empty($inputalsopricewithtax)) $inputalsopricewithtax=0;
 
+
+
 ?>
 <?php $coldisplay=0; ?>
 <!-- BEGIN PHP TEMPLATE objectline_view.tpl.php -->
@@ -111,7 +113,12 @@ if (empty($inputalsopricewithtax)) $inputalsopricewithtax=0;
 			echo get_date_range($line->date_start,$line->date_end);
 		}
 	}
+
+	$reshook=$hookmanager->executeHooks('printObjectLineDescription', $parameters, $line, $action);    // Note that $action and $object may have been modified by some hooks
+	
+
 	?>
+	
 	</td>
 
 	<?php if ($object->element == 'askpricesupplier') { ?>

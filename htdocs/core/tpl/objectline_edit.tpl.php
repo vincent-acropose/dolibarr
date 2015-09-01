@@ -92,6 +92,10 @@ $coldisplay=-1; // We remove first td
 	if (! empty($conf->global->FCKEDITOR_ENABLE_DETAILS_FULL)) $toolbarname='dolibarr_notes';
 	$doleditor=new DolEditor('product_desc',$line->description,'',164,$toolbarname,'',false,true,$enable,$nbrows,'98%');
 	$doleditor->Create();
+	
+	$reshook=$hookmanager->executeHooks('editObjectLineProducts', $parameters, $line, $action);    // Note that $action and $object may have been modified by some hooks
+	
+	
 	?>
 	</td>
 
@@ -252,10 +256,10 @@ if (! empty($conf->margin->enabled))
 		{
 		?>
 			$('#savelinebutton').click(function (e) {
-				return checkEditLine(e, "marginRate");
+				return checkEditLine(e, "np_marginRate");
 			});
 			$("input[name='np_marginRate']:first").blur(function(e) {
-				return checkEditLine(e, "marginRate");
+				return checkEditLine(e, "np_marginRate");
 			});
 		<?php
 		}
@@ -263,10 +267,10 @@ if (! empty($conf->margin->enabled))
 		{
 		?>
 			$('#savelinebutton').click(function (e) {
-				return checkEditLine(e, "markRate");
+				return checkEditLine(e, "np_markRate");
 			});
 			$("input[name='np_markRate']:first").blur(function(e) {
-				return checkEditLine(e, "markRate");
+				return checkEditLine(e, "np_markRate");
 			});
 		<?php
 		}

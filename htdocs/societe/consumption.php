@@ -2,6 +2,7 @@
 /* Copyright (C) 2012-2013 Philippe Berthet     <berthet@systune.be>
  * Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2013	   Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2015	   Ferran Marcet		<fmarcet@2byte.es>
  *
  * Version V1.1 Initial version of Philippe Berthet
  * Version V2   Change to be compatible with 3.4 and enhanced to be more generic
@@ -199,6 +200,7 @@ if ($type_element == 'invoice')
 { 	// Customer : show products from invoices
 	require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 	$documentstatic=new Facture($db);
+
 	$sql_select = 'SELECT f.rowid as doc_id, f.facnumber as doc_number, f.type as doc_type, f.datef as dateprint, f.fk_statut as status, u.firstname, u.lastname,  ';
 	$tables_from = MAIN_DB_PREFIX."facture as f,".MAIN_DB_PREFIX."facturedet as d, ".MAIN_DB_PREFIX."facturedet_extrafields as dex,  ".MAIN_DB_PREFIX."user as u ";
 	$where = " WHERE f.fk_soc = s.rowid AND dex.fk_object=f.rowid AND (dex.fk_user=u.rowid OR dex.fk_user=0) AND s.rowid = ".$socid;
@@ -230,7 +232,7 @@ if ($type_element == 'order')
 	$where = " WHERE c.fk_soc = s.rowid AND s.rowid = ".$socid;
 	$where.= " AND d.fk_commande = c.rowid";
 	$where.= " AND c.entity = ".$conf->entity;
-	$dateprint = 'c.datef';
+	$dateprint = 'c.date_commande';
 	$doc_number='c.ref';
 	$thirdTypeSelect='customer';
 }
@@ -345,11 +347,12 @@ if ($sql_select)
 		$documentstatic->fetch($objp->doc_id);		
 		$documentstatic->id=$objp->doc_id;
 		$documentstatic->ref=$objp->doc_number;
-		$documentstatic->type=$objp->type;
+		$documentstatic->type=$objp->doc_type;
 		$documentstatic->fk_statut=$objp->status;
 		$documentstatic->fk_status=$objp->status;
 		$documentstatic->statut=$objp->status;
 		$documentstatic->status=$objp->status;
+		$documentstatic->paye=$objp->paid;
 
 		$var=!$var;
 		print "<tr ".$bc[$var].">";
