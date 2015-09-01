@@ -146,6 +146,7 @@ if (empty($reshook))
 	{
 	    $result=$object->setValueFrom('ref_supplier', GETPOST('ref_supplier','alpha'), '', null, 'text', '', $user, 'ORDER_SUPPLIER_MODIFY');
 		if ($result < 0) setEventMessages($object->error, $object->errors, 'errors');
+		else $object->ref_supplier = GETPOST('ref_supplier','alpha'); // Geoffrey a fait ça, ça aurait mérité un comm pour comprendre parce que là ça me parait bizarre
 	}
 
 	// Set incoterm
