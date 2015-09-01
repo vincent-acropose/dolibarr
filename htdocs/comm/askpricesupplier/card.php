@@ -1241,9 +1241,9 @@ if ($action == 'create')
 				print '<tr><td>';
 				// multiprix
 				if ($conf->global->PRODUIT_MULTIPRICES && $soc->price_level)
-					$form->select_produits('', "idprod" . $i, '', $conf->product->limit_size, $soc->price_level);
+					$form->select_produits('', "idprod" . $i, '', $conf->product->limit_size, $soc->price_level,-1);
 				else
-					$form->select_produits('', "idprod" . $i, '', $conf->product->limit_size);
+					$form->select_produits('', "idprod" . $i, '', $conf->product->limit_size,0,-1);
 				print '</td>';
 				print '<td><input type="text" size="2" name="qty' . $i . '" value="1"></td>';
 				print '<td><input type="text" size="2" name="remise' . $i . '" value="' . $soc->remise_percent . '">%</td>';
