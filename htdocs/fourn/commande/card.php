@@ -130,6 +130,7 @@ if ($action == 'setref_supplier' && $user->rights->fournisseur->commande->creer)
 {
     $result=$object->setValueFrom('ref_supplier',GETPOST('ref_supplier','alpha'));
     if ($result < 0) dol_print_error($db, $object->error);
+	else $object->ref_supplier = GETPOST('ref_supplier','alpha');
 }
 
 // conditions de reglement
