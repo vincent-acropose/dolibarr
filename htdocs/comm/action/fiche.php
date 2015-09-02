@@ -512,7 +512,7 @@ if ($action == 'create')
 		if (GETPOST("afaire") == 1) $percent=0;
 		else if (GETPOST("afaire") == 2) $percent=100;
 	}
-	$htmlactions->form_select_status_action('formaction',$percent,1,'complete');
+	$htmlactions->form_select_status_action('formaction',0,1,'complete');
 	print '</td></tr>';
 
     // Location
