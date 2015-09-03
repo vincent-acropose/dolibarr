@@ -1457,7 +1457,7 @@ class Form
     {
         global $langs,$conf;
 //print $status;exit;
-	$status = -1;
+	//$status = -1;
         $price_level = (! empty($price_level) ? $price_level : 0);
 
         if (! empty($conf->use_javascript_ajax) && ! empty($conf->global->PRODUIT_USE_SEARCH_TO_SELECT))
