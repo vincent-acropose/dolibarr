@@ -680,7 +680,6 @@ class Facture extends CommonInvoice
 		}
 		elseif ($this->type == self::TYPE_SITUATION && !empty($conf->global->INVOICE_USE_SITUATION))
 		{
-			$this->add_object_linked('facture', $facture->fk_facture_source);
 			$this->fetchObjectLinked('', '', $object->id, 'facture');
 			
 			foreach ($this->linkedObjectsIds as $typeObject => $Tfk_object) 
@@ -690,6 +689,8 @@ class Facture extends CommonInvoice
 					$facture->add_object_linked($typeObject, $fk_object);
 				}
 			}
+			
+			$facture->add_object_linked('facture', $this->fk_facture_source);
 		}
 
 		return $facid;
