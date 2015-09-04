@@ -998,7 +998,7 @@ if (empty($reshook)) {
 										
 										if ($origin == 'shipping' && !empty($lines[$i]->line_id)) {
 											$origin_id = $lines[$i]->line_id;
-											$origin_label = 'ExpeditionLigne';
+											$origin_label = 'shipping';
 										} else {
 											$origin_id = $lines[$i]->rowid;
 											$origin_label = $origin;
