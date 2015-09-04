@@ -459,7 +459,7 @@ if ($object->id > 0)
 		if ($user->rights->prelevement->bons->creer)
 		{
 			print '<form method="POST" action="prelevement.php">';
-			print '<input type="hidden" name="facid" value="' . $id . '" />';
+			print '<input type="hidden" name="facid" value="' . $object->id . '" />';
 			print '<input type="hidden" name="action" value="new" />';
 			print '<label for="withdraw_request_amount">' . $langs->trans('MakeWithdrawRequestAmount') . ' </label>';
 			print '<input type="text" id="withdraw_request_amount" name="withdraw_request_amount" value="' . $resteapayer . '" size="10" />';
