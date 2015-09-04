@@ -633,8 +633,8 @@ if ($id > 0)
 	{
 		$expedition_static=new Expedition($db);
 
-		$sql = "SELECT s.nom, s.rowid,";
-		$sql.= " e.rowid as eid, e.ref, e.fk_statut, ";
+		$sql = "SELECT DISTINCT(e.rowid) as eid, s.nom, s.rowid,";
+		$sql.= " e.ref, e.fk_statut, ";
 		$sql.= " e.date_delivery as dd";
 		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."expedition as e, ".MAIN_DB_PREFIX."expeditiondet as ed";
 		$sql.= " WHERE e.fk_soc = s.rowid ";
