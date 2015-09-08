@@ -838,7 +838,7 @@ if ($id > 0 || ! empty($ref))
 		}
 
 		// Show total
-		if ($page == 0 && ! $mode_search)
+		/*if ($page == 0 && $mode_search)
 		{
 			print '<tr class="liste_total"><td align="left" colspan="8">';
 			if ($sep > 0) print '&nbsp;';	// If we had at least one line in future
@@ -847,7 +847,7 @@ if ($id > 0 || ! empty($ref))
 			print '<td align="right" class="nowrap"><b>'.price($solde, 0, $langs, 0, 0, -1, $object->currency_code).'</b></td>';
 			print '<td>&nbsp;</td>';
 			print '</tr>';
-		} else {
+		} else {*/
 			print '<tr class="liste_total"><td align="left" colspan="6">';
 			if ($sep > 0) print '&nbsp;';	// If we had at least one line in future
 			else print $langs->trans("Total");
@@ -857,7 +857,7 @@ if ($id > 0 || ! empty($ref))
 			print '<td align="right" class="nowrap"><b>'.price($total_cred-($total_deb*-1), 0, $langs, 0, 0, -1, $object->currency_code).'</b></td>';
 			print '<td>&nbsp;</td>';
 			print '</tr>';
-		}
+		//}
 		$db->free($result);
 	}
 	else
