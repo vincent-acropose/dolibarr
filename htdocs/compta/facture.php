@@ -3035,9 +3035,9 @@ else if ($id > 0 || ! empty($ref))
 			print '<td align="right">' . $langs->trans('Amount') . '</td>';
 			print '<td width="18">&nbsp;</td>';
 			print '</tr>';
-			
+
 			$total_prev = 0;
-			
+
 			$var = true;
 			foreach ($object->tab_previous_situation_invoice as $prev_invoice)
 			{
@@ -3050,18 +3050,18 @@ else if ($id > 0 || ! empty($ref))
 				print '<td align="right">' . price($prev_invoice->total_ttc) . '</td>';
 				print '<td width="18">&nbsp;</td>';
 				print '</tr>';
-				
+
 				$var = !$var;
 			}
-			
+
 			print '<tr '.$bc [$var].'>';
 			print '<td colspan="3" align="right">'.$langs->trans('Total').'</td>';
-			
+
 			print '<td align="right"><b>' . price($total_prev) . '</b></td>';
 			print '<td width="18">&nbsp;</td>';
 			print '</tr>';
 		}
-		
+
 		if (count($object->tab_next_situation_invoice) > 0)
 		{
 			//List of next invoices
@@ -3073,9 +3073,9 @@ else if ($id > 0 || ! empty($ref))
 			print '<td align="right">' . $langs->trans('Amount') . '</td>';
 			print '<td width="18">&nbsp;</td>';
 			print '</tr>';
-			
+
 			$total_next = 0;
-			
+
 			$var = true;
 			foreach ($object->tab_next_situation_invoice as $next_invoice)
 			{
@@ -3088,18 +3088,18 @@ else if ($id > 0 || ! empty($ref))
 				print '<td align="right">' . price($next_invoice->total_ttc) . '</td>';
 				print '<td width="18">&nbsp;</td>';
 				print '</tr>';
-				
+
 				$var = !$var;
 			}
-			
+
 			print '<tr '.$bc [$var].'>';
 			print '<td colspan="3" align="right">'.$langs->trans('Total').'</td>';
-			
+
 			print '<td align="right"><b>' . price($total_next) . '</b></td>';
 			print '<td width="18">&nbsp;</td>';
 			print '</tr>';
 		}
-		
+
 	}
 
 	// List of payments already done
