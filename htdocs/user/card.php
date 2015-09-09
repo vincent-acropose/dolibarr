@@ -1780,7 +1780,6 @@ else
             }
             print $text;
             print "</td></tr>\n";
-
             // Administrator
             print '<tr><td valign="top">'.$langs->trans("Administrator").'</td>';
             if ($object->societe_id > 0)
@@ -1861,7 +1860,9 @@ else
            	// Type
            	print '<tr><td width="25%" valign="top">'.$langs->trans("Type").'</td>';
            	print '<td>';
-           	if ($user->id == $object->id || ! $user->admin)
+
+
+           	if ($user->id == $object->id || ! $user->admin || true)
            	{
 	           	$type=$langs->trans("Internal");
     	       	if ($object->societe_id) $type=$langs->trans("External");
