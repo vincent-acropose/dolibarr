@@ -2107,7 +2107,7 @@ else
            	// Type
            	print '<tr><td>'.$langs->trans("Type").'</td>';
            	print '<td>';
-           	if ($user->id == $object->id || ! $user->admin)
+           	if ($user->id == $object->id || ! $user->admin || true)
            	{
 	           	$type=$langs->trans("Internal");
     	       	if ($object->socid) $type=$langs->trans("External");
