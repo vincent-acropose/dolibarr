@@ -167,6 +167,9 @@ else {
 			);
 			$form->select_produits_fournisseurs($object->socid, GETPOST('idprodfournprice'), 'idprodfournprice', '', '', $ajaxoptions, 1);
 		}
+
+		$reshook=$hookmanager->executeHooks('addObjectLineProducts', $parameters, $this, $action);    // Note that $action and $object may have been modified by some hooks
+		
 		echo '</span>';
 	}
 
