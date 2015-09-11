@@ -5,7 +5,7 @@
  * Copyright (C) 2005      Simon TOSSER         <simon@kornog-computing.com>
  * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2013      Cédric Salvador      <csalvador.gpcsolutions.fr>
- * Copyright (C) 2013      Juanjo Menent	    <jmenent@2byte.es>
+ * Copyright (C) 2013-2015 Juanjo Menent	    <jmenent@2byte.es>
  * Copyright (C) 2014      Cédric Gross         <c.gross@kreiz-it.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -343,7 +343,7 @@ if ($id > 0 || $ref)
 			if (! empty($conf->commande->enabled))
 			{
 				if ($found) print '<br>'; else $found=1;
-				print $langs->trans("CustomersOrdersRunning").': '.($product->stats_commande['qty']-$product->stats_sendings['qty']);
+				print $langs->trans("CustomersOrdersRunning").': '.($product->stats_commande['qty']-$product->stats_expedition['qty']);
 				$result=$product->load_stats_commande(0,'0');
 				if ($result < 0) dol_print_error($db,$product->error);
 				print ' ('.$langs->trans("Draft").': '.$product->stats_commande['qty'].')';
@@ -543,7 +543,7 @@ if (empty($action) && $product->id)
 {
     print "<div class=\"tabsAction\">\n";
 
-    if ($user->rights->stock->creer)
+    if ($user->rights->stock->mouvement->creer)
     {
         print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$product->id.'&amp;action=correction">'.$langs->trans("StockCorrection").'</a>';
     }
@@ -583,7 +583,7 @@ $sql.= " FROM ".MAIN_DB_PREFIX."entrepot as e,";
 $sql.= " ".MAIN_DB_PREFIX."product_stock as ps";
 $sql.= " WHERE ps.reel != 0";
 $sql.= " AND ps.fk_entrepot = e.rowid";
-$sql.= " AND e.entity = ".$conf->entity;
+$sql.= " AND e.entity IN (".getEntity('stock',1).")";
 $sql.= " AND ps.fk_product = ".$product->id;
 $sql.= " ORDER BY e.label";
 
