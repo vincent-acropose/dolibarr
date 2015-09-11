@@ -1223,7 +1223,7 @@ if ($action == 'create')
             $datedue=($datetmp==''?-1:$datetmp);
 			
 			// Replicate extrafields
-			$objectsrc->fetch_optionals($originid);
+			$objectsrc->fetch_optionals(GETPOST('originid'));
 			$object->array_options = $objectsrc->array_options;
         }
     }
