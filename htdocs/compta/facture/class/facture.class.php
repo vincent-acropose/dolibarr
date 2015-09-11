@@ -2174,13 +2174,24 @@ class Facture extends CommonInvoice
 			$pu_tva = $tabprice[4];
 			$pu_ttc = $tabprice[5];
 
-			// Update line into database
-			$this->line=new FactureLigne($this->db);
+			// Old properties: $price, $remise (deprecated)
+			$price = $pu;
+			$remise = 0;
+			if ($remise_percent > 0)
+			{
+				$remise = round(($pu * $remise_percent / 100),2);
+				$price = ($pu - $remise);
+			}
+			$price    = price2num($price);
 
-			// Stock previous line records
-			$staticline=new FactureLigne($this->db);
-			$staticline->fetch($rowid);
-			$this->line->oldline = $staticline;
+			//Fetch current line from the database and then clone the object and set it in $oldline property
+			$line = new FactureLigne($this->db);
+			$line->fetch($rowid);
+
+			$staticline = clone $line;
+
+			$line->oldline = $staticline;
+			$this->line = $line;
 
 			// Reorder if fk_parent_line change
 			if (! empty($fk_parent_line) && ! empty($staticline->fk_parent_line) && $fk_parent_line != $staticline->fk_parent_line)
@@ -2505,52 +2516,65 @@ class Facture extends CommonInvoice
 		else if ($conf->global->FACTURE_ADDON=='terre') $conf->global->FACTURE_ADDON='mod_facture_terre';
 		else if ($conf->global->FACTURE_ADDON=='mercure') $conf->global->FACTURE_ADDON='mod_facture_mercure';
 
-		$mybool=false;
-
-		$file = $conf->global->FACTURE_ADDON.".php";
-		$classname = $conf->global->FACTURE_ADDON;
-		// Include file with class
-		foreach ($conf->file->dol_document_root as $dirroot)
+		if (! empty($conf->global->FACTURE_ADDON))
 		{
-			$dir = $dirroot."/core/modules/facture/";
-			// Load file with numbering class (if found)
-			$mybool|=@include_once $dir.$file;
-		}
+			$mybool=false;
 
-		// For compatibility
-		if (! $mybool)
-		{
-			$file = $conf->global->FACTURE_ADDON."/".$conf->global->FACTURE_ADDON.".modules.php";
-			$classname = "mod_facture_".$conf->global->FACTURE_ADDON;
-			$classname = preg_replace('/\-.*$/','',$classname);
+			$file = $conf->global->FACTURE_ADDON.".php";
+			$classname = $conf->global->FACTURE_ADDON;
+
 			// Include file with class
-			foreach ($conf->file->dol_document_root as $dirroot)
-			{
-				$dir = $dirroot."/core/modules/facture/";
+			$dirmodels = array_merge(array('/'), (array) $conf->modules_parts['models']);
+
+			foreach ($dirmodels as $reldir) {
+
+				$dir = dol_buildpath($reldir."core/modules/facture/");
+
 				// Load file with numbering class (if found)
 				$mybool|=@include_once $dir.$file;
 			}
-		}
-		//print "xx".$mybool.$dir.$file."-".$classname;
 
-		if (! $mybool)
-		{
-			dol_print_error('',"Failed to include file ".$file);
-			return '';
-		}
+			// For compatibility
+			if (! $mybool)
+			{
+				$file = $conf->global->FACTURE_ADDON."/".$conf->global->FACTURE_ADDON.".modules.php";
+				$classname = "mod_facture_".$conf->global->FACTURE_ADDON;
+				$classname = preg_replace('/\-.*$/','',$classname);
+				// Include file with class
+				foreach ($conf->file->dol_document_root as $dirroot)
+				{
+					$dir = $dirroot."/core/modules/facture/";
+					// Load file with numbering class (if found)
+					$mybool|=@include_once $dir.$file;
+				}
+			}
 
-		$obj = new $classname();
-		$numref = "";
-		$numref = $obj->getNumRef($soc,$this,$mode);
+			if (! $mybool)
+			{
+				dol_print_error('',"Failed to include file ".$file);
+				return '';
+			}
 
-		if ($numref != "")
-		{
+			$obj = new $classname();
+			$numref = "";
+			$numref = $obj->getNextValue($soc,$this,$mode);
+
+			/**
+			 * $numref can be empty in case we ask for the last value because if there is no invoice created with the
+			 * set up mask.
+			 */
+			if ($mode != 'last' && !$numref) {
+				dol_print_error($db,"Facture::getNextNumRef ".$obj->error);
+				return "";
+			}
+
 			return $numref;
 		}
 		else
 		{
-			//dol_print_error($db,get_class($this)."::getNextNumRef ".$obj->error);
-			return false;
+			$langs->load("errors");
+			print $langs->trans("Error")." ".$langs->trans("ErrorModuleSetupNotComplete");
+			return "";
 		}
 	}
 
@@ -3425,10 +3449,12 @@ class FactureLigne  extends CommonInvoiceLine
 			$this->product_desc			= $objp->product_desc;
 
 			$this->db->free($result);
+
+			return 1;
 		}
 		else
 		{
-			dol_print_error($this->db);
+			return -1;
 		}
 	}
 
@@ -3486,7 +3512,7 @@ class FactureLigne  extends CommonInvoiceLine
 				return -1;
 			}
 		}
-		
+
 		// POS or by external module, take lowest buying price
 		if (!empty($this->fk_product) && empty($this->fk_fournprice) && empty($this->pa_ht)) {
 		    include_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.product.class.php';
