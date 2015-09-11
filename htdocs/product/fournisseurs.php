@@ -471,7 +471,6 @@ if ($id || $ref)
 						$var=!$var;
 						$f = new Societe($db);
 						$f->fetch($productfourn->fourn_id);
-						echo '<pre>';print_r($f);
 						$devise = $f->array_options['options_currency'];
 
 						print "<tr ".$bc[$var].">";
@@ -502,7 +501,7 @@ if ($id || $ref)
 						// Price for the quantity
 						print '<td align="right">';
 						print $productfourn->fourn_price?price($productfourn->fourn_price):"";
-						print " ".$devise;
+						if(!empty($devise)) print " ".$devise;
 						print '</td>';
 
 						// Charges ????
@@ -516,7 +515,7 @@ if ($id || $ref)
 						// Unit price
 						print '<td align="right">';
 						print price($productfourn->fourn_unitprice);
-						print " ".$devise;
+						if(!empty($devise)) print " ".$devise;
 						//print $objp->unitprice? price($objp->unitprice) : ($objp->quantity?price($objp->price/$objp->quantity):"&nbsp;");
 						print '</td>';
 
