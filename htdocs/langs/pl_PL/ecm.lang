@@ -1,16 +1,4 @@
-/*
- * Lince Translation File
- * Filename: 
- * Language code: pl_PL
- * Automatic generated via autotranslator tool
- * Generation date 2009-01-19 00:44:06
- */
-
-
-// Date 2009-01-19 00:44:06
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - ecm
 MenuECM=Dokumenty
 DocsMine=Moje dokumenty
 DocsGenerated=Wygenerowano dokumentów
@@ -31,15 +19,14 @@ ECMSections=Katalogi
 ECMRoot=Root
 ECMNewSection=Nowy katalog
 ECMAddSection=Dodaj podręcznik katalog
-ECMNewSection=Nowy podręcznik katalog
 ECMNewDocument=Nowy dokument
 ECMCreationDate=Data utworzenia
 ECMNbOfFilesInDir=Liczba plików w katalogu
 ECMNbOfSubDir=Liczba pod-katalogi
-ECMNbOfFilesInSubDir=Nunber z Iles subbazowe katalogów
+ECMNbOfFilesInSubDir=Liczba plików w podkatalogach
 ECMCreationUser=Twórca
-ECMArea=Obszaru ECM
-ECMAreaDesc=W ECM (Electronic Content Management) powierzchnia umożliwia zapisywanie, udostępnianie i szybkie wyszukiwanie wszelkiego rodzaju dokumentów w Dolibarr.
+ECMArea=Obszar EDM
+ECMAreaDesc=Powierzchnia (zarządzanie dokumentami elektronicznymi) EDM pozwala na zapisywanie, udostępnianie i szybko wyszukiwać wszelkiego rodzaju dokumentów w Dolibarr.
 ECMAreaDesc2=* Automatyczne katalogi wypełnione automatycznie podczas dodawania dokumentów z karty elementu. <br> * Podręcznik katalogów mogą być wykorzystane do zapisywania dokumentów nie są powiązane z konkretnym elementem.
 ECMSectionWasRemoved=<b>Katalog %s</b> została usunięta.
 ECMDocumentsSection=Dokument katalogu
@@ -48,12 +35,16 @@ ECMSearchByEntity=Szukaj wg obiektu
 ECMSectionOfDocuments=Katalogi dokumentów
 ECMTypeManual=Podręcznik
 ECMTypeAuto=Automatyczne
+ECMDocsBySocialContributions=Dokumenty związane ze składek na ubezpieczenia społeczne
 ECMDocsByThirdParties=Dokumenty związane z trzecim
 ECMDocsByProposals=Dokumenty związane z wnioskami
 ECMDocsByOrders=Dokumenty związane z zamówień klientów
 ECMDocsByContracts=Dokumenty związane z umowami
 ECMDocsByInvoices=Dokumenty związane z odbiorców faktur
 ECMDocsByProducts=Dokumenty związane z produktami
+ECMDocsByProjects=Dokumenty związane z projektami
+ECMDocsByUsers=Dokumenty związane z użytkowników
+ECMDocsByInterventions=Dokumenty związane z interwencjami
 ECMNoDirectoryYet=Nr katalogu stworzonym
 ShowECMSection=Pokaż katalog
 DeleteSection=Usuwanie katalogu
@@ -62,5 +53,5 @@ ECMDirectoryForFiles=Względna katalog plików
 CannotRemoveDirectoryContainsFiles=Usuwane nie możliwe, ponieważ zawiera ona pewne pliki
 ECMFileManager=Menedżer plików
 ECMSelectASection=Wybierz katalog na lewym drzewa ...
-// Date 2009-01-19 00:44:06
-// STOP - Lines generated via parser
+DirNotSynchronizedSyncFirst=Katalog ten wydaje się być tworzone lub zmieniane poza modułem ECM. Należy kliknąć na przycisk "Odśwież" pierwszy synchronizacji dysku i bazy danych, aby uzyskać zawartość tego katalogu.
+

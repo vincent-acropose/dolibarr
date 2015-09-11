@@ -1,6 +1,7 @@
 <?php
-/* Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012	Regis Houssin		<regis.houssin@capnetworks.com>
+/* Copyright (C) 2004-2013  Laurent Destailleur <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2012  Regis Houssin       <regis.houssin@capnetworks.com>
+ * Copyright (C) 2014       Raphaël Doursenaud  <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,39 +26,98 @@
 
 
 /**
- *		Parent class of boxes
+ * Class ModeleBoxes
+ *
+ * Boxes parent class
  */
 class ModeleBoxes    // Can't be abtract as it is instantiated to build "empty" boxes
 {
-	var $db;
-	var $error='';
-	var $max=5;
-	var $enabled=1;
-	
-	var $rowid;
-	var $id;
-	var $position;
-	var $box_order;
-	var $fk_user;
-	var $sourcefile;
-	var $box_id;
-	var $note;
-
+	/**
+	 * @var DoliDB Database handler
+	 */
+	public $db;
 
 	/**
-	 *	Constructor
-	 *
-	 *	@param	DoliDB		$db		Database hanlder
+	 * @var string Error message
 	 */
-	function __construct($db)
+	public $error = '';
+
+	/**
+	 * @var int Maximum lines
+	 */
+	public $max = 5;
+
+	/**
+	 * @var int Status
+	 */
+	public $enabled=1;
+
+	/**
+	 * @var int Box definition database ID
+	 */
+	public $rowid;
+
+	/**
+	 * @var int ID
+	 * @deprecated Same as box_id?
+	 */
+	public $id;
+
+	/**
+	 * @var int Position?
+	 */
+	public $position;
+
+	/**
+	 * @var string Display order
+	 */
+	public $box_order;
+
+	/**
+	 * @var int User ID
+	 */
+	public $fk_user;
+
+	/**
+	 * @var string Source file
+	 */
+	public $sourcefile;
+
+	/**
+	 * @var string Class name
+	 */
+	public $class;
+
+	/**
+	 * @var string ID
+	 */
+	public $box_id;
+
+	/**
+	 * @var string Alphanumeric ID
+	 */
+	public $boxcode;
+
+	/**
+	 * @var string Note
+	 */
+	public $note;
+
+	/**
+	 * Constructor
+	 *
+	 * @param   DoliDB  $db     Database handler
+     * @param   string  $param  More parameters
+	 */
+	function __construct($db,$param='')
 	{
 		$this->db=$db;
 	}
 
 	/**
-	 *  Return last error message
+	 * Return last error message
 	 *
-	 *  @return	string				Error message
+	 * @return  string  Error message
 	 */
 	function error()
 	{
@@ -66,10 +126,11 @@ class ModeleBoxes    // Can't be abtract as it is instantiated to build "empty" 
 
 
 	/**
-	 *  Load a box line from its rowid
+	 * Load a box line from its rowid
 	 *
-	 *  @param	int		$rowid		Row id to load
-	 *  @return	int					<0 if KO, >0 if OK
+	 * @param   int $rowid  Row id to load
+	 *
+	 * @return  int         <0 if KO, >0 if OK
 	 */
 	function fetch($rowid)
 	{
@@ -108,17 +169,19 @@ class ModeleBoxes    // Can't be abtract as it is instantiated to build "empty" 
 
 
 	/**
-	 *	Standard method to show a box (usage by boxes not mandatory, a box can still use its own function)
+	 *Standard method to show a box (usage by boxes not mandatory, a box can still use its own showBox function)
 	 *
-	 *	@param	array	$head       Array with properties of box title
-	 *	@param  array	$contents   Array with properties of box lines
-	 *	@return	void
+	 * @param   array   $head       Array with properties of box title
+	 * @param   array   $contents   Array with properties of box lines
+	 *
+	 * @return  void
 	 */
 	function showBox($head, $contents)
 	{
 		global $langs,$conf;
 
 		$MAXLENGTHBOX=60;   // Mettre 0 pour pas de limite
+		$bcx=array();
 		$bcx[0] = 'class="box_pair"';
 		$bcx[1] = 'class="box_impair"';
 		$var = false;
@@ -133,13 +196,13 @@ class ModeleBoxes    // Can't be abtract as it is instantiated to build "empty" 
 		print "\n\n<!-- Box start -->\n";
 		print '<div class="box" id="boxto_'.$this->box_id.'">'."\n";
 
-		if (! empty($head['text']) || ! empty($head['sublink']) || $nblines)
+		if (! empty($head['text']) || ! empty($head['sublink']) || ! empty($head['subpicto']) || $nblines)
 		{
 			print '<table summary="boxtable'.$this->box_id.'" width="100%" class="noborder boxtable">'."\n";
 		}
 
 		// Show box title
-		if (! empty($head['text']) || ! empty($head['sublink']))
+		if (! empty($head['text']) || ! empty($head['sublink']) || ! empty($head['subpicto']))
 		{
 			//print '<div id="boxto_'.$this->box_id.'_title">'."\n";
 			//print '<table summary="boxtabletitle'.$this->box_id.'" width="100%" class="noborder">'."\n";
@@ -156,22 +219,25 @@ class ModeleBoxes    // Can't be abtract as it is instantiated to build "empty" 
 				$s=dol_trunc($head['text'],isset($head['limit'])?$head['limit']:$MAXLENGTHBOX);
 				print $s;
 			}
-			if (! empty($head['sublink']))
+			print ' ';
+			if (! empty($head['sublink'])) print '<a href="'.$head['sublink'].'"'.(empty($head['target'])?' target="_blank"':'').'>';
+			if (! empty($head['subpicto'])) print img_picto($head['subtext'], $head['subpicto'], 'class="'.(empty($head['subclass'])?'':$head['subclass']).'" id="idsubimg'.$this->boxcode.'"');
+			if (! empty($head['sublink'])) '</a>';
+			if (! empty($conf->use_javascript_ajax))
 			{
-				print ' <a href="'.$head['sublink'].'" target="_blank">'.img_picto($head['subtext'],$head['subpicto']).'</a>';
-			}
-			if ($conf->use_javascript_ajax)
-			{
-				print '</td><td class="nocellnopadd boxclose" nowrap="nowrap">';
+				print '</td><td class="nocellnopadd boxclose nowrap">';
 				// The image must have the class 'boxhandle' beause it's value used in DOM draggable objects to define the area used to catch the full object
-				print img_picto($langs->trans("MoveBox",$this->box_id),'grip','class="boxhandle" style="cursor:move;"');
-				print img_picto($langs->trans("Close",$this->box_id),'close','class="boxclose" style="cursor:pointer;" id="imgclose'.$this->box_id.'"');
+				print img_picto($langs->trans("MoveBox",$this->box_id),'grip_title','class="boxhandle hideonsmartphone" style="cursor:move;"');
+				print img_picto($langs->trans("Close2",$this->box_id),'close_title','class="boxclose" rel="x:y" style="cursor:pointer;" id="imgclose'.$this->box_id.'"');
+				$label=$head['text'];
+				if (! empty($head['graph'])) $label.=' ('.$langs->trans("Graph").')';
+				print '<input type="hidden" id="boxlabelentry'.$this->box_id.'" value="'.dol_escape_htmltag($label).'">';
 				print '</td></tr></table>';
 			}
 			print '</td>';
 			print "</tr>\n";
-//			print "</table>\n";
-//			print "</div>\n";
+			//print "</table>\n";
+			//print "</div>\n";
 		}
 
 		// Show box lines
@@ -198,19 +264,20 @@ class ModeleBoxes    // Can't be abtract as it is instantiated to build "empty" 
 						if (isset($contents[$i][$j]['td'])) $tdparam.=' '.$contents[$i][$j]['td'];
 
 						if (empty($contents[$i][$j]['text'])) $contents[$i][$j]['text']="";
-						$texte=isset($contents[$i][$j]['text'])?$contents[$i][$j]['text']:'';
-						$textewithnotags=preg_replace('/<([^>]+)>/i','',$texte);
-						$texte2=isset($contents[$i][$j]['text2'])?$contents[$i][$j]['text2']:'';
-						$texte2withnotags=preg_replace('/<([^>]+)>/i','',$texte2);
-						//print "xxx $textewithnotags y";
+						$text=isset($contents[$i][$j]['text'])?$contents[$i][$j]['text']:'';
+						$textwithnotags=preg_replace('/<([^>]+)>/i','',$text);
+						$text2=isset($contents[$i][$j]['text2'])?$contents[$i][$j]['text2']:'';
+						$text2withnotags=preg_replace('/<([^>]+)>/i','',$text2);
+						$textnoformat=isset($contents[$i][$j]['textnoformat'])?$contents[$i][$j]['textnoformat']:'';
+						//print "xxx $textwithnotags y";
 
 						print '<td'.$tdparam.'>';
 
 						// Url
 						if (! empty($contents[$i][$j]['url']))
 						{
-							print '<a href="'.$contents[$i][$j]['url'].'" title="'.$textewithnotags.'"';
-							//print ' alt="'.$textewithnotags.'"';      // Pas de alt sur un "<a href>"
+							print '<a href="'.$contents[$i][$j]['url'].'" title="'.$textwithnotags.'"';
+							//print ' alt="'.$textwithnotags.'"';      // Pas de alt sur un "<a href>"
 							print isset($contents[$i][$j]['target'])?' target="'.$contents[$i][$j]['target'].'"':'';
 							print '>';
 						}
@@ -225,15 +292,17 @@ class ModeleBoxes    // Can't be abtract as it is instantiated to build "empty" 
 						$maxlength=$MAXLENGTHBOX;
 						if (! empty($contents[$i][$j]['maxlength'])) $maxlength=$contents[$i][$j]['maxlength'];
 
-						if ($maxlength) $textewithnotags=dol_trunc($textewithnotags,$maxlength);
-						if (preg_match('/^<img/i',$texte) || ! empty($contents[$i][$j]['asis'])) print $texte;	// show text with no html cleaning
-						else print $textewithnotags;				// show text with html cleaning
+						if ($maxlength) $textwithnotags=dol_trunc($textwithnotags,$maxlength);
+						if (preg_match('/^<img/i',$text) || ! empty($contents[$i][$j]['asis'])) print $text;	// show text with no html cleaning
+						else print $textwithnotags;				// show text with html cleaning
 
 						// End Url
 						if (! empty($contents[$i][$j]['url'])) print '</a>';
 
-						if (preg_match('/^<img/i',$texte2) || ! empty($contents[$i][$j]['asis2'])) print $texte2;	// show text with no html cleaning
-						else print $texte2withnotags;				// show text with html cleaning
+						if (preg_match('/^<img/i',$text2) || ! empty($contents[$i][$j]['asis2'])) print $text2;	// show text with no html cleaning
+						else print $text2withnotags;				// show text with html cleaning
+
+						if (! empty($textnoformat)) print "\n".$textnoformat."\n";
 
 						print "</td>";
 					}
@@ -243,13 +312,13 @@ class ModeleBoxes    // Can't be abtract as it is instantiated to build "empty" 
 			}
 		}
 
-		if (! empty($head['text']) || ! empty($head['sublink']) || $nblines)
+		if (! empty($head['text']) || ! empty($head['sublink']) || ! empty($head['subpicto']) || $nblines)
 		{
 			print "</table>\n";
 		}
 
 		// If invisible box with no contents
-		if (empty($head['text']) && empty($head['sublink']) && ! $nblines) print "<br>\n";
+		if (empty($head['text']) && empty($head['sublink']) && empty($head['subpicto']) && ! $nblines) print "<br>\n";
 
 		print "</div>\n";
 		print "<!-- Box end -->\n\n";
@@ -258,4 +327,3 @@ class ModeleBoxes    // Can't be abtract as it is instantiated to build "empty" 
 }
 
 
-?>

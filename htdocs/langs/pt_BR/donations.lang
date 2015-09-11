@@ -1,27 +1,26 @@
-# Dolibarr language file - pt_BR rev. 0.0 - donations
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - donations
 Donation=Doação
 Donations=Doações
+DonationRef=Doaçaõ ref.
 Donor=Dador
 Donors=Dadores
-AddDonation=Adicionar Doação
+AddDonation=Criar uma doação
 NewDonation=Nova Doação
-DonationPromise=Promessa de Doação
-PromisesNotValid=Promessas Não Validadas
-PromisesValid=Promessas Validadas
-DonationsPayed=Doações Pagas
+ShowDonation=Mostrar doaçaõ
+DonationsPaid=Doações pagas
 DonationsReceived=Doações Recebidas
 PublicDonation=Doação Pública
 DonationsNumber=Número de Doações
 DonationsArea=Área de Doações
-DonationStatusPromiseNotValidated=Promessa Não Validada
-DonationStatusPromiseValidated=Promessa Validada
-DonationStatusPayed=Doação Paga
-DonationStatusPromiseNotValidatedShort=Não Validada
+DonationStatusPaid=Doaçaõ recebida
 DonationStatusPromiseValidatedShort=Validada
-DonationStatusPayedShort=Paga
-ValidPromise=Promessa Válida
-BuildDonationReceipt=Criar Recibo
+DonationReceipt=Recibo doaçaõ
 DonationsModels=Modelo de documento de recepção de Doação
-
-
+LastModifiedDonations=As ultimas %s doações modificadaas
+SearchADonation=Buscar doaçaõ
+DonationRecipient=Recipiente doaçaõ
+IConfirmDonationReception=Declaro o recebimento como doaçaõ, de seguinte montante.
+MinimumAmount=O montante mínimo é de %s
+DONATION_ART200=Mostrar o artigo 200 do CGI se você está preocupado
+DONATION_ART238=Mostrar o artigo 238 do CGI se você está preocupado
+DONATION_ART885=Mostrar o artigo 885 do CGI se você está preocupado

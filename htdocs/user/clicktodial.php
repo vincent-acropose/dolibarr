@@ -46,16 +46,18 @@ $result = restrictedArea($user, 'user', $id, '&user', $feature2);
  * Actions
  */
 
-if ($action == 'update' && ! $_POST['cancel'])
+if ($action == 'update' && ! GETPOST('cancel'))
 {
 	$edituser = new User($db);
 	$edituser->fetch($id);
 
-	$edituser->clicktodial_login    = $_POST["login"];
-	$edituser->clicktodial_password = $_POST["password"];
-	$edituser->clicktodial_poste    = $_POST["poste"];
+	$edituser->clicktodial_url      = GETPOST("url");
+	$edituser->clicktodial_login    = GETPOST("login");
+	$edituser->clicktodial_password = GETPOST("password");
+	$edituser->clicktodial_poste    = GETPOST("poste");
 
 	$result=$edituser->update_clicktodial();
+	if ($result < 0) setEventMessage($edituser->error,'errors');
 }
 
 
@@ -102,15 +104,15 @@ if ($id > 0)
     print '<td colspan="2">'.$fuser->lastname.'</td>';
     print "</tr>\n";
 
-    // Prenom
+    // Firstname
     print '<tr><td width="25%" valign="top">'.$langs->trans("Firstname").'</td>';
-    print '<td colspan="2">'.$fuser->name.'</td>';
+    print '<td colspan="2">'.$fuser->firstname.'</td>';
     print "</tr>\n";
 
     print "</table>\n";
     print "<br>\n";
 
-
+	// Edit mode
     if ($action == 'edit')
     {
         print '<form action="'.$_SERVER['PHP_SELF'].'?id='.$fuser->id.'" method="post">';
@@ -122,15 +124,24 @@ if ($id > 0)
         {
         	print '<tr><td width="25%" valign="top">ClickToDial URL</td>';
         	print '<td class="valeur">';
-            if (empty($conf->global->CLICKTODIAL_URL))
+        	print '<input name="url" value="'.(! empty($fuser->clicktodial_url)?$fuser->clicktodial_url:'').'" size="92">';
+        	if (empty($conf->global->CLICKTODIAL_URL) && empty($fuser->clicktodial_url))
             {
                 $langs->load("errors");
                 print '<font class="error">'.$langs->trans("ErrorModuleSetupNotComplete").'</font>';
             }
-            else print $form->textwithpicto($conf->global->CLICKTODIAL_URL,$langs->trans("ClickToDialUrlDesc"));
-        	print '</td>';
+            else
+           {
+            	print ' &nbsp; &nbsp; '.$form->textwithpicto($langs->trans("KeepEmptyToUseDefault").': '.$conf->global->CLICKTODIAL_URL,$langs->trans("ClickToDialUrlDesc"));
+           }
+            print '</td>';
         	print '</tr>';
         }
+
+        print '<tr><td width="25%" valign="top">ClickToDial '.$langs->trans("IdPhoneCaller").'</td>';
+        print '<td class="valeur">';
+        print '<input name="poste" value="'.(! empty($fuser->clicktodial_poste)?$fuser->clicktodial_poste:'').'"></td>';
+        print "</tr>\n";
 
         print '<tr><td width="25%" valign="top">ClickToDial '.$langs->trans("Login").'</td>';
         print '<td class="valeur">';
@@ -142,19 +153,16 @@ if ($id > 0)
         print '<input name="password" value="'.(! empty($fuser->clicktodial_password)?$fuser->clicktodial_password:'').'"></td>';
         print "</tr>\n";
 
-        print '<tr><td width="25%" valign="top">ClickToDial '.$langs->trans("IdPhoneCaller").'</td>';
-        print '<td class="valeur">';
-        print '<input name="poste" value="'.(! empty($fuser->clicktodial_poste)?$fuser->clicktodial_poste:'').'"></td>';
-        print "</tr>\n";
+        print '</table>';
 
-		print '<tr><td colspan="2" align="center"><input class="button" type="submit" value="'.$langs->trans("Save").'">';
-		print ' &nbsp; &nbsp; ';
-		print '<input class="button" type="submit" name="cancel" value="'.$langs->trans("Cancel").'">';
-		print '</td></tr>';
+        print '<br><center><input class="button" type="submit" value="'.$langs->trans("Save").'">';
+        print ' &nbsp; &nbsp; ';
+        print '<input class="button" type="submit" name="cancel" value="'.$langs->trans("Cancel").'">';
+        print '</center>';
 
-        print '</table></form>';
+        print '</form>';
     }
-    else
+    else	// View mode
     {
 
         print '<table class="border" width="100%">';
@@ -163,24 +171,34 @@ if ($id > 0)
         {
         	print "<tr>".'<td width="25%" valign="top">ClickToDial URL</td>';
         	print '<td class="valeur">';
-        	if (empty($conf->global->CLICKTODIAL_URL))
+        	$url=$conf->global->CLICKTODIAL_URL;
+        	if (! empty($fuser->clicktodial_url)) $url=$fuser->clicktodial_url;
+        	if (empty($url))
         	{
         	    $langs->load("errors");
         	    print '<font class="error">'.$langs->trans("ErrorModuleSetupNotComplete").'</font>';
         	}
-        	else print $form->textwithpicto($conf->global->CLICKTODIAL_URL,$langs->trans("ClickToDialUrlDesc"));
+        	else
+        	{
+        		print $form->textwithpicto((empty($fuser->clicktodial_url)?$langs->trans("DefaultLink").': ':'').$url,$langs->trans("ClickToDialUrlDesc"));
+        	}
         	print '</td>';
         	print '</tr>';
         }
+
+        print '<tr><td width="25%" valign="top" class="fieldrequired">ClickToDial '.$langs->trans("IdPhoneCaller").'</td>';
+        print '<td class="valeur">'.(! empty($fuser->clicktodial_poste)?$fuser->clicktodial_poste:'').'</td>';
+        print "</tr>";
+        
         print '<tr><td width="25%" valign="top">ClickToDial '.$langs->trans("Login").'</td>';
         print '<td class="valeur">'.(! empty($fuser->clicktodial_login)?$fuser->clicktodial_login:'').'</td>';
         print '</tr>';
+        
         print '<tr><td width="25%" valign="top">ClickToDial '.$langs->trans("Password").'</td>';
         print '<td class="valeur">'.preg_replace('/./','*',(! empty($fuser->clicktodial_password)?$fuser->clicktodial_password:'')).'</a></td>';
         print "</tr>\n";
-        print '<tr><td width="25%" valign="top">ClickToDial '.$langs->trans("IdPhoneCaller").'</td>';
-        print '<td class="valeur">'.(! empty($fuser->clicktodial_poste)?$fuser->clicktodial_poste:'').'</td>';
-        print "</tr></table>\n";
+        
+        print "</table>\n";
     }
 
     print "</div>\n";
@@ -204,4 +222,3 @@ if ($id > 0)
 llxFooter();
 
 $db->close();
-?>

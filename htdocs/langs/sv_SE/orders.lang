@@ -1,16 +1,8 @@
-/*
- * Language code: sv_SV
- * Automatic generated via autotranslator.php tool
- * Generation date 2010-08-27 08:47:44
- */
-
-
-// START - Lines generated via autotranslator.php tool (2010-08-27 08:47:44).
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - orders
 OrdersArea=Kunder order område
 SuppliersOrdersArea=Leverantörer order område
 OrderCard=Beställ kort
+OrderId=Order Id
 Order=Beställ
 Orders=Beställningar
 OrderLine=Orderrad
@@ -24,19 +16,23 @@ SupplierOrder=Leverantör för
 SuppliersOrders=Leverantörens order
 SuppliersOrdersRunning=Nuvarande leverantörens order
 CustomerOrder=Kundorder
-CustomersOrders=Kundens order
+CustomersOrders=Kundorder
 CustomersOrdersRunning=Nuvarande kundens order
 CustomersOrdersAndOrdersLines=Kundorder och ordning: s linjer
-OrdersToValid=Beställningar att validera
-OrdersToBill=Order till faktura
-OrdersInProcess=Orderingången i processen
-OrdersToProcess=Order att behandla
+OrdersToValid=Kundorder att validera
+OrdersToBill=Levererade kundorder
+OrdersInProcess=Kundorder under behandling
+OrdersToProcess=Kundorder att behandla
+SuppliersOrdersToProcess=Leverantörens order att behandla
 StatusOrderCanceledShort=Annullerad
 StatusOrderDraftShort=Förslag
 StatusOrderValidatedShort=Validerad
-StatusOrderOnProcessShort=Den process
+StatusOrderSentShort=I processen
+StatusOrderSent=Sändning pågår
+StatusOrderOnProcessShort=Beställda
 StatusOrderProcessedShort=Bearbetade
 StatusOrderToBillShort=Till Bill
+StatusOrderToBill2Short=Till Bill
 StatusOrderApprovedShort=Godkänd
 StatusOrderRefusedShort=Refused
 StatusOrderToProcessShort=För att kunna behandla
@@ -45,35 +41,47 @@ StatusOrderReceivedAllShort=Allt fick
 StatusOrderCanceled=Annullerad
 StatusOrderDraft=Utkast (måste valideras)
 StatusOrderValidated=Validerad
-StatusOrderOnProcess=Den process
+StatusOrderOnProcess=Beställda, väntar på inleverans
+StatusOrderOnProcessWithValidation=Ordered - Standby reception or validation
 StatusOrderProcessed=Bearbetade
 StatusOrderToBill=Till Bill
+StatusOrderToBill2=Till Bill
 StatusOrderApproved=Godkänd
 StatusOrderRefused=Refused
 StatusOrderReceivedPartially=Delvis fått
 StatusOrderReceivedAll=Allt fick
+ShippingExist=En sändning föreligger
+ProductQtyInDraft=Produktmängd till beställningsutkast
+ProductQtyInDraftOrWaitingApproved=Produktmnängd till beställningsutkast eller godkända beställningar, ännu ej lagda
 DraftOrWaitingApproved=Förslag eller godkänts ännu ej beställas
 DraftOrWaitingShipped=Förslag eller godkännas ännu inte sändas
 MenuOrdersToBill=Order till faktura
+MenuOrdersToBill2=Fakturerbara order
 SearchOrder=Sök ordning
-Sending=Sända
-Sendings=Sendings
+SearchACustomerOrder=Sök en kundorder
+SearchASupplierOrder=Search a supplier order
 ShipProduct=Ship produkt
 Discount=Rabatt
 CreateOrder=Skapa ordning
 RefuseOrder=Vägra att
-ApproveOrder=Acceptera att
+ApproveOrder=Approve order
+Approve2Order=Approve order (second level)
 ValidateOrder=Verifiera att
+UnvalidateOrder=Unvalidate För
 DeleteOrder=Radera ordning
 CancelOrder=Avbryt för
-AddOrder=Lägg ordning
+AddOrder=Skapa order
 AddToMyOrders=Lägg till i mitt order
 AddToOtherOrders=Lägg till övriga beställningar
+AddToDraftOrders=Lägg till förlags order
 ShowOrder=Visa att
 NoOpenedOrders=Ingen öppnade order
 NoOtherOpenedOrders=Ingen annan öppnas order
+NoDraftOrders=Inga förslag till beslut
 OtherOrders=Övriga beställningar
-LastOrders=Senaste %s order
+LastOrders=Last %s customer orders
+LastCustomerOrders=Last %s customer orders
+LastSupplierOrders=Last %s supplier orders
 LastModifiedOrders=Senast %s uppdaterad order
 LastClosedOrders=Senaste %s stängd order
 AllOrders=Alla order
@@ -81,24 +89,27 @@ NbOfOrders=Antal order
 OrdersStatistics=Beställ statistik
 OrdersStatisticsSuppliers=Leverantören för statistik
 NumberOfOrdersByMonth=Antal beställningar per månad
-AmountOfOrdersByMonthHT=orderingången per månad (efter skatt)
+AmountOfOrdersByMonthHT=Mängd order per månad (netto efter skatt)
 ListOfOrders=Lista över beställningar
 CloseOrder=Stäng ordning
 ConfirmCloseOrder=Är du säker på att du vill stänga denna beställning? När en order är stängd, kan den bara faktureras.
 ConfirmCloseOrderIfSending=Är du säker på att du vill stänga denna beställning? Du måste stänga ett beslut först när alla sjöfarten är klar.
 ConfirmDeleteOrder=Är du säker på att du vill ta bort denna order?
 ConfirmValidateOrder=Är du säker på att du vill godkänna denna ordning under namnet <b>%s?</b>
+ConfirmUnvalidateOrder=Är du säker på att du vill återställa ordningen <b>%s</b> att utarbeta status?
 ConfirmCancelOrder=Är du säker på att du vill avbryta denna order?
 ConfirmMakeOrder=Är du säker på att du vill bekräfta att du gjort detta beställning på <b>%s?</b>
 GenerateBill=Skapa faktura
+ClassifyShipped=Klassificera levereras
 ClassifyBilled=Klassificera &quot;Fakturerade&quot;
 ComptaCard=Bokföring kort
 DraftOrders=Förslag till beslut
 RelatedOrders=Relaterade order
+RelatedCustomerOrders=Related customer orders
+RelatedSupplierOrders=Related supplier orders
 OnProcessOrders=I processen order
 RefOrder=Ref. För
 RefCustomerOrder=Ref. kundorder
-CustomerOrder=Kundorder
 RefCustomerOrderShort=Ref. cust. För
 SendOrderByMail=Skicka beställningen per post
 ActionsOnOrder=Åtgärder för att
@@ -112,6 +123,8 @@ PaymentOrderRef=Betalning av att %s
 CloneOrder=Klon för
 ConfirmCloneOrder=Är du säker på att du vill klona denna beställning <b>%s?</b>
 DispatchSupplierOrder=Ta emot leverantör för %s
+FirstApprovalAlreadyDone=First approval already done
+##### Types de contacts #####
 TypeContact_commande_internal_SALESREPFOLL=Representanten följa upp kundorder
 TypeContact_commande_internal_SHIPPING=Representanten uppföljning sjöfart
 TypeContact_commande_external_BILLING=Kundfaktura kontakt
@@ -122,10 +135,13 @@ TypeContact_order_supplier_internal_SHIPPING=Representanten uppföljning sjöfar
 TypeContact_order_supplier_external_BILLING=Leverantörsfaktura kontakt
 TypeContact_order_supplier_external_SHIPPING=Leverantör Frakt Kontakta
 TypeContact_order_supplier_external_CUSTOMER=Leverantör kontakt uppföljning för
+
 Error_COMMANDE_SUPPLIER_ADDON_NotDefined=Konstant COMMANDE_SUPPLIER_ADDON inte definierat
 Error_COMMANDE_ADDON_NotDefined=Konstant COMMANDE_ADDON inte definierat
 Error_FailedToLoad_COMMANDE_SUPPLIER_ADDON_File=Kunde inte ladda modulen fil %s
 Error_FailedToLoad_COMMANDE_ADDON_File=Kunde inte ladda modulen fil %s
+Error_OrderNotChecked=Inga order att fakturera valda
+# Sources
 OrderSource0=Kommersiella förslag
 OrderSource1=Internet
 OrderSource2=Mail kampanj
@@ -135,21 +151,22 @@ OrderSource5=Kommersiella
 OrderSource6=Store
 QtyOrdered=Antal beställda
 AddDeliveryCostLine=Lägg till en line-kostnad som visar vikten av beslutet
+# Documents models
 PDFEinsteinDescription=En fullständig för-modellen (logo. ..)
 PDFEdisonDescription=En enkel ordning modell
-// STOP - Lines generated via autotranslator.php tool (2010-08-27 08:48:12).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 17:32:03).
-// Reference language: en_US -> sv_SE
-SuppliersOrdersToProcess=Leverantörens order att behandla
-StatusOrderSentShort=I processen
-ShippingExist=En sändning föreligger
-UnvalidateOrder=Unvalidate För
-ConfirmUnvalidateOrder=Är du säker på att du vill återställa ordningen <b>%s</b> att utarbeta status?
+PDFProformaDescription=En fullständig proforma faktura (logo ...)
+# Orders modes
 OrderByMail=Post
 OrderByFax=Faxa
 OrderByEMail=EMail
 OrderByWWW=Nätet
 OrderByPhone=Telefonen
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 17:32:26).
+CreateInvoiceForThisCustomer=Faktura order
+NoOrdersToInvoice=Inga order fakturerbar
+CloseProcessedOrdersAutomatically=Klassificera "bearbetade" alla valda order.
+OrderCreation=Order skapning
+Ordered=Beställt
+OrderCreated=Din order har skapats
+OrderFail=Ett fel inträffade under din order skapande
+CreateOrders=Skapa order
+ToBillSeveralOrderSelectCustomer=För att skapa en faktura för flera ordrar, klicka först på kunden och välj sedan "%s".

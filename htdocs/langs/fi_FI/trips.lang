@@ -1,53 +1,102 @@
-/*
- * Language code: fi_FI
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-01-19 22:07:11
- */
-
-
-// Date 2009-01-19 22:07:11
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
-Trip=Matka
-Trips=Retket
-TripsAndExpenses=Matkat ja kulut
-TripCard=Trip-kortti
-AddTrip=Lisää matka
-ListOfTrips=Luettelo matkat
+# Dolibarr language file - Source file is en_US - trips
+ExpenseReport=Expense report
+ExpenseReports=Expense reports
+Trip=Expense report
+Trips=Expense reports
+TripsAndExpenses=Expenses reports
+TripsAndExpensesStatistics=Expense reports statistics
+TripCard=Expense report card
+AddTrip=Create expense report
+ListOfTrips=List of expense report
 ListOfFees=Luettelo palkkiot
-NewTrip=Uusi matka
+NewTrip=New expense report
+CompanyVisited=Yritys / säätiö vieraili
 Kilometers=Kilometers
 FeesKilometersOrAmout=Määrä tai kilometreinä
-DeleteTrip=Poista matka
-ConfirmDeleteTrip=Oletko varma, että haluat poistaa tämän matkan?
+DeleteTrip=Delete expense report
+ConfirmDeleteTrip=Are you sure you want to delete this expense report ?
+ListTripsAndExpenses=List of expense reports
+ListToApprove=Waiting for approval
+ExpensesArea=Expense reports area
+SearchATripAndExpense=Search an expense report
+ClassifyRefunded=Classify 'Refunded'
+ExpenseReportWaitingForApproval=A new expense report has been submitted for approval
+ExpenseReportWaitingForApprovalMessage=A new expense report has been submitted and is waiting for approval.\n- User: %s\n- Period: %s\nClick here to validate: %s
+TripId=Id expense report
+AnyOtherInThisListCanValidate=Person to inform for validation.
+TripSociete=Information company
+TripSalarie=Informations user
+TripNDF=Informations expense report
+DeleteLine=Delete a ligne of the expense report
+ConfirmDeleteLine=Are you sure you want to delete this line ?
+PDFStandardExpenseReports=Standard template to generate a PDF document for expense report
+ExpenseReportLine=Expense report line
 TF_OTHER=Muu
+TF_TRANSPORTATION=Transportation
 TF_LUNCH=Lounas
-TF_TRIP=Matka
-// Date 2009-01-19 22:07:11
-// STOP - Lines generated via parser
+TF_METRO=Metro
+TF_TRAIN=Train
+TF_BUS=Bus
+TF_CAR=Car
+TF_PEAGE=Toll
+TF_ESSENCE=Fuel
+TF_HOTEL=Hostel
+TF_TAXI=Taxi
 
+ErrorDoubleDeclaration=You have declared another expense report into a similar date range.
+ListTripsAndExpenses=List of expense reports
+AucuneNDF=No expense reports found for this criteria
+AucuneLigne=There is no expense report declared yet
+AddLine=Add a line
+AddLineMini=Add
 
-// START - Lines generated via autotranslator.php tool (2009-08-13 20:45:19).
-// Reference language: en_US
-ListTripsAndExpenses=Luettelo matkat ja kulut
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 20:45:19).
+Date_DEBUT=Period date start
+Date_FIN=Period date end
+ModePaiement=Payment mode
+Note=Note
+Project=Project
 
+VALIDATOR=User to inform for approbation
+VALIDOR=Approved by
+AUTHOR=Recorded by
+AUTHORPAIEMENT=Paied by
+REFUSEUR=Denied by
+CANCEL_USER=Canceled by
 
-// START - Lines generated via autotranslator.php tool (2009-08-19 20:44:21).
-// Reference language: en_US
-CompanyVisited=Yritys / säätiö vieraili
-// STOP - Lines generated via autotranslator.php tool (2009-08-19 20:44:21).
+MOTIF_REFUS=Reason
+MOTIF_CANCEL=Reason
 
+DATE_REFUS=Deny date
+DATE_SAVE=Validation date
+DATE_VALIDE=Validation date
+DATE_CANCEL=Cancelation date
+DATE_PAIEMENT=Payment date
 
-// START - Lines generated via autotranslator.php tool (2010-07-17 11:26:22).
-// Reference language: en_US
-TripsAndExpensesStatistics=Retket ja kulut tilastot
-// STOP - Lines generated via autotranslator.php tool (2010-07-17 11:28:17).
+TO_PAID=Pay
+BROUILLONNER=Reopen
+SendToValid=Sent to approve
+ModifyInfoGen=Edit
+ValidateAndSubmit=Validate and submit for approval
 
+NOT_VALIDATOR=You are not allowed to approve this expense report
+NOT_AUTHOR=You are not the author of this expense report. Operation cancelled.
 
-// START - Lines generated via autotranslator.php tool (2012-02-29 16:10:23).
-// Reference language: en_US -> fi_FI
-ExpensesArea=Retket ja kulut alue
-SearchATripAndExpense=Etsi matka-ja kulut
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 16:10:57).
+RefuseTrip=Deny an expense report
+ConfirmRefuseTrip=Are you sure you want to deny this expense report ?
+
+ValideTrip=Approve expense report
+ConfirmValideTrip=Are you sure you want to approve this expense report ?
+
+PaidTrip=Pay an expense report
+ConfirmPaidTrip=Are you sure you want to change status of this expense report to "Paid" ?
+
+CancelTrip=Cancel an expense report
+ConfirmCancelTrip=Are you sure you want to cancel this expense report ?
+
+BrouillonnerTrip=Move back expense report to status "Draft"n
+ConfirmBrouillonnerTrip=Are you sure you want to move this expense report to status "Draft" ?
+
+SaveTrip=Validate expense report
+ConfirmSaveTrip=Are you sure you want to validate this expense report ?
+
+NoTripsToExportCSV=No expense report to export for this period.

@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2001-2003 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (c) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2012      Marcos García        <marcosgdf@gmail.com>
  *
@@ -29,15 +29,15 @@ require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
 require_once DOL_DOCUMENT_ROOT.'/commande/class/commandestats.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/dolgraph.class.php';
 
-$WIDTH=500;
-$HEIGHT=200;
+$WIDTH=DolGraph::getDefaultGraphSizeForStats('width');
+$HEIGHT=DolGraph::getDefaultGraphSizeForStats('height');
 
 $mode=GETPOST("mode")?GETPOST("mode"):'customer';
 if ($mode == 'customer' && ! $user->rights->commande->lire) accessforbidden();
 if ($mode == 'supplier' && ! $user->rights->fournisseur->commande->lire) accessforbidden();
 
-$userid=GETPOST('userid','int'); if ($userid < 0) $userid=0;
-$socid=GETPOST('socid','int'); if ($socid < 0) $socid=0;
+$userid=GETPOST('userid','int');
+$socid=GETPOST('socid','int');
 // Security check
 if ($user->societe_id > 0)
 {
@@ -51,7 +51,10 @@ $year = GETPOST('year')>0?GETPOST('year'):$nowyear;
 $startyear=$year-1;
 $endyear=$year;
 
-$langs->load("orders");
+$langs->load('orders');
+$langs->load('companies');
+$langs->load('other');
+$langs->load('suppliers');
 
 
 /*
@@ -69,7 +72,7 @@ if ($mode == 'customer')
 }
 if ($mode == 'supplier')
 {
-    $title=$langs->trans("OrdersStatisticsSuppliers");
+    $title=$langs->trans("OrdersStatisticsSuppliers").' ('.$langs->trans("SentToSuppliers").")";
     $dir=$conf->fournisseur->dir_output.'/commande/temp';
 }
 
@@ -77,7 +80,7 @@ print_fiche_titre($title);
 
 dol_mkdir($dir);
 
-$stats = new CommandeStats($db, $socid, $mode, $userid);
+$stats = new CommandeStats($db, $socid, $mode, ($userid>0?$userid:0));
 
 // Build graphic number of object
 $data = $stats->getNbByMonthWithPrevYear($endyear,$startyear);
@@ -233,13 +236,13 @@ $h++;
 if ($mode == 'customer') $type='order_stats';
 if ($mode == 'supplier') $type='supplier_order_stats';
 
-$object=new stdClass(); // TODO $object not defined ?
-complete_head_from_modules($conf,$langs,$object,$head,$h,$type);
+complete_head_from_modules($conf,$langs,null,$head,$h,$type);
 
 dol_fiche_head($head,'byyear',$langs->trans("Statistics"));
 
-print '<table class="notopnoleftnopadd" width="100%"><tr>';
-print '<td align="center" valign="top">';
+
+print '<div class="fichecenter"><div class="fichethirdleft">';
+
 
 //if (empty($socid))
 //{
@@ -247,7 +250,7 @@ print '<td align="center" valign="top">';
 	print '<form name="stats" method="POST" action="'.$_SERVER["PHP_SELF"].'">';
 	print '<input type="hidden" name="mode" value="'.$mode.'">';
 	print '<table class="border" width="100%">';
-	print '<tr><td class="liste_titre" colspan="2">'.$langs->trans("Filter").'</td></tr>';
+	print '<tr class="liste_titre"><td class="liste_titre" colspan="2">'.$langs->trans("Filter").'</td></tr>';
 	// Company
 	print '<tr><td align="left">'.$langs->trans("ThirdParty").'</td><td align="left">';
 	if ($mode == 'customer') $filter='s.client in (1,2,3)';
@@ -255,12 +258,13 @@ print '<td align="center" valign="top">';
 	print $form->select_company($socid,'socid',$filter,1);
 	print '</td></tr>';
 	// User
-	print '<tr><td align="left">'.$langs->trans("User").'/'.$langs->trans("SalesRepresentative").'</td><td align="left">';
-	print $form->select_users($userid,'userid',1);
+	print '<tr><td align="left">'.$langs->trans("CreatedBy").'</td><td align="left">';
+	print $form->select_dolusers($userid,'userid',1);
 	print '</td></tr>';
 	// Year
 	print '<tr><td align="left">'.$langs->trans("Year").'</td><td align="left">';
 	if (! in_array($year,$arrayyears)) $arrayyears[$year]=$year;
+	if (! in_array($nowyear,$arrayyears)) $arrayyears[$nowyear]=$nowyear;
 	arsort($arrayyears);
 	print $form->selectarray('year',$arrayyears,$year,0);
 	print '</td></tr>';
@@ -286,7 +290,7 @@ foreach ($data as $val)
 	{ // If we have empty year
 	$oldyear--;
 	print '<tr height="24">';
-	print '<td align="center"><a href="'.$_SERVER["PHP_SELF"].'?year='.$oldyear.'&amp;mode='.$mode.'">'.$oldyear.'</a></td>';
+	print '<td align="center"><a href="'.$_SERVER["PHP_SELF"].'?year='.$oldyear.'&amp;mode='.$mode.($socid>0?'&socid='.$socid:'').($userid>0?'&userid='.$userid:'').'">'.$oldyear.'</a></td>';
 
 	print '<td align="right">0</td>';
 	print '<td align="right">0</td>';
@@ -295,7 +299,7 @@ foreach ($data as $val)
 	}
 
 	print '<tr height="24">';
-	print '<td align="center"><a href="'.$_SERVER["PHP_SELF"].'?year='.$year.'&amp;mode='.$mode.'">'.$year.'</a></td>';
+	print '<td align="center"><a href="'.$_SERVER["PHP_SELF"].'?year='.$year.'&amp;mode='.$mode.($socid>0?'&socid='.$socid:'').($userid>0?'&userid='.$userid:'').'">'.$year.'</a></td>';
 	print '<td align="right">'.$val['nb'].'</td>';
 	print '<td align="right">'.price(price2num($val['total'],'MT'),1).'</td>';
 	print '<td align="right">'.price(price2num($val['avg'],'MT'),1).'</td>';
@@ -306,8 +310,8 @@ foreach ($data as $val)
 print '</table>';
 
 
-print '</td>';
-print '<td align="center" valign="top">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
+
 
 // Show graphs
 print '<table class="border" width="100%"><tr valign="top"><td align="center">';
@@ -321,7 +325,9 @@ else {
 }
 print '</td></tr></table>';
 
-print '</td></tr></table>';
+
+print '</div></div></div>';
+print '<div style="clear:both"></div>';
 
 dol_fiche_end();
 
@@ -329,4 +335,3 @@ dol_fiche_end();
 llxFooter();
 
 $db->close();
-?>

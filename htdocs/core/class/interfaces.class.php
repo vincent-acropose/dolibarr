@@ -23,14 +23,16 @@
  *   \brief			Fichier de la classe de gestion des triggers
  */
 
+require_once DOL_DOCUMENT_ROOT.'/core/triggers/dolibarrtriggers.class.php';
+
 
 /**
  *   Class to manage triggers
  */
-
 class Interfaces
 {
-    var $dir;				// Directory with all core and external triggers files
+    var $db;
+	var $dir;				// Directory with all core and external triggers files
     var $errors	= array();	// Array for errors
 
     /**
@@ -48,7 +50,7 @@ class Interfaces
      *   This function call all qualified triggers.
      *
      *   @param		string		$action     Trigger event code
-     *   @param     Object		$object     Objet concern
+     *   @param     object		$object     Objet concern
      *   @param     User		$user       Objet user
      *   @param     Lang		$langs      Objet lang
      *   @param     Conf		$conf       Objet conf
@@ -59,7 +61,9 @@ class Interfaces
         // Check parameters
         if (! is_object($object) || ! is_object($conf))	// Error
         {
-            dol_syslog(get_class($this).'::run_triggers was called with wrong parameters action='.$action.' object='.is_object($object).' user='.is_object($user).' langs='.is_object($langs).' conf='.is_object($conf), LOG_ERR);
+        	$this->error='function run_triggers called with wrong parameters action='.$action.' object='.is_object($object).' user='.is_object($user).' langs='.is_object($langs).' conf='.is_object($conf);
+            dol_syslog(get_class($this).'::run_triggers '.$this->error, LOG_ERR);
+        	$this->errors[]=$this->error;
             return -1;
         }
         if (! is_object($user) || ! is_object($langs))	// Warning
@@ -102,7 +106,7 @@ class Interfaces
                         if (in_array($modName,$modules))
                         {
                             $langs->load("errors");
-                            dol_syslog(get_class($this)."::run_triggers action=".$action." ".$langs->trans("ErrorDuplicateTrigger",$modName,"/htdocs/core/triggers/"),LOG_ERR);
+                            dol_syslog(get_class($this)."::run_triggers action=".$action." ".$langs->trans("ErrorDuplicateTrigger",$modName,"/htdocs/core/triggers/"), LOG_ERR);
                             continue;
                         }
                         else
@@ -123,7 +127,7 @@ class Interfaces
 
                         if (! $qualified)
                         {
-                            dol_syslog(get_class($this)."::run_triggers action=".$action." Triggers for file '".$file."' need module to be enabled",LOG_INFO);
+                            dol_syslog(get_class($this)."::run_triggers action=".$action." Triggers for file '".$file."' need module to be enabled", LOG_DEBUG);
                             continue;
                         }
 
@@ -148,9 +152,24 @@ class Interfaces
             $objMod = new $modName($this->db);
             if ($objMod)
             {
-                dol_syslog(get_class($this)."::run_triggers action=".$action." Launch triggers for file '".$files[$key]."'",LOG_INFO);
+            	$result=0;
 
-                $result=$objMod->run_trigger($action,$object,$user,$langs,$conf);
+				if (method_exists($objMod, 'runTrigger'))	// New method to implement
+				{
+					print_r($user,true);
+	                dol_syslog(get_class($this)."::run_triggers action=".$action." Launch runTrigger for file '".$files[$key]."'", LOG_INFO);
+	                $result=$objMod->runTrigger($action,$object,$user,$langs,$conf);
+				}
+				elseif (method_exists($objMod, 'run_trigger'))	// Deprecated method
+				{
+	                dol_syslog(get_class($this)."::run_triggers action=".$action." Launch run_trigger for file '".$files[$key]."'", LOG_INFO);
+					$result=$objMod->run_trigger($action,$object,$user,$langs,$conf);
+				}
+				else
+				{
+	                dol_syslog(get_class($this)."::run_triggers action=".$action." A trigger was declared for class ".get_class($objMod)." but method runTrigger was not found", LOG_ERR);
+				}
+
                 if ($result > 0)
                 {
                     // Action OK
@@ -167,12 +186,13 @@ class Interfaces
                     // Action KO
                     $nbtotal++;
                     $nbko++;
-                    $this->errors[]=$objMod->error;
+                    if (! empty($objMod->errors)) $this->errors=array_merge($this->errors,$objMod->errors);
+                    else if (! empty($objMod->error))  $this->errors[]=$objMod->error;
                 }
             }
             else
-            {
-                dol_syslog(get_class($this)."::run_triggers action=".$action." Failed to instantiate trigger for file '".$files[$key]."'",LOG_ERR);
+			{
+                dol_syslog(get_class($this)."::run_triggers action=".$action." Failed to instantiate trigger for file '".$files[$key]."'", LOG_ERR);
             }
         }
 
@@ -199,6 +219,9 @@ class Interfaces
         global $conf, $langs;
 
         $files = array();
+        $fullpath = array();
+        $relpath = array();
+        $iscoreorexternal = array();
         $modules = array();
         $orders = array();
         $i = 0;
@@ -208,8 +231,7 @@ class Interfaces
         {
             $dir=dol_buildpath($reldir,0);
             $newdir=dol_osencode($dir);
-            //print "xx".$dir;exit;
-
+            
             // Check if directory exists (we do not use dol_is_dir to avoid loading files.lib.php at each call)
             if (! is_dir($newdir)) continue;
 
@@ -218,6 +240,7 @@ class Interfaces
             {
                 while (($file = readdir($handle))!==false)
                 {
+                    
                     if (is_readable($newdir.'/'.$file) && preg_match('/^interface_([0-9]+)_([^_]+)_(.+)\.class\.php/',$file,$reg))
                     {
 						$part1=$reg[1];
@@ -225,7 +248,6 @@ class Interfaces
 						$part3=$reg[3];
 
                         $modName = 'Interface'.ucfirst($reg[3]);
-                        //print "file=$file"; print "modName=$modName"; exit;
                         if (in_array($modName,$modules))
                         {
                             $langs->load("errors");
@@ -237,6 +259,9 @@ class Interfaces
                         }
 
                         $files[$i] = $file;
+                        $fullpath[$i] = $dir.'/'.$file;
+                        $relpath[$i] = preg_replace('/^\//','',$reldir).'/'.$file;
+                        $iscoreorexternal[$i] = ($reldir == '/core/triggers/'?'internal':'external');
                         $modules[$i] = $modName;
                         $orders[$i] = $part1.'_'.$part2.'_'.$part3;   // Set sort criteria value
 
@@ -257,6 +282,12 @@ class Interfaces
         {
             $modName = $modules[$key];
             if (empty($modName)) continue;
+
+            if (! class_exists($modName))
+            {
+				print 'Error: A trigger file was found but its class "'.$modName.'" was not found.'."<br>\n";
+            	continue;
+            }
 
             $objMod = new $modName($this->db);
 
@@ -279,6 +310,9 @@ class Interfaces
 			// We set info of modules
             $triggers[$j]['picto'] = $objMod->picto?img_object('',$objMod->picto):img_object('','generic');
             $triggers[$j]['file'] = $files[$key];
+            $triggers[$j]['fullpath'] = $fullpath[$key];
+            $triggers[$j]['relpath'] = $relpath[$key];
+            $triggers[$j]['iscoreorexternal'] = $iscoreorexternal[$key];
             $triggers[$j]['version'] = $objMod->getVersion();
             $triggers[$j]['status'] = img_picto($langs->trans("Active"),'tick');
             if ($disabledbyname > 0 || $disabledbymodule > 1) $triggers[$j]['status'] = "&nbsp;";
@@ -305,4 +339,3 @@ class Interfaces
     }
 
 }
-?>

@@ -1,8 +1,9 @@
 <?php
-
 /* Copyright (C) 2002-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2005-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013	   Florian Henry        <florian.henry@open-concept.pro>
+ * Copyright (C) 2014      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +38,11 @@ class Project extends CommonObject
     public $fk_element = 'fk_projet';
     protected $ismultientitymanaged = 1;  // 0=No test on entity, 1=Test with field entity, 2=Test with link by societe
 
+    /**
+     * {@inheritdoc}
+     */
+    protected $table_ref_field = 'ref';
+
     var $id;
     var $ref;
     var $description;
@@ -50,9 +56,9 @@ class Project extends CommonObject
     var $note_private;
     var $note_public;
     var $statuts_short;
-    var $statuts;
+    var $statuts;			// 0=draft, 1=opened, 2=closed
     var $oldcopy;
-    
+
 
     /**
      *  Constructor
@@ -62,10 +68,9 @@ class Project extends CommonObject
     function __construct($db)
     {
         $this->db = $db;
-        $this->societe = new Societe($db);
 
-        $this->statuts_short = array(0 => 'Draft', 1 => 'Validated', 2 => 'Closed');
-        $this->statuts = array(0 => 'Draft', 1 => 'Validated', 2 => 'Closed');
+        $this->statuts_short = array(0 => 'Draft', 1 => 'Opened', 2 => 'Closed');
+        $this->statuts = array(0 => 'Draft', 1 => 'Opened', 2 => 'Closed');
     }
 
     /**
@@ -81,6 +86,8 @@ class Project extends CommonObject
 
         $error = 0;
         $ret = 0;
+
+        $now=dol_now();
 
         // Check parameters
         if (!trim($this->ref))
@@ -112,13 +119,13 @@ class Project extends CommonObject
         $sql.= ", " . $user->id;
         $sql.= ", 0";
         $sql.= ", " . ($this->public ? 1 : 0);
-        $sql.= ", " . $this->db->idate(dol_now());
-        $sql.= ", " . ($this->date_start != '' ? $this->db->idate($this->date_start) : 'null');
-        $sql.= ", " . ($this->date_end != '' ? $this->db->idate($this->date_end) : 'null');
+        $sql.= ", '".$this->db->idate($now)."'";
+        $sql.= ", " . ($this->date_start != '' ? "'".$this->db->idate($this->date_start)."'" : 'null');
+        $sql.= ", " . ($this->date_end != '' ? "'".$this->db->idate($this->date_end)."'" : 'null');
         $sql.= ", ".$conf->entity;
         $sql.= ")";
 
-        dol_syslog(get_class($this)."::create sql=" . $sql, LOG_DEBUG);
+        dol_syslog(get_class($this)."::create", LOG_DEBUG);
         $resql = $this->db->query($sql);
         if ($resql)
         {
@@ -127,15 +134,9 @@ class Project extends CommonObject
 
             if (!$notrigger)
             {
-                // Call triggers
-                include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-                $interface = new Interfaces($this->db);
-                $result = $interface->run_triggers('PROJECT_CREATE', $this, $user, $langs, $conf);
-                if ($result < 0)
-                {
-                    $error++;
-                    $this->errors = $interface->errors;
-                }
+                // Call trigger
+                $result=$this->call_trigger('PROJECT_CREATE',$user);
+                if ($result < 0) { $error++; }
                 // End call triggers
             }
         }
@@ -143,8 +144,19 @@ class Project extends CommonObject
         {
             $this->error = $this->db->lasterror();
             $this->errno = $this->db->lasterrno();
-            dol_syslog(get_class($this)."::create error -2 " . $this->error, LOG_ERR);
             $error++;
+        }
+
+        //Update extrafield
+        if (!$error) {
+        	if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
+        	{
+        		$result=$this->insertExtraFields();
+        		if ($result < 0)
+        		{
+        			$error++;
+        		}
+        	}
         }
 
         if (!$error && !empty($conf->global->MAIN_DISABLEDRAFTSTATUS))
@@ -184,33 +196,42 @@ class Project extends CommonObject
 
         if (dol_strlen(trim($this->ref)) > 0)
         {
+            $this->db->begin();
+
             $sql = "UPDATE " . MAIN_DB_PREFIX . "projet SET";
-            $sql.= " ref='" . $this->ref . "'";
+            $sql.= " ref='" . $this->db->escape($this->ref) . "'";
             $sql.= ", title = '" . $this->db->escape($this->title) . "'";
             $sql.= ", description = '" . $this->db->escape($this->description) . "'";
             $sql.= ", fk_soc = " . ($this->socid > 0 ? $this->socid : "null");
             $sql.= ", fk_statut = " . $this->statut;
             $sql.= ", public = " . ($this->public ? 1 : 0);
-            $sql.= ", datec=" . ($this->date_c != '' ? $this->db->idate($this->date_c) : 'null');
-            $sql.= ", dateo=" . ($this->date_start != '' ? $this->db->idate($this->date_start) : 'null');
-            $sql.= ", datee=" . ($this->date_end != '' ? $this->db->idate($this->date_end) : 'null');
+            $sql.= ", datec=" . ($this->date_c != '' ? "'".$this->db->idate($this->date_c)."'" : 'null');
+            $sql.= ", dateo=" . ($this->date_start != '' ? "'".$this->db->idate($this->date_start)."'" : 'null');
+            $sql.= ", datee=" . ($this->date_end != '' ? "'".$this->db->idate($this->date_end)."'" : 'null');
             $sql.= " WHERE rowid = " . $this->id;
 
-            dol_syslog(get_class($this)."::Update sql=" . $sql, LOG_DEBUG);
-            if ($this->db->query($sql))
+            dol_syslog(get_class($this)."::Update", LOG_DEBUG);
+            $resql=$this->db->query($sql);
+            if ($resql)
             {
                 if (!$notrigger)
                 {
-                    // Call triggers
-                    include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-                    $interface = new Interfaces($this->db);
-                    $result = $interface->run_triggers('PROJECT_MODIFY', $this, $user, $langs, $conf);
-                    if ($result < 0)
-                    {
-                        $error++;
-                        $this->errors = $interface->errors;
-                    }
+                    // Call trigger
+                    $result=$this->call_trigger('PROJECT_MODIFY',$user);
+                    if ($result < 0) { $error++; }
                     // End call triggers
+                }
+
+                //Update extrafield
+                if (!$error) {
+                	if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
+                	{
+                		$result=$this->insertExtraFields();
+                		if ($result < 0)
+                		{
+                			$error++;
+                		}
+                	}
                 }
 
                 if (! $error && (is_object($this->oldcopy) && $this->oldcopy->ref != $this->ref))
@@ -222,8 +243,9 @@ class Project extends CommonObject
                 		$newdir = $conf->projet->dir_output . "/" . dol_sanitizeFileName($this->ref);
                 		if (file_exists($olddir))
                 		{
-                			$res=@dol_move($olddir, $newdir);
-                			if (! $res)
+							include_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
+							$res=dol_move($olddir, $newdir);
+							if (! $res)
                 			{
                 				$this->error='ErrorFailToMoveDir';
                 				$error++;
@@ -231,12 +253,22 @@ class Project extends CommonObject
                 		}
                 	}
                 }
-
-                $result = 1;
+                if (! $error )
+                {
+                    $this->db->commit();
+                    $result = 1;
+                }
+                else
+              {
+                    $this->db->rollback();
+                    $result = -1;
+                }
             }
             else
-            {
+			{
                 $this->error = $this->db->lasterror();
+                $this->errors[] = $this->error;
+                $this->db->rollback();
                 dol_syslog(get_class($this)."::Update error -2 " . $this->error, LOG_ERR);
                 $result = -2;
             }
@@ -262,7 +294,7 @@ class Project extends CommonObject
         if (empty($id) && empty($ref)) return -1;
 
         $sql = "SELECT rowid, ref, title, description, public, datec";
-        $sql.= ", tms, dateo, datee, fk_soc, fk_user_creat, fk_statut, note_private, note_public";
+        $sql.= ", tms, dateo, datee, fk_soc, fk_user_creat, fk_statut, note_private, note_public,model_pdf";
         $sql.= " FROM " . MAIN_DB_PREFIX . "projet";
         if (! empty($id))
         {
@@ -270,11 +302,11 @@ class Project extends CommonObject
         }
         else if (! empty($ref))
         {
-        	$sql.= " WHERE ref='".$ref."'";
-        	$sql.= " AND entity IN (".getEntity('project').")";
+        	$sql.= " WHERE ref='".$this->db->escape($ref)."'";
+        	$sql.= " AND entity IN (".getEntity('project',1).")";
         }
 
-        dol_syslog(get_class($this)."::fetch sql=" . $sql, LOG_DEBUG);
+        dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
         $resql = $this->db->query($sql);
         if ($resql)
         {
@@ -296,10 +328,10 @@ class Project extends CommonObject
                 $this->note_private = $obj->note_private;
                 $this->note_public = $obj->note_public;
                 $this->socid = $obj->fk_soc;
-                $this->societe->id = $obj->fk_soc; // TODO For backward compatibility
                 $this->user_author_id = $obj->fk_user_creat;
                 $this->public = $obj->public;
                 $this->statut = $obj->fk_statut;
+                $this->modelpdf	= $obj->model_pdf;
 
                 $this->db->free($resql);
 
@@ -313,7 +345,6 @@ class Project extends CommonObject
         else
         {
             $this->error = $this->db->lasterror();
-            dol_syslog(get_class($this)."::fetch " . $this->error, LOG_ERR);
             return -1;
         }
     }
@@ -362,38 +393,41 @@ class Project extends CommonObject
     /**
      * 	Return list of elements for type linked to project
      *
-     * 	@param		string		$type		'propal','order','invoice','order_supplier','invoice_supplier'
-     * 	@return		array					List of orders linked to project, <0 if error
+     * 	@param		string		$type			'propal','order','invoice','order_supplier','invoice_supplier'
+     * 	@param		string		$tablename		name of table associated of the type
+     * 	@param		string		$datefieldname	name of table associated of the type
+     *  @param		string		$dates			Start date (at 00:00:00)
+     *  @param		string		$datee			End date (at 23:00:00)
+     * 	@return		mixed						List of orders linked to project, < 0 or string if error
      */
-    function get_element_list($type)
+    function get_element_list($type, $tablename, $datefieldname='', $dates='', $datee='')
     {
         $elements = array();
 
-        $sql = '';
-        if ($type == 'propal')
-            $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "propal WHERE fk_projet=" . $this->id;
-        if ($type == 'order')
-            $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "commande WHERE fk_projet=" . $this->id;
-        if ($type == 'invoice')
-            $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "facture WHERE fk_projet=" . $this->id;
-        if ($type == 'invoice_predefined')
-            $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "facture_rec WHERE fk_projet=" . $this->id;
-        if ($type == 'order_supplier')
-            $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "commande_fournisseur WHERE fk_projet=" . $this->id;
-        if ($type == 'invoice_supplier')
-            $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "facture_fourn WHERE fk_projet=" . $this->id;
-        if ($type == 'contract')
-            $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "contrat WHERE fk_projet=" . $this->id;
-        if ($type == 'intervention')
-            $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "fichinter WHERE fk_projet=" . $this->id;
-        if ($type == 'trip')
-            $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "deplacement WHERE fk_projet=" . $this->id;
         if ($type == 'agenda')
+        {
             $sql = "SELECT id as rowid FROM " . MAIN_DB_PREFIX . "actioncomm WHERE fk_project=" . $this->id;
-        if (! $sql) return -1;
+        }
+        else
+		{
+            $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . $tablename." WHERE fk_projet=" . $this->id;
+		}
+		if ($dates > 0)
+		{
+			if (empty($datefieldname) && ! empty($this->table_element_date)) $datefieldname=$this->table_element_date;
+			if (empty($datefieldname)) return 'Error this object has no date field defined';
+			$sql.=" AND (".$datefieldname." >= '".$this->db->idate($dates)."' OR ".$datefieldname." IS NULL)";
+		}
+    	if ($datee > 0)
+		{
+			if (empty($datefieldname) && ! empty($this->table_element_date)) $datefieldname=$this->table_element_date;
+			if (empty($datefieldname)) return 'Error this object has no date field defined';
+			$sql.=" AND (".$datefieldname." <= '".$this->db->idate($datee)."' OR ".$datefieldname." IS NULL)";
+		}
+		if (! $sql) return -1;
 
         //print $sql;
-        dol_syslog(get_class($this)."::get_element_list sql=" . $sql);
+        dol_syslog(get_class($this)."::get_element_list", LOG_DEBUG);
         $result = $this->db->query($sql);
         if ($result)
         {
@@ -450,18 +484,74 @@ class Project extends CommonObject
             }
         }
 
-        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "projet_task";
-        $sql.= " WHERE fk_projet=" . $this->id;
+        // Delete tasks
+        if (! $error)
+        {
+	        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "projet_task_time";
+	        $sql.= " WHERE fk_task IN (SELECT rowid FROM " . MAIN_DB_PREFIX . "projet_task WHERE fk_projet=" . $this->id . ")";
 
-        dol_syslog(get_class($this) . "::delete sql=" . $sql, LOG_DEBUG);
-        $resql = $this->db->query($sql);
+	        $resql = $this->db->query($sql);
+	        if (!$resql)
+	        {
+	        	$this->errors[] = $this->db->lasterror();
+	        	$error++;
+	        }
+        }
 
-        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "projet";
-        $sql.= " WHERE rowid=" . $this->id;
+        if (! $error)
+        {
+	        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "projet_task_extrafields";
+	        $sql.= " WHERE fk_object IN (SELECT rowid FROM " . MAIN_DB_PREFIX . "projet_task WHERE fk_projet=" . $this->id . ")";
 
-        dol_syslog(get_class($this) . "::delete sql=" . $sql, LOG_DEBUG);
-        $resql = $this->db->query($sql);
-        if ($resql)
+	        $resql = $this->db->query($sql);
+	        if (!$resql)
+	        {
+	        	$this->errors[] = $this->db->lasterror();
+	        	$error++;
+	        }
+        }
+
+        if (! $error)
+        {
+	        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "projet_task";
+	        $sql.= " WHERE fk_projet=" . $this->id;
+
+	        $resql = $this->db->query($sql);
+	        if (!$resql)
+	        {
+	        	$this->errors[] = $this->db->lasterror();
+	        	$error++;
+	        }
+        }
+
+        // Delete project
+        if (! $error)
+        {
+	        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "projet";
+	        $sql.= " WHERE rowid=" . $this->id;
+
+	        $resql = $this->db->query($sql);
+	        if (!$resql)
+	        {
+	        	$this->errors[] = $langs->trans("CantRemoveProject");
+	        	$error++;
+	        }
+        }
+
+        if (! $error)
+        {
+	        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "projet_extrafields";
+	        $sql.= " WHERE fk_object=" . $this->id;
+
+	        $resql = $this->db->query($sql);
+	        if (! $resql)
+	        {
+	        	$this->errors[] = $this->db->lasterror();
+	        	$error++;
+	        }
+        }
+
+        if (empty($error))
         {
             // We remove directory
             $projectref = dol_sanitizeFileName($this->ref);
@@ -473,34 +563,36 @@ class Project extends CommonObject
                     $res = @dol_delete_dir_recursive($dir);
                     if (!$res)
                     {
-                        $this->error = 'ErrorFailToDeleteDir';
-                        $this->db->rollback();
-                        return 0;
+                        $this->errors[] = 'ErrorFailToDeleteDir';
+                        $error++;
                     }
                 }
             }
 
             if (!$notrigger)
             {
-                // Call triggers
-                include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-                $interface = new Interfaces($this->db);
-                $result = $interface->run_triggers('PROJECT_DELETE', $this, $user, $langs, $conf);
-                if ($result < 0)
-                {
+                // Call trigger
+                $result=$this->call_trigger('PROJECT_DELETE',$user);
+
+                if ($result < 0) {
                     $error++;
-                    $this->errors = $interface->errors;
                 }
                 // End call triggers
             }
+        }
 
-            dol_syslog(get_class($this) . "::delete sql=" . $sql, LOG_DEBUG);
+    	if (empty($error))
+    	{
             $this->db->commit();
             return 1;
         }
         else
-        {
-            $this->error = $this->db->lasterror();
+       {
+        	foreach ( $this->errors as $errmsg )
+        	{
+				dol_syslog(get_class($this) . "::delete " . $errmsg, LOG_ERR);
+				$this->error .= ($this->error ? ', ' . $errmsg : $errmsg);
+			}
             dol_syslog(get_class($this) . "::delete " . $this->error, LOG_ERR);
             $this->db->rollback();
             return -1;
@@ -528,20 +620,14 @@ class Project extends CommonObject
             $sql.= " WHERE rowid = " . $this->id;
             $sql.= " AND entity = " . $conf->entity;
 
-            dol_syslog(get_class($this)."::setValid sql=" . $sql);
+            dol_syslog(get_class($this)."::setValid", LOG_DEBUG);
             $resql = $this->db->query($sql);
             if ($resql)
             {
-                // Appel des triggers
-                include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-                $interface = new Interfaces($this->db);
-                $result = $interface->run_triggers('PROJECT_VALIDATE', $this, $user, $langs, $conf);
-                if ($result < 0)
-                {
-                    $error++;
-                    $this->errors = $interface->errors;
-                }
-                // Fin appel triggers
+                // Call trigger
+                $result=$this->call_trigger('PROJECT_VALIDATE',$user);
+                if ($result < 0) { $error++; }
+                // End call triggers
 
                 if (!$error)
                 {
@@ -561,7 +647,6 @@ class Project extends CommonObject
             {
                 $this->db->rollback();
                 $this->error = $this->db->lasterror();
-                dol_syslog(get_class($this)."::setValid " . $this->error, LOG_ERR);
                 return -1;
             }
         }
@@ -589,20 +674,14 @@ class Project extends CommonObject
             $sql.= " AND entity = " . $conf->entity;
             $sql.= " AND fk_statut = 1";
 
-            dol_syslog(get_class($this)."::setClose sql=" . $sql);
+            dol_syslog(get_class($this)."::setClose", LOG_DEBUG);
             $resql = $this->db->query($sql);
             if ($resql)
             {
-                // Appel des triggers
-                include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-                $interface = new Interfaces($this->db);
-                $result = $interface->run_triggers('PROJECT_CLOSE', $this, $user, $langs, $conf);
-                if ($result < 0)
-                {
-                    $error++;
-                    $this->errors = $interface->errors;
-                }
-                // Fin appel triggers
+                // Call trigger
+                $result=$this->call_trigger('PROJECT_CLOSE',$user);
+                if ($result < 0) { $error++; }
+                // End call triggers
 
                 if (!$error)
                 {
@@ -622,7 +701,6 @@ class Project extends CommonObject
             {
                 $this->db->rollback();
                 $this->error = $this->db->lasterror();
-                dol_syslog(get_class($this)."::setClose " . $this->error, LOG_ERR);
                 return -1;
             }
         }
@@ -690,9 +768,9 @@ class Project extends CommonObject
             if ($statut == 0)
                 return $langs->trans($this->statuts_short[$statut]) . ' ' . img_picto($langs->trans($this->statuts_short[$statut]), 'statut0');
             if ($statut == 1)
-                return $langs->trans($this->statuts_short[$statut]) . ' ' . img_picto($langs->trans($this->statuts_short[$statut]), 'statut1');
+                return $langs->trans($this->statuts_short[$statut]) . ' ' . img_picto($langs->trans($this->statuts_short[$statut]), 'statut4');
             if ($statut == 2)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut6') . ' ' . $langs->trans($this->statuts_short[$statut]);
+                return $langs->trans($this->statuts_short[$statut]) . ' ' . img_picto($langs->trans($this->statuts_short[$statut]), 'statut6');
         }
     }
 
@@ -701,7 +779,7 @@ class Project extends CommonObject
      *
      * 	@param	int		$withpicto		0=Pas de picto, 1=Inclut le picto dans le lien, 2=Picto seul
      * 	@param	string	$option			Variant ('', 'nolink')
-     * 	@param	int		$addlabel		0=Default, 1=Add label into string
+     * 	@param	int		$addlabel		0=Default, 1=Add label into string, >1=Add first chars into string
      * 	@return	string					Chaine avec URL
      */
     function getNomUrl($withpicto=0, $option='', $addlabel=0)
@@ -714,8 +792,16 @@ class Project extends CommonObject
 
         if ($option != 'nolink')
         {
-            $lien = '<a href="' . DOL_URL_ROOT . '/projet/fiche.php?id=' . $this->id . '">';
-            $lienfin = '</a>';
+        	if (preg_match('/\.php$/',$option))
+        	{
+            	$lien = '<a href="' . dol_buildpath($option,1) . '?id=' . $this->id . '">';
+            	$lienfin = '</a>';
+        	}
+        	else
+        	{
+            	$lien = '<a href="' . DOL_URL_ROOT . '/projet/card.php?id=' . $this->id . '">';
+            	$lienfin = '</a>';
+        	}
         }
 
         $picto = 'projectpub';
@@ -725,7 +811,7 @@ class Project extends CommonObject
 
         if ($withpicto) $result.=($lien . img_object($label, $picto) . $lienfin);
         if ($withpicto && $withpicto != 2) $result.=' ';
-        if ($withpicto != 2) $result.=$lien . $this->ref . $lienfin . (($addlabel && $this->title) ? ' - ' . $this->title : '');
+        if ($withpicto != 2) $result.=$lien . $this->ref . $lienfin . (($addlabel && $this->title) ? ' - ' . dol_trunc($this->title, ($addlabel > 1 ? $addlabel : 0)) : '');
         return $result;
     }
 
@@ -742,28 +828,7 @@ class Project extends CommonObject
 
         $now=dol_now();
 
-        // Charge tableau des produits prodids
-        $prodids = array();
-
-        $sql = "SELECT rowid";
-        $sql.= " FROM " . MAIN_DB_PREFIX . "product";
-        $sql.= " WHERE tosell = 1";
-        $sql.= " AND entity = " . $conf->entity;
-
-        $resql = $this->db->query($sql);
-        if ($resql)
-        {
-            $num_prods = $this->db->num_rows($resql);
-            $i = 0;
-            while ($i < $num_prods)
-            {
-                $i++;
-                $row = $this->db->fetch_row($resql);
-                $prodids[$i] = $row[0];
-            }
-        }
-
-        // Initialise parametres
+        // Initialise parameters
         $this->id = 0;
         $this->ref = 'SPECIMEN';
         $this->specimen = 1;
@@ -772,17 +837,20 @@ class Project extends CommonObject
         $this->date_m = $now;
         $this->date_start = $now;
         $this->note_public = 'SPECIMEN';
+        /*
         $nbp = rand(1, 9);
         $xnbp = 0;
         while ($xnbp < $nbp)
         {
             $line = new Task($this->db);
-            $line->desc = $langs->trans("Description") . " " . $xnbp;
-            $line->qty = 1;
-            $prodid = rand(1, $num_prods);
-            $line->fk_product = $prodids[$prodid];
+            $line->fk_project = 0;
+            $line->label = $langs->trans("Label") . " " . $xnbp;
+            $line->description = $langs->trans("Description") . " " . $xnbp;
+
+            $this->lines[]=$line;
             $xnbp++;
         }
+        */
     }
 
     /**
@@ -796,16 +864,16 @@ class Project extends CommonObject
     {
         // To verify role of users
         $userAccess = 0;
-        if (($mode == 'read' && $user->rights->projet->all->lire) || ($mode == 'write' && $user->rights->projet->all->creer) || ($mode == 'delete' && $user->rights->projet->all->supprimer))
+        if (($mode == 'read' && ! empty($user->rights->projet->all->lire)) || ($mode == 'write' && ! empty($user->rights->projet->all->creer)) || ($mode == 'delete' && ! empty($user->rights->projet->all->supprimer)))
         {
             $userAccess = 1;
         }
-        else if ($this->public && (($mode == 'read' && $user->rights->projet->lire) || ($mode == 'write' && $user->rights->projet->creer) || ($mode == 'delete' && $user->rights->projet->supprimer)))
+        else if ($this->public && (($mode == 'read' && ! empty($user->rights->projet->lire)) || ($mode == 'write' && ! empty($user->rights->projet->creer)) || ($mode == 'delete' && ! empty($user->rights->projet->supprimer))))
         {
             $userAccess = 1;
         }
         else
-        {
+		{
             foreach (array('internal', 'external') as $source)
             {
                 $userRole = $this->liste_contact(4, $source);
@@ -814,7 +882,7 @@ class Project extends CommonObject
                 $nblinks = 0;
                 while ($nblinks < $num)
                 {
-                    if ($source == 'internal' && preg_match('/PROJECT/', $userRole[$nblinks]['code']) && $user->id == $userRole[$nblinks]['id'])
+                    if ($source == 'internal' && preg_match('/^PROJECT/', $userRole[$nblinks]['code']) && $user->id == $userRole[$nblinks]['id'])
                     {
                         if ($mode == 'read'   && $user->rights->projet->lire)      $userAccess++;
                         if ($mode == 'write'  && $user->rights->projet->creer)     $userAccess++;
@@ -856,14 +924,14 @@ class Project extends CommonObject
         $projects = array();
         $temp = array();
 
-        $sql = "SELECT DISTINCT p.rowid, p.ref";
+        $sql = "SELECT ".(($mode == 0 || $mode == 1) ? "DISTINCT " : "")."p.rowid, p.ref";
         $sql.= " FROM " . MAIN_DB_PREFIX . "projet as p";
         if ($mode == 0 || $mode == 1)
         {
             $sql.= ", " . MAIN_DB_PREFIX . "element_contact as ec";
             $sql.= ", " . MAIN_DB_PREFIX . "c_type_contact as ctc";
         }
-        $sql.= " WHERE p.entity IN (".getEntity('project').")";
+        $sql.= " WHERE p.entity IN (".getEntity('project',1).")";
         // Internal users must see project he is contact to even if project linked to a third party he can't see.
         //if ($socid || ! $user->rights->societe->client->voir)	$sql.= " AND (p.fk_soc IS NULL OR p.fk_soc = 0 OR p.fk_soc = ".$socid.")";
         if ($socid > 0) $sql.= " AND (p.fk_soc IS NULL OR p.fk_soc = 0 OR p.fk_soc = " . $socid . ")";
@@ -931,26 +999,31 @@ class Project extends CommonObject
 	  *	@param	int		$fromid     	Id of object to clone
 	  *	@param	bool	$clone_contact	clone contact of project
 	  *	@param	bool	$clone_task		clone task of project
-	  *	@param	bool	$clone_file		clone file of project
+	  *	@param	bool	$clone_project_file		clone file of project
+	  *	@param	bool	$clone_task_file		clone file of task (if task are copied)
       *	@param	bool	$clone_note		clone note of project
+      *	@param	bool	$notrigger		no trigger flag
 	  * @return	int						New id of clone
 	  */
-	function createFromClone($fromid,$clone_contact=false,$clone_task=true,$clone_file=false,$clone_note=true)
+	function createFromClone($fromid,$clone_contact=false,$clone_task=true,$clone_project_file=false,$clone_task_file=false,$clone_note=true,$notrigger=0)
 	{
 		global $user,$langs,$conf;
 
 		$error=0;
 
-		dol_syslog("createFromClone clone_contact=".$clone_contact." clone_task=".$clone_task." clone_file=".$clone_file." clone_note=".$clone_note);
+		dol_syslog("createFromClone clone_contact=".$clone_contact." clone_task=".$clone_task." clone_project_file=".$clone_project_file." clone_note=".$clone_note);
 
 		$now = dol_mktime(0,0,0,idate('m',dol_now()),idate('d',dol_now()),idate('Y',dol_now()));
 
 		$clone_project=new Project($this->db);
 
+		$clone_project->context['createfromclone']='createfromclone';
+
 		$this->db->begin();
 
 		// Load source object
 		$clone_project->fetch($fromid);
+		$clone_project->fetch_thirdparty();
 
 		$orign_dt_start=$clone_project->date_start;
 		$orign_project_ref=$clone_project->ref;
@@ -978,7 +1051,7 @@ class Project extends CommonObject
 
         	require_once DOL_DOCUMENT_ROOT ."/core/modules/project/".$conf->global->PROJECT_ADDON.'.php';
         	$modProject = new $obj;
-        	$defaultref = $modProject->getNextValue($clone_project->societe->id,$clone_project);
+        	$defaultref = $modProject->getNextValue(is_object($clone_project->thirdparty)?$clone_project->thirdparty->id:0,$clone_project);
     	}
 
     	if (is_numeric($defaultref) && $defaultref <= 0) $defaultref='';
@@ -986,7 +1059,7 @@ class Project extends CommonObject
 		$clone_project->ref=$defaultref;
 
 		// Create clone
-		$result=$clone_project->create($user);
+		$result=$clone_project->create($user,$notrigger);
 
 		// Other options
 		if ($result < 0)
@@ -997,8 +1070,6 @@ class Project extends CommonObject
 
 		if (! $error)
 		{
-			$this->db->commit();
-
 			//Get the new project id
 			$clone_project_id=$clone_project->id;
 
@@ -1011,7 +1082,7 @@ class Project extends CommonObject
         	else
         	{
         		$this->db->begin();
-				$res=$clone_project->update_note_public(dol_html_entity_decode($clone_project->note_public, ENT_QUOTES));
+				$res=$clone_project->update_note(dol_html_entity_decode($clone_project->note_public, ENT_QUOTES),'_public');
 				if ($res < 0)
 				{
 					$this->error.=$clone_project->error;
@@ -1024,7 +1095,7 @@ class Project extends CommonObject
 				}
 
 				$this->db->begin();
-				$res=$clone_project->update_note(dol_html_entity_decode($clone_project->note_private, ENT_QUOTES));
+				$res=$clone_project->update_note(dol_html_entity_decode($clone_project->note_private, ENT_QUOTES), '_private');
 				if ($res < 0)
 				{
 					$this->error.=$clone_project->error;
@@ -1049,7 +1120,7 @@ class Project extends CommonObject
 
 					foreach ($tab as $contacttoadd)
 					{
-						$clone_project->add_contact($contacttoadd['id'], $contacttoadd['code'], $contacttoadd['source']);
+						$clone_project->add_contact($contacttoadd['id'], $contacttoadd['code'], $contacttoadd['source'],$notrigger);
 						if ($clone_project->error == 'DB_ERROR_RECORD_ALREADY_EXISTS')
 						{
 							$langs->load("errors");
@@ -1069,7 +1140,7 @@ class Project extends CommonObject
 			}
 
 			//Duplicate file
-			if ($clone_file)
+			if ($clone_project_file)
 			{
 				require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
@@ -1078,7 +1149,7 @@ class Project extends CommonObject
 
 				if (dol_mkdir($clone_project_dir) >= 0)
 				{
-					$filearray=dol_dir_list($ori_project_dir,"files",0,'','\.meta$','',SORT_ASC,1);
+					$filearray=dol_dir_list($ori_project_dir,"files",0,'','(\.meta|_preview\.png)$','',SORT_ASC,1);
 					foreach($filearray as $key => $file)
 					{
 						$rescopy = dol_copy($ori_project_dir . '/' . $file['name'], $clone_project_dir . '/' . $file['name'],0,1);
@@ -1099,6 +1170,8 @@ class Project extends CommonObject
 			//Duplicate task
 			if ($clone_task)
 			{
+				require_once DOL_DOCUMENT_ROOT . '/projet/class/task.class.php';
+
 				$taskstatic = new Task($this->db);
 
 				// Security check
@@ -1112,7 +1185,7 @@ class Project extends CommonObject
 
 			    foreach ($tasksarray as $tasktoclone)
 			    {
-					$result_clone = $taskstatic->createFromClone($tasktoclone->id,$clone_project_id,$tasktoclone->fk_parent,true,true,false,true,true,false);
+					$result_clone = $taskstatic->createFromClone($tasktoclone->id,$clone_project_id,$tasktoclone->fk_parent,true,true,false,$clone_task_file,true,false);
 					if ($result_clone <= 0)
 				    {
 				    	$this->error.=$result_clone->error;
@@ -1142,7 +1215,7 @@ class Project extends CommonObject
 			    	{
 			    		$taskstatic->fk_task_parent=$tab_conv_child_parent[$taskstatic->fk_task_parent];
 			    	}
-			    	$res=$taskstatic->update($user);
+			    	$res=$taskstatic->update($user,$notrigger);
 			    	if ($result_clone <= 0)
 				    {
 				    	$this->error.=$taskstatic->error;
@@ -1150,23 +1223,19 @@ class Project extends CommonObject
 				    }
 			    }
 			}
+		}
 
+		unset($clone_project->context['createfromclone']);
 
-
-			if (! $error)
-			{
-				return $clone_project_id;
-			}
-			else
-			{
-				dol_syslog(get_class($this)."::createFromClone nbError: ".$error." error : " . $this->error, LOG_ERR);
-				return -1;
-			}
-
+		if (! $error)
+		{
+			$this->db->commit();
+			return $clone_project_id;
 		}
 		else
 		{
 			$this->db->rollback();
+			dol_syslog(get_class($this)."::createFromClone nbError: ".$error." error : " . $this->error, LOG_ERR);
 			return -1;
 		}
 	}
@@ -1239,6 +1308,106 @@ class Project extends CommonObject
 	    return $result;
 	}
 
+
+	 /**
+	  *    Associate element to a project
+	  *
+	  *    @param	string	$tableName			Table of the element to update
+	  *    @param	int		$elementSelectId	Key-rowid of the line of the element to update
+	  *    @return	int							1 if OK or < 0 if KO
+	  */
+	function update_element($tableName, $elementSelectId)
+	{
+		$sql="UPDATE ".MAIN_DB_PREFIX.$tableName;
+
+		if ($TableName=="actioncomm")
+		{
+			$sql.= " SET fk_project=".$this->id;
+			$sql.= " WHERE id=".$elementSelectId;
+		}
+		else
+		{
+			$sql.= " SET fk_projet=".$this->id;
+			$sql.= " WHERE rowid=".$elementSelectId;
+		}
+
+		dol_syslog(get_class($this)."::update_element", LOG_DEBUG);
+		$resql=$this->db->query($sql);
+		if (!$resql) {
+			$this->error=$this->db->lasterror();
+			return -1;
+		}else {
+			return 1;
+		}
+
+	}
+
+	/**
+	 *    Associate element to a project
+	 *
+	 *    @param	string	$tableName			Table of the element to update
+	 *    @param	int		$elementSelectId	Key-rowid of the line of the element to update
+	 *    @return	int							1 if OK or < 0 if KO
+	 */
+	function remove_element($tableName, $elementSelectId)
+	{
+		$sql="UPDATE ".MAIN_DB_PREFIX.$tableName;
+
+		if ($TableName=="actioncomm")
+		{
+			$sql.= " SET fk_project=NULL";
+			$sql.= " WHERE id=".$elementSelectId;
+		}
+		else
+		{
+			$sql.= " SET fk_projet=NULL";
+			$sql.= " WHERE rowid=".$elementSelectId;
+		}
+
+		dol_syslog(get_class($this)."::remove_element", LOG_DEBUG);
+		$resql=$this->db->query($sql);
+		if (!$resql) {
+			$this->error=$this->db->lasterror();
+			return -1;
+		}else {
+			return 1;
+		}
+
+	}
+
+	/**
+	 *  Create an intervention document on disk using template defined into PROJECT_ADDON_PDF
+	 *
+	 *  @param	string		$modele			force le modele a utiliser ('' par defaut)
+	 *  @param	Translate	$outputlangs	objet lang a utiliser pour traduction
+	 *  @param  int			$hidedetails    Hide details of lines
+	 *  @param  int			$hidedesc       Hide description
+	 *  @param  int			$hideref        Hide ref
+	 *  @return int         				0 if KO, 1 if OK
+	 */
+	public function generateDocument($modele, $outputlangs, $hidedetails=0, $hidedesc=0, $hideref=0)
+	{
+		global $conf,$langs;
+
+		$langs->load("projects");
+
+		// Positionne modele sur le nom du modele de projet a utiliser
+		if (! dol_strlen($modele))
+		{
+			if (! empty($conf->global->PROJECT_ADDON_PDF))
+			{
+				$modele = $conf->global->PROJECT_ADDON_PDF;
+			}
+			else
+			{
+				$modele='baleine';
+			}
+		}
+
+		$modelpath = "core/modules/project/doc/";
+
+		return $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref);
+	}
+
 }
 
-?>

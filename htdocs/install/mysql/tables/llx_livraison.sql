@@ -26,18 +26,18 @@ create table llx_livraison
   fk_soc                integer      NOT NULL,
   
   ref_ext               varchar(30),					-- reference into an external system (not used by dolibarr)
-  ref_int				varchar(30),					-- reference into an internal system (used by dolibarr)
+  ref_int				varchar(30),					-- reference into an internal system (used by dolibarr to store extern id like paypal info)
   ref_customer          varchar(30),					-- customer number
   
   date_creation         datetime,						-- date de creation
   fk_user_author        integer,						-- createur du bon de livraison
   date_valid            datetime,						-- date de validation
   fk_user_valid         integer,						-- valideur du bon de livraison
-  date_delivery 	    date		DEFAULT NULL,		-- delivery date
+  date_delivery 	    datetime		DEFAULT NULL,	-- delivery date
   fk_address  			integer,						-- delivery address (deprecated)
   fk_statut             smallint     DEFAULT 0,
   total_ht              double(24,8) DEFAULT 0,
-  note                  text,
+  note_private          text,
   note_public           text,
   model_pdf             varchar(255)
   

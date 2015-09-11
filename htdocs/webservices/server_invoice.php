@@ -67,7 +67,7 @@ $server->wsdl->addComplexType(
     	'sourceapplication' => array('name'=>'sourceapplication','type'=>'xsd:string'),
     	'login' => array('name'=>'login','type'=>'xsd:string'),
         'password' => array('name'=>'password','type'=>'xsd:string'),
-        'entity' => array('name'=>'entity','type'=>'xsd:string'),
+        'entity' => array('name'=>'entity','type'=>'xsd:string')
     )
 );
 // Define WSDL Return object
@@ -102,6 +102,7 @@ $server->wsdl->addComplexType(
     	'total' => array('name'=>'total','type'=>'xsd:double'),
         'date_start' => array('name'=>'date_start','type'=>'xsd:date'),
         'date_end' => array('name'=>'date_end','type'=>'xsd:date'),
+        'payment_mode_id' => array('name'=>'payment_mode_id','type'=>'xsd:string'),
         // From product
         'product_id' => array('name'=>'product_id','type'=>'xsd:int'),
         'product_ref' => array('name'=>'product_ref','type'=>'xsd:string'),
@@ -110,7 +111,7 @@ $server->wsdl->addComplexType(
     )
 );
 
-$server->wsdl->addComplexType(
+/*$server->wsdl->addComplexType(
     'LinesArray',
     'complexType',
     'array',
@@ -121,7 +122,7 @@ $server->wsdl->addComplexType(
         array('ref'=>'SOAP-ENC:arrayType','wsdl:arrayType'=>'tns:line[]')
     ),
     'tns:line'
-);
+);*/
 $server->wsdl->addComplexType(
     'LinesArray2',
     'complexType',
@@ -135,7 +136,9 @@ $server->wsdl->addComplexType(
             'minOccurs' => '0',
             'maxOccurs' => 'unbounded'
         )
-    )
+    ),
+    null,
+    'tns:line'
 );
 
 
@@ -161,7 +164,7 @@ $server->wsdl->addComplexType(
         'total_net' => array('name'=>'type','type'=>'xsd:double'),
         'total_vat' => array('name'=>'type','type'=>'xsd:double'),
         'total' => array('name'=>'type','type'=>'xsd:double'),
-        'note' => array('name'=>'note','type'=>'xsd:string'),
+        'note_private' => array('name'=>'note_private','type'=>'xsd:string'),
         'note_public' => array('name'=>'note_public','type'=>'xsd:string'),
         'status' => array('name'=>'status','type'=>'xsd:int'),
         'close_code' => array('name'=>'close_code','type'=>'xsd:string'),
@@ -170,7 +173,7 @@ $server->wsdl->addComplexType(
         'lines' => array('name'=>'lines','type'=>'tns:LinesArray2')
     )
 );
-
+/*
 $server->wsdl->addComplexType(
     'InvoicesArray',
     'complexType',
@@ -182,7 +185,7 @@ $server->wsdl->addComplexType(
         array('ref'=>'SOAP-ENC:arrayType','wsdl:arrayType'=>'tns:invoice[]')
     ),
     'tns:invoice'
-);
+);*/
 $server->wsdl->addComplexType(
     'InvoicesArray2',
     'complexType',
@@ -196,7 +199,9 @@ $server->wsdl->addComplexType(
             'minOccurs' => '0',
             'maxOccurs' => 'unbounded'
         )
-    )
+    ),
+    null,
+    'tns:invoice'
 );
 
 
@@ -313,27 +318,25 @@ function getInvoice($authentication,$id='',$ref='',$ref_ext='')
 			        'invoice'=>array(
 				    	'id' => $invoice->id,
 			   			'ref' => $invoice->ref,
-			   			'ref_ext' => $invoice->ref_ext?$invoice->ref_ext:'',   // If not defined, field is not added into soap
-			            'fk_user_author' => $invoice->user_author?$invoice->user_author:'',
-			            'fk_user_valid' => $invoice->user_valid?$invoice->user_valid:'',
-                        'date' => $invoice->date?dol_print_date($invoice->date,'dayrfc'):'',
-                        'date_creation' => $invoice->date_creation?dol_print_date($invoice->date_creation,'dayhourrfc'):'',
-                        'date_validation' => $invoice->date_validation?dol_print_date($invoice->date_creation,'dayhourrfc'):'',
-                        'date_modification' => $invoice->datem?dol_print_date($invoice->datem,'dayhourrfc'):'',
-                        'type' => $invoice->type,
-                        'total_net' => $invoice->total_ht,
-                        'total_vat' => $invoice->total_tva,
-                        'total' => $invoice->total_ttc,
-                        'note' => $invoice->note?$invoice->note:'',
-                        'note_public' => $invoice->note_public?$invoice->note_public:'',
-                        'status'=> $invoice->statut,
-                        'close_code' => $invoice->close_code?$invoice->close_code:'',
-                        'close_note' => $invoice->close_note?$invoice->close_note:'',
-			            'lines' => $linesresp
-//					        'lines' => array('0'=>array('id'=>222,'type'=>1),
-//				        				 '1'=>array('id'=>333,'type'=>1))
-
-			    ));
+			        	'ref_ext' => $invoice->ref_ext?$invoice->ref_ext:'',   // If not defined, field is not added into soap
+			        	'fk_user_author' => $invoice->user_author?$invoice->user_author:'',
+			        	'fk_user_valid' => $invoice->user_valid?$invoice->user_valid:'',
+			        	'date' => $invoice->date?dol_print_date($invoice->date,'dayrfc'):'',
+			        	'date_creation' => $invoice->date_creation?dol_print_date($invoice->date_creation,'dayhourrfc'):'',
+			        	'date_validation' => $invoice->date_validation?dol_print_date($invoice->date_creation,'dayhourrfc'):'',
+			        	'date_modification' => $invoice->datem?dol_print_date($invoice->datem,'dayhourrfc'):'',
+			        	'type' => $invoice->type,
+			        	'total_net' => $invoice->total_ht,
+			        	'total_vat' => $invoice->total_tva,
+			        	'total' => $invoice->total_ttc,
+			        	'note_private' => $invoice->note_private?$invoice->note_private:'',
+			        	'note_public' => $invoice->note_public?$invoice->note_public:'',
+			        	'status'=> $invoice->statut,
+			        	'close_code' => $invoice->close_code?$invoice->close_code:'',
+			        	'close_note' => $invoice->close_note?$invoice->close_note:'',
+			        	'payment_mode_id' => $invoice->mode_reglement_id?$invoice->mode_reglement_id:'',
+			        	'lines' => $linesresp
+			        ));
 			}
 			else
 			{
@@ -377,7 +380,10 @@ function getInvoicesForThirdParty($authentication,$idthirdparty)
     $errorcode='';$errorlabel='';
     $error=0;
     $fuser=check_authentication($authentication,$error,$errorcode,$errorlabel);
-    // Check parameters
+
+	if ($fuser->societe_id) $socid=$fuser->societe_id;
+
+	// Check parameters
 	if (! $error && empty($idthirdparty))
 	{
 		$error++;
@@ -390,12 +396,8 @@ function getInvoicesForThirdParty($authentication,$idthirdparty)
 
 		$sql.='SELECT f.rowid as facid, facnumber as ref, ref_ext, type, fk_statut as status, total_ttc, total, tva';
 		$sql.=' FROM '.MAIN_DB_PREFIX.'facture as f';
-		//$sql.=', '.MAIN_DB_PREFIX.'societe as s';
-		//$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as p ON pt.fk_product = p.rowid';
-		//$sql.=" WHERE f.fk_soc = s.rowid AND nom = '".$db->escape($idthirdparty)."'";
-		//$sql.=" WHERE f.fk_soc = s.rowid AND nom = '".$db->escape($idthirdparty)."'";
-		$sql.=" WHERE f.fk_soc = ".$db->escape($idthirdparty);
-		$sql.=" AND f.entity = ".$conf->entity;
+		$sql.=" WHERE f.entity = ".$conf->entity;
+		if ($idthirdparty != 'all' ) $sql.=" AND f.fk_soc = ".$db->escape($idthirdparty);
 
 		$resql=$db->query($sql);
 		if ($resql)
@@ -410,49 +412,60 @@ function getInvoicesForThirdParty($authentication,$idthirdparty)
 			    $invoice=new Facture($db);
 			    $invoice->fetch($obj->facid);
 
-				// Define lines of invoice
-				$linesresp=array();
-				foreach($invoice->lines as $line)
-				{
-   				    $linesresp[]=array(
-    					'id'=>$line->rowid,
-    					'type'=>$line->product_type,
-    					'total_net'=>$line->total_ht,
-    					'total_vat'=>$line->total_tva,
-    					'total'=>$line->total_ttc,
-                        'vat_rate'=>$line->tva_tx,
-                        'qty'=>$line->qty,
-   				        'product_ref'=>$line->product_ref,
-                        'product_label'=>$line->product_label,
-                        'product_desc'=>$line->product_desc,
-   				    );
-				}
+			    // Sécurité pour utilisateur externe
+			    if( $socid && ( $socid != $invoice->socid) )
+			    {
+			    	$error++;
+			    	$errorcode='PERMISSION_DENIED'; $errorlabel=$invoice->socid.' User does not have permission for this request';
+			    }
 
-				// Now define invoice
-				$linesinvoice[]=array(
-                    'id' => $invoice->id,
-                    'ref' => $invoice->ref,
-                    'ref_ext' => $invoice->ref_ext?$invoice->ref_ext:'',   // If not defined, field is not added into soap
-                    'fk_user_author' => $invoice->user_author?$invoice->user_author:'',
-                    'fk_user_valid' => $invoice->user_valid?$invoice->user_valid:'',
-                    'date' => $invoice->date?dol_print_date($invoice->date,'dayrfc'):'',
-                    'date_due' => $invoice->date_lim_reglement?dol_print_date($invoice->date_lim_reglement,'dayrfc'):'',
-				    'date_creation' => $invoice->date_creation?dol_print_date($invoice->date_creation,'dayhourrfc'):'',
-                    'date_validation' => $invoice->date_validation?dol_print_date($invoice->date_creation,'dayhourrfc'):'',
-                    'date_modification' => $invoice->datem?dol_print_date($invoice->datem,'dayhourrfc'):'',
-                    'type' => $invoice->type,
-                    'total_net' => $invoice->total_ht,
-                    'total_vat' => $invoice->total_tva,
-                    'total' => $invoice->total_ttc,
-                    'note' => $invoice->note?$invoice->note:'',
-                    'note_public' => $invoice->note_public?$invoice->note_public:'',
-                    'status'=> $invoice->statut,
-                    'close_code' => $invoice->close_code?$invoice->close_code:'',
-                    'close_note' => $invoice->close_note?$invoice->close_note:'',
-		    		'lines' => $linesresp
-				);
+			    if(!$error)
+			    {
+			    	// Define lines of invoice
+			    	$linesresp=array();
+			    	foreach($invoice->lines as $line)
+			    	{
+			    		$linesresp[]=array(
+	    					'id'=>$line->rowid,
+	    					'type'=>$line->product_type,
+	    					'total_net'=>$line->total_ht,
+	    					'total_vat'=>$line->total_tva,
+	    					'total'=>$line->total_ttc,
+			    			'vat_rate'=>$line->tva_tx,
+			    			'qty'=>$line->qty,
+			    			'product_ref'=>$line->product_ref,
+			    			'product_label'=>$line->product_label,
+			    			'product_desc'=>$line->product_desc,
+			    		);
+			    	}
 
-				$i++;
+			    	// Now define invoice
+			    	$linesinvoice[]=array(
+			    		'id' => $invoice->id,
+			    		'ref' => $invoice->ref,
+			    		'ref_ext' => $invoice->ref_ext?$invoice->ref_ext:'',   // If not defined, field is not added into soap
+			    		'fk_user_author' => $invoice->user_author?$invoice->user_author:'',
+			    		'fk_user_valid' => $invoice->user_valid?$invoice->user_valid:'',
+			    		'date' => $invoice->date?dol_print_date($invoice->date,'dayrfc'):'',
+			    		'date_due' => $invoice->date_lim_reglement?dol_print_date($invoice->date_lim_reglement,'dayrfc'):'',
+					    'date_creation' => $invoice->date_creation?dol_print_date($invoice->date_creation,'dayhourrfc'):'',
+			    		'date_validation' => $invoice->date_validation?dol_print_date($invoice->date_creation,'dayhourrfc'):'',
+			    		'date_modification' => $invoice->datem?dol_print_date($invoice->datem,'dayhourrfc'):'',
+			    		'type' => $invoice->type,
+			    		'total_net' => $invoice->total_ht,
+			    		'total_vat' => $invoice->total_tva,
+			    		'total' => $invoice->total_ttc,
+			    		'note_private' => $invoice->note_private?$invoice->note_private:'',
+			    		'note_public' => $invoice->note_public?$invoice->note_public:'',
+			    		'status'=> $invoice->statut,
+			    		'close_code' => $invoice->close_code?$invoice->close_code:'',
+			    		'close_note' => $invoice->close_note?$invoice->close_note:'',
+					'payment_mode_id' => $invoice->mode_reglement_id?$invoice->mode_reglement_id:'',
+			    		'lines' => $linesresp
+			    	);
+			    }
+
+			    $i++;
 			}
 
 			$objectresp=array(
@@ -507,11 +520,20 @@ function createInvoice($authentication,$invoice)
         $newobject->type=$invoice['type'];
         $newobject->ref_ext=$invoice['ref_ext'];
         $newobject->date=dol_stringtotime($invoice['date'],'dayrfc');
-        $newobject->note=$invoice['note'];
+        $newobject->note_private=$invoice['note_private'];
         $newobject->note_public=$invoice['note_public'];
-        $newobject->statut=$invoice['status'];
+        $newobject->statut=0;	// We start with status draft
         $newobject->fk_project=$invoice['project_id'];
         $newobject->date_creation=$now;
+        
+	//take mode_reglement and cond_reglement from thirdparty
+        $soc = new Societe($db);
+        $res=$soc->fetch($newobject->socid);
+        if ($res > 0) {
+    	    $newobject->mode_reglement_id = ! empty($invoice['payment_mode_id'])?$invoice['payment_mode_id']:$soc->mode_reglement_id;
+            $newobject->cond_reglement_id  = $soc->cond_reglement_id; 
+        }
+        else $newobject->mode_reglement_id = $invoice['payment_mode_id'];
 
         // Trick because nusoap does not store data with same structure if there is one or several lines
         $arrayoflines=array();
@@ -522,7 +544,7 @@ function createInvoice($authentication,$invoice)
         {
             // $key can be 'line' or '0','1',...
             $newline=new FactureLigne($db);
-            $newline->type=$line['type'];
+            $newline->product_type=$line['type'];
             $newline->desc=$line['desc'];
             $newline->fk_product=$line['fk_product'];
             $newline->tva_tx=$line['vat_rate'];
@@ -531,6 +553,8 @@ function createInvoice($authentication,$invoice)
             $newline->total_ht=$line['total_net'];
             $newline->total_tva=$line['total_vat'];
             $newline->total_ttc=$line['total'];
+            $newline->date_start=dol_stringtotime($line['date_start']);
+            $newline->date_end=dol_stringtotime($line['date_end']);
             $newline->fk_product=$line['product_id'];
             $newobject->lines[]=$newline;
         }
@@ -545,7 +569,7 @@ function createInvoice($authentication,$invoice)
             $error++;
         }
 
-        if ($newobject->statut == 1)   // We want invoice validated
+        if ($invoice['status'] == 1)   // We want invoice to have status validated
         {
             $result=$newobject->validate($fuser);
             if ($result < 0)
@@ -577,8 +601,5 @@ function createInvoice($authentication,$invoice)
     return $objectresp;
 }
 
-
 // Return the results.
-$server->service((isset($HTTP_RAW_POST_DATA)?$HTTP_RAW_POST_DATA:''));
-
-?>
+$server->service(file_get_contents("php://input"));

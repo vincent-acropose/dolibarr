@@ -30,23 +30,24 @@ p {
 .conteneur {
 	background: #fff;
 	text-align: left;
-	width: 770px;
+	max-width: 770px;
 	margin: 10px auto;
+	border: 2px solid #000;
 }
 
 .conteneur_img_gauche {
-	background: url("../img/bg_conteneur_gauche.png") top left repeat-y;
+	/* background: url("../img/bg_conteneur_gauche.png") top left repeat-y; */
 }
 
 .conteneur_img_droite {
-	background: url("../img/bg_conteneur_droite.png") top right repeat-y;
+	/* background: url("../img/bg_conteneur_droite.png") top right repeat-y; */
 }
 
 /* ------------------- Header ------------------- */
 .entete {
 	height: 15px;
 	margin: 0;
-	background: url('../img/bg_entete.png') no-repeat left top;
+	/* background: url('../img/bg_entete.png') no-repeat left top; */
 }
 
 .entete span {
@@ -55,14 +56,16 @@ p {
 
 /* ------------------- Menu ------------------- */
 .menu_principal {
-	margin: 0 auto;
-	margin-left: 15px;
-	margin-bottom: 20px;
-	margin-right: 20px;
-	font-size: 14px;
-	width: 735px;
+    margin: 0 20px 20px 15px;
+    font-size: 14px;
 	height: 84px;
-	background: url('../img/bg_menu.png') no-repeat left top;
+	background: #CCCCCC;
+	background-image: linear-gradient(top, rgba(255,255,255,.3) 0%, rgba(40,40,40,.3) 100%);
+	background-image: -o-linear-gradient(top, rgba(255,255,255,.3) 0%, rgba(40,40,40,.3) 100%);
+	background-image: -moz-linear-gradient(top, rgba(255,255,255,.3) 0%, rgba(40,40,40,.3) 100%);
+	background-image: -webkit-linear-gradient(top, rgba(255,255,255,.3) 0%, rgba(40,40,40,.3) 100%);
+	background-image: -ms-linear-gradient(top, rgba(255,255,255,.3) 0%, rgba(40,40,40,.3) 100%);
+	background-image: -webkit-gradient( linear, left top, left bottom, color-stop(0, rgba(255,255,255,.3)), color-stop(1, rgba(40,40,40,.3)) );
 }
 
 .menu_bloc {
@@ -71,27 +74,27 @@ p {
 
 .menu {
 	margin: 0;
-	padding: 0;
-	list-style-type: none;
-	padding-top: 10px;
+    list-style-type: none;
+    padding: 10px 0 0;
 }
 
 .menu li {
 	float: left;
+	padding-right: 10px;
 }
 
 .menu_choix1,.menu_choix2 {
 	font-size: 1.4em;
 	text-align: left;
-	width: 180px;
 }
 
 .menu_choix1 a,.menu_choix2 a {
 	display: block;
 	color: #fff;
 	text-decoration: none;
-	width: 100px;
+	padding-top: 18px;
 	padding-left: 54px;
+	font-size: 14px;
 	height: 48px;
 	background: url('../img/new.png') top left no-repeat;
 }
@@ -113,7 +116,6 @@ p {
 	text-align: right;
 	font-style: italic;
 	font-weight: normal;
-	width: 340px;
 	display: block;
 	color: #333;
 	text-decoration: none;
@@ -124,11 +126,13 @@ p {
 	font-weight: normal;
 	text-decoration: none;
 }
-
+li.menu_choix0 {
+		float: right;
+}
 
 /* ------------------- R�capitulatif des articles ------------------- */
 .liste_articles {
-	width: 215px;
+	min-width: 215px;
 	float: right;
 	margin-top: 8px;
 	margin-right: 20px;
@@ -137,9 +141,8 @@ p {
 }
 
 p.titre {
-	margin: 0;
-	margin-bottom: 20px;
-	text-align: center;
+    margin: 0 0 20px;
+    text-align: center;
 	font-weight: bold;
 	font-size: 1.4em;
 	color: #5ca64d;
@@ -147,11 +150,10 @@ p.titre {
 }
 
 .cadre_article {
-	margin: 0 auto;
-	width: 180px;
+    width: 180px;
 	text-align: center;
-	margin-bottom: 10px;
-	padding-bottom: 10px;
+    margin: 0 auto 10px;
+    padding-bottom: 10px;
 	border-bottom: 1px solid #eee;
 }
 
@@ -199,10 +201,9 @@ p.titre {
 }
 
 .formulaire_login table {
-	margin: 0 auto;
-	padding-left: 60px;
-	margin-bottom: 20px;
-	background: url('../img/login.png') bottom left no-repeat;
+    padding-left: 60px;
+    margin: 0 auto 20px;
+    background: url('../img/login.png') bottom left no-repeat;
 }
 
 .formulaire_login table tr {
@@ -216,16 +217,12 @@ p.titre {
 	border: 1px solid #6d3f6d;
 }
 
-.bouton_login input {
-	background: #fff;
-	border: 1px solid #6d3f6d;
-}
-
 .principal {
 	float: left;
 	margin: 0 15px;
 	padding: 0;
-	width: 495px;
+	max-width: 500px;
+	width: 100%;
 }
 
 .titre1 {
@@ -243,7 +240,6 @@ p.titre {
 .cadre_facturation {
 	border: 2px solid #ddd;
 	margin-bottom: 15px;
-	padding: 10px 10px;
 }
 
 .principal p {
@@ -313,7 +309,7 @@ p.titre {
 }
 
 .texte_ref {
-	width: 80px;
+	min-width: 150px;
 }
 
 .texte1,.texte1_off {
@@ -326,22 +322,12 @@ p.titre {
 
 /* ------------------- */
 .textarea_note {
-	width: 300px;
-	height: 150px;
+	width: 100%;
+	height: 50px;
 	padding: 2px 2px;
 }
 
 /* -------------- Boutons --------------------- */
-.bouton_ajout_article,.bouton_mode_reglement,.bouton_validation {
-	border: 1px solid #999;
-	background: #f7f7ff;
-}
-
-.bouton_ajout_article:hover,.bouton_mode_reglement:hover,.bouton_validation:hover
-	{
-	background: #e7e7ff;
-}
-
 .bouton_ajout_article {
 	margin-top: 10px;
 	width: 100%;
@@ -377,7 +363,7 @@ p.titre {
 }
 
 .resume_label,.note_label {
-	width: 200px;
+	min-width: 200px;
 	font-weight: bold;
 	font-size: 1.1em;
 }
@@ -390,7 +376,7 @@ p.titre {
 .pied {
 	clear: both;
 	height: 15px;
-	background: url('../img/bg_pied.png') no-repeat bottom left;
+	/* background: url('../img/bg_pied.png') no-repeat bottom left; */
 }
 
 /* ------------------- Param�tres communs (messages d'erreur, informations, etc...) ------------------- */
@@ -411,9 +397,8 @@ p.titre {
 /* Titre */
 .err_titre {
 	font-weight: bold;
-	margin: 0;
-	margin-bottom: 10px;
-	padding: 0;
+    margin: 0 0 10px;
+    padding: 0;
 }
 
 /* Description */
@@ -435,9 +420,8 @@ p.titre {
 /* Titre */
 .msg_titre {
 	font-weight: bold;
-	margin: 0;
-	margin-bottom: 10px;
-	padding: 0;
+    margin: 0 0 10px;
+    padding: 0;
 }
 
 /* Description */
@@ -472,4 +456,3 @@ p.titre {
 	background-color: #3366cc;
 	color: white ! important;
 }
-

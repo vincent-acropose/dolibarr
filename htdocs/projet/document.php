@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2010 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2013 Cédric Salvador      <csalvador@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,10 +46,11 @@ if ($user->societe_id > 0) $socid=$user->societe_id;
 $result=restrictedArea($user,'projet',$id,'');
 
 $object = new Project($db);
-$object->fetch($id,$ref);
-if ($object->id > 0)
+if ($id > 0 || ! empty($ref))
 {
+	$object->fetch($id,$ref);
 	$object->fetch_thirdparty();
+	$upload_dir = $conf->projet->dir_output . "/" . dol_sanitizeFileName($object->ref);
 }
 
 // Get parameters
@@ -68,25 +70,7 @@ if (! $sortfield) $sortfield="name";
  * Actions
  */
 
-// Envoi fichier
-if (GETPOST('sendit') && ! empty($conf->global->MAIN_UPLOAD_DOC))
-{
-	$upload_dir = $conf->projet->dir_output . "/" . dol_sanitizeFileName($object->ref);
-	dol_add_file_process($upload_dir,0,1,'userfile');
-}
-
-// Delete
-if ($action == 'confirm_delete' && $confirm == 'yes' && $user->rights->projet->supprimer)
-{
-    $langs->load("other");
-	$upload_dir = $conf->projet->dir_output . "/" . dol_sanitizeFileName($object->ref);
-	$file = $upload_dir . '/' . GETPOST('urlfile');	// Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
-	$ret=dol_delete_file($file,0,0,0,$object);
-	if ($ret) setEventMessage($langs->trans("FileWasRemoved", GETPOST('urlfile')));
-	else setEventMessage($langs->trans("ErrorFailToDeleteFile", GETPOST('urlfile')), 'errors');
-    header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
-    exit;
-}
+include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_pre_headers.tpl.php';
 
 
 /*
@@ -101,8 +85,6 @@ if ($object->id > 0)
 {
 	$upload_dir = $conf->projet->dir_output.'/'.dol_sanitizeFileName($object->ref);
 
-	if ($object->societe->id > 0)  $result=$object->societe->fetch($object->societe->id);
-
     // To verify role of users
     //$userAccess = $object->restrictedProjectArea($user,'read');
     $userWrite  = $object->restrictedProjectArea($user,'write');
@@ -113,22 +95,16 @@ if ($object->id > 0)
 	dol_fiche_head($head, 'document', $langs->trans("Project"), 0, ($object->public?'projectpub':'project'));
 
 	// Files list constructor
-	$filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+	$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
 	$totalsize=0;
 	foreach($filearray as $key => $file)
 	{
 		$totalsize+=$file['size'];
 	}
 
-	if ($action == 'delete')
-	{
-		$ret=$form->form_confirm($_SERVER["PHP_SELF"]."?id=".$object->id."&urlfile=".urlencode(GETPOST("urlfile")),$langs->trans("DeleteAFile"),$langs->trans("ConfirmDeleteAFile"),"confirm_delete",'','',1);
-		if ($ret == 'html') print '<br>';
-	}
-
 	print '<table class="border" width="100%">';
 
-	$linkback = '<a href="'.DOL_URL_ROOT.'/projet/liste.php">'.$langs->trans("BackToList").'</a>';
+	$linkback = '<a href="'.DOL_URL_ROOT.'/projet/list.php">'.$langs->trans("BackToList").'</a>';
 
 	// Ref
 	print '<tr><td width="30%">'.$langs->trans("Ref").'</td><td>';
@@ -145,8 +121,8 @@ if ($object->id > 0)
 	print '<tr><td>'.$langs->trans("Label").'</td><td>'.$object->title.'</td></tr>';
 
 	// Company
-	print '<tr><td>'.$langs->trans("Company").'</td><td>';
-	if (! empty($object->societe->id)) print $object->societe->getNomUrl(1);
+	print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
+	if (! empty($object->thirdparty->id)) print $object->thirdparty->getNomUrl(1);
 	else print '&nbsp;';
 	print '</td></tr>';
 
@@ -166,14 +142,9 @@ if ($object->id > 0)
 	print "</table>\n";
 	print "</div>\n";
 
-	// Affiche formulaire upload
-	$formfile=new FormFile($db);
-	$formfile->form_attach_new_file(DOL_URL_ROOT.'/projet/document.php?id='.$object->id,'',0,0,($userWrite>0),50,$object);
-
-
-	// List of document
-	$param='&id='.$object->id;
-	$formfile->list_of_documents($filearray,$object,'projet',$param,0,'',($userWrite>0));
+	$modulepart = 'project';
+	$permission = ($userWrite > 0);
+	include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_post_headers.tpl.php';
 
 }
 else
@@ -184,4 +155,3 @@ else
 llxFooter();
 
 $db->close();
-?>

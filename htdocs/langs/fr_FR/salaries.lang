@@ -1,0 +1,13 @@
+# Dolibarr language file - Source file is en_US - users
+SALARIES_ACCOUNTING_ACCOUNT_PAYMENT=Code comptable pour les paiements des salaires
+SALARIES_ACCOUNTING_ACCOUNT_CHARGE=Code comptable pour les charges financières
+Salary=Salaires
+Salaries=Salaires
+Employee=Employé
+NewSalaryPayment=Nouveau règlement de salaire
+SalaryPayment=Règlement salaire
+SalariesPayments=Règlements des salaires
+ShowSalaryPayment=Afficher règlement de salaire
+THM=Tarif horaire moyen
+TJM=Tarif journalier moyen
+CurrentSalary=Salaire courant

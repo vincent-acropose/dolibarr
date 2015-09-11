@@ -22,7 +22,11 @@
  *		\brief      Page de bilan
  */
 
-require 'pre.inc.php';
+require('../../main.inc.php');
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+
+$langs->load("banks");
+$langs->load("categories");
 
 if (!$user->rights->banque->lire)
   accessforbidden();
@@ -65,22 +69,22 @@ print "</tr>\n";
 $var=!$var;
 $sql = "SELECT sum(amount) as amount FROM ".MAIN_DB_PREFIX."paiement";
 $paiem = valeur($sql);
-print "<tr $bc[$var]><td>Somme des paiements (associes a une facture)</td><td align=\"right\">".price($paiem)."</td></tr>";
+print "<tr ".$bc[$var]."><td>Somme des paiements (associes a une facture)</td><td align=\"right\">".price($paiem)."</td></tr>";
 
 $var=!$var;
 $sql = "SELECT sum(amount) as amount FROM ".MAIN_DB_PREFIX."bank WHERE amount > 0";
 $credits = valeur($sql);
-print "<tr $bc[$var]><td>Somme des credits</td><td align=\"right\">".price($credits)."</td></tr>";
+print "<tr ".$bc[$var]."><td>Somme des credits</td><td align=\"right\">".price($credits)."</td></tr>";
 
 $var=!$var;
 $sql = "SELECT sum(amount) as amount FROM ".MAIN_DB_PREFIX."bank WHERE amount < 0";
 $debits = valeur($sql);
-print "<tr $bc[$var]><td>Somme des debits</td><td align=\"right\">".price($debits)."</td></tr>";
+print "<tr ".$bc[$var]."><td>Somme des debits</td><td align=\"right\">".price($debits)."</td></tr>";
 
 $var=!$var;
 $sql = "SELECT sum(amount) as amount FROM ".MAIN_DB_PREFIX."bank ";
 $solde = valeur($sql);
-print "<tr $bc[$var]><td>".$langs->trans("BankBalance")."</td><td align=\"right\">".price($solde)."</td></tr>";
+print "<tr ".$bc[$var]."><td>".$langs->trans("BankBalance")."</td><td align=\"right\">".price($solde)."</td></tr>";
 
 
 print "</table>";
@@ -88,4 +92,3 @@ print "</table>";
 $db->close();
 
 llxFooter();
-?>

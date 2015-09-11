@@ -37,13 +37,13 @@ $extrafields = new ExtraFields($db);
 $form = new Form($db);
 
 // List of supported format
-$tmptype2label=getStaticMember(get_class($extrafields),'type2label');
+$tmptype2label=ExtraFields::$type2label;
 $type2label=array('');
 foreach ($tmptype2label as $key => $val) $type2label[$key]=$langs->trans($val);
 
 $action=GETPOST('action', 'alpha');
 $attrname=GETPOST('attrname', 'alpha');
-$elementtype='product';
+$elementtype='product'; //Must be the $element of the class that manage extrafield
 
 if (!$user->admin) accessforbidden();
 
@@ -52,7 +52,7 @@ if (!$user->admin) accessforbidden();
  * Actions
  */
 
-require DOL_DOCUMENT_ROOT.'/core/admin_extrafields.inc.php';
+require DOL_DOCUMENT_ROOT.'/core/actions_extrafields.inc.php';
 
 
 
@@ -88,8 +88,6 @@ dol_fiche_head($head, 'attributes', $tab, 0, 'product');
 
 print $langs->trans('DefineHereComplementaryAttributes', $tab).'<br>'."\n";
 print '<br>';
-
-dol_htmloutput_errors($mesg);
 
 // Load attribute_label
 $extrafields->fetch_name_optionals_label($elementtype);
@@ -167,4 +165,3 @@ if ($action == 'edit' && ! empty($attrname))
 llxFooter();
 
 $db->close();
-?>

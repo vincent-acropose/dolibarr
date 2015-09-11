@@ -1,13 +1,4 @@
-/*
- * Language code: sv_SV
- * Automatic generated via autotranslator.php tool
- * Generation date 2010-08-27 08:47:44
- */
-
-
-// START - Lines generated via autotranslator.php tool (2010-08-27 08:47:44).
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - banks
 Bank=Bank
 Banks=Banker
 MenuBankCash=Bank / Cash
@@ -17,6 +8,7 @@ FinancialAccount=Konto
 FinancialAccounts=Konton
 BankAccount=Bankkonto
 BankAccounts=Bankkonton
+ShowAccount=Visa konto
 AccountRef=Finansiell balans ref
 AccountLabel=Finansiell balans etikett
 CashAccount=Cash konto
@@ -28,6 +20,8 @@ SavingAccount=Sparkonto
 SavingAccounts=Sparkonton
 ErrorBankLabelAlreadyExists=Finansiell balans etikett finns redan
 BankBalance=Balans
+BankBalanceBefore=Balans innan
+BankBalanceAfter=Balans efter
 BalanceMinimalAllowed=Minsta tillåtna balans
 BalanceMinimalDesired=Lägsta önskvärd balans
 InitialBankBalance=Initial jämvikt
@@ -35,10 +29,15 @@ EndBankBalance=Avsluta balans
 CurrentBalance=Aktuellt saldo
 FutureBalance=Framtida balans
 ShowAllTimeBalance=Visa balans från start
+AllTime=Från början
 Reconciliation=Avstämning
 RIB=Bankkontonummer
 IBAN=IBAN-nummer
+IbanValid=IBAN is Valid
+IbanNotValid=IBAN is Not Valid
 BIC=BIC / SWIFT nummer
+SwiftValid=BIC/SWIFT is Valid
+SwiftNotValid=BIC/SWIFT is Not Valid
 StandingOrders=Stående order
 StandingOrder=Stående order
 Withdrawals=Uttag
@@ -53,6 +52,7 @@ BankAccountDomiciliation=Konto adress
 BankAccountCountry=Konto land
 BankAccountOwner=Konto ägare namn
 BankAccountOwnerAddress=Konto ägare adress
+RIBControlError=Integritet kontroll av värden misslyckas. Detta innebär att information om detta kontonummer är inte fullständiga eller fel (kontrollera land, siffror och IBAN).
 CreateAccount=Skapa konto
 NewAccount=Nytt konto
 NewBankAccount=Nytt bankkonto
@@ -110,7 +110,9 @@ ConciliatedBy=Förenas med
 DateConciliating=Reconcile datum
 BankLineConciliated=Transaktion förenas
 CustomerInvoicePayment=Kundbetalning
+CustomerInvoicePaymentBack=Kund betalning tillbaka
 SupplierInvoicePayment=Leverantör betalning
+WithdrawalPayment=Tillbakadragande betalning
 SocialContributionPayment=Sociala avgifter betalas
 FinancialAccountJournal=Finansiell balans tidskrift
 BankTransfer=Banköverföring
@@ -126,6 +128,7 @@ DeleteCheckReceipt=Ta bort denna kontroll kvitto?
 ConfirmDeleteCheckReceipt=Är du säker på att du vill ta bort denna kontroll kvitto?
 BankChecks=Bankcheckar
 BankChecksToReceipt=Checkar väntar på insättning
+ShowCheckReceipt=Visar kontrollera insättning mottagande
 NumberOfCheques=Nb av kontroller
 DeleteTransaction=Ta bort transaktion
 ConfirmDeleteTransaction=Är du säker på att du vill ta bort denna transaktion?
@@ -133,31 +136,32 @@ ThisWillAlsoDeleteBankRecord=Detta kommer också att ta bort genereras banktrans
 BankMovements=Rörelser
 CashBudget=Cash budget
 PlannedTransactions=Planerade transaktioner
+Graph=Grafiken
 ExportDataset_banque_1=Bank transaktioner och kontoutdrag
+ExportDataset_banque_2=Insättningsblankett
 TransactionOnTheOtherAccount=Transaktionen på det andra kontot
 TransactionWithOtherAccount=Kontoöverföring
 PaymentNumberUpdateSucceeded=Betalning nummer uppdaterats
 PaymentNumberUpdateFailed=Betalningsnummer kunde inte uppdateras
 PaymentDateUpdateSucceeded=Betalningsdag uppdatera framgångsrikt
 PaymentDateUpdateFailed=Betalningsdagen kunde inte uppdateras
+Transactions=Transaktioner
 BankTransactionLine=Bank transaktion
 AllAccounts=Alla bank / Likvida medel
 BackToAccount=Tillbaka till konto
 ShowAllAccounts=Visa för alla konton
-// STOP - Lines generated via autotranslator.php tool (2010-08-27 08:51:00).
-
-
-// START - Lines generated via autotranslator.php tool (2011-10-10 02:45:33).
-// Reference language: en_US -> sv_SE
 FutureTransaction=Transaktioner i Futur. Inget sätt att blidka.
 SelectChequeTransactionAndGenerate=Välj / Filtret kontrollerar att inkludera i kontrollen insättning kvittot och klicka på &quot;Skapa&quot;.
-// STOP - Lines generated via autotranslator.php tool (2011-10-10 07:33:29).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 17:32:03).
-// Reference language: en_US -> sv_SE
-RIBControlError=Integritet kontroll av värden misslyckas. Detta innebär att information om detta kontonummer är inte fullständiga eller fel (kontrollera land, siffror och IBAN).
-WithdrawalPayment=Tillbakadragande betalning
-ShowCheckReceipt=Visar kontrollera insättning mottagande
-Graph=Grafiken
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 17:32:13).
+InputReceiptNumber=Choose the bank statement related with the conciliation. Use a sortable numeric value: YYYYMM or YYYYMMDD
+EventualyAddCategory=Så småningom, ange en kategori där för att klassificera de register
+ToConciliate=För att förena?
+ThenCheckLinesAndConciliate=Kontrollera sedan linjerna som finns i kontoutdraget och klicka
+BankDashboard=Bankkonton sammandrag
+DefaultRIB=Standard BAN
+AllRIB=Alla BAN
+LabelRIB=BAN etikett
+NoBANRecord=Inget BAN rad
+DeleteARib=Radera BAN rad
+ConfirmDeleteRib=Är du säker på att du vill ta bort denna BAN rad?
+StartDate=Start date
+EndDate=End date

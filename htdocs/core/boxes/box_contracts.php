@@ -31,7 +31,7 @@ class box_contracts extends ModeleBoxes
 {
     var $boxcode="lastcontracts";
     var $boximg="object_contract";
-    var $boxlabel;
+    var $boxlabel="BoxLastContracts";
     var $depends = array("contrat");	// conf->contrat->enabled
 
     var $db;
@@ -40,18 +40,6 @@ class box_contracts extends ModeleBoxes
     var $info_box_head = array();
     var $info_box_contents = array();
 
-
-    /**
-     *  Constructor
-     */
-    function __construct()
-    {
-    	global $langs;
-
-    	$langs->load("boxes");
-
-    	$this->boxlabel=$langs->transnoentitiesnoconv("BoxLastContracts");
-    }
 
     /**
      *  Load data for box to show them later
@@ -72,7 +60,7 @@ class box_contracts extends ModeleBoxes
 
     	if ($user->rights->contrat->lire)
     	{
-    		$sql = "SELECT s.nom, s.rowid as socid,";
+    		$sql = "SELECT s.nom as name, s.rowid as socid,";
     		$sql.= " c.rowid, c.ref, c.statut as fk_statut, c.date_contrat, c.datec, c.fin_validite, c.date_cloture";
     		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."contrat as c";
     		if (!$user->rights->societe->client->voir && !$user->societe_id) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
@@ -108,25 +96,25 @@ class box_contracts extends ModeleBoxes
 
     				$this->info_box_contents[$i][0] = array('td' => 'align="left" width="16"',
     				'logo' => $this->boximg,
-    				'url' => DOL_URL_ROOT."/contrat/fiche.php?id=".$objp->rowid);
+    				'url' => DOL_URL_ROOT."/contrat/card.php?id=".$objp->rowid);
 
     				$this->info_box_contents[$i][1] = array('td' => 'align="left"',
     				'text' => ($objp->ref?$objp->ref:$objp->rowid),	// Some contracts have no ref
     				'text2'=> $late,
-    				'url' => DOL_URL_ROOT."/contrat/fiche.php?id=".$objp->rowid);
+    				'url' => DOL_URL_ROOT."/contrat/card.php?id=".$objp->rowid);
 
     				$this->info_box_contents[$i][2] = array('td' => 'align="left" width="16"',
     				'logo' => 'company',
-    				'url' => DOL_URL_ROOT."/comm/fiche.php?socid=".$objp->socid);
+    				'url' => DOL_URL_ROOT."/comm/card.php?socid=".$objp->socid);
 
     				$this->info_box_contents[$i][3] = array('td' => 'align="left"',
-    				'text' => dol_trunc($objp->nom,40),
-    				'url' => DOL_URL_ROOT."/comm/fiche.php?socid=".$objp->socid);
+    				'text' => dol_trunc($objp->name,40),
+    				'url' => DOL_URL_ROOT."/comm/card.php?socid=".$objp->socid);
 
     				$this->info_box_contents[$i][4] = array('td' => 'align="right"',
     				'text' => dol_print_date($datec,'day'));
 
-    				$this->info_box_contents[$i][5] = array('td' => 'align="right" nowrap="nowrap"',
+    				$this->info_box_contents[$i][5] = array('td' => 'align="right" class="nowrap"',
     				'text' => $contractstatic->getLibStatut(6),
     				'asis'=>1
     				);
@@ -135,6 +123,8 @@ class box_contracts extends ModeleBoxes
     			}
 
     			if ($num==0) $this->info_box_contents[$i][0] = array('td' => 'align="center"','text'=>$langs->trans("NoRecordedContracts"));
+
+				$db->free($resql);
     		}
     		else
     		{
@@ -164,4 +154,3 @@ class box_contracts extends ModeleBoxes
 
 }
 
-?>

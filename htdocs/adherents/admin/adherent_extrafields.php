@@ -35,13 +35,13 @@ $extrafields = new ExtraFields($db);
 $form = new Form($db);
 
 // List of supported format
-$tmptype2label=getStaticMember(get_class($extrafields),'type2label');
+$tmptype2label=ExtraFields::$type2label;
 $type2label=array('');
 foreach ($tmptype2label as $key => $val) $type2label[$key]=$langs->trans($val);
 
 $action=GETPOST('action', 'alpha');
 $attrname=GETPOST('attrname', 'alpha');
-$elementtype='member';
+$elementtype='adherent'; //Must be the $table_element of the class that manage extrafield
 
 if (!$user->admin) accessforbidden();
 
@@ -50,7 +50,7 @@ if (!$user->admin) accessforbidden();
  * Actions
  */
 
-require DOL_DOCUMENT_ROOT.'/core/admin_extrafields.inc.php';
+require DOL_DOCUMENT_ROOT.'/core/actions_extrafields.inc.php';
 
 
 
@@ -68,13 +68,11 @@ print_fiche_titre($langs->trans("MembersSetup"),$linkback,'setup');
 
 $head = member_admin_prepare_head();
 
-dol_fiche_head($head, 'attributes', $langs->trans("Member"), 0, 'user');
+dol_fiche_head($head, 'attributes', $langs->trans("Members"), 0, 'user');
 
 
 print $langs->trans("DefineHereComplementaryAttributes", $langs->transnoentitiesnoconv("Members")).'<br>'."\n";
 print '<br>';
-
-dol_htmloutput_errors($mesg);
 
 // Load attribute_label
 $extrafields->fetch_name_optionals_label($elementtype);
@@ -105,7 +103,6 @@ foreach($extrafields->attribute_type as $key => $value)
 	print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=edit&attrname='.$key.'">'.img_edit().'</a>';
 	print "&nbsp; <a href=\"".$_SERVER["PHP_SELF"]."?action=delete&attrname=".$key."\">".img_delete()."</a></td>\n";
 	print "</tr>";
-	//      $i++;
 }
 
 print "</table>";
@@ -117,15 +114,15 @@ dol_fiche_end();
 if ($action != 'create' && $action != 'edit')
 {
 	print '<div class="tabsAction">';
-	print "<a class=\"butAction\" href=\"".$_SERVER["PHP_SELF"]."?action=create\">".$langs->trans("NewAttribute")."</a>";
+	print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"]."?action=create\">".$langs->trans("NewAttribute").'</a></div>';
 	print "</div>";
 }
 
 
 /* ************************************************************************** */
 /*                                                                            */
-/* Creation d'un champ optionnel
- /*                                                                            */
+/* Creation of an optional field											  */
+/*                                                                            */
 /* ************************************************************************** */
 
 if ($action == 'create')
@@ -138,7 +135,7 @@ if ($action == 'create')
 
 /* ************************************************************************** */
 /*                                                                            */
-/* Edition d'un champ optionnel                                               */
+/* Edition of an optional field                                               */
 /*                                                                            */
 /* ************************************************************************** */
 if ($action == 'edit' && ! empty($attrname))
@@ -152,4 +149,3 @@ if ($action == 'edit' && ! empty($attrname))
 llxFooter();
 
 $db->close();
-?>

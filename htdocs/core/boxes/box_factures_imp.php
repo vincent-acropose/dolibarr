@@ -34,7 +34,7 @@ class box_factures_imp extends ModeleBoxes
 {
 	var $boxcode="oldestunpaidcustomerbills";
 	var $boximg="object_bill";
-	var $boxlabel;
+	var $boxlabel="BoxOldestUnpaidCustomerBills";
 	var $depends = array("facture");
 
 	var $db;
@@ -43,17 +43,6 @@ class box_factures_imp extends ModeleBoxes
 	var $info_box_head = array();
 	var $info_box_contents = array();
 
-
-	/**
-     *  Constructor
-	 */
-	function __construct()
-	{
-		global $langs;
-		$langs->load("boxes");
-
-		$this->boxlabel=$langs->transnoentitiesnoconv("BoxOldestUnpaidCustomerBills");
-	}
 
 	/**
 	 *  Load data into info_box_contents array to show array later.
@@ -74,7 +63,7 @@ class box_factures_imp extends ModeleBoxes
 
 		if ($user->rights->facture->lire)
 		{
-			$sql = "SELECT s.nom, s.rowid as socid,";
+			$sql = "SELECT s.nom as name, s.rowid as socid,";
 			$sql.= " f.facnumber, f.date_lim_reglement as datelimite,";
 			$sql.= " f.amount, f.datef as df,";
 			$sql.= " f.paye, f.fk_statut, f.rowid as facid";
@@ -118,12 +107,12 @@ class box_factures_imp extends ModeleBoxes
 
 					$this->info_box_contents[$i][2] = array('td' => 'align="left" width="16"',
                     'logo' => 'company',
-                    'url' => DOL_URL_ROOT."/comm/fiche.php?socid=".$objp->socid);
+                    'url' => DOL_URL_ROOT."/comm/card.php?socid=".$objp->socid);
 
 					$this->info_box_contents[$i][3] = array('td' => 'align="left"',
-                    'text' => $objp->nom,
+                    'text' => $objp->name,
                     'maxlength'=>44,
-                    'url' => DOL_URL_ROOT."/comm/fiche.php?socid=".$objp->socid);
+                    'url' => DOL_URL_ROOT."/comm/card.php?socid=".$objp->socid);
 
 					$this->info_box_contents[$i][4] = array('td' => 'align="right"',
                     'text' => dol_print_date($datelimite,'day'),
@@ -136,6 +125,8 @@ class box_factures_imp extends ModeleBoxes
 				}
 
 				if ($num==0) $this->info_box_contents[$i][0] = array('td' => 'align="center"','text'=>$langs->trans("NoUnpaidCustomerBills"));
+
+				$db->free($result);
 			}
 			else
 			{
@@ -164,4 +155,3 @@ class box_factures_imp extends ModeleBoxes
 
 }
 
-?>

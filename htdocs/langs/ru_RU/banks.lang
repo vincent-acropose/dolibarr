@@ -1,23 +1,14 @@
-/*
- * Language code: ru_RU
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-01-19 21:30:52
- */
-
-
-// Date 2009-01-19 21:30:52
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - banks
 Bank=Банк
 Banks=Банки
-MenuBankCash=Банк / Наличный
-MenuSetupBank=Банк / Наличный установки
+MenuBankCash=Банк / Наличные
+MenuSetupBank=Банк / Наличные установки
 BankName=Название банка
 FinancialAccount=Учетная запись
 FinancialAccounts=Счета
 BankAccount=Банковский счет
 BankAccounts=Банковские счета
+ShowAccount=Показать учётную запись
 AccountRef=Финансовые счета исх
 AccountLabel=Финансовые счета этикетки
 CashAccount=Денежные счета
@@ -29,6 +20,8 @@ SavingAccount=Сберегательный счет
 SavingAccounts=Сберегательные счета
 ErrorBankLabelAlreadyExists=Финансовые счета ярлык уже существует
 BankBalance=Баланс
+BankBalanceBefore=Баланс до
+BankBalanceAfter=Баланс после
 BalanceMinimalAllowed=Минимальный остаток разрешается
 BalanceMinimalDesired=Минимальный требуемый баланс
 InitialBankBalance=Начальный баланс
@@ -36,10 +29,15 @@ EndBankBalance=Конец баланс
 CurrentBalance=Текущий баланс
 FutureBalance=Будущие баланс
 ShowAllTimeBalance=Показать баланса с начала
+AllTime=Сначала
 Reconciliation=Примирение
 RIB=Bank Account Number
 IBAN=IBAN номера
+IbanValid=Номер счета IBAN верный
+IbanNotValid=Номер счета IBAN не верный
 BIC=BIC / SWIFT число
+SwiftValid=Номер BIC/SWIFT верный
+SwiftNotValid=Номер BIC/SWIFT не верный
 StandingOrders=Постоянные заказы
 StandingOrder=Постоянная порядка
 Withdrawals=Снятие
@@ -51,11 +49,11 @@ LastAccountStatements=Последнее счета
 Rapprochement=Reconciliate
 IOMonthlyReporting=Ежемесячная отчетность
 BankAccountDomiciliation=Счет адрес
+BankAccountCountry=Счет страны
 BankAccountOwner=Имя владельца счета
 BankAccountOwnerAddress=Адрес владельца счета
+RIBControlError=Проверка целостности значений не удается. Это означает, что информацию для этой учетной записи числа не являются полными или неправильный (проверьте стране, цифры и IBAN).
 CreateAccount=Создать аккаунт
-StandingOrderToProcess=Для обработки
-StandingOrderProcessed=Обработано
 NewAccount=Новый счет
 NewBankAccount=Новые банковские счета
 NewFinancialAccount=Новые финансовые счета
@@ -112,7 +110,9 @@ ConciliatedBy=Conciliated путем
 DateConciliating=Согласительную дата
 BankLineConciliated=Сделка conciliated
 CustomerInvoicePayment=Заказчиком оплаты
+CustomerInvoicePaymentBack=Банк для платежей клиента
 SupplierInvoicePayment=Поставщик оплаты
+WithdrawalPayment=Снятие оплаты
 SocialContributionPayment=Социальный вклад оплаты
 FinancialAccountJournal=Финансовые счета журнале
 BankTransfer=Банковский перевод
@@ -128,6 +128,7 @@ DeleteCheckReceipt=Исключить данную проверку получе
 ConfirmDeleteCheckReceipt=Вы уверены, что хотите удалить эту проверку получения?
 BankChecks=Банковские чеки
 BankChecksToReceipt=Чеки ждет депозит
+ShowCheckReceipt=Показать проверить депозита получения
 NumberOfCheques=Nb чеков
 DeleteTransaction=Удалить сделка
 ConfirmDeleteTransaction=Вы уверены, что хотите удалить эту сделку?
@@ -135,34 +136,32 @@ ThisWillAlsoDeleteBankRecord=Это позволит также исключит
 BankMovements=Перевозкой
 CashBudget=Наличный бюджет
 PlannedTransactions=Планируемые операции
+Graph=Графика
 ExportDataset_banque_1=Банковские операции и счета
+ExportDataset_banque_2=Бланк депозита
 TransactionOnTheOtherAccount=Сделка с другой учетной записи
 TransactionWithOtherAccount=Счет передачи
 PaymentNumberUpdateSucceeded=Оплата числа успешно обновлен
 PaymentNumberUpdateFailed=Оплата число не может быть обновлен
 PaymentDateUpdateSucceeded=Оплата дата обновления успешно
 PaymentDateUpdateFailed=Дата платежа не может быть обновлен
+Transactions=Транзакции
 BankTransactionLine=Банковский перевод
 AllAccounts=Все банковские / счета наличных
 BackToAccount=Перейти к ответу
 ShowAllAccounts=Шоу для всех учетных записей
-// Date 2009-01-19 21:30:52
-// STOP - Lines generated via parser
-
-
-
-// START - Lines generated via autotranslator.php tool (2010-09-04 01:33:40).
-// Reference language: en_US -> ru_RU
-BankAccountCountry=Счет страны
-// STOP - Lines generated via autotranslator.php tool (2010-09-04 01:37:40).
-
-
-// START - Lines generated via autotranslator.php tool (2011-08-27 16:56:14).
-// Reference language: en_US -> ru_RU
-RIBControlError=Проверка целостности значений не удается. Это означает, что информацию для этой учетной записи числа не являются полными или неправильный (проверьте стране, цифры и IBAN).
-WithdrawalPayment=Снятие оплаты
-ShowCheckReceipt=Показать проверить депозита получения
-Graph=Графика
 FutureTransaction=Сделки в Futur. Ни в коем случае к согласительной процедуре.
 SelectChequeTransactionAndGenerate=Выбор / фильтр проверяет, включать в получении депозита проверки и нажмите кнопку &quot;Создать&quot;.
-// STOP - Lines generated via autotranslator.php tool (2011-08-27 16:58:01).
+InputReceiptNumber=Choose the bank statement related with the conciliation. Use a sortable numeric value: YYYYMM or YYYYMMDD
+EventualyAddCategory=Укажите категорию для классификации записей
+ToConciliate=To conciliate?
+ThenCheckLinesAndConciliate=Проверьте последние строки в выписке по счёту из банка и нажмите
+BankDashboard=Суммарная информация по банковским счетам
+DefaultRIB=Номер счета BAN по умолчанию
+AllRIB=Все номера счетов BAN
+LabelRIB=Метка номера счета BAN
+NoBANRecord=Нет записи с номером счета BAN
+DeleteARib=Удалить запись в номером счета BAN
+ConfirmDeleteRib=Вы точно хотите удалить запись с номером счета BAN ?
+StartDate=Дата начала
+EndDate=Дата окончания

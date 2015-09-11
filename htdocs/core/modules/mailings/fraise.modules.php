@@ -28,8 +28,7 @@ include_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php';
 
 
 /**
- *	    \class      mailing_fraise
- *		\brief      Class to generate target according to rule Fraise
+ *	Class to generate target according to rule Fraise
  */
 class mailing_fraise extends MailingTargets
 {
@@ -141,7 +140,7 @@ class mailing_fraise extends MailingTargets
      */
     function url($id)
     {
-        return '<a href="'.DOL_URL_ROOT.'/adherents/fiche.php?rowid='.$id.'">'.img_object('',"user").'</a>';
+        return '<a href="'.DOL_URL_ROOT.'/adherents/card.php?rowid='.$id.'">'.img_object('',"user").'</a>';
     }
 
 
@@ -166,10 +165,11 @@ class mailing_fraise extends MailingTargets
 
         // La requete doit retourner: id, email, fk_contact, name, firstname
         $sql = "SELECT a.rowid as id, a.email as email, null as fk_contact, ";
-        $sql.= " a.nom as name, a.prenom as firstname,";
-        $sql.= " a.datefin, a.civilite, a.login, a.societe";	// Other fields
+        $sql.= " a.lastname, a.firstname,";
+        $sql.= " a.datefin, a.civility as civility_id, a.login, a.societe";	// Other fields
         $sql.= " FROM ".MAIN_DB_PREFIX."adherent as a";
-        $sql.= " WHERE a.email IS NOT NULL";
+        $sql.= " WHERE a.email <> ''";     // Note that null != '' is false
+        $sql.= " AND a.email NOT IN (SELECT email FROM ".MAIN_DB_PREFIX."mailing_cibles WHERE fk_mailing=".$mailing_id.")";
         if (isset($_POST["filter"]) && $_POST["filter"] == '-1') $sql.= " AND a.statut=-1";
         if (isset($_POST["filter"]) && $_POST["filter"] == '1a') $sql.= " AND a.statut=1 AND a.datefin >= '".$this->db->idate($now)."'";
         if (isset($_POST["filter"]) && $_POST["filter"] == '1b') $sql.= " AND a.statut=1 AND (a.datefin IS NULL or a.datefin < '".$this->db->idate($now)."')";
@@ -180,7 +180,7 @@ class mailing_fraise extends MailingTargets
         //print $sql;
 
         // Add targets into table
-        dol_syslog(get_class($this)."::add_to_target sql=".$sql);
+        dol_syslog(get_class($this)."::add_to_target", LOG_DEBUG);
         $result=$this->db->query($sql);
         if ($result)
         {
@@ -199,11 +199,11 @@ class mailing_fraise extends MailingTargets
                     $cibles[$j] = array(
                     			'email' => $obj->email,
                     			'fk_contact' => $obj->fk_contact,
-                    			'name' => $obj->name,
+                    			'lastname' => $obj->lastname,
                     			'firstname' => $obj->firstname,
                     			'other' =>
                                 ($langs->transnoentities("Login").'='.$obj->login).';'.
-                                ($langs->transnoentities("UserTitle").'='.($obj->civilite?$langs->transnoentities("Civility".$obj->civilite):'')).';'.
+                                ($langs->transnoentities("UserTitle").'='.($obj->civility_id?$langs->transnoentities("Civility".$obj->civility_id):'')).';'.
                                 ($langs->transnoentities("DateEnd").'='.dol_print_date($this->db->jdate($obj->datefin),'day')).';'.
                                 ($langs->transnoentities("Company").'='.$obj->societe),
                                 'source_url' => $this->url($obj->id),
@@ -229,4 +229,3 @@ class mailing_fraise extends MailingTargets
 
 }
 
-?>

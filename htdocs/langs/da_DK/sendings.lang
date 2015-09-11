@@ -1,20 +1,12 @@
-/*
- * Lince Translation File
- * Filename: 
- * Language code: da_DA
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-01-19 21:26:39
- */
-
-
-// Date 2009-01-19 21:26:39
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - sendings
 RefSending=Ref. afsendelse
 Sending=Sender
 Sendings=Sendings
-Receivings=Receivings
+AllSendings=All Shipments
+Shipment=Sender
+Shipments=Forsendelser
+ShowSending=Show Sending
+Receivings=Receipts
 SendingsArea=Sendings område
 ListOfSendings=Liste over sendings
 SendingMethod=Afsendelse metode
@@ -23,7 +15,8 @@ LastSendings=Seneste %s sendings
 SearchASending=Søg en sendeorganisation
 StatisticsOfSendings=Statistik over sendings
 NbOfSendings=Antal sendings
-SendingCard=Afsendelse kortet
+NumberOfShipmentsByMonth=Number of shipments by month
+SendingCard=Shipment card
 NewSending=Ny afsendelse
 CreateASending=Opret en sendeorganisation
 CreateSending=Opret afsendelse
@@ -31,18 +24,22 @@ QtyOrdered=Qty bestilt
 QtyShipped=Qty afsendt
 QtyToShip=Qty til skibet
 QtyReceived=Antal modtagne
-KeepToShip=Hold til skib
+KeepToShip=Remain to ship
 OtherSendingsForSameOrder=Andre sendings for denne ordre
 DateSending=Dato for afsendelse orden
 DateSendingShort=Dato for afsendelse orden
 SendingsForSameOrder=Sendings for denne ordre
 SendingsAndReceivingForSameOrder=Sendings og receivings for denne ordre
 SendingsToValidate=Henvist til validere
+StatusSendingCanceled=Aflyst
 StatusSendingDraft=Udkast
 StatusSendingValidated=Valideret (produkter til skib eller allerede er afsendt)
+StatusSendingProcessed=Forarbejdet
+StatusSendingCanceledShort=Aflyst
 StatusSendingDraftShort=Udkast
 StatusSendingValidatedShort=Valideret
-SendingSheet=Afsendelse ark
+StatusSendingProcessedShort=Forarbejdet
+SendingSheet=Shipment sheet
 Carriers=Carriers
 Carrier=Carrier
 CarriersArea=Rederierne område
@@ -53,39 +50,37 @@ ConfirmCancelSending=Er du sikker på at du vil annullere denne sende?
 GenericTransport=Generic transport
 Enlevement=Fået efter kunde
 DocumentModelSimple=Simpelt dokument model
-WarningNoQtyLeftToSend=Advarsel, ikke produkter som venter på at blive afsendt.
-// Date 2009-01-19 21:26:39
-// STOP - Lines generated via parser
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-13 20:39:59).
-// Reference language: en_US
-StatsOnShipmentsOnlyValidated=Statistik gennemført om overførsel kun valideret
-SendingMethodCATCH=Fangst af kunden
-SendingMethodTRANS=Transporter
-SendingMethodCOLSUI=Colissimo
-DocumentModelSirocco=Simpelt dokument model for levering kvitteringer
-DocumentModelTyphon=Mere komplet dokument model for levering kvitteringer (logo. ..)
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 20:39:59).
-
-
-// START - Lines generated via autotranslator.php tool (2010-07-17 11:19:38).
-// Reference language: en_US
-Shipments=Forsendelser
-StatusSendingCanceled=Aflyst
-StatusSendingCanceledShort=Aflyst
 DocumentModelMerou=Merou A5 model
+WarningNoQtyLeftToSend=Advarsel, ikke produkter som venter på at blive afsendt.
+StatsOnShipmentsOnlyValidated=Statistics conducted on shipments only validated. Date used is date of validation of shipment (planed delivery date is not always known).
 DateDeliveryPlanned=Høvlet leveringsdato
 DateReceived=Dato levering modtaget
-// STOP - Lines generated via autotranslator.php tool (2010-07-17 11:19:57).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 15:59:19).
-// Reference language: en_US -> da_DK
 SendShippingByEMail=Send forsendelse via e-mail
-SendShippingRef=Send forsendelse %s
+SendShippingRef=Submission of shipment %s
 ActionsOnShipping=Arrangementer på forsendelse
 LinkToTrackYourPackage=Link til at spore din pakke
 ShipmentCreationIsDoneFromOrder=For øjeblikket er skabelsen af ​​en ny forsendelse udført af ordrekortet.
+RelatedShippings=Related shipments
+ShipmentLine=Shipment line
+CarrierList=List of transporters
+SendingRunning=Product from ordered customer orders
+SuppliersReceiptRunning=Product from ordered supplier orders
+ProductQtyInCustomersOrdersRunning=Product quantity into opened customers orders
+ProductQtyInSuppliersOrdersRunning=Product quantity into opened suppliers orders
+ProductQtyInShipmentAlreadySent=Product quantity from opended customer order already sent
+ProductQtyInSuppliersShipmentAlreadyRecevied=Product quantity from opened supplier order already received
+
+# Sending methods
+SendingMethodCATCH=Fangst af kunden
+SendingMethodTRANS=Transporter
+SendingMethodCOLSUI=Colissimo
+# ModelDocument
+DocumentModelSirocco=Simpelt dokument model for levering kvitteringer
+DocumentModelTyphon=Mere komplet dokument model for levering kvitteringer (logo. ..)
 Error_EXPEDITION_ADDON_NUMBER_NotDefined=Konstant EXPEDITION_ADDON_NUMBER ikke defineret
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 16:02:11).
+SumOfProductVolumes=Sum of product volumes
+SumOfProductWeights=Sum of product weights
+
+# warehouse details
+DetailWarehouseNumber= Warehouse details
+DetailWarehouseFormat= W:%s (Qty : %d)

@@ -1,23 +1,14 @@
-/*
- * Lince Translation File
- * Filename: 
- * Language code: pl_PL
- * Automatic generated via autotranslator tool
- * Generation date 2009-01-19 00:44:06
- */
-
-
-// Date 2009-01-19 00:44:06
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - orders
 OrdersArea=Klienci dziedzinie zamówień
 SuppliersOrdersArea=Dostawcy dziedzinie zamówień
 OrderCard=Zamów kartę
+OrderId=Zamówienie Id
 Order=Porządek
 Orders=Zamówienia
+OrderLine=Zamówienie linii
 OrderFollow=Kontynuacja
 OrderDate=Kolejność Data
+OrderToProcess=Aby proces
 NewOrder=New Order
 ToOrder=Zamów
 MakeOrder=Zamów
@@ -25,19 +16,23 @@ SupplierOrder=Dostawca celu
 SuppliersOrders=Dostawcy zleceń
 SuppliersOrdersRunning=Aktualna dostawców zleceń
 CustomerOrder=Zamówieniem
-CustomersOrders=Klienci zleceń
+CustomersOrders=Zamówienia klientów
 CustomersOrdersRunning=Aktualna klientów zleceń
 CustomersOrdersAndOrdersLines=Zamówień i zleceń linii
-OrdersToValid=Zamówienia do ważnych
-OrdersToBill=Zamówienia na rachunku
-OrdersInProcess=Zamówienia w procesie
-OrdersToProcess=Zamówienia na proces
+OrdersToValid=Zamówienia klientów, aby potwierdzić
+OrdersToBill=Zamówienia klientów są dostarczane
+OrdersInProcess=Zamówienia klientów w procesie
+OrdersToProcess=Zamówienia klientów na przetwarzanie
+SuppliersOrdersToProcess=Dostawcy zamówienia na przetwarzanie
 StatusOrderCanceledShort=Odwołany
 StatusOrderDraftShort=Szkic
 StatusOrderValidatedShort=Zatwierdzona
-StatusOrderOnProcessShort=Na proces
+StatusOrderSentShort=W procesie
+StatusOrderSent=Wysyłka w procesie
+StatusOrderOnProcessShort=Zamówione
 StatusOrderProcessedShort=Przetworzone
 StatusOrderToBillShort=Do rachunku
+StatusOrderToBill2Short=Do rachunku
 StatusOrderApprovedShort=Zatwierdzony
 StatusOrderRefusedShort=Odmowa
 StatusOrderToProcessShort=Aby proces
@@ -46,35 +41,47 @@ StatusOrderReceivedAllShort=Wszystko otrzymała
 StatusOrderCanceled=Odwołany
 StatusOrderDraft=Projekt (musi zostać zatwierdzone)
 StatusOrderValidated=Zatwierdzona
-StatusOrderOnProcess=Na proces
+StatusOrderOnProcess=Zamówione - odbiór czuwania
+StatusOrderOnProcessWithValidation=Zamówione - odbiór lub walidacji czuwania
 StatusOrderProcessed=Przetworzone
 StatusOrderToBill=Do rachunku
+StatusOrderToBill2=Do rachunku
 StatusOrderApproved=Zatwierdzony
 StatusOrderRefused=Odmowa
 StatusOrderReceivedPartially=Częściowo otrzymała
 StatusOrderReceivedAll=Wszystko otrzymała
+ShippingExist=Przesyłka istnieje
+ProductQtyInDraft=Ilość produktów w projektach zamówień
+ProductQtyInDraftOrWaitingApproved=Ilość produktów w projekcie lub zatwierdzonych zamówień, jeszcze nie zamówione
 DraftOrWaitingApproved=Projekt nie został jeszcze zatwierdzony lub sortowane
 DraftOrWaitingShipped=Projekt lub zatwierdzonych jeszcze nie wysłane
 MenuOrdersToBill=Zamówienia na rachunku
+MenuOrdersToBill2=Rozliczanych zamówienia
 SearchOrder=Szukaj celu
-Sending=Wysyłanie
-Sendings=Sendings
+SearchACustomerOrder=Szukaj zamówienie klienta
+SearchASupplierOrder=Szukaj zlecenie dostawców
 ShipProduct=Statek produktu
 Discount=Rabat
 CreateOrder=Tworzenie Zamówienie
 RefuseOrder=Odmówić celu
-ApproveOrder=Akceptuj zamówienie
+ApproveOrder=Zatwierdź zamówienie
+Approve2Order=Zatwierdza porządek (drugi poziom)
 ValidateOrder=Sprawdź zamówienie
+UnvalidateOrder=Unvalidate zamówienie
 DeleteOrder=Usuń zamówienie
 CancelOrder=Anulować zamówienie
-AddOrder=Dodaj zamówienie
+AddOrder=Tworzenie zamówienia
 AddToMyOrders=Dodaj do mojego zamówienia
 AddToOtherOrders=Dodaj do zamówienia
+AddToDraftOrders=Dodaj do projektu porządku
 ShowOrder=Pokaż zamówienie
 NoOpenedOrders=Nie otworzył zamówień
 NoOtherOpenedOrders=Żadne inne otwarte zamówienia
+NoDraftOrders=Brak projektów zamówienia
 OtherOrders=Inne zamówienia
-LastOrders=Ostatnia %s zamówień
+LastOrders=Ostatnie %s zamówień klienta
+LastCustomerOrders=Ostatnie %s zamówień klienta
+LastSupplierOrders=Ostatnie %s zamówień dla dostawcy
 LastModifiedOrders=Ostatnia %s zmodyfikowane zamówień
 LastClosedOrders=Ostatnia %s zamkniętych zleceń
 AllOrders=Wszystkie zlecenia
@@ -82,24 +89,27 @@ NbOfOrders=Liczba zleceń
 OrdersStatistics=Zamówienia statystyk
 OrdersStatisticsSuppliers=Dostawca zamówień statystyk
 NumberOfOrdersByMonth=Liczba zleceń przez miesiąc
-AmountOfOrdersByMonthHT=Kwota zamówienia przez miesiąc (po odliczeniu podatku)
+AmountOfOrdersByMonthHT=Ilość zamówień na miesiąc (po odliczeniu podatku)
 ListOfOrders=Lista zamówień
-CloseOrder=Zamknij celu
+CloseOrder=Zamknij zamówienie
 ConfirmCloseOrder=Czy na pewno chcesz zamknąć to zamówienie? Gdy zamówienie jest zamknięta, to może być rozliczone.
 ConfirmCloseOrderIfSending=Czy na pewno chcesz zamknąć to zamówienie? Musisz zamknąć zamówienie tylko wtedy, gdy wszystkie wysyłki są zrobione.
 ConfirmDeleteOrder=Czy na pewno chcesz usunąć to zamówienie?
 ConfirmValidateOrder=Czy na pewno chcesz, aby potwierdzić tej kolejności pod <b>nazwą %s?</b>
+ConfirmUnvalidateOrder=Czy na pewno chcesz przywrócić <b>%s</b> zamówień ze statusem projektu?
 ConfirmCancelOrder=Czy na pewno chcesz anulować zamówienie?
 ConfirmMakeOrder=Czy na pewno chcesz, aby potwierdzić wprowadzone tym celu <b>na %s?</b>
 GenerateBill=Generowanie faktur
+ClassifyShipped=Klasyfikowania dostarczane
 ClassifyBilled=Klasyfikacja "obciążonego"
 ComptaCard=Księgowość karty
 DraftOrders=Projekt zamówień
 RelatedOrders=Podobne zamówienia
+RelatedCustomerOrders=Podobne zamówienia klientów
+RelatedSupplierOrders=Podobne zlecenia dostawca
 OnProcessOrders=Na proces zamówienia
 RefOrder=Nr ref. porządek
 RefCustomerOrder=Nr ref. zamówieniem
-CustomerOrder=Zamówieniem
 RefCustomerOrderShort=Nr ref. cust. porządek
 SendOrderByMail=Wyślij zamówienie pocztą
 ActionsOnOrder=Działania mające na celu
@@ -109,37 +119,12 @@ AuthorRequest=Wniosek autora
 UseCustomerContactAsOrderRecipientIfExist=Użyj klienta adres, jeśli określone zamiast trzeciej kolejności adres odbiorcy adres
 RunningOrders=Zamówienia na proces
 UserWithApproveOrderGrant=Useres przyznane z "zatwierdza zamówienia zgody.
-Error_COMMANDE_SUPPLIER_ADDON_NotDefined=Stała COMMANDE_SUPPLIER_ADDON nie zdefiniowane
-Error_COMMANDE_ADDON_NotDefined=Stała COMMANDE_ADDON nie zdefiniowane
-Error_FailedToLoad_COMMANDE_SUPPLIER_ADDON_File=Nie można załadować modułu pliku ' %s'
-Error_FailedToLoad_COMMANDE_ADDON_File=Nie można załadować modułu pliku ' %s'
-OrderSource0=Commercial wniosku
-OrderSource1=Internet
-OrderSource2=Poczta kampanii
-OrderSource3=Telefon compain
-OrderSource4=Faks kampanii
-OrderSource5=Komercyjne
-OrderSource6=Przechowywać
-QtyOrdered=Ilosc sortowane
-AddDeliveryCostLine=Dodaj dostawy koszt linii wskazujące wagi zamówienia
-PDFEinsteinDescription=Pełna kolejność modelu (logo. ..)
-// Date 2009-01-19 00:44:06
-// STOP - Lines generated via parser
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-13 21:07:31).
-// Reference language: en_US
-OrderLine=Zamówienie linii
 PaymentOrderRef=Płatność celu %s
 CloneOrder=Clone celu
 ConfirmCloneOrder=Czy na pewno chcesz klon tej <b>kolejności %s?</b>
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 21:07:31).
-
-
-// START - Lines generated via autotranslator.php tool (2010-09-04 01:33:40).
-// Reference language: en_US -> pl_PL
-OrderToProcess=Aby proces
 DispatchSupplierOrder=%s Odbiór aby dostawca
+FirstApprovalAlreadyDone=Pierwsze zatwierdzenie już zrobione
+##### Types de contacts #####
 TypeContact_commande_internal_SALESREPFOLL=Przedstawiciela w ślad za zamówienie klienta
 TypeContact_commande_internal_SHIPPING=Przedstawiciela w ślad za koszty
 TypeContact_commande_external_BILLING=kontakt faktury klienta
@@ -150,20 +135,38 @@ TypeContact_order_supplier_internal_SHIPPING=Przedstawiciela w ślad za koszty
 TypeContact_order_supplier_external_BILLING=kontakt fakturze dostawcy
 TypeContact_order_supplier_external_SHIPPING=kontakt koszty dostawcy
 TypeContact_order_supplier_external_CUSTOMER=Kontaktowy dostawca w ślad za zamówienie
+
+Error_COMMANDE_SUPPLIER_ADDON_NotDefined=Stała COMMANDE_SUPPLIER_ADDON nie zdefiniowane
+Error_COMMANDE_ADDON_NotDefined=Stała COMMANDE_ADDON nie zdefiniowane
+Error_FailedToLoad_COMMANDE_SUPPLIER_ADDON_File=Nie można załadować modułu pliku ' %s'
+Error_FailedToLoad_COMMANDE_ADDON_File=Nie można załadować modułu pliku ' %s'
+Error_OrderNotChecked=Zlecenia do faktury wybrane
+# Sources
+OrderSource0=Commercial wniosku
+OrderSource1=Internet
+OrderSource2=Poczta kampanii
+OrderSource3=Telefon compain
+OrderSource4=Faks kampanii
+OrderSource5=Komercyjne
+OrderSource6=Przechowywać
+QtyOrdered=Ilosc sortowane
+AddDeliveryCostLine=Dodaj dostawy koszt linii wskazujące wagi zamówienia
+# Documents models
+PDFEinsteinDescription=Pełna kolejność modelu (logo. ..)
 PDFEdisonDescription=Prosty model celu
-// STOP - Lines generated via autotranslator.php tool (2010-09-04 01:34:15).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 17:18:29).
-// Reference language: en_US -> pl_PL
-SuppliersOrdersToProcess=Dostawcy zamówienia na przetwarzanie
-StatusOrderSentShort=W procesie
-ShippingExist=Przesyłka istnieje
-UnvalidateOrder=Unvalidate zamówienie
-ConfirmUnvalidateOrder=Czy na pewno chcesz przywrócić <b>%s</b> zamówień ze statusem projektu?
+PDFProformaDescription=Pełna faktura proforma (logo ...)
+# Orders modes
 OrderByMail=Poczta
 OrderByFax=Faks
 OrderByEMail=EMail
 OrderByWWW=Online
 OrderByPhone=Telefon
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 17:18:53).
+CreateInvoiceForThisCustomer=Zamówienia na banknoty
+NoOrdersToInvoice=Brak zleceń rozliczanych
+CloseProcessedOrdersAutomatically=Sklasyfikować "przetwarzane" wszystkie wybrane zamówienia.
+OrderCreation=Stworzenie Zamówienie
+Ordered=Zamówione
+OrderCreated=Twoje zamówienia zostały utworzone
+OrderFail=Błąd podczas tworzenia się zamówień
+CreateOrders=Tworzenie zamówienia
+ToBillSeveralOrderSelectCustomer=Aby utworzyć fakturę za kilka rzędów, kliknij pierwszy na klienta, a następnie wybrać "% s".

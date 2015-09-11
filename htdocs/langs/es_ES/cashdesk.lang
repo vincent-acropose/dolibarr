@@ -1,5 +1,4 @@
-# Language file - es_ES - cashdesk 
-CHARSET=UTF-8
+# Language file - Source file is en_US - cashdesk
 CashDeskMenu=TPV
 CashDesk=Terminal Punto de Venta
 CashDesks=Terminales Punto de Venta
@@ -13,6 +12,7 @@ CashDeskProducts=Productos
 CashDeskStock=Stock
 CashDeskOn=de
 CashDeskThirdParty=Tercero
+CashdeskDashboard=Acceso Punto de venta
 ShoppingCart=Cesta
 NewSell=Nueva venta
 BackOffice=Back office
@@ -36,3 +36,5 @@ BankToPay=Cuenta de cobro
 ShowCompany=Ver empresa
 ShowStock=Ver almacén
 DeleteArticle=Haga clic para quitar este artículo
+FilterRefOrLabelOrBC=Búsqueda (Ref/Etiq.)
+UserNeedPermissionToEditStockToUsePos=Ha configurado el decremento de stock en la creación de facturas, por lo que el usuario que utilice el TPV deberá tener permiso para editar stock.

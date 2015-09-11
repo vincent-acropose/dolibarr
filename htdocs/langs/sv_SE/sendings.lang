@@ -1,18 +1,12 @@
-/*
- * Language code: sv_SV
- * Automatic generated via autotranslator.php tool
- * Generation date 2010-08-27 08:47:44
- */
-
-
-// START - Lines generated via autotranslator.php tool (2010-08-27 08:47:44).
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - sendings
 RefSending=Ref. transporten
 Sending=Sändning
 Sendings=Transporter
+AllSendings=All Shipments
+Shipment=Sändning
 Shipments=Transporter
-Receivings=Receivings
+ShowSending=Visa skickade
+Receivings=Kvitto
 SendingsArea=Transporter område
 ListOfSendings=Lista över transporter
 SendingMethod=Frakt metod
@@ -21,7 +15,8 @@ LastSendings=Senaste %s transporter
 SearchASending=Sök efter transport
 StatisticsOfSendings=Statistik för transporter
 NbOfSendings=Antal transporter
-SendingCard=Frakt-kort
+NumberOfShipmentsByMonth=Antal leveranser per månad
+SendingCard=Fraktkort
 NewSending=Ny leverans
 CreateASending=Skapa en sändning
 CreateSending=Skapa leverans
@@ -29,7 +24,7 @@ QtyOrdered=Antal beställda
 QtyShipped=Antal sändas
 QtyToShip=Antal till-fartyg
 QtyReceived=Antal mottagna
-KeepToShip=Håll dig till fartyg
+KeepToShip=Remain to ship
 OtherSendingsForSameOrder=Andra sändningar för denna beställning
 DateSending=Datum skicka ordning
 DateSendingShort=Datum skicka ordning
@@ -39,10 +34,12 @@ SendingsToValidate=Transporter för att validera
 StatusSendingCanceled=Annullerad
 StatusSendingDraft=Förslag
 StatusSendingValidated=Validerad (produkter till ett fartyg eller som redan sänts)
+StatusSendingProcessed=Bearbetade
 StatusSendingCanceledShort=Annullerad
 StatusSendingDraftShort=Förslag
 StatusSendingValidatedShort=Validerad
-SendingSheet=Att skicka ark
+StatusSendingProcessedShort=Bearbetade
+SendingSheet=Packsedel
 Carriers=Bärare
 Carrier=Carrier
 CarriersArea=Bärare område
@@ -55,23 +52,35 @@ Enlevement=Fått av kunden
 DocumentModelSimple=Enkel förlagan
 DocumentModelMerou=Merou A5-modellen
 WarningNoQtyLeftToSend=Varning, att inga produkter väntar sändas.
-StatsOnShipmentsOnlyValidated=Statistik som gjorts på transporter enda validerade
+StatsOnShipmentsOnlyValidated=Statistik utförda på försändelser endast valideras. Datum som används är datum för godkännandet av leveransen (planerat leveransdatum är inte alltid känt).
 DateDeliveryPlanned=Hyvlat leveransdatum
 DateReceived=Datum leverans fick
-SendingMethodCATCH=Fångst av kunden
-SendingMethodTRANS=Transporter
-SendingMethodCOLSUI=Colissimo
-DocumentModelSirocco=Enkel handling modell för leverans kvitton
-DocumentModelTyphon=Mer komplett dokument modell för leverans intäkter (logo. ..)
-// STOP - Lines generated via autotranslator.php tool (2010-08-27 08:50:37).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 17:32:03).
-// Reference language: en_US -> sv_SE
 SendShippingByEMail=Skicka leverans via e-post
-SendShippingRef=Skicka transport %s
+SendShippingRef=Inlämning av leveransen %s
 ActionsOnShipping=Evenemang på leverans
 LinkToTrackYourPackage=Länk till spåra ditt paket
 ShipmentCreationIsDoneFromOrder=För närvarande är skapandet av en ny leverans sker från ordern kortet.
+RelatedShippings=Hänförliga leveranser
+ShipmentLine=Transport linje
+CarrierList=Lista över transportörer
+SendingRunning=Produkt från beställda kundorder
+SuppliersReceiptRunning=Produkt från beställda leverantörsorder
+ProductQtyInCustomersOrdersRunning=Produktkvantitet till öppnade kundorder
+ProductQtyInSuppliersOrdersRunning=Produktkvantitet till öppnade leverantörsorder
+ProductQtyInShipmentAlreadySent=Produktkvantitet från öppnade kundorder är redan skickade
+ProductQtyInSuppliersShipmentAlreadyRecevied=Produktkvantitet från öppnade leverantörsorder är redan skickade
+
+# Sending methods
+SendingMethodCATCH=Fångst av kunden
+SendingMethodTRANS=Transporter
+SendingMethodCOLSUI=Colissimo
+# ModelDocument
+DocumentModelSirocco=Enkel handling modell för leverans kvitton
+DocumentModelTyphon=Mer komplett dokument modell för leverans intäkter (logo. ..)
 Error_EXPEDITION_ADDON_NUMBER_NotDefined=Konstant EXPEDITION_ADDON_NUMBER definieras inte
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 17:34:49).
+SumOfProductVolumes=Summan av produktvolymer
+SumOfProductWeights=Summan av produktvikter
+
+# warehouse details
+DetailWarehouseNumber= Lagerinformation
+DetailWarehouseFormat= W:%s (Antal : %d)

@@ -1,5 +1,4 @@
-# Dolibarr language file - no_NB - banks
-CHARSET=UTF-8 
+# Dolibarr language file - Source file is en_US - banks
 Bank=Bank
 Banks=Banker
 MenuBankCash=Bank/Kasse
@@ -9,6 +8,7 @@ FinancialAccount=Hovedbokskonto
 FinancialAccounts=Hovebokskonti
 BankAccount=Bankkonto
 BankAccounts=Bankkonti
+ShowAccount=Vis konto
 AccountRef=Kontonummer hovedbokskonto
 AccountLabel=Kontonavn hovedbokskonto
 CashAccount=Kassekonto
@@ -20,6 +20,8 @@ SavingAccount=Kapitalkonto
 SavingAccounts=Kapitalkonti
 ErrorBankLabelAlreadyExists=Hovedbokskonto med samme navn eksisterer fra før
 BankBalance=Saldo
+BankBalanceBefore=Balanse før
+BankBalanceAfter=Balance etter
 BalanceMinimalAllowed=Minste saldogrense
 BalanceMinimalDesired=Minste ønskede saldogrense
 InitialBankBalance=Inngående balanse
@@ -27,10 +29,15 @@ EndBankBalance=Utgående balanse
 CurrentBalance=Gjeldende balanse
 FutureBalance=Framtidig balanse
 ShowAllTimeBalance=Vis balanse fra oppstart
+AllTime=Fra start
 Reconciliation=Bankavstemming
 RIB=Bankkontonummer
 IBAN=IBAN-nummer
+IbanValid=IBAN is Valid
+IbanNotValid=IBAN is Not Valid
 BIC=BIC/SWIFT-nummer
+SwiftValid=BIC/SWIFT is Valid
+SwiftNotValid=BIC/SWIFT is Not Valid
 StandingOrders=Åpne ordre
 StandingOrder=Åpne ordre
 Withdrawals=Uttak
@@ -42,12 +49,11 @@ LastAccountStatements=Kontoutdrag
 Rapprochement=Avstemming
 IOMonthlyReporting=Månedlig rapportering
 BankAccountDomiciliation=Kontoadresse
+BankAccountCountry=Konto landet
 BankAccountOwner=Kontoeier
 BankAccountOwnerAddress=Kontoeiers adresse
 RIBControlError=Integritetssjekk feilet. Dette betyr at informasjon om denne kontoen er ufullstendig eller feil (sjekk land, nummer og IBAN).
 CreateAccount=Opprett konto
-StandingOrderToProcess=Til behandling
-StandingOrderProcessed=Behandlet
 NewAccount=Ny konto
 NewBankAccount=Ny bankkonto
 NewFinancialAccount=Ny hovedbokskonto
@@ -80,6 +86,8 @@ ListBankTransactions=Oversikt over transaksjoner
 IdTransaction=Transaksjons-ID
 BankTransactions=Banktransaksjoner
 SearchTransaction=Søk i transaksjoner
+ListTransactions=Liste transaksjoner
+ListTransactionsByCategory=Liste transaksjon / kategori
 TransactionsToConciliate=Transaksjon du vil stemme av
 Conciliable=Avstemmingsbar
 Conciliate=Avstemm
@@ -102,7 +110,9 @@ ConciliatedBy=Avstemt av
 DateConciliating=Avstemt den
 BankLineConciliated=Transaksjonen er avstemt
 CustomerInvoicePayment=Kundeinnbetaling
+CustomerInvoicePaymentBack=Customer payment back
 SupplierInvoicePayment=Leverandøutbetaling
+WithdrawalPayment=Tilbaketrekking betaling
 SocialContributionPayment=Social contribution betaling (ikke i Norge)
 FinancialAccountJournal=Utskrift hovedbok
 BankTransfer=Bankoverføring
@@ -118,6 +128,7 @@ DeleteCheckReceipt=Slett denne sjekkbetalingen?
 ConfirmDeleteCheckReceipt=Er du sikker på at du vil slette denne sjekkbetalingen?
 BankChecks=Banksjekker
 BankChecksToReceipt=Sjekker som venter på å bli satt inn
+ShowCheckReceipt=Vis sjekk innskudd kvittering
 NumberOfCheques=Ant. sjekker
 DeleteTransaction=Slett transaksjon
 ConfirmDeleteTransaction=Er du sikker på at du vil slette transaksjonen?
@@ -125,37 +136,32 @@ ThisWillAlsoDeleteBankRecord=Dette vil også slette genererte banktransaksjoner
 BankMovements=Bevegelser
 CashBudget=Likviditetsbudsjett
 PlannedTransactions=Planlagte transaksjoner
+Graph=Grafikk
 ExportDataset_banque_1=Banktransaksjoner og kontoutdrag
+ExportDataset_banque_2=Deposit slip
 TransactionOnTheOtherAccount=Transaksjonen på den andre kontoen
 TransactionWithOtherAccount=Overført beløp
 PaymentNumberUpdateSucceeded=Betalingsnummer er oppdatert
 PaymentNumberUpdateFailed=Klarte ikke å oppdatere betalingsnummer
 PaymentDateUpdateSucceeded=Betalingsdato oppdatert
 PaymentDateUpdateFailed=Klarte ikke å oppdatere betalingsdatoen
+Transactions=Transaksjoner
 BankTransactionLine=Bankoverføring
-
-
-// START - Lines generated via autotranslator.php tool (2010-07-17 11:45:17).
-// Reference language: en_US
-BankAccountCountry=Konto landet
-ListTransactions=Liste transaksjoner
-ListTransactionsByCategory=Liste transaksjon / kategori
 AllAccounts=Alle bank / cash kontoer
 BackToAccount=Tilbake til kontoen
 ShowAllAccounts=Vis for alle kontoer
-// STOP - Lines generated via autotranslator.php tool (2010-07-17 11:48:15).
-
-
-// START - Lines generated via autotranslator.php tool (2011-10-10 02:45:33).
-// Reference language: en_US -> nb_NO
-SelectChequeTransactionAndGenerate=Velg / filter sjekker for å inkludere inn sjekken innskudd kvitteringen og klikk på &quot;Create&quot;.
-// STOP - Lines generated via autotranslator.php tool (2011-10-10 07:15:02).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 17:06:43).
-// Reference language: en_US -> nb_NO
-WithdrawalPayment=Tilbaketrekking betaling
-ShowCheckReceipt=Vis sjekk innskudd kvittering
-Graph=Grafikk
 FutureTransaction=Transaksjon i Futur. Ingen måte å forsone.
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 17:06:53).
+SelectChequeTransactionAndGenerate=Velg / filter sjekker for å inkludere inn sjekken innskudd kvitteringen og klikk på &quot;Create&quot;.
+InputReceiptNumber=Choose the bank statement related with the conciliation. Use a sortable numeric value: YYYYMM or YYYYMMDD
+EventualyAddCategory=Eventually, specify a category in which to classify the records
+ToConciliate=To conciliate?
+ThenCheckLinesAndConciliate=Then, check the lines present in the bank statement and click
+BankDashboard=Bankkonti sammendrag
+DefaultRIB=Standard BAN
+AllRIB=Alle BAN
+LabelRIB=BAN Etikett
+NoBANRecord=Ingen BAN kort
+DeleteARib=BAN-kort slettet
+ConfirmDeleteRib=Er du sikker på at du vil slette dette BAN-kortet?
+StartDate=Start date
+EndDate=End date

@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2001-2003 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -27,12 +27,18 @@ require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/sociales/class/chargesociales.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formsocialcontrib.class.php';
 
+$langs->load("compta");
+$langs->load("banks");
+$langs->load("bills");
+
 // Security check
 $socid = isset($_GET["socid"])?$_GET["socid"]:'';
 if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user, 'tax', '', '', 'charges');
 
-
+$search_ref = GETPOST('search_ref','int');
+$search_label = GETPOST('search_label','alpha');
+$search_amount = GETPOST('search_amount','alpha');
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
 $page = GETPOST("page",'int');
@@ -62,6 +68,15 @@ else
 	$typeid=$_REQUEST['typeid'];
 }
 
+if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both test are required to be compatible with all browsers
+{
+	$search_ref="";
+	$search_label="";
+	$search_amount="";
+    $typeid="";
+	$year="";
+	$month="";
+}
 
 /*
  *	View
@@ -75,12 +90,18 @@ llxHeader();
 
 $sql = "SELECT cs.rowid as id, cs.fk_type as type, ";
 $sql.= " cs.amount, cs.date_ech, cs.libelle, cs.paye, cs.periode,";
-$sql.= " c.libelle as type_lib";
-$sql.= " FROM ".MAIN_DB_PREFIX."c_chargesociales as c";
-$sql.= ", ".MAIN_DB_PREFIX."chargesociales as cs";
+$sql.= " c.libelle as type_lib,";
+$sql.= " SUM(pc.amount) as alreadypayed";
+$sql.= " FROM ".MAIN_DB_PREFIX."c_chargesociales as c,";
+$sql.= " ".MAIN_DB_PREFIX."chargesociales as cs";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."paiementcharge as pc ON pc.fk_charge = cs.rowid";
 $sql.= " WHERE cs.fk_type = c.id";
 $sql.= " AND cs.entity = ".$conf->entity;
-if (GETPOST("search_label")) $sql.=" AND cs.libelle LIKE '%".GETPOST("search_label")."%'";
+
+// Search criteria
+if ($search_ref)	$sql.=" AND cs.rowid=".$search_ref;
+if ($search_label) 	$sql.=" AND cs.libelle LIKE '%".$db->escape($search_label)."%'";
+if ($search_amount) $sql.=" AND cs.amount='".$db->escape(price2num(trim($search_amount)))."'";
 if ($year > 0)
 {
     $sql .= " AND (";
@@ -97,6 +118,7 @@ if ($filtre) {
 if ($typeid) {
     $sql .= " AND cs.fk_type=".$typeid;
 }
+$sql.= " GROUP BY cs.rowid, cs.fk_type, cs.amount, cs.date_ech, cs.libelle, cs.paye, cs.periode, c.libelle";
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($limit+1,$offset);
 
@@ -121,10 +143,6 @@ if ($resql)
 		print_barre_liste($langs->trans("SocialContributions"),$page,$_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',$num,$totalnboflines);
 	}
 
-
-	dol_htmloutput_mesg($mesg);
-
-
 	if (empty($mysoc->country_id) && empty($mysoc->country_code))
 	{
 		print '<div class="error">';
@@ -137,41 +155,45 @@ if ($resql)
 	{
 
 		print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'">';
-
-		print "<table class=\"noborder\" width=\"100%\">";
-
-		print "<tr class=\"liste_titre\">";
-		print_liste_field_titre($langs->trans("Ref"),"index.php","id","",$param,"",$sortfield,$sortorder);
-		print_liste_field_titre($langs->trans("Label"),"index.php","cs.libelle","",$param,'align="left"',$sortfield,$sortorder);
-		print_liste_field_titre($langs->trans("Type"),"index.php","type","",$param,'align="left"',$sortfield,$sortorder);
-		print_liste_field_titre($langs->trans("PeriodEndDate"),"index.php","periode","",$param,'align="center"',$sortfield,$sortorder);
-		print_liste_field_titre($langs->trans("Amount"),"index.php","cs.amount","",$param,'align="right"',$sortfield,$sortorder);
-		print_liste_field_titre($langs->trans("DateDue"),"index.php","cs.date_ech","",$param,'align="center"',$sortfield,$sortorder);
-		print_liste_field_titre($langs->trans("Status"),"index.php","cs.paye","",$param,'align="right"',$sortfield,$sortorder);
+		print '<table class="liste" width="100%">';
+		print '<tr class="liste_titre">';
+		print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"id","",$param,"",$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("Label"),$_SERVER["PHP_SELF"],"cs.libelle","",$param,'align="left"',$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("Type"),$_SERVER["PHP_SELF"],"type","",$param,'align="left"',$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("PeriodEndDate"),$_SERVER["PHP_SELF"],"periode","",$param,'align="center"',$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("Amount"),$_SERVER["PHP_SELF"],"cs.amount","",$param,'align="right"',$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("DateDue"),$_SERVER["PHP_SELF"],"cs.date_ech","",$param,'align="center"',$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"cs.paye","",$param,'align="right"',$sortfield,$sortorder);
 		print "</tr>\n";
 
 		print '<tr class="liste_titre">';
-		print '<td class="liste_titre">&nbsp;</td>';
-		print '<td class="liste_titre"><input type="text" class="flat" size="8" name="search_label" value="'.GETPOST("search_label").'"></td>';
+		// Ref
+		print '<td class="liste_titre" align="left">';
+		print '<input class="flat" type="text" size="3" name="search_ref" value="'.$search_ref.'">';
+		print '</td>';
+		// Label
+		print '<td class="liste_titre"><input type="text" class="flat" size="8" name="search_label" value="'.$search_label.'"></td>';
 		// Type
 		print '<td class="liste_titre" align="left">';
 	    $formsocialcontrib->select_type_socialcontrib($typeid,'typeid',1,16,0);
 	    print '</td>';
 		// Period end date
 		print '<td class="liste_titre">&nbsp;</td>';
-	    print '<td class="liste_titre">&nbsp;</td>';
-		print '<td class="liste_titre">&nbsp;</td>';
+	    // Amount
 		print '<td class="liste_titre" align="right">';
-		print '<input type="image" class="liste_titre" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" name="button_search" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+		print '<input class="flat" type="text" size="6" name="search_amount" value="'.$search_amount.'">';
 		print '</td>';
-		print "</tr>\n";
+		print '<td class="liste_titre">&nbsp;</td>';
+		print '<td class="liste_titre" align="right"><input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+		print '<input type="image" class="liste_titre" name="button_removefilter" src="'.img_picto($langs->trans("Search"),'searchclear.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'" title="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">';
+		print "</td></tr>\n";
 
 		while ($i < min($num,$limit))
 		{
 			$obj = $db->fetch_object($resql);
 
 			$var = !$var;
-			print "<tr $bc[$var]>";
+			print "<tr ".$bc[$var].">";
 
 			// Ref
 			print '<td width="60">';
@@ -204,7 +226,7 @@ if ($resql)
 			// Due date
 			print '<td width="110" align="center">'.dol_print_date($db->jdate($obj->date_ech), 'day').'</td>';
 
-			print '<td align="right" nowrap="nowrap">'.$chargesociale_static->LibStatut($obj->paye,5).'</a></td>';
+			print '<td align="right" class="nowrap">'.$chargesociale_static->LibStatut($obj->paye,5,$obj->alreadypayed).'</a></td>';
 
 			print '</tr>';
 			$i++;
@@ -226,4 +248,3 @@ else
 $db->close();
 
 llxFooter();
-?>

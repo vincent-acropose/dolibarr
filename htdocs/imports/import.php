@@ -33,6 +33,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/images.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/import.lib.php';
 
 $langs->load("exports");
+$langs->load("compta");
 $langs->load("errors");
 
 // Security check
@@ -57,7 +58,7 @@ $entitytolang=array(		// Translation code
 	'order'=>'Order','order_line'=>'OrderLine',
 	'intervention'=>'Intervention' ,'inter_line'=>'InterLine',
 	'member'=>'Member','member_type'=>'MemberType','subscription'=>'Subscription',
-	'tax'=>'SocialContribution','tax_type'=>'DictionnarySocialContributions',
+	'tax'=>'SocialContribution','tax_type'=>'DictionarySocialContributions',
 	'account'=>'BankTransactions',
 	'payment'=>'Payment',
 	'product'=>'Product','stock'=>'Stock','warehouse'=>'Warehouse',
@@ -135,14 +136,14 @@ if ($action=='downfield' || $action=='upfield')
 if ($action == 'builddoc')
 {
 	// Build import file
-	$result=$objimport->build_file($user, $_POST['model'], $datatoimport, $array_match_file_to_database);
+	$result=$objimport->build_file($user, GETPOST('model','alpha'), $datatoimport, $array_match_file_to_database);
 	if ($result < 0)
 	{
-		$mesg='<div class="error">'.$objimport->error.'</div>';
+		setEventMessage($objimport->error, 'errors');
 	}
 	else
 	{
-		$mesg='<div class="ok">'.$langs->trans("FileSuccessfullyBuilt").'</div>';
+		setEventMessage($langs->trans("FileSuccessfullyBuilt"));
 	}
 }
 
@@ -175,21 +176,23 @@ if ($action == 'add_import_model')
 		$result = $objimport->create($user);
 		if ($result >= 0)
 		{
-			$mesg='<div class="ok">'.$langs->trans("ImportModelSaved",$objimport->model_name).'</div>';
+			setEventMessage($langs->trans("ImportModelSaved",$objimport->model_name));
 		}
 		else
 		{
 			$langs->load("errors");
 			if ($objimport->errno == 'DB_ERROR_RECORD_ALREADY_EXISTS')
 			{
-				$mesg='<div class="error">'.$langs->trans("ErrorImportDuplicateProfil").'</div>';
+				setEventMessage($langs->trans("ErrorImportDuplicateProfil"), 'errors');
 			}
-			else $mesg='<div class="error">'.$objimport->error.'</div>';
+			else {
+				setEventMessage($objimport->error, 'errors');
+			}
 		}
 	}
 	else
 	{
-		$mesg='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentities("ImportModelName")).'</div>';
+		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("ImportModelName")), 'errors');
 	}
 }
 
@@ -352,10 +355,13 @@ if ($step == 1 || ! $datatoimport)
 	{
 		foreach ($objimport->array_import_code as $key => $value)
 		{
+			//var_dump($objimport->array_import_code[$key]);
 			$val=!$val;
 			print '<tr '.$bc[$val].'><td nospan="nospan">';
-			//print img_object($objimport->array_import_module[$key]->getName(),$import->array_import_module[$key]->picto).' ';
-			print $objimport->array_import_module[$key]->getName();
+			$titleofmodule=$objimport->array_import_module[$key]->getName();
+			// Special cas for import common to module/services
+			if (in_array($objimport->array_import_code[$key], array('produit_supplierprices','produit_multiprice'))) $titleofmodule=$langs->trans("ProductOrService");
+			print $titleofmodule;
 			print '</td><td>';
 			//print $value;
 			print img_object($objimport->array_import_module[$key]->getName(),$objimport->array_import_icon[$key]).' ';
@@ -382,8 +388,6 @@ if ($step == 1 || ! $datatoimport)
 
     dol_fiche_end();
 
-	if ($mesg) print $mesg;
-
 }
 
 
@@ -407,8 +411,10 @@ if ($step == 2 && $datatoimport)
 	// Module
 	print '<tr><td width="25%">'.$langs->trans("Module").'</td>';
 	print '<td>';
-	//print img_object($objimport->array_import_module[0]->getName(),$objimport->array_import_module[0]->picto).' ';
-	print $objimport->array_import_module[0]->getName();
+	$titleofmodule=$objimport->array_import_module[0]->getName();
+	// Special cas for import common to module/services
+	if (in_array($objimport->array_import_code[0], array('produit_supplierprices','produit_multiprice'))) $titleofmodule=$langs->trans("ProductOrService");
+	print $titleofmodule;
 	print '</td></tr>';
 
 	// Lot de donnees a importer
@@ -456,7 +462,6 @@ if ($step == 2 && $datatoimport)
 
     dol_fiche_end();
 
-	if ($mesg) print $mesg;
 }
 
 
@@ -481,8 +486,8 @@ if ($step == 3 && $datatoimport)
 	 */
 	if ($action == 'delete')
 	{
-		$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?urlfile='.urlencode(GETPOST('urlfile')).'&step=3'.$param, $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile', '', 0, 1);
-		if ($ret == 'html') print '<br>';
+		print $form->formconfirm($_SERVER["PHP_SELF"].'?urlfile='.urlencode(GETPOST('urlfile')).'&step=3'.$param, $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile', '', 0, 1);
+
 	}
 
 	print '<table width="100%" class="border">';
@@ -490,8 +495,10 @@ if ($step == 3 && $datatoimport)
 	// Module
 	print '<tr><td width="25%">'.$langs->trans("Module").'</td>';
 	print '<td>';
-	//print img_object($objimport->array_import_module[0]->getName(),$objimport->array_import_module[0]->picto).' ';
-	print $objimport->array_import_module[0]->getName();
+	$titleofmodule=$objimport->array_import_module[0]->getName();
+	// Special cas for import common to module/services
+	if (in_array($objimport->array_import_code[0], array('produit_supplierprices','produit_multiprice'))) $titleofmodule=$langs->trans("ProductOrService");
+	print $titleofmodule;
 	print '</td></tr>';
 
 	// Lot de donnees a importer
@@ -511,7 +518,7 @@ if ($step == 3 && $datatoimport)
 	print '<td>';
     $text=$objmodelimport->getDriverDescForKey($format);
     print $form->textwithpicto($objmodelimport->getDriverLabelForKey($format),$text);
-    print '</td><td align="right" nowrap="nowrap"><a href="'.DOL_URL_ROOT.'/imports/emptyexample.php?format='.$format.$param.'" target="_blank">'.$langs->trans("DownloadEmptyExample").'</a>';
+    print '</td><td align="right" class="nowrap"><a href="'.DOL_URL_ROOT.'/imports/emptyexample.php?format='.$format.$param.'" target="_blank">'.$langs->trans("DownloadEmptyExample").'</a>';
 
 	print '</td></tr>';
 
@@ -569,7 +576,7 @@ if ($step == 3 && $datatoimport)
 			print '<tr '.$bc[$var].'>';
 			print '<td width="16">'.img_mime($file).'</td>';
 			print '<td>';
-    		print '<a href="'.DOL_URL_ROOT.'/document.php?modulepart='.$modulepart.'&file='.urlencode($relativepath).'&step=3'.$param.'" target="_blank">';
+    		print '<a data-ajax="false" href="'.DOL_URL_ROOT.'/document.php?modulepart='.$modulepart.'&file='.urlencode($relativepath).'&step=3'.$param.'" target="_blank">';
     		print $file;
     		print '</a>';
 			print '</td>';
@@ -590,10 +597,7 @@ if ($step == 3 && $datatoimport)
 
 	print '</table></form>';
 
-
     dol_fiche_end();
-
-	if ($mesg) print $mesg;
 }
 
 
@@ -695,8 +699,10 @@ if ($step == 4 && $datatoimport)
 	// Module
 	print '<tr><td width="25%">'.$langs->trans("Module").'</td>';
 	print '<td>';
-	//print img_object($objimport->array_import_module[0]->getName(),$objimport->array_import_module[0]->picto).' ';
-	print $objimport->array_import_module[0]->getName();
+	$titleofmodule=$objimport->array_import_module[0]->getName();
+	// Special cas for import common to module/services
+	if (in_array($objimport->array_import_code[0], array('produit_supplierprices','produit_multiprice'))) $titleofmodule=$langs->trans("ProductOrService");
+	print $titleofmodule;
 	print '</td></tr>';
 
 	// Lot de donnees a importer
@@ -742,7 +748,7 @@ if ($step == 4 && $datatoimport)
 	print '<td>';
 	$modulepart='import';
 	$relativepath=GETPOST('filetoimport');
-    print '<a href="'.DOL_URL_ROOT.'/document.php?modulepart='.$modulepart.'&file='.urlencode($relativepath).'&step=4'.$param.'" target="_blank">';
+    print '<a data-ajax="false" href="'.DOL_URL_ROOT.'/document.php?modulepart='.$modulepart.'&file='.urlencode($relativepath).'&step=4'.$param.'" target="_blank">';
     print $filetoimport;
     print '</a>';
 	print '</td></tr>';
@@ -824,7 +830,7 @@ if ($step == 4 && $datatoimport)
 	}
 
 	print "</div>\n";
-	print "<!-- End box container -->\n";
+	print "<!-- End box left container -->\n";
 
 
 	print '</td><td width="50%">';
@@ -847,7 +853,7 @@ if ($step == 4 && $datatoimport)
 		$entityicon=$entitytoicon[$entity]?$entitytoicon[$entity]:$entity;
 		$entitylang=$entitytolang[$entity]?$entitytolang[$entity]:$entity;
 
-		print '<td nowrap="nowrap" style="font-weight: normal">=>'.img_object('',$entityicon).' '.$langs->trans($entitylang).'</td>';
+		print '<td class="nowrap" style="font-weight: normal">=>'.img_object('',$entityicon).' '.$langs->trans($entitylang).'</td>';
 		print '<td style="font-weight: normal">';
 		$newlabel=preg_replace('/\*$/','',$label);
 		$text=$langs->trans($newlabel);
@@ -890,7 +896,7 @@ if ($step == 4 && $datatoimport)
 		else
 		{
 		    if ($objimport->array_import_convertvalue[0][$code]['rule']=='fetchidfromref')    $htmltext.=$langs->trans("SourceExample").': <b>'.$langs->transnoentitiesnoconv("ExampleAnyRefFoundIntoElement",$entitylang).($example?' ('.$langs->transnoentitiesnoconv("Example").': '.$example.')':'').'</b><br>';
-		    if ($objimport->array_import_convertvalue[0][$code]['rule']=='fetchidfromcodeid') $htmltext.=$langs->trans("SourceExample").': <b>'.$langs->trans("ExampleAnyCodeOrIdFoundIntoDictionnary",$langs->transnoentitiesnoconv($objimport->array_import_convertvalue[0][$code]['dict'])).($example?' ('.$langs->transnoentitiesnoconv("Example").': '.$example.')':'').'</b><br>';
+		    if ($objimport->array_import_convertvalue[0][$code]['rule']=='fetchidfromcodeid') $htmltext.=$langs->trans("SourceExample").': <b>'.$langs->trans("ExampleAnyCodeOrIdFoundIntoDictionary",$langs->transnoentitiesnoconv($objimport->array_import_convertvalue[0][$code]['dict'])).($example?' ('.$langs->transnoentitiesnoconv("Example").': '.$example.')':'').'</b><br>';
 		}
 		$htmltext.='<br>';
 		// Target field info
@@ -1000,9 +1006,6 @@ if ($step == 4 && $datatoimport)
         print '}'."\n";
         print '</script>'."\n";
 	}
-
-
-	if ($mesg) print $mesg;
 
 	/*
 	 * Barre d'action
@@ -1144,8 +1147,10 @@ if ($step == 5 && $datatoimport)
 	// Module
 	print '<tr><td width="25%">'.$langs->trans("Module").'</td>';
 	print '<td>';
-	//print img_object($objimport->array_import_module[0]->getName(),$objimport->array_import_module[0]->picto).' ';
-	print $objimport->array_import_module[0]->getName();
+	$titleofmodule=$objimport->array_import_module[0]->getName();
+	// Special cas for import common to module/services
+	if (in_array($objimport->array_import_code[0], array('produit_supplierprices','produit_multiprice'))) $titleofmodule=$langs->trans("ProductOrService");
+	print $titleofmodule;
 	print '</td></tr>';
 
 	// Lot de donnees a importer
@@ -1172,7 +1177,7 @@ if ($step == 5 && $datatoimport)
 	print '<td>';
 	$modulepart='import';
 	$relativepath=GETPOST('filetoimport');
-    print '<a href="'.DOL_URL_ROOT.'/document.php?modulepart='.$modulepart.'&file='.urlencode($relativepath).'&step=4'.$param.'" target="_blank">';
+    print '<a data-ajax="false" href="'.DOL_URL_ROOT.'/document.php?modulepart='.$modulepart.'&file='.urlencode($relativepath).'&step=4'.$param.'" target="_blank">';
     print $filetoimport;
     print '</a>';
     print '</td></tr>';
@@ -1307,13 +1312,22 @@ if ($step == 5 && $datatoimport)
         $result=$obj->import_open_file($pathfile,$langs);
         if ($result > 0)
         {
-            $sourcelinenb=0;
+            global $tablewithentity_cache;
+            $tablewithentity_cache=array();
+        	$sourcelinenb=0; $endoffile=0;
+
             // Loop on each input file record
-            while ($sourcelinenb < $nboflines)
+            while ($sourcelinenb < $nboflines && ! $endoffile)
             {
                 $sourcelinenb++;
                 // Read line and stor it into $arrayrecord
                 $arrayrecord=$obj->import_read_record();
+                if ($arrayrecord === false)
+                {
+					$arrayofwarnings[$sourcelinenb][0]=array('lib'=>'File has '.$nboflines.' lines. However we reach end of file after record '.$sourcelinenb.'. This may occurs when some records are split onto several lines.','type'=>'EOF_RECORD_ON_SEVERAL_LINES');
+                	$endoffile++;
+                	continue;
+                }
                 if ($excludefirstline && $sourcelinenb == 1) continue;
 
                 //
@@ -1418,8 +1432,6 @@ if ($step == 5 && $datatoimport)
         }
         print '</center>';
     }
-
-    if ($mesg) print $mesg;
 }
 
 
@@ -1478,8 +1490,10 @@ if ($step == 6 && $datatoimport)
 	// Module
 	print '<tr><td width="25%">'.$langs->trans("Module").'</td>';
 	print '<td>';
-	//print img_object($objimport->array_import_module[0]->getName(),$objimport->array_import_module[0]->picto).' ';
-	print $objimport->array_import_module[0]->getName();
+	$titleofmodule=$objimport->array_import_module[0]->getName();
+	// Special cas for import common to module/services
+	if (in_array($objimport->array_import_code[0], array('produit_supplierprices','produit_multiprice'))) $titleofmodule=$langs->trans("ProductOrService");
+	print $titleofmodule;
 	print '</td></tr>';
 
 	// Lot de donnees a importer
@@ -1506,7 +1520,7 @@ if ($step == 6 && $datatoimport)
 	print '<td>';
 	$modulepart='import';
     $relativepath=GETPOST('filetoimport');
-    print '<a href="'.DOL_URL_ROOT.'/document.php?modulepart='.$modulepart.'&file='.urlencode($relativepath).'&step=4'.$param.'" target="_blank">';
+    print '<a data-ajax="false" href="'.DOL_URL_ROOT.'/document.php?modulepart='.$modulepart.'&file='.urlencode($relativepath).'&step=4'.$param.'" target="_blank">';
     print $filetoimport;
     print '</a>';
 	print '</td></tr>';
@@ -1615,11 +1629,20 @@ if ($step == 6 && $datatoimport)
 	$result=$obj->import_open_file($pathfile,$langs);
 	if ($result > 0)
 	{
-		$sourcelinenb=0;
-		while ($sourcelinenb < $nboflines)
+        global $tablewithentity_cache;
+        $tablewithentity_cache=array();
+		$sourcelinenb=0; $endoffile=0;
+
+		while ($sourcelinenb < $nboflines && ! $endoffile)
 		{
 			$sourcelinenb++;
 			$arrayrecord=$obj->import_read_record();
+			if ($arrayrecord === false)
+			{
+				$arrayofwarnings[$sourcelinenb][0]=array('lib'=>'File has '.$nboflines.' lines. However we reach end of file after record '.$sourcelinenb.'. This may occurs when some records are split onto several lines.','type'=>'EOF_RECORD_ON_SEVERAL_LINES');
+				$endoffile++;
+				continue;
+			}
 			if ($excludefirstline && $sourcelinenb == 1) continue;
 
 			$result=$obj->import_insert($arrayrecord,$array_match_file_to_database,$objimport,count($fieldssource),$importid);
@@ -1648,8 +1671,6 @@ if ($step == 6 && $datatoimport)
 	print $langs->trans("FileWasImported",$importid).'<br>';
 	print $langs->trans("YouCanUseImportIdToFindRecord",$importid).'<br>';
 	print '</center>';
-
-	if ($mesg) print $mesg;
 }
 
 
@@ -1731,8 +1752,8 @@ function show_elem($fieldssource,$pos,$key,$var,$nostyle='')
 /**
  * Return not used field number
  *
- * @param 	array	&$fieldssource	Array of field source
- * @param	array	&$listofkey		Array of keys
+ * @param 	array	$fieldssource	Array of field source
+ * @param	array	$listofkey		Array of keys
  * @return	void
  */
 function getnewkey(&$fieldssource,&$listofkey)
@@ -1754,4 +1775,3 @@ function getnewkey(&$fieldssource,&$listofkey)
 	$listofkey[$i]=1;
 	return $i;
 }
-?>

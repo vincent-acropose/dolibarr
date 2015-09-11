@@ -82,7 +82,7 @@ if (! defined('DONOTLOADCONF') && file_exists($conffile))
     $result=include_once $conffile;	// Load conf file
     if ($result)
     {
-		if (empty($dolibarr_main_db_type)) $dolibarr_main_db_type='mysql';	// For backward compatibility
+		if (empty($dolibarr_main_db_type)) $dolibarr_main_db_type='mysqli';	// For backward compatibility
 
 		// Clean parameters
     	$dolibarr_main_data_root        =isset($dolibarr_main_data_root)?trim($dolibarr_main_data_root):'';
@@ -133,10 +133,6 @@ define('MAIN_DB_PREFIX',(isset($dolibarr_main_db_prefix)?$dolibarr_main_db_prefi
 
 define('DOL_CLASS_PATH', 'class/');                             // Filsystem path to class dir
 define('DOL_DATA_ROOT',(isset($dolibarr_main_data_root)?$dolibarr_main_data_root:''));
-if (! empty($dolibarr_main_document_root_alt))
-{
-    define('DOL_DOCUMENT_ROOT_ALT', $dolibarr_main_document_root_alt);	// Filesystem paths to alternate core php (alternate htdocs)
-}
 define('DOL_MAIN_URL_ROOT', (isset($dolibarr_main_url_root)?$dolibarr_main_url_root:''));           // URL relative root
 $uri=preg_replace('/^http(s?):\/\//i','',constant('DOL_MAIN_URL_ROOT'));  // $uri contains url without http*
 $suburi = strstr($uri, '/');       // $suburi contains url without domain
@@ -323,17 +319,17 @@ function conf($dolibarr_main_document_root)
     	{
     		throw new Exception('Missing log handler file '.$handler.'.php');
     	}
-    
+
     	require_once $file;
     	$loghandlerinstance = new $handler();
     	if (!$loghandlerinstance instanceof LogHandlerInterface)
     	{
     		throw new Exception('Log handler does not extend LogHandlerInterface');
     	}
-    
-    	if (empty($conf->loghandlers[$handler])) $conf->loghandlers[$handler]=$loghandlerinstance;
+
+		if (empty($conf->loghandlers[$handler])) $conf->loghandlers[$handler]=$loghandlerinstance;
     }
-    
+
     return 1;
 }
 
@@ -477,4 +473,3 @@ function dolibarr_install_syslog($message, $level=LOG_DEBUG)
     dol_syslog($message,$level);
 }
 
-?>

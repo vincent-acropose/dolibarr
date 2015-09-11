@@ -1,0 +1,88 @@
+# Dolibarr language file - Source file is en_US - cron
+# About page
+About = Om
+CronAbout = Om Cron
+CronAboutPage = Side om Cron
+# Right
+Permission23101 = Les planlagt oppgave
+Permission23102 = Opprett/endre planlagt oppgave
+Permission23103 = Slett planlagt oppgave
+Permission23104 = Utfør planlagt oppgave
+# Admin
+CronSetup= Administrasjon av planlagte oppgaver
+URLToLaunchCronJobs=URL to check and launch cron jobs if required
+OrToLaunchASpecificJob=Or to check and launch a specific job
+KeyForCronAccess=Sikkerhetsnøkkel for URL for å starte cronjobber
+FileToLaunchCronJobs=Kommandolinje for å starte cronjobber
+CronExplainHowToRunUnix=On Unix environment you should use the following crontab entry to run the command line each 5 minutes
+CronExplainHowToRunWin=On Microsoft(tm) Windows environement you can use Scheduled task tools to run the command line each 5 minutes
+# Menu
+CronJobs=Planlagte jobber
+CronListActive=Liste over aktive/planlagte jobber
+CronListInactive=Liste over deaktiverte jobber
+# Page list
+CronDateLastRun=Siste kjøring
+CronLastOutput=Resultat av forrige kjøring
+CronLastResult=Siste kjøring - kode
+CronListOfCronJobs=Liste over planlagte oppgaver
+CronCommand=Kommando
+CronList=Planlagt jobb
+CronDelete=Slett planlagte jobber
+CronConfirmDelete=Er du sikker på at du vil slette denne planlagte jobben
+CronExecute=Start planlagte jobber
+CronConfirmExecute=Er du sikker på at du vil kjøre denne oppgaven nå?
+CronInfo=Scheduled job module allow to execute job that have been planned
+CronWaitingJobs=Ventende jobber
+CronTask=Jobb
+CronNone=Ingen
+CronDtStart=Startdato
+CronDtEnd=Sluttdato
+CronDtNextLaunch=Neste kjøring
+CronDtLastLaunch=Siste kjøring
+CronFrequency=Frekvens
+CronClass=Klasse
+CronMethod=Metode
+CronModule=Modul
+CronAction=Handling
+CronStatus=Status
+CronStatusActive=Slått på
+CronStatusInactive=Slått av
+CronNoJobs=Ingen registrerte jobb
+CronPriority=Prioritet
+CronLabel=Beskrivelse
+CronNbRun=NB! Start
+CronEach=Alle
+JobFinished=Jobb startet og fullført
+#Page card
+CronAdd= Legg til jobber
+CronHourStart= Time og dato for oppgavestart
+CronEvery= Og utfør oppgave hver
+CronObject= Objekt å opprette
+CronArgs=Parametere
+CronSaveSucess=Lagret
+CronNote=Kommentar
+CronFieldMandatory=Feltene %s er obligatoriske
+CronErrEndDateStartDt=Sluttdato kan ikke være før startdato
+CronStatusActiveBtn=Aktiver
+CronStatusInactiveBtn=Slå av
+CronTaskInactive=Denne jobben er deaktivert
+CronDtLastResult=Dato for siste resultat
+CronId=ID
+CronClassFile=Klasser (filnavn.klasse.php)
+CronModuleHelp=Name of Dolibarr module directory (also work with external Dolibarr module). <BR> For exemple to fetch method of Dolibarr Product object /htdocs/<u>product</u>/class/product.class.php, the value of module is <i>product</i>
+CronClassFileHelp=The file name to load. <BR> For exemple to fetch method of Dolibarr Product object /htdocs/product/class/<u>product.class.php</u>, the value of class file name is <i>product.class.php</i>
+CronObjectHelp=The object name to load. <BR> For exemple to fetch method of Dolibarr Product object /htdocs/product/class/product.class.php, the value of class file name is <i>Product</i>
+CronMethodHelp=The object method to launch. <BR> For exemple to fetch method of Dolibarr Product object /htdocs/product/class/product.class.php, the value of method is  is <i>fecth</i>
+CronArgsHelp=The method arguments. <BR> For exemple to fetch method of Dolibarr Product object /htdocs/product/class/product.class.php, the value of paramters can be <i>0, ProductRef</i>
+CronCommandHelp=System kommandolinje som skal kjøres
+CronCreateJob=Opprett ny planlagt jobb
+# Info
+CronInfoPage=Informasjon
+# Common
+CronType=Oppgavetype
+CronType_method=Call method of a Dolibarr Class
+CronType_command=Shell kommando
+CronMenu=Cron
+CronCannotLoadClass=Kan ikke laste klasse %s eller objekt %s
+UseMenuModuleToolsToAddCronJobs=Gå til meny "Hjem - Modulverktøy - Jobbliste" for å se på og endre planlagte jobber.
+TaskDisabled=Oppgave deaktivert

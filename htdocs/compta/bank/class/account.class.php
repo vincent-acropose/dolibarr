@@ -4,6 +4,7 @@
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Christophe Combelles <ccomb@free.fr>
  * Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copytight (C) 2013	   Florian Henry        <florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +36,12 @@ class Account extends CommonObject
     public $element='bank_account';
     public $table_element='bank_account';
 
-    var $rowid;	 	// deprecated
+    /**
+     * //TODO: Discuss this. $rowid is preferred over $id
+     * @var
+     * @deprecated
+     */
+    var $rowid;
     var $id;
     var $ref;
     var $label;
@@ -58,21 +64,14 @@ class Account extends CommonObject
     //! BIC/SWIFT number
     var $bic;
     //! IBAN number (International Bank Account Number)
-    var $iban_prefix;
+    var $iban;			// stored into iban_prefix field into database
     var $proprio;
-    var $adresse_proprio;
+    var $owner_address;
 
-
-    var $fk_departement;    // deprecated
-    var $departement_code;    // deprecated
-    var $departement;        // deprecated
     var $state_id;
     var $state_code;
     var $state;
 
-    var $fk_pays;            // deprecated
-    var $pays_code;            // deprecated
-    var $pays;                // deprecated
     var $country_id;
     var $country_code;
     var $country;
@@ -80,6 +79,7 @@ class Account extends CommonObject
     var $type_lib=array();
 
     var $account_number;
+	var $accountancy_journal;
 
     var $currency_code;
     var $min_allowed;
@@ -152,7 +152,7 @@ class Account extends CommonObject
         $sql.= ", '".$type."'";
         $sql.= ")";
 
-        dol_syslog(get_class($this)."::add_url_line sql=".$sql);
+        dol_syslog(get_class($this)."::add_url_line", LOG_DEBUG);
         if ($this->db->query($sql))
         {
             $rowid = $this->db->last_insert_id(MAIN_DB_PREFIX."bank_url");
@@ -161,7 +161,6 @@ class Account extends CommonObject
         else
         {
             $this->error=$this->db->lasterror();
-            dol_syslog(get_class($this)."::add_url_line ".$this->error, LOG_ERR);
             return -1;
         }
     }
@@ -195,7 +194,7 @@ class Account extends CommonObject
         }
         $sql.= " ORDER BY type, label";
 
-        dol_syslog(get_class($this)."::get_url sql=".$sql);
+        dol_syslog(get_class($this)."::get_url", LOG_DEBUG);
         $result = $this->db->query($sql);
         if ($result)
         {
@@ -226,7 +225,7 @@ class Account extends CommonObject
     /**
      *  Add an entry into table ".MAIN_DB_PREFIX."bank
      *
-     *  @param	timsestmap	$date			Date operation
+     *  @param	int	$date			Date operation
      *  @param	string		$oper			1,2,3,4... (deprecated) or TYP,VIR,PRE,LIQ,VAD,CB,CHQ...
      *  @param	string		$label			Descripton
      *  @param	float		$amount			Amount
@@ -308,7 +307,7 @@ class Account extends CommonObject
         $sql.= ", ".($banque?"'".$this->db->escape($banque)."'":"null");
         $sql.= ")";
 
-        dol_syslog(get_class($this)."::addline sql=".$sql);
+        dol_syslog(get_class($this)."::addline", LOG_DEBUG);
         if ($this->db->query($sql))
         {
             $rowid = $this->db->last_insert_id(MAIN_DB_PREFIX."bank");
@@ -336,7 +335,6 @@ class Account extends CommonObject
         else
         {
             $this->error=$this->db->lasterror();
-            dol_syslog(get_class($this)."::addline ".$this->error, LOG_ERR);
             $this->db->rollback();
             return -2;
         }
@@ -345,17 +343,18 @@ class Account extends CommonObject
     /**
      *  Create bank account into database
      *
+     *  @param	User	$user		Object user making creation
      *  @return int        			< 0 if KO, > 0 if OK
      */
-    function create()
+    function create($user='')
     {
         global $langs,$conf;
 
         // Clean parameters
         if (! $this->min_allowed) $this->min_allowed=0;
         if (! $this->min_desired) $this->min_desired=0;
-        $this->state_id = ($this->state_id?$this->state_id:$this->fk_departement);
-        $this->country_id = ($this->country_id?$this->country_id:$this->fk_pays);
+        $this->state_id = ($this->state_id?$this->state_id:$this->state_id);
+        $this->country_id = ($this->country_id?$this->country_id:$this->country_id);
 
         // Check parameters
         if (empty($this->country_id))
@@ -388,12 +387,13 @@ class Account extends CommonObject
         $sql.= ", label";
         $sql.= ", entity";
         $sql.= ", account_number";
+		$sql.= ", accountancy_journal";
         $sql.= ", currency_code";
         $sql.= ", rappro";
         $sql.= ", min_allowed";
         $sql.= ", min_desired";
         $sql.= ", comment";
-        $sql.= ", fk_departement";
+        $sql.= ", state_id";
         $sql.= ", fk_pays";
         $sql.= ") VALUES (";
         $sql.= "'".$this->db->idate($now)."'";
@@ -401,6 +401,7 @@ class Account extends CommonObject
         $sql.= ", '".$this->db->escape($this->label)."'";
         $sql.= ", ".$conf->entity;
         $sql.= ", '".$this->db->escape($this->account_number)."'";
+		$sql.= ", '".$this->db->escape($this->accountancy_journal)."'";
         $sql.= ", '".$this->currency_code."'";
         $sql.= ", ".$this->rappro;
         $sql.= ", ".price2num($this->min_allowed);
@@ -410,7 +411,7 @@ class Account extends CommonObject
         $sql.= ", ".$this->country_id;
         $sql.= ")";
 
-        dol_syslog(get_class($this)."::create sql=".$sql);
+        dol_syslog(get_class($this)."::create", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -443,7 +444,6 @@ class Account extends CommonObject
                 if (! $resql)
                 {
                     $this->error=$this->db->lasterror();
-                    dol_syslog($this->error, LOG_ERR);
                     return -3;
                 }
             }
@@ -454,12 +454,10 @@ class Account extends CommonObject
             if ($this->db->errno() == 'DB_ERROR_RECORD_ALREADY_EXISTS')
             {
                 $this->error=$langs->trans("ErrorBankLabelAlreadyExists");
-                dol_syslog($this->error, LOG_ERR);
                 return -1;
             }
             else {
                 $this->error=$this->db->error()." sql=".$sql;
-                dol_syslog($this->error, LOG_ERR);
                 return -2;
             }
         }
@@ -478,8 +476,8 @@ class Account extends CommonObject
         // Clean parameters
         if (! $this->min_allowed) $this->min_allowed=0;
         if (! $this->min_desired) $this->min_desired=0;
-        $this->state_id = ($this->state_id?$this->state_id:$this->fk_departement);
-        $this->country_id = ($this->country_id?$this->country_id:$this->fk_pays);
+        $this->state_id = ($this->state_id?$this->state_id:$this->state_id);
+        $this->country_id = ($this->country_id?$this->country_id:$this->country_id);
 
         // Check parameters
         if (empty($this->country_id))
@@ -506,6 +504,7 @@ class Account extends CommonObject
         $sql.= ",rappro = ".$this->rappro;
         $sql.= ",url = ".($this->url?"'".$this->url."'":"null");
         $sql.= ",account_number = '".$this->account_number."'";
+		$sql.= ",accountancy_journal = '".$this->accountancy_journal."'";
 
         $sql.= ",currency_code = '".$this->currency_code."'";
 
@@ -513,13 +512,13 @@ class Account extends CommonObject
         $sql.= ",min_desired = '".price2num($this->min_desired)."'";
         $sql.= ",comment     = '".$this->db->escape($this->comment)."'";
 
-        $sql.= ",fk_departement = ".($this->state_id>0?"'".$this->state_id."'":"null");
+        $sql.= ",state_id = ".($this->state_id>0?"'".$this->state_id."'":"null");
         $sql.= ",fk_pays = ".$this->country_id;
 
         $sql.= " WHERE rowid = ".$this->id;
         $sql.= " AND entity = ".$conf->entity;
 
-        dol_syslog(get_class($this)."::update sql=".$sql);
+        dol_syslog(get_class($this)."::update", LOG_DEBUG);
         $result = $this->db->query($sql);
         if ($result)
         {
@@ -545,8 +544,8 @@ class Account extends CommonObject
         global $conf,$langs;
 
         // Clean parameters
-        $this->state_id = ($this->state_id?$this->state_id:$this->fk_departement);
-        $this->country_id = ($this->country_id?$this->country_id:$this->fk_pays);
+        $this->state_id = ($this->state_id?$this->state_id:$this->state_id);
+        $this->country_id = ($this->country_id?$this->country_id:$this->country_id);
 
         // Chargement librairie pour acces fonction controle RIB
         require_once DOL_DOCUMENT_ROOT.'/core/lib/bank.lib.php';
@@ -570,13 +569,13 @@ class Account extends CommonObject
         $sql.= ",iban_prefix = '".$this->iban."'";
         $sql.= ",domiciliation='".$this->db->escape($this->domiciliation)."'";
         $sql.= ",proprio = '".$this->db->escape($this->proprio)."'";
-        $sql.= ",adresse_proprio = '".$this->db->escape($this->adresse_proprio)."'";
-        $sql.= ",fk_departement = ".($this->state_id>0?"'".$this->state_id."'":"null");
+        $sql.= ",owner_address = '".$this->db->escape($this->owner_address)."'";
+        $sql.= ",state_id = ".($this->state_id>0?"'".$this->state_id."'":"null");
         $sql.= ",fk_pays = ".$this->country_id;
         $sql.= " WHERE rowid = ".$this->id;
         $sql.= " AND entity = ".$conf->entity;
 
-        dol_syslog(get_class($this)."::update_bban sql=$sql");
+        dol_syslog(get_class($this)."::update_bban", LOG_DEBUG);
 
         $result = $this->db->query($sql);
         if ($result)
@@ -611,19 +610,19 @@ class Account extends CommonObject
 
         $sql = "SELECT ba.rowid, ba.ref, ba.label, ba.bank, ba.number, ba.courant, ba.clos, ba.rappro, ba.url,";
         $sql.= " ba.code_banque, ba.code_guichet, ba.cle_rib, ba.bic, ba.iban_prefix as iban,";
-        $sql.= " ba.domiciliation, ba.proprio, ba.adresse_proprio, ba.fk_departement, ba.fk_pays as country_id,";
-        $sql.= " ba.account_number, ba.currency_code,";
+        $sql.= " ba.domiciliation, ba.proprio, ba.owner_address, ba.state_id, ba.fk_pays as country_id,";
+        $sql.= " ba.account_number, ba.accountancy_journal, ba.currency_code,";
         $sql.= " ba.min_allowed, ba.min_desired, ba.comment,";
-        $sql.= ' p.code as country_code, p.libelle as country,';
+        $sql.= ' c.code as country_code, c.label as country,';
         $sql.= ' d.code_departement as state_code, d.nom as state';
         $sql.= " FROM ".MAIN_DB_PREFIX."bank_account as ba";
-        $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_pays as p ON ba.fk_pays = p.rowid';
-        $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_departements as d ON ba.fk_departement = d.rowid';
-        $sql.= " WHERE entity = ".$conf->entity;
+        $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_country as c ON ba.fk_pays = c.rowid';
+        $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_departements as d ON ba.state_id = d.rowid';
+        $sql.= " WHERE entity IN (".getEntity($this->element, 1).")";
         if ($id)  $sql.= " AND ba.rowid  = ".$id;
         if ($ref) $sql.= " AND ba.ref = '".$this->db->escape($ref)."'";
 
-        dol_syslog(get_class($this)."::fetch sql=".$sql);
+        dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
         $result = $this->db->query($sql);
         if ($result)
         {
@@ -648,26 +647,20 @@ class Account extends CommonObject
                 $this->cle_rib       = $obj->cle_rib;
                 $this->bic           = $obj->bic;
                 $this->iban          = $obj->iban;
-                $this->iban_prefix   = $obj->iban;	// deprecated
                 $this->domiciliation = $obj->domiciliation;
                 $this->proprio       = $obj->proprio;
-                $this->adresse_proprio = $obj->adresse_proprio;
+                $this->owner_address = $obj->owner_address;
 
-                $this->fk_departement  = $obj->fk_departement;    // deprecated
-                $this->departement_code= $obj->state_code;        // deprecated
-                $this->departement     = $obj->state;             // deprecated
-                $this->state_id        = $obj->fk_departement;
+                $this->state_id        = $obj->state_id;
                 $this->state_code      = $obj->state_code;
                 $this->state           = $obj->state;
 
-                $this->fk_pays       = $obj->country_id;          // deprecated
-                $this->pays_code     = $obj->country_code;        // deprecated
-                $this->pays          = $obj->country;             // deprecated
                 $this->country_id    = $obj->country_id;
                 $this->country_code  = $obj->country_code;
                 $this->country       = $obj->country;
 
                 $this->account_number = $obj->account_number;
+				$this->accountancy_journal = $obj->accountancy_journal;
 
                 $this->currency_code  = $obj->currency_code;
                 $this->account_currency_code  = $obj->currency_code;
@@ -677,10 +670,9 @@ class Account extends CommonObject
                 return 1;
             }
             else
-            {
+			{
                 return 0;
             }
-            $this->db->free($result);
         }
         else
         {
@@ -703,7 +695,7 @@ class Account extends CommonObject
         $sql.= " WHERE rowid  = ".$this->rowid;
         $sql.= " AND entity = ".$conf->entity;
 
-        dol_syslog(get_class($this)."::delete sql=".$sql);
+        dol_syslog(get_class($this)."::delete", LOG_DEBUG);
         $result = $this->db->query($sql);
         if ($result) {
             return 1;
@@ -817,7 +809,7 @@ class Account extends CommonObject
         $sql = "SELECT sum(amount) as amount";
         $sql.= " FROM ".MAIN_DB_PREFIX."bank";
         $sql.= " WHERE fk_account = ".$this->id;
-        if ($option == 1) $sql.= " AND dateo <= ".$this->db->idate(time());
+        if ($option == 1) $sql.= " AND dateo <= '".$this->db->idate(dol_now())."'";
 
         $resql = $this->db->query($sql);
         if ($resql)
@@ -894,7 +886,7 @@ class Account extends CommonObject
 
         if (empty($mode))
         {
-            $lien = '<a href="'.DOL_URL_ROOT.'/compta/bank/fiche.php?id='.$this->id.'">';
+            $lien = '<a href="'.DOL_URL_ROOT.'/compta/bank/card.php?id='.$this->id.'">';
             $lienfin='</a>';
         }
         else if ($mode == 'transactions')
@@ -987,7 +979,7 @@ class Account extends CommonObject
         $country_code=$this->getCountryCode();
 
         if (in_array($country_code,array('CH','DE','FR','ES','GA','IT'))) return 1; // France, Spain, Gabon
-        if (in_array($country_code,array('AU','BE','CA','DK','GR','GB','ID','IE','IR','KR','NL','NZ','US'))) return 2;      // Australia, Great Britain...
+        if (in_array($country_code,array('AU','BE','CA','DK','GR','GB','ID','IE','IR','KR','NL','NZ','UK','US'))) return 2;      // Australia, Great Britain...
         return 0;
     }
 
@@ -1023,10 +1015,9 @@ class Account extends CommonObject
         $this->cle_rib         = 50;
         $this->bic             = 'AA12';
         $this->iban            = 'FR999999999';
-        $this->iban_prefix     = 'FR';  // deprecated
         $this->domiciliation   = 'The bank addresse';
         $this->proprio         = 'Owner';
-        $this->adresse_proprio = 'Owner address';
+        $this->owner_address   = 'Owner address';
         $this->country_id      = 1;
     }
 
@@ -1094,7 +1085,7 @@ class AccountLine extends CommonObject
         $sql.= " b.fk_type, b.num_releve, b.num_chq, b.rappro, b.note,";
         $sql.= " b.fk_bordereau, b.banque, b.emetteur,";
         //$sql.= " b.author"; // Is this used ?
-        $sql.= " ba.label as bank_account_label";
+        $sql.= " ba.ref as bank_account_ref, ba.label as bank_account_label";
         $sql.= " FROM ".MAIN_DB_PREFIX."bank as b,";
         $sql.= " ".MAIN_DB_PREFIX."bank_account as ba";
         $sql.= " WHERE b.fk_account = ba.rowid";
@@ -1103,7 +1094,7 @@ class AccountLine extends CommonObject
         else if ($ref) $sql.= " AND b.rowid='".$this->db->escape($ref)."'";
         else $sql.= " AND b.rowid=".$rowid;
 
-        dol_syslog(get_class($this)."::fetch sql=".$sql);
+        dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
         $result = $this->db->query($sql);
         if ($result)
         {
@@ -1135,6 +1126,7 @@ class AccountLine extends CommonObject
                 $this->fk_bordereau		= $obj->fk_bordereau;
 
                 $this->fk_account		= $obj->fk_account;
+                $this->bank_account_ref   = $obj->bank_account_ref;
                 $this->bank_account_label = $obj->bank_account_label;
 
                 $ret=1;
@@ -1156,33 +1148,33 @@ class AccountLine extends CommonObject
      *		@param	User	$user	User object that delete
      *      @return	int 			<0 if KO, >0 if OK
      */
-    function delete($user=0)
+    function delete($user=null)
     {
         $nbko=0;
 
         if ($this->rappro)
         {
             // Protection to avoid any delete of consolidated lines
-            $this->error="DeleteNotPossibleLineIsConsolidated";
+            $this->error="ErrorDeleteNotPossibleLineIsConsolidated";
             return -1;
         }
 
         $this->db->begin();
 
         // Delete urls
-        $result=$this->delete_urls();
+        $result=$this->delete_urls($user);
         if ($result < 0)
         {
             $nbko++;
         }
 
         $sql = "DELETE FROM ".MAIN_DB_PREFIX."bank_class WHERE lineid=".$this->rowid;
-        dol_syslog(get_class($this)."::delete sql=".$sql);
+        dol_syslog(get_class($this)."::delete", LOG_DEBUG);
         $result = $this->db->query($sql);
         if (! $result) $nbko++;
 
         $sql = "DELETE FROM ".MAIN_DB_PREFIX."bank WHERE rowid=".$this->rowid;
-        dol_syslog(get_class($this)."::delete sql=".$sql);
+        dol_syslog(get_class($this)."::delete", LOG_DEBUG);
         $result = $this->db->query($sql);
         if (! $result) $nbko++;
 
@@ -1205,7 +1197,7 @@ class AccountLine extends CommonObject
      *		@param	User	$user	User object that delete
      *      @return	int 			<0 if KO, >0 if OK
      */
-    function delete_urls($user=0)
+    function delete_urls($user=null)
     {
         $nbko=0;
 
@@ -1219,7 +1211,7 @@ class AccountLine extends CommonObject
         $this->db->begin();
 
         $sql = "DELETE FROM ".MAIN_DB_PREFIX."bank_url WHERE fk_bank=".$this->rowid;
-        dol_syslog(get_class($this)."::delete_urls sql=".$sql);
+        dol_syslog(get_class($this)."::delete_urls", LOG_DEBUG);
         $result = $this->db->query($sql);
         if (! $result) $nbko++;
 
@@ -1253,7 +1245,7 @@ class AccountLine extends CommonObject
         $sql.= " dateo='".$this->db->idate($this->dateo)."'";
         $sql.= " WHERE rowid = ".$this->rowid;
 
-        dol_syslog(get_class($this)."::update sql=".$sql);
+        dol_syslog(get_class($this)."::update", LOG_DEBUG);
         $resql = $this->db->query($sql);
         if ($resql)
         {
@@ -1264,7 +1256,6 @@ class AccountLine extends CommonObject
         {
             $this->db->rollback();
             $this->error=$this->db->error();
-            dol_syslog(get_class($this)."::update ".$this->error, LOG_ERR);
             return -1;
         }
     }
@@ -1287,7 +1278,7 @@ class AccountLine extends CommonObject
         $sql.= ", fk_user_rappro = ".$user->id;
         $sql.= " WHERE rowid = ".$this->id;
 
-        dol_syslog(get_class($this)."::update_conciliation sql=".$sql, LOG_DEBUG);
+        dol_syslog(get_class($this)."::update_conciliation", LOG_DEBUG);
         $resql = $this->db->query($sql);
         if ($resql)
         {
@@ -1301,13 +1292,13 @@ class AccountLine extends CommonObject
                 $sql.= ", ".$cat;
                 $sql.= ")";
 
-                dol_syslog(get_class($this)."::update_conciliation sql=".$sql, LOG_DEBUG);
-                $resql = $this->db->query($sql);
+                dol_syslog(get_class($this)."::update_conciliation", LOG_DEBUG);
+                $this->db->query($sql);
 
                 // No error check. Can fail if category already affected
             }
 
-            $bankline->rappro=1;
+            $this->rappro=1;
 
             $this->db->commit();
             return 1;
@@ -1447,22 +1438,24 @@ class AccountLine extends CommonObject
         if ($withpicto) $result.=($lien.img_object($langs->trans("ShowTransaction"),'account').$lienfin.' ');
         $result.=$lien.$this->rowid.$lienfin;
 
+        if ($option == 'showall' || $option == 'showconciliated') $result.=' (';
         if ($option == 'showall')
         {
-            $result.=' (';
             $result.=$langs->trans("BankAccount").': ';
             $accountstatic=new Account($this->db);
             $accountstatic->id=$this->fk_account;
             $accountstatic->label=$this->bank_account_label;
             $result.=$accountstatic->getNomUrl(0).', ';
+        }
+        if ($option == 'showall' || $option == 'showconciliated')
+        {
             $result.=$langs->trans("BankLineConciliated").': ';
             $result.=yn($this->rappro);
-            $result.=')';
         }
+        if ($option == 'showall' || $option == 'showconciliated') $result.=')';
 
         return $result;
     }
 
 }
 
-?>

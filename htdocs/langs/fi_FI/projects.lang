@@ -1,21 +1,23 @@
-/*
- * Language code: fi_FI
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-01-19 22:07:11
- */
-
-
-// Date 2009-01-19 22:07:11
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - projects
+RefProject=Ref. project
+ProjectId=Project Id
 Project=Hanke
 Projects=Projektit
+ProjectStatus=Project status
 SharedProject=Yhteiset hanke
-Myprojects=Omat hankkeet
+PrivateProject=Yhteystiedot Hankkeen
+MyProjectsDesc=Tämä näkemys on vain hankkeisiin olet yhteyshenkilö (mikä on tyyppi).
+ProjectsPublicDesc=Tämä näkemys esitetään kaikki hankkeet sinulla voi lukea.
+ProjectsPublicTaskDesc=This view presents all projects and tasks you are allowed to read.
+ProjectsDesc=Tämä näkemys esitetään kaikki hankkeet (käyttäjäoikeuksien antaa sinulle luvan katsella kaikkea).
+MyTasksDesc=Tämä näkemys on vain hankkeisiin tai tehtäviä olet yhteyshenkilö (mikä on tyyppi).
+OnlyOpenedProject=Only opened projects are visible (projects with draft or closed status are not visible).
+TasksPublicDesc=Tämä näkemys esitetään kaikki hankkeet ja tehtävät sinulla voi lukea.
+TasksDesc=Tämä näkemys esitetään kaikki hankkeet ja tehtävät (käyttäjäoikeuksien antaa sinulle luvan katsella kaikkea).
+AllTaskVisibleButEditIfYouAreAssigned=All tasks for such project are visible, but you can enter time only for task you are assigned on.
 ProjectsArea=Projektit alueella
 NewProject=Uusi projekti
-AddProject=Lisää hanke
+AddProject=Create project
 DeleteAProject=Poista hanke
 DeleteATask=Poista tehtävä
 ConfirmDeleteAProject=Oletko varma, että haluat poistaa tämän hankkeen?
@@ -30,59 +32,56 @@ NoProject=Ei hanke määritellään
 NbOpenTasks=Nb on avattu tehtävät
 NbOfProjects=Nb hankkeiden
 TimeSpent=Käytetty aika
+TimeSpentByYou=Time spent by you
+TimeSpentByUser=Time spent by user
+TimesSpent=Käytetty aika
 RefTask=Ref. tehtävä
 LabelTask=Label tehtävä
+TaskTimeSpent=Time spent on tasks
+TaskTimeUser=User
+TaskTimeNote=Note
+TaskTimeDate=Date
+TasksOnOpenedProject=Tasks on opened projects
+WorkloadNotDefined=Workload not defined
 NewTimeSpent=Uusi käytetty aika
 MyTimeSpent=Oma käytetty aika
 MyTasks=Omat tehtävät
 Tasks=Tehtävät
 Task=Tehtävä
+TaskDateStart=Task start date
+TaskDateEnd=Task end date
+TaskDescription=Task description
 NewTask=Uusi tehtävä
-AddTask=Lisää tehtävä
+AddTask=Create task
 AddDuration=Lisää kesto
 Activity=Toiminto
 Activities=Tehtävät / toiminnot
 MyActivity=Oma aktiivisuus
 MyActivities=Omat tehtävät / toiminnot
-DurationEffective=Todellisen keston
 MyProjects=Omat hankkeet
+DurationEffective=Todellisen keston
+Progress=Edistyminen
+ProgressDeclared=Declared progress
+ProgressCalculated=Calculated progress
 Time=Aika
 ListProposalsAssociatedProject=Luettelot kaupallisen ehdotuksia hankkeeseen liittyvät
 ListOrdersAssociatedProject=Luettelot tilausten hankkeeseen liittyvät
 ListInvoicesAssociatedProject=Luettelot laskut liittyvät hankkeen
+ListPredefinedInvoicesAssociatedProject=Luettelo asiakkaiden ennalta laskut liittyvät hankkeen
 ListSupplierOrdersAssociatedProject=Luettelo toimittajien tilaukset hankkeeseen liittyvät
 ListSupplierInvoicesAssociatedProject=Luettelo tavarantoimittajien laskut liittyvät hankkeen
 ListContractAssociatedProject=Luettelo sopimukset hankkeeseen liittyvät
+ListFichinterAssociatedProject=Luettelo toimien hankkeeseen liittyvän
+ListExpenseReportsAssociatedProject=List of expense reports associated with the project
+ListDonationsAssociatedProject=List of donations associated with the project
+ListActionsAssociatedProject=Luettelo toimia, jotka liittyvät hankkeen
 ActivityOnProjectThisWeek=Toiminta hanke tällä viikolla
 ActivityOnProjectThisMonth=Toiminta hankkeen tässä kuussa
 ActivityOnProjectThisYear=Toiminta hanke tänä vuonna
 ChildOfTask=Child Hankkeen / tehtävä
 NotOwnerOfProject=Ei omistaja tämän yksityistä hanketta
 AffectedTo=Vaikuttaa
-// Date 2009-01-19 22:07:11
-// STOP - Lines generated via parser
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-13 20:45:19).
-// Reference language: en_US
-ListPredefinedInvoicesAssociatedProject=Luettelo asiakkaiden ennalta laskut liittyvät hankkeen
 CantRemoveProject=Tämä hanke ei voi poistaa, koska se on viittaamat joitakin muita esineitä (lasku, tilaukset ja muut). Katso viittaajan välilehti.
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 20:45:19).
-
-
-// START - Lines generated via autotranslator.php tool (2010-07-17 11:26:22).
-// Reference language: en_US
-PrivateProject=Yhteystiedot Hankkeen
-MyProjectsDesc=Tämä näkemys on vain hankkeisiin olet yhteyshenkilö (mikä on tyyppi).
-ProjectsPublicDesc=Tämä näkemys esitetään kaikki hankkeet sinulla voi lukea.
-ProjectsDesc=Tämä näkemys esitetään kaikki hankkeet (käyttäjäoikeuksien antaa sinulle luvan katsella kaikkea).
-MyTasksDesc=Tämä näkemys on vain hankkeisiin tai tehtäviä olet yhteyshenkilö (mikä on tyyppi).
-TasksPublicDesc=Tämä näkemys esitetään kaikki hankkeet ja tehtävät sinulla voi lukea.
-TasksDesc=Tämä näkemys esitetään kaikki hankkeet ja tehtävät (käyttäjäoikeuksien antaa sinulle luvan katsella kaikkea).
-Progress=Edistyminen
-ListFichinterAssociatedProject=Luettelo toimien hankkeeseen liittyvän
-ListTripAssociatedProject=Luettelo matkat ja kulut hankkeeseen liittyvät
-ListActionsAssociatedProject=Luettelo toimia, jotka liittyvät hankkeen
 ValidateProject=Vahvista projet
 ConfirmValidateProject=Oletko varma että haluat vahvistaa tätä hanketta?
 CloseAProject=Sulje projekti
@@ -94,29 +93,54 @@ ActionsOnProject=Toimien hanketta
 YouAreNotContactOfProject=Et ole kosketuksissa tämän yksityisen hankkeen
 DeleteATimeSpent=Poista käytetty aika
 ConfirmDeleteATimeSpent=Oletko varma että haluat poistaa tämän aika?
-DoNotShowMyTasksOnly=Katso myös tehtävien En vaikuteta
-ShowMyTasksOnly=Näytä vain tehtäviä olen vaikuttaa
+DoNotShowMyTasksOnly=See also tasks not assigned to me
+ShowMyTasksOnly=View only tasks assigned to me
 TaskRessourceLinks=Ressources
 ProjectsDedicatedToThisThirdParty=Hankkeet omistettu tälle kolmannelle
 NoTasks=Ei tehtävät hankkeen
 LinkedToAnotherCompany=Liittyy muihin kolmannen osapuolen
-TypeContact_project_internal_PROJECTLEADER=Projektin johtaja
-TypeContact_project_external_PROJECTLEADER=Projektin johtaja
-TypeContact_project_internal_CONTRIBUTOR=Avustaja
-TypeContact_project_external_CONTRIBUTOR=Avustaja
-TypeContact_project_task_internal_TASKEXECUTIVE=Tehtävä johtoon
-TypeContact_project_task_external_TASKEXECUTIVE=Tehtävä johtoon
-TypeContact_project_task_internal_CONTRIBUTOR=Avustaja
-TypeContact_project_task_external_CONTRIBUTOR=Avustaja
-DocumentModelBaleine=Täydellinen hankkeen tarkastusraportin malli (logo. ..)
-// STOP - Lines generated via autotranslator.php tool (2010-07-17 11:26:40).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 16:10:23).
-// Reference language: en_US -> fi_FI
-TimesSpent=Käytetty aika
-TaskIsNotAffectedToYou=Tehtävä ei ole kohdistettu sinua
+TaskIsNotAffectedToYou=Task not assigned to you
 ErrorTimeSpentIsEmpty=Käytetty aika on tyhjä
 ThisWillAlsoRemoveTasks=Tämä toiminto poistaa myös kaikki tehtävät projektin <b>(%s</b> tehtävät tällä hetkellä) ja kaikki panokset käytetty aika.
 IfNeedToUseOhterObjectKeepEmpty=Jos jotkin esineet (lasku, tilaus, ...), jotka kuuluvat toiselle kolmannelle osapuolelle, on liityttävä hankkeeseen luoda, pitää tämä tyhjä saada hanke on multi kolmansille osapuolille.
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 16:13:06).
+CloneProject=Clone project
+CloneTasks=Clone tasks
+CloneContacts=Clone contacts
+CloneNotes=Clone notes
+CloneProjectFiles=Clone project joined files
+CloneTaskFiles=Clone task(s) joined files (if task(s) cloned)
+CloneMoveDate=Update project/tasks dates from now ?
+ConfirmCloneProject=Are you sure to clone this project ?
+ProjectReportDate=Change task date according project start date
+ErrorShiftTaskDate=Impossible to shift task date according to new project start date
+ProjectsAndTasksLines=Projects and tasks
+ProjectCreatedInDolibarr=Project %s created
+TaskCreatedInDolibarr=Task %s created
+TaskModifiedInDolibarr=Task %s modified
+TaskDeletedInDolibarr=Task %s deleted
+##### Types de contacts #####
+TypeContact_project_internal_PROJECTLEADER=Projektin johtaja
+TypeContact_project_external_PROJECTLEADER=Projektin johtaja
+TypeContact_project_internal_PROJECTCONTRIBUTOR=Contributor
+TypeContact_project_external_PROJECTCONTRIBUTOR=Contributor
+TypeContact_project_task_internal_TASKEXECUTIVE=Tehtävä johtoon
+TypeContact_project_task_external_TASKEXECUTIVE=Tehtävä johtoon
+TypeContact_project_task_internal_TASKCONTRIBUTOR=Contributor
+TypeContact_project_task_external_TASKCONTRIBUTOR=Contributor
+SelectElement=Select element
+AddElement=Link to element
+UnlinkElement=Unlink element
+# Documents models
+DocumentModelBaleine=Täydellinen hankkeen tarkastusraportin malli (logo. ..)
+PlannedWorkload=Planned workload
+PlannedWorkloadShort=Workload
+WorkloadOccupation=Workload assignation
+ProjectReferers=Refering objects
+SearchAProject=Search a project
+ProjectMustBeValidatedFirst=Project must be validated first
+ProjectDraft=Draft projects
+FirstAddRessourceToAllocateTime=Associate a ressource to allocate time
+InputPerDay=Input per day
+InputPerWeek=Input per week
+InputPerAction=Input per action
+TimeAlreadyRecorded=Time spent already recorded for this task/day and user %s

@@ -112,7 +112,7 @@ else
 			{
 				$row = $db->fetch_row($resql);
 				$var=!$var;
-				print "<tr $bc[$var]>";
+				print "<tr ".$bc[$var].">";
 
 				print "<td>$row[0]</td>";
 				print "<td>$row[1]</td>";
@@ -129,5 +129,5 @@ else
 }
 
 llxFooter();
+
 $db->close();
-?>

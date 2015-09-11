@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2010-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2010-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2010-2014 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2011 Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -114,10 +114,10 @@ class HookManager
      *
      * 		@param		string	$method			Name of method hooked ('doActions', 'printSearchForm', 'showInputField', ...)
      * 	    @param		array	$parameters		Array of parameters
-     * 		@param		Object	&$object		Object to use hooks on
-     * 	    @param		string	&$action		Action code on calling page ('create', 'edit', 'view', 'add', 'update', 'delete'...)
-     * 		@return		mixed					For doActions,formObjectOptions:    Return 0 if we want to keep standard actions, >0 if if want to stop standard actions, <0 means KO.
-     * 											For printSearchForm,printLeftBlock,printTopRightMenu,formAddObjectLine,...: Return HTML string. TODO Must always return an int and things to print into ->resprints.
+     * 		@param		Object	$object			Object to use hooks on
+     * 	    @param		string	$action			Action code on calling page ('create', 'edit', 'view', 'add', 'update', 'delete'...)
+     * 		@return		mixed					For doActions,formObjectOptions,pdf_xxx:    								Return 0 if we want to keep standard actions, >0 if if want to stop standard actions, <0 means KO.
+     * 											For printSearchForm,printLeftBlock,printTopRightMenu,formAddObjectLine,...: Return HTML string. TODO Deprecated. Must always return an int and things to print into ->resprints.
      *                                          Can also return some values into an array ->results.
      * 											$this->error or this->errors are also defined by class called by this function if error.
      */
@@ -128,64 +128,100 @@ class HookManager
         $parameters['context']=join(':',$this->contextarray);
         dol_syslog(get_class($this).'::executeHooks method='.$method." action=".$action." context=".$parameters['context']);
 
+        // Define type of hook ('output', 'returnvalue' or 'addreplace'). 'addreplace' should be type for all hooks. 'output' and 'returnvalue' are deprecated.
+        $hooktype='output';
+        if (preg_match('/^pdf_/',$method)) $hooktype='returnvalue';	// pdf_xxx except pdf_writelinedesc are returnvalue hooks. When there is 2 hooks of this type, only last one win.
+        if ($method =='insertExtraFields') $hooktype='returnvalue';
+        if (in_array(
+        	$method,
+        	array(
+        		'addMoreActionsButtons',
+		        'addStatisticLine',
+		        'doActions',
+        		'formCreateThirdpartyOptions',
+		        'formObjectOptions',
+		        'formattachOptions',
+		        'formBuilddocLineOptions',
+		        'moveUploadedFile',
+		        'pdf_writelinedesc',
+		        'paymentsupplierinvoices',
+		        'printSearchForm',
+        		'formatEvent'
+        		)
+        	)) $hooktype='addreplace';
+
         // Loop on each hook to qualify modules that declared context
         $modulealreadyexecuted=array();
-        $resaction=0; $error=0;
+        $resaction=0; $error=0; $result='';
 		$this->resPrint=''; $this->resArray=array();
-        foreach($this->hooks as $modules)    // this->hooks is an array with context as key and value is an array of modules that handle this context
+        foreach($this->hooks as $context => $modules)    // this->hooks is an array with context as key and value is an array of modules that handle this context
         {
             if (! empty($modules))
             {
                 foreach($modules as $module => $actionclassinstance)
                 {
-                	// jump to next class if method does not exists
-                    if (! method_exists($actionclassinstance,$method)) continue;
-                	// test to avoid to run twice a hook, when a module implements several active contexts
-                    if (in_array($module,$modulealreadyexecuted)) continue;
-                    $modulealreadyexecuted[$module]=$module;
+                	//print "Before hook ".get_class($actionclassinstance)." method=".$method." hooktype=".$hooktype." results=".count($actionclassinstance->results)." resprints=".count($actionclassinstance->resprints)." resaction=".$resaction." result=".$result."<br>\n";
 
-                    // Hooks that return int
-                    if (($method == 'doActions' || $method == 'formObjectOptions'))
+                	// jump to next module/class if method does not exists
+                    if (! method_exists($actionclassinstance,$method)) continue;
+
+                    // test to avoid to run twice a hook, when a module implements several active contexts
+                    if (in_array($module,$modulealreadyexecuted)) continue;
+                    $modulealreadyexecuted[$module]=$module; // Use the $currentcontext in method for avoid to run twice
+
+                    // Clean class (an error may have been set into a previous call of another method for same module/hook)
+                    $actionclassinstance->error=0;
+                    $actionclassinstance->errors=array();
+
+                    // Add current context for avoid method execution in bad context, you can add this test in your method : eg if($currentcontext != 'formfile') return;
+                    $parameters['currentcontext'] = $context;
+                    // Hooks that must return int (hooks with type 'addreplace')
+                    if ($hooktype == 'addreplace')
                     {
-                    	$resaction+=$actionclassinstance->$method($parameters, $object, $action, $this); // $object and $action can be changed by method ($object->id during creation for example or $action to go back to other action for example)
+                    	dol_syslog("Call method ".$method." of class ".get_class($actionclassinstance).", module=".$module.", hooktype=".$hooktype, LOG_DEBUG);
+                    	$resaction += $actionclassinstance->$method($parameters, $object, $action, $this); // $object and $action can be changed by method ($object->id during creation for example or $action to go back to other action for example)
                     	if ($resaction < 0 || ! empty($actionclassinstance->error) || (! empty($actionclassinstance->errors) && count($actionclassinstance->errors) > 0))
                     	{
                     		$error++;
                     		$this->error=$actionclassinstance->error; $this->errors=array_merge($this->errors, (array) $actionclassinstance->errors);
-                    		// TODO remove this. Change must be inside the method if required
-                    		if ($method == 'doActions')
-                    		{
-                    			if ($action=='add')    $action='create';
-                    			if ($action=='update') $action='edit';
-                    		}
+                    		dol_syslog("Error on hook module=".$module.", method ".$method.", class ".get_class($actionclassinstance).", hooktype=".$hooktype.(empty($this->error)?'':" ".$this->error).(empty($this->errors)?'':" ".join(",",$this->errors)), LOG_ERR);
                     	}
+
+                    	if (isset($actionclassinstance->results) && is_array($actionclassinstance->results))  $this->resArray =array_merge($this->resArray, $actionclassinstance->results);
+                    	if (! empty($actionclassinstance->resprints)) $this->resPrint.=$actionclassinstance->resprints;
                     }
-                    // Generic hooks that return a string (printSearchForm, printLeftBlock, printTopRightMenu, formAddObjectLine, formBuilddocOptions, ...)
+                    // Generic hooks that return a string or array (printSearchForm, printLeftBlock, formAddObjectLine, formBuilddocOptions, ...)
                     else
-                    {
-                    	// TODO. this should be done into the method by returning nothing
+					{
+                    	// TODO. this should be done into the method of hook by returning nothing
                     	if (is_array($parameters) && ! empty($parameters['special_code']) && $parameters['special_code'] > 3 && $parameters['special_code'] != $actionclassinstance->module_number) continue;
 
-                    	$result = $actionclassinstance->$method($parameters, $object, $action, $this);
+                    	//dol_syslog("Call method ".$method." of class ".get_class($actionclassinstance).", module=".$module.", hooktype=".$hooktype, LOG_DEBUG);
+                    	$result = $actionclassinstance->$method($parameters, $object, $action, $this); // $object and $action can be changed by method ($object->id during creation for example or $action to go back to other action for example)
 
                     	if (! empty($actionclassinstance->results) && is_array($actionclassinstance->results)) $this->resArray =array_merge($this->resArray, $actionclassinstance->results);
                     	if (! empty($actionclassinstance->resprints)) $this->resPrint.=$actionclassinstance->resprints;
-
-                    	// TODO. remove this. array result must be set into $actionclassinstance->results
-                    	if (is_array($result)) $this->resArray = array_merge($this->resArray, $result);
-                    	// TODO. remove this. result must not be a string. we must use $actionclassinstance->resprint to return a string
-                    	if (! is_array($result) && ! is_numeric($result)) $this->resPrint.=$result;
+                    	// TODO dead code to remove (do not enable this, but fix hook instead): result must not be a string. we must use $actionclassinstance->resprints to return a string
+                    	if (! is_array($result) && ! is_numeric($result))
+                    	{
+                    		dol_syslog('Error: Bug into hook '.$method.' of module class '.get_class($actionclassinstance).'. Method must not return a string but an int (0=OK, 1=Replace, -1=KO) and set string into ->resprints', LOG_ERR);
+                    		if (empty($actionclassinstance->resprints)) { $this->resPrint.=$result; $result=0; }
+                    	}
                     }
 
-                    //print "method=".$method." results=".count($actionclassinstance->results)." resprints=".count($actionclassinstance->resprints)." result=".$result." resaction=".$resaction;
+                    //print "After hook  ".get_class($actionclassinstance)." method=".$method." hooktype=".$hooktype." results=".count($actionclassinstance->results)." resprints=".count($actionclassinstance->resprints)." resaction=".$resaction." result=".$result."<br>\n";
+
+                    unset($actionclassinstance->results);
+                    unset($actionclassinstance->resprints);
                 }
             }
         }
 
-        if ($method != 'doActions' && $method != 'formObjectOptions') return $this->resPrint;	// TODO remove this. When there is something to print, ->resPrint is filled.
+        // TODO remove this. When there is something to print for an output hook, ->resPrint is filled.
+        if ($hooktype == 'output') return $this->resPrint;
+		if ($hooktype == 'returnvalue') return $result;
         return ($error?-1:$resaction);
 	}
 
 }
 
-?>

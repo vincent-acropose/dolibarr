@@ -1,9 +1,9 @@
 <?php
 /* Copyright (C) 2005		Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2006-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2009-2012	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2009-2014	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2011		Juanjo Menent			<jmenent@2byte.es>
- * Copyright (C) 2012      Christophe Battarel  <christophe.battarel@altairis.fr>
+ * Copyright (C) 2012		Christophe Battarel		<christophe.battarel@altairis.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,14 +40,20 @@ class ProductFournisseur extends Product
     var $product_fourn_price_id;  // id of ligne product-supplier
 
     var $id;                      // product id
-    var $fourn_ref;               // ref supplier
-    var $fourn_qty;               // quantity for price
+    var $fourn_ref;               // deprecated
+    var $ref_supplier;			  // ref supplier (can be set by get_buyprice)
+    var $vatrate_supplier;		  // default vat rate for this supplier/qty/product (can be set by get_buyprice)
+
+    var $fourn_qty;               // quantity for price (can be set by get_buyprice)
+    var $fourn_pu;			       // unit price for quantity (can be set by get_buyprice)
+
     var $fourn_price;             // price for quantity
     var $fourn_remise_percent;    // discount for quantity (percent)
     var $fourn_remise;            // discount for quantity (amount)
     var $product_fourn_id;        // supplier id
     var $fk_availability;         // availability delay
     var $fourn_unitprice;
+    var $fourn_tva_npr;
 
 
     /**
@@ -77,12 +83,11 @@ class ProductFournisseur extends Product
         $sql = "DELETE FROM ".MAIN_DB_PREFIX."product_fournisseur_price";
         $sql.= " WHERE fk_product = ".$this->id." AND fk_soc = ".$id_fourn;
 
-        dol_syslog(get_class($this)."::remove_fournisseur sql=".$sql);
+        dol_syslog(get_class($this)."::remove_fournisseur", LOG_DEBUG);
         $resql2=$this->db->query($sql);
         if (! $resql2)
         {
             $this->error=$this->db->lasterror();
-            dol_syslog(get_class($this)."::remove_fournisseur ".$this->error, LOG_ERR);
             $ok=0;
         }
 
@@ -114,7 +119,7 @@ class ProductFournisseur extends Product
         $sql = "DELETE FROM ".MAIN_DB_PREFIX."product_fournisseur_price";
         $sql.= " WHERE rowid = ".$rowid;
 
-        dol_syslog(get_class($this)."::remove_product_fournisseur_price sql=".$sql);
+        dol_syslog(get_class($this)."::remove_product_fournisseur_price", LOG_DEBUG);
         $resql = $this->db->query($sql);
         if ($resql)
         {
@@ -124,7 +129,6 @@ class ProductFournisseur extends Product
         else
         {
             $this->error=$this->db->lasterror();
-            dol_syslog(get_class($this)."::remove_product_fournisseur_price ".$this->error,LOG_ERR);
             $this->db->rollback();
             return -1;
         }
@@ -145,11 +149,13 @@ class ProductFournisseur extends Product
      *    @param  	string		$charges			costs affering to product
 	 *    @param  	float		$remise_percent		Discount  regarding qty (percent)
 	 *    @param  	float		$remise				Discount  regarding qty (amount)
+	 *    @param  	int			$newnpr				Set NPR or not
      *    @return	int								<0 if KO, >=0 if OK
      */
-    function update_buyprice($qty, $buyprice, $user, $price_base_type, $fourn, $availability, $ref_fourn, $tva_tx, $charges=0, $remise_percent=0, $remise=0)
+    function update_buyprice($qty, $buyprice, $user, $price_base_type, $fourn, $availability, $ref_fourn, $tva_tx, $charges=0, $remise_percent=0, $remise=0, $newnpr=0)
     {
-        global $conf,$mysoc;
+        global $conf, $langs;
+        //global $mysoc;
 
         // Clean parameter
         if (empty($qty)) $qty=0;
@@ -179,6 +185,7 @@ class ProductFournisseur extends Product
         {
 	  		$sql = "UPDATE ".MAIN_DB_PREFIX."product_fournisseur_price";
 			$sql.= " SET fk_user = " . $user->id." ,";
+            $sql.= " ref_fourn = '" . $this->db->escape($ref_fourn) . "',";
 			$sql.= " price = ".price2num($buyprice).",";
 			$sql.= " quantity = ".$qty.",";
 			$sql.= " remise_percent = ".$remise_percent.",";
@@ -188,16 +195,30 @@ class ProductFournisseur extends Product
 			$sql.= " tva_tx = ".$tva_tx.",";
 			$sql.= " fk_availability = ".$availability.",";
 			$sql.= " entity = ".$conf->entity.",";
+			$sql.= " info_bits = ".$newnpr.",";
 			$sql.= " charges = ".$charges;
 			$sql.= " WHERE rowid = ".$this->product_fourn_price_id;
 			// TODO Add price_base_type and price_ttc
 
-			dol_syslog(get_class($this).'::update_buyprice sql='.$sql);
+			dol_syslog(get_class($this).'::update_buyprice', LOG_DEBUG);
 			$resql = $this->db->query($sql);
 			if ($resql)
 			{
-				$this->db->commit();
-				return 0;
+                // Call trigger
+                $result=$this->call_trigger('SUPPLIER_PRODUCT_BUYPRICE_UPDATE',$user);
+                if ($result < 0) $error++;
+                // End call triggers
+
+				if (empty($error))
+				{
+					$this->db->commit();
+					return 0;
+				}
+				else
+				{
+					$this->db->rollback();
+					return 1;
+				}
 			}
 			else
 			{
@@ -212,13 +233,13 @@ class ProductFournisseur extends Product
 	        	// Delete price for this quantity
 	        	$sql = "DELETE FROM  ".MAIN_DB_PREFIX."product_fournisseur_price";
           		$sql.= " WHERE fk_soc = ".$fourn->id." AND ref_fourn = '".$this->db->escape($ref_fourn)."' AND quantity = ".$qty." AND entity = ".$conf->entity;
-				dol_syslog(get_class($this).'::update_buyprice sql='.$sql);
+				dol_syslog(get_class($this).'::update_buyprice', LOG_DEBUG);
 	        	$resql=$this->db->query($sql);
 				if ($resql)
 		  		{
 		            // Add price for this quantity to supplier
 		            $sql = "INSERT INTO ".MAIN_DB_PREFIX."product_fournisseur_price(";
-		            $sql.= "datec, fk_product, fk_soc, ref_fourn, fk_user, price, quantity, remise_percent, remise, unitprice, tva_tx, charges, unitcharges, fk_availability, entity)";
+		            $sql.= "datec, fk_product, fk_soc, ref_fourn, fk_user, price, quantity, remise_percent, remise, unitprice, tva_tx, charges, unitcharges, fk_availability, info_bits, entity)";
 		            $sql.= " values('".$this->db->idate($now)."',";
 		            $sql.= " ".$this->id.",";
 		            $sql.= " ".$fourn->id.",";
@@ -233,18 +254,19 @@ class ProductFournisseur extends Product
 		            $sql.= " ".$charges.",";
 		            $sql.= " ".$unitCharges.",";
 		            $sql.= " ".$availability.",";
+		            $sql.= " ".$newnpr.",";
 		            $sql.= $conf->entity;
 		            $sql.=")";
 
-		            dol_syslog(get_class($this)."::update_buyprice sql=".$sql);
+		            dol_syslog(get_class($this)."::update_buyprice", LOG_DEBUG);
 		            if (! $this->db->query($sql))
 		            {
 		                $error++;
 		            }
 
-		            /*if (! $error)
+		            if (! $error  && !empty($cong->global->PRODUCT_PRICE_SUPPLIER_NO_LOG))
 		            {
-		                // Ajoute modif dans table log
+		                // Add record into log table
 		                $sql = "INSERT INTO ".MAIN_DB_PREFIX."product_fournisseur_price_log(";
 		                $sql.= "datec, fk_product_fournisseur,fk_user,price,quantity)";
 		                $sql.= "values('".$this->db->idate($now)."',";
@@ -260,12 +282,25 @@ class ProductFournisseur extends Product
 		                    $error++;
 		                }
 		            }
-					*/
+
 
 		            if (! $error)
 		            {
-		                $this->db->commit();
-		                return 0;
+                        // Call trigger
+                        $result=$this->call_trigger('SUPPLIER_PRODUCT_BUYPRICE_CREATE',$user);
+                        if ($result < 0) $error++;
+                        // End call triggers
+
+        				if (empty($error))
+        				{
+        					$this->db->commit();
+        					return 0;
+        				}
+        				else
+        				{
+        					$this->db->rollback();
+        					return 1;
+        				}
 		            }
 		            else
 		            {
@@ -292,31 +327,32 @@ class ProductFournisseur extends Product
     function fetch_product_fournisseur_price($rowid)
     {
         $sql = "SELECT pfp.rowid, pfp.price, pfp.quantity, pfp.unitprice, pfp.remise_percent, pfp.remise, pfp.tva_tx, pfp.fk_availability,";
-        $sql.= " pfp.fk_soc, pfp.ref_fourn, pfp.fk_product, pfp.charges, pfp.unitcharges";
+        $sql.= " pfp.fk_soc, pfp.ref_fourn, pfp.fk_product, pfp.charges, pfp.unitcharges"; // , pfp.recuperableonly as fourn_tva_npr";  FIXME this field not exist in llx_product_fournisseur_price
         $sql.= " FROM ".MAIN_DB_PREFIX."product_fournisseur_price as pfp";
         $sql.= " WHERE pfp.rowid = ".$rowid;
 
-        dol_syslog(get_class($this)."::fetch_product_fournisseur_price sql=".$sql, LOG_DEBUG);
+        dol_syslog(get_class($this)."::fetch_product_fournisseur_price", LOG_DEBUG);
         $resql = $this->db->query($sql);
         if ($resql)
         {
             $obj = $this->db->fetch_object($resql);
             if ($obj)
             {
-                $this->product_fourn_price_id	= $rowid;
-                $this->fourn_ref				= $obj->ref_fourn;
-                $this->fourn_price				= $obj->price;
-								$this->fourn_charges          = $obj->charges;
-								$this->fourn_qty              = $obj->quantity;
-								$this->fourn_remise_percent   = $obj->remise_percent;
-								$this->fourn_remise           = $obj->remise;
-								$this->fourn_unitprice        = $obj->unitprice;
-								$this->fourn_unitcharges      = $obj->unitcharges;
-                $this->tva_tx					= $obj->tva_tx;
-                $this->product_id				= $obj->fk_product;	// deprecated
-                $this->fk_product				= $obj->fk_product;
-                $this->fk_availability			= $obj->fk_availability;
-                return 1;
+            	$this->product_fourn_price_id	= $rowid;
+            	$this->fourn_ref				= $obj->ref_fourn;
+            	$this->fourn_price				= $obj->price;
+            	$this->fourn_charges            = $obj->charges;
+            	$this->fourn_qty                = $obj->quantity;
+            	$this->fourn_remise_percent     = $obj->remise_percent;
+            	$this->fourn_remise             = $obj->remise;
+            	$this->fourn_unitprice          = $obj->unitprice;
+            	$this->fourn_unitcharges        = $obj->unitcharges;
+            	$this->tva_tx					= $obj->tva_tx;
+            	$this->product_id				= $obj->fk_product;	// deprecated
+            	$this->fk_product				= $obj->fk_product;
+            	$this->fk_availability			= $obj->fk_availability;
+            	//$this->fourn_tva_npr			= $obj->fourn_tva_npr; // FIXME this field not exist in llx_product_fournisseur_price
+            	return 1;
             }
             else
             {
@@ -326,7 +362,6 @@ class ProductFournisseur extends Product
         else
         {
             $this->error=$this->db->error();
-            dol_syslog(get_class($this)."::fetch_product_fournisseur_price error=".$this->error, LOG_ERR);
             return -1;
         }
     }
@@ -346,7 +381,7 @@ class ProductFournisseur extends Product
 
         $sql = "SELECT s.nom as supplier_name, s.rowid as fourn_id,";
         $sql.= " pfp.rowid as product_fourn_pri_id, pfp.ref_fourn, pfp.fk_product as product_fourn_id,";
-        $sql.= " pfp.price, pfp.quantity, pfp.unitprice, pfp.remise_percent, pfp.remise, pfp.tva_tx, pfp.fk_availability, pfp.charges, pfp.unitcharges";
+        $sql.= " pfp.price, pfp.quantity, pfp.unitprice, pfp.remise_percent, pfp.remise, pfp.tva_tx, pfp.fk_availability, pfp.charges, pfp.unitcharges, pfp.info_bits";
         $sql.= " FROM ".MAIN_DB_PREFIX."product_fournisseur_price as pfp";
         $sql.= ", ".MAIN_DB_PREFIX."societe as s";
         $sql.= " WHERE pfp.entity IN (".getEntity('product', 1).")";
@@ -354,7 +389,7 @@ class ProductFournisseur extends Product
         $sql.= " AND pfp.fk_product = ".$prodid;
         if (empty($sortfield)) $sql.= " ORDER BY s.nom, pfp.quantity, pfp.price";
         else $sql.= $this->db->order($sortfield,$sortorder);
-        dol_syslog(get_class($this)."::list_product_fournisseur_price sql=".$sql, LOG_DEBUG);
+        dol_syslog(get_class($this)."::list_product_fournisseur_price", LOG_DEBUG);
 
         $resql = $this->db->query($sql);
         if ($resql)
@@ -381,6 +416,7 @@ class ProductFournisseur extends Product
                 $prodfourn->fourn_name				= $record["supplier_name"];
                 $prodfourn->fk_availability			= $record["fk_availability"];
                 $prodfourn->id						= $prodid;
+                $prodfourn->fourn_tva_npr						= $record["info_bits"];
 
                 if (!isset($prodfourn->fourn_unitprice))
                 {
@@ -403,7 +439,6 @@ class ProductFournisseur extends Product
         else
         {
             $this->error=$this->db->error();
-            dol_syslog(get_class($this)."::list_product_fournisseur_price error=".$this->error, LOG_ERR);
             return -1;
         }
     }
@@ -412,11 +447,18 @@ class ProductFournisseur extends Product
      * 	Load properties for minimum price
      *
      *  @param	int		$prodid	    Product id
-     *  @return int					<0 if KO, >0 if OK
+     *  @param	int		$qty		Minimum quantity
+     *  @return int					<0 if KO, 0=Not found of no product id provided, >0 if OK
      */
-    function find_min_price_product_fournisseur($prodid)
+    function find_min_price_product_fournisseur($prodid, $qty=0)
     {
         global $conf;
+
+        if (empty($prodid))
+        {
+        	dol_syslog("Warning function find_min_price_product_fournisseur were called with prodid empty. May be a bug.", LOG_WARNING);
+        	return 0;
+        }
 
         $this->product_fourn_price_id = '';
         $this->product_fourn_id       = '';
@@ -432,15 +474,17 @@ class ProductFournisseur extends Product
 
         $sql = "SELECT s.nom as supplier_name, s.rowid as fourn_id,";
         $sql.= " pfp.rowid as product_fourn_price_id, pfp.ref_fourn,";
-        $sql.= " pfp.price, pfp.quantity, pfp.unitprice, pfp.tva_tx, pfp.charges, pfp.unitcharges";
+        $sql.= " pfp.price, pfp.quantity, pfp.unitprice, pfp.tva_tx, pfp.charges, pfp.unitcharges, ";
+        $sql.= " pfp.remise, pfp.remise_percent";
         $sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."product_fournisseur_price as pfp";
         $sql.= " WHERE s.entity IN (".getEntity('societe', 1).")";
         $sql.= " AND pfp.fk_product = ".$prodid;
         $sql.= " AND pfp.fk_soc = s.rowid";
+        if ($qty > 0) $sql.= " AND pfp.quantity <= ".$qty;
         $sql.= " ORDER BY pfp.unitprice";
         $sql.= $this->db->plimit(1);
 
-        dol_syslog(get_class($this)."::find_min_price_product_fournisseur sql=".$sql, LOG_DEBUG);
+        dol_syslog(get_class($this)."::find_min_price_product_fournisseur", LOG_DEBUG);
 
         $resql = $this->db->query($sql);
         if ($resql)
@@ -463,9 +507,8 @@ class ProductFournisseur extends Product
             return 1;
         }
         else
-        {
+		{
             $this->error=$this->db->error();
-            dol_syslog(get_class($this)."::find_min_price_product_fournisseur error=".$this->error, LOG_ERR);
             return -1;
         }
     }
@@ -489,16 +532,17 @@ class ProductFournisseur extends Product
     /**
      *	Display price of product
      *
-     *	@return	string		String with supplier price
+     *  @param	int		$showunitprice	Show "Unit price" into output string
+     *  @param	int		$showsuptitle	Show "Supplier" into output string
+     *	@return	string					String with supplier price
      */
-    function display_price_product_fournisseur()
+    function display_price_product_fournisseur($showunitprice=1,$showsuptitle=1)
     {
         global $langs;
         $langs->load("suppliers");
-        $out=price($this->fourn_unitprice).' '.$langs->trans("HT").' &nbsp; ('.$langs->trans("Supplier").': '.$this->getSocNomUrl(1).' / '.$langs->trans("SupplierRef").': '.$this->fourn_ref.')';
+        $out=($showunitprice?price($this->fourn_unitprice).' '.$langs->trans("HT").' &nbsp; (':'').($showsuptitle?$langs->trans("Supplier").': ':'').$this->getSocNomUrl(1).' / '.$langs->trans("SupplierRef").': '.$this->fourn_ref.($showunitprice?')':'');
         return $out;
     }
 
 }
 
-?>

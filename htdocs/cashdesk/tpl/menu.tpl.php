@@ -66,16 +66,15 @@ print '<li class="menu_choix1"><a href="affIndex.php?menu=facturation&id=NOUV"><
 // Open new tab on backoffice (this is not a disconnect from POS)
 print '<li class="menu_choix2"><a href=".." target="backoffice"><span>'.$langs->trans("BackOffice").'</span></a></li>';
 // Disconnect
-print '<li class="menu_choix0">'.$langs->trans("User").': '.$_SESSION['prenom'].' '.$_SESSION['nom'];
+print '<li class="menu_choix0">'.$langs->trans("User").': '.$_SESSION['firstname'].' '.$_SESSION['lastname'];
 print ' <a href="deconnexion.php">'.img_picto($langs->trans('Logout'), 'logout.png').'</a><br>';
 print $langs->trans("CashDeskThirdParty").': '.$companyLink.'<br>';
 /*print $langs->trans("CashDeskBankCash").': '.$bankcashLink.'<br>';
 print $langs->trans("CashDeskBankCB").': '.$bankcbLink.'<br>';
 print $langs->trans("CashDeskBankCheque").': '.$bankchequeLink.'<br>';*/
-if (!empty($_SESSION["CASHDESK_ID_WAREHOUSE"]) && ! empty($conf->stock->enabled))
+if (!empty($_SESSION["CASHDESK_ID_WAREHOUSE"]) && ! empty($conf->stock->enabled) && empty($conf->global->CASHDESK_NO_DECREASE_STOCK))
 {
 	print $langs->trans("CashDeskWarehouse").': '.$warehouseLink;
 }
 print '</li></ul>';
 print '</div>';
-?>

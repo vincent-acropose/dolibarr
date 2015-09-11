@@ -73,7 +73,7 @@ if ($action == 'note')
 if ($mode == 'search') {
 	if ($modesearch == 'soc') {
 		$sql = "SELECT s.rowid FROM ".MAIN_DB_PREFIX."societe as s ";
-		$sql.= " WHERE lower(s.nom) LIKE '%".$db->escape(strtolower($socname))."%'";
+		$sql.= " WHERE s.nom LIKE '%".$db->escape(strtolower($socname))."%'";
 		$sql.= " AND s.entity IN (".getEntity('societe', 1).")";
 	}
 
@@ -93,7 +93,7 @@ if ($mode == 'search') {
  * Mode List
  */
 
-$sql = "SELECT s.rowid, s.nom, s.client, s.ville, s.datec, s.datea";
+$sql = "SELECT s.rowid, s.nom as name, s.client, s.town, s.datec, s.datea";
 $sql.= ", st.libelle as stcomm, s.prefix_comm, s.code_client, s.code_compta ";
 if (!$user->rights->societe->client->voir && !$socid) $sql.= ", sc.fk_soc, sc.fk_user ";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."c_stcomm as st";
@@ -107,13 +107,13 @@ if (dol_strlen($stcomm))
 }
 if ($socname)
 {
-	$sql.= " AND s.nom LIKE '%".$db->escape(strtolower($socname))."%'";
+	$sql.= " AND s.nom LIKE '%".$db->escape($socname)."%'";
 	$sortfield = "s.nom";
 	$sortorder = "ASC";
 }
 if ($_GET["search_nom"])
 {
-	$sql.= " AND s.nom LIKE '%".$db->escape(strtolower($_GET["search_nom"]))."%'";
+	$sql.= " AND s.nom LIKE '%".$db->escape($_GET["search_nom"])."%'";
 }
 if ($_GET["search_compta"])
 {
@@ -141,7 +141,7 @@ if ($resql)
 	$i = 0;
 
 	$langs->load('commercial');
-	
+
 	print_barre_liste($langs->trans("ListOfCustomers"), $page, $_SERVER["PHP_SELF"],"",$sortfield,$sortorder,'',$num);
 
 	print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'">';
@@ -150,7 +150,7 @@ if ($resql)
 	print '<tr class="liste_titre">';
 
 	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","","",'valign="center"',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Town"),$_SERVER["PHP_SELF"],"s.ville","","",'valign="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Town"),$_SERVER["PHP_SELF"],"s.town","","",'valign="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("CustomerCode"),$_SERVER["PHP_SELF"],"s.code_client","","",'align="left"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AccountancyCode"),$_SERVER["PHP_SELF"],"s.code_compta","","",'align="left"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateCreation"),$_SERVER["PHP_SELF"],"datec",$addu,"",'align="right"',$sortfield,$sortorder);
@@ -173,11 +173,11 @@ if ($resql)
 	print '</td>';
 
 	print '<td align="right" colspan="2" class="liste_titre">';
-	print '<input type="image" class="liste_titre" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" name="button_search" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+	print '<input type="image" class="liste_titre" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" name="button_search" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 	print '</td>';
 	print "</tr>\n";
 
-	$var=True;
+	$var=true;
 
 	while ($i < min($num,$conf->liste_limit))
 	{
@@ -185,14 +185,14 @@ if ($resql)
 
 		$var=!$var;
 
-		print "<tr $bc[$var]>";
+		print "<tr ".$bc[$var].">";
 		print '<td>';
 		$thirdpartystatic->id=$obj->rowid;
-		$thirdpartystatic->nom=$obj->nom;
+		$thirdpartystatic->name=$obj->name;
 		$thirdpartystatic->client=$obj->client;
 		print $thirdpartystatic->getNomUrl(1,'compta');
 		print '</td>';
-		print '<td>'.$obj->ville.'&nbsp;</td>';
+		print '<td>'.$obj->town.'&nbsp;</td>';
 		print '<td align="left">'.$obj->code_client.'&nbsp;</td>';
 		print '<td align="left">'.$obj->code_compta.'&nbsp;</td>';
 		print '<td align="right">'.dol_print_date($db->jdate($obj->datec)).'</td>';
@@ -213,4 +213,3 @@ else
 $db->close();
 
 llxFooter();
-?>

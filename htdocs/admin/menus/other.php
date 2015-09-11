@@ -87,7 +87,7 @@ $head[$h][2] = 'editor';
 $h++;
 
 $head[$h][0] = DOL_URL_ROOT."/admin/menus/other.php";
-$head[$h][1] = $langs->trans("Miscellanous");
+$head[$h][1] = $langs->trans("Miscellaneous");
 $head[$h][2] = 'misc';
 $h++;
 
@@ -120,7 +120,7 @@ print "</td>";
 print '</tr>';
 
 // Use a flip-hide menu
-if (isset($conf->global->MAIN_FEATURES_LEVEL) && $conf->global->MAIN_FEATURES_LEVEL > 0)
+if (isset($conf->global->MAIN_FEATURES_LEVEL) && $conf->global->MAIN_FEATURES_LEVEL > 1)
 {
 	$var=!$var;
 	print "<tr ".$bc[$var].">";
@@ -143,4 +143,3 @@ print '</table>';
 
 llxFooter();
 $db->close();
-?>

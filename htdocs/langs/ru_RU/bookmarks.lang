@@ -1,30 +1,19 @@
-/*
- * Language code: ru_RU
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-08-13 21:14:36
- */
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-13 21:14:36).
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - marque pages
 AddThisPageToBookmarks=Добавить эту страницу в закладки
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 21:14:36).
-
 Bookmark=Закладка
 Bookmarks=Закладки
 NewBookmark=Новая закладка
-ShowBookmark=Показать закладки
-OpenANewWindow=Открыть в новом окне
-ReplaceWindow=Замените текущее окно
+ShowBookmark=Показать закладку
+OpenANewWindow=Открыть новое окно
+ReplaceWindow=Заменить текущее окно
 BookmarkTargetNewWindowShort=Новое окно
 BookmarkTargetReplaceWindowShort=Текущее окно
-BookmarkTitle=Закладка титула
+BookmarkTitle=Название закладки
 UrlOrLink=URL
-BehaviourOnClick=Поведение на кнопку на URL
+BehaviourOnClick=Поведение при нажатии на ссылку
 CreateBookmark=Создать закладку
-SetHereATitleForLink=Установите здесь название для закладки
-UseAnExternalHttpLinkOrRelativeDolibarrLink=Использование внешнего HTTP URL или относительный URL Dolibarr
-ChooseIfANewWindowMustBeOpenedOnClickOnBookmark=Выберите, если страница открыта ссылка должна появиться на текущем или новом окне
+SetHereATitleForLink=Установите название для закладки
+UseAnExternalHttpLinkOrRelativeDolibarrLink=Используйте внешний HTTP URL или относительный Dolibarr URL
+ChooseIfANewWindowMustBeOpenedOnClickOnBookmark=Выберите, где должна открыться страница при нажатии на ссылку: в текущем или в новом окне
 BookmarksManagement=Управление закладками
 ListOfBookmarks=Список закладок

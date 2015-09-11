@@ -2,6 +2,7 @@
 /* Copyright (C) 2007-2008	Jeremie Ollivier	<jeremie.o@laposte.net>
  * Copyright (C) 2011		Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2011		Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2015		Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,10 +23,13 @@ $langs->load("main");
 $langs->load("bills");
 $langs->load("cashdesk");
 
+// Object $form must de defined
+
 ?>
 
 <script type="text/javascript" src="javascript/facturation1.js"></script>
 <script type="text/javascript" src="javascript/dhtml.js"></script>
+<script type="text/javascript" src="javascript/keypad.js"></script>
 
 <!-- ========================= Cadre "Article" ============================= -->
 <fieldset class="cadre_facturation"><legend class="titre1"><?php echo $langs->trans("Article"); ?></legend>
@@ -35,12 +39,13 @@ $langs->load("cashdesk");
 		<input type="hidden" name="hdnSource" value="NULL" />
 
 		<table>
-			<tr><th class="label1"><?php echo $langs->trans("Code"); ?></th><th class="label1"><?php echo $langs->trans("Designation"); ?></th></tr>
+			<tr><th class="label1"><?php echo $langs->trans("FilterRefOrLabelOrBC"); ?></th><th class="label1"><?php echo $langs->trans("Designation"); ?></th></tr>
 			<tr>
 			<!-- Affichage de la reference et de la designation -->
 			<td><input class="texte_ref" type="text" id ="txtRef" name="txtRef" value="<?php echo $obj_facturation->ref() ?>"
 				onchange="javascript: setSource('REF');"
-				onfocus="javascript: this.select(); verifResultat('resultats_dhtml', this.value);"
+				onkeyup="javascript: verifResultat('resultats_dhtml', this.value, <?php echo (isset($conf->global->BARCODE_USE_SEARCH_TO_SELECT) ? (int) $conf->global->BARCODE_USE_SEARCH_TO_SELECT : 1) ?>);"
+				onfocus="javascript: this.select(); verifResultat('resultats_dhtml', this.value, <?php echo (isset($conf->global->BARCODE_USE_SEARCH_TO_SELECT) ? (int) $conf->global->BARCODE_USE_SEARCH_TO_SELECT : 1) ?>);"
 				onBlur="javascript: document.getElementById('resultats_dhtml').innerHTML = '';"/>
 			</td>
 			<td class="select_design">
@@ -62,43 +67,24 @@ $langs->load("cashdesk");
 						$id = $obj_facturation->id();
 
 						// Si trop d'articles ont ete trouves, on n'affiche que les X premiers (defini dans le fichier de configuration) ...
-						if ( $nbr_enreg > $conf_taille_listes ) {
 
-							for ($i = 0; $i < $conf_taille_listes; $i++) {
+						$nbtoshow = $nbr_enreg;
+						if (! empty($conf_taille_listes) && $nbtoshow > $conf_taille_listes) $nbtoshow = $conf_taille_listes;
 
-								if ( $id == $tab_designations[$i]['rowid'] )
-									$selected = 'selected="selected"';
-								else
-									$selected = '';
+						for ($i = 0; $i < $nbtoshow; $i++)
+						{
+							if ( $id == $tab_designations[$i]['rowid'] )
+								$selected = 'selected="selected"';
+							else
+								$selected = '';
 
-								$label = $tab_designations[$i]['label'];
+							$label = $tab_designations[$i]['label'];
 
-								print '<option '.$selected.' value="'.$tab_designations[$i]['rowid'].'">'.dol_trunc($tab_designations[$i]['ref'],7).' - '.dol_trunc($label,35,'middle');
-								if (! empty($conf->stock->enabled) && !empty($conf_fkentrepot) && $tab_designations[$i]['fk_product_type']==0) print ' ('.$langs->trans("CashDeskStock").': '.$tab_designations[$i]['reel'].')';
-								print '</option>'."\n				";
-
-							}
-
-						// ... sinon on affiche tout
-						} else {
-
-							for ($i = 0; $i < $nbr_enreg; $i++) {
-
-								if ( $id == $tab_designations[$i]['rowid'] )
-									$selected = 'selected="selected"';
-								else
-									$selected = '';
-
-								$label = $tab_designations[$i]['label'];
-
-								print '<option '.$selected.' value="'.$tab_designations[$i]['rowid'].'">'.dol_trunc($tab_designations[$i]['ref'],7).' - '.dol_trunc($label,35,'middle');
-								if (! empty($conf->stock->enabled) && !empty($conf_fkentrepot) && $tab_designations[$i]['fk_product_type']==0) print ' ('.$langs->trans("CashDeskStock").': '.(empty($tab_designations[$i]['reel'])?0:$tab_designations[$i]['reel']).')';
-								print '</option>'."\n				";
-
-							}
+							print '<option '.$selected.' value="'.$tab_designations[$i]['rowid'].'">'.dol_trunc($tab_designations[$i]['ref'],7).' - '.dol_trunc($label,35,'middle');
+							if (! empty($conf->stock->enabled) && !empty($conf_fkentrepot) && $tab_designations[$i]['fk_product_type']==0) print ' ('.$langs->trans("CashDeskStock").': '.(empty($tab_designations[$i]['reel'])?0:$tab_designations[$i]['reel']).')';
+							print '</option>'."\n";
 
 						}
-
 					?>
 				</select>
 			</td>
@@ -120,23 +106,28 @@ $langs->load("cashdesk");
             <th><?php echo $langs->trans("VATRate"); ?></th>
             </tr>
 			<tr>
-				<td><input class="texte1" type="text" name="txtQte" value="1" onkeyup="javascript: modif();" onfocus="javascript: this.select();" /></td>
+				<td><input class="texte1" type="text" id="txtQte" name="txtQte" value="1" onkeyup="javascript: modif();" onfocus="javascript: this.select();" />
+<?php print genkeypad("txtQte", "frmQte");?>
+				</td>
 				<!-- Affichage du stock pour l'article courant -->
 				<td>
 				<input class="texte1_off" type="text" name="txtStock" value="<?php echo $obj_facturation->stock() ?>" disabled="disabled" />
 				</td>
-				<!-- Affichage du prix unitaire -->
-				<td><input class="texte1_off" type="text" name="txtPrixUnit" value="<?php echo price2num($obj_facturation->prix(), 'MU'); ?>" disabled="disabled" /></td>
+				<!-- Show unit price -->
+				<?php // TODO Remove the disabled and use this value when adding product into cart ?>
+				<td><input class="texte1_off" type="text" name="txtPrixUnit" value="<?php echo price2num($obj_facturation->prix(), 'MU'); ?>" onchange="javascript: modif();" disabled="disabled" /></td>
 				<td><?php echo $conf->currency; ?></td>
     			<!-- Choix de la remise -->
-    			<td><input class="texte1" type="text" name="txtRemise" value="0" onkeyup="javascript: modif();" onfocus="javascript: this.select();"/></td>
+    			<td><input class="texte1" type="text" id="txtRemise" name="txtRemise" value="0" onkeyup="javascript: modif();" onfocus="javascript: this.select();"/>
+<?php print genkeypad("txtRemise", "frmQte");?>
+    			</td>
     			<!-- Affichage du total HT -->
     			<td><input class="texte1_off" type="text" name="txtTotal" value="" disabled="disabled" /></td><td><?php echo $conf->currency; ?></td>
                 <!-- Choix du taux de TVA -->
                 <td class="select_tva">
+                <?php //var_dump($tab_tva); ?>
                 <select name="selTva" onchange="javascript: modif();" >
                     <?php
-
                         $tva_tx = $obj_facturation->tva();
                         $tab_tva_size=count($tab_tva);
                         for($i=0;$i < $tab_tva_size;$i++) {
@@ -144,23 +135,21 @@ $langs->load("cashdesk");
                             if ( $tva_tx == $tab_tva[$i]['taux'] )
                                 $selected = 'selected="selected"';
                             else
-                                $selected = '';
+                            $selected = '';
 
                             echo ('<option '.$selected.' value="'.$tab_tva[$i]['rowid'].'">'.$tab_tva[$i]['taux'].'</option>'."\n               ");
-
                         }
-
                     ?>
                 </select>
                 </td>
 			</tr>
 		</table>
 
-		<input class="bouton_ajout_article" type="submit" id="sbmtEnvoyer" value="<?php echo $langs->trans("AddThisArticle"); ?>" />
+		<input class="button bouton_ajout_article" type="submit" id="sbmtEnvoyer" value="<?php echo $langs->trans("AddThisArticle"); ?>" />
 	</form>
 </fieldset>
 
-<!-- ========================= Cadre "Difference" ============================= -->
+<!-- ========================= Cadre "Amount" ============================= -->
 <form id="frmDifference"  class="formulaire1" method="post" onsubmit="javascript: return verifReglement()" action="validation_verif.php?action=valide_achat">
 	<input type="hidden" name="hdnChoix" value="" />
 	<input type="hidden" name="token" value="<?php echo $_SESSION['newtoken']; ?>" />
@@ -171,7 +160,9 @@ $langs->load("cashdesk");
 			<!-- Affichage du montant du -->
 			<td><input class="texte2_off" type="text" name="txtDu" value="<?php echo price2num($obj_facturation->prixTotalTtc(), 'MT'); ?>" disabled="disabled" /></td>
 			<!-- Choix du montant encaisse -->
-			<td><input class="texte2" type="text" name="txtEncaisse" value="" onkeyup="javascript: verifDifference();" onfocus="javascript: this.select();" /></td>
+			<td><input class="texte2" type="text" id="txtEncaisse" name="txtEncaisse" value="" onkeyup="javascript: verifDifference();" onfocus="javascript: this.select();" />
+<?php print genkeypad("txtEncaisse", "frmDifference");?>
+			</td>
 			<!-- Affichage du montant rendu -->
 			<td><input class="texte2_off" type="text" name="txtRendu" value="0" disabled="disabled" /></td>
 			</tr>
@@ -189,7 +180,7 @@ $langs->load("cashdesk");
 				$langs->load("errors");
 				print '<input class="bouton_mode_reglement_disabled" type="button" name="btnModeReglement" value="'.$langs->trans("Cash").'" title="'.dol_escape_htmltag($langs->trans("ErrorModuleSetupNotComplete")).'" />';
 			}
-			else print '<input class="bouton_mode_reglement" type="submit" name="btnModeReglement" value="'.$langs->trans("Cash").'" onclick="javascript: verifClic(\'ESP\');" />';
+			else print '<input class="button bouton_mode_reglement" type="submit" name="btnModeReglement" value="'.$langs->trans("Cash").'" onclick="javascript: verifClic(\'ESP\');" />';
 			print '</td>';
 			print '<td>';
 			if (empty($_SESSION['CASHDESK_ID_BANKACCOUNT_CHEQUE']) || $_SESSION['CASHDESK_ID_BANKACCOUNT_CHEQUE'] < 0)
@@ -197,15 +188,15 @@ $langs->load("cashdesk");
 				$langs->load("errors");
 				print '<input class="bouton_mode_reglement_disabled" type="button" name="btnModeReglement" value="'.$langs->trans("CreditCard").'" title="'.dol_escape_htmltag($langs->trans("ErrorModuleSetupNotComplete")).'" />';
 			}
-			else print '<input class="bouton_mode_reglement" type="submit" name="btnModeReglement" value="'.$langs->trans("CreditCard").'" onclick="javascript: verifClic(\'CB\');" />';
+			else print '<input class="button bouton_mode_reglement" type="submit" name="btnModeReglement" value="'.$langs->trans("CreditCard").'" onclick="javascript: verifClic(\'CB\');" />';
 			print '</td>';
 			print '<td>';
 			if (empty($_SESSION['CASHDESK_ID_BANKACCOUNT_CB']) || $_SESSION['CASHDESK_ID_BANKACCOUNT_CB'] < 0)
 			{
 				$langs->load("errors");
-				print '<input class="bouton_mode_reglement_disabled" type="button" name="btnModeReglement" value="'.$langs->trans("Cheque").'" title="'.dol_escape_htmltag($langs->trans("ErrorModuleSetupNotComplete")).'" />';
+				print '<input class="bouton_mode_reglement_disabled" type="button" name="btnModeReglement" value="'.$langs->trans("CheckBank").'" title="'.dol_escape_htmltag($langs->trans("ErrorModuleSetupNotComplete")).'" />';
 			}
-			else print '<input class="bouton_mode_reglement" type="submit" name="btnModeReglement" value="'.$langs->trans("Cheque").'" onclick="javascript: verifClic(\'CHQ\');" />';
+			else print '<input class="button bouton_mode_reglement" type="submit" name="btnModeReglement" value="'.$langs->trans("CheckBank").'" onclick="javascript: verifClic(\'CHQ\');" />';
 			print '</td>';
 			?>
 			</tr>
@@ -213,15 +204,11 @@ $langs->load("cashdesk");
 		<table>
 			<tr>
 				<td>
-				<input class="bouton_mode_reglement" type="submit" name="btnModeReglement" value="<?php echo $langs->trans("Reported"); ?>" onclick="javascript: verifClic('DIF');" />
-				<?php echo $langs->trans("DateEcheance"); ?> :
-<?php
-    $form=new Form($db);
-    print $form->select_date(-1,'txtDatePaiement');
-?>
-<!-- <input class="texte2" type="text" id="txtDatePaiement" name="txtDatePaiement" value="" />
-				<input class="bouton_cal" type="image" src="img/calendrier.png" id="btnCalendrier" value="..." title="<?php echo $langs->trans("CalTip"); ?>" />
- -->
+				<input class="button bouton_mode_reglement" type="submit" name="btnModeReglement" value="<?php echo $langs->trans("Reported"); ?>" onclick="javascript: verifClic('DIF');" />
+				<?php
+				echo $langs->trans("DateEcheance").' :';
+				print $form->select_date(-1,'txtDatePaiement');
+				?>
  				</td>
 			</tr>
 

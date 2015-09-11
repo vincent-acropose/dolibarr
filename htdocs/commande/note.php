@@ -2,6 +2,7 @@
 /* Copyright (C) 2004      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2007 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013      Florian Henry		  	<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,24 +50,15 @@ if (! $object->fetch($id, $ref) > 0)
 	dol_print_error($db);
 }
 
+$permissionnote=$user->rights->commande->creer;	// Used by the include of actions_setnotes.inc.php
+
 
 /*
  * Actions
  */
 
-if ($action == 'setnote_public' && $user->rights->commande->creer)
-{
-	$object->fetch($id);
-	$result=$object->update_note_public(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES));
-	if ($result < 0) dol_print_error($db,$object->error);
-}
+include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not includ_once
 
-else if ($action == 'setnote' && $user->rights->commande->creer)
-{
-	$object->fetch($id);
-	$result=$object->update_note(dol_html_entity_decode(GETPOST('note'), ENT_QUOTES));
-	if ($result < 0) dol_print_error($db,$object->error);
-}
 
 /*
  * View
@@ -87,7 +79,7 @@ if ($id > 0 || ! empty($ref))
 
 	print '<table class="border" width="100%">';
 
-	$linkback = '<a href="'.DOL_URL_ROOT.'/commande/liste.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
+	$linkback = '<a href="'.DOL_URL_ROOT.'/commande/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
 	// Ref
 	print '<tr><td width="25%">'.$langs->trans("Ref").'</td><td colspan="3">';
@@ -96,7 +88,7 @@ if ($id > 0 || ! empty($ref))
 
 	// Ref commande client
 	print '<tr><td>';
-	print '<table class="nobordernopadding" width="100%"><tr><td nowrap>';
+	print '<table class="nobordernopadding" width="100%"><tr><td class="nowrap">';
 	print $langs->trans('RefCustomer').'</td><td align="left">';
 	print '</td>';
 	print '</tr></table>';
@@ -121,4 +113,3 @@ if ($id > 0 || ! empty($ref))
 
 llxFooter();
 $db->close();
-?>

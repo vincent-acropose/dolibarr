@@ -1,0 +1,45 @@
+# Dolibarr language file - Source file is en_US - marges
+
+Margin=Marža
+Margins=Marže
+TotalMargin=Skupna marža
+MarginOnProducts=Marža / proizvod
+MarginOnServices=Marža / storitev
+MarginRate=Stopnja marže
+MarkRate=Ciljna stopnja
+DisplayMarginRates=Prikaži stopnje marž
+DisplayMarkRates=Prikaži ciljne stopnje
+InputPrice=Vhodna cena
+margin=Upravljanje profitnih marž
+margesSetup=Nastavitve uporavljanja profitnih marž
+MarginDetails=Podatki o marži
+ProductMargins=Marže proizvoda
+CustomerMargins=Marže kupcev
+SalesRepresentativeMargins=Marža prodajnega predstavnika
+UserMargins=User margins
+ProductService=Proizvod ali storitev
+AllProducts=Vsi proizvodi in storitve
+ChooseProduct/Service=Izberi proizvod ali storitev
+StartDate=Začetni datum
+EndDate=Končni datum
+Launch=Start
+ForceBuyingPriceIfNull=Uveljavi nabavno ceno, če je nič
+ForceBuyingPriceIfNullDetails=če je "ON", bo marža 0 (nabavna cena = prodajna cena), drugače ("OFF")  bo marža enaka prodajni ceni (nabavna cena = 0)
+MARGIN_METHODE_FOR_DISCOUNT=Metoda marž pri globalnih popustih
+UseDiscountAsProduct=Kot proizvod
+UseDiscountAsService=Kot storitev
+UseDiscountOnTotal=V delni vsoti
+MARGIN_METHODE_FOR_DISCOUNT_DETAILS=Določa, če se globalni popust smatra kot proizvod, storitev, ali samo delna vsota pri izračunu marže.
+MARGIN_TYPE=Tip marže
+MargeBrute=Bruto marža
+MargeNette=Neto marža
+MARGIN_TYPE_DETAILS=Bruto marža : prodajna cena - nabavna cena<br/>Neto marža : prodajna cena - stroškovna cena
+CostPrice=Stroškovna cena
+BuyingCost=Stroškovna cena
+UnitCharges=Stroški po enoti
+Charges=Stroški
+AgentContactType=Tip kontakta komercialnega agenta
+AgentContactTypeDetails=Define what contact type (linked on invoices) will be used for margin report per sale representative
+rateMustBeNumeric=Rate must be a numeric value
+markRateShouldBeLesserThan100=Mark rate should be lower than 100
+ShowMarginInfos=Show margin infos

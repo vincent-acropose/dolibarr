@@ -1,7 +1,8 @@
 <?php
-/* Copyright (C) 2010-2012 Regis Houssin <regis.houssin@capnetworks.com>
+/* Copyright (C) 2010-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2006-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2012      Florian Henry <florian.henry@open-concept.pro>
+ * Copyright (C) 2012      Florian Henry        <florian.henry@open-concept.pro>
+ * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -107,23 +108,8 @@ if ($id > 0 || ! empty($ref))
 	}
 }
 
-// Envoi fichier
-if (GETPOST('sendit') && ! empty($conf->global->MAIN_UPLOAD_DOC))
-{
-	dol_add_file_process($upload_dir,0,1,'userfile');
-}
+include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_pre_headers.tpl.php';
 
-// Delete
-if ($action=='delete')
-{
-    $langs->load("other");
-	$file = $upload_dir . '/' . GETPOST('urlfile');	// Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
-	$ret=dol_delete_file($file,0,0,0,$object);
-	if ($ret) setEventMessage($langs->trans("FileWasRemoved", GETPOST('urlfile')));
-	else setEventMessage($langs->trans("ErrorFailToDeleteFile", GETPOST('urlfile')), 'errors');
-    header('Location: '.$_SERVER["PHP_SELF"].'?id='.$id);
-    exit;
-}
 
 /*
  * View
@@ -135,7 +121,7 @@ llxHeader('',$langs->trans('Task'));
 
 if ($object->id > 0)
 {
-	if (! empty($projectstatic->socid)) $projectstatic->societe->fetch($projectstatic->socid);
+	$projectstatic->fetch_thirdparty();
 
 	$userWrite  = $projectstatic->restrictedProjectArea($user,'write');
 
@@ -165,8 +151,8 @@ if ($object->id > 0)
 
 		print '<tr><td>'.$langs->trans("Label").'</td><td>'.$projectstatic->title.'</td></tr>';
 
-		print '<tr><td>'.$langs->trans("Company").'</td><td>';
-		if (! empty($projectstatic->societe->id)) print $projectstatic->societe->getNomUrl(1);
+		print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
+		if (! empty($projectstatic->thirdparty->id)) print $projectstatic->thirdparty->getNomUrl(1);
 		else print '&nbsp;';
 		print '</td>';
 		print '</tr>';
@@ -180,11 +166,19 @@ if ($object->id > 0)
 		// Statut
 		print '<tr><td>'.$langs->trans("Status").'</td><td>'.$projectstatic->getLibStatut(4).'</td></tr>';
 
+	   	// Date start
+		print '<tr><td>'.$langs->trans("DateStart").'</td><td>';
+		print dol_print_date($projectstatic->date_start,'day');
+		print '</td></tr>';
+
+		// Date end
+		print '<tr><td>'.$langs->trans("DateEnd").'</td><td>';
+		print dol_print_date($projectstatic->date_end,'day');
+		print '</td></tr>';
+
 		print '</table>';
 
 		dol_fiche_end();
-
-		print '<br>';
 	}
 
 	$head = task_prepare_head($object);
@@ -194,7 +188,7 @@ if ($object->id > 0)
 	$linkback=GETPOST('withproject')?'<a href="'.DOL_URL_ROOT.'/projet/tasks.php?id='.$projectstatic->id.'">'.$langs->trans("BackToList").'</a>':'';
 
 	// Files list constructor
-	$filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+	$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
 	$totalsize=0;
 	foreach($filearray as $key => $file)
 	{
@@ -213,7 +207,7 @@ if ($object->id > 0)
 		$object->next_prev_filter=" fk_projet in (".$projectsListId.")";
 	}
 	else $object->next_prev_filter=" fk_projet = ".$projectstatic->id;
-	print $form->showrefnav($object,'id',$linkback,1,'rowid','ref','',$param);
+	print $form->showrefnav($object,'ref',$linkback,1,'ref','ref','',$param);
 	print '</td>';
 	print '</tr>';
 
@@ -228,8 +222,8 @@ if ($object->id > 0)
 		print '</td></tr>';
 
 		// Third party
-		print '<td>'.$langs->trans("Company").'</td><td colspan="3">';
-		if ($projectstatic->societe->id) print $projectstatic->societe->getNomUrl(1);
+		print '<td>'.$langs->trans("ThirdParty").'</td><td colspan="3">';
+		if ($projectstatic->thirdparty->id) print $projectstatic->thirdparty->getNomUrl(1);
 		else print '&nbsp;';
 		print '</td></tr>';
 	}
@@ -244,15 +238,12 @@ if ($object->id > 0)
 
 	print '<br>';
 
-
-	// Affiche formulaire upload
-	$formfile=new FormFile($db);
-	$formfile->form_attach_new_file(DOL_URL_ROOT.'/projet/tasks/document.php?id='.$object->id.($withproject?'&withproject=1':''),'',0,0,$user->rights->projet->creer,50,$object);
-
-
-	// List of document
-	$param='&id='.$object->id;
-	$formfile->list_of_documents($filearray,$object,'projet',$param,0,dol_sanitizeFileName($projectstatic->ref).'/'.dol_sanitizeFileName($object->ref).'/');
+	$param='';
+	if ($withproject) $param .= '&withproject=1';
+	$modulepart = 'project_task';
+	$permission = $user->rights->projet->creer;
+	$relativepathwithnofile=dol_sanitizeFileName($projectstatic->ref).'/'.dol_sanitizeFileName($object->ref).'/';
+	include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_post_headers.tpl.php';
 }
 else
 {
@@ -264,4 +255,3 @@ else
 llxFooter();
 
 $db->close();
-?>

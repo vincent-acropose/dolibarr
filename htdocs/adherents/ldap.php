@@ -60,8 +60,6 @@ if (! $result)
 
 if ($action == 'dolibarr2ldap')
 {
-	$message="";
-
 	$db->begin();
 
 	$ldap=new Ldap();
@@ -75,12 +73,12 @@ if ($action == 'dolibarr2ldap')
 
 	if ($result >= 0)
 	{
-		$message.='<div class="ok">'.$langs->trans("MemberSynchronized").'</div>';
+		setEventMessage($langs->trans("MemberSynchronized"));
 		$db->commit();
 	}
 	else
 	{
-		$message.='<div class="error">'.$ldap->error.'</div>';
+		setEventMessage($ldap->error, 'errors');
 		$db->rollback();
 	}
 }
@@ -108,11 +106,11 @@ print '<td class="valeur">';
 print $form->showrefnav($adh,'id');
 print '</td></tr>';
 
-// Nom
+// Lastname
 print '<tr><td>'.$langs->trans("Lastname").'</td><td class="valeur">'.$adh->lastname.'&nbsp;</td>';
 print '</tr>';
 
-// Prenom
+// Firstname
 print '<tr><td width="15%">'.$langs->trans("Firstname").'</td><td class="valeur">'.$adh->firstname.'&nbsp;</td>';
 print '</tr>';
 
@@ -157,10 +155,6 @@ print '</table>';
 
 print '</div>';
 
-
-dol_htmloutput_mesg($message);
-
-
 /*
  * Barre d'actions
  */
@@ -169,7 +163,7 @@ print '<div class="tabsAction">';
 
 if (! empty($conf->global->LDAP_MEMBER_ACTIVE) && $conf->global->LDAP_MEMBER_ACTIVE != 'ldap2dolibarr')
 {
-	print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$adh->id.'&amp;action=dolibarr2ldap">'.$langs->trans("ForceSynchronize").'</a>';
+	print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$adh->id.'&amp;action=dolibarr2ldap">'.$langs->trans("ForceSynchronize").'</a></div>';
 }
 
 print "</div>\n";
@@ -241,4 +235,3 @@ print '</table>';
 llxFooter();
 
 $db->close();
-?>

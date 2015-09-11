@@ -24,16 +24,18 @@
  *	\brief      Prelevement creation page
  */
 
-require '../bank/pre.inc.php';
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/bonprelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/prelevement.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
+$langs->load("banks");
+$langs->load("categories");
 $langs->load("widthdrawals");
 $langs->load("companies");
-$langs->load("banks");
 $langs->load("bills");
 
 // Security check
@@ -56,9 +58,9 @@ if ($action == 'modify')
         dolibarr_set_const($db, GETPOST("nom$i"), GETPOST("value$i"),'chaine',0,'',$conf->entity);
     }
 }
-
 if ($action == 'create')
 {
+	// $conf->global->PRELEVEMENT_CODE_BANQUE and $conf->global->PRELEVEMENT_CODE_GUICHET should be empty
     $bprev = new BonPrelevement($db);
     $result=$bprev->create($conf->global->PRELEVEMENT_CODE_BANQUE, $conf->global->PRELEVEMENT_CODE_GUICHET);
     if ($result < 0)
@@ -68,6 +70,10 @@ if ($action == 'create')
     if ($result == 0)
     {
         $mesg='<div class="error">'.$langs->trans("NoInvoiceCouldBeWithdrawed").'</div>';
+        foreach($bprev->invoice_in_error as $key => $val)
+        {
+        	$mesg.=$val."<br>\n";
+        }
     }
 }
 
@@ -154,7 +160,7 @@ print '<br>';
  * Invoices waiting for withdraw
  */
 
-$sql = "SELECT f.facnumber, f.rowid, f.total_ttc, s.nom, s.rowid as socid,";
+$sql = "SELECT f.facnumber, f.rowid, f.total_ttc, s.nom as name, s.rowid as socid,";
 $sql.= " pfd.date_demande";
 $sql.= " FROM ".MAIN_DB_PREFIX."facture as f,";
 $sql.= " ".MAIN_DB_PREFIX."societe as s,";
@@ -177,6 +183,7 @@ if ($resql)
     print '<tr class="liste_titre">';
     print '<td>'.$langs->trans("Invoice").'</td>';
     print '<td>'.$langs->trans("ThirdParty").'</td>';
+    print '<td>'.$langs->trans("RIB").'</td>';
     print '<td align="right">'.$langs->trans("AmountTTC").'</td>';
     print '<td align="right">'.$langs->trans("DateRequest").'</td>';
     print '</tr>';
@@ -188,18 +195,24 @@ if ($resql)
         {
             $obj = $db->fetch_object($resql);
             $var=!$var;
-            print '<tr '.$bc[$var].'><td>';
+            print '<tr '.$bc[$var].'>';
+            print '<td>';
             $invoicestatic->id=$obj->rowid;
             $invoicestatic->ref=$obj->facnumber;
             print $invoicestatic->getNomUrl(1,'withdraw');
             print '</td>';
+            // Thirdparty
             print '<td>';
-            $thirdpartystatic->id=$obj->socid;
-            $thirdpartystatic->nom=$obj->nom;
-            print $thirdpartystatic->getNomUrl(1,'customer');
+            $thirdpartystatic->fetch($obj->socid);
+            print $thirdpartystatic->getNomUrl(1,'card');
             print '</td>';
+            // RIB
+            print '<td>';
+            print $thirdpartystatic->display_rib();
+            print '</td>';
+            // Amount
             print '<td align="right">';
-            print price($obj->total_ttc).' '.$langs->trans("Currency".$conf->currency);
+            print price($obj->total_ttc,0,$langs,0,0,-1,$conf->currency);
             print '</td>';
             // Date
             print '<td align="right">';
@@ -209,7 +222,7 @@ if ($resql)
             $i++;
         }
     }
-    else print '<tr><td colspan="4">'.$langs->trans("None").'</td></tr>';
+    else print '<tr '.$bc[0].'><td colspan="5">'.$langs->trans("None").'</td></tr>';
     print "</table>";
     print "<br>\n";
 }
@@ -252,14 +265,14 @@ if ($result)
         $obj = $db->fetch_object($result);
         $var=!$var;
 
-        print "<tr $bc[$var]><td>";
+        print "<tr ".$bc[$var]."><td>";
         $bprev->id=$obj->rowid;
         $bprev->ref=$obj->ref;
         print $bprev->getNomUrl(1);
         print "</td>\n";
         print '<td align="center">'.dol_print_date($db->jdate($obj->datec),'day')."</td>\n";
 
-        print '<td align="right">'.price($obj->amount).' '.$langs->trans("Currency".$conf->currency)."</td>\n";
+        print '<td align="right">'.price($obj->amount,0,$langs,0,0,-1,$conf->currency)."</td>\n";
 
         print "</tr>\n";
         $i++;
@@ -276,4 +289,3 @@ else
 $db->close();
 
 llxFooter();
-?>

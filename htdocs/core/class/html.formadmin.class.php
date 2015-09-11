@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2007      Patrick Raguin 		<patrick.raguin@gmail.com>
  *
@@ -53,9 +53,10 @@ class FormAdmin
 	 * 		@param		array		$filter			Array of keys to exclude in list
 	 * 		@param		int			$showempty		Add empty value
 	 *      @param      int			$showwarning    Show a warning if language is not complete
+	 *      @param		int			$disabled		Disable edit of select
 	 *      @return		string						Return HTML select string with list of languages
 	 */
-	function select_language($selected='',$htmlname='lang_id',$showauto=0,$filter=0,$showempty=0,$showwarning=0)
+	function select_language($selected='',$htmlname='lang_id',$showauto=0,$filter=0,$showempty=0,$showwarning=0,$disabled=0)
 	{
 		global $langs;
 
@@ -63,7 +64,7 @@ class FormAdmin
 
 		$out='';
 
-		$out.= '<select class="flat" id="'.$htmlname.'" name="'.$htmlname.'">';
+		$out.= '<select class="flat" id="'.$htmlname.'" name="'.$htmlname.'"'.($disabled?' disabled="disabled"':'').'>';
 		if ($showempty)
 		{
 			$out.= '<option value=""';
@@ -121,7 +122,7 @@ class FormAdmin
         global $langs,$conf;
 
         // Clean parameters
-        if ($selected == 'eldy.php') $selected='eldy_backoffice.php';  // For compatibility
+
 
         // Check parameters
         if (! is_array($dirmenuarray)) return -1;
@@ -143,7 +144,11 @@ class FormAdmin
     	                    if (is_file($dir."/".$file) && substr($file, 0, 1) <> '.' && substr($file, 0, 3) <> 'CVS' && substr($file, 0, 5) != 'index')
     	                    {
     	                        if (preg_match('/lib\.php$/i',$file)) continue;	// We exclude library files
-    	                    	$filelib=preg_replace('/\.php$/i','',$file);
+    	                        if (preg_match('/eldy_(backoffice|frontoffice)\.php$/i',$file)) continue;		// We exclude all menu manager files
+    	                        if (preg_match('/auguria_(backoffice|frontoffice)\.php$/i',$file)) continue;	// We exclude all menu manager files
+    	                        if (preg_match('/smartphone_(backoffice|frontoffice)\.php$/i',$file)) continue;	// We exclude all menu manager files
+
+    	                        $filelib=preg_replace('/\.php$/i','',$file);
     	        				$prefix='';
     	        				// 0=Recommanded, 1=Experimental, 2=Developpement, 3=Other
     	        				if (preg_match('/^eldy/i',$file)) $prefix='0';
@@ -176,7 +181,7 @@ class FormAdmin
 			$newprefix=$tab[0];
 			if ($newprefix=='1' && ($conf->global->MAIN_FEATURES_LEVEL < 1)) continue;
 			if ($newprefix=='2' && ($conf->global->MAIN_FEATURES_LEVEL < 2)) continue;
-			if (! empty($conf->browser->firefox) && $newprefix != $oldprefix)	// Add separators
+			if ($newprefix != $oldprefix)	// Add separators
 			{
 				// Affiche titre
 				print '<option value="-1" disabled="disabled">';
@@ -195,9 +200,9 @@ class FormAdmin
     /**
      *  Return combo list of available menu families
      *
-     *  @param	string	$selected        Menu pre-selected
-     *  @param  string	$htmlname        Name of html select
-     *  @param	string	$dirmenuarray    Directories to scan
+     *  @param	string		$selected        Menu pre-selected
+     *  @param	string		$htmlname        Name of html select
+     *  @param	string[]	$dirmenuarray    Directories to scan
      *  @return	void
      */
     function select_menu_families($selected, $htmlname, $dirmenuarray)
@@ -320,7 +325,7 @@ class FormAdmin
 	 *
 	 *    	@param      string	$selected       Paper format pre-selected
 	 *    	@param      string	$htmlname       Name of HTML select field
-	 * 		@param		string	$filter			Key to filter
+	 * 		@param		string	$filter			Value to filter on code
 	 * 		@param		int		$showempty		Add empty value
 	 * 		@return		string					Return HTML output
 	 */
@@ -328,8 +333,12 @@ class FormAdmin
 	{
 		global $langs;
 
-		$sql="SELECT code, label, width, height, unit FROM ".MAIN_DB_PREFIX."c_paper_format where active=1";
-        if ($filter) $sql.=" WHERE code LIKE '%".$filter."%'";
+		$langs->load("dict");
+
+		$sql = "SELECT code, label, width, height, unit";
+		$sql.= " FROM ".MAIN_DB_PREFIX."c_paper_format";
+		$sql.= " WHERE active=1";
+        if ($filter) $sql.=" AND code LIKE '%".$this->db->escape($filter)."%'";
 
         $resql=$this->db->query($sql);
         if ($resql)
@@ -346,7 +355,11 @@ class FormAdmin
                 $i++;
             }
         }
-        else dol_print_error($this->db);
+        else
+		{
+			dol_print_error($this->db);
+			return '';
+		}
 		$out='';
 
 		$out.= '<select class="flat" id="'.$htmlname.'" name="'.$htmlname.'">';
@@ -372,4 +385,3 @@ class FormAdmin
 		return $out;
 	}
 }
-?>

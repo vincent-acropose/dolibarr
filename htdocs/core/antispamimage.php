@@ -26,6 +26,7 @@ define('NOLOGIN',1);
 if (! defined('NOREQUIREUSER'))   define('NOREQUIREUSER',1);
 if (! defined('NOREQUIREDB'))     define('NOREQUIREDB',1);
 if (! defined('NOREQUIRETRAN'))   define('NOREQUIRETRAN',1);
+if (! defined('NOREQUIREMENU'))   define('NOREQUIREMENU',1);
 if (! defined('NOREQUIRESOC'))    define('NOREQUIRESOC',1);
 if (! defined('NOTOKENRENEWAL'))  define('NOTOKENRENEWAL',1);
 
@@ -50,8 +51,6 @@ for($i = 0; $i < $length; $i++)
 $sessionkey='dol_antispam_value';
 $_SESSION[$sessionkey]=$string;
 
-header("Content-type: image/png");
-
 $img = imagecreate(80,32);
 if (empty($img))
 {
@@ -59,9 +58,10 @@ if (empty($img))
     exit;
 }
 
+header("Content-type: image/png");
+
 $background_color = imagecolorallocate($img, 250, 250, 250);
 $ecriture_color = imagecolorallocate($img, 0, 0, 0);
 imagestring($img, 4, 24, 8, $string, $ecriture_color);
 imagepng($img);
 
-?>

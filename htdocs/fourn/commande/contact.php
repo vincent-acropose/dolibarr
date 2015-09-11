@@ -40,7 +40,7 @@ $action	= GETPOST('action', 'alpha');
 
 // Security check
 if ($user->societe_id) $socid=$user->societe_id;
-$result = restrictedArea($user, 'commande_fournisseur', $id,'');
+$result = restrictedArea($user, 'fournisseur', $id, '', 'commande');
 
 $object = new CommandeFournisseur($db);
 
@@ -56,7 +56,7 @@ if ($action == 'addcontact' && $user->rights->fournisseur->commande->creer)
     if ($result > 0 && $id > 0)
     {
     	$contactid = (GETPOST('userid') ? GETPOST('userid') : GETPOST('contactid'));
-  		$result = $result = $object->add_contact($contactid, $_POST["type"], $_POST["source"]);
+  		$result = $object->add_contact($contactid, $_POST["type"], $_POST["source"]);
     }
 
 	if ($result >= 0)
@@ -69,11 +69,11 @@ if ($action == 'addcontact' && $user->rights->fournisseur->commande->creer)
 		if ($object->error == 'DB_ERROR_RECORD_ALREADY_EXISTS')
 		{
 			$langs->load("errors");
-			$mesg = '<div class="error">'.$langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType").'</div>';
+			setEventMessage($langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType"), 'errors');
 		}
 		else
 		{
-			$mesg = '<div class="error">'.$object->error.'</div>';
+			setEventMessage($object->error, 'errors');
 		}
 	}
 }
@@ -126,7 +126,6 @@ $userstatic=new User($db);
 /* Mode vue et edition                                                         */
 /*                                                                             */
 /* *************************************************************************** */
-dol_htmloutput_mesg($mesg);
 
 if ($id > 0 || ! empty($ref))
 {
@@ -147,7 +146,7 @@ if ($id > 0 || ! empty($ref))
 		*/
 		print '<table class="border" width="100%">';
 
-		$linkback = '<a href="'.DOL_URL_ROOT.'/fourn/commande/liste.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
+		$linkback = '<a href="'.DOL_URL_ROOT.'/fourn/commande/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
 		// Ref
 		print '<tr><td width="20%">'.$langs->trans("Ref").'</td>';
@@ -166,10 +165,10 @@ if ($id > 0 || ! empty($ref))
 		print '</div>';
 
 		print '<br>';
-		
+
 		// Contacts lines
 		include DOL_DOCUMENT_ROOT.'/core/tpl/contacts.tpl.php';
-		
+
 	}
 	else
 	{
@@ -181,4 +180,3 @@ if ($id > 0 || ! empty($ref))
 
 llxFooter();
 $db->close();
-?>

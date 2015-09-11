@@ -54,13 +54,13 @@ $result = restrictedArea($user, 'tax', '', '', 'charges');
  * @param	DoliDB	$db		Database handler
  * @param	int		$y		Year
  * @param	int		$q		Year quarter (1-4)
- * @return	void
+ * @return	array
  */
 function tva_coll($db,$y,$q)
 {
 	global $conf;
 
-    if ($conf->global->COMPTA_MODE == "CREANCES-DETTES")
+    if ($conf->global->ACCOUNTING_MODE == "CREANCES-DETTES")
     {
         // if vat paid on due invoices
         $sql = "SELECT d.fk_facture as facid, f.facnumber as facnum, d.tva_tx as rate, d.total_ht as totalht, d.total_tva as amount";
@@ -122,13 +122,13 @@ function tva_coll($db,$y,$q)
  * @param	DoliDB	$db			Database handler object
  * @param	int		$y			Year
  * @param	int		$q			Year quarter (1-4)
- * @return	void
+ * @return	array
  */
 function tva_paye($db, $y,$q)
 {
 	global $conf;
 
-    if ($conf->global->COMPTA_MODE == "CREANCES-DETTES")
+    if ($conf->global->ACCOUNTING_MODE == "CREANCES-DETTES")
     {
         // Si on paye la tva sur les factures dues (non brouillon)
         $sql = "SELECT d.fk_facture_fourn as facid, f.facnumber as facnum, d.tva_tx as rate, d.total_ht as totalht, d.tva as amount";
@@ -212,7 +212,7 @@ print "<td align=\"right\">".$langs->trans("Invoices")."</td>";
 print "<td align=\"right\">".$langs->trans("TotalToPay")."</td>";
 print "</tr>\n";
 
-if ($conf->global->COMPTA_MODE == "CREANCES-DETTES")
+if ($conf->global->ACCOUNTING_MODE == "CREANCES-DETTES")
 {
 	$y = $year_current;
 
@@ -250,7 +250,7 @@ if ($conf->global->COMPTA_MODE == "CREANCES-DETTES")
 			}
 			$x_both[$my_paye_rate]['paye']['links'] = '';
 			foreach($x_paye[$my_paye_rate]['facid'] as $id=>$dummy){
-				$x_both[$my_paye_rate]['paye']['links'] .= '<a href="../../fourn/facture/fiche.php?facid='.$x_paye[$my_paye_rate]['facid'][$id].'" title="'.$x_paye[$my_paye_rate]['facnum'][$id].'">..'.substr($x_paye[$my_paye_rate]['facnum'][$id],-2).'</a> ';
+				$x_both[$my_paye_rate]['paye']['links'] .= '<a href="../../fourn/facture/card.php?facid='.$x_paye[$my_paye_rate]['facid'][$id].'" title="'.$x_paye[$my_paye_rate]['facnum'][$id].'">..'.substr($x_paye[$my_paye_rate]['facnum'][$id],-2).'</a> ';
 			}
 		}
 		//now we have an array (x_both) indexed by rates for coll and paye
@@ -261,13 +261,13 @@ if ($conf->global->COMPTA_MODE == "CREANCES-DETTES")
 		$x_paye_ht = 0;
 		foreach($x_both as $rate => $both){
 			$var=!$var;
-			print "<tr $bc[$var]>";
+			print "<tr ".$bc[$var].">";
 			print "<td>$rate%</td>";
-			print "<td nowrap align=\"right\">".price($both['coll']['totalht'])."</td>";
-			print "<td nowrap align=\"right\">".price($both['coll']['vat'])."</td>";
+			print "<td class=\"nowrap\" align=\"right\">".price($both['coll']['totalht'])."</td>";
+			print "<td class=\"nowrap\" align=\"right\">".price($both['coll']['vat'])."</td>";
 			print "<td align=\"right\">".$both['coll']['links']."</td>";
-			print "<td nowrap align=\"right\">".price($both['paye']['totalht'])."</td>";
-			print "<td nowrap align=\"right\">".price($both['paye']['vat'])."</td>";
+			print "<td class=\"nowrap\" align=\"right\">".price($both['paye']['totalht'])."</td>";
+			print "<td class=\"nowrap\" align=\"right\">".price($both['paye']['vat'])."</td>";
 			print "<td align=\"right\">".$both['paye']['links']."</td>";
 			print "<td></td>";
 			print "</tr>";
@@ -284,22 +284,22 @@ if ($conf->global->COMPTA_MODE == "CREANCES-DETTES")
 		$subtotal = $subtotal + $diff;
 
 		$var=!$var;
-		print "<tr $bc[$var]>";
+		print "<tr ".$bc[$var].">";
 		print '<td colspan="7"></td>';
-		print "<td nowrap align=\"right\">".price($diff)."</td>\n";
+		print "<td class=\"nowrap\" align=\"right\">".price($diff)."</td>\n";
 		print "</tr>\n";
 
 		$i++;
 	}
 	print '<tr class="liste_total">';
 	print '<td align="right">'.$langs->trans("Total").':</td>';
-	print '<td nowrap="nowrap" align="right">'.price($subtot_coll_total).'</td>';
-	print '<td nowrap="nowrap" align="right">'.price($subtot_coll_vat).'</td>';
+	print '<td class="nowrap" align="right">'.price($subtot_coll_total).'</td>';
+	print '<td class="nowrap" align="right">'.price($subtot_coll_vat).'</td>';
 	print '<td></td>';
-	print '<td nowrap="nowrap" align="right">'.price($subtot_paye_total).'</td>';
-	print '<td nowrap="nowrap" align="right">'.price($subtot_paye_vat).'</td>';
+	print '<td class="nowrap" align="right">'.price($subtot_paye_total).'</td>';
+	print '<td class="nowrap" align="right">'.price($subtot_paye_vat).'</td>';
 	print '<td></td>';
-	print '<td nowrap="nowrap" align="right"><b>'.price($total).'</b>';
+	print '<td class="nowrap" align="right"><b>'.price($total).'</b>';
 	print '</td>';
 	print '</tr>';
 
@@ -318,4 +318,3 @@ echo '</table>';
 $db->close();
 
 llxFooter();
-?>

@@ -1,90 +1,86 @@
-/*
- * Language code: ru_RU
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-01-19 21:30:52
- */
-
-
-// Date 2009-01-19 21:30:52
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
-RefSending=Ref. отправка
-Sending=Отправка
-Sendings=Отправок
-Receivings=Receivings
-SendingsArea=Отправок области
-ListOfSendings=Список отправок
-SendingMethod=Отправка метод
-SendingReceipt=Отправка получения
-LastSendings=Последнее %s отправок
-SearchASending=Поиск направления
-StatisticsOfSendings=Статистика отправок
-NbOfSendings=Число отправок
-SendingCard=
-NewSending=Новые направления
-CreateASending=Создать отправке
-CreateSending=Создать отправке
+# Dolibarr language file - Source file is en_US - sendings
+RefSending=Ref. поставки
+Sending=Поставки
+Sendings=Поставки
+AllSendings=All Shipments
+Shipment=Поставка
+Shipments=Поставки
+ShowSending=Показать Отправку
+Receivings=Получатели
+SendingsArea=Раздел поставок
+ListOfSendings=Список поставок
+SendingMethod=Метод отправки
+SendingReceipt=Получатель
+LastSendings=Последнее %s поставок
+SearchASending=Поиск поставки
+StatisticsOfSendings=Статистика поставок
+NbOfSendings=Число поставок
+NumberOfShipmentsByMonth=Количество поставок по месяцам
+SendingCard=Карточка поставки
+NewSending=Новая поставка
+CreateASending=Создать поставку
+CreateSending=Создать поставку
 QtyOrdered=Количество заказанных
-QtyShipped=Количество отгружен
-QtyToShip=Количество судов
-QtyReceived=Количество получил
-KeepToShip=Держите на корабль
-OtherSendingsForSameOrder=Другие отправок с этой целью
-DateSending=Дата отправки порядка
-DateSendingShort=Дата отправки порядка
-SendingsForSameOrder=Отправок с этой целью
-SendingsAndReceivingForSameOrder=Отправок и receivings в таком порядке
-SendingsToValidate=Отправка на проверку
+QtyShipped=Количество отгруженных
+QtyToShip=Количество для отправки
+QtyReceived=Количество получено
+KeepToShip=Осталось отправить
+OtherSendingsForSameOrder=Другие поставки для этого заказа
+DateSending=Дата отправки заказа
+DateSendingShort=Дата отправки заказа
+SendingsForSameOrder=Поставок для этого заказа
+SendingsAndReceivingForSameOrder=Поставки и получения для этого заказа
+SendingsToValidate=Поставки для проверки
+StatusSendingCanceled=Отменена
 StatusSendingDraft=Черновик
-StatusSendingValidated=Удостоверенная (продукты для судна или уже отгружен)
+StatusSendingValidated=Утверждена (товары для отправки или уже отправлены)
+StatusSendingProcessed=Обработано
+StatusSendingCanceledShort=Отменена
 StatusSendingDraftShort=Черновик
-StatusSendingValidatedShort=Подтвержденные
-SendingSheet=Отправка листа
+StatusSendingValidatedShort=Утверждена
+StatusSendingProcessedShort=Обработано
+SendingSheet=Лист поставки
 Carriers=Перевозчики
 Carrier=Перевозчик
-CarriersArea=Перевозчики области
+CarriersArea=Раздел перевозчика
 NewCarrier=Новый перевозчик
-ConfirmDeleteSending=Вы уверены, что хотите удалить эту отправку?
-ConfirmValidateSending=Вы уверены, что хотите valdate этой передаче?
-ConfirmCancelSending=Вы уверены, что хотите отменить отправку?
-GenericTransport=Общие транспорт
-Enlevement=Полученной клиентом
+ConfirmDeleteSending=Вы уверены, что хотите удалить эту поставку?
+ConfirmValidateSending=Вы уверены, что хотите подтвердить эту поставку со ссылкой <b>%s</b> ?
+ConfirmCancelSending=Вы уверены, что хотите отменить эту поставку?
+GenericTransport=Основной транспорт
+Enlevement=Получен клиентом
 DocumentModelSimple=Простая модель документа
-WarningNoQtyLeftToSend=Внимание, без продуктов, ожидающих отправки.
-// Date 2009-01-19 21:30:52
-// STOP - Lines generated via parser
+DocumentModelMerou=Модель A5
+WarningNoQtyLeftToSend=Внимание, нет товаров ожидающих отправки.
+StatsOnShipmentsOnlyValidated=Статистика собирается только на утверждённые поставки. Используемая дата - дата утверждения поставки (планируемая дата доставки не всегда известна)
+DateDeliveryPlanned=Планируемая дата доставки
+DateReceived=Дата доставки получена
+SendShippingByEMail=Отправить поставкой по EMail
+SendShippingRef=Представление поставки %s
+ActionsOnShipping=События поставки
+LinkToTrackYourPackage=Ссылка на номер для отслеживания посылки
+ShipmentCreationIsDoneFromOrder=На данный момент, создание новой поставки закончено из карточки заказа.
+RelatedShippings=Связанные поставки
+ShipmentLine=Линия поставки
+CarrierList=Список перевозчиков
+SendingRunning=Товар из уже заказанных клиентом
+SuppliersReceiptRunning=Товар из уже  заказанных поставщиком
+ProductQtyInCustomersOrdersRunning=Количество товара в открытых заказах клиента
+ProductQtyInSuppliersOrdersRunning=Количество товара в открытых заказах поставщика
+ProductQtyInShipmentAlreadySent=Количество товара из открытого заказа клиента уже отправлено. 
+ProductQtyInSuppliersShipmentAlreadyRecevied=Количество товара из открытого заказа поставщика уже получено. 
 
-
-// START - Lines generated via autotranslator.php tool (2009-08-13 21:14:36).
-// Reference language: en_US
-StatsOnShipmentsOnlyValidated=Статистика проводится на поставки только апробированные
-SendingMethodCATCH=Catch заказчиком
-SendingMethodTRANS=Transporter
+# Sending methods
+SendingMethodCATCH=Получено заказчиком
+SendingMethodTRANS=Перевозчик
 SendingMethodCOLSUI=Colissimo
+# ModelDocument
 DocumentModelSirocco=Простая модель документа для доставки квитанций
 DocumentModelTyphon=Более полная модель документа для доставки квитанций (logo. ..)
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 21:14:36).
-
-
-
-// START - Lines generated via autotranslator.php tool (2010-09-04 01:33:40).
-// Reference language: en_US -> ru_RU
-Shipments=Поставки
-StatusSendingCanceled=Отменен
-StatusSendingCanceledShort=Отменен
-DocumentModelMerou=Mérou модели A5
-DateDeliveryPlanned=Планируемая дата поставки
-DateReceived=Дата доставки получили
-// STOP - Lines generated via autotranslator.php tool (2010-09-04 01:37:29).
-
-
-// START - Lines generated via autotranslator.php tool (2011-08-27 16:56:14).
-// Reference language: en_US -> ru_RU
-SendShippingByEMail=Отправить доставкой по EMail
-SendShippingRef=Отправить доставки %s
-ActionsOnShipping=Acions на судоходство
-LinkToTrackYourPackage=Ссылка на дорожку ваш пакет
-ShipmentCreationIsDoneFromOrder=На данный момент, создание новой партии производится с целью карту.
 Error_EXPEDITION_ADDON_NUMBER_NotDefined=Постоянное EXPEDITION_ADDON_NUMBER не определена
-// STOP - Lines generated via autotranslator.php tool (2011-08-27 17:00:56).
+SumOfProductVolumes=Сумма сторон товара
+SumOfProductWeights=Вес товара в сумме
+
+# warehouse details
+DetailWarehouseNumber= Детали склада
+DetailWarehouseFormat= В:%s (Кол-во : %d)

@@ -71,7 +71,7 @@ if (GETPOST("action") == 'setremise')
 	}
 	else
 	{
-		$errmesg=$soc->error;
+		setEventMessage($soc->error, 'errors');
 	}
 }
 
@@ -97,8 +97,6 @@ if ($socid > 0)
 	$objsoc->id=$socid;
 	$objsoc->fetch($socid);
 
-	dol_htmloutput_errors($errmesg);
-
 	$head = societe_prepare_head($objsoc);
 
 	dol_fiche_head($head, 'relativediscount', $langs->trans("ThirdParty"),0,'company');
@@ -114,7 +112,7 @@ if ($socid > 0)
 
 	// Remise
 	print '<tr><td colspan="2" width="25%">';
-	print $langs->trans("CustomerRelativeDiscount").'</td><td colspan="2">'.price2num($objsoc->remise_client)."%</td></tr>";
+	print $langs->trans("CustomerRelativeDiscount").'</td><td colspan="2">'.price2num($objsoc->remise_percent)."%</td></tr>";
 
 	print '</table>';
 	print '<br>';
@@ -130,7 +128,7 @@ if ($socid > 0)
 
 	// Nouvelle valeur
 	print '<tr><td colspan="2">';
-	print $langs->trans("NewValue").'</td><td colspan="2"><input type="text" size="5" name="remise" value="'.($_POST["remise"]?$_POST["remise"]:$objsoc->remise_client).'">%</td></tr>';
+	print $langs->trans("NewValue").'</td><td colspan="2"><input type="text" size="5" name="remise" value="'.($_POST["remise"]?$_POST["remise"]:'').'">%</td></tr>';
 
 	// Motif/Note
 	print '<tr><td colspan="2" width="25%">';
@@ -155,9 +153,9 @@ if ($socid > 0)
 
 
 	/*
-	 * Liste de l'historique des avoirs
+	 * List log of all percent discounts
 	 */
-	$sql  = "SELECT rc.rowid,rc.remise_client,rc.note, rc.datec as dc,";
+	$sql  = "SELECT rc.rowid, rc.remise_client as remise_percent, rc.note, rc.datec as dc,";
 	$sql.= " u.login, u.rowid as user_id";
 	$sql.= " FROM ".MAIN_DB_PREFIX."societe_remise as rc, ".MAIN_DB_PREFIX."user as u";
 	$sql.= " WHERE rc.fk_soc =". $objsoc->id;
@@ -184,9 +182,9 @@ if ($socid > 0)
 			$tag = !$tag;
 			print '<tr '.$bc[$tag].'>';
 			print '<td>'.dol_print_date($db->jdate($obj->dc),"dayhour").'</td>';
-			print '<td align="center">'.price2num($obj->remise_client).'%</td>';
+			print '<td align="center">'.price2num($obj->remise_percent).'%</td>';
 			print '<td align="left">'.$obj->note.'</td>';
-			print '<td align="center"><a href="'.DOL_URL_ROOT.'/user/fiche.php?id='.$obj->user_id.'">'.img_object($langs->trans("ShowUser"),'user').' '.$obj->login.'</a></td>';
+			print '<td align="center"><a href="'.DOL_URL_ROOT.'/user/card.php?id='.$obj->user_id.'">'.img_object($langs->trans("ShowUser"),'user').' '.$obj->login.'</a></td>';
 			print '</tr>';
 			$i++;
 		}
@@ -203,4 +201,3 @@ if ($socid > 0)
 $db->close();
 
 llxFooter();
-?>

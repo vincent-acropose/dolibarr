@@ -37,34 +37,49 @@ $socid = GETPOST('socid','int');
 if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user, 'societe', $socid, '&societe');
 
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('infothirdparty'));
+
+$object = new Societe($db);
+
 
 /*
-*	View
-*/
-
-llxHeader();
-
-$soc = new Societe($db);
-$soc->fetch($socid);
-$soc->info($socid);
-
-/*
- * Affichage onglets
+ *	Actions
  */
-$head = societe_prepare_head($soc);
 
-dol_fiche_head($head, 'info', $langs->trans("ThirdParty"),0,'company');
+$parameters=array('id'=>$socid);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 
 
 
-print '<table width="100%"><tr><td>';
-dol_print_object_info($soc);
-print '</td></tr></table>';
+/*
+ *	View
+ */
 
-print '</div>';
+$help_url='EN:Module_Third_Parties|FR:Module_Tiers|ES:Empresas';
+llxHeader('',$langs->trans("ThirdParty"),$help_url);
 
+if ($socid > 0)
+{
+	$result = $object->fetch($socid);
+	$object->info($socid);
+
+	/*
+	 * Affichage onglets
+	 */
+	$head = societe_prepare_head($object);
+
+	dol_fiche_head($head, 'info', $langs->trans("ThirdParty"), 0, 'company');
+
+
+	print '<table width="100%"><tr><td>';
+	dol_print_object_info($object);
+	print '</td></tr></table>';
+
+	dol_fiche_end();
+}
 
 llxFooter();
 
 $db->close();
-?>

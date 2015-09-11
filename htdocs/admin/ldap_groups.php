@@ -4,7 +4,7 @@
  * Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
  * Copyright (C) 2005      Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2006-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2011 	   Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2011-2013 Juanjo Menent		<jmenent@2byte.es>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,16 +64,16 @@ if ($action == 'setvalue' && $user->admin)
     $key=GETPOST("key");
     if ($key) $valkey=$conf->global->$key;
     if (! dolibarr_set_const($db, 'LDAP_KEY_GROUPS',$valkey,'chaine',0,'',$conf->entity)) $error++;
-
-	if (! $error)
-  	{
-  		$db->commit();
-  		$mesg='<div class="ok">'.$langs->trans("SetupSaved").'</div>';
-  	}
-  	else
-  	{
-  		$db->rollback();
-		dol_print_error($db);
+    
+    if (! $error)
+    {
+    	$db->commit();
+    	setEventMessage($langs->trans("SetupSaved"));
+    }
+    else
+    {
+    	$db->rollback();
+    	dol_print_error($db);
     }
 }
 
@@ -93,7 +93,7 @@ $head = ldap_prepare_head();
 // Test si fonction LDAP actives
 if (! function_exists("ldap_connect"))
 {
-	$mesg.='<div class="error">'.$langs->trans("LDAPFunctionsNotAvailableOnPHP").'</div>';  ;
+	setEventMessage($langs->trans("LDAPFunctionsNotAvailableOnPHP"),'errors');
 }
 
 dol_fiche_head($head, 'groups', $langs->trans("LDAPSetup"));
@@ -219,6 +219,10 @@ if (function_exists("ldap_connect"))
 			$info=$object->_load_ldap_info();
 			$dn=$object->_load_ldap_dn($info);
 
+			// Get a gid number for objectclass PosixGroup
+			if(in_array('posixGroup',$info['objectclass']))
+				$info['gidNumber'] = $ldap->getNextGroupGid();
+
 			$result1=$ldap->delete($dn);			// To be sure to delete existing records
 			$result2=$ldap->add($dn,$info,$user);	// Now the test
 			$result3=$ldap->delete($dn);			// Clean what we did
@@ -253,9 +257,6 @@ if (function_exists("ldap_connect"))
 	}
 }
 
-dol_htmloutput_mesg($mesg);
-
 $db->close();
 
 llxFooter();
-?>

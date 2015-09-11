@@ -15,6 +15,16 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Upgrade scripts can be ran from command line with syntax:
+ *
+ * cd htdocs/install
+ * php upgrade.php 3.4.0 3.5.0 [dirmodule|ignoredbversion]
+ * php upgrade2.php 3.4.0 3.5.0
+ *
+ * Option 'dirmodule' allows to provide a path for an external module, so we migrate from command line a script from a module.
+ * Option 'ignoredbversion' allows to run migration even if database is a bugged database version.
+ * Return code is 0 if OK, >0 if error
  */
 
 /**
@@ -39,13 +49,16 @@ $ok = 0;
 // Ne fonctionne que si on est pas en safe_mode.
 $err=error_reporting();
 error_reporting(0);
-@set_time_limit(120);
+@set_time_limit(300);
 error_reporting($err);
+
 
 $setuplang=GETPOST("selectlang",'',3)?GETPOST("selectlang",'',3):'auto';
 $langs->setDefaultLang($setuplang);
 $versionfrom=GETPOST("versionfrom",'',3)?GETPOST("versionfrom",'',3):(empty($argv[1])?'':$argv[1]);
 $versionto=GETPOST("versionto",'',3)?GETPOST("versionto",'',3):(empty($argv[2])?'':$argv[2]);
+$dirmodule=((GETPOST("dirmodule",'',3) && GETPOST("dirmodule",'',3) != 'ignoredbversion'))?GETPOST("dirmodule",'',3):((empty($argv[3]) || $argv[3] == 'ignoredbversion')?'':$argv[3]);
+$ignoredbversion=(GETPOST('ignoredbversion','',3)=='ignoredbversion')?GETPOST('ignoredbversion','',3):((empty($argv[3]) || $argv[3] != 'ignoredbversion')?'':$argv[3]);
 
 $langs->load("admin");
 $langs->load("install");
@@ -65,6 +78,22 @@ if (! is_object($conf)) dolibarr_install_syslog("upgrade2: conf file not initial
  * View
  */
 
+if (! $versionfrom && ! $versionto)
+{
+	print 'Error: Parameter versionfrom or versionto missing.'."\n";
+	print 'Upgrade must be ran from cmmand line with parameters or called from page install/index.php (like a first install) instead of page install/upgrade.php'."\n";
+	// Test if batch mode
+	$sapi_type = php_sapi_name();
+	$script_file = basename(__FILE__);
+	$path=dirname(__FILE__).'/';
+	if (substr($sapi_type, 0, 3) == 'cli')
+	{
+		print 'Syntax from command line: '.$script_file." x.y.z a.b.c\n";
+	}
+	exit;
+}
+
+
 pHeader('',"upgrade2",GETPOST('action'),'versionfrom='.$versionfrom.'&versionto='.$versionto);
 
 $actiondone=0;
@@ -75,12 +104,6 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
     $actiondone=1;
 
     print '<h3>'.$langs->trans("DatabaseMigration").'</h3>';
-
-    if (! $versionfrom && ! $versionto)
-    {
-        print '<div class="error">Parameter versionfrom or versionto missing. Upgrade is launched from page install/index.php (like a first install) instead of install/upgrade.php</div>';
-        exit;
-    }
 
     print '<table cellspacing="0" cellpadding="1" border="0" width="100%">';
     $error=0;
@@ -114,9 +137,13 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
 
     $db=getDoliDBInstance($conf->db->type,$conf->db->host,$conf->db->user,$conf->db->pass,$conf->db->name,$conf->db->port);
 
+    // Create the global $hookmanager object
+    include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
+    $hookmanager=new HookManager($db);
+
     if ($db->connected == 1)
     {
-        print '<tr><td nowrap="nowrap">';
+        print '<tr><td class="nowrap">';
         print $langs->trans("ServerConnection")." : $dolibarr_main_db_host</td><td align=\"right\">".$langs->trans("OK")."</td></tr>\n";
         dolibarr_install_syslog("upgrade: ".$langs->transnoentities("ServerConnection")." : $dolibarr_main_db_host ".$langs->transnoentities("OK"));
         $ok = 1;
@@ -132,7 +159,7 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
     {
         if($db->database_selected == 1)
         {
-            print '<tr><td nowrap="nowrap">';
+            print '<tr><td class="nowrap">';
             print $langs->trans("DatabaseConnection")." : ".$dolibarr_main_db_name."</td><td align=\"right\">".$langs->trans("OK")."</td></tr>\n";
             dolibarr_install_syslog("upgrade: Database connection successfull : $dolibarr_main_db_name");
             $ok=1;
@@ -154,8 +181,8 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
         print '<td align="right">'.$version.'</td></tr>';
         dolibarr_install_syslog("upgrade: ".$langs->transnoentities("ServerVersion")." : $version");
 
-        // Test database version
-        $versionmindb=getStaticMember(get_class($db),'versionmin');
+        // Test database version requirement
+        $versionmindb=$db::VERSIONMIN;
         //print join('.',$versionarray).' - '.join('.',$versionmindb);
         if (count($versionmindb) && count($versionarray)
         	&& versioncompare($versionarray,$versionmindb) < 0)
@@ -166,6 +193,35 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
         	$ok=0;
         }
 
+        // Test database version is not forbidden for migration
+        if (empty($ignoredbversion))
+        {
+			$dbversion_disallowed=array(
+				array('type'=>'mysql','version'=>array(5,5,40)),
+				array('type'=>'mysqli','version'=>array(5,5,40)) //,
+				//array('type'=>'mysql','version'=>array(5,5,41)),
+				//array('type'=>'mysqli','version'=>array(5,5,41))
+			);
+			$listofforbiddenversion='';
+			foreach ($dbversion_disallowed as $dbversion_totest)
+			{
+				if ($dbversion_totest['type'] == $db->type) $listofforbiddenversion.=($listofforbiddenversion?', ':'').join('.',$dbversion_totest['version']);
+			}
+			foreach ($dbversion_disallowed as $dbversion_totest)
+			{
+		        //print $db->type.' - '.join('.',$versionarray).' - '.versioncompare($dbversion_totest['version'],$versionarray)."<br>\n";
+		        if ($dbversion_totest['type'] == $db->type
+		        	&& (versioncompare($dbversion_totest['version'],$versionarray) == 0 || versioncompare($dbversion_totest['version'],$versionarray)<=-4 || versioncompare($dbversion_totest['version'],$versionarray)>=4)
+		        )
+		        {
+		        	// Warning: database version too low.
+		        	print '<tr><td><div class="warning">'.$langs->trans("ErrorDatabaseVersionForbiddenForMigration",join('.',$versionarray),$listofforbiddenversion)."</div></td><td align=\"right\">".$langs->trans("Error")."</td></tr>\n";
+		        	dolibarr_install_syslog("upgrade: ".$langs->transnoentities("ErrorDatabaseVersionForbiddenForMigration",join('.',$versionarray),$listofforbiddenversion));
+		        	$ok=0;
+		        	break;
+		        }
+			}
+        }
     }
 
     // Force l'affichage de la progression
@@ -190,7 +246,7 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
 			    $filles=array();
 			    $sql = "SELECT fk_categorie_mere, fk_categorie_fille";
 			    $sql.= " FROM ".MAIN_DB_PREFIX."categorie_association";
-			    dolibarr_install_syslog("upgrade: search duplicate sql=".$sql);
+			    dolibarr_install_syslog("upgrade: search duplicate", LOG_DEBUG);
 			    $resql = $db->query($sql);
 			    if ($resql)
 			    {
@@ -218,7 +274,7 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
 
 			            // We delete all
 			            $sql="DELETE FROM ".MAIN_DB_PREFIX."categorie_association";
-			            dolibarr_install_syslog("upgrade: delete association sql=".$sql);
+			            dolibarr_install_syslog("upgrade: delete association", LOG_DEBUG);
 			            $resqld=$db->query($sql);
 			            if ($resqld)
 			            {
@@ -227,7 +283,7 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
 			                {
 			                    $sql ="INSERT INTO ".MAIN_DB_PREFIX."categorie_association(fk_categorie_mere,fk_categorie_fille)";
 			                    $sql.=" VALUES(".$val['mere'].", ".$val['fille'].")";
-			                    dolibarr_install_syslog("upgrade: insert association sql=".$sql);
+			                    dolibarr_install_syslog("upgrade: insert association", LOG_DEBUG);
 			                    $resqli=$db->query($sql);
 			                    if (! $resqli) $error++;
 			                }
@@ -254,6 +310,7 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
 		    }
 	    }
     }
+
 
 	/*
 	 * Remove deprecated indexes and constraints for Mysql
@@ -319,8 +376,9 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
     if ($ok)
     {
         $dir = "mysql/migration/";		// We use mysql migration scripts whatever is database driver
+		if (! empty($dirmodule)) $dir=dol_buildpath('/'.$dirmodule.'/sql/',0);
 
-        // For minor version
+		// Clean last part to exclude minor version x.y.z -> x.y
         $newversionfrom=preg_replace('/(\.[0-9]+)$/i','.0',$versionfrom);
         $newversionto=preg_replace('/(\.[0-9]+)$/i','.0',$versionto);
 
@@ -337,12 +395,12 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
         {
             while (($file = readdir($handle))!==false)
             {
-                if (preg_match('/\.sql$/i',$file)) $filesindir[]=$file;
+            	if (preg_match('/\.sql$/i',$file)) $filesindir[]=$file;
             }
             sort($filesindir);
         }
         else
-        {
+		{
             print '<div class="error">'.$langs->trans("ErrorCanNotReadDir",$dir).'</div>';
         }
 
@@ -359,24 +417,60 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
             }
         }
 
-        // Loop on each migrate files
-        foreach($filelist as $file)
+        if (count($filelist) == 0)
         {
-            print '<tr><td nowrap>';
-            print $langs->trans("ChoosedMigrateScript").'</td><td align="right">'.$file.'</td></tr>'."\n";
-
-            $name = substr($file, 0, dol_strlen($file) - 4);
-
-            // Run sql script
-            $ok=run_sql($dir.$file, 0, '', 1);
+        	print '<div class="error">'.$langs->trans("ErrorNoMigrationFilesFoundForParameters").'</div>';
         }
+		else
+		{
+	        // Loop on each migrate files
+	        foreach($filelist as $file)
+	        {
+	        	print '<tr><td colspan="2"><hr></td></tr>';
+	            print '<tr><td class="nowrap">'.$langs->trans("ChoosedMigrateScript").'</td><td align="right">'.$file.'</td></tr>'."\n";
+
+	            // Run sql script
+	            $ok=run_sql($dir.$file, 0, '', 1);
+
+	            // Scan if there is migration scripts for modules htdocs/module/sql or htdocs/custom/module/sql
+	            $modulesfile = array();
+	            foreach ($conf->file->dol_document_root as $type => $dirroot)
+	            {
+	            	$handlemodule=@opendir($dirroot);		// $dirroot may be '..'
+	            	if (is_resource($handlemodule))
+	            	{
+	            		while (($filemodule = readdir($handlemodule))!==false)
+	            		{
+	            			if (! preg_match('/\./',$filemodule) && is_dir($dirroot.'/'.$filemodule.'/sql'))	// We exclude filemodule that contains . (are not directories) and are not directories.
+	            			{
+	            				//print "Scan for ".$dirroot . '/' . $filemodule . '/sql/'.$file;
+	            				if (is_file($dirroot . '/' . $filemodule . '/sql/'.$file))
+	            				{
+	            					$modulesfile[$dirroot . '/' . $filemodule . '/sql/'.$file] = '/' . $filemodule . '/sql/'.$file;
+	            				}
+	            			}
+	            		}
+	            		closedir($handlemodule);
+	            	}
+	            }
+
+	            foreach ($modulesfile as $modulefilelong => $modulefileshort)
+	            {
+	            	print '<tr><td colspan="2"><hr></td></tr>';
+	            	print '<tr><td class="nowrap">'.$langs->trans("ChoosedMigrateScript").' (external modules)</td><td align="right">'.$modulefileshort.'</td></tr>'."\n";
+
+		            // Run sql script
+	            	$okmodule=run_sql($modulefilelong, 0, '', 1);	// Note: Result of migration of external module should not decide if we continue migration of Dolibarr or not.
+	            }
+
+	        }
+		}
     }
 
     print '</table>';
 
     if ($db->connected) $db->close();
 }
-
 
 if (empty($actiondone))
 {
@@ -387,10 +481,9 @@ $ret=0;
 if (! $ok && isset($argv[1])) $ret=1;
 dol_syslog("Exit ".$ret);
 
-pFooter(! $ok && empty($_GET["ignoreerrors"]),$setuplang);
+pFooter(((! $ok && empty($_GET["ignoreerrors"])) || $dirmodule),$setuplang);
 
 if ($db->connected) $db->close();
 
 // Return code if ran from command line
 if ($ret) exit($ret);
-?>

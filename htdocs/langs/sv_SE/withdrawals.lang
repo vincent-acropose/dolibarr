@@ -1,13 +1,4 @@
-/*
- * Language code: sv_SV
- * Automatic generated via autotranslator.php tool
- * Generation date 2010-08-28 13:09:36
- */
-
-
-// START - Lines generated via autotranslator.php tool (2010-08-28 13:09:36).
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - withdrawals
 StandingOrdersArea=Stående order område
 CustomersStandingOrdersArea=Kunder stående order område
 StandingOrders=Stående order
@@ -23,11 +14,13 @@ WithdrawalReceiptShort=Kvitto
 LastWithdrawalReceipts=Senaste %s tillbakadragande kvitton
 WithdrawedBills=Indragna fakturor
 WithdrawalsLines=Återkallelse linjer
-RequestStandingOrderToTreat=Begäran om stående order att behandla
-RequestStandingOrderTreated=Begäran om stående behandlas order
+RequestStandingOrderToTreat=Begäran om stående order att bearbeta
+RequestStandingOrderTreated=Begäran om stående order bearbetas
+NotPossibleForThisStatusOfWithdrawReceiptORLine=Ännu inte möjligt. Uttag status måste vara inställd på "kredit" innan den förklarar förkastar på specifika linjer.
 CustomersStandingOrders=Kunden stående order
 CustomerStandingOrder=Kunden stående order
-NbOfInvoiceToWithdraw=Nb av fakturan med dra tillbaka begäran
+NbOfInvoiceToWithdraw=St. av faktura med återkallnings begäran
+NbOfInvoiceToWithdrawWithInfo=St. av faktura med återkallande begäran för kunder som har definierat bankkontouppgifter
 InvoiceWaitingWithdraw=Faktura väntar på återkalla
 AmountToWithdraw=Belopp att dra tillbaka
 WithdrawsRefused=Återkallar vägrade
@@ -54,10 +47,11 @@ RefusedData=Datum för avslag
 RefusedReason=Orsak till avslag
 RefusedInvoicing=Fakturering avslaget
 NoInvoiceRefused=Ladda inte avslaget
-InvoiceRefused=Ladda avvisande till kund
+InvoiceRefused=Faktura vägrade (Ladda avslag till kunden)
 Status=Status
 StatusUnknown=Okänd
 StatusWaiting=Väntar
+StatusTrans=Överförs
 StatusCredited=Krediteras
 StatusRefused=Refused
 StatusMotif0=Ospecificerat
@@ -77,22 +71,21 @@ NotifyTransmision=Återkallelse Transmission
 NotifyEmision=Återkallelse utsläpp
 NotifyCredit=Återkallelse Credit
 NumeroNationalEmetter=Nationella sändare Antal
-// STOP - Lines generated via autotranslator.php tool (2010-08-28 13:13:15).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 17:32:03).
-// Reference language: en_US -> sv_SE
-NbOfInvoiceToWithdrawWithInfo=Nb av faktura med återkalla begäran om kunder som har definierats bankkontoinformation
-StatusTrans=Överförs
 PleaseSelectCustomerBankBANToWithdraw=Välj information om kunden bankkonto ta ut
 WithBankUsingRIB=För bankkonton med hjälp av RIB
 WithBankUsingBANBIC=För bankkonton som använder IBAN / BIC / SWIFT
 BankToReceiveWithdraw=Bankkonto för att ta emot drar
 CreditDate=Krediter på
-WithdrawalFileNotCapable=Det går inte att skapa filen uttag kvitto för ditt land
+WithdrawalFileNotCapable=Det går inte att skapa uttags kvitto fil för ditt land %s (ditt land stöds inte)
 ShowWithdraw=Visa Dra
 IfInvoiceNeedOnWithdrawPaymentWontBeClosed=Om faktura har minst ett uttag betalning som ännu inte behandlats, kommer det inte anges som betalas för att hantera uttag innan.
-DoStandingOrdersBeforePayments=Detta flikar gör att du kan begära en stående order. När det kommer att vara färdig, kan du skriva betalningen för att stänga fakturan.
+DoStandingOrdersBeforePayments=Denna flik ger möjlighet att begära en stående order. Väl utförd, gå till meny Bank->Uttag för att ställa in stående order. När en stående order stängs kommer betalning på faktura att registreras automatiskt och fakturorna att stängas om restbelopp är noll.
+WithdrawalFile=Utträde fil
+SetToStatusSent=Ställ in på status "File Skickat"
+ThisWillAlsoAddPaymentOnInvoice=Detta kommer också att gälla utbetalningar till fakturor och kommer att klassificera dem som "Paid"
+StatisticsByLineStatus=Statistik efter status linjer
+
+### Notifications
 InfoCreditSubject=Betalning av %s stående order av banken
 InfoCreditMessage=Den stående beställning %s har betalats av banken <br> Uppgifter om betalning: %s
 InfoTransSubject=Överföring av %s stående order till bank
@@ -100,6 +93,5 @@ InfoTransMessage=Den stående beställning %s har transmited till bank med %s %s
 InfoTransData=Belopp: %s <br> Metode: %s <br> Datum: %s
 InfoFoot=Detta är ett automatiskt meddelande skickas av Dolibarr
 InfoRejectSubject=Stående order vägrade
-InfoRejectMessage=Hej, <br><br> att ständig ordning faktura %s relaterade till företagets %s med en mängd %s har avslagits av banken. <br><br> - <br> % $
+InfoRejectMessage=Hej, <br><br> den stående beställning av faktura %s relaterad till bolagets %s, med en mängd %s har avslagits av banken. <br><br>--<br> %s
 ModeWarning=Alternativ på riktigt läget inte var satt, sluta vi efter denna simulering
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 17:32:37).

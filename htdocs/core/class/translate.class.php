@@ -29,17 +29,17 @@
  */
 class Translate
 {
-	var $dir;						// Directories that contains /langs subdirectory
+	var $dir;							// Directories that contains /langs subdirectory
 
-	var $defaultlang;				// Current language for current user
-	var $direction = 'ltr';			// Left to right or Right to left
-	var $charset_inputfile=array();	// To store charset encoding used for language
-	var $charset_output='UTF-8';	// Codage used by "trans" method outputs
+	var $defaultlang;					// Current language for current user
+	var $direction = 'ltr';				// Left to right or Right to left
+	var $charset_output='UTF-8';		// Codage used by "trans" method outputs
 
 	var $tab_translate=array();		// Array of all translations key=>value
-	private $_tab_loaded=array();	// Array to store result after loading each language file
+	private $_tab_loaded=array();		// Array to store result after loading each language file
 
-	var $cache_labels=array();		// Cache for labels return by getLabelFromKey method
+	var $cache_labels=array();			// Cache for labels return by getLabelFromKey method
+	var $cache_currencies=array();		// Cache to store currency symbols
 
 
 
@@ -60,7 +60,7 @@ class Translate
 	/**
 	 *  Set accessor for this->defaultlang
 	 *
-	 *  @param	string	$srclang     	Language to use
+	 *  @param	string	$srclang     	Language to use. If '' or 'auto', we use browser lang.
 	 *  @return	void
 	 */
 	function setDefaultLang($srclang='en_US')
@@ -105,11 +105,12 @@ class Translate
 			// Array force long code from first part, even if long code is defined
 			$longforshort=array('ar'=>'ar_SA');
 			if (isset($longforshort[strtolower($langpart[0])])) $srclang=$longforshort[strtolower($langpart[0])];
-			else {
+			else if (! is_numeric($langpart[1])) {		// Second part YY may be a numeric with some Chrome browser
 				$srclang=strtolower($langpart[0])."_".strtoupper($langpart[1]);
 				$longforlong=array('no_nb'=>'nb_NO');
 				if (isset($longforlong[strtolower($srclang)])) $srclang=$longforlong[strtolower($srclang)];
 			}
+			else $srclang=strtolower($langpart[0])."_".strtoupper($langpart[0]);
 		}
 		else {						// If it's for a codetouse that is a short code xx
     	    // Array to convert short lang code into long code.
@@ -143,7 +144,7 @@ class Translate
 	 *  If data for file already loaded, do nothing.
 	 * 	All data in translation array are stored in UTF-8 format.
      *  tab_loaded is completed with $domain key.
-     *  Warning: MAIN_USE_CUSTOM_TRANSLATION is an old deprecated feature. Do not use it. It will revert 
+     *  Warning: MAIN_USE_CUSTOM_TRANSLATION is an old deprecated feature. Do not use it. It will revert
      *  rule "we keep first entry found with we keep last entry found" so it is probably not what you want to do.
      *
      *  Value for hash are: 1:Loaded from disk, 2:Not found, 3:Loaded from cache
@@ -152,7 +153,7 @@ class Translate
  	 *										If $domain is "file@module" instead of "file" then we look for module lang file
 	 *										in htdocs/custom/modules/mymodule/langs/code_CODE/file.lang
 	 *										then in htdocs/module/langs/code_CODE/file.lang instead of htdocs/langs/code_CODE/file.lang
-	 *  @param	string	$alt         		0 (try xx_ZZ then 1), 1 (try xx_XX then 2), 2 (try en_US or fr_FR or es_ES)
+	 *  @param	string	$alt         		0 (try xx_ZZ then 1), 1 (try xx_XX then 2), 2 (try en_US)
 	 * 	@param	int		$stopafterdirection	Stop when the DIRECTION tag is found (optimize speed)
 	 * 	@param	int		$forcelangdir		To force a different lang directory
 	 *	@return	int							<0 if KO, 0 if already loaded or loading not required, >0 if OK
@@ -193,8 +194,14 @@ class Translate
 
 		// Redefine alt
 		$langarray=explode('_',$langofdir);
-		if ($alt < 1 && strtolower($langarray[0]) == strtolower($langarray[1])) $alt=1;
-		if ($alt < 2 && (strtolower($langofdir) == 'en_us' || strtolower($langofdir) == 'fr_fr' || strtolower($langofdir) == 'es_es')) $alt=2;
+		if ($alt < 1 && isset($langarray[1]) && strtolower($langarray[0]) == strtolower($langarray[1])) $alt=1;
+		if ($alt < 2 && strtolower($langofdir) == 'en_us') $alt=2;
+
+		if (empty($langofdir))	// This may occurs when load is called without setting the language and without providing a value for forcelangdir
+		{
+			dol_syslog("Error: ".get_class($this)."::Load was called but language was not set yet with langs->setDefaultLang(). Nothing will be loaded.", LOG_WARNING);
+			return -1;
+		}
 
 		foreach($this->dir as $keydir => $searchdir)
 		{
@@ -204,7 +211,7 @@ class Translate
 
 			$filelangexists=is_file($file_lang_osencoded);
 
-			//dol_syslog('Translate::Load Try to read for alt='.$alt.' langofdir='.$langofdir.' file_lang='.$file_lang." => filelangexists=".$filelangexists);
+			//dol_syslog(get_class($this).'::Load Try to read for alt='.$alt.' langofdir='.$langofdir.' newdomain='.$domain.' modulename='.$modulename.' file_lang='.$file_lang." => filelangexists=".$filelangexists);
 
 			if ($filelangexists)
 			{
@@ -310,8 +317,8 @@ class Translate
 			// This function MUST NOT contains call to syslog
 			//dol_syslog("Translate::Load loading alternate translation file (to complete ".$this->defaultlang."/".$newdomain.".lang file)", LOG_DEBUG);
 			$langofdir='en_US';
-			if (preg_match('/^fr/i',$langarray[0])) $langofdir='fr_FR';
-			if (preg_match('/^es/i',$langarray[0])) $langofdir='es_ES';
+			//if (preg_match('/^fr/i',$langarray[0])) $langofdir='fr_FR';
+			//if (preg_match('/^es/i',$langarray[0])) $langofdir='es_ES';
 			$this->load($domain,$alt+1,$stopafterdirection,$langofdir);
 		}
 
@@ -333,17 +340,19 @@ class Translate
 	 * Return translated value of key. Search in lang file, then into database.
 	 * Key must be any complete entry into lang file: CurrencyEUR, ...
 	 * If not found, return key.
-	 * WARNING: To avoid infinite loop (getLabelFromKey->transnoentities->getTradFromKey), getLabelFromKey must
-	 * not be called with same value than input.
+	 * The string return is not formated (translated with transnoentitiesnoconv)
+	 * NOTE: To avoid infinite loop (getLabelFromKey->transnoentities->getTradFromKey), if you modify this function,
+	 * check that getLabelFromKey is not called with same value than input.
 	 *
 	 * @param	string		$key		Key to translate
-	 * @return 	string					Translated string
+	 * @return 	string					Translated string (translated with transnoentitiesnoconv)
 	 */
 	private function getTradFromKey($key)
 	{
 		global $db;
 
-		//print 'xx'.$key;
+		if (! is_string($key)) return 'ErrorBadValueForParamNotAString';	// Avoid multiple errors with code not using function correctly.
+
 		$newstr=$key;
 		if (preg_match('/^Currency([A-Z][A-Z][A-Z])$/i',$key,$reg))
 		{
@@ -359,7 +368,7 @@ class Translate
         }
         else if (preg_match('/^Civility([0-9A-Z]+)$/i',$key,$reg))
         {
-            $newstr=$this->getLabelFromKey($db,$reg[1],'c_civilite','code','civilite');
+            $newstr=$this->getLabelFromKey($db,$reg[1],'c_civility','code','label');
         }
         else if (preg_match('/^OrderSource([0-9A-Z]+)$/i',$key,$reg))
         {
@@ -588,7 +597,7 @@ class Translate
 			{
 				// Test si fichier dans repertoire de la langue alternative
 				if ($this->defaultlang != "en_US") $filenamealt = $searchdir."/langs/en_US/".$filename;
-				else $filenamealt = $searchdir."/langs/fr_FR/".$filename;
+				//else $filenamealt = $searchdir."/langs/fr_FR/".$filename;
 				if (is_readable(dol_osencode($filenamealt))) return true;
 			}
 		}
@@ -641,21 +650,23 @@ class Translate
 	 *      Search into translation array, then into cache, then if still not found, search into database.
 	 *      Store key-label found into cache variable $this->cache_labels to save SQL requests to get labels.
 	 *
-	 * 		@param	DoliBD	$db				Database handler
-	 * 		@param	string	$key			Key to get label (key in language file)
+	 * 		@param	DoliDB	$db				Database handler
+	 * 		@param	string	$key			Translation key to get label (key in language file)
 	 * 		@param	string	$tablename		Table name without prefix
 	 * 		@param	string	$fieldkey		Field for key
 	 * 		@param	string	$fieldlabel		Field for label
+	 *      @param	string	$keyforselect	Use another value than the translation key for the where into select
 	 *      @return string					Label in UTF8 (but without entities)
+	 *      @see dol_getIdFromCode
 	 */
-	function getLabelFromKey($db,$key,$tablename,$fieldkey,$fieldlabel)
+	function getLabelFromKey($db,$key,$tablename,$fieldkey,$fieldlabel,$keyforselect='')
 	{
 		// If key empty
 		if ($key == '') return '';
 
         //print 'param: '.$key.'-'.$keydatabase.'-'.$this->trans($key); exit;
 
-		// Check if in language array (this can call getTradFromKey)
+		// Check if a translation is available (this can call getTradFromKey)
 		if ($this->transnoentitiesnoconv($key) != $key)
 		{
 			return $this->transnoentitiesnoconv($key);    // Found in language array
@@ -669,8 +680,8 @@ class Translate
 
 		$sql = "SELECT ".$fieldlabel." as label";
 		$sql.= " FROM ".MAIN_DB_PREFIX.$tablename;
-		$sql.= " WHERE ".$fieldkey." = '".$key."'";
-		dol_syslog(get_class($this).'::getLabelFromKey sql='.$sql,LOG_DEBUG);
+		$sql.= " WHERE ".$fieldkey." = '".($keyforselect?$keyforselect:$key)."'";
+		dol_syslog(get_class($this).'::getLabelFromKey', LOG_DEBUG);
 		$resql = $db->query($sql);
 		if ($resql)
 		{
@@ -684,11 +695,118 @@ class Translate
 		else
 		{
 			$this->error=$db->lasterror();
-			dol_syslog(get_class($this).'::getLabelFromKey error='.$this->error,LOG_ERR);
 			return -1;
 		}
 	}
 
+
+	/**
+	 *	Return a currency code into its symbol
+	 *
+	 *  @param	string	$currency_code		Currency Code
+	 *  @param	string	$amount				If not '', show currency + amount according to langs ($10, 10€).
+	 *  @return	string						Amount + Currency symbol encoded into UTF8
+	 *  @deprecated							Use method price to output a price
+	 */
+	function getCurrencyAmount($currency_code, $amount)
+	{
+		$symbol=$this->getCurrencySymbol($currency_code);
+
+		if (in_array($currency_code, array('USD'))) return $symbol.$amount;
+		else return $amount.$symbol;
+	}
+
+	/**
+	 *	Return a currency code into its symbol
+	 *
+	 *  @param	string	$currency_code		Currency code
+	 *  @param	string	$forceloadall		1=Force to load all currencies into cache. We know we need to use all of them. By default read and cache only required currency.
+	 *  @return	string						Currency symbol encoded into UTF8
+	 */
+	function getCurrencySymbol($currency_code, $forceloadall=0)
+	{
+		$currency_sign = '';	// By default return iso code
+
+		if (function_exists("mb_convert_encoding"))
+		{
+			$this->loadCacheCurrencies($forceloadall?'':$currency_code);
+
+			if (isset($this->cache_currencies[$currency_code]) && ! empty($this->cache_currencies[$currency_code]['unicode']) && is_array($this->cache_currencies[$currency_code]['unicode']))
+			{
+				foreach($this->cache_currencies[$currency_code]['unicode'] as $unicode)
+				{
+					$currency_sign .= mb_convert_encoding("&#{$unicode};", "UTF-8", 'HTML-ENTITIES');
+				}
+			}
+		}
+
+		return ($currency_sign?$currency_sign:$currency_code);
+	}
+
+	/**
+	 *  Load into the cache this->cache_currencies, all currencies
+	 *
+	 *	@param	string	$currency_code		Get only currency. Get all if ''.
+	 *  @return int             			Nb of loaded lines, 0 if already loaded, <0 if KO
+	 */
+	public function loadCacheCurrencies($currency_code)
+	{
+		global $db;
+
+		if (! empty($currency_code) && isset($this->cache_currencies[$currency_code])) return 0;    // Value already into cache
+
+		$sql = "SELECT code_iso, label, unicode";
+		$sql.= " FROM ".MAIN_DB_PREFIX."c_currencies";
+		$sql.= " WHERE active = 1";
+		if (! empty($currency_code)) $sql.=" AND code_iso = '".$currency_code."'";
+		//$sql.= " ORDER BY code_iso ASC"; // Not required, a sort is done later
+
+		dol_syslog(get_class($this).'::loadCacheCurrencies', LOG_DEBUG);
+		$resql = $db->query($sql);
+		if ($resql)
+		{
+			$this->load("dict");
+			$label=array();
+			foreach($this->cache_currencies as $key => $val) $label[$key]=$val['label'];
+
+			$num = $db->num_rows($resql);
+			$i = 0;
+			while ($i < $num)
+			{
+				$obj = $db->fetch_object($resql);
+
+				// Si traduction existe, on l'utilise, sinon on prend le libelle par defaut
+				$this->cache_currencies[$obj->code_iso]['label'] = ($obj->code_iso && $this->trans("Currency".$obj->code_iso)!="Currency".$obj->code_iso?$this->trans("Currency".$obj->code_iso):($obj->label!='-'?$obj->label:''));
+				$this->cache_currencies[$obj->code_iso]['unicode'] = (array) json_decode($obj->unicode, true);
+				$label[$obj->code_iso] = $this->cache_currencies[$obj->code_iso]['label'];
+				$i++;
+			}
+			//print count($label).' '.count($this->cache_currencies);
+			array_multisort($label, SORT_ASC, $this->cache_currencies);
+			//var_dump($this->cache_currencies);	$this->cache_currencies is now sorted onto label
+			return $num;
+		}
+		else
+		{
+			dol_print_error($db);
+			return -1;
+		}
+	}
+
+	/**
+	 * Return an array with content of all loaded translation keys (found into this->tab_translate)
+	 *
+	 * @return array	Array of translation keys lang_key => string_translation_loaded
+	 */
+	function get_translations_for_substitutions()
+	{
+		$substitutionarray = array();
+
+		foreach($this->tab_translate as $code => $label) {
+			$substitutionarray['lang_'.$code] = $label;
+		}
+
+		return $substitutionarray;
+	}
 }
 
-?>

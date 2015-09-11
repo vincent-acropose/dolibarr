@@ -25,17 +25,17 @@
 /**
  * Prepare array with list of tabs
  *
- * @param   Object	$object		Object related to tabs
- * @return  array				Array of tabs to shoc
+ * @param   Contact	$object		Object related to tabs
+ * @return  array				Array of tabs to show
  */
-function contact_prepare_head($object)
+function contact_prepare_head(Contact $object)
 {
-	global $langs, $conf;
+	global $langs, $conf, $user;
 
 	$h = 0;
 	$head = array();
 
-	$head[$h][0] = DOL_URL_ROOT.'/contact/fiche.php?id='.$object->id;
+	$head[$h][0] = DOL_URL_ROOT.'/contact/card.php?id='.$object->id;
 	$head[$h][1] = $langs->trans("Card");
 	$head[$h][2] = 'card';
 	$h++;
@@ -66,6 +66,22 @@ function contact_prepare_head($object)
     // $this->tabs = array('entity:-tabname);   												to remove a tab
     complete_head_from_modules($conf,$langs,$object,$head,$h,'contact');
 
+    // Notes
+    $head[$h][0] = DOL_URL_ROOT.'/contact/note.php?id='.$object->id;
+    $head[$h][1] = $langs->trans("Note");
+    $head[$h][2] = 'note';
+    $h++;
+    
+    if (! empty($conf->categorie->enabled)  && ! empty($user->rights->categorie->lire))
+    {
+    	$type = 4;
+    	$head[$h][0] = DOL_URL_ROOT.'/categories/categorie.php?id='.$object->id."&type=".$type;
+    	$head[$h][1] = $langs->trans('Categories');
+    	$head[$h][2] = 'category';
+    	$h++;
+    }
+    
+    // Info
     $head[$h][0] = DOL_URL_ROOT.'/contact/info.php?id='.$object->id;
 	$head[$h][1] = $langs->trans("Info");
 	$head[$h][2] = 'info';
@@ -76,4 +92,3 @@ function contact_prepare_head($object)
 	return $head;
 }
 
-?>

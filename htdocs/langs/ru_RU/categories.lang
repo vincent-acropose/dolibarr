@@ -1,66 +1,62 @@
-/*
- * Language code: ru_RU
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-01-19 21:30:52
- */
-
-
-// Date 2009-01-19 21:30:52
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
-Category=Категория
-Categories=Категории
-Rubrique=Категория
-Rubriques=Категории
-categories=категории
-TheCategorie=Категория
+# Dolibarr language file - Source file is en_US - categories
+Rubrique=Tag/Category
+Rubriques=Tags/Categories
+categories=tags/categories
+TheCategorie=The tag/category
+NoCategoryYet=No tag/category of this type created
 In=В
 AddIn=Добавить в
 modify=изменить
 Classify=Добавить
-CategoriesArea=Область категорий
-ProductsCategoriesArea=Область категорий Товаров/Услуг
-SuppliersCategoriesArea=Область категорий Поставщиков
-CustomersCategoriesArea=Область категорий Покупателей
-ThirdPartyCategoriesArea=Область категорий Контрагентов
-MainCats=Основные категории
+CategoriesArea=Tags/Categories area
+ProductsCategoriesArea=Products/Services tags/categories area
+SuppliersCategoriesArea=Suppliers tags/categories area
+CustomersCategoriesArea=Customers tags/categories area
+ThirdPartyCategoriesArea=Third parties tags/categories area
+MembersCategoriesArea=Members tags/categories area
+ContactsCategoriesArea=Contacts tags/categories area
+MainCats=Main tags/categories
 SubCats=Подкатегории
 CatStatistics=Статистика
-CatList=Список категорий
-AllCats=Все категории
-ViewCat=Просмотреть категорию
-NewCat=Добавить категорию
-NewCategory=Новая категория
-ModifCat=Изменить категорию
-CatCreated=Категория создана
-CreateCat=Создать категорию
-CreateThisCat=Создать эту категорию
+CatList=List of tags/categories
+AllCats=All tags/categories
+ViewCat=View tag/category
+NewCat=Add tag/category
+NewCategory=New tag/category
+ModifCat=Modify tag/category
+CatCreated=Tag/category created
+CreateCat=Create tag/category
+CreateThisCat=Create this tag/category
 ValidateFields=Проверить поля
 NoSubCat=Нет подкатегории.
 SubCatOf=Подкатегория
-FoundCats=Найдено категорий
-FoundCatsForName=Найдено категорей по имени:
-FoundSubCatsIn=Подкатегории, найденные в категории
-ErrSameCatSelected=Вы выбрали ту же самую категорию несколько раз
-ErrForgotCat=Вы забыли выбрать категорию
+FoundCats=Found tags/categories
+FoundCatsForName=Tags/categories found for the name :
+FoundSubCatsIn=Subcategories found in the tag/category
+ErrSameCatSelected=You selected the same tag/category several times
+ErrForgotCat=You forgot to choose the tag/category
 ErrForgotField=Вы забыли заполнить поля
 ErrCatAlreadyExists=Это имя уже используется
-AddProductToCat=Добавить этот продукт в категорию?
-ImpossibleAddCat=Невозможно добавить категорию
-ImpossibleAssociateCategory=Невозможно добавить категорию к
+AddProductToCat=Add this product to a tag/category?
+ImpossibleAddCat=Impossible to add the tag/category
+ImpossibleAssociateCategory=Impossible to associate the tag/category to
 WasAddedSuccessfully=<b>%s</b> успешно добавлена.
-ObjectAlreadyLinkedToCategory=Элемент уже связан с этой категорией.
-CategorySuccessfullyCreated=Категория %s успешно добавлена.
-ProductIsInCategories=Товар/услуга принадлежит к следующим категориям
-SupplierIsInCategories=Контрагент принадлежит к следующим категориям поставщиков
-CompanyIsInCustomersCategories=Этот контрагент принадлежит к следующим категориям покупателей/потенциальных клиентов
-CompanyIsInSuppliersCategories=Этот контрагент принадлежит к следующим категориям поставщиков
-ProductHasNoCategory=Этот товар/услуга не принадлежит к какой-либо категории
-SupplierHasNoCategory=Этот поставщик не принадлежит к какой-либо категории
-CompanyHasNoCategory=Эта компания не принадлежит к какой-либо категории
-ClassifyInCategory=Добавить категорию
+ObjectAlreadyLinkedToCategory=Element is already linked to this tag/category.
+CategorySuccessfullyCreated=This tag/category %s has been added with success.
+ProductIsInCategories=Product/service owns to following tags/categories
+SupplierIsInCategories=Third party owns to following suppliers tags/categories
+CompanyIsInCustomersCategories=This third party owns to following customers/prospects tags/categories
+CompanyIsInSuppliersCategories=This third party owns to following suppliers tags/categories
+MemberIsInCategories=This member owns to following members tags/categories
+ContactIsInCategories=This contact owns to following contacts tags/categories
+ProductHasNoCategory=This product/service is not in any tags/categories
+SupplierHasNoCategory=This supplier is not in any tags/categories
+CompanyHasNoCategory=This company is not in any tags/categories
+MemberHasNoCategory=This member is not in any tags/categories
+ContactHasNoCategory=This contact is not in any tags/categories
+ClassifyInCategory=Classify in tag/category
 NoneCategory=Нет
+NotCategorized=Without tag/category
 CategoryExistsAtSameLevel=Категория к таким кодом уже существует
 ReturnInProduct=Назад к карточке товара/услуги
 ReturnInSupplier=Назад к карточке поставщика
@@ -68,46 +64,47 @@ ReturnInCompany=Назад к карточке покупателя/потенц
 ContentsVisibleByAll=Содержимое будет доступно всем
 ContentsVisibleByAllShort=Содержимое доступно всем
 ContentsNotVisibleByAllShort=Содержание не доступно всем
-CategoriesTree=Дерево категорий
-DeleteCategory=Удалить категорию
-ConfirmDeleteCategory=Вы уверены, что хотите удалить эту категорию?
-RemoveFromCategory=Удалить связь с категорией
-RemoveFromCategoryConfirm=Вы уверены, что хотите удалить связь операции и категории?
-NoCategoriesDefined=Категории не определены
-SuppliersCategoryShort=Категории Поставщиков
-CustomersCategoryShort=Категории Покупателей
-ProductsCategoryShort=Категории Товаров
-SuppliersCategoriesShort=Категории Поставщиков
-CustomersCategoriesShort=Категории Покупателей
+CategoriesTree=Tags/categories tree
+DeleteCategory=Delete tag/category
+ConfirmDeleteCategory=Are you sure you want to delete this tag/category ?
+RemoveFromCategory=Remove link with tag/categorie
+RemoveFromCategoryConfirm=Are you sure you want to remove link between the transaction and the tag/category ?
+NoCategoriesDefined=No tag/category defined
+SuppliersCategoryShort=Suppliers tags/category
+CustomersCategoryShort=Customers tags/category
+ProductsCategoryShort=Products tags/category
+MembersCategoryShort=Members tags/category
+SuppliersCategoriesShort=Suppliers tags/categories
+CustomersCategoriesShort=Customers tags/categories
 CustomersProspectsCategoriesShort=Категории Покупателей/Потенц. клиентов
-ProductsCategoriesShort=Категории Товаров
+ProductsCategoriesShort=Products tags/categories
+MembersCategoriesShort=Members tags/categories
+ContactCategoriesShort=Contacts tags/categories
 ThisCategoryHasNoProduct=В этой категории нет товаров.
 ThisCategoryHasNoSupplier=В этой категории нет поставщиков.
 ThisCategoryHasNoCustomer=В этой категории нет покупателей.
+ThisCategoryHasNoMember=В этой категории нет участников.
+ThisCategoryHasNoContact=Эта категория не содержит ни одного контакта
 AssignedToCustomer=Установленное для покупателя
 AssignedToTheCustomer=Установленное для покупателя
 InternalCategory=Внутренняя категория
-CategoryContents=Содержание категории
-CategId=Код категории
-// Date 2009-01-19 21:30:52
-// STOP - Lines generated via parser
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-13 21:14:36).
-// Reference language: en_US
-NoCategoryYet=Категории этого типа не созданы
-CatSupList=Список категорий поставщиков
-CatCusList=Список категорий покупателей / потенц. клиентов
-CatProdList=Список категорий продукции
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 21:14:36).
-
-// START - Lines generated via autotranslator.php tool (2010-09-04 01:33:40).
-// Reference language: en_US -> ru_RU
-MembersCategoriesArea=Область категорий участников
-MemberIsInCategories=Этот участник принадлежит к следующим категориям
-MemberHasNoCategory=Этот пользователь не находится в какой-либо категории
-MembersCategoryShort=Категории участников
-MembersCategoriesShort=Категории участников
-ThisCategoryHasNoMember=Эта категория не содержит участников.
-CatMemberList=Список категорий участников
-// STOP - Lines generated via autotranslator.php tool (2010-09-04 01:35:21).
+CategoryContents=Tag/category contents
+CategId=Tag/category id
+CatSupList=List of supplier tags/categories
+CatCusList=List of customer/prospect tags/categories
+CatProdList=List of products tags/categories
+CatMemberList=List of members tags/categories
+CatContactList=List of contact tags/categories and contact
+CatSupLinks=Links between suppliers and tags/categories
+CatCusLinks=Links between customers/prospects and tags/categories
+CatProdLinks=Links between products/services and tags/categories
+CatMemberLinks=Links between members and tags/categories
+DeleteFromCat=Remove from tags/category
+DeletePicture=Удалить изображение
+ConfirmDeletePicture=Подтверждаете удаление изображения?
+ExtraFieldsCategories=Дополнительные атрибуты
+CategoriesSetup=Tags/categories setup
+CategorieRecursiv=Link with parent tag/category automatically
+CategorieRecursivHelp=Если активировать, то продукт будет связан с родительской категорией при добавлении в подкатегорию
+AddProductServiceIntoCategory=Добавить следующий товар/услугу
+ShowCategory=Show tag/category

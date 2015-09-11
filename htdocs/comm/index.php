@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2001-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -53,26 +53,6 @@ $now=dol_now();
  * Actions
  */
 
-if ($action == 'add_bookmark' && ! empty($socid))
-{
-	$sql = "DELETE FROM ".MAIN_DB_PREFIX."bookmark WHERE fk_soc = ".$db->escape($socid)." AND fk_user=".$user->id;
-	if (! $db->query($sql) )
-	{
-		dol_print_error($db);
-	}
-	$sql = "INSERT INTO ".MAIN_DB_PREFIX."bookmark (fk_soc, dateb, fk_user) VALUES (".$db->escape($socid).", ".$db->idate($now).",".$user->id.");";
-	if (! $db->query($sql) )
-	{
-		dol_print_error($db);
-	}
-}
-
-if ($action == 'del_bookmark' && ! empty($bid))
-{
-	$sql = "DELETE FROM ".MAIN_DB_PREFIX."bookmark WHERE rowid=".$db->escape($bid);
-	$result = $db->query($sql);
-}
-
 
 /*
  * View
@@ -85,19 +65,11 @@ if (! empty($conf->propal->enabled)) $propalstatic=new Propal($db);
 
 llxHeader();
 
-print_fiche_titre($langs->trans("CustomerArea"));
+print_fiche_titre($langs->trans("CommercialArea"));
 
-print '<table border="0" width="100%" class="notopnoleftnoright">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
 
-print '<tr>';
-if ((! empty($conf->propal->enabled) && $user->rights->propale->lire) ||
-    (! empty($conf->contrat->enabled) && $user->rights->contrat->lire) ||
-    (! empty($conf->commande->enabled) && $user->rights->commande->lire))
-{
-	print '<td valign="top" width="30%" class="notopnoleft">';
-}
-
-// Recherche Propal
+// Search proposal
 if (! empty($conf->propal->enabled) && $user->rights->propal->lire)
 {
 	$var=false;
@@ -106,28 +78,58 @@ if (! empty($conf->propal->enabled) && $user->rights->propal->lire)
 	print '<table class="noborder nohover" width="100%">';
 	print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("SearchAProposal").'</td></tr>';
 	print '<tr '.$bc[$var].'>';
-	print '<td nowrap>'.$langs->trans("Ref").':</td><td><input type="text" class="flat" name="sf_ref" size="18"></td>';
+	print '<td class="nowrap"><label for="sf_ref">'.$langs->trans("Ref").'</label>:</td><td><input type="text" class="flat" name="sf_ref" id="sf_ref" size="18"></td>';
 	print '<td rowspan="2"><input type="submit" value="'.$langs->trans("Search").'" class="button"></td></tr>';
-	print '<tr '.$bc[$var].'><td nowrap>'.$langs->trans("Other").':</td><td><input type="text" class="flat" name="sall" size="18"></td>';
+	print '<tr '.$bc[$var].'><td class="nowrap"><label for="sall">'.$langs->trans("Other").'</label>:</td><td><input type="text" class="flat" name="sall" id="sall" size="18"></td>';
 	print '</tr>';
 	print "</table></form>\n";
 	print "<br>\n";
 }
 
-/*
- * Recherche Contrat
- */
+// Search customer order
+if (! empty($conf->commande->enabled) && $user->rights->commande->lire)
+{
+	$var=false;
+	print '<table class="noborder nohover" width="100%">';
+	print '<form method="post" action="'.DOL_URL_ROOT.'/commande/list.php">';
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("SearchACustomerOrder").'</td></tr>';
+	print '<tr '.$bc[$var].'><td>';
+	print '<label for="sref">'.$langs->trans("Ref").'</label>:</td><td><input type="text" class="flat" name="sref" id="sref" size=18></td><td rowspan="2"><input type="submit" value="'.$langs->trans("Search").'" class="button"></td></tr>';
+	print '<tr '.$bc[$var].'><td class="nowrap"><label for="sall">'.$langs->trans("Other").'</label>:</td><td><input type="text" class="flat" name="sall" id="sall" size="18"></td>';
+	print '</tr>';
+	print "</form></table><br>\n";
+}
+
+// Search contract
 if (! empty($conf->contrat->enabled) && $user->rights->contrat->lire)
 {
 	$var=false;
-	print '<form method="post" action="'.DOL_URL_ROOT.'/contrat/liste.php">';
+	print '<form method="post" action="'.DOL_URL_ROOT.'/contrat/list.php">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 	print '<table class="noborder nohover" width="100%">';
 	print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("SearchAContract").'</td></tr>';
 	print '<tr '.$bc[$var].'>';
-	print '<td nowrap>'.$langs->trans("Ref").':</td><td><input type="text" class="flat" name="search_contract" size="18"></td>';
+	print '<td class="nowrap"><label for="search_contract">'.$langs->trans("Ref").'</label>:</td><td><input type="text" class="flat" name="search_contract" id="search_contract" size="18"></td>';
 	print '<td rowspan="2"><input type="submit" value="'.$langs->trans("Search").'" class="button"></td></tr>';
-	print '<tr '.$bc[$var].'><td nowrap>'.$langs->trans("Other").':</td><td><input type="text" class="flat" name="sall" size="18"></td>';
+	print '<tr '.$bc[$var].'><td class="nowrap"><label for="sall">'.$langs->trans("Other").'</label>:</td><td><input type="text" class="flat" name="sall" id="sall" size="18"></td>';
+	print '</tr>';
+	print "</table></form>\n";
+	print "<br>";
+}
+
+// Search contract
+if (! empty($conf->ficheinter->enabled) && $user->rights->ficheinter->lire)
+{
+	$var=false;
+	print '<form method="post" action="'.DOL_URL_ROOT.'/fichinter/list.php">';
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print '<table class="noborder nohover" width="100%">';
+	print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("SearchAnIntervention").'</td></tr>';
+	print '<tr '.$bc[$var].'>';
+	print '<td class="nowrap"><label for="search_contract">'.$langs->trans("Ref").'</label>:</td><td><input type="text" class="flat" name="search_inter" id="search_inter" size="18"></td>';
+	print '<td rowspan="2"><input type="submit" value="'.$langs->trans("Search").'" class="button"></td></tr>';
+	print '<tr '.$bc[$var].'><td class="nowrap"><label for="sall">'.$langs->trans("Other").'</label>:</td><td><input type="text" class="flat" name="sall" id="sall" size="18"></td>';
 	print '</tr>';
 	print "</table></form>\n";
 	print "<br>";
@@ -165,19 +167,19 @@ if (! empty($conf->propal->enabled) && $user->rights->propal->lire)
 			{
 				$obj = $db->fetch_object($resql);
 				$var=!$var;
-				print '<tr '.$bc[$var].'><td  nowrap="nowrap">';
+				print '<tr '.$bc[$var].'><td  class="nowrap">';
 				$propalstatic->id=$obj->rowid;
 				$propalstatic->ref=$obj->ref;
 				print $propalstatic->getNomUrl(1);
 				print '</td>';
-				print '<td nowrap="nowrap">';
+				print '<td class="nowrap">';
 				$companystatic->id=$obj->socid;
 				$companystatic->name=$obj->name;
 				$companystatic->client=$obj->client;
 				$companystatic->canvas=$obj->canvas;
 				print $companystatic->getNomUrl(1,'customer',16);
 				print '</td>';
-				print '<td align="right" nowrap="nowrap">'.price($obj->total_ht).'</td></tr>';
+				print '<td align="right" class="nowrap">'.price($obj->total_ht).'</td></tr>';
 				$i++;
 				$total += $obj->total_ht;
 			}
@@ -232,15 +234,15 @@ if (! empty($conf->commande->enabled) && $user->rights->commande->lire)
 			{
 				$var=!$var;
 				$obj = $db->fetch_object($resql);
-				print '<tr '.$bc[$var].'><td nowrap="nowrap"><a href="../commande/fiche.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowOrder"),"order").' '.$obj->ref.'</a></td>';
-				print '<td nowrap="nowrap">';
+				print '<tr '.$bc[$var].'><td class="nowrap"><a href="../commande/card.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowOrder"),"order").' '.$obj->ref.'</a></td>';
+				print '<td class="nowrap">';
 				$companystatic->id=$obj->socid;
 				$companystatic->name=$obj->name;
 				$companystatic->client=$obj->client;
                 $companystatic->canvas=$obj->canvas;
 				print $companystatic->getNomUrl(1,'customer',16);
 				print '</td>';
-				print '<td align="right" nowrap="nowrap">'.price($obj->total_ttc).'</td></tr>';
+				print '<td align="right" class="nowrap">'.price($obj->total_ttc).'</td></tr>';
 				$i++;
 				$total += $obj->total_ttc;
 			}
@@ -256,18 +258,8 @@ if (! empty($conf->commande->enabled) && $user->rights->commande->lire)
 	}
 }
 
-if ((! empty($conf->propal->enabled) && $user->rights->propale->lire) ||
-    (! empty($conf->contrat->enabled) && $user->rights->contrat->lire) ||
-    (! empty($conf->commande->enabled) && $user->rights->commande->lire))
-{
-	print '</td>';
-	print '<td valign="top" width="70%" class="notopnoleftnoright">';
-}
-else
-{
-	print '<td valign="top" width="100%" class="notopnoleftnoright">';
-}
 
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
 
 
 $NBMAX=3;
@@ -313,11 +305,9 @@ if (! empty($conf->societe->enabled) && $user->rights->societe->lire)
 				$companystatic->client=$objp->client;
                 $companystatic->canvas=$objp->canvas;
 				print '<tr '.$bc[$var].'>';
-				print '<td nowrap="nowrap">'.$companystatic->getNomUrl(1,'customer',48).'</td>';
+				print '<td class="nowrap">'.$companystatic->getNomUrl(1,'customer',48).'</td>';
 				print '<td align="right" nowrap>';
-				if ($objp->client == 2 || $objp->client == 3) print $langs->trans("Prospect");
-				if ($objp->client == 3) print ' / ';
-				if ($objp->client == 1 || $objp->client == 3) print $langs->trans("Customer");
+				print $companystatic->getLibCustProspStatut();
 				print "</td>";
 				print '<td align="right" nowrap>'.dol_print_date($db->jdate($objp->tms),'day')."</td>";
 				print '</tr>';
@@ -371,7 +361,7 @@ if (! empty($conf->fournisseur->enabled) && $user->rights->societe->lire)
                 $companystatic->name=$objp->name;
                 $companystatic->canvas=$objp->canvas;
                 print '<tr '.$bc[$var].'>';
-				print '<td nowrap="nowrap">'.$companystatic->getNomUrl(1,'supplier',44).'</td>';
+				print '<td class="nowrap">'.$companystatic->getNomUrl(1,'supplier',44).'</td>';
 				print '<td align="right">'.dol_print_date($db->jdate($objp->dm),'day').'</td>';
 				print '</tr>';
 				$var=!$var;
@@ -444,7 +434,7 @@ if (! empty($conf->contrat->enabled) && $user->rights->contrat->lire && 0) // TO
 			while ($i < $num)
 			{
 				$obj = $db->fetch_object($resql);
-				print "<tr ".$bc[$var]."><td><a href=\"../contrat/fiche.php?id=".$obj->contratid."\">".img_object($langs->trans("ShowContract","contract"))." ".$obj->ref."</a></td>";
+				print "<tr ".$bc[$var]."><td><a href=\"../contrat/card.php?id=".$obj->contratid."\">".img_object($langs->trans("ShowContract","contract"), 'contract')." ".$obj->ref."</a></td>";
 				print '<td>';
                 $companystatic->id=$objp->rowid;
                 $companystatic->name=$objp->name;
@@ -471,7 +461,7 @@ if (! empty($conf->propal->enabled) && $user->rights->propal->lire)
 {
 	$langs->load("propal");
 
-	$sql = "SELECT s.nom, s.rowid, p.rowid as propalid, p.total as total_ttc, p.total_ht, p.ref, p.fk_statut, p.datep as dp, p.fin_validite as dfv";
+	$sql = "SELECT s.nom as name, s.rowid, p.rowid as propalid, p.total as total_ttc, p.total_ht, p.ref, p.fk_statut, p.datep as dp, p.fin_validite as dfv";
 	$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 	$sql.= ", ".MAIN_DB_PREFIX."propal as p";
 	if (! $user->rights->societe->client->voir && ! $socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
@@ -493,24 +483,26 @@ if (! empty($conf->propal->enabled) && $user->rights->propal->lire)
 			$var=true;
 
 			print '<table class="noborder" width="100%">';
-			print '<tr class="liste_titre"><td colspan="5">'.$langs->trans("ProposalsOpened").'</td></tr>';
-			while ($i < $num)
+			print '<tr class="liste_titre"><td colspan="5">'.$langs->trans("ProposalsOpened").' <a href="'.DOL_URL_ROOT.'/comm/propal/list.php?viewstatut=1">('.$num.')</td></tr>';
+
+			$nbofloop=min($num, (empty($conf->global->MAIN_MAXLIST_OVERLOAD)?500:$conf->global->MAIN_MAXLIST_OVERLOAD));
+			while ($i < $nbofloop)
 			{
 				$obj = $db->fetch_object($result);
 				$var=!$var;
 				print '<tr '.$bc[$var].'>';
 
 				// Ref
-				print '<td nowrap="nowrap" width="140">';
+				print '<td class="nowrap" width="140">';
 
 				$propalstatic->id=$obj->propalid;
 				$propalstatic->ref=$obj->ref;
 
 				print '<table class="nobordernopadding"><tr class="nocellnopadd">';
-				print '<td class="nobordernopadding" nowrap="nowrap">';
+				print '<td class="nobordernopadding nowrap">';
 				print $propalstatic->getNomUrl(1);
 				print '</td>';
-				print '<td width="18" class="nobordernopadding" nowrap="nowrap">';
+				print '<td width="18" class="nobordernopadding nowrap">';
 				if ($db->jdate($obj->dfv) < ($now - $conf->propal->cloture->warning_delay)) print img_warning($langs->trans("Late"));
 				print '</td>';
 				print '<td width="16" align="center" class="nobordernopadding">';
@@ -522,7 +514,7 @@ if (! empty($conf->propal->enabled) && $user->rights->propal->lire)
 
 				print "</td>";
 
-				print '<td align="left"><a href="fiche.php?socid='.$obj->rowid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.dol_trunc($obj->nom,44).'</a></td>'."\n";
+				print '<td align="left"><a href="card.php?socid='.$obj->rowid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.dol_trunc($obj->name,44).'</a></td>'."\n";
 				print '<td align="right">';
 				print dol_print_date($db->jdate($obj->dp),'day').'</td>'."\n";
 				print '<td align="right">'.price($obj->total_ttc).'</td>';
@@ -531,7 +523,12 @@ if (! empty($conf->propal->enabled) && $user->rights->propal->lire)
 				$i++;
 				$total += $obj->total_ttc;
 			}
-			if ($total>0) {
+			if ($num > $nbofloop)
+			{
+				print '<tr class="liste_total"><td colspan="5">'.$langs->trans("XMoreLines", ($num - $nbofloop))."</td></tr>";
+			}
+			else if ($total>0)
+			{
 				print '<tr class="liste_total"><td colspan="3">'.$langs->trans("Total")."</td><td align=\"right\">".price($total)."</td><td>&nbsp;</td></tr>";
 			}
 			print "</table><br>";
@@ -544,11 +541,8 @@ if (! empty($conf->propal->enabled) && $user->rights->propal->lire)
 }
 
 
-print '</td></tr>';
-print '</table>';
+print '</div></div></div>';
 
 llxFooter();
 
 $db->close();
-
-?>

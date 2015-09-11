@@ -1,13 +1,14 @@
 <?php
 /* Copyright (C) 2003-2006 Rodolphe Quiedeville	        <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2011 Laurent Destailleur          <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2013 Laurent Destailleur          <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Sebastien Di Cintio          <sdicintio@ressource-toi.org>
  * Copyright (C) 2004      Benoit Mortier               <benoit.mortier@opensides.be>
  * Copyright (C) 2004      Andre Cianfarani             <acianfa@free.fr>
- * Copyright (C) 2005-2012 Regis Houssin                <regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2014 Regis Houssin                <regis.houssin@capnetworks.com>
  * Copyright (C) 2008 	   Raphael Bertrand (Resultic)  <raphael.bertrand@resultic.fr>
- * Copyright (C) 2011-2012 Juanjo Menent			    <jmenent@2byte.es>
- * Copyright (C) 2011 	   Philippe Grand			    <philippe.grand@atoo-net.com>
+ * Copyright (C) 2011-2013 Juanjo Menent			    <jmenent@2byte.es>
+ * Copyright (C) 2011-2013 Philippe Grand			    <philippe.grand@atoo-net.com>
+ * Copyright (C) 2013 	   Florian Henry			    <florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +33,7 @@
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/order.lib.php';
 
 $langs->load("admin");
 $langs->load("errors");
@@ -42,6 +44,10 @@ if (! $user->admin) accessforbidden();
 
 $action = GETPOST('action','alpha');
 $value = GETPOST('value','alpha');
+$label = GETPOST('label','alpha');
+$scandir = GETPOST('scandir','alpha');
+$type = 'order';
+
 
 /*
  * Actions
@@ -58,11 +64,11 @@ if ($action == 'updateMask')
 
  	if (! $error)
     {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+        setEventMessage($langs->trans("SetupSaved"));
     }
     else
     {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+        setEventMessage($langs->trans("Error"),'errors');
     }
 }
 
@@ -100,44 +106,56 @@ else if ($action == 'specimen')
 		}
 		else
 		{
-			$mesg='<font class="error">'.$module->error.'</font>';
+			setEventMessage($module->error,'errors');
 			dol_syslog($module->error, LOG_ERR);
 		}
 	}
 	else
 	{
-		$mesg='<font class="error">'.$langs->trans("ErrorModuleNotFound").'</font>';
+		setEventMessage($langs->trans("ErrorModuleNotFound"),'errors');
 		dol_syslog($langs->trans("ErrorModuleNotFound"), LOG_ERR);
+	}
+}
+
+// Define constants for submodules that contains parameters (forms with param1, param2, ... and value1, value2, ...)
+if ($action == 'setModuleOptions')
+{
+	$post_size=count($_POST);
+
+	$db->begin();
+
+	for($i=0;$i < $post_size;$i++)
+	{
+		if (array_key_exists('param'.$i,$_POST))
+		{
+			$param=GETPOST("param".$i,'alpha');
+			$value=GETPOST("value".$i,'alpha');
+			if ($param) $res = dolibarr_set_const($db,$param,$value,'chaine',0,'',$conf->entity);
+			if (! $res > 0) $error++;
+		}
+	}
+	if (! $error)
+	{
+		$db->commit();
+		setEventMessage($langs->trans("SetupSaved"));
+	}
+	else
+	{
+		$db->rollback();
+		setEventMessage($langs->trans("Error"),'errors');
 	}
 }
 
 // Activate a model
 else if ($action == 'set')
 {
-	$label = GETPOST('label','alpha');
-	$scandir = GETPOST('scandir','alpha');
-
-	$type='order';
-    $sql = "INSERT INTO ".MAIN_DB_PREFIX."document_model (nom, type, entity, libelle, description)";
-    $sql.= " VALUES ('".$db->escape($value)."','".$type."',".$conf->entity.", ";
-    $sql.= ($label?"'".$db->escape($label)."'":'null').", ";
-    $sql.= (! empty($scandir)?"'".$db->escape($scandir)."'":"null");
-    $sql.= ")";
-	if ($db->query($sql))
-	{
-
-	}
+	$ret = addDocumentModel($value, $type, $label, $scandir);
 }
 
 else if ($action == 'del')
 {
-	$type='order';
-	$sql = "DELETE FROM ".MAIN_DB_PREFIX."document_model";
-	$sql.= " WHERE nom = '".$db->escape($value)."'";
-	$sql.= " AND type = '".$type."'";
-	$sql.= " AND entity = ".$conf->entity;
-
-	if ($db->query($sql))
+	$ret = delDocumentModel($value, $type);
+	if ($ret > 0)
 	{
         if ($conf->global->COMMANDE_ADDON_PDF == "$value") dolibarr_del_const($db, 'COMMANDE_ADDON_PDF',$conf->entity);
 	}
@@ -146,41 +164,18 @@ else if ($action == 'del')
 // Set default model
 else if ($action == 'setdoc')
 {
-	$label = GETPOST('label','alpha');
-	$scandir = GETPOST('scandir','alpha');
-
-	$db->begin();
-
 	if (dolibarr_set_const($db, "COMMANDE_ADDON_PDF",$value,'chaine',0,'',$conf->entity))
 	{
+		// La constante qui a ete lue en avant du nouveau set
+		// on passe donc par une variable pour avoir un affichage coherent
 		$conf->global->COMMANDE_ADDON_PDF = $value;
 	}
 
 	// On active le modele
-	$type='order';
-
-	$sql_del = "DELETE FROM ".MAIN_DB_PREFIX."document_model";
-	$sql_del.= " WHERE nom = '".$db->escape($value)."'";
-	$sql_del.= " AND type = '".$type."'";
-	$sql_del.= " AND entity = ".$conf->entity;
-    dol_syslog("Delete from model table ".$sql_del);
-	$result1=$db->query($sql_del);
-
-    $sql = "INSERT INTO ".MAIN_DB_PREFIX."document_model (nom, type, entity, libelle, description)";
-    $sql.= " VALUES ('".$value."', '".$type."', ".$conf->entity.", ";
-    $sql.= ($label?"'".$db->escape($label)."'":'null').", ";
-    $sql.= (! empty($scandir)?"'".$scandir."'":"null");
-    $sql.= ")";
-    dol_syslog("Insert into model table ".$sql);
-    $result2=$db->query($sql);
-	if ($result1 && $result2)
+	$ret = delDocumentModel($value, $type);
+	if ($ret > 0)
 	{
-		$db->commit();
-	}
-	else
-	{
-        dol_syslog("Error ".$db->lasterror(), LOG_ERR);
-		$db->rollback();
+		$ret = addDocumentModel($value, $type, $label, $scandir);
 	}
 }
 
@@ -201,11 +196,11 @@ else if ($action == 'set_COMMANDE_DRAFT_WATERMARK')
 
  	if (! $error)
     {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+        setEventMessage($langs->trans("SetupSaved"));
     }
     else
     {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+        setEventMessage($langs->trans("Error"),'errors');
     }
 }
 
@@ -219,20 +214,41 @@ else if ($action == 'set_COMMANDE_FREE_TEXT')
 
  	if (! $error)
     {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+        setEventMessage($langs->trans("SetupSaved"));
     }
     else
     {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+        setEventMessage($langs->trans("Error"),'errors');
     }
 }
-else if ($action=='setModuleOptions') {
-	if (dolibarr_set_const($db, "COMMANDE_ADDON_PDF_ODT_PATH",GETPOST('value1'),'chaine',0,'',$conf->entity))
-	{
-		// La constante qui a ete lue en avant du nouveau set
-		// on passe donc par une variable pour avoir un affichage coherent
-		$conf->global->COMMANDE_ADDON_PDF_ODT_PATH = GETPOST('value1');
-	}
+
+// Activate Set Shippable Icon In List
+else if ($action=="setshippableiconinlist") {
+    $setshippableiconinlist = GETPOST('value','int');
+    $res = dolibarr_set_const($db, "SHIPPABLE_ORDER_ICON_IN_LIST", $setshippableiconinlist,'yesno',0,'',$conf->entity);
+    if (! $res > 0) $error++;
+    if (! $error) {
+        setEventMessage($langs->trans("SetupSaved"));
+    } else {
+        setEventMessage($langs->trans("Error"), 'errors');
+    }
+}
+
+// Activate ask for payment bank
+else if ($action == 'set_BANK_ASK_PAYMENT_BANK_DURING_ORDER')
+{
+    $res = dolibarr_set_const($db, "BANK_ASK_PAYMENT_BANK_DURING_ORDER",$value,'chaine',0,'',$conf->entity);
+
+    if (! $res > 0) $error++;
+
+    if (! $error)
+    {
+        setEventMessage($langs->trans("SetupSaved"));
+    }
+    else
+    {
+        setEventMessage($langs->trans("Error"),'errors');
+    }
 }
 
 
@@ -250,10 +266,12 @@ $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToM
 print_fiche_titre($langs->trans("OrdersSetup"),$linkback,'setup');
 print '<br>';
 
+$head = order_admin_prepare_head();
 
+dol_fiche_head($head, 'general', $langs->trans("Orders"), 0, 'order');
 
 /*
- * Numbering module
+ * Orders Numbering model
  */
 
 print_titre($langs->trans("OrdersNumberingModules"));
@@ -262,9 +280,9 @@ print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("Name").'</td>';
 print '<td>'.$langs->trans("Description").'</td>';
-print '<td nowrap="nowrap">'.$langs->trans("Example").'</td>';
+print '<td class="nowrap">'.$langs->trans("Example").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Status").'</td>';
-print '<td align="center" width="16">'.$langs->trans("Infos").'</td>';
+print '<td align="center" width="16">'.$langs->trans("ShortInfo").'</td>';
 print '</tr>'."\n";
 
 clearstatcache();
@@ -286,9 +304,9 @@ foreach ($dirmodels as $reldir)
 				{
 					$file = substr($file, 0, dol_strlen($file)-4);
 
-					require_once DOL_DOCUMENT_ROOT ."/core/modules/commande/".$file.'.php';
+					require_once $dir.$file.'.php';
 
-					$module = new $file;
+					$module = new $file($db);
 
 					// Show modules according to features level
 					if ($module->version == 'development'  && $conf->global->MAIN_FEATURES_LEVEL < 2) continue;
@@ -301,8 +319,8 @@ foreach ($dirmodels as $reldir)
 						print $module->info();
 						print '</td>';
 
-                        // Show example of numbering module
-                        print '<td nowrap="nowrap">';
+                        // Show example of numbering model
+                        print '<td class="nowrap">';
                         $tmp=$module->getExample();
                         if (preg_match('/^Error/',$tmp)) print '<div class="error">'.$langs->trans($tmp).'</div>';
                         elseif ($tmp=='NotConfigured') print $langs->trans($tmp);
@@ -347,7 +365,7 @@ foreach ($dirmodels as $reldir)
 						print $form->textwithpicto('',$htmltooltip,1,0);
 						print '</td>';
 
-						print '</tr>';
+						print "</tr>\n";
 					}
 				}
 			}
@@ -355,17 +373,16 @@ foreach ($dirmodels as $reldir)
 		}
 	}
 }
-
-print '</table><br>';
+print "</table><br>\n";
 
 
 /*
  * Document templates generators
  */
+
 print_titre($langs->trans("OrdersModelModule"));
 
 // Load array def with activated templates
-$type='order';
 $def = array();
 $sql = "SELECT nom";
 $sql.= " FROM ".MAIN_DB_PREFIX."document_model";
@@ -395,7 +412,8 @@ print '<td>'.$langs->trans("Name").'</td>';
 print '<td>'.$langs->trans("Description").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Status")."</td>\n";
 print '<td align="center" width="60">'.$langs->trans("Default")."</td>\n";
-print '<td align="center" width="38" colspan="2">'.$langs->trans("Infos").'</td>';
+print '<td align="center" width="38">'.$langs->trans("ShortInfo").'</td>';
+print '<td align="center" width="38">'.$langs->trans("Preview").'</td>';
 print "</tr>\n";
 
 clearstatcache();
@@ -518,11 +536,14 @@ foreach ($dirmodels as $reldir)
 }
 
 print '</table>';
-
-//Autres Options
 print "<br>";
-print_titre($langs->trans("OtherOptions"));
 
+/*
+ * Other options
+ *
+ */
+
+print_titre($langs->trans("OtherOptions"));
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("Parameter").'</td>';
@@ -556,13 +577,56 @@ print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">'
 print "</td></tr>\n";
 print '</form>';
 
+// Shippable Icon in List
+$var=!$var;
+print "<tr ".$bc[$var].">";
+print '<td>'.$langs->trans("ShippableOrderIconInList").'</td>';
+print '<td>&nbsp</td>';
+print '<td align="center">';
+if (!empty($conf->global->SHIPPABLE_ORDER_ICON_IN_LIST)) {
+    print '<a href="'.$_SERVER['PHP_SELF'].'?action=setshippableiconinlist&value=0">';
+    print img_picto($langs->trans("Activated"),'switch_on');
+} else {
+    print '<a href="'.$_SERVER['PHP_SELF'].'?action=setshippableiconinlist&value=1">';
+    print img_picto($langs->trans("Disabled"),'switch_off');
+}
+print '</a></td>';
+print '</tr>';
+
+// Ask for payment bank during order
+if ($conf->banque->enabled)
+{
+    $var=!$var;
+    print '<tr '.$bc[$var].'><td>';
+    print $langs->trans("BANK_ASK_PAYMENT_BANK_DURING_ORDER").'</td><td>&nbsp</td><td align="center">';
+    if (! empty($conf->use_javascript_ajax))
+    {
+        print ajax_constantonoff('BANK_ASK_PAYMENT_BANK_DURING_ORDER');
+    }
+    else
+    {
+        if (empty($conf->global->BANK_ASK_PAYMENT_BANK_DURING_ORDER))
+        {
+            print '<a href="'.$_SERVER['PHP_SELF'].'?action=set_BANK_ASK_PAYMENT_BANK_DURING_ORDER&amp;value=1">'.img_picto($langs->trans("Disabled"),'switch_off').'</a>';
+        }
+        else
+        {
+            print '<a href="'.$_SERVER['PHP_SELF'].'?action=set_BANK_ASK_PAYMENT_BANK_DURING_ORDER&amp;value=0">'.img_picto($langs->trans("Enabled"),'switch_on').'</a>';
+        }
+    }
+    print '</td></tr>';
+}
+else
+{
+    $var=!$var;
+    print '<tr '.$bc[$var].'><td>';
+    print $langs->trans("BANK_ASK_PAYMENT_BANK_DURING_ORDER").'</td><td>&nbsp;</td><td align="center">'.$langs->trans('NotAvailable').'</td></tr>';
+}
+
 print '</table>';
 
 print '<br>';
 
-dol_htmloutput_mesg($mesg);
-
 llxFooter();
 
 $db->close();
-?>

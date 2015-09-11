@@ -2,6 +2,7 @@
 /* Copyright (C) 2005-2009	Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  * Copyright (C) 2006		Marc Barilley		<marc@ocebo.com>
+ * Copyright (C) 2011-2013  Philippe Grand      <philippe.grand@atoo-net.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +29,7 @@
  * Prepare array with list of tabs
  *
  * @param   Object	$object		Object related to tabs
- * @return  array				Array of tabs to shoc
+ * @return  array				Array of tabs to show
  */
 function facturefourn_prepare_head($object)
 {
@@ -36,7 +37,7 @@ function facturefourn_prepare_head($object)
 	$h = 0;
 	$head = array();
 
-	$head[$h][0] = DOL_URL_ROOT.'/fourn/facture/fiche.php?facid='.$object->id;
+	$head[$h][0] = DOL_URL_ROOT.'/fourn/facture/card.php?facid='.$object->id;
 	$head[$h][1] = $langs->trans('CardBill');
 	$head[$h][2] = 'card';
 	$h++;
@@ -57,18 +58,22 @@ function facturefourn_prepare_head($object)
 
     if (empty($conf->global->MAIN_DISABLE_NOTES_TAB))
     {
+    	$nbNote = 0;
+        if(!empty($object->note_private)) $nbNote++;
+		if(!empty($object->note_public)) $nbNote++;
     	$head[$h][0] = DOL_URL_ROOT.'/fourn/facture/note.php?facid='.$object->id;
     	$head[$h][1] = $langs->trans('Notes');
+		if ($nbNote > 0) $head[$h][1].= ' <span class="badge">'.$nbNote.'</span>';
     	$head[$h][2] = 'note';
     	$h++;
     }
 
+	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+	$upload_dir = $conf->fournisseur->facture->dir_output.'/'.get_exdir($object->id,2).$object->ref;
+	$nbFiles = count(dol_dir_list($upload_dir,'files',0,'','(\.meta|_preview\.png)$'));
 	$head[$h][0] = DOL_URL_ROOT.'/fourn/facture/document.php?facid='.$object->id;
-	/*$filesdir = $conf->fournisseur->dir_output.'/facture/'.get_exdir($fac->id,2).$fac->id;
-	include_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-	$listoffiles=dol_dir_list($filesdir,'files',1);
-	$head[$h][1] = (count($listoffiles)?$langs->trans('DocumentsNb',count($listoffiles)):$langs->trans('Documents'));*/
 	$head[$h][1] = $langs->trans('Documents');
+	if($nbFiles > 0) $head[$h][1].= ' <span class="badge">'.$nbFiles.'</span>';
 	$head[$h][2] = 'documents';
 	$h++;
 
@@ -87,7 +92,7 @@ function facturefourn_prepare_head($object)
  * Prepare array with list of tabs
  *
  * @param   Object	$object		Object related to tabs
- * @return  array				Array of tabs to shoc
+ * @return  array				Array of tabs to show
  */
 function ordersupplier_prepare_head($object)
 {
@@ -95,7 +100,7 @@ function ordersupplier_prepare_head($object)
 	$h = 0;
 	$head = array();
 
-	$head[$h][0] = DOL_URL_ROOT.'/fourn/commande/fiche.php?id='.$object->id;
+	$head[$h][0] = DOL_URL_ROOT.'/fourn/commande/card.php?id='.$object->id;
 	$head[$h][1] = $langs->trans("OrderCard");
 	$head[$h][2] = 'card';
 	$h++;
@@ -125,18 +130,22 @@ function ordersupplier_prepare_head($object)
 
     if (empty($conf->global->MAIN_DISABLE_NOTES_TAB))
     {
+    	$nbNote = 0;
+        if(!empty($object->note_private)) $nbNote++;
+		if(!empty($object->note_public)) $nbNote++;
     	$head[$h][0] = DOL_URL_ROOT.'/fourn/commande/note.php?id='.$object->id;
     	$head[$h][1] = $langs->trans("Notes");
+		if ($nbNote > 0) $head[$h][1].= ' <span class="badge">'.$nbNote.'</span>';
     	$head[$h][2] = 'note';
     	$h++;
     }
 
+	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+	$upload_dir = $conf->fournisseur->dir_output . "/commande/" . dol_sanitizeFileName($object->ref);
+	$nbFiles = count(dol_dir_list($upload_dir,'files',0,'','(\.meta|_preview\.png)$'));
 	$head[$h][0] = DOL_URL_ROOT.'/fourn/commande/document.php?id='.$object->id;
-	/*$filesdir = $conf->fournisseur->dir_output . "/commande/" . dol_sanitizeFileName($commande->ref);
-	include_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-	$listoffiles=dol_dir_list($filesdir,'files',1);
-	$head[$h][1] = (count($listoffiles)?$langs->trans('DocumentsNb',count($listoffiles)):$langs->trans('Documents'));*/
 	$head[$h][1] = $langs->trans('Documents');
+	if($nbFiles > 0) $head[$h][1].= ' <span class="badge">'.$nbFiles.'</span>';
 	$head[$h][2] = 'documents';
 	$h++;
 
@@ -148,5 +157,43 @@ function ordersupplier_prepare_head($object)
 	return $head;
 }
 
+/**
+ *  Return array head with list of tabs to view object informations.
+ *
+ *  @return	array   	        head array with tabs
+ */
+function supplierorder_admin_prepare_head()
+{
+	global $langs, $conf, $user;
 
-?>
+	$h = 0;
+	$head = array();
+
+	$head[$h][0] = DOL_URL_ROOT."/admin/supplier_order.php";
+	$head[$h][1] = $langs->trans("SupplierOrder");
+	$head[$h][2] = 'order';
+	$h++;
+
+	$head[$h][0] = DOL_URL_ROOT."/admin/supplier_invoice.php";
+	$head[$h][1] = $langs->trans("SuppliersInvoice");
+	$head[$h][2] = 'invoice';
+	$h++;
+
+	complete_head_from_modules($conf,$langs,null,$head,$h,'supplierorder_admin');
+
+	$head[$h][0] = DOL_URL_ROOT.'/admin/supplierorder_extrafields.php';
+	$head[$h][1] = $langs->trans("ExtraFieldsSupplierOrders");
+	$head[$h][2] = 'supplierorder';
+	$h++;
+
+	$head[$h][0] = DOL_URL_ROOT.'/admin/supplierinvoice_extrafields.php';
+	$head[$h][1] = $langs->trans("ExtraFieldsSupplierInvoices");
+	$head[$h][2] = 'supplierinvoice';
+	$h++;
+
+	complete_head_from_modules($conf,$langs,null,$head,$h,'supplierorder_admin','remove');
+
+	return $head;
+}
+
+

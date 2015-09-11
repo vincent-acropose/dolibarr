@@ -32,7 +32,7 @@ require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 // Security check
 $orderid = GETPOST('orderid');
 if ($user->societe_id) $socid=$user->societe_id;
-$result = restrictedArea($user, 'commande_fournisseur', $orderid,'');
+$result = restrictedArea($user, 'fournisseur', $orderid, '', 'commande');
 
 $langs->load("suppliers");
 $langs->load("orders");
@@ -56,22 +56,22 @@ print '<tr valign="top"><td class="notopnoleft" width="30%">';
 
 /*
  * Search form
-*/
+ */
 $var=false;
 print '<table class="noborder nohover" width="100%">';
-print '<form method="post" action="liste.php">';
+print '<form method="post" action="list.php">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("SearchOrder").'</td></tr>';
 print '<tr '.$bc[$var].'><td>';
 print $langs->trans("Ref").':</td><td><input type="text" class="flat" name="search_ref" size=18></td><td rowspan="2"><input type="submit" value="'.$langs->trans("Search").'" class="button"></td></tr>';
-print '<tr '.$bc[$var].'><td nowrap>'.$langs->trans("Other").':</td><td><input type="text" class="flat" name="search_all" size="18"></td>';
+print '<tr '.$bc[$var].'><td class="nowrap">'.$langs->trans("Other").':</td><td><input type="text" class="flat" name="search_all" size="18"></td>';
 print '</tr>';
 print "</form></table><br>\n";
 
 
 /*
  * Statistics
-*/
+ */
 
 $sql = "SELECT count(cf.rowid), fk_statut";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
@@ -125,13 +125,13 @@ if ($resql)
             $var=!$var;
             print "<tr ".$bc[$var].">";
             print '<td>'.$commandestatic->LibStatut($statut,0).'</td>';
-            print '<td align="right"><a href="liste.php?statut='.$statut.'">'.(isset($vals[$statut])?$vals[$statut]:0).'</a></td>';
+            print '<td align="right"><a href="list.php?statut='.$statut.'">'.(isset($vals[$statut])?$vals[$statut]:0).'</a></td>';
             print "</tr>\n";
         }
     }
     if ($conf->use_javascript_ajax)
     {
-        print '<tr><td align="center" colspan="2">';
+        print '<tr class="impair"><td align="center" colspan="2">';
         $data=array('series'=>$dataseries);
         dol_print_graph('stats',300,180,$data,1,'pie',1);
         print '</td></tr>';
@@ -182,9 +182,9 @@ if ($resql)
         $row = $db->fetch_row($resql);
         $var=!$var;
 
-        print "<tr $bc[$var]>";
+        print "<tr ".$bc[$var].">";
         print '<td>'.$langs->trans($commandestatic->statuts[$row[1]]).'</td>';
-        print '<td align="right"><a href="liste.php?statut='.$row[1].'">'.$row[0].' '.$commandestatic->LibStatut($row[1],3).'</a></td>';
+        print '<td align="right"><a href="list.php?statut='.$row[1].'">'.$row[0].' '.$commandestatic->LibStatut($row[1],3).'</a></td>';
 
         print "</tr>\n";
         $i++;
@@ -204,7 +204,7 @@ else
 
 if (! empty($conf->fournisseur->enabled))
 {
-    $sql = "SELECT c.rowid, c.ref, s.nom, s.rowid as socid";
+    $sql = "SELECT c.rowid, c.ref, s.nom as name, s.rowid as socid";
     $sql.= " FROM ".MAIN_DB_PREFIX."commande_fournisseur as c";
     $sql.= ", ".MAIN_DB_PREFIX."societe as s";
     if (!$user->rights->societe->client->voir && !$socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
@@ -230,10 +230,10 @@ if (! empty($conf->fournisseur->enabled))
             {
                 $var=!$var;
                 $obj = $db->fetch_object($resql);
-                print "<tr $bc[$var]>";
-                print '<td nowrap="nowrap">';
-                print "<a href=\"fiche.php?id=".$obj->rowid."\">".img_object($langs->trans("ShowOrder"),"order").' '.$obj->ref."</a></td>";
-                print '<td><a href="'.DOL_URL_ROOT.'/fourn/fiche.php?socid='.$obj->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.dol_trunc($obj->nom,24).'</a></td></tr>';
+                print "<tr ".$bc[$var].">";
+                print '<td class="nowrap">';
+                print "<a href=\"card.php?id=".$obj->rowid."\">".img_object($langs->trans("ShowOrder"),"order").' '.$obj->ref."</a></td>";
+                print '<td><a href="'.DOL_URL_ROOT.'/fourn/card.php?socid='.$obj->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.dol_trunc($obj->name,24).'</a></td></tr>';
                 $i++;
             }
         }
@@ -245,7 +245,7 @@ if (! empty($conf->fournisseur->enabled))
 /*
  * List of users allowed
  */
-$sql = "SELECT u.rowid, u.name, u.firstname";
+$sql = "SELECT u.rowid, u.lastname, u.firstname";
 $sql.= " FROM ".MAIN_DB_PREFIX."user as u,";
 $sql.= " ".MAIN_DB_PREFIX."user_rights as ur";
 $sql.= ", ".MAIN_DB_PREFIX."rights_def as rd";
@@ -273,10 +273,10 @@ if ($resql)
         $obj = $db->fetch_object($resql);
         $var=!$var;
 
-        print "<tr $bc[$var]>";
+        print "<tr ".$bc[$var].">";
         print '<td>';
         $userstatic->id=$obj->rowid;
-        $userstatic->lastname=$obj->name;
+        $userstatic->lastname=$obj->lastname;
         $userstatic->firstname=$obj->firstname;
         print $userstatic->getNomUrl(1);
         print '</td>';
@@ -300,7 +300,7 @@ print '</td><td width="70%" valign="top" class="notopnoleftnoright">';
 */
 $max=5;
 
-$sql = "SELECT c.rowid, c.ref, c.fk_statut, c.tms, s.nom, s.rowid as socid";
+$sql = "SELECT c.rowid, c.ref, c.fk_statut, c.tms, s.nom as name, s.rowid as socid";
 $sql.= " FROM ".MAIN_DB_PREFIX."commande_fournisseur as c";
 $sql.= ", ".MAIN_DB_PREFIX."societe as s";
 if (!$user->rights->societe->client->voir && !$socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
@@ -329,22 +329,22 @@ if ($resql)
             $var=!$var;
             $obj = $db->fetch_object($resql);
 
-            print "<tr $bc[$var]>";
-            print '<td width="20%" nowrap="nowrap">';
+            print "<tr ".$bc[$var].">";
+            print '<td width="20%" class="nowrap">';
 
             $commandestatic->id=$obj->rowid;
             $commandestatic->ref=$obj->ref;
 
             print '<table class="nobordernopadding"><tr class="nocellnopadd">';
-            print '<td width="96" class="nobordernopadding" nowrap="nowrap">';
+            print '<td width="96" class="nobordernopadding nowrap">';
             print $commandestatic->getNomUrl(1);
             print '</td>';
 
-            print '<td width="16" class="nobordernopadding" nowrap="nowrap">';
+            print '<td width="16" class="nobordernopadding nowrap">';
             print '&nbsp;';
             print '</td>';
 
-            print '<td width="16" align="right" class="nobordernopadding">';
+            print '<td width="16" align="right" class="nobordernopadding hideonsmartphone">';
             $filename=dol_sanitizeFileName($obj->ref);
             $filedir=$conf->commande->dir_output . '/' . dol_sanitizeFileName($obj->ref);
             $urlsource=$_SERVER['PHP_SELF'].'?id='.$obj->rowid;
@@ -353,7 +353,7 @@ if ($resql)
 
             print '</td>';
 
-            print '<td><a href="'.DOL_URL_ROOT.'/fourn/fiche.php?socid='.$obj->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.$obj->nom.'</a></td>';
+            print '<td><a href="'.DOL_URL_ROOT.'/fourn/card.php?socid='.$obj->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.$obj->name.'</a></td>';
             print '<td>'.dol_print_date($db->jdate($obj->tms),'day').'</td>';
             print '<td align="right">'.$commandestatic->LibStatut($obj->fk_statut,5).'</td>';
             print '</tr>';
@@ -369,7 +369,7 @@ else dol_print_error($db);
  * Orders to process
 */
 /*
- $sql = "SELECT c.rowid, c.ref, c.fk_statut, s.nom, s.rowid as socid";
+ $sql = "SELECT c.rowid, c.ref, c.fk_statut, s.nom as name, s.rowid as socid";
 $sql.=" FROM ".MAIN_DB_PREFIX."commande_fournisseur as c";
 $sql.= ", ".MAIN_DB_PREFIX."societe as s";
 if (!$user->rights->societe->client->voir && !$socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
@@ -387,7 +387,7 @@ $num = $db->num_rows($resql);
 
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
-print '<td colspan="3">'.$langs->trans("OrdersToProcess").' <a href="'.DOL_URL_ROOT.'/commande/liste.php?viewstatut=1">('.$num.')</a></td></tr>';
+print '<td colspan="3">'.$langs->trans("OrdersToProcess").' <a href="'.DOL_URL_ROOT.'/commande/list.php?viewstatut=1">('.$num.')</a></td></tr>';
 
 if ($num)
 {
@@ -397,22 +397,22 @@ while ($i < $num)
 {
 $var=!$var;
 $obj = $db->fetch_object($resql);
-print "<tr $bc[$var]>";
-print '<td nowrap="nowrap">';
+print "<tr ".$bc[$var].">";
+print '<td class="nowrap">';
 
 $commandestatic->id=$obj->rowid;
 $commandestatic->ref=$obj->ref;
 
 print '<table class="nobordernopadding"><tr class="nocellnopadd">';
-print '<td width="96" class="nobordernopadding" nowrap="nowrap">';
+print '<td width="96" class="nobordernopadding nowrap">';
 print $commandestatic->getNomUrl(1);
 print '</td>';
 
-print '<td width="16" class="nobordernopadding" nowrap="nowrap">';
+print '<td width="16" class="nobordernopadding nowrap">';
 print '&nbsp;';
 print '</td>';
 
-print '<td width="16" align="right" class="nobordernopadding">';
+print '<td width="16" align="right" class="nobordernopadding hideonsmartphone">';
 $filename=dol_sanitizeFileName($obj->ref);
 $filedir=$conf->commande->dir_output . '/' . dol_sanitizeFileName($obj->ref);
 $urlsource=$_SERVER['PHP_SELF'].'?id='.$obj->rowid;
@@ -421,7 +421,7 @@ print '</td></tr></table>';
 
 print '</td>';
 
-print '<td><a href="'.DOL_URL_ROOT.'/comm/fiche.php?socid='.$obj->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.dol_trunc($obj->nom,24).'</a></td>';
+print '<td><a href="'.DOL_URL_ROOT.'/comm/card.php?socid='.$obj->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.dol_trunc($obj->name,24).'</a></td>';
 
 print '<td align="right">'.$commandestatic->LibStatut($obj->fk_statut,$obj->facture,5).'</td>';
 
@@ -439,4 +439,3 @@ print '</td></tr></table>';
 llxFooter();
 
 $db->close();
-?>

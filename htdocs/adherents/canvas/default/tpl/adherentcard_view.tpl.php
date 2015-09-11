@@ -66,7 +66,7 @@ dol_htmloutput_errors($this->control->tpl['error'],$this->control->tpl['errors']
 
 <tr>
 	<td><?php echo $langs->trans("Zip").' / '.$langs->trans("Town"); ?></td>
-	<td colspan="3"><?php echo $this->control->tpl['zip'].$this->control->tpl['ville']; ?></td>
+	<td colspan="3"><?php echo $this->control->tpl['zip'].$this->control->tpl['town']; ?></td>
 </tr>
 
 <tr>
@@ -76,7 +76,7 @@ dol_htmloutput_errors($this->control->tpl['error'],$this->control->tpl['errors']
 
 <tr>
 	<td><?php echo $langs->trans('State'); ?></td>
-	<td colspan="3"><?php echo $this->control->tpl['departement']; ?></td>
+	<td colspan="3"><?php echo $this->control->tpl['state']; ?></td>
 </tr>
 
 <tr>
@@ -115,7 +115,7 @@ dol_htmloutput_errors($this->control->tpl['error'],$this->control->tpl['errors']
 
 <?php echo $this->control->tpl['showend']; ?>
 
-<?php if (! $user->societe_id) { ?>
+<?php if (empty($user->societe_id)) { ?>
 <div class="tabsAction">
 
 <?php if ($user->rights->adherent->creer) { ?>

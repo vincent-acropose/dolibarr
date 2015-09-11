@@ -65,16 +65,21 @@ function image_format_supported($file)
  *    	Return size of image file on disk (Supported extensions are gif, jpg, png and bmp)
  *
  * 		@param	string	$file		Full path name of file
+ * 		@param	bool	$url		Image with url (true or false)
  * 		@return	array				array('width'=>width, 'height'=>height)
  */
-function dol_getImageSize($file)
+function dol_getImageSize($file, $url = false)
 {
 	$ret=array();
 
 	if (image_format_supported($file) < 0) return $ret;
 
-	$fichier = realpath($file); 	// Chemin canonique absolu de l'image
-	$dir = dirname($file); 			// Chemin du dossier contenant l'image
+	$fichier = $file;
+	if (!$url)
+	{
+		$fichier = realpath($file); 	// Chemin canonique absolu de l'image
+		$dir = dirname($file); 			// Chemin du dossier contenant l'image
+	}
 
 	$infoImg = getimagesize($fichier); // Recuperation des infos de l'image
 	$ret['width']=$infoImg[0]; // Largeur de l'image
@@ -269,7 +274,7 @@ function dol_imageResizeOrCrop($file, $mode, $newWidth, $newHeight, $src_x=0, $s
 			imagepng($imgThumb, $imgThumbName, $newquality);
 			break;
 		case 4:	// Bmp
-			image2wmp($imgThumb, $imgThumbName);
+			image2wbmp($imgThumb, $imgThumbName);
 			break;
 	}
 
@@ -529,7 +534,7 @@ function vignette($file, $maxWidth = 160, $maxHeight = 120, $extName='_small', $
             // Not supported by PHP GD
 			break;
 		case IMAGETYPE_WBMP:    // 15
-			image2wmp($imgThumb, $imgThumbName);
+			image2wbmp($imgThumb, $imgThumbName);
 			break;
 	}
 
@@ -653,7 +658,7 @@ function moneyMeter($actualValue=0, $pendingValue=0, $intentValue=0)
 
 	// actual
 	$sectionHeight = round(($actualValue / $maximumValue) * $height);
-	$totalHeight = $totalHeight + $sectionHeight;
+	$totalHeight = $sectionHeight;
 	if ( $sectionHeight > 0 )
 	{
 		$section = $formSection;
@@ -664,7 +669,7 @@ function moneyMeter($actualValue=0, $pendingValue=0, $intentValue=0)
 
 	// pending
 	$sectionHeight = round(($pendingValue / $maximumValue) * $height);
-	$totalHeight = $totalHeight + $sectionHeight;
+	$totalHeight += $sectionHeight;
 	if ( $sectionHeight > 0 )
 	{
 		$section = $formSection;
@@ -675,7 +680,7 @@ function moneyMeter($actualValue=0, $pendingValue=0, $intentValue=0)
 
 	// intent
 	$sectionHeight = round(($intentValue / $maximumValue) * $height);
-	$totalHeight = $totalHeight + $sectionHeight;
+	$totalHeight += $sectionHeight;
 	if ( $sectionHeight > 0 )
 	{
 		$section = $formSection;
@@ -700,4 +705,3 @@ function moneyMeter($actualValue=0, $pendingValue=0, $intentValue=0)
 	return $thermometer . $formLegenda;
 }
 
-?>

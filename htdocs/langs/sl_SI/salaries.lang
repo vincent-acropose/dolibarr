@@ -1,0 +1,13 @@
+# Dolibarr language file - Source file is en_US - users
+SALARIES_ACCOUNTING_ACCOUNT_PAYMENT=Accountancy code for salaries payments
+SALARIES_ACCOUNTING_ACCOUNT_CHARGE=Accountancy code for financial charge
+Salary=Plača
+Salaries=Plače
+Employee=Zaposleni
+NewSalaryPayment=Novo izplačilo plače
+SalaryPayment=Izplačilo plače
+SalariesPayments=Izplačila plač
+ShowSalaryPayment=Prikaži izplačilo plač
+THM=Average hourly price
+TJM=Average daily price
+CurrentSalary=Current salary

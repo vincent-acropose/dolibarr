@@ -62,7 +62,7 @@ class CMailFile
 	var $css;
 	//! Defined css style for body background
 	var $styleCSS;
-	//! Defined bacckground directly in body tag
+	//! Defined background directly in body tag
 	var $bodyCSS;
 
 	// Image
@@ -85,18 +85,18 @@ class CMailFile
 	 *	CMailFile
 	 *
 	 *	@param 	string	$subject             Topic/Subject of mail
-	 *	@param 	string	$to                  Recipients emails (RFC 2822: "Nom prenom <email>[, ...]" ou "email[, ...]" ou "<email>[, ...]")
-	 *	@param 	string	$from                Sender email      (RFC 2822: "Nom prenom <email>[, ...]" ou "email[, ...]" ou "<email>[, ...]")
+	 *	@param 	string	$to                  Recipients emails (RFC 2822: "Nom firstname <email>[, ...]" ou "email[, ...]" ou "<email>[, ...]")
+	 *	@param 	string	$from                Sender email      (RFC 2822: "Nom firstname <email>[, ...]" ou "email[, ...]" ou "<email>[, ...]")
 	 *	@param 	string	$msg                 Message
 	 *	@param 	array	$filename_list       List of files to attach (full path of filename on file system)
 	 *	@param 	array	$mimetype_list       List of MIME type of attached files
 	 *	@param 	array	$mimefilename_list   List of attached file name in message
 	 *	@param 	string	$addr_cc             Email cc
-	 *	@param 	string	$addr_bcc            Email bcc
-	 *	@param 	int		$deliveryreceipt		Ask a delivery receipt
-	 *	@param 	int		$msgishtml       	1=String IS already html, 0=String IS NOT html, -1=Unknown need autodetection
-	 *	@param 	string	$errors_to      		Email errors
-	 *	@param	string	$css			        Css option
+	 *	@param 	string	$addr_bcc            Email bcc (Note: This is autocompleted with MAIN_MAIL_AUTOCOPY_TO if defined)
+	 *	@param 	int		$deliveryreceipt     Ask a delivery receipt
+	 *	@param 	int		$msgishtml           1=String IS already html, 0=String IS NOT html, -1=Unknown make autodetection (with fast mode, not reliable)
+	 *	@param 	string	$errors_to      	 Email errors
+	 *	@param	string	$css                 Css option
 	 */
 	function __construct($subject,$to,$from,$msg,
 	$filename_list=array(),$mimetype_list=array(),$mimefilename_list=array(),
@@ -106,9 +106,9 @@ class CMailFile
 
 		// We define end of line (RFC 821).
 		$this->eol="\r\n";
-		// We define end of line for header fields (RFC 822bis section 2.3 says header must contains \r\n). 
+		// We define end of line for header fields (RFC 822bis section 2.3 says header must contains \r\n).
 		$this->eol2="\r\n";
-		if (! empty($conf->global->MAIN_FIX_FOR_BUGGED_MTA)) 
+		if (! empty($conf->global->MAIN_FIX_FOR_BUGGED_MTA))
 		{
 			$this->eol="\n";
 			$this->eol2="\n";
@@ -118,10 +118,10 @@ class CMailFile
 		$this->mixed_boundary = "multipart_x." . time() . ".x_boundary";
 
 		// On defini related_boundary
-		$this->related_boundary = 'mul_'.dol_hash(uniqid("dolibarr2"));
+		$this->related_boundary = 'mul_'.dol_hash(uniqid("dolibarr2"), 3);	// Force md5 hash (does not contains special chars)
 
 		// On defini alternative_boundary
-		$this->alternative_boundary = 'mul_'.dol_hash(uniqid("dolibarr3"));
+		$this->alternative_boundary = 'mul_'.dol_hash(uniqid("dolibarr3"), 3);	// Force md5 hash (does not contains special chars)
 
 		// If ending method not defined
 		if (empty($conf->global->MAIN_MAIL_SENDMODE)) $conf->global->MAIN_MAIL_SENDMODE='mail';
@@ -170,7 +170,7 @@ class CMailFile
 			}
 		}
 
-		// Add autocopy to
+		// Add autocopy to (Note: Adding bcc for specific modules are also done from pages)
 		if (! empty($conf->global->MAIN_MAIL_AUTOCOPY_TO)) $addr_bcc.=($addr_bcc?', ':'').$conf->global->MAIN_MAIL_AUTOCOPY_TO;
 
 		// Action according to choosed sending method
@@ -212,9 +212,10 @@ class CMailFile
 			$text_body = $this->write_body($msg);
 
 			// Encode images
+			$images_encoded = '';
 			if ($this->atleastoneimage)
 			{
-				$images_encoded = $this->write_images($this->images_encoded);
+				$images_encoded.= $this->write_images($this->images_encoded);
 				// always end related and end alternative after inline images
 				$images_encoded.= "--" . $this->related_boundary . "--" . $this->eol;
 				$images_encoded.= $this->eol . "--" . $this->alternative_boundary . "--" . $this->eol;
@@ -256,7 +257,7 @@ class CMailFile
 				if (!empty($css))
 				{
 					$this->css = $css;
-					$this->styleCSS = $this->buildCSS();
+					$this->buildCSS();
 				}
 				$msg = $this->html;
 				$msg = $this->checkIfHTML($msg);
@@ -308,7 +309,7 @@ class CMailFile
 				if (!empty($css))
 				{
 					$this->css = $css;
-					$this->styleCSS = $this->buildCSS();
+					$this->buildCSS();
 				}
 				$msg = $this->html;
 				$msg = $this->checkIfHTML($msg);
@@ -359,12 +360,25 @@ class CMailFile
 	 */
 	function sendfile()
 	{
-		global $conf;
+		global $conf,$db;
 
 		$errorlevel=error_reporting();
 		error_reporting($errorlevel ^ E_WARNING);   // Desactive warnings
 
 		$res=false;
+        
+        dol_include_once('/core/class/hookmanager.class.php');
+        $hookmanager=new HookManager($db);
+        $hookmanager->initHooks(array('maildao'));
+        $reshook=$hookmanager->executeHooks('doactions',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
+        if (!empty($reshook))
+        {
+                
+            $this->error="Error in hook maildao doactions ".$reshook;
+            dol_syslog("CMailFile::sendfile: mail end error=".$this->error, LOG_ERR);
+        
+            return $reshook;
+        }
 
 		if (empty($conf->global->MAIN_DISABLE_ALL_MAILS))
 		{
@@ -404,7 +418,7 @@ class CMailFile
 						// le return-path dans les header ne fonctionne pas avec tous les MTA
 						// Le passage par -f est donc possible si la constante MAIN_MAIL_ALLOW_SENDMAIL_F est definie.
 						// La variable definie pose des pb avec certains sendmail securisee (option -f refusee car dangereuse)
-						$bounce .= ($bounce?' ':'').(! empty($conf->global->MAIN_MAIL_ERRORS_TO) ? '-f' . $conf->global->MAIN_MAIL_ERRORS_TO : ($this->addr_from != '' ? '-f' . $this->addr_from : '') );
+						$bounce .= ($bounce?' ':'').(! empty($conf->global->MAIN_MAIL_ERRORS_TO) ? '-f' . $this->getValidAddress($conf->global->MAIN_MAIL_ERRORS_TO,2) : ($this->addr_from != '' ? '-f' . $this->getValidAddress($this->addr_from,2) : '') );
 					}
                     if (! empty($conf->global->MAIN_MAIL_SENDMAIL_FORCE_BA))    // To force usage of -ba option. This option tells sendmail to read From: or Sender: to setup sender
                     {
@@ -551,7 +565,7 @@ class CMailFile
 	/**
 	 *  Write content of a SMTP request into a dump file (mode = all)
 	 *  Used for debugging.
-	 *  Note that to see full SMTP protocol, you can use tcpdump -w /tmp/smtp -s 2000 port 25" 
+	 *  Note that to see full SMTP protocol, you can use tcpdump -w /tmp/smtp -s 2000 port 25"
 	 *
 	 *  @return	void
 	 */
@@ -572,7 +586,7 @@ class CMailFile
 			}
 			elseif ($conf->global->MAIN_MAIL_SENDMODE == 'smtps')
 			{
-				fputs($fp, $this->smtps->log);
+				fputs($fp, $this->smtps->log);	// this->smtps->log is filled only if MAIN_MAIL_DEBUG was set to on
 			}
 
 			fclose($fp);
@@ -624,7 +638,7 @@ class CMailFile
             if ($this->css['bgcolor'])
             {
                 $this->styleCSS.= '  background-color: '.$this->css['bgcolor'].';';
-                $this->bodyCSS.= ' BGCOLOR="'.$this->css['bgcolor'].'"';
+                $this->bodyCSS.= ' bgcolor="'.$this->css['bgcolor'].'"';
             }
             if ($this->css['bgimage'])
             {
@@ -656,6 +670,7 @@ class CMailFile
 		{
 			$out.= "To: ".$this->getValidAddress($this->addr_to,0,1).$this->eol2;
 		}
+		// Return-Path is important because it is used by SPF. Some MTA does not read Return-Path from header but from command line. See option MAIN_MAIL_ALLOW_SENDMAIL_F for that.
 		$out.= "Return-Path: ".$this->getValidAddress($this->addr_from,0,1).$this->eol2;
 		if (isset($this->reply_to)  && $this->reply_to)  $out.= "Reply-To: ".$this->getValidAddress($this->reply_to,2).$this->eol2;
 		if (isset($this->errors_to) && $this->errors_to) $out.= "Errors-To: ".$this->getValidAddress($this->errors_to,2).$this->eol2;
@@ -742,7 +757,7 @@ class CMailFile
 		}
 		else
 		{
-			$strContent.= $msgtext;
+			$strContent = $msgtext;
 		}
 
 		// Make RFC821 Compliant, replace bare linefeeds
@@ -751,7 +766,7 @@ class CMailFile
 		{
 			$strContent = preg_replace("/\r\n/si", "\n", $strContent);
 		}
-		
+
         //$strContent = rtrim(chunk_split($strContent));    // Function chunck_split seems bugged
         $strContent = rtrim(wordwrap($strContent));
 
@@ -962,11 +977,14 @@ class CMailFile
 						$this->html_images[$i]["name"] = $img;
 
 						// Content type
-						$ext = preg_replace('/^.*\.(\w{3,4})$/e', 'strtolower("$1")', $img);
-						$this->html_images[$i]["content_type"] = $this->image_types[$ext];
+						if (preg_match('/^.+\.(\w{3,4})$/', $img, $reg))
+						{
+							$ext=strtolower($reg[1]);
+							$this->html_images[$i]["content_type"] = $this->image_types[$ext];
+						}
 
 						// cid
-						$this->html_images[$i]["cid"] = dol_hash(uniqid(time()));
+						$this->html_images[$i]["cid"] = dol_hash(uniqid(time()), 3);	// Force md5 hash (does not contains special chars)
 						$this->html = preg_replace("/src=\"$src\"|src='$src'/i", "src=\"cid:".$this->html_images[$i]["cid"]."\"", $this->html);
 					}
 					$i++;
@@ -1020,7 +1038,7 @@ class CMailFile
 	/**
 	 * Return an address for SMTP protocol
 	 *
-	 * @param	string		$adresses		Example: 'John Doe <john@doe.com>' or 'john@doe.com'
+	 * @param	string		$address		Example: 'John Doe <john@doe.com>' or 'john@doe.com'
 	 * @param	int			$format			0=auto, 1=emails with <>, 2=emails without <>, 3=auto + label between "
 	 * @param	int			$encode			1=Encode name to RFC2822
 	 * @return	string						If format 0: '<john@doe.com>' or 'John Doe <john@doe.com>' or '=?UTF-8?B?Sm9obiBEb2U=?= <john@doe.com>'
@@ -1028,13 +1046,13 @@ class CMailFile
 	 *										If format 2: 'john@doe.com'
 	 *										If format 3: '<john@doe.com>' or '"John Doe" <john@doe.com>' or '"=?UTF-8?B?Sm9obiBEb2U=?=" <john@doe.com>'
 	 */
-	function getValidAddress($adresses,$format,$encode='')
+	function getValidAddress($address,$format,$encode='')
 	{
 		global $conf;
 
 		$ret='';
 
-		$arrayaddress=explode(',',$adresses);
+		$arrayaddress=explode(',',$address);
 
 		// Boucle sur chaque composant de l'adresse
 		foreach($arrayaddress as $val)
@@ -1076,4 +1094,3 @@ class CMailFile
 	}
 }
 
-?>

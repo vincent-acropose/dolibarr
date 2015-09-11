@@ -53,7 +53,7 @@ if ($action == 'update' || $action == 'add')
 	$constname=GETPOST('constname','alpha');
 	$constvalue=(GETPOST('constvalue_'.$constname) ? GETPOST('constvalue_'.$constname) : GETPOST('constvalue'));
 
-	if (($constname=='ADHERENT_CARD_TYPE' || $constname=='ADHERENT_ETIQUETTE_TYPE') && $constvalue == -1) $constvalue='';
+	if (($constname=='ADHERENT_CARD_TYPE' || $constname=='ADHERENT_ETIQUETTE_TYPE' || $constname=='ADHERENT_PRODUCT_ID_FOR_SUBSCRIPTIONS') && $constvalue == -1) $constvalue='';
 	if ($constname=='ADHERENT_LOGIN_NOT_REQUIRED') // Invert choice
 	{
 		if ($constvalue) $constvalue=0;
@@ -68,11 +68,11 @@ if ($action == 'update' || $action == 'add')
 
 	if (! $error)
 	{
-		$mesg = '<div class="ok">'.$langs->trans("SetupSaved").'</div>';
+		setEventMessage($langs->trans("SetupSaved"));
 	}
 	else
 	{
-		$mesg = '<div class="error">'.$langs->trans("Error").'</div>';
+		setEventMessage($langs->trans("Error"), 'errors');
 	}
 }
 
@@ -102,6 +102,8 @@ if ($action == 'unset')
  * View
  */
 
+$form = new Form($db);
+
 $help_url='EN:Module_Foundations|FR:Module_Adh&eacute;rents|ES:M&oacute;dulo_Miembros';
 
 llxHeader('',$langs->trans("MembersSetup"),$help_url);
@@ -113,11 +115,7 @@ print_fiche_titre($langs->trans("MembersSetup"),$linkback,'setup');
 
 $head = member_admin_prepare_head();
 
-dol_fiche_head($head, 'general', $langs->trans("Member"), 0, 'user');
-
-
-dol_htmloutput_mesg($mesg);
-
+dol_fiche_head($head, 'general', $langs->trans("Members"), 0, 'user');
 
 print_fiche_titre($langs->trans("MemberMainOptions"),'','');
 print '<table class="noborder" width="100%">';
@@ -127,23 +125,19 @@ print '<td>'.$langs->trans("Value").'</td>';
 print '<td align="center">'.$langs->trans("Action").'</td>';
 print "</tr>\n";
 $var=true;
-$form = new Form($db);
 
 // Login/Pass required for members
-if ($conf->global->MAIN_FEATURES_LEVEL > 0)
-{
-    $var=!$var;
-    print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
-    print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-    print '<input type="hidden" name="action" value="update">';
-    print '<input type="hidden" name="constname" value="ADHERENT_LOGIN_NOT_REQUIRED">';
-    print '<tr '.$bc[$var].'><td>'.$langs->trans("AdherentLoginRequired").'</td><td>';
-    print $form->selectyesno('constvalue',(! empty($conf->global->ADHERENT_LOGIN_NOT_REQUIRED)?$conf->global->ADHERENT_LOGIN_NOT_REQUIRED:1),1);
-    print '</td><td align="center" width="80">';
-    print '<input type="submit" class="button" value="'.$langs->trans("Update").'" name="Button">';
-    print "</td></tr>\n";
-    print '</form>';
-}
+$var=!$var;
+print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+print '<input type="hidden" name="action" value="update">';
+print '<input type="hidden" name="constname" value="ADHERENT_LOGIN_NOT_REQUIRED">';
+print '<tr '.$bc[$var].'><td>'.$langs->trans("AdherentLoginRequired").'</td><td>';
+print $form->selectyesno('constvalue',(! empty($conf->global->ADHERENT_LOGIN_NOT_REQUIRED)?0:1),1);
+print '</td><td align="center" width="80">';
+print '<input type="submit" class="button" value="'.$langs->trans("Update").'" name="Button">';
+print "</td></tr>\n";
+print '</form>';
 
 // Mail required for members
 $var=!$var;
@@ -171,29 +165,69 @@ print '<input type="submit" class="button" value="'.$langs->trans("Update").'" n
 print "</td></tr>\n";
 print '</form>';
 
-// Insertion cotisations dans compte financier
+// Insert subscription into bank account
 $var=!$var;
 print '<form action="adherent.php" method="POST">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<input type="hidden" name="action" value="update">';
 print '<input type="hidden" name="constname" value="ADHERENT_BANK_USE">';
-print '<tr '.$bc[$var].'><td>'.$langs->trans("AddSubscriptionIntoAccount").'</td>';
-if (! empty($conf->banque->enabled))
-{
-    print '<td>';
-    print $form->selectyesno('constvalue',$conf->global->ADHERENT_BANK_USE,1);
-    print '</td><td align="center" width="80">';
-    print '<input type="submit" class="button" value="'.$langs->trans("Update").'" name="Button">';
-    print '</td>';
-}
-else
-{
-    print '<td align="right" colspan="2">';
-    print $langs->trans("WarningModuleNotActive",$langs->transnoentities("Module85Name")).' '.img_warning("","");
-    print '</td>';
-}
+print '<tr '.$bc[$var].'><td>'.$langs->trans("MoreActionsOnSubscription").'</td>';
+$arraychoices=array('0'=>$langs->trans("None"));
+if (! empty($conf->banque->enabled)) $arraychoices['bankdirect']=$langs->trans("MoreActionBankDirect");
+if (! empty($conf->banque->enabled) && ! empty($conf->societe->enabled) && ! empty($conf->facture->enabled)) $arraychoices['invoiceonly']=$langs->trans("MoreActionInvoiceOnly");
+if (! empty($conf->banque->enabled) && ! empty($conf->societe->enabled) && ! empty($conf->facture->enabled)) $arraychoices['bankviainvoice']=$langs->trans("MoreActionBankViaInvoice");
+print '<td>';
+print $form->selectarray('constvalue',$arraychoices,$conf->global->ADHERENT_BANK_USE,0);
+print '</td><td align="center" width="80">';
+print '<input type="submit" class="button" value="'.$langs->trans("Update").'" name="Button">';
+print '</td>';
 print "</tr>\n";
 print '</form>';
+
+// Use vat for invoice creation
+if ($conf->facture->enabled)
+{
+	$var=!$var;
+	print '<form action="adherent.php" method="POST">';
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print '<input type="hidden" name="action" value="update">';
+	print '<input type="hidden" name="constname" value="ADHERENT_VAT_FOR_SUBSCRIPTIONS">';
+	print '<tr '.$bc[$var].'><td>'.$langs->trans("VATToUseForSubscriptions").'</td>';
+	if (! empty($conf->banque->enabled))
+	{
+		print '<td>';
+		print $form->selectarray('constvalue', array('0'=>$langs->trans("NoVatOnSubscription"),'defaultforfoundationcountry'=>$langs->trans("Default")), (empty($conf->global->ADHERENT_VAT_FOR_SUBSCRIPTIONS)?'0':$conf->global->ADHERENT_VAT_FOR_SUBSCRIPTIONS), 0);
+		print '</td><td align="center" width="80">';
+		print '<input type="submit" class="button" value="'.$langs->trans("Update").'" name="Button">';
+		print '</td>';
+	}
+	else
+	{
+		print '<td align="right" colspan="2">';
+		print $langs->trans("WarningModuleNotActive",$langs->transnoentities("Module85Name"));
+		print '</td>';
+	}
+	print "</tr>\n";
+	print '</form>';
+
+	if (! empty($conf->product->enabled) || ! empty($conf->service->enabled))
+	{
+		$var=!$var;
+		print '<form action="adherent.php" method="POST">';
+		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+		print '<input type="hidden" name="action" value="update">';
+		print '<input type="hidden" name="constname" value="ADHERENT_PRODUCT_ID_FOR_SUBSCRIPTIONS">';
+		print '<tr '.$bc[$var].'><td>'.$langs->trans("ADHERENT_PRODUCT_ID_FOR_SUBSCRIPTIONS").'</td>';
+		print '<td>';
+		$form->select_produits($conf->global->ADHERENT_PRODUCT_ID_FOR_SUBSCRIPTIONS, 'constvalue_ADHERENT_PRODUCT_ID_FOR_SUBSCRIPTIONS');
+		print '</td><td align="center" width="80">';
+		print '<input type="submit" class="button" value="'.$langs->trans("Update").'" name="Button">';
+		print '</td>';
+	}
+	print "</tr>\n";
+	print '</form>';
+}
+
 print '</table>';
 print '<br>';
 
@@ -216,7 +250,7 @@ form_constantes($constantes);
 
 print '*'.$langs->trans("FollowingConstantsWillBeSubstituted").'<br>';
 print '%DOL_MAIN_URL_ROOT%, %ID%, %FIRSTNAME%, %LASTNAME%, %FULLNAME%, %LOGIN%, %PASSWORD%, ';
-print '%COMPANY%, %ADDRESS%, %ZIP%, %TOWN%, %COUNTRY%, %EMAIL%, %NAISS%, %PHOTO%, %TYPE%, ';
+print '%COMPANY%, %ADDRESS%, %ZIP%, %TOWN%, %COUNTRY%, %EMAIL%, %BIRTH%, %PHOTO%, %TYPE%, ';
 print '%YEAR%, %MONTH%, %DAY%';
 print '<br>';
 
@@ -234,7 +268,7 @@ form_constantes($constantes);
 
 print '*'.$langs->trans("FollowingConstantsWillBeSubstituted").'<br>';
 print '%DOL_MAIN_URL_ROOT%, %ID%, %FIRSTNAME%, %LASTNAME%, %FULLNAME%, %LOGIN%, %PASSWORD%, ';
-print '%COMPANY%, %ADDRESS%, %ZIP%, %TOWN%, %COUNTRY%, %EMAIL%, %NAISS%, %PHOTO%, %TYPE%, ';
+print '%COMPANY%, %ADDRESS%, %ZIP%, %TOWN%, %COUNTRY%, %EMAIL%, %BIRTH%, %PHOTO%, %TYPE%, ';
 print '%YEAR%, %MONTH%, %DAY%';
 print '<br>';
 
@@ -242,7 +276,7 @@ print '<br>';
 
 
 /*
- * Edition des variables globales non rattache a un theme specifique
+ * Editing global variables not related to a specific theme
  */
 $constantes=array(
 		'ADHERENT_AUTOREGISTER_NOTIF_MAIL_SUBJECT',
@@ -264,7 +298,7 @@ form_constantes($constantes);
 
 print '*'.$langs->trans("FollowingConstantsWillBeSubstituted").'<br>';
 print '%DOL_MAIN_URL_ROOT%, %ID%, %FIRSTNAME%, %LASTNAME%, %FULLNAME%, %LOGIN%, %PASSWORD%, ';
-print '%COMPANY%, %ADDRESS%, %ZIP%, %TOWN%, %COUNTRY%, %EMAIL%, %NAISS%, %PHOTO%, %TYPE%, ';
+print '%COMPANY%, %ADDRESS%, %ZIP%, %TOWN%, %COUNTRY%, %EMAIL%, %BIRTH%, %PHOTO%, %TYPE%, ';
 //print '%YEAR%, %MONTH%, %DAY%';	// Not supported
 print '<br>';
 
@@ -274,4 +308,3 @@ dol_fiche_end();
 llxFooter();
 
 $db->close();
-?>

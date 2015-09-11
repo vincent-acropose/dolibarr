@@ -24,11 +24,13 @@
  * 	\brief      Page liste des bons de prelevements
  */
 
-require '../bank/pre.inc.php';
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/bonprelevement.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
-$langs->load("withdrawals");
+$langs->load("banks");
 $langs->load("categories");
+$langs->load("widthdrawals");
 
 // Security check
 $socid = GETPOST('socid','int');
@@ -71,14 +73,14 @@ if ($result)
 
   $urladd= "&amp;statut=".$statut;
 
-  print_barre_liste($langs->trans("WithdrawalsReceipts"), $page, "bons.php", $urladd, $sortfield, $sortorder, '', $num);
+  print_barre_liste($langs->trans("WithdrawalsReceipts"), $page, $_SERVER["PHP_SELF"], $urladd, $sortfield, $sortorder, '', $num);
 
   print"\n<!-- debut table -->\n";
   print '<table class="liste" width="100%">';
 
   print '<tr class="liste_titre">';
-  print_liste_field_titre($langs->trans("WithdrawalReceipt"),"bons.php","p.ref",'','','class="liste_titre"');
-  print_liste_field_titre($langs->trans("Date"),"bons.php","p.datec","","",'class="liste_titre" align="center"');
+  print_liste_field_titre($langs->trans("WithdrawalsReceipts"),$_SERVER["PHP_SELF"],"p.ref",'','','class="liste_titre"');
+  print_liste_field_titre($langs->trans("Date"),$_SERVER["PHP_SELF"],"p.datec","","",'class="liste_titre" align="center"');
   print '<td class="liste_titre" align="right">'.$langs->trans("Amount").'</td>';
   print '</tr>';
 
@@ -86,7 +88,7 @@ if ($result)
   print '<form action="bons.php" method="GET">';
   print '<td class="liste_titre"><input type="text" class="flat" name="search_ligne" value="'. $search_line.'" size="10"></td>';
   print '<td class="liste_titre">&nbsp;</td>';
-  print '<td class="liste_titre" align="right"><input type="image" class="liste_titre" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" name="button_search" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'"></td>';
+  print '<td class="liste_titre" align="right"><input type="image" class="liste_titre" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" name="button_search" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'"></td>';
   print '</form>';
   print '</tr>';
 
@@ -97,12 +99,12 @@ if ($result)
       $obj = $db->fetch_object($result);
       $var=!$var;
 
-      print "<tr $bc[$var]><td>";
+      print "<tr ".$bc[$var]."><td>";
 
       print $bon->LibStatut($obj->statut,2);
       print "&nbsp;";
 
-      print '<a href="fiche.php?id='.$obj->rowid.'">'.$obj->ref."</a></td>\n";
+      print '<a href="card.php?id='.$obj->rowid.'">'.$obj->ref."</a></td>\n";
 
       print '<td align="center">'.dol_print_date($db->jdate($obj->datec),'day')."</td>\n";
 
@@ -123,4 +125,3 @@ $db->close();
 
 llxFooter();
 
-?>

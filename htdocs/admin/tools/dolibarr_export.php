@@ -50,7 +50,7 @@ if (! $user->admin)
 
 if ($action == 'delete')
 {
-	$file=$conf->admin->dir_output.'/backup/'.GETPOST('urlfile');
+	$file=$conf->admin->dir_output.'/'.GETPOST('urlfile');
     $ret=dol_delete_file($file, 1);
     if ($ret) setEventMessage($langs->trans("FileWasRemoved", GETPOST('urlfile')));
     else setEventMessage($langs->trans("ErrorFailToDeleteFile", GETPOST('urlfile')), 'errors');
@@ -65,7 +65,7 @@ if ($action == 'delete')
 $form=new Form($db);
 $formfile = new FormFile($db);
 
-$label=getStaticMember($db, 'label');
+$label=$db::LABEL;
 
 $help_url='EN:Backups|FR:Sauvegardes|ES:Copias_de_seguridad';
 llxHeader('','',$help_url);
@@ -97,7 +97,7 @@ jQuery(document).ready(function() {
 		if (jQuery("#select_sql_compat").val() == 'POSTGRESQL')
 		{
 			jQuery("#checkbox_dump_disable-add-locks").attr('checked',true);
-		};
+		}
 	});
 
 	<?php
@@ -195,7 +195,7 @@ print $langs->trans("BackupDescY").'<br><br>';
 
 			<div class="formelementrow"><input type="checkbox" name="disable_fk"
 				value="yes" id="checkbox_disable_fk" checked="checked" /> <label
-				for="checkbox_disable_fk"> <?php echo $langs->trans("CommandsToDisableForeignKeysForImport"); ?></label>
+				for="checkbox_disable_fk"> <?php echo $langs->trans("CommandsToDisableForeignKeysForImport"); ?> <?php print img_info($langs->trans('CommandsToDisableForeignKeysForImportWarning')); ?></label>
 			</div>
 			<label for="select_sql_compat"> <?php echo $langs->trans("ExportCompatibility"); ?></label>
 
@@ -219,7 +219,7 @@ print $langs->trans("BackupDescY").'<br><br>';
 			<fieldset><legend> <input type="checkbox" name="sql_structure"
 				value="structure" id="checkbox_sql_structure" checked="checked" /> <label
 				for="checkbox_sql_structure"> <?php echo $langs->trans('ExportStructure') ?></label> </legend> <input
-				type="checkbox" name="drop" value="1" id="checkbox_dump_drop" /> <label
+				type="checkbox" name="drop"<?php echo ((! isset($_GET["drop"]) && ! isset($_POST["drop"])) || GETPOST('drop'))?' checked="checked"':''; ?> id="checkbox_dump_drop" /> <label
 				for="checkbox_dump_drop"><?php echo $langs->trans("AddDropTable"); ?></label><br>
 			</fieldset>
 
@@ -274,7 +274,7 @@ print $langs->trans("BackupDescY").'<br><br>';
 
                             <br>
                             <fieldset><legend><?php echo $langs->trans('ExportStructure') ?></legend> <input
-                                    type="checkbox" name="nobin_drop" value="1" id="checkbox_dump_drop" /> <label
+                                    type="checkbox" name="nobin_drop"<?php echo ((! isset($_GET["nobin_drop"]) && ! isset($_POST["nobin_drop"])) || GETPOST('nobin_drop'))?' checked="checked"':''; ?> id="checkbox_dump_drop" /> <label
                                     for="checkbox_dump_drop"><?php echo $langs->trans("AddDropTable"); ?></label><br>
                             </fieldset>
 
@@ -359,16 +359,18 @@ print $langs->trans("BackupDescY").'<br><br>';
 
 </fieldset>
 
-
-
-<fieldset><label for="filename_template"> <?php echo $langs->trans("FileNameToGenerate"); ?></label>:
+<fieldset>
+<legend><?php echo $langs->trans("Destination"); ?></legend>
+<label for="filename_template"> <?php echo $langs->trans("FileNameToGenerate"); ?></label>:
  <input type="text" name="filename_template" size="60"
 	id="filename_template"
 	value="<?php
 $prefix='dump';
-if ($label == 'MySQL')      $prefix='mysqldump';
-if ($label == 'PostgreSQL') $prefix='pg_dump';
-$file=$prefix.'_'.$dolibarr_main_db_name.'_'.dol_sanitizeFileName(DOL_VERSION).'_'.strftime("%Y%m%d%H%M").'.sql';
+$ext='.sql';
+if ($label == 'MySQL')      { $prefix='mysqldump'; $ext='sql'; }
+//if ($label == 'PostgreSQL') { $prefix='pg_dump'; $ext='dump'; }
+if ($label == 'PostgreSQL') { $prefix='pg_dump'; $ext='sql'; }
+$file=$prefix.'_'.$dolibarr_main_db_name.'_'.dol_sanitizeFileName(DOL_VERSION).'_'.strftime("%Y%m%d%H%M").'.'.$ext;
 echo $file;
 ?>" /> <br>
 <br>
@@ -376,16 +378,19 @@ echo $file;
 <?php
 
 // Define compressions array
-$compression=array(
-	'none' => array('function' => '',       'id' => 'radio_compression_none', 'label' => $langs->trans("None")),
-	'gz'   => array('function' => 'gzopen', 'id' => 'radio_compression_gzip', 'label' => $langs->trans("Gzip")),
-);
+$compression=array();
 if ($label == 'MySQL')
 {
-//	$compression['zip']= array('function' => 'dol_compress', 'id' => 'radio_compression_zip',  'label' => $langs->trans("FormatZip"));		// Not open source format. Must implement dol_compress function
+	$compression['none'] = array('function' => '',       'id' => 'radio_compression_none', 'label' => $langs->trans("None"));
+	$compression['gz'] = array('function' => 'gzopen', 'id' => 'radio_compression_gzip', 'label' => $langs->trans("Gzip"));
+	//	$compression['zip']= array('function' => 'dol_compress', 'id' => 'radio_compression_zip',  'label' => $langs->trans("FormatZip"));		// Not open source format. Must implement dol_compress function
     $compression['bz'] = array('function' => 'bzopen',       'id' => 'radio_compression_bzip', 'label' => $langs->trans("Bzip2"));
 }
-
+else
+{
+	$compression['none'] = array('function' => '',       'id' => 'radio_compression_none', 'label' => $langs->trans("Default"));
+	$compression['gz'] = array('function' => 'gzopen', 'id' => 'radio_compression_gzip', 'label' => $langs->trans("Gzip"));
+}
 
 // Show compression choices
 print '<div class="formelementrow">';
@@ -414,7 +419,7 @@ print "\n";
 
 ?></fieldset>
 
-
+<br>
 <div align="center"><input type="submit" class="button"
 	value="<?php echo $langs->trans("GenerateBackup") ?>" id="buttonGo" /><br>
 <br>
@@ -433,4 +438,3 @@ print '<br>';
 llxFooter();
 
 $db->close();
-?>

@@ -1,8 +1,9 @@
 <?php
 /* Copyright (C) 2001-2003 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
- * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2006      Yannick Warnier      <ywarnier@beeznest.org>
+ * Copyright (C) 2014	   Ferran Marcet        <fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +35,7 @@ $langs->load("bills");
 $langs->load("compta");
 $langs->load("companies");
 $langs->load("products");
+$langs->load("other");
 
 // Date range
 $year=GETPOST("year");
@@ -109,8 +111,10 @@ $fsearch.='  <input type="text" name="min" id="min" value="'.$min.'" size="6">';
 // Affiche en-tete du rapport
 if ($modetax==1)	// Calculate on invoice for goods and services
 {
-    $nom=$langs->trans("VATReportByCustomersInDueDebtMode");
-    //$nom.='<br>('.$langs->trans("SeeVATReportInInputOutputMode",'<a href="'.$_SERVER["PHP_SELF"].'?year='.$year_start.'&modetax=0">','</a>').')';
+    $name=$langs->trans("VATReportByCustomersInDueDebtMode");
+	$calcmode=$langs->trans("CalcModeVATDebt");
+    $calcmode.='<br>('.$langs->trans("TaxModuleSetupToModifyRules",DOL_URL_ROOT.'/admin/taxes.php').')';
+    //$name.='<br>('.$langs->trans("SeeVATReportInInputOutputMode",'<a href="'.$_SERVER["PHP_SELF"].'?year='.$year_start.'&modetax=0">','</a>').')';
     $period=$form->select_date($date_start,'date_start',0,0,0,'',1,0,1).' - '.$form->select_date($date_end,'date_end',0,0,0,'',1,0,1);
     //$periodlink=($year_start?"<a href='".$_SERVER["PHP_SELF"]."?year=".($year_start-1)."&modetax=".$modetax."'>".img_previous()."</a> <a href='".$_SERVER["PHP_SELF"]."?year=".($year_start+1)."&modetax=".$modetax."'>".img_next()."</a>":"");
     $description=$langs->trans("RulesVATDueServices");
@@ -121,7 +125,6 @@ if ($modetax==1)	// Calculate on invoice for goods and services
     if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS)) $description.='<br>'.$langs->trans("DepositsAreNotIncluded");
 	else  $description.='<br>'.$langs->trans("DepositsAreIncluded");
 	$description.=$fsearch;
-    $description.='<br>('.$langs->trans("TaxModuleSetupToModifyRules",DOL_URL_ROOT.'/admin/taxes.php').')';
 	$builddate=time();
     //$exportlink=$langs->trans("NotYetAvailable");
 
@@ -136,8 +139,10 @@ if ($modetax==1)	// Calculate on invoice for goods and services
 }
 if ($modetax==0) 	// Invoice for goods, payment for services
 {
-    $nom=$langs->trans("VATReportByCustomersInInputOutputMode");
-    //$nom.='<br>('.$langs->trans("SeeVATReportInDueDebtMode",'<a href="'.$_SERVER["PHP_SELF"].'?year='.$year_start.'&modetax=1">','</a>').')';
+    $name=$langs->trans("VATReportByCustomersInInputOutputMode");
+    $calcmode=$langs->trans("CalcModeVATEngagement");
+    $calcmode.='<br>('.$langs->trans("TaxModuleSetupToModifyRules",DOL_URL_ROOT.'/admin/taxes.php').')';
+    //$name.='<br>('.$langs->trans("SeeVATReportInDueDebtMode",'<a href="'.$_SERVER["PHP_SELF"].'?year='.$year_start.'&modetax=1">','</a>').')';
     $period=$form->select_date($date_start,'date_start',0,0,0,'',1,0,1).' - '.$form->select_date($date_end,'date_end',0,0,0,'',1,0,1);
     //$periodlink=($year_start?"<a href='".$_SERVER["PHP_SELF"]."?year=".($year_start-1)."&modetax=".$modetax."'>".img_previous()."</a> <a href='".$_SERVER["PHP_SELF"]."?year=".($year_start+1)."&modetax=".$modetax."'>".img_next()."</a>":"");
     $description=$langs->trans("RulesVATInServices");
@@ -149,7 +154,6 @@ if ($modetax==0) 	// Invoice for goods, payment for services
     //if ($conf->global->MAIN_MODULE_COMPTABILITE || $conf->global->MAIN_MODULE_ACCOUNTING) $description.='<br>'.img_warning().' '.$langs->trans('OptionVatInfoModuleComptabilite');
     //if (! empty($conf->global->MAIN_MODULE_COMPTABILITE)) $description.='<br>'.$langs->trans("WarningDepositsNotIncluded");
     $description.=$fsearch;
-    $description.='<br>('.$langs->trans("TaxModuleSetupToModifyRules",DOL_URL_ROOT.'/admin/taxes.php').')';
     $builddate=time();
     //$exportlink=$langs->trans("NotYetAvailable");
 
@@ -162,7 +166,7 @@ if ($modetax==0) 	// Invoice for goods, payment for services
 	$amountsup=$langs->trans("AmountHT");
 	if ($mysoc->tva_assuj) $vatsup.=' ('.$langs->trans("ToGetBack").')';
 }
-report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportlink);
+report_header($name,$nomlink,$period,$periodlink,$description,$builddate,$exportlink,array(),$calcmode);
 
 $vatcust=$langs->trans("VATReceived");
 $vatsup=$langs->trans("VATPaid");
@@ -183,6 +187,17 @@ print "<td align=\"right\">".$vatcust."</td>";
 print "</tr>\n";
 
 $coll_list = vat_by_thirdparty($db,0,$date_start,$date_end,$modetax,'sell');
+
+$action = "tvaclient";
+$object = &$coll_list;
+$parameters["mode"] = $modetax;
+$parameters["start"] = $date_start;
+$parameters["end"] = $date_end;
+$parameters["direction"] = 'sell';
+// Initialize technical object to manage hooks of expenses. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('externalbalance'));
+$reshook=$hookmanager->executeHooks('addStatisticLine',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+
 if (is_array($coll_list))
 {
 	$var=true;
@@ -207,16 +222,16 @@ if (is_array($coll_list))
 				}
 			}
 			print "<tr ".$bc[$var].">";
-			print "<td nowrap>".$i."</td>";
+			print '<td class="nowrap">'.$i."</td>";
 			$company_static->id=$coll->socid;
-			$company_static->nom=$coll->nom;
+			$company_static->name=$coll->name;
 			$company_static->client=1;
-			print '<td nowrap>'.$company_static->getNomUrl(1,'customer').'</td>';
+			print '<td class="nowrap">'.$company_static->getNomUrl(1,'customer').'</td>';
 			$find = array(' ','.');
 			$replace = array('','');
-			print "<td nowrap>".$intra."</td>";
-			print "<td nowrap align=\"right\">".price($coll->amount)."</td>";
-			print "<td nowrap align=\"right\">".price($coll->tva)."</td>";
+			print '<td class="nowrap">'.$intra."</td>";
+			print "<td class=\"nowrap\" align=\"right\">".price($coll->amount)."</td>";
+			print "<td class=\"nowrap\" align=\"right\">".price($coll->tva)."</td>";
             $totalamount = $totalamount + $coll->amount;
 			$total = $total + $coll->tva;
 			print "</tr>\n";
@@ -226,8 +241,8 @@ if (is_array($coll_list))
     $x_coll_sum = $total;
 
 	print '<tr class="liste_total"><td align="right" colspan="3">'.$langs->trans("Total").':</td>';
-    print '<td nowrap align="right">'.price($totalamount).'</td>';
-	print '<td nowrap align="right">'.price($total).'</td>';
+    print '<td class="nowrap" align="right">'.price($totalamount).'</td>';
+	print '<td class="nowrap" align="right">'.price($total).'</td>';
 	print '</tr>';
 }
 else
@@ -261,6 +276,9 @@ print "</tr>\n";
 $company_static=new Societe($db);
 
 $coll_list = vat_by_thirdparty($db,0,$date_start,$date_end,$modetax,'buy');
+
+$parameters["direction"] = 'buy';
+$reshook=$hookmanager->executeHooks('addStatisticLine',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 if (is_array($coll_list))
 {
 	$var=true;
@@ -284,17 +302,17 @@ if (is_array($coll_list))
 					$intra = '';
 				}
 			}
-			print "<tr $bc[$var]>";
-			print "<td nowrap>".$i."</td>";
+			print "<tr ".$bc[$var].">";
+			print '<td class="nowrap">'.$i."</td>";
 			$company_static->id=$coll->socid;
-			$company_static->nom=$coll->nom;
+			$company_static->name=$coll->name;
 			$company_static->fournisseur=1;
-			print '<td nowrap>'.$company_static->getNomUrl(1,'supplier').'</td>';
+			print '<td class="nowrap">'.$company_static->getNomUrl(1,'supplier').'</td>';
 			$find = array(' ','.');
 			$replace = array('','');
-			print "<td nowrap>".$intra."</td>";
-			print "<td nowrap align=\"right\">".price($coll->amount)."</td>";
-			print "<td nowrap align=\"right\">".price($coll->tva)."</td>";
+			print '<td class="nowrap">'.$intra."</td>";
+			print "<td class=\"nowrap\" align=\"right\">".price($coll->amount)."</td>";
+			print "<td class=\"nowrap\" align=\"right\">".price($coll->tva)."</td>";
             $totalamount = $totalamount + $coll->amount;
 			$total = $total + $coll->tva;
 			print "</tr>\n";
@@ -304,8 +322,8 @@ if (is_array($coll_list))
     $x_paye_sum = $total;
 
 	print '<tr class="liste_total"><td align="right" colspan="3">'.$langs->trans("Total").':</td>';
-    print '<td nowrap align="right">'.price($totalamount).'</td>';
-	print '<td nowrap align="right">'.price($total).'</td>';
+    print '<td class="nowrap" align="right">'.price($totalamount).'</td>';
+	print '<td class="nowrap" align="right">'.price($total).'</td>';
 	print '</tr>';
 
 	print '</table>';
@@ -316,7 +334,7 @@ if (is_array($coll_list))
     $diff = $x_coll_sum - $x_paye_sum;
     print '<tr class="liste_total">';
     print '<td class="liste_total" colspan="4">'.$langs->trans("TotalToPay").($q?', '.$langs->trans("Quadri").' '.$q:'').'</td>';
-    print '<td class="liste_total" nowrap="nowrap" align="right"><b>'.price(price2num($diff,'MT'))."</b></td>\n";
+    print '<td class="liste_total nowrap" align="right"><b>'.price(price2num($diff,'MT'))."</b></td>\n";
     print "</tr>\n";
 
 }
@@ -337,4 +355,3 @@ print '</table>';
 llxFooter();
 
 $db->close();
-?>

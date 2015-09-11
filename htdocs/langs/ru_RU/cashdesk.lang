@@ -1,13 +1,4 @@
-/*
- * Language code: ru_RU
- * Automatic generated via autotranslator.php tool
- * Generation date 2011-08-27 16:56:14
- */
-
-
-// START - Lines generated via autotranslator.php tool (2011-08-27 16:56:14).
-// Reference language: en_US -> ru_RU
-CHARSET=UTF-8
+# Language file - Source file is en_US - cashdesk
 CashDeskMenu=Точка продажи
 CashDesk=Точка продажи
 CashDesks=Точка продаж
@@ -18,9 +9,10 @@ CashDeskBankCheque=Банковский счет (чек)
 CashDeskWarehouse=Склад
 CashdeskShowServices=Продажа услуг
 CashDeskProducts=Продукты
-CashDeskStock=Акции
+CashDeskStock=Запасы на складе
 CashDeskOn=на
 CashDeskThirdParty=Третье лицо
+CashdeskDashboard=Доступ к точкам продажи
 ShoppingCart=Корзина
 NewSell=Новые продать
 BackOffice=Бэк-офис
@@ -28,7 +20,6 @@ AddThisArticle=Добавить эту статью
 RestartSelling=Вернитесь на продажу
 SellFinished=Продажа готового
 PrintTicket=Печать билетов
-NoResults=Нет результатов
 NoProductFound=Ни одна статья найдены
 ProductFound=продукт найден
 ProductsFound=продуктов, полученных
@@ -45,4 +36,5 @@ BankToPay=Пополнять счета
 ShowCompany=Показать компании
 ShowStock=Показать склад
 DeleteArticle=Нажмите, чтобы удалить эту статью
-// STOP - Lines generated via autotranslator.php tool (2011-08-27 16:58:25).
+FilterRefOrLabelOrBC=Поиск (ссылке/метке)
+UserNeedPermissionToEditStockToUsePos=Вы просите уменьшить запас на складе при создании счёта, поэтому пользователь, использующий POS-терминал, должен иметь права доступа для редактирования запаса на складе.

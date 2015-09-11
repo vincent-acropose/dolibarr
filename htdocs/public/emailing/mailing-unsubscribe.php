@@ -1,8 +1,9 @@
 <?php
 /**
  * Copyright (C) 2004      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2005-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2012	   Florian Henry  <florian.henry@open-concept.pro>
+ * Copyright (C) 2014	   Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +26,23 @@
  *      \brief      Script use to update unsubcribe contact to prospect mailing list
  */
 
-define("NOLOGIN",1);		// This means this output page does not require to be logged.
-define("NOCSRFCHECK",1);	// We accept to go on this page from external web site.
+if (! defined('NOLOGIN'))        define("NOLOGIN",1);			// This means this output page does not require to be logged.
+if (! defined('NOCSRFCHECK'))    define('NOCSRFCHECK','1');		// Do not check anti CSRF attack test
+if (! defined('NOREQUIREMENU'))  define('NOREQUIREMENU','1');	// If there is no need to load and show top and left menu
+
+/**
+ * Header empty
+ *
+ * @return	void
+ */
+function llxHeader() { }
+/**
+ * Footer empty
+ *
+ * @return	void
+ */
+function llxFooter() { }
+
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
@@ -38,40 +54,53 @@ $langs->load("mails");
 
 $tag=GETPOST('tag');
 $unsuscrib=GETPOST('unsuscrib');
-
-if (empty($conf->global->MAILING_EMAIL_UNSUBSCRIBE)) accessforbidden('Option not enabled');
+$securitykey=GETPOST('securitykey');
 
 
 /*
  * Actions
  */
 
-if (($tag!='') && ($unsuscrib=='1'))
+dol_syslog("public/emailing/mailing-read.php : tag=".$tag." securitykey=".$securitykey, LOG_DEBUG);
+
+if ($securitykey != $conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY)
 {
-	//Udate status of mail in Destinaries maling list
+	print 'Bad security key value.';
+	exit;
+}
+
+
+if (! empty($tag) && ($unsuscrib=='1'))
+{
+	// Update status of mail in recipient mailing list table
 	$statut='3';
 	$sql = "UPDATE ".MAIN_DB_PREFIX."mailing_cibles SET statut=".$statut." WHERE tag='".$db->escape($tag)."'";
 	dol_syslog("public/emailing/mailing-unsubscribe.php : Mail unsubcribe : ".$sql, LOG_DEBUG);
 
 	$resql=$db->query($sql);
+	if (! $resql) dol_print_error($db);
 
-	//Update status communication of thirdparty prospect
+	// Update status communication of thirdparty prospect
 	$sql = "UPDATE ".MAIN_DB_PREFIX."societe SET fk_stcomm=-1 WHERE rowid IN (SELECT source_id FROM ".MAIN_DB_PREFIX."mailing_cibles WHERE tag='".$db->escape($tag)."' AND source_type='thirdparty' AND source_id is not null)";
 	dol_syslog("public/emailing/mailing-unsubscribe.php : Mail unsubcribe thirdparty : ".$sql, LOG_DEBUG);
 
 	$resql=$db->query($sql);
+	if (! $resql) dol_print_error($db);
 
-    //Update status communication of contact prospect
-	$sql = "UPDATE ".MAIN_DB_PREFIX."societe SET fk_stcomm=-1 WHERE rowid IN (SELECT fk_soc FROM ".MAIN_DB_PREFIX."socpeople AS sc INNER JOIN ".MAIN_DB_PREFIX."mailing_cibles AS mc ON mc.tag = '".$db->escape($tag)."' AND mc.source_type = 'contact' AND mc.source_id = sc.rowid)";
+    // Update status communication of contact prospect
+	$sql = "UPDATE ".MAIN_DB_PREFIX."socpeople SET no_email=1 WHERE rowid IN (SELECT source_id FROM ".MAIN_DB_PREFIX."mailing_cibles WHERE tag = '".$db->escape($tag)."' AND source_type='contact' AND source_id is not null)";
 	dol_syslog("public/emailing/mailing-unsubscribe.php : Mail unsubcribe contact : ".$sql, LOG_DEBUG);
 
 	$resql=$db->query($sql);
+	if (! $resql) dol_print_error($db);
+
 
 	$sql = "SELECT mc.email";
 	$sql .= " FROM ".MAIN_DB_PREFIX."mailing_cibles as mc";
 	$sql .= " WHERE mc.tag='".$db->escape($tag)."'";
 
 	$resql=$db->query($sql);
+	if (! $resql) dol_print_error($db);
 
 	$obj = $db->fetch_object($resql);
 
@@ -82,8 +111,8 @@ if (($tag!='') && ($unsuscrib=='1'))
 	print "<html>\n";
 	print "<head>\n";
 	print '<meta name="robots" content="noindex,nofollow">'."\n";
-	print '<meta name="keywords" content="dolibarr,mailing">'."\n";
-	print '<meta name="description" content="Welcome on Dolibarr Mailing unsubcribe">'."\n";
+	print '<meta name="keywords" content="dolibarr,emailing">'."\n";
+	print '<meta name="description" content="Dolibarr EMailing unsubcribe page">'."\n";
 	print "<title>".$langs->trans("MailUnsubcribe")."</title>\n";
 	print '<link rel="stylesheet" type="text/css" href="'.DOL_URL_ROOT.$conf->css.'?lang='.$langs->defaultlang.'">'."\n";
 	print '<style type="text/css">';
@@ -101,4 +130,3 @@ if (($tag!='') && ($unsuscrib=='1'))
 }
 
 $db->close();
-?>

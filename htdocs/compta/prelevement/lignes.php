@@ -24,17 +24,20 @@
  *	\brief      Prelevement lines
  */
 
-require '../bank/pre.inc.php';
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/lib/prelevement.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/bonprelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/ligneprelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/rejetprelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+
+$langs->load("banks");
+$langs->load("categories");
 
 // Security check
 if ($user->societe_id > 0) accessforbidden();
 
-$langs->load("categories");
 $langs->load('withdrawals');
 $langs->load('bills');
 
@@ -51,7 +54,7 @@ $sortfield = ((GETPOST('sortfield','alpha')=="")) ? "pl.fk_soc" : GETPOST('sortf
  * View
  */
 
-llxHeader('',$langs->trans("WithdrawalReceipt"));
+llxHeader('',$langs->trans("WithdrawalsReceipts"));
 
 if ($prev_id)
 {
@@ -60,7 +63,7 @@ if ($prev_id)
 	if ($bon->fetch($prev_id) == 0)
 	{
 		$head = prelevement_prepare_head($bon);
-		dol_fiche_head($head, 'lines', $langs->trans("WithdrawalReceipt"), '', 'payment');
+		dol_fiche_head($head, 'lines', $langs->trans("WithdrawalsReceipts"), '', 'payment');
 
 		print '<table class="border" width="100%">';
 
@@ -99,11 +102,11 @@ if ($prev_id)
 		print '<table class="border" width="100%"><tr><td width="20%">';
 		print $langs->trans("WithdrawalFile").'</td><td>';
 		$relativepath = 'receipts/'.$bon->ref;
-		print '<a href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
+		print '<a data-ajax="false" href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
 		print '</td></tr></table>';
 
 		dol_fiche_end();
-		
+
 	}
 	else
 	{
@@ -121,11 +124,9 @@ $pagenext = $page + 1;
 
 /*
  * Liste des lignes de prelevement
- *
- *
  */
 $sql = "SELECT pl.rowid, pl.statut, pl.amount";
-$sql.= ", s.rowid as socid, s.nom";
+$sql.= ", s.rowid as socid, s.nom as name";
 $sql.= " FROM ".MAIN_DB_PREFIX."prelevement_lignes as pl";
 $sql.= ", ".MAIN_DB_PREFIX."prelevement_bons as pb";
 $sql.= ", ".MAIN_DB_PREFIX."societe as s";
@@ -146,13 +147,13 @@ if ($result)
 
 	$urladd = "&amp;id=".$prev_id;
 
-	print_barre_liste("", $page, "lignes.php", $urladd, $sortfield, $sortorder, '', $num);
+	print_barre_liste("", $page, $_SERVER["PHP_SELF"], $urladd, $sortfield, $sortorder, '', $num);
 	print"\n<!-- debut table -->\n";
 	print '<table class="noborder" width="100%" cellspacing="0" cellpadding="4">';
 	print '<tr class="liste_titre">';
-	print_liste_field_titre($langs->trans("Lines"),"lignes.php","pl.rowid",'',$urladd);
-	print_liste_field_titre($langs->trans("ThirdParty"),"lignes.php","s.nom",'',$urladd);
-	print_liste_field_titre($langs->trans("Amount"),"lignes.php","pl.amount","",$urladd,'align="center"');
+	print_liste_field_titre($langs->trans("Lines"),$_SERVER["PHP_SELF"],"pl.rowid",'',$urladd);
+	print_liste_field_titre($langs->trans("ThirdParty"),$_SERVER["PHP_SELF"],"s.nom",'',$urladd);
+	print_liste_field_titre($langs->trans("Amount"),$_SERVER["PHP_SELF"],"pl.amount","",$urladd,'align="center"');
 	print '<td colspan="2">&nbsp;</td></tr>';
 
 	$var=false;
@@ -163,7 +164,7 @@ if ($result)
 	{
 		$obj = $db->fetch_object($result);
 
-		print "<tr $bc[$var]><td>";
+		print "<tr ".$bc[$var]."><td>";
 
 		print $ligne->LibStatut($obj->statut,2);
 		print "&nbsp;";
@@ -172,7 +173,11 @@ if ($result)
 		print substr('000000'.$obj->rowid, -6);
 		print '</a></td>';
 
-		print '<td><a href="'.DOL_URL_ROOT.'/comm/fiche.php?socid='.$obj->socid.'">'.stripslashes($obj->nom)."</a></td>\n";
+		$thirdparty=new Societe($db);
+		$thirdparty->fetch($obj->socid);
+		print '<td>';
+		print $thirdparty->getNomUrl(1);
+		print "</td>\n";
 
 		print '<td align="center">'.price($obj->amount)."</td>\n";
 
@@ -196,7 +201,7 @@ if ($result)
 
 	if($socid)
 	{
-		print "<tr $bc[$var]><td>";
+		print "<tr ".$bc[$var]."><td>";
 
 		print '<td>Total</td>';
 
@@ -218,4 +223,3 @@ else
 $db->close();
 
 llxFooter();
-?>

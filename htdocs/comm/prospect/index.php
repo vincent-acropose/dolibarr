@@ -46,9 +46,10 @@ llxHeader();
 
 print_fiche_titre($langs->trans("ProspectionArea"));
 
-print '<table border="0" width="100%" class="notopnoleftnoright">';
+//print '<table border="0" width="100%" class="notopnoleftnoright">';
+//print '<tr><td valign="top" width="30%" class="notopnoleft">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
 
-print '<tr><td valign="top" width="30%" class="notopnoleft">';
 
 if (! empty($conf->propal->enabled))
 {
@@ -59,7 +60,7 @@ if (! empty($conf->propal->enabled))
 	print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("SearchAProposal").'</td></tr>';
 	print '<tr '.$bc[$var].'><td>';
 	print $langs->trans("Ref").':</td><td><input type="text" class="flat" name="sf_ref" size="18"></td><td rowspan="2"><input type="submit" value="'.$langs->trans("Search").'" class="button"></td></tr>';
-	print '<tr '.$bc[$var].'><td nowrap>'.$langs->trans("Other").':</td><td><input type="text" class="flat" name="sall" size="18"></td>';
+	print '<tr '.$bc[$var].'><td class="nowrap">'.$langs->trans("Other").':</td><td><input type="text" class="flat" name="sall" size="18"></td>';
 	print '</tr>';
 	print "</form></table><br>\n";
 }
@@ -158,17 +159,18 @@ if (! empty($conf->propal->enabled) && $user->rights->propale->lire)
 	}
 }
 
+
+//print '</td><td valign="top" width="70%" class="notopnoleftnoright">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
+
+
 /*
  * Actions commerciales a faire
- *
  */
-print '</td><td valign="top" width="70%" class="notopnoleftnoright">';
-
 if (! empty($conf->agenda->enabled)) show_array_actions_to_do(10);
 
 /*
  * Dernieres propales ouvertes
- *
  */
 if (! empty($conf->propal->enabled) && $user->rights->propale->lire)
 {
@@ -276,11 +278,9 @@ if ($resql)
 }
 
 
-print '</td></tr>';
-print '</table>';
+//print '</td></tr></table>';
+print '</div></div></div>';
 
 llxFooter();
 
 $db->close();
-
-?>

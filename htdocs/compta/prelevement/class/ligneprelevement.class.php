@@ -26,10 +26,8 @@
 
 
 /**
- *       \class      LignePrelevement
- *       \brief      Classe permettant la gestion des prelevements
+ *	Class to manage withdrawals
  */
-
 class LignePrelevement
 {
 	var $id;
@@ -63,7 +61,7 @@ class LignePrelevement
 	 *  Recupere l'objet prelevement
 	 *
 	 *  @param	int		$rowid       id de la facture a recuperer
-	 *  @return	void
+	 *  @return	void|int
 	 */
 	function fetch($rowid)
 	{
@@ -140,24 +138,23 @@ class LignePrelevement
 
 		if ($mode == 1)
 		{
-			if ($statut==0) return img_picto($langs->trans($this->statuts[$statut]),'statut0').' '.$langs->trans($this->statuts[$statut]);
+			if ($statut==0) return img_picto($langs->trans($this->statuts[$statut]),'statut1').' '.$langs->trans($this->statuts[$statut]);
 			if ($statut==2) return img_picto($langs->trans($this->statuts[$statut]),'statut4').' '.$langs->trans($this->statuts[$statut]);
 			if ($statut==3) return img_picto($langs->trans($this->statuts[$statut]),'statut8').' '.$langs->trans($this->statuts[$statut]);
 		}
 		if ($mode == 2)
 		{
-			if ($statut==0) return img_picto($langs->trans($this->statuts[$statut]),'statut0');
+			if ($statut==0) return img_picto($langs->trans($this->statuts[$statut]),'statut1');
 			if ($statut==2) return img_picto($langs->trans($this->statuts[$statut]),'statut4');
 			if ($statut==3) return img_picto($langs->trans($this->statuts[$statut]),'statut8');
 		}
 
 		if ($mode == 3)
 		{
-			if ($statut==0) return $langs->trans($this->statuts[$statut]).' '.img_picto($langs->trans($this->statuts[$statut]),'statut0');
+			if ($statut==0) return $langs->trans($this->statuts[$statut]).' '.img_picto($langs->trans($this->statuts[$statut]),'statut1');
 			if ($statut==2) return $langs->trans($this->statuts[$statut]).' '.img_picto($langs->trans($this->statuts[$statut]),'statut4');
 			if ($statut==3) return $langs->trans($this->statuts[$statut]).' '.img_picto($langs->trans($this->statuts[$statut]),'statut8');
 		}
 	}
 }
 
-?>

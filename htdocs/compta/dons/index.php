@@ -118,7 +118,7 @@ foreach ($listofstatus as $status)
 {
     $var=!$var;
     print "<tr ".$bc[$var].">";
-    print '<td><a href="liste.php?statut='.$status.'">'.$donstatic->LibStatut($status,4).'</a></td>';
+    print '<td><a href="list.php?statut='.$status.'">'.$donstatic->LibStatut($status,4).'</a></td>';
     print '<td align="right">'.(! empty($nb[$status])?$nb[$status]:'&nbsp;').'</td>';
     print '<td align="right">'.(! empty($nb[$status])?price($somme[$status],'MT'):'&nbsp;').'</td>';
     print '<td align="right">'.(! empty($nb[$status])?price(price2num($somme[$status]/$nb[$status],'MT')):'&nbsp;').'</td>';
@@ -146,8 +146,7 @@ $max=10;
  * Last modified donations
  */
 
-$sql = "SELECT c.rowid, c.ref, c.fk_statut, c.societe, c.nom,";
-$sql.= " tms as datem, amount";
+$sql = "SELECT c.rowid, c.ref, c.fk_statut, c.societe, c.lastname, c.firstname, c.tms as datem, c.amount";
 $sql.= " FROM ".MAIN_DB_PREFIX."don as c";
 $sql.= " WHERE c.entity = ".$conf->entity;
 //$sql.= " AND c.fk_statut > 2";
@@ -176,17 +175,17 @@ if ($resql)
             $donation_static->id=$obj->rowid;
             $donation_static->ref=$obj->ref?$obj->ref:$obj->rowid;
 
-            print '<td width="96" class="nobordernopadding" nowrap="nowrap">';
+            print '<td width="96" class="nobordernopadding nowrap">';
             print $donation_static->getNomUrl(1);
             print '</td>';
 
             print '<td class="nobordernopadding">';
             print $obj->societe;
-            print ($obj->societe && $obj->nom?' / ':'');
-            print $obj->nom;
+            print ($obj->societe && ($obj->lastname || $obj->firstname)?' / ':'');
+            print dolGetFirstLastname($obj->lastname,$obj->firstname);
             print '</td>';
 
-            print '<td width="16" align="right" class="nobordernopadding">';
+            print '<td align="right" class="nobordernopadding">';
             print price($obj->amount,1);
             print '</td>';
 
@@ -210,4 +209,3 @@ print '</td></tr></table>';
 llxFooter();
 
 $db->close();
-?>

@@ -27,7 +27,7 @@
  * Prepare array with list of tabs
  *
  * @param   Object	$object		Object related to tabs
- * @return  array				Array of tabs to shoc
+ * @return  array				Array of tabs to show
  */
 function user_prepare_head($object)
 {
@@ -44,7 +44,7 @@ function user_prepare_head($object)
 	$h = 0;
 	$head = array();
 
-    $head[$h][0] = DOL_URL_ROOT.'/user/fiche.php?id='.$object->id;
+    $head[$h][0] = DOL_URL_ROOT.'/user/card.php?id='.$object->id;
     $head[$h][1] = $langs->trans("UserCard");
     $head[$h][2] = 'user';
     $h++;
@@ -71,6 +71,14 @@ function user_prepare_head($object)
     $head[$h][2] = 'guisetup';
     $h++;
 
+    if (! empty($conf->agenda->enabled))
+    {
+	    $head[$h][0] = DOL_URL_ROOT.'/user/agenda_extsites.php?id='.$object->id;
+	    $head[$h][1] = $langs->trans("ExtSites");
+	    $head[$h][2] = 'extsites';
+	    $h++;
+    }
+
     if (! empty($conf->clicktodial->enabled))
     {
         $head[$h][0] = DOL_URL_ROOT.'/user/clicktodial.php?id='.$object->id;
@@ -85,12 +93,27 @@ function user_prepare_head($object)
     // $this->tabs = array('entity:-tabname);   												to remove a tab
     complete_head_from_modules($conf,$langs,$object,$head,$h,'user');
 
-    if (! empty($user->societe_id))
+    //Info on users is visible only by internal user
+    if (empty($user->societe_id))
     {
-    	$head[$h][0] = DOL_URL_ROOT.'/user/note.php?id='.$object->id;
-    	$head[$h][1] = $langs->trans("Note");
-    	$head[$h][2] = 'note';
-    	$h++;
+		// Notes
+        $nbNote = 0;
+        if(!empty($object->note)) $nbNote++;
+        $head[$h][0] = DOL_URL_ROOT.'/user/note.php?id='.$object->id;
+        $head[$h][1] = $langs->trans("Note");
+		if ($nbNote > 0) $head[$h][1].= ' <span class="badge">'.$nbNote.'</span>';
+        $head[$h][2] = 'note';
+        $h++;
+
+        // Attached files
+        require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+        $upload_dir = $conf->user->dir_output . "/" . $object->id;
+        $nbFiles = count(dol_dir_list($upload_dir,'files',0,'','(\.meta|_preview\.png)$'));
+        $head[$h][0] = DOL_URL_ROOT.'/user/document.php?userid='.$object->id;
+        $head[$h][1] = $langs->trans("Documents");
+        if($nbFiles > 0) $head[$h][1].= ' <span class="badge">'.$nbFiles.'</span>';
+        $head[$h][2] = 'document';
+        $h++;
 
     	$head[$h][0] = DOL_URL_ROOT.'/user/info.php?id='.$object->id;
     	$head[$h][1] = $langs->trans("Info");
@@ -117,7 +140,7 @@ function group_prepare_head($object)
 	$h = 0;
 	$head = array();
 
-    $head[$h][0] = DOL_URL_ROOT.'/user/group/fiche.php?id='.$object->id;
+    $head[$h][0] = DOL_URL_ROOT.'/user/group/card.php?id='.$object->id;
     $head[$h][1] = $langs->trans("GroupCard");
     $head[$h][2] = 'group';
     $h++;
@@ -155,7 +178,7 @@ function group_prepare_head($object)
 /**
  * Prepare array with list of tabs
  *
- * @return  array				Array of tabs to shoc
+ * @return  array				Array of tabs to show
  */
 function user_admin_prepare_head()
 {
@@ -163,24 +186,29 @@ function user_admin_prepare_head()
 
 	$langs->load("users");
 	$h=0;
-	
+
     $head[$h][0] = DOL_URL_ROOT.'/admin/user.php';
     $head[$h][1] = $langs->trans("Parameters");
     $head[$h][2] = 'card';
     $h++;
-	
+
     $head[$h][0] = DOL_URL_ROOT.'/user/admin/user_extrafields.php';
     $head[$h][1] = $langs->trans("ExtraFields");
     $head[$h][2] = 'attributes';
     $h++;
-    
+
+   $head[$h][0] = DOL_URL_ROOT.'/user/admin/group_extrafields.php';
+    $head[$h][1] = $langs->trans("ExtraFields")." ".$langs->trans("Groups");
+    $head[$h][2] = 'attributes_group';
+    $h++;
+
 	// Show more tabs from modules
 	// Entries must be declared in modules descriptor with line
 	// $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
 	// $this->tabs = array('entity:-tabname);   												to remove a tab
-	complete_head_from_modules($conf,$langs,$object,$head,$h,'useradmin');
+	complete_head_from_modules($conf,$langs,null,$head,$h,'useradmin');
 
-	complete_head_from_modules($conf,$langs,$object,$head,$h,'useradmin','remove');
+	complete_head_from_modules($conf,$langs,null,$head,$h,'useradmin','remove');
 
 	return $head;
 }
@@ -214,24 +242,30 @@ function entity_prepare_head($object, $aEntities)
 /**
  * 	Show list of themes. Show all thumbs of themes
  *
- * 	@param	User	$fuser				User concerned or '' for global theme
- * 	@param	int		$edit				1 to add edit form
- * 	@param	boolean	$foruserprofile		Show for user profile view
+ * 	@param	User|null	$fuser				User concerned or null for global theme
+ * 	@param	int			$edit				1 to add edit form
+ * 	@param	boolean		$foruserprofile		Show for user profile view
  * 	@return	void
  */
 function show_theme($fuser,$edit=0,$foruserprofile=false)
 {
     global $conf,$langs,$bc;
 
-    $forcethemedir=(! empty($conf->global->MAIN_FORCETHEMEDIR) ? $conf->global->MAIN_FORCETHEMEDIR : '');
-    $dirthemes=array($forcethemedir.'/theme');
-    if (! empty($conf->modules_parts['themes'])) {
-    	$dirthemes=array_merge(array($forcethemedir.'/theme'),(array) $conf->modules_parts['themes']);
+    //$dirthemes=array(empty($conf->global->MAIN_FORCETHEMEDIR)?'/theme':$conf->global->MAIN_FORCETHEMEDIR.'/theme');
+    $dirthemes=array('/theme');
+    if (! empty($conf->modules_parts['theme']))		// Using this feature slow down application
+    {
+    	foreach($conf->modules_parts['theme'] as $reldir)
+    	{
+	    	$dirthemes=array_merge($dirthemes,(array) ($reldir.'theme'));
+    	}
     }
+    $dirthemes=array_unique($dirthemes);
+	// Now dir_themes=array('/themes') or dir_themes=array('/theme','/mymodule/theme')
 
     $selected_theme='';
     if (empty($foruserprofile)) $selected_theme=$conf->global->MAIN_THEME;
-    else $selected_theme=empty($fuser->conf->MAIN_THEME)?'':$fuser->conf->MAIN_THEME;
+    else $selected_theme=((is_object($fuser) && ! empty($fuser->conf->MAIN_THEME))?$fuser->conf->MAIN_THEME:'');
 
     $colspan=2;
     if ($foruserprofile) $colspan=4;
@@ -251,7 +285,7 @@ function show_theme($fuser,$edit=0,$foruserprofile=false)
 	    print '<tr '.$bc[$var].'>';
 	    print '<td>'.$langs->trans("DefaultSkin").'</td>';
 	    print '<td>'.$conf->global->MAIN_THEME.'</td>';
-	    print '<td align="left" nowrap="nowrap" width="20%"><input '.$bc[$var].' name="check_MAIN_THEME"'.($edit?'':' disabled').' type="checkbox" '.($selected_theme?" checked":"").'> '.$langs->trans("UsePersonalValue").'</td>';
+	    print '<td align="left" class="nowrap" width="20%"><input '.$bc[$var].' name="check_MAIN_THEME"'.($edit?'':' disabled').' type="checkbox" '.($selected_theme?" checked":"").'> '.$langs->trans("UsePersonalValue").'</td>';
 	    print '<td>&nbsp;</td>';
 	    print '</tr>';
     }
@@ -281,13 +315,13 @@ function show_theme($fuser,$edit=0,$foruserprofile=false)
     $var=!$var;
     print '<tr '.$bc[$var].'><td colspan="'.$colspan.'">';
 
-    print '<table class="nobordernopadding" width="100%">';
+    print '<table class="nobordernopadding" width="100%"><tr><td><div align="center">';
 
     $i=0;
-
     foreach($dirthemes as $dir)
     {
-    	$dirtheme=dol_buildpath($dir,0);
+    	//print $dirroot.$dir;exit;
+    	$dirtheme=dol_buildpath($dir,0);	// This include loop on $conf->file->dol_document_root
     	$urltheme=dol_buildpath($dir,1);
 
     	if (is_dir($dirtheme))
@@ -303,22 +337,15 @@ function show_theme($fuser,$edit=0,$foruserprofile=false)
     					// Disable not stable themes
     					//if ($conf->global->MAIN_FEATURES_LEVEL < 1 && preg_match('/bureau2crea/i',$subdir)) continue;
 
-    					if ($i % $thumbsbyrow == 0)
-    					{
-    						print '<tr '.$bc[$var].'>';
-    					}
-
-    					print '<td align="center">';
+    					print '<div class="inline-block" style="margin-top: 10px; margin-bottom: 10px; margin-right: 20px; margin-left: 20px;">';
     					$file=$dirtheme."/".$subdir."/thumb.png";
     					$url=$urltheme."/".$subdir."/thumb.png";
     					if (! file_exists($file)) $url=$urltheme."/common/nophoto.jpg";
-    					print '<table><tr><td>';
     					print '<a href="'.$_SERVER["PHP_SELF"].($edit?'?action=edit&theme=':'?theme=').$subdir.(GETPOST("optioncss")?'&optioncss='.GETPOST("optioncss",'alpha',1):'').($fuser?'&id='.$fuser->id:'').'" style="font-weight: normal;" alt="'.$langs->trans("Preview").'">';
     					if ($subdir == $conf->global->MAIN_THEME) $title=$langs->trans("ThemeCurrentlyActive");
     					else $title=$langs->trans("ShowPreview");
-    					print '<img src="'.$url.'" border="0" width="80" height="60" alt="'.$title.'" title="'.$title.'">';
-    					print '</a>';
-    					print '</td></tr><tr><td align="center">';
+    					print '<img src="'.$url.'" border="0" width="80" height="60" alt="'.$title.'" title="'.$title.'" style="margin-bottom: 5px;">';
+    					print '</a><br>';
     					if ($subdir == $selected_theme)
     					{
     						print '<input '.($edit?'':'disabled').' type="radio" '.$bc[$var].' style="border: 0px;" checked name="main_theme" value="'.$subdir.'"> <b>'.$subdir.'</b>';
@@ -327,30 +354,18 @@ function show_theme($fuser,$edit=0,$foruserprofile=false)
     					{
     						print '<input '.($edit?'':'disabled').' type="radio" '.$bc[$var].' style="border: 0px;" name="main_theme" value="'.$subdir.'"> '.$subdir;
     					}
-    					print '</td></tr></table></td>';
+						print '</div>';
 
     					$i++;
-
-    					if ($i % $thumbsbyrow == 0) print '</tr>';
     				}
     			}
     		}
     	}
     }
 
-    if ($i % $thumbsbyrow != 0)
-    {
-        while ($i % $thumbsbyrow != 0)
-        {
-            print '<td>&nbsp;</td>';
-            $i++;
-        }
-        print '</tr>';
-    }
-    print '</table>';
+    print '</div></td></tr></table>';
 
     print '</td></tr>';
     print '</table>';
 }
 
-?>

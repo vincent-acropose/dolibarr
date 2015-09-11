@@ -1,5 +1,6 @@
 <?php
 /* Copyright (C) 2008-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2013	   Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +61,7 @@ if ($action == "save")
 	}
 
 	$db->commit();
-	$mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+	setEventMessage($langs->trans("SetupSaved"));
 }
 
 
@@ -77,14 +78,15 @@ print_fiche_titre($langs->trans("SecuritySetup"),'','setup');
 print $langs->trans("LogEventDesc")."<br>\n";
 print "<br>\n";
 
-$head=security_prepare_head();
-
-dol_fiche_head($head, 'audit', $langs->trans("Security"));
-
 
 print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<input type="hidden" name="action" value="save">';
+
+$head=security_prepare_head();
+
+dol_fiche_head($head, 'audit', $langs->trans("Security"));
+
 
 $var=true;
 print "<table class=\"noborder\" width=\"100%\">";
@@ -108,19 +110,14 @@ foreach ($eventstolog as $key => $arr)
 }
 print '</table>';
 
-print '<br><center>';
+dol_fiche_end();
+
+print '<div class="center">';
 print "<input type=\"submit\" name=\"save\" class=\"button\" value=\"".$langs->trans("Save")."\">";
-print "</center>";
+print "</div>";
 
 print "</form>\n";
 
-print '</div>';
-
-
-dol_htmloutput_mesg($mesg);
-
-
-$db->close();
 
 llxFooter();
-?>
+$db->close();

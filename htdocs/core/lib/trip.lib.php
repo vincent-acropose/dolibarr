@@ -24,17 +24,17 @@
 /**
  * Prepare array with list of tabs
  *
- * @param   Object	$object		Object related to tabs
- * @return  array				Array of tabs to shoc
+ * @param   Deplacement	$object		Object related to tabs
+ * @return  array				Array of tabs to show
  */
-function trip_prepare_head($object)
+function trip_prepare_head(Deplacement $object)
 {
 	global $langs, $conf;
 
 	$h = 0;
 	$head = array();
 
-	$head[$h][0] = DOL_URL_ROOT . '/compta/deplacement/fiche.php?id=' . $object->id;
+	$head[$h][0] = DOL_URL_ROOT . '/compta/deplacement/card.php?id=' . $object->id;
 	$head[$h][1] = $langs->trans("Card");
 	$head[$h][2] = 'card';
 	$h++;
@@ -45,6 +45,11 @@ function trip_prepare_head($object)
     // $this->tabs = array('entity:-tabname);   												to remove a tab
 	complete_head_from_modules($conf,$langs,$object,$head,$h,'trip');
 
+	$head[$h][0] = DOL_URL_ROOT.'/compta/deplacement/document.php?id='.$object->id;
+	$head[$h][1] = $langs->trans("Documents");
+	$head[$h][2] = 'documents';
+	$h++;
+
 	$head[$h][0] = DOL_URL_ROOT . '/compta/deplacement/info.php?id=' . $object->id;
 	$head[$h][1] = $langs->trans("Info");
 	$head[$h][2] = 'info';
@@ -54,5 +59,3 @@ function trip_prepare_head($object)
 
 	return $head;
 }
-
-?>

@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2001-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2012 Juanjo Menent        <jmenent@2byte.es>
@@ -34,7 +34,6 @@ require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.product.class.php';
 $langs->load("products");
 $langs->load("suppliers");
 $langs->load("bills");
-// Charges ????
 if (! empty($conf->margin->enabled)) $langs->load("margins");
 
 $id = GETPOST('id', 'int');
@@ -42,7 +41,8 @@ $ref = GETPOST('ref', 'alpha');
 $rowid=GETPOST('rowid','int');
 $action=GETPOST('action', 'alpha');
 $socid=GETPOST('socid', 'int');
-$error=0; $mesg = '';
+$backtopage=GETPOST('backtopage','alpha');
+$error=0;
 
 // If socid provided by ajax company selector
 if (! empty($_REQUEST['search_fourn_id']))
@@ -59,10 +59,9 @@ if ($user->societe_id) $socid=$user->societe_id;
 $result=restrictedArea($user,'produit|service&fournisseur',$fieldvalue,'product&product','','',$fieldtype);
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
-include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
-$hookmanager=new HookManager($db);
-$hookmanager->initHooks(array('pricesuppliercard'));
-
+$hookmanager->initHooks(array('pricesuppliercard','globalcard'));
+$product = new ProductFournisseur($db);
+$product->fetch($id,$ref);
 
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
@@ -75,116 +74,128 @@ if (! $sortorder) $sortorder="ASC";
  * Actions
  */
 
-if ($action == 'remove_pf')
-{
-	$product = new ProductFournisseur($db);
-	if ($product->fetch($id) > 0)
+$parameters=array('socid'=>$socid, 'id_prod'=>$id);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$product,$action);    // Note that $action and $object may have been modified by some hooks
+if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+
+if (empty($reshook)) {
+	if ($action == 'remove_pf')
 	{
-		if ($rowid)
+		$product = new ProductFournisseur($db);
+		if ($product->fetch($id) > 0)
 		{
-			$result=$product->remove_product_fournisseur_price($rowid);
-			$action = '';
-			$mesg = '<div class="ok">'.$langs->trans("PriceRemoved").'.</div>';
+			if ($rowid)
+			{
+				$result=$product->remove_product_fournisseur_price($rowid);
+				$action = '';
+				setEventMessage($langs->trans("PriceRemoved"));
+			}
 		}
 	}
-}
 
-if ($action == 'updateprice' && GETPOST('cancel') <> $langs->trans("Cancel"))
-{
-    $id_fourn=GETPOST("id_fourn");
-    if (empty($id_fourn)) $id_fourn=GETPOST("search_id_fourn");
-    $ref_fourn=GETPOST("ref_fourn");
-    if (empty($ref_fourn)) $ref_fourn=GETPOST("search_ref_fourn");
-    $quantity=GETPOST("qty");
-	$remise_percent=price2num(GETPOST('remise_percent','alpha'));
-    $tva_tx=price2num(GETPOST('tva_tx','alpha'));
+	if ($action == 'updateprice' && GETPOST('cancel') <> $langs->trans("Cancel"))
+	{
+		$id_fourn=GETPOST("id_fourn");
+		if (empty($id_fourn)) $id_fourn=GETPOST("search_id_fourn");
+		$ref_fourn=GETPOST("ref_fourn");
+		if (empty($ref_fourn)) $ref_fourn=GETPOST("search_ref_fourn");
+		$quantity=GETPOST("qty");
+		$remise_percent=price2num(GETPOST('remise_percent','alpha'));
+		$npr = preg_match('/\*/', $_POST['tva_tx']) ? 1 : 0 ;
+		$tva_tx = str_replace('*','', GETPOST('tva_tx','alpha'));
+		$tva_tx = price2num($tva_tx);
 
-	if (empty($quantity))
-	{
-		$error++;
-		$mesg='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentities("Qty")).'</div>';
-	}
-	if (empty($ref_fourn))
-	{
-		$error++;
-		$mesg='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentities("RefSupplier")).'</div>';
-	}
-	if ($id_fourn <= 0)
-	{
-		$error++;
-		$mesg='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentities("Supplier")).'</div>';
-	}
-	if ($_POST["price"] < 0 || $_POST["price"] == '')
-	{
-		$error++;
-		$mesg='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentities("Price")).'</div>';
-	}
-
-	$product = new ProductFournisseur($db);
-	$result=$product->fetch($id);
-	if ($result <= 0)
-	{
-	    $error++;
-	    $mesg=$product->error;
-	}
-
-	if (! $error)
-    {
-    	$db->begin();
-
-		if (! $error)
+		if ($tva_tx == '')
 		{
-			$ret=$product->add_fournisseur($user, $id_fourn, $ref_fourn, $quantity);    // This insert record with no value for price. Values are update later with update_buyprice
-			if ($ret == -3)
-			{
-				$error++;
+			$error++;
+			setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("VATRateForSupplierProduct")), 'errors');
+		}
+		if (empty($quantity))
+		{
+			$error++;
+			setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("Qty")), 'errors');
+		}
+		if (empty($ref_fourn))
+		{
+			$error++;
+			setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("RefSupplier")), 'errors');
+		}
+		if ($id_fourn <= 0)
+		{
+			$error++;
+			setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("Supplier")), 'errors');
+		}
+		if ($_POST["price"] < 0 || $_POST["price"] == '')
+		{
+			$error++;
+			setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("Price")), 'errors');
+		}
 
-				$product->fetch($product->product_id_already_linked);
-				$productLink = $product->getNomUrl(1,'supplier');
-
-				$mesg='<div class="error">'.$langs->trans("ReferenceSupplierIsAlreadyAssociatedWithAProduct",$productLink).'</div>';
-			}
-			else if ($ret < 0)
-			{
-				$error++;
-				$mesg='<div class="error">'.$product->error.'</div>';
-			}
+		$product = new ProductFournisseur($db);
+		$result=$product->fetch($id);
+		if ($result <= 0)
+		{
+			$error++;
+			setEventMessage($product->error, 'errors');
 		}
 
 		if (! $error)
 		{
-			$supplier=new Fournisseur($db);
-			$result=$supplier->fetch($id_fourn);
-			if (isset($_POST['ref_fourn_price_id']))
-				$product->fetch_product_fournisseur_price($_POST['ref_fourn_price_id']);
+			$db->begin();
 
-			$ret=$product->update_buyprice($quantity, $_POST["price"], $user, $_POST["price_base_type"], $supplier, $_POST["oselDispo"], $ref_fourn, $tva_tx, $_POST["charges"], $remise_percent);
-			if ($ret < 0)
+			if (! $error)
 			{
-				$error++;
-				$mesg='<div class="error">'.$product->error.'</div>';
+				$ret=$product->add_fournisseur($user, $id_fourn, $ref_fourn, $quantity);    // This insert record with no value for price. Values are update later with update_buyprice
+				if ($ret == -3)
+				{
+					$error++;
+
+					$product->fetch($product->product_id_already_linked);
+					$productLink = $product->getNomUrl(1,'supplier');
+
+					setEventMessage($langs->trans("ReferenceSupplierIsAlreadyAssociatedWithAProduct",$productLink), 'errors');
+				}
+				else if ($ret < 0)
+				{
+					$error++;
+					setEventMessage($product->error, 'errors');
+				}
+			}
+
+			if (! $error)
+			{
+				$supplier=new Fournisseur($db);
+				$result=$supplier->fetch($id_fourn);
+				if (isset($_POST['ref_fourn_price_id']))
+					$product->fetch_product_fournisseur_price($_POST['ref_fourn_price_id']);
+
+				$ret=$product->update_buyprice($quantity, $_POST["price"], $user, $_POST["price_base_type"], $supplier, $_POST["oselDispo"], $ref_fourn, $tva_tx, $_POST["charges"], $remise_percent, $npr);
+				if ($ret < 0)
+				{
+					$error++;
+					setEventMessage($product->error, 'errors');
+				}
+			}
+
+			if (! $error)
+			{
+				$db->commit();
+				$action='';
+			}
+			else
+			{
+				$db->rollback();
 			}
 		}
+	}
 
-		if (! $error)
-		{
-			$db->commit();
-			$action='';
-		}
-		else
-		{
-			$db->rollback();
-		}
-    }
+	if (GETPOST('cancel') == $langs->trans("Cancel"))
+	{
+		$action = '';
+		header("Location: fournisseurs.php?id=".$_GET["id"]);
+		exit;
+	}
 }
-
-if (GETPOST('cancel') == $langs->trans("Cancel"))
-{
-	$action = '';
-	header("Location: fournisseurs.php?id=".$_GET["id"]);
-	exit;
-}
-
 
 
 /*
@@ -249,10 +260,6 @@ if ($id || $ref)
 
 			print "</div>\n";
 
-
-			dol_htmloutput_mesg($mesg);
-
-
 			// Form to add or update a price
 			if (($action == 'add_price' || $action == 'updateprice' ) && ($user->rights->produit->creer || $user->rights->service->creer))
 			{
@@ -290,10 +297,14 @@ if ($id || $ref)
 					$events[]=array('method' => 'getVatRates', 'url' => dol_buildpath('/core/ajax/vatrates.php',1), 'htmlname' => 'tva_tx', 'params' => array());
 					print $form->select_company(GETPOST("id_fourn"),'id_fourn','fournisseur=1',1,0,0,$events);
 
-					if (is_object($hookmanager))
+					$parameters=array('filtre'=>"fournisseur=1",'html_name'=>'id_fourn','selected'=>GETPOST("id_fourn"),'showempty'=>1,'prod_id'=>$product->id);
+				    $reshook=$hookmanager->executeHooks('formCreateThirdpartyOptions',$parameters,$object,$action);
+					if (empty($reshook))
 					{
-						$parameters=array('filtre'=>"fournisseur=1",'html_name'=>'id_fourn','selected'=>GETPOST("id_fourn"),'showempty'=>1,'prod_id'=>$product->id);
-					    $reshook=$hookmanager->executeHooks('formCreateThirdpartyOptions',$parameters,$object,$action);
+						if (empty($form->result))
+						{
+							print ' - <a href="'.DOL_URL_ROOT.'/societe/soc.php?action=create&type=f&backtopage='.urlencode($_SERVER["PHP_SELF"].'?id='.$product->id.'&action='.$action).'">'.$langs->trans("CreateDolibarrThirdPartySupplier").'</a>';
+						}
 					}
 				}
 				print '</td></tr>';
@@ -316,7 +327,7 @@ if ($id || $ref)
 				{
 					$langs->load("propal");
 					print '<tr><td>'.$langs->trans("Availability").'</td><td>';
-					$form->select_availability($product->fk_availability,"oselDispo",1);
+					$form->selectAvailabilityDelay($product->fk_availability,"oselDispo",1);
 					print '</td></tr>'."\n";
 				}
 
@@ -343,8 +354,9 @@ if ($id || $ref)
 				// We don't have supplier, so we try to guess.
 				// For this we build a fictive supplier with same properties than user but using vat)
 				$mysoc2=dol_clone($mysoc);
+				$mysoc2->name='Fictive seller with same country';
 				$mysoc2->tva_assuj=1;
-				$default_vat=get_default_tva($mysoc2, $mysoc, 0, $product->id);
+				$default_vat=get_default_tva($mysoc2, $mysoc, $product->id, 0);
 
 				print '<tr><td class="fieldrequired">'.$langs->trans("VATRateForSupplierProduct").'</td>';
 				print '<td>';
@@ -352,6 +364,7 @@ if ($id || $ref)
 				if (! empty($socid))	// When update
 				{
 					$default_vat=get_default_tva($supplier, $mysoc, $product->id);
+					if (empty($default_vat)) $default_vat=$product->tva_tx;
 				}
 				print '<input type="text" class="flat" size="5" name="tva_tx" value="'.(GETPOST("tva_tx")?vatrate(GETPOST("tva_tx")):($default_vat!=''?vatrate($default_vat):'')).'">';
 				print '</td></tr>';
@@ -370,13 +383,22 @@ if ($id || $ref)
 				print '</tr>';
 
 				// Charges ????
-				if (! empty($conf->margin->enabled))
+				if ($conf->global->PRODUCT_CHARGES)
 				{
-					print '<tr>';
-					print '<td>'.$langs->trans("Charges").'</td>';
-					print '<td><input class="flat" name="charges" size="8" value="'.(GETPOST('charges')?price(GETPOST('charges')):(isset($product->fourn_charges)?price($product->fourn_charges):'')).'">';
-	        		print '</td>';
-					print '</tr>';
+					if (! empty($conf->margin->enabled))
+					{
+						print '<tr>';
+						print '<td>'.$langs->trans("Charges").'</td>';
+						print '<td><input class="flat" name="charges" size="8" value="'.(GETPOST('charges')?price(GETPOST('charges')):(isset($product->fourn_charges)?price($product->fourn_charges):'')).'">';
+		        		print '</td>';
+						print '</tr>';
+					}
+				}
+
+				if (is_object($hookmanager))
+				{
+					$parameters=array('id_fourn'=>$id_fourn,'prod_id'=>$product->id);
+				    $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);
 				}
 
 				print '</table>';
@@ -425,11 +447,17 @@ if ($id || $ref)
 				print '<td class="liste_titre" align="right">'.$langs->trans("VATRate").'</td>';
 				print '<td class="liste_titre" align="right">'.$langs->trans("PriceQtyMinHT").'</td>';
 				// Charges ????
-				if (! empty($conf->margin->enabled)) print '<td align="right">'.$langs->trans("Charges").'</td>';
+				if ($conf->global->PRODUCT_CHARGES)
+				{
+					if (! empty($conf->margin->enabled)) print '<td align="right">'.$langs->trans("Charges").'</td>';
+				}
 				print_liste_field_titre($langs->trans("UnitPriceHT"),$_SERVER["PHP_SELF"],"pfp.unitprice","",$param,'align="right"',$sortfield,$sortorder);
 				print '<td class="liste_titre" align="right">'.$langs->trans("DiscountQtyMin").'</td>';
 				// Charges ????
-				if (! empty($conf->margin->enabled)) print '<td align="right">'.$langs->trans("UnitCharges").'</td>';
+				if ($conf->global->PRODUCT_CHARGES)
+				{
+					if (! empty($conf->margin->enabled)) print '<td align="right">'.$langs->trans("UnitCharges").'</td>';
+				}
 				print '<td class="liste_titre"></td>';
 				print "</tr>\n";
 
@@ -475,11 +503,14 @@ if ($id || $ref)
 						print '</td>';
 
 						// Charges ????
-						if (! empty($conf->margin->enabled))
+						if ($conf->global->PRODUCT_CHARGES)
 						{
-							print '<td align="right">';
-							print $productfourn->fourn_charges?price($productfourn->fourn_charges):"";
-							print '</td>';
+							if (! empty($conf->margin->enabled))
+							{
+								print '<td align="right">';
+								print $productfourn->fourn_charges?price($productfourn->fourn_charges):"";
+								print '</td>';
+							}
 						}
 
 						// Unit price
@@ -493,12 +524,21 @@ if ($id || $ref)
 						print price2num($productfourn->fourn_remise_percent).'%';
 						print '</td>';
 
-						// Unit Charges ???
-						if (! empty($conf->margin->enabled))
+						// Charges ????
+						if ($conf->global->PRODUCT_CHARGES)
 						{
-							print '<td align="right">';
-							print $productfourn->fourn_unitcharges?price($productfourn->fourn_unitcharges) : ($productfourn->fourn_qty?price($productfourn->fourn_charges/$productfourn->fourn_qty):"&nbsp;");
-							print '</td>';
+							if (! empty($conf->margin->enabled))
+							{
+								print '<td align="right">';
+								print $productfourn->fourn_unitcharges?price($productfourn->fourn_unitcharges) : ($productfourn->fourn_qty?price($productfourn->fourn_charges/$productfourn->fourn_qty):"&nbsp;");
+								print '</td>';
+							}
+						}
+
+						if (is_object($hookmanager))
+						{
+							$parameters=array('id_pfp'=>$productfourn->product_fourn_price_id,'id_fourn'=>$id_fourn,'prod_id'=>$product->id);
+						    $reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$object,$action);
 						}
 
 						// Modify-Remove
@@ -529,4 +569,3 @@ else
 // End of page
 llxFooter();
 $db->close();
-?>

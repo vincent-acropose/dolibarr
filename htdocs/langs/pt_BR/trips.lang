@@ -1,22 +1,13 @@
-# Dolibarr language file - pt_BR rev. 0.0 - trips
-CHARSET=UTF-8
-Trip=Deslocamento
-Trips=Deslocamentos
-TripsAndExpenses=Deslocamentos e Despesas
-TripId=Id de Viagens/Despesas notas
-TripCard=Ficha de Deslocamento
-AddTrip=Adicionar Deslocamento
-ListOfTrips=Lista de Deslocamentos
-ListOfFees=Lista de Taxas
-NewTrip=Nova Deslocamento
-CompanyVisited=Empresa/Instituição Visitada
+# Dolibarr language file - Source file is en_US - trips
+Trip=Expense report
+Trips=Expense reports
+TripsAndExpenses=Expenses reports
+TripsAndExpensesStatistics=Expense reports statistics
+ListOfTrips=List of expense report
+NewTrip=New expense report
 Kilometers=Kilometros
 FeesKilometersOrAmout=Quantidade de Kilometros
-DeleteTrip=Eliminar Deslocamento
-ConfirmDeleteTrip=Tem certeza que quer eliminar esta deslocamento?
-TF_OTHER=Outro
-TF_LUNCH=Alimentação
-TF_TRIP=Viagem
-ListTripsAndExpenses=Lista de viagens e despesas
-
-
+DeleteTrip=Delete expense report
+ConfirmDeleteTrip=Are you sure you want to delete this expense report ?
+ListTripsAndExpenses=List of expense reports
+ClassifyRefunded=Classificar 'Rembolsado'

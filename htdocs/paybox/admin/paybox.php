@@ -61,11 +61,13 @@ if ($action == 'setvalue' && $user->admin)
     if (! $result > 0) $error++;
     $result=dolibarr_set_const($db, "PAYBOX_MESSAGE_KO",GETPOST('PAYBOX_MESSAGE_KO','alpha'),'chaine',0,'',$conf->entity);
 	if (! $result > 0) $error++;
+	$result=dolibarr_set_const($db, "PAYBOX_PAYONLINE_SENDEMAIL",GETPOST('PAYBOX_PAYONLINE_SENDEMAIL'),'chaine',0,'',$conf->entity);
+	if (! $result > 0) $error++;
 	
     if (! $error)
   	{
   		$db->commit();
-  		$mesg='<div class="ok">'.$langs->trans("SetupSaved").'</div>';
+	    setEventMessage($langs->trans("SetupSaved"));
   	}
   	else
   	{
@@ -100,7 +102,7 @@ print '<input type="hidden" name="action" value="setvalue">';
 
 $var=true;
 
-print '<table class="nobordernopadding" width="100%">';
+print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("AccountParameter").'</td>';
 print '<td>'.$langs->trans("Value").'</td>';
@@ -186,8 +188,14 @@ $doleditor=new DolEditor('PAYBOX_MESSAGE_KO',$conf->global->PAYBOX_MESSAGE_KO,''
 $doleditor->Create();
 print '</td></tr>';
 
-print '<tr><td colspan="2" align="center"><br><input type="submit" class="button" value="'.$langs->trans("Modify").'"></td></tr>';
-print '</table></form>';
+$var=!$var;
+print '<tr '.$bc[$var].'><td>';
+print $langs->trans("PAYBOX_PAYONLINE_SENDEMAIL").'</td><td>';
+print '<input size="32" type="email" name="PAYBOX_PAYONLINE_SENDEMAIL" value="'.$conf->global->PAYBOX_PAYONLINE_SENDEMAIL.'">';
+print ' &nbsp; '.$langs->trans("Example").': myemail@myserver.com';
+print '</td></tr>';
+
+print '</table><br><center><input type="submit" class="button" value="'.$langs->trans("Modify").'"></center></form>';
 
 print '<br><br>';
 
@@ -219,9 +227,6 @@ if (! empty($conf->adherent->enabled))
 print "<br>";
 print info_admin($langs->trans("YouCanAddTagOnUrl"));
 
-dol_htmloutput_mesg($mesg);
-
 $db->close();
-
+dol_fiche_end();
 llxFooter();
-?>

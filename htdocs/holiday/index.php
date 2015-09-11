@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2011	Dimitri Mouillard	<dmouillard@teclib.com>
- * Copyright (C) 2012	Laurent Destailleur	<eldy@users.sourceforge.net>
+ * Copyright (C) 2013	Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2012	Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -51,7 +51,7 @@ $offset = $conf->liste_limit * $page ;
 $pageprev = $page - 1;
 $pagenext = $page + 1;
 
-$id = GETPOST('id');
+$id = GETPOST('id','int');
 
 $search_ref      = GETPOST('search_ref');
 $month_create    = GETPOST('month_create');
@@ -64,14 +64,25 @@ $search_employe  = GETPOST('search_employe');
 $search_valideur = GETPOST('search_valideur');
 $search_statut   = GETPOST('select_statut');
 
+if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both test are required to be compatible with all browsers
+{
+	$search_ref="";
+	$month_create="";
+	$year_create="";
+    $month_start="";
+	$year_start="";
+	$month_end="";
+	$year_end="";
+	$search_employe="";
+	$search_valideur="";
+	$search_statut="";
+}
 
 /*
  * Actions
  */
 
 // None
-
-
 
 /*
  * View
@@ -101,9 +112,11 @@ if(!empty($search_ref))
 // DATE START
 if($year_start > 0) {
     if($month_start > 0) {
-        $filter.= " AND date_format(cp.date_debut, '%Y-%m') = '$year_start-$month_start'";
+    	$filter .= " AND (cp.date_debut BETWEEN '".$db->idate(dol_get_first_day($year_start,$month_start,1))."' AND '".$db->idate(dol_get_last_day($year_start,$month_start,1))."')";
+    	//$filter.= " AND date_format(cp.date_debut, '%Y-%m') = '$year_start-$month_start'";
     } else {
-        $filter.= " AND date_format(cp.date_debut, '%Y') = '$year_start'";
+    	$filter .= " AND (cp.date_debut BETWEEN '".$db->idate(dol_get_first_day($year_start,1,1))."' AND '".$db->idate(dol_get_last_day($year_start,12,1))."')";
+    	//$filter.= " AND date_format(cp.date_debut, '%Y') = '$year_start'";
     }
 } else {
     if($month_start > 0) {
@@ -114,9 +127,11 @@ if($year_start > 0) {
 // DATE FIN
 if($year_end > 0) {
     if($month_end > 0) {
-        $filter.= " AND date_format(cp.date_fin, '%Y-%m') = '$year_end-$month_end'";
+    	$filter .= " AND (cp.date_fin BETWEEN '".$db->idate(dol_get_first_day($year_end,$month_end,1))."' AND '".$db->idate(dol_get_last_day($year_end,$month_end,1))."')";
+    	//$filter.= " AND date_format(cp.date_fin, '%Y-%m') = '$year_end-$month_end'";
     } else {
-        $filter.= " AND date_format(cp.date_fin, '%Y') = '$year_end'";
+    	$filter .= " AND (cp.date_fin BETWEEN '".$db->idate(dol_get_first_day($year_end,1,1))."' AND '".$db->idate(dol_get_last_day($year_end,12,1))."')";
+    	//$filter.= " AND date_format(cp.date_fin, '%Y') = '$year_end'";
     }
 } else {
     if($month_end > 0) {
@@ -127,9 +142,11 @@ if($year_end > 0) {
 // DATE CREATE
 if($year_create > 0) {
     if($month_create > 0) {
-        $filter.= " AND date_format(cp.date_create, '%Y-%m') = '$year_create-$month_create'";
+    	$filter .= " AND (cp.date_create BETWEEN '".$db->idate(dol_get_first_day($year_create,$month_create,1))."' AND '".$db->idate(dol_get_last_day($year_create,$month_create,1))."')";
+    	//$filter.= " AND date_format(cp.date_create, '%Y-%m') = '$year_create-$month_create'";
     } else {
-        $filter.= " AND date_format(cp.date_create, '%Y') = '$year_create'";
+    	$filter .= " AND (cp.date_create BETWEEN '".$db->idate(dol_get_first_day($year_create,1,1))."' AND '".$db->idate(dol_get_last_day($year_create,12,1))."')";
+    	//$filter.= " AND date_format(cp.date_create, '%Y') = '$year_create'";
     }
 } else {
     if($month_create > 0) {
@@ -167,7 +184,7 @@ if ($id > 0)
 	$user_id = $fuser->id;
 }
 // Récupération des congés payés de l'utilisateur ou de tous les users
-if (!$user->rights->holiday->lire_tous || $id > 0)
+if (!$user->rights->holiday->write_all || $id > 0)
 {
 	$holiday_payes = $holiday->fetchByUser($user_id,$order,$filter);
 }
@@ -180,10 +197,7 @@ if ($holiday_payes == '-1')
 {
     print_fiche_titre($langs->trans('CPTitreMenu'));
 
-    print '<div class="tabBar">';
-    print '<span>'.$langs->trans('CPErrorSQL');
-    print ' '.$holiday->error.'</span>';
-    print '</div>';
+    dol_print_error($db, $langs->trans('Error').' '.$holiday->error);
     exit();
 }
 
@@ -211,24 +225,23 @@ if ($id > 0)
 	print '</td>';
 	print '</tr>';
 
-	// Nom
+	// LastName
 	print '<tr><td width="25%" valign="top">'.$langs->trans("LastName").'</td>';
 	print '<td colspan="2">'.$fuser->lastname.'</td>';
 	print "</tr>\n";
 
-	// Prenom
+	// FirstName
 	print '<tr><td width="25%" valign="top">'.$langs->trans("FirstName").'</td>';
 	print '<td colspan="2">'.$fuser->firstname.'</td>';
 	print "</tr>\n";
 
 	print '</table><br>';
-
 }
 else
 {
 	print_barre_liste($langs->trans("ListeCP"), $page, $_SERVER["PHP_SELF"], '', $sortfield, $sortorder, "", $num);
 
-	print '<div class="tabBar">';
+	dol_fiche_head('');
 }
 
 
@@ -236,7 +249,15 @@ $nbaquis=$holiday->getCPforUser($user_id);
 $nbdeduced=$holiday->getConfCP('nbHolidayDeducted');
 $nb_holiday = $nbaquis / $nbdeduced;
 print $langs->trans('SoldeCPUser',round($nb_holiday,2)).($nbdeduced != 1 ? ' ('.$nbaquis.' / '.$nbdeduced.')' : '');
-print '</div>';
+
+if ($id > 0)
+{
+	dol_fiche_end();
+	print '</br>';
+}
+else {
+	dol_fiche_end();
+}
 
 print '<form method="get" action="'.$_SERVER["PHP_SELF"].'">'."\n";
 print '<table class="noborder" width="100%;">';
@@ -247,23 +268,25 @@ print_liste_field_titre($langs->trans("Employe"),$_SERVER["PHP_SELF"],"cp.fk_use
 print_liste_field_titre($langs->trans("ValidatorCP"),$_SERVER["PHP_SELF"],"cp.fk_validator","",'','',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans("DateDebCP"),$_SERVER["PHP_SELF"],"cp.date_debut","",'','align="center"',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans("DateFinCP"),$_SERVER["PHP_SELF"],"cp.date_fin","",'','align="center"',$sortfield,$sortorder);
-print_liste_field_titre($langs->trans("Duration"));
+print_liste_field_titre($langs->trans("Duration"),$_SERVER["PHP_SELF"],'','','','align="center"',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"cp.statut","",'','align="center"',$sortfield,$sortorder);
+print '<td></td>';
 print "</tr>\n";
 
 // FILTRES
 print '<tr class="liste_titre">';
 print '<td class="liste_titre" align="left" width="50">';
 print '<input class="flat" size="4" type="text" name="search_ref" value="'.$search_ref.'">';
+print '</td>';
 
 // DATE CREATE
 print '<td class="liste_titre" colspan="1" align="center">';
 print '<input class="flat" type="text" size="1" maxlength="2" name="month_create" value="'.$month_create.'">';
-$formother->select_year($year_create,'year_create',1, $min_year, $max_year);
+$formother->select_year($year_create,'year_create',1, $min_year, 0);
 print '</td>';
 
 // UTILISATEUR
-if($user->rights->holiday->lire_tous) {
+if($user->rights->holiday->write_all) {
     print '<td class="liste_titre" align="left">';
     $form->select_users($search_employe,"search_employe",1,"",0,'');
     print '</td>';
@@ -272,19 +295,20 @@ if($user->rights->holiday->lire_tous) {
 }
 
 // VALIDEUR
-if($user->rights->holiday->lire_tous){
+if($user->rights->holiday->write_all)
+{
     print '<td class="liste_titre" align="left">';
 
-    // Liste des utiliseurs du groupes Comptabilité
-
-    $idGroupValid = $holiday->getConfCP('userGroup');
-
-    $validator = new UserGroup($db,$idGroupValid);
-    $valideur = $validator->listUsersForGroup();
-
-    $form->select_users($search_valideur,"search_valideur",1,"",0,$valideur,'');
+    $validator = new UserGroup($db);
+    $excludefilter=$user->admin?'':'u.rowid <> '.$user->id;
+    $valideurobjects = $validator->listUsersForGroup($excludefilter);
+    $valideurarray = array();
+    foreach($valideurobjects as $val) $valideurarray[$val->id]=$val->id;
+    $form->select_users($search_valideur,"search_valideur",1,"",0,$valideurarray,'');
     print '</td>';
-} else {
+}
+else
+{
     print '<td class="liste_titre">&nbsp;</td>';
 }
 
@@ -306,8 +330,15 @@ print '<td>&nbsp;</td>';
 // STATUT
 print '<td class="liste_titre" width="70px;" align="center">';
 $holiday->selectStatutCP($search_statut);
-print '<input type="image" class="liste_titre" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" alt="'.$langs->trans('Search').'">';
-print "</td></tr>\n";
+print '</td>';
+
+// ACTION
+print '<td align="right">';
+print '<input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+print '<input type="image" class="liste_titre" name="button_removefilter" src="'.img_picto($langs->trans("Search"),'searchclear.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'" title="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">';
+print '</td>';
+
+print "</tr>\n";
 
 
 // Lines
@@ -344,9 +375,9 @@ if (! empty($holiday->holiday))
 		print '<td align="center">'.dol_print_date($infos_CP['date_debut'],'day').'</td>';
 		print '<td align="center">'.dol_print_date($infos_CP['date_fin'],'day').'</td>';
 		print '<td align="right">';
-		$nbopenedday=num_open_day($infos_CP['date_debut'], $infos_CP['date_fin'], 0, 1, $infos_CP['halfday']);
-		print $nbopenedday;
-		print '<td align="right">'.$holidaystatic->LibStatut($infos_CP['statut'],5).'</td>';
+		$nbopenedday=num_open_day($infos_CP['date_debut_gmt'], $infos_CP['date_fin_gmt'], 0, 1, $infos_CP['halfday']);
+		print $nbopenedday.' '.$langs->trans('DurationDays');
+		print '<td align="right" colspan="2">'.$holidaystatic->LibStatut($infos_CP['statut'],5).'</td>';
 		print '</tr>'."\n";
 
 	}
@@ -356,7 +387,7 @@ if (! empty($holiday->holiday))
 if($holiday_payes == '2')
 {
     print '<tr>';
-    print '<td colspan="8" class="pair" style="text-align: center; padding: 5px;">'.$langs->trans('None').'</td>';
+    print '<td colspan="9" class="pair" style="text-align: center; padding: 5px;">'.$langs->trans('None').'</td>';
     print '</tr>';
 }
 
@@ -367,11 +398,10 @@ if ($user_id == $user->id)
 {
 	print '<br>';
 	print '<div style="float: right; margin-top: 8px;">';
-	print '<a href="./fiche.php?action=request" class="butAction">'.$langs->trans('AddCP').'</a>';
+	print '<a href="./card.php?action=request" class="butAction">'.$langs->trans('AddCP').'</a>';
 	print '</div>';
 }
 
 llxFooter();
 
 $db->close();
-?>

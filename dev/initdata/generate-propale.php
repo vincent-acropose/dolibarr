@@ -122,7 +122,7 @@ while ($i < GEN_NUMBER_PROPAL && $result >= 0)
 	$soc = new Societe($db);
 
 
-	$propal = new Propal($db, $socids[$socid]);
+	$propal = new Propal($db);
 
 	$obj = $conf->global->PROPALE_ADDON;
 	$modPropale = new $obj;
@@ -130,6 +130,7 @@ while ($i < GEN_NUMBER_PROPAL && $result >= 0)
 
 	$propal->ref = $numpr;
 	$propal->contactid = $contids[$socids[$socid]][0];
+	$propal->socid = $socids[$socid];
 	$propal->datep = time();
 	$propal->cond_reglement_id = 3;
 	$propal->mode_reglement_id = 3;
@@ -143,7 +144,9 @@ while ($i < GEN_NUMBER_PROPAL && $result >= 0)
 		while ($xnbp < $nbp)
 		{
 			$prodid = rand(1, $num_prods);
-			$result=$propal->addline($propal->id, 'Description '.$xnbp, '100', rand(1,5), '19.6', 0, 0, $prodids[$prodid], 0);
+			$product=new Product($db);
+			$result=$product->fetch($prodids[$prodid]);
+			$result=$propal->addline($product->description, $product->price, rand(1,5), 0, 0, 0, $prodids[$prodid], 0);
 			if ($result < 0)
 			{
 				dol_print_error($db,$propal->error);
@@ -159,4 +162,3 @@ while ($i < GEN_NUMBER_PROPAL && $result >= 0)
 
 }
 
-?>

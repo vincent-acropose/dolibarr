@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2005		Patrick Rouillon	<patrick@rouillon.net>
- * Copyright (C) 2005-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2014	Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -51,12 +51,12 @@ $object = new FactureFournisseur($db);
 
 if ($action == 'addcontact' && $user->rights->fournisseur->facture->creer)
 {
-	$result = $object->fetch($id);
+	$result = $object->fetch($id, $ref);
 
     if ($result > 0 && $id > 0)
     {
     	$contactid = (GETPOST('userid') ? GETPOST('userid') : GETPOST('contactid'));
-  		$result = $result = $object->add_contact($contactid, $_POST["type"], $_POST["source"]);
+  		$result = $object->add_contact($contactid, $_POST["type"], $_POST["source"]);
     }
 
 	if ($result >= 0)
@@ -69,11 +69,11 @@ if ($action == 'addcontact' && $user->rights->fournisseur->facture->creer)
 		if ($object->error == 'DB_ERROR_RECORD_ALREADY_EXISTS')
 		{
 			$langs->load("errors");
-			$mesg = '<div class="error">'.$langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType").'</div>';
+			setEventMessage($langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType"), 'errors');
 		}
 		else
 		{
-			$mesg = '<div class="error">'.$object->error.'</div>';
+			setEventMessage($object->error, 'errors');
 		}
 	}
 }
@@ -125,7 +125,6 @@ $userstatic=new User($db);
 /* Mode vue et edition                                                         */
 /*                                                                             */
 /* *************************************************************************** */
-dol_htmloutput_mesg($mesg);
 
 if ($id > 0 || ! empty($ref))
 {
@@ -142,29 +141,74 @@ if ($id > 0 || ! empty($ref))
 		 */
 		print '<table class="border" width="100%">';
 
-		$linkback = '<a href="'.DOL_URL_ROOT.'/fourn/facture/index.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
+		$linkback = '<a href="'.DOL_URL_ROOT.'/fourn/facture/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
 		// Reference du facture
 		print '<tr><td width="20%">'.$langs->trans("Ref").'</td><td colspan="3">';
-		print $form->showrefnav($object, 'facid', $linkback, 1, 'rowid', 'ref', $morehtmlref);
+		print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref);
 		print "</td></tr>";
 
         // Ref supplier
-        print '<tr><td nowrap="nowrap">'.$langs->trans("RefSupplier").'</td><td colspan="3">'.$object->ref_supplier.'</td>';
+        print '<tr><td class="nowrap">'.$langs->trans("RefSupplier").'</td><td colspan="3">'.$object->ref_supplier.'</td>';
         print "</tr>\n";
 
 		// Third party
 		print "<tr><td>".$langs->trans("Supplier")."</td>";
-		print '<td colspan="3">'.$object->client->getNomUrl(1,'compta').'</td></tr>';
+		print '<td colspan="3">'.$object->thirdparty->getNomUrl(1,'supplier').'</td></tr>';
+
+		// Type
+		print '<tr><td>'.$langs->trans('Type').'</td><td colspan="4">';
+		print $object->getLibType();
+		if ($object->type == FactureFournisseur::TYPE_REPLACEMENT)
+		{
+			$facreplaced=new FactureFournisseur($db);
+			$facreplaced->fetch($object->fk_facture_source);
+			print ' ('.$langs->transnoentities("ReplaceInvoice",$facreplaced->getNomUrl(1)).')';
+		}
+		if ($object->type == FactureFournisseur::TYPE_CREDIT_NOTE)
+		{
+			$facusing=new FactureFournisseur($db);
+			$facusing->fetch($object->fk_facture_source);
+			print ' ('.$langs->transnoentities("CorrectInvoice",$facusing->getNomUrl(1)).')';
+		}
+
+		$facidavoir=$object->getListIdAvoirFromInvoice();
+		if (count($facidavoir) > 0)
+		{
+			print ' ('.$langs->transnoentities("InvoiceHasAvoir");
+			$i=0;
+			foreach($facidavoir as $fid)
+			{
+				if ($i==0) print ' ';
+				else print ',';
+				$facavoir=new FactureFournisseur($db);
+				$facavoir->fetch($fid);
+				print $facavoir->getNomUrl(1);
+			}
+			print ')';
+		}
+		if ($facidnext > 0)
+		{
+			$facthatreplace=new FactureFournisseur($db);
+			$facthatreplace->fetch($facidnext);
+			print ' ('.$langs->transnoentities("ReplacedByInvoice",$facthatreplace->getNomUrl(1)).')';
+		}
+		print '</td></tr>';
+
+		// Label
+		print '<tr><td>'.$form->editfieldkey("Label",'label',$object->label,$object,0).'</td><td colspan="3">';
+		print $form->editfieldval("Label",'label',$object->label,$object,0);
+		print '</td></tr>';
+
 		print "</table>";
 
-		print '</div>';
+		dol_fiche_end();
 
 		print '<br>';
-		
+
 		// Contacts lines
 		include DOL_DOCUMENT_ROOT.'/core/tpl/contacts.tpl.php';
-		
+
 	}
 	else
 	{
@@ -175,4 +219,3 @@ if ($id > 0 || ! empty($ref))
 
 llxFooter();
 $db->close();
-?>

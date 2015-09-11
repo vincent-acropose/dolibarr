@@ -65,7 +65,7 @@ class modECM extends DolibarrModules
 		$this->dirs = array("/ecm/temp");
 
 		// Config pages. Put here list of php page names stored in admmin directory used to setup module
-		$this->config_page_url = array();
+		$this->config_page_url = array('ecm.php');
 
 		// Dependencies
 		$this->depends = array();		// List of modules id that must be enabled if this module is enabled
@@ -73,6 +73,13 @@ class modECM extends DolibarrModules
 
 		// Constants
 		$this->const = array();			// List of parameters
+		$r=0;
+
+		$this->const[$r][0] = "ECM_AUTO_TREE_ENABLED";
+		$this->const[$r][1] = "chaine";
+		$this->const[$r][2] = "1";
+		$this->const[$r][3] = 'Auto tree is enabled by default';
+		$this->const[$r][4] = 0;
 
 		// Boxes
 		$this->boxes = array();			// List of boxes
@@ -131,11 +138,12 @@ class modECM extends DolibarrModules
 		$r++;
 
 		// Left menu linked to top menu
-		$this->menu[$r]=array('fk_menu'=>'r=0',
+		$this->menu[$r]=array('fk_menu'=>'fk_mainmenu=ecm',
 							  'type'=>'left',
 							  'titre'=>'ECMArea',
 							  'mainmenu'=>'ecm',
-							  'url'=>'/ecm/index.php',
+							  'leftmenu'=>'ecm',
+							  'url'=>'/ecm/index.php?mainmenu=ecm&leftmenu=ecm',
 							  'langs'=>'ecm',
 							  'position'=>101,
 							  'perms'=>'$user->rights->ecm->read || $user->rights->ecm->upload',
@@ -144,24 +152,12 @@ class modECM extends DolibarrModules
 							  'user'=>2);			// 0=Menu for internal users, 1=external users, 2=both
 		$r++;
 
-		$this->menu[$r]=array('fk_menu'=>'r=1',
+		$this->menu[$r]=array('fk_menu'=>'fk_mainmenu=ecm,fk_leftmenu=ecm',
 							  'type'=>'left',
-							  'titre'=>'ECMNewSection',
+							  'titre'=>'ECMSectionsManual',
 							  'mainmenu'=>'ecm',
-							  'url'=>'/ecm/docdir.php?action=create',
-							  'langs'=>'ecm',
-							  'position'=>100,
-							  'perms'=>'$user->rights->ecm->setup',
-							  'enabled'=>'$user->rights->ecm->setup',
-							  'target'=>'',
-							  'user'=>2);			// 0=Menu for internal users, 1=external users, 2=both
-		$r++;
-
-		$this->menu[$r]=array('fk_menu'=>'r=1',
-							  'type'=>'left',
-							  'titre'=>'ECMFileManager',
-							  'mainmenu'=>'ecm',
-							  'url'=>'/ecm/index.php?action=file_manager',
+							  'leftmenu'=>'ecm_manual',
+							  'url'=>'/ecm/index.php?action=file_manager&mainmenu=ecm&leftmenu=ecm',
 							  'langs'=>'ecm',
 							  'position'=>102,
 							  'perms'=>'$user->rights->ecm->read || $user->rights->ecm->upload',
@@ -170,21 +166,18 @@ class modECM extends DolibarrModules
 							  'user'=>2);			// 0=Menu for internal users, 1=external users, 2=both
 		$r++;
 
-		/*
-		$this->menu[$r]=array('fk_menu'=>'r=1',
+		$this->menu[$r]=array('fk_menu'=>'fk_mainmenu=ecm,fk_leftmenu=ecm',
 							  'type'=>'left',
-							  'titre'=>'Search',
+							  'titre'=>'ECMSectionsAuto',
 							  'mainmenu'=>'ecm',
-							  'url'=>'/ecm/search.php',
+							  'url'=>'/ecm/index_auto.php?action=file_manager&mainmenu=ecm&leftmenu=ecm',
 							  'langs'=>'ecm',
 							  'position'=>103,
-							  'perms'=>'$user->rights->ecm->read',
-							  'enabled'=>'$user->rights->ecm->read',
+							  'perms'=>'$user->rights->ecm->read || $user->rights->ecm->upload',
+							  'enabled'=>'$user->rights->ecm->read || $user->rights->ecm->upload',
 							  'target'=>'',
 							  'user'=>2);			// 0=Menu for internal users, 1=external users, 2=both
-							  
-		$r++;*/
-
+		$r++;
 	}
 
 	/**
@@ -219,4 +212,3 @@ class modECM extends DolibarrModules
 
 }
 
-?>

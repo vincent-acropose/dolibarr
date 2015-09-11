@@ -61,7 +61,7 @@ class mailing_contacts2 extends MailingTargets
      */
     function url($id)
     {
-        return '<a href="'.DOL_URL_ROOT.'/contact/fiche.php?id='.$id.'">'.img_object('',"contact").'</a>';
+        return '<a href="'.DOL_URL_ROOT.'/contact/card.php?id='.$id.'">'.img_object('',"contact").'</a>';
     }
 
     /**
@@ -79,16 +79,17 @@ class mailing_contacts2 extends MailingTargets
 
         // La requete doit retourner: id, email, fk_contact, name, firstname, other
         $sql = "SELECT sp.rowid as id, sp.email as email, sp.rowid as fk_contact,";
-        $sql.= " sp.name as name, sp.firstname as firstname, sp.civilite,";
+        $sql.= " sp.lastname, sp.firstname as firstname, sp.civility as civility_id,";
         $sql.= " s.nom as companyname";
     	$sql.= " FROM ".MAIN_DB_PREFIX."socpeople as sp";
     	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = sp.fk_soc";
         $sql.= " WHERE sp.entity IN (".getEntity('societe', 1).")";
-    	$sql.= " AND sp.email != ''";  // Note that null != '' is false
+    	$sql.= " AND sp.email <> ''";  // Note that null != '' is false
     	$sql.= " AND sp.no_email = 0";
     	//$sql.= " AND sp.poste != ''";
+    	$sql.= " AND sp.email NOT IN (SELECT email FROM ".MAIN_DB_PREFIX."mailing_cibles WHERE fk_mailing=".$mailing_id.")";
     	if ($filtersarray[0]<>'all') $sql.= " AND sp.poste ='".$this->db->escape($filtersarray[0])."'";
-    	$sql.= " ORDER BY sp.name, sp.firstname";
+    	$sql.= " ORDER BY sp.lastname, sp.firstname";
     	$resql = $this->db->query($sql);
     	if ($resql)
     	{
@@ -100,11 +101,11 @@ class mailing_contacts2 extends MailingTargets
     			$target[] = array(
                             'email' => $obj->email,
                             'fk_contact' => $obj->fk_contact,
-                            'name' => $obj->name,
+                            'lastname' => $obj->lastname,
                             'firstname' => $obj->firstname,
                             'other' =>
                                 ($langs->transnoentities("ThirdParty").'='.$obj->companyname).';'.
-                                ($langs->transnoentities("UserTitle").'='.($obj->civilite?$langs->transnoentities("Civility".$obj->civilite):'')),
+                                ($langs->transnoentities("UserTitle").'='.($obj->civility_id?$langs->transnoentities("Civility".$obj->civility_id):'')),
                             'source_url' => $this->url($obj->id),
                             'source_id' => $obj->id,
                             'source_type' => 'contact'
@@ -187,7 +188,6 @@ class mailing_contacts2 extends MailingTargets
 
         $sql = "SELECT sp.poste, count(distinct(sp.email)) AS nb";
         $sql.= " FROM ".MAIN_DB_PREFIX."socpeople as sp";
-        $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = sp.fk_soc";
         $sql.= " WHERE sp.entity IN (".getEntity('societe', 1).")";
         $sql.= " AND sp.email != ''";    // Note that null != '' is false
         $sql.= " AND sp.no_email = 0";
@@ -217,4 +217,3 @@ class mailing_contacts2 extends MailingTargets
 
 }
 
-?>

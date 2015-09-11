@@ -28,12 +28,12 @@ create table llx_entrepot
   description     text,
   lieu            varchar(64),					-- resume lieu situation
   address         varchar(255),
-  cp              varchar(10),
-  ville           varchar(50),
+  zip             varchar(10),
+  town            varchar(50),
   fk_departement  integer,
   fk_pays         integer DEFAULT 0,
   statut          tinyint DEFAULT 1,			-- 1 open, 0 close
-  valo_pmp        float(12,4),					-- valoristaion du stock en PMP
+  valo_pmp        float(12,4),					-- PMP value for this warehouse (deprecated. No sens for a warehouse)
   fk_user_author  integer,
   import_key	  varchar(14)
 )ENGINE=innodb;

@@ -29,15 +29,15 @@ create table llx_commandedet
   description					text,
   tva_tx						double(6,3),	                 -- vat rate
   localtax1_tx               	double(6,3)  DEFAULT 0,    		 -- localtax1 rate
-  localtax1_type			 	varchar(1)	  	 NULL, 			 -- localtax1 type
+  localtax1_type			 	varchar(10)	  	 NULL, 			 -- localtax1 type
   localtax2_tx               	double(6,3)  DEFAULT 0,    		 -- localtax2 rate
-  localtax2_type			 	varchar(1)	  	 NULL, 			 -- localtax2 type
+  localtax2_type			 	varchar(10)	  	 NULL, 			 -- localtax2 type
   qty							real,                            -- quantity
   remise_percent				real         DEFAULT 0,          -- pourcentage de remise
   remise						real         DEFAULT 0,          -- montant de la remise
   fk_remise_except				integer      NULL,               -- Lien vers table des remises fixes
   price							real,                            -- prix final
-  subprice						double(24,8) DEFAULT 0,          -- prix unitaire
+  subprice						double(24,8) DEFAULT 0,          -- P.U. HT (exemple 100)
   total_ht						double(24,8) DEFAULT 0,          -- Total HT de la ligne toute quantite et incluant remise ligne et globale
   total_tva						double(24,8) DEFAULT 0,          -- Total TVA de la ligne toute quantite et incluant remise ligne et globale
   total_localtax1				double(24,8) DEFAULT 0,          -- Total LocalTax1 
@@ -47,8 +47,10 @@ create table llx_commandedet
   date_start					datetime     DEFAULT NULL,       -- date debut si service
   date_end						datetime     DEFAULT NULL,       -- date fin si service
   info_bits						integer      DEFAULT 0,          -- TVA NPR ou non
-  buy_price_ht					double(24,8) DEFAULT 0,          -- prix d'achat HT
-  fk_product_fournisseur_price	integer      DEFAULT NULL,       -- reference prix fournisseur
+
+  buy_price_ht					double(24,8) DEFAULT 0,          -- buying price
+  fk_product_fournisseur_price	integer      DEFAULT NULL,       -- reference of supplier price when line was added (may be used to update buy_price_ht current price when future invoice will be created)
+  
   special_code					integer UNSIGNED DEFAULT 0,      -- code pour les lignes speciales
   rang							integer      DEFAULT 0,
   import_key					varchar(14)

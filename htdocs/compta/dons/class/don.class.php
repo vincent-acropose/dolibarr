@@ -2,6 +2,7 @@
 /* Copyright (C) 2002      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2009      Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2014      Florian Henry		  	<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,19 +40,20 @@ class Don extends CommonObject
     var $ref;
     var $date;
     var $amount;
-    var $prenom;
-    var $nom;
+    var $firstname;
+    var $lastname;
     var $societe;
-    var $adresse;
-    var $cp;
-    var $ville;
-    var $pays;
+    var $address;
+    var $zip;
+    var $town;
+    var $country;
     var $email;
     var $public;
     var $fk_project;
     var $modepaiement;
     var $modepaiementid;
-    var $note;
+    var $note_private;
+    var $note_public;
     var $statut;
 
     var $projet;
@@ -181,17 +183,18 @@ class Don extends CommonObject
         $this->id=0;
         $this->ref = 'SPECIMEN';
         $this->specimen=1;
-        $this->nom = 'Doe';
-        $this->prenom = 'John';
+        $this->lastname = 'Doe';
+        $this->firstname = 'John';
         $this->socid = 1;
         $this->date = dol_now();
         $this->amount = 100;
         $this->public = 1;
         $this->societe = 'The Company';
-        $this->adresse = 'Twist road';
-        $this->cp = '99999';
-        $this->ville = 'Town';
-        $this->note_public='SPECIMEN';
+        $this->address = 'Twist road';
+        $this->zip = '99999';
+        $this->town = 'Town';
+        $this->note_private='Private note';
+        $this->note_public='Public note';
         $this->email='email@email.com';
         $this->note='';
         $this->statut=1;
@@ -199,45 +202,51 @@ class Don extends CommonObject
 
 
     /**
-     *	Check params
+     *	Check params and init ->errors array.
+     *  TODO This function seems to not be used by core code.
      *
      *	@param	int	$minimum	Minimum
      *	@return	int				0 if KO, >0 if OK
      */
     function check($minimum=0)
     {
+    	global $langs;
+    	$langs->load('main');
+    	$langs->load('companies');
+
+    	$error_string = array();
         $err = 0;
 
         if (dol_strlen(trim($this->societe)) == 0)
         {
-            if ((dol_strlen(trim($this->nom)) + dol_strlen(trim($this->prenom))) == 0)
+            if ((dol_strlen(trim($this->lastname)) + dol_strlen(trim($this->firstname))) == 0)
             {
-                $error_string[$err] = "Vous devez saisir vos nom et prenom ou le nom de votre societe.";
+                $error_string[] = $langs->trans('ErrorFieldRequired',$langs->trans('Company').'/'.$langs->trans('Firstname').'-'.$langs->trans('Lastname'));
                 $err++;
             }
         }
 
-        if (dol_strlen(trim($this->adresse)) == 0)
+        if (dol_strlen(trim($this->address)) == 0)
         {
-            $error_string[$err] = "L'adresse saisie est invalide";
+            $error_string[] = $langs->trans('ErrorFieldRequired',$langs->trans('Address'));
             $err++;
         }
 
-        if (dol_strlen(trim($this->cp)) == 0)
+        if (dol_strlen(trim($this->zip)) == 0)
         {
-            $error_string[$err] = "Le code postal saisi est invalide";
+            $error_string[] = $langs->trans('ErrorFieldRequired',$langs->trans('Zip'));
             $err++;
         }
 
-        if (dol_strlen(trim($this->ville)) == 0)
+        if (dol_strlen(trim($this->town)) == 0)
         {
-            $error_string[$err] = "La ville saisie est invalide";
+            $error_string[] = $langs->trans('ErrorFieldRequired',$langs->trans('Town'));
             $err++;
         }
 
         if (dol_strlen(trim($this->email)) == 0)
         {
-            $error_string[$err] = "L'email saisi est invalide";
+            $error_string[] = $langs->trans('ErrorFieldRequired',$langs->trans('EMail'));
             $err++;
         }
 
@@ -249,7 +258,7 @@ class Don extends CommonObject
         {
             if (!isset($map[substr($this->amount, $i, 1)] ))
             {
-                $error_string[$err] = "Le montant du don contient un/des caractere(s) invalide(s)";
+                $error_string[] = $langs->trans('ErrorFieldRequired',$langs->trans('Amount'));
                 $err++;
                 $amount_invalid = 1;
                 break;
@@ -260,14 +269,14 @@ class Don extends CommonObject
         {
             if ($this->amount == 0)
             {
-                $error_string[$err] = "Le montant du don est null";
+                $error_string[] = $langs->trans('ErrorFieldRequired',$langs->trans('Amount'));
                 $err++;
             }
             else
             {
                 if ($this->amount < $minimum && $minimum > 0)
                 {
-                    $error_string[$err] = "Le montant minimum du don est de $minimum";
+                    $error_string[] = $langs->trans('MinimumAmount',$langs->trans('$minimum'));
                     $err++;
                 }
             }
@@ -275,14 +284,13 @@ class Don extends CommonObject
 
         if ($err)
         {
-            $this->error = $error_string;
+            $this->errors = $error_string;
             return 0;
         }
         else
-        {
+		{
             return 1;
         }
-
     }
 
     /**
@@ -297,29 +305,32 @@ class Don extends CommonObject
         global $conf;
 
         // Clean parameters
-        $this->address=($this->address>0?$this->address:$this->adresse);
-        $this->zip=($this->zip>0?$this->zip:$this->cp);
-        $this->town=($this->town>0?$this->town:$this->ville);
-        $this->country_id=($this->country_id>0?$this->country_id:$this->fk_pays);
-        $this->country=($this->country?$this->country:$this->pays);
+        $this->address=($this->address>0?$this->address:$this->address);
+        $this->zip=($this->zip>0?$this->zip:$this->zip);
+        $this->town=($this->town>0?$this->town:$this->town);
+        $this->country_id=($this->country_id>0?$this->country_id:$this->country_id);
+        $this->country=($this->country?$this->country:$this->country);
 
         $now=dol_now();
+
+        $this->db->begin();
 
         $sql = "INSERT INTO ".MAIN_DB_PREFIX."don (";
         $sql.= "datec";
         $sql.= ", entity";
         $sql.= ", amount";
         $sql.= ", fk_paiement";
-        $sql.= ", prenom";
-        $sql.= ", nom";
+        $sql.= ", firstname";
+        $sql.= ", lastname";
         $sql.= ", societe";
-        $sql.= ", adresse";
-        $sql.= ", cp";
-        $sql.= ", ville";
-        $sql.= ", pays";
+        $sql.= ", address";
+        $sql.= ", zip";
+        $sql.= ", town";
+        $sql.= ", country";
         $sql.= ", public";
         $sql.= ", fk_don_projet";
-        $sql.= ", note";
+        $sql.= ", note_private";
+        $sql.= ", note_public";
         $sql.= ", fk_user_author";
         $sql.= ", fk_user_valid";
         $sql.= ", datedon";
@@ -331,16 +342,17 @@ class Don extends CommonObject
         $sql.= ", ".$conf->entity;
         $sql.= ", ".price2num($this->amount);
         $sql.= ", ".($this->modepaiementid?$this->modepaiementid:"null");
-        $sql.= ", '".$this->db->escape($this->prenom)."'";
-        $sql.= ", '".$this->db->escape($this->nom)."'";
+        $sql.= ", '".$this->db->escape($this->firstname)."'";
+        $sql.= ", '".$this->db->escape($this->lastname)."'";
         $sql.= ", '".$this->db->escape($this->societe)."'";
-        $sql.= ", '".$this->db->escape($this->adresse)."'";
+        $sql.= ", '".$this->db->escape($this->address)."'";
         $sql.= ", '".$this->db->escape($this->zip)."'";
         $sql.= ", '".$this->db->escape($this->town)."'";
         $sql.= ", '".$this->db->escape($this->country)."'"; // TODO use country_id
         $sql.= ", ".$this->public;
         $sql.= ", ".($this->fk_project > 0?$this->fk_project:"null");
-        $sql.= ", '".$this->db->escape($this->note)."'";
+       	$sql.= ", ".(!empty($this->note_private)?("'".$this->db->escape($this->note_private)."'"):"NULL");
+		$sql.= ", ".(!empty($this->note_public)?("'".$this->db->escape($this->note_public)."'"):"NULL");
         $sql.= ", ".$user->id;
         $sql.= ", null";
         $sql.= ", '".$this->db->idate($this->date)."'";
@@ -349,25 +361,23 @@ class Don extends CommonObject
         $sql.= ", '".$this->db->escape($this->phone_mobile)."'";
         $sql.= ")";
 
-        dol_syslog("Don::create sql=".$sql, LOG_DEBUG);
+        dol_syslog("Don::create", LOG_DEBUG);
         $result = $this->db->query($sql);
         if ($result)
         {
             $this->id = $this->db->last_insert_id(MAIN_DB_PREFIX."don");
 
-            // Appel des triggers
-            include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-            $interface=new Interfaces($this->db);
-            $result=$interface->run_triggers('DON_CREATE',$this,$user,$langs,$conf);
-            if ($result < 0) {
-                    $error++; $this->errors=$interface->errors;
-            }
-            // Fin appel triggers
+            // Call trigger
+            $result=$this->call_trigger('DON_CREATE',$user);
+            if ($result < 0) { $error++; $this->db->rollback(); return -1; }
+            // End call triggers
 
+            $this->db->commit();
             return $this->id;
         }
         else
         {
+            $this->db->rollback();
             dol_print_error($this->db);
             return -1;
         }
@@ -382,25 +392,28 @@ class Don extends CommonObject
     function update($user)
     {
         // Clean parameters
-        $this->address=($this->address>0?$this->address:$this->adresse);
-        $this->zip=($this->zip>0?$this->zip:$this->cp);
-        $this->town=($this->town>0?$this->town:$this->ville);
-        $this->country_id=($this->country_id>0?$this->country_id:$this->fk_pays);
-        $this->country=($this->country?$this->country:$this->pays);
+        $this->address=($this->address>0?$this->address:$this->address);
+        $this->zip=($this->zip>0?$this->zip:$this->zip);
+        $this->town=($this->town>0?$this->town:$this->town);
+        $this->country_id=($this->country_id>0?$this->country_id:$this->country_id);
+        $this->country=($this->country?$this->country:$this->country);
+
+        $this->db->begin();
 
         $sql = "UPDATE ".MAIN_DB_PREFIX."don SET ";
         $sql .= "amount = " . price2num($this->amount);
         $sql .= ",fk_paiement = ".($this->modepaiementid?$this->modepaiementid:"null");
-        $sql .= ",prenom = '".$this->db->escape($this->prenom)."'";
-        $sql .= ",nom='".$this->db->escape($this->nom)."'";
+        $sql .= ",firstname = '".$this->db->escape($this->firstname)."'";
+        $sql .= ",lastname='".$this->db->escape($this->lastname)."'";
         $sql .= ",societe='".$this->db->escape($this->societe)."'";
-        $sql .= ",adresse='".$this->db->escape($this->address)."'";
-        $sql .= ",cp='".$this->db->escape($this->zip)."'";
-        $sql .= ",ville='".$this->db->escape($this->town)."'";
-        $sql .= ",pays='".$this->db->escape($this->country)."'"; // TODO use country_id
+        $sql .= ",address='".$this->db->escape($this->address)."'";
+        $sql .= ",zip='".$this->db->escape($this->zip)."'";
+        $sql .= ",town='".$this->db->escape($this->town)."'";
+        $sql .= ",country='".$this->db->escape($this->country)."'"; // TODO use country_id
         $sql .= ",public=".$this->public;
         $sql .= ",fk_don_projet=".($this->fk_project>0?$this->fk_project:'null');
-        $sql .= ",note='".$this->db->escape($this->note)."'";
+        $sql .= ",note_private=".(!empty($this->note_private)?("'".$this->db->escape($this->note_private)."'"):"NULL");
+        $sql .= ",note_public=".(!empty($this->note_public)?("'".$this->db->escape($this->note_public)."'"):"NULL");
         $sql .= ",datedon='".$this->db->idate($this->date)."'";
         $sql .= ",email='".$this->email."'";
         $sql .= ",phone='".$this->phone."'";
@@ -408,14 +421,21 @@ class Don extends CommonObject
         $sql .= ",fk_statut=".$this->statut;
         $sql .= " WHERE rowid = $this->id";
 
-        dol_syslog("Don::update sql=".$sql);
+        dol_syslog("Don::update", LOG_DEBUG);
         $result = $this->db->query($sql);
         if ($result)
         {
+            // Call trigger
+            $result=$this->call_trigger('DON_UPDATE',$user);
+            if ($result < 0) { $error++; $this->db->rollback(); return -1; }
+            // End call triggers
+
+            $this->db->commit();
             return 1;
         }
         else
         {
+            $this->db->rollback();
             dol_print_error($this->db);
             return -1;
         }
@@ -429,18 +449,28 @@ class Don extends CommonObject
      */
     function delete($rowid)
     {
+		global $user;
+		
+        $this->db->begin();
 
-        $sql = "DELETE FROM ".MAIN_DB_PREFIX."don WHERE rowid = $rowid AND fk_statut = 0;";
+        $sql = "DELETE FROM ".MAIN_DB_PREFIX."don WHERE rowid = $rowid AND fk_statut = 0 OR fk_statut = -1";
 
         $resql=$this->db->query($sql);
         if ($resql)
         {
             if ( $this->db->affected_rows($resql) )
             {
+                // Call trigger
+                $result=$this->call_trigger('DON_DELETE',$user);
+                if ($result < 0) { $error++; $this->db->rollback(); return -1; }
+                // End call triggers
+
+                $this->db->commit();
                 return 1;
             }
             else
             {
+                $this->db->rollback();
                 return -1;
             }
         }
@@ -463,14 +493,16 @@ class Don extends CommonObject
         global $conf;
 
         $sql = "SELECT d.rowid, d.datec, d.tms as datem, d.datedon,";
-        $sql.= " d.prenom, d.nom, d.societe, d.amount, d.fk_statut, d.adresse, d.cp, d.ville, d.pays, d.public, d.amount, d.fk_paiement, d.note, cp.libelle, d.email, d.phone, d.phone_mobile, d.fk_don_projet,";
+        $sql.= " d.firstname, d.lastname, d.societe, d.amount, d.fk_statut, d.address, d.zip, d.town, ";
+        $sql.= " 	d.country, d.public, d.amount, d.fk_paiement, d.note_private, d.note_public, cp.libelle, d.email, d.phone, ";
+        $sql.= " 	d.phone_mobile, d.fk_don_projet,";
         $sql.= " p.title as project_label";
         $sql.= " FROM ".MAIN_DB_PREFIX."don as d";
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON p.rowid = d.fk_don_projet";
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_paiement as cp ON cp.id = d.fk_paiement";
         $sql.= " WHERE d.rowid = ".$rowid." AND d.entity = ".$conf->entity;
 
-        dol_syslog(get_class($this)."::fetch sql=".$sql);
+        dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -483,26 +515,26 @@ class Don extends CommonObject
                 $this->datec          = $this->db->jdate($obj->datec);
                 $this->datem          = $this->db->jdate($obj->datem);
                 $this->date           = $this->db->jdate($obj->datedon);
-                $this->prenom         = $obj->prenom;
-                $this->nom            = $obj->nom;
+                $this->firstname      = $obj->firstname;
+                $this->lastname       = $obj->lastname;
                 $this->societe        = $obj->societe;
                 $this->statut         = $obj->fk_statut;
-                $this->adresse        = $obj->adresse;
-                $this->cp             = $obj->cp;
-                $this->ville          = $obj->ville;
-                $this->zip            = $obj->cp;
-                $this->town           = $obj->ville;
+                $this->address        = $obj->address;
+                $this->town           = $obj->town;
+                $this->zip            = $obj->zip;
+                $this->town           = $obj->town;
+                $this->country        = $obj->country;
                 $this->email          = $obj->email;
                 $this->phone          = $obj->phone;
                 $this->phone_mobile   = $obj->phone_mobile;
-                $this->pays           = $obj->pays;
                 $this->projet         = $obj->project_label;
                 $this->fk_project     = $obj->fk_don_projet;
                 $this->public         = $obj->public;
                 $this->modepaiementid = $obj->fk_paiement;
                 $this->modepaiement   = $obj->libelle;
                 $this->amount         = $obj->amount;
-                $this->note			  = $obj->note;
+                $this->note_private	  = $obj->note_private;
+                $this->note_public	  = $obj->note_public;
                 $this->commentaire    = $obj->note;	// deprecated
             }
             return 1;
@@ -527,7 +559,6 @@ class Don extends CommonObject
 
         $sql = "UPDATE ".MAIN_DB_PREFIX."don SET fk_statut = 1, fk_user_valid = $userid WHERE rowid = $rowid AND fk_statut = 0";
 
-        dol_syslog("sql=".$sql);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -563,7 +594,6 @@ class Don extends CommonObject
         }
         $sql .=  " WHERE rowid = $rowid AND fk_statut = 1";
 
-        dol_syslog("sql=".$sql);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -595,7 +625,6 @@ class Don extends CommonObject
 
         $sql = "UPDATE ".MAIN_DB_PREFIX."don SET fk_statut = 3 WHERE rowid = $rowid AND fk_statut = 2";
 
-        dol_syslog("sql=".$sql);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -625,7 +654,6 @@ class Don extends CommonObject
     {
         $sql = "UPDATE ".MAIN_DB_PREFIX."don SET fk_statut = -1 WHERE rowid = ".$rowid;
 
-        dol_syslog("sql=".$sql);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -685,7 +713,7 @@ class Don extends CommonObject
 
         $result='';
 
-        $lien = '<a href="'.DOL_URL_ROOT.'/compta/dons/fiche.php?rowid='.$this->id.'">';
+        $lien = '<a href="'.DOL_URL_ROOT.'/compta/dons/card.php?rowid='.$this->id.'">';
         $lienfin='</a>';
 
         $picto='generic';
@@ -699,4 +727,3 @@ class Don extends CommonObject
     }
 
 }
-?>

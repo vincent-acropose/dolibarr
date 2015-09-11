@@ -1,13 +1,4 @@
-/*
- * Language code: bg_BG
- * Automatic generated via autotranslator.php tool
- * Generation date 2012-09-08 17:16:45
- */
-
-
-// START - Lines generated via autotranslator.php tool (2012-09-08 17:16:45).
-// Reference language: en_US -> bg_BG
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - orders
 OrdersArea=Клиентите поръчки площ
 SuppliersOrdersArea=Доставчици поръчки площ
 OrderCard=Поръчка карта
@@ -25,22 +16,23 @@ SupplierOrder=Доставчик за
 SuppliersOrders=Доставчик поръчки
 SuppliersOrdersRunning=Доставчика за поръчки
 CustomerOrder=Клиента заявка
-CustomersOrders=Нареждания на клиента
+CustomersOrders=Customers orders
 CustomersOrdersRunning=На клиента за поръчки
 CustomersOrdersAndOrdersLines=Клиентските поръчки и реда линии
-OrdersToValid=Нареждания на клиента за валидация
-OrdersToBill=Клиентски поръчки доставени
-OrdersInProcess=Нареждания на клиенти в процес
-OrdersToProcess=Нареждания на клиента, за да обработват
+OrdersToValid=Customers orders to validate
+OrdersToBill=Customers orders delivered
+OrdersInProcess=Customers orders in process
+OrdersToProcess=Customers orders to process
 SuppliersOrdersToProcess=Доставчик нареждания за обработка на
 StatusOrderCanceledShort=Отменен
 StatusOrderDraftShort=Проект
 StatusOrderValidatedShort=Утвърден
 StatusOrderSentShort=В процес
 StatusOrderSent=Транспортиране в процес
-StatusOrderOnProcessShort=Прием
+StatusOrderOnProcessShort=Ordered
 StatusOrderProcessedShort=Обработен
 StatusOrderToBillShort=Доставени
+StatusOrderToBill2Short=На Бил
 StatusOrderApprovedShort=Одобрен
 StatusOrderRefusedShort=Отказ
 StatusOrderToProcessShort=За да обработвате
@@ -49,45 +41,55 @@ StatusOrderReceivedAllShort=Всичко получи
 StatusOrderCanceled=Отменен
 StatusOrderDraft=Проект (трябва да бъдат валидирани)
 StatusOrderValidated=Утвърден
-StatusOrderOnProcess=Очаквам да получа
+StatusOrderOnProcess=Ordered - Standby reception
+StatusOrderOnProcessWithValidation=Ordered - Standby reception or validation
 StatusOrderProcessed=Обработен
 StatusOrderToBill=Доставени
+StatusOrderToBill2=На Бил
 StatusOrderApproved=Одобрен
 StatusOrderRefused=Отказ
 StatusOrderReceivedPartially=Частично получено
 StatusOrderReceivedAll=Всичко получи
 ShippingExist=Пратка съществува
+ProductQtyInDraft=Product quantity into draft orders
+ProductQtyInDraftOrWaitingApproved=Product quantity into draft or approved orders, not yet ordered
 DraftOrWaitingApproved=Проект или одобрен, все още не е осъден
 DraftOrWaitingShipped=Проект или потвърдено все още не са изпратени
 MenuOrdersToBill=Доставени поръчки
+MenuOrdersToBill2=Billable orders
 SearchOrder=Търсене за
-Sending=Изпращане
-Sendings=Sendings
+SearchACustomerOrder=Search a customer order
+SearchASupplierOrder=Search a supplier order
 ShipProduct=Кораб продукт
 Discount=Отстъпка
 CreateOrder=Създаване на поръчка
 RefuseOrder=Спецконтейнери за
-ApproveOrder=Приемам за
+ApproveOrder=Approve order
+Approve2Order=Approve order (second level)
 ValidateOrder=Валидиране за
 UnvalidateOrder=Unvalidate за
 DeleteOrder=Изтрий заявка
 CancelOrder=Отказ за
-AddOrder=Добави за
+AddOrder=Create order
 AddToMyOrders=Добави към моите заповеди
 AddToOtherOrders=Добави към други поръчки
+AddToDraftOrders=Add to draft order
 ShowOrder=Покажи за
 NoOpenedOrders=Не са открити поръчки
-NoOtherOpenedOrders=Никой друг отвори поръчки
+NoOtherOpenedOrders=Няма други поръчки
+NoDraftOrders=No draft orders
 OtherOrders=Други поръчки
-LastOrders=Последни поръчки %s
-LastModifiedOrders=Последно %s промяна поръчки
-LastClosedOrders=Последно %s затворен поръчки
+LastOrders=Last %s customer orders
+LastCustomerOrders=Last %s customer orders
+LastSupplierOrders=Last %s supplier orders
+LastModifiedOrders=Последните %s променени поръчки
+LastClosedOrders=Последните %s затворени поръчки
 AllOrders=Всички поръчки
 NbOfOrders=Брой на поръчките
 OrdersStatistics=Поръчка статистически данни
 OrdersStatisticsSuppliers=Доставчик реда статистика
 NumberOfOrdersByMonth=Брой на поръчки по месец
-AmountOfOrdersByMonthHT=размер на нареждания от месец (нетно от данъци)
+AmountOfOrdersByMonthHT=Amount of orders by month (net of tax)
 ListOfOrders=Списък на поръчките
 CloseOrder=Затвори за
 ConfirmCloseOrder=Сигурен ли сте, че искате да затворите този ред? След заповед е затворена, тя може само да бъдат таксувани.
@@ -103,10 +105,11 @@ ClassifyBilled=Класифицирайте таксувани
 ComptaCard=Счетоводството карта
 DraftOrders=Проект за поръчки
 RelatedOrders=Подобни поръчки
+RelatedCustomerOrders=Related customer orders
+RelatedSupplierOrders=Related supplier orders
 OnProcessOrders=В процес поръчки
 RefOrder=Реф. ред
 RefCustomerOrder=Реф. поръчка на клиента
-CustomerOrder=Клиента заявка
 RefCustomerOrderShort=Реф. Клиент. ред
 SendOrderByMail=Изпратете поръчка по пощата
 ActionsOnOrder=Събития по поръчка
@@ -120,6 +123,8 @@ PaymentOrderRef=Плащане на поръчката %s
 CloneOrder=Clone за
 ConfirmCloneOrder=Сигурен ли сте, че искате да клонирате за този <b>%s?</b>
 DispatchSupplierOrder=Получаване %s доставчика ред
+FirstApprovalAlreadyDone=First approval already done
+##### Types de contacts #####
 TypeContact_commande_internal_SALESREPFOLL=Представител проследяване поръчка на клиента
 TypeContact_commande_internal_SHIPPING=Представител проследяване доставка
 TypeContact_commande_external_BILLING=Контакта с клиентите фактура
@@ -130,11 +135,13 @@ TypeContact_order_supplier_internal_SHIPPING=Представител просл
 TypeContact_order_supplier_external_BILLING=Свържи се с доставчика фактура
 TypeContact_order_supplier_external_SHIPPING=Свържи се с доставчика корабоплаване
 TypeContact_order_supplier_external_CUSTOMER=Доставчик следното заповед за
+
 Error_COMMANDE_SUPPLIER_ADDON_NotDefined=Постоянно COMMANDE_SUPPLIER_ADDON не е определен
 Error_COMMANDE_ADDON_NotDefined=Постоянно COMMANDE_ADDON не е определен
 Error_FailedToLoad_COMMANDE_SUPPLIER_ADDON_File=Неуспешно зареждане на файл-модул, &quot;%s&quot;
 Error_FailedToLoad_COMMANDE_ADDON_File=Неуспешно зареждане на файл-модул, &quot;%s&quot;
 Error_OrderNotChecked=Няма поръчки на избрани фактура
+# Sources
 OrderSource0=Търговско предложение
 OrderSource1=Интернет
 OrderSource2=Mail кампания
@@ -144,11 +151,22 @@ OrderSource5=Търговски
 OrderSource6=Съхранявайте
 QtyOrdered=Количество нареди
 AddDeliveryCostLine=Добавяне на линия за цена за доставка се посочва теглото на поръчката
+# Documents models
 PDFEinsteinDescription=Цялостен модел за (logo. ..)
 PDFEdisonDescription=Прост модел за
+PDFProformaDescription=A complete proforma invoice (logo…)
+# Orders modes
 OrderByMail=Поща
 OrderByFax=Факс
-OrderByEMail=EMail
+OrderByEMail=Имейл
 OrderByWWW=Online
 OrderByPhone=Телефон
-// STOP - Lines generated via autotranslator.php tool (2012-09-08 17:19:34).
+CreateInvoiceForThisCustomer=Bill orders
+NoOrdersToInvoice=No orders billable
+CloseProcessedOrdersAutomatically=Classify "Processed" all selected orders.
+OrderCreation=Order creation
+Ordered=Ordered
+OrderCreated=Your orders have been created
+OrderFail=An error happened during your orders creation
+CreateOrders=Create orders
+ToBillSeveralOrderSelectCustomer=To create an invoice for several orders, click first onto customer, then choose "%s".

@@ -44,6 +44,8 @@ $year = strftime("%Y", time());
 $startyear=$year-2;
 $endyear=$year;
 
+$langs->load("members");
+$langs->load("companies");
 
 
 /*
@@ -72,7 +74,7 @@ $sql.=" GROUP BY d.morphy";
 $foundphy=$foundmor=0;
 
 // Define $data array
-dol_syslog("Count member sql=".$sql);
+dol_syslog("Count member", LOG_DEBUG);
 $resql=$db->query($sql);
 if ($resql)
 {
@@ -147,4 +149,3 @@ dol_fiche_end();
 llxFooter();
 
 $db->close();
-?>

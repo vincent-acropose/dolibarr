@@ -1,19 +1,25 @@
-/*
- * Language code: fa_IR
- * Automatic generated via autotranslator.php tool
- * Generation date 2011-10-10 02:45:33
- */
-
-
-// START - Lines generated via autotranslator.php tool (2011-10-10 02:45:33).
-// Reference language: en_US -> fa_IR
-CHARSET=UTF-8
-PaypalSetup=پی پال نصب ماژول
-PaypalDesc=این ماژول صفحات پیشنهاد پرداخت در <a href="http://www.paypal.com" target="_blank">پی پال</a> توسط مشتریان اجازه می دهد. این را می توان برای پرداخت رایگان یا پرداخت بر روی یک شیء خاص Dolibarr استفاده می شود (فاکتور ، سفارش ،...)
+# Dolibarr language file - Source file is en_US - paypal
+PaypalSetup=راه اندازی ماژول پی پال
+PaypalDesc=این ماژول صفحات پیشنهاد به اجازه پرداخت <a href="http://www.paypal.com" target="_blank">پی پال</a> توسط مشتریان. این می تواند برای پرداخت رایگان و پرداخت در یک شیء خاص Dolibarr استفاده می شود (فاکتور، سفارش، ...)
 PaypalOrCBDoPayment=پرداخت با کارت اعتباری یا پی پال
-PAYPAL_API_INTEGRAL_OR_PAYPALONLY=پیشنهاد &quot;انتگرال&quot; پرداخت (اعتباری کارت + پی پال) و یا &quot;پی پال&quot; تنها
-PAYPAL_CSS_URL=آدرس کلیپ Optionnal شیوه نامه CSS در صفحه پرداخت
-ThisIsTransactionId=<b>%s</b> : این شناسه (شماره) معامله
-PAYPAL_ADD_PAYMENT_URL=اضافه کردن آدرس از پرداخت پی پال زمانی که شما از طریق پست ارسال یک سند
-PAYPAL_IPN_MAIL_ADDRESS=آدرس پست الکترونیکی برای آگاه شدن از طریق از طریق مسنجر پرداخت (IPN)
-// STOP - Lines generated via autotranslator.php tool (2011-10-10 10:44:06).
+PaypalDoPayment=پرداخت با پی پال
+PaypalCBDoPayment=پرداخت با کارت اعتباری
+PAYPAL_API_SANDBOX=تست حالت / گودال ماسهبازی
+PAYPAL_API_USER=نام کاربری API
+PAYPAL_API_PASSWORD=رمز عبور API
+PAYPAL_API_SIGNATURE=امضا API
+PAYPAL_API_INTEGRAL_OR_PAYPALONLY=ارائه پرداخت "جدایی ناپذیر" (کارت اعتباری + پی پال) و یا "پی پال" تنها
+PaypalModeIntegral=انتگرال
+PaypalModeOnlyPaypal=پی پال تنها
+PAYPAL_CSS_URL=آدرس Optionnal از سبک CSS ورق در صفحه پرداخت
+ThisIsTransactionId=این شناسه از معامله <b>است:%s</b>
+PAYPAL_ADD_PAYMENT_URL=اضافه کردن آدرس از پرداخت پی پال زمانی که شما یک سند ارسال از طریق پست
+PAYPAL_IPN_MAIL_ADDRESS=آدرس پست الکترونیکی برای اطلاع رسانی فوری پرداخت (IPN)
+PredefinedMailContentLink=شما می توانید بر روی لینک زیر کلیک کنید امن به پرداخت خود را (پی پال) اگر آن را در حال حاضر انجام می شود. از%s
+YouAreCurrentlyInSandboxMode=شما در حال حاضر در "گودال ماسهبازی" حالت
+NewPaypalPaymentReceived=پرداخت پی پال جدید دریافت
+NewPaypalPaymentFailed=پرداخت جدید پی پال تلاش کردند اما موفق
+PAYPAL_PAYONLINE_SENDEMAIL=ایمیل پس از پرداخت برای هشدار دادن به (موفقیت یا نه)
+ReturnURLAfterPayment=URL بازگشت پس از پرداخت
+ValidationOfPaypalPaymentFailed=اعتبار سنجی پرداخت پی پال شکست خورده
+PaypalConfirmPaymentPageWasCalledButFailed=صفحه تایید پرداخت پی پال توسط پی پال نامیده می شد اما به تایید شکست خورده

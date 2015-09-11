@@ -1,19 +1,11 @@
-﻿/*
- * Language code: tr_TR
- * Manually generated
- * Generation date 2012-07-07 21:26:26
- */
-
-
-// START - Lines manually generated (2012-07-07 21:26:26).
-// Reference language: en_US -> TR - orders
-CHARSET=UTF-8
-OrdersArea=Müşteri siparişleri alan
-SuppliersOrdersArea=Tedarikçi siparişleri alan
+# Dolibarr language file - Source file is en_US - orders
+OrdersArea=Müşteri siparişleri alanı
+SuppliersOrdersArea=Tedarikçi siparişleri alanı
 OrderCard=Sipariş kartı
+OrderId=Sipariş Id
 Order=Sipariş
 Orders=Siparişler
-OrderLine=Sipariş satırı
+OrderLine=Sipariş kalemi
 OrderFollow=İzleme
 OrderDate=Sipariş Tarihi
 OrderToProcess=İşlenecek sipariş
@@ -21,14 +13,14 @@ NewOrder=Yeni sipariş
 ToOrder=Sipariş yap
 MakeOrder=Sipariş yap
 SupplierOrder=Tedarikçi siparişi
-SuppliersOrders=Tedarikçilerin siparişleri
-SuppliersOrdersRunning=Mevcut tedarikçilerin siparişleri
+SuppliersOrders=Tedarikçi siparişleri
+SuppliersOrdersRunning=Mevcut tedarikçi siparişleri
 CustomerOrder=Müşteri siparişi
-CustomersOrders=Müşterilerin siparişleri
-CustomersOrdersRunning=Mevcut müşterilerin siparişleri
-CustomersOrdersAndOrdersLines=Müşteri siparişleri ve sipariş satırları
+CustomersOrders=Müşteri siparişleri
+CustomersOrdersRunning=Mevcut müşteri siparişleri
+CustomersOrdersAndOrdersLines=Müşteri siparişleri ve sipariş kalemleri
 OrdersToValid=Doğrulanacak müşteri siparişleri
-OrdersToBill=Faturalanacak müşteri siparişleri
+OrdersToBill=Sevkedilen müşteri siparişleri
 OrdersInProcess=İşlemde olan müşteri siparişleri
 OrdersToProcess=İşlenecek müşteri siparişleri
 SuppliersOrdersToProcess=İşlenecek tedarikçi siparişleri
@@ -37,10 +29,11 @@ StatusOrderDraftShort=Taslak
 StatusOrderValidatedShort=Doğrulanmış
 StatusOrderSentShort=İşlemde
 StatusOrderSent=Sevkiyat işlemde
-StatusOrderOnProcessShort=Kabul
+StatusOrderOnProcessShort=Sipariş edildi
 StatusOrderProcessedShort=İşlenmiş
-StatusOrderToBillShort=Faturalanacak
-StatusOrderApprovedShort=Onaylanmış
+StatusOrderToBillShort=Teslim edlidi
+StatusOrderToBill2Short=Faturalanacak
+StatusOrderApprovedShort=Onaylı
 StatusOrderRefusedShort=Reddedildi
 StatusOrderToProcessShort=İşlenecek
 StatusOrderReceivedPartiallyShort=Kısmen aldı
@@ -48,37 +41,47 @@ StatusOrderReceivedAllShort=Herşey alındı
 StatusOrderCanceled=İptal edilmiş
 StatusOrderDraft=Taslak (doğrulanması gerekir)
 StatusOrderValidated=Doğrulanmış
-StatusOrderOnProcess=Alınmak için bekliyor
+StatusOrderOnProcess=Sipariş edildi - Teslime hazır
+StatusOrderOnProcessWithValidation=Sipariş edildi - Kabul ya da doğrulama için beklemede
 StatusOrderProcessed=İşlenmiş
-StatusOrderToBill=Faturalanacak
-StatusOrderApproved=Onaylanmış
+StatusOrderToBill=Teslim edildi
+StatusOrderToBill2=Faturalanacak
+StatusOrderApproved=Onaylı
 StatusOrderRefused=Reddedildi
 StatusOrderReceivedPartially=Kısmen alındı
 StatusOrderReceivedAll=Her şey kabul edildi
 ShippingExist=Bir sevkiyat var
-DraftOrWaitingApproved=Taslak veya onaylanmış henüz sipariş verilmemiş 
+ProductQtyInDraft=Taslak siparişlerdeki ürün miktarı
+ProductQtyInDraftOrWaitingApproved=Henüz sipariş edilmemiş, taslak veya onaylı siparişlerdeki ürün miktarı
+DraftOrWaitingApproved=Taslak veya onaylanmış henüz sipariş verilmemiş
 DraftOrWaitingShipped=Taslak veya onaylanmış henüz sevkedilmemiş
-MenuOrdersToBill=Faturalanacak siparişler
+MenuOrdersToBill=Teslim edilen siparişler
+MenuOrdersToBill2=Faturalanabilir siparişler
 SearchOrder=Sipariş ara
-Sending=Gönderme
-Sendings=Gönderimler
+SearchACustomerOrder=Müşteri siparişi ara
+SearchASupplierOrder=Bir tedarikçi siparişi ara
 ShipProduct=Ürünü sevket
 Discount=İndirim
 CreateOrder=Sipariş oluştur
 RefuseOrder=Siparişi reddet
-ApproveOrder=Sipariş kabul et
+ApproveOrder=Sipariş onayla
+Approve2Order=Sipariş onayla (ikinci seviye)
 ValidateOrder=Doğrulamak amacıyla
 UnvalidateOrder=Siparişten doğrulamayı kaldır
 DeleteOrder=Sipariş sil
 CancelOrder=Siparişi iptal et
-AddOrder=Sipariş ekle
+AddOrder=Sipariş oluştur
 AddToMyOrders=Siparişlerime ekle
 AddToOtherOrders=Diğer siparişlere ekle
+AddToDraftOrders=Taslak siparişe ekle
 ShowOrder=Siparişi göster
 NoOpenedOrders=Açık sipariş yok
 NoOtherOpenedOrders=Başka açık sipariş yok
+NoDraftOrders=Taslak sipariş yok
 OtherOrders=Diğer siparişler
-LastOrders=Son %s sipariş
+LastOrders=Son %s müşteri siparişi
+LastCustomerOrders=Son %s müşteri siparişi
+LastSupplierOrders=Son %s tedarikçi siparişi
 LastModifiedOrders=Değiştirilen son %s sipariş
 LastClosedOrders=Kapatılan son %s sipariş
 AllOrders=Bütün siparişler
@@ -86,7 +89,7 @@ NbOfOrders=Sipariş sayısı
 OrdersStatistics=Sipariş istatistikleri
 OrdersStatisticsSuppliers=Tedarikçi siparişleri istatistikleri
 NumberOfOrdersByMonth=Aylık sipariş sayısı
-AmountOfOrdersByMonthHT=Aya göre sipariş tutarı (KDV yok)
+AmountOfOrdersByMonthHT=Aylık sipariş tutarı (vergisiz net)
 ListOfOrders=Sipariş listesi
 CloseOrder=Siparişi kapat
 ConfirmCloseOrder=Bu siparişi kapatmak istediğinizden emin misiniz? Sipariş birkez kapatılırsa, yalnızca fatura edilebilir.
@@ -97,17 +100,19 @@ ConfirmUnvalidateOrder=<b>%s</b> siparişini taslak durumuna geri almak istediğ
 ConfirmCancelOrder=Bu siparişi iptal etmek istediğinizden emin misiniz?
 ConfirmMakeOrder=Bu siparişi <b>%s</b> üzerine yaptığınızı onaylamak istediğinizden emin misiniz?
 GenerateBill=Fatura oluştur
-ClassifyBilled="Faturalandı" olarak sınıflandır
+ClassifyShipped=Teslim edildi sınıflandır
+ClassifyBilled=Faturalı olarak sınıflandır
 ComptaCard=Muhasebe kartı
-DraftOrders=Taslak sipariş
+DraftOrders=Taslak siparişler
 RelatedOrders=İlgili siparişler
+RelatedCustomerOrders=İlgili müşteri siparişi
+RelatedSupplierOrders=İlgili tedarikçi siparişi
 OnProcessOrders=İşlemdeki siparişler
 RefOrder=Sipariş ref.
 RefCustomerOrder=Müşteri sipariş ref.
-CustomerOrder=Müşteri siparişi
 RefCustomerOrderShort=Müşt. Sipariş ref.
 SendOrderByMail=Siparişi postayla gönder
-ActionsOnOrder=Sipariş eylemleri
+ActionsOnOrder=Sipariş etkinlikleri
 NoArticleOfTypeProduct='ürün' türünde herhangi bir madde olmadığından bu sipariş için sevkedilebilir madde yok
 OrderMode=Sipariş yöntemi
 AuthorRequest=Siparişi yazan
@@ -118,7 +123,8 @@ PaymentOrderRef=Sipariş %s ödemesi
 CloneOrder=Siparişi klonla
 ConfirmCloneOrder=Bu <b>%s</b> siparişi klonlamak istediğinizden emin misiniz?
 DispatchSupplierOrder=%s tedarikçi siparişini al
-##### Kişi türleri #####
+FirstApprovalAlreadyDone=İlk onay zaten yapılmış
+##### Types de contacts #####
 TypeContact_commande_internal_SALESREPFOLL=Müşteri siparişi izleme temsilcisi
 TypeContact_commande_internal_SHIPPING=Sevkiyat izleme temsilcisi
 TypeContact_commande_external_BILLING=Müşteri fatura yetkilisi
@@ -134,24 +140,33 @@ Error_COMMANDE_SUPPLIER_ADDON_NotDefined=COMMANDE_SUPPLIER_ADDON değişmezi tan
 Error_COMMANDE_ADDON_NotDefined=Sabit COMMANDE_ADDON tanımlanmamış
 Error_FailedToLoad_COMMANDE_SUPPLIER_ADDON_File=Modül dosyası %s yüklenemedi
 Error_FailedToLoad_COMMANDE_ADDON_File=Modül dosyası %s yüklenemedi
-
-# Kaynaklar
-OrderSource0=Ticari teklif
+Error_OrderNotChecked=Faturalanacak seçilmiş sipariş yok
+# Sources
+OrderSource0=Teklif
 OrderSource1=Internet
 OrderSource2=Posta kampanyası
 OrderSource3=Telefon kampanyası
 OrderSource4=Faks kampanyası
-OrderSource5=Reklam
+OrderSource5=Ticaret
 OrderSource6=Mağaza
 QtyOrdered=Sipariş miktarı
 AddDeliveryCostLine=Siparişin ağırlığını belirten bir teslimat satırı ekleyin
-
-# Belge modelleri
+# Documents models
 PDFEinsteinDescription=Bir tam sipariş modeli (logo. ..)
 PDFEdisonDescription=Basit bir sipariş modeli
-# Sipariş biçimleri
+PDFProformaDescription=Eksiksiz bir proforma fatura (logo...)
+# Orders modes
 OrderByMail=Posta
 OrderByFax=Faks
 OrderByEMail=Eposta
 OrderByWWW=Çevrimiçi
 OrderByPhone=Telefon
+CreateInvoiceForThisCustomer=Sipariş Faturala
+NoOrdersToInvoice=Faturalanabilir sipariş yok
+CloseProcessedOrdersAutomatically=Seçilen tüm siparişleri "İşlendi" olarak sınıflandır.
+OrderCreation=Sipariş oluşturma
+Ordered=Sipariş verildi
+OrderCreated=Siparişleriniz oluşturulmuştur
+OrderFail=Siparişiniz oluşturulması sırasında hata oluştu
+CreateOrders=Sipariş oluştur
+ToBillSeveralOrderSelectCustomer=Birden çok siparişe fatura oluşturmak için, önce müşteriye tıkla, sonra "%s" seç
