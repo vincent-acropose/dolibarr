@@ -194,7 +194,7 @@ class RssParser
         }
 
         $this->_urlRSS = $urlRSS;
-        $newpathofdestfile=$cachedir.'/'.dol_hash($this->_urlRSS);
+        $newpathofdestfile=$cachedir.'/'.dol_hash($this->_urlRSS,3);	// Force md5 hash (does not contains special chars)
         $newmask='0644';
 
         //dol_syslog("RssPArser::parser parse url=".$urlRSS." => cache file=".$newpathofdestfile);
@@ -400,7 +400,7 @@ class RssParser
                     {
                         if (! empty($conf->global->EXTERNALRSS_USE_SIMPLEXML))
                         {
-                            $itemLink = (string) $item['link']['href'];
+                            $itemLink = (isset($item['link']['href']) ? (string) $item['link']['href'] : '');
                             $itemTitle = (string) $item['title'];
                             $itemDescription = (string) $item['summary'];
                             $itemPubDate = (string) $item['created'];
@@ -409,7 +409,7 @@ class RssParser
                         }
                         else
                         {
-                            $itemLink = (string) $item['link']['href'];
+                            $itemLink = (isset($item['link']['href']) ? (string) $item['link']['href'] : '');
                             $itemTitle = (string) $item['title'];
                             $itemDescription = (string) $item['summary'];
                             $itemPubDate = (string) $item['created'];
@@ -550,7 +550,7 @@ class RssParser
         //
         elseif ($this->_format == 'atom' and $el == 'link' )
         {
-            if ( isset($attrs['rel']) and $attrs['rel'] == 'alternate' )
+            if ( isset($attrs['rel']) && $attrs['rel'] == 'alternate' )
             {
                 $link_el = 'link';
             }

@@ -1,6 +1,6 @@
 <?php
-/* Copyright (C) 2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2009 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2006      Rodolphe Quiedeville <rodolphe@quiedeville.org>
+ * Copyright (C) 2009-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,16 +76,17 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 	}
 
 	/**
-	 *	Fonction generant le rapport sur le disque
+	 *	Fonction to generate document on disk
 	 *
-	 *	@param	string		$_dir			Directory
-	 *	@param	string		$number			Number
-	 *	@param	Translate	$outputlangs	Lang output object
-     *	@return	int     					1=ok, 0=ko
+	 *	@param	RemiseCheque	$object			Object RemiseCheque			
+	 *	@param	string			$_dir			Directory
+	 *	@param	string			$number			Number
+	 *	@param	Translate		$outputlangs	Lang output object
+     *	@return	int     						1=ok, 0=ko
 	 */
-	function write_file($_dir, $number, $outputlangs)
+	function write_file($object, $_dir, $number, $outputlangs)
 	{
-		global $user,$conf,$langs;
+		global $user,$conf,$langs,$hookmanager;
 
         if (! is_object($outputlangs)) $outputlangs=$langs;
         // For backward compatibility with FPDF, force output charset to ISO, because FPDF expect text to be encoded in ISO
@@ -98,7 +99,7 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 		$outputlangs->load("products");
         $outputlangs->load("compta");
 
-		$dir = $_dir . "/".get_exdir($number,2,1).$number;
+		$dir = $_dir . "/".get_exdir($number,0,1,0,$object,'cheque').$number;
 
 		if (! is_dir($dir))
 		{
@@ -111,7 +112,18 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 			}
 		}
 
-		$_file = $dir . "/bordereau-".$number.".pdf";
+		$file = $dir . "/bordereau-".$number.".pdf";
+
+		// Add pdfgeneration hook
+		if (! is_object($hookmanager))
+		{
+			include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
+			$hookmanager=new HookManager($this->db);
+		}
+		$hookmanager->initHooks(array('pdfgeneration'));
+		$parameters=array('file'=>$file, 'outputlangs'=>$outputlangs);
+		global $action;
+		$reshook=$hookmanager->executeHooks('beforePDFCreation',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 
 		// Create PDF instance
         $pdf=pdf_getInstance($this->format);
@@ -141,6 +153,7 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 		$pdf->SetMargins($this->marge_gauche, $this->marge_haute, $this->marge_droite);   // Left, Top, Right
 
 		$nboflines=count($this->lines);
+
 		// Define nb of page
 		$pages = intval($nboflines / $this->line_per_page);
 		if (($nboflines % $this->line_per_page)>0)
@@ -165,9 +178,21 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 
 		$pdf->Close();
 
-		$pdf->Output($_file,'F');
+		$pdf->Output($file,'F');
+
+		// Add pdfgeneration hook
+		if (! is_object($hookmanager))
+		{
+			include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
+			$hookmanager=new HookManager($this->db);
+		}
+		$hookmanager->initHooks(array('pdfgeneration'));
+		$parameters=array('file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs);
+		global $action;
+		$reshook=$hookmanager->executeHooks('afterPDFCreation',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
+
 		if (! empty($conf->global->MAIN_UMASK))
-			@chmod($_file, octdec($conf->global->MAIN_UMASK));
+			@chmod($file, octdec($conf->global->MAIN_UMASK));
 
         $outputlangs->charset_output=$sav_charset_output;
 	    return 1;   // Pas d'erreur
@@ -352,7 +377,8 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 		global $conf;
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
 
-		//return pdf_pagefoot($pdf,$outputlangs,'BANK_CHEQUERECEIPT_FREE_TEXT',$this->emetteur,$this->marge_basse,$this->marge_gauche,$this->page_hauteur,$object);
+		//$showdetails=0;
+		//return pdf_pagefoot($pdf,$outputlangs,'BANK_CHEQUERECEIPT_FREE_TEXT',$this->emetteur,$this->marge_basse,$this->marge_gauche,$this->page_hauteur,$object,$showdetails,$hidefreetext);
 		$paramfreetext='BANK_CHEQUERECEIPT_FREE_TEXT';
 		$marge_basse=$this->marge_basse;
 		$marge_gauche=$this->marge_gauche;

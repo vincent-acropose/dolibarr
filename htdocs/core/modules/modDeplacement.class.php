@@ -50,7 +50,7 @@ class modDeplacement extends DolibarrModules
 		$this->description = "Gestion des notes de frais et deplacements";		// Si traduction Module75Desc non trouvee
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr' or version
-		$this->version = 'dolibarr';
+		$this->version = 'dolibarr_deprecated';
 
 		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);
 		$this->special = 0;
@@ -78,28 +78,34 @@ class modDeplacement extends DolibarrModules
 		$this->rights_class = 'deplacement';
 
 		$this->rights[1][0] = 171;
-		$this->rights[1][1] = 'Lire les deplacements';
+		$this->rights[1][1] = 'Lire ses notes de frais et deplacements et celles de sa hierarchy';
 		$this->rights[1][2] = 'r';
 		$this->rights[1][3] = 1;
 		$this->rights[1][4] = 'lire';
 
 		$this->rights[2][0] = 172;
-		$this->rights[2][1] = 'Creer/modifier les deplacements';
+		$this->rights[2][1] = 'Creer/modifier une note de frais et deplacements';
 		$this->rights[2][2] = 'w';
 		$this->rights[2][3] = 0;
 		$this->rights[2][4] = 'creer';
 
     	$this->rights[3][0] = 173;
-		$this->rights[3][1] = 'Supprimer les deplacements';
+		$this->rights[3][1] = 'Supprimer les notes de frais et deplacements';
 		$this->rights[3][2] = 'd';
 		$this->rights[3][3] = 0;
 		$this->rights[3][4] = 'supprimer';
 
-		$this->rights[6][0] = 178;
-		$this->rights[6][1] = 'Exporter les deplacements';
-		$this->rights[6][2] = 'd';
-		$this->rights[6][3] = 0;
-		$this->rights[6][4] = 'export';
+    	$this->rights[4][0] = 174;
+		$this->rights[4][1] = 'Lire toutes les notes de frais';
+		$this->rights[4][2] = 'd';
+		$this->rights[4][3] = 0;
+		$this->rights[4][4] = 'readall';
+
+		$this->rights[5][0] = 178;
+		$this->rights[5][1] = 'Exporter les notes de frais et deplacements';
+		$this->rights[5][2] = 'd';
+		$this->rights[5][3] = 0;
+		$this->rights[5][4] = 'export';
 
 		// Exports
 		$r=0;
@@ -118,7 +124,7 @@ class modDeplacement extends DolibarrModules
 		$this->export_sql_end[$r] .=', '.MAIN_DB_PREFIX.'deplacement as d';
 		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'societe as s ON d.fk_soc = s.rowid';
 		$this->export_sql_end[$r] .=' WHERE d.fk_user = u.rowid';
-		$this->export_sql_end[$r] .=' AND d.entity = '.$conf->entity;
+		$this->export_sql_end[$r] .=' AND d.entity IN ('.getEntity('deplacement',1).')';
 	}
 
 
@@ -139,20 +145,4 @@ class modDeplacement extends DolibarrModules
 
 		return $this->_init($sql,$options);
 	}
-
-    /**
-	 *		Function called when module is disabled.
-	 *      Remove from database constants, boxes and permissions from Dolibarr database.
-	 *		Data directories are not deleted
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-     */
-    function remove($options='')
-    {
-		$sql = array();
-
-		return $this->_remove($sql,$options);
-    }
-
 }

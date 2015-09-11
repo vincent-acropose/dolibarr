@@ -34,11 +34,11 @@ include_once DOL_DOCUMENT_ROOT .'/core/modules/DolibarrModules.class.php';
 class modMyModule extends DolibarrModules
 {
 	/**
-	 *   Constructor. Define names, constants, directories, boxes, permissions
+	 * Constructor. Define names, constants, directories, boxes, permissions
 	 *
-	 *   @param      DoliDB		$db      Database handler
+	 * @param DoliDB $db Database handler
 	 */
-	function __construct($db)
+	public function __construct($db)
 	{
         global $langs,$conf;
 
@@ -57,7 +57,7 @@ class modMyModule extends DolibarrModules
 		$this->name = preg_replace('/^mod/i','',get_class($this));
 		// Module description, used if translation string 'ModuleXXXDesc' not found (where XXX is value of numeric property 'numero' of module)
 		$this->description = "Description of module MyModule";
-		// Possible values for version are: 'development', 'experimental', 'dolibarr' or version
+		// Possible values for version are: 'development', 'experimental', 'dolibarr' or 'dolibarr_deprecated' or version
 		$this->version = '1.0';
 		// Key used in llx_const table to save module status enabled/disabled (where MYMODULE is value of property name of module in uppercase)
 		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);
@@ -113,9 +113,9 @@ class modMyModule extends DolibarrModules
 		$this->const = array();
 
 		// Array to add new pages in new tabs
-		// Example: $this->tabs = array('objecttype:+tabname1:Title1:mylangfile@mymodule:$user->rights->mymodule->read:/mymodule/mynewtab1.php?id=__ID__',  	// To add a new tab identified by code tabname1
-        //                              'objecttype:+tabname2:Title2:mylangfile@mymodule:$user->rights->othermodule->read:/mymodule/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2
-        //                              'objecttype:-tabname:NU:conditiontoremove');                                                     						// To remove an existing tab identified by code tabname
+		// Example: $this->tabs = array('objecttype:+tabname1:Title1:mylangfile@mymodule:$user->rights->mymodule->read:/mymodule/mynewtab1.php?id=__ID__',  					// To add a new tab identified by code tabname1
+        //                              'objecttype:+tabname2:SUBSTITUTION_Title2:mylangfile@mymodule:$user->rights->othermodule->read:/mymodule/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2. Label will be result of calling all substitution functions on 'Title2' key.
+        //                              'objecttype:-tabname:NU:conditiontoremove');                                                     										// To remove an existing tab identified by code tabname
 		// where objecttype can be
 		// 'categories_x'	  to add a tab in category view (replace 'x' by type of category (0=product, 1=supplier, 2=customer, 3=member)
 		// 'contact'          to add a tab in contact view
@@ -167,19 +167,24 @@ class modMyModule extends DolibarrModules
 		// Example:
 		//$this->boxes=array(array(0=>array('file'=>'myboxa.php','note'=>'','enabledbydefaulton'=>'Home'),1=>array('file'=>'myboxb.php','note'=>''),2=>array('file'=>'myboxc.php','note'=>'')););
 
+		// Cronjobs
+		$this->cronjobs = array();			// List of cron jobs entries to add
+		// Example: $this->cronjobs=array(0=>array('label'=>'My label', 'jobtype'=>'method', 'class'=>'MyClass', 'method'=>'myMethod', 'parameters'=>'', 'comment'=>'Comment', 'frequency'=>3600, 'unitfrequency'=>3600),
+		//                                1=>array('label'=>'My label', 'jobtype'=>'command', 'command'=>'', 'parameters'=>'', 'comment'=>'Comment', 'frequency'=>3600, 'unitfrequency'=>3600)
+		// );
+
 		// Permissions
 		$this->rights = array();		// Permission array used by this module
 		$r=0;
 
 		// Add here list of permission defined by an id, a label, a boolean and two constant strings.
 		// Example:
-		// $this->rights[$r][0] = 2000; 				// Permission id (must not be already used)
+		// $this->rights[$r][0] = $this->numero + $r;	// Permission id (must not be already used)
 		// $this->rights[$r][1] = 'Permision label';	// Permission label
 		// $this->rights[$r][3] = 1; 					// Permission by default for new user (0/1)
 		// $this->rights[$r][4] = 'level1';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		// $this->rights[$r][5] = 'level2';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		// $r++;
-
 
 		// Main menu entries
 		$this->menu = array();			// List of menus to add
@@ -244,24 +249,24 @@ class modMyModule extends DolibarrModules
      *      @param      string	$options    Options when enabling module ('', 'noboxes')
 	 *      @return     int             	1 if OK, 0 if KO
 	 */
-	function init($options='')
+	public function init($options='')
 	{
 		$sql = array();
 
-		$result=$this->_load_tables('/mymodule/sql/');
+		//$this->_load_tables('/mymodule/sql/');
 
 		return $this->_init($sql, $options);
 	}
 
 	/**
-	 *		Function called when module is disabled.
-	 *      Remove from database constants, boxes and permissions from Dolibarr database.
-	 *		Data directories are not deleted
+	 * Function called when module is disabled.
+	 * Remove from database constants, boxes and permissions from Dolibarr database.
+	 * Data directories are not deleted
 	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
+	 * @param      string	$options    Options when enabling module ('', 'noboxes')
+	 * @return     int             	1 if OK, 0 if KO
 	 */
-	function remove($options='')
+	public function remove($options = '')
 	{
 		$sql = array();
 

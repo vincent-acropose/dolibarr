@@ -24,6 +24,7 @@ require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/memory.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/geturl.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 
 $langs->load("admin");
 $langs->load("install");
@@ -47,9 +48,16 @@ $nowstring=dol_print_date(dol_now(),'dayhourlog');
 
 llxHeader();
 
-print_fiche_titre($langs->trans("PerfDolibarr"),'','setup');
+print_fiche_titre($langs->trans("PerfDolibarr"),'','title_setup');
 
 print $langs->trans("YouMayFindPerfAdviceHere",'http://wiki.dolibarr.org/index.php/FAQ_Increase_Performance').' (<a href="'.$_SERVER["PHP_SELF"].'">'.$langs->trans("Reload").'</a>)<br>';
+
+// Recupere la version de PHP
+$phpversion=version_php();
+print "<br>PHP - ".$langs->trans("Version").": ".$phpversion."<br>\n";
+
+// Recupere la version du serveur web
+print "<br>Web server - ".$langs->trans("Version").": ".$_SERVER["SERVER_SOFTWARE"]."<br>\n";
 
 // XDebug
 print '<br>';
@@ -164,7 +172,7 @@ jQuery(document).ready(function() {
   var compcssstring;
   getcssurl = $.ajax({
     type: "GET",
-    url: \''.DOL_URL_ROOT.'/includes/jquery/css/smoothness/jquery-ui-latest.custom.css\',
+    url: \''.DOL_URL_ROOT.'/includes/jquery/css/smoothness/jquery-ui.css\',
     cache: false,
     /* async: false, */
     /*crossDomain: true, */

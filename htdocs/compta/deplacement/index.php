@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2003		Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2011	Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2015	Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004		Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2005-2011	Regis Houssin        <regis.houssin@capnetworks.com>
  *
@@ -54,6 +54,9 @@ $limit = $conf->liste_limit;
 
 $tripandexpense_static=new Deplacement($db);
 
+$childids = $user->getAllChildIds();
+$childids[]=$user->id;
+
 //$help_url='EN:Module_Donations|FR:Module_Dons|ES:M&oacute;dulo_Donaciones';
 $help_url='';
 llxHeader('',$langs->trans("ListOfFees"),$help_url);
@@ -64,6 +67,7 @@ $totalnb=0;
 $sql = "SELECT count(d.rowid) as nb, sum(d.km) as km, d.type";
 $sql.= " FROM ".MAIN_DB_PREFIX."deplacement as d";
 $sql.= " WHERE d.entity = ".$conf->entity;
+if (empty($user->rights->deplacement->readall) && empty($user->rights->deplacement->lire_tous)) $sql.=' AND d.fk_user IN ('.join(',',$childids).')';
 $sql.= " GROUP BY d.type";
 $sql.= " ORDER BY d.type";
 
@@ -94,7 +98,7 @@ print '<div class="fichecenter"><div class="fichethirdleft">';
 
 
 // Statistics
-print '<table class="noborder" width="100%">';
+print '<table class="noborder nohover" width="100%">';
 print '<tr class="liste_titre">';
 print '<td colspan="4">'.$langs->trans("Statistics").'</td>';
 print "</tr>\n";
@@ -107,7 +111,7 @@ foreach ($listoftype as $code => $label)
 
 if ($conf->use_javascript_ajax)
 {
-    print '<tr><td align="center" colspan="4">';
+    print '<tr '.$bc[false].'><td align="center" colspan="4">';
     $data=array('series'=>$dataseries);
     dol_print_graph('stats',300,180,$data,1,'pie',1);
     print '</td></tr>';
@@ -134,6 +138,7 @@ $sql.= " FROM ".MAIN_DB_PREFIX."deplacement as d, ".MAIN_DB_PREFIX."user as u";
 if (!$user->rights->societe->client->voir && !$user->societe_id) $sql.= ", ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 $sql.= " WHERE u.rowid = d.fk_user";
 $sql.= " AND d.entity = ".$conf->entity;
+if (empty($user->rights->deplacement->readall) && empty($user->rights->deplacement->lire_tous)) $sql.=' AND d.fk_user IN ('.join(',',$childids).')';
 if (!$user->rights->societe->client->voir && !$user->societe_id) $sql.= " AND d.fk_soc = s. rowid AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
 if ($socid) $sql.= " AND d.fk_soc = ".$socid;
 $sql.= $db->order("d.tms","DESC");

@@ -27,13 +27,14 @@
  *
  * @param   Object	$object		Object related to tabs
  * @param	string	$type		Type of category
- * @return  array				Array of tabs to shoc
+ * @return  array				Array of tabs to show
  */
 function categories_prepare_head($object,$type)
 {
 	global $langs, $conf, $user;
 
 	$langs->load("categories");
+	$langs->load("products");
 
 	$h = 0;
 	$head = array();

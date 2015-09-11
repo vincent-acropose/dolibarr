@@ -1,7 +1,6 @@
 # Dolibarr language file - Source file is en_US - suppliers
 Suppliers=Leveranciers
-Supplier=Leverancier
-AddSupplier=Voeg een leverancier toe
+AddSupplier=Nieuwe leverancier
 SupplierRemoved=Leverancier verwijderd
 SuppliersInvoice=Leveranciersfactuur
 NewSupplier=Nieuwe leverancier
@@ -30,7 +29,7 @@ ExportDataset_fournisseur_2=Leveranciersfacturen en -betalingen
 ExportDataset_fournisseur_3=Leveranciersorders en orderlijnen
 ApproveThisOrder=Opdracht goedkeuren
 ConfirmApproveThisOrder=Weet u zeker dat u de Opdracht <b>%s</b> wilt goedkeuren?
-DenyingThisOrder=Opdracht weigeren
+DenyingThisOrder=Wijger deze bestelling
 ConfirmDenyingThisOrder=Weet u zeker dat u deze Opdracht <b>%s</b> wilt weigeren?
 ConfirmCancelThisOrder=Weet u zeker dat u deze Opdracht <b>%s</b> wilt annuleren?
 AddCustomerOrder=Voeg afnemersopdracht toe
@@ -40,3 +39,8 @@ AddSupplierInvoice=Voeg leveranciersfactuur toe
 ListOfSupplierProductForSupplier=Lijst van producten en de prijzen van de leverancier <b>%s</b>
 NoneOrBatchFileNeverRan=Geen of bundel (batch) <b>%s</b> niet recentelijk gedraaid
 SentToSuppliers=Stuur naar leveranciers
+ListOfSupplierOrders=Lijst van leverancier bestellingen
+MenuOrdersSupplierToBill=Leverancier bestellingen te factureren
+NbDaysToDelivery=Levering vertraging in de dagen
+DescNbDaysToDelivery=The biggest deliver delay of the products from this order
+UseDoubleApproval=Use double approval when amount (without tax) is higher than (The second approval can be done by any user with the dedicated permission. Set to 0 for no double approval)

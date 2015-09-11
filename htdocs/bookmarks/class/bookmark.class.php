@@ -1,5 +1,6 @@
 <?php
 /* Copyright (C) 2005 Laurent Destailleur <eldy@users.sourceforge.net>
+ * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,7 +66,7 @@ class Bookmark
         $sql.= " WHERE rowid = ".$id;
         $sql.= " AND entity = ".$conf->entity;
 
-		dol_syslog("Bookmark::fetch sql=".$sql, LOG_DEBUG);
+		dol_syslog("Bookmark::fetch", LOG_DEBUG);
         $resql  = $this->db->query($sql);
         if ($resql)
         {
@@ -123,7 +124,7 @@ class Bookmark
         if ($this->fk_soc) $sql.=",".$this->fk_soc;
         $sql.= ")";
 
-        dol_syslog("Bookmark::update sql=".$sql, LOG_DEBUG);
+        dol_syslog("Bookmark::update", LOG_DEBUG);
         $resql = $this->db->query($sql);
         if ($resql)
         {
@@ -173,7 +174,7 @@ class Bookmark
         $sql.= " ,position = '".$this->position."'";
         $sql.= " WHERE rowid = ".$this->id;
 
-        dol_syslog("Bookmark::update sql=".$sql, LOG_DEBUG);
+        dol_syslog("Bookmark::update", LOG_DEBUG);
         if ($this->db->query($sql))
         {
             return 1;
@@ -196,7 +197,7 @@ class Bookmark
         $sql  = "DELETE FROM ".MAIN_DB_PREFIX."bookmark";
         $sql .= " WHERE rowid = ".$id;
 
-        dol_syslog("Bookmark::remove sql=".$sql, LOG_DEBUG);
+        dol_syslog("Bookmark::remove", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -209,5 +210,22 @@ class Bookmark
         }
 
     }
+
+	/**
+	 * Function used to replace a thirdparty id with another one.
+	 *
+	 * @param DoliDB $db Database handler
+	 * @param int $origin_id Old thirdparty id
+	 * @param int $dest_id New thirdparty id
+	 * @return bool
+	 */
+	public static function replaceThirdparty(DoliDB $db, $origin_id, $dest_id)
+	{
+		$tables = array(
+			'bookmark'
+		);
+
+		return CommonObject::commonReplaceThirdparty($db, $origin_id, $dest_id, $tables);
+	}
 
 }

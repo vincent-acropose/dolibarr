@@ -3,6 +3,7 @@
  * Copyright (C) 2004-2010	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2004		Eric Seigne				<eric.seigne@ryxeo.com>
  * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2015       Marcos García           <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,12 +28,23 @@
 
 
 /**
- *	\class      CommonDocGenerator
- *	\brief      Parent class for documents generators
+ *	Parent class for documents generators
  */
 abstract class CommonDocGenerator
 {
 	var $error='';
+	protected $db;
+	
+	
+	/**
+	 *	Constructor
+	 *
+	 *  @param		DoliDB		$db      Database handler
+	*/
+	public function __construct($db) {
+		$this->db = $db;
+		return 1;
+	}
 
 
     /**
@@ -119,10 +131,10 @@ abstract class CommonDocGenerator
             'mycompany_idprof5'=>$mysoc->idprof5,
             'mycompany_idprof6'=>$mysoc->idprof6,
         	'mycompany_vatnumber'=>$mysoc->tva_intra,
-            // Only private not exists for "mysoc"
-        	'mycompany_note'=>$mysoc->note_private
-            //'mycompany_note_private'=>$mysoc->note_private,
-        	//'mycompany_note_public'=>$mysoc->note_public,
+			'mycompany_object'=>$mysoc->object,
+        	// Only private not exists for "mysoc"
+            'mycompany_note_private'=>$mysoc->note_private,
+
         );
     }
 
@@ -149,6 +161,7 @@ abstract class CommonDocGenerator
 
         $array_thirdparty = array(
             'company_name'=>$object->name,
+	        'company_name_alias' => $object->name_alias,
             'company_email'=>$object->email,
             'company_phone'=>$object->phone,
             'company_fax'=>$object->fax,
@@ -167,6 +180,7 @@ abstract class CommonDocGenerator
             'company_customeraccountancycode'=>$object->code_compta,
             'company_supplieraccountancycode'=>$object->code_compta_fournisseur,
             'company_juridicalstatus'=>$object->forme_juridique,
+            'company_outstanding_limit'=>$object->outstanding_limit,
             'company_capital'=>$object->capital,
             'company_idprof1'=>$object->idprof1,
             'company_idprof2'=>$object->idprof2,
@@ -207,7 +221,7 @@ abstract class CommonDocGenerator
 	/**
 	 * Define array with couple subtitution key => subtitution value
 	 *
-	 * @param	Object 		$object        	contact
+	 * @param	Contact 		$object        	contact
 	 * @param	Translate 	$outputlangs   	object for output
 	 * @param   array_key	$array_key	    Name of the key for return array
 	 * @return	array of substitution key->code
@@ -291,6 +305,10 @@ abstract class CommonDocGenerator
    			'current_datehour'=>dol_print_date($now,'dayhour','tzuser'),
    			'current_server_date'=>dol_print_date($now,'day','tzserver'),
    			'current_server_datehour'=>dol_print_date($now,'dayhour','tzserver'),
+   			'current_date_locale'=>dol_print_date($now,'day','tzuser',$outputlangs),
+   			'current_datehour_locale'=>dol_print_date($now,'dayhour','tzuser',$outputlangs),
+   			'current_server_date_locale'=>dol_print_date($now,'day','tzserver',$outputlangs),
+   			'current_server_datehour_locale'=>dol_print_date($now,'dayhour','tzserver',$outputlangs),
     	);
 
     	return $array_other;
@@ -358,7 +376,8 @@ abstract class CommonDocGenerator
 		$array_key.'_total_discount_ht' => price2num($object->getTotalDiscount()),
 
 		$array_key.'_note_private'=>$object->note,
-		$array_key.'_note'=>$object->note_public,
+		$array_key.'_note_public'=>$object->note_public,
+		$array_key.'_note'=>$object->note_public,			// For backward compatibility
 		// Payments
 		$array_key.'_already_payed_locale'=>price($alreadypayed, 0, $outputlangs),
 		$array_key.'_remain_to_pay_locale'=>price($object->total_ttc - $sumpayed, 0, $outputlangs),
@@ -384,7 +403,7 @@ abstract class CommonDocGenerator
 			$extralabels = $extrafields->fetch_name_optionals_label($extrafieldkey,true);
 			$object->fetch_optionals($object->id,$extralabels);
 
-			$resarray = $this->fill_substitutionarray_with_extrafields($object,$resarray,$extrafields,$array_key=$array_key,$outputlangs);
+			$resarray = $this->fill_substitutionarray_with_extrafields($object,$resarray,$extrafields,$array_key,$outputlangs);
 		}
 		return $resarray;
 	}
@@ -400,10 +419,11 @@ abstract class CommonDocGenerator
 	{
 		global $conf;
 
-		return array(
+		$resarray= array(
 			'line_fulldesc'=>doc_getlinedesc($line,$outputlangs),
 			'line_product_ref'=>$line->product_ref,
 			'line_product_label'=>$line->product_label,
+                        'line_product_type'=>$line->product_type,
 			'line_desc'=>$line->desc,
 			'line_vatrate'=>vatrate($line->tva_tx,true,$line->info_bits),
 			'line_up'=>price2num($line->subprice),
@@ -421,12 +441,24 @@ abstract class CommonDocGenerator
 			'line_date_end'=>$line->date_end,
 			'line_date_end_rfc'=>dol_print_date($line->date_end,'rfc')
 		);
+
+		// Retrieve extrafields
+		$extrafieldkey=$line->element;
+		$array_key="line";
+		require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+		$extrafields = new ExtraFields($this->db);
+		$extralabels = $extrafields->fetch_name_optionals_label($extrafieldkey,true);
+		$line->fetch_optionals($line->rowid,$extralabels);
+
+		$resarray = $this->fill_substitutionarray_with_extrafields($line,$resarray,$extrafields,$array_key=$array_key,$outputlangs);
+
+		return $resarray;
 	}
 
     /**
      * Define array with couple substitution key => substitution value
      *
-     * @param   Object			$object             Main object to use as data source
+     * @param   Expedition			$object             Main object to use as data source
      * @param   Translate		$outputlangs        Lang object to use for output
      * @param   array_key		$array_key	        Name of the key for return array
      * @return	array								Array of substitution

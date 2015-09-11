@@ -38,7 +38,7 @@ $showpass=GETPOST('showpass');
  * View
  */
 
-$label=getStaticMember($db, 'label');
+$label=$db::LABEL;
 
 $help_url='EN:Restores|FR:Restaurations|ES:Restauraciones';
 llxHeader('','',$help_url);
@@ -63,16 +63,27 @@ jQuery(document).ready(function() {
 </script>
 <?php
 
-print_fiche_titre($langs->trans("Restore"),'','setup');
+print_fiche_titre($langs->trans("Restore"),'','title_setup');
 
 print $langs->trans("RestoreDesc",DOL_DATA_ROOT).'<br><br>';
+?>
+<fieldset>
+<legend style="font-size: 3em">1</legend>
+<?php
 print $langs->trans("RestoreDesc2",DOL_DATA_ROOT).'<br><br>';
-print $langs->trans("RestoreDesc3",DOL_DATA_ROOT).'<br><br>';
+?>
+</fieldset>
 
+<br>
+
+<fieldset>
+<legend style="font-size: 3em">2</legend>
+<?php
+print $langs->trans("RestoreDesc3",$dolibarr_main_db_name).'<br><br>';
 ?>
 
-<fieldset id="fieldsetexport">
-<?php print '<legend>'.$langs->trans("DatabaseName").' : <b>'.$dolibarr_main_db_name.'</b></legend>'; ?>
+<?php print $langs->trans("DatabaseName").' : <b>'.$dolibarr_main_db_name.'</b>'; ?><br><br>
+
 <table><tr><td valign="top">
 
 <?php if ($conf->use_javascript_ajax) { ?>
@@ -94,7 +105,7 @@ print $langs->trans("RestoreDesc3",DOL_DATA_ROOT).'<br><br>';
     ?>
     <div class="formelementrow">
         <input type="radio" name="what" value="mysql" id="radio_dump_postgresql"<?php echo ($radio_dump=='postgresql_options'?' checked':''); ?> />
-        <label for="radio_dump_postgresql">PostgreSQL Restore (pg_restore)</label>
+        <label for="radio_dump_postgresql">PostgreSQL Restore (pg_restore or psql)</label>
     </div>
     <?php
     }
@@ -170,6 +181,9 @@ else if ($label == 'PostgreSQL')
     }*/
     $paramcrypted.=" -W";
     $paramclear.=" -W";
+    // With psql:
+    $paramcrypted.=" -f";
+    $paramclear.=" -f";
 
     echo $langs->trans("ImportPostgreSqlDesc");
     print '<br>';

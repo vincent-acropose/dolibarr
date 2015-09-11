@@ -1,7 +1,7 @@
 # Dolibarr language file - Source file is en_US - contracts
 ContractsArea=Područje za ugovore
 ListOfContracts=Lista ugovora
-LastContracts=Zadnji %s izmijenjeni ugovori
+LastModifiedContracts=Last %s modified contracts
 AllContracts=Svi ugovori
 ContractCard=Kartica ugovora
 ContractStatus=Status ugovora
@@ -19,7 +19,10 @@ ServiceStatusLateShort=Istekao
 ServiceStatusClosed=Zatvoren
 ServicesLegend=Legenda usluga
 Contracts=Ugovori
+ContractsAndLine=Contracts and line of contracts
 Contract=Ugovor
+ContractLine=Contract line
+Closing=Closing
 NoContracts=Nema ugovora
 MenuServices=Usluge
 MenuInactiveServices=Usluge nisu aktivne
@@ -27,7 +30,7 @@ MenuRunningServices=Aktivne usluge
 MenuExpiredServices=Istekle usluge
 MenuClosedServices=Završene usluge
 NewContract=Novi ugovor
-AddContract=Dodaj ugovor
+AddContract=Create contract
 SearchAContract=Traži kontakt
 DeleteAContract=Obrisati ugovor
 CloseAContract=Zatvori ugovor
@@ -53,7 +56,7 @@ ListOfRunningContractsLines=Lista stavki aktivnih ugovora
 ListOfRunningServices=Lista aktivnih usluga
 NotActivatedServices=Nekativne usluge (među potvrđenim ugovorima)
 BoardNotActivatedServices=Usluge za aktiviranje među potvrđenim ugovorima
-LastContracts=Zadnji %s izmijenjeni ugovori
+LastContracts=Last %s contracts
 LastActivatedServices=Zadnjih $s aktiviranih usluga
 LastModifiedServices=Zadnjih %s izmijenjenih usluga
 EditServiceLine=Izmijeni stavku usluge
@@ -91,6 +94,7 @@ ListOfServicesToExpire=Lista usluga pred isticanje
 NoteListOfYourExpiredServices=This list contains only services of contracts for third parties you are linked to as a sale representative.
 StandardContractsTemplate=Standard contracts template
 ContactNameAndSignature=For %s, name and signature:
+OnlyLinesWithTypeServiceAreUsed=Only lines with type "Service" will be cloned.
 
 ##### Types de contacts #####
 TypeContact_contrat_internal_SALESREPSIGN=Predstavnik prodaje koji potpisuje ugovor

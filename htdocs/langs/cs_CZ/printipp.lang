@@ -1,18 +1,14 @@
-/*
- * Language code: cs_CZ
- * Automatic generated via autotranslator.php tool
- * Generation date 2013-10-26 11:58:10
- */
-
-
-// START - Lines generated via autotranslator.php tool (2013-10-26 11:58:10).
-// Reference language: en_US -> cs_CZ
-PrintIPPSetup=Nastavení modulu Přímý tisk
-PrintIPPDesc=Ce modul Permet d'un ajouter Bouton d'dojem přímé des dokumenty vers votre imprimante. Il requiert un systeme Linux Equipe de poháry.
-PRINTIPP_ENABLED=Zobrazit Piktogram &quot;Přímý tisk&quot; do seznamu dokumentů
+# Dolibarr language file - Source file is en_US - printipp
+PrintIPPSetup=Nastavení tiskového modulu Direct
+PrintIPPDesc=Tento modul přidá tlačítko Tisk pro odeslání dokumentu přímo na tiskárnu. To vyžaduje systém Linux s nainstalovaným CUPS.
+PRINTIPP_ENABLED=Zobrazit ikonu "Přímý tisk" v seznamech dokumentů
 PRINTIPP_HOST=Tiskový server
-PRINTIPP_PORT=Přístav
+PRINTIPP_PORT=Port
 PRINTIPP_USER=Přihlášení
 PRINTIPP_PASSWORD=Heslo
-NoPrinterFound=Žádné tiskárny nalezeny (zkontrolujte poháry Nasta)
-// STOP - Lines generated via autotranslator.php tool (2013-10-26 12:39:36).
+NoPrinterFound=Nebyly nalezeny žádné tiskárny (zkontrolujte nastavení CUPS)
+FileWasSentToPrinter=Soubor %s byl poslán na tiskárnu
+NoDefaultPrinterDefined=Není definována žádná výchozí tiskárna
+DefaultPrinter=Výchozí tiskárna
+Printer=Tiskárna
+CupsServer=CUPS server

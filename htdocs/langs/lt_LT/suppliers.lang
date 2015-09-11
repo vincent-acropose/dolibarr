@@ -1,7 +1,6 @@
 # Dolibarr language file - Source file is en_US - suppliers
 Suppliers=Tiekėjai
-Supplier=Tiekėjas
-AddSupplier=Pridėti tiekėją
+AddSupplier=Sukurti tiekėją
 SupplierRemoved=Tiekėjas pašalintas
 SuppliersInvoice=Tiekėjo sąskaita-faktūra
 NewSupplier=Naujas tiekėjas
@@ -30,7 +29,7 @@ ExportDataset_fournisseur_2=Tiekėjo sąskaitos-faktūros ir mokėjimai
 ExportDataset_fournisseur_3=Tiekėjo užsakymai ir užsakymo eilutės
 ApproveThisOrder=Patvirtinti šį užsakymą
 ConfirmApproveThisOrder=Ar tikrai norite patvirtinti užsakymą <b>%s</b> ?
-DenyingThisOrder=Neigiantis šį užsakymą
+DenyingThisOrder=Atmesti šį užsakymą
 ConfirmDenyingThisOrder=Ar tikrai norite atsisakyti šio užsakymo <b> s?</b>
 ConfirmCancelThisOrder=Ar tikrai norite atšaukti šį užsakymą <b>%s</b> ?
 AddCustomerOrder=Sukurti kliento užsakymą
@@ -40,3 +39,8 @@ AddSupplierInvoice=Sukurti tiekėjo sąskaitą-faktūrą
 ListOfSupplierProductForSupplier=Produktų ir kainų sąrašas tiekėjui <b>%s</b>
 NoneOrBatchFileNeverRan=Nėra arba grupinis <b>%s</b> neseniai neįvyko
 SentToSuppliers=Nusiųsta tiekėjams
+ListOfSupplierOrders=Tiekėjo užsakymų sąrašas
+MenuOrdersSupplierToBill=Tiekėjo užsakymai sąskaitoms
+NbDaysToDelivery=Pristatymo vėlavimas dienomis
+DescNbDaysToDelivery=The biggest deliver delay of the products from this order
+UseDoubleApproval=Use double approval when amount (without tax) is higher than (The second approval can be done by any user with the dedicated permission. Set to 0 for no double approval)

@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2003-2004	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
- * Copyright (C) 2004-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2015	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2011-2013	Juanjo Menent			<jmenent@2byte.es>
  *
@@ -130,7 +130,7 @@ $help_url='EN:Module_Barcode|FR:Module_Codes_Barre|ES:Módulo Código de barra';
 llxHeader('',$langs->trans("BarcodeSetup"),$help_url);
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans("BarcodeSetup"),$linkback,'setup');
+print_fiche_titre($langs->trans("BarcodeSetup"),$linkback,'title_setup');
 
 // Detect bar codes modules
 $barcodelist=array();
@@ -203,7 +203,7 @@ $sql.= " FROM ".MAIN_DB_PREFIX."c_barcode_type";
 $sql.= " WHERE entity = ".$conf->entity;
 $sql.= " ORDER BY code";
 
-dol_syslog("admin/barcode.php sql=".$sql);
+dol_syslog("admin/barcode.php", LOG_DEBUG);
 $resql=$db->query($sql);
 if ($resql)
 {
@@ -318,7 +318,6 @@ if (! isset($_SERVER['WINDIR']))
 	print '</td>';
 	print '<td width="60" align="center"><input type="submit" class="button" name="submit_GENBARCODE_LOCATION" value="'.$langs->trans("Modify").'"></td>';
 	print '</tr>';
-	print '</form>';
 }
 
 // Module products
@@ -328,7 +327,7 @@ if (! empty($conf->product->enabled))
 	print "<tr ".$bc[$var].">";
 	print '<td>'.$langs->trans("SetDefaultBarcodeTypeProducts").'</td>';
 	print '<td width="60" align="right">';
-	print $formbarcode->select_barcode_type($conf->global->PRODUIT_DEFAULT_BARCODE_TYPE,"PRODUIT_DEFAULT_BARCODE_TYPE",1);
+	$formbarcode->select_barcode_type($conf->global->PRODUIT_DEFAULT_BARCODE_TYPE,"PRODUIT_DEFAULT_BARCODE_TYPE",1);
 	print '</td><td align="right">';
 	print '<input type="submit" class="button" name="submit_PRODUIT_DEFAULT_BARCODE_TYPE" value="'.$langs->trans("Modify").'">';
 	print "</td>";
@@ -350,6 +349,7 @@ if (! empty($conf->societe->enabled))
 }
 
 print "</table>\n";
+print '</form>';
 
 print '<br>';
 
@@ -396,7 +396,7 @@ if ($conf->produit->enabled)
 	    			$var = !$var;
 
 	    			print '<tr '.$bc[$var].'>';
-	    			print '<td>'.$modBarCode->nom."</td><td>\n";
+	    			print '<td>'.(isset($modBarCode->name)?$modBarCode->name:$modBarCode->nom)."</td><td>\n";
 	    			print $modBarCode->info($langs);
 	    			print '</td>';
 	    			print '<td class="nowrap">'.$modBarCode->getExample($langs)."</td>\n";
@@ -430,6 +430,5 @@ print '</form>';
 
 print "<br>";
 
-$db->close();
-
 llxFooter();
+$db->close();

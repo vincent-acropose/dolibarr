@@ -3,6 +3,8 @@
 -- Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
 -- Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
 -- Copyright (C) 2010      Juanjo Menent        <dolibarr@2byte.es>
+-- Copyright (C) 2014      Teddy Andreotti      <125155@supinfo.com>
+-- Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -22,7 +24,8 @@
 create table llx_societe
 (
   rowid                    integer AUTO_INCREMENT PRIMARY KEY,
-  nom                      varchar(60),                                -- company reference name
+  nom                      varchar(128),                                -- company reference name (should be same length than adherent.societe)
+  name_alias          varchar(128) NULL,
   entity                   integer DEFAULT 1 NOT NULL,               -- multi company id
 
   ref_ext                  varchar(128),                               -- reference into an external system (not used by dolibarr)
@@ -69,6 +72,8 @@ create table llx_societe
   fournisseur              tinyint        DEFAULT 0,            		-- fournisseur 0/1
   supplier_account         varchar(32),                         		-- compte client chez un fournisseur
   fk_prospectlevel         varchar(12),                         		-- prospect level (in llx_c_prospectlevel)
+  fk_incoterms             integer,										-- for incoterms
+  location_incoterms       varchar(255),								-- for incoterms
   customer_bad             tinyint        DEFAULT 0,            		-- mauvais payeur 0/1
   customer_rate            real           DEFAULT 0,            		-- taux fiabilite client (0 a 1)
   supplier_rate            real           DEFAULT 0,            		-- taux fiabilite fournisseur (0 a 1)
@@ -81,7 +86,9 @@ create table llx_societe
   cond_reglement_supplier  tinyint,                             		-- condition de reglement fournisseur
   tva_assuj                tinyint        DEFAULT 1,	        		-- assujeti ou non a la TVA
   localtax1_assuj          tinyint        DEFAULT 0,	        		-- assujeti ou non a local tax 1
+  localtax1_value 		   double(6,3),
   localtax2_assuj          tinyint        DEFAULT 0,	        		-- assujeti ou non a local tax 2
+  localtax2_value 		   double(6,3),
   barcode                  varchar(255),                        		-- barcode
   fk_barcode_type          integer NULL   DEFAULT 0,                    -- barcode type
   price_level              integer NULL,                        		-- level of price for multiprices
@@ -89,5 +96,7 @@ create table llx_societe
   default_lang             varchar(6),									-- default language
   logo                     varchar(255),
   canvas				   varchar(32),			                        -- type of canvas if used (null by default)
-  import_key               varchar(14)                          		-- import key
+  import_key               varchar(14),                          		-- import key
+  webservices_url          varchar(255),                            -- supplier webservice url
+  webservices_key          varchar(128)                            -- supplier webservice key
 )ENGINE=innodb;

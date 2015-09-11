@@ -277,7 +277,7 @@ function limitChars(textarea, limit, infodiv)
             {
                 $defaultmessage=$this->withbody;
             }
-            $defaultmessage=make_substitutions($defaultmessage,$this->substit,$langs);
+            $defaultmessage=make_substitutions($defaultmessage,$this->substit);
             if (isset($_POST["message"])) $defaultmessage=$_POST["message"];
             $defaultmessage=str_replace('\n',"\n",$defaultmessage);
 
@@ -307,28 +307,27 @@ function limitChars(textarea, limit, infodiv)
            <option value="0">0</option>
            <option value="1">1</option>
            <option value="2">2</option>
-           <option value="3" selected="selected">3</option>
+           <option value="3" selected>3</option>
            </select></td></tr>
 
            <tr><td>'.$langs->trans("Type").' :</td><td>
            <select name="class" id="valid" class="flat">
            <option value="0">Flash</option>
-           <option value="1" selected="selected">Standard</option>
+           <option value="1" selected>Standard</option>
            <option value="2">SIM</option>
            <option value="3">ToolKit</option>
            </select></td></tr>';
 
         print "</table>\n";
 
-        print '<center>';
-        print "<input class=\"button\" type=\"submit\" name=\"sendmail\" value=\"".$langs->trans("SendSms")."\"";
-        print ">";
+        print '<div class="center">';
+        print '<input class="button" type="submit" name="sendmail" value="'.$langs->trans("SendSms").'">';
         if ($this->withcancel)
         {
-            print " &nbsp; &nbsp; ";
-            print "<input class=\"button\" type=\"submit\" name=\"cancel\" value=\"".$langs->trans("Cancel")."\">";
+            print '&nbsp;&nbsp;&nbnp;&nbsp;&nbsp;';
+            print '<input class="button" type="submit" name="cancel" value="'.$langs->trans("Cancel").'">';
         }
-        print "</center>\n";
+        print '</div>';
 
         print "</form>\n";
         print "<!-- End form SMS -->\n";

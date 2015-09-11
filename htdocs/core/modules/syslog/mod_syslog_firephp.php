@@ -7,6 +7,8 @@ require_once DOL_DOCUMENT_ROOT.'/core/modules/syslog/logHandler.php';
  */
 class mod_syslog_firephp extends LogHandler implements LogHandlerInterface
 {
+	var $code = 'firephp';
+
 	/**
 	 * 	Return name of logger
 	 *
@@ -42,7 +44,7 @@ class mod_syslog_firephp extends LogHandler implements LogHandlerInterface
 	/**
 	 * Is the module active ?
 	 *
-	 * @return boolean
+	 * @return int
 	 */
 	public function isActive()
 	{
@@ -86,7 +88,7 @@ class mod_syslog_firephp extends LogHandler implements LogHandlerInterface
 	/**
 	 * 	Return if configuration is valid
 	 *
-	 * 	@return	boolean		True if configuration ok
+	 * 	@return	array		Array of errors. Empty array if ok.
 	 */
 	public function checkConfiguration()
 	{
@@ -111,7 +113,7 @@ class mod_syslog_firephp extends LogHandler implements LogHandlerInterface
 	 * 	Output log content
 	 *
 	 *	@param	array	$content	Content to log
-	 * 	@return	void
+	 * 	@return	null|false
 	 */
 	public function export($content)
 	{

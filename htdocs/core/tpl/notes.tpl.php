@@ -22,6 +22,7 @@ $note_public = 'note_public';
 $note_private = 'note_private';
 
 $colwidth=(isset($colwidth)?$colwidth:25);
+
 $permission=(isset($permission)?$permission:(isset($user->rights->$module->creer)?$user->rights->$module->creer:0));    // If already defined by caller page
 $moreparam=(isset($moreparam)?$moreparam:'');
 $value_public=$object->note_public;
@@ -49,6 +50,7 @@ if (! empty($conf->global->MAIN_AUTO_TIMESTAMP_IN_PRIVATE_NOTES))
 
 // Special cases
 if ($module == 'propal')                { $permission=$user->rights->propale->creer;}
+elseif ($module == 'askpricesupplier')  { $permission=$user->rights->askpricesupplier->creer;}
 elseif ($module == 'fichinter')         { $permission=$user->rights->ficheinter->creer;}
 elseif ($module == 'project')           { $permission=$user->rights->projet->creer;}
 elseif ($module == 'project_task')      { $permission=$user->rights->projet->creer;}
@@ -59,8 +61,9 @@ elseif ($module == 'contact')    		{ $permission=$user->rights->societe->creer;}
 elseif ($module == 'shipping')    		{ $permission=$user->rights->expedition->creer;}
 //else dol_print_error('','Bad value '.$module.' for param module');
 
-if (! empty($conf->global->FCKEDITOR_ENABLE_SOCIETE)) $typeofdata='ckeditor:dolibarr_notes:100%:200::1:12:100';
+if (! empty($conf->global->FCKEDITOR_ENABLE_SOCIETE)) $typeofdata='ckeditor:dolibarr_notes:100%:200::1:12:100';	// Rem: This var is for all notes, not only thirdparties note.
 else $typeofdata='textarea:12:100';
+
 ?>
 
 <!-- BEGIN PHP TEMPLATE NOTES -->

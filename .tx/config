@@ -1,6 +1,12 @@
 [main]
 host = https://www.transifex.com
-lang_map = uz: uz_UZ
+lang_map = uz: uz_UZ, sw: sw_SW, sr@latin: sr_RS
+
+[dolibarr.accountancy]
+file_filter = htdocs/langs/<lang>/accountancy.lang
+source_file = htdocs/langs/en_US/accountancy.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
 
 [dolibarr.admin]
 file_filter = htdocs/langs/<lang>/admin.lang
@@ -140,6 +146,12 @@ source_file = htdocs/langs/en_US/holiday.lang
 source_lang = en_US
 type = MOZILLAPROPERTIES
 
+[dolibarr.incoterm]
+file_filter = htdocs/langs/<lang>/incoterm.lang
+source_file = htdocs/langs/en_US/incoterm.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
+
 [dolibarr.install]
 file_filter = htdocs/langs/<lang>/install.lang
 source_file = htdocs/langs/en_US/install.lang
@@ -167,6 +179,12 @@ type = MOZILLAPROPERTIES
 [dolibarr.link]
 file_filter = htdocs/langs/<lang>/link.lang
 source_file = htdocs/langs/en_US/link.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
+
+[dolibarr.loan]
+file_filter = htdocs/langs/<lang>/loan.lang
+source_file = htdocs/langs/en_US/loan.lang
 source_lang = en_US
 type = MOZILLAPROPERTIES
 
@@ -212,12 +230,6 @@ source_file = htdocs/langs/en_US/orders.lang
 source_lang = en_US
 type = MOZILLAPROPERTIES
 
-[dolibarr.oscommerce]
-file_filter = htdocs/langs/<lang>/oscommerce.lang
-source_file = htdocs/langs/en_US/oscommerce.lang
-source_lang = en_US
-type = MOZILLAPROPERTIES
-
 [dolibarr.other]
 file_filter = htdocs/langs/<lang>/other.lang
 source_file = htdocs/langs/en_US/other.lang
@@ -233,6 +245,18 @@ type = MOZILLAPROPERTIES
 [dolibarr.paypal]
 file_filter = htdocs/langs/<lang>/paypal.lang
 source_file = htdocs/langs/en_US/paypal.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
+
+[dolibarr.printing]
+file_filter = htdocs/langs/<lang>/printing.lang
+source_file = htdocs/langs/en_US/printing.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
+
+[dolibarr.productbatch]
+file_filter = htdocs/langs/<lang>/productbatch.lang
+source_file = htdocs/langs/en_US/productbatch.lang
 source_lang = en_US
 type = MOZILLAPROPERTIES
 
@@ -254,6 +278,12 @@ source_file = htdocs/langs/en_US/propal.lang
 source_lang = en_US
 type = MOZILLAPROPERTIES
 
+[dolibarr.resource]
+file_filter = htdocs/langs/<lang>/resource.lang
+source_file = htdocs/langs/en_US/resource.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
+
 [dolibarr.salaries]
 file_filter = htdocs/langs/<lang>/salaries.lang
 source_file = htdocs/langs/en_US/salaries.lang
@@ -263,12 +293,6 @@ type = MOZILLAPROPERTIES
 [dolibarr.sendings]
 file_filter = htdocs/langs/<lang>/sendings.lang
 source_file = htdocs/langs/en_US/sendings.lang
-source_lang = en_US
-type = MOZILLAPROPERTIES
-
-[dolibarr.shop]
-file_filter = htdocs/langs/<lang>/shop.lang
-source_file = htdocs/langs/en_US/shop.lang
 source_lang = en_US
 type = MOZILLAPROPERTIES
 
@@ -313,4 +337,3 @@ file_filter = htdocs/langs/<lang>/workflow.lang
 source_file = htdocs/langs/en_US/workflow.lang
 source_lang = en_US
 type = MOZILLAPROPERTIES
-

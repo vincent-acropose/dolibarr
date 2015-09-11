@@ -59,7 +59,7 @@ class mailing_contacts4 extends MailingTargets
      */
     function url($id)
     {
-        return '<a href="'.DOL_URL_ROOT.'/contact/fiche.php?id='.$id.'">'.img_object('',"contact").'</a>';
+        return '<a href="'.DOL_URL_ROOT.'/contact/card.php?id='.$id.'">'.img_object('',"contact").'</a>';
     }
 
     /**
@@ -77,7 +77,7 @@ class mailing_contacts4 extends MailingTargets
 
         // La requete doit retourner: id, email, fk_contact, name, firstname, other
         $sql = "SELECT sp.rowid as id, sp.email as email, sp.rowid as fk_contact,";
-        $sql.= " sp.lastname, sp.firstname, sp.civilite as civility_id,";
+        $sql.= " sp.lastname, sp.firstname, sp.civility as civility_id,";
         $sql.= " s.nom as companyname";
         $sql.= " FROM ".MAIN_DB_PREFIX."socpeople as sp";
         if ($filtersarray[0] <> 'all')$sql.= " INNER JOIN ".MAIN_DB_PREFIX."categorie_contact as cs ON cs.fk_socpeople=sp.rowid";
@@ -89,7 +89,7 @@ class mailing_contacts4 extends MailingTargets
     	if ($filtersarray[0] <> 'all') $sql.= " AND c.label = '".$this->db->escape($filtersarray[0])."'";
     	$sql.= " ORDER BY sp.lastname, sp.firstname";
 
-    	dol_syslog(get_class($this).':: add_to_target sql='.$sql,LOG_DEBUG);
+    	dol_syslog(get_class($this).':: add_to_target',LOG_DEBUG);
     	$resql = $this->db->query($sql);
     	if ($resql)
     	{
@@ -115,7 +115,6 @@ class mailing_contacts4 extends MailingTargets
 			}
 		}else {
 			$this->error=$this->db->lasterrno();
-			dol_syslog(get_class($this)."Error sql=".$sql." ".$this->error, LOG_ERR);
 			return -1;
 		}
 
@@ -146,7 +145,7 @@ class mailing_contacts4 extends MailingTargets
             $statssql[$i].= " AND sp.email != ''";    // Note that null != '' is false
             $statssql[$i].= " AND sp.entity IN (".getEntity('societe', 1).")";
             $statssql[$i].= " AND cs.fk_categorie = c.rowid";
-            $statssql[$i].= " AND cs.fk_societe = sp.fk_soc";
+            $statssql[$i].= " AND cs.fk_soc = sp.fk_soc";
             $statssql[$i].= " GROUP BY c.label";
             $statssql[$i].= " ORDER BY nb DESC";
             $statssql[$i].= " LIMIT $i,1";
@@ -159,7 +158,7 @@ class mailing_contacts4 extends MailingTargets
     /**
      *		Return here number of distinct emails returned by your selector.
      *
-     *		@param	string	$sql		Requete sql de comptage
+     *		@param		string	$sql		Requete sql de comptage
      *		@return		int		Number of recipients
      */
     function getNbOfRecipients($sql='')
@@ -184,7 +183,7 @@ class mailing_contacts4 extends MailingTargets
         $sql.= " AND sp.entity IN (".getEntity('societe', 1).")";
         $sql.= " AND sp.email != ''"; // Note that null != '' is false
         $sql.= " AND cs.fk_categorie = c.rowid";
-        $sql.= " AND cs.fk_societe = sp.fk_soc";
+        $sql.= " AND cs.fk_soc = sp.fk_soc";
         */
     	// La requete doit retourner un champ "nb" pour etre comprise
     	// par parent::getNbOfRecipients
@@ -215,7 +214,7 @@ class mailing_contacts4 extends MailingTargets
 
         $resql = $this->db->query($sql);
 
-        dol_syslog(get_class($this).':: formFilter sql='.$sql,LOG_DEBUG);
+        dol_syslog(get_class($this).':: formFilter',LOG_DEBUG);
 		if ($resql) {
 	        $s='';
 	        $s.='<select name="filter" class="flat">';
@@ -236,7 +235,6 @@ class mailing_contacts4 extends MailingTargets
 		}
 		else {
 			$this->error=$this->db->lasterrno();
-			dol_syslog("Error sql=".$sql." ".$this->error, LOG_ERR);
 			return -1;
 		}
 

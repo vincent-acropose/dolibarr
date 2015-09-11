@@ -33,7 +33,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/modules/barcode/modules_barcode.class.php'
  */
 class mod_barcode_product_standard extends ModeleNumRefBarCode
 {
-	var $nom='Standard';				// Model Name
+	var $name='Standard';				// Model Name
 	var $code_modifiable;				// Editable code
 	var $code_modifiable_invalide;		// Modified code if it is invalid
 	var $code_modifiable_null;			// Modified code if it is null
@@ -72,7 +72,7 @@ class mod_barcode_product_standard extends ModeleNumRefBarCode
 
 		$langs->load("products");
 
-		$disabled = ((! empty($mc->sharings['referent']) && $mc->sharings['referent'] != $conf->entity) ? ' disabled="disabled"' : '');
+		$disabled = ((! empty($mc->sharings['referent']) && $mc->sharings['referent'] != $conf->entity) ? ' disabled' : '');
 
 		$texte = $langs->trans('GenericNumRefModelDesc')."<br>\n";
 		$texte.= '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';

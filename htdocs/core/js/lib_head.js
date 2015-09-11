@@ -57,7 +57,8 @@ function showDP(base,dateFieldID,format,codelang)
 
 	showDP.box=document.createElement("div");
 	showDP.box.className="bodyline";
-	showDP.box.style.siplay="block";
+	showDP.box.style.display="block";
+	showDP.box.style.zIndex="1000";
 	showDP.box.style.position="absolute";
 	showDP.box.style.top=thetop + "px";
 	showDP.box.style.left=theleft + "px";
@@ -631,7 +632,7 @@ function hideMessage(fieldId,message) {
 
 
 /*
- * TODO Used by admin page only ? 
+ * Used by button to set on/off 
  */
 function setConstant(url, code, input, entity, strict) {
 	$.get( url, {
@@ -689,7 +690,7 @@ function setConstant(url, code, input, entity, strict) {
 }
 
 /*
- * TODO Used by admin page only ? 
+ * Used by button to set on/off  
  */
 function delConstant(url, code, input, entity, strict) {
 	$.get( url, {
@@ -743,7 +744,7 @@ function delConstant(url, code, input, entity, strict) {
 }
 
 /*
- * TODO Used by admin page only ? 
+ * Used by button to set on/off  
  */
 function confirmConstantAction(action, url, code, input, box, entity, yesButton, noButton, strict) {
 	var boxConfirm = box;
@@ -854,7 +855,7 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
                                 // remove invalid value, as it didnt match anything
                             	$( this ).val( "" );
                                 select.val( "" );
-                                input.data( "autocomplete" ).term = "";
+                                input.data("ui-autocomplete").term = "";
                                 return false;
                             }
                         }
@@ -862,8 +863,8 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
                 })
                 .addClass( "ui-widget ui-widget-content ui-corner-left dolibarrcombobox" );
 
-            input.data( "autocomplete" )._renderItem = function( ul, item ) {
-                return $( "<li></li>" )
+            input.data("ui-autocomplete")._renderItem = function( ul, item ) {
+                return $("<li></li>")
                     .data( "item.autocomplete", item )
                     .append( "<a>" + item.label + "</a>" )
                     .appendTo( ul );

@@ -40,7 +40,10 @@ if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user, 'contact', $id, 'socpeople&societe');
 
 $contact = new Contact($db);
-$contact->fetch($id, $user);
+if ($id > 0)
+{
+	$contact->fetch($id, $user);
+}
 
 
 /*
@@ -49,8 +52,6 @@ $contact->fetch($id, $user);
 
 if ($action == 'dolibarr2ldap')
 {
-	$message="";
-
 	$db->begin();
 
 	$ldap=new Ldap();
@@ -64,12 +65,12 @@ if ($action == 'dolibarr2ldap')
 
 	if ($result >= 0)
 	{
-		$message.='<div class="ok">'.$langs->trans("ContactSynchronized").'</div>';
+		setEventMessage($langs->trans("ContactSynchronized"));
 		$db->commit();
 	}
 	else
 	{
-		$message.='<div class="error">'.$ldap->error.'</div>';
+		setEventMessage($ldap->error, 'errors');
 		$db->rollback();
 	}
 }
@@ -107,11 +108,11 @@ if ($contact->socid > 0)
 	$objsoc = new Societe($db);
 	$objsoc->fetch($contact->socid);
 
-	print '<tr><td width="20%">'.$langs->trans("Company").'</td><td colspan="3">'.$objsoc->getNomUrl(1).'</td></tr>';
+	print '<tr><td width="20%">'.$langs->trans("ThirdParty").'</td><td colspan="3">'.$objsoc->getNomUrl(1).'</td></tr>';
 }
 else
 {
-	print '<tr><td width="20%">'.$langs->trans("Company").'</td><td colspan="3">';
+	print '<tr><td width="20%">'.$langs->trans("ThirdParty").'</td><td colspan="3">';
 	print $langs->trans("ContactNotLinkedToCompany");
 	print '</td></tr>';
 }
@@ -134,10 +135,7 @@ print '<tr><td>LDAP '.$langs->trans("LDAPServerPort").'</td><td class="valeur" c
 
 print '</table>';
 
-print '</div>';
-
-
-dol_htmloutput_mesg($message);
+dol_fiche_end();
 
 
 /*
@@ -210,6 +208,6 @@ print '</table>';
 
 
 
-$db->close();
-
 llxFooter();
+
+$db->close();

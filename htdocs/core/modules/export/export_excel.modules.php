@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2006-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2006-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2012      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -65,8 +65,21 @@ class ExportExcel extends ModeleExports
 		$this->version='1.30';             // Driver version
 
 		// If driver use an external library, put its name here
-		$this->label_lib='PhpExcel';
-		$this->version_lib='1.7.2';
+		if (! empty($conf->global->MAIN_USE_PHP_WRITEEXCEL))
+		{
+			require_once PHP_WRITEEXCEL_PATH.'class.writeexcel_workbookbig.inc.php';
+            require_once PHP_WRITEEXCEL_PATH.'class.writeexcel_worksheet.inc.php';
+            require_once PHP_WRITEEXCEL_PATH.'functions.writeexcel_utility.inc.php';
+			$this->label_lib='PhpWriteExcel';
+            $this->version_lib='unknown';
+		}
+		else
+		{
+            require_once PHPEXCEL_PATH.'PHPExcel.php';
+            require_once PHPEXCEL_PATH.'PHPExcel/Style/Alignment.php';
+			$this->label_lib='PhpExcel';
+            $this->version_lib='1.8.0';		// No way to get info from library
+		}
 
 		$this->disabled = (in_array(constant('PHPEXCEL_PATH'),array('disabled','disabled/'))?1:0);	// A condition to disable module (used for native debian packages)
 
@@ -76,7 +89,7 @@ class ExportExcel extends ModeleExports
 	/**
 	 * getDriverId
 	 *
-	 * @return int
+	 * @return string
 	 */
 	function getDriverId()
 	{
@@ -189,6 +202,14 @@ class ExportExcel extends ModeleExports
 	            	$this->error=$langs->trans('ErrorPHPNeedModule','zip');
 	            	return -1;
 	            }
+		    }
+
+		    if (!empty($conf->global->MAIN_USE_FILECACHE_EXPORT_EXCEL_DIR)) {
+			    $cacheMethod = PHPExcel_CachedObjectStorageFactory::cache_to_discISAM;
+			    $cacheSettings = array (
+			    		'dir' => $conf->global->MAIN_USE_FILECACHE_EXPORT_EXCEL_DIR
+			    );
+			    PHPExcel_Settings::setCacheStorageMethod($cacheMethod, $cacheSettings);
 		    }
 
             $this->workbook = new PHPExcel();
@@ -305,7 +326,14 @@ class ExportExcel extends ModeleExports
 
 			$newvalue=$this->excel_clean($newvalue);
 			$typefield=isset($array_types[$code])?$array_types[$code]:'';
-
+			
+			if (preg_match('/^Select:/i', $typefield, $reg) && $typefield = substr($typefield, 7))
+			{
+				$array = unserialize($typefield);
+				$array = $array['options'];
+				$newvalue = $array[$newvalue];
+			}
+			
 			// Traduction newvalue
 			if (preg_match('/^\((.*)\)$/i',$newvalue,$reg))
 			{
@@ -418,7 +446,7 @@ class ExportExcel extends ModeleExports
             $this->workbook->disconnectWorksheets();
             unset($this->workbook);
     	}
-		return 0;
+		return 1;
 	}
 
 

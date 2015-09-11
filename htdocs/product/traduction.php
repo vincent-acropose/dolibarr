@@ -2,6 +2,7 @@
 /* Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2007      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2010-2012 Destailleur Laurent <eldy@users.sourceforge.net>
+ * Copyright (C) 2014 	   Henry Florian <florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,7 +63,7 @@ if ($action == 'delete' && GETPOST('langtodelete','alpha'))
 	$product->delMultiLangs(GETPOST('langtodelete','alpha'));
 }
 
-// Validation de l'ajout
+// Add translation
 if ($action == 'vadd' &&
 $cancel != $langs->trans("Cancel") &&
 ($user->rights->produit->creer || $user->rights->service->creer))
@@ -93,11 +94,11 @@ $cancel != $langs->trans("Cancel") &&
 	else
 	{
 		$action = 'add';
-		$mesg = '<div class="error">'.$product->error.'</div>';
+		setEventMessage($product->error,'errors');
 	}
 }
 
-// Validation de l'edition
+// Edit translation
 if ($action == 'vedit' &&
 $cancel != $langs->trans("Cancel") &&
 ($user->rights->produit->creer || $user->rights->service->creer))
@@ -129,7 +130,28 @@ $cancel != $langs->trans("Cancel") &&
 	else
 	{
 		$action = 'edit';
-		$mesg = '<div class="error">'.$product->error.'</div>';
+		setEventMessage($product->error,'errors');
+	}
+}
+
+// Delete translation
+if ($action == 'vdelete' &&
+$cancel != $langs->trans("Cancel") &&
+($user->rights->produit->creer || $user->rights->service->creer))
+{
+	$product = new Product($db);
+	$product->fetch($id);
+	$langtodelete=GETPOST('langdel','alpha');
+
+
+	if ( $product->delMultiLangs($langtodelete) > 0 )
+	{
+		$action = '';
+	}
+	else
+	{
+		$action = 'edit';
+		setEventMessage($product->error,'errors');
 	}
 }
 
@@ -146,14 +168,10 @@ llxHeader("","",$langs->trans("Translation"));
 $form = new Form($db);
 $formadmin=new FormAdmin($db);
 
-$head=product_prepare_head($product, $user);
+$head=product_prepare_head($product);
 $titre=$langs->trans("CardProduct".$product->type);
-$picto=($product->type==1?'service':'product');
+$picto=($product->type==Product::TYPE_SERVICE?'service':'product');
 dol_fiche_head($head, 'translation', $titre, 0, $picto);
-
-if (! empty($mesg)) {
-	dol_htmloutput_mesg($mesg);
-}
 
 print '<table class="border" width="100%">';
 
@@ -194,14 +212,16 @@ if ($action == 'edit')
 			$doleditor->Create();
 
 			print '</td></tr>';
-			print '</tr>';
+			print '<tr height="30px"><td colspan="2" align="right"><a class="butAction" href="'.DOL_URL_ROOT.'/product/traduction.php?action=vdelete&id='.$product->id.'&langdel='.$key.'">'.$langs->trans("Delete").'</a></td></tr>';
 			print '</table>';
 		}
 	}
 
-	print '<br><center>';
-	print '<input type="submit" class="button" value="'.$langs->trans("Save").'"> &nbsp; &nbsp; ';
-	print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'"></center>';
+	print '<br><div class="center">';
+	print '<input type="submit" class="button" value="'.$langs->trans("Save").'">';
+	print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+	print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'">';
+	print '</div>';
 
 	print '</form>';
 
@@ -282,9 +302,11 @@ if ($action == 'add' && ($user->rights->produit->creer || $user->rights->service
 	print '</tr>';
 	print '</table>';
 
-	print '<br><center>';
-	print '<input type="submit" class="button" value="'.$langs->trans("Save").'"> &nbsp; &nbsp; ';
-	print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'"></center>';
+	print '<br><div class="center">';
+	print '<input type="submit" class="button" value="'.$langs->trans("Save").'">';
+	print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+	print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'">';
+	print '</div>';
 
 	print '</form>';
 
