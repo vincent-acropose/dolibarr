@@ -165,7 +165,7 @@ if ($action == 'update')
     $cp->fetch($_POST['holiday_id']);
 
     // Si en attente de validation
-    if ($cp->statut == 1)
+    if ($cp->statut != 3)
     {
         // Si c'est le créateur ou qu'il a le droit de tout lire / modifier
         if ($user->id == $cp->fk_user || $user->rights->holiday->lire_tous)
@@ -240,7 +240,7 @@ if ($action == 'confirm_delete'  && $_GET['confirm'] == 'yes')
         $cp->fetch($id);
 
         // Si c'est bien un brouillon
-        if ($cp->statut == 1)
+        if ($cp->statut != 3)
         {
             // Si l'utilisateur à le droit de lire cette demande, il peut la supprimer
             if ($user->id == $cp->fk_user || $user->rights->holiday->lire_tous)
@@ -263,7 +263,7 @@ if ($action == 'confirm_send')
     $cp->fetch($id);
 
     // Si brouillon et créateur
-    if($cp->statut == 1 && $user->id == $cp->fk_user)
+    if($cp->statut != 3 && $user->id == $cp->fk_user)
     {
         $cp->statut = 2;
 
@@ -592,6 +592,12 @@ if ($action == 'confirm_cancel' && GETPOST('confirm') == 'yes')
     }
 
 }
+if ($action=='reset') {
+	$cp = new Holiday($db);
+	$cp->fetch($_GET['id']);
+	$cp->statut=1;
+	$cp->update($user);
+}
 
 
 
@@ -829,7 +835,7 @@ else
             if($user->id == $cp->fk_user || $user->rights->holiday->lire_tous)
             {
 
-                if ($action == 'delete' && $cp->statut == 1) {
+                if ($action == 'delete' && $cp->statut != 3) {
                     if($user->rights->holiday->delete)
                     {
                         $ret=$form->form_confirm("fiche.php?id=".$id,$langs->trans("TitleDeleteCP"),$langs->trans("ConfirmDeleteCP"),"confirm_delete", '', 0, 1);
@@ -838,7 +844,7 @@ else
                 }
 
                 // Si envoi en validation
-                if ($action == 'sendToValidate' && $cp->statut == 1 && $user->id == $cp->fk_user)
+                if ($action == 'sendToValidate' && $cp->statut != 3 && $user->id == $cp->fk_user)
                 {
                     $ret=$form->form_confirm("fiche.php?id=".$id,$langs->trans("TitleToValidCP"),$langs->trans("ConfirmToValidCP"),"confirm_send", '', 1, 1);
                     if ($ret == 'html') print '<br />';
@@ -870,7 +876,7 @@ else
 
                 dol_fiche_head($head,'card',$langs->trans("CPTitreMenu"),0,'holiday');
 
-                if ($action == 'edit' && $user->id == $cp->fk_user && $cp->statut == 1)
+                if ($action == 'edit' && $user->id == $cp->fk_user && $cp->statut != 3)
                 {
                     $edit = true;
                     print '<form method="post" action="'.$_SERVER['PHP_SELF'].'?id='.$_GET['id'].'">'."\n";
@@ -1040,10 +1046,10 @@ else
                 print '</tbody>';
                 print '</table>';
 
-                if ($edit && $user->id == $cp->fk_user && $cp->statut == 1)
+                if ($edit && $user->id == $cp->fk_user && $cp->statut != 3)
                 {
                     print '<br><div align="center">';
-                    if($user->rights->holiday->write && $_GET['action'] == 'edit' && $cp->statut == 1)
+                    if($user->rights->holiday->write && $_GET['action'] == 'edit' && $cp->statut != 3)
                     {
                         print '<input type="submit" value="'.$langs->trans("UpdateButtonCP").'" class="button">';
                     }
@@ -1059,15 +1065,15 @@ else
 		            print '<div class="tabsAction">';
 
                     // Boutons d'actions
-                    if($user->rights->holiday->write && $_GET['action'] != 'edit' && $cp->statut == 1)
+                    if($user->rights->holiday->write && $_GET['action'] != 'edit' && $cp->statut != 3)
                     {
                         print '<a href="fiche.php?id='.$_GET['id'].'&action=edit" class="butAction">'.$langs->trans("EditCP").'</a>';
                     }
-                    if($user->id == $cp->fk_user && $cp->statut == 1)
+                    if($user->id == $cp->fk_user && $cp->statut != 3)
                     {
                         print '<a href="fiche.php?id='.$_GET['id'].'&action=sendToValidate" class="butAction">'.$langs->trans("Validate").'</a>';
                     }
-                    if($user->rights->holiday->delete && $cp->statut == 1)
+                    if($user->rights->holiday->delete && $cp->statut != 3)
                     {
                     	print '<a href="fiche.php?id='.$_GET['id'].'&action=delete" class="butActionDelete">'.$langs->trans("DeleteCP").'</a>';
                     }
@@ -1078,10 +1084,15 @@ else
                         print '<a href="fiche.php?id='.$_GET['id'].'&action=refuse" class="butAction">'.$langs->trans("ActionRefuseCP").'</a>';
                     }
 
-                    if (($user->id == $cp->fk_validator || $user->id == $cp->fk_user) && $cp->statut == 2)
+                    if (($user->id == $cp->fk_validator || $user->id == $cp->fk_user || $user->admin ) && ($cp->statut == 2 || $cp->statut == 5))
                     {
-                    	if (($cp->date_debut > dol_now()) || $user->admin) print '<a href="fiche.php?id='.$_GET['id'].'&action=cancel" class="butAction">'.$langs->trans("ActionCancelCP").'</a>';
-                    	else print '<a href="#" class="butActionRefused" title="'.$langs->trans("HolidayStarted").'">'.$langs->trans("ActionCancelCP").'</a>';
+                    	if (($cp->date_debut > dol_now()) || $user->admin) {
+                    		print '<a href="fiche.php?id='.$_GET['id'].'&action=cancel" class="butAction">'.$langs->trans("ActionCancelCP").'</a>';
+                    		print '<a href="fiche.php?id='.$_GET['id'].'&action=reset" class="butAction">'.$langs->trans("Passé à l'état Brouillon").'</a>';
+                    	}
+                    	else  {
+                    		print '<a href="#" class="butActionRefused" title="'.$langs->trans("HolidayStarted").'">'.$langs->trans("ActionCancelCP").'</a>';
+                    	}
                     }
 
                     print '</div>';
