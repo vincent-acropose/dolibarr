@@ -227,8 +227,14 @@ if (isset($conf->file->main_authentication) && preg_match('/openid/',$conf->file
 	</div></div>
 <?php
 }
-?>
 
+	$xml = simplexml_load_file("http://www.commitstrip.com/fr/feed/");
+
+        $little = $xml->channel->item[0]->children('content',true);
+
+        print $little->encoded;
+
+?>
 <?php if ($main_home)
 {
 ?>
