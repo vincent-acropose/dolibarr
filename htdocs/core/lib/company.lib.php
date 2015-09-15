@@ -484,8 +484,9 @@ function show_projects($conf,$langs,$db,$object,$backtopage='')
         print_fiche_titre($langs->trans("ProjectsDedicatedToThisThirdParty"),$buttoncreate,'');
         print "\n".'<table class="noborder" width=100%>';
 
-        $sql  = "SELECT p.rowid,p.fk_statut,p.title,p.ref,p.public, p.dateo as do, p.datee as de";
+        $sql  = "SELECT p.rowid,p.fk_statut,p.title,p.ref,p.public, p.dateo as do, p.datee as de, pex.etat_prj";
         $sql .= " FROM ".MAIN_DB_PREFIX."projet as p";
+        $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pex ON (p.rowid = pex.fk_object)";
         $sql .= " WHERE p.fk_soc = ".$object->id;
         $sql .= " ORDER BY p.dateo DESC";
 
@@ -493,11 +494,34 @@ function show_projects($conf,$langs,$db,$object,$backtopage='')
         if ($result)
         {
             $num = $db->num_rows($result);
-
+            $ex=new ExtraFields($db);
+            $ex->fetch_name_optionals_label('projet');
+            
             print '<tr class="liste_titre">';
-            print '<td>'.$langs->trans("Ref").'</td><td>'.$langs->trans("Name").'</td><td align="center">'.$langs->trans("DateStart").'</td><td align="center">'.$langs->trans("DateEnd").'</td><td>'.$langs->trans("Status").'</td>';
+            print '<td>'.$langs->trans("Ref").'</td><td>'.$langs->trans("Name").'</td>
+            <td align="center">'.$langs->trans("DateStart").'</td>
+            <td align="center">'.$langs->trans("DateEnd").'</td>
+            <td align="center">'.$langs->trans("Progression").'</td>
+            <td>'.$langs->trans("Status").'</td>';
+            /*
             print '</tr>';
-
+            print '<tr class="liste_titre">';
+            print '<td class="liste_titre"></td>';
+            print '<td class="liste_titre"></td>';
+            print '<td class="liste_titre"></td>';
+            print '<td class="liste_titre"></td>';
+            print '<td class="liste_titre"  align="center">';
+            
+            $ex=new ExtraFields($db);
+            $ex->fetch_name_optionals_label('projet');
+            $form=new Form($db);
+            //var_dump($ex->attribute_param['etat_prj']);
+            echo $form->selectarray('search_etat_prj', $ex->attribute_param['etat_prj']['options'],$search_etat_prj,1);
+            
+            print '</td>';
+            print '<td class="liste_titre">&nbsp;</td>';
+            print '<td class="liste_titre" align="right"><input class="liste_titre" type="image" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'"></td>';
+            print "</tr>\n";*/
             if ($num > 0)
             {
                 require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
@@ -528,7 +552,8 @@ function show_projects($conf,$langs,$db,$object,$backtopage='')
                         // Date end
                         print '<td align="center">'.dol_print_date($db->jdate($obj->de),"day").'</td>';
 						// Status
-						print '<td>'.$projectstatic->LibStatut($obj->fk_statut, 5).'</td>';
+						print '<td align="center">'.$ex->attribute_param['etat_prj']['options'][$obj->etat_prj].'</td>';
+                        print '<td>'.$projectstatic->LibStatut($obj->fk_statut, 5).'</td>';
 
                         print '</tr>';
                     }
@@ -590,8 +615,9 @@ function show_projects_linked($conf,$langs,$db,$object,$backtopage='')
         print_fiche_titre($langs->trans("ProjectsWhereThirdPartyIsContact"),$buttoncreate,'');
         print "\n".'<table class="noborder" width=100%>';
 
-        $sql  = "SELECT p.rowid,sp.rowid as id_contact,p.fk_statut,p.title,p.ref,p.public, p.dateo as do, p.datee as de, ctc.code";
+        $sql  = "SELECT p.rowid,sp.rowid as id_contact,p.fk_statut,p.title,p.ref,p.public, p.dateo as do, p.datee as de, ctc.code, pex.etat_prj";
         $sql .= " FROM ".MAIN_DB_PREFIX."projet as p";
+        $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pex ON (p.rowid = pex.fk_object)";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_contact ec ON (ec.element_id = p.rowid)";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_contact ctc ON (ctc.rowid = ec.fk_c_type_contact)";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople sp ON (sp.rowid = ec.fk_socpeople)";
@@ -603,9 +629,15 @@ function show_projects_linked($conf,$langs,$db,$object,$backtopage='')
         if ($result)
         {
             $num = $db->num_rows($result);
-
+            $ex=new ExtraFields($db);
+            $ex->fetch_name_optionals_label('projet');
+            
             print '<tr class="liste_titre">';
-            print '<td>'.$langs->trans("Ref").'</td><td>'.$langs->trans("Name").'</td><td>'.$langs->trans("Contact").'</td><td>'.$langs->trans("ContactType").'</td><td align="center">'.$langs->trans("DateStart").'</td><td align="center">'.$langs->trans("DateEnd").'</td><td>'.$langs->trans("Status").'</td>';
+            print '<td>'.$langs->trans("Ref").'</td><td>'.$langs->trans("Name").'</td>
+            <td>'.$langs->trans("Contact").'</td><td>'.$langs->trans("ContactType").'</td>
+            <td align="center">'.$langs->trans("DateStart").'</td><td align="center">'.$langs->trans("DateEnd").'</td>
+            <td align="center">'.$langs->trans("Progression").'</td>
+            <td>'.$langs->trans("Status").'</td>';
             print '</tr>';
 
             if ($num > 0)
@@ -645,6 +677,8 @@ function show_projects_linked($conf,$langs,$db,$object,$backtopage='')
                         // Date end
                         print '<td align="center">'.dol_print_date($db->jdate($obj->de),"day").'</td>';
 						// Status
+						print '<td align="center">'.$ex->attribute_param['etat_prj']['options'][$obj->etat_prj].'</td>';
+                        
 						print '<td>'.$projectstatic->LibStatut($obj->fk_statut, 5).'</td>';
 
                         print '</tr>';
