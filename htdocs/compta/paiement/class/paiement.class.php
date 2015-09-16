@@ -590,6 +590,13 @@ class Paiement extends CommonObject
             {
             	$this->datepaye = $date;
                 $this->date = $date;
+				
+				// Spécifique Zen eSPAce : mise à jour date banque si modification date rglt
+				$sql = "UPDATE ".MAIN_DB_PREFIX."bank";
+	            $sql.= " SET datev = '".$this->db->idate($date)."', dateo = '".$this->db->idate($date)."'";
+	            $sql.= " WHERE rowid = ".$this->bank_line;
+				$this->db->query($sql);
+				
                 return 0;
             }
             else
