@@ -3380,7 +3380,7 @@ if ($action == 'create')
 				// On verifie si les lignes de factures ont ete exportees en compta et/ou ventilees
 				$ventilExportCompta = $object->getVentilExportCompta();
 
-				if ($resteapayer == $object->total_ttc && $object->paye == 0 && $ventilExportCompta == 0) {
+				if (round($resteapayer,2) == round($object->total_ttc,2) && $object->paye == 0 && $ventilExportCompta == 0) {
 					if (! $objectidnext) {
 						if ((empty($conf->global->MAIN_USE_ADVANCED_PERMS) && $user->rights->facture->valider) || $user->rights->facture->invoice_advance->unvalidate) {
 							print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?facid=' . $object->id . '&amp;action=modif">' . $langs->trans('Modify') . '</a></div>';
