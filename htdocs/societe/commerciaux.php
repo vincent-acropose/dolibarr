@@ -141,7 +141,7 @@ if ($_GET["socid"])
 	print '<tr><td valign="top">'.$langs->trans("SalesRepresentatives").'</td>';
 	print '<td colspan="3">';
 
-	$sql = "SELECT u.rowid, u.name, u.firstname";
+	$sql = "SELECT u.rowid, u.name, u.firstname, sc.type_activite_cpro";
 	$sql .= " FROM ".MAIN_DB_PREFIX."user as u";
 	$sql .= " , ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 	$sql .= " WHERE sc.fk_soc =".$soc->id;
@@ -160,7 +160,7 @@ if ($_GET["socid"])
 
 			print '<a href="'.DOL_URL_ROOT.'/user/fiche.php?id='.$obj->rowid.'">';
 			print img_object($langs->trans("ShowUser"),"user").' ';
-			print $obj->firstname." " .$obj->name."\n";
+			print $obj->firstname." " .$obj->name.' ['.$obj->type_activite_cpro.']'."\n";
 			print '</a>&nbsp;';
 			if ($user->rights->societe->creer)
 			{
