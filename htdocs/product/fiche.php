@@ -1435,17 +1435,19 @@ else
             // Description
             print '<tr><td valign="top">'.$langs->trans("Description").'</td><td colspan="2">'.(dol_textishtml($object->description)?$object->description:dol_nl2br($object->description,1,true)).'</td></tr>';
 
-			// Affichage du niveau de risque
-			$c = new Categorie($db);
-			$TCategories = $c->containing($object->id, 'product');
-			
-			if (!empty($TCategories)) {
-				$categorie = $TCategories[0];
-				$risque = $categorie->array_options['options_niveau_de_risque'];
-				print '<tr>
-					<td valign="top">'.$langs->trans("RiskLevel").'</td>
-					<td>' . $risque . ' (' .  $categorie->label . ' - ' . $categorie->description . ')</td>
-				</tr>';
+			// Affichage du niveau de risque (uniquement pour les produits)
+			if($object->type == 0) {
+				$c = new Categorie($db);
+				$TCategories = $c->containing($object->id, 'product');
+				
+				if (!empty($TCategories)) {
+					$categorie = $TCategories[0];
+					$risque = $categorie->array_options['options_niveau_de_risque'];
+					print '<tr>
+						<td valign="top">'.$langs->trans("RiskLevel").'</td>
+						<td>' . $risque . ' (' .  $categorie->label . ' - ' . $categorie->description . ')</td>
+					</tr>';
+				}
 			}
 
             // Public URL
