@@ -503,16 +503,16 @@ else
 
             // Phone / Fax
             if (($objsoc->typent_code == 'TE_PRIVATE' || ! empty($conf->global->CONTACT_USE_COMPANY_ADDRESS)) && dol_strlen(trim($object->phone_pro)) == 0) $object->phone_pro = $objsoc->phone;	// Predefined with third party
-            print '<tr><td>'.$langs->trans("PhonePro").'</td><td><input name="phone_pro" id="phone_pro" type="text" size="18" maxlength="80" value="'.dol_escape_htmltag(GETPOST("phone_pro")?GETPOST("phone_pro"):$object->phone_pro).'"></td>';
+            print '<tr><td class="fieldrequired">'.$langs->trans("PhonePro").'</td><td><input name="phone_pro" id="phone_pro" type="text" size="18" maxlength="80" value="'.dol_escape_htmltag(GETPOST("phone_pro")?GETPOST("phone_pro"):$object->phone_pro).'"></td>';
             print '<td>'.$langs->trans("PhonePerso").'</td><td><input name="phone_perso" id="phone_perso" type="text" size="18" maxlength="80" value="'.dol_escape_htmltag(GETPOST("phone_perso")?GETPOST("phone_perso"):$object->phone_perso).'"></td></tr>';
 
             if (($objsoc->typent_code == 'TE_PRIVATE' || ! empty($conf->global->CONTACT_USE_COMPANY_ADDRESS)) && dol_strlen(trim($object->fax)) == 0) $object->fax = $objsoc->fax;	// Predefined with third party
-            print '<tr><td>'.$langs->trans("PhoneMobile").'</td><td><input name="phone_mobile" id="phone_mobile" type="text" size="18" maxlength="80" value="'.dol_escape_htmltag(GETPOST("phone_mobile")?GETPOST("phone_mobile"):$object->phone_mobile).'"></td>';
+            print '<tr><td class="fieldrequired">'.$langs->trans("PhoneMobile").'</td><td><input name="phone_mobile" id="phone_mobile" type="text" size="18" maxlength="80" value="'.dol_escape_htmltag(GETPOST("phone_mobile")?GETPOST("phone_mobile"):$object->phone_mobile).'"></td>';
             print '<td>'.$langs->trans("Fax").'</td><td><input name="fax" id="fax" type="text" size="18" maxlength="80" value="'.dol_escape_htmltag(GETPOST("fax",'alpha')?GETPOST("fax",'alpha'):$object->fax).'"></td></tr>';
 
             // EMail
             if (($objsoc->typent_code == 'TE_PRIVATE' || ! empty($conf->global->CONTACT_USE_COMPANY_ADDRESS)) && dol_strlen(trim($object->email)) == 0) $object->email = $objsoc->email;	// Predefined with third party
-            print '<tr><td>'.$langs->trans("Email").'</td><td><input name="email" id="email" type="text" size="50" maxlength="80" value="'.(GETPOST("email",'alpha')?GETPOST("email",'alpha'):$object->email).'"></td>';
+            print '<tr><td class="fieldrequired">'.$langs->trans("Email").'</td><td><input name="email" id="email" type="text" size="50" maxlength="80" value="'.(GETPOST("email",'alpha')?GETPOST("email",'alpha'):$object->email).'"></td>';
             if (! empty($conf->mailing->enabled))
             {
             	print '<td>'.$langs->trans("No_Email").'</td><td>'.$form->selectyesno('no_email',(GETPOST("no_email",'alpha')?GETPOST("no_email",'alpha'):$object->no_email), 1).'</td>';
@@ -701,14 +701,14 @@ else
             }
 
             // Phone
-            print '<tr><td>'.$langs->trans("PhonePro").'</td><td><input name="phone_pro" type="text" size="18" maxlength="80" value="'.(isset($_POST["phone_pro"])?$_POST["phone_pro"]:$object->phone_pro).'"></td>';
+            print '<tr><td class="fieldrequired">'.$langs->trans("PhonePro").'</td><td><input name="phone_pro" type="text" size="18" maxlength="80" value="'.(isset($_POST["phone_pro"])?$_POST["phone_pro"]:$object->phone_pro).'"></td>';
             print '<td>'.$langs->trans("PhonePerso").'</td><td><input name="phone_perso" type="text" size="18" maxlength="80" value="'.(isset($_POST["phone_perso"])?$_POST["phone_perso"]:$object->phone_perso).'"></td></tr>';
 
-            print '<tr><td>'.$langs->trans("PhoneMobile").'</td><td><input name="phone_mobile" type="text" size="18" maxlength="80" value="'.(isset($_POST["phone_mobile"])?$_POST["phone_mobile"]:$object->phone_mobile).'"></td>';
+            print '<tr><td class="fieldrequired">'.$langs->trans("PhoneMobile").'</td><td><input name="phone_mobile" type="text" size="18" maxlength="80" value="'.(isset($_POST["phone_mobile"])?$_POST["phone_mobile"]:$object->phone_mobile).'"></td>';
             print '<td>'.$langs->trans("Fax").'</td><td><input name="fax" type="text" size="18" maxlength="80" value="'.(isset($_POST["fax"])?$_POST["fax"]:$object->fax).'"></td></tr>';
 
             // EMail
-            print '<tr><td>'.$langs->trans("EMail").'</td><td><input name="email" type="text" size="40" maxlength="80" value="'.(isset($_POST["email"])?$_POST["email"]:$object->email).'"></td>';
+            print '<tr><td class="fieldrequired">'.$langs->trans("EMail").'</td><td><input name="email" type="text" size="40" maxlength="80" value="'.(isset($_POST["email"])?$_POST["email"]:$object->email).'"></td>';
             if (! empty($conf->mailing->enabled))
             {
                 $langs->load("mails");
