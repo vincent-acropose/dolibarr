@@ -523,7 +523,7 @@ if (empty($reshook)) {
 			$langs->load("errors");
 			$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentities("Firstname"))."<br>\n";
 		}
-		if ($morphy == 'mor' && (empty($fk_soc) || $fk_soc == -1)) {
+		if ($morphy == 'mor' && (empty($societe) || $societe == -1)) {
 			$error++;
 			$langs->load("errors");
 			$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentities("Company"))."<br>\n";
