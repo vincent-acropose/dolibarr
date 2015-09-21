@@ -440,6 +440,8 @@ if (! defined('NOLOGIN'))
 
         if ($test && $goontestloop)
         {
+            $user->entity = $entitytotest;
+            
         	$login = checkLoginPassEntity($usertotest,$passwordtotest,$entitytotest,$authmode);
         	if ($login)
             {
