@@ -1018,9 +1018,15 @@ class Commande extends CommonOrder
         $this->date_creation      = '';
         $this->date_validation    = '';
         $this->ref_client         = '';
-		
+
         // Create clone
         $result=$this->create($user);
+        if ($result < 0) $error++;
+
+		// Set new ref
+		$newref='(PROV'.$this->id.')';
+        $sql = 'UPDATE '.MAIN_DB_PREFIX."commande SET ref='".$this->db->escape($newref)."' WHERE rowid=".$this->id;
+        $result=$this->db->query($sql);
         if ($result < 0) $error++;
 
         if (! $error)
@@ -1070,7 +1076,7 @@ class Commande extends CommonOrder
 
         $error=0;
 
-        
+
         $this->date_commande = dol_now();
         $this->source = 0;
 
@@ -3862,4 +3868,3 @@ class OrderLine extends CommonOrderLine
         }
     }
 }
-
