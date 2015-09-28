@@ -148,7 +148,7 @@ class Facture extends CommonInvoice
 	//List of situations invoices
 	var $tab_previous_situation_invoice=array();
 	var $tab_next_situation_invoice=array();
-	
+
 	/**
 	 * @var int Situation cycle reference number
 	 */
@@ -635,7 +635,7 @@ class Facture extends CommonInvoice
 	function createFromCurrent($user,$invertdetail=0)
 	{
 		global $conf;
-		
+
 		// Charge facture source
 		$facture=new Facture($this->db);
 
@@ -676,7 +676,7 @@ class Facture extends CommonInvoice
 				$facture->lines[$i]->total_ttc = -$facture->lines[$i]->total_ttc;
 			}
 		}
-		
+
 		dol_syslog(get_class($this)."::createFromCurrent invertdetail=".$invertdetail." socid=".$this->socid." nboflines=".count($facture->lines));
 
 		$facid = $facture->create($user);
@@ -688,15 +688,15 @@ class Facture extends CommonInvoice
 		elseif ($this->type == self::TYPE_SITUATION && !empty($conf->global->INVOICE_USE_SITUATION))
 		{
 			$this->fetchObjectLinked('', '', $object->id, 'facture');
-			
-			foreach ($this->linkedObjectsIds as $typeObject => $Tfk_object) 
+
+			foreach ($this->linkedObjectsIds as $typeObject => $Tfk_object)
 			{
-				foreach ($Tfk_object as $fk_object)	
+				foreach ($Tfk_object as $fk_object)
 				{
 					$facture->add_object_linked($typeObject, $fk_object);
 				}
 			}
-			
+
 			$facture->add_object_linked('facture', $this->fk_facture_source);
 		}
 
@@ -1213,30 +1213,30 @@ class Facture extends CommonInvoice
 	/**
 	 * Load all situations invoices in $this->tab_previous_situation_invoice and $this->tab_next_situation_invoice
 	 *
-	 *	@return		void 
+	 *	@return		void
 	 */
 	 function fetchPreviousNextSituationInvoice()
 	 {
 	 	$this->tab_previous_situation_invoice = array();
 		$this->tab_next_situation_invoice = array();
-		
+
 		$sql = 'SELECT rowid, situation_counter FROM '.MAIN_DB_PREFIX.'facture WHERE rowid <> '.$this->id.' AND situation_cycle_ref = '.(int) $this->situation_cycle_ref.' ORDER BY situation_counter ASC';
-		
+
 		dol_syslog(get_class($this).'::fetchPreviousNextSituationInvoice', LOG_DEBUG);
 		$result = $this->db->query($sql);
 		if ($result && $this->db->num_rows($result) > 0)
 		{
-			
+
 			while ($objp = $this->db->fetch_object($result))
 			{
 				$invoice = new Facture($this->db);
 				if ($invoice->fetch($objp->rowid) > 0)
-				{					
+				{
 					if ($objp->situation_counter < $this->situation_counter) $this->tab_previous_situation_invoice[] = $invoice;
 					else $this->tab_next_situation_invoice[] = $invoice;
 				}
 			}
-			
+
 		}
 
 	 }
@@ -1665,7 +1665,7 @@ class Facture extends CommonInvoice
 	            // Call trigger
 	            $result=$this->call_trigger('BILL_PAYED',$user);
 	            if ($result < 0) $error++;
-               
+
 	            // End call triggers
 			}
 			else
@@ -2025,7 +2025,7 @@ class Facture extends CommonInvoice
 				$this->brouillon=0;
 				$this->date_validation=$now;
 				$i = 0;
-				
+
                 if (!empty($conf->global->INVOICE_USE_SITUATION))
                 {
     				$final = True;
@@ -2058,7 +2058,7 @@ class Facture extends CommonInvoice
 
 	/**
 	 * Update price of next invoice
-	 * 
+	 *
 	 * @return bool		false if KO, true if OK
 	 */
 	function updatePriceNextInvoice(&$langs)
@@ -2066,14 +2066,14 @@ class Facture extends CommonInvoice
 		foreach ($this->tab_next_situation_invoice as $next_invoice)
 		{
 			$is_last = $next_invoice->is_last_in_cycle();
-			
+
 			if ($next_invoice->brouillon && $is_last == 1) break;
-			elseif ($next_invoice->brouillon && $is_last != 1) 
+			elseif ($next_invoice->brouillon && $is_last != 1)
 			{
 				$this->error = $langs->trans('updatePriceNextInvoiceErrorUpdateline', $next_invoice->ref);
 				return false;
 			}
-			
+
 			$next_invoice->brouillon = 1;
 			foreach ($next_invoice->lines as $line)
 			{
@@ -2081,20 +2081,20 @@ class Facture extends CommonInvoice
 														$line->date_start, $line->date_end, $line->tva_tx, $line->localtax1_tx, $line->localtax2_tx, 'HT', $line->info_bits, $line->product_type,
 														$line->fk_parent_line, 0, $line->fk_fournprice, $line->pa_ht, $line->label, $line->special_code, $line->array_options, $line->situation_percent,
 														$line->fk_unit);
-				
-				if ($result < 0) 
+
+				if ($result < 0)
 				{
 					$this->error = $langs->trans('updatePriceNextInvoiceErrorUpdateline', $next_invoice->ref);
 					return false;
 				}
 			}
-			
+
 			break; // Only the next invoice and not each next invoice
 		}
-		
+
 		return true;
 	}
-	 
+
 	/**
 	 *	Set draft status
 	 *
@@ -2244,7 +2244,7 @@ class Facture extends CommonInvoice
 		if (empty($fk_parent_line) || $fk_parent_line < 0) $fk_parent_line=0;
 		if (empty($fk_prev_id)) $fk_prev_id = 'null';
 		if (! isset($situation_percent) || $situation_percent > 100 || (string) $situation_percent == '') $situation_percent = 100;
-		    
+
 		$remise_percent=price2num($remise_percent);
 		$qty=price2num($qty);
 		$pu_ht=price2num($pu_ht);
@@ -2317,10 +2317,10 @@ class Facture extends CommonInvoice
 			$this->line->fk_facture=$this->id;
 			$this->line->label=$label;	// deprecated
 			$this->line->desc=$desc;
-			
+
 			$this->line->qty=            ($this->type==self::TYPE_CREDIT_NOTE?abs($qty):$qty);	    // For credit note, quantity is always positive and unit price negative
 			$this->line->subprice=       ($this->type==self::TYPE_CREDIT_NOTE?-abs($pu_ht):$pu_ht); // For credit note, unit price always negative, always positive otherwise
-					
+
 			$this->line->tva_tx=$txtva;
 			$this->line->localtax1_tx=$txlocaltax1;
 			$this->line->localtax2_tx=$txlocaltax2;
@@ -2332,7 +2332,7 @@ class Facture extends CommonInvoice
 			$this->line->total_tva=      (($this->type==self::TYPE_CREDIT_NOTE||$qty<0)?-abs($total_tva):$total_tva);  // For credit note and if qty is negative, total is negative
 			$this->line->total_localtax1=(($this->type==self::TYPE_CREDIT_NOTE||$qty<0)?-abs($total_localtax1):$total_localtax1);  // For credit note and if qty is negative, total is negative
 			$this->line->total_localtax2=(($this->type==self::TYPE_CREDIT_NOTE||$qty<0)?-abs($total_localtax2):$total_localtax2);  // For credit note and if qty is negative, total is negative
-			
+
 			$this->line->fk_product=$fk_product;
 			$this->line->product_type=$product_type;
 			$this->line->remise_percent=$remise_percent;
@@ -2342,7 +2342,7 @@ class Facture extends CommonInvoice
 			$this->line->rang=$rangtouse;
 			$this->line->info_bits=$info_bits;
 			$this->line->fk_remise_except=$fk_remise_except;
-			
+
 			$this->line->special_code=$special_code;
 			$this->line->fk_parent_line=$fk_parent_line;
 			$this->line->origin=$origin;
@@ -2437,7 +2437,7 @@ class Facture extends CommonInvoice
 					return -3;
 				}
 			}
-		
+
 			$this->db->begin();
 
 			// Clean parameters
@@ -2582,30 +2582,30 @@ class Facture extends CommonInvoice
 	}
 
 	/**
-	 * Check if the percent edited is lower of next invoice line 
-	 * 
+	 * Check if the percent edited is lower of next invoice line
+	 *
 	 * @return false if KO, true if OK
 	 */
 	function checkProgressLine($idline, $situation_percent)
 	{
-		$sql = 'SELECT fd.situation_percent FROM '.MAIN_DB_PREFIX.'facturedet fd 
-				INNER JOIN '.MAIN_DB_PREFIX.'facture f ON (fd.fk_facture = f.rowid) 
-				WHERE fd.fk_prev_id = '.$idline.' 
+		$sql = 'SELECT fd.situation_percent FROM '.MAIN_DB_PREFIX.'facturedet fd
+				INNER JOIN '.MAIN_DB_PREFIX.'facture f ON (fd.fk_facture = f.rowid)
+				WHERE fd.fk_prev_id = '.$idline.'
 				AND f.fk_statut <> 0';
-		
+
 		$result = $this->db->query($sql);
 		if (! $result)
 		{
 			$this->error=$this->db->error();
 			return false;
 		}
-		
+
 		$obj = $this->db->fetch_object($result);
-		
+
 		if ($obj === null) return true;
 		else return $situation_percent < $obj->situation_percent;
 	}
-	 
+
 	/**
 	 * Update invoice line with percentage
 	 *
@@ -3798,10 +3798,10 @@ class Facture extends CommonInvoice
 	 */
 	function get_prev_sits()
 	{
-
 		$sql = 'SELECT rowid FROM ' . MAIN_DB_PREFIX . 'facture';
 		$sql .= ' where situation_cycle_ref = ' . $this->situation_cycle_ref;
 		$sql .= ' and situation_counter < ' . $this->situation_counter;
+		$sql .= ' AND entity in ('.getEntity('facture').')';
 		$resql = $this->db->query($sql);
 		$res = array();
 		if ($resql && $resql->num_rows > 0) {
@@ -3828,9 +3828,9 @@ class Facture extends CommonInvoice
 	function setFinal()
 	{
 		global $conf, $langs, $user;
-		
+
         $this->db->begin();
-        
+
 		$this->situation_final = 1;
 		$sql = 'update ' . MAIN_DB_PREFIX . 'facture set situation_final = ' . $this->situation_final . ' where rowid = ' . $this->id;
 		$resql = $this->db->query($sql);
@@ -3854,20 +3854,13 @@ class Facture extends CommonInvoice
 	 */
 	function is_last_in_cycle()
 	{
-		if (!empty($this->situation_cycle_ref)) {
-			// No point in testing anything if we're not inside a cycle
-			$sql = 'SELECT max(situation_counter) FROM ' . MAIN_DB_PREFIX . 'facture WHERE situation_cycle_ref = ' . $this->situation_cycle_ref;
-			$resql = $this->db->query($sql);
-	
-			if ($resql && $resql->num_rows > 0) {
-				$res = $this->db->fetch_array($resql);
-				$last = $res['max(situation_counter)'];
-				return ($last == $this->situation_counter);
-			} else {
-				$this->error = $this->db->lasterror();
-				dol_syslog(get_class($this) . "::select Error " . $this->error, LOG_ERR);
-				return false;
-			}
+		$sql = 'SELECT max(situation_counter) FROM ' . MAIN_DB_PREFIX . 'facture WHERE situation_cycle_ref = ' . (int) $this->situation_cycle_ref . ' AND entity in ('.getEntity('facture').')';
+		$resql = $this->db->query($sql);
+
+		if ($resql && $resql->num_rows > 0) {
+			$res = $this->db->fetch_array($resql);
+			$last = $res['max(situation_counter)'];
+			return ($last == $this->situation_counter);
 		} else {
 			return true;
 		}
