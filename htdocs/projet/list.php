@@ -131,14 +131,16 @@ if ($resql)
 	}
 
 	$param='';
-	if ($mine)				$param.='mode=mine';
+	if ($mine)				$param.='&mode=mine';
+//var_dump($mine);
 	if ($socid)				$param.='&socid='.$socid;
 	if ($search_ref)		$param.='&search_ref='.$search_ref;
 	if ($search_label)		$param.='&search_label='.$search_label;
-    if ($search_societe)    $param.='&search_societe='.$search_societe;
-    if ($search_etat_prj)    $param.='&search_etat_prj='.$search_etat_prj;
+   	if ($search_societe)    $param.='&search_societe='.$search_societe;
+    	if ($search_etat_prj)    $param.='&search_etat_prj='.$search_etat_prj;
 	
 	print '<form method="get" action="'.$_SERVER["PHP_SELF"].'">';
+	print '<input type="hidden" name="mode" value="'.( $mine ? 'mine' : '' ).'" />';
 
 	print '<table class="noborder" width="100%">';
 	print '<tr class="liste_titre">';
