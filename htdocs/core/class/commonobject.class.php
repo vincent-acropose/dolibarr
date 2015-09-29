@@ -81,8 +81,8 @@ abstract class CommonObject
 
 		$sql = "SELECT rowid, ref, ref_ext";
 		$sql.= " FROM ".MAIN_DB_PREFIX.$element;
-		$sql.= " WHERE entity IN (".getEntity($element,1).")" ; 
-		
+		$sql.= " WHERE entity IN (".getEntity($element, true).")" ;
+
 		if ($id > 0) $sql.= " AND rowid = ".$db->escape($id);
 		else if ($ref) $sql.= " AND ref = '".$db->escape($ref)."'";
 		else if ($ref_ext) $sql.= " AND ref_ext = '".$db->escape($ref_ext)."'";
@@ -1838,7 +1838,7 @@ abstract class CommonObject
      *	@return	void
      *  @see	add_object_linked, updateObjectLinked, deleteObjectLinked
      */
-	function fetchObjectLinked($sourceid='',$sourcetype='',$targetid='',$targettype='',$clause='OR')
+	function fetchObjectLinked($sourceid=null,$sourcetype='',$targetid=null,$targettype='',$clause='OR')
     {
         global $conf;
 
@@ -1866,11 +1866,11 @@ abstract class CommonObject
         $sourcetype = (! empty($sourcetype) ? $sourcetype : $this->element);
         $targettype = (! empty($targettype) ? $targettype : $this->element);
 
-        if (empty($sourceid) && empty($targetid))
+        /*if (empty($sourceid) && empty($targetid))
         {
         	dol_syslog('Bad usage of function. No source nor target id defined (nor as parameter nor as object id)', LOG_ERROR);
         	return -1;
-        }
+        }*/
 
         // Links beetween objects are stored in this table
         $sql = 'SELECT fk_source, sourcetype, fk_target, targettype';
@@ -3387,6 +3387,11 @@ abstract class CommonObject
     function fetch_optionals($rowid='',$optionsArray='')
     {
     	if (empty($rowid)) $rowid=$this->id;
+
+        //To avoid SQL errors. Probably not the better solution though
+        if (!$this->table_element) {
+            return 0;
+        }
 
         if (! is_array($optionsArray))
         {
