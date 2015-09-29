@@ -267,7 +267,7 @@ if (! empty($conf->margin->enabled))
 		{
 		?>
 			$('#savelinebutton').click(function (e) {
-				/*return checkEditLine(e, "np_markRate");*/
+				return checkEditLine(e, "np_markRate");
 			});
 			$("input[name='np_markRate']:first").blur(function(e) {
 				return checkEditLine(e, "np_markRate");
@@ -307,9 +307,11 @@ if (! empty($conf->margin->enabled))
 		var price = 0;
 		remisejs=price2numjs(remise.val());
 
-        bpjs=price2numjs(buying_price.val());
+        	bpjs=price2numjs(buying_price.val());
 		if (remisejs != 100 && bpjs > 0)
 		{
+			ratejs=price2numjs(rate.val());
+
 			/* console.log(npRate+" - "+bpjs+" - "+ratejs); */
 
 			if (npRate == "np_marginRate")

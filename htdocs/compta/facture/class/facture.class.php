@@ -2186,15 +2186,25 @@ class Facture extends CommonInvoice
 			$pu_tva = $tabprice[4];
 			$pu_ttc = $tabprice[5];
 
-			// Update line into database
-			$this->line=new FactureLigne($this->db);
+			// Old properties: $price, $remise (deprecated)
+			$price = $pu;
+			$remise = 0;
+			if ($remise_percent > 0)
+			{
+				$remise = round(($pu * $remise_percent / 100),2);
+				$price = ($pu - $remise);
+			}
+			$price    = price2num($price);
 
+			//Fetch current line from the database and then clone the object and set it in $oldline property
+			$line = new FactureLigne($this->db);
+			$line->fetch($rowid);
+
+			$staticline = clone $line;
+
+			$line->oldline = $staticline;
+			$this->line = $line;
             $this->line->context = $this->context;
-
-            // Stock previous line records
-			$staticline=new FactureLigne($this->db);
-			$staticline->fetch($rowid);
-			$this->line->oldline = $staticline;
 
 			// Reorder if fk_parent_line change
 			if (! empty($fk_parent_line) && ! empty($staticline->fk_parent_line) && $fk_parent_line != $staticline->fk_parent_line)
@@ -2563,15 +2573,16 @@ class Facture extends CommonInvoice
 			$numref = "";
 			$numref = $obj->getNextValue($soc,$this,$mode);
 
-			if ($numref != "")
-			{
-				return $numref;
-			}
-			else
-			{
+			/**
+			 * $numref can be empty in case we ask for the last value because if there is no invoice created with the
+			 * set up mask.
+			 */
+			if ($mode != 'last' && !$numref) {
 				dol_print_error($db,"Facture::getNextNumRef ".$obj->error);
 				return "";
 			}
+
+			return $numref;
 		}
 		else
 		{
@@ -3497,10 +3508,12 @@ class FactureLigne extends CommonInvoiceLine
 			$this->product_desc			= $objp->product_desc;
 
 			$this->db->free($result);
+
+			return 1;
 		}
 		else
 		{
-			dol_print_error($this->db);
+			return -1;
 		}
 	}
 
