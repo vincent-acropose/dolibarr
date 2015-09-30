@@ -955,7 +955,25 @@ else if ($id || $ref)
                     $text.='<br>';
                     $text.=$notify->confirmMessage('SHIPPING_VALIDATE',$object->socid);
                 }
-
+				
+				if($conf->dispatch->enabled){
+					$sql = "SELECT COUNT(eda.rowid) as total
+							FROM ".MAIN_DB_PREFIX."expeditiondet_asset eda 
+								LEFT JOIN ".MAIN_DB_PREFIX."expeditiondet as ed ON (eda.fk_expeditiondet = ed.rowid)
+							WHERE ed.fk_expedition = ".$object->id."";
+					//echo $sql;
+					$result = $db->query($sql);
+					if ($result)
+					{
+						if ($db->num_rows($result))
+						{
+							$obj = $db->fetch_object($result);
+							//echo $obj->total;
+							if($obj->total == 0)$text.="<br><br><span style='color:red;font-size:15px'><b>ATTENTION! le détail d'expédition est vide!</b></span>";
+						}
+					}
+				}
+				
                 $ret=$form->form_confirm($_SERVER['PHP_SELF'].'?id='.$object->id,$langs->trans('ValidateSending'),$text,'confirm_valid','',0,1);
                 if ($ret == 'html') print '<br>';
             }
