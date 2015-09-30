@@ -177,7 +177,7 @@ $catotal=0;
 if ($modecompta == 'CREANCES-DETTES') 
 {
     $sql = "SELECT DISTINCT p.rowid as rowid, p.ref as ref, p.label as label,";
-    $sql.= " sum(l.total_ht) as amount, sum(l.total_ttc) as amount_ttc";
+    $sql.= " sum(l.total_ht) as amount, sum(l.total_ttc) as amount_ttc, sum(l.qty) as totalqty";
     $sql.= " FROM ".MAIN_DB_PREFIX."facture as f, ".MAIN_DB_PREFIX."facturedet as l, ".MAIN_DB_PREFIX."product as p";
 	if ($selected_cat === -2)	// Without any category 
 	{
@@ -221,6 +221,7 @@ if ($modecompta == 'CREANCES-DETTES')
 		$obj = $db->fetch_object($result);
 		$amount_ht[$obj->rowid] = $obj->amount;
 		$amount[$obj->rowid] = $obj->amount_ttc;
+		$qty[$obj->rowid] = $obj->totalqty;
 		$name[$obj->rowid] = $obj->ref . '&nbsp;-&nbsp;' . $obj->label;
 		$catotal_ht+=$obj->amount;
 		$catotal+=$obj->amount_ttc;
@@ -251,7 +252,7 @@ if ($modecompta == 'CREANCES-DETTES')
 	print ' checked';
     }
     print '></td>';
-    print '<td colspan="3" align="right">';
+    print '<td colspan="4" align="right">';
     print '<input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'"  value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
     print '</td></tr>';
 	    // Array header
@@ -280,6 +281,16 @@ if ($modecompta == 'CREANCES-DETTES')
 	    $langs->trans("AmountTTC"),
 	    $_SERVER["PHP_SELF"],
 	    "amount_ttc",
+	    "",
+	    $paramslink,
+	    'align="right"',
+	    $sortfield,
+	    $sortorder
+	    );
+    print_liste_field_titre(
+	    $langs->trans("Qty"),
+	    $_SERVER["PHP_SELF"],
+	    "totalqty",
 	    "",
 	    $paramslink,
 	    'align="right"',
@@ -329,6 +340,14 @@ if ($modecompta == 'CREANCES-DETTES')
 		    arsort($amount);
 		    $arrayforsort=$amount;
 	    }
+	    if ($sortfield == 'totalqty' && $sortorder == 'asc') {
+		    asort($qty);
+		    $arrayforsort=$qty;
+	    }
+	    if ($sortfield == 'totalqty' && $sortorder == 'desc') {
+		    arsort($qty);
+		    $arrayforsort=$qty;
+	    }
 	    foreach($arrayforsort as $key=>$value) {
 		    $var=!$var;
 		    print "<tr ".$bc[$var].">";
@@ -363,6 +382,12 @@ if ($modecompta == 'CREANCES-DETTES')
 		}*/
 		print price($amount[$key]);
 		//print '</a>';
+		print '</td>';
+		print '</td>';
+
+		// Qty
+		print '<td align="right">';
+		print $qty[$key];
 		print '</td>';
 
 		// Percent;
