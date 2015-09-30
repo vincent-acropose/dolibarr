@@ -49,6 +49,7 @@ $langs->load('products');
 $socid=GETPOST('socid','int');
 
 $search_user=GETPOST('search_user','int');
+$search_country=GETPOST('country_id','int');
 $search_sale=GETPOST('search_sale','int');
 $search_ref=GETPOST('sf_ref')?GETPOST('sf_ref','alpha'):GETPOST('search_ref','alpha');
 $search_refcustomer=GETPOST('search_refcustomer','alpha');
@@ -145,7 +146,7 @@ $sql = 'SELECT s.rowid, s.nom, s.town, s.client, s.code_client,';
 $sql.= ' p.rowid as propalid, p.note_private, p.total_ht, p.ref, p.ref_client, p.fk_statut, p.fk_user_author, p.datep as dp, p.fin_validite as dfv,';
 if (! $user->rights->societe->client->voir && ! $socid) $sql .= " sc.fk_soc, sc.fk_user,";
 $sql.= ' u.login';
-$sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s, '.MAIN_DB_PREFIX.'propal as p';
+$sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s LEFT JOIN '.MAIN_DB_PREFIX.'c_pays cp ON (s.fk_pays = cp.rowid), '.MAIN_DB_PREFIX.'propal as p';
 if ($sall) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as pd ON p.rowid=pd.fk_propal';
 $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'user as u ON p.fk_user_author = u.rowid';
 // We'll need this table joined to the select in order to filter by sale
@@ -207,6 +208,10 @@ if ($search_user > 0)
 {
     $sql.= " AND c.fk_c_type_contact = tc.rowid AND tc.element='propal' AND tc.source='internal' AND c.element_id = p.rowid AND c.fk_socpeople = ".$search_user;
 }
+if ($search_country > 0)
+{
+    $sql.= " AND cp.rowid = ".$search_country;
+}
 
 
 $sql.= ' ORDER BY '.$sortfield.' '.$sortorder.', p.ref DESC';
@@ -236,6 +241,7 @@ if ($result)
 	if ($search_montant_ht)  $param.='&search_montant_ht='.$search_montant_ht;
 	if ($search_author)  	 $param.='&search_author='.$search_author;
 	if ($search_town)		 $param.='&search_town='.$search_town;
+	if ($search_country)		 $param.='&country_id='.$search_country;
 	print_barre_liste($langs->trans('ListOfProposals').' '.($socid?'- '.$soc->nom:''), $page, $_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',$num);
 
 	// Lignes des champs de filtre
@@ -259,6 +265,13 @@ if ($result)
 	{
 	    $moreforfilter.=$langs->trans('LinkedToSpecificUsers'). ': ';
 	    $moreforfilter.=$form->select_dolusers($search_user,'search_user',1);
+		$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
+	}
+	// If the user can view prospects other than his'
+	if ($user->rights->societe->client->voir || $socid)
+	{
+	    $moreforfilter.=$langs->trans('Pays Société'). ': ';
+	    $moreforfilter.=$form->select_country();
 	}
 	if (! empty($moreforfilter))
 	{
