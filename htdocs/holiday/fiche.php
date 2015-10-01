@@ -263,7 +263,7 @@ if ($action == 'confirm_send')
     $cp->fetch($id);
 
     // Si brouillon et créateur
-    if($cp->statut != 3 && $user->id == $cp->fk_user)
+    if($cp->statut != 3 && ($user->id == $cp->fk_validator || $user->id == $cp->fk_user))
     {
         $cp->statut = 2;
 
@@ -832,7 +832,7 @@ else
             }
 
             // On vérifie si l'utilisateur à le droit de lire cette demande
-            if($user->id == $cp->fk_user || $user->rights->holiday->lire_tous)
+            if($user->id == $cp->fk_user || $user->id == $cp->fk_validator || $user->rights->holiday->lire_tous)
             {
 
                 if ($action == 'delete' && $cp->statut != 3) {
@@ -844,7 +844,7 @@ else
                 }
 
                 // Si envoi en validation
-                if ($action == 'sendToValidate' && $cp->statut != 3 && $user->id == $cp->fk_user)
+                if ($action == 'sendToValidate' && $cp->statut != 3 && ($user->id == $cp->fk_validator || $user->id == $cp->fk_user))
                 {
                     $ret=$form->form_confirm("fiche.php?id=".$id,$langs->trans("TitleToValidCP"),$langs->trans("ConfirmToValidCP"),"confirm_send", '', 1, 1);
                     if ($ret == 'html') print '<br />';
@@ -876,7 +876,7 @@ else
 
                 dol_fiche_head($head,'card',$langs->trans("CPTitreMenu"),0,'holiday');
 
-                if ($action == 'edit' && $user->id == $cp->fk_user && $cp->statut != 3)
+                if ($action == 'edit' && ($user->id == $cp->fk_validator || $user->id == $cp->fk_user) && $cp->statut != 3)
                 {
                     $edit = true;
                     print '<form method="post" action="'.$_SERVER['PHP_SELF'].'?id='.$_GET['id'].'">'."\n";
@@ -1046,7 +1046,7 @@ else
                 print '</tbody>';
                 print '</table>';
 
-                if ($edit && $user->id == $cp->fk_user && $cp->statut != 3)
+                if ($edit && ($user->id == $cp->fk_validator || $user->id == $cp->fk_user) && $cp->statut != 3)
                 {
                     print '<br><div align="center">';
                     if($user->rights->holiday->write && $_GET['action'] == 'edit' && $cp->statut != 3)
@@ -1065,11 +1065,11 @@ else
 		            print '<div class="tabsAction">';
 
                     // Boutons d'actions
-                    if($user->rights->holiday->write && $_GET['action'] != 'edit' && $cp->statut != 3)
+                    if($user->rights->holiday->write && $_GET['action'] != 'edit' && $cp->statut != 3 && $cp->statut != 4)
                     {
                         print '<a href="fiche.php?id='.$_GET['id'].'&action=edit" class="butAction">'.$langs->trans("EditCP").'</a>';
                     }
-                    if($user->id == $cp->fk_user && $cp->statut != 3)
+                    if(($user->id == $cp->fk_validator || $user->id == $cp->fk_user) && ($cp->statut != 3 && $cp->statut != 2 && $cp->statut != 4))
                     {
                         print '<a href="fiche.php?id='.$_GET['id'].'&action=sendToValidate" class="butAction">'.$langs->trans("Validate").'</a>';
                     }
@@ -1084,7 +1084,7 @@ else
                         print '<a href="fiche.php?id='.$_GET['id'].'&action=refuse" class="butAction">'.$langs->trans("ActionRefuseCP").'</a>';
                     }
 
-                    if (($user->id == $cp->fk_validator || $user->id == $cp->fk_user || $user->admin ) && ($cp->statut == 2 || $cp->statut == 5))
+                    if (($user->id == $cp->fk_validator || $user->id == $cp->fk_user || $user->admin ) && ($cp->statut == 2 || $cp->statut == 5 || $cp->statut == 3))
                     {
                     	if (($cp->date_debut > dol_now()) || $user->admin) {
                     		print '<a href="fiche.php?id='.$_GET['id'].'&action=cancel" class="butAction">'.$langs->trans("ActionCancelCP").'</a>';
