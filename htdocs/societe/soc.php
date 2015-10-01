@@ -533,28 +533,63 @@ if (empty($reshook))
         }
     }
     
-    if ($action == 'updateadresscontact_confirm' && $confirm='yes' && $user->rights->societe->contact->creer) {
+    if ($action == 'updateadresscontact_confirm' && $confirm=='yes' && $user->rights->societe->contact->creer) {
     	$object->fetch($socid);
     	$contact_ids=GETPOST('contactid','array');
     	//var_dump($contact_ids);
     	if (is_array($contact_ids) && count($contact_ids)>0) {
-	    	$sql = 'UPDATE '.MAIN_DB_PREFIX."socpeople SET address='".$db->escape($object->address)."'";
-	    	$sql .= ",zip='".$db->escape($object->zip)."'";
-	    	$sql .= ",town='".$db->escape($object->town)."'";
-	    	$sql .= ",fk_departement=".(empty($object->state_id)?'NULL':$object->state_id);
-	    	$sql .= ",fk_pays=".(empty($object->country_id)?'NULL':$object->country_id);
-	    	$sql .= " WHERE rowid IN (".implode(',',$contact_ids).")";
-	    	
-	    	$result = $db->query($sql);
-	    	if (!$result) {
-	    		setEventMessage('Error:'.$db->lasterror(),'errors');
-	    	}else {
-	    		setEventMessage('Save','mesgs');
-	    		header('Location: '.$_SERVER["PHP_SELF"].'?socid='.$object->id);
-	    		exit;
-	    	}
+    		$sql = 'UPDATE '.MAIN_DB_PREFIX."socpeople SET address='".$db->escape($object->address)."'";
+    		$sql .= ",zip='".$db->escape($object->zip)."'";
+    		$sql .= ",town='".$db->escape($object->town)."'";
+    		$sql .= ",fk_departement=".(empty($object->state_id)?'NULL':$object->state_id);
+    		$sql .= ",fk_pays=".(empty($object->country_id)?'NULL':$object->country_id);
+    		$sql .= " WHERE rowid IN (".implode(',',$contact_ids).")";
+    
+    		$result = $db->query($sql);
+    		if (!$result) {
+    			setEventMessage('Error:'.$db->lasterror(),'errors');
+    		}else {
+    			setEventMessage('Save','mesgs');
+    			header('Location: '.$_SERVER["PHP_SELF"].'?socid='.$object->id);
+    			exit;
+    		}
     	}
     }
+    
+    if ($action == 'updatesalessubsidiaries_confirm' && $confirm=='yes' && $user->rights->societe->contact->creer) {
+    	$soc_ids=GETPOST('socidsalesudp','array');
+    	if (is_array($soc_ids) && count($soc_ids)>0) {
+    		$db->begin();
+    		$sql = 'DELETE FROM '.MAIN_DB_PREFIX.'societe_commerciaux WHERE fk_soc IN ('.implode(',',$soc_ids).")";
+    		$result = $db->query($sql);
+    		if (!$result) {
+    			setEventMessage('Error:'.$db->lasterror(),'errors');
+    			$error++;
+    		}else {
+    			foreach ($soc_ids as $socidupd) {
+    				$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'societe_commerciaux(fk_soc,fk_user)';
+    				$sql .= ' SELECT '.$socidupd.',fk_user FROM '.MAIN_DB_PREFIX.'societe_commerciaux WHERE fk_soc='.$socid;
+    				dol_syslog('updatesalessubsidiaries_confirm sql='.$sql);
+    				$result = $db->query($sql);
+    				if (!$result) {
+    					setEventMessage('Error:'.$db->lasterror(),'errors');
+    					$error++;
+    				}
+    			}
+    	   
+    			if (empty($error)){
+    				$db->commit();
+    			} else {
+    				$db->rollback();
+    			}
+    			
+    			setEventMessage('Save','mesgs');
+    			header('Location: '.$_SERVER["PHP_SELF"].'?socid='.$object->id);
+    			exit;
+    		}
+    	}
+    }
+    
 
     // Set parent company
     if ($action == 'set_thirdparty' && $user->rights->societe->creer)
@@ -699,6 +734,59 @@ if ($action=='updateadresscontact') {
 	
 	
 	$ret=$form->form_confirm($_SERVER['PHP_SELF'].'?socid='.$socid,$langs->trans("SelectContactToUpdateAdress"),$langs->trans("ConfirmUpdateContactAdress"),"updateadresscontact_confirm",$form_question,1,0,300,700);
+	if ($ret == 'html') print '<br>';
+}
+
+if ($action=='updatesalessubsidiaries') {
+
+	$sql = "SELECT s.rowid as socid ,comm.rowid as comid";
+	$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
+	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON sc.fk_soc=s.rowid";
+	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."user as comm on comm.rowid=sc.fk_user";
+	$sql.= " WHERE s.parent = ".$socid;
+	$sql.= " AND s.entity IN (".getEntity('societe', 1).")";
+	$sql.= " ORDER BY s.nom";
+	$result = $db->query($sql);
+	if (!$result) {
+		setEventMessage($db->lasterror,'errors');
+	}
+	$num = $db->num_rows($result);
+
+	if ($num)
+	{
+		$arraysoccom=array();
+		while ($obj = $db->fetch_object($result))
+		{
+			$arraysoccom[$obj->socid][]=empty($obj->comid)?'0':$obj->comid;
+		}
+		
+		foreach($arraysoccom as $socidcomm=>$socdata) {
+			$socstatic=new Societe($db);
+			$socstatic->fetch($socidcomm);
+			
+			$txt=$socstatic->name;
+			
+			foreach($socdata as $comm) {
+				if (!empty($comm)) {
+					$userstatic=new User($db);
+					$userstatic->fetch($comm);
+					$txt.='-'.$userstatic->getFullName($langs);
+				}
+			}
+			
+			$soc_html_checkbox.='<input type="checkbox" class="flat" checked="checked" id="socidsalesudp_'.$socidcomm.'" name="socidsalesudp[]" value="'.$socidcomm.'">'.$txt.'</input>'.'<BR>';
+		}
+	}
+
+	$form_question = array ();
+	$form_question [] = array (
+			'label' => '',
+			'type' => 'other',
+			'value' => $soc_html_checkbox,
+	);
+
+
+	$ret=$form->form_confirm($_SERVER['PHP_SELF'].'?socid='.$socid,$langs->trans("SelectCustomerUpdateSales"),$langs->trans("ConfirmSelectCustomerUpdateSales"),"updatesalessubsidiaries_confirm",$form_question,1,0,300,700);
 	if ($ret == 'html') print '<br>';
 }
 
@@ -1979,6 +2067,20 @@ else
         	}
         }
         
+        if ($user->rights->societe->contact->creer)
+        {
+        	$sql = "SELECT s.rowid";
+        	$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
+        	$sql.= " WHERE s.parent = ".$object->id;
+        	$sql.= " AND s.entity IN (".getEntity('societe', 1).")";
+        	$sql.= " ORDER BY s.nom";
+        	$result = $db->query($sql);
+        	$num = $db->num_rows($result);
+        	if ($num) {
+        		print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?socid='.$object->id.'&amp;action=updatesalessubsidiaries">'.$langs->trans("UpdateSalesSubsidiaries").'</a></div>'."\n";
+        	}
+        
+        }
         if ($user->rights->societe->creer)
         {
             print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?socid='.$object->id.'&amp;action=edit">'.$langs->trans("Modify").'</a></div>'."\n";

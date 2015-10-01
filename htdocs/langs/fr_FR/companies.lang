@@ -413,3 +413,6 @@ SelectContactToUpdateAdress=Selectionner les contacts à mettre à jour
 ConfirmUpdateContactAdress=Confirmer la mise à jour
 LastCustomersSessionBills=Factures de session payées par des tiers
 MotherSelectedIsItSelfChildOfCurrent=Vous ne pouvez choirisr ce tier comme maison mére, car elle a comme maison mére le tier que vous modifiez
+UpdateSalesSubsidiaries=Mettre a jour les commerciaux des filliales
+SelectCustomerUpdateSales=Selectionner les filliales pour lesquels remplacer les commerciaux
+ConfirmSelectCustomerUpdateSales=Remplacer les commerciaux
