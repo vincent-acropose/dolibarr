@@ -256,6 +256,29 @@ if (empty($reshook))
 	        $mesg=$object->error;
 	    }
 	}
+	else if($action == 'generate_definitive_ref'){
+		
+		// Numbering module definition
+        $soc = new Societe($object->db);
+        $soc->fetch($object->socid);
+		
+		$numref = $object->getNextNumRef($soc);
+		
+		// Set Ref
+		$sql = "UPDATE ".MAIN_DB_PREFIX."expedition SET";
+		$sql.= " ref='".$numref."'";
+		$sql.= " WHERE rowid = ".$object->id;
+
+		dol_syslog(get_class($object)."::set_ref update expedition", LOG_DEBUG);
+		$resql=$db->query($sql);
+		if (! $resql)
+		{
+			$object->error=$object->db->lasterror();
+			$error++;
+		}else{
+			 header("Location: ".DOL_URL_ROOT.'/expedition/card.php?id='.$object->id);
+		}
+	}
 
 	else if ($action == 'confirm_valid' && $confirm == 'yes' && $user->rights->expedition->valider)
 	{
@@ -1567,6 +1590,15 @@ else if ($id || $ref)
 			if ($user->rights->facture->creer)
 			{
 				print '<a class="butAction" href="'.DOL_URL_ROOT.'/compta/facture.php?action=create&amp;origin='.$object->element.'&amp;originid='.$object->id.'&amp;socid='.$object->socid.'">'.$langs->trans("CreateBill").'</a>';
+			}
+		}
+		
+		// Set defitive ref to shipping
+		if (strpos($object->ref,'PROV'))
+		{
+			if ($user->rights->expedition->valider)
+			{
+				print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=generate_definitive_ref">'.$langs->trans("Générer la référence définitive").'</a>';
 			}
 		}
 
