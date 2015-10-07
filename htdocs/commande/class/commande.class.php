@@ -976,7 +976,9 @@ class Commande extends CommonOrder
      */
     function createFromProposal($object)
     {
-        global $conf,$user,$langs,$hookmanager;
+        global $db, $conf,$user,$langs,$hookmanager;
+
+		dol_include_once('/core/class/extrafields.class.php');
 
         $error=0;
 
@@ -1046,9 +1048,15 @@ class Commande extends CommonOrder
 
             // get extrafields from original line
 			$object->fetch_optionals($object->id);
-			foreach($object->array_options as $options_key => $value)
-				$this->array_options[$options_key] = $value;
 
+			$e = new ExtraFields($db);
+			$element_extrafields = $e->fetch_name_optionals_label($this->element);
+
+			foreach($object->array_options as $options_key => $value) {
+				if(array_key_exists(str_replace('options_', '', $options_key), $element_extrafields)){
+					$this->array_options[$options_key] = $value;
+				}
+			}
             // Possibility to add external linked objects with hooks
             $this->linked_objects[$this->origin] = $this->origin_id;
             if (is_array($object->other_linked_objects) && ! empty($object->other_linked_objects))
@@ -2413,15 +2421,15 @@ class Commande extends CommonOrder
                 $price = ($pu - $remise);
             }
 
-            // Update line
-            $this->line=new OrderLine($this->db);
+            //Fetch current line from the database and then clone the object and set it in $oldline property
+            $line = new OrderLine($this->db);
+            $line->fetch($rowid);
 
+            $staticline = clone $line;
+
+            $line->oldline = $staticline;
+            $this->line = $line;
             $this->line->context = $this->context;
-
-            // Stock previous line records
-            $staticline=new OrderLine($this->db);
-            $staticline->fetch($rowid);
-            $this->line->oldline = $staticline;
 
             // Reorder if fk_parent_line change
             if (! empty($fk_parent_line) && ! empty($staticline->fk_parent_line) && $fk_parent_line != $staticline->fk_parent_line)
@@ -3348,10 +3356,12 @@ class OrderLine extends CommonOrderLine
             $this->date_end         = $this->db->jdate($objp->date_end);
 
             $this->db->free($result);
+
+            return 1;
         }
         else
         {
-            dol_print_error($this->db);
+            return -1;
         }
     }
 

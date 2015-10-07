@@ -149,7 +149,7 @@ if ($action == 'add')
 		exit;
 	}
 
-    $percentage=in_array(GETPOST('status'),array(-1,100))?GETPOST('status'):GETPOST("percentage");	// If status is -1 or 100, percentage is not defined and we must use status
+    $percentage=in_array(GETPOST('status'),array(-1,100))?GETPOST('status'):(in_array(GETPOST('complete'),array(-1,100))?GETPOST('complete'):GETPOST("percentage"));	// If status is -1 or 100, percentage is not defined and we must use status
 
     // Clean parameters
 	$datep=dol_mktime($fulldayevent?'00':GETPOST("aphour"), $fulldayevent?'00':GETPOST("apmin"), 0, GETPOST("apmonth"), GETPOST("apday"), GETPOST("apyear"));
@@ -751,6 +751,8 @@ if ($action == 'create')
 		print '<td colspan="3">'.dolGetElementUrl($originid,$origin,1).'</td></tr>';
 		print '<input type="hidden" name="fk_element" size="10" value="'.GETPOST('originid').'">';
 		print '<input type="hidden" name="elementtype" size="10" value="'.GETPOST('origin').'">';
+		print '<input type="hidden" name="originid" size="10" value="'.GETPOST('originid').'">';
+		print '<input type="hidden" name="origin" size="10" value="'.GETPOST('origin').'">';
 	}
 
 	if (GETPOST("datep") && preg_match('/^([0-9][0-9][0-9][0-9])([0-9][0-9])([0-9][0-9])$/',GETPOST("datep"),$reg))

@@ -3,7 +3,7 @@
  * Copyright (C) 2002-2003 Jean-Louis Bergamo   <jlb@j1b.org>
  * Copyright (C) 2004-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
- * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2015 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2005      Lionel Cousteix      <etm_ltd@tiscali.co.uk>
  * Copyright (C) 2011      Herve Prot           <herve.prot@symeos.com>
  * Copyright (C) 2012      Juanjo Menent        <jmenent@2byte.es>
@@ -255,7 +255,7 @@ if ($action == 'add' && $canadduser)
             $langs->load("errors");
             $db->rollback();
             if (is_array($object->errors) && count($object->errors)) setEventMessage($object->errors,'errors');
-            else setEventMessage($object->error);
+            else setEventMessage($object->error, 'errors');
             $action="create";       // Go back to create page
         }
 
@@ -320,7 +320,7 @@ if ($action == 'update' && ! $_POST["cancel"])
 				$result=$tmpuser->fetch(0, GETPOST("login"));
 				if ($result > 0)
 				{
-					setEventMessage($langs->trans("ErrorLoginAlreadyExists"), 'errors');
+					setEventMessage($langs->trans("ErrorLoginAlreadyExists", GETPOST('login')), 'errors');
 					$action="edit";       // Go back to create page
 					$error++;
 				}
@@ -709,7 +709,7 @@ if (($action == 'create') || ($action == 'adduserldap'))
     print '<form action="'.$_SERVER['PHP_SELF'].'" method="POST" name="createuser">';
     print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
     print '<input type="hidden" name="action" value="add">';
-    if (! empty($ldap_sid)) print '<input type="hidden" name="ldap_sid" value="'.$ldap_sid.'">';
+    if (! empty($ldap_sid)) print '<input type="hidden" name="ldap_sid" value="'.dol_escape_htmltag($ldap_sid).'">';
     print '<input type="hidden" name="entity" value="'.$conf->entity.'">';
 
     print '<table class="border" width="100%">';

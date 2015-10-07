@@ -499,8 +499,9 @@ class Contact extends CommonObject
 	 */
 	function fetch($id, $user=0, $ref_ext='')
 	{
-		dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
 		global $langs;
+
+		dol_syslog(get_class($this)."::fetch id=".$id, LOG_DEBUG);
 
 		$langs->load("companies");
 
@@ -524,7 +525,6 @@ class Contact extends CommonObject
 		if ($id) $sql.= " WHERE c.rowid = ". $id;
 		elseif ($ref_ext) $sql .= " WHERE c.ref_ext = '".$this->db->escape($ref_ext)."'";
 
-		dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
@@ -551,7 +551,7 @@ class Contact extends CommonObject
 
 				$this->country_id 		= $obj->country_id;
 				$this->country_code		= $obj->country_id?$obj->country_code:'';
-				$this->country			= ($obj->country_id > 0)?$langs->transnoentitiesnoconv("Country".$obj->country_code):'';
+				$this->country			= $obj->country_id?($langs->trans('Country'.$obj->country_code)!='Country'.$obj->country_code?$langs->transnoentities('Country'.$obj->country_code):$obj->country):'';
 
 				$this->socid			= $obj->fk_soc;
 				$this->socname			= $obj->socname;
@@ -565,7 +565,7 @@ class Contact extends CommonObject
 
 				$this->email			= $obj->email;
 				$this->jabberid			= $obj->jabberid;
-        $this->skype			= $obj->skype;
+                $this->skype			= $obj->skype;
 				$this->priv				= $obj->priv;
 				$this->mail				= $obj->email;
 
@@ -627,6 +627,13 @@ class Contact extends CommonObject
 						return -1;
 					}
 				}
+
+				// Retreive all extrafield for contact
+                // fetch optionals attributes and labels
+                require_once(DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php');
+                $extrafields=new ExtraFields($this->db);
+                $extralabels=$extrafields->fetch_name_optionals_label($this->table_element,true);
+               	$this->fetch_optionals($this->id,$extralabels);
 
 				return 1;
 			}

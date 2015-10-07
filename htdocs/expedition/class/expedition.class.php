@@ -753,10 +753,11 @@ class Expedition extends CommonObject
 
 		$orderline = new OrderLine($this->db);
 		$orderline->fetch($id);
-		$fk_product = $orderline->fk_product;
 
-		if (! empty($orderline->fk_product))
+		if (! empty($conf->stock->enabled) && ! empty($orderline->fk_product))
 		{
+			$fk_product = $orderline->fk_product;
+
 			if (! ($entrepot_id > 0) && empty($conf->global->STOCK_WAREHOUSE_NOT_REQUIRED_FOR_SHIPMENTS))
 			{
 				$this->error=$langs->trans("ErrorWarehouseRequiredIntoShipmentLine");
@@ -1140,6 +1141,8 @@ class Expedition extends CommonObject
 				$line->details_entrepot[]     = $detail_entrepot;
 
                 $line->line_id          = $obj->line_id;
+                $line->rowid            = $obj->line_id;    // TODO deprecated
+                $line->id               = $obj->line_id;
 				$line->fk_origin_line 	= $obj->fk_origin_line;
 				$line->origin_line_id 	= $obj->fk_origin_line;	    // TODO deprecated
 				$line->fk_product     	= $obj->fk_product;

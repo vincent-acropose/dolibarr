@@ -456,21 +456,23 @@ if ($nboftargetok) {
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/document`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/documents`;
 		# Removed known external modules to avoir any error when packaging on test env 
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/custom/*`;	# For custom we want to keep dir
+		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/allscreens*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/ancotec*`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/calling*`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/bootstrap*`;
-	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/custom*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/factory*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/management*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/multicompany*`;
+		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/ndf*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/nltechno*`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/oscim*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/pos*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/public/test`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/teclib*`;
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/timesheet*`;
-		# Removed other test files
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/themes/oblyon*`;
+		# Removed other test files
 		$ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/themes/eldy/*.new`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/public/test`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/test`;
@@ -981,10 +983,10 @@ if ($nboftargetok) {
 			mkdir($DESTI.'/package_windows');
 			if (-d $DESTI.'/package_windows') { $NEWDESTI=$DESTI.'/package_windows'; } 
 
-     		print "Remove target $FILENAMEEXEDOLIWAMP.exe...\n";
+     		print "Remove target $NEWDESTI/$FILENAMEEXEDOLIWAMP.exe...\n";
     		unlink "$NEWDESTI/$FILENAMEEXEDOLIWAMP.exe";
  
- 			print "Check that in your Wine setup, you create a Z: drive that point to your /tmp directory.\n";
+ 			print "Check that in your Wine setup, you create a Z: drive that point to your / directory.\n";
 
  			$SOURCEBACK=$SOURCE;
  			$SOURCEBACK =~ s/\//\\/g;

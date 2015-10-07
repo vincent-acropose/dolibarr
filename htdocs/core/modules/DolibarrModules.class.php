@@ -1160,7 +1160,6 @@ abstract class DolibarrModules
 
         $this->db->begin();
 
-        //var_dump($this->menu); exit;
         foreach ($this->menu as $key => $value)
         {
             $menu = new Menubase($this->db);
@@ -1169,11 +1168,9 @@ abstract class DolibarrModules
             if (! $this->menu[$key]['fk_menu'])
             {
                 $menu->fk_menu=0;
-                //print 'aaa'.$this->menu[$key]['fk_menu'];
             }
             else
             {
-                //print 'xxx'.$this->menu[$key]['fk_menu'];exit;
                 $foundparent=0;
                 $fk_parent=$this->menu[$key]['fk_menu'];
                 if (preg_match('/^r=/',$fk_parent))	// old deprecated method
@@ -1412,7 +1409,6 @@ abstract class DolibarrModules
     	global $conf;
 
     	$error=0;
-    	$entity=$conf->entity;
 
     	if (is_array($this->module_parts) && ! empty($this->module_parts))
     	{
@@ -1420,6 +1416,7 @@ abstract class DolibarrModules
     		{
     			if (is_array($value) && count($value) == 0) continue;	// Discard empty arrays
 
+    			$entity=$conf->entity; // Reset the current entity
     			$newvalue = $value;
 
     			// Serialize array parameters
@@ -1429,6 +1426,11 @@ abstract class DolibarrModules
     				if (is_array($value['data']) && ! empty($value['data']))
     				{
     					$newvalue = json_encode($value['data']);
+    					if (isset($value['entity'])) $entity = $value['entity'];
+    				}
+    				else if (isset($value['data']) && !is_array($value['data']))
+    				{
+    					$newvalue = $value['data'];
     					if (isset($value['entity'])) $entity = $value['entity'];
     				}
     				else

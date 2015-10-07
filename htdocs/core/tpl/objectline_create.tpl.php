@@ -167,6 +167,9 @@ else {
 			);
 			$form->select_produits_fournisseurs($object->socid, GETPOST('idprodfournprice'), 'idprodfournprice', '', '', $ajaxoptions, 1);
 		}
+
+		$reshook=$hookmanager->executeHooks('addObjectLineProducts', $parameters, $this, $action);    // Note that $action and $object may have been modified by some hooks
+		
 		echo '</span>';
 	}
 
@@ -201,7 +204,7 @@ else {
 	<?php } ?>
 
 	<td align="right"><?php
-	if ($seller->tva_assuj == "0") echo '<input type="hidden" name="tva_tx" id="tva_tx" value="0">0';
+	if ($seller->tva_assuj == "0") echo '<input type="hidden" name="tva_tx" id="tva_tx" value="0">'.vatrate(0, true);
 	else echo $form->load_tva('tva_tx', (isset($_POST["tva_tx"])?$_POST["tva_tx"]:-1), $seller, $buyer);
 	?>
 	</td>
