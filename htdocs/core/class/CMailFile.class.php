@@ -187,7 +187,7 @@ class CMailFile
 			// Define smtp_headers
 			$this->subject = $subject;
 			$this->addr_from = $from;
-			$this->errors_to = $errors_to;
+			$this->errors_to = empty($errors_to) ? $from : $errors_to;
 			$this->addr_to = $to;
 			$this->addr_cc = $addr_cc;
 			$this->addr_bcc = $addr_bcc;
