@@ -545,16 +545,17 @@ class Expedition extends CommonObject
 
 		// Class of company linked to order
 		$result=$soc->set_as_client();
-
+		
+		$numref = $this->ref;
 		// Define new ref
 		if (! $error && (preg_match('/^[\(]?PROV/i', $this->ref)))
 		{
 			$numref = $this->getNextNumRef($soc);
 		}
-		else
+		/*else
 		{
 			$numref = "EXP".$this->id;
-		}
+		}*/
         $this->newref = $numref;
 
 		$now=dol_now();
