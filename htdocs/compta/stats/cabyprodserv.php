@@ -26,10 +26,12 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/report.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/tax.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/product.lib.php';
 
 $langs->load("products");
 $langs->load("categories");
 $langs->load("errors");
+$langs->load("other");
 
 // Security pack (data & check)
 $socid = GETPOST('socid','int');
@@ -177,7 +179,7 @@ $catotal=0;
 if ($modecompta == 'CREANCES-DETTES') 
 {
     $sql = "SELECT DISTINCT p.rowid as rowid, p.ref as ref, p.label as label,";
-    $sql.= " sum(l.total_ht) as amount, sum(l.total_ttc) as amount_ttc, sum(l.qty) as totalqty";
+    $sql.= " sum(l.total_ht) as amount, sum(l.total_ttc) as amount_ttc, sum(l.qty) as totalqty, sum(l.tarif_poids) as poids, l.poids as unit";
     $sql.= " FROM ".MAIN_DB_PREFIX."facture as f, ".MAIN_DB_PREFIX."facturedet as l, ".MAIN_DB_PREFIX."product as p";
 	if ($selected_cat === -2)	// Without any category 
 	{
@@ -209,10 +211,11 @@ if ($modecompta == 'CREANCES-DETTES')
 		$sql.= " AND cp.fk_categorie = c.rowid AND cp.fk_product = p.rowid";
 	}
     $sql.= " AND f.entity = ".$conf->entity;
-    $sql.= " GROUP BY p.rowid";
+    $sql.= " GROUP BY p.rowid, l.poids";
     $sql.= " ORDER BY p.ref";
 
     dol_syslog("cabyprodserv sql=".$sql);
+	
     $result = $db->query($sql);
     if ($result) {
 	$num = $db->num_rows($result);
@@ -222,6 +225,8 @@ if ($modecompta == 'CREANCES-DETTES')
 		$amount_ht[$obj->rowid] = $obj->amount;
 		$amount[$obj->rowid] = $obj->amount_ttc;
 		$qty[$obj->rowid] = $obj->totalqty;
+		$poids[$obj->rowid]['qty'] = $obj->poids;
+		$poids[$obj->rowid]['unite'] = $obj->unit;
 		$name[$obj->rowid] = $obj->ref . '&nbsp;-&nbsp;' . $obj->label;
 		$catotal_ht+=$obj->amount;
 		$catotal+=$obj->amount_ttc;
@@ -252,7 +257,7 @@ if ($modecompta == 'CREANCES-DETTES')
 	print ' checked';
     }
     print '></td>';
-    print '<td colspan="4" align="right">';
+    print '<td colspan="5" align="right">';
     print '<input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'"  value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
     print '</td></tr>';
 	    // Array header
@@ -288,9 +293,19 @@ if ($modecompta == 'CREANCES-DETTES')
 	    $sortorder
 	    );
     print_liste_field_titre(
-	    $langs->trans("Qty"),
+	    $langs->trans("Quantité total"),
 	    $_SERVER["PHP_SELF"],
 	    "totalqty",
+	    "",
+	    $paramslink,
+	    'align="right"',
+	    $sortfield,
+	    $sortorder
+	    );
+	print_liste_field_titre(
+	    $langs->trans("Poids Total"),
+	    $_SERVER["PHP_SELF"],
+	    "poids",
 	    "",
 	    $paramslink,
 	    'align="right"',
@@ -348,6 +363,15 @@ if ($modecompta == 'CREANCES-DETTES')
 		    arsort($qty);
 		    $arrayforsort=$qty;
 	    }
+		 if ($sortfield == 'poids' && $sortorder == 'asc') {
+		    asort($poids);
+		    $arrayforsort=$poids;
+	    }
+	    if ($sortfield == 'poids' && $sortorder == 'desc') {
+		    arsort($poids);
+		    $arrayforsort=$poids;
+	    }
+		
 	    foreach($arrayforsort as $key=>$value) {
 		    $var=!$var;
 		    print "<tr ".$bc[$var].">";
@@ -388,6 +412,11 @@ if ($modecompta == 'CREANCES-DETTES')
 		// Qty
 		print '<td align="right">';
 		print $qty[$key];
+		print '</td>';
+		
+		// Poids
+		print '<td align="right">';
+		print price($poids[$key]['qty'])." ".measuring_units_string($poids[$key]['unite'],'weight');
 		print '</td>';
 
 		// Percent;
