@@ -179,7 +179,7 @@ $catotal=0;
 if ($modecompta == 'CREANCES-DETTES') 
 {
     $sql = "SELECT DISTINCT p.rowid as rowid, p.ref as ref, p.label as label,";
-    $sql.= " sum(l.total_ht) as amount, sum(l.total_ttc) as amount_ttc, sum(l.qty) as totalqty, sum(l.tarif_poids) as poids, l.poids as unit";
+    $sql.= " sum(l.total_ht) as amount, sum(l.total_ttc) as amount_ttc, sum(l.qty) as totalqty, l.qty as qty, l.tarif_poids as poids, l.poids as unit";
     $sql.= " FROM ".MAIN_DB_PREFIX."facture as f, ".MAIN_DB_PREFIX."facturedet as l, ".MAIN_DB_PREFIX."product as p";
 	if ($selected_cat === -2)	// Without any category 
 	{
@@ -213,27 +213,29 @@ if ($modecompta == 'CREANCES-DETTES')
     $sql.= " AND f.entity = ".$conf->entity;
     $sql.= " GROUP BY p.rowid, l.poids";
     $sql.= " ORDER BY p.ref";
-
+	
+	//echo $sql;
+	
     dol_syslog("cabyprodserv sql=".$sql);
 	
     $result = $db->query($sql);
     if ($result) {
-	$num = $db->num_rows($result);
-	$i=0;
-	while ($i < $num) {
-		$obj = $db->fetch_object($result);
-		$amount_ht[$obj->rowid] = $obj->amount;
-		$amount[$obj->rowid] = $obj->amount_ttc;
-		$qty[$obj->rowid] = $obj->totalqty;
-		$poids[$obj->rowid]['qty'] = $obj->poids;
-		$poids[$obj->rowid]['unite'] = $obj->unit;
-		$name[$obj->rowid] = $obj->ref . '&nbsp;-&nbsp;' . $obj->label;
-		$catotal_ht+=$obj->amount;
-		$catotal+=$obj->amount_ttc;
-		$i++;
-	}
+		$num = $db->num_rows($result);
+		$i=0;
+		while ($i < $num) {
+			$obj = $db->fetch_object($result);
+			$amount_ht[$obj->rowid] = $obj->amount;
+			$amount[$obj->rowid] = $obj->amount_ttc;
+			$qty[$obj->rowid] = $obj->totalqty;
+			$poids[$obj->rowid]['qty'] =  $obj->totalqty * $obj->poids;
+			$poids[$obj->rowid]['unite'] = $obj->unit;
+			$name[$obj->rowid] = $obj->ref . '&nbsp;-&nbsp;' . $obj->label;
+			$catotal_ht+=$obj->amount;
+			$catotal+=$obj->amount_ttc;
+			$i++;
+		}
     } else {
-	dol_print_error($db);
+		dol_print_error($db);
     }
 
     // Show Array
@@ -293,7 +295,7 @@ if ($modecompta == 'CREANCES-DETTES')
 	    $sortorder
 	    );
     print_liste_field_titre(
-	    $langs->trans("Quantité total"),
+	    $langs->trans("Quantité Total"),
 	    $_SERVER["PHP_SELF"],
 	    "totalqty",
 	    "",
@@ -372,7 +374,25 @@ if ($modecompta == 'CREANCES-DETTES')
 		    $arrayforsort=$poids;
 	    }
 		
-	    foreach($arrayforsort as $key=>$value) {
+		/*echo '<pre>';
+		print_r($arrayforsort);*/
+		
+	    //foreach($arrayforsort as $key=>$value) {
+	    $result = $db->query($sql);
+	    $num = $db->num_rows($result);
+		$i=0;
+		while ($i < $num) {
+			$obj = $db->fetch_object($result);
+			$amount_ht[$obj->rowid] = $obj->amount;
+			$amount[$obj->rowid] = $obj->amount_ttc;
+			$qty[$obj->rowid] = $obj->totalqty;
+			$poids[$obj->rowid]['qty'] = $obj->totalqty * $obj->poids;
+			$poids[$obj->rowid]['unite'] = $obj->unit;
+			$name[$obj->rowid] = $obj->ref . '&nbsp;-&nbsp;' . $obj->label;
+			$catotal_ht+=$obj->amount;
+			$catotal+=$obj->amount_ttc;
+			$key = $obj->rowid;
+
 		    $var=!$var;
 		    print "<tr ".$bc[$var].">";
 
@@ -384,48 +404,48 @@ if ($modecompta == 'CREANCES-DETTES')
 			$linkname=$langs->trans("PaymentsNotLinkedToProduct");
 		    }
 
-		print "<td>".$linkname."</td>\n";
-
-		// Amount w/o VAT
-		print '<td align="right">';
-		/*if ($key > 0) {
-		    print '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?productid='.$key.'">';
-		} else {
-		    print '<a href="#">';
-		}*/
-		print price($amount_ht[$key]);
-		//print '</a>';
-		print '</td>';
-
-		// Amount with VAT
-		print '<td align="right">';
-		/*if ($key > 0) {
-		    print '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?productid='.$key.'">';
-		} else {
-		    print '<a href="#">';
-		}*/
-		print price($amount[$key]);
-		//print '</a>';
-		print '</td>';
-		print '</td>';
-
-		// Qty
-		print '<td align="right">';
-		print $qty[$key];
-		print '</td>';
-		
-		// Poids
-		print '<td align="right">';
-		print price($poids[$key]['qty'])." ".measuring_units_string($poids[$key]['unite'],'weight');
-		print '</td>';
-
-		// Percent;
-		print '<td align="right">'.($catotal > 0 ? round(100 * $amount[$key] / $catotal, 2).'%' : '&nbsp;').'</td>';
-
-		// TODO: statistics?
-
-		print "</tr>\n";
-		$i++;
+			print "<td>".$linkname."</td>\n";
+	
+			// Amount w/o VAT
+			print '<td align="right">';
+			/*if ($key > 0) {
+			    print '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?productid='.$key.'">';
+			} else {
+			    print '<a href="#">';
+			}*/
+			print price($amount_ht[$key]);
+			//print '</a>';
+			print '</td>';
+	
+			// Amount with VAT
+			print '<td align="right">';
+			/*if ($key > 0) {
+			    print '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?productid='.$key.'">';
+			} else {
+			    print '<a href="#">';
+			}*/
+			print price($amount[$key]);
+			//print '</a>';
+			print '</td>';
+			print '</td>';
+	
+			// Qty
+			print '<td align="right">';
+			print $qty[$key];
+			print '</td>';
+			
+			// Poids
+			print '<td align="right">';
+			print price($poids[$key]['qty'])." ".measuring_units_string($poids[$key]['unite'],'weight');
+			print '</td>';
+	
+			// Percent;
+			print '<td align="right">'.($catotal > 0 ? round(100 * $amount[$key] / $catotal, 2).'%' : '&nbsp;').'</td>';
+	
+			// TODO: statistics?
+	
+			print "</tr>\n";
+			$i++;
 	    }
 
 	    // Total
