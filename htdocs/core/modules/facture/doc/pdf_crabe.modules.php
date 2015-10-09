@@ -1467,6 +1467,7 @@ class pdf_crabe extends ModelePDFFactures
 		global $conf;
 		
 		//Gestion LCR /////////////////////////////////////////////////////////////////////
+	   	//if ($object->mode_reglement_code == 'LCR' || $object->mode_reglement_code == 'LCRD')
 	   	if ($object->mode_reglement_code == 'TA' || $object->mode_reglement_code == 'TNA')
 		{
 			$pdf->AddPage();
@@ -1478,37 +1479,38 @@ class pdf_crabe extends ModelePDFFactures
 			$curx=$this->marge_gauche;
 			$cury=$posy-30;			   
 			$pdf->SetFont('','', $default_font_size - 1);
-			$pdf->writeHTMLCell(53, 20, 10, 13, $outputlangs->convToOutputCharset('MERCI DE NOUS RETOURNER LA PRESENTE TRAITE SOUS 8 JOURS.'), 0, 1, false, true, 'J',true);
+			if($object->mode_reglement_code == 'TNA') $pdf->writeHTMLCell(53, 20, 10, 13, $outputlangs->convToOutputCharset('Cet effet sera présenté automatiquement par nos soins.'), 0, 1, false, true, 'J',true);
+			else $pdf->writeHTMLCell(53, 20, 10, 13, $outputlangs->convToOutputCharset('MERCI DE NOUS RETOURNER LA PRESENTE TRAITE SOUS 8 JOURS.'), 0, 1, false, true, 'J',true);
 			
 			$pdf->SetFont('','', $default_font_size - 3);
 			$pdf->writeHTMLCell(40, 20, 70, 12, $outputlangs->convToOutputCharset('Contre cette LETTRE DE CHANGE STIPULEE SANS FRAIS'), 0, 1, false, true, 'J',true);
-			$pdf->writeHTMLCell(40, 20, 70, 17.5, $outputlangs->convToOutputCharset('Veuillez payer la somme indiquée ci_dessous à l\'ordre de'), 0, 1, false, true, 'J',true);
+			$pdf->writeHTMLCell(40, 20, 70, 17.5, $outputlangs->convToOutputCharset('Veuillez payer la somme indiquée ci-dessous à l\'ordre de'), 0, 1, false, true, 'J',true);
 			
 			$pdf->SetFont('','', $default_font_size - 2);
-			$pdf->writeHTMLCell(20, 20, 115, 10, $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_NOM), 0, 1, false, true, 'J',true);
-			$pdf->writeHTMLCell(40, 20, 115, 14, $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_ADDRESS), 0, 1, false, true, 'J',true);
-			$pdf->writeHTMLCell(40, 20, 115, 21, $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_ZIP.' '.$conf->global->MAIN_INFO_SOCIETE_TOWN), 0, 1, false, true, 'J',true);
+			$pdf->writeHTMLCell(120, 20, 115, 10, $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_NOM), 0, 1, false, true, 'J',true);
+			$pdf->writeHTMLCell(120, 20, 115, 14, $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_ADDRESS), 0, 1, false, true, 'J',true);
+			$pdf->writeHTMLCell(120, 20, 115, 21, $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_ZIP.' '.$conf->global->MAIN_INFO_SOCIETE_TOWN), 0, 1, false, true, 'J',true);
 			
 			
-			$pdf->writeHTMLCell(150, 20, 10, 28, $outputlangs->convToOutputCharset('A '.$conf->global->MAIN_INFO_SOCIETE_TOWN.', le'), 0, 1, false, true, 'J',true);
+			//$pdf->writeHTMLCell(150, 50, 10, 21, $outputlangs->convToOutputCharset('A '.$conf->global->MAIN_INFO_SOCIETE_TOWN.', le'), 0, 1, false, true, 'J',true);
 			
 
 			//Affichage code monnaie 
-			$pdf->SetXY(180, $cury+1);
+			$pdf->SetXY(181, $cury+1);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',7);
 			$pdf->Cell(18, 0, "Code Monnaie",0,1,C);
-			$pdf->SetXY(180, $cury+5);
+			$pdf->SetXY(181, $cury+5);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',14);
 			$pdf->Cell(18, 0, $outputlangs->trans($conf->currency),0,0,C);
-
+			
 			//Affichage lieu / date
 			$cury+=5;
 			$pdf->SetXY(15, $cury);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',8);
-			$pdf->Cell(2, 0, "A",0,1,C);
+			$pdf->Cell(4, 0, "À", 0, 1, C);
 			$pdf->SetXY(20, $cury);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
-			$pdf->Cell(15, 0, $outputlangs->convToOutputCharset($this->emetteur->ville),0,1,C);
+			$pdf->Cell(15, 0, $outputlangs->convToOutputCharset($this->emetteur->town),0,1,C); //$this->emetteur->town
 			$pdf->SetXY(40, $cury);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',8);
 			$pdf->Cell(2, 0, ", le",0,1,C);
@@ -1577,14 +1579,14 @@ class pdf_crabe extends ModelePDFFactures
 			$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
 			$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeurportioncadre, $cury+$hauteur_cadre);
 			$curx+=$largeurportioncadre;
-			$pdf->Line($curx, $cury+2, $curx, $cury+$hauteur_cadre);
+			$pdf->Line($curx, $cury+4, $curx, $cury+$hauteur_cadre);
 
 			$curx+=10;
 			$largeurportioncadre=6;
-			$pdf->Line($curx, $cury+2, $curx, $cury+$hauteur_cadre);
+			$pdf->Line($curx, $cury+4, $curx, $cury+$hauteur_cadre);
 			$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeurportioncadre, $cury+$hauteur_cadre);
 			$curx+=$largeurportioncadre;
-			$pdf->Line($curx, $cury+2, $curx, $cury+$hauteur_cadre);
+			$pdf->Line($curx, $cury+4, $curx, $cury+$hauteur_cadre);
 
 			$curx+=3;
 			$largeurportioncadre=6;
@@ -1624,7 +1626,7 @@ class pdf_crabe extends ModelePDFFactures
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre*4/5, $cury);
 			$pdf->Line($curx+$largeur_cadre, $cury+$hauteur_cadre, $curx+$largeur_cadre*4/5, $cury+$hauteur_cadre);
-			$pdf->SetXY($curx, $cury+2);
+			$pdf->SetXY($curx, $cury+1);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
 			$pdf->Cell($largeur_cadre, 1, $outputlangs->convToOutputCharset($object->ref),0,0,C);
 
@@ -1654,7 +1656,7 @@ class pdf_crabe extends ModelePDFFactures
 			$pdf->SetXY($curx, $cury+2);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
 // MB leave blank
-			//$pdf->Cell($largeur_cadre, 0, "R�f ",0,0,C);
+			//$pdf->Cell($largeur_cadre, 0, "Réf ",0,0,C);
  
 				// RIB client
 			$cury=$cury+$hauteur_cadre+3;
@@ -1679,22 +1681,22 @@ class pdf_crabe extends ModelePDFFactures
 					$pdf->Line($curx+35, $cury, $curx+35, $cury+$hauteur_cadre-2);
 					$pdf->Line($curx+60, $cury, $curx+60, $cury+$hauteur_cadre-2);
 					$pdf->Line($curx+70, $cury, $curx+70, $cury+$hauteur_cadre);
-					$pdf->SetXY($curx+5, $cury+$hauteur_cadre-4);
+					$pdf->SetXY($curx+5, $cury+$hauteur_cadre-5);
 					$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
-					if ($cpt->code_banque && $cpt->code_guichet && $cpt->number && $cpt->cle_rib)
+					if ($cpt->code_banque && $cpt->code_guichet && $cpt->number && $cpt->cle_rib) {
 						$pdf->Cell($largeur_cadre, 1, $cpt->code_banque."             ".$cpt->code_guichet."         ".$cpt->number."        ".$cpt->cle_rib,0,0,L);
+					}	
 					$pdf->SetXY($curx, $cury+$hauteur_cadre-1);
 					$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
-					$pdf->Cell($largeur_cadre, 1, "Code établissement    Code guichet           N° de compte            Cl RIB",0,0,L);
+					$pdf->Cell($largeur_cadre, 1, "Code établissement    Code guichet           N° de compte            Clé RIB",0,0,L);
 					$curx=150;				
 					$largeur_cadre=55;
 					$pdf->SetXY($curx, $cury);
 					$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
 					$pdf->Cell($largeur_cadre, 1, "Domiciliation bancaire",0,0,C);
-					$pdf->SetXY($curx, $cury+2);
+					$pdf->SetXY($curx, $cury+4);
 					$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
-					if ($cpt->domiciliation)
-						$pdf->Cell($largeur_cadre, 5,$outputlangs->convToOutputCharset($cpt->domiciliation) ,1,0,C);
+					$pdf->Cell($largeur_cadre, 5, $outputlangs->convToOutputCharset($cpt->domiciliation), 1, 0, 'C');
 					$i++;
 				}
 			}
@@ -1725,19 +1727,22 @@ class pdf_crabe extends ModelePDFFactures
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
 			$arrayidcontact = $object->getIdContact('external','BILLING');
 			$carac_client=$outputlangs->convToOutputCharset($object->client->nom);
-			$carac_client.="\n".$outputlangs->convToOutputCharset($object->client->adresse);
-			$carac_client.="\n".$outputlangs->convToOutputCharset($object->client->cp) . " " . $outputlangs->convToOutputCharset($object->client->ville)."\n";
+			$carac_client.="\n".$outputlangs->convToOutputCharset($object->client->address);
+			$carac_client.="\n".$outputlangs->convToOutputCharset($object->client->zip) . " " . $outputlangs->convToOutputCharset($object->client->town)."\n";
+
 			$pdf->MultiCell($largeur_cadre*2.5, $hauteur_cadre, $carac_client,1,C);
-			//N� Siren
+			//Num Siren
 			$pdf->SetXY($curx, $cury+16);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
 			$pdf->MultiCell($largeur_cadre, 4, "N° SIREN du tiré",0,R);
 			$pdf->SetXY($curx+$largeur_cadre+2, $cury+16);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
-			$pdf->MultiCell($largeur_cadre*2.5, 4, $outputlangs->convToOutputCharset($object->client->siren),1,C);
+			$pdf->MultiCell($largeur_cadre*2.5, 4, $outputlangs->convToOutputCharset($object->client->idprof1),1,C);
+			
 			//signature du tireur
-			$pdf->SetXY($curx+$largeur_cadre*5, $cury);
+			$pdf->SetXY($curx+($largeur_cadre*5)-3, $cury+2);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
+			
 			$pdf->MultiCell($largeur_cadre*2, 4, "Signature du tireur",0,C);
 
 			$pdf->Line(0,103,$this->page_largeur, 103);		
