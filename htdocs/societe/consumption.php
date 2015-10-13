@@ -203,8 +203,11 @@ if ($type_element == 'invoice')
 
 	$sql_select = 'SELECT f.rowid as doc_id, f.facnumber as doc_number, f.type as doc_type, f.datef as dateprint, f.fk_statut as status, u.firstname, u.lastname,  ';
 	$tables_from = MAIN_DB_PREFIX."facture as f,".MAIN_DB_PREFIX."facturedet as d, ".MAIN_DB_PREFIX."facturedet_extrafields as dex,  ".MAIN_DB_PREFIX."user as u ";
-	$where = " WHERE f.fk_soc = s.rowid AND dex.fk_object=f.rowid AND (dex.fk_user=u.rowid OR dex.fk_user=0) AND s.rowid = ".$socid;
-	$where.= " AND d.fk_facture = f.rowid";
+	$tables_from = MAIN_DB_PREFIX."facture as f 
+		LEFT JOIN ".MAIN_DB_PREFIX."facturedet as d ON (d.fk_facture = f.rowid)
+		LEFT JOIN ".MAIN_DB_PREFIX."facturedet_extrafields as dex ON (dex.fk_object = d.rowid)
+		LEFT JOIN ".MAIN_DB_PREFIX."user as u ON (u.rowid = dex.fk_user) ";
+	$where = " WHERE f.fk_soc = s.rowid AND p.rowid = d.fk_product AND s.rowid = ".$socid;
 	$where.= " AND f.entity = ".$conf->entity;
 	$dateprint = 'f.datef';
 	$doc_number='f.facnumber';
