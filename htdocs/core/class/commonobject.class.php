@@ -575,6 +575,11 @@ abstract class CommonObject
         global $conf;
 
         if (empty($this->socid)) return 0;
+        
+        if (!class_exists('Societe'))
+	    require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+
+	require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 
         $thirdparty = new Societe($this->db);
         $result=$thirdparty->fetch($this->socid);
@@ -1052,7 +1057,6 @@ abstract class CommonObject
             return 0;
         }
     }
-
 
     /**
      *  Save a new position (field rang) for details lines.
@@ -2002,7 +2006,7 @@ abstract class CommonObject
         $sql.= " FROM ".MAIN_DB_PREFIX.$this->table_element;
         $sql.= " WHERE entity IN (".getEntity($this->element, 1).")";
         if (! empty($id))  $sql.= " AND rowid = ".$id;
-        if (! empty($ref)) $sql.= " AND ref = '".$ref."'";
+        if (! empty($ref)) $sql.= " AND ref = '".$this->db->escape($ref)."'";
 
         $resql = $this->db->query($sql);
         if ($resql)
@@ -2176,10 +2180,10 @@ abstract class CommonObject
             			$this->array_options[$key] = price2num($this->array_options[$key]);
             			break;
             		case 'date':
-            			$this->array_options[$key]=$this->db->idate($this->array_options[$key]);
+            			if (is_numeric($this->array_options[$key])) $this->array_options[$key]=$this->db->idate($this->array_options[$key]);
             			break;
             		case 'datetime':
-            			$this->array_options[$key]=$this->db->idate($this->array_options[$key]);
+            			if (is_numeric($this->array_options[$key])) $this->array_options[$key]=$this->db->idate($this->array_options[$key]);
             			break;
                	}
             }
@@ -2193,7 +2197,7 @@ abstract class CommonObject
             {
             	$attributeKey = substr($key,8);   // Remove 'options_' prefix
                 // Add field of attribut
-            	if ($extrafields->attribute_type[$attributeKey] != 'separate') // Only for other type of separate
+            	if (isset($extrafields->attribute_type[$attributeKey]) && $extrafields->attribute_type[$attributeKey] != 'separate') // Only for other type of separate
                 	$sql.=",".$attributeKey;
             }
             $sql .= ") VALUES (".$this->id;
@@ -2201,7 +2205,7 @@ abstract class CommonObject
             {
             	$attributeKey = substr($key,8);   // Remove 'options_' prefix
                 // Add field o fattribut
-            	if($extrafields->attribute_type[$attributeKey] != 'separate') // Only for other type of separate)
+            	if(isset($extrafields->attribute_type[$attributeKey]) && $extrafields->attribute_type[$attributeKey] != 'separate') // Only for other type of separate)
             	{
 	                if ($this->array_options[$key] != '')
 	                {

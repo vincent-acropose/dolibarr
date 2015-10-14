@@ -72,9 +72,9 @@ $pagenext = $page + 1;
 $startdate=$enddate='';
 
 if (!empty($_POST['startdatemonth']))
-  $startdate  = dol_mktime(12, 0, 0, $_POST['startdatemonth'], $_POST['startdateday'], $_POST['startdateyear']);
+  $startdate  = dol_mktime(0, 0, 0, $_POST['startdatemonth'], $_POST['startdateday'], $_POST['startdateyear']);
 if (!empty($_POST['enddatemonth']))
-  $enddate  = dol_mktime(12, 0, 0, $_POST['enddatemonth'], $_POST['enddateday'], $_POST['enddateyear']);
+  $enddate  = dol_mktime(23, 59, 59, $_POST['enddatemonth'], $_POST['enddateday'], $_POST['enddateyear']);
 
 
 /*
@@ -167,8 +167,8 @@ $sql = "SELECT p.label, p.rowid, p.fk_product_type, p.ref,";
 if ($id > 0) $sql.= " d.fk_product,";
 if ($id > 0) $sql.= " f.rowid as facid, f.facnumber, f.total as total_ht, f.datef, f.paye, f.fk_statut as statut,";
 $sql.= " sum(d.total_ht) as selling_price,";
-$sql.= " sum(".$db->ifsql('d.total_ht <=0','d.qty * d.buy_price_ht * -1','d.qty * d.buy_price_ht').") as buying_price,";
-$sql.= " sum(".$db->ifsql('d.total_ht <=0','-1 * (abs(d.total_ht) - (d.buy_price_ht * d.qty))','d.total_ht - (d.buy_price_ht * d.qty)').") as marge";
+$sql.= " sum(".$db->ifsql('d.total_ht < 0','d.qty * d.buy_price_ht * -1','d.qty * d.buy_price_ht').") as buying_price,";
+$sql.= " sum(".$db->ifsql('d.total_ht < 0','-1 * (abs(d.total_ht) - (d.buy_price_ht * d.qty))','d.total_ht - (d.buy_price_ht * d.qty)').") as marge";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 $sql.= ", ".MAIN_DB_PREFIX."product as p";
 $sql.= ", ".MAIN_DB_PREFIX."facture as f";
