@@ -50,6 +50,12 @@ $version=DOL_VERSION;
 $error=0;
 $forcecommit=0;
 
+// Conf LDAP multicompany
+$TGroupEntities_conf = unserialize($conf->global->MULTICOMPANY_USER_GROUP_ENTITY);
+$TGroupEntities = array();
+if(!empty($TGroupEntities_conf)) {
+	foreach ($TGroupEntities_conf as $TData) $TGroupEntities[$TData['group_id']][] = $TData['entity_id'];
+}
 
 /*
  * Main
@@ -203,7 +209,13 @@ if ($result >= 0)
 
 				// Ajout de l'utilisateur dans le groupe
 				if(!in_array($fuser->id, array_keys($group->members))) {
-					$fuser->SetInGroup($group->id, $group->entity);
+					
+					if(empty($TGroupEntities[$group->id])) {
+						$fuser->SetInGroup($group->id, $group->entity);
+					} else {
+						foreach ($TGroupEntities[$group->id] as $entity) $fuser->SetInGroup($group->id, $used_entity);
+					}
+					
 					echo $fuser->login.' added'."\n";
 				}
 			}
