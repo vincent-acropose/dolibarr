@@ -2121,6 +2121,10 @@ if ($action == 'create')
 	print '</td></tr>';
 
     // Bank Account
+	if (isset($_POST['fk_account'])) {
+		$fk_account = $_POST['fk_account'];
+	}
+
     print '<tr><td>' . $langs->trans('BankAccount') . '</td><td colspan="2">';
     $form->select_comptes($fk_account, 'fk_account', 0, '', 1);
     print '</td></tr>';
@@ -3623,7 +3627,7 @@ if ($action == 'create')
 		$formmail->substit['__FACREF__'] = $object->ref;
 		$formmail->substit['__SIGNATURE__'] = $user->signature;
 		$formmail->substit['__REFCLIENT__'] = $object->ref_client;
-		$formmail->substit['__THIRPARTY_NAME__'] = $object->thirdparty->name;
+		$formmail->substit['__THIRDPARTY_NAME__'] = $object->thirdparty->name;
 		$formmail->substit['__PROJECT_REF__'] = (is_object($object->projet)?$object->projet->ref:'');
 		$formmail->substit['__PERSONALIZED__'] = '';
 		$formmail->substit['__CONTACTCIVNAME__'] = '';

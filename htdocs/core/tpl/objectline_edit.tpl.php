@@ -267,7 +267,7 @@ if (! empty($conf->margin->enabled))
 		{
 		?>
 			$('#savelinebutton').click(function (e) {
-				/*return checkEditLine(e, "np_markRate");*/
+				return checkEditLine(e, "np_markRate");
 			});
 			$("input[name='np_markRate']:first").blur(function(e) {
 				return checkEditLine(e, "np_markRate");
@@ -287,18 +287,17 @@ if (! empty($conf->margin->enabled))
 
 		var rate = $("input[name='"+npRate+"']:first");
 		if (rate.val() == '' || (typeof rate.val()) == 'undefined' ) return true;
-		var ratejs = price2numjs(rate.val());
 
-		if (! $.isNumeric(ratejs))
+		if (! $.isNumeric(rate.val().replace(',','.')))
 		{
-			alert('<?php echo $langs->transnoentitiesnoconv("rateMustBeNumeric"); ?>');
+			alert('<?php echo $langs->trans("rateMustBeNumeric"); ?>');
 			e.stopPropagation();
 			setTimeout(function () { rate.focus() }, 50);
 			return false;
 		}
-		if (npRate == "np_markRate" && ratejs > 100)
+		if (npRate == "np_markRate" && rate.val() >= 100)
 		{
-			alert('<?php echo $langs->transnoentitiesnoconv("markRateShouldBeLesserThan100"); ?>');
+			alert('<?php echo $langs->trans("markRateShouldBeLesserThan100"); ?>');
 			e.stopPropagation();
 			setTimeout(function () { rate.focus() }, 50);
 			return false;
@@ -307,18 +306,19 @@ if (! empty($conf->margin->enabled))
 		var price = 0;
 		remisejs=price2numjs(remise.val());
 
-        bpjs=price2numjs(buying_price.val());
-		if (remisejs != 100 && bpjs > 0)
+		if (remisejs != 100)
 		{
+			bpjs=price2numjs(buying_price.val());
+			ratejs=price2numjs(rate.val());
+
 			/* console.log(npRate+" - "+bpjs+" - "+ratejs); */
 
 			if (npRate == "np_marginRate")
 				price = ((bpjs * (1 + ratejs / 100)) / (1 - remisejs / 100));
 			else if (npRate == "np_markRate")
 				price = ((bpjs / (1 - ratejs / 100)) / (1 - remisejs / 100));
-				
-			$("input[name='price_ht']:first").val(price);    // TODO Must use a function like php price to have here a formated value
 		}
+		$("input[name='price_ht']:first").val(price);	// TODO Must use a function like php price to have here a formated value
 
 		return true;
 	}
