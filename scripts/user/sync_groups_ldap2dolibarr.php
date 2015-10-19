@@ -213,7 +213,7 @@ if ($result >= 0)
 					if(empty($TGroupEntities[$group->id])) {
 						$fuser->SetInGroup($group->id, $group->entity);
 					} else {
-						foreach ($TGroupEntities[$group->id] as $entity) $fuser->SetInGroup($group->id, $used_entity);
+						foreach ($TGroupEntities[$group->id] as $used_entity) $fuser->SetInGroup($group->id, $used_entity);
 					}
 					
 					echo $fuser->login.' added'."\n";
