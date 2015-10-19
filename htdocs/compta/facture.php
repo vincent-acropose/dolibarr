@@ -999,7 +999,7 @@ if (empty($reshook))
 									$langs->trans('Deposit'),
 									$amountdeposit,		 	// subprice
 									1, 						// quantity
-									$lines[$i]->tva_tx, 0, // localtax1_tx
+									20, 0, // localtax1_tx
 									0, 						// localtax2_tx
 									0, 						// fk_product
 									0, 						// remise_percent
@@ -2113,10 +2113,11 @@ if ($action == 'create')
 		if (($origin == 'propal') || ($origin == 'commande'))
 		{
 			print '<td class="nowrap" style="padding-left: 5px">';
-			$arraylist = array('amount' => 'FixAmount','variable' => 'VarAmount');
+			$arraylist = array('variable' => 'VarAmount','amount' => 'FixAmount');
 			print $form->selectarray('typedeposit', $arraylist, GETPOST('typedeposit'), 0, 0, 0, '', 1);
 			print '</td>';
-			print '<td class="nowrap" style="padding-left: 5px">' . $langs->trans('Value') . ':<input type="text" id="valuedeposit" name="valuedeposit" size="3" value="' . GETPOST('valuedeposit', 'int') . '"/>';
+			$valuedeposit = GETPOST('valuedeposit', 'int') ? GETPOST('valuedeposit', 'int') : '30';
+			print '<td class="nowrap" style="padding-left: 5px">' . $langs->trans('Value') . ':<input type="text" id="valuedeposit" name="valuedeposit" size="3" value="' . $valuedeposit . '"/>';
 		}
 		print '</td></tr></table>';
 
