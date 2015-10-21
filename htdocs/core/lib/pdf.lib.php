@@ -275,13 +275,13 @@ function pdf_build_address($outputlangs,$sourcecompany,$targetcompany='',$target
 		if (empty($conf->global->MAIN_PDF_DISABLESOURCEDETAILS))
 		{
     		// Tel
-    		if ($sourcecompany->tel) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Phone").": ".$outputlangs->convToOutputCharset($sourcecompany->tel);
+    		if ($sourcecompany->tel) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Phone")." : ".$outputlangs->convToOutputCharset($sourcecompany->tel);
     		// Fax
-    		if ($sourcecompany->fax) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Fax").": ".$outputlangs->convToOutputCharset($sourcecompany->fax);
+    		if ($sourcecompany->fax) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Fax")." : ".$outputlangs->convToOutputCharset($sourcecompany->fax);
     		// EMail
-    		if ($sourcecompany->email) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Email").": ".$outputlangs->convToOutputCharset($sourcecompany->email);
+    		if ($sourcecompany->email) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Email")." : ".$outputlangs->convToOutputCharset($sourcecompany->email);
     		// Web
-    		if ($sourcecompany->url) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Web").": ".$outputlangs->convToOutputCharset($sourcecompany->url);
+    		if ($sourcecompany->url) $stringaddress .= ($stringaddress ? "\n" : '' ).$outputlangs->transnoentities("Web")." : ".$outputlangs->convToOutputCharset($sourcecompany->url);
     	}
 	}
 
@@ -444,7 +444,7 @@ function pdf_bank(&$pdf,$outputlangs,$curx,$cury,$account,$onlynumber=0,$default
 	if (empty($onlynumber))
 	{
 		$pdf->SetFont('','B',$default_font_size - 3);
-		$pdf->MultiCell(100, 3, $outputlangs->transnoentities('PaymentByTransferOnThisBankAccount').':', 0, 'L', 0);
+		$pdf->MultiCell(100, 3, $outputlangs->transnoentities('PaymentByTransferOnThisBankAccount').' :', 0, 'L', 0);
 		$cury+=4;
 	}
 
@@ -462,7 +462,7 @@ function pdf_bank(&$pdf,$outputlangs,$curx,$cury,$account,$onlynumber=0,$default
 		{
 			$pdf->SetFont('','',$default_font_size - 4);
 			$pdf->SetXY($curx, $cury);
-			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("Bank").': ' . $outputlangs->convToOutputCharset($account->bank), 0, 'L', 0);
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("Bank").' : ' . $outputlangs->convToOutputCharset($account->bank), 0, 'L', 0);
 			$cury+=3;
 		}
 
@@ -554,7 +554,7 @@ function pdf_bank(&$pdf,$outputlangs,$curx,$cury,$account,$onlynumber=0,$default
 	if (empty($onlynumber) && ! empty($account->domiciliation))
 	{
 		$pdf->SetXY($curx, $cury);
-		$val=$outputlangs->transnoentities("Residence").': ' . $outputlangs->convToOutputCharset($account->domiciliation);
+		$val=$outputlangs->transnoentities("Residence").' : ' . $outputlangs->convToOutputCharset($account->domiciliation);
 		$pdf->MultiCell(100, 3, $val, 0, 'L', 0);
 		$nboflines=dol_nboflines_bis($val,120);
 		//print $nboflines;exit;
@@ -563,9 +563,9 @@ function pdf_bank(&$pdf,$outputlangs,$curx,$cury,$account,$onlynumber=0,$default
 	else if (! $usedetailedbban) $cury+=1;
 
 	$pdf->SetXY($curx, $cury);
-	$pdf->MultiCell(100, 3, $outputlangs->transnoentities($ibankey).': ' . $outputlangs->convToOutputCharset($account->iban), 0, 'L', 0);
+	$pdf->MultiCell(100, 3, $outputlangs->transnoentities($ibankey).' : ' . $outputlangs->convToOutputCharset($account->iban), 0, 'L', 0);
 	$pdf->SetXY($curx, $cury+3);
-	$pdf->MultiCell(100, 3, $outputlangs->transnoentities($bickey).': ' . $outputlangs->convToOutputCharset($account->bic), 0, 'L', 0);
+	$pdf->MultiCell(100, 3, $outputlangs->transnoentities($bickey).' : ' . $outputlangs->convToOutputCharset($account->bic), 0, 'L', 0);
 
 	return $pdf->getY();
 }
@@ -677,14 +677,14 @@ function pdf_pagefoot(&$pdf,$outputlangs,$paramfreetext,$fromcompany,$marge_bass
 	{
 		$field=$outputlangs->transcountrynoentities("ProfId1",$fromcompany->country_code);
 		if (preg_match('/\((.*)\)/i',$field,$reg)) $field=$reg[1];
-		$line3.=($line3?" - ":"").$field.": ".$outputlangs->convToOutputCharset($fromcompany->idprof1);
+		$line3.=($line3?" - ":"").$field." : ".$outputlangs->convToOutputCharset($fromcompany->idprof1);
 	}
 	// Prof Id 2
 	if ($fromcompany->idprof2)
 	{
 		$field=$outputlangs->transcountrynoentities("ProfId2",$fromcompany->country_code);
 		if (preg_match('/\((.*)\)/i',$field,$reg)) $field=$reg[1];
-		$line3.=($line3?" - ":"").$field.": ".$outputlangs->convToOutputCharset($fromcompany->idprof2);
+		$line3.=($line3?" - ":"").$field." : ".$outputlangs->convToOutputCharset($fromcompany->idprof2);
 	}
 
 	// Line 4 of company infos
@@ -694,19 +694,19 @@ function pdf_pagefoot(&$pdf,$outputlangs,$paramfreetext,$fromcompany,$marge_bass
 	{
 		$field=$outputlangs->transcountrynoentities("ProfId3",$fromcompany->country_code);
 		if (preg_match('/\((.*)\)/i',$field,$reg)) $field=$reg[1];
-		$line4.=($line4?" - ":"").$field.": ".$outputlangs->convToOutputCharset($fromcompany->idprof3);
+		$line4.=($line4?" - ":"").$field." : ".$outputlangs->convToOutputCharset($fromcompany->idprof3);
 	}
 	// Prof Id 4
 	if ($fromcompany->idprof4)
 	{
 		$field=$outputlangs->transcountrynoentities("ProfId4",$fromcompany->country_code);
 		if (preg_match('/\((.*)\)/i',$field,$reg)) $field=$reg[1];
-		$line4.=($line4?" - ":"").$field.": ".$outputlangs->convToOutputCharset($fromcompany->idprof4);
+		$line4.=($line4?" - ":"").$field." : ".$outputlangs->convToOutputCharset($fromcompany->idprof4);
 	}
 	// IntraCommunautary VAT
 	if ($fromcompany->tva_intra != '')
 	{
-		$line4.=($line4?" - ":"").$outputlangs->transnoentities("VATIntraShort").": ".$outputlangs->convToOutputCharset($fromcompany->tva_intra);
+		$line4.=($line4?" - ":"").$outputlangs->transnoentities("VATIntraShort")." : ".$outputlangs->convToOutputCharset($fromcompany->tva_intra);
 	}
 
 	$pdf->SetFont('','',7);
