@@ -184,7 +184,16 @@ class pdf_rouget extends ModelePdfExpedition
 				{
 					$tab_top = 88;
 					$tab_top_alt = $tab_top;
-
+					
+					if (! empty($object->tracking_number)) {
+						if($object->shipping_method_id < 1) {
+							$pdf->SetFont('','B', $default_font_size - 2);
+							$pdf->writeHTMLCell(60, 4, $this->posxdesc-1, $tab_top-1, $outputlangs->transnoentities("TrackingNumber")." : " . $object->tracking_number, 0, 1, false, true, 'L');
+						}
+						$tab_top_alt = $pdf->GetY();
+						$tab_top_alt += 1;
+					}
+				
 					// Tracking number
 					if (! empty($object->tracking_number))
 					{
@@ -197,10 +206,11 @@ class pdf_rouget extends ModelePdfExpedition
 								$code=$outputlangs->getLabelFromKey($this->db,$object->shipping_method_id,'c_shipment_mode','rowid','code');
 								$label=$outputlangs->trans("LinkToTrackYourPackage")."<br>";
 								$label.=$outputlangs->trans("SendingMethod".strtoupper($code))." :";
+								
 								$pdf->SetFont('','B', $default_font_size - 2);
-								$pdf->writeHTMLCell(60, 7, $this->posxdesc-1, $tab_top-1, $label." ".$object->tracking_url, 0, 1, false, true, 'L');
+								$pdf->writeHTMLCell(60, 8, $this->posxdesc-1, $tab_top, $label." ".$object->tracking_url, 0, 1, false, true, 'L');
 
-								$tab_top_alt += 7;
+								$tab_top_alt = $pdf->GetY();
 							}
 						}
 					} else if ($object->shipping_method_id > 0) {
@@ -208,12 +218,12 @@ class pdf_rouget extends ModelePdfExpedition
 						$label = $outputlangs->trans("SendingMethod".strtoupper($code));
 						
 						$pdf->SetFont('','B', $default_font_size - 2);
-						$pdf->writeHTMLCell(60, 4, $this->posxdesc-1, $tab_top-1, $label, 0, 1, false, true, 'L');
+						$pdf->writeHTMLCell(60, 4, $this->posxdesc-1, $tab_top, $label, 0, 1, false, true, 'L');
 
-						$tab_top_alt += 4;
+						$tab_top_alt = $pdf->GetY();
 					}
 
-					// Affiche notes
+					// Notes
 					if (! empty($object->note_public))
 					{
 						$pdf->SetFont('','', $default_font_size - 1);   // Dans boucle pour gerer multi-page
@@ -252,7 +262,7 @@ class pdf_rouget extends ModelePdfExpedition
 					$pageposbefore=$pdf->getPage();
 
 					// Description de la ligne produit
-					pdf_writelinedesc($pdf,$object,$i,$outputlangs,$this->posxqtyordered-10,3,$this->posxdesc,$curY,0,0);
+					pdf_writelinedesc($pdf,$object,$i,$outputlangs,$this->posxqtyordered-10,3,$this->posxdesc,$curY,0,1);
 
 					$nexY = $pdf->GetY();
 					$pageposafter=$pdf->getPage();
@@ -669,3 +679,4 @@ class pdf_rouget extends ModelePdfExpedition
 	}
 
 }
+

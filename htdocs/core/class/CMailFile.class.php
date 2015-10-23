@@ -103,7 +103,7 @@ class CMailFile
 	$addr_cc="",$addr_bcc="",$deliveryreceipt=0,$msgishtml=0,$errors_to='',$css='')
 	{
 		global $conf;
-
+		
 		// We define end of line (RFC 821).
 		$this->eol="\r\n";
 		// We define end of line for header fields (RFC 822bis section 2.3 says header must contains \r\n).
@@ -173,7 +173,7 @@ class CMailFile
 		//echo $addr_cc;exit;
 		// Add autocopy to
 		if (! empty($conf->global->MAIN_MAIL_AUTOCOPY_TO)) $addr_bcc.=($addr_bcc?', ':'').$conf->global->MAIN_MAIL_AUTOCOPY_TO;
-
+		
 		// Action according to choosed sending method
 		if ($conf->global->MAIN_MAIL_SENDMODE == 'mail')
 		{
@@ -191,8 +191,9 @@ class CMailFile
 			$this->errors_to = $errors_to;
 			$this->addr_to = $to;
 			//echo $addr_cc." ".$addr_bcc;
-			if($addr_cc > 0) $this->addr_cc = $addr_cc;
-			if($addr_bcc > 0) $this->addr_bcc = $addr_bcc;
+			
+			if(empty($addr_cc) === false) $this->addr_cc = $addr_cc;
+			if(empty($addr_bcc) === false) $this->addr_bcc = $addr_bcc;
 			$this->deliveryreceipt = $deliveryreceipt;
 			$smtp_headers = $this->write_smtpheaders();
 			
@@ -286,9 +287,9 @@ class CMailFile
 				}
 			}
 
-			if($addr_cc  > 0) $smtps->setCC($addr_cc);
-			if($addr_bcc  > 0) $smtps->setBCC($addr_bcc);
-			if($errors_to  > 0) $smtps->setErrorsTo($errors_to);
+			if(empty($addr_cc) === false) $smtps->setCC($addr_cc);
+			if(empty($addr_bcc) === false) $smtps->setBCC($addr_bcc);
+			if(empty($errors_to) === false) $smtps->setErrorsTo($errors_to);
 			$smtps->setDeliveryReceipt($deliveryreceipt);
 
 			$this->smtps=$smtps;
@@ -366,12 +367,25 @@ class CMailFile
 	 */
 	function sendfile()
 	{
-		global $conf;
+		global $conf,$db;
 
 		$errorlevel=error_reporting();
 		error_reporting($errorlevel ^ E_WARNING);   // Desactive warnings
 
 		$res=false;
+
+		dol_include_once('/core/class/hookmanager.class.php');
+	        $hookmanager=new HookManager($db);
+	        $hookmanager->initHooks(array('maildao'));
+	        $reshook=$hookmanager->executeHooks('doactions',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
+        	if (!empty($reshook))
+	        {
+                
+        	    $this->error="Error in hook maildao doactions ".$reshook;
+	            dol_syslog("CMailFile::sendfile: mail end error=".$this->error, LOG_ERR);
+        
+        	    return $reshook;
+	        }
 
 		if (empty($conf->global->MAIN_DISABLE_ALL_MAILS))
 		{

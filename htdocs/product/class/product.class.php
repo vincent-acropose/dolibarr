@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2001-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2013 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2015 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
  * Copyright (C) 2007-2011 Jean Heimburger      <jean@tiaris.info>
  * Copyright (C) 2010-2011 Juanjo Menent        <jmenent@2byte.es>
@@ -1482,7 +1482,7 @@ class Product extends CommonObject
 				$this->date_modification		= $obj->tms;
 				$this->import_key				= $obj->import_key;
 				$this->entity					= $obj->entity;
-				
+
 				$this->ref_ext					= $obj->ref_ext;
 
 				$this->db->free($resql);
@@ -1716,6 +1716,32 @@ class Product extends CommonObject
 			$this->stats_commande['nb']=$obj->nb;
 			$this->stats_commande['rows']=$obj->nb_rows;
 			$this->stats_commande['qty']=$obj->qty?$obj->qty:0;
+
+			// if it's a virtual product, maybe it is in order by extension			
+			$TFather = $this->getFather();
+			if(is_array($TFather) && !empty($TFather)) {
+				
+				foreach($TFather as &$fatherData) {
+					
+					$pFather = new Product($this->db);
+					$pFather->id = $fatherData['id'];  
+					$qtyCoef = $fatherData['qty'];
+
+					
+					$pFather->load_stats_commande($socid, $filtrestatut);
+						
+					$this->stats_commande['customers']+=$pFather->stats_commande['customers'];
+					$this->stats_commande['nb']+=$pFather->stats_commande['nb'];
+					$this->stats_commande['rows']+=$pFather->stats_commande['rows'];
+					$this->stats_commande['qty']+=$pFather->stats_commande['qty'] * $qtyCoef;
+						
+					
+					
+					
+				}
+				
+			}
+			
 			return 1;
 		}
 		else
@@ -2693,7 +2719,7 @@ class Product extends CommonObject
 	function getFather()
 	{
 
-		$sql = "SELECT p.ref, p.label as label,p.rowid,pa.fk_product_pere as id,p.fk_product_type";
+		$sql = "SELECT p.ref, p.label as label,p.rowid,pa.fk_product_pere as id, pa.qty,p.fk_product_type";
 		$sql.= " FROM ".MAIN_DB_PREFIX."product_association as pa,";
 		$sql.= " ".MAIN_DB_PREFIX."product as p";
 		$sql.= " WHERE p.rowid = pa.fk_product_pere";
@@ -2708,6 +2734,7 @@ class Product extends CommonObject
 				$prods[$record['id']]['id'] =  $record['rowid'];
 				$prods[$record['id']]['ref'] =  $record['ref'];
 				$prods[$record['id']]['label'] =  $this->db->escape($record['label']);
+				$prods[$record['id']]['qty'] = $record['qty'];
 				$prods[$record['id']]['fk_product_type'] =  $record['fk_product_type'];
 			}
 			return $prods;
@@ -3021,7 +3048,7 @@ class Product extends CommonObject
 	 *
 	 *    @return     int             < 0 if KO, > 0 if OK
 	 */
-	function load_stock()
+	function load_stock($mode='physical')
 	{
 		$this->stock_reel = 0;
 		$this->stock_warehouse = array();
@@ -3054,7 +3081,7 @@ class Product extends CommonObject
 				}
 			}
 			$this->db->free($result);
-			$this->load_virtual_stock();
+			$this->load_virtual_stock($mode);
 			return 1;
 		}
 		else
@@ -3069,7 +3096,7 @@ class Product extends CommonObject
 	 *
 	 *    @return     int             < 0 if KO, > 0 if OK
 	 */
-	function load_virtual_stock()
+	function load_virtual_stock($mode='physical')
 	{
 		global $conf;
 
@@ -3231,7 +3258,7 @@ class Product extends CommonObject
 
     				if (! utf8_check($file)) $file=utf8_encode($file);	// To be sure file is stored in UTF8 in memory
 
-    				if (dol_is_file($dir.$file) && preg_match('/(\.jpg|\.bmp|\.gif|\.png|\.tiff)$/i', $dir.$file))
+    				if (dol_is_file($dir.$file) && preg_match('/(\.jp(e?)g|\.bmp|\.gif|\.png|\.tiff)$/i', $dir.$file))
     				{
     					$nbphoto++;
     					$photo = $file;
@@ -3411,7 +3438,7 @@ class Product extends CommonObject
 		$filename = preg_replace('/'.preg_quote($dir,'/').'/i','',$file); // Nom du fichier
 
 		// On efface l'image d'origine
-		dol_delete_file($file);
+		dol_delete_file($file, 0, 0, 0, $this); // For triggers
 
 		// Si elle existe, on efface la vignette
 		if (preg_match('/(\.jpg|\.bmp|\.gif|\.png|\.tiff)$/i',$filename,$regs))
