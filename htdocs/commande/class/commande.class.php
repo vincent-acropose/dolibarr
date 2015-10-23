@@ -914,13 +914,12 @@ class Commande extends CommonOrder
         require_once DOL_DOCUMENT_ROOT ."/core/modules/commande/".$conf->global->COMMANDE_ADDON.'.php';
         $obj = $conf->global->COMMANDE_ADDON;
         $modCommande = new $obj;
-        $this->ref = $modCommande->getNextValue($objsoc,$this);
-
+        $this->ref = '';//$modCommande->getNextValue($objsoc,$this);
+//var_dump($this->ref);
 
         // Create clone
         $result=$this->create($user);
         if ($result < 0) $error++;
-
         if (! $error)
         {
             // Hook of thirdparty module

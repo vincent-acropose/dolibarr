@@ -2406,7 +2406,9 @@ if ($action == 'create' && $user->rights->commande->creer) {
 		{
 			$ref = dol_sanitizeFileName($object->ref);
 			include_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
-			$fileparams = dol_most_recent_file($conf->commande->dir_output . '/' . $ref, preg_quote($ref, '/'));
+			
+			$regexp = preg_quote($ref, '/') . '$';
+			$fileparams = dol_most_recent_file($conf->commande->dir_output . '/' . $ref, $regexp);
 			$file = $fileparams ['fullname'];
 
 			// Build document if it not exists

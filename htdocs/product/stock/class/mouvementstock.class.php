@@ -117,6 +117,7 @@ class MouvementStock
 			if ($resql)
 			{
 				$mvid = $this->db->last_insert_id(MAIN_DB_PREFIX."stock_mouvement");
+				$this->rowid = $mvid;
 			}
 			else
 			{

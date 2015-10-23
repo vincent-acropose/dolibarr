@@ -69,7 +69,7 @@ function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $uselocalt
 	global $conf,$mysoc,$db;
 
 	$result=array();
-
+	
 	// Clean parameters
 	if (empty($txtva)) $txtva=0;
 	if (empty($seller) || ! is_object($seller))
@@ -128,9 +128,9 @@ function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $uselocalt
 		else dol_print_error($db);
 	}
 	// initialize total (may be HT or TTC depending on price_base_type)
-	$tot_sans_remise = $pu * $qty;
-	$tot_avec_remise_ligne = $tot_sans_remise       * (1 - ($remise_percent_ligne / 100));
-	$tot_avec_remise       = $tot_avec_remise_ligne * (1 - ($remise_percent_global / 100));
+	$tot_sans_remise 	   = price2num($pu * $qty, 'MT');
+	$tot_avec_remise_ligne = price2num($tot_sans_remise       * (1 - ($remise_percent_ligne / 100)), 'MT');
+	$tot_avec_remise       = price2num($tot_avec_remise_ligne * (1 - ($remise_percent_global / 100)), 'MT');
 
 	// initialize result
 	for ($i=0; $i <= 15; $i++) $result[$i] = 0;
