@@ -210,24 +210,44 @@ if ($result >= 0)
 
 				$userIdList[$userdn] = $fuser->id;
 
+
+                                        $sql = "DELETE FROM ".MAIN_DB_PREFIX."usergroup_user";
+                                        $sql.= " WHERE fk_user  = ".$fuser->id;
+                                        $sql.= " AND fk_usergroup = ".$group->id;
+                                        $db->query($sql);
+
+
 				// Ajout de l'utilisateur dans le groupe
 					//if(empty($TGroupEntities[$group->id])) {
 				if(!empty($TGroupEntities[$group->id]))  {
-					foreach ($TGroupEntities[$group->id] as $used_entity) $fuser->SetInGroup($group->id, $used_entity);
+					foreach ($TGroupEntities[$group->id] as $used_entity) {
+						$fuser->SetInGroup($group->id, $used_entity);
+						echo $fuser->login.' entity : '.$used_entity.' added'."\n";
+					}
 				}		
 				else {
 					$fuser->SetInGroup($group->id, $group->entity);
+					echo $fuser->login.' entity : '.$group->entity.' added'."\n";
 				}		
 							
-				echo $fuser->login.' added'."\n";
 				
+			}
+			
+			$TMember=array();
+			$res = $db->query("SELECT fk_user FROM ".MAIN_DB_PREFIX."usergroup_user WHERE fk_usergroup=".$group->id);
+			while($objgroup = $db->fetch_object($res)) {
+				$TMember[] = $objgroup->fk_user;
 			}
 
 			// 2 - Suppression des utilisateurs du groupe Dolibarr qui ne sont plus dans le groupe LDAP
-			foreach ($group->members as $guser) {
-				if(!in_array($guser->id, $userIdList)) {
-					$guser->RemoveFromGroup($group->id, $group->entity);
-					echo $guser->login.' removed'."\n";
+			foreach ($TMember as $g_fk_user) {
+				if(!in_array($g_fk_user, $userIdList)) {
+
+					$sql = "DELETE FROM ".MAIN_DB_PREFIX."usergroup_user";
+					$sql.= " WHERE fk_user  = ".$g_fk_user;
+					$sql.= " AND fk_usergroup = ".$group->id;
+					$db->query($sql);
+					echo $g_fk_user.' removed'."\n";
 				}
 			}
 		}
