@@ -1478,8 +1478,8 @@ class pdf_crabe extends ModelePDFFactures
 		
 			$curx=$this->marge_gauche;
 			$cury=$posy-30;			   
-			$pdf->SetFont('','', $default_font_size - 1);
-			if($object->mode_reglement_code == 'TNA') $pdf->writeHTMLCell(53, 20, 10, 13, $outputlangs->convToOutputCharset('Cet effet sera présenté automatiquement par nos soins.'), 0, 1, false, true, 'J',true);
+			$pdf->SetFont('','B', $default_font_size - 1);
+			if($object->mode_reglement_code == 'TNA') $pdf->writeHTMLCell(53, 20, 10, 13, $outputlangs->convToOutputCharset('CET EFFET SERA PRESENTE AUTOMATIQUEMENT PAR NOS SOINS.'), 0, 1, false, true, 'J',true);
 			else $pdf->writeHTMLCell(53, 20, 10, 13, $outputlangs->convToOutputCharset('MERCI DE NOUS RETOURNER LA PRESENTE TRAITE SOUS 8 JOURS.'), 0, 1, false, true, 'J',true);
 			
 			$pdf->SetFont('','', $default_font_size - 3);
