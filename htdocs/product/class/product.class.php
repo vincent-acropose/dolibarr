@@ -2179,7 +2179,7 @@ class Product extends CommonObject
 		$sql.= " GROUP BY date_format(e.date_delivery,'%Y%m')";
 		$sql.= " ORDER BY date_format(e.date_delivery,'%Y%m') DESC";
 		
-		echo $sql;
+		//echo $sql;
 
 		return $this->_get_stats($sql,$mode);
 	}
