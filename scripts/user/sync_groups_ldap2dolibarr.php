@@ -180,11 +180,14 @@ if ($result >= 0)
 			}
 
 			//print_r($group);
-
+			
 			// Gestion des utilisateurs associés au groupe
 			// 1 - Association des utilisateurs du groupe LDAP au groupe Dolibarr
 			$userList = array();
 			$userIdList = array();
+			
+			// On récupère tous les utilisateurs du groupe 
+			
 			foreach($ldapgroup[$conf->global->LDAP_GROUP_FIELD_GROUPMEMBERS] as $key => $userdn) {
 				if($key === 'count') continue;
 				if(empty($userList[$userdn])) { // Récupération de l'utilisateur
@@ -208,16 +211,16 @@ if ($result >= 0)
 				$userIdList[$userdn] = $fuser->id;
 
 				// Ajout de l'utilisateur dans le groupe
-				if(!in_array($fuser->id, array_keys($group->members))) {
-					
-					if(empty($TGroupEntities[$group->id])) {
-						$fuser->SetInGroup($group->id, $group->entity);
-					} else {
-						foreach ($TGroupEntities[$group->id] as $used_entity) $fuser->SetInGroup($group->id, $used_entity);
-					}
-					
-					echo $fuser->login.' added'."\n";
-				}
+					//if(empty($TGroupEntities[$group->id])) {
+				if(!empty($TGroupEntities[$group->id]))  {
+					foreach ($TGroupEntities[$group->id] as $used_entity) $fuser->SetInGroup($group->id, $used_entity);
+				}		
+				else {
+					$fuser->SetInGroup($group->id, $group->entity);
+				}		
+							
+				echo $fuser->login.' added'."\n";
+				
 			}
 
 			// 2 - Suppression des utilisateurs du groupe Dolibarr qui ne sont plus dans le groupe LDAP
