@@ -137,6 +137,18 @@ class FormProjets
 		}
 		$sql.= " ORDER BY p.ref ASC";
 
+		// New Project List for ATM
+		$sql = 'SELECT p.rowid, p.ref, p.title, p.fk_soc, p.fk_statut, p.public, s.nom';
+		$sql.= ' FROM '.MAIN_DB_PREFIX .'projet as p';
+		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX .'societe s ON p.fk_soc = s.rowid';
+		$sql.= " WHERE p.entity = ".$conf->entity;
+		if ($projectsListId !== false) $sql.= " AND p.rowid IN (".$projectsListId.")";
+		if (!empty($filterkey)) {
+                        $sql .= ' AND p.title LIKE "%'.$this->db->escape($filterkey).'%"';
+                        $sql .= ' OR p.ref LIKE "%'.$this->db->escape($filterkey).'%"';
+                }
+		$sql.= " ORDER BY s.nom, p.ref ASC";
+
 		dol_syslog(__METHOD__, LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
@@ -188,7 +200,7 @@ class FormProjets
 						$disabled=0;
 						if ($obj->fk_statut == 0)
 						{
-							$disabled=1;
+							$disabled=0;
 							$labeltoshow.=' - '.$langs->trans("Draft");
 						}
 						else if ($obj->fk_statut == 2)
@@ -198,7 +210,7 @@ class FormProjets
 						}
 						else if ($socid > 0 && (! empty($obj->fk_soc) && $obj->fk_soc != $socid))
 						{
-							$disabled=1;
+							$disabled=0;
 							$labeltoshow.=' - '.$langs->trans("LinkedToAnotherCompany");
 						}
 
