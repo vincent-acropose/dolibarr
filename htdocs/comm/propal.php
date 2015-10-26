@@ -115,7 +115,7 @@ if (empty($reshook))
 	// Action clone object
 	if ($action == 'confirm_clone' && $confirm == 'yes')
 	{
-		if (1 == 0 && ! GETPOST('clone_content') && ! GETPOST('clone_receivers'))
+		if (! GETPOST('socid', 3))
 		{
 			setEventMessage($langs->trans("NoCloneOptionsSpecified"), 'errors');
 		}
@@ -127,7 +127,7 @@ if (empty($reshook))
 					header("Location: " . $_SERVER['PHP_SELF'] . '?id=' . $result);
 					exit();
 				} else {
-					setEventMessage($object->error, 'errors');
+					if (count($object->errors) > 0) setEventMessage($object->errors, 'errors');
 					$action = '';
 				}
 			}
@@ -1267,7 +1267,7 @@ if ($action == 'create')
 		print '</td>';
 	} else {
 		print '<td colspan="2">';
-		print $form->select_company('', 'socid', 's.client = 1 OR s.client = 2 OR s.client = 3', 1);
+		print $form->select_company('', 'socid', '(s.client = 1 OR s.client = 2 OR s.client = 3) AND status=1', 1);
 		print '</td>';
 	}
 	print '</tr>' . "\n";
@@ -2261,7 +2261,7 @@ if ($action == 'create')
 		$formmail->substit['__PROPREF__'] = $object->ref;
 		$formmail->substit['__SIGNATURE__'] = $user->signature;
 		$formmail->substit['__REFCLIENT__'] = $object->ref_client;
-		$formmail->substit['__THIRPARTY_NAME__'] = $object->thirdparty->name;
+		$formmail->substit['__THIRDPARTY_NAME__'] = $object->thirdparty->name;
 		$formmail->substit['__PROJECT_REF__'] = (is_object($object->projet)?$object->projet->ref:'');
 		$formmail->substit['__PERSONALIZED__'] = '';
 		$formmail->substit['__CONTACTCIVNAME__'] = '';

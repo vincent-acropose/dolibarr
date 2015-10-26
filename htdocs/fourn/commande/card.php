@@ -128,10 +128,9 @@ include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, 
 
 if ($action == 'setref_supplier' && $user->rights->fournisseur->commande->creer)
 {
-	
     $result=$object->setValueFrom('ref_supplier',GETPOST('ref_supplier','alpha'));
     if ($result < 0) dol_print_error($db, $object->error);
-	else $object->ref_supplier=GETPOST('ref_supplier','alpha'); // ADD : ref_supplier to object property, otherwise not visibly updated on change
+	else $object->ref_supplier = GETPOST('ref_supplier','alpha');
 }
 
 // conditions de reglement
@@ -2196,7 +2195,7 @@ elseif (! empty($object->id))
 		// Tableau des substitutions
 		$formmail->substit['__ORDERREF__']=$object->ref;
 		$formmail->substit['__ORDERSUPPLIERREF__']=$object->ref_supplier;
-		$formmail->substit['__THIRPARTY_NAME__'] = $object->thirdparty->name;
+		$formmail->substit['__THIRDPARTY_NAME__'] = $object->thirdparty->name;
 		$formmail->substit['__PROJECT_REF__'] = (is_object($object->projet)?$object->projet->ref:'');
 		$formmail->substit['__SIGNATURE__']=$user->signature;
 		$formmail->substit['__PERSONALIZED__']='';
