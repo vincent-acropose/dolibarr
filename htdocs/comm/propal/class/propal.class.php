@@ -547,15 +547,15 @@ class Propal extends CommonObject
                 $price = $pu - $remise;
             }
 
-            // Update line
-            $this->line=new PropaleLigne($this->db);
+            //Fetch current line from the database and then clone the object and set it in $oldline property
+            $line = new PropaleLigne($this->db);
+            $line->fetch($rowid);
 
+            $staticline = clone $line;
+
+            $line->oldline = $staticline;
+            $this->line = $line;
             $this->line->context = $this->context;
-
-            // Stock previous line records
-            $staticline=new PropaleLigne($this->db);
-            $staticline->fetch($rowid);
-            $this->line->oldline = $staticline;
 
             // Reorder if fk_parent_line change
             if (! empty($fk_parent_line) && ! empty($staticline->fk_parent_line) && $fk_parent_line != $staticline->fk_parent_line)
@@ -960,9 +960,9 @@ class Propal extends CommonObject
     function createFromClone($socid=0)
     {
         global $db, $user,$langs,$conf,$hookmanager;
-		
+
 		dol_include_once('/projet/class.project.class.php');
-				
+
         $this->context['createfromclone']='createfromclone';
 
         $error=0;
@@ -987,7 +987,7 @@ class Propal extends CommonObject
                 $this->socid 				= $objsoc->id;
                 $this->cond_reglement_id	= (! empty($objsoc->cond_reglement_id) ? $objsoc->cond_reglement_id : 0);
                 $this->mode_reglement_id	= (! empty($objsoc->mode_reglement_id) ? $objsoc->mode_reglement_id : 0);
-				
+
 				$project = new Project($db);
 				
 				// ATTENTION, spécifique acropose, il faut que l'on puisse toujours récupérer le fk_project de la propal de départ, dans tous les cas
@@ -997,7 +997,7 @@ class Propal extends CommonObject
 				} else {
 					$this->fk_project = '';
 				}
-                
+
                 $this->fk_delivery_address	= '';
             }
 
@@ -2921,10 +2921,12 @@ class PropaleLigne  extends CommonObject
             $this->date_end         = $this->db->jdate($objp->date_end);
 
 			$this->db->free($result);
+
+            return 1;
 		}
 		else
 		{
-			dol_print_error($this->db);
+			return -1;
 		}
 	}
 
@@ -2952,11 +2954,12 @@ class PropaleLigne  extends CommonObject
         if (empty($this->total_localtax2)) $this->total_localtax2=0;
         if (empty($this->rang)) $this->rang=0;
         if (empty($this->remise)) $this->remise=0;
-        if (empty($this->remise_percent)) $this->remise_percent=0;
+        if (empty($this->remise_percent) || ! is_numeric($this->remise_percent)) $this->remise_percent=0;
         if (empty($this->info_bits)) $this->info_bits=0;
         if (empty($this->special_code)) $this->special_code=0;
         if (empty($this->fk_parent_line)) $this->fk_parent_line=0;
         if (empty($this->fk_fournprice)) $this->fk_fournprice=0;
+		if (! is_numeric($this->qty)) $this->qty = 0;
 
         if (empty($this->pa_ht)) $this->pa_ht=0;
 

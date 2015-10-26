@@ -156,7 +156,9 @@ else {
 
 		if (empty($senderissupplier))
 		{
-			$form->select_produits(GETPOST('idprod'), 'idprod', $filtertype, $conf->product->limit_size, $buyer->price_level, 1, 2, '', 1, array(),$buyer->id);
+			$prods_available = 1;
+			if(strpos($_SERVER['PHP_SELF'], 'askpricesupplier') !== false) $prods_available = -1;
+			$form->select_produits(GETPOST('idprod'), 'idprod', $filtertype, $conf->product->limit_size, $buyer->price_level, $prods_available, 2, '', 1, array(),$buyer->id);
 		}
 		else
 		{

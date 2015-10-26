@@ -1453,10 +1453,11 @@ class Form
      *  @param      int			$socid					Thirdparty Id
      *  @return		void
      */
-    function select_produits($selected='', $htmlname='productid', $filtertype='', $limit=20, $price_level=0, $status=1, $finished=2, $selected_input_value='', $hidelabel=0, $ajaxoptions=array(),$socid=0)
+    function select_produits($selected='', $htmlname='productid', $filtertype='', $limit=20, $price_level=0, $status=-1, $finished=2, $selected_input_value='', $hidelabel=0, $ajaxoptions=array(),$socid=0)
     {
         global $langs,$conf;
-
+//print $status;exit;
+	//$status = -1;
         $price_level = (! empty($price_level) ? $price_level : 0);
 
         if (! empty($conf->use_javascript_ajax) && ! empty($conf->global->PRODUIT_USE_SEARCH_TO_SELECT))

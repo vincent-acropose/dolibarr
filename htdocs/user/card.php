@@ -255,7 +255,7 @@ if ($action == 'add' && $canadduser)
             $langs->load("errors");
             $db->rollback();
             if (is_array($object->errors) && count($object->errors)) setEventMessage($object->errors,'errors');
-            else setEventMessage($object->error);
+            else setEventMessage($object->error, 'errors');
             $action="create";       // Go back to create page
         }
 
@@ -320,7 +320,7 @@ if ($action == 'update' && ! $_POST["cancel"])
 				$result=$tmpuser->fetch(0, GETPOST("login"));
 				if ($result > 0)
 				{
-					setEventMessage($langs->trans("ErrorLoginAlreadyExists"), 'errors');
+					setEventMessage($langs->trans("ErrorLoginAlreadyExists", GETPOST('login')), 'errors');
 					$action="edit";       // Go back to create page
 					$error++;
 				}
@@ -709,7 +709,7 @@ if (($action == 'create') || ($action == 'adduserldap'))
     print '<form action="'.$_SERVER['PHP_SELF'].'" method="POST" name="createuser">';
     print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
     print '<input type="hidden" name="action" value="add">';
-    if (! empty($ldap_sid)) print '<input type="hidden" name="ldap_sid" value="'.$ldap_sid.'">';
+    if (! empty($ldap_sid)) print '<input type="hidden" name="ldap_sid" value="'.dol_escape_htmltag($ldap_sid).'">';
     print '<input type="hidden" name="entity" value="'.$conf->entity.'">';
 
     print '<table class="border" width="100%">';
@@ -1780,7 +1780,6 @@ else
             }
             print $text;
             print "</td></tr>\n";
-
             // Administrator
             print '<tr><td valign="top">'.$langs->trans("Administrator").'</td>';
             if ($object->societe_id > 0)
@@ -1861,7 +1860,9 @@ else
            	// Type
            	print '<tr><td width="25%" valign="top">'.$langs->trans("Type").'</td>';
            	print '<td>';
-           	if ($user->id == $object->id || ! $user->admin)
+
+
+           	if ($user->id == $object->id || ! $user->admin || true)
            	{
 	           	$type=$langs->trans("Internal");
     	       	if ($object->societe_id) $type=$langs->trans("External");

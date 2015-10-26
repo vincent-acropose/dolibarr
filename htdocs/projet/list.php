@@ -62,7 +62,7 @@ $search_ref=GETPOST("search_ref");
 $search_label=GETPOST("search_label");
 $search_societe=GETPOST("search_societe");
 $search_all=GETPOST("search_all");
-
+$search_etat_prj=GETPOST("search_etat_prj");
 
 /*
  * View
@@ -77,9 +77,10 @@ llxHeader("",$langs->trans("Projects"),"EN:Module_Projects|FR:Module_Projets|ES:
 $projectsListId = $projectstatic->getProjectsAuthorizedForUser($user,($mine?$mine:($user->rights->projet->all->lire?2:0)),1,$socid);
 
 $sql = "SELECT p.rowid as projectid, p.ref, p.title, p.fk_statut, p.public, p.fk_user_creat";
-$sql.= ", p.datec as date_create, p.dateo as date_start, p.datee as date_end";
+$sql.= ", p.datec as date_create, p.dateo as date_start, p.datee as date_end, pex.etat_prj";
 $sql.= ", s.nom as name, s.rowid as socid";
 $sql.= " FROM ".MAIN_DB_PREFIX."projet as p";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pex ON (p.rowid = pex.fk_object)";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s on p.fk_soc = s.rowid";
 $sql.= " WHERE p.entity = ".$conf->entity;
 if ($mine || ! $user->rights->projet->all->lire) $sql.= " AND p.rowid IN (".$projectsListId.")";
@@ -94,9 +95,13 @@ if ($search_label)
 {
 	$sql .= natural_search('p.title', $search_label);
 }
+if ($search_etat_prj>0)
+{
+    $sql .= natural_search('pex.etat_prj', $search_etat_prj);
+}
 if ($search_societe)
 {
-	$sql .= natural_search('s.nom', $search_societe);
+    $sql .= natural_search('s.nom', $search_societe);
 }
 if ($search_all)
 {
@@ -126,19 +131,23 @@ if ($resql)
 	}
 
 	$param='';
-	if ($mine)				$param.='mode=mine';
+	if ($mine)				$param.='&mode=mine';
+//var_dump($mine);
 	if ($socid)				$param.='&socid='.$socid;
 	if ($search_ref)		$param.='&search_ref='.$search_ref;
 	if ($search_label)		$param.='&search_label='.$search_label;
-	if ($search_societe)	$param.='&search_societe='.$search_societe;
+   	if ($search_societe)    $param.='&search_societe='.$search_societe;
+    	if ($search_etat_prj)    $param.='&search_etat_prj='.$search_etat_prj;
 	
 	print '<form method="get" action="'.$_SERVER["PHP_SELF"].'">';
+	print '<input type="hidden" name="mode" value="'.( $mine ? 'mine' : '' ).'" />';
 
 	print '<table class="noborder" width="100%">';
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"p.ref","",$param,"",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Label"),$_SERVER["PHP_SELF"],"p.title","",$param,"",$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("ThirdParty"),$_SERVER["PHP_SELF"],"s.nom","",$param,"",$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("ThirdParty"),$_SERVER["PHP_SELF"],"s.nom","",$param,"",$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Progression"),$_SERVER["PHP_SELF"],"pex.etat_prj","",$param,"",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Visibility"),$_SERVER["PHP_SELF"],"p.public","",$param,"",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],'p.fk_statut',"",$param,'align="right"',$sortfield,$sortorder);
 	print "</tr>\n";
@@ -150,9 +159,18 @@ if ($resql)
 	print '<td class="liste_titre">';
 	print '<input type="text" class="flat" name="search_label" value="'.$search_label.'">';
 	print '</td>';
-	print '<td class="liste_titre">';
-	print '<input type="text" class="flat" name="search_societe" value="'.$search_societe.'">';
-	print '</td>';
+    print '<td class="liste_titre">';
+    print '<input type="text" class="flat" name="search_societe" value="'.$search_societe.'">';
+    print '</td>';
+    print '<td class="liste_titre">';
+    
+    $ex=new ExtraFields($db);
+    $ex->fetch_name_optionals_label('projet');
+    $form=new Form($db);
+    //var_dump($ex->attribute_param['etat_prj']);
+    echo $form->selectarray('search_etat_prj', $ex->attribute_param['etat_prj']['options'],$search_etat_prj,1);
+    
+    print '</td>';
 	print '<td class="liste_titre">&nbsp;</td>';
 	print '<td class="liste_titre" align="right"><input class="liste_titre" type="image" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'"></td>';
 	print "</tr>\n";
@@ -196,6 +214,10 @@ if ($resql)
 				print '&nbsp;';
 			}
 			print '</td>';
+
+            print '<td align="left">';
+            print $ex->attribute_param['etat_prj']['options'][$objp->etat_prj];
+            print '</td>';
 
 			// Visibility
 			print '<td align="left">';

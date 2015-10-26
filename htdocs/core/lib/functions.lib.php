@@ -1047,19 +1047,6 @@ function dol_getdate($timestamp,$fast=false)
 	else
 	{
 		$arrayinfo=getdate($timestamp);
-
-		/*$startday=isset($conf->global->MAIN_START_WEEK)?$conf->global->MAIN_START_WEEK:1;
-		if($startday==1)
-		{
-			if ($arrayinfo["wday"]==0)
-			{
-				$arrayinfo["wday"]=6;
-			}
-			else
-			{
-				$arrayinfo["wday"]=$arrayinfo["wday"]-1;
-			}
-		}*/
 	}
 
 	return $arrayinfo;
@@ -1136,19 +1123,6 @@ function dol_mktime($hour,$minute,$second,$month,$day,$year,$gm=false,$check=1)
 	else
 	{
 		dol_print_error('','PHP version must be 5.3+');
-		/*
-		$usealternatemethod=false;
-		if ($year <= 1970) $usealternatemethod=true;		// <= 1970
-		if ($year >= 2038) $usealternatemethod=true;		// >= 2038
-
-		if ($usealternatemethod || $gm)	// Si time gm, seule adodb peut convertir
-		{
-			$date=adodb_mktime($hour,$minute,$second,$month,$day,$year,0,$gm);
-		}
-		else
-		{
-			$date=mktime($hour,$minute,$second,$month,$day,$year);
-		}*/
 		return '';
 	}
 }
@@ -1906,7 +1880,7 @@ function img_picto($titlealt, $picto, $options = '', $pictoisfullpath = false, $
 		$tmparray=array(0=>$titlealt);
 		if (preg_match('/:[^\s]/',$titlealt)) $tmparray=explode(':',$titlealt);		// We explode if we have TextA:TextB. Not if we have TextA: TextB
 		$title=$tmparray[0];
-		$alt=empty($tmparray[1])?'':$tmparray[1];
+		$alt=empty($tmparray[1])?$tmparray[0]:$tmparray[1]; // Use title for alt if no alt is provided
 		return '<img src="'.$fullpathpicto.'" border="0" alt="'.dol_escape_htmltag($alt).'"'.($notitle?'':' title="'.dol_escape_htmltag($title).'"').($options?' '.$options:'').'>';	// Alt is used for accessibility, title for popup
 	}
 }
