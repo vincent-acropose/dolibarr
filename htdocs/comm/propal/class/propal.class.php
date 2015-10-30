@@ -214,6 +214,10 @@ class Propal extends CommonObject
 	 * Billed quote
 	 */
 	const STATUS_BILLED = 4;
+	/**
+	 * Not feasible
+	 */
+	const STATUS_NOTFEASIBLE = 5;
 
     /**
      *	Constructor
@@ -242,11 +246,13 @@ class Propal extends CommonObject
         $this->labelstatut[2]=(! empty($conf->global->PROPAL_STATUS_SIGNED_LABEL) ? $conf->global->PROPAL_STATUS_SIGNED_LABEL : $langs->trans("PropalStatusSigned"));
         $this->labelstatut[3]=(! empty($conf->global->PROPAL_STATUS_NOTSIGNED_LABEL) ? $conf->global->PROPAL_STATUS_NOTSIGNED_LABEL : $langs->trans("PropalStatusNotSigned"));
         $this->labelstatut[4]=(! empty($conf->global->PROPAL_STATUS_BILLED_LABEL) ? $conf->global->PROPAL_STATUS_BILLED_LABEL : $langs->trans("PropalStatusBilled"));
+        $this->labelstatut[5]=(! empty($conf->global->PROPAL_STATUS_NOTFEASIBLE_LABEL) ? $conf->global->PROPAL_STATUS_NOTFEASIBLE_LABEL : $langs->trans("PropalStatusNotFeasible"));
         $this->labelstatut_short[0]=(! empty($conf->global->PROPAL_STATUS_DRAFTSHORT_LABEL) ? $conf->global->PROPAL_STATUS_DRAFTSHORT_LABEL : $langs->trans("PropalStatusDraftShort"));
         $this->labelstatut_short[1]=(! empty($conf->global->PROPAL_STATUS_VALIDATEDSHORT_LABEL) ? $conf->global->PROPAL_STATUS_VALIDATEDSHORT_LABEL : $langs->trans("Opened"));
         $this->labelstatut_short[2]=(! empty($conf->global->PROPAL_STATUS_SIGNEDSHORT_LABEL) ? $conf->global->PROPAL_STATUS_SIGNEDSHORT_LABEL : $langs->trans("PropalStatusSignedShort"));
         $this->labelstatut_short[3]=(! empty($conf->global->PROPAL_STATUS_NOTSIGNEDSHORT_LABEL) ? $conf->global->PROPAL_STATUS_NOTSIGNEDSHORT_LABEL : $langs->trans("PropalStatusNotSignedShort"));
         $this->labelstatut_short[4]=(! empty($conf->global->PROPAL_STATUS_BILLEDSHORT_LABEL) ? $conf->global->PROPAL_STATUS_BILLEDSHORT_LABEL : $langs->trans("PropalStatusBilledShort"));
+        $this->labelstatut_short[5]=(! empty($conf->global->PROPAL_STATUS_NOTFEASIBLESHORT_LABEL) ? $conf->global->PROPAL_STATUS_NOTFEASIBLESHORT_LABEL : $langs->trans("PropalStatusNotFeasibleShort"));
     }
 
 
@@ -2471,6 +2477,7 @@ class Propal extends CommonObject
 	if ($statut==self::STATUS_SIGNED) $statuttrans='statut3';
 	if ($statut==self::STATUS_NOTSIGNED) $statuttrans='statut5';
 	if ($statut==self::STATUS_BILLED) $statuttrans='statut6';
+	if ($statut==self::STATUS_NOTFEASIBLE) $statuttrans='statut5';
 
 	if ($mode == 0)	return $this->labelstatut[$statut];
 	if ($mode == 1)	return $this->labelstatut_short[$statut];
@@ -2478,6 +2485,7 @@ class Propal extends CommonObject
 	if ($mode == 3)	return img_picto($this->labelstatut[$statut], $statuttrans);
 	if ($mode == 4)	return img_picto($this->labelstatut[$statut],$statuttrans).' '.$this->labelstatut[$statut];
 	if ($mode == 5)	return '<span class="hideonsmartphone">'.$this->labelstatut_short[$statut].' </span>'.img_picto($this->labelstatut_short[$statut],$statuttrans);
+	if ($mode == 6)	return img_picto($this->labelstatut_short[$statut],$statuttrans).' '.$this->labelstatut_short[$statut];
     }
 
 
