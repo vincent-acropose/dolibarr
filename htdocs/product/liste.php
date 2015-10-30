@@ -147,7 +147,7 @@ else
 	if ($sall)
 	{
 		// For natural search
-		$params = array('p.ref', 'p.label', 'p.description', 'p.note', 'pext.ref_interdacta');
+		$params = array('p.ref', 'p.label', 'p.description', 'p.note', 'pext.ref_interdacta', 'pext.ref_adveo');
 		// multilang
 		if ($conf->global->MAIN_MULTILANGS) // si l'option est active
 		{
