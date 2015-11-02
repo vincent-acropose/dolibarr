@@ -2135,6 +2135,7 @@ if ($action == 'create')
 		$form_close .= '<option value="0">&nbsp;</option>';
 		$form_close .= '<option value="2">' . $object->labelstatut [2] . '</option>';
 		$form_close .= '<option value="3">' . $object->labelstatut [3] . '</option>';
+		$form_close .= '<option value="5">' . $object->labelstatut [5] . '</option>';
 		$form_close .= '</select>';
 		$form_close .= '</td></tr>';
 		$form_close .= '<tr><td width="150" align="left">' . $langs->trans('Note') . '</td><td align="left"><textarea cols="70" rows="' . ROWS_3 . '" wrap="soft" name="note">';
