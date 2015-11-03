@@ -582,6 +582,7 @@ if ($id || $ref)
 							
 							print '<td align="right">';
 							print $obj->conditionnement;
+							print ' ('.price($productfourn->fourn_unitprice / $obj->conditionnement).')';
 							print '</td>';
 						}
 
