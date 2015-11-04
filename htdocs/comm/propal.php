@@ -565,7 +565,8 @@ if (empty($reshook))
 	else if ($action == 'confirm_reopen' && $user->rights->propal->cloturer && ! GETPOST('cancel'))
 	{
 		// prevent browser refresh from reopening proposal several times
-		if ($object->statut == Propal::STATUS_SIGNED || $object->statut == Propal::STATUS_NOTSIGNED || $object->statut == Propal::STATUS_BILLED) {
+		if ($object->statut == Propal::STATUS_SIGNED || $object->statut == Propal::STATUS_NOTSIGNED 
+		|| $object->statut == Propal::STATUS_BILLED || $object->statut == Propal::STATUS_NOTFEASIBLE) {
 			$object->reopen($user, 1);
 		}
 	}
