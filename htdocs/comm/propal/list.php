@@ -50,6 +50,7 @@ $langs->load('products');
 
 $socid=GETPOST('socid','int');
 
+
 $search_user=GETPOST('search_user','int');
 $search_sale=GETPOST('search_sale','int');
 $search_ref=GETPOST('sf_ref')?GETPOST('sf_ref','alpha'):GETPOST('search_ref','alpha');
@@ -58,6 +59,7 @@ $search_societe=GETPOST('search_societe','alpha');
 $search_montant_ht=GETPOST('search_montant_ht','alpha');
 $search_author=GETPOST('search_author','alpha');
 $search_product_category=GETPOST('search_product_category','int');
+$search_delai_realisation=GETPOST('search_delai_realisation','int');
 $search_montant_subvention=GETPOST('search_montant_subvention','alpha');
 $search_probability=GETPOST('search_probability','int');
 $search_town=GETPOST('search_town','alpha');
@@ -99,6 +101,7 @@ if (GETPOST("button_removefilter") || GETPOST("button_removefilter_x"))	// Both 
     $search_author='';
     $search_product_category='';
     $search_town='';
+	$search_delai_realisation='';
 	$search_montant_subvention='';
 	$search_probability='';
     $year='';
@@ -162,7 +165,7 @@ $sql = 'SELECT';
 if ($sall || $search_product_category > 0) $sql = 'SELECT DISTINCT';
 $sql.= ' s.rowid, s.nom as name, s.town, s.client, s.code_client,';
 $sql.= ' p.rowid as propalid, p.note_private, p.total_ht, p.ref, p.ref_client, p.fk_statut, p.fk_user_author, p.datep as dp, p.fin_validite as dfv,';
-$sql.= ' pex.date_cloture_prev, pex.mt_subvention, pex.proba, ';
+$sql.= ' pex.date_cloture_prev, pex.mt_subvention, pex.proba, pex.delai_realisation, ';
 if (! $user->rights->societe->client->voir && ! $socid) $sql .= " sc.fk_soc, sc.fk_user,";
 $sql.= ' u.login';
 $sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s, '.MAIN_DB_PREFIX.'propal as p';
@@ -208,7 +211,8 @@ if ($sall) {
 }
 if ($search_product_category > 0) $sql.=" AND cp.fk_categorie = ".$search_product_category;
 if ($search_montant_subvention != '') $sql.= natural_search("pex.mt_subvention", $search_montant_subvention, 1);
-if ($search_probability != '') $sql.= natural_search("pex.proba", $search_probability, 1);
+if ($search_probability > 0) $sql.= natural_search("pex.proba", $search_probability, 1);
+if ($search_delai_realisation > 0) $sql.= natural_search("pex.delai_realisation", $search_delai_realisation, 1);
 if ($socid > 0) $sql.= ' AND s.rowid = '.$socid;
 if ($viewstatut <> '')
 {
@@ -232,6 +236,8 @@ if ($search_user > 0)
 {
     $sql.= " AND c.fk_c_type_contact = tc.rowid AND tc.element='propal' AND tc.source='internal' AND c.element_id = p.rowid AND c.fk_socpeople = ".$search_user;
 }
+
+/*
 // DATE PREVISIONELLE CLOTURE SQL
 if ($dateprevmonth > 0)
 {
@@ -246,6 +252,7 @@ else if ($dateprevyear > 0)
 {
 	$sql.= " AND pex.date_cloture_prev BETWEEN '".$db->idate(dol_get_first_day($dateprevyear,1,false))."' AND '".$db->idate(dol_get_last_day($dateprevyear,12,false))."'";
 }
+ */
 
 
 $sql.= ' ORDER BY '.$sortfield.' '.$sortorder.', p.ref DESC';
@@ -276,8 +283,8 @@ if ($result)
 	$param='&socid='.$socid.'&viewstatut='.$viewstatut;
 	if ($month)              $param.='&month='.$month;
 	if ($year)               $param.='&year='.$year;
-	if ($dateprevmonth)              $param.='&dateprevmonth='.$dateprevmonth;
-	if ($dateprevyear)               $param.='&dateprevyear='.$dateprevyear;
+	/*if ($dateprevmonth)              $param.='&dateprevmonth='.$dateprevmonth;
+	if ($dateprevyear)               $param.='&dateprevyear='.$dateprevyear;*/
     if ($search_ref)         $param.='&search_ref=' .$search_ref;
     if ($search_refcustomer) $param.='&search_refcustomer=' .$search_refcustomer;
     if ($search_societe)     $param.='&search_societe=' .$search_societe;
@@ -286,6 +293,7 @@ if ($result)
 	if ($search_montant_ht)  $param.='&search_montant_ht='.$search_montant_ht;
 	if ($search_author)  	 $param.='&search_author='.$search_author;
 	if ($search_town)		 $param.='&search_town='.$search_town;
+	if ($search_delai_realisation)		 $param.='&search_delai_realisation='.$search_delai_realisation;
 	if ($search_montant_subvention)		 $param.='&search_montant_subvention='.$search_montant_subvention;
 	if ($search_probability)		 $param.='&search_probability='.$search_probability;
 
@@ -342,8 +350,9 @@ if ($result)
 	print_liste_field_titre($langs->trans('Town'),$_SERVER["PHP_SELF"],'s.town','',$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('Date'),$_SERVER["PHP_SELF"],'p.datep','',$param, 'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('DateEndPropalShort'),$_SERVER["PHP_SELF"],'dfv','',$param, 'align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans('RealisationDelay'),$_SERVER["PHP_SELF"],'pex.delai_realisation','',$param, 'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('AmountHT'),$_SERVER["PHP_SELF"],'p.total_ht','',$param, 'align="right"',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans('DateCloturePrev'),$_SERVER["PHP_SELF"],'pex.date_cloture_prev','',$param, 'align="center"',$sortfield,$sortorder);
+	// print_liste_field_titre($langs->trans('DateCloturePrev'),$_SERVER["PHP_SELF"],'pex.date_cloture_prev','',$param, 'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('MontantSubvention'),$_SERVER["PHP_SELF"],'pex.mt_subvention','',$param, 'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('Probability'),$_SERVER["PHP_SELF"],'pex.proba','',$param, 'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('Author'),$_SERVER["PHP_SELF"],'u.login','',$param,'align="center"',$sortfield,$sortorder);
@@ -371,23 +380,33 @@ if ($result)
 	$formother->select_year($syear,'year',1, 20, 5);
 	print '</td>';
 	print '<td class="liste_titre" colspan="1">&nbsp;</td>';
+	 
+	// Delai réalisation
+	print '<td class="liste_titre" align="center">';
+	print $form->selectarray('search_delai_realisation', $extrafield->attribute_param['delai_realisation']['options'], $search_delai_realisation, 1, 0, 0, '', 0, 0, 0, 0, '', 1);
+	print '</td>';
+	
 	// Amount
 	print '<td class="liste_titre" align="right">';
 	print '<input class="flat" type="text" size="6" name="search_montant_ht" value="'.$search_montant_ht.'">';
 	print '</td>';
+	/*
 	// Date previsionnelle cloture
 	print '<td class="liste_titre" align="center">';
 	print '<input class="flat" type="text" size="1" maxlength="2" name="dateprevmonth" value="'.$dateprevmonth.'">';
 	$sdateprevyear = $dateprevyear;
 	$formother->select_year($sdateprevyear,'dateprevyear',1, 20, 5);
 	print '</td>';
+	 * 
+	 */
 	// Subvention
 	print '<td class="liste_titre" align="right">';
 	print '<input class="flat" type="text" size="6" name="search_montant_subvention" value="'.$search_montant_subvention.'">';
 	print '</td>';
 	// Probability
 	print '<td class="liste_titre" align="right">';
-	print '<input class="flat" type="text" size="6" name="search_probability" value="'.$search_probability.'">';
+	
+	print $form->selectarray('search_probability', $extrafield->attribute_param['proba']['options'], $search_probability, 1, 0, 0, '', 0, 0, 0, 0, '', 1);
 	print '</td>';
 	// Author
 	print '<td class="liste_titre" align="center">';
@@ -482,19 +501,22 @@ if ($result)
 			print '<td>&nbsp;</td>';
 		}
 		
+		// Delai réalisation
+		print '<td align="center">'.$extrafield->attribute_param['delai_realisation']['options'][$objp->delai_realisation]."</td>\n";
+		
 		// Motant
 		print '<td align="right">'.price($objp->total_ht)."</td>\n";
 		
 		// Date cloture prev
-		print '<td align="center">'.dol_print_date($db->jdate($objp->date_cloture_prev), 'day')."</td>\n";
+		//print '<td align="center">'.dol_print_date($db->jdate($objp->date_cloture_prev), 'day')."</td>\n";
+		
 		// Subvention
 		print '<td align="right">'.price($objp->mt_subvention)."</td>\n";
 		
 		// Probability
-		if($objp->proba != '')
-			print '<td align="right">'.$extrafield->attribute_param['proba']['options'][$objp->proba]."%</td>\n";
-		else
-			print '<td align="right">n/c</td>'."\n";
+		print '<td align="right">';
+		if($objp->proba != '') print $extrafield->attribute_param['proba']['options'][$objp->proba]."%";
+		print "</td>\n";
 
 		$userstatic->id=$objp->fk_user_author;
 		$userstatic->login=$objp->login;
@@ -521,14 +543,14 @@ if ($result)
 				if($num<$limit){
 					$var=!$var;
 					print '<tr class="liste_total"><td align="left">'.$langs->trans("TotalHT").'</td>';
-					print '<td colspan="6" align="right">'.price($total).'</td><td></td><td align="right">'.price($totalsubvention).'</td><td colspan="4"></td>';
+					print '<td colspan="7" align="right">'.price($total).'</td><td align="right">'.price($totalsubvention).'</td><td colspan="4"></td>';
 					print '</tr>';
 				}
 				else
 				{
 					$var=!$var;
 					print '<tr class="liste_total"><td align="left">'.$langs->trans("TotalHTforthispage").'</td>';
-					print '<td colspan="6" align="right">'.price($total).'</td><td></td><td align="right">'.price($totalsubvention).'</td><td colspan="4"></td>';
+					print '<td colspan="7" align="right">'.price($total).'</td><td align="right">'.price($totalsubvention).'</td><td colspan="4"></td>';
 					print '</tr>';
 				}
 
