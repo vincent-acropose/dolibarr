@@ -1470,6 +1470,13 @@ class pdf_crabe extends ModelePDFFactures
 	   	//if ($object->mode_reglement_code == 'LCR' || $object->mode_reglement_code == 'LCRD')
 	   	if ($object->mode_reglement_code == 'TA' || $object->mode_reglement_code == 'TNA')
 		{
+			
+			$totalpaye  = $object->getSommePaiement();
+            $totalcreditnotes = $object->getSumCreditNotesUsed();
+            $totaldeposits = $object->getSumDepositsUsed();
+			
+			$resteapayer = price($object->total_ttc - $totalpaye - $totalcreditnotes - $totaldeposits);
+			
 			$pdf->AddPage();
 			$posy =50;
 			$pdf->SetDrawColor(0,0,0);
@@ -1540,8 +1547,8 @@ class pdf_crabe extends ModelePDFFactures
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 			$pdf->SetXY($curx, $cury+4);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
-			$pdf->Cell($largeur_cadre, 0, price($object->total_ttc),0,0,C);
-					
+			$pdf->Cell($largeur_cadre, 0, $resteapayer,0,0,C);
+			
 			$curx=$curx+$largeur_cadre+5;
 			$hauteur_cadre=8;
 			$largeur_cadre=25;
@@ -1613,7 +1620,7 @@ class pdf_crabe extends ModelePDFFactures
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 			$pdf->SetXY($curx, $cury+4);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
-			$pdf->Cell($largeur_cadre, 0, price($object->total_ttc),0,0,C);
+			$pdf->Cell($largeur_cadre, 0, $resteapayer,0,0,C);
 
 			$cury=$cury+$hauteur_cadre+3;
 			$curx=20;
