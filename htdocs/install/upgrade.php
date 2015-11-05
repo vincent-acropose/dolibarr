@@ -197,8 +197,8 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
         if (empty($ignoredbversion))
         {
 			$dbversion_disallowed=array(
-				array('type'=>'mysql','version'=>array(5,5,40)),
-				array('type'=>'mysqli','version'=>array(5,5,40)) //,
+			/*	array('type'=>'mysql','version'=>array(5,5,40)),
+				array('type'=>'mysqli','version'=>array(5,5,40))*/ //,
 				//array('type'=>'mysql','version'=>array(5,5,41)),
 				//array('type'=>'mysqli','version'=>array(5,5,41))
 			);
