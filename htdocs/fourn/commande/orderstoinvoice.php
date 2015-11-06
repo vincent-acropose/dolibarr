@@ -405,7 +405,7 @@ if (($action != 'create' && $action != 'add') || ! empty($mesgs)) {
 	$sql .= ' AND c.fk_soc = s.rowid';
 
 	// Show orders with status validated, shipping started and delivered (well any order we can bill)
-	$sql .= " AND c.fk_statut IN (5)";
+	$sql .= " AND c.fk_statut IN (5,4)";
 
 	// Find order that are not already invoiced
 	$sql .= " AND c.rowid NOT IN (SELECT fk_source FROM " . MAIN_DB_PREFIX . "element_element WHERE targettype='invoice_supplier')";
