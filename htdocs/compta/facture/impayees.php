@@ -29,10 +29,12 @@
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 
 $langs->load("mails");
 $langs->load("bills");
@@ -42,6 +44,10 @@ $action = GETPOST('action','alpha');
 $option = GETPOST('option');
 $mode=GETPOST('mode');
 $builddoc_generatebutton=GETPOST('builddoc_generatebutton');
+
+$day	= GETPOST('day','int');
+$month	= GETPOST('month','int');
+$year	= GETPOST('year','int');
 
 // Security check
 if ($user->societe_id) $socid=$user->societe_id;
@@ -338,6 +344,7 @@ if ($action == 'remove_file')
 
 $form = new Form($db);
 $formfile = new FormFile($db);
+$formother = new FormOther($db);
 
 $title=$langs->trans("BillsCustomersUnpaid");
 if ($option=='late') $title=$langs->trans("BillsCustomersUnpaid");
@@ -429,6 +436,21 @@ if ($search_paymentmode)     $sql .= " AND f.fk_mode_reglement = ".$search_payme
 if ($search_montant_ht)  $sql .= " AND f.total = '".$db->escape($search_montant_ht)."'";
 if ($search_montant_ttc) $sql .= " AND f.total_ttc = '".$db->escape($search_montant_ttc)."'";
 if (GETPOST('sf_ref'))   $sql .= " AND f.facnumber LIKE '%".$db->escape(GETPOST('sf_ref'))."%'";
+
+if ($month > 0)
+{
+    if ($year > 0 && empty($day))
+    $sql.= " AND f.datef BETWEEN '".$db->idate(dol_get_first_day($year,$month,false))."' AND '".$db->idate(dol_get_last_day($year,$month,false))."'";
+    else if ($year > 0 && ! empty($day))
+    $sql.= " AND f.datef BETWEEN '".$db->idate(dol_mktime(0, 0, 0, $month, $day, $year))."' AND '".$db->idate(dol_mktime(23, 59, 59, $month, $day, $year))."'";
+    else
+    $sql.= " AND date_format(f.datef, '%m') = '".$month."'";
+}
+else if ($year > 0)
+{
+    $sql.= " AND f.datef BETWEEN '".$db->idate(dol_get_first_day($year,1,false))."' AND '".$db->idate(dol_get_last_day($year,12,false))."'";
+}
+
 $sql.= " GROUP BY s.nom, s.rowid, s.email, f.rowid, f.facnumber, f.ref_client, f.increment, f.total, f.tva, f.total_ttc, f.localtax1, f.localtax2, f.revenuestamp,";
 $sql.= " f.datef, f.date_lim_reglement, f.paye, f.fk_statut, f.type, fk_mode_reglement";
 if (! $user->rights->societe->client->voir && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
@@ -572,7 +594,10 @@ if ($resql)
     print '<td class="liste_titre">';
     print '<input class="flat" size="6" type="text" name="search_refcustomer" value="'.$search_refcustomer.'">';
     print '</td>';
-	print '<td class="liste_titre">&nbsp;</td>';
+    print '<td>';
+    print '<input class="flat" type="text" size="1" maxlength="2" name="month" value="'.$month.'">';
+	$formother->select_year($year?$year:-1,'year',1, 20, 5);
+    print '</td>';
 	print '<td class="liste_titre">&nbsp;</td>';
 	print '<td class="liste_titre" align="left"><input class="flat" type="text" size="10" name="search_societe" value="'.dol_escape_htmltag($search_societe).'"></td>';
 	print '<td class="liste_titre" align="left">';
