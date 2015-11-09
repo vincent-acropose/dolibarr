@@ -1325,7 +1325,6 @@ function pdf_getlineupexcltax($object,$i,$outputlangs,$hidedetails=0)
 		$parameters = array('i'=>$i,'outputlangs'=>$outputlangs,'hidedetails'=>$hidedetails,'special_code'=>$special_code);
 		$action='';
 		$reshook = $hookmanager->executeHooks('pdf_getlineupexcltax',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
-
 		if(!empty($hookmanager->resPrint)) return $hookmanager->resPrint;
 		else return $reshook;
     }
@@ -1391,7 +1390,6 @@ function pdf_getlineqty($object,$i,$outputlangs,$hidedetails=0)
 
 			if(!empty($hookmanager->resPrint)) return $hookmanager->resPrint;
 			else return $reshook;
-
 		}
 		else
 		{
