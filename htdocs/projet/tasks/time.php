@@ -392,15 +392,17 @@ if ($id > 0 || ! empty($ref))
 			print '<td class="nowrap">';
 			print img_object('','user','class="hideonsmartphone"');
 			$contactsoftask=$object->getListContactId('internal');
-			if (count($contactsoftask)>0)
+			$userid = $user->id;
+			print $form->select_dolusers((GETPOST('userid')?GETPOST('userid'):$userid), 'userid', 0, '', 0, '', '', 0, 0, 0, '', 0, $langs->trans("ResourceNotAssignedToTask"));
+
+			/*if (count($contactsoftask)>0)
 			{
 				$userid=$contactsoftask[0];
-				print $form->select_dolusers((GETPOST('userid')?GETPOST('userid'):$userid), 'userid', 0, '', 0, '', $contactsoftask, 0, 0, 0, '', 0, $langs->trans("ResourceNotAssignedToTheTask"));
 			}
 			else
 			{
 				print img_error($langs->trans('FirstAddRessourceToAllocateTime')).$langs->trans('FirstAddRessourceToAllocateTime');
-			}
+			}*/
 			print '</td>';
 
 			// Note
@@ -431,7 +433,7 @@ if ($id > 0 || ! empty($ref))
 		 *  List of time spent
 		 */
 		$tasks = array();
-		
+
 		$sql = "SELECT t.rowid, t.task_date, t.task_datehour, t.task_date_withhour, t.task_duration, t.fk_user, t.note, t.thm";
 		$sql.= ", u.lastname, u.firstname";
 		$sql .= " FROM ".MAIN_DB_PREFIX."projet_task_time as t";

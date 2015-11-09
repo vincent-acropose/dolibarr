@@ -179,7 +179,7 @@ if (! $user->rights->societe->client->voir && ! $socid) $sql.= " LEFT JOIN ".MAI
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON a.fk_soc = s.rowid";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople as sp ON a.fk_contact = sp.rowid";
 // We must filter on assignement table
-if ($filtert > 0 || $usergroup > 0) $sql.=", ".MAIN_DB_PREFIX."actioncomm_resources as ar";
+if ($filtert > 0 || $usergroup > 0) $sql.=" LEFT OUTER JOIN ".MAIN_DB_PREFIX."actioncomm_resources as ar ON (ar.fk_actioncomm = a.id AND ar.element_type='user')";
 if ($usergroup > 0) $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."usergroup_user as ugu ON ugu.fk_user = ar.fk_element";
 $sql.= " WHERE c.id = a.fk_action";
 $sql.= ' AND a.entity IN ('.getEntity('agenda', 1).')';
@@ -188,7 +188,7 @@ if ($pid) $sql.=" AND a.fk_project=".$db->escape($pid);
 if (! $user->rights->societe->client->voir && ! $socid) $sql.= " AND (a.fk_soc IS NULL OR sc.fk_user = " .$user->id . ")";
 if ($socid > 0) $sql.= " AND s.rowid = ".$socid;
 // We must filter on assignement table
-if ($filtert > 0 || $usergroup > 0) $sql.= " AND ar.fk_actioncomm = a.id AND ar.element_type='user'";
+//if ($filtert > 0 || $usergroup > 0) $sql.= " AND ar.fk_actioncomm = a.id AND ar.element_type='user'";
 if ($type) $sql.= " AND c.id = ".$type;
 if ($status == '0') { $sql.= " AND a.percent = 0"; }
 if ($status == '-1') { $sql.= " AND a.percent = -1"; }	// Not applicable
@@ -233,13 +233,8 @@ if ($resql)
 
 	$head = calendars_prepare_head($param);
 
-<<<<<<< HEAD
     dol_fiche_head($head, $tabactive, $langs->trans('Agenda'), 0, 'action');
     print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,0,$filtert,0,$pid,$socid,$action,-1,$actioncode,$usergroup);
-=======
-    dol_fiche_head($head, 'card', $langs->trans('Events'), 0, 'list');
-    print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,$filtera,$filtert,$filterd,$filterg,$pid,$socid,-1);
->>>>>>> Add group filter
     dol_fiche_end();
 
     // Add link to show birthdays
