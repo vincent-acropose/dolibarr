@@ -218,6 +218,7 @@ class Propal extends CommonObject
 	 * Not feasible
 	 */
 	const STATUS_NOTFEASIBLE = 5;
+	
 
     /**
      *	Constructor
