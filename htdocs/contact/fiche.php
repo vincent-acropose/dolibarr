@@ -320,6 +320,7 @@ if ($socid > 0)
 {
     $objsoc = new Societe($db);
     $objsoc->fetch($socid);
+    $objsoc->fetch_optionals($socid);
 }
 
 if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action))
@@ -411,6 +412,8 @@ else
 								$(\'select[name="country_id"]\').val("'.dol_escape_js($objsoc->country_id).'");
 								$(\'select[name="state_id"]\').val("'.dol_escape_js($objsoc->state_id).'");
 								$(\'input[name="email"]\').val("'.dol_escape_js($objsoc->email).'");
+								$(\'input[name="options_addresse_2"]\').val("'.dol_escape_js($objsoc->array_options['options_addresse_2']).'");
+								$(\'input[name="options_addresse_3"]\').val("'.dol_escape_js($objsoc->array_options['options_addresse_3']).'");
             			});
 						})'."\n";
 				print '</script>'."\n";
@@ -627,6 +630,8 @@ else
 								$(\'input[name="town"]\').val("'.dol_escape_js($objsoc->town).'");
 								$(\'select[name="country_id"]\').val("'.dol_escape_js($objsoc->country_id).'");
 								$(\'select[name="state_id"]\').val("'.dol_escape_js($objsoc->state_id).'");
+								$(\'input[name="options_addresse_2"]\').val("'.dol_escape_js($objsoc->array_options['options_addresse_2']).'");
+								$(\'input[name="options_addresse_3"]\').val("'.dol_escape_js($objsoc->array_options['options_addresse_3']).'");
             				});
 						})'."\n";
 				print '</script>'."\n";
