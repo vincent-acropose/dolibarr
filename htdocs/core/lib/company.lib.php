@@ -1050,7 +1050,7 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
         if (get_class($object) == 'Societe'  && $object->id) $sql.= " AND a.fk_soc = ".$object->id;
         if (is_object($objcon) && $objcon->id) $sql.= " AND a.fk_contact = ".$objcon->id;
         $sql.= " AND c.id=a.fk_action";
-        $sql.= " AND (c.module<>'agefodd' OR c.module IS NULL)";
+        $sql.= " AND (c.module<>'agefodd' OR c.module IS NULL) AND c.type<>'systemauto'";
         $sql.= " AND (a.percent = 100 OR (a.percent = -1 AND a.datep <= '".$db->idate($now)."'))";
         $sql.= " ORDER BY a.datep DESC, a.id DESC";
 

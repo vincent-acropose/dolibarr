@@ -261,6 +261,10 @@ if (empty($reshook))
 	            }
 	        }
 	
+	        if (empty($object->address)) {
+	        	setEventMessage('Vous avez oublier de saisir l\'adresse', 'warnings');
+	        }
+	        
 	        if (! $error && $id > 0)
 	        {
 	            $db->commit();
@@ -346,6 +350,10 @@ if (empty($reshook))
             // Fill array 'array_options' with data from add form
 			$ret = $extrafields->setOptionalsFromPost($extralabels,$object);
 
+			if (empty($object->address)) {
+				setEventMessage('Vous avez oublier de saisir l\'adresse', 'warnings');
+			}
+			
             $result = $object->update($contactid, $user);
 
             if ($result > 0)
