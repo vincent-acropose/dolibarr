@@ -637,6 +637,7 @@ class ExtraFields
 	 * @param  string  $keyprefix      Prefix string to add into name and id of field (can be used to avoid duplicate names)
 	 * @param  string  $keysuffix      Suffix string to add into name and id of field (can be used to avoid duplicate names)
 	 * @param  int     $showsize       Value for size attribute
+	 * @param  int     $objectid       Current object id
 	 * @return string
 	 */
 	function showInputField($key,$value,$moreparam='',$keyprefix='',$keysuffix='',$showsize=0, $objectid=0)
