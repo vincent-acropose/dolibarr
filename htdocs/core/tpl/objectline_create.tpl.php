@@ -306,7 +306,16 @@ else {
 			$newline = new SupplierInvoiceLine($this->db);
 		}
 		if (is_object($newline)) {
+			
+			if ($this->table_element_line=='contratdet') {
+				$newline->id=$object->id;
+			}
+			
 			print $newline->showOptionals($extrafieldsline, 'edit', array('style'=>$bcnd[$var], 'colspan'=>$coldisplay+8));
+			
+			if ($this->table_element_line=='contratdet') {
+				$newline->id=null;
+			}
 		}
 	}
 	?>
