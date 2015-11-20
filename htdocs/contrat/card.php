@@ -1471,7 +1471,9 @@ else
                     	print '<tr '.$bc[$var].'>';
                     	$line = new ContratLigne($db);
                     	$line->fetch_optionals($objp->rowid,$extralabelslines);
+                    	$line->id=$object->id;
                     	print $line->showOptionals($extrafieldsline, 'view', array('style'=>$bc[$var], 'colspan'=>$colspan));
+                    	$line->id=$objp->rowid;
                     	print '</tr>';
                     }
                 }
@@ -1544,7 +1546,9 @@ else
                     	print '<tr '.$bc[$var].'>';
                     	$line = new ContratLigne($db);
                     	$line->fetch_optionals($objp->rowid,$extralabelslines);
+                    	$line->id=$object->id;
                     	print $line->showOptionals($extrafieldsline, 'edit', array('style'=>$bc[$var], 'colspan'=>$colspan));
+                    	$line->id=$objp->rowid;
                     	print '</tr>';
                     }
 
