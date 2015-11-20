@@ -807,6 +807,11 @@ class ExtraFields
 				if (!empty($InfoFieldList[4]))
 				{
 					
+					// can use SELECT request
+					if (strpos($InfoFieldList[4], '$SEL$')!==false) {
+						$InfoFieldList[4]=str_replace('$SEL$','SELECT',$InfoFieldList[4]);
+					}
+					
 					// current object id can be use into filter
 					if (strpos($InfoFieldList[4], '$ID$')!==false && !empty($objectid)) {
 						$InfoFieldList[4]=str_replace('$ID$',$objectid,$InfoFieldList[4]);
@@ -830,10 +835,10 @@ class ExtraFields
 					$sqlwhere.= ' WHERE 1=1';
 				}
 				// Some tables may have field, some other not. For the moment we disable it.
-				if (in_array($InfoFieldList[0],array('tablewithentity'))) $sqlwhere.= ' AND entity = '.$conf->entity;
-				
-				
-				
+				if (in_array($InfoFieldList[0],array('tablewithentity'))) 
+				{
+					$sqlwhere.= ' AND entity = '.$conf->entity;
+				}
 				$sql.=$sqlwhere;
 				//print $sql;
 
@@ -991,6 +996,11 @@ class ExtraFields
 				$sql = 'SELECT ' . $keyList;
 				$sql .= ' FROM ' . MAIN_DB_PREFIX . $InfoFieldList[0];
 				if (! empty($InfoFieldList[4])) {
+					
+					// can use SELECT request
+					if (strpos($InfoFieldList[4], '$SEL$')!==false) {
+						$InfoFieldList[4]=str_replace('$SEL$','SELECT',$InfoFieldList[4]);
+					}
 					
 					// current object id can be use into filter
 					if (strpos($InfoFieldList[4], '$ID$')!==false && !empty($objectid)) {
