@@ -3889,7 +3889,7 @@ abstract class CommonObject
 						$out .= $extrafields->showOutputField($key,$value);
 						break;
 					case "edit":
-						$out .= $extrafields->showInputField($key,$value,'',$keyprefix, 0, $this->id);
+						$out .= $extrafields->showInputField($key,$value,'',$keyprefix, 0, (empty($this->id)?$this->rowid:$this->id));
 						break;
 					}
 
