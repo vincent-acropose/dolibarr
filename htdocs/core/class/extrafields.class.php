@@ -988,6 +988,12 @@ class ExtraFields
 				$sql = 'SELECT ' . $keyList;
 				$sql .= ' FROM ' . MAIN_DB_PREFIX . $InfoFieldList[0];
 				if (! empty($InfoFieldList[4])) {
+					
+					// current object id can be use into filter
+					if (strpos($InfoFieldList[4], '$ID$')!==false && !empty($objectid)) {
+						$InfoFieldList[4]=str_replace('$ID$',$objectid,$InfoFieldList[4]);
+					}
+					
 					// We have to join on extrafield table
 					if (strpos($InfoFieldList[4], 'extra') !== false) {
 						$sql .= ' as main, ' . MAIN_DB_PREFIX . $InfoFieldList[0] . '_extrafields as extra';
@@ -998,12 +1004,12 @@ class ExtraFields
 				} else {
 					$sqlwhere .= ' WHERE 1=1';
 				}
-				if (in_array($InfoFieldList[0], array (
-						'tablewithentity'
-				)))
-					$sqlwhere .= ' AND entity = ' . $conf->entity; // Some tables may have field, some other not. For the moment we disable it.
-						                                                                                                      // $sql.=preg_replace('/^ AND /','',$sqlwhere);
-						                                                                                                      // print $sql;
+				
+				// Some tables may have field, some other not. For the moment we disable it.
+				if (in_array($InfoFieldList[0], array ('tablewithentity'))) {
+					$sqlwhere .= ' AND entity = ' . $conf->entity; 
+				}
+
 				$sql .= $sqlwhere;
 				dol_syslog(get_class($this) . '::showInputField type=chkbxlst',LOG_DEBUG);
 				$resql = $this->db->query($sql);
