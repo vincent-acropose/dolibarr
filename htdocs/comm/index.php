@@ -557,11 +557,11 @@ if (! empty($conf->propal->enabled) && $user->rights->propal->lire)
                 print '</td>';
 				print '<td align="right">';
 				print dol_print_date($db->jdate($obj->dp),'day').'</td>'."\n";
-				print '<td align="right">'.price($obj->total_ttc).'</td>';
+				print '<td align="right">'.price($obj->total_ht).'</td>';
 				print '<td align="center" width="14">'.$propalstatic->LibStatut($obj->fk_statut,3).'</td>'."\n";
 				print '</tr>'."\n";
 				$i++;
-				$total += $obj->total_ttc;
+				$total += $obj->total_ht;
 			}
 			if ($num > $nbofloop)
 			{
