@@ -739,17 +739,11 @@ class ExtraFields
 		elseif ($type == 'select')
 		{
 			$out = '';
-<<<<<<< HEAD
 			if (! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_USE_SEARCH_TO_SELECT) && ! $forcecombo)
 			{
 				include_once DOL_DOCUMENT_ROOT . '/core/lib/ajax.lib.php';
 				$out.= ajax_combobox($keysuffix.'options_'.$key.$keyprefix, array(), $conf->global->MAIN_USE_SEARCH_TO_SELECT, $conf->global->MAIN_SELECT_MIN_SIZE_OPTION);
-=======
-			if (! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_EXTRAFIELDS_USE_SELECT2))
-			{
-				include_once DOL_DOCUMENT_ROOT . '/core/lib/ajax.lib.php';
-				$out.= ajax_combobox($keysuffix.'options_'.$key.$keyprefix, array(), 0);
->>>>>>> ce4172c754820563000a4025de4fe931cc20a289
+
 			}
 
 			$out.='<select class="flat" name="'.$keysuffix.'options_'.$key.$keyprefix.'" id="options_'.$key.$keyprefix.'" '.($moreparam?$moreparam:'').'>';
@@ -767,17 +761,11 @@ class ExtraFields
 		elseif ($type == 'sellist')
 		{
 			$out = '';
-<<<<<<< HEAD
 			if ($conf->use_javascript_ajax && $conf->global->MAIN_USE_SEARCH_TO_SELECT && ! $forcecombo)
 			{
 				include_once DOL_DOCUMENT_ROOT . '/core/lib/ajax.lib.php';
 				$out.= ajax_combobox($keysuffix.'options_'.$key.$keyprefix, array(), $conf->global->MAIN_USE_SEARCH_TO_SELECT, $conf->global->MAIN_SELECT_MIN_SIZE_OPTION);
-=======
-			if (! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_EXTRAFIELDS_USE_SELECT2))
-			{
-				include_once DOL_DOCUMENT_ROOT . '/core/lib/ajax.lib.php';
-				$out.= ajax_combobox($keysuffix.'options_'.$key.$keyprefix, array(), 0);
->>>>>>> ce4172c754820563000a4025de4fe931cc20a289
+
 			}
 
 			$out.='<select class="flat" name="'.$keysuffix.'options_'.$key.$keyprefix.'" id="options_'.$key.$keyprefix.'" '.($moreparam?$moreparam:'').'>';
