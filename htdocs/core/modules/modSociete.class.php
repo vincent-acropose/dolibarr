@@ -327,6 +327,7 @@ class modSociete extends DolibarrModules {
 				'd.nom' => 'State',
 				'userextra.u_code' => 'Code Commerciale',
 				'sp.nom' => "ParentCompany",
+				'sp.code_client' => "Code maison mére",
 		);
 		if (! empty($conf->global->SOCIETE_USEPREFIX))
 			$this->export_fields_array[$r]['s.prefix'] = 'Prefix';
@@ -370,6 +371,7 @@ class modSociete extends DolibarrModules {
 				'd.nom' => 'Text',
 				'userextra.u_code' => "Text",
 				'sp.nom' => "Text",
+				'sp.code_client' => "Text",
 		);
 		$this->export_entities_array[$r] = array (); // We define here only fields that use another picto
 		                                          // Add extra fields
@@ -457,6 +459,7 @@ class modSociete extends DolibarrModules {
 				't.libelle' => "ThirdPartyType",
 				'userextra.u_code' => 'Code Commerciale',
 				'sp.nom' => "ParentCompany",
+				'sp.code_client' => "Code maison mére",
 		);
 		$this->export_TypeFields_array[$r] = array (
 				'c.lastname' => "Text",
@@ -470,6 +473,7 @@ class modSociete extends DolibarrModules {
 				't.libelle' => "Text",
 				's.nom' => "Text",
 				'sp.nom' => "Text",
+				'sp.code_client' => "Text",
 		);
 		$this->export_entities_array[$r] = array (
 				's.rowid' => "company",
@@ -481,6 +485,7 @@ class modSociete extends DolibarrModules {
 				't.libelle' => "company",
 				'userextra.u_code' => "company",
 				'sp.nom' => "company",
+				'sp.code_client' => "company",
 		); // We define here only fields that use another picto
 		if (empty($conf->fournisseur->enabled)) {
 			unset($this->export_fields_array[$r]['s.code_fournisseur']);
