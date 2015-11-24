@@ -1783,6 +1783,16 @@ function dol_check_secure_access_document($modulepart,$original_file,$entity,$fu
 		$accessallowed=1;
 		$original_file=$conf->scanner->dir_temp.'/'.$fuser->id.'/'.$original_file;
 	}
+	
+	// Wrapping pour les produits et services
+	else if ($modulepart == 'conformite')
+	{
+		if ($fuser->rights->conformite->dossier->read || preg_match('/^specimen/i',$original_file))
+		{
+			$accessallowed=1;
+		}
+		$original_file=$conf->conformite->multidir_output[$entity].'/'.$original_file;
+	}
 
     // GENERIC Wrapping
     // If modulepart=module_user_temp	Allows any module to open a file if file is in directory called DOL_DATA_ROOT/modulepart/temp/iduser
