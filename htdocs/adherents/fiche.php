@@ -251,7 +251,8 @@ if (empty($reshook)) {
 		}
 		$lastname=$_POST["lastname"];
 		$firstname=$_POST["firstname"];
-		$morphy=$morphy=$_POST["morphy"];;
+		$morphy=$_POST["morphy"];
+		$societe = trim($_POST["societe"]);
 		if ($morphy != 'mor' && empty($lastname)) {
 			$error++;
 			$langs->load("errors");
@@ -261,6 +262,13 @@ if (empty($reshook)) {
 			$error++;
 			$langs->load("errors");
 			$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentities("Firstname"))."<br>\n";
+		}
+		
+		if ($morphy == 'mor' && empty($societe))
+		{
+			$error++;
+			$langs->load("errors");
+			$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentities("Company"))."<br>\n";
 		}
 
 		// Create new object
@@ -275,8 +283,8 @@ if (empty($reshook)) {
 			$object->login       = trim($_POST["login"]);
 			$object->pass        = trim($_POST["pass"]);
 
-			$object->societe     = trim($_POST["societe"]);
-			$object->company     = trim($_POST["societe"]);
+			$object->societe     = $societe;
+			$object->company     = $societe;
 
 			$object->address     = trim($_POST["address"]);
 			$object->zip         = trim($_POST["zipcode"]);
@@ -422,7 +430,10 @@ if (empty($reshook)) {
 		$civility_id=$_POST["civility_id"];
 		$lastname=$_POST["lastname"];
 		$firstname=$_POST["firstname"];
-		$societe=$_POST["societe"];
+		
+		//$societe=$_POST["societe"];
+		$societe = GETPOST('societe', 'alpha');
+		
 		$address=$_POST["address"];
 		$zip=$_POST["zipcode"];
 		$town=$_POST["town"];
@@ -474,7 +485,7 @@ if (empty($reshook)) {
 		$ret = $extrafields->setOptionalsFromPost($extralabels,$object);
 
 		// Check parameters
-		if (empty($morphy) || $morphy == "-1") {
+		if (empty($morphy)) {
 			$error++;
 			$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Nature"))."<br>\n";
 		}
@@ -511,6 +522,11 @@ if (empty($reshook)) {
 			$error++;
 			$langs->load("errors");
 			$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentities("Firstname"))."<br>\n";
+		}
+		if ($morphy == 'mor' && (empty($societe) || $societe == -1)) {
+			$error++;
+			$langs->load("errors");
+			$errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentities("Company"))."<br>\n";
 		}
 		if (! ($typeid > 0)) {	// Keep () before !
 			$error++;
@@ -1044,7 +1060,7 @@ else
 			print '<input type="hidden" name="typeid" value="'.$object->typeid.'">';
 		}
 		print "</td></tr>";
-
+		
 		// Company
 		print '<tr><td id="tdcompany">'.$langs->trans("Company").'</td><td><input type="text" name="societe" size="40" value="'.(isset($_POST["societe"])?$_POST["societe"]:$object->societe).'"></td></tr>';
 
