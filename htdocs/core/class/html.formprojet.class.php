@@ -271,7 +271,7 @@ class FormProjets
      *  @param	int		$disabled		Disabled
 	 *	@return int         			Nber of project if OK, <0 if KO
 	 */
-	function selectTasks($socid=-1, $selected='', $htmlname='taskid', $maxlength=24, $option_only=0, $show_empty=1, $discard_closed=0, $forcefocus=0, $disabled=0)
+	function selectTasks($socid=-1, $selected='', $htmlname='taskid', $maxlength=24, $option_only=0, $show_empty=1, $discard_closed=0, $forcefocus=0, $disabled=0, $projectId=0)
 	{
 		global $user,$conf,$langs;
 
@@ -297,11 +297,13 @@ class FormProjets
 		$sql.= ', '.MAIN_DB_PREFIX.'projet_task as t';
 		$sql.= " WHERE p.entity = ".$conf->entity;
 		$sql.= " AND t.fk_projet = p.rowid";
-		if ($projectsListId !== false) $sql.= " AND p.rowid IN (".$projectsListId.")";
+		
+		if($projectId != 0) $sql.= " AND p.rowid = ".$projectId;
+		elseif ($projectsListId !== false) $sql.= " AND p.rowid IN (".$projectsListId.")";
+		
 		if ($socid == 0) $sql.= " AND (p.fk_soc=0 OR p.fk_soc IS NULL)";
 		if ($socid > 0)  $sql.= " AND (p.fk_soc=".$socid." OR p.fk_soc IS NULL)";
 		$sql.= " ORDER BY p.ref, t.ref ASC";
-
 		dol_syslog(__METHOD__, LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
