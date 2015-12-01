@@ -475,10 +475,13 @@ class Mydoliboard extends CommonObject
 							elseif ($tabletype[$nbcol]==253) // text
 								$sz.="<td align=left width=".$width."% >".$valfield."</td>";
 
-							elseif ($tabletype[$nbcol]==5 || $tabletype[$nbcol]==3) // numérique
+							elseif ($tabletype[$nbcol]==5 || $tabletype[$nbcol]==3 || $tabletype[$nbcol]==246) // numérique
 								$sz.="<td align=right width=".$width."% >".round($valfield,2)."</td>";
-							else   // all the other type
+							else 
+								// all the other type
 								$sz.="<td align=center width=".$width."% >".$tabletype[$nbcol]."--".$valfield."</td>";
+							
+								
 							$nbcol++;
 						}
 						$sz.="</tr>";
