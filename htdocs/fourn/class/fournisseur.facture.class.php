@@ -375,7 +375,7 @@ class FactureFournisseur extends CommonInvoice
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_payment_term as cr ON (t.fk_cond_reglement = cr.rowid)";
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_paiement as p ON (t.fk_mode_reglement = p.id)";
         if ($id)  $sql.= " WHERE t.rowid=".$id;
-        if ($ref) $sql.= " WHERE t.ref='".$this->db->escape($ref)."'";
+        if ($ref) $sql.= " WHERE t.ref_supplier='".$this->db->escape($ref)."'";
 
         dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
         $resql=$this->db->query($sql);
