@@ -468,19 +468,22 @@ class Mydoliboard extends CommonObject
 						$nbcol=0;
 						foreach ($rec as $valfield ) 
 						{
-							if ($tabletype[$nbcol]==1) // boolean
+							// boolean
+							if ($tabletype[$nbcol]==1) { 
 								$sz.="<td align=center width=".$width."% >".yn($valfield)."</td>";
-							elseif ($tabletype[$nbcol]==10) // date
+							} elseif ($tabletype[$nbcol]==10) {
+								// date
 								$sz.="<td align=center width='70px' >".dol_print_date($this->db->jdate($valfield),'day')."</td>";
-							elseif ($tabletype[$nbcol]==253) // text
+							} elseif ($tabletype[$nbcol]==253) {
+								// text
 								$sz.="<td align=left width=".$width."% >".$valfield."</td>";
-
-							elseif ($tabletype[$nbcol]==5 || $tabletype[$nbcol]==3 || $tabletype[$nbcol]==246) // numérique
+							} elseif ($tabletype[$nbcol]==5 || $tabletype[$nbcol]==3 || $tabletype[$nbcol]==246) {
+								// numérique
 								$sz.="<td align=right width=".$width."% >".round($valfield,2)."</td>";
-							else 
+							} else { 
 								// all the other type
 								$sz.="<td align=center width=".$width."% >".$tabletype[$nbcol]."--".$valfield."</td>";
-							
+							}
 								
 							$nbcol++;
 						}
