@@ -1,0 +1,9 @@
+3.5.+1.1.2
+	- many bug fix
+	- add xml sample
+3.6.+1.2.0
+	add : new commun top menu with other patas-tools
+3.6.+1.2.1
+	fix : error if no row returned on board
+	add : link on current element in tabmode*
+	add : category tabs (product and society added)

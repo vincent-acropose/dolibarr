@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='ISO-8859-1'?><mydoliboard>
+<label>Chiffre d'Affaire</label>
+<description>Chiffre d'Affaire</description>
+<titlemenu>CA journee</titlemenu>
+<mainmenu>accountancy</mainmenu>
+<leftmenu>customers_bills</leftmenu>
+<elementtab>customers_bills</elementtab>
+<perms></perms>
+<langs></langs>
+<author>Patas-Monkey.com</author>
+<blocAmode> 
+0
+ </blocAmode>
+<blocAtitle>
+
+</blocAtitle>
+<blocBmode> 
+0
+ </blocBmode>
+<blocBtitle>
+
+</blocBtitle>
+<blocCmode> 
+0
+ </blocCmode>
+<blocCtitle>
+0
+</blocCtitle>
+<blocDmode> 
+0
+ </blocDmode>
+<blocDtitle>
+0
+</blocDtitle>
+<paramfields>
+ANNEE=2014#MOIS=6#JOUR=18
+</paramfields>
+<mydoliboardsheets>
+	<mydoliboardsheet >
+	 	<titlesheet>CA par produit</titlesheet>
+	 	<descriptionsheet></descriptionsheet>
+	 	<displaycell>A</displaycell>
+	 	<cellorder>0</cellorder>
+	 	<authorsheet>Patas-Monkey.com</authorsheet>
+	 	<permssheet></permssheet>
+	 	<langssheet></langssheet>
+	 	<querymaj></querymaj>
+	 	<querydisp>#SEL#  f.datef, fd.fk_product, fd.label, SUM( fd.total_ht ) AS mnt_HT, SUM( fd.total_tva ) mnt_tva, SUM( fd.total_ttc ) mnt_TTC
+FROM llx_facture AS f, llx_facturedet AS fd
+WHERE f.rowid = fd.fk_facture
+And year(f.datef)=#ANNEE#
+And month(f.datef)=#MOIS#
+AND day(f.datef)=#JOUR# 
+GROUP BY f.datef, fd.fk_product, fd.label</querydisp>
+	</mydoliboardsheet>
+	<mydoliboardsheet >
+	 	<titlesheet>Encaissement</titlesheet>
+	 	<descriptionsheet></descriptionsheet>
+	 	<displaycell>D</displaycell>
+	 	<cellorder>0</cellorder>
+	 	<authorsheet>Patas-Monkey.com</authorsheet>
+	 	<permssheet></permssheet>
+	 	<langssheet></langssheet>
+	 	<querymaj></querymaj>
+	 	<querydisp>#SEL# b.datev, cp.libelle, sum(b.amount) montant FROM `llx_c_paiement` as cp, llx_bank as b
+WHERE cp.active=1
+AND b.fk_type=cp.code
+AND year(b.datev)=#ANNEE#
+AND month(b.datev)=#MOIS#
+AND day(b.datev)=#JOUR# 
+group by b.datev, cp.libelle</querydisp>
+	</mydoliboardsheet>
+</mydoliboardsheets>
+</mydoliboard>

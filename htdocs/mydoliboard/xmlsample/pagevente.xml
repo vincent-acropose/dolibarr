@@ -1,0 +1,111 @@
+<?xml version='1.0' encoding='ISO-8859-1'?><mydoliboard>
+<label>mydoliboard - infos</label>
+<description>mydoliboard - infos</description>
+<titlemenu>mydoliboard</titlemenu>
+<mainmenu>products</mainmenu>
+<leftmenu>product</leftmenu>
+<perms></perms>
+<langs></langs>
+<author>patas-monkeys.com</author>
+<blocAmode> 
+0
+ </blocAmode>
+<blocAtitle>
+
+</blocAtitle>
+<blocBmode> 
+1
+ </blocBmode>
+<blocBtitle>
+
+</blocBtitle>
+<blocCmode> 
+0
+ </blocCmode>
+<blocCtitle>
+
+</blocCtitle>
+<blocDmode> 
+0
+ </blocDmode>
+<blocDtitle>
+
+</blocDtitle>
+<paramfields>
+ANNEE=2013
+</paramfields>
+<mydoliboardsheets>
+	<mydoliboardsheet>
+	 	<titlesheet>produits crees / mois</titlesheet>
+	 	<descriptionsheet></descriptionsheet>
+	 	<displaycell>B</displaycell>
+	 	<cellorder>1</cellorder>
+	 	<authorsheet>patas-monkeys.com</authorsheet>
+	 	<permssheet></permssheet>
+	 	<langssheet></langssheet>
+	 	<querymaj></querymaj>
+	 	<querydisp>SELECT 
+COUNT( IF( MONTH( tms ) =1, rowid, NULL ) ) AS janv, 
+COUNT( IF( MONTH( tms ) =2, rowid, NULL ) ) AS fevr, 
+COUNT( IF( MONTH( tms ) =3, rowid, NULL ) ) AS mars, 
+COUNT( IF( MONTH( tms ) =4, rowid, NULL ) ) AS avril, 
+COUNT( IF( MONTH( tms ) =5, rowid, NULL ) ) AS mai, 
+COUNT( IF( MONTH( tms ) =6, rowid, NULL ) ) AS juin, 
+COUNT( IF( MONTH( tms ) =7, rowid, NULL ) ) AS juill, 
+COUNT( IF( MONTH( tms ) =8, rowid, NULL ) ) AS aout, 
+COUNT( IF( MONTH( tms ) =9, rowid, NULL ) ) AS sept, 
+COUNT( IF( MONTH( tms ) =10, rowid, NULL ) ) AS oct, 
+COUNT( IF( MONTH( tms ) =11, rowid, NULL ) ) AS nov, 
+COUNT( IF( MONTH( tms ) =12, rowid, NULL ) ) AS dece
+FROM llx_product
+where year(tms)=#ANNEE#</querydisp>
+	</mydoliboardsheet>
+	<mydoliboardsheet>
+	 	<titlesheet>produits vendus</titlesheet>
+	 	<description>produits vendus par mois</description>
+	 	<displaycell>B</displaycell>
+	 	<cellorder>2</cellorder>
+	 	<author>patas-monkeys.com</author>
+	 	<perms></perms>
+	 	<langs></langs>
+	 	<querymaj></querymaj>
+	 	<querydisp>SELECT  COUNT( IF( MONTH( f.tms ) =1, fd.rowid, NULL ) ) AS janv,
+ COUNT( IF( MONTH( f.tms ) =2, fd.rowid, NULL ) ) AS fevr,
+ COUNT( IF( MONTH( f.tms ) =3, fd.rowid, NULL ) ) AS mars,
+ COUNT( IF( MONTH( f.tms ) =4, fd.rowid, NULL ) ) AS avril,
+COUNT( IF( MONTH( f.tms ) =5, fd.rowid, NULL ) ) AS mai, 
+COUNT( IF( MONTH( f.tms ) =6, fd.rowid, NULL ) ) AS juin,
+COUNT( IF( MONTH( f.tms ) =7, fd.rowid, NULL ) ) AS juill, 
+COUNT( IF( MONTH( f.tms ) =8, fd.rowid, NULL ) ) AS aout, 
+COUNT( IF( MONTH( f.tms ) =9, fd.rowid, NULL ) ) AS sept,
+COUNT( IF( MONTH( f.tms ) =10, fd.rowid, NULL ) ) AS oct,
+COUNT( IF( MONTH( f.tms ) =11, fd.rowid, NULL ) ) AS nov, 
+COUNT( IF( MONTH( f.tms ) =12, fd.rowid, NULL ) ) AS dece FROM llx_facturedet AS fd, llx_facture AS f WHERE product_type =0
+AND fd.fk_facture = f.rowid and year(tms)=#ANNEE#</querydisp>
+	</mydoliboardsheet>
+	<mydoliboardsheet>
+	 	<titlesheet>produits achetes</titlesheet>
+	 	<description></description>
+	 	<displaycell>3</displaycell>
+	 	<cellorder></cellorder>
+	 	<author>patas-monkeys.com</author>
+	 	<perms></perms>
+	 	<langs></langs>
+	 	<querymaj></querymaj>
+	 	<querydisp>SELECT 
+COUNT( IF( MONTH( f.tms ) =1, fd.rowid, NULL ) ) AS janv, 
+COUNT( IF( MONTH( f.tms ) =2, fd.rowid, NULL ) ) AS fevr, 
+COUNT( IF( MONTH( f.tms ) =3, fd.rowid, NULL ) ) AS mars, 
+COUNT( IF( MONTH( f.tms ) =4, fd.rowid, NULL ) ) AS avril, 
+COUNT( IF( MONTH( f.tms ) =5, fd.rowid, NULL ) ) AS mai, 
+COUNT( IF( MONTH( f.tms ) =6, fd.rowid, NULL ) ) AS juin, 
+COUNT( IF( MONTH( f.tms ) =7, fd.rowid, NULL ) ) AS juill, 
+COUNT( IF( MONTH( f.tms ) =8, fd.rowid, NULL ) ) AS aout, 
+COUNT( IF( MONTH( f.tms ) =9, fd.rowid, NULL ) ) AS sept, 
+COUNT( IF( MONTH( f.tms ) =10, fd.rowid, NULL ) ) AS oct, 
+COUNT( IF( MONTH( f.tms ) =11, fd.rowid, NULL ) ) AS nov, 
+COUNT( IF( MONTH( f.tms ) =12, fd.rowid, NULL ) ) AS dece 
+FROM llx_facture_fourn_det AS fd, llx_facture_fourn AS f WHERE product_type =0 AND fd.fk_facture_fourn = f.rowid and year(tms)=#ANNEE#</querydisp>
+	</mydoliboardsheet>
+</mydoliboardsheets>
+</mydoliboard>

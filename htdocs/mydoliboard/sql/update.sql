@@ -1,0 +1,1 @@
+ALTER TABLE  `llx_mydoliboard` ADD  `elementtab` varchar(50) NULL DEFAULT NULL;
