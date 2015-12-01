@@ -302,7 +302,7 @@ if ($resql)
 		$filedir=$conf->fournisseur->dir_output.'/facture' . '/' . dol_sanitizeFileName($obj->facid).'/0/'.dol_sanitizeFileName($obj->ref);
 		print $formfile->getDocumentsLink($facturestatic->element, $filename, $filedir);
 		print "</td>\n";
-		print '<td class="nowrap">'.dol_trunc($obj->ref_supplier,10)."</td>";
+		print '<td class="nowrap">'.$obj->ref_supplier."</td>";
 		print '<td align="center" class="nowrap">'.dol_print_date($db->jdate($obj->datef),'day').'</td>';
 		print '<td align="center" class="nowrap">'.dol_print_date($db->jdate($obj->date_echeance),'day');
 		if (($obj->paye == 0) && ($obj->fk_statut > 0) && $obj->date_echeance && $db->jdate($obj->date_echeance) < ($now - $conf->facture->fournisseur->warning_delay)) print img_picto($langs->trans("Late"),"warning");
