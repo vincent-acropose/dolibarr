@@ -460,7 +460,11 @@ class Mydoliboard extends CommonObject
 						$nbcol++;
 					}
 					$sz.="</tr>";
-					$width=round(85/($nbcol-1),0);
+					if ($nbcol>1) {
+						$width=round(85/($nbcol-1),0);
+					} else {
+						$width=85;
+					}
 					while ($rec = $this->db->fetch_object($resboardsql))
 					{	
 						$sz.="<tr>";
