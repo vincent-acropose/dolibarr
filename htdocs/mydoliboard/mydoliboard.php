@@ -274,12 +274,12 @@ if ($mydoliboardstatic->blocBmode==0)
 	print "<td width=50% valign=top>".$mydoliboardstatic->genboard("B")."</td>";
 else
 	print "<td width=50% valign=top>".$mydoliboardstatic->gengraph("B", $mydoliboardstatic->blocBmode, $mydoliboardstatic->blocBtitle)."</td>";
-if ($mydoliboardstatic->blocAmode==0)
+if ($mydoliboardstatic->blocCmode==0)
 	print "<td width=50% valign=top>".$mydoliboardstatic->genboard("C")."</td>";
 else
 	print "<td width=50% valign=top>".$mydoliboardstatic->gengraph("C", $mydoliboardstatic->blocCmode, $mydoliboardstatic->blocCtitle)."</td>";
 print "</tr><tr>";
-if ($mydoliboardstatic->blocAmode==0)
+if ($mydoliboardstatic->blocDmode==0)
 	print "<td colspan=2 valign=top>".$mydoliboardstatic->genboard("D")."</td>";
 else
 	print "<td colspan=2 valign=top>".$mydoliboardstatic->gengraph("D", $mydoliboardstatic->blocDmode, $mydoliboardstatic->blocDtitle)."</td>";
