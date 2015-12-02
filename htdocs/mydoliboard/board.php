@@ -67,6 +67,7 @@ if ($action == 'add' && $user->rights->mydoliboard->creer)
 		$object->active			= $_POST["active"];
 		$object->querymaj		= $_POST["querymaj"];
 		$object->querydisp		= $_POST["querydisp"];
+		$object->graphtype		= $_POST["graphtype"];
 
 		$result = $object->create($user);
 		if ($result == 0)
@@ -101,6 +102,7 @@ elseif ($action == 'validate' && $user->rights->mydoliboard->creer)
 	$object->active=		GETPOST("active");
 	$object->querydisp=		$_POST["querydisp"];
 	$object->querymaj=		$_POST["querymaj"];
+	$object->graphtype=		$_POST["graphtype"];
 
 	$result=$object->update();
 	if ($result<0) {
@@ -136,6 +138,7 @@ if ($action == 'create' && $user->rights->mydoliboard->creer)
 		$perms=$prevpage->perms;
 		$langsvalue=$prevpage->langs;
 		$author=$prevpage->author;
+		$graphtype=$prevpage->graphtype;
 	}
 	else
 	{
@@ -143,6 +146,7 @@ if ($action == 'create' && $user->rights->mydoliboard->creer)
 		$perms=$_POST["perms"];
 		$langsvalue=$_POST["langs"];
 		$author=$_POST["author"];
+		$graphtype=$_POST["graphtype"];
 	}
 	
 	print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
@@ -170,6 +174,8 @@ if ($action == 'create' && $user->rights->mydoliboard->creer)
 
 	// author
 	print '<tr><td><span >'.$langs->trans("author").'</span></td><td><input size="30" type="text" name="author" value="'.$author.'"></td></tr>';
+	
+	print '<tr><td><span >'.$langs->trans("Type de graphique").'</span></td><td><input size="10" type="text" name="graphtype" value="'.$graphtype.'"></td></tr>';
 
 	// querymaj : pour le moment cela reste en standbye
 	//print '<tr><td ><span >'.$langs->trans("querymaj").'</span></td>';
@@ -222,9 +228,14 @@ elseif ($action == 'update' && $user->rights->mydoliboard->creer)
 	// non modifiable si il est renseign�
 	if ($object->author)
 		print '<input type="hidden" name="author" value="'.$object->author.'">'.$object->author;
-	else
-		print '<input size="30" type="text" name="author" value="'.$object->author.'">';
-	print '</td></tr>';
+		else
+			print '<input size="30" type="text" name="author" value="'.$object->author.'">';
+			print '</td></tr>';
+	
+	print '<tr><td><span >'.$langs->trans("Type de graphique").'</span></td><td><input size="10" type="text" name="graphtype" value="'.$object->graphtype.'"></td></tr>';
+	
+	
+	
 
 	print '<tr><td>'.$langs->trans("active").'</td><td align=left >';
 	print $form->selectyesno('active',$object->active,1);
@@ -281,9 +292,11 @@ else
 	print '<tr><td>'.$langs->trans("perms").'</td><td >'.$object->perms.'</td></tr>';
 	print '<tr><td>'.$langs->trans("langs").'</td><td >'.$object->langs.'</td></tr>';
 	print '<tr><td>'.$langs->trans("author").'</td><td >'.$object->author.'</td></tr>';
+	print '<tr><td>'.$langs->trans("Type de graphique").'</td><td >'.$object->graphtype.'</td></tr>';
 	print '<tr><td>'.$langs->trans("active").'</td><td >'.yn($object->active).'</td></tr>';
 	//print '<tr><td width=25% >'.$langs->trans("querymaj").'</td><td >'.$object->querymaj.'</td></tr>';
 	print '<tr><td>'.$langs->trans("querydisp").'</td><td >'.$object->querydisp.'</td></tr>';
+	
 	print '</table>';
 
 	/*

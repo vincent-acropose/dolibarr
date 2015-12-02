@@ -523,10 +523,12 @@ class Mydoliboard extends CommonObject
 		if ($resql)
 		{
 			$tablesgraph = array ();
+			$graphtype=array();
 			$ligne=0;
 			while ($rec = $this->db->fetch_array($resql))
 			{
 				$titreligne[$ligne]=$rec['titlesheet'];
+				$graphtype[]=$rec['graphtype'];
 				$descligne[$ligne]=$rec['description'];
 				// on  récupère le fichier de lang
 				if ($rec['langs'])
@@ -541,7 +543,7 @@ class Mydoliboard extends CommonObject
 				// on récupère si besoin les valeurs saisies
 				if ($this->paramfields)
 				{
-					$tblInitFields=explode(":",$this->paramfields);
+					$tblInitFields=explode("#",$this->paramfields);
 					foreach ($tblInitFields as $initfields ) 
 					{
 						$tblInitField=explode("=",$initfields);
@@ -638,7 +640,7 @@ class Mydoliboard extends CommonObject
 						$line[$j].="<td align=center>".yn($tablesgraph[$j][$i])."</td>";
 					elseif ($headertype[$i]==10) // date
 						$line[$j].="<td align=right>".dol_print_date($this->db->jdate($tablesgraph[$j][$i]),'day')."</td>";
-					elseif ($headertype[$i]==5 || $headertype[$i]==8 || $headertype[$i]==3) // numérique
+					elseif ($headertype[$i]==5 || $headertype[$i]==8 || $headertype[$i]==3 || $tabletype[$nbcol]==246) // numérique
 					{
 						$line[$j].="<td align=right>".$tablesgraph[$j][$i]."</td>";
 						$totalline[$j]=$totalline[$j]+$tablesgraph[$j][$i];
@@ -672,7 +674,7 @@ class Mydoliboard extends CommonObject
 				$px1->SetTitle($title);
 				$px1->SetWidth($width);
 				$px1->SetHeight($height);
-				$px1->SetType(array('line','line','line'));
+				$px1->SetType($graphtype);
 				$px1->SetShading(3);
 				$px1->setBgColor('onglet');
 				$px1->setBgColorGrid(array(255,255,255));
@@ -1169,6 +1171,7 @@ class Mydoliboardsheet extends CommonObject
 	var $enabled;
 	var	$visible;
 	var $filter;
+	public $graphtype;
 
 	/**
 	 *	Constructor
@@ -1253,7 +1256,7 @@ class Mydoliboardsheet extends CommonObject
 	{
 		global $conf;
 
-		$sql = "SELECT fk_mdbpage, titlesheet, description, displaycell, cellorder, perms, langs, author, active, querymaj, querydisp";
+		$sql = "SELECT fk_mdbpage, titlesheet, description, displaycell, cellorder, perms, langs, author, active, querymaj, querydisp, graphtype";
 		$sql.= " FROM ".MAIN_DB_PREFIX."mydoliboardsheet";
 		$sql.= " WHERE rowid = '".$rowid."'";
 
@@ -1276,6 +1279,7 @@ class Mydoliboardsheet extends CommonObject
 				$this->active		= $res['active'];
 				$this->querymaj		= $res['querymaj'];
 				$this->querydisp	= $res['querydisp'];
+				$this->graphtype	= $res['graphtype'];
 				$this->db->free($resql);
 
 				return 1;
@@ -1357,6 +1361,7 @@ class Mydoliboardsheet extends CommonObject
 		$this->author=(!is_array($this->author)?trim($this->author):'');
 		$this->querymaj=(!is_array($this->querymaj)?trim($this->querymaj):'');
 		$this->querydisp=(!is_array($this->querydisp)?trim($this->querydisp):'');
+		$this->graphtype=(!is_array($this->graphtype)?trim($this->graphtype):'');
 
 		$this->db->begin();
 
@@ -1371,7 +1376,8 @@ class Mydoliboardsheet extends CommonObject
 		$sql.= " author,";
 		$sql.= " active,";
 		$sql.= " querymaj,";
-		$sql.= " querydisp";
+		$sql.= " querydisp,";
+		$sql.= " graphtype,";
 		$sql.= ") VALUES (";
 		$sql.= " ".$this->db->escape($this->fk_mdbpage);
 		$sql.= ", '".$this->db->escape($this->description)."'";
@@ -1384,6 +1390,7 @@ class Mydoliboardsheet extends CommonObject
 		$sql.= ", 0";  // by default the new list is not active
 		$sql.= ", '".$this->db->escape($this->querymaj)."'";
 		$sql.= ", '".$this->db->escape($this->querydisp)."'";
+		$sql.= ", '".$this->db->escape($this->graphtype)."'";
 		$sql.= ")";
 //print $sql.'<br>';
 		dol_syslog(get_class($this).'::create sql='.$sql);
@@ -1431,6 +1438,7 @@ class Mydoliboardsheet extends CommonObject
 		$sql .= ", displaycell ='".$this->db->escape($this->displaycell)."'";
 		$sql .= ", querymaj ='".$this->db->escape($this->querymaj)."'";
 		$sql .= ", querydisp ='".$this->db->escape($this->querydisp)."'";
+		$sql .= ", graphtype ='".$this->db->escape($this->graphtype)."'";
 		$sql .= ", author ='".$this->db->escape($this->author)."'";
 		$sql .= ", active =".$this->db->escape($this->active);
 		$sql .= " WHERE rowid = ".$this->rowid;
