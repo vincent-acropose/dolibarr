@@ -624,12 +624,12 @@ class Mydoliboard extends CommonObject
 			// on affiche le tableau 
 			$graph_datas=array();
 
-			$szhead='<table class="border" width="'.$width.'px"><tr class="liste_titre"><th width=100px>'.$langs->trans("label").'</th>';
+			$szhead='<table class="border" width="'.$width.'px"><tr class="liste_titre">';
 			$legend=array();
 			$totalline=array();
 			for($j=0;$j < $ligne;$j++)
 			{
-				$line[$j]='<tr><td title="'.$descligne[$j].'">'.$titreligne[$j].'</td>';
+				$line[$j]='<tr>';
 				array_push($legend,$titreligne[$j]);
 				$totalline[$j]=0;
 			}
@@ -654,18 +654,14 @@ class Mydoliboard extends CommonObject
 					array_push($graph_datas[$i], $tablesgraph[$j][$i]);
 				}
 			}
-
-			// display board
-			if ($mode == 1 || $mode == 3)
-			{
-				$sz.=$szhead."<th >Total</th></tr>";
-				for($j=0;$j < $ligne;$j++)
-					$sz.=$line[$j]."<td align=right><b>".$totalline[$j]."</b></td></tr>";
-				$sz.="</table><br>";
-			}
+                        
+                        $sz.="<h3>".$titreligne[0]."</h3>";
+			$sz.="<p>".$descligne[0]."</p><br>";
+			
 			// display graph
 			if ($mode == 1 || $mode == 2)
 			{
+                                
 				// Fabrication du graphique
 				$file= $conf->mydoliboard->dir_temp."/page-".$this->rowid."-".$bloc.".png";
 				$fileurl=DOL_URL_ROOT.'/viewimage.php?modulepart=mydoliboard_temp&file='."/page-".$this->rowid."-".$bloc.".png";
@@ -675,7 +671,7 @@ class Mydoliboard extends CommonObject
 				$px1->SetLegendWidthMin(180);
 				$px1->SetMaxValue($px1->GetCeilMaxValue()<0?0:$px1->GetCeilMaxValue());
 				$px1->SetMinValue($px1->GetFloorMinValue()>0?0:$px1->GetFloorMinValue());
-				$px1->SetTitle($title);
+				$px1->SetTitle('');
 				$px1->SetWidth($width);
 				$px1->SetHeight($height);
 				$px1->SetType($graphtype);
@@ -692,6 +688,14 @@ class Mydoliboard extends CommonObject
 				unset($px1);
 				unset($tablesgraph);
 
+			}
+                        // display board
+			if ($mode == 1 || $mode == 3)
+			{
+				$sz.=$szhead;
+				for($j=0;$j-1 < $ligne;$j++)
+					$sz.=$line[$j]."</tr>";
+				$sz.="</table><br>";
 			}
 		}
 		return $sz;
@@ -1462,3 +1466,4 @@ class Mydoliboardsheet extends CommonObject
 	}
 }
 ?>
+		
