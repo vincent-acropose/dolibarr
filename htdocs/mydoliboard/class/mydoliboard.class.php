@@ -1381,7 +1381,7 @@ class Mydoliboardsheet extends CommonObject
 		$sql.= " active,";
 		$sql.= " querymaj,";
 		$sql.= " querydisp,";
-		$sql.= " graphtype,";
+		$sql.= " graphtype";
 		$sql.= ") VALUES (";
 		$sql.= " ".$this->db->escape($this->fk_mdbpage);
 		$sql.= ", '".$this->db->escape($this->description)."'";
