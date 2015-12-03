@@ -883,7 +883,9 @@ class Societe extends CommonObject
             	unset($this->country);
             	unset($this->state_code);
             	unset($this->state);
-
+				
+				if(empty($this->cond_reglement_id)) $this->setPaymentTerms(2); //30 jours
+				
             	$nbrowsaffected = $this->db->affected_rows($resql);
 
             	if (! $error && $nbrowsaffected)
