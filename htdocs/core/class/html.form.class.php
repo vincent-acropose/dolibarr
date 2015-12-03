@@ -939,10 +939,11 @@ class Form
             // Construct $out and $outarray
             $out.= '<select id="'.$htmlname.'" class="flat'.($morecss?' '.$morecss:'').'" name="'.$htmlname.'"'.$nodatarole.'>'."\n";
 
-            $textifempty='';
+            $textifempty=' ';
             // Do not use textempty = ' ' or '&nbsp;' here, or search on key will search on ' key'.
             //$textifempty=' ';
             //if (! empty($conf->use_javascript_ajax) || $forcecombo) $textifempty='';
+            
             if ($showempty) $out.= '<option value="-1">'.$textifempty.'</option>'."\n";
 
             $num = $this->db->num_rows($resql);
@@ -3766,7 +3767,7 @@ class Form
     function form_thirdparty($page, $selected='', $htmlname='socid', $filter='',$showempty=0, $showtype=0, $forcecombo=0, $events=array())
     {
         global $langs;
-
+		
         if ($htmlname != "none")
         {
             print '<form method="post" action="'.$page.'">';
@@ -3786,7 +3787,13 @@ class Form
                 require_once DOL_DOCUMENT_ROOT .'/societe/class/societe.class.php';
                 $soc = new Societe($this->db);
                 $soc->fetch($selected);
-                print $soc->getNomUrl($langs);
+				if($soc->id){
+                	print $soc->getNomUrl($langs);
+				}
+				 else
+	            {
+	                print "&nbsp;";
+	            }
             }
             else
             {
