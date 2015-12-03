@@ -260,6 +260,7 @@ class Mydoliboard extends CommonObject
 	/*  Get the right position menu value for new */
 	function getposmenu($titlemenu, $mainmenu, $leftmenu)
 	{
+        $result = 100;
 		// gestion de la position du menu
 		$sql="SELECT max(position) as posmenu FROM ".MAIN_DB_PREFIX."menu";
 		$sql.=" WHERE fk_mainmenu ='".trim($mainmenu)."'";
@@ -271,13 +272,14 @@ class Mydoliboard extends CommonObject
 			if ($this->db->num_rows($resql) > 0)
 			{
 				$res = $this->db->fetch_array($resql);
+                                
 				// on rajoute 1 à la derniere liste présente
 				if ($res['posmenu'] >= 100)
-					return $res['posmenu']+1;
+					$result = $res['posmenu']+1;
 			}
 		}
 		// on renvoie la valeur par défaut dans tous les autres cas
-		return 100;
+		return $result;
 	}
 
 

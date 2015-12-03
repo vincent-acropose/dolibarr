@@ -69,11 +69,11 @@ if (! empty($socid))
  */
 if (GETPOST('dojob')!="") 
 {
-	// on récupère les id à traiter
+	// on rÃ©cupÃ¨re les id Ã  traiter
 	$tbllistcheck= GETPOST('checksel');
 	foreach ($tbllistcheck as $rowidsel) 
 	{
-		// on récupère la requete à lancer
+		// on rÃ©cupÃ¨re la requete Ã  lancer
 		$sqlQuerydo=$myliststatic->querydo;
 		// on lance la requete
 		$sqlQuerydo=str_replace("#ROWID#", $rowidsel, $sqlQuerydo);
@@ -105,7 +105,7 @@ if ($myliststatic->fieldinit)
 	{
 		$tblInitField=explode("=",$initfields);
 		$valueinit = GETPOST($tblInitField[0]);
-		// on prend la valeur par défaut si la valeur n'est pas saisie...
+		// on prend la valeur par dÃ©faut si la valeur n'est pas saisie...
 		if (!$valueinit)
 			$valueinit = $tblInitField[1];
 		$sql=str_replace("#".$tblInitField[0]."#", $valueinit, $sql);
@@ -115,16 +115,16 @@ if ($myliststatic->fieldinit)
 // boucle sur les champs filtrables
 $sqlfilter= $myliststatic->GetSqlFilterQuery($ArrayTable);
 
-// pour gérer le cas du where dans la query
-// si y a des champs à filter et pas de where dans la requete de base
+// pour gÃ©rer le cas du where dans la query
+// si y a des champs Ã  filter et pas de where dans la requete de base
 if ($sqlfilter && strpos(strtoupper($sql), "WHERE") ==0)
 	$sqlfilter= " WHERE 1=1 ".$sqlfilter;
 	
-// pour gérer le cas du filtrage selon utilisateur
+// pour gÃ©rer le cas du filtrage selon utilisateur
 if (strpos(strtoupper($sql), "#USER#") > 0)
 	$sql=str_replace("#USER#", $user->id, $sql);
 
-// filtre sur l'id de l'élément en mode tabs
+// filtre sur l'id de l'Ã©lÃ©ment en mode tabs
 if (!empty($myliststatic->elementtab) && $idreftab != "")
 {
 	switch($myliststatic->elementtab) {
@@ -146,17 +146,17 @@ if (!empty($myliststatic->elementtab) && $idreftab != "")
 
 }
 
-// on positionne les champs à filter avant un group by ou un order by
+// on positionne les champs Ã  filter avant un group by ou un order by
 if (strpos(strtoupper($sql), 'GROUP BY') > 0)
 {
-	// on découpe le sql
+	// on dÃ©coupe le sql
 	$sqlleft=substr($sql,0,strpos(strtoupper($sql), 'GROUP BY')-1);
 	$sqlright=substr($sql,strpos(strtoupper($sql), 'GROUP BY'));
 	$sql=$sqlleft." ".$sqlfilter." ".$sqlright;
 }
 elseif (strpos(strtoupper($sql), 'ORDER BY') > 0)
 {
-	// on découpe le sql
+	// on dÃ©coupe le sql
 	$sqlleft=substr($sql,0,strpos(strtoupper($sql), 'ORDER BY')-1);
 	$sqlright=substr($sql,strpos(strtoupper($sql), 'ORDER BY'));
 	$sql=$sqlleft." ".$sqlfilter." ".$sqlright;
@@ -168,7 +168,7 @@ else
 if (strpos(strtoupper($sql), 'GROUP BY') == 0)
 	$sql.= $myliststatic->GetGroupBy($ArrayTable);
 
-// Si il y a un order by prédéfini dans la requete on désactive le tri
+// Si il y a un order by prÃ©dÃ©fini dans la requete on dÃ©sactive le tri
 if (strpos(strtoupper($myliststatic->querylist), 'ORDER BY') == 0) 
 	$sql.= ' ORDER BY '.$sortfield.' '.$sortorder;
 
@@ -187,11 +187,11 @@ if (GETPOST('export')!="")
 		if (! empty($fields['alias'])) 
 			$tmp.=$fields['alias'];
 		else
-			// pour gérer les . des définitions de champs
+			// pour gÃ©rer les . des dÃ©finitions de champs
 			$tmp.=str_replace(array('.', '-'),'_',$fields['field']);
 		$tmp.=$sep;
 	}
-	// on enlève la dernière virgule et l'espace en fin de ligne
+	// on enlÃ¨ve la derniÃ¨re virgule et l'espace en fin de ligne
 	print substr($tmp,0,-1)."\n";
 
 
@@ -202,7 +202,7 @@ if (GETPOST('export')!="")
 	{
 		$num = $db->num_rows($resql);
 		$i = 0;
-		// on boucle sur les lignes de résultats
+		// on boucle sur les lignes de rÃ©sultats
 		while ($i < $num)
 		{
 			$objp = $db->fetch_object($result);
@@ -212,7 +212,7 @@ if (GETPOST('export')!="")
 
 				if ((strpos($fields['field'], '.rowid') > 0 || strpos($fields['field'], '.id') > 0)  && $fields['param'])
 				{
-					// pour les clés qui sont lié à un autre élément
+					// pour les clÃ©s qui sont liÃ© Ã  un autre Ã©lÃ©ment
 					$tblelement=explode(":",$fields['param']);
 					if ($tblelement[1]!="")
 						require_once DOL_DOCUMENT_ROOT.$tblelement[1];
@@ -220,7 +220,7 @@ if (GETPOST('export')!="")
 						$fieldsname=$fields['alias'];
 					else
 						$fieldsname=str_replace(array('.', '-'),"_",$fields['field']);
-					// seulement si le champs est renseigné
+					// seulement si le champs est renseignÃ©
 					if ($objp->$fieldsname)
 					{
 						$objectstatic = new $tblelement[0]($db);
@@ -237,7 +237,7 @@ if (GETPOST('export')!="")
 					$tblelement=explode(":",$fields['param']);
 					if ($tblelement[1]!="")
 						require_once DOL_DOCUMENT_ROOT.$tblelement[1];
-					// cas à part des status
+					// cas Ã  part des status
 					if (strpos($fields['field'], 'fk_statut') > 0 )
 					{
 						$objectstatic = new $tblelement[0]($db);
@@ -273,7 +273,7 @@ if (GETPOST('export')!="")
 					else
 						$codFields=str_replace(array('.', '-'),"_",$fields['field']);
 			
-					// selon le type de données
+					// selon le type de donnÃ©es
 					switch($fields['type'])
 					{
 						case "Price":
@@ -319,7 +319,7 @@ if (GETPOST('printpdf')!="")
  * View
  */
 
-// mode onglet : il est actif et une clé est transmise
+// mode onglet : il est actif et une clÃ© est transmise
 $idreftab=GETPOST('id');
 if (!empty($myliststatic->elementtab) && $idreftab != "")
 {
@@ -499,7 +499,7 @@ if ( ! $limit )	$limit = 25;
 if ( empty($conf->global->MAIN_USE_JQUERY_DATATABLES)) $sql.= $db->plimit($limit + 1,$offset);
 
 //  pour les tests on affiche la requete SQL 
-if ($myliststatic->active ==0)  // lancement de la requete à partir du menu mylist
+if ($myliststatic->active ==0)  // lancement de la requete Ã  partir du menu mylist
 	print $sql;
 	
 
@@ -512,7 +512,7 @@ if ($result)
     $num = $db->num_rows($resql);
     $i = 0;
 	
-	// génération dynamique du param
+	// gÃ©nÃ©ration dynamique du param
 
 	$param.="&rowid=".$rowid;
 	
@@ -530,13 +530,13 @@ if ($result)
 	print '<form method="post" action="'.$_SERVER["PHP_SELF"].'">';
 	print '<input type="hidden" name="rowid" value="'.$rowid.'">';
 
-	// champs filtrés, champ personnalisés et case à cocher
+	// champs filtrÃ©s, champ personnalisÃ©s et case Ã  cocher
 	if (! empty($conf->global->MAIN_USE_JQUERY_DATATABLES))
 	{
 		print '<div STYLE="float:left;">';
 		print '<input type="image" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png"  value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 		print '</div>';
-		// gestion des champs personnalisés
+		// gestion des champs personnalisÃ©s
 		if (! empty($myliststatic->fieldinit))
 		{
 			print '<div STYLE="float:left;">';
@@ -547,9 +547,9 @@ if ($result)
 		print $myliststatic->GenFilterFieldsTables($ArrayTable);
 
 
-		// gestion de la requete de mise à jour en masse
+		// gestion de la requete de mise Ã  jour en masse
 		if (! empty($myliststatic->querydo))
-		{	// on récupère le champ servant de clé pour la ligne
+		{	// on rÃ©cupÃ¨re le champ servant de clÃ© pour la ligne
 			foreach ($ArrayTable as $key => $fields) 
 			{
 				if ($fields['type'] == 'Check')
@@ -583,7 +583,7 @@ if ($result)
 		}
 
 		print '<tr class="liste_titre">';
-		// si il y a une requete de mise à jour
+		// si il y a une requete de mise Ã  jour
 		
 		foreach ($ArrayTable as $key => $fields)
 			if ($fields['visible']=='1')
@@ -606,11 +606,11 @@ if ($result)
 
 	if (! empty($conf->global->MAIN_USE_JQUERY_DATATABLES))
 	{
-		// en mode datatable si un filtre est appliqué 
+		// en mode datatable si un filtre est appliquÃ© 
 		if ($sqlfilter !="")
 			$limit=$num;				// on affiche tous les enregistrements
 		else
-			$limit=min($num,$limit * 4);	// sinon on affiche soit le nombre, soit (4 pages par défaut )
+			$limit=min($num,$limit * 4);	// sinon on affiche soit le nombre, soit (4 pages par dÃ©faut )
 	}
 	else
 	{
@@ -630,7 +630,7 @@ if ($result)
 			{
 				if ((strpos($fields['field'], '.rowid') > 0 || strpos($fields['field'], '.id') > 0)  && $fields['param'])
 				{
-					// pour les clés qui sont lié à un autre élément
+					// pour les clÃ©s qui sont liÃ© Ã  un autre Ã©lÃ©ment
 					print '<td nowrap="nowrap" align="'.$fields['align'].'">';
 					$tblelement=explode(":",$fields['param']);
 					if ($tblelement[1]!="")
@@ -639,7 +639,7 @@ if ($result)
 						$fieldsname=$fields['alias'];
 					else
 						$fieldsname=str_replace(array('.', '-'),"_",$fields['field']);
-					// seulement si le champs est renseigné
+					// seulement si le champs est renseignÃ©
 					if ($objp->$fieldsname)
 					{
 						$objectstatic = new $tblelement[0]($db);
@@ -655,7 +655,7 @@ if ($result)
 					$tblelement=explode(":",$fields['param']);
 					if ($tblelement[1]!="")
 						require_once DOL_DOCUMENT_ROOT.$tblelement[1];
-					// cas à part des status
+					// cas Ã  part des status
 					if (strpos($fields['field'], 'fk_statut') > 0 )
 					{
 						$objectstatic = new $tblelement[0]($db);
@@ -690,7 +690,7 @@ if ($result)
 				}
 			}
 		}
-		// si il y a une requete de mise à jour
+		// si il y a une requete de mise Ã  jour
 		if (! empty($myliststatic->querydo))
 		{
 			print "\n";
@@ -765,8 +765,8 @@ if (!empty($conf->global->MAIN_USE_JQUERY_DATATABLES))
 	print '"bPaginate": true,'."\n";
 	print '"bFilter": false,'."\n";
 	print '"sPaginationType": "full_numbers",'."\n";
-	print $myliststatic->gen_aoColumns($ArrayTable, !empty($myliststatic->querydo)); // pour gérer le format de certaine colonnes
-	print $myliststatic->gen_aasorting($sortfield, $sortorder, $ArrayTable, !empty($myliststatic->querydo)); // pour gérer le trie par défaut dans la requete SQL
+	print $myliststatic->gen_aoColumns($ArrayTable, !empty($myliststatic->querydo)); // pour gÃ©rer le format de certaine colonnes
+	print $myliststatic->gen_aasorting($sortfield, $sortorder, $ArrayTable, !empty($myliststatic->querydo)); // pour gÃ©rer le trie par dÃ©faut dans la requete SQL
 	print '"bJQueryUI": false,'."\n"; 
 	print '"oLanguage": {"sUrl": "'.$langs->trans('datatabledict').'" },'."\n";
 	print '"iDisplayLength": '.$conf->global->MYLIST_NB_ROWS.','."\n";
@@ -778,7 +778,7 @@ if (!empty($conf->global->MAIN_USE_JQUERY_DATATABLES))
 
 	// extension pour le trie
 	print 'jQuery.extend( jQuery.fn.dataTableExt.oSort, {';
-	// pour gérer les . et les , des décimales et le blanc des milliers
+	// pour gÃ©rer les . et les , des dÃ©cimales et le blanc des milliers
 	print '"numeric-comma-pre": function ( a ) {';
 	print 'var x = (a == "-") ? 0 : a.replace( /,/, "." );';
 	print 'x = x.replace( " ", "" );';
@@ -787,7 +787,7 @@ if (!empty($conf->global->MAIN_USE_JQUERY_DATATABLES))
 	print '"numeric-comma-asc": function ( a, b ) {return ((a < b) ? -1 : ((a > b) ? 1 : 0));},';
 	print '"numeric-comma-desc": function ( a, b ) {return ((a < b) ? 1 : ((a > b) ? -1 : 0));},';
 	
-	// pour gérer les dates au format européenne
+	// pour gÃ©rer les dates au format europÃ©enne
 	print '"date-euro-pre": function ( a ) {';
     print 'if ($.trim(a) != "") {';
     print 'var frDatea = $.trim(a).split("/");';
