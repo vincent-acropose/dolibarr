@@ -225,7 +225,7 @@ if ($result >= 0)
 
 			$fuser->job=$ldapuser[$conf->global->LDAP_FIELD_TITLE];
 			$fuser->note=$ldapuser[$conf->global->LDAP_FIELD_DESCRIPTION];
-			$fuser->admin=0;
+			//$fuser->admin=0;
 			$fuser->societe_id=0;
 			$fuser->contact_id=0;
 			$fuser->fk_member=0;
