@@ -41,10 +41,10 @@ class Mylist extends CommonObject
 	var $elementtab;
 	var $idmenu;
 	var $description;
-	var $listsUsed=array();			// Tableau des colonnes paramétrés de la liste
-	var $OLDlistsUsed=array();		// Tableau des colonnes paramétrés de la liste ancien mode
+	var $listsUsed=array();			// Tableau des colonnes paramÃ©trÃ©s de la liste
+	var $OLDlistsUsed=array();		// Tableau des colonnes paramÃ©trÃ©s de la liste ancien mode
 	
-	var $fieldinit;					// permet de gérer les paramètres supplémentaires
+	var $fieldinit;					// permet de gÃ©rer les paramÃ¨tres supplÃ©mentaires
 	var $perms;
 	var $langs;
 	var $author;
@@ -55,11 +55,11 @@ class Mylist extends CommonObject
 	var $querydo;
 
 	// champs des champs de la liste
-	var $idfield;		// clé numérique associé au champ
+	var $idfield;		// clÃ© numÃ©rique associÃ© au champ
 	var $name;			// libelle du champs dans la base 
 	var $field;			// nom du champs dans la base 
 	var $alias;		
-	var $param;		 	// permet de gérer les liste et les clées
+	var $param;		 	// permet de gÃ©rer les liste et les clÃ©es
 	var $type;
 	var $pos;
 	var	$align;
@@ -69,8 +69,8 @@ class Mylist extends CommonObject
 	var $sumreport;
 	var $avgreport;
 	var $width;			// la taille de la colonne
-	var $filterinit;	// une valeur de filtrage par défaut
-	var $updatekey;		// pour la mise à jour
+	var $filterinit;	// une valeur de filtrage par dÃ©faut
+	var $updatekey;		// pour la mise Ã  jour
 
 
 	/**
@@ -103,7 +103,7 @@ class Mylist extends CommonObject
 			$fieldinit =$tblInitField[0];
 			$valueinit = GETPOST($fieldinit);
 
-			// on prend la valeur par défaut si la valeur n'est pas saisie...
+			// on prend la valeur par dÃ©faut si la valeur n'est pas saisie...
 			if (!$valueinit)
 				$valueinit = $tblInitField[1];
 			if ($bdatatablesON)
@@ -140,7 +140,7 @@ class Mylist extends CommonObject
 			$fieldinit =$tblInitField[0];
 			$valueinit = GETPOST($fieldinit);
 
-			// on prend la valeur par défaut si la valeur n'est pas saisie...
+			// on prend la valeur par dÃ©faut si la valeur n'est pas saisie...
 			if (!$valueinit)
 				$valueinit = $tblInitField[1];
 			$tmp.='&'.$tblInitField[0]."=".$valueinit;
@@ -148,14 +148,14 @@ class Mylist extends CommonObject
 		return $tmp;
 	}
 
-	// gère le format et la taille des champs
+	// gÃ¨re le format et la taille des champs
 	function gen_aoColumns($arrayOfFields, $bckecked)
 	{	
 		$tmp='"aoColumns": [';
-		// boucle sur les champs pour en définir le type pour le trie
+		// boucle sur les champs pour en dÃ©finir le type pour le trie
 		foreach ($arrayOfFields as $key => $fields) 
 		{
-			// selon le type de données
+			// selon le type de donnÃ©es
 			switch($fields['type'])
 			{
 				case "Number":
@@ -164,7 +164,7 @@ class Mylist extends CommonObject
 					$tmp.= '{ "sType": "numeric-comma" ';
 					if ($fields['width'] >0 )
 						$tmp.= ', "sWidth": "'.$fields['width'].'"' ;
-					else	// longueur par défaut pour le champs date
+					else	// longueur par dÃ©faut pour le champs date
 						$tmp.= ', "sWidth": "100px"' ;
 					$tmp.= ' },';
 					break;
@@ -173,7 +173,7 @@ class Mylist extends CommonObject
 					$tmp.= '{ "sType": "date-euro"';
 					if ($fields['width'] >0 )
 						$tmp.= ', "sWidth": "'.$fields['width'].'"' ;
-					else	// longueur par défaut pour le champs date
+					else	// longueur par dÃ©faut pour le champs date
 						$tmp.= ', "sWidth": "80px"' ;
 					$tmp.= ' },';
 					break;
@@ -196,14 +196,14 @@ class Mylist extends CommonObject
 	}
 
 	function gen_aasorting($sortfield, $sortorder, $arrayOfFields, $bckecked)
-	{	// si il y a un trie par défaut
+	{	// si il y a un trie par dÃ©faut
 		$posOrderby=strpos(strtoupper($this->querylist), 'ORDER BY');
 		$tmp="";
 		if ($sortfield ==1 && $posOrderby > 0 )
-		{	// un petit espace après l'accolade pour gérer la suppression si rien à trier
+		{	// un petit espace aprÃ¨s l'accolade pour gÃ©rer la suppression si rien Ã  trier
 			$tmp='"aaSorting":[ ';
 			$stringorderby=substr($this->querylist, strpos(strtoupper($this->querylist), 'ORDER BY')+8);
-			// on fabrique la ligne de trie par défaut
+			// on fabrique la ligne de trie par dÃ©faut
 			if (strpos($stringorderby, ',') > 0)
 				$tblorderby = explode(",", $stringorderby);
 			else
@@ -222,7 +222,7 @@ class Mylist extends CommonObject
 
 					$poscol++;
 				}
-				// si le champs à trier n'est pas dans la liste, il est ignoré
+				// si le champs Ã  trier n'est pas dans la liste, il est ignorÃ©
 			}
 			
 			// si on peu cocher les ligne on ajoute une colonne 
@@ -266,9 +266,9 @@ class Mylist extends CommonObject
 					$tmp.= '<td align="'.$fields['align'].'">';
 				$namefield=str_replace(array('.', '-'),'_',$fields['field']);
 
-				// récupération du filtrage saisie
+				// rÃ©cupÃ©ration du filtrage saisie
 				$filtervalue=GETPOST($namefield);
-				// gestion du filtrage par défaut (si il y en a un et que l'on est pas au premier appel
+				// gestion du filtrage par dÃ©faut (si il y en a un et que l'on est pas au premier appel
 				if ($fields['filterinit'] != "" && GETPOST("filterinit") != 1 )
 					$filtervalue=$fields['filterinit'];
 
@@ -344,7 +344,7 @@ class Mylist extends CommonObject
 						$sql.= ' WHERE '.$InfoFieldList[4];
 						$sql.= ' ORDER BY label';
 						break;
-					case 4 :		// cas des clés primaires (Class:fichier:table:label)
+					case 4 :		// cas des clÃ©s primaires (Class:fichier:table:label)
 						// cas de la class action commerciale avec id au lieu de rowid
 						if ($InfoFieldList[0]=='Actioncomm')
 							$sql = 'SELECT id as rowid , '.$InfoFieldList[3].' as label';
@@ -407,7 +407,7 @@ class Mylist extends CommonObject
 
 				foreach ($tblselectedstatut as $key )
 				{
-					// pour cette daube d'état 'paye' dans les factures
+					// pour cette daube d'Ã©tat 'paye' dans les factures
 					if ($key !='P')
 					{
 						$objectstatic->statut= $key;
@@ -461,9 +461,9 @@ class Mylist extends CommonObject
 
 	if ($ValueField != "" || $DefaultFilterValue != "")
 	{	
-		// récupération du filtrage saisie
+		// rÃ©cupÃ©ration du filtrage saisie
 		$filtervalue=$ValueField;
-		// gestion du filtrage par défaut (si il y en a un et que l'on est pas au premier appel
+		// gestion du filtrage par dÃ©faut (si il y en a un et que l'on est pas au premier appel
 		if ($DefaultFilterValue !="" && GETPOST("filterinit") != 1 )
 			$filtervalue=$DefaultFilterValue;
 		// build the input field on depend of the type of file
@@ -524,7 +524,7 @@ class Mylist extends CommonObject
 				$szFilterQuery=" and ".$NameField."=".(is_numeric($filtervalue) ? $filtervalue : ($filtervalue =='yes' ? 1: 0) );
 				break;
 			case 'Statut':
-				// pour gérer la merde des statut de facturation
+				// pour gÃ©rer la merde des statut de facturation
 				if ($filtervalue !='P')
 					$szFilterQuery=" and ".$NameField."=".$filtervalue;
 				else
@@ -595,11 +595,11 @@ class Mylist extends CommonObject
 				if (! empty($fields['alias'])) 
 					$tmp.=$fields['alias'];
 				else
-					// pour gérer les . des définitions de champs
+					// pour gÃ©rer les . des dÃ©finitions de champs
 					$tmp.=str_replace(array('.', '-'),'_',$fields['field']);
 				$tmp.=", ";
 			}
-			// on enlève la dernière virgule et l'espace en fin de ligne
+			// on enlÃ¨ve la derniÃ¨re virgule et l'espace en fin de ligne
 			return substr($tmp,0,-2);
 		}
 
@@ -627,7 +627,7 @@ class Mylist extends CommonObject
 					$tmp.=$fields['field'].", ";
 			}
 		}
-		// on enlève la dernière virgule et l'espace en fin de ligne
+		// on enlÃ¨ve la derniÃ¨re virgule et l'espace en fin de ligne
 		if ($btopGroupBy)
 			return substr($tmp,0,-2);
 		else
@@ -639,13 +639,13 @@ class Mylist extends CommonObject
 		global $langs, $conf;
 
 		$tmp= "<td align=".$Arrayfields['align'].">";
-		// pour gérer l'aliassing des champs
+		// pour gÃ©rer l'aliassing des champs
 		if (!empty($Arrayfields['alias']))
 			$codFields=$Arrayfields['alias'];
 		else
 			$codFields=str_replace(array('.', '-'),"_",$Arrayfields['field']);
 
-		// selon le type de données
+		// selon le type de donnÃ©es
 		switch($Arrayfields['type'])
 		{
 			case "Price":
@@ -680,7 +680,7 @@ class Mylist extends CommonObject
 
 	function genHideFields($Arrayfields)
 	{
-		//boucle sur les champs à afficher
+		//boucle sur les champs Ã  afficher
 		$tmp="<script>"."\n"."jQuery(document).ready(function() {"."\n";
 
 		$i=0;
@@ -775,7 +775,7 @@ class Mylist extends CommonObject
 				$this->OLDlistsUsed	= json_decode($res['fieldused'],true);
 				$this->db->free($resql);
 
-				// pour gérer les anciennes versions
+				// pour gÃ©rer les anciennes versions
 				$this->fillmylistdet();
 				return 1;
 			}
@@ -803,12 +803,12 @@ class Mylist extends CommonObject
 			if ($this->db->num_rows($resql) > 0)
 			{
 				$res = $this->db->fetch_array($resql);
-				// on rajoute 1 à la derniere liste présente
+				// on rajoute 1 Ã  la derniere liste prÃ©sente
 				if ($res['posmenu'] >= 100)
 					return $res['posmenu']+1;
 			}
 		}
-		// on renvoie la valeur par défaut dans tous les autres cas
+		// on renvoie la valeur par dÃ©faut dans tous les autres cas
 		return 100;
 	}
 
@@ -989,11 +989,11 @@ print $sql."<br>";
 			if ($this->db->num_rows($resql) > 0)
 			{
 				$res = $this->db->fetch_array($resql);
-				// on rajoute 1 à la derniere liste présente
+				// on rajoute 1 Ã  la derniere liste prÃ©sente
 					return $res['posmenu']+1;
 			}
 		}
-		// on renvoie la valeur par défaut dans tous les autres cas
+		// on renvoie la valeur par dÃ©faut dans tous les autres cas
 		return 1;
 	}
 
@@ -1008,11 +1008,11 @@ print $sql."<br>";
  	 */
 	function AOTupdateFieldList($user='')
 	{
-		// plus d'actualité
+		// plus d'actualitÃ©
 		global $conf, $langs;
 		
 		$fieldsused=json_encode($this->listsUsed);
-		// pour gérer la '' des champs calculés avant la mise à jour
+		// pour gÃ©rer la '' des champs calculÃ©s avant la mise Ã  jour
 		$fieldsused=str_replace("'", "''", $fieldsused);
 		
 		//print $this->listsUsed.'<br>';
@@ -1046,7 +1046,7 @@ print $sql."<br>";
 		$error=0;
 		$positionsave=0;
 		
-		// on commence par récupérer l'id du menu à supprimer
+		// on commence par rÃ©cupÃ©rer l'id du menu Ã  supprimer
 		$sql="select m.rowid from ".MAIN_DB_PREFIX."menu as m, ".MAIN_DB_PREFIX."mylist as l";
 		$sql .= " WHERE code = '".$this->code."'";
 		$sql .= " and l.titlemenu=m.titre";
@@ -1096,7 +1096,7 @@ print $sql."<br>";
 			// si la liste est active
 			if ($this->active)
 			{
-				// on met à jour la table des menus
+				// on met Ã  jour la table des menus
 				// on ajoute le menu
 				require_once DOL_DOCUMENT_ROOT.'/core/class/menubase.class.php';
 				$menu = new Menubase($this->db);
@@ -1116,7 +1116,7 @@ print $sql."<br>";
 				$menu->enabled=1;
 				$result=$menu->create($user);
 
-				// on crée l'onglet 
+				// on crÃ©e l'onglet 
 				if ($this->elementtab)
 				{
 					switch($this->elementtab) {
@@ -1201,8 +1201,8 @@ print $sql."<br>";
 
 		dol_syslog(get_class($this)."::delete");
 
-		// on vire le menu si il existe, normalement pas nécessaire (liste désactivé) mais on sait jamais
-		// on commence par récupérer l'id du menu à supprimer
+		// on vire le menu si il existe, normalement pas nÃ©cessaire (liste dÃ©sactivÃ©) mais on sait jamais
+		// on commence par rÃ©cupÃ©rer l'id du menu Ã  supprimer
 		$sql="select m.rowid from ".MAIN_DB_PREFIX."menu as m, ".MAIN_DB_PREFIX."mylist as l";
 		$sql .= " WHERE code = '".$this->code."'";
 		$sql .= " and l.titlemenu=m.titre";
@@ -1271,7 +1271,7 @@ print $sql."<br>";
 				$cat['export']		= $rec['export'];
 				$cat['author']		= $rec['author'];
 				$cat['active']		= $rec['active'];
-				// analyse du paramétrage
+				// analyse du paramÃ©trage
 				$cat['nbFieldsUsable']	= $this->nbFieldsUsable($rec['rowid']);
 				$cat['nbFieldsShow']	= $this->nbFieldsShow($rec['rowid']);
 				$cat['nbFilters']		= $this->nbFilters($rec['rowid']);
@@ -1324,7 +1324,7 @@ print $sql."<br>";
 	function getChampsArray($rowid=0)
 	{
 		global $user;
-// on récupère les champs de la liste dans un Tableau
+// on rÃ©cupÃ¨re les champs de la liste dans un Tableau
 		$sql ="select * FROM ".MAIN_DB_PREFIX."mylistdet ";
 		if ($rowid > 0)
 			$sql.= " WHERE fk_mylist=".$rowid;
@@ -1361,7 +1361,7 @@ print $sql."<br>";
 				$newArray['sumreport']	= $objp->sumreport;
 				$newArray['avgreport']	= $objp->avgreport;
 				$newArray['filterinit']	= $objp->filterinit;
-				// on rajoute à la liste
+				// on rajoute Ã  la liste
 				$newArrays[$i] = $newArray;
 				
 				$i++;
@@ -1383,7 +1383,7 @@ print $sql."<br>";
 	 */
 	function FetchChampArray($rowid)
 	{
-// on récupère les champs de la liste dans un Tableau
+// on rÃ©cupÃ¨re les champs de la liste dans un Tableau
 		$sql ="select * FROM ".MAIN_DB_PREFIX."mylistdet ";
 		$sql.= " WHERE rowid=".$rowid;
 		
@@ -1472,7 +1472,7 @@ print $sql."<br>";
 	function importlist($xml)
 	{
 		global $user;
-		// on récupère le fichier et on le parse
+		// on rÃ©cupÃ¨re le fichier et on le parse
 		libxml_use_internal_errors(true);
 		$sxe = simplexml_load_string($xml);
 		if ($sxe === false) {
@@ -1503,7 +1503,7 @@ print $sql."<br>";
 		if ($this->rowid)
 			$this->delete($user);
 
-		// on crée une nouvelle liste
+		// on crÃ©e une nouvelle liste
 		$fk_mylist = $this->create($user);
 		
 
@@ -1578,13 +1578,13 @@ print $sql."<br>";
 		return $tmp;
 	}
 	
-	/* permet de convertir l'ancien paramétrage des champs vers la table des champs */
+	/* permet de convertir l'ancien paramÃ©trage des champs vers la table des champs */
 	function fillmylistdet()
 	{
-		// pour l'ancienne compatibilité
+		// pour l'ancienne compatibilitÃ©
 		if(is_array($this->OLDlistsUsed))
 		{
-			// on insère en base
+			// on insÃ¨re en base
 			foreach ($this->OLDlistsUsed as $key=> $value )
 			{
 				//var_dump($value);
@@ -1598,7 +1598,7 @@ print $sql."<br>";
 				$sql.=", '".$this->db->escape($value['name'])."'";
 				$sql.=", '".$this->db->escape($value['alias'])."'";
 				$sql.=", '".$this->db->escape($value['type'])."'";
-				$sql.=", '".$this->db->escape(($value['elementfield']?$value['elementfield']:$value['param']))."'"; // pour la compatibilité
+				$sql.=", '".$this->db->escape(($value['elementfield']?$value['elementfield']:$value['param']))."'"; // pour la compatibilitÃ©
 				$sql.=", '".$this->db->escape($value['align'])."'";
 				$sql.=", ". $value['enabled'];
 				$sql.=", ". $value['visible'];
@@ -1610,7 +1610,7 @@ print $sql."<br>";
 			}
 			// on purge la variable
 
-			// on vérifie que tout est ok avant de purger
+			// on vÃ©rifie que tout est ok avant de purger
 			$sql ="select * FROM ".MAIN_DB_PREFIX."mylistdet ";
 			$sql.= " WHERE fk_mylist=".$this->rowid;
 			$sql.= " ORDER BY pos";
@@ -1636,7 +1636,7 @@ print $sql."<br>";
 	}
 }
 
-// TODO sortir les fonction lié au champs de la classe principale
+// TODO sortir les fonction liÃ© au champs de la classe principale
 class Mylistdet extends CommonObject
 {
 	
@@ -1644,12 +1644,12 @@ class Mylistdet extends CommonObject
 	public $table_element='mylistdet';
 	
 	// champs des champs de la liste
-	var $idfield;		// clé numérique associé au champ
+	var $idfield;		// clÃ© numÃ©rique associÃ© au champ
 	var $name;			// libelle du champs dans la base 
 	var $field;			// nom du champs dans la base 
 	var $alias;		
-	//var $elementfield; 	// permet de gérer les liste et les clées
-	var $param;		 	// permet de gérer les liste et les clées
+	//var $elementfield; 	// permet de gÃ©rer les liste et les clÃ©es
+	var $param;		 	// permet de gÃ©rer les liste et les clÃ©es
 	var $type;
 	var $pos;
 	var	$align;
@@ -1659,7 +1659,6 @@ class Mylistdet extends CommonObject
 	var $sumreport;
 	var $avgreport;
 	var $width;			// la taille de la colonne
-	var $filterinit;	// une valeur de filtrage par défaut
-	var $updatekey;		// pour la mise à jour
+	var $filterinit;	// une valeur de filtrage par dÃ©faut
+	var $updatekey;		// pour la mise Ã  jour
 }
-?>

@@ -117,7 +117,7 @@ $sqlfilter= $myliststatic->GetSqlFilterQuery($ArrayTable);
 
 // pour gérer le cas du where dans la query
 // si y a des champs à filter et pas de where dans la requete de base
-if ($sqlfilter && strpos(strtoupper($sql), "WHERE") ==0)
+if ($sqlfilter && strrpos(strtoupper($sql), "WHERE") ==0)
 	$sqlfilter= " WHERE 1=1 ".$sqlfilter;
 	
 // pour gérer le cas du filtrage selon utilisateur
@@ -125,6 +125,7 @@ if (strpos(strtoupper($sql), "#USER#") > 0)
 	$sql=str_replace("#USER#", $user->id, $sql);
 
 // filtre sur l'id de l'élément en mode tabs
+$idreftab=GETPOST('id');
 if (!empty($myliststatic->elementtab) && $idreftab != "")
 {
 	switch($myliststatic->elementtab) {
@@ -147,29 +148,29 @@ if (!empty($myliststatic->elementtab) && $idreftab != "")
 }
 
 // on positionne les champs à filter avant un group by ou un order by
-if (strpos(strtoupper($sql), 'GROUP BY') > 0)
+if (strrpos(strtoupper($sql), 'ORDER BY') > 0)
 {
 	// on découpe le sql
-	$sqlleft=substr($sql,0,strpos(strtoupper($sql), 'GROUP BY')-1);
-	$sqlright=substr($sql,strpos(strtoupper($sql), 'GROUP BY'));
+	$sqlleft=substr($sql,0,strrpos(strtoupper($sql), 'ORDER BY')-1);
+	$sqlright=substr($sql,strrpos(strtoupper($sql), 'ORDER BY'));
 	$sql=$sqlleft." ".$sqlfilter." ".$sqlright;
 }
-elseif (strpos(strtoupper($sql), 'ORDER BY') > 0)
+elseif (strrpos(strtoupper($sql), 'GROUP BY') > 0)
 {
 	// on découpe le sql
-	$sqlleft=substr($sql,0,strpos(strtoupper($sql), 'ORDER BY')-1);
-	$sqlright=substr($sql,strpos(strtoupper($sql), 'ORDER BY'));
+	$sqlleft=substr($sql,0,strrpos(strtoupper($sql), 'GROUP BY')-1);
+	$sqlright=substr($sql,strrpos(strtoupper($sql), 'GROUP BY'));
 	$sql=$sqlleft." ".$sqlfilter." ".$sqlright;
 }
 else
 	$sql.= $sqlfilter;
 
 // if we don't allready have a group by
-if (strpos(strtoupper($sql), 'GROUP BY') == 0)
+if (strrpos(strtoupper($sql), 'GROUP BY') == 0)
 	$sql.= $myliststatic->GetGroupBy($ArrayTable);
 
 // Si il y a un order by prédéfini dans la requete on désactive le tri
-if (strpos(strtoupper($myliststatic->querylist), 'ORDER BY') == 0) 
+if (strrpos(strtoupper($myliststatic->querylist), 'ORDER BY') == 0) 
 	$sql.= ' ORDER BY '.$sortfield.' '.$sortorder;
 
 
@@ -210,7 +211,7 @@ if (GETPOST('export')!="")
 			foreach ($ArrayTable as $key => $fields) 
 			{
 
-				if ((strpos($fields['field'], '.rowid') > 0 || strpos($fields['field'], '.id') > 0)  && $fields['param'])
+				if ((strpos($fields['field'], '.rowid') > 0 || strpos($fields['field'], '.id') > 0 || strpos($fields['field'], '_rowid') > 0)  && $fields['param'])
 				{
 					// pour les clés qui sont lié à un autre élément
 					$tblelement=explode(":",$fields['param']);
@@ -226,7 +227,11 @@ if (GETPOST('export')!="")
 						$objectstatic = new $tblelement[0]($db);
 						$objectstatic->id=$objp->$fieldsname;
 						$objectstatic->fetch($objp->$fieldsname);
-						$url=$objectstatic->getNomUrl(0);
+                        if (strpos($fields['field'], '_rowid') > 0) {
+						    $url=$objectstatic->getNomUrl('vin');
+                        } else {
+                            $url=$objectstatic->getNomUrl();
+                        }
 						print html_entity_decode (substr( $url, strpos($url,">")+1,-4),   ENT_COMPAT | ENT_HTML401, "ISO-8859-1");
 
 					}
@@ -335,6 +340,7 @@ if (!empty($myliststatic->elementtab) && $idreftab != "")
 
 			print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
 			print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+            print '<input type="hidden" name="id" value="'.$idreftab.'">';
 			print '<table class="border" width="100%">';
 			print '<tr><td width="20%">'.$langs->trans('ThirdPartyName').'</td>';
 			print '<td colspan="3">';
@@ -377,6 +383,7 @@ if (!empty($myliststatic->elementtab) && $idreftab != "")
 			
 			print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
 			print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+            print '<input type="hidden" name="id" value="'.$idreftab.'">';
 			print '<table class="border" width="100%">';
 
 			print '<tr>';
@@ -476,7 +483,6 @@ $form = new Form($db);
 $formother = new FormOther($db);
 $formfile = new FormFile($db);
 
-
 $now=dol_now();
 
 
@@ -514,7 +520,7 @@ if ($result)
 	
 	// génération dynamique du param
 
-	$param.="&rowid=".$rowid;
+	$param.="&rowid=".$rowid."&id=".$idreftab;
 	
 	if ( empty($conf->global->MAIN_USE_JQUERY_DATATABLES))
 	{
@@ -529,7 +535,10 @@ if ($result)
 	// Lignes des champs de filtre
 	print '<form method="post" action="'.$_SERVER["PHP_SELF"].'">';
 	print '<input type="hidden" name="rowid" value="'.$rowid.'">';
-
+    print '<input type="hidden" name="id" value="'.$idreftab.'">';
+    
+    
+    
 	// champs filtrés, champ personnalisés et case à cocher
 	if (! empty($conf->global->MAIN_USE_JQUERY_DATATABLES))
 	{
@@ -607,10 +616,10 @@ if ($result)
 	if (! empty($conf->global->MAIN_USE_JQUERY_DATATABLES))
 	{
 		// en mode datatable si un filtre est appliqué 
-		if ($sqlfilter !="")
+		//if ($sqlfilter !="")
 			$limit=$num;				// on affiche tous les enregistrements
-		else
-			$limit=min($num,$limit * 4);	// sinon on affiche soit le nombre, soit (4 pages par défaut )
+		//else
+		//	$limit=min($num,$limit * 400);	// sinon on affiche soit le nombre, soit (4 pages par défaut )
 	}
 	else
 	{
@@ -628,7 +637,7 @@ if ($result)
 		{
 			if (!empty($conf->global->MAIN_USE_JQUERY_DATATABLES) || $fields['visible']=='1')
 			{
-				if ((strpos($fields['field'], '.rowid') > 0 || strpos($fields['field'], '.id') > 0)  && $fields['param'])
+				if ((strpos($fields['field'], '.rowid') > 0 || strpos($fields['field'], '.id') > 0 || strpos($fields['field'], '_rowid') > 0)  && $fields['param'])
 				{
 					// pour les clés qui sont lié à un autre élément
 					print '<td nowrap="nowrap" align="'.$fields['align'].'">';
@@ -645,18 +654,23 @@ if ($result)
 						$objectstatic = new $tblelement[0]($db);
 						$objectstatic->id=$objp->$fieldsname;
 						$objectstatic->fetch($objp->$fieldsname);
-						print $objectstatic->getNomUrl(1);
+						if (strpos($fields['field'], '_rowid') > 0) {
+    					    $url=$objectstatic->getNomUrl('vin');
+                        } else {
+                            $url=$objectstatic->getNomUrl(0);
+                        }
+                        print $url;
 					}
 					print '</td>';
 				}
-				elseif (strpos($fields['field'], 'fk_') > 0 && $fields['param']) 
+				elseif (strrpos($fields['field'], 'fk_') !== FALSE && $fields['param']) 
 				{
 					print '<td nowrap="nowrap" align="'.$fields['align'].'">';
-					$tblelement=explode(":",$fields['param']);
+                    $tblelement=explode(":",$fields['param']);
 					if ($tblelement[1]!="")
 						require_once DOL_DOCUMENT_ROOT.$tblelement[1];
 					// cas à part des status
-					if (strpos($fields['field'], 'fk_statut') > 0 )
+					if (strrpos($fields['field'], 'fk_statut') !== FALSE )
 					{
 						$objectstatic = new $tblelement[0]($db);
 						if ($fields['alias']!="")
@@ -668,7 +682,24 @@ if ($result)
 						$objectstatic->fk_statut=$objp->$fieldsname;
 						if ($objp->f_paye == 1)
 							$objectstatic->paye=1;
-						print $objectstatic->getLibStatut(5);
+                        print $objectstatic->getLibStatut();
+					}
+                    elseif (strrpos($fields['field'], 'flag_') !== FALSE )
+    				{
+						$objectstatic = new $tblelement[0]($db);
+    					if ($fields['alias']!="")
+							$fieldsname=$fields['alias'];
+						else
+							$fieldsname=str_replace(array('.', '-'),"_",$fields['field']);
+						$objectstatic->statut=$objp->$fieldsname;
+						// for compatibility case
+						$objectstatic->fk_statut=$objp->$fieldsname;
+						if ($objp->f_paye == 1)
+							$objectstatic->paye=1;
+                        if(is_numeric($objp->$fieldsname)) 
+                        {
+                        print $objectstatic->LibStatut($objp->$fieldsname,1);
+                        }
 					}
 					else
 					{
@@ -680,12 +711,14 @@ if ($result)
 							print $objectstatic->getNomUrl(1);
 						}
 						else
-							print $myliststatic->get_infolist($objp->$fieldsname,$fields['param']);
+							
+                            print $myliststatic->get_infolist($objp->$fieldsname,$fields['param']);
 					}
 					print '</td>';
 				}
 				else
 				{
+                    
 					print $myliststatic->genDefaultTD ($fields['field'], $fields, $objp);
 				}
 			}
@@ -803,4 +836,3 @@ if (!empty($conf->global->MAIN_USE_JQUERY_DATATABLES))
 
 	print $myliststatic->genHideFields($ArrayTable);
 }
-?>
