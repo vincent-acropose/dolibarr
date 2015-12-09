@@ -311,6 +311,7 @@ class pdf_crabe extends ModelePDFFactures
 					$this->posxtva -= $progress_width;
 					$this->posxup -= $progress_width;
 					$this->posxqty -= $progress_width;
+					$this->posxdiscount = 156;
 					$this->posxdiscount -= $progress_width;
 					$this->posxprogress -= $progress_width;
 				}
@@ -518,7 +519,9 @@ class pdf_crabe extends ModelePDFFactures
 					// Discount on line
 					if ($object->lines[$i]->remise_percent)
 					{
-                        $pdf->SetXY($this->posxdiscount-2, $curY);
+						$num = 1;
+						if($this->situationinvoice) $num = 8;
+                        $pdf->SetXY($this->posxdiscount-$num, $curY);
 					    $remise_percent = pdf_getlineremisepercent($object, $i, $outputlangs, $hidedetails);
 						$pdf->MultiCell($this->posxprogress-$this->posxdiscount+2, 3, $remise_percent, 0, 'R');
 					}
@@ -1376,12 +1379,27 @@ class pdf_crabe extends ModelePDFFactures
 		$pdf->line($this->posxdiscount-1, $tab_top, $this->posxdiscount-1, $tab_top + $tab_height);
 		if (empty($hidetop))
 		{
-			if ($this->atleastonediscount)
+			if($this->situationinvoice)
+			{
+				$pdf->SetXY($this->posxdiscount-10, $tab_top+1);
+				$pdf->MultiCell($this->postotalht-$this->posxdiscount+1,2, $outputlangs->transnoentities("ReductionShort"),'','C');
+			}
+			else if ($this->atleastonediscount)
 			{
 				$pdf->SetXY($this->posxdiscount-1, $tab_top+1);
 				$pdf->MultiCell($this->postotalht-$this->posxdiscount+1,2, $outputlangs->transnoentities("ReductionShort"),'','C');
 			}
 		}
+		
+		if($this->situationinvoice) {
+			$pdf->line($this->posxprogress - 5, $tab_top, $this->posxprogress - 5, $tab_top + $tab_height);
+			if (empty($hidetop)) {
+				$pdf->SetXY($this->posxprogress - 30, $tab_top + 1);
+				$pdf->MultiCell($this->posxdiscount - $this->posxprogress - 1, 2, $outputlangs->transnoentities("Progress"), '',
+					'C');
+			}
+		}
+		
 		if ($this->atleastonediscount)
 		{
 			$pdf->line($this->postotalht, $tab_top, $this->postotalht, $tab_top + $tab_height);
