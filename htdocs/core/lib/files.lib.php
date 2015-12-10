@@ -1102,7 +1102,6 @@ function dol_add_file_process($upload_dir, $allowoverwrite=0, $donotupdatesessio
 						setEventMessage($langs->trans($resupload), 'errors');
 					}
 				}
-				var_dump($i);
 			}
 			
 		}
