@@ -148,6 +148,7 @@ if (empty($user->societe_id))
 	    ! empty($conf->societe->enabled) && $user->rights->societe->lire && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS_STATS),
 	    ! empty($conf->societe->enabled) && $user->rights->societe->lire && empty($conf->global->SOCIETE_DISABLE_PROSPECTS_STATS),
 	    ! empty($conf->fournisseur->enabled) && $user->rights->fournisseur->lire && empty($conf->global->SOCIETE_DISABLE_SUPPLIERS_STATS),
+	    ! empty($conf->societe->enabled) && $user->rights->societe->lire && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS_STATS),
 	    ! empty($conf->adherent->enabled) && $user->rights->adherent->lire,
 	    ! empty($conf->product->enabled) && $user->rights->produit->lire,
 	    ! empty($conf->service->enabled) && $user->rights->service->lire,
@@ -159,6 +160,7 @@ if (empty($user->societe_id))
 	    $includes=array(DOL_DOCUMENT_ROOT."/societe/class/client.class.php",
 	    DOL_DOCUMENT_ROOT."/comm/prospect/class/prospect.class.php",
 	    DOL_DOCUMENT_ROOT."/fourn/class/fournisseur.class.php",
+	    DOL_DOCUMENT_ROOT."/contact/class/contact.class.php",
 	    DOL_DOCUMENT_ROOT."/adherents/class/adherent.class.php",
 	    DOL_DOCUMENT_ROOT."/product/class/product.class.php",
 	    DOL_DOCUMENT_ROOT."/product/class/service.class.php",
@@ -170,6 +172,7 @@ if (empty($user->societe_id))
 	    $classes=array('Client',
 	                   'Prospect',
 	                   'Fournisseur',
+	                   'Contact',
 	                   'Adherent',
 	                   'Product',
 	                   'Service',
@@ -181,6 +184,7 @@ if (empty($user->societe_id))
 	    $keys=array('customers',
 	                'prospects',
 	                'suppliers',
+	                'contacts',
 	                'members',
 	                'products',
 	                'services',
@@ -192,6 +196,7 @@ if (empty($user->societe_id))
 	    $icons=array('company',
 	                 'company',
 	                 'company',
+	                 'contact',
 	                 'user',
 	                 'product',
 	                 'service',
@@ -203,6 +208,7 @@ if (empty($user->societe_id))
 	    $titres=array("ThirdPartyCustomersStats",
 	                  "ThirdPartyProspectsStats",
 	                  "Suppliers",
+	                  "Contacts",
 	                  "Members",
 	                  "Products",
 	                  "Services",
@@ -214,6 +220,7 @@ if (empty($user->societe_id))
 	    $links=array(DOL_URL_ROOT.'/comm/list.php',
 	    DOL_URL_ROOT.'/comm/prospect/list.php',
 	    DOL_URL_ROOT.'/fourn/liste.php',
+	    DOL_URL_ROOT.'/contact/list.php',
 	    DOL_URL_ROOT.'/adherents/liste.php?statut=1&mainmenu=members',
 	    DOL_URL_ROOT.'/product/liste.php?type=0&mainmenu=products',
 	    DOL_URL_ROOT.'/product/liste.php?type=1&mainmenu=products',
@@ -225,6 +232,7 @@ if (empty($user->societe_id))
 	    $langfile=array("companies",
 	                    "prospects",
 	                    "suppliers",
+	                    "contacts",
 	                    "members",
 	                    "products",
 	                    "produts",
@@ -240,6 +248,7 @@ if (empty($user->societe_id))
 	        if ($conditions[$key])
 	        {
 	            $classe=$classes[$key];
+				
 	            // Search in cache if load_state_board is already realized
 	            if (! isset($boardloaded[$classe]) || ! is_object($boardloaded[$classe]))
 	            {
