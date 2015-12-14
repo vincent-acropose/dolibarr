@@ -1192,6 +1192,40 @@ class Contact extends CommonObject
 			return 1;
 		}
 	}
+	
+    /**
+     *  Load indicators into this->nb for board
+     *
+     *  @return     int         <0 if KO, >0 if OK
+     */
+    function load_state_board()
+    {
+        global $conf, $user;
+
+        $this->nb=array("contacts" => 0);
+        $clause = "WHERE";
+
+        $sql = "SELECT count(s.rowid) as nb";
+        $sql.= " FROM ".MAIN_DB_PREFIX."socpeople as s";
+
+        $resql=$this->db->query($sql);
+        if ($resql)
+        {
+            while ($obj=$this->db->fetch_object($resql))
+            {
+                $this->nb["contacts"]+=$obj->nb;
+            }
+            $this->db->free($resql);
+            return 1;
+        }
+        else
+        {
+            dol_print_error($this->db);
+            $this->error=$this->db->error();
+            return -1;
+        }
+
+    }
 
 	/**
 	 * Sets object to supplied categories.
