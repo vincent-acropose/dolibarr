@@ -2340,7 +2340,7 @@ class Societe extends CommonObject
     function check_codeclient()
     {
         global $conf;
-        if (! empty($conf->global->SOCIETE_CODECLIENT_ADDON))
+        /*if (! empty($conf->global->SOCIETE_CODECLIENT_ADDON))
         {
         	$module=$conf->global->SOCIETE_CODECLIENT_ADDON;
 
@@ -2359,8 +2359,8 @@ class Societe extends CommonObject
         }
         else
 		{
-            return 0;
-        }
+            return 1;
+        }*/
     }
 
     /**
