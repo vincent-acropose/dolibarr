@@ -222,6 +222,7 @@ class FormMail
         $langs->load("other");
         $langs->load("mails");
 		
+		if (empty($outputlangs)) $outputlangs = $langs;
 		$outputlangs->load("other");
 
         $hookmanager->initHooks(array('formmail'));
