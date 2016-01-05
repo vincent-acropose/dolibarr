@@ -1357,7 +1357,7 @@ if ($action == 'send' && ! GETPOST('addfile') && ! GETPOST('removedfile') && ! G
 			
 			$receivercc = $_POST['receivercc'];
 			$sendtocc = ($receivercc!=='') ? $receivercc : $_POST['sendtocc'];
-			
+			if($sendtocc=='-1')$sendtocc='';
 			$deliveryreceipt = GETPOST('deliveryreceipt');
 
 			if ($action == 'send')
