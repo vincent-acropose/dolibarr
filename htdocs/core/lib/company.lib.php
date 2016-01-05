@@ -938,9 +938,9 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
         if (get_class($object) == 'Adherent') $sql.= ", m.lastname, m.firstname";
         if (get_class($object) == 'Societe')  $sql.= ", sp.lastname, sp.firstname";
         $sql.= " FROM ".MAIN_DB_PREFIX."user as u, ".MAIN_DB_PREFIX."actioncomm as a";
-        if (get_class($object) == 'Adherent') $sql.= ", ".MAIN_DB_PREFIX."adherent as m";
+        $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_actioncomm as c ON a.fk_action = c.id";
         if (get_class($object) == 'Societe')  $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople as sp ON a.fk_contact = sp.rowid";
-        $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_actioncomm as c ON a.fk_action = c.id ";
+        if (get_class($object) == 'Adherent') $sql.= ", ".MAIN_DB_PREFIX."adherent as m";
         $sql.= " WHERE u.rowid = a.fk_user_author";
         $sql.= " AND a.entity IN (".getEntity('agenda', 1).")";
         if (get_class($object) == 'Adherent') {
@@ -1204,7 +1204,7 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
 		{
             $out.='<a href="'.DOL_URL_ROOT.'/comm/action/fiche.php?action=create';
             if (get_class($object) == 'Societe') $out.='&amp;socid='.$object->id;
-            $out.=(! empty($objcon->id)?'&amp;contactid='.$objcon->id:'').'&amp;backtopage=1&amp;percentage=-1">';
+            $out.=(! empty($objcon->id)?'&amp;contactid='.$objcon->id:'').'&amp;backtopage=1&amp;percentage=100">';
     		$out.=$langs->trans("AddAnAction").' ';
     		$out.=img_picto($langs->trans("AddAnAction"),'filenew');
     		$out.="</a>";

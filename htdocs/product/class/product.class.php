@@ -806,7 +806,7 @@ class Product extends CommonObject
 			}
 
 			// Delete all child tables
-			$elements = array('product_fournisseur_price','product_price','product_lang','categorie_product','product_stock');
+			$elements = array('product_fournisseur_price','product_price','product_lang','categorie_product','product_stock','product_customer_price');
 			foreach($elements as $table)
 			{
 				if (! $error)
@@ -2891,7 +2891,7 @@ class Product extends CommonObject
 	{
 		global $langs;
 		$langs->load('products');
-		if ($conf->productbatch->enabled) $langs->load("productbatch");
+		if (! empty($conf->productbatch->enabled)) $langs->load("productbatch");
 
 		if ($type == 2)
 		{
@@ -3022,7 +3022,7 @@ class Product extends CommonObject
 		$sql = "SELECT ps.reel, ps.fk_entrepot, ps.pmp, ps.rowid";
 		$sql.= " FROM ".MAIN_DB_PREFIX."product_stock as ps";
 		$sql.= ", ".MAIN_DB_PREFIX."entrepot as w";
-		$sql.= " WHERE w.entity IN (".getEntity('warehouse', 1).")";
+		$sql.= " WHERE w.entity IN (".getEntity('stock', 1).")";
 		$sql.= " AND w.rowid = ps.fk_entrepot";
 		$sql.= " AND ps.fk_product = ".$this->id;
 
