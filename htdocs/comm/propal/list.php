@@ -47,6 +47,7 @@ $langs->load('compta');
 $langs->load('bills');
 $langs->load('orders');
 $langs->load('products');
+$langs->load('cliceribois@cliceribois');
 
 $socid=GETPOST('socid','int');
 
