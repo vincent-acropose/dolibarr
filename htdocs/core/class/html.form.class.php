@@ -2609,6 +2609,8 @@ class Form
 
         dol_syslog(__METHOD__." selected=".$selected.", htmlname=".$htmlname, LOG_DEBUG);
 
+		$selected = ($selected) ? $selected : 2 ;
+
         $this->load_cache_conditions_paiements();
 
         print '<select class="flat" name="'.$htmlname.'">';
@@ -2648,6 +2650,8 @@ class Form
         global $langs,$user;
 
         dol_syslog(__METHOD__." ".$selected.", ".$htmlname.", ".$filtertype.", ".$format, LOG_DEBUG);
+
+		$selected = ($selected) ? $selected : 2 ;
 
         $filterarray=array();
         if ($filtertype == 'CRDT')  	$filterarray=array(0,2,3);
