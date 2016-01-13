@@ -42,7 +42,13 @@ function check_user_password_ldap($usertotest,$passwordtotest,$entitytotest)
 	global $dolibarr_main_auth_ldap_admin_login,$dolibarr_main_auth_ldap_admin_pass;
 	global $dolibarr_main_auth_ldap_filter;
 	global $dolibarr_main_auth_ldap_debug;
-
+	
+	
+	$usertemp = new User($db);
+	$usertemp->fetch($usertotest);
+	
+	if(empty($usertemp->ldap_sid)) return '';
+	
 	// Force master entity in transversal mode
 	$entity=$entitytotest;
 	if (! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode)) $entity=1;
@@ -170,25 +176,35 @@ function check_user_password_ldap($usertotest,$passwordtotest,$entitytotest)
 
 						// On recherche le user dolibarr en fonction de son SID ldap
 						$sid = $ldap->getObjectSid($login);
-						if ($ldapdebug) print "DEBUG: sid = ".$sid."<br>\n";
-
-						$usertmp=new User($db);
-						$resultFetchUser=$usertmp->fetch('',$login,$sid);
-						if ($resultFetchUser > 0)
-						{
-							dol_syslog("functions_ldap::check_user_password_ldap Sync user found user id=".$usertmp->id);
-							// On verifie si le login a change et on met a jour les attributs dolibarr
-
-							if ($usertmp->login != $ldap->login && $ldap->login)
-							{
-								$usertmp->login = $ldap->login;
-								$usertmp->update($usertmp);
-								// TODO Que faire si update echoue car on update avec un login deja existant.
-							}
-
-							//$resultUpdate = $usertmp->update_ldap2dolibarr($ldap);
+						if(empty($sid)){
+							$result = 1;
+							dol_syslog("functions_ldap::check_user_password_ldap Authentification ko bad user/password for '".$usertotest."'");
+							sleep(1);
+							$langs->load('main');
+							$langs->load('other');
+							$_SESSION["dol_loginmesg"]=$langs->trans("ErrorBadLoginPassword");
 						}
-						unset($usertmp);
+						else{
+							if ($ldapdebug) print "DEBUG: sid = ".$sid."<br>\n";
+
+							$usertmp=new User($db);
+							$resultFetchUser=$usertmp->fetch('',$login,$sid);
+							if ($resultFetchUser > 0)
+							{
+								dol_syslog("functions_ldap::check_user_password_ldap Sync user found user id=".$usertmp->id);
+								// On verifie si le login a change et on met a jour les attributs dolibarr
+	
+								if ($usertmp->login != $ldap->login && $ldap->login)
+								{
+									$usertmp->login = $ldap->login;
+									$usertmp->update($usertmp);
+									// TODO Que faire si update echoue car on update avec un login deja existant.
+								}
+	
+								//$resultUpdate = $usertmp->update_ldap2dolibarr($ldap);
+							}
+							unset($usertmp);
+						}
 				}
 
 				if (! empty($conf->multicompany->enabled))	// We must check entity (even if sync is not active)
