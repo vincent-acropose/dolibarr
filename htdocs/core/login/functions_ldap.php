@@ -45,7 +45,7 @@ function check_user_password_ldap($usertotest,$passwordtotest,$entitytotest)
 	
 	
 	$usertemp = new User($db);
-	$usertemp->fetch($usertotest);
+	$usertemp->fetch('',$usertotest);
 	
 	if(empty($usertemp->ldap_sid)) return '';
 	
