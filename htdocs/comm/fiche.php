@@ -840,7 +840,7 @@ if ($id > 0)
 				print '</td>';
 				print '<td class="nowrap">';
 				$sessstatic=new Agsession($db);
-				$sessstatic->fetch($objp->fk_soc_OPCA);
+				$sessstatic->fetch($objp->sessid);
 				print $sessstatic->getNomUrl(1);
 				print '</td>';
 				print '<td class="nowrap">';
