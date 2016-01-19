@@ -2,6 +2,46 @@
 English Dolibarr ChangeLog
 --------------------------------------------------------------
 
+***** ChangeLog for 3.5.7 compared to 3.5.6 *****
+Fix: Paypal link were broken due to SSL v3 closed.
+Fix: [ bug #1769 ] Error when installing to a PostgreSQL DB that contains numbers
+Fix: [ bug #1752 ] Date filter of margins module, filters since 12H instead of 00H
+Fix: [ bug #1757 ] Sorting breaks product/service statistics
+Fix: [ bug #1797 ] Tulip supplier invoice module takes creation date instead of invoice date
+Fix: [ bug #1792 ] Users are not allowed to see margins module index page when no product view permission is enabled
+Fix: [ bug #1846 ] Browser IE11 not detected
+Fix: [ bug #1906 ] Deplacement does not allow translated decimal format
+Fix: [ bug #1905 ] Custom deplacement types do not get translated in deplacement card
+Fix: [ bug #2583 ] Unable to create a bank transfer with localized numbers
+Fix: [ bug #2577 ] Incorrect invoice status in "Linked objects" page of a project
+Fix: [ bug #2576 ] Unable to edit a dictionary entry that has # in its ref
+Fix: [ bug #2758 ] Product::update sets product note to "null" when $prod->note is null
+Fix: [ bug #2757 ] Deleting product category photo gives "Forbidden access" error
+Fix: [ bug #2976 ] "Report" tab is the current tab but it is not marked as selected by the UI
+Fix: [ bug #2861 ] Undefined variable $res when migrating
+Fix: [ bug #2837 ] Product list table column header does not match column body
+Fix: [ bug #2835 ] Customer prices of a product shows incorrect history order
+Fix: [ bug #2814 ] JPEG photos are not displayed in Product photos page
+Fix: [ bug #2715 ] Statistics page has broken layout with long thirdparty names
+Fix: [ bug #2570 ] [Contacts] Page should not process if ID is invalid
+Fix: [ bug #3268 ] SQL error when accessing thirdparty log page without a socid parameter
+Fix: [ bug #3180 ] formObjectOptions hook when editing thirdparty card does not print result
+Fix: [ bug #1791 ] Margin menu not available if any Finance module is not enabled
+Fix: [ bug #3310 ] OrderLine::fetch, FactureLigne::fetch and PropaleLigne::fetch do not return anything
+Fix: [ bug #3206 ] PropaleLigne, OrderLine and FactureLigne given to triggers through update function does not contain all the information
+Fix: [ bug #3313 ] Error enabling module with PostgreSQL database
+
+***** ChangeLog for 3.5.6 compared to 3.5.5 *****
+Fix: Avoid missing class error for fetch_thirdparty method #1973
+Fix: Can't update phone_pro from web service
+Fix: Some security holes.
+Fix: copy extrafields when creating order from proposal.
+Fix: report on action was not filtering by environment.
+Fix: Avoid missing class error.
+Fix: Add function dolEscapeXML.
+Fix: Bad days and month reported by function.
+Fix: Bad margin calculation.
+
 ***** ChangeLog for 3.5.5 compared to 3.5.4 *****
 Fix: Holiday module was broken. Initializaion of amount of holidays failed.
 Fix: [ bug #1523 ] suite bug #1334 : filtre et ordre de tri conjoints ne s'appliquent pas.
@@ -21,7 +61,16 @@ Fix: When disabled, all fields to add time into task line must be disabled.
 Fix: Missing include files.lib.php in some pages to use dol_delete_recursive.
 Fix: [ bug #1558 ] Product/service edit page title shows new Ref instead of old ref.
 Fix: [ bug #1553 ] Saving User displays setup removes menu.
-Fix: [ bug #1544 ] Can remove date from invoice
+Fix: [ bug #1544 ] Can remove date from invoice.
+Fix: list event view lost type event filter.
+Fix: Add code save on create event.
+Fix: SQL injection.
+Fix: [ bug #1589 ] Menu type in "Edit menu" page is not translated
+Fix: [ bug #1591 ] Linked object block shows Total HT/TTC even if not having permission to read them
+Fix: [ bug #1577 ] When creating new Private individual third, selected third type is ignored
+Fix: [ bug #1555 ] Update accountancy code of products does not throw PRODUCT_MODIFY trigger
+Fix: [ bug #1548 ] Supplier payment card shows type in French
+Fix: [ bug #1546 ] Incorrect page number when searching in the list of bank transactions
 
 ***** ChangeLog for 3.5.4 compared to 3.5.3 *****
 Fix: Hide title of event when agenda module disabled.
