@@ -220,7 +220,8 @@ class Export
 
 			if ($i > 0) $sql.=', ';
 			else $i++;
-
+			
+			$key = str_replace('\\', '', $key);
 			if (strpos($key, ' as ')===false) {
 				$newfield=$key.' as '.str_replace(array('.', '-'),'_',$key);
 			} else {
@@ -244,6 +245,11 @@ class Export
 		}
 		$sql.=$this->array_export_sql_order[$indice];
 
+		if (strpos($sql, 'GROUP_CONCAT')!==false)
+		{
+			$sql .= ' GROUP BY s.rowid'; // Que le module Societe qui utilise un GROUP_CONCAT donc je filtre directement sur son ID
+		}
+		
 		return $sql;
 	}
 
