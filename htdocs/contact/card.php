@@ -597,9 +597,9 @@ else
 
 
             // Add personnal information
-            print_fiche_titre('<div class="comboperso">'.$langs->trans("PersonalInformations").'</div>','','');
+            print_fiche_titre('<div class="comboperso" style="display:none">'.$langs->trans("PersonalInformations").'</div>','','');
 
-            print '<table class="border" width="100%">';
+            print '<table class="border" width="100%" style="display:none">';
 
             // Date To Birth
             print '<tr><td width="20%"><label for="birthday">'.$langs->trans("DateToBirth").'</label></td><td width="30%">';

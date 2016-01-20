@@ -1082,7 +1082,7 @@ else
         {
             // Assign a Name
             print '<tr>';
-            print '<td><label for="commercial_id">Contact Solystic</label></td>';
+            print '<td><label for="commercial_id">'.$langs->trans("AllocateCommercial").'</label></td>';
             print '<td colspan="3" class="maxwidthonsmartphone">';
             $form->select_users((! empty($object->commercial_id)?$object->commercial_id:$user->id),'commercial_id',1); // Add current user by default
             print '</td></tr>';
