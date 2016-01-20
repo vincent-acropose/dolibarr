@@ -849,7 +849,7 @@ else
 
         // Prospect/Customer
         print '<tr><td width="25%"><span class="fieldrequired"><label for="customerprospect">'.$langs->trans('ProspectCustomer').'</label></span></td>';
-	    print '<td width="25%" class="maxwidthonsmartphone"><select class="flat" name="client" id="customerprospect">';
+	    print '<td colspan="3" class="maxwidthonsmartphone" ><select class="flat" name="client" id="customerprospect">';
         $selected=isset($_POST['client'])?GETPOST('client'):$object->client;
         if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS)) print '<option value="2"'.($selected==2?' selected="selected"':'').'>'.$langs->trans('Prospect').'</option>';
         if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) print '<option value="3"'.($selected==3?' selected="selected"':'').'>'.$langs->trans('ProspectCustomer').'</option>';
@@ -857,7 +857,7 @@ else
         print '<option value="0"'.($selected==0?' selected="selected"':'').'>'.$langs->trans('NorProspectNorCustomer').'</option>';
         print '</select></td>';
 
-        print '<td width="25%"><label for="customer_code">'.$langs->trans('CustomerCode').'</label></td><td width="25%">';
+        print '<td width="25%" style="display:none;"><label for="customer_code">'.$langs->trans('CustomerCode').'</label></td><td width="25%" style="display:none;">';
         print '<table class="nobordernopadding"><tr><td>';
         $tmpcode=$object->code_client;
         if (empty($tmpcode) && ! empty($modCodeClient->code_auto)) $tmpcode=$modCodeClient->getNextValue($object,0);
@@ -887,8 +887,14 @@ else
             print '</td></tr>';
         }
 
+		// Type 
+		print '<tr><td><label for="typent_id">'.$langs->trans("ThirdPartyType").'</label></td><td colspan="3">'."\n";
+        print $form->selectarray("typent_id", $formcompany->typent_array(0), $object->typent_id, 0, 0, 0, '', 0, 0, 0, (empty($conf->global->SOCIETE_SORT_ON_TYPEENT)?'ASC':$conf->global->SOCIETE_SORT_ON_TYPEENT));
+        if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
+        print '</td></tr>';
+
         // Status
-        print '<tr><td><label for="status">'.$langs->trans('Status').'</label></td><td colspan="3">';
+        print '<tr style="display:none;"><td><label for="status">'.$langs->trans('Status').'</label></td><td colspan="3">';
         print $form->selectarray('status', array('0'=>$langs->trans('ActivityCeased'),'1'=>$langs->trans('InActivity')),1);
         print '</td></tr>';
 
@@ -943,11 +949,12 @@ else
 
         // Phone / Fax
         print '<tr><td><label for="phone">'.$langs->trans('Phone').'</label></td>';
-	    print '<td><input type="text" name="phone" id="phone" value="'.$object->phone.'"></td>';
+	    print '<td width="25%"><input type="text" name="phone" id="phone" value="'.$object->phone.'"></td>';
         print '<td><label for="fax">'.$langs->trans('Fax').'</label></td>';
 	    print '<td><input type="text" name="fax" id="fax" value="'.$object->fax.'"></td></tr>';
 
         // Prof ids
+        
         $i=1; $j=0;
         while ($i <= 6)
         {
@@ -956,7 +963,7 @@ else
             {
 	            $key='idprof'.$i;
 
-                if (($j % 2) == 0) print '<tr>';
+                if (($j % 2) == 0) print '<tr style="display:none;">';
 
                 $idprof_mandatory ='SOCIETE_IDPROF'.($i).'_MANDATORY';
                	if(empty($conf->global->$idprof_mandatory))
@@ -974,7 +981,7 @@ else
         if ($j % 2 == 1) print '<td colspan="2"></td></tr>';
 
         // Assujeti TVA
-        print '<tr><td><label for="assujtva_value">'.$langs->trans('VATIsUsed').'</label></td>';
+        print '<tr style="display:none;"><td><label for="assujtva_value">'.$langs->trans('VATIsUsed').'</label></td>';
         print '<td>';
         print $form->selectyesno('assujtva_value',1,1);     // Assujeti par defaut en creation
         print '</td>';
@@ -1008,17 +1015,14 @@ else
         print '</tr>';
 
         // Type - Size
-        print '<tr><td><label for="typent_id">'.$langs->trans("ThirdPartyType").'</label></td><td>'."\n";
-        print $form->selectarray("typent_id", $formcompany->typent_array(0), $object->typent_id, 0, 0, 0, '', 0, 0, 0, (empty($conf->global->SOCIETE_SORT_ON_TYPEENT)?'ASC':$conf->global->SOCIETE_SORT_ON_TYPEENT));
-        if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
-        print '</td>';
-        print '<td><label for="effectif_id">'.$langs->trans("Staff").'</label></td><td>';
+
+        print '<tr style="display:none;"><td><label for="effectif_id">'.$langs->trans("Staff").'</label></td><td>';
         print $form->selectarray("effectif_id", $formcompany->effectif_array(0), $object->effectif_id);
         if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
         print '</td></tr>';
 
         // Legal Form
-        print '<tr><td><label for="legal_form">'.$langs->trans('JuridicalStatus').'</label></td>';
+        print '<tr style="display:none;"><td><label for="legal_form">'.$langs->trans('JuridicalStatus').'</label></td>';
         print '<td colspan="3" class="maxwidthonsmartphone">';
         if ($object->country_id)
         {
@@ -1031,7 +1035,7 @@ else
         print '</td></tr>';
 
         // Capital
-        print '<tr><td><label for="capital">'.$langs->trans('Capital').'</label></td>';
+        print '<tr style="display:none;"><td><label for="capital">'.$langs->trans('Capital').'</label></td>';
 	    print '<td colspan="3"><input type="text" name="capital" id="capital" size="10" value="'.$object->capital.'"> ';
         print '<span class="hideonsmartphone">'.$langs->trans("Currency".$conf->currency).'</span></td></tr>';
 
@@ -1078,7 +1082,7 @@ else
         {
             // Assign a Name
             print '<tr>';
-            print '<td><label for="commercial_id">'.$langs->trans("AllocateCommercial").'</label></td>';
+            print '<td><label for="commercial_id">Contact Solystic</label></td>';
             print '<td colspan="3" class="maxwidthonsmartphone">';
             $form->select_users((! empty($object->commercial_id)?$object->commercial_id:$user->id),'commercial_id',1); // Add current user by default
             print '</td></tr>';
