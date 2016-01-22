@@ -349,7 +349,7 @@ class Societe extends CommonObject
             // On ne verifie le code client que si la societe est un client / prospect et que le code est modifiable
             // Si il n'est pas modifiable il n'est pas mis a jour lors de l'update
             $rescode = $this->check_codeclient();
-            if ($rescode <> 0)
+            if ($rescode < -1)
             {
                 if ($rescode == -1)
                 {
