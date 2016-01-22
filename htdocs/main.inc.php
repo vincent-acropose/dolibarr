@@ -68,6 +68,52 @@ if (function_exists('get_magic_quotes_gpc'))	// magic_quotes_* removed in PHP6
     }
 }
 
+function get_entity_user($username) {
+	
+	global $db, $conf;
+	
+	if(empty($username)) return 0;
+	
+	dol_include_once('/user/class/user.class.php');
+	dol_include_once('/usergroup/class/user.class.php');
+	
+	$u = new User($db);
+	$u->fetch('', $username);
+	
+	$TGroupEntities_conf = unserialize($conf->global->MULTICOMPANY_USER_GROUP_ENTITY);
+	$TGroupEntities = array();
+	if(!empty($TGroupEntities_conf)) {
+		foreach ($TGroupEntities_conf as $TData) $TGroupEntities[$TData['group_id']][] = $TData['entity_id'];
+	}
+	$TGroupEntities = array_keys($TGroupEntities);
+	//var_dump(array_keys($TGroupEntities));exit;
+	if($u->id > 0) {
+		
+		// On récupère la première entité du 1er groupe dans lequel se trouve l'utilisateur
+		$sql = 'SELECT fk_usergroup, entity FROM '.MAIN_DB_PREFIX.'usergroup_user WHERE fk_user = '.$u->id.' ORDER BY entity';
+		$resql = $db->query($sql);
+		$res = $db->fetch_object($resql);
+		$entity = $res->entity;
+		
+		// Ici on cherche le premier groupe appartenant à la conf financement pour connecter l'utilisateur dans la bonne entité.
+		// S'il n'y en a pas, on le conencte dans la première entité trouv"e au dessus"
+		if(!empty($TGroupEntities)) {
+			if(!in_array($entity, $TGroupEntities)) {
+				while ($res = $db->fetch_object($resql)) {
+					if(in_array($res->fk_usergroup, $TGroupEntities)) {
+						$entity = $res->entity;
+						break;
+					}
+				}
+			}
+		}
+		
+		if($entity > 0) return $entity;
+		
+	}
+	
+}
+
 /**
  * Security: SQL Injection and XSS Injection (scripts) protection (Filters on GET, POST, PHP_SELF).
  *
@@ -425,7 +471,13 @@ if (! defined('NOLOGIN'))
         $usertotest		= (! empty($_COOKIE['login_dolibarr']) ? $_COOKIE['login_dolibarr'] : GETPOST("username","alpha",2));
         $passwordtotest	= (! empty($_COOKIE['password_dolibarr']) ? $_COOKIE['password_dolibarr'] : GETPOST('password'));
         $entitytotest	= (GETPOST('entity','int') ? GETPOST('entity','int') : (!empty($conf->entity) ? $conf->entity : 1));
-
+		
+		$ent_id = get_entity_user(GETPOST('username'));
+		if(!empty($ent_id)) {
+			$conf->entity = $ent_id;
+			$entitytotest = $ent_id;
+		}
+		
         // Validation of login/pass/entity
         // If ok, the variable login will be returned
         // If error, we will put error message in session under the name dol_loginmesg
