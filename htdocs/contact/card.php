@@ -546,11 +546,11 @@ else
             // EMail
             if (($objsoc->typent_code == 'TE_PRIVATE' || ! empty($conf->global->CONTACT_USE_COMPANY_ADDRESS)) && dol_strlen(trim($object->email)) == 0) $object->email = $objsoc->email;	// Predefined with third party
             print '<tr><td><label for="email">'.$langs->trans("Email").'</label></td>';
-	        print '<td><input name="email" id="email" type="text" size="50" maxlength="80" value="'.(GETPOST("email",'alpha')?GETPOST("email",'alpha'):$object->email).'"></td>';
+	        print '<td colspan=3><input name="email" id="email" type="text" size="50" maxlength="80" value="'.(GETPOST("email",'alpha')?GETPOST("email",'alpha'):$object->email).'"></td>';
             if (! empty($conf->mailing->enabled))
             {
-            	print '<td><label for="no_email">'.$langs->trans("No_Email").'</label></td>';
-	            print '<td>'.$form->selectyesno('no_email',(GETPOST("no_email",'alpha')?GETPOST("no_email",'alpha'):$object->no_email), 1).'</td>';
+            	print '<td style="display:none;"><label for="no_email">'.$langs->trans("No_Email").'</label></td>';
+	            print '<td style="display:none;">'.$form->selectyesno('no_email','1', 1).'</td>';
             }
             else
 			      {
@@ -636,7 +636,6 @@ else
                 print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'">';
             }
             print '</center>';
-
             print "</form>";
         }
         elseif ($action == 'edit' && ! empty($id))
@@ -782,7 +781,7 @@ else
             if (! empty($conf->mailing->enabled))
             {
             	print '<td><label for="no_email">'.$langs->trans("No_Email").'</label></td>';
-	            print '<td>'.$form->selectyesno('no_email',(isset($_POST["no_email"])?$_POST["no_email"]:$object->no_email), 1).'</td>';
+	            print '<td>'.$form->selectyesno('no_email','1', 1).'</td>';
             }
             else
 			{
@@ -1008,7 +1007,7 @@ else
         print '<tr><td>'.$langs->trans("IM").'</td><td>'.$object->jabberid.'</td>';
         if (!empty($conf->mailing->enabled))
         {
-        	print '<td>'.$langs->trans("No_Email").'</td><td>'.yn($object->no_email).'</td>';
+        	print '<td>'.$langs->trans("No_Email").'</td><td>'.yn($object->no_emai1l).'</td>';
         }
         else
        {
