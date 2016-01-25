@@ -1007,7 +1007,7 @@ else
         print '<tr><td>'.$langs->trans("IM").'</td><td>'.$object->jabberid.'</td>';
         if (!empty($conf->mailing->enabled))
         {
-        	print '<td>'.$langs->trans("No_Email").'</td><td>'.yn($object->no_emai1l).'</td>';
+        	print '<td>'.$langs->trans("No_Email").'</td><td>'.yn($object->no_email).'</td>';
         }
         else
        {
