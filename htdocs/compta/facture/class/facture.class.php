@@ -865,7 +865,9 @@ class Facture extends CommonInvoice
 	function fetch($rowid, $ref='', $ref_ext='', $ref_int='')
 	{
 		global $conf;
-
+		
+		dol_include_once('/financement/lib/financement.lib.php');
+		
 		if (empty($rowid) && empty($ref) && empty($ref_ext) && empty($ref_int)) return -1;
 
 		$sql = 'SELECT f.rowid,f.facnumber,f.ref_client,f.ref_ext,f.ref_int,f.type,f.fk_soc,f.amount,f.tva, f.localtax1, f.localtax2, f.total, f.total_ttc, f.revenuestamp';
