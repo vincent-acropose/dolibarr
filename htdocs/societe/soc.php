@@ -894,7 +894,7 @@ else
         print '</td></tr>';
 
         // Status
-        print '<tr style="display:none;"><td><label for="status">'.$langs->trans('Status').'</label></td><td colspan="3">';
+        print '<tr><td><label for="status">'.$langs->trans('Status').'</label></td><td colspan="3">';
         print $form->selectarray('status', array('0'=>$langs->trans('ActivityCeased'),'1'=>$langs->trans('InActivity')),1);
         print '</td></tr>';
 
@@ -1319,13 +1319,13 @@ else
 
             // Prospect/Customer
             print '<tr><td width="25%"><span class="fieldrequired"><label for="customerprospect">'.$langs->trans('ProspectCustomer').'</label></span></td>';
-	        print '<td width="25%"><select class="flat" name="client" id="customerprospect">';
+	        print '<td  colspan=3><select class="flat" name="client" id="customerprospect">';
             if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS)) print '<option value="2"'.($object->client==2?' selected="selected"':'').'>'.$langs->trans('Prospect').'</option>';
             if (empty($conf->global->SOCIETE_DISABLE_PROSPECTS) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) print '<option value="3"'.($object->client==3?' selected="selected"':'').'>'.$langs->trans('ProspectCustomer').'</option>';
             if (empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) print '<option value="1"'.($object->client==1?' selected="selected"':'').'>'.$langs->trans('Customer').'</option>';
             print '<option value="0"'.($object->client==0?' selected="selected"':'').'>'.$langs->trans('NorProspectNorCustomer').'</option>';
             print '</select></td>';
-            print '<td width="25%"><label for="customer_code">'.$langs->trans('CustomerCode').'</label></td><td width="25%">';
+            print '<td style="display: none;" width="25%"><label for="customer_code">'.$langs->trans('CustomerCode').'</label></td><td style="display: none;" width="25%">';
 
             print '<table class="nobordernopadding"><tr><td>';
             if ((!$object->code_client || $object->code_client == -1) && $modCodeClient->code_auto)
@@ -1385,6 +1385,14 @@ else
                 print '</td></tr>';
             }
 
+
+			// Type 
+			print '<tr><td><label for="typent_id">'.$langs->trans("ThirdPartyType").'</label></td><td colspan="3">'."\n";
+	        print $form->selectarray("typent_id", $formcompany->typent_array(0), $object->typent_id, 0, 0, 0, '', 0, 0, 0, (empty($conf->global->SOCIETE_SORT_ON_TYPEENT)?'ASC':$conf->global->SOCIETE_SORT_ON_TYPEENT));
+	        if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
+	        print '</td></tr>';
+			
+			
             // Barcode
             if (! empty($conf->barcode->enabled))
             {
@@ -1453,7 +1461,7 @@ else
                 {
 	                $key='idprof'.$i;
 
-	                if (($j % 2) == 0) print '<tr>';
+	                if (($j % 2) == 0) print '<tr style="display: none;">';
 
 	                $idprof_mandatory ='SOCIETE_IDPROF'.($i).'_MANDATORY';
 	                if(empty($conf->global->$idprof_mandatory))
@@ -1471,7 +1479,7 @@ else
             if ($j % 2 == 1) print '<td colspan="2"></td></tr>';
 
             // VAT payers
-            print '<tr><td><label for="assjtva_value">'.$langs->trans('VATIsUsed').'</label></td><td>';
+            print '<tr style="display: none;"><td><label for="assjtva_value">'.$langs->trans('VATIsUsed').'</label></td><td>';
             print $form->selectyesno('assujtva_value',$object->tva_assuj,1);
             print '</td>';
 
@@ -1556,21 +1564,17 @@ else
             }
 
             // Type - Size
-            print '<tr><td><label for="typent_id">'.$langs->trans("ThirdPartyType").'</label></td><td>';
-            print $form->selectarray("typent_id",$formcompany->typent_array(0), $object->typent_id, 0, 0, 0, '', 0, 0, 0, (empty($conf->global->SOCIETE_SORT_ON_TYPEENT)?'ASC':$conf->global->SOCIETE_SORT_ON_TYPEENT));
-            if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
-            print '</td>';
-            print '<td><label for="effectif_id">'.$langs->trans("Staff").'</label></td><td>';
+            print '<tr style="display:none;"><td><label for="effectif_id">'.$langs->trans("Staff").'</label></td><td>';
             print $form->selectarray("effectif_id",$formcompany->effectif_array(0), $object->effectif_id);
             if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
             print '</td></tr>';
 
-            print '<tr><td><label for="legal_form">'.$langs->trans('JuridicalStatus').'</label></td><td colspan="3">';
+            print '<tr style="display:none;"><td><label for="legal_form">'.$langs->trans('JuridicalStatus').'</label></td><td colspan="3">';
             print $formcompany->select_juridicalstatus($object->forme_juridique_code,$object->country_code);
             print '</td></tr>';
 
             // Capital
-            print '<tr><td><label for="capital">'.$langs->trans("Capital").'</label></td>';
+            print '<tr style="display:none;"><td><label for="capital">'.$langs->trans("Capital").'</label></td>';
 	        print '<td colspan="3"><input type="text" name="capital" id="capital" size="10" value="'.$object->capital.'"><font class="hideonsmartphone">'.$langs->trans("Currency".$conf->currency).'</font></td></tr>';
 
             // Default language
@@ -1704,7 +1708,7 @@ else
         // Customer code
         if ($object->client)
         {
-            print '<tr><td>';
+            print '<tr style="display:none;"><td>';
             print $langs->trans('CustomerCode').'</td><td colspan="'.(2+(($showlogo || $showbarcode)?0:1)).'">';
             print $object->code_client;
             if ($object->check_codeclient() <> 0) print ' <font class="error">('.$langs->trans("WrongCustomerCode").')</font>';
@@ -1734,6 +1738,11 @@ else
             print $htmllogobar; $htmllogobar='';
             print '</tr>';
         }
+		
+		// Type + Staff
+        $arr = $formcompany->typent_array(1);
+        $object->typent= $arr[$object->typent_code];
+        print '<tr><td>'.$langs->trans("ThirdPartyType").'</td><td>'.$object->typent.'</td></tr>';
 
         // Status
         print '<tr><td>'.$langs->trans("Status").'</td>';
@@ -1801,7 +1810,7 @@ else
             $idprof=$langs->transcountry('ProfId'.$i,$object->country_code);
             if ($idprof!='-')
             {
-                if (($j % 2) == 0) print '<tr>';
+                if (($j % 2) == 0) print '<tr style="display:none;">';
                 print '<td>'.$idprof.'</td><td>';
                 $key='idprof'.$i;
                 print $object->$key;
@@ -1819,7 +1828,7 @@ else
         if ($j % 2 == 1)  print '<td colspan="2"></td></tr>';
 
         // VAT payers
-        print '<tr><td>';
+        print '<tr style="display:none;"><td>';
         print $langs->trans('VATIsUsed');
         print '</td><td>';
         print yn($object->tva_assuj);
@@ -1960,16 +1969,13 @@ else
             print '</td><tr>';
         }
 */
-        // Type + Staff
-        $arr = $formcompany->typent_array(1);
-        $object->typent= $arr[$object->typent_code];
-        print '<tr><td>'.$langs->trans("ThirdPartyType").'</td><td>'.$object->typent.'</td><td>'.$langs->trans("Staff").'</td><td>'.$object->effectif.'</td></tr>';
+        //<td style="display:none;">'.$langs->trans("Staff").'</td><td style="display:none;">'.$object->effectif.'</td></tr>';
 
         // Legal
-        print '<tr><td>'.$langs->trans('JuridicalStatus').'</td><td colspan="3">'.$object->forme_juridique.'</td></tr>';
+        print '<tr style="display:none;"><td>'.$langs->trans('JuridicalStatus').'</td><td colspan="3">'.$object->forme_juridique.'</td></tr>';
 
         // Capital
-        print '<tr><td>'.$langs->trans('Capital').'</td><td colspan="3">';
+        print '<tr style="display:none;"><td>'.$langs->trans('Capital').'</td><td colspan="3">';
         if ($object->capital) print price($object->capital,'',$langs,0,-1,-1, $conf->currency);
         else print '&nbsp;';
         print '</td></tr>';
@@ -2254,6 +2260,8 @@ else
 
 }
 
+$TTypent=$formcompany->typent_array();
+//var_dump($TTypent);
 
 // End of page
 llxFooter();

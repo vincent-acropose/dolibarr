@@ -41,6 +41,7 @@ $result = restrictedArea($user,'societe',$socid,'');
 $sortfield = GETPOST('sortfield','alpha');
 $sortorder = GETPOST('sortorder','alpha');
 $page=GETPOST('page','int');
+$origin=GETPOST("origin");
 if ($page == -1) { $page = 0 ; }
 $offset = $conf->liste_limit * $page;
 $pageprev = $page - 1;
@@ -106,13 +107,21 @@ llxHeader('',$langs->trans("ThirdParty"),$help_url);
 $sql = "SELECT s.rowid, s.nom as name, s.client, s.zip, s.town, st.libelle as stcomm, s.prefix_comm, s.code_client, s.code_compta, s.status as status,";
 $sql.= " s.datec, s.canvas";
 if ((!$user->rights->societe->client->voir && !$socid) || $search_sale) $sql .= ", sc.fk_soc, sc.fk_user"; // We need these fields in order to filter by sale (including the case where the user can only see his prospects)
-$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
+if (!empty($origin)){
+	$sql.= ", ty.libelle FROM ".MAIN_DB_PREFIX."c_typent ty ";
+	$sql.="INNER JOIN ".MAIN_DB_PREFIX."societe s ";
+	$sql.="ON ty.id=s.fk_typent";
+}
+else{
+	$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
+}
 if (! empty($search_categ) || ! empty($catid)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_societe as cs ON s.rowid = cs.fk_societe"; // We need this table joined to the select in order to filter by categ
 if ((!$user->rights->societe->client->voir && !$socid) || $search_sale) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc"; // We need this table joined to the select in order to filter by sale
 $sql.= ", ".MAIN_DB_PREFIX."c_stcomm as st";
 $sql.= " WHERE s.fk_stcomm = st.id";
 $sql.= " AND s.client IN (1, 3)";
 $sql.= ' AND s.entity IN ('.getEntity('societe', 1).')';
+if (!empty($origin)) $sql.=" AND ty.libelle='".$origin."'";
 if ((!$user->rights->societe->client->voir && !$socid) || $search_sale) $sql.= " AND s.rowid = sc.fk_soc";
 if ($socid) $sql.= " AND s.rowid = ".$socid;
 if ($search_sale) $sql.= " AND s.rowid = sc.fk_soc";		// Join for the needed table to filter by sale
@@ -137,7 +146,6 @@ if ($search_sale)
 {
 	$sql .= " AND sc.fk_user = ".$search_sale;
 }
-
 // Count total nb of records
 $nbtotalofrecords = 0;
 if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST))
@@ -252,7 +260,6 @@ if ($result)
 	while ($i < min($num,$conf->liste_limit))
 	{
 		$obj = $db->fetch_object($result);
-
 		$var=!$var;
 
 		print "<tr ".$bc[$var].">";
