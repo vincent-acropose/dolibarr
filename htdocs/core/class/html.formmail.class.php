@@ -262,14 +262,27 @@ class FormMail
 				$outputlangs->load('other');
 			}
 
-        	// Get message template
+			/*
+			 * BACKPORTING 3.8 
+			 */
+			// Get message template
+			$model_id=0;
+        	if (array_key_exists('models_id',$this->param))
+        	{
+        		$model_id=$this->param["models_id"];
+        	}
+			$arraydefaultmessage=$this->getEMailTemplate($this->db, $this->param["models"], $user, $outputlangs, $model_id);
+			/* 3.7 VERSION
+			 * // Get message template
         	$arraydefaultmessage=$this->getEMailTemplate($this->db, $this->param["models"], $user, $outputlangs);
+			 *
+			 */
 
 
         	$out.= "\n<!-- Debut form mail -->\n";
         	if ($this->withform == 1)
         	{
-        		$out.= '<form method="POST" name="mailform" enctype="multipart/form-data" action="'.$this->param["returnurl"].'">'."\n";
+        		$out.= '<form method="POST" name="mailform" enctype="multipart/form-data" action="'.$this->param["returnurl"].'#formmail">'."\n";
 				$out.= '<input style="display:none" type="submit" id="sendmail" name="sendmail">';
         		$out.= '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'" />';
         	}
@@ -277,6 +290,34 @@ class FormMail
         	{
         		$out.= '<input type="hidden" id="'.$key.'" name="'.$key.'" value="'.$value.'" />'."\n";
         	}
+			
+			/*
+			 * BACKPORTING 3.8
+			 */
+			$result = $this->fetchAllEMailTemplate($this->param["models"], $user, $outputlangs);
+        	if ($result<0)
+        	{
+        		setEventMessage($this->error,'errors');
+        	}
+        	$modelmail_array=array();
+        	foreach($this->lines_model as $line)
+        	{
+        		$modelmail_array[$line->id]=$line->label;
+        	}
+			
+        	// Zone to select its email template
+        	if (count($modelmail_array)>0)
+        	{
+	        	$out.= '<div style="padding: 3px 0 3px 0">'."\n";
+	        	$out.= $langs->trans('SelectMailModel').': '.$form->selectarray('modelmailselected', $modelmail_array, 0, 1);
+	        	if ($user->admin) $out.= info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
+	        	$out.= ' &nbsp; ';
+	        	$out.= '<input class="button" type="submit" value="'.$langs->trans('Valid').'" name="modelselected" id="modelselected">';
+	        	$out.= ' &nbsp; ';
+	        	$out.= '</div>';
+        	}
+			/**/
+			
         	$out.= '<table class="border" width="100%">'."\n";
 
         	// Substitution array
@@ -527,7 +568,8 @@ class FormMail
         		}
         		else
         		{
-        			$out.= '<input type="text" size="60" id="subject" name="subject" value="'. (isset($_POST["subject"])?$_POST["subject"]:($defaulttopic?$defaulttopic:'')) .'" />';
+        			//$out.= '<input type="text" size="60" id="subject" name="subject" value="'. (isset($_POST["subject"])?$_POST["subject"]:($defaulttopic?$defaulttopic:'')) .'" />'; // 3.7 VERSION
+        			$out.= '<input type="text" size="60" id="subject" name="subject" value="'. ((isset($_POST["subject"]) && ! $_POST['modelselected'])?$_POST["subject"]:($defaulttopic?$defaulttopic:'')) .'" />'; //BACKPORTING 3.8
         		}
         		$out.= "</td></tr>\n";
         	}
@@ -570,7 +612,8 @@ class FormMail
 	        		}
 	        		if ($this->withfile == 2)	// Can add other files
 	        		{
-	        			$out.= '<input type="file" class="flat" id="addedfile" name="addedfile" value="'.$langs->trans("Upload").'" />';
+	        			if (!empty($conf->global->FROM_MAIL_USE_INPUT_FILE_MULTIPLE)) $out.= '<input type="file" class="flat" id="addedfile" name="addedfile[]" value="'.$langs->trans("Upload").'" multiple />';
+						else $out.= '<input type="file" class="flat" id="addedfile" name="addedfile" value="'.$langs->trans("Upload").'" />';
 	        			$out.= ' ';
 	        			$out.= '<input type="submit" class="button" id="'.$addfileaction.'" name="'.$addfileaction.'" value="'.$langs->trans("MailingAddFile").'" />';
 	        		}
@@ -618,7 +661,8 @@ class FormMail
 				}
 
 
-        		if (isset($_POST["message"])) $defaultmessage=$_POST["message"];
+        		//if (isset($_POST["message"])) $defaultmessage=$_POST["message"]; //3.7 VERSION
+				if (isset($_POST["message"]) &&  ! $_POST['modelselected']) $defaultmessage=$_POST["message"]; //BACKPORTING 3.8
 				else
 				{
 					$defaultmessage=make_substitutions($defaultmessage,$this->substit);
@@ -690,9 +734,10 @@ class FormMail
 	 * 		@param	string		$type_template	Get message for key module
 	 *      @param	string		$user			Use template public or limited to this user
 	 *      @param	Translate	$outputlangs	Output lang object
+	 * 		@param	int			$id				Id template to find //BACKPORTING 3.8
 	 *      @return array						array('topic'=>,'content'=>,..)
 	 */
-	private function getEMailTemplate($db, $type_template, $user, $outputlangs)
+	private function getEMailTemplate($db, $type_template, $user, $outputlangs,$id=0)
 	{
 		$ret=array();
 
@@ -702,6 +747,7 @@ class FormMail
 		$sql.= " AND entity IN (".getEntity("c_email_templates").")";
 		$sql.= " AND (fk_user is NULL or fk_user = 0 or fk_user = ".$user->id.")";
 		if (is_object($outputlangs)) $sql.= " AND (lang = '".$outputlangs->defaultlang."' OR lang IS NULL OR lang = '')";
+		if (!empty($id)) $sql.= " AND rowid=".$id; //BACKPORTING
 		$sql.= $db->order("lang,label","ASC");
 		//print $sql;
 
@@ -745,5 +791,63 @@ class FormMail
 			return -1;
 		}
 	}
+	
+	/** BACKPORTING 3.8
+	 *      Find if template exists
+	 *      Search into table c_email_templates
+	 *
+	 * 		@param	string		$type_template	Get message for key module
+	 *      @param	string		$user			Use template public or limited to this user
+	 *      @param	Translate	$outputlangs	Output lang object
+	 *      @return	int		<0 if KO,
+	 */
+	public function fetchAllEMailTemplate($type_template, $user, $outputlangs)
+	{
+		$ret=array();
+
+		$sql = "SELECT rowid, label, topic, content, lang";
+		$sql.= " FROM ".MAIN_DB_PREFIX.'c_email_templates';
+		$sql.= " WHERE type_template='".$this->db->escape($type_template)."'";
+		$sql.= " AND entity IN (".getEntity("c_email_templates").")";
+		$sql.= " AND (fk_user is NULL or fk_user = 0 or fk_user = ".$user->id.")";
+		if (is_object($outputlangs)) $sql.= " AND (lang = '".$outputlangs->defaultlang."' OR lang IS NULL OR lang = '')";
+		$sql.= $this->db->order("lang,label","ASC");
+		//print $sql;
+
+		$resql = $this->db->query($sql);
+		if ($resql)
+		{
+			$num=$this->db->num_rows($resql);
+			$this->lines_model=array();
+			while ($obj = $this->db->fetch_object($resql))
+			{
+				$line = new ModelMail();
+				$line->id=$obj->rowid;
+				$line->label=$obj->label;
+				$line->topic=$obj->topic;
+				$line->content=$obj->lacontentbel;
+				$line->lang=$obj->lang;
+				$this->lines_model[]=$line;
+			}
+			$this->db->free($resql);
+			return $num;
+		}
+		else
+		{
+			$this->error=get_class($this).' '.__METHOD__.' ERROR:'.$this->db->lasterror();
+			return -1;
+		}
+	}
 }
 
+/** BACKPORTING 3.8
+ * ModelMail
+ */
+class ModelMail
+{
+	public $id;
+	public $label;
+	public $topic;
+	public $content;
+	public $lang;
+}
