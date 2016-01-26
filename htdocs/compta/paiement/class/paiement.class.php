@@ -530,6 +530,18 @@ class Paiement extends CommonObject
                     }
                 }
 
+                // Add link 'WithdrawalPayment' in bank_url
+                if (! $error && $label == '(WithdrawalPayment)')
+                {
+					$result=$acc->add_url_line(
+						$bank_line_id,
+						$this->id_prelevement,
+						DOL_URL_ROOT.'/compta/prelevement/fiche.php?id=',
+						$this->num_paiement,
+						'withdraw'
+					);
+				}
+
 	            if (! $error && ! $notrigger)
 				{
 					// Appel des triggers
