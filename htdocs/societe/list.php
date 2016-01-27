@@ -43,6 +43,7 @@ $search_nom_only=trim(GETPOST("search_nom_only"));
 $search_all=trim(GETPOST("search_all"));
 $sbarcode=trim(GETPOST("sbarcode"));
 $search_town=trim(GETPOST("search_town"));
+$search_zip=trim(GETPOST("search_zip"));
 $socname=trim(GETPOST("socname"));
 $search_idprof1=trim(GETPOST('search_idprof1'));
 $search_idprof2=trim(GETPOST('search_idprof2'));
@@ -168,6 +169,7 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
 	$search_nom="";
 	$sbarcode="";
 	$search_town="";
+	$search_zip="";
 	$search_idprof1='';
 	$search_idprof2='';
 	$search_idprof3='';
@@ -197,6 +199,7 @@ if ($socname)
 $title=$langs->trans("ListOfThirdParties");
 
 $sql = "SELECT s.rowid, s.nom as name, s.barcode, s.town, s.datec, s.code_client, s.code_fournisseur, ";
+$sql .= " s.zip, ";
 $sql.= " st.libelle as stcomm, s.prefix_comm, s.client, s.fournisseur, s.canvas, s.status as status,";
 $sql.= " s.siren as idprof1, s.siret as idprof2, ape as idprof3, idprof4 as idprof4";
 // We'll need these fields in order to filter by sale (including the case where the user can only see his prospects)
@@ -228,6 +231,7 @@ if ($search_nom_only) $sql.= natural_search("s.nom",$search_nom_only);
 if ($search_all)      $sql.= natural_search(array("s.nom", "s.name_alias", "s.code_client", "s.code_fournisseur", "s.email", "s.url","s.siren","s.siret","s.ape","s.idprof4","s.idprof5","s.idprof6"), $search_all);
 if ($search_nom)      $sql.= natural_search(array("s.nom", "s.name_alias", "s.code_client", "s.code_fournisseur", "s.email", "s.url","s.siren","s.siret","s.ape","s.idprof4","s.idprof5","s.idprof6"), $search_nom);
 if ($search_town)     $sql .= " AND s.town LIKE '%".$db->escape($search_town)."%'";
+if ($search_zip)     $sql .= " AND s.zip LIKE '%".$db->escape($search_zip)."%'";
 if ($search_idprof1)  $sql .= " AND s.siren LIKE '%".$db->escape($search_idprof1)."%'";
 if ($search_idprof2)  $sql .= " AND s.siret LIKE '%".$db->escape($search_idprof2)."%'";
 if ($search_idprof3)  $sql .= " AND s.ape LIKE '%".$db->escape($search_idprof3)."%'";
@@ -333,6 +337,7 @@ if ($resql)
     print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","",$params,"",$sortfield,$sortorder);
     if (! empty($conf->barcode->enabled)) print_liste_field_titre($langs->trans("BarCode"), $_SERVER["PHP_SELF"], "s.barcode",$param,'','',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Zip"),$_SERVER["PHP_SELF"],"s.zip","",$params,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Town"),$_SERVER["PHP_SELF"],"s.town","",$params,'',$sortfield,$sortorder);
 	print_liste_field_titre($form->textwithpicto($langs->trans("ProfId1Short"),$textprofid[1],1,0),$_SERVER["PHP_SELF"],"s.siren","",$params,'class="nowrap"',$sortfield,$sortorder);
 	print_liste_field_titre($form->textwithpicto($langs->trans("ProfId2Short"),$textprofid[2],1,0),$_SERVER["PHP_SELF"],"s.siret","",$params,'class="nowrap"',$sortfield,$sortorder);
@@ -361,6 +366,10 @@ if ($resql)
 		print '<input class="flat" type="text" name="sbarcode" size="6" value="'.htmlspecialchars($sbarcode).'">';
 		print '</td>';
     }
+    // Zip
+    print '<td class="liste_titre">';
+    print '<input class="flat" size="6" type="text" name="search_zip" value="'.htmlspecialchars($search_zip).'">';
+    print '</td>';
 	// Town
 	print '<td class="liste_titre">';
 	print '<input class="flat" size="10" type="text" name="search_town" value="'.htmlspecialchars($search_town).'">';
@@ -431,6 +440,7 @@ if ($resql)
 		{
 			print '<td>'.$objp->barcode.'</td>';
 		}
+		print "<td>".$obj->zip."</td>\n";
 		print "<td>".$obj->town."</td>\n";
 		print "<td>".$obj->idprof1."</td>\n";
 		print "<td>".$obj->idprof2."</td>\n";
