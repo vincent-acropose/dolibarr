@@ -699,6 +699,11 @@ else if ($action == 'confirm_valid' && $confirm == 'yes' && $user->rights->contr
     $result = $object->validate($user);
 }
 
+else if ($action == 'reopen' && $user->rights->contrat->creer)
+{
+    $result = $object->reopen($user);
+}
+
 // Close all lines
 else if ($action == 'confirm_close' && $confirm == 'yes' && $user->rights->contrat->creer)
 {
@@ -1843,7 +1848,12 @@ else
                 if ($user->rights->contrat->creer) print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=valid">'.$langs->trans("Validate").'</a></div>';
                 else print '<div class="inline-block divButAction"><a class="butActionRefused" href="#" title="'.$langs->trans("NotEnoughPermissions").'">'.$langs->trans("Validate").'</a></div>';
             }
-
+            if ($object->statut == 1 && $nbofservices)
+            {
+                if ($user->rights->contrat->creer) print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=reopen">'.$langs->trans("Modify").'</a></div>';
+                else print '<div class="inline-block divButAction"><a class="butActionRefused" href="#" title="'.$langs->trans("NotEnoughPermissions").'">'.$langs->trans("Modify").'</a></div>';
+            }
+            
             if (! empty($conf->facture->enabled) && $object->statut > 0 && $object->nbofservicesclosed < $nbofservices)
             {
                 $langs->load("bills");
@@ -1903,6 +1913,12 @@ else
 
         print '</div><div class="fichehalfright"><div class="ficheaddleft">';
 
+		// List of actions on element
+		include_once DOL_DOCUMENT_ROOT . '/core/class/html.formactions.class.php';
+		$formactions = new FormActions($db);
+		$somethingshown = $formactions->showactions($object, 'contract', $socid);
+        
+        
         print '</div></div></div>';
     }
 }
