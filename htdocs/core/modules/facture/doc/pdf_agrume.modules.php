@@ -449,7 +449,7 @@ class pdf_agrume extends ModelePDFFactures
 					$bottomlasttab=$this->page_hauteur - $heightforinfotot  + 1;
 					
 					// Affiche zone infos
-					$posy=$this->_tableau_info($pdf, $object, $bottomlasttab, $outputlangs);
+					$posy=$this->_tableau_info($pdf, $object, $bottomlasttab-25, $outputlangs);
 					
 					// Affiche zone totaux
 					foreach ($object->lines as $line)
@@ -467,11 +467,12 @@ class pdf_agrume extends ModelePDFFactures
 						$this->tva[$vatrate] += $tvaligne;
 					}
 
-					$posy=$this->_tableau_tot_situation($pdf, $object, $deja_regle, $bottomlasttab, $outputlangs);
+					//$posy=$this->_tableau_tot_situation($pdf, $object, $deja_regle, $bottomlasttab, $outputlangs);
+					$posy=$this->_tableau_tot_situation($pdf, $object, $deja_regle, $bottomlasttab-25, $outputlangs);
 					$this->tva = array();
 					
 					// Pied de page
-					$this->_pagefoot($pdf,$object,$outputlangs,1);
+					$this->_pagefoot($pdf,$object,$outputlangs);
 					if (method_exists($pdf,'AliasNbPages')) $pdf->AliasNbPages();
 			
 					// Page break
