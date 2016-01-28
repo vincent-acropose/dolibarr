@@ -101,7 +101,7 @@ $coldisplay=-1; // We remove first td
 		$doleditor=new DolEditor('product_desc',$line->description,'',164,$toolbarname,'',false,true,$enable,$nbrows,'98%');
 		$doleditor->Create();
 	} else {
-		print '<textarea id="desc" class="flat" name="desc" readonly style="width: 200px; height:80px;">' . $line->description . '</textarea>';
+		print '<textarea id="desc" class="flat" name="desc" style="width: 200px; height:80px;">' . $line->description . '</textarea>';
 	}
 	?>
 	</td>
