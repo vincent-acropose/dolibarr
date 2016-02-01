@@ -762,12 +762,12 @@ else
 
             // EMail
             print '<tr><td><label for="email">'.$langs->trans("EMail").'</label></td>';
-	        print '<td><input name="email" id="email" type="text" size="40" maxlength="80" value="'.(isset($_POST["email"])?$_POST["email"]:$object->email).'"></td>';
+	        print '<td colspan=3><input name="email" id="email" type="text" size="40" maxlength="80" value="'.(isset($_POST["email"])?$_POST["email"]:$object->email).'"></td>';
             if (! empty($conf->mailing->enabled))
             {
                 $langs->load("mails");
-                print '<td class="nowrap">'.$langs->trans("NbOfEMailingsSend").'</td>';
-                print '<td>'.$object->getNbOfEMailings().'</td>';
+                print '<td class="nowrap" style="display:none">'.$langs->trans("NbOfEMailingsSend").'</td>';
+                print '<td style="display:none">'.$object->getNbOfEMailings().'</td>';
             }
             else
 			{
@@ -777,11 +777,11 @@ else
 
             // Jabberid
             print '<tr><td><label for="jabberid">'.$langs->trans("IM").'</label></td>';
-	        print '<td><input name="jabberid" id="jabberid" type="text" size="40" maxlength="80" value="'.(isset($_POST["jabberid"])?$_POST["jabberid"]:$object->jabberid).'"></td>';
+	        print '<td colspan=3><input name="jabberid" id="jabberid" type="text" size="40" maxlength="80" value="'.(isset($_POST["jabberid"])?$_POST["jabberid"]:$object->jabberid).'"></td>';
             if (! empty($conf->mailing->enabled))
             {
-            	print '<td><label for="no_email">'.$langs->trans("No_Email").'</label></td>';
-	            print '<td>'.$form->selectyesno('no_email','1', 1).'</td>';
+            	print '<td style="display:none"><label for="no_email">'.$langs->trans("No_Email").'</label></td>';
+	            print '<td style="display:none">'.$form->selectyesno('no_email','1', 1).'</td>';
             }
             else
 			{

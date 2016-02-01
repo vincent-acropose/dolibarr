@@ -473,6 +473,8 @@ class Form
         return $this->textwithtooltip($text, $htmltext, 2, $direction, $img, $extracss, $notabs, '', $noencodehtmltext);
     }
 
+
+	
     /**
      *  Return combo list of activated countries, into language of user
      *
