@@ -61,7 +61,8 @@ $search_categ=GETPOST("search_categ",'int');
 $search_status=GETPOST("search_status",'int');
 if ($search_status=='') $search_status=1; // always display activ customer first
 $search_country_id=GETPOST('search_country_id', 'int');
-
+$search_typent_id=GETPOST('search_typent_id', 'int');
+var_dump($search_typent_id);
 $type=GETPOST("type");
 $view=GETPOST("view");
 
@@ -148,7 +149,10 @@ if (! empty($search_categ)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_conta
 if (!$user->rights->societe->client->voir && !$socid) $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON s.rowid = sc.fk_soc";
 $sql.= ' WHERE p.entity IN ('.getEntity('societe', 1).')';
 if ((!$user->rights->societe->contact->lire && !$socid) || $search_sale) $sql.= " AND p.rowid = ssr.fk_socpeople";
-
+// Filter on typent
+if(!empty($search_typent_id)){
+	$sql.= "AND s.fk_typent=".$search_typent_id;
+}
 if (!$user->rights->societe->client->voir && !$socid) //restriction
 {
 	$sql .= " AND (sc.fk_user = " .$user->id." OR p.fk_soc IS NULL)";
@@ -277,7 +281,6 @@ else
     $sql.= " ORDER BY $sortfield $sortorder ";
 	$sql.= " ".$db->plimit($conf->liste_limit+1, $offset);
 }
-
 //print $sql;
 dol_syslog("contact/list.php", LOG_DEBUG);
 
@@ -320,6 +323,8 @@ if ($result)
 		
 		$moreforfilter.=$langs->trans('Country'). ': ';
 		$moreforfilter.=$form->select_country(($search_country_id!=''?$search_country_id:''), 'search_country_id');
+		$moreforfilter.=$langs->trans('Typent'). ': ';
+		$moreforfilter.=$form->select_typent(($search_typent_id!=''?$search_typent_id:''), 'search_typent_id');
  	}
     if ($moreforfilter)
     {

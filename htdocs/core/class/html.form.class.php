@@ -473,7 +473,69 @@ class Form
         return $this->textwithtooltip($text, $htmltext, 2, $direction, $img, $extracss, $notabs, '', $noencodehtmltext);
     }
 
+	/**
+     *  Return combo list of activated typent, into language of user
+     *
+     *  @param	string	$selected       Id or Code or Label of preselected typent
+     *  @param  string	$htmlname       Name of html select object
+     *  @param  string	$htmloption     Options html on select object
+     *  @param	string	$maxlength		Max length for labels (0=no limit)
+     *  @return string           		HTML string with select
+     */
+	function select_typent($selected='', $htmlname='typent', $htmloption='', $maxlength=0){
+		global $conf,$langs;
+		
+		$out='';
+		$TTypent=array();
+		
+		$sql = "SELECT id, code as code, libelle as libelle ";
+        $sql.= " FROM ".MAIN_DB_PREFIX."c_typent";
+        $sql.= " WHERE active = 1";
+		$resql=$this->db->query($sql);
+		//var_dump($resql);
+		//dol_syslog(get_class($this)."::select_typent", LOG_DEBUG);
+		if ($resql)
+        {
+            $out.= '<select id="select'.$htmlname.'" class="flat selectcountry" name="'.$htmlname.'" '.$htmloption.'>';
+            $num = $this->db->num_rows($resql);
+            $i = 0;
+            if ($num)
+            {
 
+                while ($i < $num)
+                {
+                    $obj = $this->db->fetch_object($resql);
+                    $TTypent[$i]['id'] 		= $obj->id;
+                    $TTypent[$i]['code'] 	= $obj->code;
+                    $TTypent[$i]['libelle'] 	= $obj->libelle;
+                    $i++;
+                }
+
+				//var_dump($TTypent);
+                foreach ($TTypent as $row)
+                {
+                    if ($selected && $selected != '-1' && ($selected == $row['id'] || $selected == $row['code'] || $selected == $row['libelle'] ) )
+                    {
+                        $foundselected=true;
+                        $out.= '<option value="'.$row['id'].'" selected="selected">';
+                    }
+                    else
+					{
+                        $out.= '<option value="'.$row['id'].'">';
+                    }
+                    $out.= dol_trunc($row['libelle'],$maxlength,'middle');
+                    $out.= '</option>';
+                }
+            }
+            $out.= '</select>';
+        }
+        else
+		{
+            dol_print_error($this->db);
+        }
+
+        return $out;
+	}
 	
     /**
      *  Return combo list of activated countries, into language of user
