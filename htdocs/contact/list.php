@@ -62,7 +62,7 @@ $search_status=GETPOST("search_status",'int');
 if ($search_status=='') $search_status=1; // always display activ customer first
 $search_country_id=GETPOST('search_country_id', 'int');
 $search_typent_id=GETPOST('search_typent_id', 'int');
-var_dump($search_typent_id);
+//var_dump($search_typent_id);
 $type=GETPOST("type");
 $view=GETPOST("view");
 
