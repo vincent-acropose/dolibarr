@@ -748,7 +748,7 @@ if ($action == 'create')
 	{
 
 		$events=array();
-		$events[]=array('method' => 'getContacts', 'url' => dol_buildpath('/core/ajax/contacts.php',1), 'htmlname' => 'contactid', 'params' => array('add-customer-contact' => 'disabled'));
+		$events[]=array('method' => 'getContacts', 'url' => dol_buildpath('/core/ajax/contacts.php',1), 'htmlname' => 'contactid', 'params' => array('add-customer-contact' => 'disabled'), 'showempty' => 1);
 		//For external user force the company to user company
 		if (!empty($user->societe_id)) {
 			print $form->select_thirdparty_list($user->societe_id,'socid','',1,1,0,$events);
@@ -1076,7 +1076,7 @@ if ($id > 0)
 			print '<tr><td width="30%">'.$langs->trans("ActionOnCompany").'</td>';
 			print '<td>';
 			$events=array();
-			$events[]=array('method' => 'getContacts', 'url' => dol_buildpath('/core/ajax/contacts.php',1), 'htmlname' => 'contactid', 'params' => array('add-customer-contact' => 'disabled'));
+			$events[]=array('method' => 'getContacts', 'url' => dol_buildpath('/core/ajax/contacts.php',1), 'htmlname' => 'contactid', 'params' => array('add-customer-contact' => 'disabled'), 'showempty' => 1);
 			print $form->select_company($object->socid,'socid','',1,1,0,$events);
 			print '</td>';
 
