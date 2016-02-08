@@ -46,13 +46,13 @@ $langs->load('orders');
 $langs->load('products');
 
 $socid=GETPOST('socid','int');
-
 $search_user=GETPOST('search_user','int');
 $search_sale=GETPOST('search_sale','int');
 $search_ref=GETPOST('sf_ref')?GETPOST('sf_ref','alpha'):GETPOST('search_ref','alpha');
 $search_refcustomer=GETPOST('search_refcustomer','alpha');
 $search_societe=GETPOST('search_societe','alpha');
 $search_montant_ht=GETPOST('search_montant_ht','alpha');
+
 
 $sall=GETPOST("sall");
 $mesg=(GETPOST("msg") ? GETPOST("msg") : GETPOST("mesg"));
@@ -258,6 +258,9 @@ if ($result)
 	print_liste_field_titre($langs->trans('Date'),$_SERVER["PHP_SELF"],'p.datep','',$param, 'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('DateEndPropalShort'),$_SERVER["PHP_SELF"],'dfv','',$param, 'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('AmountHT'),$_SERVER["PHP_SELF"],'p.total_ht','',$param, 'align="right"',$sortfield,$sortorder);
+	if ($user->rights->margin->list->see){
+		print_liste_field_titre($langs->trans('Margin'),$_SERVER["PHP_SELF"],'','',$param,'align="right"',$sortfield,$sortorder);
+	}
 	print_liste_field_titre($langs->trans('Author'),$_SERVER["PHP_SELF"],'u.login','',$param,'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('Status'),$_SERVER["PHP_SELF"],'p.fk_statut','',$param,'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre('');
@@ -282,7 +285,7 @@ if ($result)
 	print '<td class="liste_titre" colspan="1">&nbsp;</td>';
 	print '<td class="liste_titre" align="right">';
 	print '<input class="flat" type="text" size="10" name="search_montant_ht" value="'.$search_montant_ht.'">';
-	print '</td>';
+	print '</td>';	
 	print '<td class="liste_titre">&nbsp;</td>';
 	print '<td class="liste_titre" align="right">';
 	$formpropal->select_propal_statut($viewstatut,1);
@@ -294,10 +297,15 @@ if ($result)
 	$var=true;
 	$total=0;
 	$subtotal=0;
+	$marge=0;
 
 	while ($i < min($num,$limit))
 	{
 		$objp = $db->fetch_object($result);
+		$objectstatic->fetch($objp->propalid);
+		$infos_margin=$objectstatic->getMarginInfos();
+		$marge=$infos_margin['total_margin'];
+		//var_dump($objp);
 		$now = dol_now();
 		$var=!$var;
 		print '<tr '.$bc[$var].'>';
@@ -361,6 +369,9 @@ if ($result)
 		}
 
 		print '<td align="right">'.price($objp->total_ht)."</td>\n";
+		if ($user->rights->margin->list->see){
+			print '<td align="right">'.price($marge)."</td>\n";
+		}
 
 		$userstatic->id=$objp->fk_user_author;
 		$userstatic->login=$objp->login;

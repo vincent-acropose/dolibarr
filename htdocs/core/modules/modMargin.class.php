@@ -90,7 +90,16 @@ class modMargin extends DolibarrModules
 
 		// Permissions
 		$this->rights = array();		// Permission array used by this module
-		$r=0;
+		$r = 0;
+		$this->rights[$r][0] = 59001;
+		$this->rights[$r][1] = 'Voir les marges de propales/factures';
+		$this->rights[$r][2] = 'w';
+		$this->rights[$r][3] = 0;
+		$this->rights[$r][4] = 'list';
+        $this->rights[$r][5] = 'see';
+
+
+		$r++;
 
 		// Main menu entries
 		$this->menu = array();			// List of menus to add

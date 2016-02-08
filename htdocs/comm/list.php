@@ -146,7 +146,6 @@ if ($result)
 	$param = "&amp;search_nom=".$search_nom."&amp;search_code=".$search_code."&amp;search_zipcode=".$search_zipcode."&amp;search_town=".$search_town;
  	if ($search_categ != '') $param.='&amp;search_categ='.$search_categ;
  	if ($search_sale != '')	$param.='&amp;search_sale='.$search_sale;
-
 	print_barre_liste($langs->trans("ListOfCustomers"), $page, $_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',$num,$nbtotalofrecords);
 
 	$i = 0;
