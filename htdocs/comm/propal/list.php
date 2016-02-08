@@ -370,9 +370,9 @@ if ($result)
 			print '<td>&nbsp;</td>';
 		}
 
-		print '<td align="right">'.price($objp->total_ht)."</td>\n";
+		print '<td align="right">'.price($objp->total_ht).' '.$langs->getCurrencySymbol($conf->currency)."</td>\n";
 		if ($user->rights->margin->list->see){
-			print '<td align="right">'.price($marge)."</td>\n";
+			print '<td align="right">'.price($marge).' '.$langs->getCurrencySymbol($conf->currency)."</td>\n";
 		}
 
 		$userstatic->id=$objp->fk_user_author;

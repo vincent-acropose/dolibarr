@@ -413,7 +413,7 @@ if ($resql)
             print '<td class="liste_total" align="right">'.price($total_tva).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
             print '<td class="liste_total" align="right">'.price($total_ttc).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
 			if ($user->rights->margin->list->see){
-				print '<td  class="liste_total" align="right">'.price($marge)."</td>\n";
+				print '<td  class="liste_total" align="right">'.price($marge).' '.$langs->getCurrencySymbol($conf->currency).'</td>\n';
 			}
             print '<td class="liste_total" align="right">'.price($totalrecu).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
             print '<td class="liste_total" align="center">&nbsp;</td>';
