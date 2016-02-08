@@ -270,7 +270,7 @@ if ($resql)
     if ($moreforfilter)
     {
         print '<tr class="liste_titre">';
-        print '<td class="liste_titre" colspan="10">';
+        print '<td class="liste_titre" colspan="11">';
         print $moreforfilter;
         print '</td></tr>';
     }
@@ -284,6 +284,9 @@ if ($resql)
     print_liste_field_titre($langs->trans('AmountHT'),$_SERVER['PHP_SELF'],'f.total','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('AmountVAT'),$_SERVER['PHP_SELF'],'f.tva','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('AmountTTC'),$_SERVER['PHP_SELF'],'f.total_ttc','',$param,'align="right"',$sortfield,$sortorder);
+	if ($user->rights->margin->list->see){
+		print_liste_field_titre($langs->trans('Margin'),$_SERVER["PHP_SELF"],'','',$param,'align="right"',$sortfield,$sortorder);
+	}
     print_liste_field_titre($langs->trans('Received'),$_SERVER['PHP_SELF'],'am','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Status'),$_SERVER['PHP_SELF'],'fk_statut,paye,am','',$param,'align="right"',$sortfield,$sortorder);
     //print '<td class="liste_titre">&nbsp;</td>';
@@ -306,7 +309,7 @@ if ($resql)
     print '<td class="liste_titre" align="right">&nbsp;</td>';
     print '<td class="liste_titre" align="right"><input class="flat" type="text" size="10" name="search_montant_ttc" value="'.$search_montant_ttc.'"></td>';
     print '<td class="liste_titre" align="right">&nbsp;</td>';
-    print '<td class="liste_titre" align="right"><input type="image" class="liste_titre" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+    print '<td class="liste_titre" align="right" colspan="2"><input type="image" class="liste_titre" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
     print "</td></tr>\n";
 
     if ($num > 0)
@@ -321,7 +324,10 @@ if ($resql)
         {
             $objp = $db->fetch_object($resql);
             $var=!$var;
-
+			$facturestatic->fetch($objp->facid);
+			$infos_margin=$facturestatic->getMarginInfos();
+			//var_dump($infos_margin);exit;
+			$marge=$infos_margin['total_margin'];
             $datelimit=$db->jdate($objp->datelimite);
 
             print '<tr '.$bc[$var].'>';
@@ -378,6 +384,10 @@ if ($resql)
             print '<td align="right">'.price($objp->total_tva).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
 
             print '<td align="right">'.price($objp->total_ttc).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
+			
+			if ($user->rights->margin->list->see){
+				print '<td  class="liste_total" align="right">'.price($marge)."</td>\n";
+			}
 
             print '<td align="right">'.(! empty($paiement)?price($paiement).' '.$langs->getCurrencySymbol($conf->currency):'&nbsp;').'</td>';
 
@@ -402,6 +412,9 @@ if ($resql)
             print '<td class="liste_total" align="right">'.price($total_ht).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
             print '<td class="liste_total" align="right">'.price($total_tva).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
             print '<td class="liste_total" align="right">'.price($total_ttc).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
+			if ($user->rights->margin->list->see){
+				print '<td  class="liste_total" align="right">'.price($marge)."</td>\n";
+			}
             print '<td class="liste_total" align="right">'.price($totalrecu).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
             print '<td class="liste_total" align="center">&nbsp;</td>';
             print '</tr>';

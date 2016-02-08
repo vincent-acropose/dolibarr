@@ -246,7 +246,9 @@ if ($result)
 	if (! empty($moreforfilter))
 	{
 	    print '<tr class="liste_titre">';
-	    print '<td class="liste_titre" colspan="9">';
+
+	    print '<td class="liste_titre" colspan="10">';
+
 	    print $moreforfilter;
 	    print '</td></tr>';
 	}
@@ -290,7 +292,7 @@ if ($result)
 	print '<td class="liste_titre" align="right">';
 	$formpropal->select_propal_statut($viewstatut,1);
 	print '</td>';
-	print '<td class="liste_titre" align="right"><input class="liste_titre" type="image" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+	print '<td class="liste_titre" align="right" colspan="2"><input class="liste_titre" type="image" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 	print '</td>';
 	print "</tr>\n";
 
