@@ -94,7 +94,7 @@ class modMargin extends DolibarrModules
 		$this->rights[$r][0] = 59001;
 		$this->rights[$r][1] = 'Voir les marges de propales/factures';
 		$this->rights[$r][2] = 'w';
-		$this->rights[$r][3] = 0;
+		$this->rights[$r][3] = 1;
 		$this->rights[$r][4] = 'list';
         $this->rights[$r][5] = 'see';
 
