@@ -1381,8 +1381,9 @@ function show_subsidiaries($conf,$langs,$db,$object)
 		$sql.= " LEFT OUTER JOIN ".MAIN_DB_PREFIX."fichinter_extrafields fe2 ON (f2.rowid = fe2.fk_object)";
 		$sql.= " WHERE s2.parent = ".$object->id;
 		$sql.= " AND s2.entity IN (".getEntity('societe', 1).")";
-		$sql.= ' AND fe2.statutmission IN ("10","20", "40") AND f2.fk_statut>0
-		AND f2.datec>f.datec ';
+		//$sql.= ' AND fe2.statutmission IN ("10","20", "40") AND f2.fk_statut>0 AND f2.datec>f.datec ';
+		// tk 3571 : peu importe la date, s'il existe plusieurs inter, dont au moins une "Programmée" et une "Non effectuée", on affiche uniquement dans "programmée"
+		$sql.= ' AND fe2.statutmission IN ("10","20", "40") AND f2.fk_statut>0';
 		
 		$sql.= ')';
 	}
