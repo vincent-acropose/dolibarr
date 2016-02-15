@@ -909,6 +909,8 @@ class Commande extends CommonOrder
         $this->date_creation      = '';
         $this->date_validation    = '';
         //$this->ref_client         = '';
+	$this->date_commande      = dol_now();
+	$this->date_livraison     = '';
 
         // Set ref
         require_once DOL_DOCUMENT_ROOT ."/core/modules/commande/".$conf->global->COMMANDE_ADDON.'.php';
