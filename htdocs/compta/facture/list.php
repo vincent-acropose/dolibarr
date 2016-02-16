@@ -319,6 +319,7 @@ if ($resql)
         $total_tva=0;
         $total_ttc=0;
         $totalrecu=0;
+        $totalmarge=0;
 
         while ($i < min($num,$limit))
         {
@@ -386,7 +387,7 @@ if ($resql)
             print '<td align="right">'.price($objp->total_ttc).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
 			
 			if ($user->rights->margin->list->see){
-				print '<td  class="liste_total" align="right">'.price($marge)."</td>\n";
+				print '<td  class="liste_total" align="right">'.price($marge).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
 			}
 
             print '<td align="right">'.(! empty($paiement)?price($paiement).' '.$langs->getCurrencySymbol($conf->currency):'&nbsp;').'</td>';
@@ -401,6 +402,7 @@ if ($resql)
             $total_tva+=$objp->total_tva;
             $total_ttc+=$objp->total_ttc;
             $totalrecu+=$paiement;
+			$totalmarge+=$marge;
             $i++;
         }
 
@@ -413,7 +415,7 @@ if ($resql)
             print '<td class="liste_total" align="right">'.price($total_tva).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
             print '<td class="liste_total" align="right">'.price($total_ttc).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
 			if ($user->rights->margin->list->see){
-				print '<td  class="liste_total" align="right">'.price($marge).' '.$langs->getCurrencySymbol($conf->currency).'</td>\n';
+				print '<td  class="liste_total" align="right">'.price($totalmarge).' '.$langs->getCurrencySymbol($conf->currency).'</td>\n';
 			}
             print '<td class="liste_total" align="right">'.price($totalrecu).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
             print '<td class="liste_total" align="center">&nbsp;</td>';
