@@ -300,6 +300,7 @@ if ($result)
 	$total=0;
 	$subtotal=0;
 	$marge=0;
+	$totalmarge=0;
 
 	while ($i < min($num,$limit))
 	{
@@ -390,6 +391,7 @@ if ($result)
 
 		$total += $objp->total_ht;
 		$subtotal += $objp->total_ht;
+		$totalmarge += $marge;
 
 		$i++;
 	}
@@ -399,14 +401,16 @@ if ($result)
 				if($num<$limit){
 					$var=!$var;
 					print '<tr class="liste_total"><td align="left">'.$langs->trans("TotalHT").'</td>';
-					print '<td colspan="5" align="right">'.price($total).'</td><td colspan="3"></td>';
+					print '<td colspan="5" align="right">'.price($total).'</td>';
+					print '<td align="right">'.price($totalmarge).'</td><td colspan=3></td>';
 					print '</tr>';
 				}
 				else
 				{
 					$var=!$var;
 					print '<tr class="liste_total"><td align="left">'.$langs->trans("TotalHTforthispage").'</td>';
-					print '<td colspan="5" align="right">'.price($total).'</td><td colspan="3"></td>';
+					print '<td colspan="5" align="right">'.price($total).'</td>';
+					print '<td align="right">'.price($totalmarge).'</td><td colspan=3></td>';
 					print '</tr>';
 				}
 
