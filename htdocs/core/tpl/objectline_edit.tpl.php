@@ -370,7 +370,7 @@ if (! empty($conf->margin->enabled))
 			}
 		}
 		/* console.log("new price ht = "+price); */
-		$("input[name='price_ht']:first").val(price);	// TODO Must use a function like php price to have here a formated value
+		//$("input[name='price_ht']:first").val(price);	// TODO Must use a function like php price to have here a formated value
 
 		return true;
 	}
