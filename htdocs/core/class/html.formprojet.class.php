@@ -118,11 +118,11 @@ class FormProjets
 		if (! empty($conf->global->PROJECT_HIDE_UNSELECTABLES)) $hideunselectables = true;
 
 		$projectsListId = false;
-		/*if (empty($user->rights->projet->all->lire))
+		if (empty($user->rights->projet->all->lire))
 		{
 			$projectstatic=new Project($this->db);
 			$projectsListId = $projectstatic->getProjectsAuthorizedForUser($user,0,1);
-		}*/
+		}
 
 		// Search all projects
 		$sql = 'SELECT p.rowid, p.ref, p.title, p.fk_soc, p.fk_statut, p.public';
@@ -283,11 +283,11 @@ class FormProjets
 		if (! empty($conf->global->PROJECT_HIDE_UNSELECTABLES)) $hideunselectables = true;
 
 		$projectsListId = false;
-		/*if (empty($user->rights->projet->all->lire))
+		if (empty($user->rights->projet->all->lire))
 		{
 			$projectstatic=new Project($this->db);
 			$projectsListId = $projectstatic->getProjectsAuthorizedForUser($user,0,1);
-		}*/
+		}
 
 		// Search all projects
 		$sql = 'SELECT t.rowid, t.ref as tref, t.label as tlabel, p.ref, p.title, p.fk_soc, p.fk_statut, p.public,';
