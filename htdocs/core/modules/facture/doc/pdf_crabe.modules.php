@@ -436,7 +436,8 @@ class pdf_crabe extends ModelePDFFactures
 					$curX = $this->posxdesc-1;
 
 					$pdf->startTransaction();
-					pdf_writelinedesc($pdf,$object,$i,$outputlangs,$this->posxpicture-$curX,3,$curX,$curY,$hideref,$hidedesc);
+					$wDesc = $this->posxpicture-$curX-($this->posxup-$this->posxtva-0.8);
+					pdf_writelinedesc($pdf,$object,$i,$outputlangs,$wDesc,3,$curX,$curY,$hideref,$hidedesc);
 					$pageposafter=$pdf->getPage();
 					if ($pageposafter > $pageposbefore)	// There is a pagebreak
 					{
@@ -1376,7 +1377,7 @@ class pdf_crabe extends ModelePDFFactures
 					'C');
 			}
 		}
-
+		
 		$pdf->line($this->posxdiscount-1, $tab_top, $this->posxdiscount-1, $tab_top + $tab_height);
 		if (empty($hidetop))
 		{
