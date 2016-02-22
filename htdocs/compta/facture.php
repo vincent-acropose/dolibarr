@@ -1037,7 +1037,7 @@ if (empty($reshook))
 									$desc=(! empty($lines[$i]->desc)?$lines[$i]->desc:$lines[$i]->libelle);
 									if ($object->situation_counter == 1) $lines[$i]->situation_percent =  0;
 
-									if ($lines[$i]->subprice < 0)
+									/*if ($lines[$i]->subprice < 0)
 									{
 										// Negative line, we create a discount line
 										$discount = new DiscountAbsolute($db);
@@ -1056,7 +1056,7 @@ if (empty($reshook))
 											$error ++;
 											break;
 										}
-									} else {
+									} else {*/
 										// Positive line
 										$product_type = ($lines[$i]->product_type ? $lines[$i]->product_type : 0);
 
@@ -1107,7 +1107,7 @@ if (empty($reshook))
 										if ($result > 0 && $lines[$i]->product_type == 9) {
 											$fk_parent_line = $result;
 										}
-									}
+									//}
 								}
 
 								// Hooks
@@ -1144,6 +1144,7 @@ if (empty($reshook))
 
 		if (GETPOST('type') == Facture::TYPE_SITUATION && (!empty($_POST['situations'])))
 		{
+			
 			$datefacture = dol_mktime(12, 0, 0, $_POST['remonth'], $_POST['reday'], $_POST['reyear']);
 			if (empty($datefacture)) {
 				$error++;
