@@ -49,6 +49,7 @@ $search_nom         = GETPOST("search_nom");
 $search_zipcode     = GETPOST("search_zipcode");
 $search_town        = GETPOST("search_town");
 $search_state       = GETPOST("search_state");
+$search_country     = GETPOST("search_country");
 $search_datec       = GETPOST("search_datec");
 $search_categ       = GETPOST("search_categ",'int');
 $search_status		= GETPOST("search_status",'int');
@@ -172,6 +173,7 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
 	$search_zipcode="";
 	$search_town="";
 	$search_state="";
+	$search_country="";
 	$search_datec="";
 	$search_categ="";
 	$search_status="";
@@ -218,7 +220,8 @@ $prospectstatic->loadCacheOfProspStatus();
 $sql = "SELECT s.rowid as socid, s.nom as name, s.name_alias, s.zip, s.town, s.datec, s.status as status, s.code_client, s.client,";
 $sql.= " s.prefix_comm, s.fk_prospectlevel, s.fk_stcomm as stcomm_id,";
 $sql.= " st.libelle as stcomm_label,";
-$sql.= " d.nom as departement";
+$sql.= " d.nom as departement, ";
+$sql.= " c.code as country_code";
 if ((!$user->rights->societe->client->voir && !$socid) || $search_sale > 0) $sql .= ", sc.fk_soc, sc.fk_user"; // We need these fields in order to filter by sale (including the case where the user can only see his prospects)
 // Add fields for extrafields
 if (is_array($extrafields->attribute_list) && count($extrafields->attribute_list)) foreach ($extrafields->attribute_list as $key => $val) $sql.=",ef.".$key.' as options_'.$key;
@@ -230,6 +233,7 @@ $sql .= " FROM ".MAIN_DB_PREFIX."c_stcomm as st";
 $sql.= ", ".MAIN_DB_PREFIX."societe as s";
 if (is_array($extrafields->attribute_list) && count($extrafields->attribute_list)) $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe_extrafields as ef on (s.rowid = ef.fk_object)";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_departements as d on (d.rowid = s.fk_departement)";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_country as c on (c.rowid = s.fk_pays)";
 if (! empty($search_categ) || ! empty($catid)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_societe as cs ON s.rowid = cs.fk_soc"; // We need this table joined to the select in order to filter by categ
 if ((!$user->rights->societe->client->voir && !$socid) || $search_sale > 0) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc"; // We need this table joined to the select in order to filter by sale
 $sql.= " WHERE s.fk_stcomm = st.id";
@@ -246,6 +250,7 @@ if ($search_nom) $sql .= natural_search(array('s.nom','s.name_alias'), $search_n
 if ($search_zipcode) $sql .= " AND s.zip LIKE '".$db->escape(strtolower($search_zipcode))."%'";
 if ($search_town)    $sql .= natural_search('s.town', $search_town);
 if ($search_state)   $sql .= natural_search('d.nom', $search_state);
+if ($search_country) $sql .= " AND s.fk_pays = ".$search_country;
 if ($search_datec)   $sql .= " AND s.datec LIKE '%".$db->escape($search_datec)."%'";
 if ($search_status!='') $sql .= " AND s.status = ".$db->escape($search_status);
 // Insert levels filters
@@ -304,7 +309,7 @@ if ($resql)
         llxHeader('',$langs->trans("ThirdParty"),$help_url);
 	}
 
-	$param='&search_stcomm='.$search_stcomm.'&search_nom='.urlencode($search_nom).'&search_zipcode='.urlencode($search_zipcode).'&search_town='.urlencode($search_town);
+	$param='&search_stcomm='.$search_stcomm.'&search_nom='.urlencode($search_nom).'&search_zipcode='.urlencode($search_zipcode).'&search_town='.urlencode($search_town).'&search_country='.urlencode($search_country);
  	// Store the status filter in the URL
  	if (isSet($search_setstcomm))
  	{
@@ -351,6 +356,9 @@ if ($resql)
 	 	$moreforfilter.=$langs->trans('SalesRepresentatives'). ': ';
 		$moreforfilter.=$formother->select_salesrepresentatives($search_sale,'search_sale',$user);
  	}
+	$moreforfilter.= ' &nbsp; &nbsp; &nbsp; ';
+	$moreforfilter.=$langs->trans('Country'). ': ';
+	$moreforfilter.=$form->select_country($search_country, 'search_country');
  	if ($moreforfilter)
 	{
 		print '<div class="liste_titre">';
@@ -368,6 +376,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans("Zip"),$_SERVER["PHP_SELF"],"s.zip","",$param,"",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Town"),$_SERVER["PHP_SELF"],"s.town","",$param,"",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("State"),$_SERVER["PHP_SELF"],"s.fk_departement","",$param,'align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Country"),$_SERVER["PHP_SELF"],"c.code","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateCreation"),$_SERVER["PHP_SELF"],"s.datec","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("ProspectLevelShort"),$_SERVER["PHP_SELF"],"s.fk_prospectlevel","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("StatusProsp"),$_SERVER["PHP_SELF"],"s.fk_stcomm","",$param,'align="center"',$sortfield,$sortorder);
@@ -405,6 +414,9 @@ if ($resql)
 	print '</td>';
  	print '<td class="liste_titre" align="center">';
     print '<input type="text" class="flat" name="search_state" size="8" value="'.$search_state.'">';
+    print '</td>';
+	print '<td class="liste_titre" align="center">';
+    print '&nbsp;';
     print '</td>';
     print '<td align="center" class="liste_titre">';
 	print '<input class="flat" type="text" size="10" name="search_datec" value="'.$search_datec.'">';
@@ -503,6 +515,11 @@ if ($resql)
         print "<td>".$obj->zip."</td>";
 		print "<td>".$obj->town."</td>";
 		print '<td align="center">'.$obj->departement.'</td>';
+		if(!empty($obj->country_code)) {
+			print '<td align="center">'.$langs->trans('Country'.$obj->country_code).'</td>';
+		} else {
+			print '<td align="center">-</td>';
+		}
 		// Creation date
 		print '<td align="center">'.dol_print_date($db->jdate($obj->datec)).'</td>';
 		// Level
