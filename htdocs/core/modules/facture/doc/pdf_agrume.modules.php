@@ -372,10 +372,13 @@ class pdf_agrume extends ModelePDFFactures
 				}
 				if ($notetoshow)
 				{
+						
 					$tab_top = 88 + $height_incoterms;
-
+					if($this->situationinvoice)$tab_top += 10;
+					
 					$pdf->SetFont('','', $default_font_size - 1);
 					$pdf->writeHTMLCell(190, 3, $this->posxdesc-1, $tab_top, dol_htmlentitiesbr($notetoshow), 0, 1);
+					
 					$nexY = $pdf->GetY();
 					$height_note=$nexY-$tab_top;
 
@@ -481,11 +484,13 @@ class pdf_agrume extends ModelePDFFactures
 					$pagenb++;
 					if (! empty($tplidx)) $pdf->useTemplate($tplidx);
 					if (empty($conf->global->MAIN_PDF_DONOTREPEAT_HEAD)) $this->_pagehead($pdf, $object, 0, $outputlangs);
+
 					$pdf->setPage($pageposbefore+1);
 					$showpricebeforepagebreak=0;
 					
 					$iniY = $tab_top_newpage+10;
 					$curY = $tab_top_newpage+10;
+					
 					$nexY = $tab_top_newpage+10;
 				}
 				else 
@@ -494,7 +499,9 @@ class pdf_agrume extends ModelePDFFactures
 					$curY = $tab_top + 7;
 					$nexY = $tab_top + 7;
 				}
-
+					
+				if($this->situationinvoice) $nexY += 5;
+				
 				// Loop on each lines
 				for ($i = 0; $i < $nblignes; $i++)
 				{
@@ -507,7 +514,7 @@ class pdf_agrume extends ModelePDFFactures
 					if (! empty($realpatharray[$i])) $imglinesize=pdf_getSizeForImage($realpatharray[$i]);
 
 					$pdf->setTopMargin($tab_top_newpage);
-					$pdf->setPageOrientation('', 1, $heightforfooter+$heightforfreetext+$heightforinfotot);	// The only function to edit the bottom margin of current page to set it.
+					$pdf->setPageOrientation('', 1, $heightforfooter+$heightforfreetext+$heightforinfotot+10);	// The only function to edit the bottom margin of current page to set it.
 					$pageposbefore=$pdf->getPage();
 
 					$showpricebeforepagebreak=1;
@@ -1657,7 +1664,12 @@ class pdf_agrume extends ModelePDFFactures
 		// Force to disable hidetop and hidebottom
 		$hidebottom=0;
 		if ($hidetop) $hidetop=-1;
-
+		
+		if($this->situationinvoice){
+			$tab_top += 5;
+			$tab_height -= 5;
+		}
+		
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
 
 		// Amount in (at tab_top - 1)
@@ -1951,6 +1963,7 @@ exit;
 
 			// Show sender
 			$posy=42;
+			if($this->situationinvoice) $posy += 10;
 			$posx=$this->marge_gauche;
 			if (! empty($conf->global->MAIN_INVERT_SENDER_RECIPIENT)) $posx=$this->page_largeur-$this->marge_droite-80;
 			$hautcadre=40;
@@ -2003,6 +2016,7 @@ exit;
 			$widthrecbox=100;
 			if ($this->page_largeur < 210) $widthrecbox=84;	// To work with US executive format
 			$posy=42;
+			if($this->situationinvoice) $posy += 10;
 			$posx=$this->page_largeur-$this->marge_droite-$widthrecbox;
 			if (! empty($conf->global->MAIN_INVERT_SENDER_RECIPIENT)) $posx=$this->marge_gauche;
 
