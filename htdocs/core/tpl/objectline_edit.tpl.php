@@ -135,7 +135,7 @@ $coldisplay=-1; // We remove first td
 		// for example always visible on invoice but must be visible only if stock module on and stock decrease option is on invoice validation and status is not validated
 		// must also not be output for most entities (proposal, intervention, ...)
 		//if($line->qty > $line->stock) print img_picto($langs->trans("StockTooLow"),"warning", 'style="vertical-align: bottom;"')." ";
-		print '<input size="3" type="text" class="flat" name="qty" id="qty" value="' . $line->qty . '"';
+		print '<input size="5" type="text" class="flat" name="qty" id="qty" value="' . $line->qty . '"';
 		if ($this->situation_counter > 1) print ' readonly';
 		print '>';
 	} else { ?>

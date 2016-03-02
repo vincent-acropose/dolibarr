@@ -229,7 +229,7 @@ else {
 	<input type="text" size="5" name="price_ttc" id="price_ttc" class="flat" value="<?php echo (isset($_POST["price_ttc"])?$_POST["price_ttc"]:''); ?>">
 	</td>
 	<?php } ?>
-	<td class="nobottom" align="right"><input type="text" size="2" name="qty" id="qty" class="flat" value="<?php echo (isset($_POST["qty"])?$_POST["qty"]:1); ?>">
+	<td class="nobottom" align="right"><input type="text" size="5" name="qty" id="qty" class="flat" value="<?php echo (isset($_POST["qty"])?$_POST["qty"]:1); ?>">
 	</td>
 	<?php
 	if($conf->global->PRODUCT_USE_UNITS)
