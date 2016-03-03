@@ -3655,7 +3655,7 @@ else if ($id > 0 || ! empty($ref))
 				// On verifie si les lignes de factures ont ete exportees en compta et/ou ventilees
 				$ventilExportCompta = $object->getVentilExportCompta();
 
-				if ($resteapayer == $object->total_ttc && empty($object->paye) && $ventilExportCompta == 0) 
+				if (empty($object->paye) && $ventilExportCompta == 0) 
 				{
 					if (! $objectidnext) 
 					{
