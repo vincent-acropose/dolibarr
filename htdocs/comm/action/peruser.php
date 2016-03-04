@@ -108,7 +108,7 @@ $tmparray=explode('-',$tmp);
 $begin_d = GETPOST('begin_d')?GETPOST('begin_d','int'):($tmparray[0] != '' ? $tmparray[0] : 1);
 $end_d   = GETPOST('end_d')?GETPOST('end_d'):($tmparray[1] != '' ? $tmparray[1] : 5);
 if ($begin_d < 1 || $begin_d > 7) $begin_d = 1;
-if ($end_d < 1 || $end_d > 7) $end_d = 7;
+//if ($end_d < 1 || $end_d > 7) $end_d = 7;
 if ($end_d < $begin_d) $end_d = $begin_d + 1;
 
 if ($actioncode == '') $actioncode=(empty($conf->global->AGENDA_DEFAULT_FILTER_TYPE)?'':$conf->global->AGENDA_DEFAULT_FILTER_TYPE);
@@ -224,7 +224,7 @@ $next_day   = $next['day'];
 
 // Define firstdaytoshow and lastdaytoshow (warning: lastdaytoshow is last second to show + 1)
 $firstdaytoshow=dol_mktime(0,0,0,$first_month,$first_day,$first_year);
-$lastdaytoshow=dol_time_plus_duree($firstdaytoshow, 7, 'd');
+$lastdaytoshow=dol_time_plus_duree($firstdaytoshow, $end_d, 'd');
 //print $firstday.'-'.$first_month.'-'.$first_year;
 //print dol_print_date($firstdaytoshow,'dayhour');
 //print dol_print_date($lastdaytoshow,'dayhour');
@@ -475,41 +475,31 @@ if ($resql)
             $event->ponctuel=1;
         }
 
-        // Check values
-        if ($event->date_end_in_calendar < $firstdaytoshow ||
-        $event->date_start_in_calendar >= $lastdaytoshow)
-        {
-            // This record is out of visible range
-        }
-        else
+        if ($event->date_start_in_calendar < $firstdaytoshow) $event->date_start_in_calendar=$firstdaytoshow;
+        if ($event->date_end_in_calendar >= $lastdaytoshow) $event->date_end_in_calendar=($lastdaytoshow - 1);
+		
+		//echo $obj->datep.' : '.date('d-m-Y', $event->date_end_in_calendar).'<br>';
+		
+        // Add an entry in actionarray for each day
+        $daycursor=$event->date_start_in_calendar;
+        $annee = date('Y',$daycursor);
+        $mois = date('m',$daycursor);
+        $jour = date('d',$daycursor);
+
+        // Loop on each day covered by action to prepare an index to show on calendar
+        $loop=true; $j=0;
+        $daykey=dol_mktime(0,0,0,$mois,$jour,$annee);
+        do
 		{
-            if ($event->date_start_in_calendar < $firstdaytoshow) $event->date_start_in_calendar=$firstdaytoshow;
-            if ($event->date_end_in_calendar >= $lastdaytoshow) $event->date_end_in_calendar=($lastdaytoshow - 1);
+            //if ($event->id==408) print 'daykey='.$daykey.' '.$event->datep.' '.$event->datef.'<br>';
 
-            // Add an entry in actionarray for each day
-            $daycursor=$event->date_start_in_calendar;
-            $annee = date('Y',$daycursor);
-            $mois = date('m',$daycursor);
-            $jour = date('d',$daycursor);
+            $eventarray[$daykey][]=$event;
+            $j++;
 
-            // Loop on each day covered by action to prepare an index to show on calendar
-            $loop=true; $j=0;
-            $daykey=dol_mktime(0,0,0,$mois,$jour,$annee);
-            do
-			{
-                //if ($event->id==408) print 'daykey='.$daykey.' '.$event->datep.' '.$event->datef.'<br>';
-
-                $eventarray[$daykey][]=$event;
-                $j++;
-
-                $daykey+=60*60*24;
-                if ($daykey > $event->date_end_in_calendar) $loop=false;
-            }
-            while ($loop);
-
-            //print 'Event '.$i.' id='.$event->id.' (start='.dol_print_date($event->datep).'-end='.dol_print_date($event->datef);
-            //print ' startincalendar='.dol_print_date($event->date_start_in_calendar).'-endincalendar='.dol_print_date($event->date_end_in_calendar).') was added in '.$j.' different index key of array<br>';
+            $daykey+=60*60*24;
+            if ($daykey > $event->date_end_in_calendar) $loop=false;
         }
+        while ($loop);
         $i++;
 
     }
@@ -560,13 +550,9 @@ echo '<table width="100%" class="nocellnopadd cal_month">';
 echo '<tr class="liste_titre">';
 echo '<td></td>';
 $i=0;	// 0 = sunday,
-while ($i < 7)
+while ($i < $end_d)
 {
-	if (($i + 1) < $begin_d || ($i + 1) > $end_d)
-	{
-		$i++;
-		continue;
-	}
+
 	echo '<td align="center" colspan="'.($end_h - $begin_h).'">';
 	echo $langs->trans("Day".(($i+(isset($conf->global->MAIN_START_WEEK)?$conf->global->MAIN_START_WEEK:1)) % 7));
 	print "<br>";
@@ -580,7 +566,7 @@ echo "</tr>\n";
 echo '<tr class="liste_titre">';
 echo '<td></td>';
 $i=0;
-while ($i < 7)
+while ($i < $end_d)
 {
 	if (($i + 1) < $begin_d || ($i + 1) > $end_d)
 	{
@@ -699,7 +685,7 @@ foreach ($usernames as $username)
 
 	// Lopp on each day of week
 	$i = 0;
-	for ($iter_day = 0; $iter_day < 8; $iter_day++)
+	for ($iter_day = 0; $iter_day < $end_d; $iter_day++)
 	{
 		if (($i + 1) < $begin_d || ($i + 1) > $end_d)
 		{
@@ -858,7 +844,7 @@ function show_day_events2($username, $day, $month, $year, $monthshown, $style, &
 				$keysofuserassigned=array_keys($event->userassigned);
 				if (! in_array($username->id,$keysofuserassigned)) continue;	// We discard record if event is from another user than user we want to show
 				//if ($username->id != $event->userownerid) continue;	// We discard record if event is from another user than user we want to show
-
+				
 				$parameters=array();
 				$reshook=$hookmanager->executeHooks('formatEvent',$parameters,$event,$action);    // Note that $action and $object may have been modified by some hooks
 				if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
@@ -928,8 +914,6 @@ function show_day_events2($username, $day, $month, $year, $monthshown, $style, &
 
 						$dateendtouse=$event->date_end_in_calendar;
 						if ($dateendtouse==$event->date_start_in_calendar) $dateendtouse++;
-
-						//print dol_print_date($event->date_start_in_calendar,'dayhour').'-'.dol_print_date($a,'dayhour').'-'.dol_print_date($b,'dayhour').'<br>';
 
 						if ($event->date_start_in_calendar < $b && $dateendtouse > $a)
 						{

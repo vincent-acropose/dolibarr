@@ -143,7 +143,7 @@ function print_actions_filter($form, $canedit, $status, $year, $month, $day, $sh
 		print '<input type="number" class="short" name="begin_d" value="'.$begin_d.'" min="1" max="7">';
 		if (empty($conf->dol_use_jmobile)) print ' - ';
 		else print '</div><div class="ui-block-b">';
-		print '<input type="number" class="short" name="end_d" value="'.$end_d.'" min="1" max="7">';
+		print '<input type="number" class="short" name="end_d" value="'.$end_d.'" min="1" max="50">';
 		print '</div></div>';
 		print '</td></tr>';
 	}
