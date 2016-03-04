@@ -215,7 +215,7 @@ class FormActions
      *  @param	string		$onlyautoornot	Group list by auto events or not: We keep only the 2 generic lines (AC_OTH and AC_OTH_AUTO)
      * 	@return	void
      */
-    function select_type_actions($selected='',$htmlname='actioncode',$excludetype='',$onlyautoornot=0)
+    function select_type_actions($selected='',$htmlname='actioncode',$excludetype='',$onlyautoornot=0,$returntype='print')
     {
         global $langs,$user;
 
@@ -231,9 +231,16 @@ class FormActions
 
        	if ($selected == 'manual') $selected='AC_OTH';
        	if ($selected == 'auto')   $selected='AC_OTH_AUTO';
-       	
-        print $form->selectarray($htmlname, $arraylist, $selected);
-        if ($user->admin && empty($onlyautoornot)) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
+
+       	if ($returntype=='output') {
+       		$html= $form->selectarray($htmlname, $arraylist, $selected);
+       		if ($user->admin && empty($onlyautoornot)) $html.= info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
+       		return $html ;
+       	} else {
+       		print $form->selectarray($htmlname, $arraylist, $selected);
+       		if ($user->admin && empty($onlyautoornot)) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
+       	}
     }
+
 
 }

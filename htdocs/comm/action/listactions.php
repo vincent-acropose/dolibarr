@@ -241,8 +241,8 @@ if ($resql)
     $head = calendars_prepare_head('');
     dol_fiche_head($head, 'card', $langs->trans('Events'), 0, 'list');
     print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,$filtera,$filtert,$filterd,$pid,$socid,-1,$actioncode,$filterdatestart,$filterdatesend);
-    
-    
+
+
     if ($action=='switchstatus') {
     	print '<script type="text/javascript">
 					jQuery(document).ready(function () {
@@ -253,7 +253,7 @@ if ($resql)
 					});
 					</script> ';
     }
-    
+
     dol_fiche_end();
 
     // Add link to show birthdays
@@ -275,30 +275,29 @@ if ($resql)
 
     print_barre_liste($newtitle, $page, $_SERVER["PHP_SELF"], $param,$sortfield,$sortorder,$link,$num,0,'');
     //print '<br>';
-    
-   
+
+
 
 	$i = 0;
 	print '<table class="liste" width="100%">';
-	
-	
+
+
 	print '<tr class="liste_titre">';
-	print_liste_field_titre($langs->trans("Type"),$_SERVER["PHP_SELF"],"c.libelle",$param,"",'width="10%"',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Action"),$_SERVER["PHP_SELF"],"c.code",$param,"","",$sortfield,$sortorder);
-	
+	print_liste_field_titre($langs->trans("Type"),$_SERVER["PHP_SELF"],"c.libelle","",$param,"",'width="10%"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Action"),$_SERVER["PHP_SELF"],"c.code","",$param,"","",$sortfield,$sortorder);
 	//print_liste_field_titre($langs->trans("Title"),$_SERVER["PHP_SELF"],"a.label",$param,"","",$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("DateStart"),$_SERVER["PHP_SELF"],"a.datep,a.datep2",$param,'','align="center"',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("DateEnd"),$_SERVER["PHP_SELF"],"a.datep2,a.datep2",$param,'','align="center"',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom,a.datep2",$param,"","",$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Contact"),$_SERVER["PHP_SELF"],"a.fk_contact,a.datep2",$param,"","",$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Description"),$_SERVER["PHP_SELF"],"a.note",$param,"","",$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("ActionUserAsk"),$_SERVER["PHP_SELF"],"ua.login,a.datep2",$param,"","",$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("AffectedTo"),$_SERVER["PHP_SELF"],"ut.login,a.datep2",$param,"","",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("DateStart"),$_SERVER["PHP_SELF"],"a.datep,a.datep2","",$param,'','align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("DateEnd"),$_SERVER["PHP_SELF"],"a.datep2,a.datep2","",$param,'','align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom,a.datep2","",$param,"","",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Contact"),$_SERVER["PHP_SELF"],"a.fk_contact,a.datep2","",$param,"","",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Description"),$_SERVER["PHP_SELF"],"a.note","",$param,"","",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("ActionUserAsk"),$_SERVER["PHP_SELF"],"ua.login,a.datep2","",$param,"","",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("AffectedTo"),$_SERVER["PHP_SELF"],"ut.login,a.datep2","",$param,"","",$sortfield,$sortorder);
 	//print_liste_field_titre($langs->trans("DoneBy"),$_SERVER["PHP_SELF"],"ud.login",$param,"","",$sortfield,$sortorder);
 	print '<th class="liste_titre">'.$langs->trans('ChangeStatusTo').'</th>';
-	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"a.percent,a.datep2",$param,"",'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"a.percent,a.datep2","",$param,"",'align="right"',$sortfield,$sortorder);
 	print "</tr>\n";
-	
+
 
 
 	$contactstatic = new Contact($db);
@@ -313,7 +312,7 @@ if ($resql)
 		$var=!$var;
 
 		print "<tr $bc[$var]>";
-		
+
 		//Type
 		print '<td>';
 		if ("Action".$obj->acode!=$langs->trans("Action".$obj->acode)) {
@@ -332,8 +331,8 @@ if ($resql)
 		print $actionstatic->getNomUrl(1,28);
 		print '<a name="actid_'.$obj->id.'" id="actid_'.$obj->id.'"/>';
 		print '</td>';
-		
-		
+
+
 		// Titre
 		//print '<td>';
 		//print dol_trunc($obj->label,12);
@@ -381,7 +380,7 @@ if ($resql)
 			print "&nbsp;";
 		}
 		print '</td>';
-		
+
 		//Description
 		print '<td title="' . dol_htmlentities($obj->note,ENT_COMPAT) . '">' . dol_htmlentitiesbr( dol_trunc ( $obj->note, 60 ),  1 ) . '</td>';
 
@@ -420,7 +419,7 @@ if ($resql)
 		}
 		else print '&nbsp;';
 		print '</td>';*/
-		
+
 		//Add link to update action status
 		print '<td>';
 		$listofstatus = array(
@@ -449,7 +448,7 @@ if ($resql)
 			$html_change_act_status.='</a>&nbsp;&nbsp;';
 		}
 		print $html_change_act_status;
-		
+
 		print '</td>';
 
 		// Status/Percent

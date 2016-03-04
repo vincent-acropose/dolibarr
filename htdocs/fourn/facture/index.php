@@ -198,8 +198,8 @@ if ($resql)
 
 	print_barre_liste($langs->trans("BillsSuppliers").($socid?" $soc->nom":""),$page,"index.php",$param,$sortfield,$sortorder,'',$num);
 	print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'">';
-	
-	
+
+
 	// Filter on categories
 	$moreforfilter='';
 	if (! empty($conf->categorie->enabled))
@@ -214,8 +214,8 @@ if ($resql)
 		print $moreforfilter;
 		print '</div>';
 	}
-	
-	
+
+
 	print '<table class="liste" width="100%">';
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"fac.ref","",$param,"",$sortfield,$sortorder);
@@ -278,7 +278,7 @@ if ($resql)
 		$facturestatic->ref_supplier=$obj->ref_supplier;
 		print $facturestatic->getNomUrl(1);
 		print "</td>\n";
-		print '<td class="nowrap">'.dol_trunc($obj->ref_supplier,10)."</td>";
+		print '<td class="nowrap">'.dol_trunc($obj->ref_supplier,40)."</td>";
 		print '<td align="center" class="nowrap">'.dol_print_date($db->jdate($obj->datef),'day').'</td>';
 		print '<td align="center" class="nowrap">'.dol_print_date($db->jdate($obj->date_echeance),'day');
 		if (($obj->paye == 0) && ($obj->fk_statut > 0) && $obj->date_echeance && $db->jdate($obj->date_echeance) < ($now - $conf->facture->fournisseur->warning_delay)) print img_picto($langs->trans("Late"),"warning");

@@ -256,7 +256,8 @@ if ($sall)
     // For natural search
     $scrit = explode(' ', $sall);
     foreach ($scrit as $crit) {
-        $sql .= " AND (p.lastname LIKE '%".$db->escape($crit)."%' OR p.firstname LIKE '%".$db->escape($crit)."%' OR p.email LIKE '%".$db->escape($crit)."%')";
+        $sql .= " AND (p.lastname LIKE '%".$db->escape($crit)."%' OR p.firstname LIKE '%".$db->escape($crit)."%' OR p.email LIKE '%".$db->escape($crit)."%' OR";
+        $sql .= " p.phone LIKE '%".$db->escape($crit)."%' OR p.phone_perso LIKE '%".$db->escape($crit)."%' OR p.phone_mobile LIKE '%".$db->escape($crit)."%')";
     }
 }
 if (! empty($socid))
@@ -318,27 +319,27 @@ if ($result)
     print '<input type="hidden" name="type" value="'.$type.'">';
     print '<input type="hidden" name="sortfield" value="'.$sortfield.'">';
     print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
-    
+
     if (! empty($conf->categorie->enabled))
     {
     	$moreforfilter.=$langs->trans('Categories'). ': ';
     	$moreforfilter.=$formother->select_categories(4,$search_categ,'search_categ',1);
     	$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
     }
-    
+
     $moreforfilter .= $langs->trans ( 'SalesRepresentatives' ) . ': ';
     $moreforfilter .= $formother->select_salesrepresentatives ( $search_sale, 'search_sale', $user );
-    
+
     if ($moreforfilter)
     {
     	print '<div class="liste_titre">';
     	print $moreforfilter;
     	print '</div>';
     }
-    
+
     if ($sall)
     {
-        print $langs->trans("Filter")." (".$langs->trans("Lastname").", ".$langs->trans("Firstname")." ".$langs->trans("or")." ".$langs->trans("EMail")."): ".$sall;
+        print $langs->trans("Filter")." (".$langs->trans("Lastname").", ".$langs->trans("Firstname")." ".$langs->trans("or")." ".$langs->trans("EMail")." ".$langs->trans("or")." ".$langs->trans("Phone")."): ".$sall;
     }
 
     print '<table class="liste" width="100%">';
@@ -374,7 +375,7 @@ if ($result)
     print '<td class="liste_titre">';
     print '<input class="flat" type="text" name="search_poste" size="9" value="'.$search_poste.'">';
     print '</td>';
-    
+
     print '<td class="liste_titre">';
     if (is_array ( $extralabels ) && key_exists ( 'ct_service', $extralabels )) {
     	print $extrafields->showInputField ( 'ct_service', $ct_service );
@@ -411,7 +412,7 @@ if ($result)
     print '<td class="liste_titre">';
     print '<input type="text" class="flat" name="search_country" size="10" value="'.$search_country.'">';
     print '</td>';
-    
+
 	print '<td class="liste_titre">&nbsp;</td>';
 	print '<td class="liste_titre" align="center">';
 	$selectarray=array('0'=>$langs->trans("ContactPublic"),'1'=>$langs->trans("ContactPrivate"));
@@ -448,35 +449,35 @@ if ($result)
 		// Firstname
         print '<td>'.dol_trunc($obj->firstname,20).'</td>';
 
-       
-        
+
+
 		// Function
         print '<td>'.dol_trunc($obj->poste,20).'</td>';
-        
+
         // Function/service
         print '<td>';
-        
-        
+
+
         if (is_array ( $extralabels ) && key_exists ( 'ct_service', $extralabels )) {
         	print $extrafields->showOutputField ( 'ct_service', $obj->ct_service );
         }
-        
+
         print '</td>';
-        
+
         //ct_ptincipal
         print '<td>';
         if (is_array ( $extralabels ) && key_exists ( 'ct_principal', $extralabels )) {
         	print $extrafields->showOutputField ( 'ct_principal', $obj->ct_principal );
         }
         print '</td>';
-        
+
         //ct_catalogue
         print '<td>';
         if (is_array ( $extralabels ) && key_exists ( 'ct_catalogue', $extralabels )) {
         	print $extrafields->showOutputField ( 'ct_catalogue', $obj->ct_catalogue );
         }
         print '</td>';
-        
+
         // Company
         if (empty($conf->global->SOCIETE_DISABLE_CONTACTS))
         {
@@ -512,7 +513,7 @@ if ($result)
 
 		// Private/Public
 		print '<td align="center">'.$contactstatic->LibPubPriv($obj->priv).'</td>';
-		
+
 		// Status
 		print '<td align="center">'.$contactstatic->getLibStatut(3).'</td>';
 

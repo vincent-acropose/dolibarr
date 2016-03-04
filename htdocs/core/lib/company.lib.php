@@ -37,7 +37,7 @@ function societe_prepare_head($object)
     global $langs, $conf, $user;
     $h = 0;
     $head = array();
-    
+
     $langs->load("products");
 
     $head[$h][0] = DOL_URL_ROOT.'/societe/soc.php?socid='.$object->id;
@@ -117,7 +117,7 @@ function societe_prepare_head($object)
         	$h++;
         }
     }
-    
+
     if (($object->client==1 || $object->client==2 || $object->client==3) && (! empty ( $conf->global->PRODUIT_CUSTOMER_PRICES )))
     {
 	    // price
@@ -510,15 +510,15 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
 {
     global $user,$conf;
     global $bc;
-    
+
     $form= new Form($db);
-    
+
     $sortfield = GETPOST("sortfield",'alpha');
     $sortorder = GETPOST("sortorder",'alpha');
     $search_status		= GETPOST("search_status",'int');
     if ($search_status=='') $search_status=1; // always display activ customer first
     $search_name = GETPOST("search_name",'alpha');
-    
+
     if (! $sortorder) $sortorder="ASC";
     if (! $sortfield) $sortfield="p.lastname";
 
@@ -545,20 +545,20 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
     $title = (! empty($conf->global->SOCIETE_ADDRESSES_MANAGEMENT) ? $langs->trans("ContactsForCompany") : $langs->trans("ContactsAddressesForCompany"));
     print_fiche_titre($title,$buttoncreate,'');
 
-    
+
     $param="socid=".$object->id;
     if ($search_status != '') $param.='&amp;search_status='.$search_status;
     if ($search_name != '') $param.='&amp;search_name='.urlencode($search_name);
     $param.='#contactlist';
-    
+
      print '<a name="contactlist"></a>';
-    
+
     print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'#contactlist" name="formfilter">';
     print '<input type="hidden" name="socid" value="'.$object->id.'">';
     print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
     print '<input type="hidden" name="sortfield" value="'.$sortfield.'">';
-    
-    print "\n".'<table class="noborder" width="100%">'."\n";   
+
+    print "\n".'<table class="noborder" width="100%">'."\n";
     print '<tr class="liste_titre">';
     print_liste_field_titre($langs->trans("Name"),$_SERVER["PHP_SELF"],"p.lastname","",$param,'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Poste"),$_SERVER["PHP_SELF"],"p.poste","",$param,'',$sortfield,$sortorder);
@@ -575,35 +575,35 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
         print '<td>&nbsp;</td>';
     }
     print "</tr>";
-    
+
     print '<tr class="liste_titre">';
     print '<td class="liste_titre">';
     print '<input type="text" class="flat" name="search_name" size="20" value="'.$search_name.'">';
     print '</td>';
-    
-    print '<td>&nbsp;</td>';
-    print '<td>&nbsp;</td>';
-    print '<td>&nbsp;</td>';  
+
     print '<td>&nbsp;</td>';
     print '<td>&nbsp;</td>';
     print '<td>&nbsp;</td>';
     print '<td>&nbsp;</td>';
-    
+    print '<td>&nbsp;</td>';
+    print '<td>&nbsp;</td>';
+    print '<td>&nbsp;</td>';
+
     print '<td class="liste_titre">';
     print $form->selectarray('search_status', array('0'=>$langs->trans('ActivityCeased'),'1'=>$langs->trans('InActivity')),$search_status);
     print '</td>';
-    
+
     if (! empty($conf->agenda->enabled) && $user->rights->agenda->myactions->create)
     {
     	print '<td>&nbsp;</td>';
-    }	
-    
+    }
+
     print '<td class="liste_titre" align="right">';
 	print '<input type="image" class="liste_titre" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 	print '</td>';
-    
+
     print "</tr>";
-  
+
 
     $sql = "SELECT p.rowid, p.lastname, p.firstname, p.fk_pays, p.poste, p.phone, p.phone_mobile, p.fax, p.email, p.statut, p.datec ";
     $sql .= ", petx.ct_service ";
@@ -639,15 +639,15 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
             print '</td>';
 
             print '<td>'.$obj->poste.'</td>';
-                    
+
             print '<td>';
             require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
             $extrafield=new ExtraFields($db);
             $extrafield->fetch_name_optionals_label('socpeople');
             print $extrafield->showOutputField('ct_service',$obj->ct_service);
-            
+
             print '</td>';
-            
+
 
             $country_code = getCountry($obj->fk_pays, 2);
 
@@ -829,6 +829,55 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
 
     if (! empty($conf->agenda->enabled))
     {
+
+
+    	$sortfield = GETPOST("sortfield",'alpha');
+		$sortorder = GETPOST("sortorder",'alpha');
+    	$action=GETPOST('action');
+    	if ($action=='switchstatus') {
+    		$newpercent=GETPOST('newpercent');
+    		$switchid=GETPOST('switchid');
+    		$sql='UPDATE '.MAIN_DB_PREFIX.'actioncomm SET percent='.$newpercent.' WHERE id='.$switchid;
+    		dol_syslog(__FILE__."::switchstatus sql=".$sql);
+    		$result=$db->query($sql);
+    		if (!$result)
+    		{
+    			setEventMessage('Error'.$db->lasterror(),'errors');
+    		}
+    	}
+
+    	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
+
+    	$search_actioncode_todo=GETPOST('search_actioncode_todo');
+    	$search_title_todo=GETPOST('search_title_todo');
+    	$search_desc_todo=GETPOST('search_desc_todo');
+    	$search_contact_todo=GETPOST('search_contact_todo');
+    	$socid=GETPOST('socid');
+
+    	$htmlactions = new FormActions($db);
+
+    	$filter=array();
+    	if (!empty($search_actioncode_todo)) {
+    		$param.="&amp;search_actioncode_todo=".$search_actioncode_todo;
+    		$filter['c.code']=$search_actioncode_todo;
+    	}
+    	if (!empty($search_title_todo)) {
+    		$param.="&amp;search_title_todo=".$search_title_todo;
+    		$filter['a.label']=$search_title_todo;
+    	}
+    	if (!empty($search_desc_todo)) {
+    		$param.="&amp;search_desc_todo=".$search_desc_todo;
+    		$filter['a.note']=$search_desc_todo;
+    	}
+    	if (!empty($search_contact_todo)) {
+    		$param.="&amp;search_contact_todo=".$search_contact_todo;
+    		$filter['contactname']=$search_contact_todo;
+    	}
+    	if (!empty($socid)) {
+    		$param.="&amp;socid=".$socid;
+    	}
+
+
         require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
         $actionstatic=new ActionComm($db);
         $userstatic=new User($db);
@@ -836,6 +885,7 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $socstatic = new Societe($db);
 
         $out.="\n";
+        $out.='<form method="POST" id="searchActionListToDo" name="searchActionListToDo" action="'.$_SERVER["PHP_SELF"].'?socid='.$object->id.'">';
         $out.='<table width="100%" class="noborder">';
         $out.='<tr class="liste_titre">';
         $out.='<td>';
@@ -843,15 +893,17 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $out.=$langs->trans("ActionsToDoShort");
         if (get_class($object) == 'Societe') $out.='</a>';
         $out.='</td>';
-        $out.='<td>'.$langs->trans('Type').'</td>';
-        $out.='<td>&nbsp;</td>';
-        $out.='<td>'.$langs->trans('Action').'</td>';
-        $out.='<td>'.$langs->trans('Description').'</td>';
-        $out.='<td>'.$langs->trans('Customer').'</td>';
-        $out.='<td>'.$langs->trans('Contact').'</td>';
-        $out.='<td>'.$langs->trans('ActionUserAsk').'</td>';
-        $out.='<td>'.$langs->trans('AffectedTo').'</td>';
-        $out.='<td align="right">';
+        $out.= getTitleFieldOfList($langs->trans("Type"), 0, $_SERVER["PHP_SELF"], "c.libelle", "", $param, 'width="10%"', $sortfield, $sortorder);
+        $out.='<td>&nbsp;3</td>';
+        $out.= getTitleFieldOfList($langs->trans("Action"), 0, $_SERVER["PHP_SELF"], "a.label", "", $param, '', $sortfield, $sortorder);
+        $out.= getTitleFieldOfList($langs->trans("Description"), 0, $_SERVER["PHP_SELF"], "a.note", "", $param, '', $sortfield, $sortorder);
+        $out.= getTitleFieldOfList($langs->trans("Customer"), 0, $_SERVER["PHP_SELF"], "soc.nom", "", $param, '', $sortfield, $sortorder);
+        $out.= getTitleFieldOfList($langs->trans("Contact"), 0, $_SERVER["PHP_SELF"], "sp.lastname,sp.firstname", "", $param, '', $sortfield, $sortorder);
+        $out.='<th>'.$langs->trans('ActionUserAsk').'</th>';
+        $out.= getTitleFieldOfList($langs->trans("AffectedTo"), 0, $_SERVER["PHP_SELF"], "u.login", "", $param, '', $sortfield, $sortorder);
+        $out.= '<th>'.$langs->trans('Status').'</th>';
+        $out.= '<th align="left">'.$langs->trans('ChangeStatusTo').'</th>';
+        $out.='<th align="right" width="20px">';
 		$permok=$user->rights->agenda->myactions->create;
         if (($object->id || $objcon->id) && $permok)
 		{
@@ -862,6 +914,23 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
     		$out.=img_picto($langs->trans("AddAnAction"),'filenew');
     		$out.="</a>";
 		}
+        $out.='</th>';
+        $out.='</tr>';
+
+        $out.='<tr class="liste_titre">';
+        $out.='<td></td>';
+        $out.='<td>'.$htmlactions->select_type_actions($search_actioncode_todo, "search_actioncode_todo","systemauto",0,'output').'</td>';
+        $out.='<td>&nbsp;</td>';
+        $out.='<td><input type="text" size="10" name="search_title_todo" value="'.$search_title_todo.'"/></td>';
+        $out.='<td><input type="text" size="10" name="search_desc_todo" value="'.$search_desc_todo.'"/></td>';
+        $out.='<td></td>';
+        $out.='<td><input type="text" size="10" name="search_contact_todo" value="'.$search_contact_todo.'"/></td>';
+        $out.='<td></td>';
+        $out.='<td></td>';
+        $out.= '<td></td>';
+        $out.= '<td></td>';
+        $out.='<td align="right">';
+        $out.='<input class="liste_titre" name="button_search" type="image" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
         $out.='</td>';
         $out.='</tr>';
 
@@ -879,6 +948,7 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $sql.= " FROM ".MAIN_DB_PREFIX."c_actioncomm as c, ".MAIN_DB_PREFIX."user as u, ".MAIN_DB_PREFIX."actioncomm as a";
         if (get_class($object) == 'Adherent') $sql.= ", ".MAIN_DB_PREFIX."adherent as m";
         if (get_class($object) == 'Societe')  $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople as sp ON a.fk_contact = sp.rowid";
+        if (get_class($object) == 'Societe')  $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as soc ON a.fk_soc = soc.rowid";
         $sql.= " WHERE u.rowid = a.fk_user_author";
         $sql.= " AND a.entity IN (".getEntity('agenda', 1).")";
         if (get_class($object) == 'Adherent') {
@@ -891,6 +961,19 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $sql.= " AND c.id=a.fk_action";
         $sql.= " AND (c.module<>'agefodd' OR c.module IS NULL)";
         $sql.= " AND ((a.percent >= 0 AND a.percent < 100) OR (a.percent = -1 AND a.datep > '".$db->idate($now)."'))";
+
+        foreach($filter as $key=>$value) {
+        	if ($key=='c.code') {
+        		$sql.= 'AND '.$key.'=\''.$db->escape($value).'\'';
+        	} elseif ($key=='a.label'){
+        		$sql.= 'AND '.$key.' LIKE \'%'.$db->escape($value).'%\'';
+        	} elseif ($key=='contactname'){
+        		$sql.= 'AND sp.lastname LIKE \'%'.$db->escape($value).'%\' OR sp.firstname LIKE \'%'.$db->escape($value).'%\'';
+        	}else {
+        		$sql.= 'AND '.$key.'='.$value;
+        	}
+
+        }
         $sql.= " ORDER BY a.datep DESC, a.id DESC";
 
         dol_syslog("company.lib::show_actions_todo sql=".$sql);
@@ -914,8 +997,12 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
                     $out.="<tr ".$bc[$var].">";
 
                     $out.='<td width="120" align="left" class="nowrap">'.dol_print_date($datep,'dayhour')."</td>\n";
-                    
-                    $out.='<td width="120" align="left" class="nowrap">'.$obj->libelle."</td>\n";
+
+                    $out.='<td width="120" align="left" class="nowrap">';
+                    $transcode=$langs->trans("Action".$obj->acode);
+                    $libelle=($transcode!="Action".$obj->acode?$transcode:$obj->libelle);
+
+                    $out.= $libelle."</td>\n";
 
                     // Picto warning
                     $out.='<td width="16">';
@@ -934,15 +1021,15 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
                     // Title of event
                     //$out.='<td colspan="2">'.dol_trunc($obj->label,40).'</td>';
                     $out.='<td>'.$actionstatic->getNomUrl(1,40).'</td>';
-                    
+
                     //Desc
                     $out.= '<td>' . dol_htmlentitiesbr( dol_trunc ( $obj->note, 60 ),  1 ) . '</td>';
-                    
+
                     // Soc pour cette action
                     if (!empty($obj->fk_soc))
                     {
                     	$socstatic->fetch($obj->fk_soc);
-                    
+
                     	$out.='<td width="120">'.$socstatic->getNomUrl(1).'</td>';
                     }
                     else
@@ -962,7 +1049,7 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
                     {
                         $out.='<td>&nbsp;</td>';
                     }
-                    
+
                     //User affected
                     $out.='<td class="nowrap" width="80">';
                     $userstatic->fetch($obj->fk_user_action);
@@ -978,8 +1065,42 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
                     // Statut
                     $out.='<td class="nowrap" width="20" align="center">'.$actionstatic->LibStatut($obj->percent,3).'</td>';
 
+                    //Add link to update action status
+                    $out.= '<td align="left">';
+                    $listofstatus = array(
+                    		'-1' => $langs->trans("ActionNotApplicable"),
+                    		'0' => $langs->trans("ActionRunningNotStarted"),
+                    		'50' => $langs->trans("ActionRunningShort"),
+                    		'100' => $langs->trans("ActionDoneShort")
+                    );
+                    $html_change_act_status='';
+                    foreach($listofstatus as $key=>$text) {
+                    	$html_change_act_status.='<a href="'.$_SERVER["PHP_SELF"].'?'.$param.'&action=switchstatus&newpercent='.$key.'&switchid='.$obj->id.'"';
+                    	switch ($key) {
+                    		case -1 :
+                    			$html_change_act_status.= 'title="'.$langs->trans('ChangeStatusTo',$text).'">'.img_picto($langs->trans('StatusNotApplicable'),'statut9');
+                    			break;
+                    		case 0 :
+                    			$html_change_act_status.= 'title="'.$langs->trans('ChangeStatusTo',$text).'">'.img_picto($langs->trans('StatusActionToDo'),'statut1');
+                    			break;
+                    		case 50 :
+                    			$html_change_act_status.= 'title="'.$langs->trans('ChangeStatusTo',$text).'">'.img_picto($langs->trans('StatusActionInProcess'),'statut3');
+                    			break;
+                    		case 100 :
+                    			$html_change_act_status.= 'title="'.$langs->trans('ChangeStatusTo',$text).'">'.img_picto($langs->trans('StatusActionDone'),'statut6');
+                    			break;
+                    	}
+                    	$html_change_act_status.='</a>&nbsp;&nbsp;';
+                    }
+                    $out.= $html_change_act_status;
+
+                    $out.= '</td>';
+
+                    $out.= '<td></td>';
+
                     $out.="</tr>\n";
                     $i++;
+
                 }
             }
             else
@@ -994,6 +1115,7 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
             dol_print_error($db);
         }
         $out.="</table>\n";
+        $out.='</form>';
 
         $out.="<br>\n";
     }
@@ -1186,20 +1308,20 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
     		$out.="</a>";
 		}
         $out.='</td>';
-        
+
         $out.='</tr>';
 
         foreach ($histo as $key=>$value)
         {
             $var=!$var;
             $out.="<tr ".$bc[$var].">";
-            
+
             // Champ date
             $out.='<td width="120" class="nowrap">';
             if ($histo[$key]['date']) $out.=dol_print_date($histo[$key]['date'],'dayhour');
             else if ($histo[$key]['datestart']) $out.=dol_print_date($histo[$key]['datestart'],'dayhour');
             $out.="</td>\n";
-            
+
             // Champ type
             $out.='<td width="50" class="nowrap">';
             $out.=$histo[$key]['libelle'];
@@ -1261,7 +1383,7 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
             }
             else $out.='&nbsp;';
             $out.='</td>';
-            
+
             // Soc pour cette action
             if (isset($histo[$key]['fk_soc']) && $histo[$key]['fk_soc'] > 0)
             {
@@ -1273,7 +1395,7 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
             {
             	$out.='<td>&nbsp;</td>';
             }
-            
+
             // Contact pour cette action
             if (isset($histo[$key]['contact_id']) && $histo[$key]['contact_id'] > 0)
             {
@@ -1286,7 +1408,7 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
             {
                 $out.='<td>&nbsp;</td>';
             }
-            
+
             //User affected
             $out.='<td class="nowrap" width="80">';
             $userstatic->fetch($histo[$key]['fk_user_action']);
