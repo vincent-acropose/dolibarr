@@ -1035,11 +1035,13 @@ function show_day_events2($username, $day, $month, $year, $monthshown, $style, &
 			$title1=$langs->trans("Ref").' '.$ids1.($title1?' - '.$title1:'');
 			if ($output[0]['string']) $title1.=($title1?' - ':'').$output[0]['string'];
 			if ($output[0]['color']) $color1 = $output[0]['color'];
+			if(!empty($username->color)) $color1 = $username->color;
 		}
 		else if (count($cases1[$h]) > 1)
 		{
 			$title1=$langs->trans("Ref").' '.$ids1.($title1?' - '.$title1:'');
 			$color1='222222';
+			if(!empty($username->color)) $color1 = $username->color;
 		}
 
 		if (count($cases2[$h]) == 1)	// only 1 event
@@ -1048,11 +1050,13 @@ function show_day_events2($username, $day, $month, $year, $monthshown, $style, &
 			$title2=$langs->trans("Ref").' '.$ids2.($title2?' - '.$title2:'');
 			if ($output[0]['string']) $title2.=($title2?' - ':'').$output[0]['string'];
 			if ($output[0]['color']) $color2 = $output[0]['color'];
+			if(!empty($username->color)) $color2 = $username->color;
 		}
 		else if (count($cases2[$h]) > 1)
 		{
 			$title2=$langs->trans("Ref").' '.$ids2.($title2?' - '.$title2:'');
 			$color2='222222';
+			if(!empty($username->color)) $color2 = $username->color;
 		}
 		print '<table class="nobordernopadding" width="100%">';
 		print '<tr><td '.($color1?'style="background: #'.$color1.';"':'').'class="'.($style1?$style1.' ':'').'onclickopenref'.($title1?' cursorpointer':'').'" ref="ref_'.$username->id.'_'.sprintf("%04d",$year).'_'.sprintf("%02d",$month).'_'.sprintf("%02d",$day).'_'.sprintf("%02d",$h).'_00_'.($ids1?$ids1:'none').'"'.($title1?' title="'.$title1.'"':'').'>';
