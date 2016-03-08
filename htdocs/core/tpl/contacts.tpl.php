@@ -100,7 +100,7 @@ $userstatic=new User($db);
 			<?php $selectedCompany = $formcompany->selectCompaniesForNewContact($object, 'id', $selectedCompany, 'newcompany'); ?>
 		</div>
 		<div class="tagtd maxwidthonsmartphone">
-			<?php $nbofcontacts=$form->select_contacts($selectedCompany, '', 'contactid'); ?>
+			<?php $nbofcontacts=$form->select_contacts($selectedCompany, '', 'contactid',0,'','',1); ?>
 		</div>
 		<?php } ?>
 		<div class="tagtd maxwidthonsmartphone">
