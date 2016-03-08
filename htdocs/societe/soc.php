@@ -894,7 +894,7 @@ else
         print '</td></tr>';
 
         // Status
-        print '<tr><td><label for="status">'.$langs->trans('Status').'</label></td><td colspan="3">';
+        print '<tr style="display:none"><td><label for="status">'.$langs->trans('Status').'</label></td><td colspan="3">';
         print $form->selectarray('status', array('0'=>$langs->trans('ActivityCeased'),'1'=>$langs->trans('InActivity')),1);
         print '</td></tr>';
 
@@ -1402,7 +1402,7 @@ else
             }
 
             // Status
-            print '<tr><td><label for="status">'.$langs->trans("Status").'</label></td><td colspan="3">';
+            print '<tr style="display:none;"><td><label for="status">'.$langs->trans("Status").'</label></td><td colspan="3">';
             print $form->selectarray('status', array('0'=>$langs->trans('ActivityCeased'),'1'=>$langs->trans('InActivity')),$object->status);
             print '</td></tr>';
 
