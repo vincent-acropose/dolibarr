@@ -5,6 +5,9 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 
 CKEDITOR.editorConfig = function( config )
 {
+	config.scayt_autoStartup = true;
+	config.scayt_sLang = 'fr_FR';
+
 	// Define changes to default configuration here.
 	// http://docs.cksource.com/CKEditor_3.x/Developers_Guide
 	// http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html
@@ -69,6 +72,7 @@ CKEDITOR.editorConfig = function( config )
 	 	['NumberedList','BulletedList','Outdent','Indent'],
 	 	['JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock'],
 	    ['Link','Unlink','Image','Table','HorizontalRule','SpecialChar']
+		,['Scayt']
 	];
 	
 	// Used for details lines
