@@ -1048,6 +1048,7 @@ class Propal extends CommonObject
      */
     function create_from($user)
     {
+    	// i love this function because $this->products is not used in create function...
         $this->products=$this->lines;
 
         return $this->create($user);
@@ -1162,7 +1163,7 @@ class Propal extends CommonObject
             }
 
             // Call trigger
-            $result=$this->call_trigger('PROPAL_CLONE',$user);
+            $result=$clonedObj->call_trigger('PROPAL_CLONE',$user);
             if ($result < 0) { $error++; }
             // End call triggers
         }

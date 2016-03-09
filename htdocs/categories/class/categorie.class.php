@@ -1241,7 +1241,7 @@ class Categorie extends CommonObject
 
 		$sql = "SELECT ct.fk_categorie, c.label, c.rowid";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "categorie_" . $this->MAP_CAT_TABLE[$type] . " as ct, " . MAIN_DB_PREFIX . "categorie as c";
-		$sql .= " WHERE ct.fk_categorie = c.rowid AND ct.fk_" . $this->MAP_CAT_FK[$type] . " = " . $id . " AND c.type = " . $this->MAP_ID[$type];
+		$sql .= " WHERE ct.fk_categorie = c.rowid AND ct.fk_" . $this->MAP_CAT_FK[$type] . " = " . (int) $id . " AND c.type = " . $this->MAP_ID[$type];
 		$sql .= " AND c.entity IN (" . getEntity( 'category', 1 ) . ")";
 
 		$res = $this->db->query($sql);
@@ -1294,7 +1294,7 @@ class Categorie extends CommonObject
 		if (is_numeric( $type )) {
 			// We want to reverse lookup
 			$map_type = array_flip( $this->MAP_ID );
-			$type = $map_type;
+			$type = $map_type[$type];
 			dol_syslog( get_class( $this ) . "::rechercher(): numeric types are deprecated, please use string instead",
 				LOG_WARNING );
 		}

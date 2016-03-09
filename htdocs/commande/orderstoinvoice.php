@@ -6,6 +6,7 @@
  * Copyright (C) 2012	   Andreu Bisquerra Gaya  	<jove@bisquerra.com>
  * Copyright (C) 2012	   David Rodriguez Martinez <davidrm146@gmail.com>
  * Copyright (C) 2012	   Juanjo Menent			<jmenent@2byte.es>
+ * Copyright (C) 2015	   Ferran Marcet			<fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -179,6 +180,7 @@ if (($action == 'create' || $action == 'add') && !$error)
 					$object->origin_id = $orders_id[$ii];
 					$object->linked_objects = $orders_id;
 					$id = $object->create($user);
+					$object->fetch_thirdparty();
 
 					if ($id>0)
 					{
@@ -298,7 +300,8 @@ if (($action == 'create' || $action == 'add') && !$error)
 												$lines[$i]->rowid,
 												$fk_parent_line,
 												$lines[$i]->fk_fournprice,
-												$lines[$i]->pa_ht
+												$lines[$i]->pa_ht,
+												$lines[$i]->label
 										);
 										if ($result > 0)
 										{
@@ -394,9 +397,9 @@ if ($action == 'create' && !$error)
 	print '<input type="hidden" name="origin" value="'.GETPOST('origin').'">';
 	print '<input type="hidden" name="originid" value="'.GETPOST('originid').'">';
 	print '<input type="hidden" name="autocloseorders" value="'.GETPOST('autocloseorders').'">';
-	
+
 	dol_fiche_head();
-	
+
 	print '<table class="border" width="100%">';
 
 	// Ref
@@ -499,15 +502,15 @@ if ($action == 'create' && !$error)
 	}
 
 	dol_fiche_end();
-	
+
 	// Button "Create Draft"
 	print '<div class="center"><input type="submit" class="button" name="bouton" value="'.$langs->trans('CreateDraft').'" /></div>';
 	print "</form>\n";
 
 	print '</td></tr>';
 	print "</table>\n";
-	
-	
+
+
 }
 
 // Mode liste
