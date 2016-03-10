@@ -1171,10 +1171,10 @@ function pdf_getlinedesc($object,$i,$outputlangs,$hideref=0,$hidedesc=0,$issuppl
 		foreach ($dbatch as $detail)
 		{
 			$dte=array();
-			if ($detail->eatby) $dte[]=$outputlangs->transnoentitiesnoconv('printEatby',dol_print_date($detail->eatby, $format, false, $outputlangs));
-			if ($detail->sellby) $dte[]=$outputlangs->transnoentitiesnoconv('printSellby',dol_print_date($detail->sellby, $format, false, $outputlangs));
-			if ($detail->batch) $dte[]=$outputlangs->transnoentitiesnoconv('printBatch',$detail->batch);
-			$dte[]=$outputlangs->transnoentitiesnoconv('printQty',$detail->dluo_qty);
+			if ($detail->eatby) $dte[]=$langs->transnoentitiesnoconv('printEatby',dol_print_date($detail->eatby, $format, false, $langs));
+			if ($detail->sellby) $dte[]=$langs->transnoentitiesnoconv('printSellby',dol_print_date($detail->sellby, $format, false, $langs));
+			if ($detail->batch) $dte[]=$langs->transnoentitiesnoconv('printBatch',$detail->batch);
+			$dte[]=$langs->transnoentitiesnoconv('printQty',$detail->dluo_qty);
 			$libelleproduitservice.= "__N__  ".implode($dte,"-");
 		}
 	}
