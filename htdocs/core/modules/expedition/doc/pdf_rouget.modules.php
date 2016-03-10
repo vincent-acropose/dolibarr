@@ -279,6 +279,9 @@ class pdf_rouget extends ModelePdfExpedition
 				$nexY = $tab_top + 7;
 
 				$num=count($object->lines);
+				
+				$TWeightUnits = array(-6=>'mg', -3=>'g', 0=>'Kg', 3=>'tonnes', 99=>'livre'); // TODO fait à la va vite parce que pas le temps
+				
 				// Loop on each lines
 				for ($i = 0; $i < $num; $i++)
 				{
@@ -307,10 +310,10 @@ class pdf_rouget extends ModelePdfExpedition
 					$pdf->SetFont('','', $default_font_size - 1);   // On repositionne la police par defaut
 
 					$pdf->SetXY($this->posxqtyordered, $curY);
-					$pdf->MultiCell(($this->posxqtytoship - $this->posxqtyordered), 3, $object->lines[$i]->qty_asked,'','C');
+					$pdf->MultiCell(($this->posxqtytoship - $this->posxqtyordered), 3, $object->lines[$i]->qty_asked.' '.$TWeightUnits[$object->weight_units],'','C');
 
 					$pdf->SetXY($this->posxqtytoship, $curY);
-					$pdf->MultiCell(($this->page_largeur - $this->marge_droite - $this->posxqtytoship), 3, $object->lines[$i]->qty_shipped,'','C');
+					$pdf->MultiCell(($this->page_largeur - $this->marge_droite - $this->posxqtytoship), 3, $object->lines[$i]->qty_shipped.' '.$TWeightUnits[$object->weight_units],'','C');
 
 					// Add line
 					if ($conf->global->MAIN_PDF_DASH_BETWEEN_LINES && $i < ($nblignes - 1))
