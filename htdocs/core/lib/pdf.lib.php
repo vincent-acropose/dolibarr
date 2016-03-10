@@ -375,7 +375,7 @@ function pdf_build_address($outputlangs,$sourcecompany,$targetcompany='',$target
 			}
 			// Country
 			if (!empty($targetcontact->country_code) && $targetcontact->country_code != $sourcecompany->country_code) {
-				$stringaddress.=$outputlangs->convToOutputCharset($outputlangs->transnoentitiesnoconv("Country".$targetcontact->country_code))."\n";
+				$stringaddress.=$outputlangs->convToOutputCharset($outputlangs->transnoentitiesnoconv("Country".$targetcontact->country_code));
 			}
 			else if (empty($targetcontact->country_code) && !empty($targetcompany->country_code) && ($targetcompany->country_code != $sourcecompany->country_code)) {
 				$stringaddress.=$outputlangs->convToOutputCharset($outputlangs->transnoentitiesnoconv("Country".$targetcompany->country_code))."\n";
