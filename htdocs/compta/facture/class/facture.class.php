@@ -1541,7 +1541,7 @@ class Facture extends CommonInvoice
 	 *    @param     int	$idremise	Id of absolute discount
 	 *    @return    int          		>0 if OK, <0 if KO
 	 */
-	function insert_discount($idremise)
+	function insert_discount($idremise,$fk_product='')
 	{
 		global $langs;
 
@@ -1570,6 +1570,7 @@ class Facture extends CommonInvoice
 			$facligne->tva_tx=$remise->tva_tx;
 			$facligne->subprice = -$remise->amount_ht;
 			$facligne->fk_product=0;					// Id produit predefini
+			if(!empty($fk_product)) $facligne->fk_product = $fk_product;
 			$facligne->qty=1;
 			$facligne->remise_percent=0;
 			$facligne->rang=-1;
