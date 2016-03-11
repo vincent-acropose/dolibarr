@@ -1008,7 +1008,7 @@ if (empty($reshook))
 										$discount->description = $desc;
 										$discountid = $discount->create($user);
 										if ($discountid > 0) {
-											$result = $object->insert_discount($discountid); // This include link_to_invoice
+											$result = $object->insert_discount($discountid,$lines[$i]->fk_product); // This include link_to_invoice
 										} else {
 											setEventMessage($discount->error, 'errors');
 											$error ++;
