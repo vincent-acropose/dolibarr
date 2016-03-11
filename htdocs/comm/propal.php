@@ -2058,6 +2058,9 @@ if ($action == 'create')
 		print $form_close;
 	}
 
+	//Select mail models is same action as presend
+	if (GETPOST('modelselected')) $action = 'presend'; //BACKPORTING 3.8
+	
 	/*
 	 * Boutons Actions
 	 */
@@ -2288,6 +2291,7 @@ if ($action == 'create')
 		// Tableau des parametres complementaires
 		$formmail->param['action'] = 'send';
 		$formmail->param['models'] = 'propal_send';
+		$formmail->param['models_id']=GETPOST('modelmailselected','int');
 		$formmail->param['id'] = $object->id;
 		$formmail->param['returnurl'] = $_SERVER["PHP_SELF"] . '?id=' . $object->id;
 		// Init list of files

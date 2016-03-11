@@ -2108,7 +2108,10 @@ else
 
         print '</div>'."\n";
 
-
+		//Select mail models is same action as presend //BACKPORTING 3.8
+		if (GETPOST('modelselected')) {
+			$action = 'presend';
+		}
 		if ($action == 'presend')
 		{
 			/*
@@ -2186,6 +2189,7 @@ else
 			// Tableau des parametres complementaires du post
 			$formmail->param['action']=$action;
 			$formmail->param['models']=$modelmail;
+			$formmail->param['models_id']=GETPOST('modelmailselected','int'); //BACKPORTING 3.8
 			$formmail->param['socid']=$object->id;
 			$formmail->param['returnurl']=$_SERVER["PHP_SELF"].'?socid='.$object->id;
 

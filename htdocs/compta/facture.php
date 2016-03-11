@@ -1008,7 +1008,7 @@ if (empty($reshook))
 										$discount->description = $desc;
 										$discountid = $discount->create($user);
 										if ($discountid > 0) {
-											$result = $object->insert_discount($discountid); // This include link_to_invoice
+											$result = $object->insert_discount($discountid,$lines[$i]->fk_product); // This include link_to_invoice
 										} else {
 											setEventMessage($discount->error, 'errors');
 											$error ++;
@@ -3646,6 +3646,7 @@ if ($action == 'create')
 		$formmail->substit['__REFCLIENT__'] = $object->ref_client;
 		$formmail->substit['__THIRDPARTY_NAME__'] = $object->thirdparty->name;
 		$formmail->substit['__PROJECT_REF__'] = (is_object($object->projet)?$object->projet->ref:'');
+		$formmail->substit['__PROJECT_NAME__'] = (is_object($object->projet)?$object->projet->title:''); //BACKPORTING 3.8
 		$formmail->substit['__PERSONALIZED__'] = '';
 		$formmail->substit['__CONTACTCIVNAME__'] = '';
 
@@ -3674,6 +3675,7 @@ if ($action == 'create')
 		// Tableau des parametres complementaires du post
 		$formmail->param['action'] = $action;
 		$formmail->param['models'] = $modelmail;
+		$formmail->param['models_id']=GETPOST('modelmailselected','int');
 		$formmail->param['facid'] = $object->id;
 		$formmail->param['returnurl'] = $_SERVER["PHP_SELF"] . '?id=' . $object->id;
 
