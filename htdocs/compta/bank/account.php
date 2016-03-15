@@ -79,6 +79,7 @@ $req_enddtmonth=GETPOST('req_enddtmonth', 'int');
 $req_enddtday=GETPOST('req_enddtday', 'int');
 $req_enddtyear=GETPOST('req_enddtyear', 'int');
 $req_enddt = dol_mktime(23, 59, 59, $req_enddtmonth, $req_enddtday, $req_enddtyear);
+$req_userid = GETPOST('userid');
 
 $vline=GETPOST("vline");
 $page=GETPOST('page','int');
@@ -107,6 +108,7 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
 	$req_enddtday="";
 	$req_enddtyear="";
 	$req_enddt = "";
+	$req_userid = "";
 }
 
 /*
@@ -520,6 +522,7 @@ if ($id > 0 || ! empty($ref))
 	print '<tr class="liste_titre">';
 	print '<td>'.$langs->trans("Date").'</td>';
 	print '<td>'.$langs->trans("Value").'</td>';
+	print '<td>'.$langs->trans("User").'</td>';
 	print '<td>'.$langs->trans("Type").'</td>';
 	print '<td>'.$langs->trans("Numero").'</td>';
 	print '<td>'.$langs->trans("Description").'</td>';
@@ -544,6 +547,9 @@ if ($id > 0 || ! empty($ref))
 	print '<tr class="liste_titre">';
 	print '<td colspan="2">'.$period_filter.'</td>';
 	print '<td>';
+	$form->select_users($req_userid, 'userid', 1);
+	print '</td>';
+	print '<td>';
 	//$filtertype=array('TIP'=>'TIP','PRE'=>'PRE',...)
 	$filtertype='';
 	$form->select_types_paiements($paiementtype,'paiementtype',$filtertype,2,1,1,8);
@@ -567,7 +573,7 @@ if ($id > 0 || ! empty($ref))
 	 * select sum(amount) from solde ;
      */
 
-	$sql = "SELECT b.rowid, b.dateo as do, b.datev as dv,";
+	$sql = "SELECT fac.fk_user_author as id_user_fac, fac_fourn.fk_user_author as id_user_fac_fourn, b.rowid, b.dateo as do, b.datev as dv,";
 	$sql.= " b.amount, b.label, b.rappro, b.num_releve, b.num_chq, b.fk_type, b.fk_bordereau,";
 	$sql.= " ba.rowid as bankid, ba.ref as bankref, ba.label as banklabel";
 	if ($mode_search)
@@ -607,8 +613,20 @@ if ($id > 0 || ! empty($ref))
 		//$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."bank_url as bu3 ON bu3.fk_bank = b.rowid AND bu3.type='company'";
 		//$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON bu3.url_id = s.rowid";
 	}
+	
+	// Jointures sur table facture client
+	$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'paiement pay ON(b.rowid = pay.fk_bank)';
+	$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'paiement_facture pay_f ON(pay.rowid = pay_f.fk_paiement)';
+	$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'facture fac ON(pay_f.fk_facture = fac.rowid)';
+	
+	// Jointures sur factures fournisseurs
+	$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'paiementfourn pay_fourn ON(b.rowid = pay_fourn.fk_bank)';
+	$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'paiementfourn_facturefourn pay_fourn_f ON(pay_fourn.rowid = pay_fourn_f.fk_paiementfourn)';
+	$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'facture_fourn fac_fourn ON(pay_fourn_f.fk_facturefourn = fac_fourn.rowid)';
+	
 	$sql.= " WHERE b.fk_account=".$object->id;
 	$sql.= " AND b.fk_account = ba.rowid";
+	if($req_userid > 0) $sql.= " AND (fac.fk_user_author = ".$req_userid." OR fac_fourn.fk_user_author = ".$req_userid.")";
 
 	// Si le partage des compte bancaire est activé dans multicompany, on ne limite pas la recherche des comptes à l'entité dans laquelle on se trouve (Ticket 1573)
 	if(!$conf->global->MULTICOMPANY_BANK_ACCOUNT_SHARING_ENABLED) $sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
@@ -631,7 +649,9 @@ if ($id > 0 || ! empty($ref))
 
 		$num = $db->num_rows($result);
 		$i = 0; $total = 0; $sep = -1; $total_deb=0; $total_cred=0;
-
+		
+		$u = new User($db);
+		
 		while ($i < $num)
 		{
 			$objp = $db->fetch_object($result);
@@ -661,7 +681,15 @@ if ($id > 0 || ! empty($ref))
 
 				print '<td class="nowrap">'.dol_print_date($db->jdate($objp->dv),"day");
 				print "</td>\n";
-
+				
+				print '<td>';
+				if(!empty($objp->id_user_fac) || !empty($objp->id_user_fac_fourn)) {
+					$u->fetch($objp->id_user_fac);
+					if($u->id <= 0) $u->fetch($objp->id_user_fac_fourn);
+					print $u->getNomUrl(1);
+				}
+				print '</td>';
+				
 				// Payment type
 				print '<td class="nowrap">';
 				$label=($langs->trans("PaymentTypeShort".$objp->fk_type)!="PaymentTypeShort".$objp->fk_type)?$langs->trans("PaymentTypeShort".$objp->fk_type):$objp->fk_type;
@@ -955,6 +983,7 @@ if ($id > 0 || ! empty($ref))
 			if ($sep > 0) print '&nbsp;';	// If we had at least one line in future
 			else print $langs->trans("CurrentBalance");
 			print ' '.$object->currency_code.'</td>';
+			print '<td>&nbsp;</td>';
 			print '<td align="right" class="nowrap"><b>'.price($total, 0, $langs, 0, 0, -1, $object->currency_code).'</b></td>';
 			print '<td>&nbsp;</td>';
 			print '</tr>';
