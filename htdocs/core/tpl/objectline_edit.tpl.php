@@ -306,22 +306,23 @@ if (! empty($conf->margin->enabled))
 
 		var price = 0;
 		remisejs=price2numjs(remise.val());
-
-        	bpjs=price2numjs(buying_price.val());
-		if (remisejs != 100 && bpjs > 0)
+		if (remisejs != 100)
 		{
+			bpjs=price2numjs(buying_price.val());
 			ratejs=price2numjs(rate.val());
-
 			/* console.log(npRate+" - "+bpjs+" - "+ratejs); */
-
 			if (npRate == "np_marginRate")
 				price = ((bpjs * (1 + ratejs / 100)) / (1 - remisejs / 100));
 			else if (npRate == "np_markRate")
-				price = ((bpjs / (1 - ratejs / 100)) / (1 - remisejs / 100));
-				
-			$("input[name='price_ht']:first").val(price);    // TODO Must use a function like php price to have here a formated value
+			{
+				if (ratejs != 100)	// If markRate is 100, it means buying price is 0, so it is not possible to retreive price from it and markRate. We keep it unchange
+				{
+					price = ((bpjs / (1 - (ratejs / 100))) / (1 - remisejs / 100));
+				}
+				else price=$("input[name='price_ht']:first").val();
+			}
 		}
-
+		$("input[name='price_ht']:first").val(price);	// TODO Must use a function like php price to have here a formated value
 		return true;
 	}
 
