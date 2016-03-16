@@ -31,6 +31,9 @@ require_once DOL_DOCUMENT_ROOT.'/exports/class/export.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/modules/export/modules_export.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
+set_time_limit(0); // TK3904
+ini_set('memory_limit','512M'); // TK3904
+
 $langs->load("exports");
 $langs->load("users");
 
