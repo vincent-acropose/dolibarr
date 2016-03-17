@@ -1008,6 +1008,7 @@ else
         print '<table class="border" width="100%">';
 
         // Accountancy_code_sell
+	if(empty($object->accountancy_code_sell)) $object->accountancy_code_sell = '701130000';
         print '<tr><td>'.$langs->trans("ProductAccountancySellCode").'</td>';
         print '<td><input name="accountancy_code_sell" size="16" value="'.$object->accountancy_code_sell.'">';
         print '</td></tr>';
