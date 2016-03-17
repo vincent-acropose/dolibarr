@@ -55,6 +55,10 @@ $tobuy = GETPOST("tobuy", 'int');
 $fourn_id = GETPOST("fourn_id",'int');
 $catid = GETPOST('catid','int');
 
+if(!isset($_REQUEST['finished'])) $finished = "0";
+else $finished = GETPOST('finished','int');
+if($finished == "-1") $finished="";
+
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
 $page = GETPOST("page",'int');
@@ -167,6 +171,7 @@ else
     	else $sql.= " AND p.fk_product_type <> '1'";
     }
 	if ($sref)     $sql .= natural_search('p.ref', $sref);
+
     if ($sbarcode) $sql .= natural_search('p.barcode', $sbarcode);
     if ($snom)
 	{
@@ -186,6 +191,16 @@ else
     if ($search_categ > 0)   $sql.= " AND cp.fk_categorie = ".$db->escape($search_categ);
     if ($search_categ == -2) $sql.= " AND cp.fk_categorie IS NULL";
     if ($fourn_id > 0) $sql.= " AND pfp.fk_soc = ".$fourn_id;
+
+    if ($finished === '0')
+    {
+        $sql.= " AND p.finished = ".$finished;
+    }
+    elseif ($finished === '1')
+    {
+            $sql.= " AND p.finished = ".$finished;
+    }
+
     $sql.= " GROUP BY p.rowid, p.ref, p.label, p.barcode, p.price, p.price_ttc, p.price_base_type,";
     $sql.= " p.fk_product_type, p.tms,";
     $sql.= " p.duration, p.tosell, p.tobuy, p.seuil_stock_alerte";
@@ -236,10 +251,11 @@ else
 		    setEventMessage($langs->trans("ProductDeleted", GETPOST('delprod')));
 	    }
 
-    	$param="&amp;sref=".$sref.($sbarcode?"&amp;sbarcode=".$sbarcode:"")."&amp;snom=".$snom."&amp;sall=".$sall."&amp;tosell=".$tosell."&amp;tobuy=".$tobuy;
+    	$param="&amp;finished=".$finished."&amp;sref=".$sref.($sbarcode?"&amp;sbarcode=".$sbarcode:"")."&amp;snom=".$snom."&amp;sall=".$sall."&amp;tosell=".$tosell."&amp;tobuy=".$tobuy;
     	$param.=($fourn_id?"&amp;fourn_id=".$fourn_id:"");
     	$param.=($search_categ?"&amp;search_categ=".$search_categ:"");
     	$param.=isset($type)?"&amp;type=".$type:"";
+	
 
     	print_barre_liste($texte, $page, "list.php", $param, $sortfield, $sortorder, '', $num, $nbtotalofrecords,'title_products.png');
 
@@ -296,6 +312,10 @@ else
     			$moreforfilter.=$htmlother->select_categories(Categorie::TYPE_PRODUCT,$search_categ,'search_categ',1);
     		 	$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
     		}
+
+		$statutarray=array('1' => $langs->trans("Finished"), '0' => $langs->trans("RowMaterial"));
+	        $moreforfilter.='&nbsp; '.$langs->trans("Nature").' : '.$form->selectarray('finished',$statutarray,$finished,1);
+
     	 	if ($moreforfilter)
     		{
     			print '<tr class="liste_titre">';
