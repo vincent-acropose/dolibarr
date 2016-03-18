@@ -731,8 +731,8 @@ class pdf_crabe extends ModelePDFFactures
 		$pdf->SetXY($tab3_posx+21, $tab3_top);
 		$pdf->MultiCell(20, 3, $outputlangs->transnoentities("Amount"), 0, 'L', 0);
 		$pdf->SetXY($tab3_posx+40, $tab3_top);
-		$pdf->MultiCell(20, 3, $outputlangs->transnoentities("Type"), 0, 'L', 0);
-		$pdf->SetXY($tab3_posx+58, $tab3_top);
+		$pdf->MultiCell(40, 3, $outputlangs->transnoentities("PaymentMode"), 0, 'L', 0);
+		$pdf->SetXY($tab3_posx+60, $tab3_top);
 		$pdf->MultiCell(20, 3, $outputlangs->transnoentities("Num"), 0, 'L', 0);
 
 		$pdf->line($tab3_posx, $tab3_top-1+$tab3_height, $tab3_posx+$tab3_width, $tab3_top-1+$tab3_height);
@@ -1486,7 +1486,7 @@ class pdf_crabe extends ModelePDFFactures
 		}
 
 		$objectidnext=$object->getIdReplacingInvoice('validated');
-		if ($object->type == 0 && $objectidnext)
+		/*if ($object->type == 0 && $objectidnext)
 		{
 			$objectreplacing=new Facture($this->db);
 			$objectreplacing->fetch($objectidnext);
@@ -1515,7 +1515,7 @@ class pdf_crabe extends ModelePDFFactures
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
 			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("CorrectionInvoice").' : '.$outputlangs->convToOutputCharset($objectreplaced->ref), '', 'R');
-		}
+		}*/
 
 		$posy+=4;
 		$pdf->SetXY($posx,$posy);
