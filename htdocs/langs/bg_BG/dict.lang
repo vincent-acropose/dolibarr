@@ -248,11 +248,11 @@ CountryBL=Сен Бартелеми
 CountryMF=Saint Martin
 
 ##### Civilities #####
-CivilityMME=Г-жа
-CivilityMR=Г-н
-CivilityMLE=Г-ца
-CivilityMTRE=Майстор
-CivilityDR=Доктор
+##CivilityMME=Г-жа
+#CivilityMR=Г-н
+#CivilityMLE=Г-ца
+#CivilityMTRE=Майстор
+#CivilityDR=Доктор
 ##### Currencies #####
 Currencyeuros=Евро
 CurrencyAUD=АС долара

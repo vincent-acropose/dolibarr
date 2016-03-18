@@ -248,11 +248,11 @@ CountryBL=Saint Barthelemy
 CountryMF=Saint Martin
 
 ##### Civilities #####
-CivilityMME=Kundze
-CivilityMR=Kungs
-CivilityMLE=Ms
-CivilityMTRE=Meistars
-CivilityDR=Doktors
+##CivilityMME=Kundze
+#CivilityMR=Kungs
+#CivilityMLE=Ms
+#CivilityMTRE=Meistars
+#CivilityDR=Doktors
 ##### Currencies #####
 Currencyeuros=Eiro
 CurrencyAUD=AU dolāri

@@ -248,11 +248,11 @@ CountryBL=سنت بارتلیمی
 CountryMF=سنت مارتین
 
 ##### Civilities #####
-CivilityMME=خانم
-CivilityMR=آقای
-CivilityMLE=خانم
-CivilityMTRE=استاد
-CivilityDR=دکتر
+##CivilityMME=خانم
+#CivilityMR=آقای
+#CivilityMLE=خانم
+#CivilityMTRE=استاد
+#CivilityDR=دکتر
 ##### Currencies #####
 Currencyeuros=یورو
 CurrencyAUD=دلار AU

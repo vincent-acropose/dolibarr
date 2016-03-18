@@ -248,11 +248,11 @@ CountryBL=Saint Barthelemy
 CountryMF=Saint Martin
 
 ##### Civilities #####
-CivilityMME=Gospođa
-CivilityMR=Gospodin
-CivilityMLE=Gospođica
-CivilityMTRE=Master
-CivilityDR=Doktor
+##CivilityMME=Gospođa
+#CivilityMR=Gospodin
+#CivilityMLE=Gospođica
+#CivilityMTRE=Master
+#CivilityDR=Doktor
 ##### Currencies #####
 Currencyeuros=EUR
 CurrencyAUD=Australski dolari

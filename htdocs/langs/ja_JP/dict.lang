@@ -248,11 +248,11 @@ CountryBL=セントバーツ
 CountryMF=サンマルタン島
 
 ##### Civilities #####
-CivilityMME=ミセス
-CivilityMR=氏
-CivilityMLE=さん
-CivilityMTRE=マスタ
-# CivilityDR=Doctor
+##CivilityMME=ミセス
+#CivilityMR=氏
+#CivilityMLE=さん
+#CivilityMTRE=マスタ
+# #CivilityDR=Doctor
 
 ##### Currencies #####
 Currencyeuros=ユーロ

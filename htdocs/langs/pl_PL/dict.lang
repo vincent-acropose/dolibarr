@@ -248,11 +248,11 @@ CountryBL=Saint Barthelemy
 CountryMF=Saint Martin
 
 ##### Civilities #####
-CivilityMME=Pani
-CivilityMR=Pan
-CivilityMLE=Pani
-CivilityMTRE=Mistrz
-CivilityDR=Lekarz
+##CivilityMME=Pani
+#CivilityMR=Pan
+#CivilityMLE=Pani
+#CivilityMTRE=Mistrz
+#CivilityDR=Lekarz
 ##### Currencies #####
 Currencyeuros=Euro
 CurrencyAUD=Dolar UA

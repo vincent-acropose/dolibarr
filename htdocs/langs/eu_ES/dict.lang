@@ -248,11 +248,11 @@ CountryBL=Saint Barthelemy
 CountryMF=Saint Martin
 
 ##### Civilities #####
-CivilityMME=Mrs.
-CivilityMR=Jauna
-CivilityMLE=Anderea
-CivilityMTRE=Master
-CivilityDR=Doctor
+##CivilityMME=Mrs.
+#CivilityMR=Jauna
+#CivilityMLE=Anderea
+#CivilityMTRE=Master
+#CivilityDR=Doctor
 ##### Currencies #####
 Currencyeuros=Euroak
 CurrencyAUD=AU dolarrak

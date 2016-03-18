@@ -248,11 +248,11 @@ CountryBL=Švento Baltramiejaus sala
 CountryMF=Saint Martin
 
 ##### Civilities #####
-CivilityMME=p.
-CivilityMR=p.
-CivilityMLE=p.
-CivilityMTRE=Magistras
-CivilityDR=Daktaras
+##CivilityMME=p.
+#CivilityMR=p.
+#CivilityMLE=p.
+#CivilityMTRE=Magistras
+#CivilityDR=Daktaras
 ##### Currencies #####
 Currencyeuros=Eurų
 CurrencyAUD=AUS doleriai

@@ -248,11 +248,11 @@ CountryBL=Saint Barthelemy
 CountryMF=Saint Martin
 
 ##### Civilities #####
-CivilityMME=Bn.
-CivilityMR=Bay
-CivilityMLE=Bn.
-CivilityMTRE=Master
-CivilityDR=Doktor
+##CivilityMME=Bn.
+#CivilityMR=Bay
+#CivilityMLE=Bn.
+#CivilityMTRE=Master
+#CivilityDR=Doktor
 ##### Currencies #####
 Currencyeuros=Euro
 CurrencyAUD=AU Doları

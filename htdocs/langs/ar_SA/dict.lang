@@ -248,11 +248,11 @@ CountryBL=سانت بارتيليمي
 CountryMF=سانت مارتين
 
 ##### Civilities #####
-CivilityMME=السيدة
-CivilityMR=السيد
-CivilityMLE=السيدة
-CivilityMTRE=السيد
-CivilityDR=Doctor
+##CivilityMME=السيدة
+#CivilityMR=السيد
+#CivilityMLE=السيدة
+#CivilityMTRE=السيد
+#CivilityDR=Doctor
 ##### Currencies #####
 Currencyeuros=يورو
 CurrencyAUD=دولار للاتحاد الافريقي

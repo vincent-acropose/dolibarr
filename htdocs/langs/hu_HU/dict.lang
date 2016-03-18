@@ -248,11 +248,11 @@ CountryBL=Saint Barthelemy
 CountryMF=Szent Márton
 
 ##### Civilities #####
-CivilityMME=Asszony
-CivilityMR=Úr
-CivilityMLE=Kisasszony
-CivilityMTRE=Mester
-# CivilityDR=Doctor
+##CivilityMME=Asszony
+#CivilityMR=Úr
+#CivilityMLE=Kisasszony
+#CivilityMTRE=Mester
+# #CivilityDR=Doctor
 
 ##### Currencies #####
 Currencyeuros=Euró

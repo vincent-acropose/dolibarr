@@ -248,11 +248,11 @@ CountryBL=圣巴泰勒米
 CountryMF=圣马丁
 
 ##### Civilities #####
-CivilityMME=夫人
-CivilityMR=先生
-CivilityMLE=女士
-CivilityMTRE=主
-CivilityDR=医生
+##CivilityMME=夫人
+#CivilityMR=先生
+#CivilityMLE=女士
+#CivilityMTRE=主
+#CivilityDR=医生
 ##### Currencies #####
 Currencyeuros=欧元
 CurrencyAUD=澳元

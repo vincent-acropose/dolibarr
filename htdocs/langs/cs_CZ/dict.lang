@@ -248,11 +248,11 @@ CountryBL=Saint Barthelemy
 CountryMF=Svatý Martin
 
 ##### Civilities #####
-CivilityMME=Paní
-CivilityMR=Pan
-CivilityMLE=Paní
-CivilityMTRE=Mistr
-CivilityDR=Lékař
+##CivilityMME=Paní
+#CivilityMR=Pan
+#CivilityMLE=Paní
+#CivilityMTRE=Mistr
+#CivilityDR=Lékař
 
 ##### Currencies #####
 Currencyeuros=Euro
