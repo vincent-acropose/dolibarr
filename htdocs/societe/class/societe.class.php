@@ -1953,7 +1953,7 @@ class Societe extends CommonObject
     function check_codeclient()
     {
         global $conf;
-        if (! empty($conf->global->SOCIETE_CODECLIENT_ADDON))
+        /*if (! empty($conf->global->SOCIETE_CODECLIENT_ADDON))
         {
             $dirsociete=array_merge(array('/core/modules/societe/'),$conf->modules_parts['societe']);
             foreach ($dirsociete as $dirroot)
@@ -1973,7 +1973,8 @@ class Societe extends CommonObject
         else
         {
             return 0;
-        }
+        }*/
+        return 0;
     }
 
     /**
@@ -1988,7 +1989,7 @@ class Societe extends CommonObject
     function check_codefournisseur()
     {
         global $conf;
-        if (! empty($conf->global->SOCIETE_CODECLIENT_ADDON))
+        /*if (! empty($conf->global->SOCIETE_CODECLIENT_ADDON))
         {
             $dirsociete=array_merge(array('/core/modules/societe/'),$conf->modules_parts['societe']);
             foreach ($dirsociete as $dirroot)
@@ -2008,7 +2009,8 @@ class Societe extends CommonObject
         else
         {
             return 0;
-        }
+        }*/
+        return 0;
     }
 
     /**
