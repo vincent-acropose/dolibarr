@@ -713,7 +713,7 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
 		{
 			$prod = new Product($db);
 			$prod->fetch($idprod);
-
+			
 			$label = ((GETPOST('product_label') && GETPOST('product_label')!=$prod->label)?GETPOST('product_label'):'');
 
 			// If prices fields are update
@@ -781,7 +781,7 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
 						$outputlangs = new Translate("",$conf);
 						$outputlangs->setDefaultLang($newlang);
 					}
-
+					
 					$desc = (! empty($prod->multilangs[$outputlangs->defaultlang]["description"])) ? $prod->multilangs[$outputlangs->defaultlang]["description"] : $prod->description;
 				}
 				else
@@ -790,13 +790,13 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
 				}
 
 				$desc=dol_concatdesc($desc,$product_desc);
-
+				
 				// Add custom code and origin country into description
-				if (empty($conf->global->MAIN_PRODUCT_DISABLE_CUSTOMCOUNTRYCODE) && (! empty($prod->customcode) || ! empty($prod->country_code)))
+				if (empty($conf->global->MAIN_PRODUCT_DISABLE_CUSTOMCOUNTRYCODE) && (! empty($prod->country_code)))
 				{
 					$tmptxt='(';
-					if (! empty($prod->customcode)) $tmptxt.=$langs->transnoentitiesnoconv("CustomCode").': '.$prod->customcode;
-					if (! empty($prod->customcode) && ! empty($prod->country_code)) $tmptxt.=' - ';
+					/*if (! empty($prod->customcode)) $tmptxt.=$langs->transnoentitiesnoconv("CustomCode").': '.$prod->customcode;
+					if (! empty($prod->customcode) && ! empty($prod->country_code)) $tmptxt.=' - ';*/
 					if (! empty($prod->country_code)) $tmptxt.=$langs->transnoentitiesnoconv("CountryOrigin").': '.getCountry($prod->country_code,0,$db,$langs,0);
 					$tmptxt.=')';
 					$desc= dol_concatdesc($desc, $tmptxt);
@@ -837,6 +837,7 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
 		}
 		else
 		{
+			
 			// Insert line
 			$result=$object->addline(
 				$desc,
