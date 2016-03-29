@@ -135,14 +135,14 @@ class Entrepot extends CommonObject
 	 */
 	function update($id, $user)
 	{
-		$this->libelle=$this->db->escape(trim($this->libelle));
-		$this->description=$this->db->escape(trim($this->description));
+		$this->libelle=trim($this->libelle);
+		$this->description=trim($this->description);
 
-		$this->lieu=$this->db->escape(trim($this->lieu));
+		$this->lieu=trim($this->lieu);
 
-		$this->address=$this->db->escape(trim($this->address));
-        $this->zip=$this->zip?trim($this->zip):trim($this->zip);
-        $this->town=$this->town?trim($this->town):trim($this->town);
+		$this->address=trim($this->address);
+	        $this->zip=trim($this->zip);
+        	$this->town=trim($this->town);
 		$this->country_id=($this->country_id > 0 ? $this->country_id : $this->country_id);
 
 		$sql = "UPDATE ".MAIN_DB_PREFIX."entrepot ";
@@ -355,7 +355,7 @@ class Entrepot extends CommonObject
 
 		$sql = "SELECT rowid, label";
 		$sql.= " FROM ".MAIN_DB_PREFIX."entrepot";
-		$sql.= " WHERE entity IN (".getEntity('warehouse', 1).")";
+		$sql.= " WHERE entity IN (".getEntity('stock', 1).")";
 		$sql.= " AND statut = ".$status;
 
 		$result = $this->db->query($sql);
@@ -510,14 +510,19 @@ class Entrepot extends CommonObject
 	function getNomUrl($withpicto=0,$option='')
 	{
 		global $langs;
+		$langs->load("stocks");
 
 		$result='';
+        $label = '<u>' . $langs->trans("ShowWarehouse").'</u>';
+        $label.= '<br><b>' . $langs->trans('Ref') . ':</b> ' . $this->libelle;
+        if (! empty($this->lieu))
+            $label.= '<br><b>' . $langs->trans('LocationSummary').':</b> '.$this->lieu;
 
-		$lien='<a href="'.DOL_URL_ROOT.'/product/stock/card.php?id='.$this->id.'">';
-		$lienfin='</a>';
+        $link='<a href="'.DOL_URL_ROOT.'/product/stock/card.php?id='.$this->id.'" title="'.dol_escape_htmltag($label, 1).'" class="classfortooltip">';
+        $linkend='</a>';
 
-		if ($withpicto) $result.=($lien.img_object($langs->trans("ShowStock"),'stock').$lienfin.' ');
-		$result.=$lien.$this->libelle.$lienfin;
+        if ($withpicto) $result.=($link.img_object($label, 'stock', 'class="classfortooltip"').$linkend.' ');
+		$result.=$link.$this->libelle.$linkend;
 		return $result;
 	}
 

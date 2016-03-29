@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2010	Jean Heimburger		<jean@tiaris.info>
  * Copyright (C) 2011		Juanjo Menent		<jmenent@2byte.es>
  * Copyright (C) 2012		Regis Houssin		<regis@dolibarr.fr>
- * Copyright (C) 2013-2014  Alexandre Spangaro	<alexandre.spangaro@gmail.com>
+ * Copyright (C) 2013-2014  Alexandre Spangaro	<aspangaro.dolibarr@gmail.com>
  * Copyright (C) 2013-2014  Olivier Geffroy		<jeff@jeffinfo.com>
  * Copyright (C) 2013-2014  Florian Henry	    <florian.henry@open-concept.pro>
  *
@@ -84,7 +84,7 @@ if (empty($date_start) || empty($date_end)) // We define date_start and date_end
 $p = explode(":", $conf->global->MAIN_INFO_SOCIETE_COUNTRY);
 $idpays = $p[0];
 
-$sql = "SELECT f.rowid, f.ref, f.type, f.datef as df, f.libelle,";
+$sql = "SELECT f.rowid, f.ref, f.type, f.datef as df, f.libelle,f.ref_supplier,";
 $sql .= " fd.rowid as fdid, fd.description, fd.total_ttc, fd.tva_tx, fd.total_ht, fd.tva as total_tva, fd.product_type,";
 $sql .= " s.rowid as socid, s.nom as name, s.code_compta_fournisseur, s.fournisseur,";
 $sql .= " s.code_compta_fournisseur, p.accountancy_code_buy , ct.accountancy_code_buy as account_tva, aa.rowid as fk_compte, aa.account_number as compte, aa.label as label_compte";
@@ -96,7 +96,7 @@ $sql .= " JOIN " . MAIN_DB_PREFIX . "facture_fourn as f ON f.rowid = fd.fk_factu
 $sql .= " JOIN " . MAIN_DB_PREFIX . "societe as s ON s.rowid = f.fk_soc";
 $sql .= " WHERE f.fk_statut > 0 ";
 if (! empty($conf->multicompany->enabled)) {
-	$sql .= " AND f.entity = " . $conf->entity;
+	$sql .= " AND f.entity IN (" . getEntity("facture_fourn", 1) . ")";
 }
 if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS))
 	$sql .= " AND f.type IN (0,1,2)";
@@ -112,7 +112,7 @@ if ($result) {
 	$num = $db->num_rows($result);
 	// les variables
 	$cptfour = (! empty($conf->global->ACCOUNTING_ACCOUNT_SUPPLIER)) ? $conf->global->ACCOUNTING_ACCOUNT_SUPPLIER : $langs->trans("CodeNotDef");
-	$cpttva = (! empty($conf->global->ACCOUNTING_VAT_ACCOUNT)) ? $conf->global->ACCOUNTING_VAT_ACCOUNT : $langs->trans("CodeNotDef");
+	$cpttva = (! empty($conf->global->ACCOUNTING_VAT_SOLD_ACCOUNT)) ? $conf->global->ACCOUNTING_VAT_SOLD_ACCOUNT : $langs->trans("CodeNotDef");
 
 	$tabfac = array ();
 	$tabht = array ();
@@ -135,7 +135,7 @@ if ($result) {
 		$compta_tva = (! empty($obj->account_tva) ? $obj->account_tva : $cpttva);
 
 		$tabfac[$obj->rowid]["date"] = $obj->df;
-		$tabfac[$obj->rowid]["ref"] = $obj->ref;
+		$tabfac[$obj->rowid]["ref"] = $obj->ref_supplier.' ('.$obj->ref.')';
 		$tabfac[$obj->rowid]["type"] = $obj->type;
 		$tabfac[$obj->rowid]["description"] = $obj->description;
 		$tabfac[$obj->rowid]["fk_facturefourndet"] = $obj->fdid;
@@ -157,6 +157,7 @@ if ($result) {
 // Bookkeeping Write
 if ($action == 'writebookkeeping') {
 	$now = dol_now();
+	$error = 0;
 
 	foreach ( $tabfac as $key => $val ) {
 		foreach ( $tabttc[$key] as $k => $mt ) {
@@ -177,8 +178,13 @@ if ($action == 'writebookkeeping') {
 			$bookkeeping->debit = ($mt <= 0) ? $mt : 0;
 			$bookkeeping->credit = ($mt > 0) ? $mt : 0;
 			$bookkeeping->code_journal = $conf->global->ACCOUNTING_PURCHASE_JOURNAL;
+			$bookkeeping->fk_user_author = $user->id;
 
-			$bookkeeping->create();
+			$result = $bookkeeping->create();
+			if ($result < 0) {
+				$error ++;
+				setEventMessages($object->error, $object->errors, 'errors');
+			}
 		}
 
 		// Product / Service
@@ -202,8 +208,13 @@ if ($action == 'writebookkeeping') {
 					$bookkeeping->debit = ($mt > 0) ? $mt : 0;
 					$bookkeeping->credit = ($mt <= 0) ? $mt : 0;
 					$bookkeeping->code_journal = $conf->global->ACCOUNTING_PURCHASE_JOURNAL;
+					$bookkeeping->fk_user_author = $user->id;
 
-					$bookkeeping->create();
+					$result = $bookkeeping->create();
+					if ($result < 0) {
+						$error ++;
+						setEventMessages($object->error, $object->errors, 'errors');
+					}
 				}
 			}
 		}
@@ -228,10 +239,19 @@ if ($action == 'writebookkeeping') {
 				$bookkeeping->debit = ($mt > 0) ? $mt : 0;
 				$bookkeeping->credit = ($mt <= 0) ? $mt : 0;
 				$bookkeeping->code_journal = $conf->global->ACCOUNTING_PURCHASE_JOURNAL;
+				$bookkeeping->fk_user_author = $user->id;
 
-				$bookkeeping->create();
+				$result = $bookkeeping->create();
+				if ($result < 0) {
+					$error ++;
+					setEventMessages($object->error, $object->errors, 'errors');
+				}
 			}
 		}
+	}
+
+	if (empty($error)) {
+		setEventMessages($langs->trans("GeneralLedgerIsWritten"), null, 'mesgs');
 	}
 }
 
@@ -240,7 +260,7 @@ if ($action == 'writebookkeeping') {
  * View
  */
 
-$companystatic = new Societe($db);
+$companystatic = new Fournisseur($db);
 
 // Export
 if ($action == 'export_csv')
@@ -249,7 +269,11 @@ if ($action == 'export_csv')
 	$purchase_journal = $conf->global->ACCOUNTING_PURCHASE_JOURNAL;
 
 	header('Content-Type: text/csv');
-	header('Content-Disposition: attachment;filename=journal_achats.csv');
+	if ($conf->global->EXPORT_PREFIX_SPEC)
+		$filename=$conf->global->EXPORT_PREFIX_SPEC."_"."journal_achats.csv";
+	else
+		$filename="journal_achats.csv";
+	header('Content-Disposition: attachment;filename='.$filename);
 
 	if ($conf->global->ACCOUNTING_EXPORT_MODELCSV == 2) 	// Model Cegid Expert Export
 	{
@@ -408,7 +432,6 @@ if ($action == 'export_csv')
 	$r = '';
 
 	$invoicestatic = new FactureFournisseur($db);
-	$companystatic = new Fournisseur($db);
 
 	foreach ( $tabfac as $key => $val ) {
 		$invoicestatic->id = $key;

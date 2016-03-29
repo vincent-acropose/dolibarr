@@ -1,5 +1,14 @@
 # Dolibarr language file - en_US - Accounting Expert
 CHARSET=UTF-8
+ACCOUNTING_EXPORT_SEPARATORCSV=Oddělovač sloupců pro export souboru
+ACCOUNTING_EXPORT_DATE=Formát data pro export souboru
+ACCOUNTING_EXPORT_PIECE=Export the number of piece
+ACCOUNTING_EXPORT_GLOBAL_ACCOUNT=Export with global account
+ACCOUNTING_EXPORT_LABEL=Export the label
+ACCOUNTING_EXPORT_AMOUNT=Export the amount
+ACCOUNTING_EXPORT_DEVISE=Export the devise
+Selectformat=Select the format for the file
+ACCOUNTING_EXPORT_PREFIX_SPEC=Specify the prefix for the file name
 
 Accounting=Účetnictví
 Globalparameters=Globální parametry
@@ -27,6 +36,7 @@ Selectchartofaccounts=Vyberte účtové osnovy
 Validate=Potvrdit
 Addanaccount=Přidat účetní účet
 AccountAccounting=Účetní účet
+AccountAccountingSuggest=Accounting account suggest
 Ventilation=Přerušení
 ToDispatch=Nahlásit
 Dispatched=Odesláno
@@ -41,6 +51,7 @@ NewAccount=Nový účetní účet
 Update=Aktualizovat
 List=Seznam
 Create=Vytvořit
+CreateMvts=Create movement
 UpdateAccount=Změna účetního účtu
 UpdateMvts=Změna pohybu
 WriteBookKeeping=Účetní záznamy v hlavní účetní knize
@@ -52,15 +63,15 @@ AccountingVentilationSupplier=Členění účetnictví dodavatel
 AccountingVentilationCustomer=Členění účetnictví zákazník
 Line=Linka
 
-CAHTF=Celkové platby dodavatele HT
+CAHTF=Total purchase supplier before tax
 InvoiceLines=Řádky faktury, které mají být prověřeny
 InvoiceLinesDone=Prověření řádků faktury
-IntoAccount=V účetním účtu 
+IntoAccount=Ventilate in the accounting account
 
 Ventilate=Prověřit
 VentilationAuto=Automatické členění
 
-Processing=Pracuji .....
+Processing=Dřu jako kůň  .....
 EndProcessing=Konec zpracování
 AnyLineVentilate=Prověřit všechny řádky
 SelectedLines=Vybrané řádky
@@ -76,14 +87,15 @@ ACCOUNTING_LIST_SORT_VENTILATION_DONE=Začněte třídění rozpisu stránek "Br
 
 AccountLength=Délka účetnické osnovy uvedené v Dolibarr
 AccountLengthDesc=Funkce povolující simulovat délku účetního účtu nahrazením místa prostřednictvím nulového obrázku. Tato funkce se týká pouze zobrazení, to nemění účetní účty zaregistrované v Dolibarr. Pro export této funkce je nutné, aby byla kompatibilní s daným softwarem.
+ACCOUNTING_LENGTH_DESCRIPTION=Length for displaying product & services description in listings (Best = 50)
+ACCOUNTING_LENGTH_DESCRIPTION_ACCOUNT=Length for displaying product & services account description form in listings (Best = 50)
 ACCOUNTING_LENGTH_GACCOUNT=Délka hlavních účtů
 ACCOUNTING_LENGTH_AACCOUNT=Délka účtů třetích stran
 
 ACCOUNTING_SELL_JOURNAL=Prodejní deník
 ACCOUNTING_PURCHASE_JOURNAL=Nákupní deník
-ACCOUNTING_BANK_JOURNAL=Bankovní deník
-ACCOUNTING_CASH_JOURNAL=Peněžní deník
 ACCOUNTING_MISCELLANEOUS_JOURNAL=Ostatní deník
+ACCOUNTING_EXPENSEREPORT_JOURNAL=Rozšířený výpis deníku
 ACCOUNTING_SOCIAL_JOURNAL=Sociální deník
 
 ACCOUNTING_ACCOUNT_TRANSFER_CASH=Převodní účet
@@ -143,7 +155,7 @@ Active=Prohlášení
 NewFiscalYear=Nový fiskální rok
 
 DescVentilCustomer=Seznamte se zde s ročním rozdělením účetnictví faktur zákazníků
-TotalVente=Celkový obrat HT
+TotalVente=Total turnover before tax
 TotalMarge=Celkové tržby marže
 DescVentilDoneCustomer=Seznamte se zde se seznamem linek faktur zákazníků a jejich účetních účtů
 DescVentilTodoCustomer=Prověřte své řádky zákaznické faktury s účetním účtem.
@@ -158,3 +170,4 @@ ValidateHistory=Ověřit automaticky
 ErrorAccountancyCodeIsAlreadyUse=Chyba, nelze odstranit tento účetní účet, protože ho zrovna používáte
 
 FicheVentilation=Karta členění
+GeneralLedgerIsWritten=Operations are written in the general ledger

@@ -1,5 +1,14 @@
 # Dolibarr language file - en_US - Accounting Expert
 CHARSET=UTF-8
+ACCOUNTING_EXPORT_SEPARATORCSV=Column separator for export file
+ACCOUNTING_EXPORT_DATE=Date format for export file
+ACCOUNTING_EXPORT_PIECE=Export the number of piece
+ACCOUNTING_EXPORT_GLOBAL_ACCOUNT=Export with global account
+ACCOUNTING_EXPORT_LABEL=Export the label
+ACCOUNTING_EXPORT_AMOUNT=Export the amount
+ACCOUNTING_EXPORT_DEVISE=Export the devise
+Selectformat=Select the format for the file
+ACCOUNTING_EXPORT_PREFIX_SPEC=Specify the prefix for the file name
 
 Accounting=Apskaita
 Globalparameters=Bendrieji parametrai
@@ -27,6 +36,7 @@ Selectchartofaccounts=Pasirinkite sąskaitų planą
 Validate=Patvirtinti
 Addanaccount=Pridėti apskaitos sąskaitą
 AccountAccounting=Apskaitos sąskaita
+AccountAccountingSuggest=Accounting account suggest
 Ventilation=Schema
 ToDispatch=Išsiųsti
 Dispatched=Išsiųsta
@@ -41,6 +51,7 @@ NewAccount=Nauja apskaitos sąskaita
 Update=Atnaujinimas
 List=Sąrašas
 Create=Sukurti
+CreateMvts=Create movement
 UpdateAccount=Apskaitos sąskaitos modifikavimas
 UpdateMvts=Judėjimo modifikavimas
 WriteBookKeeping=Įrašyti sąskaitas Didžiąją knygą
@@ -52,10 +63,10 @@ AccountingVentilationSupplier=Apskaitos tiekėjo schema
 AccountingVentilationCustomer=Apskaitos kliento schema
 Line=Eilutė
 
-CAHTF=Iš viso pirkimas iš tiekėjų HT
+CAHTF=Total purchase supplier before tax
 InvoiceLines=Sąskaitos eilutės, kurios turi būti apsvarstytos
 InvoiceLinesDone=Svarstomos eilutės sąskaitoje-faktūroje
-IntoAccount=Apskaitos sąskaitoje
+IntoAccount=Ventilate in the accounting account
 
 Ventilate=Svarstyti
 VentilationAuto=Automatinis paskirstymas
@@ -76,14 +87,15 @@ ACCOUNTING_LIST_SORT_VENTILATION_DONE=Begin the sorting of the breakdown pages "
 
 AccountLength=Apskaitos sąskaitų, parodytų Dolibarr, ilgis
 AccountLengthDesc=Function allowing to feign a length of accounting account by replacing spaces by the zero figure. This function touches only the display, it does not modify the accounting accounts registered in Dolibarr. For the export, this function is necessary to be compatible with certain software.
+ACCOUNTING_LENGTH_DESCRIPTION=Length for displaying product & services description in listings (Best = 50)
+ACCOUNTING_LENGTH_DESCRIPTION_ACCOUNT=Length for displaying product & services account description form in listings (Best = 50)
 ACCOUNTING_LENGTH_GACCOUNT=Bendrųjų sąskaitų ilgis
 ACCOUNTING_LENGTH_AACCOUNT=Trečiųjų šalių sąskaitų ilgis
 
 ACCOUNTING_SELL_JOURNAL=Pardavimų žurnalas
 ACCOUNTING_PURCHASE_JOURNAL=Pirkimų žurnalas
-ACCOUNTING_BANK_JOURNAL=Banko žurnalas
-ACCOUNTING_CASH_JOURNAL=Pinigų žurnalas
 ACCOUNTING_MISCELLANEOUS_JOURNAL=Įvairiarūšis žurnalas
+ACCOUNTING_EXPENSEREPORT_JOURNAL=Expense report journal
 ACCOUNTING_SOCIAL_JOURNAL=Socialinis žurnalas
 
 ACCOUNTING_ACCOUNT_TRANSFER_CASH=Operacijų sąskaita
@@ -143,7 +155,7 @@ Active=Ataskaita
 NewFiscalYear=Nauji fiskaliniai metai
 
 DescVentilCustomer=Consult here the annual breakdown accounting of your invoices customers
-TotalVente=Bendra apyvarta HT
+TotalVente=Total turnover before tax
 TotalMarge=Iš viso pardavimų marža
 DescVentilDoneCustomer=Consult here the list of the lines of invoices customers and their accounting account
 DescVentilTodoCustomer=Ventilate your lines of customer invoice with an accounting account
@@ -158,3 +170,4 @@ ValidateHistory=Patvirtinti automatiškai
 ErrorAccountancyCodeIsAlreadyUse=Error, you cannot delete this accounting account because it is used
 
 FicheVentilation=Suskirstymo kortelė
+GeneralLedgerIsWritten=Operations are written in the general ledger

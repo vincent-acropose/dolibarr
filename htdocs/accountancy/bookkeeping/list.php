@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2013-2014 Olivier Geffroy		<jeff@jeffinfo.com>
  * Copyright (C) 2013-2014 Florian Henry		<florian.henry@open-concept.pro>
- * Copyright (C) 2013-2014 Alexandre Spangaro	<alexandre.spangaro@gmail.com> 
+ * Copyright (C) 2013-2015 Alexandre Spangaro	<aspangaro.dolibarr@gmail.com> 
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,10 @@ require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/accounting.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/accountancy/class/html.formventilation.class.php';
 require_once DOL_DOCUMENT_ROOT.'/accountancy/class/bookkeeping.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 
+// Langs
+$langs->load("accountancy");
 
 $page = GETPOST("page");
 $sortorder = GETPOST("sortorder");
@@ -50,6 +53,7 @@ if ($sortfield == "")
 $offset = $conf->liste_limit * $page;
 
 $formventilation = new FormVentilation($db);
+$formother = new FormOther($db);
 
 if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both test are required to be compatible with all browsers
 {
@@ -72,7 +76,20 @@ if ($action == 'delbookkeeping') {
 		$result = $object->delete_by_importkey($import_key);
 		Header("Location: list.php");
 		if ($result < 0) {
-			setEventMessage($object->errors, 'errors');
+			setEventMessages($object->error, $object->errors, 'errors');
+		}
+	}
+}
+elseif ($action == 'delbookkeepingyear') {
+	
+	$delyear = GETPOST('delyear', 'int');
+	
+	if (! empty($delyear)) {
+		$object = new BookKeeping($db);
+		$result = $object->delete_by_year($delyear);
+		Header("Location: list.php");
+		if ($result < 0) {
+			setEventMessages($object->error, $object->errors, 'errors');
 		}
 	}
 } // Export
@@ -84,7 +101,7 @@ else if ($action == 'export_csv') {
 	$object = new BookKeeping($db);
 	$result = $object->export_bookkeping('ebp');
 	if ($result < 0) {
-		setEventMessage($object->errors, 'errors');
+		setEventMessages($object->error, $object->errors, 'errors');
 	}
 	
 	foreach ( $object->linesexport as $line ) {
@@ -145,7 +162,7 @@ else {
 		
 		print_barre_liste($langs->trans("Bookkeeping"), $page, $_SERVER["PHP_SELF"], "", $sortfield, $sortorder, '', $num);
 		
-		print '<form name="add" action="' . $_SERVER["PHP_SELF"] . '" method="POST">';
+		/*print '<form name="add" action="' . $_SERVER["PHP_SELF"] . '" method="POST">';
 		print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
 		print '<input type="hidden" name="action" value="delbookkeeping">';
 		
@@ -153,9 +170,17 @@ else {
 		
 		print '<div class="inline-block divButAction"><input type="submit" class="butAction" value="' . $langs->trans("DelBookKeeping") . '" /></div>';
 		
-		print '</form>';
+		print '</form>';*/
 		
-		print '<a href="./card.php?action=create" class="butAction">' . $langs->trans("NewAccountingMvt") . '</a></div>';
+		print '<form name="add" action="' . $_SERVER["PHP_SELF"] . '" method="POST">';
+		print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
+		print '<input type="hidden" name="action" value="delbookkeepingyear">';
+		
+		print $formother->select_year(GETPOST('delyear'),'delyear');
+		
+		print '<div class="inline-block divButAction"><input type="submit" class="butAction" value="' . $langs->trans("DelBookKeeping") . '" /></div>';
+		
+		print '</form>';
 		
 		print '<form name="add" action="' . $_SERVER["PHP_SELF"] . '" method="POST">';
 		print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
@@ -209,7 +234,7 @@ else {
 			print "<tr $bc[$var]>";
 			
 			print '<td>' . $obj->doc_type . '</td>';
-			print '<td>' . dol_print_date($db->jdate($obj->doc_date), 'day') . '</td>';
+			print '<td align="center">' . dol_print_date($db->jdate($obj->doc_date), 'day') . '</td>';
 			print '<td>' . $obj->doc_ref . '</td>';
 			print '<td>' . length_accountg($obj->numero_compte) . '</td>';
 			print '<td>' . length_accounta($obj->code_tiers) . '</td>';
@@ -224,6 +249,11 @@ else {
 			$i ++;
 		}
 		print "</table>";
+
+		print '<div class="tabsAction">';
+		print '<a class="butAction" href="./card.php?action=create">'.$langs->trans("NewAccountingMvt").'</a>';
+		print '</div>';
+
 		$db->free($resql);
 	} else {
 		dol_print_error($db);

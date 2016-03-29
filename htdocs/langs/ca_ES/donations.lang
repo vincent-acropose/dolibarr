@@ -1,12 +1,12 @@
 # Dolibarr language file - Source file is en_US - donations
 Donation=Donació
-Donations=Donacións
+Donations=Donacions
 DonationRef=Ref. donació
 Donor=Donant
 Donors=Donants
 AddDonation=Crear una donació
 NewDonation=Nova donació
-DeleteADonation=Eliminar una donació
+DeleteADonation=Elimina una donació
 ConfirmDeleteADonation=Estàs segur de voler eliminar aquesta donació?
 ShowDonation=Mostrar donació
 DonationPromise=Promesa de donació

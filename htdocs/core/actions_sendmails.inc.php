@@ -22,7 +22,7 @@
  */
 
 
-// TODO Include this include file into all class objects
+// TODO Include this include file into all element pages allowing email sending
 
 // $id must be defined
 // $actiontypecode must be defined
@@ -56,14 +56,14 @@ if (! empty($_POST['removedfile']))
 	$upload_dir_tmp = $vardir.'/temp';
 
 	// TODO Delete only files that was uploaded from email form
-	dol_remove_file_process($_POST['removedfile'],0);
+	dol_remove_file_process($_POST['removedfile'],0,1);
 	$action='presend';
 }
 
 /*
  * Send mail
  */
-if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_POST['removedfile'] && ! $_POST['cancel'])
+if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_POST['removedfile'] && ! $_POST['cancel'] && !$_POST['modelselected'])
 {
 	$langs->load('mails');
 
@@ -103,7 +103,7 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 			}
 			else	// Id du contact
 			{
-				$sendto = $thirdparty->contact_get_property($_POST['receiver'],'email');
+				$sendto = $thirdparty->contact_get_property((int) $_POST['receiver'],'email');
 				$sendtoid = $_POST['receiver'];
 			}
 		}
@@ -120,7 +120,7 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 			}
 			else	// Id du contact
 			{
-				$sendtocc = $thirdparty->contact_get_property($_POST['receivercc'],'email');
+				$sendtocc = $thirdparty->contact_get_property((int) $_POST['receivercc'],'email');
 			}
 		}
 
@@ -161,9 +161,11 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 			$filename = $attachedfiles['names'];
 			$mimetype = $attachedfiles['mimes'];
 
+			$trackid = GETPOST('trackid','aZ');
+
 			// Send mail
 			require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-			$mailfile = new CMailFile($subject,$sendto,$from,$message,$filepath,$mimetype,$filename,$sendtocc,$sendtobcc,$deliveryreceipt,-1);
+			$mailfile = new CMailFile($subject,$sendto,$from,$message,$filepath,$mimetype,$filename,$sendtocc,$sendtobcc,$deliveryreceipt,-1,'','',$trackid);
 			if ($mailfile->error)
 			{
 				$mesgs[]='<div class="error">'.$mailfile->error.'</div>';
@@ -210,19 +212,17 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 				else
 				{
 					$langs->load("other");
-					$mesg='<div class="error">';
 					if ($mailfile->error)
 					{
+						$mesg='';
 						$mesg.=$langs->trans('ErrorFailedToSendMail',$from,$sendto);
 						$mesg.='<br>'.$mailfile->error;
+						setEventMessage($mesg,'errors');
 					}
 					else
 					{
-						$mesg.='No mail sent. Feature is disabled by option MAIN_DISABLE_ALL_MAILS';
+						setEventMessage('No mail sent. Feature is disabled by option MAIN_DISABLE_ALL_MAILS', 'warnings');
 					}
-					$mesg.='</div>';
-
-					setEventMessage($mesg,'warnings');
 					$action = 'presend';
 				}
 			}

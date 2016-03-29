@@ -23,8 +23,8 @@
 /**
  *  \file       htdocs/core/modules/propale/modules_propale.php
  *  \ingroup    propale
- *  \brief      Fichier contenant la classe mere de generation des demandes de prix en PDF
- *  			et la classe mere de numerotation des demandes de prix
+ *  \brief      Fichier contenant la classe mere de generation des propales en PDF
+ *  			et la classe mere de numerotation des propales
  */
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commondocgenerator.class.php';
@@ -156,10 +156,12 @@ abstract class ModeleNumRefAskPriceSupplier
  *  @param      int			$hidedesc       Hide description
  *  @param      int			$hideref        Hide ref
  * 	@return     int         				0 if KO, 1 if OK
- * @deprecated Use the new function generateDocument of Propal class
+ * @deprecated Use the new function generateDocument of AskPriceSupplier class
+ * @see AskPriceSupplier::generateDocument()
  */
 function askpricesupplier_pdf_create(DoliDB $db, AskPriceSupplier $object, $modele, $outputlangs, $hidedetails=0, $hidedesc=0, $hideref=0)
 {
+	dol_syslog(__METHOD__ . " is deprecated", LOG_WARNING);
 	return $object->generateDocument($modele, $outputlangs, $hidedetails, $hidedesc, $hideref);
 }
 

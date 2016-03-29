@@ -40,7 +40,8 @@ function versiontostring($versionarray)
 }
 
 /**
- *	Compare 2 versions (stored into 2 arrays)
+ *	Compare 2 versions (stored into 2 arrays).
+ *  For example, to check if Dolibarr version is lower than (x,y,z), do "if versioncompare(versiondolibarrarray(), array(x.y.z)) <= 0"
  *
  *	@param      array		$versionarray1      Array of version (vermajor,verminor,patch)
  *	@param      array		$versionarray2		Array of version (vermajor,verminor,patch)
@@ -386,6 +387,12 @@ function dolibarr_del_const($db, $name, $entity=1)
 {
     global $conf;
 
+    if (empty($name))
+    {
+    	dol_print_error('','Error call dolibar_del_const with parameter name empty');
+    	return -1;
+    }
+
     $sql = "DELETE FROM ".MAIN_DB_PREFIX."const";
     $sql.= " WHERE (".$db->decrypt('name')." = '".$db->escape($name)."'";
     if (is_numeric($name)) $sql.= " OR rowid = '".$db->escape($name)."'";
@@ -438,7 +445,7 @@ function dolibarr_get_const($db, $name, $entity=1)
 
 
 /**
- *	Insert a parameter (key,value) into database.
+ *	Insert a parameter (key,value) into database (delete old key then insert it again).
  *
  *	@param	    DoliDB		$db         Database handler
  *	@param	    string		$name		Name of constant
@@ -516,11 +523,6 @@ function security_prepare_head()
     $h = 0;
     $head = array();
 
-    $head[$h][0] = DOL_URL_ROOT."/admin/proxy.php";
-    $head[$h][1] = $langs->trans("ExternalAccess");
-    $head[$h][2] = 'proxy';
-    $h++;
-
     $head[$h][0] = DOL_URL_ROOT."/admin/security_other.php";
     $head[$h][1] = $langs->trans("Miscellaneous");
     $head[$h][2] = 'misc';
@@ -529,6 +531,16 @@ function security_prepare_head()
     $head[$h][0] = DOL_URL_ROOT."/admin/security.php";
     $head[$h][1] = $langs->trans("Passwords");
     $head[$h][2] = 'passwords';
+    $h++;
+
+    $head[$h][0] = DOL_URL_ROOT."/admin/security_file.php";
+    $head[$h][1] = $langs->trans("Files");
+    $head[$h][2] = 'file';
+    $h++;
+
+    $head[$h][0] = DOL_URL_ROOT."/admin/proxy.php";
+    $head[$h][1] = $langs->trans("ExternalAccess");
+    $head[$h][2] = 'proxy';
     $h++;
 
     $head[$h][0] = DOL_URL_ROOT."/admin/events.php";
@@ -575,9 +587,11 @@ function listOfSessions()
                 if(! @is_dir($fullpath) && is_readable($fullpath))
                 {
                     $sessValues = file_get_contents($fullpath);	// get raw session data
-
+                    // Example of possible value
+                    //$sessValues = 'newtoken|s:32:"1239f7a0c4b899200fe9ca5ea394f307";dol_loginmesg|s:0:"";newtoken|s:32:"1236457104f7ae0f328c2928973f3cb5";dol_loginmesg|s:0:"";token|s:32:"123615ad8d650c5cc4199b9a1a76783f";dol_login|s:5:"admin";dol_authmode|s:8:"dolibarr";dol_tz|s:1:"1";dol_tz_string|s:13:"Europe/Berlin";dol_dst|i:0;dol_dst_observed|s:1:"1";dol_dst_first|s:0:"";dol_dst_second|s:0:"";dol_screenwidth|s:4:"1920";dol_screenheight|s:3:"971";dol_company|s:12:"MyBigCompany";dol_entity|i:1;mainmenu|s:4:"home";leftmenuopened|s:10:"admintools";idmenu|s:0:"";leftmenu|s:10:"admintools";';
+                    
                     if (preg_match('/dol_login/i',$sessValues) && // limit to dolibarr session
-                    preg_match('/dol_entity\|s:([0-9]+):"('.$conf->entity.')"/i',$sessValues) && // limit to current entity
+                        (preg_match('/dol_entity\|i:'.$conf->entity.';/i',$sessValues) || preg_match('/dol_entity\|s:([0-9]+):"'.$conf->entity.'"/i',$sessValues)) && // limit to current entity
                     preg_match('/dol_company\|s:([0-9]+):"('.$conf->global->MAIN_INFO_SOCIETE_NOM.')"/i',$sessValues)) // limit to company name
                     {
                         $tmp=explode('_', $file);
@@ -822,20 +836,22 @@ function unActivateModule($value, $requiredby=1)
     {
         $objMod = new $modName($db);
         $result=$objMod->remove();
+        if ($result <= 0) $ret=$objMod->error;
     }
     else
     {
-        // TODO Cannot instantiate abstract class
-    	//$genericMod = new DolibarrModul($db);
-        //$genericMod->name=preg_replace('/^mod/i','',$modName);
-        //$genericMod->rights_class=strtolower(preg_replace('/^mod/i','',$modName));
-        //$genericMod->const_name='MAIN_MODULE_'.strtoupper(preg_replace('/^mod/i','',$modName));
+        //print $dir.$modFile;
+    	// TODO Replace this after DolibarrModules is moved as abstract class with a try catch to show module we try to disable has not been found or could not be loaded
+        $genericMod = new DolibarrModules($db);
+        $genericMod->name=preg_replace('/^mod/i','',$modName);
+        $genericMod->rights_class=strtolower(preg_replace('/^mod/i','',$modName));
+        $genericMod->const_name='MAIN_MODULE_'.strtoupper(preg_replace('/^mod/i','',$modName));
         dol_syslog("modules::unActivateModule Failed to find module file, we use generic function with name " . $modName);
-        //$genericMod->_remove();
+        $genericMod->_remove(array());
     }
 
     // Desactivation des modules qui dependent de lui
-    if ($requiredby)
+    if (! $ret && $requiredby)
     {
         $countrb=count($objMod->requiredby);
         for ($i = 0; $i < $countrb; $i++)
@@ -966,21 +982,29 @@ function complete_dictionary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsql
                                 //var_dump($objMod->dictionaries['tabname']);
                                 $taborder[] = 0;
                                 $tabfieldcheck[] = array(); $tabhelp[] = array();
+                                $nbtabname=$nbtablib=$nbtabsql=$nbtabsqlsort=$nbtabfield=$nbtabfieldvalue=$nbtabfieldinsert=$nbtabrowid=$nbtabcond=$nbtabfieldcheck=$nbtabhelp=0;
                                 foreach($objMod->dictionaries['tabname'] as $val)
                                 {
                                     $taborder[] = count($tabname)+1;
+                                    $nbtabname++;
                                     $tabname[] = $val;
                                 }
-                                foreach($objMod->dictionaries['tablib'] as $val) $tablib[] = $val;
-                                foreach($objMod->dictionaries['tabsql'] as $val) $tabsql[] = $val;
-                                foreach($objMod->dictionaries['tabsqlsort'] as $val) $tabsqlsort[] = $val;
-                                foreach($objMod->dictionaries['tabfield'] as $val) $tabfield[] = $val;
-                                foreach($objMod->dictionaries['tabfieldvalue'] as $val) $tabfieldvalue[] = $val;
-                                foreach($objMod->dictionaries['tabfieldinsert'] as $val) $tabfieldinsert[] = $val;
-                                foreach($objMod->dictionaries['tabrowid'] as $val) $tabrowid[] = $val;
-                                foreach($objMod->dictionaries['tabcond'] as $val) $tabcond[] = $val;
-                                if (! empty($objMod->dictionaries['tabfieldcheck'])) foreach($objMod->dictionaries['tabfieldcheck'] as $val) $tabfieldcheck[] = $val;
-                                if (! empty($objMod->dictionaries['tabhelp'])) foreach($objMod->dictionaries['tabhelp'] as $val) $tabhelp[] = $val;
+                                foreach($objMod->dictionaries['tablib'] as $val)         { $nbtablib++; $tablib[] = $val; }
+                                foreach($objMod->dictionaries['tabsql'] as $val)         { $nbtabsql++; $tabsql[] = $val; }
+                                foreach($objMod->dictionaries['tabsqlsort'] as $val)     { $nbtabsqlsort++; $tabsqlsort[] = $val; }
+                                foreach($objMod->dictionaries['tabfield'] as $val)       { $nbtabfield++; $tabfield[] = $val; }
+                                foreach($objMod->dictionaries['tabfieldvalue'] as $val)  { $nbtabfieldvalue++; $tabfieldvalue[] = $val; }
+                                foreach($objMod->dictionaries['tabfieldinsert'] as $val) { $nbtabfieldinsert++; $tabfieldinsert[] = $val; }
+                                foreach($objMod->dictionaries['tabrowid'] as $val)       { $nbtabrowid++; $tabrowid[] = $val; }
+                                foreach($objMod->dictionaries['tabcond'] as $val)        { $nbtabcond++; $tabcond[] = $val; }
+                                if (! empty($objMod->dictionaries['tabfieldcheck'])) foreach($objMod->dictionaries['tabfieldcheck'] as $val) { $nbtabfieldcheck++; $tabfieldcheck[] = $val; }
+                                if (! empty($objMod->dictionaries['tabhelp'])) foreach($objMod->dictionaries['tabhelp'] as $val)             { $nbtabhelp++; $tabhelp[] = $val; }
+                                
+                                if ($nbtabname != $nbtablib || $nbtablib != $nbtabsql || $nbtabsql != $nbtabsqlsort)
+                                {
+                                    print 'Error in descriptor of module '.$const_name.'. Array ->dictionaries has not same number of record for key "tabname", "tablib", "tabsql" and "tabsqlsort"';   
+                                    //print "$const_name: $nbtabname=$nbtablib=$nbtabsql=$nbtabsqlsort=$nbtabfield=$nbtabfieldvalue=$nbtabfieldinsert=$nbtabrowid=$nbtabcond=$nbtabfieldcheck=$nbtabhelp\n";
+                                }
                                 //foreach($objMod->dictionaries['tabsqlsort'] as $val) $tablib[] = $val;
                                 //$tabname = array_merge ($tabname, $objMod->dictionaries['tabname']);
                                 //var_dump($tabcond);
@@ -1072,18 +1096,18 @@ function form_constantes($tableau,$strictw3c=0)
             if ($const == 'ADHERENT_MAILMAN_URL')
             {
                 print '. '.$langs->trans("Example").': <a href="#" id="exampleclick1">'.img_down().'</a><br>';
-                //print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members?adminpw=%MAILMAN_ADMINPW%&subscribees=%EMAIL%&send_welcome_msg_to_this_batch=1';
+                //print 'http://lists.exampe.com/cgi-bin/mailman/admin/%LISTE%/members?adminpw=%MAILMAN_ADMINPW%&subscribees=%EMAIL%&send_welcome_msg_to_this_batch=1';
                 print '<div id="example1" class="hidden">';
-                print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members/add?subscribees_upload=%EMAIL%&amp;adminpw=%MAILMAN_ADMINPW%&amp;subscribe_or_invite=0&amp;send_welcome_msg_to_this_batch=0&amp;notification_to_list_owner=0';
+                print 'http://lists.example.com/cgi-bin/mailman/admin/%LISTE%/members/add?subscribees_upload=%EMAIL%&amp;adminpw=%MAILMAN_ADMINPW%&amp;subscribe_or_invite=0&amp;send_welcome_msg_to_this_batch=0&amp;notification_to_list_owner=0';
                 print '</div>';
             }
             if ($const == 'ADHERENT_MAILMAN_UNSUB_URL')
             {
                 print '. '.$langs->trans("Example").': <a href="#" id="exampleclick2">'.img_down().'</a><br>';
                 print '<div id="example2" class="hidden">';
-                print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members/remove?unsubscribees_upload=%EMAIL%&amp;adminpw=%MAILMAN_ADMINPW%&amp;send_unsub_ack_to_this_batch=0&amp;send_unsub_notifications_to_list_owner=0';
+                print 'http://lists.example.com/cgi-bin/mailman/admin/%LISTE%/members/remove?unsubscribees_upload=%EMAIL%&amp;adminpw=%MAILMAN_ADMINPW%&amp;send_unsub_ack_to_this_batch=0&amp;send_unsub_notifications_to_list_owner=0';
                 print '</div>';
-                //print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members/remove?adminpw=%MAILMAN_ADMINPW%&unsubscribees=%EMAIL%';
+                //print 'http://lists.example.com/cgi-bin/mailman/admin/%LISTE%/members/remove?adminpw=%MAILMAN_ADMINPW%&unsubscribees=%EMAIL%';
             }
             if ($const == 'ADHERENT_MAILMAN_LISTS')
             {
@@ -1094,7 +1118,7 @@ function form_constantes($tableau,$strictw3c=0)
             	print 'TYPE:Type1:mymailmanlist1,TYPE:Type2:mymailmanlist2<br>';
             	if ($conf->categorie->enabled) print 'CATEG:Categ1:mymailmanlist1,CATEG:Categ2:mymailmanlist2<br>';
             	print '</div>';
-            	//print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members/remove?adminpw=%MAILMAN_ADMINPW%&unsubscribees=%EMAIL%';
+            	//print 'http://lists.example.com/cgi-bin/mailman/admin/%LISTE%/members/remove?adminpw=%MAILMAN_ADMINPW%&unsubscribees=%EMAIL%';
             }
 
             print "</td>\n";

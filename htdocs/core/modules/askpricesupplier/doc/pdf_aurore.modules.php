@@ -165,7 +165,7 @@ class pdf_aurore extends ModelePDFAskPriceSupplier
 				$objphoto = new Product($this->db);
 				$objphoto->fetch($object->lines[$i]->fk_product);
 
-				$pdir = get_exdir($object->lines[$i]->fk_product,2) . $object->lines[$i]->fk_product ."/photos/";
+				$pdir = get_exdir($object->lines[$i]->fk_product,2,0,0,$objphoto,'product') . $object->lines[$i]->fk_product ."/photos/";
 				$dir = $conf->product->dir_output.'/'.$pdir;
 
 				$realpath='';
@@ -490,7 +490,7 @@ class pdf_aurore extends ModelePDFAskPriceSupplier
 					if ($posYAfterImage > $posYAfterDescription) $nexY=$posYAfterImage;
 
 					// Add line
-					if (! empty($conf->global->MAIN_PDF_DASH_BETWEEN_LINES) && $i < ($nblignes - 1))
+					if ($conf->global->MAIN_PDF_DASH_BETWEEN_LINES && $i < ($nblignes - 1))
 					{
 						$pdf->setPage($pageposafter);
 						$pdf->SetLineStyle(array('dash'=>'1,1','color'=>array(210,210,210)));
@@ -708,7 +708,7 @@ class pdf_aurore extends ModelePDFAskPriceSupplier
 
 			$pdf->SetFont('','', $default_font_size - 2);
 			$pdf->SetXY($posxval, $posy);
-			
+
 			$lib_condition_paiement=str_replace('\n',"\n",$lib_condition_paiement);
 			$pdf->MultiCell(80, 4, $lib_condition_paiement,0,'L');
 
@@ -922,7 +922,7 @@ class pdf_aurore extends ModelePDFAskPriceSupplier
 				// VAT
 				foreach($this->tva as $tvakey => $tvaval)
 				{
-					if ($tvakey > 0)    // On affiche pas taux 0
+					if ($tvakey != 0)    // On affiche pas taux 0
 					{
 						$this->atleastoneratenotnull++;
 
@@ -1266,7 +1266,7 @@ class pdf_aurore extends ModelePDFAskPriceSupplier
 		$pdf->SetTextColor(0,0,60);
 		$pdf->MultiCell(100, 3, $outputlangs->transnoentities("AskPriceSupplierDate")." : " . dol_print_date($object->date_livraison,"day",false,$outputlangs,true), '', 'R');
 */
-		
+
 		if ($object->client->code_client)
 		{
 			$posy+=4;

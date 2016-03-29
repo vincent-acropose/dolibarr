@@ -53,6 +53,13 @@ $bookmark=new Bookmark($db);
 
 if ($action == 'add' || $action == 'addproduct' || $action == 'update')
 {
+
+	if ($action == 'update') {
+		$invertedaction = 'edit';
+	} else {
+		$invertedaction = 'create';
+	}
+
 	$error = 0;
 
 	if (GETPOST("cancel"))
@@ -63,7 +70,9 @@ if ($action == 'add' || $action == 'addproduct' || $action == 'update')
 	}
 
 	if ($action == 'update') $bookmark->fetch($_POST["id"]);
-	$bookmark->fk_user=$userid;
+	// Check if null because user not admin can't set an user and send empty value here.
+	if(!empty($userid))
+		$bookmark->fk_user=$userid;
 	$bookmark->title=$title;
 	$bookmark->url=$url;
 	$bookmark->target=$target;
@@ -71,12 +80,12 @@ if ($action == 'add' || $action == 'addproduct' || $action == 'update')
 
 	if (! $title) {
 		$error++;
-		setEventMessage($langs->trans("ErrorFieldRequired",$langs->trans("BookmarkTitle")), 'errors');
+		setEventMessage($langs->transnoentities("ErrorFieldRequired",$langs->trans("BookmarkTitle")), 'errors');
 	}
 
 	if (! $url) {
 		$error++;
-		setEventMessage($langs->trans("ErrorFieldRequired",$langs->trans("UrlOrLink")), 'errors');
+		setEventMessage($langs->transnoentities("ErrorFieldRequired",$langs->trans("UrlOrLink")), 'errors');
 	}
 
 	if (! $error)
@@ -97,18 +106,18 @@ if ($action == 'add' || $action == 'addproduct' || $action == 'update')
 			if ($bookmark->errno == 'DB_ERROR_RECORD_ALREADY_EXISTS')
 			{
 				$langs->load("errors");
-				setEventMessage($langs->trans("WarningBookmarkAlreadyExists"), 'warnings');
+				setEventMessage($langs->transnoentities("WarningBookmarkAlreadyExists"), 'warnings');
 			}
 			else
 			{
 				setEventMessage($bookmark->error, 'errors');
 			}
-			$action='create';
+			$action = $invertedaction;
 		}
 	}
 	else
 	{
-		$action='create';
+		$action = $invertedaction;
 	}
 }
 
@@ -186,6 +195,13 @@ if ($id > 0 && ! preg_match('/^add/i',$action))
 	 */
 	$bookmark->fetch($id);
 
+	$head = array(
+		array(
+			'',
+			$langs->trans('Card'),
+			'card'
+		)
+	);
 
 	if ($action == 'edit')
 	{

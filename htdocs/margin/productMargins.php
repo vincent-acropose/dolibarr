@@ -72,9 +72,9 @@ $pagenext = $page + 1;
 $startdate=$enddate='';
 
 if (!empty($_POST['startdatemonth']))
-  $startdate  = dol_mktime(12, 0, 0, $_POST['startdatemonth'], $_POST['startdateday'], $_POST['startdateyear']);
+  $startdate  = dol_mktime(0, 0, 0, $_POST['startdatemonth'], $_POST['startdateday'], $_POST['startdateyear']);
 if (!empty($_POST['enddatemonth']))
-  $enddate  = dol_mktime(12, 0, 0, $_POST['enddatemonth'], $_POST['enddateday'], $_POST['enddateyear']);
+  $enddate  = dol_mktime(23, 59, 59, $_POST['enddatemonth'], $_POST['enddateday'], $_POST['enddateyear']);
 
 
 /*
@@ -162,7 +162,7 @@ if (! empty($conf->global->DISPLAY_MARK_RATES)) {
 print "</table>";
 print '</form>';
 
-$sql = "SELECT p.label, p.rowid, p.fk_product_type, p.ref,";
+$sql = "SELECT p.label, p.rowid, p.fk_product_type, p.ref, p.entity as pentity,";
 if ($id > 0) $sql.= " d.fk_product,";
 if ($id > 0) $sql.= " f.rowid as facid, f.facnumber, f.total as total_ht, f.datef, f.paye, f.fk_statut as statut,";
 $sql.= " sum(d.total_ht) as selling_price,";
@@ -263,7 +263,8 @@ if ($result)
 				$product_static->type=$objp->fk_product_type;
 				$product_static->id=$objp->rowid;
 				$product_static->ref=$objp->ref;
-				$product_static->libelle=$objp->label;
+				$product_static->label=$objp->label;
+				$product_static->entity=$objp->pentity;
 				$text=$product_static->getNomUrl(1);
 				print $text.= ' - '.$objp->label;
 				print "</td>\n";

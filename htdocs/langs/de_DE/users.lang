@@ -1,5 +1,5 @@
 # Dolibarr language file - Source file is en_US - users
-HRMArea=PM - Personalmanagment - Übersicht
+HRMArea=Personalmanagment - Übersicht
 UserCard=Benutzerkarte
 ContactCard=Kontaktkarte
 GroupCard=Firmenverbundkarte
@@ -57,6 +57,7 @@ RemoveFromGroup=Gruppenzuweisung entfernen
 PasswordChangedAndSentTo=Passwort geändert und an <b>%s</b> gesendet.
 PasswordChangeRequestSent=Kennwort-Änderungsanforderung für <b>%s</b> gesendet an <b>%s</b>.
 MenuUsersAndGroups=Benutzer & Gruppen
+MenuMyUserCard=Meine Benutzer-Karte
 LastGroupsCreated=%s zuletzt erstellte Gruppen
 LastUsersCreated=%s zuletzt erstellte Benutzer
 ShowGroup=Zeige Gruppe

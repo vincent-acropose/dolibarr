@@ -48,7 +48,7 @@ class PropaleStats extends Stats
 	 * Constructor
 	 *
 	 * @param 	DoliDB	$db		   Database handler
-	 * @param 	int		$socid	   Id third party for filter
+	 * @param 	int		$socid	   Id third party for filter. This value must be forced during the new to external user company if user is an external user.
      * @param   int		$userid    Id user for filter (creation user)
 	 */
 	function __construct($db, $socid=0, $userid=0)
@@ -69,7 +69,7 @@ class PropaleStats extends Stats
 
 		$this->where.= " p.fk_statut > 0";
 		//$this->where.= " AND p.fk_soc = s.rowid AND p.entity = ".$conf->entity;
-		$this->where.= " AND p.entity = ".$conf->entity;
+		$this->where.= " AND p.entity IN (".getEntity('propal', 1).")";
 		if (!$user->rights->societe->client->voir && !$this->socid) $this->where .= " AND p.fk_soc = sc.fk_soc AND sc.fk_user = " .$user->id;
 		if($this->socid)
 		{

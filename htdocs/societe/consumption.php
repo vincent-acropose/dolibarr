@@ -1,7 +1,8 @@
 <?php
 /* Copyright (C) 2012-2013 Philippe Berthet     <berthet@systune.be>
- * Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2013	   Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2004-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2013-2015 Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
  * Copyright (C) 2015	   Ferran Marcet		<fmarcet@2byte.es>
  *
  * Version V1.1 Initial version of Philippe Berthet
@@ -55,7 +56,6 @@ $limit = $conf->liste_limit;
 // Search fields
 $sref=GETPOST("sref");
 $sprod_fulldescr=GETPOST("sprod_fulldescr");
-$sprod_user=GETPOST("sprod_user");
 $month	= GETPOST('month','int');
 $year	= GETPOST('year','int');
 
@@ -64,13 +64,12 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
 {
     $sref='';
     $sprod_fulldescr='';
-	$sprod_user='';
     $year='';
     $month='';
 }
 // Customer or supplier selected in drop box
 $thirdTypeSelect = GETPOST("third_select_id");
-$type_element = GETPOST('type_element')?GETPOST('type_element'):'invoice';
+$type_element = GETPOST('type_element')?GETPOST('type_element'):'';
 
 
 $langs->load("companies");
@@ -78,6 +77,8 @@ $langs->load("bills");
 $langs->load("orders");
 $langs->load("suppliers");
 $langs->load("propal");
+$langs->load("interventions");
+$langs->load("contracts");
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
 $hookmanager->initHooks(array('consumptionthirdparty'));
@@ -101,8 +102,10 @@ $form = new Form($db);
 $formother = new FormOther($db);
 $productstatic=new Product($db);
 
-$titre = $langs->trans("Referer",$object->name);
-llxHeader('',$titre,'');
+$title = $langs->trans("Referers",$object->name);
+if (! empty($conf->global->MAIN_HTML_TITLE) && preg_match('/thirdpartynameonly/',$conf->global->MAIN_HTML_TITLE) && $object->name) $title=$object->name." - ".$title;
+$help_url='EN:Module_Third_Parties|FR:Module_Tiers|ES:Empresas';
+llxHeader('',$title,$help_url);
 
 if (empty($socid))
 {
@@ -118,6 +121,10 @@ print '<tr><td width="25%">'.$langs->trans('ThirdPartyName').'</td>';
 print '<td colspan="3">';
 print $form->showrefnav($object,'socid','',($user->societe_id?0:1),'rowid','nom');
 print '</td></tr>';
+
+// Alias names (commercial, trademark or alias names)
+print '<tr id="name_alias"><td><label for="name_alias_input">'.$langs->trans('AliasNames').'</label></td>';
+print '<td colspan="3">'.$object->name_alias.'</td></tr>';
 
 if (! empty($conf->global->SOCIETE_USEPREFIX))  // Old not used prefix field
 {
@@ -143,7 +150,8 @@ if ($object->client)
 	if ($conf->propal->enabled && $user->rights->propal->lire) $elementTypeArray['propal']=$langs->transnoentitiesnoconv('Proposals');
 	if ($conf->commande->enabled && $user->rights->commande->lire) $elementTypeArray['order']=$langs->transnoentitiesnoconv('Orders');
 	if ($conf->facture->enabled && $user->rights->facture->lire) $elementTypeArray['invoice']=$langs->transnoentitiesnoconv('Invoices');
-	if ($conf->ficheinter>enabled && $user->rights->ficheinter->lire) $elementTypeArray['fichinter']=$langs->transnoentitiesnoconv('Interventions');
+	if ($conf->ficheinter->enabled && $user->rights->ficheinter->lire) $elementTypeArray['fichinter']=$langs->transnoentitiesnoconv('Interventions');
+	if ($conf->contrat->enabled && $user->rights->contrat->lire) $elementTypeArray['contract']=$langs->transnoentitiesnoconv('Contracts');
 }
 
 if ($object->fournisseur)
@@ -169,10 +177,8 @@ dol_fiche_end();
 print '<br>';
 
 
-print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'?socid='.$socid.'">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-print '<input type="hidden" name="socid" value="'.$socid.'">'."\n";
-
 
 $sql_select='';
 /*if ($type_element == 'action')
@@ -217,7 +223,7 @@ if ($type_element == 'propal')
 {
 	require_once DOL_DOCUMENT_ROOT.'/comm/propal/class/propal.class.php';
 	$documentstatic=new Propal($db);
-	$sql_select = 'SELECT c.rowid as doc_id, c.ref as doc_number, \'1\' as doc_type, c.datep as datePrint, c.fk_statut as status, ';
+	$sql_select = 'SELECT c.rowid as doc_id, c.ref as doc_number, \'1\' as doc_type, c.datep as dateprint, c.fk_statut as status, ';
 	$tables_from = MAIN_DB_PREFIX."propal as c,".MAIN_DB_PREFIX."propaldet as d";
 	$where = " WHERE c.fk_soc = s.rowid AND s.rowid = ".$socid;
 	$where.= " AND d.fk_propal = c.rowid";
@@ -263,18 +269,30 @@ if ($type_element == 'supplier_order')
 	$doc_number='c.ref';
 	$thirdTypeSelect='supplier';
 }
-
+if ($type_element == 'contract')
+{ 	// Supplier : Show products from orders.
+	require_once DOL_DOCUMENT_ROOT.'/contrat/class/contrat.class.php';
+	$documentstatic=new Contrat($db);
+	$documentstaticline=new ContratLigne($db);	
+	$sql_select = 'SELECT c.rowid as doc_id, c.ref as doc_number, \'1\' as doc_type, c.date_contrat as dateprint, d.statut as status, ';
+	$tables_from = MAIN_DB_PREFIX."contrat as c,".MAIN_DB_PREFIX."contratdet as d";
+	$where = " WHERE c.fk_soc = s.rowid AND s.rowid = ".$socid;
+	$where.= " AND d.fk_contrat = c.rowid";
+	$dateprint = 'c.date_valid';
+	$doc_number='c.ref';
+	$thirdTypeSelect='customer';
+}
 
 $sql = $sql_select;
 $sql.= ' d.description as description,';
-if ($type_element != 'fichinter') $sql.= ' d.label, d.fk_product as product_id, d.fk_product as fk_product, d.info_bits, d.date_start, d.date_end, d.qty, d.qty as prod_qty,';
-if ($type_element != 'fichinter') $sql.= ' p.ref as ref, p.rowid as prod_id, p.rowid as fk_product, p.fk_product_type as prod_type, p.fk_product_type as fk_product_type,';
+if ($type_element != 'fichinter' && $type_element != 'contract') $sql.= ' d.label, d.fk_product as product_id, d.fk_product as fk_product, d.info_bits, d.date_start, d.date_end, d.qty, d.qty as prod_qty,';
+if ($type_element == 'contract') $sql.= ' d.label, d.fk_product as product_id, d.fk_product as fk_product, d.info_bits, d.date_ouverture as date_start, d.date_cloture as date_end, d.qty, d.qty as prod_qty,';
+if ($type_element != 'fichinter') $sql.= ' p.ref as ref, p.rowid as prod_id, p.rowid as fk_product, p.fk_product_type as prod_type, p.fk_product_type as fk_product_type, p.entity as pentity,';
 $sql.= " s.rowid as socid ";
 if ($type_element != 'fichinter') $sql.= ", p.ref as prod_ref, p.label as product_label";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".$tables_from;
-if ($type_element != 'fichinter') $sql.= ', '.MAIN_DB_PREFIX.'product as p ';
+if ($type_element != 'fichinter') $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as p ON d.fk_product = p.rowid ';
 $sql.= $where;
-if ($type_element != 'fichinter') $sql.= ' AND d.fk_product = p.rowid ';
 if ($month > 0) {
 	if ($year > 0) {
 		$start = dol_mktime(0, 0, 0, $month, 1, $year);
@@ -290,13 +308,12 @@ if ($month > 0) {
 }
 if ($sref) $sql.= " AND ".$doc_number." LIKE '%".$sref."%'";
 if ($sprod_fulldescr) $sql.= " AND (d.description LIKE '%".$sprod_fulldescr."%' OR p.label LIKE '%".$sprod_fulldescr."%')";
-if ($sprod_user) $sql.= " AND (CONCAT(u.firstname,' ',u.lastname) LIKE '%".$sprod_user."%')";
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($limit + 1, $offset);
 //print $sql;
 
 // Define type of elements
-$typeElementString = $form->selectarray("type_element", $elementTypeArray, $type_element, 2);
+$typeElementString = $form->selectarray("type_element", $elementTypeArray, GETPOST('type_element'), 2);
 $button = '<input type="submit" class="button" name="button_third" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 $param="&amp;sref=".$sref."&amp;month=".$month."&amp;year=".$year."&amp;sprod_fulldescr=".$sprod_fulldescr."&amp;socid=".$socid."&amp;type_element=".$type_element;
 
@@ -315,14 +332,14 @@ print_liste_field_titre($langs->trans('Ref'),$_SERVER['PHP_SELF'],'doc_number','
 print_liste_field_titre($langs->trans('Date'),$_SERVER['PHP_SELF'],'dateprint','',$param,'align="center" width="150"',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans('Status'),$_SERVER['PHP_SELF'],'fk_status','',$param,'align="center"',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans('Product'),$_SERVER['PHP_SELF'],'','',$param,'align="left"',$sortfield,$sortorder);
-print_liste_field_titre($langs->trans('Esthéticienne'),$_SERVER['PHP_SELF'],'','',$param,'align="left"',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans('Quantity'),$_SERVER['PHP_SELF'],'prod_qty','',$param,'align="right"',$sortfield,$sortorder);
+print "</tr>\n";
 // Filters
 print '<tr class="liste_titre">';
 print '<td class="liste_titre" align="left">';
 print '<input class="flat" type="text" name="sref" size="8" value="'.$sref.'">';
 print '</td>';
-print '<td class="liste_titre">'; // date
+print '<td class="liste_titre nowrap">'; // date
 print $formother->select_month($month?$month:-1,'month',1);
 $formother->select_year($year?$year:-1,'year',1, 20, 1);
 print '</td>';
@@ -330,9 +347,6 @@ print '<td class="liste_titre" align="center">';
 print '</td>';
 print '<td class="liste_titre" align="left">';
 print '<input class="flat" type="text" name="sprod_fulldescr" size="15" value="'.dol_escape_htmltag($sprod_fulldescr).'">';
-print '</td>';
-print '<td class="liste_titre" align="left">';
-print '<input class="flat" type="text" name="sprod_user" size="15" value="'.dol_escape_htmltag($sprod_user).'">'; 
 print '</td>';
 print '<td class="liste_titre" align="right">';
 print '<input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
@@ -347,7 +361,6 @@ if ($sql_select)
 	$i = 0;
 	while (($objp = $db->fetch_object($resql)) && $i < $conf->liste_limit )
 	{
-		$documentstatic->fetch($objp->doc_id);		
 		$documentstatic->id=$objp->doc_id;
 		$documentstatic->ref=$objp->doc_number;
 		$documentstatic->type=$objp->doc_type;
@@ -356,6 +369,8 @@ if ($sql_select)
 		$documentstatic->statut=$objp->status;
 		$documentstatic->status=$objp->status;
 		$documentstatic->paye=$objp->paid;
+		
+		if (is_object($documentstaticline)) $documentstaticline->statut=$objp->status;
 
 		$var=!$var;
 		print "<tr ".$bc[$var].">";
@@ -366,7 +381,14 @@ if ($sql_select)
 
 		// Status
 		print '<td align="center">';
-		print $documentstatic->getLibStatut(2);
+		if ($type_element == 'contract')
+		{
+			print $documentstaticline->getLibStatut(2);
+		}
+		else
+		{
+			print $documentstatic->getLibStatut(2);
+		}
 		print '</td>';
 
 		print '<td>';
@@ -382,6 +404,7 @@ if ($sql_select)
 			$product_static->type=$objp->fk_product_type;
 			$product_static->id=$objp->fk_product;
 			$product_static->ref=$objp->ref;
+			$product_static->entity=$objp->pentity;
 			$text=$product_static->getNomUrl(1);
 		}
 
@@ -504,8 +527,7 @@ if ($sql_select)
 		print '</td>';
 
 		//print '<td align="left">'.$prodreftxt.'</td>';
-		print '<td align="right">'.$objp->firstname.' '.$objp->lastname.'</td>';
-		
+
 		print '<td align="right">'.$objp->prod_qty.'</td>';
 
 		print "</tr>\n";

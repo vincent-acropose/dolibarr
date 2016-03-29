@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2004-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2007 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2013 Juanjo Menent			    <jmenent@2byte.es>
+ * Copyright (C) 2013-2015 Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -126,7 +126,9 @@ if ($action == 'activate_encryptdbpassconf')
 	$result = encodedecode_dbpassconf(1);
 	if ($result > 0)
 	{
-		// database value not required
+	    sleep(3);  // Don't know why but we need to wait file is completely saved before making the reload. Even with flush and clearstatcache, we need to wait.
+	    
+	    // database value not required
 		//dolibarr_set_const($db, "MAIN_DATABASE_PWD_CONFIG_ENCRYPTED", "1");
 		header("Location: security.php");
 		exit;
@@ -141,6 +143,8 @@ else if ($action == 'disable_encryptdbpassconf')
 	$result = encodedecode_dbpassconf(0);
 	if ($result > 0)
 	{
+	    sleep(3);  // Don't know why but we need to wait file is completely saved before making the reload. Even with flush and clearstatcache, we need to wait.
+	    
 		// database value not required
 		//dolibarr_del_const($db, "MAIN_DATABASE_PWD_CONFIG_ENCRYPTED",$conf->entity);
 		header("Location: security.php");
@@ -185,7 +189,7 @@ $form = new Form($db);
 
 llxHeader('',$langs->trans("Passwords"));
 
-print_fiche_titre($langs->trans("SecuritySetup"),'','setup');
+print_fiche_titre($langs->trans("SecuritySetup"),'','title_setup');
 
 print $langs->trans("GeneratedPasswordDesc")."<br>\n";
 print "<br>\n";
@@ -288,6 +292,7 @@ $var=!$var;
 	$this->NbRepeat = $tabConf[4];
 	$this->WithoutAmbi = $tabConf[5];
 	*/
+	print '<br>';
 	print '<table class="noborder" width="100%">';
 	print '<tr class="liste_titre">';
 	print '<td colspan="3"> '.$langs->trans("PasswordPatternDesc").'</td>';
@@ -328,12 +333,16 @@ $var=!$var;
 	print '<td>' . $langs->trans("NoAmbiCaracAutoGeneration")."</td>";
 	print '<td colspan="2"><input type="checkbox" id="NoAmbiCaracAutoGeneration" '.($tabConf[5] ? "checked" : "").' min="0"> <span id="textcheckbox">'.($tabConf[5] ? $langs->trans("Activated") : $langs->trans("Disabled")).'</span></td>';
 	print '</tr>';
-
-	$var=!$var;
-	print "<tr ".$bc[$var].">";
-	print '<td colspan="2"></td><td width="103" align="center"><a id="linkChangePattern">'.$langs->trans("Save").'</a></td>';
-	print '</tr>';
+	
 	print '</table>';
+
+	print '<br>';
+	print '<table align="right">';
+	print '<tr><td>';
+	print '<a class="button" id="linkChangePattern">'.$langs->trans("Save").'</a>';
+	print '</td></tr>';
+	print '</table>';
+	print '<br><br>';
 
 	print '<script type="text/javascript">';
 	print '	function getStringArg(){';
@@ -385,7 +394,7 @@ $var=!$var;
 // Cryptage mot de passe
 print '<br>';
 $var=true;
-print "<form method=\"post\" action=\"security.php\">";
+print "<form method=\"post\" action=\"" . $_SERVER["PHP_SELF"] . "\">";
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print "<input type=\"hidden\" name=\"action\" value=\"encrypt\">";
 
@@ -470,18 +479,18 @@ $var=!$var;
 print "<tr ".$bc[$var].">";
 print '<td colspan="3">'.$langs->trans("DisableForgetPasswordLinkOnLogonPage").'</td>';
 print '<td align="center" width="60">';
-if($conf->global->MAIN_SECURITY_DISABLEFORGETPASSLINK == 1)
+if(! empty($conf->global->MAIN_SECURITY_DISABLEFORGETPASSLINK))
 {
 	print img_picto($langs->trans("Active"),'tick');
 }
 print '</td>';
-if ($conf->global->MAIN_SECURITY_DISABLEFORGETPASSLINK == 0)
+if (empty($conf->global->MAIN_SECURITY_DISABLEFORGETPASSLINK))
 {
 	print '<td align="center" width="100">';
 	print '<a href="security.php?action=activate_MAIN_SECURITY_DISABLEFORGETPASSLINK">'.$langs->trans("Activate").'</a>';
 	print "</td>";
 }
-if($conf->global->MAIN_SECURITY_DISABLEFORGETPASSLINK == 1)
+if (!empty($conf->global->MAIN_SECURITY_DISABLEFORGETPASSLINK))
 {
 	print '<td align="center" width="100">';
 	print '<a href="security.php?action=disable_MAIN_SECURITY_DISABLEFORGETPASSLINK">'.$langs->trans("Disable").'</a>';

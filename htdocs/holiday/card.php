@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2011	   Dimitri Mouillard	<dmouillard@teclib.com>
- * Copyright (C) 2012-2013 Laurent Destailleur	<eldy@users.sourceforge.net>
+ * Copyright (C) 2012-2015 Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2012	   Regis Houssin		<regis.houssin@capnetworks.com>
  * Copyright (C) 2013	   Juanjo Menent		<jmenent@2byte.es>
  * Copyright (C) 2014	   Ferran Marcet		<fmarcet@2byte.es>
@@ -51,27 +51,30 @@ $now=dol_now();
  * Actions
  */
 
-// Si création de la demande
+// If create a request
 if ($action == 'create')
 {
 	$cp = new Holiday($db);
 
-    // Si pas le droit de créer une demande
+    // If no right to create a request
     if (($userid == $user->id && empty($user->rights->holiday->write)) || ($userid != $user->id && empty($user->rights->holiday->write_all)))
     {
     	$error++;
-    	setEventMessage($langs->trans('CantCreateCP'));
+    	setEventMessages($langs->trans('CantCreateCP'), null, 'errors');
     	$action='request';
     }
 
     if (! $error)
     {
+    	$db->begin();
+
 	    $date_debut = dol_mktime(0, 0, 0, GETPOST('date_debut_month'), GETPOST('date_debut_day'), GETPOST('date_debut_year'));
 	    $date_fin = dol_mktime(0, 0, 0, GETPOST('date_fin_month'), GETPOST('date_fin_day'), GETPOST('date_fin_year'));
 	    $date_debut_gmt = dol_mktime(0, 0, 0, GETPOST('date_debut_month'), GETPOST('date_debut_day'), GETPOST('date_debut_year'), 1);
 	    $date_fin_gmt = dol_mktime(0, 0, 0, GETPOST('date_fin_month'), GETPOST('date_fin_day'), GETPOST('date_fin_year'), 1);
 	    $starthalfday=GETPOST('starthalfday');
 	    $endhalfday=GETPOST('endhalfday');
+	    $type=GETPOST('type');
 	    $halfday=0;
 	    if ($starthalfday == 'afternoon' && $endhalfday == 'morning') $halfday=2;
 	    else if ($starthalfday == 'afternoon') $halfday=-1;
@@ -81,21 +84,29 @@ if ($action == 'create')
 	    $description = trim(GETPOST('description'));
 	    $userID = GETPOST('userID');
 
-	    // Si pas de date de début
+        // If no type
+	    if ($type <= 0)
+	    {
+	        setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Type")), null, 'errors');
+	        $error++;
+	        $action='create';
+	    }
+	    
+	    // If no start date
 	    if (empty($date_debut))
 	    {
 	        header('Location: card.php?action=request&error=nodatedebut');
 	        exit;
 	    }
 
-	    // Si pas de date de fin
+	    // If no end date
 	    if (empty($date_fin))
 	    {
 	        header('Location: card.php?action=request&error=nodatefin');
 	        exit;
 	    }
 
-	    // Si date de début après la date de fin
+	    // If start date after end date
 	    if ($date_debut > $date_fin)
 	    {
 	        header('Location: card.php?action=request&error=datefin');
@@ -110,7 +121,7 @@ if ($action == 'create')
 	        exit;
 	    }
 
-	    // Si aucun jours ouvrés dans la demande
+	    // If there is no Business Days within request 
 	    $nbopenedday=num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1, $halfday);
 	    if($nbopenedday < 0.5)
 	    {
@@ -118,33 +129,45 @@ if ($action == 'create')
 	        exit;
 	    }
 
-	    // Si pas de validateur choisi
+	    // If no validator designated
 	    if ($valideur < 1)
 	    {
-	        header('Location: card.php?action=request&error=Valideur');
-	        exit;
+	        setEventMessage($langs->transnoentitiesnoconv('InvalidValidatorCP'), 'errors');
+	        $error++;
 	    }
 
-	    $cp->fk_user = $userid;
-	    $cp->description = $description;
-	    $cp->date_debut = $date_debut;
-	    $cp->date_fin = $date_fin;
-	    $cp->fk_validator = $valideur;
-		$cp->halfday = $halfday;
-
-	    $verif = $cp->create($userid);
-
-	    // Si pas d'erreur SQL on redirige vers la fiche de la demande
-	    if ($verif > 0)
+	    if ($type < 1)
 	    {
-	        header('Location: card.php?id='.$verif);
+	        setEventMessage($langs->trans('ErrorFieldRequired', $langs->transnoentitiesnoconv("Type")), 'errors');
+	        $error++;
+	    }
+
+	    $result = 0;
+	    
+	    if (! $error)
+	    {
+    	    $cp->fk_user = $userid;
+    	    $cp->description = $description;
+    	    $cp->date_debut = $date_debut;
+    	    $cp->date_fin = $date_fin;
+    	    $cp->fk_validator = $valideur;
+    		$cp->halfday = $halfday;
+    		$cp->fk_type = $type;
+    
+    		$result = $cp->create($user);
+	    }
+	    
+	    // If no SQL error we redirect to the request card
+	    if (! $error && $result > 0)
+	    {
+			$db->commit();
+
+	    	header('Location: card.php?id='.$result);
 	        exit;
 	    }
 	    else
-	    {
-	        // Sinon on affiche le formulaire de demande avec le message d'erreur SQL
-	        header('Location: card.php?action=request&error=SQL_Create&msg='.$cp->error);
-	        exit;
+		{
+	    	$db->rollback();
 	    }
     }
 }
@@ -162,7 +185,7 @@ if ($action == 'update')
 	else if ($starthalfday == 'afternoon') $halfday=-1;
 	else if ($endhalfday == 'morning') $halfday=1;
 
-    // Si pas le droit de modifier une demande
+    // If no right to modify a request 
     if (! $user->rights->holiday->write)
     {
         header('Location: card.php?action=request&error=CantUpdate');
@@ -174,40 +197,40 @@ if ($action == 'update')
 
 	$canedit=(($user->id == $cp->fk_user && $user->rights->holiday->write) || ($user->id != $cp->fk_user && $user->rights->holiday->write_all));
 
-	// Si en attente de validation
+	// If under validation
     if ($cp->statut == 1)
     {
-        // Si c'est le créateur ou qu'il a le droit de tout lire / modifier
+        // If this is the requestor or has read/write rights
         if ($canedit)
         {
             $valideur = $_POST['valideur'];
             $description = trim($_POST['description']);
 
-            // Si pas de date de début
+            // If no start date
             if (empty($_POST['date_debut_'])) {
                 header('Location: card.php?id='.$_POST['holiday_id'].'&action=edit&error=nodatedebut');
                 exit;
             }
 
-            // Si pas de date de fin
+            // If no end date
             if (empty($_POST['date_fin_'])) {
                 header('Location: card.php?id='.$_POST['holiday_id'].'&action=edit&error=nodatefin');
                 exit;
             }
 
-            // Si date de début après la date de fin
+            // If start date after end date
             if ($date_debut > $date_fin) {
                 header('Location: card.php?id='.$_POST['holiday_id'].'&action=edit&error=datefin');
                 exit;
             }
 
-            // Si pas de valideur choisi
+            // If no validator designated
             if ($valideur < 1) {
                 header('Location: card.php?id='.$_POST['holiday_id'].'&action=edit&error=Valideur');
                 exit;
             }
 
-            // Si pas de jours ouvrés dans la demande
+            // If there is no Business Days within request
             $nbopenedday=num_open_day($date_debut_gmt, $date_fin_gmt, 0, 1, $halfday);
             if ($nbopenedday < 0.5)
             {
@@ -230,7 +253,7 @@ if ($action == 'update')
             }
             else
            {
-                // Sinon on affiche le formulaire de demande avec le message d'erreur SQL
+                // Otherwise we display the request form with the SQL error message
                 header('Location: card.php?id='.$_POST['holiday_id'].'&action=edit&error=SQL_Create&msg='.$cp->error);
                 exit;
             }
@@ -241,45 +264,42 @@ if ($action == 'update')
     }
 }
 
-// Si suppression de la demande
-if ($action == 'confirm_delete' && GETPOST('confirm') == 'yes')
+// If delete of request
+if ($action == 'confirm_delete' && GETPOST('confirm') == 'yes' && $user->rights->holiday->delete)
 {
-    if($user->rights->holiday->delete)
-    {
-    	$error=0;
+	$error=0;
 
-    	$db->begin();
+	$db->begin();
 
-        $cp = new Holiday($db);
-        $cp->fetch($id);
+	$cp = new Holiday($db);
+	$cp->fetch($id);
 
-        $canedit=(($user->id == $cp->fk_user && $user->rights->holiday->write) || ($user->id != $cp->fk_user && $user->rights->holiday->write_all));
+	$canedit=(($user->id == $cp->fk_user && $user->rights->holiday->write) || ($user->id != $cp->fk_user && $user->rights->holiday->write_all));
 
-        // Si c'est bien un brouillon
-        if ($cp->statut == 1 || $cp->statut == 3)
-        {
-            // Si l'utilisateur à le droit de lire cette demande, il peut la supprimer
-            if ($canedit)
-            {
-                $result=$cp->delete($id);
-            }
-            else
-            {
-                $error = $langs->trans('ErrorCantDeleteCP');
-            }
-        }
+    // If this is a rough draft
+	if ($cp->statut == 1 || $cp->statut == 3)
+	{
+		// Si l'utilisateur à le droit de lire cette demande, il peut la supprimer
+		if ($canedit)
+		{
+			$result=$cp->delete($id);
+		}
+		else
+		{
+			$error = $langs->trans('ErrorCantDeleteCP');
+		}
+	}
 
-       	if (! $error)
-        {
-          	$db->commit();
-           	header('Location: index.php');
-           	exit;
-        }
-        else
-        {
-        	$db->rollback();
-        }
-    }
+	if (! $error)
+	{
+		$db->commit();
+		header('Location: list.php');
+		exit;
+	}
+	else
+	{
+		$db->rollback();
+	}
 }
 
 // Si envoi de la demande
@@ -288,8 +308,10 @@ if ($action == 'confirm_send')
     $cp = new Holiday($db);
     $cp->fetch($id);
 
+    $canedit=(($user->id == $cp->fk_user && $user->rights->holiday->write) || ($user->id != $cp->fk_user && $user->rights->holiday->write_all));
+    
     // Si brouillon et créateur
-    if($cp->statut == 1 && $user->id == $cp->fk_user)
+    if($cp->statut == 1 && $canedit)
     {
         $cp->statut = 2;
 
@@ -344,7 +366,7 @@ if ($action == 'confirm_send')
             if ($cp->getConfCP('AlertValidatorSolde'))
             {
             	$nbopenedday=num_open_day($cp->date_debut_gmt,$cp->date_fin_gmt,0,1,$cp->halfday);
-                if ($nbopenedday > $cp->getCPforUser($cp->fk_user))
+                if ($nbopenedday > $cp->getCPforUser($cp->fk_user, $cp->fk_type))
                 {
                     $message.= "\n";
                     $message.= $langs->transnoentities("HolidaysToValidateAlertSolde")."\n";
@@ -381,7 +403,7 @@ if ($action == 'confirm_send')
 
 
 // Si Validation de la demande
-if($action == 'confirm_valid')
+if ($action == 'confirm_valid')
 {
     $cp = new Holiday($db);
     $cp->fetch($id);
@@ -401,15 +423,15 @@ if($action == 'confirm_valid')
             // Calculcate number of days consummed
             $nbopenedday=num_open_day($cp->date_debut_gmt,$cp->date_fin_gmt,0,1,$cp->halfday);
 
-            $soldeActuel = $cp->getCpforUser($cp->fk_user);
+            $soldeActuel = $cp->getCpforUser($cp->fk_user, $cp->fk_type);
             $newSolde = $soldeActuel - ($nbopenedday * $cp->getConfCP('nbHolidayDeducted'));
 
             // On ajoute la modification dans le LOG
-            $cp->addLogCP($user->id, $cp->fk_user, $langs->transnoentitiesnoconv("Holidays"), $newSolde);
+            $cp->addLogCP($user->id, $cp->fk_user, $langs->transnoentitiesnoconv("Holidays"), $newSolde, $cp->fk_type);
 
             // Mise à jour du solde
-            $cp->updateSoldeCP($cp->fk_user, $newSolde);
-
+            $cp->updateSoldeCP($cp->fk_user, $newSolde, $cp->fk_type);
+            
             // To
             $destinataire = new User($db);
             $destinataire->fetch($cp->fk_user);
@@ -466,7 +488,7 @@ if($action == 'confirm_valid')
 
 if ($action == 'confirm_refuse')
 {
-    if (!empty($_POST['detail_refuse']))
+    if (! empty($_POST['detail_refuse']))
     {
         $cp = new Holiday($db);
         $cp->fetch($_GET['id']);
@@ -566,14 +588,14 @@ if ($action == 'confirm_cancel' && GETPOST('confirm') == 'yes')
         	// Calculcate number of days consummed
         	$nbopenedday=num_open_day($cp->date_debut_gmt,$cp->date_fin_gmt,0,1,$cp->halfday);
 
-        	$soldeActuel = $cp->getCpforUser($cp->fk_user);
+        	$soldeActuel = $cp->getCpforUser($cp->fk_user, $cp->fk_type);
         	$newSolde = $soldeActuel + ($nbopenedday * $cp->getConfCP('nbHolidayDeducted'));
 
         	// On ajoute la modification dans le LOG
-        	$result1=$cp->addLogCP($user->id, $cp->fk_user, $langs->transnoentitiesnoconv("HolidaysCancelation"), $newSolde);
+        	$result1=$cp->addLogCP($user->id, $cp->fk_user, $langs->transnoentitiesnoconv("HolidaysCancelation"), $newSolde, $cp->fk_type);
 
         	// Mise à jour du solde
-        	$result2=$cp->updateSoldeCP($cp->fk_user, $newSolde);
+        	$result2=$cp->updateSoldeCP($cp->fk_user, $newSolde, $cp->fk_type);
 
         	if ($result1 < 0 || $result2 < 0)
         	{
@@ -606,7 +628,7 @@ if ($action == 'confirm_cancel' && GETPOST('confirm') == 'yes')
 
             // From
             $expediteur = new User($db);
-            $expediteur->fetch($cp->fk_validator);
+            $expediteur->fetch($cp->fk_user_cancel);
             $emailFrom = $expediteur->email;
 
             // Subject
@@ -673,7 +695,7 @@ if (empty($id) || $action == 'add' || $action == 'request' || $action == 'create
     else
     {
         // Formulaire de demande de congés payés
-        print_fiche_titre($langs->trans('MenuAddCP'));
+        print_fiche_titre($langs->trans('MenuAddCP'), '', 'title_hrm.png');
 
         // Si il y a une erreur
         if (GETPOST('error')) {
@@ -747,11 +769,31 @@ if (empty($id) || $action == 'add' || $action == 'request' || $action == 'create
         print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'" onsubmit="return valider()" name="demandeCP">'."\n";
         print '<input type="hidden" name="action" value="create" />'."\n";
         print '<input type="hidden" name="userID" value="'.$userid.'" />'."\n";
-        print '<div class="tabBar">';
-        print '<span>'.$langs->trans('DelayToRequestCP',$cp->getConfCP('delayForRequest')).'</span><br /><br />';
+
+        dol_fiche_head();
+
+        $out='';
+        $typeleaves=$cp->getTypes(1,1);
+    	foreach($typeleaves as $key => $val)
+		{
+			$nb_type = $cp->getCPforUser($user->id, $val['rowid']);
+			$nb_holiday += $nb_type;
+			$out .= ' - '.$val['label'].': <strong>'.($nb_type?price2num($nb_type):0).'</strong><br>';
+		}
+        print $langs->trans('SoldeCPUser', round($nb_holiday,5)).'<br>';
+		print $out;
+
+        dol_fiche_end();
+
+
+        dol_fiche_head();
+
+        //print '<span>'.$langs->trans('DelayToRequestCP',$cp->getConfCP('delayForRequest')).'</span><br /><br />';
 
         print '<table class="border" width="100%">';
         print '<tbody>';
+
+        // User
         print '<tr>';
         print '<td class="fieldrequired">'.$langs->trans("User").'</td>';
         print '<td>';
@@ -761,32 +803,51 @@ if (empty($id) || $action == 'add' || $action == 'request' || $action == 'create
         	print '<input type="hidden" name="userid" value="'.$userid.'">';
         }
         else print $form->select_users(GETPOST('userid')?GETPOST('userid'):$user->id,'userid',0,'',0);
-        $nb_holiday = $cp->getCPforUser($user->id) / $cp->getConfCP('nbHolidayDeducted');
-        print ' &nbsp; <span>'.$langs->trans('SoldeCPUser', round($nb_holiday,2)).'</span>';
         print '</td>';
         print '</tr>';
+
+        // Type
+        print '<tr>';
+        print '<td class="fieldrequired">'.$langs->trans("Type").'</td>';
+        print '<td>';
+        $typeleaves=$cp->getTypes(1,-1);
+        $arraytypeleaves=array();
+        foreach($typeleaves as $key => $val)
+        {
+        	$labeltoshow = $val['label'];
+        	$labeltoshow .= ($val['delay'] > 0 ? ' ('.$langs->trans("NoticePeriod").': '.$val['delay'].' '.$langs->trans("days").')':'');
+			$arraytypeleaves[$val['rowid']]=$labeltoshow;
+        }
+        print $form->selectarray('type', $arraytypeleaves, (GETPOST('type')?GETPOST('type'):''), 1);
+        if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
+        print '</td>';
+        print '</tr>';
+
+        // Date start
         print '<tr>';
         print '<td class="fieldrequired">'.$langs->trans("DateDebCP").' ('.$langs->trans("FirstDayOfHoliday").')</td>';
         print '<td>';
         // Si la demande ne vient pas de l'agenda
-        if(!isset($_GET['datep'])) {
+        if (! GETPOST('date_debut_')) {
             $form->select_date(-1,'date_debut_');
         } else {
-            $tmpdate = dol_mktime(0, 0, 0, GETPOST('datepmonth'), GETPOST('datepday'), GETPOST('datepyear'));
+            $tmpdate = dol_mktime(0, 0, 0, GETPOST('date_debut_month'), GETPOST('date_debut_day'), GETPOST('date_debut_year'));
             $form->select_date($tmpdate,'date_debut_');
         }
         print ' &nbsp; &nbsp; ';
         print $form->selectarray('starthalfday', $listhalfday, (GETPOST('starthalfday')?GETPOST('starthalfday'):'morning'));
         print '</td>';
         print '</tr>';
+
+        // Date end
         print '<tr>';
         print '<td class="fieldrequired">'.$langs->trans("DateFinCP").' ('.$langs->trans("LastDayOfHoliday").')</td>';
         print '<td>';
         // Si la demande ne vient pas de l'agenda
-        if(!isset($_GET['datep'])) {
+        if (! GETPOST('date_fin_')) {
             $form->select_date(-1,'date_fin_');
         } else {
-            $tmpdate = dol_mktime(0, 0, 0, GETPOST('datefmonth'), GETPOST('datefday'), GETPOST('datefyear'));
+            $tmpdate = dol_mktime(0, 0, 0, GETPOST('date_fin_month'), GETPOST('date_fin_day'), GETPOST('date_fin_year'));
             $form->select_date($tmpdate,'date_fin_');
         }
         print ' &nbsp; &nbsp; ';
@@ -797,14 +858,13 @@ if (empty($id) || $action == 'add' || $action == 'request' || $action == 'create
         // Approved by
         print '<tr>';
         print '<td class="fieldrequired">'.$langs->trans("ReviewedByCP").'</td>';
-        // Liste des utiliseurs du groupe choisi dans la config
         $validator = new UserGroup($db);
         $excludefilter=$user->admin?'':'u.rowid <> '.$user->id;
         $valideurobjects = $validator->listUsersForGroup($excludefilter);
         $valideurarray = array();
         foreach($valideurobjects as $val) $valideurarray[$val->id]=$val->id;
         print '<td>';
-        print $form->select_dolusers($user->fk_user, "valideur", 1, "", 0, $valideurarray);	// By default, hierarchical parent
+        print $form->select_dolusers((GETPOST('valideur')>0?GETPOST('valideur'):$user->fk_user), "valideur", 1, "", 0, $valideurarray, 0, 0, 0, 0, '', 0, '', '', 1);	// By default, hierarchical parent
         print '</td>';
         print '</tr>';
 
@@ -818,17 +878,17 @@ if (empty($id) || $action == 'add' || $action == 'request' || $action == 'create
 
         print '</tbody>';
         print '</table>';
-        print '<div style="clear: both;"></div>';
-        print '</div>';
-        print '</from>'."\n";
 
-        print '<center>';
+        dol_fiche_end();
+
+        print '<div class="center">';
         print '<input type="submit" value="'.$langs->trans("SendRequestCP").'" name="bouton" class="button">';
         print '&nbsp; &nbsp; ';
         print '<input type="button" value="'.$langs->trans("Cancel").'" class="button" onclick="history.go(-1)">';
-        print '</center>';
-    }
+        print '</div>';
 
+        print '</from>'."\n";
+    }
 }
 else
 {
@@ -905,7 +965,7 @@ else
                 }
 
                 // Si envoi en validation
-                if ($action == 'sendToValidate' && $cp->statut == 1 && $user->id == $cp->fk_user)
+                if ($action == 'sendToValidate' && $cp->statut == 1)
                 {
                     print $form->formconfirm("card.php?id=".$id,$langs->trans("TitleToValidCP"),$langs->trans("ConfirmToValidCP"),"confirm_send", '', 1, 1);
                 }
@@ -931,16 +991,17 @@ else
 
                 $head=holiday_prepare_head($cp);
 
-                dol_fiche_head($head,'card',$langs->trans("CPTitreMenu"),0,'holiday');
 
                 if ($action == 'edit' && $cp->statut == 1)
                 {
                     $edit = true;
-                    print '<form method="post" action="'.$_SERVER['PHP_SELF'].'?id='.$_GET['id'].'">'."\n";
+                    print '<form method="post" action="'.$_SERVER['PHP_SELF'].'?id='.$id.'">'."\n";
                     print '<input type="hidden" name="action" value="update"/>'."\n";
-                    print '<input type="hidden" name="holiday_id" value="'.$_GET['id'].'" />'."\n";
+                    print '<input type="hidden" name="holiday_id" value="'.$id.'" />'."\n";
                 }
 
+                dol_fiche_head($head,'card',$langs->trans("CPTitreMenu"),0,'holiday');
+                
                 print '<table class="border" width="100%">';
                 print '<tbody>';
 
@@ -957,6 +1018,15 @@ else
         		print '<td>';
         		print $userRequest->getNomUrl(1);
         		print '</td></tr>';
+
+		        // Type
+		        print '<tr>';
+		        print '<td>'.$langs->trans("Type").'</td>';
+		        print '<td>';
+		        $typeleaves=$cp->getTypes(1,-1);
+		        print $typeleaves[$cp->fk_type]['label'];
+		        print '</td>';
+		        print '</tr>';
 
 			    $starthalfday=($cp->halfday == -1 || $cp->halfday == 2)?'afternoon':'morning';
 			    $endhalfday=($cp->halfday == 1 || $cp->halfday == 2)?'morning':'afternoon';
@@ -1037,6 +1107,7 @@ else
                     print '<td><textarea name="description" class="flat" rows="'.ROWS_3.'" cols="70">'.$cp->description.'</textarea></td>';
                     print '</tr>';
                 }
+
                 print '</tbody>';
                 print '</table>'."\n";
 
@@ -1067,14 +1138,15 @@ else
                 } else {
                     print '<tr>';
                     print '<td width="50%">'.$langs->trans('ReviewedByCP').'</td>';
-                    // Liste des utiliseurs du groupes choisi dans la config
-                    $idGroupValid = $cp->getConfCP('userGroup');
 
-                    $validator = new UserGroup($db);
-                    $valideur = $validator->listUsersForGroup('',1);
+			        $validator = new UserGroup($db);
+			        $excludefilter=$user->admin?'':'u.rowid <> '.$user->id;
+			        $valideurobjects = $validator->listUsersForGroup($excludefilter);
+			        $valideurarray = array();
+			        foreach($valideurobjects as $val) $valideurarray[$val->id]=$val->id;
 
                     print '<td>';
-                    $form->select_users($cp->fk_validator,"valideur",1,"",0,$valideur,'');
+        			print $form->select_dolusers($user->fk_user, "valideur", 1, "", 0, $valideurarray);	// By default, hierarchical parent
                     print '</td>';
                     print '</tr>';
                 }
@@ -1104,19 +1176,20 @@ else
                 print '</tbody>';
                 print '</table>';
 
+                dol_fiche_end();
+                
                 if ($action == 'edit' && $cp->statut == 1)
                 {
-                    print '<br><div align="center">';
+                    print '<div align="center">';
                     if ($canedit && $cp->statut == 1)
                     {
-                        print '<input type="submit" value="'.$langs->trans("UpdateButtonCP").'" class="button">';
+                        print '<input type="submit" value="'.$langs->trans("Save").'" class="button">';
                     }
                     print '</div>';
 
                     print '</form>';
                 }
 
-                dol_fiche_end();
 
                 if (! $edit)
                 {

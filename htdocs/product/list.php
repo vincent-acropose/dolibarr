@@ -1,14 +1,15 @@
 <?php
-/* Copyright (C) 2001-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2012-2013 Marcos García        <marcosgdf@gmail.com>
- * Copyright (C) 2013      Juanjo Menent        <jmenent@2byte.es>
- * Copyright (C) 2013      Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
- * Copyright (C) 2013      Jean Heimburger   	<jean@tiaris.info>
- * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
- * Copyright (C) 2013      Florian Henry        <florian.henry@open-concept.pro>
- * Copyright (C) 2013      Adolfo segura        <adolfo.segura@gmail.com>
+/* Copyright (C) 2001-2006  Rodolphe Quiedeville    <rodolphe@quiedeville.org>
+ * Copyright (C) 2004-2011  Laurent Destailleur     <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2012  Regis Houssin           <regis.houssin@capnetworks.com>
+ * Copyright (C) 2012-2013  Marcos García           <marcosgdf@gmail.com>
+ * Copyright (C) 2013       Juanjo Menent           <jmenent@2byte.es>
+ * Copyright (C) 2013-2015  Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
+ * Copyright (C) 2013       Jean Heimburger         <jean@tiaris.info>
+ * Copyright (C) 2013       Cédric Salvador         <csalvador@gpcsolutions.fr>
+ * Copyright (C) 2013       Florian Henry           <florian.henry@open-concept.pro>
+ * Copyright (C) 2013       Adolfo segura           <adolfo.segura@gmail.com>
+ * Copyright (C) 2015       Jean-François Ferry     <jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,6 +67,7 @@ if (! $sortorder) $sortorder="ASC";
 
 $limit = $conf->liste_limit;
 
+if (empty($action)) $action='list';
 
 // Get object canvas (By default, this is not defined, so standard usage of dolibarr)
 $canvas=GETPOST("canvas");
@@ -107,8 +109,8 @@ $form=new Form($db);
 
 if (is_object($objcanvas) && $objcanvas->displayCanvasExists($action))
 {
-	$objcanvas->assign_values('list');       // This must contains code to load data (must call LoadListDatas($limit, $offset, $sortfield, $sortorder))
-    $objcanvas->display_canvas('list');  	 // This is code to show template
+	$objcanvas->assign_values($action);       // This must contains code to load data (must call LoadListDatas($limit, $offset, $sortfield, $sortorder))
+    $objcanvas->display_canvas($action);  	  // This is code to show template
 }
 else
 {
@@ -132,7 +134,7 @@ else
     // Add what we are searching for
     if (! empty($sall)) $texte.= " - ".$sall;
 
-    $sql = 'SELECT DISTINCT p.rowid, p.ref, p.label, p.barcode, p.price, p.price_ttc, p.price_base_type,';
+    $sql = 'SELECT DISTINCT p.rowid, p.ref, p.label, p.barcode, p.price, p.price_ttc, p.price_base_type, p.entity,';
     $sql.= ' p.fk_product_type, p.tms as datem,';
     $sql.= ' p.duration, p.tosell, p.tobuy, p.seuil_stock_alerte, p.desiredstock,';
     $sql.= ' MIN(pfp.unitprice) as minsellprice';
@@ -239,7 +241,7 @@ else
     	$param.=($search_categ?"&amp;search_categ=".$search_categ:"");
     	$param.=isset($type)?"&amp;type=".$type:"";
 
-    	print_barre_liste($texte, $page, "list.php", $param, $sortfield, $sortorder, '', $num, $nbtotalofrecords);
+    	print_barre_liste($texte, $page, "list.php", $param, $sortfield, $sortorder, '', $num, $nbtotalofrecords,'title_products.png');
 
     	if (! empty($catid))
     	{
@@ -291,7 +293,7 @@ else
     		if (! empty($conf->categorie->enabled))
     		{
     		 	$moreforfilter.=$langs->trans('Categories'). ': ';
-    			$moreforfilter.=$htmlother->select_categories(0,$search_categ,'search_categ',1);
+    			$moreforfilter.=$htmlother->select_categories(Categorie::TYPE_PRODUCT,$search_categ,'search_categ',1);
     		 	$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
     		}
     	 	if ($moreforfilter)
@@ -309,14 +311,22 @@ else
     		if (! empty($conf->barcode->enabled)) print_liste_field_titre($langs->trans("BarCode"), $_SERVER["PHP_SELF"], "p.barcode",$param,'','',$sortfield,$sortorder);
     		print_liste_field_titre($langs->trans("DateModification"), $_SERVER["PHP_SELF"], "p.tms",$param,"",'align="center"',$sortfield,$sortorder);
     		if (! empty($conf->service->enabled) && $type != 0) print_liste_field_titre($langs->trans("Duration"), $_SERVER["PHP_SELF"], "p.duration",$param,"",'align="center"',$sortfield,$sortorder);
-    		if (empty($conf->global->PRODUIT_MULTIPRICES)) print_liste_field_titre($langs->trans("SellingPrice"), $_SERVER["PHP_SELF"], "p.price",$param,"",'align="right"',$sortfield,$sortorder);
+    		if (empty($conf->global->PRODUIT_MULTIPRICES))
+    		{
+    			$titlefield=$langs->trans("SellingPrice");
+    		   	if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
+   				{
+					$titlefields=$form->textwithpicto($langs->trans("SellingPrice"), $langs->trans("DefaultPriceRealPriceMayDependOnCustomer"));
+    			}
+    			print_liste_field_titre($titlefields, $_SERVER["PHP_SELF"], "p.price",$param,"",'align="right"',$sortfield,$sortorder);
+    		}
     		if ($user->rights->fournisseur->lire) print '<td class="liste_titre" align="right">'.$langs->trans("BuyingPriceMinShort").'</td>';
     		if (! empty($conf->stock->enabled) && $user->rights->stock->lire && $type != 1) print '<td class="liste_titre" align="right">'.$langs->trans("DesiredStock").'</td>';
     		if (! empty($conf->stock->enabled) && $user->rights->stock->lire && $type != 1) print '<td class="liste_titre" align="right">'.$langs->trans("PhysicalStock").'</td>';
     		print_liste_field_titre($langs->trans("Sell"), $_SERVER["PHP_SELF"], "p.tosell",$param,"",'align="center"',$sortfield,$sortorder);
             print_liste_field_titre($langs->trans("Buy"), $_SERVER["PHP_SELF"], "p.tobuy",$param,"",'align="center"',$sortfield,$sortorder);
-            print '<td width="1%">&nbsp;</td>';
-    		print "</tr>\n";
+            print_liste_field_titre('',$_SERVER["PHP_SELF"],"",'','','',$sortfield,$sortorder,'maxwidthsearch ');
+			print "</tr>\n";
 
     		// Lignes des champs de filtre
     		print '<tr class="liste_titre">';
@@ -349,8 +359,7 @@ else
     		// Sell price
             if (empty($conf->global->PRODUIT_MULTIPRICES))
             {
-        		print '<td class="liste_titre">';
-        		print '&nbsp;';
+        		print '<td class="liste_titre" align="right">';
         		print '</td>';
             }
 
@@ -373,11 +382,11 @@ else
     			print '</td>';
     		}
 
-    		print '<td align="center">';
+    		print '<td class="liste_titre" align="center">';
             print $form->selectarray('tosell', array('0'=>$langs->trans('ProductStatusNotOnSellShort'),'1'=>$langs->trans('ProductStatusOnSellShort')),$tosell,1);
             print '</td >';
 
-            print '<td align="center">';
+            print '<td class="liste_titre" align="center">';
             print $form->selectarray('tobuy', array('0'=>$langs->trans('ProductStatusNotOnBuyShort'),'1'=>$langs->trans('ProductStatusOnBuyShort')),$tobuy,1);
             print '</td>';
 
@@ -385,6 +394,7 @@ else
     		print '<input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
     		print '<input type="image" class="liste_titre" name="button_removefilter" src="'.img_picto($langs->trans("RemoveFilter"),'searchclear.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'" title="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">';
     		print '</td>';
+
     		print '</tr>';
 
 
@@ -420,7 +430,9 @@ else
     			print '<td class="nowrap">';
     			$product_static->id = $objp->rowid;
     			$product_static->ref = $objp->ref;
+                $product_static->label = $objp->label;
     			$product_static->type = $objp->fk_product_type;
+				$product_static->entity = $objp->entity;
     			print $product_static->getNomUrl(1,'',24);
     			print "</td>\n";
 
@@ -475,8 +487,11 @@ else
     					{
     						if ($product_fourn->product_fourn_price_id > 0)
     						{
-    							$htmltext=$product_fourn->display_price_product_fournisseur();
-    							if (! empty($conf->fournisseur->enabled) && $user->rights->fournisseur->lire) print $form->textwithpicto(price($product_fourn->fourn_unitprice).' '.$langs->trans("HT"),$htmltext);
+    							if (! empty($conf->fournisseur->enabled) && $user->rights->fournisseur->lire)
+    							{
+    								$htmltext=$product_fourn->display_price_product_fournisseur(1, 1, 0, 1);
+    								print $form->textwithpicto(price($product_fourn->fourn_unitprice).' '.$langs->trans("HT"),$htmltext);
+    							}
     							else print price($product_fourn->fourn_unitprice).' '.$langs->trans("HT");
     						}
     					}

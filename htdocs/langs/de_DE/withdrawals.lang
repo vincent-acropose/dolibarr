@@ -30,7 +30,7 @@ WithdrawalsSetup=Abbuchungseinstellungen
 WithdrawStatistics=Abbuchungsstatistik
 WithdrawRejectStatistics=Statistik abgelehnter Abbuchungen
 LastWithdrawalReceipt=%s neueste Abbuchungsbelege
-MakeWithdrawRequest=Abbuchungsantrag stellen
+MakeWithdrawRequest=Beantragen Sie einen Abbuchungsantrag
 ThirdPartyBankCode=BLZ Partner
 ThirdPartyDeskCode=Schalter-Code Partner
 NoInvoiceCouldBeWithdrawed=Keine Rechnung erfolgreich abgebucht. Überprüfen Sie die Kontonummern der den Rechnungen zugewiesenen Partnern.
@@ -84,6 +84,11 @@ WithdrawalFile=Datei abbuchen
 SetToStatusSent=Setze in Status "Datei versandt"
 ThisWillAlsoAddPaymentOnInvoice=Dies wird auch Zahlungen auf Rechnungen erstellen und diese als bezahlt markieren
 StatisticsByLineStatus=Statistiken nach Statuszeilen
+RUM=RUM
+RUMWillBeGenerated=RUM Zahl wird beim speichern der Bankinformationen generiert
+WithdrawMode=Abbuchungsmodus (FRST oder RECUR)
+WithdrawRequestAmount=Abbachungsauftrag Betrag:
+WithdrawRequestErrorNilAmount=Es kann keine Abbuchung für einen Nullbetrag erstellt werden.
 
 ### Notifications
 InfoCreditSubject=Zahlung Abbucher %s an die Bank

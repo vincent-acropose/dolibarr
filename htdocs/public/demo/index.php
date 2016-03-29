@@ -61,10 +61,10 @@ if (empty($reshook))
 {
 	$demoprofiles=array(
 		array('default'=>'1', 'key'=>'profdemoservonly','label'=>'DemoCompanyServiceOnly',
-		'disablemodules'=>'adherent,barcode,cashdesk,categorie,don,expedition,externalsite,mailmanspip,margin,prelevement,product,stock',
+		'disablemodules'=>'adherent,barcode,cashdesk,categorie,don,expedition,externalsite,incoterm,mailmanspip,margin,prelevement,product,productbatch,stock',
 		'icon'=>DOL_URL_ROOT.'/public/demo/dolibarr_screenshot8.png'),
 		array('default'=>'-1','key'=>'profdemoshopwithdesk','label'=>'DemoCompanyShopWithCashDesk',
-		'disablemodules'=>'adherent,categorie,don,externalsite,ficheinter,mailmanspip,prelevement,product,stock',
+		'disablemodules'=>'adherent,categorie,don,externalsite,ficheinter,incoterm,mailmanspip,prelevement,product,productbatch,stock',
 		'icon'=>DOL_URL_ROOT.'/public/demo/dolibarr_screenshot2.png'),
 		array('default'=>'0', 'key'=>'profdemoprodstock','label'=>'DemoCompanyProductAndStocks',
 		'disablemodules'=>'adherent,contrat,categorie,don,externalsite,ficheinter,mailmanspip,prelevement,service',
@@ -73,16 +73,16 @@ if (empty($reshook))
 		'disablemodules'=>'adherent,don,externalsite,mailmanspip',
 		'icon'=>DOL_URL_ROOT.'/public/demo/dolibarr_screenshot9.png'),
 		array('default'=>'-1', 'key'=>'profdemofun','label'=>'DemoFundation',
-		'disablemodules'=>'banque,barcode,cashdesk,commande,commercial,compta,comptabilite,contrat,expedition,externalsite,facture,ficheinter,fournisseur,mailmanspip,margin,prelevement,product,projet,propal,propale,service,societe,stock,tax',
+		'disablemodules'=>'banque,barcode,cashdesk,commande,commercial,compta,comptabilite,contrat,expedition,externalsite,facture,ficheinter,fournisseur,incoterm,mailmanspip,margin,prelevement,product,productbatch,projet,propal,propale,service,societe,stock,tax',
 		'icon'=>DOL_URL_ROOT.'/public/demo/dolibarr_screenshot6.png'),
 		array('default'=>'0', 'key'=>'profdemofun2','label'=>'DemoFundation2',
-		'disablemodules'=>'barcode,cashdesk,commande,commercial,compta,comptabilite,contrat,expedition,externalsite,facture,ficheinter,fournisseur,mailmanspip,margin,prelevement,product,projet,propal,propale,service,societe,stock,tax',
+		'disablemodules'=>'barcode,cashdesk,commande,commercial,compta,comptabilite,contrat,expedition,externalsite,facture,ficheinter,fournisseur,mailmanspip,margin,prelevement,product,productbatch,projet,propal,propale,service,societe,stock,tax',
 		'icon'=>DOL_URL_ROOT.'/public/demo/dolibarr_screenshot6.png')
 	);
 
 	// Visible
 	$alwayscheckedmodules=array('barcode','bookmark','externalrss','fckeditor','geoipmaxmind','gravatar','memcached','syslog','user','webservices');  // Technical module we always want
-	$alwaysuncheckedmodules=array('paybox','paypal','google','scanner','workflow');  // Module we never want
+	$alwaysuncheckedmodules=array('paybox','paypal','google','printing','resource','scanner','workflow');  // Module we never want
 	// Not visible
 	$alwayshiddencheckedmodules=array('accounting','barcode','bookmark','clicktodial','comptabilite','document','domain','externalrss','externalsite','fckeditor','geoipmaxmind','gravatar','label','ldap',
 									'mailmanspip','notification','syslog','user','webservices',
@@ -305,7 +305,7 @@ print "\n";
 print '<table style="font-size:14px;" class="centpercent" summary="Main table for Dolibarr demos">';
 
 print '<tr><td>';
-print '<center><img src="'.DOL_URL_ROOT.'/theme/dolibarr_logo.png" alt="Dolibarr logo"></center><br>';
+print '<div class="center"><img src="'.DOL_URL_ROOT.'/theme/dolibarr_logo.png" alt="Dolibarr logo"></div><br>';
 print '<br>';
 
 print $langs->trans("DemoDesc").'<br>';
@@ -383,8 +383,8 @@ foreach ($demoprofiles as $profilearray)
                     $modulo=($j % $nbcolsmod);
         		    if ($modulo == 0) print '<tr>';
                     print '<td><input type="checkbox" class="checkbox" name="'.$modulekeyname.'" value="1"';
-                    if (in_array($modulekeyname,$alwaysuncheckedmodules)) print ' disabled="disabled"';
-                    if (! in_array($modulekeyname,$alwaysuncheckedmodules)  && (! in_array($modulekeyname,$listofdisabledmodules) || in_array($modulekeyname,$alwayscheckedmodules))) print ' checked="checked"';
+                    if (in_array($modulekeyname,$alwaysuncheckedmodules)) print ' disabled';
+                    if (! in_array($modulekeyname,$alwaysuncheckedmodules)  && (! in_array($modulekeyname,$listofdisabledmodules) || in_array($modulekeyname,$alwayscheckedmodules))) print ' checked';
                     print '> '.$val->getName().' &nbsp;';
                     print '<!-- id='.$val->numero.' -->';
                     print '</td>';

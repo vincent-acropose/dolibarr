@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2004		Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2005-2012	Laurent Destailleur		<eldy@uers.sourceforge.net>
- * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2016	Regis Houssin			<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -140,9 +140,7 @@ if (empty($reshook))
 	{
 		if (empty($conf->global->MAILING_LIMIT_SENDBYWEB))
 		{
-			//TODO: What is this for?
-			// Pour des raisons de securite, on ne permet pas cette fonction via l'IHM,
-			// on affiche donc juste un message
+			// As security measure, we don't allow send from the GUI
 			setEventMessage($langs->trans("MailingNeedCommand"), 'warnings');
 			setEventMessage('<textarea cols="70" rows="'.ROWS_2.'" wrap="soft">php ./scripts/emailings/mailing-send.php '.$object->id.'</textarea>', 'warnings');
 			setEventMessage($langs->trans("MailingNeedCommand2"), 'warnings');
@@ -155,7 +153,7 @@ if (empty($reshook))
 		}
 		else
 		{
-			$upload_dir = $conf->mailing->dir_output . "/" . get_exdir($object->id,2,0,1);
+			$upload_dir = $conf->mailing->dir_output . "/" . get_exdir($object->id,2,0,1,$object,'mailing');
 
 			if ($object->statut == 0)
 			{
@@ -224,6 +222,8 @@ if (empty($reshook))
 	                    $tmpfield=explode('=',$other[2],2); $other3=(isset($tmpfield[1])?$tmpfield[1]:$tmpfield[0]);
 	                    $tmpfield=explode('=',$other[3],2); $other4=(isset($tmpfield[1])?$tmpfield[1]:$tmpfield[0]);
 	                    $tmpfield=explode('=',$other[4],2); $other5=(isset($tmpfield[1])?$tmpfield[1]:$tmpfield[0]);
+	                    $signature = ((!empty($user->signature) && empty($conf->global->MAIN_MAIL_DO_NOT_USE_SIGN))?$user->signature:'');
+
 	                    // Array of possible substitutions (See also fie mailing-send.php that should manage same substitutions)
 						$substitutionarray=array(
 								'__ID__' => $obj->source_id,
@@ -236,6 +236,7 @@ if (empty($reshook))
 								'__OTHER3__' => $other3,
 								'__OTHER4__' => $other4,
 								'__OTHER5__' => $other5,
+								'__SIGNATURE__' => $signature,	// Signature is empty when ran from command line or taken from user in parameter)
 								'__CHECK_READ__' => '<img src="'.DOL_MAIN_URL_ROOT.'/public/emailing/mailing-read.php?tag='.$obj->tag.'&securitykey='.urlencode($conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY).'" width="1" height="1" style="width:1px;height:1px" border="0"/>',
 								'__UNSUBSCRIBE__' => '<a href="'.DOL_MAIN_URL_ROOT.'/public/emailing/mailing-unsubscribe.php?tag='.$obj->tag.'&unsuscrib=1&securitykey='.urlencode($conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY).'" target="_blank">'.$langs->trans("MailUnsubcribe").'</a>'
 						);
@@ -325,8 +326,12 @@ if (empty($reshook))
 								}
 							}
 
+						    if (!empty($conf->global->MAILING_DELAY))
+						    {
+                            	sleep($conf->global->MAILING_DELAY);
+                        	}
 
-							//test if CHECK READ change statut prospect contact
+                        	//test if CHECK READ change statut prospect contact
 						}
 						else
 						{
@@ -396,7 +401,7 @@ if (empty($reshook))
 	{
 		$error=0;
 
-		$upload_dir = $conf->mailing->dir_output . "/" . get_exdir($object->id,2,0,1);
+		$upload_dir = $conf->mailing->dir_output . "/" . get_exdir($object->id,2,0,1,$object,'mailing');
 
 		$object->sendto = $_POST["sendto"];
 		if (! $object->sendto)
@@ -493,7 +498,7 @@ if (empty($reshook))
 	// Action update description of emailing
 	if ($action == 'settitre' || $action == 'setemail_from' || $action == 'setreplyto' || $action == 'setemail_errorsto')
 	{
-		$upload_dir = $conf->mailing->dir_output . "/" . get_exdir($object->id,2,0,1);
+		$upload_dir = $conf->mailing->dir_output . "/" . get_exdir($object->id,2,0,1,$object,'mailing');
 
 		if ($action == 'settitre')					$object->titre          = trim(GETPOST('titre','alpha'));
 		else if ($action == 'setemail_from')		$object->email_from     = trim(GETPOST('email_from','alpha'));
@@ -525,7 +530,7 @@ if (empty($reshook))
 	 */
 	if (! empty($_POST['addfile']))
 	{
-		$upload_dir = $conf->mailing->dir_output . "/" . get_exdir($object->id,2,0,1);
+		$upload_dir = $conf->mailing->dir_output . "/" . get_exdir($object->id,2,0,1,$object,'mailing');
 
 		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
@@ -538,11 +543,11 @@ if (empty($reshook))
 	// Action remove file
 	if (! empty($_POST["removedfile"]))
 	{
-		$upload_dir = $conf->mailing->dir_output . "/" . get_exdir($object->id,2,0,1);
+		$upload_dir = $conf->mailing->dir_output . "/" . get_exdir($object->id,2,0,1,$object,'mailing');
 
 		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
-	    dol_remove_file_process($_POST['removedfile'],0);
+	    dol_remove_file_process($_POST['removedfile'],0,0);    // We really delete file linked to mailing
 
 		$action="edit";
 	}
@@ -673,6 +678,8 @@ if ($action == 'create')
 
 	print_fiche_titre($langs->trans("NewMailing"));
 
+	dol_fiche_head();
+
 	print '<table class="border" width="100%">';
 	print '<tr><td width="25%" class="fieldrequired">'.$langs->trans("MailTitle").'</td><td><input class="flat" name="titre" size="40" value="'.$_POST['titre'].'"></td></tr>';
 	print '<tr><td width="25%" class="fieldrequired">'.$langs->trans("MailFrom").'</td><td><input class="flat" name="from" size="40" value="'.$conf->global->MAILING_EMAIL_FROM.'"></td></tr>';
@@ -704,12 +711,14 @@ if ($action == 'create')
 	print '<td>';
 	// Editeur wysiwyg
 	require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
-	$doleditor=new DolEditor('body',$_POST['body'],'',320,'dolibarr_mailings','',true,true,$conf->global->FCKEDITOR_ENABLE_MAILING,20,70);
+	$doleditor=new DolEditor('body',$_POST['body'],'',320,'dolibarr_mailings','',true,true,$conf->global->FCKEDITOR_ENABLE_MAILING,20,'90%');
 	$doleditor->Create();
 	print '</td></tr>';
 	print '</table>';
 
-	print '<br><center><input type="submit" class="button" value="'.$langs->trans("CreateMailing").'"></center>';
+	dol_fiche_end();
+
+	print '<div class="center"><input type="submit" class="button" value="'.$langs->trans("CreateMailing").'"></div>';
 
 	print '</form>';
 }
@@ -717,7 +726,7 @@ else
 {
 	if ($object->id > 0)
 	{
-		$upload_dir = $conf->mailing->dir_output . "/" . get_exdir($object->id,2,0,1);
+		$upload_dir = $conf->mailing->dir_output . "/" . get_exdir($object->id,2,0,1,$object,'mailing');
 
 		$head = emailing_prepare_head($object);
 
@@ -986,6 +995,9 @@ else
 
 			// Print mail content
 			print_fiche_titre($langs->trans("EMail"),'','');
+
+			dol_fiche_head('');
+
 			print '<table class="border" width="100%">';
 
 			// Subject
@@ -1036,7 +1048,8 @@ else
 			print '</tr>';
 
 			print '</table>';
-			print "<br>";
+
+			dol_fiche_end();
 		}
 		else
 		{
@@ -1083,7 +1096,10 @@ else
 			}
 
 			print '</table>';
-			print "</div>";
+
+			dol_fiche_end();
+
+
 
 			print "\n";
 			print '<form name="edit_mailing" action="card.php" method="post" enctype="multipart/form-data">'."\n";
@@ -1093,6 +1109,9 @@ else
 
 			// Print mail content
 			print_fiche_titre($langs->trans("EMail"),'','');
+
+			dol_fiche_head();
+
 			print '<table class="border" width="100%">';
 
 			// Subject
@@ -1158,11 +1177,13 @@ else
 
 			print '</table>';
 
-			print '<br><center>';
+			dol_fiche_end();
+
+			print '<div class="center">';
 			print '<input type="submit" class="button" value="'.$langs->trans("Save").'" name="save">';
-			print ' &nbsp; ';
+			print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
 			print '<input type="submit" class="button" value="'.$langs->trans("Cancel").'" name="cancel">';
-			print '</center>';
+			print '</div>';
 
 			print '</form>';
 			print '<br>';
