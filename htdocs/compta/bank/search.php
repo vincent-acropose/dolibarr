@@ -50,6 +50,7 @@ $account=GETPOST("account",'alpha');
 $bid=GETPOST("bid","int");
 $search_dt_start = dol_mktime(0, 0, 0, GETPOST('search_start_dtmonth', 'int'), GETPOST('search_start_dtday', 'int'), GETPOST('search_start_dtyear', 'int'));
 $search_dt_end = dol_mktime(0, 0, 0, GETPOST('search_end_dtmonth', 'int'), GETPOST('search_end_dtday', 'int'), GETPOST('search_end_dtyear', 'int'));
+$req_userid = GETPOST('userid');
 $search_thirdparty=GETPOST("thirdparty",'alpha');
 $search_req_nb=GETPOST("req_nb",'alpha');
 
@@ -114,16 +115,28 @@ $formother = new FormOther($db);
 if ($vline) $viewline = $vline;
 else $viewline = 50;
 
-$sql = "SELECT b.rowid, b.dateo as do, b.datev as dv, b.amount, b.label, b.rappro, b.num_releve, b.num_chq,";
+$sql = "SELECT fac.fk_user_author as id_user_fac, fac_fourn.fk_user_author as id_user_fac_fourn, b.rowid, b.dateo as do, b.datev as dv, b.amount, b.label, b.rappro, b.num_releve, b.num_chq,";
 $sql.= " b.fk_account, b.fk_type,";
 $sql.= " ba.rowid as bankid, ba.ref as bankref,";
-$sql.= " bu.url_id,";
+$sql.= " bu.label as labelurl, bu.url_id,";
 $sql.= " s.nom, s.name_alias, s.client, s.fournisseur, s.code_client, s.code_fournisseur";
 $sql.= " FROM ";
 if ($bid) $sql.= MAIN_DB_PREFIX."bank_class as l,";
 $sql.= " ".MAIN_DB_PREFIX."bank_account as ba,";
 $sql.= " ".MAIN_DB_PREFIX."bank as b";
-$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."bank_url as bu ON bu.fk_bank = b.rowid AND type = 'company'";
+
+
+// Jointures sur table facture client
+$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'paiement pay ON (b.rowid = pay.fk_bank)';
+$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'paiement_facture pay_f ON (pay.rowid = pay_f.fk_paiement)';
+$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'facture fac ON (pay_f.fk_facture = fac.rowid)';
+
+// Jointures sur factures fournisseurs
+$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'paiementfourn pay_fourn ON (b.rowid = pay_fourn.fk_bank)';
+$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'paiementfourn_facturefourn pay_fourn_f ON (pay_fourn.rowid = pay_fourn_f.fk_paiementfourn)';
+$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'facture_fourn fac_fourn ON (pay_fourn_f.fk_facturefourn = fac_fourn.rowid)';
+
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."bank_url as bu ON bu.fk_bank = b.rowid AND bu.type = 'company'";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON bu.url_id = s.rowid";
 $sql.= " WHERE b.fk_account = ba.rowid";
 $sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
@@ -150,6 +163,9 @@ if (dol_strlen($search_dt_start)>0) {
 if (dol_strlen($search_dt_end)>0) {
 	$sql .= " AND b.dateo <= '" . $db->idate($search_dt_end) . "'";
 }
+
+if($req_userid > 0) $sql.= " AND (fac.fk_user_author = ".$req_userid." OR fac_fourn.fk_user_author = ".$req_userid.")";
+
 // Search criteria amount
 $debit = price2num(str_replace('-','',$debit));
 $credit = price2num(str_replace('-','',$credit));
@@ -218,6 +234,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans('DateOperationShort'),$_SERVER['PHP_SELF'],'b.dateo','',$param,'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Value'),$_SERVER['PHP_SELF'],'b.datev','',$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Type"),$_SERVER['PHP_SELF'],'','',$param,'align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("User"));
     print_liste_field_titre($langs->trans("Numero"),$_SERVER['PHP_SELF'],'b.num_releve','',$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Description"),$_SERVER['PHP_SELF'],'','',$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("ThirdParty"),$_SERVER['PHP_SELF'],'bu.label','',$param,'',$sortfield,$sortorder);
@@ -233,7 +250,10 @@ if ($resql)
     print '<td class="liste_titre">&nbsp;</td>';
     print '<td class="liste_titre" align="center">';
     $form->select_types_paiements(empty($type)?'':$type, 'type', '', 2, 0, 1);
-    print '</td>';
+	print '</td>';
+	print '<td>';
+	$form->select_users($req_userid, 'userid', 1);
+	print '</td>';
     // Numero
     print '<td class="liste_titre" align="center"><input type="text" class="flat" name="req_nb" value="'.dol_escape_htmltag($search_req_nb).'" size="2"></td>';
     print '<td class="liste_titre">';
@@ -256,6 +276,8 @@ if ($resql)
     // Loop on each record
     $total_debit=0;
     $total_credit=0;
+	$u = new User($db);
+	
     while ($i < min($num,$limit)) {
         $objp = $db->fetch_object($resql);
         $printline=false;
@@ -295,6 +317,14 @@ if ($resql)
 	        if ($labeltype == 'SOLD') print '&nbsp;'; //$langs->trans("InitialBankBalance");
 	        else print $labeltype;
 	        print "</td>\n";
+
+			print '<td>';
+			if(!empty($objp->id_user_fac) || !empty($objp->id_user_fac_fourn)) {
+				$u->fetch($objp->id_user_fac);
+				if($u->id <= 0) $u->fetch($objp->id_user_fac_fourn);
+				print $u->getNomUrl(1);
+			}
+			print '</td>';
 
 	        // Num
 	        print '<td class="nowrap" align="center">'.($objp->num_chq?$objp->num_chq:"")."</td>\n";
@@ -359,6 +389,7 @@ if ($resql)
 		print '<tr  class="liste_total">';
 		print '<td>' . $langs->trans('Total') . '</td>';
 		print '<td colspan="6"></td>';
+		print '<td>&nbsp;</td>';
 		print '<td  align="right">' . price($total_debit * - 1) . '</td>';
 		print '<td  align="right">' . price($total_credit) . '</td>';
 		print '<td></td>';
