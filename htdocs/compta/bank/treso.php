@@ -1,7 +1,8 @@
 <?php
-/* Copytight (C) 2005-2009 Regis Houssin               <regis.houssin@capnetworks.com>
+/* Copyright (C) 2005-2009 Regis Houssin               <regis.houssin@capnetworks.com>
  * Copyright (C) 2008-2009 Laurent Destailleur (Eldy)  <eldy@users.sourceforge.net>
  * Copyright (C) 2008      Raphael Bertrand (Resultic) <raphael.bertrand@resultic.fr>
+ * Copyright (C) 2015	   Marcos García			   <marcosgdf@gmail.com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +35,7 @@ require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 $langs->load("banks");
 $langs->load("categories");
 $langs->load("bills");
+$langs->load("companies");
 
 // Security check
 if (isset($_GET["account"]) || isset($_GET["ref"]))
@@ -47,10 +49,6 @@ $result=restrictedArea($user,'banque',$id,'bank_account&bank_account','','',$fie
 
 $vline=isset($_GET["vline"])?$_GET["vline"]:$_POST["vline"];
 $page=isset($_GET["page"])?$_GET["page"]:0;
-
-$mesg='';
-
-
 
 /*
  * View
@@ -88,10 +86,6 @@ if ($_REQUEST["account"] || $_REQUEST["ref"])
 	}
 
 
-	/*
-	 *
-	 *
-	 */
 	// Onglets
 	$head=bank_prepare_head($acct);
 	dol_fiche_head($head,'cash',$langs->trans("FinancialAccount"),0,'account');
@@ -101,29 +95,26 @@ if ($_REQUEST["account"] || $_REQUEST["ref"])
 	$linkback = '<a href="'.DOL_URL_ROOT.'/compta/bank/index.php">'.$langs->trans("BackToList").'</a>';
 
 	// Ref
-	print '<tr><td valign="top" width="25%">'.$langs->trans("Ref").'</td>';
+	print '<tr><td width="25%">'.$langs->trans("Ref").'</td>';
 	print '<td colspan="3">';
 	print $form->showrefnav($acct, 'ref', $linkback, 1, 'ref');
 	print '</td></tr>';
 
 	// Label
-	print '<tr><td valign="top">'.$langs->trans("Label").'</td>';
+	print '<tr><td>'.$langs->trans("Label").'</td>';
 	print '<td colspan="3">'.$acct->label.'</td></tr>';
 
 	print '</table>';
 
-	print '<br>';
-
-
-	if ($mesg) print '<div class="error">'.$mesg.'</div>';
-
+	dol_fiche_end();
+	
 
 	$solde = $acct->solde(0);
 
 	/*
 	 * Affiche tableau des echeances a venir
 	 */
-	print '<table class="notopnoleftnoright" width="100% border="1">';
+	print '<table class="noborder centpercent">';
 
 	// Ligne de titre tableau des ecritures
 	print '<tr class="liste_titre">';
@@ -141,13 +132,13 @@ if ($_REQUEST["account"] || $_REQUEST["ref"])
 	$var=!$var;
 	print '<tr class="liste_total">';
 	print '<td align="left" colspan="5">'.$langs->trans("CurrentBalance").'</td>';
-	print '<td align="right" nowrap>'.price($solde).'</td>';
+	print '<td align="right" class="nowrap">'.price($solde).'</td>';
 	print '</tr>';
 
 	$var=!$var;
 	print '<tr class="liste_total">';
 	print '<td align="left" colspan="5">'.$langs->trans("RemainderToPay").'</td>';
-	print '<td align="right" nowrap>&nbsp;</td>';
+	print '<td align="right" class="nowrap">&nbsp;</td>';
 	print '</tr>';
 
 
@@ -155,21 +146,23 @@ if ($_REQUEST["account"] || $_REQUEST["ref"])
 
 	// Customer invoices
 	$sql = "SELECT 'invoice' as family, f.rowid as objid, f.facnumber as ref, f.total_ttc, f.type, f.date_lim_reglement as dlr,";
-	$sql.= " s.rowid as socid, s.nom, s.fournisseur";
+	$sql.= " s.rowid as socid, s.nom as name, s.fournisseur";
 	$sql.= " FROM ".MAIN_DB_PREFIX."facture as f";
 	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON f.fk_soc = s.rowid";
 	$sql.= " WHERE f.entity = ".$conf->entity;
 	$sql.= " AND f.paye = 0 AND f.fk_statut = 1";	// Not paid
-	$sql.= " ORDER BY dlr ASC";
+    $sql.= " AND (f.fk_account IN (0, ".$acct->id.") OR f.fk_account IS NULL)"; // Id bank account of invoice
+    $sql.= " ORDER BY dlr ASC";
 
 	// Supplier invoices
-	$sql2= " SELECT 'invoice_supplier' as family, ff.rowid as objid, ff.ref_supplier as ref, (-1*ff.total_ttc) as total_ttc, ff.type, ff.date_lim_reglement as dlr,";
-	$sql2.= " s.rowid as socid, s.nom, s.fournisseur";
+	$sql2= " SELECT 'invoice_supplier' as family, ff.rowid as objid, ff.ref as ref, ff.ref_supplier as ref_supplier, (-1*ff.total_ttc) as total_ttc, ff.type, ff.date_lim_reglement as dlr,";
+	$sql2.= " s.rowid as socid, s.nom as name, s.fournisseur";
 	$sql2.= " FROM ".MAIN_DB_PREFIX."facture_fourn as ff";
 	$sql2.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON ff.fk_soc = s.rowid";
 	$sql2.= " WHERE ff.entity = ".$conf->entity;
 	$sql2.= " AND ff.paye = 0 AND fk_statut = 1";	// Not paid
-	$sql2.= " ORDER BY dlr ASC";
+    $sql2.= " AND (ff.fk_account IN (0, ".$acct->id.") OR ff.fk_account IS NULL)"; // Id bank account of supplier invoice
+    $sql2.= " ORDER BY dlr ASC";
 
 	// Social contributions
 	$sql3= " SELECT 'social_contribution' as family, cs.rowid as objid, cs.libelle as ref, (-1*cs.amount) as total_ttc, ccs.libelle as type, cs.date_ech as dlr";
@@ -259,18 +252,19 @@ if ($_REQUEST["account"] || $_REQUEST["ref"])
 
 			if ($obj->family == 'invoice_supplier')
 			{
-				// TODO This code is to avoid to count suppliers credit note (ff.type = 2)
-				// Ajouter gestion des avoirs fournisseurs, champ
-				if (($obj->total_ttc < 0 && $obj->type != 2)
-				 || ($obj->total_ttc > 0 && $obj->type == 2))
+				$showline=1;
+				// Uncomment this line to avoid to count suppliers credit note (ff.type = 2)
+				//$showline=(($obj->total_ttc < 0 && $obj->type != 2) || ($obj->total_ttc > 0 && $obj->type == 2))
+				if ($showline)
 				{
-					$facturefournstatic->ref=$obj->ref;
+					$ref=$obj->ref;
+					$facturefournstatic->ref=$ref;
 					$facturefournstatic->id=$obj->objid;
 					$facturefournstatic->type=$obj->type;
 					$ref = $facturefournstatic->getNomUrl(1,'');
 
 					$societestatic->id = $obj->socid;
-					$societestatic->nom = $obj->nom;
+					$societestatic->name = $obj->name;
 					$refcomp=$societestatic->getNomUrl(1,'',24);
 
 					$paiement = -1*$facturefournstatic->getSommePaiement();	// Payment already done
@@ -284,7 +278,7 @@ if ($_REQUEST["account"] || $_REQUEST["ref"])
 				$ref = $facturestatic->getNomUrl(1,'');
 
 				$societestatic->id = $obj->socid;
-				$societestatic->nom = $obj->nom;
+				$societestatic->name = $obj->name;
 				$refcomp=$societestatic->getNomUrl(1,'',24);
 
 				$paiement = $facturestatic->getSommePaiement();	// Payment already done
@@ -303,7 +297,7 @@ if ($_REQUEST["account"] || $_REQUEST["ref"])
 			if ($paiement) $total_ttc = $obj->total_ttc - $paiement;
 			$solde += $total_ttc;
 
-			// We discard with a remain to pay to 0
+			// We discard lines with a remainder to pay to 0
 			if (price2num($total_ttc) != 0)
 			{
                 $var=!$var;
@@ -316,7 +310,7 @@ if ($_REQUEST["account"] || $_REQUEST["ref"])
     			print "</td>";
     			print "<td>".$ref."</td>";
     			print "<td>".$refcomp."</td>";
-    			if ($obj->total_ttc < 0) { print "<td align=\"right\">".price($total_ttc)."</td><td>&nbsp;</td>"; };
+    			if ($obj->total_ttc < 0) { print "<td align=\"right\">".price(abs($total_ttc))."</td><td>&nbsp;</td>"; };
     			if ($obj->total_ttc >= 0) { print "<td>&nbsp;</td><td align=\"right\">".price($total_ttc)."</td>"; };
     			print '<td align="right">'.price($solde).'</td>';
     			print "</tr>";
@@ -333,8 +327,8 @@ if ($_REQUEST["account"] || $_REQUEST["ref"])
 	// Solde actuel
 	$var=!$var;
 	print '<tr class="liste_total">';
-	print '<td align="left" colspan="5">'.$langs->trans("FutureBalance").'</td>';
-	print '<td align="right" nowrap>'.price($solde).'</td>';
+	print '<td align="left" colspan="5">'.$langs->trans("FutureBalance").' ('.$acct->currency_code.')</td>';
+	print '<td align="right" class="nowrap">'.price($solde, 0, $langs, 0, 0, -1, $acct->currency_code).'</td>';
 	print '</tr>';
 
 	print "</table>";
@@ -348,4 +342,3 @@ else
 $db->close();
 
 llxFooter();
-?>

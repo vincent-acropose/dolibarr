@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2007-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2007-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2011      François Legastelois <flegastelois@teclib.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -34,7 +34,7 @@ if ($user->societe_id > 0) accessforbidden();
 
 
 // Si l'utilisateur n'a pas le droit de lire cette page
-if(!$user->rights->holiday->month_report) accessforbidden();
+if(!$user->rights->holiday->read_all) accessforbidden();
 
 
 
@@ -61,8 +61,8 @@ if(empty($year)) {
 }
 
 $sql = "SELECT cp.rowid, cp.fk_user, cp.date_debut, cp.date_fin, cp.halfday";
-$sql.= " FROM llx_holiday cp";
-$sql.= " LEFT JOIN llx_user u ON cp.fk_user = u.rowid";
+$sql.= " FROM " . MAIN_DB_PREFIX . "holiday cp";
+$sql.= " LEFT JOIN " . MAIN_DB_PREFIX . "user u ON cp.fk_user = u.rowid";
 $sql.= " WHERE cp.statut = 3";	// Approved
 // TODO Use BETWEEN instead of date_format
 $sql.= " AND (date_format(cp.date_debut, '%Y-%c') = '$year-$month' OR date_format(cp.date_fin, '%Y-%c') = '$year-$month')";
@@ -71,11 +71,18 @@ $sql.= " ORDER BY u.lastname,cp.date_debut";
 $result  = $db->query($sql);
 $num = $db->num_rows($result);
 
-print_fiche_titre($langs->trans('MenuReportMonth'));
+print_fiche_titre($langs->trans('MenuReportMonth'), '', 'title_hrm.png');
 
-print '<div class="tabBar">';
+// Get month of last update
+$lastUpdate = $cp->getConfCP('lastUpdate', 0);
+$monthLastUpdate = $lastUpdate[4].$lastUpdate[5];
+$yearLastUpdate = $lastUpdate[0].$lastUpdate[1].$lastUpdate[2].$lastUpdate[3];
+print $langs->trans("MonthOfLastMonthlyUpdate").': <strong>'.$yearLastUpdate.'-'.$monthLastUpdate.'</strong><br><br>'."\n";
+
 
 print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">'."\n";
+
+dol_fiche_head();
 
 print $langs->trans('Month').': ';
 print $htmlother->select_month($month, 'month_start').' ';
@@ -83,8 +90,7 @@ print $htmlother->select_year($year,'year_start',1,10,3);
 
 print '<input type="submit" value="'.$langs->trans("Refresh").'" class="button" />';
 
-print '</form>';
-
+print '<br>';
 print '<br>';
 
 $var=true;
@@ -119,13 +125,8 @@ if($num == '0') {
 
 		$start_date=$db->jdate($holiday['date_debut']);
 		$end_date=$db->jdate($holiday['date_fin']);
-		/*if(substr($holiday['date_debut'],5,2)==$month-1){
-			$holiday['date_debut'] = date('Y-'.$month.'-01');
-		}
-
-		if(substr($holiday['date_fin'],5,2)==$month+1){
-			$holiday['date_fin'] = date('Y-'.$month.'-t');
-		}*/
+		$start_date_gmt=$db->jdate($holiday['date_debut'],1);
+		$end_date_gmt=$db->jdate($holiday['date_fin'],1);
 
 		print '<tr '.$bc[$var].'>';
 		print '<td>'.$holidaystatic->getNomUrl(1).'</td>';
@@ -135,17 +136,20 @@ if($num == '0') {
 		print '<td>'.dol_print_date($end_date,'day');
 		print '</td>';
 		print '<td align="right">';
-		$nbopenedday=num_open_day($start_date, $end_date, 0, 1, $holiday['halfday']);
+		$nbopenedday=num_open_day($start_date_gmt, $end_date_gmt, 0, 1, $holiday['halfday']);
 		print $nbopenedday;
 		print '</td>';
 		print '</tr>';
 	}
 }
 print '</table>';
-print '</div>';
+
+dol_fiche_end();
+
+print '</form>';
+
 
 // Fin de page
 llxFooter();
 
 $db->close();
-?>

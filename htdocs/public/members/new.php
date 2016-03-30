@@ -25,9 +25,9 @@
  *	\brief      Example of form to add a new member
  *
  *  Note that you can add following constant to change behaviour of page
- *  MEMBER_NEWFORM_AMOUNT               Default amount for autosubscribe form
+ *  MEMBER_NEWFORM_AMOUNT               Default amount for auto-subscribe form
  *  MEMBER_NEWFORM_EDITAMOUNT           Amount can be edited
- *  MEMBER_NEWFORM_PAYONLINE            Suggest paypemt with paypal of paybox
+ *  MEMBER_NEWFORM_PAYONLINE            Suggest payment with paypal of paybox
  *  MEMBER_NEWFORM_DOLIBARRTURNOVER     Show field turnover (specific for dolibarr foundation)
  *  MEMBER_URL_REDIRECT_SUBSCRIPTION    Url to redirect once subscribe submitted
  *  MEMBER_NEWFORM_FORCETYPE            Force type of member
@@ -38,11 +38,11 @@
 define("NOLOGIN",1);		// This means this output page does not require to be logged.
 define("NOCSRFCHECK",1);	// We accept to go on this page from external web site.
 
-// For MultiCompany module. 
+// For MultiCompany module.
 // Do not use GETPOST here, function is not defined and define must be done before including main.inc.php
-// TODO This should be useless. Because entity must be retreive from object ref and not from url.
+// TODO This should be useless. Because entity must be retrieve from object ref and not from url.
 $entity=(! empty($_GET['entity']) ? (int) $_GET['entity'] : (! empty($_POST['entity']) ? (int) $_POST['entity'] : 1));
-if (is_int($entity)) define("DOLENTITY", $entity);
+if (is_numeric($entity)) define("DOLENTITY", $entity);
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
@@ -66,7 +66,7 @@ $langs->load("install");
 $langs->load("other");
 
 // Security check
-if (empty($conf->adherent->enabled)) accessforbidden('',1,1,1);
+if (empty($conf->adherent->enabled)) accessforbidden('',0,0,1);
 
 if (empty($conf->global->MEMBER_ENABLE_PUBLIC))
 {
@@ -110,9 +110,9 @@ function llxHeaderVierge($title, $head="", $disablejs=0, $disablehead=0, $arrayo
     {
         $urllogo=DOL_URL_ROOT.'/theme/dolibarr_logo.png';
     }
-    print '<center>';
+    print '<div class="center">';
     print '<img alt="Logo" id="logosubscribe" title="" src="'.$urllogo.'" />';
-    print '</center><br>';
+    print '</div><br>';
 
     print '<div style="margin-left: 50px; margin-right: 50px;">';
 }
@@ -138,7 +138,7 @@ function llxFooterVierge()
  * Actions
  */
 
-// Action called when page is submited
+// Action called when page is submitted
 if ($action == 'add')
 {
     // test if login already exists
@@ -226,7 +226,7 @@ if ($action == 'add')
         $adh->public      = $_POST["public"];
         $adh->firstname   = $_POST["firstname"];
         $adh->lastname    = $_POST["lastname"];
-        $adh->civilite_id = $_POST["civilite_id"];
+        $adh->civility_id = $_POST["civility_id"];
         $adh->societe     = $_POST["societe"];
         $adh->address     = $_POST["address"];
         $adh->zip         = $_POST["zipcode"];
@@ -250,8 +250,9 @@ if ($action == 'add')
         // Fill array 'array_options' with data from add form
         $extralabels=$extrafields->fetch_name_optionals_label($adh->table_element);
         $ret = $extrafields->setOptionalsFromPost($extralabels,$adh);
+		if ($ret < 0) $error++;
 
-        $result=$adh->create($user->id);
+        $result=$adh->create($user);
         if ($result > 0)
         {
 			require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
@@ -303,7 +304,6 @@ if ($action == 'add')
                     $urlback=DOL_MAIN_URL_ROOT.'/public/paybox/newpayment.php?from=membernewform&source=membersubscription&ref='.$adh->ref;
                     if (price2num(GETPOST('amount'))) $urlback.='&amount='.price2num(GETPOST('amount'));
                     if (GETPOST('email')) $urlback.='&email='.urlencode(GETPOST('email'));
-                    if (! empty($entity)) $urlback.='&entity='.$entity;
                 }
                 else if ($conf->global->MEMBER_NEWFORM_PAYONLINE == 'paypal')
                 {
@@ -314,7 +314,7 @@ if ($action == 'add')
                     {
                     	$urlback.='&securekey='.dol_hash($conf->global->PAYPAL_SECURITY_TOKEN . 'membersubscription' . $adh->ref, 2);
                     }
-                    if (! empty($entity)) $urlback.='&entity='.$entity;
+                    
                 }
                 else
                 {
@@ -323,6 +323,7 @@ if ($action == 'add')
                 }
             }
 
+            if (! empty($entity)) $urlback.='&entity='.$entity;
             dol_syslog("member ".$adh->ref." was created, we redirect to ".$urlback);
             Header("Location: ".$urlback);
             exit;
@@ -334,7 +335,7 @@ if ($action == 'add')
     }
 }
 
-// Action called after a submited was send and member created succesfully
+// Action called after a submitted was send and member created successfully
 // If MEMBER_URL_REDIRECT_SUBSCRIPTION is set to url we never go here because a redirect was done to this url.
 // backtopage parameter with an url was set on member submit page, we never go here because a redirect was done to this url.
 if ($action == 'added')
@@ -343,9 +344,9 @@ if ($action == 'added')
 
     // Si on a pas ete redirige
     print '<br>';
-    print '<center>';
+    print '<div class="center">';
     print $langs->trans("NewMemberbyWeb");
-    print '</center>';
+    print '</div>';
 
     llxFooterVierge();
     exit;
@@ -374,9 +375,20 @@ else print $langs->trans("NewSubscriptionDesc",$conf->global->MAIN_INFO_SOCIETE_
 dol_htmloutput_errors($errmsg);
 
 print '<div align="center">';
+print '<div id="divsubscribe">';
+
+
+// Print form
+print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST" name="newmember">'."\n";
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'" / >';
+print '<input type="hidden" name="entity" value="'.$entity.'" />';
+print '<input type="hidden" name="action" value="add" />';
+
 
 print '<br>'.$langs->trans("FieldsWithAreMandatory",'*').'<br>';
 //print $langs->trans("FieldsWithIsForPublic",'**').'<br>';
+
+dol_fiche_head('');
 
 print '<script type="text/javascript">
 jQuery(document).ready(function () {
@@ -402,13 +414,7 @@ jQuery(document).ready(function () {
 });
 </script>';
 
-// Print form
-print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST" name="newmember">'."\n";
-print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'" / >';
-print '<input type="hidden" name="entity" value="'.$entity.'" />';
-print '<input type="hidden" name="action" value="add" />';
 
-print '<div id="divsubscribe">';
 print '<table class="border" summary="form to subscribe" id="tablesubscribe">'."\n";
 
 // Type
@@ -445,7 +451,7 @@ else
 }
 // Civility
 print '<tr><td>'.$langs->trans('UserTitle').'</td><td>';
-print $formcompany->select_civility(GETPOST('civilite_id'),'civilite_id').'</td></tr>'."\n";
+print $formcompany->select_civility(GETPOST('civility_id'),'civility_id').'</td></tr>'."\n";
 // Lastname
 print '<tr><td>'.$langs->trans("Lastname").' <FONT COLOR="red">*</FONT></td><td><input type="text" name="lastname" size="40" value="'.dol_escape_htmltag(GETPOST('lastname')).'"></td></tr>'."\n";
 // Firstname
@@ -498,7 +504,7 @@ if (empty($conf->global->ADHERENT_LOGIN_NOT_REQUIRED))
 }
 // Birthday
 print '<tr id="trbirth" class="trbirth"><td>'.$langs->trans("DateToBirth").'</td><td>';
-print $form->select_date($birthday,'birth',0,0,1,"newmember");
+print $form->select_date($birthday,'birth',0,0,1,"newmember",1,0,1);
 print '</td></tr>'."\n";
 // Photo
 print '<tr><td>'.$langs->trans("URLPhoto").'</td><td><input type="text" name="photo" size="40" value="'.dol_escape_htmltag(GETPOST('photo')).'"></td></tr>'."\n";
@@ -582,7 +588,7 @@ if (! empty($conf->global->MEMBER_NEWFORM_AMOUNT)
     }
     else
     {
-        print '<input type="text" name="amount" id="amounthidden" class="flat amount" disabled="disabled" size="6" value="'.$amount.'">';
+        print '<input type="text" name="amount" id="amounthidden" class="flat amount" disabled size="6" value="'.$amount.'">';
         print '<input type="hidden" name="amount" id="amount" class="flat amount" size="6" value="'.$amount.'">';
     }
     print ' '.$langs->trans("Currency".$conf->currency);
@@ -590,20 +596,23 @@ if (! empty($conf->global->MEMBER_NEWFORM_AMOUNT)
 }
 print "</table>\n";
 
+dol_fiche_end();
+
 // Save
-print '<br><center>';
+print '<div class="center">';
 print '<input type="submit" value="'.$langs->trans("Save").'" id="submitsave" class="button">';
 if (! empty($backtopage))
 {
     print ' &nbsp; &nbsp; <input type="submit" value="'.$langs->trans("Cancel").'" id="submitcancel" class="button">';
 }
-print '</center>';
-
-print "<br></div></form>\n";
 print '</div>';
 
-print
+
+print "</form>\n";
+print "<br>";
+print '</div></div>';
+
+
 llxFooterVierge();
 
 $db->close();
-?>

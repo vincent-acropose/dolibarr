@@ -27,11 +27,11 @@
 define("NOLOGIN",1);		// This means this output page does not require to be logged.
 define("NOCSRFCHECK",1);	// We accept to go on this page from external web site.
 
-// For MultiCompany module. 
+// For MultiCompany module.
 // Do not use GETPOST here, function is not defined and define must be done before including main.inc.php
 // TODO This should be useless. Because entity must be retreive from object ref and not from url.
 $entity=(! empty($_GET['entity']) ? (int) $_GET['entity'] : (! empty($_POST['entity']) ? (int) $_POST['entity'] : 1));
-if (is_int($entity)) define("DOLENTITY", $entity);
+if (is_numeric($entity)) define("DOLENTITY", $entity);
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
@@ -39,7 +39,7 @@ require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent_type.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 
 // Security check
-if (empty($conf->adherent->enabled)) accessforbidden('',1,1,1);
+if (empty($conf->adherent->enabled)) accessforbidden('',0,0,1);
 
 
 $langs->load("main");
@@ -65,7 +65,11 @@ $extrafields = new ExtraFields($db);
  * View
  */
 
-llxHeaderVierge($langs->trans("MemberCard"));
+$morehead='';
+if (! empty($conf->global->MEMBER_PUBLIC_CSS)) $morehead='<link rel="stylesheet" type="text/css" href="'.$conf->global->MEMBER_PUBLIC_CSS.'">';
+else $morehead='<link rel="stylesheet" type="text/css" href="'.DOL_URL_ROOT.'/theme/eldy/style.css.php'.'">';
+
+llxHeaderVierge($langs->trans("MemberCard"), $morehead);
 
 // fetch optionals attributes and labels
 $extralabels=$extrafields->fetch_name_optionals_label('adherent');
@@ -75,7 +79,7 @@ if ($id > 0)
 	if ($res < 0) { dol_print_error($db,$object->error); exit; }
 	$res=$object->fetch_optionals($object->id,$extralabels);
 
-	print_titre($langs->trans("MemberCard"));
+	print_fiche_titre($langs->trans("MemberCard"), '', '');
 
 	if (empty($object->public))
 	{
@@ -83,7 +87,7 @@ if ($id > 0)
 	}
 	else
 	{
-		print '<table class="border" cellspacing="0" width="100%" cellpadding="3">';
+		print '<table class="public_border" cellspacing="0" width="100%" cellpadding="3">';
 
 		print '<tr><td width="15%">'.$langs->trans("Type").'</td><td class="valeur">'.$object->type."</td></tr>\n";
 		print '<tr><td>'.$langs->trans("Person").'</td><td class="valeur">'.$object->morphy.'</td></tr>';
@@ -138,7 +142,7 @@ function llxHeaderVierge($title, $head = "")
 	print "<title>".$title."</title>\n";
 	if ($head) print $head."\n";
 	print "</head>\n";
-	print "<body>\n";
+	print '<body class="public_body">'."\n";
 }
 
 /**
@@ -154,4 +158,3 @@ function llxFooterVierge()
 	print "</html>\n";
 }
 
-?>

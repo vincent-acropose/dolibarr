@@ -26,18 +26,18 @@
 define("NOLOGIN",1);		// This means this output page does not require to be logged.
 define("NOCSRFCHECK",1);	// We accept to go on this page from external web site.
 
-// For MultiCompany module. 
+// For MultiCompany module.
 // Do not use GETPOST here, function is not defined and define must be done before including main.inc.php
 // TODO This should be useless. Because entity must be retreive from object ref and not from url.
 $entity=(! empty($_GET['entity']) ? (int) $_GET['entity'] : (! empty($_POST['entity']) ? (int) $_POST['entity'] : 1));
-if (is_int($entity)) define("DOLENTITY", $entity);
+if (is_numeric($entity)) define("DOLENTITY", $entity);
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/paybox/lib/paybox.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 
 // Security check
-if (empty($conf->paybox->enabled)) accessforbidden('',1,1,1);
+if (empty($conf->paybox->enabled)) accessforbidden('',0,0,1);
 
 $langs->load("main");
 $langs->load("other");
@@ -99,19 +99,56 @@ $ipaddress          = $_SESSION['ipaddress'];
 dol_syslog("Call newpaymentok with token=".$token." paymentType=".$paymentType." currencyCodeType=".$currencyCodeType." payerID=".$payerID." ipaddress=".$ipaddress." FinalPaymentAmt=".$FinalPaymentAmt." fulltag=".$fulltag);
 */
 
+
+print $langs->trans("YourPaymentHasBeenRecorded")."<br><br>\n";
+
+if (! empty($conf->global->PAYBOX_MESSAGE_OK)) print $conf->global->PAYBOX_MESSAGE_OK;
+
+// Appel des triggers
+include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+$interface=new Interfaces($db);
+$result=$interface->run_triggers('PAYBOX_PAYMENT_OK',$object,$user,$langs,$conf);
+if ($result < 0) { $error++; $errors=$interface->errors; }
+// Fin appel triggers
+
+
 // Send an email
 if (! empty($conf->global->PAYBOX_PAYONLINE_SENDEMAIL))
 {
 	$sendto=$conf->global->PAYBOX_PAYONLINE_SENDEMAIL;
 	$from=$conf->global->MAILING_EMAIL_FROM;
-	require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-	$mailfile = new CMailFile(
-		'['.$conf->global->MAIN_APPLICATION_TITLE.'] '.$langs->transnoentitiesnoconv("NewPayboxPaymentReceived"),
-		$sendto,
-		$from,
-		$langs->transnoentitiesnoconv("NewPayboxPaymentReceived")."\n".$fulltag
-		);
+	// Define $urlwithroot
+	$urlwithouturlroot=preg_replace('/'.preg_quote(DOL_URL_ROOT,'/').'$/i','',trim($dolibarr_main_url_root));
+	$urlwithroot=$urlwithouturlroot.DOL_URL_ROOT;		// This is to use external domain name found into config file
+	//$urlwithroot=DOL_MAIN_URL_ROOT;					// This is to use same domain name than current
 
+	$urlback=$_SERVER["REQUEST_URI"];
+	$topic='['.$conf->global->MAIN_APPLICATION_TITLE.'] '.$langs->transnoentitiesnoconv("NewPayboxPaymentReceived");
+	$tmptag=dolExplodeIntoArray($fulltag,'.','=');
+	$content="";
+	if (! empty($tmptag['MEM']))
+	{
+		$langs->load("members");
+		$url=$urlwithroot."/adherents/card_subscriptions.php?rowid=".$tmptag['MEM'];
+		$content.=$langs->trans("PaymentSubscription")."<br>\n";
+		$content.=$langs->trans("MemberId").': '.$tmptag['MEM']."<br>\n";
+		$content.=$langs->trans("Link").': <a href="'.$url.'">'.$url.'</a>'."<br>\n";
+	}
+	else
+	{
+		$content.=$langs->transnoentitiesnoconv("NewPayboxPaymentReceived")."<br>\n";
+	}
+	$content.="<br>\n";
+	$content.=$langs->transnoentitiesnoconv("TechnicalInformation").":<br>\n";
+	$content.=$langs->transnoentitiesnoconv("ReturnURLAfterPayment").': '.$urlback."<br>\n";
+	$content.="tag=".$fulltag."<br>\n";
+
+	$ishtml=dol_textishtml($content);	// May contain urls
+
+	require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
+	$mailfile = new CMailFile($topic, $sendto, $from, $content, array(), array(), array(), '', '', 0, $ishtml);
+
+	// Send an email
 	$result=$mailfile->sendfile();
 	if ($result)
 	{
@@ -124,12 +161,8 @@ if (! empty($conf->global->PAYBOX_PAYONLINE_SENDEMAIL))
 }
 
 
-print $langs->trans("YourPaymentHasBeenRecorded")."<br>\n";
-
-if (! empty($conf->global->PAYBOX_MESSAGE_OK)) print $conf->global->PAYBOX_MESSAGE_OK;
 
 print "\n</div>\n";
-
 
 html_print_paybox_footer($mysoc,$langs);
 
@@ -137,4 +170,3 @@ html_print_paybox_footer($mysoc,$langs);
 llxFooterPayBox();
 
 $db->close();
-?>

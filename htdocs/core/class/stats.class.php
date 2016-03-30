@@ -31,7 +31,7 @@ abstract class Stats
 {
 	protected $db;
 	var $_lastfetchdate=array();	// Dates of cache file read by methods
-	var $cachefilesuffix='';		// Suffix to add to name of cache file (to avoid file name conflicts) 
+	var $cachefilesuffix='';		// Suffix to add to name of cache file (to avoid file name conflicts)
 
 	/**
 	 * Return nb of elements by month for several years
@@ -56,7 +56,7 @@ abstract class Stats
 	    	include_once DOL_DOCUMENT_ROOT.'/core/lib/json.lib.php';
 	    }
 
-		$newpathofdestfile=$conf->user->dir_temp.'/'.get_class($this).'_'.__FUNCTION__.'_'.(empty($this->cachefilesuffix)?'':$this->cachefilesuffix.'_').$langs->defaultlang.'_user'.$user->id.'.cache';
+		$newpathofdestfile=$conf->user->dir_temp.'/'.get_class($this).'_'.__FUNCTION__.'_'.(empty($this->cachefilesuffix)?'':$this->cachefilesuffix.'_').$langs->defaultlang.'_entity.'.$conf->entity.'_user'.$user->id.'.cache';
 		$newmask='0644';
 
 		$nowgmt = dol_now();
@@ -76,12 +76,12 @@ abstract class Stats
 				dol_syslog(get_class($this).'::'.__FUNCTION__." cache file ".$newpathofdestfile." is not found or older than now - cachedelay (".$nowgmt." - ".$cachedelay.") so we can't use it.");
 			}
 		}
-		
+
 		// Load file into $data
 		if ($foundintocache)    // Cache file found and is not too old
 		{
 			dol_syslog(get_class($this).'::'.__FUNCTION__." read data from cache file ".$newpathofdestfile." ".$filedate.".");
-			$data = dol_json_decode(file_get_contents($newpathofdestfile), true);
+			$data = json_decode(file_get_contents($newpathofdestfile), true);
 		}
 		else
 		{
@@ -112,7 +112,7 @@ abstract class Stats
 			dol_syslog(get_class($this).'::'.__FUNCTION__." save cache file ".$newpathofdestfile." onto disk.");
 			if (! dol_is_dir($conf->user->dir_temp)) dol_mkdir($conf->user->dir_temp);
 			$fp = fopen($newpathofdestfile, 'w');
-			fwrite($fp, dol_json_encode($data));
+			fwrite($fp, json_encode($data));
 			fclose($fp);
 			if (! empty($conf->global->MAIN_UMASK)) $newmask=$conf->global->MAIN_UMASK;
 			@chmod($newpathofdestfile, octdec($newmask));
@@ -125,7 +125,10 @@ abstract class Stats
 	}
 
 	/**
-	 * Return amount of elements by month for several years
+	 * Return amount of elements by month for several years.
+	 * Criterias used to build request are defined into the constructor of parent class into xxx/class/xxxstats.class.php
+	 * The caller of class can add more filters into sql request by adding criteris into the $stats->where property just after
+	 * calling constructor.
 	 *
 	 * @param	int		$endyear		Start year
 	 * @param	int		$startyear		End year
@@ -147,7 +150,7 @@ abstract class Stats
         	include_once DOL_DOCUMENT_ROOT.'/core/lib/json.lib.php';
         }
 
-        $newpathofdestfile=$conf->user->dir_temp.'/'.get_class($this).'_'.__FUNCTION__.'_'.(empty($this->cachefilesuffix)?'':$this->cachefilesuffix.'_').$langs->defaultlang.'_user'.$user->id.'.cache';
+        $newpathofdestfile=$conf->user->dir_temp.'/'.get_class($this).'_'.__FUNCTION__.'_'.(empty($this->cachefilesuffix)?'':$this->cachefilesuffix.'_').$langs->defaultlang.'_entity.'.$conf->entity.'_user'.$user->id.'.cache';
         $newmask='0644';
 
         $nowgmt = dol_now();
@@ -172,7 +175,7 @@ abstract class Stats
         if ($foundintocache)    // Cache file found and is not too old
         {
         	dol_syslog(get_class($this).'::'.__FUNCTION__." read data from cache file ".$newpathofdestfile." ".$filedate.".");
-        	$data = dol_json_decode(file_get_contents($newpathofdestfile), true);
+        	$data = json_decode(file_get_contents($newpathofdestfile), true);
         }
         else
 		{
@@ -203,11 +206,14 @@ abstract class Stats
 			dol_syslog(get_class($this).'::'.__FUNCTION__." save cache file ".$newpathofdestfile." onto disk.");
 			if (! dol_is_dir($conf->user->dir_temp)) dol_mkdir($conf->user->dir_temp);
 			$fp = fopen($newpathofdestfile, 'w');
-			fwrite($fp, dol_json_encode($data));
-			fclose($fp);
-			if (! empty($conf->global->MAIN_UMASK)) $newmask=$conf->global->MAIN_UMASK;
-			@chmod($newpathofdestfile, octdec($newmask));
-
+			if ($fp)
+			{
+				fwrite($fp, json_encode($data));
+				fclose($fp);
+				if (! empty($conf->global->MAIN_UMASK)) $newmask=$conf->global->MAIN_UMASK;
+				@chmod($newpathofdestfile, octdec($newmask));
+			}
+			else dol_syslog("Failed to write cache file", LOG_ERR);
 			$this->_lastfetchdate[get_class($this).'_'.__FUNCTION__]=$nowgmt;
 		}
 
@@ -270,7 +276,7 @@ abstract class Stats
         	include_once DOL_DOCUMENT_ROOT.'/core/lib/json.lib.php';
         }
 
-        $newpathofdestfile=$conf->user->dir_temp.'/'.get_class($this).'_'.__FUNCTION__.'_'.(empty($this->cachefilesuffix)?'':$this->cachefilesuffix.'_').$langs->defaultlang.'_user'.$user->id.'.cache';
+        $newpathofdestfile=$conf->user->dir_temp.'/'.get_class($this).'_'.__FUNCTION__.'_'.(empty($this->cachefilesuffix)?'':$this->cachefilesuffix.'_').$langs->defaultlang.'_entity.'.$conf->entity.'_user'.$user->id.'.cache';
         $newmask='0644';
 
         $nowgmt = dol_now();
@@ -295,7 +301,7 @@ abstract class Stats
         if ($foundintocache)    // Cache file found and is not too old
         {
         	dol_syslog(get_class($this).'::'.__FUNCTION__." read data from cache file ".$newpathofdestfile." ".$filedate.".");
-        	$data = dol_json_decode(file_get_contents($newpathofdestfile), true);
+        	$data = json_decode(file_get_contents($newpathofdestfile), true);
         }
         else
 		{
@@ -309,21 +315,23 @@ abstract class Stats
 			dol_syslog(get_class($this).'::'.__FUNCTION__." save cache file ".$newpathofdestfile." onto disk.");
 			if (! dol_is_dir($conf->user->dir_temp)) dol_mkdir($conf->user->dir_temp);
 			$fp = fopen($newpathofdestfile, 'w');
-			fwrite($fp, dol_json_encode($data));
-			fclose($fp);
-			if (! empty($conf->global->MAIN_UMASK)) $newmask=$conf->global->MAIN_UMASK;
-			@chmod($newpathofdestfile, octdec($newmask));
-
+			if ($fp)
+			{
+				fwrite($fp, json_encode($data));
+				fclose($fp);
+				if (! empty($conf->global->MAIN_UMASK)) $newmask=$conf->global->MAIN_UMASK;
+				@chmod($newpathofdestfile, octdec($newmask));
+			}
 			$this->_lastfetchdate[get_class($this).'_'.__FUNCTION__]=$nowgmt;
 		}
 
 		return $data;
-	}	
-	
-	
+	}
+
+
 	// Here we have low level of shared code called by XxxStats.class.php
 
-	
+
 	/**
 	 * 	Return nb of elements by year
 	 *
@@ -334,7 +342,7 @@ abstract class Stats
 	{
 		$result = array();
 
-		dol_syslog(get_class($this).'::'.__FUNCTION__." sql=".$sql);
+		dol_syslog(get_class($this).'::'.__FUNCTION__."", LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
@@ -364,7 +372,7 @@ abstract class Stats
 	{
 		$result = array();
 
-		dol_syslog(get_class($this).'::'.__FUNCTION__." sql=".$sql);
+		dol_syslog(get_class($this).'::'.__FUNCTION__."", LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
@@ -375,8 +383,11 @@ abstract class Stats
 				$row = $this->db->fetch_object($resql);
 				$result[$i]['year'] = $row->year;
 				$result[$i]['nb'] = $row->nb;
+				if($i>0 && $row->nb) $result[$i-1]['nb_diff'] = ($result[$i-1]['nb'] - $row->nb) / $row->nb * 100;
 				$result[$i]['total'] = $row->total;
+				if($i>0 && $row->total) $result[$i-1]['total_diff'] = ($result[$i-1]['total'] - $row->total) / $row->total * 100;
 				$result[$i]['avg'] = $row->avg;
+				if($i>0 && $row->avg) $result[$i-1]['avg_diff'] = ($result[$i-1]['avg'] - $row->avg) / $row->avg * 100;
 				$i++;
 			}
 			$this->db->free($resql);
@@ -400,7 +411,7 @@ abstract class Stats
 		$result=array();
 		$res=array();
 
-		dol_syslog(get_class($this).'::'.__FUNCTION__." sql=".$sql);
+		dol_syslog(get_class($this).'::'.__FUNCTION__."", LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
@@ -451,7 +462,7 @@ abstract class Stats
 		$result=array();
 		$res=array();
 
-		dol_syslog(get_class($this).'::'.__FUNCTION__." sql=".$sql);
+		dol_syslog(get_class($this).'::'.__FUNCTION__."", LOG_DEBUG);
 
 		$resql=$this->db->query($sql);
 		if ($resql)
@@ -491,14 +502,15 @@ abstract class Stats
 	 *
      *     @param	int		$year       Year
      *     @param  	string	$sql        SQL
-     *     @return	array
+	 *     @param	int		$format		0=Label of absiss is a translated text, 1=Label of absiss is a number
+	 *     @return	array
 	 */
-	function _getAverageByMonth($year, $sql)
+	function _getAverageByMonth($year, $sql, $format=0)
 	{
 		$result=array();
 		$res=array();
 
-		dol_syslog(get_class($this).'::'.__FUNCTION__." sql=".$sql);
+		dol_syslog(get_class($this).'::'.__FUNCTION__."", LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
@@ -531,8 +543,8 @@ abstract class Stats
 
 		return $data;
 	}
-	
-	
+
+
 	/**
 	 *	   Return number or total of product refs
 	 *
@@ -543,11 +555,11 @@ abstract class Stats
 	function _getAllByProduct($sql, $limit=10)
 	{
 		global $langs;
-		
+
 		$result=array();
 		$res=array();
 
-		dol_syslog(get_class($this).'::'.__FUNCTION__." sql=".$sql);
+		dol_syslog(get_class($this).'::'.__FUNCTION__."", LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
@@ -566,7 +578,6 @@ abstract class Stats
         else dol_print_error($this->db);
 
 		return $result;
-	}	
+	}
 }
 
-?>

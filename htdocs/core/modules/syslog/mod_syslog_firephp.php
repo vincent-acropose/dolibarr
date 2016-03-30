@@ -7,6 +7,8 @@ require_once DOL_DOCUMENT_ROOT.'/core/modules/syslog/logHandler.php';
  */
 class mod_syslog_firephp extends LogHandler implements LogHandlerInterface
 {
+	var $code = 'firephp';
+
 	/**
 	 * 	Return name of logger
 	 *
@@ -42,7 +44,7 @@ class mod_syslog_firephp extends LogHandler implements LogHandlerInterface
 	/**
 	 * Is the module active ?
 	 *
-	 * @return boolean
+	 * @return int
 	 */
 	public function isActive()
 	{
@@ -86,7 +88,7 @@ class mod_syslog_firephp extends LogHandler implements LogHandlerInterface
 	/**
 	 * 	Return if configuration is valid
 	 *
-	 * 	@return	boolean		True if configuration ok
+	 * 	@return	array		Array of errors. Empty array if ok.
 	 */
 	public function checkConfiguration()
 	{
@@ -110,8 +112,8 @@ class mod_syslog_firephp extends LogHandler implements LogHandlerInterface
 	/**
 	 * 	Output log content
 	 *
-	 *	@param	string	$content	Content to log
-	 * 	@return	void
+	 *	@param	array	$content	Content to log
+	 * 	@return	null|false
 	 */
 	public function export($content)
 	{
@@ -132,10 +134,10 @@ class mod_syslog_firephp extends LogHandler implements LogHandlerInterface
 			set_include_path($oldinclude);
 			ob_start();	// To be sure headers are not flushed until all page is completely processed
 			$firephp = FirePHP::getInstance(true);
-			if ($level == LOG_ERR) $firephp->error($message);
-			elseif ($level == LOG_WARNING) $firephp->warn($message);
-			elseif ($level == LOG_INFO) $firephp->log($message);
-			else $firephp->log($message);
+			if ($content['level'] == LOG_ERR) $firephp->error($content['message']);
+			elseif ($content['level'] == LOG_WARNING) $firephp->warn($content['message']);
+			elseif ($content['level'] == LOG_INFO) $firephp->log($content['message']);
+			else $firephp->log($content['message']);
 		}
 		catch (Exception $e)
 		{

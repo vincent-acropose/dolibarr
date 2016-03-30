@@ -62,8 +62,7 @@ class modFckeditor extends DolibarrModules
 		$this->config_page_url = array("fckeditor.php");
 
 		// Dependances
-		global $dolibarr_js_CKEDITOR;
-		$this->hidden = ($dolibarr_js_CKEDITOR == 'disabled'?1:0);	// A condition to disable module (used for native debian packages)
+		$this->disabled = (in_array(constant('JS_CKEDITOR'),array('disabled','disabled/'))?1:0);	// A condition to disable module (used for native debian packages)
 		$this->depends = array();
 		$this->requiredby = array();
 
@@ -73,7 +72,7 @@ class modFckeditor extends DolibarrModules
         $this->const[1]  = array("FCKEDITOR_ENABLE_PRODUCTDESC","yesno","1","WYSIWIG for products/services description and note");
         $this->const[2]  = array("FCKEDITOR_ENABLE_MAILING","yesno","1","WYSIWIG for mass emailings");
         $this->const[3]  = array("FCKEDITOR_ENABLE_DETAILS","yesno","1","WYSIWIG for products details lines for all entities");
-        $this->const[4]  = array("FCKEDITOR_ENABLE_USERSIGN","yesno","1","WYSIWIG for products details lines for all entities");
+        $this->const[4]  = array("FCKEDITOR_ENABLE_USERSIGN","yesno","1","WYSIWIG for user signature");
         $this->const[5]  = array("FCKEDITOR_ENABLE_MAIL","yesno","1","WYSIWIG for products details lines for all entities");
 
 		// Boites
@@ -83,38 +82,4 @@ class modFckeditor extends DolibarrModules
 		$this->rights = array();
 		$this->rights_class = 'fckeditor';
 	}
-
-	/**
-	 *		Function called when module is enabled.
-	 *		The init function add constants, boxes, permissions and menus (defined in constructor) into Dolibarr database.
-	 *		It also creates data directories
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-	 */
-	function init($options='')
-	{
-		global $conf;
-
-		$sql = array();
-
-		return $this->_init($sql,$options);
-	}
-
-    /**
-	 *		Function called when module is disabled.
-	 *      Remove from database constants, boxes and permissions from Dolibarr database.
-	 *		Data directories are not deleted
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-     */
-    function remove($options='')
-    {
-		$sql = array();
-
-		return $this->_remove($sql,$options);
-    }
-
 }
-?>

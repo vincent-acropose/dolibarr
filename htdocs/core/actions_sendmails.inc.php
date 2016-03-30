@@ -22,11 +22,12 @@
  */
 
 
-// TODO Include this include file into all class objects
+// TODO Include this include file into all element pages allowing email sending
 
 // $id must be defined
 // $actiontypecode must be defined
-
+// $paramname must be defined
+// $mode must be defined
 
 /*
  * Add file in email form
@@ -55,14 +56,14 @@ if (! empty($_POST['removedfile']))
 	$upload_dir_tmp = $vardir.'/temp';
 
 	// TODO Delete only files that was uploaded from email form
-	dol_remove_file_process($_POST['removedfile'],0);
+	dol_remove_file_process($_POST['removedfile'],0,1);
 	$action='presend';
 }
 
 /*
  * Send mail
  */
-if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_POST['removedfile'] && ! $_POST['cancel'])
+if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_POST['removedfile'] && ! $_POST['cancel'] && !$_POST['modelselected'])
 {
 	$langs->load('mails');
 
@@ -86,10 +87,10 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 
 	if ($result > 0)
 	{
-		if ($_POST['sendto'])
+		if (trim($_POST['sendto']))
 		{
 			// Recipient is provided into free text
-			$sendto = $_POST['sendto'];
+			$sendto = trim($_POST['sendto']);
 			$sendtoid = 0;
 		}
 		elseif ($_POST['receiver'] != '-1')
@@ -102,8 +103,24 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 			}
 			else	// Id du contact
 			{
-				$sendto = $thirdparty->contact_get_property($_POST['receiver'],'email');
+				$sendto = $thirdparty->contact_get_property((int) $_POST['receiver'],'email');
 				$sendtoid = $_POST['receiver'];
+			}
+		}
+		if (trim($_POST['sendtocc']))
+		{
+			$sendtocc = trim($_POST['sendtocc']);
+		}
+		elseif ($_POST['receivercc'] != '-1')
+		{
+			// Recipient was provided from combo list
+			if ($_POST['receivercc'] == 'thirdparty')	// Id of third party
+			{
+				$sendtocc = $thirdparty->email;
+			}
+			else	// Id du contact
+			{
+				$sendtocc = $thirdparty->contact_get_property((int) $_POST['receivercc'],'email');
 			}
 		}
 
@@ -114,19 +131,24 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 			$from = $_POST['fromname'] . ' <' . $_POST['frommail'] .'>';
 			$replyto = $_POST['replytoname']. ' <' . $_POST['replytomail'].'>';
 			$message = $_POST['message'];
-			$sendtocc = $_POST['sendtocc'];
+			$sendtobcc= GETPOST('sendtoccc');
+			if ($mode == 'emailfromproposal') $sendtobcc .= (empty($conf->global->MAIN_MAIL_AUTOCOPY_PROPOSAL_TO) ? '' : (($sendtobcc?", ":"").$conf->global->MAIN_MAIL_AUTOCOPY_PROPOSAL_TO));
+			if ($mode == 'emailfromorder')    $sendtobcc .= (empty($conf->global->MAIN_MAIL_AUTOCOPY_ORDER_TO) ? '' : (($sendtobcc?", ":"").$conf->global->MAIN_MAIL_AUTOCOPY_ORDER_TO));
+			if ($mode == 'emailfrominvoice')  $sendtobcc .= (empty($conf->global->MAIN_MAIL_AUTOCOPY_INVOICE_TO) ? '' : (($sendtobcc?", ":"").$conf->global->MAIN_MAIL_AUTOCOPY_INVOICE_TO));
+
 			$deliveryreceipt = $_POST['deliveryreceipt'];
 
 			if ($action == 'send' || $action == 'relance')
 			{
 				if (dol_strlen($_POST['subject'])) $subject = $_POST['subject'];
-				$actionmsg2=$langs->transnoentities('MailSentBy').' '.$from.' '.$langs->transnoentities('To').' '.$sendto.".\n";
+				$actionmsg2=$langs->transnoentities('MailSentBy').' '.$from.' '.$langs->transnoentities('To').' '.$sendto;
 				if ($message)
 				{
-					$actionmsg=$langs->transnoentities('MailSentBy').' '.$from.' '.$langs->transnoentities('To').' '.$sendto.".\n";
-					$actionmsg.=$langs->transnoentities('MailTopic').": ".$subject."\n";
-					$actionmsg.=$langs->transnoentities('TextUsedInTheMessageBody').":\n";
-					$actionmsg.=$message;
+					$actionmsg=$langs->transnoentities('MailSentBy').' '.$from.' '.$langs->transnoentities('To').' '.$sendto;
+					if ($sendtocc) $actionmsg = dol_concatdesc($actionmsg, $langs->transnoentities('Bcc') . ": " . $sendtocc);
+					$actionmsg = dol_concatdesc($actionmsg, $langs->transnoentities('MailTopic') . ": " . $subject);
+					$actionmsg = dol_concatdesc($actionmsg, $langs->transnoentities('TextUsedInTheMessageBody') . ":");
+					$actionmsg = dol_concatdesc($actionmsg, $message);
 				}
 			}
 
@@ -139,9 +161,11 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 			$filename = $attachedfiles['names'];
 			$mimetype = $attachedfiles['mimes'];
 
+			$trackid = GETPOST('trackid','aZ');
+
 			// Send mail
 			require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-			$mailfile = new CMailFile($subject,$sendto,$from,$message,$filepath,$mimetype,$filename,$sendtocc,'',$deliveryreceipt,-1);
+			$mailfile = new CMailFile($subject,$sendto,$from,$message,$filepath,$mimetype,$filename,$sendtocc,$sendtobcc,$deliveryreceipt,-1,'','',$trackid);
 			if ($mailfile->error)
 			{
 				$mesgs[]='<div class="error">'.$mailfile->error.'</div>';
@@ -165,7 +189,7 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 					// Appel des triggers
 					include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
 					$interface=new Interfaces($db);
-					$result=$interface->run_triggers('COMPANY_SENTBYMAIL',$object,$user,$langs,$conf);
+					$result=$interface->run_triggers($trigger_name,$object,$user,$langs,$conf);
 					if ($result < 0) {
 						$error++; $this->errors=$interface->errors;
 					}
@@ -188,19 +212,17 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 				else
 				{
 					$langs->load("other");
-					$mesg='<div class="error">';
 					if ($mailfile->error)
 					{
+						$mesg='';
 						$mesg.=$langs->trans('ErrorFailedToSendMail',$from,$sendto);
 						$mesg.='<br>'.$mailfile->error;
+						setEventMessage($mesg,'errors');
 					}
 					else
 					{
-						$mesg.='No mail sent. Feature is disabled by option MAIN_DISABLE_ALL_MAILS';
+						setEventMessage('No mail sent. Feature is disabled by option MAIN_DISABLE_ALL_MAILS', 'warnings');
 					}
-					$mesg.='</div>';
-
-					setEventMessage($mesg,'warnings');
 					$action = 'presend';
 				}
 			}
@@ -229,5 +251,3 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 	}
 
 }
-
-?>

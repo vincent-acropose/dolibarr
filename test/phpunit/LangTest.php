@@ -25,7 +25,7 @@
 
 global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
 require_once dirname(__FILE__).'/../../htdocs/core/lib/security.lib.php';
 require_once dirname(__FILE__).'/../../htdocs/core/lib/security2.lib.php';
@@ -92,6 +92,8 @@ class LangTest extends PHPUnit_Framework_TestCase
 
     	print __METHOD__."\n";
     }
+
+    // tear down after class
     public static function tearDownAfterClass()
     {
     	global $conf,$user,$langs,$db;
@@ -146,7 +148,7 @@ class LangTest extends PHPUnit_Framework_TestCase
 		{
 			if (! preg_match('/^[a-z]+_[A-Z]+$/',$code)) continue;
 
-			print 'Check language file for code='.$code."\n";
+			print 'Check language file for lang code='.$code."\n";
 			$tmplangs=new Translate('',$conf);
     		$langcode=$code;
         	$tmplangs->setDefaultLang($langcode);
@@ -154,24 +156,23 @@ class LangTest extends PHPUnit_Framework_TestCase
 
 			$result=$tmplangs->trans("SeparatorDecimal");
 			print __METHOD__." SeparatorDecimal=".$result."\n";
-			$this->assertContains($result,array('.',',','/',' ','','None'));
+			$this->assertContains($result,array('.',',','/',' ','','None'), 'Error for decimal separator for lang code '.$code);	// Note that ، that is coma for RTL languages is not supported
 
 			$result=$tmplangs->trans("SeparatorThousand");
 			print __METHOD__." SeparatorThousand=".$result."\n";
-			$this->assertContains($result,array('.',',','/',' ','','None','SeparatorThousand'));	// SeparatorThousand is returned when SeparatorThousand=Space
+			$this->assertContains($result, array('.',',','/',' ','','None','Space'), 'Error for thousand separator for lang code '.$code);	// Note that ، that is coma for RTL languages is not supported
 
 			// Test java string contains only d,M,y,/,-,. and not m,...
 			$result=$tmplangs->trans("FormatDateShortJava");
 			print __METHOD__." FormatDateShortJava=".$result."\n";
-			$this->assertRegExp('/^[dMy\/\-\.]+$/',$result);
+			$this->assertRegExp('/^[dMy\/\-\.]+$/',$result,'FormatDateShortJava KO for lang code '.$code);
 			$result=$tmplangs->trans("FormatDateShortJavaInput");
 			print __METHOD__." FormatDateShortJavaInput=".$result."\n";
-			$this->assertRegExp('/^[dMy\/\-\.]+$/',$result);
+			$this->assertRegExp('/^[dMy\/\-\.]+$/',$result,'FormatDateShortJavaInput KO for lang code '.$code);
 
 			unset($tmplangs);
 		}
 
-        return $result;
+        return;
     }
 }
-?>

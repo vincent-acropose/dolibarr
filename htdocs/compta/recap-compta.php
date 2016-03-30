@@ -30,7 +30,7 @@ $langs->load("companies");
 if (! empty($conf->facture->enabled)) $langs->load("bills");
 
 // Security check
-$socid = $_GET["socid"];
+$socid = GETPOST("socid",'int');
 if ($user->societe_id > 0)
 {
   $action = '';
@@ -64,8 +64,8 @@ if ($socid > 0)
 
 	print '<table class="border" width="100%">';
 
-	// Nom
-	print '<tr><td width="20%">'.$langs->trans("Name").'</td><td width="80%" colspan="3">'.$societe->nom.'</td></tr>';
+	// Name
+	print '<tr><td width="20%">'.$langs->trans("Name").'</td><td width="80%" colspan="3">'.$societe->name.'</td></tr>';
 
 	// Prefix
 	if (! empty($conf->global->SOCIETE_USEPREFIX))  // Old not used prefix field
@@ -115,7 +115,7 @@ if ($socid > 0)
 
 			if (! $num > 0)
 			{
-				print '<tr><td colspan="7">'.$langs->trans("NoInvoice").'</td></tr>';
+				print '<tr '.$bc[false].'><td colspan="7">'.$langs->trans("NoInvoice").'</td></tr>';
 			}
 
 			$solde = 0;
@@ -142,7 +142,7 @@ if ($socid > 0)
 
 				print '<td aling="left">'.$fac->getLibStatut(2,$totalpaye).'</td>';
 				print '<td align="right">'.price($fac->total_ttc)."</td>\n";
-				if (($fac->statut == 3 ) || ($fac->statut == 2 && ! $fact->close_code) )  $solde = $solde = $solde + $totalpaye;
+				if (($fac->statut == Facture::STATUS_ABANDONED ) || ($fac->statut == Facture::STATUS_CLOSED && ! $fact->close_code) )  $solde = $solde = $solde + $totalpaye;
 				else $solde = $solde + $fac->total_ttc;
 
 				print '<td align="right">&nbsp;</td>';
@@ -181,7 +181,7 @@ if ($socid > 0)
 						print '<td align="center">'.dol_print_date($db->jdate($objp->dp),'day')."</td>\n";
 						print '<td>';
 						print '&nbsp; &nbsp; &nbsp; '; // Decalage
-						print '<a href="paiement/fiche.php?id='.$objp->rowid.'">'.img_object($langs->trans("ShowPayment"),"payment").' '.$langs->trans("Payment").' '.$objp->rowid.'</td>';
+						print '<a href="paiement/card.php?id='.$objp->rowid.'">'.img_object($langs->trans("ShowPayment"),"payment").' '.$langs->trans("Payment").' '.$objp->rowid.'</td>';
 						print "<td>&nbsp;</td>\n";
 						print "<td>&nbsp;</td>\n";
 						print '<td align="right">'.price($objp->amount).'</td>';
@@ -224,4 +224,3 @@ else
 llxFooter();
 
 $db->close();
-?>

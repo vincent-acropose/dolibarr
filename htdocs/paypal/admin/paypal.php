@@ -93,10 +93,15 @@ llxHeader('',$langs->trans("PaypalSetup"));
 
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre(' - '.$langs->trans("ModuleSetup"),$linkback,'paypal_logo@paypal');
+print_fiche_titre($langs->trans("ModuleSetup").' PayPal',$linkback);
 print '<br>';
 
 $head=paypaladmin_prepare_head();
+
+print '<form method="post" action="'.$_SERVER["PHP_SELF"].'">';
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+print '<input type="hidden" name="action" value="setvalue">';
+
 
 dol_fiche_head($head, 'paypalaccount', '');
 
@@ -111,12 +116,8 @@ if (! function_exists('curl_version'))
 
 
 print '<br>';
-print '<form method="post" action="'.$_SERVER["PHP_SELF"].'">';
-print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-print '<input type="hidden" name="action" value="setvalue">';
 
-
-print '<table class="nobordernopadding" width="100%">';
+print '<table class="noborder" width="100%">';
 
 $var=true;
 print '<tr class="liste_titre">';
@@ -230,13 +231,13 @@ print $langs->trans("SecurityTokenIsUnique").'</td><td>';
 print $form->selectyesno("PAYPAL_SECURITY_TOKEN_UNIQUE",(empty($conf->global->PAYPAL_SECURITY_TOKEN)?0:$conf->global->PAYPAL_SECURITY_TOKEN_UNIQUE),1);
 print '</td></tr>';
 
-print '<tr><td colspan="2" align="center"><br><input type="submit" class="button" value="'.$langs->trans("Modify").'"></td></tr>';
-
 print '</table>';
 
-print '</form>';
-
 dol_fiche_end();
+
+print '<div class="center"><input type="submit" class="button" value="'.$langs->trans("Modify").'"></div>';
+
+print '</form>';
 
 print '<br><br>';
 
@@ -365,10 +366,10 @@ if (! empty($conf->use_javascript_ajax))
 {
 	print "\n".'<script type="text/javascript">';
 	print '$(document).ready(function () {
-            $("#apidoc").hide();
+            $("#apidoca").hide();
             $("#apidoca").click(function() {
-                $("#apidoca").hide();
                 $("#apidoc").show();
+            	$("#apidoca").hide();
             });
 
             $("#generate_token").click(function() {
@@ -386,4 +387,3 @@ if (! empty($conf->use_javascript_ajax))
 
 llxFooter();
 $db->close();
-?>

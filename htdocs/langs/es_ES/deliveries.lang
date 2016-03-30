@@ -23,3 +23,6 @@ GoodStatusDeclaration=He recibido la mercancía en buen estado,
 Deliverer=Destinatario :
 Sender=Origen
 Recipient=Destinatario
+ErrorStockIsNotEnough=No hay suficiente stock
+Shippable=Enviable
+NonShippable=No enviable

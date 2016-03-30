@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C)      2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2007-2011 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2011 Herve Prot           <herve.prot@symeos.com>
@@ -20,7 +20,7 @@
  */
 
 /**
- *		\file       htdocs/theme/eldy/style.css.php
+ *		\file       htdocs/theme/cameleo/style.css.php
  *		\brief      Fichier de style CSS du theme Cameleo
  */
 
@@ -39,27 +39,27 @@ session_cache_limiter(FALSE);
 
 require_once '../../main.inc.php';
 
+// Load user to have $user->conf loaded (not done into main because of NOLOGIN constant defined)
+if (empty($user->id) && ! empty($_SESSION['dol_login'])) $user->fetch('',$_SESSION['dol_login']);
+
+
 // Define css type
 header('Content-type: text/css');
-// Important: Following code is to avoid page request by browser and PHP CPU at
-// each Dolibarr page access.
+// Important: Following code is to avoid page request by browser and PHP CPU at each Dolibarr page access.
 if (empty($dolibarr_nocache)) header('Cache-Control: max-age=3600, public, must-revalidate');
 else header('Cache-Control: no-cache');
 
 // On the fly GZIP compression for all pages (if browser support it). Must set the bit 3 of constant to 1.
 if (isset($conf->global->MAIN_OPTIMIZE_SPEED) && ($conf->global->MAIN_OPTIMIZE_SPEED & 0x04)) { ob_start("ob_gzhandler"); }
 
-if (! empty($_GET["lang"])) $langs->setDefaultLang($_GET["lang"]);	// If language was forced on URL
-if (! empty($_GET["theme"])) $conf->theme=$_GET["theme"];  // If theme was forced on URL
+if (GETPOST('lang')) $langs->setDefaultLang(GETPOST('lang'));	// If language was forced on URL
+if (GETPOST('theme')) $conf->theme=GETPOST('theme');  // If theme was forced on URL
 $langs->load("main",0,1);
 $right=($langs->trans("DIRECTION")=='rtl'?'left':'right');
 $left=($langs->trans("DIRECTION")=='rtl'?'right':'left');
-$fontsize=empty($conf->dol_optimize_smallscreen)?'12':'12';
-$fontsizesmaller=empty($conf->dol_optimize_smallscreen)?'11':'11';
 
+// Define image path files and other constants
 $fontlist='arial,tahoma,verdana,helvetica';
-//$fontlist='Verdana,Helvetica,Arial,sans-serif';
-
 $dol_hide_topmenu=$conf->dol_hide_topmenu;
 $dol_hide_leftmenu=$conf->dol_hide_leftmenu;
 $dol_optimize_smallscreen=$conf->dol_optimize_smallscreen;
@@ -71,6 +71,10 @@ $theme='cameleo';	// Value of theme
 if (! empty($conf->global->MAIN_OVERWRITE_THEME_RES)) { $path='/'.$conf->global->MAIN_OVERWRITE_THEME_RES; $theme=$conf->global->MAIN_OVERWRITE_THEME_RES; }
 
 $colorshadowtitle='000';
+$fontsize='12';
+$fontsizesmaller='11';
+
+if (! empty($conf->dol_optimize_smallscreen)) $fontsize=11;
 ?>
 
 /* ============================================================================== */
@@ -81,12 +85,10 @@ body {
 <?php if (GETPOST("optioncss") == 'print') {  ?>
 	background-color: #FFFFFF;
 <?php } else { ?>
-	/*background: #ffffff url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/headbg2.jpg',1); ?>) 0 0 no-repeat;*/
+	background-color: #FCFCFC;
 <?php } ?>
 	color: #101010;
-	<?php if (empty($dol_use_jmobile) || 1==1) { ?>
 	font-size: <?php print $fontsize ?>px;
-    <?php } ?>
     font-family: <?php print $fontlist ?>;
     margin-top: 0;
     margin-bottom: 0;
@@ -110,7 +112,7 @@ input, input.flat, textarea, textarea.flat, form.flat select, select.flat {
 	font-family: <?php print $fontlist ?>;
 	background: #FDFDFD;
     border: 1px solid #ACBCBB;
-    padding: 1px 1px 1px 1px;
+    padding: 2px;
     margin: 0px 0px 0px 0px;
 }
 <?php } ?>
@@ -183,13 +185,22 @@ legend { margin-bottom: 8px; }
     padding: 0px 2px 0px 2px;
     margin: 0px 0px 0px 0px;
 }
-.buttonajax {
-    font-family: <?php print $fontlist ?>;
-	border: 0px;
-	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1); ?>);
-	background-position: bottom;
-    padding: 0px 0px 0px 0px;
-    margin: 0px 0px 0px 0px;
+.button:disabled {
+	opacity: 0.4;
+    filter: alpha(opacity=40); /* For IE8 and earlier */
+    box-shadow: none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    cursor: auto;
+}
+.buttonRefused {
+	pointer-events: none;
+   	cursor: default;
+	opacity: 0.4;
+    filter: alpha(opacity=40); /* For IE8 and earlier */
+    box-shadow: none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
 }
 form {
     padding: 0em 0em 0em 0em;
@@ -203,7 +214,7 @@ div.floatright
 {
     float:<?php print $right; ?>;
 }
-div.inline-block
+.inline-block
 {
 	display:inline-block;
 }
@@ -216,6 +227,7 @@ div.inline-block
 }
 .center {
     text-align: center;
+	margin: 0px auto;
 }
 .left {
 	text-align: <?php print $left; ?>;
@@ -232,6 +244,23 @@ div.inline-block
 .nounderline {
     text-decoration: none;
 }
+.cursorpointer {
+	cursor: pointer;
+}
+.badge {
+	display: inline-block;
+	min-width: 10px;
+	padding: 2px 5px;
+	font-size: 10px;
+	font-weight: 700;
+	line-height: 0.9em;
+	color: #fff;
+	text-align: center;
+	white-space: nowrap;
+	vertical-align: baseline;
+	background-color: #777;
+	border-radius: 10px;
+}
 
 
 /* ============================================================================== */
@@ -243,8 +272,13 @@ div.inline-block
 .hideonsmartphone { display: none; }
 .noenlargeonsmartphone { width : 50px !important; display: inline !important; }
 .maxwidthonsmartphone { max-width: 100px; }
+.maxwidth200onsmartphone { max-width: 200px; }
 <?php } ?>
 .linkobject { cursor: pointer; }
+<?php if (GETPOST("optioncss") == 'print') { ?>
+.hideonprint { display: none !important; }
+<?php } ?>
+
 
 /* ============================================================================== */
 /* Styles for dragging lines                                                      */
@@ -267,13 +301,14 @@ td.showDragHandle {
 /* ============================================================================== */
 
 #id-container {
-  display: table;
-  table-layout: fixed;
+	margin-bottom: 8px;
+	display: table;
+  	table-layout: fixed;
 }
 #id-right, #id-left {
-  display: table-cell;
-  float: none;
-  vertical-align: top;
+	display: table-cell;
+	float: none;
+	vertical-align: top;
 }
 #id-<?php echo $right; ?> {
 	width: 100%;
@@ -320,16 +355,8 @@ div.ficheaddleft {
 /* ============================================================================== */
 
 <?php
-if (! empty($conf->dol_optimize_smallscreen))
-{
-	$minwidthtmenu=0;
-	$heightmenu=19;
-}
-else
-{
-	$minwidthtmenu=70;
-	$heightmenu=47;
-}
+$minwidthtmenu=70;
+$heightmenu=47;
 ?>
 
 div#tmenu_tooltip {
@@ -471,7 +498,9 @@ div.mainmenu {
 	margin-left: 0px;
 }
 
-<?php if (empty($conf->dol_optimize_smallscreen)) { ?>
+
+/* Do not load menu img if hidden to save bandwidth */
+<?php if (empty($dol_hide_topmenu)) { ?>
 
 div.mainmenu.agenda {
 	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/agenda.png',1); ?>);
@@ -540,10 +569,6 @@ div.mainmenu.tools {
 	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/tools.png',1); ?>);
 }
 
-div.mainmenu.shop {
-	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/shop.png',1); ?>);
-}
-
 div.mainmenu.google {
 	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/globe.png',1); ?>);
 }
@@ -567,7 +592,7 @@ foreach($conf->modules as $val)
 $mainmenuusedarray=array_unique(explode(',',$mainmenuused));
 
 $generic=1;
-$divalreadydefined=array('home','companies','products','commercial','accountancy','project','tools','members','shop','agenda','ecm','bookmark','cashdesk','geoipmaxmind','gravatar','clicktodial','paypal','webservices');
+$divalreadydefined=array('home','companies','products','commercial','accountancy','project','tools','members','agenda','ecm','bookmark','cashdesk','geoipmaxmind','gravatar','clicktodial','paypal','webservices');
 foreach($mainmenuusedarray as $val)
 {
 	if (empty($val) || in_array($val,$divalreadydefined)) continue;
@@ -591,7 +616,7 @@ foreach($mainmenuusedarray as $val)
 	}
 	if ($url)
 	{
-		print "/* A mainmenu entry but img file ".$val.".png not found, so we use a generic one */\n";
+		print "/* A mainmenu entry but img file ".$val.".png not found (check /".$val."/img/".$val.".png), so we use a generic one */\n";
 		print "div.mainmenu.".$val." {\n";
 		print "	background-image: url(".$url.");\n";
 		print "	height:28px;\n";
@@ -602,7 +627,7 @@ foreach($mainmenuusedarray as $val)
 ?>
 
 <?php
-}	// End test if not phone
+}	// End test if $dol_hide_topmenu
 ?>
 
 .tmenuimage {
@@ -613,7 +638,12 @@ foreach($mainmenuusedarray as $val)
 
 
 /* Login */
-
+.login_vertical_align {
+	padding: 10px;
+}
+.login_main_message {
+	text-align: center;
+}
 form#login {
 	margin-top: <?php echo $dol_optimize_smallscreen?'30':'60' ?>px;
 	margin-bottom: 30px;
@@ -628,8 +658,7 @@ form#login {
 	text-shadow: 1px 1px 1px #FFF;
 }
 .login_table {
-	margin-left: 10px;
-	margin-right: 10px;
+	margin: 0px auto;  /* Center */
 	padding:12px;
 	max-width: 540px;
 	border: 1px solid #C0C0C0;
@@ -649,11 +678,15 @@ form#login {
 	background-image: -ms-linear-gradient(top, rgba(240,240,240,.3) 0%, rgba(192,192,192,.3) 100%);
 	background-image: linear-gradient(top, rgba(240,240,240,.3) 0%, rgba(192,192,192,.3) 100%);
 }
+#securitycode {
+	min-width: 60px;
+}
 #img_securitycode {
 	border: 1px solid #DDDDDD;
 }
 #img_logo {
 	max-width: 200px;
+	max-height: 100px;
 }
 
 div.login_block {
@@ -851,9 +884,14 @@ div.blockvmenusearch div.menu_titre {
 {
 	padding-top: 1px;
 	padding-bottom: 1px;
-	height: 20px;
+	min-height: 20px;
 }
 
+#blockvmenusearch form
+{
+	clear: both;
+	margin-bottom: 14px;
+}
 
 div.blockvmenubookmarks
 {
@@ -1224,8 +1262,8 @@ background: linear-gradient(top, #fceabb 0%,#fccd4d 50%,#FFA820 87%,#fbdf93 100%
 }
 
 
-div.tabs a.tab#active {
-    color: #FFF;
+div.tabs a.tab:active, .tabactive {
+    color: #FFF !important;
     padding: 0px 6px 0px 6px;
     -moz-border-radius-topleft:8px;
     -moz-border-radius-topright:8px;
@@ -1257,7 +1295,7 @@ div.tabBar {
     padding-left: 4px;
     padding-right: 4px;
     padding-bottom: 4px;
-    margin: 6px 0px 6px 0px;
+    margin: 6px 0px 20px 0px;
     -moz-border-radius:8px;
     border-radius:8px;
     border-right: 1px solid #555555;
@@ -1375,6 +1413,13 @@ background-repeat: repeat-x;
 */
 
 
+.paddingrightonly {
+	border-collapse: collapse;
+	border: 0px;
+	margin-left: 0px;
+	padding-<?php print $left; ?>: 0px !important;
+	padding-<?php print $right; ?>: 4px !important;
+}
 .nocellnopadd {
 list-style-type:none;
 margin: 0px;
@@ -1469,7 +1514,7 @@ padding: 0px 0px;
 }
 table.nobordernopadding td {
 border: 0px;
-padding: 0px 0px !important;
+padding: 0px 0px;
 }
 
 /* For lists */
@@ -1499,6 +1544,95 @@ table.liste td {
 .tagtable, .table-border { display: table; }
 .tagtr, .table-border-row  { display: table-row; }
 .tagtd, .table-border-col, .table-key-border-col, .table-val-border-col { display: table-cell; }
+
+/* Pagination */
+div.pagination {
+	float: right;
+}
+div.pagination a {
+	font-weight: normal;
+}
+div.pagination ul
+{
+  list-style: none;
+  display: inline-block;
+  padding-left: 0px;
+  padding-right: 0px;
+  margin: 0;
+}
+div.pagination li {
+  display: inline-block;
+  padding-left: 0px;
+  padding-right: 0px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.pagination {
+  display: inline-block;
+  padding-left: 0;
+  border-radius: 4px;
+}
+
+div.pagination li a,
+div.pagination li span {
+  /*position: relative;*/
+  /*float: left;*/
+  padding: 6px 12px;
+  margin-left: -1px;
+  line-height: 1.42857143;
+  color: #000;
+  text-decoration: none;
+  background-color: #fff;
+  border: 1px solid #ddd;
+}
+div.pagination li:first-child a,
+div.pagination li:first-child span {
+  margin-left: 0;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+div.pagination li:last-child a,
+div.pagination li:last-child span {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+div.pagination li a:hover,
+div.pagination li span:hover,
+div.pagination li a:focus,
+div.pagination li span:focus {
+  color: #000;
+  background-color: #eee;
+  border-color: #ddd;
+}
+div.pagination li .active a,
+div.pagination li .active span,
+div.pagination li .active a:hover,
+div.pagination li .active span:hover,
+div.pagination li .active a:focus,
+div.pagination li .active span:focus {
+  z-index: 2;
+  color: #fff;
+  cursor: default;
+  background-color: <?php $colorbackhmenu1 ?>;
+  border-color: #337ab7;
+}
+div.pagination .disabled span,
+div.pagination .disabled span:hover,
+div.pagination .disabled span:focus,
+div.pagination .disabled a,
+div.pagination .disabled a:hover,
+div.pagination .disabled a:focus {
+  color: #777;
+  cursor: not-allowed;
+  background-color: #fff;
+  border-color: #ddd;
+}
+div.pagination li .active {
+  text-decoration: underline;
+}
+div.pagination li.paginationafterarrows {
+	margin-left: 10px;
+}
 
 tr.liste_titre, tr.liste_titre_sel, form.liste_titre, form.liste_titre_sel
 {
@@ -1745,11 +1879,8 @@ div.titre {
 	font-family: <?php print $fontlist ?>;
 	font-weight: normal;
 	color: #842F00;
-    font-size: 20px;
+    font-size: 16px;
 	text-decoration: none;
-	<?php if (empty($dol_use_jmobile)) { ?>
-	margin-left: 12px;
-	<?php } ?>
 }
 
 #dolpaymenttable { width: 600px; font-size: 13px; }
@@ -1948,13 +2079,18 @@ td.hidden {
 
 table.cal_month    { border-spacing: 0px; }
 .cal_current_month { border-top: 0; border-left: solid 1px #E0E0E0; border-right: 0; border-bottom: solid 1px #E0E0E0; }
+.cal_current_month_peruserleft { border-top: 0; border-left: solid 3px #6C7C7B; border-right: 0; border-bottom: solid 1px #E0E0E0; }
 .cal_other_month   { border-top: 0; border-left: solid 1px #C0C0C0; border-right: 0; border-bottom: solid 1px #C0C0C0; }
+.cal_other_month_peruserleft { border-top: 0; border-left: solid 3px #6C7C7B !important; border-right: 0; }
 .cal_current_month_right { border-right: solid 1px #E0E0E0; }
 .cal_other_month_right   { border-right: solid 1px #C0C0C0; }
 .cal_other_month   { background: #DDDDDD; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
 .cal_past_month    { background: #EEEEEE; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
 .cal_current_month { background: #FFFFFF; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
+.cal_current_month_peruserleft { background: #FFFFFF; border-left: solid 3px #6C7C7B; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
 .cal_today         { background: #FFFFFF; border: solid 2px #C0C0C0; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
+.cal_today_peruser { background: #FFFFFF; border-right: solid 1px #6C7C7B; border-top: solid 1px #A0A0A0; border-bottom: solid 1px #A0A0A0; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
+.cal_today_peruser_peruserleft { background: #FFFFFF; border-left: solid 3px #6C7C7B; border-top: solid 1px #A0A0A0; border-right: solid 1px #6C7C7B; border-bottom: solid 1px #A0A0A0; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
 table.cal_event    { border-collapse: collapse; margin-bottom: 1px; }
 table.cal_event td { border: 0px; padding-<?php print $left; ?>: 0px; padding-<?php print $right; ?>: 2px; padding-top: 0px; padding-bottom: 0px; }
 ul.cal_event       { padding-right: 2px; padding-top: 1px; border: none; list-style-type: none; margin: 0 auto; padding-left: 0px; padding-start: 0px; -khtml-padding-start: 0px; -o-padding-start: 0px; -webkit-padding-start: 0px; -webkit-padding-start: 0px; }
@@ -1963,6 +2099,8 @@ li.cal_event       { border: none; list-style-type: none; }
 .cal_event a:visited {font-size: 11px; font-weight: bold !important; }
 .cal_event a:active  {font-size: 11px; font-weight: bold !important; }
 .cal_event a:hover   {font-size: 11px; font-weight: bold !important; }
+.peruser_busy      { background: #CC8888; }
+.peruser_notbusy   { background: #EEDDDD; }
 
 
 /* ============================================================================== */
@@ -2201,8 +2339,6 @@ a.cke_dialog_ui_button
 	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1); ?>) !important;
 	background-position: bottom !important;
     border: 1px solid #ACBCBB !important;
-	padding: 0.1em 0.7em !important;
-	margin: 0em 0.5em !important;
     -moz-border-radius:0px 5px 0px 5px !important;
 	-webkit-border-radius:0px 5px 0px 5px !important;
 	border-radius:0px 5px 0px 5px !important;
@@ -2360,6 +2496,114 @@ div.ecmjqft {
 .sorting_desc { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_desc.png',1); ?>') no-repeat center right; }
 .sorting_asc_disabled  { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_asc_disabled',1); ?>') no-repeat center right; }
 .sorting_desc_disabled { background: url('<?php echo dol_buildpath('/theme/'.$theme.'/img/sort_desc_disabled',1); ?>') no-repeat center right; }
+.paginate_disabled_previous:hover, .paginate_enabled_previous:hover, .paginate_disabled_next:hover, .paginate_enabled_next:hover
+{
+	font-weight: normal;
+}
+.paginate_enabled_previous:hover, .paginate_enabled_next:hover
+{
+	text-decoration: underline !important;
+}
+.ui-state-disabled, .ui-widget-content .ui-state-disabled, .ui-widget-header .ui-state-disabled, .paginate_button_disabled {
+	opacity: .35;
+	filter: Alpha(Opacity=35);
+	background-image: none;
+}
+
+
+/* ============================================================================== */
+/*  Select2                                                                       */
+/* ============================================================================== */
+
+.selectoptiondisabledwhite {
+	background: #FFFFFF !important;
+}
+
+.select2-choice,
+.select2-drop.select2-drop-above.select2-drop-active,
+.select2-container-active .select2-choice,
+.select2-container-active .select2-choices,
+.select2-dropdown-open.select2-drop-above .select2-choice,
+.select2-dropdown-open.select2-drop-above .select2-choices,
+.select2-container-multi.select2-container-active .select2-choices
+{
+	border: 1px solid #aaa;
+}
+.select2-disabled
+{
+	color: #888;
+}
+.select2-drop-active
+{
+	border: 1px solid #aaa;
+	border-top: none;
+}
+a span.select2-chosen
+{
+	font-weight: normal !important;
+}
+.select2-container .select2-choice {
+	background-image: none;
+	height: 24px;
+	line-height: 24px;
+}
+.select2-choices .select2-search-choice {
+  border: 1px solid #aaa !important;
+}
+.select2-results .select2-no-results, .select2-results .select2-searching, .select2-results .select2-ajax-error, .select2-results .select2-selection-limit
+{
+	background: #FFFFFF;
+}
+.select2-container-multi.select2-container-disabled .select2-choices {
+	background-color: #FFFFFF;
+	background-image: none;
+	border: none;
+	cursor: default;
+}
+.select2-container-multi .select2-choices .select2-search-choice {
+  margin-bottom: 3px;
+}
+/* To emulate select 2 style */
+.select2-container-multi-dolibarr .select2-choices-dolibarr .select2-search-choice-dolibarr {
+  padding: 2px 5px 1px 5px;
+  margin: 0 0 2px 3px;
+  position: relative;
+  line-height: 13px;
+  color: #333;
+  cursor: default;
+  border: 1px solid #aaaaaa;
+  border-radius: 3px;
+  -webkit-box-shadow: 0 0 2px #fff inset, 0 1px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: 0 0 2px #fff inset, 0 1px 0 rgba(0, 0, 0, 0.05);
+  background-clip: padding-box;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  background-color: #e4e4e4;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#eeeeee', endColorstr='#f4f4f4', GradientType=0);
+  background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, color-stop(20%, #f4f4f4), color-stop(50%, #f0f0f0), color-stop(52%, #e8e8e8), color-stop(100%, #eee));
+  background-image: -webkit-linear-gradient(top, #f4f4f4 20%, #f0f0f0 50%, #e8e8e8 52%, #eee 100%);
+  background-image: -moz-linear-gradient(top, #f4f4f4 20%, #f0f0f0 50%, #e8e8e8 52%, #eee 100%);
+  background-image: linear-gradient(to bottom, #f4f4f4 20%, #f0f0f0 50%, #e8e8e8 52%, #eee 100%);
+}
+.select2-container-multi-dolibarr .select2-choices-dolibarr .select2-search-choice-dolibarr a {
+	font-weight: normal;
+}
+.select2-container-multi-dolibarr .select2-choices-dolibarr li {
+  float: left;
+  list-style: none;
+}
+.select2-container-multi-dolibarr .select2-choices-dolibarr {
+  height: auto !important;
+  height: 1%;
+  margin: 0;
+  padding: 0 5px 0 0;
+  position: relative;
+  cursor: text;
+  overflow: hidden;
+}
 
 
 /* ============================================================================== */
@@ -2380,9 +2624,7 @@ a.ui-link, a.ui-link:hover, .ui-btn:hover, span.ui-btn-text:hover, span.ui-btn-i
 	min-width: .4em;
 	padding-left: 10px;
 	padding-right: 10px;
-	<?php if (empty($dol_use_jmobile) || 1==1) { ?>
 	font-size: <?php print $fontsize ?>px;
-	<?php } ?>
 	/* white-space: normal; */		/* Warning, enable this break the truncate feature */
 }
 .ui-select .ui-btn-icon-right .ui-btn-inner {
@@ -2502,8 +2744,15 @@ ul.ulmenu {
 	background-image: -o-linear-gradient( #eee,#e1e1e1 ) !important;
 	background-image: linear-gradient( #eee,#e1e1e1 ) !important;
 }
+.lilevel2
+{
+	padding-left: 22px;
+}
+.lilevel3
+{
+	padding-left: 54px;
+}
 
 
 <?php
 if (is_object($db)) $db->close();
-?>

@@ -4,6 +4,7 @@
  * Copyright (C) 2005-2012      Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010           Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2013      Florian Henry		  	<florian.henry@open-concept.pro>
+ * Copyright (C) 2015      Marcos García            <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,26 +41,15 @@ $result = restrictedArea($user, 'societe', $id, '&societe');
 $object = new Societe($db);
 if ($id > 0) $object->fetch($id);
 
+$permissionnote=$user->rights->societe->creer;	// Used by the include of actions_setnotes.inc.php
+
+
 /*
  * Actions
  */
 
-/******************************************************************************/
-/*                     Actions                                                */
-/******************************************************************************/
-if ($action == 'setnote_public' && $user->rights->societe->creer)
-{
-	$object->fetch($id);
-	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES),'_public');
-	if ($result < 0) setEventMessage($object->error,'errors');
-}
+include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not includ_once
 
-else if ($action == 'setnote_private' && $user->rights->societe->creer)
-{
-	$object->fetch($id);
-	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_private'), ENT_QUOTES),'_private');
-	if ($result < 0) setEventMessage($object->error,'errors');
-}
 
 /*
  *	View
@@ -91,6 +81,11 @@ if ($id > 0)
     print '<td colspan="3">';
     print $form->showrefnav($object,'socid','',($user->societe_id?0:1),'rowid','nom');
     print '</td></tr>';
+
+	// Alias names (commercial, trademark or alias names)
+	print '<tr><td>'.$langs->trans('AliasNames').'</td><td colspan="3">';
+	print $object->name_alias;
+	print "</td></tr>";
 
     if (! empty($conf->global->SOCIETE_USEPREFIX))  // Old not used prefix field
     {
@@ -129,4 +124,3 @@ if ($id > 0)
 llxFooter();
 $db->close();
 
-?>

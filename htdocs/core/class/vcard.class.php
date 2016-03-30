@@ -150,7 +150,7 @@ class vCard
     {
         $this->properties["N;CHARSET=".$this->encoding] = encode($family).";".encode($first).";".encode($additional).";".encode($prefix).";".encode($suffix);
         $this->filename = "$first%20$family.vcf";
-        if ($this->properties["FN"]=="") $this->setFormattedName(trim("$prefix $first $additional $family $suffix"));
+        if (empty($this->properties["FN"])) $this->setFormattedName(trim("$prefix $first $additional $family $suffix"));
     }
 
     /**
@@ -306,7 +306,7 @@ class vCard
     /**
      *  permet d'obtenir une vcard
      *
-     *  @return	void
+     *  @return	string
      */
     function getVCard()
     {
@@ -334,4 +334,3 @@ class vCard
     }
 
 }
-?>

@@ -2,6 +2,7 @@
 /* Copyright (C) 2004      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2015      Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +19,7 @@
  */
 
 /**
- *		\file       htdocs/install/repair.php
+ *      \file       htdocs/install/repair.php
  *      \brief      Run repair script
  */
 
@@ -29,7 +30,7 @@ require_once $dolibarr_main_document_root.'/core/class/extrafields.class.php';
 require_once 'lib/repair.lib.php';
 
 $grant_query='';
-$etape = 2;
+$step = 2;
 $ok = 0;
 
 
@@ -47,6 +48,7 @@ $versionto=GETPOST("versionto",'',3)?GETPOST("versionto",'',3):(empty($argv[2])?
 
 $langs->load("admin");
 $langs->load("install");
+$langs->load("other");
 
 if ($dolibarr_main_db_type == "mysql") $choix=1;
 if ($dolibarr_main_db_type == "mysqli") $choix=1;
@@ -54,8 +56,8 @@ if ($dolibarr_main_db_type == "pgsql") $choix=2;
 if ($dolibarr_main_db_type == "mssql") $choix=3;
 
 
-dolibarr_install_syslog("repair: Entering upgrade.php page");
-if (! is_object($conf)) dolibarr_install_syslog("repair: conf file not initialized",LOG_ERR);
+dolibarr_install_syslog("--- repair: entering upgrade.php page");
+if (! is_object($conf)) dolibarr_install_syslog("repair: conf file not initialized", LOG_ERR);
 
 
 /*
@@ -101,54 +103,57 @@ $conf->db->dolibarr_main_db_cryptkey	= isset($dolibarr_main_db_cryptkey)?$doliba
 
 $db=getDoliDBInstance($conf->db->type,$conf->db->host,$conf->db->user,$conf->db->pass,$conf->db->name,$conf->db->port);
 
-if ($db->connected == 1)
+if ($db->connected)
 {
     print '<tr><td class="nowrap">';
     print $langs->trans("ServerConnection")." : $dolibarr_main_db_host</td><td align=\"right\">".$langs->trans("OK")."</td></tr>";
-    dolibarr_install_syslog("repair: ".$langs->transnoentities("ServerConnection")." : $dolibarr_main_db_host ".$langs->transnoentities("OK"));
+    dolibarr_install_syslog("repair: " . $langs->transnoentities("ServerConnection") . ": " . $dolibarr_main_db_host . $langs->transnoentities("OK"));
     $ok = 1;
 }
 else
 {
     print "<tr><td>".$langs->trans("ErrorFailedToConnectToDatabase",$dolibarr_main_db_name)."</td><td align=\"right\">".$langs->transnoentities("Error")."</td></tr>";
-    dolibarr_install_syslog("repair: ".$langs->transnoentities("ErrorFailedToConnectToDatabase",$dolibarr_main_db_name));
+    dolibarr_install_syslog("repair: " . $langs->transnoentities("ErrorFailedToConnectToDatabase", $dolibarr_main_db_name));
     $ok = 0;
 }
 
 if ($ok)
 {
-    if($db->database_selected == 1)
+    if($db->database_selected)
     {
         print '<tr><td class="nowrap">';
         print $langs->trans("DatabaseConnection")." : ".$dolibarr_main_db_name."</td><td align=\"right\">".$langs->trans("OK")."</td></tr>";
-        dolibarr_install_syslog("repair: Database connection successfull : $dolibarr_main_db_name");
+        dolibarr_install_syslog("repair: database connection successful: " . $dolibarr_main_db_name);
         $ok=1;
     }
     else
     {
         print "<tr><td>".$langs->trans("ErrorFailedToConnectToDatabase",$dolibarr_main_db_name)."</td><td align=\"right\">".$langs->trans("Error")."</td></tr>";
-        dolibarr_install_syslog("repair: ".$langs->transnoentities("ErrorFailedToConnectToDatabase",$dolibarr_main_db_name));
+        dolibarr_install_syslog("repair: " . $langs->transnoentities("ErrorFailedToConnectToDatabase", $dolibarr_main_db_name));
         $ok=0;
     }
 }
 
-// Affiche version
+// Show database version
 if ($ok)
 {
     $version=$db->getVersion();
     $versionarray=$db->getVersionArray();
     print '<tr><td>'.$langs->trans("ServerVersion").'</td>';
     print '<td align="right">'.$version.'</td></tr>';
-    dolibarr_install_syslog("repair: ".$langs->transnoentities("ServerVersion")." : $version");
+    dolibarr_install_syslog("repair: " . $langs->transnoentities("ServerVersion") . ": " . $version);
     //print '<td align="right">'.join('.',$versionarray).'</td></tr>';
 }
 
-// Force l'affichage de la progression
+// Show wait message
 print '<tr><td colspan="2">'.$langs->trans("PleaseBePatient").'</td></tr>';
 flush();
 
 
-// Run repair SQL file
+/* Start action here */
+
+
+// run_sql: Run repair SQL file
 if ($ok)
 {
     $dir = "mysql/migration/";
@@ -191,86 +196,169 @@ if ($ok)
 }
 
 
-// Search list of fields declared and list of fields created into databases and create fields missing
-$extrafields=new ExtraFields($db);
-$listofmodulesextra=array('societe'=>'societe','adherent'=>'adherent','product'=>'product',
-			'socpeople'=>'socpeople', 'commande'=>'commande', 'facture'=>'facture',
-			'commande_fournisseur'=>'commande_fournisseur', 'actioncomm'=>'actioncomm',
-			'adherent_type'=>'adherent_type','user'=>'user','projet'=>'projet', 'projet_task'=>'projet_task');
-foreach($listofmodulesextra as $tablename => $elementtype)
+// sync_extrafields: Search list of fields declared and list of fields created into databases and create fields missing
+if ($ok)
 {
-    // Get list of fields
-    $tableextra=MAIN_DB_PREFIX.$tablename.'_extrafields';
+	$extrafields=new ExtraFields($db);
+	$listofmodulesextra=array('societe'=>'societe','adherent'=>'adherent','product'=>'product',
+				'socpeople'=>'socpeople', 'commande'=>'commande', 'facture'=>'facture',
+				'commande_fournisseur'=>'commande_fournisseur', 'actioncomm'=>'actioncomm',
+				'adherent_type'=>'adherent_type','user'=>'user','projet'=>'projet', 'projet_task'=>'projet_task');
+	foreach($listofmodulesextra as $tablename => $elementtype)
+	{
+	    // Get list of fields
+	    $tableextra=MAIN_DB_PREFIX.$tablename.'_extrafields';
 
-    // Define $arrayoffieldsdesc
-    $arrayoffieldsdesc=$extrafields->fetch_name_optionals_label($elementtype);
+	    // Define $arrayoffieldsdesc
+	    $arrayoffieldsdesc=$extrafields->fetch_name_optionals_label($elementtype);
 
-    // Define $arrayoffieldsfound
-    $arrayoffieldsfound=array();
-    $resql=$db->DDLDescTable($tableextra);
-    if ($resql)
-    {
-        print '<tr><td>Check availability of extra field for '.$tableextra."<br>\n";
-        $i=0;
-        while($obj=$db->fetch_object($resql))
-        {
-            $fieldname=$fieldtype='';
-            if (preg_match('/mysql/',$db->type))
-            {
-                $fieldname=$obj->Field;
-                $fieldtype=$obj->Type;
-            }
-            else
-            {
-                $fieldname = isset($obj->Key)?$obj->Key:$obj->attname;
-                $fieldtype = isset($obj->Type)?$obj->Type:'varchar';
-            }
+	    // Define $arrayoffieldsfound
+	    $arrayoffieldsfound=array();
+	    $resql=$db->DDLDescTable($tableextra);
+	    if ($resql)
+	    {
+	        print '<tr><td>Check availability of extra field for '.$tableextra."<br>\n";
+	        $i=0;
+	        while($obj=$db->fetch_object($resql))
+	        {
+	            $fieldname=$fieldtype='';
+	            if (preg_match('/mysql/',$db->type))
+	            {
+	                $fieldname=$obj->Field;
+	                $fieldtype=$obj->Type;
+	            }
+	            else
+	            {
+	                $fieldname = isset($obj->Key)?$obj->Key:$obj->attname;
+	                $fieldtype = isset($obj->Type)?$obj->Type:'varchar';
+	            }
 
-            if (empty($fieldname)) continue;
-            if (in_array($fieldname,array('rowid','tms','fk_object','import_key'))) continue;
-            $arrayoffieldsfound[$fieldname]=array('type'=>$fieldtype);
-        }
+	            if (empty($fieldname)) continue;
+	            if (in_array($fieldname,array('rowid','tms','fk_object','import_key'))) continue;
+	            $arrayoffieldsfound[$fieldname]=array('type'=>$fieldtype);
+	        }
 
-        // If it does not match, we create fields
-        foreach($arrayoffieldsdesc as $code => $label)
-        {
-            if (! in_array($code,array_keys($arrayoffieldsfound)))
-            {
-                print 'Found field '.$code.' declared into '.MAIN_DB_PREFIX.'extrafields table but not found into desc of table '.$tableextra." -> ";
-                $type=$extrafields->attribute_type[$code]; $value=$extrafields->attribute_size[$code]; $attribute=''; $default=''; $extra=''; $null='null';
-                $field_desc=array(
-                	'type'=>$type,
-                	'value'=>$value,
-                	'attribute'=>$attribute,
-                	'default'=>$default,
-                	'extra'=>$extra,
-                	'null'=>$null
-                );
-                //var_dump($field_desc);exit;
+	        // If it does not match, we create fields
+	        foreach($arrayoffieldsdesc as $code => $label)
+	        {
+	            if (! in_array($code,array_keys($arrayoffieldsfound)))
+	            {
+	                print 'Found field '.$code.' declared into '.MAIN_DB_PREFIX.'extrafields table but not found into desc of table '.$tableextra." -> ";
+	                $type=$extrafields->attribute_type[$code]; $value=$extrafields->attribute_size[$code]; $attribute=''; $default=''; $extra=''; $null='null';
+	                $field_desc=array(
+	                	'type'=>$type,
+	                	'value'=>$value,
+	                	'attribute'=>$attribute,
+	                	'default'=>$default,
+	                	'extra'=>$extra,
+	                	'null'=>$null
+	                );
+	                //var_dump($field_desc);exit;
 
-                $result=$db->DDLAddField($tableextra,$code,$field_desc,"");
-                if ($result < 0)
-                {
-                    print "KO ".$db->lasterror."<br>\n";
-                }
-                else
-                {
-                    print "OK<br>\n";
-                }
-            }
-        }
+	                $result=$db->DDLAddField($tableextra,$code,$field_desc,"");
+	                if ($result < 0)
+	                {
+	                    print "KO ".$db->lasterror."<br>\n";
+	                }
+	                else
+	                {
+	                    print "OK<br>\n";
+	                }
+	            }
+	        }
 
-        print "</td><td>&nbsp;</td></tr>\n";
-    }
+	        print "</td><td>&nbsp;</td></tr>\n";
+	    }
+	}
 }
 
 
-// Clean data into ecm_directories table
-clean_data_ecm_directories();
+
+// clean_data_ecm_dir: Clean data into ecm_directories table
+if ($ok)
+{
+	clean_data_ecm_directories();
+}
 
 
-// Check and clean linked elements
-if (GETPOST('clean_linked_elements'))
+
+/* From here, actions need a parameter */
+
+
+
+// clean_linked_elements: Check and clean linked elements
+if ($ok && GETPOST('restore_thirdparties_logos'))
+{
+	//$exts=array('gif','png','jpg');
+
+	$ext='';
+	//foreach($exts as $ext)
+	//{
+		$sql="SELECT s.rowid, s.nom as name, s.logo FROM ".MAIN_DB_PREFIX."societe as s ORDER BY s.nom";
+		$resql=$db->query($sql);
+		if ($resql)
+		{
+			$num=$db->num_rows($resql);
+			$i=0;
+
+			while($i < $num)
+			{
+				$obj=$db->fetch_object($resql);
+
+				/*
+				$name=preg_replace('/é/','',$obj->name);
+				$name=preg_replace('/ /','_',$name);
+				$name=preg_replace('/\'/','',$name);
+				*/
+
+				$tmp=explode('.',$obj->logo);
+				$name=$tmp[0];
+				if (isset($tmp[1])) $ext='.'.$tmp[1];
+
+				if (! empty($name))
+				{
+					$filetotest=$dolibarr_main_data_root.'/societe/logos/'.$name.$ext;
+					$filetotestsmall=$dolibarr_main_data_root.'/societe/logos/thumbs/'.$name.$ext;
+					$exists=dol_is_file($filetotest);
+					print 'Check thirdparty '.$obj->rowid.' name='.$obj->name.' logo='.$obj->logo.' file '.$filetotest." exists=".$exists."<br>\n";
+					if ($exists)
+					{
+						$filetarget=$dolibarr_main_data_root.'/societe/'.$obj->rowid.'/logos/'.$name.$ext;
+						$filetargetsmall=$dolibarr_main_data_root.'/societe/'.$obj->rowid.'/logos/thumbs/'.$name.'_small'.$ext;
+						$existt=dol_is_file($filetarget);
+						if (! $existt)
+						{
+							dol_mkdir($dolibarr_main_data_root.'/societe/'.$obj->rowid.'/logos');
+
+							print "  &nbsp; &nbsp; &nbsp; -> Copy file ".$filetotest." -> ".$filetarget."<br>\n";
+							dol_copy($filetotest, $filetarget, '', 0);
+						}
+
+						$existtt=dol_is_file($filetargetsmall);
+						if (! $existtt)
+						{
+							dol_mkdir($dolibarr_main_data_root.'/societe/'.$obj->rowid.'/logos/thumbs');
+
+							print "  &nbsp; &nbsp; &nbsp; -> Copy file ".$filetotestsmall." -> ".$filetargetsmall."<br>\n";
+							dol_copy($filetotestsmall, $filetargetsmall, '', 0);
+						}
+					}
+				}
+
+				$i++;
+			}
+		}
+		else
+		{
+			$ok=0;
+			dol_print_error($db);
+		}
+	//}
+}
+
+
+// clean_linked_elements: Check and clean linked elements
+if ($ok && GETPOST('clean_linked_elements'))
 {
 	// propal => order
 	print "</td><td>".checkLinkedElements('propal', 'commande')."</td></tr>\n";
@@ -292,8 +380,8 @@ if (GETPOST('clean_linked_elements'))
 }
 
 
-// Run purge of directory
-if (GETPOST('purge'))
+// clean_orphelin_dir: Run purge of directory
+if ($ok && GETPOST('clean_orphelin_dir'))
 {
     $conf->setValues($db);
 
@@ -313,7 +401,7 @@ if (GETPOST('purge'))
 
         print '<tr><td colspan="2">Clean orphelins files into files '.$upload_dir.'</td></tr>';
 
-        $filearray=dol_dir_list($upload_dir,"files",1,'',array('^SPECIMEN\.pdf$','^\.','\.meta$','^temp$','^payments$','^CVS$','^thumbs$'),'',SORT_DESC,1);
+        $filearray=dol_dir_list($upload_dir,"files",1,'',array('^SPECIMEN\.pdf$','^\.','(\.meta|_preview\.png)$','^temp$','^payments$','^CVS$','^thumbs$'),'',SORT_DESC,1);
 
         // To show ref or specific information according to view to show (defined by $module)
         if ($modulepart == 'invoice')
@@ -424,14 +512,14 @@ if (empty($actiondone))
 }
 
 
-print '<center><a href="../index.php?mainmenu=home'.(isset($_POST["login"])?'&username='.urlencode($_POST["login"]):'').'">';
+print '<div class="center"><a href="../index.php?mainmenu=home'.(isset($_POST["login"])?'&username='.urlencode($_POST["login"]):'').'">';
 print $langs->trans("GoToDolibarr");
-print '</a></center>';
+print '</a></div>';
 
+dolibarr_install_syslog("--- repair: end");
 pFooter(1,$setuplang);
 
 if ($db->connected) $db->close();
 
 // Return code if ran from command line
 if (! $ok && isset($argv[1])) exit(1);
-?>

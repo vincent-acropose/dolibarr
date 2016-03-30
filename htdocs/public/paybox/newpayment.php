@@ -27,11 +27,11 @@
 define("NOLOGIN",1);		// This means this output page does not require to be logged.
 define("NOCSRFCHECK",1);	// We accept to go on this page from external web site.
 
-// For MultiCompany module. 
+// For MultiCompany module.
 // Do not use GETPOST here, function is not defined and define must be done before including main.inc.php
 // TODO This should be useless. Because entity must be retreive from object ref and not from url.
 $entity=(! empty($_GET['entity']) ? (int) $_GET['entity'] : (! empty($_POST['entity']) ? (int) $_POST['entity'] : 1));
-if (is_int($entity)) define("DOLENTITY", $entity);
+if (is_numeric($entity)) define("DOLENTITY", $entity);
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/paybox/lib/paybox.lib.php';
@@ -40,7 +40,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 
 // Security check
-if (empty($conf->paybox->enabled)) accessforbidden('',1,1,1);
+if (empty($conf->paybox->enabled)) accessforbidden('',0,0,1);
 
 $langs->load("main");
 $langs->load("other");
@@ -166,8 +166,8 @@ if (! empty($conf->global->$paramcreditor)) $creditor=$conf->global->$paramcredi
 else if (! empty($conf->global->PAYBOX_CREDITOR)) $creditor=$conf->global->PAYBOX_CREDITOR;
 
 print '<span id="dolpaymentspan"></span>'."\n";
-print '<center>';
-print '<form id="dolpaymentform" name="paymentform" action="'.$_SERVER["PHP_SELF"].'" method="POST">';
+print '<div class="center">';
+print '<form id="dolpaymentform" class="center" name="paymentform" action="'.$_SERVER["PHP_SELF"].'" method="POST">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<input type="hidden" name="action" value="dopayment">';
 print '<input type="hidden" name="tag" value="'.GETPOST("tag",'alpha').'">';
@@ -180,7 +180,7 @@ print '<!-- urlok = '.$urlok.' -->'."\n";
 print '<!-- urlko = '.$urlko.' -->'."\n";
 print "\n";
 
-print '<table id="dolpaymenttable" summary="Payment form">'."\n";
+print '<table id="dolpaymenttable" summary="Payment form" class="center">'."\n";
 
 // Show logo (search order: logo defined by PAYBOX_LOGO_suffix, then PAYBOX_LOGO, then small company logo, large company logo, theme logo, common logo)
 $width=0;
@@ -558,7 +558,7 @@ if (GETPOST("source") == 'contractline' && $valid)
 	$text='<b>'.$langs->trans("PaymentRenewContractId",$contract->ref,$contractline->ref).'</b>';
 	if ($contractline->fk_product)
 	{
-		$text.='<br>'.$product->ref.($product->libelle?' - '.$product->libelle:'');
+		$text.='<br>'.$product->ref.($product->label?' - '.$product->label:'');
 	}
 	if ($contractline->description) $text.='<br>'.dol_htmlentitiesbr($contractline->description);
 	//if ($contractline->date_fin_validite) {
@@ -778,7 +778,7 @@ print '</td></tr>'."\n";
 
 print '</table>'."\n";
 print '</form>'."\n";
-print '</center>'."\n";
+print '</div>'."\n";
 print '<br>';
 
 
@@ -788,4 +788,3 @@ html_print_paybox_footer($mysoc,$langs);
 llxFooterPayBox();
 
 $db->close();
-?>

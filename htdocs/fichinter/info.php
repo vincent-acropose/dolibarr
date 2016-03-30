@@ -49,7 +49,7 @@ if ($id > 0)
  *	View
  */
 
-llxHeader();
+llxHeader('',$langs->trans("Intervention"));
 
 $societe = new Societe($db);
 $societe->fetch($object->socid);
@@ -68,4 +68,3 @@ print '</div>';
 $db->close();
 
 llxFooter();
-?>

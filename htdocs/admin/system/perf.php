@@ -24,6 +24,7 @@ require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/memory.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/geturl.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 
 $langs->load("admin");
 $langs->load("install");
@@ -47,9 +48,16 @@ $nowstring=dol_print_date(dol_now(),'dayhourlog');
 
 llxHeader();
 
-print_fiche_titre($langs->trans("PerfDolibarr"),'','setup');
+print_fiche_titre($langs->trans("PerfDolibarr"),'','title_setup');
 
 print $langs->trans("YouMayFindPerfAdviceHere",'http://wiki.dolibarr.org/index.php/FAQ_Increase_Performance').' (<a href="'.$_SERVER["PHP_SELF"].'">'.$langs->trans("Reload").'</a>)<br>';
+
+// Recupere la version de PHP
+$phpversion=version_php();
+print "<br>PHP - ".$langs->trans("Version").": ".$phpversion."<br>\n";
+
+// Recupere la version du serveur web
+print "<br>Web server - ".$langs->trans("Version").": ".$_SERVER["SERVER_SOFTWARE"]."<br>\n";
 
 // XDebug
 print '<br>';
@@ -77,6 +85,7 @@ if ($test)
 	else
 	{
 		print img_picto('','warning').' '.$langs->trans("MemcachedModuleAvailableButNotSetup");
+		print ' <a href="'.dol_buildpath('/memcached/admin/memcached.php',1).'">Memcached module admin page</a>';
 	}
 }
 else print img_picto('','warning').' '.$langs->trans("MemcachedNotAvailable");
@@ -85,18 +94,35 @@ print '</br>';
 // OPCode cache
 print '<br>';
 print '<strong>'.$langs->trans("OPCodeCache").'</strong>: ';
-$test1=function_exists('xcache_info');
-if ($test1)
+$foundcache=0;
+$test=function_exists('xcache_info');
+if (! $foundcache && $test)
 {
+	$foundcache++;
 	print img_picto('','tick.png').' '.$langs->trans("XCacheInstalled");
 	print ' '.$langs->trans("MoreInformation").' <a href="'.DOL_URL_ROOT.'/admin/system/xcache.php'.'">Xcache admin page</a>';
 }
-else
+$test=function_exists('eaccelerator_info');
+if (! $foundcache && $test)
 {
-	$test2=function_exists('eaccelerator_info');
-	if ($test2) print img_picto('','tick.png').' '.$langs->trans("EAcceleratorInstalled");
-	else print $langs->trans("NoOPCodeCacheFound");
+	$foundcache++;
+	print img_picto('','tick.png').' '.$langs->trans("EAcceleratorInstalled");
 }
+$test=function_exists('apc_cache_info');
+if (! $foundcache && $test)
+{
+	//var_dump(apc_cache_info());
+	if (ini_get('apc.enabled'))
+	{
+		$foundcache++;
+		print img_picto('','tick.png').' '.$langs->trans("APCInstalled");
+	}
+	else
+	{
+		print img_picto('','warning').' '.$langs->trans("APCCacheInstalledButDisabled");
+	}
+}
+if (! $foundcache) print $langs->trans("NoOPCodeCacheFound");
 print '<br>';
 
 // HTTPCacheStaticResources
@@ -146,7 +172,7 @@ jQuery(document).ready(function() {
   var compcssstring;
   getcssurl = $.ajax({
     type: "GET",
-    url: \''.DOL_URL_ROOT.'/includes/jquery/css/smoothness/jquery-ui-latest.custom.css\',
+    url: \''.DOL_URL_ROOT.'/includes/jquery/css/smoothness/jquery-ui.css\',
     cache: false,
     /* async: false, */
     /*crossDomain: true, */
@@ -458,4 +484,3 @@ print '<br>';
 llxFooter();
 
 $db->close();
-?>

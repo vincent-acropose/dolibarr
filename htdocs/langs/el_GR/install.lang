@@ -35,7 +35,6 @@ IfDatabaseExistsGoBackAndCheckCreate=If database already exists, go back and unc
 WarningBrowserTooOld=Πάρα πολύ παλιά έκδοση του προγράμματος περιήγησης. Αναβάθμιση του προγράμματος περιήγησης σας σε μια πρόσφατη έκδοση του Firefox, Chrome ή Opera συστήνεται.
 PHPVersion=Έκδοση PHP
 YouCanContinue=Μπορείτε να συνεχίσετε ...
-PleaseBePatient=Παρακαλώ περιμένετε ...
 License=Χρήση άδειας
 ConfigurationFile=Αρχείο ρυθμίσεων
 WebPagesDirectory=Κατάλογος όπου αποθηκεύονται οι σελίδες web
@@ -64,6 +63,7 @@ DatabaseSuperUserAccess=Database server - Superuser access
 CheckToCreateDatabase=Check box if database does not exist and must be created.<br>In this case, you must fill the login/password for superuser account at the bottom of this page.
 CheckToCreateUser=Check box if database owner does not exist and must be created.<br>In this case, you must choose its login and password and also fill the login/password for the superuser account at the bottom of this page. If this box is unchecked, owner database and its passwords must exists.
 Experimental=(Πειραματική)
+Deprecated=(deprecated)
 DatabaseRootLoginDescription=Login of the user allowed to create new databases or new users, useless if your database and your database login already exists (like when you're hosted by a web hosting provider).
 KeepEmptyIfNoPassword=Leave empty if user has no password (avoid this)
 SaveConfigurationFile=Αποθήκευση τιμών
@@ -155,10 +155,11 @@ MigrationFinished=Μετανάστευση τελειώσει
 LastStepDesc=<strong>Τελευταίο βήμα:</strong> Καθορίστε εδώ login και password που σκοπεύετε να χρησιμοποιήσετε για να συνδεθείτε με το λογισμικό. Να μην χάσετε αυτή, όπως είναι ο λογαριασμός για να επιτρέψει να διαχειριστεί όλες τις άλλες.
 ActivateModule=Ενεργοποίηση %s ενότητα
 ShowEditTechnicalParameters=Κάντε κλικ εδώ για να δείτε/επεξεργαστείτε προηγμένες παραμέτρους (κατάσταση έμπειρου χρήστη)
+WarningUpgrade=Warning:\nDid your run a database backup first ?\nThis is highly recommanded: for example, due to some bugs into databases systems (for example mysql version 5.5.40), some data or tables may be lost during this process, so it is highly recommanded to have a complete dump of your database before starting migration.\n\nClick OK to start migration process...
+ErrorDatabaseVersionForbiddenForMigration=Your database version is %s. It has a critical bug making data loss if you make structure change on your database, like it is required by the migration process. For his reason, migration will not be allowed until you upgrade your database to a higher fixed version (list of known bugged version: %s)
 
 #########
 # upgrade
-#########
 MigrationFixData=Fix for denormalized data
 MigrationOrder=Data migration for customer's orders
 MigrationSupplierOrder=Data migration for supplier's orders
@@ -207,3 +208,7 @@ MigrationProjectTaskTime=Update time spent in seconds
 MigrationActioncommElement=Ενημέρωση στοιχεία για τις δράσεις
 MigrationPaymentMode=Η μεταφορά δεδομένων για την κατάσταση πληρωμής
 MigrationCategorieAssociation=Μετακίνηση των κατηγοριών
+MigrationEvents=Migration of events to add event owner into assignement table
+MigrationReloadModule=Reload module %s
+ShowNotAvailableOptions=Εμφάνιση μη διαθέσιμων επιλογών
+HideNotAvailableOptions=Απόκρυψη μη μη διαθέσιμων επιλογών

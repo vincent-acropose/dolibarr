@@ -25,7 +25,7 @@
 
 global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
 
 if (empty($user->id))
@@ -75,10 +75,13 @@ class NumberingModulesTest extends PHPUnit_Framework_TestCase
   	public static function setUpBeforeClass()
     {
     	global $conf,$user,$langs,$db;
-		$db->begin();	// This is to have all actions inside a transaction even if test launched without suite.
+		
+    	$db->begin();	// This is to have all actions inside a transaction even if test launched without suite.
 
     	print __METHOD__."\n";
     }
+
+    // tear down after class
     public static function tearDownAfterClass()
     {
     	global $conf,$user,$langs,$db;
@@ -143,10 +146,10 @@ class NumberingModulesTest extends PHPUnit_Framework_TestCase
 		$result2=$localobject->create($user,1);
 		$result3=$localobject->validate($user, $result);		// create invoice by forcing ref
 		print __METHOD__." result=".$result."\n";
-		$this->assertEquals('1915-0001', $result);				// counter must start to 1
+		$this->assertEquals('1915-0001', $result, 'Test for {yyyy}-{0000}, 1st invoice');				// counter must start to 1
 		$result=$localobject->is_erasable();
 		print __METHOD__." is_erasable=".$result."\n";
-		$this->assertEquals(1, $result, 'Test for {yyyy}-{0000}, 1st invoice');						// Can be deleted
+		$this->assertEquals(1, $result, 'Test for is_erasable, 1st invoice');						   // Can be deleted
 
 		$localobject2=new Facture($this->savdb);
 		$localobject2->initAsSpecimen();
@@ -154,7 +157,7 @@ class NumberingModulesTest extends PHPUnit_Framework_TestCase
 		$numbering=new mod_facture_mercure();
 		$result=$numbering->getNextValue($mysoc, $localobject2, 'last');
 		print __METHOD__." result=".$result."\n";
-		$this->assertEquals('1915-0001', $result);
+		$this->assertEquals('1915-0001', $result, "Test to get last value with param 'last'");
 		$result=$numbering->getNextValue($mysoc, $localobject2);
 		$result2=$localobject2->create($user,1);
 		$result3=$localobject2->validate($user, $result);		// create invoice by forcing ref
@@ -165,7 +168,7 @@ class NumberingModulesTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals(1, $result);						// Can be deleted
 		$result=$localobject->is_erasable();
 		print __METHOD__." is_erasable=".$result."\n";
-		$this->assertEquals(0, $result, 'Test for {yyyy}-{0000} that is_erasable is 0 for 1st invoice');						// 1 can no more be deleted (2 is more recent
+		$this->assertEquals(0, $result, 'Test for {yyyy}-{0000} that is_erasable is 0 for 1st invoice');						// 1 can no more be deleted (2 is more recent)
 
 		// Now we try with a reset
 		$conf->global->FACTURE_MERCURE_MASK_CREDIT='{yyyy}-{0000@1}';
@@ -500,7 +503,7 @@ class NumberingModulesTest extends PHPUnit_Framework_TestCase
     	$conf->global->SOCIETE_FISCAL_MONTH_START=6;
     	$conf->global->FACTURE_MERCURE_MASK_CREDIT='{yyyy}{mm}-{0000@99}';
     	$conf->global->FACTURE_MERCURE_MASK_INVOICE='{yyyy}{mm}-{0000@99}';
-    	
+
     	$localobject=new Facture($this->savdb);
     	$localobject->initAsSpecimen();
     	$localobject->date=dol_mktime(12, 0, 0, 1, 1, 1980);	// we use year 1980 to be sure to not have existing invoice for this year
@@ -510,7 +513,7 @@ class NumberingModulesTest extends PHPUnit_Framework_TestCase
     	$result3=$localobject->validate($user, $result);
     	print __METHOD__." result=".$result."\n";
     	$this->assertEquals('198001-0001', $result);	// counter must start to 1
-    	
+
     	$localobject=new Facture($this->savdb);
     	$localobject->initAsSpecimen();
     	$localobject->date=dol_mktime(12, 0, 0, 1, 1, 1980);	// we use year 1980 to be sure to not have existing invoice for this year
@@ -520,7 +523,7 @@ class NumberingModulesTest extends PHPUnit_Framework_TestCase
     	$result3=$localobject->validate($user, $result);
     	print __METHOD__." result=".$result."\n";
     	$this->assertEquals('198001-0002', $result);	// counter must start to 2
-    	
+
     	$localobject=new Facture($this->savdb);
     	$localobject->initAsSpecimen();
     	$localobject->date=dol_mktime(12, 0, 0, 2, 1, 1980);	// we use year 1980 to be sure to not have existing invoice for this year
@@ -530,7 +533,7 @@ class NumberingModulesTest extends PHPUnit_Framework_TestCase
     	$result3=$localobject->validate($user, $result);
     	print __METHOD__." result=".$result."\n";
     	$this->assertEquals('198002-0001', $result);	// counter must start to 1
-    	
+
     	$localobject=new Facture($this->savdb);
     	$localobject->initAsSpecimen();
     	$localobject->date=dol_mktime(12, 0, 0, 1, 1, 1981);	// we use year 1981 to be sure to not have existing invoice for this year
@@ -540,9 +543,29 @@ class NumberingModulesTest extends PHPUnit_Framework_TestCase
     	$result3=$localobject->validate($user, $result);
     	print __METHOD__." result=".$result."\n";
     	$this->assertEquals('198101-0001', $result);	// counter must start to 1
-      	
+
+    	// Test with {t} tag
+    	$conf->global->SOCIETE_FISCAL_MONTH_START=1;
+    	$conf->global->FACTURE_MERCURE_MASK_CREDIT='{t}{yyyy}{mm}-{0000}';
+    	$conf->global->FACTURE_MERCURE_MASK_INVOICE='{t}{yyyy}{mm}-{0000}';
+
+    	$tmpthirdparty=new Societe($this->savdb);
+    	$tmpthirdparty->initAsSpecimen();
+    	$tmpthirdparty->typent_code = 'TE_ABC';
+
+    	$localobject=new Facture($this->savdb);
+    	$localobject->initAsSpecimen();
+    	$localobject->date=dol_mktime(12, 0, 0, 1, 1, 1982);	// we use year 1982 to be sure to not have existing invoice for this year
+    	$numbering=new mod_facture_mercure();
+    	$result=$numbering->getNextValue($tmpthirdparty, $localobject);
+    	$result2=$localobject->create($user,1);
+    	$result3=$localobject->validate($user, $result);
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals('A198201-0001', $result);	// counter must start to 1
+
+
+
     	return $result;
     }
 
 }
-?>

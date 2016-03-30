@@ -21,7 +21,7 @@
  */
 
 /**
- *	\defgroup   ficheinter     Module intervention cards
+ *	\defgroup   ficheinter     Module Interventions
  *	\brief      Module to manage intervention cards
  *	\file       htdocs/core/modules/modFicheinter.class.php
  *	\ingroup    ficheinter
@@ -87,9 +87,8 @@ class modFicheinter extends DolibarrModules
         $this->const[$r][2] = "pacific";
         $r++;
 
-        // Boites
-        $this->boxes = array();
-        $this->boxes[0][1] = "box_ficheinter.php";
+        // Boxes
+        $this->boxes = array(0=>array('file'=>'box_ficheinter.php','enabledbydefaulton'=>'Home'));
 
         // Permissions
         $this->rights = array();
@@ -140,15 +139,15 @@ class modFicheinter extends DolibarrModules
         $this->export_label[$r]='InterventionCardsAndInterventionLines';	// Translation key (used only if key ExportDataset_xxx_z not found)
         $this->export_permission[$r]=array(array("ficheinter","export"));
         $this->export_fields_array[$r]=array('s.rowid'=>"IdCompany",'s.nom'=>'CompanyName','s.address'=>'Address','s.zip'=>'Zip','s.town'=>'Town','s.fk_pays'=>'Country','s.phone'=>'Phone','s.siren'=>'ProfId1','s.siret'=>'ProfId2','s.ape'=>'ProfId3','s.idprof4'=>'ProfId4','s.code_compta'=>'CustomerAccountancyCode','s.code_compta_fournisseur'=>'SupplierAccountancyCode','f.rowid'=>"InterId",'f.ref'=>"InterRef",'f.datec'=>"InterDateCreation",'f.duree'=>"InterDuration",'f.fk_statut'=>'InterStatus','f.description'=>"InterNote",'fd.rowid'=>'InterLineId','fd.date'=>"InterLineDate",'fd.duree'=>"InterLineDuration",'fd.description'=>"InterLineDesc");
-        //$this->export_TypeFields_array[$r]=array('s.rowid'=>"List:societe:nom",'s.nom'=>'Text','s.address'=>'Text','s.zip'=>'Text','s.town'=>'Text','s.fk_pays'=>'List:c_pays:libelle','s.phone'=>'Text','s.siren'=>'Text','s.siret'=>'Text','s.ape'=>'Text','s.idprof4'=>'Text','s.code_compta'=>'Text','s.code_compta_fournisseur'=>'Text','f.ref'=>"Text",'f.datec'=>"Date",'f.duree'=>"Duree",'f.fk_statut'=>'Statut','f.description'=>"Text",'f.datee'=>"Date",'f.dateo'=>"Date",'f.fulldayevent'=>"Boolean",'fd.date'=>"Date",'fd.duree'=>"Duree",'fd.description'=>"Text",'fd.total_ht'=>"Numeric");
-        $this->export_TypeFields_array[$r]=array('s.nom'=>'Text','s.address'=>'Text','s.zip'=>'Text','s.town'=>'Text','s.fk_pays'=>'List:c_pays:libelle','s.phone'=>'Text','s.siren'=>'Text','s.siret'=>'Text','s.ape'=>'Text','s.idprof4'=>'Text','s.code_compta'=>'Text','s.code_compta_fournisseur'=>'Text','f.ref'=>"Text",'f.datec'=>"Date",'f.duree'=>"Duree",'f.fk_statut'=>'Statut','f.description'=>"Text",'f.datee'=>"Date",'f.dateo'=>"Date",'f.fulldayevent'=>"Boolean",'fd.date'=>"Date",'fd.duree'=>"Duree",'fd.description'=>"Text",'fd.total_ht'=>"Numeric");
+        //$this->export_TypeFields_array[$r]=array('s.rowid'=>"List:societe:nom",'s.nom'=>'Text','s.address'=>'Text','s.zip'=>'Text','s.town'=>'Text','s.fk_pays'=>'List:c_country:label','s.phone'=>'Text','s.siren'=>'Text','s.siret'=>'Text','s.ape'=>'Text','s.idprof4'=>'Text','s.code_compta'=>'Text','s.code_compta_fournisseur'=>'Text','f.ref'=>"Text",'f.datec'=>"Date",'f.duree'=>"Duree",'f.fk_statut'=>'Statut','f.description'=>"Text",'f.datee'=>"Date",'f.dateo'=>"Date",'f.fulldayevent'=>"Boolean",'fd.date'=>"Date",'fd.duree'=>"Duree",'fd.description'=>"Text",'fd.total_ht'=>"Numeric");
+        $this->export_TypeFields_array[$r]=array('s.nom'=>'Text','s.address'=>'Text','s.zip'=>'Text','s.town'=>'Text','s.fk_pays'=>'List:c_country:label','s.phone'=>'Text','s.siren'=>'Text','s.siret'=>'Text','s.ape'=>'Text','s.idprof4'=>'Text','s.code_compta'=>'Text','s.code_compta_fournisseur'=>'Text','f.ref'=>"Text",'f.datec'=>"Date",'f.duree'=>"Duree",'f.fk_statut'=>'Statut','f.description'=>"Text",'f.datee'=>"Date",'f.dateo'=>"Date",'f.fulldayevent'=>"Boolean",'fd.date'=>"Date",'fd.duree'=>"Duree",'fd.description'=>"Text",'fd.total_ht'=>"Numeric");
         $this->export_entities_array[$r]=array('s.rowid'=>"company",'s.nom'=>'company','s.address'=>'company','s.zip'=>'company','s.town'=>'company','s.fk_pays'=>'company','s.phone'=>'company','s.siren'=>'company','s.siret'=>'company','s.ape'=>'company','s.idprof4'=>'company','s.code_compta'=>'company','s.code_compta_fournisseur'=>'company','f.rowid'=>"intervention",'f.ref'=>"intervention",'f.datec'=>"intervention",'f.duree'=>"intervention",'f.fk_statut'=>"intervention",'f.description'=>"intervention",'fd.rowid'=>"inter_line",'fd.date'=>"inter_line",'fd.duree'=>'inter_line','fd.description'=>'inter_line');
         $this->export_dependencies_array[$r]=array('inter_line'=>'fd.rowid'); // To add unique key if we ask a field of a child to avoid the DISTINCT to discard them
 
         $this->export_sql_start[$r]='SELECT DISTINCT ';
         $this->export_sql_end[$r]  =' FROM ('.MAIN_DB_PREFIX.'fichinter as f, '.MAIN_DB_PREFIX.'fichinterdet as fd, '.MAIN_DB_PREFIX.'societe as s)';
         $this->export_sql_end[$r] .=' WHERE f.fk_soc = s.rowid AND f.rowid = fd.fk_fichinter';
-        $this->export_sql_end[$r] .=' AND f.entity = '.$conf->entity;
+        $this->export_sql_end[$r] .=' AND f.entity IN ('.getEntity('intervention',1).')';
         $r++;
 
     }
@@ -176,21 +175,4 @@ class modFicheinter extends DolibarrModules
 
         return $this->_init($sql,$options);
     }
-
-    /**
-	 *		Function called when module is disabled.
-	 *      Remove from database constants, boxes and permissions from Dolibarr database.
-	 *		Data directories are not deleted
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-     */
-    function remove($options='')
-    {
-		$sql = array();
-
-		return $this->_remove($sql,$options);
-    }
-
 }
-?>

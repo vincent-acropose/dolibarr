@@ -39,7 +39,7 @@ if (! $user->admin)
 
 llxHeader();
 
-print_fiche_titre($langs->trans("AvailableModules"),'','setup');
+print_fiche_titre($langs->trans("AvailableModules"),'','title_setup');
 
 print $langs->trans("ToActivateModule").'<br>';
 print "<br>\n";
@@ -106,8 +106,8 @@ print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("Modules").'</td>';
 print '<td>'.$langs->trans("Version").'</td>';
-print '<td align="center">'.$langs->trans("Id Module").'</td>';
-print '<td>'.$langs->trans("Id Permissions").'</td>';
+print '<td align="center">'.$langs->trans("IdModule").'</td>';
+print '<td>'.$langs->trans("IdPermissions").'</td>';
 print '</tr>';
 $var=false;
 $sortorder=$modules_names;
@@ -118,7 +118,7 @@ foreach($sortorder as $numero=>$name)
 	$idperms="";
 	$var=!$var;
 	// Module
-	print "<tr ".$bc[$var]."><td width=\"300\" nowrap=\"nowrap\">";
+	print "<tr ".$bc[$var].'><td width="300" class="nowrap">';
 	$alt=$name.' - '.$modules_files[$numero];
     if (! empty($picto[$numero]))
     {
@@ -159,4 +159,3 @@ foreach($rights_ids as $right_id)
 
 llxFooter();
 $db->close();
-?>

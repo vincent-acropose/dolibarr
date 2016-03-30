@@ -25,7 +25,7 @@
 
 global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
 require_once dirname(__FILE__).'/../../htdocs/core/db/pgsql.class.php';
 $langs->load("dict");
@@ -83,6 +83,8 @@ class PgsqlTest extends PHPUnit_Framework_TestCase
 
     	print __METHOD__."\n";
     }
+
+    // tear down after class
     public static function tearDownAfterClass()
     {
     	global $conf,$user,$langs,$db;
@@ -163,4 +165,3 @@ class PgsqlTest extends PHPUnit_Framework_TestCase
     	return $result;
     }
 }
-?>

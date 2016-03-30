@@ -166,6 +166,7 @@ cui hai bisogno ed essere facile da usare.
 %{__cp} -pr build/tgz/*     $RPM_BUILD_ROOT%{_datadir}/%{name}/build/tgz
 %{__cp} -pr htdocs  $RPM_BUILD_ROOT%{_datadir}/%{name}
 %{__cp} -pr scripts $RPM_BUILD_ROOT%{_datadir}/%{name}
+%{__rm} -rf $RPM_BUILD_ROOT%{_datadir}/%{name}/htdocs/includes/ckeditor/_source  
 %if 0%{?fedora} || 0%{?rhel_version} || 0%{?centos_version}
 %{__rm} -rf $RPM_BUILD_ROOT%{_datadir}/%{name}/htdocs/includes/adodbtime  
 %{__rm} -rf $RPM_BUILD_ROOT%{_datadir}/%{name}/htdocs/includes/nusoap
@@ -238,9 +239,10 @@ done >>%{name}.lang
 %_datadir/dolibarr/htdocs/accountancy
 %_datadir/dolibarr/htdocs/adherents
 %_datadir/dolibarr/htdocs/admin
+%_datadir/dolibarr/htdocs/api
 %_datadir/dolibarr/htdocs/asterisk
+%_datadir/dolibarr/htdocs/barcode
 %_datadir/dolibarr/htdocs/bookmarks
-%_datadir/dolibarr/htdocs/boutique
 %_datadir/dolibarr/htdocs/cashdesk
 %_datadir/dolibarr/htdocs/categories
 %_datadir/dolibarr/htdocs/comm
@@ -251,8 +253,10 @@ done >>%{name}.lang
 %_datadir/dolibarr/htdocs/contrat
 %_datadir/dolibarr/htdocs/core
 %_datadir/dolibarr/htdocs/cron
+%_datadir/dolibarr/htdocs/don
 %_datadir/dolibarr/htdocs/ecm
 %_datadir/dolibarr/htdocs/expedition
+%_datadir/dolibarr/htdocs/expensereport
 %_datadir/dolibarr/htdocs/exports
 %_datadir/dolibarr/htdocs/externalsite
 %_datadir/dolibarr/htdocs/fichinter
@@ -264,15 +268,17 @@ done >>%{name}.lang
 %_datadir/dolibarr/htdocs/install
 %_datadir/dolibarr/htdocs/langs/HOWTO-Translation.txt
 %_datadir/dolibarr/htdocs/livraison
+%_datadir/dolibarr/htdocs/loan
 %_datadir/dolibarr/htdocs/mailmanspip
 %_datadir/dolibarr/htdocs/margin
 %_datadir/dolibarr/htdocs/opensurvey
 %_datadir/dolibarr/htdocs/paybox
 %_datadir/dolibarr/htdocs/paypal
-%_datadir/dolibarr/htdocs/printipp
+%_datadir/dolibarr/htdocs/printing
 %_datadir/dolibarr/htdocs/product
 %_datadir/dolibarr/htdocs/projet
 %_datadir/dolibarr/htdocs/public
+%_datadir/dolibarr/htdocs/resource
 %_datadir/dolibarr/htdocs/societe
 %_datadir/dolibarr/htdocs/support
 %_datadir/dolibarr/htdocs/theme
@@ -566,11 +572,4 @@ fi
 
 # version x.y.z-0.1.a for alpha, x.y.z-0.2.b for beta, x.y.z-0.3 for release
 %changelog
-* Fri Feb 14 2014 Laurent Destailleur 3.5.2-0.3
-- Upstream release
-
-* Fri Feb 7 2014 Laurent Destailleur 3.5.1-0.3
-- Upstream release
-
-* Mon Dec 30 2013 Laurent Destailleur 3.5.0-0.3
-- Initial version (#723326)
+__CHANGELOGSTRING__

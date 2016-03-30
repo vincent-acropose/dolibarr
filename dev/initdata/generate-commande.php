@@ -20,7 +20,7 @@
  */
 
 /**
- * 	    \file       htdocs/dev/generate-commande.php
+ * 	    \file       dev/initdata/generate-commande.php
  * 		\brief      Script de generation de donnees aleatoires pour les commandes
  */
 
@@ -212,4 +212,3 @@ for ($s = 0 ; $s < GEN_NUMBER_COMMANDE ; $s++)
 	}
 }
 
-?>

@@ -212,7 +212,7 @@ function dol_loginfunction($langs,$conf,$mysoc)
 	// Execute hook getLoginPageOptions
 	// Should be an array with differents options in $hookmanager->resArray
 	$parameters=array('entity' => GETPOST('entity','int'));
-	$hookmanager->executeHooks('getLoginPageOptions',$parameters);    // Note that $action and $object may have been modified by some hooks
+	$reshook = $hookmanager->executeHooks('getLoginPageOptions',$parameters);    // Note that $action and $object may have been modified by some hooks. resArray is filled by hook.
 
 	// Login
 	$login = (! empty($hookmanager->resArray['username']) ? $hookmanager->resArray['username'] : (GETPOST("username","alpha") ? GETPOST("username","alpha") : $demologin));
@@ -238,7 +238,6 @@ function dol_loginfunction($langs,$conf,$mysoc)
 	elseif (is_readable(DOL_DOCUMENT_ROOT.'/theme/dolibarr_logo.png'))
 	{
 		$urllogo=DOL_URL_ROOT.'/theme/dolibarr_logo.png';
-
 	}
 
 	// Security graphical code
@@ -286,16 +285,17 @@ function dol_loginfunction($langs,$conf,$mysoc)
 
 	// Set jquery theme
 	$dol_loginmesg = (! empty($_SESSION["dol_loginmesg"])?$_SESSION["dol_loginmesg"]:'');
-	$favicon=DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/favicon.ico';
+	$favicon=dol_buildpath('/theme/'.$conf->theme.'/img/favicon.ico',1);
+	if (! empty($conf->global->MAIN_FAVICON_URL)) $favicon=$conf->global->MAIN_FAVICON_URL;
 	$jquerytheme = 'smoothness';
 	if (! empty($conf->global->MAIN_USE_JQUERY_THEME)) $jquerytheme = $conf->global->MAIN_USE_JQUERY_THEME;
 
 	// Set dol_hide_topmenu, dol_hide_leftmenu, dol_optimize_smallscreen, dol_nomousehover
-	$dol_hide_topmenu=GETPOST('dol_hide_topmenu');
-	$dol_hide_leftmenu=GETPOST('dol_hide_leftmenu');
-	$dol_optimize_smallscreen=GETPOST('dol_optimize_smallscreen');
-	$dol_no_mouse_hover=GETPOST('dol_no_mouse_hover');
-	$dol_use_jmobile=GETPOST('dol_use_jmobile');
+	$dol_hide_topmenu=GETPOST('dol_hide_topmenu','int');
+	$dol_hide_leftmenu=GETPOST('dol_hide_leftmenu','int');
+	$dol_optimize_smallscreen=GETPOST('dol_optimize_smallscreen','int');
+	$dol_no_mouse_hover=GETPOST('dol_no_mouse_hover','int');
+	$dol_use_jmobile=GETPOST('dol_use_jmobile','int');
 
 	// Include login page template
 	include $template_dir.'login.tpl.php';
@@ -416,7 +416,10 @@ function encodedecode_dbpassconf($level=0)
 		if ($fp = @fopen($file,'w'))
 		{
 			fputs($fp, $config);
+			fflush($fp);
 			fclose($fp);
+			clearstatcache();
+			
 			// It's config file, so we set read permission for creator only.
 			// Should set permission to web user and groups for users used by batch
 			//@chmod($file, octdec('0600'));
@@ -439,7 +442,7 @@ function encodedecode_dbpassconf($level=0)
 /**
  * Return a generated password using default module
  *
- * @param		boolean		$generic		true=Create generic password (a MD5 string), false=Use the configured password generation module
+ * @param		boolean		$generic		true=Create generic password (use md5, sha1 depending on setup), false=Use the configured password generation module
  * @return		string						New value for password
  */
 function getRandomPassword($generic=false)
@@ -462,4 +465,3 @@ function getRandomPassword($generic=false)
 	return $generated_password;
 }
 
-?>

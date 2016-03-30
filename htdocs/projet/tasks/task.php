@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2005		Rodolphe Quiedeville	<rodolphe@quiedeville.org>
- * Copyright (C) 2006-2013	Laurent Destailleur		<eldy@users.sourceforge.net>
+ * Copyright (C) 2006-2015	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2010-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,6 @@
  *	\brief      Page of a project task
  */
 
-
 require ("../../main.inc.php");
 require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 require_once DOL_DOCUMENT_ROOT.'/projet/class/task.class.php';
@@ -38,12 +37,12 @@ $langs->load("projects");
 $langs->load("companies");
 
 $id=GETPOST('id','int');
-$ref=GETPOST('ref','alpha');
+$ref=GETPOST("ref",'alpha',1);
 $action=GETPOST('action','alpha');
 $confirm=GETPOST('confirm','alpha');
 $withproject=GETPOST('withproject','int');
 $project_ref=GETPOST('project_ref','alpha');
-$planned_workload=GETPOST('planned_workloadhour')*3600+GETPOST('planned_workloadmin')*60;
+$planned_workload=((GETPOST('planned_workloadhour')!='' && GETPOST('planned_workloadmin')!='')?GETPOST('planned_workloadhour')*3600+GETPOST('planned_workloadmin')*60:'');
 
 // Security check
 $socid=0;
@@ -51,7 +50,7 @@ if ($user->societe_id > 0) $socid = $user->societe_id;
 if (! $user->rights->projet->lire) accessforbidden();
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
-$hookmanager->initHooks(array('projecttaskcard'));
+$hookmanager->initHooks(array('projecttaskcard','globalcard'));
 
 $object = new Task($db);
 $extrafields = new ExtraFields($db);
@@ -59,9 +58,11 @@ $projectstatic = new Project($db);
 
 // fetch optionals attributes and labels
 $extralabels=$extrafields->fetch_name_optionals_label($object->table_element);
+
+
 /*
  * Actions
-*/
+ */
 
 if ($action == 'update' && ! $_POST["cancel"] && $user->rights->projet->creer)
 {
@@ -70,7 +71,7 @@ if ($action == 'update' && ! $_POST["cancel"] && $user->rights->projet->creer)
 	if (empty($_POST["label"]))
 	{
 		$error++;
-		$mesg='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentities("Label")).'</div>';
+		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("Label")), 'errors');
 	}
 	if (! $error)
 	{
@@ -80,18 +81,27 @@ if ($action == 'update' && ! $_POST["cancel"] && $user->rights->projet->creer)
 		$task_parent=$tmparray[1];
 		if (empty($task_parent)) $task_parent = 0;	// If task_parent is ''
 
+		$object->ref = GETPOST("ref",'alpha',2);
 		$object->label = $_POST["label"];
 		$object->description = $_POST['description'];
 		$object->fk_task_parent = $task_parent;
 		$object->planned_workload = $planned_workload;
-		$object->date_start = dol_mktime(0,0,0,$_POST['dateomonth'],$_POST['dateoday'],$_POST['dateoyear']);
-		$object->date_end = dol_mktime(0,0,0,$_POST['dateemonth'],$_POST['dateeday'],$_POST['dateeyear']);
+		$object->date_start = dol_mktime($_POST['dateohour'],$_POST['dateomin'],0,$_POST['dateomonth'],$_POST['dateoday'],$_POST['dateoyear'],'user');
+		$object->date_end = dol_mktime($_POST['dateehour'],$_POST['dateemin'],0,$_POST['dateemonth'],$_POST['dateeday'],$_POST['dateeyear'],'user');
 		$object->progress = $_POST['progress'];
 
 		// Fill array 'array_options' with data from add form
 		$ret = $extrafields->setOptionalsFromPost($extralabels,$object);
+		if ($ret < 0) $error++;
 
-		$result=$object->update($user);
+		if (! $error)
+		{
+			$result=$object->update($user);
+			if ($result < 0)
+			{
+			    setEventMessages($object->error,$object->errors,'errors');
+			}
+		}
 	}
 	else
 	{
@@ -101,23 +111,19 @@ if ($action == 'update' && ! $_POST["cancel"] && $user->rights->projet->creer)
 
 if ($action == 'confirm_delete' && $confirm == "yes" && $user->rights->projet->supprimer)
 {
-	if ($object->fetch($id,$ref) >= 0 )
+	if ($object->fetch($id,$ref) >= 0)
 	{
-		$result=$projectstatic->fetch($object->fk_projet);
-		if (! empty($projectstatic->socid))
-		{
-			$projectstatic->societe->fetch($projectstatic->socid);
-		}
+		$result=$projectstatic->fetch($object->fk_project);
+		$projectstatic->fetch_thirdparty();
 
 		if ($object->delete($user) > 0)
 		{
-			header("Location: index.php");
+			header('Location: '.DOL_URL_ROOT.'/projet/tasks.php?id='.$projectstatic->id.($withproject?'&withproject=1':''));
 			exit;
 		}
 		else
 		{
-			$langs->load("errors");
-			$mesg='<div class="error">'.$langs->trans($object->error).'</div>';
+		    setEventMessages($object->error,$object->errors,'errors');
 			$action='';
 		}
 	}
@@ -154,11 +160,11 @@ if ($action == 'builddoc' && $user->rights->projet->creer)
 		$outputlangs = new Translate("",$conf);
 		$outputlangs->setDefaultLang(GETPOST('lang_id'));
 	}
-	$result=task_pdf_create($db, $object, $object->modelpdf, $outputlangs);
+	$result= $object->generateDocument($object->modelpdf, $outputlangs);
 	if ($result <= 0)
 	{
-		dol_print_error($db,$result);
-		exit;
+		setEventMessages($object->error, $object->errors, 'errors');
+        $action='';
 	}
 }
 
@@ -197,7 +203,9 @@ if ($id > 0 || ! empty($ref))
 		$res=$object->fetch_optionals($object->id,$extralabels);
 
 		$result=$projectstatic->fetch($object->fk_project);
-		if (! empty($projectstatic->socid)) $projectstatic->societe->fetch($projectstatic->socid);
+		if (! empty($projectstatic->socid)) $projectstatic->fetch_thirdparty();
+
+		$object->project = dol_clone($projectstatic);
 
 		$userWrite  = $projectstatic->restrictedProjectArea($user,'write');
 
@@ -227,8 +235,8 @@ if ($id > 0 || ! empty($ref))
 
 			print '<tr><td>'.$langs->trans("Label").'</td><td>'.$projectstatic->title.'</td></tr>';
 
-			print '<tr><td>'.$langs->trans("Company").'</td><td>';
-			if (! empty($projectstatic->societe->id)) print $projectstatic->societe->getNomUrl(1);
+			print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
+			if (! empty($projectstatic->thirdparty->id)) print $projectstatic->thirdparty->getNomUrl(1);
 			else print '&nbsp;';
 			print '</td>';
 			print '</tr>';
@@ -242,11 +250,19 @@ if ($id > 0 || ! empty($ref))
 			// Statut
 			print '<tr><td>'.$langs->trans("Status").'</td><td>'.$projectstatic->getLibStatut(4).'</td></tr>';
 
+		   	// Date start
+			print '<tr><td>'.$langs->trans("DateStart").'</td><td>';
+			print dol_print_date($projectstatic->date_start,'day');
+			print '</td></tr>';
+
+			// Date end
+			print '<tr><td>'.$langs->trans("DateEnd").'</td><td>';
+			print dol_print_date($projectstatic->date_end,'day');
+			print '</td></tr>';
+
 			print '</table>';
 
 			dol_fiche_end();
-
-			print '<br>';
 		}
 
 		/*
@@ -267,7 +283,7 @@ if ($id > 0 || ! empty($ref))
 		}
 		else
 		{
-		print '<a class="butActionRefused" href="#" title="'.$langs->trans("NoPermission").'">'.$langs->trans('AddTask').'</a>';
+		print '<a class="butActionRefused" href="#" title="'.$langs->trans("NotEnoughPermissions").'">'.$langs->trans('AddTask').'</a>';
 		}
 
 		print '</div>';
@@ -277,12 +293,7 @@ if ($id > 0 || ! empty($ref))
 		//$userAccess = $projectstatic->restrictedProjectArea($user); // We allow task affected to user even if a not allowed project
 		//$arrayofuseridoftask=$object->getListContactId('internal');
 
-		dol_htmloutput_mesg($mesg);
-
 		$head=task_prepare_head($object);
-		dol_fiche_head($head, 'task_task', $langs->trans("Task"),0,'projecttask');
-
-
 
 		if ($action == 'edit' && $user->rights->projet->creer)
 		{
@@ -292,11 +303,13 @@ if ($id > 0 || ! empty($ref))
 			print '<input type="hidden" name="withproject" value="'.$withproject.'">';
 			print '<input type="hidden" name="id" value="'.$object->id.'">';
 
+			dol_fiche_head($head, 'task_task', $langs->trans("Task"),0,'projecttask');
+
 			print '<table class="border" width="100%">';
 
 			// Ref
 			print '<tr><td width="30%">'.$langs->trans("Ref").'</td>';
-			print '<td>'.$object->ref.'</td></tr>';
+			print '<td><input size="12" name="ref" value="'.$object->ref.'"></td></tr>';
 
 			// Label
 			print '<tr><td>'.$langs->trans("Label").'</td>';
@@ -310,7 +323,7 @@ if ($id > 0 || ! empty($ref))
 				print '</td></tr>';
 
 				// Third party
-				print '<td>'.$langs->trans("Company").'</td><td colspan="3">';
+				print '<td>'.$langs->trans("ThirdParty").'</td><td colspan="3">';
 				if ($projectstatic->societe->id) print $projectstatic->societe->getNomUrl(1);
 				else print '&nbsp;';
 				print '</td></tr>';
@@ -318,17 +331,17 @@ if ($id > 0 || ! empty($ref))
 
 			// Task parent
 			print '<tr><td>'.$langs->trans("ChildOfTask").'</td><td>';
-			print $formother->selectProjectTasks($object->fk_task_parent,$projectstatic->id, 'task_parent', $user->admin?0:1, 0);
+			print $formother->selectProjectTasks($object->fk_task_parent, $projectstatic->id, 'task_parent', ($user->admin?0:1), 0, 0, 0, $object->id);
 			print '</td></tr>';
 
 			// Date start
 			print '<tr><td>'.$langs->trans("DateStart").'</td><td>';
-			print $form->select_date($object->date_start,'dateo');
+			print $form->select_date($object->date_start,'dateo',1,1,0,'',1,0,1);
 			print '</td></tr>';
 
 			// Date end
 			print '<tr><td>'.$langs->trans("DateEnd").'</td><td>';
-			print $form->select_date($object->date_end?$object->date_end:-1,'datee');
+			print $form->select_date($object->date_end?$object->date_end:-1,'datee',1,1,0,'',1,0,1);
 			print '</td></tr>';
 
 			// Planned workload
@@ -336,8 +349,8 @@ if ($id > 0 || ! empty($ref))
 			print $form->select_duration('planned_workload',$object->planned_workload,0,'text');
 			print '</td></tr>';
 
-			// Progress
-			print '<tr><td>'.$langs->trans("Progress").'</td><td colspan="3">';
+			// Progress declared
+			print '<tr><td>'.$langs->trans("ProgressDeclared").'</td><td colspan="3">';
 			print $formother->select_percent($object->progress,'progress');
 			print '</td></tr>';
 
@@ -357,10 +370,12 @@ if ($id > 0 || ! empty($ref))
 
 			print '</table>';
 
-			print '<center><br>';
+			dol_fiche_end();
+
+			print '<div align="center">';
 			print '<input type="submit" class="button" name="update" value="'.$langs->trans("Modify").'"> &nbsp; ';
 			print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'">';
-			print '<center>';
+			print '</div>';
 
 			print '</form>';
 		}
@@ -368,9 +383,11 @@ if ($id > 0 || ! empty($ref))
 		{
 			/*
 			 * Fiche tache en mode visu
-			*/
+			 */
 			$param=($withproject?'&withproject=1':'');
 			$linkback=$withproject?'<a href="'.DOL_URL_ROOT.'/projet/tasks.php?id='.$projectstatic->id.'">'.$langs->trans("BackToList").'</a>':'';
+
+			dol_fiche_head($head, 'task_task', $langs->trans("Task"),0,'projecttask');
 
 			if ($action == 'delete')
 			{
@@ -404,7 +421,7 @@ if ($id > 0 || ! empty($ref))
 				print '</td></tr>';
 
 				// Third party
-				print '<td>'.$langs->trans("Company").'</td><td colspan="3">';
+				print '<td>'.$langs->trans("ThirdParty").'</td><td colspan="3">';
 				if ($projectstatic->societe->id) print $projectstatic->societe->getNomUrl(1);
 				else print '&nbsp;';
 				print '</td></tr>';
@@ -412,22 +429,39 @@ if ($id > 0 || ! empty($ref))
 
 			// Date start
 			print '<tr><td>'.$langs->trans("DateStart").'</td><td colspan="3">';
-			print dol_print_date($object->date_start,'day');
+			print dol_print_date($object->date_start,'dayhour');
 			print '</td></tr>';
 
 			// Date end
 			print '<tr><td>'.$langs->trans("DateEnd").'</td><td colspan="3">';
-			print dol_print_date($object->date_end,'day');
+			print dol_print_date($object->date_end,'dayhour');
 			print '</td></tr>';
 
 			// Planned workload
 			print '<tr><td>'.$langs->trans("PlannedWorkload").'</td><td colspan="3">';
-			print convertSecondToTime($object->planned_workload,'allhourmin');
+			if ($object->planned_workload != '')
+			{
+				print convertSecondToTime($object->planned_workload,'allhourmin');
+			}
 			print '</td></tr>';
 
-			// Progress
-			print '<tr><td>'.$langs->trans("Progress").'</td><td colspan="3">';
-			print $object->progress.' %';
+			// Progress declared
+			print '<tr><td>'.$langs->trans("ProgressDeclared").'</td><td colspan="3">';
+			if ($object->progress != '')
+			{
+				print $object->progress.' %';
+			}
+			print '</td></tr>';
+
+			// Progress calculated
+			print '<tr><td>'.$langs->trans("ProgressCalculated").'</td><td colspan="3">';
+			if ($object->planned_workload != '')
+			{
+				$tmparray=$object->getSummaryOfTimeSpent();
+				if ($tmparray['total_duration'] > 0 && ! empty($object->planned_workload)) print round($tmparray['total_duration'] / $object->planned_workload * 100, 2).' %';
+				else print '0 %';
+			}
+			else print '';
 			print '</td></tr>';
 
 			// Description
@@ -445,12 +479,11 @@ if ($id > 0 || ! empty($ref))
 
 			print '</table>';
 
+			dol_fiche_end();
 		}
 
-		dol_fiche_end();
 
-
-		if ($_GET["action"] != 'edit')
+		if ($action != 'edit')
 		{
 			/*
 			 * Actions
@@ -484,7 +517,7 @@ if ($id > 0 || ! empty($ref))
 
 			/*
 			 * Documents generes
-			*/
+			 */
 			$filename=dol_sanitizeFileName($projectstatic->ref). "/". dol_sanitizeFileName($object->ref);
 			$filedir=$conf->projet->dir_output . "/" . dol_sanitizeFileName($projectstatic->ref). "/" .dol_sanitizeFileName($object->ref);
 			$urlsource=$_SERVER["PHP_SELF"]."?id=".$object->id;
@@ -505,4 +538,3 @@ if ($id > 0 || ! empty($ref))
 
 llxFooter();
 $db->close();
-?>

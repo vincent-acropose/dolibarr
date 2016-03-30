@@ -61,7 +61,7 @@ class MenuManager
 	 *  Show menu
 	 *
      *	@param	string	$mode			'top', 'left', 'jmobile'
-     *  @return	void
+     *  @return	string
 	 */
 	function showmenu($mode)
 	{
@@ -115,6 +115,7 @@ class MenuManager
 			$this->menu->add("/admin/modules.php", $langs->trans("Modules"),1);
 			$this->menu->add("/admin/menus.php", $langs->trans("Menus"),1);
 			$this->menu->add("/admin/ihm.php", $langs->trans("GUISetup"),1);
+			$this->menu->add("/admin/fiscalyear.php", $langs->trans("Fiscalyear"),1);
 			$this->menu->add("/admin/boxes.php", $langs->trans("Boxes"),1);
 			$this->menu->add("/admin/delais.php",$langs->trans("Alerts"),1);
 			$this->menu->add("/admin/proxy.php?mainmenu=home", $langs->trans("Security"),1);
@@ -122,7 +123,8 @@ class MenuManager
 			$this->menu->add("/admin/pdf.php?mainmenu=home", $langs->trans("PDF"),1);
 			$this->menu->add("/admin/mails.php?mainmenu=home", $langs->trans("Emails"),1);
 			$this->menu->add("/admin/sms.php?mainmenu=home", $langs->trans("SMS"),1);
-			$this->menu->add("/admin/dict.php?mainmenu=home", $langs->trans("DictionnarySetup"),1);
+			$this->menu->add("/admin/dict.php?mainmenu=home", $langs->trans("DictionarySetup"),1);
+			if (! empty($conf->accounting->enabled)) $this->menu->add("/accountancy/admin/account.php", $langs->trans("Chartofaccounts"),1);
 			$this->menu->add("/admin/const.php?mainmenu=home", $langs->trans("OtherSetup"),1);
 
 			// ***** END *****
@@ -175,10 +177,20 @@ class MenuManager
 						print '<div class="menu_contenu">';
 
 						if ($this->menu->liste[$i]['enabled'])
-							print $tabstring.'<a class="vsmenu" href="'.dol_buildpath($this->menu->liste[$i]['url'],1).'">'.$this->menu->liste[$i]['titre'].'</a><br>';
+						{
+							print $tabstring;
+							if ($this->menu->liste[$i]['url']) print '<a class="vsmenu" href="'.dol_buildpath($this->menu->liste[$i]['url'],1).'"'.($this->menu->liste[$i]['target']?' target="'.$this->menu->liste[$i]['target'].'"':'').'>';
+							else print '<span class="vsmenu">';
+							if ($this->menu->liste[$i]['url']) print $this->menu->liste[$i]['titre'].'</a>';
+							else print '</span>';
+						}
 						else
-							print $tabstring.'<font class="vsmenudisabled vsmenudisabledmargin">'.$this->menu->liste[$i]['titre'].'</font><br>';
+						{
+							print $tabstring.'<font class="vsmenudisabled vsmenudisabledmargin">'.$this->menu->liste[$i]['titre'].'</font>';
+						}
 
+						// If title is not pure text and contains a table, no carriage return added
+						if (! strstr($this->menu->liste[$i]['titre'],'<table')) print '<br>';
 						print '</div>'."\n";
 					}
 
@@ -300,7 +312,7 @@ function print_start_menu_entry_empty($idsel,$classname,$showmode)
  */
 function print_text_menu_entry_empty($text, $showmode, $url, $id, $idsel, $classname, $atarget)
 {
-	global $conf;
+	global $conf,$langs;
 
 	if ($showmode == 1)
 	{
@@ -347,4 +359,3 @@ function print_end_menu_array_empty()
 	print "\n";
 }
 
-?>

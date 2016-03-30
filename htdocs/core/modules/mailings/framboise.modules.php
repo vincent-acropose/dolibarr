@@ -19,8 +19,7 @@ include_once DOL_DOCUMENT_ROOT.'/core/modules/mailings/modules_mailings.php';
 
 
 /**
- *	    \class      mailing_framboise
- *		\brief      Class to manage a list of personalised recipients for mailing feature
+ *	Class to manage a list of personalised recipients for mailing feature
  */
 class mailing_framboise extends MailingTargets
 {
@@ -58,11 +57,14 @@ class mailing_framboise extends MailingTargets
 	function add_to_target($mailing_id,$filtersarray=array())
 	{
 		global $conf, $langs;
+		$langs->load("members");
+		$langs->load("companies");
 
 		$cibles = array();
 
 		// Select the members from category
 		$sql = "SELECT a.rowid as id, a.email as email, a.lastname, null as fk_contact, a.firstname,";
+		$sql.= " a.datefin, a.civility as civility_id, a.login, a.societe,";	// Other fields
 		if ($_POST['filter']) $sql.= " c.label";
 		else $sql.=" null as label";
 		$sql.= " FROM ".MAIN_DB_PREFIX."adherent as a";
@@ -97,7 +99,12 @@ class mailing_framboise extends MailingTargets
                     			'fk_contact' => $obj->fk_contact,
                     			'lastname' => $obj->lastname,
                     			'firstname' => $obj->firstname,
-                    			'other' => ($obj->label?$langs->transnoentities("Category").'='.$obj->label:''),
+                    			'other' =>
+                                ($langs->transnoentities("Login").'='.$obj->login).';'.
+                                ($langs->transnoentities("UserTitle").'='.($obj->civility_id?$langs->transnoentities("Civility".$obj->civility_id):'')).';'.
+                                ($langs->transnoentities("DateEnd").'='.dol_print_date($this->db->jdate($obj->datefin),'day')).';'.
+                                ($langs->transnoentities("Company").'='.$obj->societe).';'.
+								($obj->label?$langs->transnoentities("Category").'='.$obj->label:''),
                                 'source_url' => $this->url($obj->id),
                                 'source_id' => $obj->id,
                                 'source_type' => 'member'
@@ -143,8 +150,8 @@ class mailing_framboise extends MailingTargets
 	 *	For example if this selector is used to extract 500 different
 	 *	emails from a text file, this function must return 500.
 	 *
-	 *  @param	string	$sql		Requete sql de comptage
-	 *	@return		int			Nb of recipients
+	 *  @param		string	$sql		Requete sql de comptage
+	 *	@return		int					Nb of recipients
 	 */
 	function getNbOfRecipients($sql='')
 	{
@@ -191,7 +198,7 @@ class mailing_framboise extends MailingTargets
 			$num = $this->db->num_rows($resql);
 
 			$s.='<option value="0">&nbsp;</option>';
-			if (! $num) $s.='<option value="0" disabled="disabled">'.$langs->trans("NoCategoriesDefined").'</option>';
+			if (! $num) $s.='<option value="0" disabled>'.$langs->trans("NoCategoriesDefined").'</option>';
 
 			$i = 0;
 			while ($i < $num)
@@ -222,13 +229,8 @@ class mailing_framboise extends MailingTargets
 	 */
 	function url($id)
 	{
-		//$companystatic=new Societe($this->db);
-		//$companystatic->id=$id;
-		//$companystatic->nom='';
-		//return $companystatic->getNomUrl(1);	// Url too long
-		return '<a href="'.DOL_URL_ROOT.'/adherents/fiche.php?rowid='.$id.'">'.img_object('',"user").'</a>';
+		return '<a href="'.DOL_URL_ROOT.'/adherents/card.php?rowid='.$id.'">'.img_object('',"user").'</a>';
 	}
 
 }
 
-?>

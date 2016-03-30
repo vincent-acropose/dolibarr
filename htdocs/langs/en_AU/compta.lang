@@ -1,15 +1,3 @@
-# Dolibarr language file - en_AU - compta
-# This file contains only line that must differs from en_US
-AmountHTVATRealReceived=Amount excl GST collected
-AmountHTVATRealPaid=Amount excl GST paid
-VATToPay=GST to pay
-VATReceived=GST received
-VATToCollect=GST to collect
-VATSummary=GST Summary
-VATPaid=GST paid
-VATCollected=GST collected
-NewVATPayment=New GST payment
-VATPayment=GST Payment
-VATPayments=GST Payments
-TotalToPay=Total to pay
-TotalVATReceived=Total GST received
+# Dolibarr language file - Source file is en_US - compta
+ACCOUNTING_VAT_SOLD_ACCOUNT=Default accountancy code for collecting VAT (VAT on sales)
+ACCOUNTING_VAT_BUY_ACCOUNT=Default accountancy code for recovered VAT (VAT on purchases)

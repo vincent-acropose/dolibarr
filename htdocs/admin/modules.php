@@ -5,6 +5,7 @@
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2011	   Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2015      Jean-François Ferry	<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -210,7 +211,7 @@ asort($orders);
 $nbofactivatedmodules=count($conf->modules);
 $moreinfo=$langs->trans("TotalNumberOfActivatedModules",($nbofactivatedmodules-1));
 if ($nbofactivatedmodules <= 1) $moreinfo .= ' '.img_warning($langs->trans("YouMustEnableOneModule"));
-print load_fiche_titre($langs->trans("ModulesSetup"),$moreinfo,'setup');
+print load_fiche_titre($langs->trans("ModulesSetup"),$moreinfo,'title_setup');
 
 // Start to show page
 if (empty($mode)) $mode='common';
@@ -416,24 +417,27 @@ if ($mode != 'marketplace')
         print "</td>\n";
 
         // Activate/Disable and Setup (2 columns)
-        if (! empty($conf->global->$const_name))
+        if (! empty($conf->global->$const_name))	// If module is activated
         {
         	$disableSetup = 0;
 
         	print '<td align="center" valign="middle">';
-
-        	if (! empty($objMod->always_enabled) || ((! empty($conf->multicompany->enabled) && $objMod->core_enabled) && ($user->entity || $conf->entity!=1)))
+            if (! empty($objMod->disabled))
+        	{
+        		print $langs->trans("Disabled");
+        	}
+        	else if (! empty($objMod->always_enabled) || ((! empty($conf->multicompany->enabled) && $objMod->core_enabled) && ($user->entity || $conf->entity!=1)))
         	{
         		print $langs->trans("Required");
         		if (! empty($conf->multicompany->enabled) && $user->entity) $disableSetup++;
-        		print '</td>'."\n";
         	}
         	else
         	{
         		print '<a href="modules.php?id='.$objMod->numero.'&amp;action=reset&amp;value=' . $modName . '&amp;mode=' . $mode . '">';
         		print img_picto($langs->trans("Activated"),'switch_on');
-        		print '</a></td>'."\n";
+        		print '</a>';
         	}
+        	print '</td>'."\n";
 
         	if (! empty($objMod->config_page_url) && !$disableSetup)
         	{
@@ -465,11 +469,11 @@ if ($mode != 'marketplace')
         		}
         		else if (preg_match('/^([^@]+)@([^@]+)$/i',$objMod->config_page_url,$regs))
         		{
-        			print '<td align="right" valign="top"><a href="'.dol_buildpath('/'.$regs[2].'/admin/'.$regs[1],1).'" title="'.$langs->trans("Setup").'">'.img_picto($langs->trans("Setup"),"setup").'</a></td>';
+        			print '<td align="right" valign="middle"><a href="'.dol_buildpath('/'.$regs[2].'/admin/'.$regs[1],1).'" title="'.$langs->trans("Setup").'">'.img_picto($langs->trans("Setup"),"setup").'</a></td>';
         		}
         		else
         		{
-        			print '<td align="right" valign="top"><a href="'.$objMod->config_page_url.'" title="'.$langs->trans("Setup").'">'.img_picto($langs->trans("Setup"),"setup").'</a></td>';
+        			print '<td align="right" valign="middle"><a href="'.$objMod->config_page_url.'" title="'.$langs->trans("Setup").'">'.img_picto($langs->trans("Setup"),"setup").'</a></td>';
         		}
         	}
         	else
@@ -478,19 +482,26 @@ if ($mode != 'marketplace')
         	}
 
         }
-        else
+        else	// Module not activated
 		{
         	print '<td align="center" valign="middle">';
-
-        	if (! empty($objMod->always_enabled))
+		    if (! empty($objMod->always_enabled))
         	{
         		// Ne devrait pas arriver.
         	}
-
-        	// Module non actif
-        	print '<a href="modules.php?id='.$objMod->numero.'&amp;action=set&amp;value=' . $modName . '&amp;mode=' . $mode . '">';
-        	print img_picto($langs->trans("Disabled"),'switch_off');
-        	print "</a></td>\n  <td>&nbsp;</td>\n";
+        	else if (! empty($objMod->disabled))
+        	{
+        		print $langs->trans("Disabled");
+        	}
+        	else
+        	{
+	        	// Module non actif
+	        	print '<a href="modules.php?id='.$objMod->numero.'&amp;action=set&amp;value=' . $modName . '&amp;mode=' . $mode . '">';
+	        	print img_picto($langs->trans("Disabled"),'switch_off');
+	        	print "</a>\n";
+        	}
+        	print "</td>\n";
+        	print "<td>&nbsp;</td>";
         }
 
         print "</tr>\n";
@@ -511,11 +522,18 @@ else
     $var=!$var;
     print "<tr ".$bc[$var].">\n";
     $url='http://www.dolistore.com';
-    print '<td align="left"><a href="'.$url.'" target="_blank"><img border="0" width="180" src="'.DOL_URL_ROOT.'/theme/dolistore_logo.png"></a></td>';
+    print '<td align="left"><a href="'.$url.'" target="_blank" rel="external"><img border="0" width="180" src="'.DOL_URL_ROOT.'/theme/dolistore_logo.png"></a></td>';
     print '<td>'.$langs->trans("DoliStoreDesc").'</td>';
-    print '<td><a href="'.$url.'" target="_blank">'.$url.'</a></td>';
+    print '<td><a href="'.$url.'" target="_blank" rel="external">'.$url.'</a></td>';
     print '</tr>';
 
+    $var=!$var;
+    print "<tr ".$bc[$var].">\n";
+    $url='http://partners.dolibarr.org';
+    print '<td align="left"><a href="'.$url.'" target="_blank" rel="external"><img border="0" width="180" src="'.DOL_URL_ROOT.'/theme/dolibarr_preferred_partner_int.png"></a></td>';
+    print '<td>'.$langs->trans("DoliPartnersDesc").'</td>';
+    print '<td><a href="'.$url.'" target="_blank" rel="external">'.$url.'</a></td>';
+    print '</tr>';
 
     print "</table>\n";
 }
@@ -525,10 +543,9 @@ dol_fiche_end();
 
 
 // Show warning about external users
-if ($mode != 'marketplace') print '<div class="info">'.showModulesExludedForExternal($modules).'</div><br>'."\n";
+if ($mode != 'marketplace') print info_admin(showModulesExludedForExternal($modules))."\n";
 
 
 llxFooter();
 
 $db->close();
-?>

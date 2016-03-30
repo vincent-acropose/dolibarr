@@ -70,21 +70,22 @@ if ($id > 0 || ! empty($ref))
 {
 	$product = new Product($db);
 	$result = $product->fetch($id, $ref);
-	
+
 	$parameters=array('id'=>$id);
 	$reshook=$hookmanager->executeHooks('doActions',$parameters,$product,$action);    // Note that $action and $object may have been modified by some hooks
-	$error=$hookmanager->error; $errors=$hookmanager->errors;
+	if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 
 	llxHeader("","",$langs->trans("CardProduct".$product->type));
 
 	if ($result > 0)
 	{
-		$head=product_prepare_head($product,$user);
+		$head=product_prepare_head($product);
 		$titre=$langs->trans("CardProduct".$product->type);
-		$picto=($product->type==1?'service':'product');
+		$picto=($product->type==Product::TYPE_SERVICE?'service':'product');
 		dol_fiche_head($head, 'referers', $titre, 0, $picto);
-		
+
 		$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$product,$action);    // Note that $action and $object may have been modified by hook
+		if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 
 		print '<table class="border" width="100%">';
 
@@ -96,7 +97,7 @@ if ($id > 0 || ! empty($ref))
 		print '</tr>';
 
 		// Libelle
-		print '<tr><td>'.$langs->trans("Label").'</td><td colspan="3">'.$product->libelle.'</td>';
+		print '<tr><td>'.$langs->trans("Label").'</td><td colspan="3">'.$product->label.'</td>';
 		print '</tr>';
 
 		// Status (to sell)
@@ -123,19 +124,19 @@ if ($id > 0 || ! empty($ref))
 		$sql.= ' sum('.$db->ifsql("cd.statut=4 AND (cd.date_fin_validite IS NULL OR cd.date_fin_validite <= '".$db->idate($now)."')",1,0).') as nb_late,';
 		$sql.= ' sum('.$db->ifsql("cd.statut=5",1,0).') as nb_closed,';
 		$sql.= " c.rowid as rowid, c.date_contrat, c.statut as statut,";
-		$sql.= " s.nom, s.rowid as socid, s.code_client";
+		$sql.= " s.nom as name, s.rowid as socid, s.code_client";
 		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 		if (!$user->rights->societe->client->voir && !$socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 		$sql.= ", ".MAIN_DB_PREFIX."contrat as c";
 		$sql.= ", ".MAIN_DB_PREFIX."contratdet as cd";
 		$sql.= " WHERE c.rowid = cd.fk_contrat";
 		$sql.= " AND c.fk_soc = s.rowid";
-		$sql.= " AND c.entity = ".$conf->entity;
+		$sql.= " AND c.entity IN (".getEntity('contrat', 1).")";
 		$sql.= " AND cd.fk_product =".$product->id;
 		if (!$user->rights->societe->client->voir && !$socid) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
 		if ($socid) $sql.= " AND s.rowid = ".$socid;
 		$sql.= " GROUP BY c.rowid, c.date_contrat, c.statut, s.nom, s.rowid, s.code_client";
-		$sql.= " ORDER BY $sortfield $sortorder";
+		$sql.= $db->order($sortfield, $sortorder);
 		$sql.= $db->plimit($conf->liste_limit +1, $offset);
 
 		$result = $db->query($sql);
@@ -170,10 +171,10 @@ if ($id > 0 || ! empty($ref))
 					$var=!$var;
 
 					print "<tr ".$bc[$var].">";
-					print '<td><a href="'.DOL_URL_ROOT.'/contrat/fiche.php?id='.$objp->rowid.'">'.img_object($langs->trans("ShowContract"),"contract").' ';
+					print '<td><a href="'.DOL_URL_ROOT.'/contrat/card.php?id='.$objp->rowid.'">'.img_object($langs->trans("ShowContract"),"contract").' ';
 					print $objp->rowid;
 					print "</a></td>\n";
-					print '<td><a href="'.DOL_URL_ROOT.'/comm/fiche.php?socid='.$objp->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.dol_trunc($objp->nom,44).'</a></td>';
+					print '<td><a href="'.DOL_URL_ROOT.'/comm/card.php?socid='.$objp->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.dol_trunc($objp->name,44).'</a></td>';
 					print "<td>".$objp->code_client."</td>\n";
 					print "<td align=\"center\">";
 					print dol_print_date($db->jdate($objp->date_contrat))."</td>";
@@ -205,4 +206,3 @@ else
 
 llxFooter();
 $db->close();
-?>

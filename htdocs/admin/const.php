@@ -38,7 +38,7 @@ $action=GETPOST('action','alpha');
 $update=GETPOST('update','alpha');
 $delete=GETPOST('delete');	// Do not use alpha here
 $debug=GETPOST('debug','int');
-$consts=GETPOST('const');
+$consts=GETPOST('const','array');
 $constname=GETPOST('constname','alpha');
 $constvalue=GETPOST('constvalue');
 $constnote=GETPOST('constnote','alpha');
@@ -165,14 +165,14 @@ jQuery(document).ready(function() {
 		var row_num = field_id.split("_");
 		jQuery("#updateconst").show();
 		jQuery("#action").val('update');
-		jQuery("#check_" + row_num[1]).attr("checked",true);
+		jQuery("#check_" + row_num[1]).prop("checked",true);
 	});
 });
 </script>
 <?php
 }
 
-print_fiche_titre($langs->trans("OtherSetup"),'','setup');
+print_fiche_titre($langs->trans("OtherSetup"),'','title_setup');
 
 print $langs->trans("ConstDesc")."<br>\n";
 print "<br>\n";
@@ -229,11 +229,12 @@ $sql.= ", note";
 $sql.= ", entity";
 $sql.= " FROM ".MAIN_DB_PREFIX."const";
 $sql.= " WHERE entity IN (".$user->entity.",".$conf->entity.")";
-if (empty($user->entity) && $debug) {} // to force for superadmin
-elseif ($user->entity || empty($conf->multicompany->enabled)) $sql.= " AND visible = 1";
+if ((empty($user->entity) || $user->admin) && $debug) {} 										// to force for superadmin to debug
+else if (! GETPOST('visible') || GETPOST('visible') != 'all') $sql.= " AND visible = 1";		// We must always have this. Otherwise, array is too large and submitting data fails due to apache POST or GET limits
+if (GETPOST('name')) $sql.=natural_search("name", GETPOST('name'));
 $sql.= " ORDER BY entity, name ASC";
 
-dol_syslog("Const::listConstant sql=".$sql);
+dol_syslog("Const::listConstant", LOG_DEBUG);
 $result = $db->query($sql);
 if ($result)
 {
@@ -260,7 +261,7 @@ if ($result)
 
 		// Note
 		print '<td>';
-		print '<input type="text" id="note_'.$i.'"class="flat inputforupdate" size="40" name="const['.$i.'][note]" value="'.htmlspecialchars($obj->note,1).'">';
+		print '<input type="text" id="note_'.$i.'" class="flat inputforupdate" size="40" name="const['.$i.'][note]" value="'.htmlspecialchars($obj->note,1).'">';
 		print '</td>';
 
 		// Entity limit to superadmin
@@ -280,7 +281,6 @@ if ($result)
 		if ($conf->use_javascript_ajax)
 		{
 			print '<input type="checkbox" class="flat checkboxfordelete" id="check_'.$i.'" name="const['.$i.'][check]" value="1">';
-			print ' &nbsp; ';
 		}
 		else
 		{
@@ -313,4 +313,3 @@ print "</form>\n";
 llxFooter();
 
 $db->close();
-?>

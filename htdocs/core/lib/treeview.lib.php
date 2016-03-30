@@ -28,10 +28,10 @@
 /**
  * Show indent and picto of a tree line. Return array with information of line.
  *
- * @param	array	&$fulltree		Array of entries in correct order
+ * @param	array	$fulltree		Array of entries in correct order
  * @param 	string	$key			Key of entry into fulltree to show picto
  * @param	int		$silent			Do not output indent and picto, returns only value
- * @return	array					array(0 or 1 if at least one of this level after, 0 or 1 if at least one of higher level after, nbofdirinsub, nbofdocinsub)
+ * @return	integer[]					array(0 or 1 if at least one of this level after, 0 or 1 if at least one of higher level after, nbofdirinsub, nbofdocinsub)
  */
 function tree_showpad(&$fulltree,$key,$silent=0)
 {
@@ -94,7 +94,7 @@ function tree_showpad(&$fulltree,$key,$silent=0)
 
 
 
-// ------------------------------- Used by menu editor -----------------
+// ------------------------------- Used by menu editor, category view, ... -----------------
 
 /**
  *  Recursive function to output menu tree. <ul id="iddivjstree"><li>...</li></ul>
@@ -102,6 +102,7 @@ function tree_showpad(&$fulltree,$key,$silent=0)
  *  $arrayofjs=array('/includes/jquery/plugins/jquerytreeview/jquery.treeview.js',
  *                   '/includes/jquery/plugins/jquerytreeview/lib/jquery.cookie.js');
  *	$arrayofcss=array('/includes/jquery/plugins/jquerytreeview/jquery.treeview.css');
+ *  TODO Replace with jstree plugin instead of treeview plugin.
  *
  *  @param	array	$tab    		Array of all elements
  *  @param  int	    $pere   		Array with parent ids ('rowid'=>,'mainmenu'=>,'leftmenu'=>,'fk_mainmenu=>,'fk_leftmenu=>)
@@ -143,7 +144,7 @@ function tree_recur($tab, $pere, $rang, $iddivjstree='iddivjstree')
 		if ($tab[$x]['fk_menu'] != -1 && $tab[$x]['fk_menu'] == $pere['rowid'])
 		{
 			if (empty($ulprinted) && ! empty($pere['rowid'])) { print '<ul'.(empty($pere['rowid'])?' id="treeData"':'').'>'; $ulprinted++; }
-			print "\n".'<li>';
+			print "\n".'<li '.($tab[$x]['statut']?' class="liuseractive"':'class="liuserdisabled"').'>';
 			print $tab[$x]['entry'];
 			// And now we search all its sons of lower level
 			tree_recur($tab,$tab[$x],$rang+1);
@@ -152,7 +153,7 @@ function tree_recur($tab, $pere, $rang, $iddivjstree='iddivjstree')
 		elseif (! empty($tab[$x]['rowid']) && $tab[$x]['fk_menu'] == -1 && $tab[$x]['fk_mainmenu'] == $pere['mainmenu'] && $tab[$x]['fk_leftmenu'] == $pere['leftmenu'])
 		{
 			if (empty($ulprinted) && ! empty($pere['rowid'])) { print '<ul'.(empty($pere['rowid'])?' id="treeData"':'').'>'; $ulprinted++; }
-			print "\n".'<li>';
+			print "\n".'<li '.($tab[$x]['statut']?' class="liuseractive"':'class="liuserdisabled"').'>';
 			print $tab[$x]['entry'];
 			// And now we search all its sons of lower level
 			tree_recur($tab,$tab[$x],$rang+1);
@@ -164,4 +165,3 @@ function tree_recur($tab, $pere, $rang, $iddivjstree='iddivjstree')
 	if (empty($pere['rowid'])) print '</ul>';
 }
 
-?>

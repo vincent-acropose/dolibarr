@@ -74,7 +74,7 @@ class Menubase
      *      @param      User	$user       User that create
      *      @return     int      			<0 if KO, Id of record if OK
      */
-    function create($user=0)
+    function create($user=null)
     {
         global $conf, $langs;
 
@@ -95,6 +95,7 @@ class Menubase
         $this->perms=trim($this->perms);
         $this->enabled=trim($this->enabled);
         $this->user=trim($this->user);
+        $this->position=trim($this->position);
         if (! $this->level) $this->level=0;
 
         // Check parameters
@@ -152,7 +153,7 @@ class Menubase
         $sql.= " '".$this->fk_menu."',";
         $sql.= " ".($this->fk_mainmenu?"'".$this->fk_mainmenu."'":"null").",";
         $sql.= " ".($this->fk_leftmenu?"'".$this->fk_leftmenu."'":"null").",";
-        $sql.= " '".$this->position."',";
+        $sql.= " '".(int) $this->position."',";
         $sql.= " '".$this->db->escape($this->url)."',";
         $sql.= " '".$this->db->escape($this->target)."',";
         $sql.= " '".$this->db->escape($this->titre)."',";
@@ -162,7 +163,7 @@ class Menubase
         $sql.= " '".$this->user."'";
         $sql.= ")";
 
-        dol_syslog(get_class($this)."::create sql=".$sql, LOG_DEBUG);
+        dol_syslog(get_class($this)."::create", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -174,7 +175,6 @@ class Menubase
         else
         {
             $this->error="Error ".$this->db->lasterror();
-            dol_syslog(get_class($this)."::create ".$this->error, LOG_ERR);
             return -1;
         }
     }
@@ -186,7 +186,7 @@ class Menubase
      *  @param  int		$notrigger	    0=no, 1=yes (no update trigger)
      *  @return int 		        	<0 if KO, >0 if OK
      */
-    function update($user=0, $notrigger=0)
+    function update($user=null, $notrigger=0)
     {
         global $conf, $langs;
 
@@ -232,12 +232,11 @@ class Menubase
         $sql.= " usertype='".$this->user."'";
         $sql.= " WHERE rowid=".$this->id;
 
-        dol_syslog(get_class($this)."::update sql=".$sql, LOG_DEBUG);
+        dol_syslog(get_class($this)."::update", LOG_DEBUG);
         $resql = $this->db->query($sql);
         if (! $resql)
         {
             $this->error="Error ".$this->db->lasterror();
-            dol_syslog(get_class($this)."::update ".$this->error, LOG_ERR);
             return -1;
         }
 
@@ -252,7 +251,7 @@ class Menubase
      *   @param		User    $user       User that load
      *   @return	int         		<0 if KO, >0 if OK
      */
-    function fetch($id, $user=0)
+    function fetch($id, $user=null)
     {
         global $langs;
 
@@ -277,7 +276,7 @@ class Menubase
         $sql.= " FROM ".MAIN_DB_PREFIX."menu as t";
         $sql.= " WHERE t.rowid = ".$id;
 
-        dol_syslog(get_class($this)."::fetch sql=".$sql, LOG_DEBUG);
+        dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -311,7 +310,6 @@ class Menubase
         else
         {
             $this->error="Error ".$this->db->lasterror();
-            dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
             return -1;
         }
     }
@@ -330,12 +328,11 @@ class Menubase
         $sql = "DELETE FROM ".MAIN_DB_PREFIX."menu";
         $sql.= " WHERE rowid=".$this->id;
 
-        dol_syslog(get_class($this)."::delete sql=".$sql);
+        dol_syslog(get_class($this)."::delete", LOG_DEBUG);
         $resql = $this->db->query($sql);
         if (! $resql)
         {
             $this->error="Error ".$this->db->lasterror();
-            dol_syslog(get_class($this)."::delete ".$this->error, LOG_ERR);
             return -1;
         }
 
@@ -380,7 +377,7 @@ class Menubase
      * 	@param	string	$myleftmenu		Value for leftmenu to filter menu to load (always '')
      * 	@param	int		$type_user		0=Menu for backoffice, 1=Menu for front office
      * 	@param	string	$menu_handler	Filter on name of menu_handler used (auguria, eldy...)
-     * 	@param  array	&$tabMenu       If array with menu entries already loaded, we put this array here (in most cases, it's empty)
+     * 	@param  array	$tabMenu       If array with menu entries already loaded, we put this array here (in most cases, it's empty)
      * 	@return	array					Return array with menu entries for top menu
      */
     function menuTopCharger($mymainmenu, $myleftmenu, $type_user, $menu_handler, &$tabMenu)
@@ -403,13 +400,13 @@ class Menubase
     /**
      * 	Load entries found from database in this->newmenu array.
      *
-     * 	@param	array	$newmenu        Menu array to complete (in most cases, it's empty, may be already initialized with some menu manager like eldy)
+     * 	@param	Menu	$newmenu        Menu array to complete (in most cases, it's empty, may be already initialized with some menu manager like eldy)
      * 	@param	string	$mymainmenu		Value for mainmenu to filter menu to load (often $_SESSION["mainmenu"])
      * 	@param	string	$myleftmenu		Value for leftmenu to filter menu to load (always '')
      * 	@param	int		$type_user		0=Menu for backoffice, 1=Menu for front office
      * 	@param	string	$menu_handler	Filter on name of menu_handler used (auguria, eldy...)
-     * 	@param  array	&$tabMenu       Array with menu entries already loaded
-     * 	@return array    		       	Menu array for particular mainmenu value or full tabArray
+     * 	@param  array	$tabMenu       Array with menu entries already loaded
+     * 	@return Menu    		       	Menu array for particular mainmenu value or full tabArray
      */
     function menuLeftCharger($newmenu, $mymainmenu, $myleftmenu, $type_user, $menu_handler, &$tabMenu)
     {
@@ -493,7 +490,7 @@ class Menubase
      *  @param	string	$myleftmenu     Value for left that defined leftmenu
      *  @param  int		$type_user      Looks for menu entry for 0=Internal users, 1=External users
      *  @param  string	$menu_handler   Name of menu_handler used ('auguria', 'eldy'...)
-     *  @param  array	&$tabMenu       Array to store new entries found (in most cases, it's empty, but may be alreay filled)
+     *  @param  array	$tabMenu       Array to store new entries found (in most cases, it's empty, but may be alreay filled)
      *  @return int     		        >0 if OK, <0 if KO
      */
     function menuLoad($mymainmenu, $myleftmenu, $type_user, $menu_handler, &$tabMenu)
@@ -516,7 +513,7 @@ class Menubase
 
 //$tmp1=dol_microtime_float();
 //print '>>> 1 0<br>';
-        dol_syslog(get_class($this)."::menuLoad mymainmenu=".$mymainmenu." myleftmenu=".$myleftmenu." type_user=".$type_user." menu_handler=".$menu_handler." tabMenu size=".count($tabMenu)." sql=".$sql);
+        dol_syslog(get_class($this)."::menuLoad mymainmenu=".$mymainmenu." myleftmenu=".$myleftmenu." type_user=".$type_user." menu_handler=".$menu_handler." tabMenu size=".count($tabMenu)."", LOG_DEBUG);
         $resql = $this->db->query($sql);
         if ($resql)
         {
@@ -547,7 +544,6 @@ class Menubase
                 	$tmpcond=$menu['enabled'];
                 	if ($leftmenu == 'all') $tmpcond=preg_replace('/\$leftmenu\s*==\s*["\'a-zA-Z_]+/','1==1',$tmpcond);	// Force part of condition to true
                     $enabled = verifCond($tmpcond);
-                    //if ($conf->use_javascript_ajax && ! empty($conf->global->MAIN_MENU_USE_JQUERY_ACCORDION) && empty($conf->dol_use_jmobile) && preg_match('/^\$leftmenu/',$menu['enabled'])) $enabled=1;
                 }
 
                 // Define $title
@@ -644,4 +640,3 @@ class Menubase
 
 }
 
-?>

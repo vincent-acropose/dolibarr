@@ -81,20 +81,19 @@ include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_pre_headers.tpl.php
 
 $form = new Form($db);
 
-llxHeader("","",$langs->trans("InterventionCard"));
-
+llxHeader('',$langs->trans("Intervention"));
 
 if ($object->id)
 {
 	$object->fetch_thirdparty();
 
-	$head=fichinter_prepare_head($object, $user);
+	$head=fichinter_prepare_head($object);
 
 	dol_fiche_head($head, 'documents',  $langs->trans("InterventionCard"), 0, 'intervention');
 
 
 	// Construit liste des fichiers
-	$filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+	$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
 	$totalsize=0;
 	foreach($filearray as $key => $file)
 	{
@@ -131,7 +130,7 @@ else
 	print $langs->trans("ErrorUnknown");
 }
 
+
 llxFooter();
 
 $db->close();
-?>

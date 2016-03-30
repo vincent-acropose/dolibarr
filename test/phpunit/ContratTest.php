@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2010 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2010-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 
 global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
 require_once dirname(__FILE__).'/../../htdocs/contrat/class/contrat.class.php';
 
@@ -80,6 +80,8 @@ class ContratTest extends PHPUnit_Framework_TestCase
 
     	print __METHOD__."\n";
     }
+
+    // tear down after class
     public static function tearDownAfterClass()
     {
     	global $conf,$user,$langs,$db;
@@ -162,37 +164,13 @@ class ContratTest extends PHPUnit_Framework_TestCase
     	return $localobject;
     }
 
-    /**
-     * testContratValid
-     *
-     * @param	Contrat		$localobject		Contract
-     * @return	int
-     *
-     * @depends	testContratFetch
-     * The depends says test is run only if previous is ok
-     */
-    public function testContratValid($localobject)
-    {
-    	global $conf,$user,$langs,$db;
-		$conf=$this->savconf;
-		$user=$this->savuser;
-		$langs=$this->savlangs;
-		$db=$this->savdb;
-
-    	$result=$localobject->update_statut($user);
-    	print __METHOD__." id=".$localobject->id." result=".$result."\n";
-
-    	$this->assertLessThan($result, 0);
-    	return $localobject;
-    }
-
    /**
-     * testContratValid
+     * testContratOther
      *
      * @param	Object	$localobject	Object contract
      * @return	int
      *
-     * @depends testContratValid
+     * @depends testContratFetch
      * The depends says test is run only if previous is ok
      */
     public function testContratOther($localobject)
@@ -241,28 +219,4 @@ class ContratTest extends PHPUnit_Framework_TestCase
     	return $result;
     }
 
-
-    /**
-     *	testVerifyNumRef
-     *
-     *	@return	int
-     */
-    public function testVerifyNumRef()
-    {
-    	global $conf,$user,$langs,$db;
-		$conf=$this->savconf;
-		$user=$this->savuser;
-		$langs=$this->savlangs;
-		$db=$this->savdb;
-
-		$localobject=new Contrat($this->savdb);
-    	$result=$localobject->ref='refthatdoesnotexists';
-		$result=$localobject->VerifyNumRef();
-
-		print __METHOD__." result=".$result."\n";
-    	$this->assertEquals($result, 0);
-    	return $result;
-    }
-
 }
-?>

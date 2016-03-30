@@ -19,7 +19,7 @@
  */
 
 /**
- *	    \file       htdocs/dev/generate-facture.php
+ *      \file       dev/intdata/generate-facture.php
  *		\brief      Script de generation de donnees aleatoires pour les factures
  */
 
@@ -94,7 +94,7 @@ while ($i < GEN_NUMBER_FACTURE && $result >= 0)
 
 	print "Invoice ".$i." for socid ".$socid;
 
-	$facture = new Facture($db, $socids[$socid]);
+	$facture = new Facture($db);
 	$facture->date = time();
 	$facture->cond_reglement_id = 3;
 	$facture->mode_reglement_id = 3;
@@ -135,4 +135,3 @@ while ($i < GEN_NUMBER_FACTURE && $result >= 0)
 }
 
 
-?>

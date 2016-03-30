@@ -42,7 +42,7 @@ $form=new Form($db);
 
 llxHeader();
 
-print_fiche_titre($langs->trans("InfoDolibarr"),'','setup');
+print_fiche_titre($langs->trans("InfoDolibarr"),'','title_setup');
 
 // Version
 $var=true;
@@ -89,6 +89,20 @@ print '<tr '.$bc[$var].'><td width="300">'.$langs->trans("CurrentTheme").'</td><
 $var=!$var;
 print '<tr '.$bc[$var].'><td width="300">'.$langs->trans("CurrentMenuHandler").'</td><td colspan="2">';
 print $conf->standard_menu;
+print '</td></tr>'."\n";
+$var=!$var;
+print '<tr '.$bc[$var].'><td width="300">'.$langs->trans("Screen").'</td><td colspan="2">';
+print $_SESSION['dol_screenwidth'].' x '.$_SESSION['dol_screenheight'];
+print '</td></tr>'."\n";
+$var=!$var;
+print '<tr '.$bc[$var].'><td width="300">'.$langs->trans("Session").'</td><td colspan="2">';
+$i=0;
+foreach($_SESSION as $key => $val)
+{
+	if ($i > 0) print ', ';
+	print $key.' => '.$val;
+	$i++;
+}
 print '</td></tr>'."\n";
 print '</table>';
 print '<br>';
@@ -155,7 +169,8 @@ print '<tr '.$bc[$var].'><td width="300">&nbsp; => price(1234.56)</td><td>'.pric
 // Timezone
 $txt =$langs->trans("OSTZ").' (variable system TZ): '.(! empty($_ENV["TZ"])?$_ENV["TZ"]:$langs->trans("NotDefined")).'<br>'."\n";
 $txt.=$langs->trans("PHPTZ").' (php.ini date.timezone): '.(ini_get("date.timezone")?ini_get("date.timezone"):$langs->trans("NotDefined")).''."<br>\n"; // date.timezone must be in valued defined in http://fr3.php.net/manual/en/timezones.europe.php
-$txt.=$langs->trans("YouCanEditPHPTZ");
+$txt.=$langs->trans("Dolibarr constant MAIN_SERVER_TZ").': '.(empty($conf->global->MAIN_SERVER_TZ)?$langs->trans("NotDefined"):$conf->global->MAIN_SERVER_TZ);
+//$txt.=$langs->trans("YouCanEditPHPTZ"); // deprecated
 $var=!$var;
 print '<tr '.$bc[$var].'><td width="300">'.$langs->trans("CurrentTimeZone").'</td><td>';	// Timezone server PHP
 $a=getServerTimeZoneInt('now');
@@ -164,7 +179,7 @@ $c=getServerTimeZoneInt('summer');
 $daylight=(is_numeric($c) && is_numeric($b))?round($c-$b):'unknown';
 //print $a." ".$b." ".$c." ".$daylight;
 $val=($a>=0?'+':'').$a;
-$val.=' ('.($a==='unknown'?'unknown':($a>=0?'+':'').($a*3600)).')';
+$val.=' ('.($a=='unknown'?'unknown':($a>=0?'+':'').($a*3600)).')';
 $val.=' &nbsp; &nbsp; &nbsp; '.getServerTimeZoneString();
 $val.=' &nbsp; &nbsp; &nbsp; '.$langs->trans("DaylingSavingTime").': '.($daylight==='unknown'?'unknown':($a==$c?yn($daylight):yn(0).($daylight?'  &nbsp; &nbsp; ('.$langs->trans('YesInSummer').')':'')));
 print $form->textwithtooltip($val,$txt,2,1,img_info(''));
@@ -177,13 +192,20 @@ $var=!$var;
 print '<tr '.$bc[$var].'><td width="300">&nbsp; => dol_get_first_day(1970,1,false)</td><td>'.dol_get_first_day(1970,1,false).' &nbsp; &nbsp; (=> dol_print_date() or idate() of this value = '.dol_print_date(dol_get_first_day(1970,1,false),'dayhour').')</td>';
 $var=!$var;
 print '<tr '.$bc[$var].'><td width="300">&nbsp; => dol_get_first_day(1970,1,true)</td><td>'.dol_get_first_day(1970,1,true).' &nbsp; &nbsp; (=> dol_print_date() or idate() of this value = '.dol_print_date(dol_get_first_day(1970,1,true),'dayhour').')</td>';
-// Parent company
-/*
-$var=!$var;
-print '<tr '.$bc[$var].'><td width="300">'.$langs->trans("CompanyTZ").'</td><td>'.$langs->trans("FeatureNotYetAvailable").'</td></tr>'."\n";
-$var=!$var;
-print '<tr '.$bc[$var].'><td width="300">&nbsp; => '.$langs->trans("CompanyHour").'</td><td>'.$langs->trans("FeatureNotYetAvailable").'</td></tr>'."\n";
-*/
+// Database timezone
+if ($conf->db->type == 'mysql' || $conf->db->type == 'mysqli')
+{
+	$var=!$var;
+	print '<tr '.$bc[$var].'><td width="300">'.$langs->trans("MySQLTimeZone").' (database)</td><td>';	// Timezone server base
+	$sql="SHOW VARIABLES where variable_name = 'system_time_zone'";
+	$resql = $db->query($sql);
+	if ($resql)
+	{
+		$obj = $db->fetch_object($resql);
+		print $form->textwithtooltip($obj->Value,$langs->trans('TZHasNoEffect'),2,1,img_info(''));
+	}
+	print '</td></tr>'."\n";
+}
 // Client
 $var=!$var;
 $tz=(int) $_SESSION['dol_tz'] + (int) $_SESSION['dol_dst'];
@@ -244,9 +266,10 @@ $configfileparameters=array(
 		'?dolibarr_main_auth_ldap_debug' => 'dolibarr_main_auth_ldap_debug',
 		'separator3' => '',
 		'?dolibarr_lib_ADODB_PATH' => 'dolibarr_lib_ADODB_PATH',
-		'?dolibarr_lib_TCPDF_PATH' => 'dolibarr_lib_TCPDF_PATH',
 		'?dolibarr_lib_FPDF_PATH' => 'dolibarr_lib_FPDF_PATH',
+		'?dolibarr_lib_TCPDF_PATH' => 'dolibarr_lib_TCPDF_PATH',
 		'?dolibarr_lib_FPDI_PATH' => 'dolibarr_lib_FPDI_PATH',
+		'?dolibarr_lib_TCPDI_PATH' => 'dolibarr_lib_TCPDI_PATH',
 		'?dolibarr_lib_NUSOAP_PATH' => 'dolibarr_lib_NUSOAP_PATH',
 		'?dolibarr_lib_PHPEXCEL_PATH' => 'dolibarr_lib_PHPEXCEL_PATH',
 		'?dolibarr_lib_GEOIP_PATH' => 'dolibarr_lib_GEOIP_PATH',
@@ -302,6 +325,22 @@ foreach($configfileparameters as $key => $value)
 			print "<td>";
 			if ($newkey == 'dolibarr_main_db_pass') print preg_replace('/./i','*',${$newkey});
 			else if ($newkey == 'dolibarr_main_url_root' && preg_match('/__auto__/',${$newkey})) print ${$newkey}.' => '.constant('DOL_MAIN_URL_ROOT');
+			else if ($newkey == 'dolibarr_main_document_root_alt')
+			{
+				$tmparray=explode(',',${$newkey});
+				$i=0;
+				foreach($tmparray as $value2)
+				{
+					if ($i > 0) print ', ';
+					print $value2;
+					if (! is_readable($value2))
+					{
+						$langs->load("errors");
+						print ' '.img_warning($langs->trans("ErrorCantReadDir",$value2));
+					}
+					++$i;
+				}
+			}
 			else print ${$newkey};
 			if ($newkey == 'dolibarr_main_url_root' && $newkey != DOL_MAIN_URL_ROOT) print ' (currently overwritten by autodetected value: '.DOL_MAIN_URL_ROOT.')';
 			print "</td>";
@@ -371,4 +410,3 @@ print '</table>';
 llxFooter();
 
 $db->close();
-?>

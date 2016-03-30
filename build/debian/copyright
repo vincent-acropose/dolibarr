@@ -1,7 +1,7 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: Dolibarr
 Upstream-Contact: Laurent Destailleur <eldy@users.sourceforge.net>
-Source: http://sourceforge.net/projects/dolibarr/files/
+Source: http://www.dolibarr.org/files/stable/standard/
 
 Files: *
 Copyright: 2002-2009, Rodolphe Quiedeville   <rodolphe@quiedeville.org>
@@ -61,7 +61,7 @@ License: GPL-3+
 Files: htdocs/includes/adodbtime/*
 Copyright: 2003-2005, John Lim
            unknown, jackbbs
-License: BSD
+License: BSD-3-Clause
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions
  are met:
@@ -159,7 +159,7 @@ Comments:
  Those files are not shipped in the binary package as we
  configure Dolibarr to use Dejavu fonts from "fonts-dejavu-core".
   
-Files: docs/images/*
+Files: doc/images/*
 Copyright: Laurent Destailleur 
 License: CC-BY-SA-3.0
  You are free:
@@ -176,7 +176,7 @@ License: CC-BY-SA-3.0
  .
  For more information, see http://creativecommons.org/licenses/by-sa/3.0/
 
-Files: htdocs/includes/fpdi/*
+Files: htdocs/includes/fpdfi/*
 Copyright: 2004-2011 Setasign - Jan Slabon
 License: GPL-2+
  This program is free software; you can redistribute it
@@ -272,7 +272,7 @@ Comment:
 
 Files: htdocs/includes/jquery/plugins/flot/*
 Copyright: Flot team
-License: Public Domain
+License: Public-Domain
  This work is not subject to copyright in any jurisdiction
 Comment:
  Those files are not shipped in the binary package because we configure

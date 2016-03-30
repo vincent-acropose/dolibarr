@@ -39,7 +39,7 @@ abstract class ModeleThirdPartyDoc extends CommonDocGenerator
      *  Return list of active generation modules
      *
 	 * 	@param	DoliDB		$db					Database handler
-     *  @param	string		$maxfilenamelength  Max length of value to show
+     *  @param	integer		$maxfilenamelength  Max length of value to show
      * 	@return	array							List of templates
      */
     static function liste_modeles($db,$maxfilenamelength=0)
@@ -134,6 +134,7 @@ abstract class ModeleThirdPartyCode
         if ($this->version == 'development') return $langs->trans("VersionDevelopment");
         if ($this->version == 'experimental') return $langs->trans("VersionExperimental");
         if ($this->version == 'dolibarr') return DOL_VERSION;
+        if ($this->version) return $this->version;
         return $langs->trans("NotAvailable");
     }
 
@@ -141,7 +142,7 @@ abstract class ModeleThirdPartyCode
      *  Renvoi la liste des modeles de numéroation
      *
      *  @param	DoliDB	$db     			Database handler
-     *  @param  string	$maxfilenamelength  Max length of value to show
+     *  @param  integer	$maxfilenamelength  Max length of value to show
      *  @return	array						List of numbers
      */
     static function liste_modeles($db,$maxfilenamelength=0)
@@ -183,7 +184,7 @@ abstract class ModeleThirdPartyCode
         $langs->load("admin");
 
         $s='';
-        if ($type == -1) $s.=$langs->trans("Name").': <b>'.$this->nom.'</b><br>';
+        if ($type == -1) $s.=$langs->trans("Name").': <b>'.$this->getNom($langs).'</b><br>';
         if ($type == -1) $s.=$langs->trans("Version").': <b>'.$this->getVersion().'</b><br>';
         if ($type == 0)  $s.=$langs->trans("CustomerCodeDesc").'<br>';
         if ($type == 1)  $s.=$langs->trans("SupplierCodeDesc").'<br>';
@@ -303,6 +304,7 @@ abstract class ModeleAccountancyCode
         if ($this->version == 'development') return $langs->trans("VersionDevelopment");
         if ($this->version == 'experimental') return $langs->trans("VersionExperimental");
         if ($this->version == 'dolibarr') return DOL_VERSION;
+        if ($this->version) return $this->version;
         return $langs->trans("NotAvailable");
     }
 
@@ -353,6 +355,8 @@ abstract class ModeleAccountancyCode
      */
     function get_code($db, $societe, $type='')
     {
+	    global $langs;
+
         return $langs->trans("NotAvailable");
     }
 }
@@ -374,6 +378,7 @@ function thirdparty_doc_create($db, $object, $message, $modele, $outputlangs)
 {
     global $conf,$langs,$user;
     $langs->load("bills");
+	$error=0;
 
     $dir = DOL_DOCUMENT_ROOT . "/core/modules/societe/doc";
     $srctemplatepath='';
@@ -417,15 +422,6 @@ function thirdparty_doc_create($db, $object, $message, $modele, $outputlangs)
         {
             $outputlangs->charset_output=$sav_charset_output;
 
-            // Appel des triggers
-            include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-            $interface=new Interfaces($db);
-            $result=$interface->run_triggers('COMPANY_BUILDDOC',$object,$user,$langs,$conf);
-            if ($result < 0) {
-            	$error++; $this->errors=$interface->errors;
-            }
-            // Fin appel triggers
-
             return 1;
         }
         else
@@ -444,4 +440,3 @@ function thirdparty_doc_create($db, $object, $message, $modele, $outputlangs)
 }
 
 
-?>

@@ -93,30 +93,6 @@ class modComptabilite extends DolibarrModules
 		$this->rights[$r][3] = 1;
 		$this->rights[$r][4] = 'resultat';
 		$this->rights[$r][5] = 'lire';
-
-		$r++;
-		$this->rights[$r][0] = 96;
-		$this->rights[$r][1] = 'Parametrer la ventilation';
-		$this->rights[$r][2] = 'r';
-		$this->rights[$r][3] = 0;
-		$this->rights[$r][4] = 'ventilation';
-		$this->rights[$r][5] = 'parametrer';
-
-		$r++;
-		$this->rights[$r][0] = 97;
-		$this->rights[$r][1] = 'Lire les ventilations de factures';
-		$this->rights[$r][2] = 'r';
-		$this->rights[$r][3] = 1;
-		$this->rights[$r][4] = 'ventilation';
-		$this->rights[$r][5] = 'lire';
-
-		$r++;
-		$this->rights[$r][0] = 98;
-		$this->rights[$r][1] = 'Ventiler les lignes de factures';
-		$this->rights[$r][2] = 'r';
-		$this->rights[$r][3] = 0;
-		$this->rights[$r][4] = 'ventilation';
-		$this->rights[$r][5] = 'creer';
 	}
 
 
@@ -139,21 +115,4 @@ class modComptabilite extends DolibarrModules
 
 		return $this->_init($sql,$options);
 	}
-
-    /**
-	 *		Function called when module is disabled.
-	 *      Remove from database constants, boxes and permissions from Dolibarr database.
-	 *		Data directories are not deleted
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-     */
-    function remove($options='')
-    {
-		$sql = array();
-
-		return $this->_remove($sql,$options);
-    }
-
 }
-?>

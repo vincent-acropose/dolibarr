@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 /**
@@ -28,6 +27,7 @@ require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/product/stock/class/entrepot.class.php';
 
 $langs->load("stocks");
+$langs->load("productbatch");
 
 // Security check
 $result=restrictedArea($user,'stock');
@@ -51,7 +51,7 @@ print '<div class="fichecenter"><div class="fichethirdleft">';
 /*
  * Zone recherche entrepot
  */
-print '<form method="post" action="'.DOL_URL_ROOT.'/product/stock/liste.php">';
+print '<form method="post" action="'.DOL_URL_ROOT.'/product/stock/list.php">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<table class="noborder nohover" width="100%">';
 print "<tr class=\"liste_titre\">";
@@ -64,7 +64,7 @@ print "</table></form><br>";
 $sql = "SELECT e.label, e.rowid, e.statut";
 $sql.= " FROM ".MAIN_DB_PREFIX."entrepot as e";
 $sql.= " WHERE e.statut in (0,1)";
-$sql.= " AND e.entity = ".$conf->entity;
+$sql.= " AND e.entity IN (".getEntity('stock', 1).")";
 $sql.= $db->order('e.statut','DESC');
 $sql.= $db->plimit(15, 0);
 
@@ -89,7 +89,7 @@ if ($result)
             $objp = $db->fetch_object($result);
             $var=!$var;
             print "<tr ".$bc[$var].">";
-            print "<td><a href=\"fiche.php?id=$objp->rowid\">".img_object($langs->trans("ShowStock"),"stock")." ".$objp->label."</a></td>\n";
+            print "<td><a href=\"card.php?id=$objp->rowid\">".img_object($langs->trans("ShowStock"),"stock")." ".$objp->label."</a></td>\n";
             print '<td align="right">'.$entrepot->LibStatut($objp->statut,5).'</td>';
             print "</tr>\n";
             $i++;
@@ -113,18 +113,18 @@ print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
 $max=10;
 $sql = "SELECT p.rowid, p.label as produit,";
 $sql.= " e.label as stock, e.rowid as entrepot_id,";
-$sql.= " m.value, m.datem";
+$sql.= " m.value as qty, m.datem, m.batch, m.eatby, m.sellby";
 $sql.= " FROM ".MAIN_DB_PREFIX."entrepot as e";
 $sql.= ", ".MAIN_DB_PREFIX."stock_mouvement as m";
 $sql.= ", ".MAIN_DB_PREFIX."product as p";
 $sql.= " WHERE m.fk_product = p.rowid";
 $sql.= " AND m.fk_entrepot = e.rowid";
-$sql.= " AND e.entity = ".$conf->entity;
+$sql.= " AND e.entity IN (".getEntity('stock', 1).")";
 if (empty($conf->global->STOCK_SUPPORTS_SERVICES)) $sql.= " AND p.fk_product_type = 0";
 $sql.= $db->order("datem","DESC");
 $sql.= $db->plimit($max,0);
 
-dol_syslog("Index:list stock movements sql=".$sql, LOG_DEBUG);
+dol_syslog("Index:list stock movements", LOG_DEBUG);
 $resql = $db->query($sql);
 if ($resql)
 {
@@ -134,6 +134,12 @@ if ($resql)
 	print "<tr class=\"liste_titre\">";
 	print '<td>'.$langs->trans("LastMovements",min($num,$max)).'</td>';
 	print '<td>'.$langs->trans("Product").'</td>';
+	if (! empty($conf->productbatch->enabled))
+	{
+		print '<td>'.$langs->trans("Batch").'</td>';
+		print '<td>'.$langs->trans("l_eatby").'</td>';
+		print '<td>'.$langs->trans("l_sellby").'</td>';
+	}
 	print '<td>'.$langs->trans("Warehouse").'</td>';
 	print '<td align="right"><a href="'.DOL_URL_ROOT.'/product/stock/mouvement.php">'.$langs->trans("FullList").'</a></td>';
 	print "</tr>\n";
@@ -146,15 +152,21 @@ if ($resql)
 		$var=!$var;
 		print "<tr ".$bc[$var].">";
 		print '<td>'.dol_print_date($db->jdate($objp->datem),'dayhour').'</td>';
-		print "<td><a href=\"../fiche.php?id=$objp->rowid\">";
+		print "<td><a href=\"../card.php?id=$objp->rowid\">";
 		print img_object($langs->trans("ShowProduct"),"product").' '.$objp->produit;
 		print "</a></td>\n";
-		print '<td><a href="fiche.php?id='.$objp->entrepot_id.'">';
+		if (! empty($conf->productbatch->enabled))
+		{
+			print '<td>'.$objp->batch.'</td>';
+			print '<td>'.dol_print_date($db->jdate($objp->eatby),'day').'</td>';
+			print '<td>'.dol_print_date($db->jdate($objp->sellby),'day').'</td>';
+		}
+		print '<td><a href="card.php?id='.$objp->entrepot_id.'">';
 		print img_object($langs->trans("ShowWarehouse"),"stock").' '.$objp->stock;
 		print "</a></td>\n";
 		print '<td align="right">';
-		if ($objp->value > 0) print '+';
-		print $objp->value.'</td>';
+		if ($objp->qty > 0) print '+';
+		print $objp->qty.'</td>';
 		print "</tr>\n";
 		$i++;
 	}
@@ -169,4 +181,3 @@ print '</div></div></div>';
 llxFooter();
 
 $db->close();
-?>

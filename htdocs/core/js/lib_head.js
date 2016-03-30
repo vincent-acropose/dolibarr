@@ -1,5 +1,5 @@
-// Copyright (C) 2005-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
-// Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+// Copyright (C) 2005-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
+// Copyright (C) 2005-2014 Regis Houssin        <regis.houssin@capnetworks.com>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -57,7 +57,8 @@ function showDP(base,dateFieldID,format,codelang)
 
 	showDP.box=document.createElement("div");
 	showDP.box.className="bodyline";
-	showDP.box.style.siplay="block";
+	showDP.box.style.display="block";
+	showDP.box.style.zIndex="1000";
 	showDP.box.style.position="absolute";
 	showDP.box.style.top=thetop + "px";
 	showDP.box.style.left=theleft + "px";
@@ -554,7 +555,9 @@ function newpopup(url,title) {
 	tmp=url;
 	var l = (argc > 2) ? argv[2] : 600;
 	var h = (argc > 3) ? argv[3] : 400;
-	var wfeatures="directories=0,menubar=0,status=0,resizable=0,scrollbars=1,toolbar=0,width="+l+",height="+h+",left=" + eval("(screen.width - l)/2") + ",top=" + eval("(screen.height - h)/2");
+	var left = (screen.width - l)/2;
+	var top = (screen.height - h)/2;
+	var wfeatures = "directories=0,menubar=0,status=0,resizable=0,scrollbars=1,toolbar=0,width=" + l +",height=" + h + ",left=" + left + ",top=" + top;
 	fen=window.open(tmp,title,wfeatures);
 	return false;
 }
@@ -629,9 +632,9 @@ function hideMessage(fieldId,message) {
 
 
 /*
- * TODO Used by admin page only ? 
+ * Used by button to set on/off 
  */
-function setConstant(url, code, input, entity) {
+function setConstant(url, code, input, entity, strict) {
 	$.get( url, {
 		action: "set",
 		name: code,
@@ -642,7 +645,7 @@ function setConstant(url, code, input, entity) {
 		$("#del_" + code).show();
 		$.each(input, function(type, data) {
 			// Enable another element
-			if (type == "disabled") {
+			if (type == "disabled" && strict != 1) {
 				$.each(data, function(key, value) {
 					var newvalue=((value.search("^#") < 0 && value.search("^\.") < 0) ? "#" : "") + value;
 					$(newvalue).removeAttr("disabled");
@@ -654,7 +657,10 @@ function setConstant(url, code, input, entity) {
 			} else if (type == "enabled") {
 				$.each(data, function(key, value) {
 					var newvalue=((value.search("^#") < 0 && value.search("^\.") < 0) ? "#" : "") + value;
-					$(newvalue).attr("disabled", true);
+					if (strict == 1)
+						$(newvalue).removeAttr("disabled");
+					else
+						$(newvalue).attr("disabled", true);
 					if ($(newvalue).hasClass("butAction") == true) {
 						$(newvalue).removeClass("butAction");
 						$(newvalue).addClass("butActionRefused");
@@ -684,9 +690,9 @@ function setConstant(url, code, input, entity) {
 }
 
 /*
- * TODO Used by admin page only ? 
+ * Used by button to set on/off  
  */
-function delConstant(url, code, input, entity) {
+function delConstant(url, code, input, entity, strict) {
 	$.get( url, {
 		action: "del",
 		name: code,
@@ -706,7 +712,7 @@ function delConstant(url, code, input, entity) {
 						$(newvalue).addClass("butActionRefused");
 					}
 				});
-			} else if (type == "enabled") {
+			} else if (type == "enabled" && strict != 1) {
 				$.each(data, function(key, value) {
 					var newvalue=((value.search("^#") < 0 && value.search("^\.") < 0) ? "#" : "") + value;
 					$(newvalue).removeAttr("disabled");
@@ -738,9 +744,9 @@ function delConstant(url, code, input, entity) {
 }
 
 /*
- * TODO Used by admin page only ? 
+ * Used by button to set on/off  
  */
-function confirmConstantAction(action, url, code, input, box, entity, yesButton, noButton) {
+function confirmConstantAction(action, url, code, input, box, entity, yesButton, noButton, strict) {
 	var boxConfirm = box;
 	$("#confirm_" + code)
 			.attr("title", boxConfirm.title)
@@ -756,9 +762,9 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
 						text : yesButton,
 						click : function() {
 							if (action == "set") {
-								setConstant(url, code, input, entity);
+								setConstant(url, code, input, entity, strict);
 							} else if (action == "del") {
-								delConstant(url, code, input, entity);
+								delConstant(url, code, input, entity, strict);
 							}
 							// Close dialog
 							$(this).dialog("close");
@@ -808,6 +814,7 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
             var input = this.input = $( "<input>" )
                 .insertAfter( select )
                 .val( value )
+                .attr('id', 'inputautocomplete'+select.attr('id'))
                 .autocomplete({
                     delay: 0,
                     minLength: this.options.minLengthToAutocomplete,
@@ -848,7 +855,7 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
                                 // remove invalid value, as it didnt match anything
                             	$( this ).val( "" );
                                 select.val( "" );
-                                input.data( "autocomplete" ).term = "";
+                                input.data("ui-autocomplete").term = "";
                                 return false;
                             }
                         }
@@ -856,8 +863,8 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
                 })
                 .addClass( "ui-widget ui-widget-content ui-corner-left dolibarrcombobox" );
 
-            input.data( "autocomplete" )._renderItem = function( ul, item ) {
-                return $( "<li></li>" )
+            input.data("ui-autocomplete")._renderItem = function( ul, item ) {
+                return $("<li></li>")
                     .data( "item.autocomplete", item )
                     .append( "<a>" + item.label + "</a>" )
                     .appendTo( ul );
@@ -899,11 +906,30 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
     });
 })( jQuery );
 
+
+/*
+ * Function to output a dialog bog for copy/paste
+ * 
+ * @param	string	text	Text to put into copy/paste area
+ * @param	string	text2	Text to put under the copy/paste area
+ */
+function copyToClipboard(text,text2) 
+{
+	text = text.replace(/<br>/g,"\n");
+	var newElem = "<textarea id=\"coords\" style=\"border: none; width: 90%; height: 120px;\">"+text+"</textarea><br><br>"+text2;
+	$("#dialog").html(newElem);
+	$("#dialog").dialog();
+	$("#coords").select();
+	return false;
+}
+
+
 /* 
  * Timer for delayed keyup function
  * 
  * TODO Who use this ?
  */
+/*
 (function($){
 	$.widget("ui.onDelayedKeyup", {
 	    _init : function() {
@@ -922,4 +948,4 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
 	    }
 	});
 })(jQuery);
-
+*/

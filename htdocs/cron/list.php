@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2012      Nicolas Villa aka Boyquotes http://informetic.fr
  * Copyright (C) 2013      Florian Henry <florian.henry@open-concept.pro>
- * Copyright (C) 2013      Laurent Destailleur <eldy@users.srouceforge.net>
+ * Copyright (C) 2013-2015 Laurent Destailleur <eldy@users.srouceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,7 +64,7 @@ $pageprev = $page - 1;
 $pagenext = $page + 1;
 
 // Do we click on purge search criteria ?
-if (GETPOST("button_removefilter"))
+if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both test are required to be compatible with all browsers
 {
 	$search_label='';
 	$status=-1;
@@ -100,6 +100,21 @@ if ($action == 'confirm_execute' && $confirm == "yes" && $user->rights->cron->ex
 	if ($result < 0) {
 		setEventMessage($object->error,'errors');
 	}
+	else
+	{
+		$res = $object->reprogram_jobs($user->login);
+		if ($res > 0)
+		{
+			if ($object->lastresult > 0) setEventMessage($langs->trans("JobFinished"),'warnings');
+			else setEventMessage($langs->trans("JobFinished"),'mesgs');
+			$action='';
+		}
+		else
+		{
+			setEventMessage($object->error,'errors');
+			$action='';
+		}
+	}
 
 	header("Location: ".DOL_URL_ROOT.'/cron/list.php?status=-1');		// Make a call to avoid to run twice job when using back
 	exit;
@@ -116,20 +131,20 @@ $pagetitle=$langs->trans("CronList");
 
 llxHeader('',$pagetitle);
 
-print_fiche_titre($pagetitle,'','setup');
+print_fiche_titre($pagetitle,'','title_setup');
 
 print $langs->trans('CronInfo');
 
 if ($action == 'delete')
 {
 	print $form->formconfirm($_SERVER['PHP_SELF']."?id=".$id.'&status='.$status,$langs->trans("CronDelete"),$langs->trans("CronConfirmDelete"),"confirm_delete",'','',1);
-	
+
 }
 
 if ($action == 'execute')
 {
 	print $form->formconfirm($_SERVER['PHP_SELF']."?id=".$id.'&status='.$status,$langs->trans("CronExecute"),$langs->trans("CronConfirmExecute"),"confirm_execute",'','',1);
-	
+
 }
 
 // liste des jobs creer
@@ -150,22 +165,23 @@ print '<input type="hidden" name="status" value="'.$status.'" >';
 print '<table width="100%" class="noborder">';
 print '<tr class="liste_titre">';
 $arg_url='&page='.$page.'&status='.$status.'&search_label='.$search_label;
-print_liste_field_titre($langs->trans("CronLabel"),$_SERVEUR['PHP_SELF'],"t.label","",$arg_url,'',$sortfield,$sortorder);
+print_liste_field_titre($langs->trans("ID"),$_SERVER["PHP_SELF"],"t.rowid","",$arg_url,'',$sortfield,$sortorder);
+print_liste_field_titre($langs->trans("CronLabel"),$_SERVER["PHP_SELF"],"t.label","",$arg_url,'',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans("CronTask"),'','',"",$arg_url,'',$sortfield,$sortorder);
-print_liste_field_titre($langs->trans("CronDtStart"),$_SERVEUR['PHP_SELF'],"t.datestart","",$arg_url,'',$sortfield,$sortorder);
-print_liste_field_titre($langs->trans("CronDtEnd"),$_SERVEUR['PHP_SELF'],"t.dateend","",$arg_url,'',$sortfield,$sortorder);
-print_liste_field_titre($langs->trans("CronDtLastLaunch"),$_SERVEUR['PHP_SELF'],"t.datelastrun","",$arg_url,'',$sortfield,$sortorder);
-print_liste_field_titre($langs->trans("CronDtNextLaunch"),$_SERVEUR['PHP_SELF'],"t.datenextrun","",$arg_url,'',$sortfield,$sortorder);
+print_liste_field_titre($langs->trans("CronDtStart"),$_SERVER["PHP_SELF"],"t.datestart","",$arg_url,'',$sortfield,$sortorder);
+print_liste_field_titre($langs->trans("CronDtEnd"),$_SERVER["PHP_SELF"],"t.dateend","",$arg_url,'',$sortfield,$sortorder);
+print_liste_field_titre($langs->trans("CronDtLastLaunch"),$_SERVER["PHP_SELF"],"t.datelastrun","",$arg_url,'',$sortfield,$sortorder);
+print_liste_field_titre($langs->trans("CronDtNextLaunch"),$_SERVER["PHP_SELF"],"t.datenextrun","",$arg_url,'',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans("CronFrequency"),'',"","",$arg_url,'',$sortfield,$sortorder);
-print_liste_field_titre($langs->trans("CronNbRun"),$_SERVEUR['PHP_SELF'],"t.nbrun","",$arg_url,'',$sortfield,$sortorder);
-print_liste_field_titre($langs->trans("CronLastResult"),$_SERVEUR['PHP_SELF'],"t.lastresult","",$arg_url,'',$sortfield,$sortorder);
-print_liste_field_titre($langs->trans("CronLastOutput"),$_SERVEUR['PHP_SELF'],"t.lastoutput","",$arg_url,'',$sortfield,$sortorder);
-print_liste_field_titre($langs->trans("Enabled"),$_SERVEUR['PHP_SELF'],"t.status","",$arg_url,'align="center"',$sortfield,$sortorder);
-print '<td></td>';
-print '</tr>';
+print_liste_field_titre($langs->trans("CronNbRun"),$_SERVER["PHP_SELF"],"t.nbrun","",$arg_url,'',$sortfield,$sortorder);
+print_liste_field_titre($langs->trans("CronLastResult"),$_SERVER["PHP_SELF"],"t.lastresult","",$arg_url,'',$sortfield,$sortorder);
+print_liste_field_titre($langs->trans("CronLastOutput"),$_SERVER["PHP_SELF"],"t.lastoutput","",$arg_url,'',$sortfield,$sortorder);
+print_liste_field_titre($langs->trans("Enabled"),$_SERVER["PHP_SELF"],"t.status","",$arg_url,'align="center"',$sortfield,$sortorder);
+print_liste_field_titre('');
+print "</tr>\n";
 
 print '<tr class="liste_titre">';
-
+print '<td>&nbsp;</td>';
 print '<td class="liste_titre">';
 print '<input type="text" class="flat" name="search_label" value="'.$search_label.'" size="10">';
 print '</td>';
@@ -186,14 +202,13 @@ print '<input class="liste_titre" type="image" src="'.img_picto($langs->trans("S
 print '&nbsp; ';
 print '<input type="image" class="liste_titre" name="button_removefilter" src="'.img_picto($langs->trans("Search"),'searchclear.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'" title="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">';
 print '</td>';
-
 print '</tr>';
 
 
 if (count($object->lines) > 0)
 {
 	// Loop on each active job
-	$style='impair';
+	$style='pair';
 	foreach($object->lines as $line)
 	{
 		// title profil
@@ -203,28 +218,38 @@ if (count($object->lines) > 0)
 		print '<tr class="'.$style.'">';
 
 		print '<td>';
-		if(!empty($line->label)) {
+		print '<a href="'.DOL_URL_ROOT.'/cron/card.php?id='.$line->id.'">';
+		print img_picto('', 'object_cron').' ';
+		print $line->id;
+		print '</a>';
+		print '</td>';
+
+		print '<td>';
+		if (! empty($line->label))
+		{
 			print '<a href="'.DOL_URL_ROOT.'/cron/card.php?id='.$line->id.'">'.$line->label.'</a>';
 		}
-		else {
+		else
+		{
 			print $langs->trans('CronNone');
 		}
 		print '</td>';
 
 		print '<td>';
-		if ($line->jobtype=='method') {
+		if ($line->jobtype=='method')
+		{
 			print $langs->trans('CronModule').':'.$line->module_name.'<BR>';
 			print $langs->trans('CronClass').':'. $line->classesname.'<BR>';
 			print $langs->trans('CronObject').':'. $line->objectname.'<BR>';
 			print $langs->trans('CronMethod').':'. $line->methodename;
 			if(!empty($line->params)) {
-				print '<BR/>'.$langs->trans('CronArgs').':'. $line->params;
+				print '<br>'.$langs->trans('CronArgs').':'. $line->params;
 			}
 
 		}elseif ($line->jobtype=='command') {
 			print $langs->trans('CronCommand').':'. dol_trunc($line->command);
 			if(!empty($line->params)) {
-				print '<BR/>'.$langs->trans('CronArgs').':'. $line->params;
+				print '<br>'.$langs->trans('CronArgs').':'. $line->params;
 			}
 		}
 		print '</td>';
@@ -264,20 +289,23 @@ if (count($object->lines) > 0)
 		if(!empty($line->lastoutput)) {print dol_trunc(nl2br($line->lastoutput),100);} else {print $langs->trans('CronNone');}
 		print '</td>';
 
+		// Status
 		print '<td align="center">';
 		print yn($line->status);
 		print '</td>';
 
 		print '<td align="right">';
-		if ($user->rights->cron->delete) {
-			print "<a href=\"".$_SERVER["PHP_SELF"]."?id=".$line->id."&status=".$status."&action=delete\" title=\"".$langs->trans('CronDelete')."\">".img_delete()."</a> &nbsp;";
+		if ($user->rights->cron->delete)
+		{
+			print "<a href=\"".$_SERVER["PHP_SELF"]."?id=".$line->id."&status=".$status."&action=delete\" title=\"".dol_escape_htmltag($langs->trans('CronDelete'))."\">".img_picto($langs->trans('CronDelete'),'delete')."</a> &nbsp;";
 		} else {
-			print "<a href=\"#\" title=\"".$langs->trans('NotEnoughPermissions')."\">".img_delete()."</a> &nbsp; ";
+			print "<a href=\"#\" title=\"".dol_escape_htmltag($langs->trans('NotEnoughPermissions'))."\">".img_picto($langs->trans('NotEnoughPermissions'), 'delete')."</a> &nbsp; ";
 		}
-		if ($user->rights->cron->execute) {
-			print "<a href=\"".$_SERVER["PHP_SELF"]."?id=".$line->id."&status=".$status."&action=execute\" title=\"".$langs->trans('CronExecute')."\">".img_picto('',"play")."</a>";
+		if ($user->rights->cron->execute)
+		{
+			print "<a href=\"".$_SERVER["PHP_SELF"]."?id=".$line->id."&status=".$status."&action=execute\" title=\"".dol_escape_htmltag($langs->trans('CronExecute'))."\">".img_picto($langs->trans('CronExecute'),"play")."</a>";
 		} else {
-			print "<a href=\"#\" title=\"".$langs->trans('NotEnoughPermissions')."\">".img_picto('',"execute")."</a>";
+			print "<a href=\"#\" title=\"".dol_escape_htmltag($langs->trans('NotEnoughPermissions'))."\">".img_picto($langs->trans('NotEnoughPermissions'),"execute")."</a>";
 		}
 		print '</td>';
 
@@ -286,7 +314,7 @@ if (count($object->lines) > 0)
 }
 else
 {
-	print '<tr><td colspan="8">'.$langs->trans('CronNoJobs').'</td></tr>';
+	print '<tr><td colspan="9">'.$langs->trans('CronNoJobs').'</td></tr>';
 }
 
 print '</table>';
@@ -299,11 +327,11 @@ print "\n<div class=\"tabsAction\">\n";
 
 if (! $user->rights->cron->create)
 {
-	print '<a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->transnoentitiesnoconv("NotEnoughPermissions")).'">'.$langs->trans("New").'</a>';
+	print '<a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->transnoentitiesnoconv("NotEnoughPermissions")).'">'.$langs->trans("CronCreateJob").'</a>';
 }
 else
 {
-	print '<a class="butAction" href="'.DOL_URL_ROOT.'/cron/card.php?action=create">'.$langs->trans("New").'</a>';
+	print '<a class="butAction" href="'.DOL_URL_ROOT.'/cron/card.php?action=create">'.$langs->trans("CronCreateJob").'</a>';
 }
 
 print '</div>';
@@ -317,4 +345,3 @@ dol_print_cron_urls();
 llxFooter();
 
 $db->close();
-?>

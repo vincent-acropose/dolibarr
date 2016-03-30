@@ -73,7 +73,7 @@ $obj->socid=$argv[1];
 
 $listofcontractsforcompany=$obj->getListOfContracts('all');
 
-print_r($listofcontractsforcompany);
+print $listofcontractsforcompany;
 
 
 // -------------------- END OF YOUR CODE --------------------
@@ -81,4 +81,3 @@ print_r($listofcontractsforcompany);
 $db->close();
 
 return $error;
-?>

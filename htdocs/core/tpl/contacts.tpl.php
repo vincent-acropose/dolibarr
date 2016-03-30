@@ -1,6 +1,6 @@
 <?php
-/* Copyright (C) 2012 Regis Houssin       <regis.houssin@capnetworks.com>
- * Copyright (C) 2013 Laurent Destailleur <eldy@users.sourceforge.net>
+/* Copyright (C) 2012      Regis Houssin       <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013-2015 Laurent Destailleur <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,14 +17,11 @@
  *
  * This template needs:
  * $object
+ * $withproject (if we are on task contact)
  */
 
-if (! class_exists('Contact')) {
-	require DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
-}
-if (! class_exists('FormCompany')) {
-	require DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
-}
+require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
 
 $module = $object->element;
 
@@ -59,60 +56,68 @@ $userstatic=new User($db);
 		<div class="tagtd">&nbsp;</div>
 	</form>
 
-	<?php $var=false; ?>
+	<?php
 
-
+	$var=true;
+	if (empty($hideaddcontactforuser))
+	{
+		$var=!$var;
+	?>
 	<form class="tagtr impair" action="<?php echo $_SERVER["PHP_SELF"].'?id='.$object->id; ?>" method="POST">
 	<input type="hidden" name="token" value="<?php echo $_SESSION['newtoken']; ?>" />
 	<input type="hidden" name="id" value="<?php echo $object->id; ?>" />
 	<input type="hidden" name="action" value="addcontact" />
 	<input type="hidden" name="source" value="internal" />
+	<?php if ($withproject) print '<input type="hidden" name="withproject" value="'.$withproject.'">'; ?>
 		<div class="nowrap tagtd"><?php echo img_object('','user').' '.$langs->trans("Users"); ?></div>
 		<div class="tagtd"><?php echo $conf->global->MAIN_INFO_SOCIETE_NOM; ?></div>
 		<div class="tagtd maxwidthonsmartphone"><?php echo $form->select_dolusers($user->id, 'userid', 0, (! empty($userAlreadySelected)?$userAlreadySelected:null), 0, null, null, 0, 56); ?></div>
-		<div class="tagtd maxwidthonsmartphone"><?php echo $formcompany->selectTypeContact($object, '', 'type','internal'); ?></div>
+		<div class="tagtd maxwidthonsmartphone">
+		<?php
+		$tmpobject=$object;
+		if ($object->element == 'shipping' && is_object($objectsrc)) $tmpobject=$objectsrc;
+		echo $formcompany->selectTypeContact($tmpobject, '', 'type','internal'); 
+		?></div>
 		<div class="tagtd">&nbsp;</div>
 		<div class="tagtd" align="right"><input type="submit" class="button" value="<?php echo $langs->trans("Add"); ?>"></div>
 	</form>
 
-	<?php $var=!$var; ?>
+	<?php
+	}
+
+	if (empty($hideaddcontactforthirdparty))
+	{
+		$var=!$var;
+	?>
 
 	<form class="tagtr pair" action="<?php echo $_SERVER["PHP_SELF"].'?id='.$object->id; ?>" method="POST">
 	<input type="hidden" name="token" value="<?php echo $_SESSION['newtoken']; ?>" />
 	<input type="hidden" name="id" value="<?php echo $object->id; ?>" />
 	<input type="hidden" name="action" value="addcontact" />
 	<input type="hidden" name="source" value="external" />
+	<?php if ($withproject) print '<input type="hidden" name="withproject" value="'.$withproject.'">'; ?>
 		<div class="tagtd nowrap"><?php echo img_object('','contact').' '.$langs->trans("ThirdPartyContacts"); ?></div>
-		<?php if ($conf->use_javascript_ajax && ! empty($conf->global->COMPANY_USE_SEARCH_TO_SELECT)) { ?>
 		<div class="tagtd nowrap maxwidthonsmartphone">
-			<?php
-			$events=array();
-			$events[]=array('method' => 'getContacts', 'url' => dol_buildpath('/core/ajax/contacts.php',1), 'htmlname' => 'contactid', 'params' => array('add-customer-contact' => 'disabled'));
-			print $form->select_company($object->socid,'socid','',1,0,0,$events);
-			?>
-		</div>
-		<div class="tagtd maxwidthonsmartphone">
-			<?php $nbofcontacts=$form->select_contacts($object->socid, '', 'contactid'); ?>
-		</div>
-		<?php } else { ?>
-		<div class="tagtd maxwidthonsmartphone">
 			<?php $selectedCompany = isset($_GET["newcompany"])?$_GET["newcompany"]:$object->socid; ?>
-			<?php $selectedCompany = $formcompany->selectCompaniesForNewContact($object, 'id', $selectedCompany, 'newcompany'); ?>
+			<?php $selectedCompany = $formcompany->selectCompaniesForNewContact($object, 'id', $selectedCompany, 'newcompany', '', 0); ?>
 		</div>
 		<div class="tagtd maxwidthonsmartphone">
 			<?php $nbofcontacts=$form->select_contacts($selectedCompany, '', 'contactid',0,'','',1); ?>
 		</div>
-		<?php } ?>
 		<div class="tagtd maxwidthonsmartphone">
-			<?php $formcompany->selectTypeContact($object, '', 'type','external'); ?>
+			<?php
+			$tmpobject=$object;
+			if ($object->element == 'shipping' && is_object($objectsrc)) $tmpobject=$objectsrc;
+			$formcompany->selectTypeContact($tmpobject, '', 'type','external'); ?>
 		</div>
 		<div class="tagtd">&nbsp;</div>
 		<div  class="tagtd" align="right">
-			<input type="submit" id="add-customer-contact" class="button" value="<?php echo $langs->trans("Add"); ?>"<?php if (! $nbofcontacts) echo ' disabled="disabled"'; ?>>
+			<input type="submit" id="add-customer-contact" class="button" value="<?php echo $langs->trans("Add"); ?>"<?php if (! $nbofcontacts) echo ' disabled'; ?>>
 		</div>
 	</form>
 
-<?php } ?>
+<?php }
+	} ?>
 
 	<form class="tagtr liste_titre">
 		<div class="tagtd"><?php echo $langs->trans("Source"); ?></div>
@@ -126,8 +131,13 @@ $userstatic=new User($db);
 	<?php $var=true; ?>
 
 	<?php
-	foreach(array('internal','external') as $source) {
-		$tab = $object->liste_contact(-1,$source);
+	$arrayofsource=array('internal','external');	// Show both link to user and thirdparties contacts
+	foreach($arrayofsource as $source) {
+
+		$tmpobject=$object;
+		if ($object->element == 'shipping' && is_object($objectsrc)) $tmpobject=$objectsrc;
+
+		$tab = $tmpobject->liste_contact(-1,$source);
 		$num=count($tab);
 
 		$i = 0;
@@ -159,6 +169,8 @@ $userstatic=new User($db);
 		</div>
 		<div class="tagtd">
 			<?php
+			$statusofcontact = $tab[$i]['status'];
+
 			if ($tab[$i]['source']=='internal')
 			{
 				$userstatic->id=$tab[$i]['id'];
@@ -177,26 +189,26 @@ $userstatic=new User($db);
 		</div>
 		<div class="tagtd"><?php echo $tab[$i]['libelle']; ?></div>
 		<div class="tagtd" align="center">
-			<?php if ($object->statut >= 0) echo '<a href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;action=swapstatut&amp;ligne='.$tab[$i]['rowid'].'">'; ?>
+			<?php //if ($object->statut >= 0) echo '<a href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;action=swapstatut&amp;ligne='.$tab[$i]['rowid'].'">'; ?>
 			<?php
 			if ($tab[$i]['source']=='internal')
 			{
 				$userstatic->id=$tab[$i]['id'];
 				$userstatic->lastname=$tab[$i]['lastname'];
 				$userstatic->firstname=$tab[$i]['firstname'];
-				//echo $userstatic->LibStatut($tab[$i]['status'],3);
+				echo $userstatic->LibStatut($tab[$i]['statuscontact'],3);
 			}
 			if ($tab[$i]['source']=='external')
 			{
 				$contactstatic->id=$tab[$i]['id'];
 				$contactstatic->lastname=$tab[$i]['lastname'];
 				$contactstatic->firstname=$tab[$i]['firstname'];
-				echo $contactstatic->LibStatut($tab[$i]['status'],3);
+				echo $contactstatic->LibStatut($tab[$i]['statuscontact'],3);
 			}
 			?>
-			<?php if ($object->statut >= 0) echo '</a>'; ?>
+			<?php //if ($object->statut >= 0) echo '</a>'; ?>
 		</div>
-		<div class="tagtd nowrap" align="center">
+		<div class="tagtd nowrap" align="right">
 			<?php if ($permission) { ?>
 				&nbsp;<a href="<?php echo $_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=deletecontact&amp;lineid='.$tab[$i]['rowid']; ?>"><?php echo img_delete(); ?></a>
 			<?php } ?>

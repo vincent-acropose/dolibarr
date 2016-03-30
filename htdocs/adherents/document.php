@@ -60,7 +60,6 @@ if (! $sortorder) $sortorder="ASC";
 if (! $sortfield) $sortfield="name";
 
 
-$upload_dir = $conf->adherent->dir_output . "/" . get_exdir($id,2,0,1) . '/' . $id;
 $form = new Form($db);
 $object=new Adherent($db);
 $membert=new AdherentType($db);
@@ -70,6 +69,9 @@ if ($result < 0)
 	dol_print_error($db);
 	exit;
 }
+$upload_dir = $conf->adherent->dir_output . "/" . get_exdir($object->id,2,0,1,$object,'member') . '/' . dol_sanitizeFileName($object->ref);
+
+
 /*
  * Actions
  */
@@ -103,7 +105,7 @@ if ($id > 0)
 
 
 		// Construit liste des fichiers
-		$filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+		$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
 		$totalsize=0;
 		foreach($filearray as $key => $file)
 		{
@@ -113,7 +115,7 @@ if ($id > 0)
 
 		print '<table class="border" width="100%">';
 
-		$linkback = '<a href="'.DOL_URL_ROOT.'/adherents/liste.php">'.$langs->trans("BackToList").'</a>';
+		$linkback = '<a href="'.DOL_URL_ROOT.'/adherents/list.php">'.$langs->trans("BackToList").'</a>';
 
         // Ref
         print '<tr><td width="20%">'.$langs->trans("Ref").'</td>';
@@ -185,4 +187,3 @@ else
 
 llxFooter();
 $db->close();
-?>

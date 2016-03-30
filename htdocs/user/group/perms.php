@@ -199,7 +199,7 @@ if ($id)
 
     // Nom
     print '<tr><td width="25%" valign="top">'.$langs->trans("Name").'</td>';
-    print '<td colspan="2">'.$fgroup->nom.'';
+    print '<td colspan="2">'.$fgroup->name.'';
     if (! $fgroup->entity)
     {
         print img_picto($langs->trans("GlobalGroup"),'redstar');
@@ -329,4 +329,3 @@ if ($id)
 $db->close();
 
 llxFooter();
-?>
