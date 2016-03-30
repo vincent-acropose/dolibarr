@@ -755,10 +755,17 @@ if (empty($reshook))
 	                $facture_source = new Facture($db); // fetch origin object
 	                if ($facture_source->fetch($object->fk_facture_source)>0)
 	                {
+	                	$fk_parent_line = 0;
 
 	                    foreach($facture_source->lines as $line)
 	                    {
+	                    	// Reset fk_parent_line for no child products and special product
+	                    	if (($line->product_type != 9 && empty($line->fk_parent_line)) || $line->product_type == 9) {
+	                    		$fk_parent_line = 0;
+	                    	}
+
 	                        $line->fk_facture = $object->id;
+	                        $line->fk_parent_line = $fk_parent_line;
 
 	                        $line->subprice =-$line->subprice; // invert price for object
 	                        $line->pa_ht = -$line->pa_ht;
@@ -768,9 +775,14 @@ if (empty($reshook))
 	                        $line->total_localtax1=-$line->total_localtax1;
 	                        $line->total_localtax2=-$line->total_localtax2;
 
-	                        $line->insert();
+	                        $result = $line->insert();
 
 	                        $object->lines[] = $line; // insert new line in current object
+
+	                        // Defined the new fk_parent_line
+	                        if ($result > 0 && $line->product_type == 9) {
+	                        	$fk_parent_line = $result;
+	                        }
 	                    }
 
 	                    $object->update_price(1);
@@ -3657,7 +3669,7 @@ else if ($id > 0 || ! empty($ref))
 
 				if ($resteapayer == $object->total_ttc && empty($object->paye) && $ventilExportCompta == 0) 
 				{
-					if (! $objectidnext) 
+					if (! $objectidnext && $object->is_last_in_cycle())
 					{
 					    if ((empty($conf->global->MAIN_USE_ADVANCED_PERMS) && ! empty($user->rights->facture->creer))
        						|| (! empty($conf->global->MAIN_USE_ADVANCED_PERMS) && ! empty($user->rights->facture->invoice_advance->unvalidate)))
