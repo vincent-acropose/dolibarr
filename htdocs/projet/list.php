@@ -72,6 +72,8 @@ $search_status=GETPOST("search_status",'int');
 $search_opp_status=GETPOST("search_opp_status",'alpha');
 $search_public=GETPOST("search_public",'int');
 $search_user=GETPOST('search_user','int');
+$search_entity=GETPOST('search_entity','int');
+$search_avancee=GETPOST('search_avancee','int');
 $search_sale=GETPOST('search_sale','int');
 
 $day	= GETPOST('day','int');
@@ -126,7 +128,7 @@ llxHeader("",$langs->trans("Projects"),"EN:Module_Projects|FR:Module_Projets|ES:
 $projectsListId = $projectstatic->getProjectsAuthorizedForUser($user,($mine?$mine:($user->rights->projet->all->lire?2:0)),1,$socid);
 
 $sql = "SELECT p.rowid as projectid, p.ref, p.title, p.fk_statut, p.fk_opp_status, p.public, p.fk_user_creat";
-$sql.= ", p.datec as date_create, p.dateo as date_start, p.datee as date_end, p.opp_amount";
+$sql.= ", p.datec as date_create, p.dateo as date_start, p.datee as date_end, p.opp_amount,p.entity,pex.avancee";
 $sql.= ", s.nom as name, s.rowid as socid";
 $sql.= ", cls.code as opp_status_code";
 // Add fields for extrafields
@@ -136,6 +138,7 @@ $parameters=array();
 $reshook=$hookmanager->executeHooks('printFieldListSelect',$parameters);    // Note that $action and $object may have been modified by hook
 $sql.=$hookmanager->resPrint;
 $sql.= " FROM ".MAIN_DB_PREFIX."projet as p";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pex ON p.rowid = pex.fk_object";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s on p.fk_soc = s.rowid";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_lead_status as cls on p.fk_opp_status = cls.rowid";
 
@@ -154,6 +157,8 @@ if ($mine || ! $user->rights->projet->all->lire) $sql.= " AND p.rowid IN (".$pro
 if ($socid) $sql.= "  AND (p.fk_soc IS NULL OR p.fk_soc = 0 OR p.fk_soc = ".$socid.")";
 if ($search_ref) $sql .= natural_search('p.ref', $search_ref);
 if ($search_label) $sql .= natural_search('p.title', $search_label);
+if ($search_avancee) $sql .= natural_search('pex.avancee', $search_avancee);
+if ($search_entity) $sql .= natural_search('p.entity', $search_entity);
 if ($search_societe) $sql .= natural_search('s.nom', $search_societe);
 if ($smonth > 0)
 {
@@ -288,7 +293,9 @@ if ($resql)
 	print_liste_field_titre($langs->trans("SalesRepresentative"),$_SERVER["PHP_SELF"],"","",$param,"",$sortfield,$sortorder);
 	if (empty($conf->global->PROJECT_LIST_HIDE_STARTDATE)) print_liste_field_titre($langs->trans("DateStart"),$_SERVER["PHP_SELF"],"p.dateo","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateEnd"),$_SERVER["PHP_SELF"],"p.datee","",$param,'align="center"',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Visibility"),$_SERVER["PHP_SELF"],"p.public","",$param,"",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Entity"),$_SERVER["PHP_SELF"],"p.entity","",$param,'align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Avancée"),$_SERVER["PHP_SELF"],"pex.avancee","",$param,'align="center"',$sortfield,$sortorder);
+	//print_liste_field_titre($langs->trans("Visibility"),$_SERVER["PHP_SELF"],"p.public","",$param,"",$sortfield,$sortorder);
     if (! empty($conf->global->PROJECT_USE_OPPORTUNITIES))
     {
     	print_liste_field_titre($langs->trans("OpportunityAmountShort"),$_SERVER["PHP_SELF"],'p.opp_amount',"",$param,'align="right"',$sortfield,$sortorder);
@@ -330,10 +337,26 @@ if ($resql)
 	print '</td>';
 
 	print '<td class="liste_titre">';
-	$array=array(''=>'',0 => $langs->trans("PrivateProject"),1 => $langs->trans("SharedProject"));
-    print $form->selectarray('search_public',$array,$search_public);
+	//$mc->getInstanceDao();
+	$mc->dao->getEntities();
+	$TEntity=array(''=>'');
+	foreach ($mc->dao->entities as $entity)
+	{
+		if ($entity->active == 1)
+		{
+			$TEntity[$entity->id] = $entity->label; 
+		}
+	}
+	
+    print $form->selectarray('search_entity',$TEntity,$search_entity);
     print '</td>';
-
+	print '<td class="liste_titre">';
+	$extrafields=new ExtraFields($db);
+	$extrafields->fetch_name_optionals_label('projet');
+	$TAvancee=array_merge(array(0=>''),$extrafields->attribute_param['avancee']['options']);
+    print $form->selectarray('search_avancee',$TAvancee,$search_avancee);
+    print '</td>';
+    
     $parameters=array();
     $reshook=$hookmanager->executeHooks('printFieldListOption',$parameters);    // Note that $action and $object may have been modified by hook
     print $hookmanager->resPrint;
@@ -448,11 +471,19 @@ if ($resql)
     		print '</td>';
 
     		// Visibility
-    		print '<td align="left">';
+    		/*print '<td align="left">';
     		if ($objp->public) print $langs->trans('SharedProject');
     		else print $langs->trans('PrivateProject');
     		print '</td>';
+			*/
 
+			print '<td align="left">';
+    		echo empty($TEntity[$objp->entity])? '' : $TEntity[$objp->entity];
+    		print '</td>';
+			print '<td align="left">';
+			echo empty($TAvancee[$objp->avancee])? '' : $TAvancee[$objp->avancee];
+    		print '</td>';
+			
         	$parameters=array('obj' => $objp);
         	$reshook=$hookmanager->executeHooks('printFieldListValue',$parameters);    // Note that $action and $object may have been modified by hook
 		    print $hookmanager->resPrint;
