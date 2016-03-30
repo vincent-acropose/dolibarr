@@ -466,24 +466,34 @@ if ($result)
 
 		$i++;
 	}
-
+	
+	 /*
+ 	 * ATM AA 08/02/12
+ 	 * Ajout de la recherche dans les autres bases 
+ 	 */	
+ 	
+ 	if($search_sale!='' || $search_nom!='' || $search_town!='' || $search_code!='' || $search_compta!='') {
+ 		dol_include_once('/clientshare/lib/fonction.php');
+ 		_recherche_autre_client($db,$user,$conf,$search_sale, $search_nom, $search_ville, $search_code, $search_compta);		
+ 	}
+	
 	if ($total>0)
-			{
-				if($num<$limit){
-					$var=!$var;
-					print '<tr class="liste_total"><td align="left">'.$langs->trans("TotalHT").'</td>';
-					print '<td colspan="6" align="right">'.price($total).'</td><td colspan="3"></td>';
-					print '</tr>';
-				}
-				else
-				{
-					$var=!$var;
-					print '<tr class="liste_total"><td align="left">'.$langs->trans("TotalHTforthispage").'</td>';
-					print '<td colspan="6" align="right">'.price($total).'</td><td colspan="3"></td>';
-					print '</tr>';
-				}
+	{
+		if($num<$limit){
+			$var=!$var;
+			print '<tr class="liste_total"><td align="left">'.$langs->trans("TotalHT").'</td>';
+			print '<td colspan="6" align="right">'.price($total).'</td><td colspan="3"></td>';
+			print '</tr>';
+		}
+		else
+		{
+			$var=!$var;
+			print '<tr class="liste_total"><td align="left">'.$langs->trans("TotalHTforthispage").'</td>';
+			print '<td colspan="6" align="right">'.price($total).'</td><td colspan="3"></td>';
+			print '</tr>';
+		}
 
-			}
+	}
 
 	print '</table>';
 

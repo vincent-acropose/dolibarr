@@ -272,6 +272,18 @@ if ($resql)
 		print "</tr>\n";
 		$i++;
 	}
+
+	/*
+ 	 * ATM AA 30/04/12
+ 	 * Ajout de la recherche dans les autres bases 
+ 	 */	
+ 		
+ 	
+ 	if($search_sale!='' || $search_name!='' || $search_town!='' || $search_code!='' || $search_compta!='') {
+ 		 dol_include_once('/clientshare/lib/fonction.php');
+ 		_recherche_autre_client($db,$user,$conf,$search_sale, $search_nom, $search_town, $search_code, $search_compta, true);		
+ 	}
+
 	print "</table>\n";
 	print "</form>\n";
 	$db->free($resql);
