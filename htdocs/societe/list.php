@@ -476,7 +476,17 @@ if ($resql)
 	$parameters=array('sql' => $sql);
 	$reshook=$hookmanager->executeHooks('printFieldListFooter',$parameters);    // Note that $action and $object may have been modified by hook
 	print $hookmanager->resPrint;
+	
+	/*
+ 	 * ATM AA 30/04/12
+ 	 * Ajout de la recherche dans les autres bases 
+	 */	
 
+	if($search_sale!='' || $search_nom!='' || $search_town!='' || $search_code!='' || $search_compta!='') {
+		dol_include_once('/clientshare/lib/fonction.php');
+		_recherche_autre_client($db,$user,$conf,$search_sale, $search_nom, $search_town, $search_code, $search_compta, true);		
+	}
+	
 	print "</table>";
 
 	print '</form>';
