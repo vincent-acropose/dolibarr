@@ -146,8 +146,8 @@ if ($search_user > 0)
 	$sql.=", ".MAIN_DB_PREFIX."element_contact as c";
 	$sql.=", ".MAIN_DB_PREFIX."c_type_contact as tc";
 }
+$sql.= " WHERE p.entity IN (".getEntity('project',1).')';
 
-$sql.= " WHERE p.entity = ".$conf->entity;
 if ($mine || ! $user->rights->projet->all->lire) $sql.= " AND p.rowid IN (".$projectsListId.")";
 // No need to check company, as filtering of projects must be done by getProjectsAuthorizedForUser
 //if ($socid || ! $user->rights->societe->client->voir)	$sql.= "  AND (p.fk_soc IS NULL OR p.fk_soc = 0 OR p.fk_soc = ".$socid.")";
