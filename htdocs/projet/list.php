@@ -128,7 +128,7 @@ llxHeader("",$langs->trans("Projects"),"EN:Module_Projects|FR:Module_Projets|ES:
 $projectsListId = $projectstatic->getProjectsAuthorizedForUser($user,($mine?$mine:($user->rights->projet->all->lire?2:0)),1,$socid);
 
 $sql = "SELECT p.rowid as projectid, p.ref, p.title, p.fk_statut, p.fk_opp_status, p.public, p.fk_user_creat";
-$sql.= ", p.datec as date_create, p.dateo as date_start, p.datee as date_end, p.opp_amount,p.entity,pex.avancee";
+$sql.= ", p.datec as date_create, p.dateo as date_start, p.datee as date_end, p.opp_amount,p.entity,pex.avance as avancee";
 $sql.= ", s.nom as name, s.rowid as socid";
 $sql.= ", cls.code as opp_status_code";
 // Add fields for extrafields
@@ -157,7 +157,7 @@ if ($mine || ! $user->rights->projet->all->lire) $sql.= " AND p.rowid IN (".$pro
 if ($socid) $sql.= "  AND (p.fk_soc IS NULL OR p.fk_soc = 0 OR p.fk_soc = ".$socid.")";
 if ($search_ref) $sql .= natural_search('p.ref', $search_ref);
 if ($search_label) $sql .= natural_search('p.title', $search_label);
-if ($search_avancee) $sql .= natural_search('pex.avancee', $search_avancee);
+if ($search_avancee) $sql .= natural_search('pex.avance', $search_avancee);
 if ($search_entity) $sql .= natural_search('p.entity', $search_entity);
 if ($search_societe) $sql .= natural_search('s.nom', $search_societe);
 if ($smonth > 0)
@@ -353,7 +353,7 @@ if ($resql)
 	print '<td class="liste_titre">';
 	$extrafields=new ExtraFields($db);
 	$extrafields->fetch_name_optionals_label('projet');
-	$TAvancee=array_merge(array(0=>''),$extrafields->attribute_param['avancee']['options']);
+	$TAvancee=array_merge(array(0=>''),$extrafields->attribute_param['avance']['options']);
     print $form->selectarray('search_avancee',$TAvancee,$search_avancee);
     print '</td>';
     
