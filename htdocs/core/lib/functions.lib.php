@@ -4845,7 +4845,7 @@ function complete_head_from_modules($conf,$langs,$object,&$head,&$h,$type,$mode=
 						$head[$h][1] = $label;
 						$head[$h][2] = str_replace('+','',$values[1]);
 
-var_dump($head[$h]);
+//var_dump($head[$h]);
 						$h++;
 					}
 				}
