@@ -71,6 +71,8 @@ $product->fetch($id,$ref);
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
 
+$reputations=array(''=>$langs->trans('Standard'),'FAVORITE'=>$langs->trans('Favorite'),'NOTTHGOOD'=>$langs->trans('NotTheGoodQualitySupplier'), 'DONOTORDER'=>$langs->trans('DoNotOrderThisProductToThisSupplier'));
+
 if (! $sortfield) $sortfield="s.nom";
 if (! $sortorder) $sortorder="ASC";
 
@@ -114,6 +116,7 @@ if (empty($reshook))
 		$tva_tx = price2num($tva_tx);
 		$price_expression = GETPOST('eid', 'int') ? GETPOST('eid', 'int') : ''; // Discard expression if not in expression mode
 		$delivery_time_days = GETPOST('delivery_time_days', 'int') ? GETPOST('delivery_time_days', 'int') : '';
+		$supplier_reputation = GETPOST('supplier_reputation');
 
 		if ($tva_tx == '')
 		{
@@ -197,7 +200,7 @@ if (empty($reshook))
 				if (isset($_POST['ref_fourn_price_id']))
 					$product->fetch_product_fournisseur_price($_POST['ref_fourn_price_id']);
 
-				$ret=$product->update_buyprice($quantity, $_POST["price"], $user, $_POST["price_base_type"], $supplier, $_POST["oselDispo"], $ref_fourn, $tva_tx, $_POST["charges"], $remise_percent, 0, $npr, $delivery_time_days);
+				$ret=$product->update_buyprice($quantity, $_POST["price"], $user, $_POST["price_base_type"], $supplier, $_POST["oselDispo"], $ref_fourn, $tva_tx, $_POST["charges"], $remise_percent, 0, $npr, $delivery_time_days,$supplier_reputation);
 				if ($ret < 0)
 				{
 
@@ -369,6 +372,10 @@ if ($id || $ref)
 					}
 				}
 				print '</td></tr>';
+
+				//reputation
+				print '<tr><td class="fieldrequired">'.$langs->trans("SupplierReputation").'</td><td>';
+				echo $form->selectarray('supplier_reputation', $reputations,$product->supplier_reputation);				print '</td></tr>';
 
 				// Ref supplier
 				print '<tr><td class="fieldrequired">'.$langs->trans("SupplierRef").'</td><td>';
@@ -568,6 +575,7 @@ if ($id || $ref)
 				$param="&id=".$product->id;
 				print '<tr class="liste_titre">';
 				print_liste_field_titre($langs->trans("Suppliers"),$_SERVER["PHP_SELF"],"s.nom","",$param,"",$sortfield,$sortorder);
+				print_liste_field_titre($langs->trans("ReputationForThisProduct"));
 				print_liste_field_titre($langs->trans("SupplierRef"));
 				if (!empty($conf->global->FOURN_PRODUCT_AVAILABILITY)) print_liste_field_titre($langs->trans("Availability"),$_SERVER["PHP_SELF"],"pfp.fk_availability","",$param,"",$sortfield,$sortorder);
 				print_liste_field_titre($langs->trans("QtyMin"),$_SERVER["PHP_SELF"],"pfp.quantity","",$param,'align="right"',$sortfield,$sortorder);
@@ -604,6 +612,11 @@ if ($id || $ref)
 						print "<tr ".$bc[$var].">";
 
 						print '<td>'.$productfourn->getSocNomUrl(1,'supplier').'</td>';
+						print '<td>';
+						if(!empty($productfourn->supplier_reputation) && !empty($reputations[$productfourn->supplier_reputation])) {
+							print $reputations[$productfourn->supplier_reputation];	
+						}  
+						print'</td>';
 
 						// Supplier
 						print '<td align="left">'.$productfourn->fourn_ref.'</td>';
