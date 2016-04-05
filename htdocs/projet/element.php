@@ -592,7 +592,11 @@ foreach ($listofreferent as $key => $value)
 				$idofelement=$tmp[0];
 				$idofelementuser=$tmp[1];
 
-				$element->fetch($idofelement);
+				if($element->fetch($idofelement)<=0) {
+					_getElementFromOtherEntity($idofelement, $element);
+				}
+				
+				
 				if ($idofelementuser) $elementuser->fetch($idofelementuser);
 
 				if ($tablename != 'expensereport_det')
@@ -904,3 +908,28 @@ function sortElementsByClientName($elementarray)
 
 	return $elementarray;
 }
+function _getElementFromOtherEntity($id, &$element) {
+	
+	global $db, $conf,$user,$langs;
+	
+	$sql = "SELECT entity FROM ".MAIN_DB_PREFIX.$element->table_element." WHERE rowid = ".$id;
+	//var_dump($sql);exit;
+	$res = $db->query($sql);
+	if($obj = $db->fetch_object($res)) {
+		
+		$conf_backup = clone $conf;
+		
+		$conf->entity = $obj->entity;
+		
+		$element->fetch($id);
+		
+		$conf = clone $conf_backup;
+		
+	}
+	else{
+		$element->ref = 'ImpossibleToLoadEntity';
+	}
+	
+	
+}
+
