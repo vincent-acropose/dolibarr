@@ -383,7 +383,9 @@ foreach ($listofreferent as $key => $value)
 				$idofelement=$tmp[0];
 				$idofelementuser=$tmp[1];
 
-				$element->fetch($idofelement);
+				if($element->fetch($idofelement) <= 0) {
+					_getElementFromOtherEntity($idofelement, $element);
+				}
 				if ($idofelementuser) $elementuser->fetch($idofelementuser);
 
 				if ($tablename != 'expensereport_det') $element->fetch_thirdparty();
