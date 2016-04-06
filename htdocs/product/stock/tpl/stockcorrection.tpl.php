@@ -48,6 +48,15 @@ $langs->load("productbatch");
 		print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
 		print '<table class="border" width="100%">';
 
+
+		// User
+		print '<tr>';
+	        print '<td width="20%">' . $langs->trans("User") . '</td>';
+	        print '<td colspan="5">';
+	        print $form->select_users($user->id, 'author');
+	        print '</td>';
+	        print '</tr>';
+
 		// Warehouse or product
 		print '<tr>';
 		if ($object->element == 'product')
