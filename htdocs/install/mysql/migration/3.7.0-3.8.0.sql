@@ -808,3 +808,5 @@ CREATE TABLE llx_holiday_users_tmp
 INSERT INTO llx_holiday_users_tmp(fk_user,fk_type,nb_holiday) SELECT fk_user,fk_type,nb_holiday FROM llx_holiday_users;
 DROP TABLE llx_holiday_users;
 ALTER TABLE llx_holiday_users_tmp RENAME TO llx_holiday_users;
+
+ALTER TABLE llx_product_fournisseur_price ADD supplier_reputation varchar(10) NULL;
