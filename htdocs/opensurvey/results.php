@@ -1,6 +1,6 @@
 <?php
-/* Copyright (C) 2013      Laurent Destailleur <eldy@users.sourceforge.net>
- * Copyright (C) 2014 Marcos García				<marcosgdf@gmail.com>
+/* Copyright (C) 2013-2015 Laurent Destailleur <eldy@users.sourceforge.net>
+ * Copyright (C) 2014      Marcos García       <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -83,7 +83,7 @@ if (GETPOST("boutonp") || GETPOST("boutonp.x") || GETPOST("boutonp_x"))		// bout
 		$nom=substr(GETPOST("nom"),0,64);
 
 		// Check if vote already exists
-		$sql = 'SELECT id_users, nom';
+		$sql = 'SELECT id_users, nom as name';
 		$sql.= ' FROM '.MAIN_DB_PREFIX.'opensurvey_user_studs';
 		$sql.= " WHERE id_sondage='".$db->escape($numsondage)."' AND nom = '".$db->escape($nom)."'";
 		$sql.= ' ORDER BY id_users';
@@ -125,7 +125,6 @@ for ($i=0; $i<$nblignes; $i++)
 }
 if ($testmodifier)
 {
-
 	// Security check
 	if (!$user->rights->opensurvey->write) accessforbidden();
 
@@ -151,7 +150,6 @@ if ($testmodifier)
 	$sql.= " SET reponses = '".$db->escape($nouveauchoix)."'";
 	$sql.= " WHERE id_users = '".$db->escape($idtomodify)."'";
 
-	dol_syslog("sql=".$sql);
 	$resql = $db->query($sql);
 	if (! $resql) dol_print_error($db);
 }
@@ -172,7 +170,6 @@ if (GETPOST("ajoutercolonne") && GETPOST('nouvellecolonne') && $object->format =
 	$sql = 'UPDATE '.MAIN_DB_PREFIX."opensurvey_sondage";
 	$sql.= " SET sujet = '".$db->escape($nouveauxsujets)."'";
 	$sql.= " WHERE id_sondage = '".$db->escape($numsondage)."'";
-	dol_syslog("sql=".$sql);
 	$resql = $db->query($sql);
 	if (! $resql) dol_print_error($db);
 	else {
@@ -258,7 +255,6 @@ if (isset($_POST["ajoutercolonne"]) && $object->format == "D")
 			$sql = 'UPDATE '.MAIN_DB_PREFIX."opensurvey_sondage";
 			$sql.= " SET sujet = '".$db->escape($dateinsertion)."'";
 			$sql.= " WHERE id_sondage = '".$db->escape($numsondage)."'";
-			dol_syslog("sql=".$sql);
 			$resql = $db->query($sql);
 			if (! $resql) dol_print_error($db);
 			else {
@@ -286,10 +282,9 @@ for ($i = 0; $i < $nblignes; $i++)
 
 		// Loop on each answer
 		$compteur = 0;
-		$sql ="SELECT id_users, nom, id_sondage, reponses";
+		$sql ="SELECT id_users, nom as name, id_sondage, reponses";
 		$sql.=" FROM ".MAIN_DB_PREFIX."opensurvey_user_studs";
 		$sql.=" WHERE id_sondage = '".$db->escape($numsondage)."'";
-		dol_syslog('sql='.$sql);
 		$resql=$db->query($sql);
 		if (! $resql) dol_print_error($db);
 		$num=$db->num_rows($resql);
@@ -340,13 +335,12 @@ for ($i = 0; $i < $nbcolonnes; $i++)
 		// Mise a jour des sujets dans la base
 		$sql = 'UPDATE '.MAIN_DB_PREFIX."opensurvey_sondage";
 		$sql.= " SET sujet = '".$db->escape($nouveauxsujets)."' WHERE id_sondage = '".$db->escape($numsondage)."'";
-		dol_syslog("sql=".$sql);
 		$resql = $db->query($sql);
 		if (! $resql) dol_print_error($db);
 
 		// Clean current answer to remove deleted columns
 		$compteur = 0;
-		$sql ="SELECT id_users, nom, id_sondage, reponses";
+		$sql ="SELECT id_users, nom as name, id_sondage, reponses";
 		$sql.=" FROM ".MAIN_DB_PREFIX."opensurvey_user_studs";
 		$sql.=" WHERE id_sondage = '".$db->escape($numsondage)."'";
 		dol_syslog('sql='.$sql);
@@ -463,7 +457,7 @@ print '</td></tr>';
 
 // Expire date
 print '<tr><td>'.$langs->trans('ExpireDate').'</td><td colspan="2">';
-if ($action == 'edit') print $form->select_date($expiredate?$expiredate:$object->date_fin,'expire');
+if ($action == 'edit') print $form->select_date($expiredate?$expiredate:$object->date_fin,'expire',0,0,0,'',1,0,1);
 else print dol_print_date($object->date_fin,'day');
 print '</td></tr>';
 
@@ -478,17 +472,28 @@ if ($object->fk_user_creat) {
 print '</td></tr>';
 
 // Link
-print '<tr><td>'.img_picto('','object_globe.png').' '.$langs->trans("UrlForSurvey",'').'</td><td>';
+print '<tr><td>'.img_picto('','object_globe.png').' '.$langs->trans("UrlForSurvey",'').'</td><td colspan="2">';
 
 // Define $urlwithroot
 $urlwithouturlroot=preg_replace('/'.preg_quote(DOL_URL_ROOT,'/').'$/i','',trim($dolibarr_main_url_root));
 $urlwithroot=$urlwithouturlroot.DOL_URL_ROOT;		// This is to use external domain name found into config file
 //$urlwithroot=DOL_MAIN_URL_ROOT;					// This is to use same domain name than current
 
-$url=$urlwithouturlroot.dol_buildpath('/opensurvey/public/studs.php',1).'?sondage='.$numsondage;
-$urlvcal='<a href="'.$url.'" target="_blank">'.$url.'</a>';
-print $urlvcal;
+$url=$urlwithouturlroot.dol_buildpath('/public/opensurvey/studs.php',1).'?sondage='.$object->id_sondage;
+$urllink='<input type="text" style="width: 60%" '.($action == 'edit' ? 'disabled' : '').' id="opensurveyurl" name="opensurveyurl" value="'.$url.'">';
+print $urllink;
+if ($action != 'edit')
+{
+	print '<script type="text/javascript">
+               jQuery(document).ready(function () {
+				    jQuery("#opensurveyurl").click(function() { jQuery(this).select(); } );
+				});
+		    </script>';
+	print ' <a href="'.$url.'" target="_blank">'.$langs->trans("Link").'</a>';
 
+}
+
+print '</td></tr>';
 
 print '</table>';
 
@@ -761,7 +766,7 @@ else
 $sumfor = array();
 $sumagainst = array();
 $compteur = 0;
-$sql ="SELECT id_users, nom, id_sondage, reponses";
+$sql ="SELECT id_users, nom as name, id_sondage, reponses";
 $sql.=" FROM ".MAIN_DB_PREFIX."opensurvey_user_studs";
 $sql.=" WHERE id_sondage = '".$db->escape($numsondage)."'";
 dol_syslog('sql='.$sql);
@@ -785,7 +790,7 @@ while ($compteur < $num)
 	}
 
 	// Name
-	print '</td><td class="nom">'.dol_htmlentities($obj->nom).'</td>'."\n";
+	print '</td><td class="nom">'.dol_htmlentities($obj->name).'</td>'."\n";
 
 	// si la ligne n'est pas a changer, on affiche les données
 	if (! $testligneamodifier)
@@ -839,7 +844,7 @@ while ($compteur < $num)
 				if (empty($listofanswers[$i]['format']) || ! in_array($listofanswers[$i]['format'],array('yesno','foragainst')))
 				{
 					print '<input type="checkbox" name="choix'.$i.'" value="1" ';
-					if ($car == '1') print 'checked="checked"';
+					if ($car == '1') print 'checked';
 					print '>';
 				}
 				if (! empty($listofanswers[$i]['format']) && $listofanswers[$i]['format'] == 'yesno')
@@ -936,7 +941,7 @@ if (empty($testligneamodifier))
 			print '<input type="checkbox" name="choix'.$i.'" value="1"';
 			if ( isset($_POST['choix'.$i]) && $_POST['choix'.$i] == '1' )
 			{
-				print ' checked="checked"';
+				print ' checked';
 			}
 			print '>';
 		}

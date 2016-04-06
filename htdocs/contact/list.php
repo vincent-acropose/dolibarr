@@ -1,11 +1,12 @@
 <?php
-/* Copyright (C) 2001-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2003      Eric Seigne          <erics@rycks.com>
- * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2013-2015 Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
- * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
- * Copyright (C) 2013      Alexandre Spangaro   <alexandre.spangaro@gmail.com>
+/* Copyright (C) 2001-2004  Rodolphe Quiedeville    <rodolphe@quiedeville.org>
+ * Copyright (C) 2003       Eric Seigne             <erics@rycks.com>
+ * Copyright (C) 2004-2012  Laurent Destailleur     <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2012  Regis Houssin           <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013-2015  Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
+ * Copyright (C) 2013       Cédric Salvador         <csalvador@gpcsolutions.fr>
+ * Copyright (C) 2013       Alexandre Spangaro      <aspangaro.dolibarr@gmail.com>
+ * Copyright (C) 2015       Jean-François Ferry     <jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +40,7 @@ $contactid = GETPOST('id','int');
 if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user, 'contact', $contactid,'');
 
+$search_firstlast_only=GETPOST("search_firstlast_only");
 $search_lastname=GETPOST("search_lastname");
 $search_firstname=GETPOST("search_firstname");
 $search_societe=GETPOST("search_societe");
@@ -51,8 +53,8 @@ $search_fax=GETPOST("search_fax");
 $search_email=GETPOST("search_email");
 $search_skype=GETPOST("search_skype");
 $search_priv=GETPOST("search_priv");
-$search_categ = GETPOST("search_categ",'int');
-$search_status		= GETPOST("search_status",'int');
+$search_categ=GETPOST("search_categ",'int');
+$search_status=GETPOST("search_status",'int');
 if ($search_status=='') $search_status=1; // always display activ customer first
 
 
@@ -74,15 +76,20 @@ $offset = $limit * $page;
 
 $langs->load("companies");
 $titre = (! empty($conf->global->SOCIETE_ADDRESSES_MANAGEMENT) ? $langs->trans("ListOfContacts") : $langs->trans("ListOfContactsAddresses"));
-if ($type == "c" || $type=="p")
+if ($type == "p")
+{
+	$titre.='  ('.$langs->trans("ThirdPartyProspects").')';
+	$urlfiche="card.php";
+}
+if ($type == "c")
 {
 	$titre.='  ('.$langs->trans("ThirdPartyCustomers").')';
-	$urlfiche="fiche.php";
+	$urlfiche="card.php";
 }
 else if ($type == "f")
 {
 	$titre.=' ('.$langs->trans("ThirdPartySuppliers").')';
-	$urlfiche="fiche.php";
+	$urlfiche="card.php";
 }
 else if ($type == "o")
 {
@@ -90,8 +97,9 @@ else if ($type == "o")
 	$urlfiche="";
 }
 
-if (GETPOST('button_removefilter'))
+if (GETPOST('button_removefilter_x') || GETPOST('button_removefilter'))	// Both tests are required to be compatible with all browsers
 {
+    $search_firstlast_only="";
     $search_lastname="";
     $search_firstname="";
     $search_societe="";
@@ -123,10 +131,10 @@ $formother=new FormOther($db);
 
 $sql = "SELECT s.rowid as socid, s.nom as name,";
 $sql.= " p.rowid as cidp, p.lastname as lastname, p.statut, p.firstname, p.poste, p.email, p.skype,";
-$sql.= " p.phone, p.phone_mobile, p.fax, p.fk_pays, p.priv, p.tms,";
-$sql.= " cp.code as country_code";
+$sql.= " p.phone as phone_pro, p.phone_mobile, p.phone_perso, p.fax, p.fk_pays, p.priv, p.tms,";
+$sql.= " co.code as country_code";
 $sql.= " FROM ".MAIN_DB_PREFIX."socpeople as p";
-$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_pays as cp ON cp.rowid = p.fk_pays";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_country as co ON co.rowid = p.fk_pays";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = p.fk_soc";
 if (! empty($search_categ)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_contact as cs ON p.rowid = cs.fk_socpeople"; // We need this table joined to the select in order to filter by categ
 if (!$user->rights->societe->client->voir && !$socid) $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON s.rowid = sc.fk_soc";
@@ -154,6 +162,9 @@ else
 if ($search_categ > 0)   $sql.= " AND cs.fk_categorie = ".$db->escape($search_categ);
 if ($search_categ == -2) $sql.= " AND cs.fk_categorie IS NULL";
 
+if ($search_firstlast_only) {
+    $sql .= natural_search(array('p.lastname','p.firstname'), $search_firstlast_only);
+}
 if ($search_lastname) {      // filter on lastname
     $sql .= natural_search('p.lastname', $search_lastname);
 }
@@ -213,7 +224,7 @@ else if ($type == "p")        // filtre sur type
 }
 if ($sall)
 {
-    $sql .= natural_search(array('p.lastname', 'p.firstname', 'p.email'), $sall);
+    $sql .= natural_search(array('p.lastname', 'p.firstname', 'p.email', 's.nom'), $sall);
 }
 if (! empty($socid))
 {
@@ -239,7 +250,7 @@ else
 }
 
 //print $sql;
-dol_syslog("contact/list.php sql=".$sql);
+dol_syslog("contact/list.php", LOG_DEBUG);
 $result = $db->query($sql);
 if ($result)
 {
@@ -254,18 +265,19 @@ if ($result)
 	$num = $db->num_rows($result);
     $i = 0;
 
-    print_barre_liste($titre, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, '', $num, $nbtotalofrecords);
+    print_barre_liste($titre, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, '', $num, $nbtotalofrecords,'title_companies.png');
 
     print '<form method="post" action="'.$_SERVER["PHP_SELF"].'">';
     print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-    print '<input type="hidden" name="view" value="'.htmlspecialchars($view).'">';
+    print '<input type="hidden" name="view" value="'.dol_escape_htmltag($view).'">';
     print '<input type="hidden" name="sortfield" value="'.$sortfield.'">';
     print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
 
     if (! empty($conf->categorie->enabled))
     {
+		require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
     	$moreforfilter.=$langs->trans('Categories'). ': ';
-    	$moreforfilter.=$formother->select_categories(4,$search_categ,'search_categ',1);
+    	$moreforfilter.=$formother->select_categories(Categorie::TYPE_CONTACT,$search_categ,'search_categ',1);
     	$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
     }
     if ($moreforfilter)
@@ -277,9 +289,12 @@ if ($result)
 
     if ($sall)
     {
-        print $langs->trans("Filter")." (".$langs->trans("Lastname").", ".$langs->trans("Firstname")." ".$langs->trans("or")." ".$langs->trans("EMail")."): ".htmlspecialchars($sall);
+        print $langs->trans("Filter")." (".$langs->trans("Lastname").", ".$langs->trans("Firstname").", ".$langs->trans("ThirdParty")." ".$langs->trans("or")." ".$langs->trans("EMail")."): ".$sall;
     }
-
+	if ($search_firstlast_only)
+	{
+        print $langs->trans("Filter")." (".$langs->trans("Lastname").", ".$langs->trans("Firstname")."): ".$search_firstlast_only;
+	}
     print '<table class="liste" width="100%">';
 
     // Ligne des titres
@@ -287,51 +302,51 @@ if ($result)
     print_liste_field_titre($langs->trans("Lastname"),$_SERVER["PHP_SELF"],"p.lastname", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Firstname"),$_SERVER["PHP_SELF"],"p.firstname", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("PostOrFunction"),$_SERVER["PHP_SELF"],"p.poste", $begin, $param, '', $sortfield,$sortorder);
-    if (empty($conf->global->SOCIETE_DISABLE_CONTACTS)) print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom", $begin, $param, '', $sortfield,$sortorder);
+    if (empty($conf->global->SOCIETE_DISABLE_CONTACTS)) print_liste_field_titre($langs->trans("ThirdParty"),$_SERVER["PHP_SELF"],"s.nom", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Phone"),$_SERVER["PHP_SELF"],"p.phone", $begin, $param, '', $sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("PhoneMobile"),$_SERVER["PHP_SELF"],"p.phone_mob", $begin, $param, '', $sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("PhoneMobile"),$_SERVER["PHP_SELF"],"p.phone_mobile", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Fax"),$_SERVER["PHP_SELF"],"p.fax", $begin, $param, '', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("EMail"),$_SERVER["PHP_SELF"],"p.email", $begin, $param, '', $sortfield,$sortorder);
     if (! empty($conf->skype->enabled)) { print_liste_field_titre($langs->trans("Skype"),$_SERVER["PHP_SELF"],"p.skype", $begin, $param, '', $sortfield,$sortorder); }
     print_liste_field_titre($langs->trans("DateModificationShort"),$_SERVER["PHP_SELF"],"p.tms", $begin, $param, 'align="center"', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("ContactVisibility"),$_SERVER["PHP_SELF"],"p.priv", $begin, $param, 'align="center"', $sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"p.statut", $begin, $param, 'align="center"', $sortfield,$sortorder);
-    print '<td class="liste_titre">&nbsp;</td>';
+    print_liste_field_titre('',$_SERVER["PHP_SELF"],"",'','','',$sortfield,$sortorder,'maxwidthsearch ');
     print "</tr>\n";
 
-    // Ligne des champs de filtres
+    // Lines for filter fields
     print '<tr class="liste_titre">';
     print '<td class="liste_titre">';
-    print '<input class="flat" type="text" name="search_lastname" size="9" value="'.htmlspecialchars($search_lastname).'">';
+    print '<input class="flat" type="text" name="search_lastname" size="9" value="'.dol_escape_htmltag($search_lastname).'">';
     print '</td>';
     print '<td class="liste_titre">';
-    print '<input class="flat" type="text" name="search_firstname" size="9" value="'.htmlspecialchars($search_firstname).'">';
+    print '<input class="flat" type="text" name="search_firstname" size="9" value="'.dol_escape_htmltag($search_firstname).'">';
     print '</td>';
     print '<td class="liste_titre">';
-    print '<input class="flat" type="text" name="search_poste" size="9" value="'.htmlspecialchars($search_poste).'">';
+    print '<input class="flat" type="text" name="search_poste" size="9" value="'.dol_escape_htmltag($search_poste).'">';
     print '</td>';
     if (empty($conf->global->SOCIETE_DISABLE_CONTACTS))
     {
         print '<td class="liste_titre">';
-        print '<input class="flat" type="text" name="search_societe" size="9" value="'.htmlspecialchars($search_societe).'">';
+        print '<input class="flat" type="text" name="search_societe" size="9" value="'.dol_escape_htmltag($search_societe).'">';
         print '</td>';
     }
     print '<td class="liste_titre">';
-    print '<input class="flat" type="text" name="search_phonepro" size="8" value="'.htmlspecialchars($search_phonepro).'">';
+    print '<input class="flat" type="text" name="search_phonepro" size="8" value="'.dol_escape_htmltag($search_phonepro).'">';
     print '</td>';
     print '<td class="liste_titre">';
-    print '<input class="flat" type="text" name="search_phonemob" size="8" value="'.htmlspecialchars($search_phonemob).'">';
+    print '<input class="flat" type="text" name="search_phonemob" size="8" value="'.dol_escape_htmltag($search_phonemob).'">';
     print '</td>';
     print '<td class="liste_titre">';
-    print '<input class="flat" type="text" name="search_fax" size="8" value="'.htmlspecialchars($search_fax).'">';
+    print '<input class="flat" type="text" name="search_fax" size="8" value="'.dol_escape_htmltag($search_fax).'">';
     print '</td>';
     print '<td class="liste_titre">';
-    print '<input class="flat" type="text" name="search_email" size="8" value="'.htmlspecialchars($search_email).'">';
+    print '<input class="flat" type="text" name="search_email" size="8" value="'.dol_escape_htmltag($search_email).'">';
     print '</td>';
     if (! empty($conf->skype->enabled))
     {
         print '<td class="liste_titre">';
-        print '<input class="flat" type="text" name="search_skype" size="8" value="'.htmlspecialchars($search_skype).'">';
+        print '<input class="flat" type="text" name="search_skype" size="8" value="'.dol_escape_htmltag($search_skype).'">';
         print '</td>';
     }
 	print '<td class="liste_titre">&nbsp;</td>';
@@ -343,9 +358,8 @@ if ($result)
     print $form->selectarray('search_status', array('0'=>$langs->trans('ActivityCeased'),'1'=>$langs->trans('InActivity')),$search_status);
     print '</td>';
     print '<td class="liste_titre" align="right">';
-    print '<input type="image" value="button_search" class="liste_titre" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
-    print '&nbsp; ';
-    print '<input type="image" value="button_removefilter" class="liste_titre" src="'.img_picto($langs->trans("Search"),'searchclear.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'" title="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">';
+    print '<input type="image" name="button_search" class="liste_titre" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+    print '<input type="image" name="button_removefilter" class="liste_titre" src="'.img_picto($langs->trans("RemoveFilter"),'searchclear.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'" title="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">';
     print '</td>';
     print '</tr>';
 
@@ -363,6 +377,10 @@ if ($result)
 		$contactstatic->firstname='';
 		$contactstatic->id=$obj->cidp;
 		$contactstatic->statut=$obj->statut;
+		$contactstatic->poste=$obj->poste;
+		$contactstatic->phone_pro=$obj->phone_pro;
+		$contactstatic->phone_perso=$obj->phone_perso;
+		$contactstatic->phone_mobile=$obj->phone_mobile;
 		print $contactstatic->getNomUrl(1,'',20);
 		print '</td>';
 
@@ -378,7 +396,7 @@ if ($result)
     		print '<td>';
             if ($obj->socid)
             {
-                print '<a href="'.DOL_URL_ROOT.'/comm/fiche.php?socid='.$obj->socid.'">';
+                print '<a href="'.DOL_URL_ROOT.'/comm/card.php?socid='.$obj->socid.'">';
                 print img_object($langs->trans("ShowCompany"),"company").' '.dol_trunc($obj->name,20).'</a>';
             }
             else
@@ -389,7 +407,7 @@ if ($result)
         }
 
         // Phone
-        print '<td>'.dol_print_phone($obj->phone,$obj->country_code,$obj->cidp,$obj->socid,'AC_TEL').'</td>';
+        print '<td>'.dol_print_phone($obj->phone_pro,$obj->country_code,$obj->cidp,$obj->socid,'AC_TEL').'</td>';
         // Phone mobile
         print '<td>'.dol_print_phone($obj->phone_mobile,$obj->country_code,$obj->cidp,$obj->socid,'AC_TEL').'</td>';
         // Fax
@@ -410,7 +428,7 @@ if ($result)
 
 		// Links Add action and Export vcard
         print '<td align="right">';
-        print '<a href="'.DOL_URL_ROOT.'/comm/action/fiche.php?action=create&amp;backtopage=1&amp;contactid='.$obj->cidp.'&amp;socid='.$obj->socid.'">'.img_object($langs->trans("AddAction"),"action").'</a>';
+        print '<a href="'.DOL_URL_ROOT.'/comm/action/card.php?action=create&amp;backtopage=1&amp;contactid='.$obj->cidp.'&amp;socid='.$obj->socid.'">'.img_object($langs->trans("AddAction"),"action").'</a>';
         print ' &nbsp; ';
         print '<a data-ajax="false" href="'.DOL_URL_ROOT.'/contact/vcard.php?id='.$obj->cidp.'">';
         print img_picto($langs->trans("VCard"),'vcard.png').' ';
@@ -424,7 +442,7 @@ if ($result)
 
     print '</form>';
 
-    if ($num > $limit) print_barre_liste('', $page, $_SERVER["PHP_SELF"], '&amp;begin='.$begin.'&amp;view='.$view.'&amp;userid='.$userid, $sortfield, $sortorder, '', $num, $nbtotalofrecords, '');
+    if ($num > $limit) print_barre_liste('', $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, '', $num, $nbtotalofrecords, '');
 
     $db->free($result);
 }

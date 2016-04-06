@@ -184,7 +184,7 @@ function getUrlSondage($id, $admin = false)
  * 	Generate a random id
  *
  *	@param	string	$car	Char to generate key
- * 	@return	void
+ * 	@return	string
  */
 function dol_survey_random($car)
 {
@@ -249,4 +249,3 @@ function ajouter_sondage()
 	header("Location: ".$urlback);
 	exit();
 }
-

@@ -42,7 +42,7 @@ $(document).ready(function() {
 		},
 		// Called if we click on a dir (not a file)
 		function(elem) {
-			id=elem.attr('id').substr(12);
+			id=elem.attr('id').substr(12);	// We get id that is 'fmdirlia_id_xxx' (id we want is xxx)
 			jQuery("#formuserfile_section_dir").val(elem.attr('rel'));
    			jQuery("#formuserfile_section_id").val(id);
 			jQuery('#formuserfile').show();
@@ -51,7 +51,7 @@ $(document).ready(function() {
 
 	$('#refreshbutton').click( function() {
 		$.pleaseBePatient("<?php echo $langs->trans('PleaseBePatient'); ?>");
-		$.getJSON( "<?php echo DOL_URL_ROOT . '/ecm/ajax/ecmdatabase.php'; ?>", {
+		$.get( "<?php echo DOL_URL_ROOT . '/ecm/ajax/ecmdatabase.php'; ?>", {
 			action: "build",
 			element: "ecm"
 		},
@@ -65,6 +65,9 @@ $(document).ready(function() {
 function loadandshowpreview(filedirname,section)
 {
 	//alert('filedirname='+filedirname);
+	//console.log(filedirname);
+	//console.log(section);
+
 	$('#ecmfileview').empty();
 
 	var url = '<?php echo dol_buildpath('/core/ajax/ajaxdirpreview.php',1); ?>?action=preview&module=ecm&section='+section+'&file='+urlencode(filedirname);

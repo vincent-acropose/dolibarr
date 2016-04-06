@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 /**
@@ -113,14 +112,14 @@ if (GETPOST('save','alpha'))
 llxHeader();
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans("AdvancedEditor"),$linkback,'setup');
+print_fiche_titre($langs->trans("AdvancedEditor"),$linkback,'title_setup');
 print '<br>';
 
 $var=true;
 
 if (empty($conf->use_javascript_ajax))
 {
-    dol_htmloutput_errors('',array($langs->trans("NotAvailable"),$langs->trans("JavascriptDisabled")),1);
+	setEventMessage(array($langs->trans("NotAvailable"), $langs->trans("JavascriptDisabled")), 'errors');
 }
 else
 {
@@ -166,7 +165,7 @@ else
     $readonly=($mode=='dolibarr_readonly'?1:0);
     $editor=new DolEditor('formtestfield',isset($conf->global->FCKEDITOR_TEST)?$conf->global->FCKEDITOR_TEST:'Test','',200,$mode,'In', true, $uselocalbrowser, 1, 120, 8, $readonly);
     $editor->Create();
-    print '<center><br><input class="button" type="submit" name="save" value="'.$langs->trans("Save").'"></center>'."\n";
+    print '<br><div class="center"><input class="button" type="submit" name="save" value="'.$langs->trans("Save").'"></div>'."\n";
     print '<div id="divforlog"></div>';
     print '</form>'."\n";
 

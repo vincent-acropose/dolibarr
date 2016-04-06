@@ -1,4 +1,5 @@
 # Dolibarr language file - Source file is en_US - externalsite
-ExternalSiteSetup=Nastavení odkaz na externí webové stránky
-ExternalSiteURL=Externí URL stránek
-ExternalSiteModuleNotComplete=Modul ExternalSite nebyl správně nakonfigurován.
+ExternalSiteSetup=Nastavení odkazu na externí webové stránky
+ExternalSiteURL=URL externích stránek
+ExternalSiteModuleNotComplete=Modul Externí stránky nebyl správně nakonfigurován.
+ExampleMyMenuEntry=Moje menu vstup

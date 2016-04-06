@@ -35,7 +35,6 @@ IfDatabaseExistsGoBackAndCheckCreate=If database already exists, go back and unc
 WarningBrowserTooOld=Too old version of browser. Upgrading your browser to a recent version of Firefox, Chrome or Opera is highly recommanded.
 PHPVersion=PHP Version
 YouCanContinue=You can continue...
-PleaseBePatient=Please be patient...
 License=Using license
 ConfigurationFile=Configuration file
 WebPagesDirectory=Directory where web pages are stored
@@ -64,6 +63,7 @@ DatabaseSuperUserAccess=Database server - Superuser access
 CheckToCreateDatabase=Check box if database does not exist and must be created.<br>In this case, you must fill the login/password for superuser account at the bottom of this page.
 CheckToCreateUser=Check box if database owner does not exist and must be created.<br>In this case, you must choose its login and password and also fill the login/password for the superuser account at the bottom of this page. If this box is unchecked, owner database and its passwords must exists.
 Experimental=(experimental)
+Deprecated=(deprecated)
 DatabaseRootLoginDescription=Login of the user allowed to create new databases or new users, mandatory if your database or its owner does not already exists.
 KeepEmptyIfNoPassword=Leave empty if user has no password (avoid this)
 SaveConfigurationFile=Save values
@@ -155,6 +155,8 @@ MigrationFinished=Migration finished
 LastStepDesc=<strong>Last step</strong>: Define here login and password you plan to use to connect to software. Do not loose this as it is the account to administer all others.
 ActivateModule=Activate module %s
 ShowEditTechnicalParameters=Click here to show/edit advanced parameters (expert mode)
+WarningUpgrade=Warning:\nDid your run a database backup first ?\nThis is highly recommanded: for example, due to some bugs into databases systems (for example mysql version 5.5.40), some data or tables may be lost during this process, so it is highly recommanded to have a complete dump of your database before starting migration.\n\nClick OK to start migration process...
+ErrorDatabaseVersionForbiddenForMigration=Your database version is %s. It has a critical bug making data loss if you make structure change on your database, like it is required by the migration process. For his reason, migration will not be allowed until you upgrade your database to a higher fixed version (list of known bugged version: %s)
 
 #########
 # upgrade
@@ -206,6 +208,7 @@ MigrationProjectTaskTime=Update time spent in seconds
 MigrationActioncommElement=Update data on actions
 MigrationPaymentMode=Data migration for payment mode
 MigrationCategorieAssociation=Migration of categories
-
+MigrationEvents=Migration of events to add event owner into assignement table
+MigrationReloadModule=Reload module %s
 ShowNotAvailableOptions=Show not available options
 HideNotAvailableOptions=Hide not available options

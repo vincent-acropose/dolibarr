@@ -36,10 +36,11 @@ create table llx_commande
   date_valid			datetime,						-- date de validation
   date_cloture			datetime,						-- date de cloture
   date_commande			date,							-- date de la commande
-  fk_user_author		integer,						-- createur de la commande
-  fk_user_valid			integer,						-- valideur de la commande
-  fk_user_cloture		integer,						-- auteur cloture
-  source				smallint,
+  fk_user_author		integer,						-- user making creation
+  fk_user_modif         integer,                       -- user making last change
+  fk_user_valid			integer,						-- user validating
+  fk_user_cloture		integer,						-- user closing
+  source				smallint,						-- not used, except by setting this to 42 for orders coming for replenishment and 0 in other case ?
   fk_statut				smallint  default 0,
   amount_ht				real      default 0,
   remise_percent		real      default 0,
@@ -61,9 +62,12 @@ create table llx_commande
   fk_mode_reglement		integer,						-- mode de reglement
   
   date_livraison		date 	  default NULL,
+  fk_shipping_method    integer,                       -- shipping method id
   fk_availability		integer NULL,
-  fk_input_reason		integer,
+  fk_input_reason		integer,						-- id coming from c_input_reason, '0' if no defined
   fk_delivery_address	integer,						-- delivery address (deprecated)
+  fk_incoterms          integer,						-- for incoterms
+  location_incoterms    varchar(255),					-- for incoterms
   import_key			varchar(14),
   extraparams			varchar(255)					-- for stock other parameters with json format
   

@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C)    2013      Cédric Salvador     <csalvador@gpcsolutions.fr>
  * Copyright (C)    2013-2014 Laurent Destailleur <eldy@users.sourceforge.net>
+ * Copyright (C)	2015	  Marcos García		  <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +20,7 @@
 
 $langs->load("link");
 if (empty($relativepathwithnofile)) $relativepathwithnofile='';
+
 
 /*
  * Confirm form to delete
@@ -41,6 +43,21 @@ if ($action == 'delete')
 
 $formfile=new FormFile($db);
 
+// We define var to enable the feature to add prefix of uploaded files
+$savingdocmask='';
+if (empty($conf->global->MAIN_DISABLE_SUGGEST_REF_AS_PREFIX))
+{
+	//var_dump($modulepart);
+	if (in_array($modulepart,array('facture_fournisseur','commande_fournisseur','facture','commande','propal','askpricesupplier','ficheinter','contract','project','project_task','expensereport')))
+	{
+		$savingdocmask=dol_sanitizeFileName($object->ref).'-__file__';
+	}
+	/*if (in_array($modulepart,array('member')))
+	{
+		$savingdocmask=$object->login.'___file__';
+	}*/
+}
+
 // Show upload form (document and links)
 $formfile->form_attach_new_file(
     $_SERVER["PHP_SELF"].'?id='.$object->id.(empty($withproject)?'':'&withproject=1'),
@@ -49,7 +66,10 @@ $formfile->form_attach_new_file(
     0,
     $permission,
     50,
-    $object
+    $object,
+	'',
+	1,
+	$savingdocmask
 );
 
 // List of document

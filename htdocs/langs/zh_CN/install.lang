@@ -35,7 +35,6 @@ IfDatabaseExistsGoBackAndCheckCreate=如果数据库已经存在，请返回并�
 WarningBrowserTooOld=浏览器的版本太旧，您的浏览器需升级到最新版本，建议使用Firefox，Chrome或Opera浏览器。
 PHPVersion=PHP版本
 YouCanContinue=您可以继续...
-PleaseBePatient=请耐心等待...
 License=使用许可
 ConfigurationFile=配置文件
 WebPagesDirectory=目录下的网页存储
@@ -64,6 +63,7 @@ DatabaseSuperUserAccess=数据库服务器 - 超级用户
 CheckToCreateDatabase=检查中，如果数据库不存在，必须创建。 <br>在这种情况下，必须填写登录/密码为超级用户帐户在本页面底部。
 CheckToCreateUser=如果数据库所有者复选框不存在，必须创建。 <br>在这种情况下，必须选择自己的登录名和密码，并填写在本页面底部的登录/为超级用户帐户的密码。如果此框未被选中，业主数据库及其密码必须存在。
 Experimental=（实验）
+Deprecated=(deprecated)
 DatabaseRootLoginDescription=允许创建新的数据库或新用户，无用的，如果你的数据库和数据库登录已经存在就像当你在一个网站举办的托管服务提供商是（用户登录）。
 KeepEmptyIfNoPassword=给空如果用户没有密码（避免这种情况）
 SaveConfigurationFile=保存价值
@@ -89,7 +89,7 @@ SystemIsUpgraded=Dolibarr已经升级成功。
 YouNeedToPersonalizeSetup=您需要配置Dolibarr以满足您的需求（外观，功能，...).要做到这一点，请按照以下链接：
 AdminLoginCreatedSuccessfuly=Dolibarr管理员登录<b>'%s'</b>的创建successfuly。
 GoToDolibarr=前往Dolibarr
-GoToSetupArea=前往Dolibarr（安装面积）
+GoToSetupArea=去dolibarr（设置区域）
 MigrationNotFinished=您的数据库的版本是不完全最新的，所以你必须再次运行升级过程。
 GoToUpgradePage=转到页再次升级
 Examples=范例
@@ -155,6 +155,8 @@ MigrationFinished=迁移完成
 LastStepDesc=<strong>最后一步</strong> ：此处定义的登录名和密码，您打算使用连接到软件。不松，因为它是帐户管理所有其他。
 ActivateModule=激活模块%s
 ShowEditTechnicalParameters=点击此处显示/编辑高级参数（专家模式）
+WarningUpgrade=Warning:\nDid your run a database backup first ?\nThis is highly recommanded: for example, due to some bugs into databases systems (for example mysql version 5.5.40), some data or tables may be lost during this process, so it is highly recommanded to have a complete dump of your database before starting migration.\n\nClick OK to start migration process...
+ErrorDatabaseVersionForbiddenForMigration=Your database version is %s. It has a critical bug making data loss if you make structure change on your database, like it is required by the migration process. For his reason, migration will not be allowed until you upgrade your database to a higher fixed version (list of known bugged version: %s)
 
 #########
 # upgrade
@@ -206,6 +208,7 @@ MigrationProjectTaskTime=更新时间花费在几秒钟内
 MigrationActioncommElement=在行动上的更新数据
 MigrationPaymentMode=付款方式的数据迁移
 MigrationCategorieAssociation=迁移类别
-
-ShowNotAvailableOptions=Show not available options
-HideNotAvailableOptions=Hide not available options
+MigrationEvents=Migration of events to add event owner into assignement table
+MigrationReloadModule=Reload module %s
+ShowNotAvailableOptions=显示不可用的选项
+HideNotAvailableOptions=隐藏不可用的选项

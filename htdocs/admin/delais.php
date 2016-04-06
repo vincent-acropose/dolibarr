@@ -97,6 +97,12 @@ $modules=array(
 						'img' => 'user'
 				)
 		),
+		'expensereport' => array(
+				array(
+						'code' => 'MAIN_DELAY_EXPENSEREPORTS',
+						'img' => 'trip'
+				)
+		),
 );
 
 if ($action == 'update')
@@ -127,7 +133,7 @@ $form = new Form($db);
 
 llxHeader();
 
-print_fiche_titre($langs->trans("DelaysOfToleranceBeforeWarning"),'','setup');
+print_fiche_titre($langs->trans("DelaysOfToleranceBeforeWarning"),'','title_setup');
 
 print $langs->transnoentities("DelaysOfToleranceDesc",img_warning());
 print " ".$langs->trans("OnlyActiveElementsAreShown",DOL_URL_ROOT.'/admin/modules.php')."<br>\n";
@@ -171,13 +177,13 @@ if ($action == 'edit')
 
 	$var=!$var;
 	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("MAIN_DISABLE_METEO").'</td><td>' .$form->selectyesno('MAIN_DISABLE_METEO',(isset($conf->global->MAIN_DISABLE_METEO)?1:0),1) . '</td></tr>';
+	print '<td>'.$langs->trans("MAIN_DISABLE_METEO").'</td><td>' .$form->selectyesno('MAIN_DISABLE_METEO',(empty($conf->global->MAIN_DISABLE_METEO)?0:1),1) . '</td></tr>';
 
 	print '</table>';
 
 	print '<br>';
 
-    print '<br><center><input type="submit" class="button" value="'.$langs->trans("Save").'"></center>';
+    print '<br><div class="center"><input type="submit" class="button" value="'.$langs->trans("Save").'"></div>';
     print '<br>';
 
     print '</form>';

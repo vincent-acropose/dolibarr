@@ -38,9 +38,10 @@ create table llx_propal
   fin_validite			datetime,						-- date de fin de validite
   date_valid			datetime,						-- date de validation
   date_cloture			datetime,						-- date de cloture
-  fk_user_author		integer,						-- createur de la propale
-  fk_user_valid			integer,						-- valideur de la propale
-  fk_user_cloture		integer,						-- cloture de la propale signee ou non signee
+  fk_user_author		integer,						-- user making creation
+  fk_user_modif         integer,                       -- user making last change
+  fk_user_valid			integer,						-- user validating
+  fk_user_cloture		integer,						-- user closing (signed or not)
   fk_statut				smallint DEFAULT 0 NOT NULL,
   price					real         DEFAULT 0,			-- (obsolete)
   remise_percent		real         DEFAULT 0,			-- remise globale relative en pourcent (obsolete)
@@ -61,8 +62,11 @@ create table llx_propal
   note_public			text,
   model_pdf				varchar(255),
   date_livraison		date DEFAULT NULL,				-- delivery date
+  fk_shipping_method    integer,                        -- shipping method id
   fk_availability		integer NULL,
   fk_input_reason		integer,
+  fk_incoterms          integer,										-- for incoterms
+  location_incoterms    varchar(255),								-- for incoterms
   import_key			varchar(14),
   extraparams			varchar(255),					-- for stock other parameters with json format
   fk_delivery_address	integer							-- delivery address (deprecated)

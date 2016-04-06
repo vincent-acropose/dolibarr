@@ -27,6 +27,10 @@
  */
 abstract class ActionsAdherentCardCommon
 {
+    /**
+     * Database handler
+     * @var DoliDB
+     */
     var $db;
     var $dirmodule;
     var $targetmodule;
@@ -51,6 +55,8 @@ abstract class ActionsAdherentCardCommon
 	 */
 	private function getInstanceDao()
 	{
+		dol_syslog(__METHOD__ . " is deprecated", LOG_WARNING);
+
 		if (! is_object($this->object))
 		{
 			$modelclassfile = dol_buildpath('/'.$this->dirmodule.'/canvas/'.$this->canvas.'/dao_'.$this->targetmodule.'_'.$this->canvas.'.class.php');
@@ -130,7 +136,7 @@ abstract class ActionsAdherentCardCommon
                 }
                 else
                 {
-                    $this->errors=$nuser->error;
+                    $this->errors[]=$nuser->error;
 
                     $this->db->rollback();
                 }
@@ -412,7 +418,7 @@ abstract class ActionsAdherentCardCommon
         // We set country_id, and country_code label of the chosen country
         if ($this->object->country_id)
         {
-            $sql = "SELECT code, libelle FROM ".MAIN_DB_PREFIX."c_pays WHERE rowid = ".$this->object->country_id;
+            $sql = "SELECT code, label FROM ".MAIN_DB_PREFIX."c_country WHERE rowid = ".$this->object->country_id;
             $resql=$this->db->query($sql);
             if ($resql)
             {

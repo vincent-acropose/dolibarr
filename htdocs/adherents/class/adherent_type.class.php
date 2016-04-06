@@ -36,6 +36,12 @@ class AdherentType extends CommonObject
     public $element = 'adherent_type';
 
     var $id;
+
+    /**
+     * @var int
+     */
+    public $ref;
+
     var $libelle;
     var $statut;
     var $cotisation;  // Soumis a la cotisation
@@ -60,13 +66,13 @@ class AdherentType extends CommonObject
      *  Fonction qui permet de creer le status de l'adherent
      *
      *  @param      User		$user		User making creation
-     *  @return     						>0 if OK, < 0 if KO
+     *  @return     int						>0 if OK, < 0 if KO
      */
     function create($user)
     {
         global $conf;
 
-        $this->statut=trim($this->statut);
+        $this->statut=(int) $this->statut;
 
         $sql = "INSERT INTO ".MAIN_DB_PREFIX."adherent_type (";
         $sql.= "libelle";
@@ -76,7 +82,7 @@ class AdherentType extends CommonObject
         $sql.= ", ".$conf->entity;
         $sql.= ")";
 
-        dol_syslog("Adherent_type::create sql=".$sql);
+        dol_syslog("Adherent_type::create", LOG_DEBUG);
         $result = $this->db->query($sql);
         if ($result)
         {
@@ -119,7 +125,7 @@ class AdherentType extends CommonObject
         if ($result)
         {
         	$action='update';
-        	
+
         	// Actions on extra fields (by external module or standard code)
         	$hookmanager->initHooks(array('membertypedao'));
         	$parameters=array('membertype'=>$this->id);
@@ -151,21 +157,23 @@ class AdherentType extends CommonObject
      *	Fonction qui permet de supprimer le status de l'adherent
      *
      *	@param      int		$rowid		Id of member type to delete
-     *  @return		int					>0 if OK, < 0 if KO
+     *  @return		int					>0 if OK, 0 if not found, < 0 if KO
      */
-    function delete($rowid)
+    function delete($rowid='')
     {
-        $sql = "DELETE FROM ".MAIN_DB_PREFIX."adherent_type WHERE rowid = $rowid";
+    	if (empty($rowid)) $rowid=$this->id;
+
+        $sql = "DELETE FROM ".MAIN_DB_PREFIX."adherent_type WHERE rowid = ".$rowid;
 
         $resql=$this->db->query($sql);
         if ($resql)
         {
-            if ( $this->db->affected_rows($resql) )
+            if ($this->db->affected_rows($resql))
             {
                 return 1;
             }
             else
-            {
+			{
                 return 0;
             }
         }
@@ -188,7 +196,7 @@ class AdherentType extends CommonObject
         $sql .= " FROM ".MAIN_DB_PREFIX."adherent_type as d";
         $sql .= " WHERE d.rowid = ".$rowid;
 
-        dol_syslog("Adherent_type::fetch sql=".$sql);
+        dol_syslog("Adherent_type::fetch", LOG_DEBUG);
 
         $resql=$this->db->query($sql);
         if ($resql)
@@ -211,7 +219,6 @@ class AdherentType extends CommonObject
         else
         {
             $this->error=$this->db->lasterror();
-            dol_syslog("Adherent_type::fetch ".$this->error, LOG_ERR);
             return -1;
         }
     }
@@ -247,20 +254,20 @@ class AdherentType extends CommonObject
                     $i++;
                 }
             }
-            return $projets;
         }
         else
         {
             print $this->db->error();
         }
 
+        return $projets;
     }
 
 
     /**
-     *    	Renvoie nom clicable (avec eventuellement le picto)
+     *    	Return clicable name (with picto eventually)
      *
-     *		@param		int		$withpicto		0=Pas de picto, 1=Inclut le picto dans le lien, 2=Picto seul
+     *		@param		int		$withpicto		0=No picto, 1=Include picto into link, 2=Only picto
      *		@param		int		$maxlen			length max libelle
      *		@return		string					String with URL
      */
@@ -269,16 +276,16 @@ class AdherentType extends CommonObject
         global $langs;
 
         $result='';
-
-        $lien = '<a href="'.DOL_URL_ROOT.'/adherents/type.php?rowid='.$this->id.'">';
-        $lienfin='</a>';
-
-        $picto='group';
         $label=$langs->trans("ShowTypeCard",$this->libelle);
 
-        if ($withpicto) $result.=($lien.img_object($label,$picto).$lienfin);
+        $link = '<a href="'.DOL_URL_ROOT.'/adherents/type.php?rowid='.$this->id.'" title="'.dol_escape_htmltag($label, 1).'" class="classfortooltip">';
+        $linkend='</a>';
+
+        $picto='group';
+
+        if ($withpicto) $result.=($link.img_object($label, $picto, 'class="classfortooltip"').$linkend);
         if ($withpicto && $withpicto != 2) $result.=' ';
-        $result.=$lien.($maxlen?dol_trunc($this->libelle,$maxlen):$this->libelle).$lienfin;
+        $result.=$link.($maxlen?dol_trunc($this->libelle,$maxlen):$this->libelle).$linkend;
         return $result;
     }
 
@@ -286,7 +293,7 @@ class AdherentType extends CommonObject
     /**
      *     getMailOnValid
      *
-     *     @return     Return mail model
+     *     @return string     Return mail model
      */
     function getMailOnValid()
     {
@@ -305,7 +312,7 @@ class AdherentType extends CommonObject
     /**
      *     getMailOnSubscription
      *
-     *     @return     Return mail model
+     *     @return string     Return mail model
      */
     function getMailOnSubscription()
     {
@@ -324,7 +331,7 @@ class AdherentType extends CommonObject
     /**
      *     getMailOnResiliate
      *
-     *     @return     Return mail model
+     *     @return string     Return mail model
      */
     function getMailOnResiliate()
     {

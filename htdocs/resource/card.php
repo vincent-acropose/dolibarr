@@ -44,6 +44,7 @@ $id						= GETPOST('id','int');
 $action					= GETPOST('action','alpha');
 $ref					= GETPOST('ref');
 $description			= GETPOST('description');
+$confirm				= GETPOST('confirm');
 $fk_code_type_resource	= GETPOST('fk_code_type_resource','alpha');
 
 // Protection if external user
@@ -57,26 +58,25 @@ if( ! $user->rights->resource->read)
 
 $object = new Resource($db);
 
-$hookmanager->initHooks(array('resource_card'));
+$hookmanager->initHooks(array('resource_card','globalcard'));
 $parameters=array('resource_id'=>$id);
 $reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 
-if (empty($reshook)) {
-
+if (empty($reshook))
+{
 	/*******************************************************************
 	* ACTIONS
-	*
-	* Put here all code to do according to value of "action" parameter
 	********************************************************************/
 
-	if ($action == 'update' && ! $_POST["cancel"]  && $user->rights->resource->write )
+	if ($action == 'update' && ! $_POST["cancel"] && $user->rights->resource->write)
 	{
 		$error=0;
 
 		if (empty($ref))
 		{
 			$error++;
-			$mesg='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentities("Ref")).'</div>';
+			setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("Ref")), 'errors');
 		}
 
 		if (! $error)
@@ -96,7 +96,7 @@ if (empty($reshook)) {
 				}
 				else
 				{
-					setEventMessage('<div class="error">'.$object->error.'</div>');
+					setEventMessage($object->error, 'errors');
 					$action='edit';
 				}
 
@@ -112,7 +112,31 @@ if (empty($reshook)) {
 			$action='edit';
 		}
 	}
+
+	if ($action == 'confirm_delete_resource' && $user->rights->resource->delete && $confirm === 'yes')
+	{
+		$res = $object->fetch($id);
+		if($res > 0)
+		{
+			$result = $object->delete($id);
+
+			if ($result >= 0)
+			{
+				setEventMessage($langs->trans('RessourceSuccessfullyDeleted'));
+				Header('Location: '.DOL_URL_ROOT.'/resource/list.php');
+				exit;
+			}
+			else {
+				setEventMessage($object->error,'errors');
+			}
+		}
+		else
+		{
+			setEventMessage($object->error,'errors');
+		}
+	}
 }
+
 
 /***************************************************
 * VIEW
@@ -128,54 +152,62 @@ $formresource = new FormResource($db);
 if ( $object->fetch($id) > 0 )
 {
 	$head=resourcePrepareHead($object);
-	dol_fiche_head($head, 'resource', $langs->trans("ResourceSingular"),0,'resource@resource');
 
 
 	if ($action == 'edit' )
 	{
-
 		if ( ! $user->rights->resource->write )
 			accessforbidden('',0);
 
 		/*---------------------------------------
 		 * Edit object
-		*/
+		 */
 		print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
 		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 		print '<input type="hidden" name="action" value="update">';
 		print '<input type="hidden" name="id" value="'.$object->id.'">';
 
+		dol_fiche_head($head, 'resource', $langs->trans("ResourceSingular"),0,'resource@resource');
+
 		print '<table class="border" width="100%">';
 
 		// Ref
-		print '<tr><td width="20%">'.$langs->trans("ResourceFormLabel_ref").'</td>';
+		print '<tr><td width="20%" class="fieldrequired">'.$langs->trans("ResourceFormLabel_ref").'</td>';
 		print '<td><input size="12" name="ref" value="'.(GETPOST('ref') ? GETPOST('ref') : $object->ref).'"></td></tr>';
-		
+
 		// Type
 		print '<tr><td width="20%">'.$langs->trans("ResourceType").'</td>';
 		print '<td>';
-		$ret = $formresource->select_types_resource($object->fk_code_type_resource,'fk_code_type_resource','',2);		
+		$ret = $formresource->select_types_resource($object->fk_code_type_resource,'fk_code_type_resource','',2);
 		print '</td></tr>';
-		
+
 		// Description
 		print '<tr><td valign="top">'.$langs->trans("Description").'</td>';
 		print '<td>';
 		print '<textarea name="description" cols="80" rows="'.ROWS_3.'">'.($_POST['description'] ? GETPOST('description','alpha') : $object->description).'</textarea>';
 		print '</td></tr>';
 
-		print '<tr><td align="center" colspan="2">';
+		print '</table>';
+
+		dol_fiche_end();
+
+		print '<div class="center">';
 		print '<input name="update" class="button" type="submit" value="'.$langs->trans("Modify").'"> &nbsp; ';
 		print '<input type="submit" class="button" name="cancel" Value="'.$langs->trans("Cancel").'"></td></tr>';
-		print '</table>';
+		print '</div>';
+
 		print '</form>';
 	}
 	else
 	{
-	    // Confirmation suppression resource line
+		dol_fiche_head($head, 'resource', $langs->trans("ResourceSingular"),0,'resource@resource');
+
+		// Confirm deleting resource line
 	    if ($action == 'delete')
 	    {
 	        print $form->formconfirm("card.php?&id=".$id,$langs->trans("DeleteResource"),$langs->trans("ConfirmDeleteResource"),"confirm_delete_resource",'','',1);
 	    }
+
 
 		/*---------------------------------------
 		 * View object
@@ -195,7 +227,7 @@ if ( $object->fetch($id) > 0 )
 		print $object->type_label;
 		print '</td>';
 		print '</tr>';
-		
+
 		// Description
 		print '<tr>';
 		print '<td>' . $langs->trans("ResourceFormLabel_description") . '</td>';
@@ -211,26 +243,26 @@ if ( $object->fetch($id) > 0 )
 
 	/*
 	 * Boutons actions
-	*/
+	 */
 	print '<div class="tabsAction">';
 	$parameters = array();
 	$reshook = $hookmanager->executeHooks('addMoreActionsButtons', $parameters, $object, $action); // Note that $action and $object may have been
 	// modified by hook
-	if (empty($reshook)) 
-	{	
+	if (empty($reshook))
+	{
 		if ($action != "edit" )
 		{
 			// Edit resource
 			if($user->rights->resource->write)
 			{
 				print '<div class="inline-block divButAction">';
-				print '<a href="'.$_SERVER['PHP_SELF'].'?id='.$id.'&amp;action=edit" class="butAction">'.$langs->trans('Edit').'</a>';
+				print '<a href="'.$_SERVER['PHP_SELF'].'?id='.$id.'&amp;action=edit" class="butAction">'.$langs->trans('Modify').'</a>';
 				print '</div>';
 			}
 		}
-		if ($action != "delete" )
+		if ($action != "delete" && $action != "edit")
 		{
-		    // Edit resource
+		    // Delete resource
 		    if($user->rights->resource->delete)
 		    {
 		        print '<div class="inline-block divButAction">';

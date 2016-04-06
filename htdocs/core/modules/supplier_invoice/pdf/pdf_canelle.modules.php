@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2010-2011      Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2010-2014 		Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2015           Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,9 +59,8 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 	 *	Constructor
 	 *
 	 *  @param	DoliDB		$db     	Database handler
-	 *  @param	Object		$object		Supplier invoice
 	 */
-	function __construct($db,$object)
+	function __construct($db)
 	{
 		global $conf,$langs,$mysoc;
 
@@ -91,12 +91,6 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 
 		$this->franchise=!$mysoc->tva_assuj;
 
-        // Get source company
-        if (! is_object($object->thirdparty)) $object->fetch_thirdparty();
-        if (! is_object($object->thirdparty)) $object->thirdparty=$mysoc;	// If fetch_thirdparty fails, object has no socid (specimen)
-        $this->emetteur=$object->thirdparty;
-        if (! $this->emetteur->country_code) $this->emetteur->country_code=substr($langs->defaultlang,-2);    // By default, if was not defined
-
         // Defini position des colonnes
 		$this->posxdesc=$this->marge_gauche+1;
 		$this->posxtva=112;
@@ -104,6 +98,13 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 		$this->posxqty=145;
 		$this->posxdiscount=162;
 		$this->postotalht=174;
+
+		if($conf->global->PRODUCT_USE_UNITS) {
+			$this->posxtva=99;
+			$this->posxup=114;
+			$this->posxqty=133;
+			$this->posxunit=150;
+		}
 		//if (! empty($conf->global->MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT)) $this->posxtva=$this->posxup;
 		$this->posxpicture=$this->posxtva - (empty($conf->global->MAIN_DOCUMENTS_WITH_PICTURE_WIDTH)?20:$conf->global->MAIN_DOCUMENTS_WITH_PICTURE_WIDTH);	// width of images
 		if ($this->page_largeur < 210) // To work with US executive format
@@ -139,6 +140,12 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 	{
 		global $user,$langs,$conf,$mysoc,$hookmanager;
 
+		// Get source company
+		if (! is_object($object->thirdparty)) $object->fetch_thirdparty();
+		if (! is_object($object->thirdparty)) $object->thirdparty=$mysoc;	// If fetch_thirdparty fails, object has no socid (specimen)
+		$this->emetteur=$object->thirdparty;
+		if (! $this->emetteur->country_code) $this->emetteur->country_code=substr($langs->defaultlang,-2);    // By default, if was not defined
+
 		if (! is_object($outputlangs)) $outputlangs=$langs;
 		// For backward compatibility with FPDF, force output charset to ISO, because FPDF expect text to be encoded in ISO
 		if (! empty($conf->global->MAIN_USE_FPDF)) $outputlangs->charset_output='ISO-8859-1';
@@ -167,7 +174,7 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 			{
 				$objectref = dol_sanitizeFileName($object->ref);
 				$objectrefsupplier = dol_sanitizeFileName($object->ref_supplier);
-                $dir = $conf->fournisseur->facture->dir_output.'/'.get_exdir($object->id,2).$objectref;
+                $dir = $conf->fournisseur->facture->dir_output.'/'.get_exdir($object->id,2,0,0,$object,'invoice_supplier').$objectref;
 				$file = $dir . "/" . $objectref . ".pdf";
 				if (! empty($conf->global->SUPPLIER_REF_IN_NAME)) $file = $dir . "/" . $objectref . ($objectrefsupplier?"_".$objectrefsupplier:"").".pdf";
 			}
@@ -184,6 +191,17 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 
 			if (file_exists($dir))
 			{
+				// Add pdfgeneration hook
+				if (! is_object($hookmanager))
+				{
+					include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
+					$hookmanager=new HookManager($this->db);
+				}
+				$hookmanager->initHooks(array('pdfgeneration'));
+				$parameters=array('file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs);
+				global $action;
+				$reshook=$hookmanager->executeHooks('beforePDFCreation',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+
 				$nblignes = count($object->lines);
 
                 $pdf=pdf_getInstance($this->format);
@@ -227,7 +245,7 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
                         $this->atleastonediscount++;
                     }
                 }
-				if (empty($this->atleastonediscount))
+				if (empty($this->atleastonediscount) && empty($conf->global->PRODUCT_USE_UNITS))
 				{
 					$this->posxpicture+=($this->postotalht - $this->posxdiscount);
 					$this->posxtva+=($this->postotalht - $this->posxdiscount);
@@ -251,10 +269,33 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 				$tab_height = 130;
 				$tab_height_newpage = 150;
 
+				// Incoterm
+				$height_incoterms = 0;
+				if ($conf->incoterm->enabled)
+				{
+					$desc_incoterms = $object->getIncotermsForPDF();
+					if ($desc_incoterms)
+					{
+						$tab_top = 88;
+
+						$pdf->SetFont('','', $default_font_size - 1);
+						$pdf->writeHTMLCell(190, 3, $this->posxdesc-1, $tab_top-1, dol_htmlentitiesbr($desc_incoterms), 0, 1);
+						$nexY = $pdf->GetY();
+						$height_incoterms=$nexY-$tab_top;
+
+						// Rect prend une longueur en 3eme param
+						$pdf->SetDrawColor(192,192,192);
+						$pdf->Rect($this->marge_gauche, $tab_top-1, $this->page_largeur-$this->marge_gauche-$this->marge_droite, $height_incoterms+1);
+
+						$tab_top = $nexY+6;
+						$height_incoterms += 4;
+					}
+				}
+
 				// Affiche notes
 				if (! empty($object->note_public))
 				{
-					$tab_top = 88;
+					$tab_top = 88 + $height_incoterms;
 
 					$pdf->SetFont('','', $default_font_size - 1);
 					$pdf->writeHTMLCell(190, 3, $this->posxdesc-1, $tab_top, dol_htmlentitiesbr($object->note_public), 0, 1);
@@ -301,7 +342,7 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 						$pageposafter=$pageposbefore;
 						//print $pageposafter.'-'.$pageposbefore;exit;
 						$pdf->setPageOrientation('', 1, $heightforfooter);	// The only function to edit the bottom margin of current page to set it.
-						pdf_writelinedesc($pdf,$object,$i,$outputlangs,$this->posxtva-$curX,4,$curX,$curY,$hideref,$hidedesc);
+						pdf_writelinedesc($pdf,$object,$i,$outputlangs,$this->posxtva-$curX,4,$curX,$curY,$hideref,$hidedesc,1);
 						$posyafter=$pdf->GetY();
 						if ($posyafter > ($this->page_hauteur - ($heightforfooter+$heightforfreetext+$heightforinfotot)))	// There is no space left for total+free text
 						{
@@ -349,9 +390,30 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 					$pdf->SetXY($this->posxup, $curY);
 					$pdf->MultiCell($this->posxqty-$this->posxup-0.8, 3, price($object->lines[$i]->pu_ht), 0, 'R', 0);
 
+					// Unit price before discount
+					$up_excl_tax = pdf_getlineupexcltax($object, $i, $outputlangs, $hidedetails);
+					$pdf->SetXY($this->posxup, $curY);
+					$pdf->MultiCell($this->posxqty-$this->posxup-0.8, 3, $up_excl_tax, 0, 'R', 0);
+
 					// Quantity
 					$pdf->SetXY($this->posxqty, $curY);
-					$pdf->MultiCell($this->posxdiscount-$this->posxqty-0.8, 3, $object->lines[$i]->qty, 0, 'R');
+					// Enough for 6 chars
+					if($conf->global->PRODUCT_USE_UNITS)
+					{
+						$pdf->MultiCell($this->posxunit-$this->posxqty-0.8, 4, $object->lines[$i]->qty, 0, 'R');
+					}
+					else
+					{
+						$pdf->MultiCell($this->posxdiscount-$this->posxqty-0.8, 4, $object->lines[$i]->qty, 0, 'R');
+					}
+
+					// Unit
+					if($conf->global->PRODUCT_USE_UNITS)
+					{
+						$unit = pdf_getlineunit($object, $i, $outputlangs, $hidedetails, $hookmanager);
+						$pdf->SetXY($this->posxunit, $curY);
+						$pdf->MultiCell($this->posxdiscount-$this->posxunit-0.8, 4, $unit, 0, 'L');
+					}
 
 					// Discount on line
 					$pdf->SetXY($this->posxdiscount, $curY);
@@ -386,7 +448,7 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 					$this->localtax2[$localtax2rate]+=$localtax2ligne;
 
 					// Add line
-					if (! empty($conf->global->MAIN_PDF_DASH_BETWEEN_LINES) && $i < ($nblignes - 1))
+					if ($conf->global->MAIN_PDF_DASH_BETWEEN_LINES && $i < ($nblignes - 1))
 					{
 						$pdf->setPage($pageposafter);
 						$pdf->SetLineStyle(array('dash'=>'1,1','color'=>array(210,210,210)));
@@ -757,7 +819,23 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 		if (empty($hidetop))
 		{
 			$pdf->SetXY($this->posxqty-1, $tab_top+1);
-			$pdf->MultiCell($this->posxdiscount-$this->posxqty-1,2, $outputlangs->transnoentities("Qty"),'','C');
+			if($conf->global->PRODUCT_USE_UNITS)
+			{
+				$pdf->MultiCell($this->posxunit-$this->posxqty-1,2, $outputlangs->transnoentities("Qty"),'','C');
+			}
+			else
+			{
+				$pdf->MultiCell($this->posxdiscount-$this->posxqty-1,2, $outputlangs->transnoentities("Qty"),'','C');
+			}
+		}
+
+		if($conf->global->PRODUCT_USE_UNITS) {
+			$pdf->line($this->posxunit - 1, $tab_top, $this->posxunit - 1, $tab_top + $tab_height);
+			if (empty($hidetop)) {
+				$pdf->SetXY($this->posxunit - 1, $tab_top + 1);
+				$pdf->MultiCell($this->posxdiscount - $this->posxunit - 1, 2, $outputlangs->transnoentities("Unit"), '',
+					'C');
+			}
 		}
 
 		$pdf->line($this->posxdiscount-1, $tab_top, $this->posxdiscount-1, $tab_top + $tab_height);
@@ -786,7 +864,7 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 	 *  Show payments table
 	 *
 	 *  @param	PDF			$pdf     		Object PDF
-	 *  @param  Object		$object     	Object invoice
+	 *  @param  FactureFournisseur		$object     	Object invoice
 	 *	@param	int			$posy			Position y in PDF
 	 *	@param	Translate	$outputlangs	Object langs for output
 	 *	@return int							<0 if KO, >0 if OK
@@ -861,7 +939,6 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 		else
 		{
 			$this->error=$this->db->lasterror();
-			dol_syslog($this->db,$this->error, LOG_ERR);
 			return -1;
 		}
 
@@ -871,7 +948,7 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 	 *  Show top header of page.
 	 *
 	 *  @param	PDF			$pdf     		Object PDF
-	 *  @param  Object		$object     	Object to show
+	 *  @param  FactureFournisseur		$object     	Object to show
 	 *  @param  int	    	$showaddress    0=no, 1=yes
 	 *  @param  Translate	$outputlangs	Object lang for output
 	 *  @return	void
@@ -925,34 +1002,57 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 		$pdf->SetXY($posx,$posy);
 		$pdf->SetTextColor(0,0,60);
 		$pdf->MultiCell(100, 3, $outputlangs->transnoentities("SupplierInvoice")." ".$outputlangs->convToOutputCharset($object->ref), '', 'R');
-
-		$pdf->SetFont('','B', $default_font_size);
+		$posy+=1;
 
 		if ($object->ref_supplier)
 		{
-    		$posy+=5;
+    		$posy+=4;
+			$pdf->SetFont('','B', $default_font_size);
     		$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
     		$pdf->MultiCell(100, 4, $outputlangs->transnoentities("RefSupplier")." : " . $object->ref_supplier, '', 'R');
+			$posy+=1;
 		}
 
-		$posy+=1;
 		$pdf->SetFont('','', $default_font_size - 1);
 
-		$posy+=5;
-		$pdf->SetXY($posx,$posy);
+		if (! empty($conf->global->PDF_SHOW_PROJECT))
+		{
+			$object->fetch_projet();
+			if (! empty($object->project->ref))
+			{
+        		$posy+=4;
+				$pdf->SetXY($posx,$posy);
+        		$langs->load("projects");
+				$pdf->SetTextColor(0,0,60);
+				$pdf->MultiCell(100, 3, $outputlangs->transnoentities("Project")." : " . (empty($object->project->ref)?'':$object->projet->ref), '', 'R');
+			}
+		}
+
 		if ($object->date)
 		{
+			$posy+=4;
+			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
 			$pdf->MultiCell(100, 4, $outputlangs->transnoentities("Date")." : " . dol_print_date($object->date,"day",false,$outputlangs,true), '', 'R');
 		}
 		else
 		{
+			$posy+=4;
+			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(255,0,0);
 			$pdf->MultiCell(100, 4, strtolower($outputlangs->transnoentities("OrderToProcess")), '', 'R');
 		}
 
-		$posy+=2;
+		if ($object->thirdparty->code_fournisseur)
+		{
+			$posy+=4;
+			$pdf->SetXY($posx,$posy);
+			$pdf->SetTextColor(0,0,60);
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("SupplierCode")." : " . $outputlangs->transnoentities($object->thirdparty->code_fournisseur), '', 'R');
+		}
+
+		$posy+=1;
 		$pdf->SetTextColor(0,0,60);
 
 		// Show list of linked objects
@@ -1001,18 +1101,15 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 				$result=$object->fetch_contact($arrayidcontact[0]);
 			}
 
-			// Recipient name
-			if (! empty($usecontact))
-			{
-				// On peut utiliser le nom de la societe du contact
-				if (! empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) $socname = $object->contact->socname;
-				else $socname = $mysoc->nom;
-				$carac_client_name=$outputlangs->convToOutputCharset($socname);
+			//Recipient name
+			// On peut utiliser le nom de la societe du contact
+			if ($usecontact && !empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) {
+				$thirdparty = $object->contact;
+			} else {
+				$thirdparty = $mysoc;
 			}
-			else
-			{
-				$carac_client_name=$outputlangs->convToOutputCharset($mysoc->nom);
-			}
+
+			$carac_client_name= pdfBuildThirdpartyName($thirdparty, $outputlangs);
 
 			$carac_client=pdf_build_address($outputlangs,$this->emetteur,$mysoc,((!empty($object->contact))?$object->contact:null),$usecontact,'target');
 
@@ -1035,9 +1132,11 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 			$pdf->SetFont('','B', $default_font_size);
 			$pdf->MultiCell($widthrecbox, 4, $carac_client_name, 0, 'L');
 
+			$posy = $pdf->getY();
+
 			// Show recipient information
 			$pdf->SetFont('','', $default_font_size - 1);
-			$pdf->SetXY($posx+2,$posy+4+(dol_nboflines_bis($carac_client_name,50)*4));
+			$pdf->SetXY($posx+2,$posy);
 			$pdf->MultiCell($widthrecbox, 4, $carac_client, 0, 'L');
 		}
 	}
@@ -1046,14 +1145,15 @@ class pdf_canelle extends ModelePDFSuppliersInvoices
 	 *   	Show footer of page. Need this->emetteur object
      *
 	 *   	@param	PDF			$pdf     			PDF
-	 * 		@param	Object		$object				Object to show
+	 * 		@param	FactureFournisseur		$object				Object to show
 	 *      @param	Translate	$outputlangs		Object lang for output
 	 *      @param	int			$hidefreetext		1=Hide free text
 	 *      @return	int								Return height of bottom margin including footer text
 	 */
 	function _pagefoot(&$pdf, $object, $outputlangs,$hidefreetext=0)
 	{
-		return pdf_pagefoot($pdf,$outputlangs,'SUPPLIER_INVOICE_FREE_TEXT',$this->emetteur,$this->marge_basse,$this->marge_gauche,$this->page_hauteur,$object,0,$hidefreetext);
+		$showdetails=0;
+		return pdf_pagefoot($pdf,$outputlangs,'SUPPLIER_INVOICE_FREE_TEXT',$this->emetteur,$this->marge_basse,$this->marge_gauche,$this->page_hauteur,$object,$showdetails,$hidefreetext);
 	}
 
 }

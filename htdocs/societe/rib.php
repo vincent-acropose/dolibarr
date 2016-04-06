@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2002-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2003      Jean-Louis Bergamo   <jlb@j1b.org>
- * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2013      Peter Fontaine       <contact@peterfontaine.fr>
  * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
@@ -30,6 +30,7 @@ require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/bank.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/companybankaccount.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/bonprelevement.class.php';
 
 $langs->load("companies");
 $langs->load("commercial");
@@ -72,15 +73,16 @@ if ($action == 'update' && ! $_POST["cancel"])
 	$account->number          = $_POST["number"];
 	$account->cle_rib         = $_POST["cle_rib"];
 	$account->bic             = $_POST["bic"];
-	$account->iban_prefix     = $_POST["iban_prefix"];
+	$account->iban            = $_POST["iban"];
 	$account->domiciliation   = $_POST["domiciliation"];
 	$account->proprio         = $_POST["proprio"];
 	$account->owner_address   = $_POST["owner_address"];
+	$account->frstrecur       = GETPOST('frstrecur');
 
 	$result = $account->update($user);
 	if (! $result)
 	{
-		$message=$account->error;
+		setEventMessage($account->error, 'errors');
 		$_GET["action"]='edit';     // Force chargement page edition
 	}
 	else
@@ -130,15 +132,16 @@ if ($action == 'add' && ! $_POST["cancel"])
 	    $account->number          = $_POST["number"];
 	    $account->cle_rib         = $_POST["cle_rib"];
 	    $account->bic             = $_POST["bic"];
-	    $account->iban_prefix     = $_POST["iban_prefix"];
+	    $account->iban            = $_POST["iban"];
 	    $account->domiciliation   = $_POST["domiciliation"];
 	    $account->proprio         = $_POST["proprio"];
 	    $account->owner_address   = $_POST["owner_address"];
+		$account->frstrecur       = GETPOST('frstrecur');
 
 	    $result = $account->update($user);	// TODO Use create and include update into create method
 	    if (! $result)
 	    {
-	        $message=$account->error;
+		    setEventMessages($account->error, $account->errors, 'errors');
 	        $_GET["action"]='create';     // Force chargement page création
 	    }
 	    else
@@ -154,12 +157,13 @@ if ($action == 'setasdefault')
 {
     $account = new CompanyBankAccount($db);
     $res = $account->setAsDefault(GETPOST('ribid','int'));
-    if ($res) {
+    if ($res)
+    {
         $url=DOL_URL_ROOT.'/societe/rib.php?socid='.$soc->id;
         header('Location: '.$url);
         exit;
     } else {
-        $message=$db->lasterror;
+	    setEventMessage($db->lasterror, 'errors');
     }
 }
 
@@ -177,26 +181,27 @@ if ($action == 'confirm_delete' && $_GET['confirm'] == 'yes')
 		}
 		else
 		{
-			$message = $account->error;
+			setEventMessage($account->error, 'errors');
 		}
 	}
 	else
 	{
-         $message = $account->error;
+		setEventMessage($account->error, 'errors');
     }
 }
+
 
 /*
  *	View
  */
 
 $form = new Form($db);
+$prelevement = new BonPrelevement($db);
 
 llxHeader();
 
 $head=societe_prepare_head2($soc);
 
-dol_fiche_head($head, 'rib', $langs->trans("ThirdParty"),0,'company');
 
 $account = new CompanyBankAccount($db);
 if (! $id)
@@ -206,16 +211,27 @@ else
 if (empty($account->socid)) $account->socid=$soc->id;
 
 
+if ($socid && $action == 'edit' && $user->rights->societe->creer)
+{
+    print '<form action="rib.php?socid='.$soc->id.'" method="post">';
+    print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+    print '<input type="hidden" name="action" value="update">';
+    print '<input type="hidden" name="id" value="'.$_GET["id"].'">';
+}
+if ($socid && $action == 'create' && $user->rights->societe->creer)
+{
+    print '<form action="rib.php?socid='.$soc->id.'" method="post">';
+    print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+    print '<input type="hidden" name="action" value="add">';
+}
 
-/* ************************************************************************** */
-/*                                                                            */
-/* Visu et edition                                                            */
-/*                                                                            */
-/* ************************************************************************** */
 
+// View
 if ($socid && $action != 'edit' && $action != "create")
 {
-    // Confirm delete third party
+	dol_fiche_head($head, 'rib', $langs->trans("ThirdParty"),0,'company');
+
+	// Confirm delete third party
     if ($action == 'delete')
     {
         print $form->formconfirm($_SERVER["PHP_SELF"]."?socid=".$soc->id."&ribid=".($ribid?$ribid:$id), $langs->trans("DeleteARib"), $langs->trans("ConfirmDeleteRib", $account->getRibLabel()), "confirm_delete", '', 0, 1);
@@ -225,10 +241,10 @@ if ($socid && $action != 'edit' && $action != "create")
 
     print '<table class="border" width="100%">';
 
-    print '<tr><td>'.$langs->trans("LabelRIB").'</td>';
+    print '<tr><td width="35%">'.$langs->trans("LabelRIB").'</td>';
     print '<td colspan="4">'.$account->label.'</td></tr>';
 
-	print '<tr><td valign="top" width="35%">'.$langs->trans("BankName").'</td>';
+	print '<tr><td valign="top">'.$langs->trans("BankName").'</td>';
 	print '<td colspan="4">'.$account->bank.'</td></tr>';
 
 	// Show fields of bank account
@@ -293,10 +309,26 @@ if ($socid && $action != 'edit' && $action != "create")
 	}
 
 	print '<tr><td valign="top">'.$langs->trans("IBAN").'</td>';
-	print '<td colspan="4">'.$account->iban_prefix.'</td></tr>';
+	print '<td colspan="4">'.$account->iban . '&nbsp;';
+    if (! empty($account->iban)) {
+        if (! checkIbanForAccount($account)) {
+            print img_picto($langs->trans("IbanNotValid"),'warning');
+        } else {
+            print img_picto($langs->trans("IbanValid"),'info');
+        }
+    }
+    print '</td></tr>';
 
 	print '<tr><td valign="top">'.$langs->trans("BIC").'</td>';
-	print '<td colspan="4">'.$account->bic.'</td></tr>';
+	print '<td colspan="4">'.$account->bic.'&nbsp;';
+    if (! empty($account->bic)) {
+        if (! checkSwiftForAccount($account)) {
+            print img_picto($langs->trans("SwiftNotValid"),'warning');
+        } else {
+            print img_picto($langs->trans("SwiftValid"),'info');
+        }
+    }
+    print '</td></tr>';
 
 	print '<tr><td valign="top">'.$langs->trans("BankAccountDomiciliation").'</td><td colspan="4">';
 	print $account->domiciliation;
@@ -318,7 +350,12 @@ if ($socid && $action != 'edit' && $action != "create")
 		print '<div class="warning">'.$langs->trans("RIBControlError").'</div>';
 	}
 
-    print "<br />";
+    print "<br>";
+
+
+    /*
+     * List of bank accounts
+     */
 
     print_titre($langs->trans("AllRIB"));
 
@@ -334,13 +371,18 @@ if ($socid && $action != 'edit' && $action != "create")
         print_liste_field_titre($langs->trans("RIB"));
         print_liste_field_titre($langs->trans("IBAN"));
         print_liste_field_titre($langs->trans("BIC"));
+        if (! empty($conf->prelevement->enabled))
+        {
+			print '<td>RUM</td>';
+			print '<td>'.$langs->trans("WithdrawMode").'</td>';
+        }
         print_liste_field_titre($langs->trans("DefaultRIB"), '', '', '', '', 'align="center"');
-        print '<td width="40"></td>';
-        print '</tr>';
+        print_liste_field_titre('',$_SERVER["PHP_SELF"],"",'','','',$sortfield,$sortorder,'maxwidthsearch ');
+		print "</tr>\n";
 
         foreach ($rib_list as $rib)
         {
-            print "<tr $bc[$var]>";
+            print "<tr ".$bc[$var].">";
             // Label
             print '<td>'.$rib->label.'</td>';
             // Bank name
@@ -351,6 +393,16 @@ if ($socid && $action != 'edit' && $action != "create")
             print '<td>'.$rib->iban.'</td>';
             // BIC
             print '<td>'.$rib->bic.'</td>';
+
+            if (! empty($conf->prelevement->enabled))
+            {
+            	// RUM
+				print '<td>'.$prelevement->buildRumNumber($soc->code_client, $rib->datec, $rib->id).'</td>';
+
+				// FRSTRECUR
+				print '<td>'.$rib->frstrecur.'</td>';
+            }
+
             // Default
             print '<td align="center" width="70">';
             if (!$rib->default_rib) {
@@ -376,38 +428,31 @@ if ($socid && $action != 'edit' && $action != "create")
            		print img_picto($langs->trans("Delete"),'delete');
            		print '</a>';
             }
-
-            print '</td>';
-            print '</tr>';
-            $var = !$var;
+        	print '</td>';
+	        print '</tr>';
         }
 
-        if (count($rib_list) == 0) {
-            print '<tr><td colspan="7" align="center">'.$langs->trans("NoBANRecord").'</td></tr>';
+        if (count($rib_list) == 0)
+        {
+        	$colspan=7;
+        	if (! empty($conf->prelevement->enabled)) $colspan+=2;
+            print '<tr '.$bc[0].'><td colspan="'.$colspan.'" align="center">'.$langs->trans("NoBANRecord").'</td></tr>';
         }
 
         print '</table>';
     } else {
         dol_print_error($db);
     }
+
+    dol_fiche_end();
 }
 
-/* ************************************************************************** */
-/*                                                                            */
-/* Edition                                                                    */
-/*                                                                            */
-/* ************************************************************************** */
-
+// Edit
 if ($socid && $action == 'edit' && $user->rights->societe->creer)
 {
-    dol_htmloutput_mesg($message);
+	dol_fiche_head($head, 'rib', $langs->trans("ThirdParty"),0,'company');
 
-    print '<form action="rib.php?socid='.$soc->id.'" method="post">';
-    print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-    print '<input type="hidden" name="action" value="update">';
-    print '<input type="hidden" name="id" value="'.$_GET["id"].'">';
-
-    print '<table class="border" width="100%">';
+	print '<table class="border" width="100%">';
 
     print '<tr><td valign="top" width="35%" class="fieldrequired">'.$langs->trans("LabelRIB").'</td>';
     print '<td colspan="4"><input size="30" type="text" name="label" value="'.$account->label.'"></td></tr>';
@@ -461,7 +506,7 @@ if ($socid && $action == 'edit' && $user->rights->societe->creer)
 
 		if ($val == 'AccountNumber')
 		{
-			print '<td>'.$langs->trans("BankAccountNumber").'</td>';
+			print '<td class="fieldrequired">'.$langs->trans("BankAccountNumber").'</td>';
 			print '<td><input size="18" type="text" class="flat" name="number" value="'.$account->number.'"></td>';
 			print '</tr>';
 		}
@@ -478,14 +523,14 @@ if ($socid && $action == 'edit' && $user->rights->societe->creer)
 	}
 
     // IBAN
-    print '<tr><td valign="top">'.$langs->trans("IBAN").'</td>';
-    print '<td colspan="4"><input size="30" type="text" name="iban_prefix" value="'.$account->iban_prefix.'"></td></tr>';
+    print '<tr><td valign="top" class="fieldrequired">'.$langs->trans("IBAN").'</td>';
+    print '<td colspan="4"><input size="30" type="text" name="iban" value="'.$account->iban.'"></td></tr>';
 
-    print '<tr><td valign="top">'.$langs->trans("BIC").'</td>';
+    print '<tr><td valign="top" class="fieldrequired">'.$langs->trans("BIC").'</td>';
     print '<td colspan="4"><input size="12" type="text" name="bic" value="'.$account->bic.'"></td></tr>';
 
     print '<tr><td valign="top">'.$langs->trans("BankAccountDomiciliation").'</td><td colspan="4">';
-    print "<textarea name=\"domiciliation\" rows=\"4\" cols=\"40\">";
+    print '<textarea name="domiciliation" rows="4" cols="40">';
     print $account->domiciliation;
     print "</textarea></td></tr>";
 
@@ -498,30 +543,43 @@ if ($socid && $action == 'edit' && $user->rights->societe->creer)
     print $account->owner_address;
     print "</textarea></td></tr>";
 
-    print '</table><br>';
+    print '</table>';
 
-    print '<center><input class="button" value="'.$langs->trans("Modify").'" type="submit">';
-    print ' &nbsp; <input name="cancel" class="button" value="'.$langs->trans("Cancel").'" type="submit">';
-    print '</center>';
+    if ($conf->prelevement->enabled)
+    {
+		print '<br>';
 
-    print '</form>';
+    	print '<table class="border" width="100%">';
+
+    	if (empty($account->rum)) $account->rum = $prelevement->buildRumNumber($soc->code_client, $account->datec, $account->id);
+
+    	// RUM
+    	print '<tr><td width="35%">'.$langs->trans("RUM").'</td>';
+	    print '<td colspan="4">'.$account->rum.'</td></tr>';
+
+	    // FRSTRECUR
+	    print '<tr><td width="35%">'.$langs->trans("WithdrawMode").'</td>';
+	    print '<td colspan="4"><input size="30" type="text" name="frstrecur" value="'.(GETPOST('frstrecur')?GETPOST('frstrecur'):$account->frstrecur).'"></td></tr>';
+
+	    print '</table>';
+    }
+
+	dol_fiche_end();
+
+	print '<div align="center">';
+	print '<input class="button" value="'.$langs->trans("Modify").'" type="submit">';
+    print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+	print '<input class="button" name="cancel" value="'.$langs->trans("Cancel").'" type="submit">';
+    print '</div>';
 }
 
 
-/* ************************************************************************** */
-/*                                                                            */
-/* Création                                                                   */
-/*                                                                            */
-/* ************************************************************************** */
-
+// Create
 if ($socid && $action == 'create' && $user->rights->societe->creer)
 {
-    dol_htmloutput_mesg($message);
+	dol_fiche_head($head, 'rib', $langs->trans("ThirdParty"),0,'company');
 
-    print '<form action="rib.php?socid='.$soc->id.'" method="post">';
-    print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-    print '<input type="hidden" name="action" value="add">';
-    print '<table class="border" width="100%">';
+	print '<table class="border" width="100%">';
 
 
     print '<tr><td valign="top" width="35%" class="fieldrequired">'.$langs->trans("LabelRIB").'</td>';
@@ -561,7 +619,7 @@ if ($socid && $action == 'create' && $user->rights->societe->creer)
 
     // IBAN
     print '<tr><td valign="top">'.$langs->trans("IBAN").'</td>';
-    print '<td colspan="4"><input size="30" type="text" name="iban_prefix" value="'.GETPOST('iban_prefix').'"></td></tr>';
+    print '<td colspan="4"><input size="30" type="text" name="iban" value="'.GETPOST('iban').'"></td></tr>';
 
     print '<tr><td valign="top">'.$langs->trans("BIC").'</td>';
     print '<td colspan="4"><input size="12" type="text" name="bic" value="'.GETPOST('bic').'"></td></tr>';
@@ -580,17 +638,43 @@ if ($socid && $action == 'create' && $user->rights->societe->creer)
     print GETPOST('owner_address');
     print "</textarea></td></tr>";
 
-    print '</table><br>';
+    print '</table>';
 
-    print '<center><input class="button" value="'.$langs->trans("Add").'" type="submit">';
-    print ' &nbsp; <input name="cancel" class="button" value="'.$langs->trans("Cancel").'" type="submit">';
-    print '</center>';
+    if ($conf->prelevement->enabled)
+    {
+		print '<br>';
 
-    print '</form>';
+    	print '<table class="border" width="100%">';
+
+    	// RUM
+    	print '<tr><td width="35%">'.$langs->trans("RUM").'</td>';
+	    print '<td colspan="4">'.$langs->trans("RUMWillBeGenerated").'</td></tr>';
+
+	    // FRSTRECUR
+	    print '<tr><td width="35%">'.$langs->trans("WithdrawMode").'</td>';
+	    print '<td colspan="4"><input size="30" type="text" name="frstrecur" value="'.(isset($_POST['frstrecur'])?GETPOST('frstrecur'):'FRST').'"></td></tr>';
+
+	    print '</table>';
+    }
+
+	dol_fiche_end();
+
+	print '<div align="center">';
+	print '<input class="button" value="'.$langs->trans("Add").'" type="submit">';
+    print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+	print '<input name="cancel" class="button" value="'.$langs->trans("Cancel").'" type="submit">';
+    print '</div>';
 }
 
+if ($socid && $action == 'edit' && $user->rights->societe->creer)
+{
+	print '</form>';
+}
+if ($socid && $action == 'create' && $user->rights->societe->creer)
+{
+	print '</form>';
+}
 
-dol_fiche_end();
 
 
 if ($socid && $action != 'edit' && $action != 'create')

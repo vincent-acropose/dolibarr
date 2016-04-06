@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2002-2003 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2015 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2011      Herve Prot           <herve.prot@symeos.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -57,7 +57,7 @@ llxHeader();
 
 print_fiche_titre($langs->trans("ListOfGroups"));
 
-$sql = "SELECT g.rowid, g.nom, g.entity, g.datec, COUNT(DISTINCT ugu.fk_user) as nb";
+$sql = "SELECT g.rowid, g.nom as name, g.entity, g.datec, COUNT(DISTINCT ugu.fk_user) as nb";
 $sql.= " FROM ".MAIN_DB_PREFIX."usergroup as g";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."usergroup_user as ugu ON ugu.fk_usergroup = g.rowid";
 if (! empty($conf->multicompany->enabled) && $conf->entity == 1 && ($conf->multicompany->transverse_mode || ($user->admin && ! $user->entity)))
@@ -91,7 +91,7 @@ if ($resql)
     {
     	print_liste_field_titre($langs->trans("Entity"),$_SERVER["PHP_SELF"],"g.entity",$param,"",'align="center"',$sortfield,$sortorder);
     }
-    print_liste_field_titre($langs->trans("NbOfUsers"),$_SERVER["PHP_SELF"],"g.nb",$param,"",'align="center"',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("NbOfUsers"),$_SERVER["PHP_SELF"],"nb",$param,"",'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("DateCreation"),$_SERVER["PHP_SELF"],"g.datec",$param,"",'align="right"',$sortfield,$sortorder);
     print "</tr>\n";
     $var=True;
@@ -101,14 +101,14 @@ if ($resql)
         $var=!$var;
 
         print "<tr ".$bc[$var].">";
-        print '<td><a href="fiche.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowGroup"),"group").' '.$obj->nom.'</a>';
+        print '<td><a href="card.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowGroup"),"group").' '.$obj->name.'</a>';
         if (! $obj->entity)
         {
         	print img_picto($langs->trans("GlobalGroup"),'redstar');
         }
         print "</td>";
         //multicompany
-        if (! empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode) && $conf->entity == 1)
+        if (! empty($conf->multicompany->enabled) && is_object($mc) && empty($conf->multicompany->transverse_mode) && $conf->entity == 1)
         {
             $mc->getInfo($obj->entity);
             print '<td align="center">'.$mc->label.'</td>';

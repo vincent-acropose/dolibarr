@@ -1,14 +1,14 @@
 # Dolibarr language file - Source file is en_US - install
-InstallEasy=Me yritimme tehdä Dolibarr setup mahdollisimman helppoa. Seuraa ohjeita vaihe vaiheelta.
-MiscellaneousChecks=Esitiedot tarkistaa
-DolibarrWelcome=Tervetuloa Dolibarr
-ConfFileExists=Configuration <b>file %s</b> on olemassa.
-ConfFileDoesNotExists=Configuration <b>file %s</b> ei ole olemassa!
-ConfFileDoesNotExistsAndCouldNotBeCreated=Configuration <b>file %s</b> ei ole olemassa, ja ei voi luoda!
-ConfFileCouldBeCreated=Configuration <b>file %s</b> voitaisiin luoda.
-ConfFileIsNotWritable=Kokoonpano <b>tiedostoa %s</b> ei ole kirjoitettavissa. Tarkista käyttöoikeudet. Ensimmäistä kertaa asentaa, verkkopalvelimesi on myönnettävä voi kirjoittaa tämä tiedosto aikana asennusprosessi ( "chmod 666" esimerkiksi Unix kuten OS).
+InstallEasy=Seuraa ohjeita askel askeleelta.
+MiscellaneousChecks=Ehtojen tarkistus
+DolibarrWelcome=Tervetuloa Dolibarriin
+ConfFileExists=Asetustiedosto <b>%s</b> on olemassa.
+ConfFileDoesNotExists=Asetustiedosto <b>%s</b> ei ole olemassa!
+ConfFileDoesNotExistsAndCouldNotBeCreated=Asetustiedostoa <b>%s</b> ei ole olemassa, ja sitä ei voi luoda!
+ConfFileCouldBeCreated=Asetustiedosto <b>%s</b> voitaisiin luoda.
+ConfFileIsNotWritable=Asetustiedosto <b>%s</b> ei ole kirjoitettavissa. Tarkista käyttöoikeudet. Ensimmäistä kertaa asennettaessa, verkkopalvelimesi on annettava kirjoituslupa tämän asetusprosessin aikana asennus ( esimerkiksi "chmod 666"  Unix tyylisisä OSsiessa).
 ConfFileIsWritable=Configuration <b>file %s</b> on kirjoitettavissa.
-ConfFileReload=Päivitä kaikki tiedot asetustiedosto.
+ConfFileReload=Uudelleen lataa kaikki tiedot asetustiedostosta.
 PHPSupportSessions=Tämä PHP tukee istuntoja.
 PHPSupportPOSTGETOk=Tämä PHP tukee muuttujat POST ja GET.
 PHPSupportPOSTGETKo=On mahdollista, sinun PHP asennusohjelma ei tue muuttujat POST tai GET. Tarkista parametri <b>variables_order</b> vuonna php.ini.
@@ -35,7 +35,6 @@ IfDatabaseExistsGoBackAndCheckCreate=Jos tietokanta on jo olemassa, mene takaisi
 WarningBrowserTooOld=Selaimesi versio on liian vanha. Selaimen päivitys tuoreimpaan versioon on suositeltavaa. Suosittelemme selaimeksi Firefoxia, Chromea tai Operaa.
 PHPVersion=PHP Version
 YouCanContinue=Voit jatkaa ...
-PleaseBePatient=Ole kärsivällinen ...
 License=Käyttämällä lisenssi
 ConfigurationFile=Configuration file
 WebPagesDirectory=Directory jossa www-sivut on tallennettu
@@ -64,6 +63,7 @@ DatabaseSuperUserAccess=Tietokanta - SuperUser pääsy
 CheckToCreateDatabase=Valintaruutu, jos tietokanta ei ole olemassa, ja ne on luotu. <br> Tässä tapauksessa sinun täytyy täyttää tunnus / salasana SuperUser huomioon alareunassa tällä sivulla.
 CheckToCreateUser=Valintaruutu, jos kirjautuminen ei ole olemassa, ja ne on luotu. <br> Tässä tapauksessa sinun täytyy täyttää tunnus / salasana SuperUser huomioon alareunassa tällä sivulla.
 Experimental=(kokeellinen, ei käytössä)
+Deprecated=(deprecated)
 DatabaseRootLoginDescription=Kirjaudu että käyttäjä voi luoda uusia tietokantoja tai uusia käyttäjiä, hyödytön, jos tietokanta ja tietokanta on jo olemassa (kuten silloin, kun olet isännöi Web hosting-palvelujen tarjoaja).
 KeepEmptyIfNoPassword=Jätä tyhjä, jos käyttäjä ei ole salasanaa (välttää)
 SaveConfigurationFile=Tallenna arvot
@@ -155,6 +155,8 @@ MigrationFinished=Muuttoliike valmis
 LastStepDesc=<strong>Viimeinen askel:</strong> Määritä tässä käyttäjätunnuksen ja salasanan aiot käyttää yhteyden ohjelmisto. Älä löysä tämä on tilin hallinnoida kaikkia muita.
 ActivateModule=Aktivoi moduuli %s
 ShowEditTechnicalParameters=Klikkaa tästä näyttääksesi/muuttaaksesi edistyneemmät parametrit (asiantuntija tila)
+WarningUpgrade=Warning:\nDid your run a database backup first ?\nThis is highly recommanded: for example, due to some bugs into databases systems (for example mysql version 5.5.40), some data or tables may be lost during this process, so it is highly recommanded to have a complete dump of your database before starting migration.\n\nClick OK to start migration process...
+ErrorDatabaseVersionForbiddenForMigration=Your database version is %s. It has a critical bug making data loss if you make structure change on your database, like it is required by the migration process. For his reason, migration will not be allowed until you upgrade your database to a higher fixed version (list of known bugged version: %s)
 
 #########
 # upgrade
@@ -206,6 +208,7 @@ MigrationProjectTaskTime=Päivitä aika sekunneissa
 MigrationActioncommElement=Päivitä tiedot toimista
 MigrationPaymentMode=Tiedot muuttoliike maksua tilassa
 MigrationCategorieAssociation=Kategorioiden siirto 
-
-ShowNotAvailableOptions=Show not available options
-HideNotAvailableOptions=Hide not available options
+MigrationEvents=Migration of events to add event owner into assignement table
+MigrationReloadModule=Reload module %s
+ShowNotAvailableOptions=Näytä ei saatavilla olevat valinnat
+HideNotAvailableOptions=Piilota ei saatavilla olevat valinnat

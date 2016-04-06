@@ -22,7 +22,6 @@
 
  */
 
-// Put here all includes required by your class file
 require_once DOL_DOCUMENT_ROOT."/core/class/commonobject.class.php";
 require_once DOL_DOCUMENT_ROOT."/core/lib/functions2.lib.php";
 
@@ -84,7 +83,7 @@ class Resource extends CommonObject
 
 
     	// Insert request
-    	$sql = "INSERT INTO ".MAIN_DB_PREFIX."resource(";
+    	$sql = "INSERT INTO ".MAIN_DB_PREFIX.$this->table_element."(";
 
     	$sql.= " entity,";
     	$sql.= "ref,";
@@ -106,7 +105,7 @@ class Resource extends CommonObject
 
     	$this->db->begin();
 
-    	dol_syslog(get_class($this)."::create sql=".$sql, LOG_DEBUG);
+    	dol_syslog(get_class($this)."::create", LOG_DEBUG);
     	$resql=$this->db->query($sql);
     	if (! $resql) {
     		$error++; $this->errors[]="Error ".$this->db->lasterror();
@@ -114,7 +113,7 @@ class Resource extends CommonObject
 
     	if (! $error)
     	{
-    		$this->id = $this->db->last_insert_id(MAIN_DB_PREFIX."place");
+    		$this->id = $this->db->last_insert_id(MAIN_DB_PREFIX.$this->table_element);
 
     		if (! $notrigger)
     		{
@@ -164,11 +163,11 @@ class Resource extends CommonObject
     	$sql.= " t.note_private,";
     	$sql.= " t.tms,";
     	$sql.= " ty.label as type_label";
-    	$sql.= " FROM ".MAIN_DB_PREFIX."resource as t";
+    	$sql.= " FROM ".MAIN_DB_PREFIX.$this->table_element." as t";
     	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_resource as ty ON ty.code=t.fk_code_type_resource";
     	$sql.= " WHERE t.rowid = ".$this->db->escape($id);
 
-    	dol_syslog(get_class($this)."::fetch sql=".$sql, LOG_DEBUG);
+    	dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
     	$resql=$this->db->query($sql);
     	if ($resql)
     	{
@@ -205,7 +204,7 @@ class Resource extends CommonObject
      *  @param  int		$notrigger	 0=launch triggers after, 1=disable triggers
      *  @return int     		   	 <0 if KO, >0 if OK
      */
-    function update($user=0, $notrigger=0)
+    function update($user=null, $notrigger=0)
     {
     	global $conf, $langs;
     	$error=0;
@@ -216,7 +215,7 @@ class Resource extends CommonObject
     	if (isset($this->description)) $this->description=trim($this->description);
 
     	// Update request
-    	$sql = "UPDATE ".MAIN_DB_PREFIX."resource SET";
+    	$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element." SET";
     	$sql.= " ref=".(isset($this->ref)?"'".$this->db->escape($this->ref)."'":"null").",";
     	$sql.= " description=".(isset($this->description)?"'".$this->db->escape($this->description)."'":"null").",";
     	$sql.= " fk_code_type_resource=".(isset($this->fk_code_type_resource)?"'".$this->db->escape($this->fk_code_type_resource)."'":"null").",";
@@ -225,7 +224,7 @@ class Resource extends CommonObject
 
     	$this->db->begin();
 
-    	dol_syslog(get_class($this)."::update sql=".$sql, LOG_DEBUG);
+    	dol_syslog(get_class($this)."::update", LOG_DEBUG);
     	$resql = $this->db->query($sql);
     	if (! $resql) { $error++; $this->errors[]="Error ".$this->db->lasterror(); }
 
@@ -285,7 +284,7 @@ class Resource extends CommonObject
 		$sql.= " FROM ".MAIN_DB_PREFIX."element_resources as t";
     	$sql.= " WHERE t.rowid = ".$this->db->escape($id);
 
-    	dol_syslog(get_class($this)."::fetch sql=".$sql, LOG_DEBUG);
+    	dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
     	$resql=$this->db->query($sql);
     	if ($resql)
     	{
@@ -315,7 +314,6 @@ class Resource extends CommonObject
     	else
     	{
     		$this->error="Error ".$this->db->lasterror();
-    		dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
     		return -1;
     	}
     }
@@ -333,41 +331,35 @@ class Resource extends CommonObject
 
         $error=0;
 
-        $sql = "DELETE FROM ".MAIN_DB_PREFIX."resource";
+        if (! $notrigger)
+        {
+            // Call trigger
+            $result=$this->call_trigger('RESOURCE_DELETE',$user);
+            if ($result < 0) return -1;
+            // End call triggers
+        }
+
+        $sql = "DELETE FROM ".MAIN_DB_PREFIX.$this->table_element;
         $sql.= " WHERE rowid =".$rowid;
 
-        dol_syslog(get_class($this)."::delete sql=".$sql);
+        dol_syslog(get_class($this)."::delete", LOG_DEBUG);
         if ($this->db->query($sql))
         {
             $sql = "DELETE FROM ".MAIN_DB_PREFIX."element_resources";
             $sql.= " WHERE element_type='resource' AND resource_id ='".$this->db->escape($rowid)."'";
-            dol_syslog(get_class($this)."::delete sql=".$sql);
+            dol_syslog(get_class($this)."::delete", LOG_DEBUG);
             if ($this->db->query($sql))
             {
-                if (! $notrigger)
-                {
-                    // Call triggers
-                    include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-                    $interface=new Interfaces($this->db);
-                    $result=$interface->run_triggers('RESOURCE_DELETE',$this,$user,$langs,$conf);
-                    if ($result < 0) {
-                        $error++; $this->errors=$interface->errors;
-                    }
-                    // End call triggers
-                }
-
                 return 1;
             }
             else {
                 $this->error=$this->db->lasterror();
-                dol_syslog(get_class($this)."::delete_resource error=".$this->error, LOG_ERR);
                 return -1;
             }
         }
         else
         {
             $this->error=$this->db->lasterror();
-            dol_syslog(get_class($this)."::delete_resource error=".$this->error, LOG_ERR);
             return -1;
         }
     }
@@ -393,9 +385,9 @@ class Resource extends CommonObject
     	$sql.= " t.fk_code_type_resource,";
     	$sql.= " t.tms,";
     	$sql.= " ty.label as type_label";
-    	$sql.= " FROM ".MAIN_DB_PREFIX."resource as t";
+    	$sql.= " FROM ".MAIN_DB_PREFIX.$this->table_element." as t";
     	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_type_resource as ty ON ty.code=t.fk_code_type_resource";
-    	//$sql.= " WHERE t.entity IN (".getEntity('resource').")";
+    	$sql.= " WHERE t.entity IN (".getEntity('resource',1).")";
 
     	//Manage filter
     	if (!empty($filter)){
@@ -409,9 +401,15 @@ class Resource extends CommonObject
     		}
     	}
     	$sql.= " GROUP BY t.rowid";
-    	$sql.= " ORDER BY $sortfield $sortorder ";
-    	if ($limit) $sql.= $this->db->plimit($limit+1,$offset);
-    	dol_syslog(get_class($this)."::fetch_all sql=".$sql, LOG_DEBUG);
+    	$sql.= $this->db->order($sortfield,$sortorder);
+        $this->num_all = 0;
+        if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST))
+        {
+            $result = $this->db->query($sql);
+            $this->num_all = $this->db->num_rows($result);
+        }
+    	if ($limit) $sql.= $this->db->plimit($limit, $offset);
+    	dol_syslog(get_class($this)."::fetch_all", LOG_DEBUG);
 
     	$resql=$this->db->query($sql);
     	if ($resql)
@@ -469,7 +467,7 @@ class Resource extends CommonObject
 		$sql.= " t.fk_user_create,";
 		$sql.= " t.tms";
    		$sql.= ' FROM '.MAIN_DB_PREFIX .'element_resources as t ';
-   		//$sql.= " WHERE t.entity IN (".getEntity('resource').")";
+   		$sql.= " WHERE t.entity IN (".getEntity('resource',1).")";
 
    		//Manage filter
    		if (!empty($filter)){
@@ -483,8 +481,9 @@ class Resource extends CommonObject
    			}
    		}
    		$sql.= " GROUP BY t.rowid";
-   		$sql.= " ORDER BY $sortfield $sortorder " . $this->db->plimit($limit+1,$offset);
-   		dol_syslog(get_class($this)."::fetch_all sql=".$sql, LOG_DEBUG);
+    	$sql.= $this->db->order($sortfield,$sortorder);
+   		if ($limit) $sql.= $this->db->plimit($limit+1,$offset);
+   		dol_syslog(get_class($this)."::fetch_all", LOG_DEBUG);
 
    		$resql=$this->db->query($sql);
    		if ($resql)
@@ -554,7 +553,7 @@ class Resource extends CommonObject
     	$sql.= " t.fk_user_create,";
     	$sql.= " t.tms";
     	$sql.= ' FROM '.MAIN_DB_PREFIX .'element_resources as t ';
-    	//$sql.= " WHERE t.entity IN (".getEntity('resource').")";
+    	$sql.= " WHERE t.entity IN (".getEntity('resource',1).")";
 
     	//Manage filter
     	if (!empty($filter)){
@@ -568,8 +567,9 @@ class Resource extends CommonObject
     		}
     	}
     	$sql.= " GROUP BY t.resource_id";
-    	$sql.= " ORDER BY " . $sortfield . "  " . $sortorder . " " . $this->db->plimit($limit+1,$offset);
-    	dol_syslog(get_class($this)."::fetch_all sql=".$sql, LOG_DEBUG);
+    	$sql.= $this->db->order($sortfield,$sortorder);
+    	if ($limit) $sql.= $this->db->plimit($limit+1,$offset);
+    	dol_syslog(get_class($this)."::fetch_all", LOG_DEBUG);
 
     	$resql=$this->db->query($sql);
     	if ($resql)
@@ -611,9 +611,9 @@ class Resource extends CommonObject
      * Fetch all resources available, declared by modules
      * Load available resource in array $this->available_resources
      *
-     * note : deprecated, remplaced by hook getElementResources
-     *
      * @return int 	number of available resources declared by modules
+     * @deprecated, remplaced by hook getElementResources
+     * @see getElementResources()
      */
     function fetch_all_available() {
     	global $conf;
@@ -640,7 +640,7 @@ class Resource extends CommonObject
 
     	if (! $this->table_element)
     	{
-    		dol_print_error('',get_class($this)."::load_previous_next_ref was called on objet with property table_element not defined", LOG_ERR);
+    		dol_print_error('',get_class($this)."::load_previous_next_ref was called on objet with property table_element not defined");
     		return -1;
     	}
 
@@ -702,7 +702,7 @@ class Resource extends CommonObject
      *  @param  int		$notrigger	 0=launch triggers after, 1=disable triggers
      *  @return int     		   	 <0 if KO, >0 if OK
      */
-    function update_element_resource($user=0, $notrigger=0)
+    function update_element_resource($user=null, $notrigger=0)
     {
     	global $conf, $langs;
 		$error=0;
@@ -729,7 +729,7 @@ class Resource extends CommonObject
 
 		$this->db->begin();
 
-		dol_syslog(get_class($this)."::update sql=".$sql, LOG_DEBUG);
+		dol_syslog(get_class($this)."::update", LOG_DEBUG);
         $resql = $this->db->query($sql);
     	if (! $resql) { $error++; $this->errors[]="Error ".$this->db->lasterror(); }
 
@@ -737,15 +737,10 @@ class Resource extends CommonObject
 		{
 			if (! $notrigger)
 			{
-	            // Uncomment this and change MYOBJECT to your own tag if you
-	            // want this action calls a trigger.
-
-	            // Call triggers
-	            include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-	            $interface=new Interfaces($this->db);
-	            $result=$interface->run_triggers('RESOURCE_MODIFY',$this,$user,$langs,$conf);
-	            if ($result < 0) { $error++; $this->errors=$interface->errors; }
-	            // End call triggers
+                // Call trigger
+                $result=$this->call_trigger('RESOURCE_MODIFY',$user);
+                if ($result < 0) $error++;
+                // End call triggers
 	    	}
 		}
 
@@ -784,7 +779,7 @@ class Resource extends CommonObject
 	    	$sql.=" AND resource_type LIKE '%".$resource_type."%'";
 	    $sql .= ' ORDER BY resource_type';
 
-	    dol_syslog(get_class($this)."::getElementResources sql=".$sql);
+	    dol_syslog(get_class($this)."::getElementResources", LOG_DEBUG);
 	    $resql = $this->db->query($sql);
 	    if ($resql)
 	    {
@@ -808,16 +803,20 @@ class Resource extends CommonObject
 	    return $resources;
     }
 
+    /*
+     *  Return an int number of resources linked to the element
+     *
+     *  @return     int
+     */
     function fetchElementResources($element,$element_id)
     {
-    	$resources = $this->getElementResources($element,$element_id);
-    	$i=0;
-    	foreach($resources as $nb => $resource)
-    	{
-    		$this->lines[$i] = fetchObjectByElement($resource['resource_id'],$resource['resource_type']);
-    		$i++;
-    	}
-    	return $i;
+        $resources = $this->getElementResources($element,$element_id);
+        $i=0;
+        foreach($resources as $nb => $resource) {
+            $this->lines[$i] = fetchObjectByElement($resource['resource_id'],$resource['resource_type']);
+            $i++;
+        }
+        return $i;
 
     }
 
@@ -837,7 +836,7 @@ class Resource extends CommonObject
     	$sql.= " FROM ".MAIN_DB_PREFIX."c_type_resource";
     	$sql.= " WHERE active > 0";
     	$sql.= " ORDER BY rowid";
-    	dol_syslog(get_class($this)."::load_cache_code_type_resource sql=".$sql,LOG_DEBUG);
+    	dol_syslog(get_class($this)."::load_cache_code_type_resource", LOG_DEBUG);
     	$resql = $this->db->query($sql);
     	if ($resql)
     	{
@@ -875,22 +874,22 @@ class Resource extends CommonObject
         global $langs;
 
         $result='';
+        $label=$langs->trans("ShowResource").': '.$this->ref;
 
         if ($option == '')
         {
-            $lien = '<a href="'.dol_buildpath('/resource/card.php',1).'?id='.$this->id. $get_params .'">';
+            $link = '<a href="'.dol_buildpath('/resource/card.php',1).'?id='.$this->id. $get_params .'" title="'.dol_escape_htmltag($label, 1).'" class="classfortooltip">';
             $picto='resource@resource';
             $label=$langs->trans("ShowResource").': '.$this->ref;
 
         }
 
-        $lienfin='</a>';
+        $linkend='</a>';
 
-        $label=$langs->trans("ShowResource").': '.$this->ref;
 
-        if ($withpicto) $result.=($lien.img_object($label,$picto).$lienfin);
+        if ($withpicto) $result.=($link.img_object($label, $picto, 'class="classfortooltip"').$linkend);
         if ($withpicto && $withpicto != 2) $result.=' ';
-        $result.=$lien.$this->ref.$lienfin;
+        $result.=$link.$this->ref.$linkend;
         return $result;
     }
 }

@@ -1,6 +1,7 @@
 <?php
-/* Copyright (C) 2013      Cédric Salvador    	<csalvador@gpcsolutions.fr>
- * Copyright (C) 2013-2014 Laurent Destaileur	<ely@users.sourceforge.net>
+/* Copyright (C) 2013		Cédric Salvador		<csalvador@gpcsolutions.fr>
+ * Copyright (C) 2013-2014	Laurent Destaileur	<ely@users.sourceforge.net>
+ * Copyright (C) 2014		Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,9 +52,15 @@ $tobuy = GETPOST('tobuy', 'int');
 $salert = GETPOST('salert', 'alpha');
 $mode = GETPOST('mode','alpha');
 
+$fourn_id = GETPOST('fourn_id','int');
+$texte = '';
+
 $sortfield = GETPOST('sortfield','alpha');
 $sortorder = GETPOST('sortorder','alpha');
 $page = GETPOST('page','int');
+if ($page == -1) { $page = 0; }
+$limit = $conf->liste_limit;
+$offset = $limit * $page ;
 
 if (!$sortfield) {
     $sortfield = 'p.ref';
@@ -62,11 +69,6 @@ if (!$sortfield) {
 if (!$sortorder) {
     $sortorder = 'ASC';
 }
-$limit = $conf->liste_limit;
-$offset = $limit * $page ;
-
-// Force limit to no (currently solution to solve loosing selection when using pagination. No pagination on this page)
-$limit = 0;
 
 
 /*
@@ -131,7 +133,6 @@ if ($action == 'order' && isset($_POST['valid']))
 				{
                     $error=$db->lasterror();
                     dol_print_error($db);
-                    dol_syslog('replenish.php: '.$error, LOG_ERR);
                 }
                 $db->free($resql);
                 unset($_POST['fourn' . $i]);
@@ -182,13 +183,14 @@ if ($action == 'order' && isset($_POST['valid']))
                 }
             } else {
                 $order->socid = $id_fourn;
+                $order->fetch_thirdparty();
                 //trick to know which orders have been generated this way
                 $order->source = 42;
                 foreach ($supplier['lines'] as $line) {
                     $order->lines[] = $line;
                 }
-                $order->cond_reglement_id = 0;
-                $order->mode_reglement_id = 0;
+                $order->cond_reglement_id = $order->thirdparty->cond_reglement_supplier_id;
+                $order->mode_reglement_id = $order->thirdparty->mode_reglement_supplier_id;
                 $id = $order->create($user);
                 if ($id < 0) {
                     $fail++;
@@ -218,6 +220,7 @@ if ($action == 'order' && isset($_POST['valid']))
     }
 }
 
+
 /*
  * View
  */
@@ -233,7 +236,7 @@ if (! empty($conf->global->STOCK_CALCULATE_ON_SHIPMENT) || ! empty($conf->global
 $usevirtualstock=-1;
 if ($virtualdiffersfromphysical)
 {
-	$usevirtualstock=($conf->global->STOCK_USE_VIRTUAL_STOCK?1:0);
+	$usevirtualstock=(! empty($conf->global->STOCK_USE_VIRTUAL_STOCK)?1:0);
 	if ($mode=='virtual') $usevirtualstock=1;
 	if ($mode=='physical') $usevirtualstock=0;
 }
@@ -290,61 +293,60 @@ if ($usevirtualstock)
 	$sqlCommandesCli = "(SELECT ".$db->ifsql("SUM(cd.qty) IS NULL", "0", "SUM(cd.qty)")." as qty";
 	$sqlCommandesCli.= " FROM ".MAIN_DB_PREFIX."commandedet as cd";
 	$sqlCommandesCli.= " LEFT JOIN ".MAIN_DB_PREFIX."commande as c ON (c.rowid = cd.fk_commande)";
-	$sqlCommandesCli.= " WHERE c.entity = ".$conf->entity;
+	$sqlCommandesCli.= " WHERE c.entity IN (".getEntity('order', 1).")";
 	$sqlCommandesCli.= " AND cd.fk_product = p.rowid";
 	$sqlCommandesCli.= " AND c.fk_statut IN (1,2))";
-	
+
 	$sqlExpeditionsCli = "(SELECT ".$db->ifsql("SUM(ed.qty) IS NULL", "0", "SUM(ed.qty)")." as qty";
 	$sqlExpeditionsCli.= " FROM ".MAIN_DB_PREFIX."expedition as e";
 	$sqlExpeditionsCli.= " LEFT JOIN ".MAIN_DB_PREFIX."expeditiondet as ed ON (ed.fk_expedition = e.rowid)";
 	$sqlExpeditionsCli.= " LEFT JOIN ".MAIN_DB_PREFIX."commandedet as cd ON (cd.rowid = ed.fk_origin_line)";
 	$sqlExpeditionsCli.= " LEFT JOIN ".MAIN_DB_PREFIX."commande as c ON (c.rowid = cd.fk_commande)";
-	$sqlExpeditionsCli.= " WHERE e.entity = ".$conf->entity;
+	$sqlExpeditionsCli.= " WHERE e.entity IN (".getEntity('expedition', 1).")";
 	$sqlExpeditionsCli.= " AND cd.fk_product = p.rowid";
 	$sqlExpeditionsCli.= " AND c.fk_statut IN (1,2))";
-		
+
 	$sqlCommandesFourn = "(SELECT ".$db->ifsql("SUM(cd.qty) IS NULL", "0", "SUM(cd.qty)")." as qty";
 	$sqlCommandesFourn.= " FROM ".MAIN_DB_PREFIX."commande_fournisseurdet as cd";
 	$sqlCommandesFourn.= ", ".MAIN_DB_PREFIX."commande_fournisseur as c";
 	$sqlCommandesFourn.= " WHERE c.rowid = cd.fk_commande";
-	$sqlCommandesFourn.= " AND c.entity = ".$conf->entity;
+	$sqlCommandesFourn.= " AND c.entity IN (".getEntity('commande_fournisseur', 1).")";
 	$sqlCommandesFourn.= " AND cd.fk_product = p.rowid";
 	$sqlCommandesFourn.= " AND c.fk_statut IN (0,3,4))";
 
 	$sqlReceptionFourn = "(SELECT ".$db->ifsql("SUM(fd.qty) IS NULL", "0", "SUM(fd.qty)")." as qty";
 	$sqlReceptionFourn.= " FROM ".MAIN_DB_PREFIX."commande_fournisseur as cf";
 	$sqlReceptionFourn.= " LEFT JOIN ".MAIN_DB_PREFIX."commande_fournisseur_dispatch as fd ON (fd.fk_commande = cf.rowid)";
-	$sqlReceptionFourn.= " WHERE cf.entity = ".$conf->entity;
+	$sqlReceptionFourn.= " WHERE cf.entity IN (".getEntity('commande_fournisseur', 1).")";
 	$sqlReceptionFourn.= " AND fd.fk_product = p.rowid";
 	$sqlReceptionFourn.= " AND cf.fk_statut IN (3,4))";
-	
+
 	$sql.= ' HAVING ((('.$db->ifsql("p.desiredstock IS NULL", "0", "p.desiredstock").' > SUM('.$db->ifsql("s.reel IS NULL", "0", "s.reel").')';
 	$sql.= ' - ('.$sqlCommandesCli.' - '.$sqlExpeditionsCli.') + ('.$sqlCommandesFourn.' - '.$sqlReceptionFourn.')))';
 	$sql.= ' OR (p.seuil_stock_alerte >= 0 AND (p.seuil_stock_alerte > SUM('.$db->ifsql("s.reel IS NULL", "0", "s.reel").')';
 	$sql.= ' - ('.$sqlCommandesCli.' - '.$sqlExpeditionsCli.') + ('.$sqlCommandesFourn.' - '.$sqlReceptionFourn.'))))';
-	
+
 	if ($salert == 'on')	// Option to see when stock is lower than alert
 	{
 		$sql.= ' AND (p.seuil_stock_alerte > 0 AND (p.seuil_stock_alerte > SUM('.$db->ifsql("s.reel IS NULL", "0", "s.reel").')';
 		$sql.= ' - ('.$sqlCommandesCli.' - '.$sqlExpeditionsCli.') + ('.$sqlCommandesFourn.' - '.$sqlReceptionFourn.')))';
-		$alertchecked = 'checked="checked"';
+		$alertchecked = 'checked';
 	}
 } else {
 	$sql.= ' HAVING ((p.desiredstock > 0 AND (p.desiredstock > SUM('.$db->ifsql("s.reel IS NULL", "0", "s.reel").')))';
 	$sql.= ' OR (p.seuil_stock_alerte > 0 AND (p.seuil_stock_alerte > SUM('.$db->ifsql("s.reel IS NULL", "0", "s.reel").'))))';
-	
+
 	if ($salert == 'on')	// Option to see when stock is lower than alert
 	{
 		$sql.= ' AND (p.seuil_stock_alerte > 0 AND (p.seuil_stock_alerte > SUM('.$db->ifsql("s.reel IS NULL", "0", "s.reel").')))';
-		$alertchecked = 'checked="checked"';
+		$alertchecked = 'checked';
 	}
 }
 
 $sql.= $db->order($sortfield,$sortorder);
-$sql.= $db->plimit($limit, $offset);
+$sql.= $db->plimit($limit + 1, $offset);
 
 //print $sql;
-dol_syslog('Execute request sql='.$sql);
 $resql = $db->query($sql);
 if (empty($resql))
 {
@@ -368,6 +370,17 @@ $head[0][2] = 'replenish';
 $head[1][0] = DOL_URL_ROOT.'/product/stock/replenishorders.php';
 $head[1][1] = $langs->trans("ReplenishmentOrders");
 $head[1][2] = 'replenishorders';
+
+
+
+print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST" name="formulaire">'.
+	'<input type="hidden" name="token" value="' .$_SESSION['newtoken'] . '">'.
+	'<input type="hidden" name="sortfield" value="' . $sortfield . '">'.
+	'<input type="hidden" name="sortorder" value="' . $sortorder . '">'.
+	'<input type="hidden" name="type" value="' . $type . '">'.
+	'<input type="hidden" name="linecount" value="' . $num . '">'.
+	'<input type="hidden" name="action" value="order">'.
+	'<input type="hidden" name="mode" value="' . $mode . '">';
 
 dol_fiche_head($head, 'replenish', $langs->trans('Replenishment'), 0, 'stock');
 
@@ -419,16 +432,7 @@ if ($sref || $snom || $sall || $salert || GETPOST('search', 'alpha')) {
 	);
 }
 
-print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST" name="formulaire">'.
-	'<input type="hidden" name="token" value="' .$_SESSION['newtoken'] . '">'.
-	'<input type="hidden" name="sortfield" value="' . $sortfield . '">'.
-	'<input type="hidden" name="sortorder" value="' . $sortorder . '">'.
-	'<input type="hidden" name="type" value="' . $type . '">'.
-	'<input type="hidden" name="linecount" value="' . $num . '">'.
-	'<input type="hidden" name="action" value="order">'.
-	'<input type="hidden" name="mode" value="' . $mode . '">'.
-
-	'<table class="liste" width="100%">';
+print '<table class="liste" width="100%">';
 
 $param = (isset($type)? '&type=' . $type : '');
 $param .= '&fourn_id=' . $fourn_id . '&snom='. $snom . '&salert=' . $salert;
@@ -452,8 +456,7 @@ print_liste_field_titre($stocklabel, $_SERVER["PHP_SELF"], 'stock_physique', $pa
 print_liste_field_titre($langs->trans('Ordered'), $_SERVER["PHP_SELF"], '', $param, '', 'align="right"', $sortfield, $sortorder);
 print_liste_field_titre($langs->trans('StockToBuy'), $_SERVER["PHP_SELF"], '', $param, '', 'align="right"', $sortfield, $sortorder);
 print_liste_field_titre($langs->trans('Supplier'), $_SERVER["PHP_SELF"], '', $param, '', 'align="right"', $sortfield, $sortorder);
-
-print '</tr>';
+print "</tr>\n";
 
 // Lignes des champs de filtre
 print '<tr class="liste_titre">'.
@@ -463,7 +466,7 @@ print '<tr class="liste_titre">'.
 if (!empty($conf->service->enabled) && $type == 1) print '<td class="liste_titre">&nbsp;</td>';
 print '<td class="liste_titre">&nbsp;</td>'.
 	'<td class="liste_titre" align="right">&nbsp;</td>'.
-	'<td class="liste_titre" align="right">' . $langs->trans('AlertOnly') . '&nbsp;<input type="checkbox" id="salert" name="salert" ' . $alertchecked . '></td>'.
+	'<td class="liste_titre" align="right">' . $langs->trans('AlertOnly') . '&nbsp;<input type="checkbox" id="salert" name="salert" ' . (!empty($alertchecked)?$alertchecked:'') . '></td>'.
 	'<td class="liste_titre" align="right">&nbsp;</td>'.
 	'<td class="liste_titre">&nbsp;</td>'.
 	'<td class="liste_titre" align="right">'.
@@ -473,7 +476,6 @@ print '<td class="liste_titre">&nbsp;</td>'.
 print '</tr>';
 
 $prod = new Product($db);
-$productFournisseur = new ProductFournisseur($db);
 
 $var = True;
 while ($i < ($limit ? min($num, $limit) : $num))
@@ -501,7 +503,6 @@ while ($i < ($limit ? min($num, $limit) : $num))
 				if (!empty($objtp->label)) $objp->label = $objtp->label;
 			}
 		}
-		$form = new Form($db);
 		$var =! $var;
 
 		if ($usevirtualstock)
@@ -513,9 +514,15 @@ while ($i < ($limit ? min($num, $limit) : $num))
 		{
 			$stock = $prod->stock_reel;
 		}
-		
-		$ordered = $prod->stats_commande_fournisseur['qty']-$prod->stats_reception['qty'];
-		
+
+		// Force call prod->load_stats_xxx to choose status to count (otherwise it is loaded by load_stock function)
+		$result=$prod->load_stats_commande_fournisseur(0,'1,2,3,4');
+		$result=$prod->load_stats_reception(0,'4');
+
+		//print $prod->stats_commande_fournisseur['qty'].'<br>'."\n";
+		//print $prod->stats_reception['qty'];
+		$ordered = $prod->stats_commande_fournisseur['qty'] - $prod->stats_reception['qty'];
+
 		$warning='';
 		if ($objp->alertstock && ($stock < $objp->alertstock))
 		{
@@ -528,24 +535,25 @@ while ($i < ($limit ? min($num, $limit) : $num))
 		if(count($TProductFournisseur)  == 1){
 			$qty_fourn = $TProductFournisseur[0]->fourn_qty;
 		}
-		/*echo '<pre>';
-		print_r($TProductFournisseur);*/
 		//depending on conf, use either physical stock or
 		//virtual stock to compute the stock to buy value
 		$stocktobuy = max(max($objp->desiredstock, $objp->alertstock) - $stock - $ordered, 0);
 		$stocktobuy = max($stocktobuy, $qty_fourn);
 		$disabled = '';
-		if($ordered > 0) {
-			$compare = $usevirtualstock ? $stock : $stock + $ordered;
-			if($compare >= $objp->desiredstock) {
+		if ($ordered > 0)
+		{
+			$stockforcompare = $usevirtualstock ? $stock : $stock + $ordered;
+			if ($stockforcompare >= $objp->desiredstock)
+			{
 				$picto = img_picto('', './img/yes', '', 1);
-				$disabled = 'disabled="disabled"';
+				$disabled = 'disabled';
 			}
 			else {
 				$picto = img_picto('', './img/no', '', 1);
 			}
 		} else {
-			$picto = img_picto('', './img/no', '', 1);
+			//$picto = img_help('',$langs->trans("NoPendingReceptionOnSupplierOrder"));
+			$picto = img_picto($langs->trans("NoPendingReceptionOnSupplierOrder"), './img/no', '', 1);
 		}
 
 		print '<tr '.$bc[$var].'>';
@@ -597,11 +605,6 @@ while ($i < ($limit ? min($num, $limit) : $num))
 }
 print '</table>';
 
-$value=$langs->trans("CreateOrders");
-print '<div class="center"><input class="button" type="submit" name="valid" value="'.$value.'"></div>';
-
-
-print '</form>';
 
 if ($num > $conf->liste_limit)
 {
@@ -611,42 +614,29 @@ if ($num > $conf->liste_limit)
 		$filters .= '&sall=' . $sall;
 		$filters .= '&salert=' . $salert;
 		$filters .= '&mode=' . $mode;
-		print_barre_liste(
-			'',
-			$page,
-			'replenish.php',
-			$filters,
-			$sortfield,
-			$sortorder,
-			'',
-			$num,
-			0,
-			''
-		);
-	} else {
+		print_barre_liste('', $page, 'replenish.php', $filters, $sortfield, $sortorder, '', $num, 0, '');
+	}
+	else
+	{
 		$filters = '&sref=' . $sref . '&snom=' . $snom;
 		$filters .= '&fourn_id=' . $fourn_id;
 		$filters .= (isset($type)? '&type=' . $type : '');
 		$filters .= '&salert=' . $salert;
 		$filters .= '&mode=' . $mode;
-		print_barre_liste(
-			'',
-			$page,
-			'replenish.php',
-			$filters,
-			$sortfield,
-			$sortorder,
-			'',
-			$num,
-			0,
-			''
-		);
+		print_barre_liste('', $page, 'replenish.php', $filters, $sortfield, $sortorder, '', $num, 0, '');
 	}
 }
 
 $db->free($resql);
 
 dol_fiche_end();
+
+
+$value=$langs->trans("CreateOrders");
+print '<div class="center"><input class="button" type="submit" name="valid" value="'.$value.'"></div>';
+
+
+print '</form>';
 
 
 // TODO Replace this with jquery

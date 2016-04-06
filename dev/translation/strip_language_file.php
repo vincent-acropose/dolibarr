@@ -1,9 +1,22 @@
 #!/usr/bin/php
 <?php
-/*
- * strip_language_file.php
+/* Copyright (C) 2014 by FromDual GmbH, licensed under GPL v2
+ * Copyright (C) 2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
- * (c) 2014 by FromDual GmbH, licensed under GPL v2
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * -----
  *
  * Compares a secondary language translation file with its primary
  * language file and strips redundant translations.
@@ -12,11 +25,10 @@
  *
  * Usage:
  * cd htdocs/langs
- * ../../dev/translation/strip_language_file.php <primary_lang_dir> <secondary_lang_dir> <languagefile.lang>
+ * ./dev/translation/strip_language_file.php <primary_lang_dir> <secondary_lang_dir> [file.lang|all]
  *
- * Parameters:
- * 1 - Primary Language
- * 2 - Secondary Language
+ * To rename all .delta files, you can do
+ * for fic in `ls *.delta`; do f=`echo $fic | sed -e 's/\.delta//'`; echo $f; mv $f.delta $f; done
  *
  * Rules:
  * secondary string == primary string -> strip
@@ -24,9 +36,6 @@
  * secondary string not in primary -> strip and warning
  * secondary string has no value -> strip and warning
  * secondary string != primary string -> secondary.lang.delta
- *
- * To rename all .delta fils, you can do
- * for fic in `ls *.delta`; do f=`echo $fic | sed -e 's/\.delta//'`; echo $f; mv $f.delta $f; done
  */
 
 /**
@@ -51,24 +60,26 @@ $rc = 0;
 
 $lPrimary = isset($argv[1])?$argv[1]:'';
 $lSecondary = isset($argv[2])?$argv[2]:'';
+$lEnglish = 'en_US';
 $filesToProcess = isset($argv[3])?$argv[3]:'';
 
 if (empty($lPrimary) || empty($lSecondary) || empty($filesToProcess))
 {
 	$rc = 1;
 	$msg = '***** Script to clean language files *****'."\n";
-	$msg.= 'Usage: ../../dev/translation/strip_language_file.php xx_XX xx_YY [file.lang|all]'."\n";
+	$msg.= 'Usage: ./dev/translation/strip_language_file.php xx_XX xx_YY [file.lang|all]'."\n";
 	print $msg . "(rc=$rc).\n";
 	exit($rc);
 }
 
 $aPrimary = array();
 $aSecondary = array();
+$aEnglish = array();
 
 // Define array $filesToProcess
 if ($filesToProcess == 'all')
 {
-	$dir = new DirectoryIterator($lPrimary);
+	$dir = new DirectoryIterator('htdocs/langs/'.$lPrimary);
 	while($dir->valid()) {
 		if(!$dir->isDot() && $dir->isFile() && ! preg_match('/^\./',$dir->getFilename())) {
 			$files[] =  $dir->getFilename();
@@ -85,8 +96,9 @@ else $filesToProcess=explode(',',$filesToProcess);
 // Loop on each file
 foreach($filesToProcess as $fileToProcess)
 {
-	$lPrimaryFile = $lPrimary.'/'.$fileToProcess;
-	$lSecondaryFile = $lSecondary.'/'.$fileToProcess;
+	$lPrimaryFile = 'htdocs/langs/'.$lPrimary.'/'.$fileToProcess;
+	$lSecondaryFile = 'htdocs/langs/'.$lSecondary.'/'.$fileToProcess;
+	$lEnglishFile = 'htdocs/langs/'.$lEnglish.'/'.$fileToProcess;
 	$output = $lSecondaryFile . '.delta';
 
 	print "---- Process language file ".$lSecondaryFile."\n";
@@ -101,6 +113,13 @@ foreach($filesToProcess as $fileToProcess)
 	if ( ! is_readable($lSecondaryFile) ) {
 		$rc = 3;
 		$msg = "Cannot read secondary language file $lSecondaryFile. We discard this file.";
+		print $msg . "\n";
+		continue;
+	}
+
+	if ( ! is_readable($lEnglishFile) ) {
+		$rc = 3;
+		$msg = "Cannot read english language file $lEnglishFile. We discard this file.";
 		print $msg . "\n";
 		continue;
 	}
@@ -161,6 +180,65 @@ foreach($filesToProcess as $fileToProcess)
 		print $msg . " (rc=$rc).\n";
 		exit($rc);
 	}
+
+
+	// Start reading and parsing English
+
+	if ( $handle = fopen($lEnglishFile, 'r') )
+	{
+		print "Read English File $lEnglishFile:\n";
+		$cnt = 0;
+		while (($line = fgets($handle)) !== false)
+		{
+			$cnt++;
+
+			// strip comments
+			if ( preg_match("/^\w*#/", $line) ) {
+				continue;
+			}
+			// strip empty lines
+			if ( preg_match("/^\w*$/", $line) ) {
+				continue;
+			}
+
+			$a = mb_split('=', trim($line), 2);
+			if ( count($a) != 2 ) {
+				print "ERROR in file $lEnglishFile, line $cnt: " . trim($line) . "\n";
+				continue;
+			}
+
+			list($key, $value) = $a;
+
+			// key is redundant
+			if ( array_key_exists($key, $aEnglish) ) {
+				print "Key $key is redundant in file $lEnglishFile (line: $cnt).\n";
+				continue;
+			}
+
+			// String has no value
+			if ( $value == '' ) {
+				print "Key $key has no value in file $lEnglishFile (line: $cnt).\n";
+				continue;
+			}
+
+			$aEnglish[$key] = trim($value);
+		}
+		if ( ! feof($handle) )
+		{
+			$rc = 5;
+			$msg = "Unexpected fgets() fail";
+			print $msg . " (rc=$rc).\n";
+			exit($rc);
+		}
+		fclose($handle);
+	}
+	else {
+		$rc = 6;
+		$msg = "Cannot open file $lEnglishFile";
+		print $msg . " (rc=$rc).\n";
+		exit($rc);
+	}
+
 
 
 	// Start reading and parsing Primary. See rules in header!
@@ -236,8 +314,12 @@ foreach($filesToProcess as $fileToProcess)
 				continue;
 			}
 
-			// String exists in both files and does not match
-			if ((! empty($aSecondary[$key]) && $aSecondary[$key] != $aPrimary[$key]) || in_array($key, $arrayofkeytoalwayskeep) || preg_match('/^FormatDate/',$key) || preg_match('/^FormatHour/',$key))
+			// String exists in both files and value into alternative language differs from main language but also from english files
+			if (
+				(! empty($aSecondary[$key]) && $aSecondary[$key] != $aPrimary[$key]
+			    && ! empty($aEnglish[$key]) && $aSecondary[$key] != $aEnglish[$key])
+				|| in_array($key, $arrayofkeytoalwayskeep) || preg_match('/^FormatDate/',$key) || preg_match('/^FormatHour/',$key)
+				)
 			{
 				//print "Key $key differs so we add it into new secondary language (line: $cnt).\n";
 				fwrite($oh, $key."=".(empty($aSecondary[$key])?$aPrimary[$key]:$aSecondary[$key])."\n");
@@ -260,6 +342,9 @@ foreach($filesToProcess as $fileToProcess)
 	}
 
 	print "Output can be found at $output.\n";
+
+	print "To rename all .delta files, you can do:\n";
+	print '> for fic in `ls htdocs/langs/'.$lSecondary.'/*.delta`; do f=`echo $fic | sed -e \'s/\.delta//\'`; echo $f; mv $f.delta $f; done'."\n";
 }
 
 

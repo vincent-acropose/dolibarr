@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2001-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,8 @@ $langs->load("companies");
 $langs->load("orders");
 $langs->load("bills");
 
+$id=GETPOST("id",'int');
+
 $socid = GETPOST('id','int');
 // Security check
 if ($user->societe_id > 0)
@@ -52,9 +54,9 @@ if (GETPOST('cancel') && ! empty($backtopage))
 
 if (GETPOST("action") == 'setremise')
 {
-	$soc = New Societe($db);
-	$soc->fetch($_GET["id"]);
-	$result=$soc->set_remise_client($_POST["remise"],$_POST["note"],$user);
+	$soc = new Societe($db);
+	$soc->fetch($id);
+	$result=$soc->set_remise_client(price2num(GETPOST("remise")),GETPOST("note"),$user);
 
 	if ($result > 0)
 	{
@@ -71,7 +73,7 @@ if (GETPOST("action") == 'setremise')
 	}
 	else
 	{
-		$errmesg=$soc->error;
+		setEventMessage($soc->error, 'errors');
 	}
 }
 
@@ -97,9 +99,14 @@ if ($socid > 0)
 	$objsoc->id=$socid;
 	$objsoc->fetch($socid);
 
-	dol_htmloutput_errors($errmesg);
-
 	$head = societe_prepare_head($objsoc);
+
+	
+	
+	print '<form method="POST" action="remise.php?id='.$objsoc->id.'">';
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print '<input type="hidden" name="action" value="setremise">';
+    print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
 
 	dol_fiche_head($head, 'relativediscount', $langs->trans("ThirdParty"),0,'company');
 
@@ -121,11 +128,6 @@ if ($socid > 0)
 
 	print_fiche_titre($langs->trans("NewRelativeDiscount"),'','');
 
-	print '<form method="POST" action="remise.php?id='.$objsoc->id.'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="setremise">';
-    print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
-
 	print '<table class="border" width="100%">';
 
 	// Nouvelle valeur
@@ -138,18 +140,18 @@ if ($socid > 0)
 
 	print "</table>";
 
-	print '<center>';
+	dol_fiche_end();
+	
+	print '<div class="center">';
 	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
     if (! empty($backtopage))
     {
-        print '&nbsp; &nbsp; ';
+        print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
 	    print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'">';
     }
-	print '</center>';
+	print '</div>';
 
 	print "</form>";
-
-	dol_fiche_end();
 
 	print '<br>';
 
@@ -186,7 +188,7 @@ if ($socid > 0)
 			print '<td>'.dol_print_date($db->jdate($obj->dc),"dayhour").'</td>';
 			print '<td align="center">'.price2num($obj->remise_percent).'%</td>';
 			print '<td align="left">'.$obj->note.'</td>';
-			print '<td align="center"><a href="'.DOL_URL_ROOT.'/user/fiche.php?id='.$obj->user_id.'">'.img_object($langs->trans("ShowUser"),'user').' '.$obj->login.'</a></td>';
+			print '<td align="center"><a href="'.DOL_URL_ROOT.'/user/card.php?id='.$obj->user_id.'">'.img_object($langs->trans("ShowUser"),'user').' '.$obj->login.'</a></td>';
 			print '</tr>';
 			$i++;
 		}

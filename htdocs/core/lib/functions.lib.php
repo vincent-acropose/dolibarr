@@ -7,10 +7,12 @@
  * Copyright (C) 2004      Christophe Combelles <ccomb@free.fr>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2008      Raphael Bertrand (Resultic)       <raphael.bertrand@resultic.fr>
- * Copyright (C) 2010-2011 Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2010-2014 Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
- * Copyright (C) 2013      Alexandre Spangaro   <alexandre.spangaro@gmail.com>
+ * Copyright (C) 2013      Alexandre Spangaro   <aspangaro.dolibarr@gmail.com>
+ * Copyright (C) 2014      Cédric GROSS         <c.gross@kreiz-it.fr>
  * Copyright (C) 2014-2015 Marcos García        <marcosgdf@gmail.com>
+ * Copyright (C) 2015       Jean-François Ferry		<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,11 +35,7 @@
  *					This file contains all frequently used functions.
  */
 
-
-if (! function_exists('json_encode'))
-{
-	include_once DOL_DOCUMENT_ROOT .'/core/lib/json.lib.php';
-}
+include_once DOL_DOCUMENT_ROOT .'/core/lib/json.lib.php';
 
 /**
  * Function to return value of a static property when class
@@ -47,26 +45,37 @@ if (! function_exists('json_encode'))
  * @param	string 	$class		Class name
  * @param 	string 	$member		Name of property
  * @return 	mixed				Return value of static property
+ * @deprecated Dolibarr now requires 5.3.0+, use $class::$property syntax
+ * @see https://php.net/manual/language.oop5.static.php
  */
 function getStaticMember($class, $member)
 {
-	if (is_object($class)) $class = get_class($class);
-	$classObj = new ReflectionClass($class);
-	$result = null;
+	dol_syslog(__FUNCTION__ . " is deprecated", LOG_WARNING);
 
-	$found=0;
-	foreach($classObj->getStaticProperties() as $prop => $value)
+	// This part is deprecated. Uncomment if for php 5.2.*, and comment next isset class::member
+	/*if (version_compare(phpversion(), '5.3.0', '<'))
 	{
-		if ($prop == $member)
-		{
-			$result = $value;
-			$found++;
-			break;
-		}
-	}
+		if (is_object($class)) $class = get_class($class);
+		$classObj = new ReflectionClass($class);
+		$result = null;
 
-	if (! $found) dol_print_error('','Try to get a static member "'.$member.'" in class "'.$class.'" that does not exists or is not static.');
-	return $result;
+		$found=0;
+		foreach($classObj->getStaticProperties() as $prop => $value)
+		{
+			if ($prop == $member)
+			{
+				$result = $value;
+				$found++;
+				break;
+			}
+		}
+
+		if ($found) return $result;
+	}*/
+
+	if (isset($class::$member)) return $class::$member;
+	dol_print_error('','Try to get a static member "'.$member.'" in class "'.$class.'" that does not exists or is not static.');
+	return null;
 }
 
 
@@ -91,13 +100,13 @@ function getDoliDBInstance($type, $host, $user, $pass, $name, $port)
 }
 
 /**
- * 	Get entity to use
+ * 	Get list of entity id to use
  *
  * 	@param	string	$element	Current element
- * 	@param	int		$shared		1=Return shared entities
+ * 	@param	int		$shared		0=Return id of entity, 1=Return id entity + shared entities
  * 	@return	mixed				Entity id(s) to use
  */
-function getEntity($element=false, $shared=false)
+function getEntity($element=false, $shared=0)
 {
 	global $conf, $mc;
 
@@ -108,12 +117,9 @@ function getEntity($element=false, $shared=false)
 	else
 	{
 		$out='';
-
 		$addzero = array('user', 'usergroup');
 		if (in_array($element, $addzero)) $out.= '0,';
-
 		$out.= $conf->entity;
-
 		return $out;
 	}
 }
@@ -121,38 +127,85 @@ function getEntity($element=false, $shared=false)
 /**
  * Return information about user browser
  *
- * @return	array		Array of information ('browsername'=>,'browseros'=>,'phone'=>,'browserfirefox'=>)
+ * Returns array with the following format:
+ * array(
+ *  'browsername' => Browser name (firefox|chrome|iceweasel|epiphany|safari|opera|ie|unknown)
+ *  'browserversion' => Browser version. Empty if unknown
+ *  'browseros' => Set with mobile OS (android|blackberry|ios|palm|symbian|webos|maemo|windows|unknown)
+ *  'layout' => (tablet|phone|classic)
+ *  'phone' => empty if not mobile, (android|blackberry|ios|palm|unknown) if mobile
+ *  'tablet' => true/false
+ * )
+ *
+ * @param string $user_agent Content of $_SERVER["HTTP_USER_AGENT"] variable
+ * @return	array Check function documentation
  */
-function getBrowserInfo()
+function getBrowserInfo($user_agent)
 {
-	$name='unknown'; $version=''; $os='unknown'; $phone='';
+	include_once DOL_DOCUMENT_ROOT.'/includes/mobiledetect/mobiledetect.class.php';
 
-	// If phone/smartphone, we set phone os name.
-	if (preg_match('/android/i',$_SERVER["HTTP_USER_AGENT"]))			{ $os=$phone='android'; }
-	elseif (preg_match('/blackberry/i',$_SERVER["HTTP_USER_AGENT"]))	{ $os=$phone='blackberry'; }
-	elseif (preg_match('/iphone/i',$_SERVER["HTTP_USER_AGENT"]))		{ $os='ios'; $phone='iphone'; }
-	elseif (preg_match('/ipod/i',$_SERVER["HTTP_USER_AGENT"]))			{ $os='ios'; $phone='iphone'; }
-	elseif (preg_match('/palm/i',$_SERVER["HTTP_USER_AGENT"]))			{ $os=$phone='palm'; }
-	elseif (preg_match('/symbian/i',$_SERVER["HTTP_USER_AGENT"]))		{ $os='symbian'; $phone='unknown'; }
-	elseif (preg_match('/webos/i',$_SERVER["HTTP_USER_AGENT"]))			{ $os='webos'; $phone='unknown'; }
-	elseif (preg_match('/maemo/i',$_SERVER["HTTP_USER_AGENT"]))			{ $os='maemo'; $phone='unknown'; }
-	// MS products at end
-	elseif (preg_match('/iemobile/i',$_SERVER["HTTP_USER_AGENT"]))		{ $os='windows'; $phone='unkown'; }
-	elseif (preg_match('/windows ce/i',$_SERVER["HTTP_USER_AGENT"]))	{ $os='windows'; $phone='unkown'; }
+	$name='unknown';
+	$version='';
+	$os='unknown';
+	$phone = '';
+
+	$detectmobile = new MobileDetect(null, $user_agent);
+	$tablet = $detectmobile->isTablet();
+
+	if ($detectmobile->isMobile()) {
+
+		$phone = 'unknown';
+
+		// If phone/smartphone, we set phone os name.
+		if ($detectmobile->is('AndroidOS')) {
+			$os = $phone = 'android';
+		} elseif ($detectmobile->is('BlackBerryOS')) {
+			$os = $phone = 'blackberry';
+		} elseif ($detectmobile->is('iOS')) {
+			$os = 'ios';
+			$phone = 'iphone';
+		} elseif ($detectmobile->is('PalmOS')) {
+			$os = $phone = 'palm';
+		} elseif ($detectmobile->is('SymbianOS')) {
+			$os = 'symbian';
+		} elseif ($detectmobile->is('webOS')) {
+			$os = 'webos';
+		} elseif ($detectmobile->is('MaemoOS')) {
+			$os = 'maemo';
+		} elseif ($detectmobile->is('WindowsMobileOS') || $detectmobile->is('WindowsPhoneOS')) {
+			$os = 'windows';
+		}
+	}
+
+	// OS
+	if (preg_match('/linux/i', $user_agent))	{ $os='linux'; }
+
 	// Name
-	if (preg_match('/firefox(\/|\s)([\d\.]*)/i',    $_SERVER["HTTP_USER_AGENT"], $reg))  { $name='firefox';   $version=$reg[2]; }
-	elseif (preg_match('/chrome(\/|\s)([\d\.]+)/i', $_SERVER["HTTP_USER_AGENT"], $reg))  { $name='chrome';    $version=$reg[2]; }    // we can have 'chrome (Mozilla...) chrome x.y' in one string
-	elseif (preg_match('/chrome/i',                 $_SERVER["HTTP_USER_AGENT"], $reg))  { $name='chrome'; }
-	elseif (preg_match('/iceweasel/i',$_SERVER["HTTP_USER_AGENT"]))                      { $name='iceweasel'; $version=$reg[2]; }
-	elseif (preg_match('/epiphany/i',$_SERVER["HTTP_USER_AGENT"]))                       { $name='epiphany';  $version=$reg[2]; }
-	elseif ((empty($phone) || preg_match('/iphone/i',$_SERVER["HTTP_USER_AGENT"])) && preg_match('/safari(\/|\s)([\d\.]*)/i',$_SERVER["HTTP_USER_AGENT"], $reg)) { $name='safari'; $version=$reg[2]; }	// Safari is often present in string for mobile but its not.
-	elseif (preg_match('/opera(\/|\s)([\d\.]*)/i',  $_SERVER["HTTP_USER_AGENT"], $reg))  { $name='opera';     $version=$reg[2]; }
-	elseif (preg_match('/(MSIE\s([0-9]+\.[0-9]))|.*(Trident\/[0-9]+.[0-9];\srv:([0-9]+\.[0-9]+))/i',   $_SERVER["HTTP_USER_AGENT"], $reg))  { $name='ie';        $version= end($reg); }    // MS products at end
-	// Other
-	$firefox=0;
-	if (in_array($name,array('firefox','iceweasel'))) $firefox=1;
+	if (preg_match('/firefox(\/|\s)([\d\.]*)/i', $user_agent, $reg))  { $name='firefox';   $version=$reg[2]; }
+	elseif (preg_match('/chrome(\/|\s)([\d\.]+)/i', $user_agent, $reg))  { $name='chrome';    $version=$reg[2]; }    // we can have 'chrome (Mozilla...) chrome x.y' in one string
+	elseif (preg_match('/chrome/i', $user_agent, $reg))  { $name='chrome'; }
+	elseif (preg_match('/iceweasel/i', $user_agent))                      { $name='iceweasel'; $version=$reg[2]; }
+	elseif (preg_match('/epiphany/i', $user_agent))                       { $name='epiphany';  $version=$reg[2]; }
+	elseif (preg_match('/safari(\/|\s)([\d\.]*)/i', $user_agent, $reg)) { $name='safari'; $version=$reg[2]; }	// Safari is often present in string for mobile but its not.
+	elseif (preg_match('/opera(\/|\s)([\d\.]*)/i', $user_agent, $reg))  { $name='opera';     $version=$reg[2]; }
+	elseif (preg_match('/(MSIE\s([0-9]+\.[0-9]))|.*(Trident\/[0-9]+.[0-9];\srv:([0-9]+\.[0-9]+))/i', $user_agent, $reg))  { $name='ie';        $version=end($reg); }    // MS products at end
 
-	return array('browsername'=>$name, 'browserversion'=>$version, 'browseros'=>$os, 'phone'=>$phone, 'browserfirefox'=>$firefox);
+	if ($tablet) {
+		$layout = 'tablet';
+	} elseif ($phone) {
+		$layout = 'phone';
+	} else {
+		$layout = 'classic';
+	}
+
+	return array(
+		'browsername' => $name,
+		'browserversion' => $version,
+		'browseros' => $os,
+		'layout' => $layout,
+		'phone' => $phone,
+		'tablet' => $tablet
+	);
 }
 
 /**
@@ -173,11 +226,13 @@ function dol_shutdown()
  *  Return value of a param into GET or POST supervariable
  *
  *  @param	string	$paramname   Name of parameter to found
- *  @param	string	$check	     Type of check (''=no check,  'int'=check it's numeric, 'alpha'=check it's text and sign, 'aZ'=check it's a-z only, 'array'=check it's array)
+ *  @param	string	$check	     Type of check (''=no check,  'int'=check it's numeric, 'alpha'=check it's text and sign, 'aZ'=check it's a-z only, 'array'=check it's array, 'san_alpha'=Use filter_var with FILTER_SANITIZE_STRING (do not use this for free text string), 'custom'= custom filter specify $filter and $options)
  *  @param	int		$method	     Type of method (0 = get then post, 1 = only get, 2 = only post, 3 = post then get, 4 = post then get then cookie)
- *  @return string||string[]      		 Value found, or '' if check fails
+ *  @param  int     $filter      Filter to apply when $check is set to custom. (See http://php.net/manual/en/filter.filters.php for détails)
+ *  @param  mixed   $options     Options to pass to filter_var when $check is set to custom
+ *  @return string|string[]      Value found (string or array), or '' if check fails
  */
-function GETPOST($paramname,$check='',$method=0)
+function GETPOST($paramname,$check='',$method=0,$filter=NULL,$options=NULL)
 {
 	if (empty($method)) $out = isset($_GET[$paramname])?$_GET[$paramname]:(isset($_POST[$paramname])?$_POST[$paramname]:'');
 	elseif ($method==1) $out = isset($_GET[$paramname])?$_GET[$paramname]:'';
@@ -188,28 +243,33 @@ function GETPOST($paramname,$check='',$method=0)
 
 	if (! empty($check))
 	{
-		// Check if numeric
-		if ($check == 'int' && ! is_numeric($out)) $out='';
-		// Check if alpha
-		elseif ($check == 'alpha')
-		{
-			$out=trim($out);
-			// '"' is dangerous because param in url can close the href= or src= and add javascript functions.
-			// '../' is dangerous because it allows dir transversals
-			if (preg_match('/"/',$out)) $out='';
-			else if (preg_match('/\.\.\//',$out)) $out='';
-		}
-		elseif ($check == 'aZ')
-		{
-			$out=trim($out);
-			// '"' is dangerous because param in url can close the href= or src= and add javascript functions.
-			// '../' is dangerous because it allows dir transversals
-			if (preg_match('/[^a-z]+/i',$out)) $out='';
-		}
-		elseif ($check == 'array')
-		{
-			if (! is_array($out) || empty($out)) $out=array();
-		}
+	    switch ($check)
+	    {
+	        case 'int':
+	            if (! is_numeric($out)) { $out=''; }
+	            break;
+	        case 'alpha':
+	            $out=trim($out);
+	            // '"' is dangerous because param in url can close the href= or src= and add javascript functions.
+	            // '../' is dangerous because it allows dir transversals
+	            if (preg_match('/"/',$out)) $out='';
+	            else if (preg_match('/\.\.\//',$out)) $out='';
+	            break;
+	        case 'san_alpha':
+	            $out=filter_var($out,FILTER_SANITIZE_STRING);
+	            break;
+	        case 'aZ':
+	            $out=trim($out);
+	            if (preg_match('/[^a-z]+/i',$out)) $out='';
+	            break;
+	        case 'array':
+	            if (! is_array($out) || empty($out)) $out=array();
+	            break;
+	        case 'custom':
+	            if (empty($filter)) return 'BadFourthParameterForGETPOST';
+	            $out=filter_var($out, $filter, $options);
+	            break;
+	    }
 	}
 
 	return $out;
@@ -225,7 +285,12 @@ function GETPOST($paramname,$check='',$method=0)
  */
 function dol_getprefix()
 {
-	if (isset($_SERVER["SERVER_NAME"]) && isset($_SERVER["DOCUMENT_ROOT"])) return dol_hash($_SERVER["SERVER_NAME"].$_SERVER["DOCUMENT_ROOT"].DOL_DOCUMENT_ROOT.DOL_URL_ROOT);
+	if (isset($_SERVER["SERVER_NAME"]) && isset($_SERVER["DOCUMENT_ROOT"]))
+	{
+		return dol_hash($_SERVER["SERVER_NAME"].$_SERVER["DOCUMENT_ROOT"].DOL_DOCUMENT_ROOT.DOL_URL_ROOT);
+		// Use this for a "clear" cookie name
+		//return dol_sanitizeFileName($_SERVER["SERVER_NAME"].$_SERVER["DOCUMENT_ROOT"].DOL_DOCUMENT_ROOT.DOL_URL_ROOT);
+	}
 	else return dol_hash(DOL_DOCUMENT_ROOT.DOL_URL_ROOT);
 }
 
@@ -237,16 +302,23 @@ function dol_getprefix()
  *
  * 	@param	string	$relpath	Relative path to file (Ie: mydir/myfile, ../myfile, ...)
  * 	@param	string	$classname	Class name
- *  @return int					false if include fails.
+ *  @return bool                True if load is a success, False if it fails
  */
 function dol_include_once($relpath, $classname='')
 {
-	global $conf,$langs,$user,$mysoc;   // Other global var must be retreived with $GLOBALS['var']
+	global $conf,$langs,$user,$mysoc;   // Do not remove this. They must be defined for files we include. Other globals var must be retreived with $GLOBALS['var']
+
+	$fullpath = dol_buildpath($relpath);
+
+	if (!file_exists($fullpath)) {
+		dol_syslog('functions::dol_include_once Tried to load unexisting file: '.$relpath, LOG_ERR);
+		return false;
+	}
 
 	if (! empty($classname) && ! class_exists($classname)) {
-		return @include dol_buildpath($relpath);			// Remove @ to find error into php log file if you have problems
+		return include $fullpath;
 	} else {
-		return @include_once dol_buildpath($relpath);		// Remove @ to find error into php log file if you have problems
+		return include_once $fullpath;
 	}
 }
 
@@ -318,11 +390,12 @@ function dol_buildpath($path, $type=0)
  *
  * 	@param	object	$object		Object to clone
  *	@return object				Object clone
- *  @deprecated Dolibarr no longer supports PHP4, you can now use native function
+ *  @deprecated Dolibarr no longer supports PHP4, use PHP5 native clone construct
+ *  @see https://php.net/manual/language.oop5.cloning.php
  */
 function dol_clone($object)
 {
-	dol_syslog("Functions.lib::dol_clone Clone object");
+	dol_syslog(__FUNCTION__ . " is deprecated", LOG_WARNING);
 
 	$myclone=clone($object);
 	return $myclone;
@@ -351,7 +424,7 @@ function dol_size($size,$type='')
  *
  *	@param	string	$str            String to clean
  * 	@param	string	$newstr			String to replace bad chars with
- *  @param	string	$unaccent		1=Remove also accent (default), 0 do not remove them
+ *  @param	int	$unaccent		1=Remove also accent (default), 0 do not remove them
  *	@return string          		String cleaned (a-zA-Z_)
  *
  * 	@see        	dol_string_nospecial, dol_string_unaccent
@@ -420,35 +493,49 @@ function dol_string_unaccent($str)
 /**
  *	Clean a string from all punctuation characters to use it as a ref or login
  *
- *	@param	string	$str            String to clean
- * 	@param	string	$newstr			String to replace forbidden chars with
- *  @param  array	$badchars       List of forbidden characters
- * 	@return string          		Cleaned string
+ *	@param	string	$str            	String to clean
+ * 	@param	string	$newstr				String to replace forbidden chars with
+ *  @param  array	$badcharstoreplace  List of forbidden characters
+ * 	@return string          			Cleaned string
  *
  * 	@see    		dol_sanitizeFilename, dol_string_unaccent
  */
-function dol_string_nospecial($str,$newstr='_',$badchars='')
+function dol_string_nospecial($str,$newstr='_',$badcharstoreplace='')
 {
 	$forbidden_chars_to_replace=array(" ","'","/","\\",":","*","?","\"","<",">","|","[","]",",",";","=");
 	$forbidden_chars_to_remove=array();
-	if (is_array($badchars)) $forbidden_chars_to_replace=$badchars;
+	if (is_array($badcharstoreplace)) $forbidden_chars_to_replace=$badcharstoreplace;
 	//$forbidden_chars_to_remove=array("(",")");
 
 	return str_replace($forbidden_chars_to_replace,$newstr,str_replace($forbidden_chars_to_remove,"",$str));
+}
+
+
+/**
+ * Encode string for xml usage
+ *
+ * @param 	string	$string		String to encode
+ * @return	string				String encoded
+ */
+function dolEscapeXML($string)
+{
+	return strtr($string, array('\''=>'&apos;','"'=>'&quot;','&'=>'&amp;','<'=>'&lt;','>'=>'&gt;'));
 }
 
 /**
  *  Returns text escaped for inclusion into javascript code
  *
  *  @param      string		$stringtoescape		String to escape
- *  @param		string		$mode				0=Escape also ' and " into ', 1=Escape ' but not " for usage into 'string', 2=Escape " but not ' for usage into "string", 3=Escape ' and " with \
+ *  @param		int		$mode				0=Escape also ' and " into ', 1=Escape ' but not " for usage into 'string', 2=Escape " but not ' for usage into "string", 3=Escape ' and " with \
+ *  @param		int		$noescapebackslashn	0=Escape also \n. 1=Do not escape \n.
  *  @return     string     		 				Escaped string. Both ' and " are escaped into ' if they are escaped.
  */
-function dol_escape_js($stringtoescape, $mode=0)
+function dol_escape_js($stringtoescape, $mode=0, $noescapebackslashn=0)
 {
 	// escape quotes and backslashes, newlines, etc.
-	$substitjs=array("&#039;"=>"\\'",'\\'=>'\\\\',"\r"=>'\\r',"\n"=>'\\n');
+	$substitjs=array("&#039;"=>"\\'","\r"=>'\\r');
 	//$substitjs['</']='<\/';	// We removed this. Should be useless.
+	if (empty($noescapebackslashn)) { $substitjs["\n"]='\\n'; $substitjs['\\']='\\\\'; }
 	if (empty($mode)) { $substitjs["'"]="\\'"; $substitjs['"']="\\'"; }
 	else if ($mode == 1) $substitjs["'"]="\\'";
 	else if ($mode == 2) { $substitjs['"']='\\"'; }
@@ -458,7 +545,7 @@ function dol_escape_js($stringtoescape, $mode=0)
 
 
 /**
- *  Returns text escaped for inclusion in HTML alt or title tags
+ *  Returns text escaped for inclusion in HTML alt or title tags, or into values of HTML input fields.
  *
  *  @param      string		$stringtoescape		String to escape
  *  @param		int			$keepb				Do not clean b tags
@@ -510,21 +597,22 @@ function dol_strtoupper($utf8_string)
  *  This function works only if syslog module is enabled.
  * 	This must not use any call to other function calling dol_syslog (avoid infinite loop).
  *
- * 	@param  string		$message			Line to log. Ne doit pas etre traduit si level = LOG_ERR
- *  @param  int			$level				Log level
- *                                  		0=Show nothing
- *											On Windows LOG_ERR=4, LOG_WARNING=5, LOG_NOTICE=LOG_INFO=6, LOG_DEBUG=6 si define_syslog_variables ou PHP 5.3+, 7 si dolibarr
- *											On Linux   LOG_ERR=3, LOG_WARNING=4, LOG_INFO=6, LOG_DEBUG=7
- *  @param	int			$ident				1=Increase ident of 1, -1=Decrease ident of 1
- *  @param	string		$suffixinfilename	When output is a file, append this suffix into default log filename.
+ * 	@param  string		$message				Line to log.
+ *  @param  int			$level					Log level
+ *                                  			0=Show nothing
+ *												On Windows LOG_ERR=4, LOG_WARNING=5, LOG_NOTICE=LOG_INFO=6, LOG_DEBUG=6 si define_syslog_variables ou PHP 5.3+, 7 si dolibarr
+ *												On Linux   LOG_ERR=3, LOG_WARNING=4, LOG_INFO=6, LOG_DEBUG=7
+ *  @param	int			$ident					1=Increase ident of 1, -1=Decrease ident of 1
+ *  @param	string		$suffixinfilename		When output is a file, append this suffix into default log filename.
+ *  @param	string		$restricttologhandler	Output log only for this log handler
  *  @return	void
  */
-function dol_syslog($message, $level = LOG_INFO, $ident = 0, $suffixinfilename='')
+function dol_syslog($message, $level = LOG_INFO, $ident = 0, $suffixinfilename='', $restricttologhandler='')
 {
 	global $conf, $user;
 
 	// If syslog module enabled
-	if (empty($conf->syslog->enabled)) return false;
+	if (empty($conf->syslog->enabled)) return;
 
 	if (! empty($level))
 	{
@@ -534,7 +622,7 @@ function dol_syslog($message, $level = LOG_INFO, $ident = 0, $suffixinfilename='
 		{
 			throw new Exception('Incorrect log level');
 		}
-		if ($level > $conf->global->SYSLOG_LEVEL) return false;
+		if ($level > $conf->global->SYSLOG_LEVEL) return;
 
 		// If adding log inside HTML page is required
 		if (! empty($_REQUEST['logtohtml']) && ! empty($conf->global->MAIN_LOGTOHTML))
@@ -542,6 +630,7 @@ function dol_syslog($message, $level = LOG_INFO, $ident = 0, $suffixinfilename='
 			$conf->logbuffer[] = dol_print_date(time(),"%Y-%m-%d %H:%M:%S")." ".$message;
 		}
 
+		//TODO: Remove this. MAIN_ENABLE_LOG_HTML should be deprecated and use a log handler dedicated to HTML output
 		// If enable html log tag enabled and url parameter log defined, we show output log on HTML comments
 		if (! empty($conf->global->MAIN_ENABLE_LOG_HTML) && ! empty($_GET["log"]))
 		{
@@ -565,10 +654,10 @@ function dol_syslog($message, $level = LOG_INFO, $ident = 0, $suffixinfilename='
 		else if (! empty($_SERVER['COMPUTERNAME'])) $data['ip'] = $_SERVER['COMPUTERNAME'].(empty($_SERVER['USERNAME'])?'':'@'.$_SERVER['USERNAME']);
 		// This is when PHP session is ran outside a web server, like from Linux command line (Not always defined, but usefull if OS defined it).
 		else if (! empty($_SERVER['LOGNAME'])) $data['ip'] = '???@'.$_SERVER['LOGNAME'];
-
 		// Loop on each log handler and send output
 		foreach ($conf->loghandlers as $loghandlerinstance)
 		{
+			if ($restricttologhandler && $loghandlerinstance->code != $restricttologhandler) continue;
 			$loghandlerinstance->export($data,$suffixinfilename);
 		}
 		unset($data);
@@ -609,11 +698,11 @@ function dol_fiche_head($links=array(), $active='0', $title='', $notab=0, $picto
  *	@param  int		$notab				0=Add tab header, 1=no tab header. If you set this to 1, using dol_fiche_end() to close tab is not required.
  * 	@param	string	$picto				Add a picto on tab title
  *	@param	int		$pictoisfullpath	If 1, image path is a full path. If you set this to 1, you can use url returned by dol_buildpath('/mymodyle/img/myimg.png',1) for $picto.
- * 	@return	void
+ * 	@return	string
  */
 function dol_get_fiche_head($links=array(), $active='0', $title='', $notab=0, $picto='', $pictoisfullpath=0)
 {
-	global $conf;
+	global $conf,$langs;
 
 	$out="\n".'<div class="tabs" data-role="controlgroup" data-type="horizontal">'."\n";
 
@@ -638,39 +727,88 @@ function dol_get_fiche_head($links=array(), $active='0', $title='', $notab=0, $p
 	}
 
 	// Show tabs
+	$bactive=false;
+	// if =0 we don't use the feature
+	$limittoshow=(empty($conf->global->MAIN_MAXTABS_IN_CARD)?99:$conf->global->MAIN_MAXTABS_IN_CARD);
+	$displaytab=0;
+	$nbintab=0;
+
 	for ($i = 0 ; $i <= $maxkey ; $i++)
 	{
-		$isactive=(is_numeric($active) && $i == $active) || (! is_numeric($active) && $active == $links[$i][2]);
+		if ((is_numeric($active) && $i == $active) || (! empty($links[$i][2]) && ! is_numeric($active) && $active == $links[$i][2]))
+		{
+			$isactive=true;
+			$bactive=true;
+			if ($i <=$limittoshow)
+				$limittoshow++;
+		}
+		else
+			$isactive=false;
 
-		$out.='<div class="inline-block tabsElem'.((! $isactive && ! empty($conf->global->MAIN_HIDE_INACTIVETAB_ON_PRINT))?' hideonprint':'').'">';
-		if (isset($links[$i][2]) && $links[$i][2] == 'image')
+		if ($i <= $limittoshow || $isactive )
 		{
-			if (!empty($links[$i][0]))
+			$out.='<div class="inline-block tabsElem'.($isactive ? ' tabsElemActive' : '').((! $isactive && ! empty($conf->global->MAIN_HIDE_INACTIVETAB_ON_PRINT))?' hideonprint':'').'"><!-- id tab = '.(empty($links[$i][2])?'':$links[$i][2]).' -->';
+			if (isset($links[$i][2]) && $links[$i][2] == 'image')
 			{
-				$out.='<a data-role="button" class="tabimage" href="'.$links[$i][0].'">'.$links[$i][1].'</a>'."\n";
+				if (!empty($links[$i][0]))
+				{
+					$out.='<a data-role="button" class="tabimage" href="'.$links[$i][0].'">'.$links[$i][1].'</a>'."\n";
+				}
+				else
+				{
+					$out.='<span data-role="button" class="tabspan">'.$links[$i][1].'</span>'."\n";
+				}
 			}
-			else
+			else if (! empty($links[$i][1]))
 			{
-				$out.='<span data-role="button" class="tabspan">'.$links[$i][1].'</span>'."\n";
+				//print "x $i $active ".$links[$i][2]." z";
+				if ($isactive)
+				{
+					$out.='<a data-role="button"'.(! empty($links[$i][2])?' id="'.$links[$i][2].'"':'').' class="tabactive tab inline-block" href="'.$links[$i][0].'">'.$links[$i][1].'</a>'."\n";
+				}
+				else
+				{
+					$out.='<a data-role="button"'.(! empty($links[$i][2])?' id="'.$links[$i][2].'"':'').' class="tabunactive tab inline-block" href="'.$links[$i][0].'">'.$links[$i][1].'</a>'."\n";
+				}
 			}
+			$out.='</div>';
 		}
-		else if (! empty($links[$i][1]))
+		else
 		{
-			//print "x $i $active ".$links[$i][2]." z";
-			if ($isactive)
+			$outmore.='<div class="" style="display:inherit; background-color:#f9f9f9; padding-top:5px; padding-right:15px; padding-left:12px;">';
+			if (isset($links[$i][2]) && $links[$i][2] == 'image')
 			{
-				$out.='<a data-role="button"'.(! empty($links[$i][2])?' id="'.$links[$i][2].'"':'').' class="tabactive tab inline-block" href="'.$links[$i][0].'">'.$links[$i][1].'</a>'."\n";
+				if (!empty($links[$i][0]))
+					$outmore.='<a class="tabimage" href="'.$links[$i][0].'">'.$links[$i][1].'</a>'."\n";
+				else
+					$outmore.='<span class="tabspan">'.$links[$i][1].'</span>'."\n";
+
 			}
-			else
-			{
-				$out.='<a data-role="button"'.(! empty($links[$i][2])?' id="'.$links[$i][2].'"':'').' class="tab inline-block" href="'.$links[$i][0].'">'.$links[$i][1].'</a>'."\n";
-			}
+			else if (! empty($links[$i][1]))
+				$outmore.='<a'.(! empty($links[$i][2])?' id="'.$links[$i][2].'"':'').' class="inline-block" href="'.$links[$i][0].'">'.$links[$i][1].'</a>'."\n";
+
+			$outmore.='</div>';
+			$nbintab++;
 		}
-		$out.='</div>';
+		$displaytab=$i;
+	}
+
+	if ($displaytab > $limittoshow)
+	{
+		$tabsname=str_replace("@", "", $picto);
+		$out.='<div id="moretabs'.$tabsname.'" class="inline-block tabsElem">';
+		$out.='<a href="" data-role="button" style="background-color: #f0f0f0;" class="tab inline-block">'.$langs->trans("More").' <span class="badge">'.$nbintab.'</span></a>';
+		$out.='<div id="moretabsList'.$tabsname.'" style="position: absolute; left: -999em;text-align: left;margin:0px;padding:2px">'.$outmore.'</div>';
+		$out.="</div>\n";
+
+		$out.="<script>";
+		$out.="$('#moretabs".$tabsname."').mouseenter( function() { $('#moretabsList".$tabsname."').css('left','auto');});";
+		$out.="$('#moretabs".$tabsname."').mouseleave( function() { $('#moretabsList".$tabsname."').css('left','-999em');});";
+		$out.="</script>";
 	}
 
 	$out.="</div>\n";
-
+	
 	if (! $notab) $out.="\n".'<div class="tabBar">'."\n";
 
 	return $out;
@@ -691,12 +829,31 @@ function dol_fiche_end($notab=0)
  *	Return tab footer of a card
  *
  *	@param  int		$notab		0=Add tab footer, 1=no tab footer
- *  @return	void
+ *  @return	string
  */
 function dol_get_fiche_end($notab=0)
 {
 	if (! $notab) return "\n</div>\n";
 	else return '';
+}
+
+/**
+ * Show a string with the label tag dedicated to the HTML edit field.
+ *
+ * @param	string	$langkey		Translation key
+ * @param 	string	$fieldkey		Key of the html select field the text refers to
+ * @param	int		$fieldrequired	1=Field is mandatory
+ */
+function fieldLabel($langkey, $fieldkey, $fieldrequired=0)
+{
+	global $conf, $langs;
+	$ret='';
+	if ($fieldrequired) $ret.='<span class="fieldrequired">';
+	if (empty($conf->dol_use_jmobile)) $ret.='<label for="'.$fieldkey.'">';
+	$ret.=$langs->trans($langkey);
+	if (empty($conf->dol_use_jmobile)) $ret.='</label>';
+	if ($fieldrequired) $ret.='</span>';
+	return $ret;
 }
 
 /**
@@ -720,8 +877,9 @@ function dol_bc($var,$moreclass='')
  *      @param  Object		$object         A company or contact object
  * 	    @param	int			$withcountry	1=Add country into address string
  *      @param	string		$sep			Separator to use to build string
- *      @param	Tranlsate	$outputlangs	Object lang that contains language for text translation.
+ *      @param	Translate	$outputlangs	Object lang that contains language for text translation.
  *      @return string          			Formated string
+ *      @see dol_print_address
  */
 function dol_format_address($object,$withcountry=0,$sep="\n",$outputlangs='')
 {
@@ -754,7 +912,7 @@ function dol_format_address($object,$withcountry=0,$sep="\n",$outputlangs='')
 	else if (in_array($object->country_code,array('ES','TR'))) // ES: title firstname name \n address lines \n zip town \n state \n country
 	{
 		$ret .= ($ret ? $sep : '' ).$object->zip;
-		$ret .= ' '.$object->town;
+		$ret .= ($object->town?' '.$object->town:'');
 		if ($object->state && in_array($object->country_code,$countriesusingstate))
 		{
 			$ret.="\n".$object->state;
@@ -764,14 +922,14 @@ function dol_format_address($object,$withcountry=0,$sep="\n",$outputlangs='')
 	else                                        		// Other: title firstname name \n address lines \n zip town \n country
 	{
 		$ret .= ($ret ? $sep : '' ).$object->zip;
-		$ret .= ' '.$object->town;
+		$ret .= ($object->town?' '.$object->town:'');
 		if ($object->state && in_array($object->country_code,$countriesusingstate))
 		{
 			$ret.=", ".$object->state;
 		}
 	}
 	if (! is_object($outputlangs)) $outputlangs=$langs;
-	if ($withcountry) $ret.=($object->country_code?$sep.$outputlangs->convToOutputCharset($outputlangs->transnoentitiesnoconv("Country".$object->country_code)):'');
+	if ($withcountry) $ret.=($object->country_code?($ret?$sep:'').$outputlangs->convToOutputCharset($outputlangs->transnoentitiesnoconv("Country".$object->country_code)):'');
 
 	return $ret;
 }
@@ -806,8 +964,9 @@ function dol_strftime($fmt, $ts=false, $is_gmt=false)
  *										"day", "daytext", "dayhour", "dayhourldap", "dayhourtext", "dayrfc", "dayhourrfc"
  * 	@param	string		$tzoutput		true or 'gmt' => string is for Greenwich location
  * 										false or 'tzserver' => output string is for local PHP server TZ usage
- * 										'tzuser' => output string is for local browser TZ usage
- *	@param	Tranlsate	$outputlangs	Object lang that contains language for text translation.
+ * 										'tzuser' => output string is for user TZ (current browser TZ with current dst)
+ *                                      'tzuserrel' => output string is for user TZ (current browser TZ with dst or not, depending on date position)
+ *	@param	Translate	$outputlangs	Object lang that contains language for text translation.
  *  @param  boolean		$encodetooutput false=no convert into output pagecode
  * 	@return string      				Formated date or '' if time is null
  *
@@ -828,18 +987,16 @@ function dol_print_date($time,$format='',$tzoutput='tzserver',$outputlangs='',$e
 			if ($tzoutput == 'tzserver')
 			{
 				$to_gmt=false;
-				$offsettz=$offsetdst=0;
+				$offsettzstring=@date_default_timezone_get();		// Example 'Europe/Berlin' or 'Indian/Reunion'
+				$offsettz=0;
+				$offsetdst=0;
 			}
 			elseif ($tzoutput == 'tzuser')
 			{
 				$to_gmt=true;
+				$offsettzstring=(empty($_SESSION['dol_tz_string'])?'UTC':$_SESSION['dol_tz_string']);	// Example 'Europe/Berlin' or 'Indian/Reunion'
 				$offsettz=(empty($_SESSION['dol_tz'])?0:$_SESSION['dol_tz'])*60*60;
 				$offsetdst=(empty($_SESSION['dol_dst'])?0:$_SESSION['dol_dst'])*60*60;
-			}
-			elseif ($tzoutput == 'tzcompany')
-			{
-				$to_gmt=false;
-				$offsettz=$offsetdst=0;	// TODO Define this and use it later
 			}
 		}
 	}
@@ -889,9 +1046,9 @@ function dol_print_date($time,$format='',$tzoutput='tzserver',$outputlangs='',$e
 		$format=str_replace('%A','__A__',$format);
 	}
 
-	// Analyze date (deprecated)   Ex: 1970-01-01, 1970-01-01 01:00:00, 19700101010000
+	// Analyze date
 	if (preg_match('/^([0-9]+)\-([0-9]+)\-([0-9]+) ?([0-9]+)?:?([0-9]+)?:?([0-9]+)?/i',$time,$reg)
-	|| preg_match('/^([0-9][0-9][0-9][0-9])([0-9][0-9])([0-9][0-9])([0-9][0-9])([0-9][0-9])([0-9][0-9])$/i',$time,$reg))
+	|| preg_match('/^([0-9][0-9][0-9][0-9])([0-9][0-9])([0-9][0-9])([0-9][0-9])([0-9][0-9])([0-9][0-9])$/i',$time,$reg))	// Deprecated. Ex: 1970-01-01, 1970-01-01 01:00:00, 19700101010000
 	{
 		// This part of code should not be used. TODO Remove this.
 		dol_syslog("Functions.lib::dol_print_date function call with deprecated value of time in page ".$_SERVER["PHP_SELF"], LOG_WARNING);
@@ -911,7 +1068,7 @@ function dol_print_date($time,$format='',$tzoutput='tzserver',$outputlangs='',$e
 		// Date is a timestamps
 		if ($time < 100000000000)	// Protection against bad date values
 		{
-			$ret=adodb_strftime($format,$time+$offsettz+$offsetdst,$to_gmt);	// TODO Remove this
+			$ret=adodb_strftime($format,$time+$offsettz+$offsetdst,$to_gmt);	// TODO Replace this with function Date PHP. We also should not use anymore offsettz and offsetdst but only offsettzstring.
 		}
 		else $ret='Bad value '.$time.' for date';
 	}
@@ -951,8 +1108,9 @@ function dol_print_date($time,$format='',$tzoutput='tzserver',$outputlangs='',$e
 /**
  *	Return an array with locale date info.
  *  PHP getdate is restricted to the years 1901-2038 on Unix and 1970-2038 on Windows
- *  WARNING: This function always use PHP server timezone to return locale informations.
+ *  WARNING: This function always use PHP server timezone to return locale informations !!!
  *  Usage must be avoid.
+ *  FIXME: Replace this with PHP date function and a parameter $gm
  *
  *	@param	int			$timestamp      Timestamp
  *	@param	boolean		$fast           Fast mode
@@ -962,7 +1120,7 @@ function dol_print_date($time,$format='',$tzoutput='tzserver',$outputlangs='',$e
  *										'minutes' => $min,
  *										'hours' => $hour,
  *										'mday' => $day,
- *										'wday' => $dow,
+ *										'wday' => $dow,		0=sunday, 6=saturday
  *										'mon' => $month,
  *										'year' => $year,
  *										'yday' => floor($secsInYear/$_day_power),
@@ -982,6 +1140,8 @@ function dol_print_date($time,$format='',$tzoutput='tzserver',$outputlangs='',$e
  */
 function dol_getdate($timestamp,$fast=false)
 {
+	global $conf;
+
 	$usealternatemethod=false;
 	if ($timestamp <= 0) $usealternatemethod=true;				// <= 1970
 	if ($timestamp >= 2145913200) $usealternatemethod=true;		// >= 2038
@@ -1011,7 +1171,7 @@ function dol_getdate($timestamp,$fast=false)
  *	@param	int			$year			Year
  *	@param	mixed		$gm				True or 1 or 'gmt'=Input informations are GMT values, False or 0 or 'server' = local to server TZ, 'user' = local to user TZ
  *	@param	int			$check			0=No check on parameters (Can use day 32, etc...)
- *	@return	int							Date as a timestamp, '' if error
+ *	@return	int|string					Date as a timestamp, '' or false if error
  * 	@see 								dol_print_date, dol_stringtotime, dol_getdate
  */
 function dol_mktime($hour,$minute,$second,$month,$day,$year,$gm=false,$check=1)
@@ -1039,13 +1199,13 @@ function dol_mktime($hour,$minute,$second,$month,$day,$year,$gm=false,$check=1)
 	{
 		if (empty($gm) || $gm === 'server')
 		{
-			$default_timezone=@date_default_timezone_get();
+			$default_timezone=@date_default_timezone_get();		// Example 'Europe/Berlin'
 			$localtz = new DateTimeZone($default_timezone);
 		}
 		else if ($gm === 'user')
 		{
-			// We use dol_tz_string first because it contains dst.
-			$default_timezone=(empty($_SESSION["dol_tz_string"])?@date_default_timezone_get():$_SESSION["dol_tz_string"]);
+			// We use dol_tz_string first because it is more reliable.
+			$default_timezone=(empty($_SESSION["dol_tz_string"])?@date_default_timezone_get():$_SESSION["dol_tz_string"]);		// Example 'Europe/Berlin'
 			try {
 				$localtz = new DateTimeZone($default_timezone);
 			}
@@ -1064,25 +1224,13 @@ function dol_mktime($hour,$minute,$second,$month,$day,$year,$gm=false,$check=1)
 		$dt->setDate($year,$month,$day);
 		$dt->setTime((int) $hour, (int) $minute, (int) $second);
 		$date=$dt->getTimestamp();	// should include daylight saving time
+		return $date;
 	}
 	else
 	{
 		dol_print_error('','PHP version must be 5.3+');
-		/*
-		$usealternatemethod=false;
-		if ($year <= 1970) $usealternatemethod=true;		// <= 1970
-		if ($year >= 2038) $usealternatemethod=true;		// >= 2038
-
-		if ($usealternatemethod || $gm)	// Si time gm, seule adodb peut convertir
-		{
-			$date=adodb_mktime($hour,$minute,$second,$month,$day,$year,0,$gm);
-		}
-		else
-		{
-			$date=mktime($hour,$minute,$second,$month,$day,$year);
-		}*/
+		return '';
 	}
-	return $date;
 }
 
 
@@ -1189,9 +1337,10 @@ function dol_print_url($url,$target='_blank',$max=32)
  * @param 	int			$addlink		0=no link, 1=email has a html email link (+ link to create action if constant AGENDA_ADDACTIONFOREMAIL is on)
  * @param	int			$max			Max number of characters to show
  * @param	int			$showinvalid	Show warning if syntax email is wrong
+ * @param	int			$withpicto		Show picto
  * @return	string						HTML Link
  */
-function dol_print_email($email,$cid=0,$socid=0,$addlink=0,$max=64,$showinvalid=1)
+function dol_print_email($email,$cid=0,$socid=0,$addlink=0,$max=64,$showinvalid=1,$withpicto=0)
 {
 	global $conf,$user,$langs;
 
@@ -1216,8 +1365,8 @@ function dol_print_email($email,$cid=0,$socid=0,$addlink=0,$max=64,$showinvalid=
 		if (($cid || $socid) && ! empty($conf->agenda->enabled) && $user->rights->agenda->myactions->create)
 		{
 			$type='AC_EMAIL'; $link='';
-			if (! empty($conf->global->AGENDA_ADDACTIONFOREMAIL)) $link='<a href="'.DOL_URL_ROOT.'/comm/action/fiche.php?action=create&amp;backtopage=1&amp;actioncode='.$type.'&amp;contactid='.$cid.'&amp;socid='.$socid.'">'.img_object($langs->trans("AddAction"),"calendar").'</a>';
-			$newemail='<table class="nobordernopadding"><tr><td>'.$newemail.' </td><td>&nbsp;'.$link.'</td></tr></table>';
+			if (! empty($conf->global->AGENDA_ADDACTIONFOREMAIL)) $link='<a href="'.DOL_URL_ROOT.'/comm/action/card.php?action=create&amp;backtopage=1&amp;actioncode='.$type.'&amp;contactid='.$cid.'&amp;socid='.$socid.'">'.img_object($langs->trans("AddAction"),"calendar").'</a>';
+			if ($link) $newemail='<div>'.$newemail.' '.$link.'</div>';
 		}
 	}
 	else
@@ -1228,18 +1377,18 @@ function dol_print_email($email,$cid=0,$socid=0,$addlink=0,$max=64,$showinvalid=
 			$newemail.=img_warning($langs->trans("ErrorBadEMail",$email));
 		}
 	}
-	return $newemail;
+	return '<div class="nospan float" style="margin-right: 10px">'.($withpicto?img_picto($langs->trans("EMail"), 'object_email.png').' ':'').$newemail.'</div>';
 }
 
 /**
  * Show Skype link
  *
  * @param	string		$skype			Skype to show (only skype, without 'Name of recipient' before)
- * @param int 			$cid 			  Id of contact if known
- * @param int 			$socid 			Id of third party if known
- * @param int 			$addlink		0=no link to create action
- * @param	int			  $max			  Max number of characters to show
- * @return	string						  HTML Link
+ * @param	int 		$cid 			Id of contact if known
+ * @param	int 		$socid 			Id of third party if known
+ * @param	int 		$addlink		0=no link to create action
+ * @param	int			$max			Max number of characters to show
+ * @return	string						HTML Link
  */
 function dol_print_skype($skype,$cid=0,$socid=0,$addlink=0,$max=64)
 {
@@ -1254,18 +1403,18 @@ function dol_print_skype($skype,$cid=0,$socid=0,$addlink=0,$max=64)
 		$newskype='<a href="skype:';
 		$newskype.=dol_trunc($skype,$max);
 		$newskype.='?call" alt="'.$langs->trans("Call").'&nbsp;'.$skype.'" title="'.$langs->trans("Call").'&nbsp;'.$skype.'">';
-    $newskype.='<img src="../theme/common/skype_callbutton.png" border="0">&nbsp;';
-		$newskype.='</a>&nbsp;<a href="skype:';
+		$newskype.='<img src="../theme/common/skype_callbutton.png" border="0">';
+		$newskype.='</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="skype:';
 		$newskype.=dol_trunc($skype,$max);
 		$newskype.='?chat" alt="'.$langs->trans("Chat").'&nbsp;'.$skype.'" title="'.$langs->trans("Chat").'&nbsp;'.$skype.'">';
-    $newskype.='<img src="../theme/common/skype_chatbutton.png" border="0">&nbsp;';
+		$newskype.='<img src="../theme/common/skype_chatbutton.png" border="0">';
 		$newskype.='</a>';
 
 		if (($cid || $socid) && ! empty($conf->agenda->enabled) && $user->rights->agenda->myactions->create)
 		{
 			$type='AC_SKYPE'; $link='';
-			if (! empty($conf->global->AGENDA_ADDACTIONFORSKYPE)) $link='<a href="'.DOL_URL_ROOT.'/comm/action/fiche.php?action=create&amp;backtopage=1&amp;actioncode='.$type.'&amp;contactid='.$cid.'&amp;socid='.$socid.'">'.img_object($langs->trans("AddAction"),"calendar").'</a>';
-			$newskype='<table class="nobordernopadding"><tr><td>'.$newskype.' </td><td>&nbsp;'.$link.'</td></tr></table>';
+			if (! empty($conf->global->AGENDA_ADDACTIONFORSKYPE)) $link='<a href="'.DOL_URL_ROOT.'/comm/action/card.php?action=create&amp;backtopage=1&amp;actioncode='.$type.'&amp;contactid='.$cid.'&amp;socid='.$socid.'">'.img_object($langs->trans("AddAction"),"calendar").'</a>';
+			$newskype='<div class="divskype nowrap">'.$newskype.($link?' '.$link:'').'</div>';
 		}
 	}
 	else
@@ -1283,11 +1432,12 @@ function dol_print_skype($skype,$cid=0,$socid=0,$addlink=0,$max=64)
  * 	@param 	string	$country 	Country code to use for formatting
  * 	@param 	int		$cid 		Id of contact if known
  * 	@param 	int		$socid 		Id of third party if known
- * 	@param 	int		$addlink	''=no link to create action, 'AC_TEL'=add link to clicktodial (if module enabled) and add link to create event (if conf->global->AGENDA_ADDACTIONFORPHONE set)
+ * 	@param 	string		$addlink	''=no link to create action, 'AC_TEL'=add link to clicktodial (if module enabled) and add link to create event (if conf->global->AGENDA_ADDACTIONFORPHONE set)
  * 	@param 	string	$separ 		Separation between numbers for a better visibility example : xx.xx.xx.xx.xx
+ *  @param	string  $withpicto  Show picto
  * 	@return string 				Formated phone number
  */
-function dol_print_phone($phone,$country='',$cid=0,$socid=0,$addlink='',$separ="&nbsp;")
+function dol_print_phone($phone,$country='',$cid=0,$socid=0,$addlink='',$separ="&nbsp;",$withpicto='')
 {
 	global $conf,$user,$langs,$mysoc;
 
@@ -1362,12 +1512,12 @@ function dol_print_phone($phone,$country='',$cid=0,$socid=0,$addlink='',$separ="
 		{
 			$type='AC_TEL'; $link='';
 			if ($addlink == 'AC_FAX') $type='AC_FAX';
-			if (! empty($conf->global->AGENDA_ADDACTIONFORPHONE)) $link='<a href="'.DOL_URL_ROOT.'/comm/action/fiche.php?action=create&amp;backtopage=1&amp;actioncode='.$type.($cid?'&amp;contactid='.$cid:'').($socid?'&amp;socid='.$socid:'').'">'.img_object($langs->trans("AddAction"),"calendar").'</a>';
-			if ($link) $newphone='<table class="nobordernopadding"><tr><td>'.$newphone.' </td><td>&nbsp;'.$link.'</td></tr></table>';
+			if (! empty($conf->global->AGENDA_ADDACTIONFORPHONE)) $link='<a href="'.DOL_URL_ROOT.'/comm/action/card.php?action=create&amp;backtopage=1&amp;actioncode='.$type.($cid?'&amp;contactid='.$cid:'').($socid?'&amp;socid='.$socid:'').'">'.img_object($langs->trans("AddAction"),"calendar").'</a>';
+			if ($link) $newphone='<div>'.$newphone.' '.$link.'</div>';
 		}
 	}
 
-	return $newphone;
+	return '<div class="nospan float" style="margin-right: 10px">'.($withpicto?img_picto(($withpicto=='fax'?$langs->trans("Fax"):$langs->trans("Phone")), 'object_'.($withpicto=='fax'?'phoning_fax':'phoning').'.png').' ':'').$newphone.'</div>';
 }
 
 /**
@@ -1443,6 +1593,7 @@ function dol_user_country()
  *  @param  int		$mode        thirdparty|contact|member|other
  *  @param  int		$id          Id of object
  *  @return void
+ *  @see dol_format_address
  */
 function dol_print_address($address, $htmlid, $mode, $id)
 {
@@ -1484,28 +1635,21 @@ function dol_print_address($address, $htmlid, $mode, $id)
 /**
  *	Return true if email syntax is ok
  *
- *	@param	    string		$address    email (Ex: "toto@titi.com", "John Do <johndo@titi.com>")
- *	@return     boolean     			true if email syntax is OK, false if KO or empty string
+ *	@param	    string		$address    			email (Ex: "toto@examle.com", "John Do <johndo@example.com>")
+ *  @param		int			$acceptsupervisorkey	If 1, the special string '__SUPERVISOREMAIL__' is also accepted as valid
+ *	@return     boolean     						true if email syntax is OK, false if KO or empty string
  */
-function isValidEmail($address)
+function isValidEmail($address, $acceptsupervisorkey=0)
 {
-	if (preg_match("/.*<(.+)>/i", $address, $regs)) {
-		$address = $regs[1];
-	}
-	// 2 letters domains extensions are for countries
-	// 3 letters domains extensions: biz|com|edu|gov|int|mil|net|org|pro|...
-	if (preg_match("/^[^@\s\t]+@([a-zA-Z0-9\-]+\.)+([a-zA-Z0-9\-]{2,3}|asso|aero|coop|info|name)\$/i",$address))
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+	if ($acceptsupervisorkey && $address == '__SUPERVISOREMAIL__') return true;
+	if (filter_var($address, FILTER_VALIDATE_EMAIL)) return true;
+
+	return false;
 }
 
 /**
  *  Return true if phone number syntax is ok
+ *  TODO Decide what to do with this
  *
  *  @param	string		$phone		phone (Ex: "0601010101")
  *  @return boolean     			true if phone syntax is OK, false if KO or empty string
@@ -1569,13 +1713,18 @@ function dol_substr($string,$start,$length,$stringencoding='')
  *  @param		string	$type			Type of graph ('pie', 'barline')
  *  @param		int		$showpercent	Show percent (with type='pie' only)
  *  @param		string	$url			Param to add an url to click values
+ *  @param		int		$combineother	0=No combine, 0.05=Combine if lower than 5%
  *  @return		void
  *  @deprecated
+ *  @see DolGraph
  */
-function dol_print_graph($htmlid,$width,$height,$data,$showlegend=0,$type='pie',$showpercent=0,$url='')
+function dol_print_graph($htmlid,$width,$height,$data,$showlegend=0,$type='pie',$showpercent=0,$url='',$combineother=0.05)
 {
+	dol_syslog(__FUNCTION__ . " is deprecated", LOG_WARNING);
+
 	global $conf,$langs;
 	global $theme_datacolor;    // To have var kept when function is called several times
+
 	if (empty($conf->use_javascript_ajax)) return;
 	$jsgraphlib='flot';
 	$datacolor=array();
@@ -1617,26 +1766,34 @@ function dol_print_graph($htmlid,$width,$height,$data,$showlegend=0,$type='pie',
 						series: {
 							pie: {
 								show: true,
-								radius: 3/4,
+								radius: 0.8,';
+			if ($combineother)
+			{
+				print '
+								combine: {
+								 	threshold: '.$combineother.'
+								},';
+			}
+			print '
 								label: {
 									show: true,
-									radius: 3/4,
+									radius: 0.9,
 									formatter: function(label, series) {
 										var percent=Math.round(series.percent);
 										var number=series.data[0][1];
 										return \'';
-										print '<div style="font-size:8pt;text-align:center;padding:2px;color:white;">';
+										print '<div style="font-size:8pt;text-align:center;padding:2px;color:black;">';
 										if ($url) print '<a style="color: #FFFFFF;" border="0" href="'.$url.'=">';
-										print '\'+'.($showlegend?'number':'label+\'<br/>\'+number');
+										print '\'+'.($showlegend?'number':'label+\' \'+number');
 										if (! empty($showpercent)) print '+\'<br/>\'+percent+\'%\'';
 										print '+\'';
 										if ($url) print '</a>';
 										print '</div>\';
 									},
 									background: {
-										opacity: 0.5,
+										opacity: 0.0,
 										color: \'#000000\'
-									}
+									},
 								}
 							}
 						},
@@ -1728,13 +1885,18 @@ function dol_print_graph($htmlid,$width,$height,$data,$showlegend=0,$type='pie',
  *	@param	string	$trunc				Where to trunc: right, left, middle (size must be a 2 power), wrap
  * 	@param	string	$stringencoding		Tell what is source string encoding
  *  @param	int		$nodot				Truncation do not add ... after truncation. So it's an exact truncation.
+ *  @param  int     $display            Trunc is use to display and can be changed for small screen
  *	@return string						Truncated string
  */
-function dol_trunc($string,$size=40,$trunc='right',$stringencoding='UTF-8',$nodot=0)
+function dol_trunc($string,$size=40,$trunc='right',$stringencoding='UTF-8',$nodot=0, $display=0)
 {
 	global $conf;
 
 	if ($size==0 || ! empty($conf->global->MAIN_DISABLE_TRUNC)) return $string;
+	
+	if (empty($stringencoding)) $stringencoding='UTF-8';
+	// reduce for small screen
+	if ($conf->dol_optimize_smallscreen==1 && $display==1) $size = round($size/3);
 
 	// We go always here
 	if ($trunc == 'right')
@@ -1779,7 +1941,7 @@ function dol_trunc($string,$size=40,$trunc='right',$stringencoding='UTF-8',$nodo
 /**
  *	Show picto whatever it's its name (generic function)
  *
- *	@param      string		$alt         		Text on alt and title of image (alt only if param notitle is set to 1)
+ *	@param      string		$titlealt         	Text on title and alt. If text is "TextA:TextB", use Text A on alt and Text B on title. Alt only if param notitle is set to 1.
  *	@param      string		$picto       		Name of image file to show ('filenew', ...)
  *												If no extension provided, we use '.png'. Image must be stored into theme/xxx/img directory.
  *                                  			Example: picto.png                  if picto.png is stored into htdocs/theme/mytheme/img
@@ -1792,7 +1954,7 @@ function dol_trunc($string,$size=40,$trunc='right',$stringencoding='UTF-8',$nodo
  *  @return     string       				    Return img tag
  *  @see        #img_object, #img_picto_common
  */
-function img_picto($alt, $picto, $options = '', $pictoisfullpath = false, $srconly=0, $notitle=0)
+function img_picto($titlealt, $picto, $options = '', $pictoisfullpath = false, $srconly=0, $notitle=0)
 {
 	global $conf;
 
@@ -1805,13 +1967,15 @@ function img_picto($alt, $picto, $options = '', $pictoisfullpath = false, $srcon
 	}
 	else
 	{
-		// By default, we search $url/theme/$theme/img/$picto
+		// We forge fullpathpicto for image to $path/img/$picto. By default, we take DOL_URL_ROOT/theme/$conf->theme/img/$picto
 		$url = DOL_URL_ROOT;
 		$theme = $conf->theme;
 
 		$path = 'theme/'.$theme;
-		if (! empty($conf->global->MAIN_OVERWRITE_THEME_RES)) $path = $conf->global->MAIN_OVERWRITE_THEME_RES.'/theme/'.$conf->global->MAIN_OVERWRITE_THEME_RES;
-		//if (! empty($conf->global->MAIN_FORCETHEMEDIR)) $path = preg_replace('/^\//', '', $conf->global->MAIN_FORCETHEMEDIR).'/'.$path;	// TODO What if there is both FORCETHEMDIR and OVERWRITE_THEM_RES
+		if (! empty($conf->global->MAIN_OVERWRITE_THEME_PATH)) $path = $conf->global->MAIN_OVERWRITE_THEME_PATH.'/theme/'.$theme;	// If the theme does not have the same name as the module
+		else if (! empty($conf->global->MAIN_OVERWRITE_THEME_RES)) $path = $conf->global->MAIN_OVERWRITE_THEME_RES.'/theme/'.$conf->global->MAIN_OVERWRITE_THEME_RES;  // To allow an external module to overwrite image resources whatever is activated theme
+		else if (! empty($conf->modules_parts['theme']) && array_key_exists($theme, $conf->modules_parts['theme'])) $path = $theme.'/theme/'.$theme;	// If the theme have the same name as the module
+
 		// If we ask an image into $url/$mymodule/img (instead of default path)
 		if (preg_match('/^([^@]+)@([^@]+)$/i',$picto,$regs))
 		{
@@ -1821,10 +1985,10 @@ function img_picto($alt, $picto, $options = '', $pictoisfullpath = false, $srcon
 		// Clean parameters
 		if (! preg_match('/(\.png|\.gif)$/i',$picto)) $picto .= '.png';
 		// If alt path are defined, define url where img file is, according to physical path
-		foreach ($conf->file->dol_document_root as $type => $dirroot)	// ex: array(["main"]=>"/home/maindir/htdocs", ["alt0"]=>"/home/moddir/htdocs", ...)
+		foreach ($conf->file->dol_document_root as $type => $dirroot)	// ex: array(["main"]=>"/home/maindir/htdocs", ["alt0"]=>"/home/moddir0/htdocs", ...)
 		{
 			if ($type == 'main') continue;
-			if (file_exists($dirroot.'/'.$path.'/img/'.$picto))
+			if (file_exists($dirroot.'/'.$path.'/img/'.$picto))	// This need a lot of time, that's why enabling alternative dir like "custom" dir is not recommanded
 			{
 				$url=DOL_URL_ROOT.$conf->file->dol_url_root[$type];
 				break;
@@ -1836,13 +2000,20 @@ function img_picto($alt, $picto, $options = '', $pictoisfullpath = false, $srcon
 	}
 
 	if ($srconly) return $fullpathpicto;
-	else return '<img src="'.$fullpathpicto.'" border="0" alt="'.dol_escape_htmltag($alt).'"'.($notitle?'':' title="'.dol_escape_htmltag($alt).'"').($options?' '.$options:'').'>';
+	else
+	{
+		$tmparray=array(0=>$titlealt);
+		if (preg_match('/:[^\s]/',$titlealt)) $tmparray=explode(':',$titlealt);		// We explode if we have TextA:TextB. Not if we have TextA: TextB
+		$title=$tmparray[0];
+		$alt=empty($tmparray[1])?'':$tmparray[1];
+		return '<img src="'.$fullpathpicto.'" border="0" alt="'.dol_escape_htmltag($alt).'"'.($notitle?'':' title="'.dol_escape_htmltag($title).'"').($options?' '.$options:'').'>';	// Alt is used for accessibility, title for popup
+	}
 }
 
 /**
  *	Show a picto called object_picto (generic function)
  *
- *	@param	string	$alt				Text of alt on image
+ *	@param	string	$titlealt			Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
  *	@param	string	$picto				Name of image to show object_picto (example: user, group, action, bill, contract, propal, product, ...)
  *										For external modules use imagename@mymodule to search into directory "img" of module.
  *	@param	string	$options			Add more attribute on img tag (ie: class="datecallink")
@@ -1850,22 +2021,22 @@ function img_picto($alt, $picto, $options = '', $pictoisfullpath = false, $srcon
  *	@return	string						Return img tag
  *	@see	#img_picto, #img_picto_common
  */
-function img_object($alt, $picto, $options = '', $pictoisfullpath = false)
+function img_object($titlealt, $picto, $options = '', $pictoisfullpath = false)
 {
-	return img_picto($alt, 'object_'.$picto, $options, $pictoisfullpath);
+	return img_picto($titlealt, 'object_'.$picto, $options, $pictoisfullpath);
 }
 
 /**
  *	Show picto (generic function)
  *
- *	@param      string		$alt         		Text on alt and title of image
+ *	@param      string		$titlealt         	Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
  *	@param      string		$picto       		Name of image file to show (If no extension provided, we use '.png'). Image must be stored into htdocs/theme/common directory.
  *	@param		string		$options			Add more attribute on img tag
  *	@param		int			$pictoisfullpath	If 1, image path is a full path
  *	@return     string      					Return img tag
  *  @see        #img_object, #img_picto
  */
-function img_picto_common($alt, $picto, $options = '', $pictoisfullpath = 0)
+function img_picto_common($titlealt, $picto, $options = '', $pictoisfullpath = 0)
 {
 	global $conf;
 
@@ -1884,141 +2055,145 @@ function img_picto_common($alt, $picto, $options = '', $pictoisfullpath = 0)
 		}
 	}
 
-	return img_picto($alt, $path, $options, 1);
+	return img_picto($titlealt, $path, $options, 1);
 }
 
 /**
  *	Show logo action
  *
- *	@param	string	$alt         	Text for image alt and title ('default', ...)
- *	@param  int		$numaction   	Action to show
- *	@return string      			Return an img tag
+ *	@param	string		$titlealt       Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
+ *	@param  string		$numaction   	Action id or code to show
+ *	@return string      				Return an img tag
  */
-function img_action($alt, $numaction)
+function img_action($titlealt, $numaction)
 {
 	global $conf, $langs;
 
-	if ($alt == 'default')
+	if (empty($titlealt) || $titlealt == 'default')
 	{
-		if ($numaction == -1) $alt = $langs->transnoentitiesnoconv('ChangeDoNotContact');
-		if ($numaction == 0) $alt = $langs->transnoentitiesnoconv('ChangeNeverContacted');
-		if ($numaction == 1) $alt = $langs->transnoentitiesnoconv('ChangeToContact');
-		if ($numaction == 2) $alt = $langs->transnoentitiesnoconv('ChangeContactInProcess');
-		if ($numaction == 3) $alt = $langs->transnoentitiesnoconv('ChangeContactDone');
+		if ($numaction == '-1' || $numaction == 'ST_NO')			{ $numaction = -1; $titlealt = $langs->transnoentitiesnoconv('ChangeDoNotContact'); }
+		elseif ($numaction ==  '0' || $numaction == 'ST_NEVER') 	{ $numaction = 0; $titlealt = $langs->transnoentitiesnoconv('ChangeNeverContacted'); }
+		elseif ($numaction ==  '1' || $numaction == 'ST_TODO')  	{ $numaction = 1; $titlealt = $langs->transnoentitiesnoconv('ChangeToContact'); }
+		elseif ($numaction ==  '2' || $numaction == 'ST_PEND')  	{ $numaction = 2; $titlealt = $langs->transnoentitiesnoconv('ChangeContactInProcess'); }
+		elseif ($numaction ==  '3' || $numaction == 'ST_DONE')  	{ $numaction = 3; $titlealt = $langs->transnoentitiesnoconv('ChangeContactDone'); }
+		else { $titlealt = $langs->transnoentitiesnoconv('ChangeStatus '.$numaction); $numaction = 0; }
 	}
+	if (! is_numeric($numaction)) $numaction=0;
 
-	return img_picto($alt, 'stcomm'.$numaction.'.png');
+	return img_picto($titlealt, 'stcomm'.$numaction.'.png');
 }
 
 /**
  *  Show pdf logo
  *
- *  @param	string		$alt        Texte sur le alt de l'image
+ *  @param	string		$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
  *  @param  int		    $size       Taille de l'icone : 3 = 16x16px , 2 = 14x14px
  *  @return string      			Retourne tag img
  */
-function img_pdf($alt = 'default', $size = 3)
+function img_pdf($titlealt = 'default', $size = 3)
 {
 	global $conf, $langs;
 
-	if ($alt == 'default') $alt = $langs->trans('Show');
+	if ($titlealt == 'default') $titlealt = $langs->trans('Show');
 
-	return img_picto($alt, 'pdf'.$size.'.png');
+	return img_picto($titlealt, 'pdf'.$size.'.png');
 }
 
 /**
  *	Show logo +
  *
- *	@param	string	$alt        Texte sur le alt de l'image
+ *	@param	string	$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
+ *	@param  string	$other      Add more attributes on img
  *	@return string      		Return tag img
  */
-function img_edit_add($alt = 'default')
+function img_edit_add($titlealt = 'default', $other = '')
 {
 	global $conf, $langs;
 
-	if ($alt == 'default') $alt = $langs->trans('Add');
+	if ($titlealt == 'default') $titlealt = $langs->trans('Add');
 
-	return img_picto($alt, 'edit_add.png');
+	return img_picto($titlealt, 'edit_add.png', $other);
 }
 /**
  *	Show logo -
  *
- *	@param	string	$alt         Texte sur le alt de l'image
- *	@return string      Retourne tag img
+ *	@param	string	$titlealt	Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
+ *	@param  string	$other      Add more attributes on img
+ *	@return string      		Return tag img
  */
-function img_edit_remove($alt = 'default')
+function img_edit_remove($titlealt = 'default', $other='')
 {
 	global $conf, $langs;
 
-	if ($alt == 'default') $alt = $langs->trans('Remove');
+	if ($titlealt == 'default') $titlealt = $langs->trans('Remove');
 
-	return img_picto($alt, 'edit_remove.png');
+	return img_picto($titlealt, 'edit_remove.png', $other);
 }
 
 /**
  *	Show logo editer/modifier fiche
  *
- *	@param  string	$alt        Texte sur le alt de l'image
- *	@param  float	$float      Si il faut y mettre le style "float: right"
+ *	@param  string	$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
+ *	@param  integer	$float      Si il faut y mettre le style "float: right"
  *	@param  string	$other		Add more attributes on img
- *	@return string      		Retourne tag img
+ *	@return string      		Return tag img
  */
-function img_edit($alt = 'default', $float = 0, $other = '')
+function img_edit($titlealt = 'default', $float = 0, $other = '')
 {
 	global $conf, $langs;
 
-	if ($alt == 'default') $alt = $langs->trans('Modify');
+	if ($titlealt == 'default') $titlealt = $langs->trans('Modify');
 
-	return img_picto($alt, 'edit.png', ($float ? 'style="float: right"' : $other));
+	return img_picto($titlealt, 'edit.png', ($float ? 'style="float: right"' : $other));
 }
 
 /**
  *	Show logo view card
  *
- *	@param	string	$alt         Texte sur le alt de l'image
- *	@param  float	$float       Si il faut y mettre le style "float: right"
+ *	@param	string	$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
+ *	@param  integer	$float      Si il faut y mettre le style "float: right"
  *	@param  string	$other		Add more attributes on img
- *	@return string      Retourne tag img
+ *	@return string      		Return tag img
  */
-function img_view($alt = 'default', $float = 0, $other = '')
+function img_view($titlealt = 'default', $float = 0, $other = '')
 {
 	global $conf, $langs;
 
-	if ($alt == 'default') $alt = $langs->trans('View');
+	if ($titlealt == 'default') $titlealt = $langs->trans('View');
 
 	$options = ($float ? 'style="float: right" ' : '').$other;
 
-	return img_picto($alt, 'view.png', $options);
+	return img_picto($titlealt, 'view.png', $options);
 }
 
 /**
  *  Show delete logo
  *
- *  @param	string	$alt        Text on alt image
+ *  @param	string	$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
  *	@param  string	$other      Add more attributes on img
  *  @return string      		Retourne tag img
  */
-function img_delete($alt = 'default', $other = '')
+function img_delete($titlealt = 'default', $other = '')
 {
 	global $conf, $langs;
 
-	if ($alt == 'default') $alt = $langs->trans('Delete');
+	if ($titlealt == 'default') $titlealt = $langs->trans('Delete');
 
-	return img_picto($alt, 'delete.png', $other);
+	return img_picto($titlealt, 'delete.png', $other);
 }
 
 /**
  *  Show printer logo
  *
- *  @param  string  $alt        Text on alt image
+ *  @param  string  $titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
  *  @param  string  $other      Add more attributes on img
  *  @return string              Retourne tag img
  */
-function img_printer($alt = "default", $other='')
+function img_printer($titlealt = "default", $other='')
 {
     global $conf,$langs;
-    if ($alt=="default") $alt=$langs->trans("Print");
-    return img_picto($alt,'printer.png',$other);
+    if ($titlealt=="default") $titlealt=$langs->trans("Print");
+    return img_picto($titlealt,'printer.png',$other);
 }
 
 /**
@@ -2038,165 +2213,167 @@ function img_help($usehelpcursor = 1, $usealttitle = 1)
 		else $usealttitle = $langs->trans('Info');
 	}
 
-	return img_picto($usealttitle, 'info.png', ($usehelpcursor ? 'style="cursor: help"' : ''));
+	return img_picto($usealttitle, 'info.png', ($usehelpcursor ? 'style="vertical-align: middle; cursor: help"' : 'style="vertical-align: middle;"'));
 }
 
 /**
  *	Show info logo
  *
- *	@param	string	$alt        Text to show on alt image
+ *	@param	string	$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
  *	@return string      		Return img tag
  */
-function img_info($alt = 'default')
+function img_info($titlealt = 'default')
 {
 	global $conf, $langs;
 
-	if ($alt == 'default') $alt = $langs->trans('Informations');
+	if ($titlealt == 'default') $titlealt = $langs->trans('Informations');
 
-	return img_picto($alt, 'info.png');
+	return img_picto($titlealt, 'info.png', 'style="vertical-align: middle;"');
 }
 
 /**
  *	Show warning logo
  *
- *	@param	string	$alt        Text to show on alt image
+ *	@param	string	$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
  *	@param  int		$float      If we must add style "float: right"
  *	@return string      		Return img tag
  */
-function img_warning($alt = 'default', $float = 0)
+function img_warning($titlealt = 'default', $float = 0)
 {
 	global $conf, $langs;
 
-	if ($alt == 'default') $alt = $langs->trans('Warning');
+	if ($titlealt == 'default') $titlealt = $langs->trans('Warning');
 
-	return img_picto($alt, 'warning.png', ($float ? 'style="float: right"' : ''));
+	return img_picto($titlealt, 'warning.png', 'class="pictowarning"'.($float ? ' style="float: right"' : ''));
 }
 
 /**
  *  Show error logo
  *
- *	@param	string	$alt        Text to show on alt image
+ *	@param	string	$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
  *	@return string      		Return img tag
  */
-function img_error($alt = 'default')
+function img_error($titlealt = 'default')
 {
 	global $conf, $langs;
 
-	if ($alt == 'default') $alt = $langs->trans('Error');
+	if ($titlealt == 'default') $titlealt = $langs->trans('Error');
 
-	return img_picto($alt, 'error.png');
+	return img_picto($titlealt, 'error.png');
 }
 
 /**
  *	Show next logo
  *
- *	@param	string	$alt        Text to show on alt image
+ *	@param	string	$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
  *	@return string      		Return img tag
  */
-function img_next($alt = 'default')
+function img_next($titlealt = 'default')
 {
 	global $conf, $langs;
 
-	if ($alt == 'default') $alt = $langs->trans('Next');
+	if ($titlealt == 'default') $titlealt = $langs->trans('Next');
 
-	return img_picto($alt, 'next.png');
+	return img_picto($titlealt, 'next.png');
 }
 
 /**
  *	Show previous logo
  *
- *	@param	string	$alt        Text to show on alt image
+ *	@param	string	$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
  *	@return string      		Return img tag
  */
-function img_previous($alt = 'default')
+function img_previous($titlealt = 'default')
 {
 	global $conf, $langs;
 
-	if ($alt == 'default') $alt = $langs->trans('Previous');
+	if ($titlealt == 'default') $titlealt = $langs->trans('Previous');
 
-	return img_picto($alt, 'previous.png');
+	return img_picto($titlealt, 'previous.png');
 }
 
 /**
  *	Show down arrow logo
  *
- *	@param	string	$alt        Text to show on alt image
+ *	@param	string	$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
  *	@param  int		$selected   Selected
+ *  @param	string	$moreclass	Add more CSS classes
  *	@return string      		Return img tag
  */
-function img_down($alt = 'default', $selected = 0)
+function img_down($titlealt = 'default', $selected = 0, $moreclass='')
 {
 	global $conf, $langs;
 
-	if ($alt == 'default') $alt = $langs->trans('Down');
+	if ($titlealt == 'default') $titlealt = $langs->trans('Down');
 
-	return img_picto($alt, ($selected ? '1downarrow_selected.png' : '1downarrow.png'), 'class="imgdown"');
+	return img_picto($titlealt, ($selected ? '1downarrow_selected.png' : '1downarrow.png'), 'class="imgdown'.($moreclass?" ".$moreclass:"").'"');
 }
 
 /**
  *	Show top arrow logo
  *
- *	@param	string	$alt        Text to show on alt image
+ *	@param	string	$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
  *	@param  int		$selected	Selected
+ *  @param	string	$moreclass	Add more CSS classes
  *	@return string      		Return img tag
  */
-function img_up($alt = 'default', $selected = 0)
+function img_up($titlealt = 'default', $selected = 0, $moreclass='')
 {
 	global $conf, $langs;
 
-	if ($alt == 'default') $alt = $langs->trans('Up');
+	if ($titlealt == 'default') $titlealt = $langs->trans('Up');
 
-	return img_picto($alt, ($selected ? '1uparrow_selected.png' : '1uparrow.png'), 'class="imgup"');
+	return img_picto($titlealt, ($selected ? '1uparrow_selected.png' : '1uparrow.png'), 'class="imgup'.($moreclass?" ".$moreclass:"").'"');
 }
 
 /**
  *	Show left arrow logo
  *
- *	@param	string	$alt        Text to show on alt image
+ *	@param	string	$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
  *	@param  int		$selected	Selected
  *	@param	string	$options	Add more attribute on img tag (For example 'style="float: right"')
  *	@return string      		Return img tag
  */
-function img_left($alt = 'default', $selected = 0, $options='')
+function img_left($titlealt = 'default', $selected = 0, $options='')
 {
 	global $conf, $langs;
 
-	if ($alt == 'default') $alt = $langs->trans('Left');
+	if ($titlealt == 'default') $titlealt = $langs->trans('Left');
 
-	return img_picto($alt, ($selected ? '1leftarrow_selected.png' : '1leftarrow.png'), $options);
+	return img_picto($titlealt, ($selected ? '1leftarrow_selected.png' : '1leftarrow.png'), $options);
 }
 
 /**
  *	Show right arrow logo
  *
- *	@param	string	$alt        Text to show on alt image
+ *	@param	string	$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
  *	@param  int		$selected	Selected
  *	@param	string	$options	Add more attribute on img tag (For example 'style="float: right"')
  *	@return string      		Return img tag
  */
-function img_right($alt = 'default', $selected = 0, $options='')
+function img_right($titlealt = 'default', $selected = 0, $options='')
 {
 	global $conf, $langs;
 
-	if ($alt == 'default') $alt = $langs->trans('Right');
+	if ($titlealt == 'default') $titlealt = $langs->trans('Right');
 
-	return img_picto($alt, ($selected ? '1rightarrow_selected.png' : '1rightarrow.png'), $options);
+	return img_picto($titlealt, ($selected ? '1rightarrow_selected.png' : '1rightarrow.png'), $options);
 }
 
 /**
  *	Show tick logo if allowed
  *
  *	@param	string	$allow		Allow
- *	@param	string	$alt        Text to show on alt image
+ *	@param	string	$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
  *	@return string      		Return img tag
  */
-function img_allow($allow, $alt = 'default')
+function img_allow($allow, $titlealt = 'default')
 {
 	global $conf, $langs;
 
-	if ($alt == 'default') $alt = $langs->trans('Active');
+	if ($titlealt == 'default') $titlealt = $langs->trans('Active');
 
-	if ($allow == 1) return img_picto($alt, 'tick.png');
+	if ($allow == 1) return img_picto($titlealt, 'tick.png');
 
 	return '-';
 }
@@ -2206,19 +2383,19 @@ function img_allow($allow, $alt = 'default')
  *	Show MIME img of a file
  *
  *	@param	string	$file		Filename
- * 	@param	string	$alt		Alternate text to show on img mous hover
+ * 	@param	string	$titlealt	Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
  *	@return string     			Return img tag
  */
-function img_mime($file, $alt = '')
+function img_mime($file, $titlealt = '')
 {
 	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
 	$mimetype = dol_mimetype($file, '', 1);
 	$mimeimg = dol_mimetype($file, '', 2);
 
-	if (empty($alt)) $alt = 'Mime type: '.$mimetype;
+	if (empty($titlealt)) $titlealt = 'Mime type: '.$mimetype;
 
-	return img_picto_common($alt, 'mime/'.$mimeimg);
+	return img_picto_common($titlealt, 'mime/'.$mimeimg);
 }
 
 
@@ -2226,29 +2403,73 @@ function img_mime($file, $alt = '')
  *	Show phone logo.
  *  Use img_picto instead.
  *
- *	@param	string	$alt        Text to show on alt image
+ *	@param	string	$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
  *	@param  int		$option		Option
  *	@return string      		Return img tag
  *  @deprecated
+ *  @see img_picto
  */
-function img_phone($alt = 'default', $option = 0)
+function img_phone($titlealt = 'default', $option = 0)
 {
+	dol_syslog(__FUNCTION__ . " is deprecated", LOG_WARNING);
+
 	global $conf,$langs;
 
-	if ($alt == 'default') $alt = $langs->trans('Call');
+	if ($titlealt == 'default') $titlealt = $langs->trans('Call');
 
 	if ($option == 1) $img = 'call';
 	else $img = 'call_out';
 
-	return img_picto($alt, $img);
+	return img_picto($titlealt, $img);
 }
 
+/**
+ *  Show search logo
+ *
+ *  @param	string	$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
+ *	@param  string	$other      Add more attributes on img
+ *  @return string      		Retourne tag img
+ */
+function img_search($titlealt = 'default', $other = '')
+{
+	global $conf, $langs;
+
+	if ($titlealt == 'default') $titlealt = $langs->trans('Search');
+
+	$img = img_picto($titlealt, 'search.png', $other, false, 1);
+
+	$input = '<input type="image" class="liste_titre" name="button_search" src="'.$img.'" ';
+	$input.= 'value="'.dol_escape_htmltag($titlealt).'" title="'.dol_escape_htmltag($titlealt).'" >';
+
+	return $input;
+}
+
+/**
+ *  Show search logo
+ *
+ *  @param	string	$titlealt   Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
+ *	@param  string	$other      Add more attributes on img
+ *  @return string      		Retourne tag img
+ */
+function img_searchclear($titlealt = 'default', $other = '')
+{
+	global $conf, $langs;
+
+	if ($titlealt == 'default') $titlealt = $langs->trans('Search');
+
+	$img = img_picto($titlealt, 'searchclear.png', $other, false, 1);
+
+	$input = '<input type="image" class="liste_titre" name="button_removefilter" src="'.$img.'" ';
+	$input.= 'value="'.dol_escape_htmltag($titlealt).'" title="'.dol_escape_htmltag($titlealt).'" >';
+
+	return $input;
+}
 
 /**
  *	Show information for admin users
  *
  *	@param	string	$text			Text info
- *	@param  string	$infoonimgalt	Info is shown only on alt of star picto, otherwise it is show on output after the star picto
+ *	@param  integer	$infoonimgalt	Info is shown only on alt of star picto, otherwise it is show on output after the star picto
  *	@param	int		$nodiv			No div
  *	@return	string					String with info text
  */
@@ -2261,7 +2482,7 @@ function info_admin($text, $infoonimgalt = 0, $nodiv=0)
 		return img_picto($text, 'info', 'class="hideonsmartphone"');
 	}
 
-	return ($nodiv?'':'<div class="info hideonsmartphone">').img_picto($langs->trans('InfoAdmin'), 'info', 'class="hideonsmartphone"').' '.$text.($nodiv?'':'</div>');
+	return ($nodiv?'':'<div class="info hideonsmartphone">').img_picto($langs->trans('InfoAdmin'), ($nodiv?'info':'info_black'), 'class="hideonsmartphone"').' '.$text.($nodiv?'':'</div>');
 }
 
 
@@ -2273,10 +2494,11 @@ function info_admin($text, $infoonimgalt = 0, $nodiv=0)
  *
  *	@param	 	DoliDB	$db      	Database handler
  *	@param  	mixed	$error		String or array of errors strings to show
+ *  @param		array	$errors		Array of errors
  *	@return 	void
  *  @see    	dol_htmloutput_errors
  */
-function dol_print_error($db='',$error='')
+function dol_print_error($db='',$error='',$errors=null)
 {
 	global $conf,$langs,$argv;
 	global $dolibarr_main_prod;
@@ -2297,19 +2519,22 @@ function dol_print_error($db='',$error='')
 	if ($_SERVER['DOCUMENT_ROOT'])    // Mode web
 	{
 		$out.=$langs->trans("DolibarrHasDetectedError").".<br>\n";
-		if (! empty($conf->global->MAIN_FEATURES_LEVEL))
-		$out.="You use an experimental level of features, so please do NOT report any bugs, anywhere, until going back to MAIN_FEATURES_LEVEL = 0.<br>\n";
+		if (! empty($conf->global->MAIN_FEATURES_LEVEL)) $out.="You use an experimental or develop level of features, so please do NOT report any bugs, except if problem is confirmed moving option MAIN_FEATURES_LEVEL back to 0.<br>\n";
 		$out.=$langs->trans("InformationToHelpDiagnose").":<br>\n";
 
-		$out.="<b>".$langs->trans("Date").":</b> ".dol_print_date(time(),'dayhourlog')."<br>\n";;
-		$out.="<b>".$langs->trans("Dolibarr").":</b> ".DOL_VERSION."<br>\n";;
-		if (isset($conf->global->MAIN_FEATURES_LEVEL)) $out.="<b>".$langs->trans("LevelOfFeature").":</b> ".$conf->global->MAIN_FEATURES_LEVEL."<br>\n";;
+		$out.="<b>".$langs->trans("Date").":</b> ".dol_print_date(time(),'dayhourlog')."<br>\n";
+		$out.="<b>".$langs->trans("Dolibarr").":</b> ".DOL_VERSION."<br>\n";
+		if (isset($conf->global->MAIN_FEATURES_LEVEL)) $out.="<b>".$langs->trans("LevelOfFeature").":</b> ".$conf->global->MAIN_FEATURES_LEVEL."<br>\n";
 		if (function_exists("phpversion"))
 		{
 			$out.="<b>".$langs->trans("PHP").":</b> ".phpversion()."<br>\n";
-			//phpinfo();       // This is to show location of php.ini file
 		}
 		$out.="<b>".$langs->trans("Server").":</b> ".$_SERVER["SERVER_SOFTWARE"]."<br>\n";
+		if (function_exists("php_uname"))
+		{
+			$out.="<b>".$langs->trans("OS").":</b> ".php_uname()."<br>\n";
+		}
+		$out.="<b>".$langs->trans("UserAgent").":</b> ".$_SERVER["HTTP_USER_AGENT"]."<br>\n";
 		$out.="<br>\n";
 		$out.="<b>".$langs->trans("RequestedUrl").":</b> ".dol_htmlentities($_SERVER["REQUEST_URI"],ENT_COMPAT,'UTF-8')."<br>\n";
 		$out.="<b>".$langs->trans("Referer").":</b> ".(isset($_SERVER["HTTP_REFERER"])?dol_htmlentities($_SERVER["HTTP_REFERER"],ENT_COMPAT,'UTF-8'):'')."<br>\n";
@@ -2321,7 +2546,7 @@ function dol_print_error($db='',$error='')
 	else                              // Mode CLI
 	{
 		$out.='> '.$langs->transnoentities("ErrorInternalErrorDetected").":\n".$argv[0]."\n";
-		$syslog.="pid=".getmypid();
+		$syslog.="pid=".dol_getmypid();
 	}
 
 	if (is_object($db))
@@ -2346,12 +2571,15 @@ function dol_print_error($db='',$error='')
 		$syslog.=", db_error=".$db->lasterror();
 	}
 
-	if ($error)
+	if ($error || $errors)
 	{
 		$langs->load("errors");
 
-		if (is_array($error)) $errors=$error;
-		else $errors=array($error);
+		// Merge all into $errors array
+		if (is_array($error) && is_array($errors)) $errors=array_merge($error,$errors);
+		elseif (is_array($error)) $errors=$error;
+		elseif (is_array($errors)) $errors=array_merge(array($error),$errors);
+		else $errors=array_merge(array($error));
 
 		foreach($errors as $msg)
 		{
@@ -2360,7 +2588,7 @@ function dol_print_error($db='',$error='')
 			{
 				$out.="<b>".$langs->trans("Message").":</b> ".$msg."<br>\n" ;
 			}
-			else                            // Mode CLI
+			else                        // Mode CLI
 			{
 				$out.='> '.$langs->transnoentities("Message").":\n".$msg."\n" ;
 			}
@@ -2409,18 +2637,19 @@ function dol_print_error_email($prefixcode)
  *	@param  string	$td          Options of attribute td ("" by defaut, example: 'align="center"')
  *	@param  string	$sortfield   Current field used to sort
  *	@param  string	$sortorder   Current sort order
+ *  @param	string	$prefix		 Prefix for css. Use space after prefix to add your own CSS tag.
  *	@return	void
  */
-function print_liste_field_titre($name, $file="", $field="", $begin="", $moreparam="", $td="", $sortfield="", $sortorder="")
+function print_liste_field_titre($name, $file="", $field="", $begin="", $moreparam="", $td="", $sortfield="", $sortorder="", $prefix="")
 {
-	print getTitleFieldOfList($name, 0, $file, $field, $begin, $moreparam, $td, $sortfield, $sortorder);
+	print getTitleFieldOfList($name, 0, $file, $field, $begin, $moreparam, $td, $sortfield, $sortorder, $prefix);
 }
 
 /**
  *	Get title line of an array
  *
  *	@param	string	$name        Label of field
- *	@param	int		$thead		 0=To use with standard table forat, 1=To use inside <thead><tr>, 2=To use with <div>
+ *	@param	int		$thead		 0=To use with standard table format, 1=To use inside <thead><tr>, 2=To use with <div>
  *	@param	string	$file        Url used when we click on sort picto
  *	@param	string	$field       Field to use for new sorting. Empty if this field is not sortable.
  *	@param	string	$begin       ("" by defaut)
@@ -2428,9 +2657,10 @@ function print_liste_field_titre($name, $file="", $field="", $begin="", $morepar
  *	@param  string	$moreattrib  Add more attributes on th ("" by defaut)
  *	@param  string	$sortfield   Current field used to sort
  *	@param  string	$sortorder   Current sort order
- *	@return	void
+ *  @param	string	$prefix		 Prefix for css. Use space after prefix to add your own CSS tag.
+ *	@return	string
  */
-function getTitleFieldOfList($name, $thead=0, $file="", $field="", $begin="", $moreparam="", $moreattrib="", $sortfield="", $sortorder="")
+function getTitleFieldOfList($name, $thead=0, $file="", $field="", $begin="", $moreparam="", $moreattrib="", $sortfield="", $sortorder="", $prefix="")
 {
 	global $conf;
 	//print "$name, $file, $field, $begin, $options, $moreattrib, $sortfield, $sortorder<br>\n";
@@ -2443,8 +2673,8 @@ function getTitleFieldOfList($name, $thead=0, $file="", $field="", $begin="", $m
 
 	// If field is used as sort criteria we use a specific class
 	// Example if (sortfield,field)=("nom","xxx.nom") or (sortfield,field)=("nom","nom")
-	if ($field && ($sortfield == $field || $sortfield == preg_replace("/^[^\.]+\./","",$field))) $out.= '<'.$tag.' class="liste_titre_sel" '. $moreattrib.'>';
-	else $out.= '<'.$tag.' class="liste_titre" '. $moreattrib.'>';
+	if ($field && ($sortfield == $field || $sortfield == preg_replace("/^[^\.]+\./","",$field))) $out.= '<'.$tag.' class="'.$prefix.'liste_titre_sel" '. $moreattrib.'>';
+	else $out.= '<'.$tag.' class="'.$prefix.'liste_titre" '. $moreattrib.'>';
 
 	if (! empty($conf->dol_optimize_smallscreen) && empty($thead) && $field)    // If this is a sort field
 	{
@@ -2499,13 +2729,17 @@ function getTitleFieldOfList($name, $thead=0, $file="", $field="", $begin="", $m
 }
 
 /**
- *	Show a title (deprecated. use print_fiche_titre instead)
+ *	Show a title.
  *
  *	@param	string	$title			Title to show
  *	@return	string					Title to show
+ *  @deprecated						Use load_fiche_titre instead
+ *  @see print_fiche_titre, load_fiche_titre
  */
 function print_titre($title)
 {
+	dol_syslog(__FUNCTION__ . " is deprecated", LOG_WARNING);
+
 	print '<div class="titre">'.$title.'</div>';
 }
 
@@ -2518,8 +2752,9 @@ function print_titre($title)
  *	@param	int		$pictoisfullpath	1=Icon name is a full absolute url of image
  * 	@param	int		$id					To force an id on html objects
  * 	@return	void
+ *  @deprecated Use print load_fiche_titre instead
  */
-function print_fiche_titre($title, $mesg='', $picto='title.png', $pictoisfullpath=0, $id='')
+function print_fiche_titre($title, $mesg='', $picto='title_generic.png', $pictoisfullpath=0, $id='')
 {
 	print load_fiche_titre($title, $mesg, $picto, $pictoisfullpath, $id);
 }
@@ -2532,9 +2767,9 @@ function print_fiche_titre($title, $mesg='', $picto='title.png', $pictoisfullpat
  *	@param	string	$picto				Icon to use before title (should be a 32x32 transparent png file)
  *	@param	int		$pictoisfullpath	1=Icon name is a full absolute url of image
  * 	@param	int		$id					To force an id on html objects
- * 	@return	void
+ * 	@return	string
  */
-function load_fiche_titre($titre, $mesg='', $picto='title.png', $pictoisfullpath=0, $id='')
+function load_fiche_titre($titre, $mesg='', $picto='title_generic.png', $pictoisfullpath=0, $id=0)
 {
 	global $conf;
 
@@ -2571,15 +2806,16 @@ function load_fiche_titre($titre, $mesg='', $picto='title.png', $pictoisfullpath
  *	@param	int		$num				number of records found by select with limit+1
  *	@param	int		$totalnboflines		Total number of records/lines for all pages (if known)
  *	@param	string	$picto				Icon to use before title (should be a 32x32 transparent png file)
- *	@param	int		$pictoisfullpath		1=Icon name is a full absolute url of image
+ *	@param	int		$pictoisfullpath	1=Icon name is a full absolute url of image
+ *  @param	string	$morehtml			More html to show
  *	@return	void
  */
-function print_barre_liste($titre, $page, $file, $options='', $sortfield='', $sortorder='', $center='', $num=-1, $totalnboflines=0, $picto='title.png', $pictoisfullpath=0)
+function print_barre_liste($titre, $page, $file, $options='', $sortfield='', $sortorder='', $center='', $num=-1, $totalnboflines=0, $picto='title_generic.png', $pictoisfullpath=0, $morehtml='')
 {
 	global $conf,$langs;
 
-	if ($picto == 'setup') $picto='title.png';
-	if (($conf->browser->name == 'ie') && $picto=='title.png') $picto='title.gif';
+	if ($picto == 'setup') $picto='title_setup.png';
+	if (($conf->browser->name == 'ie') && $picto=='title_generic.png') $picto='title.gif';
 
 	if (($num > $conf->liste_limit) || ($num == -1))
 	{
@@ -2592,7 +2828,7 @@ function print_barre_liste($titre, $page, $file, $options='', $sortfield='', $so
 
 	print "\n";
 	print "<!-- Begin title '".$titre."' -->\n";
-	print '<table width="100%" border="0" class="notopnoleftnoright" style="margin-bottom: 2px;"><tr>';
+	print '<table width="100%" border="0" class="notopnoleftnoright" style="margin-bottom: 6px;"><tr>';
 
 	// Left
 	if ($picto && $titre) print '<td class="nobordernopadding hideonsmartphone" width="40" align="left" valign="middle">'.img_picto('', $picto, '', $pictoisfullpath).'</td>';
@@ -2612,44 +2848,48 @@ function print_barre_liste($titre, $page, $file, $options='', $sortfield='', $so
 	$pagelist = '';
 	if ($page > 0 || $num > $conf->liste_limit)
 	{
-		if ($totalnboflines)
+		if ($totalnboflines)	// If we know total nb of lines
 		{
-			$maxnbofpage=10;
+			$maxnbofpage=(empty($conf->dol_optimize_smallscreen) ? 6 : 3);		// nb before and after selected page + ... + first or last
 
 			$nbpages=ceil($totalnboflines/$conf->liste_limit);
 			$cpt=($page-$maxnbofpage);
 			if ($cpt < 0) { $cpt=0; }
-			$pagelist.=$langs->trans('Page');
+
 			if ($cpt>=1)
 			{
-				$pagelist.=' <a href="'.$file.'?page=0'.$options.'&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">1</a>';
-				if ($cpt >= 2) $pagelist.=' ...';
+				$pagelist.= '<li'.(empty($conf->dol_use_jmobile)?' class="pagination"':'').'><a '.(empty($conf->dol_use_jmobile)?'':'data-role="button" ').'href="'.$file.'?page=0'.$options.'&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">1</a></li>';
+				if ($cpt > 2) $pagelist.='<li'.(empty($conf->dol_use_jmobile)?' class="pagination"':'').'><span '.(empty($conf->dol_use_jmobile)?'class="inactive"':'data-role="button"').'>...</span></li>';
+				else if ($cpt == 2) $pagelist.='<li'.(empty($conf->dol_use_jmobile)?' class="pagination"':'').'><a '.(empty($conf->dol_use_jmobile)?'':'data-role="button" ').'href="'.$file.'?page=1'.$options.'&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">2</a></li>';
 			}
+			
 			do
 			{
 				if ($cpt==$page)
 				{
-					$pagelist.= ' <u>'.($page+1).'</u>';
+					$pagelist.= '<li'.(empty($conf->dol_use_jmobile)?' class="pagination"':'').'><span '.(empty($conf->dol_use_jmobile)?'class="active"':'data-role="button"').'>'.($page+1).'</span></li>';
 				}
 				else
 				{
-					$pagelist.= ' <a href="'.$file.'?page='.$cpt.$options.'&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">'.($cpt+1).'</a>';
+					$pagelist.= '<li'.(empty($conf->dol_use_jmobile)?' class="pagination"':'').'><a '.(empty($conf->dol_use_jmobile)?'':'data-role="button" ').'href="'.$file.'?page='.$cpt.$options.'&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">'.($cpt+1).'</a></li>';
 				}
 				$cpt++;
 			}
 			while ($cpt < $nbpages && $cpt<=$page+$maxnbofpage);
+			
 			if ($cpt<$nbpages)
 			{
-				if ($cpt<$nbpages-1) $pagelist.= ' ...';
-				$pagelist.= ' <a href="'.$file.'?page='.($nbpages-1).$options.'&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">'.$nbpages.'</a>';
+				if ($cpt<$nbpages-2) $pagelist.= '<li'.(empty($conf->dol_use_jmobile)?' class="pagination"':'').'><span '.(empty($conf->dol_use_jmobile)?'class="inactive"':'data-role="button"').'>...</span></li>';
+				else if ($cpt == $nbpages-2) $pagelist.= '<li'.(empty($conf->dol_use_jmobile)?' class="pagination"':'').'><a '.(empty($conf->dol_use_jmobile)?'':'data-role="button" ').'href="'.$file.'?page='.($nbpages-2).$options.'&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">'.($nbpages - 1).'</a></li>';
+				$pagelist.= '<li'.(empty($conf->dol_use_jmobile)?' class="pagination"':'').'><a '.(empty($conf->dol_use_jmobile)?'':'data-role="button" ').'href="'.$file.'?page='.($nbpages-1).$options.'&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">'.$nbpages.'</a></li>';
 			}
 		}
 		else
 		{
-			$pagelist.= $langs->trans('Page').' '.($page+1);
+			$pagelist.= '<li'.(empty($conf->dol_use_jmobile)?' class="pagination"':'').'><span '.(empty($conf->dol_use_jmobile)?'class="active"':'data-role="button"').'>'.($page+1)."</li>";
 		}
 	}
-	print_fleche_navigation($page,$file,$options,$nextpage,$pagelist);
+	print_fleche_navigation($page,$file,$options,$nextpage,$pagelist,$morehtml);		// output the div and ul for previous/last completed with page numbers into $pagelist
 	print '</td>';
 
 	print '</tr></table>'."\n";
@@ -2657,30 +2897,42 @@ function print_barre_liste($titre, $page, $file, $options='', $sortfield='', $so
 }
 
 /**
- *	Fonction servant a afficher les fleches de navigation dans les pages de listes
+ *	Function to show navigation arrows into lists
  *
  *	@param	int				$page				Number of page
- *	@param	string			$file				Lien
- *	@param	string			$options         	Autres parametres d'url a propager dans les liens ("" par defaut)
- *	@param	boolean|int		$nextpage	    	Do we show a next page button
- *	@param	string			$betweenarrows		HTML Content to show between arrows
+ *	@param	string			$file				Page URL (in most cases provided with $_SERVER["PHP_SELF"])
+ *	@param	string			$options         	Other url paramaters to propagate ("" by default)
+ *	@param	integer			$nextpage	    	Do we show a next page button
+ *	@param	string			$betweenarrows		HTML content to show between arrows. MUST contains '<li> </li>' tags or '<li><span> </span></li>'.
+ *  @param	string			$afterarrows		HTML content to show after arrows. Must NOT contains '<li> </li>' tags.
  *	@return	void
  */
-function print_fleche_navigation($page,$file,$options='',$nextpage=0,$betweenarrows='')
+function print_fleche_navigation($page, $file, $options='', $nextpage=0, $betweenarrows='', $afterarrows='')
 {
 	global $conf, $langs;
 
+	print '<div class="pagination"><ul>';
 	if ($page > 0)
 	{
-		if (empty($conf->dol_use_jmobile)) print '<a href="'.$file.'?page='.($page-1).$options.'">'.img_previous($langs->trans("Previous")).'</a>';
-		else print '<a data-role="button" data-icon="arrow-l" data-iconpos="left" href="'.$file.'?page='.($page-1).$options.'">'.$langs->trans("Previous").'</a>';
+		if (empty($conf->dol_use_jmobile)) print '<li class="pagination"><a class="paginationprevious" href="'.$file.'?page='.($page-1).$options.'"><</a></li>';
+		else print '<li><a data-role="button" data-icon="arrow-l" data-iconpos="left" href="'.$file.'?page='.($page-1).$options.'">'.$langs->trans("Previous").'</a></li>';
 	}
-	if ($betweenarrows) print ($page > 0?' ':'').$betweenarrows.($nextpage>0?' ':'');
+	if ($betweenarrows)
+	{
+		print $betweenarrows;
+	}
 	if ($nextpage > 0)
 	{
-		if (empty($conf->dol_use_jmobile)) print '<a href="'.$file.'?page='.($page+1).$options.'">'.img_next($langs->trans("Next")).'</a>';
-		else print '<a data-role="button" data-icon="arrow-r" data-iconpos="right" href="'.$file.'?page='.($page+1).$options.'">'.$langs->trans("Next").'</a>';
+		if (empty($conf->dol_use_jmobile)) print '<li class="pagination"><a class="paginationnext" href="'.$file.'?page='.($page+1).$options.'">></a></li>';
+		else print '<li><a data-role="button" data-icon="arrow-r" data-iconpos="right" href="'.$file.'?page='.($page+1).$options.'">'.$langs->trans("Next").'</a></li>';
 	}
+	if ($afterarrows)
+	{
+		print '<li class="paginationafterarrows">';
+		print $afterarrows;
+		print '</li>';
+	}
+	print '</ul></div>'."\n";
 }
 
 
@@ -2719,7 +2971,7 @@ function vatrate($rate,$addpercent=false,$info_bits=0,$usestarfornpr=0)
  *		Function used into PDF and HTML pages
  *
  *		@param	float		$amount			Amount to format
- *		@param	string		$form			Type of format, HTML or not (not by default)
+ *		@param	integer		$form			Type of format, HTML or not (not by default)
  *		@param	Translate	$outlangs		Object langs for output
  *		@param	int			$trunc			1=Truncate if there is too much decimals (default), 0=Does not truncate
  *		@param	int			$rounding		Minimum number of decimal to show. If 0, no change, if -1, we use min($conf->global->MAIN_MAX_DECIMALS_UNIT,$conf->global->MAIN_MAX_DECIMALS_TOTAL)
@@ -2789,18 +3041,21 @@ function price($amount, $form=0, $outlangs='', $trunc=1, $rounding=-1, $forcerou
 	{
 		if ($currency_code == 'auto') $currency_code=$conf->currency;
 
-		$listofcurrenciesbefore=array('USD');
+		$listofcurrenciesbefore=array('USD','GBP','AUD','MXN');
 		if (in_array($currency_code,$listofcurrenciesbefore)) $cursymbolbefore.=$outlangs->getCurrencySymbol($currency_code);
-		else $cursymbolafter.=$outlangs->getCurrencySymbol($currency_code);
+		else
+		{
+			$tmpcur=$outlangs->getCurrencySymbol($currency_code);
+			$cursymbolafter.=($tmpcur == $currency_code ? ' '.$tmpcur : $tmpcur);
+		}
 	}
-	$output=$cursymbolbefore.$output.$end.$cursymbolafter;
+	$output=$cursymbolbefore.$output.$end.($cursymbolafter?' ':'').$cursymbolafter;
 
 	return $output;
 }
 
 /**
- *	Function that return a number with universal decimal format (decimal separator is '.') from
- *	an amount typed by a user.
+ *	Function that return a number with universal decimal format (decimal separator is '.') from an amount typed by a user.
  *	Function to use on each input amount before any numeric test or database insert
  *
  *	@param	float	$amount			Amount to convert/clean
@@ -2809,7 +3064,7 @@ function price($amount, $form=0, $outlangs='', $trunc=1, $rounding=-1, $forcerou
  *									'MT'=Round to Max for totals with Tax (MAIN_MAX_DECIMALS_TOT)
  *									'MS'=Round to Max Shown (MAIN_MAX_DECIMALS_SHOWN)
  * 	@param	int		$alreadysqlnb	Put 1 if you know that content is already universal format number
- *	@return	string					Amount with universal numeric format (Example: '99.99999')
+ *	@return	string					Amount with universal numeric format (Example: '99.99999') or unchanged text if conversion fails.
  *
  *	@see    price					Opposite function of price2num
  */
@@ -2889,7 +3144,7 @@ function price2num($amount,$rounding='',$alreadysqlnb=0)
 
 /**
  *	Return localtax rate for a particular vat, when selling a product with vat $tva, from a $thirdparty_buyer to a $thirdparty_seller
- *  Note: It applies same rule than get_default_tva
+ *  Note: This function applies same rules than get_default_tva
  *
  * 	@param	float		$tva			        Vat taxe
  * 	@param  int			$local		         	Local tax to search and return (1 or 2 return only tax rate 1 or tax rate 2)
@@ -2906,11 +3161,16 @@ function get_localtax($tva, $local, $thirdparty_buyer="", $thirdparty_seller="")
 
 	dol_syslog("get_localtax tva=".$tva." local=".$local." thirdparty_buyer id=".(is_object($thirdparty_buyer)?$thirdparty_buyer->id:'')."/country_code=".(is_object($thirdparty_buyer)?$thirdparty_buyer->country_code:'')." thirdparty_seller id=".$thirdparty_seller->id."/country_code=".$thirdparty_seller->country_code." thirdparty_seller localtax1_assuj=".$thirdparty_seller->localtax1_assuj."  thirdparty_seller localtax2_assuj=".$thirdparty_seller->localtax2_assuj);
 
+	if($thirdparty_buyer->country_code!=$thirdparty_seller->country_code)
+	{
+		return 0;
+	}
 	// Some test to guess with no need to make database access
 	if ($mysoc->country_code == 'ES') // For spain localtaxes 1 and 2, tax is qualified if buyer use local taxe
 	{
 		if ($local == 1)
 		{
+			if(! $mysoc->localtax1_assuj) return 0;
 			if ($thirdparty_seller->id==$mysoc->id)
 			{
 				if (! $thirdparty_buyer->localtax1_assuj) return 0;
@@ -2923,8 +3183,8 @@ function get_localtax($tva, $local, $thirdparty_buyer="", $thirdparty_seller="")
 
 		if ($local == 2)
 		{
-
-			if ($thirdparty_seller->id==$mysoc->id)
+			if(! $mysoc->localtax2_assuj) return 0;
+			if ($thirdparty_seller->id==$mysoc->id )
 			{
 				if (! $thirdparty_buyer->localtax2_assuj) return 0;
 			}
@@ -2950,12 +3210,46 @@ function get_localtax($tva, $local, $thirdparty_buyer="", $thirdparty_seller="")
 	}*/
 
 	// Search local taxes
-	$sql  = "SELECT t.localtax1, t.localtax2, t.localtax1_type, t.localtax2_type";
-	$sql .= " FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_pays as p";
-	$sql .= " WHERE t.fk_pays = p.rowid AND p.code = '".$thirdparty_seller->country_code."'";
-	$sql .= " AND t.taux = ".((float) $tva)." AND t.active = 1";
+	if ($local==1)
+	{
+		if($thirdparty_seller!=$mysoc )
+		{
+			if(!isOnlyOneLocalTax($local))
+			{
+				return $thirdparty_seller->localtax1_value;
+			}
+		}
+		else
+		{
+			if(!isOnlyOneLocalTax($local))
+			{
+				return $conf->global->MAIN_INFO_VALUE_LOCALTAX1;
+			}
+		}
+	}
+	if ($local==2)
+	{
+		if($thirdparty_seller!=$mysoc)
+		{
+			if(!isOnlyOneLocalTax($local))
+			{
+				return $thirdparty_seller->localtax2_value;
+			}
+		}
+		else
+		{
+			if(!isOnlyOneLocalTax($local))
+			{
+				return $conf->global->MAIN_INFO_VALUE_LOCALTAX2;
+			}
+		}
+	}
 
-	dol_syslog("get_localtax sql=".$sql);
+	$sql  = "SELECT t.localtax1, t.localtax2, t.localtax1_type, t.localtax2_type";
+	$sql .= " FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_country as c";
+	$sql .= " WHERE t.fk_pays = c.rowid AND c.code = '".$thirdparty_seller->country_code."'";
+	$sql .= " AND t.taux = ".((float) $tva)." AND t.active = 1";
+	dol_syslog("get_localtax", LOG_DEBUG);
 	$resql=$db->query($sql);
 	if ($resql)
 	{
@@ -2967,37 +3261,133 @@ function get_localtax($tva, $local, $thirdparty_buyer="", $thirdparty_seller="")
 	return 0;
 }
 
+
+/**
+ * Return true if LocalTax is unique
+ *
+ * @param int 	$local	Local taxt to test
+ * @return boolean 		True if LocalTax have multiple values, False if not
+ */
+function isOnlyOneLocalTax($local)
+{
+	$tax=get_localtax_by_third($local);
+
+	$valors=explode(":", $tax);
+
+	if(count($valors)>1)
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
+/**
+ * Get values of localtaxes
+ *
+ * @param	int		$local 	LocalTax to get
+ * @return	number			Values of localtax
+ */
+function get_localtax_by_third($local)
+{
+	global $db, $mysoc;
+	$sql ="SELECT t.localtax1, t.localtax2 ";
+	$sql.=" FROM ".MAIN_DB_PREFIX."c_tva as t inner join ".MAIN_DB_PREFIX."c_country as c ON c.rowid=t.fk_pays";
+	$sql.=" WHERE c.code = '".$mysoc->country_code."' AND t.taux=(SELECT max(tt.taux)";
+	$sql.=" FROM ".MAIN_DB_PREFIX."c_tva as tt inner join ".MAIN_DB_PREFIX."c_country as c ON c.rowid=tt.fk_pays";
+	$sql.=" WHERE c.code = '".$mysoc->country_code."')";
+
+	$resql=$db->query($sql);
+	if ($resql)
+	{
+		$obj = $db->fetch_object($resql);
+		if ($local==1) return $obj->localtax1;
+		elseif ($local==2) return $obj->localtax2;
+	}
+
+	return 0;
+
+}
+
+
 /**
  *  Get type and rate of localtaxes for a particular vat rate/country fo thirdparty
  *  TODO
- *  This function is called to retrieve type for building PDF. Such call of function must be removed.
+ *  This function is also called to retrieve type for building PDF. Such call of function must be removed.
  *  Instead this function must be called when adding a line to get (array of localtax and type) and
  *  provide it to the function calcul_price_total.
  *
- *  @param		float	$vatrate			VAT Rate
- *  @param		int		$local              Number of localtax (1 or 2, or 0 to return 1 & 2)
- *  @param		int		$thirdparty         Company object
- *  @return		array    	  				array(localtax_type1(1-6 / 0 if not found), rate of localtax1, ...)
+ *  @param	float	$vatrate			VAT Rate
+ *  @param	int		$local              Number of localtax (1 or 2, or 0 to return 1 & 2)
+ *  @param	Societe	$buyer         		Company object
+ *  @param	Societe	$seller        		Company object
+ *  @return	array    	  				array(localtax_type1(1-6 / 0 if not found), rate of localtax1, ...)
  */
-function getLocalTaxesFromRate($vatrate, $local, $thirdparty)
+function getLocalTaxesFromRate($vatrate, $local, $buyer, $seller)
 {
 	global $db;
 
-	dol_syslog("getLocalTaxesFromRate vatrate=".$vatrate." local=".$local." thirdparty id=".(is_object($thirdparty)?$thirdparty->id:''));
+	dol_syslog("getLocalTaxesFromRate vatrate=".$vatrate." local=".$local);
 
 	// Search local taxes
 	$sql  = "SELECT t.localtax1, t.localtax1_type, t.localtax2, t.localtax2_type, t.accountancy_code_sell, t.accountancy_code_buy";
-	$sql .= " FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_pays as p";
-	$sql .= " WHERE t.fk_pays = p.rowid AND p.code = '".$thirdparty->country_code."'";
+	$sql .= " FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_country as c";
+	$sql .= " WHERE t.fk_pays = c.rowid AND c.code = '".$buyer->country_code."'";
 	$sql .= " AND t.taux = ".((float) $vatrate)." AND t.active = 1";
 
 	$resql=$db->query($sql);
 	if ($resql)
 	{
 		$obj = $db->fetch_object($resql);
-		if ($local == 1) return array($obj->localtax1_type, $obj->localtax1,$obj->accountancy_code_sell,$obj->accountancy_code_buy);
-		elseif ($local == 2) return array($obj->localtax2_type, $obj->localtax2,$obj->accountancy_code_sell,$obj->accountancy_code_buy);
-		else return array($obj->localtax1_type, $obj->localtax1, $obj->localtax2_type, $obj->localtax2,$obj->accountancy_code_sell,$obj->accountancy_code_buy);
+		if ($local == 1)
+		{
+			if (! isOnlyOneLocalTax(1))
+			{
+				return array($obj->localtax1_type, get_localtax($vatrate, $local, $buyer, $seller), $obj->accountancy_code_sell,$obj->accountancy_code_buy);
+			}
+			else
+			{
+				return array($obj->localtax1_type, $obj->localtax1,$obj->accountancy_code_sell,$obj->accountancy_code_buy);
+			}
+		}
+		elseif ($local == 2)
+		{
+			if (! isOnlyOneLocalTax(2))
+			{
+				return array($obj->localtax2_type, get_localtax($vatrate, $local, $buyer, $seller),$obj->accountancy_code_sell,$obj->accountancy_code_buy);
+			}
+			else
+			{
+				return array($obj->localtax2_type, $obj->localtax2,$obj->accountancy_code_sell,$obj->accountancy_code_buy);
+			}
+		}
+		else
+		{
+			if(! isOnlyOneLocalTax(1))
+			{
+				if(! isOnlyOneLocalTax(2))
+				{
+					return array($obj->localtax1_type, get_localtax($vatrate, 1, $buyer, $seller), $obj->localtax2_type, get_localtax($vatrate, 2, $buyer, $seller),$obj->accountancy_code_sell,$obj->accountancy_code_buy);
+				}
+				else
+				{
+					return array($obj->localtax1_type, get_localtax($vatrate, 1, $buyer, $seller), $obj->localtax2_type, $obj->localtax2,$obj->accountancy_code_sell,$obj->accountancy_code_buy);
+				}
+			}
+			else
+			{
+				if(! isOnlyOneLocalTax(2))
+				{
+					return array($obj->localtax1_type, $obj->localtax1, $obj->localtax2_type,get_localtax($vatrate, 2, $buyer, $seller) ,$obj->accountancy_code_sell,$obj->accountancy_code_buy);
+				}
+				else
+				{
+					return array($obj->localtax1_type, $obj->localtax1, $obj->localtax2_type, $obj->localtax2,$obj->accountancy_code_sell,$obj->accountancy_code_buy);
+				}
+			}
+		}
 	}
 
 	return 0;
@@ -3054,8 +3444,8 @@ function get_product_vat_for_country($idprod, $thirdparty_seller, $idprodfournpr
 		{
 			// If vat of product for the country not found or not defined, we return higher vat of country.
 			$sql = "SELECT taux as vat_rate";
-			$sql.= " FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_pays as p";
-			$sql.= " WHERE t.active=1 AND t.fk_pays = p.rowid AND p.code='".$thirdparty_seller->country_code."'";
+			$sql.= " FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_country as c";
+			$sql.= " WHERE t.active=1 AND t.fk_pays = c.rowid AND c.code='".$thirdparty_seller->country_code."'";
 			$sql.= " ORDER BY t.taux DESC, t.recuperableonly ASC";
 			$sql.= $db->plimit(1);
 
@@ -3124,8 +3514,8 @@ function get_product_localtax_for_country($idprod, $local, $thirdparty_seller)
 	{
 		// If vat of product for the country not found or not defined, we return higher vat of country.
 		$sql = "SELECT taux as vat_rate, localtax1, localtax2";
-		$sql.= " FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_pays as p";
-		$sql.= " WHERE t.active=1 AND t.fk_pays = p.rowid AND p.code='".$thirdparty_seller->country_code."'";
+		$sql.= " FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_country as c";
+		$sql.= " WHERE t.active=1 AND t.fk_pays = c.rowid AND c.code='".$thirdparty_seller->country_code."'";
 		$sql.= " ORDER BY t.taux DESC, t.recuperableonly ASC";
 		$sql.= $db->plimit(1);
 
@@ -3187,7 +3577,7 @@ function get_default_tva($thirdparty_seller, $thirdparty_buyer, $idprod=0, $idpr
 	// we use the buyer VAT.
 	if (! empty($conf->global->SERVICE_ARE_ECOMMERCE_200238EC))
 	{
-		if (! $seller_in_cee && $buyer_in_cee && ! $thirdparty_buyer->isACompany())
+		if ($seller_in_cee && $buyer_in_cee && ! $thirdparty_buyer->isACompany())
 		{
 			//print 'VATRULE 0';
 			return get_product_vat_for_country($idprod,$thirdparty_buyer,$idprodfournprice);
@@ -3282,7 +3672,7 @@ function get_default_npr($thirdparty_seller, $thirdparty_buyer, $idprod=0, $idpr
  *	@param  Societe		$thirdparty_buyer   	Thirdparty buyer
  *  @param	int			$local					Localtax to process (1 or 2)
  *	@param  int			$idprod					Id product
- *	@return float        				       	localtax, -1 si ne peut etre determine
+ *	@return integer        				       	localtax, -1 si ne peut etre determine
  *  @see get_default_tva, get_default_npr
  */
 function get_default_localtax($thirdparty_seller, $thirdparty_buyer, $local, $idprod=0)
@@ -3324,7 +3714,7 @@ function get_default_localtax($thirdparty_seller, $thirdparty_buyer, $local, $id
  *	Return yes or no in current language
  *
  *	@param	string	$yesno			Value to test (1, 'yes', 'true' or 0, 'no', 'false')
- *	@param	string	$case			1=Yes/No, 0=yes/no
+ *	@param	integer	$case			1=Yes/No, 0=yes/no, 2=Disabled checkbox, 3=Disabled checkbox + Yes/No
  *	@param	int		$color			0=texte only, 1=Text is formated with a color font style ('ok' or 'error'), 2=Text is formated with 'ok' color.
  *	@return	string					HTML string
  */
@@ -3334,12 +3724,20 @@ function yn($yesno, $case=1, $color=0)
 	$result='unknown';
 	if ($yesno == 1 || strtolower($yesno) == 'yes' || strtolower($yesno) == 'true') 	// A mettre avant test sur no a cause du == 0
 	{
-		$result=($case?$langs->trans("Yes"):$langs->trans("yes"));
+		$result=$langs->trans('yes');
+		if ($case == 1 || $case == 3) $result=$langs->trans("Yes");
+		if ($case == 2) $result='<input type="checkbox" value="1" checked disabled>';
+		if ($case == 3) $result='<input type="checkbox" value="1" checked disabled> '.$result;
+
 		$classname='ok';
 	}
 	elseif ($yesno == 0 || strtolower($yesno) == 'no' || strtolower($yesno) == 'false')
 	{
-		$result=($case?$langs->trans("No"):$langs->trans("no"));
+		$result=$langs->trans("no");
+		if ($case == 1 || $case == 3) $result=$langs->trans("No");
+		if ($case == 2) $result='<input type="checkbox" value="0" disabled>';
+		if ($case == 3) $result='<input type="checkbox" value="0" disabled> '.$result;
+
 		if ($color == 2) $classname='ok';
 		else $classname='error';
 	}
@@ -3349,26 +3747,46 @@ function yn($yesno, $case=1, $color=0)
 
 
 /**
- *	Return a path to have a directory according to an id
- *  Examples:       '001' with level 3->"0/0/1/", '015' with level 3->"0/1/5/"
- *  Examples:       'ABC-1' with level 3 ->"0/0/1/", '015' with level 1->"5/"
+ *	Return a path to have a directory according to object.
+ *  New usage:       $conf->product->multidir_output[$object->entity].'/'.get_exdir(0, 0, 0, 1, $object, 'modulepart')
+ *  Old usage:       '001' with level 3->"0/0/1/", '015' with level 3->"0/1/5/"
+ *  Old usage:       'ABC-1' with level 3 ->"0/0/1/", '015' with level 1->"5/"
  *
- *	@param	string	$num            Id to develop
- *	@param  int		$level		    Level of development (1, 2 or 3 level)
- * 	@param	int		$alpha		    Use alpha ref
- *  @param  int		$withoutslash   0=With slash at end, 1=without slash at end
- *  @return	string					Dir to use
+ *	@param	string	$num            Id of object (deprecated, $object will be used in future)
+ *	@param  int		$level		    Level of subdirs to return (1, 2 or 3 levels). (deprecated, global option will be used in future)
+ * 	@param	int		$alpha		    0=Keep number only to forge path, 1=Use alpha part afer the - (By default, use 0). (deprecated, global option will be used in future)
+ *  @param  int		$withoutslash   0=With slash at end (except if '/', we return ''), 1=without slash at end
+ *  @param	Object	$object			Object
+ *  @param	string	$modulepart		Type of object ('invoice_supplier, 'donation', 'invoice', ...')
+ *  @return	string					Dir to use ending. Example '' or '1/' or '1/2/'
  */
-function get_exdir($num,$level=3,$alpha=0,$withoutslash=0)
+function get_exdir($num,$level,$alpha,$withoutslash,$object,$modulepart)
 {
+	global $conf;
+
 	$path = '';
-	if (empty($alpha)) $num = preg_replace('/([^0-9])/i','',$num);
-	else $num = preg_replace('/^.*\-/i','',$num);
-	$num = substr("000".$num, -$level);
-	if ($level == 1) $path = substr($num,0,1);
-	if ($level == 2) $path = substr($num,1,1).'/'.substr($num,0,1);
-	if ($level == 3) $path = substr($num,2,1).'/'.substr($num,1,1).'/'.substr($num,0,1);
-	if (empty($withoutslash)) $path.='/';
+
+	$arrayforoldpath=array('cheque','user','category','holiday','shipment', 'member','don','donation','supplier_invoice','invoice_supplier','mailing');
+	if (! empty($conf->global->PRODUCT_USE_OLD_PATH_FOR_PHOTO)) $arrayforoldpath[]='product';	
+	if (! empty($level) && in_array($modulepart, $arrayforoldpath))
+	{
+		// This part should be removed once all code is using "get_exdir" to forge path, with all parameters provided
+		if (empty($alpha)) $num = preg_replace('/([^0-9])/i','',$num);
+		else $num = preg_replace('/^.*\-/i','',$num);
+		$num = substr("000".$num, -$level);
+		if ($level == 1) $path = substr($num,0,1);
+		if ($level == 2) $path = substr($num,1,1).'/'.substr($num,0,1);
+		if ($level == 3) $path = substr($num,2,1).'/'.substr($num,1,1).'/'.substr($num,0,1);
+	}
+	else
+	{
+		// TODO
+		// We will introduce here a common way of forging path for document storage
+		// Here, object->id, object->ref and object->modulepart are required.
+
+	}
+
+	if (empty($withoutslash) && ! empty($path)) $path.='/';
 	return $path;
 }
 
@@ -3377,9 +3795,10 @@ function get_exdir($num,$level=3,$alpha=0,$withoutslash=0)
  *
  *	@param	string	$dir		Directory to create (Separator must be '/'. Example: '/mydir/mysubdir')
  *	@param	string	$dataroot	Data root directory (To avoid having the data root in the loop. Using this will also lost the warning on first dir PHP has no permission when open_basedir is used)
+ *  @param	int		$newmask	Mask for new file (Defaults to $conf->global->MAIN_UMASK or 0755 if unavailable). Example: '0444'
  *	@return int         		< 0 if KO, 0 = already exists, > 0 if OK
  */
-function dol_mkdir($dir, $dataroot='')
+function dol_mkdir($dir, $dataroot='', $newmask=null)
 {
 	global $conf;
 
@@ -3416,8 +3835,10 @@ function dol_mkdir($dir, $dataroot='')
 				dol_syslog("functions.lib::dol_mkdir: Directory '".$ccdir."' does not exists or is outside open_basedir PHP setting.",LOG_DEBUG);
 
 				umask(0);
-				$dirmaskdec=octdec('0755');
-				if (! empty($conf->global->MAIN_UMASK)) $dirmaskdec=octdec($conf->global->MAIN_UMASK);
+				$dirmaskdec=octdec($newmask);
+				if (empty($newmask)) {
+					$dirmaskdec = empty( $conf->global->MAIN_UMASK ) ? octdec( '0755' ) : octdec( $conf->global->MAIN_UMASK );
+				}
 				$dirmaskdec |= octdec('0111');  // Set x bit required for directories
 				if (! @mkdir($ccdir_osencoded, $dirmaskdec))
 				{
@@ -3457,7 +3878,7 @@ function picto_required()
  *	Clean a string from all HTML tags and entities
  *
  *	@param	string	$StringHtml			String to clean
- *	@param	string	$removelinefeed		Replace also all lines feeds by a space, otherwise only last one are removed
+ *	@param	integer	$removelinefeed		Replace also all lines feeds by a space, otherwise only last one are removed
  *  @param  string	$pagecodeto      	Encoding of input/output string
  *	@return string	    				String cleaned
  *
@@ -3483,32 +3904,28 @@ function dol_string_nohtmltag($StringHtml,$removelinefeed=1,$pagecodeto='UTF-8')
 
 
 /**
- *	Replace CRLF in string with a HTML BR tag
+ * Replace CRLF in string with a HTML BR tag
  *
- *	@param	string	$stringtoencode		String to encode
- *	@param	string	$nl2brmode			0=Adding br before \n, 1=Replacing \n by br
- *  @param  string	$forxml             false=Use <br>, true=Use <br />
- *	@return	string						String encoded
+ * @param	string	$stringtoencode		String to encode
+ * @param	int     $nl2brmode			0=Adding br before \n, 1=Replacing \n by br
+ * @param   bool	$forxml             false=Use <br>, true=Use <br />
+ * @return	string						String encoded
  */
 function dol_nl2br($stringtoencode,$nl2brmode=0,$forxml=false)
 {
-	if (! $nl2brmode)
-	{
-		// We use @ to avoid warning on PHP4 that does not support entity encoding from UTF8;
-		if (version_compare(PHP_VERSION, '5.3.0') < 0) return @nl2br($stringtoencode);
-		else return @nl2br($stringtoencode,$forxml);
-	}
-	else
-	{
-		$ret=preg_replace('/(\r\n|\r|\n)/i',($forxml?'<br />':'<br>'),$stringtoencode);
+	if (!$nl2brmode) {
+		return nl2br($stringtoencode, $forxml);
+	} else {
+		$ret=preg_replace('/(\r\n|\r|\n)/i', ($forxml?'<br />':'<br>'), $stringtoencode);
 		return $ret;
 	}
 }
 
+
 /**
  *	This function is called to encode a string into a HTML string but differs from htmlentities because
- * 	all entities but &,<,> are converted. This permits to encode special chars to entities with no double
- *  encoding for already encoded HTML strings.
+ * 	a detection is done before to see if text is already HTML or not. Also, all entities but &,<,> are converted.
+ *  This permits to encode special chars to entities with no double encoding for already encoded HTML strings.
  * 	This function also remove last EOL or BR if $removelasteolbr=1 (default).
  *  For PDF usage, you can show text by 2 ways:
  *              - writeHTMLCell -> param must be encoded into HTML.
@@ -3525,7 +3942,7 @@ function dol_nl2br($stringtoencode,$nl2brmode=0,$forxml=false)
 function dol_htmlentitiesbr($stringtoencode,$nl2brmode=0,$pagecodefrom='UTF-8',$removelasteolbr=1)
 {
 	$newstring=$stringtoencode;
-	if (dol_textishtml($stringtoencode))
+	if (dol_textishtml($stringtoencode))	// Check if text is already HTML or not
 	{
 		$newstring=preg_replace('/<br(\s[\sa-zA-Z_="]*)?\/?>/i','<br>',$newstring);	// Replace "<br type="_moz" />" by "<br>". It's same and avoid pb with FPDF.
 		if ($removelasteolbr) $newstring=preg_replace('/<br>$/i','',$newstring);	// Remove last <br> (remove only last one)
@@ -3582,14 +3999,12 @@ function dol_htmlcleanlastbr($stringtodecode)
  */
 function dol_html_entity_decode($a,$b,$c='UTF-8')
 {
-	// We use @ to avoid warning on PHP4 that does not support entity decoding to UTF8;
-	$ret=@html_entity_decode($a,$b,$c);
-	return $ret;
+	return html_entity_decode($a,$b,$c);
 }
 
 /**
- * Replace htmlentities functions to manage errors
- * http://php.net/manual/en/function.htmlentities.php
+ * Replace htmlentities functions to manage errors http://php.net/manual/en/function.htmlentities.php
+ * Goal of this function is to be sure to have default values of htmlentities that match what we need.
  *
  * @param   string  $string         The input string.
  * @param   int     $flags          Flags(see PHP doc above)
@@ -3599,9 +4014,7 @@ function dol_html_entity_decode($a,$b,$c='UTF-8')
  */
 function dol_htmlentities($string, $flags=null, $encoding='UTF-8', $double_encode=false)
 {
-	// We use @ to avoid warning on PHP4 that does not support entity decoding to UTF8;
-	$ret=@htmlentities($string, $flags, $encoding, $double_encode);
-	return $ret;
+	return htmlentities($string, $flags, $encoding, $double_encode);
 }
 
 
@@ -3632,8 +4045,9 @@ function dol_string_is_good_iso($s)
  *	Return nb of lines of a clear text
  *
  *	@param	string	$s			String to check
- * 	@param	string	$maxchar	Not yet used
+ * 	@param	int     $maxchar	Not yet used
  *	@return	int					Number of lines
+ *  @see	dol_nboflines_bis
  */
 function dol_nboflines($s,$maxchar=0)
 {
@@ -3652,6 +4066,7 @@ function dol_nboflines($s,$maxchar=0)
  *	@param	int		$maxlinesize  	Largeur de ligne en caracteres (ou 0 si pas de limite - defaut)
  * 	@param	string	$charset		Give the charset used to encode the $text variable in memory.
  *	@return int						Number of lines
+ *	@see	dol_nboflines, dolGetFirstLineOfText
  */
 function dol_nboflines_bis($text,$maxlinesize=0,$charset='UTF-8')
 {
@@ -3687,12 +4102,15 @@ function dol_nboflines_bis($text,$maxlinesize=0,$charset='UTF-8')
 /**
  *	 Same function than microtime in PHP 5 but compatible with PHP4
  *
- *	 @return		float		Time (millisecondes) with microsecondes in decimal part
+ * @return		float		Time (millisecondes) with microsecondes in decimal part
+ * @deprecated Dolibarr does not support PHP4, you should use native function
+ * @see microtime()
  */
 function dol_microtime_float()
 {
-	list($usec, $sec) = explode(" ", microtime());
-	return ((float) $usec + (float) $sec);
+	dol_syslog(__FUNCTION__ . " is deprecated", LOG_WARNING);
+
+	return microtime(true);
 }
 
 /**
@@ -3717,9 +4135,11 @@ function dol_textishtml($msg,$option=0)
 		if (preg_match('/<html/i',$msg))				return true;
 		elseif (preg_match('/<body/i',$msg))			return true;
 		elseif (preg_match('/<(b|em|i)>/i',$msg))		return true;
-		elseif (preg_match('/<(br|div|font|img|li|span|strong|table)>/i',$msg)) 	  return true;
-		elseif (preg_match('/<(br|div|font|img|li|span|strong|table)\s+[^<>\/]*>/i',$msg)) return true;
-		elseif (preg_match('/<(br|div|font|img|li|span|strong|table)\s+[^<>\/]*\/>/i',$msg)) return true;
+		elseif (preg_match('/<(br|div|font|li|span|strong|table)>/i',$msg)) 	  return true;
+		elseif (preg_match('/<(br|div|font|li|span|strong|table)\s+[^<>\/]*>/i',$msg)) return true;
+		elseif (preg_match('/<(br|div|font|li|span|strong|table)\s+[^<>\/]*\/>/i',$msg)) return true;
+		elseif (preg_match('/<img\s+[^<>]*src[^<>]*>/i',$msg)) return true;	// must accept <img src="http://example.com/aaa.png" />
+		elseif (preg_match('/<a\s+[^<>]*href[^<>]*>/i',$msg)) return true;	// must accept <a href="http://example.com/aaa.png" />
 		elseif (preg_match('/<h[0-9]>/i',$msg))			return true;
 		elseif (preg_match('/&[A-Z0-9]{1,6};/i',$msg))	return true;    // Html entities names (http://www.w3schools.com/tags/ref_entities.asp)
 		elseif (preg_match('/&#[0-9]{2,3};/i',$msg))	return true;    // Html entities numbers (http://www.w3schools.com/tags/ref_entities.asp)
@@ -3736,7 +4156,7 @@ function dol_textishtml($msg,$option=0)
  *
  *  @param	string	$text1		Text 1
  *  @param	string	$text2		Text 2
- *  @param  string	$forxml     false=Use <br>, true=Use <br />
+ *  @param  bool	$forxml     false=Use <br>, true=Use <br />
  *  @return	string				Text 1 + new line + Text2
  *  @see    dol_textishtml
  */
@@ -3750,10 +4170,7 @@ function dol_concatdesc($text1,$text2,$forxml=false)
 }
 
 /**
- *  Make substition into a string
- *  There is two type of substitions:
- * 	- From $substitutionarray (oldval=>newval)
- * 	- From special constants (__XXX__=>f(objet->xxx)) by substitutions modules
+ *  Make substition into a string replacing key with vals from $substitutionarray (oldval=>newval)
  *
  *  @param	string	$chaine      			Source string in which we must do substitution
  *  @param  array	$substitutionarray		Array with key->val to substitute
@@ -3781,7 +4198,7 @@ function make_substitutions($chaine,$substitutionarray)
  *
  *  @param  array		$substitutionarray		Array substitution old value => new value value
  *  @param  Translate	$outputlangs            If we want substitution from special constants, we provide a language
- *  @param  Object		$object                 If we want substitution from special constants, we provide data in a source object
+ *  @param  object		$object                 If we want substitution from special constants, we provide data in a source object
  *  @param  Mixed		$parameters       		Add more parameters (useful to pass product lines)
  *  @param  string      $callfunc               What is the name of the custom function that will be called? (default: completesubstitutionarray)
  *  @return	void
@@ -3824,8 +4241,8 @@ function complete_substitutions_array(&$substitutionarray,$outputlangs,$object='
 /**
  *    Format output for start and end date
  *
- *    @param	timestamp	$date_start    Start date
- *    @param    timestamp	$date_end      End date
+ *    @param	int	$date_start    Start date
+ *    @param    int	$date_end      End date
  *    @param    string		$format        Output format
  *    @param	Translate	$outputlangs   Output language
  *    @return	void
@@ -3838,13 +4255,14 @@ function print_date_range($date_start,$date_end,$format = '',$outputlangs='')
 /**
  *    Format output for start and end date
  *
- *    @param	timestamp	$date_start    Start date
- *    @param    timestamp	$date_end      End date
- *    @param    string		$format        Output format
- *    @param	Translate	$outputlangs   Output language
- *    @return	string						String
+ *    @param	int			$date_start    		Start date
+ *    @param    int			$date_end      		End date
+ *    @param    string		$format        		Output format
+ *    @param	Translate	$outputlangs   		Output language
+ *    @param	integer		$withparenthesis	1=Add parenthesis, 0=non parenthesis
+ *    @return	string							String
  */
-function get_date_range($date_start,$date_end,$format = '',$outputlangs='')
+function get_date_range($date_start,$date_end,$format = '',$outputlangs='', $withparenthesis=1)
 {
 	global $langs;
 
@@ -3854,15 +4272,15 @@ function get_date_range($date_start,$date_end,$format = '',$outputlangs='')
 
 	if ($date_start && $date_end)
 	{
-		$out.= ' ('.$outputlangs->trans('DateFromTo',dol_print_date($date_start, $format, false, $outputlangs),dol_print_date($date_end, $format, false, $outputlangs)).')';
+		$out.= ($withparenthesis?' (':'').$outputlangs->transnoentitiesnoconv('DateFromTo',dol_print_date($date_start, $format, false, $outputlangs),dol_print_date($date_end, $format, false, $outputlangs)).($withparenthesis?')':'');
 	}
 	if ($date_start && ! $date_end)
 	{
-		$out.= ' ('.$outputlangs->trans('DateFrom',dol_print_date($date_start, $format, false, $outputlangs)).')';
+		$out.= ($withparenthesis?' (':'').$outputlangs->transnoentitiesnoconv('DateFrom',dol_print_date($date_start, $format, false, $outputlangs)).($withparenthesis?')':'');
 	}
 	if (! $date_start && $date_end)
 	{
-		$out.= ' ('.$outputlangs->trans('DateUntil',dol_print_date($date_end, $format, false, $outputlangs)).')';
+		$out.= ($withparenthesis?' (':'').$outputlangs->transnoentitiesnoconv('DateUntil',dol_print_date($date_end, $format, false, $outputlangs)).($withparenthesis?')':'');
 	}
 
 	return $out;
@@ -3900,16 +4318,18 @@ function dolGetFirstLastname($firstname,$lastname,$nameorder=-1)
 
 
 /**
- *	Set event message in dol_events session
+ *	Set event message in dol_events session object. Will be output by calling dol_htmloutput_events.
+ *  Note: Calling dol_htmloutput_events is done into pages by standard llxFooter() function.
+ *  Note: Prefer to use setEventMessages instead.
  *
  *	@param	mixed	$mesgs			Message string or array
- *  @param  string	$style      	Which style to use ('mesgs', 'warnings', 'errors')
+ *  @param  string	$style      	Which style to use ('mesgs' by default, 'warnings', 'errors')
  *  @return	void
  *  @see	dol_htmloutput_events
  */
 function setEventMessage($mesgs, $style='mesgs')
 {
-	if (! in_array((string) $style, array('mesgs','warnings','errors'))) dol_print_error('','Bad parameter for setEventMessage');
+	//dol_syslog(__FUNCTION__ . " is deprecated", LOG_WARNING);		This is not deprecated, it is used by setEventMessages function
 	if (! is_array($mesgs))		// If mesgs is a string
 	{
 		if ($mesgs) $_SESSION['dol_events'][$style][] = $mesgs;
@@ -3924,7 +4344,30 @@ function setEventMessage($mesgs, $style='mesgs')
 }
 
 /**
+ *	Set event messages in dol_events session object. Will be output by calling dol_htmloutput_events.
+ *  Note: Calling dol_htmloutput_events is done into pages by standard llxFooter() function.
+ *
+ *	@param	string	$mesg			Message string
+ *	@param	array	$mesgs			Message array
+ *  @param  string	$style      	Which style to use ('mesgs' by default, 'warnings', 'errors')
+ *  @return	void
+ *  @see	dol_htmloutput_events
+ */
+function setEventMessages($mesg, $mesgs, $style='mesgs')
+{
+	if (! in_array((string) $style, array('mesgs','warnings','errors'))) dol_print_error('','Bad parameter for setEventMessage');
+	if (empty($mesgs)) setEventMessage($mesg, $style);
+	else
+	{
+		if (! empty($mesg) && ! in_array($mesg, $mesgs)) setEventMessage($mesg, $style);	// Add message string if not already into array
+		setEventMessage($mesgs, $style);
+	}
+}
+
+/**
  *	Print formated messages to output (Used to show messages on html output).
+ *  Note: Calling dol_htmloutput_events is done into pages by standard llxFooter() function, so there is
+ *  no need to call it explicitely.
  *
  *  @return	void
  *  @see    dol_htmloutput_mesg
@@ -3952,15 +4395,17 @@ function dol_htmloutput_events()
 
 /**
  *	Get formated messages to output (Used to show messages on html output).
+ *  This include also the translation of the message key.
  *
- *	@param	string		$mesgstring		Message string
- *	@param	array		$mesgarray      Messages array
+ *	@param	string		$mesgstring		Message string or message key
+ *	@param	string[]	$mesgarray      Array of message strings or message keys
  *  @param  string		$style          Style of message output ('ok' or 'error')
  *  @param  int			$keepembedded   Set to 1 in error message must be kept embedded into its html place (this disable jnotify)
  *	@return	string						Return html output
  *
  *  @see    dol_print_error
  *  @see    dol_htmloutput_errors
+ *  @see    setEventMessages
  */
 function get_htmloutput_mesg($mesgstring='',$mesgarray='', $style='ok', $keepembedded=0)
 {
@@ -4045,14 +4490,15 @@ function get_htmloutput_errors($mesgstring='', $mesgarray='', $keepembedded=0)
 /**
  *	Print formated messages to output (Used to show messages on html output).
  *
- *	@param	string	$mesgstring		 Message
- *	@param	array	$mesgarray       Messages array
- *  @param  string	$style           Which style to use ('ok', 'warning', 'error')
- *  @param  int		$keepembedded    Set to 1 if message must be kept embedded into its html place (this disable jnotify)
+ *	@param	string		$mesgstring		Message string or message key
+ *	@param	string[]	$mesgarray      Array of message strings or message keys
+ *  @param  string      $style          Which style to use ('ok', 'warning', 'error')
+ *  @param  int         $keepembedded   Set to 1 if message must be kept embedded into its html place (this disable jnotify)
  *  @return	void
  *
  *  @see    dol_print_error
  *  @see    dol_htmloutput_errors
+ *  @see    setEventMessages
  */
 function dol_htmloutput_mesg($mesgstring='',$mesgarray='', $style='ok', $keepembedded=0)
 {
@@ -4120,12 +4566,13 @@ function dol_htmloutput_errors($mesgstring='', $mesgarray='', $keepembedded=0)
  *
  *  @param      array		$array      		Array to sort (array of array('key','otherkey1','otherkey2'...))
  *  @param      string		$index				Key in array to use for sorting criteria
- *  @param      int			$order				Sort order
+ *  @param      int			$order				Sort order ('asc' or 'desc')
  *  @param      int			$natsort			1=use "natural" sort (natsort), 0=use "standard" sort (asort)
  *  @param      int			$case_sensitive		1=sort is case sensitive, 0=not case sensitive
+ *  @param		int			$keepindex			If 0 and index key of array to sort is a numeric, than index will be rewrote. If 1 or index key is not numeric, key for index is kept after sorting.
  *  @return     array							Sorted array
  */
-function dol_sort_array(&$array, $index, $order='asc', $natsort=0, $case_sensitive=0)
+function dol_sort_array(&$array, $index, $order='asc', $natsort=0, $case_sensitive=0, $keepindex=0)
 {
 	// Clean parameters
 	$order=strtolower($order);
@@ -4134,13 +4581,21 @@ function dol_sort_array(&$array, $index, $order='asc', $natsort=0, $case_sensiti
 	if (is_array($array) && $sizearray>0)
 	{
 		foreach(array_keys($array) as $key) $temp[$key]=$array[$key][$index];
+
 		if (!$natsort) ($order=='asc') ? asort($temp) : arsort($temp);
 		else
 		{
 			($case_sensitive) ? natsort($temp) : natcasesort($temp);
 			if($order!='asc') $temp=array_reverse($temp,TRUE);
 		}
-		foreach(array_keys($temp) as $key) (is_numeric($key))? $sorted[]=$array[$key] : $sorted[$key]=$array[$key];
+
+		$sorted = array();
+
+		foreach(array_keys($temp) as $key)
+		{
+			(is_numeric($key) && empty($keepindex)) ? $sorted[]=$array[$key] : $sorted[$key]=$array[$key];
+		}
+
 		return $sorted;
 	}
 	return $array;
@@ -4176,7 +4631,7 @@ function utf8_check($str)
 
 
 /**
- *      Return an UTF-8 string encoded into OS filesystem encoding. This function is used to define
+ *      Return a string encoded into OS filesystem encoding. This function is used to define
  * 	    value to pass to filesystem PHP functions.
  *
  *      @param	string	$str        String to encode (UTF-8)
@@ -4197,7 +4652,8 @@ function dol_osencode($str)
 
 
 /**
- *      Return an id or code from a code or id. Store also Code-Id into a cache for next use.
+ *      Return an id or code from a code or id.
+ *      Store also Code-Id into a cache to speed up next request on same key.
  *
  * 		@param	DoliDB	$db			Database handler
  * 		@param	string	$key		Code to get Id
@@ -4205,7 +4661,7 @@ function dol_osencode($str)
  * 		@param	string	$fieldkey	Field for code
  * 		@param	string	$fieldid	Field for id
  *      @return int					<0 if KO, Id of code if OK
- *      @see getLabelFromKey
+ *      @see $langs->getLabelFromKey
  */
 function dol_getIdFromCode($db,$key,$tablename,$fieldkey='code',$fieldid='id')
 {
@@ -4220,22 +4676,21 @@ function dol_getIdFromCode($db,$key,$tablename,$fieldkey='code',$fieldid='id')
 		return $cache_codes[$tablename][$key];   // Found in cache
 	}
 
-	$sql = "SELECT ".$fieldid." as id";
+	$sql = "SELECT ".$fieldid." as valuetoget";
 	$sql.= " FROM ".MAIN_DB_PREFIX.$tablename;
 	$sql.= " WHERE ".$fieldkey." = '".$key."'";
-	dol_syslog('dol_getIdFromCode sql='.$sql, LOG_DEBUG);
+	dol_syslog('dol_getIdFromCode', LOG_DEBUG);
 	$resql = $db->query($sql);
 	if ($resql)
 	{
 		$obj = $db->fetch_object($resql);
-		if ($obj) $cache_codes[$tablename][$key]=$obj->id;
+		if ($obj) $cache_codes[$tablename][$key]=$obj->valuetoget;
 		else $cache_codes[$tablename][$key]='';
 		$db->free($resql);
 		return $cache_codes[$tablename][$key];
 	}
 	else
 	{
-		dol_syslog("dol_getIdFromCode error=".$db->lasterror(), LOG_ERR);
 		return -1;
 	}
 }
@@ -4282,6 +4737,7 @@ function dol_eval($s,$returnvalue=0)
 	global $leftmenu;
 	global $rights;
 	global $object;
+    global $soc;
 
 //	print $s."<br>\n";
 	if ($returnvalue) return @eval('return '.$s.';');
@@ -4308,6 +4764,8 @@ function dol_validElement($element)
 function picto_from_langcode($codelang)
 {
 	global $langs;
+
+	if (empty($codelang)) return '';
 
 	if (empty($codelang)) return '';
 
@@ -4338,26 +4796,27 @@ function picto_from_langcode($codelang)
  *  Complete or removed entries into a head array (used to build tabs) with value added by external modules.
  *  Such values are declared into $conf->modules_parts['tab'].
  *
- *  @param	Conf		$conf           Object conf
- *  @param  Translate	$langs          Object langs
- *  @param  Object		$object         Object object
- *  @param  array		$head          Object head
- *  @param  int			$h             New position to fill
- *  @param  string		$type           Value for object where objectvalue can be
- *                              		'thirdparty'       to add a tab in third party view
- *		                              	'intervention'     to add a tab in intervention view
- *     		                         	'supplier_order'   to add a tab in supplier order view
- *          		                    'supplier_invoice' to add a tab in supplier invoice view
- *                  		            'invoice'          to add a tab in customer invoice view
- *                          		    'order'            to add a tab in customer order view
- *                      		        'product'          to add a tab in product view
- *                              		'propal'           to add a tab in propal view
- *                              		'user'             to add a tab in user view
- *                              		'group'            to add a tab in group view
- * 		        	                    'member'           to add a tab in fundation member view
- *      		                        'categories_x'	   to add a tab in category view ('x': type of category (0=product, 1=supplier, 2=customer, 3=member)
- *      								'ecm'			   to add a tab for another ecm view
- *  @param  string		$mode  	        'add' to complete head, 'remove' to remove entries
+ *  @param	Conf			$conf           Object conf
+ *  @param  Translate		$langs          Object langs
+ *  @param  object|null		$object         Object object
+ *  @param  array			$head          	Object head
+ *  @param  int				$h				New position to fill
+ *  @param  string			$type           Value for object where objectvalue can be
+ *                              			'thirdparty'       to add a tab in third party view
+ *		                        	      	'intervention'     to add a tab in intervention view
+ *     		                    	     	'supplier_order'   to add a tab in supplier order view
+ *          		            	        'supplier_invoice' to add a tab in supplier invoice view
+ *                  		    	        'invoice'          to add a tab in customer invoice view
+ *                          			    'order'            to add a tab in customer order view
+ *                      			        'product'          to add a tab in product view
+ *                              			'propal'           to add a tab in propal view
+ *                              			'user'             to add a tab in user view
+ *                              			'group'            to add a tab in group view
+ * 		        	               	     	'member'           to add a tab in fundation member view
+ *      		                        	'categories_x'	   to add a tab in category view ('x': type of category (0=product, 1=supplier, 2=customer, 3=member)
+ *      									'ecm'			   to add a tab for another ecm view
+ *                                          'stock'            to add a tab for warehouse view
+ *  @param  string		$mode  	        	'add' to complete head, 'remove' to remove entries
  *	@return	void
  */
 function complete_head_from_modules($conf,$langs,$object,&$head,&$h,$type,$mode='add')
@@ -4431,7 +4890,7 @@ function complete_head_from_modules($conf,$langs,$object,&$head,&$h,$type,$mode=
  * Print common footer :
  * 		conf->global->MAIN_HTML_FOOTER
  * 		conf->global->MAIN_GOOGLE_AN_ID
- * 		DOL_TUNING
+ * 		conf->global->MAIN_SHOW_TUNING_INFO or $_SERVER["MAIN_SHOW_TUNING_INFO"]
  * 		conf->logbuffer
  *
  * @param	string	$zone	'private' (for private pages) or 'public' (for public pages)
@@ -4468,7 +4927,7 @@ function printCommonFooter($zone='private')
 	}
 
 	// End of tuning
-	if (! empty($_SERVER['DOL_TUNING']) || ! empty($conf->global->MAIN_SHOW_TUNING_INFO))
+	if (! empty($_SERVER['MAIN_SHOW_TUNING_INFO']) || ! empty($conf->global->MAIN_SHOW_TUNING_INFO))
 	{
 		print "\n".'<script type="text/javascript">'."\n";
 		print 'window.console && console.log("';
@@ -4476,7 +4935,7 @@ function printCommonFooter($zone='private')
 		print 'MAIN_OPTIMIZE_SPEED='.(isset($conf->global->MAIN_OPTIMIZE_SPEED)?$conf->global->MAIN_OPTIMIZE_SPEED:'off');
 		if ($micro_start_time)
 		{
-			$micro_end_time=dol_microtime_float(true);
+			$micro_end_time=dol_microtime_float();
 			print ' - Build time: '.ceil(1000*($micro_end_time-$micro_start_time)).' ms';
 		}
 		if (function_exists("memory_get_usage"))
@@ -4497,8 +4956,9 @@ function printCommonFooter($zone='private')
 		print '</script>'."\n";
 
 		// Add Xdebug coverage of code
-		if (defined('XDEBUGCOVERAGE')) {
-			var_dump(xdebug_get_code_coverage());
+		if (defined('XDEBUGCOVERAGE'))
+		{
+			print_r(xdebug_get_code_coverage());
 		}
 	}
 
@@ -4547,19 +5007,6 @@ function dolExplodeIntoArray($string, $delimiter = ';', $kv = '=')
 
 
 /**
- *	Convert an array with RGB value into hex RGB value
- *
- *  @param	array	$arraycolor			Array
- *  @param	string	$colorifnotfound	Color code to return if entry not defined
- *  @return	string						RGB hex value (without # before). For example: FF00FF
- */
-function colorArrayToHex($arraycolor,$colorifnotfound='888888')
-{
-	if (! is_array($arraycolor)) return $colorifnotfound;
-	return dechex($arraycolor[0]).dechex($arraycolor[1]).dechex($arraycolor[2]);
-}
-
-/**
  * Set focus onto field with selector
  *
  * @param 	string	$selector	Selector ('#id')
@@ -4572,49 +5019,135 @@ function dol_set_focus($selector)
 }
 
 
-if (! function_exists('getmypid'))
+/**
+ * Return getmypid() or random PID when function is disabled
+ * Some web hosts disable this php function for security reasons
+ * and sometimes we can't redeclare function
+ *
+ * @return	int
+ */
+function dol_getmypid()
 {
-	/**
-	 * Return random PID
-	 * Some web hosts disable this php function for security reasons
-	 *
-	 * @return	int
-	 */
-	function getmypid()
-	{
-		return rand(1,32768);
-	}
+    if (! function_exists('getmypid')) {
+        return rand(1,32768);
+    } else {
+        return getmypid();
+    }
 }
 
 
 /**
- * Natural search
+ * Generate natural SQL search string for a criteria (this criteria can be tested on one or several fields)
  *
- * @param 	mixed 	$fields 	String or array of strings filled with the fields names in the SQL query
- * @param 	string 	$value 		The value to look for (example: "keyword1 keyword2")
- * @return 	string 	$res 		The statement to append to the SQL query
+ * @param 	string|string[]	$fields 	String or array of strings, filled with the name of all fields in the SQL query we must check (combined with a OR)
+ * @param 	string 			$value 		The value to look for.
+ *                          		    If param $mode is 0, can contains several keywords separated with a space or |
+ *                                         like "keyword1 keyword2" = We want record field like keyword1 AND field like keyword2
+ *                                         or like "keyword1|keyword2" = We want record field like keyword1 OR field like keyword2
+ *                             			If param $mode is 1, can contains an operator <, > or = like "<10" or ">=100.5 < 1000"
+ *                             			If param $mode is 2, can contains a list of id separated by comma like "1,3,4"
+ * @param	integer			$mode		0=value is list of keywords, 1=value is a numeric test (Example ">5.5 <10"), 2=value is a list of id separated with comma (Example '1,3,4')
+ * @param	integer			$nofirstand	1=Do now output the first 'AND'
+ * @return 	string 			$res 		The statement to append to the SQL query
  */
-function natural_search($fields, $value)
+function natural_search($fields, $value, $mode=0, $nofirstand=0)
 {
-    global $db;
+    global $db,$langs;
+
+    if ($mode == 1)
+    {
+    	$value=preg_replace('/([<>=]+)\s+([0-9'.preg_quote($langs->trans("DecimalSeparator"),'/').'\-])/','\1\2',$value);	// Clean string '< 10' into '<10' so we can the explode on space to get all tests to do
+    }
     $crits = explode(' ', $value);
     $res = '';
     if (! is_array($fields)) $fields = array($fields);
 
-    $end = count($fields);
+    $nboffields = count($fields);
     $end2 = count($crits);
     $j = 0;
-    foreach ($crits as $crit) {
-        $i = 0;
-        foreach ($fields as $field) {
-            if ( $i > 0 && $i < $end) $res .= " OR ";
-            $res .= $field . " LIKE '%" . $db->escape(trim($crit)) . "%'";
+    foreach ($crits as $crit)
+    {
+        $i = 0; $i2 = 0;
+        $newres = '';
+        foreach ($fields as $field)
+        {
+            if ($mode == 1)
+            {
+            	$operator='=';
+            	$newcrit = preg_replace('/([<>=]+)/','',trim($crit));
+
+            	preg_match('/([<>=]+)/',trim($crit), $reg);
+            	if ($reg[1])
+            	{
+            		$operator = $reg[1];
+            	}
+            	if ($newcrit != '')
+            	{
+            		$numnewcrit = price2num($newcrit);
+            		if (is_numeric($numnewcrit))
+            		{
+            			$newres .= ($i2 > 0 ? ' OR ' : '') . $field . ' '.$operator.' '.$numnewcrit;
+            		}
+            		else
+            		{
+            			$newres .= ($i2 > 0 ? ' OR ' : '') . '1 = 2';	// force false
+            		}
+            		$i2++;	// a criteria was added to string
+            	}
+            }
+            else if ($mode == 2)
+            {
+				$newres .= ($i2 > 0 ? ' OR ' : '') . $field . " IN (" . $db->escape(trim($crit)) . ")";
+            	$i2++;	// a criteria was added to string
+            }
+            else
+			{
+				$textcrit = '';
+				$tmpcrits = explode('|',$crit);
+				$i3 = 0;
+				foreach($tmpcrits as $tmpcrit)
+				{
+	            	$newres .= (($i2 > 0 || $i3 > 0) ? ' OR ' : '') . $field . " LIKE '%" . $db->escape(trim($tmpcrit)) . "%'";
+	            	$i3++;
+				}
+				$i2++;	// a criteria was added to string
+            }
             $i++;
         }
-        if ($end > 1) $res .= ')';
-        if ($j < $end2 - 1) $res .= " AND ";
-        if ($end > 1 && $j < $end2 - 1) $res .= '(';
+        if ($newres) $res = $res . ($res ? ' AND ' : '') . ($i2 > 1 ? '(' : '') .$newres . ($i2 > 1 ? ')' : '');
         $j++;
     }
-    return " AND " . ($end > 1? '(' : '') . $res;
+    $res = ($nofirstand?"":" AND ")."(" . $res . ")";
+    //print 'xx'.$res.'yy';
+    return $res;
+}
+
+/**
+ * Return the filename of file to get the thumbs
+ * 
+ * @param   string  $file           Original filename
+ * @param   string  $extName        Extension to differenciate thumb file name ('', '_small', '_mini')
+ * @param   string  $extImgTarget   Force image format for thumbs. Use '' to keep same extension than original image.
+ * @return  string                  New file name
+ */
+function getImageFileNameForSize($file, $extName, $extImgTarget='')
+{
+	$dirName = dirname($file);
+	if ($dirName == '.') $dirName='';
+	
+    $fileName = preg_replace('/(\.gif|\.jpeg|\.jpg|\.png|\.bmp)$/i','',$file);	// On enleve extension quelquesoit la casse
+	$fileName = basename($fileName);
+	
+	if (empty($extImgTarget)) $extImgTarget = (preg_match('/\.jpg$/i',$file)?'.jpg':'');
+    if (empty($extImgTarget)) $extImgTarget = (preg_match('/\.jpeg$/i',$file)?'.jpeg':'');
+    if (empty($extImgTarget)) $extImgTarget = (preg_match('/\.gif$/i',$file)?'.gif':'');
+    if (empty($extImgTarget)) $extImgTarget = (preg_match('/\.png$/i',$file)?'.png':'');
+    if (empty($extImgTarget)) $extImgTarget = (preg_match('/\.bmp$/i',$file)?'.bmp':'');
+
+    if (! $extImgTarget) return $file;
+	
+    $subdir='';
+    if ($extName) $subdir = 'thumbs/';
+    
+    return $dirName.$subdir.$fileName.$extName.$extImgTarget; // New filename for thumb
 }

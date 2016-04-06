@@ -35,7 +35,6 @@ IfDatabaseExistsGoBackAndCheckCreate=データベースが既に存在する場�
 WarningBrowserTooOld=Too old version of browser. Upgrading your browser to a recent version of Firefox, Chrome or Opera is highly recommanded.
 PHPVersion=PHPのバージョン
 YouCanContinue=作業を続行することができます...
-PleaseBePatient=しばらくお待ちください...
 License=ライセンスを使用して
 ConfigurationFile=設定ファイル
 WebPagesDirectory=ウェブページが保存されているディレクトリ
@@ -64,6 +63,7 @@ DatabaseSuperUserAccess=データベースサーバ - スーパーユーザー�
 CheckToCreateDatabase=データベースが存在しない場合はチェックボックスをオンにして作成する必要があります。 <br>このケースでは、このページの下部にスーパーユーザアカウントのログイン/パスワードを入力する必要があります。
 CheckToCreateUser=データベースの所有者が存在しない場合はチェックボックスをオンにして作成する必要があります。 <br>このケースでは、そのログイン名とパスワードを選択しても、ログイン/このページの下部にスーパーユーザーアカウント用のパスワードを入力する必要があります。このボックスがチェックされていない場合、所有者のデータベースとそのパスワードが存在する必要があります。
 Experimental=（実験的）
+Deprecated=(deprecated)
 DatabaseRootLoginDescription=あなたのデータベースおよびデータベースのログインが既に存在する場合（あなたがウェブホスティングプロバイダによってホストされているときのように）役に立たない、新しいデータベースまたは新しいユーザを作成することを禁止するユーザのログイン。
 KeepEmptyIfNoPassword=ユーザーがパスワードを持っていない場合（これを避けるため）を空のままに
 SaveConfigurationFile=値を保存
@@ -155,6 +155,8 @@ MigrationFinished=マイグレーションが終了しました
 LastStepDesc=<strong>最後のステップ</strong> ：ここにあなたがソフトウェアへの接続に使用する予定のログインとパスワードを定義します。それは他のすべてを管理するアカウントであるとしてこれを紛失しないでください。
 ActivateModule=モジュール%sをアクティブにする
 ShowEditTechnicalParameters=Click here to show/edit advanced parameters (expert mode)
+WarningUpgrade=Warning:\nDid your run a database backup first ?\nThis is highly recommanded: for example, due to some bugs into databases systems (for example mysql version 5.5.40), some data or tables may be lost during this process, so it is highly recommanded to have a complete dump of your database before starting migration.\n\nClick OK to start migration process...
+ErrorDatabaseVersionForbiddenForMigration=Your database version is %s. It has a critical bug making data loss if you make structure change on your database, like it is required by the migration process. For his reason, migration will not be allowed until you upgrade your database to a higher fixed version (list of known bugged version: %s)
 
 #########
 # upgrade
@@ -206,6 +208,7 @@ MigrationProjectTaskTime=更新時間は秒単位で過ごした
 MigrationActioncommElement=アクション上でデータを更新する
 MigrationPaymentMode=支払い·モードのデータ移行
 MigrationCategorieAssociation=Migration of categories
-
+MigrationEvents=Migration of events to add event owner into assignement table
+MigrationReloadModule=Reload module %s
 ShowNotAvailableOptions=Show not available options
 HideNotAvailableOptions=Hide not available options

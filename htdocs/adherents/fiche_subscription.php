@@ -186,7 +186,7 @@ if ($user->rights->adherent->cotisation->creer && $action == 'edit')
 	$head[$h][2] = 'info';
 	$h++;
 
-	dol_fiche_head($head, 'general', $langs->trans("Subscription"));
+	dol_fiche_head($head, 'general', $langs->trans("Subscription"), 0, 'payment');
 
 	print "\n";
 	print '<form name="update" action="'.$_SERVER["PHP_SELF"].'" method="post">';
@@ -291,8 +291,6 @@ if ($rowid && $action != 'edit')
 	$h++;
 
 	dol_fiche_head($head, 'general', $langs->trans("Subscription"), '', 'payment');
-
-	if ($msg) print '<div class="error">'.$msg.'</div>';
 
     // Confirmation to delete subscription
     if ($action == 'delete')

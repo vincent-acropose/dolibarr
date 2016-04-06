@@ -38,11 +38,8 @@ $mine = ($mode == 'mine' ? 1 : 0);
 //if (! $user->rights->projet->all->lire) $mine=1;	// Special for projects
 
 $object = new Project($db);
-if ($ref)
-{
-    $object->fetch(0,$ref);
-    $id=$object->id;
-}
+
+include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php';  // Must be include, not include_once
 
 // Security check
 $socid=0;
@@ -69,7 +66,6 @@ $formother=new FormOther($db);
 $userstatic=new User($db);
 $companystatic=new Societe($db);
 $task = new Task($db);
-$object = new Project($db);
 
 $arrayofcss=array('/includes/jsgantt/jsgantt.css');
 
@@ -81,14 +77,13 @@ if (! empty($conf->use_javascript_ajax))
 	);
 }
 
+$title=$langs->trans("Project").' - '.$langs->trans("Gantt").' - '.$object->ref.' '.$object->name;
+if (! empty($conf->global->MAIN_HTML_TITLE) && preg_match('/projectnameonly/',$conf->global->MAIN_HTML_TITLE) && $object->name) $title=$object->ref.' '.$object->name.' - '.$langs->trans("Gantt");
 $help_url="EN:Module_Projects|FR:Module_Projets|ES:M&oacute;dulo_Proyectos";
-llxHeader("",$langs->trans("Tasks"),$help_url,'',0,0,$arrayofjs,$arrayofcss);
+llxHeader("",$title,$help_url,'',0,0,$arrayofjs,$arrayofcss);
 
 if ($id > 0 || ! empty($ref))
 {
-	$object->fetch($id,$ref);
-	if ($object->societe->id > 0)  $result=$object->societe->fetch($object->societe->id);
-
 	// To verify role of users
 	//$userAccess = $object->restrictedProjectArea($user,'read');
 	$userWrite  = $object->restrictedProjectArea($user,'write');
@@ -105,7 +100,7 @@ if ($id > 0 || ! empty($ref))
 
     print '<table class="border" width="100%">';
 
-    $linkback = '<a href="'.DOL_URL_ROOT.'/projet/liste.php">'.$langs->trans("BackToList").'</a>';
+    $linkback = '<a href="'.DOL_URL_ROOT.'/projet/list.php">'.$langs->trans("BackToList").'</a>';
 
     // Ref
     print '<tr><td width="30%">';
@@ -123,7 +118,7 @@ if ($id > 0 || ! empty($ref))
     print '<tr><td>'.$langs->trans("Label").'</td><td>'.$object->title.'</td></tr>';
 
     print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
-    if (! empty($object->societe->id)) print $object->societe->getNomUrl(1);
+    if (! empty($object->thirdparty->id)) print $object->thirdparty->getNomUrl(1);
     else print '&nbsp;';
     print '</td>';
     print '</tr>';
@@ -155,8 +150,9 @@ if ($id > 0 || ! empty($ref))
 
 
 /*
- * Actions
+ * Buttons actions
  */
+
 print '<div class="tabsAction">';
 
 if ($user->rights->projet->all->creer || $user->rights->projet->creer)
@@ -195,8 +191,8 @@ if (count($tasksarray)>0)
 
 	// Show Gant diagram from $taskarray using JSGantt
 
-	$dateformat=$langs->trans("FormatDateShort");				// Used by include ganttchart.inc.php later
 	$dateformat=$langs->trans("FormatDateShortJQuery");			// Used by include ganttchart.inc.php later
+	$datehourformat=$langs->trans("FormatDateShortJQuery").' '.$langs->trans("FormatHourShortJQuery");	// Used by include ganttchart.inc.php later
 	$array_contacts=array();
 	$tasks=array();
 	$project_dependencies=array();
@@ -210,6 +206,7 @@ if (count($tasksarray)>0)
 		$tasks[$taskcursor]['task_milestone']=0;
 		$tasks[$taskcursor]['task_percent_complete']=$val->progress;
 		//$tasks[$taskcursor]['task_name']=$task->getNomUrl(1);
+		//print dol_print_date($val->date_start).dol_print_date($val->date_end).'<br>'."\n";
 		$tasks[$taskcursor]['task_name']=$val->label;
 		$tasks[$taskcursor]['task_start_date']=$val->date_start;
 		$tasks[$taskcursor]['task_end_date']=$val->date_end;
@@ -244,10 +241,10 @@ if (count($tasksarray)>0)
 			}
 		}
 		if ($s) $tasks[$taskcursor]['task_resources']='<a href="'.DOL_URL_ROOT.'/projet/tasks/contact.php?id='.$val->id.'&withproject=1" title="'.dol_escape_htmltag($s).'">'.$langs->trans("List").'</a>';
+		/* For JSGanttImproved if ($s) $tasks[$taskcursor]['task_resources']=join(',',$idofusers); */
 		//print "xxx".$val->id.$tasks[$taskcursor]['task_resources'];
 		$taskcursor++;
 	}
-	//var_dump($tasks);
 
 	print "\n";
 

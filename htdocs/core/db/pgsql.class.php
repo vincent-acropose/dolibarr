@@ -1,12 +1,13 @@
 <?php
 /* Copyright (C) 2001		Fabien Seisen			<seisen@linuxfr.org>
  * Copyright (C) 2002-2005	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
- * Copyright (C) 2004-2012	Laurent Destailleur		<eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2014	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2004		Sebastien Di Cintio		<sdicintio@ressource-toi.org>
  * Copyright (C) 2004		Benoit Mortier			<benoit.mortier@opensides.be>
  * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2012		Yann Droneaud			<yann@droneaud.fr>
  * Copyright (C) 2012		Florian Henry			<florian.henry@open-concept.pro>
+ * Copyright (C) 2015       Marcos García           <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,14 +38,14 @@ class DoliDBPgsql extends DoliDB
     //! Database type
 	public $type='pgsql';            // Name of manager
     //! Database label
-	static $label='PostgreSQL';      // Label of manager
+	const LABEL='PostgreSQL';      // Label of manager
 	//! Charset
 	var $forcecharset='UTF8';       // Can't be static as it may be forced with a dynamic value
     //! Collate used to force collate when creating database
     var $forcecollate='';			// Can't be static as it may be forced with a dynamic value
 	//! Version min database
-	static $versionmin=array(8,4,0);	// Version min database
-	//! Resultset of last query
+	const VERSIONMIN='8.4.0';	// Version min database
+	/** @var resource Resultset of last query */
 	private $_results;
 
 	public $unescapeslashquot;
@@ -60,7 +61,6 @@ class DoliDBPgsql extends DoliDB
 	 *	@param	    string	$pass		Mot de passe
 	 *	@param	    string	$name		Nom de la database
 	 *	@param	    int		$port		Port of database server
-	 *	@return	    int					1 if OK, 0 if not
 	 */
 	function __construct($type, $host, $user, $pass, $name='', $port=0)
 	{
@@ -71,6 +71,8 @@ class DoliDBPgsql extends DoliDB
 		if (! empty($conf->db->dolibarr_main_db_collation))	$this->forcecollate=$conf->db->dolibarr_main_db_collation;
 
 		$this->database_user=$user;
+        $this->database_host=$host;
+        $this->database_port=$port;
 
 		$this->transaction_opened=0;
 
@@ -78,8 +80,8 @@ class DoliDBPgsql extends DoliDB
 
 		if (! function_exists("pg_connect"))
 		{
-			$this->connected = 0;
-			$this->ok = 0;
+			$this->connected = false;
+			$this->ok = false;
 			$this->error="Pgsql PHP functions are not available in this version of PHP";
 			dol_syslog(get_class($this)."::DoliDBPgsql : Pgsql PHP functions are not available in this version of PHP",LOG_ERR);
 			return $this->ok;
@@ -87,8 +89,8 @@ class DoliDBPgsql extends DoliDB
 
 		if (! $host)
 		{
-			$this->connected = 0;
-			$this->ok = 0;
+			$this->connected = false;
+			$this->ok = false;
 			$this->error=$langs->trans("ErrorWrongHostParameter");
 			dol_syslog(get_class($this)."::DoliDBPgsql : Erreur Connect, wrong host parameters",LOG_ERR);
 			return $this->ok;
@@ -100,14 +102,14 @@ class DoliDBPgsql extends DoliDB
 
 		if ($this->db)
 		{
-			$this->connected = 1;
-			$this->ok = 1;
+			$this->connected = true;
+			$this->ok = true;
 		}
 		else
 		{
 			// host, login ou password incorrect
-			$this->connected = 0;
-			$this->ok = 0;
+			$this->connected = false;
+			$this->ok = false;
 			$this->error='Host, login or password incorrect';
 			dol_syslog(get_class($this)."::DoliDBPgsql : Erreur Connect ".$this->error,LOG_ERR);
 		}
@@ -117,15 +119,15 @@ class DoliDBPgsql extends DoliDB
 		{
 			if ($this->select_db($name))
 			{
-				$this->database_selected = 1;
+				$this->database_selected = true;
 				$this->database_name = $name;
-				$this->ok = 1;
+				$this->ok = true;
 			}
 			else
 			{
-				$this->database_selected = 0;
+				$this->database_selected = false;
 				$this->database_name = '';
-				$this->ok = 0;
+				$this->ok = false;
 				$this->error=$this->error();
 				dol_syslog(get_class($this)."::DoliDBPgsql : Erreur Select_db ".$this->error,LOG_ERR);
 			}
@@ -133,7 +135,7 @@ class DoliDBPgsql extends DoliDB
 		else
 		{
 			// Pas de selection de base demandee, ok ou ko
-			$this->database_selected = 0;
+			$this->database_selected = false;
 		}
 
 		return $this->ok;
@@ -145,10 +147,10 @@ class DoliDBPgsql extends DoliDB
      *
      *  @param  string	$line   			SQL request line to convert
      *  @param  string	$type				Type of SQL order ('ddl' for insert, update, select, delete or 'dml' for create, alter...)
-     *  @param	string	$unescapeslashquot	Unescape slash quote with quote quote
+     *  @param	bool	$unescapeslashquot	Unescape slash quote with quote quote
      *  @return string   					SQL request line converted
      */
-	static function convertSQLFromMysql($line,$type='auto',$unescapeslashquot=0)
+	static function convertSQLFromMysql($line,$type='auto',$unescapeslashquot=false)
 	{
 		// Removed empty line if this is a comment line for SVN tagging
 		if (preg_match('/^--\s\$Id/i',$line)) {
@@ -206,6 +208,8 @@ class DoliDBPgsql extends DoliDB
     			$line=preg_replace('/tinytext/i','text',$line);
     			$line=preg_replace('/mediumtext/i','text',$line);
 
+    			$line=preg_replace('/text\([0-9]+\)/i','text',$line);
+
     			// change not null datetime field to null valid ones
     			// (to support remapping of "zero time" to null
     			$line=preg_replace('/datetime not null/i','datetime',$line);
@@ -253,7 +257,7 @@ class DoliDBPgsql extends DoliDB
                     $newreg3=preg_replace('/ NOT NULL/i','',$newreg3);
                     $newreg3=preg_replace('/ NULL/i','',$newreg3);
                     $newreg3=preg_replace('/ DEFAULT 0/i','',$newreg3);
-                    $newreg3=preg_replace('/ DEFAULT \'[0-9a-zA-Z_@]*\'/i','',$newreg3);
+                    $newreg3=preg_replace('/ DEFAULT \'?[0-9a-zA-Z_@]*\'?/i','',$newreg3);
                     $line.= "ALTER TABLE ".$reg[1]." ALTER COLUMN ".$reg[2]." TYPE ".$newreg3;
                     // TODO Add alter to set default value or null/not null if there is this in $reg[3]
                 }
@@ -349,7 +353,7 @@ class DoliDBPgsql extends DoliDB
      *  On compare juste manuellement si la database choisie est bien celle activee par la connexion
 	 *
 	 *	@param	    string	$database	Name of database
-	 *	@return	    boolean  		    true if OK, false if KO
+	 *	@return	    bool				true if OK, false if KO
 	 */
 	function select_db($database)
 	{
@@ -364,8 +368,8 @@ class DoliDBPgsql extends DoliDB
 	 *	@param	    string		$login		Login
 	 *	@param	    string		$passwd		Password
 	 *	@param		string		$name		Name of database (not used for mysql, used for pgsql)
-	 *	@param		string		$port		Port of database server
-	 *	@return		resource				Database access handler
+	 *	@param		integer		$port		Port of database server
+	 *	@return		false|resource			Database access handler
 	 *	@see		close
 	 */
 	function connect($host, $login, $passwd, $name, $port=0)
@@ -406,6 +410,7 @@ class DoliDBPgsql extends DoliDB
 			$this->database_name = $name;
 			pg_set_error_verbosity($this->db, PGSQL_ERRORS_VERBOSE);	// Set verbosity to max
 		}
+		pg_query($this->db, "set datestyle = 'ISO, YMD';");
 
 		return $this->db;
 	}
@@ -433,10 +438,7 @@ class DoliDBPgsql extends DoliDB
 	 */
 	function getDriverInfo()
 	{
-		// FIXME: Dummy method
-		// TODO: Implement
-
-		return '';
+		return 'pgsql php driver';
 	}
 
     /**
@@ -450,7 +452,7 @@ class DoliDBPgsql extends DoliDB
         if ($this->db)
         {
           if ($this->transaction_opened > 0) dol_syslog(get_class($this)."::close Closing a connection with an opened transaction depth=".$this->transaction_opened,LOG_ERR);
-          $this->connected=0;
+          $this->connected=false;
           return pg_close($this->db);
         }
         return false;
@@ -462,7 +464,7 @@ class DoliDBPgsql extends DoliDB
 	 * @param	string	$query			SQL query string
 	 * @param	int		$usesavepoint	0=Default mode, 1=Run a savepoint before and a rollback to savepoint if error (this allow to have some request with errors inside global transactions).
      * @param   string	$type           Type of SQL order ('ddl' for insert, update, select, delete or 'dml' for create, alter...)
-	 * @return	resource    			Resultset of answer
+	 * @return	false|resource			Resultset of answer
 	 */
 	function query($query,$usesavepoint=0,$type='auto')
 	{
@@ -494,7 +496,10 @@ class DoliDBPgsql extends DoliDB
 			@pg_query($this->db, 'SAVEPOINT mysavepoint');
 		}
 
+		if (! in_array($query,array('BEGIN','COMMIT','ROLLBACK'))) dol_syslog('sql='.$query, LOG_DEBUG);
+
 		$ret = @pg_query($this->db, $query);
+
 		//print $query;
 		if (! preg_match("/^COMMIT/i",$query) && ! preg_match("/^ROLLBACK/i",$query)) // Si requete utilisateur, on la sauvegarde ainsi que son resultset
 		{
@@ -505,10 +510,11 @@ class DoliDBPgsql extends DoliDB
     				$this->lastqueryerror = $query;
     				$this->lasterror = $this->error();
     				$this->lasterrno = $this->errno();
+
+    				if ($conf->global->SYSLOG_LEVEL < LOG_DEBUG) dol_syslog(get_class($this)."::query SQL Error query: ".$query, LOG_ERR);	// Log of request was not yet done previously
+					dol_syslog(get_class($this)."::query SQL Error message: ".$this->lasterror." (".$this->lasterrno.")", LOG_ERR);
+					dol_syslog(get_class($this)."::query SQL Error usesavepoint = ".$usesavepoint, LOG_ERR);
 			    }
-				dol_syslog(get_class($this)."::query SQL error usesavepoint = ".$usesavepoint." - ".$query." - ".pg_last_error($this->db)." => ".$this->errno(), LOG_WARNING);
-				//print "\n>> ".$query."<br>\n";
-				//print '>> '.$this->lasterrno.' - '.$this->lasterror.' - '.$this->lastqueryerror."<br>\n";
 
 				if ($usesavepoint && $this->transaction_opened)	// Warning, after that errno will be erased
 				{
@@ -525,8 +531,8 @@ class DoliDBPgsql extends DoliDB
 	/**
 	 *	Renvoie la ligne courante (comme un objet) pour le curseur resultset
 	 *
-	 *	@param	Resultset	$resultset  Curseur de la requete voulue
-	 *	@return	Object 					Object result line or false if KO or end of cursor
+	 *	@param	resource	$resultset  Curseur de la requete voulue
+	 *	@return	false|object			Object result line or false if KO or end of cursor
 	 */
 	function fetch_object($resultset)
 	{
@@ -538,8 +544,8 @@ class DoliDBPgsql extends DoliDB
 	/**
      *	Return datas as an array
      *
-     *	@param	Resultset	$resultset  Resultset of request
-     *	@return	array					Array
+     *	@param	resource	$resultset  Resultset of request
+     *	@return	false|array				Array
 	 */
 	function fetch_array($resultset)
 	{
@@ -551,8 +557,8 @@ class DoliDBPgsql extends DoliDB
 	/**
      *	Return datas as an array
      *
-     *	@param	Resultset	$resultset  Resultset of request
-     *	@return	array					Array
+     *	@param	resource	$resultset  Resultset of request
+     *	@return	false|array				Array
 	 */
 	function fetch_row($resultset)
 	{
@@ -564,8 +570,8 @@ class DoliDBPgsql extends DoliDB
 	/**
      *	Return number of lines for result of a SELECT
      *
-     *	@param	Resultset	$resultset  Resulset of requests
-     *	@return int		    			Nb of lines
+     *	@param	resourse	$resultset  Resulset of requests
+     *	@return int		    			Nb of lines, -1 on error
      *	@see    affected_rows
 	 */
 	function num_rows($resultset)
@@ -578,7 +584,7 @@ class DoliDBPgsql extends DoliDB
 	/**
 	 * Renvoie le nombre de lignes dans le resultat d'une requete INSERT, DELETE ou UPDATE
 	 *
-	 * @param	Resultset	$resultset  Result set of request
+	 * @param	resource	$resultset  Result set of request
 	 * @return  int		    			Nb of lines
 	 * @see 	num_rows
 	 */
@@ -595,10 +601,10 @@ class DoliDBPgsql extends DoliDB
 	/**
 	 * Libere le dernier resultset utilise sur cette connexion
 	 *
-	 * @param	Resultset	$resultset  Result set of request
+	 * @param	resource	$resultset  Result set of request
 	 * @return	void
 	 */
-	function free($resultset=0)
+	function free($resultset=null)
 	{
         // If resultset not provided, we take the last used by connexion
 		if (! is_resource($resultset)) { $resultset=$this->_results; }
@@ -663,7 +669,7 @@ class DoliDBPgsql extends DoliDB
 	/**
 	 * Renvoie le code erreur generique de l'operation precedente.
 	 *
-	 * @return    error_num       (Exemples: DB_ERROR_TABLE_ALREADY_EXISTS, DB_ERROR_RECORD_ALREADY_EXISTS...)
+	 * @return	string		Error code (Exemples: DB_ERROR_TABLE_ALREADY_EXISTS, DB_ERROR_RECORD_ALREADY_EXISTS...)
 	 */
 	function errno()
 	{
@@ -729,7 +735,7 @@ class DoliDBPgsql extends DoliDB
 	/**
 	 * Renvoie le texte de l'erreur pgsql de l'operation precedente
 	 *
-	 * @return		error_text
+	 * @return	string		Error text
 	 */
 	function error()
 	{
@@ -741,7 +747,7 @@ class DoliDBPgsql extends DoliDB
 	 *
 	 * @param   string	$tab    	Table name concerned by insert. Ne sert pas sous MySql mais requis pour compatibilite avec Postgresql
 	 * @param	string	$fieldid	Field name
-	 * @return  int     			Id of row
+	 * @return  string     			Id of row
 	 */
 	function last_insert_id($tab,$fieldid='rowid')
 	{
@@ -763,7 +769,7 @@ class DoliDBPgsql extends DoliDB
      *
      *  @param  string  $fieldorvalue   Field name or value to encrypt
      *  @param	int		$withQuotes     Return string with quotes
-     *  @return return          		XXX(field) or XXX('value') or field or 'value'
+     *  @return string          		XXX(field) or XXX('value') or field or 'value'
 	 */
 	function encrypt($fieldorvalue, $withQuotes=0)
 	{
@@ -822,7 +828,7 @@ class DoliDBPgsql extends DoliDB
 	 * 	@param	string	$charset		Charset used to store data
 	 * 	@param	string	$collation		Charset used to sort data
 	 * 	@param	string	$owner			Username of database owner
-	 * 	@return	resource				resource defined if OK, null if KO
+	 * 	@return	false|resource				resource defined if OK, null if KO
 	 */
 	function DDLCreateDb($database,$charset='',$collation='',$owner='')
 	{
@@ -842,8 +848,8 @@ class DoliDBPgsql extends DoliDB
 	 *  List tables into a database
 	 *
 	 *  @param	string		$database	Name of database
-	 *  @param	string		$table		Nmae of table filter ('xxx%')
-	 *  @return	resource				Resource
+	 *  @param	string		$table		Name of table filter ('xxx%')
+	 *  @return	array					List of tables in an array
 	 */
 	function DDLListTables($database, $table='')
 	{
@@ -856,7 +862,7 @@ class DoliDBPgsql extends DoliDB
 		{
 			$listtables[] = $row[0];
 		}
-		return  $listtables;
+		return $listtables;
 	}
 
 	/**
@@ -905,11 +911,13 @@ class DoliDBPgsql extends DoliDB
 	 *	@param	    string	$type 			Type de la table
 	 *	@param	    array	$unique_keys 	Tableau associatifs Nom de champs qui seront clef unique => valeur
 	 *	@param	    array	$fulltext_keys	Tableau des Nom de champs qui seront indexes en fulltext
-	 *	@param	    string	$keys 			Tableau des champs cles noms => valeur
+	 *	@param	    array	$keys 			Tableau des champs cles noms => valeur
 	 *	@return	    int						<0 if KO, >=0 if OK
 	 */
-	function DDLCreateTable($table,$fields,$primary_key,$type,$unique_keys="",$fulltext_keys="",$keys="")
+	function DDLCreateTable($table,$fields,$primary_key,$type,$unique_keys=null,$fulltext_keys=null,$keys=null)
 	{
+		// FIXME: $fulltext_keys parameter is unused
+
 		// cles recherchees dans le tableau des descriptions (fields) : type,value,attribute,null,default,extra
 		// ex. : $fields['rowid'] = array('type'=>'int','value'=>'11','null'=>'not null','extra'=> 'auto_increment');
 		$sql = "create table ".$table."(";
@@ -939,7 +947,7 @@ class DoliDBPgsql extends DoliDB
 		if($primary_key != "")
 		$pk = "primary key(".$primary_key.")";
 
-		if($unique_keys != "")
+		if(is_array($unique_keys))
 		{
 			$i = 0;
 			foreach($unique_keys as $key => $value)
@@ -948,7 +956,7 @@ class DoliDBPgsql extends DoliDB
 				$i++;
 			}
 		}
-		if($keys != "")
+		if(is_array($keys))
 		{
 			$i = 0;
 			foreach($keys as $key => $value)
@@ -960,9 +968,9 @@ class DoliDBPgsql extends DoliDB
 		$sql .= implode(',',$sqlfields);
 		if($primary_key != "")
 		$sql .= ",".$pk;
-		if($unique_keys != "")
+		if(is_array($unique_keys))
 		$sql .= ",".implode(',',$sqluq);
-		if($keys != "")
+		if(is_array($keys))
 		$sql .= ",".implode(',',$sqlk);
 		$sql .=") type=".$type;
 
@@ -1002,7 +1010,7 @@ class DoliDBPgsql extends DoliDB
 	 *
 	 *	@param	string		$table	Name of table
 	 *	@param	string		$field	Optionnel : Name of field if we want description of field
-	 *	@return	resultset			Resultset x (x->attname)
+	 *	@return	false|resource		Resultset x (x->attname)
 	 */
 	function DDLDescTable($table,$field="")
 	{
@@ -1047,8 +1055,7 @@ class DoliDBPgsql extends DoliDB
 
 		dol_syslog($sql,LOG_DEBUG);
 		if(! $this -> query($sql))
-		return -1;
-		else
+			return -1;
 		return 1;
 	}
 
@@ -1073,8 +1080,7 @@ class DoliDBPgsql extends DoliDB
 
 		dol_syslog($sql,LOG_DEBUG);
 		if (! $this->query($sql))
-		return -1;
-		else
+			return -1;
 		return 1;
 	}
 
@@ -1094,7 +1100,7 @@ class DoliDBPgsql extends DoliDB
 			$this->error=$this->lasterror();
 			return -1;
 		}
-		else return 1;
+		return 1;
 	}
 
 	/**
@@ -1205,11 +1211,14 @@ class DoliDBPgsql extends DoliDB
      */
 	function getPathOfRestore()
 	{
-		$fullpathofdump='/pathtopgrestore/pg_restore';
+		//$tool='pg_restore';
+		$tool='psql';
 
-        if (file_exists('/usr/bin/pg_restore'))
+		$fullpathofdump='/pathtopgrestore/'.$tool;
+
+        if (file_exists('/usr/bin/'.$tool))
         {
-            $fullpathofdump='/usr/bin/pg_restore';
+            $fullpathofdump='/usr/bin/'.$tool;
         }
         else
         {
@@ -1219,7 +1228,7 @@ class DoliDBPgsql extends DoliDB
             {
                 $liste=$this->fetch_array($resql);
                 $basedir=$liste['data_directory'];
-                $fullpathofdump=preg_replace('/data$/','bin',$basedir).'/pg_restore';
+                $fullpathofdump=preg_replace('/data$/','bin',$basedir).'/'.$tool;
             }
         }
 

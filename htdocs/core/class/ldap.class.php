@@ -2,7 +2,7 @@
 /* Copyright (C) 2004		Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004		Benoit Mortier       <benoit.mortier@opensides.be>
  * Copyright (C) 2005-2011	Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2006-2011	Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2006-2015	Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,11 +25,12 @@
  */
 
 /**
- *      \class      Ldap
- *      \brief      Class to manage LDAP features
+ *	Class to manage LDAP features
  */
 class Ldap
 {
+	var $error;
+
 	/**
 	 * Tableau des serveurs (IP addresses ou nom d'hotes)
 	 */
@@ -78,7 +79,7 @@ class Ldap
 	var $name;
 	var $firstname;
 	var $login;
-  var $phone;
+	var $phone;
 	var $skype;
 	var $fax;
 	var $mail;
@@ -155,10 +156,17 @@ class Ldap
 		if (count($this->server) == 0 || empty($this->server[0]))
 		{
 			$this->error='LDAP setup (file conf.php) is not complete';
-			$return=-1;
 			dol_syslog(get_class($this)."::connect_bind ".$this->error, LOG_WARNING);
+			return -1;
 		}
 
+		if (! function_exists('ldap_connect'))
+		{
+			$this->error='Your PHP need extension ldap';
+			dol_syslog(get_class($this)."::connect_bind ".$this->error, LOG_WARNING);
+		    return -1;
+		}
+		
 		// Loop on each ldap server
 		foreach ($this->server as $key => $host)
 		{
@@ -176,7 +184,10 @@ class Ldap
 
 			if (is_resource($this->connection))
 			{
+				// Execute the ldap_set_option here (after connect and before bind)
 				$this->setVersion();
+				ldap_set_option($this->connection, LDAP_OPT_SIZELIMIT, 0); // no limit here. should return true.
+
 
 				if ($this->serverType == "activedirectory")
 				{
@@ -345,7 +356,7 @@ class Ldap
 	/**
 	 * Change ldap protocol version to use.
 	 *
-	 * @return	string					version
+	 * @return	boolean					version
 	 */
 	function setVersion() {
 		// LDAP_OPT_PROTOCOL_VERSION est une constante qui vaut 17
@@ -356,7 +367,7 @@ class Ldap
 	/**
 	 * changement du referrals.
 	 *
-	 * @return	string					referrals
+	 * @return	boolean					referrals
 	 */
 	function setReferrals() {
 		// LDAP_OPT_REFERRALS est une constante qui vaut ?
@@ -411,9 +422,10 @@ class Ldap
 		}
 		else
 		{
-			$this->error=@ldap_error($this->connection);
-			$this->errno=@ldap_errno($this->connection);
-			dol_syslog(get_class($this)."::add failed: ".$this->errno." ".$this->error, LOG_ERR);
+			$this->ldapErrorCode = @ldap_errno($this->connection);
+			$this->ldapErrorText = @ldap_error($this->connection);
+			$this->error=$this->ldapErrorCode." ".$this->ldapErrorText;
+			dol_syslog(get_class($this)."::add failed: ".$this->error, LOG_ERR);
 			return -1;
 		}
 	}
@@ -798,7 +810,7 @@ class Ldap
 	 *
 	 *	@param	string	$dn			DN entry key
 	 *	@param	string	$filter		Filter
-	 *	@return	int					<0 if KO, >0 if OK
+	 *	@return	int|false|array					<0 or false if KO, array if OK
 	 */
 	function getAttribute($dn,$filter)
 	{
@@ -847,6 +859,7 @@ class Ldap
 	 */
 	function getAttributeValues($filterrecord,$attribute)
 	{
+		$attributes=array();
 		$attributes[0] = $attribute;
 
 		// We need to search for this user in order to get their entry.
@@ -1075,9 +1088,9 @@ class Ldap
 		$subcount = hexdec(substr($hex_sid,2,2));    // Get count of sub-auth entries
 		$auth = hexdec(substr($hex_sid,4,12));      // SECURITY_NT_AUTHORITY
 		$result = "$rev-$auth";
-		for ($x=0;$x < $subcount; $x++) {
-			$subauth[$x] = hexdec($this->littleEndian(substr($hex_sid,16+($x*8),8)));  // get all SECURITY_NT_AUTHORITY
-			$result .= "-".$subauth[$x];
+		for ($x=0;$x < $subcount; $x++)
+		{
+			$result .= "-".hexdec($this->littleEndian(substr($hex_sid,16+($x*8),8)));  // get all SECURITY_NT_AUTHORITY
 		}
 		return $result;
 	}
@@ -1090,9 +1103,9 @@ class Ldap
 	 *	car conflit majuscule-minuscule. A n'utiliser que pour les pages
 	 *	'Fiche LDAP' qui affiche champ lisibles par defaut.
 	 *
-	 * 	@param	string	$checkDn		DN de recherche (Ex: ou=users,cn=my-domain,cn=com)
-	 * 	@param 	string	$filter			Filtre de recherche (ex: (sn=nom_personne) )
-	 *	@return	array					Tableau des reponses (cle en minuscule-valeur)
+	 * 	@param	string		$checkDn		DN de recherche (Ex: ou=users,cn=my-domain,cn=com)
+	 * 	@param 	string		$filter			Search filter (ex: (sn=nom_personne) )
+	 *	@return	array|int					Array with answers (key lowercased - value)
 	 */
 	function search($checkDn, $filter)
 	{
@@ -1308,7 +1321,7 @@ class Ldap
 	 *	Convertit le temps ActiveDirectory en Unix timestamp
 	 *
 	 *	@param	string	$value		AD time to convert
-	 *	@return	string				Unix timestamp
+	 *	@return	integer				Unix timestamp
 	 */
 	function convert_time($value)
 	{

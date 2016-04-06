@@ -1,8 +1,9 @@
 <?php
 /* Copyright (C) 2001-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copytight (C) 2005-2015 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copytight (C) 2012	   Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2005-2015 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2012	   Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2015      Jean-François Ferry	<jfefe@aternatik.fr>
  * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -46,7 +47,6 @@ if ($action == 'add')
 {
 	$langs->load("errors");
 
-	$mesg='';
 	$dateo = dol_mktime(12,0,0,GETPOST('remonth','int'),GETPOST('reday','int'),GETPOST('reyear','int'));
 	$label = GETPOST('label','alpha');
 	$amount= GETPOST('amount');
@@ -54,22 +54,22 @@ if ($action == 'add')
 	if (! $label)
 	{
 		$error=1;
-		$mesg.="<div class=\"error\">".$langs->trans("ErrorFieldRequired",$langs->transnoentities("Description"))."</div>";
+		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("Description")), 'errors');
 	}
 	if (! $amount)
 	{
 		$error=1;
-		$mesg.="<div class=\"error\">".$langs->trans("ErrorFieldRequired",$langs->transnoentities("Amount"))."</div>";
+		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("Amount")), 'errors');
 	}
 	if (! GETPOST('account_from','int'))
 	{
 		$error=1;
-		$mesg.="<div class=\"error\">".$langs->trans("ErrorFieldRequired",$langs->transnoentities("TransferFrom"))."</div>";
+		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("TransferFrom")), 'errors');
 	}
 	if (! GETPOST('account_to','int'))
 	{
 		$error=1;
-		$mesg.="<div class=\"error\">".$langs->trans("ErrorFieldRequired",$langs->transnoentities("TransferTo"))."</div>";
+		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("TransferTo")), 'errors');
 	}
 	if (! $error)
 	{
@@ -81,7 +81,7 @@ if ($action == 'add')
 		$accountto=new Account($db);
 		$accountto->fetch(GETPOST('account_to','int'));
 
-		if ($accountto->id != $accountfrom->id)
+		if (($accountto->id != $accountfrom->id) && ($accountto->currency_code == $accountfrom->currency_code))
 		{
 			$db->begin();
 
@@ -112,20 +112,19 @@ if ($action == 'add')
 
 			if (! $error)
 			{
-				$mesg.="<div class=\"ok\">";
-				$mesg.=$langs->trans("TransferFromToDone","<a href=\"account.php?account=".$accountfrom->id."\">".$accountfrom->label."</a>","<a href=\"account.php?account=".$accountto->id."\">".$accountto->label."</a>",$amount,$langs->transnoentities("Currency".$conf->currency));
-				$mesg.="</div>";
+				$mesgs = $langs->trans("TransferFromToDone","<a href=\"account.php?account=".$accountfrom->id."\">".$accountfrom->label."</a>","<a href=\"account.php?account=".$accountto->id."\">".$accountto->label."</a>",$amount,$langs->transnoentities("Currency".$conf->currency));
+				setEventMessage($mesgs);
 				$db->commit();
 			}
 			else
 			{
-				$mesg.="<div class=\"error\">".$accountfrom->error.' '.$accountto->error."</div>";
+				setEventMessage($accountfrom->error.' '.$accountto->error, 'errors');
 				$db->rollback();
 			}
 		}
 		else
 		{
-			$mesg.="<div class=\"error\">".$langs->trans("ErrorFromToAccountsMustDiffers")."</div>";
+			setEventMessage($langs->trans("ErrorFromToAccountsMustDiffers"), 'errors');
 		}
 	}
 }
@@ -153,9 +152,7 @@ if($error)
 	$amount = GETPOST('amount','int');
 }
 
-print_fiche_titre($langs->trans("BankTransfer"));
-
-dol_htmloutput_mesg($mesg);
+print_fiche_titre($langs->trans("BankTransfer"), '', 'title_bank.png');
 
 print $langs->trans("TransferDesc");
 print "<br><br>";
@@ -172,11 +169,11 @@ print '</tr>';
 
 $var=false;
 print '<tr '.$bc[$var].'><td>';
-print $form->select_comptes($account_from,'account_from',0,'',1);
+$form->select_comptes($account_from,'account_from',0,'',1);
 print "</td>";
 
 print "<td>\n";
-print $form->select_comptes($account_to,'account_to',0,'',1);
+$form->select_comptes($account_to,'account_to',0,'',1);
 print "</td>\n";
 
 print "<td>";
@@ -187,7 +184,7 @@ print '<td><input name="amount" class="flat" type="text" size="8" value="'.$amou
 
 print "</table>";
 
-print '<br><center><input type="submit" class="button" value="'.$langs->trans("Add").'"></center>';
+print '<br><div class="center"><input type="submit" class="button" value="'.$langs->trans("Add").'"></div>';
 
 print "</form>";
 

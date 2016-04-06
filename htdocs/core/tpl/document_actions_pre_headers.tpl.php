@@ -1,5 +1,7 @@
 <?php
 /* Copyright (C)    2013    Cédric Salvador    <csalvador@gpcsolutions.fr>
+ * Copyright (C)    2015    Marcos García      <marcosgdf@gmail.com>
+ * Copyright (C)    2015    Ferran Marcet      <fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,14 +19,23 @@
  */
 
 // Variable $upload_dir must be defined when entering here
+// Variable $upload_dirold may also exists.
 
 // Send file/link
-if (GETPOST('sendit') && ! empty($conf->global->MAIN_UPLOAD_DOC)) {
-    if ($object->id) {
-        dol_add_file_process($upload_dir, 0, 1, 'userfile');
+if (GETPOST('sendit') && ! empty($conf->global->MAIN_UPLOAD_DOC))
+{
+    if ($object->id)
+    {
+    	if (! empty($upload_dirold) && ! empty($conf->global->PRODUCT_USE_OLD_PATH_FOR_PHOTO))
+            dol_add_file_process($upload_dirold, 0, 1, 'userfile', GETPOST('savingdocmask'));
+        else
+            dol_add_file_process($upload_dir, 0, 1, 'userfile', GETPOST('savingdocmask'));
     }
-} elseif (GETPOST('linkit') && ! empty($conf->global->MAIN_UPLOAD_DOC)) {
-    if ($object->id) {
+}
+elseif (GETPOST('linkit') && ! empty($conf->global->MAIN_UPLOAD_DOC))
+{
+    if ($object->id)
+    {
         $link = GETPOST('link', 'alpha');
         if ($link)
         {
@@ -48,17 +59,36 @@ if ($action == 'confirm_deletefile' && $confirm == 'yes')
 		{
        		$urlfile=basename($urlfile);
 			$file = $upload_dir . "/" . $urlfile;
+			if (! empty($upload_dirold)) $fileold = $upload_dirold . "/" . $urlfile;
 		}
         $linkid = GETPOST('linkid', 'int');	// Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
 
         if ($urlfile)
         {
+	        $dir = dirname($file).'/';     // Chemin du dossier contenant l'image d'origine
+	        $dirthumb = $dir.'/thumbs/';   // Chemin du dossier contenant la vignette
+
             $ret = dol_delete_file($file, 0, 0, 0, $object);
-            if ($ret) {
-                setEventMessage($langs->trans("FileWasRemoved", $urlfile));
-            } else {
-                setEventMessage($langs->trans("ErrorFailToDeleteFile", $urlfile), 'errors');
-            }
+            if (! empty($fileold)) dol_delete_file($fileold, 0, 0, 0, $object);     // Delete file using old path
+            
+	        // Si elle existe, on efface la vignette
+	        if (preg_match('/(\.jpg|\.jpeg|\.bmp|\.gif|\.png|\.tiff)$/i',$file,$regs))
+	        {
+		        $photo_vignette=basename(preg_replace('/'.$regs[0].'/i','',$file).'_small'.$regs[0]);
+		        if (file_exists(dol_osencode($dirthumb.$photo_vignette)))
+		        {
+			        dol_delete_file($dirthumb.$photo_vignette);
+		        }
+
+		        $photo_vignette=basename(preg_replace('/'.$regs[0].'/i','',$file).'_mini'.$regs[0]);
+		        if (file_exists(dol_osencode($dirthumb.$photo_vignette)))
+		        {
+			        dol_delete_file($dirthumb.$photo_vignette);
+		        }
+	        }
+
+            if ($ret) setEventMessage($langs->trans("FileWasRemoved", $urlfile));
+            else setEventMessage($langs->trans("ErrorFailToDeleteFile", $urlfile), 'errors');
         }
         elseif ($linkid)
         {
@@ -67,11 +97,16 @@ if ($action == 'confirm_deletefile' && $confirm == 'yes')
             $link->id = $linkid;
             $link->fetch();
             $res = $link->delete($user);
+
             $langs->load('link');
-            if ($res) {
+            if ($res > 0) {
                 setEventMessage($langs->trans("LinkRemoved", $link->label));
             } else {
-                setEventMessage($langs->trans("ErrorFailedToDeleteLink", $link->label), 'errors');
+                if (count($link->errors)) {
+                    setEventMessages('', $link->errors, 'errors');
+                } else {
+                    setEventMessage($langs->trans("ErrorFailedToDeleteLink", $link->label), 'errors');
+                }
             }
         }
         header('Location: ' . $_SERVER["PHP_SELF"] . '?id=' . $object->id.(!empty($withproject)?'&withproject=1':''));

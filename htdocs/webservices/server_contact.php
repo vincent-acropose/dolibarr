@@ -114,8 +114,7 @@ $contact_fields = array(
 	'user_id' => array('name'=>'user_id','type'=>'xsd:string'),
 	'user_login' => array('name'=>'user_login','type'=>'xsd:string'),
 	'civility_id' => array('name'=>'civility_id','type'=>'xsd:string'),
-	'poste' => array('name'=>'poste','type'=>'xsd:string'),
-	'statut' => array('name'=>'statut','type'=>'xsd:string')
+	'poste' => array('name'=>'poste','type'=>'xsd:string')
 	//...
 );
 //Retreive all extrafield for contact
@@ -233,8 +232,8 @@ $server->register(
  * Get Contact
  *
  * @param	array		$authentication		Array of authentication information
- * @param	int		$id			Id of object
- * @param	string		$ref_ext		Ref external of object
+ * @param	int			$id					Id of object
+ * @param	string		$ref_ext			Ref external of object
  * @return	mixed
  */
 function getContact($authentication,$id,$ref_ext)
@@ -273,7 +272,7 @@ function getContact($authentication,$id,$ref_ext)
 	        ){
             	$contact_result_fields =array(
 	            	'id' => $contact->id,
-			'ref_ext' => $contact->ref_ext,
+	            	'ref_ext' => $contact->ref_ext,
 	            	'lastname' => $contact->lastname,
 	            	'firstname' => $contact->firstname,
 	            	'address' => $contact->address,
@@ -286,7 +285,7 @@ function getContact($authentication,$id,$ref_ext)
 	            	'country_code' => $contact->country_code,
 	            	'country' => $contact->country,
 	            	'socid' => $contact->socid,
-	            	'status' => $contact->status,
+	            	'status' => $contact->statut,
 	            	'phone_pro' => $contact->phone_pro,
 	            	'fax' => $contact->fax,
 	            	'phone_perso' => $contact->phone_perso,
@@ -304,8 +303,7 @@ function getContact($authentication,$id,$ref_ext)
 	            	'user_id' => $contact->user_id,
 	            	'user_login' => $contact->user_login,
 	            	'civility_id' => $contact->civility_id,
-            		'poste' => $contact->poste,
-            		'statut' => $contact->statut
+            		'poste' => $contact->poste
             	);
 
             	//Retreive all extrafield for thirdsparty
@@ -336,7 +334,7 @@ function getContact($authentication,$id,$ref_ext)
          else
          {
              $error++;
-             $errorcode='NOT_FOUND'; $errorlabel='Object not found for id='.$id.' nor ref='.$ref.' nor ref_ext='.$ref_ext;
+             $errorcode='NOT_FOUND'; $errorlabel='Object not found for id='.$id.' nor ref_ext='.$ref_ext;
          }
     }
 
@@ -353,7 +351,7 @@ function getContact($authentication,$id,$ref_ext)
  * Create Contact
  *
  * @param	array		$authentication		Array of authentication information
- * @param	Contact	$contact		    $contact
+ * @param	Contact		$contact		    $contact
  * @return	array							Array result
  */
 function createContact($authentication,$contact)
@@ -398,7 +396,7 @@ function createContact($authentication,$contact)
 		$newobject->country_code=$contact['country_code'];
 		$newobject->country=$contact['country'];
 		$newobject->socid=$contact['socid'];
-		$newobject->status=$contact['status'];
+		$newobject->statut=$contact['status'];
 		$newobject->phone_pro=$contact['phone_pro'];
 		$newobject->fax=$contact['fax'];
 		$newobject->phone_perso=$contact['phone_perso'];
@@ -416,7 +414,6 @@ function createContact($authentication,$contact)
 		$newobject->user_id=$contact['user_id'];
 		$newobject->user_login=$contact['user_login'];
 		$newobject->poste=$contact['poste'];
-		$newobject->statut=$contact['statut'];
 
 		//Retreive all extrafield for thirdsparty
 		// fetch optionals attributes and labels
@@ -493,24 +490,23 @@ function getContactsForThirdParty($authentication,$idthirdparty)
 	{
 		$linesinvoice=array();
 
-		$sql = "SELECT c.rowid, c.fk_soc, c.civilite as civility_id, c.lastname, c.firstname, c.statut,";
+		$sql = "SELECT c.rowid, c.fk_soc, c.civility as civility_id, c.lastname, c.firstname, c.statut as status,";
 		$sql.= " c.address, c.zip, c.town,";
 		$sql.= " c.fk_pays as country_id,";
 		$sql.= " c.fk_departement,";
 		$sql.= " c.birthday,";
 		$sql.= " c.poste, c.phone, c.phone_perso, c.phone_mobile, c.fax, c.email, c.jabberid,";
 		//$sql.= " c.priv, c.note, c.default_lang, c.no_email, c.canvas,";
-		$sql.= " p.libelle as country, p.code as country_code,";
+		$sql.= " co.label as country, co.code as country_code,";
 		$sql.= " d.nom as state, d.code_departement as state_code,";
 		$sql.= " u.rowid as user_id, u.login as user_login,";
 		$sql.= " s.nom as socname, s.address as socaddress, s.zip as soccp, s.town as soccity, s.default_lang as socdefault_lang";
 		$sql.= " FROM ".MAIN_DB_PREFIX."socpeople as c";
-		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_pays as p ON c.fk_pays = p.rowid";
+		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_country as co ON c.fk_pays = co.rowid";
 		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_departements as d ON c.fk_departement = d.rowid";
 		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."user as u ON c.rowid = u.fk_socpeople";
 		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON c.fk_soc = s.rowid";
 		$sql.= " WHERE c.fk_soc=$idthirdparty";
-
 
 		$resql=$db->query($sql);
 		if ($resql)
@@ -525,58 +521,50 @@ function getContactsForThirdParty($authentication,$idthirdparty)
 				$contact=new Contact($db);
 				$contact->fetch($obj->rowid);
 
-
 				// Now define invoice
 				$linescontact[]=array(
-				'id' => $contact->id,
-				'ref' => $contact->ref,
-				'civility_id' => $contact->civility_id?$contact->civility_id:'',
-				'lastname' => $contact->lastname?$contact->lastname:'',
-				'firstname' => $contact->firstname?$contact->firstname:'',
-				'address' => $contact->address?$contact->address:'',
-				'zip' => $contact->zip?$contact->zip:'',
-				'town' => $contact->town?$contact->town:'',
+					'id' => $contact->id,
+					'ref' => $contact->ref,
+					'civility_id' => $contact->civility_id?$contact->civility_id:'',
+					'lastname' => $contact->lastname?$contact->lastname:'',
+					'firstname' => $contact->firstname?$contact->firstname:'',
+					'address' => $contact->address?$contact->address:'',
+					'zip' => $contact->zip?$contact->zip:'',
+					'town' => $contact->town?$contact->town:'',
 
-				'state_id' => $contact->state_id?$contact->state_id:'',
-				'state_code' => $contact->state_code?$contact->state_code:'',
-				'state' => $contact->state?$contact->state:'',
+					'state_id' => $contact->state_id?$contact->state_id:'',
+					'state_code' => $contact->state_code?$contact->state_code:'',
+					'state' => $contact->state?$contact->state:'',
 
-				'country_id' => $contact->country_id?$contact->country_id:'',
-				'country_code' => $contact->country_code?$contact->country_code:'',
-				'country' => $contact->country?$contact->country:'',
+					'country_id' => $contact->country_id?$contact->country_id:'',
+					'country_code' => $contact->country_code?$contact->country_code:'',
+					'country' => $contact->country?$contact->country:'',
 
-				'socid' => $contact->socid?$contact->socid:'',
-				'socname' => $contact->socname?$contact->socname:'',
-				'poste' => $contact->poste?$contact->poste:'',
+					'socid' => $contact->socid?$contact->socid:'',
+					'socname' => $contact->socname?$contact->socname:'',
+					'poste' => $contact->poste?$contact->poste:'',
 
+					'phone_pro' => $contact->phone_pro?$contact->phone_pro:'',
+					'fax' => $contact->fax?$contact->fax:'',
+					'phone_perso' => $contact->phone_perso?$contact->phone_perso:'',
+					'phone_mobile' => $contact->phone_mobile?$contact->phone_mobile:'',
 
+					'email' => $contact->email?$contact->email:'',
+					'jabberid' => $contact->jabberid?$contact->jabberid:'',
+					'priv' => $contact->priv?$contact->priv:'',
+					'mail' => $contact->mail?$contact->mail:'',
 
-				'phone_pro' => $contact->phone_pro?$contact->phone_pro:'',
-				'fax' => $contact->fax?$contact->fax:'',
-				'phone_perso' => $contact->phone_perso?$contact->phone_perso:'',
-				'phone_mobile' => $contact->phone_mobile?$contact->phone_mobile:'',
-
-				'email' => $contact->email?$contact->email:'',
-				'jabberid' => $contact->jabberid?$contact->jabberid:'',
-				'priv' => $contact->priv?$contact->priv:'',
-				'mail' => $contact->mail?$contact->mail:'',
-
-				'birthday' => $contact->birthday?$contact->birthday:'',
-				'default_lang' => $contact->default_lang?$contact->default_lang:'',
-				'note' => $contact->note?$contact->note:'',
-				'no_email' => $contact->no_email?$contact->no_email:'',
-				'ref_facturation' => $contact->ref_facturation?$contact->ref_facturation:'',
-				'ref_contrat' => $contact->ref_contrat?$contact->ref_contrat:'',
-				'ref_commande' => $contact->ref_commande?$contact->ref_commande:'',
-				'ref_propal' => $contact->ref_propal?$contact->ref_propal:'',
-				'user_id' => $contact->user_id?$contact->user_id:'',
-				'user_login' => $contact->user_login?$contact->user_login:'',
-				'statut' => $contact->statut?$contact->statut:''
-
-
-
-
-
+					'birthday' => $contact->birthday?$contact->birthday:'',
+					'default_lang' => $contact->default_lang?$contact->default_lang:'',
+					'note' => $contact->note?$contact->note:'',
+					'no_email' => $contact->no_email?$contact->no_email:'',
+					'ref_facturation' => $contact->ref_facturation?$contact->ref_facturation:'',
+					'ref_contrat' => $contact->ref_contrat?$contact->ref_contrat:'',
+					'ref_commande' => $contact->ref_commande?$contact->ref_commande:'',
+					'ref_propal' => $contact->ref_propal?$contact->ref_propal:'',
+					'user_id' => $contact->user_id?$contact->user_id:'',
+					'user_login' => $contact->user_login?$contact->user_login:'',
+					'status' => $contact->statut?$contact->statut:''
 				);
 
 				$i++;
@@ -627,9 +615,15 @@ function updateContact($authentication,$contact)
 	$error=0;
 	$fuser=check_authentication($authentication,$error,$errorcode,$errorlabel);
 	// Check parameters
-	if (empty($contact['id']))	{
-		$error++; $errorcode='KO'; $errorlabel="Contact id is mandatory.";
+	if (empty($contact['id']) && empty($contact['ref_ext']))	{
+		$error++; $errorcode='KO'; $errorlabel="Contact id or ref_ext is mandatory.";
 	}
+	// Check parameters
+    if (! $error && ($id && $ref_ext))
+    {
+        $error++;
+        $errorcode='BAD_PARAMETERS'; $errorlabel="Parameter id and ref_ext can't be all provided. You must choose one of them.";
+    }
 
 	if (! $error)
 	{
@@ -638,7 +632,7 @@ function updateContact($authentication,$contact)
 		include_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 
 		$object=new Contact($db);
-		$result=$object->fetch($contact['id']);
+		$result=$object->fetch($contact['id'],0,$contact['ref_ext']);
 
 		if (!empty($object->id)) {
 
@@ -715,6 +709,6 @@ function updateContact($authentication,$contact)
 
 	return $objectresp;
 }
-// Return the results.
-$server->service($HTTP_RAW_POST_DATA);
 
+// Return the results.
+$server->service(file_get_contents("php://input"));

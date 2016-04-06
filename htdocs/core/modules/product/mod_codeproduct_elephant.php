@@ -35,6 +35,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/modules/product/modules_product.class.php'
 class mod_codeproduct_elephant extends ModeleProductCode
 {
 	var $nom='Elephant';				// Nom du modele
+	var $name='Elephant';				// Nom du modele
 	var $code_modifiable;				// Code modifiable
 	var $code_modifiable_invalide;		// Code modifiable si il est invalide
 	var $code_modifiable_null;			// Code modifiables si il est null
@@ -73,7 +74,7 @@ class mod_codeproduct_elephant extends ModeleProductCode
 
 		$langs->load("products");
 
-		$disabled = ((! empty($mc->sharings['referent']) && $mc->sharings['referent'] != $conf->entity) ? ' disabled="disabled"' : '');
+		$disabled = ((! empty($mc->sharings['referent']) && $mc->sharings['referent'] != $conf->entity) ? ' disabled' : '');
 
 		$texte = $langs->trans('GenericNumRefModelDesc')."<br>\n";
 		$texte.= '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
