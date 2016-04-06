@@ -321,11 +321,12 @@ else
     			print_liste_field_titre($titlefields, $_SERVER["PHP_SELF"], "p.price",$param,"",'align="right"',$sortfield,$sortorder);
     		}
     		if ($user->rights->fournisseur->lire) print '<td class="liste_titre" align="right">'.$langs->trans("BuyingPriceMinShort").'</td>';
+    		if ($user->rights->fournisseur->lire) print '<td class="liste_titre" align="center">'.$langs->trans("Fournisseur Préféré").'</td>';
     		if (! empty($conf->stock->enabled) && $user->rights->stock->lire && $type != 1) print '<td class="liste_titre" align="right">'.$langs->trans("DesiredStock").'</td>';
     		if (! empty($conf->stock->enabled) && $user->rights->stock->lire && $type != 1) print '<td class="liste_titre" align="right">'.$langs->trans("PhysicalStock").'</td>';
     		print_liste_field_titre($langs->trans("Sell"), $_SERVER["PHP_SELF"], "p.tosell",$param,"",'align="center"',$sortfield,$sortorder);
-            print_liste_field_titre($langs->trans("Buy"), $_SERVER["PHP_SELF"], "p.tobuy",$param,"",'align="center"',$sortfield,$sortorder);
-            print_liste_field_titre('',$_SERVER["PHP_SELF"],"",'','','',$sortfield,$sortorder,'maxwidthsearch ');
+            	print_liste_field_titre($langs->trans("Buy"), $_SERVER["PHP_SELF"], "p.tobuy",$param,"",'align="center"',$sortfield,$sortorder);
+            	print_liste_field_titre('',$_SERVER["PHP_SELF"],"",'','','',$sortfield,$sortorder,'maxwidthsearch ');
 			print "</tr>\n";
 
     		// Lignes des champs de filtre
@@ -365,7 +366,7 @@ else
 
     		// Minimum buying Price
     		if ($user->rights->fournisseur->lire) {
-    			print '<td class="liste_titre">';
+    			print '<td class="liste_titre" colspan="2">';
     			print '&nbsp;';
     			print '</td>';
     		}
@@ -480,7 +481,7 @@ else
     			if ($user->rights->fournisseur->lire)
     			{
         			print  '<td align="right">';
-    			    if ($objp->tobuy && $objp->minsellprice != '')
+    			    	if ($objp->tobuy && $objp->minsellprice != '')
         			{
     					//print price($objp->minsellprice).' '.$langs->trans("HT");
     					if ($product_fourn->find_min_price_product_fournisseur($objp->rowid) > 0)
@@ -491,13 +492,39 @@ else
     							{
     								$htmltext=$product_fourn->display_price_product_fournisseur(1, 1, 0, 1);
     								print $form->textwithpicto(price($product_fourn->fourn_unitprice).' '.$langs->trans("HT"),$htmltext);
+    								
+									$sql = '
+										SELECT conditionnement 
+										FROM ' . MAIN_DB_PREFIX . 'product_fournisseur_price 
+										WHERE rowid = ' . $product_fourn->product_fourn_price_id . '
+									';
+									
+									$statement = $db->query($sql);
+									$objCond = $db->fetch_object($statement);
+									
+									print ' / '.$objCond->conditionnement;
+									print ' ('.price($product_fourn->fourn_unitprice / $objCond->conditionnement).')';
+									print img_help(1, " / conditionnement (PU) ");
+									
     							}
     							else print price($product_fourn->fourn_unitprice).' '.$langs->trans("HT");
+
     						}
     					}
         			}
         			print '</td>';
-    			}
+    			
+			$resReput = $db->query("SELECT fk_soc FROM ".MAIN_DB_PREFIX."product_fournisseur_price WHERE fk_product=".$objp->rowid." AND supplier_reputation='FAVORITE'");
+			$TSupplierFavorite = array();
+			while($objreput = $db->fetch_object($resReput)) {
+					$ff=new Societe($db);
+					if($ff->fetch($objreput->fk_soc)>0) {
+						$TSupplierFavorite[] = $ff->getNomUrl(0);
+					}
+			}
+			echo '<td align="center">'. implode(', ', $TSupplierFavorite) .'</td>';
+
+			}
 
     			// Show stock
     			if (! empty($conf->stock->enabled) && $user->rights->stock->lire && $type != 1)

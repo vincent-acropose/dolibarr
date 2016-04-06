@@ -609,7 +609,16 @@ if ($id || $ref)
 					{
 						$var=!$var;
 
-						print "<tr ".$bc[$var].">";
+						print "<tr ".$bc[$var];
+
+						if($productfourn->supplier_reputation == 'FAVORITE') {
+							echo ' style="background-color:#eeffee;" ';
+						}
+						else if($productfourn->supplier_reputation=='DONOTORDER'){
+                                                        echo ' style="background-color:#ffdddd;" ';
+                                                }
+
+						print ">";
 
 						print '<td>'.$productfourn->getSocNomUrl(1,'supplier').'</td>';
 						print '<td>';
