@@ -98,7 +98,8 @@ if ($action == 'setdesiredstock')
 if ($action == "correct_stock" && ! $cancel)
 {
 	$author = new User($db);
-	$author->fetch($_POST['author']);
+	if($_POST['author']>0) $author->fetch($_POST['author']);
+	else $author = clone $user; 
 
 	if (! (GETPOST("id_entrepot") > 0))
 	{
@@ -137,7 +138,6 @@ if ($action == "correct_stock" && ! $cancel)
 			if ($product->hasbatch())
 			{
 				$result=$product->correct_stock_batch(
-					$user,
 					$author,
 					GETPOST("id_entrepot"),
 					GETPOST("nbpiece"),
@@ -153,8 +153,7 @@ if ($action == "correct_stock" && ! $cancel)
 			else
 			{
 				$result=$product->correct_stock(
-		    		$user,
-				$author,
+		    		$author,
 		    		GETPOST("id_entrepot"),
 		    		GETPOST("nbpiece"),
 		    		GETPOST("mouvement"),
