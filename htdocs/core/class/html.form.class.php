@@ -1257,7 +1257,11 @@ class Form
         	{
         		$sql.= ", ".MAIN_DB_PREFIX."usergroup_user as ug";
         		$sql.= " WHERE ug.fk_user = u.rowid";
-        		$sql.= " AND ug.entity = ".$conf->entity;
+			if(empty($force_entity)) {
+	        		$sql.= " AND ug.entity = ".$conf->entity;
+			} else {
+				$sql.= " AND ug.entity IN(0,".$force_entity.")";
+			}
         	}
         	else
         	{
