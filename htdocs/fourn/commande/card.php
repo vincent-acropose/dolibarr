@@ -667,8 +667,8 @@ if (empty($reshook))
 			}
 		}
 		
-		if ($error>0) {
-		    // Check parameters
+		if ($error == 0) {
+			 // Check parameters
 		    if (! empty($conf->stock->enabled) && ! empty($conf->global->STOCK_CALCULATE_ON_SUPPLIER_VALIDATE_ORDER) && $qualified_for_stock_change)	// warning name of option should be STOCK_CALCULATE_ON_SUPPLIER_APPROVE_ORDER
 		    {
 		        if (! $idwarehouse || $idwarehouse == -1)
@@ -682,6 +682,7 @@ if (empty($reshook))
 		    if (! $error)
 		    {
 		        $result	= $object->approve($user, $idwarehouse, ($action=='confirm_approve2'?1:0));
+				
 		        if ($result > 0)
 		        {
 		            if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
