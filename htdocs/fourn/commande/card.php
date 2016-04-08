@@ -656,41 +656,55 @@ if (empty($reshook))
 		   	$qualified_for_stock_change=$object->hasProductsOrServices(1);
 		}
 
-	    // Check parameters
-	    if (! empty($conf->stock->enabled) && ! empty($conf->global->STOCK_CALCULATE_ON_SUPPLIER_VALIDATE_ORDER) && $qualified_for_stock_change)	// warning name of option should be STOCK_CALCULATE_ON_SUPPLIER_APPROVE_ORDER
-	    {
-	        if (! $idwarehouse || $idwarehouse == -1)
-	        {
-	            $error++;
-	            setEventMessage($langs->trans('ErrorFieldRequired',$langs->transnoentitiesnoconv("Warehouse")), 'errors');
-	            $action='';
-	        }
-	    }
+		$free_lines = false;
+		foreach ($object->lines as $line) {
+			if (empty($line->fk_product)) {
+				$error++;
+				
+			    setEventMessage('La commande ne peut pas être acceptée car elle contient une ligne libre.', 'errors');
+			    $action='';
+				break;
+			}
+		}
+		
+		if ($error>0) {
+		    // Check parameters
+		    if (! empty($conf->stock->enabled) && ! empty($conf->global->STOCK_CALCULATE_ON_SUPPLIER_VALIDATE_ORDER) && $qualified_for_stock_change)	// warning name of option should be STOCK_CALCULATE_ON_SUPPLIER_APPROVE_ORDER
+		    {
+		        if (! $idwarehouse || $idwarehouse == -1)
+		        {
+		            $error++;
+		            setEventMessage($langs->trans('ErrorFieldRequired',$langs->transnoentitiesnoconv("Warehouse")), 'errors');
+		            $action='';
+		        }
+		    }
+	
+		    if (! $error)
+		    {
+		        $result	= $object->approve($user, $idwarehouse, ($action=='confirm_approve2'?1:0));
+		        if ($result > 0)
+		        {
+		            if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
+		                $outputlangs = $langs;
+		                $newlang = '';
+		                if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id')) $newlang = GETPOST('lang_id','alpha');
+		                if ($conf->global->MAIN_MULTILANGS && empty($newlang))	$newlang = $object->thirdparty->default_lang;
+		                if (! empty($newlang)) {
+		                    $outputlangs = new Translate("", $conf);
+		                    $outputlangs->setDefaultLang($newlang);
+		                }
+			            $object->generateDocument($object->modelpdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
+		            }
+		            header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
+		            exit;
+		        }
+		        else
+				{
+		            setEventMessages($object->error, $object->errors, 'errors');
+		        }
+		    }
 
-	    if (! $error)
-	    {
-	        $result	= $object->approve($user, $idwarehouse, ($action=='confirm_approve2'?1:0));
-	        if ($result > 0)
-	        {
-	            if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
-	                $outputlangs = $langs;
-	                $newlang = '';
-	                if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id')) $newlang = GETPOST('lang_id','alpha');
-	                if ($conf->global->MAIN_MULTILANGS && empty($newlang))	$newlang = $object->thirdparty->default_lang;
-	                if (! empty($newlang)) {
-	                    $outputlangs = new Translate("", $conf);
-	                    $outputlangs->setDefaultLang($newlang);
-	                }
-		            $object->generateDocument($object->modelpdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
-	            }
-	            header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
-	            exit;
-	        }
-	        else
-			{
-	            setEventMessages($object->error, $object->errors, 'errors');
-	        }
-	    }
+		}
 	}
 
 	if ($action == 'confirm_refuse' &&	$confirm == 'yes' && $user->rights->fournisseur->commande->approuver)
@@ -2839,7 +2853,7 @@ elseif (! empty($object->id))
 				}
 
 				// Send
-				if (in_array($object->statut, array(2, 3, 4, 5)))
+				if (in_array($object->statut, array(3)))
 				{
 					if ($user->rights->fournisseur->commande->commander)
 					{
