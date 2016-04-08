@@ -46,6 +46,6 @@ DescNbDaysToDelivery=Le plus gros délai de livraison parmi les produits de cett
 UseDoubleApproval=Utilisez la double approbation lors que le montant (hors taxes) est supérieur à (La deuxième approbation pourra être fait par un utilisateur avec la permission dédiée. Réglez à 0 pour ne pas avoir de double approbation)
 SupplierReputation=Réputation du fournisseur
 DoNotOrderThisProductToThisSupplier=A éviter
-NotTheGoodQualitySupplier=Pas la bonne qualité
+NotTheGoodQualitySupplier=Qualité moyenne
 ReputationForThisProduct=Réputation
 FavoriteSupplier=Préféré
