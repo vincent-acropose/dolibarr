@@ -100,7 +100,7 @@ class pdf_crabe extends ModelePDFFactures
 		$this->option_logo = 1;                    // Affiche logo
 		$this->option_tva = 1;                     // Gere option tva FACTURE_TVAOPTION
 		$this->option_modereg = 1;                 // Affiche mode reglement
-		$this->option_condreg = 1;                 // Affiche conditions reglement
+			$this->option_condreg = 1;                 // Affiche conditions reglement
 		$this->option_codeproduitservice = 1;      // Affiche code produit-service
 		$this->option_multilang = 1;               // Dispo en plusieurs langues
 		$this->option_escompte = 1;                // Affiche si il y a eu escompte
@@ -126,8 +126,8 @@ class pdf_crabe extends ModelePDFFactures
 		else
 		{
 			$this->posxtva=112;
-			$this->posxup=126;
-			$this->posxqty=145;
+			$this->posxup=124;
+			$this->posxqty=148;
 		}
 		$this->posxdiscount=162;
 		$this->posxprogress=174; // Only displayed for situation invoices
