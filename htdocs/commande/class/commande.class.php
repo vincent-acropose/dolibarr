@@ -883,6 +883,9 @@ class Commande extends CommonOrder
         // Load source object
         $objFrom = dol_clone($this);
 
+		// Dans notre cas, on veut systématiquement supprimer le projet lié lors d'un clonage de commande
+		$this->fk_project = '';
+
         // Change socid if needed
         if (! empty($socid) && $socid != $this->socid)
         {
