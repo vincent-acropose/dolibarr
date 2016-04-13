@@ -408,7 +408,7 @@ class pdf_agrume extends ModelePDFFactures
 						}
 					}
 			
-					$top = $tab_top;
+					$top = $tab_top += 5;
 					$pdf->writeHTMLCell(190, 3, $this->posxdesc-1, $tab_top, $langs->trans('PDFAgrumeSituationInvoiceTitle'), 0, 1);
 					
 					$pdf->SetFont('','', $default_font_size - 2);
