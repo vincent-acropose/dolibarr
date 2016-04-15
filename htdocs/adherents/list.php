@@ -51,6 +51,7 @@ $sall=GETPOST("sall");
 
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
+
 $page = GETPOST("page",'int');
 if ($page == -1) { $page = 0; }
 $offset = $conf->liste_limit * $page ;
@@ -209,7 +210,7 @@ if ($resql)
 	print "<table class=\"noborder\" width=\"100%\">";
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"d.rowid",$param,"","",$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Name")." / ".$langs->trans("Company"),$_SERVER["PHP_SELF"],"d.lastname",$param,"","",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Name")." / ".$langs->trans("Company"),$_SERVER["PHP_SELF"],"d.societe",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Login"),$_SERVER["PHP_SELF"],"d.login",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Type"),$_SERVER["PHP_SELF"],"t.libelle",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Person"),$_SERVER["PHP_SELF"],"d.morphy",$param,"","",$sortfield,$sortorder);
@@ -265,7 +266,6 @@ if ($resql)
 	while ($i < $num && $i < $conf->liste_limit)
 	{
 		$objp = $db->fetch_object($resql);
-
 		$datefin=$db->jdate($objp->datefin);
 		$memberstatic->id=$objp->rowid;
 		$memberstatic->ref=$objp->rowid;
