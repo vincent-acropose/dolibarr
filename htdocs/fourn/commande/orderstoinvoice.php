@@ -291,8 +291,8 @@ if ($action == 'create' && empty($mesgs)) {
 	if ($socid)
 		$res = $soc->fetch($socid);
 	if ($res) {
-		$cond_reglement_id = $soc->cond_reglement_id;
-		$mode_reglement_id = $soc->mode_reglement_id;
+		$cond_reglement_id = $soc->cond_reglement_supplier_id;
+		$mode_reglement_id = $soc->mode_reglement_supplier_id;
 	}
 	$dateinvoice = empty($conf->global->MAIN_AUTOFILL_DATE) ? - 1 : '';
 
