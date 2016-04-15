@@ -1274,7 +1274,7 @@ class pdf_crabe_proforma extends ModelePDFFactures
 			$pdf->MultiCell(100, 4, $outputlangs->convToOutputCharset($text), 0, 'L');
 		}
 		
-		$object->type == 4;
+		$object->type = 4;
 		
 		$pdf->SetFont('','B', $default_font_size + 3);
 		$pdf->SetXY($posx,$posy);
