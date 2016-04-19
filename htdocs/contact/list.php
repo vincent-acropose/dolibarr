@@ -151,7 +151,7 @@ $sql.= ' WHERE p.entity IN ('.getEntity('societe', 1).')';
 if ((!$user->rights->societe->contact->lire && !$socid) || $search_sale) $sql.= " AND p.rowid = ssr.fk_socpeople";
 // Filter on typent
 if(!empty($search_typent_id)){
-	$sql.= "AND s.fk_typent=".$search_typent_id;
+	$sql.= " AND s.fk_typent=".$search_typent_id;
 }
 if (!$user->rights->societe->client->voir && !$socid) //restriction
 {
