@@ -252,7 +252,7 @@ class pdf_crabe extends ModelePDFFactures
 
 				// Set nblignes with the new facture lines content after hook
 				$nblignes = count($object->lines);
-				
+
 				// Create pdf instance
 				$pdf=pdf_getInstance($this->format);
                 $default_font_size = pdf_getPDFFontSize($outputlangs);	// Must be after pdf_getInstance
@@ -1380,7 +1380,7 @@ class pdf_crabe extends ModelePDFFactures
 					'C');
 			}
 		}
-		
+
 		$pdf->line($this->posxdiscount-1, $tab_top, $this->posxdiscount-1, $tab_top + $tab_height);
 		if (empty($hidetop))
 		{
@@ -1395,7 +1395,7 @@ class pdf_crabe extends ModelePDFFactures
 				$pdf->MultiCell($this->postotalht-$this->posxdiscount+1,2, $outputlangs->transnoentities("ReductionShort"),'','C');
 			}
 		}
-		
+
 		if($this->situationinvoice) {
 			$pdf->line($this->posxprogress - 5, $tab_top, $this->posxprogress - 5, $tab_top + $tab_height);
 			if (empty($hidetop)) {
@@ -1404,7 +1404,7 @@ class pdf_crabe extends ModelePDFFactures
 					'C');
 			}
 		}
-		
+
 		if ($this->atleastonediscount)
 		{
 			$pdf->line($this->postotalht, $tab_top, $this->postotalht, $tab_top + $tab_height);
