@@ -1,0 +1,45 @@
+# Dolibarr language file - es_ES - CustomTabs
+CHARSET=UTF-8
+NewCustomtabs=Nueva solapa personalizada
+CustomTabsList=Listado de solapas personalizadas
+TabsCard=Solapas
+TabsFields=Campos
+TabsTemplate=Plantillas
+CalcFields=Campos calculados
+TabsButton=Botón de la solapa
+ModeCustomTabs=Tipo de solapa
+CustomTabsSettingRight=Control de acceso a la solapa
+NewTabs=Nueva solapa
+UserGroupTabsRight=Control de acceso
+ImportCustomTabs=Importar solapa
+ImportExportTabs=Parámetros de Importacion / Exportación
+ActiveStatut=Solapa activa
+DeleteTabs=Eliminar solapa
+NoGEDInListMode=EDM no disponible en modo lista
+RestrictedCustomTabs=Acceso denegado
+EnabledRead=Acceso lectura
+DisabledRead=Acceso bloqueado
+EnabledWrite=Modificar acceso
+DisabledWrite=Modificar bloqueo
+EnabledAdd=Añadir acceso
+DisabledAdd=Añadir bloqueo
+EnabledDelete=Eliminar acceso
+DisabledDelete=Eliminar bloqueo
+AddLine=Nuevo registro
+TabsFieldsView=Visualizar campos de la solapa
+NoParentDefined=No parent
+SettingIsOnToolsMenu=Se puede acceder a la configuración desde el menú de Dolibarr
+AccessOnToolsMenu=Las "Herramientas" de Dolibarr deben estar activas
+CustomtabsSetup=Configuración de la solapas personalizadas
+###
+TableName=Nombre de la tabla
+Element=Elementos relacionados
+FichierGED=EDM en la solapa
+DefineHereCustomTabsAttributes=Defina aquí los campos de la solapa
+DefineHereCustomTabsTemplate=Defina aquí la plantilla de la solapa
+DefineHereCustomTabsButton=Defina aquí la solicitud SQL
+SomeHelpfullinfoAboutTemplate=Define here the display of the card/list using HTML format.e.g. field in tab : <b>"test"</b> enter :<br>    - <b>"#LABEL-test#"</b> toe ner the field title<br>- <b>"#FIELD-test#"</b> to place the text zone
+## ADMIN INFOS
+PatasMonkeyPresent= Este módulo ha sido creado por patas-monkey
+MoreModulesLink=Todos nuestros módulos estan disponibles en Dolistore
+PatasTools=Patas-M Tools

@@ -1,0 +1,61 @@
+3.5.+1.3.2
+	- correct some bug event
+	- add QRCode Feature (thanks grandoc)
+
+3.5.+1.3.3
+	- new index on ref equipement including fournish ID
+	- adding associated element hability (join with customlink)
+
+3.5.+1.3.6
+	- fix intervention error dropdown
+	- enhance expedition choice (lot managment)
+
+3.6.+1.4.0
+	- factory feature
+	- add equipement event link to project
+	- add admin tabs 'about' with changelog feature
+
+3.6+1.4.1
+	- fix transfert serial to bill error
+	- add extrafields on equipement event
+	- fix extrafields error on equipement ($value instead $Value... stupid)
+
+3.6+1.4.2
+	- add : display description of product (jquery trick)
+	- fix : sending document error with note_public empty
+
+3.6.+1.4.3
+	- fix : document delete wrong, using template now
+	- fix : export query error (left a . )
+	- fix : admin setting error
+	
+3.6.+1.4.4
+	- fix : better access right management
+	- add : display description of product (jquery trick)
+	
+3.7.+1.5.0
+	- fix : better line management for sending document 
+	- fix : Extrafields compatibility
+	- add : myField compatibility
+	- chg : equipement event in a dedicaced tabs 
+	- fix : no update event button if fichintet not enabled
+	
+3.7.+1.5.1
+	- fix : delete equipment errors
+	- fix : access of details button after create
+	- fix : after cut equipement no button 
+	
+3.7.+1.5.2
+	- Chg : Admin Changelog new tabs
+	- Add : AddEvents on multiple Equipment
+	- Add : Export of csv List of Equipment
+	- Add : mass update Warehouse and condition of equipment
+	
+3.7.+1.5.3
+	- Add : import serial use carriage return as __N__ and tabs as __B__
+	- fix : bad fields (facnumber instead ref in facture_fourn) on list 
+
+3.7.+1.6.0
+	- fix : some little bug on list
+	- Add : number of event in badge on tabs
+	- fix : postgres sql compatibility correction

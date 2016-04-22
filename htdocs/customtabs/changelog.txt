@@ -1,0 +1,59 @@
+3.5.+1.0.1 
+	fix : setting right on project goes wrong ($user var left)
+	fix : Extrafields contraint error not returned on update/insert
+	add : customtabs list is by default ordered with the first fields
+	fix : bad adherent class
+	fix : next/prev on tab better managed
+	add : customTabs on invoice
+
+3.5.+1.0.2
+	add : dictionnary feature
+	add : factory link
+	add : stock link
+
+3.6.+1.1.0
+	add : new commun top menu with other patas-tools
+
+3.6.+1.1.1
+	add : ODT feature; get customtabs value on ODT (for card tabs)
+	add : customTabs Feature on proposal
+
+3.6.+1.1.2
+	fix : sending tabs error
+	add : customTabs on order and supplier order
+	add : ODT feature; get customtabs value on ODT (for list tabs)
+	add : add many line on list in the same time
+
+3.6+1.1.3
+	fix : file deletion on ged bad formated
+
+3.6+1.1.4
+	fix : custom folder compatibility
+	fix : error on contract and intervention
+
+3.6+1.1.5
+	add : customTabs Feature on bank elements
+	
+3.7+1.2.0
+	fix : extrafields compatibility calls
+	chg : edit line mean update instead of delete/insert
+	chg : 3.7 compatibility 
+	chg : 3.7 name of file standardisation
+
+3.7.+1.2.1
+	add : salaries, tax and charges Tabs for customTabs feature
+	fix : Date format error on add line (wrong typing in multiline management)
+
+3.7.+1.2.2
+	fix : buttons on end of list not appear after  add delete or update
+
+3.7.+1.2.3
+	add : Agefodd compatibility
+	fix : delete customtabs not good
+	fix : xml import Error
+
+3.8.+1.3.0
+	chg : 3.8 comptability (extrafields template)
+	change : card.php separate on list.php and card.php
+	add : filter on customTabs list (element, type and statut)
+	add : allow add tabs on module present on custom folders
