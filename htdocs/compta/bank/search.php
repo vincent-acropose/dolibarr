@@ -59,6 +59,7 @@ if (!empty($debit)) $param.='&debit='.$debit;
 if (!empty($credit)) $param.='&credit='.$credit;
 if (!empty($account)) $param.='&account='.$account;
 if (!empty($bid))  $param.='&bid='.$bid;
+if (!empty($req_userid)) $param.='&userid='.$req_userid;
 if (dol_strlen($search_dt_start) > 0)
 	$param .= '&search_start_dtmonth=' . GETPOST('search_start_dtmonth', 'int') . '&search_start_dtday=' . GETPOST('search_start_dtday', 'int') . '&search_start_dtyear=' . GETPOST('search_start_dtyear', 'int');
 if (dol_strlen($search_dt_end) > 0)
@@ -83,6 +84,7 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
 	$credit="";
 	$account="";
 	$bid="";
+	$req_userid="";
 }
 
 /*
@@ -100,7 +102,9 @@ $formother = new FormOther($db);
 if ($vline) $viewline = $vline;
 else $viewline = 50;
 
-$sql = "SELECT fac.fk_user_author as id_user_fac, fac_fourn.fk_user_author as id_user_fac_fourn, b.rowid, b.dateo as do, b.datev as dv, b.amount, b.label, b.rappro, b.num_releve, b.num_chq,";
+//$sql = "SELECT fac.fk_user_author as id_user_fac, fac_fourn.fk_user_author as id_user_fac_fourn, b.rowid, b.dateo as do, b.datev as dv, b.amount, b.label, b.rappro, b.num_releve, b.num_chq,";
+// Finalement, on veut filtrer sur le user qui a enregistrer le règlement
+$sql = "SELECT b.fk_user_author as id_user_reglement, b.rowid, b.dateo as do, b.datev as dv, b.amount, b.label, b.rappro, b.num_releve, b.num_chq,";
 $sql.= " b.fk_account, b.fk_type,";
 $sql.= " ba.rowid as bankid, ba.ref as bankref,";
 $sql.= " bu.label as labelurl, bu.url_id";
@@ -110,6 +114,7 @@ $sql.= " ".MAIN_DB_PREFIX."bank_account as ba,";
 $sql.= " ".MAIN_DB_PREFIX."bank as b";
 
 
+/*
 // Jointures sur table facture client
 $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'paiement pay ON (b.rowid = pay.fk_bank)';
 $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'paiement_facture pay_f ON (pay.rowid = pay_f.fk_paiement)';
@@ -119,6 +124,7 @@ $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'facture fac ON (pay_f.fk_facture = fac.rowi
 $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'paiementfourn pay_fourn ON (b.rowid = pay_fourn.fk_bank)';
 $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'paiementfourn_facturefourn pay_fourn_f ON (pay_fourn.rowid = pay_fourn_f.fk_paiementfourn)';
 $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'facture_fourn fac_fourn ON (pay_fourn_f.fk_facturefourn = fac_fourn.rowid)';
+*/
 
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."bank_url as bu ON bu.fk_bank = b.rowid AND bu.type = 'company'";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON bu.url_id = s.rowid";
@@ -150,7 +156,7 @@ if (dol_strlen($search_dt_end)>0) {
 	$sql .= " AND b.dateo <= '" . $db->idate($search_dt_end) . "'";
 }
 
-if($req_userid > 0) $sql.= " AND (fac.fk_user_author = ".$req_userid." OR fac_fourn.fk_user_author = ".$req_userid.")";
+if($req_userid > 0) $sql.= " AND (b.fk_user_author = ".$req_userid.")";
 
 // Search criteria amount
 $si=0;
@@ -297,9 +303,9 @@ if ($resql)
 	        print "</td>\n";
 
 			print '<td>';
-			if(!empty($objp->id_user_fac) || !empty($objp->id_user_fac_fourn)) {
-				$u->fetch($objp->id_user_fac);
-				if($u->id <= 0) $u->fetch($objp->id_user_fac_fourn);
+			if(!empty($objp->id_user_reglement)) {
+				$u->fetch($objp->id_user_reglement);
+				if($u->id <= 0) $u->fetch($objp->id_user_reglement);
 				print $u->getNomUrl(1);
 			}
 			print '</td>';
