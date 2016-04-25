@@ -518,7 +518,8 @@ foreach ($listofreferent as $key => $value)
 
         	if (empty($conf->global->PROJECT_LINK_DISABLE)) 
         	{
-        		if ($key != 'invoice_element')$selectList=$formproject->select_element($tablename, $idtofilterthirdparty, 'minwidth200');
+        		if ($key == 'invoice_element')$selectList=-1;
+				else $selectList=$formproject->select_element($tablename, $idtofilterthirdparty, 'minwidth200');
 				if (! $selectList || ($selectList<0))
 				{
 					setEventMessages($formproject->error,$formproject->errors,'errors');
