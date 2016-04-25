@@ -76,6 +76,7 @@ ListInvoicesAssociatedProjectElement=Liste des factures clients associées au pr
 ListPredefinedInvoicesAssociatedProject=Liste des factures clients prédéfinies associées au projet
 ListSupplierOrdersAssociatedProject=Liste des commandes fournisseurs associées au projet
 ListSupplierInvoicesAssociatedProject=Liste des factures fournisseurs associées au projet
+ListSupplierInvoicesAssociatedProjectElement=Liste des factures fournisseurs associées au projet via Related
 ListContractAssociatedProject=Liste des contrats associés au projet
 ListFichinterAssociatedProject=Liste des interventions associées au projet
 ListExpenseReportsAssociatedProject=Liste des notes de frais associées avec ce projet

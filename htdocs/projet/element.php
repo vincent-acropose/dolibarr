@@ -235,6 +235,14 @@ $listofreferent=array(
 	'table'=>'facture_fourn',
 	'datefieldname'=>'datef',
 	'test'=>$conf->fournisseur->enabled && $user->rights->fournisseur->facture->lire),
+'invoice_supplier_element'=>array(
+	'name'=>"BillsSuppliers",
+	'title'=>"ListSupplierInvoicesAssociatedProjectElement",
+	'class'=>'FactureFournisseur',
+	'margin'=>'minus',
+	'table'=>'element_element',
+	'datefieldname'=>'datef',
+	'test'=>$conf->fournisseur->enabled && $user->rights->fournisseur->facture->lire),
 'contract'=>array(
 	'name'=>"Contracts",
 	'title'=>"ListContractAssociatedProject",
@@ -518,7 +526,7 @@ foreach ($listofreferent as $key => $value)
 
         	if (empty($conf->global->PROJECT_LINK_DISABLE)) 
         	{
-        		if ($key == 'invoice_element')$selectList=-1;
+        		if ($key == 'invoice_element' || $key=='invoice_supplier_element')$selectList=-1;
 				else $selectList=$formproject->select_element($tablename, $idtofilterthirdparty, 'minwidth200');
 				if (! $selectList || ($selectList<0))
 				{
@@ -640,7 +648,7 @@ foreach ($listofreferent as $key => $value)
 				print '<td style="width: 24px">';
 				if ($tablename != 'projet_task')
 				{
-					if ($key != 'invoice_element')print '<a href="' . $_SERVER["PHP_SELF"] . '?id=' . $projectid . '&action=unlink&tablename=' . $tablename . '&elementselect=' . $element->id . '">' . img_picto($langs->trans('Unlink'), 'editdelete') . '</a>';
+					if ($key != 'invoice_element' && $key != 'invoice_supplier_element')print '<a href="' . $_SERVER["PHP_SELF"] . '?id=' . $projectid . '&action=unlink&tablename=' . $tablename . '&elementselect=' . $element->id . '">' . img_picto($langs->trans('Unlink'), 'editdelete') . '</a>';
 				}
 				print "</td>\n";
 				// Ref

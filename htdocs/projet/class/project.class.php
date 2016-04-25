@@ -481,6 +481,13 @@ class Project extends CommonObject
 			$sql.= " INNER JOIN ".MAIN_DB_PREFIX."projet p ON el.fk_target=p.rowid";
 			$sql.= " WHERE el.sourcetype='facture' AND el.targettype='project' AND p.rowid=".$this->id;
 		}
+		elseif ($type == 'invoice_supplier_element')
+		{
+			$sql = "SELECT f.rowid FROM ".MAIN_DB_PREFIX."facture_fourn f";
+			$sql.= " INNER JOIN ".MAIN_DB_PREFIX."element_element el ON f.rowid=el.fk_source";
+			$sql.= " INNER JOIN ".MAIN_DB_PREFIX."projet p ON el.fk_target=p.rowid";
+			$sql.= " WHERE el.sourcetype='invoice_supplier' AND el.targettype='project' AND p.rowid=".$this->id;
+		}
         else
 		{
             $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . $tablename." WHERE fk_projet=" . $this->id;
