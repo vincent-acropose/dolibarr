@@ -205,6 +205,14 @@ $listofreferent=array(
 	'table'=>'facture',
 	'datefieldname'=>'datef',
 	'test'=>$conf->facture->enabled && $user->rights->facture->lire),
+'invoice_element'=>array(
+	'name'=>"CustomersInvoicesElement",
+	'title'=>"ListInvoicesAssociatedProjectElement",
+	'class'=>'Facture',
+	'margin'=>'add',
+	'table'=>'element_element',
+	'datefieldname'=>'datef',
+	'test'=>$conf->facture->enabled && $user->rights->facture->lire),	
 'invoice_predefined'=>array(
 	'name'=>"PredefinedInvoices",
 	'title'=>"ListPredefinedInvoicesAssociatedProject",
@@ -368,7 +376,6 @@ foreach ($listofreferent as $key => $value)
 	if ($qualified && isset($margin))		// If this element must be included into profit calculation ($margin is 'minus' or 'plus')
 	{
 		$element = new $classname($db);
-
 		$elementarray = $object->get_element_list($key, $tablename, $datefieldname, $dates, $datee);
 		if (count($elementarray)>0 && is_array($elementarray))
 		{
@@ -511,26 +518,26 @@ foreach ($listofreferent as $key => $value)
 
         	if (empty($conf->global->PROJECT_LINK_DISABLE)) 
         	{
-			$selectList=$formproject->select_element($tablename, $idtofilterthirdparty, 'minwidth200');
-			if (! $selectList || ($selectList<0))
-			{
-				setEventMessages($formproject->error,$formproject->errors,'errors');
+        		if ($key != 'invoice_element')$selectList=$formproject->select_element($tablename, $idtofilterthirdparty, 'minwidth200');
+				if (! $selectList || ($selectList<0))
+				{
+					setEventMessages($formproject->error,$formproject->errors,'errors');
+				}
+				elseif($selectList)
+				{
+					// Define form with the combo list of elements to link
+					$addform.='<form action="'.$_SERVER["PHP_SELF"].'?id='.$projectid.'" method="post">';
+					$addform.='<input type="hidden" name="tablename" value="'.$tablename.'">';
+					$addform.='<input type="hidden" name="action" value="addelement">';
+					$addform.='<input type="hidden" name="datesrfc" value="'.dol_print_date($dates,'dayhourrfc').'">';
+					$addform.='<input type="hidden" name="dateerfc" value="'.dol_print_date($datee,'dayhourrfc').'">';
+					$addform.='<table><tr><td>'.$langs->trans("SelectElement").'</td>';
+					$addform.='<td>'.$selectList.'</td>';
+					$addform.='<td><input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans("AddElement")).'"></td>';
+					$addform.='</tr></table>';
+					$addform.='</form>';
+				}
 			}
-			elseif($selectList)
-			{
-				// Define form with the combo list of elements to link
-				$addform.='<form action="'.$_SERVER["PHP_SELF"].'?id='.$projectid.'" method="post">';
-				$addform.='<input type="hidden" name="tablename" value="'.$tablename.'">';
-				$addform.='<input type="hidden" name="action" value="addelement">';
-				$addform.='<input type="hidden" name="datesrfc" value="'.dol_print_date($dates,'dayhourrfc').'">';
-				$addform.='<input type="hidden" name="dateerfc" value="'.dol_print_date($datee,'dayhourrfc').'">';
-				$addform.='<table><tr><td>'.$langs->trans("SelectElement").'</td>';
-				$addform.='<td>'.$selectList.'</td>';
-				$addform.='<td><input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans("AddElement")).'"></td>';
-				$addform.='</tr></table>';
-				$addform.='</form>';
-			}
-		}
 
 		print_fiche_titre($langs->trans($title), $addform, '');
 
@@ -632,7 +639,7 @@ foreach ($listofreferent as $key => $value)
 				print '<td style="width: 24px">';
 				if ($tablename != 'projet_task')
 				{
-					print '<a href="' . $_SERVER["PHP_SELF"] . '?id=' . $projectid . '&action=unlink&tablename=' . $tablename . '&elementselect=' . $element->id . '">' . img_picto($langs->trans('Unlink'), 'editdelete') . '</a>';
+					if ($key != 'invoice_element')print '<a href="' . $_SERVER["PHP_SELF"] . '?id=' . $projectid . '&action=unlink&tablename=' . $tablename . '&elementselect=' . $element->id . '">' . img_picto($langs->trans('Unlink'), 'editdelete') . '</a>';
 				}
 				print "</td>\n";
 				// Ref

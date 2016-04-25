@@ -474,6 +474,13 @@ class Project extends CommonObject
 		{
 			$sql = "SELECT DISTINCT pt.rowid, ptt.fk_user FROM " . MAIN_DB_PREFIX . "projet_task as pt, " . MAIN_DB_PREFIX . "projet_task_time as ptt WHERE pt.rowid = ptt.fk_task AND pt.fk_projet=" . $this->id;
 		}
+		elseif ($type == 'invoice_element')
+		{
+			$sql = "SELECT f.rowid FROM ".MAIN_DB_PREFIX."facture f";
+			$sql.= " INNER JOIN ".MAIN_DB_PREFIX."element_element el ON f.rowid=el.fk_source";
+			$sql.= " INNER JOIN ".MAIN_DB_PREFIX."projet p ON el.fk_target=p.rowid";
+			$sql.= " WHERE el.sourcetype='facture' AND el.targettype='project' AND p.rowid=".$this->id;
+		}
         else
 		{
             $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . $tablename." WHERE fk_projet=" . $this->id;
@@ -491,6 +498,7 @@ class Project extends CommonObject
 			if (empty($datefieldname)) return 'Error this object has no date field defined';
 			$sql.=" AND (".$datefieldname." <= '".$this->db->idate($datee)."' OR ".$datefieldname." IS NULL)";
 		}
+		//var_dump($sql);
 		if (! $sql) return -1;
 
         //print $sql;

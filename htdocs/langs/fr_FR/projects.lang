@@ -72,6 +72,7 @@ Time=Temps
 ListProposalsAssociatedProject=Liste des propositions commerciales associées au projet
 ListOrdersAssociatedProject=Liste des commandes clients associées au projet
 ListInvoicesAssociatedProject=Liste des factures clients associées au projet
+ListInvoicesAssociatedProjectElement=Liste des factures clients associées au projet via Related
 ListPredefinedInvoicesAssociatedProject=Liste des factures clients prédéfinies associées au projet
 ListSupplierOrdersAssociatedProject=Liste des commandes fournisseurs associées au projet
 ListSupplierInvoicesAssociatedProject=Liste des factures fournisseurs associées au projet
