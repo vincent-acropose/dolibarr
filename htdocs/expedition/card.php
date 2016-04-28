@@ -1193,14 +1193,15 @@ else if ($id || $ref)
 		}
 		else
 		{
+			print $object->trueWeight;
 			print ($object->trueWeight && $object->weight_units!='')?' '.measuring_units_string($object->weight_units,"weight"):'';
 		}
 
 		if ($totalWeight > 0)
 		{
-			if (!empty($object->trueWeight)) print ' ('.$langs->trans("SumOfProductWeights").': ';
+			if (!empty($totalWeight)) print ' ('.$langs->trans("SumOfProductWeights").': ';
 			print $totalWeight.' '.measuring_units_string(0,"weight");
-			if (!empty($object->trueWeight)) print ')';
+			if (!empty($totalWeight)) print ')';
 		}
 		print '</td></tr>';
 
