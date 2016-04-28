@@ -318,7 +318,7 @@ PaymentConditionPT_DELIVERY=Règlement à la livraison
 PaymentConditionShortPT_ORDER=A commande
 PaymentConditionPT_ORDER=À réception de commande
 PaymentConditionShortPT_5050=50/50
-PaymentConditionPT_5050=Règlement 50%% d'avance, 50%% à la livraison
+PaymentConditionPT_5050=Règlement 50%% à la commande, 50%% à la livraison
 FixAmount=Montant Fixe
 VarAmount=Montant variable (%% tot.)
 # PaymentType
