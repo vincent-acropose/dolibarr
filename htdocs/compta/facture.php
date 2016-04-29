@@ -755,10 +755,17 @@ if (empty($reshook))
 	                $facture_source = new Facture($db); // fetch origin object
 	                if ($facture_source->fetch($object->fk_facture_source)>0)
 	                {
+	                	$fk_parent_line = 0;
 
 	                    foreach($facture_source->lines as $line)
 	                    {
+	                    	// Reset fk_parent_line for no child products and special product
+	                    	if (($line->product_type != 9 && empty($line->fk_parent_line)) || $line->product_type == 9) {
+	                    		$fk_parent_line = 0;
+	                    	}
+
 	                        $line->fk_facture = $object->id;
+	                        $line->fk_parent_line = $fk_parent_line;
 
 	                        $line->subprice =-$line->subprice; // invert price for object
 	                        $line->pa_ht = -$line->pa_ht;
@@ -768,9 +775,14 @@ if (empty($reshook))
 	                        $line->total_localtax1=-$line->total_localtax1;
 	                        $line->total_localtax2=-$line->total_localtax2;
 
-	                        $line->insert();
+	                        $result = $line->insert();
 
 	                        $object->lines[] = $line; // insert new line in current object
+
+	                        // Defined the new fk_parent_line
+	                        if ($result > 0 && $line->product_type == 9) {
+	                        	$fk_parent_line = $result;
+	                        }
 	                    }
 
 	                    $object->update_price(1);
@@ -1316,8 +1328,8 @@ if (empty($reshook))
 						$pu_ttc = $prod->multiprices_ttc[$object->thirdparty->price_level];
 						$price_min = $prod->multiprices_min[$object->thirdparty->price_level];
 						$price_base_type = $prod->multiprices_base_type[$object->thirdparty->price_level];
-						if (isset($prod->multiprices_tva_tx[$object->thirdparty->price_level])) $tva_tx=$prod->multiprices_tva_tx[$object->thirdparty->price_level];
-						if (isset($prod->multiprices_recuperableonly[$object->thirdparty->price_level])) $tva_npr=$prod->multiprices_recuperableonly[$object->thirdparty->price_level];
+						if (isset($prod->multiprices_tva_tx[$object->thirdparty->price_level]) && $tva_tx !=0 ) $tva_tx=$prod->multiprices_tva_tx[$object->thirdparty->price_level];
+						if (isset($prod->multiprices_recuperableonly[$object->thirdparty->price_level]) && $tva_npr !=0 ) $tva_npr=$prod->multiprices_recuperableonly[$object->thirdparty->price_level];
 					}
 					elseif (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 					{
@@ -1907,7 +1919,7 @@ if ($action == 'create')
 			$objectsrc->fetch_thirdparty();
 
 			$projectid = (! empty($projectid) ? $projectid : $objectsrc->fk_project);
-			$ref_client = (! empty($objectsrc->ref_client) ? $objectsrc->ref_client : '');
+			$ref_client = (! empty($objectsrc->ref_client) ? $objectsrc->ref_client : (! empty($objectsrc->ref_customer) ? $objectsrc->ref_customer:''));
 			$ref_int = (! empty($objectsrc->ref_int) ? $objectsrc->ref_int : '');
 
 			// only if socid not filled else it's allready done upper
@@ -3658,7 +3670,7 @@ else if ($id > 0 || ! empty($ref))
 
 				if ($resteapayer == $object->total_ttc && empty($object->paye) && $ventilExportCompta == 0) 
 				{
-					if (! $objectidnext) 
+					if (! $objectidnext && $object->is_last_in_cycle())
 					{
 					    if ((empty($conf->global->MAIN_USE_ADVANCED_PERMS) && ! empty($user->rights->facture->creer))
        						|| (! empty($conf->global->MAIN_USE_ADVANCED_PERMS) && ! empty($user->rights->facture->invoice_advance->unvalidate)))
