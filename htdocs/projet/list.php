@@ -128,7 +128,7 @@ llxHeader("",$langs->trans("Projects"),"EN:Module_Projects|FR:Module_Projets|ES:
 $projectsListId = $projectstatic->getProjectsAuthorizedForUser($user,($mine?$mine:($user->rights->projet->all->lire?2:0)),1,$socid);
 
 $sql = "SELECT p.rowid as projectid, p.ref, p.title, p.fk_statut, p.fk_opp_status, p.public, p.fk_user_creat";
-$sql.= ", p.datec as date_create, p.dateo as date_start, p.datee as date_end, p.opp_amount,p.entity,pex.avance as avancee";
+$sql.= ", p.datec as date_create, p.dateo as date_start, p.datee as date_end,p.budget_amount ,p.opp_amount,p.entity,pex.avance as avancee";
 $sql.= ", s.nom as name, s.rowid as socid";
 $sql.= ", cls.code as opp_status_code";
 // Add fields for extrafields
@@ -293,6 +293,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans("SalesRepresentative"),$_SERVER["PHP_SELF"],"","",$param,"",$sortfield,$sortorder);
 	if (empty($conf->global->PROJECT_LIST_HIDE_STARTDATE)) print_liste_field_titre($langs->trans("DateStart"),$_SERVER["PHP_SELF"],"p.dateo","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateEnd"),$_SERVER["PHP_SELF"],"p.datee","",$param,'align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Budget"),$_SERVER["PHP_SELF"],"p.budget_amount","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Entity"),$_SERVER["PHP_SELF"],"p.entity","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Avancée"),$_SERVER["PHP_SELF"],"pex.avancee","",$param,'align="center"',$sortfield,$sortorder);
 	//print_liste_field_titre($langs->trans("Visibility"),$_SERVER["PHP_SELF"],"p.public","",$param,"",$sortfield,$sortorder);
@@ -336,7 +337,7 @@ if ($resql)
 	$formother->select_year($year?$year:-1,'year',1, 20, 5);
 	print '</td>';
 
-	print '<td class="liste_titre">';
+	print '<td class="liste_titre"></td><td class="liste_titre">';
 	//$mc->getInstanceDao();
 	$mc->dao->getEntities();
 	$TEntity=array(''=>'');
@@ -474,8 +475,10 @@ if ($resql)
     		/*print '<td align="left">';
     		if ($objp->public) print $langs->trans('SharedProject');
     		else print $langs->trans('PrivateProject');
-    		print '</td>';
-			*/
+    		print '</td>';*/
+		print '<td align="right">';
+		print price($objp->budget_amount);
+		print '</td>';
 
 			print '<td align="left">';
     		echo empty($TEntity[$objp->entity])? '' : $TEntity[$objp->entity];
