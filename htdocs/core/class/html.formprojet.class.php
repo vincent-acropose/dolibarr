@@ -130,13 +130,13 @@ class FormProjets
 		$sql.= " WHERE p.entity IN (".getEntity('project', 1).")";
 		if ($projectsListId !== false) $sql.= " AND p.rowid IN (".$projectsListId.")";
 		if ($socid == 0) $sql.= " AND (p.fk_soc=0 OR p.fk_soc IS NULL)";
-		if ($socid > 0)  $sql.= " AND (p.fk_soc=".$socid." OR p.fk_soc IS NULL)";
+		//if ($socid > 0)  $sql.= " AND (p.fk_soc=".$socid." OR p.fk_soc IS NULL)";
 		if (!empty($filterkey)) {
 			$sql .= ' AND p.title LIKE "%'.$this->db->escape($filterkey).'%"';
 			$sql .= ' OR p.ref LIKE "%'.$this->db->escape($filterkey).'%"';
 		}
 		$sql.= " ORDER BY p.ref ASC";
-
+//print $sql;
 		dol_syslog(__METHOD__, LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
@@ -198,7 +198,7 @@ class FormProjets
 						}
 						else if ($socid > 0 && (! empty($obj->fk_soc) && $obj->fk_soc != $socid))
 						{
-							$disabled=1;
+						//	$disabled=1;
 							$labeltoshow.=' - '.$langs->trans("LinkedToAnotherCompany");
 						}
 
