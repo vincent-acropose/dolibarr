@@ -1486,8 +1486,8 @@ class Form
 
         if (! empty($conf->stock->enabled) && isset($objp->stock) && $objp->fk_product_type == 0)
         {
-            $opt.= ' - '.$langs->trans("Stock").':'.$objp->stock;
-            $outval.=' - '.$langs->transnoentities("Stock").':'.$objp->stock;
+            $opt.= ' - '.$langs->trans("Stock").':'.price2num($objp->stock);
+            $outval.=' - '.$langs->transnoentities("Stock").':'.price2num($objp->stock);
         }
 
         if ($objp->duration)
