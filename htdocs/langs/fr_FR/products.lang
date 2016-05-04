@@ -298,3 +298,5 @@ IncludingProductWithTag=Incluant un produit ayant le tag/catégorie
 DefaultPriceRealPriceMayDependOnCustomer=Prix ​​par défaut, le prix réel peut dépendre du client
 WarningSelectOneDocument=Sélectionnez au moins un document
 DefaultUnitToShow=Unité
+DeleteProductBuyPrice=Supprimer prix d'achat
+ConfirmDeleteProductBuyPrice=Êtes-vous sûr de vouloir effacer ce prix d'achat ?
