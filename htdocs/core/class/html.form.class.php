@@ -1664,7 +1664,21 @@ class Form
         $outarray=array();
 
         $sql = "SELECT ";
-        $sql.= " p.rowid, p.label, p.ref, p.description, p.fk_product_type, p.price, p.price_ttc, p.price_base_type, p.tva_tx, p.duration, p.stock, p.fk_price_expression";
+		
+		// B2S grosse bouse
+		if(!empty($conf->global->SHIPPABLEORDER_SPECIFIC_WAREHOUSE)) {
+			$sql.= " p.rowid, p.label, p.ref, p.description, p.fk_product_type, p.price, p.price_ttc, p.price_base_type, p.tva_tx, p.duration, 
+			(
+			
+				SELECT SUM(reel) FROM ".MAIN_DB_PREFIX."product_stock WHERE fk_product=p.rowid AND fk_entrepot IN (".$conf->global->SHIPPABLEORDER_SPECIFIC_WAREHOUSE.")
+			
+			) as stock, p.fk_price_expression";
+			
+		}
+		else{
+			$sql.= " p.rowid, p.label, p.ref, p.description, p.fk_product_type, p.price, p.price_ttc, p.price_base_type, p.tva_tx, p.duration, p.stock, p.fk_price_expression";	
+		}
+        
 
         //Price by customer
         if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES) && !empty($socid)) {
