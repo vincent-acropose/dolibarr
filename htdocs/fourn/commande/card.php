@@ -782,6 +782,24 @@ if (empty($reshook))
 	        $date_liv = dol_mktime(GETPOST('rehour'),GETPOST('remin'),GETPOST('resec'),GETPOST("remonth"),GETPOST("reday"),GETPOST("reyear"));
 
 	        $result	= $object->Livraison($user, $date_liv, GETPOST("type"), GETPOST("comment"));
+			
+			// Define output language
+			$outputlangs = $langs;
+			$newlang = '';
+			if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id')) $newlang = GETPOST('lang_id');
+			if ($conf->global->MAIN_MULTILANGS && empty($newlang)) $newlang = $object->thirdparty->default_lang;
+			if (! empty($newlang))
+			{
+				$outputlangs = new Translate("", $conf);
+				$outputlangs->setDefaultLang($newlang);
+			}
+			$result = $object->generateDocument($object->modelpdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
+			if ($result <= 0)
+			{
+				setEventMessages($object->error, $object->errors, 'errors');
+		        $action='';
+			}
+			
 	        if ($result > 0)
 	        {
 	            header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
