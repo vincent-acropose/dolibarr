@@ -205,11 +205,51 @@ class modCategorie extends DolibarrModules
 		$this->export_icon[$r]='category';
         $this->export_enabled[$r]='$conf->adherent->enabled';
 		$this->export_permission[$r]=array(array("categorie","lire"),array("adherent","lire"));
-		$this->export_fields_array[$r]=array('u.rowid'=>"CategId",'u.label'=>"Label",'u.description'=>"Description",'p.rowid'=>'MemberId','s.nom' => "Societe",'p.lastname'=>'LastName','p.firstname'=>'Firstname');
-		$this->export_TypeFields_array[$r]=array('u.label'=>"Text",'u.description'=>"Text",'p.rowid'=>'List:adherent:nom','p.lastname'=>'Text','p.firstname'=>'Text');
-		$this->export_entities_array[$r]=array('p.rowid'=>'member','p.lastname'=>'member','p.firstname'=>'member');	// We define here only fields that use another picto
+		$this->export_fields_array[$r]=array('u.rowid'=>"CategId",'u.label'=>"Label",'u.description'=>"Description",'p.rowid'=>'MemberId','p.lastname'=>'LastName','p.firstname'=>'Firstname','p.address'=>'Address','p.zip'=>'Zip','p.town'=>'Town');
+		$this->export_TypeFields_array[$r]=array('u.label'=>"Text",'u.description'=>"Text",'p.rowid'=>'List:adherent:nom','p.lastname'=>'Text','p.firstname'=>'Text','p.address'=>'Text','p.zip'=>'Text','p.town'=>'Text');
+		$this->export_entities_array[$r]=array('p.rowid'=>'member','p.lastname'=>'member','p.firstname'=>'member','p.address'=>'member','p.zip'=>'member','p.town'=>'member');	// We define here only fields that use another picto
+		
+        // Add extra fields
+        $sql="SELECT name, label, type, param FROM ".MAIN_DB_PREFIX."extrafields WHERE elementtype = 'socpeople'";
+        $resql=$this->db->query($sql);
+        if ($resql)    // This can fail when class is used on old database (during migration for example)
+        {
+        	while ($obj=$this->db->fetch_object($resql))
+        	{
+        		$fieldname='extra.'.$obj->name;
+        		$fieldlabel=ucfirst($obj->label);
+        		$typeFilter="Text";
+        		switch($obj->type)
+        		{
+        			case 'int':
+        			case 'double':
+        			case 'price':
+        				$typeFilter="Numeric";
+        				break;
+        			case 'date':
+        			case 'datetime':
+        				$typeFilter="Date";
+        				break;
+        			case 'boolean':
+        				$typeFilter="Boolean";
+        				break;
+        			case 'sellist':
+        				$typeFilter="List:".$obj->param;
+        				break;
+					case 'select':
+						$typeFilter="Select:".$obj->param;
+						break;
+        		}
+        		$this->export_fields_array[$r][$fieldname]=$fieldlabel;
+        		$this->export_TypeFields_array[$r][$fieldname]=$typeFilter;
+        		$this->export_entities_array[$r][$fieldname]='member';
+        	}
+        }
+        // End add axtra fields
+		
 		$this->export_sql_start[$r]='SELECT DISTINCT ';
-		$this->export_sql_end[$r]  =' FROM '.MAIN_DB_PREFIX.'categorie as u, '.MAIN_DB_PREFIX.'categorie_member as cp, '.MAIN_DB_PREFIX.'adherent as p';
+		$this->export_sql_end[$r]  =' FROM '.MAIN_DB_PREFIX.'categorie as u, '.MAIN_DB_PREFIX.'categorie_member as cp, '.MAIN_DB_PREFIX.'adherent as p
+									  LEFT JOIN '.MAIN_DB_PREFIX.'adherent_extrafields as extra ON (extra.fk_object = p.rowid)';
 		$this->export_sql_end[$r] .=' WHERE u.rowid = cp.fk_categorie AND cp.fk_member = p.rowid';
 		$this->export_sql_end[$r] .=' AND u.entity = '.$conf->entity;
 		$this->export_sql_end[$r] .=' AND u.type = 3';	// Supplier categories
