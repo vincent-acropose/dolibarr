@@ -130,6 +130,23 @@ if (! defined('NOREQUIREDB'))
 	}
 }
 
+
+/*
+ * Object $dbReader
+ */
+if (! defined('NOREQUIREDB'))
+{
+	if (!empty($hostReader)) {
+    	$dbReader=getDoliDBInstance($typeReader,$hostReader,$userReader,$passReader,$nameReader,$portReader);
+
+		if ($dbReader->error)
+		{
+			dol_print_error($dbReader,"host=".$hostReader.", port=".$portReader.", user=".$userReader.", databasename=".$nameReader.", ".$dbReader->error);
+			exit;
+		}
+	}
+}
+
 // Now database connexion is known, so we can forget password
 //unset($dolibarr_main_db_pass); 	// We comment this because this constant is used in a lot of pages
 unset($conf->db->pass);				// This is to avoid password to be shown in memory/swap dump
