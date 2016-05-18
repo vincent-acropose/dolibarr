@@ -242,6 +242,12 @@ $nbdeduced=$holiday->getConfCP('nbHolidayDeducted');
 $nb_holiday = $nbaquis / $nbdeduced;
 print $langs->trans('SoldeCPUser',round($nb_holiday,2)).($nbdeduced != 1 ? ' ('.$nbaquis.' / '.$nbdeduced.')' : '');
 
+//RTT
+$nbrttaquis=$holiday->getCPforUser($user_id, true);
+$nbrttdeduced=$holiday->getConfCP('nbRttDeducted');
+$nb_rtt = ($nbrttdeduced > 0) ? $nbrttaquis / $nbrttdeduced : 0;
+print '<br />'.$langs->trans('Solde de RTT: ').'<b>'.round($nb_rtt,2).' jours</b>';
+
 if ($id > 0)
 {
 	dol_fiche_end();
