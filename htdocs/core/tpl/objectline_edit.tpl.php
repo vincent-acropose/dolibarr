@@ -328,6 +328,7 @@ if (! empty($conf->margin->enabled))
 	/* Force content of price_ht to 0 or if a discount is set, recalculate it from margin rate */
 	function checkEditLine(e, npRate)
 	{
+		return;
 		var buying_price = $("input[name='buying_price']:first");
 		var remise = $("input[name='remise_percent']:first");
 
