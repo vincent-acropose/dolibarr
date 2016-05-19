@@ -322,6 +322,7 @@ if (! empty($conf->margin->enabled))
 	/* TODO This function seems no more used */
 	function checkEditLine(e, npRate)
 	{
+		return;
 		var buying_price = $("input[name='buying_price']:first");
 		var remise = $("input[name='remise_percent']:first");
 
