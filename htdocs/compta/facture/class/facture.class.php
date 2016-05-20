@@ -1399,6 +1399,7 @@ class Facture extends CommonInvoice
 			$facligne->remise_percent=0;
 			$facligne->rang=-1;
 			$facligne->info_bits=2;
+			$facligne->product_type = 1;				// Services for ATM
 
 			$facligne->total_ht  = -$remise->amount_ht;
 			$facligne->total_tva = -$remise->amount_tva;
