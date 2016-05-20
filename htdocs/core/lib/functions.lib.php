@@ -1600,7 +1600,7 @@ function dol_print_phone($phone,$countrycode='',$cid=0,$socid=0,$addlink='',$sep
 			$newphone=substr($newphone,0,4).$separ.substr($newphone,4,2).$separ.substr($newphone,6,2).$separ.substr($newphone,8,2).$separ.substr($newphone,10,2);
 		}
 	}
-
+	
 	if (! empty($addlink))	// Link on phone number (+ link to add action if conf->global->AGENDA_ADDACTIONFORPHONE set)
 	{
 		if (! empty($conf->browser->phone) || (! empty($conf->clicktodial->enabled) && ! empty($conf->global->CLICKTODIAL_USE_TEL_LINK_ON_PHONE_NUMBERS)))	// If phone or option for, we use link of phone
@@ -1632,6 +1632,13 @@ function dol_print_phone($phone,$countrycode='',$cid=0,$socid=0,$addlink='',$sep
 			$newphone ='<a href="'.$url.'"';
 			if (! empty($conf->global->CLICKTODIAL_FORCENEWTARGET)) $newphone.=' target="_blank"';
 			$newphone.='>'.$newphonesav.'</a>';
+		}
+		//ajout b2s pour l'ouverture du script d'appel
+		else if (!empty($conf->global->CLICKTODIAL_B2S)) 
+		{
+			$newphonesav=$newphone;
+			$newphone ='<a href="javascript:top.clic_to_call_b2s(\''.$phone.'\')"';
+			$newphone.='>'.$newphonesav.'</a>';			
 		}
 
 		//if (($cid || $socid) && ! empty($conf->agenda->enabled) && $user->rights->agenda->myactions->create)
