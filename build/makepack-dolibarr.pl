@@ -376,7 +376,7 @@ if ($nboftargetok) {
 			
 		print 'Run git tag -a -m "'.$MAJOR.'.'.$MINOR.'.'.$BUILD.'" "'.$MAJOR.'.'.$MINOR.'.'.$BUILD.'"'."\n";
 		$ret=`git tag -a -m "$MAJOR.$MINOR.$BUILD" "$MAJOR.$MINOR.$BUILD" 2>&1`;
-		if ($ret =~ /already exists/)
+		if ($ret =~ /(already exists|existe déjà)/)
 		{
 			print "WARNING: Tag ".$MAJOR.'.'.$MINOR.'.'.$BUILD." already exists. Overwrite (y/N) ? ";
 			$QUESTIONOVERWRITETAG=<STDIN>; 
@@ -1086,6 +1086,14 @@ if ($nboftargetok) {
 			"$DESTI/standard/$FILENAMETGZ.tgz"=>'Dolibarr ERP-CRM',
 			"$DESTI/standard/$FILENAMETGZ.zip"=>'Dolibarr ERP-CRM'
 		);
+		%filestoscanstableasso=(
+			"$DESTI/package_rpm_generic/$FILENAMERPM"=>'package_rpm_generic',
+			"$DESTI/package_debian-ubuntu/${FILENAMEDEB}_all.deb"=>'package_debian-ubuntu',
+			"$DESTI/package_windows/$FILENAMEEXEDOLIWAMP.exe"=>'package_windows',
+			"$DESTI/standard/$FILENAMETGZ.tgz"=>'standard',
+			"$DESTI/standard/$FILENAMETGZ.zip"=>'standard'
+		);
+
 		use POSIX qw/strftime/;
 		foreach my $file (sort keys %filestoscansf)
 		{
@@ -1128,13 +1136,15 @@ if ($nboftargetok) {
 	    		
 	    		if ($target eq 'SF') { 
 	    			$destFolder="$NEWPUBLISH/$filestoscan{$file}/".$MAJOR.'.'.$MINOR.'.'.$BUILD;
-		    		print "Publish file ".$file." to $NEWPUBLISH/".$filestoscan{$file}."\n";
 	    		}
+	    		elsif ($target eq 'ASSO' && $NEWPUBLISH =~ /stable/) {
+	    			$destFolder="$NEWPUBLISH/$filestoscanstableasso{$file}";
+	    		} 
 	    		else
 	    		{
 	    			$destFolder="$NEWPUBLISH";
-		    		print "Publish file ".$file." to $NEWPUBLISH\n";
 	    		}
+	    		print "Publish file ".$file." to ".$destFolder."\n";
 
 				# mkdir	   
 				#my $ssh = Net::SSH::Perl->new("frs.sourceforge.net");
