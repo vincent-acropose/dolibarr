@@ -1858,6 +1858,14 @@ class Expedition extends CommonObject
 				}
 			}
 			
+			if (! $error) {
+				// Call trigger
+				$result=$this->call_trigger('SHIPPING_BILLED',$user);
+				if ($result < 0) { $error++; }
+				// End call triggers
+					
+			}
+			
 			return 1;
 		}
 		else
