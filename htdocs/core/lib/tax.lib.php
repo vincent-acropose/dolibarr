@@ -420,6 +420,7 @@ function vat_by_date($db, $y, $q, $date_start, $date_end, $modetax, $direction, 
         $sql.= " FROM ".MAIN_DB_PREFIX.$invoicetable." as f,";
         $sql.= " ".MAIN_DB_PREFIX.$paymentfacturetable." as pf,";
         $sql.= " ".MAIN_DB_PREFIX.$paymenttable." as pa,";
+		$sql.= " ".MAIN_DB_PREFIX."bank as b,";
         $sql.= " ".MAIN_DB_PREFIX."societe as s,";
         $sql.= " ".MAIN_DB_PREFIX.$invoicedettable." as d";
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product as p on d.fk_product = p.rowid";
@@ -431,18 +432,19 @@ function vat_by_date($db, $y, $q, $date_start, $date_end, $modetax, $direction, 
         $sql.= " AND s.rowid = f.fk_soc";
         $sql.= " AND pf.".$fk_facture2." = f.rowid";
         $sql.= " AND pa.rowid = pf.".$fk_payment;
+        $sql.= " AND b.rowid = pa.fk_bank";
         if ($y && $m)
         {
-            $sql.= " AND pa.datep >= '".$db->idate(dol_get_first_day($y,$m,false))."'";
-            $sql.= " AND pa.datep <= '".$db->idate(dol_get_last_day($y,$m,false))."'";
+            $sql.= " AND b.datev >= '".$db->idate(dol_get_first_day($y,$m,false))."'";
+            $sql.= " AND b.datev <= '".$db->idate(dol_get_last_day($y,$m,false))."'";
         }
         else if ($y)
         {
-            $sql.= " AND pa.datep >= '".$db->idate(dol_get_first_day($y,1,false))."'";
-            $sql.= " AND pa.datep <= '".$db->idate(dol_get_last_day($y,12,false))."'";
+            $sql.= " AND b.datev >= '".$db->idate(dol_get_first_day($y,1,false))."'";
+            $sql.= " AND b.datev <= '".$db->idate(dol_get_last_day($y,12,false))."'";
         }
-        if ($q) $sql.= " AND (date_format(pa.datep,'%m') > ".(($q-1)*3)." AND date_format(pa.datep,'%m') <= ".($q*3).")";
-        if ($date_start && $date_end) $sql.= " AND pa.datep >= '".$db->idate($date_start)."' AND pa.datep <= '".$db->idate($date_end)."'";
+        if ($q) $sql.= " AND (date_format(b.datev,'%m') > ".(($q-1)*3)." AND date_format(b.datev,'%m') <= ".($q*3).")";
+        if ($date_start && $date_end) $sql.= " AND b.datev >= '".$db->idate($date_start)."' AND b.datev <= '".$db->idate($date_end)."'";
         $sql.= " AND (d.product_type = 1";                              // Limit to services
         $sql.= " OR d.date_start is NOT null OR d.date_end IS NOT NULL)";       // enhance detection of service
         $sql.= " ORDER BY d.rowid, d.".$fk_facture.", pf.rowid";
