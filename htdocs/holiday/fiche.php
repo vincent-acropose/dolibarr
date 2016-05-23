@@ -399,7 +399,7 @@ if($action == 'confirm_valid')
             $cp->addLogCP($user->id,$cp->fk_user, $langs->trans('Event').': '.$langs->transnoentitiesnoconv("Holidays"),$newSolde);
 
             // Mise à jour du solde
-            $cp->updateSoldeCP($cp->fk_user,$newSolde);
+            $cp->updateSoldeCP($cp->fk_user,$newSolde, $rtt);
 
             // To
             $destinataire = new User($db);
