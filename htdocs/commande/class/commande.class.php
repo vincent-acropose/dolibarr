@@ -455,16 +455,8 @@ class Commande extends CommonOrder
                     }
                 }
 
-                if (!$error) {
-                	// Call trigger
-                	$result=$this->call_trigger('ORDER_SETDRAFT',$user);
-                	if ($result < 0) $error++;
-                }
-                
                 if (!$error)
                 {
-                	
-                	         	
                     $this->statut=self::STATUS_DRAFT;
                     $this->db->commit();
                     return $result;
@@ -476,10 +468,21 @@ class Commande extends CommonOrder
                     return $result;
                 }
             }
+            
+            if (!$error) {
+            	// Call trigger
+            	$result=$this->call_trigger('ORDER_SETDRAFT',$user);
+            	if ($result < 0) $error++;
+            }
 
-            $this->statut=self::STATUS_DRAFT;
-            $this->db->commit();
-            return 1;
+            if (!$error) {
+           		$this->statut=self::STATUS_DRAFT;
+           		$this->db->commit();
+            	return 1;
+            } else {
+            	$this->db->rollback();
+            	return -1;
+            }
         }
         else
         {
