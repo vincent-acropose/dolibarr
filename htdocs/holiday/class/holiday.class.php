@@ -65,6 +65,7 @@ class Holiday extends CommonObject
     var $optValue = '';
     var $optRowid = '';
 
+	var $type_conges='conges';
     /**
      *   Constructor
      *
@@ -118,7 +119,8 @@ class Holiday extends CommonObject
         $sql.= "date_fin,";
         $sql.= "halfday,";
         $sql.= "statut,";
-        $sql.= "fk_validator";
+        $sql.= "fk_validator,";
+		$sql.= "type_conges";
         $sql.= ") VALUES (";
 
         // User
@@ -129,7 +131,8 @@ class Holiday extends CommonObject
         $sql.= " '".$this->db->idate($this->date_fin)."',";
         $sql.= " ".$this->halfday.",";
         $sql.= " '1',";
-        $sql.= " '".$this->fk_validator."'";
+        $sql.= " '".$this->fk_validator."',";
+		$sql.= " '".$this->db->escape($this->type_conges)."'";
 
         $sql.= ")";
 
@@ -194,7 +197,8 @@ class Holiday extends CommonObject
         $sql.= " cp.fk_user_cancel,";
         $sql.= " cp.detail_refuse,";
         $sql.= " cp.note_private,";
-        $sql.= " cp.note_public";
+        $sql.= " cp.note_public,";
+		$sql.= " cp.type_conges";
         $sql.= " FROM ".MAIN_DB_PREFIX."holiday as cp";
         $sql.= " WHERE cp.rowid = ".$id;
 
@@ -226,6 +230,7 @@ class Holiday extends CommonObject
                 $this->detail_refuse = $obj->detail_refuse;
                 $this->note_private = $obj->note_private;
                 $this->note_public = $obj->note_public;
+				$this->type_conges = $obj->type_conges;
             }
             $this->db->free($resql);
 
@@ -269,6 +274,7 @@ class Holiday extends CommonObject
         $sql.= " cp.date_cancel,";
         $sql.= " cp.fk_user_cancel,";
         $sql.= " cp.detail_refuse,";
+		$sql.= " cp.type_conges,";
 
 		$sql.= " uu.lastname as user_lastname,";
         $sql.= " uu.firstname as user_firstname,";
@@ -327,6 +333,7 @@ class Holiday extends CommonObject
                 $tab_result[$i]['date_cancel'] = $this->db->jdate($obj->date_cancel);
                 $tab_result[$i]['fk_user_cancel'] = $obj->fk_user_cancel;
                 $tab_result[$i]['detail_refuse'] = $obj->detail_refuse;
+				$tab_result[$i]['type_conges'] = $obj->type_conges;
 
                 $tab_result[$i]['user_firstname'] = $obj->user_firstname;
                 $tab_result[$i]['user_lastname'] = $obj->user_lastname;
@@ -379,6 +386,7 @@ class Holiday extends CommonObject
         $sql.= " cp.date_cancel,";
         $sql.= " cp.fk_user_cancel,";
         $sql.= " cp.detail_refuse,";
+		$sql.= " cp.type_conges,";
 
         $sql.= " uu.lastname as user_lastname,";
         $sql.= " uu.firstname as user_firstname,";
@@ -436,6 +444,7 @@ class Holiday extends CommonObject
                 $tab_result[$i]['date_cancel'] = $obj->date_cancel;
                 $tab_result[$i]['fk_user_cancel'] = $obj->fk_user_cancel;
                 $tab_result[$i]['detail_refuse'] = $obj->detail_refuse;
+				$tab_result[$i]['type_conges'] = $obj->type_conges;
 
                 $tab_result[$i]['user_firstname'] = $obj->user_firstname;
                 $tab_result[$i]['user_lastname'] = $obj->user_lastname;
@@ -474,6 +483,7 @@ class Holiday extends CommonObject
         $sql = "UPDATE ".MAIN_DB_PREFIX."holiday SET";
 
         $sql.= " description= '".$this->db->escape($this->description)."',";
+		$sql.= " type_conges= '".$this->db->escape($this->type_conges)."',";
 
         if(!empty($this->date_debut)) {
             $sql.= " date_debut = '".$this->db->idate($this->date_debut)."',";
@@ -873,10 +883,13 @@ class Holiday extends CommonObject
      *	@param		int		$nbHoliday	Nb of days
      *  @return     void
      */
-    function updateSoldeCP($userID='',$nbHoliday='')
+    function updateSoldeCP($userID='',$nbHoliday='', $updateRtt=false)
     {
         global $user, $langs;
 
+		$rtt = false;
+		if ($this->type_conges == 'rtt') $rtt = true;
+			
         if (empty($userID) && empty($nbHoliday))
         {
             // Si mise à jour pour tout le monde en début de mois
@@ -887,7 +900,7 @@ class Holiday extends CommonObject
             $lastUpdate = $this->getConfCP('lastUpdate');
             $monthLastUpdate = $lastUpdate[4].$lastUpdate[5];
 			//print 'month: '.$month.' '.$lastUpdate.' '.$monthLastUpdate;
-
+			
             // Si la date du mois n'est pas la même que celle sauvegardée, on met à jour le timestamp
             if ($month != $monthLastUpdate)
             {
@@ -899,18 +912,21 @@ class Holiday extends CommonObject
                 $result = $this->db->query($sql);
 
                 // On ajoute x jours à chaque utilisateurs
-                $nb_holiday = $this->getConfCP('nbHolidayEveryMonth');
+                if ($rtt) $nb_holiday = $this->getConfCP('nbRttEveryMonth');
+				else $nb_holiday = $this->getConfCP('nbHolidayEveryMonth');
+				
 				if (empty($nb_holiday)) $nb_holiday=0;
 
                 $users = $this->fetchUsers(false,false);
                 $nbUser = count($users);
 
                 $i = 0;
-
+					
                 while($i < $nbUser)
                 {
-                    $now_holiday = $this->getCPforUser($users[$i]['rowid']);
-                    $new_solde = $now_holiday + $this->getConfCP('nbHolidayEveryMonth');
+                    $now_holiday = $this->getCPforUser($users[$i]['rowid'], $rtt);
+                    if ($rtt) $new_solde = $now_holiday + $this->getConfCP('nbRttEveryMonth');
+					else $new_solde = $now_holiday + $this->getConfCP('nbHolidayEveryMonth');
 
                     // On ajoute la modification dans le LOG
                     $this->addLogCP($user->id,$users[$i]['rowid'], $langs->trans('Event').': '.$langs->trans('HolidaysMonthlyUpdate'),$new_solde);
@@ -919,7 +935,8 @@ class Holiday extends CommonObject
                 }
 
                 $sql2 = "UPDATE ".MAIN_DB_PREFIX."holiday_users SET";
-                $sql2.= " nb_holiday = nb_holiday + ".$nb_holiday;
+                if ($rtt) $sql2.= " nb_rtt = nb_rtt + ".$nb_holiday;
+				else $sql2.= " nb_holiday = nb_holiday + ".$nb_holiday;
 
                 dol_syslog(get_class($this).'::updateSoldeCP sql='.$sql2);
                 $this->db->query($sql2);
@@ -930,7 +947,8 @@ class Holiday extends CommonObject
 
             // Mise à jour pour un utilisateur
             $sql = "UPDATE ".MAIN_DB_PREFIX."holiday_users SET";
-            $sql.= " nb_holiday = ".$nbHoliday;
+            if ($updateRtt) $sql.= " nb_rtt = ".$nbHoliday;
+			else $sql.= " nb_holiday = ".$nbHoliday;
             $sql.= " WHERE fk_user = '".$userID."'";
 
 			dol_syslog(get_class($this).'::updateSoldeCP sql='.$sql);
@@ -979,15 +997,15 @@ class Holiday extends CommonObject
         	dol_syslog(get_class($this).'::createCPusers');
             foreach($this->fetchUsers(false,true) as $users) {
                 $sql = "INSERT INTO ".MAIN_DB_PREFIX."holiday_users";
-                $sql.= " (fk_user, nb_holiday)";
-                $sql.= " VALUES ('".$users['rowid']."','0')";
+                $sql.= " (fk_user, nb_holiday, nb_rtt)";
+                $sql.= " VALUES ('".$users['rowid']."','0', '0')";
 
                 $this->db->query($sql);
             }
         } else {
             $sql = "INSERT INTO ".MAIN_DB_PREFIX."holiday_users";
-            $sql.= " (fk_user, nb_holiday)";
-            $sql.= " VALUES ('".$userid."','0')";
+            $sql.= " (fk_user, nb_holiday, nb_rtt)";
+            $sql.= " VALUES ('".$userid."','0', '0')";
 
             $this->db->query($sql);
         }
@@ -1016,9 +1034,9 @@ class Holiday extends CommonObject
      *  @param	int		$user_id    ID de l'utilisateur
      *  @return float        		Retourne le solde de congés payés de l'utilisateur
      */
-    function getCPforUser($user_id) {
+    function getCPforUser($user_id, $rtt=false) {
 
-        $sql = "SELECT nb_holiday";
+        $sql = "SELECT nb_holiday, nb_rtt";
         $sql.= " FROM ".MAIN_DB_PREFIX."holiday_users";
         $sql.= " WHERE fk_user = '".$user_id."'";
 
@@ -1026,7 +1044,8 @@ class Holiday extends CommonObject
         $result = $this->db->query($sql);
         if($result) {
             $obj = $this->db->fetch_object($result);
-            return number_format($obj->nb_holiday,2);
+			if ($rtt) return number_format($obj->nb_rtt,2);
+			else return number_format($obj->nb_holiday,2);
         } else {
             return '0';
         }
@@ -1562,11 +1581,13 @@ class Holiday extends CommonObject
      * @param 	int		$new_solde			New value
      * @return number|string
      */
-    function addLogCP($fk_user_action,$fk_user_update,$type,$new_solde) {
+    function addLogCP($fk_user_action,$fk_user_update,$type,$new_solde,$type_conges='') {
 
         global $conf, $langs;
 
         $error=0;
+
+		if (empty($type_conges)) $type_conges = $this->type_conges;
 
         $prev_solde = $this->getCPforUser($fk_user_update);
         $new_solde = number_format($new_solde,2,'.','');
@@ -1579,7 +1600,8 @@ class Holiday extends CommonObject
         $sql.= "fk_user_update,";
         $sql.= "type_action,";
         $sql.= "prev_solde,";
-        $sql.= "new_solde";
+        $sql.= "new_solde,";
+        $sql.= "type_conges";
 
         $sql.= ") VALUES (";
 
@@ -1588,7 +1610,8 @@ class Holiday extends CommonObject
         $sql.= " '".$fk_user_update."',";
         $sql.= " '".$this->db->escape($type)."',";
         $sql.= " '".$prev_solde."',";
-        $sql.= " '".$new_solde."'";
+        $sql.= " '".$new_solde."',";
+		$sql.= " '".$this->db->escape($type_conges)."'";
         $sql.= ")";
 
         $this->db->begin();

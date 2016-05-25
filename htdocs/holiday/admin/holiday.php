@@ -73,6 +73,12 @@ if ($action == "add")
     {
         $error = true;
     }
+	
+	// Option du délai pour faire une demande de congés payés
+    if (!$cp->updateConfCP('delayForRTT',$_POST['delayForRTT']))
+    {
+        $error = true;
+    }
 
     // Option du nombre de jours à ajouter chaque mois
     $nbHolidayEveryMonth = price2num($_POST['nbHolidayEveryMonth'],5);
@@ -82,6 +88,14 @@ if ($action == "add")
         $error = true;
     }
 
+	 // Option du nombre de jours à ajouter chaque mois
+    $nbRttEveryMonth = price2num($_POST['nbRttEveryMonth'],5);
+
+    if(!$cp->updateConfCP('nbRttEveryMonth',$nbRttEveryMonth))
+    {
+        $error = true;
+    }
+	
     // Option du nombre de jours pour un mariage
     $OptMariageCP = price2num($_POST['OptMariage'],5);
 
@@ -136,6 +150,13 @@ if ($action == "add")
     $nbHolidayDeducted = price2num($_POST['nbHolidayDeducted'],2);
 
     if(!$cp->updateConfCP('nbHolidayDeducted',$nbHolidayDeducted)) {
+        $error = true;
+    }
+	
+	// Option du nombre de jours à déduire pour 1 jour de congés
+    $nbRttDeducted = price2num($_POST['nbRttDeducted'],2);
+
+    if(!$cp->updateConfCP('nbRttDeducted',$nbRttDeducted)) {
         $error = true;
     }
 
@@ -311,6 +332,27 @@ $var=!$var;
 print '<tr '.$bc[$var].'>'."\n";
 print '<td style="padding:5px;">'.$langs->trans('nbHolidayDeductedCP').'</td>'."\n";
 print '<td style="padding:5px;"><input class="flat" type="text" name="nbHolidayDeducted" value="'.$cp->getConfCP('nbHolidayDeducted').'" size="2"/> '.$langs->trans('DurationDays').'</td>'."\n";
+print '</tr>'."\n";
+
+
+
+//RTT
+$var=!$var;
+print '<tr '.$bc[$var].'>'."\n";
+print '<td style="padding:5px;">'.$langs->trans('Délai pour faire une demande de RTT avant ceux-ci').'</td>'."\n";
+print '<td style="padding:5px;"><input class="flat" type="text" name="delayForRTT" value="'.$cp->getConfCP('delayForRTT').'" size="2" /> '.$langs->trans('DurationDays').'</td>'."\n";
+print '</tr>'."\n";
+
+$var=!$var;
+print '<tr '.$bc[$var].'>'."\n";
+print '<td style="padding:5px;">'.$langs->trans('Nombre de RTT ajoutés chaque mois').'</td>'."\n";
+print '<td style="padding:5px;"><input class="flat" type="text" name="nbRttEveryMonth" value="'.$cp->getConfCP('nbRttEveryMonth').'" size="5"/> '.$langs->trans('DurationDays').'</td>'."\n";
+print '</tr>'."\n";
+
+$var=!$var;
+print '<tr '.$bc[$var].'>'."\n";
+print '<td style="padding:5px;">'.$langs->trans('Nombre de RTT à déduire par jour de RTT pris').'</td>'."\n";
+print '<td style="padding:5px;"><input class="flat" type="text" name="nbRttDeducted" value="'.$cp->getConfCP('nbRttDeducted').'" size="2"/> '.$langs->trans('DurationDays').'</td>'."\n";
 print '</tr>'."\n";
 
 print '</tbody>'."\n";

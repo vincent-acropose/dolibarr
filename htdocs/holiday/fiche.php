@@ -62,6 +62,7 @@ if ($action == 'create')
         exit;
     }
 
+	$type_conges = GETPOST('type_conges');
     $date_debut = dol_mktime(0, 0, 0, GETPOST('date_debut_month'), GETPOST('date_debut_day'), GETPOST('date_debut_year'));
     $date_fin = dol_mktime(0, 0, 0, GETPOST('date_fin_month'), GETPOST('date_fin_day'), GETPOST('date_fin_year'));
     $starthalfday=GETPOST('starthalfday');
@@ -125,6 +126,7 @@ if ($action == 'create')
     $cp->date_fin = $date_fin;
     $cp->fk_validator = $valideur;
 	$cp->halfday = $halfday;
+	$cp->type_conges = $type_conges;
 
     $verif = $cp->create($user_id);
 
@@ -145,6 +147,7 @@ if ($action == 'create')
 
 if ($action == 'update')
 {
+	$type_conges = GETPOST('type_conges');
 	$date_debut = dol_mktime(0, 0, 0, GETPOST('date_debut_month'), GETPOST('date_debut_day'), GETPOST('date_debut_year'));
 	$date_fin = dol_mktime(0, 0, 0, GETPOST('date_fin_month'), GETPOST('date_fin_day'), GETPOST('date_fin_year'));
 	$starthalfday=GETPOST('starthalfday');
@@ -205,6 +208,7 @@ if ($action == 'update')
                 exit;
             }
 
+            $cp->type_conges = $type_conges;
             $cp->description = $description;
             $cp->date_debut = $date_debut;
             $cp->date_fin = $date_fin;
@@ -297,9 +301,11 @@ if ($action == 'confirm_send')
             // Content
             $message = $langs->transnoentitiesnoconv("Hello")." ".$destinataire->firstname.",\n";
             $message.= "\n";
-            $message.= $langs->transnoentities("HolidaysToValidateBody")."\n";
+            if ($cp->type_conges == 'rtt') $message.= "Veuillez trouver ci-dessous une demande de RTT à valider."; 
+			else $message.= $langs->transnoentities("HolidaysToValidateBody")."\n";
 
-            $delayForRequest = $cp->getConfCP('delayForRequest');
+            if ($cp->type_conges == 'rtt') $delayForRequest = $cp->getConfCP('delayForRtt');
+			else $delayForRequest = $cp->getConfCP('delayForRequest');
             //$delayForRequest = $delayForRequest * (60*60*24);
 
             $nextMonth = dol_time_plus_duree($now, $delayForRequest, 'd');
@@ -310,7 +316,9 @@ if ($action == 'confirm_send')
                 if($cp->date_debut < $nextMonth)
                 {
                     $message.= "\n";
-                    $message.= $langs->transnoentities("HolidaysToValidateDelay",$cp->getConfCP('delayForRequest'))."\n";
+					
+					if ($cp->type_conges == 'rtt') $message.= "Cette demande de congés payés à été effectué dans un délai de moins de ".$cp->getConfCP('delayForRequest')." jours avant ceux-ci."; 
+					else $message.= $langs->transnoentities("HolidaysToValidateDelay",$cp->getConfCP('delayForRequest'))."\n";
                 }
             }
 
@@ -318,10 +326,14 @@ if ($action == 'confirm_send')
             if($cp->getConfCP('AlertValidatorSolde'))
             {
             	$nbopenedday=num_open_day($cp->date_debut,$cp->date_fin,0,1);
-                if ($nbopenedday > $cp->getCPforUser($cp->fk_user))
+				$rtt = false;
+				if ($cp->type_conges == 'rtt') $rtt = true;
+				
+                if ($nbopenedday > $cp->getCPforUser($cp->fk_user, $rtt))
                 {
                     $message.= "\n";
-                    $message.= $langs->transnoentities("HolidaysToValidateAlertSolde")."\n";
+                    if ($cp->type_conges == 'rtt') $message.= "L'utilisateur ayant fait cette demande de RTT n'a pas le solde requis."; 
+					else $message.= $langs->transnoentities("HolidaysToValidateAlertSolde")."\n";
                 }
             }
 
@@ -376,14 +388,18 @@ if($action == 'confirm_valid')
             // Retrait du nombre de jours prit
             $nbJour = $nbopenedday=num_open_day($cp->date_debut,$cp->date_fin,0,1);
 
-            $soldeActuel = $cp->getCpforUser($cp->fk_user);
-            $newSolde = $soldeActuel - ($nbJour*$cp->getConfCP('nbHolidayDeducted'));
+			$rtt = false;
+			if ($cp->type_conges == 'rtt') $rtt = true;
+			
+            $soldeActuel = $cp->getCpforUser($cp->fk_user, $rtt);
+            if ($rtt) $newSolde = $soldeActuel - ($nbJour*$cp->getConfCP('nbRttDeducted'));
+			else $newSolde = $soldeActuel - ($nbJour*$cp->getConfCP('nbHolidayDeducted'));
 
             // On ajoute la modification dans le LOG
             $cp->addLogCP($user->id,$cp->fk_user, $langs->trans('Event').': '.$langs->transnoentitiesnoconv("Holidays"),$newSolde);
 
             // Mise à jour du solde
-            $cp->updateSoldeCP($cp->fk_user,$newSolde);
+            $cp->updateSoldeCP($cp->fk_user,$newSolde, $rtt);
 
             // To
             $destinataire = new User($db);
@@ -405,12 +421,14 @@ if($action == 'confirm_valid')
 			$societeName = $conf->global->MAIN_INFO_SOCIETE_NOM;
             if (! empty($conf->global->MAIN_APPLICATION_TITLE)) $societeName = $conf->global->MAIN_APPLICATION_TITLE;
 
-            $subject = $societeName." - ".$langs->transnoentitiesnoconv("HolidaysValidated");
+            if ($cp->type_conges == 'rtt') $subject = $societeName." - ".$langs->transnoentitiesnoconv("HolidaysValidatedRTT");
+			else $subject = $societeName." - ".$langs->transnoentitiesnoconv("HolidaysValidated");
 
             // Content
             $message = $langs->transnoentitiesnoconv("Hello")." ".$destinataire->firstname.",\n";
             $message.= "\n";
-            $message.=  $langs->transnoentities("HolidaysValidatedBody", dol_print_date($cp->date_debut,'day'),dol_print_date($cp->date_fin,'day'))."\n";
+            if ($cp->type_conges == 'rtt') $message.=  $langs->transnoentities("HolidaysValidatedBodyRTT", dol_print_date($cp->date_debut,'day'),dol_print_date($cp->date_fin,'day'))."\n";
+			else $message.=  $langs->transnoentities("HolidaysValidatedBody", dol_print_date($cp->date_debut,'day'),dol_print_date($cp->date_fin,'day'))."\n";
 
             $message.= "- ".$langs->transnoentitiesnoconv("ValidatedBy")." : ".dolGetFirstLastname($expediteur->firstname, $expediteur->lastname)."\n";
 
@@ -479,12 +497,14 @@ if ($action == 'confirm_refuse')
 				$societeName = $conf->global->MAIN_INFO_SOCIETE_NOM;
 	            if (! empty($conf->global->MAIN_APPLICATION_TITLE)) $societeName = $conf->global->MAIN_APPLICATION_TITLE;
 
-	            $subject = $societeName." - ".$langs->transnoentitiesnoconv("HolidaysRefused");
+	            if ($cp->type_conges) $subject = $societeName." - ".$langs->transnoentitiesnoconv("HolidaysRefusedRTT");
+				else $subject = $societeName." - ".$langs->transnoentitiesnoconv("HolidaysRefused");
 
                 // Content
             	$message = $langs->transnoentitiesnoconv("Hello")." ".$destinataire->firstname.",\n";
 	            $message.= "\n";
-                $message.= $langs->transnoentities("HolidaysRefusedBody", dol_print_date($cp->date_debut,'day'), dol_print_date($cp->date_fin,'day'))."\n";
+                if ($cp->type_conges) $message.= $langs->transnoentities("HolidaysRefusedBodyRTT", dol_print_date($cp->date_debut,'day'), dol_print_date($cp->date_fin,'day'))."\n";
+				else $message.= $langs->transnoentities("HolidaysRefusedBody", dol_print_date($cp->date_debut,'day'), dol_print_date($cp->date_fin,'day'))."\n";
                 $message.= GETPOST('detail_refuse','alpha')."\n\n";
 
 	            $message.= "- ".$langs->transnoentitiesnoconv("ModifiedBy")." : ".dolGetFirstLastname($expediteur->firstname, $expediteur->lastname)."\n";
@@ -698,13 +718,28 @@ if (empty($id) || $action == 'add' || $action == 'request')
         print '<input type="hidden" name="action" value="create" />'."\n";
         print '<input type="hidden" name="userID" value="'.$user_id.'" />'."\n";
         print '<div class="tabBar">';
-        print '<span>'.$langs->trans('DelayToRequestCP',$cp->getConfCP('delayForRequest')).'</span><br /><br />';
+        print '<span>'.$langs->trans('DelayToRequestCP',$cp->getConfCP('delayForRequest')).'</span><br />';
+		print '<span>'.$langs->trans('Les demandes de RTT doivent être faites au moins').' <b>'.$cp->getConfCP('delayForRTT').' jours</b> avant la date de ceux-ci.
+		</span><br /><br />';
 
         $nb_holiday = $cp->getCPforUser($user->id) / $cp->getConfCP('nbHolidayDeducted');
+		$nb_rtt = $cp->getCPforUser($user->id, true) / $cp->getConfCP('nbRttDeducted');
 
-        print '<span>'.$langs->trans('SoldeCPUser', round($nb_holiday,0)).'</span><br /><br />';
+        print '<span>'.$langs->trans('SoldeCPUser', round($nb_holiday,0)).'</span><br />';
+        print '<span>'.$langs->trans('Solde de congés:').' <b>'.round($nb_rtt,0).' jours</b></span><br /><br />';
         print '<table class="border" width="100%">';
         print '<tbody>';
+        
+		print '<tr>';
+		print '<td>'.$langs->trans('Type de demande').'</td>';
+		print '<td>
+			<select name="type_conges">
+				<option value="conges">'.$langs->trans('Congés Payés').'</option>
+				<option value="rtt">'.$langs->trans('RTT').'</option>
+			</select>
+		</td>';
+		print '</tr>';
+		
         print '<tr>';
         print '<td class="fieldrequired">'.$langs->trans("DateDebCP").' ('.$langs->trans("FirstDayOfHoliday").')</td>';
         print '<td>';
@@ -895,6 +930,28 @@ else
                 print $form->showrefnav($cp, 'id', $linkback, 1, 'rowid', 'ref');
                 print '</td>';
                 print '</tr>';
+				
+				if (!$edit)
+				{
+					print '<tr>';
+					print '<td>'.$langs->trans('Type de demande').'</td>';
+					if ($cp->type_conges == 'rtt') print '<td>'.$langs->trans('RTT').'</td>';
+					else print '<td>'.$langs->trans('Congés Payés
+					').'</td>';
+					print '</tr>';
+				}
+				else {
+					print '<tr>';
+					print '<td>'.$langs->trans('Type de demande:').'</td>';
+					print '<td>
+						<select name="type_conges">
+							<option '.($cp->type_conges == 'conges' ? 'selected="selected"' : '').' value="conges">'.$langs->trans('Congés Payés').'</option>
+							<option '.($cp->type_conges == 'rtt' ? 'selected="selected"' : '').' value="rtt">'.$langs->trans('RTT').'</option>
+						</select>
+					</td>';
+					print '</tr>';	
+				}
+				
 
 			    $starthalfday=($cp->halfday == -1 || $cp->halfday == 2)?'afternoon':'morning';
 			    $endhalfday=($cp->halfday == 1 || $cp->halfday == 2)?'morning':'afternoon';
@@ -938,7 +995,8 @@ else
                     print '</tr>';
                 }
                 print '<tr>';
-                print '<td>'.$langs->trans('NbUseDaysCP').'</td>';
+                if ($cp->type_conges == 'rtt') print '<td>'.$langs->trans('Nombre de RTT consommés').'</td>';
+				else print '<td>'.$langs->trans('NbUseDaysCP').'</td>';
                 print '<td>'.num_open_day($cp->date_debut, $cp->date_fin, 0, 1, $cp->halfday).'</td>';
                 print '</tr>';
 

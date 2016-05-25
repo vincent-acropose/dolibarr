@@ -137,9 +137,13 @@ HolidaysToValidateBody=Veuillez trouver ci-dessous une demande de congés payés
 HolidaysToValidateDelay=Cette demande de congés payés à été effectué dans un délai de moins de %s jours avant ceux-ci.
 HolidaysToValidateAlertSolde=L'utilisateur ayant fait cette demande de congés payés n'a pas le solde requis.
 HolidaysValidated=Congés payés validée
+HolidaysValidatedRTT=RTT validé
 HolidaysValidatedBody=Votre demande de congés payés du %s au %s vient d'être validée!
+HolidaysValidatedBodyRTT=Votre demande de RTT du %s au %s vient d'être validée!
 HolidaysRefused=Congés payés refusée
+HolidaysRefusedRTT=RTT refusé
 HolidaysRefusedBody=Votre demande de congés payés %s à %s vient d'être refusée pour le motif suivant :
+HolidaysRefusedBodyRTT=Votre demande de RTT %s à %s vient d'être refusée pour le motif suivant :
 HolidaysCanceled=Congés payés annulée
 HolidaysCanceledBody=Votre demande de congés %s à %s va été annulée.
 
