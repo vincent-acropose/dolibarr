@@ -1127,7 +1127,7 @@ class Facture extends CommonInvoice
 		$this->lines=array();
 
 		$sql = 'SELECT l.rowid, l.fk_product, l.fk_parent_line, l.label as custom_label, l.description, l.product_type, l.price, l.qty, l.tva_tx, ';
-		$sql .= ' l.situation_percent, l.fk_prev_id,';
+		$sql.= ' l.situation_percent, l.fk_prev_id,';
 		$sql.= ' l.localtax1_tx, l.localtax2_tx, l.localtax1_type, l.localtax2_type, l.remise_percent, l.fk_remise_except, l.subprice,';
 		$sql.= ' l.rang, l.special_code,';
 		$sql.= ' l.date_start as date_start, l.date_end as date_end,';
@@ -1137,7 +1137,7 @@ class Facture extends CommonInvoice
 		$sql.= ' FROM '.MAIN_DB_PREFIX.'facturedet as l';
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as p ON l.fk_product = p.rowid';
 		$sql.= ' WHERE l.fk_facture = '.$this->id;
-		$sql.= ' ORDER BY l.rang';
+		$sql.= ' ORDER BY l.rang, l.rowid';
 
 		dol_syslog(get_class($this).'::fetch_lines', LOG_DEBUG);
 		$result = $this->db->query($sql);
@@ -1154,7 +1154,9 @@ class Facture extends CommonInvoice
 				$line->rowid	        = $objp->rowid;             // deprecated
 				$line->label            = $objp->custom_label;		// deprecated
 				$line->desc             = $objp->description;		// Description line
+				$line->description      = $objp->description;		// Description line
 				$line->product_type     = $objp->product_type;		// Type of line
+				$line->ref              = $objp->product_ref;		// Ref product
 				$line->product_ref      = $objp->product_ref;		// Ref product
 				$line->libelle          = $objp->product_label;		// TODO deprecated
 				$line->product_label	= $objp->product_label;		// Label product
@@ -2408,7 +2410,7 @@ class Facture extends CommonInvoice
 	 * 	@param 		string		$fk_unit 			Code of the unit to use. Null to use the default one
 	 *  @return    	int             				< 0 if KO, > 0 if OK
 	 */
-	function updateline($rowid, $desc, $pu, $qty, $remise_percent, $date_start, $date_end, $txtva, $txlocaltax1=0, $txlocaltax2=0, $price_base_type='HT', $info_bits=0, $type= self::TYPE_STANDARD, $fk_parent_line=0, $skip_update_total=0, $fk_fournprice=null, $pa_ht=0, $label='', $special_code=0, $array_options=0, $situation_percent=0, $fk_unit = null)
+	function updateline($rowid, $desc, $pu, $qty, $remise_percent, $date_start, $date_end, $txtva, $txlocaltax1=0, $txlocaltax2=0, $price_base_type='HT', $info_bits=0, $type= self::TYPE_STANDARD, $fk_parent_line=0, $skip_update_total=0, $fk_fournprice=null, $pa_ht=0, $label='', $special_code=0, $array_options=0, $situation_percent=100, $fk_unit = null)
 	{
 		// Deprecation warning
 		if ($label) {
@@ -2509,7 +2511,7 @@ class Facture extends CommonInvoice
 			$this->line->date_start			= $date_start;
 			$this->line->date_end			= $date_end;
 			$this->line->total_ht			= (($this->type==self::TYPE_CREDIT_NOTE||$qty<0)?-abs($total_ht):$total_ht);  // For credit note and if qty is negative, total is negative
-			$this->line->total_tva			= $total_tva;
+			$this->line->total_tva			= (($this->type==self::TYPE_CREDIT_NOTE||$qty<0)?-abs($total_tva):$total_tva);
 			$this->line->total_localtax1	= $total_localtax1;
 			$this->line->total_localtax2	= $total_localtax2;
 			$this->line->total_ttc			= (($this->type==self::TYPE_CREDIT_NOTE||$qty<0)?-abs($total_ttc):$total_ttc);
@@ -3618,6 +3620,8 @@ class Facture extends CommonInvoice
 	 */
 	function getLinesArray()
 	{
+	    return $this->fetch_lines();
+	    /*
 		$sql = 'SELECT l.rowid, l.label as custom_label, l.description, l.fk_product, l.product_type, l.qty, l.tva_tx,';
 		$sql.= ' l.fk_remise_except, l.localtax1_tx, l.localtax2_tx,';
 		$sql .= ' l.situation_percent, l.fk_prev_id,';
@@ -3650,11 +3654,12 @@ class Facture extends CommonInvoice
 				$this->lines[$i]->description 		= $obj->description;
 				$this->lines[$i]->fk_product		= $obj->fk_product;
 				$this->lines[$i]->ref				= $obj->product_ref;
-                $this->lines[$i]->entity            = $obj->entity;         // Product entity
-				$this->lines[$i]->product_label		= $obj->product_label;
+                $this->lines[$i]->product_ref		= $obj->product_ref;
+                $this->lines[$i]->product_label		= $obj->product_label;
 				$this->lines[$i]->product_desc		= $obj->product_desc;
 				$this->lines[$i]->fk_product_type	= $obj->fk_product_type;
 				$this->lines[$i]->product_type		= $obj->product_type;
+				$this->lines[$i]->entity            = $obj->entity;         // Product entity
 				$this->lines[$i]->qty				= $obj->qty;
 				$this->lines[$i]->subprice			= $obj->subprice;
 				$this->lines[$i]->fk_remise_except 	= $obj->fk_remise_except;
@@ -3664,6 +3669,10 @@ class Facture extends CommonInvoice
 				$this->lines[$i]->total_ht			= $obj->total_ht;
 				$this->lines[$i]->total_tva			= $obj->total_tva;
 				$this->lines[$i]->total_ttc			= $obj->total_ttc;
+				$this->lines[$i]->localtax1_tx      = $obj->localtax1_tx;
+				$this->lines[$i]->localtax2_tx      = $obj->localtax2_tx;
+				$this->lines[$i]->localtax1_type    = $obj->localtax1_type;
+				$this->lines[$i]->localtax2_type    = $obj->localtax2_type;
 				$this->lines[$i]->fk_parent_line	= $obj->fk_parent_line;
 				$this->lines[$i]->situation_percent = $obj->situation_percent;
 				$this->lines[$i]->fk_prev_id        = $obj->fk_prev_id;
@@ -3688,7 +3697,7 @@ class Facture extends CommonInvoice
 		{
 			$this->error=$this->db->error();
 			return -1;
-		}
+		}*/
 	}
 
 	/**

@@ -146,6 +146,9 @@ if ($resql)
     	$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
     }
 
+    $parameters=array();
+    $reshook=$hookmanager->executeHooks('printFieldPreListTitle',$parameters);
+    
     if ($moreforfilter)
     {
     	print '<tr class="liste_titre">';
