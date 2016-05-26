@@ -5,6 +5,7 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 
 CKEDITOR.editorConfig = function( config )
 {
+	config.scayt_sLang = 'fr_FR';
 	// Define changes to default configuration here.
 	// http://docs.cksource.com/CKEditor_3.x/Developers_Guide
 	// http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html
@@ -56,6 +57,7 @@ CKEDITOR.editorConfig = function( config )
 	 	['NumberedList','BulletedList','Outdent','Indent','CreateDiv'],
 	 	['JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock'],
 	 	['Link','Unlink','Anchor','Image','Table','HorizontalRule','SpecialChar']
+		['Scayt']
 	 ];
 	
 	// Used for notes fields
@@ -68,7 +70,8 @@ CKEDITOR.editorConfig = function( config )
 	 	['Bold','Italic','Underline','Strike','Subscript','Superscript','-','TextColor','RemoveFormat'],
 	 	['NumberedList','BulletedList','Outdent','Indent'],
 	 	['JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock'],
-	    ['Link','Unlink','Image','Table','HorizontalRule','SpecialChar']
+	    ['Link','Unlink','Image','Table','HorizontalRule','SpecialChar'],
+		['Scayt']
 	];
 	
 	// Used for details lines
@@ -81,6 +84,7 @@ CKEDITOR.editorConfig = function( config )
 	 	['NumberedList','BulletedList','Outdent','Indent'],
 	 	['JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock'],
 	    ['Link','Unlink','SpecialChar']
+		['Scayt']
 	];
 	
 	// Used for mailing fields
