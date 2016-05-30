@@ -45,13 +45,13 @@ foreach ( $linkedObjectBlock as $object ) {
 	// var_dump($object);
 	$var = ! $var;
 	$productlink->fetch($object->fk_product);
-	
+
 	?>
 <tr <?php echo $GLOBALS['bc'][$var]; ?>>
-		<td><a href="<?php echo $object->getNomUrl(1); ?></td><td
-				align="center"><?php echo $productlink->getNomUrl(1); ?></td>
+		<td><?php echo $object->getNomUrl(1); ?></td>
+		<td	align="center"><?php echo $productlink->getNomUrl(1); ?></td>
 				<td align="right"><?php echo $object->getLibStatut(3); ?></td>
-	
+
 	</tr>
 <?php
 }
