@@ -732,6 +732,8 @@ function dol_format_address($object,$withcountry=0,$sep="\n",$outputlangs='')
 
 	// Address
 	$ret .= $object->address;
+	if(!empty($object->array_options['options_addresse_2'])) $ret .= $sep . $object->array_options['options_addresse_2'];
+	if(!empty($object->array_options['options_addresse_3'])) $ret .= $sep . $object->array_options['options_addresse_3'];
 	// Zip/Town/State
 	if (in_array($object->country_code,array('US','AU')) || ! empty($conf->global->MAIN_FORCE_STATE_INTO_ADDRESS))   	// US: title firstname name \n address lines \n town, state, zip \n country
 	{
