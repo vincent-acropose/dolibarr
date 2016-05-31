@@ -1,10 +1,11 @@
 <?php
-/* Copyright (C) 2003      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2003      Jean-Louis Bergamo   <jlb@j1b.org>
- * Copyright (C) 2004-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2004      Sebastien Di Cintio  <sdicintio@ressource-toi.org>
- * Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
- * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
+/* Copyright (C) 2003		Rodolphe Quiedeville	<rodolphe@quiedeville.org>
+ * Copyright (C) 2003		Jean-Louis Bergamo		<jlb@j1b.org>
+ * Copyright (C) 2004-2009	Laurent Destailleur		<eldy@users.sourceforge.net>
+ * Copyright (C) 2004		Sebastien Di Cintio		<sdicintio@ressource-toi.org>
+ * Copyright (C) 2004		Benoit Mortier			<benoit.mortier@opensides.be>
+ * Copyright (C) 2005-2011	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2015		Juanjo Menent			<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -94,12 +95,12 @@ $help_url='EN:Module_Users|FR:Module_Utilisateurs|ES:M&oacute;dulo_Usuarios';
 llxHeader('',$langs->trans("UsersSetup"),$help_url);
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans("UsersSetup"),$linkback,'setup');
+print load_fiche_titre($langs->trans("UsersSetup"),$linkback,'title_setup');
 
 
 $head=user_admin_prepare_head();
 
-dol_fiche_head($head,'card', $langs->trans("User"), 0, 'user');
+dol_fiche_head($head,'card', $langs->trans("MenuUsersAndGroups"), 0, 'user');
 
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
@@ -124,37 +125,16 @@ if ($conf->use_javascript_ajax)
 }
 else
 {
-	if($conf->global->USER_MAIL_REQUIRED == 0)
+	if (empty($conf->global->USER_MAIL_REQUIRED))
 	{
 		print '<a href="'.$_SERVER['PHP_SELF'].'?action=set_USER_MAIL_REQUIRED">'.img_picto($langs->trans("Disabled"),'off').'</a>';
 	}
-	else if($conf->global->USER_MAIL_REQUIRED == 1)
+	else
 	{
 		print '<a href="'.$_SERVER['PHP_SELF'].'?action=del_USER_MAIL_REQUIRED">'.img_picto($langs->trans("Enabled"),'on').'</a>';
 	}
 }
 print '</td></tr>';
-
-/*
-// USER_USE_SEARCH_TO_SELECT
-$var=!$var;
-print "<tr ".$bc[$var].">";
-print '<td>'.$langs->trans("HideClosedUserComboBox").'</td>';
-print '<td align="center" width="20">&nbsp;</td>';
-if (! empty($conf->global->USER_HIDE_INACTIVE_IN_COMBOBOX))
-{
-	print '<td  align="center" width="100"><a href="'.$_SERVER['PHP_SELF'].'?action=sethideinactiveuser&status=0">';
-	print img_picto($langs->trans("Activated"),'switch_on');
-	print '</a></td>';
-}
-else
-{
-	print '<td  align="center" width="100"><a href="'.$_SERVER['PHP_SELF'].'?action=sethideinactiveuser&status=1">';
-	print img_picto($langs->trans("Disabled"),'switch_off');
-	print '</a></td>';
-}
-print '</tr>';
-*/
 
 print '</table>';
 
@@ -162,4 +142,3 @@ dol_fiche_end();
 
 llxFooter();
 $db->close();
-?>

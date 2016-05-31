@@ -1,7 +1,8 @@
 <?php
-/* Copyright (C) 2003,2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
+/* Copyright (C) 2003-2005	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
+ * Copyright (C) 2004-2010	Laurent Destailleur		<eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2011	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2015		Alexandre Spangaro		<aspangaro.dolibarr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +19,18 @@
  */
 
 /**
- *	\defgroup   don     Module donation
- *	\brief      Module pour gerer le suivi des dons
+ *	\defgroup   don     Module donations
+ *	\brief      Module to manage the follow-up of the donations
  *	\file       htdocs/core/modules/modDon.class.php
- *	\ingroup    don
- *	\brief      Fichier de description et activation du module Don
+ *	\ingroup    donations
+ *	\brief      Description and activation file for module Donation
  */
 
 include_once DOL_DOCUMENT_ROOT .'/core/modules/DolibarrModules.class.php';
 
 
 /**
- *	Classe de description et activation du module Don
+ *	Class to describe and enable module Donation
  */
 class modDon  extends DolibarrModules
 {
@@ -56,14 +57,14 @@ class modDon  extends DolibarrModules
 		$this->picto='bill';
 
 		// Data directories to create when module is enabled
-		$this->dirs = array("/dons/temp");
+		$this->dirs = array("/don/temp");
 
 		// Dependancies
 		$this->depends = array();
 		$this->requiredby = array();
 
 		// Config pages
-		$this->config_page_url = array("dons.php");
+		$this->config_page_url = array("donation.php@don");
 
 		// Constants
 		$this->const = array();
@@ -74,7 +75,41 @@ class modDon  extends DolibarrModules
 		$this->const[$r][2] = "html_cerfafr";
 		$this->const[$r][3] = 'Nom du gestionnaire de generation de recu de dons';
 		$this->const[$r][4] = 0;
+
 		$r++;
+		$this->const[$r][0] = "DONATION_ART200";
+		$this->const[$r][1] = "yesno";
+		$this->const[$r][2] = "0";
+		$this->const[$r][3] = 'Option Française - Eligibilité Art200 du CGI';
+		$this->const[$r][4] = 0;
+
+		$r++;
+		$this->const[$r][0] = "DONATION_ART238";
+		$this->const[$r][1] = "yesno";
+		$this->const[$r][2] = "0";
+		$this->const[$r][3] = 'Option Française - Eligibilité Art238 bis du CGI';
+		$this->const[$r][4] = 0;
+
+		$r++;
+		$this->const[$r][0] = "DONATION_ART885";
+		$this->const[$r][1] = "yesno";
+		$this->const[$r][2] = "0";
+		$this->const[$r][3] = 'Option Française - Eligibilité Art885-0 V bis du CGI';
+		$this->const[$r][4] = 0;
+
+		$r++;
+		$this->const[$r][0] = "DONATION_MESSAGE";
+		$this->const[$r][1] = "chaine";
+		$this->const[$r][2] = "Thank you";
+		$this->const[$r][3] = 'Message affiché sur le récépissé de versements ou dons';
+		$this->const[$r][4] = 0;
+
+		$r++;
+		$this->const[$r][0] = "DONATION_ACCOUNTINGACCOUNT";
+		$this->const[$r][1] = "chaine";
+		$this->const[$r][2] = "7581";
+		$this->const[$r][3] = 'Compte comptable de remise des versements ou dons';
+		$this->const[$r][4] = 0;
 
 		// Boxes
 		$this->boxes = array();
@@ -123,21 +158,4 @@ class modDon  extends DolibarrModules
 
 		return $this->_init($sql,$options);
 	}
-
-    /**
-	 *		Function called when module is disabled.
-	 *      Remove from database constants, boxes and permissions from Dolibarr database.
-	 *		Data directories are not deleted
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-     */
-    function remove($options='')
-    {
-		$sql = array();
-
-		return $this->_remove($sql,$options);
-    }
-
 }
-?>

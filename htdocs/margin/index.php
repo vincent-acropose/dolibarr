@@ -34,4 +34,3 @@ if ($user->rights->produit->lire) {
 
 header('Location: '.dol_buildpath('/margin/'.$page.'.php', 1));
 
-?>

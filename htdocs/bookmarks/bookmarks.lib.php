@@ -38,8 +38,6 @@ function printBookmarksList($aDb, $aLangs)
 	require_once DOL_DOCUMENT_ROOT.'/bookmarks/class/bookmark.class.php';
 	if (! isset($conf->global->BOOKMARKS_SHOW_IN_MENU)) $conf->global->BOOKMARKS_SHOW_IN_MENU=5;
 
-	$bookm = new Bookmark($db);
-
 	$langs->load("bookmarks");
 
 	$url= $_SERVER["PHP_SELF"].(! empty($_SERVER["QUERY_STRING"])?'?'.$_SERVER["QUERY_STRING"]:'');
@@ -48,12 +46,11 @@ function printBookmarksList($aDb, $aLangs)
 	// Menu bookmark
 	$ret.= '<div class="menu_titre">';
 	$ret.= '<table class="nobordernopadding" width="100%" summary="bookmarkstable"><tr><td>';
-	$ret.= '<a class="vmenu" href="'.DOL_URL_ROOT.'/bookmarks/liste.php">'.$langs->trans('Bookmarks').'</a>';
+	$ret.= '<a class="vmenu" href="'.DOL_URL_ROOT.'/bookmarks/list.php">'.$langs->trans('Bookmarks').'</a>';
 	$ret.= '</td><td align="right">';
 	if ($user->rights->bookmark->creer)
 	{
-		$ret.= '<a class="vsmenu" href="'.DOL_URL_ROOT.'/bookmarks/fiche.php?action=create&amp;urlsource='.urlencode($url).'&amp;url='.urlencode($url).'">';
-		//$ret.=img_picto($langs->trans('AddThisPageToBookmarks'),'edit_add').' ';
+		$ret.= '<a class="vsmenu addbookmarkpicto" href="'.DOL_URL_ROOT.'/bookmarks/card.php?action=create&amp;urlsource='.urlencode($url).'&amp;url='.urlencode($url).'">';
 		$ret.=img_object($langs->trans('AddThisPageToBookmarks'),'bookmark');
 		$ret.= '</a>';
 	}
@@ -67,6 +64,7 @@ function printBookmarksList($aDb, $aLangs)
 	{
 		$sql = "SELECT rowid, title, url, target FROM ".MAIN_DB_PREFIX."bookmark";
 		$sql.= " WHERE (fk_user = ".$user->id." OR fk_user is NULL OR fk_user = 0)";
+        $sql.= " AND entity = ".$conf->entity;
 		$sql.= " ORDER BY position";
 		if ($resql = $db->query($sql) )
 		{
@@ -90,4 +88,3 @@ function printBookmarksList($aDb, $aLangs)
 	return $ret;
 }
 
-?>

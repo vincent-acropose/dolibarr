@@ -23,25 +23,29 @@ create table llx_commande_fournisseur
 (
   rowid					integer AUTO_INCREMENT PRIMARY KEY,
 
-  ref					varchar(30) NOT NULL,          -- order number
+  ref					varchar(255) NOT NULL,          -- order number
   entity				integer DEFAULT 1 NOT NULL,	 -- multi company id
 
-  ref_ext				varchar(30),                  -- reference into an external system (not used by dolibarr)
-  ref_supplier			varchar(30),
+  ref_ext				varchar(64),                  -- reference into an external system (not used by dolibarr)
+  ref_supplier			varchar(255),
 
   fk_soc				integer NOT NULL,
-  fk_projet				integer DEFAULT 0,             -- projet auquel est rattache la commande
+  fk_projet				integer DEFAULT 0,             -- project id
 
   tms					timestamp,
   date_creation			datetime,                      -- date de creation 
   date_valid			datetime,                      -- date de validation
   date_approve			datetime,                      -- date de approve
+  date_approve2			datetime,                      -- date de approve 2 (when double approving is accivated)
   date_commande			date,                          -- date de la commande
-  fk_user_author		integer,                       -- createur de la commande
-  fk_user_valid			integer,                       -- valideur de la commande
-  fk_user_approve		integer,                       -- auteur approve
-  source				smallint NOT NULL,
+  fk_user_author		integer,                       -- user making creation
+  fk_user_modif         integer,                       -- user making last change
+  fk_user_valid			integer,                       -- user validating
+  fk_user_approve		integer,                       -- user approving
+  fk_user_approve2		integer,                       -- user approving 2 (when double approving is accivated)
+  source				smallint NOT NULL,			-- not used, except by setting this to 42 for orders coming for replenishment and 0 in other case ?
   fk_statut				smallint  default 0,
+  billed				smallint  default 0,
   amount_ht				real      default 0,
   remise_percent		real      default 0,
   remise				real      default 0,
@@ -54,11 +58,14 @@ create table llx_commande_fournisseur
   note_public			text,
   model_pdf				varchar(255),
 
-  date_livraison		date 	  default NULL,
+  date_livraison		datetime  default NULL,
+  fk_account            integer,                       -- bank account
   fk_cond_reglement		integer,                       -- condition de reglement
   fk_mode_reglement		integer,                       -- mode de reglement
-  fk_input_method	integer default 0,
+  fk_input_method	    integer default 0,            -- id coming from c_input_reason, '0' if no defined
+  fk_incoterms          integer,						-- for incoterms
+  location_incoterms    varchar(255),					-- for incoterms
   import_key			varchar(14),
   extraparams			varchar(255)					-- for stock other parameters with json format
-  
+
 )ENGINE=innodb;

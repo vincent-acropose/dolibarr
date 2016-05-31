@@ -56,14 +56,16 @@ $fgroup->getrights();
 
 if ($action == 'dolibarr2ldap')
 {
-	$message="";
-
 	$db->begin();
 
 	$ldap=new Ldap();
 	$result=$ldap->connect_bind();
 
 	$info=$fgroup->_load_ldap_info();
+	// Get a gid number for objectclass PosixGroup
+	if(in_array('posixGroup',$info['objectclass']))
+		$info['gidNumber'] = $ldap->getNextGroupGid();
+
 	$dn=$fgroup->_load_ldap_dn($info);
 	$olddn=$dn;	// We can say that old dn = dn as we force synchro
 
@@ -71,12 +73,12 @@ if ($action == 'dolibarr2ldap')
 
 	if ($result >= 0)
 	{
-		$message.='<div class="ok">'.$langs->trans("GroupSynchronized").'</div>';
+		setEventMessages($langs->trans("GroupSynchronized"), null, 'mesgs');
 		$db->commit();
 	}
 	else
 	{
-		$message.='<div class="error">'.$ldap->error.'</div>';
+		setEventMessages($ldap->error, $ldap->errors, 'errors');
 		$db->rollback();
 	}
 }
@@ -98,15 +100,15 @@ dol_fiche_head($head, 'ldap', $langs->trans("Group"), 0, 'group');
 print '<table class="border" width="100%">';
 
 // Ref
-print '<tr><td width="25%" valign="top">'.$langs->trans("Ref").'</td>';
+print '<tr><td width="25%">'.$langs->trans("Ref").'</td>';
 print '<td colspan="2">';
 print $form->showrefnav($fgroup,'id','',$canreadperms);
 print '</td>';
 print '</tr>';
 
 // Name
-print '<tr><td width="25%" valign="top">'.$langs->trans("Name").'</td>';
-print '<td width="75%" class="valeur">'.$fgroup->nom;
+print '<tr><td width="25%">'.$langs->trans("Name").'</td>';
+print '<td width="75%" class="valeur">'.$fgroup->name;
 if (!$fgroup->entity)
 {
 	print img_picto($langs->trans("GlobalGroup"),'redstar');
@@ -114,7 +116,7 @@ if (!$fgroup->entity)
 print "</td></tr>\n";
 
 // Note
-print '<tr><td width="25%" valign="top">'.$langs->trans("Note").'</td>';
+print '<tr><td width="25%" class="tdtop">'.$langs->trans("Note").'</td>';
 print '<td class="valeur">'.nl2br($fgroup->note).'&nbsp;</td>';
 print "</tr>\n";
 
@@ -135,10 +137,6 @@ print "</table>\n";
 
 print '</div>';
 
-
-dol_htmloutput_mesg($message);
-
-
 /*
  * Barre d'actions
  */
@@ -157,7 +155,7 @@ if ($conf->global->LDAP_SYNCHRO_ACTIVE == 'dolibarr2ldap') print "<br>\n";
 
 
 // Affichage attributs LDAP
-print_titre($langs->trans("LDAPInformationsForThisGroup"));
+print load_fiche_titre($langs->trans("LDAPInformationsForThisGroup"));
 
 print '<table width="100%" class="noborder">';
 
@@ -208,4 +206,3 @@ llxFooter();
 
 $db->close();
 
-?>

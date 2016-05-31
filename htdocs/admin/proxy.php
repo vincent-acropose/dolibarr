@@ -44,12 +44,12 @@ if (GETPOST("action") == 'set_proxy')
 {
     if (GETPOST("MAIN_USE_CONNECT_TIMEOUT") && ! is_numeric(GETPOST("MAIN_USE_CONNECT_TIMEOUT")))
     {
-        setEventMessage($langs->trans("ErrorValueMustBeInteger"),'errors');
+        setEventMessages($langs->trans("ErrorValueMustBeInteger"), null, 'errors');
         $error++;
     }
     if (GETPOST("MAIN_USE_RESPONSE_TIMEOUT") && ! is_numeric(GETPOST("MAIN_USE_RESPONSE_TIMEOUT")))
     {
-        setEventMessage($langs->trans("ErrorValueMustBeInteger"),'errors');
+        setEventMessages($langs->trans("ErrorValueMustBeInteger"), null, 'errors');
         $error++;
     }
 
@@ -68,7 +68,7 @@ if (GETPOST("action") == 'set_proxy')
 
     if (! $error)
     {
-        setEventMessage($langs->trans("RecordModifiedSuccessfully"));
+        setEventMessages($langs->trans("RecordModifiedSuccessfully"), null, 'mesgs');
     }
 }
 
@@ -79,12 +79,20 @@ if (GETPOST("action") == 'set_proxy')
 
 $form = new Form($db);
 
-llxHeader('',$langs->trans("Proxy"));
+$wikihelp='EN:Setup_Security|FR:Paramétrage_Sécurité|ES:Configuración_Seguridad';
+llxHeader('',$langs->trans("Proxy"), $wikihelp);
 
-print_fiche_titre($langs->trans("SecuritySetup"),'','setup');
+print load_fiche_titre($langs->trans("SecuritySetup"),'','title_setup');
 
 print $langs->trans("ProxyDesc")."<br>\n";
 print "<br>\n";
+
+
+
+print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+print '<input type="hidden" name="action" value="set_proxy">';
+
 
 $head=security_prepare_head();
 
@@ -117,10 +125,6 @@ if ($conf->use_javascript_ajax)
 
 // Timeout
 $var=true;
-
-print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
-print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-print '<input type="hidden" name="action" value="set_proxy">';
 
 print '<table width="100%" class="noborder">';
 
@@ -196,16 +200,13 @@ print '</tr>';
 
 print '</table>';
 
-print '<br><center>';
+dol_fiche_end();
+
+print '<div class="center">';
 print '<input type="submit" class="button" name="button" value="'.$langs->trans("Modify").'">';
-print '</center>';
+print '</div>';
 
 print '</form>';
 
-dol_fiche_end();
-
-
-$db->close();
-
 llxFooter();
-?>
+$db->close();

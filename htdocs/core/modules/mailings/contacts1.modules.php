@@ -60,7 +60,7 @@ class mailing_contacts1 extends MailingTargets
 	 *	array of SQL request that returns two field:
 	 *	One called "label", One called "nb".
 	 *
-	 *	@return		array		Array with SQL requests
+	 *	@return		string[]		Array with SQL requests
 	 */
 	function getSqlArrayForStats()
 	{
@@ -75,6 +75,7 @@ class mailing_contacts1 extends MailingTargets
 		$statssql[0].= " WHERE c.entity IN (".getEntity('societe', 1).")";
 		$statssql[0].= " AND c.email != ''";      // Note that null != '' is false
 		$statssql[0].= " AND c.no_email = 0";
+		$statssql[0].= " AND c.statut = 1";
 
 		return $statssql;
 	}
@@ -85,7 +86,7 @@ class mailing_contacts1 extends MailingTargets
 	 *	For example if this selector is used to extract 500 different
 	 *	emails from a text file, this function must return 500.
 	 *
-	 *  @param	string	$sql		Requete sql de comptage
+	 *  @param		string	$sql		Requete sql de comptage
 	 *	@return		int
 	 */
 	function getNbOfRecipients($sql='')
@@ -98,6 +99,7 @@ class mailing_contacts1 extends MailingTargets
 		$sql.= " WHERE c.entity IN (".getEntity('societe', 1).")";
 		$sql.= " AND c.email != ''"; // Note that null != '' is false
 		$sql.= " AND c.no_email = 0";
+		$sql.= " AND c.statut = 1";
 
 		// La requete doit retourner un champ "nb" pour etre comprise
 		// par parent::getNbOfRecipients
@@ -158,7 +160,7 @@ class mailing_contacts1 extends MailingTargets
 	 */
 	function url($id)
 	{
-		return '<a href="'.DOL_URL_ROOT.'/contact/fiche.php?id='.$id.'">'.img_object('',"contact").'</a>';
+		return '<a href="'.DOL_URL_ROOT.'/contact/card.php?id='.$id.'">'.img_object('',"contact").'</a>';
 	}
 
 
@@ -197,13 +199,14 @@ class mailing_contacts1 extends MailingTargets
 
 		// La requete doit retourner: id, email, fk_contact, name, firstname, other
 		$sql = "SELECT c.rowid as id, c.email as email, c.rowid as fk_contact,";
-		$sql.= " c.lastname, c.firstname, c.civilite,";
+		$sql.= " c.lastname, c.firstname, c.civility as civility_id,";
 		$sql.= " s.nom as companyname";
 		$sql.= " FROM ".MAIN_DB_PREFIX."socpeople as c";
     	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = c.fk_soc";
 		$sql.= " WHERE c.entity IN (".getEntity('societe', 1).")";
 		$sql.= " AND c.email <> ''";
 		$sql.= " AND c.no_email = 0";
+		$sql.= " AND c.statut = 1";
 		$sql.= " AND c.email NOT IN (SELECT email FROM ".MAIN_DB_PREFIX."mailing_cibles WHERE fk_mailing=".$mailing_id.")";
 		foreach($filtersarray as $key)
 		{
@@ -239,7 +242,7 @@ class mailing_contacts1 extends MailingTargets
                     		'firstname' => $obj->firstname,
                     		'other' =>
                                 ($langs->transnoentities("ThirdParty").'='.$obj->companyname).';'.
-                                ($langs->transnoentities("UserTitle").'='.($obj->civilite?$langs->transnoentities("Civility".$obj->civilite):'')),
+                                ($langs->transnoentities("UserTitle").'='.($obj->civility_id?$langs->transnoentities("Civility".$obj->civility_id):'')),
                             'source_url' => $this->url($obj->id),
                             'source_id' => $obj->id,
                             'source_type' => 'contact'
@@ -263,4 +266,3 @@ class mailing_contacts1 extends MailingTargets
 
 }
 
-?>

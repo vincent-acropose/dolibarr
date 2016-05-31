@@ -28,11 +28,6 @@ include_once DOL_DOCUMENT_ROOT.'/societe/canvas/actions_card_common.class.php';
  */
 class ActionsCardIndividual extends ActionsCardCommon
 {
-    var $dirmodule;
-	var $targetmodule;
-    var $canvas;
-    var $card;
-
     /**
 	 *    Constructor
 	 *
@@ -74,8 +69,9 @@ class ActionsCardIndividual extends ActionsCardCommon
 
 	/**
 	 * Execute actions
+     * @deprecated Use the doActions of hooks instead of this.
 	 *
-	 * @param	string	&$action	Action
+	 * @param	string	$action	Action
 	 * @param	int		$id			Id of object (may be empty for creation)
 	 * @return	int					<0 if KO, >0 if OK
 	 */
@@ -91,8 +87,8 @@ class ActionsCardIndividual extends ActionsCardCommon
 	/**
 	 *    Assign custom values for canvas (for example into this->tpl to be used by templates)
 	 *
-	 *    @param	string	&$action    Type of action
-	 *    @param	string	$id			Id of object
+	 *    @param	string	$action    Type of action
+	 *    @param	integer	$id			Id of object
 	 *    @param	string	$ref		Ref of object
 	 *    @return	void
 	 */
@@ -109,7 +105,7 @@ class ActionsCardIndividual extends ActionsCardCommon
 
 		if ($action == 'create' || $action == 'edit')
 		{
-			$this->tpl['select_civility'] = $formcompany->select_civility(GETPOST('civilite_id'));
+			$this->tpl['select_civility'] = $formcompany->select_civility(GETPOST('civility_id'));
 		}
 		else
 		{
@@ -127,11 +123,11 @@ class ActionsCardIndividual extends ActionsCardCommon
 	 *
 	 * 	@param      User	$user      	  	User to check
 	 * 	@param      string	$features	    Features to check (in most cases, it's module name)
-	 * 	@param      int		$objectid      	Object ID if we want to check permission on a particular record (optionnal)
-	 *  @param      string	$dbtablename    Table name where object is stored. Not used if objectid is null (optionnal)
+	 * 	@param      int		$objectid      	Object ID if we want to check permission on a particular record (optional)
+	 *  @param      string	$dbtablename    Table name where object is stored. Not used if objectid is null (optional)
 	 *  @param      string	$feature2		Feature to check (second level of permission)
-	 *  @param      string	$dbt_keyfield   Field name for socid foreign key if not fk_soc. (optionnal)
-	 *  @param      string	$dbt_select		Field name for select if not rowid. (optionnal)
+	 *  @param      string	$dbt_keyfield   Field name for socid foreign key if not fk_soc. (optional)
+	 *  @param      string	$dbt_select		Field name for select if not rowid. (optional)
 	 *  @return		int						1
 	 */
 	function restrictedArea($user, $features='societe', $objectid=0, $dbtablename='', $feature2='', $dbt_keyfield='fk_soc', $dbt_select='rowid')
@@ -141,4 +137,3 @@ class ActionsCardIndividual extends ActionsCardCommon
 
 }
 
-?>

@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2002-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2005 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2011-2012 Juanjo Menent        <jmenent@2byte.es>
  *
@@ -40,6 +40,11 @@ $ref = GETPOST('ref','alpha');
 if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user, 'ficheinter', $id, 'fichinter');
 
+
+/*
+ * View
+ */
+
 llxHeader();
 
 $form = new Form($db);
@@ -67,13 +72,21 @@ if ($id > 0 || ! empty($ref))
 		 */
 		print '<table class="border" width="100%">';
 
-		// Ref
-		print '<tr><td width="18%">'.$langs->trans("Ref")."</td>";
-		print '<td colspan="2">'.$object->ref.'</td>';
+    	$linkback = '<a href="'.DOL_URL_ROOT.'/fichinter/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
+    
+    	// Ref
+    	print '<tr><td width="25%">'.$langs->trans("Ref").'</td><td colspan="3">';
+    	print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref');
+    	print '</td></tr>';
 
-		$nbrow=4;
+		$nbrow=3;
+		// Client
+		print "<tr><td>".$langs->trans("Customer")."</td>";
+		print '<td>';
+		print '<a href="'.DOL_URL_ROOT.'/comm/card.php?socid='.$soc->id.'">'.$soc->name.'</a>';
+		print '</td>';
 		print '<td rowspan="'.$nbrow.'" valign="top" width="50%">';
-
+		
 		/*
 		 * Documents
 		 */
@@ -85,9 +98,10 @@ if ($id > 0 || ! empty($ref))
 		$relativepath = "${objectref}/${objectref}.pdf";
 		$relativepathdetail = "${objectref}/${objectref}-detail.pdf";
 
-		// Chemin vers png apercus
-		$fileimage = $file.".png";          // Si PDF d'1 page
-		$fileimagebis = $file."-0.png";     // Si PDF de plus d'1 page
+        // Define path to preview pdf file (preview precompiled "file.ext" are "file.ext_preview.png")
+        $fileimage = $file.'_preview.png';          	// If PDF has 1 page
+        $fileimagebis = $file.'_preview-0.pdf.png';     // If PDF has more than one page
+        $relativepathimage = $relativepath.'_preview.png';
 
 		$var=true;
 
@@ -95,7 +109,7 @@ if ($id > 0 || ! empty($ref))
 		if (file_exists($file))
 		{
 			$encfile = urlencode($file);
-			print_titre($langs->trans("Documents"));
+			print load_fiche_titre($langs->trans("Documents"));
 			print '<table class="border" width="100%">';
 
 			print "<tr ".$bc[$var]."><td>".$langs->trans("Intervention")." PDF</td>";
@@ -118,11 +132,11 @@ if ($id > 0 || ! empty($ref))
 			print "</table>\n";
 
 			// Conversion du PDF en image png si fichier png non existant
-			if (! file_exists($fileimage) && ! file_exists($fileimagebis))
+			if ((! file_exists($fileimage) && ! file_exists($fileimagebis)) || (filemtime($fileimage) < filemtime($file)))
 			{
 				if (class_exists("Imagick"))
 				{
-					$ret = dol_convert_file($file);
+					$ret = dol_convert_file($file,'png',$fileimage);
 					if ($ret < 0) $error++;
 				}
 				else
@@ -135,24 +149,19 @@ if ($id > 0 || ! empty($ref))
 
 		print "</td></tr>";
 
-		// Client
-		print "<tr><td>".$langs->trans("Customer")."</td>";
-		print '<td colspan="2">';
-		print '<a href="'.DOL_URL_ROOT.'/comm/fiche.php?socid='.$soc->id.'">'.$soc->nom.'</a>';
-		print '</td>';
-		print '</tr>';
-
 		// Statut
 		print '<tr><td>'.$langs->trans("Status").'</td>';
-		print "<td colspan=\"2\">".$object->getLibStatut(4)."</td>\n";
+		print "<td>".$object->getLibStatut(4)."</td>\n";
 		print '</tr>';
 
 		// Date
 		print '<tr><td>'.$langs->trans("Date").'</td>';
-		print "<td colspan=\"2\">".dol_print_date($object->date,"daytext")."</td>\n";
+		print "<td>".dol_print_date($object->datec,"daytext")."</td>\n";
 		print '</tr>';
 
 		print '</table>';
+
+		dol_fiche_end();
 	}
 	else
 	{
@@ -164,7 +173,7 @@ if ($id > 0 || ! empty($ref))
 // Si fichier png PDF d'1 page trouve
 if (file_exists($fileimage))
 {
-	print '<img src="'.DOL_URL_ROOT . '/viewimage.php?modulepart=apercufichinter&file='.urlencode($relativepathimage).'">';
+	print '<img style="background: #FFF" src="'.DOL_URL_ROOT . '/viewimage.php?modulepart=apercufichinter&file='.urlencode($relativepathimage).'">';
 }
 // Si fichier png PDF de plus d'1 page trouve
 elseif (file_exists($fileimagebis))
@@ -177,14 +186,12 @@ elseif (file_exists($fileimagebis))
 
 		if (file_exists($dir_output.$preview))
 		{
-			print '<img src="'.DOL_URL_ROOT . '/viewimage.php?modulepart=apercufichinter&file='.urlencode($preview).'"><p>';
+			print '<img style="background: #FFF" src="'.DOL_URL_ROOT . '/viewimage.php?modulepart=apercufichinter&file='.urlencode($preview).'"><p>';
 		}
 	}
 }
 
-print '</div>';
-
-$db->close();
 
 llxFooter();
-?>
+
+$db->close();

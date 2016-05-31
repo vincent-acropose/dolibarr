@@ -43,7 +43,7 @@ $title='InfoPHP';
 
 if (isset($title))
 {
-	print_fiche_titre($langs->trans($title), '', 'setup');
+	print load_fiche_titre($langs->trans($title), '', 'title_setup');
 }
 
 
@@ -54,7 +54,7 @@ print "\n";
 
 $var=false;
 
-// Recupere la version de l'OS
+// Recupere la version de PHP
 $phpversion=version_php();
 print "<tr ".$bc[$var].'><td  width="220px">'.$langs->trans("Version")."</td><td>".$phpversion."</td></tr>\n";
 
@@ -67,7 +67,7 @@ print '<br>';
 $phparray=phpinfo_array();
 foreach($phparray as $key => $value)
 {
-	//print_titre($key);
+	//print load_fiche_titre($key);
 	print '<table class="noborder">';
 	print '<tr class="liste_titre">';
 	//print '<td width="220px">'.$langs->trans("Parameter").'</td>';
@@ -120,4 +120,3 @@ foreach($phparray as $key => $value)
 llxFooter();
 
 $db->close();
-?>

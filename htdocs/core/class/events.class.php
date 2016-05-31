@@ -31,7 +31,6 @@
 
 /**
  *	Events class
- *	Initialy built by build_class_from_table on 2008-02-28 17:25
  */
 class Events // extends CommonObject
 {
@@ -40,6 +39,8 @@ class Events // extends CommonObject
 
 	var $id;
 	var $db;
+
+	var $error;
 
 	var $tms;
 	var $type;
@@ -111,7 +112,7 @@ class Events // extends CommonObject
 		$this->description=trim($this->description);
 
 		// Check parameters
-		if (! $this->description) { $this->error='ErrorBadValueForParameter'; return -1; }
+		if (empty($this->description)) { $this->error='ErrorBadValueForParameterCreateEventDesc'; return -1; }
 
 		// Insert request
 		$sql = "INSERT INTO ".MAIN_DB_PREFIX."events(";
@@ -127,12 +128,12 @@ class Events // extends CommonObject
 		$sql.= " ".$conf->entity.",";
 		$sql.= " '".$_SERVER['REMOTE_ADDR']."',";
 		$sql.= " ".($_SERVER['HTTP_USER_AGENT']?"'".dol_trunc($_SERVER['HTTP_USER_AGENT'],250)."'":'NULL').",";
-		$sql.= " ".$this->db->idate($this->dateevent).",";
+		$sql.= " '".$this->db->idate($this->dateevent)."',";
 		$sql.= " ".($user->id?"'".$user->id."'":'NULL').",";
-		$sql.= " '".$this->db->escape($this->description)."'";
+		$sql.= " '".$this->db->escape(dol_trunc($this->description,250))."'";
 		$sql.= ")";
 
-		dol_syslog(get_class($this)."::create sql=".$sql, LOG_DEBUG);
+		dol_syslog(get_class($this)."::create", LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
@@ -142,7 +143,6 @@ class Events // extends CommonObject
 		else
 		{
 			$this->error="Error ".$this->db->lasterror();
-			dol_syslog(get_class($this)."::create ".$this->error, LOG_ERR);
 			return -1;
 		}
 	}
@@ -155,7 +155,7 @@ class Events // extends CommonObject
 	 * @param   int		$notrigger	    0=no, 1=yes (no update trigger)
 	 * @return  int         			<0 if KO, >0 if OK
 	 */
-	function update($user=0, $notrigger=0)
+	function update($user=null, $notrigger=0)
 	{
 		global $conf, $langs;
 
@@ -174,12 +174,11 @@ class Events // extends CommonObject
 		$sql.= " description='".$this->db->escape($this->description)."'";
 		$sql.= " WHERE rowid=".$this->id;
 
-		dol_syslog(get_class($this)."::update sql=".$sql, LOG_DEBUG);
+		dol_syslog(get_class($this)."::update", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if (! $resql)
 		{
 			$this->error="Error ".$this->db->lasterror();
-			dol_syslog(get_class($this)."::update ".$this->error, LOG_ERR);
 			return -1;
 		}
 		return 1;
@@ -193,7 +192,7 @@ class Events // extends CommonObject
 	 *  @param  User	$user       User that load
 	 *  @return int         		<0 if KO, >0 if OK
 	 */
-	function fetch($id, $user=0)
+	function fetch($id, $user=null)
 	{
 		global $langs;
 
@@ -209,7 +208,7 @@ class Events // extends CommonObject
 		$sql.= " FROM ".MAIN_DB_PREFIX."events as t";
 		$sql.= " WHERE t.rowid = ".$id;
 
-		dol_syslog(get_class($this)."::fetch sql=".$sql, LOG_DEBUG);
+		dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
@@ -233,7 +232,6 @@ class Events // extends CommonObject
 		else
 		{
 			$this->error="Error ".$this->db->lasterror();
-			dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
 			return -1;
 		}
 	}
@@ -252,12 +250,11 @@ class Events // extends CommonObject
 		$sql = "DELETE FROM ".MAIN_DB_PREFIX."events";
 		$sql.= " WHERE rowid=".$this->id;
 
-		dol_syslog(get_class($this)."::delete sql=".$sql);
+		dol_syslog(get_class($this)."::delete", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if (! $resql)
 		{
 			$this->error="Error ".$this->db->lasterror();
-			dol_syslog(get_class($this)."::delete ".$this->error, LOG_ERR);
 			return -1;
 		}
 
@@ -283,4 +280,3 @@ class Events // extends CommonObject
 	}
 
 }
-?>

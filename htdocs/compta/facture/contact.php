@@ -2,7 +2,7 @@
 /* Copyright (C) 2005      Patrick Rouillon     <patrick@rouillon.net>
  * Copyright (C) 2005-2009 Destailleur Laurent  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2011-2012 Philippe Grand       <philippe.grand@atoo-net.com>
+ * Copyright (C) 2011-2015 Philippe Grand       <philippe.grand@atoo-net.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ $object = new Facture($db);
 
 
 /*
- * Ajout d'un nouveau contact
+ * Add a new contact
  */
 
 if ($action == 'addcontact' && $user->rights->facture->creer)
@@ -71,16 +71,16 @@ if ($action == 'addcontact' && $user->rights->facture->creer)
 		if ($object->error == 'DB_ERROR_RECORD_ALREADY_EXISTS')
 		{
 			$langs->load("errors");
-			$mesg = '<div class="error">'.$langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType").'</div>';
+			setEventMessages($langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType"), null, 'errors');
 		}
 		else
 		{
-			$mesg = '<div class="error">'.$object->error.'</div>';
+			setEventMessages($object->error, $object->errors, 'errors');
 		}
 	}
 }
 
-// bascule du statut d'un contact
+// Toggle the status of a contact
 else if ($action == 'swapstatut' && $user->rights->facture->creer)
 {
 	if ($object->fetch($id))
@@ -93,7 +93,7 @@ else if ($action == 'swapstatut' && $user->rights->facture->creer)
 	}
 }
 
-// Efface un contact
+// Deletes a contact
 else if ($action == 'deletecontact' && $user->rights->facture->creer)
 {
 	$object->fetch($id);
@@ -124,10 +124,9 @@ $userstatic=new User($db);
 
 /* *************************************************************************** */
 /*                                                                             */
-/* Mode vue et edition                                                         */
+/* View and edit mode                                                         */
 /*                                                                             */
 /* *************************************************************************** */
-dol_htmloutput_mesg($mesg);
 
 if ($id > 0 || ! empty($ref))
 {
@@ -140,7 +139,7 @@ if ($id > 0 || ! empty($ref))
 		dol_fiche_head($head, 'contact', $langs->trans('InvoiceCustomer'), 0, 'bill');
 
 		/*
-		 *   Facture synthese pour rappel
+		 *   Summary invoice for reminder
 		 */
 		print '<table class="border" width="100%">';
 
@@ -179,7 +178,7 @@ if ($id > 0 || ! empty($ref))
 		print '<td colspan="3">'.$object->client->getNomUrl(1,'compta').'</td></tr>';
 		print "</table>";
 
-		print '</div>';
+		dol_fiche_end();
 
 		print '<br>';
 
@@ -202,4 +201,3 @@ if ($id > 0 || ! empty($ref))
 
 llxFooter();
 $db->close();
-?>

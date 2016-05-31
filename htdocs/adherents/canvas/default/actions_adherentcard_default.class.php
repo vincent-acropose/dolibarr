@@ -30,12 +30,6 @@ include_once DOL_DOCUMENT_ROOT.'/adherents/canvas/actions_adherentcard_common.cl
  */
 class ActionsAdherentCardDefault extends ActionsAdherentCardCommon
 {
-	var $db;
-	var $dirmodule;
-    var $targetmodule;
-    var $canvas;
-    var $card;
-
 	/**
      *	Constructor
      *
@@ -62,7 +56,7 @@ class ActionsAdherentCardDefault extends ActionsAdherentCardCommon
 	 */
 	private function getTitle($action)
 	{
-		global $langs;
+		global $langs,$conf;
 
 		$out='';
 
@@ -76,7 +70,7 @@ class ActionsAdherentCardDefault extends ActionsAdherentCardCommon
 	/**
 	 *  Assign custom values for canvas
 	 *
-	 *  @param	string		&$action    	Type of action
+	 *  @param	string		$action    	Type of action
 	 *  @param	int			$id				Id
 	 *  @return	void
 	 */
@@ -145,4 +139,3 @@ class ActionsAdherentCardDefault extends ActionsAdherentCardCommon
 	}
 }
 
-?>

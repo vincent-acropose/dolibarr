@@ -26,6 +26,8 @@
 
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 
 $langs->load("categories");
 
@@ -34,10 +36,12 @@ $ref=GETPOST('ref');
 $type=GETPOST('type');
 $action=GETPOST('action');
 $confirm=GETPOST('confirm');
+$cancel=GETPOST('cancel');
 
 $socid=GETPOST('socid','int');
-$nom=GETPOST('nom');
+$label=GETPOST('label');
 $description=GETPOST('description');
+$color=GETPOST('color','alpha');
 $visible=GETPOST('visible');
 $parent=GETPOST('parent');
 
@@ -50,54 +54,68 @@ if ($id == "")
 // Security check
 $result = restrictedArea($user, 'categorie', $id, '&category');
 
+$object = new Categorie($db);
+if ($id > 0)
+{
+    $result=$object->fetch($id);
+}
+
+$extrafields = new ExtraFields($db);
+$extralabels=$extrafields->fetch_name_optionals_label($object->table_element);
+
+// Initialize technical object to manage hooks. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('categorycard'));
 
 
 /*
  * Actions
  */
 
+if ($cancel)
+{
+    header('Location: '.DOL_URL_ROOT.'/categories/viewcat.php?id='.$object->id.'&type='.$type);
+    exit;
+}
+
 // Action mise a jour d'une categorie
 if ($action == 'update' && $user->rights->categorie->creer)
 {
-	$categorie = new Categorie($db);
-	$result=$categorie->fetch($id);
-
-	$categorie->label          = $nom;
-	$categorie->description    = dol_htmlcleanlastbr($description);
-	$categorie->socid          = ($socid ? $socid : 'null');
-	$categorie->visible        = $visible;
+	$object->label          = $label;
+	$object->description    = dol_htmlcleanlastbr($description);
+	$object->color          = $color;
+	$object->socid          = ($socid ? $socid : 'null');
+	$object->visible        = $visible;
 
 	if ($parent != "-1")
-		$categorie->fk_parent = $parent;
+		$object->fk_parent = $parent;
 	else
-		$categorie->fk_parent = "";
+		$object->fk_parent = "";
 
 
-	if (empty($categorie->label))
+	if (empty($object->label))
 	{
-		$action = 'create';
-		$mesg = $langs->trans("ErrorFieldRequired",$langs->transnoentities("Label"));
+	    $error++;
+		$action = 'edit';
+		setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentities("Label")), null, 'errors');
 	}
-	if (empty($categorie->description))
+	if (! $error && empty($object->error))
 	{
-		$action = 'create';
-		$mesg = $langs->trans("ErrorFieldRequired",$langs->transnoentities("Description"));
-	}
-	if (empty($categorie->error))
-	{
-		if ($categorie->update($user) > 0)
+		$ret = $extrafields->setOptionalsFromPost($extralabels,$object);
+		if ($ret < 0) $error++;
+
+		if (! $error && $object->update($user) > 0)
 		{
-			header('Location: '.DOL_URL_ROOT.'/categories/viewcat.php?id='.$categorie->id.'&type='.$type);
+			header('Location: '.DOL_URL_ROOT.'/categories/viewcat.php?id='.$object->id.'&type='.$type);
 			exit;
 		}
 		else
 		{
-			$mesg=$categorie->error;
+			setEventMessages($object->error, $object->errors, 'errors');
 		}
 	}
 	else
 	{
-		$mesg=$categorie->error;
+		setEventMessages($object->error, $object->errors, 'errors');
 	}
 }
 
@@ -107,22 +125,15 @@ if ($action == 'update' && $user->rights->categorie->creer)
  * View
  */
 
+$form = new Form($db);
+$formother = new FormOther($db);
+
 llxHeader("","",$langs->trans("Categories"));
 
-print_fiche_titre($langs->trans("ModifCat"));
+print load_fiche_titre($langs->trans("ModifCat"));
 
-
-dol_htmloutput_errors($mesg);
-
-
-$object = new Categorie($db);
 $object->fetch($id);
 
-$form = new Form($db);
-
-print '<table class="notopnoleft" border="0" width="100%">';
-
-print '<tr><td class="notopnoleft" valign="top" width="30%">';
 
 print "\n";
 print '<form method="post" action="'.$_SERVER['PHP_SELF'].'">';
@@ -131,21 +142,30 @@ print '<input type="hidden" name="action" value="update">';
 print '<input type="hidden" name="id" value="'.$object->id.'">';
 print '<input type="hidden" name="type" value="'.$type.'">';
 
+dol_fiche_head('');
+
 print '<table class="border" width="100%">';
 
 // Ref
-print '<tr><td class="fieldrequired">';
+print '<tr><td class="fieldrequired" width="25%">';
 print $langs->trans("Ref").'</td>';
-print '<td><input type="text" size="25" id="nom" name ="nom" value="'.$object->label.'" />';
+print '<td><input type="text" size="25" id="label" name ="label" value="'.$object->label.'" />';
 print '</tr>';
 
 // Description
 print '<tr>';
-print '<td width="25%">'.$langs->trans("Description").'</td>';
-print '<td>';
+print '<td>'.$langs->trans("Description").'</td>';
+print '<td >';
 require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 $doleditor=new DolEditor('description',$object->description,'',200,'dolibarr_notes','',false,true,$conf->fckeditor->enabled,ROWS_6,50);
 $doleditor->Create();
+print '</td></tr>';
+
+// Color
+print '<tr>';
+print '<td>'.$langs->trans("Color").'</td>';
+print '<td >';
+print $formother->selectColor($object->color, 'color');
 print '</td></tr>';
 
 // Parent category
@@ -153,17 +173,23 @@ print '<tr><td>'.$langs->trans("In").'</td><td>';
 print $form->select_all_categories($type,$object->fk_parent,'parent',64,$object->id);
 print '</td></tr>';
 
-print '</table>';
-print '<br>';
+$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
+if (empty($reshook) && ! empty($extrafields->attribute_label))
+{
+	print $object->showOptionals($extrafields,'edit');
+}
 
-print '<center><input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-print '</center>';
+print '</table>';
+
+
+dol_fiche_end();
+
+
+print '<div class="center"><input type="submit" class="button" name"submit" value="'.$langs->trans("Modify").'"> &nbsp; <input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'"></div>';
 
 print '</form>';
 
-print '</td></tr></table>';
 
 
 llxFooter();
 $db->close();
-?>

@@ -69,6 +69,7 @@ INSERT INTO llx_c_currencies ( code_iso, unicode, active, label ) VALUES ( 'EUR'
 INSERT INTO llx_c_currencies ( code_iso, unicode, active, label ) VALUES ( 'FKP', '[163]', 1,				'Falkland Islands (Malvinas) Pound');
 INSERT INTO llx_c_currencies ( code_iso, unicode, active, label ) VALUES ( 'FJD', '[36]', 1,				'Fiji Dollar');
 INSERT INTO llx_c_currencies ( code_iso, unicode, active, label ) VALUES ( 'GHC', '[162]', 1,				'Ghana Cedis');
+INSERT INTO llx_c_currencies ( code_iso, unicode, active, label ) VALUES ( 'GNF', '[70,71]', 1,				'Franc Guinéen');
 INSERT INTO llx_c_currencies ( code_iso, unicode, active, label ) VALUES ( 'GIP', '[163]', 1,				'Gibraltar Pound');
 INSERT INTO llx_c_currencies ( code_iso, unicode, active, label ) VALUES ( 'GTQ', '[81]', 1,				'Guatemala Quetzal');
 INSERT INTO llx_c_currencies ( code_iso, unicode, active, label ) VALUES ( 'GGP', '[163]', 1,				'Guernsey Pound');
@@ -150,6 +151,7 @@ INSERT INTO llx_c_currencies ( code_iso, unicode, active, label ) VALUES ( 'VEF'
 INSERT INTO llx_c_currencies ( code_iso, unicode, active, label ) VALUES ( 'VND', '[8363]', 1,				'Viet Nam Dong');
 INSERT INTO llx_c_currencies ( code_iso, unicode, active, label ) VALUES ( 'XAF', NULL, 1,					'Communaute Financiere Africaine (BEAC) CFA Franc');
 INSERT INTO llx_c_currencies ( code_iso, unicode, active, label ) VALUES ( 'XOF', NULL, 1,					'Communaute Financiere Africaine (BCEAO) Franc');
+INSERT INTO llx_c_currencies ( code_iso, unicode, active, label ) VALUES ( 'XPF', NULL, 1,                   'Franc pacifique (XPF)');
 INSERT INTO llx_c_currencies ( code_iso, unicode, active, label ) VALUES ( 'YER', '[65020]', 1,				'Yemen Rial');
 INSERT INTO llx_c_currencies ( code_iso, unicode, active, label ) VALUES ( 'ZWD', '[90,36]', 1,				'Zimbabwe Dollar');
 

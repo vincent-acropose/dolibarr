@@ -29,12 +29,6 @@ include_once DOL_DOCUMENT_ROOT.'/contact/canvas/actions_contactcard_common.class
  */
 class ActionsContactCardDefault extends ActionsContactCardCommon
 {
-	var $db;
-	var $dirmodule;
-    var $targetmodule;
-    var $canvas;
-    var $card;
-
 	/**
      *	Constructor
      *
@@ -75,7 +69,7 @@ class ActionsContactCardDefault extends ActionsContactCardCommon
 	/**
 	 *  Assign custom values for canvas
 	 *
-	 *  @param	string		&$action    	Type of action
+	 *  @param	string		$action    	Type of action
 	 *  @param	int			$id				Id
 	 *  @return	void
 	 */
@@ -144,4 +138,3 @@ class ActionsContactCardDefault extends ActionsContactCardCommon
 	}
 }
 
-?>

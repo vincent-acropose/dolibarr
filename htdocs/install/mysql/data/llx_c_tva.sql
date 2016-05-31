@@ -5,7 +5,7 @@
 -- Copyright (C) 2004      Guillaume Delecourt  <guillaume.delecourt@opensides.be>
 -- Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
 -- Copyright (C) 2007 	   Patrick Raguin       <patrick.raguin@gmail.com>
--- Copyright (C) 2010-2011 Juanjo Menent        <jmenent@2byte.es>
+-- Copyright (C) 2010-2015 Juanjo Menent        <jmenent@2byte.es>
 -- Copyright (C) 2012      Sebastian Neuwert    <sebastian.neuwert@modula71.de>
 -- Copyright (C) 2012	   Ricardo Schluter		<info@ripasch.nl>
 --
@@ -49,7 +49,7 @@ insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (41
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (412, 41,  '10','0','VAT reduced rate', 1);
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (413, 41,   '0','0','VAT Rate 0',1);
 
--- BRASIL (id country=59)
+-- BRASIL (id country=56)
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (561, 56,  '0','0','VAT reduced rate',1);
 
 -- BULGARIA (id country=59)
@@ -66,7 +66,10 @@ insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values ( 2
 -- CANADA (id country=14)
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (141, 14,   '7','0','VAT standard rate',1);
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (142, 14,   '0','0','VAT Rate 0',1);
-insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_type,note,active) values (143, 14,'5','0','9.975','1','TPS and TVQ rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_type,note,active) values (143, 14,'5','0','9.975','1','GST/TPS and PST/TVQ rate for Province',1);
+--insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_type,note,active) values (143, 14,'5','0','9.975','1','GST/TPS and PST/TVQ rate for Quebec',1);
+--insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_type,note,active) values (144, 14,'5','0','7','1','GST/TPS and PST/TVQ rate for British Columbia',1);
+--insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_type,note,active) values (149, 14,'5','0',null,null,'GST/TPS and PST/TVQ rate for Yukon',1);
 
 
 -- CAMEROUN (id country=24)
@@ -118,16 +121,27 @@ insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (11
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1163, 116,   '0','0','VAT rate 0',1);
 
 -- ITALY (id country=3)
-insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values ( 31,  3,  '21','0','VAT standard rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values ( 31,  3,  '22','0','VAT standard rate',1);
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values ( 32,  3,  '10','0','VAT reduced rate',1);
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values ( 33,  3,   '4','0','VAT super-reduced rate',1);
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values ( 34,  3,   '0','0','VAT Rate 0',1);
 
 -- INDIA (id country=117)
-insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1171, 117,  '12.5','0','VAT standard rate',1);
-insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1172, 117,  '4','0','VAT reduced rate',1);
-insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1173, 117,  '1','0','VAT super-reduced rate',1);
-insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1174, 117,  '0','0','VAT Rate 0',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1171, 117, '12.5','0','VAT standard rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1172, 117,    '4','0','VAT reduced rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1173, 117,    '1','0','VAT super-reduced rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1174, 117,    '0','0','VAT Rate 0',1);
+
+-- IRELAND (id country=8)
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (81,     8,    '0','0','VAT Rate 0',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (82,     8,   '23','0','VAT standard rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (83,     8, '13.5','0','VAT reduced rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (84,     8,    '9','0','VAT reduced rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (85,     8,  '4.8','0','VAT reduced rate',1);
+
+-- IVORY COST (id country=21)
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_type,localtax2,localtax2_type,note,active) values (211, 21,  '0','0',0,0,0,0,'IVA Rate 0',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_type,localtax2,localtax2_type,note,active) values (212, 21,  '18','0',7.5,2,0,0,'IVA standard rate',1);
 
 -- JAPAN (id country=123)
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1231, 123, '0','0','VAT Rate 0',1);
@@ -156,6 +170,12 @@ insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (12
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (124,  12,  '7','0','VAT super-reduced rate', 1);
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (125,  12,  '0','0','VAT Rate 0', 1);
 
+-- MALTA (id country=148)
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1481,  148, '18','0','VAT standard rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1482,  148, '7','0','VAT reduced rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1483,  148, '5','0','VAT super-reduced rate', 1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1484,  148, '0','0','VAT Rate 0', 1);
+
 -- NEDERLAND (id country=17)
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (171, 17,  '19','0','Algemeen BTW tarief',1);
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (172, 17,   '6','0','Verlaagd BTW tarief', 1);
@@ -177,12 +197,12 @@ insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (17
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1734, 173,    '0','0','VAT Rate 0', 1);
 
 -- PERU (id country=181)
-insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1841, 181,  '18','0','VAT standard rate',1);
-insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1843, 181,   '0','0','VAT Rate 0',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1811, 181,  '18','0','VAT standard rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1812, 181,   '0','0','VAT Rate 0',1);
 
 -- POLAND (id country=184)
-insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1841, 184,  '20','0','VAT standard rate',1);
-insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1842, 184,   '7','0','VAT reduced rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1841, 184,  '23','0','VAT standard rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1842, 184,   '8','0','VAT reduced rate',1);
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1843, 184,   '3','0','VAT reduced rate',1);
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1844, 184,   '0','0','VAT Rate 0', 1);
 
@@ -193,7 +213,7 @@ insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (25
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (254, 25,   '6','0','VAT reduced rate',1); 
 
 -- ROMANIA (id country=188)
-insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1881,188,  '24','0','VAT standard rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1881,188,  '20','0','VAT standard rate',1);
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1882,188,   '9','0','VAT reduced rate',1);
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1884,188,   '5','0','VAT reduced rate',1);
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (1883,188,   '0','0','VAT Rate 0', 1);
@@ -204,6 +224,11 @@ INSERT INTO llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) VALUES ( 2
 -- SAN SALVADOR (id country=86)
 INSERT INTO llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) VALUES (861, 86, '13', '0', 'IVA 13', 1);
 INSERT INTO llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) VALUES (862, 86,  '0', '0', 'SIN IVA', 1);
+
+-- SENEGAL (id country=22)
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (221, 22, '18', '0', 'VAT standard rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (222, 22, '10', '0', 'VAT reduced rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (223, 22, '0', '0', 'VAT Rate 0', 1);
 
 -- SLOVAKIA (id country=201)
 INSERT INTO llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) VALUES (2011, 201, '19', '0', 'VAT standard rate', 1);
@@ -216,10 +241,10 @@ INSERT INTO llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) VALUES (20
 INSERT INTO llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) VALUES (2023, 202,  '0', '0', 'VAT Rate 0', 1);
 
 -- SPAIN (id country=4)
-insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_type,localtax2,localtax2_type,note,active) values ( 41, 4,'21','0','5.2','3','-21','1','VAT standard rate',1);
-insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_type,localtax2,localtax2_type,note,active) values ( 42, 4,'10','0','1.4','3','-21','1','VAT reduced rate',1);
-insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_type,localtax2,localtax2_type,note,active) values ( 43, 4, '4','0','0.5','3','-21','1','VAT super-reduced rate',1);
-insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_type,localtax2,localtax2_type,note,active) values ( 44, 4, '0','0',  '0','3','-21','1','VAT Rate 0',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_type,localtax2,localtax2_type,note,active) values ( 41, 4,'21','0','5.2','3','-19:-15:-9','5','VAT standard rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_type,localtax2,localtax2_type,note,active) values ( 42, 4,'10','0','1.4','3','-19:-15:-9','5','VAT reduced rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_type,localtax2,localtax2_type,note,active) values ( 43, 4, '4','0','0.5','3','-19:-15:-9','5','VAT super-reduced rate',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_type,localtax2,localtax2_type,note,active) values ( 44, 4, '0','0',  '0','3','-19:-15:-9','5','VAT Rate 0',1);
 
 -- SWEDEN (id country=20)
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values (201,20,  '25','0','VAT standard rate',1);
@@ -232,6 +257,9 @@ insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values ( 6
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values ( 62, 6, '3.8','0','VAT reduced rate',1);
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values ( 63, 6, '2.5','0','VAT super-reduced rate',1);
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values ( 64, 6,   '0','0','VAT Rate 0',  1);
+
+-- TAIWAN (id country=213)
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values ( 2131, 213,   '5','0','VAT 5%',1);
 
 -- TUNISIA (id country=10)
 insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active,localtax1,localtax1_type,localtax2,localtax2_type) values (101,10,    '6','0','VAT 6%', 1, 1, '4', 0, 0);

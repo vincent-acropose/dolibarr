@@ -58,18 +58,17 @@ if ($action == 'add' || GETPOST('modify','alpha'))
 	$ftp_server = "FTP_SERVER_" . $entry; //$_POST["numero_entry"];
 
 	$error=0;
-	$mesg='';
 
 	if (! GETPOST("$ftp_name",'alpha'))
 	{
 		$error=1;
-		$mesg.='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Label")).'</div>';
+		setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Label")), null, 'errors');
 	}
 
 	if (! GETPOST("$ftp_server",'alpha'))
 	{
 		$error=1;
-		$mesg.='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Server")).'</div>';
+		setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Server")), null, 'errors');
 	}
 
     if (! $error)
@@ -91,7 +90,6 @@ if ($action == 'add' || GETPOST('modify','alpha'))
         if ($result1 && $result2 && $result3 && $result4 && $result5 && $result6)
         {
             $db->commit();
-	  		//$mesg='<div class="ok">'.$langs->trans("Success").'</div>';
             header("Location: ".$_SERVER["PHP_SELF"]);
             exit;
         }
@@ -119,7 +117,6 @@ if (GETPOST('delete','alpha'))
         if ($result1 && $result2 && $result3 && $result4 && $result5 && $result6)
         {
             $db->commit();
-	  		//$mesg='<div class="ok">'.$langs->trans("Success").'</div>';
             header("Location: ".$_SERVER["PHP_SELF"]);
             exit;
         }
@@ -141,7 +138,7 @@ $form=new Form($db);
 llxHeader();
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans("FTPClientSetup"), $linkback, 'setup');
+print load_fiche_titre($langs->trans("FTPClientSetup"), $linkback, 'title_setup');
 print '<br>';
 
 if (! function_exists('ftp_connect'))
@@ -155,7 +152,7 @@ else
 	print '<form name="ftpconfig" action="ftpclient.php" method="post">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 
-	print '<table class="nobordernopadding" width="100%">';
+	print '<table class="noborder" width="100%">';
 	print '<tr class="liste_titre">';
 	print '<td colspan="2">'.$langs->trans("NewFTPClient").'</td>';
 	print '<td>'.$langs->trans("Example").'</td>';
@@ -199,15 +196,13 @@ else
 	print '<td>'.$langs->trans("No").'</td>';
 	print '</tr>';
 	
+	print '</table>';
+	
 	?>
-	<tr><td colspan="3" align="center">
-	<input type="submit" class="button" value="<?php echo $langs->trans("Add") ?>">
+	<br><div class="center"><input type="submit" class="button" value="<?php echo $langs->trans("Add") ?>"></div>
 	<input type="hidden" name="action" value="add">
 	<input type="hidden" name="numero_entry" value="<?php echo ($lastftpentry+1) ?>">
-	</td>
-	</tr>
 	<?php
-	print '</table>';
 	print '</form>';
 	?>
 
@@ -215,13 +210,13 @@ else
 
 	<?php
 
-	print '<table class="nobordernopadding" width="100%">'."\n";
+	print '<table class="noborder" width="100%">'."\n";
 
 	$sql ="select name, value, note from ".MAIN_DB_PREFIX."const";
 	$sql.=" WHERE name like 'FTP_SERVER_%'";
 	$sql.=" ORDER BY name";
 
-	dol_syslog("ftpclient select ftp setup sql=".$sql,LOG_DEBUG);
+	dol_syslog("ftpclient select ftp setup", LOG_DEBUG);
 	$resql=$db->query($sql);
 	if ($resql)
 	{
@@ -277,7 +272,7 @@ else
 
 			$var=!$var;
 			print "<tr ".$bc[$var].">";
-			print "<td width=\"100\">".$langs->trans("Passive")."</td>";
+			print "<td width=\"100\">".$langs->trans("FTPPassiveMode")."</td>";
 			print '<td>'.$form->selectyesno('FTP_PASSIVE_'.$idrss, @constant("FTP_PASSIVE_" . $idrss), 1).'</td>';
 			print "</tr>";
 
@@ -304,10 +299,6 @@ else
 
 }
 
-dol_htmloutput_mesg($mesg);
-
-
 llxFooter();
 
 $db->close();
-?>

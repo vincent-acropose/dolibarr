@@ -1,5 +1,4 @@
 # Dolibarr language file - Source file is en_US - ecm
-MenuECM=Dokumenty
 DocsMine=Moje dokumenty
 DocsGenerated=Generované dokumenty
 DocsElements=Prvky dokumenty
@@ -35,7 +34,7 @@ ECMSearchByEntity=Hľadať podľa objektu
 ECMSectionOfDocuments=Adresára dokumentov
 ECMTypeManual=Manuál
 ECMTypeAuto=Automatický
-ECMDocsBySocialContributions=Dokumenty súvisiace odvody na sociálne zabezpečenie
+ECMDocsBySocialContributions=Documents linked to social or fiscal taxes
 ECMDocsByThirdParties=Dokumenty súvisiace s tretími stranami
 ECMDocsByProposals=Dokumenty súvisiace s návrhmi
 ECMDocsByOrders=Dokumenty súvisiace s zákazníkmi objednávky
@@ -43,6 +42,8 @@ ECMDocsByContracts=Dokumenty súvisiace so zmluvami
 ECMDocsByInvoices=Dokumenty súvisiace s faktúrami zákazníkmi
 ECMDocsByProducts=Dokumenty súvisiace s produktmi
 ECMDocsByProjects=Dokumenty súvisiace s projektmi
+ECMDocsByUsers=Documents linked to users
+ECMDocsByInterventions=Documents linked to interventions
 ECMNoDirectoryYet=No vytvoril adresár
 ShowECMSection=Zobraziť adresár
 DeleteSection=Odstráňte adresár

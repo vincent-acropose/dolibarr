@@ -25,6 +25,7 @@
  */
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/cashdesk/include/environnement.php';
+require_once DOL_DOCUMENT_ROOT.'/cashdesk/include/keypad.php';
 
 // Test if already logged
 if ( $_SESSION['uid'] <= 0 )
@@ -41,7 +42,7 @@ $langs->load("cashdesk");
  */
 
 //header("Content-type: text/html; charset=UTF-8");
-header("Content-type: text/html; charset=".$conf->file->character_set_client);
+//header("Content-type: text/html; charset=".$conf->file->character_set_client);
 
 $arrayofjs=array();
 $arrayofcss=array('/cashdesk/css/style.css');
@@ -75,4 +76,3 @@ include_once 'affPied.php';
 
 print '</div></div></div>'."\n";
 print '</body></html>'."\n";
-?>

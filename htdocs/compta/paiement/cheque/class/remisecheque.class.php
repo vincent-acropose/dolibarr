@@ -2,7 +2,8 @@
 /* Copyright (C) 2006      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2007-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2011      Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2011-2015 Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +25,7 @@
  *	\brief      File with class to manage cheque delivery receipts
  */
 require_once DOL_DOCUMENT_ROOT .'/core/class/commonobject.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 
 
 /**
@@ -34,12 +36,18 @@ class RemiseCheque extends CommonObject
 	public $element='chequereceipt';
 	public $table_element='bordereau_cheque';
 
-	var $id;
 	var $num;
 	var $intitule;
-	var $ref_ext;
 	//! Numero d'erreur Plage 1024-1279
 	var $errno;
+
+	public $amount;
+	public $date_bordereau;
+	public $account_id;
+	public $account_label;
+	public $author_id;
+	public $nbcheque;
+	public $number;
 
 	/**
 	 *	Constructor
@@ -73,7 +81,7 @@ class RemiseCheque extends CommonObject
 		if ($id)  $sql.= " AND bc.rowid = ".$id;
 		if ($ref) $sql.= " AND bc.number = '".$this->db->escape($ref)."'";
 
-		dol_syslog("RemiseCheque::fetch sql=".$sql, LOG_DEBUG);
+		dol_syslog("RemiseCheque::fetch", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql)
 		{
@@ -143,8 +151,8 @@ class RemiseCheque extends CommonObject
 		$sql.= ", nbcheque";
 		$sql.= ", ref_ext";
 		$sql.= ") VALUES (";
-		$sql.= $this->db->idate($now);
-		$sql.= ", ".$this->db->idate($now);
+		$sql.= "'".$this->db->idate($now)."'";
+		$sql.= ", '".$this->db->idate($now)."'";
 		$sql.= ", ".$user->id;
 		$sql.= ", ".$account_id;
 		$sql.= ", 0";
@@ -155,7 +163,7 @@ class RemiseCheque extends CommonObject
 		$sql.= ", ''";
 		$sql.= ")";
 
-		dol_syslog("RemiseCheque::Create sql=".$sql, LOG_DEBUG);
+		dol_syslog("RemiseCheque::Create", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ( $resql )
 		{
@@ -172,7 +180,7 @@ class RemiseCheque extends CommonObject
 				$sql.= " SET number='(PROV".$this->id.")'";
 				$sql.= " WHERE rowid='".$this->id."';";
 
-				dol_syslog("RemiseCheque::Create sql=".$sql, LOG_DEBUG);
+				dol_syslog("RemiseCheque::Create", LOG_DEBUG);
 				$resql = $this->db->query($sql);
 				if (! $resql)
 				{
@@ -192,7 +200,7 @@ class RemiseCheque extends CommonObject
 				$sql.= " AND b.fk_account='".$account_id."'";
 				if ($limit) $sql.= $this->db->plimit($limit);
 
-				dol_syslog("RemiseCheque::Create sql=".$sql, LOG_DEBUG);
+				dol_syslog("RemiseCheque::Create", LOG_DEBUG);
 				$resql = $this->db->query($sql);
 				if ($resql)
 				{
@@ -225,7 +233,7 @@ class RemiseCheque extends CommonObject
 						$sql.= " SET fk_bordereau = ".$this->id;
 						$sql.= " WHERE rowid = ".$lineid;
 
-						dol_syslog("RemiseCheque::Create sql=".$sql, LOG_DEBUG);
+						dol_syslog("RemiseCheque::Create", LOG_DEBUG);
 						$resql = $this->db->query($sql);
 						if (!$resql)
 						{
@@ -250,7 +258,6 @@ class RemiseCheque extends CommonObject
 			$this->errno = -1;
 			$this->error=$this->db->lasterror();
 			$this->errno=$this->db->lasterrno();
-			dol_syslog("RemiseCheque::Create Error ".$this->error, LOG_ERR);
 		}
 
 	    if (! $this->errno && ! empty($conf->global->MAIN_DISABLEDRAFTSTATUS))
@@ -275,7 +282,7 @@ class RemiseCheque extends CommonObject
 	 *	Supprime la remise en base
 	 *
 	 *	@param  User	$user 		Utilisateur qui effectue l'operation
-	 *	@return	void
+	 *	@return	int
 	 */
 	function delete($user='')
 	{
@@ -293,25 +300,23 @@ class RemiseCheque extends CommonObject
 		{
 			$num = $this->db->affected_rows($resql);
 
-			if ($num <> 1)
-	  {
-	  	$this->errno = -2;
-	  	dol_syslog("Remisecheque::Delete Erreur Lecture ID ($this->errno)");
-	  }
+			if ($num <> 1) {
+				$this->errno = -2;
+				dol_syslog("Remisecheque::Delete Erreur Lecture ID ($this->errno)");
+			}
 
-	  if ( $this->errno === 0)
-	  {
-	  	$sql = "UPDATE ".MAIN_DB_PREFIX."bank";
-	  	$sql.= " SET fk_bordereau = 0";
-	  	$sql.= " WHERE fk_bordereau = '".$this->id."'";
+			if ( $this->errno === 0) {
+			    $sql = "UPDATE ".MAIN_DB_PREFIX."bank";
+			    $sql.= " SET fk_bordereau = 0";
+			    $sql.= " WHERE fk_bordereau = '".$this->id."'";
 
-	  	$resql = $this->db->query($sql);
-	  	if (!$resql)
-	  	{
-	  		$this->errno = -1028;
-	  		dol_syslog("RemiseCheque::Delete ERREUR UPDATE ($this->errno)");
-	  	}
-	  }
+			    $resql = $this->db->query($sql);
+			    if (!$resql)
+			    {
+			        $this->errno = -1028;
+				    dol_syslog("RemiseCheque::Delete ERREUR UPDATE ($this->errno)");
+				}
+			}
 		}
 
 		if ($this->errno === 0)
@@ -351,7 +356,7 @@ class RemiseCheque extends CommonObject
 			$sql.= " AND entity = ".$conf->entity;
 			$sql.= " AND statut = 0";
 
-			dol_syslog("RemiseCheque::Validate sql=".$sql, LOG_DEBUG);
+			dol_syslog("RemiseCheque::Validate", LOG_DEBUG);
 			$resql = $this->db->query($sql);
 			if ( $resql )
 			{
@@ -410,7 +415,7 @@ class RemiseCheque extends CommonObject
 		$sql.= " WHERE entity = ".$conf->entity;
 		$sql.= " AND number not like '(%'";
 
-		dol_syslog("Remisecheque::getNextNumber sql=".$sql);
+		dol_syslog("Remisecheque::getNextNumber", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql)
 		{
@@ -433,23 +438,19 @@ class RemiseCheque extends CommonObject
      *      Load indicators for dashboard (this->nbtodo and this->nbtodolate)
      *
      *      @param      User	$user       Objet user
-     *      @return     int                 <0 if KO, >0 if OK
+     *      @return WorkboardResponse|int <0 if KO, WorkboardResponse if OK
 	 */
 	function load_board($user)
 	{
-		global $conf;
+		global $conf, $langs;
 
 		if ($user->societe_id) return -1;   // protection pour eviter appel par utilisateur externe
-
-		$now=dol_now();
-
-		$this->nbtodo=$this->nbtodolate=0;
 
 		$sql = "SELECT b.rowid, b.datev as datefin";
 		$sql.= " FROM ".MAIN_DB_PREFIX."bank as b";
 		$sql.= ", ".MAIN_DB_PREFIX."bank_account as ba";
 		$sql.= " WHERE b.fk_account = ba.rowid";
-		$sql.= " AND ba.entity = ".$conf->entity;
+		$sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
 		$sql.= " AND b.fk_type = 'CHQ'";
 		$sql.= " AND b.fk_bordereau = 0";
 		$sql.= " AND b.amount > 0";
@@ -457,12 +458,25 @@ class RemiseCheque extends CommonObject
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
+			$langs->load("banks");
+			$now=dol_now();
+
+			$response = new WorkboardResponse();
+			$response->warning_delay=$conf->bank->cheque->warning_delay/60/60/24;
+			$response->label=$langs->trans("BankChecksToReceipt");
+			$response->url=DOL_URL_ROOT.'/compta/paiement/cheque/index.php?leftmenu=checks&amp;mainmenu=bank';
+			$response->img=img_object($langs->trans("BankChecksToReceipt"),"payment");
+
 			while ($obj=$this->db->fetch_object($resql))
 			{
-				$this->nbtodo++;
-				if ($this->db->jdate($obj->datefin) < ($now - $conf->bank->cheque->warning_delay)) $this->nbtodolate++;
+				$response->nbtodo++;
+
+				if ($this->db->jdate($obj->datefin) < ($now - $conf->bank->cheque->warning_delay)) {
+					$response->nbtodolate++;
+				}
 			}
-			return 1;
+
+			return $response;
 		}
 		else
 		{
@@ -477,7 +491,7 @@ class RemiseCheque extends CommonObject
 	 *	Build document
 	 *
 	 *	@param	string		$model 			Model name
-	 *	@param 	Tranlsate	$outputlangs	Object langs
+	 *	@param 	Translate	$outputlangs	Object langs
 	 * 	@return int        					<0 if KO, >0 if OK
 	 */
 	function generatePdf($model, $outputlangs)
@@ -510,7 +524,7 @@ class RemiseCheque extends CommonObject
 			$sql.= " AND bc.entity = ".$conf->entity;
 			$sql.= " ORDER BY b.dateo ASC, b.rowid ASC";
 
-			dol_syslog("RemiseCheque::generatePdf sql=".$sql, LOG_DEBUG);
+			dol_syslog("RemiseCheque::generatePdf", LOG_DEBUG);
 			$result = $this->db->query($sql);
 			if ($result)
 			{
@@ -538,7 +552,7 @@ class RemiseCheque extends CommonObject
 			// We save charset_output to restore it because write_file can change it if needed for
 			// output format that does not support UTF8.
 			$sav_charseSupprimert_output=$outputlangs->charset_output;
-			$result=$docmodel->write_file($conf->banque->dir_output.'/bordereau', $this->number, $outputlangs);
+			$result=$docmodel->write_file($this, $conf->banque->dir_output.'/bordereau', $this->number, $outputlangs);
 			if ($result > 0)
 			{
 				//$outputlangs->charset_output=$sav_charset_output;
@@ -638,17 +652,116 @@ class RemiseCheque extends CommonObject
 
 			$resql = $this->db->query($sql);
 			if ($resql)
-	  {
-	  	$this->updateAmount();
-	  }
-	  else
-	  {
-	  	$this->errno = -1032;
-	  	dol_syslog("RemiseCheque::removeCheck ERREUR UPDATE ($this->errno)");
-	  }
+			{
+				$this->updateAmount();
+			}
+			else
+			{
+				$this->errno = -1032;
+				dol_syslog("RemiseCheque::removeCheck ERREUR UPDATE ($this->errno)");
+			}
 		}
 		return 0;
 	}
+
+	/**
+	 *	Check return management
+	 *	Reopen linked invoices and create a new negative payment.
+	 *
+	 *	@param	int		$bank_id 		   Id of bank transaction line concerned
+	 *	@param	date	$rejection_date    Date to use on the negative payment
+	 * 	@return	int                        Id of negative payment line created 
+	 */
+	function rejectCheck($bank_id, $rejection_date)
+	{
+		global $db, $user;
+
+		$payment = new Paiement($db);
+		$payment->fetch(0,0,$bank_id);
+
+		$bankline = new AccountLine($db);
+		$bankline->fetch($bank_id);
+		
+		/* Conciliation is allowed because when check is returned, a new line is created onto bank transaction log.
+		if ($bankline->rappro)
+		{
+            $this->error='ActionRefusedLineAlreadyConciliated';
+		    return -1;
+		}*/
+		
+		$this->db->begin();
+		
+		// Not conciliated, we can delete it
+		//$bankline->delete($user);    // We delete 
+			    
+		$bankaccount = $payment->fk_account;
+
+		// Get invoices list to reopen them
+		$sql = 'SELECT pf.fk_facture, pf.amount';
+		$sql.= ' FROM '.MAIN_DB_PREFIX.'paiement_facture as pf';
+		$sql.= ' WHERE pf.fk_paiement = '.$payment->id;
+
+		$resql=$db->query($sql);
+		if ($resql)
+		{
+			$rejectedPayment = new Paiement($db);
+			$rejectedPayment->amounts = array();
+			$rejectedPayment->datepaye = $rejection_date;
+			$rejectedPayment->paiementid = dol_getIdFromCode($this->db, 'CHQ', 'c_paiement');
+			$rejectedPayment->num_paiement = $payment->numero;
+
+			while($obj = $db->fetch_object($resql))
+			{
+				$invoice = new Facture($db);
+				$invoice->fetch($obj->fk_facture);
+				$invoice->set_unpaid($user);
+
+				$rejectedPayment->amounts[$obj->fk_facture] = price2num($obj->amount) * -1;
+			}
+
+			$result = $rejectedPayment->create($user);
+			if ($result > 0)
+			{
+                // We created a negative payment, we also add the line as bank transaction
+			    $result=$rejectedPayment->addPaymentToBank($user,'payment','(CheckRejected)',$bankaccount,'','');
+				if ($result > 0)
+				{
+				    $result = $payment->reject();
+					if ($result > 0)
+					{
+    					$this->db->commit();
+    					return $rejectedPayment->id;
+					}
+					else
+					{
+                        $this->db->rollback();
+					    return -1;
+					}
+				}
+				else
+				{
+				    $this->error = $rejectedPayment->error;
+				    $this->errors = $rejectedPayment->errors;
+				    $this->db->rollback();
+					return -1;
+				}
+			}
+			else
+			{
+				$this->error = $rejectedPayment->error;
+				$this->errors = $rejectedPayment->errors;
+			    $this->db->rollback();
+				return -1;
+			}
+		}
+		else
+		{
+			$this->error=$this->db->lasterror();
+			$this->db->rollback();
+			return -1;
+		}
+	}
+
 	/**
 	 *	Charge les proprietes ref_previous et ref_next
 	 *
@@ -694,7 +807,7 @@ class RemiseCheque extends CommonObject
      *      Set the creation date
      *
      *      @param	User		$user           Object user
-     *      @param  timestamp   $date           Date creation
+     *      @param  int   $date           Date creation
      *      @return int                 		<0 if KO, >0 if OK
      */
     function set_date($user, $date)
@@ -705,7 +818,7 @@ class RemiseCheque extends CommonObject
             $sql.= " SET date_bordereau = ".($date ? $this->db->idate($date) : 'null');
             $sql.= " WHERE rowid = ".$this->id;
 
-            dol_syslog("RemiseCheque::set_date sql=$sql",LOG_DEBUG);
+            dol_syslog("RemiseCheque::set_date", LOG_DEBUG);
             $resql=$this->db->query($sql);
             if ($resql)
             {
@@ -715,7 +828,6 @@ class RemiseCheque extends CommonObject
             else
             {
                 $this->error=$this->db->error();
-                dol_syslog("RemiseCheque::set_date ".$this->error,LOG_ERR);
                 return -1;
             }
         }
@@ -725,11 +837,43 @@ class RemiseCheque extends CommonObject
         }
     }
 
+	/**
+	 *      Set the number of bordereau
+	 *
+	 *      @param	User		$user           Object user
+	 *      @param  int   $number         number of bordereau
+	 *      @return int                 		<0 if KO, >0 if OK
+	 */
+	function set_number($user, $number)
+	{
+		if ($user->rights->banque->cheque)
+		{
+			$sql = "UPDATE ".MAIN_DB_PREFIX."bordereau_cheque";
+			$sql.= " SET number = '".$number."'" ;
+			$sql.= " WHERE rowid = ".$this->id;
+
+			dol_syslog("RemiseCheque::set_number", LOG_DEBUG);
+			$resql=$this->db->query($sql);
+			if ($resql)
+			{
+				return 1;
+			}
+			else
+			{
+				$this->error=$this->db->error();
+				return -1;
+			}
+		}
+		else
+		{
+			return -2;
+		}
+	}
 
 	/**
-	 *    	Renvoie nom clicable (avec eventuellement le picto)
+	 *    	Return clicable name (with picto eventually)
 	 *
-	 *		@param	int		$withpicto		0=Pas de picto, 1=Inclut le picto dans le lien, 2=Picto seul
+	 *		@param	int		$withpicto		0=No picto, 1=Include picto into link, 2=Only picto
 	 *		@param	string	$option			Sur quoi pointe le lien
 	 *		@return	string					Chaine avec URL
 	 */
@@ -738,13 +882,14 @@ class RemiseCheque extends CommonObject
 		global $langs;
 
 		$result='';
+        $label = $langs->trans("ShowCheckReceipt").': '.$this->ref;
 
-		$lien = '<a href="'.DOL_URL_ROOT.'/compta/paiement/cheque/fiche.php?id='.$this->id.'">';
-		$lienfin='</a>';
+        $link = '<a href="'.DOL_URL_ROOT.'/compta/paiement/cheque/card.php?id='.$this->id.'" title="'.dol_escape_htmltag($label, 1).'" class="classfortooltip">';
+		$linkend='</a>';
 
-		if ($withpicto) $result.=($lien.img_object($langs->trans("ShowCheckReceipt"),'payment').$lienfin);
+        if ($withpicto) $result.=($link.img_object($label, 'payment', 'class="classfortooltip"').$linkend);
 		if ($withpicto && $withpicto != 2) $result.=' ';
-		if ($withpicto != 2) $result.=$lien.$this->ref.$lienfin;
+		if ($withpicto != 2) $result.=$link.$this->ref.$linkend;
 
 		return $result;
 	}
@@ -805,4 +950,3 @@ class RemiseCheque extends CommonObject
 	}
 
 }
-?>

@@ -125,14 +125,14 @@ class FileUpload
 			if (!empty($parent->socid)) {
 				$parent->fetch_thirdparty();
 			}
-			$object->$parentObject = dol_clone($parent);
+			$object->$parentObject = clone $parent;
 		} else {
 			$object->fetch_thirdparty();
 		}
 
 		$object_ref = dol_sanitizeFileName($object->ref);
 		if ($element == 'invoice_supplier') {
-			$object_ref = get_exdir($object->id, 2) . $object_ref;
+			$object_ref = get_exdir($object->id,2,0,0,$object,'invoice_supplier') . $object_ref;
 		} else if ($element == 'project_task') {
 			$object_ref = $object->project->ref . '/' . $object_ref;
 		}
@@ -558,7 +558,8 @@ class FileUpload
                 isset($_SERVER['HTTP_X_FILE_NAME']) ? $_SERVER['HTTP_X_FILE_NAME'] : (isset($upload['name']) ? $upload['name'] : null),
                 isset($_SERVER['HTTP_X_FILE_SIZE']) ? $_SERVER['HTTP_X_FILE_SIZE'] : (isset($upload['size']) ? $upload['size'] : null),
                 isset($_SERVER['HTTP_X_FILE_TYPE']) ? $_SERVER['HTTP_X_FILE_TYPE'] : (isset($upload['type']) ? $upload['type'] : null),
-                isset($upload['error']) ? $upload['error'] : null
+                isset($upload['error']) ? $upload['error'] : null,
+                0
             );
 		}
 		header('Vary: Accept');

@@ -45,23 +45,25 @@ class FormPropal
      *    Return combo list of differents status of a proposal
      *    Values are id of table c_propalst
      *
-     *    @param	string	$selected   Preselected value
-     *    @param	int		$short		Use short labels
+     *    @param	string	$selected   	Preselected value
+     *    @param	int		$short			Use short labels
+     *    @param	int		$excludedraft	0=All status, 1=Exclude draft status
+     *    @param	int 	$showempty		1=Add empty line
      *    @return	void
      */
-    function select_propal_statut($selected='',$short=0)
+    function selectProposalStatus($selected='',$short=0, $excludedraft=0, $showempty=1)
     {
         global $langs;
 
         $sql = "SELECT id, code, label, active FROM ".MAIN_DB_PREFIX."c_propalst";
         $sql .= " WHERE active = 1";
 
-        dol_syslog(get_class($this)."::select_propal_statut sql=".$sql);
+        dol_syslog(get_class($this)."::selectProposalStatus", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
             print '<select class="flat" name="propal_statut">';
-            print '<option value="">&nbsp;</option>';
+            if ($showempty) print '<option value="">&nbsp;</option>';
             $num = $this->db->num_rows($resql);
             $i = 0;
             if ($num)
@@ -69,9 +71,17 @@ class FormPropal
                 while ($i < $num)
                 {
                     $obj = $this->db->fetch_object($resql);
+                    if ($excludedraft)
+                    {
+						if ($obj->code == 'Draft' || $obj->code == 'PR_DRAFT')
+						{
+							$i++;
+							continue;
+						}
+                    }
                     if ($selected == $obj->id)
                     {
-                        print '<option value="'.$obj->id.'" selected="selected">';
+                        print '<option value="'.$obj->id.'" selected>';
                     }
                     else
                     {
@@ -83,7 +93,7 @@ class FormPropal
                         print $langs->trans("PropalStatus".$key.($short?'Short':''));
                     }
                     else
-                    {
+					{
                         $conv_to_new_code=array('PR_DRAFT'=>'Draft','PR_OPEN'=>'Opened','PR_CLOSED'=>'Closed','PR_SIGNED'=>'Signed','PR_NOTSIGNED'=>'NotSigned','PR_FAC'=>'Billed');
                         if (! empty($conv_to_new_code[$obj->code])) $key=$conv_to_new_code[$obj->code];
                         print ($langs->trans("PropalStatus".$key.($short?'Short':''))!="PropalStatus".$key.($short?'Short':''))?$langs->trans("PropalStatus".$key.($short?'Short':'')):$obj->label;
@@ -102,4 +112,3 @@ class FormPropal
 
 }
 
-?>

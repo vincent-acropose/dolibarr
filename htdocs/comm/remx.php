@@ -36,7 +36,7 @@ $action=GETPOST('action','alpha');
 $backtopage=GETPOST('backtopage','alpha');
 
 // Security check
-$socid = GETPOST('id','int');
+$socid = GETPOST('id','int')?GETPOST('id','int'):GETPOST('socid','int');
 if ($user->societe_id > 0)
 {
 	$socid = $user->societe_id;
@@ -65,17 +65,17 @@ if ($action == 'confirm_split' && GETPOST("confirm") == 'yes')
 	if (! $res > 0)
 	{
 		$error++;
-		$mesg='<div class="error">'.$langs->trans("ErrorFailedToLoadDiscount").'</div>';
+		setEventMessages($langs->trans("ErrorFailedToLoadDiscount"), null, 'errors');
 	}
 	if (! $error && price2num($_POST["amount_ttc_1"]+$_POST["amount_ttc_2"]) != $discount->amount_ttc)
 	{
 		$error++;
-		$mesg='<div class="error">'.$langs->trans("TotalOfTwoDiscountMustEqualsOriginal").'</div>';
+		setEventMessages($langs->trans("TotalOfTwoDiscountMustEqualsOriginal"), null, 'errors');
 	}
 	if (! $error && $discount->fk_facture_line)
 	{
 		$error++;
-		$mesg='<div class="error">'.$langs->trans("ErrorCantSplitAUsedDiscount").'</div>';
+		setEventMessages($langs->trans("ErrorCantSplitAUsedDiscount"), null, 'errors');
 	}
 	if (! $error)
 	{
@@ -140,7 +140,7 @@ if ($action == 'setremise')
 		$error=0;
 		if (empty($_POST["desc"]))
 		{
-			$mesg='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->trans("ReasonDiscount")).'</div>';
+			setEventMessages($langs->trans("ErrorFieldRequired", $langs->trans("ReasonDiscount")), null, 'errors');
 			$error++;
 		}
 
@@ -166,13 +166,13 @@ if ($action == 'setremise')
 			else
 			{
 				$error++;
-				$mesg='<div class="error">'.$soc->error.'</div>';
+				setEventMessages($soc->error, $soc->errors, 'errors');
 			}
 		}
 	}
 	else
 	{
-		$mesg='<div class="error">'.$langs->trans("ErrorFieldFormat",$langs->trans("NewGlobalDiscount")).'</div>';
+		setEventMessages($langs->trans("ErrorFieldFormat",$langs->trans("NewGlobalDiscount")), null, 'errors');
 	}
 }
 
@@ -194,7 +194,7 @@ if (GETPOST("action") == 'confirm_remove' && GETPOST("confirm")=='yes')
 	}
 	else
 	{
-		$mesg='<div class="error">'.$discount->error.'</div>';
+		setEventMessages($discount->error, $discount->errors, 'errors');
 		$db->rollback();
 	}
 }
@@ -211,39 +211,35 @@ llxHeader('',$langs->trans("GlobalDiscount"));
 
 if ($socid > 0)
 {
-	dol_htmloutput_mesg($mesg);
-
 	// On recupere les donnees societes par l'objet
-	$objsoc = new Societe($db);
-	$objsoc->id=$socid;
-	$objsoc->fetch($socid);
+	$object = new Societe($db);
+	$object->fetch($socid);
 
 	/*
-	 * Affichage onglets
+	 * Display tabs
 	 */
-	$head = societe_prepare_head($objsoc);
-
-	dol_fiche_head($head, 'absolutediscount', $langs->trans("ThirdParty"),0,'company');
+	$head = societe_prepare_head($object);
 
 
-	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?id='.$objsoc->id.'">';
+	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 	print '<input type="hidden" name="action" value="setremise">';
     print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
 
-	print '<table class="border" width="100%">';
-
-	// Name
-	print '<tr><td width="38%">'.$langs->trans('Name').'</td>';
-	print '<td>';
-	print $form->showrefnav($objsoc,'id','',1,'rowid','nom');
-	print '</td></tr>';
+	dol_fiche_head($head, 'absolutediscount', $langs->trans("ThirdParty"),0,'company');
+    
+    dol_banner_tab($object, 'socid', '', ($user->societe_id?0:1), 'rowid', 'nom');
+        
+    print '<div class="fichecenter">';
+    
+    print '<div class="underbanner clearboth"></div>';
+	print '<table class="border centpercent">';
 
 	// Calcul avoirs en cours
 	$remise_all=$remise_user=0;
 	$sql = "SELECT SUM(rc.amount_ht) as amount, rc.fk_user";
 	$sql.= " FROM ".MAIN_DB_PREFIX."societe_remise_except as rc";
-	$sql.= " WHERE rc.fk_soc =". $objsoc->id;
+	$sql.= " WHERE rc.fk_soc =". $object->id;
 	$sql.= " AND (fk_facture_line IS NULL AND fk_facture IS NULL)";
 	$sql.= " GROUP BY rc.fk_user";
 	$resql=$db->query($sql);
@@ -258,7 +254,7 @@ if ($socid > 0)
 		dol_print_error($db);
 	}
 
-	print '<tr><td width="38%">'.$langs->trans("CustomerAbsoluteDiscountAllUsers").'</td>';
+	print '<tr><td class="titlefield">'.$langs->trans("CustomerAbsoluteDiscountAllUsers").'</td>';
 	print '<td>'.$remise_all.'&nbsp;'.$langs->trans("Currency".$conf->currency).' '.$langs->trans("HT").'</td></tr>';
 
 	print '<tr><td>'.$langs->trans("CustomerAbsoluteDiscountMy").'</td>';
@@ -266,42 +262,45 @@ if ($socid > 0)
 	print '</table>';
 	print '<br>';
 
-	print_fiche_titre($langs->trans("NewGlobalDiscount"),'','');
+	print load_fiche_titre($langs->trans("NewGlobalDiscount"),'','');
 	print '<table class="border" width="100%">';
 	print '<tr><td width="38%">'.$langs->trans("AmountHT").'</td>';
 	print '<td><input type="text" size="5" name="amount_ht" value="'.$_POST["amount_ht"].'">';
 	print '<span class="hideonsmartphone">&nbsp;'.$langs->trans("Currency".$conf->currency).'</span></td></tr>';
 	print '<tr><td width="38%">'.$langs->trans("VAT").'</td>';
 	print '<td>';
-	print $form->load_tva('tva_tx',GETPOST('tva_tx'),$mysoc,$objsoc);
+	print $form->load_tva('tva_tx',GETPOST('tva_tx'),$mysoc,$object);
 	print '</td></tr>';
 	print '<tr><td>'.$langs->trans("NoteReason").'</td>';
 	print '<td><input type="text" size="60" name="desc" value="'.$_POST["desc"].'"></td></tr>';
 
 	print "</table>";
 
-	print '<center>';
+	print '</div>';
+	
+	dol_fiche_end();
+	
+	print '<div class="center">';
 	print '<input type="submit" class="button" name="submit" value="'.$langs->trans("AddGlobalDiscount").'">';
     if (! empty($backtopage))
     {
-        print '&nbsp; &nbsp; ';
+        print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
 	    print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'">';
     }
-	print '</center>';
+	print '</div>';
 
 	print '</form>';
 
-	dol_fiche_end();
 
 	print '<br>';
 
 	if ($_GET['action'] == 'remove')
 	{
-		print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$objsoc->id.'&remid='.$_GET["remid"], $langs->trans('RemoveDiscount'), $langs->trans('ConfirmRemoveDiscount'), 'confirm_remove', '', 0, 1);
+		print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&remid='.$_GET["remid"], $langs->trans('RemoveDiscount'), $langs->trans('ConfirmRemoveDiscount'), 'confirm_remove', '', 0, 1);
 	}
 
 	/*
-	 * Liste remises fixes restant en cours (= liees a acune facture ni ligne de facture)
+	 * Liste remises fixes restant en cours (= liees a aucune facture ni ligne de facture)
 	 */
 	$sql = "SELECT rc.rowid, rc.amount_ht, rc.amount_tva, rc.amount_ttc, rc.tva_tx,";
 	$sql.= " rc.datec as dc, rc.description,";
@@ -310,7 +309,7 @@ if ($socid > 0)
 	$sql.= " fa.facnumber as ref, fa.type as type";
 	$sql.= " FROM  ".MAIN_DB_PREFIX."user as u, ".MAIN_DB_PREFIX."societe_remise_except as rc";
 	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."facture as fa ON rc.fk_facture_source = fa.rowid";
-	$sql.= " WHERE rc.fk_soc =". $objsoc->id;
+	$sql.= " WHERE rc.fk_soc =". $object->id;
 	$sql.= " AND u.rowid = rc.fk_user";
 	$sql.= " AND (rc.fk_facture_line IS NULL AND rc.fk_facture IS NULL)";
 	$sql.= " ORDER BY rc.datec DESC";
@@ -318,7 +317,7 @@ if ($socid > 0)
 	$resql=$db->query($sql);
 	if ($resql)
 	{
-		print_titre($langs->trans("DiscountStillRemaining"));
+		print load_fiche_titre($langs->trans("DiscountStillRemaining"));
 		print '<table width="100%" class="noborder">';
 		print '<tr class="liste_titre">';
 		print '<td width="120" align="left">'.$langs->trans("Date").'</td>';	// Need 120+ for format with AM/PM
@@ -331,8 +330,10 @@ if ($socid > 0)
 		print '<td width="50">&nbsp;</td>';
 		print '</tr>';
 
+		$showconfirminfo=array();
+
 		$var = true;
-		$i = 0 ;
+		$i = 0;
 		$num = $db->num_rows($resql);
 		while ($i < $num)
 		{
@@ -369,14 +370,14 @@ if ($socid > 0)
 			print '<td align="right">'.price2num($obj->tva_tx,'MU').'%</td>';
 			print '<td align="right">'.price($obj->amount_ttc).'</td>';
 			print '<td align="center">';
-			print '<a href="'.DOL_URL_ROOT.'/user/fiche.php?id='.$obj->user_id.'">'.img_object($langs->trans("ShowUser"),'user').' '.$obj->login.'</a>';
+			print '<a href="'.DOL_URL_ROOT.'/user/card.php?id='.$obj->user_id.'">'.img_object($langs->trans("ShowUser"),'user').' '.$obj->login.'</a>';
 			print '</td>';
 			if ($user->rights->societe->creer || $user->rights->facture->creer)
 			{
 				print '<td class="nowrap">';
-				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$objsoc->id.'&amp;action=split&amp;remid='.$obj->rowid.'">'.img_picto($langs->trans("SplitDiscount"),'split').'</a>';
+				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=split&amp;remid='.$obj->rowid.'">'.img_picto($langs->trans("SplitDiscount"),'split').'</a>';
 				print ' &nbsp; ';
-				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$objsoc->id.'&amp;action=remove&amp;remid='.$obj->rowid.'">'.img_delete($langs->trans("RemoveDiscount")).'</a>';
+				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=remove&amp;remid='.$obj->rowid.'">'.img_delete($langs->trans("RemoveDiscount")).'</a>';
 				print '</td>';
 			}
 			else print '<td>&nbsp;</td>';
@@ -384,24 +385,26 @@ if ($socid > 0)
 
 			if ($_GET["action"]=='split' && $_GET['remid'] == $obj->rowid)
 			{
-				print "<tr ".$bc[$var].">";
-				print '<td colspan="8">';
-				$amount1=price2num($obj->amount_ttc/2,'MT');
-				$amount2=($obj->amount_ttc-$amount1);
-				$formquestion=array(
-				'text' => $langs->trans('TypeAmountOfEachNewDiscount'),
-				array('type' => 'text', 'name' => 'amount_ttc_1', 'label' => $langs->trans("AmountTTC").' 1', 'value' => $amount1, 'size' => '5'),
-				array('type' => 'text', 'name' => 'amount_ttc_2', 'label' => $langs->trans("AmountTTC").' 2', 'value' => $amount2, 'size' => '5')
-				);
-				$langs->load("dict");
-				print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$objsoc->id.'&remid='.$obj->rowid, $langs->trans('SplitDiscount'), $langs->trans('ConfirmSplitDiscount',price($obj->amount_ttc),$langs->transnoentities("Currency".$conf->currency)), 'confirm_split', $formquestion, 0, 0);
-				print '</td>';
-				print '</tr>';
+				$showconfirminfo['rowid']=$obj->rowid;
+				$showconfirminfo['amount_ttc']=$obj->amount_ttc;
 			}
 			$i++;
 		}
 		$db->free($resql);
 		print "</table>";
+
+		if (count($showconfirminfo))
+		{
+			$amount1=price2num($showconfirminfo['amount_ttc']/2,'MT');
+			$amount2=($showconfirminfo['amount_ttc']-$amount1);
+			$formquestion=array(
+				'text' => $langs->trans('TypeAmountOfEachNewDiscount'),
+				array('type' => 'text', 'name' => 'amount_ttc_1', 'label' => $langs->trans("AmountTTC").' 1', 'value' => $amount1, 'size' => '5'),
+				array('type' => 'text', 'name' => 'amount_ttc_2', 'label' => $langs->trans("AmountTTC").' 2', 'value' => $amount2, 'size' => '5')
+			);
+			$langs->load("dict");
+			print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&remid='.$showconfirminfo['rowid'], $langs->trans('SplitDiscount'), $langs->trans('ConfirmSplitDiscount',price($showconfirminfo['amount_ttc']),$langs->transnoentities("Currency".$conf->currency)), 'confirm_split', $formquestion, 0, 0);
+		}
 	}
 	else
 	{
@@ -426,7 +429,7 @@ if ($socid > 0)
 	$sql.= " , ".MAIN_DB_PREFIX."facturedet as fc";
 	$sql.= " , ".MAIN_DB_PREFIX."societe_remise_except as rc";
 	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."facture as fa ON rc.fk_facture_source = fa.rowid";
-	$sql.= " WHERE rc.fk_soc =". $objsoc->id;
+	$sql.= " WHERE rc.fk_soc =". $object->id;
 	$sql.= " AND rc.fk_facture_line = fc.rowid";
 	$sql.= " AND fc.fk_facture = f.rowid";
 	$sql.= " AND rc.fk_user = u.rowid";
@@ -443,7 +446,7 @@ if ($socid > 0)
 	$sql2.= " , ".MAIN_DB_PREFIX."user as u";
 	$sql2.= " , ".MAIN_DB_PREFIX."societe_remise_except as rc";
 	$sql2.= " LEFT JOIN ".MAIN_DB_PREFIX."facture as fa ON rc.fk_facture_source = fa.rowid";
-	$sql2.= " WHERE rc.fk_soc =". $objsoc->id;
+	$sql2.= " WHERE rc.fk_soc =". $object->id;
 	$sql2.= " AND rc.fk_facture = f.rowid";
 	$sql2.= " AND rc.fk_user = u.rowid";
 
@@ -454,7 +457,7 @@ if ($socid > 0)
 	if ($resql) $resql2=$db->query($sql2);
 	if ($resql2)
 	{
-		print_titre($langs->trans("DiscountAlreadyCounted"));
+		print load_fiche_titre($langs->trans("DiscountAlreadyCounted"));
 		print '<table class="noborder" width="100%">';
 		print '<tr class="liste_titre">';
 		print '<td width="120" align="left">'.$langs->trans("Date").'</td>';	// Need 120+ for format with AM/PM
@@ -526,7 +529,7 @@ if ($socid > 0)
 			print '<td align="right">'.price2num($obj->tva_tx,'MU').'%</td>';
 			print '<td align="right">'.price($obj->amount_ttc).'</td>';
 			print '<td align="center">';
-			print '<a href="'.DOL_URL_ROOT.'/user/fiche.php?id='.$obj->user_id.'">'.img_object($langs->trans("ShowUser"),'user').' '.$obj->login.'</a>';
+			print '<a href="'.DOL_URL_ROOT.'/user/card.php?id='.$obj->user_id.'">'.img_object($langs->trans("ShowUser"),'user').' '.$obj->login.'</a>';
 			print '</td>';
 			print '<td>&nbsp;</td>';
 			print '</tr>';
@@ -536,12 +539,10 @@ if ($socid > 0)
 	}
 	else
 	{
-		print dol_print_error($db);
+		dol_print_error($db);
 	}
 
 }
 
-$db->close();
-
 llxFooter();
-?>
+$db->close();

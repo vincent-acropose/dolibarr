@@ -30,14 +30,15 @@ create table llx_adherent
   entity           integer DEFAULT 1 NOT NULL,	-- multi company id
   ref_ext          varchar(128),                -- reference into an external system (not used by dolibarr)
 
-  civilite         varchar(6),
+  civility         varchar(6),
   lastname         varchar(50),
   firstname        varchar(50),
   login            varchar(50),          -- login
   pass             varchar(50),          -- password
+  pass_crypted     varchar(128),
   fk_adherent_type integer NOT NULL,
   morphy           varchar(3) NOT NULL, -- personne morale / personne physique
-  societe          varchar(50),
+  societe          varchar(128),			-- company name (should be same lenght than societe.name)
   fk_soc           integer NULL,		-- Link to third party linked to member
   address          text,
   zip              varchar(30),
@@ -54,7 +55,8 @@ create table llx_adherent
   statut           smallint NOT NULL DEFAULT 0,
   public           smallint NOT NULL DEFAULT 0, -- certain champ de la fiche sont ils public ou pas ?
   datefin          datetime,  -- date de fin de validite de la cotisation
-  note             text,
+  note_private     text DEFAULT NULL,
+  note_public      text DEFAULT NULL,
   datevalid        datetime,  -- date de validation
   datec            datetime,  -- date de creation
   tms              timestamp, -- date de modification

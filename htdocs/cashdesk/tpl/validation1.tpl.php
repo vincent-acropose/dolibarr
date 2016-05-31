@@ -14,10 +14,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 $langs->load("main");
+$langs->load("bills");
+
+// Object $form must de defined
 
 ?>
 
@@ -105,14 +107,14 @@ $langs->load("main");
 		<p class="note_label">
 			<?php
 				echo $langs->trans("BankToPay"). "<br>";
-				$form = new Form($db);
 				$form->select_comptes($selected,'cashdeskbank',0,$filtre);
 			?>
 		</p>
 		<p class="note_label"><?php echo $langs->trans("Notes"); ?><br><textarea class="textarea_note" name="txtaNotes"></textarea></p>
 
-		<span><input class="bouton_validation" type="submit" name="btnValider" value="<?php echo $langs->trans("ValidateInvoice"); ?>" /></span>
-		<p><a class="lien1" href="affIndex.php?menu=facturation"><?php echo $langs->trans("RestartSelling"); ?></a></p>
+		<div class="center"><input class="button" type="submit" name="btnValider" value="<?php echo $langs->trans("ValidateInvoice"); ?>" /><br>
+		<br><a class="lien1" href="affIndex.php?menutpl=facturation"><?php echo $langs->trans("RestartSelling"); ?></a>
+		</div>
 	</form>
 
 

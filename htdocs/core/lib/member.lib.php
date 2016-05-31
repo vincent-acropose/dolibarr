@@ -1,5 +1,7 @@
 <?php
-/* Copyright (C) 2006-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2006-2015  Laurent Destailleur <eldy@users.sourceforge.net>
+ * Copyright (C) 2015-2016  Alexandre Spangaro  <aspangaro.dolibarr@gmail.com>
+ * Copyright (C) 2015       Raphaël Doursenaud  <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,17 +26,17 @@
 /**
  *  Return array head with list of tabs to view object informations
  *
- *  @param	Object	$object         Member
+ *  @param	Adherent	$object         Member
  *  @return array           		head
  */
-function member_prepare_head($object)
+function member_prepare_head(Adherent $object)
 {
 	global $langs, $conf, $user;
 
 	$h = 0;
 	$head = array();
 
-	$head[$h][0] = DOL_URL_ROOT.'/adherents/fiche.php?rowid='.$object->id;
+	$head[$h][0] = DOL_URL_ROOT.'/adherents/card.php?rowid='.$object->id;
 	$head[$h][1] = $langs->trans("MemberCard");
 	$head[$h][2] = 'general';
 	$h++;
@@ -66,15 +68,6 @@ function member_prepare_head($object)
 	    $h++;
 	}
 
-	// Show category tab
-	if (! empty($conf->categorie->enabled) && ! empty($user->rights->categorie->lire))
-	{
-		$head[$h][0] = DOL_URL_ROOT."/categories/categorie.php?id=".$object->id.'&type=3';
-		$head[$h][1] = $langs->trans('Categories');
-		$head[$h][2] = 'category';
-		$h++;
-	}
-
     // Show more tabs from modules
     // Entries must be declared in modules descriptor with line
     // $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
@@ -88,11 +81,16 @@ function member_prepare_head($object)
     $head[$h][0] = DOL_URL_ROOT.'/adherents/note.php?id='.$object->id;
 	$head[$h][1] = $langs->trans("Note");
 	$head[$h][2] = 'note';
-    if($nbNote > 0) $head[$h][1].= ' ('.$nbNote.')';
+    if ($nbNote > 0) $head[$h][1].= ' <span class="badge">'.$nbNote.'</span>';
 	$h++;
 
+    // Attachments
+    require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+    $upload_dir = $conf->adherent->multidir_output[$object->entity].'/'.get_exdir($object->id,2,0,1,$object,'member').'/'.dol_sanitizeFileName($object->ref);
+    $nbFiles = count(dol_dir_list($upload_dir,'files',0,'','(\.meta|_preview\.png)$'));
     $head[$h][0] = DOL_URL_ROOT.'/adherents/document.php?id='.$object->id;
-    $head[$h][1] = $langs->trans("Documents");
+    $head[$h][1] = $langs->trans('Documents');
+    if($nbFiles > 0) $head[$h][1].= ' <span class="badge">'.$nbFiles.'</span>';
     $head[$h][2] = 'document';
     $h++;
 
@@ -107,6 +105,34 @@ function member_prepare_head($object)
 	return $head;
 }
 
+/**
+ *  Return array head with list of tabs to view object informations
+ *
+ *  @param	Adherent	$object         Member
+ *  @return array           		head
+ */
+function member_type_prepare_head(AdherentType $object)
+{
+	global $langs, $conf, $user;
+
+	$h=0;
+	$head = array();
+
+	$head[$h][0] = DOL_URL_ROOT.'/adherents/type.php?rowid='.$object->id;
+	$head[$h][1] = $langs->trans("Card");
+	$head[$h][2] = 'card';
+	$h++;
+
+    // Show more tabs from modules
+    // Entries must be declared in modules descriptor with line
+    // $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
+    // $this->tabs = array('entity:-tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to remove a tab
+    complete_head_from_modules($conf,$langs,$object,$head,$h,'membertype');
+
+	complete_head_from_modules($conf,$langs,$object,$head,$h,'membertype','remove');
+
+	return $head;
+}
 
 /**
  *  Return array head with list of tabs to view object informations
@@ -155,7 +181,7 @@ function member_admin_prepare_head()
 /**
  *  Return array head with list of tabs to view object stats informations
  *
- *  @param	Object	$object         Member or null
+ *  @param	Adherent	$object         Member or null
  *  @return	array           		head
  */
 function member_stats_prepare_head($object)
@@ -173,6 +199,11 @@ function member_stats_prepare_head($object)
     $head[$h][0] = DOL_URL_ROOT.'/adherents/stats/geo.php?mode=memberbycountry';
     $head[$h][1] = $langs->trans("Country");
     $head[$h][2] = 'statscountry';
+    $h++;
+
+    $head[$h][0] = DOL_URL_ROOT.'/adherents/stats/geo.php?mode=memberbyregion';
+    $head[$h][1] = $langs->trans("Region");
+    $head[$h][2] = 'statsregion';
     $h++;
 
     $head[$h][0] = DOL_URL_ROOT.'/adherents/stats/geo.php?mode=memberbystate';
@@ -200,4 +231,3 @@ function member_stats_prepare_head($object)
 
     return $head;
 }
-?>

@@ -2,13 +2,15 @@
 RefSending=Réf. expédition
 Sending=Expédition
 Sendings=Expéditions
+AllSendings=Toutes les expéditions
 Shipment=Expédition
 Shipments=Expéditions
-Receivings=Réceptions
+ShowSending=Afficher Expéditions
+Receivings=Bons de réceptions
 SendingsArea=Espace expéditions
 ListOfSendings=Liste des expéditions
 SendingMethod=Méthode d'expédition
-SendingReceipt=Bordereau de livraison
+SendingReceipt=Bordereau d'expédition
 LastSendings=Les %s dernières expéditions
 SearchASending=Rechercher expédition
 StatisticsOfSendings=Statistiques des expéditions
@@ -24,8 +26,8 @@ QtyToShip=Qté. à expédier
 QtyReceived=Qté. reçue
 KeepToShip=Reste à expédier
 OtherSendingsForSameOrder=Autres expéditions pour cette commande
-DateSending=Date ordre d'expédition
-DateSendingShort=Date ordre exp.
+DateSending=Date expédition
+DateSendingShort=Date exp.
 SendingsForSameOrder=Expéditions pour cette commande
 SendingsAndReceivingForSameOrder=Expéditions et réceptions pour cette commande
 SendingsToValidate=Expéditions à valider
@@ -37,7 +39,7 @@ StatusSendingCanceledShort=Annulée
 StatusSendingDraftShort=Brouillon
 StatusSendingValidatedShort=Validée
 StatusSendingProcessedShort=Traitée
-SendingSheet=Bordereau d'expédition
+SendingSheet=Fiche expédition
 Carriers=Transporteurs
 Carrier=Transporteur
 CarriersArea=Espace transporteurs
@@ -49,28 +51,39 @@ GenericTransport=Transporteur générique
 Enlevement=Enlèvement sur place par le client
 DocumentModelSimple=Modèle simple
 DocumentModelMerou=Modèle Merou A5
-WarningNoQtyLeftToSend=Alerte, aucun produit en attente de livraison.
-StatsOnShipmentsOnlyValidated=Statistiques effectuées sur les expéditions validées uniquement. La date prise en compte est la date de validation (la date de prévision d'expédition n'étant pas toujours renseignée).
-DateDeliveryPlanned=Date de livraison prévue
+WarningNoQtyLeftToSend=Alerte, aucun produit en attente d'expédition.
+StatsOnShipmentsOnlyValidated=Statistiques effectuées sur les expéditions validées uniquement. La date prise en compte est la date de validation (la date de prévision de livraison n'étant pas toujours renseignée).
+DateDeliveryPlanned=Date prévue de livraison
 DateReceived=Date de réception réelle
 SendShippingByEMail=Envoyer bon d'expédition par email
-SendShippingRef=Envoi bon d'expédition %s
+SendShippingRef=Envoi du bordereau d'expédition %s
 ActionsOnShipping=Événements sur l'expédition
 LinkToTrackYourPackage=Lien pour le suivi de votre colis
 ShipmentCreationIsDoneFromOrder=Pour le moment, la création d'une nouvelle expédition se fait depuis la fiche commande.
-RelatedShippings=Expédition(s) associée(s)
+RelatedShippings=Expéditions liées
 ShipmentLine=Ligne d'expédition
 CarrierList=Liste des transporteurs
+SendingRunning=Produit des commandes clients passées
+SuppliersReceiptRunning=Produit des commandes fournisseurs passées
+ProductQtyInCustomersOrdersRunning=Quantité de produit en commandes client ouvertes
+ProductQtyInSuppliersOrdersRunning=Quantité de produit en commandes fournisseur ouvertes
+ProductQtyInShipmentAlreadySent=Quantité du produit parmi les commandes clients déjà envoyées
+ProductQtyInSuppliersShipmentAlreadyRecevied=Quantité de produit déjà reçu en commandes fournisseur ouvertes
+NoProductToShipFoundIntoStock=Aucun produit à expédier n'a été trouver dans l'entrepôt <b>%s</b>. Corrigez l'inventaire ou retourner choisir un autre entrepôt.
+WeightVolShort=Weight/Vol.
+ValidateOrderFirstBeforeShipment=You must first validate the order before being able to make shipments.
 
 # Sending methods
 SendingMethodCATCH=Enlèvement par le client
 SendingMethodTRANS=Transporteur
 SendingMethodCOLSUI=Colissimo Suivi
-
 # ModelDocument
 DocumentModelSirocco=Modèle de bon de réception/livraison simple
 DocumentModelTyphon=Modèle de bon de réception/livraison complet (logo…)
-
 Error_EXPEDITION_ADDON_NUMBER_NotDefined=Constante EXPEDITION_ADDON_NUMBER non définie
 SumOfProductVolumes=Somme des volumes des produits
 SumOfProductWeights=Somme des poids des produits
+
+# warehouse details
+DetailWarehouseNumber= Détail de l'entrepôt
+DetailWarehouseFormat= W:%s (Qté : %d)

@@ -42,7 +42,7 @@ llxHeader("","");
 
 $form = new Form($db);
 
-print_fiche_titre($langs->trans("TriggersAvailable"),'','setup');
+print load_fiche_titre($langs->trans("TriggersAvailable"),'','title_setup');
 
 print $langs->trans("TriggersDesc")."<br>";
 print "<br>\n";
@@ -50,7 +50,7 @@ print "<br>\n";
 $template_dir = DOL_DOCUMENT_ROOT.'/core/tpl/';
 
 $interfaces = new Interfaces($db);
-$triggers = $interfaces->getTriggersList(0,'priority');
+$triggers = $interfaces->getTriggersList();
 
 print '<table class="noborder">
 <tr class="liste_titre">
@@ -68,7 +68,12 @@ foreach ($triggers as $trigger)
 	print '<td valign="top" width="14" align="center">'.$trigger['picto'].'</td>';
 	print '<td valign="top">'.$trigger['file'].'</td>';
 	print '<td valign="top" align="center">'.$trigger['status'].'</td>';
-	print '<td valign="top">'.$form->textwithpicto('', $trigger['info']).'</td>';
+	print '<td valign="top">';
+	$text=$trigger['info'];
+	$text.="<br>\n<strong>".$langs->trans("File")."</strong>:<br>\n".$trigger['relpath'];
+	//$text.="\n".$langs->trans("ExternalModule",$trigger['isocreorexternal']);
+	print $form->textwithpicto('', $text);
+	print '</td>';
 	print '</tr>';
 }
 
@@ -77,4 +82,3 @@ print '</table>';
 llxFooter();
 
 $db->close();
-?>

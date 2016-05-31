@@ -1,6 +1,6 @@
 <?php
-/* Copyright (C) 2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2009 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2006      Rodolphe Quiedeville <rodolphe@quiedeville.org>
+ * Copyright (C) 2009-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +33,6 @@ require_once DOL_DOCUMENT_ROOT.'/core/modules/cheque/pdf/modules_chequereceipts.
  */
 class BordereauChequeBlochet extends ModeleChequeReceipts
 {
-    var $error='';
-
 	var $emetteur;	// Objet societe qui emet
 
 	/**
@@ -76,16 +74,17 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 	}
 
 	/**
-	 *	Fonction generant le rapport sur le disque
+	 *	Fonction to generate document on disk
 	 *
-	 *	@param	string		$_dir			Directory
-	 *	@param	string		$number			Number
-	 *	@param	Translate	$outputlangs	Lang output object
-     *	@return	int     					1=ok, 0=ko
+	 *	@param	RemiseCheque	$object			Object RemiseCheque			
+	 *	@param	string			$_dir			Directory
+	 *	@param	string			$number			Number
+	 *	@param	Translate		$outputlangs	Lang output object
+     *	@return	int     						1=ok, 0=ko
 	 */
-	function write_file($_dir, $number, $outputlangs)
+	function write_file($object, $_dir, $number, $outputlangs)
 	{
-		global $user,$conf,$langs;
+		global $user,$conf,$langs,$hookmanager;
 
         if (! is_object($outputlangs)) $outputlangs=$langs;
         // For backward compatibility with FPDF, force output charset to ISO, because FPDF expect text to be encoded in ISO
@@ -98,7 +97,7 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 		$outputlangs->load("products");
         $outputlangs->load("compta");
 
-		$dir = $_dir . "/".get_exdir($number,2,1).$number;
+		$dir = $_dir . "/".get_exdir($number,0,1,0,$object,'cheque').$number;
 
 		if (! is_dir($dir))
 		{
@@ -111,7 +110,18 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 			}
 		}
 
-		$_file = $dir . "/bordereau-".$number.".pdf";
+		$file = $dir . "/bordereau-".$number.".pdf";
+
+		// Add pdfgeneration hook
+		if (! is_object($hookmanager))
+		{
+			include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
+			$hookmanager=new HookManager($this->db);
+		}
+		$hookmanager->initHooks(array('pdfgeneration'));
+		$parameters=array('file'=>$file, 'outputlangs'=>$outputlangs);
+		global $action;
+		$reshook=$hookmanager->executeHooks('beforePDFCreation',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 
 		// Create PDF instance
         $pdf=pdf_getInstance($this->format);
@@ -141,6 +151,7 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 		$pdf->SetMargins($this->marge_gauche, $this->marge_haute, $this->marge_droite);   // Left, Top, Right
 
 		$nboflines=count($this->lines);
+
 		// Define nb of page
 		$pages = intval($nboflines / $this->line_per_page);
 		if (($nboflines % $this->line_per_page)>0)
@@ -165,9 +176,21 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 
 		$pdf->Close();
 
-		$pdf->Output($_file,'F');
+		$pdf->Output($file,'F');
+
+		// Add pdfgeneration hook
+		if (! is_object($hookmanager))
+		{
+			include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
+			$hookmanager=new HookManager($this->db);
+		}
+		$hookmanager->initHooks(array('pdfgeneration'));
+		$parameters=array('file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs);
+		global $action;
+		$reshook=$hookmanager->executeHooks('afterPDFCreation',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
+
 		if (! empty($conf->global->MAIN_UMASK))
-			@chmod($_file, octdec($conf->global->MAIN_UMASK));
+			@chmod($file, octdec($conf->global->MAIN_UMASK));
 
         $outputlangs->charset_output=$sav_charset_output;
 	    return 1;   // Pas d'erreur
@@ -177,7 +200,7 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 	/**
 	 *	Generate Header
 	 *
-	 *	@param  PDF			&$pdf        	Pdf object
+	 *	@param  PDF			$pdf        	Pdf object
 	 *	@param  int			$page        	Current page number
 	 *	@param  int			$pages       	Total number of pages
 	 *	@param	Translate	$outputlangs	Object language for output
@@ -283,7 +306,7 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 	/**
 	 *	Output array
 	 *
-	 *	@param	PDF			&$pdf			PDF object
+	 *	@param	PDF			$pdf			PDF object
 	 *	@param	int			$pagenb			Page nb
 	 *	@param	int			$pages			Pages
 	 *	@param	Translate	$outputlangs	Object lang
@@ -341,7 +364,7 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 	/**
 	 *   	Show footer of page. Need this->emetteur object
      *
-	 *   	@param	PDF			&$pdf     			PDF
+	 *   	@param	PDF			$pdf     			PDF
 	 * 		@param	Object		$object				Object to show
 	 *      @param	Translate	$outputlangs		Object lang for output
 	 *      @param	int			$hidefreetext		1=Hide free text
@@ -352,7 +375,8 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 		global $conf;
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
 
-		//return pdf_pagefoot($pdf,$outputlangs,'BANK_CHEQUERECEIPT_FREE_TEXT',$this->emetteur,$this->marge_basse,$this->marge_gauche,$this->page_hauteur,$object);
+		//$showdetails=0;
+		return pdf_pagefoot($pdf,$outputlangs,'BANK_CHEQUERECEIPT_FREE_TEXT',$this->emetteur,$this->marge_basse,$this->marge_gauche,$this->page_hauteur,$object,$showdetails,$hidefreetext);
 		$paramfreetext='BANK_CHEQUERECEIPT_FREE_TEXT';
 		$marge_basse=$this->marge_basse;
 		$marge_gauche=$this->marge_gauche;
@@ -364,7 +388,45 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 		$pdf->SetFont('','', $default_font_size - 3);
 		$pdf->SetDrawColor(224,224,224);
 
+		// The start of the bottom of this page footer is positioned according to # of lines
+    	$freetextheight=0;
+    	if ($line)	// Free text
+    	{
+    		//$line="eee<br>\nfd<strong>sf</strong>sdf<br>\nghfghg<br>";
+    	    if (empty($conf->global->PDF_ALLOW_HTML_FOR_FREE_TEXT))   // by default
+    		{
+    			$width=20000; $align='L';	// By default, ask a manual break: We use a large value 20000, to not have automatic wrap. This make user understand, he need to add CR on its text.
+        		if (! empty($conf->global->MAIN_USE_AUTOWRAP_ON_FREETEXT)) {
+        			$width=200; $align='C';
+        		}
+    		    $freetextheight=$pdf->getStringHeight($width,$line);
+    		}
+    		else
+    		{
+                $freetextheight=pdfGetHeightForHtmlContent($pdf,dol_htmlentitiesbr($line, 1, 'UTF-8', 0));      // New method (works for HTML content)
+                //print '<br>'.$freetextheight;exit;
+    		}
+    	}
+
+		$marginwithfooter=$marge_basse + $freetextheight;
+    	$posy=$marginwithfooter+0;
+    
+    	if ($line)	// Free text
+    	{
+    		$pdf->SetXY($dims['lm'],-$posy);
+    		if (empty($conf->global->PDF_ALLOW_HTML_FOR_FREE_TEXT))   // by default
+    		{
+                $pdf->MultiCell(0, 3, $line, 0, $align, 0);
+    		}
+    		else
+    		{
+                $pdf->writeHTMLCell($pdf->page_largeur - $pdf->margin_left - $pdf->margin_right, $freetextheight, $dims['lm'], $dims['hk']-$marginwithfooter, dol_htmlentitiesbr($line, 1, 'UTF-8', 0));
+    		}
+    		$posy-=$freetextheight;
+    	}
+    	
 		// On positionne le debut du bas de page selon nbre de lignes de ce bas de page
+		/*
 		$nbofline=dol_nboflines_bis($line,0,$outputlangs->charset_output);
 		//print 'e'.$line.'t'.dol_nboflines($line);exit;
 		$posy=$marge_basse + ($nbofline*3);
@@ -374,7 +436,7 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 			$pdf->SetXY($marge_gauche,-$posy);
 			$pdf->MultiCell(20000, 3, $line, 0, 'L', 0);	// Use a large value 20000, to not have automatic wrap. This make user understand, he need to add CR on its text.
 			$posy-=($nbofline*3);	// 6 of ligne + 3 of MultiCell
-		}
+		}*/
 
 		$pdf->SetY(-$posy);
 		$pdf->line($marge_gauche, $page_hauteur-$posy, 200, $page_hauteur-$posy);
@@ -403,4 +465,3 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 
 }
 
-?>

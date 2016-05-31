@@ -2,7 +2,7 @@
 OrdersArea=أوامر منطقة العملاء
 SuppliersOrdersArea=الموردين أوامر المنطقة
 OrderCard=من أجل بطاقة
-# OrderId=Order Id
+OrderId=رقم التعريف الخاص بالطلب
 Order=ترتيب
 Orders=أوامر
 OrderLine=من أجل خط
@@ -16,64 +16,79 @@ SupplierOrder=من أجل المورد
 SuppliersOrders=الموردين أوامر
 SuppliersOrdersRunning=الحالية الموردين أوامر
 CustomerOrder=عملاء النظام
-CustomersOrders=الزبائن
-CustomersOrdersRunning=الحالية الزبائن
-CustomersOrdersAndOrdersLines=أوامر العملاء وأوامر خطوط
-OrdersToValid=أوامر صالحة
-OrdersToBill=أوامر لمشروع قانون
-OrdersInProcess=الأوامر في عملية
-OrdersToProcess=أوامر لعملية
-SuppliersOrdersToProcess=المورد أوامر لمعالجة
+CustomersOrders=طلبات العملاء
+CustomersOrdersRunning=أوامر العملاء الحالية
+CustomersOrdersAndOrdersLines=طلبات العملاء وخطوط أجل
+OrdersToValid=طلبات العملاء للتحقق من صحة
+OrdersToBill=تسليم أوامر العملاء
+OrdersInProcess=طلبات العملاء في عملية
+OrdersToProcess=طلبات العملاء لمعالجة
+SuppliersOrdersToProcess=أوامر المورد لمعالجة
 StatusOrderCanceledShort=ألغى
 StatusOrderDraftShort=مسودة
 StatusOrderValidatedShort=صادق
 StatusOrderSentShort=في عملية
-# StatusOrderSent=Shipment in process
-StatusOrderOnProcessShort=على عملية
+StatusOrderSent=شحنة في عملية
+StatusOrderOnProcessShort=أمر
 StatusOrderProcessedShort=تجهيز
+StatusOrderDelivered=تم التوصيل
+StatusOrderDeliveredShort=Delivered
 StatusOrderToBillShort=على مشروع قانون
 StatusOrderToBill2Short=على مشروع قانون
 StatusOrderApprovedShort=وافق
 StatusOrderRefusedShort=رفض
+StatusOrderBilledShort=المنقار
 StatusOrderToProcessShort=لعملية
 StatusOrderReceivedPartiallyShort=تلقى جزئيا
 StatusOrderReceivedAllShort=وتلقى كل شيء
 StatusOrderCanceled=ألغى
 StatusOrderDraft=مشروع (لا بد من التحقق من صحة)
 StatusOrderValidated=صادق
-StatusOrderOnProcess=على عملية
+StatusOrderOnProcess=أمر - استقبال الاستعداد
+StatusOrderOnProcessWithValidation=أمر - استقبال الاستعداد أو التحقق من صحة
 StatusOrderProcessed=تجهيز
 StatusOrderToBill=على مشروع قانون
 StatusOrderToBill2=على مشروع قانون
 StatusOrderApproved=وافق
 StatusOrderRefused=رفض
+StatusOrderBilled=المنقار
 StatusOrderReceivedPartially=تلقى جزئيا
 StatusOrderReceivedAll=وتلقى كل شيء
 ShippingExist=شحنة موجود
+ProductQtyInDraft=كمية المنتج في مشاريع المراسيم
+ProductQtyInDraftOrWaitingApproved=كمية المنتج إلى مشروع أو الأوامر المعتمدة، لا يأمر بعد
 DraftOrWaitingApproved=الموافقة على مشروع أو لم يأمر بعد
 DraftOrWaitingShipped=مشروع مصادق عليه أو لم تشحن
 MenuOrdersToBill=أوامر لمشروع قانون
-# MenuOrdersToBill2=Orders to bill
+MenuOrdersToBill2=أوامر للفوترة
 SearchOrder=من أجل البحث
+SearchACustomerOrder=ابحث عن النظام العميل
+SearchASupplierOrder=بحث أمر المورد
 ShipProduct=سفينة المنتج
-Discount=الخصم
-CreateOrder=خلق أمر
+CreateOrder=إنشاء أمر
 RefuseOrder=رفض النظام
-ApproveOrder=قبول النظام
+ApproveOrder=الموافقة على النظام
+Approve2Order=الموافقة على النظام (المستوى الثاني)
 ValidateOrder=من أجل التحقق من صحة
 UnvalidateOrder=Unvalidate النظام
 DeleteOrder=من أجل حذف
 CancelOrder=من أجل إلغاء
-AddOrder=من أجل إضافة
+OrderReopened= ترتيب%s إعادة فتح
+AddOrder=إنشاء النظام
 AddToMyOrders=أضف إلى أوامر
 AddToOtherOrders=إضافة إلى أوامر أخرى
-# AddToDraftOrders=Add to draft order
+AddToDraftOrders=إضافة إلى مشروع النظام
 ShowOrder=وتبين من أجل
-NoOpenedOrders=أي أوامر فتح
-NoOtherOpenedOrders=أي أوامر فتح
-# NoDraftOrders=No draft orders
+OrdersOpened=أوامر لمعالجة
+NoOpenedOrders=لا أوامر مفتوحة
+NoOtherOpenedOrders=أية أوامر أخرى مفتوحة
+NoDraftOrders=لا مشاريع المراسيم
+NoOrder=No order
+NoSupplierOrder=لا مورد طلبات
 OtherOrders=أوامر أخرى
-LastOrders=ق الماضي أوامر ٪
+LastOrders=مشاركة الصورة٪ طلبات العملاء
+LastCustomerOrders=مشاركة الصورة٪ طلبات العملاء
+LastSupplierOrders=مشاركة الصورة٪ أوامر المورد
 LastModifiedOrders=آخر تعديل أوامر ق ٪
 LastClosedOrders=٪ ق الماضي أوامر مغلقة
 AllOrders=جميع أوامر
@@ -81,7 +96,7 @@ NbOfOrders=عدد الأوامر
 OrdersStatistics=أوامر إحصاءات
 OrdersStatisticsSuppliers=المورد أوامر إحصاءات
 NumberOfOrdersByMonth=عدد أوامر الشهر
-# AmountOfOrdersByMonthHT=Amount of orders by month (net of tax)
+AmountOfOrdersByMonthHT=كمية أوامر من شهر (صافية من الضرائب)
 ListOfOrders=قائمة الأوامر
 CloseOrder=وثيق من أجل
 ConfirmCloseOrder=هل أنت متأكد من أجل اقفال هذا؟ مرة واحدة أمر قد انتهى ، فإنه لا يمكن إلا أن يكون فواتير.
@@ -92,15 +107,17 @@ ConfirmUnvalidateOrder=هل أنت متأكد أنك تريد استعادة <b>
 ConfirmCancelOrder=هل أنت متأكد من أنك تريد إلغاء هذا النظام؟
 ConfirmMakeOrder=هل أنت متأكد من أن يؤكد لك هذا النظام على <b>٪ ق؟</b>
 GenerateBill=توليد الفاتورة
-# ClassifyShipped=Classify delivered
+ClassifyShipped=تصنيف تسليمها
 ClassifyBilled=تصنيف "فواتير"
 ComptaCard=بطاقة المحاسبة
 DraftOrders=مشروع أوامر
+DraftSuppliersOrders=أوامر مشروع الموردين
 RelatedOrders=الأوامر ذات الصلة
+RelatedCustomerOrders=طلبات العملاء ذات صلة
+RelatedSupplierOrders=أوامر المورد ذات صلة
 OnProcessOrders=على عملية أوامر
 RefOrder=المرجع. ترتيب
 RefCustomerOrder=المرجع. عملاء النظام
-CustomerOrder=عملاء النظام
 RefCustomerOrderShort=المرجع. العملاء. ترتيب
 SendOrderByMail=لكي ترسل عن طريق البريد
 ActionsOnOrder=إجراءات من أجل
@@ -114,6 +131,8 @@ PaymentOrderRef=من أجل دفع ق ٪
 CloneOrder=استنساخ النظام
 ConfirmCloneOrder=هل أنت متأكد من أن هذا الأمر استنساخ <b>٪ ق؟</b>
 DispatchSupplierOrder=%s استقبال النظام مورد
+FirstApprovalAlreadyDone=الموافقة الأولى فعلت
+SecondApprovalAlreadyDone=الموافقة الثانية فعلت
 ##### Types de contacts #####
 TypeContact_commande_internal_SALESREPFOLL=ممثل العميل متابعة النظام
 TypeContact_commande_internal_SHIPPING=ممثل الشحن متابعة
@@ -130,9 +149,7 @@ Error_COMMANDE_SUPPLIER_ADDON_NotDefined=لم تعرف COMMANDE_SUPPLIER_ADDON �
 Error_COMMANDE_ADDON_NotDefined=لم تعرف COMMANDE_ADDON مستمر
 Error_FailedToLoad_COMMANDE_SUPPLIER_ADDON_File=لم يتم تحميل الملف وحدة '٪ ق'
 Error_FailedToLoad_COMMANDE_ADDON_File=لم يتم تحميل الملف وحدة '٪ ق'
-# Error_OrderNotChecked=No orders to invoice selected
-
-
+Error_OrderNotChecked=لا أوامر إلى فاتورة مختارة
 # Sources
 OrderSource0=اقتراح التجارية
 OrderSource1=الإنترنت
@@ -143,24 +160,22 @@ OrderSource5=التجارية
 OrderSource6=مخزن
 QtyOrdered=الكمية أمرت
 AddDeliveryCostLine=تضاف تكلفة توصيل خط يبين الوزن من أجل
-
 # Documents models
 PDFEinsteinDescription=من أجل نموذج كامل (logo...)
 PDFEdisonDescription=نموذج النظام بسيطة
-# PDFProformaDescription=A complete proforma invoice (logo…)
+PDFProformaDescription=فاتورة أولية كاملة (شعار ...)
 # Orders modes
 OrderByMail=بريد
 OrderByFax=الفاكس
 OrderByEMail=بريد إلكتروني
 OrderByWWW=على الانترنت
 OrderByPhone=هاتف
-
-# CreateInvoiceForThisCustomer=Bill orders
-# NoOrdersToInvoice=No orders billable
-# CloseProcessedOrdersAutomatically=Classify "Processed" all selected orders.
-# MenuOrdersToBill2=Orders to bill
-# OrderCreation=Order creation
-# Ordered=Ordered
-# OrderCreated=Your orders have been created
-# OrderFail=An error happened during your orders creation
-# CreateOrders=Create orders
+CreateInvoiceForThisCustomer=أوامر بيل
+NoOrdersToInvoice=لا أوامر فوترة
+CloseProcessedOrdersAutomatically=تصنيف "المصنعة" جميع أوامر المحدد.
+OrderCreation=إنشاء ترتيب
+Ordered=أمر
+OrderCreated=وقد تم إنشاء طلباتكم
+OrderFail=حدث خطأ أثناء إنشاء طلباتكم
+CreateOrders=إنشاء أوامر
+ToBillSeveralOrderSelectCustomer=لإنشاء فاتورة لعدة أوامر، انقر أولا على العملاء، ثم اختر "٪ الصورة".

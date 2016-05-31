@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2002-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2006-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2006-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,14 +33,12 @@ class Cotisation extends CommonObject
 	public $element='subscription';
 	public $table_element='cotisation';
 
-	var $id;
-	var $datec;
-	var $datem;
-	var $dateh;				// Subscription start date
+	var $datec;				// Date creation
+	var $datem;				// Date modification
+	var $dateh;				// Subscription start date (date subscription)
 	var $datef;				// Subscription end date
 	var $fk_adherent;
 	var $amount;
-	var $note;
 	var $fk_bank;
 
 
@@ -80,7 +78,7 @@ class Cotisation extends CommonObject
 		$sql.= " '".$this->db->idate($this->datef)."',";
 		$sql.= " ".$this->amount.",'".$this->db->escape($this->note)."')";
 
-		dol_syslog(get_class($this)."::create sql=".$sql);
+		dol_syslog(get_class($this)."::create", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql)
 		{
@@ -88,8 +86,7 @@ class Cotisation extends CommonObject
 		}
 		else
 		{
-			$this->error=$this->db->error();
-			dol_syslog($this->error, LOG_ERR);
+			$this->error=$this->db->lasterror();
 			return -1;
 		}
 	}
@@ -105,13 +102,13 @@ class Cotisation extends CommonObject
 	{
         $sql ="SELECT rowid, fk_adherent, datec,";
 		$sql.=" tms,";
-		$sql.=" dateadh,";
+		$sql.=" dateadh as dateh,";
 		$sql.=" datef,";
 		$sql.=" cotisation, note, fk_bank";
 		$sql.=" FROM ".MAIN_DB_PREFIX."cotisation";
 		$sql.="	WHERE rowid=".$rowid;
 
-		dol_syslog(get_class($this)."::fetch sql=".$sql);
+		dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
@@ -125,7 +122,7 @@ class Cotisation extends CommonObject
 				$this->fk_adherent    = $obj->fk_adherent;
 				$this->datec          = $this->db->jdate($obj->datec);
 				$this->datem          = $this->db->jdate($obj->tms);
-				$this->dateh          = $this->db->jdate($obj->dateadh);
+				$this->dateh          = $this->db->jdate($obj->dateh);
 				$this->datef          = $this->db->jdate($obj->datef);
 				$this->amount         = $obj->cotisation;
 				$this->note           = $obj->note;
@@ -139,7 +136,7 @@ class Cotisation extends CommonObject
 		}
 		else
 		{
-			$this->error=$this->db->error();
+			$this->error=$this->db->lasterror();
 			return -1;
 		}
 	}
@@ -166,7 +163,7 @@ class Cotisation extends CommonObject
 		$sql .= " fk_bank = ".($this->fk_bank ? $this->fk_bank : 'null');
 		$sql .= " WHERE rowid = ".$this->id;
 
-		dol_syslog(get_class($this)."::update sql=".$sql);
+		dol_syslog(get_class($this)."::update", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql)
 		{
@@ -180,8 +177,7 @@ class Cotisation extends CommonObject
 		else
 		{
 			$this->db->rollback();
-			$this->error=$this->db->error();
-			dol_syslog(get_class($this)."::update ".$this->error, LOG_ERR);
+			$this->error=$this->db->lasterror();
 			return -1;
 		}
 	}
@@ -205,7 +201,7 @@ class Cotisation extends CommonObject
 		$this->db->begin();
 
 		$sql = "DELETE FROM ".MAIN_DB_PREFIX."cotisation WHERE rowid = ".$this->id;
-		dol_syslog(get_class($this)."::delete sql=".$sql);
+		dol_syslog(get_class($this)."::delete", LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
@@ -217,7 +213,7 @@ class Cotisation extends CommonObject
 				$result=$member->fetch($this->fk_adherent);
 				$result=$member->update_end_date($user);
 
-				if ($accountline->rowid > 0)	// If we found bank account line (this means this->fk_bank defined)
+				if ($accountline->id > 0)						// If we found bank account line (this means this->fk_bank defined)
 				{
 					$result=$accountline->delete($user);		// Return false if refused because line is conciliated
 					if ($result > 0)
@@ -254,9 +250,9 @@ class Cotisation extends CommonObject
 
 
 	/**
-	 *  Renvoie nom clicable (avec eventuellement le picto)
+	 *  Return clicable name (with picto eventually)
 	 *
-	 *	@param	int		$withpicto		0=Pas de picto, 1=Inclut le picto dans le lien, 2=Picto seul
+	 *	@param	int		$withpicto		0=No picto, 1=Include picto into link, 2=Only picto
 	 *	@return	string					Chaine avec URL
 	 */
 	function getNomUrl($withpicto=0)
@@ -264,16 +260,16 @@ class Cotisation extends CommonObject
 		global $langs;
 
 		$result='';
+        $label=$langs->trans("ShowSubscription").': '.$this->ref;
 
-		$lien = '<a href="'.DOL_URL_ROOT.'/adherents/fiche_subscription.php?rowid='.$this->id.'">';
-		$lienfin='</a>';
+        $link = '<a href="'.DOL_URL_ROOT.'/adherents/fiche_subscription.php?rowid='.$this->id.'" title="'.dol_escape_htmltag($label, 1).'" class="classfortooltip">';
+		$linkend='</a>';
 
 		$picto='payment';
-		$label=$langs->trans("ShowSubscription");
 
-		if ($withpicto) $result.=($lien.img_object($label,$picto).$lienfin);
+        if ($withpicto) $result.=($link.img_object($label, $picto, 'class="classfortooltip"').$linkend);
 		if ($withpicto && $withpicto != 2) $result.=' ';
-		$result.=$lien.$this->ref.$lienfin;
+		$result.=$link.$this->ref.$linkend;
 		return $result;
 	}
 
@@ -312,4 +308,3 @@ class Cotisation extends CommonObject
 		}
 	}
 }
-?>

@@ -34,7 +34,7 @@ $page=GETPOST('page', 'int');
 if (! $sortorder) $sortorder="ASC";
 if (! $sortfield) $sortfield="p.name";
 if ($page < 0) { $page = 0; }
-$limit = $conf->liste_limit;
+$limit = GETPOST('limit')?GETPOST('limit','int'):$conf->liste_limit;
 $offset = $limit * $page ;
 
 $type=GETPOST('type', 'alpha');
@@ -59,12 +59,12 @@ llxHeader('','Contacts');
 if ($type == "c" || $type == "p")
 {
   $label = $langs->trans("Customers");
-  $urlfiche="fiche.php";
+  $urlfiche="card.php";
 }
 if ($type == "f")
 {
   $label = $langs->trans("Suppliers");
-  $urlfiche="fiche.php";
+  $urlfiche="card.php";
 }
 
 /*
@@ -72,7 +72,7 @@ if ($type == "f")
  *
  */
 
-$sql = "SELECT s.rowid, s.nom,  st.libelle as stcomm";
+$sql = "SELECT s.rowid, s.nom as name, st.libelle as stcomm";
 $sql.= ", p.rowid as cidp, p.name, p.firstname, p.email, p.phone";
 $sql.= " FROM ".MAIN_DB_PREFIX."c_stcomm as st,";
 if (! $user->rights->societe->client->voir && ! $socid) $sql .= " ".MAIN_DB_PREFIX."societe_commerciaux as sc,";
@@ -131,8 +131,8 @@ if ($resql)
 	print_liste_field_titre($langs->trans("Lastname"),$_SERVER["PHP_SELF"],"p.name", $begin, $param,"",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Firstname"),$_SERVER["PHP_SELF"],"p.firstname", $begin, $param,"",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom", $begin, $param,"",$sortfield,$sortorder);
-	print '<td class="liste_titre">'.$langs->trans("Email").'</td>';
-	print '<td class="liste_titre">'.$langs->trans("Phone").'</td>';
+	print_liste_field_titre($langs->trans("Email"));
+	print_liste_field_titre($langs->trans("Phone"));
 	print "</tr>\n";
 
 	print '<form action="'.$_SERVER["PHP_SELF"].'?type='.$_GET["type"].'" method="GET">';
@@ -154,12 +154,12 @@ if ($resql)
 		$var=!$var;
 
 		print "<tr ".$bc[$var].">";
-		print '<td><a href="'.DOL_URL_ROOT.'/contact/fiche.php?id='.$obj->cidp.'&socid='.$obj->rowid.'">'.img_object($langs->trans("ShowContact"),"contact");
-		print '</a>&nbsp;<a href="'.DOL_URL_ROOT.'/contact/fiche.php?id='.$obj->cidp.'&socid='.$obj->rowid.'">'.$obj->name.'</a></td>';
+		print '<td><a href="'.DOL_URL_ROOT.'/contact/card.php?id='.$obj->cidp.'&socid='.$obj->rowid.'">'.img_object($langs->trans("ShowContact"),"contact");
+		print '</a>&nbsp;<a href="'.DOL_URL_ROOT.'/contact/card.php?id='.$obj->cidp.'&socid='.$obj->rowid.'">'.$obj->name.'</a></td>';
 		print "<td>$obj->firstname</TD>";
 
 		print '<td><a href="'.$_SERVER["PHP_SELF"].'?type='.$type.'&socid='.$obj->rowid.'">'.img_object($langs->trans("ShowCompany"),"company").'</a>&nbsp;';
-		print "<a href=\"".$urlfiche."?socid=".$obj->rowid."\">$obj->nom</a></td>\n";
+		print "<a href=\"".$urlfiche."?socid=".$obj->rowid."\">$obj->name</a></td>\n";
 
 		print '<td>'.dol_print_phone($obj->email,$obj->cidp,$obj->rowid,'AC_EMAIL').'</td>';
 
@@ -179,4 +179,3 @@ else
 llxFooter();
 
 $db->close();
-?>

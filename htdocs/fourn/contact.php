@@ -50,7 +50,7 @@ $pageprev = $page - 1;
 $pagenext = $page + 1;
 if (! $sortorder) $sortorder="ASC";
 if (! $sortfield) $sortfield="p.name";
-$limit = $conf->liste_limit;
+$limit = GETPOST('limit')?GETPOST('limit','int'):$conf->liste_limit;
 
 
 /*
@@ -94,16 +94,17 @@ if ($result)
     $num = $db->num_rows($result);
 
     $title = (! empty($conf->global->SOCIETE_ADDRESSES_MANAGEMENT) ? $langs->trans("ListOfContacts") : $langs->trans("ListOfContactsAddresses"));
-    print_barre_liste($title." (".$langs->trans("Suppliers").")",$page, "contact.php", "",$sortfield,$sortorder,"",$num);
+    print_barre_liste($title." (".$langs->trans("Suppliers").")",$page, $_SERVER["PHP_SELF"], "",$sortfield,$sortorder,"",$num);
 
     print '<table class="liste" width="100%">';
     print '<tr class="liste_titre">';
-    print_liste_field_titre($langs->trans("Lastname"),"contact.php","p.name", $begin, "", "", $sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("Firstname"),"contact.php","p.firstname", $begin, "", "", $sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("Company"),"contact.php","s.nom", $begin, "", "", $sortfield,$sortorder);
-    print '<td class="liste_titre">'.$langs->trans("Email").'</td>';
-    print '<td class="liste_titre">'.$langs->trans("Phone").'</td>';
+    print_liste_field_titre($langs->trans("Lastname"),$_SERVER["PHP_SELF"],"p.name", $begin, "", "", $sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Firstname"),$_SERVER["PHP_SELF"],"p.firstname", $begin, "", "", $sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom", $begin, "", "", $sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Email"));
+    print_liste_field_titre($langs->trans("Phone"));
     print "</tr>\n";
+
     $var=True;
     $i = 0;
     while ($i < min($num,$limit))
@@ -114,9 +115,9 @@ if ($result)
 
         print "<tr ".$bc[$var].">";
 
-        print '<td><a href="'.DOL_URL_ROOT.'/contact/fiche.php?id='.$obj->cidp.'">'.img_object($langs->trans("ShowContact"),"contact").' '.$obj->lastname.'</a></td>';
+        print '<td><a href="'.DOL_URL_ROOT.'/contact/card.php?id='.$obj->cidp.'">'.img_object($langs->trans("ShowContact"),"contact").' '.$obj->lastname.'</a></td>';
         print '<td>'.$obj->firstname.'</td>';
-        print '<td><a href="'.DOL_URL_ROOT.'/fourn/fiche.php?socid='.$obj->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.$obj->name.'</a></td>';
+        print '<td><a href="'.DOL_URL_ROOT.'/fourn/card.php?socid='.$obj->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.$obj->name.'</a></td>';
         print '<td>'.$obj->email.'</td>';
         print '<td>'.$obj->phone.'</td>';
 
@@ -136,4 +137,3 @@ else
 llxFooter();
 
 $db->close();
-?>

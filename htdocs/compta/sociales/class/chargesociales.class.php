@@ -34,8 +34,11 @@ class ChargeSociales extends CommonObject
     public $table='chargesociales';
     public $table_element='chargesociales';
 
-    var $id;
-    var $ref;
+    /**
+     * {@inheritdoc}
+     */
+    protected $table_ref_field = 'ref';
+
     var $date_ech;
     var $lib;
     var $type;
@@ -62,19 +65,21 @@ class ChargeSociales extends CommonObject
     /**
      *  Retrouve et charge une charge sociale
      *
-     *  @param	int     $id		1 si trouve, 0 sinon
-     *  @return	void
+     *  @param	int     $id		Id
+     *  @param	string  $ref	Ref
+     *  @return	int <0 KO >0 OK
      */
-    function fetch($id)
+    function fetch($id, $ref='')
     {
         $sql = "SELECT cs.rowid, cs.date_ech,";
         $sql.= " cs.libelle as lib, cs.fk_type, cs.amount, cs.paye, cs.periode,";
         $sql.= " c.libelle";
         $sql.= " FROM ".MAIN_DB_PREFIX."chargesociales as cs, ".MAIN_DB_PREFIX."c_chargesociales as c";
         $sql.= " WHERE cs.fk_type = c.id";
-        $sql.= " AND cs.rowid = ".$id;
+        if ($ref) $sql.= " AND cs.rowid = ".$ref;
+        else $sql.= " AND cs.rowid = ".$id;
 
-        dol_syslog(get_class($this)."::fetch sql=".$sql);
+        dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -92,21 +97,40 @@ class ChargeSociales extends CommonObject
                 $this->paye           = $obj->paye;
                 $this->periode        = $this->db->jdate($obj->periode);
 
+                $this->db->free($resql);
+
                 return 1;
             }
             else
             {
                 return 0;
             }
-            $this->db->free($resql);
         }
         else
         {
-            $this->error=$this->db->error();
+            $this->error=$this->db->lasterror();
             return -1;
         }
     }
 
+	/**
+	 * Check if a social contribution can be created into database
+	 *
+	 * @return	boolean		True or false
+	 */
+	function check()
+	{
+		$newamount=price2num($this->amount,'MT');
+
+        // Validation parametres
+        if (! $newamount > 0 || empty($this->date_ech) || empty($this->periode))
+        {
+            return false;
+        }
+
+
+		return true;
+	}
 
     /**
      *      Create a social contribution into database
@@ -121,12 +145,12 @@ class ChargeSociales extends CommonObject
         // Nettoyage parametres
         $newamount=price2num($this->amount,'MT');
 
-        // Validation parametres
-        if (! $newamount > 0 || empty($this->date_ech) || empty($this->periode))
-        {
-            $this->error="ErrorBadParameter";
-            return -2;
-        }
+		if (!$this->check())
+		{
+			 $this->error="ErrorBadParameter";
+			 return -2;
+		}
+
 
         $this->db->begin();
 
@@ -137,7 +161,7 @@ class ChargeSociales extends CommonObject
         $sql.= " ".$conf->entity;
         $sql.= ")";
 
-        dol_syslog(get_class($this)."::create sql=".$sql);
+        dol_syslog(get_class($this)."::create", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -192,7 +216,7 @@ class ChargeSociales extends CommonObject
         if (! $error)
         {
             $sql = "DELETE FROM ".MAIN_DB_PREFIX."paiementcharge where fk_charge='".$this->id."'";
-            dol_syslog(get_class($this)."::delete sql=".$sql);
+            dol_syslog(get_class($this)."::delete", LOG_DEBUG);
             $resql=$this->db->query($sql);
             if (! $resql)
             {
@@ -204,7 +228,7 @@ class ChargeSociales extends CommonObject
         if (! $error)
         {
             $sql = "DELETE FROM ".MAIN_DB_PREFIX."chargesociales where rowid='".$this->id."'";
-            dol_syslog(get_class($this)."::delete sql=".$sql);
+            dol_syslog(get_class($this)."::delete", LOG_DEBUG);
             $resql=$this->db->query($sql);
             if (! $resql)
             {
@@ -240,10 +264,11 @@ class ChargeSociales extends CommonObject
         $sql = "UPDATE ".MAIN_DB_PREFIX."chargesociales";
         $sql.= " SET libelle='".$this->db->escape($this->lib)."',";
         $sql.= " date_ech='".$this->db->idate($this->date_ech)."',";
-        $sql.= " periode='".$this->db->idate($this->periode)."'";
+        $sql.= " periode='".$this->db->idate($this->periode)."',";
+        $sql.= " amount='".price2num($this->amount,'MT')."'";
         $sql.= " WHERE rowid=".$this->id;
 
-        dol_syslog(get_class($this)."::update sql=".$sql);
+        dol_syslog(get_class($this)."::update", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -283,14 +308,13 @@ class ChargeSociales extends CommonObject
             if ($this->db->num_rows($result))
             {
                 $obj = $this->db->fetch_object($result);
+                $this->db->free($result);
                 return $obj->amount;
             }
             else
             {
                 return 0;
             }
-
-            $this->db->free($result);
 
         }
         else
@@ -317,27 +341,30 @@ class ChargeSociales extends CommonObject
     }
 
     /**
-     *    Retourne le libelle du statut d'une charge (impaye, payee)
+     *  Retourne le libelle du statut d'une charge (impaye, payee)
      *
-     *    @param	int		$mode       0=libelle long, 1=libelle court, 2=Picto + Libelle court, 3=Picto, 4=Picto + Libelle long
-     *    @return	string        		Label
+     *  @param	int		$mode       	0=libelle long, 1=libelle court, 2=Picto + Libelle court, 3=Picto, 4=Picto + Libelle long
+	 *  @param  double	$alreadypaid	0=No payment already done, >0=Some payments were already done (we recommand to put here amount payed if you have it, 1 otherwise)
+     *  @return	string        			Label
      */
-    function getLibStatut($mode=0)
+    function getLibStatut($mode=0,$alreadypaid=-1)
     {
-        return $this->LibStatut($this->paye,$mode);
+        return $this->LibStatut($this->paye,$mode,$alreadypaid);
     }
 
     /**
-     *    Renvoi le libelle d'un statut donne
+     *  Renvoi le libelle d'un statut donne
      *
-     *    @param	int		$statut        	Id statut
-     *    @param    int		$mode          	0=libelle long, 1=libelle court, 2=Picto + Libelle court, 3=Picto, 4=Picto + Libelle long, 5=Libelle court + Picto
-     *    @return   string        			Label
+     *  @param	int		$statut        	Id statut
+     *  @param  int		$mode          	0=libelle long, 1=libelle court, 2=Picto + Libelle court, 3=Picto, 4=Picto + Libelle long, 5=Libelle court + Picto
+	 *  @param  double	$alreadypaid	0=No payment already done, >0=Some payments were already done (we recommand to put here amount payed if you have it, 1 otherwise)
+     *  @return string        			Label
      */
-    function LibStatut($statut,$mode=0)
+    function LibStatut($statut,$mode=0,$alreadypaid=-1)
     {
         global $langs;
         $langs->load('customers');
+        $langs->load('bills');
 
         if ($mode == 0)
         {
@@ -351,22 +378,26 @@ class ChargeSociales extends CommonObject
         }
         if ($mode == 2)
         {
-            if ($statut ==  0) return img_picto($langs->trans("Unpaid"), 'statut1').' '.$langs->trans("Unpaid");
+            if ($statut ==  0 && $alreadypaid <= 0) return img_picto($langs->trans("Unpaid"), 'statut1').' '.$langs->trans("Unpaid");
+            if ($statut ==  0 && $alreadypaid > 0) return img_picto($langs->trans("BillStatusStarted"), 'statut3').' '.$langs->trans("BillStatusStarted");
             if ($statut ==  1) return img_picto($langs->trans("Paid"), 'statut6').' '.$langs->trans("Paid");
         }
         if ($mode == 3)
         {
-            if ($statut ==  0) return img_picto($langs->trans("Unpaid"), 'statut1');
+            if ($statut ==  0 && $alreadypaid <= 0) return img_picto($langs->trans("Unpaid"), 'statut1');
+            if ($statut ==  0 && $alreadypaid > 0) return img_picto($langs->trans("BillStatusStarted"), 'statut3');
             if ($statut ==  1) return img_picto($langs->trans("Paid"), 'statut6');
         }
         if ($mode == 4)
         {
-            if ($statut ==  0) return img_picto($langs->trans("Unpaid"), 'statut1').' '.$langs->trans("Unpaid");
+            if ($statut ==  0 && $alreadypaid <= 0) return img_picto($langs->trans("Unpaid"), 'statut1').' '.$langs->trans("Unpaid");
+            if ($statut ==  0 && $alreadypaid > 0) return img_picto($langs->trans("BillStatusStarted"), 'statut3').' '.$langs->trans("BillStatusStarted");
             if ($statut ==  1) return img_picto($langs->trans("Paid"), 'statut6').' '.$langs->trans("Paid");
         }
         if ($mode == 5)
         {
-            if ($statut ==  0) return $langs->trans("Unpaid").' '.img_picto($langs->trans("Unpaid"), 'statut1');
+            if ($statut ==  0 && $alreadypaid <= 0) return $langs->trans("Unpaid").' '.img_picto($langs->trans("Unpaid"), 'statut1');
+            if ($statut ==  0 && $alreadypaid > 0) return $langs->trans("BillStatusStarted").' '.img_picto($langs->trans("BillStatusStarted"), 'statut3');
             if ($statut ==  1) return $langs->trans("Paid").' '.img_picto($langs->trans("Paid"), 'statut6');
         }
 
@@ -375,9 +406,9 @@ class ChargeSociales extends CommonObject
 
 
     /**
-     *  Renvoie nom clicable (avec eventuellement le picto)
+     *  Return clicable name (with picto eventually)
      *
-     *	@param	int		$withpicto		0=Pas de picto, 1=Inclut le picto dans le lien, 2=Picto seul
+     *	@param	int		$withpicto		0=No picto, 1=Include picto into link, 2=Only picto
      * 	@param	int		$maxlen			Longueur max libelle
      *	@return	string					Chaine avec URL
      */
@@ -388,13 +419,14 @@ class ChargeSociales extends CommonObject
         $result='';
 
         if (empty($this->ref)) $this->ref=$this->lib;
+        $label = $langs->trans("ShowSocialContribution").': '.$this->ref;
 
-        $lien = '<a href="'.DOL_URL_ROOT.'/compta/sociales/charges.php?id='.$this->id.'">';
-        $lienfin='</a>';
+        $link = '<a href="'.DOL_URL_ROOT.'/compta/sociales/charges.php?id='.$this->id.'" title="'.dol_escape_htmltag($label, 1).'" class="classfortooltip">';
+        $linkend='</a>';
 
-        if ($withpicto) $result.=($lien.img_object($langs->trans("ShowSocialContribution").': '.$this->lib,'bill').$lienfin.' ');
+        if ($withpicto) $result.=($link.img_object($label, 'bill', 'class="classfortooltip"').$linkend.' ');
         if ($withpicto && $withpicto != 2) $result.=' ';
-        if ($withpicto != 2) $result.=$lien.($maxlen?dol_trunc($this->ref,$maxlen):$this->ref).$lienfin;
+        if ($withpicto != 2) $result.=$link.($maxlen?dol_trunc($this->ref,$maxlen):$this->ref).$linkend;
         return $result;
     }
 
@@ -412,7 +444,7 @@ class ChargeSociales extends CommonObject
         $sql.= ' FROM '.MAIN_DB_PREFIX.$table;
         $sql.= ' WHERE '.$field.' = '.$this->id;
 
-        dol_syslog(get_class($this)."::getSommePaiement sql=".$sql, LOG_DEBUG);
+        dol_syslog(get_class($this)."::getSommePaiement", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -442,7 +474,7 @@ class ChargeSociales extends CommonObject
         $sql.= " FROM ".MAIN_DB_PREFIX."chargesociales as e";
         $sql.= " WHERE e.rowid = ".$id;
 
-        dol_syslog(get_class($this)."::info sql=".$sql);
+        dol_syslog(get_class($this)."::info", LOG_DEBUG);
         $result=$this->db->query($sql);
         if ($result)
         {
@@ -488,8 +520,6 @@ class ChargeSociales extends CommonObject
      */
     function initAsSpecimen()
     {
-        global $user,$langs,$conf;
-
         // Initialize parameters
         $this->id=0;
         $this->ref = 'SPECIMEN';
@@ -505,4 +535,3 @@ class ChargeSociales extends CommonObject
     }
 }
 
-?>

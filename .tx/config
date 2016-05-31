@@ -1,6 +1,12 @@
 [main]
 host = https://www.transifex.com
-lang_map = uz: uz_UZ
+lang_map = uz: uz_UZ, sw: sw_SW, sr@latin: sr_RS
+
+[dolibarr.accountancy]
+file_filter = htdocs/langs/<lang>/accountancy.lang
+source_file = htdocs/langs/en_US/accountancy.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
 
 [dolibarr.admin]
 file_filter = htdocs/langs/<lang>/admin.lang
@@ -140,6 +146,18 @@ source_file = htdocs/langs/en_US/holiday.lang
 source_lang = en_US
 type = MOZILLAPROPERTIES
 
+[dolibarr.hrm]
+file_filter = htdocs/langs/<lang>/hrm.lang
+source_file = htdocs/langs/en_US/hrm.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
+
+[dolibarr.incoterm]
+file_filter = htdocs/langs/<lang>/incoterm.lang
+source_file = htdocs/langs/en_US/incoterm.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
+
 [dolibarr.install]
 file_filter = htdocs/langs/<lang>/install.lang
 source_file = htdocs/langs/en_US/install.lang
@@ -161,6 +179,18 @@ type = MOZILLAPROPERTIES
 [dolibarr.ldap]
 file_filter = htdocs/langs/<lang>/ldap.lang
 source_file = htdocs/langs/en_US/ldap.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
+
+[dolibarr.link]
+file_filter = htdocs/langs/<lang>/link.lang
+source_file = htdocs/langs/en_US/link.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
+
+[dolibarr.loan]
+file_filter = htdocs/langs/<lang>/loan.lang
+source_file = htdocs/langs/en_US/loan.lang
 source_lang = en_US
 type = MOZILLAPROPERTIES
 
@@ -194,6 +224,12 @@ source_file = htdocs/langs/en_US/members.lang
 source_lang = en_US
 type = MOZILLAPROPERTIES
 
+[dolibarr.oauth]
+file_filter = htdocs/langs/<lang>/oauth.lang
+source_file = htdocs/langs/en_US/oauth.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
+
 [dolibarr.opensurvey]
 file_filter = htdocs/langs/<lang>/opensurvey.lang
 source_file = htdocs/langs/en_US/opensurvey.lang
@@ -203,12 +239,6 @@ type = MOZILLAPROPERTIES
 [dolibarr.orders]
 file_filter = htdocs/langs/<lang>/orders.lang
 source_file = htdocs/langs/en_US/orders.lang
-source_lang = en_US
-type = MOZILLAPROPERTIES
-
-[dolibarr.oscommerce]
-file_filter = htdocs/langs/<lang>/oscommerce.lang
-source_file = htdocs/langs/en_US/oscommerce.lang
 source_lang = en_US
 type = MOZILLAPROPERTIES
 
@@ -230,6 +260,18 @@ source_file = htdocs/langs/en_US/paypal.lang
 source_lang = en_US
 type = MOZILLAPROPERTIES
 
+[dolibarr.printing]
+file_filter = htdocs/langs/<lang>/printing.lang
+source_file = htdocs/langs/en_US/printing.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
+
+[dolibarr.productbatch]
+file_filter = htdocs/langs/<lang>/productbatch.lang
+source_file = htdocs/langs/en_US/productbatch.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
+
 [dolibarr.products]
 file_filter = htdocs/langs/<lang>/products.lang
 source_file = htdocs/langs/en_US/products.lang
@@ -248,15 +290,27 @@ source_file = htdocs/langs/en_US/propal.lang
 source_lang = en_US
 type = MOZILLAPROPERTIES
 
-[dolibarr.sendings]
-file_filter = htdocs/langs/<lang>/sendings.lang
-source_file = htdocs/langs/en_US/sendings.lang
+[dolibarr.receiptprinter]
+file_filter = htdocs/langs/<lang>/receiptprinter.lang
+source_file = htdocs/langs/en_US/receiptprinter.lang
 source_lang = en_US
 type = MOZILLAPROPERTIES
 
-[dolibarr.shop]
-file_filter = htdocs/langs/<lang>/shop.lang
-source_file = htdocs/langs/en_US/shop.lang
+[dolibarr.resource]
+file_filter = htdocs/langs/<lang>/resource.lang
+source_file = htdocs/langs/en_US/resource.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
+
+[dolibarr.salaries]
+file_filter = htdocs/langs/<lang>/salaries.lang
+source_file = htdocs/langs/en_US/salaries.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
+
+[dolibarr.sendings]
+file_filter = htdocs/langs/<lang>/sendings.lang
+source_file = htdocs/langs/en_US/sendings.lang
 source_lang = en_US
 type = MOZILLAPROPERTIES
 
@@ -275,6 +329,12 @@ type = MOZILLAPROPERTIES
 [dolibarr.suppliers]
 file_filter = htdocs/langs/<lang>/suppliers.lang
 source_file = htdocs/langs/en_US/suppliers.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
+
+[dolibarr.supplier_proposal]
+file_filter = htdocs/langs/<lang>/supplier_proposal.lang
+source_file = htdocs/langs/en_US/supplier_proposal.lang
 source_lang = en_US
 type = MOZILLAPROPERTIES
 
@@ -301,4 +361,3 @@ file_filter = htdocs/langs/<lang>/workflow.lang
 source_file = htdocs/langs/en_US/workflow.lang
 source_lang = en_US
 type = MOZILLAPROPERTIES
-

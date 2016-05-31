@@ -1,5 +1,6 @@
 <?php
 /* Copyright (C) 2005-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2015      Frederic France      <frederic.france@free.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,15 +48,16 @@ class box_bookmarks extends ModeleBoxes
 	 */
 	function loadBox($max=5)
 	{
-		global $user, $langs, $db;
+		global $user, $langs, $db, $conf;
 		$langs->load("boxes");
 
 		$this->max=$max;
 
-		$this->info_box_head = array('text' => $langs->trans("BoxMyLastBookmarks",$max),
-                                     'sublink' => DOL_URL_ROOT.'/bookmarks/liste.php');
-		if ($user->rights->bookmark->creer)
-		{
+		$this->info_box_head = array(
+            'text' => $langs->trans("BoxMyLastBookmarks",$max),
+            'sublink' => DOL_URL_ROOT.'/bookmarks/list.php',
+        );
+        if ($user->rights->bookmark->creer) {
 			$this->info_box_head['subpicto']='object_bookmark';
 			$this->info_box_head['subtext']=$langs->trans("BookmarksManagement");
 		}
@@ -70,6 +72,7 @@ class box_bookmarks extends ModeleBoxes
 			$sql = "SELECT b.title, b.url, b.target, b.favicon";
 			$sql.= " FROM ".MAIN_DB_PREFIX."bookmark as b";
 			$sql.= " WHERE fk_user = ".$user->id;
+            $sql.= " AND b.entity = ".$conf->entity;
 			$sql.= $db->order("position","ASC");
 			$sql.= $db->plimit($max, 0);
 
@@ -78,45 +81,54 @@ class box_bookmarks extends ModeleBoxes
 			{
 				$num = $db->num_rows($result);
 
-				$i = 0;
+				$line = 0;
 
-				while ($i < $num)
-				{
-					$objp = $db->fetch_object($result);
+                while ($line < $num) {
+                    $objp = $db->fetch_object($result);
 
-					$this->info_box_contents[$i][0] = array('td' => 'align="left" width="16"',
-                    'logo' => $this->boximg,
-                    'url' => $objp->url,
-                    'target' => $objp->target?'newtab':'');
-					$this->info_box_contents[$i][1] = array('td' => 'align="left"',
-                    'text' => $objp->title,
-                    'url' => $objp->url,
-                    'target' => $objp->target?'newtab':'');
+                    $this->info_box_contents[$line][0] = array(
+                        'td' => 'align="left" width="16"',
+                        'logo' => $this->boximg,
+                        'url' => $objp->url,
+                        'tooltip' => $objp->title,
+                        'target' => $objp->target?'newtab':'',
+                    );
+                    $this->info_box_contents[$line][1] = array(
+                        'td' => 'align="left"',
+                        'text' => $objp->title,
+                        'url' => $objp->url,
+                        'tooltip' => $objp->title,
+                        'target' => $objp->target?'newtab':'',
+                    );
 
-					$i++;
-				}
+                    $line++;
+                }
 
-				if ($num==0)
-				{
-					$mytxt=$langs->trans("NoRecordedBookmarks");
-					if ($user->rights->bookmark->creer) $mytxt.=' '.$langs->trans("ClickToAdd");
-					$this->info_box_contents[$i][0] = array('td' => 'align="center" colspan="2"', 'url'=> DOL_URL_ROOT.'/bookmarks/liste.php', 'text'=>$mytxt);
-				}
+                if ($num==0) {
+                    $mytxt=$langs->trans("NoRecordedBookmarks");
+                    if ($user->rights->bookmark->creer) $mytxt.=' '.$langs->trans("ClickToAdd");
+                    $this->info_box_contents[$line][0] = array(
+                        'td' => 'align="center" colspan="2"',
+                        'tooltip' => $mytxt,
+                        'url'=> DOL_URL_ROOT.'/bookmarks/list.php', 'text'=>$mytxt,
+                    );
+                }
 
-				$db->free($result);
-			}
-			else
-			{
-				$this->info_box_contents[0][0] = array(	'td' => 'align="left"',
-    	        										'maxlength'=>500,
-	            										'text' => ($db->error().' sql='.$sql));
-			}
-		}
-		else {
-			$this->info_box_contents[0][0] = array('align' => 'left',
-            'text' => $langs->trans("ReadPermissionNotAllowed"));
-		}
-	}
+                $db->free($result);
+            } else {
+                $this->info_box_contents[0][0] = array(
+                    'td' => 'align="left"',
+                    'maxlength'=>500,
+                    'text' => ($db->error().' sql='.$sql),
+                );
+            }
+        } else {
+            $this->info_box_contents[0][0] = array(
+                'align' => 'left',
+                'text' => $langs->trans("ReadPermissionNotAllowed"),
+            );
+        }
+    }
 
 	/**
 	 *	Method to show box
@@ -132,4 +144,3 @@ class box_bookmarks extends ModeleBoxes
 
 }
 
-?>

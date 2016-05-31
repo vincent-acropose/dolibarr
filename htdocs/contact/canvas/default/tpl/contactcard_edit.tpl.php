@@ -23,7 +23,7 @@ $contact = $GLOBALS['objcanvas']->control->object;
 <!-- BEGIN PHP TEMPLATE CONTACTCARD_EDIT.TPL.PHP DEFAULT -->
 
 <?php
-print_fiche_titre($this->control->tpl['title']);
+print load_fiche_titre($this->control->tpl['title']);
 
 dol_htmloutput_errors($this->control->tpl['error'],$this->control->tpl['errors']);
 
@@ -59,7 +59,7 @@ echo $this->control->tpl['ajax_selectcountry'];
 </tr>
 
 <tr>
-	<td><?php echo $langs->trans("Company"); ?></td>
+	<td><?php echo $langs->trans("ThirdParty"); ?></td>
 	<td colspan="3"><?php echo $this->control->tpl['company']; ?></td>
 </tr>
 
