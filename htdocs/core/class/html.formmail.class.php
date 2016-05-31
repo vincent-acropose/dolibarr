@@ -237,6 +237,13 @@ class FormMail extends Form
 
         if (! is_object($form)) $form=new Form($this->db);
 
+        
+        //TODO : Really bad Hack to force email sender
+        $this->fromname='CAFE ROYAL ENTREPRISES';
+        $this->frommail=$conf->global->MAIN_MAIL_EMAIL_FROM;
+        $this->fromid=null;
+        
+        
         $langs->load("other");
         $langs->load("mails");
 
