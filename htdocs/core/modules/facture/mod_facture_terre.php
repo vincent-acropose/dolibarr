@@ -157,7 +157,7 @@ class mod_facture_terre extends ModeleNumRefFactures
 		$sql = "SELECT MAX(CAST(SUBSTRING(facnumber FROM ".$posindice.") AS SIGNED)) as max";	// This is standard SQL
 		$sql.= " FROM ".MAIN_DB_PREFIX."facture";
 		$sql.= " WHERE facnumber LIKE '".$prefix."____-%'";
-		$sql.= " AND entity IN (".getEntity('facture', 1).")";
+		$sql.= " AND entity IN (".getEntity('facture', 0).")";
 
 		$resql=$db->query($sql);
 		dol_syslog(get_class($this)."::getNextValue", LOG_DEBUG);
