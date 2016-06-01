@@ -22,9 +22,9 @@ create table llx_equipement
   fk_product		integer DEFAULT 0,			-- produit auquel est rattache l'équipement
   fk_soc_fourn		integer DEFAULT 0,			-- fournisseur de l'équipement
   fk_soc_client		integer DEFAULT 0,			-- client propriétaire de l'équipement
-  ref				varchar(60) NOT NULL,		-- numéro de série interne de l'équipement ou du lot (si lot = numversion + compteur si découpé)
+  ref				varchar(255) NOT NULL,		-- numéro de série interne de l'équipement ou du lot (si lot = numversion + compteur si découpé)
   numimmocompta		text,						-- numéro d'immobilisation comptable
-  numversion		varchar(30) NULL,			-- version du produit du fournisseur (si gestion par lot)
+  numversion		varchar(255) NULL,			-- version du produit du fournisseur (si gestion par lot)
   fk_facture_fourn	integer DEFAULT 0,			-- clé de la facture d'achat au fournisseur
   fk_facture		integer DEFAULT 0,			-- clé de la facture de vente au client
   fk_entrepot		integer DEFAULT 0,			-- lieu de stockage de l'équipement
