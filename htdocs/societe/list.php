@@ -116,6 +116,7 @@ $fieldstosearchall = array(
     's.siren'=>"ProfId1",
     's.siret'=>"ProfId2",
     's.ape'=>"ProfId3",
+    's.phone'=>"Phone",
 );
 if (($tmp = $langs->transnoentities("ProfId4".$mysoc->country_code)) && $tmp != "ProfId4".$mysoc->country_code && $tmp != '-') $fieldstosearchall['s.idprof4']='ProfId4';
 if (($tmp = $langs->transnoentities("ProfId5".$mysoc->country_code)) && $tmp != "ProfId5".$mysoc->country_code && $tmp != '-') $fieldstosearchall['s.idprof5']='ProfId5';
@@ -165,7 +166,7 @@ $arrayfields=array(
 // Extra fields
 if (is_array($extrafields->attribute_label) && count($extrafields->attribute_label))
 {
-   foreach($extrafields->attribute_label as $key => $val) 
+   foreach($extrafields->attribute_label as $key => $val)
    {
        $arrayfields["ef.".$key]=array('label'=>$extrafields->attribute_label[$key], 'checked'=>$extrafields->attribute_list[$key], 'position'=>$extrafields->attribute_pos[$key], 'enabled'=>$extrafields->attribute_perms[$key]);
    }
@@ -402,7 +403,7 @@ foreach ($search_array_options as $key => $val)
     $typ=$extrafields->attribute_type[$tmpkey];
     $mode=0;
     if (in_array($typ, array('int','double'))) $mode=1;    // Search on a numeric
-    if ($val && ( ($crit != '' && ! in_array($typ, array('select'))) || ! empty($crit))) 
+    if ($val && ( ($crit != '' && ! in_array($typ, array('select'))) || ! empty($crit)))
     {
         $sql .= natural_search('ef.'.$tmpkey, $crit, $mode);
     }
@@ -461,8 +462,8 @@ if ($resql)
         $crit=$val;
         $tmpkey=preg_replace('/search_options_/','',$key);
         if ($val != '') $param.='&search_options_'.$tmpkey.'='.urlencode($val);
-    } 	
-    
+    }
+
 	print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, '', $num, $nbtotalofrecords, 'title_companies');
 
     // Show delete result message
@@ -490,13 +491,13 @@ if ($resql)
 	print '<input type="hidden" name="formfilteraction" id="formfilteraction" value="list">';
 	print '<input type="hidden" name="sortfield" value="'.$sortfield.'">';
 	print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
-	
+
     if ($search_all)
     {
         foreach($fieldstosearchall as $key => $val) $fieldstosearchall[$key]=$langs->trans($val);
         print $langs->trans("FilterOnInto", $search_all) . join(', ',$fieldstosearchall);
     }
-	
+
 	// Filter on categories
 	$moreforfilter='';
 	if ($type == 'c' || $type == 'p')
@@ -541,7 +542,7 @@ if ($resql)
 
     $varpage=empty($contextpage)?$_SERVER["PHP_SELF"]:$contextpage;
     $selectedfields=$form->multiSelectArrayWithCheckbox('selectedfields', $arrayfields, $varpage);	// This also change content of $arrayfields
-	
+
 	print '<table class="liste '.($moreforfilter?"listwithfilterbefore":"").'">';
 
 	print '<tr class="liste_titre">';
@@ -567,9 +568,9 @@ if ($resql)
 	// Extra fields
 	if (is_array($extrafields->attribute_label) && count($extrafields->attribute_label))
 	{
-	   foreach($extrafields->attribute_label as $key => $val) 
+	   foreach($extrafields->attribute_label as $key => $val)
 	   {
-           if (! empty($arrayfields["ef.".$key]['checked'])) 
+           if (! empty($arrayfields["ef.".$key]['checked']))
            {
 				$align=$extrafields->getAlignFlag($key);
 				print_liste_field_titre($extralabels[$key],$_SERVER["PHP_SELF"],"ef.".$key,"",$param,($align?'align="'.$align.'"':''),$sortfield,$sortorder);
@@ -700,7 +701,7 @@ if ($resql)
     	print '<input class="flat searchstring" size="4" type="text" name="search_idprof6" value="'.dol_escape_htmltag($search_idprof6).'">';
     	print '</td>';
     }
-    
+
     // Type (customer/prospect/supplier)
     print '<td class="liste_titre maxwidthonsmartphone" align="middle">';
 	print '<select class="flat" name="search_type">';
@@ -711,7 +712,7 @@ if ($resql)
 	print '<option value="4"'.($search_type=='4'?' selected':'').'>'.$langs->trans('Supplier').'</option>';
 	print '<option value="0"'.($search_type=='0'?' selected':'').'>'.$langs->trans('Others').'</option>';
 	print '</select></td>';
-    
+
     if (! empty($arrayfields['s.fk_prospectlevel']['checked']))
     {
 	    // Prospect level
@@ -731,15 +732,15 @@ if ($resql)
 	 		$options_to .= $langs->trans($tab_level_label);
 	 		$options_to .= '</option>';
 	 	}
-    
+
 	    // Print these two select
 	 	print $langs->trans("From").' <select class="flat" name="search_level_from">'.$options_from.'</select>';
 	 	print ' ';
 	 	print $langs->trans("to").' <select class="flat" name="search_level_to">'.$options_to.'</select>';
-	
+
 	    print '</td>';
     }
-    
+
     if (! empty($arrayfields['s.fk_stcomm']['checked']))
     {
 	    // Prospect status
@@ -755,9 +756,9 @@ if ($resql)
 	// Extra fields
 	if (is_array($extrafields->attribute_label) && count($extrafields->attribute_label))
 	{
-	   foreach($extrafields->attribute_label as $key => $val) 
+	   foreach($extrafields->attribute_label as $key => $val)
 	   {
-			if (! empty($arrayfields["ef.".$key]['checked'])) 
+			if (! empty($arrayfields["ef.".$key]['checked']))
 			{
                 $align=$extrafields->getAlignFlag($key);
                 $typeofextrafield=$extrafields->attribute_type[$key];
@@ -813,7 +814,7 @@ if ($resql)
 	{
 		$obj = $db->fetch_object($resql);
 		$var=!$var;
-		
+
 		$companystatic->id=$obj->rowid;
 		$companystatic->name=$obj->name;
 		$companystatic->canvas=$obj->canvas;
@@ -824,7 +825,7 @@ if ($resql)
 		$companystatic->code_fournisseur=$obj->code_fournisseur;
         $companystatic->fk_prospectlevel=$obj->fk_prospectlevel;
         $companystatic->name_alias=$obj->name_alias;
-		
+
 		print "<tr ".$bc[$var].">";
 		if (! empty($arrayfields['s.nom']['checked']))
 		{
@@ -866,7 +867,7 @@ if ($resql)
 	    if (! empty($arrayfields['s.zip']['checked']))
         {
             print "<td>".$obj->zip."</td>\n";
-        }        
+        }
 		// Country
         if (! empty($arrayfields['country.code_iso']['checked']))
         {
@@ -956,9 +957,9 @@ if ($resql)
 		// Extra fields
 		if (is_array($extrafields->attribute_label) && count($extrafields->attribute_label))
 		{
-		   foreach($extrafields->attribute_label as $key => $val) 
+		   foreach($extrafields->attribute_label as $key => $val)
 		   {
-				if (! empty($arrayfields["ef.".$key]['checked'])) 
+				if (! empty($arrayfields["ef.".$key]['checked']))
 				{
 					print '<td';
 					$align=$extrafields->getAlignFlag($key);
