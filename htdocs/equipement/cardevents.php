@@ -284,6 +284,10 @@ if ($user->rights->equipement->creer) {
 			print '</td></tr>' . "\n";
 		}
 	}
+	
+	// add a operation list
+	if ($conf->global->EQUIPEMENTACTIVE == "1") {
+	}
 	print '</table>';
 	print '</form>';
 }

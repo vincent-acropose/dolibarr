@@ -27,12 +27,12 @@ if (! $res && file_exists("../../main.inc.php"))
 	$res = @include ("../../main.inc.php"); // For root directory
 if (! $res && file_exists("../../../main.inc.php"))
 	$res = @include ("../../../main.inc.php"); // For "custom" directory
-		                                                                                            
+		                                           
 // Libraries
-require_once ("../core/lib/equipement.lib.php");
+dol_include_once("/equipement/core/lib/equipement.lib.php");
 
 // Translations
-$langs->load("factory@factory");
+$langs->load("equipement@equipement");
 
 // Access control
 if (! $user->admin)
@@ -56,7 +56,7 @@ print '<br>';
 print $langs->trans("PatasMonkeyPresent") . '<br><br>';
 
 $url = 'http://www.patas-monkey.com';
-print '<a href="' . $url . '" target="_blank"><img border="0" width="180" src="' . DOL_URL_ROOT . '/factory/img/patas-monkey_logo.png"></a>';
+print '<a href="' . $url . '" target="_blank"><img border="0" width="180" src="' . dol_buildpath('/equipement/img/patas-monkey_logo.png', 1) . '"></a>';
 
 print '<br><br>';
 print $langs->trans("MoreModulesLink") . '<br>';

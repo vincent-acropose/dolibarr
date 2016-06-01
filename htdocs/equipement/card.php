@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2012-2015	Charlie BENKE	<charlie@patas-monkey.com>
+/* Copyright (C) 2012-2016	Charlie BENKE	<charlie@patas-monkey.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,6 +62,8 @@ $socFournid = GETPOST('fk_soc_fourn', 'alpha');
 $socClienid = GETPOST('fk_soc_client', 'alpha');
 $nbAddEquipement = GETPOST('nbAddEquipement', 'int');
 $SerialMethod = GETPOST('SerialMethod', 'int');
+$fk_product_batch = (GETPOST('fk_product_batch', 'int') ? GETPOST('fk_product_batch', 'int') : 0);
+$dateendlot = GETPOST('dateendlot');
 
 // Security check
 if ($user->societe_id)
@@ -117,7 +119,7 @@ if ($action == 'confirm_validate' && $confirm == 'yes' && $user->rights->equipem
 			$outputlangs = new Translate("", $conf);
 			$outputlangs->setDefaultLang($newlang);
 		}
-		// génére le pdf qui n'existe pas pour le moment
+		// g�n�re le pdf qui n'existe pas pour le moment
 		$result = equipement_create($db, $object, GETPOST('model', 'alpha'), $outputlangs);
 		Header('Location: ' . $_SERVER["PHP_SELF"] . '?id=' . $object->id);
 		exit();
@@ -160,6 +162,7 @@ else if ($action == 'add' && $user->rights->equipement->creer) {
 	$object->description = GETPOST('description');
 	$object->ref = $ref;
 	$object->fk_entrepot = GETPOST('fk_entrepot', 'alpha');
+	$object->isentrepotmove = (GETPOST('fk_entrepotmove', 'alpha') ? 1 : 0);
 	$datee = dol_mktime('23', '59', '59', $_POST["dateemonth"], $_POST["dateeday"], $_POST["dateeyear"]);
 	$object->datee = $datee;
 	$dateo = dol_mktime('23', '59', '59', $_POST["dateomonth"], $_POST["dateoday"], $_POST["dateoyear"]);
@@ -173,6 +176,10 @@ else if ($action == 'add' && $user->rights->equipement->creer) {
 	$object->numversion = GETPOST('numversion', 'alpha');
 	$object->model_pdf = GETPOST('modelpdf', 'alpha');
 	$object->fk_factory = GETPOST('factoryid', 'int');
+	$object->fk_product_batch = $fk_product_batch;
+	
+	// var_dump($object);
+	// exit;
 	
 	if ($object->fk_product > 0) {
 		$result = $object->create();
@@ -242,16 +249,21 @@ else if ($action == 'confirm_delete' && $confirm == 'yes' && $user->rights->equi
 	// $object->fetch_thirdparty();
 	$object->delete($user);
 	
-	Header('Location: ' . DOL_URL_ROOT . '/equipement/list.php?leftmenu=equipement');
+	Header('Location: list.php?leftmenu=equipement');
 	exit();
 } else if ($action == 'confirm_delete' && $confirm != 'yes' && $user->rights->equipement->supprimer) {
 	$action = '';
-} else if (substr($action, 0, 7) == 'setExFi' && $user->rights->equipement->creer) {
+} else if ((substr($action, 0, 7) == 'setExFi' || $action == 'update_extras') && $user->rights->equipement->creer) {
 	$keyExFi = substr($action, 7);
 	$object->fetch($id, $ref);
 	$res = $object->fetch_optionals($object->id, $extralabels);
-	$object->array_options["options_" . $keyExFi] = $_POST["options_" . $keyExFi];
+	if (substr($action, 0, 7) == 'setExFi')
+		$object->array_options["options_" . $keyExFi] = $_POST["options_" . $keyExFi];
+	else
+		$ret = $extrafields->setOptionalsFromPost($extralabels, $object, GETPOST('attribute'));
+		// var_dump($object->array_options);
 	$object->insertExtraFields();
+	$action = "";
 } 
 
 else if ($action == 'setnumref' && $user->rights->equipement->majserial) {
@@ -259,46 +271,66 @@ else if ($action == 'setnumref' && $user->rights->equipement->majserial) {
 	$result = $object->set_numref($user, GETPOST('editnumref', 'alpha'));
 	if ($result < 0)
 		dol_print_error($db, $object->error);
+	$action = "";
 } else if ($action == 'setnumversion' && $user->rights->equipement->creer) {
 	$object->fetch($id);
 	$result = $object->set_numversion($user, GETPOST('numversion', 'alpha'));
 	if ($result < 0)
 		dol_print_error($db, $object->error);
+	$action = "";
 } else if ($action == 'setquantity' && $user->rights->equipement->creer) {
 	$object->fetch($id);
 	$result = $object->set_quantity($user, GETPOST('quantity', 'alpha'));
 	if ($result < 0)
 		dol_print_error($db, $object->error);
-} else if ($action == 'setnumimmocompta' && $user->rights->equipement->creer) {
+	$action = "";
+} 
+
+else if ($action == 'setunitweight' && $user->rights->equipement->creer) {
+	$object->fetch($id);
+	$result = $object->set_unitweight($user, GETPOST('unitweight', 'alpha'));
+	if ($result < 0)
+		dol_print_error($db, $object->error);
+	$action = "";
+} 
+
+else if ($action == 'setnumimmocompta' && $user->rights->equipement->creer) {
 	$object->fetch($id);
 	$result = $object->set_numimmocompta($user, GETPOST('numimmocompta', 'alpha'));
 	if ($result < 0)
 		dol_print_error($db, $object->error);
+	$action = "";
 } else if ($action == 'setentrepot' && $user->rights->equipement->creer) {
 	$object->fetch($id);
-	$result = $object->set_entrepot($user, GETPOST('fk_entrepot', 'alpha'));
+	$result = $object->set_entrepot($user, GETPOST('fk_entrepot', 'alpha'), (GETPOST('fk_entrepotmove', 'alpha') ? 1 : 0));
+	
 	if ($result < 0)
 		dol_print_error($db, $object->error);
+	$action = "";
 } else if ($action == 'setdescription' && $user->rights->equipement->creer) {
 	$object->fetch($id);
 	$result = $object->set_description($user, GETPOST('description'));
 	if ($result < 0)
 		dol_print_error($db, $object->error);
+	$action = "";
 } else if ($action == 'setnote_public' && $user->rights->equipement->creer) {
 	$object->fetch($id);
 	$result = $object->update_note_public(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES));
 	if ($result < 0)
 		dol_print_error($db, $object->error);
+	$action = "";
 } else if ($action == 'setnote_private' && $user->rights->equipement->creer) {
 	$object->fetch($id);
 	$result = $object->update_note(dol_html_entity_decode(GETPOST('note_private'), ENT_QUOTES));
 	if ($result < 0)
 		dol_print_error($db, $object->error);
+	$action = "";
 } else if ($action == 'setetatequip' && $user->rights->equipement->creer) {
 	$object->fetch($id);
 	$result = $object->set_etatEquipement($user, GETPOST('fk_etatequipement'));
 	if ($result < 0)
 		dol_print_error($db, $object->error);
+	$action = "";
 } 
 
 else if ($action == 'setclient' && $user->rights->equipement->creer) {
@@ -306,16 +338,19 @@ else if ($action == 'setclient' && $user->rights->equipement->creer) {
 	$result = $object->set_client($user, GETPOST('fk_soc_client'));
 	if ($result < 0)
 		dol_print_error($db, $object->error);
+	$action = "";
 } else if ($action == 'setfactclient' && $user->rights->equipement->creer) {
 	$object->fetch($id);
 	$result = $object->set_fact_client($user, GETPOST('fk_fact_client'));
 	if ($result < 0)
 		dol_print_error($db, $object->error);
+	$action = "";
 } else if ($action == 'setfactfourn' && $user->rights->equipement->creer) {
 	$object->fetch($id);
 	$result = $object->set_fact_fourn($user, GETPOST('fk_facture_fourn'));
 	if ($result < 0)
 		dol_print_error($db, $object->error);
+	$action = "";
 } else if ($action == 'setdatee') {
 	$datee = dol_mktime('23', '59', '59', $_POST["dateemonth"], $_POST["dateeday"], $_POST["dateeyear"]);
 	
@@ -323,6 +358,7 @@ else if ($action == 'setclient' && $user->rights->equipement->creer) {
 	$result = $object->set_datee($user, $datee);
 	if ($result < 0)
 		dol_print_error($db, $object->error);
+	$action = "";
 } else if ($action == 'setdateo') {
 	$dateo = dol_mktime('23', '59', '59', $_POST["dateomonth"], $_POST["dateoday"], $_POST["dateoyear"]);
 	
@@ -330,6 +366,7 @@ else if ($action == 'setclient' && $user->rights->equipement->creer) {
 	$result = $object->set_dateo($user, $dateo);
 	if ($result < 0)
 		dol_print_error($db, $object->error);
+	$action = "";
 }
 
 /*
@@ -340,17 +377,15 @@ $extralabels = $extrafields->fetch_name_optionals_label('equipement');
 $form = new Form($db);
 $formfile = new FormFile($db);
 
-llxHeader('',$langs->trans('Equipements'));
+llxHeader();
 
 if ($action == 'create') {
 	/*
 	 * Mode creation
-	 * Creation d'un nouvel équipement
+	 * Creation d'un nouvel �quipement
 	 */
 	
 	$prod = new Product($db);
-	
-	print_fiche_titre($langs->trans("AddEquipement"));
 	
 	dol_htmloutput_mesg($mesg);
 	
@@ -371,143 +406,321 @@ if ($action == 'create') {
 	if ($productid > 0) {
 		$prod->fetch($productid);
 		
-		print '<form name="equipement" action="' . $_SERVER['PHP_SELF'] . '" method="POST">';
-		print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
-		print '<input type="hidden" name="action" value="add">';
-		print '<input type="hidden" name="SerialMethod" value=' . GETPOST('SerialMethod') . '>';
-		print '<input type="hidden" name="productid" value=' . $prod->id . '>';
-		print '<input type="hidden" name="factoryid" value=' . GETPOST('factoryid') . '>';
-		
-		print '<table class="border" width="100%">';
-		
-		print '<tr><td class="fieldrequired"><table class="nobordernopadding" width="100%"><tr><td >' . $langs->trans("Product") . '</td><td align=right>';
-		if (!empty($prod->description)) {
-			print "<a href=# onclick=\"$('#descprod').toggle();\" >" . img_picto("", "edit_add") . "</a>";
+		// si le num�ro de lot est actif et pas de lot encore s�lectionn�
+		if ($conf->productbatch->enabled && $fk_product_batch == 0) {
+			$lstproductbatch = array ();
+			$sql = "SELECT pb.rowid, pb.tms, pb.fk_product_stock,";
+			$sql .= " pb.sellby, pb.eatby, pb.batch, pb.qty,";
+			$sql .= " ps.fk_entrepot";
+			$sql .= " FROM " . MAIN_DB_PREFIX . "product_batch as pb";
+			$sql .= " ," . MAIN_DB_PREFIX . "product_stock as ps";
+			$sql .= " WHERE pb.fk_product_stock=ps.rowid";
+			$sql .= " AND ps.fk_product=" . $productid;
+			$sql .= " AND qty <> 0";
+			
+			dol_syslog("productbatch::findAll", LOG_DEBUG);
+			$resql = $db->query($sql);
+			if ($resql) {
+				$num = $db->num_rows($resql);
+				$i = 0;
+				while ( $i < $num ) {
+					$obj = $db->fetch_object($resql);
+					
+					$tmp['fk_product_stock'] = $obj->fk_product_stock;
+					$tmp['sellby'] = $db->jdate($obj->sellby);
+					$tmp['eatby'] = $db->jdate($obj->eatby);
+					$tmp['batch'] = $obj->batch;
+					$tmp['qty'] = $obj->qty;
+					$tmp['import_key'] = $obj->import_key;
+					$tmp['fk_entrepot'] = $obj->fk_entrepot;
+					$lstproductbatch[$obj->rowid] = $tmp;
+					$i ++;
+				}
+			}
+			// si pas de num�ro de lot dispo on passe directement � la suite
+			if (count($lstproductbatch) == 0)
+				$fk_product_batch = - 1;
+			else {
+				print_fiche_titre($langs->trans("AddEquipementSelectBatchLot"));
+				
+				$prod = new Product($db);
+				$entrepot = new Entrepot($db);
+				// sinon on demande la s�lection du product batch
+				print '<form name="equipement" action="' . $_SERVER['PHP_SELF'] . '" method="POST">';
+				print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
+				print '<input type="hidden" name="action" value="create">';
+				print '<input type="hidden" name="SerialMethod" value=' . GETPOST('SerialMethod') . '>';
+				print '<input type="hidden" name="productid" value=' . $productid . '>';
+				print '<input type="hidden" name="factoryid" value=' . GETPOST('factoryid') . '>';
+				
+				print '<table class="border" width="100%">';
+				print '<tr class="liste_titre">';
+				print '<th class="liste_titre" width=100px>' . $langs->trans("Warehouse") . '</td>';
+				print '<th class="liste_titre" width=100px>' . $langs->trans("Product") . '</td>';
+				print '<th class="liste_titre" width=100px>' . $langs->trans("BatchLabel") . '</td>';
+				print '<th class="liste_titre" width=80px>' . $langs->trans("DateEatBy") . '</td>';
+				print '<th class="liste_titre" width=80px>' . $langs->trans("DateSellBy") . '</td>';
+				print '<th class="liste_titre" align=right width=50px>' . $langs->trans("Qty") . '</td>';
+				print '<th class="liste_titre" width=20px></td>';
+				
+				print "</tr>\n";
+				
+				foreach ( $lstproductbatch as $key => $value ) {
+					print '<tr>';
+					$entrepot->fetch($value['fk_entrepot']);
+					print '<td>' . $entrepot->getNomUrl(2) . '</td>';
+					$prod->fetch($productid);
+					print '<td>' . $prod->getNomUrl(2) . '</td>';
+					print '<td>' . $value['batch'] . '</td>';
+					
+					print '<td>' . dol_print_date($value['eatby'], 'day') . '</td>';
+					print '<td>' . dol_print_date($value['sellby'], 'day') . '</td>';
+					print '<td align=right>' . $value['qty'] . '</td>';
+					print '<td align=center><input type=radio name="fk_product_batch" value="' . $key . '"></td>';
+					print '</tr>';
+				}
+				print '<tr>';
+				print '<td colspan=6 align=right>' . $langs->trans("NoSelectBatchLot") . '</td>';
+				print '<td align=center><input type=radio name="fk_product_batch" value="-1" checked=true></td>';
+				print '</tr>';
+				
+				print '<tr>';
+				print '<td align=right colspan=4>' . $langs->trans("DateEndSelected") . '</td>';
+				print '<td  align=center>';
+				$arraydateendequipement = array (
+						'eatby' => $langs->trans("DateEatBy"),
+						'sellby' => $langs->trans("DateSellBy") 
+				);
+				print $form->selectarray('dateendlot', $arraydateendequipement, "");
+				print '</td><td align=center colspan=2>';
+				print '<input type=submit name="Save" value="' . $langs->trans("Save") . '">';
+				print '</td></tr>';
+				
+				print '</table>';
+				print '</form>';
+			}
 		}
-		print '</td></tr></table></td><td colspan="3">';
-		print $prod->getNomUrl(1) . " : " . $prod->label . '</td></tr>';
-		if (!empty($prod->description)) {
+		// si pas de batch/lot ou un lot a �t� s�lectionn� ou pas
+		if (empty($conf->productbatch->enabled) || $conf->productbatch->enabled && $fk_product_batch != 0) {
+			print_fiche_titre($langs->trans("AddEquipement"));
+			
+			print '<form name="equipement" action="' . $_SERVER['PHP_SELF'] . '" method="POST">';
+			print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
+			print '<input type="hidden" name="action" value="add">';
+			print '<input type="hidden" name="SerialMethod" value=' . GETPOST('SerialMethod') . '>';
+			print '<input type="hidden" name="productid" value=' . $prod->id . '>';
+			print '<input type="hidden" name="factoryid" value=' . GETPOST('factoryid') . '>';
+			print '<input type="hidden" name="fk_product_batch" value=' . GETPOST('fk_product_batch') . '>';
+			
+			print '<table class="border" width="100%">';
+			
+			print '<tr><td class="fieldrequired"><table class="nobordernopadding" width="100%"><tr><td >' . $langs->trans("Product") . '</td><td align=right>';
+			print "<a href=# onclick=\"$('#descprod').toggle();\" >" . img_picto("", "edit_add") . "</a>";
+			print '</td></tr></table></td><td colspan="3">';
+			print $prod->getNomUrl(1) . " : " . $prod->label . '</td></tr>';
 			print "<tr style='display:none' id='descprod'>";
 			print '<td colspan=2>' . $prod->description . '</td><tr>';
-		}
-		
-		print '<tr><td ' . (GETPOST('SerialMethod') == 3 ? ' class="fieldrequired" ' : '') . ' >';
-		print $langs->trans("VersionNumber") . '</td><td><input name="numversion" value="' . GETPOST('numversion') . '"></td></tr>';
-		// si produit a des fournisseurs
-		$LstSupplier = $prod->list_suppliers();
-		if (count($LstSupplier)) {
-			print '<tr><td >' . $langs->trans("Fournisseur") . '</td><td>';
-			// si un seul fournisseur on l'affiche sans choix possible
-			if (count($LstSupplier) == 1) {
-				print '<input type="hidden" name="fk_soc_fourn" value=' . $LstSupplier[0] . '>';
-				$soc = new Societe($db);
-				$soc->fetch($LstSupplier[0]);
-				print $soc->getNomUrl(1);
-			} else {
-				// sinon c'est une liste de sélection
-				$filterList = "";
-				foreach ( $LstSupplier as &$arr ) {
-					$filterList .= " s.rowid=" . $arr . " or";
+			if ($fk_product_batch > 0) {
+				$sql = "SELECT pb.rowid, pb.sellby, pb.eatby,";
+				$sql .= " pb.batch, pb.qty, ps.fk_entrepot";
+				$sql .= " FROM " . MAIN_DB_PREFIX . "product_batch as pb";
+				$sql .= " ," . MAIN_DB_PREFIX . "product_stock as ps";
+				$sql .= " WHERE pb.fk_product_stock=ps.rowid";
+				$sql .= " AND pb.rowid=" . $fk_product_batch;
+				
+				dol_syslog("card::addequiment", LOG_DEBUG);
+				$resql = $db->query($sql);
+				if ($resql) {
+					if ($db->num_rows($resql)) {
+						$obj = $db->fetch_object($resql);
+						$numversion = $obj->batch;
+						$quantity = $obj->qty;
+						$datee = $obj->$dateendlot;
+						$fk_entrepot = $obj->fk_entrepot;
+						switch (GETPOST('SerialMethod')) {
+							case 1 : // Internal Serial
+								$nbAddEquipement = $obj->qty;
+								$quantity = 1;
+								break;
+							
+							case 2 : // External Serial
+								$nbAddEquipement = 1;
+								$quantity = 1;
+								break;
+							
+							case 3 : // Series Mode
+								$quantity = $obj->qty;
+								$nbAddEquipement = 1;
+								break;
+						}
+					}
 				}
-				// on vire le dernier 'or' et on rajoute la parenthése de fin
-				$filterList = "( " . substr($filterList, 0, - 2) . ")";
-				print $form->select_company('', 'fk_soc_fourn', $filterList, 1);
+			} else {
+				$numversion = GETPOST('numversion');
+				$fk_entrepot = GETPOST('fk_entrepot');
+				$datee = GETPOST('datee');
+				switch (GETPOST('SerialMethod')) {
+					case 1 : // Internal Serial
+						$nbAddEquipement = (GETPOST("qtyEquipement") ? GETPOST("qtyEquipement") : "1");
+						$quantity = 1;
+						break;
+					
+					case 2 : // External Serial
+						$nbAddEquipement = 1;
+						$quantity = 1;
+						break;
+					
+					case 3 : // Series Mode
+						$quantity = (GETPOST("qtyEquipement") ? GETPOST("qtyEquipement") : "1");
+						$nbAddEquipement = 1;
+						break;
+				}
 			}
+			
+			print '<tr><td ' . (GETPOST('SerialMethod') == 3 ? ' class="fieldrequired" ' : '') . ' >';
+			print $langs->trans("VersionNumber") . '</td>';
+			if ($fk_product_batch > 0)
+				print '<td><input name="numversion" readonly STYLE="background-color: #D0D0D0;" value="' . $numversion . '"></td></tr>';
+			else
+				print '<td><input name="numversion" value="' . $numversion . '"></td></tr>';
+				
+				// si produit a des fournisseurs
+			$LstSupplier = $prod->list_suppliers();
+			if (count($LstSupplier)) {
+				print '<tr><td >' . $langs->trans("Fournisseur") . '</td><td>';
+				// si un seul fournisseur on l'affiche sans choix possible
+				if (count($LstSupplier) == 1) {
+					print '<input type="hidden" name="fk_soc_fourn" value=' . $LstSupplier[0] . '>';
+					$soc = new Societe($db);
+					$soc->fetch($LstSupplier[0]);
+					print $soc->getNomUrl(1);
+				} else {
+					// sinon c'est une liste de s�lection
+					$filterList = "";
+					foreach ( $LstSupplier as &$arr ) {
+						$filterList .= " s.rowid=" . $arr . " or";
+					}
+					// on vire le dernier 'or' et on rajoute la parenth�se de fin
+					$filterList = "( " . substr($filterList, 0, - 2) . ")";
+					print $form->select_company('', 'fk_soc_fourn', $filterList, 1);
+				}
+				print '</td></tr>';
+			}
+			
+			switch (GETPOST('SerialMethod')) {
+				case 1 : // Internal Serial
+				         // Si c'est un produit interne on g�n�re nous-m�me les num�ros de s�rie
+					print '<tr><td class="fieldrequired">' . $langs->trans("RefStart") . '</td>';
+					print '<td><input type=text name="ref" value="' . $numpr . '" readonly STYLE="background-color: #D0D0D0;" ></td></tr>' . "\n";
+					print '<tr><td class="fieldrequired">' . $langs->trans("nbEquipementToCreate") . '</td>';
+					if ($fk_product_batch > 0)
+						print '<td >' . '<input type=hidden name="nbAddEquipement" value="' . $nbAddEquipement . '">' . $nbAddEquipement;
+					else
+						print '<td >' . '<input type=text name="nbAddEquipement" value="' . $nbAddEquipement . '">';
+					print '<input type=hidden name="quantity" value="1">';
+					print "</td></tr>\n";
+					break;
+				
+				case 2 : // External Serial
+					print '<tr><td class="fieldrequired">';
+					print $form->textwithpicto($langs->trans("ExternalSerial"), $langs->trans("YouCanAddMultipleSerialWithSeparator"), 1) . '</td>';
+					print '<td>';
+					print '<textarea name="SerialFourn" cols="80" rows="' . ROWS_3 . '"></textarea>';
+					print '<input type=hidden name="quantity" value="1">';
+					print '</td></tr>' . "\n";
+					break;
+				
+				case 3 : // Series Mode
+					print '<tr><td class="fieldrequired">' . $langs->trans("Quantity") . '</td>';
+					if ($fk_product_batch > 0)
+						print '<td><input name="quantity" readonly STYLE="background-color: #D0D0D0;" size=2 value="' . $quantity . '">';
+					else
+						print '<td >' . '<input type=text name="quantity" size=2  value="' . $quantity . '">';
+					print '<input type=hidden name="nbAddEquipement" value="1">';
+					print '</td></tr>' . "\n";
+					break;
+			}
+			
+			// poid du produit
+			print '<tr><td >' . $langs->trans("UnitWeight") . '</td>';
+			print '<td><input type=text size=4 name="unitweight" value="">';
+			print '</td></tr>' . "\n";
+			
+			// l'entrepot d'affectation est saisissable par d�faut, sauf en mode product batch
+			print '<tr><td >' . $langs->trans("EntrepotStock") . '</td><td>';
+			if ($fk_product_batch > 0) {
+				$entrepotStatic = new Entrepot($db);
+				$entrepotStatic->fetch($fk_entrepot);
+				print $entrepotStatic->getNomUrl(1) . " - " . $entrepotStatic->lieu . " (" . $entrepotStatic->zip . ")";
+				print '<input type=hidden name="fk_entrepot" value="' . $fk_entrepot . '">';
+			} else
+				select_entrepot(GETPOST('fk_entrepot'), 'fk_entrepot', 1, 1, 0, 1);
+			print '</td></tr>' . "\n";
+			
+			// le client est saisissable aussi � la cr�ation pour g�rer le pb des acc�s limit�
+			print '<tr><td >' . $langs->trans("Client") . '</td><td>';
+			print $form->select_company($object->fk_soc_client, 'fk_soc_client', '', 1);
+			print '</td></tr>' . "\n";
+			
+			// Date open
+			print '<tr><td>' . $langs->trans("DateoLong") . '</td><td>';
+			print $form->select_date($object->dateo, 'dateo', 0, 0, '', "dateo");
+			print '</td></tr>' . "\n";
+			
+			// Date end
+			print '<tr><td>' . $langs->trans("DateeLong") . '</td><td>';
+			if ($fk_product_batch > 0) {
+				print '<input type=hidden name=dateeday value="' . substr($datee, 8, 2) . '">';
+				print '<input type=hidden name=dateemonth value="' . substr($datee, 5, 2) . '">';
+				print '<input type=hidden name=dateeyear value="' . substr($datee, 0, 4) . '">';
+				
+				print '<input type=text size=9 name="datee" readonly STYLE="background-color: #D0D0D0;" value="' . dol_print_date($datee, 'day') . '">';
+			} else
+				print $form->select_date('', 'datee', 0, 0, 1, "datee");
+			print '</td></tr>' . "\n";
+			
+			// Description (must be a textarea and not html must be allowed (used in list view)
+			print '<tr><td valign="top">' . $langs->trans("Description") . '</td>';
+			print '<td>';
+			print '<textarea name="description" cols="80" rows="' . ROWS_3 . '"></textarea>';
 			print '</td></tr>';
-		}
-		
-		switch (GETPOST('SerialMethod')) {
-			case 1 : // Internal Serial
-			         // Si c'est un produit interne on génére nous-méme les numéros de série
-				print '<tr><td class="fieldrequired">' . $langs->trans("RefStart") . '</td>';
-				print '<td><input type=text name="ref" value="' . $numpr . '" disabled="disabled"></td></tr>' . "\n";
-				print '<tr><td class="fieldrequired">' . $langs->trans("nbEquipementToCreate") . '</td>';
-				print '<td >' . '<input type=text name="nbAddEquipement" value="' . (GETPOST("qtyEquipement") ? GETPOST("qtyEquipement") : "1") . '">';
-				print '<input type=hidden name="quantity" value="1">';
-				print "</td></tr>\n";
-				break;
 			
-			case 2 : // External Serial
-				print '<tr><td class="fieldrequired">';
-				print $form->textwithpicto($langs->trans("ExternalSerial"), $langs->trans("YouCanAddMultipleSerialWithSeparator"), 1) . '</td>';
-				print '<td>';
-				print '<textarea name="SerialFourn" cols="80" rows="' . ROWS_3 . '"></textarea>';
-				print '<input type=hidden name="quantity" value="1">';
-				print '</td></tr>' . "\n";
-				break;
-			
-			case 3 : // Series Mode
-				print '<tr><td class="fieldrequired">' . $langs->trans("Quantity") . '</td>';
-				print '<td><input type=text name="quantity" value="' . (GETPOST("qtyEquipement") ? GETPOST("qtyEquipement") : "1") . '">';
-				print '<input type=hidden name="nbAddEquipement" value="1">';
-				print '</td></tr>' . "\n";
-				break;
-		}
-		
-		// poid du produit
-		print '<tr><td >' . $langs->trans("UnitWeight") . '</td>';
-		print '<td><input type=text size=4 name="unitweight" value="">';
-		print '</td></tr>' . "\n";
-		
-		// l'entrepot d'affectation est saisissable par défaut
-		print '<tr><td >' . $langs->trans("EntrepotStock") . '</td><td>';
-		select_entrepot(GETPOST('fk_entrepot'), 'fk_entrepot', 1, 1);
-		print '</td></tr>' . "\n";
-		
-		// le client est saisissable aussi é la création pour gérer le pb des accés limité
-		print '<tr><td >' . $langs->trans("Client") . '</td><td>';
-		print $form->select_company($object->fk_soc_client, 'fk_soc_client', '', 1);
-		print '</td></tr>' . "\n";
-		
-		// Date open
-		print '<tr><td>' . $langs->trans("DateoLong") . '</td><td>';
-		print $form->select_date($object->dateo, 'dateo', 0, 0, '', "dateo");
-		print '</td></tr>' . "\n";
-		
-		// Date end
-		print '<tr><td>' . $langs->trans("DateeLong") . '</td><td>';
-		print $form->select_date('', 'datee', 0, 0, 1, "datee");
-		print '</td></tr>' . "\n";
-		
-		// Description (must be a textarea and not html must be allowed (used in list view)
-		print '<tr><td valign="top">' . $langs->trans("Description") . '</td>';
-		print '<td>';
-		print '<textarea name="description" cols="80" rows="' . ROWS_3 . '"></textarea>';
-		print '</td></tr>';
-		
-		// Model
-		print '<tr>';
-		print '<td>' . $langs->trans("DefaultModel") . '</td>';
-		print '<td colspan="2">';
-		$liste = ModeleEquipement::liste_modeles($db);
-		print $form->selectarray('model', $liste, $conf->global->EQUIPEMENT_ADDON_PDF);
-		print "</td></tr>";
-		
-		// Public note
-		print '<tr>';
-		print '<td class="border" valign="top">' . $langs->trans('NotePublic') . '</td>';
-		print '<td valign="top" colspan="2">';
-		print '<textarea name="note_public" cols="80" rows="' . ROWS_3 . '"></textarea>';
-		print '</td></tr>';
-		
-		// Private note
-		if (! $user->societe_id) {
+			// Model
 			print '<tr>';
-			print '<td class="border" valign="top">' . $langs->trans('NotePrivate') . '</td>';
+			print '<td>' . $langs->trans("DefaultModel") . '</td>';
+			print '<td colspan="2">';
+			$liste = ModeleEquipement::liste_modeles($db);
+			print $form->selectarray('model', $liste, $conf->global->EQUIPEMENT_ADDON_PDF);
+			print "</td></tr>";
+			
+			// Public note
+			print '<tr>';
+			print '<td class="border" valign="top">' . $langs->trans('NotePublic') . '</td>';
 			print '<td valign="top" colspan="2">';
-			print '<textarea name="note_private" cols="80" rows="' . ROWS_3 . '"></textarea>';
+			print '<textarea name="note_public" cols="80" rows="' . ROWS_3 . '"></textarea>';
 			print '</td></tr>';
+			
+			// Private note
+			if (! $user->societe_id) {
+				print '<tr>';
+				print '<td class="border" valign="top">' . $langs->trans('NotePrivate') . '</td>';
+				print '<td valign="top" colspan="2">';
+				print '<textarea name="note_private" cols="80" rows="' . ROWS_3 . '"></textarea>';
+				print '</td></tr>';
+			}
+			
+			print '</table>';
+			
+			print '<center><br>';
+			print '<input type="submit" class="button" value="' . $langs->trans("CreateDraftEquipement") . '">';
+			print '</center>';
+			
+			print '</form>';
 		}
-		
-		print '</table>';
-		
-		print '<center><br>';
-		print '<input type="submit" class="button" value="' . $langs->trans("CreateDraftEquipement") . '">';
-		print '</center>';
-		
-		print '</form>';
 	} else {
-		// premiere étape on sélectionne le produit correspondand é l'équipement
+		print_fiche_titre($langs->trans("AddEquipementSelectProduct"));
+		
+		// premiere �tape on s�lectionne le produit correspondand � l'�quipement
 		print '<form name="equipement" action="' . $_SERVER['PHP_SELF'] . '" method="POST">';
 		print '<table class="border" width="100%">';
 		print '<tr><td class="fieldrequired">' . $langs->trans("Products") . '</td><td>';
@@ -526,7 +739,6 @@ if ($action == 'create') {
 		print '<input type="hidden" name="action" value="create">';
 		print '<input type="submit" class="button" value="' . $langs->trans("CreateDraftEquipement") . '">';
 		print '</center>';
-		
 		print '</form>';
 	}
 } else if ($id > 0 || ! empty($ref)) {
@@ -546,7 +758,7 @@ if ($action == 'create') {
 	
 	dol_fiche_head($head, 'card', $langs->trans("EquipementCard"), 0, 'equipement@equipement');
 	
-	// Confirmation de la suppression de l'équipement
+	// Confirmation de la suppression de l'�quipement
 	if ($action == 'delete') {
 		$ret = $form->form_confirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('DeleteEquipement'), $langs->trans('ConfirmDeleteEquipement'), 'confirm_delete', '', 0, 1);
 		if ($ret == 'html')
@@ -578,7 +790,7 @@ if ($action == 'create') {
 	
 	// Ref
 	print '<tr><td width=250px><table class="nobordernopadding" width="100%"><tr><td >' . $langs->trans("Ref") . '</td>';
-	if ($action != 'editnumref' && $object->statut == 0 && $user->rights->equipement->majserial) { // si l'équipement est é l'état brouillon et l'habilition requise est active on a le droit de modifier la référence
+	if ($action != 'editnumref' && $object->statut == 0 && $user->rights->equipement->majserial) { // si l'�quipement est � l'�tat brouillon et l'habilition requise est active on a le droit de modifier la r�f�rence
 		print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editnumref&amp;id=' . $object->id . '">' . img_edit($langs->trans('Modify'), 1) . '</a></td>';
 	}
 	print '</tr></table></td><td colspan="3">';
@@ -590,7 +802,7 @@ if ($action == 'create') {
 		print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
 		print '</form>';
 	} else {
-		$linkback = '<a href="' . DOL_URL_ROOT . '/equipement/list.php' . (! empty($socid) ? '?socid=' . $socid : '') . '">' . $langs->trans("BackToList") . '</a>';
+		$linkback = '<a href="list.php' . (! empty($socid) ? '?socid=' . $socid : '') . '">' . $langs->trans("BackToList") . '</a>';
 		print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref');
 	}
 	print '</td></tr>';
@@ -599,17 +811,13 @@ if ($action == 'create') {
 	$prod = new Product($db);
 	$prod->fetch($object->fk_product);
 	print '<tr><td class="fieldrequired"><table class="nobordernopadding" width="100%"><tr><td >' . $langs->trans("Product") . '</td><td align=right>';
-	if (!empty($prod->description)) {
-		print "<a href=# onclick=\"$('#descprod').toggle();\" >" . img_picto("", "edit_add") . "</a>";
-	}
+	print "<a href=# onclick=\"$('#descprod').toggle();\" >" . img_picto("", "edit_add") . "</a>";
 	print '</td></tr></table></td><td colspan="3">';
 	print $prod->getNomUrl(1) . " : " . $prod->label . '</td></tr>';
-	if (!empty($prod->description)) {
-		print "<tr style='display:none' id='descprod'>";
-		print '<td></td><td>' . $prod->description . '</td><tr>';
-	}
+	print "<tr style='display:none' id='descprod'>";
+	print '<td></td><td>' . $prod->description . '</td><tr>';
 	
-	// Numéro de version
+	// Num�ro de version
 	print '<tr><td><table class="nobordernopadding" width="100%"><tr><td>' . $langs->trans("VersionNumber") . '</td>';
 	if ($action != 'editnumversion' && $object->statut == 0)
 		print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editnumversion&amp;id=' . $object->id . '">' . img_edit($langs->trans('Modify'), 1) . '</a></td>';
@@ -626,7 +834,7 @@ if ($action == 'create') {
 	}
 	print '</td></tr>';
 	
-	// quantité modifiable et visible uniquement si supérieur é 1
+	// quantit� modifiable et visible uniquement si sup�rieur � 1
 	if ($object->quantity > 1) {
 		print '<tr><td><table class="nobordernopadding" width="100%"><tr><td>' . $langs->trans("Quantity") . '</td>';
 		if ($action != 'editquantity' && $object->statut == 0)
@@ -645,7 +853,23 @@ if ($action == 'create') {
 		print '</td></tr>';
 	}
 	
-	// fournisseur, lui on ne le change pas, si pas bon on supprime l'équipement
+	print '<tr><td><table class="nobordernopadding" width="100%"><tr><td>' . $langs->trans("UnitWeight") . '</td>';
+	if ($action != 'editunitweight' && $object->statut == 0)
+		print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editunitweight&amp;id=' . $object->id . '">' . img_edit($langs->trans('Modify'), 1) . '</a></td>';
+	print '</tr></table></td><td colspan="3">';
+	if ($action == 'editunitweight') {
+		print '<form name="editunitweight" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="post">';
+		print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
+		print '<input type="hidden" name="action" value="setunitweight">';
+		print '<input type="text" name="quantity" value="' . $object->unitweight . '">';
+		print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
+		print '</form>';
+	} else {
+		print $object->unitweight;
+	}
+	print '</td></tr>';
+	
+	// fournisseur, lui on ne le change pas, si pas bon on supprime l'�quipement
 	print '<tr><td class="fieldrequired">' . $langs->trans("Fournisseur") . '</td><td>';
 	if ($object->fk_soc_fourn > 0) {
 		$soc = new Societe($db);
@@ -655,29 +879,31 @@ if ($action == 'create') {
 	print '</td></tr>';
 	
 	// facture fournisseur
-	print '<tr><td><table class="nobordernopadding" width="100%"><tr><td>' . $langs->trans("RefFactFourn") . '</td>';
-	// la facture founisseur est modifiable ssi il y a un founisseur de sélectionné
-	if ($action != 'editfactfourn' && $object->statut == 0 && $object->fk_soc_fourn > 0) {
-		print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editfactfourn&amp;id=' . $object->id . '">' . img_edit($langs->trans('Modify'), 1) . '</a></td>';
-	}
-	print '</tr></table></td><td colspan="3">';
-	if ($action == 'editfactfourn') {
-		print '<form name="editfactfourn" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="post">';
-		print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
-		print '<input type="hidden" name="action" value="setfactfourn">';
-		// liste des factures fournisseurs disponible
-		print select_factfourn($object->fk_fact_fourn, $object->fk_soc_fourn, 'fk_facture_fourn', 1, 1);
-		
-		print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
-		print '</form>';
-	} else {
-		if ($object->fk_fact_fourn) {
-			$factfournstatic = new FactureFournisseur($db);
-			$factfournstatic->fetch($object->fk_fact_fourn);
-			print $factfournstatic->getNomUrl(1) . ' - ' . dol_print_date($factfournstatic->date, 'day') . ' - ' . price($factfournstatic->total_ttc);
+	if ($user->rights->facture->lire) {
+		print '<tr><td><table class="nobordernopadding" width="100%"><tr><td>' . $langs->trans("RefFactFourn") . '</td>';
+		// la facture founisseur est modifiable ssi il y a un founisseur de s�lectionn�
+		if ($action != 'editfactfourn' && $object->statut == 0 && $object->fk_soc_fourn > 0) {
+			print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editfactfourn&amp;id=' . $object->id . '">' . img_edit($langs->trans('Modify'), 1) . '</a></td>';
 		}
+		print '</tr></table></td><td colspan="3">';
+		if ($action == 'editfactfourn') {
+			print '<form name="editfactfourn" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="post">';
+			print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
+			print '<input type="hidden" name="action" value="setfactfourn">';
+			// liste des factures fournisseurs disponible
+			print select_factfourn($object->fk_fact_fourn, $object->fk_soc_fourn, 'fk_facture_fourn', 1, 1);
+			
+			print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
+			print '</form>';
+		} else {
+			if ($object->fk_fact_fourn) {
+				$factfournstatic = new FactureFournisseur($db);
+				$factfournstatic->fetch($object->fk_fact_fourn);
+				print $factfournstatic->getNomUrl(1) . ' - ' . dol_print_date($factfournstatic->date, 'day') . ' - ' . price($factfournstatic->total_ttc);
+			}
+		}
+		print '</td></tr>';
 	}
-	print '</td></tr>';
 	
 	// Lieu de stockage
 	print '<tr><td><table class="nobordernopadding" width="100%"><tr><td>' . $langs->trans("EntrepotStock") . '</td>';
@@ -722,27 +948,28 @@ if ($action == 'create') {
 	print '</td></tr>';
 	
 	// facture client
-	// on autorise la saisie de la facture client SSI il y a un client de sélectionné
-	print '<tr><td><table class="nobordernopadding" width="100%"><tr><td>' . $langs->trans("RefFactClient") . '</td>';
-	if ($action != 'editfactclient' && $object->fk_soc_client && $object->statut == 0)
-		print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editfactclient&amp;id=' . $object->id . '">' . img_edit($langs->trans('Modify'), 1) . '</a></td>';
-	print '</tr></table></td><td colspan="3">';
-	if ($action == 'editfactclient') {
-		print '<form name="editfactclient" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="post">';
-		print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
-		print '<input type="hidden" name="action" value="setfactclient">';
-		print select_facture($object->fk_fact_client, $object->fk_soc_client, 'fk_fact_client', '', 1, 1);
-		print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
-		print '</form>';
-	} else {
-		if ($object->fk_fact_client) {
-			$facturestatic = new Facture($db);
-			$facturestatic->fetch($object->fk_fact_client);
-			print $facturestatic->getNomUrl(1) . ' - ' . dol_print_date($facturestatic->date, 'day') . ' - ' . price($facturestatic->total_ttc);
+	if ($user->rights->facture->lire) {
+		// on autorise la saisie de la facture client SSI il y a un client de s�lectionn�
+		print '<tr><td><table class="nobordernopadding" width="100%"><tr><td>' . $langs->trans("RefFactClient") . '</td>';
+		if ($action != 'editfactclient' && $object->fk_soc_client && $object->statut == 0)
+			print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editfactclient&amp;id=' . $object->id . '">' . img_edit($langs->trans('Modify'), 1) . '</a></td>';
+		print '</tr></table></td><td colspan="3">';
+		if ($action == 'editfactclient') {
+			print '<form name="editfactclient" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="post">';
+			print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
+			print '<input type="hidden" name="action" value="setfactclient">';
+			print select_facture($object->fk_fact_client, $object->fk_soc_client, 'fk_fact_client', '', 1, 1);
+			print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
+			print '</form>';
+		} else {
+			if ($object->fk_fact_client) {
+				$facturestatic = new Facture($db);
+				$facturestatic->fetch($object->fk_fact_client);
+				print $facturestatic->getNomUrl(1) . ' - ' . dol_print_date($facturestatic->date, 'day') . ' - ' . price($facturestatic->total_ttc);
+			}
 		}
+		print '</td></tr>';
 	}
-	print '</td></tr>';
-	
 	// Date start
 	print '<tr><td><table class="nobordernopadding" width="100%"><tr><td>' . $langs->trans("DateoLong") . '</td>';
 	if ($action != 'editdateo' && $object->statut == 0)
@@ -778,32 +1005,39 @@ if ($action == 'create') {
 	print '</td></tr>';
 	
 	// Extrafields
-	$parameters = array (
-			'colspan' => ' colspan="3"' 
-	);
-	$reshook = $hookmanager->executeHooks('formObjectOptions', $parameters, $object, $action); // Note that $action and $object may have been modified by
-	if (empty($reshook) && ! empty($extrafields->attribute_label)) {
-		
-		foreach ( $extrafields->attribute_label as $key => $label ) {
-			$value = (isset($_POST["options_" . $key]) ? $_POST["options_" . $key] : $object->array_options["options_" . $key]);
+	if (DOL_VERSION < "3.7.0") 
+
+	{
+		$parameters = array (
+				'colspan' => ' colspan="3"' 
+		);
+		$reshook = $hookmanager->executeHooks('formObjectOptions', $parameters, $object, $action); // Note that $action and $object may have been modified by
+		if (empty($reshook) && ! empty($extrafields->attribute_label)) {
 			
-			print '<tr><td><table class="nobordernopadding" width="100%"><tr><td>' . $label . '</td>';
-			if ($action != 'ExFi' . $key && $object->statut == 0)
-				print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=ExFi' . $key . '&amp;id=' . $object->id . '">' . img_edit($langs->trans('Modify'), 1) . '</a></td>';
-			print '</tr></table></td><td colspan="3">';
-			if ($action == 'ExFi' . $key) {
-				print '<form name="ExFi' . $key . '" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="post">';
-				print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
-				print '<input type="hidden" name="action" value="setExFi' . $key . '">';
-				print $extrafields->Showinputfield($key, $value);
-				print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
-				print '</form>';
-			} else {
-				print $extrafields->showOutputField($key, $value);
+			foreach ( $extrafields->attribute_label as $key => $label ) {
+				$value = (isset($_POST["options_" . $key]) ? $_POST["options_" . $key] : $object->array_options["options_" . $key]);
+				
+				print '<tr><td><table class="nobordernopadding" width="100%"><tr><td>' . $label . '</td>';
+				if ($action != 'ExFi' . $key && $object->statut == 0)
+					print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=ExFi' . $key . '&amp;id=' . $object->id . '">' . img_edit($langs->trans('Modify'), 1) . '</a></td>';
+				print '</tr></table></td><td colspan="3">';
+				if ($action == 'ExFi' . $key) {
+					print '<form name="ExFi' . $key . '" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="post">';
+					print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
+					print '<input type="hidden" name="action" value="setExFi' . $key . '">';
+					print $extrafields->Showinputfield($key, $value);
+					print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
+					print '</form>';
+				} else {
+					print $extrafields->showOutputField($key, $value);
+				}
+				
+				print '</td></tr>' . "\n";
 			}
-			
-			print '</td></tr>' . "\n";
 		}
+	} else {
+		$cols = 3;
+		include DOL_DOCUMENT_ROOT . '/core/tpl/extrafields_view.tpl.php';
 	}
 	
 	// Description (must be a textarea and not html must be allowed (used in list view)
@@ -814,7 +1048,7 @@ if ($action == 'create') {
 	print '</td>';
 	print '</tr>';
 	
-	// Etat de l'équipement
+	// Etat de l'�quipement
 	print '<tr><td><table class="nobordernopadding" width="100%"><tr><td>' . $langs->trans("EtatEquip") . '</td>';
 	if ($action != 'editetatequip' && $object->statut == 0)
 		print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editetatequip&amp;id=' . $object->id . '">' . img_edit($langs->trans('Modify'), 1) . '</a></td>';
@@ -833,7 +1067,7 @@ if ($action == 'create') {
 	
 	print '</td></tr>';
 	
-	// Numéro de immo compta
+	// Num�ro de immo compta
 	print '<tr><td><table class="nobordernopadding" width="100%"><tr><td>' . $langs->trans("NumImmoCompta") . '</td>';
 	if ($action != 'editnumimmo' && $object->statut == 0)
 		print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editnumimmo&amp;id=' . $object->id . '">' . img_edit($langs->trans('Modify'), 1) . '</a></td>';
@@ -912,7 +1146,7 @@ if ($action == '') {
 	$reshook = $hookmanager->executeHooks('addMoreActionsButtons', $parameters, $equipement, $action); // Note that $action and $object may have been
 	                                                                                                   // modified by hook
 	if (empty($reshook)) {
-		// Découpage d'un lot si il y en a plus d'un
+		// D�coupage d'un lot si il y en a plus d'un
 		if ($object->quantity > 1 && $user->rights->equipement->creer) {
 			if (! empty($conf->use_javascript_ajax)) {
 				print '<div class="inline-block divButAction"><span id="action-cutEquimenent" class="butAction">' . $langs->trans('CutSerial') . '</span></div>' . "\n";
@@ -941,6 +1175,30 @@ if ($action == '') {
 			print '>' . $langs->trans('Delete') . '</a>';
 		}
 	}
+	print '<br>';
+	// predef event button
+	$sql = "SELECT eet.rowid, eet.libelle";
+	$sql .= " FROM " . MAIN_DB_PREFIX . "c_equipementevt_type as eet";
+	$sql .= " , " . MAIN_DB_PREFIX . "equipementevt_predef as eep";
+	$sql .= " WHERE eep.fk_equipementevt_type = eet.rowid";
+	$sql .= " AND eep.fk_product = " . $object->fk_product;
+	$sql .= " AND eet.active = 1";
+	
+	$result = $db->query($sql);
+	if ($result) {
+		$num = $db->num_rows($result);
+		print $langs->trans("PredefinedEvent");
+		$i = 0;
+		while ( $i < $num ) {
+			$objp = $db->fetch_object($result);
+			print '<a class="butAction" href="events.php?id=' . $object->id . '&prefefid=' . $objp->rowid . '" ';
+			print '>' . $langs->trans($objp->libelle) . '</a>';
+			
+			$i ++;
+		}
+		
+		$db->free($result);
+	}
 	
 	print '</div>';
 	print '<br>';
@@ -968,6 +1226,5 @@ if ($action == '') {
 }
 
 llxFooter();
-
 $db->close();
 ?>

@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2012-2013	Charles-Fr BENKE	 <charles.fr@benke.fr>
+/* Copyright (C) 2012-2016	Charlie BENKE	 <charlie@patas-monkey.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -211,6 +211,12 @@ if ($action == 'showaddinfo') {
 	// TODO Verifier si module numerotation choisi peut etre active
 	// par appel methode canBeActivated
 	dolibarr_set_const($db, "EQUIPEMENT_SHOWADDITIONNALINFO", $value, 'chaine', 0, '', $conf->entity);
+}
+
+if ($action == 'chkboxstockmvton') {
+	// TODO Verifier si module numerotation choisi peut etre active
+	// par appel methode canBeActivated
+	dolibarr_set_const($db, "EQUIPEMENT_CHKBOXSTOCKMVTON", $value, 'chaine', 0, '', $conf->entity);
 }
 
 /*
@@ -537,9 +543,26 @@ else
 	print '<a href="' . $_SERVER["PHP_SELF"] . '?action=showaddinfo&amp;value=1">' . img_picto($langs->trans("Disabled"), 'switch_off') . '</a>';
 print '</td>';
 print '</tr>' . "\n";
+$var = ! $var;
+print '<tr ' . $bc[$var] . '>';
+print '<td>' . $langs->trans("CheckboxStockMovementDefaultChecked") . '</td>';
+print '<td align=right >';
+if ($conf->global->EQUIPEMENT_CHKBOXSTOCKMVTON == "1")
+	print '<a href="' . $_SERVER["PHP_SELF"] . '?action=chkboxstockmvton&amp;value=0">' . img_picto($langs->trans("Activated"), 'switch_on') . '</a>';
+else
+	print '<a href="' . $_SERVER["PHP_SELF"] . '?action=chkboxstockmvton&amp;value=1">' . img_picto($langs->trans("Disabled"), 'switch_off') . '</a>';
+print '</td>';
+print '</tr>' . "\n";
+
 print "</table>\n";
 print '</form>';
 print '<br>';
+
+if ($action == 'chkboxstockmvton') {
+	// TODO Verifier si module numerotation choisi peut etre active
+	// par appel methode canBeActivated
+	dolibarr_set_const($db, "EQUIPEMENT_CHKBOXSTOCKMVTON", $value, 'chaine', 0, '', $conf->entity);
+}
 
 // Module barcode
 // if ($conf->barcode->enabled)
@@ -597,7 +620,5 @@ function checkvalue($checkValue, $label = '') {
 
 dol_htmloutput_mesg($mesg);
 
-$db->close();
-
 llxFooter();
-?>
+$db->close();

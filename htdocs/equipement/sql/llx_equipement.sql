@@ -28,6 +28,7 @@ create table llx_equipement
   fk_facture_fourn	integer DEFAULT 0,			-- clé de la facture d'achat au fournisseur
   fk_facture		integer DEFAULT 0,			-- clé de la facture de vente au client
   fk_entrepot		integer DEFAULT 0,			-- lieu de stockage de l'équipement
+  fk_product_batch  integer DEFAULT  NULL,
   quantity			integer DEFAULT 1 NOT NULL,	-- NEW : quantité unitaire de l'équipement (par défaut é 1, > 0 si lot)
   price				double(24,8),				-- NEW : prix de vente HT de l'équipement 
   pmp				double(24,8),				-- NEW : prix d'achat HT de l'équipement

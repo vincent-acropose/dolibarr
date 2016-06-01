@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2012-2015	Charlie BENKE	 <charlie@patas-monkey.com>
+/* Copyright (C) 2012-2016	Charlie BENKE	 <charlie@patas-monkey.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,8 +47,7 @@ class modEquipement extends DolibarrModules
 		// Module label (no space allowed), used if translation string 'ModuleXXXName' not found (where XXX is value of numeric property 'numero' of module)
 		$this->name = preg_replace('/^mod/i', '', get_class($this));
 		$this->description = "Gestion des Equipements et des numéros de série";
-		
-		$this->version = '3.7.+1.6.0';
+		$this->version = '3.9.+2.0.1';
 		
 		$this->const_name = 'MAIN_MODULE_' . strtoupper($this->name);
 		$this->special = 0;
@@ -99,6 +98,9 @@ class modEquipement extends DolibarrModules
 				),
 				'models' => 1 
 		);
+		
+		// contact element setting
+		$this->contactelement = 1;
 		
 		// Boites
 		$this->boxes = array ();
@@ -259,7 +261,7 @@ class modEquipement extends DolibarrModules
 				'supplier_order:+equipement:Equipements:@equipement:/equipement/tabs/supplier_order.php?id=__ID__',
 				'project:+equipement:Equipements:@equipement:/equipement/tabs/project.php?id=__ID__',
 				'project:+eventadd:EventsAdd:@equipement:/equipement/tabs/projectAdd.php?id=__ID__',
-				'task:+equipement:Equipements:@equipement:/equipement/tabs/task.php?id=__ID__&withproject=1',
+				//'task:+equipement:Equipements:@equipement:/equipement/tabs/task.php?id=__ID__&withproject=1',
 				'product:+equipement:Equipements:@equipement:/equipement/tabs/produit.php?id=__ID__' 
 		);
 		
@@ -421,7 +423,7 @@ class modEquipement extends DolibarrModules
 		
 		$this->export_sql_start[$r] = 'SELECT DISTINCT ';
 		$this->export_sql_end[$r] = ' FROM ' . MAIN_DB_PREFIX . 'equipement as e ';
-		$this->export_sql_end[$r] = ' LEFT JOIN ' . MAIN_DB_PREFIX . 'equipementevt as ee ON (e.rowid = ee.fk_equipement)';
+		$this->export_sql_end[$r] .= ' LEFT JOIN ' . MAIN_DB_PREFIX . 'equipementevt as ee ON (e.rowid = ee.fk_equipement)';
 		$this->export_sql_end[$r] .= ' WHERE e.entity = ' . $conf->entity;
 		
 		// Imports
@@ -507,8 +509,7 @@ class modEquipement extends DolibarrModules
 						'method' => 'fetch',
 						'element' => 'FactureFournisseur' 
 				) 
-		)
-		;
+		);
 		$this->import_examplevalues_array[$r] = array (
 				'e.ref' => "SN1111111",
 				'e.fk_product' => "PRDTEST",

@@ -67,13 +67,13 @@ $search_entrepot = GETPOST('search_entrepot', 'alpha');
 $search_equipevttype = GETPOST('search_equipevttype', 'alpha');
 if ($search_equipevttype == "-1")
 	$search_equipevttype = "";
-
+	
 	/*
  *	View
  */
 
 $form = new Form($db);
-llxHeader('',$langs->trans("Contract").'-'.$langs->trans("EventsAdd"));
+llxHeader('', $langs->trans("Contract") . '-' . $langs->trans("EventsAdd"));
 
 $object = new contrat($db);
 $result = $object->fetch($id);
@@ -125,59 +125,59 @@ $sql .= " ORDER BY " . $sortfield . " " . $sortorder;
 $result = $db->query($sql);
 if ($result) {
 	$num = $db->num_rows($result);
-
+	
 	$equipementstatic = new Equipement($db);
-
+	
 	$urlparam = "&amp;id=" . $id;
-
+	
 	print '<form method="get" action="' . $_SERVER["PHP_SELF"] . '">' . "\n";
 	print '<input type="hidden" class="flat" name="id" value="' . $id . '">';
 	print '<table class="noborder" width="100%">';
-
+	
 	print "<tr class=\"liste_titre\">";
 	print '<td width=15px class="liste_titre"></td>';
 	print_liste_field_titre($langs->trans("Ref"), $_SERVER["PHP_SELF"], "e.ref", "", $urlparam, '', $sortfield, $sortorder);
 	print_liste_field_titre($langs->trans("RefProduit"), $_SERVER["PHP_SELF"], "p.ref", "", $urlparam, '', $sortfield, $sortorder);
-	//print_liste_field_titre($langs->trans("Fournisseur"), $_SERVER["PHP_SELF"], "sfou.nom", "", $urlparam, '', $sortfield, $sortorder);
-	//print_liste_field_titre($langs->trans("Entrepot"), $_SERVER["PHP_SELF"], "ent.label", "", $urlparam, '', $sortfield, $sortorder);
-	//print_liste_field_titre($langs->trans("Dateo"), $_SERVER["PHP_SELF"], "e.dateo", "", $urlparam, '', $sortfield, $sortorder);
-	//print_liste_field_titre($langs->trans("Datee"), $_SERVER["PHP_SELF"], "e.datee", "", $urlparam, '', $sortfield, $sortorder);
-	//print_liste_field_titre($langs->trans("EtatEquip"), $_SERVER["PHP_SELF"], "e.fk_equipementetat", "", $urlparam, '', $sortfield, $sortorder);
+	// print_liste_field_titre($langs->trans("Fournisseur"), $_SERVER["PHP_SELF"], "sfou.nom", "", $urlparam, '', $sortfield, $sortorder);
+	// print_liste_field_titre($langs->trans("Entrepot"), $_SERVER["PHP_SELF"], "ent.label", "", $urlparam, '', $sortfield, $sortorder);
+	// print_liste_field_titre($langs->trans("Dateo"), $_SERVER["PHP_SELF"], "e.dateo", "", $urlparam, '', $sortfield, $sortorder);
+	// print_liste_field_titre($langs->trans("Datee"), $_SERVER["PHP_SELF"], "e.datee", "", $urlparam, '', $sortfield, $sortorder);
+	// print_liste_field_titre($langs->trans("EtatEquip"), $_SERVER["PHP_SELF"], "e.fk_equipementetat", "", $urlparam, '', $sortfield, $sortorder);
 	print '<td class="liste_titre" ></td>';
 	print "</tr>\n";
-
+	
 	print '<tr class="liste_titre">';
 	print '<td class="liste_titre" align="right"></td>';
 	print '<td class="liste_titre"><input type="text" class="flat" name="search_ref" value="' . $search_ref . '" size="8"></td>';
 	print '<td class="liste_titre"><input type="text" class="flat" name="search_refProduct" value="' . $search_refProduct . '" size="8"></td>';
-	//print '<td class="liste_titre"><input type="text" class="flat" name="search_company_fourn" value="' . $search_company_fourn . '" size="10"></td>';
-	//print '<td class="liste_titre"><input type="text" class="flat" name="search_entrepot" value="' . $search_entrepot . '" size="10"></td>';
-
+	// print '<td class="liste_titre"><input type="text" class="flat" name="search_company_fourn" value="' . $search_company_fourn . '" size="10"></td>';
+	// print '<td class="liste_titre"><input type="text" class="flat" name="search_entrepot" value="' . $search_entrepot . '" size="10"></td>';
+	
 	/*print '<td class="liste_titre" colspan="1" align="right">';
-	print '<input class="flat" type="text" size="1" maxlength="2" name="monthdatee" value="' . $monthdatee . '">';
-	$syear = $yeardatee;
-	if ($syear == '')
-		$syear = date("Y");
-	print '&nbsp;/&nbsp;<input class="flat" type="text" size="1" maxlength="4" name="yeardatee" value="' . $syear . '">';
-	print '</td>';
-
-	print '<td class="liste_titre" colspan="1" align="right">';
-	print '<input class="flat" type="text" size="1" maxlength="2" name="monthdateo" value="' . $monthdateo . '">';
-	$syear = $yeardateo;
-	if ($syear == '')
-		$syear = date("Y");
-	print '&nbsp;/&nbsp;<input class="flat" type="text" size="1" maxlength="4" name="yeardateo" value="' . $syear . '">';
-	print '</td>';*/
-
+	 print '<input class="flat" type="text" size="1" maxlength="2" name="monthdatee" value="' . $monthdatee . '">';
+	 $syear = $yeardatee;
+	 if ($syear == '')
+	 $syear = date("Y");
+	 print '&nbsp;/&nbsp;<input class="flat" type="text" size="1" maxlength="4" name="yeardatee" value="' . $syear . '">';
+	 print '</td>';
+	 
+	 print '<td class="liste_titre" colspan="1" align="right">';
+	 print '<input class="flat" type="text" size="1" maxlength="2" name="monthdateo" value="' . $monthdateo . '">';
+	 $syear = $yeardateo;
+	 if ($syear == '')
+	 $syear = date("Y");
+	 print '&nbsp;/&nbsp;<input class="flat" type="text" size="1" maxlength="4" name="yeardateo" value="' . $syear . '">';
+	 print '</td>';*/
+	
 	// liste des état des équipements
 	/*print '<td class="liste_titre" align="right">';
-	print select_equipement_etat($search_etatequipement, 'search_etatequipement', 1, 1);
-	print '</td>';*/
+	 print select_equipement_etat($search_etatequipement, 'search_etatequipement', 1, 1);
+	 print '</td>';*/
 	print '<td class="liste_titre" align="right">';
 	print '<input class="liste_titre" type="image" src="' . DOL_URL_ROOT . '/theme/' . $conf->theme . '/img/search.png" value="' . dol_escape_htmltag($langs->trans("Search")) . '" title="' . dol_escape_htmltag($langs->trans("Search")) . '">';
 	print '</td>';
 	print "</tr>\n";
-
+	
 	$var = True;
 	$total = 0;
 	$i = 0;
@@ -185,7 +185,7 @@ if ($result) {
 		$objp = $db->fetch_object($result);
 		$var = ! $var;
 		print "<tr $bc[$var]>";
-
+		
 		// ici la case é cocher de sélection pour ajouter un événement
 		print "<td width=15px>";
 		print '<input type=checkbox value=1 name="chk' . $objp->rowid . '">';
@@ -195,12 +195,12 @@ if ($result) {
 		$equipementstatic->ref = $objp->ref;
 		print $equipementstatic->getNomUrl(1);
 		print "</td>";
-
+		
 		// si la case é coché était coché, on crée l'événement
 		if (GETPOST('chk' . $objp->rowid) == 1) {
 			$ret = $equipementstatic->fetch($objp->rowid);
 			$equipementstatic->fetch_thirdparty();
-
+			
 			$desc = GETPOST('np_desc', 'alpha');
 			$dateo = dol_mktime(GETPOST('deohour', 'int'), GETPOST('deomin', 'int'), 0, GETPOST('deomonth', 'int'), GETPOST('deoday', 'int'), GETPOST('deoyear', 'int'));
 			$datee = dol_mktime(GETPOST('deehour', 'int'), GETPOST('deemin', 'int'), 0, GETPOST('deemonth', 'int'), GETPOST('deeday', 'int'), GETPOST('deeyear', 'int'));
@@ -212,10 +212,10 @@ if ($result) {
 			$fk_project = GETPOST('fk_project');
 			$fk_user_author = $user->id;
 			$total_ht = GETPOST('total_ht');
-
+			
 			$resultAdd = $equipementstatic->addline($objp->rowid, $fk_equipementevt_type, $desc, $dateo, $datee, $fulldayevent, $fk_contrat, $fk_fichinter, $fk_expedition, $fk_project, $fk_user_author, $total_ht);
 		}
-
+		
 		print '<td>';
 		if ($objp->fk_product) {
 			$productstatic = new Product($db);
@@ -223,82 +223,82 @@ if ($result) {
 			print $productstatic->getNomUrl(1);
 		}
 		print '</td>';
-
+		
 		/*print "<td>";
-		if ($objp->fk_soc_fourn) {
-			$soc = new Societe($db);
-			$soc->fetch($objp->fk_soc_fourn);
-			print $soc->getNomUrl(1);
-		}
-		print '</td>';*/
-
+		 if ($objp->fk_soc_fourn) {
+		 $soc = new Societe($db);
+		 $soc->fetch($objp->fk_soc_fourn);
+		 print $soc->getNomUrl(1);
+		 }
+		 print '</td>';*/
+		
 		// entrepot
 		/*print "<td>";
-		if ($objp->fk_entrepot > 0) {
-			$entrepotstatic = new Entrepot($db);
-			$entrepotstatic->fetch($objp->fk_entrepot);
-			print $entrepotstatic->getNomUrl(1);
-		}
-		print '</td>';*/
-
-		//print "<td nowrap align='center'>" . dol_print_date($db->jdate($objp->dateo), 'day') . "</td>\n";
-		//print "<td nowrap align='center'>" . dol_print_date($db->jdate($objp->datee), 'day') . "</td>\n";
-		//print '<td align="right">' . (!empty($objp->etatequiplibelle)?$langs->trans($objp->etatequiplibelle):$langs->trans('None')) . '</td>';
+		 if ($objp->fk_entrepot > 0) {
+		 $entrepotstatic = new Entrepot($db);
+		 $entrepotstatic->fetch($objp->fk_entrepot);
+		 print $entrepotstatic->getNomUrl(1);
+		 }
+		 print '</td>';*/
+		
+		// print "<td nowrap align='center'>" . dol_print_date($db->jdate($objp->dateo), 'day') . "</td>\n";
+		// print "<td nowrap align='center'>" . dol_print_date($db->jdate($objp->datee), 'day') . "</td>\n";
+		// print '<td align="right">' . (!empty($objp->etatequiplibelle)?$langs->trans($objp->etatequiplibelle):$langs->trans('None')) . '</td>';
 		print '<td align="right"></td>';
 		print "</tr>\n";
 		$i ++;
 	}
-
+	
 	print '</table>';
 	print '<br><br>';
-
+	
 	// on permet d'ajouter ssi il y a des équipements ajoutable...
 	if ($num > 0) {
 		print '<table class="noborder" width="100%">';
 		print '<tr class="liste_titre">';
 		print '<td colspan=2 width=180px align="left">' . $langs->trans('Description') . '</td>'; // ancre
-		//print '<td width=120px align="center">' . $langs->trans('Dateo') . '</td>';
-		//print '<td width=120px align="center" >' . $langs->trans('Datee') . '</td>';
-		//print '<td align="left" colspan=2>' . $langs->trans('AssociatedWith') . '</td>';
+		                                                                                          // print '<td width=120px align="center">' . $langs->trans('Dateo') . '</td>';
+		                                                                                          // print '<td width=120px align="center" >' . $langs->trans('Datee') . '</td>';
+		                                                                                          // print '<td align="left" colspan=2>' . $langs->trans('AssociatedWith') . '</td>';
 		print '<td colspan=2 align="right">' . $langs->trans('EquipementLineTotalHT') . '</td>';
 		print "</tr>\n";
-
+		
 		print '<tr ' . $bc[$var] . ">\n";
 		print '<td width=100px>' . $langs->trans('TypeofEquipementEvent') . '</td><td>';
 		print select_equipementevt_type('', 'fk_equipementevt_type', 1, 1);
 		// type d'événement
 		print '</td>';
-
+		
 		// Date evenement début
 		/*print '<td align="center" rowspan=2>';
-		$timearray = dol_getdate(mktime());
-		if (! GETPOST('deoday', 'int'))
-			$timewithnohour = dol_mktime(0, 0, 0, $timearray['mon'], $timearray['mday'], $timearray['year']);
-		else
-			$timewithnohour = dol_mktime(GETPOST('deohour', 'int'), GETPOST('deomin', 'int'), 0, GETPOST('deomonth', 'int'), GETPOST('deoday', 'int'), GETPOST('deoyear', 'int'));
-		$form->select_date($timewithnohour, 'deo', 1, 1, 0, "addequipevt");
-		print '</td>';
-		// Date evenement fin
-		print '<td align="center" rowspan=2>';
-		$timearray = dol_getdate(mktime());
-		if (! GETPOST('deeday', 'int'))
-			$timewithnohour = dol_mktime(0, 0, 0, $timearray['mon'], $timearray['mday'], $timearray['year']);
-		else
-			$timewithnohour = dol_mktime(GETPOST('deehour', 'int'), GETPOST('deemin', 'int'), 0, GETPOST('deemonth', 'int'), GETPOST('deeday', 'int'), GETPOST('deeyear', 'int'));
-		$form->select_date($timewithnohour, 'dee', 1, 1, 0, "addequipevt");
-		print '</td>';*/
-
+		 $timearray = dol_getdate(mktime());
+		 if (! GETPOST('deoday', 'int'))
+		 $timewithnohour = dol_mktime(0, 0, 0, $timearray['mon'], $timearray['mday'], $timearray['year']);
+		 else
+		 $timewithnohour = dol_mktime(GETPOST('deohour', 'int'), GETPOST('deomin', 'int'), 0, GETPOST('deomonth', 'int'), GETPOST('deoday', 'int'), GETPOST('deoyear', 'int'));
+		 $form->select_date($timewithnohour, 'deo', 1, 1, 0, "addequipevt");
+		 print '</td>';
+		 // Date evenement fin
+		 print '<td align="center" rowspan=2>';
+		 $timearray = dol_getdate(mktime());
+		 if (! GETPOST('deeday', 'int'))
+		 $timewithnohour = dol_mktime(0, 0, 0, $timearray['mon'], $timearray['mday'], $timearray['year']);
+		 else
+		 $timewithnohour = dol_mktime(GETPOST('deehour', 'int'), GETPOST('deemin', 'int'), 0, GETPOST('deemonth', 'int'), GETPOST('deeday', 'int'), GETPOST('deeyear', 'int'));
+		 $form->select_date($timewithnohour, 'dee', 1, 1, 0, "addequipevt");
+		 print '</td>';*/
+		
 		/*print '<td align="left">';
-		print $langs->trans("Interventions");
-		print '</td>';
-		print '<td align="left">';
-		print select_interventions('', $object->fk_soc_client, 'fk_fichinter', 1, 1);
-		print '</td>';*/
-
+		 print $langs->trans("Interventions");
+		 print '</td>';
+		 print '<td align="left">';
+		 print select_interventions('', $object->fk_soc_client, 'fk_fichinter', 1, 1);
+		 print '</td>';*/
+		
 		print '<td align="center" valign="middle" >';
 		print '<input type="text" name="total_ht" size="5" value="">';
 		print '</td></tr>';
-
+		
 		print '<tr ' . $bc[$var] . ">\n";
 		// description de l'événement de l'équipement
 		print '<td rowspan=2 colspan=2>';
@@ -307,33 +307,33 @@ if ($result) {
 		$doleditor = new DolEditor('np_desc', GETPOST('np_desc', 'alpha'), '', 100, 'dolibarr_details', '', false, true, $conf->global->FCKEDITOR_ENABLE_DETAILS, ROWS_3, 60);
 		$doleditor->Create();
 		print '</td>';
-
+		
 		/*print '<td align="left">';
-		print $langs->trans("Expeditions");
-		print '</td>';
-		print '<td align="left">';
-		print select_expeditions('', $object->fk_soc_client, 'fk_expedition', 1, 1);
-		print '</td>';*/
-
+		 print $langs->trans("Expeditions");
+		 print '</td>';
+		 print '<td align="left">';
+		 print select_expeditions('', $object->fk_soc_client, 'fk_expedition', 1, 1);
+		 print '</td>';*/
+		
 		print '<td align="center" rowspan=2>';
 		print '<input type="submit" class="button" value="' . $langs->trans('Add') . '" name="addline">';
 		print '</td>';
 		print '</tr>';
-
+		
 		// fullday event
 		/*print '<tr ' . $bc[$var] . ">\n";
-		print '<td align="center" colspan=2>';
-		print '<input type="checkbox" id="fulldayevent" value=1 name="fulldayevent" >';
-		print "&nbsp;" . $langs->trans("EventOnFullDay");
-		print '</td>';*/
-
+		 print '<td align="center" colspan=2>';
+		 print '<input type="checkbox" id="fulldayevent" value=1 name="fulldayevent" >';
+		 print "&nbsp;" . $langs->trans("EventOnFullDay");
+		 print '</td>';*/
+		
 		/*print '<td align="left">';
-		print $langs->trans("Project");
-		print '</td>';
-		print '<td align="left">';
-		print select_projects('', $object->fk_soc_client, 'fk_project', 1, 1);
-		print '</td>';*/
-
+		 print $langs->trans("Project");
+		 print '</td>';
+		 print '<td align="left">';
+		 print select_projects('', $object->fk_soc_client, 'fk_project', 1, 1);
+		 print '</td>';*/
+		
 		print '</tr>';
 		print '</table>';
 	} else
@@ -344,7 +344,5 @@ if ($result) {
 	dol_print_error($db);
 }
 
-$db->close();
-
 llxFooter();
-?>
+$db->close();

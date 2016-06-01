@@ -256,7 +256,7 @@ $extralabelsevt = $extrafieldsevt->fetch_name_optionals_label('equipementevt');
 $form = new Form($db);
 $formfile = new FormFile($db);
 
-llxHeader('',$langs->trans("EquipementEvent"));
+llxHeader('', $langs->trans("EquipementEvent"));
 
 if ($id > 0 || ! empty($ref)) {
 	/*
@@ -287,7 +287,7 @@ if ($id > 0 || ! empty($ref)) {
 	// Ref
 	print '<tr><td width=250px>' . $langs->trans("Ref") . '</td>';
 	print '<td colspan="3">';
-	$linkback = '<a href="' . DOL_URL_ROOT . '/equipement/list.php' . (! empty($socid) ? '?socid=' . $socid : '') . '">' . $langs->trans("BackToList") . '</a>';
+	$linkback = '<a href="list.php' . (! empty($socid) ? '?socid=' . $socid : '') . '">' . $langs->trans("BackToList") . '</a>';
 	print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref');
 	print '</td></tr>';
 	
@@ -366,8 +366,9 @@ if ($id > 0 || ! empty($ref)) {
 			if ($action != 'editline' || GETPOST('line_id', 'int') != $objp->rowid) {
 				print '<tr ' . $bc[$var] . ">\n";
 				print '<td >';
-				print (!empty($objp->equipeventlib)?$langs->trans($objp->equipeventlib):'');
-				// type d'événement
+				if ($objp->equipeventlib)
+					print $langs->trans($objp->equipeventlib);
+					// type d'événement
 				print '</td>';
 				
 				// description de l'événement de l'équipement
@@ -503,10 +504,14 @@ if ($id > 0 || ! empty($ref)) {
 				if ($conf->contrat->enabled) {
 					print '<td align="left">' . $langs->trans("Contrats") . '</td>';
 					print '<td align="left" colspan=2>';
-					print select_contracts($objp->fk_contrat, $object->fk_soc_client, 'fk_contrat', 1, 1);
+					if ($user->rights->contrat->lire)
+						print select_contracts($objp->fk_contrat, $object->fk_soc_client, 'fk_contrat', 1, 1);
+					else
+						print "<input type=hidden value='" . $objp->fk_contrat . "' name='fk_contrat'>";
+					
 					print '</td>';
 				} else
-					print '<td colspan=2></td>';
+					print '<td colspan=3></td>';
 				
 				print '<td align="center" colspan=5 rowspan=4 valign="middle" >';
 				print '<input type="text" name="total_ht" size="5" value="' . price($objp->total_ht) . '"><br>';
@@ -535,7 +540,11 @@ if ($id > 0 || ! empty($ref)) {
 				if ($conf->ficheinter->enabled) {
 					print '<td align="left">' . $langs->trans("Interventions") . '</td>';
 					print '<td align="left" colspan=2>';
-					print select_interventions($objp->fk_fichinter, $object->fk_soc_client, 'fk_fichinter', 1, 1);
+					if ($user->rights->ficheinter->lire)
+						print select_interventions($objp->fk_fichinter, $object->fk_soc_client, 'fk_fichinter', 1, 1);
+					else
+						print "<input type=hidden value='" . $objp->fk_fichinter . "' name='fk_fichinter'>";
+					
 					print '</td>';
 				} else
 					print '<td colspan=3 >&nbsp;</td>';
@@ -549,11 +558,17 @@ if ($id > 0 || ! empty($ref)) {
 				print '</td>';
 				
 				//
-				print '<td align="left">' . $langs->trans("Expeditions") . '</td>';
-				print '<td align="left" colspan=2>';
-				print select_expeditions($objp->fk_expedition, $object->fk_soc_client, 'fk_expedition', 1, 1);
-				print '</td>';
-				
+				if ($conf->expedition->enabled) {
+					print '<td align="left">' . $langs->trans("Expeditions") . '</td>';
+					print '<td align="left" colspan=2>';
+					if ($user->rights->expedition->lire)
+						print select_expeditions($objp->fk_expedition, $object->fk_soc_client, 'fk_expedition', 1, 1, 1);
+					else
+						print "<input type=hidden value='" . $objp->fk_expedition . "' name='fk_expedition'>";
+					
+					print '</td>';
+				} else
+					print '<td colspan=3></td>';
 				print '</tr>' . "\n";
 				
 				print '<tr ' . $bc[$var] . ">\n";
@@ -565,10 +580,17 @@ if ($id > 0 || ! empty($ref)) {
 				print '</td>';
 				
 				//
-				print '<td align="left">' . $langs->trans("Projects") . '</td>';
-				print '<td align="left" colspan=2>';
-				print select_projects($objp->fk_project, $object->fk_soc_client, 'fk_project', 1, 1);
-				print '</td>';
+				if ($conf->projet->enabled) {
+					print '<td align="left">' . $langs->trans("Projects") . '</td>';
+					print '<td align="left" colspan=2>';
+					if ($user->rights->projet->lire)
+						print select_projects($objp->fk_project, $object->fk_soc_client, 'fk_project', 1, 1);
+					else
+						print "<input type=hidden value='" . $objp->fk_project . "' name='fk_project'>";
+					
+					print '</td>';
+				} else
+					print '<td colspan=3></td>';
 				print '</tr>' . "\n";
 				
 				// extrafields on equipementevent
@@ -611,13 +633,29 @@ if ($id > 0 || ! empty($ref)) {
 			print '<td align="center" colspan=3>' . $langs->trans('EquipementLineTotalHT') . '</td>';
 			print "</tr>\n";
 			
-			// Ajout ligne d'intervention
+			// si il s'agit d'un �v�nement pr�definie
+			$predeftypeid = "";
+			$predefdescription = "";
+			if (GETPOST("prefefid") > 0) {
+				$sql = "SELECT eep.description";
+				$sql .= " FROM " . MAIN_DB_PREFIX . "c_equipementevt_type as eet";
+				$sql .= " , " . MAIN_DB_PREFIX . "equipementevt_predef as eep";
+				$sql .= " WHERE eep.fk_equipementevt_type = eet.rowid";
+				$sql .= " AND eep.fk_product = " . $object->fk_product;
+				$sql .= " AND eep.fk_equipementevt_type = " . GETPOST("prefefid");
+				$result = $db->query($sql);
+				if ($result) {
+					$objp = $db->fetch_object($result);
+					$predeftypeid = GETPOST("prefefid");
+					$predefdescription = $objp->description;
+				}
+			}
 			$var = false;
 			
 			print '<tr ' . $bc[$var] . ">\n";
 			// type d'événement
 			print '<td width=100px>' . $langs->trans('TypeofEquipementEvent') . '</td><td>';
-			print select_equipementevt_type('', 'fk_equipementevt_type', 1, 1);
+			print select_equipementevt_type($predeftypeid, 'fk_equipementevt_type', 1, 1);
 			print '</td>';
 			
 			print '<td align="left" >' . $langs->trans("Author") . '</td>';
@@ -645,7 +683,7 @@ if ($id > 0 || ! empty($ref)) {
 			print '<td rowspan=3 colspan=2>';
 			// editeur wysiwyg
 			require_once (DOL_DOCUMENT_ROOT . "/core/class/doleditor.class.php");
-			$doleditor = new DolEditor('np_desc', GETPOST('np_desc'), '', 100, 'dolibarr_details', '', false, true, $conf->global->FCKEDITOR_ENABLE_DETAILS, ROWS_4, 60);
+			$doleditor = new DolEditor('np_desc', ($predefdescription ? $predefdescription : GETPOST('np_desc')), '', 100, 'dolibarr_details', '', false, true, $conf->global->FCKEDITOR_ENABLE_DETAILS, ROWS_6, 60);
 			$doleditor->Create();
 			print '</td>';
 			//
@@ -662,7 +700,7 @@ if ($id > 0 || ! empty($ref)) {
 			print '</td>';
 			
 			// lien vers les interventions si le module est actif
-			if ($conf->ficheinter->enabled) {
+			if ($conf->ficheinter->enabled && $user->rights->ficheinter->lire) {
 				print '<td align="left">' . $langs->trans("Interventions") . '</td>';
 				print '<td align="left">';
 				print select_interventions('', $object->fk_soc_client, 'fk_fichinter', 1, 1);
@@ -688,7 +726,7 @@ if ($id > 0 || ! empty($ref)) {
 			if ($conf->expedition->enabled) {
 				print '<td align="left">' . $langs->trans("Expeditions") . '</td>';
 				print '<td align="left">';
-				print select_expeditions('', $object->fk_soc_client, 'fk_expedition', 1, 1);
+				print select_expeditions('', $object->fk_soc_client, 'fk_expedition', 1, 1, 1);
 				print '</td>';
 			} else
 				print '<td colspan=2></td>';

@@ -220,7 +220,6 @@ print '<div class="tabsAction">';
 print '<input type="submit" class="button" value="' . $langs->trans("AddEquipement") . '">';
 print '</div>';
 print '</form>';
-$db->close();
 
 llxFooter();
-?>
+$db->close();

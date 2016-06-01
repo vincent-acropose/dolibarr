@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2012-2015	Charlie Benke     <charlie@patas-monkey.com>
+/* Copyright (C) 2012-2016	Charlie Benke     <charlie@patas-monkey.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -306,7 +306,7 @@ if ($result) {
 		
 		print "<td nowrap align='center'>" . dol_print_date($db->jdate($objp->dateo), 'day') . "</td>\n";
 		print "<td nowrap align='center'>" . dol_print_date($db->jdate($objp->datee), 'day') . "</td>\n";
-		print '<td align="right">' . (!empty($objp->etatequiplibelle)?$langs->trans($objp->etatequiplibelle):$langs->trans('None')) . '</td>';
+		print '<td align="right">' . (! empty($objp->etatequiplibelle) ? $langs->trans($objp->etatequiplibelle) : $langs->trans('None')) . '</td>';
 		print '<td align="right">' . $equipementstatic->LibStatut($objp->fk_statut, 5) . '</td>';
 		print "</tr>\n";
 		
@@ -359,7 +359,5 @@ print '<a class="butAction" href="facture.php?id=' . $factureid . '&action=Filli
 
 print '</div>';
 
-$db->close();
-
 llxFooter();
-?>
+$db->close();

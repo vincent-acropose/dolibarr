@@ -318,7 +318,7 @@ if ($result) {
 		print '</td>';
 		print "<td nowrap align='center'>" . dol_print_date($db->jdate($objp->dateo), 'day') . "</td>\n";
 		print "<td nowrap align='center'>" . dol_print_date($db->jdate($objp->datee), 'day') . "</td>\n";
-		print '<td align="right">' . (!empty($objp->etatequiplibelle)?$langs->trans($objp->etatequiplibelle):$langs->trans('None')) . '</td>';
+		print '<td align="right">' . (! empty($objp->etatequiplibelle) ? $langs->trans($objp->etatequiplibelle) : $langs->trans('None')) . '</td>';
 		print '<td align="right">' . $equipementstatic->LibStatut($objp->fk_statut, 5) . '</td>';
 		print "</tr>\n";
 		

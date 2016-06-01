@@ -79,6 +79,8 @@ if ($search_equipevttype == "-1")
 
 $object = new Expedition($db);
 $result = $object->fetch($id, $ref);
+if (! $id)
+	$id = $object->id;
 $object->fetch_thirdparty();
 
 if (! empty($object->origin)) {
@@ -146,6 +148,9 @@ if ($action == 'joindre' && $user->rights->equipement->creer) {
 				}
 			}
 		}
+		// on redirige sur l'onglet � cot�
+		Header('Location: expedition.php?id=' . $id);
+		exit();
 	}
 	
 	// récupération des équipements unitaires
@@ -179,6 +184,26 @@ if ($action == 'joindre' && $user->rights->equipement->creer) {
 			$total_ht = GETPOST('total_ht');
 			// print "==".$EquipID.",".$fk_equipementevt_type.",".$desc.",".$dateo.",".$datee.",".$fulldayevent.",".$fk_contrat.",".$fk_fichinter.",".$fk_expedition.",".$total_ht;
 			$result = $equipementstatic->addline($EquipID, $fk_equipementevt_type, $desc, $dateo, $datee, $fulldayevent, $fk_contrat, $fk_fichinter, $fk_expedition, $fk_project, $fk_user_author, $total_ht);
+			
+			// gestion des sous composant si il y en a
+			$sql = "SELECT fk_equipement_fils FROM " . MAIN_DB_PREFIX . "equipementassociation ";
+			$sql .= " WHERE fk_equipement_pere=" . $EquipID;
+			
+			dol_syslog(get_class($this) . "::get_Parent sql=" . $sql, LOG_DEBUG);
+			$resql = $this->db->query($sql);
+			if ($resql) {
+				$num = $this->db->num_rows($resql);
+				$i = 0;
+				$tblrep = array ();
+				while ( $i < $num ) {
+					$objp = $this->db->fetch_object($resql);
+					
+					$result = $equipementstatic->addline($objp->fk_equipement_fils, $fk_equipementevt_type, $desc, $dateo, $datee, $fulldayevent, $fk_contrat, $fk_fichinter, $fk_expedition, $fk_project, $fk_user_author, 0) // seule le prix du parent compte
+;
+					
+					$i ++;
+				}
+			}
 		}
 	}
 }
@@ -281,6 +306,9 @@ if ($result) {
 			print '<td valign=top align="center">' . ($i + 1) . '</td>';
 		}
 		
+		$prod = new Product($db);
+		$prod->fetch($lines[$i]->fk_product);
+		
 		// Define output language
 		if (! empty($conf->global->MAIN_MULTILANGS) && ! empty($conf->global->PRODUIT_TEXTS_IN_THIRDPARTY_LANGUAGE)) {
 			$prod = new Product($db);
@@ -291,20 +319,22 @@ if ($result) {
 		print '<td valign=top>';
 		
 		// Affiche ligne produit
-		$text = '<a href="' . DOL_URL_ROOT . '/product/fiche.php?id=' . $lines[$i]->fk_product . '">';
-		if ($lines[$i]->fk_product_type == 1)
-			$text .= img_object($langs->trans('ShowService'), 'service');
-		else
-			$text .= img_object($langs->trans('ShowProduct'), 'product');
-		$text .= ' ' . $lines[$i]->ref . '</a>';
-		$text .= ' - ' . $label;
-		$description = ($conf->global->PRODUIT_DESC_IN_FORM ? '' : dol_htmlentitiesbr($lines[$i]->description));
-		// print $description;
-		print $form->textwithtooltip($text, $description, 3, '', '', $i);
-		print_date_range($lines[$i]->date_start, $lines[$i]->date_end);
-		if ($conf->global->PRODUIT_DESC_IN_FORM) {
-			print ($lines[$i]->description && $lines[$i]->description != $lines[$i]->product) ? '<br>' . dol_htmlentitiesbr($lines[$i]->description) : '';
-		}
+		print $prod->getNomUrl(2) . " - " . $label;
+		
+		// $text = '<a href="'.DOL_URL_ROOT.'/product/fiche.php?id='.$lines[$i]->fk_product.'">';
+		// if ($lines[$i]->fk_product_type==1) $text.= img_object($langs->trans('ShowService'),'service');
+		// else $text.= img_object($langs->trans('ShowProduct'),'product');
+		// $text.= ' '.$lines[$i]->ref.'</a>';
+		// $text.= ' - '.$label;
+		// $description=($conf->global->PRODUIT_DESC_IN_FORM?'':dol_htmlentitiesbr($lines[$i]->description));
+		// //print $description;
+		// print $form->textwithtooltip($text,$description,3,'','',$i);
+		// print_date_range($lines[$i]->date_start,$lines[$i]->date_end);
+		// if ($conf->global->PRODUIT_DESC_IN_FORM)
+		// {
+		// print ($lines[$i]->description && $lines[$i]->description!=$lines[$i]->product)?'<br>'.dol_htmlentitiesbr($lines[$i]->description):'';
+		// }
+		print '</td>';
 		
 		// Entrepot source
 		if ($conf->stock->enabled) {
@@ -400,9 +430,13 @@ if ($result) {
 	print select_interventions('', $object->fk_soc_client, 'fk_fichinter', 1, 1);
 	print '</td>';
 	
-	print '<td align="center" rowspan=2>';
-	print '<input type="submit" class="button" value="' . $langs->trans('Joindre') . '" name="addline">';
-	print '</td>';
+	if ($object->fk_statut != 2) {
+		print '<td align="center" rowspan=2>';
+		print '<input type="submit" class="button" value="' . $langs->trans('Joindre') . '" name="addline">';
+		print '</td>';
+	} else
+		print '<td align="center" rowspan=2></td>';
+	
 	print '</tr>';
 	
 	// fullday event
@@ -429,7 +463,6 @@ if ($result) {
 	dol_print_error($db);
 }
 
-$db->close();
 ?>
 <script>
 $(document).ready(function(){
@@ -469,4 +502,5 @@ $('#filterchk').keyup(function() {
 </script>
 <?php
 llxFooter();
+$db->close();
 ?>

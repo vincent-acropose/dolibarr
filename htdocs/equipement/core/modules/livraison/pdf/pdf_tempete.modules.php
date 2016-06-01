@@ -96,7 +96,7 @@ class pdf_tempete extends ModelePDFDeliveryOrder
 		$this->emetteur = $mysoc;
 		if (empty($this->emetteur->country_code))
 			$this->emetteur->country_code = substr($langs->defaultlang, - 2); // By default, if was not defined
-				                                                                                                        
+				                                                                  
 		// Define position of columns
 		$this->posxdesc = $this->marge_gauche + 1;
 		$this->posxcomm = 112;
@@ -391,7 +391,7 @@ class pdf_tempete extends ModelePDFDeliveryOrder
 					}
 					
 					$nexY += 2; // Passe espace entre les lignes
-					          
+					            
 					// Detect if some page were added automatically and output _tableau for past pages
 					while ( $pagenb < $pageposafter ) {
 						$pdf->setPage($pagenb);
@@ -541,6 +541,7 @@ class pdf_tempete extends ModelePDFDeliveryOrder
 	
 	/**
 	 * Show miscellaneous information (payment mode, payment term, .
+	 *
 	 * ..)
 	 *
 	 * @param PDF &$pdf Object PDF

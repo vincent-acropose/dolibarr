@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2012-2015	Charlie Benke	<charlie@patas-monkey.com>
+/* Copyright (C) 2012-2016	Charlie Benke	<charlie@patas-monkey.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,6 +47,7 @@ class Equipement extends CommonObject
 	var $fk_etatequipement; // état de l'équipement
 	var $etatequiplibelle; // état de l'équipement (libéllé
 	var $fk_entrepot; // entrepot de l'équipement chez soit
+	var $isentrepotmove; // on effectue un mouvement de stock oui/non
 	var $unitweight; // poids unitaire de l'équipement
 	var $SerialMethod; // Méthode de génération des numéros de série
 	var $quantity; // Quantité de produit en cas de gestion par lot
@@ -96,9 +97,11 @@ class Equipement extends CommonObject
 	 *
 	 * @return int <0 if KO, >0 if OK
 	 */
-	function create() {
+	function create($notrigger = 0) {
 		global $conf;
+		global $user; // todo pass $user in parameter of function
 		global $soc;
+		global $langs;
 		
 		dol_syslog(get_class($this) . "::create ref=" . $this->ref);
 		
@@ -176,6 +179,7 @@ class Equipement extends CommonObject
 			$sql .= ", entity";
 			$sql .= ", fk_user_author";
 			$sql .= ", fk_entrepot";
+			$sql .= ", fk_product_batch";
 			$sql .= ", description";
 			$sql .= ", fk_statut";
 			$sql .= ", note_private";
@@ -197,6 +201,7 @@ class Equipement extends CommonObject
 			$sql .= ", " . $conf->entity;
 			$sql .= ", " . $this->author;
 			$sql .= ", " . ($this->fk_entrepot ? $this->db->escape($this->fk_entrepot) : "null");
+			$sql .= ", " . ($this->fk_product_batch ? $this->db->escape($this->fk_product_batch) : "null");
 			$sql .= ", " . ($this->description ? "'" . $this->db->escape($this->description) . "'" : "null");
 			$sql .= ", " . ($this->fk_entrepot > 0 ? "1" : "0"); // si il y a un entrepot de sélectionné on active ou non l'équipement
 			$sql .= ", " . ($this->note_private ? "'" . $this->db->escape($this->note_private) . "'" : "null");
@@ -209,6 +214,31 @@ class Equipement extends CommonObject
 			if ($result) {
 				$i ++;
 				$this->id = $this->db->last_insert_id(MAIN_DB_PREFIX . "equipement");
+				
+				// si on veut faire un mouvement correspondant � la cr�ation
+				// et que l'on utilise pas product batch
+				if ($this->isentrepotmove && $this->fk_entrepot > 0 && $this->fk_product_batch != - 1) {
+					require_once DOL_DOCUMENT_ROOT . '/product/stock/class/mouvementstock.class.php';
+					$mouvP = new MouvementStock($this->db);
+					$mouvP->origin = new Equipement($this->db);
+					$mouvP->origin->id = $this->id;
+					
+					$idmv = $mouvP->reception($user, $this->fk_product, $this->fk_entrepot, $this->qty, 0, $langs->trans("EquipementMoveIn"));
+				}
+				
+				if (! $notrigger) {
+					// Call trigger
+					$result = $this->call_trigger('EQUIPEMENT_CREATE', $user);
+					if ($result < 0)
+						$error ++;
+					// End call triggers
+				}
+			} else {
+				dol_print_error($this->db);
+				$error ++;
+			}
+			
+			if (! $error) {
 				$this->db->commit();
 			} else {
 				$this->error = $this->db->error();
@@ -245,7 +275,7 @@ class Equipement extends CommonObject
 	function fetch($rowid, $ref = '') {
 		$sql = "SELECT e.rowid, e.ref, e.description, e.fk_soc_fourn, e.fk_facture_fourn, e.fk_statut, e.fk_entrepot,";
 		$sql .= " e.numversion, e.numimmocompta, e.fk_etatequipement, ee.libelle as etatequiplibelle, e.quantity,";
-		$sql .= " e.datec, e.datev, e.datee, e.dateo, e.tms as datem, e.unitweight,";
+		$sql .= " e.datec, e.datev, e.datee, e.dateo, e.tms as datem, e.unitweight, e.fk_product_batch,";
 		$sql .= " e.fk_product, e.fk_soc_client, e.fk_facture,";
 		$sql .= " e.note_public, e.note_private ";
 		$sql .= " FROM " . MAIN_DB_PREFIX . "equipement as e";
@@ -281,6 +311,7 @@ class Equipement extends CommonObject
 				$this->fk_soc_client = $obj->fk_soc_client;
 				$this->fk_fact_client = $obj->fk_facture;
 				$this->fk_entrepot = $obj->fk_entrepot;
+				$this->fk_product_batch = $obj->fk_product_batch;
 				$this->fk_etatequipement = $obj->fk_etatequipement;
 				$this->etatequiplibelle = $obj->etatequiplibelle;
 				$this->note_public = $obj->note_public;
@@ -361,10 +392,10 @@ class Equipement extends CommonObject
 			$updtSep = " ,";
 		}
 		
-		if ($this->fk_etatequipement > 0) {
+		if ($this->fk_entrepot > 0) {
 			$sql .= $updtSep . " fk_entrepot=" . $this->fk_entrepot;
 			$updtSep = " ,";
-		} elseif ($this->fk_etatequipement == - 1) {
+		} elseif ($this->fk_entrepot == - 1) {
 			$sql .= $updtSep . " fk_entrepot=null";
 			$updtSep = " ,";
 		}
@@ -674,10 +705,12 @@ class Equipement extends CommonObject
 	 * @param date $fk_entrepot id of the entrepot
 	 * @return int <0 if ko, >0 if ok
 	 */
-	function set_entrepot($user, $fk_entrepot) {
-		global $conf;
+	function set_entrepot($user, $fk_entrepot, $bmoveentrepot = 0) {
+		global $conf, $langs;
 		
 		if ($user->rights->equipement->creer) {
+			$oldentrepot = $this->fk_entrepot;
+			
 			$sql = "UPDATE " . MAIN_DB_PREFIX . "equipement";
 			$sql .= " SET fk_entrepot = " . ($fk_entrepot != - 1 ? $fk_entrepot : "null");
 			$sql .= " WHERE rowid = " . $this->id;
@@ -685,6 +718,55 @@ class Equipement extends CommonObject
 			
 			if ($this->db->query($sql)) {
 				$this->fk_entrepot = $fk_entrepot;
+				// si on a changé d'entrepot et on veut faire un mouvement
+				if ($bmoveentrepot && $oldentrepot != $fk_entrepot) {
+					require_once DOL_DOCUMENT_ROOT . '/product/stock/class/mouvementstock.class.php';
+					$mouvP = new MouvementStock($this->db);
+					$mouvP->origin = new Equipement($this->db);
+					$mouvP->origin->id = $this->id;
+					
+					if ($oldentrepot > 0) // si il y avait un ancien entrepot
+						$idmv = $mouvP->livraison($user, $this->fk_product, $entrepotold, $this->quantity, 0, // le prix est � 0 pour ne pas impacter le pmp
+$langs->trans("EquipementMoveOut"));
+					
+					if ($fk_entrepot > 0)
+						$idmv = $mouvP->reception($user, $this->fk_product, $fk_entrepot, $this->quantity, 0, $langs->trans("EquipementMoveIn"));
+				}
+				
+				// gestion des sous composant si il y en a
+				$sql = "SELECT * FROM " . MAIN_DB_PREFIX . "equipementassociation ";
+				$sql .= " WHERE fk_equipement_pere=" . $thid - id;
+				
+				dol_syslog(get_class($this) . "::get_Parent sql=" . $sql, LOG_DEBUG);
+				$resql = $this->db->query($sql);
+				if ($resql) {
+					$num = $this->db->num_rows($resql);
+					$i = 0;
+					$tblrep = array ();
+					while ( $i < $num ) {
+						$objp = $this->db->fetch_object($resql);
+						
+						$sql = "UPDATE " . MAIN_DB_PREFIX . "equipement";
+						$sql .= " SET fk_entrepot = " . ($fk_entrepot != - 1 ? $fk_entrepot : "null");
+						$sql .= " WHERE rowid = " . $objp->fk_equipement_fils;
+						$sql .= " AND entity = " . $conf->entity;
+						if ($this->db->query($sql)) {
+							// si on a chang� d'entrepot et on veut faire un mouvement
+							if ($bmoveentrepot && $oldentrepot != $fk_entrepot) {
+								$tmpequipement = new Equipement($this->db);
+								$mouvP->origin->id = $objp->fk_equipement_fils;
+								
+								if ($oldentrepot > 0) // si il y avait un ancien entrepot
+									$idmv = $mouvP->livraison($user, $objp->fk_product, $entrepotold, 1, 0, $langs->trans("EquipementCompMoveOut"));
+								
+								if ($fk_entrepot > 0)
+									$idmv = $mouvP->reception($user, $objp->fk_product, $fk_entrepot, 1, 0, $langs->trans("EquipementCompMoveIn"));
+							}
+						}
+						$i ++;
+					}
+				}
+				
 				return 1;
 			} else {
 				$this->error = $this->db->error();
@@ -750,7 +832,6 @@ class Equipement extends CommonObject
 			$sql .= " SET unitweight = " . price2num($unitweight);
 			$sql .= " WHERE rowid = " . $this->id;
 			$sql .= " AND entity = " . $conf->entity;
-			$sql .= " AND fk_statut = 0";
 			
 			if ($this->db->query($sql)) {
 				$this->datee = $datee;
@@ -1127,7 +1208,7 @@ class Equipement extends CommonObject
 	/**
 	 * Get the id of the fisrt parent child
 	 * with recursive search
-	 * 
+	 *
 	 * @param int $fk_equipementcomponent Id equipement component
 	 * @return int id equipement main
 	 */
@@ -1150,7 +1231,7 @@ class Equipement extends CommonObject
 	/**
 	 * Get the id of the fisrt parent child
 	 * with recursive search
-	 * 
+	 *
 	 * @param int $fk_equipementcomponent Id equipement component
 	 * @return int id equipement main
 	 */
@@ -1197,7 +1278,7 @@ class Equipement extends CommonObject
 	
 	/**
 	 * Get the id of the childs
-	 * 
+	 *
 	 * @return array id equipement childs
 	 */
 	function get_Childs() {
@@ -1222,7 +1303,7 @@ class Equipement extends CommonObject
 	
 	/**
 	 * Get the number of events of an Equipement
-	 * 
+	 *
 	 * @return array id equipement childs
 	 */
 	function get_Events() {
@@ -1612,7 +1693,7 @@ class EquipementLigne extends CommonObject
 				
 				// Remove extrafields
 				if ((! $error) && (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED))) // For avoid conflicts if trigger used
-{
+				{
 					$this->id = $this->rowid;
 					$result = $this->deleteExtraFields();
 					if ($result < 0) {
@@ -1675,5 +1756,3 @@ class EquipementLigne extends CommonObject
 		}
 	}
 }
-
-?>

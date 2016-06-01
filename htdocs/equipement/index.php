@@ -93,7 +93,7 @@ $statProducts = "";
 while ( $objp = $db->fetch_object($result) ) {
 	$statProducts .= "<tr >";
 	$statProducts .= '<td><a href="list.php?fk_etatequipement=' . $objp->fk_etatequipement . '">';
-	$statProducts .=(!empty($objp->etatequiplibelle)?$langs->trans($objp->etatequiplibelle):$langs->trans('None'));
+	$statProducts .= (! empty($objp->etatequiplibelle) ? $langs->trans($objp->etatequiplibelle) : $langs->trans('None'));
 	$statProducts .= '</a></td><td align="right">' . $objp->total . '</td>';
 	$statProducts .= "</tr>";
 	$total = $total + $objp->total;
@@ -123,7 +123,7 @@ $total = 0;
 if ($result) {
 	while ( $objp = $db->fetch_object($result) ) {
 		$statProducts .= "<tr >";
-		$statProducts .= '<td><a href="listEvt.php?fk_equipementevt_type=' . $objp->fk_equipementevt_type . '">';
+		$statProducts .= '<td><a href="listEvent.php?fk_equipementevt_type=' . $objp->fk_equipementevt_type . '">';
 		$statProducts .= ($objp->statuteventlibelle ? $langs->trans($objp->statuteventlibelle) : $langs->trans("None"));
 		$statProducts .= '</a></td><td align="right">' . $objp->total . '</td>';
 		$statProducts .= "</tr>";

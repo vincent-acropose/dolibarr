@@ -94,24 +94,27 @@ $equipementstatic = new Equipement($db);
 
 if (GETPOST("updatecheck") == $langs->trans("Update")) {
 	$separatorlist = $conf->global->EQUIPEMENT_SEPARATORLIST;
+	if (! isset($separatorlist)) // Si non saisie on utilise le ; par d�faut
+		$separatorlist = ";";
 	if ($separatorlist == "__N__")
 		$separatorlist = "\n";
 	if ($separatorlist == "__B__")
 		$separatorlist = "\b";
+
 	$idlist = explode($separatorlist, GETPOST("idlist"));
-	
+
 	if (GETPOST("chk_etatequipement"))
 		$equipementstatic->fk_etatequipement = GETPOST("update_etatequipement");
 	else
 		$equipementstatic->fk_etatequipement = 0;
-	
+
 	if (GETPOST("chk_entrepot"))
 		$equipementstatic->fk_entrepot = GETPOST("update_entrepot");
 	else
 		$equipementstatic->fk_entrepot = 0;
 	$equipementstatic->fk_statut = GETPOST("update_statut");
 	foreach ( $idlist as $key ) {
-		if (GETPOST("chk-" . $key)) {
+		if (GETPOST(trim("chk-" . $key))) {
 			$equipementstatic->id = $key;
 			$equipementstatic->updateInfos($user);
 		}
@@ -122,7 +125,7 @@ if (GETPOST("updatecheck") == $langs->trans("Update")) {
  *	View
  */
 
-llxHeader('',$langs->trans('Equipements'));
+llxHeader('', $langs->trans('Equipements'));
 
 $sql = "SELECT";
 $sql .= " e.ref, e.rowid, e.fk_statut, e.fk_product, p.ref as refproduit, e.fk_entrepot,e.quantity,";
@@ -186,43 +189,45 @@ if ($result) {
 		$urlparam .= "&search_etatequipement=" . $search_etatequipement;
 	if ($viewstatut >= 0)
 		$urlparam .= "&viewstatut=" . $viewstatut;
-	
+
 	print_barre_liste($langs->trans("ListOfEquipements"), $page, "list.php", $urlparam, $sortfield, $sortorder, '', $num);
-	
+
 	print '<form method="get" action="' . $_SERVER["PHP_SELF"] . '">' . "\n";
 	print '<input type=hidden name=page value="' . ($page) . '">';
 	print '<table class="noborder" width="100%">';
-	
+
 	print "<tr class=\"liste_titre\">";
 	print_liste_field_titre($langs->trans("Ref"), $_SERVER["PHP_SELF"], "e.ref", "", $urlparam, '', $sortfield, $sortorder);
 	print_liste_field_titre($langs->trans("RefProduit"), $_SERVER["PHP_SELF"], "p.ref", "", $urlparam, '', $sortfield, $sortorder);
 	print_liste_field_titre($langs->trans("NumVersion"), $_SERVER["PHP_SELF"], "e.numversion", "", $urlparam, '', $sortfield, $sortorder);
-	print_liste_field_titre($langs->trans("FournisseurFactFourn"), $_SERVER["PHP_SELF"], "sfou.nom", "", $urlparam, 'align="left" width=250px', $sortfield, $sortorder);
+	//print_liste_field_titre($langs->trans("FournisseurFactFourn"), $_SERVER["PHP_SELF"], "sfou.nom", "", $urlparam, 'align="left" width=200px', $sortfield, $sortorder);
 	// print_liste_field_titre($langs->trans("FF"),$_SERVER["PHP_SELF"],"ff.facnumber","",$urlparam,'',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Entrepot"), $_SERVER["PHP_SELF"], "ent.label", "", $urlparam, 'align="center" width=150px', $sortfield, $sortorder);
-	print_liste_field_titre($langs->trans("CompanyClientFactCli"), $_SERVER["PHP_SELF"], "scli.nom", "", $urlparam, 'align="left" width=250px', $sortfield, $sortorder);
+	//print_liste_field_titre($langs->trans("Entrepot"), $_SERVER["PHP_SELF"], "ent.label", "", $urlparam, 'align="left" width=150px', $sortfield, $sortorder);
+	print_liste_field_titre($langs->trans("CompanyClientFactCli"), $_SERVER["PHP_SELF"], "scli.nom", "", $urlparam, 'align="left" width=200px', $sortfield, $sortorder);
 	// print_liste_field_titre($langs->trans("FC"),$_SERVER["PHP_SELF"],"f.facnumber","",$urlparam,'',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Dateo"), $_SERVER["PHP_SELF"], "e.dateo", "", $urlparam, 'align="center" width=130px', $sortfield, $sortorder);
-	print_liste_field_titre($langs->trans("Datee"), $_SERVER["PHP_SELF"], "e.datee", "", $urlparam, 'align="center" width=130px', $sortfield, $sortorder);
-	print_liste_field_titre($langs->trans("EtatEquip"), $_SERVER["PHP_SELF"], "e.fk_equipementetat", "", $urlparam, 'align="center" width=130px', $sortfield, $sortorder);
+	print_liste_field_titre($langs->trans("Dateo"), $_SERVER["PHP_SELF"], "e.dateo", "", $urlparam, 'align="center" width=100px', $sortfield, $sortorder);
+	print_liste_field_titre($langs->trans("Datee"), $_SERVER["PHP_SELF"], "e.datee", "", $urlparam, 'align="center" width=100px', $sortfield, $sortorder);
+	//print_liste_field_titre($langs->trans("EtatEquip"), $_SERVER["PHP_SELF"], "e.fk_equipementetat", "", $urlparam, 'align="center" width=150px', $sortfield, $sortorder);
 	print_liste_field_titre($langs->trans("Status"), $_SERVER["PHP_SELF"], "e.fk_statut", "", $urlparam, 'align="right"', $sortfield, $sortorder);
+	//print '<th align=right>' . $langs->trans("SelAll") . '&nbsp;<input type=checkbox id="dochkall"></th>';
+	print '<th align=right></th>';
 	print "</tr>\n";
-	
+
 	print '<tr class="liste_titre">';
-	print '<td class="liste_titre"><input type="text" class="flat" name="search_ref" value="' . $search_ref . '" size="10"></td>';
-	print '<td class="liste_titre"><input type="text" class="flat" name="search_refProduct" value="' . $search_refProduct . '" size="10"></td>';
-	print '<td class="liste_titre"><input type="text" class="flat" name="search_numversion" value="' . $search_numversion . '" size="10"></td>';
-	print '<td class="liste_titre">';
-	print '<input type="text" class="flat" name="search_reffact_fourn" value="' . $search_reffact_fourn . '" size="10">&nbsp;';
-	print '<input type="text" class="flat" name="search_company_fourn" value="' . $search_company_fourn . '" size="20"></td>';
-	print '<td class="liste_titre">';
-	select_entrepot($search_entrepot, 'search_entrepot', 1, 1);
+	print '<td class="liste_titre" valign=top><input type="text" class="flat" name="search_ref" value="' . $search_ref . '" size="10"></td>';
+	print '<td class="liste_titre" valign=top><input type="text" class="flat" name="search_refProduct" value="' . $search_refProduct . '" size="10"></td>';
+	print '<td class="liste_titre" valign=top><input type="text" class="flat" name="search_numversion" value="' . $search_numversion . '" size="10"></td>';
+	//print '<td class="liste_titre">';
+	//print '<input type="text" class="flat" name="search_reffact_fourn" value="' . $search_reffact_fourn . '" size="10">&nbsp;';
+	//print '<input type="text" class="flat" name="search_company_fourn" value="' . $search_company_fourn . '" size="15"></td>';
+	//print '<td class="liste_titre">';
+	//select_entrepot($search_entrepot, 'search_entrepot', 1, 1, 0, 0);
 	// print '<input type="text" class="flat" name="search_entrepot" value="'.$search_entrepot.'" size="10">';
-	print '</td>';
+	//print '</td>';
 	print '<td class="liste_titre">';
 	print '<input type="text" class="flat" name="search_reffact_client" value="' . $search_reffact_client . '" size="10">&nbsp;';
-	print '<input type="text" class="flat" name="search_company_client" value="' . $search_company_client . '" size="20"></td>';
-	
+	print '<input type="text" class="flat" name="search_company_client" value="' . $search_company_client . '" size="15"></td>';
+
 	print '<td class="liste_titre" colspan="1" align="right">';
 	print '<input class="flat" type="text" size="2" maxlength="2" name="monthdatee" value="' . $monthdatee . '">';
 	$syear = $yeardatee;
@@ -230,7 +235,7 @@ if ($result) {
 		$syear = date("Y");
 	print '&nbsp;/&nbsp;<input class="flat" type="text" size="4" maxlength="4" name="yeardatee" value="' . $syear . '">';
 	print '</td>';
-	
+
 	print '<td class="liste_titre" colspan="1" align="right">';
 	print '<input class="flat" type="text" size="2" maxlength="2" name="monthdateo" value="' . $monthdateo . '">';
 	$syear = $yeardateo;
@@ -238,19 +243,14 @@ if ($result) {
 		$syear = date("Y");
 	print '&nbsp;/&nbsp;<input class="flat" type="text" size="4" maxlength="4" name="yeardateo" value="' . $syear . '">';
 	print '</td>';
-	
-	// liste des état des équipements
-	print '<td class="liste_titre" align="right">';
+
+	// liste des �tat des �quipements
+	/*print '<td class="liste_titre" align="right">';
 	print select_equipement_etat($search_etatequipement, 'search_etatequipement', 1, 1);
-	
-	print '</td>';
-	
+	print '</td>';*/
+
 	print '<td class="liste_titre" align="right">';
-	print '<table class=nobordernopadding width=100%>';
-	print '<tr><td >';
-	print '<input type=checkbox id="dochkall">';
-	print '</td><td align=right>';
-	
+
 	print '<select class="flat" name="viewstatut">';
 	print '<option value="-1">&nbsp;</option>';
 	print '<option ';
@@ -266,11 +266,12 @@ if ($result) {
 		print ' selected ';
 	print ' value="2">' . $equipementstatic->LibStatut(2) . '</option>';
 	print '</select>';
+	print '</td>';
+	print '<td>';
 	print '<input class="liste_titre" type="image" src="' . DOL_URL_ROOT . '/theme/' . $conf->theme . '/img/search.png" value="' . dol_escape_htmltag($langs->trans("Search")) . '" title="' . dol_escape_htmltag($langs->trans("Search")) . '">';
-	print '</td></tr></table>';
 	print '</td>';
 	print "</tr>\n";
-	
+
 	$var = True;
 	$idlist = "";
 	$reflist = "";
@@ -282,15 +283,15 @@ if ($result) {
 		$separatorlist = "\n";
 	if ($separatorlist == "__B__")
 		$separatorlist = "\b";
-	
+
 	while ( $i < min($num, $limit) ) {
 		$objp = $db->fetch_object($result);
-		
+
 		$idlist .= $objp->rowid . $separatorlist;
 		$reflist .= $objp->ref . $separatorlist;
 		$var = ! $var;
 		print "<tr $bc[$var]>";
-		print "<td><span onclick=\"$('.detailligne" . $i . "').toggle();\" style=\"cursor:pointer\" >" . img_picto("", "edit_add") . "</span>&nbsp;";
+		print "<td><a href=# onclick=\"$('.detailligne" . $i . "').toggle();\" >" . img_picto("", "edit_add") . "</a>&nbsp;";
 		$equipementstatic->id = $objp->rowid;
 		$equipementstatic->ref = $objp->ref;
 		print $equipementstatic->getNomUrl(1);
@@ -298,35 +299,35 @@ if ($result) {
 		if ($objp->quantity > 1)
 			print ' (' . $objp->quantity . ')';
 		print "</td>";
-		
+
 		// toujours un produit associé é un équipement
 		$productstatic = new Product($db);
 		$productstatic->fetch($objp->fk_product);
 		print '<td title="' . $productstatic->label . '">';
 		print $productstatic->getNomUrl(1);
 		print '</td>';
-		
+
 		print "<td>";
 		print $objp->numversion;
 		print '</td>';
-		
-		print "<td>";
+
+		/*print "<td>";
 		if ($objp->fk_soc_fourn) {
 			$socfourn = new Societe($db);
 			$socfourn->fetch($objp->fk_soc_fourn);
 			print $socfourn->getNomUrl(1);
 		}
-		print '</td>';
-		
+		print '</td>';*/
+
 		// entrepot
-		print "<td>";
+		/*print "<td>";
 		if ($objp->fk_entrepot > 0) {
 			$entrepotstatic = new Entrepot($db);
 			$entrepotstatic->fetch($objp->fk_entrepot);
 			print $entrepotstatic->getNomUrl(1);
 		}
-		print '</td>';
-		
+		print '</td>';*/
+
 		print "<td>";
 		if ($objp->fk_soc_client > 0) {
 			$soc = new Societe($db);
@@ -334,66 +335,68 @@ if ($result) {
 			print $soc->getNomUrl(1);
 		}
 		print '</td>';
-		
+
 		print "<td nowrap align='center'>" . dol_print_date($db->jdate($objp->dateo), 'day') . "</td>\n";
 		print "<td nowrap align='center'>" . dol_print_date($db->jdate($objp->datee), 'day') . "</td>\n";
-		
+
 		print '<td align="right">';
-		print (!empty($objp->etatequiplibelle)?$langs->trans($objp->etatequiplibelle):$langs->trans('None'));
+		if ($objp->etatequiplibelle)
+			print $langs->trans($objp->etatequiplibelle);
 		print '</td>';
 		print '<td align=right>';
-		print '<table class=nobordernopadding width=100%>';
-		print '<tr><td >';
-		print '<input type=checkbox class=chkall name=chk-' . $objp->rowid . '>';
-		print '</td><td align=right>';
 		print $equipementstatic->LibStatut($objp->fk_statut, 5);
-		print '</td></tr></table>';
 		print '</td>';
-		print "</tr>\n";
+		//print '<td align=right>';
+		//print '<input type=checkbox class=chkall name=chk-' . $objp->rowid . '>';
+		//print '</td>';
+
+		// seconde ligne
+		/*print "</tr>\n";
 		if ($bc[$var] == 'class="pair"')
 			print "<tr style='display:none' class='pair detailligne" . $i . "'>";
 		else
 			print "<tr style='display:none' class='impair detailligne" . $i . "'>";
 		print "<td>" . $equipementstatic->label . "</td>";
 		print "<td colspan=2>" . $productstatic->label . "</td>";
-		
+
 		print "<td >";
 		if ($equipementstatic->unitweight != 0)
 			print $langs->trans("RefFactFourn") . " : " . $equipementstatic->unitweight;
 		print "</td>";
-		print "<td>";
-		if ($objp->fk_facture_fourn > 0) {
+		print "<td align=left>";
+		if ($objp->fk_facture_fourn > 0 && $user->rights->facture->lire) {
 			$factfournstatic = new FactureFournisseur($db);
 			$factfournstatic->fetch($objp->fk_facture_fourn);
 			print $factfournstatic->getNomUrl(1);
 		}
 		print '</td>';
 		// print '<td></td>';
-		print "<td>";
-		if ($objp->fk_facture > 0) {
+		print "<td align=left>";
+		if ($objp->fk_facture > 0 && $user->rights->facture->lire) {
 			$facturestatic = new Facture($db);
 			$facturestatic->fetch($objp->fk_facture);
 			print $facturestatic->getNomUrl(1);
 		}
 		print '</td>';
 		print "<td colspan=5>&nbsp;</td>";
-		
-		print "</tr>\n";
+
+		print "</tr>\n";*/
 		$i ++;
 	}
-	
-	print "<tr class='liste_total'>";
+
+	/*print "<tr class='liste_total'>";
 	// to do : after test made it hidden
-	print "<th class='liste_total' colspan=4><input type=hidden size=50 name=idlist value='" . $idlist . "'></th>";
+	print "<th class='liste_total' colspan='2' align=left ><input type=hidden size=50 name=idlist value='" . $idlist . "'>";
+	print "</th>";
 	print "<th class='liste_total' align=left>";
 	print '<input type=checkbox name="chk_entrepot">';
-	select_entrepot($update_entrepot, 'update_entrepot', 1, 1);
+	select_entrepot($update_entrepot, 'update_entrepot', 1, 1, 0, 1);
 	print "</th>";
-	
+
 	print "<th align=right colspan=4>";
 	print '<input type=checkbox name="chk_etatequipement">';
 	print select_equipement_etat($update_etatequipement, 'update_etatequipement', 1, 1);
-	
+
 	print "</th>";
 	print "<th class='liste_total'  align=right>";
 	print '<select class="flat" name="update_statut">';
@@ -402,46 +405,44 @@ if ($result) {
 	print '<option value="1">' . $equipementstatic->LibStatut(1) . '</option>';
 	print '<option value="2">' . $equipementstatic->LibStatut(2) . '</option>';
 	print '</select>';
-	
+
 	print "</th>";
-	print "</tr>\n";
-	print "<tr class='liste_total'>";
-	print "<th class='liste_total' colspan=2 align=left><label id='showreflist'> " . img_printer() . $langs->trans("ShowRefEquipement") . "</label></td>";
-	print "<th class='liste_total' colspan=8 align=right>";
+	print "<th class='liste_total' align=right>";
 	print "<input type=submit name='updatecheck' value='" . $langs->trans("Update") . "'>";
 	print "</th>";
-	print "</tr>\n";
-	
+	print "</tr>\n";*/
+
 	// print '<tr class="liste_total"><td colspan="7" class="liste_total">'.$langs->trans("Total").'</td>';
 	// print '<td align="right" nowrap="nowrap" class="liste_total">'.$i.'</td><td>&nbsp;</td>';
 	// print '</tr>';
-	
+
 	print '</table>';
-	print '<textarea cols="80" id="reflist" style="display:none;" rows="' . ROWS_6 . '">' . $reflist . '</textarea>';
+	// dol_fiche_end();
+	print "<label id='showreflist'> " . img_picto("", "edit_add") . "&nbsp;" . $langs->trans("ShowRefEquipement") . "</label>";
+	print '<br><textarea cols="80" id="reflist" style="display:none;" rows="' . ROWS_6 . '">' . $reflist . '</textarea>';
 	print "</form>\n";
 	$db->free($result);
 } else {
 	dol_print_error($db);
 }
 
-$db->close();
-
 llxFooter();
+$db->close();
 ?>
 <script>
 $(document).ready(function() {
-	$('#showreflist').click(function() {  //on click 
+	$('#showreflist').click(function() {  //on click
 		$('#reflist').toggle();
-	});	
-		
-	$('#dochkall').click(function(event) {  //on click 
+	});
+
+	$('#dochkall').click(function(event) {  //on click
 		if(this.checked) { // check select status
 			$('.chkall').each(function() { //loop through each checkbox
-				this.checked = true;  
+				this.checked = true;
 			});
 		}else{
 			$('.chkall').each(function() { //loop through each checkbox
-				this.checked = false; 
+				this.checked = false;
 			});
 		}
 	});

@@ -87,7 +87,7 @@ include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_pre_headers.tpl.php
 
 $form = new Form($db);
 
-llxHeader("", "", $langs->trans("InterventionCard"));
+llxHeader("", "", $langs->trans("EquipementCard"));
 
 if ($object->id) {
 	$object->fetch_thirdparty();
@@ -113,7 +113,7 @@ if ($object->id) {
 		if (! file_exists($tempDir . DIRECTORY_SEPARATOR . 'thumbs'))
 			mkdir($tempDir . DIRECTORY_SEPARATOR . 'thumbs');
 		
-		$codeContents = '<a href="' . DOL_URL_ROOT . '/equipement/fiche.php?id=' . $object->id . '">';
+		$codeContents = '<a href="fiche.php?id=' . $object->id . '">';
 		
 		// generating
 		QRcode::png($codeContents, $tempDir . '/' . $object->ref . '.png', QR_ECLEVEL_L, 2);

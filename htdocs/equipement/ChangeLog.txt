@@ -59,3 +59,21 @@
 	- fix : some little bug on list
 	- Add : number of event in badge on tabs
 	- fix : postgres sql compatibility correction
+
+3.9.+2.0.0 (2016-04)
+	- fix : update fields don't hide bottom page button
+	- add : use of ajax search box (wait 3.9.1 patch)
+	- add : stock movement enabled
+	- add : stock movement checkbox near warehouse dropdownbox
+	- add : introduce batch serial for lot
+	- add : badge number on note
+
+3.9.+2.0.1 (2016-05)
+	- fix : extrafields date use tpl > 3.7
+	- chg : new rouget model document more rows
+	- fix : export problems (. left)
+	- fix : equipement association better managed on expedition
+	- add : list of customer who have equipement in product tabs
+	- add : predefined event feature on product tabs
+	- fix : abbes little return
+	- fix : bad url event on index page

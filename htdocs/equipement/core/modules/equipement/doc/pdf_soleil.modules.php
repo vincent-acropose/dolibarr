@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2012-2014	Charles-Fr Benke	<charles.fr@benke.fr>
+/* Copyright (C) 2012-2016	Charlie Benke	<charlie@patas-monkey.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,7 +65,7 @@ class pdf_soleil extends ModeleEquipement
 		
 		$this->db = $db;
 		$this->name = 'soleil';
-		$this->description = $langs->trans("DocumentModelStandard");
+		$this->description = $langs->trans("DocumentEquipementModelStandard");
 		
 		// Dimension page pour format A4
 		$this->type = 'pdf';
@@ -93,7 +93,7 @@ class pdf_soleil extends ModeleEquipement
 		$this->emetteur = $mysoc;
 		if (! $this->emetteur->code_pays)
 			$this->emetteur->code_pays = substr($langs->defaultlang, - 2); // By default, if not defined
-				                                                                                             
+				                                                               
 		// Defini position des colonnes
 		$this->posxdesc = $this->marge_gauche + 1;
 	}
@@ -118,7 +118,7 @@ class pdf_soleil extends ModeleEquipement
 		$outputlangs->load("main");
 		$outputlangs->load("dict");
 		$outputlangs->load("companies");
-		$outputlangs->load("equipement");
+		$outputlangs->load("equipement@equipement");
 		
 		if ($conf->equipement->dir_output) {
 			$object->fetch_thirdparty();
@@ -265,7 +265,7 @@ class pdf_soleil extends ModeleEquipement
 						$nexY += (dol_nboflines_bis($objectligne->desc, 0, $outputlangs->charset_output) * $stringheight);
 						
 						$nexY += 2; // Passe espace entre les lignes
-						          
+						            
 						// Cherche nombre de lignes a venir pour savoir si place suffisante
 						if ($i < ($nblines - 1) && empty($hidedesc)) // If it's not last line
 {

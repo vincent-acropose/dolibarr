@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2012-2015	Charlie BENKE <charlie@patas-monkey.com>
+/* Copyright (C) 2012-2016	Charlie BENKE <charlie@patas-monkey.com>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
@@ -21,10 +21,11 @@
  */
 include_once (DOL_DOCUMENT_ROOT . "/core/boxes/modules_boxes.php");
 require_once (DOL_DOCUMENT_ROOT . "/core/lib/date.lib.php");
+dol_include_once("/equipement/class/equipement.class.php");
 class box_equipement extends ModeleBoxes
 {
 	var $boxcode = "equipement";
-	var $boximg = "equipement@equipement";
+	var $boximg = "object_equipement@equipement";
 	var $boxlabel;
 	var $db;
 	var $param;
@@ -50,7 +51,6 @@ class box_equipement extends ModeleBoxes
 		
 		$this->max = $max;
 		
-		include_once (DOL_DOCUMENT_ROOT . "/equipement/class/equipement.class.php");
 		$equipement_static = new Equipement($db);
 		
 		$this->info_box_head = array (
@@ -88,18 +88,17 @@ class box_equipement extends ModeleBoxes
 					$this->info_box_contents[$i][1] = array (
 							'td' => 'align="left"',
 							'text' => $equipement_static->getNomUrl(1),
-							'url' => DOL_URL_ROOT . "/equipement/card.php?id=" . $objp->rowid 
+							'url' => dol_buildpath("/equipement/card.php?id=" . $objp->rowid, 1) 
 					);
 					
 					$this->info_box_contents[$i][2] = array (
 							'td' => 'align="right"',
 							'text' => $objp->refproduit . " - " . dol_trunc($objp->label, 32) 
-					)
-					;
+					);
 					
 					$this->info_box_contents[$i][3] = array (
 							'td' => 'align="right"',
-							'text' => $langs->trans($objp->etatequipement) 
+							'text' => ($objp->etatequipement ? $langs->trans($objp->etatequipement) : "") 
 					);
 					$this->info_box_contents[$i][4] = array (
 							'td' => 'align="right" width="18"',

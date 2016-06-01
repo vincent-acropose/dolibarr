@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2015	  Charlie BENKE	 <charlie@patas-monkey.com>
+/* Copyright (C) 2015-2016	  Charlie BENKE	 <charlie@patas-monkey.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -10,12 +10,12 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /**
+ * equipement
  * \file htdocs/equipement/admin/changelog.php
  * \ingroup factory
  * \brief about page
@@ -27,12 +27,12 @@ if (! $res && file_exists("../../main.inc.php"))
 	$res = @include ("../../main.inc.php"); // For root directory
 if (! $res && file_exists("../../../main.inc.php"))
 	$res = @include ("../../../main.inc.php"); // For "custom" directory
-		                                                                                            
+		                                           
 // Libraries
-require_once ("../core/lib/equipement.lib.php");
+dol_include_once("/equipement/core/lib/equipement.lib.php");
 
 // Translations
-$langs->load("factory@factory");
+$langs->load("equipement@equipement");
 
 // Access control
 if (! $user->admin)

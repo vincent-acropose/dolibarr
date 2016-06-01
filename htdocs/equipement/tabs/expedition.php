@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2012-2014	Charles.fr BENKE	<charles.fr@benke.fr>
+/* Copyright (C) 2012-2016	Charlie BENKE	<charlie@patas-monkey.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ require_once (DOL_DOCUMENT_ROOT . "/core/lib/date.lib.php");
 require_once (DOL_DOCUMENT_ROOT . "/core/lib/fichinter.lib.php");
 require_once (DOL_DOCUMENT_ROOT . "/core/lib/sendings.lib.php");
 require_once (DOL_DOCUMENT_ROOT . "/core/class/html.formfile.class.php");
+
 dol_include_once('/equipement/class/equipement.class.php');
 dol_include_once('/equipement/core/lib/equipement.lib.php');
 
@@ -125,6 +126,8 @@ llxHeader();
 
 $object = new Expedition($db);
 $result = $object->fetch($id, $ref);
+if (! $id)
+	$id = $object->id;
 $object->fetch_thirdparty();
 
 $head = shipping_prepare_head($object);
@@ -336,8 +339,8 @@ if ($result) {
 		}
 		print '</td>';
 		
-		print '<td align="right">' . (!empty($objp->etatequiplibelle)?$langs->trans($objp->etatequiplibelle):$langs->trans('None')) . '</td>';
-		print '<td align="right">' . (!empty($objp->equipevttypelibelle)?$langs->trans($objp->equipevttypelibelle):$langs->trans('None')) . '</td>';
+		print '<td align="right">' . (! empty($objp->etatequiplibelle) ? $langs->trans($objp->etatequiplibelle) : $langs->trans('None')) . '</td>';
+		print '<td align="right">' . (! empty($objp->equipevttypelibelle) ? $langs->trans($objp->equipevttypelibelle) : $langs->trans('None')) . '</td>';
 		print '<td align="right">';
 		// si l'équipement a été envoyé, il n'est plus possible de le supprimer par cette écran
 		if ($objp->fk_entrepot > 0) {
@@ -366,7 +369,5 @@ if ($result) {
 	dol_print_error($db);
 }
 
-$db->close();
-
 llxFooter();
-?>
+$db->close();

@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2012-2015	Charlie Benke		<charlie@patas-monkey.com>
+/* Copyright (C) 2012-2016	Charlie Benke		<charlie@patas-monkey.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -104,12 +104,22 @@ function equipement_prepare_head($object) {
 		$h ++;
 	}
 	
+	$head[$h][0] = dol_buildpath('/equipement/contact.php', 1) . '?id=' . $object->id;
+	$head[$h][1] = $langs->trans('Contact');
+	$head[$h][2] = 'contact';
+	$h ++;
+	
 	// Show more tabs from modules
 	complete_head_from_modules($conf, $langs, $object, $head, $h, 'equipement');
 	
 	if (empty($conf->global->MAIN_DISABLE_NOTES_TAB)) {
+		
 		$head[$h][0] = dol_buildpath('/equipement/note.php', 1) . '?id=' . $object->id;
 		$head[$h][1] = $langs->trans('Notes');
+		$nbNotes = ($object->note_private ? 1 : 0);
+		$nbNotes = $nbNotes + ($object->note_public ? 1 : 0);
+		if ($nbNotes > 0)
+			$head[$h][1] .= ' <span class="badge">' . $nbNotes . '</span>';
 		$head[$h][2] = 'note';
 		$h ++;
 	}
@@ -117,7 +127,7 @@ function equipement_prepare_head($object) {
 	require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
 	$upload_dir = $conf->equipement->dir_output . '/' . dol_sanitizeFileName($object->ref);
 	$nbFiles = count(dol_dir_list($upload_dir, 'files'));
-	$head[$h][0] = DOL_URL_ROOT . '/equipement/document.php?id=' . $object->id;
+	$head[$h][0] = dol_buildpath('/equipement/document.php?id=' . $object->id, 1);
 	$head[$h][1] = $langs->trans("Documents");
 	if ($nbFiles > 0)
 		$head[$h][1] .= ' <span class="badge">' . $nbFiles . '</span>';
@@ -178,6 +188,40 @@ function equipement_entrepot_prepare_head($object) {
 	return $head;
 }
 
+/**
+ * Prepare array with list of tabs
+ *
+ * @param Object $object Object related to tabs
+ * @return array Array of tabs to shoc
+ */
+function equipement_product_prepare_head($object) {
+	global $langs, $conf, $user;
+	$langs->load("equipement@equipement");
+	
+	$h = 0;
+	$head = array ();
+	
+	$head[$h][0] = dol_buildpath('/equipement/tabs/produit.php', 1) . '?id=' . $object->id;
+	$head[$h][1] = $langs->trans("ListOfEquipements");
+	$head[$h][2] = 'equipement';
+	$h ++;
+	
+	$head[$h][0] = dol_buildpath('/equipement/tabs/produitsociete.php', 1) . '?id=' . $object->id;
+	$head[$h][1] = $langs->trans("ProductSociete");
+	$head[$h][2] = 'societe';
+	$h ++;
+	
+	$head[$h][0] = dol_buildpath('/equipement/tabs/predefevent.php', 1) . '?id=' . $object->id;
+	$head[$h][1] = $langs->trans("PrefinedEvent");
+	$head[$h][2] = 'event';
+	$h ++;
+	
+	// Show more tabs from modules
+	complete_head_from_modules($conf, $langs, $object, $head, $h, 'equipementproduit');
+	
+	return $head;
+}
+
 // /**
 // * Return list of entrepot (for the stock
 // *
@@ -187,7 +231,7 @@ function equipement_entrepot_prepare_head($object) {
 // * @param int $hidetext Do not show label before combo box
 // * @return void
 // */
-function select_entrepot($selected = '', $htmlname = 'entrepotid', $showempty = 0, $hidetext = 0, $size = 0) {
+function select_entrepot($selected = '', $htmlname = 'entrepotid', $showempty = 0, $hidetext = 0, $size = 0, $addchkbox = 1) {
 	global $db, $langs, $user, $conf;
 	
 	if (empty($hidetext))
@@ -225,9 +269,15 @@ function select_entrepot($selected = '', $htmlname = 'entrepotid', $showempty = 
 				$i ++;
 			}
 			print '</select>';
+			if ($addchkbox) {
+				if ($conf->global->EQUIPEMENT_CHKBOXSTOCKMVTON == "1")
+					$checked = "checked";
+				print '&nbsp;&nbsp;<input type="checkbox" name="' . $htmlname . 'move" ' . $checked . ' value=1>&nbsp;' . $langs->trans("CreateStockMovement");
+			}
 		} else {
 			// si pas de liste, on positionne un hidden é vide
 			print '<input type="hidden" name="' . $htmlname . '" value=-1>';
+			print '<input type="hidden" name="' . $htmlname . 'move" value=-1>';
 		}
 	}
 }
@@ -325,7 +375,7 @@ function select_contracts($selected = '', $filtersoc = '', $htmlname = 'contrati
 			}
 			print '</select>';
 		} else {
-			print '<input type="hidden" name="'.$htmlname.'" value="'.$selected.'"/>';
+			print '<input type="hidden" name="' . $htmlname . '" value="' . $selected . '"/>';
 			print $langs->trans("NoContractsFind");
 		}
 	}
@@ -378,7 +428,7 @@ function select_interventions($selected = '', $filtersoc = '0', $htmlname = 'fic
 			}
 			print '</select>';
 		} else {
-			print '<input type="hidden" name="'.$htmlname.'" value="'.$selected.'"/>';
+			print '<input type="hidden" name="' . $htmlname . '" value="' . $selected . '"/>';
 			print $langs->trans("NoFichintersFind");
 		}
 	}
@@ -435,7 +485,7 @@ function select_produitEntrepot($selected = '', $fk_entrepot, $htmlname = 'fk_pr
 		}
 	}
 }
-function select_expeditions($selected = '0', $filtersoc = '0', $htmlname = 'expeditionid', $showempty = 0, $hidetext = 0) {
+function select_expeditions($selected = '0', $filtersoc = '0', $htmlname = 'expeditionid', $showempty = 0, $hidetext = 0, $allexpedition = 0) {
 	global $db, $langs, $user, $conf;
 	
 	if (empty($hidetext))
@@ -445,7 +495,7 @@ function select_expeditions($selected = '0', $filtersoc = '0', $htmlname = 'expe
 	$sql = "SELECT rowid, ref, fk_soc, tracking_number, date_expedition";
 	$sql .= " FROM " . MAIN_DB_PREFIX . "expedition";
 	// on ajoute des équipements que sur les expéditions en préparation
-	$sql .= " WHERE fk_statut =0";
+	$sql .= " WHERE fk_statut <> 2";
 	if ($filtersoc) {
 		$sql .= " and ( fk_soc=" . $filtersoc;
 		if ($selected)
@@ -479,7 +529,7 @@ function select_expeditions($selected = '0', $filtersoc = '0', $htmlname = 'expe
 			}
 			print '</select>';
 		} else {
-			print '<input type="hidden" name="'.$htmlname.'" value="'.$selected.'"/>';
+			print '<input type="hidden" name="' . $htmlname . '" value="' . $selected . '"/>';
 			print $langs->trans("NoExpeditionsFind");
 		}
 	}
@@ -665,7 +715,7 @@ function select_equipementevt_type($selected = '', $htmlname = 'fk_equipementevt
 			print '</select>';
 		} else {
 			// si pas de liste, on positionne un hidden é vide
-			print '<input type="hidden" name="' . $htmlname . '" value=-1>';
+			print '<input type="hidden" name="' . $htmlname . '" value="-1">';
 		}
 	}
 }

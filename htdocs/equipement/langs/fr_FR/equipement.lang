@@ -8,7 +8,11 @@ EquipementEtatRepart=Répartition des états des équipements
 EquipementEvtTypeRepart=Répartition par type d'évènements
 EquipementCard=Fiche équipement
 NewEquipement=Nouvel équipement
+AddEquipementSelectProduct=Créer équipement - Sélection du produit
+AddEquipementSelectBatchLot=Créer équipement - Sélection du Batch/Lot
 AddEquipement=Créer équipement
+DocumentEquipementModelStandard=Modèle de document standard de l'équipement
+ValidExpedition=Valider l'expédition de l'équipement
 ListOfEquipements=Liste des équipements
 ListOfEquipEvents=Liste des évènements
 EditEquipement=Editer
@@ -108,6 +112,17 @@ ListEquipementToAddEvents=Equipements associés à l'événement
 ShowRefEquipement=Récupérer la liste des équipements
 CompanyClientFactCli=Client / Fact. Client
 FournisseurFactFourn=Fournisseur / Fact. Fourn.
+CheckboxStockMovementDefaultChecked=Le mouvement de stock est par défaut coché
+CreateStockMovement=Créer le mouvement de stock correspondant
+EquipementMoveIn=Mouvement entrant d'équipement
+EquipementMoveOut=Mouvement sortant d'équipement
+
+###Batch/Lot
+NoSelectBatchLot=Ne pas sélectionner de Lot
+BatchLabel=Numéro de batch/lot
+DateEatBy=Date limite de consommation
+DateSellBy=	Date de péremption
+DateEndSelected= Date de fin choisie
 
 # BOXES
 LastEquipement=Les %s derniers équipements modifiés
@@ -162,6 +177,10 @@ ShowAdditionnalInfoSelling=Afficher des infos supplémentaire de l'équipement l
 FournishOptions=Paramètres numéros de séries fournisseurs
 GetEquipmentFromShipping=Ajouter les équipements de l'expédition
 FillInvoiceFromEquipment=Ajouter les équipements sur le détail de la facture
+AssociatedEquipement=Equipements Associés
+ProductSociete=Clients Possesseurs
+AssociatedEquipement=Clients Associés
+
 ##Export Addin
 DateOpen=Date début
 FullDayEvent=Jour entier
@@ -183,3 +202,5 @@ EntrepotAdd=Placer dans l'entrepôt
 EntrepotMoveOut=Transfert depuis l'entrepôt
 EntrepotMovein=Réceptionner
 EntrepotMoveList=Historique des mouvements
+
+SelAll=Sel. tous
