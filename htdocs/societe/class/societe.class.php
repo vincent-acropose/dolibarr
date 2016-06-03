@@ -989,7 +989,7 @@ class Societe extends CommonObject
         $sql .= ', s.fk_forme_juridique as forme_juridique_code';
         $sql .= ', s.webservices_url, s.webservices_key';
         $sql .= ', s.code_client, s.code_fournisseur, s.code_compta, s.code_compta_fournisseur, s.parent, s.barcode';
-        $sql .= ', s.fk_departement, s.fk_pays as country_id, s.fk_stcomm, s.remise_client, s.mode_reglement, s.cond_reglement, s.tva_assuj';
+        $sql .= ', s.fk_departement, s.fk_pays as country_id, s.fk_stcomm, s.remise_client, s.mode_reglement, s.cond_reglement, s.fk_account, s.tva_assuj';
         $sql .= ', s.mode_reglement_supplier, s.cond_reglement_supplier, s.localtax1_assuj, s.localtax1_value, s.localtax2_assuj, s.localtax2_value, s.fk_prospectlevel, s.default_lang, s.logo';
         $sql .= ', s.outstanding_limit, s.import_key, s.canvas, s.fk_incoterms, s.location_incoterms';
         $sql .= ', fj.libelle as forme_juridique';
@@ -1116,6 +1116,7 @@ class Societe extends CommonObject
                 $this->cond_reglement_id 	= $obj->cond_reglement;
                 $this->mode_reglement_supplier_id 	= $obj->mode_reglement_supplier;
                 $this->cond_reglement_supplier_id 	= $obj->cond_reglement_supplier;
+		$this->fk_account			= $obj->fk_account;
 
                 $this->client      = $obj->client;
                 $this->fournisseur = $obj->fournisseur;

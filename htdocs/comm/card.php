@@ -46,6 +46,8 @@ if (! empty($conf->adherent->enabled)) require_once DOL_DOCUMENT_ROOT.'/adherent
 if (! empty($conf->ficheinter->enabled)) require_once DOL_DOCUMENT_ROOT.'/fichinter/class/fichinter.class.php';
 
 $langs->load("companies");
+$langs->load('banks');
+
 if (! empty($conf->contrat->enabled))  $langs->load("contracts");
 if (! empty($conf->commande->enabled)) $langs->load("orders");
 if (! empty($conf->expedition->enabled)) $langs->load("sendings");
@@ -121,6 +123,14 @@ if (empty($reshook))
 	{
 		$object->fetch($id);
 		$result=$object->setPaymentMethods(GETPOST('mode_reglement_id','int'));
+		if ($result < 0) setEventMessages($object->error, $object->errors, 'errors');
+	}
+
+	// Bank account
+	if ($action == 'setbankaccount' && $user->rights->societe->creer)
+	{
+		$object->fetch($id);
+		$result=$object->setBankAccount(GETPOST('fk_account','int'));
 		if ($result < 0) setEventMessages($object->error, $object->errors, 'errors');
 	}
 
@@ -333,6 +343,26 @@ if ($id > 0)
 	}
 	print "</td>";
 	print '</tr>';
+
+	// Compte bancaire par défaut
+	print '<tr><td class="nowrap">';
+	print '<table width="100%" class="nobordernopadding"><tr><td class="nowrap">';
+	print $langs->trans('BankAccount');
+	print '<td>';
+	if (($action != 'editbankaccount') && $user->rights->societe->creer) print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=editbankaccount&amp;socid='.$object->id.'">'.img_edit($langs->trans('SetBankAccount'),1).'</a></td>';
+	print '</tr></table>';
+	print '</td><td colspan="3">';
+	if ($action == 'editbankaccount')
+	{
+		$form->formSelectAccount($_SERVER['PHP_SELF'].'?socid='.$object->id,$object->fk_account,'fk_account',1);
+	}
+	else
+	{
+		$form->formSelectAccount($_SERVER['PHP_SELF'].'?socid='.$object->id,$object->fk_account,'none');
+	}
+	print "</td>";
+	print '</tr>';
+
 
 	// Relative discounts (Discounts-Drawbacks-Rebates)
 	print '<tr><td class="nowrap">';
