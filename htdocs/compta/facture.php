@@ -1954,7 +1954,7 @@ if ($action == 'create')
 		$dateinvoice		= (empty($dateinvoice)?(empty($conf->global->MAIN_AUTOFILL_DATE)?-1:''):$dateinvoice);		// Do not set 0 here (0 for a date is 1970)
 	}
 
-	$absolute_discount = $soc->getAvailableDiscounts();
+	if(!empty($soc->id)) $absolute_discount = $soc->getAvailableDiscounts();
 
 	if (! empty($conf->use_javascript_ajax))
 	{
@@ -2563,8 +2563,8 @@ else if ($id > 0 || ! empty($ref))
 		$filterabsolutediscount = "fk_facture_source IS NULL"; // If we want deposit to be substracted to payments only and not to total of final invoice
 		$filtercreditnote = "fk_facture_source IS NOT NULL"; // If we want deposit to be substracted to payments only and not to total of final invoice
 	} else {
-		$filterabsolutediscount = "fk_facture_source IS NULL OR (fk_facture_source IS NOT NULL AND description='(DEPOSIT)')";
-		$filtercreditnote = "fk_facture_source IS NOT NULL AND description <> '(DEPOSIT)'";
+		$filterabsolutediscount = "fk_facture_source IS NULL OR (fk_facture_source IS NOT NULL AND description LIKE '(DEPOSIT)%')";
+		$filtercreditnote = "fk_facture_source IS NOT NULL AND description NOT LIKE '(DEPOSIT)%'";
 	}
 
 	$absolute_discount = $soc->getAvailableDiscounts('', $filterabsolutediscount);
@@ -2982,9 +2982,9 @@ else if ($id > 0 || ! empty($ref))
 			// Remise dispo de type avoir
 			if (! $absolute_discount)
 				print '<br>';
-				// $form->form_remise_dispo($_SERVER["PHP_SELF"].'?facid='.$object->id, 0, 'remise_id_for_payment', $soc->id, $absolute_creditnote,
-			// $filtercreditnote, $resteapayer);
-			$form->form_remise_dispo($_SERVER["PHP_SELF"] . '?facid=' . $object->id, 0, 'remise_id_for_payment', $soc->id, $absolute_creditnote, $filtercreditnote, 0); // We allow credit note even if amount is higher
+			// $form->form_remise_dispo($_SERVER["PHP_SELF"].'?facid='.$object->id, 0, 'remise_id_for_payment', $soc->id, $absolute_creditnote, $filtercreditnote, $resteapayer		
+			$more=' ('.$addcreditnote.')';
+			$form->form_remise_dispo($_SERVER["PHP_SELF"] . '?facid=' . $object->id, 0, 'remise_id_for_payment', $soc->id, $absolute_creditnote, $filtercreditnote, 0, $more); // We allow credit note even if amount is higher
 		}
 	}
 	if (! $absolute_discount && ! $absolute_creditnote) {
