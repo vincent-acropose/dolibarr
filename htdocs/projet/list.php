@@ -229,7 +229,7 @@ if ($resql)
 	if ($search_public != '') 		$param.='&search_public='.$search_public;
 	if ($search_user > 0)    		$param.='&search_user='.$search_user;
 	if ($search_sale > 0)    		$param.='&search_sale='.$search_sale;
-
+	if($search_avancee !='')			$param.='&search_avancee='.$search_avancee;
 
 	$text=$langs->trans("Projects");
 	if ($mine) $text=$langs->trans('MyProjects');
