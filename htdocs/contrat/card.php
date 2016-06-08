@@ -610,6 +610,12 @@ else if ($action == 'addline' && $user->rights->contrat->creer)
     }
 }
 
+else if ($action == 'updateligne' && $user->rights->contrat->creer && GETPOST('cancel'))
+{
+	header('Location: '.$_SERVER['PHP_SELF'].'?id='.$object->id);
+	exit;
+}
+
 else if ($action == 'updateligne' && $user->rights->contrat->creer && ! GETPOST('cancel'))
 {
     $objectline = new ContratLigne($db);
@@ -666,6 +672,8 @@ else if ($action == 'updateligne' && $user->rights->contrat->creer && ! GETPOST(
         if ($result > 0)
         {
             $db->commit();
+			header('Location: '.$_SERVER['PHP_SELF'].'?id='.$object->id);
+			exit;
         }
         else
         {
