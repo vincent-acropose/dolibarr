@@ -1481,11 +1481,13 @@ else
 
                     //Display lines extrafields
                     if (is_array($extralabelslines) && count($extralabelslines)>0) {
-                    	print '<tr '.$bc[$var].'>';
+                    	//print '<tr '.$bc[$var].'>';
                     	$line = new ContratLigne($db);
                     	$line->fetch_optionals($objp->rowid,$extralabelslines);
-                    	print $line->showOptionals($extrafieldsline, 'view', array('style'=>$bc[$var], 'colspan'=>$colspan));
-                    	print '</tr>';
+						//print $line->showOptionals($extrafieldsline, 'view', array('style'=>$bc[$var], 'colspan'=>$colspan));
+                    	dol_include_once('/clibip/lib/clibip.lib.php');
+						print cliBipShowOptionals($line, $extrafieldsline,'view',array('style'=>$bc[$var],'colspan'=>$colspan));
+                    	//print '</tr>';
                     }
                 }
                 // Ligne en mode update
