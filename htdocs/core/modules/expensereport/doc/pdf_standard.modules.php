@@ -319,6 +319,11 @@ class pdf_standard extends ModeleExpenseReport
 					$pdf->setPage($pageposbefore);
 					$pdf->setTopMargin($this->marge_haute);
 					$pdf->setPageOrientation('', 1, 0);	// The only function to edit the bottom margin of current page to set it.
+					
+					// Comments
+                    $pdf->SetFont('','', $default_font_size - 1);
+                    $pdf->SetXY($this->posxcomment, $curY);
+                    $pdf->writeHTMLCell($this->posxdate-$this->posxdesc-1, 3, $this->posxdesc-1, $curY, $object->lines[$i]->comments, 0, 1);
 
                                         // Comments
                                         $pdf->SetFont('','', $default_font_size - 1);
