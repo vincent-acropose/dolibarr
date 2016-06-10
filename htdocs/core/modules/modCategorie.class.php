@@ -356,8 +356,8 @@ class modCategorie extends DolibarrModules
         // End add axtra fields
         
 		$this->export_sql_start[$r] = 'SELECT DISTINCT ';
-		$this->export_sql_end[$r]  = ' FROM '.MAIN_DB_PREFIX.'socpeople_extrafields extra';
-		$this->export_sql_end[$r] .= ' LEFT JOIN '.MAIN_DB_PREFIX . 'socpeople as p ON (extra.fk_object = p.rowid)';
+		$this->export_sql_end[$r]  = ' FROM '.MAIN_DB_PREFIX.'socpeople as p';
+		$this->export_sql_end[$r] .= ' LEFT JOIN '.MAIN_DB_PREFIX . 'socpeople_extrafields as extra ON (extra.fk_object = p.rowid)';
 		$this->export_sql_end[$r] .= ' LEFT JOIN '.MAIN_DB_PREFIX . 'categorie_contact as cp ON (cp.fk_socpeople = p.rowid)';
 		$this->export_sql_end[$r] .= ' LEFT JOIN ' . MAIN_DB_PREFIX . 'categorie as u ON (u.rowid = cp.fk_categorie)';
 		$this->export_sql_end[$r] .= ' LEFT JOIN ' . MAIN_DB_PREFIX . 'c_pays as country ON (p.fk_pays = country.rowid)';
