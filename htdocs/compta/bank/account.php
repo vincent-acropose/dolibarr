@@ -573,7 +573,7 @@ if ($id > 0 || ! empty($ref))
 	 * select sum(amount) from solde ;
      */
 
-	$sql = "SELECT fac.fk_user_author as id_user_fac, fac_fourn.fk_user_author as id_user_fac_fourn, b.rowid, b.dateo as do, b.datev as dv,";
+	$sql = "SELECT  DISTINCT fac.fk_user_author as id_user_fac, fac_fourn.fk_user_author as id_user_fac_fourn, b.rowid, b.dateo as do, b.datev as dv,";
 	$sql.= " b.amount, b.label, b.rappro, b.num_releve, b.num_chq, b.fk_type, b.fk_bordereau,";
 	$sql.= " ba.rowid as bankid, ba.ref as bankref, ba.label as banklabel";
 	if ($mode_search)
@@ -631,7 +631,7 @@ if ($id > 0 || ! empty($ref))
 	// Si le partage des compte bancaire est activé dans multicompany, on ne limite pas la recherche des comptes à l'entité dans laquelle on se trouve (Ticket 1573)
 	if(!$conf->global->MULTICOMPANY_BANK_ACCOUNT_SHARING_ENABLED) $sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
 	
-	$sql.= $sql_rech;
+	$sql.= $sql_rech.' GROUP BY b.rowid ';
 	$sql.= $db->order("b.datev, b.datec", "ASC");  // We add date of creation to have correct order when everything is done the same day
 	$sql.= $db->plimit($limitsql, 0);
 
@@ -651,7 +651,6 @@ if ($id > 0 || ! empty($ref))
 		$i = 0; $total = 0; $sep = -1; $total_deb=0; $total_cred=0;
 		
 		$u = new User($db);
-		
 		while ($i < $num)
 		{
 			$objp = $db->fetch_object($result);
