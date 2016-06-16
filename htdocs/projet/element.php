@@ -95,6 +95,8 @@ if ($user->societe_id > 0) $socid=$user->societe_id;
 $result = restrictedArea($user, 'projet', $projectid);
 
 
+$hookmanager->initHooks(array('projectOverview'));
+
 /*
  *	View
  */
@@ -288,6 +290,14 @@ $listofreferent=array(
 	'test'=>$conf->projet->enabled && $user->rights->projet->lire && $conf->salaries->enabled),
 );
 
+
+$parameters=array('listofreferent'=>$listofreferent);
+$resHook = $hookmanager->executeHooks('completeListOfReferent',$parameters,$object,$action);
+if(!empty($hookmanager->resArray)) {
+	$listofreferent = array_merge($listofreferent, $hookmanager->resArray);	
+}
+
+
 if ($action=="addelement")
 {
 	$tablename = GETPOST("tablename");
@@ -389,7 +399,7 @@ foreach ($listofreferent as $key => $value)
 				$element->fetch($idofelement);
 				if ($idofelementuser) $elementuser->fetch($idofelementuser);
 
-				if ($tablename != 'expensereport_det') $element->fetch_thirdparty();
+				if ($tablename != 'expensereport_det' && method_exists($element, 'fetch_thirdparty')) $element->fetch_thirdparty();
 
 				if ($tablename == 'don') $total_ht_by_line=$element->amount;
 				elseif ($tablename == 'projet_task')
@@ -600,7 +610,7 @@ foreach ($listofreferent as $key => $value)
 
 				if ($tablename != 'expensereport_det')
 				{
-					$element->fetch_thirdparty();
+					if(method_exists($element, 'fetch_thirdparty')) $element->fetch_thirdparty();
 				}
 				else
 				{
