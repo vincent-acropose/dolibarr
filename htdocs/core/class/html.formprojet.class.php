@@ -440,7 +440,7 @@ class FormProjets
 		if ($table_element == 'projet_task') return '';		// Special cas of element we never link to a project (already always done)
 
 		$linkedtothirdparty=false;
-		if (! in_array($table_element, array('don','expensereport_det','expensereport'))) $linkedtothirdparty=true;
+		if (! in_array($table_element, array('don','expensereport_det','expensereport','ndfp_det'))) $linkedtothirdparty=true;
 
 		$sqlfilter='';
 		$projectkey="fk_projet";
@@ -474,17 +474,27 @@ class FormProjets
 			case "fichinter":
 			    $sql = "SELECT t.rowid, t.ref";
 			    break;
+			case "ndfp_det":
+			    $sql = "SELECT t.rowid, n.ref";
+			    break;
 			default:
 				$sql = "SELECT t.rowid, t.ref";
 				break;
 		}
 		if ($linkedtothirdparty) $sql.=", s.nom as name";
 		$sql.= " FROM ".MAIN_DB_PREFIX.$table_element." as t";
-		if ($linkedtothirdparty) $sql.=", ".MAIN_DB_PREFIX."societe as s";
+		
+		if ($linkedtothirdparty) {
+			$sql.=" INNER JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = t.fk_soc";
+		} 
+		
+		if ($table_element=='ndfp_det') {
+			$sql.=" INNER JOIN ".MAIN_DB_PREFIX."ndfp as n ON t.fk_ndfp = n.rowid";
+		}
+		
 		$sql.= " WHERE ".$projectkey." is null";
 		if (! empty($socid) && $linkedtothirdparty) $sql.= " AND t.fk_soc=".$socid;
-		if (! in_array($table_element, array('expensereport_det'))) $sql.= ' AND t.entity='.getEntity('project');
-		if ($linkedtothirdparty) $sql.=" AND s.rowid = t.fk_soc";
+		if (! in_array($table_element, array('expensereport_det','ndfp_det'))) $sql.= ' AND t.entity='.getEntity('project');
 		if ($sqlfilter) $sql.= " AND ".$sqlfilter;
 		$sql.= " ORDER BY ref DESC";
 
