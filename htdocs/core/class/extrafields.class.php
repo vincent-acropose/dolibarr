@@ -702,7 +702,7 @@ class ExtraFields
 				$sql = 'SELECT '.$keyList.', '.$InfoFieldList[1];
 				$sql.= ' FROM '.MAIN_DB_PREFIX .$InfoFieldList[0];
 				if (!empty($InfoFieldList[3])) {
-					
+
 					//We have to join on extrafield table
 					if (strpos($InfoFieldList[3], 'extra')!==false) {
 						$sql.= ' as main, '.MAIN_DB_PREFIX .$InfoFieldList[0].'_extrafields as extra';
@@ -728,7 +728,7 @@ class ExtraFields
 						while ($i < $num)
 						{
 							$obj = $this->db->fetch_object($resql);
-							$labeltoshow=dol_trunc($obj->$InfoFieldList[1],90);
+							$labeltoshow=dol_trunc($obj->{$InfoFieldList[1]},90);
 							if ($value==$obj->rowid)
 							{
 								$out.='<option value="'.$obj->rowid.'" selected="selected">'.$labeltoshow.'</option>';
