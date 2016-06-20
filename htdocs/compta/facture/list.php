@@ -219,6 +219,7 @@ if (! $sall)
     $sql.= ' f.datef, f.date_lim_reglement,';
     $sql.= ' f.paye, f.fk_statut,';
     $sql.= ' s.nom, s.rowid';
+    $sql.= ' ,contactbilling.firstname,contactbilling.lastname,contactbilling.rowid';
 }
 else
 {
@@ -369,7 +370,7 @@ if ($resql)
                 print img_warning($langs->trans('Late'));
             }
             print '</td>';
-            
+
             print '<td align="center" nowrap="1">';
             if ($objp->paye==1) {
 	            // Payments already done (from payment on this invoice)
@@ -377,7 +378,7 @@ if ($resql)
 	            $sqlpaiement.= ' FROM '.MAIN_DB_PREFIX.'c_paiement as c, '.MAIN_DB_PREFIX.'paiement_facture as pf, '.MAIN_DB_PREFIX.'paiement as p';
 	            $sqlpaiement.= ' WHERE pf.fk_facture = '.$objp->facid.' AND p.fk_paiement = c.id AND pf.fk_paiement = p.rowid';
 	            $sqlpaiement.= ' ORDER BY p.datep, p.tms';
-	            
+
 	            $dt_pay_array=array();
 	            $resqlpaiment = $db->query($sqlpaiement);
 	            if ($resqlpaiment)
@@ -400,7 +401,7 @@ if ($resql)
             $thirdparty->code_client=$objp->code_client;
             print $thirdparty->getNomUrl(1,'customer');
             print '</td>';
-            
+
             print '<td>';
             if (!empty($objp->contactblinngid)) {
 	            $contact=new Contact($db);
