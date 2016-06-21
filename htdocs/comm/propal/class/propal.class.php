@@ -1687,7 +1687,7 @@ class Propal extends CommonObject
         $this->statut = $statut;
         $error=0;
         $now=dol_now();
-        
+
         $hideref=$conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_REF;
 
         $this->db->begin();
@@ -1754,13 +1754,15 @@ class Propal extends CommonObject
             		propale_pdf_create($this->db, $this, $conf->global->PROPALE_ADDON_PDF_ODT_CLOSED?$conf->global->PROPALE_ADDON_PDF_ODT_CLOSED:$this->modelpdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
             	}
 
-                // Appel des triggers
-                include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-                $interface=new Interfaces($this->db);
-                $result=$interface->run_triggers('PROPAL_CLOSE_REFUSED',$this,$user,$langs,$conf);
-                if ($result < 0) {
-                    $error++; $this->errors=$interface->errors;
-                }
+            	if ($statut != 4) {
+	                // Appel des triggers
+	                include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+	                $interface=new Interfaces($this->db);
+	                $result=$interface->run_triggers('PROPAL_CLOSE_REFUSED',$this,$user,$langs,$conf);
+	                if ($result < 0) {
+	                    $error++; $this->errors=$interface->errors;
+	                }
+            	}
                 // Fin appel triggers
             }
 
