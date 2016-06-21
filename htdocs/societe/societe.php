@@ -316,6 +316,7 @@ if ($resql)
 	$params.= '&amp;search_zip='.$search_zip;
 	$params.= '&amp;search_adress='.$search_adress;
 	$params.= '&amp;search_phone='.$search_phone;
+	$params.= '&amp;search_sale='.$search_sale;
 	if ($search_status != '') $param.='&amp;search_status='.$search_status;
 
 	print_barre_liste($title, $page, $_SERVER["PHP_SELF"],$params,$sortfield,$sortorder,'',$num,$nbtotalofrecords);
@@ -341,8 +342,8 @@ if ($resql)
 
 	print '<form method="post" action="'.$_SERVER["PHP_SELF"].'" name="formfilter">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	
-	
+
+
 	// Filter on categories
 	$moreforfilter='';
 	if (! empty($conf->categorie->enabled))
@@ -357,10 +358,10 @@ if ($resql)
 		$moreforfilter.=$langs->trans('SalesRepresentatives'). ': ';
 		$moreforfilter.=$htmlother->select_salesrepresentatives($search_sale,'search_sale',$user);
 	}
-	
+
 	$moreforfilter.=$langs->trans('ParentCompany'). ': ';
 	$moreforfilter.=$form->select_company($search_parent,'search_parent','extra.ts_maison=1',1);
-	
+
 	$extrafields = new ExtraFields ( $db );
 	$extralabels = $extrafields->fetch_name_optionals_label ( 'societe', true );
 	if (is_array($extralabels) && key_exists('ts_logistique', $extralabels)) {
@@ -440,33 +441,33 @@ if ($resql)
 	print '<td class="liste_titre">';
 	print '<input class="flat" size="10" type="text" name="search_town" value="'.$search_town.'">';
 	print '</td>';
-	
+
 	//Address
 	print '<td class="liste_titre">';
 	print '<input class="flat" size="10" type="text" name="search_address" value="'.$search_address.'">';
 	print '</td>';
-	
+
 	//country
 	print '<td class="liste_titre">';
 	print '</td>';
-	
+
 	//Phone
 	print '<td class="liste_titre">';
 	print '<input class="flat" size="10" type="text" name="search_phone" value="'.$search_phone.'">';
 	print '</td>';
-	
+
 	//Type Ent
 	print '<td class="liste_titre">';
 	print '</td>';
-	
+
 	//Derniére prop signée
 	print '<td class="liste_titre">';
 	print '</td>';
-	
+
 	//created date
 	print '<td class="liste_titre">';
 	print '</td>';
-	
+
 	//SIRET
 	print '<td class="liste_titre">';
 	print '</td>';
@@ -499,12 +500,12 @@ if ($resql)
 	print '<option value="0"'.($search_type=='0'?' selected="selected"':'').'>'.$langs->trans('Others').'</option>';
 	print '</select></td>';
 	// Status
-	
+
 	//status
 	print '<td class="liste_titre" align="center">';
 	print $form->selectarray('search_status', array(''=>'','0'=>$langs->trans('ActivityCeased'),'1'=>$langs->trans('InActivity')),$search_status);
 	//print '</td>';
-	
+
 	//print '<td class="liste_titre" align="right">';
 	print '<input type="image" class="liste_titre" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 	print '&nbsp; ';
@@ -538,11 +539,11 @@ if ($resql)
 		print "<td>".$obj->typent."</td>\n";
 
 		print "<td>".dol_print_date($db->jdate($obj->lastpropalsigndt),'daytextshort')."</td>\n";
-		
+
 		print "<td>".dol_print_date($db->jdate($obj->datec),'daytextshort')."</td>\n";
-		
+
 		print "<td>".$obj->siret."</td>\n";
-		
+
 		//print "<td>".$obj->idprof1."</td>\n";
 		//print "<td>".$obj->idprof2."</td>\n";
 		//print "<td>".$obj->idprof3."</td>\n";
