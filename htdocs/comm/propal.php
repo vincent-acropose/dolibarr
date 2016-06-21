@@ -704,14 +704,14 @@ else if ($action == "addline" && $user->rights->propal->creer)
 				}
 				elseif (! empty ( $conf->global->PRODUIT_CUSTOMER_PRICES )) {
 					require_once DOL_DOCUMENT_ROOT . '/product/class/productcustomerprice.class.php';
-					
+
 					$prodcustprice = new Productcustomerprice($db);
-						
+
 					$filter = array (
 					't.fk_product' => $prod->id,
 					't.fk_soc'=> $object->client->id
 					);
-						
+
 					$result = $prodcustprice->fetch_all('', '', 0, 0, $filter);
 					if ($result)
 					{
@@ -808,7 +808,7 @@ else if ($action == "addline" && $user->rights->propal->creer)
 
 		$info_bits=0;
 		if ($tva_npr) $info_bits |= 0x01;
-		
+
 		if (! empty($price_min) && (price2num($pu_ht)*(1-price2num(GETPOST('remise_percent'))/100) < price2num($price_min)))
 		{
 			$mesg = $langs->trans("CantBeLessThanMinPrice",price2num($price_min,'MU').$langs->getCurrencySymbol($conf->currency));
@@ -942,7 +942,7 @@ else if ($action == 'updateligne' && $user->rights->propal->creer && GETPOST('sa
 			$error++;
 		}
 	}
-	
+
 	if (! $error)
 	{
 		$result = $object->updateline(
@@ -2146,11 +2146,11 @@ else
 					print '<div class="inline-block divButAction"><a class="butAction" href="'.DOL_URL_ROOT.'/compta/facture.php?action=create&amp;origin='.$object->element.'&amp;originid='.$object->id.'&amp;socid='.$object->socid.'">'.$langs->trans("AddBill").'</a></div>';
 				}
 
-				$arraypropal=$object->getInvoiceArrayList();
-				if (is_array($arraypropal) && count($arraypropal) > 0)
-				{
+				//$arraypropal=$object->getInvoiceArrayList();
+				//if (is_array($arraypropal) && count($arraypropal) > 0)
+				//{
 					print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=classifybilled&amp;socid='.$object->socid.'">'.$langs->trans("ClassifyBilled").'</a></div>';
-				}
+				//}
 			}
 
 			// Close
@@ -2260,8 +2260,8 @@ else
 		print '<br>';
 		print_titre($langs->trans('SendPropalByMail'));
 
-		
-		
+
+
 		require_once dol_buildpath('/agefodd/class/agefodd_session_element.class.php');
 		$agf_fin = new Agefodd_session_element($db);
 		$result=$agf_fin->fetch_element_by_id($object->id,'prop');
@@ -2275,7 +2275,7 @@ else
 			if ($result<0) {
 				setEventMessage($agf->error,'errors');
 			}
-			
+
 			require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 			$product=new Product($db);
 			$result=$product->fetch($agf->fk_product);
@@ -2284,20 +2284,20 @@ else
 			}
 			$mailsubject=$product->libelle. ' : '. $agf->formintitule. ' - '.$langs->transnoentities('Proposal'). ' ' .$mysoc->name . ' ' . $object->ref. ' ('. dol_print_date($object->datev,'daytext') .')';
 			//Produit (sans mettre le code) : Intitulé formation (Proposition Akteos PR0000-0000 du jj/mm/an (date de la proposition)
-			
+
 			$bodytext="Bonjour<BR><BR>Conformément à votre demande, j'ai le plaisir de vous adresser la proposition :<BR><BR>".$object->ref.'-'.$product->libelle.'-'.$agf->formintitule;
 			$bodytext.="<BR><BR>En espérant avoir répondu à votre attente, je reste à votre disposition pour toute information complémentaire et vous remercie de votre confiance";
 			$bodytext.="<BR><BR>".$user->signature;
-			
+
 			$mailmodel='';
 		}
-		
+
 		if (empty($mailsubject)) {
 			$mailsubject= $langs->trans('SendPropalRef','__PROPREF__');
 			$bodytext=1;
 			$mailmodel='propal_send';
 		}
-		
+
 		// Create form object
 		include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
 		$formmail = new FormMail($db);
