@@ -1728,6 +1728,7 @@ else if ($id || $ref)
 		$formmail->withcancel=1;
 		// Tableau des substitutions
 		$formmail->substit['__SHIPPINGREF__']=$object->ref;
+		$formmail->substit['__SHIPPINGNUMSUIV__']=$object->tracking_number;
 		$formmail->substit['__SIGNATURE__']=$user->signature;
 		$formmail->substit['__PERSONALIZED__']='';
 		$formmail->substit['__CONTACTCIVNAME__']='';
