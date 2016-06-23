@@ -1768,7 +1768,7 @@ class Expedition extends CommonObject
 	{
 		global $conf,$langs,$user;
 
-		$sql = 'UPDATE '.MAIN_DB_PREFIX.'expedition SET fk_statut=2';
+		$sql = 'UPDATE '.MAIN_DB_PREFIX.'expedition SET fk_statut=2,date_expedition=NOW()';
 		$sql .= ' WHERE rowid = '.$this->id.' AND fk_statut > 0';
 
 		$resql=$this->db->query($sql);
