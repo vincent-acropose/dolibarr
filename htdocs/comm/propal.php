@@ -861,7 +861,8 @@ if (empty($reshook)) {
 			$label = ((GETPOST('update_label') && GETPOST('product_label')) ? GETPOST('product_label') : '');
 
 			if ($price_min && (price2num($pu_ht) * (1 - price2num(GETPOST('remise_percent')) / 100) < price2num($price_min))) {
-				if (!in_array($productid, array(9, 10, 11087, 14312, 14421)))
+				$TProdRemise = explode(',',$conf->global->EPOXY_ID_PRODUIT_REMISE);
+				if (!in_array($productid, $TProdRemise))
 				{
 					setEventMessage($langs->trans("CantBeLessThanMinPrice", price(price2num($price_min, 'MU'), 0, $langs, 0, 0, - 1, $conf->currency)), 'errors');
 					$error ++;
