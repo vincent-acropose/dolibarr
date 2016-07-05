@@ -748,7 +748,7 @@ class ExtraFields
 			}
 
 			$out.='<select class="flat" name="'.$keysuffix.'options_'.$key.$keyprefix.'" id="options_'.$key.$keyprefix.'" '.($moreparam?$moreparam:'').'>';
-			$out.='<option value="0">&nbsp;</option>';
+			//$out.='<option value="0">&nbsp;</option>';
 			foreach ($param['options'] as $key => $val)
 			{
 			    if ($key == '') continue;
