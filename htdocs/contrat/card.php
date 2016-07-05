@@ -319,8 +319,7 @@ if ($action == 'add' && $user->rights->contrat->creer)
 									$label = $lines[$i]->product_label;
 								}
 
-								if ($conf->global->PRODUIT_DESC_IN_FORM)
-									$desc .= ($lines[$i]->desc && $lines[$i]->desc!=$lines[$i]->libelle)?dol_htmlentitiesbr($lines[$i]->desc):'';
+								$desc = ($lines[$i]->desc && $lines[$i]->desc!=$lines[$i]->libelle)?dol_htmlentitiesbr($lines[$i]->desc):'';
 							}
 							else {
 							    $desc = dol_htmlentitiesbr($lines[$i]->desc);
@@ -1643,7 +1642,7 @@ else
                     {
                         $tmpaction='activateline';
                         if ($objp->statut == 4) $tmpaction='unactivateline';
-						if (($tmpaction=='activateline' && $user->rights->contrat->activer) || ($tmpaction=='unactivateline' && $user->rights->contrat->unactiver)) {
+						if (($tmpaction=='activateline' && $user->rights->contrat->activer) || ($tmpaction=='unactivateline' && $user->rights->contrat->desactiver)) {
 							print '<a href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&amp;ligne=' . $object->lines[$cursorline - 1]->id . '&amp;action=' . $tmpaction . '">';
 							print img_edit();
 							print '</a>';
