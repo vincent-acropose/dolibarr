@@ -302,6 +302,13 @@ class pdf_bl_casino extends ModelePdfExpedition
 				
 				// Affiche notes
 				$notetoshow=empty($object->note_public)?'':$object->note_public;
+				
+				if(!empty($object->array_options['options_nb_colis'])) {
+					$colis = 'Nombre de colis : '.$object->array_options['options_nb_colis'];
+					$notetoshow .= (!empty($notetoshow)) ? "\n" : '';
+					$notetoshow .= $colis;
+				}
+				
 				if (! empty($conf->global->MAIN_ADD_SALE_REP_SIGNATURE_IN_NOTE))
 				{
 					// Get first sale rep
