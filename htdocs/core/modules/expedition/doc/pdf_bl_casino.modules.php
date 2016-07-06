@@ -1317,7 +1317,7 @@ class pdf_bl_casino extends ModelePdfExpedition
 			}
 
 			$carac_client_name = $object->thirdparty->name_alias."\n";
-			$carac_client_name= pdfBuildThirdpartyName($thirdparty, $outputlangs);
+			$carac_client_name.= pdfBuildThirdpartyName($thirdparty, $outputlangs);
 
 			$carac_client=pdf_build_address($outputlangs,$this->emetteur,$object->client,($usecontact?$object->contact:''),$usecontact,'target');
 
