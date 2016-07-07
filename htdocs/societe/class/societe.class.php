@@ -1768,6 +1768,8 @@ class Societe extends CommonObject
 
         $name=$this->name?$this->name:$this->nom;
 
+	if($this->client > 0) $option = 'customer';
+
         if (! empty($conf->dol_no_mouse_hover)) $notooltip=1;
 
 		if (! empty($conf->global->SOCIETE_ADD_REF_IN_LIST) && (!empty($withpicto)))
