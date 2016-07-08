@@ -58,7 +58,7 @@ class pdf_salaisoncvo extends ModelePDFFactures
 	var	$marge_haute;
 	var	$marge_basse;
 	// déclaration d'une constante pour le taux et d'une variable public pour le totale des lignes
-	const CVORATE=23/1000;
+	const CVORATE=0.023;
 	public $cvoLigne = 0;
 
 
