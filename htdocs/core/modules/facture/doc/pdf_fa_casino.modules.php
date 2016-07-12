@@ -1541,7 +1541,7 @@ class pdf_fa_casino extends ModelePDFFactures
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
 			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("CustomerCode")." : " . $outputlangs->transnoentities($object->thirdparty->code_client), '', 'R');
-			
+			$posy+=3;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
 			$pdf->MultiCell($w, 3, "Notre code (V-REF) : S017705" , '', 'R');
