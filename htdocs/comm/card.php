@@ -615,12 +615,13 @@ if ($id > 0)
 		$commande_static=new Commande($db);
 
         $sql = "SELECT s.nom, s.rowid";
-        $sql.= ", c.rowid as cid, c.total_ht";
+        $sql.= ", c.rowid as cid, c.total_ht,p.ref as ref_project";
         $sql.= ", c.tva as total_tva";
         $sql.= ", c.total_ttc";
         $sql.= ", c.ref, c.ref_client, c.fk_statut, c.facture";
         $sql.= ", c.date_commande as dc";
-		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."commande as c";
+		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."commande as c
+			LEFT OUTER JOIN ".MAIN_DB_PREFIX."projet p ON (p.rowid = c.fk_projet)";
 		$sql.= " WHERE c.fk_soc = s.rowid ";
 		$sql.= " AND s.rowid = ".$object->id;
 		$sql.= " AND c.entity = ".$conf->entity;
@@ -672,7 +673,7 @@ if ($id > 0)
                 $commande_static->total_ht = $objp->total_ht;
                 $commande_static->total_tva = $objp->total_tva;
                 $commande_static->total_ttc = $objp->total_ttc;
-                print $commande_static->getNomUrl(1);
+                print $commande_static->getNomUrl(1).' '.$objp->ref_project;
 				print '</td><td align="right" width="80px">'.dol_print_date($db->jdate($objp->dc),'day')."</td>\n";
 				print '<td align="right" style="min-width: 60px">'.price($objp->total_ht).'</td>';
 				print '<td align="right" style="min-width: 60px" class="nowrap">'.$commande_static->LibStatut($objp->fk_statut,$objp->facture,5).'</td></tr>';
