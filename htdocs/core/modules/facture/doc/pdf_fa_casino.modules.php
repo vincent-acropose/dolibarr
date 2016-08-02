@@ -1215,6 +1215,14 @@ class pdf_fa_casino extends ModelePDFFactures
 				// Total TTC
 				$index++;
 				$pdf->SetXY($col1x, $tab2_top + $tab2_hl * $index);
+				$pdf->MultiCell($col2x-$col1x, $tab2_hl, $outputlangs->transnoentities("CVO ".price('0.023')), $useborder, 'L', 1);
+
+				$pdf->SetXY($col2x, $tab2_top + $tab2_hl * $index);
+				$pdf->MultiCell($largcol2, $tab2_hl, price($this->get_total_cvo($object), 0, '', 1, -1, 2), $useborder, 'R', 1);
+
+				// Total TTC
+				$index++;
+				$pdf->SetXY($col1x, $tab2_top + $tab2_hl * $index);
 				$pdf->SetTextColor(0,0,60);
 				$pdf->SetFillColor(224,224,224);
 				$pdf->MultiCell($col2x-$col1x, $tab2_hl, $outputlangs->transnoentities("TotalTTC"), $useborder, 'L', 1);
@@ -1639,6 +1647,20 @@ class pdf_fa_casino extends ModelePDFFactures
 		}
 
 		$pdf->SetTextColor(0,0,0);
+	}
+
+	function get_total_cvo(&$object) {
+		
+		global $db, $conf;
+		
+		$TID_CVO = array_values(unserialize($conf->global->WTBC_CATEGS_AND_EXCLUDED_THIRD)['TCategs']);
+		$total=0;
+		foreach($object->lines as $line) {
+			if(in_array($line->fk_product, $TID_CVO)) $total+=$line->total_ht;
+		}
+		
+		return $total;
+		
 	}
 
 	/**
