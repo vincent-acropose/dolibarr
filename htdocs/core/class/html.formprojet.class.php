@@ -141,7 +141,7 @@ class FormProjets
 		if ($socid > 0)  $sql.= " AND (p.fk_soc=".$socid." OR p.fk_soc IS NULL)";
 		if (!empty($filterkey)) {
 			$sql .= ' AND p.title LIKE "%'.$this->db->escape($filterkey).'%"';
-			$sql .= ' OR p.ref LIKE "%'.$this->db->escape($filterkey).'%"';
+			$sql .= ' OR (p.ref LIKE "%'.$this->db->escape($filterkey).'%" AND p.entity='.$conf->entity.')';
 		}
 		$sql.= " ORDER BY p.ref ASC";
 
