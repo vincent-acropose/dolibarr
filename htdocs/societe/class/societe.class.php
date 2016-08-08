@@ -1171,6 +1171,216 @@ class Societe extends CommonObject
     }
 
     /**
+     *    Load a third party from database into memory
+     *
+     *    @param	int		$rowid			Id of third party to load
+     *    @param    string	$ref			Reference of third party, name (Warning, this can return several records)
+     *    @param    string	$ref_ext       	External reference of third party (Warning, this information is a free field not provided by Dolibarr)
+     *    @param    string	$ref_int       	Internal reference of third party
+     *    @param    string	$idprof1		Prof id 1 of third party (Warning, this can return several records)
+     *    @param    string	$idprof2		Prof id 2 of third party (Warning, this can return several records)
+     *    @param    string	$idprof3		Prof id 3 of third party (Warning, this can return several records)
+     *    @param    string	$idprof4		Prof id 4 of third party (Warning, this can return several records)
+     *    @return   int						>0 if OK, <0 if KO or if two records found for same ref or idprof, 0 if not found.
+     */
+    function fetch2($rowid, $ref='', $ref_ext='', $type)
+    {
+        global $langs, $conf;
+
+        if (empty($ref) && empty($ref_ext)) return -1;
+
+        $sql = 'SELECT s.rowid, s.nom as name, s.name_alias, s.entity, s.ref_ext, s.ref_int, s.address, s.datec as date_creation, s.prefix_comm';
+        $sql .= ', s.status';
+        $sql .= ', s.price_level';
+        $sql .= ', s.tms as date_modification';
+        $sql .= ', s.phone, s.fax, s.email, s.skype, s.url, s.zip, s.town, s.note_private, s.note_public, s.model_pdf, s.client, s.fournisseur';
+        $sql .= ', s.siren as idprof1, s.siret as idprof2, s.ape as idprof3, s.idprof4, s.idprof5, s.idprof6';
+        $sql .= ', s.capital, s.tva_intra';
+        $sql .= ', s.fk_typent as typent_id';
+        $sql .= ', s.fk_effectif as effectif_id';
+        $sql .= ', s.fk_forme_juridique as forme_juridique_code';
+        $sql .= ', s.webservices_url, s.webservices_key';
+        $sql .= ', s.code_client, s.code_fournisseur, s.code_compta, s.code_compta_fournisseur, s.parent, s.barcode';
+        $sql .= ', s.fk_departement, s.fk_pays as country_id, s.fk_stcomm, s.remise_client, s.mode_reglement, s.cond_reglement, s.tva_assuj';
+        $sql .= ', s.mode_reglement_supplier, s.cond_reglement_supplier, s.localtax1_assuj, s.localtax1_value, s.localtax2_assuj, s.localtax2_value, s.fk_prospectlevel, s.default_lang, s.logo';
+        $sql .= ', s.outstanding_limit, s.import_key, s.canvas, s.fk_incoterms, s.location_incoterms';
+        $sql .= ', fj.libelle as forme_juridique';
+        $sql .= ', e.libelle as effectif';
+        $sql .= ', c.code as country_code, c.label as country';
+        $sql .= ', d.code_departement as state_code, d.nom as state';
+        $sql .= ', st.libelle as stcomm';
+        $sql .= ', te.code as typent_code';
+		$sql .= ', i.libelle as libelle_incoterms';
+        $sql .= ' FROM '.MAIN_DB_PREFIX.'societe as s';
+        $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_effectif as e ON s.fk_effectif = e.id';
+        $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_country as c ON s.fk_pays = c.rowid';
+        $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_stcomm as st ON s.fk_stcomm = st.id';
+        $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_forme_juridique as fj ON s.fk_forme_juridique = fj.code';
+        $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_departements as d ON s.fk_departement = d.rowid';
+        $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_typent as te ON s.fk_typent = te.id';
+		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_incoterms as i ON s.fk_incoterms = i.rowid';
+        //if ($rowid) $sql .= ' WHERE s.rowid = '.$rowid;
+        $sql .= " WHERE s.entity = ".$conf->entity;
+		if($type === 'client') $sql .= " AND client=1";
+		elseif($type === 'fourn') $sql .= " AND fournisseur=1";
+        if($ref) $sql .= " AND s.nom = '".$this->db->escape($ref)."'";
+        $sql .= " AND s.ref_ext = '".$this->db->escape($ref_ext)."'";
+        //echo $sql;exit;
+        $resql=$this->db->query($sql);
+        dol_syslog(get_class($this)."::fetch ".$sql);
+        if ($resql)
+        {
+            $num=$this->db->num_rows($resql);
+            if ($num > 1)
+            {
+                $this->error='Fetch several records found request';
+                dol_syslog($this->error, LOG_ERR);
+                $result = -2;
+            }
+            if ($num)
+            {
+                $obj = $this->db->fetch_object($resql);
+
+                $this->id           = $obj->rowid;
+                $this->entity       = $obj->entity;
+                $this->canvas		= $obj->canvas;
+
+                $this->ref          = $obj->rowid;
+                $this->name 		= $obj->name;
+                $this->nom          = $obj->name;		// deprecated
+	            $this->name_alias = $obj->name_alias;
+                $this->ref_ext      = $obj->ref_ext;
+                $this->ref_int      = $obj->ref_int;
+
+                $this->date_creation = $this->db->jdate($obj->date_creation);
+                $this->date_modification = $this->db->jdate($obj->date_modification);
+
+                $this->address 		= $obj->address;
+                $this->zip 			= $obj->zip;
+                $this->town 		= $obj->town;
+
+                $this->country_id   = $obj->country_id;
+                $this->country_code = $obj->country_id?$obj->country_code:'';
+                $this->country 		= $obj->country_id?($langs->trans('Country'.$obj->country_code)!='Country'.$obj->country_code?$langs->transnoentities('Country'.$obj->country_code):$obj->country):'';
+
+                $this->state_id     = $obj->fk_departement;
+                $this->state_code   = $obj->state_code;
+                $this->state        = ($obj->state!='-'?$obj->state:'');
+
+                $transcode=$langs->trans('StatusProspect'.$obj->fk_stcomm);
+                $libelle=($transcode!='StatusProspect'.$obj->fk_stcomm?$transcode:$obj->stcomm);
+                $this->stcomm_id = $obj->fk_stcomm;     // id statut commercial
+                $this->statut_commercial = $libelle;    // libelle statut commercial
+
+                $this->email = $obj->email;
+                $this->skype = $obj->skype;
+                $this->url = $obj->url;
+                $this->phone = $obj->phone;
+                $this->fax = $obj->fax;
+
+                $this->parent    = $obj->parent;
+
+                $this->idprof1		= $obj->idprof1;
+                $this->idprof2		= $obj->idprof2;
+                $this->idprof3		= $obj->idprof3;
+                $this->idprof4		= $obj->idprof4;
+                $this->idprof5		= $obj->idprof5;
+                $this->idprof6		= $obj->idprof6;
+
+                $this->capital   = $obj->capital;
+
+                $this->code_client = $obj->code_client;
+                $this->code_fournisseur = $obj->code_fournisseur;
+
+                $this->code_compta = $obj->code_compta;
+                $this->code_compta_fournisseur = $obj->code_compta_fournisseur;
+
+                $this->barcode = $obj->barcode;
+
+                $this->tva_assuj      = $obj->tva_assuj;
+                $this->tva_intra      = $obj->tva_intra;
+                $this->status = $obj->status;
+
+                // Local Taxes
+                $this->localtax1_assuj      = $obj->localtax1_assuj;
+                $this->localtax2_assuj      = $obj->localtax2_assuj;
+
+                $this->localtax1_value		= $obj->localtax1_value;
+                $this->localtax2_value		= $obj->localtax2_value;
+
+                $this->typent_id      = $obj->typent_id;
+                $this->typent_code    = $obj->typent_code;
+
+                $this->effectif_id    = $obj->effectif_id;
+                $this->effectif       = $obj->effectif_id?$obj->effectif:'';
+
+                $this->forme_juridique_code= $obj->forme_juridique_code;
+                $this->forme_juridique     = $obj->forme_juridique_code?$obj->forme_juridique:'';
+
+                $this->fk_prospectlevel = $obj->fk_prospectlevel;
+
+                $this->prefix_comm = $obj->prefix_comm;
+
+                $this->remise_percent		= $obj->remise_client;
+                $this->mode_reglement_id 	= $obj->mode_reglement;
+                $this->cond_reglement_id 	= $obj->cond_reglement;
+                $this->mode_reglement_supplier_id 	= $obj->mode_reglement_supplier;
+                $this->cond_reglement_supplier_id 	= $obj->cond_reglement_supplier;
+
+                $this->client      = $obj->client;
+                $this->fournisseur = $obj->fournisseur;
+
+                $this->note = $obj->note_private; // TODO Deprecated for backward comtability
+                $this->note_private = $obj->note_private;
+                $this->note_public = $obj->note_public;
+                $this->modelpdf = $obj->model_pdf;
+                $this->default_lang = $obj->default_lang;
+                $this->logo = $obj->logo;
+
+                $this->webservices_url = $obj->webservices_url;
+                $this->webservices_key = $obj->webservices_key;
+
+                $this->outstanding_limit		= $obj->outstanding_limit;
+
+                // multiprix
+                $this->price_level = $obj->price_level;
+
+                $this->import_key = $obj->import_key;
+
+				//Incoterms
+				$this->fk_incoterms = $obj->fk_incoterms;
+				$this->location_incoterms = $obj->location_incoterms;
+				$this->libelle_incoterms = $obj->libelle_incoterms;
+
+                $result = 1;
+
+                // Retreive all extrafield for thirdparty
+                // fetch optionals attributes and labels
+                require_once(DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php');
+                $extrafields=new ExtraFields($this->db);
+                $extralabels=$extrafields->fetch_name_optionals_label($this->table_element,true);
+               	$this->fetch_optionals($this->id,$extralabels);
+            }
+            else
+			{
+                $result = 0;
+            }
+
+            $this->db->free($resql);
+        }
+        else
+		{
+            $this->error=$this->db->lasterror();
+            $result = -3;
+        }
+
+        // Use first price level if level not defined for third party
+        if (! empty($conf->global->PRODUIT_MULTIPRICES) && empty($this->price_level)) $this->price_level=1;
+
+        return $result;
+    }
+
+    /**
      * 	Search and fetch thirparties by name
      *
      * 	@param		string		$name		Name
