@@ -346,8 +346,10 @@ class Productcustomerprice extends CommonObject
 					$sql .= ' AND ' . $key . ' = \'' . $value . '\'';
 				} elseif ($key == 'soc.nom') {
 					$sql .= ' AND ' . $key . ' LIKE \'%' . $value . '%\'';
-				} elseif ($key == 'prod.ref') {
+				} elseif ($key == 'prod.ref' || $key == 'prod.label') {
 					$sql .= ' AND ' . $key . ' LIKE \'%' . $value . '%\'';
+				} elseif ($key == 't.price' || $key == 't.price_ttc') {
+					$sql .= ' AND ' . $key . ' LIKE \'%' . str_replace(',', '.', $value) . '%\'';
 				} else {
 					$sql .= ' AND ' . $key . ' = ' . $value;
 				}
