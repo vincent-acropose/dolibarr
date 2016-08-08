@@ -252,7 +252,7 @@ class Product extends CommonObject
 	 */
 	function check()
 	{
-		$this->ref = dol_sanitizeFileName(stripslashes($this->ref));
+		//$this->ref = dol_sanitizeFileName(stripslashes($this->ref));
 
 		$err = 0;
 		if (dol_strlen(trim($this->ref)) == 0)
@@ -285,7 +285,7 @@ class Product extends CommonObject
         $error=0;
 
 		// Clean parameters
-		$this->ref = dol_string_nospecial(trim($this->ref));
+		$this->ref = dol_string_nospecial(trim($this->ref), '_', array(" ","'","\\",":","*","?","\"","<",">","|","[","]",",",";","="));
 		$this->label = trim($this->label);
 		$this->price_ttc=price2num($this->price_ttc);
 		$this->price=price2num($this->price);
@@ -619,7 +619,7 @@ class Product extends CommonObject
 		if (! $this->label) $this->label = 'MISSING LABEL';
 
 		// Clean parameters
-		$this->ref = dol_string_nospecial(trim($this->ref));
+		$this->ref = dol_string_nospecial(trim($this->ref), '_', array(" ","'","\\",":","*","?","\"","<",">","|","[","]",",",";","="));
 		$this->label = trim($this->label);
 		$this->description = trim($this->description);
 		$this->note = (isset($this->note) ? trim($this->note) : null);
