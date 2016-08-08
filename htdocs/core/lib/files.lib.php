@@ -1942,7 +1942,8 @@ function dol_check_secure_access_document($modulepart,$original_file,$entity,$fu
 
 			$perm=GETPOST('perm');
 			$subperm=GETPOST('subperm');
-			if ($perm || $subperm)
+			if($modulepart == 'recouvrement') $original_file=DOL_DATA_ROOT."/recouvrement/".$original_file;
+			else if ($perm || $subperm)
 			{
 				if (($perm && ! $subperm && $fuser->rights->$modulepart->$perm) || ($perm && $subperm && $fuser->rights->$modulepart->$perm->$subperm)) $accessallowed=1;
 				$original_file=$conf->$modulepart->dir_output.'/'.$original_file;
@@ -1952,6 +1953,8 @@ function dol_check_secure_access_document($modulepart,$original_file,$entity,$fu
 				if ($fuser->rights->$modulepart->lire || $fuser->rights->$modulepart->read) $accessallowed=1;
 				$original_file=$conf->$modulepart->dir_output.'/'.$original_file;
 			}
+			//print_r($original_file);exit;
+			
 		}
 		if (preg_match('/^specimen/i',$original_file))	$accessallowed=1;    // If link to a specimen
 		if ($fuser->admin) $accessallowed=1;    // If user is admin
