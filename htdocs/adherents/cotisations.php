@@ -221,7 +221,7 @@ if ($result)
 
         $adherent->lastname=$objp->lastname;
         $adherent->firstname=$objp->firstname;
-        $adherent->ref=$adherent->getFullName($langs);
+        $adherent->ref=$objp->societe;
         $adherent->id=$objp->rowid;
         $adherent->login=$objp->login;
 

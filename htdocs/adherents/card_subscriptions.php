@@ -740,6 +740,7 @@ if ($rowid > 0)
         $sql.= " c.dateadh as dateh,";
         $sql.= " c.datef,";
         $sql.= " c.fk_bank,";
+	$sql.= " c.note,";
         $sql.= " b.rowid as bid,";
         $sql.= " ba.rowid as baid, ba.label, ba.bank";
         $sql.= " FROM ".MAIN_DB_PREFIX."adherent as d, ".MAIN_DB_PREFIX."cotisation as c";
@@ -760,6 +761,7 @@ if ($rowid > 0)
 
             print '<tr class="liste_titre">';
             print '<td>'.$langs->trans("Ref").'</td>';
+            print '<td>'.$langs->trans("Label").'</td>';
             print '<td align="center">'.$langs->trans("DateCreation").'</td>';
             print '<td align="center">'.$langs->trans("DateStart").'</td>';
             print '<td align="center">'.$langs->trans("DateEnd").'</td>';
@@ -779,6 +781,7 @@ if ($rowid > 0)
                 $cotisationstatic->ref=$objp->crowid;
                 $cotisationstatic->id=$objp->crowid;
                 print '<td>'.$cotisationstatic->getNomUrl(1).'</td>';
+                print '<td>'.$objp->note."</td>\n";
                 print '<td align="center">'.dol_print_date($db->jdate($objp->datec),'dayhour')."</td>\n";
                 print '<td align="center">'.dol_print_date($db->jdate($objp->dateh),'day')."</td>\n";
                 print '<td align="center">'.dol_print_date($db->jdate($objp->datef),'day')."</td>\n";
