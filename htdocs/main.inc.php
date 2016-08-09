@@ -530,6 +530,9 @@ if (! defined('NOLOGIN'))
         $login=$_SESSION["dol_login"];
         dol_syslog("This is an already logged session. _SESSION['dol_login']=".$login);
 
+		// FIX TK4603 => la contrainte d'unicité du champ "login" de la table "llx_user" a été supprimé et comme multicompany n'est pas en transverse mode, le fetch user ne teste pas l'entity
+        if (!empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode)) $user->entity = $conf->entity;
+		
         $resultFetchUser=$user->fetch('',$login);
         if ($resultFetchUser <= 0)
         {
