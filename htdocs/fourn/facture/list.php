@@ -73,6 +73,7 @@ $search_ref = GETPOST("search_ref","int");
 $search_ref_supplier = GETPOST("search_ref_supplier","alpha");
 $search_label = GETPOST("search_label","alpha");
 $search_company = GETPOST("search_company","alpha");
+$search_client_final = GETPOST("search_client_final","alpha");
 $search_amount_no_tax = GETPOST("search_amount_no_tax","alpha");
 $search_amount_all_tax = GETPOST("search_amount_all_tax","alpha");
 $search_status=GETPOST('search_status','alpha');
@@ -103,6 +104,7 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter"))		// Both
 	$month_lim="";
 	$day_lim="";
 	$search_projet='';
+	$search_client_final='';
 }
 
 // List of fields to search into when doing a "search in all"
@@ -155,11 +157,17 @@ llxHeader('',$langs->trans("SuppliersInvoices"),'EN:Suppliers_Invoices|FR:Factur
 
 $sql = "SELECT s.rowid as socid, s.nom as name, ";
 $sql.= " fac.rowid as facid, fac.ref, fac.ref_supplier, fac.datef, fac.date_lim_reglement as date_echeance,";
-$sql.= " fac.total_ht, fac.total_ttc, fac.paye as paye, fac.fk_statut as fk_statut, fac.libelle,";
+$sql.= " fac.total_ht, fac.total_ttc, fac.paye as paye, fac.fk_statut as fk_statut, fac.libelle, s2.rowid as socid2, s2.nom as name2,";
 $sql.= " p.rowid as project_id, p.ref as project_ref";
 if (!$user->rights->societe->client->voir && !$socid) $sql .= ", sc.fk_soc, sc.fk_user ";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."facture_fourn as fac";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON p.rowid = fac.fk_projet";
+
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as ee2 ON (ee2.fk_target = fac.rowid AND ee2.sourcetype = 'order_supplier' AND ee2.targettype = 'invoice_supplier')";
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as ee ON (ee.fk_target = ee2.fk_source AND ee.sourcetype = 'commande' AND ee.targettype = 'order_supplier')";
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."commande as c ON (c.rowid = ee.fk_source)";
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s2 ON (s2.rowid = c.fk_soc)";
+
 if (!$user->rights->societe->client->voir && !$socid) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 $sql.= " WHERE fac.entity = ".$conf->entity;
 $sql.= " AND fac.fk_soc = s.rowid";
@@ -215,6 +223,11 @@ if ($search_label)
 if ($search_company)
 {
     $sql .= natural_search('s.nom', $search_company);
+}
+
+if ($search_client_final)
+{
+	$sql .= natural_search('s2.nom', $search_client_final);
 }
 
 if (!empty($search_projet)) $sql .= natural_search('p.ref', $search_projet);
@@ -307,6 +320,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans("DateDue"),$_SERVER["PHP_SELF"],"fac.date_lim_reglement","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Label"),$_SERVER["PHP_SELF"],"fac.libelle","",$param,"",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("ThirdParty"),$_SERVER["PHP_SELF"],"s.nom","",$param,"",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Client final"),$_SERVER["PHP_SELF"],"s2.nom","",$param,'',$sortfield,$sortorder);
 	if (! empty($conf->global->PROJECT_SHOW_REF_INTO_LISTS)) print_liste_field_titre($langs->trans("Project"),$_SERVER["PHP_SELF"],"p.ref","",$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AmountHT"),$_SERVER["PHP_SELF"],"fac.total_ht","",$param,'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AmountTTC"),$_SERVER["PHP_SELF"],"fac.total_ttc","",$param,'align="right"',$sortfield,$sortorder);
@@ -342,6 +356,7 @@ if ($resql)
 	print '<td class="liste_titre" align="left">';
 	print '<input class="flat" type="text" size="8" name="search_company" value="'.$search_company.'">';
 	print '</td>';
+	print '<td class="liste_titre"><input type="text" class="flat" size="8" name="search_client_final" value="'.$search_client_final.'"></td>';
 	if (! empty($conf->global->PROJECT_SHOW_REF_INTO_LISTS))
 	{
 		print '<td class="liste_titre" align="left">';
@@ -405,6 +420,16 @@ if ($resql)
 		$supplierstatic->name=$obj->name;
 		print $supplierstatic->getNomUrl(1,'',12);
 		print '</td>';
+
+		// Client final
+		print '<td>';
+		if($obj->socid2){
+			$supplierstatic->id = $obj->socid2;
+			$supplierstatic->name = $obj->name2;
+			print $supplierstatic->getNomUrl(1,'supplier');
+		}
+		print '</td>'."\n";
+		
 		if (! empty($conf->global->PROJECT_SHOW_REF_INTO_LISTS))
 		{
 			$projectstatic->id=$obj->project_id;
