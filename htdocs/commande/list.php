@@ -38,6 +38,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
 require_once DOL_DOCUMENT_ROOT .'/product/class/product.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/html.formmargin.class.php';
 if(! empty($conf->projet->enabled)) require_once DOL_DOCUMENT_ROOT .'/projet/class/project.class.php';
 
 $langs->load('orders');
@@ -353,6 +354,9 @@ if ($resql)
 	$parameters=array();
     $reshook=$hookmanager->executeHooks('printFieldListTitle',$parameters);    // Note that $action and $object may have been modified by hook
     print $hookmanager->resPrint;
+	if(!empty($conf->margin->enabled)){
+		print_liste_field_titre($langs->trans('Margin'),$_SERVER["PHP_SELF"],'','',$param,'align="right"',$sortfield,$sortorder);
+	}
 	print_liste_field_titre($langs->trans('Status'),$_SERVER["PHP_SELF"],'c.fk_statut','',$param,'align="right"',$sortfield,$sortorder);
 	if (empty($conf->global->WORKFLOW_BILL_ON_SHIPMENT)) print_liste_field_titre($langs->trans('Billed'),$_SERVER["PHP_SELF"],'c.facture','',$param,'align="center"',$sortfield,$sortorder,'');
 	print_liste_field_titre('',$_SERVER["PHP_SELF"],"",'',$param,'',$sortfield,$sortorder,'maxwidthsearch ');
@@ -388,6 +392,8 @@ if ($resql)
 	}
 	print '<td class="liste_titre" align="right">';
 	print '<input class="flat" type="text" size="6" name="search_total_ht" value="'.$search_total_ht.'">';
+	print '</td>';
+	print '<td align="right">';
 	print '</td>';
 	print '<td align="right">';
 	$liststatus=array(
@@ -614,10 +620,17 @@ if ($resql)
 		print '<td align="center">';
 		print dol_print_date($db->jdate($objp->date_delivery), 'day');
 		print '</td>';
-
+	
 		// Amount HT
 		print '<td align="right" class="nowrap">'.price($objp->total_ht).'</td>';
-
+		
+		//Marge
+		$commande = new Commande($db);
+		$commande->fetch($objp->rowid);
+		$formmargin = new FormMargin($db);
+		$marginInfo = $formmargin->getMarginInfosArray($commande);
+		print '<td align="right" class="nowrap">'.price($marginInfo['total_margin']).'</td>';
+		
 		// Statut
 		print '<td align="right" class="nowrap">'.$generic_commande->LibStatut($objp->fk_statut, $objp->billed, 5, 1).'</td>';
 
