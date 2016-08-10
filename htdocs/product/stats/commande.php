@@ -29,6 +29,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/product.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
+if(! empty($conf->projet->enabled)) require_once DOL_DOCUMENT_ROOT .'/projet/class/project.class.php';
 
 $langs->load("orders");
 $langs->load("products");
@@ -121,9 +122,11 @@ if ($id > 0 || ! empty($ref))
 			$sql = "SELECT DISTINCT s.nom as name, s.rowid as socid, s.code_client, c.rowid, d.total_ht as total_ht, c.ref,";
 			$sql.= " c.ref_client,";
 			$sql.= " c.date_commande, c.fk_statut as statut, c.facture, c.rowid as commandeid, d.rowid, d.qty";
+			if($conf->projet->enabled) $sql .= ', c.fk_projet, p.ref as project_ref';
 			if (!$user->rights->societe->client->voir && !$socid) $sql.= ", sc.fk_soc, sc.fk_user ";
 			$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 			$sql.= ", ".MAIN_DB_PREFIX."commande as c";
+			if($conf->projet->enabled) $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'projet as p ON p.rowid = c.fk_projet ';
 			$sql.= ", ".MAIN_DB_PREFIX."commandedet as d";
 			if (!$user->rights->societe->client->voir && !$socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 			$sql.= " WHERE c.fk_soc = s.rowid";
@@ -195,6 +198,9 @@ if ($id > 0 || ! empty($ref))
 				print '<tr class="liste_titre">';
 				print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"c.rowid","",$option,'',$sortfield,$sortorder);
 				print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","",$option,'',$sortfield,$sortorder);
+				if(!empty($conf->projet->enabled)){
+					print_liste_field_titre($langs->trans('Project'),$_SERVER["PHP_SELF"],'p.ref','',$option,'',$sortfield,$sortorder);
+				}
 				print_liste_field_titre($langs->trans("CustomerCode"),$_SERVER["PHP_SELF"],"s.code_client","",$option,'',$sortfield,$sortorder);
 				print_liste_field_titre($langs->trans("OrderDate"),$_SERVER["PHP_SELF"],"c.date_commande","",$option,'align="center"',$sortfield,$sortorder);
 				print_liste_field_titre($langs->trans("Qty"),$_SERVER["PHP_SELF"],"d.qty","",$option,'align="center"',$sortfield,$sortorder);
@@ -219,6 +225,16 @@ if ($id > 0 || ! empty($ref))
 	                    print "</td>\n";
 						$societestatic->fetch($objp->socid);
 	                    print '<td>'.$societestatic->getNomUrl(1).'</td>';
+						
+						//Ref projet
+						if(! empty($conf->projet->enabled)){
+							$projet = new Project($db);
+							$projet->fetch($objp->fk_projet);
+							print '<td>';
+							print $projet->getNomUrl(1);
+							print '</td>';
+						}
+						
 	                    print "<td>".$objp->code_client."</td>\n";
 						print '<td align="center">';
 						print dol_print_date($db->jdate($objp->date_commande))."</td>";

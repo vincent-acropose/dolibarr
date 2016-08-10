@@ -344,7 +344,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans('Ref'),$_SERVER["PHP_SELF"],'c.ref','',$param,'width="25%"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('RefCustomerOrder'),$_SERVER["PHP_SELF"],'c.ref_client','',$param,'',$sortfield,$sortorder);
 	if(!empty($conf->projet->enabled)){
-		print_liste_field_titre($langs->trans('Project'),$_SERVER["PHP_SELF"],'s.nom','',$param,'',$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans('Project'),$_SERVER["PHP_SELF"],'p.ref','',$param,'',$sortfield,$sortorder);
 	}
 	print_liste_field_titre($langs->trans('ThirdParty'),$_SERVER["PHP_SELF"],'s.nom','',$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('OrderDate'),$_SERVER["PHP_SELF"],'c.date_commande','',$param, 'align="center"',$sortfield,$sortorder);

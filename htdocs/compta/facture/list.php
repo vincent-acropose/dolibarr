@@ -757,7 +757,7 @@ if ($resql)
     print_liste_field_titre($langs->trans("DateDue"),$_SERVER['PHP_SELF'],"f.date_lim_reglement",'',$param,'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('ThirdParty'),$_SERVER['PHP_SELF'],'s.nom','',$param,'',$sortfield,$sortorder);
 	if(!empty($conf->projet->enabled)){
-		print_liste_field_titre($langs->trans('Project'),$_SERVER["PHP_SELF"],'s.nom','',$param,'',$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans('Project'),$_SERVER["PHP_SELF"],'p.ref','',$param,'',$sortfield,$sortorder);
 	}
 	print_liste_field_titre($langs->trans("PaymentModeShort"),$_SERVER["PHP_SELF"],"f.fk_mode_reglement","",$param,"",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('AmountHT'),$_SERVER['PHP_SELF'],'f.total','',$param,'align="right"',$sortfield,$sortorder);
