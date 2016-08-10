@@ -76,6 +76,7 @@ $search_company = GETPOST("search_company","alpha");
 $search_amount_no_tax = GETPOST("search_amount_no_tax","alpha");
 $search_amount_all_tax = GETPOST("search_amount_all_tax","alpha");
 $search_status=GETPOST('search_status','alpha');
+$search_projet=GETPOST('search_projet','alpha');
 $day = GETPOST("day","int");
 $month = GETPOST("month","int");
 $year = GETPOST("year","int");
@@ -101,6 +102,7 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter"))		// Both
 	$year_lim="";
 	$month_lim="";
 	$day_lim="";
+	$search_projet='';
 }
 
 // List of fields to search into when doing a "search in all"
@@ -214,6 +216,8 @@ if ($search_company)
 {
     $sql .= natural_search('s.nom', $search_company);
 }
+
+if (!empty($search_projet)) $sql .= natural_search('p.ref', $search_projet);
 
 if ($search_amount_no_tax != '')
 {
@@ -340,7 +344,8 @@ if ($resql)
 	print '</td>';
 	if (! empty($conf->global->PROJECT_SHOW_REF_INTO_LISTS))
 	{
-		print '<td class="liste_titre">';
+		print '<td class="liste_titre" align="left">';
+		print '<input class="flat" type="text" name="search_projet" value="'.$search_projet.'">';
 		print '</td>';
 	}
 	print '<td class="liste_titre" align="right">';

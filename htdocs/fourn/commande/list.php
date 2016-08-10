@@ -47,6 +47,7 @@ $search_ht=GETPOST('search_ht');
 $search_ttc=GETPOST('search_ttc');
 $search_status=(GETPOST('search_status','alpha')!=''?GETPOST('search_status','alpha'):GETPOST('statut','alpha'));	// alpha and not intbecause it can be '6,7'
 $optioncss = GETPOST('optioncss','alpha');
+$search_projet=GETPOST('search_projet','alpha');
 
 $page  = GETPOST('page','int');
 $socid = GETPOST('socid','int');
@@ -73,6 +74,7 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
 	$search_ttc='';
 	$search_status='';
 	$billed='';
+	$search_projet='';
 }
 
 if ($search_status == '') $search_status=-1;
@@ -134,6 +136,7 @@ $sql.= " u.firstname,";
 $sql.= " u.lastname,";
 $sql.= " u.photo,";
 $sql.= " u.login";
+if($conf->projet->enabled) $sql .= ', cf.fk_projet, p.ref ';
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s,";
 $sql.= " ".MAIN_DB_PREFIX."commande_fournisseur as cf";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."user as u ON cf.fk_user_author = u.rowid";
@@ -150,6 +153,7 @@ if ($search_company)
 {
 	$sql .= natural_search('s.nom', $search_company);
 }
+if (!empty($search_projet)) $sql .= natural_search('p.ref', $search_projet);
 if ($search_user)
 {
 	$sql.= " AND u.login LIKE '%".$db->escape($search_user)."%'";
@@ -256,7 +260,8 @@ if ($resql)
 	print '<td class="liste_titre"><input type="text" class="flat" size="8" name="search_company" value="'.$search_company.'"></td>';
 	if (! empty($conf->global->PROJECT_SHOW_REF_INTO_LISTS))
 	{
-		print '<td class="liste_titre">';
+		print '<td class="liste_titre" align="left">';
+		print '<input class="flat" type="text" name="search_projet" value="'.$search_projet.'">';
 		print '</td>';
 	}
 	print '<td class="liste_titre"><input type="text" size="6" class="flat" name="search_user" value="'.$search_user.'"></td>';
