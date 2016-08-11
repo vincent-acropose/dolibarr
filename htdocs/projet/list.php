@@ -288,7 +288,9 @@ if ($resql)
 	print_liste_field_titre($langs->trans("SalesRepresentative"),$_SERVER["PHP_SELF"],"","",$param,"",$sortfield,$sortorder);
 	if (empty($conf->global->PROJECT_LIST_HIDE_STARTDATE)) print_liste_field_titre($langs->trans("DateStart"),$_SERVER["PHP_SELF"],"p.dateo","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateEnd"),$_SERVER["PHP_SELF"],"p.datee","",$param,'align="center"',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Visibility"),$_SERVER["PHP_SELF"],"p.public","",$param,"",$sortfield,$sortorder);
+	/** Spécifique Bonneimpression (pas besoin de la colonne Visibilité)
+	 * print_liste_field_titre($langs->trans("Visibility"),$_SERVER["PHP_SELF"],"p.public","",$param,"",$sortfield,$sortorder);
+	 */
     if (! empty($conf->global->PROJECT_USE_OPPORTUNITIES))
     {
     	print_liste_field_titre($langs->trans("OpportunityAmountShort"),$_SERVER["PHP_SELF"],'p.opp_amount',"",$param,'align="right"',$sortfield,$sortorder);
@@ -329,10 +331,12 @@ if ($resql)
 	$formother->select_year($year?$year:-1,'year',1, 20, 5);
 	print '</td>';
 
-	print '<td class="liste_titre">';
-	$array=array(''=>'',0 => $langs->trans("PrivateProject"),1 => $langs->trans("SharedProject"));
-    print $form->selectarray('search_public',$array,$search_public);
-    print '</td>';
+	/** Spécifique Bonneimpression (pas besoin de la colonne Visibilité)
+	 * print '<td class="liste_titre">';
+	 * $array=array(''=>'',0 => $langs->trans("PrivateProject"),1 => $langs->trans("SharedProject"));
+     * print $form->selectarray('search_public',$array,$search_public);
+     * print '</td>';
+	 */
 
     $parameters=array();
     $reshook=$hookmanager->executeHooks('printFieldListOption',$parameters);    // Note that $action and $object may have been modified by hook
@@ -447,11 +451,13 @@ if ($resql)
     		print dol_print_date($db->jdate($objp->date_end),'day');
     		print '</td>';
 
-    		// Visibility
-    		print '<td align="left">';
-    		if ($objp->public) print $langs->trans('SharedProject');
-    		else print $langs->trans('PrivateProject');
-    		print '</td>';
+			/** Spécifique Bonneimpression (pas besoin de la colonne Visibilité)
+    		 * // Visibility
+    		 * print '<td align="left">';
+    		 * if ($objp->public) print $langs->trans('SharedProject');
+    		 * else print $langs->trans('PrivateProject');
+    		 * print '</td>';
+			 */
 
         	$parameters=array('obj' => $objp);
         	$reshook=$hookmanager->executeHooks('printFieldListValue',$parameters);    // Note that $action and $object may have been modified by hook
