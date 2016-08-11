@@ -294,7 +294,9 @@ if ($resql)
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans("Action"),$_SERVER["PHP_SELF"],"a.label",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateStart"),$_SERVER["PHP_SELF"],"a.datep",$param,'','align="center"',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("DateEnd"),$_SERVER["PHP_SELF"],"a.datep2",$param,'','align="center"',$sortfield,$sortorder);
+	/** Spécifique  Bonne Impression (pas besoin de la date fin)
+	 * print_liste_field_titre($langs->trans("DateEnd"),$_SERVER["PHP_SELF"],"a.datep2",$param,'','align="center"',$sortfield,$sortorder);
+	 */
 	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Contact"),$_SERVER["PHP_SELF"],"a.fk_contact",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("ActionsOwnedBy"),$_SERVER["PHP_SELF"],"",$param,"","",$sortfield,$sortorder);
@@ -309,9 +311,11 @@ if ($resql)
 	print '<td class="liste_titre" align="center">';
 	print $form->select_date($datestart, 'datestart', 0, 0, 1, '', 1, 0, 1);
 	print '</td>';
-	print '<td class="liste_titre" align="center">';
-	print $form->select_date($dateend, 'dateend', 0, 0, 1, '', 1, 0, 1);
-	print '</td>';
+	/** Spécifique  Bonne Impression (pas besoin de la date fin)
+	 * print '<td class="liste_titre" align="center">';
+	 * print $form->select_date($dateend, 'dateend', 0, 0, 1, '', 1, 0, 1);
+	 * print '</td>';
+	 */
 	print '<td class="liste_titre"></td>';
 	print '<td class="liste_titre"></td>';
 	//print '<td class="liste_titre"></td>';
@@ -365,9 +369,11 @@ if ($resql)
 		if ($late) print img_warning($langs->trans("Late")).' ';
 		print '</td>';
 
-		print '<td align="center" class="nowrap">';
-		print dol_print_date($db->jdate($obj->dp2),"dayhour");
-		print '</td>';
+		/** Spécifique  Bonne Impression (pas besoin de la date fin)
+		 * print '<td align="center" class="nowrap">';
+		 * print dol_print_date($db->jdate($obj->dp2),"dayhour");
+		 * print '</td>';
+		 */
 
 		// Third party
 		print '<td>';
@@ -376,7 +382,9 @@ if ($resql)
 			$societestatic->id=$obj->socid;
 			$societestatic->client=$obj->client;
 			$societestatic->name=$obj->societe;
-			print $societestatic->getNomUrl(1,'',10);
+			// Spécifique  Bonne Impression (besoin du nom complet)
+			//print $societestatic->getNomUrl(1,'',10);
+			print $societestatic->getNomUrl(1,'');
 		}
 		else print '&nbsp;';
 		print '</td>';
