@@ -73,6 +73,7 @@ $search_opp_status=GETPOST("search_opp_status",'alpha');
 $search_public=GETPOST("search_public",'int');
 $search_user=GETPOST('search_user','int');
 $search_sale=GETPOST('search_sale','int');
+$search_demande_fin=GETPOST('search_demande_fin', 'int');
 
 $day	= GETPOST('day','int');
 $month	= GETPOST('month','int');
@@ -102,6 +103,7 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
 	$sday="";
 	$smonth="";
 	$syear="";
+	$search_demande_fin="";
 }
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
@@ -128,7 +130,7 @@ $projectsListId = $projectstatic->getProjectsAuthorizedForUser($user,($mine?$min
 $sql = "SELECT p.rowid as projectid, p.ref, p.title, p.fk_statut, p.fk_opp_status, p.public, p.fk_user_creat";
 $sql.= ", p.datec as date_create, p.dateo as date_start, p.datee as date_end, p.opp_amount";
 $sql.= ", s.nom as name, s.rowid as socid";
-$sql.= ", cls.code as opp_status_code";
+$sql.= ", cls.code as opp_status_code, pext.demande_fin";
 // Add fields for extrafields
 foreach ($extrafields->attribute_list as $key => $val) $sql.=",ef.".$key.' as options_'.$key;
 // Add fields from hooks
@@ -138,6 +140,7 @@ $sql.=$hookmanager->resPrint;
 $sql.= " FROM ".MAIN_DB_PREFIX."projet as p";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s on p.fk_soc = s.rowid";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_lead_status as cls on p.fk_opp_status = cls.rowid";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields as pext on p.rowid = pext.fk_object";
 
 // We'll need this table joined to the select in order to filter by sale
 if ($search_sale > 0 || (! $user->rights->societe->client->voir && ! $socid)) $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON sc.fk_soc = s.rowid";
@@ -193,6 +196,11 @@ if ($search_public!='') $sql .= " AND p.public = ".$db->escape($search_public);
 if ($search_sale > 0) $sql.= " AND sc.fk_user = " .$search_sale;
 if (! $user->rights->societe->client->voir && ! $socid) $sql.= " AND ((s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id.") OR (s.rowid IS NULL))";
 if ($search_user > 0) $sql.= " AND c.fk_c_type_contact = tc.rowid AND tc.element='project' AND tc.source='internal' AND c.element_id = p.rowid AND c.fk_socpeople = ".$search_user;
+if (!empty($search_demande_fin))
+{
+	$sql.= " AND pext.demande_fin = '".$search_demande_fin."'";
+	if ($search_demande_fin == 1) $sql.= " OR pext.demande_fin = '0' OR pext.demande_fin IS NULL";
+}
 // Add where from hooks
 $parameters=array();
 $reshook=$hookmanager->executeHooks('printFieldListWhere',$parameters);    // Note that $action and $object may have been modified by hook
@@ -224,6 +232,7 @@ if ($resql)
 	if ($search_public != '') 		$param.='&search_public='.$search_public;
 	if ($search_user > 0)    		$param.='&search_user='.$search_user;
 	if ($search_sale > 0)    		$param.='&search_sale='.$search_sale;
+	if ($search_demande_fin > 0)	$param.='&search_demande_fin='.$search_demande_fin;
 
 
 	$text=$langs->trans("Projects");
@@ -291,6 +300,9 @@ if ($resql)
 	/** Spécifique Bonneimpression (pas besoin de la colonne Visibilité)
 	 * print_liste_field_titre($langs->trans("Visibility"),$_SERVER["PHP_SELF"],"p.public","",$param,"",$sortfield,$sortorder);
 	 */
+	// Spécifique Bonneimpression (ajout de la colonne "Demande de financement")
+	print_liste_field_titre($langs->trans("Demande de financement"),$_SERVER["PHP_SELF"],"pext.demande_fin","",$param,"",$sortfield,$sortorder);
+	
     if (! empty($conf->global->PROJECT_USE_OPPORTUNITIES))
     {
     	print_liste_field_titre($langs->trans("OpportunityAmountShort"),$_SERVER["PHP_SELF"],'p.opp_amount',"",$param,'align="right"',$sortfield,$sortorder);
@@ -337,7 +349,12 @@ if ($resql)
      * print $form->selectarray('search_public',$array,$search_public);
      * print '</td>';
 	 */
-
+	// Spécifique Bonneimpression (ajout de la colonne "Demande de financement")
+	print '<td class="liste_titre">';
+	$array=array(0=>'',1 => $langs->trans("No"),2 => $langs->trans("Yes"));
+    print $form->selectarray('search_demande_fin',$array,$search_demande_fin);
+    print '</td>';
+	
     $parameters=array();
     $reshook=$hookmanager->executeHooks('printFieldListOption',$parameters);    // Note that $action and $object may have been modified by hook
     print $hookmanager->resPrint;
@@ -458,7 +475,12 @@ if ($resql)
     		 * else print $langs->trans('PrivateProject');
     		 * print '</td>';
 			 */
-
+			// Spécifique Bonneimpression (ajout de la colonne "Demande de financement")
+			print '<td align="left">';
+    		if ($objp->demande_fin == 2) print $langs->trans('Yes');
+			else print $langs->trans('No');
+    		print '</td>';
+			
         	$parameters=array('obj' => $objp);
         	$reshook=$hookmanager->executeHooks('printFieldListValue',$parameters);    // Note that $action and $object may have been modified by hook
 		    print $hookmanager->resPrint;
