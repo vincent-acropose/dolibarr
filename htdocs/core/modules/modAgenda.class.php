@@ -370,7 +370,7 @@ class modAgenda extends DolibarrModules
 		$this->export_label[$r]="ExportDataset_event1";
 		$this->export_permission[$r]=array(array("agenda","export"));
 		$this->export_fields_array[$r]=array('ac.id'=>"IdAgenda",'ac.ref_ext'=>"ExternalRef",'ac.datec'=>"DateCreation",'ac.datep'=>"DateActionBegin",
-			'ac.datep2'=>"DateActionEnd",'ac.label'=>"Title",'ac.note'=>"Note",'ac.percent'=>"Percent",$this->db->ifsql('(ac.durationp IS NULL OR ac.durationp=0)','0','ac.durationp/60').' as durationp'=>"Duration",
+			'ac.datep2'=>"DateActionEnd",'ac.label'=>"Title",'ac.note'=>"Note",'ac.percent'=>"Percent",$this->db->ifsql('(ac.durationp IS NULL OR ac.durationp=0)','0','ac.durationp/60/60').' as durationp'=>"Duration",
 			'cac.libelle'=>"ActionType",
 			's.rowid'=>"IdCompany",'s.nom'=>'CompanyName','s.address'=>'Address','s.zip'=>'Zip','s.town'=>'Town',
 			'co.code'=>'CountryCode','s.phone'=>'Phone','s.siren'=>'ProfId1','s.siret'=>'ProfId2','s.ape'=>'ProfId3','s.idprof4'=>'ProfId4','s.idprof5'=>'ProfId5','s.idprof6'=>'ProfId6',
