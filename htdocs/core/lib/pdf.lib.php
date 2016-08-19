@@ -1011,7 +1011,8 @@ function pdf_writeLinkedObjects(&$pdf,$object,$outputlangs,$posx,$posy,$w,$h,$al
 		    $reftoshow = $linkedobject["ref_title"].' : '.$linkedobject["ref_value"];
 		    if (! empty($linkedobject["date_value"]))
 		    {
-		        $reftoshow .= ' / '.$linkedobject["date_value"];
+		        //$reftoshow .= ' / '.$linkedobject["date_value"];
+			$reftoshow .= "\n".$linkedobject["date_title"].' : '.$linkedobject["date_value"];
 		    }
 		    
 			$posy+=3;
@@ -1891,14 +1892,15 @@ function pdf_getLinkedObjects($object,$outputlangs)
 			    // We concat this record info into fields xxx_value. title is overwrote.
 			    if (empty($object->linkedObjects['commande']) && $object->element != 'commande')	// There is not already a link to order and object is not the order, so we show also info with order
 			    {
-			        $elementobject->fetchObjectLinked();
-			        if (! empty($elementobject->linkedObjects['commande'])) $order = reset($elementobject->linkedObjects['commande']);
+			        //$elementobject->fetchObjectLinked();
+			        //if (! empty($elementobject->linkedObjects['commande'])) $order = reset($elementobject->linkedObjects['commande']);
 			    }
 			    if (! is_object($order))
 			    {
 			        $linkedobjects[$objecttype]['ref_title'] = $outputlangs->transnoentities("RefSending");
 			        if (! empty($linkedobjects[$objecttype]['ref_value'])) $linkedobjects[$objecttype]['ref_value'].=' / ';
-			        $linkedobjects[$objecttype]['ref_value'].= $outputlangs->transnoentities($elementobject->ref);
+			        //$linkedobjects[$objecttype]['ref_value'].= $outputlangs->transnoentities($elementobject->ref);
+				$linkedobjects[$objecttype]['ref_value'].= $outputlangs->transnoentities($elementobject->ref) . ($elementobject->ref_customer ? ' ('.$elementobject->ref_customer.')' : '');
 			        //$linkedobjects[$objecttype]['date_title'] = $outputlangs->transnoentities("DateSending");
 			        //if (! empty($linkedobjects[$objecttype]['date_value'])) $linkedobjects[$objecttype]['date_value'].=' / '; 
 			        //$linkedobjects[$objecttype]['date_value'].= dol_print_date($elementobject->date_delivery,'day','',$outputlangs);
