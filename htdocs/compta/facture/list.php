@@ -42,6 +42,7 @@ require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/invoice.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/html.formmargin.class.php';
 if (! empty($conf->commande->enabled)) require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
 if (! empty($conf->projet->enabled))
 {
@@ -73,6 +74,7 @@ $search_montant_ttc=GETPOST('search_montant_ttc','alpha');
 $search_status=GETPOST('search_status','int');
 $search_paymentmode=GETPOST('search_paymentmode','int');
 $option = GETPOST('option');
+$search_projet=GETPOST('search_projet','alpha');
 if ($option == 'late') $filter = 'paye:0';
 
 $sortfield = GETPOST("sortfield",'alpha');
@@ -433,6 +435,7 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
     $day_lim='';
     $year_lim='';
     $month_lim='';
+	$search_projet='';
 }
 
     
@@ -455,6 +458,7 @@ $sql.= ' f.rowid as facid, f.facnumber, f.ref_client, f.type, f.note_private, f.
 $sql.= ' f.datef as df, f.date_lim_reglement as datelimite,';
 $sql.= ' f.paye as paye, f.fk_statut,';
 $sql.= ' s.nom as name, s.rowid as socid, s.code_client, s.client ';
+if($conf->projet->enabled) $sql .= ', f.fk_projet, p.ref ';
 if (! $sall) $sql.= ', SUM(pf.amount) as am';   // To be able to sort on status
 $sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s';
 $sql.= ', '.MAIN_DB_PREFIX.'facture as f';
@@ -462,6 +466,7 @@ if (! $sall) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'paiement_facture as pf ON pf.f
 else $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'facturedet as fd ON fd.fk_facture = f.rowid';
 if ($sall || $search_product_category > 0) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'facturedet as pd ON f.rowid=pd.fk_facture';
 if ($search_product_category > 0) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as cp ON cp.fk_product=pd.fk_product';
+if($conf->projet->enabled) $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'projet as p ON p.rowid = f.fk_projet ';
 // We'll need this table joined to the select in order to filter by sale
 if ($search_sale > 0 || (! $user->rights->societe->client->voir && ! $socid)) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 if ($search_user > 0)
@@ -491,6 +496,7 @@ if ($filtre)
 if ($search_ref) $sql .= natural_search('f.facnumber', $search_ref);
 if ($search_refcustomer) $sql .= natural_search('f.ref_client', $search_refcustomer);
 if ($search_societe) $sql .= natural_search('s.nom', $search_societe);
+if (!empty($search_projet)) $sql .= natural_search('p.ref', $search_projet);
 if ($search_montant_ht != '') $sql.= natural_search('f.total', $search_montant_ht, 1);
 if ($search_montant_ttc != '') $sql.= natural_search('f.total_ttc', $search_montant_ttc, 1);
 if ($search_status != '' && $search_status >= 0) $sql.= " AND f.fk_statut = ".$db->escape($search_status);
@@ -751,10 +757,16 @@ if ($resql)
     print_liste_field_titre($langs->trans('Date'),$_SERVER['PHP_SELF'],'f.datef','',$param,'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("DateDue"),$_SERVER['PHP_SELF'],"f.date_lim_reglement",'',$param,'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('ThirdParty'),$_SERVER['PHP_SELF'],'s.nom','',$param,'',$sortfield,$sortorder);
+	if(!empty($conf->projet->enabled)){
+		print_liste_field_titre($langs->trans('Project'),$_SERVER["PHP_SELF"],'p.ref','',$param,'',$sortfield,$sortorder);
+	}
 	print_liste_field_titre($langs->trans("PaymentModeShort"),$_SERVER["PHP_SELF"],"f.fk_mode_reglement","",$param,"",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('AmountHT'),$_SERVER['PHP_SELF'],'f.total','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Taxes'),$_SERVER['PHP_SELF'],'f.tva','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('AmountTTC'),$_SERVER['PHP_SELF'],'f.total_ttc','',$param,'align="right"',$sortfield,$sortorder);
+    if(!empty($conf->margin->enabled)){
+		print_liste_field_titre($langs->trans('Margin'),$_SERVER["PHP_SELF"],'','',$param,'align="right"',$sortfield,$sortorder);
+	}
     print_liste_field_titre($langs->trans('Received'),$_SERVER['PHP_SELF'],'am','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Status'),$_SERVER['PHP_SELF'],'fk_statut,paye,am','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre('',$_SERVER["PHP_SELF"],"",'','','',$sortfield,$sortorder,'maxwidthsearch ');
@@ -780,6 +792,11 @@ if ($resql)
 	print '<br><input type="checkbox" name="option" value="late"'.($option == 'late'?' checked':'').'> '.$langs->trans("Late");
     print '</td>';
     print '<td class="liste_titre" align="left"><input class="flat" type="text" size="8" name="search_societe" value="'.$search_societe.'"></td>';
+	if(!empty($conf->projet->enabled)){
+		print '<td class="liste_titre" align="left">';
+		print '<input class="flat" type="text" name="search_projet" value="'.$search_projet.'">';
+		print '</td>';
+	}
 	print '<td class="liste_titre" align="left">';
 	$form->select_types_paiements($search_paymentmode, 'search_paymentmode', '', 0, 0, 1, 10);
 	print '</td>';
@@ -871,7 +888,16 @@ if ($resql)
             $thirdparty->code_client=$objp->code_client;
             print $thirdparty->getNomUrl(1,'customer');
             print '</td>';
-
+			
+			//Ref projet
+			if(! empty($conf->projet->enabled)){
+				$projet = new Project($db);
+				$projet->fetch($objp->fk_projet);
+				print '<td>';
+				print $projet->getNomUrl(1);
+				print '</td>';
+			}
+			
             // Payment mode
             print '<td>';
             $form->form_modes_reglement($_SERVER['PHP_SELF'], $objp->fk_mode_reglement, 'none', '', -1);
@@ -882,6 +908,13 @@ if ($resql)
             print '<td align="right">'.price($objp->total_tva,0,$langs).'</td>';
 
             print '<td align="right">'.price($objp->total_ttc,0,$langs).'</td>';
+			
+			//Marge
+			$facture = new Facture($db);
+			$facture->fetch($objp->facid);
+			$formmargin = new FormMargin($db);
+			$marginInfo = $formmargin->getMarginInfosArray($facture);
+			print '<td align="right" class="nowrap">'.price($marginInfo['total_margin']).'</td>';
 
             print '<td align="right">'.(! empty($paiement)?price($paiement,0,$langs):'&nbsp;').'</td>';
 

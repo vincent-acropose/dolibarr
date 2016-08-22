@@ -38,6 +38,8 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
 require_once DOL_DOCUMENT_ROOT .'/product/class/product.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/html.formmargin.class.php';
+if(! empty($conf->projet->enabled)) require_once DOL_DOCUMENT_ROOT .'/projet/class/project.class.php';
 
 $langs->load('orders');
 $langs->load('deliveries');
@@ -55,6 +57,7 @@ $search_product_category=GETPOST('search_product_category','int');
 $search_ref=GETPOST('search_ref','alpha')!=''?GETPOST('search_ref','alpha'):GETPOST('sref','alpha');
 $search_ref_customer=GETPOST('search_ref_customer','alpha');
 $search_company=GETPOST('search_company','alpha');
+$search_projet=GETPOST('search_projet','alpha');
 $sall=GETPOST('sall');
 $socid=GETPOST('socid','int');
 $search_user=GETPOST('search_user','int');
@@ -92,6 +95,7 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter.x") || GETP
     $search_ref_customer='';
     $search_company='';
     $search_total_ht='';
+	$search_projet='';
     $orderyear='';
     $ordermonth='';
 	$orderday='';
@@ -143,10 +147,12 @@ $sql = 'SELECT';
 if ($sall || $search_product_category > 0) $sql = 'SELECT DISTINCT';
 $sql.= ' s.nom as name, s.rowid as socid, s.client, s.code_client, c.rowid, c.ref, c.total_ht, c.tva as total_tva, c.total_ttc, c.ref_client,';
 $sql.= ' c.date_valid, c.date_commande, c.note_private, c.date_livraison as date_delivery, c.fk_statut, c.facture as billed';
+if($conf->projet->enabled) $sql .= ', c.fk_projet, p.ref as ref_projet';
 $sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s';
 $sql.= ', '.MAIN_DB_PREFIX.'commande as c';
 if ($sall || $search_product_category > 0) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'commandedet as pd ON c.rowid=pd.fk_commande';
 if ($search_product_category > 0) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as cp ON cp.fk_product=pd.fk_product';
+if($conf->projet->enabled) $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'projet as p ON p.rowid = c.fk_projet ';
 // We'll need this table joined to the select in order to filter by sale
 if ($search_sale > 0 || (! $user->rights->societe->client->voir && ! $socid)) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 if ($search_user > 0)
@@ -212,6 +218,7 @@ else if ($deliveryyear > 0)
     $sql.= " AND c.date_livraison BETWEEN '".$db->idate(dol_get_first_day($deliveryyear,1,false))."' AND '".$db->idate(dol_get_last_day($deliveryyear,12,false))."'";
 }
 if (!empty($search_company)) $sql .= natural_search('s.nom', $search_company);
+if (!empty($search_projet)) $sql .= natural_search('p.ref', $search_projet);
 if (!empty($search_ref_customer)) $sql.= natural_search('c.ref_client', $search_ref_customer);
 if ($search_sale > 0) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$search_sale;
 if ($search_user > 0) $sql.= " AND ec.fk_c_type_contact = tc.rowid AND tc.element='commande' AND tc.source='internal' AND ec.element_id = c.rowid AND ec.fk_socpeople = ".$search_user;
@@ -337,6 +344,9 @@ if ($resql)
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans('Ref'),$_SERVER["PHP_SELF"],'c.ref','',$param,'width="25%"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('RefCustomerOrder'),$_SERVER["PHP_SELF"],'c.ref_client','',$param,'',$sortfield,$sortorder);
+	if(!empty($conf->projet->enabled)){
+		print_liste_field_titre($langs->trans('Project'),$_SERVER["PHP_SELF"],'p.ref','',$param,'',$sortfield,$sortorder);
+	}
 	print_liste_field_titre($langs->trans('ThirdParty'),$_SERVER["PHP_SELF"],'s.nom','',$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('OrderDate'),$_SERVER["PHP_SELF"],'c.date_commande','',$param, 'align="center"',$sortfield,$sortorder);
 	if (empty($conf->global->ORDER_DISABLE_DELIVERY_DATE)) print_liste_field_titre($langs->trans('DeliveryDate'),$_SERVER["PHP_SELF"],'c.date_livraison','',$param, 'align="center"',$sortfield,$sortorder);
@@ -344,6 +354,9 @@ if ($resql)
 	$parameters=array();
     $reshook=$hookmanager->executeHooks('printFieldListTitle',$parameters);    // Note that $action and $object may have been modified by hook
     print $hookmanager->resPrint;
+	if(!empty($conf->margin->enabled)){
+		print_liste_field_titre($langs->trans('Margin'),$_SERVER["PHP_SELF"],'','',$param,'align="right"',$sortfield,$sortorder);
+	}
 	print_liste_field_titre($langs->trans('Status'),$_SERVER["PHP_SELF"],'c.fk_statut','',$param,'align="right"',$sortfield,$sortorder);
 	if (empty($conf->global->WORKFLOW_BILL_ON_SHIPMENT)) print_liste_field_titre($langs->trans('Billed'),$_SERVER["PHP_SELF"],'c.facture','',$param,'align="center"',$sortfield,$sortorder,'');
 	print_liste_field_titre('',$_SERVER["PHP_SELF"],"",'',$param,'',$sortfield,$sortorder,'maxwidthsearch ');
@@ -356,6 +369,11 @@ if ($resql)
 	print '<td class="liste_titre" align="left">';
 	print '<input class="flat" type="text" size="6" name="search_ref_customer" value="'.$search_ref_customer.'">';
 	print '</td>';
+	if(!empty($conf->projet->enabled)){
+		print '<td class="liste_titre" align="left">';
+		print '<input class="flat" type="text" name="search_projet" value="'.$search_projet.'">';
+		print '</td>';
+	}
 	print '<td class="liste_titre" align="left">';
 	print '<input class="flat" type="text" name="search_company" value="'.$search_company.'">';
 	print '</td>';
@@ -374,6 +392,8 @@ if ($resql)
 	}
 	print '<td class="liste_titre" align="right">';
 	print '<input class="flat" type="text" size="6" name="search_total_ht" value="'.$search_total_ht.'">';
+	print '</td>';
+	print '<td align="right">';
 	print '</td>';
 	print '<td align="right">';
 	$liststatus=array(
@@ -559,7 +579,16 @@ if ($resql)
 
 		// Ref customer
 		print '<td>'.$objp->ref_client.'</td>';
-
+		
+		//Ref projet
+		if(! empty($conf->projet->enabled)){
+			$projet = new Project($db);
+			$projet->fetch($objp->fk_projet);
+			print '<td>';
+			print $projet->getNomUrl(1);
+			print '</td>';
+		}
+		
 		// Company
 		$companystatic->id=$objp->socid;
         $companystatic->code_client = $objp->code_client;
@@ -591,10 +620,17 @@ if ($resql)
 		print '<td align="center">';
 		print dol_print_date($db->jdate($objp->date_delivery), 'day');
 		print '</td>';
-
+	
 		// Amount HT
 		print '<td align="right" class="nowrap">'.price($objp->total_ht).'</td>';
-
+		
+		//Marge
+		$commande = new Commande($db);
+		$commande->fetch($objp->rowid);
+		$formmargin = new FormMargin($db);
+		$marginInfo = $formmargin->getMarginInfosArray($commande);
+		print '<td align="right" class="nowrap">'.price($marginInfo['total_margin']).'</td>';
+		
 		// Statut
 		print '<td align="right" class="nowrap">'.$generic_commande->LibStatut($objp->fk_statut, $objp->billed, 5, 1).'</td>';
 

@@ -47,6 +47,8 @@ $search_ht=GETPOST('search_ht');
 $search_ttc=GETPOST('search_ttc');
 $search_status=(GETPOST('search_status','alpha')!=''?GETPOST('search_status','alpha'):GETPOST('statut','alpha'));	// alpha and not intbecause it can be '6,7'
 $optioncss = GETPOST('optioncss','alpha');
+$search_projet=GETPOST('search_projet','alpha');
+$search_client_final=GETPOST('search_client_final','alpha');
 
 $page  = GETPOST('page','int');
 $socid = GETPOST('socid','int');
@@ -73,6 +75,8 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
 	$search_ttc='';
 	$search_status='';
 	$billed='';
+	$search_projet='';
+	$search_client_final='';
 }
 
 if ($search_status == '') $search_status=-1;
@@ -129,7 +133,7 @@ $offset = $conf->liste_limit * $page ;
 
 $sql = "SELECT s.rowid as socid, s.nom as name, cf.date_commande as dc,";
 $sql.= " cf.rowid, cf.ref, cf.ref_supplier, cf.fk_statut, cf.billed, cf.total_ht, cf.tva as total_tva, cf.total_ttc, cf.fk_user_author, cf.date_livraison,";
-$sql.= " p.rowid as project_id, p.ref as project_ref,";
+$sql.= " p.rowid as project_id, p.ref as project_ref, s2.rowid as socid2, s2.nom as name2,";
 $sql.= " u.firstname,";
 $sql.= " u.lastname,";
 $sql.= " u.photo,";
@@ -138,6 +142,11 @@ $sql.= " FROM ".MAIN_DB_PREFIX."societe as s,";
 $sql.= " ".MAIN_DB_PREFIX."commande_fournisseur as cf";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."user as u ON cf.fk_user_author = u.rowid";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON p.rowid = cf.fk_projet";
+
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as ee ON (ee.fk_target = cf.rowid AND ee.sourcetype = 'commande' AND ee.targettype = 'order_supplier')";
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."commande as c ON (c.rowid = ee.fk_source)";
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s2 ON (s2.rowid = c.fk_soc)";
+
 if (!$user->rights->societe->client->voir && !$socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 $sql.= " WHERE cf.fk_soc = s.rowid ";
 $sql.= " AND cf.entity = ".$conf->entity;
@@ -150,6 +159,11 @@ if ($search_company)
 {
 	$sql .= natural_search('s.nom', $search_company);
 }
+if ($search_client_final)
+{
+	$sql .= natural_search('s2.nom', $search_client_final);
+}
+if (!empty($search_projet)) $sql .= natural_search('p.ref', $search_projet);
 if ($search_user)
 {
 	$sql.= " AND u.login LIKE '%".$db->escape($search_user)."%'";
@@ -238,6 +252,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"cf.ref","",$param,'',$sortfield,$sortorder);
 	if (empty($conf->global->SUPPLIER_ORDER_HIDE_REF_SUPPLIER)) print_liste_field_titre($langs->trans("RefSupplier"),$_SERVER["PHP_SELF"],"cf.ref_supplier","",$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("ThirdParty"),$_SERVER["PHP_SELF"],"s.nom","",$param,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Client final"),$_SERVER["PHP_SELF"],"s2.nom","",$param,'',$sortfield,$sortorder);
 	if (! empty($conf->global->PROJECT_SHOW_REF_INTO_LISTS)) print_liste_field_titre($langs->trans("Project"),$_SERVER["PHP_SELF"],"p.ref","",$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Author"),$_SERVER["PHP_SELF"],"u.login","",$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AmountHT"),$_SERVER["PHP_SELF"],"cf.total_ht","",$param,'align="right"',$sortfield,$sortorder);
@@ -254,9 +269,11 @@ if ($resql)
 	print '<td class="liste_titre"><input size="8" type="text" class="flat" name="search_ref" value="'.$search_ref.'"></td>';
 	if (empty($conf->global->SUPPLIER_ORDER_HIDE_REF_SUPPLIER)) print '<td class="liste_titre"><input type="text" class="flat" size="8" name="search_refsupp" value="'.$search_refsupp.'"></td>';
 	print '<td class="liste_titre"><input type="text" class="flat" size="8" name="search_company" value="'.$search_company.'"></td>';
+	print '<td class="liste_titre"><input type="text" class="flat" size="8" name="search_client_final" value="'.$search_client_final.'"></td>';
 	if (! empty($conf->global->PROJECT_SHOW_REF_INTO_LISTS))
 	{
-		print '<td class="liste_titre">';
+		print '<td class="liste_titre" align="left">';
+		print '<input class="flat" type="text" name="search_projet" value="'.$search_projet.'">';
 		print '</td>';
 	}
 	print '<td class="liste_titre"><input type="text" size="6" class="flat" name="search_user" value="'.$search_user.'"></td>';
@@ -309,6 +326,15 @@ if ($resql)
 		$thirdpartytmp->id = $obj->socid;
 		$thirdpartytmp->name = $obj->name;
 		print $thirdpartytmp->getNomUrl(1,'supplier');
+		print '</td>'."\n";
+		
+		// Client final
+		print '<td>';
+		if( $obj->socid2){
+			$thirdpartytmp->id = $obj->socid2;
+			$thirdpartytmp->name = $obj->name2;
+			print $thirdpartytmp->getNomUrl(1,'supplier');
+		}
 		print '</td>'."\n";
 
 		// Project
