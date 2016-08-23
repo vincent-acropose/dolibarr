@@ -108,11 +108,11 @@ $extrafields->fetch_name_optionals_label('contrat');
 
 llxHeader();
 
-$sql = 'SELECT';
+$sql = 'SELECT DISTINCT';
 $sql.= " c.rowid as cid, c.ref, c.datec, c.date_contrat, c.statut, c.ref_customer, c.ref_supplier,";
 $sql.= " s.nom as name, s.rowid as socid,";
 $sql.= " extra.type_contract,";
-$sql.= ' SUM('.$db->ifsql("cd.statut=0",1,0).') as nb_initial,';
+$sql.= ' SUM('.$db->ifsql("cd.statut=0",1,0).')  as nb_initial,';
 $sql.= ' SUM('.$db->ifsql("cd.statut=4 AND (cd.date_fin_validite IS NULL OR cd.date_fin_validite >= '".$db->idate($now)."')",1,0).') as nb_running,';
 $sql.= ' SUM('.$db->ifsql("cd.statut=4 AND (cd.date_fin_validite IS NOT NULL AND cd.date_fin_validite < '".$db->idate($now)."')",1,0).') as nb_expired,';
 $sql.= ' SUM('.$db->ifsql("cd.statut=4 AND (cd.date_fin_validite IS NOT NULL AND cd.date_fin_validite < '".$db->idate($now - $conf->contrat->services->expires->warning_delay)."')",1,0).') as nb_late,';
@@ -121,7 +121,7 @@ $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 if ($search_sale > 0 || (! $user->rights->societe->client->voir && ! $socid)) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 $sql.= ", ".MAIN_DB_PREFIX."contrat as c";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."contratdet as cd ON c.rowid = cd.fk_contrat";
-$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."contrat_extrafields as extra ON c.rowid = extra.fk_object";
+$sql.= " INNER JOIN ".MAIN_DB_PREFIX."contrat_extrafields as extra ON c.rowid = extra.fk_object";
 if ($search_product_category > 0) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as cp ON cp.fk_product=cd.fk_product';
 if ($search_user > 0)
 {
