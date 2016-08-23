@@ -219,7 +219,7 @@ if ($id > 0)
 
 
     dol_banner_tab($object, 'socid', '', ($user->societe_id?0:1), 'rowid', 'nom');
-        
+
 	print '<div class="fichecenter"><div class="fichehalfleft">';
 
     print '<div class="underbanner clearboth"></div>';
@@ -376,7 +376,7 @@ if ($id > 0)
 		$limit_field_type = (! empty($conf->global->MAIN_USE_JQUERY_JEDITABLE)) ? 'numeric' : 'amount';
 		print $form->editfieldval("OutstandingBill",'outstanding_limit',$object->outstanding_limit,$object,$user->rights->societe->creer,$limit_field_type,($object->outstanding_limit != '' ? price($object->outstanding_limit) : ''));
 		if (empty($object->outstanding_limit)) print $langs->trans("NoLimit");
-		
+
 		print '</td>';
 		print '</tr>';
 	}
@@ -485,11 +485,11 @@ if ($id > 0)
 	// Lien recap
 	$outstandingBills = $object->get_OutstandingBill();
 	$warn = '';
-	if ($object->outstanding_limit != '' && $object->outstanding_limit < $outstandingBills) 
+	if ($object->outstanding_limit != '' && $object->outstanding_limit < $outstandingBills)
 	{
 		$warn = img_warning($langs->trans("OutstandingBillReached"));
 	}
-	
+
 	print '<table class="noborder" width="100%">';
 	print '<tr class="liste_titre">';
 	print '<td>'.$langs->trans("Summary").'</td>';
@@ -743,7 +743,7 @@ if ($id > 0)
 
 			    print '<tr class="liste_titre">';
 				print '<td colspan="6"><table width="100%" class="nobordernopadding"><tr><td>'.$langs->trans("LastContracts",($num<=$MAXLIST?"":$MAXLIST)).'</td>';
-				print '<td align="right"><a href="'.DOL_URL_ROOT.'/contrat/list.php?socid='.$object->id.'">'.$langs->trans("AllContracts").' <span class="badge">'.$num.'</span></a></td></tr></table></td>';
+				print '<td align="right"><a href="'.DOL_URL_ROOT.'/contrat/services.php?socid='.$object->id.'">'.$langs->trans("AllContracts").' <span class="badge">'.$num.'</span></a></td></tr></table></td>';
 				print '</tr>';
 			}
 			$i = 0;
@@ -907,7 +907,7 @@ if ($id > 0)
     				print price($objp->total_ttc);
     				print '</td>';
 				}
-				
+
 				print '<td align="right" class="nowrap" style="min-width: 60px">'.($facturestatic->LibStatut($objp->paye,$objp->statut,5,$objp->am)).'</td>';
 				print "</tr>\n";
 				$i++;

@@ -193,7 +193,7 @@ if ($resql)
 	if ($search_contract) $param.='&amp;search_contract='.urlencode($search_contract);
 	if ($search_name)      $param.='&amp;search_name='.urlencode($search_name);
 	if ($search_service)  $param.='&amp;search_service='.urlencode($search_service);
-
+	if ($socid) $param.='&amp;socid='.urlencode($socid);
 
 	if ($search_extra_type_contract) $param.='&amp;options_type_contract='.urlencode($search_extra_type_contract);
 	if ($search_extradet_type_contract) $param.='&amp;options_type_contractdet='.urlencode($search_extradet_type_contract);
