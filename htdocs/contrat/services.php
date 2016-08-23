@@ -28,6 +28,7 @@ require ("../main.inc.php");
 require_once (DOL_DOCUMENT_ROOT."/contrat/class/contrat.class.php");
 require_once (DOL_DOCUMENT_ROOT."/product/class/product.class.php");
 require_once (DOL_DOCUMENT_ROOT."/societe/class/societe.class.php");
+require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 
 $langs->load("products");
 $langs->load("contracts");
@@ -52,6 +53,11 @@ $search_status=GETPOST("search_status","alpha");
 $statut=GETPOST('statut')?GETPOST('statut'):1;
 $socid=GETPOST('socid','int');
 
+$search_extra_type_contract=GETPOST('options_type_contract');
+$search_extradet_type_contract=GETPOST('options_type_contractdet');
+$search_period_rent=GETPOST('options_period_rentdet');
+$search_leaser=GETPOST('options_leaserdet');
+
 $op1month=GETPOST('op1month');
 $op1day=GETPOST('op1day');
 $op1year=GETPOST('op1year');
@@ -66,7 +72,7 @@ $contratid = GETPOST('id','int');
 if (! empty($user->societe_id)) $socid=$user->societe_id;
 $result = restrictedArea($user, 'contrat',$contratid);
 
-if ($search_status != '')
+if ($search_status != '' && $search_status!=-1)
 {
     $tmp=explode('&', $search_status);
     $mode=$tmp[0];
@@ -93,7 +99,7 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
 	$search_name="";
 	$search_contract="";
 	$search_service="";
-	$search_status=-1;
+	$search_status='';
 	$op1month="";
 	$op1day="";
 	$op1year="";
@@ -104,6 +110,11 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
 	$filter_op2="";
 	$mode='';
 	$filter='';
+
+	$search_extra_type_contract='';
+	$search_extradet_type_contract='';
+	$search_period_rent='';
+	$search_leaser='';
 }
 
 /*
@@ -113,6 +124,10 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
 $now=dol_now();
 
 $form=new Form($db);
+$extrafields=new Extrafields($db);
+$extrafields->fetch_name_optionals_label('contrat');
+$extrafieldsdet=new Extrafields($db);
+$extrafieldsdet->fetch_name_optionals_label('contratdet');
 
 llxHeader();
 
@@ -125,15 +140,19 @@ $sql.= " cd.date_ouverture_prevue,";
 $sql.= " cd.date_ouverture,";
 $sql.= " cd.date_fin_validite,";
 $sql.= " cd.date_cloture";
-$sql.= " FROM ".MAIN_DB_PREFIX."contrat as c,";
-$sql.= " ".MAIN_DB_PREFIX."societe as s,";
-if (!$user->rights->societe->client->voir && !$socid) $sql .= " ".MAIN_DB_PREFIX."societe_commerciaux as sc,";
-$sql.= " ".MAIN_DB_PREFIX."contratdet as cd";
+$sql.= " ,cd.qty";
+$sql.= " ,extra.type_contract as type_contract";
+$sql.= " ,extradet.type_contract as det_type_contract";
+$sql.= " ,extradet.period_rent";
+$sql.= " ,extradet.leaser";
+$sql.= " FROM ".MAIN_DB_PREFIX."contrat as c";
+$sql.= " INNER JOIN ".MAIN_DB_PREFIX."contratdet as cd ON c.rowid = cd.fk_contrat";
+$sql.= " INNER JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = c.fk_soc";
+if (!$user->rights->societe->client->voir && !$socid) $sql .= "  INNER JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product as p ON cd.fk_product = p.rowid";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."contrat_extrafields as extra ON c.rowid = extra.fk_object";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."contratdet_extrafields as extradet ON cd.rowid = extradet.fk_object";
 $sql.= " WHERE c.entity = ".$conf->entity;
-$sql.= " AND c.rowid = cd.fk_contrat";
-$sql.= " AND c.fk_soc = s.rowid";
-if (!$user->rights->societe->client->voir && !$socid) $sql .= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
 if ($mode == "0") $sql.= " AND cd.statut = 0";
 if ($mode == "4") $sql.= " AND cd.statut = 4";
 if ($mode == "5") $sql.= " AND cd.statut = 5";
@@ -143,6 +162,12 @@ if ($search_name)     $sql.= " AND s.nom LIKE '%".$db->escape($search_name)."%'"
 if ($search_contract) $sql.= " AND c.rowid = '".$db->escape($search_contract)."'";
 if ($search_service)  $sql.= " AND (p.ref LIKE '%".$db->escape($search_service)."%' OR p.description LIKE '%".$db->escape($search_service)."%' OR cd.description LIKE '%".$db->escape($search_service)."%')";
 if ($socid > 0)       $sql.= " AND s.rowid = ".$socid;
+
+if ($search_extra_type_contract) $sql.= " AND extra.type_contract = '".$search_extra_type_contract."'";
+if ($search_extradet_type_contract) $sql.= " AND extradet.type_contract = '".$search_extradet_type_contract."'";
+if ($search_period_rent) $sql.= " AND extradet.period_rent = '".$search_period_rent."'";
+if ($search_leaser) $sql.= " AND extradet.leaser = '".$search_leaser."'";
+
 $filter_date1=dol_mktime(0,0,0,$op1month,$op1day,$op1year);
 $filter_date2=dol_mktime(0,0,0,$op2month,$op2day,$op2year);
 if (! empty($filter_op1) && $filter_op1 != -1 && $filter_date1 != '') $sql.= " AND date_ouverture_prevue ".$filter_op1." '".$db->idate($filter_date1)."'";
@@ -168,6 +193,13 @@ if ($resql)
 	if ($search_contract) $param.='&amp;search_contract='.urlencode($search_contract);
 	if ($search_name)      $param.='&amp;search_name='.urlencode($search_name);
 	if ($search_service)  $param.='&amp;search_service='.urlencode($search_service);
+
+
+	if ($search_extra_type_contract) $param.='&amp;options_type_contract='.urlencode($search_extra_type_contract);
+	if ($search_extradet_type_contract) $param.='&amp;options_type_contractdet='.urlencode($search_extradet_type_contract);
+	if ($search_period_rent) $param.='&amp;options_period_rentdet='.urlencode($search_period_rent);
+	if ($search_leaser) $param.='&amp;options_leaserdet='.urlencode($search_leaser);
+
 	if ($mode)            $param.='&amp;mode='.$mode;
 	if ($filter)          $param.='&amp;filter='.$filter;
 	if (! empty($filter_op1) && $filter_op1 != -1) $param.='&amp;filter_op1='.urlencode($filter_op1);
@@ -181,22 +213,33 @@ if ($resql)
 	if ($mode == "4" && $filter == "expired") $title=$langs->trans("ListOfExpiredServices");
 	if ($mode == "5") $title=$langs->trans("ListOfClosedServices");
 	print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder,'',$num,$totalnboflines,'title_commercial.png');
-	
+
 	print '<form method="POST" action="'. $_SERVER["PHP_SELF"] .'">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 	print '<table class="liste" width="100%">';
 
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans("Contract"),$_SERVER["PHP_SELF"], "c.rowid",$param,"","",$sortfield,$sortorder);
+
+	print_liste_field_titre($extrafields->attribute_label['type_contract'],$_SERVER["PHP_SELF"], "extra.type_contract",$param,'',' align="center"',$sortfield,$sortorder);
+
 	print_liste_field_titre($langs->trans("Service"),$_SERVER["PHP_SELF"], "p.description",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"], "s.nom",$param,"","",$sortfield,$sortorder);
+
 	// Date debut
-	if ($mode == "0") print_liste_field_titre($langs->trans("DateStartPlannedShort"),$_SERVER["PHP_SELF"], "cd.date_ouverture_prevue",$param,'',' align="center"',$sortfield,$sortorder);
-	if ($mode == "" || $mode > 0) print_liste_field_titre($langs->trans("DateStartRealShort"),$_SERVER["PHP_SELF"], "cd.date_ouverture",$param,'',' align="center"',$sortfield,$sortorder);
+	if ($mode == "0") print_liste_field_titre($langs->trans("DateStartPlannedShort1"),$_SERVER["PHP_SELF"], "cd.date_ouverture_prevue",$param,'',' align="center"',$sortfield,$sortorder);
+	if ($mode == "" || $mode > 0) print_liste_field_titre($langs->trans("DateStartRealShort2"),$_SERVER["PHP_SELF"], "cd.date_ouverture",$param,'',' align="center"',$sortfield,$sortorder);
 	// Date fin
-	if ($mode == "" || $mode < 5) print_liste_field_titre($langs->trans("DateEndPlannedShort"),$_SERVER["PHP_SELF"], "cd.date_fin_validite",$param,'',' align="center"',$sortfield,$sortorder);
-	else print_liste_field_titre($langs->trans("DateEndRealShort"),$_SERVER["PHP_SELF"], "cd.date_cloture",$param,'',' align="center"',$sortfield,$sortorder);
+	if ($mode == "" || $mode < 5) print_liste_field_titre($langs->trans("DateEndPlannedShort3"),$_SERVER["PHP_SELF"], "cd.date_fin_validite",$param,'',' align="center"',$sortfield,$sortorder);
+	else print_liste_field_titre($langs->trans("DateEndRealShort4"),$_SERVER["PHP_SELF"], "cd.date_cloture",$param,'',' align="center"',$sortfield,$sortorder);
+
 	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"], "cd.statut,c.statut",$param,"","align=\"right\"",$sortfield,$sortorder);
+
+	print_liste_field_titre($langs->trans("Qty"),$_SERVER["PHP_SELF"], "cd.qty",$param,'',' align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($extrafieldsdet->attribute_label['type_contract'],$_SERVER["PHP_SELF"], "extradet.type_contract",$param,'',' align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($extrafieldsdet->attribute_label['period_rent'],$_SERVER["PHP_SELF"], "extradet.period_rent",$param,'',' align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($extrafieldsdet->attribute_label['leaser'],$_SERVER["PHP_SELF"], "extradet.leaser",$param,'',' align="center"',$sortfield,$sortorder);
+
 	print_liste_field_titre('',$_SERVER["PHP_SELF"],"",'','','',$sortfield,$sortorder,'maxwidthsearch ');
 	print "</tr>\n";
 
@@ -206,6 +249,9 @@ if ($resql)
 	print '<input type="hidden" name="mode" value="'.$mode.'">';
 	print '<input type="text" class="flat" size="3" name="search_contract" value="'.dol_escape_htmltag($search_contract).'">';
 	print '</td>';
+	print '<td class="liste_titre">';
+	print $extrafields->showInputField('type_contract', $search_extra_type_contract);
+	print '</td>';
 	// Service label
 	print '<td class="liste_titre">';
 	print '<input type="text" class="flat" size="12" name="search_service" value="'.dol_escape_htmltag($search_service).'">';
@@ -214,6 +260,8 @@ if ($resql)
 	print '<td class="liste_titre">';
 	print '<input type="text" class="flat" size="12" name="search_name" value="'.dol_escape_htmltag($search_name).'">';
 	print '</td>';
+
+
 	print '<td class="liste_titre" align="center">';
 	$arrayofoperators=array('<'=>'<','>'=>'>');
 	print $form->selectarray('filter_op1',$arrayofoperators,$filter_op1,1);
@@ -236,8 +284,20 @@ if ($resql)
 	    '4&filter=expired'=>$langs->trans("ServiceStatusLate"),
 	    '5'=>$langs->trans("ServiceStatusClosed")
 	);
-	print $form->selectarray('search_status',$arrayofstatus,(strstr($search_status, ',')?-1:$search_status),1);
+	print $form->selectarray('search_status',$arrayofstatus,(strstr($search_status, ',')?'-1':$search_status),1);
 	print '</td>';
+
+	print '<td align="right">qty</td>';
+	print '<td class="liste_titre">';
+	print $extrafieldsdet->showInputField('type_contract', $search_extradet_type_contract,'','det');
+	print '</td>';
+	print '<td class="liste_titre">';
+	print $extrafieldsdet->showInputField('period_rent', $search_period_rent,'','det');
+	print '</td>';
+	print '<td class="liste_titre">';
+	print $extrafieldsdet->showInputField('leaser', $search_leaser,'','det');
+	print '</td>';
+
     print '<td class="liste_titre" align="right"><input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 	print '<input type="image" class="liste_titre" name="button_removefilter" src="'.img_picto($langs->trans("Search"),'searchclear.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'" title="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">';
     print "</td></tr>\n";
@@ -256,6 +316,8 @@ if ($resql)
 		$contractstatic->ref=$obj->ref?$obj->ref:$obj->cid;
 		print $contractstatic->getNomUrl(1,16);
 		print '</td>';
+
+		print '<td>'.$extrafields->showOutputField('type_contract', $obj->type_contract).'</td>';
 
 		// Service
 		print '<td>';
@@ -311,6 +373,12 @@ if ($resql)
 			print $staticcontratligne->LibStatut($obj->statut,5,($obj->date_fin_validite && $db->jdate($obj->date_fin_validite) < $now)?1:0);
 		}
 		print '</td>';
+
+		print '<td align="center">'.$obj->qty.'</td>';
+		print '<td align="center">'.$extrafieldsdet->showOutputField('type_contract', $obj->det_type_contract).'</td>';
+		print '<td align="center">'.$extrafieldsdet->showOutputField('period_rent', $obj->period_rent).'</td>';
+		print '<td align="center">'.$extrafieldsdet->showOutputField('leaser', $obj->leaser).'</td>';
+
 		print '<td></td>';
 		print "</tr>\n";
 		$i++;

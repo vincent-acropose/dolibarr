@@ -30,6 +30,7 @@
 require ("../main.inc.php");
 require_once (DOL_DOCUMENT_ROOT."/contrat/class/contrat.class.php");
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 
 $langs->load("contracts");
 $langs->load("products");
@@ -52,6 +53,7 @@ $socid=GETPOST('socid');
 $search_user=GETPOST('search_user','int');
 $search_sale=GETPOST('search_sale','int');
 $search_product_category=GETPOST('search_product_category','int');
+$search_extra_type_contract=GETPOST('options_type_contract');
 
 $optioncss = GETPOST('optioncss','alpha');
 
@@ -76,6 +78,7 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
     $search_product_category='';
 	$sall="";
 	$search_status="";
+	$search_extra_type_contract='';
 }
 
 if ($search_status == '') $search_status=1;
@@ -100,12 +103,15 @@ $now=dol_now();
 $form=new Form($db);
 $formother = new FormOther($db);
 $socstatic = new Societe($db);
+$extrafields=new Extrafields($db);
+$extrafields->fetch_name_optionals_label('contrat');
 
 llxHeader();
 
 $sql = 'SELECT';
 $sql.= " c.rowid as cid, c.ref, c.datec, c.date_contrat, c.statut, c.ref_customer, c.ref_supplier,";
 $sql.= " s.nom as name, s.rowid as socid,";
+$sql.= " extra.type_contract,";
 $sql.= ' SUM('.$db->ifsql("cd.statut=0",1,0).') as nb_initial,';
 $sql.= ' SUM('.$db->ifsql("cd.statut=4 AND (cd.date_fin_validite IS NULL OR cd.date_fin_validite >= '".$db->idate($now)."')",1,0).') as nb_running,';
 $sql.= ' SUM('.$db->ifsql("cd.statut=4 AND (cd.date_fin_validite IS NOT NULL AND cd.date_fin_validite < '".$db->idate($now)."')",1,0).') as nb_expired,';
@@ -115,6 +121,7 @@ $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 if ($search_sale > 0 || (! $user->rights->societe->client->voir && ! $socid)) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 $sql.= ", ".MAIN_DB_PREFIX."contrat as c";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."contratdet as cd ON c.rowid = cd.fk_contrat";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."contrat_extrafields as extra ON c.rowid = extra.fk_object";
 if ($search_product_category > 0) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as cp ON cp.fk_product=cd.fk_product';
 if ($search_user > 0)
 {
@@ -140,11 +147,15 @@ if ($search_sale > 0)
 {
 	$sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$search_sale;
 }
+if (!empty($search_extra_type_contract)) {
+	$sql .= " AND type_contract='".$search_extra_type_contract."'";
+}
 if ($sall) {
     $sql .= natural_search(array_keys($fieldstosearchall), $sall);
 }
 if ($search_user > 0) $sql.= " AND ec.fk_c_type_contact = tc.rowid AND tc.element='contrat' AND tc.source='internal' AND ec.element_id = c.rowid AND ec.fk_socpeople = ".$search_user;
 $sql.= " GROUP BY c.rowid, c.ref, c.datec, c.date_contrat, c.statut, c.ref_supplier, s.nom, s.rowid";
+$sql.= " ,extra.type_contract";
 $totalnboflines=0;
 $result=$db->query($sql);
 if ($result)
@@ -174,7 +185,7 @@ if ($resql)
         foreach($fieldstosearchall as $key => $val) $fieldstosearchall[$key]=$langs->trans($val);
         print $langs->trans("FilterOnInto", $all) . join(', ',$fieldstosearchall);
     }
-    
+
     // If the user can view prospects other than his'
     $moreforfilter='';
     if ($user->rights->societe->client->voir || $socid)
@@ -203,7 +214,7 @@ if ($resql)
 		$moreforfilter.=$form->selectarray('search_product_category', $cate_arbo, $search_product_category, 1, 0, 0, '', 0, 0, 0, 0, '', 1);
 		$moreforfilter.='</div>';
 	}
-    
+
     $parameters=array();
     $reshook=$hookmanager->executeHooks('printFieldPreListTitle',$parameters);    // Note that $action and $object may have been modified by hook
 	if (empty($reshook)) $moreforfilter .= $hookmanager->resPrint;
@@ -222,9 +233,11 @@ if ($resql)
     $param.='&search_name='.$search_name;
     $param.='&search_ref_supplier='.$search_ref_supplier;
     $param.='&search_sale=' .$search_sale;
+    $param="&options_search_extra_type_contract=".$search_extra_type_contract;
     if ($optioncss != '') $param.='&optioncss='.$optioncss;
 
     print_liste_field_titre($langs->trans("Ref"), $_SERVER["PHP_SELF"], "c.rowid","","$param",'',$sortfield,$sortorder);
+    print_liste_field_titre($extrafields->attribute_label['type_contract'], $_SERVER["PHP_SELF"], "extra.type_contract","","$param",'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("RefCustomer"), $_SERVER["PHP_SELF"], "c.ref_customer","","$param",'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("RefSupplier"), $_SERVER["PHP_SELF"], "c.ref_supplier","","$param",'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("ThirdParty"), $_SERVER["PHP_SELF"], "s.nom","","$param",'',$sortfield,$sortorder);
@@ -243,6 +256,9 @@ if ($resql)
     print '<tr class="liste_titre">';
     print '<td class="liste_titre">';
     print '<input type="text" class="flat" size="3" name="search_contract" value="'.dol_escape_htmltag($search_contract).'">';
+    print '</td>';
+    print '<td class="liste_titre">';
+    print $extrafields->showInputField('type_contract', $search_extra_type_contract);
     print '</td>';
     print '<td class="liste_titre">';
     print '<input type="text" class="flat" size="6" name="search_ref_customer value="'.dol_escape_htmltag($search_ref_customer).'">';
@@ -270,6 +286,7 @@ if ($resql)
         print img_object($langs->trans("ShowContract"),"contract").' '.(isset($obj->ref) ? $obj->ref : $obj->cid) .'</a>';
         if ($obj->nb_late) print img_warning($langs->trans("Late"));
         print '</td>';
+        print '<td>'.$extrafields->showOutputField('type_contract', $obj->type_contract).'</td>';
         print '<td>'.$obj->ref_customer.'</td>';
         print '<td>'.$obj->ref_supplier.'</td>';
         print '<td><a href="../comm/card.php?socid='.$obj->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.$obj->name.'</a></td>';
