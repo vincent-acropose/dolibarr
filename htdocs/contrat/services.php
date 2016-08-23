@@ -287,7 +287,7 @@ if ($resql)
 	print $form->selectarray('search_status',$arrayofstatus,(strstr($search_status, ',')?'-1':$search_status),1);
 	print '</td>';
 
-	print '<td align="right">qty</td>';
+	print '<td align="right"></td>';
 	print '<td class="liste_titre">';
 	print $extrafieldsdet->showInputField('type_contract', $search_extradet_type_contract,'','det');
 	print '</td>';
