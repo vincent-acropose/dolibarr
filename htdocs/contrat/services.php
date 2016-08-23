@@ -131,7 +131,7 @@ $extrafieldsdet->fetch_name_optionals_label('contratdet');
 
 llxHeader();
 
-$sql = "SELECT c.rowid as cid, c.ref, c.statut as cstatut,";
+$sql = "SELECT DISTINCT c.rowid as cid, c.ref, c.statut as cstatut,";
 $sql.= " s.rowid as socid, s.nom as name,";
 $sql.= " cd.rowid, cd.description, cd.statut,";
 $sql.= " p.rowid as pid, p.ref as pref, p.label as label, p.fk_product_type as ptype, p.entity as pentity,";
