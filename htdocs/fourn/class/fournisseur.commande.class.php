@@ -65,7 +65,7 @@ class CommandeFournisseur extends CommonOrder
     //  		                                      -> 9=Refused  -> (reopen) 1=Validated
     //  Note: billed or not is on another field "billed"
     var $statuts;           // List of status
-    
+
     var $socid;
     var $fourn_id;
     var $date;
@@ -517,7 +517,7 @@ class CommandeFournisseur extends CommonOrder
         $billedtext='';
 		//if ($statut==5 && $this->billed == 1) $statut = 8;
         if ($billed == 1) $billedtext=$langs->trans("Billed");
-        
+
         // List of language codes for status
         $statutshort[0] = 'StatusOrderDraftShort';
         $statutshort[1] = 'StatusOrderValidatedShort';
@@ -734,7 +734,7 @@ class CommandeFournisseur extends CommonOrder
             // Do we have to change status now ? (If double approval is required and first approval, we keep status to 1 = validated)
 			$movetoapprovestatus=true;
 			$comment='';
-			
+
             $sql = "UPDATE ".MAIN_DB_PREFIX."commande_fournisseur";
 			$sql.= " SET ref='".$this->db->escape($num)."',";
 			if (empty($secondlevel))	// standard or first level approval
@@ -743,7 +743,7 @@ class CommandeFournisseur extends CommonOrder
     	        $sql.= " fk_user_approve = ".$user->id;
     	        if (! empty($conf->global->SUPPLIER_ORDER_DOUBLE_APPROVAL) && $conf->global->MAIN_FEATURES_LEVEL > 0 && $this->total_ht >= $conf->global->SUPPLIER_ORDER_DOUBLE_APPROVAL)
     	        {
-    	        	if (empty($this->user_approve_id2)) 
+    	        	if (empty($this->user_approve_id2))
     	        	{
     	        	    $movetoapprovestatus=false;		// second level approval not done
     	        	    $comment=' (first level)';
@@ -810,7 +810,7 @@ class CommandeFournisseur extends CommonOrder
                 if (! $error)
                 {
                 	$this->ref = $this->newref;
-                	
+
                 	if ($movetoapprovestatus) $this->statut = 2;
 					else $this->statut = 1;
            			if (empty($secondlevel))	// standard or first level approval
@@ -1356,7 +1356,7 @@ class CommandeFournisseur extends CommonOrder
 
             $localtaxes_type=getLocalTaxesFromRate($txtva,0,$mysoc,$this->thirdparty);
             $txtva = preg_replace('/\s*\(.*\)/','',$txtva);  // Remove code into vatrate.
-            
+
             $tabprice = calcul_price_total($qty, $pu, $remise_percent, $txtva, $txlocaltax1, $txlocaltax2, 0, $price_base_type, $info_bits, $product_type, $this->thirdparty, $localtaxes_type);
             $total_ht  = $tabprice[0];
             $total_tva = $tabprice[1];
@@ -1910,30 +1910,60 @@ class CommandeFournisseur extends CommonOrder
      *	@param      timestamp		$date_livraison     Planned delivery date
      *	@return     int         						<0 if KO, >0 if OK
      */
-    function set_date_livraison($user, $date_livraison)
+    function set_date_livraison($user, $date_livraison, $notrigger=0)
     {
         if ($user->rights->fournisseur->commande->creer)
         {
-            $sql = "UPDATE ".MAIN_DB_PREFIX."commande_fournisseur";
+        	$error=0;
+
+        	$this->db->begin();
+
+        	 $sql = "UPDATE ".MAIN_DB_PREFIX."commande_fournisseur";
             $sql.= " SET date_livraison = ".($date_livraison ? "'".$this->db->idate($date_livraison)."'" : 'null');
             $sql.= " WHERE rowid = ".$this->id;
 
-            dol_syslog(get_class($this)."::set_date_livraison", LOG_DEBUG);
-            $resql=$this->db->query($sql);
-            if ($resql)
-            {
-                $this->date_livraison = $date_livraison;
-                return 1;
-            }
-            else
-            {
-                $this->error=$this->db->error();
-                return -1;
-            }
+        	dol_syslog(__METHOD__, LOG_DEBUG);
+        	$resql=$this->db->query($sql);
+        	if (!$resql)
+        	{
+        		$this->errors[]=$this->db->error();
+        		$error++;
+        	}
+
+        	if (! $error)
+        	{
+        		$this->oldcopy= clone $this;
+        		$this->date_livraison = $date_livraison;
+        	}
+
+        	if (! $notrigger && empty($error))
+        	{
+        		var_dump('toto');
+        		// Call trigger
+        		$result=$this->call_trigger('ORDER_SUPPLIER_MODIFY',$user);
+        		if ($result < 0) $error++;
+        		// End call triggers
+        	}
+
+        	if (! $error)
+        	{
+        		$this->db->commit();
+        		return 1;
+        	}
+        	else
+        	{
+        		foreach($this->errors as $errmsg)
+        		{
+        			dol_syslog(__METHOD__.' Error: '.$errmsg, LOG_ERR);
+        			$this->error.=($this->error?', '.$errmsg:$errmsg);
+        		}
+        		$this->db->rollback();
+        		return -1*$error;
+        	}
         }
         else
         {
-            return -2;
+        	return -2;
         }
     }
 
@@ -2115,7 +2145,7 @@ class CommandeFournisseur extends CommonOrder
 
             $localtaxes_type=getLocalTaxesFromRate($txtva,0,$mysoc, $this->thirdparty);
             $txtva = preg_replace('/\s*\(.*\)/','',$txtva);  // Remove code into vatrate.
-            
+
             $tabprice=calcul_price_total($qty, $pu, $remise_percent, $txtva, $txlocaltax1, $txlocaltax2, 0, $price_base_type, $info_bits, $type, $this->thirdparty, $localtaxes_type);
             $total_ht  = $tabprice[0];
             $total_tva = $tabprice[1];
@@ -2533,10 +2563,10 @@ class CommandeFournisseur extends CommonOrder
     public function hasDelay()
     {
         global $conf;
-		
+
         $now = dol_now();
         $date_to_test = empty($this->date_livraison) ? $this->date_commande : $this->date_livraison;
-        
+
         return ($this->statut != 3) && $date_to_test && $date_to_test < ($now - $conf->commande->fournisseur->warning_delay);
     }
 }

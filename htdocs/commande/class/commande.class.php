@@ -2097,11 +2097,11 @@ class Commande extends CommonOrder
      *	@param      int		$date_livraison     Date de livraison
      *	@return     int         						<0 si ko, >0 si ok
      */
-    function set_date_livraison($user, $date_livraison)
+    function set_date_livraison($user, $date_livraison, $notrigger=0)
     {
         if ($user->rights->commande->creer)
         {
-        $error=0;
+       		$error=0;
 
         	$this->db->begin();
 
@@ -2459,12 +2459,12 @@ class Commande extends CommonOrder
 	{
 	    global $conf, $user, $langs;
 	    $error = 0;
-	
+
 	    $this->db->begin();
-	
+
 	    $sql = 'UPDATE '.MAIN_DB_PREFIX.'commande SET facture = 0';
 	    $sql.= ' WHERE rowid = '.$this->id.' AND fk_statut > '.self::STATUS_DRAFT;
-	
+
 	    dol_syslog(get_class($this)."::classifyUnBilled", LOG_DEBUG);
 	    if ($this->db->query($sql))
 	    {
@@ -2472,12 +2472,12 @@ class Commande extends CommonOrder
 	        $result=$this->call_trigger('ORDER_CLASSIFY_UNBILLED',$user);
 	        if ($result < 0) $error++;
 	        // End call triggers
-	
+
 	        if (! $error)
 	        {
 	            $this->facturee=0; // deprecated
 	            $this->billed=0;
-	
+
 	            $this->db->commit();
 	            return 1;
 	        }
@@ -2499,8 +2499,8 @@ class Commande extends CommonOrder
 	        return -1;
 	    }
 	}
-	
-	
+
+
     /**
      *  Update a line in database
      *
