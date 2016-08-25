@@ -1938,7 +1938,6 @@ class CommandeFournisseur extends CommonOrder
 
         	if (! $notrigger && empty($error))
         	{
-        		var_dump('toto');
         		// Call trigger
         		$result=$this->call_trigger('ORDER_SUPPLIER_MODIFY',$user);
         		if ($result < 0) $error++;
