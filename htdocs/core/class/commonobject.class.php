@@ -3747,14 +3747,15 @@ abstract class CommonObject
 						// 0 : ObjectName
 						// 1 : classPath
 						$InfoFieldList = explode(":", $param_list[0]);
+						
 						dol_include_once($InfoFieldList[1]);
 						$object = new $InfoFieldList[0]($this->db);
 						if ($value)
 						{
 							if (GETPOST('action', 'alpha') != 'confirm_clone')
 							{
-								$object->fetch(0,$value);
-								$this->array_options[$key]=$object->id;
+								$res=$object->fetch(0,$value);
+								if ($res > 0) $this->array_options[$key]=$object->id;
 							}
 						}
 						break;
