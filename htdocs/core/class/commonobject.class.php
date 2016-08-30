@@ -2214,7 +2214,7 @@ abstract class CommonObject
                 {
                     $error++;
                     $this->error=$this->db->lasterror();
-                    $this->error[]=$this->db->lasterror();
+                    $this->errors[]=$this->db->lasterror();
                 }
             }
 

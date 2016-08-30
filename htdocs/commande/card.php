@@ -351,6 +351,17 @@ if (empty($reshook))
 								                                                                                                      // trigger used
 								{
 									$lines[$i]->fetch_optionals($lines[$i]->rowid);
+									$extrafieldsline=new ExtraFields($db);
+									$extrafieldsline->fetch_name_optionals_label('commandedet');
+									$key_array=array();
+									foreach($extrafieldsline->attribute_label as $key=>$extrafieldstmp) {
+										$key_array[$key]=$key;
+									}
+									foreach ($lines[$i]->array_options as $key=>$extrafieldstmp) {
+										if (!array_key_exists($key, $key_array)) {
+											unset($lines[$i]->array_options[$key]);
+										}
+									}
 									$array_options = $lines[$i]->array_options;
 								}
 
@@ -448,12 +459,12 @@ if (empty($reshook))
 	else if ($action == 'classifyunbilled' && $user->rights->commande->creer)
 	{
 	    $ret=$object->classifyUnBilled();
-	
+
 	    if ($ret < 0) {
 	        setEventMessages($object->error, $object->errors, 'errors');
 	    }
 	}
-	
+
 	// Positionne ref commande client
 	else if ($action == 'set_ref_client' && $user->rights->commande->creer) {
 		$object->set_ref_client($user, GETPOST('ref_client'));
@@ -1572,7 +1583,7 @@ if ($action == 'create' && $user->rights->commande->creer)
 			// Calcul contrat->price (HT), contrat->total (TTC), contrat->tva
 			$objectsrc->remise_absolue = $remise_absolue;
 			$objectsrc->remise_percent = $remise_percent;
-			$objectsrc->update_price(1);
+			$objectsrc->update_price(1,'none',1);
 		}
 
 		print "\n<!-- " . $classname . " info -->";
