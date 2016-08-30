@@ -1,0 +1,36 @@
+# Dolibarr language file - fr_FR - factory
+CHARSET=UTF-8
+Restock=reStock
+InOrder=En commande
+InPropal=En proposition
+InBill=En facturation
+Signed=Signée
+PartialCmde=Préparation
+PartialBill=paiement partiel
+AlreadyOrder1=Qte deja en
+AlreadyOrder2=Cmde Fourn.
+QtyRestock=A commander
+RestockOrder=Réapprovisionner
+RestockProduct=Réapprovisionner
+NoFournishForThisProduct=Pas de fournisseur pour ce produit
+NoFournish=Hors Commande
+QtyMinAbrev=Qte Min.
+StockAlertAbrev=Seuil Alerte
+StockLimitAbrev=Limite Stock
+PriceQtyMinHTAbrev=Prx Qté min. HT
+UnitPriceHTAbrev=Prx Unit. HT
+DiscountQtyMinAbrev=Remise qté min.
+FournishSelectInfo=Si il y en a plusieurs possible, séctionner le fournisseur à qui vous souhaitez commander le produit
+CreateFournOrder=Création des bons de commandes fournisseurs
+ReferenceOfOrder=Réf. réapprovision
+Restockof=ReStock du : 
+RestockofCmdeClient=ReStock Cmde client : 
+RestockofProduct=ReStock Produit : 
+ProductNeed=Réapprovision
+RecalcReStock=Recalculer
+### SETUP
+RestockSetup=Paramétrage de reStock
+BusinessDocuments=Documents commerciaux
+PonderableStatus=Etats Pondérables
+DisplayPonderedSetting=Paramétrage de la pondération selon les états des documents commerciaux
+CoefCommandeClient2fournisseur=Coeficient de transformation d'une commande client en commande fournisseur
