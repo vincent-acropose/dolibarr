@@ -1848,6 +1848,9 @@ class Societe extends CommonObject
             $label.= '</div><div style="clear: both;"></div>';
         }
 
+        if (empty($this->address) && !empty($this->id)) {
+        	$this->fetch($this->id);
+        }
         $tmpuse_javascript_ajax = $conf->use_javascript_ajax ;
         $conf->use_javascript_ajax ="";
         $tmpadress= $this->getBannerAddress('refaddress',$this);
