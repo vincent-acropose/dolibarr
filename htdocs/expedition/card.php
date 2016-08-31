@@ -394,11 +394,14 @@ if (empty($reshook))
 				        			}
 
 				        			$objectsrc->fetchObjectLinked(null,'contrat',$objectsrc->id,'commande');
-									//TODO µFinish this
-				        			$resultAdd = $equipementstatic->addline($equipid, GETPOST('equipementevt_type'.$i), null, $dateo, $datee, null, $contractid, null, null, null, $fk_user_author, $total_ht);
-				        			if ($resultAdd < 0) {
-				        				setEventMessages($equipementstatic->error, $equipementstatic->errors, 'errors');
-				        				$error++;
+				        			if (is_array($objectsrc->linkedObjects['contrat']) && count($objectsrc->linkedObjects['contrat'])>0) {
+										$contractlinked=reset($objectsrc->linkedObjects['contrat']);
+
+					        			$resultAdd = $equipementstatic->addline($equipid, GETPOST('equipementevt_type'.$i), null, $dateo, $datee, null, $contractlinked->id, null, null, null, $fk_user_author, $total_ht);
+					        			if ($resultAdd < 0) {
+					        				setEventMessages($equipementstatic->error, $equipementstatic->errors, 'errors');
+					        				$error++;
+					        			}
 				        			}
 			        			}
 			        		}
