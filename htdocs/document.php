@@ -61,8 +61,21 @@ $action=GETPOST('action','alpha');
 $original_file=GETPOST('file','alpha');	// Do not use urldecode here ($_GET are already decoded by PHP).
 $modulepart=GETPOST('modulepart','alpha');
 $urlsource=GETPOST('urlsource','alpha');
-$entity=GETPOST('entity')?GETPOST('entity','int'):$conf->entity;
 
+$entity=(int)GETPOST('entity');
+if(!empty($entity)) {
+  $conf->entity = $entity;
+  $conf->setValues($db);
+}
+else{
+  $entity = $conf->entity;
+}
+
+//?GETPOST('entity','int'):$conf->entity;
+
+
+
+//var_dump($conf->entity,$entity, $original_file);
 // Security check
 if (empty($modulepart)) accessforbidden('Bad value for parameter modulepart');
 
@@ -105,11 +118,14 @@ $refname=basename(dirname($original_file)."/");
 
 // Security check
 if (empty($modulepart)) accessforbidden('Bad value for parameter modulepart');
+//var_dump($entity);
 $check_access = dol_check_secure_access_document($modulepart,$original_file,$entity,$refname);
 $accessallowed              = $check_access['accessallowed'];
 $sqlprotectagainstexternals = $check_access['sqlprotectagainstexternals'];
 $original_file              = $check_access['original_file'];
+//var_dump($original_file);
 
+//var_dump($check_access );
 // Basic protection (against external users only)
 if ($user->societe_id > 0)
 {
@@ -153,6 +169,7 @@ if (preg_match('/\.\./',$original_file) || preg_match('/[<>|]/',$original_file))
 }
 
 
+
 clearstatcache();
 
 $filename = basename($original_file);
@@ -160,7 +177,7 @@ $filename = basename($original_file);
 // Output file on browser
 dol_syslog("document.php download $original_file $filename content-type=$type");
 $original_file_osencoded=dol_osencode($original_file);	// New file name encoded in OS encoding charset
-
+//var_dump($original_file_osencoded,$original_file);
 // This test if file exists should be useless. We keep it to find bug more easily
 if (! file_exists($original_file_osencoded))
 {
