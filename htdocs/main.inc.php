@@ -1948,7 +1948,7 @@ if (! function_exists("llxFooter"))
     		print "\n<!-- JS CODE TO ENABLE tipTip on all object with class classfortooltip -->\n";
     		print '<script type="text/javascript">
             	jQuery(document).ready(function () {
-            		jQuery(".classfortooltip").tipTip({maxWidth: "'.dol_size(400,'width').'px", edgeOffset: 10, delay: 50, fadeIn: 50, fadeOut: 3000});
+            		jQuery(".classfortooltip").tipTip({maxWidth: "'.dol_size(400,'width').'px", edgeOffset: 10, delay: 50, fadeIn: 50, fadeOut: 2200});
             	});
             </script>' . "\n";
         }
