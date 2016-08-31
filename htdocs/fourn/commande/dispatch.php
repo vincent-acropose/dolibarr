@@ -33,6 +33,7 @@ require_once DOL_DOCUMENT_ROOT.'/product/stock/class/entrepot.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/fourn.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.commande.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.commande.dispatch.class.php';
+dol_include_once('/product/class.product.class.php');
 if (! empty($conf->projet->enabled))	require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 
 $langs->load('orders');
@@ -539,13 +540,19 @@ if ($id > 0 || ! empty($ref))
 
 							// Warehouse
 							print '<td align="right">';
+							
+							$p = new Product($db);
+							$p->fetch($objp->fk_product);
+							$ent = $p->array_options['options_emplacement'];
+							if(empty($ent)) $ent = GETPOST("entrepot".$suffix);
+							
 							if (count($listwarehouses)>1)
 							{
-								print $form->selectarray("entrepot".$suffix, $listwarehouses, GETPOST("entrepot".$suffix), 1, 0, 0, '', 0, 0, $disabled);
+								print $form->selectarray("entrepot".$suffix, $listwarehouses, $ent, 1, 0, 0, '', 0, 0, $disabled);
 							}
 							elseif  (count($listwarehouses)==1)
 							{
-								print $form->selectarray("entrepot".$suffix, $listwarehouses, GETPOST("entrepot".$suffix), 0, 0, 0, '', 0, 0, $disabled);
+								print $form->selectarray("entrepot".$suffix, $listwarehouses, $ent, 0, 0, 0, '', 0, 0, $disabled);
 							}
 							else
 							{
