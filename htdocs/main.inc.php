@@ -164,7 +164,7 @@ if (! defined('NOSCANPOSTFORINJECTION'))
 }
 
 // This is to make Dolibarr working with Plesk
-if (! empty($_SERVER['DOCUMENT_ROOT']) && substr($_SERVER['DOCUMENT_ROOT'], -6) !== 'htdocs') 
+if (! empty($_SERVER['DOCUMENT_ROOT']) && substr($_SERVER['DOCUMENT_ROOT'], -6) !== 'htdocs')
 {
 	set_include_path($_SERVER['DOCUMENT_ROOT'] . '/htdocs');
 }
@@ -530,14 +530,14 @@ if (! defined('NOLOGIN'))
                 $langs->load('errors');
 
                 $_SESSION["dol_loginmesg"]=$langs->trans("ErrorCantLoadUserFromDolibarrDatabase",$login);
-            
+
                 // TODO @deprecated Remove this. Hook must be used, not this trigger.
                 $user->trigger_mesg='ErrorCantLoadUserFromDolibarrDatabase - login='.$login;
             }
             if ($resultFetchUser < 0)
             {
                 $_SESSION["dol_loginmesg"]=$user->error;
-            
+
                 // TODO @deprecated Remove this. Hook must be used, not this trigger.
                 $user->trigger_mesg=$user->error;
             }
@@ -583,14 +583,14 @@ if (! defined('NOLOGIN'))
                 $langs->load('errors');
 
                 $_SESSION["dol_loginmesg"]=$langs->trans("ErrorCantLoadUserFromDolibarrDatabase",$login);
-                
+
                 // TODO @deprecated Remove this. Hook must be used, not this trigger.
                 $user->trigger_mesg='ErrorCantLoadUserFromDolibarrDatabase - login='.$login;
             }
             if ($resultFetchUser < 0)
             {
                 $_SESSION["dol_loginmesg"]=$user->error;
-            
+
                 // TODO @deprecated Remove this. Hook must be used, not this trigger.
                 $user->trigger_mesg=$user->error;
             }
@@ -692,7 +692,7 @@ if (! defined('NOLOGIN'))
 		{
             $db->commit();
         }
-        
+
         if (! empty($conf->global->MAIN_LANDING_PAGE))    // Example: /index.php
         {
             $newpath=dol_buildpath($conf->global->MAIN_LANDING_PAGE, 1);
@@ -1231,7 +1231,7 @@ function top_htmlhead($head, $title='', $disablejs=0, $disablehead=0, $arrayofjs
                 		    $.mobile.page.prototype.options.keepNative = \'input[type="submit"]\'; /* jQuery Mobile 1.4 and lower */
                 		   ';
             		}
-                    print '                		        
+                    print '
                				$.extend(  $.mobile , {
                					autoInitializePage : true,	/* We need this to run jmobile */
                					/* loadingMessage : \'xxxxx\', */
@@ -1417,7 +1417,7 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
 		}
 
 		// Raven.js for client-side Sentry logging support
-		if (array_key_exists('mod_syslog_sentry', $conf->loghandlers) && ! empty($conf->global->SYSLOG_SENTRY_DSN)) 
+		if (array_key_exists('mod_syslog_sentry', $conf->loghandlers) && ! empty($conf->global->SYSLOG_SENTRY_DSN))
 		{
 			// Filter out secret key
 			$dsn = parse_url($conf->global->SYSLOG_SENTRY_DSN);
@@ -1520,19 +1520,19 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
 	    if (empty($conf->global->MAIN_HELP_DISABLELINK))
 	    {
 	        $langs->load("help");
-	    
+
 	        $helpbaseurl='';
 	        $helppage='';
 	        $mode='';
 
 	        if (empty($helppagename)) $helppagename='EN:User_documentation|FR:Documentation_utilisateur|ES:Documentación_usuarios';
-	    
+
 	        // Get helpbaseurl, helppage and mode from helppagename and langs
 	        $arrayres=getHelpParamFor($helppagename,$langs);
 	        $helpbaseurl=$arrayres['helpbaseurl'];
 	        $helppage=$arrayres['helppage'];
 	        $mode=$arrayres['mode'];
-	    
+
 	        // Link to help pages
 	        if ($helpbaseurl && $helppage)
 	        {
@@ -1553,7 +1553,7 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
 	            $toprightmenu.=Form::textwithtooltip('',$title,2,1,$text,'login_block_elem',2);
 	        }
 	    }
-	    
+
 		// Logout link
 	    $toprightmenu.=Form::textwithtooltip('',$logouthtmltext,2,1,$logouttext,'login_block_elem',2);
 
@@ -1597,8 +1597,8 @@ function left_menu($menu_array_before, $helppagename='', $notused='', $menu_arra
     $searchform='';
     $bookmarks='';
 
-    if (! empty($menu_array_before)) dol_syslog("Deprecated parameter menu_array_before was used when calling main::left_menu function. Menu entries of module should now be defined into module descriptor and not provided when calling left_menu.", LOG_WARNING); 
-        
+    if (! empty($menu_array_before)) dol_syslog("Deprecated parameter menu_array_before was used when calling main::left_menu function. Menu entries of module should now be defined into module descriptor and not provided when calling left_menu.", LOG_WARNING);
+
     if (empty($conf->dol_hide_leftmenu))
     {
 	    // Instantiate hooks of thirdparty module
@@ -1623,39 +1623,39 @@ function left_menu($menu_array_before, $helppagename='', $notused='', $menu_arra
     	        $langs->load("companies");
     	        $searchform.=printSearchForm(DOL_URL_ROOT.'/societe/list.php', DOL_URL_ROOT.'/societe/list.php', $langs->trans("ThirdParties"), 'soc', 'sall', 'T', 'searchleftt', img_object('','company'));
     	    }
-    
+
     	    if (! empty($conf->societe->enabled) && $user->rights->societe->lire)
     	    {
     	        $langs->load("companies");
     	        $searchform.=printSearchForm(DOL_URL_ROOT.'/contact/list.php', DOL_URL_ROOT.'/contact/list.php', $langs->trans("Contacts"), 'contact', 'sall', 'A', 'searchleftc', img_object('','contact'));
     	    }
-    
+
     	    if (((! empty($conf->product->enabled) && $user->rights->produit->lire) || (! empty($conf->service->enabled) && $user->rights->service->lire))
     	    )
     	    {
     	        $langs->load("products");
     	        $searchform.=printSearchForm(DOL_URL_ROOT.'/product/list.php', DOL_URL_ROOT.'/product/list.php', $langs->trans("Products")."/".$langs->trans("Services"), 'products', 'sall', 'P', 'searchleftp', img_object('','product'));
     	    }
-    
+
             if (! empty($conf->projet->enabled) && $user->rights->projet->lire)
     	    {
     	        $langs->load("projects");
     	        $searchform.=printSearchForm(DOL_URL_ROOT.'/projet/list.php', DOL_URL_ROOT.'/projet/list.php', $langs->trans("Projects"), 'project', 'search_all', 'Q', 'searchleftproj', img_object('','projectpub'));
     	    }
-    
+
     	    if (! empty($conf->adherent->enabled) && $user->rights->adherent->lire)
     	    {
     	        $langs->load("members");
     	        $searchform.=printSearchForm(DOL_URL_ROOT.'/adherents/list.php', DOL_URL_ROOT.'/adherents/list.php', $langs->trans("Members"), 'member', 'sall', 'M', 'searchleftm', img_object('','user'));
     	    }
-    
+
     		if (! empty($conf->user->enabled) && $user->rights->user->user->lire)
     	    {
     	        $langs->load("users");
     	        $searchform.=printSearchForm(DOL_URL_ROOT.'/user/list.php', DOL_URL_ROOT.'/user/list.php', $langs->trans("Users"), 'user', 'sall', 'M', 'searchleftuser', img_object('','user'));
     	    }
 	    }
-  
+
 	    // Execute hook printSearchForm
 	    $parameters=array('searchform'=>$searchform);
 	    $reshook=$hookmanager->executeHooks('printSearchForm',$parameters);    // Note that $action and $object may have been modified by some hooks
@@ -1677,7 +1677,7 @@ function left_menu($menu_array_before, $helppagename='', $notused='', $menu_arra
                 </script>' . "\n";
 	        $searchform.='</div>';
 	    }
-		
+
 	    // Define $bookmarks
 	    if (! empty($conf->bookmark->enabled) && $user->rights->bookmark->lire)
 	    {
@@ -1892,7 +1892,7 @@ if (! function_exists("llxFooter"))
     /**
      * Show HTML footer
      * Close div /DIV data-role=page + /DIV class=fiche + /DIV /DIV main layout + /BODY + /HTML.
-     * If global var $delayedhtmlcontent was filled, we output it just before closing the body. 
+     * If global var $delayedhtmlcontent was filled, we output it just before closing the body.
      *
      * @param	string	$comment    A text to add as HTML comment into HTML generated page
 	 * @param	string	$zone		'private' (for private pages) or 'public' (for public pages)
@@ -1902,7 +1902,7 @@ if (! function_exists("llxFooter"))
     {
         global $conf, $langs;
         global $delayedhtmlcontent;
-        
+
         // Global html output events ($mesgs, $errors, $warnings)
         dol_htmloutput_events();
 
@@ -1939,24 +1939,24 @@ if (! function_exists("llxFooter"))
         //var_dump($langs);		// Uncommment to see the property _tab_loaded to see which language file were loaded
 
         if (empty($conf->dol_hide_leftmenu) && empty($conf->dol_use_jmobile) && empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print '</div> <!-- End div id-container -->'."\n";	// End div container
-        
+
         if (! empty($delayedhtmlcontent)) print $delayedhtmlcontent;
-        
+
 		// Wrapper to show tooltips
         if ($conf->use_javascript_ajax)
         {
     		print "\n<!-- JS CODE TO ENABLE tipTip on all object with class classfortooltip -->\n";
     		print '<script type="text/javascript">
             	jQuery(document).ready(function () {
-            		jQuery(".classfortooltip").tipTip({maxWidth: "'.dol_size(400,'width').'px", edgeOffset: 10, delay: 50, fadeIn: 50, fadeOut: 50});
+            		jQuery(".classfortooltip").tipTip({maxWidth: "'.dol_size(400,'width').'px", edgeOffset: 10, delay: 50, fadeIn: 50, fadeOut: 3000});
             	});
             </script>' . "\n";
         }
-        
+
 		// A div for the address popup
 		print "\n<!-- A div to allow dialog popup -->\n";
 		print '<div id="dialogforpopup" style="display: none;"></div>'."\n";
-        
+
         print "</body>\n";
         print "</html>\n";
     }

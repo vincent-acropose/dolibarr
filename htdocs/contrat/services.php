@@ -85,7 +85,9 @@ if ($search_status != '' && $search_status!=-1)
 }
 else
 {
-    $search_status = $mode;
+	if ($search_status!=-1) {
+		$search_status = $mode;
+	}
     if ($filter == 'expired') $search_status.='&filter=expired';
     if ($filter == 'notexpired') $search_status.='&filter=notexpired';
 }
@@ -145,6 +147,7 @@ $sql.= " ,extra.type_contract as type_contract";
 $sql.= " ,extradet.type_contract as det_type_contract";
 $sql.= " ,extradet.period_rent";
 $sql.= " ,extradet.leaser";
+$sql.= " ,cd.total_ht";
 $sql.= " FROM ".MAIN_DB_PREFIX."contrat as c";
 $sql.= " INNER JOIN ".MAIN_DB_PREFIX."contratdet as cd ON c.rowid = cd.fk_contrat";
 $sql.= " INNER JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = c.fk_soc";
@@ -173,11 +176,13 @@ $filter_date2=dol_mktime(0,0,0,$op2month,$op2day,$op2year);
 if (! empty($filter_op1) && $filter_op1 != -1 && $filter_date1 != '') $sql.= " AND date_ouverture_prevue ".$filter_op1." '".$db->idate($filter_date1)."'";
 if (! empty($filter_op2) && $filter_op2 != -1 && $filter_date2 != '') $sql.= " AND date_fin_validite ".$filter_op2." '".$db->idate($filter_date2)."'";
 $totalnboflines=0;
+
 $result=$db->query($sql);
 if ($result)
 {
     $totalnboflines = $db->num_rows($result);
 }
+
 $sql .= $db->order($sortfield,$sortorder);
 $sql .= $db->plimit($limit + 1, $offset);
 
@@ -199,6 +204,7 @@ if ($resql)
 	if ($search_extradet_type_contract) $param.='&amp;options_type_contractdet='.urlencode($search_extradet_type_contract);
 	if ($search_period_rent) $param.='&amp;options_period_rentdet='.urlencode($search_period_rent);
 	if ($search_leaser) $param.='&amp;options_leaserdet='.urlencode($search_leaser);
+	if ($search_status) $param.='&amp;search_status='.urlencode($search_status);
 
 	if ($mode)            $param.='&amp;mode='.$mode;
 	if ($filter)          $param.='&amp;filter='.$filter;
@@ -236,6 +242,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"], "cd.statut,c.statut",$param,"","align=\"right\"",$sortfield,$sortorder);
 
 	print_liste_field_titre($langs->trans("Qty"),$_SERVER["PHP_SELF"], "cd.qty",$param,'',' align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("TotalHT"),$_SERVER["PHP_SELF"], "cd.total_ht",$param,'',' align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($extrafieldsdet->attribute_label['type_contract'],$_SERVER["PHP_SELF"], "extradet.type_contract",$param,'',' align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($extrafieldsdet->attribute_label['period_rent'],$_SERVER["PHP_SELF"], "extradet.period_rent",$param,'',' align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($extrafieldsdet->attribute_label['leaser'],$_SERVER["PHP_SELF"], "extradet.leaser",$param,'',' align="center"',$sortfield,$sortorder);
@@ -287,6 +294,7 @@ if ($resql)
 	print $form->selectarray('search_status',$arrayofstatus,(strstr($search_status, ',')?'-1':$search_status),1);
 	print '</td>';
 
+	print '<td align="right"></td>';
 	print '<td align="right"></td>';
 	print '<td class="liste_titre">';
 	print $extrafieldsdet->showInputField('type_contract', $search_extradet_type_contract,'','det');
@@ -340,9 +348,7 @@ if ($resql)
 
 		// Third party
 		print '<td>';
-		$companystatic->id=$obj->socid;
-		$companystatic->name=$obj->name;
-		$companystatic->client=1;
+		$companystatic->fetch($obj->socid);
 		print $companystatic->getNomUrl(1,'customer',28);
 		print '</td>';
 
@@ -375,6 +381,7 @@ if ($resql)
 		print '</td>';
 
 		print '<td align="center">'.$obj->qty.'</td>';
+		print '<td align="center">'.price($obj->total_ht).'</td>';
 		print '<td align="center">'.$extrafieldsdet->showOutputField('type_contract', $obj->det_type_contract).'</td>';
 		print '<td align="center">'.$extrafieldsdet->showOutputField('period_rent', $obj->period_rent).'</td>';
 		print '<td align="center">'.$extrafieldsdet->showOutputField('leaser', $obj->leaser).'</td>';
