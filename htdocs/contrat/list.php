@@ -289,14 +289,19 @@ if ($resql)
         print '<td>'.$extrafields->showOutputField('type_contract', $obj->type_contract).'</td>';
         print '<td>'.$obj->ref_customer.'</td>';
         print '<td>'.$obj->ref_supplier.'</td>';
-        print '<td><a href="../comm/card.php?socid='.$obj->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.$obj->name.'</a></td>';
+        if($obj->socid)
+        {
+        	$socstatic->fetch($obj->socid);
+        	print '<td>'.$socstatic->getNomUrl(1,'customer',28).'</td>';
+        } else {
+        	print '<td></td>';
+        }
         //print '<td align="center">'.dol_print_date($obj->datec).'</td>';
 
         // Sales Rapresentatives
         print '<td>';
         if($obj->socid)
         {
-        	$socstatic->fetch($obj->socid);
         	$listsalesrepresentatives=$socstatic->getSalesRepresentatives($user);
         	$nbofsalesrepresentative=count($listsalesrepresentatives);
         	if ($nbofsalesrepresentative > 3)   // We print only number

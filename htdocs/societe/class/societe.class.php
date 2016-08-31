@@ -1851,11 +1851,24 @@ class Societe extends CommonObject
         $tmpuse_javascript_ajax = $conf->use_javascript_ajax ;
         $conf->use_javascript_ajax ="";
         $tmpadress= $this->getBannerAddress('refaddress',$this);
+        //find contact
+        $contacts_array=$this->contact_array_objects();
+        if (is_array($contacts_array) && count($contacts_array)>0) {
+        	$tmpadress_contact.="<br>";
+        	foreach($contacts_array as $cont) {
+        		$tmpadress_contact.="<br><br>".dolGetFirstLastname($cont->firstname,$cont->lastname);
+        		$tmpadress_contact.="<br>".$cont->getBannerAddress('refaddresscontact'.$cont->id, $cont);
+        	}
+        }
         $conf->use_javascript_ajax = $tmpuse_javascript_ajax;
 
         $label.='<br>'.$tmpadress;
 
         $label.="<br><br>".$langs->trans("Statut")." : ".$this->getLibStatut(2);
+
+        if (!empty($tmpadress_contact)) {
+        	 $label.=$tmpadress_contact;
+        }
 
         $label.= '</div>';
 
