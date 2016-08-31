@@ -56,7 +56,14 @@
 		{
 			print '<td width="20%" class="fieldrequired" colspan="2">'.$langs->trans("Warehouse").'</td>';
 			print '<td width="20%">';
-			print $formproduct->selectWarehouses((GETPOST("dwid")?GETPOST("dwid",'int'):(GETPOST('id_entrepot')?GETPOST('id_entrepot','int'):'ifone')),'id_entrepot','',1);
+			
+			// Préselection de l'emplacement du produit en tant qu'entrepôt par défaut 
+			$prod = new Product($db);
+			$prod->fetch(GETPOST('id'));
+			$ent_id = $prod->array_options['options_emplacement'];
+			if(empty($ent_id)) $ent_id = (GETPOST("dwid")?GETPOST("dwid",'int'):(GETPOST('id_entrepot')?GETPOST('id_entrepot','int'):'ifone'));
+			
+			print $formproduct->selectWarehouses($ent_id,'id_entrepot','',1);
 			print '</td>';
 		}
 		if ($object->element == 'stock')
