@@ -361,6 +361,13 @@ if (empty($reshook))
 		$object->fetch($id);
 		$object->set_ref_client($_POST['ref_client']);
 	}
+	
+	else if ($action == 'set_ref' && $user->rights->facture->creer)
+	{
+		$object->fetch($id);
+		$object->ref = $_POST['ref'];
+		$object->update($user);
+	}
 
 	// Classify to validated
 	else if ($action == 'confirm_valid' && $confirm == 'yes' && $user->rights->facture->valider)
@@ -2617,18 +2624,33 @@ if ($action == 'create')
 	$linkback = '<a href="' . DOL_URL_ROOT . '/compta/facture/list.php' . (! empty($socid) ? '?socid=' . $socid : '') . '">' . $langs->trans("BackToList") . '</a>';
 
 	// Ref
-	print '<tr><td width="20%">' . $langs->trans('Ref') . '</td>';
+	print '<tr><td width="20%">';
+	print '<table class="nobordernopadding" width="100%"><tr><td>';
+	print $langs->trans('Ref');
+	print '</td>';
+	print '<td align="right"><a href="' . $_SERVER['PHP_SELF'] . '?action=ref&amp;id=' . $object->id . '">' . img_edit($langs->trans('Modify')) . '</a></td>';
+	print '</tr></table>';
+	print '</td>';
 	print '<td colspan="5">';
-	$morehtmlref = '';
-	$discount = new DiscountAbsolute($db);
-	$result = $discount->fetch(0, $object->id);
-	if ($result > 0) {
-		$morehtmlref = ' (' . $langs->trans("CreditNoteConvertedIntoDiscount", $discount->getNomUrl(1, 'discount')) . ')';
+	if ($user->rights->facture->creer && $action == 'ref') {
+		print '<form action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="post">';
+		print '<input type="hidden" name="token" value="' . $_SESSION ['newtoken'] . '">';
+		print '<input type="hidden" name="action" value="set_ref">';
+		print '<input type="text" class="flat" size="20" name="ref" value="' . $object->ref . '">';
+		print ' <input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
+		print '</form>';
+	} else {
+		$morehtmlref = '';
+		$discount = new DiscountAbsolute($db);
+		$result = $discount->fetch(0, $object->id);
+		if ($result > 0) {
+			$morehtmlref = ' (' . $langs->trans("CreditNoteConvertedIntoDiscount", $discount->getNomUrl(1, 'discount')) . ')';
+		}
+		if ($result < 0) {
+			dol_print_error('', $discount->error);
+		}	
+		print $form->showrefnav($object, 'ref', $linkback, 1, 'facnumber', 'ref', $morehtmlref);
 	}
-	if ($result < 0) {
-		dol_print_error('', $discount->error);
-	}
-	print $form->showrefnav($object, 'ref', $linkback, 1, 'facnumber', 'ref', $morehtmlref);
 	print '</td></tr>';
 
 	// Ref customer
