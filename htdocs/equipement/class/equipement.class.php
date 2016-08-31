@@ -70,6 +70,7 @@ class Equipement extends CommonObject
 	var $model_pdf;
 	var $extraparams = array ();
 	var $lines = array ();
+	public $createdid=array();
 
 	/**
 	 * Constructor
@@ -97,11 +98,13 @@ class Equipement extends CommonObject
 	 *
 	 * @return int <0 if KO, >0 if OK
 	 */
-	function create($notrigger = 0) {
+	function create($notrigger = 0, $valid=false) {
 		global $conf;
 		global $user; // todo pass $user in parameter of function
 		global $soc;
 		global $langs;
+
+		$this->createdid=array();
 
 		dol_syslog(get_class($this) . "::create ref=" . $this->ref);
 
@@ -255,11 +258,15 @@ class Equipement extends CommonObject
 				$result = $this->db->query($sql);
 			}
 
-			if (! $error) {
+			if (! $error && $valid) {
 				$result = $this->setValid($user, $conf->equipement->outputdir);
 				if ($result<0) {
 					$error ++;
 				}
+			}
+
+			if (! $error) {
+				$this->createdid[$this->id]=$this->id;
 			}
 		}
 

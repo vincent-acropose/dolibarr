@@ -198,7 +198,7 @@ if (empty($reshook))
 
 	    $batch_line = array();
 	    $array_options=array();
-	    
+
 	    $num=count($objectsrc->lines);
 	    $totalqty=0;
 
@@ -213,6 +213,7 @@ if (empty($reshook))
 			$batch="batchl".$i."_0";
 	    	$qty = "qtyl".$i;
 
+
 			if (isset($_POST[$batch]))
 			{
 				//shipment line with batch-enable product
@@ -223,9 +224,9 @@ if (empty($reshook))
 					$sub_qty[$j]['q']=GETPOST($qty,'int');				// the qty we want to move for this stock record
 					$sub_qty[$j]['id_batch']=GETPOST($batch,'int');		// the id into llx_product_batch of stock record to move
 					$subtotalqty+=$sub_qty[$j]['q'];
-				
+
 					//var_dump($qty);var_dump($batch);var_dump($sub_qty[$j]['q']);var_dump($sub_qty[$j]['id_batch']);
-					
+
 					$j++;
 					$batch="batchl".$i."_".$j;
 					$qty = "qtyl".$i.'_'.$j;
@@ -242,7 +243,7 @@ if (empty($reshook))
 				//shipment line for product with no batch management
 				if (GETPOST($qty,'int') > 0) $totalqty+=GETPOST($qty,'int');
 			}
-			
+
 			// Extrafields
 			$extralabelsline = $extrafieldsline->fetch_name_optionals_label($object->table_element_line);
             $array_options[$i] = $extrafieldsline->getOptionalsFromPost($extralabelsline, $i);
@@ -253,54 +254,75 @@ if (empty($reshook))
 					unset($_POST["options_" . $key]);
 				}
 			}
-			
+
 	    }
-	
+
 	    //var_dump($batch_line[2]);
 
 	    if ($totalqty > 0)		// There is at least one thing to ship
 	    {
+	    	$nbCreateSerial=array();
+	    	$tblSerial=array();
 	        //var_dump($_POST);exit;
 	        for ($i = 0; $i < $num; $i++)
 	        {
 	            $qty = "qtyl".$i;
-				if (! isset($batch_line[$i]))
-				{	
-					// not batch mode
-					if (GETPOST($qty,'int') > 0 || (GETPOST($qty,'int') == 0 && $conf->global->SHIPMENT_GETS_ALL_ORDER_PRODUCTS))
+
+	            $serialnum=GETPOST('SerialFourn'.$i);
+	            $separatorlist = $conf->global->EQUIPEMENT_SEPARATORLIST;
+	            $separatorlist = ($separatorlist ? $separatorlist : ";");
+	            if ($separatorlist == "__N__") {
+	            	$separatorlist = "\n";
+	            }
+            	if ($separatorlist == "__B__") {
+            		$separatorlist = "\b";
+            	}
+	            $tblSerial[$i] = explode($separatorlist, $serialnum);
+	            $nbCreateSerial[$i] = count($tblSerial[$i]);
+	            if ($nbCreateSerial[$i]!=GETPOST($qty,'int')) {
+	            	setEventMessage('Le nombre de numéro de série saisie ne correspond pas à la quantité à expedier sur la ligne '.($i+1), 'errors');
+	            	$error++;
+	            }
+
+				if (empty($error)) {
+					if (! isset($batch_line[$i]))
 					{
-						$ent = "entl".$i;
-						$idl = "idl".$i;
-						$entrepot_id = is_numeric(GETPOST($ent,'int'))?GETPOST($ent,'int'):GETPOST('entrepot_id','int');
-						if ($entrepot_id < 0) $entrepot_id='';
-						if (! ($objectsrc->lines[$i]->fk_product > 0)) $entrepot_id = 0;
-						
-						$ret=$object->addline($entrepot_id,GETPOST($idl,'int'),GETPOST($qty,'int'),$array_options[$i]);
-						if ($ret < 0)
+						// not batch mode
+						if (GETPOST($qty,'int') > 0 || (GETPOST($qty,'int') == 0 && $conf->global->SHIPMENT_GETS_ALL_ORDER_PRODUCTS))
 						{
-							setEventMessages($object->error, $object->errors, 'errors');
-							$error++;
+							$ent = "entl".$i;
+							$idl = "idl".$i;
+							$entrepot_id = is_numeric(GETPOST($ent,'int'))?GETPOST($ent,'int'):GETPOST('entrepot_id','int');
+							if ($entrepot_id < 0) $entrepot_id='';
+							if (! ($objectsrc->lines[$i]->fk_product > 0)) $entrepot_id = 0;
+
+							$ret=$object->addline($entrepot_id,GETPOST($idl,'int'),GETPOST($qty,'int'),$array_options[$i]);
+							if ($ret < 0)
+							{
+								setEventMessages($object->error, $object->errors, 'errors');
+								$error++;
+							}
+						}
+					}
+					else
+					{
+						// batch mode
+						if ($batch_line[$i]['qty']>0)
+						{
+							$ret=$object->addline_batch($batch_line[$i],$array_options[$i]);
+							if ($ret < 0)
+							{
+								setEventMessages($object->error, $object->errors, 'errors');
+								$error++;
+							}
 						}
 					}
 				}
-				else
-				{	
-					// batch mode
-					if ($batch_line[$i]['qty']>0)
-					{
-						$ret=$object->addline_batch($batch_line[$i],$array_options[$i]);
-						if ($ret < 0)
-						{
-							setEventMessages($object->error, $object->errors, 'errors');
-							$error++;
-						}
-					}
-				}
-	        }	        
+	        }
 	        // Fill array 'array_options' with data from add form
 	        $ret = $extrafields->setOptionalsFromPost($extralabels, $object);
 	        if ($ret < 0) $error++;
-	        
+
 	        if (! $error)
 	        {
 	            $ret=$object->create($user);		// This create shipment (like Odoo picking) and line of shipments. Stock movement will when validating shipment.
@@ -310,13 +332,86 @@ if (empty($reshook))
 	                $error++;
 	            }
 	        }
+
+	        if (! $error)
+	        {
+	        	//Create Equipement
+	        	dol_include_once('/equipement/class/equipement.class.php');
+	        	for ($i = 0; $i < $num; $i++)
+	        	{
+	        		if (empty($error)) {
+
+	        			$entrepot_id = is_numeric(GETPOST($ent,'int'))?GETPOST($ent,'int'):GETPOST('entrepot_id','int');
+
+			        	$equipement = new Equipement($db);
+			        	$equipement->fk_product = $objectsrc->lines[$i]->fk_product;
+			        	$equipement->fk_soc_fourn = 0;
+			        	$equipement->fk_soc_client = $objectsrc->socid;
+			        	$equipement->author = $user->id;
+			        	$equipement->unitweight = 0;
+			        	$equipement->description = 0;
+			        	$equipement->ref = $ref;
+			        	$equipement->fk_entrepot = $entrepot_id;
+			        	$equipement->isentrepotmove = 1;
+			        	$equipement->datee = '';
+			        	$equipement->dateo = '';
+			        	$equipement->note_private = '';
+			        	$equipement->note_public = '';
+			        	$equipement->quantity = 1;
+			        	$equipement->nbAddEquipement = $nbCreateSerial[$i];
+			        	$equipement->SerialMethod = 2;
+			        	$equipement->SerialFourn = GETPOST('SerialFourn'.$i);
+			        	$equipement->numversion = '';
+			        	$equipement->model_pdf = '';
+			        	$equipement->fk_factory = '';
+			        	$equipement->fk_product_batch = '';
+
+			        	if ($equipement->fk_product > 0 && !empty($equipement->SerialFourn)) {
+			        		$result = $equipement->create(0,true);
+			        		if ($result < 0) {
+			        			setEventMessages($equipement->error, $equipement->errors, 'errors');
+			        			$error++;
+			        		}
+			        	}
+			        	if (empty($error)) {
+
+			        		$equipementstatic = new Equipement($db);
+
+			        		if (is_array($equipement->createdid) && count($equipement->createdid)) {
+			        			foreach($equipement->createdid as $equipid) {
+				        			$ret = $equipementstatic->fetch($equipid);
+
+				        			$dateo = $objectsrc->lines[$i]->date_start;
+				        			$datee = $objectsrc->lines[$i]->date_end;
+
+				        			$fk_user_author = $user->id;
+				        			$total_ht = $objectsrc->lines[$i]->total_ht;
+
+				        			$resultAdd = $equipementstatic->addline($equipid, GETPOST('equipementevt_type'.$i), null, $dateo, $datee, null, null, null, $object->id, null, $fk_user_author, $total_ht);
+				        			if ($resultAdd < 0) {
+				        				setEventMessages($equipementstatic->error, $equipementstatic->errors, 'errors');
+				        				$error++;
+				        			}
+
+				        			$objectsrc->fetchObjectLinked(null,'contrat',$objectsrc->id,'commande');
+									//TODO µFinish this
+				        			$resultAdd = $equipementstatic->addline($equipid, GETPOST('equipementevt_type'.$i), null, $dateo, $datee, null, $contractid, null, null, null, $fk_user_author, $total_ht);
+				        			if ($resultAdd < 0) {
+				        				setEventMessages($equipementstatic->error, $equipementstatic->errors, 'errors');
+				        				$error++;
+				        			}
+			        			}
+			        		}
+			        	}
+	        		}
+	        	}
+	        }
 	    }
 	    else
 	    {
 	        setEventMessages($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("QtyToShip")), null, 'errors');
 	        $error++;
 	    }
-
 	    if (! $error)
 	    {
 	        $db->commit();
@@ -530,7 +625,7 @@ if ($action == 'create2')
     $action=''; $id=''; $ref='';
 }
 
-// Mode creation. TODO This part seems to not be used at all. Receipt record is created by the action "create_delivery" not from a form. 
+// Mode creation. TODO This part seems to not be used at all. Receipt record is created by the action "create_delivery" not from a form.
 if ($action == 'create')
 {
     $expe = new Expedition($db);
@@ -660,15 +755,15 @@ if ($action == 'create')
             print '<td colspan="3">';
             print '<input name="tracking_number" size="20" value="'.GETPOST('tracking_number','alpha').'">';
             print "</td></tr>\n";
-            
+
             // Other attributes
             $parameters = array('objectsrc' => $objectsrc, 'colspan' => ' colspan="3"', 'socid'=>$socid);
             $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$expe,$action);    // Note that $action and $object may have been modified by hook
-            
+
             if (empty($reshook) && ! empty($extrafields->attribute_label)) {
             	print $expe->showOptionals($extrafields, 'edit');
             }
-            
+
 
             // Incoterms
 			if (!empty($conf->incoterm->enabled))
@@ -687,7 +782,7 @@ if ($action == 'create')
 			$liste = ModelePdfExpedition::liste_modeles($db);
 			print $form->selectarray('model', $liste, $conf->global->EXPEDITION_ADDON_PDF);
             print "</td></tr>\n";
-            
+
             print "</table>";
 
             dol_fiche_end();
@@ -721,8 +816,8 @@ if ($action == 'create')
 
 
             print '<br>';
-            
-            
+
+
             print '<table class="noborder" width="100%">';
 
 
@@ -733,10 +828,15 @@ if ($action == 'create')
             {
                 print '<tr class="liste_titre">';
                 print '<td>'.$langs->trans("Description").'</td>';
+
+                $langs->load('equipement@equipement');
+                print '<td align="center">'.$form->textwithpicto($langs->trans("ExternalSerial"), $langs->trans("YouCanAddMultipleSerialWithSeparator"), 1).'</td>';
+                print '<td align="center"></td>';
+
                 print '<td align="center">'.$langs->trans("QtyOrdered").'</td>';
                 print '<td align="center">'.$langs->trans("QtyShipped").'</td>';
                 print '<td align="center">'.$langs->trans("QtyToShip");
-				if (empty($conf->productbatch->enabled)) 
+				if (empty($conf->productbatch->enabled))
 				{
 	                print ' <br>(<a href="#" id="autofill">'.$langs->trans("Fill").'</a>';
 	                print ' / <a href="#" id="autoreset">'.$langs->trans("Reset").'</a>)';
@@ -820,6 +920,16 @@ if ($action == 'create')
                     print_date_range($db->jdate($line->date_start),$db->jdate($line->date_end));
                     print "</td>\n";
                 }
+
+                print '<td align="center">';
+                print '<textarea name="SerialFourn'.$indiceAsked.'" cols="20" rows="' . ROWS_3 . '">'.GETPOST('SerialFourn'.$indiceAsked).'</textarea>';
+                print '</td>' . "\n";
+
+                print '<td align="center">';
+                require_once DOL_DOCUMENT_ROOT.'/equipement/core/lib/equipement.lib.php';
+				select_equipementevt_type(GETPOST('equipementevt_type'.$indiceAsked),'equipementevt_type'.$indiceAsked);
+                print '</td>' . "\n";
+
 
                 // Qty
                 print '<td align="center">'.$line->qty;
@@ -923,7 +1033,7 @@ if ($action == 'create')
 
 					$staticwarehouse=new Entrepot($db);
 					$staticwarehouse->fetch($warehouse_id);
-					
+
 					$subj=0;
 					print '<input name="idl'.$indiceAsked.'" type="hidden" value="'.$line->id.'">';
 					if (count($product->stock_warehouse[$warehouse_id]->detail_batch))
@@ -935,11 +1045,11 @@ if ($action == 'create')
 							print '<tr><td colspan="3" ></td><td align="center"><!-- qty to ship (with lot management) -->';
 							print '<input name="qtyl'.$indiceAsked.'_'.$subj.'" id="qtyl'.$indiceAsked.'_'.$subj.'" type="text" size="4" value="'.($substock > 0 ? min($defaultqty,$substock) : '0').'">';
 							print '</td>';
-	
+
 							print '<td align="left">';
-	
+
 							print $staticwarehouse->getNomUrl(0).' / ';
-	
+
 							print '<!-- Show details of lot -->';
 							print '<input name="batchl'.$indiceAsked.'_'.$subj.'" type="hidden" value="'.$dbatch->id.'">';
 							print $langs->trans("DetailBatchFormat", $dbatch->batch, dol_print_date($dbatch->eatby,"day"), dol_print_date($dbatch->sellby,"day"), $dbatch->qty);
@@ -956,13 +1066,13 @@ if ($action == 'create')
 						print '<tr><td colspan="3" ></td><td align="center">';
 						print '<input name="qtyl'.$indiceAsked.'_'.$subj.'" id="qtyl'.$indiceAsked.'_'.$subj.'" type="text" size="4" value="0" disabled="disabled"> ';
 						print '</td>';
-						
+
 						print '<td align="left">';
 						print img_warning().' '.$langs->trans("NoProductToShipFoundIntoStock", $staticwarehouse->libelle);
 					}
 				}
-				
-				
+
+
 				//Display lines extrafields
 				if (is_array($extralabelslines) && count($extralabelslines)>0) {
 					$colspan=5;
@@ -1011,7 +1121,7 @@ else if ($id || $ref)
 
 		$soc = new Societe($db);
 		$soc->fetch($object->socid);
-		
+
 		$res = $object->fetch_optionals($object->id, $extralabels);
 
 		$head=shipping_prepare_head($object);
@@ -1333,7 +1443,7 @@ else if ($id || $ref)
 		// Other attributes
 		$cols = 3;
 		include DOL_DOCUMENT_ROOT . '/core/tpl/extrafields_view.tpl.php';
-		
+
 		print "</table>\n";
 
 		/*
@@ -1506,7 +1616,7 @@ else if ($id || $ref)
 						}
 						print $form->textwithtooltip($langs->trans("DetailBatchNumber"),$detail);
 					}
-					else 
+					else
 					{
 						print $langs->trans("NA");
 					}
@@ -1516,7 +1626,7 @@ else if ($id || $ref)
 				}
 			}
 			print "</tr>";
-			
+
 			//Display lines extrafields
 			if (is_array($extralabelslines) && count($extralabelslines)>0) {
 				$colspan= empty($conf->productbatch->enabled) ? 5 : 6;
@@ -1618,7 +1728,7 @@ else if ($id || $ref)
 	if ($action != 'presend')
 	{
         print '<div class="fichecenter"><div class="fichehalfleft">';
-	    
+
         $objectref = dol_sanitizeFileName($object->ref);
 		$filedir = $conf->expedition->dir_output . "/sending/" .$objectref;
 
@@ -1710,7 +1820,7 @@ else if ($id || $ref)
 		{
 			include DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 			$formmail->frommail=dolAddEmailTrackId($formmail->frommail, 'shi'.$object->id);
-		}		
+		}
 		$formmail->withfrom=1;
 		$liste=array();
 		foreach ($object->thirdparty->thirdparty_and_contact_email_array(1) as $key=>$value)	$liste[$key]=$value;

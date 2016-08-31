@@ -182,7 +182,7 @@ else if ($action == 'add' && $user->rights->equipement->creer) {
 	// exit;
 
 	if ($object->fk_product > 0) {
-		$result = $object->create();
+		$result = $object->create(0,true);
 		if ($result > 0) {
 			$id = $result; // Force raffraichissement sur fiche venant d'etre cree
 			$action = '';

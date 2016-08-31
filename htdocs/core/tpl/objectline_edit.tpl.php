@@ -217,7 +217,7 @@ $coldisplay=-1; // We remove first td
 	?>
 </tr>
 
-<?php if (! empty($conf->service->enabled) && $line->product_type == 1 && $dateSelector)	 { ?>
+<?php if (! empty($conf->service->enabled) && $dateSelector)	 { ?>
 <tr id="service_duration_area" <?php echo $bc[$var]; ?>>
 	<td colspan="11"><?php echo $langs->trans('ServiceLimitedDuration').' '.$langs->trans('From').' '; ?>
 	<?php
