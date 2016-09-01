@@ -75,6 +75,7 @@
 		}
 		print '<td width="20%">';
 		print '<select name="mouvement" id="mouvement" class="flat">';
+		print '<option value="2">Je souhaite</option>';
 		print '<option value="0">'.$langs->trans("Add").'</option>';
 		print '<option value="1"'.(GETPOST('mouvement')?' selected="selected"':'').'>'.$langs->trans("Delete").'</option>';
 		print '</select></td>';

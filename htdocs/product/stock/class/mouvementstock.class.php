@@ -71,6 +71,8 @@ class MouvementStock extends CommonObject
 	{
 		global $conf, $langs;
 
+		$result=$this->call_trigger('BEFORE_STOCK_MOVEMENT',$user);
+
 		require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 		$error = 0;
 		dol_syslog(get_class($this)."::_create start userid=$user->id, fk_product=$fk_product, warehouse=$entrepot_id, qty=$qty, type=$type, price=$price, label=$label, inventorycode=$inventorycode, datem=".$datem.", eatby=".$eatby.", sellby=".$sellby.", batch=".$batch.", skip_batch=".$skip_batch);
@@ -111,7 +113,7 @@ class MouvementStock extends CommonObject
 		$this->db->begin();
 
 		$product->load_stock();
-
+		
 		// Test if product require batch data. If yes, and there is not, we throw an error.
 		if (! empty($conf->productbatch->enabled) && $product->hasbatch() && ! $skip_batch)
 		{
