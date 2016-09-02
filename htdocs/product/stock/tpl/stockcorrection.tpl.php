@@ -31,7 +31,7 @@
 		jQuery(document).ready(function() {
 			function init_price()
 			{
-				if (jQuery("#mouvement").val() == \'0\') jQuery("#unitprice").removeAttr("disabled");
+				if (jQuery("#mouvement").val() == \'0\' || jQuery("#mouvement").val() == \'2\') jQuery("#unitprice").removeAttr("disabled");
 				else jQuery("#unitprice").prop("disabled", true);
 			}
 			init_price();
