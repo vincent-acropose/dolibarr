@@ -584,8 +584,15 @@ while ($i < ($limit ? min($num, $limit) : $num))
 		// Current stock
 		print '<td align="right">'. $warning . $stock. '</td>';
 
+		dol_include_once('/hevea/class/hevea_tools.class.php');
+		
 		// Already ordered
-		print '<td align="right"><a href="replenishorders.php?sproduct=' . $prod->id . '">'. $ordered . '</a> ' . $picto. '</td>';
+		$hevea_tools = new HeveaTools($db);
+		$TInfosStock = $hevea_tools->getInfosStockProduct($user,$prod->id);
+		print '<td style="width:80px;" align="right"><a href="replenishorders.php?sproduct=' . $prod->id . '">'. $ordered . '</a> ' . $picto
+			  . '<br />'
+			  . $TInfosStock['dt_receive']
+			  . '</td>';
 
 		// To order
 		//print '<td align="right"><input type="text" name="tobuy'.$i.'" value="'.$stocktobuy.'" '.$disabled.'></td>';
