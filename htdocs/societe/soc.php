@@ -60,6 +60,8 @@ $cancel     = GETPOST('cancel');
 $backtopage = GETPOST('backtopage','alpha');
 $confirm	= GETPOST('confirm');
 $socid		= GETPOST('socid','int');
+
+if (!empty($user->societe_id) && !empty($user->rights->societe->allow_external_user_to_create_tirdparty)) $user->societe_id = null;
 if ($user->societe_id) $socid=$user->societe_id;
 if (empty($socid) && $action == 'view') $action='create';
 
