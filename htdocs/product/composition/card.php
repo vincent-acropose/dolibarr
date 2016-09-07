@@ -60,12 +60,17 @@ if ($id > 0 || ! empty($ref))
 	$id=$object->id;
 }
 
-
 /*
  * Actions
  */
 
 if ($cancel) $action ='';
+
+$hookmanager->initHooks(array('composedproductcard'));
+
+$parameters=array('id'=>$id, 'ref'=>$ref);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+$error=$hookmanager->error; $errors=$hookmanager->errors;
 
 // Action association d'un sousproduit
 if ($action == 'add_prod' && ($user->rights->produit->creer || $user->rights->service->creer))
@@ -298,6 +303,11 @@ if ($id > 0 || ! empty($ref))
 				print '</tr>';
 			}
 			print '</table>';
+
+		$parameters=array('prods_arbo'=>$prods_arbo);
+		$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+		$error=$hookmanager->error; $errors=$hookmanager->errors;
+
 		//}
 
 

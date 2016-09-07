@@ -1105,16 +1105,16 @@ else
         print '</td></tr>';
 
         // Note Public
-        /*
+        
         print '<tr><td class="tdtop">'.$langs->trans("NotePublic").'</td><td>';
-        print nl2br($object->note_public);
+        print $object->note_public;
         print '</td></tr>';
 
         // Note Private
         print '<tr><td class="tdtop">'.$langs->trans("NotePrivate").'</td><td>';
-        print nl2br($object->note_private);
+        print $object->note_private;
         print '</td></tr>';
-        */
+        
         
         print '</table>';
         
