@@ -1,5 +1,4 @@
 # Dolibarr language file - Source file is en_US - ecm
-MenuECM=Documents
 DocsMine=Mes documents
 DocsGenerated=Documents générés
 DocsElements=Documents éléments
@@ -35,7 +34,7 @@ ECMSearchByEntity=Recherche par objet
 ECMSectionOfDocuments=Répertoires des documents
 ECMTypeManual=Manuel
 ECMTypeAuto=Automatique
-ECMDocsBySocialContributions=Documents associés à des charges sociales
+ECMDocsBySocialContributions=Documents liés aux taxes fiscales ou sociales
 ECMDocsByThirdParties=Documents associés aux tiers
 ECMDocsByProposals=Documents associés aux propositions
 ECMDocsByOrders=Documents associés aux commandes
@@ -43,6 +42,8 @@ ECMDocsByContracts=Documents associés aux contrats
 ECMDocsByInvoices=Documents associés aux factures
 ECMDocsByProducts=Documents associés aux produits
 ECMDocsByProjects=Documents associés aux projets
+ECMDocsByUsers=Documents associés aux utilisateurs
+ECMDocsByInterventions=Documents associés aux interventions
 ECMNoDirectoryYet=Aucun répertoire créé
 ShowECMSection=Afficher répertoire
 DeleteSection=Suppression répertoire

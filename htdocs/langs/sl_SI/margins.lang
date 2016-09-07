@@ -1,51 +1,49 @@
 # Dolibarr language file - Source file is en_US - marges
 
-# Margin=Margin
-# Margins=Margins
-# TotalMargin=Total Margin
-# MarginOnProducts=Margin / Products
-# MarginOnServices=Margin / Services
-# MarginRate=Margin rate
-# MarkRate=Mark rate
-# DisplayMarginRates=Display margin rates
-# DisplayMarkRates=Display mark rates
-# InputPrice=Input price
-
-# margin=Profit margins management
-# margesSetup=Profit margins management setup
-
-# MarginDetails=Margin details
-
-# ProductMargins=Product margins
-# CustomerMargins=Customer margins
-# AgentMargins=Agent margins
-
+Margin=Marža
+Margins=Marže
+TotalMargin=Skupna marža
+MarginOnProducts=Marža / proizvod
+MarginOnServices=Marža / storitev
+MarginRate=Stopnja marže
+MarkRate=Ciljna stopnja
+DisplayMarginRates=Prikaži stopnje marž
+DisplayMarkRates=Prikaži ciljne stopnje
+InputPrice=Vhodna cena
+margin=Upravljanje profitnih marž
+margesSetup=Nastavitve uporavljanja profitnih marž
+MarginDetails=Podatki o marži
+ProductMargins=Marže proizvoda
+CustomerMargins=Marže kupcev
+SalesRepresentativeMargins=Marža prodajnega predstavnika
+UserMargins=Marže uporabnikov
 ProductService=Proizvod ali storitev
-# AllProducts=All products and services
-# ChooseProduct/Service=Choose product or service
-# CommercialAgent=Commercial agent
-
+AllProducts=Vsi proizvodi in storitve
+ChooseProduct/Service=Izberi proizvod ali storitev
 StartDate=Začetni datum
 EndDate=Končni datum
 Launch=Start
-
-# ForceBuyingPriceIfNull=Force buying price if null
-# ForceBuyingPriceIfNullDetails=if "ON", margin will be zero on line (buying price = selling price), otherwise ("OFF"), marge will be equal to selling price (buying price = 0)
-# MARGIN_METHODE_FOR_DISCOUNT=Margin method for global discounts
-# UseDiscountAsProduct=As a product
-# UseDiscountAsService=As a service
-# UseDiscountOnTotal=On subtotal
-# MARGIN_METHODE_FOR_DISCOUNT_DETAILS=Defines if a global discount is treated as a product, a service, or only on subtotal for margin calculation.
-
-# MARGIN_TYPE=Margin type
-# MargeBrute=Raw margin
-# MargeNette=Net margin
-# MARGIN_TYPE_DETAILS=Raw margin : Selling price - Buying price<br/>Net margin : Selling price - Cost price
-
-# CostPrice=Cost price
-# BuyingCost=Cost price
-# UnitCharges=Unit charges
-# Charges=Charges
-
-# AgentContactType=Commercial agent contact type
-# AgentContactTypeDetails=Défine what contact type (linked on invoices) will be used for margin report by commercial agents
+ForceBuyingPriceIfNull=Force buying/cost price to selling price if not defined
+ForceBuyingPriceIfNullDetails=If buying/cost price not defined, and this option "ON", margin will be zero on line (buying/cost price = selling price), otherwise ("OFF"), marge will be equal to suggested default.
+MARGIN_METHODE_FOR_DISCOUNT=Metoda marž pri globalnih popustih
+UseDiscountAsProduct=Kot proizvod
+UseDiscountAsService=Kot storitev
+UseDiscountOnTotal=V delni vsoti
+MARGIN_METHODE_FOR_DISCOUNT_DETAILS=Določa, če se globalni popust smatra kot proizvod, storitev, ali samo delna vsota pri izračunu marže.
+MARGIN_TYPE=Privzeto predlagana nabavna cena s stroški za izračun marže
+MargeBrute=Bruto marža
+MargeNette=Neto marža
+MargeType1=Marža na najboljšo nabavno ceno
+MargeType2=Marža na uravnoteženo povprečno ceno (WAP)
+MargeType3=Margin on Cost Price
+MARGIN_TYPE_DETAILS=Raw margin : Selling price - Buying price<br>Net margin : Selling price - Cost price
+MarginTypeDesc=* Margin on best buying price = Selling price - Best supplier price defined on product card<br>* Margin on Weighted Average Price (WAP) = Selling price - Product Weighted Average Price (WAP) or best supplier price if WAP not yet defined<br>* Margin on Cost price = Selling price - Cost price defined on product card or WAP if cost price not defined, or best supplier price if WAP not yet defined
+CostPrice=Stroškovna cena
+BuyingCost=Stroškovna cena
+UnitCharges=Stroški po enoti
+Charges=Stroški
+AgentContactType=Tip kontakta komercialnega agenta
+AgentContactTypeDetails=Določa, kateri tip kontakta (povezava na računu) bo uporabljen za poročilo o maržah po prodajnih predstavnikih
+rateMustBeNumeric=Stopnja mora biti numerična vrednost
+markRateShouldBeLesserThan100=Označena vrednost mora biti manjša od 100
+ShowMarginInfos=Prikaži informacije o marži

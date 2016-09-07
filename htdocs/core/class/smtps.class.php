@@ -1,7 +1,7 @@
 <?php
 /*
  * Copyright (C)           Walter Torres        <walter@torres.ws> [with a *lot* of help!]
- * Copyright (C) 2005-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2006-2011 Regis Houssin
  *
  * This program is free software; you can redistribute it and/or modify
@@ -224,7 +224,7 @@ class SMTPs
 	var $log = '';
 	var $_errorsTo = '';
 	var $_deliveryReceipt = 0;
-
+    var $_trackId = '';
 
 
     /**
@@ -246,6 +246,27 @@ class SMTPs
 	function getDeliveryReceipt()
 	{
 		return $this->_deliveryReceipt;
+	}
+
+    /**
+     * Set trackid
+     *
+     * @param	string		$_val		Value
+     * @return	void
+     */
+	function setTrackId($_val = '')
+	{
+		$this->_trackId = $_val;
+	}
+
+    /**
+     * get trackid
+     *
+     * @return	string		Delivery receipt
+     */
+	function getTrackId()
+	{
+		return $this->_trackId;
 	}
 
     /**
@@ -501,7 +522,7 @@ class SMTPs
 	 * @param mixed $_strConfigPath path to config file or VOID
 	 * @return void
 	 */
-	function setConfig ( $_strConfigPath = null )
+	function setConfig($_strConfigPath = null)
 	{
 		/**
 		 * Returns constructed SELECT Object string or boolean upon failure
@@ -715,7 +736,7 @@ class SMTPs
 	 * @param string $_strTransEncode Content-Transfer-Encoding
 	 * @return void
 	 */
-	function setTransEncode ( $_strTransEncode )
+	function setTransEncode($_strTransEncode)
 	{
 		if (array_search($_strTransEncode, $this->_smtpsTransEncodeTypes))
 		$this->_smtpsTransEncode = $_strTransEncode;
@@ -809,7 +830,7 @@ class SMTPs
 	 * @return void
 	 *
 	 */
-	function _buildAddrList( $_type, $_addrList )
+	function _buildAddrList($_type, $_addrList)
 	{
 		// Pull existing list
 		$aryHost = $this->_msgRecipients;
@@ -1106,11 +1127,25 @@ class SMTPs
 		$host=preg_replace('@ssl://@i','',$host);	// Remove prefix
 
 		//NOTE: Message-ID should probably contain the username of the user who sent the msg
-		$_header .= 'Subject: '    . $this->getSubject()     . "\r\n"
-		.  'Date: '       . date("r")               . "\r\n"
-		.  'Message-ID: <' . time() . '.SMTPs@' . $host . ">\r\n";
-		//                 . 'Read-Receipt-To: '   . $this->getFrom( 'org' ) . "\r\n"
-		//                 . 'Return-Receipt-To: ' . $this->getFrom( 'org' ) . "\r\n";
+		$_header .= 'Subject: '    . $this->getSubject()     . "\r\n";
+		$_header .= 'Date: '       . date("r")               . "\r\n";
+
+		$trackid = $this->getTrackId();
+		if ($trackid)
+		{
+			// References is kept in response and Message-ID is returned into In-Reply-To:
+			$_header .= 'Message-ID: <' . time() . '.SMTPs-dolibarr-'.$trackid.'@' . $host . ">\r\n";
+			$_header .= 'References: <' . time() . '.SMTPs-dolibarr-'.$trackid.'@' . $host . ">\r\n";
+			$_header .= 'X-Dolibarr-TRACKID: ' . $trackid . "\r\n";
+		}
+		else
+		{
+			$_header .= 'Message-ID: <' . time() . '.SMTPs@' . $host . ">\r\n";
+		}
+
+		//$_header .=
+		//                 'Read-Receipt-To: '   . $this->getFrom( 'org' ) . "\r\n"
+		//                 'Return-Receipt-To: ' . $this->getFrom( 'org' ) . "\r\n";
 
 		if ( $this->getSensitivity() )
 		$_header .= 'Sensitivity: ' . $this->getSensitivity()  . "\r\n";
@@ -1159,7 +1194,7 @@ class SMTPs
 		$this->_msgContent[$strType]['data']     = $strContent;
 
 		if ( $this->getMD5flag() )
-		$this->_msgContent[$strType]['md5']      = dol_hash($strContent);
+		$this->_msgContent[$strType]['md5']      = dol_hash($strContent, 3);
 		//}
 	}
 
@@ -1206,11 +1241,8 @@ class SMTPs
 		{
 			// Since this is an actual multi-part message
 			// We need to define a content message Boundary
-			// NOTE: This was 'multipart/alternative', but Windows based
-			//       mail servers have issues with this.
-			/*
-			 * TODO  Investigate "nested" boundary message parts
-			*/
+			// NOTE: This was 'multipart/alternative', but Windows based mail servers have issues with this.
+
 			//$content = 'Content-Type: multipart/related; boundary="' . $this->_getBoundary() . '"'   . "\r\n";
 			$content = 'Content-Type: multipart/mixed; boundary="' . $this->_getBoundary('mixed') . '"'   . "\r\n";
 
@@ -1332,7 +1364,7 @@ class SMTPs
 			$this->_msgContent['attachment'][$strFileName]['data']     = $strContent;
 
 			if ( $this->getMD5flag() )
-			$this->_msgContent['attachment'][$strFileName]['md5']      = dol_hash($strContent);
+			$this->_msgContent['attachment'][$strFileName]['md5']      = dol_hash($strContent, 3);
 		}
 	}
 
@@ -1359,7 +1391,7 @@ class SMTPs
 			$this->_msgContent['image'][$strImageName]['data']     = $strContent;
 
 			if ( $this->getMD5flag() )
-			$this->_msgContent['image'][$strImageName]['md5']      = dol_hash($strContent);
+			$this->_msgContent['image'][$strImageName]['md5']      = dol_hash($strContent, 3);
 		}
 	}
 	// END DOL_CHANGE LDR
@@ -1490,8 +1522,8 @@ class SMTPs
 	function _setBoundary()
 	{
 		$this->_smtpsBoundary = "multipart_x." . time() . ".x_boundary";
-		$this->_smtpsRelatedBoundary = 'mul_'.dol_hash(uniqid("dolibarr2"));
-		$this->_smtpsAlternativeBoundary = 'mul_'.dol_hash(uniqid("dolibarr3"));
+		$this->_smtpsRelatedBoundary = 'mul_'.dol_hash(uniqid("dolibarr2"), 3);
+		$this->_smtpsAlternativeBoundary = 'mul_'.dol_hash(uniqid("dolibarr3"), 3);
 	}
 
 	/**
@@ -1803,4 +1835,3 @@ class SMTPs
  *
  */
 
-?>

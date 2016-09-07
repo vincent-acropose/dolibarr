@@ -46,7 +46,7 @@ $result = $object->fetch($id,$ref);
 
 
 /*
- * Ajout d'un nouveau contact
+ * Adding a new contact
  */
 
 if ($action == 'addcontact' && $user->rights->ficheinter->creer)
@@ -64,25 +64,24 @@ if ($action == 'addcontact' && $user->rights->ficheinter->creer)
 	}
 	else
 	{
-		if ($object->error == 'DB_ERROR_RECORD_ALREADY_EXISTS')
-		{
+		if ($object->error == 'DB_ERROR_RECORD_ALREADY_EXISTS') {
 			$langs->load("errors");
-			$mesg = '<div class="error">'.$langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType").'</div>';
+			$mesg = $langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType");
+		} else {
+			$mesg = $object->error;
 		}
-		else
-		{
-			$mesg = '<div class="error">'.$object->error.'</div>';
-		}
+
+		setEventMessages($mesg, null, 'errors');
 	}
 }
 
-// bascule du statut d'un contact
+// Toggle the status of a contact
 else if ($action == 'swapstatut' && $user->rights->ficheinter->creer)
 {
     $result=$object->swapContactStatus(GETPOST('ligne','int'));
 }
 
-// Efface un contact
+// Deletes a contact
 else if ($action == 'deletecontact' && $user->rights->ficheinter->creer)
 {
 	$result = $object->delete_contact(GETPOST('lineid','int'));
@@ -107,11 +106,9 @@ $formcompany = new FormCompany($db);
 $contactstatic=new Contact($db);
 $userstatic=new User($db);
 
-llxHeader();
-
+llxHeader('',$langs->trans("Intervention"));
 
 // Mode vue et edition
-dol_htmloutput_mesg($mesg);
 
 if ($id > 0 || ! empty($ref))
 {
@@ -124,8 +121,8 @@ if ($id > 0 || ! empty($ref))
 
 
 	/*
-	*   Fiche intervention synthese pour rappel
-	*/
+	 *   Fiche intervention synthese pour rappel
+	 */
 	print '<table class="border" width="100%">';
 
 	$linkback = '<a href="'.DOL_URL_ROOT.'/fichinter/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
@@ -147,6 +144,9 @@ if ($id > 0 || ! empty($ref))
 
 	print '<br>';
 
+	if (! empty($conf->global->FICHINTER_HIDE_ADD_CONTACT_USER))     $hideaddcontactforuser=1;
+	if (! empty($conf->global->FICHINTER_HIDE_ADD_CONTACT_THIPARTY)) $hideaddcontactforthirdparty=1;
+
 	// Contacts lines
 	include DOL_DOCUMENT_ROOT.'/core/tpl/contacts.tpl.php';
 }
@@ -154,4 +154,3 @@ if ($id > 0 || ! empty($ref))
 
 llxFooter();
 $db->close();
-?>

@@ -44,6 +44,8 @@ $object = new Adherent($db);
 $result=$object->fetch($id);
 if ($result > 0)
 {
+	$object->fetch_thirdparty();
+
     $adht = new AdherentType($db);
     $result=$adht->fetch($object->typeid);
 }
@@ -82,22 +84,23 @@ if ($object->id > 0)
 
 	dol_fiche_head($head, 'agenda', $langs->trans("Member"),0,'user');
 
-	print '<table class="border" width="100%">';
-
-	$linkback = '<a href="'.DOL_URL_ROOT.'/adherents/liste.php">'.$langs->trans("BackToList").'</a>';
-
-	// Reference
-	print '<tr><td width="20%">'.$langs->trans('Ref').'</td>';
-	print '<td colspan="3">';
-	print $form->showrefnav($object, 'id', $linkback);
-	print '</td>';
-	print '</tr>';
+	$linkback = '<a href="'.DOL_URL_ROOT.'/adherents/list.php">'.$langs->trans("BackToList").'</a>';
+	
+	dol_banner_tab($object, 'rowid', $linkback);
+    
+    print '<div class="fichecenter">';
+    
+    print '<div class="underbanner clearboth"></div>';
+	print '<table class="border centpercent">';
 
 	// Login
 	if (empty($conf->global->ADHERENT_LOGIN_NOT_REQUIRED))
 	{
-	    print '<tr><td>'.$langs->trans("Login").' / '.$langs->trans("Id").'</td><td class="valeur">'.$object->login.'&nbsp;</td></tr>';
+	    print '<tr><td class="titlefield">'.$langs->trans("Login").' / '.$langs->trans("Id").'</td><td class="valeur">'.$object->login.'&nbsp;</td></tr>';
 	}
+
+	// Type
+	print '<tr><td class="titlefield">'.$langs->trans("Type").'</td><td class="valeur">'.$adht->getNomUrl(1)."</td></tr>\n";
 
 	// Morphy
 	print '<tr><td>'.$langs->trans("Nature").'</td><td class="valeur" >'.$object->getmorphylib().'</td>';
@@ -106,9 +109,6 @@ if ($object->id > 0)
 	print '</td>';*/
 	print '</tr>';
 
-	// Type
-	print '<tr><td>'.$langs->trans("Type").'</td><td class="valeur">'.$adht->getNomUrl(1)."</td></tr>\n";
-
 	// Company
 	print '<tr><td>'.$langs->trans("Company").'</td><td class="valeur">'.$object->societe.'</td></tr>';
 
@@ -116,20 +116,12 @@ if ($object->id > 0)
 	print '<tr><td>'.$langs->trans("UserTitle").'</td><td class="valeur">'.$object->getCivilityLabel().'&nbsp;</td>';
 	print '</tr>';
 
-	// Lastname
-	print '<tr><td>'.$langs->trans("Lastname").'</td><td class="valeur" colspan="3">'.$object->lastname.'&nbsp;</td>';
-	print '</tr>';
-
-	// Firstname
-	print '<tr><td>'.$langs->trans("Firstname").'</td><td class="valeur" colspan="3">'.$object->firstname.'&nbsp;</td></tr>';
-
-	// Status
-	print '<tr><td>'.$langs->trans("Status").'</td><td class="valeur">'.$object->getLibStatut(4).'</td></tr>';
-
 	print '</table>';
 
 	print '</div>';
 
+	dol_fiche_end();
+	
 
     /*
      * Barre d'action
@@ -139,14 +131,30 @@ if ($object->id > 0)
 
     if (! empty($conf->agenda->enabled))
     {
-        print '<div class="inline-block divButAction"><a class="butAction" href="'.DOL_URL_ROOT.'/comm/action/fiche.php?action=create">'.$langs->trans("AddAction").'</a></div>';
+        print '<div class="inline-block divButAction"><a class="butAction" href="'.DOL_URL_ROOT.'/comm/action/card.php?action=create&backtopage=1">'.$langs->trans("AddAction").'</a></div>';
     }
 
     print '</div>';
 
     print '<br>';
 
-    print load_fiche_titre($langs->trans("ActionsOnMember"),'','');
+    $out='';
+
+    /*$objthirdparty=$object->thirdparty;
+    $objcon=new stdClass();
+
+    $permok=$user->rights->agenda->myactions->create;
+    if ((! empty($objthirdparty->id) || ! empty($objcon->id)) && $permok)
+    {
+        $out.='<a href="'.DOL_URL_ROOT.'/comm/action/card.php?action=create';
+        if (get_class($objthirdparty) == 'Societe') $out.='&amp;socid='.$objthirdparty->id;
+        $out.=(! empty($objcon->id)?'&amp;contactid='.$objcon->id:'').'&amp;backtopage=1&amp;percentage=-1">';
+    	$out.=$langs->trans("AddAnAction").' ';
+    	$out.=img_picto($langs->trans("AddAnAction"),'filenew');
+    	$out.="</a>";
+	}*/
+
+    print load_fiche_titre($langs->trans("ActionsOnMember"),$out,'');
 
     // List of todo actions
     show_actions_todo($conf,$langs,$db,$object);
@@ -160,4 +168,3 @@ if ($object->id > 0)
 llxFooter();
 
 $db->close();
-?>

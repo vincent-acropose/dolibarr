@@ -46,7 +46,7 @@ $staticmember=new Adherent($db);
 $statictype=new AdherentType($db);
 $subscriptionstatic=new Cotisation($db);
 
-print_fiche_titre($langs->trans("MembersArea"));
+print load_fiche_titre($langs->trans("MembersArea"));
 
 
 $var=True;
@@ -68,7 +68,7 @@ $sql.= " AND d.entity IN (".getEntity().")";
 $sql.= " WHERE t.entity IN (".getEntity().")";
 $sql.= " GROUP BY t.rowid, t.libelle, t.cotisation, d.statut";
 
-dol_syslog("index.php::select nb of members by type sql=".$sql, LOG_DEBUG);
+dol_syslog("index.php::select nb of members by type", LOG_DEBUG);
 $result = $db->query($sql);
 if ($result)
 {
@@ -101,12 +101,12 @@ $now=dol_now();
 $sql = "SELECT count(*) as somme , d.fk_adherent_type";
 $sql.= " FROM ".MAIN_DB_PREFIX."adherent as d, ".MAIN_DB_PREFIX."adherent_type as t";
 $sql.= " WHERE d.entity IN (".getEntity().")";
-//$sql.= " AND d.statut = 1 AND ((t.cotisation = 0 AND d.datefin IS NULL) OR d.datefin >= ".$db->idate($now).')';
-$sql.= " AND d.statut = 1 AND d.datefin >= ".$db->idate($now);
+//$sql.= " AND d.statut = 1 AND ((t.cotisation = 0 AND d.datefin IS NULL) OR d.datefin >= '".$db->idate($now)."')";
+$sql.= " AND d.statut = 1 AND d.datefin >= '".$db->idate($now)."'";
 $sql.= " AND t.rowid = d.fk_adherent_type";
 $sql.= " GROUP BY d.fk_adherent_type";
 
-dol_syslog("index.php::select nb of uptodate members by type sql=".$sql, LOG_DEBUG);
+dol_syslog("index.php::select nb of uptodate members by type", LOG_DEBUG);
 $result = $db->query($sql);
 if ($result)
 {
@@ -125,29 +125,32 @@ if ($result)
 //print '<tr><td width="30%" class="notopnoleft" valign="top">';
 print '<div class="fichecenter"><div class="fichethirdleft">';
 
+// Search contact/address
+if (! empty($conf->adherent->enabled) && $user->rights->adherent->lire)
+{
+	$listofsearchfields['search_member']=array('text'=>'Member');
+}
 
-// Formulaire recherche adherent
-print '<form action="liste.php" method="post">';
-print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-print '<input type="hidden" name="action" value="search">';
-print '<table class="noborder nohover" width="100%">';
-print '<tr class="liste_titre">';
-print '<td colspan="3">'.$langs->trans("SearchAMember").'</td>';
-print "</tr>\n";
-$var=false;
-print "<tr ".$bc[$var].">";
-print '<td>';
-print $langs->trans("Ref").':</td><td><input type="text" name="search_ref" class="flat" size="16">';
-print '</td><td rowspan="3"><input class="button" type="submit" value="'.$langs->trans("Search").'"></td></tr>';
-print "<tr ".$bc[$var].">";
-print '<td>';
-print $langs->trans("Name").':</td><td><input type="text" name="search_lastname" class="flat" size="16">';
-print '</td></tr>';
-print "<tr ".$bc[$var].">";
-print '<td>';
-print $langs->trans("Other").':</td><td><input type="text" name="sall" class="flat" size="16">';
-print '</td></tr>';
-print "</table></form>";
+if (count($listofsearchfields))
+{
+	print '<form method="post" action="'.DOL_URL_ROOT.'/core/search.php">';
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print '<table class="noborder nohover centpercent">';
+	$i=0;
+	foreach($listofsearchfields as $key => $value)
+	{
+		if ($i == 0) print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("Search").'</td></tr>';
+		print '<tr '.$bc[false].'>';
+		print '<td class="nowrap"><label for="'.$key.'">'.$langs->trans($value["text"]).'</label>:</td><td><input type="text" class="flat" name="'.$key.'" id="'.$key.'" size="18"></td>';
+		if ($i == 0) print '<td rowspan="'.count($listofsearchfields).'"><input type="submit" value="'.$langs->trans("Search").'" class="button"></td>';
+		print '</tr>';
+		$i++;
+	}
+	print '</table>';	
+	print '</form>';
+	print '<br>';
+}
+
 
 
 /*
@@ -156,10 +159,9 @@ print "</table></form>";
 
 if ($conf->use_javascript_ajax)
 {
-    print '<br>';
-    print '<table class="noborder" width="100%">';
+    print '<table class="noborder nohover" width="100%">';
     print '<tr class="liste_titre"><td colspan="2">'.$langs->trans("Statistics").'</td></tr>';
-    print '<tr><td align="center">';
+    print '<tr '.$bc[0].'><td align="center" colspan="2">';
 
     $SommeA=0;
     $SommeB=0;
@@ -237,11 +239,14 @@ if ($resql)
 			$staticmember->id=$obj->rowid;
 			$staticmember->lastname=$obj->lastname;
 			$staticmember->firstname=$obj->firstname;
-			if (! empty($obj->fk_soc)) {
-				$staticmember->socid = $obj->fk_soc;
+			if (! empty($obj->fk_soc))
+			{
+				$staticmember->fk_soc = $obj->fk_soc;
 				$staticmember->fetch_thirdparty();
 				$staticmember->name=$staticmember->thirdparty->name;
-			} else {
+			}
+			else
+			{
 				$staticmember->name=$obj->company;
 			}
 			$staticmember->ref=$staticmember->getFullName($langs);
@@ -364,13 +369,13 @@ $Number=array();
 $tot=0;
 $numb=0;
 
-$sql = "SELECT c.cotisation, c.dateadh";
+$sql = "SELECT c.cotisation, c.dateadh as dateh";
 $sql.= " FROM ".MAIN_DB_PREFIX."adherent as d, ".MAIN_DB_PREFIX."cotisation as c";
 $sql.= " WHERE d.entity IN (".getEntity().")";
 $sql.= " AND d.rowid = c.fk_adherent";
 if(isset($date_select) && $date_select != '')
 {
-	$sql .= " AND dateadh LIKE '$date_select%'";
+	$sql .= " AND c.dateadh LIKE '".$date_select."%'";
 }
 $result = $db->query($sql);
 if ($result)
@@ -380,7 +385,7 @@ if ($result)
 	while ($i < $num)
 	{
 		$objp = $db->fetch_object($result);
-		$year=dol_print_date($db->jdate($objp->dateadh),"%Y");
+		$year=dol_print_date($db->jdate($objp->dateh),"%Y");
 		$Total[$year]=(isset($Total[$year])?$Total[$year]:0)+$objp->cotisation;
 		$Number[$year]=(isset($Number[$year])?$Number[$year]:0)+1;
 		$tot+=$objp->cotisation;
@@ -425,4 +430,3 @@ print '</div></div></div>';
 
 llxFooter();
 $db->close();
-?>

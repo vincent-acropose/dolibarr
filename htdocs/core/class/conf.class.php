@@ -54,6 +54,10 @@ class Conf
 	public $modules_parts			= array('css'=>array(),'js'=>array(),'tabs'=>array(),'triggers'=>array(),'login'=>array(),'substitutions'=>array(),'menus'=>array(),'theme'=>array(),'sms'=>array(),'tpl'=>array(),'barcode'=>array(),'models'=>array(),'societe'=>array(),'hooks'=>array(),'dir'=>array());
 
 	var $logbuffer					= array();
+
+	/**
+	 * @var LogHandlerInterface[]
+	 */
 	var $loghandlers                = array();
 
 	//! To store properties of multi-company
@@ -72,12 +76,10 @@ class Conf
 
 	/**
 	 * Constructor
-	 *
-	 * @return Conf
 	 */
 	function __construct()
 	{
-		// Avoid warnings when filling this->xxx
+		// Properly declare multi-modules objects.
 		$this->file				= new stdClass();
 		$this->db				= new stdClass();
 		$this->global			= new stdClass();
@@ -88,7 +90,11 @@ class Conf
 		$this->browser			= new stdClass();
 		$this->multicompany		= new stdClass();
 
+		//! Charset for HTML output and for storing data in memory
+		$this->file->character_set_client='UTF-8';   // UTF-8, ISO-8859-1
+
 		// First level object
+		// TODO Remove this part.
 		$this->expedition_bon	= new stdClass();
 		$this->livraison_bon	= new stdClass();
 		$this->fournisseur		= new stdClass();
@@ -104,9 +110,7 @@ class Conf
 		$this->bank				= new stdClass();
 		$this->notification		= new stdClass();
 		$this->mailing			= new stdClass();
-
-		//! Charset for HTML output and for storing data in memory
-		$this->file->character_set_client='UTF-8';   // UTF-8, ISO-8859-1
+		$this->expensereport    = new stdClass();
 	}
 
 
@@ -119,6 +123,8 @@ class Conf
 	 */
 	function setValues($db)
 	{
+		global $conf;
+
 		dol_syslog(get_class($this)."::setValues");
 
 		/*
@@ -187,6 +193,7 @@ class Conf
 						{
 							$modulename=strtolower($reg[1]);
 							if ($modulename == 'propale') $modulename='propal';
+							if ($modulename == 'supplierproposal') $modulename='supplier_proposal';
 							if (! isset($this->$modulename) || ! is_object($this->$modulename)) $this->$modulename=new stdClass();
 							$this->$modulename->enabled=true;
 							$this->modules[]=$modulename;              // Add this module in list of enabled modules
@@ -223,27 +230,19 @@ class Conf
 			if ($ret) $mc = new ActionsMulticompany($db);
 		}
 
-		// Second or others levels object
-		$this->propal->cloture				= new stdClass();
-		$this->propal->facturation			= new stdClass();
-		$this->commande->client				= new stdClass();
-		$this->commande->fournisseur		= new stdClass();
-		$this->facture->client				= new stdClass();
-		$this->facture->fournisseur			= new stdClass();
-		$this->fournisseur->commande 		= new stdClass();
-		$this->fournisseur->facture			= new stdClass();
-		$this->contrat->services			= new stdClass();
-		$this->contrat->services->inactifs	= new stdClass();
-		$this->contrat->services->expires	= new stdClass();
-		$this->adherent->cotisation			= new stdClass();
-		$this->bank->rappro					= new stdClass();
-		$this->bank->cheque					= new stdClass();
-
 		// Clean some variables
 		if (empty($this->global->MAIN_MENU_STANDARD)) $this->global->MAIN_MENU_STANDARD="eldy_menu.php";
 		if (empty($this->global->MAIN_MENUFRONT_STANDARD)) $this->global->MAIN_MENUFRONT_STANDARD="eldy_menu.php";
 		if (empty($this->global->MAIN_MENU_SMARTPHONE)) $this->global->MAIN_MENU_SMARTPHONE="eldy_menu.php";	// Use eldy by default because smartphone does not work on all phones
 		if (empty($this->global->MAIN_MENUFRONT_SMARTPHONE)) $this->global->MAIN_MENUFRONT_SMARTPHONE="eldy_menu.php";	// Use eldy by default because smartphone does not work on all phones
+		// Clean var use vat for company
+		if (! isset($this->global->FACTURE_TVAOPTION)) $this->global->FACTURE_TVAOPTION=1;
+		else if (! empty($this->global->FACTURE_TVAOPTION) && ! is_numeric($this->global->FACTURE_TVAOPTION))
+		{
+			// Old value of option, we clean to use new value (0 or 1)
+			if ($this->global->FACTURE_TVAOPTION != "franchise") $this->global->FACTURE_TVAOPTION=1;
+			else $this->global->FACTURE_TVAOPTION=0;
+		}
 
 		// Variable globales LDAP
 		if (empty($this->global->LDAP_FIELD_FULLNAME)) $this->global->LDAP_FIELD_FULLNAME='';
@@ -324,10 +323,15 @@ class Conf
 		$this->livraison_bon->enabled=defined("MAIN_SUBMODULE_LIVRAISON")?MAIN_SUBMODULE_LIVRAISON:0;
 
 		// Module fournisseur
-		$this->fournisseur->commande->dir_output=$rootfordata."/fournisseur/commande";
-		$this->fournisseur->commande->dir_temp  =$rootfordata."/fournisseur/commande/temp";
-		$this->fournisseur->facture->dir_output =$rootfordata."/fournisseur/facture";
-		$this->fournisseur->facture->dir_temp   =$rootfordata."/fournisseur/facture/temp";
+		if (! empty($this->fournisseur))
+		{
+			$this->fournisseur->commande=new stdClass();
+			$this->fournisseur->commande->dir_output=$rootfordata."/fournisseur/commande";
+			$this->fournisseur->commande->dir_temp  =$rootfordata."/fournisseur/commande/temp";
+			$this->fournisseur->facture=new stdClass();
+			$this->fournisseur->facture->dir_output =$rootfordata."/fournisseur/facture";
+			$this->fournisseur->facture->dir_temp   =$rootfordata."/fournisseur/facture/temp";
+		}
 
 		// Module product/service
 		$this->product->multidir_output=array($this->entity => $rootfordata."/produit");
@@ -343,6 +347,9 @@ class Conf
 		// Module contrat
 		$this->contrat->dir_output=$rootfordata."/contracts";
 		$this->contrat->dir_temp  =$rootfordata."/contracts/temp";
+		// Module bank
+		$this->bank->dir_output=$rootfordata."/bank";
+		$this->bank->dir_temp  =$rootfordata."/bank/temp";
 
 
 		// Set some default values
@@ -359,15 +366,37 @@ class Conf
 		$this->use_javascript_ajax=1;
 		if (isset($this->global->MAIN_DISABLE_JAVASCRIPT)) $this->use_javascript_ajax=! $this->global->MAIN_DISABLE_JAVASCRIPT;
 		// If no javascript_ajax, Ajax features are disabled.
-		if (! $this->use_javascript_ajax) $this->global->PRODUIT_USE_SEARCH_TO_SELECT=0;
+		if (empty($this->use_javascript_ajax))
+		{
+			unset($this->global->PRODUIT_USE_SEARCH_TO_SELECT);
+			unset($this->global->COMPANY_USE_SEARCH_TO_SELECT);
+			unset($this->global->CONTACT_USE_SEARCH_TO_SELECT);
+			unset($this->global->PROJECT_USE_SEARCH_TO_SELECT);
+		}
+
+		if (! empty($conf->productbatch->enabled))
+		{
+			$this->global->STOCK_CALCULATE_ON_BILL=0;
+			$this->global->STOCK_CALCULATE_ON_VALIDATE_ORDER=0;
+			$this->global->STOCK_CALCULATE_ON_SHIPMENT=1;
+			$this->global->STOCK_CALCULATE_ON_SUPPLIER_BILL=0;
+			$this->global->STOCK_CALCULATE_ON_SUPPLIER_VALIDATE_ORDER=0;
+			$this->global->STOCK_CALCULATE_ON_SUPPLIER_DISPATCH_ORDER=1;
+		}
 
 		// conf->currency
 		if (empty($this->global->MAIN_MONNAIE)) $this->global->MAIN_MONNAIE='EUR';
 		$this->currency=$this->global->MAIN_MONNAIE;
 
-		// conf->global->COMPTA_MODE = Option des modules Comptabilites (simple ou expert). Defini le mode de calcul des etats comptables (CA,...)
-        if (empty($this->global->COMPTA_MODE)) $this->global->COMPTA_MODE='RECETTES-DEPENSES';  // By default. Can be 'RECETTES-DEPENSES' ou 'CREANCES-DETTES'
+		// conf->global->ACCOUNTING_MODE = Option des modules Comptabilites (simple ou expert). Defini le mode de calcul des etats comptables (CA,...)
+        if (empty($this->global->ACCOUNTING_MODE)) $this->global->ACCOUNTING_MODE='RECETTES-DEPENSES';  // By default. Can be 'RECETTES-DEPENSES' ou 'CREANCES-DETTES'
 
+        // By default, suppliers objects can be linked to all projects
+        $this->global->PROJECT_CAN_ALWAYS_LINK_TO_ALL_SUPPLIERS = 1;
+
+        // MAIN_HTML_TITLE
+        if (! isset($conf->global->MAIN_HTML_TITLE)) $conf->global->MAIN_HTML_TITLE='noapp,thirdpartynameonly,contactnameonly,projectnameonly';
+        
 		// conf->liste_limit = constante de taille maximale des listes
 		if (empty($this->global->MAIN_SIZE_LISTE_LIMIT)) $this->global->MAIN_SIZE_LISTE_LIMIT=25;
 		$this->liste_limit=$this->global->MAIN_SIZE_LISTE_LIMIT;
@@ -383,7 +412,7 @@ class Conf
 		$this->css  = "/theme/".$this->theme."/style.css.php";
 
 		// conf->email_from = email pour envoi par dolibarr des mails automatiques
-		$this->email_from = "robot@domain.com";
+		$this->email_from = "robot@example.com";
 		if (! empty($this->global->MAIN_MAIL_EMAIL_FROM)) $this->email_from = $this->global->MAIN_MAIL_EMAIL_FROM;
 
 		// conf->notification->email_from = email pour envoi par Dolibarr des notifications
@@ -393,7 +422,8 @@ class Conf
 		// conf->mailing->email_from = email pour envoi par Dolibarr des mailings
 		$this->mailing->email_from=$this->email_from;
 		if (! empty($this->global->MAILING_EMAIL_FROM))	$this->mailing->email_from=$this->global->MAILING_EMAIL_FROM;
-
+		if (! isset($conf->global->MAIN_EMAIL_ADD_TRACK_ID)) $conf->global->MAIN_EMAIL_ADD_TRACK_ID=1;
+		
         // Format for date (used by default when not found or not searched in lang)
         $this->format_date_short="%d/%m/%Y";            // Format of day with PHP/C tags (strftime functions)
         $this->format_date_short_java="dd/MM/yyyy";     // Format of day with Java tags
@@ -414,14 +444,21 @@ class Conf
 		if (! isset($this->global->MAIN_MAX_DECIMALS_TOT))   $this->global->MAIN_MAX_DECIMALS_TOT=2;
 		if (! isset($this->global->MAIN_MAX_DECIMALS_SHOWN)) $this->global->MAIN_MAX_DECIMALS_SHOWN=8;
 
-		// Default pdf use dash between lines
-		if (! isset($this->global->MAIN_PDF_DASH_BETWEEN_LINES)) $this->global->MAIN_PDF_DASH_BETWEEN_LINES=1;
+		// Default pdf option
+		if (! isset($this->global->MAIN_PDF_DASH_BETWEEN_LINES)) $this->global->MAIN_PDF_DASH_BETWEEN_LINES=1;    // use dash between lines
+        if (! isset($this->global->PDF_ALLOW_HTML_FOR_FREE_TEXT)) $this->global->PDF_ALLOW_HTML_FOR_FREE_TEXT=1;  // allow html content into free footer text
+		
+		// Set default value to MAIN_SHOW_LOGO
+		if (! isset($this->global->MAIN_SHOW_LOGO)) $this->global->MAIN_SHOW_LOGO=1;
 
 		// Default max file size for upload
 		$this->maxfilesize = (empty($this->global->MAIN_UPLOAD_DOC) ? 0 : $this->global->MAIN_UPLOAD_DOC * 1024);
 
 		// Define list of limited modules
-		if (! isset($this->global->MAIN_MODULES_FOR_EXTERNAL)) $this->global->MAIN_MODULES_FOR_EXTERNAL='user,facture,categorie,commande,fournisseur,contact,propal,projet,contrat,societe,ficheinter,expedition,agenda';	// '' means 'all'. Note that contact is added here as it should be a module later.
+		if (! isset($this->global->MAIN_MODULES_FOR_EXTERNAL)) $this->global->MAIN_MODULES_FOR_EXTERNAL='user,supplier_proposal,facture,categorie,commande,fournisseur,contact,propal,projet,contrat,societe,ficheinter,expedition,agenda,adherent';	// '' means 'all'. Note that contact is added here as it should be a module later.
+
+		// Enable select2
+		if (empty($this->global->MAIN_USE_JQUERY_MULTISELECT) || $this->global->MAIN_USE_JQUERY_MULTISELECT == '1') $this->global->MAIN_USE_JQUERY_MULTISELECT='select2';
 
 		// Timeouts
         if (empty($this->global->MAIN_USE_CONNECT_TIMEOUT)) $this->global->MAIN_USE_CONNECT_TIMEOUT=10;
@@ -434,18 +471,51 @@ class Conf
         if (empty($this->global->TAX_MODE_BUY_SERVICE))  $this->global->TAX_MODE_BUY_SERVICE='payment';
 
 		// Delay before warnings
-		$this->actions->warning_delay=(isset($this->global->MAIN_DELAY_ACTIONS_TODO)?$this->global->MAIN_DELAY_ACTIONS_TODO:7)*24*60*60;
-		$this->commande->client->warning_delay=(isset($this->global->MAIN_DELAY_ORDERS_TO_PROCESS)?$this->global->MAIN_DELAY_ORDERS_TO_PROCESS:2)*24*60*60;
-		$this->commande->fournisseur->warning_delay=(isset($this->global->MAIN_DELAY_SUPPLIER_ORDERS_TO_PROCESS)?$this->global->MAIN_DELAY_SUPPLIER_ORDERS_TO_PROCESS:7)*24*60*60;
-        $this->propal->cloture->warning_delay=(isset($this->global->MAIN_DELAY_PROPALS_TO_CLOSE)?$this->global->MAIN_DELAY_PROPALS_TO_CLOSE:0)*24*60*60;
-        $this->propal->facturation->warning_delay=(isset($this->global->MAIN_DELAY_PROPALS_TO_BILL)?$this->global->MAIN_DELAY_PROPALS_TO_BILL:0)*24*60*60;
-		$this->facture->client->warning_delay=(isset($this->global->MAIN_DELAY_CUSTOMER_BILLS_UNPAYED)?$this->global->MAIN_DELAY_CUSTOMER_BILLS_UNPAYED:0)*24*60*60;
-		$this->facture->fournisseur->warning_delay=(isset($this->global->MAIN_DELAY_SUPPLIER_BILLS_TO_PAY)?$this->global->MAIN_DELAY_SUPPLIER_BILLS_TO_PAY:0)*24*60*60;
-        $this->contrat->services->inactifs->warning_delay=(isset($this->global->MAIN_DELAY_NOT_ACTIVATED_SERVICES)?$this->global->MAIN_DELAY_NOT_ACTIVATED_SERVICES:0)*24*60*60;
-        $this->contrat->services->expires->warning_delay=(isset($this->global->MAIN_DELAY_RUNNING_SERVICES)?$this->global->MAIN_DELAY_RUNNING_SERVICES:0)*24*60*60;
-		$this->adherent->cotisation->warning_delay=(isset($this->global->MAIN_DELAY_MEMBERS)?$this->global->MAIN_DELAY_MEMBERS:0)*24*60*60;
-		$this->bank->rappro->warning_delay=(isset($this->global->MAIN_DELAY_TRANSACTIONS_TO_CONCILIATE)?$this->global->MAIN_DELAY_TRANSACTIONS_TO_CONCILIATE:0)*24*60*60;
-		$this->bank->cheque->warning_delay=(isset($this->global->MAIN_DELAY_CHEQUES_TO_DEPOSIT)?$this->global->MAIN_DELAY_CHEQUES_TO_DEPOSIT:0)*24*60*60;
+		// Avoid strict errors. TODO: Replace xxx->warning_delay with a property ->warning_delay_xxx
+		if (isset($this->agenda)) {
+		    $this->adherent->cotisation			= new stdClass();
+            $this->adherent->cotisation->warning_delay=(isset($this->global->MAIN_DELAY_MEMBERS)?$this->global->MAIN_DELAY_MEMBERS:0)*24*60*60;
+		}
+        if (isset($this->agenda)) $this->agenda->warning_delay=(isset($this->global->MAIN_DELAY_ACTIONS_TODO)?$this->global->MAIN_DELAY_ACTIONS_TODO:7)*24*60*60;
+        if (isset($this->commande)) {
+            $this->commande->client				= new stdClass();
+    		$this->commande->fournisseur		= new stdClass();
+    		$this->commande->client->warning_delay=(isset($this->global->MAIN_DELAY_ORDERS_TO_PROCESS)?$this->global->MAIN_DELAY_ORDERS_TO_PROCESS:2)*24*60*60;
+    		$this->commande->fournisseur->warning_delay=(isset($this->global->MAIN_DELAY_SUPPLIER_ORDERS_TO_PROCESS)?$this->global->MAIN_DELAY_SUPPLIER_ORDERS_TO_PROCESS:7)*24*60*60;
+		}
+		if (isset($this->propal)) {
+		    $this->propal->cloture				= new stdClass();
+    		$this->propal->facturation			= new stdClass();
+	        $this->propal->cloture->warning_delay=(isset($this->global->MAIN_DELAY_PROPALS_TO_CLOSE)?$this->global->MAIN_DELAY_PROPALS_TO_CLOSE:0)*24*60*60;
+            $this->propal->facturation->warning_delay=(isset($this->global->MAIN_DELAY_PROPALS_TO_BILL)?$this->global->MAIN_DELAY_PROPALS_TO_BILL:0)*24*60*60;
+		}
+		if (isset($this->facture)) {
+		    $this->facture->client				= new stdClass();
+    		$this->facture->fournisseur			= new stdClass();
+            $this->facture->client->warning_delay=(isset($this->global->MAIN_DELAY_CUSTOMER_BILLS_UNPAYED)?$this->global->MAIN_DELAY_CUSTOMER_BILLS_UNPAYED:0)*24*60*60;
+		    $this->facture->fournisseur->warning_delay=(isset($this->global->MAIN_DELAY_SUPPLIER_BILLS_TO_PAY)?$this->global->MAIN_DELAY_SUPPLIER_BILLS_TO_PAY:0)*24*60*60;
+		}
+		if (isset($this->contrat)) {
+		    $this->contrat->services			= new stdClass();
+    		$this->contrat->services->inactifs	= new stdClass();
+	   	    $this->contrat->services->expires	= new stdClass();
+		    $this->contrat->services->inactifs->warning_delay=(isset($this->global->MAIN_DELAY_NOT_ACTIVATED_SERVICES)?$this->global->MAIN_DELAY_NOT_ACTIVATED_SERVICES:0)*24*60*60;
+            $this->contrat->services->expires->warning_delay=(isset($this->global->MAIN_DELAY_RUNNING_SERVICES)?$this->global->MAIN_DELAY_RUNNING_SERVICES:0)*24*60*60;
+		}
+		if (isset($this->commande)) {
+		    $this->bank->rappro					= new stdClass();
+    		$this->bank->cheque					= new stdClass();
+            $this->bank->rappro->warning_delay=(isset($this->global->MAIN_DELAY_TRANSACTIONS_TO_CONCILIATE)?$this->global->MAIN_DELAY_TRANSACTIONS_TO_CONCILIATE:0)*24*60*60;
+		    $this->bank->cheque->warning_delay=(isset($this->global->MAIN_DELAY_CHEQUES_TO_DEPOSIT)?$this->global->MAIN_DELAY_CHEQUES_TO_DEPOSIT:0)*24*60*60;
+		}
+		if (isset($this->expensereport)) {
+		    $this->expensereport->payment		= new stdClass();
+		    $this->expensereport->payment->warning_delay=(isset($this->global->MAIN_DELAY_EXPENSEREPORTS_TO_PAY)?$this->global->MAIN_DELAY_EXPENSEREPORTS_TO_PAY:0)*24*60*60;
+		}
+		
+		// For modules that want to disable top or left menu
+		if (! empty($this->global->MAIN_HIDE_TOP_MENU)) $this->dol_hide_topmenu=$this->global->MAIN_HIDE_TOP_MENU;
+		if (! empty($this->global->MAIN_HIDE_LEFT_MENU)) $this->dol_hide_leftmenu=$this->global->MAIN_HIDE_LEFT_MENU;
 
 		// For backward compatibility
 		if (isset($this->product))   $this->produit=$this->product;
@@ -483,4 +553,3 @@ class Conf
 	}
 }
 
-?>

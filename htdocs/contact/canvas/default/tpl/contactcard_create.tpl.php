@@ -20,7 +20,7 @@
 <!-- BEGIN PHP TEMPLATE CONTACTCARD_CREATE.TPL.PHP DEFAULT -->
 
 <?php
-print_fiche_titre($this->control->tpl['title']);
+print load_fiche_titre($this->control->tpl['title']);
 
 dol_htmloutput_errors((is_numeric($object->error)?'':$object->error),$object->errors);
 
@@ -50,7 +50,7 @@ echo $this->control->tpl['ajax_selectcountry']; ?>
 </tr>
 
 <tr>
-	<td><?php echo $langs->trans("Company"); ?></td>
+	<td><?php echo $langs->trans("ThirdParty"); ?></td>
 	<td colspan="3"><?php echo $this->control->tpl['company']; ?></td>
 </tr>
 

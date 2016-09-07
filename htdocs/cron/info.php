@@ -26,6 +26,8 @@ require_once DOL_DOCUMENT_ROOT."/cron/class/cronjob.class.php";
 require_once DOL_DOCUMENT_ROOT.'/core/lib/cron.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 
+$langs->load("admin");
+$langs->load("cron");
 
 // Security check
 if (!$user->rights->cron->read) accessforbidden();
@@ -46,13 +48,12 @@ $object->info($id);
 
 $head = cron_prepare_head($object);
 
-dol_fiche_head($head, 'info', $langs->trans("CronTask"), 0, 'bill');
+dol_fiche_head($head, 'info', $langs->trans("CronTask"), 0, 'cron');
 
 print '<table width="100%"><tr><td>';
 dol_print_object_info($object);
 print '</td></tr></table>';
 print '</div>';
 
-
-$db->close();
 llxFooter();
+$db->close();

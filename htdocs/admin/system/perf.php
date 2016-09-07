@@ -24,6 +24,7 @@ require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/memory.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/geturl.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 
 $langs->load("admin");
 $langs->load("install");
@@ -47,9 +48,16 @@ $nowstring=dol_print_date(dol_now(),'dayhourlog');
 
 llxHeader();
 
-print_fiche_titre($langs->trans("PerfDolibarr"),'','setup');
+print load_fiche_titre($langs->trans("PerfDolibarr"),'','title_setup');
 
 print $langs->trans("YouMayFindPerfAdviceHere",'http://wiki.dolibarr.org/index.php/FAQ_Increase_Performance').' (<a href="'.$_SERVER["PHP_SELF"].'">'.$langs->trans("Reload").'</a>)<br>';
+
+// Recupere la version de PHP
+$phpversion=version_php();
+print "<br>PHP - ".$langs->trans("Version").": ".$phpversion."<br>\n";
+
+// Recupere la version du serveur web
+print "<br>Web server - ".$langs->trans("Version").": ".$_SERVER["SERVER_SOFTWARE"]."<br>\n";
 
 // XDebug
 print '<br>';
@@ -77,6 +85,7 @@ if ($test)
 	else
 	{
 		print img_picto('','warning').' '.$langs->trans("MemcachedModuleAvailableButNotSetup");
+		print ' <a href="'.dol_buildpath('/memcached/admin/memcached.php',1).'">Memcached module admin page</a>';
 	}
 }
 else print img_picto('','warning').' '.$langs->trans("MemcachedNotAvailable");
@@ -98,6 +107,14 @@ if (! $foundcache && $test)
 {
 	$foundcache++;
 	print img_picto('','tick.png').' '.$langs->trans("EAcceleratorInstalled");
+}
+$test=function_exists('opcache_get_status');
+if (! $foundcache && $test)
+{
+	$foundcache++;
+	print img_picto('','tick.png').' '.$langs->trans("ZendOPCacheInstalled");  // Should be by defautl starting with PHP 5.5
+	//$tmp=opcache_get_status();
+	//var_dump($tmp);
 }
 $test=function_exists('apc_cache_info');
 if (! $foundcache && $test)
@@ -163,7 +180,7 @@ jQuery(document).ready(function() {
   var compcssstring;
   getcssurl = $.ajax({
     type: "GET",
-    url: \''.DOL_URL_ROOT.'/includes/jquery/css/smoothness/jquery-ui-latest.custom.css\',
+    url: \''.DOL_URL_ROOT.'/includes/jquery/css/smoothness/jquery-ui.css\',
     cache: false,
     /* async: false, */
     /*crossDomain: true, */
@@ -280,7 +297,7 @@ jQuery(document).ready(function() {
   var compjsstring;
   getjsurl = $.ajax({
     type: "GET",
-    url: \''.DOL_URL_ROOT.'/core/js/lib_head.js\',
+    url: \''.DOL_URL_ROOT.'/core/js/lib_rare.js\',
     cache: false,
     /* async: false, */
     /* crossDomain: true,*/
@@ -475,4 +492,3 @@ print '<br>';
 llxFooter();
 
 $db->close();
-?>

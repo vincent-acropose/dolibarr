@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -14,6 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * or see http://www.gnu.org/
  */
 
 /**
@@ -46,8 +47,8 @@ class FormCron extends Form
 	 * Display On Off selector
 	 *
 	 * @param   string 	$htmlname		Html control name
-	 * @param   string 	$selected		selected value
-	 * @param   string	$readonly		Select is read only or not
+	 * @param   integer 	$selected		selected value
+	 * @param   integer	$readonly		Select is read only or not
 	 * @return	string					HTML select field
 	 */
 	function select_typejob($htmlname,$selected=0,$readonly=0)
@@ -59,12 +60,12 @@ class FormCron extends Form
 			if ($selected=='command') {
 				$out= $langs->trans('CronType_command');
 				$out.='<SELECT name="'.$htmlname.'" id="'.$htmlname.'" style="display:none"/>';
-				$out.= '<OPTION value="command" selected=\"selected\">'.$langs->trans('CronType_command').'</OPTION>';
+				$out.= '<OPTION value="command" selected>'.$langs->trans('CronType_command').'</OPTION>';
 				$out.='</SELECT>';
 			} elseif ($selected=='method') {
 				$out= $langs->trans('CronType_method');
 				$out.='<SELECT name="'.$htmlname.'" id="'.$htmlname.'" style="display:none"/>';
-				$out.= '<OPTION value="method" selected=\"selected\">'.$langs->trans('CronType_method').'</OPTION>';
+				$out.= '<OPTION value="method" selected>'.$langs->trans('CronType_method').'</OPTION>';
 				$out.='</SELECT>';
 			}
 		}else {
@@ -72,14 +73,14 @@ class FormCron extends Form
 		$out='<SELECT class="flat" name="'.$htmlname.'" id="'.$htmlname.'" />';
 
 		if ($selected=='command') {
-			$selected_attr=' selected=\"selected\" ';
+			$selected_attr=' selected ';
 		} else {
 			$selected_attr='';
 		}
 		$out.= '<OPTION value="command" '.$selected_attr.'>'.$langs->trans('CronType_command').'</OPTION>';
 
 		if ($selected=='method') {
-			$selected_attr=' selected=\"selected\" ';
+			$selected_attr=' selected ';
 		} else {
 			$selected_attr='';
 		}

@@ -100,7 +100,7 @@ if ($object->id > 0)
 
 
 	// Construit liste des fichiers
-	$filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+	$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
 	$totalsize=0;
 	foreach($filearray as $key => $file)
 	{
@@ -110,7 +110,7 @@ if ($object->id > 0)
 
 	print '<table class="border" width="100%">';
 
-	$linkback = '<a href="'.DOL_URL_ROOT.'/fourn/commande/liste.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
+	$linkback = '<a href="'.DOL_URL_ROOT.'/fourn/commande/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
 	// Ref
 	print '<tr><td width="35%">'.$langs->trans("Ref").'</td>';
@@ -172,4 +172,3 @@ else
 
 llxFooter();
 $db->close();
-?>

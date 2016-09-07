@@ -27,6 +27,10 @@
  */
 abstract class ActionsAdherentCardCommon
 {
+    /**
+     * Database handler
+     * @var DoliDB
+     */
     var $db;
     var $dirmodule;
     var $targetmodule;
@@ -46,10 +50,13 @@ abstract class ActionsAdherentCardCommon
 	/**
 	 * 	Instantiation of DAO class
 	 *
-	 * 	@return	void
+	 * 	@return	int		0
+	 *  @deprecated		Using getInstanceDao should not be used.
 	 */
 	private function getInstanceDao()
 	{
+		dol_syslog(__METHOD__ . " is deprecated", LOG_WARNING);
+
 		if (! is_object($this->object))
 		{
 			$modelclassfile = dol_buildpath('/'.$this->dirmodule.'/canvas/'.$this->canvas.'/dao_'.$this->targetmodule.'_'.$this->canvas.'.class.php');
@@ -65,6 +72,7 @@ abstract class ActionsAdherentCardCommon
 	            }
 	        }
 		}
+		return 0;
 	}
 
 	/**
@@ -90,9 +98,10 @@ abstract class ActionsAdherentCardCommon
     }
 
     /**
-     *  Load data control
+     *  doActions of a canvas is not the doActions of the hook
+     *  @deprecated Use the doActions of hooks instead of this.
      *
-	 *  @param	string	&$action    Type of action
+	 *  @param	string	$action    Type of action
 	 *  @param	int		$id			Id of object
      *	@return	void
      */
@@ -128,7 +137,7 @@ abstract class ActionsAdherentCardCommon
                 }
                 else
                 {
-                    $this->errors=$nuser->error;
+                    $this->errors[]=$nuser->error;
 
                     $this->db->rollback();
                 }
@@ -203,7 +212,7 @@ abstract class ActionsAdherentCardCommon
             {
                 $this->object->fetch($_POST["adherentid"]);
 
-                $this->object->oldcopy=dol_clone($this->object);
+				$this->object->oldcopy = clone $this->object;
 
                 $this->assign_post();
 
@@ -226,7 +235,7 @@ abstract class ActionsAdherentCardCommon
 	/**
      *  Set content of ->tpl array, to use into template
      *
-     *  @param	string		&$action    Type of action
+     *  @param	string		$action    Type of action
      *  @param	int			$id			Id
      *  @return	string					HTML output
      */
@@ -271,7 +280,7 @@ abstract class ActionsAdherentCardCommon
         	}
 
         	// Civility
-        	$this->tpl['select_civility'] = $formcompany->select_civility($this->object->civilite_id);
+        	$this->tpl['select_civility'] = $formcompany->select_civility($this->object->civility_id);
 
         	// Predefined with third party
         	if ((isset($objsoc->typent_code) && $objsoc->typent_code == 'TE_PRIVATE'))
@@ -296,7 +305,7 @@ abstract class ActionsAdherentCardCommon
             $this->tpl['select_country'] = $form->select_country($this->object->country_id,'country_id');
             $countrynotdefined = $langs->trans("ErrorSetACountryFirst").' ('.$langs->trans("SeeAbove").')';
 
-            if ($user->admin) $this->tpl['info_admin'] = info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
+            if ($user->admin) $this->tpl['info_admin'] = info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
 
             // State
             if ($this->object->country_id) $this->tpl['select_state'] = $formcompany->select_state($this->object->state_id,$this->object->country_code);
@@ -368,7 +377,7 @@ abstract class ActionsAdherentCardCommon
             require_once DOL_DOCUMENT_ROOT.'/core/lib/security2.lib.php';
         	$login=dol_buildlogin($this->object->lastname, $this->object->firstname);
 
-       		$generated_password=getRandomPassword('');
+       		$generated_password=getRandomPassword(false);
         	$password=$generated_password;
 
         	// Create a form array
@@ -395,7 +404,7 @@ abstract class ActionsAdherentCardCommon
         $this->object->fk_soc				=	$_POST["fk_soc"];
         $this->object->lastname				=	$_POST["lastname"];
         $this->object->firstname			= 	$_POST["firstname"];
-        $this->object->civilite_id			= 	$_POST["civilite_id"];
+        $this->object->civility_id			= 	$_POST["civility_id"];
         $this->object->address				=	$_POST["address"];
         $this->object->zip					=	$_POST["zipcode"];
         $this->object->town					=	$_POST["town"];
@@ -410,7 +419,7 @@ abstract class ActionsAdherentCardCommon
         // We set country_id, and country_code label of the chosen country
         if ($this->object->country_id)
         {
-            $sql = "SELECT code, libelle FROM ".MAIN_DB_PREFIX."c_pays WHERE rowid = ".$this->object->country_id;
+            $sql = "SELECT code, label FROM ".MAIN_DB_PREFIX."c_country WHERE rowid = ".$this->object->country_id;
             $resql=$this->db->query($sql);
             if ($resql)
             {
@@ -426,5 +435,3 @@ abstract class ActionsAdherentCardCommon
     }
 
 }
-
-?>

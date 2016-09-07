@@ -29,7 +29,7 @@ require_once DOL_DOCUMENT_ROOT.'/expedition/class/expedition.class.php';
  * Prepare array with list of tabs
  *
  * @param   Object	$object		Object related to tabs
- * @return  array				Array of tabs to shoc
+ * @return  array				Array of tabs to show
  */
 function shipping_prepare_head($object)
 {
@@ -41,7 +41,7 @@ function shipping_prepare_head($object)
 	$h = 0;
 	$head = array();
 
-	$head[$h][0] = DOL_URL_ROOT."/expedition/fiche.php?id=".$object->id;
+	$head[$h][0] = DOL_URL_ROOT."/expedition/card.php?id=".$object->id;
 	$head[$h][1] = $langs->trans("SendingCard");
 	$head[$h][2] = 'shipping';
 	$h++;
@@ -50,9 +50,12 @@ function shipping_prepare_head($object)
 	{
 		// delivery link
 		$object->fetchObjectLinked($object->id,$object->element);
-		if (! empty($object->linkedObjectsIds['delivery'][0]))		// If there is a delivery
+		if (count($object->linkedObjectsIds['delivery']) >  0)		// If there is a delivery
 		{
-			$head[$h][0] = DOL_URL_ROOT."/livraison/fiche.php?id=".$object->linkedObjectsIds['delivery'][0];
+		    // Take first one element of array 
+		    $tmp = reset($object->linkedObjectsIds['delivery']);
+		    
+			$head[$h][0] = DOL_URL_ROOT."/livraison/card.php?id=".$tmp;
 			$head[$h][1] = $langs->trans("DeliveryCard");
 			$head[$h][2] = 'delivery';
 			$h++;
@@ -64,8 +67,12 @@ function shipping_prepare_head($object)
 	$head[$h][2] = 'contact';
 	$h++;
 
+    $nbNote = 0;
+    if (!empty($object->note_private)) $nbNote++;
+    if (!empty($object->note_public)) $nbNote++;
 	$head[$h][0] = DOL_URL_ROOT."/expedition/note.php?id=".$object->id;
 	$head[$h][1] = $langs->trans("Notes");
+	if ($nbNote > 0) $head[$h][1].= ' <span class="badge">'.$nbNote.'</span>';
 	$head[$h][2] = 'note';
 	$h++;
 
@@ -85,7 +92,7 @@ function shipping_prepare_head($object)
  * Prepare array with list of tabs
  *
  * @param   Object	$object		Object related to tabs
- * @return  array				Array of tabs to shoc
+ * @return  array				Array of tabs to show
  */
 function delivery_prepare_head($object)
 {
@@ -99,13 +106,13 @@ function delivery_prepare_head($object)
 
 	if ($conf->expedition_bon->enabled && $user->rights->expedition->lire)
 	{
-		$head[$h][0] = DOL_URL_ROOT."/expedition/fiche.php?id=".$object->origin_id;
+		$head[$h][0] = DOL_URL_ROOT."/expedition/card.php?id=".$object->origin_id;
 		$head[$h][1] = $langs->trans("SendingCard");
 		$head[$h][2] = 'shipping';
 		$h++;
 	}
 
-	$head[$h][0] = DOL_URL_ROOT."/livraison/fiche.php?id=".$object->id;
+	$head[$h][0] = DOL_URL_ROOT."/livraison/card.php?id=".$object->id;
 	$head[$h][1] = $langs->trans("DeliveryCard");
 	$head[$h][2] = 'delivery';
 	$h++;
@@ -163,7 +170,7 @@ function show_list_sending_receive($origin,$origin_id,$filter='')
 	$sql.= ", ".MAIN_DB_PREFIX.$origin."det as obj";
 	//if ($conf->livraison_bon->enabled) $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."livraison as l ON l.fk_expedition = e.rowid LEFT JOIN ".MAIN_DB_PREFIX."livraisondet as ld ON ld.fk_livraison = l.rowid  AND obj.rowid = ld.fk_origin_line";
 	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product as p ON obj.fk_product = p.rowid";
-	$sql.= " WHERE e.entity = ".$conf->entity;
+	$sql.= " WHERE e.entity IN (".getEntity('expedition', 1).")";
 	$sql.= " AND obj.fk_".$origin." = ".$origin_id;
 	$sql.= " AND obj.rowid = ed.fk_origin_line";
 	$sql.= " AND ed.fk_expedition = e.rowid";
@@ -171,7 +178,7 @@ function show_list_sending_receive($origin,$origin_id,$filter='')
 
 	$sql.= " ORDER BY obj.fk_product";
 
-	dol_syslog("show_list_sending_receive sql=".$sql, LOG_DEBUG);
+	dol_syslog("show_list_sending_receive", LOG_DEBUG);
 	$resql = $db->query($sql);
 	if ($resql)
 	{
@@ -180,8 +187,8 @@ function show_list_sending_receive($origin,$origin_id,$filter='')
 
 		if ($num)
 		{
-			if ($filter) print_titre($langs->trans("OtherSendingsForSameOrder"));
-			else print_titre($langs->trans("SendingsAndReceivingForSameOrder"));
+			if ($filter) print load_fiche_titre($langs->trans("OtherSendingsForSameOrder"));
+			else print load_fiche_titre($langs->trans("SendingsAndReceivingForSameOrder"));
 
 			print '<table class="liste" width="100%">';
 			print '<tr class="liste_titre">';
@@ -207,7 +214,7 @@ function show_list_sending_receive($origin,$origin_id,$filter='')
 				print "<tr ".$bc[$var].">";
 
 				// Sending id
-				print '<td align="left" class="nowrap"><a href="'.DOL_URL_ROOT.'/expedition/fiche.php?id='.$objp->expedition_id.'">'.img_object($langs->trans("ShowSending"),'sending').' '.$objp->exp_ref.'<a></td>';
+				print '<td align="left" class="nowrap"><a href="'.DOL_URL_ROOT.'/expedition/card.php?id='.$objp->expedition_id.'">'.img_object($langs->trans("ShowSending"),'sending').' '.$objp->exp_ref.'<a></td>';
 
 				// Description
 				if ($objp->fk_product > 0)
@@ -218,7 +225,11 @@ function show_list_sending_receive($origin,$origin_id,$filter='')
 						$object = new $origin($db);
 						$object->fetch($origin_id);
 						$object->fetch_thirdparty();
-						$prod = new Product($db, $objp->fk_product);
+
+						$prod = new Product($db);
+						$prod->id=$objp->fk_product;
+						$prod->getMultiLangs();
+
 						$outputlangs = $langs;
 						$newlang='';
 						if (empty($newlang) && ! empty($_REQUEST['lang_id'])) $newlang=$_REQUEST['lang_id'];
@@ -294,7 +305,9 @@ function show_list_sending_receive($origin,$origin_id,$filter='')
 					$expedition->id=$objp->sendingid;
 					$expedition->fetchObjectLinked($expedition->id,$expedition->element);
 					//var_dump($expedition->linkedObjects);
-					$receiving=(! empty($expedition->linkedObjects['delivery'][0])?$expedition->linkedObjects['delivery'][0]:'');
+
+					$receiving='';
+					if (count($expedition->linkedObjects['delivery']) > 0) $receiving=reset($expedition->linkedObjects['delivery']);   // Take first link
 
 					if (! empty($receiving))
 					{
@@ -306,7 +319,7 @@ function show_list_sending_receive($origin,$origin_id,$filter='')
 						// Ref
 						print '<td>';
 						print $receiving->getNomUrl($db);
-						//print '<a href="'.DOL_URL_ROOT.'/livraison/fiche.php?id='.$livraison_id.'">'.img_object($langs->trans("ShowReceiving"),'sending').' '.$objp->livraison_ref.'<a>';
+						//print '<a href="'.DOL_URL_ROOT.'/livraison/card.php?id='.$livraison_id.'">'.img_object($langs->trans("ShowReceiving"),'sending').' '.$objp->livraison_ref.'<a>';
 						print '</td>';
 						// Qty received
 						//print '<td align="center">';
@@ -342,4 +355,3 @@ function show_list_sending_receive($origin,$origin_id,$filter='')
 	return 1;
 }
 
-?>

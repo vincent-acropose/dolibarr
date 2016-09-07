@@ -24,12 +24,12 @@
 /**
  * Function get content from an URL (use proxy if proxy defined)
  *
- * @param	string	$url 				URL to call.
- * @param	string	$postorget			'POST', 'GET', 'HEAD'
- * @param	string	$param				Paraemeters of URL (x=value1&y=value2)
- * @param	string	$followlocation		1=Follow location, 0=Do not follow
- * @param	array	$addheaders			Array of string to add into header. Example: ('Accept: application/xrds+xml', ....)
- * @return	array						Returns an associative array containing the response from the server array('content'=>response,'curl_error_no'=>errno,'curl_error_msg'=>errmsg...)
+ * @param	string	  $url 				    URL to call.
+ * @param	string    $postorget		    'POST', 'GET', 'HEAD', 'PUT', 'PUTALREADYFORMATED', 'DELETE'
+ * @param	string    $param			    Parameters of URL (x=value1&y=value2) or may be a formated content with PUTALREADYFORMATED
+ * @param	string    $followlocation		1=Follow location, 0=Do not follow
+ * @param	array     $addheaders			Array of string to add into header. Example: ('Accept: application/xrds+xml', ....)
+ * @return	array						    Returns an associative array containing the response from the server array('content'=>response,'curl_error_no'=>errno,'curl_error_msg'=>errmsg...)
  */
 function getURLContent($url,$postorget='GET',$param='',$followlocation=1,$addheaders=array())
 {
@@ -52,7 +52,6 @@ function getURLContent($url,$postorget='GET',$param='',$followlocation=1,$addhea
      exit;*/
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_VERBOSE, 1);
-    curl_setopt($ch, CURLOPT_SSLVERSION, 3); // Force SSLv3
 	curl_setopt($ch, CURLOPT_USERAGENT, 'Dolibarr geturl function');
 
 	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, ($followlocation?true:false));
@@ -72,17 +71,37 @@ function getURLContent($url,$postorget='GET',$param='',$followlocation=1,$addhea
     	curl_setopt($ch, CURLOPT_POST, 1);	// POST
     	curl_setopt($ch, CURLOPT_POSTFIELDS, $param);	// Setting param x=a&y=z as POST fields
     }
+    else if ($postorget == 'PUT')
+    {
+    	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT'); // HTTP request is 'PUT'
+    	if (! is_array($param)) parse_str($param, $array_param);
+    	else 
+    	{
+    	    dol_syslog("parameter param must be a string", LOG_WARNING);
+    	    $array_param=$param;
+    	}
+    	curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($array_param));	// Setting param x=a&y=z as PUT fields	
+    }
+    else if ($postorget == 'PUTALREADYFORMATED')
+    {
+    	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT'); // HTTP request is 'PUT'
+    	curl_setopt($ch, CURLOPT_POSTFIELDS, $param);	// param = content of post, like a xml string
+    }
     else if ($postorget == 'HEAD')
     {
     	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'HEAD'); // HTTP request is 'HEAD'
     	curl_setopt($ch, CURLOPT_NOBODY, true);
+    }
+    else if ($postorget == 'DELETE')
+    {
+    	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');	// POST
     }
     else
     {
     	curl_setopt($ch, CURLOPT_POST, 0);			// GET
     }
 
-    //if USE_PROXY constant set to TRUE in Constants.php, then only proxy will be enabled.
+    //if USE_PROXY constant set at begin of this method.
     if ($USE_PROXY)
     {
         dol_syslog("getURLContent set proxy to ".$PROXY_HOST. ":" . $PROXY_PORT." - ".$PROXY_USER. ":" . $PROXY_PASS);
@@ -124,4 +143,3 @@ function getURLContent($url,$postorget='GET',$param='',$followlocation=1,$addhea
     return $rep;
 }
 
-?>

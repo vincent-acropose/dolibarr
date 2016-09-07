@@ -42,6 +42,7 @@ $socid = GETPOST('socid','int');
 if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user, 'prelevement','','');
 
+
 /*
  * Actions
  */
@@ -63,7 +64,7 @@ if (prelevement_check_config() < 0)
 	print '</div>';
 }
 
-print_fiche_titre($langs->trans("CustomersStandingOrdersArea"));
+print load_fiche_titre($langs->trans("CustomersStandingOrdersArea"));
 
 
 print '<div class="fichecenter"><div class="fichethirdleft">';
@@ -84,10 +85,88 @@ print $bprev->NbFactureAPrelever();
 print '</a>';
 print '</td></tr>';
 $var=!$var;
-print '<tr class="liste_total"><td>'.$langs->trans("AmountToWithdraw").'</td>';
+print '<tr '.$bc[$var].'><td>'.$langs->trans("AmountToWithdraw").'</td>';
 print '<td align="right">';
-print price($bprev->SommeAPrelever());
+print price($bprev->SommeAPrelever(),'','',1,-1,-1,'auto');
 print '</td></tr></table><br>';
+
+
+
+/*
+ * Invoices waiting for withdraw
+ */
+$sql = "SELECT f.facnumber, f.rowid, f.total_ttc, f.fk_statut, f.paye, f.type,";
+$sql.= " pfd.date_demande, pfd.amount,";
+$sql.= " s.nom as name, s.rowid as socid";
+$sql.= " FROM ".MAIN_DB_PREFIX."facture as f,";
+$sql.= " ".MAIN_DB_PREFIX."societe as s";
+if (!$user->rights->societe->client->voir && !$socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
+$sql.= " , ".MAIN_DB_PREFIX."prelevement_facture_demande as pfd";
+$sql.= " WHERE s.rowid = f.fk_soc";
+$sql.= " AND f.entity = ".$conf->entity;
+$sql.= " AND pfd.traite = 0 AND pfd.fk_facture = f.rowid";
+if (!$user->rights->societe->client->voir && !$socid) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
+if ($socid) $sql.= " AND f.fk_soc = ".$socid;
+
+$resql=$db->query($sql);
+if ($resql)
+{
+    $num = $db->num_rows($resql);
+    $i = 0;
+
+    print '<table class="noborder" width="100%">';
+    print '<tr class="liste_titre">';
+    print '<td colspan="5">'.$langs->trans("InvoiceWaitingWithdraw").' ('.$num.')</td></tr>';
+    if ($num)
+    {
+        $var = True;
+        while ($i < $num && $i < 20)
+        {
+            $obj = $db->fetch_object($resql);
+
+            $invoicestatic->id=$obj->rowid;
+            $invoicestatic->ref=$obj->facnumber;
+            $invoicestatic->statut=$obj->fk_statut;
+            $invoicestatic->paye=$obj->paye;
+            $invoicestatic->type=$obj->type;
+            $alreadypayed=$invoicestatic->getSommePaiement();
+
+            $var=!$var;
+            print '<tr '.$bc[$var].'><td>';
+            print $invoicestatic->getNomUrl(1,'withdraw');
+            print '</td>';
+
+            print '<td>';
+            $thirdpartystatic->id=$obj->socid;
+            $thirdpartystatic->name=$obj->name;
+            print $thirdpartystatic->getNomUrl(1,'customer');
+            print '</td>';
+
+            print '<td align="right">';
+            print price($obj->amount);
+            print '</td>';
+
+            print '<td align="right">';
+            print dol_print_date($db->jdate($obj->date_demande),'day');
+            print '</td>';
+
+            print '<td align="right">';
+            print $invoicestatic->getLibStatut(3,$alreadypayed);
+            print '</td>';
+            print '</tr>';
+            $i++;
+        }
+    }
+    else
+    {
+        print '<tr '.$bc[false].'><td colspan="2">'.$langs->trans("NoInvoiceToWithdraw").'</td></tr>';
+    }
+    print "</table><br>";
+}
+else
+{
+    dol_print_error($db);
+}
 
 
 print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
@@ -145,86 +224,9 @@ else
     dol_print_error($db);
 }
 
-/*
- * Invoices waiting for withdraw
- */
-$sql = "SELECT f.facnumber, f.rowid, f.total_ttc, f.fk_statut, f.paye, f.type,";
-$sql.= " pfd.date_demande,";
-$sql.= " s.nom, s.rowid as socid";
-$sql.= " FROM ".MAIN_DB_PREFIX."facture as f,";
-$sql.= " ".MAIN_DB_PREFIX."societe as s";
-if (!$user->rights->societe->client->voir && !$socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
-$sql.= " , ".MAIN_DB_PREFIX."prelevement_facture_demande as pfd";
-$sql.= " WHERE s.rowid = f.fk_soc";
-$sql.= " AND f.entity = ".$conf->entity;
-$sql.= " AND pfd.traite = 0 AND pfd.fk_facture = f.rowid";
-if (!$user->rights->societe->client->voir && !$socid) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
-if ($socid) $sql.= " AND f.fk_soc = ".$socid;
-
-$resql=$db->query($sql);
-if ($resql)
-{
-    $num = $db->num_rows($resql);
-    $i = 0;
-
-    print '<table class="noborder" width="100%">';
-    print '<tr class="liste_titre">';
-    print '<td colspan="5">'.$langs->trans("InvoiceWaitingWithdraw").' ('.$num.')</td></tr>';
-    if ($num)
-    {
-        $var = True;
-        while ($i < $num && $i < 20)
-        {
-            $obj = $db->fetch_object($resql);
-
-            $invoicestatic->id=$obj->rowid;
-            $invoicestatic->ref=$obj->facnumber;
-            $invoicestatic->statut=$obj->fk_statut;
-            $invoicestatic->paye=$obj->paye;
-            $invoicestatic->type=$obj->type;
-            $alreadypayed=$invoicestatic->getSommePaiement();
-
-            $var=!$var;
-            print '<tr '.$bc[$var].'><td>';
-            print $invoicestatic->getNomUrl(1,'withdraw');
-            print '</td>';
-
-            print '<td>';
-            $thirdpartystatic->id=$obj->socid;
-            $thirdpartystatic->nom=$obj->nom;
-            print $thirdpartystatic->getNomUrl(1,'customer');
-            print '</td>';
-
-            print '<td align="right">';
-            print price($obj->total_ttc);
-            print '</td>';
-
-            print '<td align="right">';
-            print dol_print_date($db->jdate($obj->date_demande),'day');
-            print '</td>';
-
-            print '<td align="right">';
-            print $invoicestatic->getLibStatut(3,$alreadypayed);
-            print '</td>';
-            print '</tr>';
-            $i++;
-        }
-    }
-    else
-    {
-        print '<tr><td colspan="2">'.$langs->trans("NoInvoiceToWithdraw").'</td></tr>';
-    }
-    print "</table><br>";
-}
-else
-{
-    dol_print_error($db);
-}
-
 
 print '</div></div></div>';
 
 llxFooter();
 
 $db->close();
-?>

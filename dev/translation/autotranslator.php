@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 /* Copyright (C) 2009-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
@@ -99,4 +99,3 @@ print "***** Finished *****\n";
 $db->close();
 
 return $error;
-?>

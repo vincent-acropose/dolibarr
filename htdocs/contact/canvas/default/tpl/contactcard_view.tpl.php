@@ -44,7 +44,7 @@ dol_htmloutput_errors($this->control->tpl['error'],$this->control->tpl['errors']
 </tr>
 
 <tr>
-	<td><?php echo $langs->trans("Company"); ?></td>
+	<td><?php echo $langs->trans("ThirdParty"); ?></td>
 	<td colspan="3"><?php echo $this->control->tpl['company']; ?></td>
 </tr>
 
@@ -134,7 +134,7 @@ dol_htmloutput_errors($this->control->tpl['error'],$this->control->tpl['errors']
 
 <?php echo $this->control->tpl['showend']; ?>
 
-<?php if (! $user->societe_id) { ?>
+<?php if (empty($user->societe_id)) { ?>
 <div class="tabsAction">
 
 <?php if ($user->rights->societe->contact->creer) { ?>

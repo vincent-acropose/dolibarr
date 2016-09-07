@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2013   Alexandre Spangaro  <alexandre.spangaro@gmail.com>
+/* Copyright (C) 2013   Alexandre Spangaro  <aspangaro.dolibarr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,11 +16,11 @@
  */
 
 /**
- * 	\defgroup   Skype   Module Skype
+ * 	\defgroup   Skype   Module skype
  *  \brief      Add a skype button.
  *  \file       htdocs/core/modules/modSkype.class.php
  *  \ingroup    Skype
- *  \brief      Description and activation file for module Skype
+ *  \brief      Description and activation file for module skype
  */
 include_once DOL_DOCUMENT_ROOT .'/core/modules/DolibarrModules.class.php';
 
@@ -42,17 +42,17 @@ class modSkype extends DolibarrModules
         $this->db = $db;
         $this->numero = 3100;
 
-		    // Family can be 'crm','financial','hr','projects','products','ecm','technic','other'
-		    // It is used to group modules in module setup page
+		// Family can be 'crm','financial','hr','projects','products','ecm','technic','other'
+		// It is used to group modules in module setup page
         $this->family = "crm";
         // Module label (no space allowed), used if translation string 'ModuleXXXName' not found (where XXX is value of numeric property 'numero' of module)
         $this->name = preg_replace('/^mod/i','',get_class($this));
-        $this->description = "Enable Skype button into contact";
-        $this->version = 'experimental';                        // 'experimental' or 'dolibarr' or version
+        $this->description = "Enable Skype links into contacts";
+        $this->version = 'dolibarr';                        // 'experimental' or 'dolibarr' or version
         // Key used in llx_const table to save module status enabled/disabled (where MYMODULE is value of property name of module in uppercase)
         $this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);
         // Where to store the module in setup page (0=common,1=interface,2=others,3=very specific)
-        $this->special = 2;
+        $this->special = 1;
         // Name of image file used for this module.
         $this->picto='skype';
 
@@ -71,7 +71,7 @@ class modSkype extends DolibarrModules
 	    $this->conflictwith = array();	// List of modules id this module is in conflict with
         $this->langfiles = array();
 
-        // Constantes
+        // Constants
         //-----------
 
 
@@ -83,54 +83,8 @@ class modSkype extends DolibarrModules
         //------
         $this->boxes = array();
 
-    		// Permissions
-        //------------
-    		$this->rights = array();		// Permission array used by this module
-    		$this->rights_class = 'skype';
-    		$r=0;
-    
-    		$this->rights[$r][0] = 3101;
-    		$this->rights[$r][1] = 'View skype link';
-    		$this->rights[$r][3] = 1;
-    		$this->rights[$r][4] = 'view';
-    		$r++;
-
         // Main menu entries
         //------------------
         $this->menu = array();
     }
-
-
-    /**
-	 *		Function called when module is enabled.
-	 *		The init function add constants, boxes, permissions and menus (defined in constructor) into Dolibarr database.
-	 *		It also creates data directories
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-     */
-    function init($options='')
-    {
-        // Prevent pb of modules not correctly disabled
-        //$this->remove($options);
-
-        return $this->_init($sql,$options);
-    }
-
-    /**
-	 *		Function called when module is disabled.
-	 *      Remove from database constants, boxes and permissions from Dolibarr database.
-	 *		Data directories are not deleted
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-     */
-    function remove($options='')
-    {
-		$sql = array();
-
-		return $this->_remove($sql,$options);
-    }
-
 }
-?>

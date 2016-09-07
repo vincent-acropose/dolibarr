@@ -17,14 +17,14 @@
 */
 
 /**
- *       \file       htdocs/core/class/html.formmail.class.php
+ *       \file       htdocs/core/class/html.formsms.class.php
  *       \ingroup    core
  *       \brief      Fichier de la classe permettant la generation du formulaire html d'envoi de mail unitaire
  */
 require_once DOL_DOCUMENT_ROOT .'/core/class/html.form.class.php';
 
 
-/**     
+/**
  *      Classe permettant la generation du formulaire d'envoi de Sms
  *      Usage: $formsms = new FormSms($db)
  *             $formsms->proprietes=1 ou chaine ou tableau de valeurs
@@ -83,20 +83,21 @@ class FormSms
     }
 
     /**
-     *	Show the form to input an sms
+     *	Show the form to input an sms.
      *
      *	@param	string	$width	Width of form
      *	@return	void
      */
     function show_form($width='180px')
     {
-        global $conf, $langs, $user;
+        global $conf, $langs, $user, $form;
+
+        if (! is_object($form)) $form=new Form($this->db);
 
         $langs->load("other");
         $langs->load("mails");
         $langs->load("sms");
 
-        $form=new Form($this->db);
         $soc=new Societe($this->db);
         if (!empty($this->withtosocid) && $this->withtosocid > 0)
         {
@@ -213,6 +214,7 @@ function limitChars(textarea, limit, infodiv)
                 else
                 {
                     dol_syslog("Warning: The SMS sending method has not been defined into MAIN_SMS_SENDMODE", LOG_WARNING);
+	                $resultsender=array();
                     $resultsender[0]->number=$this->fromsms;
                 }
 
@@ -236,7 +238,7 @@ function limitChars(textarea, limit, infodiv)
             }
         }
 
-        // To
+        // To (target)
         if ($this->withto || is_array($this->withto))
         {
             print '<tr><td width="180">';
@@ -275,7 +277,7 @@ function limitChars(textarea, limit, infodiv)
             {
                 $defaultmessage=$this->withbody;
             }
-            $defaultmessage=make_substitutions($defaultmessage,$this->substit,$langs);
+            $defaultmessage=make_substitutions($defaultmessage,$this->substit);
             if (isset($_POST["message"])) $defaultmessage=$_POST["message"];
             $defaultmessage=str_replace('\n',"\n",$defaultmessage);
 
@@ -305,28 +307,27 @@ function limitChars(textarea, limit, infodiv)
            <option value="0">0</option>
            <option value="1">1</option>
            <option value="2">2</option>
-           <option value="3" selected="selected">3</option>
+           <option value="3" selected>3</option>
            </select></td></tr>
 
            <tr><td>'.$langs->trans("Type").' :</td><td>
            <select name="class" id="valid" class="flat">
            <option value="0">Flash</option>
-           <option value="1" selected="selected">Standard</option>
+           <option value="1" selected>Standard</option>
            <option value="2">SIM</option>
            <option value="3">ToolKit</option>
            </select></td></tr>';
 
         print "</table>\n";
 
-        print '<center>';
-        print "<input class=\"button\" type=\"submit\" name=\"sendmail\" value=\"".$langs->trans("SendSms")."\"";
-        print ">";
+        print '<div class="center">';
+        print '<input class="button" type="submit" name="sendmail" value="'.$langs->trans("SendSms").'">';
         if ($this->withcancel)
         {
-            print " &nbsp; &nbsp; ";
-            print "<input class=\"button\" type=\"submit\" name=\"cancel\" value=\"".$langs->trans("Cancel")."\">";
+            print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+            print '<input class="button" type="submit" name="cancel" value="'.$langs->trans("Cancel").'">';
         }
-        print "</center>\n";
+        print '</div>';
 
         print "</form>\n";
         print "<!-- End form SMS -->\n";
@@ -334,4 +335,3 @@ function limitChars(textarea, limit, infodiv)
 
 }
 
-?>

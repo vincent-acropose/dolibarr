@@ -1,7 +1,7 @@
 # Language file - Source file is en_US - cashdesk
-CashDeskMenu=Müügikoht
-CashDesk=Müügikoht
-CashDesks=Müügikoht
+CashDeskMenu=Kassa
+CashDesk=Kassa
+CashDesks=Kassa
 CashDeskBank=Pangakonto
 CashDeskBankCash=Pangakonto (sularaha)
 CashDeskBankCB=Pangakonto (kaardimakse)
@@ -14,7 +14,7 @@ CashDeskOn=kohta
 CashDeskThirdParty=Kolmas isik
 CashdeskDashboard=Ligipääs müügikohale
 ShoppingCart=Ostukorv
-NewSell=Uus müü
+NewSell=Uus müük
 BackOffice=Keskkontor
 AddThisArticle=Lisa see artikkel
 RestartSelling=Mine müümisel tagasi
@@ -36,4 +36,6 @@ BankToPay=Võta kontolt raha
 ShowCompany=Näita ettevõtet
 ShowStock=Näita ladu
 DeleteArticle=Klõpsa selle artikli eemaldamiseks
-FilterRefOrLabelOrBC=Otsi (viide/silt)
+FilterRefOrLabelOrBC=Otsi (viide/nimi)
+UserNeedPermissionToEditStockToUsePos=Hetkeseadistuste järgi vähendatakse laoseisu arve loomisel, seega peab kassa kasutajal olema õigus laoseisu muutmiseks.
+DolibarrReceiptPrinter=Dolibarr Receipt Printer

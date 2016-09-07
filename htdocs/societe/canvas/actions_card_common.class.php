@@ -46,12 +46,14 @@ abstract class ActionsCardCommon
 
 	/**
 	 * 	Instantiation of DAO class
-	 *  TODO This method is useless
 	 *
-	 * 	@return	void
+	 * 	@return	int		0
+	 *  @deprecated		Using getInstanceDao should not be used.
 	 */
-	protected function getInstanceDao()
+	private function getInstanceDao()
 	{
+		dol_syslog(__METHOD__ . " is deprecated", LOG_WARNING);
+
 		if (! is_object($this->object))
 		{
 			$modelclassfile = dol_buildpath('/'.$this->dirmodule.'/canvas/'.$this->canvas.'/dao_'.$this->targetmodule.'_'.$this->canvas.'.class.php');
@@ -67,6 +69,7 @@ abstract class ActionsCardCommon
 	            }
 	        }
 		}
+    	return 0;
 	}
 
 	/**
@@ -78,7 +81,7 @@ abstract class ActionsCardCommon
      */
     protected function getObject($id,$ref='')
     {
-    	$ret = $this->getInstanceDao();
+    	//$ret = $this->getInstanceDao();
 
     	$object = new Societe($this->db);
     	if (! empty($id) || ! empty($ref)) $object->fetch($id,$ref);
@@ -86,9 +89,10 @@ abstract class ActionsCardCommon
     }
 
     /**
-     *	Load data control
+     *  doActions of a canvas is not the doActions of the hook
+     *  @deprecated Use the doActions of hooks instead of this.
      *
-     *	@param	int		&$action	Action code
+     *	@param	int		$action	Action code
      *	@return	void
      */
     function doActions(&$action)
@@ -119,7 +123,7 @@ abstract class ActionsCardCommon
                 $this->object->particulier		= GETPOST("private");
 
                 $this->object->name				= empty($conf->global->MAIN_FIRSTNAME_NAME_POSITION)?trim($_POST["firstname"].' '.$_POST["lastname"]):trim($_POST["lastname"].' '.$_POST["firstname"]);
-                $this->object->civilite_id		= $_POST["civilite_id"];
+                $this->object->civility_id		= $_POST["civility_id"];
                 // Add non official properties
                 $this->object->name_bis        	= $_POST["lastname"];
                 $this->object->firstname		= $_POST["firstname"];
@@ -215,7 +219,7 @@ abstract class ActionsCardCommon
                             dol_syslog(get_class($this)."::doActions This thirdparty is a personal people",LOG_DEBUG);
                             $contact=new Contact($this->db);
 
-                            $contact->civilite_id   = $this->object->civilite_id;
+                            $contact->civility_id   = $this->object->civility_id;
                             $contact->name          = $this->object->name_bis;
                             $contact->firstname     = $this->object->firstname;
                             $contact->address       = $this->object->address;
@@ -241,14 +245,14 @@ abstract class ActionsCardCommon
 
                         if ( $this->object->client == 1 )
                         {
-                            header("Location: ".DOL_URL_ROOT."/comm/fiche.php?socid=".$this->object->id);
+                            header("Location: ".DOL_URL_ROOT."/comm/card.php?socid=".$this->object->id);
                             return;
                         }
                         else
                         {
                             if (  $this->object->fournisseur == 1 )
                             {
-                                header("Location: ".DOL_URL_ROOT."/fourn/fiche.php?socid=".$this->object->id);
+                                header("Location: ".DOL_URL_ROOT."/fourn/card.php?socid=".$this->object->id);
                                 return;
                             }
                             else
@@ -276,7 +280,7 @@ abstract class ActionsCardCommon
                         exit;
                     }
 
-                    $oldsoccanvas = dol_clone($this->object);
+					$oldsoccanvas = clone $this->object;
 
                     // To avoid setting code if third party is not concerned. But if it had values, we keep them.
                     if (empty($this->object->client) && empty($oldsoccanvas->code_client))             $this->object->code_client='';
@@ -304,7 +308,7 @@ abstract class ActionsCardCommon
 
             if ($result >= 0)
             {
-                header("Location: ".DOL_URL_ROOT."/societe/societe.php?delsoc=".$this->object->nom."");
+                header("Location: ".DOL_URL_ROOT."/societe/list.php?delsoc=".$this->object->name."");
                 exit;
             }
             else
@@ -353,8 +357,8 @@ abstract class ActionsCardCommon
 	/**
 	 *    Assign custom values for canvas (for example into this->tpl to be used by templates)
 	 *
-	 *    @param	string	&$action    Type of action
-	 *    @param	string	$id			Id of object
+	 *    @param	string	$action    Type of action
+	 *    @param	integer	$id			Id of object
 	 *    @param	string	$ref		Ref of object
 	 *    @return	void
      */
@@ -436,10 +440,10 @@ abstract class ActionsCardCommon
 
             // TODO create a function
             $this->tpl['select_customertype'] = '<select class="flat" name="client">';
-            $this->tpl['select_customertype'].= '<option value="2"'.($this->object->client==2?' selected="selected"':'').'>'.$langs->trans('Prospect').'</option>';
-            $this->tpl['select_customertype'].= '<option value="3"'.($this->object->client==3?' selected="selected"':'').'>'.$langs->trans('ProspectCustomer').'</option>';
-            $this->tpl['select_customertype'].= '<option value="1"'.($this->object->client==1?' selected="selected"':'').'>'.$langs->trans('Customer').'</option>';
-            $this->tpl['select_customertype'].= '<option value="0"'.($this->object->client==0?' selected="selected"':'').'>'.$langs->trans('NorProspectNorCustomer').'</option>';
+            $this->tpl['select_customertype'].= '<option value="2"'.($this->object->client==2?' selected':'').'>'.$langs->trans('Prospect').'</option>';
+            $this->tpl['select_customertype'].= '<option value="3"'.($this->object->client==3?' selected':'').'>'.$langs->trans('ProspectCustomer').'</option>';
+            $this->tpl['select_customertype'].= '<option value="1"'.($this->object->client==1?' selected':'').'>'.$langs->trans('Customer').'</option>';
+            $this->tpl['select_customertype'].= '<option value="0"'.($this->object->client==0?' selected':'').'>'.$langs->trans('NorProspectNorCustomer').'</option>';
             $this->tpl['select_customertype'].= '</select>';
 
             // Customer
@@ -494,7 +498,7 @@ abstract class ActionsCardCommon
             $this->tpl['select_country'] = $form->select_country($this->object->country_id,'country_id');
             $countrynotdefined = $langs->trans("ErrorSetACountryFirst").' ('.$langs->trans("SeeAbove").')';
 
-            if ($user->admin) $this->tpl['info_admin'] = info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
+            if ($user->admin) $this->tpl['info_admin'] = info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
 
             // State
             if ($this->object->country_id) $this->tpl['select_state'] = $formcompany->select_state($this->object->state_id,$this->object->country_code);
@@ -507,7 +511,7 @@ abstract class ActionsCardCommon
             $this->tpl['yn_assujtva'] = $form->selectyesno('assujtva_value',$this->tpl['tva_assuj'],1);	// Assujeti par defaut en creation
 
             // Select users
-            $this->tpl['select_users'] = $form->select_dolusers($this->object->commercial_id,'commercial_id',1);
+            $this->tpl['select_users'] = $form->select_dolusers($this->object->commercial_id, 'commercial_id', 1, '', 0, '', '', 0, 0, 0, '', 0, '', 'maxwidth300');
 
             // Local Tax
             // TODO mettre dans une classe propre au pays
@@ -704,5 +708,3 @@ abstract class ActionsCardCommon
     }
 
 }
-
-?>

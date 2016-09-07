@@ -20,7 +20,7 @@
 /**
  *  \file       htdocs/compta/deplacement/stats/index.php
  *  \ingroup    deplacement
- *  \brief      Page des stats deplacement et notes de frais
+ *  \brief      Page for statistics of module trips and expenses
  */
 
 require '../../../main.inc.php';
@@ -28,6 +28,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/dolgraph.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/deplacement/class/deplacementstats.class.php';
 
 $langs->load("trips");
+$langs->load("companies");
 
 $WIDTH=DolGraph::getDefaultGraphSizeForStats('width');
 $HEIGHT=DolGraph::getDefaultGraphSizeForStats('height');
@@ -45,6 +46,18 @@ if ($user->societe_id > 0)
 if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user, 'deplacement', $id,'');
 
+// Other security check
+$childids = $user->getAllChildIds();
+$childids[]=$user->id;
+if ($userid > 0)
+{
+	if (empty($user->rights->deplacement->readall) && empty($user->rights->deplacement->lire_tous) && ! in_array($userid, $childids))
+	{
+		accessforbidden();
+		exit;
+	}
+}
+
 $nowyear=strftime("%Y", dol_now());
 $year = GETPOST('year')>0?GETPOST('year'):$nowyear;
 //$startyear=$year-2;
@@ -60,16 +73,24 @@ $mode=GETPOST("mode")?GETPOST("mode"):'customer';
 
 $form=new Form($db);
 
+
 llxHeader();
 
 $title=$langs->trans("TripsAndExpensesStatistics");
 $dir=$conf->deplacement->dir_temp;
 
-print_fiche_titre($title, $mesg);
+print load_fiche_titre($title, $mesg);
 
 dol_mkdir($dir);
 
-$stats = new DeplacementStats($db, $socid, $userid);
+$useridtofilter=$userid;	// Filter from parameters
+if (empty($useridtofilter))
+{
+	$useridtofilter=$childids;
+	if (! empty($user->rights->deplacement->readall) || ! empty($user->rights->deplacement->lire_tous)) $useridtofilter=0;
+}
+
+$stats = new DeplacementStats($db, $socid, $useridtofilter);
 
 
 // Build graphic number of object
@@ -216,11 +237,13 @@ print '<tr class="liste_titre"><td class="liste_titre" colspan="2">'.$langs->tra
 // Company
 print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
 $filter='';
-print $form->select_company($socid,'socid',$filter,1,1);
+print $form->select_company($socid,'socid',$filter,1,1,0,array(),0,'','style="width: 95%"');
 print '</td></tr>';
 // User
-print '<tr><td>'.$langs->trans("User").'/'.$langs->trans("SalesRepresentative").'</td><td>';
-print $form->select_dolusers($userid,'userid',1);
+print '<tr><td>'.$langs->trans("User").'</td><td>';
+$include='';
+if (empty($user->rights->deplacement->readall) && empty($user->rights->deplacement->lire_tous)) $include='hierarchy';
+print $form->select_dolusers($userid, 'userid', 1, '', 0, $include, '', 0, 0, 0, '', 0, '', 'maxwidth300');
 print '</td></tr>';
 // Year
 print '<tr><td>'.$langs->trans("Year").'</td><td>';
@@ -293,4 +316,3 @@ dol_fiche_end();
 llxFooter();
 
 $db->close();
-?>

@@ -40,7 +40,7 @@ $result = restrictedArea($user, 'societe', $socid, '&societe');
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
 $hookmanager->initHooks(array('infothirdparty'));
 
-$soc = new Societe($db);
+$object = new Societe($db);
 
 
 /*
@@ -49,7 +49,7 @@ $soc = new Societe($db);
 
 $parameters=array('id'=>$socid);
 $reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
-$error=$hookmanager->error; $errors=array_merge($errors, (array) $hookmanager->errors);
+if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 
 
 
@@ -57,29 +57,49 @@ $error=$hookmanager->error; $errors=array_merge($errors, (array) $hookmanager->e
  *	View
  */
 
+$form=new Form($b);
+
+$title=$langs->trans("ThirdParty");
+if (! empty($conf->global->MAIN_HTML_TITLE) && preg_match('/thirdpartynameonly/',$conf->global->MAIN_HTML_TITLE) && $object->name) $title=$object->name.' - '.$langs->trans("Info");
 $help_url='EN:Module_Third_Parties|FR:Module_Tiers|ES:Empresas';
-llxHeader('',$langs->trans("ThirdParty"),$help_url);
+llxHeader('',$title,$help_url);
 
 if ($socid > 0)
 {
-	$result = $soc->fetch($socid);
+	$result = $object->fetch($socid);
+	if (! $result)
+	{
+		$langs->load("errors");
+		print $langs->trans("ErrorRecordNotFound");
 
-	$soc->info($socid);
+		llxFooter();
+		$db->close();
 
-	/*
-	 * Affichage onglets
-	 */
-	$head = societe_prepare_head($soc);
+		exit;
+	}
+
+	$head = societe_prepare_head($object);
 
 	dol_fiche_head($head, 'info', $langs->trans("ThirdParty"), 0, 'company');
 
+	dol_banner_tab($object, 'socid', '', ($user->societe_id?0:1), 'rowid', 'nom');
+	
+	$object->info($socid);
 
-	print '<table width="100%"><tr><td>';
-	dol_print_object_info($soc);
-	print '</td></tr></table>';
 
+	print '<div class="fichecenter">';
+
+	print '<div class="underbanner clearboth"></div>';
+
+	print '<br>';
+	
+	dol_print_object_info($object);
+
+	print '</div>';
+	
 	dol_fiche_end();
 }
+
 
 llxFooter();
 

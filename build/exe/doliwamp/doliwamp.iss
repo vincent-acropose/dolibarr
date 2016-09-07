@@ -16,9 +16,9 @@
 [Setup]
 ; ----- Change this -----
 AppName=DoliWamp
-; DoliWamp-x.x.x or DoliWamp-x.x.x-alpha or DoliWamp-x.x.x-beta or DoliWamp-x.x.x-rc or DoliWamp-x.x.x
+; Replace key with DoliWamp-x.x.x or DoliWamp-x.x.x-alpha or DoliWamp-x.x.x-beta or DoliWamp-x.x.x-rc or DoliWamp-x.x.x
 AppVerName=__FILENAMEEXEDOLIWAMP__
-; DoliWamp-x.x x or DoliWamp-x.x.x-alpha or DoliWamp-x.x.x-beta or DoliWamp-x.x.x-rc or DoliWamp-x.x.x
+; Replace key with DoliWamp-x.x x or DoliWamp-x.x.x-alpha or DoliWamp-x.x.x-beta or DoliWamp-x.x.x-rc or DoliWamp-x.x.x
 OutputBaseFilename=__FILENAMEEXEDOLIWAMP__
 ; ----- End of change
 ;OutputManifestFile=build\doliwampbuild.log
@@ -108,7 +108,7 @@ Source: "C:\Program Files\Wamp\bin\mysql\mysql5.0.45\*.*"; DestDir: "{app}\bin\m
 ; Mysql data files (does not overwrite if exists)
 Source: "build\exe\doliwamp\mysql\*.*"; DestDir: "{app}\bin\mysql\data\mysql"; Flags: onlyifdoesntexist ignoreversion recursesubdirs; Excludes: ".gitignore,.project,CVS\*,Thumbs.db"
 ; Dolibarr
-Source: "htdocs\*.*"; DestDir: "{app}\www\dolibarr\htdocs"; Flags: ignoreversion recursesubdirs; Excludes: ".gitignore,.project,CVS\*,Thumbs.db,custom\*,custom2\*,documents\*,includes\ckeditor\_source\*,includes\savant\*,includes\phpmailer\*,jquery\plugins\template\*,nltechno*,PHPExcel\Shared\PDF\*,PHPExcel\Shared\PCLZip\*,tcpdf\fonts\dejavu-fonts-ttf-2.33\*,tcpdf\fonts\freefont-20100919\*,tcpdf\fonts\utils\*,*\conf.php,*\conf.php.mysql,*\conf.php.old,*\conf.php.postgres,*\conf.php.sav,*\install.forced.php"
+Source: "htdocs\*.*"; DestDir: "{app}\www\dolibarr\htdocs"; Flags: ignoreversion recursesubdirs; Excludes: ".gitignore,.project,CVS\*,Thumbs.db,custom\*,custom2\*,documents\*,includes\ckeditor\_source\*,includes\savant\*,includes\phpmailer\*,jquery\plugins\template\*,nltechno*\*,PHPExcel\Shared\PDF\*,PHPExcel\Shared\PCLZip\*,tcpdf\fonts\dejavu-fonts-ttf-2.33\*,tcpdf\fonts\freefont-20100919\*,tcpdf\fonts\utils\*,*\conf.php,*\conf.php.mysql,*\conf.php.old,*\conf.php.postgres,*\conf.php.sav,*\install.forced.php"
 Source: "dev\*.*"; DestDir: "{app}\www\dolibarr\dev"; Flags: ignoreversion recursesubdirs; Excludes: ".gitignore,.project,CVS\*,Thumbs.db,dbmodel\*,fpdf\*,initdata\*,iso-normes\*,licence\*,phpcheckstyle\*,phpunit\*,samples\*,test\*,uml\*,vagrant\*,xdebug\*"
 Source: "doc\*.*"; DestDir: "{app}\www\dolibarr\doc"; Flags: ignoreversion recursesubdirs; Excludes: ".gitignore,.project,CVS\*,Thumbs.db,wiki\*,plaquette\*,dev\*,images\dolibarr_screenshot2.png,images\dolibarr_screenshot3.png,images\dolibarr_screenshot4.png,images\dolibarr_screenshot5.png,images\dolibarr_screenshot6.png,images\dolibarr_screenshot7.png,images\dolibarr_screenshot8.png,images\dolibarr_screenshot9.png,images\dolibarr_screenshot10.png,images\dolibarr_screenshot11.png,images\dolibarr_screenshot12.png"
 Source: "scripts\*.*"; DestDir: "{app}\www\dolibarr\scripts"; Flags: ignoreversion recursesubdirs; Excludes: ".gitignore,.project,CVS\*,Thumbs.db,product\materiel.net.php,product\import-product.php"

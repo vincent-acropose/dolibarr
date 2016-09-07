@@ -1,8 +1,9 @@
 <?php
 /* Copyright (C) 2001-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copytight (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copytight (C) 2013      Charles-Fr BENKE		<charles.fr@benke.fr>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013      Charles-Fr BENKE     <charles.fr@benke.fr>
+ * Copyright (C) 2015      Jean-François Ferry	<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +53,6 @@ if (GETPOST('add'))
 		$sql.= ", ".$conf->entity;
 		$sql.= ")";
 
-		dol_syslog("sql=".$sql);
 		$result = $db->query($sql);
 		if (!$result)
 		{
@@ -73,7 +73,6 @@ if (GETPOST('update'))
 		$sql.= " WHERE rowid = '".GETPOST('categid')."'";
 		$sql.= " AND entity = ".$conf->entity;
 
-		dol_syslog("sql=".$sql);
 		$result = $db->query($sql);
 		if (!$result)
 		{
@@ -92,7 +91,6 @@ if ($action == 'delete')
 		$sql.= " WHERE rowid = '".GETPOST('categid')."'";
 		$sql.= " AND entity = ".$conf->entity;
 
-		dol_syslog("sql=".$sql);
 		$result = $db->query($sql);
 		if (!$result)
 		{
@@ -110,7 +108,7 @@ if ($action == 'delete')
 llxHeader();
 
 
-print_fiche_titre($langs->trans("Rubriques"));
+print load_fiche_titre($langs->trans("Rubriques"), '', 'title_bank.png');
 
 print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
@@ -160,7 +158,6 @@ if ($result)
 	$db->free($result);
 }
 
-print "</form>";
 
 /*
  * Line to add category
@@ -174,11 +171,8 @@ if ($action != 'edit')
 	print '</tr>';
 }
 
-print "</table>";
-
-print "</form>";
+print '</table></form>';
 
 llxFooter();
 
 $db->close();
-?>

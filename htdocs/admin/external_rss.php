@@ -5,7 +5,7 @@
  * Copyright (C) 2004      Sebastien Di Cintio  <sdicintio@ressource-toi.org>
  * Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
  * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2011 	    Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2011 	   Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -105,7 +105,6 @@ if ($action == 'add' || GETPOST("modify"))
         if ($result1 && $result2)
         {
             $db->commit();
-	  		//$mesg='<div class="ok">'.$langs->trans("Success").'</div>';
             header("Location: ".$_SERVER["PHP_SELF"]);
             exit;
         }
@@ -171,7 +170,6 @@ if ($_POST["delete"])
         if ($result1 && $result2)
         {
             $db->commit();
-	  		//$mesg='<div class="ok">'.$langs->trans("Success").'</div>';
             header("Location: external_rss.php");
             exit;
         }
@@ -191,7 +189,7 @@ if ($_POST["delete"])
 llxHeader('',$langs->trans("ExternalRSSSetup"));
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans("ExternalRSSSetup"), $linkback, 'setup');
+print load_fiche_titre($langs->trans("ExternalRSSSetup"), $linkback, 'title_setup');
 print '<br>';
 
 // Formulaire ajout
@@ -216,11 +214,11 @@ print '<td>http://news.google.com/news?ned=us&topic=h&output=rss<br>http://www.d
 print '</tr>';
 print '</table>';
 
-print '<center><br>';
+print '<br><div class="center">';
 print '<input type="submit" class="button" value="'.$langs->trans("Add").'">';
 print '<input type="hidden" name="action" value="add">';
 print '<input type="hidden" name="norss" value="'.($lastexternalrss+1).'">';
-print '<br><br>';
+print '</div><br><br>';
 
 print '</form>';
 
@@ -229,7 +227,7 @@ $sql ="SELECT rowid, file, note FROM ".MAIN_DB_PREFIX."boxes_def";
 $sql.=" WHERE file = 'box_external_rss.php'";
 $sql.=" ORDER BY note";
 
-dol_syslog("select rss boxes sql=".$sql,LOG_DEBUG);
+dol_syslog("select rss boxes", LOG_DEBUG);
 $resql=$db->query($sql);
 if ($resql)
 {
@@ -322,7 +320,5 @@ else
 }
 
 
-$db->close();
-
 llxFooter();
-?>
+$db->close();

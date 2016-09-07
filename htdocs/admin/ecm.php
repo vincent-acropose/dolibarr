@@ -1,5 +1,6 @@
 <?php
 /* Copyright (C) 2013	Florian Henry	<florian.henry@open-concept.pro>
+ * Copyright (C) 2015	Juanjo Menent	<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,18 +70,8 @@ $help_url='';
 llxHeader('',$langs->trans("ECMSetup"),$help_url);
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans("ECMSetup"),$linkback,'setup');
+print load_fiche_titre($langs->trans("ECMSetup"),$linkback,'title_setup');
 print '<br>';
-
-$h = 0;
-
-$head[$h][0] = DOL_URL_ROOT."/admin/ecm.php";
-$head[$h][1] = $langs->trans("Miscellaneous");
-$head[$h][2] = 'general';
-$hselected=$h;
-$h++;
-
-dol_fiche_head($head, $hselected, $langs->trans("ModuleSetup"));
 
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
@@ -105,11 +96,11 @@ if ($conf->use_javascript_ajax)
 }
 else
 {
-	if($conf->global->ECM_AUTO_TREE_ENABLED == 0)
+	if (empty($conf->global->ECM_AUTO_TREE_ENABLED))
 	{
 		print '<a href="'.$_SERVER['PHP_SELF'].'?action=set_ECM_AUTO_TREE_ENABLED">'.img_picto($langs->trans("Disabled"),'off').'</a>';
 	}
-	else if($conf->global->USER_MAIL_REQUIRED == 1)
+	else if(! empty($conf->global->USER_MAIL_REQUIRED))
 	{
 		print '<a href="'.$_SERVER['PHP_SELF'].'?action=del_ECM_AUTO_TREE_ENABLED">'.img_picto($langs->trans("Enabled"),'on').'</a>';
 	}

@@ -23,8 +23,8 @@
 
 
 /**
- *	Classe permettant la generation de composants html
- *	Only common components are here.
+ *	Class to manage HTML output components for orders
+ *	Before adding component here, check they are not into common part Form.class.php
  */
 class FormOrder
 {
@@ -46,8 +46,34 @@ class FormOrder
 
 
 	/**
+     *    Return combo list of differents status of a orders
+     *
+     *    @param	string	$selected   Preselected value
+     *    @param	int		$short		Use short labels
+     *    @param	string	$hmlname	Name of HTML select element
+     *    @return	void
+     */
+    function selectSupplierOrderStatus($selected='', $short=0, $hmlname='order_status')
+    {
+        $tmpsupplierorder=new CommandeFournisseur($db);
+        
+        print '<select class="flat" name="'.$hmlname.'">';
+        print '<option value="-1">&nbsp;</option>';
+        $statustohow=array('0'=>'0','1'=>'1','2'=>'2','3'=>'3','4'=>'4','5'=>'5','6'=>'6,7','9'=>'9');	// 7 is same label than 6. 8 does not exists (billed is another field)
+
+        foreach($statustohow as $key => $value)
+        {
+			print '<option value="'.$value.'"'.(($selected == $key || $selected == $value)?' selected':'').'>';
+			$tmpsupplierorder->statut=$key;
+			print $tmpsupplierorder->getLibStatut($short);
+	        print '</option>';
+        }
+        print '</select>';
+    }
+
+	/**
 	 *  Return list of way to order
-	 * 
+	 *
 	 *	@param	string	$selected		Id of preselected order origin
 	 *  @param  string	$htmlname 		Name of HTML select list
 	 *  @param  int		$addempty		0=liste sans valeur nulle, 1=ajoute valeur inconnue
@@ -57,42 +83,43 @@ class FormOrder
 	{
 		global $conf,$langs;
 		print '<select class="flat" name="'.$htmlname.'">';
-		if ($addempty) print '<option value="-1" selected="selected">&nbsp;</option>';
+		if ($addempty) print '<option value="-1" selected>&nbsp;</option>';
 
-		// TODO Use a table called llx_c_input_reason
-		print '<option value="0"'.($selected=='0'?' selected="selected"':'').'>'.$langs->trans('OrderSource0').'</option>';
-		print '<option value="1"'.($selected=='1'?' selected="selected"':'').'>'.$langs->trans('OrderSource1').'</option>';
-		print '<option value="2"'.($selected=='2'?' selected="selected"':'').'>'.$langs->trans('OrderSource2').'</option>';
-		print '<option value="3"'.($selected=='3'?' selected="selected"':'').'>'.$langs->trans('OrderSource3').'</option>';
-		print '<option value="4"'.($selected=='4'?' selected="selected"':'').'>'.$langs->trans('OrderSource4').'</option>';
-		print '<option value="5"'.($selected=='5'?' selected="selected"':'').'>'.$langs->trans('OrderSource5').'</option>';
-		print '<option value="6"'.($selected=='6'?' selected="selected"':'').'>'.$langs->trans('OrderSource6').'</option>';
+		// TODO Use the table called llx_c_input_reason
+		print '<option value="0"'.($selected=='0'?' selected':'').'>'.$langs->trans('OrderSource0').'</option>';
+		print '<option value="1"'.($selected=='1'?' selected':'').'>'.$langs->trans('OrderSource1').'</option>';
+		print '<option value="2"'.($selected=='2'?' selected':'').'>'.$langs->trans('OrderSource2').'</option>';
+		print '<option value="3"'.($selected=='3'?' selected':'').'>'.$langs->trans('OrderSource3').'</option>';
+		print '<option value="4"'.($selected=='4'?' selected':'').'>'.$langs->trans('OrderSource4').'</option>';
+		print '<option value="5"'.($selected=='5'?' selected':'').'>'.$langs->trans('OrderSource5').'</option>';
+		print '<option value="6"'.($selected=='6'?' selected':'').'>'.$langs->trans('OrderSource6').'</option>';
 
 		print '</select>';
 	}
 
 
 	/**
-	 *	Return list of way to order
+	 *	Return list of input method (mode used to receive order, like order received by email, fax, online)
+	 *  List found into table c_input_method.
 	 *
 	 *	@param	string	$selected		Id of preselected input method
 	 *  @param  string	$htmlname 		Name of HTML select list
-	 *  @param  int		$addempty		0=liste sans valeur nulle, 1=ajoute valeur inconnue
+	 *  @param  int		$addempty		0=list with no empty value, 1=list with empty value
 	 *  @return	array					Tableau des sources de commandes
 	 */
-	function select_methodes_commande($selected='',$htmlname='source_id',$addempty=0)
+	function selectInputMethod($selected='',$htmlname='source_id',$addempty=0)
 	{
-		global $conf,$langs;
-		$listemethodes=array();
+		global $conf,$langs,$form;
 
-		require_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php';
-		$form=new Form($this->db);
+        if (! is_object($form)) $form=new Form($this->db);
+
+        $listofmethods=array();
 
 		$sql = "SELECT rowid, code, libelle as label";
 		$sql.= " FROM ".MAIN_DB_PREFIX."c_input_method";
 		$sql.= " WHERE active = 1";
 
-		dol_syslog(get_class($this)."::select_methodes_commande sql=".$sql);
+		dol_syslog(get_class($this)."::selectInputMethod", LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
@@ -101,7 +128,7 @@ class FormOrder
 			while ($i < $num)
 			{
 				$obj = $this->db->fetch_object($resql);
-				$listemethodes[$obj->rowid] = $langs->trans($obj->code)!=$obj->code?$langs->trans($obj->code):$obj->label;
+				$listofmethods[$obj->rowid] = $langs->trans($obj->code)!=$obj->code?$langs->trans($obj->code):$obj->label;
 				$i++;
 			}
 		}
@@ -111,10 +138,9 @@ class FormOrder
 			return -1;
 		}
 
-		print $form->selectarray($htmlname,$listemethodes,$selected,$addempty);
+		print $form->selectarray($htmlname,$listofmethods,$selected,$addempty);
 		return 1;
 	}
 
 }
 
-?>

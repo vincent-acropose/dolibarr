@@ -1,4 +1,4 @@
-<?php
+<?php //ligne 86
 /* Copyright (c) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/member.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/dolgraph.class.php';
 
 $graphwidth=DolGraph::getDefaultGraphSizeForStats('width',700);
@@ -60,8 +61,10 @@ $title=$langs->trans("Statistics");
 if ($mode == 'memberbycountry') $title=$langs->trans("MembersStatisticsByCountries");
 if ($mode == 'memberbystate') $title=$langs->trans("MembersStatisticsByState");
 if ($mode == 'memberbytown') $title=$langs->trans("MembersStatisticsByTown");
+if ($mode == 'memberbyregion') $title=$langs->trans("MembersStatisticsByRegion");
 
-print_fiche_titre($title, $mesg);
+
+print load_fiche_titre($title, $mesg);
 
 dol_mkdir($dir);
 
@@ -74,27 +77,44 @@ if ($mode)
         $tab='statscountry';
 
         $data = array();
-        $sql.="SELECT COUNT(d.rowid) as nb, MAX(d.datevalid) as lastdate, c.code, c.libelle as label";
-        $sql.=" FROM ".MAIN_DB_PREFIX."adherent as d LEFT JOIN ".MAIN_DB_PREFIX."c_pays as c on d.country = c.rowid";
+        $sql.="SELECT COUNT(d.rowid) as nb, MAX(d.datevalid) as lastdate, c.code, c.label";
+        $sql.=" FROM ".MAIN_DB_PREFIX."adherent as d LEFT JOIN ".MAIN_DB_PREFIX."c_country as c on d.country = c.rowid";
         $sql.=" WHERE d.entity IN (".getEntity().")";
         $sql.=" AND d.statut = 1";
-        $sql.=" GROUP BY c.libelle, c.code";
+        $sql.=" GROUP BY c.label, c.code";
         //print $sql;
     }
-    if ($mode == 'memberbystate')
+
+	if ($mode == 'memberbystate')
     {
         $label=$langs->trans("Country");
         $label2=$langs->trans("State");
         $tab='statsstate';
 
         $data = array();
-        $sql.="SELECT COUNT(d.rowid) as nb, MAX(d.datevalid) as lastdate, p.code, p.libelle as label, c.nom as label2";
+        $sql.="SELECT COUNT(d.rowid) as nb, MAX(d.datevalid) as lastdate, co.code, co.label, c.nom as label2"; //
         $sql.=" FROM ".MAIN_DB_PREFIX."adherent as d LEFT JOIN ".MAIN_DB_PREFIX."c_departements as c on d.state_id = c.rowid";
         $sql.=" LEFT JOIN ".MAIN_DB_PREFIX."c_regions as r on c.fk_region = r.code_region";
-        $sql.=" LEFT JOIN ".MAIN_DB_PREFIX."c_pays as p on d.country = p.rowid";
+        $sql.=" LEFT JOIN ".MAIN_DB_PREFIX."c_country as co on d.country = co.rowid";
         $sql.=" WHERE d.entity IN (".getEntity().")";
         $sql.=" AND d.statut = 1";
-        $sql.=" GROUP BY p.libelle, p.code, c.nom";
+        $sql.=" GROUP BY co.label, co.code, c.nom";
+        //print $sql;
+    }
+    if ($mode == 'memberbyregion') //
+    {
+        $label=$langs->trans("Country");
+        $label2=$langs->trans("Region"); //département
+        $tab='statsregion'; //onglet
+
+        $data = array(); //tableau de donnée
+        $sql.="SELECT COUNT(d.rowid) as nb, MAX(d.datevalid) as lastdate, co.code, co.label, r.nom as label2";
+        $sql.=" FROM ".MAIN_DB_PREFIX."adherent as d LEFT JOIN ".MAIN_DB_PREFIX."c_departements as c on d.state_id = c.rowid";
+        $sql.=" LEFT JOIN ".MAIN_DB_PREFIX."c_regions as r on c.fk_region = r.code_region";
+        $sql.=" LEFT JOIN ".MAIN_DB_PREFIX."c_country as co on d.country = co.rowid";
+        $sql.=" WHERE d.entity IN (".getEntity().")";
+        $sql.=" AND d.statut = 1";
+        $sql.=" GROUP BY co.label, co.code, r.nom"; //+
         //print $sql;
     }
     if ($mode == 'memberbytown')
@@ -104,12 +124,12 @@ if ($mode)
         $tab='statstown';
 
         $data = array();
-        $sql.="SELECT COUNT(d.rowid) as nb, MAX(d.datevalid) as lastdate, p.code, p.libelle as label, d.town as label2";
+        $sql.="SELECT COUNT(d.rowid) as nb, MAX(d.datevalid) as lastdate, c.code, c.label, d.town as label2";
         $sql.=" FROM ".MAIN_DB_PREFIX."adherent as d";
-        $sql.=" LEFT JOIN ".MAIN_DB_PREFIX."c_pays as p on d.country = p.rowid";
+        $sql.=" LEFT JOIN ".MAIN_DB_PREFIX."c_country as c on d.country = c.rowid";
         $sql.=" WHERE d.entity IN (".getEntity().")";
         $sql.=" AND d.statut = 1";
-        $sql.=" GROUP BY p.libelle, p.code, d.town";
+        $sql.=" GROUP BY c.label, c.code, d.town";
         //print $sql;
     }
 
@@ -119,7 +139,7 @@ if ($mode)
     //print $langsen->trans("Country"."FI");exit;
 
     // Define $data array
-    dol_syslog("Count member sql=".$sql);
+    dol_syslog("Count member", LOG_DEBUG);
     $resql=$db->query($sql);
     if ($resql)
     {
@@ -137,6 +157,15 @@ if ($mode)
 							'lastdate'=>$db->jdate($obj->lastdate)
                 );
             }
+	    if ($mode == 'memberbyregion') //+
+            {
+                $data[]=array('label'=>(($obj->code && $langs->trans("Country".$obj->code)!="Country".$obj->code)?$langs->trans("Country".$obj->code):($obj->label?$obj->label:$langs->trans("Unknown"))),
+                            'label_en'=>(($obj->code && $langsen->transnoentitiesnoconv("Country".$obj->code)!="Country".$obj->code)?$langsen->transnoentitiesnoconv("Country".$obj->code):($obj->label?$obj->label:$langs->trans("Unknown"))),
+				            'label2'=>($obj->label2?$obj->label2:$langs->trans("Unknown")),
+							'nb'=>$obj->nb,
+							'lastdate'=>$db->jdate($obj->lastdate)
+                );
+	}
             if ($mode == 'memberbystate')
             {
                 $data[]=array('label'=>(($obj->code && $langs->trans("Country".$obj->code)!="Country".$obj->code)?$langs->trans("Country".$obj->code):($obj->label?$obj->label:$langs->trans("Unknown"))),
@@ -183,6 +212,7 @@ else
     if ($mode == 'memberbycountry') print $langs->trans("MembersByCountryDesc").'<br>';
     else if ($mode == 'memberbystate') print $langs->trans("MembersByStateDesc").'<br>';
     else if ($mode == 'memberbytown') print $langs->trans("MembersByTownDesc").'<br>';
+    else if ($mode == 'memberbyregion') print $langs->trans("MembersByRegion").'<br>';//+
     else
     {
         print $langs->trans("MembersStatisticsDesc").'<br>';
@@ -192,6 +222,8 @@ else
         print '<a href="'.$_SERVER["PHP_SELF"].'?mode=memberbystate">'.$langs->trans("MembersStatisticsByState").'</a><br>';
         print '<br>';
         print '<a href="'.$_SERVER["PHP_SELF"].'?mode=memberbytown">'.$langs->trans("MembersStatisticsByTown").'</a><br>';
+        print '<br>';//+
+	print '<a href="'.$_SERVER["PHP_SELF"].'?mode=memberbyregion">'.$langs->trans("MembersStatisticsByRegion").'</a><br>';//+
     }
     print '<br>';
 }
@@ -249,8 +281,8 @@ if (count($arrayjs) && $mode == 'memberbycountry')
 
 if ($mode)
 {
-    // Print array
-    print '<table class="border" width="100%">';
+    // Print array / Affiche le tableau
+    print '<table class="noborder" width="100%">';
     print '<tr class="liste_titre">';
     print '<td align="center">'.$label.'</td>';
     if ($label2) print '<td align="center">'.$label2.'</td>';
@@ -284,4 +316,3 @@ dol_fiche_end();
 llxFooter();
 
 $db->close();
-?>

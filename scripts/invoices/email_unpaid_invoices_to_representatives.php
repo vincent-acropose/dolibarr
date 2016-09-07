@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 /*
  * Copyright (C) 2005		Rodolphe Quiedeville <rodolphe@quiedeville.org>
@@ -65,7 +65,7 @@ $error=0;
  */
 
 @set_time_limit(0);
-print "***** ".$script_file." (".$version.") pid=".getmypid()." *****\n";
+print "***** ".$script_file." (".$version.") pid=".dol_getmypid()." *****\n";
 dol_syslog($script_file." launched with arg ".join(',',$argv));
 
 $now=dol_now('tzserver');
@@ -120,7 +120,7 @@ if ($resql)
                 $oldemail = $obj->email;
                 $olduid = $obj->uid;
                 $oldlang = $obj->lang;
-                $oldsalerepresentative=dolGetFirstLastname($obj->firstname, $obj->lastname);;
+                $oldsalerepresentative=dolGetFirstLastname($obj->firstname, $obj->lastname);
                 $message = '';
                 $total = 0;
                 $foundtoprocess = 0;
@@ -277,4 +277,3 @@ function envoi_mail($mode,$oldemail,$message,$total,$userlang,$oldsalerepresenta
     }
 }
 
-?>

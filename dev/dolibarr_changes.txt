@@ -23,6 +23,21 @@ Replace call to serialize_val with no bugged value
 
 
 
+FPDI:
+-----
+Replace:
+	$this->_readXref($this->_xref, $this->_findXref());
+with:
+    try {
+	        $this->_readXref($this->_xref, $this->_findXref());
+    }
+    catch(Exception $e)
+    {
+        	print $e->getMessage();
+        	exit;
+    }
+
+
 TCPDF:
 ------
 * Removed all fonts except 
@@ -38,6 +53,33 @@ TCPDF:
 into
 	// initialize subsetchars
 	$subsetchars = array_fill(0, 256, true);
+
+* Made freemono the default monotype font because we removed courier
+In htdocs/includes/tcpdf/tcpdf.php
+-       protected $default_monospaced_font = 'courier';
++       protected $default_monospaced_font = 'freemono';
+
+* Renamed getmypid into dol_getmypid().
+
+
+To avoid to have QRcode changed because generated with a random mask, replace
+define('QR_FIND_FROM_RANDOM', 2);
+with
+define('QR_FIND_FROM_RANDOM', false);
+
+
+
+TCPDI:
+------
+Add fpdf_tpl.php 1.2
+Add tcpdi.php
+Add tcpdi_parser.php and replace:
+require_once(dirname(__FILE__).'/include/tcpdf_filters.php');
+with:
+require_once(dirname(__FILE__).'/../tecnickcom/tcpdf/include/tcpdf_filters.php');
+
+
+
 
 
 JSGANTT:
@@ -60,3 +102,13 @@ JQUERYFILETREE:
 ---------------
 * Remove directory htdocs/includes/jquery/plugins/jqueryFileTree/connectors
 
+
+
+RESTLER:
+--------
+
+   if ($className == 'Luracast\Restler\string') return;
+   if ($className == 'Luracast\Restler\mixed') return;
+
+
+        

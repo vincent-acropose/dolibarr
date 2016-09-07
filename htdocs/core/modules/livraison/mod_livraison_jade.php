@@ -70,7 +70,7 @@ class mod_livraison_jade extends ModeleNumRefDeliveryOrder
      */
     function canBeActivated()
     {
-        global $langs,$conf;
+        global $langs,$conf,$db;
 
         $langs->load("bills");
 
@@ -118,7 +118,7 @@ class mod_livraison_jade extends ModeleNumRefDeliveryOrder
         $sql.= " AND entity = ".$conf->entity;
 
         $resql=$db->query($sql);
-        dol_syslog("mod_livraison_jade::getNextValue sql=".$sql);
+        dol_syslog("mod_livraison_jade::getNextValue", LOG_DEBUG);
         if ($resql)
         {
             $obj = $db->fetch_object($resql);
@@ -127,7 +127,6 @@ class mod_livraison_jade extends ModeleNumRefDeliveryOrder
         }
         else
         {
-            dol_syslog("mod_livraison_jade::getNextValue sql=".$sql, LOG_ERR);
             return -1;
         }
 
@@ -156,4 +155,3 @@ class mod_livraison_jade extends ModeleNumRefDeliveryOrder
     }
 
 }
-?>

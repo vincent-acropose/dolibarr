@@ -31,10 +31,10 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/menubase.class.php';
  * @param 	DoliDB	$db				Database handler
  * @param 	string	$atarget		Target
  * @param 	int		$type_user     	0=Menu for backoffice, 1=Menu for front office
- * @param  	array	&$tabMenu       If array with menu entries already loaded, we put this array here (in most cases, it's empty)
- * @param	array	&$menu			Object Menu to return back list of menu entries
+ * @param  	array	$tabMenu       If array with menu entries already loaded, we put this array here (in most cases, it's empty)
+ * @param	array	$menu			Object Menu to return back list of menu entries
  * @param	int		$noout			Disable output (Initialise &$menu only).
- * @return	void
+ * @return	int						0
  */
 function print_auguria_menu($db,$atarget,$type_user,&$tabMenu,&$menu,$noout=0)
 {
@@ -61,17 +61,19 @@ function print_auguria_menu($db,$atarget,$type_user,&$tabMenu,&$menu,$noout=0)
 		if ($showmode == 1)
 		{
 			$url = $shorturl = $newTabMenu[$i]['url'];
+			
 			if (! preg_match("/^(http:\/\/|https:\/\/)/i",$newTabMenu[$i]['url']))
 			{
 				$tmp=explode('?',$newTabMenu[$i]['url'],2);
 				$url = $shorturl = $tmp[0];
 				$param = (isset($tmp[1])?$tmp[1]:'');
 
-				if (! preg_match('/mainmenu/i',$url) || ! preg_match('/leftmenu/i',$url)) $param.=($param?'&':'').'mainmenu='.$newTabMenu[$i]['mainmenu'].'&amp;leftmenu=';
+				if (! preg_match('/mainmenu/i',$param) || ! preg_match('/leftmenu/i',$param)) $param.=($param?'&':'').'mainmenu='.$newTabMenu[$i]['mainmenu'].'&amp;leftmenu=';
 				//$url.="idmenu=".$newTabMenu[$i]['rowid'];    // Already done by menuLoad
 				$url = dol_buildpath($url,1).($param?'?'.$param:'');
 				$shorturl = $shorturl.($param?'?'.$param:'');
 			}
+
 			$url=preg_replace('/__LOGIN__/',$user->login,$url);
 			$shorturl=preg_replace('/__LOGIN__/',$user->login,$shorturl);
 			$url=preg_replace('/__USERID__/',$user->id,$url);
@@ -97,6 +99,8 @@ function print_auguria_menu($db,$atarget,$type_user,&$tabMenu,&$menu,$noout=0)
 	if (empty($noout)) print_end_menu_array_auguria();
 
 	print "\n";
+
+	return 0;
 }
 
 
@@ -147,7 +151,7 @@ function print_text_menu_entry_auguria($text, $showmode, $url, $id, $idsel, $cla
 	if ($showmode == 1)
 	{
 		print '<a class="tmenuimage" href="'.$url.'"'.($atarget?' target="'.$atarget.'"':'').'>';
-		print '<div class="'.$id.' '.$idsel.'"><span class="'.$id.' tmenuimage" id="mainmenuspan_'.$idsel.'"></span></div>';
+		print '<div class="'.$id.' '.$idsel.' topmenuimage"><span class="'.$id.' tmenuimage" id="mainmenuspan_'.$idsel.'"></span></div>';
 		print '</a>';
 		print '<a '.$classname.' id="mainmenua_'.$idsel.'" href="'.$url.'"'.($atarget?' target="'.$atarget.'"':'').'>';
 		print '<span class="mainmenuaspan">';
@@ -201,14 +205,15 @@ function print_end_menu_array_auguria()
  * @param	DoliDB		$db                 Database handler
  * @param 	array		$menu_array_before  Table of menu entries to show before entries of menu handler
  * @param   array		$menu_array_after   Table of menu entries to show after entries of menu handler
- * @param  	array		&$tabMenu       	If array with menu entries already loaded, we put this array here (in most cases, it's empty)
- * @param	array		&$menu				Object Menu to return back list of menu entries
+ * @param  	array		$tabMenu       		If array with menu entries already loaded, we put this array here (in most cases, it's empty)
+ * @param	Menu		$menu				Object Menu to return back list of menu entries
  * @param	int			$noout				Disable output (Initialise &$menu only).
  * @param	string		$forcemainmenu		'x'=Force mainmenu to mainmenu='x'
  * @param	string		$forceleftmenu		'all'=Force leftmenu to '' (= all)
- * @return	void
+ * @param	array		$moredata			An array with more data to output
+ * @return	int								Nb of entries
  */
-function print_left_auguria_menu($db,$menu_array_before,$menu_array_after,&$tabMenu,&$menu,$noout=0,$forcemainmenu='',$forceleftmenu='')
+function print_left_auguria_menu($db,$menu_array_before,$menu_array_after,&$tabMenu,&$menu,$noout=0,$forcemainmenu='',$forceleftmenu='',$moredata=null)
 {
 	global $user,$conf,$langs,$dolibarr_main_db_name,$mysoc;
 
@@ -218,24 +223,39 @@ function print_left_auguria_menu($db,$menu_array_before,$menu_array_after,&$tabM
 	$leftmenu=($forceleftmenu?'':(empty($_SESSION["leftmenu"])?'none':$_SESSION["leftmenu"]));
 
 	// Show logo company
-	if (empty($noout) && ! empty($conf->global->MAIN_SHOW_LOGO))
+	if (empty($noout) && ! empty($conf->global->MAIN_SHOW_LOGO) && empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER))
 	{
 		$mysoc->logo_mini=$conf->global->MAIN_INFO_SOCIETE_LOGO_MINI;
 		if (! empty($mysoc->logo_mini) && is_readable($conf->mycompany->dir_output.'/logos/thumbs/'.$mysoc->logo_mini))
 		{
 			$urllogo=DOL_URL_ROOT.'/viewimage.php?cache=1&amp;modulepart=companylogo&amp;file='.urlencode('thumbs/'.$mysoc->logo_mini);
-			print "\n".'<!-- Show logo on menu -->'."\n";
-			print '<div class="blockvmenuimpair">'."\n";
-			print '<div class="menu_titre" id="menu_titre_logo"></div>';
-			print '<div class="menu_top" id="menu_top_logo"></div>';
-			print '<div class="menu_contenu" id="menu_contenu_logo">';
-			print '<center><img title="" src="'.$urllogo.'"></center>'."\n";
-			print '</div>';
-			print '<div class="menu_end" id="menu_end_logo"></div>';
-			print '</div>'."\n";
 		}
+		else
+		{
+			$urllogo=DOL_URL_ROOT.'/theme/dolibarr_logo.png';
+		}
+		$title=$langs->trans("GoIntoSetupToChangeLogo");
+		print "\n".'<!-- Show logo on menu -->'."\n";
+		print '<div class="blockvmenuimpair blockvmenulogo">'."\n";
+		print '<div class="menu_titre" id="menu_titre_logo"></div>';
+		print '<div class="menu_top" id="menu_top_logo"></div>';
+		print '<div class="menu_contenu" id="menu_contenu_logo">';
+		print '<div class="center"><img title="'.dol_escape_htmltag($title).'" alt="" src="'.$urllogo.'" style="max-width: 80%"></div>'."\n";
+		print '</div>';
+		print '<div class="menu_end" id="menu_end_logo"></div>';
+		print '</div>'."\n";
 	}
 
+	if (is_array($moredata) && ! empty($moredata['searchform']))
+	{
+        print "\n";
+        print "<!-- Begin SearchForm -->\n";
+        print '<div id="blockvmenusearch" class="blockvmenusearch">'."\n";
+        print $moredata['searchform'];
+        print '</div>'."\n";
+        print "<!-- End SearchForm -->\n";
+	}
+	
 	// We update newmenu with entries found into database
 	$menuArbo = new Menubase($db,'auguria');
 	$newmenu = $menuArbo->menuLeftCharger($newmenu,$mainmenu,$leftmenu,($user->societe_id?1:0),'auguria',$tabMenu);
@@ -260,7 +280,7 @@ function print_left_auguria_menu($db,$menu_array_before,$menu_array_after,&$tabM
 			while ($i < $numr)
 			{
 				$objp = $db->fetch_object($resql);
-				$newmenu->add('/compta/bank/fiche.php?id='.$objp->rowid,$objp->label,1,$user->rights->banque->lire);
+				$newmenu->add('/compta/bank/card.php?id='.$objp->rowid,$objp->label,1,$user->rights->banque->lire);
 				if ($objp->rappro && $objp->courant != 2 && empty($objp->clos))  // If not cash account and not closed and can be reconciliate
 				{
 					$newmenu->add('/compta/bank/rappro.php?account='.$objp->rowid,$langs->trans("Conciliate"),2,$user->rights->banque->consolidate);
@@ -270,6 +290,38 @@ function print_left_auguria_menu($db,$menu_array_before,$menu_array_after,&$tabM
 		}
 		else dol_print_error($db);
 		$db->free($resql);
+	}
+
+	if (! empty($conf->accounting->enabled) && !empty($user->rights->accounting->mouvements->lire) && $mainmenu == 'accountancy') 	// Entry in accountancy journal for each bank account
+	{
+		$newmenu->add('',$langs->trans("Journaux"),0,$user->rights->accounting->comptarapport->lire,'','accountancy','accounting');
+
+		$sql = "SELECT rowid, label, accountancy_journal";
+		$sql.= " FROM ".MAIN_DB_PREFIX."bank_account";
+		$sql.= " WHERE entity = ".$conf->entity;
+		$sql.= " AND clos = 0";
+		$sql.= " ORDER BY label";
+
+		$resql = $db->query($sql);
+		if ($resql)
+		{
+			$numr = $db->num_rows($resql);
+			$i = 0;
+
+			if ($numr > 0)
+			while ($i < $numr)
+			{
+				$objp = $db->fetch_object($resql);
+				$newmenu->add('/accountancy/journal/bankjournal.php?id_account='.$objp->rowid,$langs->trans("Journal").' - '.$objp->label,1,$user->rights->accounting->comptarapport->lire,'','accountancy','accounting');
+				$i++;
+			}
+		}
+		else dol_print_error($db);
+		$db->free($resql);
+
+		// Add other journal
+		$newmenu->add("/accountancy/journal/sellsjournal.php?leftmenu=journal",$langs->trans("SellsJournal"),1,$user->rights->accounting->comptarapport->lire);
+		$newmenu->add("/accountancy/journal/purchasesjournal.php?leftmenu=journal",$langs->trans("PurchasesJournal"),1,$user->rights->accounting->comptarapport->lire);
 	}
 
 	if ($conf->ftp->enabled && $mainmenu == 'ftp')	// Entry for FTP
@@ -303,7 +355,7 @@ function print_left_auguria_menu($db,$menu_array_before,$menu_array_after,&$tabM
 	// Show menu
 	if (empty($noout))
 	{
-		$alt=0; $blockvmenuopened=false;
+		$alt=0; $altok=0; $blockvmenuopened=false;
 		$num=count($menu_array);
 		for ($i = 0; $i < $num; $i++)
 		{
@@ -313,14 +365,15 @@ function print_left_auguria_menu($db,$menu_array_before,$menu_array_after,&$tabM
 			$alt++;
 			if (empty($menu_array[$i]['level']) && $showmenu)
 			{
+				$altok++;
 				$blockvmenuopened=true;
-				if (($alt%2==0))
+				if ($altok % 2 == 0)
 				{
-					print '<div class="blockvmenuimpair">'."\n";
+					print '<div class="blockvmenuimpair'.($altok == 1 ? ' blockvmenufirst':'').'">'."\n";
 				}
 				else
 				{
-					print '<div class="blockvmenupair">'."\n";
+					print '<div class="blockvmenupair'.($altok == 1 ? ' blockvmenufirst':'').'">'."\n";
 				}
 			}
 
@@ -370,8 +423,10 @@ function print_left_auguria_menu($db,$menu_array_before,$menu_array_after,&$tabM
 				{
 					print '<div class="menu_contenu">'.$tabstring;
 					if ($menu_array[$i]['url']) print '<a class="vsmenu" href="'.$url.'"'.($menu_array[$i]['target']?' target="'.$menu_array[$i]['target'].'"':'').'>';
+					else print '<span class="vsmenu">';
 					print $menu_array[$i]['titre'];
 					if ($menu_array[$i]['url']) print '</a>';
+					else print '</span>';
 					// If title is not pure text and contains a table, no carriage return added
 					if (! strstr($menu_array[$i]['titre'],'<table')) print '<br>';
 					print '</div>'."\n";
@@ -390,8 +445,20 @@ function print_left_auguria_menu($db,$menu_array_before,$menu_array_after,&$tabM
 				if ($blockvmenuopened) { print "</div>\n"; $blockvmenuopened=false; }
 			}
 		}
+		
+		if ($altok) print '<div class="blockvmenuend"></div>';
 	}
 
+	if (is_array($moredata) && ! empty($moredata['bookmarks']))
+	{
+	        print "\n";
+	        print "<!-- Begin Bookmarks -->\n";
+	        print '<div id="blockvmenubookmarks" class="blockvmenubookmarks">'."\n";
+	        print $moredata['bookmarks'];
+	        print '</div>'."\n";
+	        print "<!-- End Bookmarks -->\n";
+	}
+	
 	return count($menu_array);
 }
 
@@ -400,8 +467,8 @@ function print_left_auguria_menu($db,$menu_array_before,$menu_array_after,&$tabM
  * Function to test if an entry is enabled or not
  *
  * @param	string		$type_user					0=We need backoffice menu, 1=We need frontoffice menu
- * @param	array		&$menuentry					Array for menu entry
- * @param	array		&$listofmodulesforexternal	Array with list of modules allowed to external users
+ * @param	array		$menuentry					Array for menu entry
+ * @param	array		$listofmodulesforexternal	Array with list of modules allowed to external users
  * @return	int										0=Hide, 1=Show, 2=Show gray
  */
 function dol_auguria_showmenu($type_user, &$menuentry, &$listofmodulesforexternal)
@@ -428,5 +495,3 @@ function dol_auguria_showmenu($type_user, &$menuentry, &$listofmodulesforexterna
 	if (! $menuentry['perms']) return 2;															// No permissions and user is external
 	return 1;
 }
-
-?>

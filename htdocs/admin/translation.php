@@ -52,12 +52,10 @@ $action=GETPOST('action');
 $wikihelp='EN:Setup|FR:Paramétrage|ES:Configuración';
 llxHeader('',$langs->trans("Setup"),$wikihelp);
 
-print_fiche_titre($langs->trans("TranslationSetup"),'','setup');
+print load_fiche_titre($langs->trans("TranslationSetup"),'','title_setup');
 
 print $langs->trans("TranslationDesc")."<br>\n";
 print "<br>\n";
-
-dol_htmloutput_mesg($message);
 
 print $langs->trans("CurrentUserLanguage").': <strong>'.$langs->defaultlang.'</strong><br>';
 print img_warning().' '.$langs->trans("SomeTranslationAreUncomplete").'<br>';
@@ -69,4 +67,3 @@ print $langs->trans("SeeAlso").': <a href="'.$urlwikitranslatordoc.'" target="_b
 llxFooter();
 
 $db->close();
-?>

@@ -1,7 +1,8 @@
 <?php
 /* Copyright (C) 2004      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2005-2013 Laurent Destailleur  <eldy@uers.sourceforge.net>
+ * Copyright (C) 2005-2015 Laurent Destailleur  <eldy@uers.sourceforge.net>
  * Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2014	   Florian Henry        <florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +27,7 @@
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/modules/mailings/modules_mailings.php';
 require_once DOL_DOCUMENT_ROOT.'/comm/mailing/class/mailing.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formmailing.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/emailing.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
@@ -35,8 +37,6 @@ $langs->load("mails");
 // Security check
 if (! $user->rights->mailing->lire || $user->societe_id > 0) accessforbidden();
 
-
-$mesg = '';
 
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
@@ -54,6 +54,7 @@ $action=GETPOST("action");
 $search_lastname=GETPOST("search_lastname");
 $search_firstname=GETPOST("search_firstname");
 $search_email=GETPOST("search_email");
+$search_dest_status=GETPOST('search_dest_status');
 
 // Search modules dirs
 $modulesdir = dolGetModulesDirs('/mailings');
@@ -79,7 +80,7 @@ if ($action == 'add')
 	    //print $dir."\n<br>";
 	    dol_syslog("Scan directory ".$dir." for modules");
 
-	    // Chargement de la classe
+	    // Loading Class
 	    $file = $dir."/".$module.".modules.php";
 	    $classname = "mailing_".$module;
 
@@ -94,30 +95,31 @@ if ($action == 'add')
 
 			// Add targets into database
 			$obj = new $classname($db);
+			dol_syslog("Call add_to_target on class ".$classname);
 			$result=$obj->add_to_target($id,$filtersarray);
 		}
 	}
-
 	if ($result > 0)
 	{
+		setEventMessages($langs->trans("XTargetsAdded",$result), null, 'mesgs');
+
 		header("Location: ".$_SERVER['PHP_SELF']."?id=".$id);
 		exit;
 	}
 	if ($result == 0)
 	{
-		$mesg='<div class="warning">'.$langs->trans("WarningNoEMailsAdded").'</div>';
+		setEventMessages($langs->trans("WarningNoEMailsAdded"), null, 'warnings');
 	}
 	if ($result < 0)
 	{
-		$mesg='<div class="error">'.$langs->trans("Error").($obj->error?' '.$obj->error:'').'</div>';
+		setEventMessages($langs->trans("Error").($obj->error?' '.$obj->error:''), null, 'errors');
 	}
 }
 
 if (GETPOST('clearlist'))
 {
-	// Chargement de la classe
-	$classname = "MailingTargets";
-	$obj = new $classname($db);
+	// Loading Class
+	$obj = new MailingTargets($db);
 	$obj->clear_target($id);
 
 	header("Location: ".$_SERVER['PHP_SELF']."?id=".$id);
@@ -133,8 +135,7 @@ if ($action == 'delete')
 	{
 		if (!empty($id))
 		{
-			$classname = "MailingTargets";
-			$obj = new $classname($db);
+			$obj = new MailingTargets($db);
 			$obj->update_nb($id);
 
 			header("Location: ".$_SERVER['PHP_SELF']."?id=".$id);
@@ -142,7 +143,7 @@ if ($action == 'delete')
 		}
 		else
 		{
-			header("Location: liste.php");
+			header("Location: list.php");
 			exit;
 		}
 	}
@@ -164,10 +165,10 @@ if ($_POST["button_removefilter"])
 /*
  * View
  */
-
 llxHeader('',$langs->trans("Mailing"),'EN:Module_EMailing|FR:Module_Mailing|ES:M&oacute;dulo_Mailing');
 
 $form = new Form($db);
+$formmailing = new FormMailing($db);
 
 if ($object->fetch($id) >= 0)
 {
@@ -178,7 +179,7 @@ if ($object->fetch($id) >= 0)
 
 	print '<table class="border" width="100%">';
 
-	$linkback = '<a href="'.DOL_URL_ROOT.'/comm/mailing/liste.php">'.$langs->trans("BackToList").'</a>';
+	$linkback = '<a href="'.DOL_URL_ROOT.'/comm/mailing/list.php">'.$langs->trans("BackToList").'</a>';
 
 	print '<tr><td width="25%">'.$langs->trans("Ref").'</td>';
 	print '<td colspan="3">';
@@ -216,16 +217,14 @@ if ($object->fetch($id) >= 0)
 
 	print "</div>";
 
-	dol_htmloutput_mesg($mesg);
-
 	$var=!$var;
 
-	$allowaddtarget=($object->statut == 0 || $object->statut == 1);
+	$allowaddtarget=($object->statut == 0);
 
 	// Show email selectors
 	if ($allowaddtarget && $user->rights->mailing->creer)
 	{
-		print_fiche_titre($langs->trans("ToAddRecipientsChooseHere"),($user->admin?info_admin($langs->trans("YouCanAddYourOwnPredefindedListHere"),1):''),'');
+		print load_fiche_titre($langs->trans("ToAddRecipientsChooseHere"),($user->admin?info_admin($langs->trans("YouCanAddYourOwnPredefindedListHere"),1):''),'');
 
 		print '<table class="noborder" width="100%">';
 		print '<tr class="liste_titre">';
@@ -269,14 +268,15 @@ if ($object->fetch($id) >= 0)
 			// Loop on each submodule
             foreach($modulenames as $modulename)
             {
-				// Chargement de la classe
+				// Loading Class
 				$file = $dir.$modulename.".modules.php";
 				$classname = "mailing_".$modulename;
 				require_once $file;
 
 				$obj = new $classname($db);
 
-				$qualified=1;
+				// Check dependencies
+				$qualified=(isset($obj->enabled)?$obj->enabled:1);
 				foreach ($obj->require_module as $key)
 				{
 					if (! $conf->$key->enabled || (! $user->admin && $obj->require_admin))
@@ -304,12 +304,14 @@ if ($object->fetch($id) >= 0)
 					print img_object($langs->trans("Module").': '.get_class($obj),$obj->picto).' '.$obj->getDesc();
 					print '</td>';
 
-					/*
-					 print '<td width=\"100\">';
-					 print $modulename;
-					 print "</td>";
-					 */
-					$nbofrecipient=$obj->getNbOfRecipients('');
+					try {
+						$nbofrecipient=$obj->getNbOfRecipients('');
+					}
+					catch(Exception $e)
+					{
+						dol_syslog($e->getMessage(), LOG_ERR);
+					}
+
 					print '<td align="center">';
 					if ($nbofrecipient >= 0)
 					{
@@ -322,7 +324,13 @@ if ($object->fetch($id) >= 0)
 					print '</td>';
 
 					print '<td align="left">';
-					$filter=$obj->formFilter();
+					try {
+						$filter=$obj->formFilter();
+					}
+					catch(Exception $e)
+					{
+						dol_syslog($e->getMessage(), LOG_ERR);
+					}
 					if ($filter) print $filter;
 					else print $langs->trans("None");
 					print '</td>';
@@ -357,6 +365,7 @@ if ($object->fetch($id) >= 0)
 	if ($search_lastname)    $sql.= " AND mc.lastname    LIKE '%".$db->escape($search_lastname)."%'";
 	if ($search_firstname) $sql.= " AND mc.firstname LIKE '%".$db->escape($search_firstname)."%'";
 	if ($search_email)  $sql.= " AND mc.email  LIKE '%".$db->escape($search_email)."%'";
+	if (!empty($search_dest_status)) $sql.= " AND mc.statut=".$db->escape($search_dest_status)." ";
 	$sql .= $db->order($sortfield,$sortorder);
 	$sql .= $db->plimit($conf->liste_limit+1, $offset);
 
@@ -376,7 +385,9 @@ if ($object->fetch($id) >= 0)
 		print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
 		print '<input type="hidden" name="id" value="'.$object->id.'">';
 
-		$cleartext='<br></div><div>'.$langs->trans("ToClearAllRecipientsClickHere").': '.'<input type="submit" name="clearlist" class="button" value="'.$langs->trans("TargetsReset").'">';
+		if ($allowaddtarget) {
+			$cleartext='<br></div><div>'.$langs->trans("ToClearAllRecipientsClickHere").': '.'<input type="submit" name="clearlist" class="button" value="'.$langs->trans("TargetsReset").'">';
+		}
 
 		print_barre_liste($langs->trans("MailSelectedRecipients").$cleartext,$page,$_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,"",$num,$object->nbemail,'');
 
@@ -398,20 +409,17 @@ if ($object->fetch($id) >= 0)
 		print_liste_field_titre($langs->trans("Firstname"),$_SERVER["PHP_SELF"],"mc.firstname",$param,"","",$sortfield,$sortorder);
 		print_liste_field_titre($langs->trans("OtherInformations"),$_SERVER["PHP_SELF"],"",$param,"","",$sortfield,$sortorder);
 		print_liste_field_titre($langs->trans("Source"),$_SERVER["PHP_SELF"],"",$param,"",'align="center"',$sortfield,$sortorder);
-
-		// Date sendinf
+		// Date sending
 		if ($object->statut < 2)
 		{
-			print '<td class="liste_titre">&nbsp;</td>';
+			print_liste_field_titre('');
 		}
 		else
 		{
 			print_liste_field_titre($langs->trans("DateSending"),$_SERVER["PHP_SELF"],"mc.date_envoi",$param,'','align="center"',$sortfield,$sortorder);
 		}
-
-		// Statut
 		print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"mc.statut",$param,'','align="right"',$sortfield,$sortorder);
-
+		print_liste_field_titre('',$_SERVER["PHP_SELF"],"",'','','',$sortfield,$sortorder,'maxwidthsearch ');
 		print '</tr>';
 
 		// Ligne des champs de filtres
@@ -433,10 +441,22 @@ if ($object->fetch($id) >= 0)
 		print '&nbsp';
 		print '</td>';
 		// Source
-		print '<td class="liste_titre" align="right" colspan="3">';
+		print '<td class="liste_titre">';
+		print '&nbsp';
+		print '</td>';
+
+		// Date sending
+		print '<td class="liste_titre">';
+		print '&nbsp';
+		print '</td>';
+		//Statut
+		print '<td class="liste_titre" align="right">';
+		print $formmailing->selectDestinariesStatus($search_dest_status,'search_dest_status',1);
+		print '</td>';
+		//Search Icon
+		print '<td class="liste_titre" align="right">';
 		print '<input type="image" class="liste_titre" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" name="button_search" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
-		print '&nbsp; ';
-		print '<input type="image" class="liste_titre" src="'.img_picto($langs->trans("Search"),'searchclear.png','','',1).'" name="button_removefilter" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'" title="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">';
+		print '<input type="image" class="liste_titre" src="'.img_picto($langs->trans("Reset"),'searchclear.png','','',1).'" name="button_removefilter" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'" title="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">';
 		print '</td>';
 		print '</tr>';
 
@@ -465,23 +485,24 @@ if ($object->fetch($id) >= 0)
                     if ($obj->source_type == 'member')
                     {
                         include_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
-                        $m=new Adherent($db);
-                        $m->id=$obj->source_id;
-                        print $m->getNomUrl(2);
+                        $objectstatic=new Adherent($db);
+						$objectstatic->fetch($obj->source_id);
+                        print $objectstatic->getNomUrl(2);
                     }
                     else if ($obj->source_type == 'user')
                     {
                         include_once DOL_DOCUMENT_ROOT.'/user/class/user.class.php';
-                        $m=new User($db);
-                        $m->id=$obj->source_id;
-                        print $m->getNomUrl(2);
+                        $objectstatic=new User($db);
+						$objectstatic->fetch($obj->source_id);
+                        $objectstatic->id=$obj->source_id;
+                        print $objectstatic->getNomUrl(2);
                     }
                     else if ($obj->source_type == 'thirdparty')
                     {
                         include_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
-                        $m=new Societe($db);
-                        $m->id=$obj->source_id;
-                        print $m->getNomUrl(2);
+                        $objectstatic=new Societe($db);
+						$objectstatic->fetch($obj->source_id);
+                        print $objectstatic->getNomUrl(2);
                     }
                     else
                     {
@@ -495,21 +516,25 @@ if ($object->fetch($id) >= 0)
 				{
 					print '<td align="center">&nbsp;</td>';
 					print '<td align="right" class="nowrap">'.$langs->trans("MailingStatusNotSent");
-					if ($user->rights->mailing->creer) {
-						print '<a href="'.$_SERVER['PHP_SELF'].'?action=delete&rowid='.$obj->rowid.$param.'">'.img_delete($langs->trans("RemoveRecipient"));
-					}
 					print '</td>';
 				}
 				else
 				{
 					print '<td align="center">'.$obj->date_envoi.'</td>';
 					print '<td align="right" class="nowrap">';
-					if ($obj->statut==-1) print $langs->trans("MailingStatusError").' '.img_error();
-					if ($obj->statut==1) print $langs->trans("MailingStatusSent").' '.img_picto($langs->trans("MailingStatusSent"),'statut4');
-					if ($obj->statut==2) print $langs->trans("MailingStatusRead").' '.img_picto($langs->trans("MailingStatusRead"),'statut6');
-					if ($obj->statut==3) print $langs->trans("MailingStatusNotContact").' '.img_picto($langs->trans("MailingStatusNotContact"),'statut5');
+					print $object::libStatutDest($obj->statut,2);
 					print '</td>';
 				}
+
+				//Sreach Icon
+				print '<td align="right">';
+				if ($obj->statut == 0)
+				{
+					if ($user->rights->mailing->creer && $allowaddtarget) {
+						print '<a href="'.$_SERVER['PHP_SELF'].'?action=delete&rowid='.$obj->rowid.$param.'">'.img_delete($langs->trans("RemoveRecipient"));
+					}
+				}
+				print '</td>';
 				print '</tr>';
 
 				$i++;
@@ -517,7 +542,7 @@ if ($object->fetch($id) >= 0)
 		}
 		else
 		{
-			print '<tr '.$bc[false].'><td colspan="7">'.$langs->trans("NoTargetYet").'</td></tr>';
+			print '<tr '.$bc[false].'><td colspan="8">'.$langs->trans("NoTargetYet").'</td></tr>';
 		}
 		print "</table><br>";
 
@@ -538,4 +563,3 @@ if ($object->fetch($id) >= 0)
 llxFooter();
 
 $db->close();
-?>

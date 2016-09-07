@@ -3,10 +3,10 @@
  * Copyright (C) 2004-2011 Laurent Destailleur          <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Sebastien Di Cintio          <sdicintio@ressource-toi.org>
  * Copyright (C) 2004      Benoit Mortier               <benoit.mortier@opensides.be>
- * Copyright (C) 2005-2012 Regis Houssin                <regis.houssin@capnetworks.com>
- * Copyright (C) 2008 	   Raphael Bertrand (Resultic)  <raphael.bertrand@resultic.fr>
+ * Copyright (C) 2005-2014 Regis Houssin                <regis.houssin@capnetworks.com>
+ * Copyright (C) 2008      Raphael Bertrand (Resultic)  <raphael.bertrand@resultic.fr>
  * Copyright (C) 2011-2013 Juanjo Menent			    <jmenent@2byte.es>
- * Copyright (C) 2011-2013 Philippe Grand			    <philippe.grand@atoo-net.com>
+ * Copyright (C) 2011-2015 Philippe Grand			    <philippe.grand@atoo-net.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,11 +60,11 @@ if ($action == 'updateMask')
 
  	if (! $error)
     {
-        setEventMessage($langs->trans("SetupSaved"));
+        setEventMessages($langs->trans("SetupSaved"), null, 'mesgs');
     }
     else
     {
-        setEventMessage($langs->trans("Error"),'errors');
+        setEventMessages($langs->trans("Error"), null, 'errors');
     }
 }
 
@@ -102,14 +102,43 @@ else if ($action == 'specimen') // For fiche inter
 		}
 		else
 		{
-			setEventMessage($obj->error,'errors');
-			dol_syslog($obj->error, LOG_ERR);
+			setEventMessages($module->error, $module->errors, 'errors');
+			dol_syslog($module->error, LOG_ERR);
 		}
 	}
 	else
 	{
-		setEventMessage($langs->trans("ErrorModuleNotFound"),'errors');
+		setEventMessages($langs->trans("ErrorModuleNotFound"), null, 'errors');
 		dol_syslog($langs->trans("ErrorModuleNotFound"), LOG_ERR);
+	}
+}
+
+// Define constants for submodules that contains parameters (forms with param1, param2, ... and value1, value2, ...)
+if ($action == 'setModuleOptions')
+{
+	$post_size=count($_POST);
+
+	$db->begin();
+
+	for($i=0;$i < $post_size;$i++)
+	{
+		if (array_key_exists('param'.$i,$_POST))
+		{
+			$param=GETPOST("param".$i,'alpha');
+			$value=GETPOST("value".$i,'alpha');
+			if ($param) $res = dolibarr_set_const($db,$param,$value,'chaine',0,'',$conf->entity);
+			if (! $res > 0) $error++;
+		}
+	}
+	if (! $error)
+	{
+		$db->commit();
+		setEventMessages($langs->trans("SetupSaved"), null, 'mesgs');
+	}
+	else
+	{
+		$db->rollback();
+		setEventMessages($langs->trans("Error"), null, 'errors');
 	}
 }
 
@@ -156,53 +185,52 @@ else if ($action == 'setmod')
 
 else if ($action == 'set_FICHINTER_FREE_TEXT')
 {
-	$freetext= GETPOST('FICHINTER_FREE_TEXT','alpha');
+	$freetext= GETPOST('FICHINTER_FREE_TEXT');	// No alpha here, we want exact string
 	$res = dolibarr_set_const($db, "FICHINTER_FREE_TEXT",$freetext,'chaine',0,'',$conf->entity);
 
 	if (! $res > 0) $error++;
 
  	if (! $error)
     {
-        setEventMessage($langs->trans("SetupSaved"));
+        setEventMessages($langs->trans("SetupSaved"), null, 'mesgs');
     }
     else
     {
-        setEventMessage($langs->trans("Error"),'errors');
+        setEventMessages($langs->trans("Error"), null, 'errors');
     }
 }
 
 else if ($action == 'set_FICHINTER_DRAFT_WATERMARK')
 {
 	$draft= GETPOST('FICHINTER_DRAFT_WATERMARK','alpha');
-
 	$res = dolibarr_set_const($db, "FICHINTER_DRAFT_WATERMARK",trim($draft),'chaine',0,'',$conf->entity);
 
 	if (! $res > 0) $error++;
 
  	if (! $error)
     {
-        setEventMessage($langs->trans("SetupSaved"));
+        setEventMessages($langs->trans("SetupSaved"), null, 'mesgs');
     }
     else
     {
-        setEventMessage($langs->trans("Error"),'errors');
+        setEventMessages($langs->trans("Error"), null, 'errors');
     }
 }
 
 elseif ($action == 'set_FICHINTER_PRINT_PRODUCTS')
 {
 	$val = GETPOST('FICHINTER_PRINT_PRODUCTS','alpha');
-	$res = dolibarr_set_const($db, "FICHINTER_PRINT_PRODUCTS",($val == 'on'),'bool',0,'',$conf->entity);
+	$res = dolibarr_set_const($db, "FICHINTER_PRINT_PRODUCTS",($val == 'on' ? 1 : 0),'bool',0,'',$conf->entity);
 
 	if (! $res > 0) $error++;
 
  	if (! $error)
     {
-        setEventMessage($langs->trans("SetupSaved"));
+        setEventMessages($langs->trans("SetupSaved"), null, 'mesgs');
     }
     else
     {
-        setEventMessage($langs->trans("Error"),'errors');
+        setEventMessages($langs->trans("Error"), null, 'errors');
     }
 }
 
@@ -218,7 +246,7 @@ llxHeader();
 $form=new Form($db);
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans("InterventionsSetup"),$linkback,'setup');
+print load_fiche_titre($langs->trans("InterventionsSetup"),$linkback,'title_setup');
 
 
 $head=fichinter_admin_prepare_head();
@@ -227,7 +255,7 @@ dol_fiche_head($head, 'ficheinter', $langs->trans("Interventions"), 0, 'interven
 
 // Interventions numbering model
 
-print_titre($langs->trans("FicheinterNumberingModules"));
+print load_fiche_titre($langs->trans("FicheinterNumberingModules"),'','');
 
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
@@ -261,13 +289,13 @@ foreach ($dirmodels as $reldir)
 					require_once $dir.$file.'.php';
 
 					$module = new $file;
-					
+
 					if ($module->isEnabled())
 					{
 						// Show modules according to features level
 						if ($module->version == 'development'  && $conf->global->MAIN_FEATURES_LEVEL < 2) continue;
 						if ($module->version == 'experimental' && $conf->global->MAIN_FEATURES_LEVEL < 1) continue;
-					
+
 						$var=!$var;
 						print '<tr '.$bc[$var].'><td>'.$module->nom."</td><td>\n";
 						print $module->info();
@@ -299,10 +327,16 @@ foreach ($dirmodels as $reldir)
 						$htmltooltip='';
 						$htmltooltip.=''.$langs->trans("Version").': <b>'.$module->getVersion().'</b><br>';
 						$nextval=$module->getNextValue($mysoc,$ficheinter);
-						if ($nextval != $langs->trans("NotAvailable"))
-						{
-							$htmltooltip.=''.$langs->trans("NextValue").': '.$nextval;
-						}
+                        if ("$nextval" != $langs->trans("NotAvailable")) {   // Keep " on nextval
+                            $htmltooltip.=''.$langs->trans("NextValue").': ';
+                            if ($nextval) {
+                                if (preg_match('/^Error/',$nextval) || $nextval=='NotConfigured')
+                                    $nextval = $langs->trans($nextval);
+                                $htmltooltip.=$nextval.'<br>';
+                            } else {
+                                $htmltooltip.=$langs->trans($module->error).'<br>';
+                            }
+                        }
 						print '<td align="center">';
 						print $form->textwithpicto('',$htmltooltip,1,0);
 						print '</td>';
@@ -323,7 +357,7 @@ print '</table><br>';
  *  Documents models for Interventions
  */
 
-print_titre($langs->trans("TemplatePDFInterventions"));
+print load_fiche_titre($langs->trans("TemplatePDFInterventions"),'','');
 
 // Defini tableau def des modeles
 $type='ficheinter';
@@ -372,78 +406,99 @@ foreach ($dirmodels as $reldir)
 		$handle=opendir($dir);
 		if (is_resource($handle))
 		{
-		    while (($file = readdir($handle))!==false)
-		    {
-		    	if (substr($file, dol_strlen($file) -12) == '.modules.php' && substr($file,0,4) == 'pdf_')
+			while (($file = readdir($handle))!==false)
+			{
+				$filelist[]=$file;
+			}
+			closedir($handle);
+			arsort($filelist);
+
+			foreach($filelist as $file)
+			{
+				if (preg_match('/\.modules\.php$/i',$file) && preg_match('/^(pdf_|doc_)/',$file))
 		    	{
-				    $var=!$var;
-
-		    		$name = substr($file, 4, dol_strlen($file) -16);
-		    		$classname = substr($file, 0, dol_strlen($file) -12);
-
-				    require_once $dir.'/'.$file;
-				    $module = new $classname($db);
-
-		    		print '<tr '.$bc[$var].'><td>';
-				    print (empty($module->name)?$name:$module->name);
-		    		print "</td><td>\n";
-		    		require_once $dir.$file;
-		    		$module = new $classname($db);
-		    		print $module->description;
-		    		print '</td>';
-
-		    		// Active
-		    		if (in_array($name, $def))
+		    		if (file_exists($dir.'/'.$file))
 		    		{
-		    			print "<td align=\"center\">\n";
-		    			print '<a href="'.$_SERVER["PHP_SELF"].'?action=del&amp;value='.$name.'&amp;scandir='.$module->scandir.'&amp;label='.urlencode($module->name).'">';
-		    			print img_picto($langs->trans("Enabled"),'switch_on');
-		    			print '</a>';
-		    			print "</td>";
-		    		}
-		    		else
-		    		{
-		    			print "<td align=\"center\">\n";
-		    			print '<a href="'.$_SERVER["PHP_SELF"].'?action=set&amp;value='.$name.'&amp;scandir='.$module->scandir.'&amp;label='.urlencode($module->name).'">'.img_picto($langs->trans("Disabled"),'switch_off').'</a>';
-		    			print "</td>";
-		    		}
+		    			$var=!$var;
 
-		    		// Default
-		    		print "<td align=\"center\">";
-		    		if ($conf->global->FICHEINTER_ADDON_PDF == "$name")
-		    		{
-		    			print img_picto($langs->trans("Default"),'on');
-		    		}
-		    		else
-		    		{
-		    			print '<a href="'.$_SERVER["PHP_SELF"].'?action=setdoc&amp;value='.$name.'&amp;scandir='.$module->scandir.'&amp;label='.urlencode($module->name).'" alt="'.$langs->trans("Default").'">'.img_picto($langs->trans("Disabled"),'off').'</a>';
-		    		}
-		    		print '</td>';
+		    			$name = substr($file, 4, dol_strlen($file) -16);
+		    			$classname = substr($file, 0, dol_strlen($file) -12);
 
-		    		// Info
-		    		$htmltooltip =    ''.$langs->trans("Name").': '.$module->name;
-		    		$htmltooltip.='<br>'.$langs->trans("Type").': '.($module->type?$module->type:$langs->trans("Unknown"));
-		    		$htmltooltip.='<br>'.$langs->trans("Width").'/'.$langs->trans("Height").': '.$module->page_largeur.'/'.$module->page_hauteur;
-		    		$htmltooltip.='<br><br><u>'.$langs->trans("FeaturesSupported").':</u>';
-		    		$htmltooltip.='<br>'.$langs->trans("Logo").': '.yn($module->option_logo,1,1);
-		    		$htmltooltip.='<br>'.$langs->trans("PaymentMode").': '.yn($module->option_modereg,1,1);
-		    		$htmltooltip.='<br>'.$langs->trans("PaymentConditions").': '.yn($module->option_condreg,1,1);
-		    		$htmltooltip.='<br>'.$langs->trans("MultiLanguage").': '.yn($module->option_multilang,1,1);
-		    		$htmltooltip.='<br>'.$langs->trans("WatermarkOnDraftOrders").': '.yn($module->option_draft_watermark,1,1);
-		    		print '<td align="center">';
-		    		print $form->textwithpicto('',$htmltooltip,-1,0);
-		    		print '</td>';
-		    		
-		    		// Preview
-		    		$link='<a href="'.$_SERVER["PHP_SELF"].'?action=specimen&module='.$name.'">'.img_object($langs->trans("Preview"),'intervention').'</a>';
-		    		print '<td align="center">';
-		    		print $link;
-		    		print '</td>';
+		    			require_once $dir.'/'.$file;
+		    			$module = new $classname($db);
 
-		    		print '</tr>';
+		    			$modulequalified=1;
+		    			if ($module->version == 'development'  && $conf->global->MAIN_FEATURES_LEVEL < 2) $modulequalified=0;
+		    			if ($module->version == 'experimental' && $conf->global->MAIN_FEATURES_LEVEL < 1) $modulequalified=0;
+
+		    			if ($modulequalified)
+		    			{
+		    				print '<tr '.$bc[$var].'><td width="100">';
+		    				print (empty($module->name)?$name:$module->name);
+		    				print "</td><td>\n";
+		    				if (method_exists($module,'info')) print $module->info($langs);
+		    				else print $module->description;
+		    				print '</td>';
+
+		    				// Active
+		    				if (in_array($name, $def))
+		    				{
+		    					print "<td align=\"center\">\n";
+		    					print '<a href="'.$_SERVER["PHP_SELF"].'?action=del&amp;value='.$name.'&amp;scandir='.$module->scandir.'&amp;label='.urlencode($module->name).'">';
+		    					print img_picto($langs->trans("Enabled"),'switch_on');
+		    					print '</a>';
+		    					print "</td>";
+		    				}
+		    				else
+		    				{
+		    					print "<td align=\"center\">\n";
+		    					print '<a href="'.$_SERVER["PHP_SELF"].'?action=set&amp;value='.$name.'&amp;scandir='.$module->scandir.'&amp;label='.urlencode($module->name).'">'.img_picto($langs->trans("Disabled"),'switch_off').'</a>';
+		    					print "</td>";
+		    				}
+
+		    				// Default
+		    				print "<td align=\"center\">";
+		    				if ($conf->global->FICHEINTER_ADDON_PDF == "$name")
+		    				{
+		    					print img_picto($langs->trans("Default"),'on');
+		    				}
+		    				else
+		    				{
+		    					print '<a href="'.$_SERVER["PHP_SELF"].'?action=setdoc&amp;value='.$name.'&amp;scandir='.$module->scandir.'&amp;label='.urlencode($module->name).'" alt="'.$langs->trans("Default").'">'.img_picto($langs->trans("Disabled"),'off').'</a>';
+		    				}
+		    				print '</td>';
+
+		    				// Info
+		    				$htmltooltip =    ''.$langs->trans("Name").': '.$module->name;
+		    				$htmltooltip.='<br>'.$langs->trans("Type").': '.($module->type?$module->type:$langs->trans("Unknown"));
+		    				$htmltooltip.='<br>'.$langs->trans("Width").'/'.$langs->trans("Height").': '.$module->page_largeur.'/'.$module->page_hauteur;
+		    				$htmltooltip.='<br><br><u>'.$langs->trans("FeaturesSupported").':</u>';
+		    				$htmltooltip.='<br>'.$langs->trans("Logo").': '.yn($module->option_logo,1,1);
+		    				$htmltooltip.='<br>'.$langs->trans("PaymentMode").': '.yn($module->option_modereg,1,1);
+		    				$htmltooltip.='<br>'.$langs->trans("PaymentConditions").': '.yn($module->option_condreg,1,1);
+		    				$htmltooltip.='<br>'.$langs->trans("MultiLanguage").': '.yn($module->option_multilang,1,1);
+		    				$htmltooltip.='<br>'.$langs->trans("WatermarkOnDraftOrders").': '.yn($module->option_draft_watermark,1,1);
+		    				print '<td align="center">';
+		    				print $form->textwithpicto('',$htmltooltip,-1,0);
+		    				print '</td>';
+
+		    				// Preview
+		    				print '<td align="center">';
+		    				if ($module->type == 'pdf')
+		    				{
+		    					print '<a href="'.$_SERVER["PHP_SELF"].'?action=specimen&module='.$name.'">'.img_object($langs->trans("Preview"),'intervention').'</a>';
+		    				}
+		    				else
+		    				{
+		    					print img_object($langs->trans("PreviewNotAvailable"),'generic');
+		    				}
+		    				print '</td>';
+
+		    				print '</tr>';
+		    			}
+		    		}
 		    	}
 		    }
-		    closedir($handle);
 		}
 	}
 }
@@ -456,7 +511,7 @@ print "<br>";
  *
  */
 
-print_titre($langs->trans("OtherOptions"));
+print load_fiche_titre($langs->trans("OtherOptions"),'','');
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("Parameter").'</td>';
@@ -471,7 +526,17 @@ print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<input type="hidden" name="action" value="set_FICHINTER_FREE_TEXT">';
 print '<tr '.$bc[$var].'><td colspan="2">';
 print $langs->trans("FreeLegalTextOnInterventions").' ('.$langs->trans("AddCRIfTooLong").')<br>';
-print '<textarea name="FICHINTER_FREE_TEXT" class="flat" cols="120">'.$conf->global->FICHINTER_FREE_TEXT.'</textarea>';
+$variablename='FICHINTER_FREE_TEXT';
+if (empty($conf->global->PDF_ALLOW_HTML_FOR_FREE_TEXT))
+{
+    print '<textarea name="'.$variablename.'" class="flat" cols="120">'.$conf->global->$variablename.'</textarea>';
+}
+else
+{
+    include_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
+    $doleditor=new DolEditor($variablename, $conf->global->$variablename,'',80,'dolibarr_details');
+    print $doleditor->Create();
+}
 print '</td><td align="right">';
 print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
 print "</td></tr>\n";
@@ -488,7 +553,7 @@ print '<input size="50" class="flat" type="text" name="FICHINTER_DRAFT_WATERMARK
 print '</td><td align="right">';
 print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
 print "</td></tr>\n";
-
+print '</form>';
 // print products on fichinter
 $var=! $var;
 print '<form action="'.$_SERVER["PHP_SELF"].'" method="post">';
@@ -498,7 +563,7 @@ print '<tr '.$bc[$var].'><td>';
 print $langs->trans("PrintProductsOnFichinter").' ('.$langs->trans("PrintProductsOnFichinterDetails").')</td>';
 print '<td align="center"><input type="checkbox" name="FICHINTER_PRINT_PRODUCTS" ';
 if ($conf->global->FICHINTER_PRINT_PRODUCTS)
-	print 'checked="checked" ';
+	print 'checked ';
 print '/>';
 print '</td><td align="right">';
 print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
@@ -511,7 +576,5 @@ print '</table>';
 
 print '<br>';
 
-$db->close();
-
 llxFooter();
-?>
+$db->close();

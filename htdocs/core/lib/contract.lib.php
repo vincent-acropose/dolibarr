@@ -25,16 +25,16 @@
 /**
  * Prepare array with list of tabs
  *
- * @param   Object	$object		Object related to tabs
- * @return  array				Array of tabs to shoc
+ * @param   Contrat	$object		Object related to tabs
+ * @return  array				Array of tabs to show
  */
-function contract_prepare_head($object)
+function contract_prepare_head(Contrat $object)
 {
 	global $langs, $conf;
 	$h = 0;
 	$head = array();
 
-	$head[$h][0] = DOL_URL_ROOT.'/contrat/fiche.php?id='.$object->id;
+	$head[$h][0] = DOL_URL_ROOT.'/contrat/card.php?id='.$object->id;
 	$head[$h][1] = $langs->trans("ContractCard");
 	$head[$h][2] = 'card';
 	$h++;
@@ -60,17 +60,17 @@ function contract_prepare_head($object)
 		if(!empty($object->note_public)) $nbNote++;
     	$head[$h][0] = DOL_URL_ROOT.'/contrat/note.php?id='.$object->id;
     	$head[$h][1] = $langs->trans("Notes");
-		if($nbNote > 0) $head[$h][1].= ' ('.$nbNote.')';
+		if ($nbNote > 0) $head[$h][1].= ' <span class="badge">'.$nbNote.'</span>';
     	$head[$h][2] = 'note';
     	$h++;
     }
 
 	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 	$upload_dir = $conf->contrat->dir_output . "/" . dol_sanitizeFileName($object->ref);
-	$nbFiles = count(dol_dir_list($upload_dir,'files'));
+	$nbFiles = count(dol_dir_list($upload_dir,'files',0,'','(\.meta|_preview\.png)$'));
 	$head[$h][0] = DOL_URL_ROOT.'/contrat/document.php?id='.$object->id;
 	$head[$h][1] = $langs->trans("Documents");
-	if($nbFiles > 0) $head[$h][1].= ' ('.$nbFiles.')';
+	if($nbFiles > 0) $head[$h][1].= ' <span class="badge">'.$nbFiles.'</span>';
 	$head[$h][2] = 'documents';
 	$h++;
 
@@ -105,18 +105,22 @@ function contract_admin_prepare_head()
 	// Entries must be declared in modules descriptor with line
 	// $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
 	// $this->tabs = array('entity:-tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to remove a tab
-	complete_head_from_modules($conf,$langs,$object,$head,$h,'contract_admin');
+	complete_head_from_modules($conf,$langs,null,$head,$h,'contract_admin');
 
 	$head[$h][0] = DOL_URL_ROOT.'/contrat/admin/contract_extrafields.php';
 	$head[$h][1] = $langs->trans("ExtraFields");
     $head[$h][2] = 'attributes';
     $h++;
 
+    $head[$h][0] = DOL_URL_ROOT.'/contrat/admin/contractdet_extrafields.php';
+    $head[$h][1] = $langs->trans("ExtraFieldsLines");
+    $head[$h][2] = 'attributeslines';
+    $h++;
 
 
-	complete_head_from_modules($conf,$langs,$object,$head,$h,'contract_admin','remove');
+
+	complete_head_from_modules($conf,$langs,null,$head,$h,'contract_admin','remove');
 
 		return $head;
 }
 
-?>

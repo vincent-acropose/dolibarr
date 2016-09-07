@@ -53,8 +53,8 @@ if ($soapclient)
 $authentication=array(
     'dolibarrkey'=>$conf->global->WEBSERVICES_KEY,
     'sourceapplication'=>'DEMO',
-    'login'=>'admin_dolibarDev',
-    'password'=>'homedread',
+    'login'=>'admin',
+    'password'=>'changeme',
     'entity'=>'1');
 
 
@@ -160,6 +160,6 @@ echo '</pre>';
 echo '<h4>SOAP Message</h4>';
 echo '<pre>' . htmlspecialchars($soapclient->response, ENT_QUOTES) . '</pre>';
 
-echo '</body>'."\n";;
-echo '</html>'."\n";;
+echo '</body>'."\n";
+echo '</html>'."\n";
 ?>

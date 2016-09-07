@@ -4,6 +4,7 @@
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010      Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
+ * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,7 +66,7 @@ if ($id > 0 || ! empty($ref))
 	$result = $object->fetch($id, $ref);
 
 	$upload_dir = $conf->societe->multidir_output[$object->entity] . "/" . $object->id ;
-	$courrier_dir = $conf->societe->multidir_output[$object->entity] . "/courrier/" . get_exdir($object->id);
+	$courrier_dir = $conf->societe->multidir_output[$object->entity] . "/courrier/" . get_exdir($object->id,0,0,0,$object,'thirdparty');
 }
 
 
@@ -82,13 +83,15 @@ include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_pre_headers.tpl.php
 
 $form = new Form($db);
 
+$title=$langs->trans("ThirdParty").' - '.$langs->trans("Files");
+if (! empty($conf->global->MAIN_HTML_TITLE) && preg_match('/thirdpartynameonly/',$conf->global->MAIN_HTML_TITLE) && $object->name) $title=$object->name.' - '.$langs->trans("Files");
 $help_url='EN:Module_Third_Parties|FR:Module_Tiers|ES:Empresas';
-llxHeader('',$langs->trans("ThirdParty").' - '.$langs->trans("Files"),$help_url);
+llxHeader('',$title,$help_url);
 
 if ($object->id)
 {
 	/*
-	 * Affichage onglets
+	 * Show tabs
 	 */
 	if (! empty($conf->notification->enabled)) $langs->load("mails");
 	$head = societe_prepare_head($object);
@@ -99,21 +102,24 @@ if ($object->id)
 
 
 	// Construit liste des fichiers
-	$filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+	$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
 	$totalsize=0;
 	foreach($filearray as $key => $file)
 	{
 		$totalsize+=$file['size'];
 	}
 
+    dol_banner_tab($object, 'socid', '', ($user->societe_id?0:1), 'rowid', 'nom');
+        
+    print '<div class="fichecenter">';
+    
+    print '<div class="underbanner clearboth"></div>';
+	print '<table class="border centpercent">';
 
-	print '<table class="border"width="100%">';
-
-	// Ref
-	print '<tr><td width="25%">'.$langs->trans("ThirdPartyName").'</td>';
-	print '<td colspan="3">';
-	print $form->showrefnav($object,'socid','',($user->societe_id?0:1),'rowid','nom');
-	print '</td></tr>';
+	// Alias names (commercial, trademark or alias names)
+	print '<tr><td class="titlefield" width="25%">'.$langs->trans('AliasNames').'</td><td colspan="3">';
+	print $object->name_alias;
+	print "</td></tr>";
 
 	// Prefix
 	if (! empty($conf->global->SOCIETE_USEPREFIX))  // Old not used prefix field
@@ -139,15 +145,17 @@ if ($object->id)
 		print '</td></tr>';
 	}
 
-	// Nbre fichiers
+	// Number of files
 	print '<tr><td>'.$langs->trans("NbOfAttachedFiles").'</td><td colspan="3">'.count($filearray).'</td></tr>';
 
-	//Total taille
+	// Total size
 	print '<tr><td>'.$langs->trans("TotalSizeOfAttachedFiles").'</td><td colspan="3">'.$totalsize.' '.$langs->trans("bytes").'</td></tr>';
 
 	print '</table>';
 
 	print '</div>';
+	
+	dol_fiche_end();
 
 	$modulepart = 'societe';
 	$permission = $user->rights->societe->creer;
@@ -162,4 +170,3 @@ else
 
 llxFooter();
 $db->close();
-?>

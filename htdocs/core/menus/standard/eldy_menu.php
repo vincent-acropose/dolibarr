@@ -112,9 +112,10 @@ class MenuManager
      *  Show menu
      *
      *	@param	string	$mode			'top', 'left', 'jmobile'
-     *  @return int     				Number of menu entries shown
+     *  @param	array	$moredata		An array with more data to output
+     *  @return int                     0 or nb of top menu entries if $mode = 'topnb'
      */
-    function showmenu($mode)
+    function showmenu($mode, $moredata=null)
     {
     	global $conf, $langs, $user;
 
@@ -122,26 +123,41 @@ class MenuManager
 
         if ($this->type_user == 1)
         {
-        	$conf->global->MAIN_SEARCHFORM_SOCIETE=0;
-        	$conf->global->MAIN_SEARCHFORM_CONTACT=0;
+        	$conf->global->MAIN_SEARCHFORM_SOCIETE_DISABLED=0;
+        	$conf->global->MAIN_SEARCHFORM_CONTACT_DISABLED=1;
         }
-
-        $res='ErrorBadParameterForMode';
 
 		require_once DOL_DOCUMENT_ROOT.'/core/class/menu.class.php';
         $this->menu=new Menu();
 
-        if ($mode == 'top')  $res=print_eldy_menu($this->db,$this->atarget,$this->type_user,$this->tabMenu,$this->menu,0);
-        if ($mode == 'left') $res=print_left_eldy_menu($this->db,$this->menu_array,$this->menu_array_after,$this->tabMenu,$this->menu,0);
+        if (empty($conf->global->MAIN_MENU_INVERT))
+        {
+        	if ($mode == 'top')  print_eldy_menu($this->db,$this->atarget,$this->type_user,$this->tabMenu,$this->menu,0);
+        	if ($mode == 'left') print_left_eldy_menu($this->db,$this->menu_array,$this->menu_array_after,$this->tabMenu,$this->menu,0,'','',$moredata);
+        }
+        else
+		{
+        	$conf->global->MAIN_SHOW_LOGO=0;
+        	if ($mode == 'top')  print_left_eldy_menu($this->db,$this->menu_array,$this->menu_array_after,$this->tabMenu,$this->menu,0);
+        	if ($mode == 'left') print_eldy_menu($this->db,$this->atarget,$this->type_user,$this->tabMenu,$this->menu,0);
+		}
+
+		if ($mode == 'topnb')
+		{
+		    print_eldy_menu($this->db,$this->atarget,$this->type_user,$this->tabMenu,$this->menu,1);
+		    return $this->menu->getNbOfVisibleMenuEntries();
+		}
+		    
         if ($mode == 'jmobile')
         {
-        	$res=print_eldy_menu($this->db,$this->atarget,$this->type_user,$this->tabMenu,$this->menu,1);
+            print_eldy_menu($this->db,$this->atarget,$this->type_user,$this->tabMenu,$this->menu,1);
 
         	print '<!-- Generate menu list from menu handler '.$this->name.' -->'."\n";
         	foreach($this->menu->liste as $key => $val)		// $val['url','titre','level','enabled'=0|1|2,'target','mainmenu','leftmenu'
         	{
         		print '<ul class="ulmenu" data-role="listview" data-inset="true">';
         		print '<li data-role="list-dividerxxx" class="lilevel0">';
+
         		if ($val['enabled'] == 1)
         		{
 					$relurl=dol_buildpath($val['url'],1);
@@ -153,7 +169,7 @@ class MenuManager
         			$tmpmainmenu=$val['mainmenu'];
         			$tmpleftmenu='all';
         			$submenu=new Menu();
-	        		$res=print_left_eldy_menu($this->db,$this->menu_array,$this->menu_array_after,$this->tabMenu,$submenu,1,$tmpmainmenu,$tmpleftmenu);
+	        		print_left_eldy_menu($this->db,$this->menu_array,$this->menu_array_after,$this->tabMenu,$submenu,1,$tmpmainmenu,$tmpleftmenu);
         			$nexturl=dol_buildpath($submenu->liste[0]['url'],1);
 
         			$canonrelurl=preg_replace('/\?.*$/','',$relurl);
@@ -167,9 +183,8 @@ class MenuManager
         				// We add sub entry
         				print str_pad('',1).'<li data-role="list-dividerxxx" class="lilevel1 ui-btn-icon-right ui-btn">';	 // ui-btn to highlight on clic
         				print '<a href="'.$relurl.'"';
-        				//print ' data-ajax="false"'; 
+        				//print ' data-ajax="false"';
         				print '>';
-        				print str_pad('',12,'&nbsp;');
         				if ($langs->trans(ucfirst($val['mainmenu'])."Dashboard") == ucfirst($val['mainmenu'])."Dashboard") print $langs->trans("Access");	// No translation
         				else print $langs->trans(ucfirst($val['mainmenu'])."Dashboard");
         				print '</a>';
@@ -177,24 +192,42 @@ class MenuManager
         			}
        				foreach($submenu->liste as $key2 => $val2)		// $val['url','titre','level','enabled'=0|1|2,'target','mainmenu','leftmenu']
        				{
-        				$relurl2=dol_buildpath($val2['url'],1);
-	        			$relurl2=preg_replace('/__LOGIN__/',$user->login,$relurl2);
-    	    			$relurl2=preg_replace('/__USERID__/',$user->id,$relurl2);
-        				$canonurl2=preg_replace('/\?.*$/','',$val2['url']);
-        				//var_dump($val2['url'].' - '.$canonurl2.' - '.$val2['level']);
-        				if (in_array($canonurl2,array('/admin/index.php','/admin/tools/index.php','/core/tools.php'))) $relurl2='';
-        				if ($val2['level']==0) print str_pad('',$val2['level']+1).'<li'.($val2['level']==0?' data-role="list-dividerxxx"':'').' class="lilevel'.($val2['level']+1).' ui-btn-icon-right ui-btn">';	 // ui-btn to highlight on clic
-        				else print str_pad('',$val2['level']+1).'<li class="lilevel'.($val2['level']+1).'">';	 // ui-btn to highlight on clic
-        				if ($relurl2) 
-        				{
-        					print '<a href="'.$relurl2.'"';
-        					//print ' data-ajax="false"'; 
-        					print '>';
-        				}
-						print str_pad('',($val2['level']+1)*12,'&nbsp;');
-        				print $val2['titre'];
-        				if ($relurl2) print '</a>';
-        				print '</li>'."\n";
+						$showmenu=true;
+						if (! empty($conf->global->MAIN_MENU_HIDE_UNAUTHORIZED) && empty($val2['enabled'])) $showmenu=false;
+
+       					if ($showmenu)		// Visible (option to hide when not allowed is off or allowed)
+       					{
+	        				$relurl2=dol_buildpath($val2['url'],1);
+		        			$relurl2=preg_replace('/__LOGIN__/',$user->login,$relurl2);
+	    	    			$relurl2=preg_replace('/__USERID__/',$user->id,$relurl2);
+	        				$canonurl2=preg_replace('/\?.*$/','',$val2['url']);
+	        				//var_dump($val2['url'].' - '.$canonurl2.' - '.$val2['level']);
+	        				if (in_array($canonurl2,array('/admin/index.php','/admin/tools/index.php','/core/tools.php'))) $relurl2='';
+	        				if ($val2['level']==0) print str_pad('',$val2['level']+1).'<li'.($val2['level']==0?' data-role="list-dividerxxx"':'').' class="lilevel'.($val2['level']+1).' ui-btn-icon-right ui-btn">';	 // ui-btn to highlight on clic
+	        				else print str_pad('',$val2['level']+1).'<li class="lilevel'.($val2['level']+1).'">';	 // ui-btn to highlight on clic
+	        				if ($relurl2)
+	        				{
+	        					if ($val2['enabled'])	// Allowed
+	        					{
+	        						print '<a href="'.$relurl2.'"';
+		        					//print ' data-ajax="false"';
+		        					print '>';
+	        					}
+	        					else					// Not allowed but visible (greyed)
+	        					{
+				        			print '<a href="#" class="vsmenudisabled">';
+	        					}
+	        				}
+	        				print $val2['titre'];
+	        				if ($relurl2)
+	        				{
+	        					if ($val2['enabled'])	// Allowed
+	        						print '</a>';
+	        					else
+	        						print '</a>';
+	        				}
+	        				print '</li>'."\n";
+       					}
        				}
         			//var_dump($submenu);
         			print '</ul>';
@@ -211,9 +244,8 @@ class MenuManager
         unset($this->menu);
 
         //print 'xx'.$mode;
-        return $res;
+        return 0;
     }
 
 }
 
-?>

@@ -111,7 +111,7 @@ $_Avery_Labels = array (
 					     'marginTop'=>15,
 					     'NX'=>2,
 					     'NY'=>7,
-					     'SpaceX'=>25,
+					     'SpaceX'=>2.5,
 					     'SpaceY'=>0,
 					     'width'=>99.1,
 					     'height'=>38.1,
@@ -148,4 +148,3 @@ foreach($_Avery_Labels as $key => $val)
 	$_Avery_Labels[$key]['name'].=' ('.$_Avery_Labels[$key]['paper-size'].' - '.$_Avery_Labels[$key]['NX'].'x'.$_Avery_Labels[$key]['NY'].')';
 }
 
-?>
