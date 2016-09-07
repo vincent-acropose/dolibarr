@@ -60,7 +60,7 @@ if(empty($year)) {
 	$year = date('Y');
 }
 
-$sql = "SELECT cp.rowid, cp.fk_user, cp.date_debut, cp.date_fin, cp.halfday";
+$sql = "SELECT cp.rowid, cp.fk_user, cp.date_debut, cp.date_fin, cp.halfday, cp.type_conges";
 $sql.= " FROM llx_holiday cp";
 $sql.= " LEFT JOIN llx_user u ON cp.fk_user = u.rowid";
 $sql.= " WHERE cp.statut = 3";	// Approved
@@ -95,6 +95,7 @@ print '<td>'.$langs->trans('Employee').'</td>';
 print '<td>'.$langs->trans('DateDebCP').'</td>';
 print '<td>'.$langs->trans('DateFinCP').'</td>';
 print '<td align="right">'.$langs->trans('nbJours').'</td>';
+print '<td align="right">'.$langs->trans('Type').'</td>';
 print '</tr>';
 
 if($num == '0') {
@@ -136,6 +137,9 @@ if($num == '0') {
 		print '<td align="right">';
 		$nbopenedday=num_open_day($start_date, $end_date, 0, 1, $holiday['halfday']);
 		print $nbopenedday;
+		print '</td>';
+		print '<td align="right">';
+		print $holiday['type_conges'];
 		print '</td>';
 		print '</tr>';
 	}
