@@ -30,6 +30,7 @@
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 
 $langs->load("companies");
 
@@ -89,12 +90,12 @@ if ($socid)
 
     if (! empty($conf->global->SOCIETE_USEPREFIX))  // Old not used prefix field
     {
-        print '<tr><td>'.$langs->trans('Prefix').'</td><td colspan="3">'.$object->prefix_comm.'</td></tr>';
+        print '<tr><td class="titlefield">'.$langs->trans('Prefix').'</td><td colspan="3">'.$object->prefix_comm.'</td></tr>';
     }
 
 	if ($object->client)
 	{
-		print '<tr><td>';
+		print '<tr><td class="titlefield">';
 		print $langs->trans('CustomerCode').'</td><td colspan="3">';
 		print $object->code_client;
 		if ($object->check_codeclient() <> 0) print ' <font class="error">('.$langs->trans("WrongCustomerCode").')</font>';
@@ -103,7 +104,7 @@ if ($socid)
 
 	if ($object->fournisseur)
 	{
-		print '<tr><td>';
+		print '<tr><td class="titlefield">';
 		print $langs->trans('SupplierCode').'</td><td colspan="3">';
 		print $object->code_fournisseur;
 		if ($object->check_codefournisseur() <> 0) print ' <font class="error">('.$langs->trans("WrongSupplierCode").')</font>';
@@ -112,6 +113,12 @@ if ($socid)
 
 	print '</table>';
 
+
+	print '<br>';
+ 
+	$object->info($socid);
+	print dol_print_object_info($object, 1);
+	
 	print '</div>';
 
 	dol_fiche_end();
@@ -153,16 +160,42 @@ if ($socid)
 
     print '</div>';
 
-    print '<br>';
-
-
-    print load_fiche_titre($langs->trans("ActionsOnCompany"),'','');
-
-    // List of todo actions
-    show_actions_todo($conf,$langs,$db,$object,null,0,1);
-
-    // List of done actions
-    show_actions_done($conf,$langs,$db,$object);
+    if (! empty($conf->agenda->enabled) && (!empty($user->rights->agenda->myactions->read) || !empty($user->rights->agenda->allactions->read) ))
+    {
+        	
+		$actioncode = '';
+        if(!empty($conf->global->AGENDA_USE_EVENT_TYPE)) {
+        	
+			if (GETPOST('actioncode','array'))
+			{
+			    $actioncode=GETPOST('actioncode','array',3);
+			    if (! count($actioncode)) $actioncode='0';
+			}
+			else
+			{
+			    $actioncode=GETPOST("actioncode","alpha",3)?GETPOST("actioncode","alpha",3):(GETPOST("actioncode")=='0'?'0':(empty($conf->global->AGENDA_DEFAULT_FILTER_TYPE)?'':$conf->global->AGENDA_DEFAULT_FILTER_TYPE));
+			}
+			
+			include_once DOL_DOCUMENT_ROOT . '/core/class/html.formactions.class.php';
+			$formactions=new FormActions($db);	
+				
+			print '<form name="listactionsfilter" class="listactionsfilter" action="' . $_SERVER["PHP_SELF"] . '" method="get">';
+			print '<input type="hidden" name="socid" value="'.$objthirdparty->id.'" />';
+			$formactions->select_type_actions($actioncode, "actioncode", $excludetype, 0, 0, $multiselect);
+			print '<input type="submit" class="button" name="refresh" value="' . $langs->trans("Refresh") . '">';
+			print '</form><br />'	;
+			
+			
+		}
+		
+		print load_fiche_titre($langs->trans("ActionsOnCompany"),'','');
+		
+        // List of todo actions
+        show_actions_todo($conf,$langs,$db,$object,null,0,$actioncode);
+    
+        // List of done actions
+        show_actions_done($conf,$langs,$db,$object,null,0,$actioncode);
+    }
 }
 
 
