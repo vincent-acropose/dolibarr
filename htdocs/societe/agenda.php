@@ -163,30 +163,29 @@ if ($socid)
     if (! empty($conf->agenda->enabled) && (!empty($user->rights->agenda->myactions->read) || !empty($user->rights->agenda->allactions->read) ))
     {
         	
-		$actioncode = '';
-        if(!empty($conf->global->AGENDA_USE_EVENT_TYPE)) {
+		$actioncode = 'AC_OTH';
         	
-			if (GETPOST('actioncode','array'))
-			{
-			    $actioncode=GETPOST('actioncode','array',3);
-			    if (! count($actioncode)) $actioncode='0';
-			}
-			else
-			{
-			    $actioncode=GETPOST("actioncode","alpha",3)?GETPOST("actioncode","alpha",3):(GETPOST("actioncode")=='0'?'0':(empty($conf->global->AGENDA_DEFAULT_FILTER_TYPE)?'':$conf->global->AGENDA_DEFAULT_FILTER_TYPE));
-			}
-			
-			include_once DOL_DOCUMENT_ROOT . '/core/class/html.formactions.class.php';
-			$formactions=new FormActions($db);	
-				
-			print '<form name="listactionsfilter" class="listactionsfilter" action="' . $_SERVER["PHP_SELF"] . '" method="get">';
-			print '<input type="hidden" name="socid" value="'.$objthirdparty->id.'" />';
-			$formactions->select_type_actions($actioncode, "actioncode", $excludetype, 0, 0, $multiselect);
-			print '<input type="submit" class="button" name="refresh" value="' . $langs->trans("Refresh") . '">';
-			print '</form><br />'	;
-			
-			
+		if (GETPOST('actioncode','array'))
+		{
+		    $actioncode=GETPOST('actioncode','array',3);
+		    if (! count($actioncode)) $actioncode='0';
 		}
+		else
+		{
+		    $actioncode=GETPOST("actioncode","alpha",3)?GETPOST("actioncode","alpha",3):(GETPOST("actioncode")=='0'?'0':(empty($conf->global->AGENDA_DEFAULT_FILTER_TYPE)?'AC_OTH':$conf->global->AGENDA_DEFAULT_FILTER_TYPE));
+		}
+		
+		include_once DOL_DOCUMENT_ROOT . '/core/class/html.formactions.class.php';
+		$formactions=new FormActions($db);	
+			
+		print '<form name="listactionsfilter" class="listactionsfilter" action="' . $_SERVER["PHP_SELF"] . '" method="get">';
+		print '<input type="hidden" name="socid" value="'.$objthirdparty->id.'" />';
+		$formactions->select_type_actions($actioncode, "actioncode", $excludetype, (empty($conf->global->AGENDA_USE_EVENT_TYPE)?1:0), 0, $multiselect);
+		print '<input type="submit" class="button" name="refresh" value="' . $langs->trans("Refresh") . '">';
+		print '</form><br />'	;
+		
+		
+	
 		
 		print load_fiche_titre($langs->trans("ActionsOnCompany"),'','');
 		
