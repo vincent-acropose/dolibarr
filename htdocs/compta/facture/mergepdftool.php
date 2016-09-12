@@ -609,7 +609,9 @@ $sql.= " f.datef, f.date_lim_reglement, f.paye, f.fk_statut, f.type, f.fk_mode_r
 if (! $user->rights->societe->client->voir && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
 $sql.= " ORDER BY ";
 $listfield=explode(',',$sortfield);
+if($sortorder){
 foreach ($listfield as $key => $value) $sql.=$listfield[$key]." ".$sortorder.",";
+}
 //print $sql;
 //$sql .= $db->plimit($limit+1,$offset);
 
