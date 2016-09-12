@@ -542,8 +542,8 @@ if ($page == -1) { $page = 0; }
 $offset = $conf->liste_limit * $page;
 $pageprev = $page - 1;
 $pagenext = $page + 1;
-if (! $sortfield) $sortfield="f.date_lim_reglement";
-if (! $sortorder) $sortorder="ASC";
+/*if (! $sortfield) $sortfield="f.date_lim_reglement";
+if (! $sortorder) $sortorder="ASC";*/
 
 $limit = GETPOST('limit')?GETPOST('limit','int'):$conf->liste_limit;
 
@@ -609,7 +609,9 @@ $sql.= " f.datef, f.date_lim_reglement, f.paye, f.fk_statut, f.type, f.fk_mode_r
 if (! $user->rights->societe->client->voir && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
 $sql.= " ORDER BY ";
 $listfield=explode(',',$sortfield);
+if(!empty($listfield)){
 foreach ($listfield as $key => $value) $sql.=$listfield[$key]." ".$sortorder.",";
+}
 $sql.= " f.datef DESC";
 //print $sql;
 //$sql .= $db->plimit($limit+1,$offset);
