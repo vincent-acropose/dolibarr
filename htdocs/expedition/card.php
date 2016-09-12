@@ -280,8 +280,8 @@ if (empty($reshook))
 	            $tblSerial[$i] = explode($separatorlist, $serialnum);
 	            $nbCreateSerial[$i] = count($tblSerial[$i]);
 	            if ($nbCreateSerial[$i]!=GETPOST($qty,'int')) {
-	            	setEventMessage('Le nombre de numéro de série saisie ne correspond pas à la quantité à expedier sur la ligne '.($i+1), 'errors');
-	            	$error++;
+	            	setEventMessage('Le nombre de numéro de série saisie ne correspond pas à la quantité à expedier sur la ligne '.($i+1), 'warnings');
+	            	//$error++;
 	            }
 
 				if (empty($error)) {
@@ -325,7 +325,8 @@ if (empty($reshook))
 
 	        if (! $error)
 	        {
-	            $ret=$object->create($user);		// This create shipment (like Odoo picking) and line of shipments. Stock movement will when validating shipment.
+	        	// This create shipment (like Odoo picking) and line of shipments. Stock movement will when validating shipment.
+	            $ret=$object->create($user);
 	            if ($ret <= 0)
 	            {
 	                setEventMessages($object->error, $object->errors, 'errors');

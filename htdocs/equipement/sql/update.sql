@@ -13,4 +13,5 @@ ALTER TABLE  llx_equipement		ADD  price		double(24,8)	NULL		DEFAULT  '0';
 ALTER TABLE  llx_equipement		ADD  pmp			double(24,8)	NULL		DEFAULT  '0';
 ALTER TABLE  llx_equipement		ADD  unitweight	double(24,8)	NULL		DEFAULT  '0';		-- NEW : poid de l'équipement
 ALTER TABLE  llx_equipement		ADD  quantity		INT 			NOT NULL	DEFAULT  '1';
+ALTER TABLE  llx_equipementevt	ADD  fk_ticket	Integer 		NULL 		DEFAULT NULL;
 

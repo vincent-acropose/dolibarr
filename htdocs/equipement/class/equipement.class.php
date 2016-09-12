@@ -53,6 +53,7 @@ class Equipement extends CommonObject
 	var $quantity; // Quantité de produit en cas de gestion par lot
 	var $nbCreateEquipement; // nombre d'équipement é créer
 	var $fk_factory; // ID de la fabrication
+	var $fk_ticket; // ID de la fabrication
 	var $author;
 	var $datec; // date création de l'équipement
 	var $dateo; // date de début de l'équipement
@@ -70,7 +71,7 @@ class Equipement extends CommonObject
 	var $model_pdf;
 	var $extraparams = array ();
 	var $lines = array ();
-	public $createdid=array();
+	public $createdid = array ();
 
 	/**
 	 * Constructor
@@ -98,13 +99,13 @@ class Equipement extends CommonObject
 	 *
 	 * @return int <0 if KO, >0 if OK
 	 */
-	function create($notrigger = 0, $valid=false) {
+	function create($notrigger = 0, $valid = false) {
 		global $conf;
 		global $user; // todo pass $user in parameter of function
 		global $soc;
 		global $langs;
 
-		$this->createdid=array();
+		$this->createdid = array ();
 
 		dol_syslog(get_class($this) . "::create ref=" . $this->ref);
 
@@ -260,16 +261,15 @@ class Equipement extends CommonObject
 
 			if (! $error && $valid) {
 				$result = $this->setValid($user, $conf->equipement->outputdir);
-				if ($result<0) {
+				if ($result < 0) {
 					$error ++;
 				}
 			}
 
 			if (! $error) {
-				$this->createdid[$this->id]=$this->id;
+				$this->createdid[$this->id] = $this->id;
 			}
 		}
-
 
 		// si on est allé jusqu'é la fin des création
 		if ($this->nbAddEquipement == $i) {
@@ -675,8 +675,9 @@ class Equipement extends CommonObject
 					if (file_exists($file)) {
 						dol_delete_preview($this);
 
-						if (! dol_delete_file($file, 0, 0, 0, $this)) // For triggers
-{
+						// For triggers
+						if (! dol_delete_file($file, 0, 0, 0, $this))
+						{
 							$this->error = $langs->trans("ErrorCanNotDeleteFile", $file);
 							return 0;
 						}
@@ -740,12 +741,15 @@ class Equipement extends CommonObject
 					$mouvP->origin = new Equipement($this->db);
 					$mouvP->origin->id = $this->id;
 
-					if ($oldentrepot > 0) // si il y avait un ancien entrepot
-						$idmv = $mouvP->livraison($user, $this->fk_product, $entrepotold, $this->quantity, 0, // le prix est � 0 pour ne pas impacter le pmp
-$langs->trans("EquipementMoveOut"));
+					if ($oldentrepot > 0) {
+						// si il y avait un ancien entrepot
+						// le prix est � 0 pour ne pas impacter le pmp
+						$idmv = $mouvP->livraison($user, $this->fk_product, $entrepotold, $this->quantity, 0, $langs->trans("EquipementMoveOut"));
+					}
 
-					if ($fk_entrepot > 0)
+					if ($fk_entrepot > 0) {
 						$idmv = $mouvP->reception($user, $this->fk_product, $fk_entrepot, $this->quantity, 0, $langs->trans("EquipementMoveIn"));
+					}
 				}
 
 				// gestion des sous composant si il y en a
@@ -1096,8 +1100,8 @@ $langs->trans("EquipementMoveOut"));
 	 * @param int $duration Prix de l'événement
 	 * @return int >0 if ok, <0 if ko
 	 */
-	function addline($equipementid, $fk_equipementevt_type, $desc, $dateo, $datee, $fulldayevent, $fk_contrat, $fk_fichinter, $fk_expedition, $fk_project, $fk_user_author, $total_ht = 0, $array_option = 0) {
-		dol_syslog("Equipement::Addline $equipementid, $fk_equipementevt_type,$desc, $dateo, $datee, $fulldayEvent, $fk_contrat, $fk_fichinter, $fk_expedition, $fk_project, $fk_user_author, $total_ht ");
+	function addline($equipementid, $fk_equipementevt_type, $desc, $dateo, $datee, $fulldayevent, $fk_contrat, $fk_fichinter, $fk_expedition, $fk_project, $fk_user_author, $total_ht = 0, $array_option = 0, $fk_ticket = 0) {
+		dol_syslog("Equipement::Addline $equipementid, $fk_equipementevt_type,$desc, $dateo, $datee, $fulldayEvent, $fk_contrat, $fk_fichinter, $fk_expedition, $fk_project, $fk_user_author, $total_ht , $fk_ticket");
 		$this->db->begin();
 
 		// Insertion ligne
@@ -1114,6 +1118,7 @@ $langs->trans("EquipementMoveOut"));
 		$line->fk_contrat = $fk_contrat;
 		$line->fk_project = $fk_project;
 		$line->fk_expedition = $fk_expedition;
+		$line->fk_ticket = $fk_ticket;
 		$line->fk_user_author = $fk_user_author;
 		$line->datec = $datec;
 
@@ -1177,6 +1182,7 @@ $langs->trans("EquipementMoveOut"));
 		$sql = 'SELECT ee.rowid, ee.fk_equipement, ee.description, ee.datec, ee.fk_equipementevt_type,';
 		$sql .= ' ee.datee, ee.dateo, ee.fulldayevent, ee.total_ht,';
 		$sql .= ' ee.fk_fichinter, ee.fk_contrat, ee.fk_expedition, fi.ref as reffichinter, co.ref as refcontrat, ex.ref as refexpedition ';
+		$sql .= ' ,ee.fk_ticket ';
 		$sql .= ' FROM ' . MAIN_DB_PREFIX . 'equipementevt as ee';
 		$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "fichinter as fi on ee.fk_fichinter = fi.rowid";
 		$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "contrat as co on ee.fk_contrat = co.rowid";
@@ -1199,6 +1205,7 @@ $langs->trans("EquipementMoveOut"));
 				$line->fk_fichinter = $objp->fk_fichinter;
 				$line->fk_contrat = $objp->fk_contrat;
 				$line->fk_expedition = $objp->fk_expedition;
+				$line->fk_ticket = $objp->fk_ticket;
 				$line->ref_fichinter = $objp->reffichinter;
 				$line->ref_contrat = $objp->refcontrat;
 				$line->ref_expedition = $objp->refexpedition;
@@ -1434,6 +1441,7 @@ $langs->trans("EquipementMoveOut"));
 			if ($cloneevent) {
 				$sql = 'SELECT ee.rowid, ee.description, ee.fk_equipement, ee.fk_equipementevt_type, ee.total_ht, ee.fulldayevent,';
 				$sql .= ' ee.datec, ee.fk_user_author, ee.dateo, ee.datee, ee.fk_fichinter, ee.fk_contrat, ee.fk_expedition';
+				$sql .= ' ,ee.fk_ticket';
 				$sql .= ' FROM ' . MAIN_DB_PREFIX . 'equipementevt as ee';
 				$sql .= ' WHERE ee.fk_equipement = ' . $this->id;
 				$result = $this->db->query($sql);
@@ -1454,6 +1462,7 @@ $langs->trans("EquipementMoveOut"));
 						$line->fk_fichinter = $objp->fk_fichinter;
 						$line->fk_contrat = $objp->fk_contrat;
 						$line->fk_expedition = $objp->fk_expedition;
+						$line->fk_ticket = $objp->fk_ticket;
 						$line->datec = $objp->datec;
 
 						$result = $line->insert();
@@ -1567,6 +1576,7 @@ class EquipementLigne extends CommonObject
 	var $fk_equipementevt_type;
 	var $equipeventlib;
 	var $fk_fichinter;
+	var $fk_ticket;
 	var $fk_contrat;
 	var $fk_project;
 	var $fk_expedition;
@@ -1602,6 +1612,7 @@ class EquipementLigne extends CommonObject
 		$sql = 'SELECT ee.rowid, ee.fk_equipement, ee.description, ee.datec, ee.fk_equipementevt_type, eet.libelle as equipeventlib,';
 		$sql .= ' ee.datee, ee.dateo, ee.fulldayevent, ee.total_ht, ee.fk_user_author,';
 		$sql .= ' ee.fk_fichinter, ee.fk_contrat, ee.fk_expedition, ee.fk_project ';
+		$sql .= ' ,ee.fk_ticket ';
 		$sql .= ' FROM ' . MAIN_DB_PREFIX . 'equipementevt as ee';
 		$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "c_equipementevt_type as eet on ee.fk_equipementevt_type = eet.rowid";
 		$sql .= ' WHERE ee.rowid = ' . $rowid;
@@ -1626,6 +1637,7 @@ class EquipementLigne extends CommonObject
 			$this->fk_contrat = $objp->fk_contrat;
 			$this->fk_expedition = $objp->fk_expedition;
 			$this->fk_project = $objp->fk_project;
+			$this->fk_ticket = $objp->fk_ticket;
 			$this->fk_user_author = $objp->fk_user_author;
 
 			$this->db->free($result);
@@ -1651,7 +1663,7 @@ class EquipementLigne extends CommonObject
 		$sql = 'INSERT INTO ' . MAIN_DB_PREFIX . 'equipementevt';
 		$sql .= ' (fk_equipement, fk_equipementevt_type, description,';
 		$sql .= ' fulldayevent, fk_fichinter, fk_contrat, fk_expedition, fk_project,';
-		$sql .= ' datec, dateo, datee, total_ht, fk_user_author)';
+		$sql .= ' datec, dateo, datee, total_ht, fk_user_author, fk_ticket)';
 		$sql .= " VALUES (" . $this->fk_equipement . ",";
 		$sql .= " " . ($this->fk_equipementevt_type ? $this->fk_equipementevt_type : "null") . ",";
 		$sql .= " '" . ($this->desc ? $this->db->escape($this->desc) : "non saisie") . "',";
@@ -1664,7 +1676,8 @@ class EquipementLigne extends CommonObject
 		$sql .= " '" . $this->db->idate($this->dateo) . "',";
 		$sql .= " '" . $this->db->idate($this->datee) . "',";
 		$sql .= ' ' . ($this->total_ht ? price2num($this->total_ht) : "null") . ",";
-		$sql .= ' ' . ($this->fk_user_author ? $this->fk_user_author : "null");
+		$sql .= ' ' . ($this->fk_user_author ? $this->fk_user_author : "null") . ",";
+		$sql .= ' ' . ($this->fk_ticket ? $this->fk_ticket : "null");
 		$sql .= ')';
 		// print $sql.'<br>';
 		dol_syslog("EquipementLigne::insert sql=" . $sql);
@@ -1708,7 +1721,7 @@ class EquipementLigne extends CommonObject
 
 				// Remove extrafields
 				if ((! $error) && (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED))) // For avoid conflicts if trigger used
-				{
+{
 					$this->id = $this->rowid;
 					$result = $this->deleteExtraFields();
 					if ($result < 0) {
@@ -1745,6 +1758,7 @@ class EquipementLigne extends CommonObject
 		$sql .= ", 	fk_expedition=" . ($this->fk_expedition ? $this->fk_expedition : "null");
 		$sql .= ", 	fk_project=" . ($this->fk_project ? $this->fk_project : "null");
 		$sql .= ", 	fk_user_author=" . ($this->fk_user_author ? $this->fk_user_author : "null");
+		$sql .= ", 	fk_ticket=" . ($this->fk_ticket ? $this->fk_ticket : "null");
 
 		$sql .= " WHERE rowid = " . $this->rowid;
 

@@ -1416,7 +1416,7 @@ else
                 print '<tr class="liste_titre">';
                 print '<td>'.$langs->trans("ServiceNb",$cursorline).'</td>';
                 print '<td width="50" align="center">'.$langs->trans("VAT").'</td>';
-                print '<td width="50" align="right">'.$langs->trans("PriceUHT").'</td>';
+                print '<td width="50" align="right">'.$langs->trans("Prix HT (ou loyer)").'</td>';
                 print '<td width="30" align="center">'.$langs->trans("Qty").'</td>';
 	            if ($conf->global->PRODUCT_USE_UNITS) print '<td width="30" align="left">'.$langs->trans("Unit").'</td>';
                 print '<td width="50" align="right">'.$langs->trans("ReductionShort").'</td>';

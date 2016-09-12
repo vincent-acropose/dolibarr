@@ -242,7 +242,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"], "cd.statut,c.statut",$param,"","align=\"right\"",$sortfield,$sortorder);
 
 	print_liste_field_titre($langs->trans("Qty"),$_SERVER["PHP_SELF"], "cd.qty",$param,'',' align="center"',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("TotalHT"),$_SERVER["PHP_SELF"], "cd.total_ht",$param,'',' align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Total HT (ou loyer)"),$_SERVER["PHP_SELF"], "cd.total_ht",$param,'',' align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($extrafieldsdet->attribute_label['type_contract'],$_SERVER["PHP_SELF"], "extradet.type_contract",$param,'',' align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($extrafieldsdet->attribute_label['period_rent'],$_SERVER["PHP_SELF"], "extradet.period_rent",$param,'',' align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($extrafieldsdet->attribute_label['leaser'],$_SERVER["PHP_SELF"], "extradet.leaser",$param,'',' align="center"',$sortfield,$sortorder);

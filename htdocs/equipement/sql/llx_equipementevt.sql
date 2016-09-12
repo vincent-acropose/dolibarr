@@ -34,5 +34,6 @@ create table llx_equipementevt
   fk_expedition				integer,			-- expédition lié é l'événement
   fk_project				integer,			-- projet lié é l'événement
   fk_operation				integer,			-- operation lié é l'événement
+  fk_ticket					integer,			-- ticket lié é l'événement
   import_key 				VARCHAR( 14 ) NULL DEFAULT NULL
 )ENGINE=innodb;
