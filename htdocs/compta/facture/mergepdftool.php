@@ -610,7 +610,7 @@ if (! $user->rights->societe->client->voir && ! $socid) $sql .= ", sc.fk_soc, sc
 $sql.= " ORDER BY ";
 $listfield=explode(',',$sortfield);
 foreach ($listfield as $key => $value) $sql.=$listfield[$key]." ".$sortorder.",";
-$sql.= " f.facnumber DESC";
+$sql.= " f.datef DESC";
 //print $sql;
 //$sql .= $db->plimit($limit+1,$offset);
 
