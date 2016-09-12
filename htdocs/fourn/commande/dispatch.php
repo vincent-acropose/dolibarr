@@ -30,6 +30,7 @@
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/modules/supplier_order/modules_commandefournisseur.php';
 require_once DOL_DOCUMENT_ROOT.'/product/stock/class/entrepot.class.php';
+require_once DOL_DOCUMENT_ROOT.'/product/class/html.formproduct.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/fourn.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.commande.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.commande.dispatch.class.php';
@@ -246,6 +247,7 @@ if ($action == 'dispatch' && $user->rights->fournisseur->commande->receptionner)
  */
 
 $form =	new Form($db);
+$form_product =	new FormProduct($db);
 $warehouse_static = new Entrepot($db);
 $supplierorderdispatch = new CommandeFournisseurDispatch($db);
 
@@ -548,11 +550,13 @@ if ($id > 0 || ! empty($ref))
 							
 							if (count($listwarehouses)>1)
 							{
-								print $form->selectarray("entrepot".$suffix, $listwarehouses, $ent, 1, 0, 0, '', 0, 0, $disabled);
+								//print $form->selectarray("entrepot".$suffix, $listwarehouses, $ent, 1, 0, 0, '', 0, 0, $disabled);
+								print $form_product->selectWarehouses($ent, "entrepot".$suffix, '', 1);
 							}
 							elseif  (count($listwarehouses)==1)
 							{
-								print $form->selectarray("entrepot".$suffix, $listwarehouses, $ent, 0, 0, 0, '', 0, 0, $disabled);
+								//print $form->selectarray("entrepot".$suffix, $listwarehouses, $ent, 0, 0, 0, '', 0, 0, $disabled);
+								print $form_product->selectWarehouses($ent, "entrepot".$suffix);
 							}
 							else
 							{
