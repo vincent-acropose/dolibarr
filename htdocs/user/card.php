@@ -83,6 +83,7 @@ $socid=0;
 if ($user->societe_id > 0) $socid = $user->societe_id;
 $feature2='user';
 if ($user->id == $id) { $feature2=''; $canreaduser=1; } // A user can always read its own card
+
 if (!$canreaduser) {
 	$result = restrictedArea($user, 'user', $id, 'user&user', $feature2);
 }
@@ -103,8 +104,29 @@ $extralabels=$extrafields->fetch_name_optionals_label($object->table_element);
 // Initialize technical object to manage hooks. Note that conf->hooks_modules contains array
 $hookmanager->initHooks(array('usercard','globalcard'));
 
+$multicompany_test = (empty($conf->multicompany->enabled) || ! $user->entity || ($object->entity == $conf->entity) || ($conf->multicompany->transverse_mode && $conf->entity == 1)); 
 
+if ($id>0 && !$multicompany_test && !empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode) ){
 
+	$usergroup=new UserGroup($db);
+    $groupslist = $usergroup->listGroupsForUser($id);
+	if(!empty($groupslist)) {
+		foreach ($groupslist as &$group_user) {
+			foreach($group_user->usergroup_entity as $group_entity) {
+				if($group_entity == $conf->entity) {
+					$multicompany_test = true;
+					break;
+				}
+			} 
+		}
+	}
+}       
+
+if($action=='create' || $action=='add') $multicompany_test = true;
+
+if (!$multicompany_test) {
+	 accessforbidden();
+}
 /**
  * Actions
  */
@@ -1546,10 +1568,10 @@ else
             /*
              * Buttons actions
              */
-
+             
             print '<div class="tabsAction">';
 
-            if ($caneditfield && (empty($conf->multicompany->enabled) || ! $user->entity || ($object->entity == $conf->entity) || ($conf->multicompany->transverse_mode && $conf->entity == 1)))
+            if ($caneditfield && $multicompany_test)
             {
                 if (! empty($conf->global->MAIN_ONLY_LOGIN_ALLOWED))
                 {
@@ -1560,8 +1582,7 @@ else
                     print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;action=edit">'.$langs->trans("Modify").'</a></div>';
                 }
             }
-            elseif ($caneditpassword && ! $object->ldap_sid &&
-            (empty($conf->multicompany->enabled) || ! $user->entity || ($object->entity == $conf->entity) || ($conf->multicompany->transverse_mode && $conf->entity == 1)))
+            elseif ($caneditpassword && ! $object->ldap_sid && $multicompany_test)
             {
                 print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;action=edit">'.$langs->trans("EditPassword").'</a></div>';
             }
@@ -1574,7 +1595,7 @@ else
 	                print '<div class="inline-block divButAction"><a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("UserDisabled")).'">'.$langs->trans("ReinitPassword").'</a></div>';
 				}
                 elseif (($user->id != $id && $caneditpassword) && $object->login && !$object->ldap_sid &&
-                ((empty($conf->multicompany->enabled) && $object->entity == $user->entity) || ! $user->entity || ($object->entity == $conf->entity) || ($conf->multicompany->transverse_mode && $conf->entity == 1)))
+                $multicompany_test)
                 {
                     print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;action=password">'.$langs->trans("ReinitPassword").'</a></div>';
                 }
@@ -1584,7 +1605,7 @@ else
 	                print '<div class="inline-block divButAction"><a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("UserDisabled")).'">'.$langs->trans("SendNewPassword").'</a></div>';
 				}
                 else if (($user->id != $id && $caneditpassword) && $object->login && !$object->ldap_sid &&
-                ((empty($conf->multicompany->enabled) && $object->entity == $user->entity) || ! $user->entity || ($object->entity == $conf->entity) || ($conf->multicompany->transverse_mode && $conf->entity == 1)))
+                $multicompany_test)
                 {
                     if ($object->email) print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;action=passwordsend">'.$langs->trans("SendNewPassword").'</a></div>';
                     else print '<div class="inline-block divButAction"><a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("NoEMail")).'">'.$langs->trans("SendNewPassword").'</a></div>';
@@ -1593,19 +1614,19 @@ else
 
             // Activer
             if ($user->id <> $id && $candisableuser && $object->statut == 0 &&
-            ((empty($conf->multicompany->enabled) && $object->entity == $user->entity) || ! $user->entity || ($object->entity == $conf->entity) || ($conf->multicompany->transverse_mode && $conf->entity == 1)))
+            $multicompany_test)
             {
                 print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;action=enable">'.$langs->trans("Reactivate").'</a></div>';
             }
             // Desactiver
             if ($user->id <> $id && $candisableuser && $object->statut == 1 &&
-            ((empty($conf->multicompany->enabled) && $object->entity == $user->entity) || ! $user->entity || ($object->entity == $conf->entity) || ($conf->multicompany->transverse_mode && $conf->entity == 1)))
+            $multicompany_test)
             {
                 print '<div class="inline-block divButAction"><a class="butActionDelete" href="'.$_SERVER['PHP_SELF'].'?action=disable&amp;id='.$object->id.'">'.$langs->trans("DisableUser").'</a></div>';
             }
             // Delete
             if ($user->id <> $id && $candisableuser &&
-            ((empty($conf->multicompany->enabled) && $object->entity == $user->entity) || ! $user->entity || ($object->entity == $conf->entity) || ($conf->multicompany->transverse_mode && $conf->entity == 1)))
+            $multicompany_test)
             {
             	if ($user->admin || ! $object->admin) // If user edited is admin, delete is possible on for an admin
             	{
@@ -1683,7 +1704,7 @@ else
                     }
                     print '<input type="submit" class="button" value="'.$langs->trans("Add").'" />';
                 }
-                print '</th></tr>'."\n";
+                print '</th><th></th></tr>'."\n";
 
                 /*
                  * Groups assigned to user
@@ -1707,9 +1728,10 @@ else
                             print img_object($langs->trans("ShowGroup"),"group").' '.$group->name;
                         }
                         print '</td>';
-                        if (! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode) && $conf->entity == 1 && $user->admin && ! $user->entity)
+                        if (!empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode))
                         {
                         	print '<td class="valeur">';
+							
                         	if (! empty($group->usergroup_entity))
                         	{
                         		$nb=0;
@@ -1717,17 +1739,31 @@ else
                         		{
                         			$mc->getInfo($group_entity);
                         			print ($nb > 0 ? ', ' : '').$mc->label;
-                        			print '<a href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;action=removegroup&amp;group='.$group->id.'&amp;entity='.$group_entity.'">';
-                        			print img_delete($langs->trans("RemoveFromGroup"));
-                        			print '</a>';
+									if($conf->entity == 1 && $user->admin && ! $user->entity) {
+	                        			print '<a href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;action=removegroup&amp;group='.$group->id.'&amp;entity='.$group_entity.'">';
+	                        			print img_delete($langs->trans("RemoveFromGroup"));
+	                        			print '</a>';
+										
+									}
                         			$nb++;
                         		}
                         	}
                         }
                         print '<td align="right">';
-                        if ($caneditgroup && empty($conf->multicompany->transverse_mode))
+						
+						$candeletegroup = false;
+                        if(!empty($group->usergroup_entity)) {
+                        	foreach($group->usergroup_entity as $group_entity) {
+                        		if($group_entity == $conf->entity) {
+                        			$candeletegroup = true; break;	
+                        		}
+                        	}
+                        }
+						
+                        
+                        if ($caneditgroup && $candeletegroup /* && empty($conf->multicompany->transverse_mode)*/)
                         {
-                            print '<a href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;action=removegroup&amp;group='.$group->id.'">';
+                            print '<a href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;action=removegroup&amp;group='.$group->id.'&amp;entity='.$conf->entity.'">';
                             print img_delete($langs->trans("RemoveFromGroup"));
                             print '</a>';
                         }

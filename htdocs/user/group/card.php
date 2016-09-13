@@ -52,12 +52,12 @@ $userid=GETPOST('user', 'int');
 
 // Security check
 $result = restrictedArea($user, 'user', $id, 'usergroup&usergroup', 'user');
-
+/*
 if (! empty($conf->multicompany->enabled) && $conf->entity > 1 && $conf->multicompany->transverse_mode)
 {
     accessforbidden();
 }
-
+*/
 $object = new Usergroup($db);
 
 $extrafields = new ExtraFields($db);

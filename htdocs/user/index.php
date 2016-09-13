@@ -170,7 +170,7 @@ $buttonviewhierarchy='<form action="'.DOL_URL_ROOT.'/user/hierarchy.php'.(($sear
 
 print load_fiche_titre($langs->trans("ListOfUsers"), $buttonviewhierarchy);
 
-$sql = "SELECT u.rowid, u.lastname, u.firstname, u.admin, u.fk_soc, u.login, u.email, u.accountancy_code, u.gender, u.employee, u.photo,";
+$sql = "SELECT DISTINCT u.rowid, u.lastname, u.firstname, u.admin, u.fk_soc, u.login, u.email, u.accountancy_code, u.gender, u.employee, u.photo,";
 $sql.= " u.datelastlogin, u.datepreviouslogin,";
 $sql.= " u.ldap_sid, u.statut, u.entity,";
 $sql.= " u.tms as date_update, u.datec as date_creation,";
@@ -186,9 +186,13 @@ $sql.= " FROM ".MAIN_DB_PREFIX."user as u";
 if (is_array($extrafields->attribute_label) && count($extrafields->attribute_label)) $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."user_extrafields as ef on (u.rowid = ef.fk_object)";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON u.fk_soc = s.rowid";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."user as u2 ON u.fk_user = u2.rowid";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."usergroup_user as ug ON (ug.fk_user = u.rowid) ";
 if(! empty($conf->multicompany->enabled) && $conf->entity == 1 && (! empty($conf->multicompany->transverse_mode) || (! empty($user->admin) && empty($user->entity))))
 {
 	$sql.= " WHERE u.entity IS NOT NULL";
+}
+else if(! empty($conf->multicompany->enabled) && $conf->entity > 1 && (! empty($conf->multicompany->transverse_mode))) {
+	$sql.= " WHERE ug.entity = ".$conf->entity;
 }
 else
 {
@@ -222,6 +226,7 @@ foreach ($search_array_options as $key => $val)
         $sql .= natural_search('ef.'.$tmpkey, $crit, $mode);
     }
 }
+
 // Add where from hooks
 $parameters=array();
 $reshook=$hookmanager->executeHooks('printFieldListWhere',$parameters);    // Note that $action and $object may have been modified by hook

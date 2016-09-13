@@ -209,6 +209,9 @@ class UserGroup extends CommonObject
 		{
 			$sql.= " AND u.entity IS NOT NULL";
 		}
+		else if (! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode) && $conf->entity>1) {
+			$sql.=" AND ug.entity=".$conf->entity;
+		}
 		else
 		{
 			$sql.= " AND u.entity IN (0,".$conf->entity.")";
