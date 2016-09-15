@@ -85,7 +85,8 @@ if (! empty($canvas))
 }
 
 // Security check
-$result = restrictedArea($user, 'societe', $socid, '&societe', '', 'fk_soc', 'rowid', $objcanvas);
+/*if($conf->entity > 1 || !$user->admin) */
+	$result = restrictedArea($user, 'societe', $socid, '&societe', '', 'fk_soc', 'rowid', $objcanvas);
 
 
 
