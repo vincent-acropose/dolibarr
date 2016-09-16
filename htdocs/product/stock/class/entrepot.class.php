@@ -81,8 +81,8 @@ class Entrepot extends CommonObject
 
 		$this->db->begin();
 
-		$sql = "INSERT INTO ".MAIN_DB_PREFIX."entrepot (entity, datec, fk_user_author, label)";
-		$sql .= " VALUES (".$conf->entity.",'".$this->db->idate($now)."',".$user->id.",'".$this->db->escape($this->libelle)."')";
+		$sql = "INSERT INTO ".MAIN_DB_PREFIX."entrepot (entity, datec, fk_user_author, label, fk_parent)";
+		$sql .= " VALUES (".$conf->entity.",'".$this->db->idate($now)."',".$user->id.",'".$this->db->escape($this->libelle)."', ".($this->fk_parent > 0 ? $this->fk_parent : 'NULL').")";
 
 		dol_syslog(get_class($this)."::create", LOG_DEBUG);
 		$result=$this->db->query($sql);
@@ -142,6 +142,7 @@ class Entrepot extends CommonObject
 
 		$sql = "UPDATE ".MAIN_DB_PREFIX."entrepot ";
 		$sql .= " SET label = '" . $this->db->escape($this->libelle) ."'";
+		$sql .= ", fk_parent = '" . (($this->fk_parent > 0) ? $this->fk_parent : 'NULL') ."'";
 		$sql .= ", description = '" . $this->db->escape($this->description) ."'";
 		$sql .= ", statut = " . $this->statut;
 		$sql .= ", lieu = '" . $this->db->escape($this->lieu) ."'";
@@ -236,7 +237,7 @@ class Entrepot extends CommonObject
 	{
 		global $conf;
 
-		$sql  = "SELECT rowid, label, description, statut, lieu, address, zip, town, fk_pays as country_id";
+		$sql  = "SELECT rowid, fk_parent, label, description, statut, lieu, address, zip, town, fk_pays as country_id";
 		$sql .= " FROM ".MAIN_DB_PREFIX."entrepot";
 
 		if ($id)
@@ -259,6 +260,7 @@ class Entrepot extends CommonObject
 				$obj=$this->db->fetch_object($result);
 
 				$this->id             = $obj->rowid;
+				$this->fk_parent      = $obj->fk_parent;
 				$this->ref            = $obj->rowid;
 				$this->libelle        = $obj->label;
 				$this->description    = $obj->description;
