@@ -81,9 +81,10 @@ class FormProduct
 			while ($i < $num)
 			{
 				$obj = $this->db->fetch_object($resql);
-
+				$o = new Entrepot($this->db);
+				$o->fetch($obj->rowid);
 				$this->cache_warehouses[$obj->rowid]['id'] =$obj->rowid;
-				$this->cache_warehouses[$obj->rowid]['label']=$obj->label;
+				$this->cache_warehouses[$obj->rowid]['label']=$o->get_full_arbo();
 				if ($fk_product) $this->cache_warehouses[$obj->rowid]['stock']=$obj->reel;
 				$i++;
 			}
