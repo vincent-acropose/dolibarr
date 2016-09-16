@@ -49,6 +49,9 @@ if($action)
 	{
 		$res = dolibarr_set_const($db, "STOCK_USERSTOCK_AUTOCREATE", GETPOST('STOCK_USERSTOCK_AUTOCREATE','alpha'),'chaine',0,'',$conf->entity);
 	}
+	if ($action == 'STOCK_ALLOW_ADD_LIMIT_STOCK_BY_WAREHOUSE') {
+		$res = dolibarr_set_const($db, "STOCK_ALLOW_ADD_LIMIT_STOCK_BY_WAREHOUSE", GETPOST('STOCK_ALLOW_ADD_LIMIT_STOCK_BY_WAREHOUSE','alpha'),'chaine',0,'',$conf->entity);
+	}
 	// Mode of stock decrease
 	if ($action == 'STOCK_CALCULATE_ON_BILL'
 	|| $action == 'STOCK_CALCULATE_ON_VALIDATE_ORDER'
@@ -404,6 +407,22 @@ print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">'
 print '</form>';
 print "</td>\n";
 print "</tr>\n";
+
+$var=!$var;
+
+print "<tr ".$bc[$var].">";
+print '<td width="60%">'.$langs->trans("AllowAddLimitStockByWarehouse").'</td>';
+
+print '<td width="160" align="right">';
+print "<form method=\"post\" action=\"stock.php\">";
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+print "<input type=\"hidden\" name=\"action\" value=\"STOCK_ALLOW_ADD_LIMIT_STOCK_BY_WAREHOUSE\">";
+print $form->selectyesno("STOCK_ALLOW_ADD_LIMIT_STOCK_BY_WAREHOUSE",$conf->global->STOCK_ALLOW_ADD_LIMIT_STOCK_BY_WAREHOUSE,1);
+print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+print '</form>';
+print "</td>\n";
+print "</tr>\n";
+
 print '<br>';
 
 /* I keep the option/feature, but hidden to end users for the moment. If feature is used by module, no need to have users see it.
