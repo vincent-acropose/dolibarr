@@ -140,3 +140,6 @@ WarehouseMustBeSelectedAtFirstStepWhenProductBatchModuleOn=Source warehouse must
 InventoryCodeShort=Inv./Mov. code
 NoPendingReceptionOnSupplierOrder=No pending reception due to open supplier order
 ThisSerialAlreadyExistWithDifferentDate=This lot/serial number (<strong>%s</strong>) already exists but with different eatby or sellby date (found <strong>%s</strong> but you enter <strong>%s</strong>).
+ProductStockWarehouseCreated=Stock limit for alert and desired optimal stock correctly created
+ProductStockWarehouseUpdated=Stock limit for alert and desired optimal stock correctly updated
+AddNewProductStockWarehouse=Set new limit for alert and desired optimal stock
