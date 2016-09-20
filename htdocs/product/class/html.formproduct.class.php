@@ -57,7 +57,9 @@ class FormProduct
 	function loadWarehouses($fk_product=0)
 	{
 		global $conf, $langs;
-
+		
+		dol_include_once('/product/stock/class/entrepot.class.php');
+		
 		if (empty($fk_product) && count($this->cache_warehouses)) return 0;    // Cache already loaded and we do not want a list with information specific to a product
 
 		$sql = "SELECT e.rowid, e.label";
