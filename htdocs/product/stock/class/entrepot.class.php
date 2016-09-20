@@ -519,7 +519,7 @@ class Entrepot extends CommonObject
         $linkend='</a>';
 
         if ($withpicto) $result.=($link.img_object($label, 'stock', 'class="classfortooltip"').$linkend.' ');
-		$result.=$link.$this->libelle.$linkend;
+		$result.=$link.$this->get_full_arbo().$linkend;
 		return $result;
 	}
 
