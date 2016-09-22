@@ -768,6 +768,7 @@ Permission1236=Exporter les factures fournisseurs, attributs et règlements
 Permission1237=Exporter les commande fournisseurs, attributs
 Permission1251=Lancer des importations en masse dans la base (chargement de données)
 Permission1321=Exporter les factures clients, attributs et règlements
+Permission1322=Rouvrir une facture au statut "payée"
 Permission1421=Exporter les commandes clients et attributs
 Permission20001=Lire les demandes de congé (les vôtres et celle de vos subordonnés)
 Permission20002=Créer/modifier vos demandes de congé
