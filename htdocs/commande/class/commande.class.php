@@ -3539,7 +3539,7 @@ class OrderLine extends CommonOrderLine
      *
      *	@return	 int  <0 si ko, >0 si ok
      */
-    function delete()
+    function delete($notrigger=0)
     {
         global $conf, $user, $langs;
 
@@ -3565,11 +3565,13 @@ class OrderLine extends CommonOrderLine
 				}
 			}
 
-            // Call trigger
-            $result=$this->call_trigger('LINEORDER_DELETE',$user);
-            if ($result < 0) $error++;
-            // End call triggers
-
+			if (! $notrigger)
+			{
+	            // Call trigger
+	            $result=$this->call_trigger('LINEORDER_DELETE',$user);
+	            if ($result < 0) $error++;
+	            // End call triggers
+			}
 	        if (!$error) {
 		        $this->db->commit();
 		        return 1;
