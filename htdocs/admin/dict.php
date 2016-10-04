@@ -3,7 +3,7 @@
  * Copyright (C) 2004-2015  Laurent Destailleur     <eldy@users.sourceforge.net>
  * Copyright (C) 2004       Benoit Mortier          <benoit.mortier@opensides.be>
  * Copyright (C) 2005-2012  Regis Houssin           <regis.houssin@capnetworks.com>
- * Copyright (C) 2010-2013  Juanjo Menent           <jmenent@2byte.es>
+ * Copyright (C) 2010-2016  Juanjo Menent           <jmenent@2byte.es>
  * Copyright (C) 2011-2015  Philippe Grand          <philippe.grand@atoo-net.com>
  * Copyright (C) 2011       Remy Younes             <ryounes@gmail.com>
  * Copyright (C) 2012-2015  Marcos García           <marcosgdf@gmail.com>
@@ -699,7 +699,7 @@ if (GETPOST('actionadd') || GETPOST('actionmodify'))
         $i=0;
         foreach ($listfieldinsert as $f => $value)
         {
-            if ($value == 'price' || preg_match('/^amount/i',$value) || preg_match('/^localtax/i',$value) || $value == 'taux') {
+            if ($value == 'price' || preg_match('/^amount/i',$value) || $value == 'taux') {
             	$_POST[$listfieldvalue[$i]] = price2num($_POST[$listfieldvalue[$i]],'MU');
             }
             else if ($value == 'entity') {
@@ -747,7 +747,7 @@ if (GETPOST('actionadd') || GETPOST('actionmodify'))
         $i = 0;
         foreach ($listfieldmodify as $field)
         {
-            if ($field == 'price' || preg_match('/^amount/i',$field) || preg_match('/^localtax/i',$field) || $field == 'taux') {
+            if ($field == 'price' || preg_match('/^amount/i',$field) || $field == 'taux') {
             	$_POST[$listfieldvalue[$i]] = price2num($_POST[$listfieldvalue[$i]],'MU');
             }
             else if ($field == 'entity') {
@@ -1238,6 +1238,7 @@ if ($id)
                     {
                         foreach ($fieldlist as $field => $value)
                         {
+                            
                             $showfield=1;
                         	$align="left";
                             $valuetoshow=$obj->{$fieldlist[$field]};
@@ -1374,31 +1375,18 @@ if ($id)
 							    $valuetoshow=$localtax_typeList[$valuetoshow];
 							  else
 							    $valuetoshow = '';
-							  $align="center";
+							  $align="right";
 							}
 							else if ($fieldlist[$field]=='localtax2_type') {
 							 if ($obj->localtax2 != 0)
 							    $valuetoshow=$localtax_typeList[$valuetoshow];
 							  else
 							    $valuetoshow = '';
-							  $align="center";
-							}
-							else if ($fieldlist[$field]=='localtax1') {
-                                $valuetoshow = price($valuetoshow, 0, $langs, 0, 0);
-							  if ($obj->localtax1 == 0)
-							    $valuetoshow = '';
 							  $align="right";
 							}
-							else if ($fieldlist[$field]=='localtax2') {
+							else if ($fieldlist[$field]=='taux') {
                                 $valuetoshow = price($valuetoshow, 0, $langs, 0, 0);
-							  if ($obj->localtax2 == 0)
-							    $valuetoshow = '';
-							  $align="right";
-							}
-							else if (in_array($fieldlist[$field],array('taux','localtax1','localtax2')))
-							{
-                                $valuetoshow = price($valuetoshow, 0, $langs, 0, 0);
-								$align="right";
+							    $align="right";
 							}
 							else if (in_array($fieldlist[$field],array('recuperableonly')))
 							{
@@ -1578,7 +1566,7 @@ function fieldList($fieldlist, $obj='', $tabname='', $context='')
 			}	// For state page, we do not show the country input (we link to region, not country)
 			print '<td>';
 			$fieldname='country';
-			print $form->select_country((! empty($obj->country_code)?$obj->country_code:(! empty($obj->country)?$obj->country:'')), $fieldname, '', 28, 'maxwidth300');
+			print $form->select_country((! empty($obj->country_code)?$obj->country_code:(! empty($obj->country)?$obj->country:'')), $fieldname, '', 28, 'maxwidth200 maxwidthonsmartphone');
 			print '</td>';
 		}
 		elseif ($fieldlist[$field] == 'country_id')
@@ -1700,7 +1688,7 @@ function fieldList($fieldlist, $obj='', $tabname='', $context='')
 			if (! empty($conf->accounting->enabled))
 			{
 				$accountancy_account = (! empty($obj->$fieldlist[$field]) ? $obj->$fieldlist[$field] : 0);
-				print $formaccountancy->select_account($accountancy_account, $fieldlist[$field], 1, '', 1, 1);
+				print $formaccountancy->select_account($accountancy_account, $fieldlist[$field], 1, '', 1, 1, 'maxwidth200 maxwidthonsmartphone');
 			}
 			else
 			{

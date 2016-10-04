@@ -285,10 +285,7 @@ if (empty($reshook)) {
 			{
 				$langs->load("errors");
 				$db->rollback();
-				if (is_array($object->errors) && count($object->errors))
-				{
-					setEventMessages($object->error, $object->errors, 'errors');
-				}
+				setEventMessages($object->error, $object->errors, 'errors');
 				$action = "create";       // Go back to create page
 			}
 		}

@@ -66,7 +66,6 @@ if (!empty($conf->incoterm->enabled)) $langs->load('incoterm');
 if (! empty($conf->margin->enabled))
 	$langs->load('margins');
 
-$sall = trim(GETPOST('sall'));
 $projectid = (GETPOST('projectid') ? GETPOST('projectid', 'int') : 0);
 
 $id = (GETPOST('id', 'int') ? GETPOST('id', 'int') : GETPOST('facid', 'int')); // For backward compatibility
@@ -1996,8 +1995,10 @@ if ($action == 'create')
 		if (!empty($conf->multicurrency->enabled) && !empty($soc->multicurrency_code)) $currency_code = $soc->multicurrency_code;
 	}
 
-	if(!empty($soc->id)) $absolute_discount = $soc->getAvailableDiscounts();
-
+	if (!empty($soc->id)) $absolute_discount = $soc->getAvailableDiscounts();
+	$note_public = $object->getDefaultCreateValueFor('note_public', (is_object($objectsrc)?$objectsrc->note_public:null));
+	$note_private = $object->getDefaultCreateValueFor('note_private', ((! empty($origin) && ! empty($originid) && is_object($objectsrc))?$objectsrc->note_private:null));
+	
 	if (! empty($conf->use_javascript_ajax))
 	{
 		require_once DOL_DOCUMENT_ROOT . '/core/lib/ajax.lib.php';
@@ -2078,13 +2079,19 @@ if ($action == 'create')
 	}
 	print '</tr>' . "\n";
 
-	// Predefined invoices
+	// Overwrite value if creation of invoice is from a predefined invoice
 	if (empty($origin) && empty($originid) && GETPOST('fac_rec','int') > 0)
 	{
 	    $invoice_predefined = new FactureRec($db);
 	    $invoice_predefined->fetch(GETPOST('fac_rec','int'));
 
 	    $dateinvoice = $invoice_predefined->date_when;     // To use next gen date by default later
+	    if (empty($projectid)) $projectid = $invoice_predefined->fk_project;
+	    $cond_reglement_id = $invoice_predefined->cond_reglement_id;
+	    $mode_reglement_id = $invoice_predefined->mode_reglement_id;
+	    $fk_account = $invoice_predefined->fk_account;
+	    $note_public = $invoice_predefined->note_public;
+	    $note_private = $invoice_predefined->note_private;
 
 		$sql = 'SELECT r.rowid, r.titre, r.total_ttc';
 		$sql .= ' FROM ' . MAIN_DB_PREFIX . 'facture_rec as r';
@@ -2400,7 +2407,7 @@ if ($action == 'create')
 	}
 
 	// Payment term
-	print '<tr><td class="nowrap">' . $langs->trans('PaymentConditionsShort') . '</td><td colspan="2">';
+	print '<tr><td class="nowrap fieldrequired">' . $langs->trans('PaymentConditionsShort') . '</td><td colspan="2">';
 	$form->select_conditions_paiements(isset($_POST['cond_reglement_id']) ? $_POST['cond_reglement_id'] : $cond_reglement_id, 'cond_reglement_id');
 	print '</td></tr>';
 
@@ -2434,7 +2441,14 @@ if ($action == 'create')
 		print '<tr>';
 		print '<td><label for="incoterm_id">'.$form->textwithpicto($langs->trans("IncotermLabel"), $objectsrc->libelle_incoterms, 1).'</label></td>';
         print '<td colspan="2" class="maxwidthonsmartphone">';
-        print $form->select_incoterms((!empty($objectsrc->fk_incoterms) ? $objectsrc->fk_incoterms : ''), (!empty($objectsrc->location_incoterms)?$objectsrc->location_incoterms:''));
+        $incoterm_id = GETPOST('incoterm_id');
+        $incoterm_location = GETPOST('location_incoterms');
+        if (empty($incoterm_id))
+        {
+            $incoterm_id = (!empty($objectsrc->fk_incoterms) ? $objectsrc->fk_incoterms : $soc->fk_incoterms);
+            $incoterm_location = (!empty($objectsrc->location_incoterms) ? $objectsrc->location_incoterms : $soc->location_incoterms);
+        }
+        print $form->select_incoterms($incoterm_id, $incoterm_location);
 		print '</td></tr>';
 	}
 
@@ -2468,7 +2482,6 @@ if ($action == 'create')
 	print '<tr>';
 	print '<td class="border" valign="top">' . $langs->trans('NotePublic') . '</td>';
 	print '<td valign="top" colspan="2">';
-	$note_public = $object->getDefaultCreateValueFor('note_public', (is_object($objectsrc)?$objectsrc->note_public:null));
 	$doleditor = new DolEditor('note_public', $note_public, '', 80, 'dolibarr_notes', 'In', 0, false, true, ROWS_3, '90%');
 	print $doleditor->Create(1);
 
@@ -2478,7 +2491,6 @@ if ($action == 'create')
 		print '<tr>';
 		print '<td class="border" valign="top">' . $langs->trans('NotePrivate') . '</td>';
 		print '<td valign="top" colspan="2">';
-        $note_private = $object->getDefaultCreateValueFor('note_private', ((! empty($origin) && ! empty($originid) && is_object($objectsrc))?$objectsrc->note_private:null));
 		$doleditor = new DolEditor('note_private', $note_private, '', 80, 'dolibarr_notes', 'In', 0, false, true, ROWS_3, '90%');
 		print $doleditor->Create(1);
 		// print '<textarea name="note_private" wrap="soft" cols="70" rows="'.ROWS_3.'">'.$note_private.'.</textarea>
@@ -3135,10 +3147,10 @@ else if ($id > 0 || ! empty($ref))
 		if ($action == 'editinvoicedate') {
 			$form->form_date($_SERVER['PHP_SELF'] . '?facid=' . $object->id, $object->date, 'invoicedate');
 		} else {
-			print dol_print_date($object->date, 'daytext');
+			print dol_print_date($object->date, 'day');
 		}
 	} else {
-		print dol_print_date($object->date, 'daytext');
+		print dol_print_date($object->date, 'day');
 	}
 	print '</td>';
 
@@ -3476,7 +3488,7 @@ else if ($id > 0 || ! empty($ref))
 		if ($action == 'editdate_pointoftax') {
 			$form->form_date($_SERVER['PHP_SELF'] . '?facid=' . $object->id, $object->date_pointoftax, 'date_pointoftax');
 		} else {
-			print dol_print_date($object->date_pointoftax, 'daytext');
+			print dol_print_date($object->date_pointoftax, 'day');
 		}
 		print '</td></tr>';
 	}
@@ -3516,7 +3528,7 @@ else if ($id > 0 || ! empty($ref))
 		if ($action == 'editpaymentterm') {
 			$form->form_date($_SERVER['PHP_SELF'] . '?facid=' . $object->id, $object->date_lim_reglement, 'paymentterm');
 		} else {
-			print dol_print_date($object->date_lim_reglement, 'daytext');
+			print dol_print_date($object->date_lim_reglement, 'day');
 			if ($object->hasDelay()) {
 				print img_warning($langs->trans('Late'));
 			}

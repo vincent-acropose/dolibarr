@@ -365,12 +365,13 @@ class Expedition extends CommonObject
 	 * @param 	int		$origin_line_id		Id of source line
 	 * @param 	int		$qty				Quantity
 	 * @param	array		$array_options		extrafields array
-	 * @return	int							<0 if KO, >0 if OK
+	 * @return	int							<0 if KO, line_id if OK
 	 */
 	function create_line($entrepot_id, $origin_line_id, $qty,$array_options=0)
 	{
 		global $conf;
 		$error = 0;
+		$line_id = 0;
 
 		$sql = "INSERT INTO ".MAIN_DB_PREFIX."expeditiondet (";
 		$sql.= "fk_expedition";
@@ -390,6 +391,8 @@ class Expedition extends CommonObject
 			$error++;
 		}
 		
+		if (! $error) $line_id = $this->db->last_insert_id(MAIN_DB_PREFIX."expeditiondet");
+		
 		if (!$error && empty($conf->global->MAIN_EXTRAFIELDS_DISABLED) && is_array($array_options) && count($array_options)>0) // For avoid conflicts if trigger used
 		{
 			$expeditionline = new ExpeditionLigne($this->db);
@@ -403,7 +406,7 @@ class Expedition extends CommonObject
 			}
 		}
 
-		if (! $error) return 1;
+		if (! $error) return $line_id;
 		else return -1;
 	}
 
@@ -432,14 +435,13 @@ class Expedition extends CommonObject
 		// create shipment lines
 		foreach ($stockLocationQty as $stockLocation => $qty)
 		{
-			if ($this->create_line($stockLocation,$line_ext->origin_line_id,$qty,$array_options) < 0)
+			if (($line_id = $this->create_line($stockLocation,$line_ext->origin_line_id,$qty,$array_options)) < 0)
 			{
 				$error++;
 			}
 			else
 			{
 				// create shipment batch lines for stockLocation
-				$line_id= $this->db->last_insert_id(MAIN_DB_PREFIX."expeditiondet");
 				foreach ($tab as $detbatch)
 				{
 					if ($detbatch->entrepot_id == $stockLocation){
@@ -716,7 +718,7 @@ class Expedition extends CommonObject
 						
 						// We decrement stock of product (and sub-products) -> update table llx_product_stock (key of this table is fk_product+fk_entrepot) and add a movement record.
 					    // Note: ->fk_origin_stock = id into table llx_product_batch (may be rename into llx_product_stock_batch in another version)
-						$result=$mouvS->livraison($user, $obj->fk_product, $obj->fk_entrepot, $qty, $obj->subprice, $langs->trans("ShipmentValidatedInDolibarr",$numref), '', $obj->eatby, $obj->sellby, $obj->batch, $obj->fk_origin_stock);
+						$result=$mouvS->livraison($user, $obj->fk_product, $obj->fk_entrepot, $qty, $obj->subprice, $langs->trans("ShipmentValidatedInDolibarr",$numref), '', $this->db->jdate($obj->eatby), $this->db->jdate($obj->sellby), $obj->batch, $obj->fk_origin_stock);
 						if ($result < 0) {
 							$error++; 
 							$this->errors[]=$mouvS->error; 
@@ -1913,7 +1915,7 @@ class Expedition extends CommonObject
 							// line with batch detail
 							
 							// We decrement stock of product (and sub-products) -> update table llx_product_stock (key of this table is fk_product+fk_entrepot) and add a movement record
-							$result=$mouvS->livraison($user, $obj->fk_product, $obj->fk_entrepot, $qty, $obj->subprice, $langs->trans("ShipmentClassifyClosedInDolibarr",$numref), '', $obj->eatby, $obj->sellby, $obj->batch, $obj->fk_origin_stock);
+							$result=$mouvS->livraison($user, $obj->fk_product, $obj->fk_entrepot, $qty, $obj->subprice, $langs->trans("ShipmentClassifyClosedInDolibarr",$numref), '', $this->db->jdate($obj->eatby), $this->db->jdate($obj->sellby), $obj->batch, $obj->fk_origin_stock);
 							if ($result < 0) {
 							    $this->error = $mouvS->error;
 							    $this->errors = $mouvS->errors;
@@ -2078,7 +2080,7 @@ class Expedition extends CommonObject
 							// line with batch detail
 							
 							// We decrement stock of product (and sub-products) -> update table llx_product_stock (key of this table is fk_product+fk_entrepot) and add a movement record
-							$result=$mouvS->livraison($user, $obj->fk_product, $obj->fk_entrepot, -$qty, $obj->subprice, $langs->trans("ShipmentUnClassifyCloseddInDolibarr",$numref), '', $obj->eatby, $obj->sellby, $obj->batch, $obj->fk_origin_stock);
+							$result=$mouvS->livraison($user, $obj->fk_product, $obj->fk_entrepot, -$qty, $obj->subprice, $langs->trans("ShipmentUnClassifyCloseddInDolibarr",$numref), '', $this->db->jdate($obj->eatby), $this->db->jdate($obj->sellby), $obj->batch, $obj->fk_origin_stock);
 							if ($result < 0) {
 							    $this->error = $mouvS->error;
 							    $this->errors = $mouvS->errors;
