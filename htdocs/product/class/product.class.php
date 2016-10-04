@@ -3192,13 +3192,14 @@ class Product extends CommonObject
 		else return true;
 	}
 
-	function show_photos_lafoirfouille()
+	function show_photos_lafoirfouille($max=350)
 	{
 		$url = 'https://www.infos-lafoirfouille.fr/photos/resizer.php?photo=fichiers/'.$this->ref.'.jpg&max_height=350&max_width=350';
 		
 		$html ='<!-- Photo -->'."\n";
-		$html.= '<img class="photo" border="0" style="max-height:350px;max-width:350px;" src="'.$url.'" title="'.$this->ref.' - '.$this->label.'" />';
-		
+		$html.='<a target="_blank" href="https://www.infos-lafoirfouille.fr/photos/fichiers/'.$this->ref.'.jpg">';
+		$html.='<img class="photo" border="0" style="max-height:'.$max.'px;max-width:'.$max.'px;" src="'.$url.'" title="'.$this->ref.' - '.$this->label.'" />';
+		$html.='</a>';
 		return $html;
 	}
 
