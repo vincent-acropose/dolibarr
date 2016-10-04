@@ -3183,6 +3183,24 @@ class Product extends CommonObject
 		return false;
 	}
 
+	function has_lafoirfouille_photo()
+	{
+		$url_to_check = 'https://www.infos-lafoirfouille.fr/photos/fichiers/'.$this->ref.'.jpg';
+		
+		$file_headers = @get_headers($url_to_check);
+		if(!$file_headers || $file_headers[0] == 'HTTP/1.1 404 Not Found') return false;
+		else return true;
+	}
+
+	function show_photos_lafoirfouille()
+	{
+		$url = 'https://www.infos-lafoirfouille.fr/photos/resizer.php?photo=fichiers/'.$this->ref.'.jpg&max_height=350&max_width=350';
+		
+		$html ='<!-- Photo -->'."\n";
+		$html.= '<img class="photo" border="0" style="max-height:350px;max-width:350px;" src="'.$url.'" title="'.$this->ref.' - '.$this->label.'" />';
+		
+		return $html;
+	}
 
 	/**
 	 *  Show photos of a product (nbmax maximum), into several columns

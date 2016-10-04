@@ -1304,7 +1304,8 @@ else
             $picto=($object->type==1?'service':'product');
             dol_fiche_head($head, 'card', $titre, 0, $picto);
 
-            $showphoto=$object->is_photo_available($conf->product->multidir_output[$object->entity]);
+            //$showphoto=$object->is_photo_available($conf->product->multidir_output[$object->entity]);
+            $showphoto=$object->has_lafoirfouille_photo();
             $showbarcode=empty($conf->barcode->enabled)?0:1;
             if (! empty($conf->global->MAIN_USE_ADVANCED_PERMS) && empty($user->rights->barcode->lire_advance)) $showbarcode=0;
 
@@ -1333,7 +1334,8 @@ else
             if ($showphoto || $showbarcode)
             {
                 print '<td valign="middle" align="center" width="25%" rowspan="'.$nblignes.'">';
-                if ($showphoto) print $object->show_photos($conf->product->multidir_output[$object->entity],0,1,0,0,0);
+                //if ($showphoto) print $object->show_photos($conf->product->multidir_output[$object->entity],0,1,0,0,0);
+               	if ($showphoto) print $object->show_photos_lafoirfouille();
                 if ($showphoto && $showbarcode) print '<br><br>';
                 if ($showbarcode) print $form->showbarcode($object);
                 print '</td>';
