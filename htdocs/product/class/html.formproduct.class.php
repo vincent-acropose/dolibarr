@@ -72,7 +72,7 @@ class FormProduct
 		}
 		$sql.= " WHERE e.entity IN (".getEntity('stock', 1).")";
 		$sql.= " AND e.statut = 1";
-		$sql.= " ORDER BY e.label";
+		$sql.= " ORDER BY e.fk_parent, e.label";
 
 		dol_syslog(get_class($this).'::loadWarehouses', LOG_DEBUG);
 		$resql = $this->db->query($sql);
