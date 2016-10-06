@@ -542,8 +542,8 @@ if ($page == -1) { $page = 0; }
 $offset = $conf->liste_limit * $page;
 $pageprev = $page - 1;
 $pagenext = $page + 1;
-if (! $sortfield) $sortfield="f.datef";
-if (! $sortorder) $sortorder="DESC";
+if (! $sortfield) $sortfield="f.datef,f.rowid";
+if (! $sortorder) $sortorder="DESC,ASC";
 
 $limit = GETPOST('limit')?GETPOST('limit','int'):$conf->liste_limit;
 
@@ -610,7 +610,9 @@ if (! $user->rights->societe->client->voir && ! $socid) $sql .= ", sc.fk_soc, sc
 $sql.= " ORDER BY ";
 $listfield=explode(',',$sortfield);
 if(count($listfield)> 1){
-foreach ($listfield as $key => $value) $sql.=$listfield[$key]." ".$sortorder.",";
+	$listorder=explode(',',$sortorder);
+	foreach ($listfield as $key => $value) $sql.=$listfield[$key]." ".$listorder[$key].",";
+	$sql = substr($sql,0,-1);
 }
 else{
 	 $sql.= $sortfield.' '.$sortorder;
