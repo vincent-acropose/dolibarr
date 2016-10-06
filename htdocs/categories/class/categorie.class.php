@@ -803,6 +803,8 @@ class Categorie extends CommonObject
 				$this->cats[$obj->rowid]['fk_parent'] = $obj->fk_parent;
 				$this->cats[$obj->rowid]['label'] = ! empty($obj->label_trans) ? $obj->label_trans : $obj->label;
 				$this->cats[$obj->rowid]['description'] = ! empty($obj->description_trans) ? $obj->description_trans : $obj->description;
+				
+				$this->cats[$obj->rowid]['label'] .= ' '.$this->cats[$obj->rowid]['description'];
 				$i++;
 			}
 		}
