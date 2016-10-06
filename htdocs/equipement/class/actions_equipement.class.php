@@ -22,7 +22,7 @@
  */
 class ActionsEquipement // extends CommonObject
 {
-	
+
 	/**
 	 * Overloading the doActions function : replacing the parent's function with the one below
 	 *
@@ -33,7 +33,7 @@ class ActionsEquipement // extends CommonObject
 	 */
 	function printSearchForm($parameters, $object, $action) {
 		global $conf, $langs;
-		
+
 		if (DOL_VERSION < "3.9.1") {
 			$langs->load("equipement@equipement");
 			$title = img_object('', 'equipement@equipement') . ' ' . $langs->trans("Equipements");
@@ -62,7 +62,7 @@ class ActionsEquipement // extends CommonObject
 		$resArray = array ();
 		$resArray['searchintoequipement'] = array (
 				'text' => img_picto('', 'object_equipement@equipement') . ' ' . $langs->trans("Equipement", GETPOST('q')),
-				'url' => dol_buildpath('/equipement/list.php?sall=' . urlencode(GETPOST('q')), 1) 
+				'url' => dol_buildpath('/equipement/list.php?search_ref=' . urlencode(GETPOST('q')), 1)
 		);
 		$this->results = $resArray;
 		return 0;
