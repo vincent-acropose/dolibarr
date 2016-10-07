@@ -743,6 +743,8 @@ DeleteLine=Effacer ligne
 ConfirmDeleteLine=Êtes-vous sûr de vouloir supprimer cette ligne ?
 NoPDFAvailableForDocGenAmongChecked=Aucun PDF n'est disponible pour la génération du document parmi les enregistrements cochés
 TooManyRecordForMassAction=Trop d'enregistrements sélectionnés pour l'action de masse. De telles actions sont restreintes à une liste de %s enregistrements maximum.
+MassFilesArea=Zone des fichiers générés en masse
+ShowTempMassFilesArea=Afficher la zone des fichiers générés en masse
 # Week day
 Monday=Lundi
 Tuesday=Mardi
