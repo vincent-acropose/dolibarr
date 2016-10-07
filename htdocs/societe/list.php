@@ -5,6 +5,7 @@
  * Copyright (C) 2012       Marcos García           <marcosgdf@gmail.com>
  * Copyright (C) 2013-2015  Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
  * Copyright (C) 2015       Florian Henry      		<florian.henry@open-concept.pro>
+ * Copyright (C) 2016       Ferran Marcet      		<fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -342,6 +343,7 @@ $sql.= " st.libelle as stcomm, s.fk_stcomm as stcomm_id, s.fk_prospectlevel, s.p
 $sql.= " s.siren as idprof1, s.siret as idprof2, ape as idprof3, idprof4 as idprof4, s.fk_pays,";
 $sql.= " s.tms as date_update, s.datec as date_creation,";
 $sql.= " typent.code as typent_code";
+$sql.= " ,s.code_compta,s.code_compta_fournisseur";
 // We'll need these fields in order to filter by sale (including the case where the user can only see his prospects)
 if ($search_sale) $sql .= ", sc.fk_soc, sc.fk_user";
 // We'll need these fields in order to filter by categ
@@ -430,7 +432,7 @@ if ($resql)
 	$num = $db->num_rows($resql);
 	$i = 0;
 
-	if ($sall != '') $param = "&amp;sall=".urlencode($sall);
+	if ($search_all != '') $param = "&amp;sall=".urlencode($search_all);
  	if ($search_categ != '') $param.='&amp;search_categ='.urlencode($search_categ);
  	if ($search_sale > 0)	$param.='&amp;search_sale='.urlencode($search_sale);
 	if ($search_nom != '') $param.= "&amp;search_nom=".urlencode($search_nom);

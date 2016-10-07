@@ -234,6 +234,7 @@ if ($resql)
     $param.='&search_ref_supplier='.$search_ref_supplier;
     $param.='&search_sale=' .$search_sale;
     $param="&options_search_extra_type_contract=".$search_extra_type_contract;
+    if ($sall != '') $param.='&sall='.$sall;
     if ($optioncss != '') $param.='&optioncss='.$optioncss;
 
     print_liste_field_titre($langs->trans("Ref"), $_SERVER["PHP_SELF"], "c.rowid","","$param",'',$sortfield,$sortorder);
