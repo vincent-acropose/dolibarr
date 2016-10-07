@@ -3230,7 +3230,7 @@ class PropaleLigne  extends CommonObjectLine
      *
      *	@return	 int  <0 if ko, >0 if ok
      */
-    function delete()
+    function delete($notrigger=0)
     {
         global $conf,$langs,$user;
 
@@ -3254,13 +3254,16 @@ class PropaleLigne  extends CommonObjectLine
         		}
         	}
 
-            // Call trigger
-            $result=$this->call_trigger('LINEPROPAL_DELETE',$user);
-            if ($result < 0)
-            {
-                $this->db->rollback();
-                return -1;
-            }
+        	if (! $notrigger)
+        	{
+	            // Call trigger
+	            $result=$this->call_trigger('LINEPROPAL_DELETE',$user);
+	            if ($result < 0)
+	            {
+	                $this->db->rollback();
+	                return -1;
+	            }
+        	}
             // End call triggers
 
             $this->db->commit();
