@@ -55,6 +55,7 @@ $mode = GETPOST('mode','alpha');
 $fourn_id = GETPOST('fourn_id','int');
 $fk_supplier = GETPOST('fk_supplier','int');
 $fk_entrepot = GETPOST('fk_entrepot','int');
+$gere_en_stock = GETPOST('gere_en_stock','int');
 $texte = '';
 
 $sortfield = GETPOST('sortfield','alpha');
@@ -83,6 +84,7 @@ if (isset($_POST['button_removefilter']) || isset($_POST['valid']))
     $snom = '';
     $sal = '';
     $salert = '';
+    $gere_en_stock = '';
 }
 
 // Create orders
@@ -247,7 +249,7 @@ if ($virtualdiffersfromphysical)
 
 $title = $langs->trans('Status');
 
-$sql = 'SELECT p.rowid, p.ref, p.label, p.price,';
+$sql = 'SELECT p.rowid, p.ref, p.label, p.price, pext.gere_en_stock, ';
 $sql.= ' p.price_ttc, p.price_base_type,p.fk_product_type,';
 $sql.= ' p.tms as datem, p.duration, p.tobuy,';
 if(!empty($conf->global->STOCK_ALLOW_ADD_LIMIT_STOCK_BY_WAREHOUSE) && $fk_entrepot > 0) {
@@ -260,6 +262,7 @@ $sql.= ' SUM('.$db->ifsql("s.reel IS NULL", "0", "s.reel").') as stock_physique'
 $sql.= ' FROM ' . MAIN_DB_PREFIX . 'product as p';
 $sql.= ' LEFT JOIN ' . MAIN_DB_PREFIX . 'product_stock as s';
 $sql.= ' ON p.rowid = s.fk_product';
+$sql.= ' LEFT JOIN ' . MAIN_DB_PREFIX . 'product_extrafields as pext ON (pext.fk_object = p.rowid)';
 if($fk_supplier > 0) {
 	$sql.= ' INNER JOIN '.MAIN_DB_PREFIX.'product_fournisseur_price pfp ON (pfp.fk_product = p.rowid AND pfp.fk_soc = '.$fk_supplier.')';
 }
@@ -362,6 +365,8 @@ if ($usevirtualstock)
 	}
 }
 
+if($gere_en_stock != '' && $gere_en_stock > -1) $sql.= ' AND pext.gere_en_stock IS '.(!empty($gere_en_stock) ? 'NOT' : '').' NULL';
+
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($limit + 1, $offset);
 
@@ -416,6 +421,7 @@ print '<input type="hidden" name="sref" value="'.$sref.'">';
 print '<input type="hidden" name="snom" value="'.$snom.'">';
 print '<input type="hidden" name="salert" value="'.$salert.'">';
 print '<input type="hidden" name="mode" value="'.$mode.'">';
+print '<input type="hidden" name="gere_en_stock" value="'.$gere_en_stock.'">';
 print 'Emplacement : '.$formproduct->selectWarehouses($fk_entrepot, 'fk_entrepot', '', 1);
 print '<br />';
 print 'Fournisseur : '.$form->select_company($fk_supplier, 'fk_supplier', 'fournisseur=1', 1);
@@ -429,6 +435,7 @@ if ($sref || $snom || $sall || $salert || GETPOST('search', 'alpha')) {
 	$filters .= '&mode=' . $mode;
 	$filters .= '&fk_supplier=' . $fk_supplier;
 	$filters .= '&fk_entrepot=' . $fk_entrepot;
+	$filters .= '&gere_en_stock=' . $gere_en_stock;
 	print_barre_liste(
 		$texte,
 		$page,
@@ -447,6 +454,7 @@ if ($sref || $snom || $sall || $salert || GETPOST('search', 'alpha')) {
 	$filters .= '&mode=' . $mode;
 	$filters .= '&fk_supplier=' . $fk_supplier;
 	$filters .= '&fk_entrepot=' . $fk_entrepot;
+	$filters .= '&gere_en_stock=' . $gere_en_stock;
 	print_barre_liste(
 		$texte,
 		$page,
@@ -467,6 +475,7 @@ $param .= '&sref=' . $sref;
 $param .= '&mode=' . $mode;
 $param .= '&fk_entrepot=' . $fk_entrepot;
 $param .= '&fk_supplier=' . $fk_supplier;
+$param .= '&gere_en_stock=' . $gere_en_stock;
 
 $stocklabel = $langs->trans('Stock');
 if ($usevirtualstock == 1) $stocklabel = $langs->trans('VirtualStock');
@@ -482,6 +491,7 @@ print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST" name="formulaire">'
 	'<input type="hidden" name="linecount" value="' . $num . '">'.
 	'<input type="hidden" name="action" value="order">'.
 	'<input type="hidden" name="mode" value="' . $mode . '">';
+	'<input type="hidden" name="gere_en_stock" value="' . $gere_en_stock . '">';
 
 // Lines of title
 print '<tr class="liste_titre">';
@@ -489,6 +499,7 @@ print_liste_field_titre('<input type="checkbox" onClick="toggle(this)" />', $_SE
 print_liste_field_titre($langs->trans('Ref'), $_SERVER["PHP_SELF"], 'p.ref', $param, '', '', $sortfield, $sortorder);
 print_liste_field_titre($langs->trans('Label'), $_SERVER["PHP_SELF"], 'p.label', $param, '', '', $sortfield, $sortorder);
 if (!empty($conf->service->enabled) && $type == 1) print_liste_field_titre($langs->trans('Duration'), $_SERVER["PHP_SELF"], 'p.duration', $param, '', 'align="center"', $sortfield, $sortorder);
+print_liste_field_titre($langs->trans('Géré en stock'), $_SERVER["PHP_SELF"], 'pext.gere_en_stock', $param, '', 'align="right"', $sortfield, $sortorder);
 print_liste_field_titre($langs->trans('DesiredStock'), $_SERVER["PHP_SELF"], 'p.desiredstock', $param, '', 'align="right"', $sortfield, $sortorder);
 print_liste_field_titre($langs->trans('StockLimitShort'), $_SERVER["PHP_SELF"], 'p.seuil_stock_alerte', $param, '', 'align="right"', $sortfield, $sortorder);
 print_liste_field_titre($stocklabel, $_SERVER["PHP_SELF"], 'stock_physique', $param, '', 'align="right"', $sortfield, $sortorder);
@@ -501,7 +512,8 @@ print "</tr>\n";
 print '<tr class="liste_titre">'.
 '<td class="liste_titre">&nbsp;</td>'.
 '<td class="liste_titre"><input class="flat" type="text" name="sref" size="8" value="'.dol_escape_htmltag($sref).'"></td>'.
-'<td class="liste_titre"><input class="flat" type="text" name="snom" size="8" value="'.dol_escape_htmltag($snom).'"></td>';
+'<td class="liste_titre"><input class="flat" type="text" name="snom" size="8" value="'.dol_escape_htmltag($snom).'"></td>'.
+'<td class="liste_titre">'.$form->selectyesno('gere_en_stock', $gere_en_stock, 1, false, 1).'</td>';
 if (!empty($conf->service->enabled) && $type == 1) print '<td class="liste_titre">&nbsp;</td>';
 print '<td class="liste_titre">&nbsp;</td>'.
 	'<td class="liste_titre" align="right">&nbsp;</td>'.
@@ -611,6 +623,8 @@ while ($i < ($limit ? min($num, $limit) : $num))
 			}
 			print '<td align="center">'.$duration.'</td>';
 		}
+		
+		print '<td align="right">'.(empty($objp->gere_en_stock) ? 'Non' : 'Oui').'</td>';
 
 		// Desired stock
 		print '<td align="right">' . $objp->desiredstock . '</td>';
