@@ -65,10 +65,14 @@ ShipmentLine=Ligne d'expédition
 CarrierList=Liste des transporteurs
 SendingRunning=Produit des commandes clients passées
 SuppliersReceiptRunning=Produit des commandes fournisseurs passées
-ProductQtyInCustomersOrdersRunning=Quantité de produit en commandes client ouvertes
-ProductQtyInSuppliersOrdersRunning=Quantité de produit en commandes fournisseur ouvertes
+#ProductQtyInCustomersOrdersRunning=Quantité de produit en commandes client ouvertes
+#ProductQtyInSuppliersOrdersRunning=Quantité de produit en commandes fournisseur ouvertes
+#ProductQtyInSuppliersShipmentAlreadyRecevied=Quantité de produit déjà reçu en commandes fournisseur ouvertes
+#Spé hévéa
+ProductQtyInCustomersOrdersRunning=Quantité à livrer
+ProductQtyInSuppliersOrdersRunning=Stock futur
 ProductQtyInShipmentAlreadySent=Quantité du produit parmi les commandes clients déjà envoyées
-ProductQtyInSuppliersShipmentAlreadyRecevied=Quantité de produit déjà reçu en commandes fournisseur ouvertes
+ProductQtyInSuppliersShipmentAlreadyRecevied=Quantité à recevoir
 NoProductToShipFoundIntoStock=Aucun produit à expédier n'a été trouver dans l'entrepôt <b>%s</b>. Corrigez l'inventaire ou retourner choisir un autre entrepôt.
 WeightVolShort=Weight/Vol.
 ValidateOrderFirstBeforeShipment=You must first validate the order before being able to make shipments.

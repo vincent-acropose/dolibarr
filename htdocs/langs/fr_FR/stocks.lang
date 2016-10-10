@@ -71,7 +71,9 @@ StockLimitShort=Limite pour alerte
 StockLimit=Limite stock pour alerte
 PhysicalStock=Stock physique
 RealStock=Stock réel
-VirtualStock=Stock théorique
+#VirtualStock=Stock théorique
+#Spé Hévéa
+VirtualStock=Quantité disponible
 MininumStock=Stock minimum
 StockUp=Stock maximum
 MininumStockShort=Stock minimum
