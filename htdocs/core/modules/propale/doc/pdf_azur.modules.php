@@ -1162,7 +1162,7 @@ class pdf_azur extends ModelePDFPropales
 	 */
 	function _pagehead(&$pdf, $object, $showaddress, $outputlangs)
 	{
-		global $conf,$langs,$db;
+		global $conf,$langs;
 
 		$outputlangs->load("main");
 		$outputlangs->load("bills");
@@ -1246,11 +1246,9 @@ class pdf_azur extends ModelePDFPropales
 		$pdf->MultiCell(100, 3, $outputlangs->transnoentities("DateEndPropal")." : " . dol_print_date($object->fin_validite,"day",false,$outputlangs,true), '', 'R');
 
 		
-		$u = new User($db);
-		$u->fetch($object->user_author_id);
-		
-		
-		if (!empty($u))
+		$u = new User($this->db);
+
+		if ($u->fetch($object->user_author_id)>0)
 		{
 			$posy+=4;
 			$pdf->SetXY($posx,$posy);

@@ -1226,7 +1226,7 @@ class pdf_crabe extends ModelePDFFactures
 	 */
 	function _pagehead(&$pdf, $object, $showaddress, $outputlangs)
 	{
-		global $conf,$langs,$db;
+		global $conf,$langs;
 
 		$outputlangs->load("main");
 		$outputlangs->load("bills");
@@ -1348,12 +1348,9 @@ class pdf_crabe extends ModelePDFFactures
 			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("DateEcheance")." : " . dol_print_date($object->date_lim_reglement,"day",false,$outputlangs,true), '', 'R');
 		}
 
-		
-		$u = new User($db);
-		$u->fetch($object->user_author);
-		
-		
-		if (!empty($u))
+		$u = new User($this->db);
+				
+		if ($u->fetch($object->user_author)>0)
 		{
 			$posy+=3;
 			$pdf->SetXY($posx,$posy);
