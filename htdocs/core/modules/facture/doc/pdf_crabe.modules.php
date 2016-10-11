@@ -1226,13 +1226,13 @@ class pdf_crabe extends ModelePDFFactures
 	 */
 	function _pagehead(&$pdf, $object, $showaddress, $outputlangs)
 	{
-		global $conf,$langs, $user;
+		global $conf,$langs, $db;
 
 		$outputlangs->load("main");
 		$outputlangs->load("bills");
 		$outputlangs->load("propal");
 		$outputlangs->load("companies");
-		$outputlangs->load("clihelianthe@cliheliante");
+		
 
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
 
@@ -1348,12 +1348,17 @@ class pdf_crabe extends ModelePDFFactures
 			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("DateEcheance")." : " . dol_print_date($object->date_lim_reglement,"day",false,$outputlangs,true), '', 'R');
 		}
 
-		if ($user->getFullName($outputlangs))
+		
+		$mysql  = "SELECT lastname,firstname FROM ".MAIN_DB_PREFIX."user WHERE rowid=".$object->user_author;
+		$result = $db->query($mysql);
+		$res = $db->fetch_object($result);
+		
+		if (!empty($res))
 		{
 			$posy+=3;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("Author")." : " . $user->getFullName($outputlangs), '', 'R');
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("Author")." : " . $res->lastname .' '.$res->firstname, '', 'R');
 		}
 		
 		if ($object->client->code_compta)
