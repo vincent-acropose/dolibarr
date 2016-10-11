@@ -1168,6 +1168,7 @@ class pdf_azur extends ModelePDFPropales
 		$outputlangs->load("bills");
 		$outputlangs->load("propal");
 		$outputlangs->load("companies");
+		
 
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
 
@@ -1244,12 +1245,23 @@ class pdf_azur extends ModelePDFPropales
 		$pdf->SetTextColor(0,0,60);
 		$pdf->MultiCell(100, 3, $outputlangs->transnoentities("DateEndPropal")." : " . dol_print_date($object->fin_validite,"day",false,$outputlangs,true), '', 'R');
 
-		if ($object->client->code_client)
+		
+		$u = new User($this->db);
+
+		if ($u->fetch($object->user_author_id)>0)
 		{
 			$posy+=4;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("CustomerCode")." : " . $outputlangs->transnoentities($object->client->code_client), '', 'R');
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("Author")." : " . $u->getFullName($outputlangs), '', 'R');
+		}
+		
+		if ($object->client->code_compta)
+		{
+			$posy+=4;
+			$pdf->SetXY($posx,$posy);
+			$pdf->SetTextColor(0,0,60);
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("AccountancyCode")." : " . $object->client->code_compta, '', 'R');
 		}
 
 		$posy+=2;
