@@ -1226,7 +1226,7 @@ class pdf_crabe extends ModelePDFFactures
 	 */
 	function _pagehead(&$pdf, $object, $showaddress, $outputlangs)
 	{
-		global $conf,$langs, $db;
+		global $conf,$langs,$db;
 
 		$outputlangs->load("main");
 		$outputlangs->load("bills");
@@ -1349,16 +1349,16 @@ class pdf_crabe extends ModelePDFFactures
 		}
 
 		
-		$mysql  = "SELECT lastname,firstname FROM ".MAIN_DB_PREFIX."user WHERE rowid=".$object->user_author;
-		$result = $db->query($mysql);
-		$res = $db->fetch_object($result);
+		$u = new User($db);
+		$u->fetch($object->user_autho);
 		
-		if (!empty($res))
+		
+		if (!empty($u))
 		{
 			$posy+=3;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("Author")." : " . $res->lastname .' '.$res->firstname, '', 'R');
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("Author")." : " . $u->getFullName($outputlangs), '', 'R');
 		}
 		
 		if ($object->client->code_compta)
