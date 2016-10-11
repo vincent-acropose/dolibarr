@@ -1608,7 +1608,7 @@ class pdf_crabe extends ModelePDFFactures
 
 		
 		$u = new User($db);
-		$u->fetch($object->user_autho);
+		$u->fetch($object->user_author);
 		
 		
 		if (!empty($u))
