@@ -340,6 +340,12 @@ if (! empty($_SESSION["disablemodules"]))
  * Phase authentication / login
  */
 $login='';
+
+
+$hookmanager->initHooks(array('daologin'));
+$hookmanager->executeHooks('beforeLogin');
+	
+
 if (! defined('NOLOGIN'))
 {
     // $authmode lists the different means of identification to be tested in order of preference.
