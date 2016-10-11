@@ -1480,6 +1480,7 @@ class pdf_crabe extends ModelePDFFactures
 		$outputlangs->load("bills");
 		$outputlangs->load("propal");
 		$outputlangs->load("companies");
+		$outputlangs->load("clihelianthe@cliheliante");
 
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
 
@@ -1605,12 +1606,20 @@ class pdf_crabe extends ModelePDFFactures
 			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("DateDue")." : " . dol_print_date($object->date_lim_reglement,"day",false,$outputlangs,true), '', 'R');
 		}
 
+		if ($user->getFullName($outputlangs))
+		{
+			$posy+=3;
+			$pdf->SetXY($posx,$posy);
+			$pdf->SetTextColor(0,0,60);
+			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("Author")." : " . $user->getFullName($outputlangs), '', 'R');
+		}
+
 		if ($object->thirdparty->code_compta)
 		{
 			$posy+=3;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("CustomerCode")." : " . $outputlangs->transnoentities($object->thirdparty->code_compta), '', 'R');
+			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("AccountancyCode")." : " . $outputlangs->transnoentities($object->thirdparty->code_compta), '', 'R');
 		}
 
 		$posy+=1;

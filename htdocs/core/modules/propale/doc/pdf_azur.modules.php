@@ -1370,12 +1370,13 @@ class pdf_azur extends ModelePDFPropales
 	 */
 	function _pagehead(&$pdf, $object, $showaddress, $outputlangs)
 	{
-		global $conf,$langs;
+		global $conf,$langs, $user;
 
 		$outputlangs->load("main");
 		$outputlangs->load("bills");
 		$outputlangs->load("propal");
 		$outputlangs->load("companies");
+		$outputlangs->load("clihelianthe@clihelianthe");
 
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
 
@@ -1452,12 +1453,20 @@ class pdf_azur extends ModelePDFPropales
 		$pdf->SetTextColor(0,0,60);
 		$pdf->MultiCell(100, 3, $outputlangs->transnoentities("DateEndPropal")." : " . dol_print_date($object->fin_validite,"day",false,$outputlangs,true), '', 'R');
 
-		if ($object->thirdparty->code_client)
+		if ($user->getFullName($outputlangs))
 		{
 			$posy+=4;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("CustomerCode")." : " . $outputlangs->transnoentities($object->thirdparty->code_client), '', 'R');
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("Author")." : " . $user->getFullName($outputlangs), '', 'R');
+		}
+
+		if ($object->thirdparty->code_compta)
+		{
+			$posy+=4;
+			$pdf->SetXY($posx,$posy);
+			$pdf->SetTextColor(0,0,60);
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("AccountancyCode")." : " . $outputlangs->transnoentities($object->thirdparty->code_compta), '', 'R');
 		}
 
 		$posy+=2;
