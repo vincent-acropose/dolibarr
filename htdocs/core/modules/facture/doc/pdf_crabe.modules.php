@@ -1606,7 +1606,7 @@ class pdf_crabe extends ModelePDFFactures
 			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("DateDue")." : " . dol_print_date($object->date_lim_reglement,"day",false,$outputlangs,true), '', 'R');
 		}
 
-		$u = new User($this->db);
+/*		$u = new User($this->db);
 				
 		if ($u->fetch($object->user_author)>0)
 		{
@@ -1615,13 +1615,13 @@ class pdf_crabe extends ModelePDFFactures
 			$pdf->SetTextColor(0,0,60);
 			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("Author")." : " . $u->getFullName($outputlangs), '', 'R');
 		}
-
+*/		
 		if ($object->thirdparty->code_compta)
 		{
 			$posy+=3;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("AccountancyCode")." : " . $outputlangs->transnoentities($object->thirdparty->code_compta), '', 'R');
+			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("CustomerCode")." : " . $outputlangs->transnoentities($object->thirdparty->code_compta), '', 'R');
 		}
 
 		$posy+=1;
