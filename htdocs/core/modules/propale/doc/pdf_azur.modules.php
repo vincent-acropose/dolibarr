@@ -1256,14 +1256,14 @@ class pdf_azur extends ModelePDFPropales
 			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("Author")." : " . $u->getFullName($outputlangs), '', 'R');
 		}
 		
-		if ($object->client->code_compta)
+		/*if ($object->client->code_compta)
 		{
 			$posy+=4;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
 			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("AccountancyCode")." : " . $object->client->code_compta, '', 'R');
 		}
-
+		*/
 		$posy+=2;
 
 		// Show list of linked objects
