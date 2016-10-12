@@ -70,6 +70,7 @@ DispatchVerb=Ventiler
 StockLimitShort=Limite pour alerte
 StockLimit=Limite stock pour alerte
 PhysicalStock=Stock physique
+PhysicalStockTotal=Stock physique total
 RealStock=Stock réel
 #VirtualStock=Stock théorique
 #Spé Hévéa

@@ -585,5 +585,23 @@ class Entrepot extends CommonObject
 		 return implode(' >> ', array_reverse($TArbo));
 		
 	}
+	
+	function get_children_warehouses($id, &$TChildWarehouses) {
+		
+		$sql = 'SELECT rowid
+				FROM '.MAIN_DB_PREFIX.'entrepot
+				WHERE fk_parent = '.$id;
+		
+		$resql = $this->db->query($sql);
+		if($resql) {
+			while($res = $this->db->fetch_object($resql)) {
+				$TChildWarehouses[] = $res->rowid;
+				$this->get_children_warehouses($res->rowid, $TChildWarehouses);
+			}
+		}
+		
+		return $TChildWarehouses;
+		
+	}
 
 }

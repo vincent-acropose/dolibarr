@@ -65,7 +65,7 @@ if ($page == -1) { $page = 0; }
 $limit = GETPOST('limit')?GETPOST('limit','int'):$conf->liste_limit;
 $offset = $limit * $page ;
 
-if (!$sortfield) {
+if (!$sortfield || (($fk_entrepot > 0) && ($sortfield === 'stock_physique_recursif'))) {
     $sortfield = 'p.ref';
 }
 
@@ -479,7 +479,7 @@ $param .= '&gere_en_stock=' . $gere_en_stock;
 
 $stocklabel = $langs->trans('Stock');
 if ($usevirtualstock == 1) $stocklabel = $langs->trans('VirtualStock');
-if ($usevirtualstock == 0) $stocklabel = $langs->trans('PhysicalStock');
+if ($usevirtualstock == 0) $stocklabel = $langs->trans('PhysicalStockTotal');
 
 print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST" name="formulaire">'.
 	'<input type="hidden" name="token" value="' .$_SESSION['newtoken'] . '">'.
@@ -502,6 +502,7 @@ if (!empty($conf->service->enabled) && $type == 1) print_liste_field_titre($lang
 print_liste_field_titre($langs->trans('Géré en stock'), $_SERVER["PHP_SELF"], 'pext.gere_en_stock', $param, '', 'align="right"', $sortfield, $sortorder);
 print_liste_field_titre($langs->trans('DesiredStock'), $_SERVER["PHP_SELF"], 'p.desiredstock', $param, '', 'align="right"', $sortfield, $sortorder);
 print_liste_field_titre($langs->trans('StockLimitShort'), $_SERVER["PHP_SELF"], 'p.seuil_stock_alerte', $param, '', 'align="right"', $sortfield, $sortorder);
+if($fk_entrepot > 0) print_liste_field_titre($langs->trans('PhysicalStock'), $_SERVER["PHP_SELF"], 'stock_physique_recursif', $param, '', 'align="right"', $sortfield, $sortorder);
 print_liste_field_titre($stocklabel, $_SERVER["PHP_SELF"], 'stock_physique', $param, '', 'align="right"', $sortfield, $sortorder);
 print_liste_field_titre($langs->trans('Ordered'), $_SERVER["PHP_SELF"], '', $param, '', 'align="right"', $sortfield, $sortorder);
 print_liste_field_titre($langs->trans('StockToBuy'), $_SERVER["PHP_SELF"], '', $param, '', 'align="right"', $sortfield, $sortorder);
@@ -516,8 +517,9 @@ print '<tr class="liste_titre">'.
 '<td class="liste_titre">'.$form->selectyesno('gere_en_stock', $gere_en_stock, 1, false, 1).'</td>';
 if (!empty($conf->service->enabled) && $type == 1) print '<td class="liste_titre">&nbsp;</td>';
 print '<td class="liste_titre">&nbsp;</td>'.
-	'<td class="liste_titre" align="right">&nbsp;</td>'.
-	'<td class="liste_titre" align="right">' . $langs->trans('AlertOnly') . '&nbsp;<input type="checkbox" id="salert" name="salert" ' . (!empty($alertchecked)?$alertchecked:'') . '></td>'.
+	'<td class="liste_titre" align="right">&nbsp;</td>';
+if($fk_entrepot) print '<td class="liste_titre">&nbsp;</td>';	
+print '<td class="liste_titre" align="right">' . $langs->trans('AlertOnly') . '&nbsp;<input type="checkbox" id="salert" name="salert" ' . (!empty($alertchecked)?$alertchecked:'') . '></td>'.
 	'<td class="liste_titre" align="right">&nbsp;</td>'.
 	'<td class="liste_titre">&nbsp;</td>'.
 	'<td class="liste_titre" align="right">'.
@@ -529,9 +531,45 @@ print '</tr>';
 $prod = new Product($db);
 
 $var = True;
+
+$TData = array();
+
+$ent = new Entrepot($db);
+if($fk_entrepot > 0) {
+	$ent->fetch($fk_entrepot);
+	$prod_static = new Product($db);
+	$TChildWarehouses = array($ent->id);
+	$TChildWarehouses = array_merge($ent->get_children_warehouses($ent->id, $TChildWarehouses));
+}
+
+// Pour pouvoir faire un usort lors d'un tri sur la quantité en stock dans l'entrepot sélectionné et ses enfants, on passe par un tableau temporaire
 while ($i < ($limit ? min($num, $limit) : $num))
 {
 	$objp = $db->fetch_object($resql);
+	$TData[] = $objp;
+	
+	if($ent->id > 0) {
+		
+		$prod_static->id = $objp->rowid;
+		// Chargement du stock de ce produit par entrepot
+		$prod_static->load_stock();
+		$stock_total = 0;
+		
+		// On compte uniquement le stock de ce produit dans l'entrepot sur lequel on filtre et ses enfants
+		foreach($TChildWarehouses as $id_ent) $stock_total+=$prod_static->stock_warehouse[$id_ent]->real;
+		
+		$objp->stock_total = $stock_total;
+		
+	}
+	
+	$i++;
+}
+
+// Pour l'instant pas de tri, car est-ce vraiment utile si à chaque fois on ne peut trier que les 25 éléments de la page ?
+// (Dolibarr ne charge que les données avec un LIMIT 25 ou selon la conf)
+//if($sortfield === 'stock_physique_recursif') usort($TData, 'cmp_entrepot');
+
+foreach($TData as $i=>$objp) {
 
 	if (! empty($conf->global->STOCK_SUPPORTS_SERVICES) || $objp->fk_product_type == 0)
 	{
@@ -632,6 +670,8 @@ while ($i < ($limit ? min($num, $limit) : $num))
 		// Limit stock for alerr
 		print '<td align="right">' . $objp->alertstock . '</td>';
 
+		if($fk_entrepot > 0) print '<td align="right">' . $objp->stock_total . '</td>';
+		
 		// Current stock
 		print '<td align="right">'. $warning . $stock. '</td>';
 
@@ -654,7 +694,7 @@ while ($i < ($limit ? min($num, $limit) : $num))
 
 		print '</tr>';
 	}
-	$i++;
+	
 }
 print '</table>';
 
@@ -714,3 +754,16 @@ function toggle(source)
 llxFooter();
 
 $db->close();
+
+function cmp_entrepot($a, $b) {
+	
+	global $sortorder;
+	
+	if($a->stock_total == $b->stock_total) return 0;
+	
+	$return = 1;
+	if($sortorder === 'desc') $return *= -1;
+	
+	return ($a->stock_total < $b->stock_total) ? $return : -$return;
+	
+}
