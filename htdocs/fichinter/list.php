@@ -30,6 +30,7 @@ require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fichinter/class/fichinter.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
 
 $langs->load("companies");
 $langs->load("bills");
@@ -90,6 +91,9 @@ if (! empty($conf->global->FICHINTER_DISABLE_DETAILS)) unset($fieldstosearchall[
 $form = new Form($db);
 $interventionstatic=new Fichinter($db);
 
+$extrafields = new ExtraFields($db);
+$extralabels = $extrafields->fetch_name_optionals_label($interventionstatic->table_element, true);
+
 llxHeader('', $langs->trans("Intervention"));
 
 
@@ -97,10 +101,19 @@ $sql = "SELECT";
 $sql.= " f.ref, f.rowid as fichid, f.fk_statut, f.description,";
 if (empty($conf->global->FICHINTER_DISABLE_DETAILS)) $sql.= " fd.description as descriptiondetail, fd.date as dp, fd.duree,";
 $sql.= " s.nom as name, s.rowid as socid, s.client";
+
+if (count($extralabels) > 0) {
+	foreach($extralabels as $code_extra=>$label_extra) {
+		$sql.= ",interextra.".$code_extra. " as interextra_".$code_extra;
+	}
+}
+
+
 $sql.= " FROM (".MAIN_DB_PREFIX."societe as s";
 if (! $user->rights->societe->client->voir && empty($socid)) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 $sql.= ", ".MAIN_DB_PREFIX."fichinter as f)";
 if (empty($conf->global->FICHINTER_DISABLE_DETAILS)) $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."fichinterdet as fd ON fd.fk_fichinter = f.rowid";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."fichinter_extrafields as interextra ON interextra.fk_object = f.rowid";
 $sql.= " WHERE f.fk_soc = s.rowid ";
 $sql.= " AND f.entity = ".$conf->entity;
 if ($search_ref) {
@@ -161,7 +174,7 @@ if ($result)
         foreach($fieldstosearchall as $key => $val) $fieldstosearchall[$key]=$langs->trans($val);
         print $langs->trans("FilterOnInto", $sall) . join(', ',$fieldstosearchall);
     }
-    
+
     print '<table class="noborder" width="100%">';
 
 	print '<tr class="liste_titre">';
@@ -175,7 +188,15 @@ if ($result)
 		print_liste_field_titre($langs->trans("Duration"),$_SERVER["PHP_SELF"],"fd.duree","",$urlparam,'align="right"',$sortfield,$sortorder);
 	}
 	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"f.fk_statut","",$urlparam,'align="right"',$sortfield,$sortorder);
+
+	if (count($extralabels) > 0) {
+		foreach($extralabels as $code_extra=>$label_extra) {
+			print_liste_field_titre($label_extra, $_SERVEUR['PHP_SELF'], "interextra.".$code_extra, "", $option, ' align="right" ', $sortfield, $sortorder);
+		}
+	}
+
 	print_liste_field_titre('',$_SERVER["PHP_SELF"],"",'','','',$sortfield,$sortorder,'maxwidthsearch ');
+
 	print "</tr>\n";
 
 	print '<tr class="liste_titre">';
@@ -197,6 +218,11 @@ if ($result)
 	$liststatus=$interventionstatic->statuts_short;
 	print $form->selectarray('search_status', $liststatus, $search_status, 1, 0, 0, '', 1);
 	print '</td>';
+	if (count($extralabels) > 0) {
+		foreach($extralabels as $code_extra=>$label_extra) {
+			print '<td class="liste_titre" align="right">&nbsp;</td>';
+		}
+	}
 	print '<td class="liste_titre" align="right"><input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 	print '<input type="image" class="liste_titre" name="button_removefilter" src="'.img_picto($langs->trans("Search"),'searchclear.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'" title="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">';
     print "</td></tr>\n";
@@ -230,6 +256,14 @@ if ($result)
 			print '<td align="right">'.convertSecondToTime($objp->duree).'</td>';
 		}
 		print '<td align="right">'.$interventionstatic->LibStatut($objp->fk_statut,5).'</td>';
+
+		if (count($extralabels) > 0) {
+			foreach($extralabels as $code_extra=>$label_extra) {
+				print '<td align="right">';
+				print $extrafields->showOutputField($code_extra, $objp->{'interextra_'.$code_extra});
+				print '</td>';
+			}
+		}
 
 		print '<td>&nbsp;</td>';
 		print "</tr>\n";
