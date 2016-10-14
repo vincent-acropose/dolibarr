@@ -662,7 +662,7 @@ class pdf_soleil extends ModelePDFFicheinter
 	function _pagefoot(&$pdf,$object,$outputlangs,$hidefreetext=0)
 	{
 		$showdetails=0;
-		return pdf_pagefoot($pdf,$outputlangs,'FICHINTER_FREE_TEXT',$this->emetteur,$this->marge_basse,$this->marge_gauche,$this->page_hauteur,$object,$showdetails,$hidefreetext);
+		return pdf_pagefoot($pdf,$outputlangs,'FICHINTER_FREE_TEXT',$this->emetteur,$this->marge_basse-20,$this->marge_gauche,$this->page_hauteur,$object,$showdetails,$hidefreetext);
 	}
 
 }
