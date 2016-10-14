@@ -76,6 +76,7 @@ if ($action == 'update' && ! $_POST["cancel"])
 	$account->domiciliation   = $_POST["domiciliation"];
 	$account->proprio         = $_POST["proprio"];
 	$account->owner_address   = $_POST["owner_address"];
+	$account->rum   		  = $_POST["rum"];
 	$account->frstrecur       = GETPOST('frstrecur');
 
 	$result = $account->update($user);
@@ -135,6 +136,7 @@ if ($action == 'add' && ! $_POST["cancel"])
 	    $account->domiciliation   = $_POST["domiciliation"];
 	    $account->proprio         = $_POST["proprio"];
 	    $account->owner_address   = $_POST["owner_address"];
+	    $account->rum   		  = $_POST["rum"];
 		$account->frstrecur       = GETPOST('frstrecur');
 
 	    $result = $account->update($user);	// TODO Use create and include update into create method
@@ -161,8 +163,8 @@ if ($action == 'setasdefault')
         $url=DOL_URL_ROOT.'/societe/rib.php?socid='.$object->id;
         header('Location: '.$url);
         exit;
-    } 
-    else 
+    }
+    else
     {
 	    setEventMessages($db->lasterror, null, 'errors');
     }
@@ -239,9 +241,9 @@ if ($socid && $action != 'edit' && $action != "create")
     }
 
     dol_banner_tab($object, 'socid', '', ($user->societe_id?0:1), 'rowid', 'nom');
-        
+
     print '<div class="fichecenter">';
-    
+
     print load_fiche_titre($langs->trans("DefaultRIB"), '', '');
 
     print '<div class="underbanner clearboth"></div>';
@@ -357,7 +359,7 @@ if ($socid && $action != 'edit' && $action != "create")
 	}
 
     print "</div>";
-    
+
     dol_fiche_end();
 
 
@@ -405,7 +407,13 @@ if ($socid && $action != 'edit' && $action != "create")
             if (! empty($conf->prelevement->enabled))
             {
             	// RUM
-				print '<td>'.$prelevement->buildRumNumber($object->code_client, $rib->datec, $rib->id).'</td>';
+				print '<td>';
+				if (empty($rib->rum)) {
+					print $prelevement->buildRumNumber($object->code_client, $rib->datec, $rib->id);
+				} else {
+					print $rib->rum;
+				}
+				print '</td>';
 
 				// FRSTRECUR
 				print '<td>'.$rib->frstrecur.'</td>';
@@ -460,9 +468,9 @@ if ($socid && $action == 'edit' && $user->rights->societe->creer)
 	dol_fiche_head($head, 'rib', $langs->trans("ThirdParty"),0,'company');
 
     dol_banner_tab($object, 'socid', '', ($user->societe_id?0:1), 'rowid', 'nom');
-        
+
     print '<div class="fichecenter">';
-    
+
     print '<div class="underbanner clearboth"></div>';
 	print '<table class="border centpercent">';
 
@@ -567,7 +575,7 @@ if ($socid && $action == 'edit' && $user->rights->societe->creer)
 
     	// RUM
     	print '<tr><td width="35%">'.$langs->trans("RUM").'</td>';
-	    print '<td colspan="4">'.$account->rum.'</td></tr>';
+	    print '<td colspan="4"><input size="30" type="text" name="rum" value="'.$account->rum.'"></td></tr>';
 
 	    // FRSTRECUR
 	    print '<tr><td width="35%">'.$langs->trans("WithdrawMode").'</td>';
@@ -577,7 +585,7 @@ if ($socid && $action == 'edit' && $user->rights->societe->creer)
     }
 
     print '</div>';
-    
+
     dol_fiche_end();
 
 	print '<div align="center">';
@@ -594,9 +602,9 @@ if ($socid && $action == 'create' && $user->rights->societe->creer)
 	dol_fiche_head($head, 'rib', $langs->trans("ThirdParty"),0,'company');
 
     dol_banner_tab($object, 'socid', '', ($user->societe_id?0:1), 'rowid', 'nom');
-        
+
     print '<div class="fichecenter">';
-    
+
     print '<div class="underbanner clearboth"></div>';
 	print '<table class="border centpercent">';
 
@@ -676,7 +684,7 @@ if ($socid && $action == 'create' && $user->rights->societe->creer)
     }
 
     print '</div>';
-    
+
 	dol_fiche_end();
 
 	print '<div align="center">';

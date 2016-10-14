@@ -124,6 +124,7 @@ class CompanyBankAccount extends Account
         $sql.= ",proprio = '".$this->db->escape($this->proprio)."'";
         $sql.= ",owner_address = '".$this->db->escape($this->owner_address)."'";
         $sql.= ",default_rib = ".$this->default_rib;
+        $sql.= ",rum = '".$this->rum."'";
 	    if ($conf->prelevement->enabled)
 	    {
     	    $sql.= ",frstrecur = '".$this->db->escape($this->frstrecur)."'";
