@@ -303,7 +303,7 @@ class Export
 				}
 				break;
 			case 'Boolean':
-				$szFilterQuery=" ".$NameField."=".(is_numeric($ValueField) ? $ValueField : ($ValueField =='yes' ? 1: 0) );
+				$szFilterQuery=" (".$NameField."=".(is_numeric($ValueField) ? $ValueField : ($ValueField =='yes' ? 1: 0)." OR ".$NameField." IS NULL) " );
 				break;
 			case 'Status':
 			case 'List':
