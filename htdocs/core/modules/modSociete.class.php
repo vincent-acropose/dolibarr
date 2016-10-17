@@ -461,7 +461,7 @@ class modSociete extends DolibarrModules {
 				'userextra.u_code' => 'Code Commerciale',
 				'sp.nom' => "ParentCompany",
 				'sp.code_client' => "Code maison mére",
-				'sp.no_email' => "Désactiver l'envoi d'emailing de masse",
+				'c.no_email' => "Désactiver l'envoi d'emailing de masse",
 		);
 		$this->export_TypeFields_array[$r] = array (
 				'c.lastname' => "Text",
@@ -477,7 +477,7 @@ class modSociete extends DolibarrModules {
 				's.nom' => "Text",
 				'sp.nom' => "Text",
 				'sp.code_client' => "Text",
-				'sp.no_email' => "Boolean",
+				'c.no_email' => "Boolean",
 		);
 		$this->export_entities_array[$r] = array (
 				's.rowid' => "company",
@@ -491,7 +491,7 @@ class modSociete extends DolibarrModules {
 				'userextra.u_code' => "company",
 				'sp.nom' => "company",
 				'sp.code_client' => "company",
-				'sp.no_email' => "company",
+				'c.no_email' => "company",
 		); // We define here only fields that use another picto
 		if (empty($conf->fournisseur->enabled)) {
 			unset($this->export_fields_array[$r]['s.code_fournisseur']);
