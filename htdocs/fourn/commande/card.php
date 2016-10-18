@@ -938,7 +938,7 @@ if ($action == 'add' && $user->rights->fournisseur->commande->creer)
 								$array_option = $lines [$i]->array_options;
 							}
 
-							$idprod = $productsupplier->find_min_price_product_fournisseur($lines [$i]->fk_product, $lines [$i]->qty);
+							$idprod = $productsupplier->find_min_price_product_fournisseur($lines [$i]->fk_product, $lines [$i]->qty, $srcobject->socid);
 							$res = $productsupplier->fetch($idprod);
 
 							$result = $object->addline(
