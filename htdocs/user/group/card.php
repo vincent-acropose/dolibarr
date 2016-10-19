@@ -303,9 +303,12 @@ else
 		/*
 		 * Fiche en mode visu
 		 */
-
+		
 		if ($action != 'edit')
 		{
+			$langs->load('cliazetis@cliazetis');
+			$object->name = $langs->trans($object->name);
+		
         	dol_fiche_head($head, 'group', $title, 0, 'group');
 
 			print '<table class="border" width="100%">';

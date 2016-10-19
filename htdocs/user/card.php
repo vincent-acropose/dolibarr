@@ -1710,12 +1710,17 @@ else
                 {
                     $var=true;
 
+					$langs->load('cliazetis@cliazetis');
+
                     foreach($groupslist as $group)
                     {
                         $var=!$var;
 
                         print "<tr ".$bc[$var].">";
                         print '<td>';
+						
+						$group->name = $langs->trans($group->name);
+						
                         if ($caneditgroup)
                         {
                             print '<a href="'.DOL_URL_ROOT.'/user/group/card.php?id='.$group->id.'">'.img_object($langs->trans("ShowGroup"),"group").' '.$group->name.'</a>';
