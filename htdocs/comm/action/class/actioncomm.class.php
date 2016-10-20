@@ -584,6 +584,9 @@ class ActionComm extends CommonObject
 
                 $this->fk_element			= $obj->fk_element;
                 $this->elementtype			= $obj->elementtype;
+				
+				$this->fetch_optionals();
+				
             }
             $this->db->free($resql);
         }

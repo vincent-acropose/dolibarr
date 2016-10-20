@@ -1083,7 +1083,7 @@ if ($id > 0)
 			print $form->select_dolusers($object->userdoneid> 0?$object->userdoneid:-1,'doneby',1);
 			print '</td></tr>';
 		}
-
+		print $object->showOptionals($extrafields,'edit');
 		print '</table>';
 
 		
@@ -1281,6 +1281,7 @@ if ($id > 0)
 			}
 			print '</td></tr>';
 		}
+		print $object->showOptionals($extrafields,'view');
 
 		print '</table>';
 
