@@ -956,7 +956,7 @@ class ExtraFields
 					$out.='';
 				}
 
-				$out.='/>'.$val.'<br>';
+				$out.='/>'.$langs->trans($val).'<br>';
 			}
 		}
 		elseif ($type == 'radio')
