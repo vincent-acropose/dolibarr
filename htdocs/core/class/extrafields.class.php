@@ -1313,7 +1313,7 @@ class ExtraFields
 			if (is_array($value_arr))
 			{
 				foreach ($value_arr as $keyval=>$valueval) {
-					$value.=$langs->trans($params['options'][$valueval]).'<br>';
+					$value.=(!empty($params['options'][$valueval]) ? $langs->trans($params['options'][$valueval]) : '').'<br>';
 				}
 			}
 		}
