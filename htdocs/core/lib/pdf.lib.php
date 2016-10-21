@@ -1885,6 +1885,7 @@ function pdf_getLinkedObjects($object,$outputlangs)
 		{
 			$outputlangs->load('orders');
 			$outputlangs->load('sendings');
+			if(count($objects) > 1) return;
 			foreach($objects as $x => $elementobject)
 			{
 			    $order=null;
