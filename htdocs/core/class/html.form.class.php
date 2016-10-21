@@ -5851,7 +5851,7 @@ class Form
     function select_dolgroups($selected='', $htmlname='groupid', $show_empty=0, $exclude='', $disabled=0, $include='', $enableonly='', $force_entity=0)
     {
         global $conf,$user,$langs;
-
+		$langs->load('cliazetis@cliazetis');
         // Permettre l'exclusion de groupes
         if (is_array($exclude))	$excludeGroups = implode("','",$exclude);
         // Permettre l'inclusion de groupes
@@ -5915,7 +5915,7 @@ class Form
                     }
                     $out.= '>';
 
-                    $out.= $obj->name;
+                    $out.= $langs->trans( $obj->name );
                     if (! empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode) && $conf->entity == 1)
                     {
                         $out.= " (".$obj->label.")";
