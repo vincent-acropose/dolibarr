@@ -158,7 +158,7 @@ if ($action == "correct_stock" && ! $cancel)
 		$error++;
 		$action='correction';
 	}
-	if (! GETPOST("nbpiece"))
+	if (GETPOST("nbpiece") === '')
 	{
 		setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("NumberOfUnit")), null, 'errors');
 		$error++;
