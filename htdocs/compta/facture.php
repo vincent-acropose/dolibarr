@@ -390,19 +390,20 @@ if (empty($reshook))
 
 		// Check parameters
 
-		// Check for mandatory prof id
-		for($i = 1; $i < 6; $i ++)
+		// Check for mandatory prof id (but only if country is than than ours)
+		if ($mysoc->country_id > 0 && $object->thirdparty->country_id == $mysoc->country_id)
 		{
-			$idprof_mandatory = 'SOCIETE_IDPROF' . ($i) . '_INVOICE_MANDATORY';
-			$idprof = 'idprof' . $i;
-			if (! $object->thirdparty->$idprof && ! empty($conf->global->$idprof_mandatory))
-			{
-				if (! $error)
-					$langs->load("errors");
-				$error ++;
-
-				setEventMessage($langs->trans('ErrorProdIdIsMandatory', $langs->transcountry('ProfId' . $i, $object->thirdparty->country_code)), 'errors');
-			}
+    		for ($i = 1; $i <= 6; $i++)
+    		{
+    			$idprof_mandatory = 'SOCIETE_IDPROF' . ($i) . '_INVOICE_MANDATORY';
+    			$idprof = 'idprof' . $i;
+    			if (! $object->thirdparty->$idprof && ! empty($conf->global->$idprof_mandatory))
+    			{
+    				if (! $error) $langs->load("errors");
+    				$error++;
+    				setEventMessages($langs->trans('ErrorProdIdIsMandatory', $langs->transcountry('ProfId' . $i, $object->thirdparty->country_code)), null, 'errors');
+    			}
+    		}
 		}
 
 		$qualified_for_stock_change = 0;
@@ -1919,7 +1920,7 @@ if ($action == 'create')
 			$objectsrc->fetch_thirdparty();
 
 			$projectid = (! empty($projectid) ? $projectid : $objectsrc->fk_project);
-			$ref_client = (! empty($objectsrc->ref_client) ? $objectsrc->ref_client : '');
+			$ref_client = (! empty($objectsrc->ref_client) ? $objectsrc->ref_client : (! empty($objectsrc->ref_customer) ? $objectsrc->ref_customer:''));
 			$ref_int = (! empty($objectsrc->ref_int) ? $objectsrc->ref_int : '');
 
 			// only if socid not filled else it's allready done upper
@@ -1948,7 +1949,7 @@ if ($action == 'create')
 		$dateinvoice		= (empty($dateinvoice)?(empty($conf->global->MAIN_AUTOFILL_DATE)?-1:''):$dateinvoice);		// Do not set 0 here (0 for a date is 1970)
 	}
 
-	$absolute_discount = $soc->getAvailableDiscounts();
+	if(!empty($soc->id)) $absolute_discount = $soc->getAvailableDiscounts();
 
 	if (! empty($conf->use_javascript_ajax))
 	{
@@ -2401,7 +2402,7 @@ if ($action == 'create')
 
 		print '<tr><td>' . $langs->trans($newclassname) . '</td><td colspan="2">' . $objectsrc->getNomUrl(1);
 		//We check if Origin document has already an invoice attached to it
-		$objectsrc->fetchObjectLinked($originid,'','','facture');
+		$objectsrc->fetchObjectLinked($originid,$origin,'','facture');
 		$cntinvoice=count($objectsrc->linkedObjects['facture']);
 		if ($cntinvoice>=1)
 		{
