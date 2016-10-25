@@ -1260,7 +1260,7 @@ class Product extends CommonObject
 		$sql.= " pfp.fk_product, pfp.ref_fourn, pfp.fk_soc, pfp.tva_tx, pfp.fk_supplier_price_expression";
 		$sql.= " FROM ".MAIN_DB_PREFIX."product_fournisseur_price as pfp";
 		$sql.= " WHERE pfp.rowid = ".$prodfournprice;
-		if ($qty) $sql.= " AND pfp.quantity <= ".$qty;
+		if ($qty) $sql.= " AND pfp.quantity <= ".$qty." / IFNULL(pfp.conditionnement,1)";
 
 		dol_syslog(get_class($this)."::get_buyprice", LOG_DEBUG);
 		$resql = $this->db->query($sql);
