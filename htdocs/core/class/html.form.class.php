@@ -2037,7 +2037,7 @@ class Form
         	if (! empty($conf->barcode->enabled)) $sql.= " OR p.barcode LIKE '".$this->db->escape($prefix.$filterkey)."%'";
         	$sql.=')';
         }
-		$sql.= " AND pfp.supplier_reputation != 'DONOTORDER'";
+		//$sql.= " AND pfp.supplier_reputation != 'DONOTORDER'";
         $sql.= " ORDER BY pfp.ref_fourn DESC, pfp.quantity ASC";
         $sql.= $db->plimit($limit);
 
