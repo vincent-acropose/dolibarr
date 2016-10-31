@@ -417,6 +417,8 @@ if (empty($reshook))
 	    {
 	        $outputlangs = new Translate("",$conf);
 	        $outputlangs->setDefaultLang($newlang);
+			if (! empty($conf->productbatch->enabled)) $outputlangs->load('productbatch');
+			
 	    }
 		$result = $object->generateDocument($object->modelpdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
 	    if ($result <= 0)
