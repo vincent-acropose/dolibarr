@@ -887,7 +887,7 @@ class Facture extends CommonInvoice
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_payment_term as c ON f.fk_cond_reglement = c.rowid';
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_paiement as p ON f.fk_mode_reglement = p.id';
 		//$sql.= ' WHERE f.entity = '.$conf->entity;
-		$sql.= ' WHERE f.entity IN('.getEntity('fin_dossier', TFinancementTools::user_courant_est_admin_financement()).')';
+		$sql.= ' WHERE f.entity IN('.getEntity('fin_dossier', true).')';
 		if ($rowid)   $sql.= " AND f.rowid=".$rowid;
 		if ($ref)     $sql.= " AND f.facnumber='".$this->db->escape($ref)."'";
 		if ($ref_ext) $sql.= " AND f.ref_ext='".$this->db->escape($ref_ext)."'";
