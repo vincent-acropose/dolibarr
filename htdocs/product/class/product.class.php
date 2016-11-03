@@ -806,7 +806,7 @@ class Product extends CommonObject
 			}
 
 			// Delete all child tables
-			$elements = array('product_fournisseur_price','product_price','product_lang','categorie_product','product_stock');
+			$elements = array('product_fournisseur_price','product_price','product_lang','categorie_product','product_stock','product_customer_price');
 			foreach($elements as $table)
 			{
 				if (! $error)
@@ -1171,7 +1171,7 @@ class Product extends CommonObject
 
 		// We do select by searching with qty and prodfournprice
 		$sql = "SELECT pfp.rowid, pfp.price as price, pfp.quantity as quantity,";
-		$sql.= " pfp.fk_product, pfp.ref_fourn, pfp.fk_soc, pfp.tva_tx";
+		$sql.= " pfp.fk_product, pfp.ref_fourn, pfp.fk_soc, pfp.tva_tx, pfp.remise_percent";
 		$sql.= " FROM ".MAIN_DB_PREFIX."product_fournisseur_price as pfp";
 		$sql.= " WHERE pfp.rowid = ".$prodfournprice;
 		if ($qty) $sql.= " AND pfp.quantity <= ".$qty;
@@ -1187,6 +1187,7 @@ class Product extends CommonObject
 				$this->fourn_pu = $obj->price / $obj->quantity;     // Prix unitaire du produit pour le fournisseur $fourn_id
 				$this->ref_fourn = $obj->ref_fourn;                 // Ref supplier
 				$this->vatrate_supplier = $obj->tva_tx;             // Vat ref supplier
+				$this->remise_percent = $obj->remise_percent;
 				$result=$obj->fk_product;
 				return $result;
 			}
@@ -1194,7 +1195,7 @@ class Product extends CommonObject
 			{
 				// We do same select again but searching with qty, ref and id product
 				$sql = "SELECT pfp.rowid, pfp.price as price, pfp.quantity as quantity, pfp.fk_soc,";
-				$sql.= " pfp.fk_product, pfp.ref_fourn as ref_supplier, pfp.tva_tx";
+				$sql.= " pfp.fk_product, pfp.ref_fourn as ref_supplier, pfp.tva_tx, pfp.remise_percent";
 				$sql.= " FROM ".MAIN_DB_PREFIX."product_fournisseur_price as pfp";
 				$sql.= " WHERE pfp.ref_fourn = '".$fourn_ref."'";
 				$sql.= " AND pfp.fk_product = ".$product_id;
@@ -1215,6 +1216,7 @@ class Product extends CommonObject
 						$this->ref_fourn = $obj->ref_supplier;              // deprecated
 						$this->ref_supplier = $obj->ref_supplier;           // Ref supplier
 						$this->vatrate_supplier = $obj->tva_tx;             // Vat ref supplier
+						$this->remise_percent = $obj->remise_percent;
 						$result=$obj->fk_product;
 						return $result;
 					}
@@ -1716,6 +1718,32 @@ class Product extends CommonObject
 			$this->stats_commande['nb']=$obj->nb;
 			$this->stats_commande['rows']=$obj->nb_rows;
 			$this->stats_commande['qty']=$obj->qty?$obj->qty:0;
+
+			// if it's a virtual product, maybe it is in order by extension			
+			$TFather = $this->getFather();
+			if(is_array($TFather) && !empty($TFather)) {
+				
+				foreach($TFather as &$fatherData) {
+					
+					$pFather = new Product($this->db);
+					$pFather->id = $fatherData['id'];  
+					$qtyCoef = $fatherData['qty'];
+
+					
+					$pFather->load_stats_commande($socid, $filtrestatut);
+						
+					$this->stats_commande['customers']+=$pFather->stats_commande['customers'];
+					$this->stats_commande['nb']+=$pFather->stats_commande['nb'];
+					$this->stats_commande['rows']+=$pFather->stats_commande['rows'];
+					$this->stats_commande['qty']+=$pFather->stats_commande['qty'] * $qtyCoef;
+						
+					
+					
+					
+				}
+				
+			}
+			
 			return 1;
 		}
 		else
@@ -2659,7 +2687,7 @@ class Product extends CommonObject
 	function getFather()
 	{
 
-		$sql = "SELECT p.ref, p.label as label,p.rowid,pa.fk_product_pere as id,p.fk_product_type";
+		$sql = "SELECT p.ref, p.label as label,p.rowid,pa.fk_product_pere as id, pa.qty,p.fk_product_type";
 		$sql.= " FROM ".MAIN_DB_PREFIX."product_association as pa,";
 		$sql.= " ".MAIN_DB_PREFIX."product as p";
 		$sql.= " WHERE p.rowid = pa.fk_product_pere";
@@ -2674,6 +2702,7 @@ class Product extends CommonObject
 				$prods[$record['id']]['id'] =  $record['rowid'];
 				$prods[$record['id']]['ref'] =  $record['ref'];
 				$prods[$record['id']]['label'] =  $this->db->escape($record['label']);
+				$prods[$record['id']]['qty'] = $record['qty'];
 				$prods[$record['id']]['fk_product_type'] =  $record['fk_product_type'];
 			}
 			return $prods;
@@ -2864,7 +2893,7 @@ class Product extends CommonObject
 	{
 		global $langs;
 		$langs->load('products');
-		if ($conf->productbatch->enabled) $langs->load("productbatch");
+		if (! empty($conf->productbatch->enabled)) $langs->load("productbatch");
 
 		if ($type == 2)
 		{
@@ -2995,7 +3024,7 @@ class Product extends CommonObject
 		$sql = "SELECT ps.reel, ps.fk_entrepot, ps.pmp, ps.rowid";
 		$sql.= " FROM ".MAIN_DB_PREFIX."product_stock as ps";
 		$sql.= ", ".MAIN_DB_PREFIX."entrepot as w";
-		$sql.= " WHERE w.entity IN (".getEntity('warehouse', 1).")";
+		$sql.= " WHERE w.entity IN (".getEntity('stock', 1).")";
 		$sql.= " AND w.rowid = ps.fk_entrepot";
 		$sql.= " AND ps.fk_product = ".$this->id;
 
