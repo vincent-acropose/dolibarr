@@ -185,7 +185,7 @@ class DoliDBMysqli extends DoliDB
 	{
 		dol_syslog(get_class($this) . "::connect host=$host, port=$port, login=$login, passwd=--hidden--, name=$name", LOG_DEBUG);
 
-		return new mysqli($host, $login, $passwd, $name, $port);
+		return new mysqli($host, $login, $passwd, $name, $port,'/tmp/mysql5.sock');
 	}
 
     /**
