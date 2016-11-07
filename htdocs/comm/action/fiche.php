@@ -214,6 +214,32 @@ if ($action == 'add_action')
 
 	if (! $error)
 	{
+
+		dol_include_once('/agefodd/class/agsession.class.php');
+		$agf = new Agsession($db);
+		$result = $agf->fetch_other_session_sameplacedate_fromevent($actioncomm);
+		if ($result<0) {
+			setEventMessage($agf->error, 'errors');
+			$error ++;
+		} else {
+
+			if (is_array($agf->lines_place) && count($agf->lines_place)>0) {
+				$sessionplaceerror='';
+				foreach($agf->lines_place as $linesess) {
+					if ($linesess->typeevent=='session') {
+						$sessionplaceerror .= $langs->trans('AgfPlaceuseInOtherSession') . '<a href="' . dol_buildpath('/agefodd/session/list.php', 1) . '?site_view=1&search_id='.$linesess->rowid.'&search_site=' . $fk_session_place . '" target="_blanck">' . $linesess->rowid . '</a><br>';
+					} elseif ($linesess->typeevent=='actioncomm') {
+						$sessionplaceerror .= $langs->trans('AgfPlaceuseInOtherEvent') . '<a href="' . dol_buildpath('/comm/action/fiche.php', 1) . '?id='.$linesess->rowid.'" target="_blanck">' . $linesess->rowid . '</a><br>';
+					}
+				}
+				setEventMessage($sessionplaceerror, 'errors');
+			}
+			$error++;
+		}
+	}
+
+	if (! $error)
+	{
 		$db->begin();
 
 		// On cree l'action
@@ -350,6 +376,33 @@ if ($action == 'update')
 
 		// Fill array 'array_options' with data from add form
 		$ret = $extrafields->setOptionalsFromPost($extralabels,$actioncomm);
+
+		if (! $error)
+		{
+
+			dol_include_once('/agefodd/class/agsession.class.php');
+			$agf = new Agsession($db);
+			$result = $agf->fetch_other_session_sameplacedate_fromevent($actioncomm);
+			if ($result<0) {
+				setEventMessage($agf->error, 'errors');
+				$error ++;
+			} else {
+
+				if (is_array($agf->lines_place) && count($agf->lines_place)>0) {
+					$sessionplaceerror='';
+					foreach($agf->lines_place as $linesess) {
+						if ($linesess->typeevent=='session') {
+							$sessionplaceerror .= $langs->trans('AgfPlaceuseInOtherSession') . '<a href="' . dol_buildpath('/agefodd/session/list.php', 1) . '?site_view=1&search_id='.$linesess->rowid.'&search_site=' . $fk_session_place . '" target="_blanck">' . $linesess->rowid . '</a><br>';
+						} elseif ($linesess->typeevent=='actioncomm') {
+							$sessionplaceerror .= $langs->trans('AgfPlaceuseInOtherEvent') . '<a href="' . dol_buildpath('/comm/action/fiche.php', 1) . '?id='.$linesess->rowid.'" target="_blanck">' . $linesess->rowid . '</a><br>';
+						}
+					}
+					setEventMessage($sessionplaceerror, 'errors');
+					$error++;
+				}
+
+			}
+		}
 
 		if (! $error)
 		{
@@ -570,7 +623,7 @@ if ($action == 'create')
 	print '<tr><td class="nowrap">'.$langs->trans("ActionOnContact").'</td><td>';
 	$form->select_contacts(GETPOST('socid','int'),GETPOST('contactid'),'contactid',1);
 	print '</td></tr>';
-		
+
 
 	// Project
 	if (! empty($conf->projet->enabled))
@@ -1037,7 +1090,7 @@ if ($id > 0)
 				print $extrafields->showOutputField($key,$value);
 				print "</td></tr>\n";
 			}
-			
+
 			print '</table><br><br>';
 		}
 

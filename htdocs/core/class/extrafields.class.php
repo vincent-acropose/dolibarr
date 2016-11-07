@@ -861,12 +861,13 @@ class ExtraFields
 				}
 				$sql.= ' WHERE '.$keyList.'=\''.$this->db->escape($value).'\'';
 				//$sql.= ' AND entity = '.$conf->entity;
+
 				dol_syslog(get_class($this).':showOutputField:$type=sellist sql='.$sql);
 				$resql = $this->db->query($sql);
 				if ($resql)
 				{
 					$obj = $this->db->fetch_object($resql);
-					$value=$obj->$InfoFieldList[1];
+					$value=$obj->{$InfoFieldList[1]};
 				}
 			}
 		}
