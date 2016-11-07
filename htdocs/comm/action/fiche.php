@@ -214,7 +214,6 @@ if ($action == 'add_action')
 
 	if (! $error)
 	{
-
 		dol_include_once('/agefodd/class/agsession.class.php');
 		$agf = new Agsession($db);
 		$result = $agf->fetch_other_session_sameplacedate_fromevent($actioncomm);
@@ -233,8 +232,8 @@ if ($action == 'add_action')
 					}
 				}
 				setEventMessage($sessionplaceerror, 'errors');
+				$error++;
 			}
-			$error++;
 		}
 	}
 
@@ -379,7 +378,6 @@ if ($action == 'update')
 
 		if (! $error)
 		{
-
 			dol_include_once('/agefodd/class/agsession.class.php');
 			$agf = new Agsession($db);
 			$result = $agf->fetch_other_session_sameplacedate_fromevent($actioncomm);
@@ -400,7 +398,6 @@ if ($action == 'update')
 					setEventMessage($sessionplaceerror, 'errors');
 					$error++;
 				}
-
 			}
 		}
 
