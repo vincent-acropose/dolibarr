@@ -51,7 +51,8 @@ class modOpenSurvey extends DolibarrModules
 
 		// Family can be 'crm','financial','hr','projects','product','technic','other'
 		// It is used to group modules in module setup page
-		$this->family = "projects";
+		$this->family = "portal";
+		$this->module_position = 40;
 		// Module label (no space allowed), used if translation string 'ModuleXXXName' not found (where XXX is value of numeric property 'numero' of module)
 		$this->name = preg_replace('/^mod/i','',get_class($this));
 		// Module description used if translation string 'ModuleXXXDesc' not found (XXX is value MyModule)
@@ -144,7 +145,7 @@ class modOpenSurvey extends DolibarrModules
 								'langs'=>'opensurvey',
 								'position'=>200,
                 				'enabled'=>'$conf->opensurvey->enabled',         // Define condition to show or hide menu entry. Use '$conf->NewsSubmitter->enabled' if entry must be visible if module is enabled.
-								'perms'=>'',
+								'perms'=>'$user->rights->opensurvey->read',
 								'target'=>'',
 								'user'=>0);
 		$r++;
@@ -172,7 +173,7 @@ class modOpenSurvey extends DolibarrModules
 								'langs'=>'opensurvey',
 								'position'=>220,
                 				'enabled'=>'$conf->opensurvey->enabled',         // Define condition to show or hide menu entry. Use '$conf->NewsSubmitter->enabled' if entry must be visible if module is enabled.
-								'perms'=>'',
+								'perms'=>'$user->rights->opensurvey->read',
 								'target'=>'',
 								'user'=>0);
 		$r++;

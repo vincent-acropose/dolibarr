@@ -98,7 +98,7 @@ if ($id > 0 || ! empty($ref))
 			$projectstatic->fetch_thirdparty();
 		}
 
-		$object->project = dol_clone($projectstatic);
+		$object->project = clone $projectstatic;
 
 		$upload_dir = $conf->projet->dir_output.'/'.dol_sanitizeFileName($projectstatic->ref).'/'.dol_sanitizeFileName($object->ref);
 	}
@@ -108,7 +108,7 @@ if ($id > 0 || ! empty($ref))
 	}
 }
 
-include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_pre_headers.tpl.php';
+include_once DOL_DOCUMENT_ROOT . '/core/actions_linkedfiles.inc.php';
 
 
 /*
@@ -137,13 +137,13 @@ if ($object->id > 0)
 		print '<table class="border" width="100%">';
 
 		// Ref
-		print '<tr><td width="30%">';
+		print '<tr><td class="titlefield">';
 		print $langs->trans("Ref");
 		print '</td><td>';
 		// Define a complementary filter for search of next/prev ref.
 		if (! $user->rights->projet->all->lire)
 		{
-			$projectsListId = $projectstatic->getProjectsAuthorizedForUser($user,$mine,0);
+			$projectsListId = $projectstatic->getProjectsAuthorizedForUser($user,0,0);
 			$projectstatic->next_prev_filter=" rowid in (".(count($projectsListId)?join(',',array_keys($projectsListId)):'0').")";
 		}
 		print $form->showrefnav($projectstatic,'project_ref','',1,'ref','ref','',$param.'&withproject=1');
@@ -198,12 +198,12 @@ if ($object->id > 0)
 	print '<table class="border" width="100%">';
 
 	// Ref
-	print '<tr><td width="30%">';
+	print '<tr><td class="titlefield">';
 	print $langs->trans("Ref");
 	print '</td><td colspan="3">';
 	if (empty($withproject) || empty($projectstatic->id))
 	{
-		$projectsListId = $projectstatic->getProjectsAuthorizedForUser($user,$mine,1);
+		$projectsListId = $projectstatic->getProjectsAuthorizedForUser($user,0,1);
 		$object->next_prev_filter=" fk_projet in (".$projectsListId.")";
 	}
 	else $object->next_prev_filter=" fk_projet = ".$projectstatic->id;

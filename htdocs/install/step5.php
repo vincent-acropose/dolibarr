@@ -167,9 +167,23 @@ if ($action == "set" || empty($action) || preg_match('/upgrade/i',$action))
             // Create user
             include_once DOL_DOCUMENT_ROOT .'/user/class/user.class.php';
 
+            // Set default encryption to yes if there is no user yet into database
+		    $sql = "SELECT u.rowid, u.pass, u.pass_crypted";
+		    $sql.= " FROM ".MAIN_DB_PREFIX."user as u";
+		    //$sql.= " WHERE u.pass IS NOT NULL AND LENGTH(u.pass) < 32"; // Not a MD5 value
+		    $resql=$db->query($sql);
+		    if ($resql)
+		    {
+		        $numrows=$db->num_rows($resql);
+    			if ($numrows == 0) dolibarr_set_const($db, "DATABASE_PWD_ENCRYPTED", "1",'chaine',0,'',$conf->entity);
+		    }            
+            
+		    // Create user used to create the admin user
             $createuser=new User($db);
             $createuser->id=0;
-
+            $createuser->admin=1;
+            
+            // Set admin user
             $newuser = new User($db);
             $newuser->lastname='SuperAdmin';
             $newuser->firstname='';

@@ -32,7 +32,7 @@ include_once DOL_DOCUMENT_ROOT .'/core/modules/DolibarrModules.class.php';
 
 
 /**
- *	Classe de description et activation du module Projet
+ *	Class to describe and enable module Projet
  */
 class modProjet extends DolibarrModules
 {
@@ -50,6 +50,7 @@ class modProjet extends DolibarrModules
 		$this->numero = 400;
 
 		$this->family = "projects";
+		$this->module_position = 10;
 		// Module label (no space allowed), used if translation string 'ModuleXXXName' not found (where XXX is value of numeric property 'numero' of module)
 		$this->name = preg_replace('/^mod/i','',get_class($this));
 		$this->description = "Gestion des projets";
@@ -115,21 +116,26 @@ class modProjet extends DolibarrModules
 		$this->const[$r][3] = "";
 		$this->const[$r][4] = 0;
 		$r++;
-		
-		$this->const[$r][0] = "PROJECT_USE_OPPORTUNIES";
+		                       
+		$this->const[$r][0] = "PROJECT_USE_OPPORTUNITIES";
 		$this->const[$r][1] = "chaine";
 		$this->const[$r][2] = "1";
 		$this->const[$r][3] = "";
 		$this->const[$r][4] = 0;
 		$r++;
 		
-		/* not required (0 = not present)
-		$this->const[$r][0] = "PROJECT_HIDE_TASKS";
+		$this->const[$r][0] = "MAIN_DELAY_PROJECT_TO_CLOSE";
 		$this->const[$r][1] = "chaine";
-		$this->const[$r][2] = "0";
+		$this->const[$r][2] = "7";
 		$this->const[$r][3] = "";
 		$this->const[$r][4] = 0;
-		*/
+		$r++;
+		$this->const[$r][0] = "MAIN_DELAY_TASKS_TODO";
+		$this->const[$r][1] = "chaine";
+		$this->const[$r][2] = "7";
+		$this->const[$r][3] = "";
+		$this->const[$r][4] = 0;
+		$r++;
 		
 		// Boxes
 		$this->boxes = array();
@@ -300,8 +306,8 @@ class modProjet extends DolibarrModules
         	}
         }
         // End add extra fields
-		$this->export_fields_array[$r]=array_merge($this->export_fields_array[$r], array('ptt.task_date'=>'TaskTimeDate','ptt.task_duration'=>"TimesSpent",'ptt.fk_user'=>"TaskTimeUser",'ptt.note'=>"TaskTimeNote"));
-        $this->export_entities_array[$r]=array_merge($this->export_entities_array[$r], array('ptt.task_date'=>'task_time','ptt.task_duration'=>"task_time",'ptt.fk_user'=>"task_time",'ptt.note'=>"task_time"));
+		$this->export_fields_array[$r]=array_merge($this->export_fields_array[$r], array('ptt.rowid'=>'IdTaskTime','ptt.task_date'=>'TaskTimeDate','ptt.task_duration'=>"TimesSpent",'ptt.fk_user'=>"TaskTimeUser",'ptt.note'=>"TaskTimeNote"));
+        $this->export_entities_array[$r]=array_merge($this->export_entities_array[$r], array('ptt.rowid'=>'task_time','ptt.task_date'=>'task_time','ptt.task_duration'=>"task_time",'ptt.fk_user'=>"task_time",'ptt.note'=>"task_time"));
 
         $this->export_sql_start[$r]='SELECT DISTINCT ';
 		$this->export_sql_end[$r]  =' FROM '.MAIN_DB_PREFIX.'projet as p';

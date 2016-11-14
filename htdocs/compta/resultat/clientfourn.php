@@ -4,7 +4,7 @@
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2012      Cédric Salvador      <csalvador@gpcsolutions.fr>
  * Copyright (C) 2012-2014 Raphaël Dourseanud   <rdoursenaud@gpcsolutions.fr>
- * Copyright (C) 2014	   Ferran Marcet        <fmarcet@2byte.es>
+ * Copyright (C) 2014-2106 Ferran Marcet        <fmarcet@2byte.es>
  * Copyright (C) 2014	   Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2014	   Florian Henry        <florian.henry@open-concept.pro>
  *
@@ -279,7 +279,7 @@ if ($total_ttc == 0)
 {
     $var=!$var;
     print "<tr ".$bc[$var]."><td>&nbsp;</td>";
-    print '<td colspan="3">'.$langs->trans("None").'</td>';
+    print '<td colspan="3" class="opacitymedium">'.$langs->trans("None").'</td>';
     print '</tr>';
 }
 
@@ -362,7 +362,7 @@ if ($result) {
     {
         $var=!$var;
         print "<tr ".$bc[$var]."><td>&nbsp;</td>";
-        print '<td colspan="3">'.$langs->trans("None").'</td>';
+        print '<td colspan="3" class="opacitymedium">'.$langs->trans("None").'</td>';
         print '</tr>';
     }
 
@@ -382,7 +382,7 @@ print '</tr>';
  * Charges sociales non deductibles
  */
 
-print '<tr><td colspan="4">'.$langs->trans("SocialContributions").' ('.$langs->trans("Type").' 0)</td></tr>';
+print '<tr><td colspan="4">'.$langs->trans("SocialContributionsNondeductibles").'</td></tr>';
 
 if ($modecompta == 'CREANCES-DETTES')
 {
@@ -439,7 +439,7 @@ if ($result) {
     else {
         $var = !$var;
         print "<tr ".$bc[$var]."><td>&nbsp;</td>";
-        print '<td colspan="3">'.$langs->trans("None").'</td>';
+        print '<td colspan="3" class="opacitymedium">'.$langs->trans("None").'</td>';
         print '</tr>';
     }
 } else {
@@ -456,7 +456,7 @@ print '</tr>';
  * Charges sociales deductibles
  */
 
-print '<tr><td colspan="4">'.$langs->trans("SocialContributions").' ('.$langs->trans("Type").' 1)</td></tr>';
+print '<tr><td colspan="4">'.$langs->trans("SocialContributionsDeductibles").'</td></tr>';
 
 if ($modecompta == 'CREANCES-DETTES')
 {
@@ -517,7 +517,7 @@ if ($result) {
     else {
         $var = !$var;
         print "<tr ".$bc[$var]."><td>&nbsp;</td>";
-        print '<td colspan="3">'.$langs->trans("None").'</td>';
+        print '<td colspan="3" class="opacitymedium">'.$langs->trans("None").'</td>';
         print '</tr>';
     }
 } else {
@@ -552,7 +552,7 @@ if ($mysoc->tva_assuj == 'franchise')	// Non assujeti
  * Salaries
  */
 
-if ($conf->salaries->enabled)
+if (! empty($conf->salaries->enabled))
 {
 	if ($modecompta == 'CREANCES-DETTES') {
 	    $column = 'p.datev';
@@ -606,7 +606,7 @@ if ($conf->salaries->enabled)
 	    {
 	        $var = !$var;
 	        print "<tr ".$bc[$var]."><td>&nbsp;</td>";
-	        print '<td colspan="3">'.$langs->trans("None").'</td>';
+	        print '<td colspan="3" class="opacitymedium">'.$langs->trans("None").'</td>';
 	        print '</tr>';
 	    }
 	}
@@ -621,18 +621,102 @@ if ($conf->salaries->enabled)
 	print '</tr>';
 }
 
+/*
+ * Expense
+ */
+
+if (! empty($conf->expensereport->enabled))
+{
+	$langs->load('trips');
+	if ($modecompta == 'CREANCES-DETTES') {
+		$sql = "SELECT p.rowid, p.ref, u.rowid as userid, u.firstname, u.lastname, date_format(date_valid,'%Y-%m') as dm, sum(p.total_ht) as amount_ht,sum(p.total_ttc) as amount_ttc";
+		$sql.= " FROM ".MAIN_DB_PREFIX."expensereport as p";
+		$sql.= " INNER JOIN ".MAIN_DB_PREFIX."user as u ON u.rowid=p.fk_user_author";
+		$sql.= " WHERE p.entity = ".getEntity('expensereport',1);
+		$sql.= " AND p.fk_statut>=5";
+		
+		$column='p.date_valid';
+		
+	} else {
+		$sql = "SELECT p.rowid, p.ref, u.rowid as userid, u.firstname, u.lastname, date_format(pe.datep,'%Y-%m') as dm, sum(p.total_ht) as amount_ht,sum(p.total_ttc) as amount_ttc";
+		$sql.= " FROM ".MAIN_DB_PREFIX."expensereport as p";
+		$sql.= " INNER JOIN ".MAIN_DB_PREFIX."user as u ON u.rowid=p.fk_user_author";
+		$sql.= " INNER JOIN ".MAIN_DB_PREFIX."payment_expensereport as pe ON pe.fk_expensereport = p.rowid";
+		$sql.= " INNER JOIN ".MAIN_DB_PREFIX."c_paiement as c ON pe.fk_typepayment = c.id";
+		$sql.= " WHERE p.entity = ".getEntity('expensereport',1);
+		$sql.= " AND p.fk_statut>=5";
+		
+		$column='pe.datep';
+	}
+
+	print '<tr><td colspan="4">'.$langs->trans("ExpenseReport").'</td></tr>';
+	
+	if (! empty($date_start) && ! empty($date_end))
+		$sql.= " AND $column >= '".$db->idate($date_start)."' AND $column <= '".$db->idate($date_end)."'";
+
+		$sql.= " GROUP BY u.rowid, p.rowid, p.ref, u.firstname, u.lastname, dm";
+		$sql.= " ORDER BY p.ref";
+
+		dol_syslog("get expense report outcome");
+		$result=$db->query($sql);
+		$subtotal_ht = 0;
+		$subtotal_ttc = 0;
+		if ($result)
+		{
+			$num = $db->num_rows($result);
+			$var=true;
+			if ($num)
+			{
+				while ($obj = $db->fetch_object($result))
+				{
+					$total_ht -= $obj->amount_ht;
+					$total_ttc -= $obj->amount_ttc;
+					$subtotal_ht += $obj->amount_ht;
+					$subtotal_ttc += $obj->amount_ttc;
+
+					$var = !$var;
+					print "<tr ".$bc[$var]."><td>&nbsp;</td>";
+
+					print "<td>".$langs->trans("ExpenseReport")." <a href=\"".DOL_URL_ROOT."/expensereport/list.php?search_user=".$obj->userid."\">".$obj->firstname." ".$obj->lastname."</a></td>\n";
+
+					if ($modecompta == 'CREANCES-DETTES') print '<td align="right">'.price(-$obj->amount_ht).'</td>';
+					print '<td align="right">'.price(-$obj->amount_ttc).'</td>';
+					print '</tr>';
+				}
+			}
+			else
+			{
+				$var = !$var;
+				print "<tr ".$bc[$var]."><td>&nbsp;</td>";
+				print '<td colspan="3" class="opacitymedium">'.$langs->trans("None").'</td>';
+				print '</tr>';
+			}
+		}
+		else
+		{
+			dol_print_error($db);
+		}
+		print '<tr class="liste_total">';
+		if ($modecompta == 'CREANCES-DETTES')
+			print '<td colspan="3" align="right">'.price(-$subtotal_ht).'</td>';
+			print '<td colspan="3" align="right">'.price(-$subtotal_ttc).'</td>';
+			print '</tr>';
+}
 
 /*
  * Donation
  */
 
-if ($conf->donation->enabled)
+if (! empty($conf->don->enabled))
 {
 	print '<tr><td colspan="4">'.$langs->trans("Donation").'</td></tr>';
 	$sql = "SELECT p.societe as name, p.firstname, p.lastname, date_format(p.datedon,'%Y-%m') as dm, sum(p.amount) as amount";
 	$sql.= " FROM ".MAIN_DB_PREFIX."don as p";
 	$sql.= " WHERE p.entity = ".$conf->entity;
-	$sql.= " AND fk_statut=2";
+	if ($modecompta == 'CREANCES-DETTES')
+	   $sql.= " AND fk_statut in (1,2)";
+	else
+	   $sql.= " AND fk_statut=2";
 	if (! empty($date_start) && ! empty($date_end))
 		$sql.= " AND p.datedon >= '".$db->idate($date_start)."' AND p.datedon <= '".$db->idate($date_end)."'";
 	$sql.= " GROUP BY p.societe, p.firstname, p.lastname, dm";
@@ -673,7 +757,7 @@ if ($conf->donation->enabled)
 		{
 			$var = !$var;
 			print "<tr ".$bc[$var]."><td>&nbsp;</td>";
-			print '<td colspan="3">'.$langs->trans("None").'</td>';
+			print '<td colspan="3" class="opacitymedium">'.$langs->trans("None").'</td>';
 			print '</tr>';
 		}
 	}
@@ -894,7 +978,7 @@ $parameters["date_end"] = $date_end;
 $parameters["bc"] = $bc;
 // Initialize technical object to manage hooks of expenses. Note that conf->hooks_modules contains array array
 $hookmanager->initHooks(array('externalbalance'));
-$reshook=$hookmanager->executeHooks('addStatisticLine',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+$reshook=$hookmanager->executeHooks('addBalanceLine',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 print $hookmanager->resPrint;
 
 if ($mysoc->tva_assuj != 'franchise')	// Assujeti

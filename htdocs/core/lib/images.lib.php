@@ -292,6 +292,46 @@ function dol_imageResizeOrCrop($file, $mode, $newWidth, $newHeight, $src_x=0, $s
 
 
 /**
+ * dolRotateImage if image is a jpg file.
+ * Currently use an autodetection to know if we can rotate.
+ * TODO Introduce a new parameter to force rotate.
+ *
+ * @param 	string   $file_path      Full path to image to rotate
+ * @return	boolean				     Success or not
+ */
+function dolRotateImage($file_path)
+{
+    $exif = @exif_read_data($file_path);
+    if ($exif === false) {
+        return false;
+    }
+    $orientation = intval(@$exif['Orientation']);
+    if (!in_array($orientation, array(3, 6, 8))) {
+        return false;
+    }
+    $image = @imagecreatefromjpeg($file_path);
+    switch ($orientation) {
+        case 3:
+            $image = @imagerotate($image, 180, 0);
+            break;
+        case 6:
+            $image = @imagerotate($image, 270, 0);
+            break;
+        case 8:
+            $image = @imagerotate($image, 90, 0);
+            break;
+        default:
+            return false;
+    }
+    $success = imagejpeg($image, $file_path);
+    // Free up memory (imagedestroy does not delete files):
+    @imagedestroy($image);
+    return $success;
+}
+
+
+
+/**
  *    	Create a thumbnail from an image file (Supported extensions are gif, jpg, png and bmp).
  *      If file is myfile.jpg, new file may be myfile_small.jpg
  *
@@ -301,7 +341,7 @@ function dol_imageResizeOrCrop($file, $mode, $newWidth, $newHeight, $src_x=0, $s
  *    	@param     string	$extName        	Extension to differenciate thumb file name ('_small', '_mini')
  *    	@param     int		$quality        	Quality of compression (0=worst, 100=best)
  *      @param     string	$outdir           	Directory where to store thumb
- *      @param     int		$targetformat     	New format of target (1,2,3,... or 0 to keep old format)
+ *      @param     int		$targetformat     	New format of target (IMAGETYPE_GIF, IMAGETYPE_JPG, IMAGETYPE_PNG, IMAGETYPE_BMP, IMAGETYPE_WBMP ... or 0 to keep old format)
  *    	@return    string						Full path of thumb or '' if it fails
  */
 function vignette($file, $maxWidth = 160, $maxHeight = 120, $extName='_small', $quality=50, $outdir='thumbs', $targetformat=0)
@@ -473,6 +513,7 @@ function vignette($file, $maxWidth = 160, $maxHeight = 120, $extName='_small', $
 	}
 
 	// Initialisation des variables selon l'extension de l'image
+	// $targetformat is 0 by default, in such case, we keep original extension
 	switch($targetformat)
 	{
 		case IMAGETYPE_GIF:	    // 1
@@ -483,7 +524,7 @@ function vignette($file, $maxWidth = 160, $maxHeight = 120, $extName='_small', $
             break;
 		case IMAGETYPE_JPEG:    // 2
             $trans_colour = imagecolorallocatealpha($imgThumb, 255, 255, 255, 0);
-            $extImgTarget = (preg_match('/\.jpeg$/',$file)?'.jpeg':'.jpg');
+            $extImgTarget = (preg_match('/\.jpeg$/i',$file)?'.jpeg':'.jpg');
             $newquality=$quality;
             break;
 		case IMAGETYPE_PNG:	    // 3
@@ -512,7 +553,9 @@ function vignette($file, $maxWidth = 160, $maxHeight = 120, $extName='_small', $
 
 	$fileName = preg_replace('/(\.gif|\.jpeg|\.jpg|\.png|\.bmp)$/i','',$file);	// On enleve extension quelquesoit la casse
 	$fileName = basename($fileName);
-	$imgThumbName = $dirthumb.'/'.$fileName.$extName.$extImgTarget; // Chemin complet du fichier de la vignette
+	//$imgThumbName = $dirthumb.'/'.getImageFileNameForSize(basename($file), $extName, $extImgTarget);   // Full path of thumb file
+	$imgThumbName = getImageFileNameForSize($file, $extName, $extImgTarget);   // Full path of thumb file
+
 
 	// Check if permission are ok
 	//$fp = fopen($imgThumbName, "w");

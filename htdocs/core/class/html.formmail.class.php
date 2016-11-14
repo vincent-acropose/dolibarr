@@ -121,7 +121,7 @@ class FormMail extends Form
     }
 
     /**
-     * Clear list of attached files in send mail form (stored in session)
+     * Clear list of attached files in send mail form (also stored in session)
      *
      * @return	void
      */
@@ -132,12 +132,13 @@ class FormMail extends Form
 
         // Set tmp user directory
         $vardir=$conf->user->dir_output."/".$user->id;
-        $upload_dir = $vardir.'/temp/';
+        $upload_dir = $vardir.'/temp/';                     // TODO Add $keytoavoidconflict in upload_dir path
         if (is_dir($upload_dir)) dol_delete_dir_recursive($upload_dir);
 
-        unset($_SESSION["listofpaths"]);
-        unset($_SESSION["listofnames"]);
-        unset($_SESSION["listofmimes"]);
+        $keytoavoidconflict = empty($this->trackid)?'':'-'.$this->trackid;   // this->trackid must be defined
+        unset($_SESSION["listofpaths".$keytoavoidconflict]);
+        unset($_SESSION["listofnames".$keytoavoidconflict]);
+        unset($_SESSION["listofmimes".$keytoavoidconflict]);
     }
 
     /**
@@ -153,24 +154,26 @@ class FormMail extends Form
         $listofpaths=array();
         $listofnames=array();
         $listofmimes=array();
-        if (! empty($_SESSION["listofpaths"])) $listofpaths=explode(';',$_SESSION["listofpaths"]);
-        if (! empty($_SESSION["listofnames"])) $listofnames=explode(';',$_SESSION["listofnames"]);
-        if (! empty($_SESSION["listofmimes"])) $listofmimes=explode(';',$_SESSION["listofmimes"]);
+        
+        $keytoavoidconflict = empty($this->trackid)?'':'-'.$this->trackid;   // this->trackid must be defined
+        if (! empty($_SESSION["listofpaths".$keytoavoidconflict])) $listofpaths=explode(';',$_SESSION["listofpaths".$keytoavoidconflict]);
+        if (! empty($_SESSION["listofnames".$keytoavoidconflict])) $listofnames=explode(';',$_SESSION["listofnames".$keytoavoidconflict]);
+        if (! empty($_SESSION["listofmimes".$keytoavoidconflict])) $listofmimes=explode(';',$_SESSION["listofmimes".$keytoavoidconflict]);
         if (! in_array($file,$listofnames))
         {
             $listofpaths[]=$path;
             $listofnames[]=$file;
             $listofmimes[]=$type;
-            $_SESSION["listofpaths"]=join(';',$listofpaths);
-            $_SESSION["listofnames"]=join(';',$listofnames);
-            $_SESSION["listofmimes"]=join(';',$listofmimes);
+            $_SESSION["listofpaths".$keytoavoidconflict]=join(';',$listofpaths);
+            $_SESSION["listofnames".$keytoavoidconflict]=join(';',$listofnames);
+            $_SESSION["listofmimes".$keytoavoidconflict]=join(';',$listofmimes);
         }
     }
 
     /**
      * Remove a file from the list of attached files (stored in SECTION array)
      *
-     * @param  	string	$keytodelete     Key in file array
+     * @param  	string	$keytodelete     Key in file array (0, 1, 2, ...)
      * @return	void
      */
     function remove_attached_files($keytodelete)
@@ -178,17 +181,19 @@ class FormMail extends Form
         $listofpaths=array();
         $listofnames=array();
         $listofmimes=array();
-        if (! empty($_SESSION["listofpaths"])) $listofpaths=explode(';',$_SESSION["listofpaths"]);
-        if (! empty($_SESSION["listofnames"])) $listofnames=explode(';',$_SESSION["listofnames"]);
-        if (! empty($_SESSION["listofmimes"])) $listofmimes=explode(';',$_SESSION["listofmimes"]);
+        
+        $keytoavoidconflict = empty($this->trackid)?'':'-'.$this->trackid;   // this->trackid must be defined
+        if (! empty($_SESSION["listofpaths".$keytoavoidconflict])) $listofpaths=explode(';',$_SESSION["listofpaths".$keytoavoidconflict]);
+        if (! empty($_SESSION["listofnames".$keytoavoidconflict])) $listofnames=explode(';',$_SESSION["listofnames".$keytoavoidconflict]);
+        if (! empty($_SESSION["listofmimes".$keytoavoidconflict])) $listofmimes=explode(';',$_SESSION["listofmimes".$keytoavoidconflict]);
         if ($keytodelete >= 0)
         {
             unset ($listofpaths[$keytodelete]);
             unset ($listofnames[$keytodelete]);
             unset ($listofmimes[$keytodelete]);
-            $_SESSION["listofpaths"]=join(';',$listofpaths);
-            $_SESSION["listofnames"]=join(';',$listofnames);
-            $_SESSION["listofmimes"]=join(';',$listofmimes);
+            $_SESSION["listofpaths".$keytoavoidconflict]=join(';',$listofpaths);
+            $_SESSION["listofnames".$keytoavoidconflict]=join(';',$listofnames);
+            $_SESSION["listofmimes".$keytoavoidconflict]=join(';',$listofmimes);
             //var_dump($_SESSION['listofpaths']);
         }
     }
@@ -203,9 +208,11 @@ class FormMail extends Form
         $listofpaths=array();
         $listofnames=array();
         $listofmimes=array();
-        if (! empty($_SESSION["listofpaths"])) $listofpaths=explode(';',$_SESSION["listofpaths"]);
-        if (! empty($_SESSION["listofnames"])) $listofnames=explode(';',$_SESSION["listofnames"]);
-        if (! empty($_SESSION["listofmimes"])) $listofmimes=explode(';',$_SESSION["listofmimes"]);
+        
+        $keytoavoidconflict = empty($this->trackid)?'':'-'.$this->trackid;   // this->trackid must be defined
+        if (! empty($_SESSION["listofpaths".$keytoavoidconflict])) $listofpaths=explode(';',$_SESSION["listofpaths".$keytoavoidconflict]);
+        if (! empty($_SESSION["listofnames".$keytoavoidconflict])) $listofnames=explode(';',$_SESSION["listofnames".$keytoavoidconflict]);
+        if (! empty($_SESSION["listofmimes".$keytoavoidconflict])) $listofmimes=explode(';',$_SESSION["listofmimes".$keytoavoidconflict]);
         return array('paths'=>$listofpaths, 'names'=>$listofnames, 'mimes'=>$listofmimes);
     }
 
@@ -243,8 +250,9 @@ class FormMail extends Form
         $hookmanager->initHooks(array('formmail'));
 
         $parameters=array(
-        		'addfileaction' => $addfileaction,
-        		'removefileaction'=> $removefileaction
+        	'addfileaction' => $addfileaction,
+        	'removefileaction'=> $removefileaction,
+            'trackid'=> $this->trackid
         );
         $reshook=$hookmanager->executeHooks('getFormMail', $parameters, $this);
 
@@ -260,9 +268,11 @@ class FormMail extends Form
         	$listofpaths=array();
         	$listofnames=array();
         	$listofmimes=array();
-        	if (! empty($_SESSION["listofpaths"])) $listofpaths=explode(';',$_SESSION["listofpaths"]);
-        	if (! empty($_SESSION["listofnames"])) $listofnames=explode(';',$_SESSION["listofnames"]);
-        	if (! empty($_SESSION["listofmimes"])) $listofmimes=explode(';',$_SESSION["listofmimes"]);
+            $keytoavoidconflict = empty($this->trackid)?'':'-'.$this->trackid;   // this->trackid must be defined
+            
+        	if (! empty($_SESSION["listofpaths".$keytoavoidconflict])) $listofpaths=explode(';',$_SESSION["listofpaths".$keytoavoidconflict]);
+        	if (! empty($_SESSION["listofnames".$keytoavoidconflict])) $listofnames=explode(';',$_SESSION["listofnames".$keytoavoidconflict]);
+        	if (! empty($_SESSION["listofmimes".$keytoavoidconflict])) $listofmimes=explode(';',$_SESSION["listofmimes".$keytoavoidconflict]);
 
        		// Define output language
 			$outputlangs = $langs;
@@ -301,7 +311,7 @@ class FormMail extends Form
         	$result = $this->fetchAllEMailTemplate($this->param["models"], $user, $outputlangs);
         	if ($result<0)
         	{
-        		setEventMessage($this->error,'errors');
+        		setEventMessages($this->error, $this->errors, 'errors');
         	}
         	$modelmail_array=array();
         	foreach($this->lines_model as $line)
@@ -316,10 +326,25 @@ class FormMail extends Form
 	        	$out.= $langs->trans('SelectMailModel').': '.$this->selectarray('modelmailselected', $modelmail_array, 0, 1);
 	        	if ($user->admin) $out.= info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
 	        	$out.= ' &nbsp; ';
-	        	$out.= '<input class="button" type="submit" value="'.$langs->trans('Valid').'" name="modelselected" id="modelselected">';
+	        	$out.= '<input class="button" type="submit" value="'.$langs->trans('Use').'" name="modelselected" id="modelselected">';
 	        	$out.= ' &nbsp; ';
 	        	$out.= '</div>';
         	}
+        	elseif (! empty($this->param['models']) && in_array($this->param['models'], array(
+        	        'propal_send','order_send','facture_send',
+        	        'shipping_send','fichinter_send','supplier_proposal_send','order_supplier_send',
+        	        'invoice_supplier_send','thirdparty'
+           	    )))
+        	{
+        	    $out.= '<div style="padding: 3px 0 3px 0">'."\n";
+        	    $out.= $langs->trans('SelectMailModel').': <select name="modelmailselected" disabled="disabled"><option value="none">'.$langs->trans("NoTemplateDefined").'</option></select>';    // Do not put disabled on option, it is already on select and it makes chrome crazy.
+        	    if ($user->admin) $out.= info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
+        	    $out.= ' &nbsp; ';
+        	    $out.= '<input class="button" type="submit" value="'.$langs->trans('Use').'" name="modelselected" disabled="disabled" id="modelselected">';
+        	    $out.= ' &nbsp; ';
+        	    $out.= '</div>';
+        	}
+
 
 
         	$out.= '<table class="border" width="100%">'."\n";
@@ -524,7 +549,7 @@ class FormMail extends Form
 
         		$showinfobcc='';
         		if (! empty($conf->global->MAIN_MAIL_AUTOCOPY_PROPOSAL_TO) && ! empty($this->param['models']) && $this->param['models'] == 'propal_send') $showinfobcc=$conf->global->MAIN_MAIL_AUTOCOPY_PROPOSAL_TO;
-				if (! empty($conf->global->MAIN_MAIL_AUTOCOPY_ASKPRICESUPPLIER_TO) && ! empty($this->param['models']) && $this->param['models'] == 'askpricesupplier_send') $showinfobcc=$conf->global->MAIN_MAIL_AUTOCOPY_ASKPRICESUPPLIER_TO;
+				if (! empty($conf->global->MAIN_MAIL_AUTOCOPY_SUPPLIER_PROPOSAL_TO) && ! empty($this->param['models']) && $this->param['models'] == 'supplier_proposal_send') $showinfobcc=$conf->global->MAIN_MAIL_AUTOCOPY_SUPPLIER_PROPOSAL_TO;
         		if (! empty($conf->global->MAIN_MAIL_AUTOCOPY_ORDER_TO) && ! empty($this->param['models']) && $this->param['models'] == 'order_send') $showinfobcc=$conf->global->MAIN_MAIL_AUTOCOPY_ORDER_TO;
         		if (! empty($conf->global->MAIN_MAIL_AUTOCOPY_INVOICE_TO) && ! empty($this->param['models']) && $this->param['models'] == 'facture_send') $showinfobcc=$conf->global->MAIN_MAIL_AUTOCOPY_INVOICE_TO;
         		if ($showinfobcc) $out.=' + '.$showinfobcc;
@@ -544,7 +569,7 @@ class FormMail extends Form
         		{
         			$defaultvaluefordeliveryreceipt=0;
         			if (! empty($conf->global->MAIL_FORCE_DELIVERY_RECEIPT_PROPAL) && ! empty($this->param['models']) && $this->param['models'] == 'propal_send') $defaultvaluefordeliveryreceipt=1;
-					if (! empty($conf->global->MAIL_FORCE_DELIVERY_RECEIPT_ASKPRICESUPPLIER) && ! empty($this->param['models']) && $this->param['models'] == 'askpricesupplier_send') $defaultvaluefordeliveryreceipt=1;
+					if (! empty($conf->global->MAIL_FORCE_DELIVERY_RECEIPT_SUPPLIER_PROPOSAL) && ! empty($this->param['models']) && $this->param['models'] == 'supplier_proposal_send') $defaultvaluefordeliveryreceipt=1;
         			if (! empty($conf->global->MAIL_FORCE_DELIVERY_RECEIPT_ORDER) && ! empty($this->param['models']) && $this->param['models'] == 'order_send') $defaultvaluefordeliveryreceipt=1;
         			if (! empty($conf->global->MAIL_FORCE_DELIVERY_RECEIPT_INVOICE) && ! empty($this->param['models']) && $this->param['models'] == 'facture_send') $defaultvaluefordeliveryreceipt=1;
         			$out.= $form->selectyesno('deliveryreceipt', (isset($_POST["deliveryreceipt"])?$_POST["deliveryreceipt"]:$defaultvaluefordeliveryreceipt), 1);
@@ -615,7 +640,8 @@ class FormMail extends Form
 	        		}
 	        		if ($this->withfile == 2)	// Can add other files
 	        		{
-	        			$out.= '<input type="file" class="flat" id="addedfile" name="addedfile" value="'.$langs->trans("Upload").'" />';
+	        			if (!empty($conf->global->FROM_MAIL_USE_INPUT_FILE_MULTIPLE)) $out.= '<input type="file" class="flat" id="addedfile" name="addedfile[]" value="'.$langs->trans("Upload").'" multiple />';
+						else $out.= '<input type="file" class="flat" id="addedfile" name="addedfile" value="'.$langs->trans("Upload").'" />';
 	        			$out.= ' ';
 	        			$out.= '<input type="submit" class="button" id="'.$addfileaction.'" name="'.$addfileaction.'" value="'.$langs->trans("MailingAddFile").'" />';
 	        		}
@@ -641,14 +667,15 @@ class FormMail extends Form
 
         			$langs->load('paypal');
 
+        			// Set the paypal message and url link into __PERSONALIZED__ key
         			if ($this->param["models"]=='order_send')
         			{
-        				$url=getPaypalPaymentUrl(0,'order',$this->substit['__ORDERREF__']);
+        				$url=getPaypalPaymentUrl(0,'order',$this->substit['__ORDERREF__']?$this->substit['__ORDERREF__']:$this->substit['__REF__']);
         				$this->substit['__PERSONALIZED__']=str_replace('\n',"\n",$langs->transnoentitiesnoconv("PredefinedMailContentLink",$url));
         			}
         			if ($this->param["models"]=='facture_send')
         			{
-        				$url=getPaypalPaymentUrl(0,'invoice',$this->substit['__FACREF__']);
+        				$url=getPaypalPaymentUrl(0,'invoice',$this->substit['__REF__']);
         				$this->substit['__PERSONALIZED__']=str_replace('\n',"\n",$langs->transnoentitiesnoconv("PredefinedMailContentLink",$url));
         			}
         		}
@@ -692,15 +719,17 @@ class FormMail extends Form
 						else $this->withfckeditor=0;
         			}
 
-        			$doleditor=new DolEditor('message',$defaultmessage,'',280,$this->ckeditortoolbar,'In',true,true,$this->withfckeditor,8,72);
+        			$doleditor=new DolEditor('message',$defaultmessage,'',280,$this->ckeditortoolbar,'In',true,true,$this->withfckeditor,8,'95%');
         			$out.= $doleditor->Create(1);
         		}
         		$out.= "</td></tr>\n";
         	}
 
+        	$out.= '</table>'."\n";
+
         	if ($this->withform == 1 || $this->withform == -1)
         	{
-        		$out.= '<tr><td align="center" colspan="2"><div class="center">';
+        		$out.= '<br><div class="center">';
         		$out.= '<input class="button" type="submit" id="sendmail" name="sendmail" value="'.$langs->trans("SendMail").'"';
         		// Add a javascript test to avoid to forget to submit file before sending email
         		if ($this->withfile == 2 && $conf->use_javascript_ajax)
@@ -713,10 +742,8 @@ class FormMail extends Form
         			$out.= ' &nbsp; &nbsp; ';
         			$out.= '<input class="button" type="submit" id="cancel" name="cancel" value="'.$langs->trans("Cancel").'" />';
         		}
-        		$out.= '</div></td></tr>'."\n";
+        		$out.= '</div>'."\n";
         	}
-
-        	$out.= '</table>'."\n";
 
         	if ($this->withform == 1) $out.= '</form>'."\n";
 
@@ -753,9 +780,10 @@ class FormMail extends Form
 	 *      @param	string		$user			Use template public or limited to this user
 	 *      @param	Translate	$outputlangs	Output lang object
 	 *      @param	int			$id				Id template to find
+	 *      @param  int         $active         1=Only active template, 0=Only disabled, -1=All
 	 *      @return array						array('topic'=>,'content'=>,..)
 	 */
-	private function getEMailTemplate($db, $type_template, $user, $outputlangs,$id=0)
+	private function getEMailTemplate($db, $type_template, $user, $outputlangs, $id=0, $active=1)
 	{
 		$ret=array();
 
@@ -764,6 +792,7 @@ class FormMail extends Form
 		$sql.= " WHERE type_template='".$db->escape($type_template)."'";
 		$sql.= " AND entity IN (".getEntity("c_email_templates").")";
 		$sql.= " AND (fk_user is NULL or fk_user = 0 or fk_user = ".$user->id.")";
+		if ($active >= 0) $sql.=" AND active = ".$active;
 		if (is_object($outputlangs)) $sql.= " AND (lang = '".$outputlangs->defaultlang."' OR lang IS NULL OR lang = '')";
 		if (!empty($id)) $sql.= " AND rowid=".$id;
 		$sql.= $db->order("lang,label","ASC");
@@ -786,7 +815,7 @@ class FormMail extends Form
 				if     ($type_template=='facture_send')	            { $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendInvoice"); }
 	        	elseif ($type_template=='facture_relance')			{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendInvoiceReminder"); }
 	        	elseif ($type_template=='propal_send')				{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendProposal"); }
-	        	elseif ($type_template=='askpricesupplier_send')	{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendAskPriceSupplier"); }
+	        	elseif ($type_template=='supplier_proposal_send')	{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendSupplierProposal"); }
 	        	elseif ($type_template=='order_send')				{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendOrder"); }
 	        	elseif ($type_template=='order_supplier_send')		{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendSupplierOrder"); }
 	        	elseif ($type_template=='invoice_supplier_send')	{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendSupplierInvoice"); }
@@ -853,24 +882,27 @@ class FormMail extends Form
 	 * 		@param	string		$type_template	Get message for key module
 	 *      @param	string		$user			Use template public or limited to this user
 	 *      @param	Translate	$outputlangs	Output lang object
-	 *      @return	int		<0 if KO,
+	 *      @param  int         $active         1=Only active template, 0=Only disabled, -1=All
+	 *      @return	int		                    <0 if KO, nb of records found if OK
 	 */
-	public function fetchAllEMailTemplate($type_template, $user, $outputlangs)
+	public function fetchAllEMailTemplate($type_template, $user, $outputlangs, $active=1)
 	{
 		$ret=array();
 
-		$sql = "SELECT rowid, label, topic, content, lang";
+		$sql = "SELECT rowid, label, topic, content, lang, position";
 		$sql.= " FROM ".MAIN_DB_PREFIX.'c_email_templates';
 		$sql.= " WHERE type_template='".$this->db->escape($type_template)."'";
 		$sql.= " AND entity IN (".getEntity("c_email_templates").")";
 		$sql.= " AND (fk_user is NULL or fk_user = 0 or fk_user = ".$user->id.")";
+		if ($active >= 0) $sql.=" AND active = ".$active;
 		if (is_object($outputlangs)) $sql.= " AND (lang = '".$outputlangs->defaultlang."' OR lang IS NULL OR lang = '')";
-		$sql.= $this->db->order("lang,label","ASC");
+		$sql.= $this->db->order("position,lang,label","ASC");
 		//print $sql;
 
 		$resql = $this->db->query($sql);
 		if ($resql)
 		{
+			$num=$this->db->num_rows($resql);
 			$this->lines_model=array();
 			while ($obj = $this->db->fetch_object($resql))
 			{
@@ -878,7 +910,7 @@ class FormMail extends Form
 				$line->id=$obj->rowid;
 				$line->label=$obj->label;
 				$line->topic=$obj->topic;
-				$line->content=$obj->lacontentbel;
+				$line->content=$obj->content;
 				$line->lang=$obj->lang;
 				$this->lines_model[]=$line;
 			}
@@ -891,7 +923,100 @@ class FormMail extends Form
 			return -1;
 		}
 	}
+	
+	
+	
+	/**
+	 * Set substit array from object
+	 * 
+	 * @param	Object	$object		Object to use
+	 * @return	void
+	 */
+	function setSubstitFromObject($object)
+	{
+		global $user;
+		$this->substit['__REF__'] = $object->ref;
+		$this->substit['__REFCLIENT__'] = $object->ref_client;
+		$this->substit['__REFSUPPLIER__'] = $object->ref_supplier;
+		
+		$this->substit['__THIRDPARTY_ID__'] = (is_object($object->thirdparty)?$object->thirdparty->id:'');
+		$this->substit['__THIRDPARTY_NAME__'] = (is_object($object->thirdparty)?$object->thirdparty->name:'');
+		
+		$this->substit['__PROJECT_ID__'] = (is_object($object->projet)?$object->projet->id:'');
+		$this->substit['__PROJECT_REF__'] = (is_object($object->projet)?$object->projet->ref:'');
+		$this->substit['__PROJECT_NAME__'] = (is_object($object->projet)?$object->projet->title:'');
+		
+		$this->substit['__SIGNATURE__'] = $user->signature;
+		$this->substit['__PERSONALIZED__'] = '';
+		$this->substit['__CONTACTCIVNAME__'] = '';	// Will be replace just before sending
+	}
+	
+	/**
+	 * Set substit array from object
+	 * 
+	 * @param	string	$mode		'form' or 'emailing'
+	 * @return	void
+	 */
+	function getAvailableSubstitKey($mode='form')
+	{
+		global $conf;
+		
+		$vars=array();
+		
+		if ($mode == 'form')
+		{
+			$vars=array(
+				'__REF__', 
+				'__REFCLIENT__', 
+				'__THIRDPARTY_NAME__', 
+				'__PROJECT_REF__', 
+				'__PROJECT_NAME__',
+				'__CONTACTCIVNAME__',
+				'__PERSONALIZED__',			// Paypal link will be added here in form mode
+				'__SIGNATURE__', 
+			);
+		}
+		if ($mode == 'emailing')
+		{
+			// For mass emailing, we have different keys
+			$vars=array(
+			    '__ID__' => 'IdRecord',
+			    '__EMAIL__' => 'EMailRecipient',
+			    '__LASTNAME__' => 'Lastname',
+			    '__FIRSTNAME__' => 'Firstname',
+			    '__MAILTOEMAIL__' => 'TagMailtoEmail',
+			    '__OTHER1__' => 'Other1',
+			    '__OTHER2__' => 'Other2',
+			    '__OTHER3__' => 'Other3',
+			    '__OTHER4__' => 'Other4',
+			    '__OTHER5__' => 'Other5',
+			    '__SIGNATURE__' => 'TagSignature',
+			    '__CHECK_READ__' => 'TagCheckMail',
+				'__UNSUBSCRIBE__' => 'TagUnsubscribe'
+				//,'__PERSONALIZED__' => 'Personalized'	// Hidden because not used yet in mass emailing
+			);
+			if (! empty($conf->paypal->enabled) && ! empty($conf->global->PAYPAL_SECURITY_TOKEN))
+			{
+				$vars['__SECUREKEYPAYPAL__']='SecureKeyPaypal';
+				if (! empty($conf->global->PAYPAL_SECURITY_TOKEN_UNIQUE))
+				{
+					if ($conf->adherent->enabled) $vars['__SECUREKEYPAYPAL_MEMBER__']='SecureKeyPaypalUniquePerMember';
+					if ($conf->facture->enabled) $vars['__SECUREKEYPAYPAL_INVOICE__']='SecureKeyPaypalUniquePerInvoice';
+					if ($conf->commande->enabled) $vars['__SECUREKEYPAYPAL_ORDER__']='SecureKeyPaypalUniquePerOrder';
+					if ($conf->contrat->enabled) $vars['__SECUREKEYPAYPAL_CONTRACTLINE__']='SecureKeyPaypalUniquePerContractLine';
+				}
+			}
+			else 
+			{
+				$vars['__SECUREKEYPAYPAL__']='';
+				$vars['__SECUREKEYPAYPAL_MEMBER__']='';
+			}
+		}
+		return $vars;
+	}
+
 }
+
 
 /**
  * ModelMail

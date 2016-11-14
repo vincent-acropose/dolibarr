@@ -2,7 +2,7 @@
 /* Copyright (C) 2006		Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2007-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2009-2012	Regis Houssin			<regis.houssin@capnetworks.com>
- * Copyright (C) 2011		Juanjo Menent			<jmenent@2byte.es>
+ * Copyright (C) 2011-2016	Juanjo Menent			<jmenent@2byte.es>
  * Copyright (C) 2013 		Philippe Grand      	<philippe.grand@atoo-net.com>
  * Copyright (C) 2015	    Alexandre Spangaro      <aspangaro.dolibarr@gmail.com>
  *
@@ -26,7 +26,7 @@
  *	\brief      Page for cheque deposits
  */
 
-require('../../../main.inc.php');
+require '../../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/paiement/cheque/class/remisecheque.class.php';
@@ -44,7 +44,7 @@ $action=GETPOST('action', 'alpha');
 $confirm=GETPOST('confirm', 'alpha');
 
 // Security check
-$fieldname = (! empty($ref)?'number':'rowid');
+$fieldname = (! empty($ref)?'ref':'rowid');
 if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user, 'cheque', $id, 'bordereau_cheque','','',$fieldname);
 
@@ -54,7 +54,7 @@ $page=GETPOST('page', 'int');
 if (! $sortorder) $sortorder="ASC";
 if (! $sortfield) $sortfield="b.dateo,b.rowid";
 if ($page < 0) { $page = 0 ; }
-$limit = $conf->liste_limit;
+$limit = GETPOST('limit')?GETPOST('limit','int'):$conf->liste_limit;
 $offset = $limit * $page ;
 
 $dir=$conf->banque->dir_output.'/bordereau/';
@@ -79,12 +79,12 @@ if ($action == 'setdate' && $user->rights->banque->cheque)
         $result=$object->set_date($user,$date);
         if ($result < 0)
         {
-			setEventMessage($object->error, 'errors');
+			setEventMessages($object->error, $object->errors, 'errors');
         }
     }
     else
     {
-        setEventMessage($object->error, 'errors');
+        setEventMessages($object->error, $object->errors, 'errors');
     }
 }
 
@@ -98,12 +98,12 @@ if ($action == 'setrefext' && $user->rights->banque->cheque)
         $result=$object->setValueFrom('ref_ext', $ref_ext);
         if ($result < 0)
         {
-            setEventMessage($object->error, 'errors');
+            setEventMessages($object->error, $object->errors, 'errors');
         }
     }
     else
     {
-        setEventMessage($object->error, 'errors');
+        setEventMessages($object->error, $object->errors, 'errors');
     }
 }
 
@@ -112,17 +112,17 @@ if ($action == 'setref' && $user->rights->banque->cheque)
 	$result = $object->fetch(GETPOST('id','int'));
 	if ($result > 0)
 	{
-		$number=GETPOST('number');
+		$ref=GETPOST('ref');
 
-		$result=$object->set_number($user,$number);
+		$result=$object->set_number($user,$ref);
 		if ($result < 0)
 		{
-			setEventMessage($object->error, 'errors');
+			setEventMessages($object->error, $object->errors, 'errors');
 		}
 	}
 	else
 	{
-		setEventMessage($object->error, 'errors');
+		setEventMessages($object->error, $object->errors, 'errors');
 	}
 }
 
@@ -154,12 +154,12 @@ if ($action == 'create' && $_POST["accountid"] > 0 && $user->rights->banque->che
 		}
 		else
 		{
-			setEventMessage($object->error, 'errors');
+			setEventMessages($object->error, $object->errors, 'errors');
 		}
 	}
 	else
 	{
-		setEventMessage($langs->trans("ErrorSelectAtLeastOne"));
+		setEventMessages($langs->trans("ErrorSelectAtLeastOne"), null, 'mesgs');
 	    $action='new';
 	}
 }
@@ -175,7 +175,7 @@ if ($action == 'remove' && $id > 0 && $_GET["lineid"] > 0 && $user->rights->banq
 	}
 	else
 	{
-		setEventMessage($object->error, 'errors');
+		setEventMessages($object->error, $object->errors, 'errors');
 	}
 }
 
@@ -190,7 +190,7 @@ if ($action == 'confirm_delete' && $confirm == 'yes' && $user->rights->banque->c
 	}
 	else
 	{
-		setEventMessage($paiement->error, 'errors');
+		setEventMessages($paiement->error, $paiement->errors, 'errors');
 	}
 }
 
@@ -217,7 +217,7 @@ if ($action == 'confirm_valide' && $confirm == 'yes' && $user->rights->banque->c
 	}
 	else
 	{
-		setEventMessage($object->error, 'errors');
+		setEventMessages($object->error, $object->errors, 'errors');
 	}
 }
 
@@ -230,7 +230,7 @@ if ($action == 'confirm_reject_check' && $confirm == 'yes' && $user->rights->ban
 	$paiement_id = $object->rejectCheck($rejected_check, $reject_date);
 	if ($paiement_id > 0)
 	{
-		setEventMessage($langs->trans("CheckRejectedAndInvoicesReopened"));
+		setEventMessages($langs->trans("CheckRejectedAndInvoicesReopened"), null, 'mesgs');
 		//header("Location: ".DOL_URL_ROOT.'/compta/paiement/card.php?id='.$paiement_id);
 		//exit;
 		$action='';
@@ -280,10 +280,10 @@ else if ($action == 'remove_file' && $user->rights->banque->cheque)
 
 		$langs->load("other");
 
-		$file=$dir.get_exdir($object->number,0,1,0,$object,'cheque') . GETPOST('file');
+		$file=$dir.get_exdir($object->ref,0,1,0,$object,'cheque') . GETPOST('file');
 		$ret=dol_delete_file($file,0,0,0,$object);
-		if ($ret) setEventMessage($langs->trans("FileWasRemoved", GETPOST('file')));
-		else setEventMessage($langs->trans("ErrorFailToDeleteFile", GETPOST('file')), 'errors');
+		if ($ret) setEventMessages($langs->trans("FileWasRemoved", GETPOST('file')), null, 'mesgs');
+		else setEventMessages($langs->trans("ErrorFailToDeleteFile", GETPOST('file')), null, 'errors');
 	}
 }
 
@@ -312,7 +312,7 @@ if ($action == 'new')
 	$hselected = $h;
 	$h++;
 
-	print_fiche_titre($langs->trans("Cheques"));
+	print load_fiche_titre($langs->trans("Cheques"));
 }
 else
 {
@@ -440,7 +440,7 @@ if ($action == 'new')
 
 		if ($i == 0)
 		{
-			print '<b>'.$langs->trans("NoWaitingChecks").'</b><br>';
+			print '<div class="opacitymedium">'.$langs->trans("NoWaitingChecks").'</div><br>';
 		}
 	}
 
@@ -576,13 +576,13 @@ else
 		print '<form name="setdate" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'" method="post">';
 		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 		print '<input type="hidden" name="action" value="setref">';
-		print '<input type="text" name="number" value="'.$object->number.'">';
+		print '<input type="text" name="ref" value="'.$object->ref.'">';
 		print '<input type="submit" class="button" value="'.$langs->trans('Modify').'">';
 		print '</form>';
 	}
 	else
 	{
-	    print $form->showrefnav($object,'ref',$linkback, 1, 'number');
+	    print $form->showrefnav($object,'ref',$linkback, 1, 'ref');
 	}
 
 	print '</td>';
@@ -779,7 +779,7 @@ print '<div class="tabsAction">';
 
 if ($user->societe_id == 0 && ! empty($object->id) && $object->statut == 0 && $user->rights->banque->cheque)
 {
-	print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=valide&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">'.$langs->trans('Valid').'</a>';
+	print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=valide&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">'.$langs->trans('Validate').'</a>';
 }
 
 if ($user->societe_id == 0 && ! empty($object->id) && $user->rights->banque->cheque)
@@ -796,7 +796,7 @@ if ($action != 'new')
 	if ($object->statut == 1)
 	{
 		$filename=dol_sanitizeFileName($object->ref);
-		$filedir=$dir.get_exdir($object->number,0,1,0,$object,'cheque') . dol_sanitizeFileName($object->ref);
+		$filedir=$dir.get_exdir($object->ref,0,1,0,$object,'cheque') . dol_sanitizeFileName($object->ref);
 		$urlsource=$_SERVER["PHP_SELF"]."?id=".$object->id;
 
 		$formfile->show_documents('remisecheque', $filename, $filedir, $urlsource, 1, 1);
@@ -806,6 +806,7 @@ if ($action != 'new')
 }
 
 
-$db->close();
 
 llxFooter();
+
+$db->close();

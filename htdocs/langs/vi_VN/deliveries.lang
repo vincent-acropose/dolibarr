@@ -1,13 +1,11 @@
 # Dolibarr language file - Source file is en_US - deliveries
 Delivery=Giao hàng
-Deliveries=Giao hàng
+DeliveryRef=Ref Delivery
 DeliveryCard=Thẻ giao hàng
 DeliveryOrder=Phiếu giao hàng
-DeliveryOrders=Phiếu giao hàng
 DeliveryDate=Ngày giao hàng
-DeliveryDateShort=Ngày giao hàng
 CreateDeliveryOrder=Tạo phiếu giao hàng
-QtyDelivered=Số lượng đã giao hàng
+DeliveryStateSaved=Delivery state saved
 SetDeliveryDate=Lập ngày vận chuyển
 ValidateDeliveryReceipt=Xác nhận chứng từ giao hàng
 ValidateDeliveryReceiptConfirm=Bạn có chắc muốn xác nhận chứng từ giao hàng này ?
@@ -16,6 +14,9 @@ DeleteDeliveryReceiptConfirm=Bạn có chắc muốn xóa chứng từ giao hàn
 DeliveryMethod=Phương thức giao hàng
 TrackingNumber=Số theo dõi
 DeliveryNotValidated=Giao hàng chưa được xác nhận
+StatusDeliveryCanceled=Canceled
+StatusDeliveryDraft=Draft
+StatusDeliveryValidated=Received
 # merou PDF model
 NameAndSignature=Tên và chữ ký:
 ToAndDate=Gửi___________________________________ vào ____ / _____ / __________
@@ -26,3 +27,4 @@ Recipient=Người nhận
 ErrorStockIsNotEnough=Không có đủ tồn kho
 Shippable=Vận chuyển được
 NonShippable=Không vận chuyển được
+ShowReceiving=Show delivery receipt

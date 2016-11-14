@@ -46,7 +46,7 @@ $result = $object->fetch($id,$ref);
 
 
 /*
- * Ajout d'un nouveau contact
+ * Adding a new contact
  */
 
 if ($action == 'addcontact' && $user->rights->ficheinter->creer)
@@ -71,17 +71,17 @@ if ($action == 'addcontact' && $user->rights->ficheinter->creer)
 			$mesg = $object->error;
 		}
 
-		setEventMessage($mesg, 'errors');
+		setEventMessages($mesg, null, 'errors');
 	}
 }
 
-// bascule du statut d'un contact
+// Toggle the status of a contact
 else if ($action == 'swapstatut' && $user->rights->ficheinter->creer)
 {
     $result=$object->swapContactStatus(GETPOST('ligne','int'));
 }
 
-// Efface un contact
+// Deletes a contact
 else if ($action == 'deletecontact' && $user->rights->ficheinter->creer)
 {
 	$result = $object->delete_contact(GETPOST('lineid','int'));
@@ -121,23 +121,23 @@ if ($id > 0 || ! empty($ref))
 
 
 	/*
-	*   Fiche intervention synthese pour rappel
-	*/
+	 *   Fiche intervention synthese pour rappel
+	 */
 	print '<table class="border" width="100%">';
 
 	$linkback = '<a href="'.DOL_URL_ROOT.'/fichinter/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
 	// Ref
-	print '<tr><td width="25%">'.$langs->trans("Ref").'</td><td colspan="3">';
+	print '<tr><td class="titlefield">'.$langs->trans("Ref").'</td><td colspan="3">';
     print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref');
 	print "</td></tr>";
 
 	// Customer
-	if ( is_null($object->client) )
+	if ( is_null($object->thirdparty) )
 		$object->fetch_thirdparty();
 
 	print "<tr><td>".$langs->trans("Company")."</td>";
-	print '<td colspan="3">'.$object->client->getNomUrl(1).'</td></tr>';
+	print '<td colspan="3">'.$object->thirdparty->getNomUrl(1).'</td></tr>';
 	print "</table>";
 
 	print '</div>';

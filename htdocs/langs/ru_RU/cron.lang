@@ -1,8 +1,5 @@
 # Dolibarr language file - Source file is en_US - cron
 # About page
-About = О
-CronAbout = О Планировщике
-CronAboutPage = Страница о планировщике
 # Right
 Permission23101 = Read Scheduled job
 Permission23102 = Create/update Scheduled job
@@ -16,15 +13,12 @@ KeyForCronAccess=Ключ безопасности для запуска зап�
 FileToLaunchCronJobs=Командная строка для запуска запланированных заданий. 
 CronExplainHowToRunUnix=В системах Unix-like вы должны задать crontab для выполнения команды каждые 5 минут.
 CronExplainHowToRunWin=В Майкрософт Windows &copy; вы должны использовать Планировщик для запуска команды каждые 5 минут. 
+CronMethodDoesNotExists=Class %s does not contains any method %s
 # Menu
-CronJobs=Запланированные задания
-CronListActive=Список активных/запланированных заданий
-CronListInactive=Список неактивных заданий
+EnabledAndDisabled=Enabled and disabled
 # Page list
-CronDateLastRun=Последний раз выполнено
 CronLastOutput=Последний вывод команды
 CronLastResult=Последний код возврата команды
-CronListOfCronJobs=Список запланированных заданий
 CronCommand=Команда
 CronList=Scheduled jobs
 CronDelete=Удалить запланированные задания
@@ -32,41 +26,36 @@ CronConfirmDelete=Are you sure you want to delete these scheduled jobs ?
 CronExecute=Запустить запланированные задания
 CronConfirmExecute=Are you sure you want to execute these scheduled jobs now ?
 CronInfo=Модуль запланированных задач позволяет выполнять запланированные задачи
-CronWaitingJobs=Ожидающие задачи
 CronTask=Задание
 CronNone=Никакой
-CronDtStart=Начальная дата
-CronDtEnd=Конечная дата
+CronDtStart=Not before
+CronDtEnd=Not after
 CronDtNextLaunch=Следующий запуск
-CronDtLastLaunch=Последний запуск
+CronDtLastLaunch=Start date of latest execution
+CronDtLastResult=End date of latest execution
 CronFrequency=Frequency
 CronClass=Class
 CronMethod=Метод
 CronModule=Модуль
-CronAction=Действие
-CronStatus=Статус
-CronStatusActive=Включено
-CronStatusInactive=Выключено
 CronNoJobs=Нет зарегистрированных заданий
 CronPriority=Приоритет
 CronLabel=Описание
 CronNbRun=Кол-во запусков
+CronMaxRun=Max nb. launch
 CronEach=Каждый
 JobFinished=Задание запущено и завершено
 #Page card
 CronAdd= Добавить задание
-CronHourStart= Start hour and date of job
 CronEvery=Execute job each
 CronObject=Экземпляр / объект для создания
 CronArgs=Параметры
-CronSaveSucess=Сохранено успешно
+CronSaveSucess=Save successfully
 CronNote=Комментарий
 CronFieldMandatory=Поле %s является обязательным
 CronErrEndDateStartDt=Дата окончания не может быть раньше даты начала
 CronStatusActiveBtn=Включено
 CronStatusInactiveBtn=Выключать
 CronTaskInactive=Задание отключено
-CronDtLastResult=Дата последнего выполнения
 CronId=ID
 CronClassFile=Классы (filename.class.php)
 CronModuleHelp=Name of Dolibarr module directory (also work with external Dolibarr module). <BR> For exemple to fetch method of Dolibarr Product object /htdocs/<u>product</u>/class/product.class.php, the value of module is <i>product</i>
@@ -78,12 +67,12 @@ CronCommandHelp=Команда для выполнения
 CronCreateJob=Создать новое запланированное задание
 CronFrom=From
 # Info
-CronInfoPage=Информация
 # Common
 CronType=Job type
 CronType_method=Вызов метода из класса системы Dolibarr 
 CronType_command=Команда командной строки
-CronMenu=Планировщик
 CronCannotLoadClass=Невозможно загрузить класс %s или объект %s
-UseMenuModuleToolsToAddCronJobs=Используйте меню "Главная - Настройки модулей -Список заданий"  для просмотра и редактирования запланированных заданий. 
-TaskDisabled=Job disabled
+UseMenuModuleToolsToAddCronJobs=Go into menu "Home - Admin tools - Scheduled jobs" to see and edit scheduled jobs.
+JobDisabled=Job disabled
+MakeLocalDatabaseDumpShort=Local database backup
+MakeLocalDatabaseDump=Create a local database dump

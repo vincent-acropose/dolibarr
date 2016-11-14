@@ -4,10 +4,10 @@
  * Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2007      Franky Van Liedekerke <franky.van.liedekerke@telenet.be>
- * Copyright (C) 2013      Florian Henry		  	<florian.henry@open-concept.pro>
- * Copyright (C) 2013      Alexandre Spangaro 	<aspangaro.dolibarr@gmail.com>
+ * Copyright (C) 2013      Florian Henry		<florian.henry@open-concept.pro>
+ * Copyright (C) 2013-2016 Alexandre Spangaro 	<aspangaro.dolibarr@gmail.com>
  * Copyright (C) 2014      Juanjo Menent	 	<jmenent@2byte.es>
- * Copyright (C) 2015       Jean-François Ferry		<jfefe@aternatik.fr>
+ * Copyright (C) 2015      Jean-François Ferry	<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/contact.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/images.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
@@ -142,7 +143,7 @@ if (empty($reshook))
     	$object->fetch($id);
     	if ($object->setstatus(0)<0)
     	{
-    	    setEventMessage($object->error,'errors');
+    	    setEventMessages($object->error, $object->errors, 'errors');
     	}
     	else
     	{
@@ -157,7 +158,7 @@ if (empty($reshook))
     	$object->fetch($id);
         	if ($object->setstatus(1)<0)
     	{
-    	    setEventMessage($object->error,'errors');
+    	    setEventMessages($object->error, $object->errors, 'errors');
     	}
     	else
     	{
@@ -224,13 +225,7 @@ if (empty($reshook))
 			} else {
 				// Categories association
 				$contcats = GETPOST( 'contcats', 'array' );
-				if (!empty( $contcats )) {
-					$cat = new Categorie( $db );
-					foreach ($contcats as $id_category) {
-						$cat->fetch( $id_category );
-						$cat->add_type( $object, 'contact' );
-					}
-				}
+				$object->setCategories($contcats);
 			}
         }
 
@@ -283,13 +278,68 @@ if (empty($reshook))
             $action = 'edit';
         }
 
+
         if (! $error)
         {
         	$contactid=GETPOST("contactid",'int');
 
             $object->fetch($contactid);
 
-            $object->oldcopy=dol_clone($object);
+            // Photo save
+            $dir = $conf->societe->dir_output."/contact/".$object->id."/photos";
+            $file_OK = is_uploaded_file($_FILES['photo']['tmp_name']);
+            if (GETPOST('deletephoto') && $object->photo)
+            {
+                $fileimg=$dir.'/'.$object->photo;
+                $dirthumbs=$dir.'/thumbs';
+                dol_delete_file($fileimg);
+                dol_delete_dir_recursive($dirthumbs);
+                $object->photo = '';
+            }
+            if ($file_OK)
+            {
+                if (image_format_supported($_FILES['photo']['name']) > 0)
+                {
+                    dol_mkdir($dir);
+
+                    if (@is_dir($dir))
+                    {
+                        $newfile=$dir.'/'.dol_sanitizeFileName($_FILES['photo']['name']);
+                        $result = dol_move_uploaded_file($_FILES['photo']['tmp_name'], $newfile, 1);
+
+                        if (! $result > 0)
+                        {
+                            $errors[] = "ErrorFailedToSaveFile";
+                        }
+                        else
+                        {
+                            $object->photo = dol_sanitizeFileName($_FILES['photo']['name']);
+
+    					    // Create thumbs
+    					    $object->addThumbs($newfile);					    
+                        }
+                    }
+                }
+                else
+                {
+                    $errors[] = "ErrorBadImageFormat";
+                }
+            }
+            else
+            {
+                switch($_FILES['photo']['error'])
+                {
+                    case 1: //uploaded file exceeds the upload_max_filesize directive in php.ini
+                    case 2: //uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the html form
+                        $errors[] = "ErrorFileSizeTooLarge";
+                        break;
+                    case 3: //uploaded file was only partially uploaded
+                        $errors[] = "ErrorFilePartiallyUploaded";
+                        break;
+                }
+            }
+
+			$object->oldcopy = clone $object;
 
             $object->old_lastname	= GETPOST("old_lastname");
             $object->old_firstname	= GETPOST("old_firstname");
@@ -304,6 +354,7 @@ if (empty($reshook))
             $object->zip			= GETPOST("zipcode");
             $object->town			= GETPOST("town");
             $object->state_id   	= GETPOST("state_id",'int');
+            $object->fk_departement	= GETPOST("state_id",'int');	// For backward compatibility
             $object->country_id		= GETPOST("country_id",'int');
 
             $object->email			= GETPOST("email",'alpha');
@@ -333,21 +384,15 @@ if (empty($reshook))
 
 				// Then we add the associated categories
 				$categories = GETPOST( 'contcats', 'array' );
-				if (!empty( $categories )) {
-					$cat = new Categorie( $db );
-					foreach ($categories as $id_category) {
-						$cat->fetch( $id_category );
-						$cat->add_type( $object, 'contact' );
-					}
-				}
+				$object->setCategories($categories);
+
                 $object->old_lastname='';
                 $object->old_firstname='';
                 $action = 'view';
             }
             else
             {
-                setEventMessage($object->error,'errors');
-                setEventMessage($object->errors,'errors');
+                setEventMessages($object->error, $object->errors, 'errors');
                 $action = 'edit';
             }
         }
@@ -360,8 +405,10 @@ if (empty($reshook))
  */
 
 
+$title = (! empty($conf->global->SOCIETE_ADDRESSES_MANAGEMENT) ? $langs->trans("Contacts") : $langs->trans("ContactsAddresses"));
+if (! empty($conf->global->MAIN_HTML_TITLE) && preg_match('/contactnameonly/',$conf->global->MAIN_HTML_TITLE) && $object->lastname) $title=$object->lastname;
 $help_url='EN:Module_Third_Parties|FR:Module_Tiers|ES:Empresas';
-llxHeader('',$langs->trans("ContactsAddresses"),$help_url);
+llxHeader('', $title, $help_url);
 
 $form = new Form($db);
 $formcompany = new FormCompany($db);
@@ -443,7 +490,7 @@ else
 
             $title = $addcontact = (! empty($conf->global->SOCIETE_ADDRESSES_MANAGEMENT) ? $langs->trans("AddContact") : $langs->trans("AddContactAddress"));
             $linkback='';
-            print_fiche_titre($title,$linkback,'title_companies.png');
+            print load_fiche_titre($title,$linkback,'title_companies.png');
 
             // Affiche les erreurs
             dol_htmloutput_errors(is_numeric($error)?'':$error,$errors);
@@ -461,10 +508,12 @@ else
 								$(\'textarea[name="address"]\').val("'.dol_escape_js($objsoc->address).'");
 								$(\'input[name="zipcode"]\').val("'.dol_escape_js($objsoc->zip).'");
 								$(\'input[name="town"]\').val("'.dol_escape_js($objsoc->town).'");
-								$(\'select[name="country_id"]\').val("'.dol_escape_js($objsoc->country_id).'");
-								$(\'select[name="state_id"]\').val("'.dol_escape_js($objsoc->state_id).'");
-								$(\'input[name="email"]\').val("'.dol_escape_js($objsoc->email).'");
-            			});
+								console.log("Set state_id to '.dol_escape_js($objsoc->state_id).'");
+								$(\'select[name="state_id"]\').val("'.dol_escape_js($objsoc->state_id).'").trigger("change");
+								/* set country at end because it will trigger page refresh */
+								console.log("Set country id to '.dol_escape_js($objsoc->country_id).'");
+								$(\'select[name="country_id"]\').val("'.dol_escape_js($objsoc->country_id).'").trigger("change");   /* trigger required to update select2 components */
+                            });
 						})'."\n";
 				print '</script>'."\n";
             }
@@ -480,10 +529,10 @@ else
 
 
             // Name
-            print '<tr><td width="20%" class="fieldrequired"><label for="lastname">'.$langs->trans("Lastname").' / '.$langs->trans("Label").'</label></td>';
-	        print '<td width="30%"><input name="lastname" id="lastname" type="text" size="30" maxlength="80" value="'.dol_escape_htmltag(GETPOST("lastname")?GETPOST("lastname"):$object->lastname).'" autofocus="autofocus"></td>';
-            print '<td width="20%"><label for="firstname">'.$langs->trans("Firstname").'</label></td>';
-	        print '<td width="30%"><input name="firstname" id="firstname"type="text" size="30" maxlength="80" value="'.dol_escape_htmltag(GETPOST("firstname")?GETPOST("firstname"):$object->firstname).'"></td></tr>';
+            print '<tr><td class="titlefieldcreate fieldrequired"><label for="lastname">'.$langs->trans("Lastname").' / '.$langs->trans("Label").'</label></td>';
+	        print '<td><input name="lastname" id="lastname" type="text" size="30" maxlength="80" value="'.dol_escape_htmltag(GETPOST("lastname")?GETPOST("lastname"):$object->lastname).'" autofocus="autofocus"></td>';
+            print '<td><label for="firstname">'.$langs->trans("Firstname").'</label></td>';
+	        print '<td><input name="firstname" id="firstname"type="text" size="30" maxlength="80" value="'.dol_escape_htmltag(GETPOST("firstname")?GETPOST("firstname"):$object->firstname).'"></td></tr>';
 
             // Company
             if (empty($conf->global->SOCIETE_DISABLE_CONTACTS))
@@ -499,13 +548,13 @@ else
                 }
                 else {
                     print '<tr><td><label for="socid">'.$langs->trans("ThirdParty").'</label></td><td colspan="3" class="maxwidthonsmartphone">';
-                    print $form->select_company($socid,'socid','',1);
+                    print $form->select_company($socid,'socid','','SelectThirdParty');
                     print '</td></tr>';
                 }
             }
 
             // Civility
-            print '<tr><td width="15%"><label for="civility_id">'.$langs->trans("UserTitle").'</label></td><td colspan="3">';
+            print '<tr><td><label for="civility_id">'.$langs->trans("UserTitle").'</label></td><td colspan="3">';
             print $formcompany->select_civility(GETPOST("civility_id",'alpha')?GETPOST("civility_id",'alpha'):$object->civility_id);
             print '</td></tr>';
 
@@ -626,7 +675,7 @@ else
 
 
             // Add personnal information
-            print_fiche_titre('<div class="comboperso">'.$langs->trans("PersonalInformations").'</div>','','');
+            print load_fiche_titre('<div class="comboperso">'.$langs->trans("PersonalInformations").'</div>','','');
 
             print '<table class="border" width="100%">';
 
@@ -699,17 +748,20 @@ else
 							});
 
 							$("#copyaddressfromsoc").click(function() {
-								$(\'textarea[name="address"]\').text("'.dol_escape_js($objsoc->address).'");
+								$(\'textarea[name="address"]\').val("'.dol_escape_js($objsoc->address).'");
 								$(\'input[name="zipcode"]\').val("'.dol_escape_js($objsoc->zip).'");
 								$(\'input[name="town"]\').val("'.dol_escape_js($objsoc->town).'");
-								$(\'select[name="country_id"]\').val("'.dol_escape_js($objsoc->country_id).'");
-								$(\'select[name="state_id"]\').val("'.dol_escape_js($objsoc->state_id).'");
+								console.log("Set state_id to '.dol_escape_js($objsoc->state_id).'");
+								$(\'select[name="state_id"]\').val("'.dol_escape_js($objsoc->state_id).'").trigger("change");
+								/* set country at end because it will trigger page refresh */
+								console.log("Set country id to '.dol_escape_js($objsoc->country_id).'");
+								$(\'select[name="country_id"]\').val("'.dol_escape_js($objsoc->country_id).'").trigger("change");   /* trigger required to update select2 components */
             				});
 						})'."\n";
 				print '</script>'."\n";
             }
 
-            print '<form method="post" action="'.$_SERVER["PHP_SELF"].'?id='.$id.'" name="formsoc">';
+            print '<form enctype="multipart/form-data" method="post" action="'.$_SERVER["PHP_SELF"].'?id='.$id.'" name="formsoc">';
             print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
             print '<input type="hidden" name="id" value="'.$id.'">';
             print '<input type="hidden" name="action" value="update">';
@@ -722,23 +774,26 @@ else
 
             print '<table class="border" width="100%">';
 
-            // Ref
-            print '<tr><td>'.$langs->trans("Ref").'</td><td colspan="3">';
-            print $object->ref;
-            print '</td></tr>';
-
+            // Ref/ID
+            if (! empty($conf->global->MAIN_SHOW_TECHNICAL_ID))
+           	{
+	            print '<tr><td>'.$langs->trans("ID").'</td><td colspan="3">';
+	            print $object->ref;
+	            print '</td></tr>';
+           	}
+           	
             // Lastname
-            print '<tr><td width="20%" class="fieldrequired"><label for="lastname">'.$langs->trans("Lastname").' / '.$langs->trans("Label").'</label></td>';
-            print '<td width="30%"><input name="lastname" id="lastname" type="text" size="20" maxlength="80" value="'.(isset($_POST["lastname"])?$_POST["lastname"]:$object->lastname).'" autofocus="autofocus"></td>';
-            print '<td width="20%"><label for="firstname">'.$langs->trans("Firstname").'</label></td>';
-	        print '<td width="30%"><input name="firstname" id="firstname" type="text" size="20" maxlength="80" value="'.(isset($_POST["firstname"])?$_POST["firstname"]:$object->firstname).'"></td></tr>';
+            print '<tr><td class="titlefieldcreate fieldrequired"><label for="lastname">'.$langs->trans("Lastname").' / '.$langs->trans("Label").'</label></td>';
+            print '<td><input name="lastname" id="lastname" type="text" size="20" maxlength="80" value="'.(isset($_POST["lastname"])?$_POST["lastname"]:$object->lastname).'" autofocus="autofocus"></td>';
+            print '<td><label for="firstname">'.$langs->trans("Firstname").'</label></td>';
+	        print '<td><input name="firstname" id="firstname" type="text" size="20" maxlength="80" value="'.(isset($_POST["firstname"])?$_POST["firstname"]:$object->firstname).'"></td></tr>';
 
             // Company
             if (empty($conf->global->SOCIETE_DISABLE_CONTACTS))
             {
                 print '<tr><td><label for="socid">'.$langs->trans("ThirdParty").'</label></td>';
                 print '<td colspan="3" class="maxwidthonsmartphone">';
-                print $form->select_company(GETPOST('socid','int')?GETPOST('socid','int'):($object->socid?$object->socid:-1),'socid','',1);
+                print $form->select_company(GETPOST('socid','int')?GETPOST('socid','int'):($object->socid?$object->socid:-1), 'socid', '', $langs->trans("SelectThirdParty"));
                 print '</td>';
                 print '</tr>';
             }
@@ -835,7 +890,7 @@ else
             print $form->selectarray('priv',$selectarray,$object->priv,0);
             print '</td></tr>';
 
-             // Note Public
+            // Note Public
             print '<tr><td class="tdtop"><label for="note_public">'.$langs->trans("NotePublic").'</label></td><td colspan="3">';
             $doleditor = new DolEditor('note_public', $object->note_public, '', 80, 'dolibarr_notes', 'In', 0, false, true, ROWS_3, 70);
             print $doleditor->Create(1);
@@ -847,9 +902,9 @@ else
             print $doleditor->Create(1);
             print '</td></tr>';
 
-            // Statut
+            // Status
             print '<tr><td>'.$langs->trans("Status").'</td>';
-            print '<td>';
+            print '<td colspan="3">';
             print $object->getLibStatut(4);
             print '</td></tr>';
 
@@ -859,7 +914,7 @@ else
 				print '<td colspan="3">';
 				$cate_arbo = $form->select_all_categories( Categorie::TYPE_CONTACT, null, null, null, null, 1 );
 				$c = new Categorie( $db );
-				$cats = $c->containing( $object->id, Categorie::TYPE_CONTACT );
+				$cats = $c->containing( $object->id, 'contact' );
 				foreach ($cats as $cat) {
 					$arrayselected[] = $cat->id;
 				}
@@ -915,6 +970,23 @@ else
             }
             else print $langs->trans("NoDolibarrAccess");
             print '</td></tr>';
+
+            // Photo
+            print '<tr>';
+            print '<td>'.$langs->trans("PhotoFile").'</td>';
+            print '<td colspan="3">';
+            if ($object->photo) {
+                print $form->showphoto('contact',$object);
+                print "<br>\n";
+            }
+            print '<table class="nobordernopadding">';
+            if ($object->photo) print '<tr><td><input type="checkbox" class="flat photodelete" name="deletephoto" id="photodelete"> '.$langs->trans("Delete").'<br><br></td></tr>';
+            //print '<tr><td>'.$langs->trans("PhotoFile").'</td></tr>';
+            print '<tr><td><input type="file" class="flat" name="photo" id="photoinput"></td></tr>';
+            print '</table>';
+
+            print '</td>';
+            print '</tr>';
 
             print '</table>';
 
@@ -972,23 +1044,21 @@ else
 
         }
 
-        print '<table class="border" width="100%">';
-
         $linkback = '<a href="'.DOL_URL_ROOT.'/contact/list.php">'.$langs->trans("BackToList").'</a>';
-
-        // Ref
-        print '<tr><td width="20%">'.$langs->trans("Ref").'</td><td colspan="3">';
-        print $form->showrefnav($object, 'id', $linkback);
-        print '</td></tr>';
-
-        // Name
-        print '<tr><td width="20%">'.$langs->trans("Lastname").' / '.$langs->trans("Label").'</td><td width="30%">'.$object->lastname.'</td>';
-        print '<td width="20%">'.$langs->trans("Firstname").'</td><td width="30%">'.$object->firstname.'</td></tr>';
+        
+        dol_banner_tab($object, 'id', $linkback, 1, 'rowid', 'ref', '');
+        
+        
+        print '<div class="fichecenter">';
+        print '<div class="fichehalfleft">';
+        
+        print '<div class="underbanner clearboth"></div>';
+        print '<table class="border tableforfield" width="100%">';
 
         // Company
         if (empty($conf->global->SOCIETE_DISABLE_CONTACTS))
         {
-            print '<tr><td>'.$langs->trans("ThirdParty").'</td><td colspan="3">';
+            print '<tr><td class="titlefield">'.$langs->trans("ThirdParty").'</td><td>';
             if ($object->socid > 0)
             {
                 $objsoc->fetch($object->socid);
@@ -998,103 +1068,61 @@ else
             {
                 print $langs->trans("ContactNotLinkedToCompany");
             }
-            print '</td></tr>';
+            print '</td>';
         }
 
+        print '</tr>';
+
         // Civility
-        print '<tr><td width="15%">'.$langs->trans("UserTitle").'</td><td colspan="3">';
+        print '<tr><td class="titlefield">'.$langs->trans("UserTitle").'</td><td>';
         print $object->getCivilityLabel();
         print '</td></tr>';
 
         // Role
-        print '<tr><td>'.$langs->trans("PostOrFunction").'</td><td colspan="3">'.$object->poste.'</td>';
-
-        // Address
-        print '<tr><td>'.$langs->trans("Address").'</td><td colspan="3">';
-        dol_print_address($object->address,'gmap','contact',$object->id);
-        print '</td></tr>';
-
-        // Zip/Town
-        print '<tr><td>'.$langs->trans("Zip").' / '.$langs->trans("Town").'</td><td colspan="3">';
-        print $object->zip;
-        if ($object->zip) print '&nbsp;';
-        print $object->town.'</td></tr>';
-
-        // Country
-        print '<tr><td>'.$langs->trans("Country").'</td><td colspan="3">';
-        $img=picto_from_langcode($object->country_code);
-        if ($img) print $img.' ';
-        print $object->country;
-        print '</td></tr>';
-
-        // State
-        if (empty($conf->global->SOCIETE_DISABLE_STATE))
-        {
-            print '<tr><td>'.$langs->trans('State').'</td><td colspan="3">'.$object->state.'</td>';
-        }
-
-        // Phone
-        print '<tr><td>'.$langs->trans("PhonePro").'</td><td>'.dol_print_phone($object->phone_pro,$object->country_code,$object->id,$object->socid,'AC_TEL').'</td>';
-        print '<td>'.$langs->trans("PhonePerso").'</td><td>'.dol_print_phone($object->phone_perso,$object->country_code,$object->id,$object->socid,'AC_TEL').'</td></tr>';
-
-        print '<tr><td>'.$langs->trans("PhoneMobile").'</td><td>'.dol_print_phone($object->phone_mobile,$object->country_code,$object->id,$object->socid,'AC_TEL').'</td>';
-        print '<td>'.$langs->trans("Fax").'</td><td>'.dol_print_phone($object->fax,$object->country_code,$object->id,$object->socid,'AC_FAX').'</td></tr>';
+        print '<tr><td>'.$langs->trans("PostOrFunction").'</td><td>'.$object->poste.'</td></tr>';
 
         // Email
-        print '<tr><td>'.$langs->trans("EMail").'</td><td>'.dol_print_email($object->email,$object->id,$object->socid,'AC_EMAIL').'</td>';
         if (! empty($conf->mailing->enabled))
         {
             $langs->load("mails");
-            print '<td class="nowrap">'.$langs->trans("NbOfEMailingsSend").'</td>';
-            print '<td><a href="'.DOL_URL_ROOT.'/comm/mailing/list.php?filteremail='.urlencode($object->email).'">'.$object->getNbOfEMailings().'</a></td>';
+            print '<tr><td>'.$langs->trans("NbOfEMailingsSend").'</td>';
+            print '<td><a href="'.DOL_URL_ROOT.'/comm/mailing/list.php?filteremail='.urlencode($object->email).'">'.$object->getNbOfEMailings().'</a></td></tr>';
         }
-        else
-        {
-            print '<td colspan="2">&nbsp;</td>';
-        }
-        print '</tr>';
 
         // Instant message and no email
-        print '<tr><td>'.$langs->trans("IM").'</td><td>'.$object->jabberid.'</td>';
+        print '<tr><td>'.$langs->trans("IM").'</td><td>'.$object->jabberid.'</td></tr>';
         if (!empty($conf->mailing->enabled))
         {
-        	print '<td>'.$langs->trans("No_Email").'</td><td>'.yn($object->no_email).'</td>';
-        }
-        else
-       {
-	       	print '<td colspan="2">&nbsp;</td>';
-        }
-        print '</tr>';
-
-        // Skype
-        if (! empty($conf->skype->enabled))
-        {
-            print '<tr><td>'.$langs->trans("Skype").'</td><td colspan="3">'.dol_print_skype($object->skype,0,$object->fk_soc,1).'</td></tr>';
+        	print '<tr><td>'.$langs->trans("No_Email").'</td><td>'.yn($object->no_email).'</td></tr>';
         }
 
-        print '<tr><td>'.$langs->trans("ContactVisibility").'</td><td colspan="3">';
+        print '<tr><td>'.$langs->trans("ContactVisibility").'</td><td>';
         print $object->LibPubPriv($object->priv);
         print '</td></tr>';
 
         // Note Public
-        print '<tr><td class="tdtop">'.$langs->trans("NotePublic").'</td><td colspan="3">';
+        /*
+        print '<tr><td class="tdtop">'.$langs->trans("NotePublic").'</td><td>';
         print nl2br($object->note_public);
         print '</td></tr>';
 
         // Note Private
-        print '<tr><td class="tdtop">'.$langs->trans("NotePrivate").'</td><td colspan="3">';
+        print '<tr><td class="tdtop">'.$langs->trans("NotePrivate").'</td><td>';
         print nl2br($object->note_private);
-
-	 	// Statut
-		print '<tr><td>'.$langs->trans("Status").'</td>';
-		print '<td>';
-		print $object->getLibStatut(4);
-		print '</td>';
-		print '</tr>'."\n";
-
+        print '</td></tr>';
+        */
+        
+        print '</table>';
+        
+        print '</div>';
+        print '<div class="fichehalfright"><div class="ficheaddleft">';
+       
+        print '<div class="underbanner clearboth"></div>';
+        print '<table class="border tableforfield" width="100%">';
+        
 		// Categories
 		if (! empty($conf->categorie->enabled)  && ! empty($user->rights->categorie->lire)) {
-			print '<tr><td>' . $langs->trans( "Categories" ) . '</td>';
+			print '<tr><td class="titlefield">' . $langs->trans("Categories") . '</td>';
 			print '<td colspan="3">';
 			print $form->showCategories( $object->id, 'contact', 1 );
 			print '</td></tr>';
@@ -1111,17 +1139,22 @@ else
 
         $object->load_ref_elements();
 
-        if (! empty($conf->commande->enabled))
+        if (! empty($conf->propal->enabled))
         {
-            print '<tr><td>'.$langs->trans("ContactForOrders").'</td><td colspan="3">';
-            print $object->ref_commande?$object->ref_commande:$langs->trans("NoContactForAnyOrder");
+            print '<tr><td class="titlefield">'.$langs->trans("ContactForProposals").'</td><td colspan="3">';
+            print $object->ref_propal?$object->ref_propal:$langs->trans("NoContactForAnyProposal");
             print '</td></tr>';
         }
 
-        if (! empty($conf->propal->enabled))
+        if (! empty($conf->commande->enabled) || ! empty($conf->expedition->enabled))
         {
-            print '<tr><td>'.$langs->trans("ContactForProposals").'</td><td colspan="3">';
-            print $object->ref_propal?$object->ref_propal:$langs->trans("NoContactForAnyProposal");
+            print '<tr><td>';
+            if (! empty($conf->expedition->enabled)) { print $langs->trans("ContactForOrdersOrShipments"); }
+            else print $langs->trans("ContactForOrders");
+            print '</td><td colspan="3">';
+            $none=$langs->trans("NoContactForAnyOrder");
+            if  (! empty($conf->expedition->enabled)) { $none=$langs->trans("NoContactForAnyOrderOrShipments"); }
+            print $object->ref_commande?$object->ref_commande:$none;
             print '</td></tr>';
         }
 
@@ -1158,7 +1191,10 @@ else
         print '</td></tr>';
 
         print "</table>";
-
+        
+        print '</div></div></div>';
+        print '<div style="clear:both"></div>';
+                
         print dol_fiche_end();
 
         // Barre d'actions

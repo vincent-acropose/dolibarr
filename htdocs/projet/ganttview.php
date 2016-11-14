@@ -39,12 +39,12 @@ $mine = ($mode == 'mine' ? 1 : 0);
 
 $object = new Project($db);
 
-include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php';  // Must be include, not includ_once
+include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php';  // Must be include, not include_once
 
 // Security check
 $socid=0;
 if ($user->societe_id > 0) $socid=$user->societe_id;
-$result = restrictedArea($user, 'projet', $id);
+$result = restrictedArea($user, 'projet', $id,'projet&project');
 
 $langs->load("users");
 $langs->load("projects");
@@ -103,13 +103,13 @@ if ($id > 0 || ! empty($ref))
     $linkback = '<a href="'.DOL_URL_ROOT.'/projet/list.php">'.$langs->trans("BackToList").'</a>';
 
     // Ref
-    print '<tr><td width="30%">';
+    print '<tr><td class="titlefield">';
     print $langs->trans("Ref");
     print '</td><td>';
     // Define a complementary filter for search of next/prev ref.
     if (! $user->rights->projet->all->lire)
     {
-        $projectsListId = $object->getProjectsAuthorizedForUser($user,$mine,0);
+        $projectsListId = $object->getProjectsAuthorizedForUser($user,0,0);
         $object->next_prev_filter=" rowid in (".(count($projectsListId)?join(',',array_keys($projectsListId)):'0').")";
     }
     print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref', '', $param);
@@ -142,7 +142,11 @@ if ($id > 0 || ! empty($ref))
 	print dol_print_date($object->date_end,'day');
 	print '</td></tr>';
 
-
+	// Budget
+	print '<tr><td>'.$langs->trans("Budget").'</td><td>';
+	if (strcmp($object->budget_amount, '')) print price($object->budget_amount,'',$langs,0,0,0,$conf->currency);
+	print '</td></tr>';
+	
     print '</table>';
 
     print '</div>';
@@ -263,7 +267,7 @@ if (count($tasksarray)>0)
 }
 else
 {
-	print $langs->trans("NoTasks");
+	print '<div class="opacitymedium">'.$langs->trans("NoTasks").'</div>';
 }
 
 

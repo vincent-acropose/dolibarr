@@ -62,9 +62,10 @@ if ($action == 'remove')
  * View
  */
 
-llxHeader('',$langs->trans("DefaultRights"));
+$wikihelp='EN:Setup_Security|FR:Paramétrage_Sécurité|ES:Configuración_Seguridad';
+llxHeader('',$langs->trans("DefaultRights"), $wikihelp);
 
-print_fiche_titre($langs->trans("SecuritySetup"),'','title_setup');
+print load_fiche_titre($langs->trans("SecuritySetup"),'','title_setup');
 
 print $langs->trans("DefaultRightsDesc");
 print " ".$langs->trans("OnlyActiveElementsAreShown")."<br><br>\n";
@@ -199,13 +200,13 @@ if ($result)
         {
             print img_picto($langs->trans("Active"),'tick');
             print '</td><td>';
-            print '<a href="perms.php?pid='.$obj->id.'&amp;action=remove#'.$objMod->getName().'">'.img_edit_remove().'</a>';
+            print '<a class="reposition" href="perms.php?pid='.$obj->id.'&amp;action=remove">'.img_edit_remove().'</a>';
         }
         else
         {
             print '&nbsp;';
             print '</td><td>';
-            print '<a href="perms.php?pid='.$obj->id.'&amp;action=add#'.$objMod->getName().'">'.img_edit_add().'</a>';
+            print '<a class="reposition" href="perms.php?pid='.$obj->id.'&amp;action=add">'.img_edit_add().'</a>';
         }
 
         print '</td></tr>';
@@ -217,7 +218,5 @@ print '</table>';
 
 print '</div>';
 
-
-$db->close();
-
 llxFooter();
+$db->close();

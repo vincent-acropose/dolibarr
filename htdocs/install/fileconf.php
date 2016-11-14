@@ -333,9 +333,9 @@ if (! empty($force_install_message))
 		            if ($note) $option.=' '.$note;
 		            // Deprecated and experimental
 					if ($type=='mysql') $option.=' ' . $langs->trans("Deprecated");
-		            elseif ($type=='mssql')  $option.=' '.$langs->trans("Experimental");
-		            elseif ($type=='sqlite') $option.=' '.$langs->trans("Experimental");
-		            elseif ($type=='sqlite3') $option.=' '.$langs->trans("Experimental");
+		            elseif ($type=='mssql')  $option.=' '.$langs->trans("VersionExperimental");
+		            elseif ($type=='sqlite') $option.=' '.$langs->trans("VersionExperimental");
+		            elseif ($type=='sqlite3') $option.=' '.$langs->trans("VersionExperimental");
 		            // No available
 		            elseif (! function_exists($testfunction)) $option.=' - '.$langs->trans("FunctionNotAvailableInThisPHP");
 		            $option.='</option>';
@@ -561,17 +561,7 @@ function jscheckparam()
 		ok=false;
 		alert('<?php echo dol_escape_js($langs->transnoentities("YouAskToCreateDatabaseSoRootRequired")); ?>');
 	}
-	else if (document.forminstall.db_create_database.checked == true && (document.forminstall.db_user_root.value == ''))
-	{
-		ok=false;
-		alert('<?php echo dol_escape_js($langs->transnoentities("YouAskToCreateDatabaseSoRootRequired")); ?>');
-	}
 	// If create user asked
-	else if (document.forminstall.db_create_user.checked == true && (document.forminstall.db_user_root.value == ''))
-	{
-		ok=false;
-		alert('<?php echo dol_escape_js($langs->transnoentities("YouAskToCreateDatabaseUserSoRootRequired")); ?>');
-	}
 	else if (document.forminstall.db_create_user.checked == true && (document.forminstall.db_user_root.value == ''))
 	{
 		ok=false;

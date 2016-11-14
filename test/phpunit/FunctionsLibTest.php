@@ -206,40 +206,43 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
         // True
         $input='<html>xxx</html>';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with html tag');
         $input='<body>xxx</body>';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with body tag');
         $input='xxx <b>yyy</b> zzz';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with b tag');
+        $input='xxx <u>yyy</u> zzz';
+        $after=dol_textishtml($input);
+        $this->assertTrue($after, 'Test with u tag');
         $input='text with <div>some div</div>';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with div tag');
         $input='text with HTML &nbsp; entities';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with entities tag');
         $input='xxx<br>';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with entities br');
         $input='xxx<br >';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with entities br');
         $input='xxx<br style="eee">';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with entities br and attributes');
         $input='xxx<br style="eee" >';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with entities br and attributes bis');
         $input='<h2>abc</h2>';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with entities h2');
         $input='<img id="abc" src="https://xxx.com/aaa/image.png" />';
         $after=dol_textishtml($input);
-        $this->assertTrue($after,'Failure on test of img tag');
+        $this->assertTrue($after, 'Test with img tag');
         $input='<a class="azerty" href="https://xxx.com/aaa/image.png" />';
         $after=dol_textishtml($input);
-        $this->assertTrue($after,'Failure on test of a tag');
+        $this->assertTrue($after, 'Test with a tag');
 
         // False
         $input='xxx < br>';
@@ -853,8 +856,8 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
     	// Test RULE ES-ES
     	$vat1=get_default_localtax($companyes,$companyes,1,0);
     	$vat2=get_default_localtax($companyes,$companyes,2,0);
-    	$this->assertEquals(5.2,$vat1);
-    	$this->assertEquals(-19,$vat2);
+    	$this->assertEquals($vat1, 5.2);
+    	$this->assertStringStartsWith((string) $vat2, '-19:-15:-9');       // Can be -19 (old version) or '-19:-15:-9' (new setup)
 
     	// Test RULE ES-IT
     	$vat1=get_default_localtax($companyes,$companyit,1,0);

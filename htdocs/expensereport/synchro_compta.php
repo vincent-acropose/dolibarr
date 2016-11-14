@@ -100,7 +100,7 @@ $html = new Form($db);
 $submit = isset($_POST['submit'])?true:false;
 $idAccount=isset($_GET["account"])?$_GET["account"]:$_POST["account"];
 
-print_fiche_titre($langs->trans("TripSynch"));
+print load_fiche_titre($langs->trans("TripSynch"));
 
 
 dol_fiche_head('');
@@ -165,7 +165,7 @@ else:
 				while($i<$num):
 					$objp = $db->fetch_object($resql);
 					$var=!$var;
-						print "<tr $bc[$var]>";
+						print '<tr'. $bc[$var].'>';
 							print '<td>'.$objp->ref.'</td>';
 							print '<td>'.dol_print_date($db->jdate($objp->date_valid),'day').'</td>';
 							print '<td><a href="'.DOL_URL_ROOT.'/user/card.php?id='.$objp->fk_user_author.'">'.img_object($langs->trans("ShowUser"),"user").' '.$objp->declarant_NDF.'</a></td>';

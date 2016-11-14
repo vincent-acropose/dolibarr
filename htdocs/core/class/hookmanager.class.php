@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2010-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2010-2016 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2010-2014 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2011 Juanjo Menent        <jmenent@2byte.es>
  *
@@ -64,7 +64,7 @@ class HookManager
 	 *  class found into file /mymodule/class/actions_mymodule.class.php (if module has declared the context as a managed context).
 	 *  Then when a hook executeHooks('aMethod'...) is called, the method aMethod found into class will be executed.
 	 *
-	 *	@param	array	$arraycontext	    Array list of searched hooks tab/features. For example: 'thirdpartycard' (for hook methods into page card thirdparty), 'thirdpartydao' (for hook methods into Societe), ...
+	 *	@param	string[]	$arraycontext	    Array list of searched hooks tab/features. For example: 'thirdpartycard' (for hook methods into page card thirdparty), 'thirdpartydao' (for hook methods into Societe), ...
 	 *	@return	int							Always 1
 	 */
 	function initHooks($arraycontext)
@@ -87,8 +87,7 @@ class HookManager
 				{
 				    if (is_array($hooks)) $arrayhooks=$hooks;    // New system
 				    else $arrayhooks=explode(':',$hooks);        // Old system (for backward compatibility)
-
-					if (in_array($context,$arrayhooks))    // We instantiate action class only if hook is required
+					if (in_array($context,$arrayhooks) || in_array('all',$arrayhooks))    // We instantiate action class only if hook is required
 					{
 						$path 		= '/'.$module.'/class/';
 						$actionfile = 'actions_'.$module.'.class.php';
@@ -118,7 +117,7 @@ class HookManager
      * 		@param		Object	$object			Object to use hooks on
      * 	    @param		string	$action			Action code on calling page ('create', 'edit', 'view', 'add', 'update', 'delete'...)
      * 		@return		mixed					For 'addreplace hooks (doActions,formObjectOptions,pdf_xxx,...):  					Return 0 if we want to keep standard actions, >0 if we want to stop standard actions, <0 if KO. Things to print are returned into ->resprints and set into ->resPrint. Things to return are returned into ->results and set into ->resArray.
-     * 											For 'output' hooks (printLeftBlock, formAddObjectLine, formBuilddocOptions, ...):	Return 0, <0 if KO. Things to print are returned into ->resprints and set into ->resPrint. Things to print are returned into ->resprints and set into ->resPrint. Things to return are returned into ->results and set into ->resArray.
+     * 											For 'output' hooks (printLeftBlock, formAddObjectLine, formBuilddocOptions, ...):	Return 0, <0 if KO. Things to print are returned into ->resprints and set into ->resPrint. Things to return are returned into ->results and set into ->resArray.
      *                                          All types can also return some values into an array ->results.
      * 											$this->error or this->errors are also defined by class called by this function if error.
      */
@@ -135,6 +134,7 @@ class HookManager
 			$method,
 			array(
 				'addMoreActionsButtons',
+			    'addSearchEntry',
 				'addStatisticLine',
 				'deleteFile',
 				'doActions',
@@ -142,17 +142,40 @@ class HookManager
 				'formObjectOptions',
 				'formattachOptions',
 				'formBuilddocLineOptions',
+			    'getFormMail',
+			    'getIdProfUrl',
 				'moveUploadedFile',
+			    'pdf_build_address',
 				'pdf_writelinedesc',
+			    'pdf_getlinenum',
+			    'pdf_getlineref',
+			    'pdf_getlineref_supplier',
+			    'pdf_getlinevatrate',
+			    'pdf_getlineupexcltax',
+			    'pdf_getlineupwithtax',
+			    'pdf_getlineqty',
+			    'pdf_getlineqty_asked',
+			    'pdf_getlineqty_shipped',
+			    'pdf_getlineqty_keeptoship',
+			    'pdf_getlineunit',
+			    'pdf_getlineremisepercent',
+			    'pdf_getlineprogress',
+			    'pdf_getlinetotalexcltax',
+			    'pdf_getlinetotalwithtax',
 				'paymentsupplierinvoices',
 				'printAddress',
 				'printSearchForm',
 				'formatEvent',
-				'addCalendarChoice'
+                'addCalendarChoice',
+                'printObjectLine',
+                'printObjectSubLine',
+				'createDictionaryFieldList',
+				'editDictionaryFieldlist',
+				'getFormMail'
 				)
 			)) $hooktype='addreplace';
         // Deprecated hook types ('returnvalue')
-        if (preg_match('/^pdf_/',$method) && $method != 'pdf_writelinedesc') $hooktype='returnvalue';		// pdf_xxx except pdf_writelinedesc are 'returnvalue' hooks. When there is 2 hooks of this type, only last one win. TODO Move them into 'output' or 'addreplace' hooks.
+        //if (preg_match('/^pdf_/',$method) && $method != 'pdf_writelinedesc') $hooktype='returnvalue';		// pdf_xxx except pdf_writelinedesc are 'returnvalue' hooks. When there is 2 hooks of this type, only last one win. TODO Move them into 'output' or 'addreplace' hooks.
         if ($method == 'insertExtraFields')
         {
         	$hooktype='returnvalue';	// deprecated. TODO Remove all code with "executeHooks('insertExtraFields'" as soon as there is a trigger available.
@@ -226,11 +249,7 @@ class HookManager
             }
         }
 
-        // TODO remove this. When there is something to print for an output hook, ->resPrint is filled.
-        //if ($hooktype == 'output') return $this->resPrint;
-		//if ($hooktype == 'returnvalue') return $result;
         return ($error?-1:$resaction);
 	}
 
 }
-

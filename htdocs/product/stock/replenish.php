@@ -1,7 +1,8 @@
 <?php
 /* Copyright (C) 2013		Cédric Salvador		<csalvador@gpcsolutions.fr>
- * Copyright (C) 2013-2014	Laurent Destaileur	<ely@users.sourceforge.net>
+ * Copyright (C) 2013-2016	Laurent Destaileur	<ely@users.sourceforge.net>
  * Copyright (C) 2014		Regis Houssin		<regis.houssin@capnetworks.com>
+ * Copyright (C) 2016		Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,7 +59,7 @@ $sortfield = GETPOST('sortfield','alpha');
 $sortorder = GETPOST('sortorder','alpha');
 $page = GETPOST('page','int');
 if ($page == -1) { $page = 0; }
-$limit = $conf->liste_limit;
+$limit = GETPOST('limit')?GETPOST('limit','int'):$conf->liste_limit;
 $offset = $limit * $page ;
 
 if (!$sortfield) {
@@ -69,12 +70,23 @@ if (!$sortorder) {
     $sortorder = 'ASC';
 }
 
+// Define virtualdiffersfromphysical
+$virtualdiffersfromphysical=0;
+if (! empty($conf->global->STOCK_CALCULATE_ON_SHIPMENT)
+|| ! empty($conf->global->STOCK_CALCULATE_ON_SUPPLIER_DISPATCH_ORDER)
+|| ! empty($conf->global->STOCK_CALCULATE_ON_SHIPMENT_CLOSE))
+{
+    $virtualdiffersfromphysical=1;		// According to increase/decrease stock options, virtual and physical stock may differs.
+}
+$usevirtualstock=0;
+if ($mode == 'virtual') $usevirtualstock=1;
+
 
 /*
  * Actions
  */
 
-if (isset($_POST['button_removefilter']) || isset($_POST['valid']))
+if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter.x") || GETPOST("button_removefilter") || isset($_POST['valid'])) // Both test are required to be compatible with all browsers
 {
     $sref = '';
     $snom = '';
@@ -102,7 +114,7 @@ if ($action == 'order' && isset($_POST['valid']))
                 $supplierpriceid = GETPOST('fourn'.$i, 'int');
                 //get all the parameters needed to create a line
                 $qty = GETPOST('tobuy'.$i, 'int');
-                $desc = GETPOST('desc'.$i, 'alpha');
+                //$desc = GETPOST('desc'.$i, 'alpha');
                 $sql = 'SELECT fk_product, fk_soc, ref_fourn';
                 $sql .= ', tva_tx, unitprice FROM ';
                 $sql .= MAIN_DB_PREFIX . 'product_fournisseur_price';
@@ -116,8 +128,20 @@ if ($action == 'order' && isset($_POST['valid']))
 	                    $obj = $db->fetch_object($resql);
 	                    $line = new CommandeFournisseurLigne($db);
 	                    $line->qty = $qty;
-	                    $line->desc = $desc;
 	                    $line->fk_product = $obj->fk_product;
+	                    
+	                    $product = new Product($db);
+	                    $product->fetch($obj->fk_product);
+	                    if (! empty($conf->global->MAIN_MULTILANGS)) 
+	                    {
+	                        $product->getMultiLangs();     
+	                    }
+	                    $line->desc = $product->description;
+                        if (! empty($conf->global->MAIN_MULTILANGS))
+                        {
+                            // TODO Get desc in language of thirdparty
+                        }
+	                    
 	                    $line->tva_tx = $obj->tva_tx;
 	                    $line->subprice = $obj->unitprice;
 	                    $line->total_ht = $obj->unitprice * $qty;
@@ -176,7 +200,7 @@ if ($action == 'order' && isset($_POST['valid']))
                     $fail++;
                     $msg = $langs->trans('OrderFail') . "&nbsp;:&nbsp;";
                     $msg .= $order->error;
-                    setEventMessage($msg, 'errors');
+                    setEventMessages($msg, null, 'errors');
                 } else {
                     $id = $result;
                 }
@@ -195,7 +219,7 @@ if ($action == 'order' && isset($_POST['valid']))
                     $fail++;
                     $msg = $langs->trans('OrderFail') . "&nbsp;:&nbsp;";
                     $msg .= $order->error;
-                    setEventMessage($msg, 'errors');
+                    setEventMessages($msg, null, 'errors');
                 }
                 $i++;
             }
@@ -205,7 +229,7 @@ if ($action == 'order' && isset($_POST['valid']))
         {
         	$db->commit();
 
-            setEventMessage($langs->trans('OrderCreated'), 'mesgs');
+            setEventMessages($langs->trans('OrderCreated'), null, 'mesgs');
             header('Location: replenishorders.php');
             exit;
         }
@@ -216,7 +240,7 @@ if ($action == 'order' && isset($_POST['valid']))
     }
     if ($box == 0)
     {
-        setEventMessage($langs->trans('SelectProductWithNotNullQty'), 'warnings');
+        setEventMessages($langs->trans('SelectProductWithNotNullQty'), null, 'warnings');
     }
 }
 
@@ -227,23 +251,9 @@ if ($action == 'order' && isset($_POST['valid']))
 
 $form = new Form($db);
 
-$virtualdiffersfromphysical=0;
-if (! empty($conf->global->STOCK_CALCULATE_ON_SHIPMENT) || ! empty($conf->global->STOCK_CALCULATE_ON_SUPPLIER_DISPATCH_ORDER))
-{
-	$virtualdiffersfromphysical=1;		// According to increase/decrease stock options, virtual and physical stock may differs.
-}
-
-$usevirtualstock=-1;
-if ($virtualdiffersfromphysical)
-{
-	$usevirtualstock=(! empty($conf->global->STOCK_USE_VIRTUAL_STOCK)?1:0);
-	if ($mode=='virtual') $usevirtualstock=1;
-	if ($mode=='physical') $usevirtualstock=0;
-}
-
 $title = $langs->trans('Status');
 
-$sql = 'SELECT p.rowid, p.ref, p.label, p.price,';
+$sql = 'SELECT p.rowid, p.ref, p.label, p.description, p.price,';
 $sql.= ' p.price_ttc, p.price_base_type,p.fk_product_type,';
 $sql.= ' p.tms as datem, p.duration, p.tobuy,';
 $sql.= ' p.desiredstock, p.seuil_stock_alerte as alertstock,';
@@ -282,7 +292,7 @@ if ($snom) {
 }
 $sql.= ' AND p.tobuy = 1';
 if (!empty($canvas)) $sql .= ' AND p.canvas = "' . $db->escape($canvas) . '"';
-$sql.= ' GROUP BY p.rowid, p.ref, p.label, p.price';
+$sql.= ' GROUP BY p.rowid, p.ref, p.label, p.description, p.price';
 $sql.= ', p.price_ttc, p.price_base_type,p.fk_product_type, p.tms';
 $sql.= ', p.duration, p.tobuy';
 $sql.= ', p.desiredstock, p.seuil_stock_alerte';
@@ -372,6 +382,8 @@ $head[1][1] = $langs->trans("ReplenishmentOrders");
 $head[1][2] = 'replenishorders';
 
 
+print load_fiche_titre($langs->trans('Replenishment'), '', 'title_generic.png');
+
 
 print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST" name="formulaire">'.
 	'<input type="hidden" name="token" value="' .$_SESSION['newtoken'] . '">'.
@@ -382,7 +394,7 @@ print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST" name="formulaire">'
 	'<input type="hidden" name="action" value="order">'.
 	'<input type="hidden" name="mode" value="' . $mode . '">';
 
-dol_fiche_head($head, 'replenish', $langs->trans('Replenishment'), 0, 'stock');
+dol_fiche_head($head, 'replenish', '', 0, '');
 
 print $langs->trans("ReplenishmentStatusDesc").'<br>'."\n";
 if ($usevirtualstock == 1)
@@ -445,8 +457,8 @@ if ($usevirtualstock == 0) $stocklabel = $langs->trans('PhysicalStock');
 
 
 // Lines of title
-print '<tr class="liste_titre"><td><input type="checkbox" onClick="toggle(this)" /></td>';
-
+print '<tr class="liste_titre">';
+print_liste_field_titre('<input type="checkbox" onClick="toggle(this)" />', $_SERVER["PHP_SELF"], '');
 print_liste_field_titre($langs->trans('Ref'), $_SERVER["PHP_SELF"], 'p.ref', $param, '', '', $sortfield, $sortorder);
 print_liste_field_titre($langs->trans('Label'), $_SERVER["PHP_SELF"], 'p.label', $param, '', '', $sortfield, $sortorder);
 if (!empty($conf->service->enabled) && $type == 1) print_liste_field_titre($langs->trans('Duration'), $_SERVER["PHP_SELF"], 'p.duration', $param, '', 'align="center"', $sortfield, $sortorder);
@@ -459,20 +471,20 @@ print_liste_field_titre($langs->trans('Supplier'), $_SERVER["PHP_SELF"], '', $pa
 print "</tr>\n";
 
 // Lignes des champs de filtre
-print '<tr class="liste_titre">'.
-'<td class="liste_titre">&nbsp;</td>'.
-'<td class="liste_titre"><input class="flat" type="text" name="sref" size="8" value="'.dol_escape_htmltag($sref).'"></td>'.
-'<td class="liste_titre"><input class="flat" type="text" name="snom" size="8" value="'.dol_escape_htmltag($snom).'"></td>';
+print '<tr class="liste_titre">';
+print '<td class="liste_titre">&nbsp;</td>';
+print '<td class="liste_titre"><input class="flat" type="text" name="sref" size="8" value="'.dol_escape_htmltag($sref).'"></td>';
+print '<td class="liste_titre"><input class="flat" type="text" name="snom" size="8" value="'.dol_escape_htmltag($snom).'"></td>';
 if (!empty($conf->service->enabled) && $type == 1) print '<td class="liste_titre">&nbsp;</td>';
-print '<td class="liste_titre">&nbsp;</td>'.
-	'<td class="liste_titre" align="right">&nbsp;</td>'.
-	'<td class="liste_titre" align="right">' . $langs->trans('AlertOnly') . '&nbsp;<input type="checkbox" id="salert" name="salert" ' . (!empty($alertchecked)?$alertchecked:'') . '></td>'.
-	'<td class="liste_titre" align="right">&nbsp;</td>'.
-	'<td class="liste_titre">&nbsp;</td>'.
-	'<td class="liste_titre" align="right">'.
-	'<input class="liste_titre" name="button_search" type="image" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">'.
-	'<input type="image" class="liste_titre" src="'.img_picto($langs->trans("Search"),'searchclear.png','','',1).'" name="button_removefilter" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'" title="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">'.
-	'</td>';
+print '<td class="liste_titre">&nbsp;</td>';
+print '<td class="liste_titre" align="right">&nbsp;</td>';
+print '<td class="liste_titre" align="right">' . $langs->trans('AlertOnly') . '&nbsp;<input type="checkbox" id="salert" name="salert" ' . (!empty($alertchecked)?$alertchecked:'') . '></td>';
+print '<td class="liste_titre" align="right">&nbsp;</td>';
+print '<td class="liste_titre">&nbsp;</td>';
+print '<td class="liste_titre" align="right">';
+$searchpitco=$form->showFilterAndCheckAddButtons(0);
+print $searchpitco;
+print '</td>';
 print '</tr>';
 
 $prod = new Product($db);
@@ -490,7 +502,7 @@ while ($i < ($limit ? min($num, $limit) : $num))
 		// Multilangs
 		if (! empty($conf->global->MAIN_MULTILANGS))
 		{
-			$sql = 'SELECT label';
+			$sql = 'SELECT label,description';
 			$sql .= ' FROM ' . MAIN_DB_PREFIX . 'product_lang';
 			$sql .= ' WHERE fk_product = ' . $objp->rowid;
 			$sql .= ' AND lang = "' . $langs->getDefaultLang() . '"';
@@ -500,6 +512,7 @@ while ($i < ($limit ? min($num, $limit) : $num))
 			if ($resqlm)
 			{
 				$objtp = $db->fetch_object($resqlm);
+				if (!empty($objtp->description)) $objp->description = $objtp->description;
 				if (!empty($objtp->label)) $objp->label = $objtp->label;
 			}
 		}
@@ -555,9 +568,11 @@ while ($i < ($limit ? min($num, $limit) : $num))
 		//print '<td><input type="checkbox" class="check" name="' . $i . '"' . $disabled . '></td>';
 		print '<td><input type="checkbox" class="check" name="'.$i.'"></td>';
 
-		print '<td class="nowrap">'.$prod->getNomUrl(1, '', 16).'</td>';
+		print '<td class="nowrap">'.$prod->getNomUrl(1, '').'</td>';
 
-		print '<td>' . $objp->label . '<input type="hidden" name="desc' . $i . '" value="' . $objp->label . '" ></td>';
+		print '<td>'.$objp->label ;
+		print '<input type="hidden" name="desc' . $i . '" value="' . dol_escape_htmltag($objp->description) . '">';  // TODO Remove this and make a fetch to get description when creating order instead of a GETPOST
+		print '</td>';
 
 		if (!empty($conf->service->enabled) && $type == 1)
 		{

@@ -304,7 +304,6 @@ if ($action == 'add')
                     $urlback=DOL_MAIN_URL_ROOT.'/public/paybox/newpayment.php?from=membernewform&source=membersubscription&ref='.$adh->ref;
                     if (price2num(GETPOST('amount'))) $urlback.='&amount='.price2num(GETPOST('amount'));
                     if (GETPOST('email')) $urlback.='&email='.urlencode(GETPOST('email'));
-                    if (! empty($entity)) $urlback.='&entity='.$entity;
                 }
                 else if ($conf->global->MEMBER_NEWFORM_PAYONLINE == 'paypal')
                 {
@@ -315,7 +314,7 @@ if ($action == 'add')
                     {
                     	$urlback.='&securekey='.dol_hash($conf->global->PAYPAL_SECURITY_TOKEN . 'membersubscription' . $adh->ref, 2);
                     }
-                    if (! empty($entity)) $urlback.='&entity='.$entity;
+                    
                 }
                 else
                 {
@@ -324,6 +323,7 @@ if ($action == 'add')
                 }
             }
 
+            if (! empty($entity)) $urlback.='&entity='.$entity;
             dol_syslog("member ".$adh->ref." was created, we redirect to ".$urlback);
             Header("Location: ".$urlback);
             exit;
@@ -367,7 +367,7 @@ $extrafields->fetch_name_optionals_label('adherent');    // fetch optionals attr
 llxHeaderVierge($langs->trans("NewSubscription"));
 
 
-print_titre($langs->trans("NewSubscription"));
+print load_fiche_titre($langs->trans("NewSubscription"));
 
 if (! empty($conf->global->MEMBER_NEWFORM_TEXT)) print $langs->trans($conf->global->MEMBER_NEWFORM_TEXT)."<br>\n";
 else print $langs->trans("NewSubscriptionDesc",$conf->global->MAIN_INFO_SOCIETE_MAIL)."<br>\n";
@@ -460,7 +460,7 @@ print '<tr><td>'.$langs->trans("Firstname").' <FONT COLOR="red">*</FONT></td><td
 print '<tr id="trcompany" class="trcompany"><td>'.$langs->trans("Company").'</td><td><input type="text" name="societe" size="40" value="'.dol_escape_htmltag(GETPOST('societe')).'"></td></tr>'."\n";
 // Address
 print '<tr><td>'.$langs->trans("Address").'</td><td>'."\n";
-print '<textarea name="address" id="address" wrap="soft" cols="40" rows="'.ROWS_3.'">'.dol_escape_htmltag(GETPOST('address')).'</textarea></td></tr>'."\n";
+print '<textarea name="address" id="address" wrap="soft" class="quatrevingtpercent" rows="'.ROWS_3.'">'.dol_escape_htmltag(GETPOST('address')).'</textarea></td></tr>'."\n";
 // Zip / Town
 print '<tr><td>'.$langs->trans('Zip').' / '.$langs->trans('Town').'</td><td>';
 print $formcompany->select_ziptown(GETPOST('zipcode'), 'zipcode', array('town','selectcountry_id','state_id'), 6, 1);

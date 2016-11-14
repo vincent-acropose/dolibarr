@@ -32,19 +32,29 @@ class mod_syslog_chromephp extends LogHandler implements LogHandlerInterface
 	/**
 	 * Content of the info tooltip.
 	 *
-	 * @return false|string
+	 * @return string
 	 */
 	public function getInfo()
+	{
+		return '';
+	}
+
+	/**
+	 * Return warning if something is wrong with logger
+	 *
+	 * @return string
+	 */
+	public function getWarning()
 	{
 		global $langs;
 
 		return $this->isActive()?'':$langs->trans('ClassNotFoundIntoPathWarning','ChromePhp.class.php');
 	}
-
+	
 	/**
 	 * Is the module active ?
 	 *
-	 * @return int
+	 * @return int         -1 if not active, 0 if active but lib/path not found, 1 if OK
 	 */
 	public function isActive()
 	{
@@ -52,11 +62,10 @@ class mod_syslog_chromephp extends LogHandler implements LogHandlerInterface
 		try
 		{
 			if (empty($conf->global->SYSLOG_CHROMEPHP_INCLUDEPATH)) {
-				$conf->global->SYSLOG_CHROMEPHP_INCLUDEPATH=DOL_DOCUMENT_ROOT . '/includes/chromephp/';
+				$conf->global->SYSLOG_CHROMEPHP_INCLUDEPATH = DOL_DOCUMENT_ROOT . '/includes/ccampbell/chromephp/';
 			}
 			set_include_path($conf->global->SYSLOG_CHROMEPHP_INCLUDEPATH);
 
-			//print 'rrrrr'.get_include_path();
 		    $res = @include_once('ChromePhp.php');
 		    if (! $res) $res=@include_once('ChromePhp.class.php');
 
@@ -65,6 +74,10 @@ class mod_syslog_chromephp extends LogHandler implements LogHandlerInterface
 		    if ($res)
 		    {
 		        return 1;
+		    }
+		    else
+		    {
+		        return 0;
 		    }
 		}
 		catch(Exception $e)
@@ -88,9 +101,9 @@ class mod_syslog_chromephp extends LogHandler implements LogHandlerInterface
 			array(
 				'name' => $langs->trans('IncludePath','SYSLOG_CHROMEPHP_INCLUDEPATH'),
 				'constant' => 'SYSLOG_CHROMEPHP_INCLUDEPATH',
-				'default' => DOL_DOCUMENT_ROOT . '/includes/chromephp/',
+				'default' => DOL_DOCUMENT_ROOT . '/includes/ccampbell/chromephp/',
 				'attr' => 'size="60"',
-			    'example' =>'/usr/share/php'
+			    'example' =>'/usr/share/php, '.DOL_DOCUMENT_ROOT . '/includes/ccampbell/chromephp/'
 			)
 		);
 	}
@@ -108,7 +121,14 @@ class mod_syslog_chromephp extends LogHandler implements LogHandlerInterface
 
 		if (! file_exists($conf->global->SYSLOG_CHROMEPHP_INCLUDEPATH.'/ChromePhp.php') && ! file_exists($conf->global->SYSLOG_CHROMEPHP_INCLUDEPATH.'/ChromePhp.class.php'))
 		{
-			$errors[] = $langs->trans("ErrorFailedToOpenFile", 'ChromePhp.class.php or ChromePhp.php');
+			if (is_object($langs))   // $langs may not be defined yet.
+			{
+			    $errors[] = $langs->trans("ErrorFailedToOpenFile", 'ChromePhp.class.php or ChromePhp.php');
+			}
+			else
+			{
+		        $errors[] = "ErrorFailedToOpenFile ChromePhp.class.php or ChromePhp.php";
+			}
 		}
 
 		return $errors;
@@ -138,7 +158,7 @@ class mod_syslog_chromephp extends LogHandler implements LogHandlerInterface
 		    $res = @include_once('ChromePhp.php');
 		    if (! $res) $res=@include_once('ChromePhp.class.php');
 			set_include_path($oldinclude);
-
+			
 			ob_start();	// To be sure headers are not flushed until all page is completely processed
 			if ($content['level'] == LOG_ERR) ChromePhp::error($content['message']);
 			elseif ($content['level'] == LOG_WARNING) ChromePhp::warn($content['message']);

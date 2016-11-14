@@ -40,7 +40,7 @@ $error=0;
 
 llxHeader();
 
-print_fiche_titre($langs->trans("FileCheckDolibarr"),'','title_setup');
+print load_fiche_titre($langs->trans("FileCheckDolibarr"),'','title_setup');
 
 // Version
 $var = true;
@@ -104,7 +104,7 @@ if (file_exists($xmlfile))
             }
             else 
             {
-                print '<tr ' . $bc[false] . '><td colspan="2">'.$langs->trans("None").'</td></tr>';
+                print '<tr ' . $bc[false] . '><td colspan="2" class="opacitymedium">'.$langs->trans("None").'</td></tr>';
             }            
             print '</table>';
     
@@ -136,7 +136,7 @@ if (file_exists($xmlfile))
             }
             else 
             {
-                print '<tr ' . $bc[false] . '><td colspan="5">'.$langs->trans("None").'</td></tr>';
+                print '<tr ' . $bc[false] . '><td colspan="5" class="opacitymedium">'.$langs->trans("None").'</td></tr>';
             }
             print '</table>';
         }

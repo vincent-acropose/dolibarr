@@ -38,7 +38,7 @@ $result = restrictedArea($user, 'contrat',$contratid,'');
 * View
 */
 
-llxHeader();
+llxHeader('',$langs->trans("Contract"),"");
 
 $contrat = new Contrat($db);
 $contrat->fetch($contratid);
@@ -55,6 +55,5 @@ print '</td></tr></table>';
 
 print '</div>';
 
-$db->close();
-
 llxFooter();
+$db->close();

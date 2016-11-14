@@ -49,6 +49,7 @@ $product_static = new Product($db);
  */
 
 $transAreaType = $langs->trans("ProductsAndServicesArea");
+
 $helpurl='';
 if (! isset($_GET["type"]))
 {
@@ -66,10 +67,10 @@ if ((isset($_GET["type"]) && $_GET["type"] == 1) || empty($conf->product->enable
 	$helpurl='EN:Module_Services_En|FR:Module_Services|ES:M&oacute;dulo_Servicios';
 }
 
-llxHeader("",$langs->trans("ProductsAndServices"),$helpurl);
+llxHeader("", $langs->trans("ProductsAndServices"), $helpurl);
 
 $linkback="";
-print_fiche_titre($transAreaType,$linkback,'title_products.png');
+print load_fiche_titre($transAreaType,$linkback,'title_products.png');
 
 
 print '<div class="fichecenter"><div class="fichethirdleft">';
@@ -78,29 +79,32 @@ print '<div class="fichecenter"><div class="fichethirdleft">';
 /*
  * Search Area of product/service
  */
-$rowspan=2;
-if (! empty($conf->barcode->enabled)) $rowspan++;
-print '<form method="post" action="'.DOL_URL_ROOT.'/product/list.php">';
-print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-print '<table class="noborder nohover" width="100%">';
-print "<tr class=\"liste_titre\">";
-print '<td colspan="3">'.$langs->trans("Search").'</td></tr>';
-print "<tr ".$bc[false]."><td>";
-print '<label for="sref">'.$langs->trans("Ref").'</label>:</td><td><input class="flat" type="text" size="14" name="sref" id="sref"></td>';
-print '<td rowspan="'.$rowspan.'"><input type="submit" class="button" value="'.$langs->trans("Search").'"></td></tr>';
-if (! empty($conf->barcode->enabled))
+ 
+// Search contract
+if ((! empty($conf->product->enabled) || ! empty($conf->service->enabled)) && ($user->rights->produit->lire || $user->rights->service->lire))
 {
-	print "<tr ".$bc[false]."><td>";
-	print '<label for="barcode">'.$langs->trans("BarCode").'</label>:</td><td><input class="flat" type="text" size="14" name="sbarcode" id="barcode"></td>';
-	//print '<td><input type="submit" class="button" value="'.$langs->trans("Search").'"></td>';
-	print '</tr>';
+	$listofsearchfields['search_product']=array('text'=>'ProductOrService');
 }
-print "<tr ".$bc[false]."><td>";
-print '<label for="sall">'.$langs->trans("Other").'</label>:</td><td><input class="flat" type="text" size="14" name="sall" id="sall"></td>';
-//print '<td><input type="submit" class="button" value="'.$langs->trans("Search").'"></td>';
-print '</tr>';
-print "</table></form><br>";
 
+if (count($listofsearchfields))
+{
+	print '<form method="post" action="'.DOL_URL_ROOT.'/core/search.php">';
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print '<table class="noborder nohover centpercent">';
+	$i=0;
+	foreach($listofsearchfields as $key => $value)
+	{
+		if ($i == 0) print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("Search").'</td></tr>';
+		print '<tr '.$bc[false].'>';
+		print '<td class="nowrap"><label for="'.$key.'">'.$langs->trans($value["text"]).'</label></td><td><input type="text" class="flat inputsearch" name="'.$key.'" id="'.$key.'" size="18"></td>';
+		if ($i == 0) print '<td rowspan="'.count($listofsearchfields).'"><input type="submit" value="'.$langs->trans("Search").'" class="button"></td>';
+		print '</tr>';
+		$i++;
+	}
+	print '</table>';	
+	print '</form>';
+	print '<br>';
+}
 
 /*
  * Number of products and/or services
@@ -304,7 +308,8 @@ if ($result)
 			// Sell price
 			if (empty($conf->global->PRODUIT_MULTIPRICES))
 			{
-                if (!empty($objp->fk_price_expression)) {
+                if (!empty($conf->dynamicprices->enabled) && !empty($objp->fk_price_expression))
+                {
                 	$product = new Product($db);
                 	$product->fetch($objp->rowid);
                     $priceparser = new PriceParser($db);
@@ -314,7 +319,8 @@ if ($result)
                     }
                 }
 				print '<td align="right">';
-    			print price($objp->price).' '.$langs->trans("HT");
+    			if (isset($objp->price_base_type) && $objp->price_base_type == 'TTC') print price($objp->price_ttc).' '.$langs->trans("TTC");
+    			else print price($objp->price).' '.$langs->trans("HT");
     			print '</td>';
 			}
 			print '<td align="right" class="nowrap">';
@@ -365,20 +371,20 @@ $db->close();
 function activitytrim($product_type)
 {
 	global $conf,$langs,$db;
+	global $bc;
 
 	// We display the last 3 years
 	$yearofbegindate=date('Y',dol_time_plus_duree(time(), -3, "y"));
 
 	// breakdown by quarter
 	$sql = "SELECT DATE_FORMAT(p.datep,'%Y') as annee, DATE_FORMAT(p.datep,'%m') as mois, SUM(fd.total_ht) as Mnttot";
-	$sql.= " FROM ".MAIN_DB_PREFIX."societe as s,".MAIN_DB_PREFIX."facture as f, ".MAIN_DB_PREFIX."facturedet as fd";
+	$sql.= " FROM ".MAIN_DB_PREFIX."facture as f, ".MAIN_DB_PREFIX."facturedet as fd";
 	$sql.= " , ".MAIN_DB_PREFIX."paiement as p,".MAIN_DB_PREFIX."paiement_facture as pf";
-	$sql.= " WHERE f.fk_soc = s.rowid";
+	$sql.= " WHERE f.entity = " . $conf->entity;
 	$sql.= " AND f.rowid = fd.fk_facture";
 	$sql.= " AND pf.fk_facture = f.rowid";
 	$sql.= " AND pf.fk_paiement= p.rowid";
 	$sql.= " AND fd.product_type=".$product_type;
-	$sql.= " AND s.entity IN (".getEntity('societe', 1).")";
 	$sql.= " AND p.datep >= '".$db->idate(dol_get_first_day($yearofbegindate),1)."'";
 	$sql.= " GROUP BY annee, mois ";
 	$sql.= " ORDER BY annee, mois ";
@@ -411,6 +417,8 @@ function activitytrim($product_type)
 		}
 		$i = 0;
 
+		$var=true;
+		
 		while ($i < $num)
 		{
 			$objp = $db->fetch_object($result);
@@ -418,7 +426,8 @@ function activitytrim($product_type)
 			{
 				if ($trim1+$trim2+$trim3+$trim4 > 0)
 				{
-					print '<tr ><td align=left>'.$tmpyear.'</td>';
+				    $var=!$var;
+					print '<tr '.$bc[$var].'><td align=left>'.$tmpyear.'</td>';
 					print '<td align=right>'.price($trim1).'</td>';
 					print '<td align=right>'.price($trim2).'</td>';
 					print '<td align=right>'.price($trim3).'</td>';
@@ -451,7 +460,8 @@ function activitytrim($product_type)
 		}
 		if ($trim1+$trim2+$trim3+$trim4 > 0)
 		{
-			print '<tr ><td align=left>'.$tmpyear.'</td>';
+		    $var=!$var;
+			print '<tr '.$bc[$var].'><td align=left>'.$tmpyear.'</td>';
 			print '<td align=right>'.price($trim1).'</td>';
 			print '<td align=right>'.price($trim2).'</td>';
 			print '<td align=right>'.price($trim3).'</td>';

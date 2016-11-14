@@ -62,13 +62,13 @@ if ($action == 'add' || GETPOST('modify','alpha'))
 	if (! GETPOST("$ftp_name",'alpha'))
 	{
 		$error=1;
-		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Label")), 'errors');
+		setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Label")), null, 'errors');
 	}
 
 	if (! GETPOST("$ftp_server",'alpha'))
 	{
 		$error=1;
-		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Server")), 'errors');
+		setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Server")), null, 'errors');
 	}
 
     if (! $error)
@@ -138,7 +138,7 @@ $form=new Form($db);
 llxHeader();
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans("FTPClientSetup"), $linkback, 'title_setup');
+print load_fiche_titre($langs->trans("FTPClientSetup"), $linkback, 'title_setup');
 print '<br>';
 
 if (! function_exists('ftp_connect'))
@@ -173,7 +173,7 @@ else
 	print '<tr class="pair">';
 	print '<td width="100">'.$langs->trans("Port").'</td>';
 	print '<td><input type="text" name="FTP_PORT_'.($lastftpentry+1).'" value="'.GETPOST("FTP_PORT_" . ($lastftpentry+1)).'" size="64"></td>';
-	print '<td>21</td>';
+	print '<td>21 for pure non crypted FTP or if option FTP_CONNECT_WITH_SSL (See Home-Setup-Other) is on (FTPS)<br>22 if option FTP_CONNECT_WITH_SFTP (See Home-Setup-Other) is on (SFTP)</td>';
 	print '</tr>';
 
 	print '<tr class="impair">';

@@ -3,9 +3,9 @@
  * Copyright (C) 2007-2010	Jean Heimburger		<jean@tiaris.info>
  * Copyright (C) 2011		Juanjo Menent		<jmenent@2byte.es>
  * Copyright (C) 2012		Regis Houssin		<regis@dolibarr.fr>
- * Copyright (C) 2013-2014  Alexandre Spangaro	<aspangaro.dolibarr@gmail.com>
- * Copyright (C) 2013-2014  Olivier Geffroy		<jeff@jeffinfo.com>
- * Copyright (C) 2013-2014  Florian Henry	    <florian.henry@open-concept.pro>
+ * Copyright (C) 2013-2015  Alexandre Spangaro	<aspangaro.dolibarr@gmail.com>
+ * Copyright (C) 2013-2016  Olivier Geffroy		<jeff@jeffinfo.com>
+ * Copyright (C) 2013-2016  Florian Henry	    <florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,21 +22,20 @@
  */
 
 /**
- * \file		htdocs/accountancy/journal/purchasesjournal.php
- * \ingroup		Accounting Expert
- * \brief		Page with purchases journal
+ * \file htdocs/accountancy/journal/purchasesjournal.php
+ * \ingroup Advanced accountancy
+ * \brief Page with purchases journal
  */
-
 require '../../main.inc.php';
 
 // Class
-require_once DOL_DOCUMENT_ROOT.'/core/lib/report.lib.php';
-require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
-require_once DOL_DOCUMENT_ROOT.'/core/lib/accounting.lib.php';
-require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.facture.class.php';
-require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.class.php';
-require_once DOL_DOCUMENT_ROOT.'/accountancy/class/bookkeeping.class.php';
-require_once DOL_DOCUMENT_ROOT.'/accountancy/class/accountingaccount.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/report.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/accounting.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/fourn/class/fournisseur.facture.class.php';
+require_once DOL_DOCUMENT_ROOT . '/fourn/class/fournisseur.class.php';
+require_once DOL_DOCUMENT_ROOT . '/accountancy/class/bookkeeping.class.php';
+require_once DOL_DOCUMENT_ROOT . '/accountancy/class/accountingaccount.class.php';
 
 // Langs
 $langs->load("compta");
@@ -52,13 +51,13 @@ $date_endmonth = GETPOST('date_endmonth');
 $date_endday = GETPOST('date_endday');
 $date_endyear = GETPOST('date_endyear');
 
+$now = dol_now();
+
 // Security check
 if ($user->societe_id > 0)
 	accessforbidden();
 
 $action = GETPOST('action');
-
-
 
 /*
  * Actions
@@ -84,17 +83,18 @@ if (empty($date_start) || empty($date_end)) // We define date_start and date_end
 $p = explode(":", $conf->global->MAIN_INFO_SOCIETE_COUNTRY);
 $idpays = $p[0];
 
-$sql = "SELECT f.rowid, f.ref, f.type, f.datef as df, f.libelle,";
+$sql = "SELECT f.rowid, f.ref, f.type, f.datef as df, f.libelle,f.ref_supplier,";
 $sql .= " fd.rowid as fdid, fd.description, fd.total_ttc, fd.tva_tx, fd.total_ht, fd.tva as total_tva, fd.product_type,";
 $sql .= " s.rowid as socid, s.nom as name, s.code_compta_fournisseur, s.fournisseur,";
 $sql .= " s.code_compta_fournisseur, p.accountancy_code_buy , ct.accountancy_code_buy as account_tva, aa.rowid as fk_compte, aa.account_number as compte, aa.label as label_compte";
 $sql .= " FROM " . MAIN_DB_PREFIX . "facture_fourn_det as fd";
 $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "c_tva as ct ON fd.tva_tx = ct.taux AND ct.fk_pays = '" . $idpays . "'";
 $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "product as p ON p.rowid = fd.fk_product";
-$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "accountingaccount as aa ON aa.rowid = fd.fk_code_ventilation";
+$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "accounting_account as aa ON aa.rowid = fd.fk_code_ventilation";
 $sql .= " JOIN " . MAIN_DB_PREFIX . "facture_fourn as f ON f.rowid = fd.fk_facture_fourn";
 $sql .= " JOIN " . MAIN_DB_PREFIX . "societe as s ON s.rowid = f.fk_soc";
 $sql .= " WHERE f.fk_statut > 0 ";
+$sql .= " AND fd.fk_code_ventilation > 0 ";
 if (! empty($conf->multicompany->enabled)) {
 	$sql .= " AND f.entity IN (" . getEntity("facture_fourn", 1) . ")";
 }
@@ -112,11 +112,12 @@ if ($result) {
 	$num = $db->num_rows($result);
 	// les variables
 	$cptfour = (! empty($conf->global->ACCOUNTING_ACCOUNT_SUPPLIER)) ? $conf->global->ACCOUNTING_ACCOUNT_SUPPLIER : $langs->trans("CodeNotDef");
-	$cpttva = (! empty($conf->global->ACCOUNTING_VAT_SOLD_ACCOUNT)) ? $conf->global->ACCOUNTING_VAT_SOLD_ACCOUNT : $langs->trans("CodeNotDef");
+	$cpttva = (! empty($conf->global->ACCOUNTING_VAT_BUY_ACCOUNT)) ? $conf->global->ACCOUNTING_VAT_BUY_ACCOUNT : $langs->trans("CodeNotDef");
 
 	$tabfac = array ();
 	$tabht = array ();
 	$tabtva = array ();
+	$def_tva = array ();
 	$tabttc = array ();
 	$tabcompany = array ();
 
@@ -134,8 +135,14 @@ if ($result) {
 		}
 		$compta_tva = (! empty($obj->account_tva) ? $obj->account_tva : $cpttva);
 
-		$tabfac[$obj->rowid]["date"] = $obj->df;
-		$tabfac[$obj->rowid]["ref"] = $obj->ref;
+		//Define array for display vat tx
+		$def_tva[$obj->rowid]=price($obj->tva_tx);
+
+		$tabfac[$obj->rowid]["date"] = $db->jdate($obj->df);
+		$tabfac[$obj->rowid]["ref"] = $obj->ref_supplier . ' (' . $obj->ref . ')';
+		$tabfac[$obj->rowid]["refsologest"] = $obj->ref;
+		$tabfac[$obj->rowid]["refsuppliersologest"] = $obj->ref_supplier;
+
 		$tabfac[$obj->rowid]["type"] = $obj->type;
 		$tabfac[$obj->rowid]["description"] = $obj->description;
 		$tabfac[$obj->rowid]["fk_facturefourndet"] = $obj->fdid;
@@ -159,7 +166,21 @@ if ($action == 'writebookkeeping') {
 	$now = dol_now();
 	$error = 0;
 
-	foreach ( $tabfac as $key => $val ) {
+	foreach ($tabfac as $key => $val)
+	{
+		$companystatic = new Societe($db);
+		$invoicestatic = new FactureFournisseur($db);
+
+		$invoicestatic->id = $key;
+		$invoicestatic->ref = (string) $val["refsologest"];
+		$invoicestatic->refsupplier = $val["refsuppliersologest"];
+		$invoicestatic->type = $val["type"];
+		$invoicestatic->description = html_entity_decode(dol_trunc($val["description"], 32));
+
+		$companystatic->id = $tabcompany[$key]['id'];
+		$companystatic->name = $tabcompany[$key]['name'];
+		$companystatic->client = $tabcompany[$key]['code_client'];
+
 		foreach ( $tabttc[$key] as $k => $mt ) {
 			// get compte id and label
 
@@ -171,7 +192,7 @@ if ($action == 'writebookkeeping') {
 			$bookkeeping->fk_doc = $key;
 			$bookkeeping->fk_docdet = $val["fk_facturefourndet"];
 			$bookkeeping->code_tiers = $tabcompany[$key]['code_fournisseur'];
-			$bookkeeping->label_compte = $tabcompany[$key]['name'];
+			$bookkeeping->label_compte = dol_trunc($companystatic->name, 16) . ' - ' . $invoicestatic->refsupplier . ' - ' . $langs->trans("Code_tiers");
 			$bookkeeping->numero_compte = $conf->global->ACCOUNTING_ACCOUNT_SUPPLIER;
 			$bookkeeping->montant = $mt;
 			$bookkeeping->sens = ($mt >= 0) ? 'C' : 'D';
@@ -180,15 +201,17 @@ if ($action == 'writebookkeeping') {
 			$bookkeeping->code_journal = $conf->global->ACCOUNTING_PURCHASE_JOURNAL;
 			$bookkeeping->fk_user_author = $user->id;
 
-			$result = $bookkeeping->create();
+			$result = $bookkeeping->create($user);
 			if ($result < 0) {
 				$error ++;
-				setEventMessage($object->errors, 'errors');
+				setEventMessages($bookkeeping->error, $bookkeeping->errors, 'errors');
 			}
 		}
 
 		// Product / Service
 		foreach ( $tabht[$key] as $k => $mt ) {
+			$accountingaccount = new AccountingAccount($db);
+			$accountingaccount->fetch(null, $k);
 			if ($mt) {
 				// get compte id and label
 				$accountingaccount = new AccountingAccount($db);
@@ -201,7 +224,7 @@ if ($action == 'writebookkeeping') {
 					$bookkeeping->fk_doc = $key;
 					$bookkeeping->fk_docdet = $val["fk_facturefourndet"];
 					$bookkeeping->code_tiers = '';
-					$bookkeeping->label_compte = $accountingaccount->label;
+					$bookkeeping->label_compte = dol_trunc($companystatic->name, 16) . ' - ' . $invoicestatic->refsupplier . ' - ' . $accountingaccount->label;
 					$bookkeeping->numero_compte = $k;
 					$bookkeeping->montant = $mt;
 					$bookkeeping->sens = ($mt < 0) ? 'C' : 'D';
@@ -210,10 +233,10 @@ if ($action == 'writebookkeeping') {
 					$bookkeeping->code_journal = $conf->global->ACCOUNTING_PURCHASE_JOURNAL;
 					$bookkeeping->fk_user_author = $user->id;
 
-					$result = $bookkeeping->create();
+					$result = $bookkeeping->create($user);
 					if ($result < 0) {
 						$error ++;
-						setEventMessage($object->errors, 'errors');
+						setEventMessages($bookkeeping->error, $bookkeeping->errors, 'errors');
 					}
 				}
 			}
@@ -232,7 +255,7 @@ if ($action == 'writebookkeeping') {
 				$bookkeeping->fk_doc = $key;
 				$bookkeeping->fk_docdet = $val["fk_facturefourndet"];
 				$bookkeeping->code_tiers = '';
-				$bookkeeping->label_compte = $langs->trans("VAT");
+				$bookkeeping->label_compte = dol_trunc($companystatic->name, 16) . ' - ' . $invoicestatic->refsupplier . ' - ' . $langs->trans("VAT"). ' '.$def_tva[$key];
 				$bookkeeping->numero_compte = $k;
 				$bookkeeping->montant = $mt;
 				$bookkeeping->sens = ($mt < 0) ? 'C' : 'D';
@@ -241,20 +264,19 @@ if ($action == 'writebookkeeping') {
 				$bookkeeping->code_journal = $conf->global->ACCOUNTING_PURCHASE_JOURNAL;
 				$bookkeeping->fk_user_author = $user->id;
 
-				$result = $bookkeeping->create();
+				$result = $bookkeeping->create($user);
 				if ($result < 0) {
 					$error ++;
-					setEventMessage($object->errors, 'errors');
+					setEventMessages($object->error, $object->errors, 'errors');
 				}
 			}
 		}
 	}
 
 	if (empty($error)) {
-		setEventMessage($langs->trans("GeneralLedgerIsWritten"),'mesgs');
+		setEventMessages($langs->trans("GeneralLedgerIsWritten"), null, 'mesgs');
 	}
 }
-
 
 /*
  * View
@@ -263,122 +285,126 @@ if ($action == 'writebookkeeping') {
 $companystatic = new Fournisseur($db);
 
 // Export
-if ($action == 'export_csv')
-{
-	$sep = $conf->global->ACCOUNTING_EXPORT_SEPARATORCSV;
-	$purchase_journal = $conf->global->ACCOUNTING_PURCHASE_JOURNAL;
+if ($action == 'export_csv') {
+		$sep = $conf->global->ACCOUNTING_EXPORT_SEPARATORCSV;
+		$journal = $conf->global->ACCOUNTING_PURCHASE_JOURNAL;
 
-	header('Content-Type: text/csv');
-	if ($conf->global->EXPORT_PREFIX_SPEC)
-		$filename=$conf->global->EXPORT_PREFIX_SPEC."_"."journal_achats.csv";
-	else
-		$filename="journal_achats.csv";
-	header('Content-Disposition: attachment;filename='.$filename);
+		include DOL_DOCUMENT_ROOT . '/accountancy/tpl/export_journal.tpl.php';
 
-	if ($conf->global->ACCOUNTING_EXPORT_MODELCSV == 2) 	// Model Cegid Expert Export
-	{
-		$sep = ";";
-		
-		foreach ( $tabfac as $key => $val ) {
-			$date = dol_print_date($db->jdate($val["date"]), '%d%m%Y');
+		// Model Cegid Expert Export
+		if ($conf->global->ACCOUNTING_EXPORT_MODELCSV == 2) {
+			$sep = ";";
 
-			// Product / Service
-			foreach ( $tabht[$key] as $k => $mt ) {
+			foreach ( $tabfac as $key => $val ) {
+				$date = dol_print_date($val["date"], '%d%m%Y');
+
+				// Product / Service
+				foreach ( $tabht[$key] as $k => $mt ) {
+					$companystatic->id = $tabcompany[$key]['id'];
+					$companystatic->name = $tabcompany[$key]['name'];
+					$companystatic->client = $tabcompany[$key]['code_client'];
+
+					if ($mt) {
+						print $date . $sep;
+						print $purchase_journal . $sep;
+						print length_accountg(html_entity_decode($k)) . $sep;
+						print $sep;
+						print ($mt < 0 ? 'C' : 'D') . $sep;
+						print ($mt <= 0 ? price(- $mt) : $mt) . $sep;
+						print dol_trunc($val["description"], 32) . $sep;
+						print $val["ref"];
+						print "\n";
+					}
+				}
+
+				// VAT
+				foreach ( $tabtva[$key] as $k => $mt ) {
+					if ($mt) {
+						print $date . $sep;
+						print $purchase_journal . $sep;
+						print length_accountg(html_entity_decode($k)) . $sep;
+						print $sep;
+						print ($mt < 0 ? 'C' : 'D') . $sep;
+						print ($mt <= 0 ? price(- $mt) : $mt) . $sep;
+						print $langs->trans("VAT") . $sep;
+						print $val["ref"];
+						print "\n";
+					}
+				}
+
+				foreach ( $tabttc[$key] as $k => $mt ) {
+					print $date . $sep;
+					print $purchase_journal . $sep;
+					print length_accountg($conf->global->ACCOUNTING_ACCOUNT_SUPPLIER) . $sep;
+					print length_accounta(html_entity_decode($k)) . $sep;
+					print ($mt < 0 ? 'D' : 'C') . $sep;
+					print ($mt <= 0 ? price(- $mt) : $mt) . $sep;
+					print $companystatic->name . $sep;
+					print $val["ref"];
+					print "\n";
+				}
+			}
+		} elseif ($conf->global->ACCOUNTING_EXPORT_MODELCSV == 1) {
+			// Model Classic Export
+			foreach ( $tabfac as $key => $val ) {
+
+				$invoicestatic->id = $key;
+				$invoicestatic->ref = $val["ref"];
+				$invoicestatic->ref = $val["refsologest"];
+				$invoicestatic->refsupplier = $val["refsuppliersologest"];
+				$invoicestatic->type = $val["type"];
+				$invoicestatic->description = html_entity_decode(dol_trunc($val["description"], 32));
+
+				$date = dol_print_date($val["date"], 'day');
+
 				$companystatic->id = $tabcompany[$key]['id'];
 				$companystatic->name = $tabcompany[$key]['name'];
 				$companystatic->client = $tabcompany[$key]['code_client'];
 
-				if ($mt) {
-					print $date . $sep;
-					print $purchase_journal . $sep;
-					print length_accountg(html_entity_decode($k)) . $sep;
-					print $sep;
-					print ($mt < 0 ? 'C' : 'D') . $sep;
-					print ($mt <= 0 ? price(- $mt) : $mt) . $sep;
-					print dol_trunc($val["description"], 32) . $sep;
-					print $val["ref"];
-					print "\n";
+				// Product / Service
+				foreach ( $tabht[$key] as $k => $mt ) {
+					$accountingaccount = new AccountingAccount($db);
+					$accountingaccount->fetch(null, $k);
+					if ($mt) {
+						print '"' . $date . '"' . $sep;
+						print '"' . $val["ref"] . '"' . $sep;
+						print '"' . length_accountg(html_entity_decode($k)) . '"' . $sep;
+						print '"' . dol_trunc($companystatic->name, 16) . ' - ' . $val["refsuppliersologest"] . ' - ' . dol_trunc($accountingaccount->label, 32) . '"' . $sep;
+						// print '"' . dol_trunc($accountingaccount->label, 32) . '"' . $sep;
+						print '"' . ($mt >= 0 ? price($mt) : '') . '"' . $sep;
+						print '"' . ($mt < 0 ? price(- $mt) : '') . '"';
+						print "\n";
+					}
 				}
-			}
-
-			// VAT
-			foreach ( $tabtva[$key] as $k => $mt ) {
-				if ($mt) {
-					print $date . $sep;
-					print $purchase_journal . $sep;
-					print length_accountg(html_entity_decode($k)) . $sep;
-					print $sep;
-					print ($mt < 0 ? 'C' : 'D') . $sep;
-					print ($mt <= 0 ? price(- $mt) : $mt) . $sep;
-					print $langs->trans("VAT") . $sep;
-					print $val["ref"];
-					print "\n";
+				// VAT
+				foreach ( $tabtva[$key] as $k => $mt ) {
+					if ($mt) {
+						print '"' . $date . '"' . $sep;
+						print '"' . $val["ref"] . '"' . $sep;
+						print '"' . length_accountg(html_entity_decode($k)) . '"' . $sep;
+						// print '"' . $langs->trans("VAT") . '"' . $sep;
+						print '"' . dol_trunc($companystatic->name, 16) . ' - ' . $val["refsuppliersologest"] . ' - ' . $langs->trans("VAT") . '"' . $sep;
+						print '"' . ($mt >= 0 ? price($mt) : '') . '"' . $sep;
+						print '"' . ($mt < 0 ? price(- $mt) : '') . '"';
+						print "\n";
+					}
 				}
-			}
 
-			foreach ( $tabttc[$key] as $k => $mt ) {
-				print $date . $sep;
-				print $purchase_journal . $sep;
-				print length_accountg($conf->global->ACCOUNTING_ACCOUNT_SUPPLIER) . $sep;
-				print length_accounta(html_entity_decode($k)) . $sep;
-				print ($mt < 0 ? 'D' : 'C') . $sep;
-				print ($mt <= 0 ? price(- $mt) : $mt) . $sep;
-				print utf8_decode($companystatic->name) . $sep;
-				print $val["ref"];
+				// Third party
+				foreach ( $tabttc[$key] as $k => $mt ) {
+					print '"' . $date . '"' . $sep;
+					print '"' . $val["ref"] . '"' . $sep;
+					print '"' . length_accounta(html_entity_decode($k)) . '"' . $sep;
+					print '"' . dol_trunc($companystatic->name, 16) . ' - ' . $val["refsuppliersologest"] . ' - ' . $langs->trans("Code_tiers") . '"' . $sep;
+					print '"' . ($mt < 0 ? price(- $mt) : '') . '"' . $sep;
+					print '"' . ($mt >= 0 ? price($mt) : '') . '"';
+				}
 				print "\n";
 			}
 		}
-	} else 	// Model Classic Export
-	{
-		foreach ( $tabfac as $key => $val ) {
-			$date = dol_print_date($db->jdate($val["date"]), 'day');
-
-			$companystatic->id = $tabcompany[$key]['id'];
-			$companystatic->name = $tabcompany[$key]['name'];
-			$companystatic->client = $tabcompany[$key]['code_client'];
-
-			// Product / Service
-			foreach ( $tabht[$key] as $k => $mt ) {
-			$accountingaccount = new AccountingAccount($db);
-		    $accountingaccount->fetch(null, $k);	
-				if ($mt) {
-					print '"' . $date . '"' . $sep;
-					print '"' . $val["ref"] . '"' . $sep;
-					print '"' . length_accountg(html_entity_decode($k)) . '"' . $sep;
-					print '"' . dol_trunc($accountingaccount->label, 32) . '"' . $sep;
-					print '"' . ($mt >= 0 ? price($mt) : '') . '"' . $sep;
-					print '"' . ($mt < 0 ? price(- $mt) : '') . '"';
-					print "\n";
-				}
-			}
-			// VAT
-			foreach ( $tabtva[$key] as $k => $mt ) {
-				if ($mt) {
-					print '"' . $date . '"' . $sep;
-					print '"' . $val["ref"] . '"' . $sep;
-					print '"' . length_accountg(html_entity_decode($k)) . '"' . $sep;
-					print '"' . $langs->trans("VAT") . '"' . $sep;
-					print '"' . ($mt >= 0 ? price($mt) : '') . '"' . $sep;
-					print '"' . ($mt < 0 ? price(- $mt) : '') . '"';
-					print "\n";
-				}
-			}
-
-			// Third party
-			foreach ( $tabttc[$key] as $k => $mt ) {
-				print '"' . $date . '"' . $sep;
-				print '"' . $val["ref"] . '"' . $sep;
-				print '"' . length_accounta(html_entity_decode($k)) . '"' . $sep;
-				print '"' . utf8_decode($companystatic->name) . '"' . $sep;
-				print '"' . ($mt < 0 ? price(- $mt) : '') . '"' . $sep;
-				print '"' . ($mt >= 0 ? price($mt) : '') . '"';
-			}
-			print "\n";
-		}
-	}
 } else {
 
-	llxHeader('', '', '');
+	llxHeader('', $langs->trans("PurchasesJournal"));
 
 	$form = new Form($db);
 
@@ -388,16 +414,24 @@ if ($action == 'export_csv')
 	$exportlink = '';
 	$builddate = time();
 	$description = $langs->trans("DescPurchasesJournal") . '<br>';
-	if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS))
+	if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS)) {
 		$description .= $langs->trans("DepositsAreNotIncluded");
-	else
+	} else {
 		$description .= $langs->trans("DepositsAreIncluded");
+	}
+
 	$period = $form->select_date($date_start, 'date_start', 0, 0, 0, '', 1, 0, 1) . ' - ' . $form->select_date($date_end, 'date_end', 0, 0, 0, '', 1, 0, 1);
-	report_header($nom, $nomlink, $period, $periodlink, $description, $builddate, $exportlink, array('action' => ''));
+	report_header($nom, $nomlink, $period, $periodlink, $description, $builddate, $exportlink, array (
+			'action' => ''
+	));
 
-	print '<input type="button" class="button" style="float: right;" value="' . $langs->trans("Export") . '" onclick="launch_export();" />';
+	if ($conf->global->ACCOUNTING_EXPORT_MODELCSV != 1 && $conf->global->ACCOUNTING_EXPORT_MODELCSV != 2) {
+		print '<input type="button" class="butActionRefused" style="float: right;" value="' . $langs->trans("Export") . '" disabled="disabled" title="' . $langs->trans('ExportNotSupported') . '"/>';
+	} else {
+		print '<input type="button" class="butAction" style="float: right;" value="' . $langs->trans("Export") . '" onclick="launch_export();" />';
+	}
 
-	print '<input type="button" class="button" value="' . $langs->trans("WriteBookKeeping") . '" onclick="writebookkeeping();" />';
+	print '<input type="button" class="butAction" value="' . $langs->trans("WriteBookKeeping") . '" onclick="writebookkeeping();" />';
 
 	print '
 	<script type="text/javascript">
@@ -436,22 +470,29 @@ if ($action == 'export_csv')
 	foreach ( $tabfac as $key => $val ) {
 		$invoicestatic->id = $key;
 		$invoicestatic->ref = $val["ref"];
+
+		$invoicestatic->ref = $val["refsologest"];
+		$invoicestatic->refsupplier = $val["refsuppliersologest"];
+
 		$invoicestatic->type = $val["type"];
 		$invoicestatic->description = html_entity_decode(dol_trunc($val["description"], 32));
 
-		$date = dol_print_date($db->jdate($val["date"]), 'day');
+		$date = dol_print_date($val["date"], 'day');
 
 		// Product / Service
 		foreach ( $tabht[$key] as $k => $mt ) {
-		$accountingaccount = new AccountingAccount($db);
-		$accountingaccount->fetch(null, $k);
+			$accountingaccount = new AccountingAccount($db);
+			$accountingaccount->fetch(null, $k);
 
 			if ($mt) {
 				print "<tr " . $bc[$var] . " >";
 				print "<td>" . $date . "</td>";
 				print "<td>" . $invoicestatic->getNomUrl(1) . "</td>";
 				print "<td>" . length_accountg($k) . "</td>";
-				print "<td>" . $accountingaccount->label . "</td>";
+				$companystatic->id = $tabcompany[$key]['id'];
+				$companystatic->name = $tabcompany[$key]['name'];
+				print "<td>" . $companystatic->getNomUrl(0, 'supplier', 16) . ' - ' . $invoicestatic->refsupplier . ' - ' . $accountingaccount->label . "</td>";
+				// print "<td>" . $accountingaccount->label . "</td>";
 				print '<td align="right">' . ($mt >= 0 ? price($mt) : '') . "</td>";
 				print '<td align="right">' . ($mt < 0 ? price(- $mt) : '') . "</td>";
 				print "</tr>";
@@ -463,7 +504,8 @@ if ($action == 'export_csv')
 				print "<tr " . $bc[$var] . " >";
 				print "<td>" . $date . "</td>";
 				print "<td>" . $invoicestatic->getNomUrl(1) . "</td>";
-				print "<td>" . length_accountg($k) . "</td><td>" . $langs->trans("VAT") . "</td>";
+				print "<td>" . length_accountg($k) . "</td>";
+				print "<td>" . $companystatic->getNomUrl(0, 'supplier', 16) . ' - ' . $invoicestatic->refsupplier . ' - ' . $langs->trans("VAT"). ' '.$def_tva[$key]. "</td>";
 				print '<td align="right">' . ($mt >= 0 ? price($mt) : '') . "</td>";
 				print '<td align="right">' . ($mt < 0 ? price(- $mt) : '') . "</td>";
 				print "</tr>";
@@ -477,10 +519,11 @@ if ($action == 'export_csv')
 			print "<td>" . $invoicestatic->getNomUrl(1) . "</td>";
 			$companystatic->id = $tabcompany[$key]['id'];
 			$companystatic->name = $tabcompany[$key]['name'];
-			print "<td>" . length_accounta($k);
-			print "</td><td>" . $langs->trans("ThirdParty");
-			print ' (' . $companystatic->getNomUrl(0, 'supplier', 16) . ')';
-			print "</td>";
+			print "<td>" . length_accounta($k) . "</td>";
+			print "<td>" . $companystatic->getNomUrl(0, 'supplier', 16) . ' - ' . $invoicestatic->refsupplier . ' - ' . $langs->trans("Code_tiers") . "</td>";
+			// print "</td><td>" . $langs->trans("ThirdParty");
+			// print ' (' . $companystatic->getNomUrl(0, 'supplier', 16) . ')';
+			// print "</td>";
 			print '<td align="right">' . ($mt < 0 ? - price(- $mt) : '') . "</td>";
 			print '<td align="right">' . ($mt >= 0 ? price($mt) : '') . "</td>";
 		}

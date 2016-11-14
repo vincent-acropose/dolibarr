@@ -15,7 +15,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Create the autoloader for Luracast
+require_once DOL_DOCUMENT_ROOT.'/includes/restler/framework/Luracast/Restler/AutoLoader.php';
+call_user_func(function () {
+    $loader = Luracast\Restler\AutoLoader::instance();
+    spl_autoload_register($loader);
+    return $loader;
+});
+
+require_once DOL_DOCUMENT_ROOT.'/includes/restler/framework/Luracast/Restler/iAuthenticate.php';
+require_once DOL_DOCUMENT_ROOT.'/includes/restler/framework/Luracast/Restler/iUseAuthentication.php';
+require_once DOL_DOCUMENT_ROOT.'/includes/restler/framework/Luracast/Restler/Resources.php';
+require_once DOL_DOCUMENT_ROOT.'/includes/restler/framework/Luracast/Restler/Defaults.php';
+require_once DOL_DOCUMENT_ROOT.'/includes/restler/framework/Luracast/Restler/RestException.php';
 use \Luracast\Restler\iAuthenticate;
+use \Luracast\Restler\iUseAuthentication;
 use \Luracast\Restler\Resources;
 use \Luracast\Restler\Defaults;
 use \Luracast\Restler\RestException;
@@ -56,11 +70,13 @@ class DolibarrApiAccess implements iAuthenticate
 	{
 		global $db;
 
+		$login = '';
 		$stored_key = '';
 
 		$userClass = Defaults::$userIdentifierClass;
 
-		if (isset($_GET['api_key'])) {
+		if (isset($_GET['api_key'])) 
+		{
 			$sql = "SELECT u.login, u.datec, u.api_key, ";
 			$sql.= " u.tms as date_modification, u.entity";
 			$sql.= " FROM ".MAIN_DB_PREFIX."user as u";
@@ -80,11 +96,15 @@ class DolibarrApiAccess implements iAuthenticate
 				throw new RestException(503, 'Error when fetching user api_key :'.$db->error_msg);
 			}
 
-			if ( $stored_key != $_GET['api_key']) {
+			if ($stored_key != $_GET['api_key']) {
 				$userClass::setCacheIdentifier($_GET['api_key']);
 				return false;
 			}
 
+			if (! $login)
+			{
+			    throw new RestException(503, 'Error when searching logn user fro mapi key');
+			}
 			$fuser = new User($db);
 			if(! $fuser->fetch('',$login)) {
 				throw new RestException(503, 'Error when fetching user :'.$fuser->error);
@@ -100,12 +120,14 @@ class DolibarrApiAccess implements iAuthenticate
         }
 		else
 		{
-			return false;
+		    throw new RestException(401, "Failed to login to API. No parameter 'api_key' provided");
 		}
 
-        $userClass::setCacheIdentifier(static::$role);
-        Resources::$accessControlFunction = 'DolibarrApiAccess::verifyAccess';
-        return in_array(static::$role, (array) static::$requires) || static::$role == 'admin';
+    $userClass::setCacheIdentifier(static::$role);
+    Resources::$accessControlFunction = 'DolibarrApiAccess::verifyAccess';
+    $requirefortest = static::$requires;
+    if (! is_array($requirefortest)) $requirefortest=explode(',',$requirefortest);
+    return in_array(static::$role, (array) $requirefortest) || static::$role == 'admin';
 	}
 
 	/**

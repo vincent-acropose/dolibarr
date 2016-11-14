@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2001-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2016 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2015      Jean-François Ferry	<jfefe@aternatik.fr>
  *
@@ -38,7 +38,7 @@ $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
 $page = GETPOST("page",'int');
 if ($page == -1) { $page = 0 ; }
-$limit = $conf->liste_limit;
+$limit = GETPOST('limit')?GETPOST('limit','int'):$conf->liste_limit;
 $offset = $limit * $page ;
 
 if (! $sortfield) $sortfield="c.rowid";
@@ -48,33 +48,71 @@ $filter=GETPOST("filter");
 $search_name=GETPOST("search_name");
 $search_contract=GETPOST("search_contract");
 $search_service=GETPOST("search_service");
+$search_status=GETPOST("search_status","alpha");
 $statut=GETPOST('statut')?GETPOST('statut'):1;
 $socid=GETPOST('socid','int');
+
+$opouvertureprevuemonth=GETPOST('opouvertureprevuemonth');
+$opouvertureprevueday=GETPOST('opouvertureprevueday');
+$opouvertureprevueyear=GETPOST('opouvertureprevueyear');
+$filter_opouvertureprevue=GETPOST('filter_opouvertureprevue');
 
 $op1month=GETPOST('op1month');
 $op1day=GETPOST('op1day');
 $op1year=GETPOST('op1year');
 $filter_op1=GETPOST('filter_op1');
+
 $op2month=GETPOST('op2month');
 $op2day=GETPOST('op2day');
 $op2year=GETPOST('op2year');
 $filter_op2=GETPOST('filter_op2');
+
+$opcloturemonth=GETPOST('opcloturemonth');
+$opclotureday=GETPOST('opclotureday');
+$opclotureyear=GETPOST('opclotureyear');
+$filter_opcloture=GETPOST('filter_opcloture');
 
 // Security check
 $contratid = GETPOST('id','int');
 if (! empty($user->societe_id)) $socid=$user->societe_id;
 $result = restrictedArea($user, 'contrat',$contratid);
 
+if ($search_status != '')
+{
+    $tmp=explode('&', $search_status);
+    $mode=$tmp[0];
+    if (empty($tmp[1])) $filter='';
+    else
+    {
+        if ($tmp[1] == 'filter=notexpired') $filter='notexpired';
+        if ($tmp[1] == 'filter=expired') $filter='expired';
+    }
+}
+else
+{
+    $search_status = $mode;
+    if ($filter == 'expired') $search_status.='&filter=expired';
+    if ($filter == 'notexpired') $search_status.='&filter=notexpired';
+}
 
 $staticcontrat=new Contrat($db);
 $staticcontratligne=new ContratLigne($db);
 $companystatic=new Societe($db);
 
-if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both test are required to be compatible with all browsers
+/*
+ * Actions
+ */
+
+if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter.x") || GETPOST("button_removefilter")) // All test are required to be compatible with all browsers
 {
 	$search_name="";
 	$search_contract="";
 	$search_service="";
+	$search_status=-1;
+	$opouvertureprevuemonth="";
+	$opouvertureprevueday="";
+	$opouvertureprevueyear="";
+	$filter_opouvertureprevue="";
 	$op1month="";
 	$op1day="";
 	$op1year="";
@@ -83,6 +121,12 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
 	$op2day="";
 	$op2year="";
 	$filter_op2="";
+	$opcloturemonth="";
+	$opclotureday="";
+	$opclotureyear="";
+	$filter_opcloture="";
+	$mode='';
+	$filter='';
 }
 
 /*
@@ -98,7 +142,7 @@ llxHeader();
 $sql = "SELECT c.rowid as cid, c.ref, c.statut as cstatut,";
 $sql.= " s.rowid as socid, s.nom as name,";
 $sql.= " cd.rowid, cd.description, cd.statut,";
-$sql.= " p.rowid as pid, p.ref as pref, p.label as label, p.fk_product_type as ptype,";
+$sql.= " p.rowid as pid, p.ref as pref, p.label as label, p.fk_product_type as ptype, p.entity as pentity,";
 if (!$user->rights->societe->client->voir && !$socid) $sql .= " sc.fk_soc, sc.fk_user,";
 $sql.= " cd.date_ouverture_prevue,";
 $sql.= " cd.date_ouverture,";
@@ -117,14 +161,25 @@ if ($mode == "0") $sql.= " AND cd.statut = 0";
 if ($mode == "4") $sql.= " AND cd.statut = 4";
 if ($mode == "5") $sql.= " AND cd.statut = 5";
 if ($filter == "expired") $sql.= " AND cd.date_fin_validite < '".$db->idate($now)."'";
+if ($filter == "notexpired") $sql.= " AND cd.date_fin_validite >= '".$db->idate($now)."'";
 if ($search_name)     $sql.= " AND s.nom LIKE '%".$db->escape($search_name)."%'";
 if ($search_contract) $sql.= " AND c.rowid = '".$db->escape($search_contract)."'";
 if ($search_service)  $sql.= " AND (p.ref LIKE '%".$db->escape($search_service)."%' OR p.description LIKE '%".$db->escape($search_service)."%' OR cd.description LIKE '%".$db->escape($search_service)."%')";
 if ($socid > 0)       $sql.= " AND s.rowid = ".$socid;
+$filter_dateouvertureprevue=dol_mktime(0,0,0,$opouvertureprevuemonth,$opouvertureprevueday,$opouvertureprevueyear);
 $filter_date1=dol_mktime(0,0,0,$op1month,$op1day,$op1year);
 $filter_date2=dol_mktime(0,0,0,$op2month,$op2day,$op2year);
-if (! empty($filter_op1) && $filter_op1 != -1 && $filter_date1 != '') $sql.= " AND date_ouverture_prevue ".$filter_op1." '".$db->idate($filter_date1)."'";
-if (! empty($filter_op2) && $filter_op2 != -1 && $filter_date2 != '') $sql.= " AND date_fin_validite ".$filter_op2." '".$db->idate($filter_date2)."'";
+$filter_datecloture=dol_mktime(0,0,0,$opcloturemonth,$opclotureday,$opclotureyear);
+if (! empty($filter_opouvertureprevue) && $filter_opouvertureprevue != -1 && $filter_dateouvertureprevue != '') $sql.= " AND cd.date_ouverture_prevue ".$filter_opouvertureprevue." '".$db->idate($filter_dateouvertureprevue)."'";
+if (! empty($filter_op1) && $filter_op1 != -1 && $filter_date1 != '') $sql.= " AND cd.date_ouverture ".$filter_op1." '".$db->idate($filter_date1)."'";
+if (! empty($filter_op2) && $filter_op2 != -1 && $filter_date2 != '') $sql.= " AND cd.date_fin_validite ".$filter_op2." '".$db->idate($filter_date2)."'";
+if (! empty($filter_opcloture) && $filter_opcloture != -1 && $filter_datecloture != '') $sql.= " AND cd.date_cloture ".$filter_opcloture." '".$db->idate($filter_datecloture)."'";
+$totalnboflines=0;
+$result=$db->query($sql);
+if ($result)
+{
+    $totalnboflines = $db->num_rows($result);
+}
 $sql .= $db->order($sortfield,$sortorder);
 $sql .= $db->plimit($limit + 1, $offset);
 
@@ -142,11 +197,15 @@ if ($resql)
 	if ($search_service)  $param.='&amp;search_service='.urlencode($search_service);
 	if ($mode)            $param.='&amp;mode='.$mode;
 	if ($filter)          $param.='&amp;filter='.$filter;
+	if (! empty($filter_opouvertureprevue) && $filter_opouvertureprevue != -1) $param.='&amp;filter_opouvertureprevue='.urlencode($filter_opouvertureprevue);
 	if (! empty($filter_op1) && $filter_op1 != -1) $param.='&amp;filter_op1='.urlencode($filter_op1);
 	if (! empty($filter_op2) && $filter_op2 != -1) $param.='&amp;filter_op2='.urlencode($filter_op2);
+	if (! empty($filter_opcloture) && $filter_opcloture != -1) $param.='&amp;filter_opcloture='.urlencode($filter_opcloture);
+	if ($filter_dateouvertureprevue != '') $param.='&amp;opouvertureprevueday='.$opouvertureprevueday.'&amp;opouvertureprevuemonth='.$opouvertureprevuemonth.'&amp;opouvertureprevueyear='.$opouvertureprevueyear;
 	if ($filter_date1 != '') $param.='&amp;op1day='.$op1day.'&amp;op1month='.$op1month.'&amp;op1year='.$op1year;
 	if ($filter_date2 != '') $param.='&amp;op2day='.$op2day.'&amp;op2month='.$op2month.'&amp;op2year='.$op2year;
-
+	if ($filter_datecloture != '') $param.='&amp;opclotureday='.$op2day.'&amp;opcloturemonth='.$op2month.'&amp;opclotureyear='.$op2year;
+	
 	$title=$langs->trans("ListOfServices");
 	if ($mode == "0") $title=$langs->trans("ListOfInactiveServices");	// Must use == "0"
 	if ($mode == "4" && $filter != "expired") $title=$langs->trans("ListOfRunningServices");
@@ -163,12 +222,13 @@ if ($resql)
 	print_liste_field_titre($langs->trans("Service"),$_SERVER["PHP_SELF"], "p.description",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"], "s.nom",$param,"","",$sortfield,$sortorder);
 	// Date debut
-	if ($mode == "0") print_liste_field_titre($langs->trans("DateStartPlannedShort"),$_SERVER["PHP_SELF"], "cd.date_ouverture_prevue",$param,'',' align="center"',$sortfield,$sortorder);
-	if ($mode == "" || $mode > 0) print_liste_field_titre($langs->trans("DateStartRealShort"),$_SERVER["PHP_SELF"], "cd.date_ouverture",$param,'',' align="center"',$sortfield,$sortorder);
+	if (($mode == "" || $mode == -1) || $mode == "0") print_liste_field_titre($langs->trans("DateStartPlannedShort"),$_SERVER["PHP_SELF"], "cd.date_ouverture_prevue",$param,'',' align="center"',$sortfield,$sortorder);
+	if (($mode == "" || $mode == -1) || $mode > 0) print_liste_field_titre($langs->trans("DateStartRealShort"),$_SERVER["PHP_SELF"], "cd.date_ouverture",$param,'',' align="center"',$sortfield,$sortorder);
 	// Date fin
-	if ($mode == "" || $mode < 5) print_liste_field_titre($langs->trans("DateEndPlannedShort"),$_SERVER["PHP_SELF"], "cd.date_fin_validite",$param,'',' align="center"',$sortfield,$sortorder);
-	else print_liste_field_titre($langs->trans("DateEndRealShort"),$_SERVER["PHP_SELF"], "cd.date_cloture",$param,'',' align="center"',$sortfield,$sortorder);
+	if (($mode == "" || $mode == -1) || $mode < 5) print_liste_field_titre($langs->trans("DateEndPlannedShort"),$_SERVER["PHP_SELF"], "cd.date_fin_validite",$param,'',' align="center"',$sortfield,$sortorder);
+	if (($mode == "" || $mode == -1) || $mode >= 5) print_liste_field_titre($langs->trans("DateEndRealShort"),$_SERVER["PHP_SELF"], "cd.date_cloture",$param,'',' align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"], "cd.statut,c.statut",$param,"","align=\"right\"",$sortfield,$sortorder);
+	print_liste_field_titre('',$_SERVER["PHP_SELF"],"",'','','',$sortfield,$sortorder,'maxwidthsearch ');
 	print "</tr>\n";
 
 	print '<tr class="liste_titre">';
@@ -179,29 +239,67 @@ if ($resql)
 	print '</td>';
 	// Service label
 	print '<td class="liste_titre">';
-	print '<input type="text" class="flat" size="18" name="search_service" value="'.dol_escape_htmltag($search_service).'">';
+	print '<input type="text" class="flat" size="12" name="search_service" value="'.dol_escape_htmltag($search_service).'">';
 	print '</td>';
 	// Third party
 	print '<td class="liste_titre">';
-	print '<input type="text" class="flat" size="24" name="search_name" value="'.dol_escape_htmltag($search_name).'">';
+	print '<input type="text" class="flat" size="12" name="search_name" value="'.dol_escape_htmltag($search_name).'">';
 	print '</td>';
-	print '<td class="liste_titre" align="center">';
-	$arrayofoperators=array('<'=>'<','>'=>'>');
-	print $form->selectarray('filter_op1',$arrayofoperators,$filter_op1,1);
-	print ' ';
-	$filter_date1=dol_mktime(0,0,0,$op1month,$op1day,$op1year);
-	print $form->select_date($filter_date1,'op1',0,0,1,'',1,0,1);
+	if (($mode == "" || $mode == -1) || $mode == "0")
+	{
+    	print '<td class="liste_titre" align="center">';
+	    $arrayofoperators=array('<'=>'<','>'=>'>');
+    	print $form->selectarray('filter_opouvertureprevue',$arrayofoperators,$filter_opouvertureprevue,1);
+    	print ' ';
+    	$filter_dateouvertureprevue=dol_mktime(0,0,0,$opouvertureprevuemonth,$opouvertureprevueday,$opouvertureprevueyear);
+    	print $form->select_date($filter_dateouvertureprevue,'opouvertureprevue',0,0,1,'',1,0,1);
+    	print '</td>';
+	}
+	if (($mode == "" || $mode == -1) || $mode > 0)
+	{
+    	print '<td class="liste_titre" align="center">';
+	    $arrayofoperators=array('<'=>'<','>'=>'>');
+    	print $form->selectarray('filter_op1',$arrayofoperators,$filter_op1,1);
+    	print ' ';
+    	$filter_date1=dol_mktime(0,0,0,$op1month,$op1day,$op1year);
+    	print $form->select_date($filter_date1,'op1',0,0,1,'',1,0,1);
+    	print '</td>';
+	}
+	if (($mode == "" || $mode == -1) || $mode < 5)
+    {
+    	print '<td class="liste_titre" align="center">';
+    	$arrayofoperators=array('<'=>'<','>'=>'>');
+    	print $form->selectarray('filter_op2',$arrayofoperators,$filter_op2,1);
+    	print ' ';
+    	$filter_date2=dol_mktime(0,0,0,$op2month,$op2day,$op2year);
+    	print $form->select_date($filter_date2,'op2',0,0,1,'',1,0,1);
+    	print '</td>';
+    }
+    if (($mode == "" || $mode == -1) || $mode >= 5)
+    {
+        print '<td class="liste_titre" align="center">';
+        $arrayofoperators=array('<'=>'<','>'=>'>');
+        print $form->selectarray('filter_opcloture',$arrayofoperators,$filter_opcloture,1);
+        print ' ';
+        $filter_date_cloture=dol_mktime(0,0,0,$opcloturemonth,$opclotureday,$opclotureyear);
+        print $form->select_date($filter_date_cloture,'opcloture',0,0,1,'',1,0,1);
+        print '</td>';
+    }
+	print '<td align="right">';
+	$arrayofstatus=array(
+	    '0'=>$langs->trans("ServiceStatusInitial"),
+	    '4'=>$langs->trans("ServiceStatusRunning"),
+	    '4&filter=notexpired'=>$langs->trans("ServiceStatusNotLate"),
+	    '4&filter=expired'=>$langs->trans("ServiceStatusLate"),
+	    '5'=>$langs->trans("ServiceStatusClosed")
+	);
+	print $form->selectarray('search_status',$arrayofstatus,(strstr($search_status, ',')?-1:$search_status),1);
 	print '</td>';
-	print '<td class="liste_titre" align="center">';
-	$arrayofoperators=array('<'=>'<','>'=>'>');
-	print $form->selectarray('filter_op2',$arrayofoperators,$filter_op2,1);
-	print ' ';
-	$filter_date2=dol_mktime(0,0,0,$op2month,$op2day,$op2year);
-	print $form->select_date($filter_date2,'op2',0,0,1,'',1,0,1);
+	print '<td class="liste_titre" align="right">';
+	$searchpitco=$form->showFilterAndCheckAddButtons(0);
+	print $searchpitco;
 	print '</td>';
-    print '<td class="liste_titre" align="right"><input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
-	print '<input type="image" class="liste_titre" name="button_removefilter" src="'.img_picto($langs->trans("Search"),'searchclear.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'" title="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">';
-    print "</td></tr>\n";
+    print "</tr>\n";
 
 	$contractstatic=new Contrat($db);
 	$productstatic=new Product($db);
@@ -225,14 +323,15 @@ if ($resql)
 			$productstatic->id=$obj->pid;
 			$productstatic->type=$obj->ptype;
 			$productstatic->ref=$obj->pref;
-			print $productstatic->getNomUrl(1,'',20);
+			$productstatic->entity=$obj->pentity;
+			print $productstatic->getNomUrl(1,'',24);
             print $obj->label?' - '.dol_trunc($obj->label,16):'';
             if (! empty($obj->description) && ! empty($conf->global->PRODUCT_DESC_IN_LIST)) print '<br>'.dol_nl2br($obj->description);
 		}
 		else
 		{
-			if ($obj->type == 0) print img_object($obj->description,'product').dol_trunc($obj->description,20);
-			if ($obj->type == 1) print img_object($obj->description,'service').dol_trunc($obj->description,20);
+			if ($obj->type == 0) print img_object($obj->description,'product').' '.dol_trunc($obj->description,24);
+			if ($obj->type == 1) print img_object($obj->description,'service').' '.dol_trunc($obj->description,24);
 		}
 		print '</td>';
 
@@ -245,21 +344,33 @@ if ($resql)
 		print '</td>';
 
 		// Start date
-		if ($mode == "0") {
+		if (($mode == "" || $mode == -1) || $mode == "0") 
+		{
 			print '<td align="center">';
 			print ($obj->date_ouverture_prevue?dol_print_date($db->jdate($obj->date_ouverture_prevue)):'&nbsp;');
 			if ($db->jdate($obj->date_ouverture_prevue) && ($db->jdate($obj->date_ouverture_prevue) < ($now - $conf->contrat->services->inactifs->warning_delay)))
-			print img_picto($langs->trans("Late"),"warning");
+			print ' '.img_picto($langs->trans("Late"),"warning");
 			else print '&nbsp;&nbsp;&nbsp;&nbsp;';
 			print '</td>';
 		}
-		if ($mode == "" || $mode > 0) print '<td align="center">'.($obj->date_ouverture?dol_print_date($db->jdate($obj->date_ouverture)):'&nbsp;').'</td>';
+		if (($mode == "" || $mode == -1) || $mode > 0) 
+		{
+		    print '<td align="center">'.($obj->date_ouverture?dol_print_date($db->jdate($obj->date_ouverture)):'&nbsp;').'</td>';
+		}
 		// Date fin
-		if ($mode == "" || $mode < 5) print '<td align="center">'.($obj->date_fin_validite?dol_print_date($db->jdate($obj->date_fin_validite)):'&nbsp;');
-		else print '<td align="center">'.dol_print_date($db->jdate($obj->date_cloture));
+		if (($mode == "" || $mode == -1) || $mode < 5) 
+		{
+		    print '<td align="center">'.($obj->date_fin_validite?dol_print_date($db->jdate($obj->date_fin_validite)):'&nbsp;');
+    		if ($obj->date_fin_validite && $db->jdate($obj->date_fin_validite) < ($now - $conf->contrat->services->expires->warning_delay) && $obj->statut < 5) 
+    		{
+    		    $warning_delay=$conf->contrat->services->expires->warning_delay / 3600 / 24;
+                $textlate = $langs->trans("Late").' = '.$langs->trans("DateReference").' > '.$langs->trans("DateToday").' '.(ceil($warning_delay) >= 0 ? '+' : '').ceil($warning_delay).' '.$langs->trans("days");
+    		    print img_warning($textlate);
+    		}
+    		else print '&nbsp;&nbsp;&nbsp;&nbsp;';
+		}
+		if (($mode == "" || $mode == -1) || $mode >= 5) print '<td align="center">'.dol_print_date($db->jdate($obj->date_cloture));
 		// Icone warning
-		if ($obj->date_fin_validite && $db->jdate($obj->date_fin_validite) < ($now - $conf->contrat->services->expires->warning_delay) && $obj->statut < 5) print img_warning($langs->trans("Late"));
-		else print '&nbsp;&nbsp;&nbsp;&nbsp;';
 		print '</td>';
 		print '<td align="right" class="nowrap">';
 		if ($obj->cstatut == 0)	// If contract is draft, we say line is also draft
@@ -271,6 +382,7 @@ if ($resql)
 			print $staticcontratligne->LibStatut($obj->statut,5,($obj->date_fin_validite && $db->jdate($obj->date_fin_validite) < $now)?1:0);
 		}
 		print '</td>';
+		print '<td></td>';
 		print "</tr>\n";
 		$i++;
 	}
@@ -285,6 +397,6 @@ else
 }
 
 
-$db->close();
-
 llxFooter();
+
+$db->close();

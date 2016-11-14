@@ -48,7 +48,7 @@ $pageprev = $page - 1;
 $pagenext = $page + 1;
 if (! $sortorder) $sortorder="DESC";
 if (! $sortfield) $sortfield="d.date_create";
-$limit = $conf->liste_limit;
+$limit = GETPOST('limit')?GETPOST('limit','int'):$conf->liste_limit;
 
 
 /*
@@ -100,7 +100,7 @@ if ($result)
 }
 
 
-print_fiche_titre($langs->trans("ExpensesArea"));
+print load_fiche_titre($langs->trans("ExpensesArea"));
 
 
 print '<div class="fichecenter"><div class="fichethirdleft">';
@@ -201,7 +201,7 @@ if ($result)
     }
     else
     {
-        print '<tr '.$bc[$var].'><td colspan="6">'.$langs->trans("None").'</td></tr>';
+        print '<tr '.$bc[$var].'><td colspan="6" class="opacitymedium">'.$langs->trans("None").'</td></tr>';
     }
     print '</table><br>';
 }

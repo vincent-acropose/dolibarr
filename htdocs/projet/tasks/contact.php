@@ -94,11 +94,11 @@ if ($action == 'addcontact' && $user->rights->projet->creer)
 		if ($object->error == 'DB_ERROR_RECORD_ALREADY_EXISTS')
 		{
 			$langs->load("errors");
-			setEventMessage($langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType"), 'errors');
+			setEventMessages($langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType"), null, 'errors');
 		}
 		else
 		{
-			setEventMessage($object->error, 'errors');
+			setEventMessages($object->error, $object->errors, 'errors');
 		}
 	}
 }
@@ -173,10 +173,12 @@ if ($id > 0 || ! empty($ref))
 {
 	if ($object->fetch($id, $ref) > 0)
 	{
+	    $id = $object->id;     // So when doing a search from ref, id is also set correctly.
+	    
 		$result=$projectstatic->fetch($object->fk_project);
 		if (! empty($projectstatic->socid)) $projectstatic->fetch_thirdparty();
 
-		$object->project = dol_clone($projectstatic);
+		$object->project = clone $projectstatic;
 
 		$userWrite  = $projectstatic->restrictedProjectArea($user,'write');
 
@@ -192,7 +194,7 @@ if ($id > 0 || ! empty($ref))
     		print '<table class="border" width="100%">';
 
     		// Ref
-    		print '<tr><td width="30%">';
+    		print '<tr><td class="titlefield">';
     		print $langs->trans("Ref");
     		print '</td><td>';
     		// Define a complementary filter for search of next/prev ref.
@@ -253,7 +255,7 @@ if ($id > 0 || ! empty($ref))
 		$linkback=GETPOST('withproject')?'<a href="'.DOL_URL_ROOT.'/projet/tasks.php?id='.$projectstatic->id.'">'.$langs->trans("BackToList").'</a>':'';
 
 		// Ref
-		print '<tr><td width="30%">'.$langs->trans('Ref').'</td><td colspan="3">';
+		print '<tr><td class="titlefield">'.$langs->trans('Ref').'</td><td colspan="3">';
 		if (! GETPOST('withproject') || empty($projectstatic->id))
 		{
 		    $projectsListId = $projectstatic->getProjectsAuthorizedForUser($user,0,1);
@@ -488,6 +490,13 @@ if ($id > 0 || ! empty($ref))
 	{
 		print "ErrorRecordNotFound";
 	}
+}
+
+if (is_object($hookmanager))
+{
+	$hookmanager->initHooks(array('contacttpl'));
+	$parameters=array();
+	$reshook=$hookmanager->executeHooks('formContactTpl',$parameters,$object,$action);
 }
 
 

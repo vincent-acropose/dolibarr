@@ -42,12 +42,12 @@ $mine   = GETPOST('mode')=='mine' ? 1 : 0;
 
 $object = new Project($db);
 
-include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php';  // Must be include, not includ_once
+include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php';  // Must be include, not include_once
 
 // Security check
 $socid=0;
 if ($user->societe_id > 0) $socid=$user->societe_id;
-$result = restrictedArea($user, 'projet', $id);
+$result = restrictedArea($user, 'projet', $id,'projet&project');
 
 
 /*
@@ -76,11 +76,11 @@ if ($action == 'addcontact' && $user->rights->projet->creer)
 		if ($object->error == 'DB_ERROR_RECORD_ALREADY_EXISTS')
 		{
 			$langs->load("errors");
-			setEventMessage($langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType"), 'errors');
+			setEventMessages($langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType"), null, 'errors');
 		}
 		else
 		{
-			setEventMessage($object->error, 'errors');
+			setEventMessages($object->error, $object->errors, 'errors');
 		}
 	}
 }
@@ -157,11 +157,11 @@ if ($id > 0 || ! empty($ref))
 	$linkback = '<a href="'.DOL_URL_ROOT.'/projet/list.php">'.$langs->trans("BackToList").'</a>';
 
 	// Ref
-	print '<tr><td width="30%">'.$langs->trans('Ref').'</td><td colspan="3">';
+	print '<tr><td class="titlefield">'.$langs->trans('Ref').'</td><td colspan="3">';
 	// Define a complementary filter for search of next/prev ref.
 	if (! $user->rights->projet->all->lire)
 	{
-		$objectsListId = $object->getProjectsAuthorizedForUser($user,$mine,0);
+		$objectsListId = $object->getProjectsAuthorizedForUser($user,0,0);
 		$object->next_prev_filter=" rowid in (".(count($objectsListId)?join(',',array_keys($objectsListId)):'0').")";
 	}
 	print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref', '');
@@ -196,17 +196,20 @@ if ($id > 0 || ! empty($ref))
 	print dol_print_date($object->date_end,'day');
 	print '</td></tr>';
 
-	// Opportunity status
-	print '<tr><td>'.$langs->trans("OpportunityStatus").'</td><td>';
-	$code = dol_getIdFromCode($db, $object->opp_status, 'c_lead_status', 'rowid', 'code');
-	if ($code) print $langs->trans("OppStatus".$code);
-	print '</td></tr>';
-
-	// Opportunity Amount
-	print '<tr><td>'.$langs->trans("OpportunityAmount").'</td><td>';
-	if (strcmp($object->opp_amount,'')) print price($object->opp_amount,'',$langs,0,0,0,$conf->currency);
-	print '</td></tr>';
-
+    if (! empty($conf->global->PROJECT_USE_OPPORTUNITIES))
+    {
+    	// Opportunity status
+    	print '<tr><td>'.$langs->trans("OpportunityStatus").'</td><td>';
+    	$code = dol_getIdFromCode($db, $object->opp_status, 'c_lead_status', 'rowid', 'code');
+    	if ($code) print $langs->trans("OppStatus".$code);
+    	print '</td></tr>';
+    
+    	// Opportunity Amount
+    	print '<tr><td>'.$langs->trans("OpportunityAmount").'</td><td>';
+    	if (strcmp($object->opp_amount,'')) print price($object->opp_amount,'',$langs,0,0,0,$conf->currency);
+    	print '</td></tr>';
+    }
+    
 	// Budget
 	print '<tr><td>'.$langs->trans("Budget").'</td><td>';
 	if (strcmp($object->budget_amount, '')) print price($object->budget_amount,'',$langs,0,0,0,$conf->currency);

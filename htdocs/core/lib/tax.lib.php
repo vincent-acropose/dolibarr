@@ -2,7 +2,7 @@
 /* Copyright (C) 2004-2009 Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2006-2007 Yannick Warnier		<ywarnier@beeznest.org>
  * Copyright (C) 2011	   Regis Houssin		<regis.houssin@capnetworks.com>
- * Copyright (C) 2012	   Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2012-2016 Juanjo Menent		<jmenent@2byte.es>
  * Copyright (C) 2012      Cédric Salvador      <csalvador@gpcsolutions.fr>
  * Copyright (C) 2012-2014 Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
  * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
@@ -36,7 +36,7 @@
  */
 function tax_prepare_head(ChargeSociales $object)
 {
-    global $langs, $conf, $user;
+    global $db, $langs, $conf, $user;
 
     $h = 0;
     $head = array();
@@ -53,11 +53,13 @@ function tax_prepare_head(ChargeSociales $object)
     complete_head_from_modules($conf,$langs,$object,$head,$h,'tax');
 
 	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+    require_once DOL_DOCUMENT_ROOT.'/core/class/link.class.php';
 	$upload_dir = $conf->tax->dir_output . "/" . dol_sanitizeFileName($object->ref);
 	$nbFiles = count(dol_dir_list($upload_dir,'files',0,'','(\.meta|_preview\.png)$'));
+    $nbLinks=Link::count($db, $object->element, $object->id);
 	$head[$h][0] = DOL_URL_ROOT.'/compta/sociales/document.php?id='.$object->id;
 	$head[$h][1] = $langs->trans("Documents");
-	if($nbFiles > 0) $head[$h][1].= ' <span class="badge">'.$nbFiles.'</span>';
+	if (($nbFiles+$nbLinks) > 0) $head[$h][1].= ' <span class="badge">'.($nbFiles+$nbLinks).'</span>';
 	$head[$h][2] = 'documents';
 	$h++;
 
@@ -108,7 +110,7 @@ function vat_by_thirdparty($db, $y, $date_start, $date_end, $modetax, $direction
     if ($modetax == 1)
     {
         // If vat paid on due invoices (non draft)
-        $sql = "SELECT s.rowid as socid, s.nom as name, s.siren as tva_intra, s.tva_assuj as assuj,";
+        $sql = "SELECT s.rowid as socid, s.nom as name, s.tva_intra as tva_intra, s.tva_assuj as assuj,";
         $sql.= " sum(f.$total_ht) as amount, sum(f.".$total_tva.") as tva,";
         $sql.= " sum(f.localtax1) as localtax1,";
         $sql.= " sum(f.localtax2) as localtax2";
@@ -177,7 +179,6 @@ function vat_by_thirdparty($db, $y, $date_start, $date_end, $modetax, $direction
         return -3;
     }
 }
-
 
 /**
  *  Gets VAT to collect for the given year (and given quarter or month)

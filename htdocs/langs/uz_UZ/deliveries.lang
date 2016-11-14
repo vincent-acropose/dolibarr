@@ -1,13 +1,11 @@
 # Dolibarr language file - Source file is en_US - deliveries
 Delivery=Delivery
-Deliveries=Deliveries
+DeliveryRef=Ref Delivery
 DeliveryCard=Delivery card
 DeliveryOrder=Delivery order
-DeliveryOrders=Delivery orders
 DeliveryDate=Delivery date
-DeliveryDateShort=Deliv. date
 CreateDeliveryOrder=Generate delivery order
-QtyDelivered=Qty delivered
+DeliveryStateSaved=Delivery state saved
 SetDeliveryDate=Set shipping date
 ValidateDeliveryReceipt=Validate delivery receipt
 ValidateDeliveryReceiptConfirm=Are you sure you want to validate this delivery receipt ?
@@ -16,6 +14,9 @@ DeleteDeliveryReceiptConfirm=Are you sure you want to delete delivery receipt <b
 DeliveryMethod=Delivery method
 TrackingNumber=Tracking number
 DeliveryNotValidated=Delivery not validated
+StatusDeliveryCanceled=Canceled
+StatusDeliveryDraft=Draft
+StatusDeliveryValidated=Received
 # merou PDF model
 NameAndSignature=Name and Signature :
 ToAndDate=To___________________________________ on ____/_____/__________
@@ -24,3 +25,6 @@ Deliverer=Deliverer :
 Sender=Sender
 Recipient=Recipient
 ErrorStockIsNotEnough=There's not enough stock
+Shippable=Shippable
+NonShippable=Not Shippable
+ShowReceiving=Show delivery receipt

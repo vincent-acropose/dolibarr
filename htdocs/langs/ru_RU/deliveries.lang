@@ -1,13 +1,11 @@
 # Dolibarr language file - Source file is en_US - deliveries
 Delivery=Доставка
-Deliveries=Доставки
+DeliveryRef=Ref Delivery
 DeliveryCard=Карточка доставки
 DeliveryOrder=Заказ на доставку
-DeliveryOrders=Заказы на доставку
 DeliveryDate=Дата доставки
-DeliveryDateShort=Дата дост.
 CreateDeliveryOrder=Создание заказа на доставку
-QtyDelivered=Доставленное кол-во
+DeliveryStateSaved=Delivery state saved
 SetDeliveryDate=Установить дату отправки
 ValidateDeliveryReceipt=Подтверждение получения доставки
 ValidateDeliveryReceiptConfirm=Вы действительно подтвердаете получение этой доставки?
@@ -16,6 +14,9 @@ DeleteDeliveryReceiptConfirm=Вы действительно хотите уда
 DeliveryMethod=Способ доставки
 TrackingNumber=Номер отправления
 DeliveryNotValidated=Доставка не подтверждена
+StatusDeliveryCanceled=Canceled
+StatusDeliveryDraft=Draft
+StatusDeliveryValidated=Received
 # merou PDF model
 NameAndSignature=Имя и подпись:
 ToAndDate=Получатель ___________________________________ доставлено ____ / _____ / __________
@@ -23,6 +24,7 @@ GoodStatusDeclaration=Указанные выше товары получены 
 Deliverer=Доставщик:
 Sender=Отправитель
 Recipient=Получатель
-ErrorStockIsNotEnough=There's not enough stock
+ErrorStockIsNotEnough=Нет достаточного запаса на складе
 Shippable=Возможно к отправке
 NonShippable=Не возможно к отправке
+ShowReceiving=Show delivery receipt

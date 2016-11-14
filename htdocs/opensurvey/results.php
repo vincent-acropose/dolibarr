@@ -49,7 +49,7 @@ $nblignes=$object->fetch_lines();
  * Actions
  */
 
-//Return to the results
+// Return to the results
 if (GETPOST('retoursondage')) {
 	header('Location: results.php?id='.$_GET['id']);
 	exit;
@@ -91,7 +91,7 @@ if (GETPOST("boutonp") || GETPOST("boutonp.x") || GETPOST("boutonp_x"))		// bout
 		$num_rows = $db->num_rows($resql);
 		if ($num_rows > 0)
 		{
-			setEventMessage($langs->trans("VoteNameAlreadyExists"),'errors');
+			setEventMessages($langs->trans("VoteNameAlreadyExists"), null, 'errors');
 			$error++;
 		}
 		else
@@ -403,9 +403,11 @@ if ($result <= 0)
 	exit;
 }
 
+$title = $object->titre." - ".$langs->trans('Card');
+$helpurl = '';
 $arrayofjs=array();
 $arrayofcss=array('/opensurvey/css/style.css');
-llxHeader('',$object->titre, 0, 0, 0, 0, $arrayofjs, $arrayofcss);
+llxHeader('',$title, $helpurl, 0, 0, 0, $arrayofjs, $arrayofcss);
 
 
 // Define format of choices
@@ -432,7 +434,7 @@ print '<table class="border" width="100%">';
 $linkback = '<a href="'.dol_buildpath('/opensurvey/list.php',1).(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
 // Ref
-print '<tr><td width="18%">'.$langs->trans('Ref').'</td>';
+print '<tr><td class="titlefield">'.$langs->trans('Ref').'</td>';
 print '<td colspan="3">';
 print $form->showrefnav($object, 'id', $linkback, 1, 'id_sondage', 'id_sondage');
 print '</td>';
@@ -1020,15 +1022,15 @@ if ($nbofcheckbox >= 2)
 
 // S'il a oublié de remplir un nom
 if (isset($_POST["boutonp"]) && $_POST["nom"] == "") {
-	setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Name")), 'errors');
+	setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("Name")), null, 'errors');
 }
 
 if (isset($erreur_prenom) && $erreur_prenom) {
-	setEventMessage($langs->trans('VoteNameAlreadyExists'), 'errors');
+	setEventMessages($langs->trans('VoteNameAlreadyExists'), null, 'errors');
 }
 
 if (isset($erreur_ajout_date) && $erreur_ajout_date) {
-	setEventMessage($langs->trans("ErrorWrongDate"), 'errors');
+	setEventMessages($langs->trans("ErrorWrongDate"), null, 'errors');
 }
 
 //fin du tableau

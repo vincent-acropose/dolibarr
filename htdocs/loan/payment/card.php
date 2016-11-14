@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2014		Alexandre Spangaro	<aspangaro.dolibarr@gmail.com>
+/* Copyright (C) 2014-2016	Alexandre Spangaro	<aspangaro.dolibarr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,7 +65,7 @@ if ($action == 'confirm_delete' && $confirm == 'yes' && $user->rights->loan->del
 	}
 	else
 	{
-		setEventMessage($payment->error, 'errors');
+		setEventMessages($payment->error, $payment->errors, 'errors');
         $db->rollback();
 	}
 }
@@ -103,7 +103,7 @@ if ($action == 'confirm_valide' && $confirm == 'yes' && $user->rights->loan->wri
 	}
 	else
 	{
-		setEventMessage($payment->error);
+		setEventMessages($payment->error, $payment->errors, 'errors');
 		$db->rollback();
 	}
 }
@@ -163,7 +163,7 @@ print '<tr><td valign="top">'.$langs->trans('Mode').'</td><td colspan="3">'.$lan
 print '<tr><td valign="top">'.$langs->trans('Number').'</td><td colspan="3">'.$payment->num_payment.'</td></tr>';
 
 // Amount
-print '<tr><td valign="top">'.$langs->trans('Capital').'</td><td colspan="3">'.price($payment->amount_capital, 0, $outputlangs, 1, -1, -1, $conf->currency).'</td></tr>';
+print '<tr><td valign="top">'.$langs->trans('LoanCapital').'</td><td colspan="3">'.price($payment->amount_capital, 0, $outputlangs, 1, -1, -1, $conf->currency).'</td></tr>';
 print '<tr><td valign="top">'.$langs->trans('Insurance').'</td><td colspan="3">'.price($payment->amount_insurance, 0, $outputlangs, 1, -1, -1, $conf->currency).'</td></tr>';
 print '<tr><td valign="top">'.$langs->trans('Interest').'</td><td colspan="3">'.price($payment->amount_interest, 0, $outputlangs, 1, -1, -1, $conf->currency).'</td></tr>';
 
