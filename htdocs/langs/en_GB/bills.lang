@@ -1,38 +1,20 @@
-# Dolibarr language file - en_GB - main
-PrettyLittleSentence=Accept the amount of payments due by cheques issued in my name as a Member of an accounting association approved by the Fiscal Administration.
-ChequeNumber=Cheque N°
-ChequeOrTransferNumber=Cheque/Transfer N°
-ChequeMaker=Cheque transmitter
-ChequeBank=Bank of Cheque
-PaymentByChequeOrderedTo=Cheque payment (including tax) are payable to %s send to
-PaymentByChequeOrderedToShort=Cheque payment (including tax) are payable to
-MenuChequeDeposits=Cheques deposits
-MenuCheques=Cheques
-MenuChequesReceipts=Cheques receipts
-ChequesReceipts=Cheques receipts
-ChequesArea=Cheques deposits area
-ChequeDeposits=Cheques deposits
-Cheques=Cheques
-BankCode=Sort code
-
-# PaymentConditions
-PaymentConditionShortRECEP=Due on Receipt
-PaymentConditionRECEP=Due on Receipt
-
-# PaymentType
-PaymentTypeVIR=Bank transfer
-PaymentTypeShortVIR=Bank transfer
-PaymentTypePRE=Direct debit
-PaymentTypeShortPRE=Direct debit
-PaymentTypeLIQ=Cash
-PaymentTypeShortLIQ=Cash
-PaymentTypeCB=Credit card
-PaymentTypeShortCB=Credit card
+# Dolibarr language file - Source file is en_US - bills
+InvoiceReplacementDesc=<b>Replacement invoice</b> is used to cancel and replace completely an invoice with no payment already received.<br><br>Note: Only an invoice with no payment on it can be replaced. If the invoice you replace is not yet closed, it will be automatically closed to 'abandoned'.
 PaymentTypeCHQ=Cheque
 PaymentTypeShortCHQ=Cheque
-PaymentTypeTIP=TIP
-PaymentTypeShortTIP=TIP
-PaymentTypeVAD=On line payment
-PaymentTypeShortVAD=On line payment
-PaymentTypeTRA=Bill payment
-PaymentTypeShortTRA=Bill
+ChequeNumber=Cheque N°
+ChequeOrTransferNumber=Cheque/Transfer N°
+ChequeMaker=Cheque/Transfer drawer
+ChequeBank=Bank of Cheque
+CheckBank=Cheque
+PrettyLittleSentence=Accept the amount of payments due by cheques issued in my name as a Member of an accounting association approved by the Fiscal Administration.
+PaymentByChequeOrderedTo=Cheque payment (including tax) payable to %s send to
+PaymentByChequeOrderedToShort=Cheque payment (including tax) payable to
+MenuChequeDeposits=Cheque deposits
+MenuCheques=Cheques
+MenuChequesReceipts=Cheque receipts
+ChequesReceipts=Cheque receipts
+ChequesArea=Cheque deposits area
+ChequeDeposits=Cheque deposits
+Cheques=Cheques
+NbCheque=Number of cheques

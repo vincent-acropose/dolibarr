@@ -28,44 +28,28 @@ $langs = $GLOBALS['langs'];
 $linkedObjectBlock = $GLOBALS['linkedObjectBlock'];
 
 $langs->load("orders");
-echo '<br>';
-print_titre($langs->trans('RelatedOrders'));
-?>
-<table class="noborder allwidth">
-<tr class="liste_titre">
-	<td><?php echo $langs->trans("Ref"); ?></td>
-	<td align="center"><?php echo $langs->trans("Date"); ?></td>
-	<td align="right"><?php echo $langs->trans("AmountHTShort"); ?></td>
-	<td align="right"><?php echo $langs->trans("Status"); ?></td>
-</tr>
-<?php
+
+$total=0;
 $var=true;
-foreach($linkedObjectBlock as $object)
+foreach($linkedObjectBlock as $key => $objectlink)
 {
 	$var=!$var;
 ?>
-<tr <?php echo $bc[$var]; ?> ><td>
-	<a href="<?php echo DOL_URL_ROOT.'/fourn/commande/fiche.php?id='.$object->id ?>"><?php echo img_object($langs->trans("ShowOrder"),"order").' '.$object->ref; ?></a></td>
-	<td align="center"><?php echo dol_print_date($object->date,'day'); ?></td>
+<tr <?php echo $bc[$var]; ?> >
+    <td><?php echo $langs->trans("SupplierOrder"); ?></td>
+	<td><a href="<?php echo DOL_URL_ROOT.'/fourn/commande/card.php?id='.$objectlink->id ?>"><?php echo img_object($langs->trans("ShowOrder"),"order").' '.$objectlink->ref; ?></a></td>
+	<td align="left"><?php echo $objectlink->ref_supplier; ?></td>
+	<td align="center"><?php echo dol_print_date($objectlink->date,'day'); ?></td>
 	<td align="right"><?php
 		if ($user->rights->fournisseur->commande->lire) {
-			$total = $total + $object->total_ht;
-			echo price($object->total_ht);
+			$total = $total + $objectlink->total_ht;
+			echo price($objectlink->total_ht);
 		} ?></td>
-	<td align="right"><?php echo $object->getLibStatut(3); ?></td>
+	<td align="right"><?php echo $objectlink->getLibStatut(3); ?></td>
+	<td align="right"><a href="<?php echo $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=dellink&dellinkid='.$key; ?>"><?php echo img_delete($langs->transnoentitiesnoconv("RemoveLink")); ?></a></td>
 </tr>
 <?php
 }
-
 ?>
-<tr class="liste_total">
-	<td align="left" colspan="2"><?php echo $langs->trans('TotalHT'); ?></td>
-	<td align="right"><?php
-		if ($user->rights->fournisseur->commande->lire) {
-			echo price($total);
-		} ?></td>
-	<td>&nbsp;</td>
-</tr>
-</table>
 
 <!-- END PHP TEMPLATE -->

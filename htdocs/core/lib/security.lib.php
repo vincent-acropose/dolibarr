@@ -70,11 +70,11 @@ function dol_decode($chain)
 
 /**
  * 	Returns a hash of a string.
- *  If constant MAIN_SECURITY_HASH_ALGO is defined, we use this function as hashing function (md5 by default)
- *  If constant MAIN_SECURITY_SALT is defined, we use it as a salt
+ *  If constant MAIN_SECURITY_HASH_ALGO is defined, we use this function as hashing function.
+ *  If constant MAIN_SECURITY_SALT is defined, we use it as a salt.
  *
  * 	@param 		string		$chain		String to hash
- * 	@param		int			$type		Type of hash (0:auto, 1:sha1, 2:sha1+md5)
+ * 	@param		int			$type		Type of hash (0:auto, 1:sha1, 2:sha1+md5, 3:md5). Use 3 here, if hash is not needed for security purpose, for security need, prefer 0.
  * 	@return		string					Hash of string
  */
 function dol_hash($chain,$type=0)
@@ -86,9 +86,12 @@ function dol_hash($chain,$type=0)
 
 	if ($type == 1) return sha1($chain);
 	else if ($type == 2) return sha1(md5($chain));
+	else if ($type == 3) return md5($chain);
 	else if (! empty($conf->global->MAIN_SECURITY_HASH_ALGO) && $conf->global->MAIN_SECURITY_HASH_ALGO == 'sha1') return sha1($chain);
 	else if (! empty($conf->global->MAIN_SECURITY_HASH_ALGO) && $conf->global->MAIN_SECURITY_HASH_ALGO == 'sha1md5') return sha1(md5($chain));
-	else return md5($chain);
+
+	// No particular enconding defined, use default
+	return md5($chain);
 }
 
 
@@ -97,23 +100,23 @@ function dol_hash($chain,$type=0)
  * 	If GETPOST('action') defined, we also check write and delete permission.
  *
  *	@param	User	$user      	  	User to check
- *	@param  string	$features	    Features to check (it must be module name. Examples: 'societe', 'contact', 'produit&service', ...)
- *	@param  int		$objectid      	Object ID if we want to check a particular record (optionnal) is linked to a owned thirdparty (optionnal).
- *	@param  string	$dbtablename    'TableName&SharedElement' with Tablename is table where object is stored. SharedElement is an optionnal key to define where to check entity. Not used if objectid is null (optionnal)
- *	@param  string	$feature2		Feature to check, second level of permission (optionnal)
- *  @param  string	$dbt_keyfield   Field name for socid foreign key if not fk_soc. Not used if objectid is null (optionnal)
- *  @param  string	$dbt_select     Field name for select if not rowid. Not used if objectid is null (optionnal)
+ *	@param  string	$features	    Features to check (it must be module name. Examples: 'societe', 'contact', 'produit&service', 'produit|service', ...)
+ *	@param  int		$objectid      	Object ID if we want to check a particular record (optional) is linked to a owned thirdparty (optional).
+ *	@param  string	$tableandshare  'TableName&SharedElement' with Tablename is table where object is stored. SharedElement is an optional key to define where to check entity. Not used if objectid is null (optional)
+ *	@param  string	$feature2		Feature to check, second level of permission (optional). Can be or check with 'level1|level2'.
+ *  @param  string	$dbt_keyfield   Field name for socid foreign key if not fk_soc. Not used if objectid is null (optional)
+ *  @param  string	$dbt_select     Field name for select if not rowid. Not used if objectid is null (optional)
  *  @param	Canvas	$objcanvas		Object canvas
  * 	@return	int						Always 1, die process if not allowed
  */
-function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature2='', $dbt_keyfield='fk_soc', $dbt_select='rowid', $objcanvas=null)
+function restrictedArea($user, $features, $objectid=0, $tableandshare='', $feature2='', $dbt_keyfield='fk_soc', $dbt_select='rowid', $objcanvas=null)
 {
     global $db, $conf;
 
     //dol_syslog("functions.lib:restrictedArea $feature, $objectid, $dbtablename,$feature2,$dbt_socfield,$dbt_select");
     //print "user_id=".$user->id.", features=".$features.", feature2=".$feature2.", objectid=".$objectid;
     //print ", dbtablename=".$dbtablename.", dbt_socfield=".$dbt_keyfield.", dbt_select=".$dbt_select;
-    //print ", perm: ".$features."->".$feature2."=".$user->rights->$features->$feature2->lire."<br>";
+    //print ", perm: ".$features."->".$feature2."=".($user->rights->$features->$feature2->lire)."<br>";
 
     // If we use canvas, we try to use function that overlod restrictarea if provided with canvas
     if (is_object($objcanvas))
@@ -123,120 +126,134 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
 
     if ($dbt_select != 'rowid' && $dbt_select != 'id') $objectid = "'".$objectid."'";
 
-    // More features to check
-    $features = explode("&", $features);
+    // Features/modules to check
+    $featuresarray = array($features);
+    if (preg_match('/&/', $features)) $featuresarray = explode("&", $features);
+    else if (preg_match('/\|/', $features)) $featuresarray = explode("|", $features);
 
     // More subfeatures to check
-    if (!empty($feature2))
-    	$feature2 = explode("&", $feature2);
+    if (! empty($feature2)) $feature2 = explode("|", $feature2);
 
     // More parameters
-    $params = explode('&', $dbtablename);
+    $params = explode('&', $tableandshare);
     $dbtablename=(! empty($params[0]) ? $params[0] : '');
     $sharedelement=(! empty($params[1]) ? $params[1] : $dbtablename);
 
 	$listofmodules=explode(',',$conf->global->MAIN_MODULES_FOR_EXTERNAL);
 
 	// Check read permission from module
-    $readok=1;
-    foreach ($features as $feature)
+    $readok=1; $nbko=0;
+    foreach ($featuresarray as $feature)	// first we check nb of test ko
     {
     	if (! empty($user->societe_id) && ! empty($conf->global->MAIN_MODULES_FOR_EXTERNAL) && ! in_array($feature,$listofmodules))	// If limits on modules for external users, module must be into list of modules for external users
     	{
-    		$readok=0;
+    		$readok=0; $nbko++;
     		continue;
     	}
 
         if ($feature == 'societe')
         {
-            if (! $user->rights->societe->lire && ! $user->rights->fournisseur->lire) $readok=0;
+            if (! $user->rights->societe->lire && ! $user->rights->fournisseur->lire) { $readok=0; $nbko++; }
         }
         else if ($feature == 'contact')
         {
-            if (! $user->rights->societe->contact->lire) $readok=0;
+            if (! $user->rights->societe->contact->lire) { $readok=0; $nbko++; }
         }
         else if ($feature == 'produit|service')
         {
-            if (! $user->rights->produit->lire && ! $user->rights->service->lire) $readok=0;
+            if (! $user->rights->produit->lire && ! $user->rights->service->lire) { $readok=0; $nbko++; }
         }
         else if ($feature == 'prelevement')
         {
-            if (! $user->rights->prelevement->bons->lire) $readok=0;
+            if (! $user->rights->prelevement->bons->lire) { $readok=0; $nbko++; }
         }
         else if ($feature == 'cheque')
         {
-            if (! $user->rights->banque->cheque) $readok=0;
+            if (! $user->rights->banque->cheque) { $readok=0; $nbko++; }
         }
         else if ($feature == 'projet')
         {
-            if (! $user->rights->projet->lire && ! $user->rights->projet->all->lire) $readok=0;
+            if (! $user->rights->projet->lire && ! $user->rights->projet->all->lire) { $readok=0; $nbko++; }
         }
         else if (! empty($feature2))	// This should be used for future changes
         {
+        	$tmpreadok=1;
         	foreach($feature2 as $subfeature)
         	{
-        		if (empty($user->rights->$feature->$subfeature->lire) && empty($user->rights->$feature->$subfeature->read)) $readok=0;
-        		else { $readok=1; break; } // For bypass the second test if the first is ok
+        		if (! empty($subfeature) && empty($user->rights->$feature->$subfeature->lire) && empty($user->rights->$feature->$subfeature->read)) { $tmpreadok=0; }
+        		else if (empty($subfeature) && empty($user->rights->$feature->lire) && empty($user->rights->$feature->read)) { $tmpreadok=0; }
+        		else { $tmpreadok=1; break; } // Break is to bypass second test if the first is ok
+        	}
+        	if (! $tmpreadok)	// We found a test on feature that is ko
+        	{
+        		$readok=0;	// All tests are ko (we manage here the and, the or will be managed later using $nbko).
+        		$nbko++;
         	}
         }
         else if (! empty($feature) && ($feature!='user' && $feature!='usergroup'))		// This is for old permissions
         {
             if (empty($user->rights->$feature->lire)
             && empty($user->rights->$feature->read)
-            && empty($user->rights->$feature->run)) $readok=0;
+            && empty($user->rights->$feature->run)) { $readok=0; $nbko++; }
         }
     }
+
+    // If a or and at least one ok
+    if (preg_match('/\|/', $features) && $nbko < count($featuresarray)) $readok=1;
 
     if (! $readok) accessforbidden();
     //print "Read access is ok";
 
     // Check write permission from module
-    $createok=1;
+    $createok=1; $nbko=0;
     if (GETPOST("action")  == 'create')
     {
-        foreach ($features as $feature)
+        foreach ($featuresarray as $feature)
         {
             if ($feature == 'contact')
             {
-                if (! $user->rights->societe->contact->creer) $createok=0;
+                if (! $user->rights->societe->contact->creer) { $createok=0; $nbko++; }
             }
             else if ($feature == 'produit|service')
             {
-                if (! $user->rights->produit->creer && ! $user->rights->service->creer) $createok=0;
+                if (! $user->rights->produit->creer && ! $user->rights->service->creer) { $createok=0; $nbko++; }
             }
             else if ($feature == 'prelevement')
             {
-                if (! $user->rights->prelevement->bons->creer) $createok=0;
+                if (! $user->rights->prelevement->bons->creer) { $createok=0; $nbko++; }
             }
             else if ($feature == 'commande_fournisseur')
             {
-                if (! $user->rights->fournisseur->commande->creer) $createok=0;
+                if (! $user->rights->fournisseur->commande->creer) { $createok=0; $nbko++; }
             }
             else if ($feature == 'banque')
             {
-                if (! $user->rights->banque->modifier) $createok=0;
+                if (! $user->rights->banque->modifier) { $createok=0; $nbko++; }
             }
             else if ($feature == 'cheque')
             {
-                if (! $user->rights->banque->cheque) $createok=0;
+                if (! $user->rights->banque->cheque) { $createok=0; $nbko++; }
             }
-            else if (! empty($feature2))	// This should be used for future changes
+            else if (! empty($feature2))	// This should be used
             {
             	foreach($feature2 as $subfeature)
             	{
             		if (empty($user->rights->$feature->$subfeature->creer)
             		&& empty($user->rights->$feature->$subfeature->write)
-            		&& empty($user->rights->$feature->$subfeature->create)) $createok=0;
-            		else { $createok=1; break; } // For bypass the second test if the first is ok
+            		&& empty($user->rights->$feature->$subfeature->create)) { $createok=0; $nbko++; }
+            		else { $createok=1; break; } // Break to bypass second test if the first is ok
             	}
             }
-            else if (! empty($feature))		// This is for old permissions
+            else if (! empty($feature))		// This is for old permissions ('creer' or 'write')
             {
                 //print '<br>feature='.$feature.' creer='.$user->rights->$feature->creer.' write='.$user->rights->$feature->write;
                 if (empty($user->rights->$feature->creer)
-                && empty($user->rights->$feature->write)) $createok=0;
+                && empty($user->rights->$feature->write)) { $createok=0; $nbko++; }
             }
         }
+
+	    // If a or and at least one ok
+	    if (preg_match('/\|/', $features) && $nbko < count($featuresarray)) $createok=1;
 
         if (! $createok) accessforbidden();
         //print "Write access is ok";
@@ -253,10 +270,10 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
     }
 
     // Check delete permission from module
-    $deleteok=1;
+    $deleteok=1; $nbko=0;
     if ((GETPOST("action")  == 'confirm_delete' && GETPOST("confirm") == 'yes') || GETPOST("action")  == 'delete')
     {
-        foreach ($features as $feature)
+        foreach ($featuresarray as $feature)
         {
             if ($feature == 'contact')
             {
@@ -303,7 +320,9 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
             }
         }
 
-        //print "Delete access is ko";
+	    // If a or and at least one ok
+	    if (preg_match('/\|/', $features) && $nbko < count($featuresarray)) $deleteok=1;
+
         if (! $deleteok) accessforbidden();
         //print "Delete access is ok";
     }
@@ -312,164 +331,189 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
     // is linked to a company allowed to $user.
     if (! empty($objectid) && $objectid > 0)
     {
-        foreach ($features as $feature)
-        {
-            $sql='';
-
-            $check = array('adherent','banque','user','usergroup','produit','service','produit|service','categorie'); // Test on entity only (Objects with no link to company)
-            $checksoc = array('societe');	 // Test for societe object
-            $checkother = array('contact');	 // Test on entity and link to societe. Allowed if link is empty (Ex: contacts...).
-            $checkproject = array('projet'); // Test for project object
-            $nocheck = array('barcode','stock','fournisseur');	// No test
-            $checkdefault = 'all other not already defined'; // Test on entity and link to third party. Not allowed if link is empty (Ex: invoice, orders...).
-
-            // If dbtable not defined, we use same name for table than module name
-            if (empty($dbtablename)) $dbtablename = $feature;
-
-            // Check permission for object with entity
-            if (in_array($feature,$check))
-            {
-                $sql = "SELECT dbt.".$dbt_select;
-                $sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
-                $sql.= " WHERE dbt.".$dbt_select." = ".$objectid;
-                if (($feature == 'user' || $feature == 'usergroup') && ! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
-                {
-                    $sql.= " AND dbt.entity IS NOT NULL";
-                }
-                else
-                {
-                    $sql.= " AND dbt.entity IN (".getEntity($sharedelement, 1).")";
-                }
-            }
-            else if (in_array($feature,$checksoc))	// We check feature = checksoc
-            {
-                // If external user: Check permission for external users
-                if ($user->societe_id > 0)
-                {
-                    if ($user->societe_id <> $objectid) accessforbidden();
-                }
-                // If internal user: Check permission for internal users that are restricted on their objects
-                else if (! empty($conf->societe->enabled) && ($user->rights->societe->lire && ! $user->rights->societe->client->voir))
-                {
-                    $sql = "SELECT sc.fk_soc";
-                    $sql.= " FROM (".MAIN_DB_PREFIX."societe_commerciaux as sc";
-                    $sql.= ", ".MAIN_DB_PREFIX."societe as s)";
-                    $sql.= " WHERE sc.fk_soc = ".$objectid;
-                    $sql.= " AND sc.fk_user = ".$user->id;
-                    $sql.= " AND sc.fk_soc = s.rowid";
-                    $sql.= " AND s.entity IN (".getEntity($sharedelement, 1).")";
-                }
-                // If multicompany and internal users with all permissions, check user is in correct entity
-                else if (! empty($conf->multicompany->enabled))
-                {
-                    $sql = "SELECT s.rowid";
-                    $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
-                    $sql.= " WHERE s.rowid = ".$objectid;
-                    $sql.= " AND s.entity IN (".getEntity($sharedelement, 1).")";
-                }
-            }
-            else if (in_array($feature,$checkother))
-            {
-                // If external user: Check permission for external users
-                if ($user->societe_id > 0)
-                {
-                    $sql = "SELECT dbt.rowid";
-                    $sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
-                    $sql.= " WHERE dbt.rowid = ".$objectid;
-                    $sql.= " AND dbt.fk_soc = ".$user->societe_id;
-                }
-                // If internal user: Check permission for internal users that are restricted on their objects
-                else if (! empty($conf->societe->enabled) && ($user->rights->societe->lire && ! $user->rights->societe->client->voir))
-                {
-                    $sql = "SELECT dbt.rowid";
-                    $sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
-                    $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON dbt.fk_soc = sc.fk_soc AND sc.fk_user = '".$user->id."'";
-                    $sql.= " WHERE dbt.rowid = ".$objectid;
-                    $sql.= " AND (dbt.fk_soc IS NULL OR sc.fk_soc IS NOT NULL)";	// Contact not linked to a company or to a company of user
-                    $sql.= " AND dbt.entity IN (".getEntity($sharedelement, 1).")";
-                }
-                // If multicompany and internal users with all permissions, check user is in correct entity
-                else if (! empty($conf->multicompany->enabled))
-                {
-                    $sql = "SELECT dbt.rowid";
-                    $sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
-                    $sql.= " WHERE dbt.rowid = ".$objectid;
-                    $sql.= " AND dbt.entity IN (".getEntity($sharedelement, 1).")";
-                }
-            }
-            else if (in_array($feature,$checkproject))
-            {
-                if (! empty($conf->projet->enabled) && ! $user->rights->projet->all->lire)
-                {
-                    include_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
-                    $projectstatic=new Project($db);
-                    $tmps=$projectstatic->getProjectsAuthorizedForUser($user,0,1,0);
-                    $tmparray=explode(',',$tmps);
-                    if (! in_array($objectid,$tmparray)) accessforbidden();
-                }
-                else
-                {
-                	$sql = "SELECT dbt.".$dbt_select;
-                	$sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
-                	$sql.= " WHERE dbt.".$dbt_select." = ".$objectid;
-                	$sql.= " AND dbt.entity IN (".getEntity($sharedelement, 1).")";
-                }
-            }
-            else if (! in_array($feature,$nocheck))	// By default we check with link to third party
-            {
-                // If external user: Check permission for external users
-                if ($user->societe_id > 0)
-                {
-                	if (empty($dbt_keyfield)) dol_print_error('','Param dbt_keyfield is required but not defined');
-                	$sql = "SELECT dbt.".$dbt_keyfield;
-                    $sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
-                    $sql.= " WHERE dbt.rowid = ".$objectid;
-                    $sql.= " AND dbt.".$dbt_keyfield." = ".$user->societe_id;
-                }
-                // If internal user: Check permission for internal users that are restricted on their objects
-                else if (! empty($conf->societe->enabled) && ($user->rights->societe->lire && ! $user->rights->societe->client->voir))
-                {
-                	if (empty($dbt_keyfield)) dol_print_error('','Param dbt_keyfield is required but not defined');
-                    $sql = "SELECT sc.fk_soc";
-                    $sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
-                    $sql.= ", ".MAIN_DB_PREFIX."societe as s";
-                    $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
-                    $sql.= " WHERE dbt.".$dbt_select." = ".$objectid;
-                    $sql.= " AND sc.fk_soc = dbt.".$dbt_keyfield;
-                    $sql.= " AND dbt.".$dbt_keyfield." = s.rowid";
-                    $sql.= " AND s.entity IN (".getEntity($sharedelement, 1).")";
-                    $sql.= " AND sc.fk_user = ".$user->id;
-                }
-                // If multicompany and internal users with all permissions, check user is in correct entity
-                else if (! empty($conf->multicompany->enabled))
-                {
-                    $sql = "SELECT dbt.".$dbt_select;
-                    $sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
-                    $sql.= " WHERE dbt.".$dbt_select." = ".$objectid;
-                    $sql.= " AND dbt.entity IN (".getEntity($sharedelement, 1).")";
-                }
-            }
-
-            //print "sql=".$sql."<br>";
-            if ($sql)
-            {
-                $resql=$db->query($sql);
-                if ($resql)
-                {
-                    if ($db->num_rows($resql) == 0)	accessforbidden();
-                }
-                else
-                {
-                    dol_syslog("security.lib:restrictedArea sql=".$sql, LOG_ERR);
-                    accessforbidden();
-                }
-            }
-        }
+    	$ok = checkUserAccessToObject($user, $featuresarray, $objectid, $tableandshare, $feature2, $dbt_keyfield, $dbt_select);
+		return $ok ? 1 : accessforbidden();
     }
 
     return 1;
 }
 
+/**
+ * Check access by user to object
+ *
+ * @param User		$user			User to check
+ * @param array		$featuresarray	Features/modules to check
+ * @param int		$objectid		Object ID if we want to check a particular record (optional) is linked to a owned thirdparty (optional).
+ * @param string	$tableandshare	'TableName&SharedElement' with Tablename is table where object is stored. SharedElement is an optional key to define where to check entity. Not used if objectid is null (optional)
+ * @param string	$feature2		Feature to check, second level of permission (optional). Can be or check with 'level1|level2'.
+ * @param string	$dbt_keyfield	Field name for socid foreign key if not fk_soc. Not used if objectid is null (optional)
+ * @param string	$dbt_select		Field name for select if not rowid. Not used if objectid is null (optional)
+ *
+ * @return	bool		True if user has access, False otherwise
+ */
+function checkUserAccessToObject($user, $featuresarray, $objectid=0, $tableandshare='', $feature2='', $dbt_keyfield='', $dbt_select='rowid')
+{
+	global $db, $conf;
+
+	// More parameters
+	$params = explode('&', $tableandshare);
+	$dbtablename=(! empty($params[0]) ? $params[0] : '');
+	$sharedelement=(! empty($params[1]) ? $params[1] : $dbtablename);
+
+	foreach ($featuresarray as $feature)
+	{
+		$sql='';
+
+		$check = array('adherent','banque','user','usergroup','produit','service','produit|service','categorie'); // Test on entity only (Objects with no link to company)
+		$checksoc = array('societe');	 // Test for societe object
+		$checkother = array('contact');	 // Test on entity and link to societe. Allowed if link is empty (Ex: contacts...).
+		$checkproject = array('projet'); // Test for project object
+		$nocheck = array('barcode','stock','fournisseur');	// No test
+		$checkdefault = 'all other not already defined'; // Test on entity and link to third party. Not allowed if link is empty (Ex: invoice, orders...).
+
+		// If dbtable not defined, we use same name for table than module name
+		if (empty($dbtablename)) $dbtablename = $feature;
+
+		// Check permission for object with entity
+		if (in_array($feature,$check))
+		{
+			$sql = "SELECT dbt.".$dbt_select;
+			$sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
+			$sql.= " WHERE dbt.".$dbt_select." = ".$objectid;
+			if (($feature == 'user' || $feature == 'usergroup') && ! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
+			{
+				$sql.= " AND dbt.entity IS NOT NULL";
+			}
+			else
+			{
+				$sql.= " AND dbt.entity IN (".getEntity($sharedelement, 1).")";
+			}
+		}
+		else if (in_array($feature,$checksoc))	// We check feature = checksoc
+		{
+			// If external user: Check permission for external users
+			if ($user->societe_id > 0)
+			{
+				if ($user->societe_id <> $objectid) return false;
+			}
+			// If internal user: Check permission for internal users that are restricted on their objects
+			else if (! empty($conf->societe->enabled) && ($user->rights->societe->lire && ! $user->rights->societe->client->voir))
+			{
+				$sql = "SELECT sc.fk_soc";
+				$sql.= " FROM (".MAIN_DB_PREFIX."societe_commerciaux as sc";
+				$sql.= ", ".MAIN_DB_PREFIX."societe as s)";
+				$sql.= " WHERE sc.fk_soc = ".$objectid;
+				$sql.= " AND sc.fk_user = ".$user->id;
+				$sql.= " AND sc.fk_soc = s.rowid";
+				$sql.= " AND s.entity IN (".getEntity($sharedelement, 1).")";
+			}
+			// If multicompany and internal users with all permissions, check user is in correct entity
+			else if (! empty($conf->multicompany->enabled))
+			{
+				$sql = "SELECT s.rowid";
+				$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
+				$sql.= " WHERE s.rowid = ".$objectid;
+				$sql.= " AND s.entity IN (".getEntity($sharedelement, 1).")";
+			}
+		}
+		else if (in_array($feature,$checkother))	// Test on entity and link to societe. Allowed if link is empty (Ex: contacts...).
+		{
+			// If external user: Check permission for external users
+			if ($user->societe_id > 0)
+			{
+				$sql = "SELECT dbt.".$dbt_select;
+				$sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
+				$sql.= " WHERE dbt.".$dbt_select." = ".$objectid;
+				$sql.= " AND dbt.fk_soc = ".$user->societe_id;
+			}
+			// If internal user: Check permission for internal users that are restricted on their objects
+			else if (! empty($conf->societe->enabled) && ($user->rights->societe->lire && ! $user->rights->societe->client->voir))
+			{
+				$sql = "SELECT dbt.".$dbt_select;
+				$sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
+				$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON dbt.fk_soc = sc.fk_soc AND sc.fk_user = '".$user->id."'";
+				$sql.= " WHERE dbt.".$dbt_select." = ".$objectid;
+				$sql.= " AND (dbt.fk_soc IS NULL OR sc.fk_soc IS NOT NULL)";	// Contact not linked to a company or to a company of user
+				$sql.= " AND dbt.entity IN (".getEntity($sharedelement, 1).")";
+			}
+			// If multicompany and internal users with all permissions, check user is in correct entity
+			else if (! empty($conf->multicompany->enabled))
+			{
+				$sql = "SELECT dbt.".$dbt_select;
+				$sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
+				$sql.= " WHERE dbt.".$dbt_select." = ".$objectid;
+				$sql.= " AND dbt.entity IN (".getEntity($sharedelement, 1).")";
+			}
+		}
+		else if (in_array($feature,$checkproject))
+		{
+			if (! empty($conf->projet->enabled) && ! $user->rights->projet->all->lire)
+			{
+				include_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
+				$projectstatic=new Project($db);
+				$tmps=$projectstatic->getProjectsAuthorizedForUser($user,0,1,0);
+				$tmparray=explode(',',$tmps);
+				if (! in_array($objectid,$tmparray)) return false;
+			}
+			else
+			{
+				$sql = "SELECT dbt.".$dbt_select;
+				$sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
+				$sql.= " WHERE dbt.".$dbt_select." = ".$objectid;
+				$sql.= " AND dbt.entity IN (".getEntity($sharedelement, 1).")";
+			}
+		}
+		else if (! in_array($feature,$nocheck))	// By default we check with link to third party
+		{
+			// If external user: Check permission for external users
+			if ($user->societe_id > 0)
+			{
+				if (empty($dbt_keyfield)) dol_print_error('','Param dbt_keyfield is required but not defined');
+				$sql = "SELECT dbt.".$dbt_keyfield;
+				$sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
+				$sql.= " WHERE dbt.rowid = ".$objectid;
+				$sql.= " AND dbt.".$dbt_keyfield." = ".$user->societe_id;
+			}
+			// If internal user: Check permission for internal users that are restricted on their objects
+			else if (! empty($conf->societe->enabled) && ($user->rights->societe->lire && ! $user->rights->societe->client->voir))
+			{
+				if (empty($dbt_keyfield)) dol_print_error('','Param dbt_keyfield is required but not defined');
+				$sql = "SELECT sc.fk_soc";
+				$sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
+				$sql.= ", ".MAIN_DB_PREFIX."societe as s";
+				$sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
+				$sql.= " WHERE dbt.".$dbt_select." = ".$objectid;
+				$sql.= " AND sc.fk_soc = dbt.".$dbt_keyfield;
+				$sql.= " AND dbt.".$dbt_keyfield." = s.rowid";
+				$sql.= " AND s.entity IN (".getEntity($sharedelement, 1).")";
+				$sql.= " AND sc.fk_user = ".$user->id;
+			}
+			// If multicompany and internal users with all permissions, check user is in correct entity
+			else if (! empty($conf->multicompany->enabled))
+			{
+				$sql = "SELECT dbt.".$dbt_select;
+				$sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
+				$sql.= " WHERE dbt.".$dbt_select." = ".$objectid;
+				$sql.= " AND dbt.entity IN (".getEntity($sharedelement, 1).")";
+			}
+		}
+
+		//print "sql=".$sql."<br>";
+		if ($sql)
+		{
+			$resql=$db->query($sql);
+			if ($resql)
+			{
+				if ($db->num_rows($resql) == 0)	return false;
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}
 
 /**
  *	Show a message to say access is forbidden and stop program
@@ -518,4 +562,3 @@ function accessforbidden($message='',$printheader=1,$printfooter=1,$showonlymess
     exit(0);
 }
 
-?>

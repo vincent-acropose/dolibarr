@@ -1,7 +1,9 @@
 <?php
 /* Copyright (C) 2001-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2010	   Juanjo Menent	    <jmenent@2byte.es>
+ * Copyright (C) 2015      Jean-François Ferry	<jfefe@aternatik.fr>
+ * Copyright (C) 2016      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +34,7 @@ require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/tva/class/tva.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/paiementfourn.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/paiement/cheque/class/remisecheque.class.php';
 
 $langs->load("banks");
 $langs->load("categories");
@@ -41,6 +44,12 @@ if (! $user->rights->banque->consolidate) accessforbidden();
 
 $action=GETPOST('action', 'alpha');
 $id=GETPOST('account', 'int');
+
+$sortfield = GETPOST("sortfield",'alpha');
+$sortorder = GETPOST("sortorder",'alpha');
+if (! $sortorder) $sortorder="ASC";
+if (! $sortfield) $sortfield="dateo";
+
 
 /*
  * Actions
@@ -69,7 +78,7 @@ if ($action == 'rappro' && $user->rights->banque->consolidate)
 					$result=$bankline->update_conciliation($user,$_POST["cat"]);
 					if ($result < 0)
 					{
-						$mesg.=$bankline->error;
+						setEventMessages($bankline->error, $bankline->errors, 'errors');
 						$error++;
 						break;
 					}
@@ -81,7 +90,7 @@ if ($action == 'rappro' && $user->rights->banque->consolidate)
     {
     	$error++;
     	$langs->load("errors");
-        $mesg='<div class="error">'.$langs->trans("ErrorPleaseTypeBankTransactionReportName").'</div>';
+	    setEventMessages($langs->trans("ErrorPleaseTypeBankTransactionReportName"), null, 'errors');
     }
 
     if (! $error)
@@ -97,36 +106,24 @@ if ($action == 'rappro' && $user->rights->banque->consolidate)
 if ($action == 'del')
 {
 	$bankline=new AccountLine($db);
-	$bankline->fetch($_GET["rowid"]);
-	$result=$bankline->delete($user);
-    if ($result < 0)
-	{
-        dol_print_error($db,$bankline->error);
+
+    if ($bankline->fetch($_GET["rowid"]) > 0) {
+        $result = $bankline->delete($user);
+        if ($result < 0) {
+            dol_print_error($db, $bankline->error);
+        }
+    } else {
+        setEventMessage($langs->trans('ErrorRecordNotFound'), 'errors');
     }
 }
 
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/bankcateg.class.php';
+$bankcateg = new BankCateg($db);
+$options = array();
 
-// Load bank groups
-$sql = "SELECT rowid, label FROM ".MAIN_DB_PREFIX."bank_categ ORDER BY label";
-$resql = $db->query($sql);
-$options="";
-if ($resql)
-{
-    $var=True;
-    $num = $db->num_rows($resql);
-    if ($num > 0) $options .= '<option value="0"'.(GETPOST('cat')?'':' selected="true"').'>&nbsp;</option>';
-    $i = 0;
-    while ($i < $num)
-    {
-        $obj = $db->fetch_object($resql);
-        $options .= '<option value="'.$obj->rowid.'"'.(GETPOST('cat')==$obj->rowid?' selected="true"':'').'>'.$obj->label.'</option>'."\n";
-        $i++;
-    }
-    $db->free($resql);
-    //print $options;
+foreach ($bankcateg->fetchAll() as $bankcategory) {
+	$options[$bankcategory->id] = $bankcategory->label;
 }
-else dol_print_error($db);
-
 
 /*
  * View
@@ -142,6 +139,7 @@ $memberstatic=new Adherent($db);
 $paymentstatic=new Paiement($db);
 $paymentsupplierstatic=new PaiementFourn($db);
 $paymentvatstatic=new TVA($db);
+$remisestatic = new RemiseCheque($db);
 
 $acct = new Account($db);
 $acct->fetch($id);
@@ -149,9 +147,12 @@ $acct->fetch($id);
 $now=dol_now();
 
 $sql = "SELECT b.rowid, b.dateo as do, b.datev as dv, b.amount, b.label, b.rappro, b.num_releve, b.num_chq, b.fk_type as type";
+$sql.= ", b.fk_bordereau";
+$sql.= ", bc.ref";
 $sql.= " FROM ".MAIN_DB_PREFIX."bank as b";
+$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'bordereau_cheque as bc ON bc.rowid=b.fk_bordereau';
 $sql.= " WHERE rappro=0 AND fk_account=".$acct->id;
-$sql.= " ORDER BY dateo ASC";
+$sql.= " ORDER BY $sortfield $sortorder";
 $sql.= " LIMIT 1000";	// Limit to avoid page overload
 
 /// ajax adjust value date
@@ -180,13 +181,11 @@ if ($resql)
     $var=True;
     $num = $db->num_rows($resql);
 
-    print_fiche_titre($langs->trans("Reconciliation").': <a href="account.php?account='.$acct->id.'">'.$acct->label.'</a>');
+    print load_fiche_titre($langs->trans("Reconciliation").': <a href="account.php?account='.$acct->id.'">'.$acct->label.'</a>', '', 'title_bank.png');
     print '<br>';
 
-    dol_htmloutput_mesg($mesg);
-
     // Show last bank receipts
-    $nbmax=5;
+    $nbmax=15;      // We accept to show last 15 receipts (so we can have more than one year)
     $liste="";
     $sql = "SELECT DISTINCT num_releve FROM ".MAIN_DB_PREFIX."bank";
     $sql.= " WHERE fk_account=".$acct->id." AND num_releve IS NOT NULL";
@@ -198,10 +197,14 @@ if ($resql)
     {
         $numr=$db->num_rows($resqlr);
         $i=0;
+        $last_ok=0;
         while (($i < $numr) && ($i < $nbmax))
         {
             $objr = $db->fetch_object($resqlr);
+            if (! $last_ok) {
             $last_releve = $objr->num_releve;
+                $last_ok=1;
+            }
             $i++;
             $liste='<a href="'.DOL_URL_ROOT.'/compta/bank/releve.php?account='.$acct->id.'&amp;num='.$objr->num_releve.'">'.$objr->num_releve.'</a> &nbsp; '.$liste;
         }
@@ -218,30 +221,34 @@ if ($resql)
 
 	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?account='.$acct->id.'">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print "<input type=\"hidden\" name=\"action\" value=\"rappro\">";
-	print "<input type=\"hidden\" name=\"account\" value=\"".$acct->id."\">";
+	print '<input type="hidden" name="action" value="rappro">';
+	print '<input type="hidden" name="account" value="'.$acct->id.'">';
 
-    print $langs->trans("InputReceiptNumber").': ';
-    print '<input class="flat" name="num_releve" type="text" value="'.(GETPOST('num_releve')?GETPOST('num_releve'):$objp->num_releve).'" size="10">';
+    print '<strong>'.$langs->trans("InputReceiptNumber").'</strong>: ';
+    print '<input class="flat" name="num_releve" type="text" value="'.(GETPOST('num_releve')?GETPOST('num_releve'):'').'" size="10">';  // The only default value is value we just entered
     print '<br>';
-    if ($options)
-    {
-        print $langs->trans("EventualyAddCategory").': <select class="flat" name="cat">'.$options.'</select><br>';
-    }
+	if ($options) {
+		print $langs->trans("EventualyAddCategory").': ';
+		print Form::selectarray('cat', $options, GETPOST('cat'), 1);
+		print '<br>';
+	}
     print '<br>'.$langs->trans("ThenCheckLinesAndConciliate").' "'.$langs->trans("Conciliate").'"<br>';
 
     print '<br>';
 
-    print '<table class="liste" width="100%">';
-    print '<tr class="liste_titre">'."\n";
-    print '<td align="center">'.$langs->trans("DateOperationShort").'</td>';
-    print '<td align="center">'.$langs->trans("DateValueShort").'</td>';
-    print '<td>'.$langs->trans("Type").'</td>';
-    print '<td>'.$langs->trans("Description").'</td>';
-    print '<td align="right" width="60" class="nowrap">'.$langs->trans("Debit").'</td>';
-    print '<td align="right" width="60" class="nowrap">'.$langs->trans("Credit").'</td>';
-    print '<td align="center" width="80">'.$langs->trans("Action").'</td>';
-    print '<td align="center" width="60" class="nowrap">'.$langs->trans("ToConciliate").'</td>';
+   	$paramlist='';
+	$paramlist.="&account=".$acct->id;
+	
+	print '<table class="liste" width="100%">';
+	print '<tr class="liste_titre">'."\n";
+	print_liste_field_titre($langs->trans("DateOperationShort"),$_SERVER["PHP_SELF"],"b.dateo","",$paramlist,'align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("DateValueShort"),$_SERVER["PHP_SELF"],"b.datev","",$paramlist,'align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Type"),$_SERVER["PHP_SELF"],"b.fk_type","",$paramlist,'align="left"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Description"),$_SERVER["PHP_SELF"],"b.label","",$paramlist,'align="left"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Debit"),$_SERVER["PHP_SELF"],"b.amount","",$paramlist,' width="60 align="right"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Credit"),$_SERVER["PHP_SELF"],"b.amount","",$paramlist,' width="60 align="right"',$sortfield,$sortorder);
+	print_liste_field_titre('',$_SERVER["PHP_SELF"],"","",$paramlist,' width="80 align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("ToConciliate"),$_SERVER["PHP_SELF"],"","",$paramlist,' align="center" width="80" ',$sortfield,$sortorder);
     print "</tr>\n";
 
 
@@ -251,7 +258,7 @@ if ($resql)
         $objp = $db->fetch_object($resql);
 
         $var=!$var;
-        print "<tr ".$bc[$var].">";
+        print "<tr ".$bc[$var].">\n";
 //         print '<form method="post" action="rappro.php?account='.$_GET["account"].'">';
 //         print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 
@@ -263,13 +270,15 @@ if ($resql)
         // Date value
 		if (! $objp->rappro && ($user->rights->banque->modifier || $user->rights->banque->consolidate))
 		{
-			print '<td align="center" class="nowrap">';
+			print '<td align="center" class="nowrap">'."\n";
 			print '<span id="datevalue_'.$objp->rowid.'">'.dol_print_date($db->jdate($objp->dv),"day")."</span>";
-			print ' <span>&nbsp; ';
+			print '&nbsp;';
+			print '<span>';
 			print '<a class="ajax" href="'.$_SERVER['PHP_SELF'].'?action=dvprev&amp;account='.$acct->id.'&amp;rowid='.$objp->rowid.'">';
 			print img_edit_remove() . "</a> ";
 			print '<a class="ajax" href="'.$_SERVER['PHP_SELF'].'?action=dvnext&amp;account='.$acct->id.'&amp;rowid='.$objp->rowid.'">';
-			print img_edit_add() ."</a></span>";
+			print img_edit_add() ."</a>";
+			print '</span>';
 			print '</td>';
 		}
 		else
@@ -282,7 +291,13 @@ if ($resql)
 		// Type + Number
 		$label=($langs->trans("PaymentType".$objp->type)!="PaymentType".$objp->type)?$langs->trans("PaymentType".$objp->type):$objp->type;  // $objp->type is a code
 		if ($label=='SOLD') $label='';
-		print '<td class="nowrap">'.$label.($objp->num_chq?' '.$objp->num_chq:'').'</td>';
+        $link='';
+        if ($objp->fk_bordereau>0) {
+            $remisestatic->id = $objp->fk_bordereau;
+            $remisestatic->ref = $objp->number;
+            $link = ' '.$remisestatic->getNomUrl(1);
+        }
+		print '<td class="nowrap">'.$label.($objp->num_chq?' '.$objp->num_chq:'').$link.'</td>';
 
 		// Description
         print '<td valign="center"><a href="'.DOL_URL_ROOT.'/compta/bank/ligne.php?rowid='.$objp->rowid.'&amp;account='.$acct->id.'">';
@@ -327,7 +342,7 @@ if ($resql)
 			else if ($links[$key]['type']=='payment_sc')
 			{
 			    // We don't show anything because there is 1 payment for 1 social contribution and we already show link to social contribution
-				/*print '<a href="'.DOL_URL_ROOT.'/compta/payment_sc/fiche.php?id='.$links[$key]['url_id'].'">';
+				/*print '<a href="'.DOL_URL_ROOT.'/compta/payment_sc/card.php?id='.$links[$key]['url_id'].'">';
 				print img_object($langs->trans('ShowPayment'),'payment').' ';
 				print $langs->trans("SocialContributionPayment");
 				print '</a>';*/
@@ -347,7 +362,7 @@ if ($resql)
 				print '</a>';
 			}
 			else if ($links[$key]['type']=='member') {
-				print '<a href="'.DOL_URL_ROOT.'/adherents/fiche.php?rowid='.$links[$key]['url_id'].'">';
+				print '<a href="'.DOL_URL_ROOT.'/adherents/card.php?rowid='.$links[$key]['url_id'].'">';
 				print img_object($langs->trans('ShowMember'),'user').' ';
 				print $links[$key]['label'];
 				print '</a>';
@@ -403,7 +418,7 @@ if ($resql)
                     print '</a>';
                 }
                 else {
-                    print "&nbsp;";	// On n'empeche la suppression car le raprochement ne pourra se faire qu'apr�s la date pass�e et que l'�criture apparaisse bien sur le compte.
+                    print "&nbsp;";	// We prevents the deletion because reconciliation can not be achieved until the date has elapsed and that writing appears well on the account.
                 }
                 print "</td>";
             }
@@ -419,15 +434,7 @@ if ($resql)
         {
 
             print '<td align="center" class="nowrap">';
-            print '<input class="flat" name="rowid['.$objp->rowid.']" type="checkbox" value="'.$objp->rowid.'" size="1"'.(! empty($_POST['rowid'][$objp->rowid])?' checked="checked"':'').'>';
-//             print '<input class="flat" name="num_releve" type="text" value="'.$objp->num_releve.'" size="8">';
-//             print ' &nbsp; ';
-//             print "<input class=\"button\" type=\"submit\" value=\"".$langs->trans("Conciliate")."\">";
-//             if ($options)
-//             {
-//                 print "<br><select class=\"flat\" name=\"cat\">$options";
-//                 print "</select>";
-//             }
+            print '<input class="flat" name="rowid['.$objp->rowid.']" type="checkbox" value="'.$objp->rowid.'" size="1"'.(! empty($_POST['rowid'][$objp->rowid])?' checked':'').'>';
             print "</td>";
         }
         else
@@ -459,4 +466,3 @@ else
 llxFooter();
 
 $db->close();
-?>

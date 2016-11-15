@@ -61,9 +61,10 @@ class MenuManager
 	 *  Show menu
 	 *
      *	@param	string	$mode			'top', 'left', 'jmobile'
-     *  @return	void
+     *  @param	array	$moredata		An array with more data to output
+     *  @return int                     0 or nb of top menu entries if $mode = 'topnb'
 	 */
-	function showmenu($mode)
+	function showmenu($mode, $moredata=null)
 	{
 		global $user,$conf,$langs,$dolibarr_main_db_name;
 
@@ -77,6 +78,11 @@ class MenuManager
 		$noout=0;
 		if ($mode == 'jmobile') $noout=1;
 
+		if ($mode == 'topnb')
+		{
+		    return 1;
+		}
+		
 		if ($mode == 'top' || $mode == 'jmobile')
 		{
 			if (empty($noout)) print_start_menu_array_empty();
@@ -86,6 +92,19 @@ class MenuManager
 			$idsel='home';
 			$classname='class="tmenusel"';
 
+			// Show/Hide vertical menu
+			if ($mode != 'jmobile' && $mode != 'topnb' && (GETPOST('testmenuhider') || ! empty($conf->global->MAIN_TESTMENUHIDER)) && empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER))
+			{
+			    $showmode=1;
+			    $classname = 'class="tmenu menuhider"';
+			    $idsel='menu';
+			
+			    if (empty($noout)) print_start_menu_entry($idsel,$classname,$showmode);
+			    if (empty($noout)) print_text_menu_entry('', 1, '#', $id, $idsel, $classname, $atarget);
+			    if (empty($noout)) print_end_menu_entry($showmode);
+			    $menu->add('#', '', 0, $showmode, $atarget, "xxx", '');
+			}			
+			
 			if (empty($noout)) print_start_menu_entry_empty($idsel, $classname, $showmode);
 			if (empty($noout)) print_text_menu_entry_empty($langs->trans("Home"), 1, dol_buildpath('/index.php',1).'?mainmenu=home&amp;leftmenu=', $id, $idsel, $classname, $this->atarget);
 			if (empty($noout)) print_end_menu_entry_empty($showmode);
@@ -99,7 +118,7 @@ class MenuManager
 
 			if ($mode == 'jmobile')
 			{
-				$this->topmenu=dol_clone($this->menu);
+				$this->topmenu = clone $this->menu;
 				unset($this->menu->liste);
 			}
 		}
@@ -115,6 +134,7 @@ class MenuManager
 			$this->menu->add("/admin/modules.php", $langs->trans("Modules"),1);
 			$this->menu->add("/admin/menus.php", $langs->trans("Menus"),1);
 			$this->menu->add("/admin/ihm.php", $langs->trans("GUISetup"),1);
+			$this->menu->add("/admin/fiscalyear.php", $langs->trans("Fiscalyear"),1);
 			$this->menu->add("/admin/boxes.php", $langs->trans("Boxes"),1);
 			$this->menu->add("/admin/delais.php",$langs->trans("Alerts"),1);
 			$this->menu->add("/admin/proxy.php?mainmenu=home", $langs->trans("Security"),1);
@@ -122,7 +142,8 @@ class MenuManager
 			$this->menu->add("/admin/pdf.php?mainmenu=home", $langs->trans("PDF"),1);
 			$this->menu->add("/admin/mails.php?mainmenu=home", $langs->trans("Emails"),1);
 			$this->menu->add("/admin/sms.php?mainmenu=home", $langs->trans("SMS"),1);
-			$this->menu->add("/admin/dict.php?mainmenu=home", $langs->trans("DictionnarySetup"),1);
+			$this->menu->add("/admin/dict.php?mainmenu=home", $langs->trans("DictionarySetup"),1);
+			if (! empty($conf->accounting->enabled)) $this->menu->add("/accountancy/admin/account.php", $langs->trans("Chartofaccounts"),1);
 			$this->menu->add("/admin/const.php?mainmenu=home", $langs->trans("OtherSetup"),1);
 
 			// ***** END *****
@@ -131,20 +152,29 @@ class MenuManager
 
 			if (empty($noout))
 			{
-				$alt=0;
+				$alt=0; $altok=0; $blockvmenuopened=false;
 				$num=count($this->menu->liste);
 				for ($i = 0; $i < $num; $i++)
 				{
 					$alt++;
 					if (empty($this->menu->liste[$i]['level']))
 					{
+			    		$altok++;
+    					$blockvmenuopened=true;
+						$lastopened=true;
+        				for($j = ($i + 1); $j < $num; $j++)
+        				{
+        				    if (empty($menu_array[$j]['level'])) $lastopened=false;
+        				}
+        				$alt = 0;   // For menu manager "empty", we force to not have blockvmenufirst defined
+        				$lastopened = 1; // For menu manager "empty", we force to not have blockvmenulast defined
 						if (($alt%2==0))
 						{
-							print '<div class="blockvmenuimpair">'."\n";
+							print '<div class="blockvmenuimpair blockvmenuunique'.($lastopened?' blockvmenulast':'').($alt == 1 ? ' blockvmenufirst':'').'">'."\n";
 						}
 						else
 						{
-							print '<div class="blockvmenupair">'."\n";
+							print '<div class="blockvmenupair blockvmenuunique'.($lastopened?' blockvmenulast':'').($alt == 1 ? ' blockvmenufirst':'').'">'."\n";
 						}
 					}
 
@@ -175,10 +205,20 @@ class MenuManager
 						print '<div class="menu_contenu">';
 
 						if ($this->menu->liste[$i]['enabled'])
-							print $tabstring.'<a class="vsmenu" href="'.dol_buildpath($this->menu->liste[$i]['url'],1).'">'.$this->menu->liste[$i]['titre'].'</a><br>';
+						{
+							print $tabstring;
+							if ($this->menu->liste[$i]['url']) print '<a class="vsmenu" href="'.dol_buildpath($this->menu->liste[$i]['url'],1).'"'.($this->menu->liste[$i]['target']?' target="'.$this->menu->liste[$i]['target'].'"':'').'>';
+							else print '<span class="vsmenu">';
+							if ($this->menu->liste[$i]['url']) print $this->menu->liste[$i]['titre'].'</a>';
+							else print '</span>';
+						}
 						else
-							print $tabstring.'<font class="vsmenudisabled vsmenudisabledmargin">'.$this->menu->liste[$i]['titre'].'</font><br>';
+						{
+							print $tabstring.'<font class="vsmenudisabled vsmenudisabledmargin">'.$this->menu->liste[$i]['titre'].'</font>';
+						}
 
+						// If title is not pure text and contains a table, no carriage return added
+						if (! strstr($this->menu->liste[$i]['titre'],'<table')) print '<br>';
 						print '</div>'."\n";
 					}
 
@@ -189,11 +229,13 @@ class MenuManager
 						print "</div>\n";
 					}
 				}
+		
+				if ($altok) print '<div class="blockvmenuend"></div>';
 			}
 
 			if ($mode == 'jmobile')
 			{
-				$this->leftmenu=dol_clone($this->menu);
+				$this->leftmenu = clone $this->menu;
 				unset($this->menu->liste);
 			}
 		}
@@ -265,8 +307,10 @@ class MenuManager
  */
 function print_start_menu_array_empty()
 {
+    global $conf;
+    
 	print '<div class="tmenudiv">';
-	print '<ul class="tmenu">';
+	print '<ul class="tmenu"'.(empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER)?'':' title="Top menu"').'>';
 }
 
 /**
@@ -282,7 +326,7 @@ function print_start_menu_entry_empty($idsel,$classname,$showmode)
 	if ($showmode)
 	{
 		print '<li '.$classname.' id="mainmenutd_'.$idsel.'">';
-		print '<div class="tmenuleft"></div><div class="tmenucenter">';
+		print '<div class="tmenuleft tmenusep"></div><div class="tmenucenter">';
 	}
 }
 
@@ -300,11 +344,11 @@ function print_start_menu_entry_empty($idsel,$classname,$showmode)
  */
 function print_text_menu_entry_empty($text, $showmode, $url, $id, $idsel, $classname, $atarget)
 {
-	global $conf;
+	global $conf,$langs;
 
 	if ($showmode == 1)
 	{
-		print '<a class="tmenuimage" href="'.$url.'"'.($atarget?' target="'.$atarget.'"':'').'>';
+		print '<a class="tmenuimage" tabindex="-1" href="'.$url.'"'.($atarget?' target="'.$atarget.'"':'').'>';
 		print '<div class="'.$id.' '.$idsel.'"><span class="'.$id.' tmenuimage" id="mainmenuspan_'.$idsel.'"></span></div>';
 		print '</a>';
 		print '<a '.$classname.' id="mainmenua_'.$idsel.'" href="'.$url.'"'.($atarget?' target="'.$atarget.'"':'').'>';
@@ -347,4 +391,3 @@ function print_end_menu_array_empty()
 	print "\n";
 }
 
-?>

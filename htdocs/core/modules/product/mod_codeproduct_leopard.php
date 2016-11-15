@@ -40,6 +40,7 @@ class mod_codeproduct_leopard extends ModeleProductCode
 	 */
 
 	var $nom='Leopard';					// Nom du modele
+	var $name='Leopard';					// Nom du modele
 	var $code_modifiable;				// Code modifiable
 	var $code_modifiable_invalide;		// Code modifiable si il est invalide
 	var $code_modifiable_null;			// Code modifiables si il est null
@@ -63,7 +64,7 @@ class mod_codeproduct_leopard extends ModeleProductCode
 
 	/**		Return description of module
 	 *
-	 * 		@param	string	$langs		Object langs
+	 * 		@param	Translate	$langs	Object langs
 	 * 		@return string      		Description of module
 	 */
 	function info($langs)
@@ -91,7 +92,7 @@ class mod_codeproduct_leopard extends ModeleProductCode
 	 * 	Check validity of code according to its rules
 	 *
 	 *	@param	DoliDB		$db		Database handler
-	 *	@param	string		&$code	Code to check/correct
+	 *	@param	string		$code	Code to check/correct
 	 *	@param	Product		$product	Object product
 	 *  @param  int		  	$type   0 = product , 1 = service
 	 *  @return int					0 if OK
@@ -121,4 +122,3 @@ class mod_codeproduct_leopard extends ModeleProductCode
 	}
 }
 
-?>

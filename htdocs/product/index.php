@@ -1,7 +1,9 @@
 <?php
-/* Copyright (C) 2001-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+/* Copyright (C) 2001-2006  Rodolphe Quiedeville    <rodolphe@quiedeville.org>
+ * Copyright (C) 2004-2015  Laurent Destailleur     <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2014  Regis Houssin           <regis.houssin@capnetworks.com>
+ * Copyright (C) 2014       Charles-Fr BENKE        <charles.fr@benke.fr>
+ * Copyright (C) 2015       Jean-François Ferry     <jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +28,7 @@
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/product/dynamic_price/class/price_parser.class.php';
 
 $type=GETPOST("type",'int');
 if ($type =='' && !$user->rights->produit->lire) $type='1';	// Force global page on service page only
@@ -46,6 +49,7 @@ $product_static = new Product($db);
  */
 
 $transAreaType = $langs->trans("ProductsAndServicesArea");
+
 $helpurl='';
 if (! isset($_GET["type"]))
 {
@@ -63,42 +67,44 @@ if ((isset($_GET["type"]) && $_GET["type"] == 1) || empty($conf->product->enable
 	$helpurl='EN:Module_Services_En|FR:Module_Services|ES:M&oacute;dulo_Servicios';
 }
 
-llxHeader("",$langs->trans("ProductsAndServices"),$helpurl);
+llxHeader("", $langs->trans("ProductsAndServices"), $helpurl);
 
-print_fiche_titre($transAreaType);
+$linkback="";
+print load_fiche_titre($transAreaType,$linkback,'title_products.png');
 
 
-//print '<table border="0" width="100%" class="notopnoleftnoright">';
-//print '<tr><td valign="top" width="30%" class="notopnoleft">';
 print '<div class="fichecenter"><div class="fichethirdleft">';
 
 
 /*
  * Search Area of product/service
  */
-$rowspan=2;
-if (! empty($conf->barcode->enabled)) $rowspan++;
-print '<form method="post" action="'.DOL_URL_ROOT.'/product/liste.php">';
-print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-print '<table class="noborder nohover" width="100%">';
-print "<tr class=\"liste_titre\">";
-print '<td colspan="3">'.$langs->trans("Search").'</td></tr>';
-print "<tr ".$bc[false]."><td>";
-print $langs->trans("Ref").':</td><td><input class="flat" type="text" size="14" name="sref"></td>';
-print '<td rowspan="'.$rowspan.'"><input type="submit" class="button" value="'.$langs->trans("Search").'"></td></tr>';
-if (! empty($conf->barcode->enabled))
+ 
+// Search contract
+if ((! empty($conf->product->enabled) || ! empty($conf->service->enabled)) && ($user->rights->produit->lire || $user->rights->service->lire))
 {
-	print "<tr ".$bc[false]."><td>";
-	print $langs->trans("BarCode").':</td><td><input class="flat" type="text" size="14" name="sbarcode"></td>';
-	//print '<td><input type="submit" class="button" value="'.$langs->trans("Search").'"></td>';
-	print '</tr>';
+	$listofsearchfields['search_product']=array('text'=>'ProductOrService');
 }
-print "<tr ".$bc[false]."><td>";
-print $langs->trans("Other").':</td><td><input class="flat" type="text" size="14" name="sall"></td>';
-//print '<td><input type="submit" class="button" value="'.$langs->trans("Search").'"></td>';
-print '</tr>';
-print "</table></form><br>";
 
+if (count($listofsearchfields))
+{
+	print '<form method="post" action="'.DOL_URL_ROOT.'/core/search.php">';
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print '<table class="noborder nohover centpercent">';
+	$i=0;
+	foreach($listofsearchfields as $key => $value)
+	{
+		if ($i == 0) print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("Search").'</td></tr>';
+		print '<tr '.$bc[false].'>';
+		print '<td class="nowrap"><label for="'.$key.'">'.$langs->trans($value["text"]).'</label></td><td><input type="text" class="flat inputsearch" name="'.$key.'" id="'.$key.'" size="18"></td>';
+		if ($i == 0) print '<td rowspan="'.count($listofsearchfields).'"><input type="submit" value="'.$langs->trans("Search").'" class="button"></td>';
+		print '</tr>';
+		$i++;
+	}
+	print '</table>';	
+	print '</form>';
+	print '<br>';
+}
 
 /*
  * Number of products and/or services
@@ -113,54 +119,119 @@ $sql.= " GROUP BY p.fk_product_type, p.tosell, p.tobuy";
 $result = $db->query($sql);
 while ($objp = $db->fetch_object($result))
 {
-	$status=1;
+	$status=2;
 	if (! $objp->tosell && ! $objp->tobuy) $status=0;	// To sell OR to buy
-	$prodser[$objp->fk_product_type][$status]+=$objp->total;
+	if ((! $objp->tosell && $objp->tobuy) || ($objp->tosell && ! $objp->tobuy)) $status=1;
+	$prodser[$objp->fk_product_type][$status]=$objp->total;
 }
 
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre"><td colspan="2">'.$langs->trans("Statistics").'</td></tr>';
 if (! empty($conf->product->enabled))
 {
-	$statProducts = "<tr $bc[0]>";
-	$statProducts.= '<td><a href="liste.php?type=0&amp;tosell=0&amp;tobuy=0">'.$langs->trans("ProductsNotOnSell").'</a></td><td align="right">'.round($prodser[0][0]).'</td>';
+	$statProducts = "<tr ".$bc[0].">";
+	$statProducts.= '<td><a href="list.php?type=0&amp;tosell=0&amp;tobuy=0">'.$langs->trans("ProductsNotOnSell").'</a></td><td align="right">'.round($prodser[0][0]).'</td>';
 	$statProducts.= "</tr>";
-	$statProducts.= "<tr $bc[1]>";
-	$statProducts.= '<td><a href="liste.php?type=0&amp;tosell=1">'.$langs->trans("ProductsOnSell").'</a></td><td align="right">'.round($prodser[0][1]).'</td>';
+	$statProducts.= "<tr ".$bc[1].">";
+	$statProducts.= '<td><a href="list.php?type=0">'.$langs->trans("ProductsOnSell").'</a></td><td align="right">'.round($prodser[0][1]).'</td>';
 	$statProducts.= "</tr>";
+	$statProducts.= "<tr ".$bc[0].">";
+	$statProducts.= '<td><a href="list.php?type=0&amp;tosell=1&amp;tobuy=1">'.$langs->trans("ProductsOnSellAndOnBuy").'</a></td><td align="right">'.round($prodser[0][2]).'</td>';
+	$statProducts.= "</tr>";
+
 }
 if (! empty($conf->service->enabled))
 {
-	$statServices = "<tr $bc[0]>";
-	$statServices.= '<td><a href="liste.php?type=1&amp;tosell=0&amp;tobuy=0">'.$langs->trans("ServicesNotOnSell").'</a></td><td align="right">'.round($prodser[1][0]).'</td>';
+	$statServices = "<tr ".$bc[1].">";
+	$statServices.= '<td><a href="list.php?type=1&amp;tosell=0&amp;tobuy=0">'.$langs->trans("ServicesNotOnSell").'</a></td><td align="right">'.round($prodser[1][0]).'</td>';
 	$statServices.= "</tr>";
-	$statServices.= "<tr $bc[1]>";
-	$statServices.= '<td><a href="liste.php?type=1&amp;tosell=1">'.$langs->trans("ServicesOnSell").'</a></td><td align="right">'.round($prodser[1][1]).'</td>';
+	$statServices.= "<tr ".$bc[0].">";
+	$statServices.= '<td><a href="list.php?type=1">'.$langs->trans("ServicesOnSell").'</a></td><td align="right">'.round($prodser[1][1]).'</td>';
 	$statServices.= "</tr>";
+	$statServices.= "<tr ".$bc[1].">";
+	$statServices.= '<td><a href="list.php?type=1&amp;tosell=1&amp;tobuy=1">'.$langs->trans("ServicesOnSellAndOnBuy").'</a></td><td align="right">'.round($prodser[1][2]).'</td>';
+	$statServices.= "</tr>";
+
 }
 $total=0;
 if ($type == '0')
 {
 	print $statProducts;
-	$total=round($prodser[0][0])+round($prodser[0][1]);
+	$total=round($prodser[0][0])+round($prodser[0][1])+round($prodser[0][2]);
 }
 else if ($type == '1')
 {
 	print $statServices;
-	$total=round($prodser[1][0])+round($prodser[1][1]);
+	$total=round($prodser[1][0])+round($prodser[1][1])+round($prodser[1][2]);
 }
 else
 {
 	print $statProducts.$statServices;
-	$total=round($prodser[1][0])+round($prodser[1][1])+round($prodser[0][0])+round($prodser[0][1]);
+	$total=round($prodser[1][0])+round($prodser[1][1])+round($prodser[1][2])+round($prodser[0][0])+round($prodser[0][1])+round($prodser[0][2]);
 }
 print '<tr class="liste_total"><td>'.$langs->trans("Total").'</td><td align="right">';
 print $total;
 print '</td></tr>';
 print '</table>';
 
-
-//print '</td><td valign="top" width="70%" class="notopnoleftnoright">';
+if (! empty($conf->categorie->enabled) && ! empty($conf->global->CATEGORY_GRAPHSTATS_ON_PRODUCTS))
+{
+	require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
+	print '<br>';
+	print '<table class="noborder" width="100%">';
+	print '<tr class="liste_titre"><th colspan="2">'.$langs->trans("Categories").'</th></tr>';
+	print '<tr '.$bc[0].'><td align="center" colspan="2">';
+	$sql = "SELECT c.label, count(*) as nb";
+	$sql.= " FROM ".MAIN_DB_PREFIX."categorie_product as cs";
+	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."categorie as c ON cs.fk_categorie = c.rowid";
+	$sql.= " WHERE c.type = 0";
+	$sql.= " AND c.entity IN (".getEntity('category',1).")";
+	$sql.= " GROUP BY c.label";
+	$total=0;
+	$result = $db->query($sql);
+	if ($result)
+	{
+		$num = $db->num_rows($result);
+		$i=0;
+		if (! empty($conf->use_javascript_ajax))
+		{
+			$dataseries=array();
+			$rest=0;
+			$nbmax=10;
+			while ($i < $num)
+			{
+				$obj = $db->fetch_object($result);
+				if ($i < $nbmax)
+					$dataseries[]=array('label'=>$obj->label,'data'=>round($obj->nb));
+				else
+					$rest+=$obj->nb;
+				$total+=$obj->nb;
+				$i++;
+			}
+			if ($i > $nbmax)
+				$dataseries[]=array('label'=>$langs->trans("Other"),'data'=>round($rest));
+			$data=array('series'=>$dataseries);
+			dol_print_graph('statscategproduct',300,180,$data,1,'pie',0);
+		}
+		else
+		{
+			$var=true;
+			while ($i < $num)
+			{
+				$obj = $db->fetch_object($result);
+				$var=!$var;
+				print '<tr $bc[$var]><td>'.$obj->label.'</td><td>'.$obj->nb.'</td></tr>';
+				$total+=$obj->nb;
+				$i++;
+			}
+		}
+	}
+	print '</td></tr>';
+	print '<tr class="liste_total"><td>'.$langs->trans("Total").'</td><td align="right">';
+	print $total;
+	print '</td></tr>';
+	print '</table>';
+}
 print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
 
 
@@ -168,7 +239,8 @@ print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
  * Last modified products
  */
 $max=15;
-$sql = "SELECT p.rowid, p.label, p.price, p.ref, p.fk_product_type, p.tosell, p.tobuy,";
+$sql = "SELECT p.rowid, p.label, p.price, p.ref, p.fk_product_type, p.tosell, p.tobuy, p.fk_price_expression,";
+$sql.= " p.entity,";
 $sql.= " p.tms as datem";
 $sql.= " FROM ".MAIN_DB_PREFIX."product as p";
 $sql.= " WHERE p.entity IN (".getEntity($product_static->element, 1).")";
@@ -224,7 +296,9 @@ if ($result)
 			print '<td class="nowrap">';
 			$product_static->id=$objp->rowid;
 			$product_static->ref=$objp->ref;
+			$product_static->label = $objp->label;
 			$product_static->type=$objp->fk_product_type;
+            $product_static->entity = $objp->entity;
 			print $product_static->getNomUrl(1,'',16);
 			print "</td>\n";
 			print '<td>'.dol_trunc($objp->label,32).'</td>';
@@ -234,8 +308,18 @@ if ($result)
 			// Sell price
 			if (empty($conf->global->PRODUIT_MULTIPRICES))
 			{
+                if (!empty($conf->dynamicprices->enabled) && !empty($objp->fk_price_expression))
+                {
+                	$product = new Product($db);
+                	$product->fetch($objp->rowid);
+                    $priceparser = new PriceParser($db);
+                    $price_result = $priceparser->parseProduct($product);
+                    if ($price_result >= 0) {
+                        $objp->price = $price_result;
+                    }
+                }
 				print '<td align="right">';
-    			if ($objp->price_base_type == 'TTC') print price($objp->price_ttc).' '.$langs->trans("TTC");
+    			if (isset($objp->price_base_type) && $objp->price_base_type == 'TTC') print price($objp->price_ttc).' '.$langs->trans("TTC");
     			else print price($objp->price).' '.$langs->trans("HT");
     			print '</td>';
 			}
@@ -249,9 +333,10 @@ if ($result)
 			$i++;
 		}
 
-		$db->free();
+		$db->free($result);
 
 		print "</table>";
+		print '<br>';
 	}
 }
 else
@@ -270,7 +355,6 @@ if ($conf->global->MAIN_FEATURES_LEVEL)
 }
 
 
-//print '</td></tr></table>';
 print '</div></div></div>';
 
 llxFooter();
@@ -278,25 +362,29 @@ llxFooter();
 $db->close();
 
 
-
-
+/*
+ *  Print html activity for product type
+ *
+ *  @param      int $product_type   Type of product
+ *  @return     void
+ */
 function activitytrim($product_type)
 {
 	global $conf,$langs,$db;
+	global $bc;
 
 	// We display the last 3 years
 	$yearofbegindate=date('Y',dol_time_plus_duree(time(), -3, "y"));
 
 	// breakdown by quarter
 	$sql = "SELECT DATE_FORMAT(p.datep,'%Y') as annee, DATE_FORMAT(p.datep,'%m') as mois, SUM(fd.total_ht) as Mnttot";
-	$sql.= " FROM ".MAIN_DB_PREFIX."societe as s,".MAIN_DB_PREFIX."facture as f, ".MAIN_DB_PREFIX."facturedet as fd";
+	$sql.= " FROM ".MAIN_DB_PREFIX."facture as f, ".MAIN_DB_PREFIX."facturedet as fd";
 	$sql.= " , ".MAIN_DB_PREFIX."paiement as p,".MAIN_DB_PREFIX."paiement_facture as pf";
-	$sql.= " WHERE f.fk_soc = s.rowid";
+	$sql.= " WHERE f.entity = " . $conf->entity;
 	$sql.= " AND f.rowid = fd.fk_facture";
 	$sql.= " AND pf.fk_facture = f.rowid";
 	$sql.= " AND pf.fk_paiement= p.rowid";
 	$sql.= " AND fd.product_type=".$product_type;
-	$sql.= " AND s.entity = ".$conf->entity;
 	$sql.= " AND p.datep >= '".$db->idate(dol_get_first_day($yearofbegindate),1)."'";
 	$sql.= " GROUP BY annee, mois ";
 	$sql.= " ORDER BY annee, mois ";
@@ -304,7 +392,7 @@ function activitytrim($product_type)
 	$result = $db->query($sql);
 	if ($result)
 	{
-		$tmpyear=$beginyear;
+		$tmpyear=0;
 		$trim1=0;
 		$trim2=0;
 		$trim3=0;
@@ -314,7 +402,6 @@ function activitytrim($product_type)
 
 		if ($num > 0 )
 		{
-			print '<br>';
 			print '<table class="noborder" width="75%">';
 
 			if ($product_type==0)
@@ -330,6 +417,8 @@ function activitytrim($product_type)
 		}
 		$i = 0;
 
+		$var=true;
+		
 		while ($i < $num)
 		{
 			$objp = $db->fetch_object($result);
@@ -337,7 +426,8 @@ function activitytrim($product_type)
 			{
 				if ($trim1+$trim2+$trim3+$trim4 > 0)
 				{
-					print '<tr ><td align=left>'.$tmpyear.'</td>';
+				    $var=!$var;
+					print '<tr '.$bc[$var].'><td align=left>'.$tmpyear.'</td>';
 					print '<td align=right>'.price($trim1).'</td>';
 					print '<td align=right>'.price($trim2).'</td>';
 					print '<td align=right>'.price($trim3).'</td>';
@@ -370,7 +460,8 @@ function activitytrim($product_type)
 		}
 		if ($trim1+$trim2+$trim3+$trim4 > 0)
 		{
-			print '<tr ><td align=left>'.$tmpyear.'</td>';
+		    $var=!$var;
+			print '<tr '.$bc[$var].'><td align=left>'.$tmpyear.'</td>';
 			print '<td align=right>'.price($trim1).'</td>';
 			print '<td align=right>'.price($trim2).'</td>';
 			print '<td align=right>'.price($trim3).'</td>';
@@ -383,4 +474,3 @@ function activitytrim($product_type)
 	}
 }
 
-?>

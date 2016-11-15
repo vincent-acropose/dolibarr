@@ -28,6 +28,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/discount.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/invoice.lib.php';
 
+$langs->load("companies");
 $langs->load("bills");
 
 
@@ -35,7 +36,7 @@ $langs->load("bills");
  * View
  */
 
-llxHeader();
+llxHeader('', $langs->trans("InvoiceCustomer"));
 
 $fac = new Facture($db);
 $fac->fetch($_GET["facid"]);
@@ -54,7 +55,5 @@ print '</td></tr></table>';
 
 print '</div>';
 
-$db->close();
-
 llxFooter();
-?>
+$db->close();

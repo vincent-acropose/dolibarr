@@ -1,5 +1,6 @@
 <?php
-/* Copyright (C) 2012 Regis Houssin  <regis.houssin@capnetworks.com>
+/* Copyright (C) 2012 Regis Houssin       <regis.houssin@capnetworks.com>
+ * Copyright (C) 2016 Laurent Destailleur <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +33,7 @@ require '../../main.inc.php';
 $id			= GETPOST('id','int');
 $action		= GETPOST('action','alpha');
 $htmlname	= GETPOST('htmlname','alpha');
+$showempty	= GETPOST('showempty','int');
 
 /*
  * View
@@ -47,12 +49,12 @@ if (! empty($id) && ! empty($action) && ! empty($htmlname))
 	$form = new Form($db);
 	
 	$return=array();
+	if (empty($showempty)) $showempty=0;
 	
-	$return['value']	= $form->selectcontacts($id,'','contactid',0,'','',0,'',true);
+	$return['value']	= $form->selectcontacts($id,'',$htmlname,$showempty,'','',0,'',true);
 	$return['num']		= $form->num;
 	$return['error']	= $form->error;
 	
 	echo json_encode($return);
 }
 
-?>

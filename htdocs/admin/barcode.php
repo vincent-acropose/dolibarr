@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2003-2004	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
- * Copyright (C) 2004-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2015	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2011-2013	Juanjo Menent			<jmenent@2byte.es>
  *
@@ -39,6 +39,15 @@ $action = GETPOST('action','alpha');
  * Actions
  */
 
+if ($action == 'setbarcodeproducton')
+{
+	$res=dolibarr_set_const($db, "BARCODE_PRODUCT_ADDON_NUM", GETPOST('value'), 'chaine', 0, '', $conf->entity);
+}
+elseif ($action == 'setbarcodeproductoff')
+{
+	$res=dolibarr_del_const($db, "BARCODE_PRODUCT_ADDON_NUM", $conf->entity);
+}
+
 if ($action == 'setcoder')
 {
 	$coder = GETPOST('coder','alpha');
@@ -49,43 +58,60 @@ if ($action == 'setcoder')
 	$sqlp.= " AND entity = ".$conf->entity;
 
 	$resql=$db->query($sqlp);
-	//print $sqlp;
+	if (! $resql) dol_print_error($db);
 }
-else if ($action == 'setgenbarcodelocation')
+else if ($action == 'update')
 {
-	$location = GETPOST('genbarcodelocation','alpha');
+	$location = GETPOST('GENBARCODE_LOCATION','alpha');
 	$res = dolibarr_set_const($db, "GENBARCODE_LOCATION",$location,'chaine',0,'',$conf->entity);
-}
-else if ($action == 'setdefaultbarcodetype')
-{
-	$coder_id = GETPOST('coder_id','alpha');
+	$coder_id = GETPOST('PRODUIT_DEFAULT_BARCODE_TYPE','alpha');
 	$res = dolibarr_set_const($db, "PRODUIT_DEFAULT_BARCODE_TYPE", $coder_id,'chaine',0,'',$conf->entity);
-}
-else if ($action == 'GENBARCODE_BARCODETYPE_THIRDPARTY')
-{
-	$coder_id = GETPOST('coder_id','alpha');
+	$coder_id = GETPOST('GENBARCODE_BARCODETYPE_THIRDPARTY','alpha');
 	$res = dolibarr_set_const($db, "GENBARCODE_BARCODETYPE_THIRDPARTY", $coder_id,'chaine',0,'',$conf->entity);
 }
-/*
- else if ($_POST["action"] == 'setproductusebarcode')
- {
- dolibarr_set_const($db, "PRODUIT_USE_BARCODE",$_POST["value"],'chaine',0,'',$conf->entity);
- header("Location: barcode.php");
- exit;
- }
- */
+else if ($action == 'updateengine')
+{
+    // TODO Update engines.
+    
+}
 
-if($action && $action!='setcoder')
+// define constants for models generator that need parameters
+if ($action == 'setModuleOptions')
+{
+    $post_size=count($_POST);
+
+    for($i=0;$i < $post_size;$i++)
+    {
+        if (array_key_exists('param'.$i,$_POST))
+        {
+            $param=GETPOST("param".$i,'alpha');
+            $value=GETPOST("value".$i,'alpha');
+            if ($param) $res = dolibarr_set_const($db,$param,$value,'chaine',0,'',$conf->entity);
+        }
+    }
+	if (! $res > 0) $error++;
+
+ 	if (! $error)
+    {
+        setEventMessages($langs->trans("SetupSaved"), null, 'mesgs');
+    }
+    else
+    {
+        setEventMessages($langs->trans("Error"), null, 'errors');
+    }
+}
+
+if ($action && $action != 'setcoder' && $action != 'setModuleOptions')
 {
 	if (! $res > 0) $error++;
 
  	if (! $error)
     {
-        setEventMessage($langs->trans("SetupSaved"));
+        setEventMessages($langs->trans("SetupSaved"), null, 'mesgs');
     }
     else
     {
-        setEventMessage($langs->trans("Error"),'errors');
+        setEventMessages($langs->trans("Error"), null, 'errors');
     }
 }
 
@@ -96,10 +122,11 @@ if($action && $action!='setcoder')
 $form = new Form($db);
 $formbarcode = new FormBarCode($db);
 
-llxHeader('',$langs->trans("BarcodeSetup"),'BarcodeConfiguration');
+$help_url='EN:Module_Barcode|FR:Module_Codes_Barre|ES:Módulo Código de barra';
+llxHeader('',$langs->trans("BarcodeSetup"),$help_url);
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans("BarcodeSetup"),$linkback,'setup');
+print load_fiche_titre($langs->trans("BarcodeSetup"),$linkback,'title_setup');
 
 // Detect bar codes modules
 $barcodelist=array();
@@ -108,7 +135,7 @@ clearstatcache();
 
 
 // Scan list of all barcode included provided by external modules
-$dirbarcode=array_merge(array("/core/modules/barcode/"), $conf->modules_parts['barcode']);
+$dirbarcode=array_merge(array("/core/modules/barcode/doc/"), $conf->modules_parts['barcode']);
 
 foreach($dirbarcode as $reldir)
 {
@@ -131,7 +158,7 @@ foreach($dirbarcode as $reldir)
 					{
 						$filebis=$reg[1];
 
-						// Chargement de la classe de codage
+						// Loading encoding class
 						require_once $newdir.$file;
 						$classname = "mod".ucfirst($filebis);
 						$module = new $classname($db);
@@ -157,7 +184,11 @@ foreach($dirbarcode as $reldir)
 $var=true;
 
 print '<br>';
-print_titre($langs->trans("BarcodeEncodeModule"));
+print load_fiche_titre($langs->trans("BarcodeEncodeModule"),'','');
+
+//print "<form method=\"post\" action=\"".$_SERVER["PHP_SELF"]."\">";
+//print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+//print "<input type=\"hidden\" name=\"action\" value=\"updateengine\">";
 
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
@@ -172,7 +203,7 @@ $sql.= " FROM ".MAIN_DB_PREFIX."c_barcode_type";
 $sql.= " WHERE entity = ".$conf->entity;
 $sql.= " ORDER BY code";
 
-dol_syslog("admin/barcode.php sql=".$sql);
+dol_syslog("admin/barcode.php", LOG_DEBUG);
 $resql=$db->query($sql);
 if ($resql)
 {
@@ -221,7 +252,7 @@ if ($resql)
 						// Build barcode on disk (not used, this is done to make debug easier)
 					    $result=$module->writeBarCode($obj->example,$obj->encoding,'Y');
 						// Generate on the fly and output barcode with generator
-						$url=DOL_URL_ROOT.'/viewimage.php?modulepart=barcode&generator='.urlencode($obj->coder).'&code='.urlencode($obj->example).'&encoding='.urlencode($obj->encoding);
+						$url=DOL_URL_ROOT.'/viewimage.php?modulepart=barcode&amp;generator='.urlencode($obj->coder).'&amp;code='.urlencode($obj->example).'&amp;encoding='.urlencode($obj->encoding);
 						//print $url;
 						print '<img src="'.$url.'" title="'.$obj->example.'" border="0">';
 					}
@@ -251,13 +282,24 @@ if ($resql)
 }
 print "</table>\n";
 
+if (empty($conf->use_javascript_ajax))
+{
+    // TODO Implement code behind action updateengine
+    //print '<div class="center"><input type="submit" class="button" name="save" value="'.$langs->trans("Save").'"></div>';
+}
+//print '</form>';
+
 print "<br>";
 
+
 /*
- * Autres options
- *
+ * Other options
  */
-print_titre($langs->trans("OtherOptions"));
+print load_fiche_titre($langs->trans("OtherOptions"),'','');
+
+print "<form method=\"post\" action=\"".$_SERVER["PHP_SELF"]."\">";
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+print "<input type=\"hidden\" name=\"action\" value=\"update\">";
 
 $var=true;
 print '<table class="noborder" width="100%">';
@@ -271,65 +313,124 @@ print '</tr>';
 if (! isset($_SERVER['WINDIR']))
 {
 	$var=!$var;
-	print '<form method="post" action="'.$_SERVER["PHP_SELF"].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="setgenbarcodelocation">';
 	print '<tr '.$bc[$var].'>';
 	print '<td>'.$langs->trans("GenbarcodeLocation").'</td>';
 	print '<td width="60" align="center">';
-	print '<input type="text" size="40" name="genbarcodelocation" value="'.$conf->global->GENBARCODE_LOCATION.'">';
+	print '<input type="text" size="40" name="GENBARCODE_LOCATION" value="'.$conf->global->GENBARCODE_LOCATION.'">';
 	if (! empty($conf->global->GENBARCODE_LOCATION) && ! @file_exists($conf->global->GENBARCODE_LOCATION))
 	{
 		$langs->load("errors");
 		print '<br><font class="error">'.$langs->trans("ErrorFileNotFound",$conf->global->GENBARCODE_LOCATION).'</font>';
 	}
-	print '</td>';
-	print '<td width="60" align="center"><input type="submit" class="button" value="'.$langs->trans("Modify").'"></td>';
-	print '</tr>';
-	print '</form>';
+	print '</td></tr>';
 }
 
 // Module products
 if (! empty($conf->product->enabled))
 {
 	$var=!$var;
-	print "<form method=\"post\" action=\"".$_SERVER["PHP_SELF"]."\">";
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print "<input type=\"hidden\" name=\"action\" value=\"setdefaultbarcodetype\">";
 	print "<tr ".$bc[$var].">";
 	print '<td>'.$langs->trans("SetDefaultBarcodeTypeProducts").'</td>';
 	print '<td width="60" align="right">';
-	print $formbarcode->select_barcode_type($conf->global->PRODUIT_DEFAULT_BARCODE_TYPE,"coder_id",1);
-	print '</td><td align="right">';
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print "</td>";
-	print '</tr>';
-	print '</form>';
+	$formbarcode->select_barcode_type($conf->global->PRODUIT_DEFAULT_BARCODE_TYPE,"PRODUIT_DEFAULT_BARCODE_TYPE",1);
+	print '</td></tr>';
 }
 
 // Module thirdparty
 if (! empty($conf->societe->enabled))
 {
 	$var=!$var;
-	print "<form method=\"post\" action=\"".$_SERVER["PHP_SELF"]."\">";
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print "<input type=\"hidden\" name=\"action\" value=\"GENBARCODE_BARCODETYPE_THIRDPARTY\">";
 	print "<tr ".$bc[$var].">";
 	print '<td>'.$langs->trans("SetDefaultBarcodeTypeThirdParties").'</td>';
 	print '<td width="60" align="right">';
-	print $formbarcode->select_barcode_type($conf->global->GENBARCODE_BARCODETYPE_THIRDPARTY,"coder_id",1);
-	print '</td><td align="right">';
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print "</td>";
-	print '</tr>';
-	print '</form>';
+	print $formbarcode->select_barcode_type($conf->global->GENBARCODE_BARCODETYPE_THIRDPARTY,"GENBARCODE_BARCODETYPE_THIRDPARTY",1);
+	print '</td></tr>';
 }
 
-print '</table>';
+print "</table>\n";
+print '<div class="tabsAction">';
+print '<input type="submit" class="button" name="submit_GENBARCODE_BARCODETYPE_THIRDPARTY" value="'.$langs->trans("Modify").'">';
+print "</div>";
+print '</form>';
+
+print '<br>';
+
+
+
+// Select barcode numbering module
+if ($conf->produit->enabled)
+{
+	print load_fiche_titre($langs->trans("BarCodeNumberManager")." (".$langs->trans("Product").")",'','');
+
+	print '<table class="noborder" width="100%">';
+	print '<tr class="liste_titre">';
+	print '<td width="140">'.$langs->trans("Name").'</td>';
+	print '<td>'.$langs->trans("Description").'</td>';
+	print '<td>'.$langs->trans("Example").'</td>';
+	print '<td align="center" width="80">'.$langs->trans("Status").'</td>';
+	print '<td align="center" width="60">'.$langs->trans("ShortInfo").'</td>';
+	print "</tr>\n";
+
+	$dirbarcodenum=array_merge(array('/core/modules/barcode/'),$conf->modules_parts['barcode']);
+
+	foreach ($dirbarcodenum as $dirroot)
+	{
+		$dir = dol_buildpath($dirroot,0);
+
+		$handle = @opendir($dir);
+	    if (is_resource($handle))
+	    {
+	    	while (($file = readdir($handle))!==false)
+	    	{
+	    		if (preg_match('/^mod_barcode_product_.*php$/', $file))
+	    		{
+	    			$file = substr($file, 0, dol_strlen($file)-4);
+
+	    		    try {
+	        			dol_include_once($dirroot.$file.'.php');
+	    			}
+	    			catch(Exception $e)
+	    			{
+	    			    dol_syslog($e->getMessage(), LOG_ERR);
+	    			}
+
+	    			$modBarCode = new $file();
+	    			$var = !$var;
+
+	    			print '<tr '.$bc[$var].'>';
+	    			print '<td>'.(isset($modBarCode->name)?$modBarCode->name:$modBarCode->nom)."</td><td>\n";
+	    			print $modBarCode->info($langs);
+	    			print '</td>';
+	    			print '<td class="nowrap">'.$modBarCode->getExample($langs)."</td>\n";
+
+	    			if ($conf->global->BARCODE_PRODUCT_ADDON_NUM == "$file")
+	    			{
+	    				print '<td align="center"><a href="'.$_SERVER['PHP_SELF'].'?action=setbarcodeproductoff&amp;value='.$file.'">';
+	    				print img_picto($langs->trans("Activated"),'switch_on');
+	    				print '</a></td>';
+	    			}
+	    			else
+	    			{
+	    				print '<td align="center"><a href="'.$_SERVER['PHP_SELF'].'?action=setbarcodeproducton&amp;value='.$file.'">';
+	    				print img_picto($langs->trans("Disabled"),'switch_off');
+	    				print '</a></td>';
+	    			}
+	    			print '<td align="center">';
+	    			$s=$modBarCode->getToolTip($langs,null,-1);
+	    			print $form->textwithpicto('',$s,1);
+	    			print '</td>';
+	    			print "</tr>\n";
+	    		}
+	    	}
+	    	closedir($handle);
+	    }
+	}
+	print "</table>\n";
+}
+
+//print '</form>';
 
 print "<br>";
 
-$db->close();
-
 llxFooter();
-?>
+$db->close();

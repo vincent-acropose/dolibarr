@@ -1,7 +1,8 @@
 <?php
-/* Copyright (C) 2009 		Laurent Destailleur            <eldy@users.sourceforge.net>
- * Copyright (C) 2010-2013  Juanjo Menent			       <jmenent@2byte.es>
- * Copyright (C) 2013       Philippe Grand                 <philippe.grand@atoo-net.com>
+/* Copyright (C) 2009       Laurent Destailleur        <eldy@users.sourceforge.net>
+ * Copyright (C) 2010-2016  Juanjo Menent	       <jmenent@2byte.es>
+ * Copyright (C) 2013-2014  Philippe Grand             <philippe.grand@atoo-net.com>
+ * Copyright (C) 2015       Jean-François Ferry         <jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +27,7 @@
 
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/bank.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 
 $langs->load("admin");
@@ -43,24 +45,6 @@ $action = GETPOST('action','alpha');
 /*
  * Actions
  */
-
-if ($action == 'set_BANK_CHEQUERECEIPT_FREE_TEXT')
-{
-	$freetext = GETPOST('BANK_CHEQUERECEIPT_FREE_TEXT');	// No alpha here, we want exact string
-
-    $res = dolibarr_set_const($db, "BANK_CHEQUERECEIPT_FREE_TEXT",$freetext,'chaine',0,'',$conf->entity);
-
-	if (! $res > 0) $error++;
-
- 	if (! $error)
-    {
-        setEventMessage($langs->trans("SetupSaved"));
-    }
-    else
-    {
-        setEventMessage($langs->trans("Error"),'errors');
-    }
-}
 
 //Order display of bank account
 if ($action == 'setbankorder')
@@ -85,57 +69,17 @@ llxHeader("",$langs->trans("BankSetupModule"));
 $form=new Form($db);
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans("BankSetupModule"),$linkback,'setup');
-print '<br>';
+print load_fiche_titre($langs->trans("BankSetupModule"),$linkback,'title_setup');
 
-$h = 0;
+$head = bank_admin_prepare_head(null);
+dol_fiche_head($head, 'general', $langs->trans("BankSetupModule"), 0, 'account');
 
-$head[$h][0] = DOL_URL_ROOT."/admin/bank.php";
-$head[$h][1] = $langs->trans("Miscellaneous");
-$head[$h][2] = 'general';
-$hselected=$h;
-$h++;
-
-dol_fiche_head($head, $hselected, $langs->trans("ModuleSetup"));
-
-print '<table class="noborder" width="100%">';
-print '<tr class="liste_titre">';
-print '<td>'.$langs->trans("Parameters").'</td>';
-print '<td align="center" width="60">&nbsp;</td>';
-print '<td width="80">&nbsp;</td>';
-print "</tr>\n";
 $var=true;
 
 $var=! $var;
-print '<form action="'.$_SERVER["PHP_SELF"].'" method="post">';
-print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-print '<input type="hidden" name="action" value="set_BANK_CHEQUERECEIPT_FREE_TEXT">';
-print '<tr '.$bc[$var].'><td colspan="2">';
-print $langs->trans("FreeLegalTextOnChequeReceipts").' ('.$langs->trans("AddCRIfTooLong").')<br>';
-print '<textarea name="BANK_CHEQUERECEIPT_FREE_TEXT" class="flat" cols="120">'.$conf->global->BANK_CHEQUERECEIPT_FREE_TEXT.'</textarea>';
-print '</td><td align="right">';
-print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-print "</td></tr>\n";
-print '</table>';
-print "<br>";
-
-/*
-$var=!$var;
-print "<form method=\"post\" action=\"".$_SERVER["PHP_SELF"]."\">";
-print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-print "<input type=\"hidden\" name=\"action\" value=\"set_BANK_CHEQUERECEIPT_DRAFT_WATERMARK\">";
-print '<tr '.$bc[$var].'><td colspan="2">';
-print $langs->trans("WatermarkOnDraftChequeReceipt").'<br>';
-print '<input size="50" class="flat" type="text" name="BANK_CHEQUERECEIPT_DRAFT_WATERMARK" value="'.$conf->global->BANK_CHEQUERECEIPT_DRAFT_WATERMARK.'">';
-print '</td><td align="right">';
-print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-print "</td></tr>\n";
-print '</form>';
-*/
-
 
 //Show bank account order
-print_titre($langs->trans("BankOrderShow"));
+print load_fiche_titre($langs->trans("BankOrderShow"));
 
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
@@ -148,10 +92,10 @@ print "</tr>\n";
 
 $bankorder[0][0]=$langs->trans("BankOrderGlobal");
 $bankorder[0][1]=$langs->trans("BankOrderGlobalDesc");
-$bankorder[0][2]='BankCode DeskCode AccountNumber BankAccountNumberKey';
+$bankorder[0][2]='BankCode DeskCode BankAccountNumber BankAccountNumberKey';
 $bankorder[1][0]=$langs->trans("BankOrderES");
 $bankorder[1][1]=$langs->trans("BankOrderESDesc");
-$bankorder[1][2]='BankCode DeskCode BankAccountNumberKey AccountNumber';
+$bankorder[1][2]='BankCode DeskCode BankAccountNumberKey BankAccountNumber';
 
 $var = true;
 $i=0;
@@ -193,7 +137,8 @@ while ($i < $nbofbank)
 
 print '</table>'."\n";
 
-$db->close();
+dol_fiche_end();
 
 llxFooter();
-?>
+
+$db->close();

@@ -50,9 +50,9 @@ $pagenext = $page + 1;
 $startdate=$enddate='';
 
 if (!empty($_POST['startdatemonth']))
-  $startdate  = dol_mktime(12, 0, 0, $_POST['startdatemonth'],  $_POST['startdateday'],  $_POST['startdateyear']);
+  $startdate  = dol_mktime(0, 0, 0, $_POST['startdatemonth'],  $_POST['startdateday'],  $_POST['startdateyear']);
 if (!empty($_POST['enddatemonth']))
-  $enddate  = dol_mktime(12, 0, 0, $_POST['enddatemonth'],  $_POST['enddateday'],  $_POST['enddateyear']);
+  $enddate  = dol_mktime(23, 59, 59, $_POST['enddatemonth'],  $_POST['enddateday'],  $_POST['enddateyear']);
 
 /*
  * View
@@ -66,7 +66,7 @@ $form = new Form($db);
 llxHeader('',$langs->trans("Margins").' - '.$langs->trans("Clients"));
 
 $text=$langs->trans("Margins");
-print_fiche_titre($text);
+//print load_fiche_titre($text);
 
 // Show tabs
 $head=marges_prepare_head($user);
@@ -80,7 +80,7 @@ print '<table class="border" width="100%">';
 $client = false;
 if ($socid > 0) {
 
-	$soc = new Societe($db, $socid);
+	$soc = new Societe($db);
 	$soc->fetch($socid);
 
 	if ($soc->client)
@@ -120,16 +120,16 @@ if (! $sortfield)
 }
 
 // Start date
-print '<td>'.$langs->trans('StartDate').' ('.$langs->trans("DateValidation").')</td>';
+print '<td>'.$langs->trans('DateStart').' ('.$langs->trans("DateValidation").')</td>';
 print '<td width="20%">';
 $form->select_date($startdate,'startdate','','',1,"sel",1,1);
 print '</td>';
-print '<td width="20%">'.$langs->trans('EndDate').' ('.$langs->trans("DateValidation").')</td>';
+print '<td width="20%">'.$langs->trans('DateEnd').' ('.$langs->trans("DateValidation").')</td>';
 print '<td width="20%">';
 $form->select_date($enddate,'enddate','','',1,"sel",1,1);
 print '</td>';
 print '<td style="text-align: center;">';
-print '<input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans('Launch')).'" />';
+print '<input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans('Refresh')).'" />';
 print '</td></tr>';
 
 print "</table>";
@@ -161,11 +161,11 @@ print "</table>";
 print '</form>';
 
 $sql = "SELECT";
-$sql.= " s.rowid as socid, s.nom, s.code_client, s.client,";
+$sql.= " s.rowid as socid, s.nom as name, s.code_client, s.client,";
 if ($client) $sql.= " f.rowid as facid, f.facnumber, f.total as total_ht, f.datef, f.paye, f.fk_statut as statut,";
 $sql.= " sum(d.total_ht) as selling_price,";
-$sql.= " sum(".$db->ifsql('d.total_ht <=0','d.qty * d.buy_price_ht * -1','d.qty * d.buy_price_ht').") as buying_price,";
-$sql.= " sum(".$db->ifsql('d.total_ht <=0','-1 * (abs(d.total_ht) - (d.buy_price_ht * d.qty))','d.total_ht - (d.buy_price_ht * d.qty)').") as marge";
+$sql.= " sum(".$db->ifsql('d.total_ht < 0','d.qty * d.buy_price_ht * -1','d.qty * d.buy_price_ht').") as buying_price,";
+$sql.= " sum(".$db->ifsql('d.total_ht < 0','-1 * (abs(d.total_ht) - (d.buy_price_ht * d.qty))','d.total_ht - (d.buy_price_ht * d.qty)').") as marge";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 $sql.= ", ".MAIN_DB_PREFIX."facture as f";
 $sql.= ", ".MAIN_DB_PREFIX."facturedet as d";
@@ -173,6 +173,7 @@ $sql.= " WHERE f.fk_soc = s.rowid";
 $sql.= " AND f.fk_statut > 0";
 $sql.= " AND s.entity = ".$conf->entity;
 $sql.= " AND d.fk_facture = f.rowid";
+$sql.= " AND (d.product_type = 0 OR d.product_type = 1)";
 if ($client)
   $sql.= " AND f.fk_soc = ".$socid;
 if (!empty($startdate))
@@ -188,7 +189,7 @@ $sql.=$db->order($sortfield,$sortorder);
 // TODO: calculate total to display then restore pagination
 //$sql.= $db->plimit($conf->liste_limit +1, $offset);
 
-dol_syslog('margin::customerMargins.php sql='.$sql,LOG_DEBUG);
+dol_syslog('margin::customerMargins.php', LOG_DEBUG);
 $result = $db->query($sql);
 if ($result)
 {
@@ -258,9 +259,9 @@ if ($result)
 		  	}
 		  	else {
 				$companystatic->id=$objp->socid;
-				$companystatic->nom=$objp->nom;
+				$companystatic->name=$objp->name;
 				$companystatic->client=$objp->client;
-		   		print "<td>".$companystatic->getNomUrl(1,'customer')."</td>\n";
+		   		print "<td>".$companystatic->getNomUrl(1,'margin')."</td>\n";
 		  	}
 
 			print "<td align=\"right\">".price($pv, null, null, null, null, $rounding)."</td>\n";
@@ -281,16 +282,16 @@ if ($result)
 	// affichage totaux marges
 	$var=!$var;
 	$totalMargin = $cumul_vente - $cumul_achat;
-	if ($totalMargin < 0)
+	/*if ($totalMargin < 0)
 	{
 		$marginRate = ($cumul_achat != 0)?-1*(100 * $totalMargin / $cumul_achat):'';
 		$markRate = ($cumul_vente != 0)?-1*(100 * $totalMargin / $cumul_vente):'';
 	}
 	else
-	{
+	{*/
 		$marginRate = ($cumul_achat != 0)?(100 * $totalMargin / $cumul_achat):'';
 		$markRate = ($cumul_vente != 0)?(100 * $totalMargin / $cumul_vente):'';
-	}
+	//}
 
 	print '<tr class="liste_total">';
 	if ($client)

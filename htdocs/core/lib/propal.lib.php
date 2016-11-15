@@ -27,18 +27,18 @@
  * Prepare array with list of tabs
  *
  * @param   object	$object		Object related to tabs
- * @return  array				Array of tabs to shoc
+ * @return  array				Array of tabs to show
  */
 function propal_prepare_head($object)
 {
-	global $langs, $conf, $user;
+	global $db, $langs, $conf, $user;
 	$langs->load("propal");
 	$langs->load("compta");
 
 	$h = 0;
 	$head = array();
 
-	$head[$h][0] = DOL_URL_ROOT.'/comm/propal.php?id='.$object->id;
+	$head[$h][0] = DOL_URL_ROOT.'/comm/propal/card.php?id='.$object->id;
 	$head[$h][1] = $langs->trans('ProposalCard');
 	$head[$h][2] = 'comm';
 	$h++;
@@ -64,8 +64,10 @@ function propal_prepare_head($object)
 
 	if (empty($conf->global->MAIN_DISABLE_CONTACTS_TAB))
 	{
+	    $nbContact = count($object->liste_contact(-1,'internal')) + count($object->liste_contact(-1,'external'));
 		$head[$h][0] = DOL_URL_ROOT.'/comm/propal/contact.php?id='.$object->id;
 		$head[$h][1] = $langs->trans('ContactsAddresses');
+		if ($nbContact > 0) $head[$h][1].= ' <span class="badge">'.$nbContact.'</span>';
 		$head[$h][2] = 'contact';
 		$h++;
 	}
@@ -83,17 +85,19 @@ function propal_prepare_head($object)
 		if(!empty($object->note_public)) $nbNote++;
 	    $head[$h][0] = DOL_URL_ROOT.'/comm/propal/note.php?id='.$object->id;
 		$head[$h][1] = $langs->trans('Notes');
-		if($nbNote > 0) $head[$h][1].= ' ('.$nbNote.')';
+		if ($nbNote > 0) $head[$h][1].= ' <span class="badge">'.$nbNote.'</span>';
 		$head[$h][2] = 'note';
 		$h++;
     }
 
 	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+    require_once DOL_DOCUMENT_ROOT.'/core/class/link.class.php';
 	$upload_dir = $conf->propal->dir_output . "/" . dol_sanitizeFileName($object->ref);
-	$nbFiles = count(dol_dir_list($upload_dir,'files'));
+	$nbFiles = count(dol_dir_list($upload_dir,'files',0,'','(\.meta|_preview\.png)$'));
+    $nbLinks=Link::count($db, $object->element, $object->id);
 	$head[$h][0] = DOL_URL_ROOT.'/comm/propal/document.php?id='.$object->id;
 	$head[$h][1] = $langs->trans('Documents');
-	if($nbFiles > 0) $head[$h][1].= ' ('.$nbFiles.')';
+	if (($nbFiles+$nbLinks) > 0) $head[$h][1].= ' <span class="badge">'.($nbFiles+$nbLinks).'</span>';
 	$head[$h][2] = 'document';
 	$h++;
 
@@ -110,10 +114,9 @@ function propal_prepare_head($object)
 /**
  *  Return array head with list of tabs to view object informations.
  *
- *  @param	Object	$object		Propal
  *  @return	array   	        head array with tabs
  */
-function propal_admin_prepare_head($object)
+function propal_admin_prepare_head()
 {
 	global $langs, $conf, $user;
 
@@ -129,7 +132,7 @@ function propal_admin_prepare_head($object)
 	// Entries must be declared in modules descriptor with line
 	// $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
 	// $this->tabs = array('entity:-tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to remove a tab
-	complete_head_from_modules($conf,$langs,$object,$head,$h,'propal_admin');
+	complete_head_from_modules($conf,$langs,null,$head,$h,'propal_admin');
 
 	$head[$h][0] = DOL_URL_ROOT.'/comm/admin/propal_extrafields.php';
 	$head[$h][1] = $langs->trans("ExtraFields");
@@ -141,10 +144,9 @@ function propal_admin_prepare_head($object)
     $head[$h][2] = 'attributeslines';
     $h++;
 
-	complete_head_from_modules($conf,$langs,$object,$head,$h,'propal_admin','remove');
+	complete_head_from_modules($conf,$langs,null,$head,$h,'propal_admin','remove');
 
 	return $head;
 }
 
 
-?>

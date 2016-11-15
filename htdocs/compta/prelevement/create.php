@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2010      Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2010-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2012 Juanjo Menent        <jmenent@2byte.es>
  *
@@ -65,11 +65,17 @@ if ($action == 'create')
     $result=$bprev->create($conf->global->PRELEVEMENT_CODE_BANQUE, $conf->global->PRELEVEMENT_CODE_GUICHET);
     if ($result < 0)
     {
-        $mesg='<div class="error">'.$bprev->error.'</div>';
+    	setEventMessages($bprev->error, $bprev->errors, 'errors');
     }
     if ($result == 0)
     {
-        $mesg='<div class="error">'.$langs->trans("NoInvoiceCouldBeWithdrawed").'</div>';
+    	$mesg='';
+        $mesg=$langs->trans("NoInvoiceCouldBeWithdrawed");
+        setEventMessages($mesg, null, 'errors');
+        foreach($bprev->invoice_in_error as $key => $val)
+        {
+        	$mesg.=$val."<br>\n";
+        }
     }
 }
 
@@ -92,13 +98,19 @@ if (prelevement_check_config() < 0)
 	print '</div>';
 }
 
-$h=0;
+/*$h=0;
 $head[$h][0] = DOL_URL_ROOT.'/compta/prelevement/create.php';
 $head[$h][1] = $langs->trans("NewStandingOrder");
+$head[$h][2] = 'payment';
+$hselected = 'payment';
 $h++;
 
 dol_fiche_head($head, $hselected, $langs->trans("StandingOrders"), 0, 'payment');
+*/
 
+print load_fiche_titre($langs->trans("NewStandingOrder"));
+
+dol_fiche_head();
 
 $nb=$bprev->NbFactureAPrelever();
 $nb1=$bprev->NbFactureAPrelever(1);
@@ -156,8 +168,8 @@ print '<br>';
  * Invoices waiting for withdraw
  */
 
-$sql = "SELECT f.facnumber, f.rowid, f.total_ttc, s.nom, s.rowid as socid,";
-$sql.= " pfd.date_demande";
+$sql = "SELECT f.facnumber, f.rowid, f.total_ttc, s.nom as name, s.rowid as socid,";
+$sql.= " pfd.date_demande, pfd.amount";
 $sql.= " FROM ".MAIN_DB_PREFIX."facture as f,";
 $sql.= " ".MAIN_DB_PREFIX."societe as s,";
 $sql.= " ".MAIN_DB_PREFIX."prelevement_facture_demande as pfd";
@@ -173,12 +185,14 @@ if ($resql)
     $num = $db->num_rows($resql);
     $i = 0;
 
-    print_fiche_titre($langs->trans("InvoiceWaitingWithdraw").($num > 0?' ('.$num.')':''),'','');
+    print load_fiche_titre($langs->trans("InvoiceWaitingWithdraw").($num > 0?' ('.$num.')':''),'','');
 
     print '<table class="noborder" width="100%">';
     print '<tr class="liste_titre">';
     print '<td>'.$langs->trans("Invoice").'</td>';
     print '<td>'.$langs->trans("ThirdParty").'</td>';
+    print '<td>'.$langs->trans("RIB").'</td>';
+    print '<td>'.$langs->trans("RUM").'</td>';
     print '<td align="right">'.$langs->trans("AmountTTC").'</td>';
     print '<td align="right">'.$langs->trans("DateRequest").'</td>';
     print '</tr>';
@@ -190,18 +204,28 @@ if ($resql)
         {
             $obj = $db->fetch_object($resql);
             $var=!$var;
-            print '<tr '.$bc[$var].'><td>';
+            print '<tr '.$bc[$var].'>';
+            print '<td>';
             $invoicestatic->id=$obj->rowid;
             $invoicestatic->ref=$obj->facnumber;
             print $invoicestatic->getNomUrl(1,'withdraw');
             print '</td>';
+            // Thirdparty
             print '<td>';
-            $thirdpartystatic->id=$obj->socid;
-            $thirdpartystatic->nom=$obj->nom;
-            print $thirdpartystatic->getNomUrl(1,'customer');
+            $thirdpartystatic->fetch($obj->socid);
+            print $thirdpartystatic->getNomUrl(1,'card');
             print '</td>';
+            // RIB
+            print '<td>';
+            print $thirdpartystatic->display_rib();
+            print '</td>';
+            // RUM
+            print '<td>';
+            print $thirdpartystatic->display_rib('rum');
+            print '</td>';
+            // Amount
             print '<td align="right">';
-            print price($obj->total_ttc,0,$langs,0,0,-1,$conf->currency);
+            print price($obj->amount,0,$langs,0,0,-1,$conf->currency);
             print '</td>';
             // Date
             print '<td align="right">';
@@ -211,7 +235,7 @@ if ($resql)
             $i++;
         }
     }
-    else print '<tr><td colspan="4">'.$langs->trans("None").'</td></tr>';
+    else print '<tr '.$bc[0].'><td colspan="5" class="opacitymedium">'.$langs->trans("None").'</td></tr>';
     print "</table>";
     print "<br>\n";
 }
@@ -226,7 +250,7 @@ else
  */
 $limit=5;
 
-print_fiche_titre($langs->trans("LastWithdrawalReceipts",$limit),'','');
+print load_fiche_titre($langs->trans("LastWithdrawalReceipts",$limit),'','');
 
 $sql = "SELECT p.rowid, p.ref, p.amount, p.statut";
 $sql.= ", p.datec";
@@ -254,11 +278,14 @@ if ($result)
         $obj = $db->fetch_object($result);
         $var=!$var;
 
-        print "<tr ".$bc[$var]."><td>";
+        print "<tr ".$bc[$var].">";
+
+        print "<td>";
         $bprev->id=$obj->rowid;
         $bprev->ref=$obj->ref;
         print $bprev->getNomUrl(1);
         print "</td>\n";
+
         print '<td align="center">'.dol_print_date($db->jdate($obj->datec),'day')."</td>\n";
 
         print '<td align="right">'.price($obj->amount,0,$langs,0,0,-1,$conf->currency)."</td>\n";
@@ -274,8 +301,5 @@ else
     dol_print_error($db);
 }
 
-
-$db->close();
-
 llxFooter();
-?>
+$db->close();

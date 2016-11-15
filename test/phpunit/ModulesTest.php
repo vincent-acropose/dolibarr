@@ -79,6 +79,8 @@ class ModulesTest extends PHPUnit_Framework_TestCase
 
     	print __METHOD__."\n";
     }
+
+    // tear down after class
     public static function tearDownAfterClass()
     {
     	global $conf,$user,$langs,$db;
@@ -125,12 +127,13 @@ class ModulesTest extends PHPUnit_Framework_TestCase
 		$langs=$this->savlangs;
 		$db=$this->savdb;
 
-		$modulelist=array('Accounting','Adherent','Agenda','Banque','Barcode','Bookmark','Boutique',
-		'CashDesk','Categorie','ClickToDial','Commande','Comptabilite','Contrat','Cron','Deplacement','Document','Don',
-		'ECM','Expedition','Export','ExternalRss','ExternalSite','Facture',
-		'Fckeditor','Ficheinter','Fournisseur','FTP','GeoIPMaxmind','Gravatar','Holiday','Import','Label','Ldap','Mailing',
-		'Notification','OpenSurvey','Paybox','Paypal','Prelevement','Product','Projet','Propale',
-		'Service','Societe','Stock','Syslog','Tax','User','WebServices','Workflow');
+		$modulelist=array('Accounting','Adherent','Agenda','Banque','Barcode','Bookmark',
+		'CashDesk','Categorie','ClickToDial','Commande','Comptabilite','Contrat','Cron','Deplacement','DocumentGeneration','Don','DynamicPrices',
+		'ECM','Expedition','Export','ExternalRss','ExternalSite',
+		'Facture','Fckeditor','Ficheinter','Fournisseur','FTP','GeoIPMaxmind','Gravatar','Holiday','HRM','Import','Incoterm','Label','Ldap','Loan',
+		'Mailing','MailmanSpip','Margin',
+		'Notification','Oauth','OpenSurvey','Paybox','Paypal','Prelevement','Product','ProductBatch','Projet','Propale','ReceiptPrinter','Resource',
+		'Salaries','Service','Skype','Societe','Stock','SupplierProposal','Syslog','Tax','User','WebServices','WebServicesClient','Websites','Workflow');
 		foreach($modulelist as $modlabel)
 		{
     		require_once(DOL_DOCUMENT_ROOT.'/core/modules/mod'.$modlabel.'.class.php');
@@ -139,11 +142,10 @@ class ModulesTest extends PHPUnit_Framework_TestCase
             $result=$mod->remove();
             $result=$mod->init();
         	$this->assertLessThan($result, 0, $modlabel);
-        	print __METHOD__." result=".$result."\n";
+        	print __METHOD__." test remove/init for module ".$modlabel.", result=".$result."\n";
 		}
 
         return 0;
     }
 
 }
-?>

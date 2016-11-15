@@ -1,51 +1,43 @@
 # Dolibarr language file - Source file is en_US - marges
 
-# Margin=Margin
-# Margins=Margins
-# TotalMargin=Total Margin
-# MarginOnProducts=Margin / Products
-# MarginOnServices=Margin / Services
-# MarginRate=Margin rate
-# MarkRate=Mark rate
-# DisplayMarginRates=Display margin rates
-# DisplayMarkRates=Display mark rates
-# InputPrice=Input price
-
-# margin=Profit margins management
-# margesSetup=Profit margins management setup
-
-# MarginDetails=Margin details
-
-# ProductMargins=Product margins
-# CustomerMargins=Customer margins
-# AgentMargins=Agent margins
-
+Margin=Marginal
+Margins=Marginaler
+TotalMargin=Summa marginal
+MarginOnProducts=Marginal / Produkter
+MarginOnServices=Marginal / Tjänster
+MarginRate=Marginalsats
+MarkRate=Markera sats
+DisplayMarginRates=Visa marginalsatser
+DisplayMarkRates=Display markera hastigheter
+InputPrice=Inpris
+margin=Hantering av vinstmarginaler
+margesSetup=Inställningar för vinstmarginalhantering
+MarginDetails=Marginaldetaljer
+ProductMargins=Produktmarginaler
+CustomerMargins=Kundmarginaler
+SalesRepresentativeMargins=Återförsäljares marginaler
+UserMargins=User margins
 ProductService=Produkt eller tjänst
-# AllProducts=All products and services
-# ChooseProduct/Service=Choose product or service
-# CommercialAgent=Commercial agent
-
-StartDate=Startdatum
-EndDate=Slutdatum
-Launch=Start
-
-# ForceBuyingPriceIfNull=Force buying price if null
-# ForceBuyingPriceIfNullDetails=if "ON", margin will be zero on line (buying price = selling price), otherwise ("OFF"), marge will be equal to selling price (buying price = 0)
-# MARGIN_METHODE_FOR_DISCOUNT=Margin method for global discounts
-# UseDiscountAsProduct=As a product
-# UseDiscountAsService=As a service
-# UseDiscountOnTotal=On subtotal
-# MARGIN_METHODE_FOR_DISCOUNT_DETAILS=Defines if a global discount is treated as a product, a service, or only on subtotal for margin calculation.
-
-# MARGIN_TYPE=Margin type
-# MargeBrute=Raw margin
-# MargeNette=Net margin
-# MARGIN_TYPE_DETAILS=Raw margin : Selling price - Buying price<br/>Net margin : Selling price - Cost price
-
-# CostPrice=Cost price
-# BuyingCost=Cost price
-# UnitCharges=Unit charges
-# Charges=Charges
-
-# AgentContactType=Commercial agent contact type
-# AgentContactTypeDetails=Défine what contact type (linked on invoices) will be used for margin report by commercial agents
+AllProducts=Alla produkter och tjänster
+ChooseProduct/Service=Välj produkt eller tjänst
+ForceBuyingPriceIfNull=Force buying/cost price to selling price if not defined
+ForceBuyingPriceIfNullDetails=If buying/cost price not defined, and this option "ON", margin will be zero on line (buying/cost price = selling price), otherwise ("OFF"), marge will be equal to suggested default.
+MARGIN_METHODE_FOR_DISCOUNT=Marginalmetod för globala rabatter
+UseDiscountAsProduct=Som produkt
+UseDiscountAsService=Som tjänst
+UseDiscountOnTotal=På delsumma
+MARGIN_METHODE_FOR_DISCOUNT_DETAILS=Definierar om en global rabatt behandlas som en produkt, en tjänst, eller bara på delsumman för beräkning marginal.
+MARGIN_TYPE=Buying/Cost price suggested by default for margin calculation
+MargeType1=Margin on Best supplier price
+MargeType2=Margin on Weighted Average Price (WAP)
+MargeType3=Margin on Cost Price
+MarginTypeDesc=* Margin on best buying price = Selling price - Best supplier price defined on product card<br>* Margin on Weighted Average Price (WAP) = Selling price - Product Weighted Average Price (WAP) or best supplier price if WAP not yet defined<br>* Margin on Cost price = Selling price - Cost price defined on product card or WAP if cost price not defined, or best supplier price if WAP not yet defined
+CostPrice=Kostnadspris
+UnitCharges=Enhetsladdningar
+Charges=Avgifter
+AgentContactType=Handelsagent kontakttyp
+AgentContactTypeDetails=Definiera vad kontakttyp (länkad på fakturor) kommer att användas för marginalrapport per försäljning representant
+rateMustBeNumeric=Betyg måste vara ett numeriskt värde
+markRateShouldBeLesserThan100=Mark takt bör vara lägre än 100
+ShowMarginInfos=Visa marginal information
+CheckMargins=Margins detail

@@ -85,7 +85,7 @@ class DiscountAbsolute
         if ($rowid) $sql.= " sr.rowid=".$rowid;
         if ($fk_facture_source) $sql.= " sr.fk_facture_source=".$fk_facture_source;
 
-        dol_syslog(get_class($this)."::fetch sql=".$sql);
+        dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
         $resql = $this->db->query($sql);
         if ($resql)
         {
@@ -159,7 +159,7 @@ class DiscountAbsolute
         $sql.= " ".($this->fk_facture_source?"'".$this->fk_facture_source."'":"null");
         $sql.= ")";
 
-        dol_syslog(get_class($this)."::create sql=".$sql);
+        dol_syslog(get_class($this)."::create", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -169,7 +169,6 @@ class DiscountAbsolute
         else
         {
             $this->error=$this->db->lasterror().' - sql='.$sql;
-            dol_syslog(get_class($this)."::create ".$this->error, LOG_ERR);
             return -1;
         }
     }
@@ -188,14 +187,14 @@ class DiscountAbsolute
         // Check if we can remove the discount
         if ($this->fk_facture_source)
         {
-            $sql.="SELECT COUNT(rowid) as nb";
+            $sql="SELECT COUNT(rowid) as nb";
             $sql.=" FROM ".MAIN_DB_PREFIX."societe_remise_except";
             $sql.=" WHERE (fk_facture_line IS NOT NULL";	// Not used as absolute simple discount
             $sql.=" OR fk_facture IS NOT NULL)"; 			// Not used as credit note and not used as deposit
             $sql.=" AND fk_facture_source = ".$this->fk_facture_source;
             //$sql.=" AND rowid != ".$this->id;
 
-            dol_syslog(get_class($this)."::delete Check if we can remove discount sql=".$sql);
+            dol_syslog(get_class($this)."::delete Check if we can remove discount", LOG_DEBUG);
             $resql=$this->db->query($sql);
             if ($resql)
             {
@@ -222,7 +221,7 @@ class DiscountAbsolute
         $sql.= " AND (fk_facture_line IS NULL";	// Not used as absolute simple discount
         $sql.= " AND fk_facture IS NULL)";		// Not used as credit note and not used as deposit
 
-        dol_syslog(get_class($this)."::delete Delete discount sql=".$sql);
+        dol_syslog(get_class($this)."::delete Delete discount", LOG_DEBUG);
         $result=$this->db->query($sql);
         if ($result)
         {
@@ -233,7 +232,7 @@ class DiscountAbsolute
                 $sql.=" set paye=0, fk_statut=1";
                 $sql.=" WHERE (type = 2 or type = 3) AND rowid=".$this->fk_facture_source;
 
-                dol_syslog(get_class($this)."::delete Update credit note or deposit invoice statut sql=".$sql);
+                dol_syslog(get_class($this)."::delete Update credit note or deposit invoice statut", LOG_DEBUG);
                 $result=$this->db->query($sql);
                 if ($result)
                 {
@@ -291,7 +290,7 @@ class DiscountAbsolute
         if ($rowidinvoice) $sql.=" SET fk_facture = ".$rowidinvoice;
         $sql.=" WHERE rowid = ".$this->id;
 
-        dol_syslog(get_class($this)."::link_to_invoice sql=".$sql,LOG_DEBUG);
+        dol_syslog(get_class($this)."::link_to_invoice", LOG_DEBUG);
         $resql = $this->db->query($sql);
         if ($resql)
         {
@@ -302,7 +301,6 @@ class DiscountAbsolute
         else
         {
             $this->error=$this->db->error();
-            dol_syslog(get_class($this)."::link_to_invoice ".$this->error,LOG_ERR);
             return -3;
         }
     }
@@ -320,7 +318,7 @@ class DiscountAbsolute
         $sql.=" SET fk_facture_line = NULL, fk_facture = NULL";
         $sql.=" WHERE rowid = ".$this->id;
 
-        dol_syslog(get_class($this)."::unlink_invoice sql=".$sql,LOG_DEBUG);
+        dol_syslog(get_class($this)."::unlink_invoice", LOG_DEBUG);
         $resql = $this->db->query($sql);
         if ($resql)
         {
@@ -329,7 +327,6 @@ class DiscountAbsolute
         else
         {
             $this->error=$this->db->error();
-            dol_syslog(get_class($this)."::unlink_invoice ".$this->error,LOG_ERR);
             return -3;
         }
     }
@@ -355,7 +352,7 @@ class DiscountAbsolute
         if ($filter)   $sql.=' AND ('.$filter.')';
         if ($maxvalue) $sql.=' AND rc.amount_ttc <= '.price2num($maxvalue);
 
-        dol_syslog(get_class($this)."::getAvailableDiscounts sql=".$sql,LOG_DEBUG);
+        dol_syslog(get_class($this)."::getAvailableDiscounts", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -374,22 +371,24 @@ class DiscountAbsolute
     /**
      *  Return amount (with tax) of all credit notes and deposits invoices used by invoice
      *
-     *	@param		Facture		$invoice	Object invoice
-     *	@return		int						<0 if KO, Sum of credit notes and deposits amount otherwise
+     *	@param		Facture		$invoice		Object invoice
+	 *	@param		int			$multicurrency	Return multicurrency_amount instead of amount
+     *	@return		int							<0 if KO, Sum of credit notes and deposits amount otherwise
      */
-    function getSumCreditNotesUsed($invoice)
+    function getSumCreditNotesUsed($invoice, $multicurrency=0)
     {
-        $sql = 'SELECT sum(rc.amount_ttc) as amount';
+        $sql = 'SELECT sum(rc.amount_ttc) as amount, sum(rc.multicurrency_amount_ttc) as multicurrency_amount';
         $sql.= ' FROM '.MAIN_DB_PREFIX.'societe_remise_except as rc, '.MAIN_DB_PREFIX.'facture as f';
         $sql.= ' WHERE rc.fk_facture_source=f.rowid AND rc.fk_facture = '.$invoice->id;
         $sql.= ' AND f.type = 2';
 
-        dol_syslog(get_class($this)."::getSumCreditNotesUsed sql=".$sql,LOG_DEBUG);
+        dol_syslog(get_class($this)."::getSumCreditNotesUsed", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
             $obj = $this->db->fetch_object($resql);
-            return $obj->amount;
+            if ($multicurrency) return $obj->multicurrency_amount;
+			else return $obj->amount;
         }
         else
         {
@@ -400,22 +399,24 @@ class DiscountAbsolute
     /**
      *  Return amount (with tax) of all deposits invoices used by invoice
      *
-     *	@param		Facture		$invoice	Object invoice
-     *	@return		int						<0 if KO, Sum of credit notes and deposits amount otherwise
+     *	@param		Facture		$invoice		Object invoice
+	 *  @param 		int 		$multicurrency 	Return multicurrency_amount instead of amount
+     *	@return		int							<0 if KO, Sum of credit notes and deposits amount otherwise
      */
-    function getSumDepositsUsed($invoice)
+    function getSumDepositsUsed($invoice, $multicurrency=0)
     {
-        $sql = 'SELECT sum(rc.amount_ttc) as amount';
+        $sql = 'SELECT sum(rc.amount_ttc) as amount, sum(rc.multicurrency_amount_ttc) as multicurrency_amount';
         $sql.= ' FROM '.MAIN_DB_PREFIX.'societe_remise_except as rc, '.MAIN_DB_PREFIX.'facture as f';
         $sql.= ' WHERE rc.fk_facture_source=f.rowid AND rc.fk_facture = '.$invoice->id;
         $sql.= ' AND f.type = 3';
 
-        dol_syslog(get_class($this)."::getSumDepositsUsed sql=".$sql,LOG_DEBUG);
+        dol_syslog(get_class($this)."::getSumDepositsUsed", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
             $obj = $this->db->fetch_object($resql);
-            return $obj->amount;
+            if ($multicurrency) return $obj->multicurrency_amount;
+			else return $obj->amount;
         }
         else
         {
@@ -436,27 +437,25 @@ class DiscountAbsolute
 
         $result='';
 
-        if ($option == 'invoice')
-        {
-            $lien = '<a href="'.DOL_URL_ROOT.'/compta/facture.php?facid='.$this->fk_facture_source.'">';
-            $lienfin='</a>';
+        if ($option == 'invoice') {
             $label=$langs->trans("ShowDiscount").': '.$this->ref_facture_source;
+            $link = '<a href="'.DOL_URL_ROOT.'/compta/facture.php?facid='.$this->fk_facture_source.'" title="'.dol_escape_htmltag($label, 1).'" class="classfortooltip">';
+            $linkend='</a>';
             $ref=$this->ref_facture_source;
             $picto='bill';
         }
-        if ($option == 'discount')
-        {
-            $lien = '<a href="'.DOL_URL_ROOT.'/comm/remx.php?id='.$this->fk_soc.'">';
-            $lienfin='</a>';
+        if ($option == 'discount') {
             $label=$langs->trans("Discount");
+            $link = '<a href="'.DOL_URL_ROOT.'/comm/remx.php?id='.$this->fk_soc.'" title="'.dol_escape_htmltag($label, 1).'" class="classfortooltip">';
+            $linkend='</a>';
             $ref=$langs->trans("Discount");
             $picto='generic';
         }
 
 
-        if ($withpicto) $result.=($lien.img_object($label,$picto).$lienfin);
+        if ($withpicto) $result.=($link.img_object($label, $picto, 'class="classfortooltip"').$linkend);
         if ($withpicto && $withpicto != 2) $result.=' ';
-        $result.=$lien.$ref.$lienfin;
+        $result.=$link.$ref.$linkend;
         return $result;
     }
 
@@ -480,4 +479,3 @@ class DiscountAbsolute
 		$this->description    = 'Specimen discount';
 	}
 }
-?>

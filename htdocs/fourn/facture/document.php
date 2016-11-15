@@ -64,7 +64,7 @@ if ($object->fetch($id, $ref))
 {
 	$object->fetch_thirdparty();
 	$ref=dol_sanitizeFileName($object->ref);
-	$upload_dir = $conf->fournisseur->facture->dir_output.'/'.get_exdir($object->id,2).$ref;
+	$upload_dir = $conf->fournisseur->facture->dir_output.'/'.get_exdir($object->id,2,0,0,$object,'invoice_supplier').$ref;
 }
 
 
@@ -72,7 +72,7 @@ if ($object->fetch($id, $ref))
  * Actions
  */
 
-include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_pre_headers.tpl.php';
+include_once DOL_DOCUMENT_ROOT . '/core/actions_linkedfiles.inc.php';
 
 
 /*
@@ -81,7 +81,7 @@ include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_pre_headers.tpl.php
 
 $form = new Form($db);
 
-llxHeader();
+llxHeader('',$langs->trans('SupplierInvoice'));
 
 if ($object->id > 0)
 {
@@ -89,7 +89,7 @@ if ($object->id > 0)
 	dol_fiche_head($head, 'documents', $langs->trans('SupplierInvoice'), 0, 'bill');
 
 	// Construit liste des fichiers
-	$filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+	$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
 	$totalsize=0;
 	foreach($filearray as $key => $file)
 	{
@@ -110,7 +110,7 @@ if ($object->id > 0)
 	$linkback = '<a href="'.DOL_URL_ROOT.'/fourn/facture/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
 	// Ref
-	print '<tr><td width="30%" class="nowrap">'.$langs->trans("Ref").'</td><td colspan="3">';
+	print '<tr><td class="titlefield nowrap">'.$langs->trans("Ref").'</td><td colspan="3">';
 	print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref');
 	print '</td>';
 	print "</tr>\n";
@@ -125,13 +125,13 @@ if ($object->id > 0)
 	// Type
 	print '<tr><td>'.$langs->trans('Type').'</td><td colspan="4">';
 	print $object->getLibType();
-	if ($object->type == 1)
+	if ($object->type == FactureFournisseur::TYPE_REPLACEMENT)
 	{
 		$facreplaced=new FactureFournisseur($db);
 		$facreplaced->fetch($object->fk_facture_source);
 		print ' ('.$langs->transnoentities("ReplaceInvoice",$facreplaced->getNomUrl(1)).')';
 	}
-	if ($object->type == 2)
+	if ($object->type == FactureFournisseur::TYPE_CREDIT_NOTE)
 	{
 		$facusing=new FactureFournisseur($db);
 		$facusing->fetch($object->fk_facture_source);
@@ -168,8 +168,36 @@ if ($object->id > 0)
 	print $form->editfieldval("Label",'label',$object->label,$object,0);
 	print '</td>';
 
+	// Status
+	$alreadypaid=$object->getSommePaiement();
+	print '<tr><td>'.$langs->trans('Status').'</td><td colspan="3">'.$object->getLibStatut(4,$alreadypaid).'</td></tr>';
+
+	// Amount
+	print '<tr><td>'.$langs->trans('AmountHT').'</td><td colspan="3">'.price($object->total_ht,1,$langs,0,-1,-1,$conf->currency).'</td></tr>';
+	print '<tr><td>'.$langs->trans('AmountVAT').'</td><td colspan="3">'.price($object->total_tva,1,$langs,0,-1,-1,$conf->currency).'</td></tr>';
+
+	// Amount Local Taxes
+	//TODO: Place into a function to control showing by country or study better option
+	if ($societe->localtax1_assuj=="1") //Localtax1
+	{
+		print '<tr><td>'.$langs->transcountry("AmountLT1",$societe->country_code).'</td>';
+		print '<td colspan="3">'.price($object->total_localtax1,1,$langs,0,-1,-1,$conf->currency).'</td>';
+		print '</tr>';
+	}
+	if ($societe->localtax2_assuj=="1") //Localtax2
+	{
+		print '<tr><td>'.$langs->transcountry("AmountLT2",$societe->country_code).'</td>';
+		print '<td colspan="3">'.price($object->total_localtax2,1,$langs,0,-1,-1,$conf->currency).'</td>';
+		print '</tr>';
+	}
+	print '<tr><td>'.$langs->trans('AmountTTC').'</td><td colspan="3">'.price($object->total_ttc,1,$langs,0,-1,-1,$conf->currency).'</td></tr>';
+
+	print '</table><br>';
+
+	print '<table class="border" width="100%">';
+
 	// Nb of files
-	print '<tr><td>'.$langs->trans('NbOfAttachedFiles').'</td><td colspan="3">'.count($filearray).'</td></tr>';
+	print '<tr><td class="titlefield nowrap">'.$langs->trans('NbOfAttachedFiles').'</td><td colspan="3">'.count($filearray).'</td></tr>';
 
 	print '<tr><td>'.$langs->trans('TotalSizeOfAttachedFiles').'</td><td colspan="3">'.$totalsize.' '.$langs->trans('bytes').'</td></tr>';
 
@@ -189,4 +217,3 @@ else
 
 llxFooter();
 $db->close();
-?>

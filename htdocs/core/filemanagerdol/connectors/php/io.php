@@ -21,6 +21,14 @@
  *
  * This is the File Manager Connector for PHP.
  */
+
+/**
+ * CombinePaths
+ * 
+ * @param   string $sBasePath     sBasePath
+ * @param   string $sFolder       sFolder
+ * @return  string                Combined path
+ */
 function CombinePaths( $sBasePath, $sFolder )
 {
 	return RemoveFromEnd($sBasePath, '/') . '/' . RemoveFromStart($sFolder, '/');
@@ -45,8 +53,8 @@ function GetResourceTypePath($resourceType, $sCommand)
 /**
  * GetResourceTypeDirectory
  *
- * @param unknown_type $resourceType	Resource type
- * @param unknown_type $sCommand		Command
+ * @param string $resourceType	Resource type
+ * @param string $sCommand		Command
  * @return string
  */
 function GetResourceTypeDirectory($resourceType, $sCommand)
@@ -70,6 +78,14 @@ function GetResourceTypeDirectory($resourceType, $sCommand)
 	}
 }
 
+/**
+ * GetUrlFromPath
+ *
+ * @param	string 	$resourceType	Resource type
+ * @param 	string 	$folderPath		Path
+ * @param	string	$sCommand		Command
+ * @return	string					Full url
+ */
 function GetUrlFromPath($resourceType, $folderPath, $sCommand)
 {
 	return CombinePaths(GetResourceTypePath($resourceType, $sCommand), $folderPath);
@@ -91,7 +107,7 @@ function RemoveExtension($fileName)
  * @param 	string	$resourceType	Resource type
  * @param 	string	$folderPath		Folder
  * @param 	string	$sCommand		Command
- * @return	void
+ * @return	string
  */
 function ServerMapFolder($resourceType, $folderPath, $sCommand)
 {
@@ -107,11 +123,18 @@ function ServerMapFolder($resourceType, $folderPath, $sCommand)
 	return CombinePaths($sResourceTypePath, $folderPath);
 }
 
-function GetParentFolder( $folderPath )
+/**
+ * GetParentFolder
+ *
+ * @param	string	$folderPath		Folder path
+ * @return 	string					Parent folder
+ */
+function GetParentFolder($folderPath)
 {
-	$sPattern = "-[/\\\\][^/\\\\]+[/\\\\]?$-" ;
-	return preg_replace($sPattern, '', $folderPath);
+    $sPattern = "-[/\\\\][^/\\\\]+[/\\\\]?$-" ;
+    return preg_replace($sPattern, '', $folderPath);
 }
+
 /**
  * CreateServerFolder
  *
@@ -158,14 +181,17 @@ function CreateServerFolder($folderPath, $lastFolder = null)
 		}
 		else
 		{
-			$permissions = 0777 ;
-			if ( isset( $Config['ChmodOnFolderCreate'] ) )
+			$permissions = '0777';
+			if ( isset( $Config['ChmodOnFolderCreate'] ) && $Config['ChmodOnFolderCreate'])
 			{
-				$permissions = $Config['ChmodOnFolderCreate'] ;
+				$permissions = (string) $Config['ChmodOnFolderCreate'];
 			}
+			$permissionsdec = octdec($permissions);
+			$permissionsdec |= octdec('0111');  // Set x bit required for directories
+			dol_syslog("io.php permission = ".$permissions." ".$permissionsdec." ".decoct($permissionsdec));
 			// To create the folder with 0777 permissions, we need to set umask to zero.
 			$oldumask = umask(0);
-			mkdir($folderPath, $permissions);
+			mkdir($folderPath, $permissionsdec);
 			umask($oldumask);
 		}
 
@@ -181,46 +207,57 @@ function CreateServerFolder($folderPath, $lastFolder = null)
 		return '' ;
 }
 
+/**
+ * Get Root Path
+ *
+ * @return  string              real path
+ */
 function GetRootPath()
 {
-	if (!isset($_SERVER)) {
-		global $_SERVER;
-	}
-	$sRealPath = realpath('./');
-	// #2124 ensure that no slash is at the end
-	$sRealPath = rtrim($sRealPath,"\\/");
+    if (!isset($_SERVER)) {
+        global $_SERVER;
+    }
+    $sRealPath = realpath('./');
+    // #2124 ensure that no slash is at the end
+    $sRealPath = rtrim($sRealPath,"\\/");
 
-	$sSelfPath = $_SERVER['PHP_SELF'] ;
-	$sSelfPath = substr($sSelfPath, 0, strrpos($sSelfPath, '/'));
+    $sSelfPath = $_SERVER['PHP_SELF'] ;
+    $sSelfPath = substr($sSelfPath, 0, strrpos($sSelfPath, '/'));
 
-	$sSelfPath = str_replace('/', DIRECTORY_SEPARATOR, $sSelfPath);
+    $sSelfPath = str_replace('/', DIRECTORY_SEPARATOR, $sSelfPath);
 
-	$position = strpos($sRealPath, $sSelfPath);
+    $position = strpos($sRealPath, $sSelfPath);
 
-	// This can check only that this script isn't run from a virtual dir
-	// But it avoids the problems that arise if it isn't checked
-	if ( $position === false || $position <> strlen($sRealPath) - strlen($sSelfPath) )
-		SendError(1, 'Sorry, can\'t map "UserFilesPath" to a physical path. You must set the "UserFilesAbsolutePath" value in "editor/filemanager/connectors/php/config.php".');
+    // This can check only that this script isn't run from a virtual dir
+    // But it avoids the problems that arise if it isn't checked
+    if ( $position === false || $position <> strlen($sRealPath) - strlen($sSelfPath) )
+        SendError(1, 'Sorry, can\'t map "UserFilesPath" to a physical path. You must set the "UserFilesAbsolutePath" value in "editor/filemanager/connectors/php/config.php".');
 
-	return substr($sRealPath, 0, $position);
+    return substr($sRealPath, 0, $position);
 }
 
 // Emulate the asp Server.mapPath function.
 // given an url path return the physical directory that it corresponds to
 function Server_MapPath( $path )
 {
-	// This function is available only for Apache
-	if (function_exists('apache_lookup_uri'))
-	{
-		$info = apache_lookup_uri($path);
-		return $info->filename . $info->path_info ;
-	}
+    // This function is available only for Apache
+    if (function_exists('apache_lookup_uri')) {
+        $info = apache_lookup_uri($path);
+        return $info->filename . $info->path_info ;
+    }
 
-	// This isn't correct but for the moment there's no other solution
-	// If this script is under a virtual directory or symlink it will detect the problem and stop
-	return GetRootPath() . $path ;
+    // This isn't correct but for the moment there's no other solution
+    // If this script is under a virtual directory or symlink it will detect the problem and stop
+    return GetRootPath() . $path ;
 }
 
+/**
+ * Is Allowed Extension
+ *
+ * @param   string $sExtension      File extension
+ * @param   string $resourceType    ressource type
+ * @return  boolean                 true or false
+ */
 function IsAllowedExt($sExtension, $resourceType)
 {
 	global $Config ;
@@ -237,6 +274,12 @@ function IsAllowedExt($sExtension, $resourceType)
 	return true ;
 }
 
+/**
+ * Is Allowed Type
+ *
+ * @param   string $resourceType    ressource type
+ * @return  boolean                 true or false
+ */
 function IsAllowedType($resourceType)
 {
 	global $Config ;
@@ -249,8 +292,8 @@ function IsAllowedType($resourceType)
 /**
  * IsAllowedCommand
  *
- * @param 	string		$sCommand		Command
- * @return 	boolean						True or false
+ * @param   string		$sCommand		Command
+ * @return  boolean						True or false
  */
 function IsAllowedCommand($sCommand)
 {
@@ -348,6 +391,14 @@ EOF;
 // DOL_CHANGE
 
 // This is the function that sends the results of the uploading process to CKE.
+/**
+ * SendCKEditorResults
+ * 
+ * @param   string  $callback       callback
+ * @param   string  $sFileUrl       sFileUrl
+ * @param   string  $customMsg      customMsg
+ * @return  void
+ */
 function SendCKEditorResults ($callback, $sFileUrl, $customMsg = '')
 {
   echo '<script type="text/javascript">';
@@ -360,4 +411,3 @@ function SendCKEditorResults ($callback, $sFileUrl, $customMsg = '')
 }
 
 
-?>

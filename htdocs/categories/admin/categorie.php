@@ -1,6 +1,7 @@
 <?php
-/* Copyright (C) 2008-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2013 		Florian Henry  <florian.henry@open-concept.pro>
+/* Copyright (C) 2008-2011	Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2013 		Florian Henry  		<florian.henry@open-concept.pro>
+ * Copyright (C) 2015 		Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +30,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/categories.lib.php';
 if (!$user->admin)
 accessforbidden();
 
-$langs->load("cateogries");
+$langs->load("categories");
 
 $action=GETPOST("action");
 
@@ -46,7 +47,7 @@ if (preg_match('/set_(.*)/',$action,$reg))
     }
     else
     {
-        setEventMessage($db->lasterror(),'errors');
+        setEventMessages($db->lasterror(), null, 'errors');
     }
 }
 
@@ -60,7 +61,7 @@ if (preg_match('/del_(.*)/',$action,$reg))
     }
     else
     {
-         setEventMessage($db->lasterror(),'errors');
+         setEventMessages($db->lasterror(), null, 'errors');
     }
 }
 
@@ -70,15 +71,18 @@ if (preg_match('/del_(.*)/',$action,$reg))
  * View
  */
 
-llxHeader('',$langs->trans("CategoriesSetup"));
+$help_url='EN:Module Categories|FR:Module Catégories|ES:Módulo Categorías';
+$linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
+
+llxHeader('',$langs->trans("Categories"),$help_url);
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans("CategoriesSetup"),'','setup');
+print load_fiche_titre($langs->trans("CategoriesSetup"),$linkback,'title_setup');
 
 
 $head=categoriesadmin_prepare_head();
 
-dol_fiche_head($head, 'setup', $langs->trans("Security"));
+dol_fiche_head($head, 'setup', $langs->trans("Categories"), 0, 'category');
 
 
 print '<table class="noborder" width="100%">';
@@ -95,7 +99,7 @@ $form = new Form($db);
 $var=!$var;
 print '<tr '.$bc[$var].'>';
 print '<td>'.$langs->trans("CategorieRecursiv").'</td>';
-print '<td align="center" width="20">&nbsp;</td>';
+print '<td align="center" width="20">'. $form->textwithpicto('',$langs->trans("CategorieRecursivHelp"),1,'help').'</td>';
 
 print '<td align="center" width="100">';
 if ($conf->use_javascript_ajax)
@@ -104,11 +108,11 @@ if ($conf->use_javascript_ajax)
 }
 else
 {
-	if($conf->global->CATEGORIE_RECURSIV_ADD == 0)
+	if (empty($conf->global->CATEGORIE_RECURSIV_ADD))
 	{
 		print '<a href="'.$_SERVER['PHP_SELF'].'?action=set_CATEGORIE_RECURSIV_ADD">'.img_picto($langs->trans("Disabled"),'off').'</a>';
 	}
-	else if($conf->global->CATEGORIE_RECURSIV_ADD == 1)
+	else
 	{
 		print '<a href="'.$_SERVER['PHP_SELF'].'?action=del_CATEGORIE_RECURSIV_ADD">'.img_picto($langs->trans("Enabled"),'on').'</a>';
 	}
@@ -117,5 +121,5 @@ print '</td></tr>';
 
 print '</table>';
 
-$db->close();
 llxFooter();
+$db->close();

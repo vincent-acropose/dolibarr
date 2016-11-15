@@ -89,7 +89,9 @@ class box_graph_orders_permonth extends ModeleBoxes
 
 		if ($user->rights->commande->lire)
 		{
-			$param_year='DOLUSERCOOKIE_box_'.$this->boxcode.'_year';
+		    $langs->load("orders");
+
+		    $param_year='DOLUSERCOOKIE_box_'.$this->boxcode.'_year';
 			$param_shownb='DOLUSERCOOKIE_box_'.$this->boxcode.'_shownb';
 			$param_showtot='DOLUSERCOOKIE_box_'.$this->boxcode.'_showtot';
 
@@ -104,8 +106,7 @@ class box_graph_orders_permonth extends ModeleBoxes
 			}
 			else
 			{
-				include_once DOL_DOCUMENT_ROOT.'/core/lib/json.lib.php';
-				$tmparray=dol_json_decode($_COOKIE['DOLUSERCOOKIE_box_'.$this->boxcode],true);
+				$tmparray=json_decode($_COOKIE['DOLUSERCOOKIE_box_'.$this->boxcode],true);
 				$endyear=$tmparray['year'];
 				$shownb=$tmparray['shownb'];
 				$showtot=$tmparray['showtot'];
@@ -115,11 +116,10 @@ class box_graph_orders_permonth extends ModeleBoxes
 			if (empty($endyear)) $endyear=$nowarray['year'];
 			$startyear=$endyear-1;
 			$mode='customer';
-			$userid=0;
 			$WIDTH=(($shownb && $showtot) || ! empty($conf->dol_optimize_smallscreen))?'256':'320';
 			$HEIGHT='192';
 
-			$stats = new CommandeStats($this->db, 0, $mode, ($userid>0?$userid:0));
+			$stats = new CommandeStats($this->db, $socid, $mode, 0);
 
 			// Build graphic number of object. $data = array(array('Lib',val1,val2,val3),...)
 			if ($shownb)
@@ -197,6 +197,12 @@ class box_graph_orders_permonth extends ModeleBoxes
 				}
 			}
 
+			if (empty($conf->use_javascript_ajax))
+			{
+				$langs->load("errors");
+				$mesg=$langs->trans("WarningFeatureDisabledWithDisplayOptimizedForBlindNoJs");
+			}
+
 			if (! $mesg)
 			{
 				$stringtoshow='';
@@ -211,12 +217,12 @@ class box_graph_orders_permonth extends ModeleBoxes
 				$stringtoshow.='<form class="flat formboxfilter" method="POST" action="'.$_SERVER["PHP_SELF"].'">';
 				$stringtoshow.='<input type="hidden" name="action" value="'.$refreshaction.'">';
 				$stringtoshow.='<input type="hidden" name="DOL_AUTOSET_COOKIE" value="DOLUSERCOOKIE_box_'.$this->boxcode.':year,shownb,showtot">';
-				$stringtoshow.='<input type="checkbox" name="'.$param_shownb.'"'.($shownb?' checked="true"':'').'"> '.$langs->trans("NumberOfOrdersByMonth");
+				$stringtoshow.='<input type="checkbox" name="'.$param_shownb.'"'.($shownb?' checked':'').'> '.$langs->trans("NumberOfOrdersByMonth");
 				$stringtoshow.=' &nbsp; ';
-				$stringtoshow.='<input type="checkbox" name="'.$param_showtot.'"'.($showtot?' checked="true"':'').'"> '.$langs->trans("AmountOfOrdersByMonthHT");
+				$stringtoshow.='<input type="checkbox" name="'.$param_showtot.'"'.($showtot?' checked':'').'> '.$langs->trans("AmountOfOrdersByMonthHT");
 				$stringtoshow.='<br>';
 				$stringtoshow.=$langs->trans("Year").' <input class="flat" size="4" type="text" name="'.$param_year.'" value="'.$endyear.'">';
-				$stringtoshow.='<input type="image" src="'.img_picto($langs->trans("Refresh"),'refresh.png','','',1).'">';
+				$stringtoshow.='<input type="image" alt="'.$langs->trans("Refresh").'" src="'.img_picto($langs->trans("Refresh"),'refresh.png','','',1).'">';
 				$stringtoshow.='</form>';
 				$stringtoshow.='</div>';
 				if ($shownb && $showtot)
@@ -257,13 +263,13 @@ class box_graph_orders_permonth extends ModeleBoxes
 	 *
 	 *	@param	array	$head       Array with properties of box title
 	 *	@param  array	$contents   Array with properties of box lines
+	 *  @param	int		$nooutput	No print, only return string
 	 *	@return	void
 	 */
-	function showBox($head = null, $contents = null)
-	{
-		parent::showBox($this->info_box_head, $this->info_box_contents);
+    function showBox($head = null, $contents = null, $nooutput=0)
+    {
+		parent::showBox($this->info_box_head, $this->info_box_contents, $nooutput);
 	}
 
 }
 
-?>

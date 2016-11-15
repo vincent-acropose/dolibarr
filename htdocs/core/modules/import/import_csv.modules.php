@@ -2,7 +2,7 @@
 /* Copyright (C) 2006-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2009-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  * Copyright (C) 2012      Christophe Battarel  <christophe.battarel@altairis.fr>
- * Copyright (C) 2012       Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2012-2016 Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ class ImportCsv extends ModeleImports
 
 	var $separator;
 
+	var $file;      // Path of file
 	var $handle;    // Handle fichier
 
 	var $cacheconvert=array();      // Array to cache list of value found after a convertion
@@ -83,76 +84,6 @@ class ImportCsv extends ModeleImports
 
 		$this->datatoimport=$datatoimport;
 		if (preg_match('/^societe_/',$datatoimport)) $this->thirpartyobject=new Societe($this->db);
-	}
-
-	/**
-	 * getDriverId
-	 *
-	 * @return int		Id
-	 */
-	function getDriverId()
-	{
-		return $this->id;
-	}
-
-	/**
-	 *	getDriverLabel
-	 *
-	 *	@return string	Label
-	 */
-	function getDriverLabel()
-	{
-		return $this->label;
-	}
-
-	/**
-	 *	getDriverDesc
-	 *
-	 *	@return string	Description
-	 */
-	function getDriverDesc()
-	{
-		return $this->desc;
-	}
-
-	/**
-	 * getDriverExtension
-	 *
-	 * @return string	Driver suffix
-	 */
-	function getDriverExtension()
-	{
-		return $this->extension;
-	}
-
-	/**
-	 *	getDriverVersion
-	 *
-	 *	@return string	Driver version
-	 */
-	function getDriverVersion()
-	{
-		return $this->version;
-	}
-
-	/**
-	 *	getDriverLabel
-	 *
-	 *	@return string	Label of external lib
-	 */
-	function getLibLabel()
-	{
-		return $this->label_lib;
-	}
-
-	/**
-	 * getLibVersion
-	 *
-	 *	@return string	Version of external lib
-	 */
-	function getLibVersion()
-	{
-		return $this->version_lib;
 	}
 
 
@@ -236,6 +167,19 @@ class ImportCsv extends ModeleImports
 		return $ret;
 	}
 
+	
+	/**
+	 * 	Return nb of records. File must be closed.
+	 *
+	 *	@param	string	$file		Path of filename
+	 * 	@return		int		<0 if KO, >=0 if OK
+	 */
+	function import_get_nb_of_lines($file)
+	{
+	   return dol_count_nb_of_line($file);
+    }
+    
+
 	/**
 	 * 	Input header line from file
 	 *
@@ -256,15 +200,7 @@ class ImportCsv extends ModeleImports
 	{
 		global $conf;
 
-		$arrayres=array();
-		if (version_compare(phpversion(), '5.3') < 0)
-		{
-			$arrayres=fgetcsv($this->handle,100000,$this->separator,$this->enclosure);
-		}
-		else
-		{
-			$arrayres=fgetcsv($this->handle,100000,$this->separator,$this->enclosure,$this->escape);
-		}
+		$arrayres=fgetcsv($this->handle,100000,$this->separator,$this->enclosure,$this->escape);
 
 		// End of file
 		if ($arrayres === false) return false;
@@ -313,7 +249,7 @@ class ImportCsv extends ModeleImports
 	/**
 	 * 	Close file handle
 	 *
-	 *  @return	void
+	 *  @return	integer
 	 */
 	function import_close_file()
 	{
@@ -327,7 +263,7 @@ class ImportCsv extends ModeleImports
 	 *
 	 * @param	array	$arrayrecord					Array of read values: [fieldpos] => (['val']=>val, ['type']=>-1=null,0=blank,1=string), [fieldpos+1]...
 	 * @param	array	$array_match_file_to_database	Array of target fields where to insert data: [fieldpos] => 's.fieldname', [fieldpos+1]...
-	 * @param 	Object	$objimport						Object import (contains objimport->import_tables_array, objimport->import_fields_array, objimport->import_convertvalue_array, ...)
+	 * @param 	Object	$objimport						Object import (contains objimport->array_import_tables, objimport->array_import_fields, objimport->array_import_convertvalue, ...)
 	 * @param	int		$maxfields						Max number of fields to use
 	 * @param	string	$importid						Import key
 	 * @return	int										<0 if KO, >0 if OK
@@ -335,7 +271,8 @@ class ImportCsv extends ModeleImports
 	function import_insert($arrayrecord,$array_match_file_to_database,$objimport,$maxfields,$importid)
 	{
 		global $langs,$conf,$user;
-        global $thirdparty_static;    // Specifi to thirdparty import
+        global $thirdparty_static;    	// Specific to thirdparty import
+		global $tablewithentity_cache;	// Cache to avoid to call  desc at each rows on tables
 
 		$error=0;
 		$warning=0;
@@ -361,6 +298,7 @@ class ImportCsv extends ModeleImports
 		}
 		else
 		{
+			$last_insert_id_array = array(); // store the last inserted auto_increment id for each table, so that dependent tables can be inserted with the appropriate id (eg: extrafields fk_object will be set with the last inserted object's id)
 			// For each table to insert, me make a separate insert
 			foreach($objimport->array_import_tables[0] as $alias => $tablename)
 			{
@@ -370,6 +308,25 @@ class ImportCsv extends ModeleImports
 				$listvalues='';
 				$i=0;
 				$errorforthistable=0;
+
+				// Define $tablewithentity_cache[$tablename] if not already defined
+				if (! isset($tablewithentity_cache[$tablename]))	// keep this test with "isset"
+				{
+					dol_syslog("Check if table ".$tablename." has an entity field");
+					$resql=$this->db->DDLDescTable($tablename,'entity');
+					if ($resql)
+					{
+						$obj=$this->db->fetch_object($resql);
+						if ($obj) $tablewithentity_cache[$tablename]=1;		// table contains entity field
+						else $tablewithentity_cache[$tablename]=0;			// table does not contains entity field
+					}
+					else dol_print_error($this->db);
+				}
+				else
+				{
+					//dol_syslog("Table ".$tablename." check for entity into cache is ".$tablewithentity_cache[$tablename]);
+				}
+
 
 				// Loop on each fields in the match array: $key = 1..n, $val=alias of field (s.nom)
 				foreach($sort_array_match_file_to_database as $key => $val)
@@ -388,7 +345,7 @@ class ImportCsv extends ModeleImports
 						// Make some tests on $newval
 
 						// Is it a required field ?
-						if (preg_match('/\*/',$objimport->array_import_fields[0][$val]) && ($newval==''))
+						if (preg_match('/\*/',$objimport->array_import_fields[0][$val]) && ((string) $newval==''))
 						{
 							$this->errors[$error]['lib']=$langs->trans('ErrorMissingMandatoryValue',$key);
 							$this->errors[$error]['type']='NOTNULL';
@@ -402,21 +359,40 @@ class ImportCsv extends ModeleImports
 						    if (! empty($objimport->array_import_convertvalue[0][$val]))
 						    {
                                 //print 'Must convert '.$newval.' with rule '.join(',',$objimport->array_import_convertvalue[0][$val]).'. ';
-                                if ($objimport->array_import_convertvalue[0][$val]['rule']=='fetchidfromcodeid' || $objimport->array_import_convertvalue[0][$val]['rule']=='fetchidfromref')
+                                if ($objimport->array_import_convertvalue[0][$val]['rule']=='fetchidfromcodeid'
+                                	|| $objimport->array_import_convertvalue[0][$val]['rule']=='fetchidfromref'
+                                	|| $objimport->array_import_convertvalue[0][$val]['rule']=='fetchidfromcodeorlabel'
+                                	)
                                 {
-                                    if (! is_numeric($newval) && $newval != '')    // If value into input import file is not a numeric, we apply the function defined into descriptor
+                                    // New val can be an id or ref. If it start with id: it is forced to id, if it start with ref: it is forced to ref. It not, we try to guess.
+                                    $isidorref='id';
+                                    if (! is_numeric($newval) && $newval != '' && ! preg_match('/^id:/i',$newval)) $isidorref='ref';
+                                    $newval=preg_replace('/^(id|ref):/i','',$newval);    // Remove id: or ref: that was used to force if field is id or ref
+                                    //print 'Val is now '.$newval.' and is type '.$isidorref."<br>\n";
+                                    
+                                    if ($isidorref == 'ref')    // If value into input import file is a ref, we apply the function defined into descriptor
                                     {
                                         $file=$objimport->array_import_convertvalue[0][$val]['classfile'];
                                         $class=$objimport->array_import_convertvalue[0][$val]['class'];
                                         $method=$objimport->array_import_convertvalue[0][$val]['method'];
-                                        if (empty($this->cacheconvert[$file.'_'.$class.'_'.$method.'_'][$newval]))
+                                        if ($this->cacheconvert[$file.'_'.$class.'_'.$method.'_'][$newval] != '')
                                         {
+                                        	$newval=$this->cacheconvert[$file.'_'.$class.'_'.$method.'_'][$newval];
+                                        }
+                                        else
+										{
                                             dol_include_once($file);
                                             $classinstance=new $class($this->db);
+                                            // Try the fetch from code or ref
                                             call_user_func_array(array($classinstance, $method),array('', $newval));
+                                            // If not found, try the fetch from label
+                                            if (! ($classinstance->id != '') && $objimport->array_import_convertvalue[0][$val]['rule']=='fetchidfromcodeorlabel')
+                                            {
+												call_user_func_array(array($classinstance, $method),array('', '', $newval));
+                                            }
                                             $this->cacheconvert[$file.'_'.$class.'_'.$method.'_'][$newval]=$classinstance->id;
                                             //print 'We have made a '.$class.'->'.$method.' to get id from code '.$newval.'. ';
-                                            if (! empty($classinstance->id))
+                                            if ($classinstance->id != '')	// id may be 0, it is a found value
                                             {
                                                 $newval=$classinstance->id;
                                             }
@@ -429,10 +405,6 @@ class ImportCsv extends ModeleImports
                                                 $errorforthistable++;
                                                 $error++;
                                             }
-                                        }
-                                        else
-                                        {
-                                            $newval=$this->cacheconvert[$file.'_'.$class.'_'.$method.'_'][$newval];
                                         }
                                     }
 
@@ -481,6 +453,10 @@ class ImportCsv extends ModeleImports
                                         //print 'code_compta_fournisseur='.$newval;
                                     }
                                     if (empty($newval)) $arrayrecord[($key-1)]['type']=-1;	// If we get empty value, we will use "null"
+                                }
+                                elseif ($objimport->array_import_convertvalue[0][$val]['rule']=='numeric')
+                                {
+                                    $newval = price2num($newval);
                                 }
 
                                 //print 'Val to use as insert is '.$newval.'<br>';
@@ -569,7 +545,7 @@ class ImportCsv extends ModeleImports
     				    elseif (preg_match('/^lastrowid-/',$val))
     				    {
     				        $tmp=explode('-',$val);
-                            $lastinsertid=$this->db->last_insert_id($tmp[1]);
+    				        $lastinsertid=(isset($last_insert_id_array[$tmp[1]]))?$last_insert_id_array[$tmp[1]]:0;
     				        $listfields.=preg_replace('/^'.preg_quote($alias).'\./','',$key);
                             $listvalues.=$lastinsertid;
     				        //print $key."-".$val."-".$listfields."-".$listvalues."<br>";exit;
@@ -587,7 +563,7 @@ class ImportCsv extends ModeleImports
 					    //var_dump($objimport->array_import_convertvalue); exit;
 
 						// Build SQL request
-						if (! tablewithentity($tablename))
+						if (empty($tablewithentity_cache[$tablename]))
 						{
 							$sql ='INSERT INTO '.$tablename.'('.$listfields.', import_key';
 							if (! empty($objimport->array_import_tables_creator[0][$alias])) $sql.=', '.$objimport->array_import_tables_creator[0][$alias];
@@ -601,7 +577,7 @@ class ImportCsv extends ModeleImports
 						}
 						if (! empty($objimport->array_import_tables_creator[0][$alias])) $sql.=', '.$user->id;
 						$sql.=')';
-						dol_syslog("import_csv.modules sql=".$sql);
+						dol_syslog("import_csv.modules", LOG_DEBUG);
 
 						//print '> '.join(',',$arrayrecord);
 						//print 'sql='.$sql;
@@ -611,6 +587,7 @@ class ImportCsv extends ModeleImports
 						if ($sql)
 						{
 							$resql=$this->db->query($sql);
+							$last_insert_id_array[$tablename] = $this->db->last_insert_id($tablename); // store the last inserted auto_increment id for each table, so that dependent tables can be inserted with the appropriate id. This must be done just after the INSERT request, else we risk losing the id (because another sql query will be issued somewhere in Dolibarr).
 							if ($resql)
 							{
 								//print '.';
@@ -650,25 +627,4 @@ function cleansep($value)
 	return str_replace(array(',',';'),'/',$value);
 };
 
-/**
- * Returns if a table contains entity column
- *
- * @param  string 	$table	Table name
- * @return int				1 if table contains entity, 0 if not and -1 if error
- */
-function tablewithentity($table)
-{
-	global $db;
 
-	$resql=$db->DDLDescTable($table,'entity');
-	if ($resql)
-	{
-		$i=0;
-		$obj=$db->fetch_object($resql);
-		if ($obj) return 1;
-		else return 0;
-	}
-	else return -1;
-}
-
-?>

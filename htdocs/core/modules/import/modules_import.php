@@ -59,11 +59,83 @@ class ModeleImports
 	{
 	}
 
+	
+	/**
+	 * getDriverId
+	 *
+	 * @return string		Id
+	 */
+	function getDriverId()
+	{
+	    return $this->id;
+	}
+	
+	/**
+	 *	getDriverLabel
+	 *
+	 *	@return string	Label
+	 */
+	function getDriverLabel()
+	{
+	    return $this->label;
+	}
+	
+	/**
+	 *	getDriverDesc
+	 *
+	 *	@return string	Description
+	 */
+	function getDriverDesc()
+	{
+	    return $this->desc;
+	}
+	
+	/**
+	 * getDriverExtension
+	 *
+	 * @return string	Driver suffix
+	 */
+	function getDriverExtension()
+	{
+	    return $this->extension;
+	}
+	
+	/**
+	 *	getDriverVersion
+	 *
+	 *	@return string	Driver version
+	 */
+	function getDriverVersion()
+	{
+	    return $this->version;
+	}
+	
+	/**
+	 *	getDriverLabel
+	 *
+	 *	@return string	Label of external lib
+	 */
+	function getLibLabel()
+	{
+	    return $this->label_lib;
+	}
+	
+	/**
+	 * getLibVersion
+	 *
+	 *	@return string	Version of external lib
+	 */
+	function getLibVersion()
+	{
+	    return $this->version_lib;
+	}
+	
+	
 	/**
 	 *  Charge en memoire et renvoie la liste des modeles actifs
 	 *
      *  @param	DoliDB	$db     			Database handler
-     *  @param  string	$maxfilenamelength  Max length of value to show
+     *  @param  integer	$maxfilenamelength  Max length of value to show
      *  @return	array						List of templates
 	 */
 	function liste_modeles($db,$maxfilenamelength=0)
@@ -84,7 +156,7 @@ class ModeleImports
     			{
     				$moduleid=$reg[1];
 
-    				// Chargement de la classe
+    				// Loading Class
     				$file = $dir."/import_".$moduleid.".modules.php";
     				$classname = "Import".ucfirst($moduleid);
 
@@ -178,4 +250,3 @@ class ModeleImports
 
 }
 
-?>

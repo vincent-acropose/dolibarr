@@ -32,6 +32,7 @@ class mod_contract_serpis extends ModelNumRefContracts
 	var $prefix='CT';
 	var $error='';
 	var $nom='Serpis';
+	var $code_auto=1;
 
 
 	/**
@@ -64,7 +65,7 @@ class mod_contract_serpis extends ModelNumRefContracts
 	 */
 	function canBeActivated()
 	{
-		global $conf,$langs;
+		global $conf,$langs,$db;
 
 		$coyymm=''; $max='';
 
@@ -116,7 +117,7 @@ class mod_contract_serpis extends ModelNumRefContracts
 		}
 		else
 		{
-			dol_syslog("mod_contract_serpis::getNextValue sql=".$sql);
+			dol_syslog("mod_contract_serpis::getNextValue", LOG_DEBUG);
 			return -1;
 		}
 
@@ -144,4 +145,3 @@ class mod_contract_serpis extends ModelNumRefContracts
 	}
 
 }
-?>

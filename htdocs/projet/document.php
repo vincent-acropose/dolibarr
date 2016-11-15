@@ -43,14 +43,14 @@ $mine 		= (GETPOST('mode','alpha') == 'mine' ? 1 : 0);
 // Security check
 $socid=0;
 if ($user->societe_id > 0) $socid=$user->societe_id;
-$result=restrictedArea($user,'projet',$id,'');
+$result=restrictedArea($user,'projet',$id,'projet&project');
 
 $object = new Project($db);
-$object->fetch($id,$ref);
-if ($object->id > 0)
-{
-	$object->fetch_thirdparty();
-	$upload_dir = $conf->projet->dir_output . "/" . dol_sanitizeFileName($object->ref);
+
+include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php';  // Must be include, not include_once
+
+if ($id > 0 || ! empty($ref)) {
+    $upload_dir = $conf->projet->dir_output . "/" . dol_sanitizeFileName($object->ref);
 }
 
 // Get parameters
@@ -70,22 +70,24 @@ if (! $sortfield) $sortfield="name";
  * Actions
  */
 
-include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_pre_headers.tpl.php';
+include_once DOL_DOCUMENT_ROOT . '/core/actions_linkedfiles.inc.php';
 
 
 /*
  * View
  */
 
-llxHeader('',$langs->trans('Project'),'EN:Customers_Orders|FR:Commandes_Clients|ES:Pedidos de clientes');
+$title=$langs->trans("Project").' - '.$langs->trans("Document").' - '.$object->ref.' '.$object->name;
+if (! empty($conf->global->MAIN_HTML_TITLE) && preg_match('/projectnameonly/',$conf->global->MAIN_HTML_TITLE) && $object->name) $title=$object->ref.' '.$object->name.' - '.$langs->trans("Document");
+$help_url="EN:Module_Projects|FR:Module_Projets|ES:M&oacute;dulo_Proyectos";
+
+llxHeader('',$title,$help_url);
 
 $form = new Form($db);
 
 if ($object->id > 0)
 {
 	$upload_dir = $conf->projet->dir_output.'/'.dol_sanitizeFileName($object->ref);
-
-	if ($object->societe->id > 0)  $result=$object->societe->fetch($object->societe->id);
 
     // To verify role of users
     //$userAccess = $object->restrictedProjectArea($user,'read');
@@ -97,7 +99,7 @@ if ($object->id > 0)
 	dol_fiche_head($head, 'document', $langs->trans("Project"), 0, ($object->public?'projectpub':'project'));
 
 	// Files list constructor
-	$filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+	$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
 	$totalsize=0;
 	foreach($filearray as $key => $file)
 	{
@@ -106,14 +108,14 @@ if ($object->id > 0)
 
 	print '<table class="border" width="100%">';
 
-	$linkback = '<a href="'.DOL_URL_ROOT.'/projet/liste.php">'.$langs->trans("BackToList").'</a>';
+	$linkback = '<a href="'.DOL_URL_ROOT.'/projet/list.php">'.$langs->trans("BackToList").'</a>';
 
 	// Ref
-	print '<tr><td width="30%">'.$langs->trans("Ref").'</td><td>';
+	print '<tr><td class="titlefield">'.$langs->trans("Ref").'</td><td>';
 	// Define a complementary filter for search of next/prev ref.
     if (! $user->rights->projet->all->lire)
     {
-        $projectsListId = $object->getProjectsAuthorizedForUser($user,$mine,0);
+        $projectsListId = $object->getProjectsAuthorizedForUser($user,0,0);
         $object->next_prev_filter=" rowid in (".(count($projectsListId)?join(',',array_keys($projectsListId)):'0').")";
     }
 	print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref');
@@ -124,7 +126,7 @@ if ($object->id > 0)
 
 	// Company
 	print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
-	if (! empty($object->societe->id)) print $object->societe->getNomUrl(1);
+	if (! empty($object->thirdparty->id)) print $object->thirdparty->getNomUrl(1);
 	else print '&nbsp;';
 	print '</td></tr>';
 
@@ -157,4 +159,3 @@ else
 llxFooter();
 
 $db->close();
-?>

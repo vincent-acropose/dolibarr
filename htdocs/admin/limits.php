@@ -43,7 +43,7 @@ if ($action == 'update')
     || $_POST["MAIN_MAX_DECIMALS_SHOWN"] > $MAXDEC)
     {
         $error++;
-        $mesg='<div class="error">'.$langs->trans("ErrorDecimalLargerThanAreForbidden",$MAXDEC).'</div>';
+	    setEventMessages($langs->trans("ErrorDecimalLargerThanAreForbidden",$MAXDEC), null, 'errors');
     }
 
     if ($_POST["MAIN_MAX_DECIMALS_UNIT"]  < 0
@@ -52,7 +52,7 @@ if ($action == 'update')
     {
         $langs->load("errors");
         $error++;
-        $mesg='<div class="error">'.$langs->trans("ErrorNegativeValueNotAllowed").'</div>';
+	    setEventMessages($langs->trans("ErrorNegativeValueNotAllowed"), null, 'errors');
     }
 
     if ($_POST["MAIN_ROUNDING_RULE_TOT"])
@@ -61,7 +61,7 @@ if ($action == 'update')
         {
             $langs->load("errors");
             $error++;
-            $mesg='<div class="error">'.$langs->trans("ErrorMAIN_ROUNDING_RULE_TOTCanMAIN_MAX_DECIMALS_TOT").'</div>';
+	        setEventMessages($langs->trans("ErrorMAIN_ROUNDING_RULE_TOTCanMAIN_MAX_DECIMALS_TOT"), null, 'errors');
         }
     }
 
@@ -88,13 +88,11 @@ $form=new Form($db);
 
 llxHeader();
 
-print_fiche_titre($langs->trans("LimitsSetup"),'','setup');
+print load_fiche_titre($langs->trans("LimitsSetup"),'','title_setup');
 
 
 print $langs->trans("LimitsDesc")."<br>\n";
 print "<br>\n";
-
-if ($mesg) print $mesg.'<br>';
 
 if ($action == 'edit')
 {
@@ -128,9 +126,9 @@ if ($action == 'edit')
 
     print '</table>';
 
-    print '<br><center>';
+    print '<br><div class="center">';
     print '<input class="button" type="submit" value="'.$langs->trans("Save").'">';
-    print '</center>';
+    print '</div>';
 
     print '</form>';
     print '<br>';
@@ -171,7 +169,7 @@ else
 if (empty($mysoc->country_code))
 {
 	$langs->load("errors");
-	$warnpicto=img_error($langs->trans("WarningMandatorySetupNotComplete"));
+	$warnpicto=img_warning($langs->trans("WarningMandatorySetupNotComplete"));
 	print '<br><a href="'.DOL_URL_ROOT.'/admin/company.php?mainmenu=home">'.$warnpicto.' '.$langs->trans("WarningMandatorySetupNotComplete").'</a>';
 }
 else
@@ -182,21 +180,21 @@ else
 
 	// Always show vat rates with vat 0
 	$s=2/7;$qty=1;$vat=0;
-	$tmparray=calcul_price_total(1,$qty*price2num($s,'MU'),0,$vat,0,0,0,'HT',0,0);
+	$tmparray=calcul_price_total(1,$qty*price2num($s,'MU'),0,$vat,0,0,0,'HT',0,0,$mysoc);
 	print $langs->trans("UnitPriceOfProduct").": ".price2num($s,'MU');
 	print " x ".$langs->trans("Quantity").": ".$qty;
 	print " - ".$langs->trans("VAT").": ".$vat.'%';
 	print " &nbsp; -> &nbsp; ".$langs->trans("TotalPriceAfterRounding").": ".$tmparray[0].' / '.$tmparray[1].' / '.$tmparray[2]."<br>\n";
 
 	$s=10/3;$qty=1;$vat=0;
-	$tmparray=calcul_price_total(1,$qty*price2num($s,'MU'),0,$vat,0,0,0,'HT',0,0);
+	$tmparray=calcul_price_total(1,$qty*price2num($s,'MU'),0,$vat,0,0,0,'HT',0,0,$mysoc);
 	print $langs->trans("UnitPriceOfProduct").": ".price2num($s,'MU');
 	print " x ".$langs->trans("Quantity").": ".$qty;
 	print " - ".$langs->trans("VAT").": ".$vat.'%';
 	print " &nbsp; -> &nbsp; ".$langs->trans("TotalPriceAfterRounding").": ".$tmparray[0].' / '.$tmparray[1].' / '.$tmparray[2]."<br>\n";
 
 	$s=10/3;$qty=2;$vat=0;
-	$tmparray=calcul_price_total(1,$qty*price2num($s,'MU'),0,$vat,0,0,0,'HT',0, 0);
+	$tmparray=calcul_price_total(1,$qty*price2num($s,'MU'),0,$vat,0,0,0,'HT',0, 0,$mysoc);
 	print $langs->trans("UnitPriceOfProduct").": ".price2num($s,'MU');
 	print " x ".$langs->trans("Quantity").": ".$qty;
 	print " - ".$langs->trans("VAT").": ".$vat.'%';
@@ -206,9 +204,9 @@ else
 	// Add vat rates examples specific to country
 	$vat_rates=array();
 
-	$sql.="SELECT taux as vat_rate";
-	$sql.=" FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_pays as p";
-	$sql.=" WHERE t.active=1 AND t.fk_pays = p.rowid AND p.code='".$mysoc->country_code."' AND taux != 0";
+	$sql="SELECT taux as vat_rate";
+	$sql.=" FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_country as c";
+	$sql.=" WHERE t.active=1 AND t.fk_pays = c.rowid AND c.code='".$mysoc->country_code."' AND t.taux <> 0";
 	$sql.=" ORDER BY t.taux ASC";
 	$resql=$db->query($sql);
 	if ($resql)
@@ -232,7 +230,7 @@ else
 	        for ($qty=1; $qty<=2; $qty++)
 	        {
 	            $s=10/3;
-	            $tmparray=calcul_price_total(1,$qty*price2num($s,'MU'),0,$vat,0,0,0,'HT',0, 0);
+	            $tmparray=calcul_price_total(1,$qty*price2num($s,'MU'),0,$vat,0,0,0,'HT',0, 0,$mysoc);
 	            print $langs->trans("UnitPriceOfProduct").": ".price2num($s,'MU');
 	            print " x ".$langs->trans("Quantity").": ".$qty;
 	            print " - ".$langs->trans("VAT").": ".$vat.'%';
@@ -247,14 +245,14 @@ else
 	    // were calculated to show all possible cases of rounding. If we change this, examples becomes useless or show the same rounding rule.
 
 	    $s=10/3;$qty=1;$vat=10;
-	    $tmparray=calcul_price_total(1,$qty*price2num($s,'MU'),0,$vat,0,0,0,'HT',0, 0);
+	    $tmparray=calcul_price_total(1,$qty*price2num($s,'MU'),0,$vat,0,0,0,'HT',0, 0,$mysoc);
 	    print $langs->trans("UnitPriceOfProduct").": ".price2num($s,'MU');
 	    print " x ".$langs->trans("Quantity").": ".$qty;
 	    print " - ".$langs->trans("VAT").": ".$vat.'%';
 	    print " &nbsp; -> &nbsp; ".$langs->trans("TotalPriceAfterRounding").": ".$tmparray[0].' / '.$tmparray[1].' / '.$tmparray[2]."<br>\n";
 
 	    $s=10/3;$qty=2;$vat=10;
-	    $tmparray=calcul_price_total(1,$qty*price2num($s,'MU'),0,$vat,0,0,0,'HT',0, 0);
+	    $tmparray=calcul_price_total(1,$qty*price2num($s,'MU'),0,$vat,0,0,0,'HT',0, 0,$mysoc);
 	    print $langs->trans("UnitPriceOfProduct").": ".price2num($s,'MU');
 	    print " x ".$langs->trans("Quantity").": ".$qty;
 	    print " - ".$langs->trans("VAT").": ".$vat.'%';
@@ -274,8 +272,8 @@ else
 			$s2=2/7;
 
 			// Round by line
-			$tmparray1=calcul_price_total(1,$qty*price2num($s1,'MU'),0,$vat,0,0,0,'HT',0, 0);
-			$tmparray2=calcul_price_total(1,$qty*price2num($s2,'MU'),0,$vat,0,0,0,'HT',0, 0);
+			$tmparray1=calcul_price_total(1,$qty*price2num($s1,'MU'),0,$vat,0,0,0,'HT',0, 0,$mysoc);
+			$tmparray2=calcul_price_total(1,$qty*price2num($s2,'MU'),0,$vat,0,0,0,'HT',0, 0,$mysoc);
 			$total_ht = $tmparray1[0] + $tmparray2[0];
 			$total_tva = $tmparray1[1] + $tmparray2[1];
 			$total_ttc = $tmparray1[2] + $tmparray2[2];
@@ -298,7 +296,7 @@ else
 
 			// Global round
 			$subtotal_ht = (($qty*price2num($s1,'MU')) + ($qty*price2num($s2,'MU')));
-			$tmparray3=calcul_price_total(1,$subtotal_ht,0,$vat,0,0,0,'HT',0, 0);
+			$tmparray3=calcul_price_total(1,$subtotal_ht,0,$vat,0,0,0,'HT',0, 0,$mysoc);
 			$total_ht = $tmparray3[0];
 			$total_tva = $tmparray3[1];
 			$total_ttc = $tmparray3[2];
@@ -316,4 +314,3 @@ else
 llxFooter();
 
 $db->close();
-?>

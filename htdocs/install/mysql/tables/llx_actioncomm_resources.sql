@@ -16,17 +16,17 @@
 -- along with this program. If not, see <http://www.gnu.org/licenses/>.
 --
 -- ============================================================================
--- Table used for relations between elements of different types:
--- invoice-propal, propal-order, etc...
+-- Table used for relations between an action event and a resource (in most cases
+-- a 'user', but can also be a 'resource' like a room, or a hardware)
 -- ============================================================================
 
 create table llx_actioncomm_resources
 (
   rowid           	integer AUTO_INCREMENT PRIMARY KEY,  
-  fk_actioncomm		integer NOT NULL,
-  element_type		varchar(50) NOT NULL,
-  fk_element		integer NOT NULL,
+  fk_actioncomm		integer NOT NULL,			-- Id into llx_actioncomm
+  element_type		varchar(50) NOT NULL,		-- Type of resource ('user', 'resource')
+  fk_element		integer NOT NULL,			-- Id into table llx_user or llx_resource
   answer_status		varchar(50) NULL,
-  mandatory		smallint,
-  transparent		smallint
+  mandatory			smallint,
+  transparency		smallint default 1	    -- Used to say if event is 1=OPAQUE=busy or 0=TRANSPARENT
 ) ENGINE=innodb;

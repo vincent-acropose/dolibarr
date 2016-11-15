@@ -1,5 +1,6 @@
 <?php
-/* Copyright (C) 2010-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2010-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2015	   Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +40,6 @@ if (! defined('NOREQUIREMENU'))  define('NOREQUIREMENU','1'); // If there is no 
 if (! defined('NOREQUIREHTML'))  define('NOREQUIREHTML','1'); // If we don't need to load the html.form.class.php
 if (! defined('NOREQUIREAJAX'))  define('NOREQUIREAJAX','1');
 if (! defined("NOLOGIN"))        define("NOLOGIN",'1');       // If this page is public (can be called outside logged session)
-
 
 /**
  * Class for PHPUnit tests
@@ -83,6 +83,8 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
 
         print __METHOD__."\n";
     }
+
+    // tear down after class
     public static function tearDownAfterClass()
     {
         global $conf,$user,$langs,$db;
@@ -118,36 +120,79 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
 
 
     /**
-    * testDolHtmlCleanLastBr
+    * testGetBrowserInfo
     *
     * @return void
     */
-    public function testGetBrowserVersion()
+    public function testGetBrowserInfo()
     {
-        $_SERVER['HTTP_USER_AGENT']='Mozilla/4.0 (compatible; MSIE 5.0; Windows 98; DigExt; KITV4 Wanadoo; KITV5 Wanadoo)';    // MSIE 5.0
-        $tmp=getBrowserInfo();
+		// MSIE 5.0
+        $user_agent ='Mozilla/4.0 (compatible; MSIE 5.0; Windows 98; DigExt; KITV4 Wanadoo; KITV5 Wanadoo)';
+        $tmp=getBrowserInfo($user_agent);
         $this->assertEquals('ie',$tmp['browsername']);
         $this->assertEquals('5.0',$tmp['browserversion']);
-        $_SERVER['HTTP_USER_AGENT']='Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.5a) Gecko/20030728 Mozilla Firefox/0.9.1';    // Firefox 0.9.1
-        $tmp=getBrowserInfo();
+	    $this->assertEmpty($tmp['phone']);
+	    $this->assertFalse($tmp['tablet']);
+	    $this->assertEquals('classic', $tmp['layout']);
+
+		// Firefox 0.9.1
+        $user_agent ='Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.5a) Gecko/20030728 Mozilla Firefox/0.9.1';
+        $tmp=getBrowserInfo($user_agent);
         $this->assertEquals('firefox',$tmp['browsername']);
         $this->assertEquals('0.9.1',$tmp['browserversion']);
-        $_SERVER['HTTP_USER_AGENT']='Mozilla/3.0 (Windows 98; U) Opera 6.03  [en]';
-        $tmp=getBrowserInfo();
+	    $this->assertEmpty($tmp['phone']);
+	    $this->assertFalse($tmp['tablet']);
+	    $this->assertEquals('classic', $tmp['layout']);
+
+        $user_agent ='Mozilla/3.0 (Windows 98; U) Opera 6.03  [en]';
+        $tmp=getBrowserInfo($user_agent);
         $this->assertEquals('opera',$tmp['browsername']);
         $this->assertEquals('6.03',$tmp['browserversion']);
-        $_SERVER['HTTP_USER_AGENT']='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21';
-        $tmp=getBrowserInfo();
+	    $this->assertEmpty($tmp['phone']);
+	    $this->assertFalse($tmp['tablet']);
+	    $this->assertEquals('classic', $tmp['layout']);
+
+        $user_agent ='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21';
+        $tmp=getBrowserInfo($user_agent);
         $this->assertEquals('chrome',$tmp['browsername']);
         $this->assertEquals('19.0.1042.0',$tmp['browserversion']);
-        $_SERVER['HTTP_USER_AGENT']='chrome (Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11)';
-        $tmp=getBrowserInfo();
+	    $this->assertEmpty($tmp['phone']);
+	    $this->assertFalse($tmp['tablet']);
+	    $this->assertEquals('classic', $tmp['layout']);
+
+        $user_agent ='chrome (Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11)';
+        $tmp=getBrowserInfo($user_agent);
         $this->assertEquals('chrome',$tmp['browsername']);
         $this->assertEquals('17.0.963.56',$tmp['browserversion']);
-        $_SERVER['HTTP_USER_AGENT']='Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; de-at) AppleWebKit/533.21.1 (KHTML, like Gecko) Version/5.0.5 Safari/533.21.1';
-        $tmp=getBrowserInfo();
+	    $this->assertEmpty($tmp['phone']);
+	    $this->assertFalse($tmp['tablet']);
+	    $this->assertEquals('classic', $tmp['layout']);
+
+        $user_agent ='Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; de-at) AppleWebKit/533.21.1 (KHTML, like Gecko) Version/5.0.5 Safari/533.21.1';
+        $tmp=getBrowserInfo($user_agent);
         $this->assertEquals('safari',$tmp['browsername']);
         $this->assertEquals('533.21.1',$tmp['browserversion']);
+	    $this->assertEmpty($tmp['phone']);
+	    $this->assertFalse($tmp['tablet']);
+	    $this->assertEquals('classic', $tmp['layout']);
+
+	    //Internet Explorer 11
+	    $user_agent = 'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko';
+	    $tmp=getBrowserInfo($user_agent);
+	    $this->assertEquals('ie',$tmp['browsername']);
+	    $this->assertEquals('11.0',$tmp['browserversion']);
+	    $this->assertEmpty($tmp['phone']);
+	    $this->assertFalse($tmp['tablet']);
+	    $this->assertEquals('classic', $tmp['layout']);
+
+	    //iPad
+	    $user_agent = 'Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25';
+	    $tmp=getBrowserInfo($user_agent);
+	    $this->assertEquals('safari',$tmp['browsername']);
+	    $this->assertEquals('8536.25',$tmp['browserversion']);
+	    $this->assertEquals('ios',$tmp['browseros']);
+	    $this->assertEquals('tablet',$tmp['layout']);
+	    $this->assertEquals('iphone',$tmp['phone']);
     }
 
 
@@ -161,34 +206,43 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
         // True
         $input='<html>xxx</html>';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with html tag');
         $input='<body>xxx</body>';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with body tag');
         $input='xxx <b>yyy</b> zzz';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with b tag');
+        $input='xxx <u>yyy</u> zzz';
+        $after=dol_textishtml($input);
+        $this->assertTrue($after, 'Test with u tag');
         $input='text with <div>some div</div>';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with div tag');
         $input='text with HTML &nbsp; entities';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with entities tag');
         $input='xxx<br>';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with entities br');
         $input='xxx<br >';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with entities br');
         $input='xxx<br style="eee">';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with entities br and attributes');
         $input='xxx<br style="eee" >';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with entities br and attributes bis');
         $input='<h2>abc</h2>';
         $after=dol_textishtml($input);
-        $this->assertTrue($after);
+        $this->assertTrue($after, 'Test with entities h2');
+        $input='<img id="abc" src="https://xxx.com/aaa/image.png" />';
+        $after=dol_textishtml($input);
+        $this->assertTrue($after, 'Test with img tag');
+        $input='<a class="azerty" href="https://xxx.com/aaa/image.png" />';
+        $after=dol_textishtml($input);
+        $this->assertTrue($after, 'Test with a tag');
 
         // False
         $input='xxx < br>';
@@ -200,6 +254,10 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
         $input='xxx <brstyle="ee">';
         $after=dol_textishtml($input);
         $this->assertFalse($after);
+        $input='This is a text with html comments <!-- comment -->';	// we suppose this is not enough to be html content
+        $after=dol_textishtml($input);
+        $this->assertFalse($after);
+
     }
 
 
@@ -210,15 +268,30 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
      */
     public function testDolHtmlCleanLastBr()
     {
+        $input="A string\n";
+        $after=dol_htmlcleanlastbr($input);
+        $this->assertEquals("A string",$after);
+
+        $input="A string first\nA string second\n";
+        $after=dol_htmlcleanlastbr($input);
+        $this->assertEquals("A string first\nA string second",$after);
+
+        $input="A string\n\n\n";
+        $after=dol_htmlcleanlastbr($input);
+        $this->assertEquals("A string",$after);
+
         $input="A string<br>";
         $after=dol_htmlcleanlastbr($input);
         $this->assertEquals("A string",$after);
+
         $input="A string first<br>\nA string second<br>";
         $after=dol_htmlcleanlastbr($input);
         $this->assertEquals("A string first<br>\nA string second",$after);
+
         $input="A string\n<br type=\"_moz\" />\n";
         $after=dol_htmlcleanlastbr($input);
         $this->assertEquals("A string",$after);
+
         $input="A string\n<br><br />\n\n";
         $after=dol_htmlcleanlastbr($input);
         $this->assertEquals("A string",$after);
@@ -280,21 +353,43 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
      */
     public function testDolHtmlEntitiesBr()
     {
-        $input="A string\nwith a é, &, < and >.";   // Text not already HTML
+    	// Text not already HTML
+
+    	$input="A string\nwith a é, &, < and >.";
         $after=dol_htmlentitiesbr($input,0);    // Add <br> before \n
         $this->assertEquals("A string<br>\nwith a &eacute;, &amp;, &lt; and &gt;.",$after);
 
-        $input="A string\nwith a é, &, < and >.";   // Text not already HTML
+        $input="A string\nwith a é, &, < and >.";
         $after=dol_htmlentitiesbr($input,1);    // Replace \n with <br>
         $this->assertEquals("A string<br>with a &eacute;, &amp;, &lt; and &gt;.",$after);
 
-        $input="A string<br>\nwith a é, &, < and >.";   // Text already HTML, so &,<,> should not be converted
+        $input="A string\nwith a é, &, < and >.\n\n";	// With some \n at end that should be cleaned
+        $after=dol_htmlentitiesbr($input,0);    // Add <br> before \n
+        $this->assertEquals("A string<br>\nwith a &eacute;, &amp;, &lt; and &gt;.",$after);
+
+        $input="A string\nwith a é, &, < and >.\n\n";	// With some \n at end that should be cleaned
+        $after=dol_htmlentitiesbr($input,1);    // Replace \n with <br>
+        $this->assertEquals("A string<br>with a &eacute;, &amp;, &lt; and &gt;.",$after);
+
+        // Text already HTML, so &,<,> should not be converted
+
+        $input="A string<br>\nwith a é, &, < and >.";
         $after=dol_htmlentitiesbr($input);
         $this->assertEquals("A string<br>\nwith a &eacute;, &, < and >.",$after);
 
-        $input="<li>\nA string with a é, &, < and >.</li>\nAnother string";   // Text already HTML, so &,<,> should not be converted
+        $input="<li>\nA string with a é, &, < and >.</li>\nAnother string";
         $after=dol_htmlentitiesbr($input);
         $this->assertEquals("<li>\nA string with a &eacute;, &, < and >.</li>\nAnother string",$after);
+
+        $input="A string<br>\nwith a é, &, < and >.<br>";	// With some <br> at end that should be cleaned
+        $after=dol_htmlentitiesbr($input);
+        $this->assertEquals("A string<br>\nwith a &eacute;, &, < and >.",$after);
+
+        $input="<li>\nA string with a é, &, < and >.</li>\nAnother string<br>";	// With some <br> at end that should be cleaned
+        $after=dol_htmlentitiesbr($input);
+        $this->assertEquals("<li>\nA string with a &eacute;, &, < and >.</li>\nAnother string",$after);
+
+        // TODO Add test with param $removelasteolbr = 0
 
         return true;
     }
@@ -327,7 +422,22 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
 
 
     /**
-     * testDolTextIsHtml
+     * testDolUnaccent
+     *
+     * @return boolean
+     */
+    public function testDolUnaccent()
+    {
+    	// Text not already HTML
+
+    	$input="A string\nwith a à ä é è ë ï ü ö ÿ, &, < and >.";
+        $after=dol_string_unaccent($input);
+        $this->assertEquals("A string\nwith a a a e e e i u o y, &, < and >.",$after);
+    }
+
+
+    /**
+     * testDolUtf8Check
      *
      * @return void
      */
@@ -395,6 +505,14 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
      */
     public function testDolMkTime()
     {
+    	global $conf;
+
+    	$savtz=date_default_timezone_get();
+
+		// Some test for UTC TZ
+    	date_default_timezone_set('UTC');
+
+    	// Check bad hours
         $result=dol_mktime(25,0,0,1,1,1970,1,1);    // Error (25 hours)
         print __METHOD__." result=".$result."\n";
         $this->assertEquals('',$result);
@@ -418,7 +536,22 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
         $result=dol_mktime(2,0,0,1,1,1970,0);                // 1970-01-01 02:00:00 = 7200 in local area Europe/Paris = 3600 GMT
         print __METHOD__." result=".$result."\n";
         $tz=getServerTimeZoneInt('winter');                  // +1 in Europe/Paris at this time (this time is winter)
-        $this->assertEquals(7200-($tz*3600),$result);        // Should be 7200 if we are at greenwich winter
+        $this->assertEquals(7200-($tz*3600),$result);        // 7200 if we are at greenwich winter, 7200-($tz*3600) at local winter
+
+        // Some test for local TZ Europe/Paris
+        date_default_timezone_set('Europe/Paris');
+
+        // Check that tz for paris in winter is used
+        $result=dol_mktime(2,0,0,1,1,1970,'server');         // 1970-01-01 02:00:00 = 7200 in local area Europe/Paris = 3600 GMT
+        print __METHOD__." result=".$result."\n";
+        $this->assertEquals(3600,$result);        			 // 7200 if we are at greenwich winter, 3600 at Europe/Paris
+
+        // Check that daylight saving time is used
+        $result=dol_mktime(2,0,0,6,1,2014,0);         		// 2014-06-01 02:00:00 = 1401588000-3600(location)-3600(daylight) in local area Europe/Paris = 1401588000 GMT
+        print __METHOD__." result=".$result."\n";
+        $this->assertEquals(1401588000-3600-3600,$result);  // 1401588000 are at greenwich summer, 1401588000-3600(location)-3600(daylight) at Europe/Paris summer
+
+        date_default_timezone_set($savtz);
     }
 
 
@@ -431,7 +564,13 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
     {
         $input="x&<b>#</b>,\"'";    // " will be converted into '
         $result=dol_escape_js($input);
-        $this->assertEquals("x&<b>#<\/b>,\'\'",$result);
+        $this->assertEquals("x&<b>#</b>,\'\'",$result,"Test mode=0");
+
+        $result=dol_escape_js($input,1);
+        $this->assertEquals("x&<b>#</b>,\"\'",$result,"Test mode=1");
+
+        $result=dol_escape_js($input,2);
+        $this->assertEquals("x&<b>#</b>,\\\"'",$result,"Test mode=2");
     }
 
 
@@ -492,22 +631,26 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
      */
     public function testImgPicto()
     {
-        $s=img_picto('alt','user');
+        $s=img_picto('title','user');
         print __METHOD__." s=".$s."\n";
         $this->assertContains('theme',$s,'testImgPicto1');
 
-    	$s=img_picto('alt','img.png','style="float: right"',0);
+    	$s=img_picto('title','img.png','style="float: right"',0);
         print __METHOD__." s=".$s."\n";
         $this->assertContains('theme',$s,'testImgPicto2');
         $this->assertContains('style="float: right"',$s,'testImgPicto2');
 
-        $s=img_picto('alt','/fullpath/img.png','',1);
+        $s=img_picto('title','/fullpath/img.png','',1);
         print __METHOD__." s=".$s."\n";
-        $this->assertEquals($s,'<img src="/fullpath/img.png" border="0" alt="alt" title="alt">','testImgPicto3');
+        $this->assertEquals('<img src="/fullpath/img.png" border="0" alt="" title="title">',$s,'testImgPicto3');
 
-        $s=img_picto('alt','/fullpath/img.png','',true);
+        $s=img_picto('title','/fullpath/img.png','',true);
         print __METHOD__." s=".$s."\n";
-        $this->assertEquals($s,'<img src="/fullpath/img.png" border="0" alt="alt" title="alt">','testImgPicto3');
+        $this->assertEquals('<img src="/fullpath/img.png" border="0" alt="" title="title">',$s,'testImgPicto4');
+
+        $s=img_picto('title:alt','/fullpath/img.png','',true);
+        print __METHOD__." s=".$s."\n";
+        $this->assertEquals('<img src="/fullpath/img.png" border="0" alt="alt" title="title">',$s,'testImgPicto5');
     }
 
     /**
@@ -559,6 +702,7 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
         $this->savlangs=$langs;
         $this->savdb=$db;
 
+        // Sellers
         $companyfrnovat=new Societe($db);
         $companyfrnovat->country_code='FR';
         $companyfrnovat->tva_assuj=0;
@@ -566,53 +710,88 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
         $companyfr=new Societe($db);
         $companyfr->country_code='FR';
         $companyfr->tva_assuj=1;
+		$companyfr->tva_intra='FR9999';
 
+        // Buyers
         $companymc=new Societe($db);
         $companymc->country_code='MC';
         $companymc->tva_assuj=1;
+		$companyfr->tva_intra='MC9999';
 
         $companyit=new Societe($db);
         $companyit->country_code='IT';
         $companyit->tva_assuj=1;
         $companyit->tva_intra='IT99999';
 
-        $notcompanyit=new Societe($db);
-        $notcompanyit->country_code='IT';
-        $notcompanyit->tva_assuj=1;
-        $notcompanyit->tva_intra='';
-        $notcompanyit->typent_code='TE_PRIVATE';
+        $companyde=new Societe($db);
+        $companyde->country_code='DE';
+        $companyde->tva_assuj=1;
+        $companyde->tva_intra='DE99999';
+
+        $notcompanyde=new Societe($db);
+        $notcompanyde->country_code='DE';
+        $notcompanyde->tva_assuj=0;
+        $notcompanyde->tva_intra='';
+        $notcompanyde->typent_code='TE_PRIVATE';
 
         $companyus=new Societe($db);
         $companyus->country_code='US';
         $companyus->tva_assuj=1;
         $companyus->tva_intra='';
 
-        // Test RULE 1-2
-        $vat=get_default_tva($companyfrnovat,$companymc,0);
-        $this->assertEquals(0,$vat);
 
-        // Test RULE 3 (FR-FR)
-        $vat=get_default_tva($companyfr,$companyfr,0);
-        $this->assertEquals(19.6,$vat);
-
-        // Test RULE 3 (FR-MC)
-        $vat=get_default_tva($companyfr,$companymc,0);
-        $this->assertEquals(19.6,$vat);
-
-        // Test RULE 4 (FR-IT)
-        $vat=get_default_tva($companyfr,$companyit,0);
-        $this->assertEquals(0,$vat);
-
-        // Test RULE 5 (FR-IT)
-        $vat=get_default_tva($companyfr,$notcompanyit,0);
-        $this->assertEquals(19.6,$vat);
-
-        // Test RULE 6 (FR-IT)
+        // Test RULE 0 (FR-DE)
         // Not tested
 
-        // Test RULE 7 (FR-US)
+        // Test RULE 1
+        $vat=get_default_tva($companyfrnovat,$companymc,0);
+        $this->assertEquals(0,$vat,'RULE 1');
+
+        // Test RULE 2 (FR-FR)
+        $vat=get_default_tva($companyfr,$companyfr,0);
+        $this->assertEquals(20,$vat,'RULE 2');
+
+        // Test RULE 2 (FR-MC)
+        $vat=get_default_tva($companyfr,$companymc,0);
+        $this->assertEquals(20,$vat,'RULE 2');
+
+        // Test RULE 3 (FR-DE company)
+        $vat=get_default_tva($companyfr,$companyit,0);
+        $this->assertEquals(0,$vat,'RULE 3');
+
+        // Test RULE 4 (FR-DE not a company)
+        $vat=get_default_tva($companyfr,$notcompanyde,0);
+        $this->assertEquals(20,$vat,'RULE 4');
+
+        // Test RULE 5 (FR-US)
         $vat=get_default_tva($companyfr,$companyus,0);
-        $this->assertEquals(0,$vat);
+        $this->assertEquals(0,$vat,'RULE 5');
+
+
+        // We do same tests but with option SERVICE_ARE_ECOMMERCE_200238EC on.
+        $conf->global->SERVICE_ARE_ECOMMERCE_200238EC = 1;
+
+
+        // Test RULE 1 (FR-US)
+        $vat=get_default_tva($companyfr,$companyus,0);
+        $this->assertEquals(0,$vat,'RULE 1 ECOMMERCE_200238EC');
+
+        // Test RULE 2 (FR-FR)
+        $vat=get_default_tva($companyfr,$companyfr,0);
+        $this->assertEquals(20,$vat,'RULE 2 ECOMMERCE_200238EC');
+
+        // Test RULE 3 (FR-DE company)
+        $vat=get_default_tva($companyfr,$companyde,0);
+        $this->assertEquals(0,$vat,'RULE 3 ECOMMERCE_200238EC');
+
+        // Test RULE 4 (FR-DE not a company)
+        $vat=get_default_tva($companyfr,$notcompanyde,0);
+        $this->assertEquals(19,$vat,'RULE 4 ECOMMERCE_200238EC');
+
+        // Test RULE 5 (FR-US)
+        $vat=get_default_tva($companyfr,$companyus,0);
+        $this->assertEquals(0,$vat,'RULE 5 ECOMMERCE_200238EC');
+
     }
 
     /**
@@ -677,8 +856,8 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
     	// Test RULE ES-ES
     	$vat1=get_default_localtax($companyes,$companyes,1,0);
     	$vat2=get_default_localtax($companyes,$companyes,2,0);
-    	$this->assertEquals(5.2,$vat1);
-    	$this->assertEquals(-21,$vat2);
+    	$this->assertEquals($vat1, 5.2);
+    	$this->assertStringStartsWith((string) $vat2, '-19:-15:-9');       // Can be -19 (old version) or '-19:-15:-9' (new setup)
 
     	// Test RULE ES-IT
     	$vat1=get_default_localtax($companyes,$companyit,1,0);
@@ -701,5 +880,98 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
     	$this->assertEquals(0,$vat1);
     	$this->assertEquals(0,$vat2);
     }
+
+
+    /**
+     * testDolExplodeIntoArray
+     *
+     * @return	void
+     */
+    public function testDolExplodeIntoArray()
+    {
+    	$stringtoexplode='AA=B/B.CC=.EE=FF.HH=GG;.';
+    	$tmp=dolExplodeIntoArray($stringtoexplode,'.','=');
+
+        print __METHOD__." tmp=".json_encode($tmp)."\n";
+        $this->assertEquals('{"AA":"B\/B","CC":"","EE":"FF","HH":"GG;"}',json_encode($tmp));
+    }
+
+	/**
+	 * dol_nl2br
+	 *
+	 * @return void
+	 */
+	public function testDolNl2Br() {
+
+		//String to encode
+		$string = "a\na";
+
+		$this->assertEquals(dol_nl2br($string), "a<br>\na");
+
+		//With $forxml parameter
+		$this->assertEquals(dol_nl2br($string, 0, 1), "a<br />\na");
+
+		//Replacing \n by br
+		$this->assertEquals(dol_nl2br($string, 1), "a<br>a");
+
+		//With $forxml parameter
+		$this->assertEquals(dol_nl2br($string, 1, 1), "a<br />a");
+	}
+
+	/**
+	 * testDolPrice2Num
+	 *
+	 * @return boolean
+	 */
+	public function testDolPrice2Num()
+	{
+		$this->assertEquals(1000, price2num('1 000.0'));
+		$this->assertEquals(1000, price2num('1 000','MT'));
+		$this->assertEquals(1000, price2num('1 000','MU'));
+
+		$this->assertEquals(1000.123456, price2num('1 000.123456'));
+
+		// Round down
+		$this->assertEquals(1000.12, price2num('1 000.123452','MT'));
+		$this->assertEquals(1000.12345, price2num('1 000.123452','MU'),"Test MU");
+
+		// Round up
+		$this->assertEquals(1000.13, price2num('1 000.125456','MT'));
+		$this->assertEquals(1000.12546, price2num('1 000.125456','MU'),"Test MU");
+
+		// Text can't be converted
+		$this->assertEquals('12.4$',price2num('12.4$'));
+		$this->assertEquals('12r.4$',price2num('12r.4$'));
+
+		return true;
+	}
+
+	/**
+	 * testDolGetDate
+	 *
+	 * @return boolean
+	 */
+	public function testDolGetDate()
+	{
+		global $conf;
+
+		$conf->global->MAIN_START_WEEK = 0;
+
+		$tmp=dol_getdate(1);				// 1/1/1970 and 1 second = thirday
+		$this->assertEquals(4, $tmp['wday']);
+
+		$tmp=dol_getdate(24*60*60+1);		// 2/1/1970 and 1 second = friday
+		$this->assertEquals(5, $tmp['wday']);
+
+		$conf->global->MAIN_START_WEEK = 1;
+
+		$tmp=dol_getdate(1);				// 1/1/1970 and 1 second = thirday
+		$this->assertEquals(4, $tmp['wday']);
+
+		$tmp=dol_getdate(24*60*60+1);		// 2/1/1970 and 1 second = friday
+		$this->assertEquals(5, $tmp['wday']);
+
+		return true;
+	}
+
 }
-?>

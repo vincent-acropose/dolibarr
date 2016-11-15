@@ -59,12 +59,12 @@ if ($action == 'update')
     if ($i >= 2)
     {
         $db->commit();
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+	    setEventMessages($langs->trans("SetupSaved"), null, 'mesgs');
     }
     else
     {
         $db->rollback();
-        $mesg="<div class=\"error\">".$db->lasterror()."</div>";
+	    setEventMessages($db->lasterror(), null, 'errors');
     }
 }
 
@@ -76,18 +76,8 @@ if ($action == 'update')
 llxHeader();
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans("ExternalSiteSetup"),$linkback,'setup');
+print load_fiche_titre($langs->trans("ExternalSiteSetup"),$linkback,'title_setup');
 print '<br>';
-
-$h = 0;
-
-$head[$h][0] = DOL_URL_ROOT."/admin/externalsite.php";
-$head[$h][1] = $langs->trans("Miscellaneous");
-$head[$h][2] = 'externalsite';
-$hselected=$h;
-$h++;
-
-dol_fiche_head($head, $hselected, $langs->trans("Module100Name"));
 
 print $langs->trans("Module100Desc")."<br>\n";
 print '<br>';
@@ -109,7 +99,7 @@ $var=!$var;
 print "<tr ".$bc[$var].">";
 print '<td class="fieldrequired">'.$langs->trans("Label")."</td>";
 print "<td><input type=\"text\" class=\"flat\" name=\"EXTERNALSITE_LABEL\" value=\"". (GETPOST('EXTERNALSITE_LABEL','alpha')?GETPOST('EXTERNALSITE_LABEL','alpha'):((empty($conf->global->EXTERNALSITE_LABEL) || $conf->global->EXTERNALSITE_LABEL=='ExternalSite')?'':$conf->global->EXTERNALSITE_LABEL)) . "\" size=\"12\"></td>";
-print "<td>My menu entry</td>";
+print "<td>".$langs->trans("ExampleMyMenuEntry")."</td>";
 print "</tr>";
 
 $var=!$var;
@@ -124,17 +114,12 @@ print "</tr>";
 print "</table>";
 
 
-print '<br><center>';
-print "<input type=\"submit\" name=\"save\" class=\"button\" value=\"".$langs->trans("Save")."\">";
-print "</center>";
+print '<br><div class="center">';
+print '<input type="submit" name="save" class="button" value="'.$langs->trans("Save").'">';
+print '</div>';
 
 print "</form>\n";
-
-
-dol_htmloutput_mesg($mesg);
-
 
 llxFooter();
 
 $db->close();
-?>

@@ -1,3 +1,5 @@
-# Dolibarr language file - es_MX - stocks
-DeStockOnBill=Decrementar los stocks físicos sobre las facturas/notas de crédito a clientes
-ReStockOnBill=Incrementar los stocks físicos sobre las facturas/notas de crédito de proveedores
+# Dolibarr language file - Source file is en_US - stocks
+Location=Ubicación
+StockMustBeEnoughForInvoice=Stock level must be enough to add product/service to invoice (check is done on current real stock when adding a line into invoice whatever is rule for automatic stock change)
+StockMustBeEnoughForOrder=Stock level must be enough to add product/service to order (check is done on current real stock when adding a line into order whatever is rule for automatic stock change)
+StockMustBeEnoughForShipment=Stock level must be enough to add product/service to shipment (check is done on current real stock when adding a line into shipment whatever is rule for automatic stock change)

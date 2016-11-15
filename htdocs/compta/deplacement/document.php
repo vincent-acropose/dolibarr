@@ -72,7 +72,7 @@ $modulepart='trip';
  * Actions
  */
 
-include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_pre_headers.tpl.php';
+include_once DOL_DOCUMENT_ROOT . '/core/actions_linkedfiles.inc.php';
 
 
 /*
@@ -88,13 +88,13 @@ if ($object->id)
 {
 	$object->fetch_thirdparty();
 
-	$head=trip_prepare_head($object, $user);
+	$head=trip_prepare_head($object);
 
 	dol_fiche_head($head, 'documents',  $langs->trans("TripCard"), 0, 'trip');
 
 
 	// Construit liste des fichiers
-	$filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+	$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
 	$totalsize=0;
 	foreach($filearray as $key => $file)
 	{
@@ -134,4 +134,3 @@ else
 llxFooter();
 
 $db->close();
-?>

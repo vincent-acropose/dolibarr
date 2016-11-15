@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 /*
  * Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
@@ -50,7 +50,7 @@ $error=0;
  */
 
 @set_time_limit(0);
-print "***** ".$script_file." (".$version.") pid=".getmypid()." *****\n";
+print "***** ".$script_file." (".$version.") pid=".dol_getmypid()." *****\n";
 dol_syslog($script_file." launched with arg ".join(',',$argv));
 
 $datetimeprev = dol_now();
@@ -70,10 +70,10 @@ if (! isset($argv[1])) {	// Check parameters
 
 
 $withdrawreceipt=new BonPrelevement($db);
+// $conf->global->PRELEVEMENT_CODE_BANQUE and $conf->global->PRELEVEMENT_CODE_GUICHET should be empty
 $result=$withdrawreceipt->create($conf->global->PRELEVEMENT_CODE_BANQUE,$conf->global->PRELEVEMENT_CODE_GUICHET,$argv[1]);
 
 
 $db->close();
 
 exit(0);
-?>

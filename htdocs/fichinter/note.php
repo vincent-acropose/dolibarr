@@ -41,36 +41,25 @@ $result = restrictedArea($user, 'ficheinter', $id, 'fichinter');
 $object = new Fichinter($db);
 $object->fetch($id,$ref);
 
+$permissionnote=$user->rights->ficheinter->creer;	// Used by the include of actions_setnotes.inc.php
 
 /*
  * Actions
  */
 
-if ($action == 'setnote_public' && $user->rights->ficheinter->creer)
-{
-	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES),'_public');
-	if ($result < 0) dol_print_error($db,$object->error);
-}
-
-else if ($action == 'setnote_private' && $user->rights->ficheinter->creer)
-{
-	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_private'), ENT_QUOTES),'_private');
-	if ($result < 0) dol_print_error($db,$object->error);
-}
+include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not includ_once
 
 
 /*
  * View
  */
 
-llxHeader();
+llxHeader('',$langs->trans("Intervention"));
 
 $form = new Form($db);
 
 if ($id > 0 || ! empty($ref))
 {
-	dol_htmloutput_mesg($mesg);
-
 	$societe = new Societe($db);
 	if ($societe->fetch($object->socid))
 	{
@@ -81,12 +70,12 @@ if ($id > 0 || ! empty($ref))
 
 		$linkback = '<a href="'.DOL_URL_ROOT.'/fichinter/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
-		print '<tr><td width="25%">'.$langs->trans('Ref').'</td><td colspan="3">';
+		print '<tr><td class="titlefield">'.$langs->trans('Ref').'</td><td>';
 		print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref');
 		print '</td></tr>';
 
 		// Company
-		print '<tr><td>'.$langs->trans('Company').'</td><td colspan="3">'.$societe->getNomUrl(1).'</td></tr>';
+		print '<tr><td>'.$langs->trans('Company').'</td><td>'.$societe->getNomUrl(1).'</td></tr>';
 
 		print "</table>";
 
@@ -100,4 +89,3 @@ if ($id > 0 || ! empty($ref))
 
 llxFooter();
 $db->close();
-?>

@@ -38,7 +38,9 @@ $showpass=GETPOST('showpass');
  * View
  */
 
-$label=getStaticMember($db, 'label');
+$label=$db::LABEL;
+$type=$db->type;
+
 
 $help_url='EN:Restores|FR:Restaurations|ES:Restauraciones';
 llxHeader('','',$help_url);
@@ -63,16 +65,27 @@ jQuery(document).ready(function() {
 </script>
 <?php
 
-print_fiche_titre($langs->trans("Restore"),'','setup');
+print load_fiche_titre($langs->trans("Restore"),'','title_setup');
 
 print $langs->trans("RestoreDesc",DOL_DATA_ROOT).'<br><br>';
+?>
+<fieldset>
+<legend style="font-size: 3em">1</legend>
+<?php
 print $langs->trans("RestoreDesc2",DOL_DATA_ROOT).'<br><br>';
-print $langs->trans("RestoreDesc3",DOL_DATA_ROOT).'<br><br>';
+?>
+</fieldset>
 
+<br>
+
+<fieldset>
+<legend style="font-size: 3em">2</legend>
+<?php
+print $langs->trans("RestoreDesc3",$dolibarr_main_db_name).'<br><br>';
 ?>
 
-<fieldset id="fieldsetexport">
-<?php print '<legend>'.$langs->trans("DatabaseName").' : <b>'.$dolibarr_main_db_name.'</b></legend>'; ?>
+<?php print $langs->trans("DatabaseName").' : <b>'.$dolibarr_main_db_name.'</b>'; ?><br><br>
+
 <table><tr><td valign="top">
 
 <?php if ($conf->use_javascript_ajax) { ?>
@@ -80,7 +93,7 @@ print $langs->trans("RestoreDesc3",DOL_DATA_ROOT).'<br><br>';
 <fieldset id="exportoptions">
 	<legend><?php echo $langs->trans("ImportMethod"); ?></legend>
     <?php
-    if ($label == 'MySQL')
+    if (in_array($type, array('mysql', 'mysqli')))
     {
     ?>
     <div class="formelementrow">
@@ -89,12 +102,12 @@ print $langs->trans("RestoreDesc3",DOL_DATA_ROOT).'<br><br>';
     </div>
     <?php
     }
-    else if ($label == 'PostgreSQL')
+    else if (in_array($type, array('pgsql')))
     {
     ?>
     <div class="formelementrow">
         <input type="radio" name="what" value="mysql" id="radio_dump_postgresql"<?php echo ($radio_dump=='postgresql_options'?' checked':''); ?> />
-        <label for="radio_dump_postgresql">PostgreSQL Restore (pg_restore)</label>
+        <label for="radio_dump_postgresql">PostgreSQL Restore (pg_restore or psql)</label>
     </div>
     <?php
     }
@@ -112,7 +125,7 @@ print $langs->trans("RestoreDesc3",DOL_DATA_ROOT).'<br><br>';
 
 <div id="div_container_sub_exportoptions">
 <?php
-if ($label == 'MySQL')
+if (in_array($type, array('mysql', 'mysqli')))
 {
 ?>
 	<fieldset id="mysql_options">
@@ -146,7 +159,7 @@ if ($label == 'MySQL')
     </fieldset>
 <?php
 }
-else if ($label == 'PostgreSQL')
+else if (in_array($type, array('pgsql')))
 {
 ?>
     <fieldset id="postgresql_options">
@@ -170,6 +183,9 @@ else if ($label == 'PostgreSQL')
     }*/
     $paramcrypted.=" -W";
     $paramclear.=" -W";
+    // With psql:
+    $paramcrypted.=" -f";
+    $paramclear.=" -f";
 
     echo $langs->trans("ImportPostgreSqlDesc");
     print '<br>';
@@ -194,4 +210,3 @@ else if ($label == 'PostgreSQL')
 llxFooter();
 
 $db->close();
-?>

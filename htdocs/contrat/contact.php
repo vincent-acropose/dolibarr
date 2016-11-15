@@ -67,15 +67,14 @@ if ($action == 'addcontact' && $user->rights->contrat->creer)
 	}
 	else
 	{
-		if ($object->error == 'DB_ERROR_RECORD_ALREADY_EXISTS')
-		{
+		if ($object->error == 'DB_ERROR_RECORD_ALREADY_EXISTS') {
 			$langs->load("errors");
-			$mesg = '<div class="error">'.$langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType").'</div>';
+			$msg = $langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType");
+		} else {
+			$mesg = $object->error;
 		}
-		else
-		{
-			$mesg = '<div class="error">'.$object->error.'</div>';
-		}
+
+		setEventMessages($mesg, null, 'errors');
 	}
 }
 
@@ -110,14 +109,12 @@ if ($action == 'deletecontact' && $user->rights->contrat->creer)
  * View
  */
 
-llxHeader('', $langs->trans("ContractCard"), "Contrat");
+llxHeader('',$langs->trans("Contract"),"");
 
 $form = new Form($db);
 $formcompany= new FormCompany($db);
 $contactstatic=new Contact($db);
 $userstatic=new User($db);
-
-dol_htmloutput_mesg($mesg);
 
 /* *************************************************************************** */
 /*                                                                             */
@@ -129,8 +126,6 @@ if ($id > 0 || ! empty($ref))
 {
 	if ($object->fetch($id, $ref) > 0)
 	{
-		dol_htmloutput_mesg($mesg);
-
 		$object->fetch_thirdparty();
 
 	    $head = contract_prepare_head($object);
@@ -144,10 +139,10 @@ if ($id > 0 || ! empty($ref))
 		 */
 		print '<table class="border" width="100%">';
 
-		$linkback = '<a href="'.DOL_URL_ROOT.'/contrat/liste.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
+		$linkback = '<a href="'.DOL_URL_ROOT.'/contrat/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
 		// Reference du contrat
-		print '<tr><td width="25%">'.$langs->trans("Ref").'</td><td colspan="3">';
+		print '<tr><td class="titlefield">'.$langs->trans("Ref").'</td><td colspan="3">';
 		print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref', '');
 		print "</td></tr>";
 
@@ -185,4 +180,3 @@ if ($id > 0 || ! empty($ref))
 
 llxFooter();
 $db->close();
-?>

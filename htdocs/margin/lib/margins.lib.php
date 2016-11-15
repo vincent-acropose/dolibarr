@@ -1,5 +1,7 @@
 <?php
-/* Copyright (C) 2012	Christophe Battarel	<christophe.battarel@altairis.fr>
+/* Copyright (C) 2012      Christophe Battarel <christophe.battarel@altairis.fr>
+ * Copyright (C) 2014-2015 Marcos García       <marcosgdf@gmail.com>
+ * Copyright (C) 2016	   Florian Henry       <florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,26 +58,43 @@ function marges_admin_prepare_head()
  */
 function marges_prepare_head()
 {
-	global $langs, $conf;
-	$langs->load("marges@marges");
+	global $langs, $conf, $user;
+	$langs->load("margins");
 
 	$h = 0;
 	$head = array();
 
-	$head[$h][0] = DOL_URL_ROOT."/margin/productMargins.php";
-	$head[$h][1] = $langs->trans("ProductMargins");
-	$head[$h][2] = 'productMargins';
-	$h++;
+	if ($user->rights->produit->lire) {
+		$head[$h][0] = DOL_URL_ROOT."/margin/productMargins.php";
+		$head[$h][1] = $langs->trans("ProductMargins");
+		$head[$h][2] = 'productMargins';
+		$h++;
+	}
 
-	$head[$h][0] = DOL_URL_ROOT."/margin/customerMargins.php";
-	$head[$h][1] = $langs->trans("CustomerMargins");
-	$head[$h][2] = 'customerMargins';
-	$h++;
+	if ($user->rights->societe->lire) {
+		$head[$h][0] = DOL_URL_ROOT."/margin/customerMargins.php";
+		$head[$h][1] = $langs->trans("CustomerMargins");
+		$head[$h][2] = 'customerMargins';
+		$h++;
+	}
+
+	if ($user->rights->margins->read->all) {
+		$title = 'UserMargins';
+	} else {
+		$title = 'SalesRepresentativeMargins';
+	}
 
 	$head[$h][0] = DOL_URL_ROOT."/margin/agentMargins.php";
-	$head[$h][1] = $langs->trans("AgentMargins");
+	$head[$h][1] = $langs->trans($title);
 	$head[$h][2] = 'agentMargins';
-	$h++;
+
+	
+	if ($user->rights->margins->creer) {
+		$h++;
+		$head[$h][0] = DOL_URL_ROOT."/margin/checkMargins.php";
+		$head[$h][1] = $langs->trans('CheckMargins');
+		$head[$h][2] = 'checkMargins';
+	}
 
 	return $head;
 }
@@ -99,10 +118,10 @@ function getMarginInfos($pvht, $remise_percent, $tva_tx, $localtax1_tx, $localta
 	$marge_tx_ret='';
 	$marque_tx_ret='';
 
-	if ($fk_pa > 0) {
+	if ($fk_pa > 0 && empty($paht)) {
 		require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.product.class.php';
 		$product = new ProductFournisseur($db);
-		if ($product->fetch_product_fournisseur_price($fk_pa)) 
+		if ($product->fetch_product_fournisseur_price($fk_pa))
 		{
 			$paht_ret = $product->fourn_unitprice * (1 - $product->fourn_remise_percent / 100);
 			if ($conf->global->MARGIN_TYPE == "2" && $product->fourn_unitcharges > 0)
@@ -113,11 +132,11 @@ function getMarginInfos($pvht, $remise_percent, $tva_tx, $localtax1_tx, $localta
 			$paht_ret = $paht;
 		}
 	}
-	else 
+	else
 	{
 		$paht_ret	= $paht;
 	}
-	
+
 	// Calculate selling unit price including line discount
 	// We don't use calculate_price, because this function is dedicated to calculation of total with accuracy of total. We need an accuracy of a unit price.
 	// Also we must not apply rounding on non decimal rule defined by option MAIN_ROUNDING_RULE_TOT
@@ -139,4 +158,3 @@ function getMarginInfos($pvht, $remise_percent, $tva_tx, $localtax1_tx, $localta
 
 	return array($paht_ret, $marge_tx_ret, $marque_tx_ret);
 }
-?>

@@ -1,5 +1,2 @@
-# Dolibarr language file - es_AR - companies
-CompanyHasCreditNote=Este cliente tiene <b>%s %s</b> notas de crédito/anticipos disponibles
-VATIntra=CUIT
-VATIntraShort=CUIT
-VATIntraVeryShort=CUIT
+# Dolibarr language file - Source file is en_US - companies
+YouMustCreateContactFirst=To be able to add email notifications, you must first define contacts with valid emails for the third party

@@ -38,11 +38,11 @@ if (! $user->admin)
 $form = new Form($db);
 
 $title=$langs->trans("SystemToolsArea");
-if (GETPOST('leftmenu') == 'modulesadmintools') $title=$langs->trans("ModulesSystemTools");
+if (GETPOST('leftmenu') == 'admintools') $title=$langs->trans("ModulesSystemTools");
 
-llxHeader(array(),$title);
+llxHeader('', $title);
 
-print_fiche_titre($title,'','setup');
+print load_fiche_titre($title,'','title_setup');
 
 print $langs->trans("SystemToolsAreaDesc").'<br>';
 print "<br>";
@@ -53,8 +53,9 @@ print '<br><br>';
 
 
 // Show logo
-print '<center><div class="logo_setup"></div></center>';
+//print '<div class="center"><div class="logo_setup"></div></div>';
+print '<center><div class="logo_setup"></div></center>';				// For a reason I don't know, the div class="center does not works, we must keep the <center>
+
 
 llxFooter();
 $db->close();
-?>

@@ -1,13 +1,11 @@
 # Dolibarr language file - Source file is en_US - deliveries
 Delivery=Afhending
-Deliveries=Sendingar
+DeliveryRef=Ref Delivery
 DeliveryCard=Afhending kort
 DeliveryOrder=Sending röð
-DeliveryOrders=Sending pantana
 DeliveryDate=Fæðingardag
-DeliveryDateShort=Skila. dagsetning
 CreateDeliveryOrder=Búa til afhendingar til
-QtyDelivered=Magn afhentir
+DeliveryStateSaved=Delivery state saved
 SetDeliveryDate=Setja skipum dagsetningu
 ValidateDeliveryReceipt=Staðfesta sending berst
 ValidateDeliveryReceiptConfirm=Ertu viss um að þú viljir að sannprófa þetta sending berst?
@@ -16,6 +14,9 @@ DeleteDeliveryReceiptConfirm=Ertu viss um að þú viljir eyða pósti móttöku
 DeliveryMethod=Birtingarmáti
 TrackingNumber=Rekja spor númer
 DeliveryNotValidated=Afhending er ekki fullgilt
+StatusDeliveryCanceled=Canceled
+StatusDeliveryDraft=Draft
+StatusDeliveryValidated=Received
 # merou PDF model
 NameAndSignature=Nafn og Undirskrift:
 ToAndDate=To___________________________________ á ____ / _____ / __________
@@ -23,3 +24,7 @@ GoodStatusDeclaration=Hafa fengið vöruna hér að ofan í góðu ásigkomulagi
 Deliverer=Frelsari:
 Sender=Sendandi
 Recipient=Viðtakandi
+ErrorStockIsNotEnough=There's not enough stock
+Shippable=Shippable
+NonShippable=Not Shippable
+ShowReceiving=Show delivery receipt

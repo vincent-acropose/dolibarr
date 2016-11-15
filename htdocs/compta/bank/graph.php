@@ -46,7 +46,6 @@ $result=restrictedArea($user,'banque',$id,'bank_account&bank_account','','',$fie
 $account=$_GET["account"];
 $mode='standard';
 if (isset($_GET["mode"]) && $_GET["mode"] == 'showalltime') $mode='showalltime';
-$mesg = '';
 $error=0;
 
 
@@ -82,7 +81,7 @@ if ($result < 0)
 {
 	$langs->load("errors");
 	$error++;
-	$mesg='<div class="error">'.$langs->trans("ErrorFailedToCreateDir").'</div>';
+	setEventMessages($langs->trans("ErrorFailedToCreateDir"), null, 'errors');
 }
 else
 {
@@ -91,7 +90,7 @@ else
 	$sql.= " FROM ".MAIN_DB_PREFIX."bank as b";
 	$sql.= ", ".MAIN_DB_PREFIX."bank_account as ba";
 	$sql.= " WHERE b.fk_account = ba.rowid";
-	$sql.= " AND ba.entity = ".$conf->entity;
+	$sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
 	if ($account && $_GET["option"]!='all') $sql.= " AND b.fk_account IN (".$account.")";
 
 	$resql = $db->query($sql);
@@ -114,7 +113,7 @@ else
 
 	if ($mode == 'standard')
 	{
-		// Chargement du tableau $amounts
+		// Loading table $amounts
 		$amounts = array();
 
 		$monthnext = $month+1;
@@ -130,7 +129,7 @@ else
 		$sql.= " FROM ".MAIN_DB_PREFIX."bank as b";
 		$sql.= ", ".MAIN_DB_PREFIX."bank_account as ba";
 		$sql.= " WHERE b.fk_account = ba.rowid";
-		$sql.= " AND ba.entity = ".$conf->entity;
+		$sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
 		$sql.= " AND b.datev >= '".$year."-".$month."-01 00:00:00'";
 		$sql.= " AND b.datev < '".$yearnext."-".$monthnext."-01 00:00:00'";
 		if ($account && $_GET["option"]!='all') $sql.= " AND b.fk_account IN (".$account.")";
@@ -154,14 +153,14 @@ else
 			dol_print_error($db);
 		}
 
-		// Calcul de $solde avant le debut du graphe
+		// Calculation of $solde before the start of the graph
 		$solde = 0;
 
 		$sql = "SELECT SUM(b.amount)";
 		$sql.= " FROM ".MAIN_DB_PREFIX."bank as b";
 		$sql.= ", ".MAIN_DB_PREFIX."bank_account as ba";
 		$sql.= " WHERE b.fk_account = ba.rowid";
-		$sql.= " AND ba.entity = ".$conf->entity;
+		$sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
 		$sql.= " AND b.datev < '".$year."-".sprintf("%02s",$month)."-01'";
 		if ($account && $_GET["option"]!='all') $sql.= " AND b.fk_account IN (".$account.")";
 
@@ -266,14 +265,14 @@ else
 
 	if ($mode == 'standard')
 	{
-		// Chargement du tableau $amounts
+		// Loading table $amounts
 		$amounts = array();
 		$sql = "SELECT date_format(b.datev,'%Y%m%d')";
 		$sql.= ", SUM(b.amount)";
 		$sql.= " FROM ".MAIN_DB_PREFIX."bank as b";
 		$sql.= ", ".MAIN_DB_PREFIX."bank_account as ba";
 		$sql.= " WHERE b.fk_account = ba.rowid";
-		$sql.= " AND ba.entity = ".$conf->entity;
+		$sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
 		$sql.= " AND b.datev >= '".$year."-01-01 00:00:00'";
 		$sql.= " AND b.datev <= '".$year."-12-31 23:59:59'";
 		if ($account && $_GET["option"]!='all') $sql.= " AND b.fk_account IN (".$account.")";
@@ -297,14 +296,14 @@ else
 			dol_print_error($db);
 		}
 
-		// Calcul de $solde avant le debut du graphe
+		// Calculation of $solde before the start of the graph
 		$solde = 0;
 
 		$sql = "SELECT SUM(b.amount)";
 		$sql.= " FROM ".MAIN_DB_PREFIX."bank as b";
 		$sql.= ", ".MAIN_DB_PREFIX."bank_account as ba";
 		$sql.= " WHERE b.fk_account = ba.rowid";
-		$sql.= " AND ba.entity = ".$conf->entity;
+		$sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
 		$sql.= " AND b.datev < '".$year."-01-01'";
 		if ($account && $_GET["option"]!='all') $sql.= " AND b.fk_account IN (".$account.")";
 
@@ -404,7 +403,7 @@ else
 
 	if ($mode == 'showalltime')
 	{
-		// Chargement du tableau $amounts
+		// Loading table $amounts
 		$amounts = array();
 
 		$sql = "SELECT date_format(b.datev,'%Y%m%d')";
@@ -412,7 +411,7 @@ else
 		$sql.= " FROM ".MAIN_DB_PREFIX."bank as b";
 		$sql.= ", ".MAIN_DB_PREFIX."bank_account as ba";
 		$sql.= " WHERE b.fk_account = ba.rowid";
-		$sql.= " AND ba.entity = ".$conf->entity;
+		$sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
 		if ($account && $_GET["option"]!='all') $sql.= " AND b.fk_account IN (".$account.")";
 		$sql.= " GROUP BY date_format(b.datev,'%Y%m%d')";
 
@@ -442,7 +441,7 @@ else
 		$datas = array();
 		$datamin = array();
 		$dataall = array();
-		
+
 		$subtotal = 0;
 
 		$day = $min;
@@ -484,7 +483,7 @@ else
 			if ($acct->min_desired) array_push($graph_datas[$i],$datamin[$i]);
 			if ($acct->min_allowed) array_push($graph_datas[$i],$dataall[$i]);
 		}
-		
+
 		$px3 = new DolGraph();
 		$px3->SetData($graph_datas);
 		$arraylegends=array($langs->transnoentities("Balance"));
@@ -535,7 +534,7 @@ else
 		$sql .= " FROM ".MAIN_DB_PREFIX."bank as b";
 		$sql.= ", ".MAIN_DB_PREFIX."bank_account as ba";
 		$sql.= " WHERE b.fk_account = ba.rowid";
-		$sql.= " AND ba.entity = ".$conf->entity;
+		$sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
 		$sql.= " AND b.datev >= '".$year."-".$month."-01 00:00:00'";
 		$sql.= " AND b.datev < '".$yearnext."-".$monthnext."-01 00:00:00'";
 		$sql.= " AND b.amount > 0";
@@ -573,7 +572,7 @@ else
 		$sql .= " FROM ".MAIN_DB_PREFIX."bank as b";
 		$sql.= ", ".MAIN_DB_PREFIX."bank_account as ba";
 		$sql.= " WHERE b.fk_account = ba.rowid";
-		$sql.= " AND ba.entity = ".$conf->entity;
+		$sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
 		$sql.= " AND b.datev >= '".$year."-".$month."-01 00:00:00'";
 		$sql.= " AND b.datev < '".$yearnext."-".$monthnext."-01 00:00:00'";
 		$sql.= " AND b.amount < 0";
@@ -653,7 +652,7 @@ else
 		$sql.= " FROM ".MAIN_DB_PREFIX."bank as b";
 		$sql.= ", ".MAIN_DB_PREFIX."bank_account as ba";
 		$sql.= " WHERE b.fk_account = ba.rowid";
-		$sql.= " AND ba.entity = ".$conf->entity;
+		$sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
 		$sql.= " AND b.datev >= '".$year."-01-01 00:00:00'";
 		$sql.= " AND b.datev <= '".$year."-12-31 23:59:59'";
 		$sql.= " AND b.amount > 0";
@@ -682,7 +681,7 @@ else
 		$sql.= " FROM ".MAIN_DB_PREFIX."bank as b";
 		$sql.= ", ".MAIN_DB_PREFIX."bank_account as ba";
 		$sql.= " WHERE b.fk_account = ba.rowid";
-		$sql.= " AND ba.entity = ".$conf->entity;
+		$sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
 		$sql.= " AND b.datev >= '".$year."-01-01 00:00:00'";
 		$sql.= " AND b.datev <= '".$year."-12-31 23:59:59'";
 		$sql.= " AND b.amount < 0";
@@ -756,14 +755,12 @@ else
 $head=bank_prepare_head($acct);
 dol_fiche_head($head,'graph',$langs->trans("FinancialAccount"),0,'account');
 
-if ($mesg) print $mesg.'<br>';
-
 print '<table class="border" width="100%">';
 
 $linkback = '<a href="'.DOL_URL_ROOT.'/compta/bank/index.php">'.$langs->trans("BackToList").'</a>';
 
 // Ref
-print '<tr><td valign="top" width="25%">'.$langs->trans("Ref").'</td>';
+print '<tr><td width="25%">'.$langs->trans("Ref").'</td>';
 print '<td colspan="3">';
 if ($account)
 {
@@ -802,7 +799,7 @@ else
 print '</td></tr>';
 
 // Label
-print '<tr><td valign="top">'.$langs->trans("Label").'</td>';
+print '<tr><td>'.$langs->trans("Label").'</td>';
 print '<td colspan="3">';
 if ($account && $_GET["option"]!='all')
 {
@@ -815,6 +812,9 @@ else
 print '</td></tr>';
 
 print '</table>';
+
+dol_fiche_end();
+
 
 print '<table class="notopnoleftnoright" width="100%">';
 
@@ -844,8 +844,8 @@ if ($mode == 'standard')
 	if ($nextmonth > 12) { $nextmonth=1; $nextyear++; }
 
 	// For month
-	$lien="<a href='".$_SERVER["PHP_SELF"]."?account=".$account.($_GET["option"]!='all'?'':'&option=all')."&year=".$prevyear."&month=".$prevmonth."'>".img_previous()."</a> ".$langs->trans("Month")." <a href='".$_SERVER["PHP_SELF"]."?account=".$account."&year=".$nextyear."&month=".$nextmonth."'>".img_next()."</a>";
-	print '<tr><td align="right">'.$lien.'</td></tr>';
+	$link="<a href='".$_SERVER["PHP_SELF"]."?account=".$account.($_GET["option"]!='all'?'':'&option=all')."&year=".$prevyear."&month=".$prevmonth."'>".img_previous()."</a> ".$langs->trans("Month")." <a href='".$_SERVER["PHP_SELF"]."?account=".$account."&year=".$nextyear."&month=".$nextmonth."'>".img_next()."</a>";
+	print '<tr><td align="right">'.$link.'</td></tr>';
 
 	print '<tr><td align="center">';
 	$file = "movement".$account."-".$year.$month.".png";
@@ -858,8 +858,8 @@ if ($mode == 'standard')
 
 	// For year
 	$prevyear=$year-1;$nextyear=$year+1;
-	$lien="<a href='".$_SERVER["PHP_SELF"]."?account=".$account.($_GET["option"]!='all'?'':'&option=all')."&year=".($prevyear)."'>".img_previous()."</a> ".$langs->trans("Year")." <a href='".$_SERVER["PHP_SELF"]."?account=".$account."&year=".($nextyear)."'>".img_next()."</a>";
-	print '<tr><td align="right">'.$lien.'</td></tr>';
+	$link="<a href='".$_SERVER["PHP_SELF"]."?account=".$account.($_GET["option"]!='all'?'':'&option=all')."&year=".($prevyear)."'>".img_previous()."</a> ".$langs->trans("Year")." <a href='".$_SERVER["PHP_SELF"]."?account=".$account."&year=".($nextyear)."'>".img_next()."</a>";
+	print '<tr><td align="right">'.$link.'</td></tr>';
 
 	print '<tr><td align="center">';
 	print $show5;
@@ -879,10 +879,7 @@ if ($mode == 'showalltime')
 
 print '</table>';
 
-print "\n</div>\n";
-
 
 llxFooter();
 
 $db->close();
-?>

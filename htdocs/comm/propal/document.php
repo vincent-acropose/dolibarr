@@ -34,6 +34,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 
 $langs->load('compta');
 $langs->load('other');
+$langs->load('companies');
 
 $action		= GETPOST('action','alpha');
 $confirm	= GETPOST('confirm','alpha');
@@ -66,7 +67,7 @@ if ($object->id > 0)
 {
 	$object->fetch_thirdparty();
 	$upload_dir = $conf->propal->dir_output.'/'.dol_sanitizeFileName($object->ref);
-	include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_pre_headers.tpl.php';
+	include_once DOL_DOCUMENT_ROOT . '/core/actions_linkedfiles.inc.php';
 }
 
 /*
@@ -91,7 +92,7 @@ if ($object->id > 0)
 	dol_fiche_head($head, 'document', $langs->trans('Proposal'), 0, 'propal');
 
 	// Construit liste des fichiers
-	$filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+	$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
 	$totalsize=0;
 	foreach($filearray as $key => $file)
 	{
@@ -142,4 +143,3 @@ else
 
 llxFooter();
 $db->close();
-?>

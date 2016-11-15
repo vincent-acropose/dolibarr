@@ -35,7 +35,7 @@ $id = GETPOST('id','int');
 
 // Security check
 if ($user->societe_id) $socid=$user->societe_id;
-$result = restrictedArea($user, 'ficheinter', $fichinterid, 'fichinter');
+$result = restrictedArea($user, 'ficheinter', $id, 'fichinter');
 
 $object = new Fichinter($db);
 
@@ -49,7 +49,7 @@ if ($id > 0)
  *	View
  */
 
-llxHeader();
+llxHeader('',$langs->trans("Intervention"));
 
 $societe = new Societe($db);
 $societe->fetch($object->socid);
@@ -65,7 +65,5 @@ print '</td></tr></table>';
 
 print '</div>';
 
-$db->close();
-
 llxFooter();
-?>
+$db->close();

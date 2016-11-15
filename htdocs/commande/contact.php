@@ -2,7 +2,7 @@
 /* Copyright (C) 2005      Patrick Rouillon     <patrick@rouillon.net>
  * Copyright (C) 2005-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2011-2012 Philippe Grand       <philippe.grand@atoo-net.com>
+ * Copyright (C) 2011-2015 Philippe Grand       <philippe.grand@atoo-net.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,11 +69,11 @@ if ($action == 'addcontact' && $user->rights->commande->creer)
 		if ($object->error == 'DB_ERROR_RECORD_ALREADY_EXISTS')
 		{
 			$langs->load("errors");
-			$mesg = '<div class="error">'.$langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType").'</div>';
+			setEventMessages($langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType"), null, 'errors');
 		}
 		else
 		{
-			$mesg = '<div class="error">'.$object->error.'</div>';
+			setEventMessages($object->error, $object->errors, 'errors');
 		}
 	}
 }
@@ -132,7 +132,6 @@ $userstatic=new User($db);
 /* Mode vue et edition                                                         */
 /*                                                                             */
 /* *************************************************************************** */
-dol_htmloutput_mesg($mesg);
 
 if ($id > 0 || ! empty($ref))
 {
@@ -153,10 +152,10 @@ if ($id > 0 || ! empty($ref))
 		*/
 		print '<table class="border" width="100%">';
 
-		$linkback = '<a href="'.DOL_URL_ROOT.'/commande/liste.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
+		$linkback = '<a href="'.DOL_URL_ROOT.'/commande/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
 		// Ref
-		print '<tr><td width="18%">'.$langs->trans("Ref").'</td><td colspan="3">';
+		print '<tr><td class="titlefield">'.$langs->trans("Ref").'</td><td colspan="3">';
 		print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref');
 		print "</td></tr>";
 
@@ -172,10 +171,10 @@ if ($id > 0 || ! empty($ref))
 		print '</tr>';
 
 		// Customer
-		if (is_null($object->client))	$object->fetch_thirdparty();
+		if (is_null($object->thirdparty))	$object->fetch_thirdparty();
 
 		print "<tr><td>".$langs->trans("Company")."</td>";
-		print '<td colspan="3">'.$object->client->getNomUrl(1).'</td></tr>';
+		print '<td colspan="3">'.$object->thirdparty->getNomUrl(1).'</td></tr>';
 
 		// Delivery address
 		if (! empty($conf->global->SOCIETE_ADDRESSES_MANAGEMENT))
@@ -222,6 +221,5 @@ if ($id > 0 || ! empty($ref))
 }
 
 
-$db->close();
 llxFooter();
-?>
+$db->close();

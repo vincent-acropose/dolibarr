@@ -2,6 +2,8 @@
 /* Copyright (C) 2006-2007	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2007		Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2012		Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2016		   Gilles Poirier 		   <glgpoirier@gmail.com>
+ 
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,25 +30,27 @@
  * Prepare array with list of tabs
  *
  * @param   Object	$object		Object related to tabs
- * @return  array				Array of tabs to shoc
+ * @return  array				Array of tabs to show
  */
 function fichinter_prepare_head($object)
 {
-	global $langs, $conf, $user;
+	global $db, $langs, $conf, $user;
 	$langs->load("fichinter");
 
 	$h = 0;
 	$head = array();
 
-	$head[$h][0] = DOL_URL_ROOT.'/fichinter/fiche.php?id='.$object->id;
+	$head[$h][0] = DOL_URL_ROOT.'/fichinter/card.php?id='.$object->id;
 	$head[$h][1] = $langs->trans("Card");
 	$head[$h][2] = 'card';
 	$h++;
 
 	if (empty($conf->global->MAIN_DISABLE_CONTACTS_TAB))
 	{
-		$head[$h][0] = DOL_URL_ROOT.'/fichinter/contact.php?id='.$object->id;
+	    $nbContact = count($object->liste_contact(-1,'internal')) + count($object->liste_contact(-1,'external'));
+	    $head[$h][0] = DOL_URL_ROOT.'/fichinter/contact.php?id='.$object->id;
 		$head[$h][1] = $langs->trans('InterventionContact');
+		if ($nbContact > 0) $head[$h][1].= ' <span class="badge">'.$nbContact.'</span>';
 		$head[$h][2] = 'contact';
 		$h++;
 	}
@@ -65,6 +69,15 @@ function fichinter_prepare_head($object)
     // $this->tabs = array('entity:-tabname);   												to remove a tab
     complete_head_from_modules($conf,$langs,$object,$head,$h,'intervention');
 
+	// Tab to link resources
+	if ($conf->resource->enabled)
+	{
+		$head[$h][0] = DOL_URL_ROOT.'/resource/element_resource.php?element=fichinter&element_id='.$object->id;
+		$head[$h][1] = $langs->trans("Resources");
+		$head[$h][2] = 'resource';
+		$h++;
+	}
+
     if (empty($conf->global->MAIN_DISABLE_NOTES_TAB))
     {
     	$nbNote = 0;
@@ -72,17 +85,19 @@ function fichinter_prepare_head($object)
 		if(!empty($object->note_public)) $nbNote++;
     	$head[$h][0] = DOL_URL_ROOT.'/fichinter/note.php?id='.$object->id;
     	$head[$h][1] = $langs->trans('Notes');
-		if($nbNote > 0) $head[$h][1].= ' ('.$nbNote.')';
+		if ($nbNote > 0) $head[$h][1].= ' <span class="badge">'.$nbNote.'</span>';
     	$head[$h][2] = 'note';
     	$h++;
     }
 
 	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+    require_once DOL_DOCUMENT_ROOT.'/core/class/link.class.php';
 	$upload_dir = $conf->ficheinter->dir_output . "/" . dol_sanitizeFileName($object->ref);
-	$nbFiles = count(dol_dir_list($upload_dir,'files'));
+	$nbFiles = count(dol_dir_list($upload_dir,'files',0,'','(\.meta|_preview\.png)$'));
+    $nbLinks=Link::count($db, $object->element, $object->id);
 	$head[$h][0] = DOL_URL_ROOT.'/fichinter/document.php?id='.$object->id;
 	$head[$h][1] = $langs->trans("Documents");
-	if($nbFiles > 0) $head[$h][1].= ' ('.$nbFiles.')';
+	if (($nbFiles+$nbLinks) > 0) $head[$h][1].= ' <span class="badge">'.($nbFiles+$nbLinks).'</span>';
 	$head[$h][2] = 'documents';
 	$h++;
 
@@ -119,19 +134,23 @@ function fichinter_admin_prepare_head()
 	// Entries must be declared in modules descriptor with line
 	// $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
 	// $this->tabs = array('entity:-tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to remove a tab
-	complete_head_from_modules($conf,$langs,$object,$head,$h,'fichinter_admin');
+	complete_head_from_modules($conf,$langs,null,$head,$h,'fichinter_admin');
 
 	$head[$h][0] = DOL_URL_ROOT.'/fichinter/admin/fichinter_extrafields.php';
 	$head[$h][1] = $langs->trans("ExtraFields");
     $head[$h][2] = 'attributes';
     $h++;
 
+	$head[$h][0] = DOL_URL_ROOT.'/fichinter/admin/fichinterdet_extrafields.php';
+	$head[$h][1] = $langs->trans("ExtraFieldsLines");
+    $head[$h][2] = 'attributesdet';
+    $h++;
 
 
-	complete_head_from_modules($conf,$langs,$object,$head,$h,'fichinter_admin','remove');
+
+	complete_head_from_modules($conf,$langs,null,$head,$h,'fichinter_admin','remove');
 
 		return $head;
 }
 
 
-?>

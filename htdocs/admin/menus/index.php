@@ -43,7 +43,6 @@ foreach($dirmenus as $dirmenu)
 
 $action=GETPOST('action','alpha');
 $confirm=GETPOST('confirm','alpha');
-$mesg=GETPOST('mesg');
 
 $menu_handler_top=$conf->global->MAIN_MENU_STANDARD;
 $menu_handler_smartphone=$conf->global->MAIN_MENU_SMARTPHONE;
@@ -187,7 +186,9 @@ elseif ($action == 'confirm_delete' && $confirm == 'yes')
 	{
 		$db->commit();
 
-		header("Location: ".DOL_URL_ROOT.'/admin/menus/index.php?menu_handler='.$menu_handler.'&mesg='.urlencode($langs->trans("MenuDeleted")));
+		setEventMessages($langs->trans("MenuDeleted"), null, 'mesgs');
+
+		header("Location: ".DOL_URL_ROOT.'/admin/menus/index.php?menu_handler='.$menu_handler);
 		exit ;
 	}
 	else
@@ -213,10 +214,7 @@ $arrayofcss=array('/includes/jquery/plugins/jquerytreeview/jquery.treeview.css')
 llxHeader('',$langs->trans("Menus"),'','',0,0,$arrayofjs,$arrayofcss);
 
 
-print_fiche_titre($langs->trans("Menus"),'','setup');
-
-
-dol_htmloutput_mesg($mesg);
+print load_fiche_titre($langs->trans("Menus"),'','title_setup');
 
 
 $h = 0;
@@ -264,7 +262,7 @@ print '</form>';
 
 print '<br>';
 
-print '<table class="border" width="100%">';
+print '<table class="noborder centpercent">';
 
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("TreeMenuPersonalized").'</td>';
@@ -291,20 +289,20 @@ if ($conf->use_javascript_ajax)
 	  - la chaine a afficher
 	ie: data[]= array (index, index parent, chaine )
 	*/
+    
 	//il faut d'abord declarer un element racine de l'arbre
 
-	$data[] = array('rowid'=>0,'fk_menu'=>-1,'title'=>"racine",'mainmenu'=>'','leftmenu'=>'','fk_mainmenu'=>'','fk_leftmenu'=>'');
-
+    $data[] = array('rowid'=>0,'fk_menu'=>-1,'title'=>"racine",'mainmenu'=>'','leftmenu'=>'','fk_mainmenu'=>'','fk_leftmenu'=>'');
+    
 	//puis tous les elements enfants
 
-	$sql = "SELECT m.rowid, m.titre, m.langs, m.mainmenu, m.leftmenu, m.fk_menu, m.fk_mainmenu, m.fk_leftmenu";
+	$sql = "SELECT m.rowid, m.titre, m.langs, m.mainmenu, m.leftmenu, m.fk_menu, m.fk_mainmenu, m.fk_leftmenu, m.module";
 	$sql.= " FROM ".MAIN_DB_PREFIX."menu as m";
 	$sql.= " WHERE menu_handler = '".$menu_handler_to_search."'";
 	$sql.= " AND entity = ".$conf->entity;
-	$sql.= " AND fk_menu >= 0";
+	//$sql.= " AND fk_menu >= 0";
 	$sql.= " ORDER BY m.position, m.rowid";		// Order is position then rowid (because we need a sort criteria when position is same)
 
-	dol_syslog("sql=".$sql);
 	$res  = $db->query($sql);
 	if ($res)
 	{
@@ -317,9 +315,10 @@ if ($conf->use_javascript_ajax)
 			$titre = $langs->trans($menu['titre']);
 			$data[] = array(
 				'rowid'=>$menu['rowid'],
+			    'module'=>$menu['module'],
 				'fk_menu'=>$menu['fk_menu'],
 				'title'=>$titre,
-				'mainmenu'=>$menu['mainmenu'],
+			    'mainmenu'=>$menu['mainmenu'],
 				'leftmenu'=>$menu['leftmenu'],
 				'fk_mainmenu'=>$menu['fk_mainmenu'],
 				'fk_leftmenu'=>$menu['fk_leftmenu'],
@@ -327,8 +326,9 @@ if ($conf->use_javascript_ajax)
 						'<strong> &nbsp; <a href="edit.php?menu_handler='.$menu_handler_to_search.'&action=edit&menuId='.$menu['rowid'].'">'.$titre.'</a></strong>'.
 						'</td><td align="right">'.
 						'<a href="edit.php?menu_handler='.$menu_handler_to_search.'&action=edit&menuId='.$menu['rowid'].'">'.img_edit('default',0,'class="menuEdit" id="edit'.$menu['rowid'].'"').'</a> '.
-						'<a href="edit.php?menu_handler='.$menu_handler_to_search.'&action=create&menuId='.$menu['rowid'].'">'.img_edit_add('default',0,'class="menuNew" id="new'.$menu['rowid'].'"').'</a> '.
-						'<a href="index.php?menu_handler='.$menu_handler_to_search.'&action=delete&menuId='.$menu['rowid'].'">'.img_delete('default',0,'class="menuDel" id="del'.$menu['rowid'].'"').'</a> '.
+						'<a href="edit.php?menu_handler='.$menu_handler_to_search.'&action=create&menuId='.$menu['rowid'].'">'.img_edit_add('default').'</a> '.
+						'<a href="index.php?menu_handler='.$menu_handler_to_search.'&action=delete&menuId='.$menu['rowid'].'">'.img_delete('default').'</a> '.
+						'&nbsp; &nbsp; &nbsp;'.
 						'<a href="index.php?menu_handler='.$menu_handler_to_search.'&action=up&menuId='.$menu['rowid'].'">'.img_picto("Monter","1uparrow").'</a><a href="index.php?menu_handler='.$menu_handler_to_search.'&action=down&menuId='.$menu['rowid'].'">'.img_picto("Descendre","1downarrow").'</a>'.
 						'</td></tr></table>'
 			);
@@ -336,17 +336,54 @@ if ($conf->use_javascript_ajax)
 		}
 	}
 
+	global $tree_recur_alreadyadded;       // This var was def into tree_recur
+	
 	// Appelle de la fonction recursive (ammorce)
 	// avec recherche depuis la racine.
 	//var_dump($data);
-	tree_recur($data,$data[0],0);
+	tree_recur($data, $data[0], 0, 'iddivjstree');  // $data[0] is virtual record 'racine'
+	
 
 	print '</td>';
-
+	
 	print '</tr>';
-
+	
 	print '</table>';
-
+	
+	
+	// Process remaining records (records that are not linked to root by any path)
+    $remainingdata = array();
+	foreach($data as $datar)
+	{
+	    if (empty($datar['rowid']) || $tree_recur_alreadyadded[$datar['rowid']]) continue;
+	    $remainingdata[] = $datar;
+	}
+	
+	if (count($remainingdata))
+	{
+    	print '<table class="noborder centpercent">';
+    	
+    	print '<tr class="liste_titre">';
+    	print '<td>'.$langs->trans("NotTopTreeMenuPersonalized").'</td>';
+    	print '<td align="right"></td>';
+    	print '</tr>';
+    	
+    	print '<tr>';
+    	print '<td colspan="2">';	
+    	
+    	foreach($remainingdata as $datar)
+    	{
+            $father = array('rowid'=>$datar['rowid'],'title'=>"???",'mainmenu'=>$datar['fk_mainmenu'],'leftmenu'=>$datar['fk_leftmenu'],'fk_mainmenu'=>'','fk_leftmenu'=>'');
+    	    //print 'Start with rowid='.$datar['rowid'].' mainmenu='.$father ['mainmenu'].' leftmenu='.$father ['leftmenu'].'<br>'."\n";
+    	    tree_recur($data, $father, 0, 'iddivjstree'.$datar['rowid'], 1, 1);
+    	}
+    
+    	print '</td>';
+    
+    	print '</tr>';
+    
+    	print '</table>';
+	}
 
 	print '</div>';
 
@@ -361,7 +398,7 @@ if ($conf->use_javascript_ajax)
 else
 {
 	$langs->load("errors");
-	print '<div class="error">'.$langs->trans("ErrorFeatureNeedJavascript").'</div>';
+	setEventMessages($langs->trans("ErrorFeatureNeedJavascript"), null, 'errors');
 }
 
 print '<br>';
@@ -369,4 +406,3 @@ print '<br>';
 llxFooter();
 
 $db->close();
-?>

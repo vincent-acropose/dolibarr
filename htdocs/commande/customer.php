@@ -67,13 +67,13 @@ $thirdpartystatic=new Societe($db);
  * Mode List
  */
 
-$sql = "SELECT s.rowid, s.nom, s.client, s.town, s.datec, s.datea";
+$sql = "SELECT s.rowid, s.nom as name, s.client, s.town, s.datec, s.datea";
 $sql.= ", st.libelle as stcomm, s.prefix_comm, s.code_client, s.code_compta ";
 if (!$user->rights->societe->client->voir && !$socid) $sql.= ", sc.fk_soc, sc.fk_user ";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."c_stcomm as st, ".MAIN_DB_PREFIX."commande as c";
 if (!$user->rights->societe->client->voir && !$socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 $sql.= " WHERE s.fk_stcomm = st.id AND c.fk_soc = s.rowid";
-$sql.= " AND s.entity = ".$conf->entity;
+$sql.= " AND s.entity IN (".getEntity('societe', 1).")";
 if (!$user->rights->societe->client->voir && !$socid) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
 if (dol_strlen($stcomm))
 {
@@ -146,7 +146,7 @@ if ($resql)
 	print '</td>';
 	print "</tr>\n";
 
-	$var=True;
+	$var=true;
 
 	while ($i < min($num,$conf->liste_limit))
 	{
@@ -156,15 +156,15 @@ if ($resql)
 
 		print "<tr ".$bc[$var].">";
 		print '<td>';
-		
+
         $result='';
-        $lien=$lienfin='';
-        $lien = '<a href="'.dol_buildpath('/commande/orderstoinvoice.php',1).'?socid='.$obj->rowid.'">';
-        $lienfin='</a>';
-        $name=$obj->nom;
-        $result.=($lien.img_object($langs->trans("ShowCompany").': '.$name,'company').$lienfin);
-        $result.=$lien.(dol_trunc($name,$maxlen)).$lienfin;
-		
+        $link=$linkend='';
+        $link = '<a href="'.dol_buildpath('/commande/orderstoinvoice.php',1).'?socid='.$obj->rowid.'">';
+        $linkend='</a>';
+        $name=$obj->name;
+        $result.=($link.img_object($langs->trans("ShowCompany").': '.$name,'company').$linkend);
+        $result.=$link.(dol_trunc($name,$maxlen)).$linkend;
+
 		print $result;
 		print '</td>';
 		print '<td>'.$obj->town.'&nbsp;</td>';
@@ -185,7 +185,7 @@ else
 	dol_print_error($db);
 }
 
+llxFooter();
+
 $db->close();
 
-llxFooter();
-?>

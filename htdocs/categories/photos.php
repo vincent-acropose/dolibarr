@@ -1,8 +1,10 @@
 <?php
-/* Copyright (C) 2001-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005      Eric Seigne          <eric.seigne@ryxeo.com>
- * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+/* Copyright (C) 2001-2007  Rodolphe Quiedeville    <rodolphe@quiedeville.org>
+ * Copyright (C) 2004-2015  Laurent Destailleur     <eldy@users.sourceforge.net>
+ * Copyright (C) 2005       Eric Seigne             <eric.seigne@ryxeo.com>
+ * Copyright (C) 2005-2012  Regis Houssin           <regis.houssin@capnetworks.com>
+ * Copyright (C) 2014       Jean-François Ferry     <jfefe@aternatik.fr>
+ * Copyright (C) 2015       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +29,7 @@
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/categories.lib.php';
 
 $langs->load("categories");
@@ -65,7 +68,9 @@ if ($id > 0)
 
 if (isset($_FILES['userfile']) && $_FILES['userfile']['size'] > 0 && $_POST["sendit"] && ! empty($conf->global->MAIN_UPLOAD_DOC))
 {
-    if ($object->id) $result = $object->add_photo($upload_dir, $_FILES['userfile']);
+    if ($object->id) {
+	    $object->add_photo($upload_dir, $_FILES['userfile']);
+    }
 }
 
 if ($action == 'confirm_delete' && $_GET["file"] && $confirm == 'yes' && $user->rights->categorie->creer)
@@ -75,7 +80,7 @@ if ($action == 'confirm_delete' && $_GET["file"] && $confirm == 'yes' && $user->
 
 if ($action == 'addthumb' && $_GET["file"])
 {
-    $object->add_thumb($upload_dir."/".$_GET["file"]);
+    $object->addThumbs($upload_dir."/".$_GET["file"]);
 }
 
 
@@ -86,15 +91,17 @@ if ($action == 'addthumb' && $_GET["file"])
 llxHeader("","",$langs->trans("Categories"));
 
 $form = new Form($db);
+$formother = new FormOther($db);
 
 if ($object->id)
 {
-	$title=$langs->trans("ProductsCategoryShort");
-	if ($type == 0) $title=$langs->trans("ProductsCategoryShort");
-	elseif ($type == 1) $title=$langs->trans("SuppliersCategoryShort");
-	elseif ($type == 2) $title=$langs->trans("CustomersCategoryShort");
-	elseif ($type == 3) $title=$langs->trans("MembersCategoryShort");
-	elseif ($type == 4) $title=$langs->trans("ContactCategoriesShort");
+	if ($type == Categorie::TYPE_PRODUCT)       $title=$langs->trans("ProductsCategoryShort");
+	elseif ($type == Categorie::TYPE_SUPPLIER)  $title=$langs->trans("SuppliersCategoryShort");
+	elseif ($type == Categorie::TYPE_CUSTOMER)  $title=$langs->trans("CustomersCategoryShort");
+	elseif ($type == Categorie::TYPE_MEMBER)    $title=$langs->trans("MembersCategoryShort");
+	elseif ($type == Categorie::TYPE_CONTACT)   $title=$langs->trans("ContactCategoriesShort");
+	elseif ($type == Categorie::TYPE_ACCOUNT)   $title=$langs->trans("AccountsCategoriesShort");
+    else                                        $title=$langs->trans("Category");
 
 	$head = categories_prepare_head($object,$type);
 	dol_fiche_head($head, 'photos', $title, 0, 'category');
@@ -112,8 +119,8 @@ if ($object->id)
 	print '<table class="border" width="100%">';
 
 	// Path of category
-	print '<tr><td width="20%" class="notopnoleft">';
-	$ways = $object->print_all_ways();
+	print '<tr><td class="titlefield notopnoleft">';
+	$ways = $object->print_all_ways(" &gt;&gt; ", '', 1);
 	print $langs->trans("Ref").'</td><td>';
 	print '<a href="'.DOL_URL_ROOT.'/categories/index.php?leftmenu=cat&type='.$type.'">'.$langs->trans("Root").'</a> >> ';
 	foreach ($ways as $way)
@@ -123,55 +130,17 @@ if ($object->id)
 	print '</td></tr>';
 
 	// Description
-	print '<tr><td width="20%" class="notopnoleft">';
+	print '<tr><td class="notopnoleft">';
 	print $langs->trans("Description").'</td><td>';
-	print nl2br($object->description);
+	print dol_htmlentitiesbr($object->description);
 	print '</td></tr>';
 
-	// Visibility
-	/*		if ($type == 0 && ! empty($conf->global->CATEGORY_ASSIGNED_TO_A_CUSTOMER))
-	 {
-	if ($object->socid)
-	{
-	$soc = new Societe($db);
-	$soc->fetch($object->socid);
-
-	print '<tr><td width="20%" class="notopnoleft">';
-	print $langs->trans("AssignedToTheCustomer").'</td><td>';
-	print $soc->getNomUrl(1);
+	// Color
+	print '<tr><td class="notopnoleft">';
+	print $langs->trans("Color").'</td><td>';
+	print $formother->showColor($object->color);
 	print '</td></tr>';
-
-	$catsMeres = $object->get_meres ();
-
-	if ($catsMeres < 0)
-	{
-	dol_print_error();
-	}
-	else if (count($catsMeres) > 0)
-	{
-	print '<tr><td width="20%" class="notopnoleft">';
-	print $langs->trans("CategoryContents").'</td><td>';
-	print ($object->visible ? $langs->trans("Visible") : $langs->trans("Invisible"));
-	print '</td></tr>';
-	}
-	}
-	else
-	{
-	print '<tr><td width="20%" class="notopnoleft">';
-	print $langs->trans("CategoryContents").'</td><td>';
-	print ($object->visible ? $langs->trans("Visible") : $langs->trans("Invisible"));
-	print '</td></tr>';
-	}
-	}
-	else
-	{
-	print '<tr><td width="20%" class="notopnoleft">';
-	print $langs->trans("CategoryContents").'</td><td>';
-	print ($object->visible ? $langs->trans("Visible") : $langs->trans("Invisible"));
-	print '</td></tr>';
-	}
-	*/
-
+	
 	print "</table>\n";
 
 	print "</div>\n";
@@ -221,7 +190,7 @@ if ($object->id)
 		$maxWidth = 160;
 		$maxHeight = 120;
 
-		$pdir = get_exdir($object->id,2) . $object->id ."/photos/";
+		$pdir = get_exdir($object->id,2,0,0,$object,'category') . $object->id ."/photos/";
 		$dir = $upload_dir.'/'.$pdir;
 
 		print '<br>';
@@ -240,7 +209,7 @@ if ($object->id)
 			// Si fichier vignette disponible, on l'utilise, sinon on utilise photo origine
 			if ($obj['photo_vignette'])
 			{
-				$filename='thumbs/'.$obj['photo_vignette'];
+				$filename=$obj['photo_vignette'];
 			}
 			else
 			{
@@ -264,11 +233,11 @@ if ($object->id)
 			// On propose la generation de la vignette si elle n'existe pas et si la taille est superieure aux limites
 			if (!$obj['photo_vignette'] && preg_match('/(\.bmp|\.gif|\.jpg|\.jpeg|\.png)$/i',$obj['photo']) && ($object->imgWidth > $maxWidth || $object->imgHeight > $maxHeight))
 			{
-				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->entity.'&amp;action=addthumb&amp;type='.$type.'&amp;file='.urlencode($pdir.$viewfilename).'">'.img_picto($langs->trans('GenerateThumb'),'refresh').'&nbsp;&nbsp;</a>';
+				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=addthumb&amp;type='.$type.'&amp;file='.urlencode($pdir.$viewfilename).'">'.img_picto($langs->trans('GenerateThumb'),'refresh').'&nbsp;&nbsp;</a>';
 			}
 			if ($user->rights->categorie->creer)
 			{
-				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->entity.'&amp;action=delete&amp;type='.$type.'&amp;file='.urlencode($pdir.$viewfilename).'">';
+				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=delete&amp;type='.$type.'&amp;file='.urlencode($pdir.$viewfilename).'">';
 				print img_delete().'</a>';
 			}
 			if ($nbbyrow) print '</td>';
@@ -300,4 +269,3 @@ else
 
 llxFooter();
 $db->close();
-?>

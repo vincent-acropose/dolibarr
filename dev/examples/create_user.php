@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 /* Copyright (C) 2009 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
@@ -107,4 +107,3 @@ else
 $db->close();
 
 return $error;
-?>

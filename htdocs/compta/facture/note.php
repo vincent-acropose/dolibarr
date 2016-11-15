@@ -45,31 +45,22 @@ $result=restrictedArea($user,'facture',$id,'');
 $object = new Facture($db);
 $object->fetch($id);
 
-
-/******************************************************************************/
-/*                     Actions                                                */
-/******************************************************************************/
-
-if ($action == 'setnote_public' && $user->rights->facture->creer)
-{
-	$object->fetch($id);
-	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES),'_public');
-	if ($result < 0) dol_print_error($db,$object->error);
-}
-
-else if ($action == 'setnote_private' && $user->rights->facture->creer)
-{
-	$object->fetch($id);
-	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_private'), ENT_QUOTES),'_private');
-	if ($result < 0) dol_print_error($db,$object->error);
-}
+$permissionnote=$user->rights->facture->creer;	// Used by the include of actions_setnotes.inc.php
 
 
-/******************************************************************************/
-/* Affichage fiche                                                            */
-/******************************************************************************/
+/*
+ * Actions
+ */
 
-llxHeader();
+include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not includ_once
+
+
+
+/*
+ * View
+ */
+
+llxHeader('', $langs->trans("InvoiceCustomer"));
 
 $form = new Form($db);
 
@@ -90,7 +81,7 @@ if ($id > 0 || ! empty($ref))
     $linkback = '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
 	// Ref
-	print '<tr><td width="25%">'.$langs->trans('Ref').'</td>';
+	print '<tr><td class="titlefield">'.$langs->trans('Ref').'</td>';
 	print '<td colspan="3">';
 	$morehtmlref='';
 	$discount=new DiscountAbsolute($db);
@@ -107,13 +98,10 @@ if ($id > 0 || ! empty($ref))
 	print '</td></tr>';
 
 	// Ref customer
-	print '<tr><td width="20%">';
-	print '<table class="nobordernopadding" width="100%"><tr><td>';
+	print '<tr><td>';
 	print $langs->trans('RefCustomer');
 	print '</td>';
-	print '</tr></table>';
-	print '</td>';
-	print '<td colspan="5">';
+	print '<td colspan="3">';
 	print $object->ref_client;
 	print '</td></tr>';
 
@@ -134,4 +122,3 @@ if ($id > 0 || ! empty($ref))
 llxFooter();
 
 $db->close();
-?>

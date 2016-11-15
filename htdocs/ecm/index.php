@@ -100,7 +100,13 @@ if (GETPOST("sendit") && ! empty($conf->global->MAIN_UPLOAD_DOC))
 	if (empty($_FILES['userfile']['tmp_name']))
 	{
 		$error++;
-		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("File")), 'errors');
+		if($_FILES['userfile']['error'] == 1 || $_FILES['userfile']['error'] == 2){
+			setEventMessages($langs->trans('ErrorFileSizeTooLarge'),null, 'errors');
+		}
+		else {
+			setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("File")), null, 'errors');
+		}
+
 	}
 
 	if (! $error)
@@ -110,8 +116,6 @@ if (GETPOST("sendit") && ! empty($conf->global->MAIN_UPLOAD_DOC))
 			$resupload = dol_move_uploaded_file($_FILES['userfile']['tmp_name'], $upload_dir . "/" . dol_unescapefile($_FILES['userfile']['name']),0, 0, $_FILES['userfile']['error']);
 			if (is_numeric($resupload) && $resupload > 0)
 			{
-				//$mesg = '<div class="ok">'.$langs->trans("FileTransferComplete").'</div>';
-				//print_r($_FILES);
 				$result=$ecmdir->changeNbOfFiles('+');
 			}
 			else
@@ -119,22 +123,22 @@ if (GETPOST("sendit") && ! empty($conf->global->MAIN_UPLOAD_DOC))
 				$langs->load("errors");
 				if ($resupload < 0)	// Unknown error
 				{
-					setEventMessage($langs->trans("ErrorFileNotUploaded"), 'errors');
+					setEventMessages($langs->trans("ErrorFileNotUploaded"), null, 'errors');
 				}
 				else if (preg_match('/ErrorFileIsInfectedWithAVirus/',$resupload))	// Files infected by a virus
 				{
-					setEventMessage($langs->trans("ErrorFileIsInfectedWithAVirus"), 'errors');
+					setEventMessages($langs->trans("ErrorFileIsInfectedWithAVirus"), null, 'errors');
 				}
 				else	// Known error
 				{
-					setEventMessage($langs->trans($resupload), 'errors');
+					setEventMessages($langs->trans($resupload), null, 'errors');
 				}
 			}
 		}
 		else
 		{
 			$langs->load("errors");
-			$mesg = '<div class="error">'.$langs->trans("ErrorFailToCreateDir",$upload_dir).'</div>';
+			setEventMessages($langs->trans("ErrorFailToCreateDir",$upload_dir), null, 'errors');
 		}
 	}
 }
@@ -156,7 +160,7 @@ if ($action == 'add' && $user->rights->ecm->setup)
 	}
 	else
 	{
-		$mesg='<div class="error">Error '.$langs->trans($ecmdir->error).'</div>';
+		setEventMessages('Error '.$langs->trans($ecmdir->error), null, 'errors');
 		$action = "create";
 	}
 
@@ -177,15 +181,14 @@ if ($action == 'confirm_deletefile')
 	    		dol_print_error($db,$ecmdir->error);
 	    		exit;
 	    	}
-	    	$relativepath=$ecmdir->getRelativePath();
     	}
     	else $relativepath='';
-    	$upload_dir = $conf->ecm->dir_output.($relativepath?'/'.$relativepath:'');
+    	$upload_dir = $conf->ecm->dir_output;
     	$file = $upload_dir . "/" . GETPOST('urlfile');	// Do not use urldecode here ($_GET and $_POST are already decoded by PHP).
 
     	$ret=dol_delete_file($file);
-    	if ($ret) setEventMessage($langs->trans("FileWasRemoved", GETPOST('urlfile')));
-    	else setEventMessage($langs->trans("ErrorFailToDeleteFile", GETPOST('urlfile')), 'errors');
+    	if ($ret) setEventMessages($langs->trans("FileWasRemoved", GETPOST('urlfile')), null, 'mesgs');
+    	else setEventMessages($langs->trans("ErrorFailToDeleteFile", GETPOST('urlfile')), null, 'errors');
 
     	$result=$ecmdir->changeNbOfFiles('-');
 
@@ -198,14 +201,17 @@ if ($action == 'confirm_deletefile')
 if ($action == 'confirm_deletesection' && GETPOST('confirm') == 'yes')
 {
 	$result=$ecmdir->delete($user);
-	$mesg = '<div class="ok">'.$langs->trans("ECMSectionWasRemoved", $ecmdir->label).'</div>';
+	setEventMessages($langs->trans("ECMSectionWasRemoved", $ecmdir->label), null, 'mesgs');
 
     clearstatcache();
 }
 
 // Refresh directory view
+// This refresh list of dirs, not list of files (for preformance reason). List of files is refresh only if dir was not synchronized.
+// To refresh content of dir with cache, just open the dir in edit mode.
 if ($action == 'refreshmanual')
 {
+
     $ecmdirtmp = new EcmDirectory($db);
 
 	// This part of code is same than into file ecm/ajax/ecmdatabase.php TODO Remove duplicate
@@ -324,7 +330,6 @@ if ($action == 'refreshmanual')
     	$dirtotest=$conf->ecm->dir_output.'/'.$dirdesc['fullrelativename'];
 		if (! dol_is_dir($dirtotest))
 		{
-			$mesg.=$dirtotest." not found onto disk. We delete from database dir with id=".$dirdesc['id']."<br>\n";
 			$ecmdirtmp->id=$dirdesc['id'];
 			$ecmdirtmp->delete($user,'databaseonly');
 			//exit;
@@ -346,8 +351,10 @@ if ($action == 'refreshmanual')
  *	View
  */
 
-//print "xx".$_SESSION["dol_screenheight"];
-$maxheightwin=(isset($_SESSION["dol_screenheight"]) && $_SESSION["dol_screenheight"] > 500)?($_SESSION["dol_screenheight"]-166):660;
+// Define height of file area (depends on $_SESSION["dol_screenheight"])
+//print $_SESSION["dol_screenheight"];
+$maxheightwin=(isset($_SESSION["dol_screenheight"]) && $_SESSION["dol_screenheight"] > 466)?($_SESSION["dol_screenheight"]-186):660;	// Also into index_auto.php file
+
 $morejs=array();
 if (empty($conf->global->MAIN_ECM_DISABLE_JS)) $morejs=array("/includes/jquery/plugins/jqueryFileTree/jqueryFileTree.js");
 $moreheadcss="
@@ -373,7 +380,7 @@ $moreheadjs=empty($conf->use_javascript_ajax)?"":"
         ,   north__paneSelector:    \"#ecm-layout-north\"
         ,   west__paneSelector:     \"#ecm-layout-west\"
         ,   resizable: true
-        ,   north__size:        32
+        ,   north__size:        36
         ,   north__resizable:   false
         ,   north__closable:    false
         ,   west__size:         340
@@ -415,13 +422,15 @@ if (! empty($conf->global->ECM_AUTO_TREE_ENABLED))
 	if (! empty($conf->projet->enabled))      { $rowspan++; $sectionauto[]=array('level'=>1, 'module'=>'project', 'test'=>$conf->projet->enabled, 'label'=>$langs->trans("Projects"),     'desc'=>$langs->trans("ECMDocsByProjects")); }
 }
 
-print_fiche_titre($langs->trans("ECMArea").' - '.$langs->trans("ECMFileManager"));
+print load_fiche_titre($langs->trans("ECMArea").' - '.$langs->trans("ECMFileManager"));
 
+/*
 print '<div class="hideonsmartphone">';
 print $langs->trans("ECMAreaDesc")."<br>";
 print $langs->trans("ECMAreaDesc2")."<br>";
 print "<br>\n";
 print '</div>';
+*/
 
 // Confirm remove file (for non javascript users)
 if ($action == 'delete' && empty($conf->use_javascript_ajax))
@@ -430,11 +439,15 @@ if ($action == 'delete' && empty($conf->use_javascript_ajax))
 
 }
 
-dol_htmloutput_mesg($mesg);
-
-
 if (! empty($conf->use_javascript_ajax)) $classviewhide='hidden';
 else $classviewhide='visible';
+
+
+if (empty($conf->dol_use_jmobile))
+{
+$head = ecm_prepare_dasboard_head('');
+dol_fiche_head($head, 'index', '', 1, '');
+}
 
 // Start container of all panels
 ?>
@@ -492,75 +505,6 @@ if (empty($action) || $action == 'file_manager' || preg_match('/refresh/i',$acti
 	print '</td></tr>';
 
     $showonrightsize='';
-    // Auto section
-	if (count($sectionauto))
-	{
-		$htmltooltip=$langs->trans("ECMAreaDesc2");
-
-		// Root title line (Automatic section)
-		print '<tr>';
-		print '<td>';
-		print '<table class="nobordernopadding"><tr class="nobordernopadding">';
-		print '<td align="left" width="24">';
-		print img_picto_common('','treemenu/base.gif');
-		print '</td><td align="left">';
-		$txt=$langs->trans("ECMRoot").' ('.$langs->trans("ECMSectionsAuto").')';
-		print $form->textwithpicto($txt, $htmltooltip, 1, 0);
-		print '</td>';
-		print '</tr></table>';
-		print '</td>';
-		print '<td align="right">&nbsp;</td>';
-		print '<td align="right">&nbsp;</td>';
-		print '<td align="right">&nbsp;</td>';
-		print '<td align="right">&nbsp;</td>';
-		print '<td align="center">';
-		print '</td>';
-		print '</tr>';
-
-		$sectionauto=dol_sort_array($sectionauto,'label','ASC',true,false);
-
-		print '<tr>';
-    	print '<td colspan="6" style="padding-left: 20px">';
-	    print '<div id="filetreeauto" class="ecmfiletree"><ul class="ecmjqft">';
-
-		$nbofentries=0;
-		$oldvallevel=0;
-		foreach ($sectionauto as $key => $val)
-		{
-			if (empty($val['test'])) continue;   // If condition to show is ok
-
-			$var=false;
-
-		    print '<li class="directory collapsed">';
-			if (! empty($conf->use_javascript_ajax) && empty($conf->global->MAIN_ECM_DISABLE_JS))
-			{
-			    print '<a class="fmdirlia jqft ecmjqft" href="'.DOL_URL_ROOT.'/ecm/index.php?module='.$val['module'].'">';
-			    print $val['label'];
-   			    print '</a>';
-			}
-			else
-			{
-			    print '<a class="fmdirlia jqft ecmjqft" href="'.DOL_URL_ROOT.'/ecm/index.php?module='.$val['module'].'">';
-			    print $val['label'];
-			    print '</a>';
-			}
-
-		    print '<div class="ecmjqft">';
-		    // Info
-		    $htmltooltip='<b>'.$langs->trans("ECMSection").'</b>: '.$val['label'].'<br>';
-		    $htmltooltip='<b>'.$langs->trans("Type").'</b>: '.$langs->trans("ECMSectionAuto").'<br>';
-		    $htmltooltip.='<b>'.$langs->trans("ECMCreationUser").'</b>: '.$langs->trans("ECMTypeAuto").'<br>';
-		    $htmltooltip.='<b>'.$langs->trans("Description").'</b>: '.$val['desc'];
-		    print $form->textwithpicto('', $htmltooltip, 1, 'info');
-		    print '</div>';
-		    print '</li>';
-
-		    $nbofentries++;
-		}
-
-	    print '</ul></div></td></tr>';
-	}
-
 
 	// Manual section
 	$htmltooltip=$langs->trans("ECMAreaDesc2");
@@ -728,7 +672,7 @@ if (empty($action) || $action == 'file_manager' || preg_match('/refresh/i',$acti
     			$userstatic->lastname=$val['login_c'];
     			$htmltooltip='<b>'.$langs->trans("ECMSection").'</b>: '.$val['label'].'<br>';
     			$htmltooltip='<b>'.$langs->trans("Type").'</b>: '.$langs->trans("ECMSectionManual").'<br>';
-    			$htmltooltip.='<b>'.$langs->trans("ECMCreationUser").'</b>: '.$userstatic->getNomUrl(1).'<br>';
+    			$htmltooltip.='<b>'.$langs->trans("ECMCreationUser").'</b>: '.$userstatic->getNomUrl(1, '', false, 1).'<br>';
     			$htmltooltip.='<b>'.$langs->trans("ECMCreationDate").'</b>: '.dol_print_date($val['date_c'],"dayhour").'<br>';
     			$htmltooltip.='<b>'.$langs->trans("Description").'</b>: '.$val['description'].'<br>';
     			$htmltooltip.='<b>'.$langs->trans("ECMNbOfFilesInDir").'</b>: '.$val['cachenbofdoc'].'<br>';
@@ -768,7 +712,7 @@ if (empty($action) || $action == 'file_manager' || preg_match('/refresh/i',$acti
 }
 
 
-// End left banner
+// End left panel
 ?>
 </div>
 <div id="ecm-layout-center" class="<?php echo $classviewhide; ?>">
@@ -806,7 +750,7 @@ if ((! empty($conf->use_javascript_ajax) && empty($conf->global->MAIN_ECM_DISABL
 	}
 
     $formfile=new FormFile($db);
-	$formfile->form_attach_new_file(DOL_URL_ROOT.'/ecm/index.php', 'none', 0, ($section?$section:-1), $user->rights->ecm->upload, 48, null, '', 0, '', 0, 'formuserfile');
+	$formfile->form_attach_new_file($_SERVER["PHP_SELF"], 'none', 0, ($section?$section:-1), $user->rights->ecm->upload, 48, null, '', 0, '', 0, 'formuserfile');
 }
 else print '&nbsp;';
 
@@ -821,9 +765,11 @@ else print '&nbsp;';
 // End of page
 
 
+//dol_fiche_end();
+
 
 if (! empty($conf->use_javascript_ajax) && empty($conf->global->MAIN_ECM_DISABLE_JS)) {
-	include 'tpl/builddatabase.tpl.php';
+	include DOL_DOCUMENT_ROOT.'/ecm/tpl/enablefiletreeajax.tpl.php';
 }
 
 
@@ -831,4 +777,3 @@ if (! empty($conf->use_javascript_ajax) && empty($conf->global->MAIN_ECM_DISABLE
 llxFooter();
 
 $db->close();
-?>

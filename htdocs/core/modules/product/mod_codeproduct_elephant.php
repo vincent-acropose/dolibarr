@@ -35,6 +35,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/modules/product/modules_product.class.php'
 class mod_codeproduct_elephant extends ModeleProductCode
 {
 	var $nom='Elephant';				// Nom du modele
+	var $name='Elephant';				// Nom du modele
 	var $code_modifiable;				// Code modifiable
 	var $code_modifiable_invalide;		// Code modifiable si il est invalide
 	var $code_modifiable_null;			// Code modifiables si il est null
@@ -63,7 +64,7 @@ class mod_codeproduct_elephant extends ModeleProductCode
 
 	/**		Return description of module
 	 *
-	 * 		@param	string 		$langs		Object langs
+	 * 		@param	Translate	$langs		Object langs
 	 * 		@return string      			Description of module
 	 */
 	function info($langs)
@@ -73,7 +74,7 @@ class mod_codeproduct_elephant extends ModeleProductCode
 
 		$langs->load("products");
 
-		$disabled = ((! empty($mc->sharings['referent']) && $mc->sharings['referent'] != $conf->entity) ? ' disabled="disabled"' : '');
+		$disabled = ((! empty($mc->sharings['referent']) && $mc->sharings['referent'] != $conf->entity) ? ' disabled' : '');
 
 		$texte = $langs->trans('GenericNumRefModelDesc')."<br>\n";
 		$texte.= '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
@@ -220,7 +221,7 @@ class mod_codeproduct_elephant extends ModeleProductCode
 	 * 	Check validity of code according to its rules
 	 *
 	 *	@param	DoliDB		$db		Database handler
-	 *	@param	string		&$code	Code to check/correct
+	 *	@param	string		$code	Code to check/correct
 	 *	@param	Product		$product	Object product
 	 *  @param  int		  	$type   0 = customer/prospect , 1 = supplier
 	 *  @return int					0 if OK
@@ -301,4 +302,3 @@ class mod_codeproduct_elephant extends ModeleProductCode
 
 }
 
-?>

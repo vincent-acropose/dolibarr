@@ -1,48 +1,29 @@
 <?php
-define("NOLOGIN",1);		// This means this output page does not require to be logged.
+//define("NOLOGIN",1);		// This means this output page does not require to be logged.
 define("NOCSRFCHECK",1);	// We accept to go on this page from external web site.
+define('REQUIRE_JQUERY_MULTISELECT','select2');
 
 require '../../main.inc.php';
 include_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 
-if (empty($conf->global->MAIN_FEATURES_LEVEL))
-{
-	print "Page available onto dev environment only";
-	exit;
+if ($dolibarr_main_prod) {
+	accessforbidden();
 }
+
+llxHeader();
+
 ?>
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-
-<head>
-<meta name="robots" content="noindex,nofollow" />
-<meta name="author" content="Dolibarr Development Team">
-<link rel="shortcut icon" type="image/x-icon" href="<?php echo DOL_URL_ROOT ?>/theme/eldy/img/favicon.ico"/>
-<title>Test page</title>
-<!-- Includes for JQuery (Ajax library) -->
-<link rel="stylesheet" type="text/css" href="<?php echo DOL_URL_ROOT ?>/includes/jquery/css/smoothness/jquery-ui-latest.custom.css" />
-<link rel="stylesheet" type="text/css" href="<?php echo DOL_URL_ROOT ?>/includes/jquery/plugins/datatables/css/jquery.dataTables.css" />
-<!-- <link rel="stylesheet" type="text/css" href="<?php echo DOL_URL_ROOT ?>/includes/jquery/plugins/mobile/jquery.mobile-latest.min.css" /> -->
-<!-- <link rel="stylesheet" type="text/css" title="default" href="<?php echo DOL_URL_ROOT ?>/theme/eldy/style.css.php?dol_use_jmobile=1" /> -->
-<link rel="stylesheet" type="text/css" title="default" href="<?php echo DOL_URL_ROOT ?>/theme/eldy/style.css.php?dol_use_jmobile=0" />
-<!-- Includes JS for JQuery -->
-<script type="text/javascript" src="<?php echo DOL_URL_ROOT ?>/includes/jquery/js/jquery-latest.min.js"></script>
-<script type="text/javascript" src="<?php echo DOL_URL_ROOT ?>/includes/jquery/plugins/tablednd/jquery.tablednd.0.6.min.js"></script>
-<script type="text/javascript" src="<?php echo DOL_URL_ROOT ?>/includes/jquery/plugins/datatables/js/jquery.dataTables.js"></script>
-<!-- <script type="text/javascript" src="<?php echo DOL_URL_ROOT ?>/includes/jquery/plugins/mobile/jquery.mobile-latest.min.js"></script> -->
-</head>
-
-
-
-<body style="margin: 4px;">
-<div data-role="page">
-<br>
-This page is a sample of page using html methods.<br>
+<h1>
+This page is a sample of page using Dolibarr HTML widget methods. It is designed to make test with<br>
+- css (add parameter &amp;theme=newtheme to test another theme or edit css of current theme)<br>
+- jmobile (add parameter <a href="<?php echo $_SERVER["PHP_SELF"].'?dol_use_jmobile=1&dol_optimize_smallscreen=1'; ?>">dol_use_jmobile=1&amp;dol_optimize_smallscreen=1</a> to enable view with jmobile)<br>
+- no javascript / usage for bind people (add parameter <a href="<?php echo $_SERVER["PHP_SELF"].'?nojs=1'; ?>">nojs=1</a> to force disable javascript)<br>
+</h1>
 <br>
 
 <!--  Output to test html.form.class.php -->
-<?php 
+<?php
 $form=new Form($db);
 
 // Test1: form->select_date using tzuser date
@@ -64,8 +45,49 @@ print '<br><br>'."\n";
 print "Test 3: We must have here 1970-01-01 00:00:00 selected (fields are mandatory)<br>\n";
 $form->select_date(dol_get_first_day(1970,1,false), 'test3', 1, 1, 0);
 
-?>
+print '<br><br>'."\n";
 
-</div>
-</body>
-</html>
+// Test4a: a select
+print "Test 4a: a select<br>\n";
+$array=array(1=>'Value 1',2=>'Value 2',3=>'Value 3 ith a very long text. aze eazeae e ae aeae a e a ea ea ea e a e aea e ae aeaeaeaze.');
+$selected=3;
+print $form->selectarray('testselecta', $array, $selected, 1, 0, 0, 'style="min-width: 250px;"', 0, 0, 0, '', '', 1);
+print '<br><br>';
+print "Test 4b: a select<br>\n";
+$array=array(1=>'Value 1',2=>'Value 2',3=>'Value 3');
+$selected=3;
+print $form->selectarray('testselectb', $array, $selected, 1, 0, 0, 'style="min-width: 250px;"', 0, 0, 0, '', '', 1);
+print '<br><br>'."\n";
+print "Test 4c: Select array with no js forced<br>\n";
+$array=array(1=>'Value 1',2=>'Value 2',3=>'Value 3');
+print $form->selectarray('selectarray',$array);
+
+print '<br><br>'."\n";
+
+print "Test 4d: a select with ajax refresh and with onchange call of url<br>\n";
+$selected=-1;
+print $form->selectArrayAjax('testselectc', DOL_URL_ROOT.'/core/ajax/selectsearchbox.php', $selected, 'style="min-width: 250px;"', '', 0, 1, '', 1);
+
+print '<br><br>'."\n";
+
+// Test5a: form->select_thirdparty
+print "Test 5a: Select thirdparty<br>\n";
+print $form->select_company(0,'thirdpartytest');
+
+print '<br><br>'."\n";
+
+// Test5b: form->select_product
+print "Test 5b: Select product (using ajax)<br>\n";
+$form->select_produits(0,'producttest');
+
+print '<br><br>'."\n";
+
+// Test5c: a multiselect
+print "Test 5c: a multiselect<br>\n";
+$array=array(1=>'Value 1',2=>'Value 2',3=>'Value 3');
+$arrayselected=array(1,3);
+print $form->multiselectarray('testmulti', $array, $arrayselected, '', 0, '', 0, 250);
+
+
+llxFooter();
+$db->close();

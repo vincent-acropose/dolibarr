@@ -48,13 +48,15 @@ class FormActions
     /**
      *  Show list of action status
      *
-     * 	@param	string	$formname	Name of form where select in included
-     * 	@param	string	$selected	Preselected value (-1..100)
-     * 	@param	int		$canedit	1=can edit, 0=read only
-     *  @param  string	$htmlname   Name of html prefix for html fields (selectX and valX)
+     * 	@param	string	$formname		Name of form where select is included
+     * 	@param	string	$selected		Preselected value (-1..100)
+     * 	@param	int		$canedit		1=can edit, 0=read only
+     *  @param  string	$htmlname   	Name of html prefix for html fields (selectX and valX)
+     *  @param	integer	$showempty		Show an empty line if select is used
+     *  @param	integer	$onlyselect		0=Standard, 1=Hide percent of completion and force usage of a select list, 2=Same than 1 and add "Incomplete (Todo+Running)
      * 	@return	void
      */
-    function form_select_status_action($formname,$selected,$canedit=1,$htmlname='complete')
+    function form_select_status_action($formname,$selected,$canedit=1,$htmlname='complete',$showempty=0,$onlyselect=0)
     {
         global $langs,$conf;
 
@@ -64,6 +66,7 @@ class FormActions
             '50' => $langs->trans("ActionRunningShort"),
             '100' => $langs->trans("ActionDoneShort")
         );
+		// +ActionUncomplete
 
         if (! empty($conf->use_javascript_ajax))
         {
@@ -92,17 +95,17 @@ class FormActions
                     percentage.val(value);
 
                     if (defaultvalue == -1) {
-                        percentage.attr('disabled', 'disabled');
+						percentage.prop('disabled', true);
                         $('.hideifna').hide();
                     }
                     else if (defaultvalue == 0) {
 						percentage.val(0);
-                    	percentage.attr('disabled', 'disabled');
+						percentage.prop('disabled', true);
                         $('.hideifna').show();
                     }
                     else if (defaultvalue == 100) {
 						percentage.val(100);
-                        percentage.attr('disabled', 'disabled');
+						percentage.prop('disabled', true);
                         $('.hideifna').show();
                     }
                     else {
@@ -112,19 +115,33 @@ class FormActions
                     }
                 }
                 </script>\n";
-            print '<select '.($canedit?'':'disabled="disabled" ').'name="status" id="select'.$htmlname.'" class="flat">';
+        }
+        if (! empty($conf->use_javascript_ajax) || $onlyselect)
+        {
+        	//var_dump($selected);
+        	if ($selected == 'done') $selected='100';
+            print '<select '.($canedit?'':'disabled ').'name="'.$htmlname.'" id="select'.$htmlname.'" class="flat">';
+            if ($showempty) print '<option value=""'.($selected == ''?' selected':'').'></option>';
             foreach($listofstatus as $key => $val)
             {
-                print '<option value="'.$key.'"'.(($selected == $key) || (($selected > 0 && $selected < 100) && $key == '50') ? ' selected="selected"' : '').'>'.$val.'</option>';
+                print '<option value="'.$key.'"'.(($selected == $key && strlen($selected) == strlen($key)) || (($selected > 0 && $selected < 100) && $key == '50') ? ' selected' : '').'>'.$val.'</option>';
+                if ($key == '50' && $onlyselect == 2)
+                {
+                	print '<option value="todo"'.($selected == 'todo' ? ' selected' : '').'>'.$langs->trans("ActionUncomplete").' ('.$langs->trans("ActionRunningNotStarted")."+".$langs->trans("ActionRunningShort").')</option>';
+                }
             }
             print '</select>';
             if ($selected == 0 || $selected == 100) $canedit=0;
-            print ' <input type="text" id="val'.$htmlname.'" name="percentage" class="flat hideifna" value="'.($selected>=0?$selected:'').'" size="2"'.($canedit&&($selected>=0)?'':' disabled="disabled"').'>';
-            print '<span class="hideifna">%</span>';
+
+            if (empty($onlyselect))
+            {
+	            print ' <input type="text" id="val'.$htmlname.'" name="percentage" class="flat hideifna" value="'.($selected>=0?$selected:'').'" size="2"'.($canedit&&($selected>=0)?'':' disabled').'>';
+    	        print '<span class="hideonsmartphone hideifna">%</span>';
+            }
         }
         else
-        {
-            print ' <input type="text" id="val'.$htmlname.'" name="percentage" class="flat" value="'.($selected>=0?$selected:'').'" size="2"'.($canedit?'':' disabled="disabled"').'>%';
+		{
+            print ' <input type="text" id="val'.$htmlname.'" name="percentage" class="flat" value="'.($selected>=0?$selected:'').'" size="2"'.($canedit?'':' disabled').'>%';
         }
     }
 
@@ -136,15 +153,16 @@ class FormActions
      *  @param  string	$typeelement	'invoice','propal','order','invoice_supplier','order_supplier','fichinter'
      *	@param	int		$socid			socid of user
      *  @param	int		$forceshowtitle	Show title even if there is no actions to show
+     *  @param  string  $morecss        More css on table
      *	@return	int						<0 if KO, >=0 if OK
      */
-    function showactions($object,$typeelement,$socid=0,$forceshowtitle=0)
+    function showactions($object,$typeelement,$socid=0,$forceshowtitle=0,$morecss='listactions')
     {
         global $langs,$conf,$user;
         global $bc;
 
         require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
-        
+
         $listofactions=ActionComm::getActions($this->db, $socid, $object->id, $typeelement);
 		if (! is_array($listofactions)) dol_print_error($this->db,'FailedToGetActions');
 
@@ -154,6 +172,7 @@ class FormActions
         	if ($typeelement == 'invoice')   $title=$langs->trans('ActionsOnBill');
         	elseif ($typeelement == 'invoice_supplier' || $typeelement == 'supplier_invoice') $title=$langs->trans('ActionsOnBill');
         	elseif ($typeelement == 'propal')    $title=$langs->trans('ActionsOnPropal');
+        	elseif ($typeelement == 'supplier_proposal')    $title=$langs->trans('ActionsOnSupplierProposal');
         	elseif ($typeelement == 'order')     $title=$langs->trans('ActionsOnOrder');
         	elseif ($typeelement == 'order_supplier' || $typeelement == 'supplier_order')   $title=$langs->trans('ActionsOnOrder');
         	elseif ($typeelement == 'project')   $title=$langs->trans('ActionsOnProject');
@@ -161,15 +180,16 @@ class FormActions
             elseif ($typeelement == 'fichinter') $title=$langs->trans('ActionsOnFicheInter');
         	else $title=$langs->trans("Actions");
 
-        	print_titre($title);
+        	print load_fiche_titre($title,'','');
 
         	$total = 0;	$var=true;
-        	print '<table class="noborder" width="100%">';
+        	print '<table class="noborder'.($morecss?' '.$morecss:'').'" width="100%">';
         	print '<tr class="liste_titre">';
         	print '<th class="liste_titre">'.$langs->trans('Ref').'</th>';
         	print '<th class="liste_titre">'.$langs->trans('Action').'</th>';
         	print '<th class="liste_titre">'.$langs->trans('Date').'</th>';
         	print '<th class="liste_titre">'.$langs->trans('By').'</th>';
+        	print '<th class="liste_titre" align="right">'.$langs->trans('Status').'</th>';
         	print '</tr>';
         	print "\n";
 
@@ -177,17 +197,25 @@ class FormActions
 
         	foreach($listofactions as $action)
         	{
-        		$savlabel=$action->label;
-        		$action->label=$action->ref;
-        		$ref=$action->getNomUrl(1);
-        		$action->label=$savlabel;
+        		$ref=$action->getNomUrl(1,-1);
         		$label=$action->getNomUrl(0,38);
 
         		$var=!$var;
         		print '<tr '.$bc[$var].'>';
 				print '<td>'.$ref.'</td>';
         		print '<td>'.$label.'</td>';
-        		print '<td>'.dol_print_date($action->datep,'day').'</td>';
+        		print '<td>'.dol_print_date($action->datep,'dayhour');
+        		if ($action->datef)
+        		{
+	        		$tmpa=dol_getdate($action->datep);
+	        		$tmpb=dol_getdate($action->datef);
+	        		if ($tmpa['mday'] == $tmpb['mday'] && $tmpa['mon'] == $tmpb['mon'] && $tmpa['year'] == $tmpb['year'])
+	        		{
+	        			if ($tmpa['hours'] != $tmpb['hours'] || $tmpa['minutes'] != $tmpb['minutes'] && $tmpa['seconds'] != $tmpb['seconds']) print '-'.dol_print_date($action->datef,'hour');
+	        		}
+	        		else print '-'.dol_print_date($action->datef,'dayhour');
+        		}
+        		print '</td>';
         		print '<td>';
         		if (! empty($action->author->id))
         		{
@@ -195,6 +223,12 @@ class FormActions
         			$userstatic->firstname = $action->author->firstname;
         			$userstatic->lastname = $action->author->lastname;
         			print $userstatic->getNomUrl(1);
+        		}
+        		print '</td>';
+        		print '<td align="right">';
+        		if (! empty($action->author->id))
+        		{
+        			print $action->getLibStatut(3);
         		}
         		print '</td>';
         		print '</tr>';
@@ -207,22 +241,25 @@ class FormActions
 
 
     /**
-     *  Output list of type of event
+     *  Output html select list of type of event
      *
-     *  @param	string		$selected       Type pre-selected (can be 'manual', 'auto' or 'AC_xxx'
-     *  @param  string		$htmlname       Nom champ formulaire
-     *  @param	string		$excludetype	Type to exclude
-     *  @param	string		$onlyautoornot	Group list by auto events or not: We keep only the 2 generic lines (AC_OTH and AC_OTH_AUTO)
+     *  @param	string		$selected       Type pre-selected (can be 'manual', 'auto' or 'AC_xxx')
+     *  @param  string		$htmlname       Name of select field
+     *  @param	string		$excludetype	A type to exclude ('systemauto', 'system', '')
+     *  @param	integer		$onlyautoornot	1=Group all type AC_XXX into 1 line AC_MANUAL. 0=Keep details of type
+     *  @param	int		    $hideinfohelp	1=Do not show info help, 0=Show, -1=Show+Add info to tell how to set default value
+     *  @param  int		    $multiselect    1=Allow multiselect of action type
      * 	@return	void
      */
-    function select_type_actions($selected='',$htmlname='actioncode',$excludetype='',$onlyautoornot=0)
+    function select_type_actions($selected='',$htmlname='actioncode',$excludetype='',$onlyautoornot=0, $hideinfohelp=0, $multiselect=0)
     {
-        global $langs,$user;
+        global $langs,$user,$form,$conf;
+
+        if (! is_object($form)) $form=new Form($db);
 
         require_once DOL_DOCUMENT_ROOT.'/comm/action/class/cactioncomm.class.php';
         require_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php';
         $caction=new CActionComm($this->db);
-        $form=new Form($this->db);
 
        	// Suggest a list with manual events or all auto events
        	$arraylist=$caction->liste_array(1, 'code', $excludetype, $onlyautoornot);
@@ -231,9 +268,23 @@ class FormActions
 
        	if ($selected == 'manual') $selected='AC_OTH';
        	if ($selected == 'auto')   $selected='AC_OTH_AUTO';
-       	
-        print $form->selectarray($htmlname, $arraylist, $selected);
-        if ($user->admin && empty($onlyautoornot)) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionnarySetup"),1);
+
+       	if (! empty($conf->global->AGENDA_ALWAYS_HIDE_AUTO)) unset($arraylist['AC_OTH_AUTO']);
+
+		if (! empty($multiselect)) 
+		{
+	        if(!is_array($selected) && !empty($selected)) $selected = explode(',', $selected);
+			print $form->multiselectarray($htmlname, $arraylist, $selected, 0, 0, 'centpercent', 0, 0);
+		}
+		else 
+		{
+			print $form->selectarray($htmlname, $arraylist, $selected);
+		}
+		
+        if ($user->admin && empty($onlyautoornot) && $hideinfohelp <= 0) 
+        {
+            print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup").($hideinfohelp == -1 ? ". ".$langs->trans("YouCanSetDefaultValueInModuleSetup") : ''),1);
+        }
     }
 
 }

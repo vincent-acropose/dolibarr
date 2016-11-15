@@ -44,28 +44,21 @@ $result = restrictedArea($user, 'fournisseur', $id, '', 'commande');
 $object = new CommandeFournisseur($db);
 $object->fetch($id, $ref);
 
+$permissionnote=$user->rights->fournisseur->commande->creer;	// Used by the include of actions_setnotes.inc.php
+
 
 /*
  * Actions
  */
 
-if ($action == 'setnote_public' && $user->rights->fournisseur->commande->creer)
-{
-    $result=$object->update_note(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES),'_public');
-    if ($result < 0) dol_print_error($db,$object->error);
-}
-elseif ($action == 'setnote_private' && $user->rights->fournisseur->commande->creer)
-{
-    $result=$object->update_note(dol_html_entity_decode(GETPOST('note_private'), ENT_QUOTES), '_private');
-    if ($result < 0) dol_print_error($db,$object->error);
-}
+include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not includ_once
 
 
 /*
  * View
  */
-
-llxHeader('',$langs->trans("OrderCard"),"CommandeFournisseur");
+$help_url='EN:Module_Suppliers_Orders|FR:CommandeFournisseur|ES:Módulo_Pedidos_a_proveedores';
+llxHeader('',$langs->trans("Order"),$help_url);
 
 $form = new Form($db);
 
@@ -98,10 +91,10 @@ if ($id > 0 || ! empty($ref))
          */
         print '<table class="border" width="100%">';
 
-        $linkback = '<a href="'.DOL_URL_ROOT.'/fourn/commande/liste.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
+        $linkback = '<a href="'.DOL_URL_ROOT.'/fourn/commande/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
         // Ref
-        print '<tr><td width="20%">'.$langs->trans("Ref").'</td>';
+        print '<tr><td class="titlefield">'.$langs->trans("Ref").'</td>';
         print '<td colspan="2">';
         print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref');
         print '</td>';
@@ -161,4 +154,3 @@ if ($id > 0 || ! empty($ref))
 llxFooter();
 
 $db->close();
-?>
