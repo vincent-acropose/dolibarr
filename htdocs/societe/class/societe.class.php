@@ -1848,7 +1848,7 @@ class Societe extends CommonObject
             $label.= '</div><div style="clear: both;"></div>';
         }
 
-        if (empty($this->address) && !empty($this->id)) {
+        if (!empty($this->id)) {
         	$this->fetch($this->id);
         }
         $tmpuse_javascript_ajax = $conf->use_javascript_ajax ;
@@ -1856,6 +1856,7 @@ class Societe extends CommonObject
         $tmpadress= $this->getBannerAddress('refaddress',$this);
         //find contact
         $contacts_array=$this->contact_array_objects();
+
         if (is_array($contacts_array) && count($contacts_array)>0) {
         	$tmpadress_contact.="<br>";
         	foreach($contacts_array as $cont) {
