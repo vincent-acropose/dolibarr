@@ -2,7 +2,7 @@
 /* Copyright (C) 2004-2009	Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2006-2007	Yannick Warnier		<ywarnier@beeznest.org>
  * Copyright (C) 2011		Regis Houssin		<regis.houssin@capnetworks.com>
- * Copyright (C) 2012		Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2012-2016	Juanjo Menent		<jmenent@2byte.es>
  * Copyright (C) 2015       Marcos García       <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -204,7 +204,6 @@ function vat_by_thirdparty($db, $y, $date_start, $date_end, $modetax, $direction
         }
     }
 }
-
 
 /**
  *  Gets VAT to collect for the given year (and given quarter or month)
