@@ -711,7 +711,7 @@ if ($action == 'create')
             print '<tr><td>'.$langs->trans("DateDeliveryPlanned").'</td>';
             print '<td colspan="3">';
             //print dol_print_date($object->date_livraison,"day");	// date_livraison come from order and will be stored into date_delivery planed.
-            print $form->select_date($object->date_livraison?$object->date_livraison:-1,'date_delivery',1,1);
+            print $form->select_date(time(),'date_delivery',1,1);
             print "</td>\n";
             print '</tr>';
 
