@@ -375,10 +375,55 @@ class modSociete extends DolibarrModules
         		$this->export_entities_array[$r][$fieldname]='contact';
         	}
         }
+
+
+// Add extra fields
+        $sql="SELECT name, label, type, param FROM ".MAIN_DB_PREFIX."extrafields WHERE elementtype = 'societe'";
+        $resql=$this->db->query($sql);
+        if ($resql)    // This can fail when class is used on old database (during migration for example)
+        {
+        	while ($obj=$this->db->fetch_object($resql))
+        	{
+        		$fieldname='extrasoc.'.$obj->name;
+        		$fieldlabel=ucfirst($obj->label);
+        		$typeFilter="Text";
+        		switch($obj->type)
+        		{
+        			case 'int':
+        			case 'double':
+        			case 'price':
+        				$typeFilter="Numeric";
+        				break;
+        			case 'date':
+        			case 'datetime':
+        				$typeFilter="Date";
+        				break;
+        			case 'boolean':
+        				$typeFilter="Boolean";
+        				break;
+        			case 'sellist':
+						$tmp='';
+						$tmpparam=unserialize($obj->param);	// $tmp ay be array 'options' => array 'c_currencies:code_iso:code_iso' => null
+						if ($tmpparam['options'] && is_array($tmpparam['options'])) 
+        				{
+							$stack=array_keys($tmpparam['options']);
+							$tmp=array_shift($stack);
+						}
+						if (preg_match('/[a-z0-9_]+:[a-z0-9_]+:[a-z0-9_]+/', $tmp)) $typeFilter="List:".$tmp;
+						break;
+        		}
+        		$this->export_fields_array[$r][$fieldname]=$fieldlabel;
+        		$this->export_TypeFields_array[$r][$fieldname]=$typeFilter;
+        		$this->export_entities_array[$r][$fieldname]='company';
+        	}
+        }
+
+
         // End add axtra fields
         $this->export_sql_start[$r]='SELECT DISTINCT ';
 		$this->export_sql_end[$r]  =' FROM '.MAIN_DB_PREFIX.'socpeople as c';
 		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'societe as s ON c.fk_soc = s.rowid';
+$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'societe_extrafields as extrasoc ON s.rowid = extrasoc.fk_object';
 		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'c_departements as d ON c.fk_departement = d.rowid';
 		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'c_country as co ON c.fk_pays = co.rowid';
 		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'socpeople_extrafields as extra ON extra.fk_object = c.rowid';
