@@ -228,7 +228,6 @@ if ($object->id)
     $param = '&id=' . $object->id;
     include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_post_headers.tpl.php';
 
-
     // Merge propal PDF docuemnt PDF files
     if (!empty($conf->global->PRODUIT_PDF_MERGE_PROPAL))
     {
@@ -243,7 +242,11 @@ if ($object->id)
 
     	$form = new Form($db);
 
-    	$filearray = dol_dir_list($upload_dir, "files", 0, '', '\.meta$', 'name', SORT_ASC, 1);
+        if (! empty($conf->global->PRODUCT_USE_OLD_PATH_FOR_PHOTO))    // For backward compatiblity, we scan also old dirs
+    	{
+
+    		$filearray = array_merge($filearray,dol_dir_list($upload_dirold, "files", 0, '', '\.meta$', 'name', SORT_ASC, 1));
+    	}
 
     	// For each file build select list with PDF extention
     	if (count($filearray) > 0) 
