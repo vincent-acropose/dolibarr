@@ -131,6 +131,7 @@ class ActionComm extends CommonObject
 
     var $socid;
     var $contactid;
+	var $societeassigned = array();	// Array of societe ids
 
     /**
      * Company linked to action (optional)
@@ -311,6 +312,7 @@ class ActionComm extends CommonObject
         $sql.= (! empty($this->elementtype)?"'".$this->elementtype."'":"null").",";
         $sql.= $conf->entity;
         $sql.= ")";
+		
 
         dol_syslog(get_class($this)."::add", LOG_DEBUG);
         $resql=$this->db->query($sql);
@@ -330,6 +332,29 @@ class ActionComm extends CommonObject
 
 					$sql ="INSERT INTO ".MAIN_DB_PREFIX."actioncomm_resources(fk_actioncomm, element_type, fk_element, mandatory, transparency, answer_status)";
 					$sql.=" VALUES(".$this->id.", 'user', ".$val['id'].", ".(empty($val['mandatory'])?'0':$val['mandatory']).", ".(empty($val['transparency'])?'0':$val['transparency']).", ".(empty($val['answer_status'])?'0':$val['answer_status']).")";
+
+					$resql = $this->db->query($sql);
+					if (! $resql)
+					{
+						$error++;
+		           		$this->errors[]=$this->db->lasterror();
+					}
+					//var_dump($sql);exit;
+				}
+			}
+			
+            // Now insert assignedsociete
+			if (! $error)
+			{
+				foreach($this->societeassigned as $key => $val)
+				{
+			        if (! is_array($val))	// For backward compatibility when val=id
+			        {
+			        	$val=array('id'=>$val);
+			        }
+
+					$sql ="INSERT INTO ".MAIN_DB_PREFIX."actioncomm_resources(fk_actioncomm, element_type, fk_element, mandatory, transparency, answer_status)";
+					$sql.=" VALUES(".$this->id.", 'societe', ".$val['id'].", 0, 0, ".(empty($val['contactid'])?'NULL':$val['contactid']).")";
 
 					$resql = $this->db->query($sql);
 					if (! $resql)
@@ -614,6 +639,41 @@ class ActionComm extends CommonObject
 		}
     }
 
+
+    /**
+     *    Initialize this->societeassigned array with list of id of societe assigned to event
+     *
+     *    @return	int				<0 if KO, >0 if OK
+     */
+    function fetch_societeassigned()
+    {
+        $sql ="SELECT fk_actioncomm, element_type, fk_element, answer_status";
+		$sql.=" FROM ".MAIN_DB_PREFIX."actioncomm_resources";
+		$sql.=" WHERE element_type = 'societe' AND fk_actioncomm = ".$this->id;
+		$resql2=$this->db->query($sql);
+		if ($resql2)
+		{
+			$this->societeassigned=array();
+
+            while ($obj = $this->db->fetch_object($resql2))
+            {
+            	if ($obj->fk_element > 0) $this->societeassigned[$obj->fk_element]=array('id'=>$obj->fk_element, 'contactid'=>$obj->answer_status);
+            	if (empty($this->societeassignedid)) {
+            		$this->socid=$obj->fk_element;	// If not defined (should not happened, we fix this)
+            		$this->contactid=$obj->answer_status;	// If not defined (should not happened, we fix this)
+            		$this->societeassignedid = $this->socid;
+				}
+            }
+
+        	return 1;
+		}
+		else
+		{
+			dol_print_error($this->db);
+			return -1;
+		}
+    }
+
     /**
      *    Delete event from database
      *
@@ -780,7 +840,7 @@ class ActionComm extends CommonObject
             // Now insert assignedusers
 			if (! $error)
 			{
-				$sql ="DELETE FROM ".MAIN_DB_PREFIX."actioncomm_resources where fk_actioncomm = ".$this->id." AND element_type = 'user'";
+				$sql ="DELETE FROM ".MAIN_DB_PREFIX."actioncomm_resources where fk_actioncomm = ".$this->id." AND (element_type = 'user' OR element_type = 'societe')";
 				$resql = $this->db->query($sql);
 
 				foreach($this->userassigned as $key => $val)
@@ -799,6 +859,25 @@ class ActionComm extends CommonObject
 		           		$this->errors[]=$this->db->lasterror();
 					}
 					//var_dump($sql);exit;
+				}
+				
+	            // Now insert assignedsociete
+				foreach($this->societeassigned as $key => $val)
+				{
+			        if (! is_array($val))	// For backward compatibility when val=id
+			        {
+			        	$val=array('id'=>$val);
+			        }
+
+					$sql ="INSERT INTO ".MAIN_DB_PREFIX."actioncomm_resources(fk_actioncomm, element_type, fk_element, mandatory, transparency, answer_status)";
+					$sql.=" VALUES(".$this->id.", 'societe', ".$val['id'].", 0, 0, ".(empty($val['contactid'])?'NULL':$val['contactid']).")";
+
+					$resql = $this->db->query($sql);
+					if (! $resql)
+					{
+						$error++;
+		           		$this->errors[]=$this->db->lasterror();
+					}
 				}
 			}
 

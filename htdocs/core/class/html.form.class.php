@@ -1499,6 +1499,65 @@ class Form
         return $out;
     }
 
+    function select_company_forevent($action='', $htmlname='socid', $show_empty=0, $exclude='', $disabled=0, $include='', $events=array() )
+    {
+        global $conf,$user,$langs,$db;
+		
+		$societestatic= new Societe($db);
+		$contactstatic= new Contact($db);
+
+		$out='';
+
+        // Method with no ajax
+        //$out.='<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+        if ($action == 'view')
+        {
+			$out.='';
+        }
+		else
+		{
+			$out.='<input type="hidden" class="removedassignedsocietehidden" name="removedassignedsociete" value="">';
+			$out.='<script type="text/javascript" language="javascript">jQuery(document).ready(function () {    jQuery(".removedassignedsociete").click(function() {        jQuery(".removedassignedsocietehidden").val(jQuery(this).val());    });})</script>';
+			$out.=$this->select_company('', $htmlname, $filter, $showempty, 0, 0, $events);
+			/* HACK nb caractere recherche contact */
+			$out.=$this->selectcontacts($user->socid, null, 'contactid', 1, '', '', 0, 'minwidth200');
+			$out.=' <input type="submit" class="button" name="'.$action.'assignedtosociete" value="'.dol_escape_htmltag($langs->trans("Add")).'">';
+		}
+		
+		$assignedtosociete=array();
+		if (!empty($_SESSION['assignedtosociete']))
+		{
+			$assignedtosociete=json_decode($_SESSION['assignedtosociete'], true);
+		}
+
+		$nbassignedtosociete=count($assignedtosociete);
+		if ($nbassignedtosociete && $action != 'view') $out.='<br>';
+		$i=0; $ownerid=0;
+		foreach($assignedtosociete as $key => $value)
+		{
+			if ($value['id'] == $ownerid) continue;
+			$societestatic->fetch($value['id']);
+			$out.=$societestatic->getNomUrl(1);
+			if ($i == 0) {
+				 $ownerid = $value['id']; 
+				 $out.=' ('.$langs->trans("Societe").' Active)'; 
+			}
+			if(!empty($value['contactid'])) {
+				$contactstatic->fetch($value['contactid']);
+				$out.=' '.$contactstatic->getNomUrl(1);
+			}
+			if ($action != 'view') $out.=' <input type="image" style="border: 0px;" src="'.img_picto($langs->trans("Remove"), 'delete', '', 0, 1).'" value="'.$societestatic->id.'" class="removedassignedsociete" id="removedassignedsociete_'.$societestatic->id.'" name="removedassignedsociete_'.$societestatic->id.'">';
+			//$out.=' '.($value['mandatory']?$langs->trans("Mandatory"):$langs->trans("Optional"));
+			//$out.=' '.($value['transparency']?$langs->trans("Busy"):$langs->trans("NotBusy"));
+			$out.='<br>';
+			$i++;
+		}
+		
+
+		//$out.='</form>';
+        return $out;
+    }
+
 
     /**
      *  Return list of products for customer in Ajax if Ajax activated or go to select_produits_list

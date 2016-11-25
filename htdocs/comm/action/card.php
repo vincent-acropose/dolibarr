@@ -123,6 +123,25 @@ if (GETPOST('removedassigned') || GETPOST('removedassigned') == '0')
 	$listUserAssignedUpdated = true;
 }
 
+$listSocieteAssignedUpdated = false;
+// Remove user to assigned list
+if (GETPOST('removedassignedsociete') || GETPOST('removedassignedsociete') == '0')
+{
+	$idtoremove=GETPOST('removedassignedsociete');
+	if (! empty($_SESSION['assignedtosociete'])) $tmpassignedsocieteids=json_decode($_SESSION['assignedtosociete'],1);
+	else $tmpassignedsocieteids=array();
+	foreach ($tmpassignedsocieteids as $key => $val)
+	{
+		if ($val['id'] == $idtoremove || $val['id'] == -1) unset($tmpassignedsocieteids[$key]);
+	}
+	$_SESSION['assignedtosociete']=json_encode($tmpassignedsocieteids);
+	$donotclearsession=1;
+	if ($action == 'add') $action = 'create';
+	if ($action == 'update') $action = 'edit';
+	
+	$listSocieteAssignedUpdated = true;
+}
+
 // Add user to assigned list
 if (GETPOST('addassignedtouser') || GETPOST('updateassignedtouser'))
 {
@@ -142,6 +161,27 @@ if (GETPOST('addassignedtouser') || GETPOST('updateassignedtouser'))
 	if ($action == 'update') $action = 'edit';
 
 	$listUserAssignedUpdated = true;
+}
+
+// Add Societe and contact to assigned list
+if (GETPOST('editassignedtosociete') || GETPOST('updateassignedtosociete'))
+{
+	// Add a new user
+	if (GETPOST('assignedtosociete') > 0)
+	{
+		$assignedtosociete=array();
+		if (! empty($_SESSION['assignedtosociete']))
+		{
+			$assignedtosociete=json_decode($_SESSION['assignedtosociete'], true);
+		}
+		$assignedtosociete[GETPOST('assignedtosociete')]=array('id'=>GETPOST('assignedtosociete'), 'contactid'=>GETPOST('contactid'));
+		$_SESSION['assignedtosociete']=json_encode($assignedtosociete);
+	}
+	$donotclearsession=1;
+	if ($action == 'add') $action = 'create';
+	if ($action == 'update') $action = 'edit';
+
+	$listSocieteAssignedUpdated = true;
 }
 
 // Action clone object
@@ -170,6 +210,7 @@ if ($action == 'confirm_clone' && $confirm == 'yes')
 // Add event
 if ($action == 'add')
 {
+	
 	$error=0;
 
     if (empty($backtopage))
@@ -269,6 +310,21 @@ if ($action == 'add')
 
 			$i++;
 		}
+
+		$listofsocieteid=array();
+		if (! empty($_SESSION['assignedtosociete'])) $listofsocieteid=json_decode($_SESSION['assignedtosociete'], true);
+		$i=0;
+		foreach($listofsocieteid as $key => $value)
+		{
+			if ($i == 0)	// First entry
+			{
+				if ($value['id'] > 0) $object->socid=$value['id'];
+			}
+
+			$object->societeassigned[$value['id']]=array('id'=>$value['id'], 'contactid'=>$value['contactid']);
+
+			$i++;
+		}
 	}
 
 	if (! $error && ! empty($conf->global->AGENDA_ENABLE_DONEBY))
@@ -280,7 +336,7 @@ if ($action == 'add')
 
 	if (isset($_POST["contactid"])) $object->contact = $contact;
 
-	if (GETPOST('socid','int') > 0)
+	if (GETPOST('socid','int') > 0 || $object->socid > 0)
 	{
 		$object->socid=GETPOST('socid','int');
 		$object->fetch_thirdparty();
@@ -330,6 +386,7 @@ if ($action == 'add')
 			if (! $object->error)
 			{
 				unset($_SESSION['assignedtouser']);
+				unset($_SESSION['assignedtosociete']);
 
 				$moreparam='';
 				if ($user->id != $object->userownerid) $moreparam="usertodo=-1";	// We force to remove filter so created record is visible when going back to per user view.
@@ -368,7 +425,6 @@ if ($action == 'add')
 		}
 	}
 }
-
 /*
  * Action update event
  */
@@ -391,6 +447,7 @@ if ($action == 'update')
 
 		$object->fetch($id);
 		$object->fetch_userassigned();
+		$object->fetch_societeassigned();
 
 		$datep=dol_mktime($fulldayevent?'00':$aphour, $fulldayevent?'00':$apmin, 0, $_POST["apmonth"], $_POST["apday"], $_POST["apyear"]);
 		$datef=dol_mktime($fulldayevent?'23':$p2hour, $fulldayevent?'59':$p2min, $fulldayevent?'59':'0', $_POST["p2month"], $_POST["p2day"], $_POST["p2year"]);
@@ -403,7 +460,6 @@ if ($action == 'update')
 		$object->priority    = GETPOST("priority");
         $object->fulldayevent= GETPOST("fullday")?1:0;
 		$object->location    = GETPOST('location');
-		$object->socid       = GETPOST("socid");
 		$object->contactid   = GETPOST("contactid",'int');
 		//$object->societe->id = $_POST["socid"];			// deprecated
 		//$object->contact->id = $_POST["contactid"];		// deprecated
@@ -446,6 +502,27 @@ if ($action == 'update')
 			$object->userassigned[$val['id']]=array('id'=>$val['id'], 'mandatory'=>0, 'transparency'=>($user->id == $val['id'] ? $transparency : ''));
 			$i++;
 		}
+		
+		// Societe && CONTACT
+		$listofsocieteid=array();
+		if (! empty($_SESSION['assignedtosociete']))	// Now concat assigned societe
+		{
+			// Restore array with key with same value than param 'id'
+			$tmplist1=json_decode($_SESSION['assignedtosociete'], true); $tmplist2=array();
+			foreach($tmplist1 as $key => $val)
+			{
+				if ($val['id'] > 0 && $val['id'] != $assignedtosociete) $listofsocieteid[$val['id']]=$val;
+			}
+		}
+
+		$object->societeassigned=array();	$object->socid=0; // Clear old content
+		$i=0;
+		foreach($listofsocieteid as $key => $val)
+		{
+			if ($i == 0) $object->socid = $val['id'];
+			$object->societeassigned[$val['id']]=array('id'=>$val['id'], 'contactid'=>$val['contactid']);
+			$i++;
+		}
 
 		$object->transparency = $transparency;		// We set transparency on event (even if we can also store it on each user, standard says this property is for event)
 
@@ -479,12 +556,13 @@ if ($action == 'update')
 		if (! $error)
 		{
 			$db->begin();
-
+			
 			$result=$object->update($user);
 
 			if ($result > 0)
 			{
 				unset($_SESSION['assignedtouser']);
+				unset($_SESSION['assignedtosociete']);
 
 				$db->commit();
 			}
@@ -501,6 +579,7 @@ if ($action == 'update')
         if (! empty($backtopage))
         {
         	unset($_SESSION['assignedtouser']);
+			unset($_SESSION['assignedtosociete']);
             header("Location: ".$backtopage);
             exit;
         }
@@ -742,6 +821,29 @@ if ($action == 'create')
 
 	// Societe, contact
 	print '<tr><td width="30%" class="nowrap">'.$langs->trans("ActionOnCompany").'</td><td>';
+	$listofsocieteid=array();
+	if (empty($donotclearsession))
+	{
+		$assignedtosociete=GETPOST("assignedtosociete")?GETPOST("assignedtosociete"):(! empty($object->socid) && $object->socid > 0 ? $object->socid : null);
+		if ($assignedtosociete) $listofsocieteid[$assignedtosociete]=array('id'=>$assignedtosociete,'mandatory'=>0,'transparency'=>0,'contactid'=>GETPOST());	// Owner first
+		$_SESSION['assignedtosociete']=json_encode($listofsocieteid);
+	}
+	else
+	{
+		if (!empty($_SESSION['assignedtosociete']))
+		{
+			$listofsocieteid=json_decode($_SESSION['assignedtosociete'], true);
+		}
+	}
+
+	$events=array();
+	$events[]=array('method' => 'getContacts', 'url' => dol_buildpath('/core/ajax/contacts.php',1), 'htmlname' => 'contactid', 'params' => array('add-customer-contact' => 'disabled'));
+	
+	print $form->select_company_forevent('edit','assignedtosociete','',1,1,0,$events);
+	/*
+	print '</td></tr>';
+	print '<tr><td width="30%" class="nowrap">'.$langs->trans("ActionOnCompany").'</td><td>';
+	
 	if (GETPOST('socid','int') > 0)
 	{
 		$societe = new Societe($db);
@@ -766,7 +868,7 @@ if ($action == 'create')
 
 	print '<tr><td class="nowrap">'.$langs->trans("ActionOnContact").'</td><td>';
 	$form->select_contacts(GETPOST('socid','int'), GETPOST('contactid'), 'contactid', 1, '', '', 0, 'minwidth200');
-	print '</td></tr>';
+	print '</td></tr>';*/
 
 
 	// Project
@@ -846,7 +948,8 @@ if ($id > 0)
 	$result3=$object->fetch_contact();
 	$result4=$object->fetch_userassigned();
 	$result5=$object->fetch_optionals($id,$extralabels);
-
+	$result6=$object->fetch_societeassigned();
+	
 	if($listUserAssignedUpdated || $donotclearsession) {
 		$aphour	= GETPOST('aphour', 'int');
 		$apmin	= GETPOST('apmin', 'int');
@@ -873,7 +976,7 @@ if ($id > 0)
 		$object->note = GETPOST("note");
 	}
 
-	if ($result1 < 0 || $result2 < 0 || $result3 < 0 || $result4 < 0 || $result5 < 0)
+	if ($result1 < 0 || $result2 < 0 || $result3 < 0 || $result4 < 0 || $result5 < 0 || $result6 < 0)
 	{
 		dol_print_error($db,$object->error);
 		exit;
@@ -1082,16 +1185,31 @@ if ($id > 0)
 		// Thirdparty - Contact
 		if ($conf->societe->enabled)
 		{
-			print '<tr><td width="30%">'.$langs->trans("ActionOnCompany").'</td>';
-			print '<td>';
+			// Societe, contact
+			print '<tr><td width="30%" class="nowrap">'.$langs->trans("ActionOnCompany").'</td><td>';
+			$listofsocieteid=array();
+			if (empty($donotclearsession))
+			{
+				$tmplist1=$object->societeassigned; $tmplist2=array();
+				foreach($tmplist1 as $key => $val)
+				{
+					if ($val['id'] && $val['id']) $listofsocieteid[$val['id']]=$val;
+				}
+				$_SESSION['assignedtosociete']=json_encode($listofsocieteid);
+			}
+			else
+			{
+				if (!empty($object->societeassigned))
+				{
+					$listofsocieteid=json_decode($_SESSION['assignedtosociete'], true);
+				}
+			}
+		
 			$events=array();
 			$events[]=array('method' => 'getContacts', 'url' => dol_buildpath('/core/ajax/contacts.php',1), 'htmlname' => 'contactid', 'params' => array('add-customer-contact' => 'disabled'));
-			print $form->select_company($object->socid,'socid','',1,1,0,$events);
-			print '</td>';
-
-			// Contact
-			print '<td>'.$langs->trans("Contact").'</td><td>';
-			$form->select_contacts($object->socid, $object->contactid, 'contactid', 1, '', '', 0, 'minwidth200');
+			
+			print $form->select_company_forevent('edit','assignedtosociete','',1,1,0,$events);
+		
 			print '</td></tr>';
 		}
 
@@ -1266,32 +1384,29 @@ if ($id > 0)
 		// Third party - Contact
 		if ($conf->societe->enabled)
 		{
-			print '<tr><td width="30%">'.$langs->trans("ActionOnCompany").'</td><td>'.($object->thirdparty->id?$object->thirdparty->getNomUrl(1):$langs->trans("None"));
-			if (is_object($object->thirdparty) && $object->thirdparty->id > 0 && $object->type_code == 'AC_TEL')
+			
+			// Societe, contact
+			print '<tr><td width="30%" class="nowrap">'.$langs->trans("ActionOnCompany").'</td><td>';
+			$listofsocieteid=array();
+			if (empty($donotclearsession))
 			{
-				if ($object->thirdparty->fetch($object->thirdparty->id))
+				$tmplist1=$object->societeassigned; $tmplist2=array();
+				foreach($tmplist1 as $key => $val)
 				{
-					print "<br>".dol_print_phone($object->thirdparty->phone);
+					if ($val['id']) $listofsocieteid[$val['id']]=$val;
 				}
-			}
-			print '</td>';
-			print '<td>'.$langs->trans("Contact").'</td>';
-			print '<td>';
-			if ($object->contactid > 0)
-			{
-				print $object->contact->getNomUrl(1);
-				if ($object->contactid && $object->type_code == 'AC_TEL')
-				{
-					if ($object->contact->fetch($object->contactid))
-					{
-						print "<br>".dol_print_phone($object->contact->phone_pro);
-					}
-				}
+				$_SESSION['assignedtosociete']=json_encode($listofsocieteid);
 			}
 			else
 			{
-				print $langs->trans("None");
+				if (!empty($object->societeassigned))
+				{
+					$listofsocieteid=json_decode($_SESSION['assignedtosociete'], true);
+				}
 			}
+			$events=array();
+			print $form->select_company_forevent('view','assignedtosociete','',1,1,0,$events);
+		
 			print '</td></tr>';
 		}
 
