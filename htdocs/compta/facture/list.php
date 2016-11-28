@@ -142,6 +142,59 @@ if (empty($reshook))
 		setEventMessages($langs->trans("NoLineChecked"), null, "warnings");
 	}
 
+	if (! $error && $massaction == 'setpayed')
+	{
+		require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
+		require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+
+		$db->begin();
+		foreach($toselect as $invoiceid) {
+			$objecttmp=new Facture($db);
+			$result=$objecttmp->fetch($invoiceid);
+			if ($result<0) {
+				setEventMessages($objecttmp->error,$objecttmp->errors,'errors');
+			}else {
+
+				// Creation of payment line
+				$paiement = new Paiement($db);
+				$paiement->datepaye     = dol_now();
+				$paiement->amounts      = array($objecttmp->id=>$objecttmp->total_ttc);   // Array with all payments dispatching
+				$paiement->paiementid   = $objecttmp->mode_reglement_id;
+				//$paiement->num_paiement = $_POST['num_paiement'];
+				//$paiement->note         = $_POST['comment'];
+
+				if (! $error)
+				{
+					$paiement_id = $paiement->create($user, 1);
+					if ($paiement_id < 0)
+					{
+						setEventMessages($paiement->error, $paiement->errors, 'errors');
+						$error++;
+					}
+				}
+
+				if (! $error)
+				{
+					$label='(CustomerInvoicePayment)';
+					if ($objecttmp->type == 2) $label='(CustomerInvoicePaymentBack)';
+					//TODO hard coded account id 1
+					$result=$paiement->addPaymentToBank($user,'payment',$label,1,'','');
+					if ($result < 0)
+					{
+						setEventMessages($paiement->error, $paiement->errors, 'errors');
+						$error++;
+					}
+				}
+			}
+		}
+		if (! $error)
+		{
+			$db->commit();
+		}else {
+			$db->rollback();
+		}
+	}
+
 	if (! $error && $massaction == 'confirm_presend')
 	{
 		$resaction = '';
@@ -149,7 +202,7 @@ if (empty($reshook))
 		$nbignored = 0;
 		$langs->load("mails");
 		include_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-		
+
 		if (!isset($user->email))
 		{
 			$error++;
@@ -167,7 +220,7 @@ if (empty($reshook))
 			{
 				$objecttmp=new Facture($db);	// must create new instance because instance is saved into $listofobjectref array for future use
 				$result=$objecttmp->fetch($toselectid);
-				if ($result > 0) 
+				if ($result > 0)
 				{
 					$listoinvoicesid[$toselectid]=$toselectid;
 					$thirdpartyid=$objecttmp->fk_soc?$objecttmp->fk_soc:$objecttmp->socid;
@@ -176,16 +229,16 @@ if (empty($reshook))
 				}
 			}
 			//var_dump($listofobjectthirdparties);exit;
-			
+
 			foreach ($listofobjectthirdparties as $thirdpartyid)
 			{
 				$result = $thirdparty->fetch($thirdpartyid);
-				if ($result < 0) 
+				if ($result < 0)
 				{
 					dol_print_error($db);
 					exit;
 				}
-				
+
 				// Define recipient $sendto and $sendtocc
 				if (trim($_POST['sendto']))
 				{
@@ -223,9 +276,9 @@ if (empty($reshook))
 						$sendtocc = $thirdparty->contact_get_property((int) $_POST['receivercc'],'email');
 					}
 				}
-				
+
 				//var_dump($listofobjectref[$thirdpartyid]);	// Array of invoice for this thirdparty
-				
+
 				$attachedfiles=array('paths'=>array(), 'names'=>array(), 'mimes'=>array());
 				$listofqualifiedinvoice=array();
 				$listofqualifiedref=array();
@@ -233,13 +286,13 @@ if (empty($reshook))
 				{
 					//var_dump($object);
 					//var_dump($thirdpartyid.' - '.$objectid.' - '.$object->statut);
-					
+
 					if ($object->statut != Facture::STATUS_VALIDATED)
 					{
 						$nbignored++;
 						continue; // Payment done or started or canceled
 					}
-	
+
 					// Read document
 					// TODO Use future field $object->fullpathdoc to know where is stored default file
 					// TODO If not defined, use $object->modelpdf (or defaut invoice config) to know what is template to use to regenerate doc.
@@ -255,39 +308,39 @@ if (empty($reshook))
 							$object->fetch_thirdparty();
 							$sendto = $object->thirdparty->email;
 						}
-	
-						if (empty($sendto)) 
+
+						if (empty($sendto))
 						{
 							//print "No recipient for thirdparty ".$object->thirdparty->name;
 							$nbignored++;
 							continue;
 						}
-	
+
 						if (dol_strlen($sendto))
 						{
 							// Create form object
 							$attachedfiles=array(
-									'paths'=>array_merge($attachedfiles['paths'],array($file)), 
-									'names'=>array_merge($attachedfiles['names'],array($filename)), 
+									'paths'=>array_merge($attachedfiles['paths'],array($file)),
+									'names'=>array_merge($attachedfiles['names'],array($filename)),
 									'mimes'=>array_merge($attachedfiles['mimes'],array($mime))
 							);
 						}
-	
+
 						$listofqualifiedinvoice[$objectid]=$object;
 						$listofqualifiedref[$objectid]=$object->ref;
 					}
 					else
-					{  
+					{
 						$nbignored++;
 						$langs->load("other");
 						$resaction.='<div class="error">'.$langs->trans('ErrorCantReadFile',$file).'</div>';
 						dol_syslog('Failed to read file: '.$file, LOG_WARNING);
 						continue;
 					}
-					
+
 					//var_dump($listofqualifiedref);
 				}
-	
+
 				if (count($listofqualifiedinvoice) > 0)
 				{
 					$langs->load("commercial");
@@ -297,7 +350,7 @@ if (empty($reshook))
 					$message = GETPOST('message');
 					$sendtocc = GETPOST('sentocc');
 					$sendtobcc = (empty($conf->global->MAIN_MAIL_AUTOCOPY_INVOICE_TO)?'':$conf->global->MAIN_MAIL_AUTOCOPY_INVOICE_TO);
-		
+
 					$substitutionarray=array(
 						'__ID__' => join(', ',array_keys($listofqualifiedinvoice)),
 						'__EMAIL__' => $thirdparty->email,
@@ -308,16 +361,16 @@ if (empty($reshook))
 					    '__REF__' => join(', ',$listofqualifiedref),
 						'__REFCLIENT__' => $thirdparty->name
 					);
-	
+
 					$subject=make_substitutions($subject, $substitutionarray);
 					$message=make_substitutions($message, $substitutionarray);
-	
+
 					$filepath = $attachedfiles['paths'];
 					$filename = $attachedfiles['names'];
 					$mimetype = $attachedfiles['mimes'];
-					
+
 					//var_dump($filepath);
-					
+
 					// Send mail
 					require_once(DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php');
 					$mailfile = new CMailFile($subject,$sendto,$from,$message,$filepath,$mimetype,$filename,$sendtocc,$sendtobcc,$deliveryreceipt,-1);
@@ -331,9 +384,9 @@ if (empty($reshook))
 						if ($result)
 						{
 							$resaction.=$langs->trans('MailSuccessfulySent',$mailfile->getValidAddress($from,2),$mailfile->getValidAddress($sendto,2)).'<br>';		// Must not contain "
-	
+
 							$error=0;
-	
+
 							// Insert logs into agenda
 							foreach($listofqualifiedinvoice as $invid => $object)
 							{
@@ -346,7 +399,7 @@ if (empty($reshook))
 									$actionmsg = dol_concatdesc($actionmsg, $langs->transnoentities('TextUsedInTheMessageBody') . ":");
 									$actionmsg = dol_concatdesc($actionmsg, $message);
 								}
-								
+
 								// Initialisation donnees
 								$object->sendtoid		= 0;
 								$object->actiontypecode	= $actiontypecode;
@@ -354,14 +407,14 @@ if (empty($reshook))
 								$object->actionmsg2		= $actionmsg2; // Short text
 								$object->fk_element		= $invid;
 								$object->elementtype	= $object->element;
-		
+
 								// Appel des triggers
 								include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
 								$interface=new Interfaces($db);
 								$result=$interface->run_triggers('BILL_SENTBYMAIL',$object,$user,$langs,$conf);
 								if ($result < 0) { $error++; $errors=$interface->errors; }
 								// Fin appel triggers
-		
+
 								if ($error)
 								{
 									setEventMessages($db->lasterror(), $errors, 'errors');
@@ -392,7 +445,7 @@ if (empty($reshook))
 			$resaction.=$langs->trans("NbSelected").': '.count($toselect)."\n<br>";
 			$resaction.=$langs->trans("NbIgnored").': '.($nbignored?$nbignored:0)."\n<br>";
 			$resaction.=$langs->trans("NbSent").': '.($nbsent?$nbsent:0)."\n<br>";
-			
+
 			if ($nbsent)
 			{
 				$action='';	// Do not show form post if there was at least one successfull sent
@@ -405,7 +458,7 @@ if (empty($reshook))
 				setEventMessages($resaction, null, 'warnings');
 			}
 		}
-		
+
 		$action='list';
 		$massaction='';
 	}
@@ -435,7 +488,7 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
     $month_lim='';
 }
 
-    
+
 
 /*
  * View
@@ -560,7 +613,7 @@ if ($resql)
     $num = $db->num_rows($resql);
 
 	$arrayofselected=is_array($toselect)?$toselect:array();
-    
+
     if ($socid)
     {
         $soc = new Societe($db);
@@ -586,19 +639,19 @@ if ($resql)
 	if ($search_status != '') $param.='&search_status='.$search_status;
 	if ($search_paymentmode > 0) $param.='search_paymentmode='.$search_paymentmode;
 	$param.=(! empty($option)?"&amp;option=".$option:"");
-	
-	$massactionbutton=$form->selectMassAction('', $massaction ? array() : array('presend'=>$langs->trans("SendByMail")));
-    
+
+	$massactionbutton=$form->selectMassAction('', $massaction ? array() : array('presend'=>$langs->trans("SendByMail"),'setpayed'=>$langs->trans("Classer payées")));
+
     $i = 0;
     print '<form method="POST" name="searchFormList" action="'.$_SERVER["PHP_SELF"].'">'."\n";
-    
+
 	print_barre_liste($langs->trans('BillsCustomers').' '.($socid?' '.$soc->name:''),$page,$_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,$massactionbutton,$num,$nbtotalofrecords,'title_accountancy.png');
 
 	if ($massaction == 'presend')
 	{
 		$langs->load("mails");
-		
-		if (! GETPOST('cancel')) 
+
+		if (! GETPOST('cancel'))
 		{
 			$objecttmp=new Facture($db);
 			$listofselectedid=array();
@@ -607,7 +660,7 @@ if ($resql)
 			foreach($arrayofselected as $toselectid)
 			{
 				$result=$objecttmp->fetch($toselectid);
-				if ($result > 0) 
+				if ($result > 0)
 				{
 					$listofselectedid[$toselectid]=$toselectid;
 					$thirdpartyid=$objecttmp->fk_soc?$objecttmp->fk_soc:$objecttmp->socid;
@@ -618,10 +671,10 @@ if ($resql)
 		}
 
 		print '<input type="hidden" name="massaction" value="confirm_presend">';
-		
+
 		include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
-		$formmail = new FormMail($db);		
-		
+		$formmail = new FormMail($db);
+
 		dol_fiche_head(null, '', '');
 
 		$topicmail="SendBillRef";
@@ -686,11 +739,11 @@ if ($resql)
 		//$formmail->param['returnurl']=$_SERVER["PHP_SELF"].'?id='.$object->id;
 
 		print $formmail->get_form();
-        
+
         dol_fiche_end();
 	}
-	
-	
+
+
     if ($optioncss != '') print '<input type="hidden" name="optioncss" value="'.$optioncss.'">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 	print '<input type="hidden" name="action" value="list">';
@@ -703,7 +756,7 @@ if ($resql)
         foreach($fieldstosearchall as $key => $val) $fieldstosearchall[$key]=$langs->trans($val);
         print $langs->trans("FilterOnInto", $sall) . join(', ',$fieldstosearchall);
     }
-    
+
  	// If the user can view prospects other than his'
     $moreforfilter='';
  	if ($user->rights->societe->client->voir || $socid)
@@ -745,7 +798,7 @@ if ($resql)
     }
 
     print '<table class="liste '.($moreforfilter?"listwithfilterbefore":"").'">';
-    		
+
     print '<tr class="liste_titre">';
     print_liste_field_titre($langs->trans('Ref'),$_SERVER['PHP_SELF'],'f.facnumber','',$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('RefCustomer'),$_SERVER["PHP_SELF"],'f.ref_client','',$param,'',$sortfield,$sortorder);
@@ -782,7 +835,7 @@ if ($resql)
     print '</td>';
     print '<td class="liste_titre" align="left"><input class="flat" type="text" size="8" name="search_societe" value="'.$search_societe.'"></td>';
 	print '<td class="liste_titre" align="left">';
-	$form->select_types_paiements($search_paymentmode, 'search_paymentmode', '', 0, 0, 1, 10);
+	$form->select_types_paiements($search_paymentmode, 'search_paymentmode', '', 0, 1, 1, 10);
 	print '</td>';
     print '<td class="liste_titre" align="right"><input class="flat" type="text" size="6" name="search_montant_ht" value="'.$search_montant_ht.'"></td>';
     print '<td class="liste_titre"></td>';
@@ -877,7 +930,7 @@ if ($resql)
             print '<td>';
             $form->form_modes_reglement($_SERVER['PHP_SELF'], $objp->fk_mode_reglement, 'none', '', -1);
             print '</td>';
-            
+
             print '<td align="right">'.price($objp->total_ht,0,$langs).'</td>';
 
             print '<td align="right">'.price($objp->total_tva,0,$langs).'</td>';
