@@ -589,8 +589,8 @@ if ($id > 0)
                 $propal_static->total_tva = $objp->total_tva;
                 $propal_static->total_ttc = $objp->total_ttc;
                 print $propal_static->getNomUrl(1);
-                if ( ($db->jdate($objp->dp) < ($now - $conf->propal->cloture->warning_delay)) && $objp->fk_statut == 1 ) {
-                    print " ".img_warning();
+                if ( ($db->jdate($objp->datelimite) < ($now - $conf->propal->cloture->warning_delay)) && $objp->fk_statut == 1 ) {
+                    print " <!-- ".$objp->datelimite." ".$conf->propal->cloture->warning_delay." -->".img_warning();
                 }
 				print '</td><td align="right" width="80px">'.dol_print_date($db->jdate($objp->dp),'day')."</td>\n";
 				print '<td align="right" style="min-width: 60px">'.price($objp->total_ht).'</td>';
