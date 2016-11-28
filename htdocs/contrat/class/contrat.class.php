@@ -920,8 +920,9 @@ class Contrat extends CommonObject
 				$error ++;
 
 			if (! $error) {
-				if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
-{
+				if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED))
+				{
+					// For avoid conflicts if trigger used
 					$result = $this->insertExtraFields();
 					if ($result < 0) {
 						$error ++;
@@ -2164,13 +2165,14 @@ class Contrat extends CommonObject
 			$this->errors[] = $clonedObj->error;
 		} else {
 			// copy internal contacts
-			if ($clonedObj->copy_linked_contact($this, 'internal') < 0)
-				$error ++;
+			$clonedObj->copy_linked_contact($this, 'internal');
+				//$error ++;
+
 
 				// copy external contacts if same company
-			elseif ($this->socid == $clonedObj->socid) {
-				if ($clonedObj->copy_linked_contact($this, 'external') < 0)
-					$error ++;
+			if ($this->socid == $clonedObj->socid) {
+				$clonedObj->copy_linked_contact($this, 'external');
+					//$error ++;
 			}
 		}
 
