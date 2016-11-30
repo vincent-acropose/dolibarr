@@ -1331,7 +1331,10 @@ function pdf_getlineupexcltax($object,$i,$outputlangs,$hidedetails=0)
  */
 function pdf_getlineupwithtax($object,$i,$outputlangs,$hidedetails=0)
 {
-	global $hookmanager;
+	global $hookmanager,$conf;
+
+	$sign=1;
+	if (isset($object->type) && $object->type == 2 && ! empty($conf->global->INVOICE_POSITIVE_CREDIT_NOTE)) $sign=-1;
 
 	if (is_object($hookmanager) && (($object->lines[$i]->product_type == 9 && !empty($object->lines[$i]->special_code)) || ! empty($object->lines[$i]->fk_parent_line)))
 	{
@@ -1344,7 +1347,7 @@ function pdf_getlineupwithtax($object,$i,$outputlangs,$hidedetails=0)
 	}
 	else
 	{
-		if (empty($hidedetails) || $hidedetails > 1) return price(($object->lines[$i]->subprice) + ($object->lines[$i]->subprice)*($object->lines[$i]->tva_tx)/100, 0, $outputlangs);
+		if (empty($hidedetails) || $hidedetails > 1) return price($sign * (($object->lines[$i]->subprice) + ($object->lines[$i]->subprice)*($object->lines[$i]->tva_tx)/100), 0, $outputlangs);
 	}
 }
 
@@ -1639,7 +1642,10 @@ function pdf_getlinetotalexcltax($object,$i,$outputlangs,$hidedetails=0)
  */
 function pdf_getlinetotalwithtax($object,$i,$outputlangs,$hidedetails=0)
 {
-	global $hookmanager;
+	global $hookmanager,$conf;
+
+	$sign=1;
+	if (isset($object->type) && $object->type == 2 && ! empty($conf->global->INVOICE_POSITIVE_CREDIT_NOTE)) $sign=-1;
 
 	if ($object->lines[$i]->special_code == 3)
 	{
@@ -1660,7 +1666,7 @@ function pdf_getlinetotalwithtax($object,$i,$outputlangs,$hidedetails=0)
 		}
 		else
 		{
-			if (empty($hidedetails) || $hidedetails > 1) return price(($object->lines[$i]->total_ht) + ($object->lines[$i]->total_ht)*($object->lines[$i]->tva_tx)/100, 0, $outputlangs);
+			if (empty($hidedetails) || $hidedetails > 1) return price($sign * (($object->lines[$i]->total_ht) + ($object->lines[$i]->total_ht)*($object->lines[$i]->tva_tx)/100), 0, $outputlangs);
 		}
 	}
 	return '';

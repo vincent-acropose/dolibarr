@@ -792,7 +792,7 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 		}
 
 		// Show list of linked objects
-		$posy = pdf_writeLinkedObjects($pdf, $object, $outputlangs, $posx, $posy, 100, 3, 'R', $default_font_size);
+		//$posy = pdf_writeLinkedObjects($pdf, $object, $outputlangs, $posx, $posy, 100, 3, 'R', $default_font_size);
 
 		if ($showaddress)
 		{
