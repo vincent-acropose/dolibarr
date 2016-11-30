@@ -1259,7 +1259,7 @@ class Form
      *  @param	string	$show_every		0=default list, 1=add also a value "Everybody" at beginning of list
      *  @param	string	$enableonlytext	If option $enableonly is set, we use this text to explain into label why record is disabled. Not used if enableonly is empty.
      *  @param	string	$morecss		More css
-     *  @param  int     $noactive       Show only active users (this will also happened whatever is this option if USER_HIDE_INACTIVE_IN_COMBOBOX is on). 
+     *  @param  int     $noactive       Show only active users (this will also happened whatever is this option if USER_HIDE_INACTIVE_IN_COMBOBOX is on).
      * 	@return	string					HTML select string
      *  @see select_dolgroups
      */
@@ -2077,11 +2077,11 @@ class Form
                 if ($filterkey && $filterkey != '') $label=preg_replace('/('.preg_quote($filterkey).')/i','<strong>$1</strong>',$label,1);
 
                 $opt.=$objp->ref;
-                if (! empty($objp->idprodfournprice) && ($objp->ref != $objp->ref_fourn)) 
+                if (! empty($objp->idprodfournprice) && ($objp->ref != $objp->ref_fourn))
                 	$opt.=' ('.$objp->ref_fourn.')';
                 $opt.=' - ';
                 $outval.=$objRef;
-                if (! empty($objp->idprodfournprice) && ($objp->ref != $objp->ref_fourn)) 
+                if (! empty($objp->idprodfournprice) && ($objp->ref != $objp->ref_fourn))
                 	$outval.=' ('.$objRefFourn.')';
                 $outval.=' - ';
                 $opt.=dol_trunc($label, 72).' - ';
@@ -3021,7 +3021,7 @@ class Form
         $langs->load("categories");
 
 		include_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
-        
+
         $cat = new Categorie($this->db);
         $cate_arbo = $cat->get_full_arbo($type,$excludeafterid);
 
@@ -4480,8 +4480,9 @@ class Form
             foreach($array as $key => $value)
             {
                 $out.='<option value="'.$key.'"';
-                if ($id != '' && $id == $key) $out.=' selected';		// To preselect a value
+                if ($id !== '' && $id == $key) $out.=' selected';		// To preselect a value
                 $out.='>';
+
 
                 if ($key_in_label)
                 {
