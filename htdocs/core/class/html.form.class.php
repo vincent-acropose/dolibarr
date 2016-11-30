@@ -4480,7 +4480,7 @@ class Form
             foreach($array as $key => $value)
             {
                 $out.='<option value="'.$key.'"';
-                if ($id !== '' && $id == $key) $out.=' selected';		// To preselect a value
+                if ($id != '' && $id == $key) $out.=' selected';		// To preselect a value
                 $out.='>';
 
 
