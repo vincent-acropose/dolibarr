@@ -119,6 +119,7 @@ if ($resql)
 
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"e.ref","",$param,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Commande"),$_SERVER["PHP_SELF"]);
 	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom", "", $param,'align="left"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateDeliveryPlanned"),$_SERVER["PHP_SELF"],"e.date_delivery","",$param, 'align="center"',$sortfield,$sortorder);
 	if($conf->livraison_bon->enabled) {
@@ -133,7 +134,7 @@ if ($resql)
 	print '<tr class="liste_titre">';
 	print '<td class="liste_titre">';
 	print '<input class="flat" size="10" type="text" name="search_ref_exp" value="'.$search_ref_exp.'">';
-    print '</td>';
+    print '</td><td>&nbsp;</td>';
 	print '<td class="liste_titre" align="left">';
 	print '<input class="flat" type="text" size="10" name="search_company" value="'.dol_escape_htmltag($search_company).'">';
 	print '</td>';
@@ -167,6 +168,17 @@ if ($resql)
 		$shipment->id=$objp->rowid;
 		$shipment->ref=$objp->ref;
 		print $shipment->getNomUrl(1);
+
+		echo '</td><td>';
+
+		$shipment->fetchObjectLinked(null,'commande', $objp->rowid,'shipping');
+		if(!empty($shipment->linkedObjects['commande'])) {
+
+			list($k, $order) = each($shipment->linkedObjects['commande']);
+
+			echo $order->getNomUrl(1);
+
+		}
 		print "</td>\n";
 
 		// Third party
