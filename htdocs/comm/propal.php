@@ -1645,7 +1645,7 @@ if ($object->statut == 0 && $user->rights->propal->creer)
 		else
 		{
 			// Add free products/services
-			$object->formAddFreeProduct(0,$mysoc,$soc,$hookmanager);
+			//$object->formAddFreeProduct(0,$mysoc,$soc,$hookmanager);
 
 			// Add predefined products/services
 			if (! empty($conf->product->enabled) || ! empty($conf->service->enabled))

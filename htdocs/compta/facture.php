@@ -3056,7 +3056,7 @@ else if ($id > 0 || ! empty($ref))
             else
             {
             	// Add free products/services
-            	$object->formAddFreeProduct(1,$mysoc,$soc,$hookmanager);
+            	//$object->formAddFreeProduct(1,$mysoc,$soc,$hookmanager);
 
             	// Add predefined products/services
             	if (! empty($conf->product->enabled) || ! empty($conf->service->enabled))
@@ -3138,7 +3138,7 @@ else if ($id > 0 || ! empty($ref))
                 }
 
                 // Send by mail
-                if (($object->statut == 1 || $object->statut == 2))
+                if (($object->statut == 1 || $object->statut == 2 || $object->statut == 0))
                 {
                     if ($objectidnext)
                     {

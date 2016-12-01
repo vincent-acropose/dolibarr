@@ -124,6 +124,7 @@ class mod_facture_mercure extends ModeleNumRefFactures
         // Get Mask value
         $mask = '';
         if (is_object($facture) && $facture->type == 2) $mask=$conf->global->FACTURE_MERCURE_MASK_CREDIT;
+	else if (is_object($facture) && $facture->type == 3) $mask='AC'.$conf->global->FACTURE_MERCURE_MASK_INVOICE;
         else $mask=$conf->global->FACTURE_MERCURE_MASK_INVOICE;
         if (! $mask)
         {

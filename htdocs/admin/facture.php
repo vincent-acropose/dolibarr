@@ -634,7 +634,7 @@ if (! empty($conf->banque->enabled))
     $sql.= " FROM ".MAIN_DB_PREFIX."bank_account";
     $sql.= " WHERE clos = 0";
     $sql.= " AND courant = 1";
-    $sql.= " AND entity = ".$conf->entity;
+    $sql.= " AND entity IN (".getEntity('bank_account', 1).")";
     $resql=$db->query($sql);
     if ($resql)
     {
@@ -679,7 +679,7 @@ $sql = "SELECT rowid, label";
 $sql.= " FROM ".MAIN_DB_PREFIX."bank_account";
 $sql.= " WHERE clos = 0";
 $sql.= " AND courant = 1";
-$sql.= " AND entity = ".$conf->entity;
+$sql.= " AND entity IN (".getEntity('bank_account', 1).")";
 $var=True;
 $resql=$db->query($sql);
 if ($resql)
