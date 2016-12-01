@@ -1,0 +1,27 @@
+
+-------- ChangeLog Theme Oblyon --------
+
+Version 1.1:
+ - Message of the day stylized 
+ - Removed navigation bar in "print" mode. Fix margins.
+ - Simplification of the help area. helpdoc.png changed
+ - Add grip_title.png and close_title.png icons (v3.5)
+ - Stylized statistics box (v3.5)
+ - Stylized graphs (colors can be easily changed in graph-color.php)
+ - Changed fonts (mostly Open Sans)
+ - Add variables in style.css.php to change fonts
+ - Add Scanner, BitTorrent, Cron and "Comptabilite Expert" icons
+   	Icons coming from external modules are now visible 
+ - Generic icon modified (only one now)
+ - Add ChangeLog
+
+ - Visual Corrections
+ - Minor bugs fixes
+
+Version 1.0.1: 
+ - Fixed warning PHP message 
+ - Logo Oblyon modified
+
+
+Version 1.0: 
+ - Initial release

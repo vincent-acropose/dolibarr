@@ -833,6 +833,7 @@ function dol_print_date($time,$format='',$tzoutput='tzserver',$outputlangs='',$e
 	else if ($format == 'dayhourxcard')	$format='%Y%m%dT%H%M%SZ';
 	else if ($format == 'dayxcard')	 	$format='%Y%m%d';
 	else if ($format == 'dayrfc')			 $format='%Y-%m-%d';             // DATE_RFC3339
+	else if ($format == 'dayrfcinv')			 $format='%d-%m-%Y';             // DATE_RFC3339
 	else if ($format == 'dayhourrfc')		 $format='%Y-%m-%dT%H:%M:%SZ';   // DATETIME RFC3339
 	else if ($format == 'standard')		$format='%Y-%m-%d %H:%M:%S';
 

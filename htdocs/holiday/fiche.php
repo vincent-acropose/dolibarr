@@ -617,6 +617,20 @@ if ($action=='reset') {
 	$cp->fetch($_GET['id']);
 	$cp->statut=1;
 	$cp->update($user);
+    $nbJour = $nbopenedday=num_open_day($cp->date_debut,$cp->date_fin,0,1);
+
+	$rtt = false;
+	if ($cp->type_conges == 'rtt') $rtt = true;
+	
+    $soldeActuel = $cp->getCpforUser($cp->fk_user, $rtt);
+    if ($rtt) $newSolde = $soldeActuel + ($nbJour*$cp->getConfCP('nbRttDeducted'));
+	else $newSolde = $soldeActuel + ($nbJour*$cp->getConfCP('nbHolidayDeducted'));
+
+    // On ajoute la modification dans le LOG
+    $cp->addLogCP($user->id,$cp->fk_user, $langs->trans('Event').': '.$langs->transnoentitiesnoconv("Holidays"),$newSolde);
+
+    // Mise à jour du solde
+	$cp->updateSoldeCP($cp->fk_user,$newSolde, $rtt);
 }
 
 

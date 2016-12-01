@@ -137,7 +137,7 @@ function print_actions_filter($form, $canedit, $status, $year, $month, $day, $sh
 	print '</td>';
 	
 	// Buttons
-	print '<td align="left" valign="middle" class="nowrap">';
+	print '<td align="center" valign="middle" class="nowrap">';
 	print img_picto ( $langs->trans ( "ViewCal" ), 'object_calendar', 'class="hideonsmartphone"' ) . ' <input type="submit" class="button" style="min-width:120px" name="viewcal" value="' . $langs->trans ( "ViewCal" ) . '">';
 	print '<br>';
 	print img_picto ( $langs->trans ( "ViewWeek" ), 'object_calendarweek', 'class="hideonsmartphone"' ) . ' <input type="submit" class="button" style="min-width:120px" name="viewweek" value="' . $langs->trans ( "ViewWeek" ) . '">';

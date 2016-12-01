@@ -81,9 +81,9 @@ if ($action == "add")
     }
 
     // Option du nombre de jours à ajouter chaque mois
-    $nbHolidayEveryMonth = price2num($_POST['nbHolidayEveryMonth'],5);
+    $nbHolidayEveryYear = price2num($_POST['nbHolidayEveryYear'],5);
 
-    if(!$cp->updateConfCP('nbHolidayEveryMonth',$nbHolidayEveryMonth))
+    if(!$cp->updateConfCP('nbHolidayEveryYear',$nbHolidayEveryYear))
     {
         $error = true;
     }
@@ -324,8 +324,8 @@ print '</tr>'."\n";
 
 $var=!$var;
 print '<tr '.$bc[$var].'>'."\n";
-print '<td style="padding:5px;">'.$langs->trans('nbHolidayEveryMonthCP').'</td>'."\n";
-print '<td style="padding:5px;"><input class="flat" type="text" name="nbHolidayEveryMonth" value="'.$cp->getConfCP('nbHolidayEveryMonth').'" size="5"/> '.$langs->trans('DurationDays').'</td>'."\n";
+print '<td style="padding:5px;">'.$langs->trans('nbHolidayEveryYearCP').'</td>'."\n";
+print '<td style="padding:5px;"><input class="flat" type="text" name="nbHolidayEveryYear" value="'.$cp->getConfCP('nbHolidayEveryYear').'" size="5"/> '.$langs->trans('DurationDays').'</td>'."\n";
 print '</tr>'."\n";
 
 $var=!$var;

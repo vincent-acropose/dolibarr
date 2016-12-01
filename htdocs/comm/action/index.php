@@ -78,7 +78,7 @@ $type=GETPOST("type");
 $maxprint=(isset($_GET["maxprint"])?GETPOST("maxprint"):$conf->global->AGENDA_MAX_EVENTS_DAY_VIEW);
 $actioncode=GETPOST("actioncode","alpha",3)?GETPOST("actioncode","alpha",3):(GETPOST("actioncode")=="0"?'':(empty($conf->global->AGENDA_USE_EVENT_TYPE)?'AC_OTH':''));
 
-if (GETPOST('viewcal') && $action != 'show_day' && $action != 'show_week')  {
+if (GETPOST('viewcal'))  {
     $action='show_month'; $day='';
 }                                                   // View by month
 if (GETPOST('viewweek')) {
