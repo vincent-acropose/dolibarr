@@ -119,7 +119,7 @@ if ($resql)
 
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"e.ref","",$param,'',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Commande"),$_SERVER["PHP_SELF"]);
+	print_liste_field_titre('Réf client Commande',$_SERVER["PHP_SELF"]);
 	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom", "", $param,'align="left"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateDeliveryPlanned"),$_SERVER["PHP_SELF"],"e.date_delivery","",$param, 'align="center"',$sortfield,$sortorder);
 	if($conf->livraison_bon->enabled) {
@@ -176,8 +176,8 @@ if ($resql)
 
 			list($k, $order) = each($shipment->linkedObjects['commande']);
 
-			echo $order->getNomUrl(1);
-
+			//echo $order->getNomUrl(1);
+			echo $order->ref_client;
 		}
 		print "</td>\n";
 
