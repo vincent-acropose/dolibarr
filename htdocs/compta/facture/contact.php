@@ -2,7 +2,7 @@
 /* Copyright (C) 2005      Patrick Rouillon     <patrick@rouillon.net>
  * Copyright (C) 2005-2009 Destailleur Laurent  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2011-2012 Philippe Grand       <philippe.grand@atoo-net.com>
+ * Copyright (C) 2011-2015 Philippe Grand       <philippe.grand@atoo-net.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ $object = new Facture($db);
 
 
 /*
- * Ajout d'un nouveau contact
+ * Add a new contact
  */
 
 if ($action == 'addcontact' && $user->rights->facture->creer)
@@ -71,16 +71,16 @@ if ($action == 'addcontact' && $user->rights->facture->creer)
 		if ($object->error == 'DB_ERROR_RECORD_ALREADY_EXISTS')
 		{
 			$langs->load("errors");
-			setEventMessage($langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType"), 'errors');
+			setEventMessages($langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType"), null, 'errors');
 		}
 		else
 		{
-			setEventMessage($object->error, 'errors');
+			setEventMessages($object->error, $object->errors, 'errors');
 		}
 	}
 }
 
-// Bascule du statut d'un contact
+// Toggle the status of a contact
 else if ($action == 'swapstatut' && $user->rights->facture->creer)
 {
 	if ($object->fetch($id))
@@ -93,7 +93,7 @@ else if ($action == 'swapstatut' && $user->rights->facture->creer)
 	}
 }
 
-// Efface un contact
+// Deletes a contact
 else if ($action == 'deletecontact' && $user->rights->facture->creer)
 {
 	$object->fetch($id);
@@ -114,7 +114,7 @@ else if ($action == 'deletecontact' && $user->rights->facture->creer)
  * View
  */
 
-llxHeader('', $langs->trans("Bill"), "Facture");
+llxHeader('', $langs->trans("InvoiceCustomer"));
 
 $form = new Form($db);
 $formcompany = new FormCompany($db);
@@ -124,7 +124,7 @@ $userstatic=new User($db);
 
 /* *************************************************************************** */
 /*                                                                             */
-/* Mode vue et edition                                                         */
+/* View and edit mode                                                         */
 /*                                                                             */
 /* *************************************************************************** */
 
@@ -139,14 +139,14 @@ if ($id > 0 || ! empty($ref))
 		dol_fiche_head($head, 'contact', $langs->trans('InvoiceCustomer'), 0, 'bill');
 
 		/*
-		 *   Facture synthese pour rappel
+		 *   Summary invoice for reminder
 		 */
 		print '<table class="border" width="100%">';
 
 		$linkback = '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
 		// Ref
-		print '<tr><td width="20%">'.$langs->trans('Ref').'</td>';
+		print '<tr><td class="titlefield">'.$langs->trans('Ref').'</td>';
 		print '<td colspan="3">';
 		$morehtmlref='';
 		$discount=new DiscountAbsolute($db);
@@ -163,19 +163,16 @@ if ($id > 0 || ! empty($ref))
 		print '</td></tr>';
 
 		// Ref customer
-		print '<tr><td width="20%">';
-        print '<table class="nobordernopadding" width="100%"><tr><td>';
+		print '<tr><td>';
         print $langs->trans('RefCustomer');
         print '</td>';
-        print '</tr></table>';
-        print '</td>';
-        print '<td colspan="5">';
+        print '<td colspan="3">';
         print $object->ref_client;
 		print '</td></tr>';
 
 		// Customer
 		print "<tr><td>".$langs->trans("Company")."</td>";
-		print '<td colspan="3">'.$object->client->getNomUrl(1,'compta').'</td></tr>';
+		print '<td colspan="3">'.$object->thirdparty->getNomUrl(1,'compta').'</td></tr>';
 		print "</table>";
 
 		dol_fiche_end();

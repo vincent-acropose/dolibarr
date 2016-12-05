@@ -1,7 +1,7 @@
 <?php
-/* Copyright (C) 2012 Regis Houssin       <regis.houssin@capnetworks.com>
- * Copyright (C) 2013 Florian Henry	      <florian.henry@open-concept.pro>
- * Copyright (C) 2014 Laurent Destailleur <eldy@destailleur.fr>
+/* Copyright (C)    2013      Cédric Salvador     <csalvador@gpcsolutions.fr>
+ * Copyright (C)    2013-2014 Laurent Destailleur <eldy@users.sourceforge.net>
+ * Copyright (C)	2015	  Marcos García		  <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,68 +15,75 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * or see http://www.gnu.org/
  */
 
-$module = $object->element;
-$note_public = 'note_public';
-$note_private = 'note_private';
+$langs->load("link");
+if (empty($relativepathwithnofile)) $relativepathwithnofile='';
 
-$colwidth=(isset($colwidth)?$colwidth:25);
 
-$permission=(isset($permission)?$permission:(isset($user->rights->$module->creer)?$user->rights->$module->creer:0));    // If already defined by caller page
-$moreparam=(isset($moreparam)?$moreparam:'');
-$value_public=$object->note_public;
-$value_private=$object->note_private;
-if (! empty($conf->global->MAIN_AUTO_TIMESTAMP_IN_PUBLIC_NOTES))
+/*
+ * Confirm form to delete
+ */
+
+if ($action == 'delete')
 {
-	$stringtoadd=dol_print_date(dol_now(), 'dayhour').' '.$user->getFullName($langs).' --';
-	if (GETPOST('action') == 'edit'.$note_public)
-	{
-		$value_public=dol_concatdesc($value_public, ($value_public?"\n":"")."-- ".$stringtoadd);
-		if (dol_textishtml($value_public)) $value_public.="<br>\n";
-		else $value_public.="\n";
-	}
-}
-if (! empty($conf->global->MAIN_AUTO_TIMESTAMP_IN_PRIVATE_NOTES))
-{
-	$stringtoadd=dol_print_date(dol_now(), 'dayhour').' '.$user->getFullName($langs).' --';
-	if (GETPOST('action') == 'edit'.$note_private)
-	{
-		$value_private=dol_concatdesc($value_private, ($value_private?"\n":"")."-- ".$stringtoadd);
-		if (dol_textishtml($value_private)) $value_private.="<br>\n";
-		else $value_private.="\n";
-	}
+	$langs->load("companies");	// Need for string DeleteFile+ConfirmDeleteFiles
+	$ret = $form->form_confirm(
+			$_SERVER["PHP_SELF"] . '?id=' . $object->id . '&urlfile=' . urlencode(GETPOST("urlfile")) . '&linkid=' . GETPOST('linkid', 'int') . (empty($param)?'':$param),
+			$langs->trans('DeleteFile'),
+			$langs->trans('ConfirmDeleteFile'),
+			'confirm_deletefile',
+			'',
+			0,
+			1
+	);
+	if ($ret == 'html') print '<br>';
 }
 
-// Special cases
-if ($module == 'propal')                { $permission=$user->rights->propale->creer;}
-elseif ($module == 'askpricesupplier')  { $permission=$user->rights->askpricesupplier->creer;}
-elseif ($module == 'fichinter')         { $permission=$user->rights->ficheinter->creer;}
-elseif ($module == 'project')           { $permission=$user->rights->projet->creer;}
-elseif ($module == 'project_task')      { $permission=$user->rights->projet->creer;}
-elseif ($module == 'invoice_supplier')  { $permission=$user->rights->fournisseur->facture->creer;}
-elseif ($module == 'order_supplier')    { $permission=$user->rights->fournisseur->commande->creer;}
-elseif ($module == 'societe')    		{ $permission=$user->rights->societe->creer;}
-elseif ($module == 'contact')    		{ $permission=$user->rights->societe->creer;}
-elseif ($module == 'shipping')    		{ $permission=$user->rights->expedition->creer;}
-//else dol_print_error('','Bad value '.$module.' for param module');
+$formfile=new FormFile($db);
 
-if (! empty($conf->global->FCKEDITOR_ENABLE_SOCIETE)) $typeofdata='ckeditor:dolibarr_notes:100%:200::1:12:100';	// Rem: This var is for all notes, not only thirdparties note.
-else $typeofdata='textarea:12:100';
+// We define var to enable the feature to add prefix of uploaded files
+$savingdocmask='';
+if (empty($conf->global->MAIN_DISABLE_SUGGEST_REF_AS_PREFIX))
+{
+	//var_dump($modulepart);
+	if (in_array($modulepart,array('facture_fournisseur','commande_fournisseur','facture','commande','propal','supplier_proposal','ficheinter','contract','project','project_task','expensereport')))
+	{
+		$savingdocmask=dol_sanitizeFileName($object->ref).'-__file__';
+	}
+	/*if (in_array($modulepart,array('member')))
+	{
+		$savingdocmask=$object->login.'___file__';
+	}*/
+}
 
-?>
+// Show upload form (document and links)
+$formfile->form_attach_new_file(
+    $_SERVER["PHP_SELF"].'?id='.$object->id.(empty($withproject)?'':'&withproject=1'),
+    '',
+    0,
+    0,
+    $permission,
+    $conf->browser->layout == 'phone' ? 40 : 60,
+    $object,
+	'',
+	1,
+	$savingdocmask
+);
 
-<!-- BEGIN PHP TEMPLATE NOTES -->
-<div class="border table-border centpercent">
-	<div class="table-border-row">
-		<div class="table-key-border-col"<?php echo ' style="width: '.$colwidth.'%"'; ?>><?php echo $form->editfieldkey("NotePublic", $note_public, $value_public, $object, $permission, $typeofdata, $moreparam); ?></div>
-		<div class="table-val-border-col"><?php echo $form->editfieldval("NotePublic", $note_public, $value_public, $object, $permission, $typeofdata, '', null, null, $moreparam); ?></div>
-	</div>
-<?php if (empty($user->societe_id)) { ?>
-	<div class="table-border-row">
-		<div class="table-key-border-col"<?php echo ' style="width: '.$colwidth.'%"'; ?>><?php echo $form->editfieldkey("NotePrivate", $note_private, $value_private, $object, $permission, $typeofdata, $moreparam); ?></div>
-		<div class="table-val-border-col"><?php echo $form->editfieldval("NotePrivate", $note_private, $value_private, $object, $permission, $typeofdata, '', null, null, $moreparam); ?></div>
-	</div>
-<?php } ?>
-</div>
-<!-- END PHP TEMPLATE NOTES-->
+// List of document
+$formfile->list_of_documents(
+    $filearray,
+    $object,
+    $modulepart,
+    $param,
+    0,
+    $relativepathwithnofile,		// relative path with no file. For example "moduledir/0/1"
+    $permission
+);
+
+print "<br>";
+//List of links
+$formfile->listOfLinks($object, $permission, $action, GETPOST('linkid', 'int'), $param);
+print "<br>";

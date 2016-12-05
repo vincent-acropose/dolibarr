@@ -1,4 +1,2 @@
 # Dolibarr language file - Source file is en_US - companies
-VATIsUsed=Sujeto a ITBIS
-VATIsNotUsed=No sujeto a ITBIS
-VATIntraCheckDesc=El link <b>%s</b> permite consultar al servicio europeo de control de números de ITBIS intracomunitario. Se requiere acceso a internet para que el servicio funcione
+YouMustCreateContactFirst=To be able to add email notifications, you must first define contacts with valid emails for the third party

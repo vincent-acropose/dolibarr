@@ -40,8 +40,9 @@ create table llx_expedition
   fk_address  			integer		DEFAULT NULL, 		-- delivery address (deprecated)
   fk_shipping_method    integer,
   tracking_number       varchar(50),
-  fk_statut             smallint	DEFAULT 0,
-
+  fk_statut             smallint	DEFAULT 0,			-- 0 = draft, 1 = validated, 2 = billed or closed depending on WORKFLOW_BILL_ON_SHIPMENT option
+  billed                smallint    DEFAULT 0,
+  
   height                float,							-- height
   width                 float,							-- with
   size_units            integer,						-- unit of all sizes (height, width, depth)
@@ -50,6 +51,10 @@ create table llx_expedition
   weight                float,							-- weight
   note_private          text,
   note_public           text,
-  model_pdf             varchar(255)
+  model_pdf             varchar(255),
+  fk_incoterms          integer,						-- for incoterms
+  location_incoterms    varchar(255),					-- for incoterms
   
+  import_key			varchar(14),
+  extraparams			varchar(255)							-- for other parameters with json format
 )ENGINE=innodb;

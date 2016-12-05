@@ -132,7 +132,9 @@ class box_graph_invoices_permonth extends ModeleBoxes
 				$mesg = $px1->isGraphKo();
 				if (! $mesg)
 				{
-					$px1->SetData($data1);
+				    $langs->load("bills");
+				    
+				    $px1->SetData($data1);
 					unset($data1);
 					$px1->SetPrecisionY(0);
 					$i=$startyear;$legend=array();
@@ -170,6 +172,8 @@ class box_graph_invoices_permonth extends ModeleBoxes
 				$mesg = $px2->isGraphKo();
 				if (! $mesg)
 				{
+				    $langs->load("bills");
+
 					$px2->SetData($data2);
 					unset($data2);
 					$px2->SetPrecisionY(0);
@@ -215,9 +219,9 @@ class box_graph_invoices_permonth extends ModeleBoxes
 				$stringtoshow.='<form class="flat formboxfilter" method="POST" action="'.$_SERVER["PHP_SELF"].'">';
 				$stringtoshow.='<input type="hidden" name="action" value="'.$refreshaction.'">';
 				$stringtoshow.='<input type="hidden" name="DOL_AUTOSET_COOKIE" value="DOLUSERCOOKIE_box_'.$this->boxcode.':year,shownb,showtot">';
-				$stringtoshow.='<input type="checkbox" name="'.$param_shownb.'"'.($shownb?' checked="true"':'').'> '.$langs->trans("NumberOfBillsByMonth");
+				$stringtoshow.='<input type="checkbox" name="'.$param_shownb.'"'.($shownb?' checked':'').'> '.$langs->trans("NumberOfBillsByMonth");
 				$stringtoshow.=' &nbsp; ';
-				$stringtoshow.='<input type="checkbox" name="'.$param_showtot.'"'.($showtot?' checked="true"':'').'> '.$langs->trans("AmountOfBillsByMonthHT");
+				$stringtoshow.='<input type="checkbox" name="'.$param_showtot.'"'.($showtot?' checked':'').'> '.$langs->trans("AmountOfBillsByMonthHT");
 				$stringtoshow.='<br>';
 				$stringtoshow.=$langs->trans("Year").' <input class="flat" size="4" type="text" name="'.$param_year.'" value="'.$endyear.'">';
 				$stringtoshow.='<input type="image" alt="'.$langs->trans("Refresh").'" src="'.img_picto($langs->trans("Refresh"),'refresh.png','','',1).'">';
@@ -261,11 +265,12 @@ class box_graph_invoices_permonth extends ModeleBoxes
 	 *
 	 *	@param	array	$head       Array with properties of box title
 	 *	@param  array	$contents   Array with properties of box lines
+	 *  @param	int		$nooutput	No print, only return string
 	 *	@return	void
 	 */
-	function showBox($head = null, $contents = null)
-	{
-		parent::showBox($this->info_box_head, $this->info_box_contents);
+    function showBox($head = null, $contents = null, $nooutput=0)
+    {
+		parent::showBox($this->info_box_head, $this->info_box_contents, $nooutput);
 	}
 
 }

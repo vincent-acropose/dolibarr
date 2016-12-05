@@ -1,7 +1,8 @@
 <?php
-/* Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2007      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2010-2012 Destailleur Laurent <eldy@users.sourceforge.net>
+/* Copyright (C) 2005-2012  Regis Houssin           <regis.houssin@capnetworks.com>
+ * Copyright (C) 2007       Rodolphe Quiedeville    <rodolphe@quiedeville.org>
+ * Copyright (C) 2010-2012  Destailleur Laurent     <eldy@users.sourceforge.net>
+ * Copyright (C) 2015       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +30,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/categories.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formadmin.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 
 $langs->load("categories");
 $langs->load("languages");
@@ -87,14 +89,14 @@ $cancel != $langs->trans("Cancel") &&
 	}
 
 	// sauvegarde en base
-	if ( $object->setMultiLangs() > 0 )
+	if ( $object->setMultiLangs($user) > 0 )
 	{
 		$action = '';
 	}
 	else
 	{
 		$action = 'add';
-		setEventMessage($object->error, 'errors');
+		setEventMessages($object->error, $object->errors, 'errors');
 	}
 }
 
@@ -120,14 +122,14 @@ $cancel != $langs->trans("Cancel") &&
 		}
 	}
 
-	if ( $object->setMultiLangs() > 0 )
+	if ( $object->setMultiLangs($user) > 0 )
 	{
 		$action = '';
 	}
 	else
 	{
 		$action = 'edit';
-		setEventMessage($object->error, 'errors');
+		setEventMessages($object->error, $object->errors, 'errors');
 	}
 }
 
@@ -142,13 +144,15 @@ llxHeader("","",$langs->trans("Translation"));
 
 $form = new Form($db);
 $formadmin=new FormAdmin($db);
+$formother = new FormOther($db);
 
-if ($type == 0) $title=$langs->trans("ProductsCategoryShort");
-elseif ($type == 1) $title=$langs->trans("SuppliersCategoryShort");
-elseif ($type == 2) $title=$langs->trans("CustomersCategoryShort");
-elseif ($type == 3) $title=$langs->trans("MembersCategoryShort");
-elseif ($type == 4) $title=$langs->trans("ContactCategoriesShort");
-else $title=$langs->trans("Category");
+if ($type == Categorie::TYPE_PRODUCT)       $title=$langs->trans("ProductsCategoryShort");
+elseif ($type == Categorie::TYPE_SUPPLIER)  $title=$langs->trans("SuppliersCategoryShort");
+elseif ($type == Categorie::TYPE_CUSTOMER)  $title=$langs->trans("CustomersCategoryShort");
+elseif ($type == Categorie::TYPE_MEMBER)    $title=$langs->trans("MembersCategoryShort");
+elseif ($type == Categorie::TYPE_CONTACT)   $title=$langs->trans("ContactCategoriesShort");
+elseif ($type == Categorie::TYPE_ACCOUNT)   $title=$langs->trans("AccountsCategoriesShort");
+else                                        $title=$langs->trans("Category");
 
 $head = categories_prepare_head($object,$type);
 dol_fiche_head($head, 'translation', $title, 0, 'category');
@@ -157,10 +161,29 @@ print '<table class="border" width="100%">';
 
 // Reference
 print '<tr>';
-print '<td width="15%">'.$langs->trans("Ref").'</td><td colspan="2">';
-print $object->label;
+print '<td class="titlefield notopnoleft">';
+$ways = $object->print_all_ways(" &gt;&gt; ", '', 1);
+print $langs->trans("Ref").'</td><td>';
+print '<a href="'.DOL_URL_ROOT.'/categories/index.php?leftmenu=cat&type='.$type.'">'.$langs->trans("Root").'</a> >> ';
+foreach ($ways as $way)
+{
+    print $way."<br>\n";
+}
 print '</td>';
 print '</tr>';
+
+// Description
+print '<tr><td class="notopnoleft tdtop">';
+print $langs->trans("Description").'</td><td>';
+print dol_htmlentitiesbr($object->description);
+print '</td></tr>';
+
+// Color
+print '<tr><td class="notopnoleft">';
+print $langs->trans("Color").'</td><td>';
+print $formother->showColor($object->color);
+print '</td></tr>';
+
 print '</table>';
 
 if ($action == 'edit')
@@ -179,8 +202,8 @@ if ($action == 'edit')
 		{
 			print "<br><b><u>".$langs->trans('Language_'.$key)." :</u></b><br>";
 			print '<table class="border" width="100%">';
-			print '<tr><td valign="top" width="15%" class="fieldrequired">'.$langs->trans('Label').'</td><td><input name="libelle-'.$key.'" size="40" value="'.$object->multilangs[$key]["label"].'"></td></tr>';
-			print '<tr><td valign="top" width="15%">'.$langs->trans('Description').'</td><td>';
+			print '<tr><td class="fieldtitlecreate fieldrequired">'.$langs->trans('Label').'</td><td><input name="libelle-'.$key.'" size="40" value="'.$object->multilangs[$key]["label"].'"></td></tr>';
+			print '<tr><td class="tdtop">'.$langs->trans('Description').'</td><td>';
 			$doleditor = new DolEditor("desc-$key", $object->multilangs[$key]["description"], '', 160, 'dolibarr_notes', '', false, true, $conf->global->FCKEDITOR_ENABLE_PRODUCTDESC, 3, 80);
 			$doleditor->Create();
 			print '</td></tr>';
@@ -190,9 +213,11 @@ if ($action == 'edit')
 		}
 	}
 
-	print '<br /><center>';
-	print '<input type="submit" class="button" value="'.$langs->trans("Save").'"> &nbsp; &nbsp; ';
-	print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'"></center>';
+	print '<div class="center">';
+	print '<input type="submit" class="button" value="'.$langs->trans("Save").'">';
+	print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+	print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'">';
+	print '</div>';
 
 	print '</form>';
 
@@ -208,9 +233,9 @@ else
 			$s=picto_from_langcode($key);
 			print "<br>".($s?$s.' ':'')." <b>".$langs->trans('Language_'.$key).":</b><br>";
 			print '<table class="border" width="100%">';
-			print '<tr><td width="15%">'.$langs->trans('Label').'</td><td>'.$object->multilangs[$key]["label"].'</td></tr>';
-			print '<tr><td width="15%">'.$langs->trans('Description').'</td><td>'.$object->multilangs[$key]["description"].'</td></tr>';
-			print '<tr><td width="15%">'.$langs->trans('Note').'</td><td>'.$object->multilangs[$key]["note"].'</td></tr>';
+			print '<tr><td class="fieldtitlecreate>'.$langs->trans('Label').'</td><td>'.$object->multilangs[$key]["label"].'</td></tr>';
+			print '<tr><td class="tdtop">'.$langs->trans('Description').'</td><td>'.$object->multilangs[$key]["description"].'</td></tr>';
+			print '<tr><td>'.$langs->trans('Note').'</td><td>'.$object->multilangs[$key]["note"].'</td></tr>';
 			print '</table>';
 		}
 	}
@@ -254,11 +279,11 @@ if ($action == 'add' && ($user->rights->produit->creer || $user->rights->service
 	print '<input type="hidden" name="id" value="'.$_GET["id"].'">';
 
 	print '<table class="border" width="100%">';
-	print '<tr><td valign="top" width="15%" class="fieldrequired">'.$langs->trans('Translation').'</td><td>';
+	print '<tr><td class="fieldtitlecreate fieldrequired">'.$langs->trans('Translation').'</td><td>';
     print $formadmin->select_language('','forcelangprod',0,$object->multilangs);
 	print '</td></tr>';
-	print '<tr><td valign="top" width="15%" class="fieldrequired">'.$langs->trans('Label').'</td><td><input name="libelle" size="40"></td></tr>';
-	print '<tr><td valign="top" width="15%">'.$langs->trans('Description').'</td><td>';
+	print '<tr><td class="fieldrequired">'.$langs->trans('Label').'</td><td><input name="libelle" size="40"></td></tr>';
+	print '<tr><td class="tdtop">'.$langs->trans('Description').'</td><td>';
 	$doleditor = new DolEditor('desc', '', '', 160, 'dolibarr_notes', '', false, true, $conf->global->FCKEDITOR_ENABLE_PRODUCTDESC, 3, 80);
 	$doleditor->Create();
 	print '</td></tr>';
@@ -266,9 +291,11 @@ if ($action == 'add' && ($user->rights->produit->creer || $user->rights->service
 	print '</tr>';
 	print '</table>';
 
-	print '<br><center>';
-	print '<input type="submit" class="button" value="'.$langs->trans("Save").'"> &nbsp; &nbsp; ';
-	print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'"></center>';
+	print '<div class="center">';
+	print '<input type="submit" class="button" value="'.$langs->trans("Save").'">';
+	print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+	print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'">';
+	print '</div>';
 
 	print '</form>';
 

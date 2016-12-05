@@ -5,6 +5,7 @@
  * Copyright (C) 2008		Raphael Bertrand (Resultic)	<raphael.bertrand@resultic.fr>
  * Copyright (C) 2011		Fabrice CHERRIER
  * Copyright (C) 2013       Philippe Grand	            <philippe.grand@atoo-net.com>
+ * Copyright (C) 2015       Marcos García               <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -197,7 +198,7 @@ class pdf_strato extends ModelePDFContract
 				$pdf->SetSubject($outputlangs->transnoentities("ContractCard"));
 				$pdf->SetCreator("Dolibarr ".DOL_VERSION);
 				$pdf->SetAuthor($outputlangs->convToOutputCharset($user->getFullName($outputlangs)));
-				$pdf->SetKeyWords($outputlangs->convToOutputCharset($object->ref)." ".$outputlangs->transnoentities("ContractCard"));
+				$pdf->SetKeyWords($outputlangs->convToOutputCharset($object->ref)." ".$outputlangs->transnoentities("ContractCard")." ".$outputlangs->convToOutputCharset($object->thirdparty->name));
 				if (! empty($conf->global->MAIN_DISABLE_PDF_COMPRESSION)) $pdf->SetCompression(false);
 
 				$pdf->SetMargins($this->marge_gauche, $this->marge_haute, $this->marge_droite);   // Left, Top, Right
@@ -253,7 +254,7 @@ class pdf_strato extends ModelePDFContract
 				{
 					$objectligne = $object->lines[$i];
 
-					$valide = $objectligne->id ? $objectligne->fetch($objectligne->id) : 0;
+					$valide = $objectligne->id ? 1 : 0;
 
 					if ($valide > 0 || $object->specimen)
 					{
@@ -268,18 +269,32 @@ class pdf_strato extends ModelePDFContract
 
 						// Description of product line
 
-						if ($objectligne->datei) {
-							$datei = dol_print_date($objectligne->datei,'dayhour',false,$outputlangs,true);
+						if ($objectligne->date_ouverture_prevue) {
+							$datei = dol_print_date($objectligne->date_ouverture_prevue,'day',false,$outputlangs,true);
 						} else {
 							$datei = $langs->trans("Unknown");
 						}
 
-						if ($objectligne->duration) {
-							$durationi = convertSecondToTime($objectligne->duration);
+						if ($objectligne->date_fin_validite) {
+							$durationi = convertSecondToTime($objectligne->date_fin_validite - $objectligne->date_ouverture_prevue, 'allwithouthour');
+							$datee = dol_print_date($objectligne->date_fin_validite,'day',false,$outputlangs,true);
 						} else {
 							$durationi = $langs->trans("Unknown");
+							$datee = $langs->trans("Unknown");
 						}
 
+						if ($objectligne->date_ouverture) {
+							$daters = dol_print_date($objectligne->date_ouverture,'day',false,$outputlangs,true);
+						} else {
+							$daters = $langs->trans("Unknown");
+						}
+
+						if ($objectligne->date_cloture) {
+							$datere = dol_print_date($objectligne->date_cloture,'day',false,$outputlangs,true);
+						} else {
+							$datere = $langs->trans("Unknown");
+						}
+						
 						$txtpredefinedservice='';
                         $txtpredefinedservice = $objectligne->product_ref;
                         if ($objectligne->product_label)
@@ -288,7 +303,10 @@ class pdf_strato extends ModelePDFContract
                         	$txtpredefinedservice .= $objectligne->product_label;
                         }
 
-						$txt='<strong>'.dol_htmlentitiesbr($outputlangs->transnoentities("Date")." : ".$datei." - ".$outputlangs->transnoentities("Duration")." : ".$durationi,1,$outputlangs->charset_output).'</strong>';
+						$txt='<strong>'.dol_htmlentitiesbr($outputlangs->transnoentities("DateStartPlannedShort")." : ".$datei." - ".$outputlangs->transnoentities("DateEndPlanned")." : ".$datee,1,$outputlangs->charset_output).'</strong>';
+						$txt.='<br>';
+						$txt.='<strong>'.dol_htmlentitiesbr($outputlangs->transnoentities("DateStartRealShort")." : ".$daters,1,$outputlangs->charset_output);
+						if ($objectligne->date_cloture) $txt.=dol_htmlentitiesbr(" - ".$outputlangs->transnoentities("DateEndRealShort")." : ".$datere,1,$outputlangs->charset_output).'</strong>';
 						$desc=dol_htmlentitiesbr($objectligne->desc,1);
 
 						$pdf->writeHTMLCell(0, 0, $curX, $curY, dol_concatdesc($txt,dol_concatdesc($txtpredefinedservice,$desc)), 0, 1, 0);
@@ -462,7 +480,7 @@ class pdf_strato extends ModelePDFContract
 	 *  Show top header of page.
 	 *
 	 *  @param	PDF			$pdf     		Object PDF
-	 *  @param  Object		$object     	Object to show
+	 *  @param  CommonObject		$object     	Object to show
 	 *  @param  int	    	$showaddress    0=no, 1=yes
 	 *  @param  Translate	$outputlangs	Object lang for output
 	 *  @return	void
@@ -536,14 +554,14 @@ class pdf_strato extends ModelePDFContract
 		$posy+=4;
 		$pdf->SetXY($posx,$posy);
 		$pdf->SetTextColor(0,0,60);
-		$pdf->MultiCell(100, 3, $outputlangs->transnoentities("Date")." : " . dol_print_date($object->date_creation,"day",false,$outputlangs,true), '', 'R');
+		$pdf->MultiCell(100, 3, $outputlangs->transnoentities("Date")." : " . dol_print_date($object->date_contrat,"day",false,$outputlangs,true), '', 'R');
 
-		if ($object->client->code_client)
+		if ($object->thirdparty->code_client)
 		{
 			$posy+=4;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("CustomerCode")." : " . $outputlangs->transnoentities($object->client->code_client), '', 'R');
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("CustomerCode")." : " . $outputlangs->transnoentities($object->thirdparty->code_client), '', 'R');
 		}
 
 		if ($showaddress)
@@ -558,7 +576,7 @@ class pdf_strato extends ModelePDFContract
 				$carac_emetteur .= ($carac_emetteur ? "\n" : '' ).$outputlangs->transnoentities("Name").": ".$outputlangs->convToOutputCharset($object->user->getFullName($outputlangs))."\n";
 			}
 
-			$carac_emetteur .= pdf_build_address($outputlangs, $this->emetteur, $object->client);
+			$carac_emetteur .= pdf_build_address($outputlangs, $this->emetteur, $object->thirdparty);
 
 			// Show sender
 			$posy=42;
@@ -596,20 +614,19 @@ class pdf_strato extends ModelePDFContract
 				$result=$object->fetch_contact($arrayidcontact[0]);
 			}
 
-			$this->recipient = $object->client;
+			$this->recipient = $object->thirdparty;
 
-			// Recipient name
-			if (! empty($usecontact)) {
-				// On peut utiliser le nom de la societe du contact
-				if (! empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) $socname = $object->contact->socname;
-				else $socname = $object->client->name;
-				$this->recipient->name = $outputlangs->convToOutputCharset($socname);
-			}
-			else {
-				$this->recipient->name = $outputlangs->convToOutputCharset($object->client->name);
+			//Recipient name
+			// On peut utiliser le nom de la societe du contact
+			if ($usecontact && !empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) {
+				$thirdparty = $object->contact;
+			} else {
+				$thirdparty = $object->thirdparty;
 			}
 
-			$carac_client=pdf_build_address($outputlangs, $this->emetteur, $object->client, (isset($object->contact)?$object->contact:''), $usecontact, 'target');
+			$this->recipient->name = pdfBuildThirdpartyName($thirdparty, $outputlangs);
+
+			$carac_client=pdf_build_address($outputlangs, $this->emetteur, $object->thirdparty, (isset($object->contact)?$object->contact:''), $usecontact, 'target', $object);
 
 			// Show recipient
 			$widthrecbox=100;
@@ -630,9 +647,11 @@ class pdf_strato extends ModelePDFContract
 			$pdf->SetFont('','B', $default_font_size);
 			$pdf->MultiCell($widthrecbox, 4, $this->recipient->name, 0, 'L');
 
+			$posy = $pdf->getY();
+
 			// Show recipient information
 			$pdf->SetFont('','', $default_font_size - 1);
-			$pdf->SetXY($posx+2,$posy+4+(dol_nboflines_bis($this->recipient->name,50)*4));
+			$pdf->SetXY($posx+2,$posy);
 			$pdf->MultiCell($widthrecbox, 4, $carac_client, 0, 'L');
 		}
 	}
@@ -641,14 +660,15 @@ class pdf_strato extends ModelePDFContract
 	 *   	Show footer of page. Need this->emetteur object
      *
 	 *   	@param	PDF			$pdf     			PDF
-	 * 		@param	Object		$object				Object to show
+	 * 		@param	CommonObject		$object				Object to show
 	 *      @param	Translate	$outputlangs		Object lang for output
 	 *      @param	int			$hidefreetext		1=Hide free text
-	 *      @return	void
+	 *      @return	integer
 	 */
 	function _pagefoot(&$pdf,$object,$outputlangs,$hidefreetext=0)
 	{
-		$showdetails=0;
+		global $conf;
+		$showdetails=$conf->global->MAIN_GENERATE_DOCUMENTS_SHOW_FOOT_DETAILS;
 		return pdf_pagefoot($pdf,$outputlangs,'CONTRACT_FREE_TEXT',$this->emetteur,$this->marge_basse,$this->marge_gauche,$this->page_hauteur,$object,$showdetails,$hidefreetext);
 	}
 

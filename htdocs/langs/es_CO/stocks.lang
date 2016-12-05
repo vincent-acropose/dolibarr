@@ -1,2 +1,4 @@
 # Dolibarr language file - Source file is en_US - stocks
-WarehouseMustBeSelectedAtFirstStepWhenProductBatchModuleOn=Source warehouse must be defined here when "product lot" module is on. It will be used to list wich lot/serial is available for product that required lot/serial data for movement. If you want to send products from different warehouses, just make the shipment into several steps.
+StockMustBeEnoughForInvoice=Stock level must be enough to add product/service to invoice (check is done on current real stock when adding a line into invoice whatever is rule for automatic stock change)
+StockMustBeEnoughForOrder=Stock level must be enough to add product/service to order (check is done on current real stock when adding a line into order whatever is rule for automatic stock change)
+StockMustBeEnoughForShipment=Stock level must be enough to add product/service to shipment (check is done on current real stock when adding a line into shipment whatever is rule for automatic stock change)

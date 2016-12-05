@@ -1,8 +1,9 @@
 <?php
 /* Copyright (C) 2013-2014 Olivier Geffroy		<jeff@jeffinfo.com>
- * Copyright (C) 2013-2015 Alexandre Spangaro	<alexandre.spangaro@gmail.com>
+ * Copyright (C) 2013-2016 Alexandre Spangaro	<aspangaro.dolibarr@gmail.com>
  * Copyright (C) 2014      Ari Elbaz (elarifr)	<github@accedinfo.com>
  * Copyright (C) 2014 	   Florian Henry        <florian.henry@open-concept.pro>
+ * Copyright (C) 2016      Laurent Destailleur 	<eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +21,7 @@
 
 /**
  * \file		htdocs/core/modules/modAccounting.class.php
- * \ingroup		Accounting Expert
+ * \ingroup		Advanced accountancy
  * \brief		Module to activate Accounting Expert module
  */
 include_once DOL_DOCUMENT_ROOT .'/core/modules/DolibarrModules.class.php';
@@ -44,12 +45,13 @@ class modAccounting extends DolibarrModules
 		$this->numero = 50400;
 
 		$this->family = "financial";
+		$this->module_position = 610;
 		// Module label (no space allowed), used if translation string 'ModuleXXXName' not found (where XXX is value of numeric property 'numero' of module)
 		$this->name = preg_replace('/^mod/i', '', get_class($this));
 		$this->description = "Advanced accounting management";
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr' or version
-		$this->version = 'development';
+		$this->version = 'experimental';
 
 		$this->const_name = 'MAIN_MODULE_' . strtoupper($this->name);
 		$this->special = 0;
@@ -69,7 +71,7 @@ class modAccounting extends DolibarrModules
 		$this->requiredby = array(); // List of modules id to disable if this one is disabled
 		$this->conflictwith = array("modComptabilite"); // List of modules are in conflict with this module
 		$this->phpmin = array(5, 3); // Minimum version of PHP required by module
-		$this->need_dolibarr_version = array(3, 6); // Minimum version of Dolibarr required by module
+		$this->need_dolibarr_version = array(3, 9); // Minimum version of Dolibarr required by module
 		$this->langfiles = array("accountancy");
 
 		// Constants
@@ -156,16 +158,19 @@ class modAccounting extends DolibarrModules
 				"yesno",
 				"1"
 		);
+		/*
 		$this->const[15] = array (
 				"ACCOUNTING_GROUPBYACCOUNT",
 				"yesno",
 				"1"
 		);
+		*/
 		$this->const[16] = array (
 				"ACCOUNTING_EXPORT_DATE",
 				"chaine",
 				"%d%m%Y"
 		);
+		/*
 		$this->const[17] = array (
 				"ACCOUNTING_EXPORT_PIECE",
 				"yesno",
@@ -174,7 +179,7 @@ class modAccounting extends DolibarrModules
 		$this->const[18] = array (
 				"ACCOUNTING_EXPORT_GLOBAL_ACCOUNT",
 				"yesno",
-				"1" 
+				"1"
 		);
 		$this->const[19] = array (
 				"ACCOUNTING_EXPORT_LABEL",
@@ -184,12 +189,28 @@ class modAccounting extends DolibarrModules
 		$this->const[20] = array (
 				"ACCOUNTING_EXPORT_AMOUNT",
 				"yesno",
-				"1" 
+				"1"
 		);
 		$this->const[21] = array (
 				"ACCOUNTING_EXPORT_DEVISE",
 				"yesno",
-				"1" 
+				"1"
+		);
+		*/
+		$this->const[22] = array(
+				"ACCOUNTING_EXPENSEREPORT_JOURNAL",
+				"chaine",
+				"ER"
+		);
+		$this->const[23] = array(
+				"ACCOUNTING_EXPORT_FORMAT",
+				"chaine",
+				"csv"
+		);
+		$this->const[24] = array(
+				"BANK_DISABLE_DIRECT_INPUT",
+				"yesno",
+				"1"
 		);
 
 		// Tabs
@@ -254,11 +275,11 @@ class modAccounting extends DolibarrModules
 		$this->rights[$r][4] = 'fiscalyear';
 		$this->rights[$r][5] = '';
 		$r++;
-		
+
 		$this->rights[$r][0] = 50440;
 		$this->rights[$r][1] = 'Manage chart of accounts';
 		$this->rights[$r][2] = 'r';
-		$this->rights[$r][3] = 1;
+		$this->rights[$r][3] = 0;
 		$this->rights[$r][4] = 'chartofaccount';
 		$this->rights[$r][5] = '';
 		$r++;
@@ -267,35 +288,4 @@ class modAccounting extends DolibarrModules
 		$this->menus = array();
 		$r = 0;
 	}
-
-    /**
-	 *		Function called when module is enabled.
-	 *		The init function add constants, boxes, permissions and menus (defined in constructor) into Dolibarr database.
-	 *		It also creates data directories
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-     */
-    function init($options='')
-    {
-
-        $sql = array();
-
-        return $this->_init($sql,$options);
-    }
-
-    /**
-	 *		Function called when module is disabled.
-	 *      Remove from database constants, boxes and permissions from Dolibarr database.
-	 *		Data directories are not deleted
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-     */
-    function remove($options='')
-    {
-		$sql = array();
-
-		return $this->_remove($sql,$options);
-    }
 }

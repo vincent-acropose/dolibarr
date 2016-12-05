@@ -1,34 +1,31 @@
+# Dolibarr language file - Source file is en_US - resource
+MenuResourceIndex=Zdroje
+MenuResourceAdd=Nový zdroj
+DeleteResource=Smazat zdroj
+ConfirmDeleteResourceElement=Potvrďte odstranění zdroje pro tento element
+NoResourceInDatabase=Žádný zdroj v databázi.
+NoResourceLinked=Žádný propojený zdroj
 
-MenuResourceIndex=Resources
-MenuResourceAdd=New resource
-MenuResourcePlanning=Resource planning
-DeleteResource=Delete resource
-ConfirmDeleteResourceElement=Confirm delete the resource for this element
-NoResourceInDatabase=No resource in database.
-NoResourceLinked=No resource linked
+ResourcePageIndex=Výpis zdrojů
+ResourceSingular=Zdroj
+ResourceCard=Karta zdroje
+AddResource=Vytvořit zdroj
+ResourceFormLabel_ref=Název zdroje
+ResourceType=Typ zdroje
+ResourceFormLabel_description=Popis zdroje
 
-ResourcePageIndex=Resources list
-ResourceSingular=Resource
-ResourceCard=Resource card
-AddResource=Create a resource
-ResourceFormLabel_ref=Resource name
-ResourceType=Resource type
-ResourceFormLabel_description=Resource description
+ResourcesLinkedToElement=Zdroje propojené s prvkem
 
-ResourcesLinkedToElement=Resources linked to element
+ShowResource=Show resource
 
-ShowResourcePlanning=Show resource planning
-GotoDate=Go to date
+ResourceElementPage=Prvky zdrojů
+ResourceCreatedWithSuccess=Zdroj úspěšně vytvořen
+RessourceLineSuccessfullyDeleted=Propojení zdrojů bylo úspěšně odstraněno
+RessourceLineSuccessfullyUpdated=Propojení zdrojů bylo úspěšně aktualizováno
+ResourceLinkedWithSuccess=Zdroj úspěšně propojen
 
-ResourceElementPage=Element resources
-ResourceCreatedWithSuccess=Resource successfully created
-RessourceLineSuccessfullyDeleted=Resource line successfully deleted
-RessourceLineSuccessfullyUpdated=Resource line successfully updated
-ResourceLinkedWithSuccess=Resource linked with success
+ConfirmDeleteResource=Potvrďte odstranění tohoto zdroje
+RessourceSuccessfullyDeleted=Zdroj úspěšně odstraněn
+DictionaryResourceType=Typy zdrojů
 
-TitleResourceCard=Resource card
-ConfirmDeleteResource=Confirm to delete this resource
-RessourceSuccessfullyDeleted=Resource successfully deleted
-DictionaryResourceType=Type of resources
-
-SelectResource=Select resource
+SelectResource=Výběr zdroje

@@ -17,7 +17,7 @@
 */
 
 /**
- *       \file       htdocs/core/class/html.formmail.class.php
+ *       \file       htdocs/core/class/html.formsms.class.php
  *       \ingroup    core
  *       \brief      Fichier de la classe permettant la generation du formulaire html d'envoi de mail unitaire
  */
@@ -229,7 +229,7 @@ function limitChars(textarea, limit, infodiv)
                 }
                 else
                 {
-                    print '<span class="error">'.$langs->trans("SmsNoPossibleRecipientFound");
+                    print '<span class="error">'.$langs->trans("SmsNoPossibleSenderFound");
                     if (is_object($sms) && ! empty($sms->error)) print ' '.$sms->error;
                     print '</span>';
                 }
@@ -304,31 +304,30 @@ function limitChars(textarea, limit, infodiv)
 
            <tr><td>'.$langs->trans("Priority").' :</td><td>
            <select name="priority" id="valid" class="flat">
-           <option value="0">0</option>
-           <option value="1">1</option>
-           <option value="2">2</option>
-           <option value="3" selected="selected">3</option>
+           <option value="0">high</option>
+           <option value="1">medium</option>
+           <option value="2" selected>low</option>
+           <option value="3">veryLow</option>
            </select></td></tr>
 
            <tr><td>'.$langs->trans("Type").' :</td><td>
            <select name="class" id="valid" class="flat">
            <option value="0">Flash</option>
-           <option value="1" selected="selected">Standard</option>
+           <option value="1" selected>Standard</option>
            <option value="2">SIM</option>
            <option value="3">ToolKit</option>
            </select></td></tr>';
 
         print "</table>\n";
 
-        print '<center>';
-        print "<input class=\"button\" type=\"submit\" name=\"sendmail\" value=\"".$langs->trans("SendSms")."\"";
-        print ">";
+        print '<div class="center">';
+        print '<input class="button" type="submit" name="sendmail" value="'.$langs->trans("SendSms").'">';
         if ($this->withcancel)
         {
-            print " &nbsp; &nbsp; ";
-            print "<input class=\"button\" type=\"submit\" name=\"cancel\" value=\"".$langs->trans("Cancel")."\">";
+            print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+            print '<input class="button" type="submit" name="cancel" value="'.$langs->trans("Cancel").'">';
         }
-        print "</center>\n";
+        print '</div>';
 
         print "</form>\n";
         print "<!-- End form SMS -->\n";

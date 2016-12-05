@@ -1,9 +1,9 @@
 <?php
 /* Copyright (C) 2002-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2005-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2016 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2013	   Florian Henry        <florian.henry@open-concept.pro>
- * Copyright (C) 2014      Marcos García        <marcosgdf@gmail.com>
+ * Copyright (C) 2014-2015 Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,21 +43,55 @@ class Project extends CommonObject
      */
     protected $table_ref_field = 'ref';
 
-    var $id;
-    var $ref;
     var $description;
-    var $statut;
+	/**
+	 * @var string
+	 * @deprecated
+	 * @see title
+	 */
+	public $titre;
     var $title;
     var $date_start;
     var $date_end;
+    var $date_close;
     var $socid;
     var $user_author_id;    //!< Id of project creator. Not defined if shared project.
+	var $user_close_id;
     var $public;      //!< Tell if this is a public or private project
-    var $note_private;
-    var $note_public;
+    var $budget_amount;
+
     var $statuts_short;
-    var $statuts;			// 0=draft, 1=opened, 2=closed
+    var $statuts_long;
+
+    var $statut;			// 0=draft, 1=opened, 2=closed
+    var $opp_status;		// opportunity status, into table llx_c_lead_status
+	var $opp_percent;		// opportunity probability
+
     var $oldcopy;
+
+    var $weekWorkLoad;			// Used to store workload details of a projet
+    var $weekWorkLoadPerTask;	// Used to store workload details of tasks of a projet
+
+	/**
+	 * @var int Creation date
+	 * @deprecated
+	 * @see date_c
+	 */
+	public $datec;
+	/**
+	 * @var int Creation date
+	 */
+	public $date_c;
+	/**
+	 * @var int Modification date
+	 * @deprecated
+	 * @see date_m
+	 */
+	public $datem;
+	/**
+	 * @var int Modification date
+	 */
+	public $date_m;
 
 
     /**
@@ -70,7 +104,7 @@ class Project extends CommonObject
         $this->db = $db;
 
         $this->statuts_short = array(0 => 'Draft', 1 => 'Opened', 2 => 'Closed');
-        $this->statuts = array(0 => 'Draft', 1 => 'Opened', 2 => 'Closed');
+        $this->statuts_long = array(0 => 'Draft', 1 => 'Opened', 2 => 'Closed');
     }
 
     /**
@@ -106,10 +140,14 @@ class Project extends CommonObject
         $sql.= ", fk_soc";
         $sql.= ", fk_user_creat";
         $sql.= ", fk_statut";
+        $sql.= ", fk_opp_status";
+        $sql.= ", opp_percent";
         $sql.= ", public";
         $sql.= ", datec";
         $sql.= ", dateo";
         $sql.= ", datee";
+        $sql.= ", opp_amount";
+        $sql.= ", budget_amount";
         $sql.= ", entity";
         $sql.= ") VALUES (";
         $sql.= "'" . $this->db->escape($this->ref) . "'";
@@ -117,11 +155,15 @@ class Project extends CommonObject
         $sql.= ", '" . $this->db->escape($this->description) . "'";
         $sql.= ", " . ($this->socid > 0 ? $this->socid : "null");
         $sql.= ", " . $user->id;
-        $sql.= ", 0";
+        $sql.= ", ".(is_numeric($this->statut) ? $this->statut : '0');
+        $sql.= ", ".(is_numeric($this->opp_status) ? $this->opp_status : 'NULL');
+        $sql.= ", ".(is_numeric($this->opp_percent) ? $this->opp_percent : 'NULL');
         $sql.= ", " . ($this->public ? 1 : 0);
         $sql.= ", '".$this->db->idate($now)."'";
         $sql.= ", " . ($this->date_start != '' ? "'".$this->db->idate($this->date_start)."'" : 'null');
         $sql.= ", " . ($this->date_end != '' ? "'".$this->db->idate($this->date_end)."'" : 'null');
+        $sql.= ", " . (strcmp($this->opp_amount,'') ? price2num($this->opp_amount) : 'null');
+        $sql.= ", " . (strcmp($this->budget_amount,'') ? price2num($this->budget_amount) : 'null');
         $sql.= ", ".$conf->entity;
         $sql.= ")";
 
@@ -147,7 +189,7 @@ class Project extends CommonObject
             $error++;
         }
 
-        //Update extrafield
+        // Update extrafield
         if (!$error) {
         	if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
         	{
@@ -189,11 +231,21 @@ class Project extends CommonObject
         global $langs, $conf;
 
 		$error=0;
-
+		
         // Clean parameters
         $this->title = trim($this->title);
         $this->description = trim($this->description);
-
+		if ($this->opp_amount < 0) $this->opp_amount='';
+		if ($this->opp_percent < 0) $this->opp_percent='';
+        if ($this->date_end && $this->date_end < $this->date_start)
+        {
+            $this->error = $langs->trans("ErrorDateEndLowerThanDateStart");
+            $this->errors[] = $this->error;
+            $this->db->rollback();
+            dol_syslog(get_class($this)."::update error -3 " . $this->error, LOG_ERR);
+            return -3;
+        }
+        
         if (dol_strlen(trim($this->ref)) > 0)
         {
             $this->db->begin();
@@ -204,13 +256,19 @@ class Project extends CommonObject
             $sql.= ", description = '" . $this->db->escape($this->description) . "'";
             $sql.= ", fk_soc = " . ($this->socid > 0 ? $this->socid : "null");
             $sql.= ", fk_statut = " . $this->statut;
+            $sql.= ", fk_opp_status = " . ((is_numeric($this->opp_status) && $this->opp_status > 0) ? $this->opp_status : 'null');
+			$sql.= ", opp_percent = " . ((is_numeric($this->opp_percent) && $this->opp_percent != '') ? $this->opp_percent : 'null');
             $sql.= ", public = " . ($this->public ? 1 : 0);
             $sql.= ", datec=" . ($this->date_c != '' ? "'".$this->db->idate($this->date_c)."'" : 'null');
             $sql.= ", dateo=" . ($this->date_start != '' ? "'".$this->db->idate($this->date_start)."'" : 'null');
             $sql.= ", datee=" . ($this->date_end != '' ? "'".$this->db->idate($this->date_end)."'" : 'null');
+            $sql.= ", date_close=" . ($this->date_close != '' ? "'".$this->db->idate($this->date_close)."'" : 'null');
+            $sql.= ", fk_user_close=" . ($this->fk_user_close > 0 ? $this->fk_user_close : "null");
+            $sql.= ", opp_amount = " . (strcmp($this->opp_amount, '') ? price2num($this->opp_amount) : "null");
+            $sql.= ", budget_amount = " . (strcmp($this->budget_amount, '')  ? price2num($this->budget_amount) : "null");
             $sql.= " WHERE rowid = " . $this->id;
 
-            dol_syslog(get_class($this)."::Update", LOG_DEBUG);
+            dol_syslog(get_class($this)."::update", LOG_DEBUG);
             $resql=$this->db->query($sql);
             if ($resql)
             {
@@ -247,7 +305,8 @@ class Project extends CommonObject
 							$res=dol_move($olddir, $newdir);
 							if (! $res)
                 			{
-                				$this->error='ErrorFailToMoveDir';
+							    $langs->load("errors");
+								$this->error=$langs->trans('ErrorFailToRenameDir',$olddir,$newdir);
                 				$error++;
                 			}
                 		}
@@ -269,13 +328,13 @@ class Project extends CommonObject
                 $this->error = $this->db->lasterror();
                 $this->errors[] = $this->error;
                 $this->db->rollback();
-                dol_syslog(get_class($this)."::Update error -2 " . $this->error, LOG_ERR);
+                dol_syslog(get_class($this)."::update error -2 " . $this->error, LOG_ERR);
                 $result = -2;
             }
         }
         else
         {
-            dol_syslog(get_class($this)."::Update ref null");
+            dol_syslog(get_class($this)."::update ref null");
             $result = -1;
         }
 
@@ -293,8 +352,8 @@ class Project extends CommonObject
     {
         if (empty($id) && empty($ref)) return -1;
 
-        $sql = "SELECT rowid, ref, title, description, public, datec";
-        $sql.= ", tms, dateo, datee, fk_soc, fk_user_creat, fk_statut, note_private, note_public,model_pdf";
+        $sql = "SELECT rowid, ref, title, description, public, datec, opp_amount, budget_amount,";
+        $sql.= " tms, dateo, datee, date_close, fk_soc, fk_user_creat, fk_user_close, fk_statut, fk_opp_status, opp_percent, note_private, note_public, model_pdf";
         $sql.= " FROM " . MAIN_DB_PREFIX . "projet";
         if (! empty($id))
         {
@@ -325,12 +384,18 @@ class Project extends CommonObject
                 $this->datem = $this->db->jdate($obj->tms);  // TODO deprecated
                 $this->date_start = $this->db->jdate($obj->dateo);
                 $this->date_end = $this->db->jdate($obj->datee);
+                $this->date_close = $this->db->jdate($obj->date_close);
                 $this->note_private = $obj->note_private;
                 $this->note_public = $obj->note_public;
                 $this->socid = $obj->fk_soc;
                 $this->user_author_id = $obj->fk_user_creat;
+                $this->user_close_id = $obj->fk_user_close;
                 $this->public = $obj->public;
                 $this->statut = $obj->fk_statut;
+                $this->opp_status = $obj->fk_opp_status;
+                $this->opp_amount	= $obj->opp_amount;
+                $this->opp_percent	= $obj->opp_percent;
+                $this->budget_amount	= $obj->budget_amount;
                 $this->modelpdf	= $obj->model_pdf;
 
                 $this->db->free($resql);
@@ -391,27 +456,42 @@ class Project extends CommonObject
     }
 
     /**
-     * 	Return list of elements for type linked to project
+     * 	Return list of elements for type, linked to project
      *
-     * 	@param		string		$type			'propal','order','invoice','order_supplier','invoice_supplier'
+     * 	@param		string		$type			'propal','order','invoice','order_supplier','invoice_supplier',...
      * 	@param		string		$tablename		name of table associated of the type
-     * 	@param		string		$datefieldname	name of table associated of the type
-     *  @param		string		$dates			Start date (at 00:00:00)
-     *  @param		string		$datee			End date (at 23:00:00)
-     * 	@return		mixed						List of orders linked to project, < 0 or string if error
+     * 	@param		string		$datefieldname	name of date field for filter
+     *  @param		string		$dates			Start date (ex 00:00:00)
+     *  @param		string		$datee			End date (ex 23:59:59)
+     * 	@return		mixed						Array list of object ids linked to project, < 0 or string if error
      */
     function get_element_list($type, $tablename, $datefieldname='', $dates='', $datee='')
     {
         $elements = array();
-
-        if ($type == 'agenda')
+        
+        if ($this->id <= 0) return $elements;
+        
+		if ($type == 'agenda')
         {
             $sql = "SELECT id as rowid FROM " . MAIN_DB_PREFIX . "actioncomm WHERE fk_project=" . $this->id;
         }
+        elseif ($type == 'expensereport')
+		{
+            $sql = "SELECT ed.rowid FROM " . MAIN_DB_PREFIX . "expensereport as e, " . MAIN_DB_PREFIX . "expensereport_det as ed WHERE e.rowid = ed.fk_expensereport AND ed.fk_projet=" . $this->id;
+		}
+        elseif ($type == 'project_task')
+		{
+			$sql = "SELECT DISTINCT pt.rowid FROM " . MAIN_DB_PREFIX . "projet_task as pt, " . MAIN_DB_PREFIX . "projet_task_time as ptt WHERE pt.rowid = ptt.fk_task AND pt.fk_projet=" . $this->id;
+		}
+		elseif ($type == 'project_task_time')	// Case we want to duplicate line foreach user
+		{
+			$sql = "SELECT DISTINCT pt.rowid, ptt.fk_user FROM " . MAIN_DB_PREFIX . "projet_task as pt, " . MAIN_DB_PREFIX . "projet_task_time as ptt WHERE pt.rowid = ptt.fk_task AND pt.fk_projet=" . $this->id;
+		}
         else
 		{
             $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . $tablename." WHERE fk_projet=" . $this->id;
 		}
+
 		if ($dates > 0)
 		{
 			if (empty($datefieldname) && ! empty($this->table_element_date)) $datefieldname=$this->table_element_date;
@@ -439,7 +519,7 @@ class Project extends CommonObject
                 {
                     $obj = $this->db->fetch_object($result);
 
-                    $elements[$i] = $obj->rowid;
+                    $elements[$i] = $obj->rowid.(empty($obj->fk_user)?'':'_'.$obj->fk_user);
 
                     $i++;
                 }
@@ -482,6 +562,23 @@ class Project extends CommonObject
                 $this->db->rollback();
                 return 0;
             }
+        }
+
+        // Set fk_projet into elements to null
+        $listoftables=array(
+        		'facture'=>'fk_projet','propal'=>'fk_projet','commande'=>'fk_projet','facture_fourn'=>'fk_projet','commande_fournisseur'=>'fk_projet',
+        		'expensereport_det'=>'fk_projet','contrat'=>'fk_projet','fichinter'=>'fk_projet','don'=>'fk_projet'
+        		);
+        foreach($listoftables as $key => $value)
+        {
+   	        $sql = "UPDATE " . MAIN_DB_PREFIX . $key . " SET ".$value." = NULL where ".$value." = ". $this->id;
+	        $resql = $this->db->query($sql);
+	        if (!$resql)
+	        {
+	        	$this->errors[] = $this->db->lasterror();
+	        	$error++;
+	        	break;
+	        }
         }
 
         // Delete tasks
@@ -533,7 +630,7 @@ class Project extends CommonObject
 	        $resql = $this->db->query($sql);
 	        if (!$resql)
 	        {
-	        	$this->errors[] = $this->db->lasterror();
+	        	$this->errors[] = $langs->trans("CantRemoveProject");
 	        	$error++;
 	        }
         }
@@ -655,12 +752,14 @@ class Project extends CommonObject
     /**
      * 		Close a project
      *
-     * 		@param		User	$user		User that validate
+     * 		@param		User	$user		User that close project
      * 		@return		int					<0 if KO, >0 if OK
      */
     function setClose($user)
     {
         global $langs, $conf;
+
+        $now = dol_now();
 
 		$error=0;
 
@@ -669,10 +768,15 @@ class Project extends CommonObject
             $this->db->begin();
 
             $sql = "UPDATE " . MAIN_DB_PREFIX . "projet";
-            $sql.= " SET fk_statut = 2";
+            $sql.= " SET fk_statut = 2, fk_user_close = ".$user->id.", date_close = '".$this->db->idate($now)."'";
             $sql.= " WHERE rowid = " . $this->id;
             $sql.= " AND entity = " . $conf->entity;
             $sql.= " AND fk_statut = 1";
+
+            if (! empty($conf->global->PROJECT_USE_OPPORTUNITIES))
+            {
+            	// TODO What to do if fk_opp_status is not code 'WON' or 'LOST'
+            }
 
             dol_syslog(get_class($this)."::setClose", LOG_DEBUG);
             $resql = $this->db->query($sql);
@@ -730,7 +834,7 @@ class Project extends CommonObject
 
         if ($mode == 0)
         {
-            return $langs->trans($this->statuts[$statut]);
+            return $langs->trans($this->statuts_long[$statut]);
         }
         if ($mode == 1)
         {
@@ -739,79 +843,96 @@ class Project extends CommonObject
         if ($mode == 2)
         {
             if ($statut == 0)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut0') . ' ' . $langs->trans($this->statuts_short[$statut]);
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut0') . ' ' . $langs->trans($this->statuts_short[$statut]);
             if ($statut == 1)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut4') . ' ' . $langs->trans($this->statuts_short[$statut]);
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut4') . ' ' . $langs->trans($this->statuts_short[$statut]);
             if ($statut == 2)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut6') . ' ' . $langs->trans($this->statuts_short[$statut]);
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut6') . ' ' . $langs->trans($this->statuts_short[$statut]);
         }
         if ($mode == 3)
         {
             if ($statut == 0)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut0');
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut0');
             if ($statut == 1)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut4');
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut4');
             if ($statut == 2)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut6');
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut6');
         }
         if ($mode == 4)
         {
             if ($statut == 0)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut0') . ' ' . $langs->trans($this->statuts_short[$statut]);
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut0') . ' ' . $langs->trans($this->statuts_long[$statut]);
             if ($statut == 1)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut4') . ' ' . $langs->trans($this->statuts_short[$statut]);
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut4') . ' ' . $langs->trans($this->statuts_long[$statut]);
             if ($statut == 2)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut6') . ' ' . $langs->trans($this->statuts_short[$statut]);
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut6') . ' ' . $langs->trans($this->statuts_long[$statut]);
         }
         if ($mode == 5)
         {
             if ($statut == 0)
-                return $langs->trans($this->statuts_short[$statut]) . ' ' . img_picto($langs->trans($this->statuts_short[$statut]), 'statut0');
+                return $langs->trans($this->statuts_short[$statut]) . ' ' . img_picto($langs->trans($this->statuts_long[$statut]), 'statut0');
             if ($statut == 1)
-                return $langs->trans($this->statuts_short[$statut]) . ' ' . img_picto($langs->trans($this->statuts_short[$statut]), 'statut4');
+                return $langs->trans($this->statuts_short[$statut]) . ' ' . img_picto($langs->trans($this->statuts_long[$statut]), 'statut4');
             if ($statut == 2)
-                return $langs->trans($this->statuts_short[$statut]) . ' ' . img_picto($langs->trans($this->statuts_short[$statut]), 'statut6');
+                return $langs->trans($this->statuts_short[$statut]) . ' ' . img_picto($langs->trans($this->statuts_long[$statut]), 'statut6');
         }
     }
 
     /**
-     * 	Renvoie nom clicable (avec eventuellement le picto)
+     * 	Return clicable name (with picto eventually)
      *
-     * 	@param	int		$withpicto		0=Pas de picto, 1=Inclut le picto dans le lien, 2=Picto seul
+     * 	@param	int		$withpicto		0=No picto, 1=Include picto into link, 2=Only picto
      * 	@param	string	$option			Variant ('', 'nolink')
      * 	@param	int		$addlabel		0=Default, 1=Add label into string, >1=Add first chars into string
+     *  @param	string	$moreinpopup	Text to add into popup
+     *  @param	string	$sep			Separator between ref and label if option addlabel is set
      * 	@return	string					Chaine avec URL
      */
-    function getNomUrl($withpicto=0, $option='', $addlabel=0)
+    function getNomUrl($withpicto=0, $option='', $addlabel=0, $moreinpopup='', $sep=' - ')
     {
         global $langs;
 
         $result = '';
-        $lien = '';
-        $lienfin = '';
+        $link = '';
+        $linkend = '';
+        $label='';
+        if ($option != 'nolink') $label = '<u>' . $langs->trans("ShowProject") . '</u>';
+        if (! empty($this->ref))
+            $label .= ($label?'<br>':'').'<b>' . $langs->trans('Ref') . ': </b>' . $this->ref;	// The space must be after the : to not being explode when showing the title in img_picto
+        if (! empty($this->title))
+            $label .= ($label?'<br>':'').'<b>' . $langs->trans('Label') . ': </b>' . $this->title;	// The space must be after the : to not being explode when showing the title in img_picto
+        if (! empty($this->dateo))
+            $label .= ($label?'<br>':'').'<b>' . $langs->trans('DateStart') . ': </b>' . dol_print_date($this->dateo, 'day');	// The space must be after the : to not being explode when showing the title in img_picto
+        if (! empty($this->datee))
+            $label .= ($label?'<br>':'').'<b>' . $langs->trans('DateEnd') . ': </b>' . dol_print_date($this->datee, 'day');	// The space must be after the : to not being explode when showing the title in img_picto
+        if ($moreinpopup) $label.='<br>'.$moreinpopup;
+        $linkclose = '" title="'.dol_escape_htmltag($label, 1).'" class="classfortooltip">';
 
-        if ($option != 'nolink')
+        if ($option != 'nolink') 
         {
-        	if (preg_match('/\.php$/',$option))
-        	{
-            	$lien = '<a href="' . dol_buildpath($option,1) . '?id=' . $this->id . '">';
-            	$lienfin = '</a>';
-        	}
-        	else
-        	{
-            	$lien = '<a href="' . DOL_URL_ROOT . '/projet/card.php?id=' . $this->id . '">';
-            	$lienfin = '</a>';
-        	}
+            if (preg_match('/\.php$/',$option)) {
+                $link = '<a href="' . dol_buildpath($option,1) . '?id=' . $this->id . $linkclose;
+                $linkend = '</a>';
+            }
+            else if ($option == 'task')
+            {
+                $link = '<a href="' . DOL_URL_ROOT . '/projet/tasks.php?id=' . $this->id . $linkclose;
+                $linkend = '</a>';
+            }
+            else
+            {
+                $link = '<a href="' . DOL_URL_ROOT . '/projet/card.php?id=' . $this->id . $linkclose;
+                $linkend = '</a>';
+            }
         }
 
         $picto = 'projectpub';
         if (!$this->public) $picto = 'project';
 
-        $label = $langs->trans("ShowProject") . ': ' . $this->ref . ($this->title ? ' - ' . $this->title : '');
 
-        if ($withpicto) $result.=($lien . img_object($label, $picto) . $lienfin);
+        if ($withpicto) $result.=($link . img_object($label, $picto, 'class="classfortooltip"') . $linkend);
         if ($withpicto && $withpicto != 2) $result.=' ';
-        if ($withpicto != 2) $result.=$lien . $this->ref . $lienfin . (($addlabel && $this->title) ? ' - ' . dol_trunc($this->title, ($addlabel > 1 ? $addlabel : 0)) : '');
+        if ($withpicto != 2) $result.=$link . $this->ref . $linkend . (($addlabel && $this->title) ? $sep . dol_trunc($this->title, ($addlabel > 1 ? $addlabel : 0)) : '');
         return $result;
     }
 
@@ -836,9 +957,14 @@ class Project extends CommonObject
         $this->date_c = $now;
         $this->date_m = $now;
         $this->date_start = $now;
+        $this->date_end = $now + (3600 * 24 * 365);
         $this->note_public = 'SPECIMEN';
+		$this->fk_ele = 20000;
+        $this->opp_amount = 20000;
+        $this->budget_amount = 10000;
+
         /*
-        $nbp = rand(1, 9);
+        $nbp = mt_rand(1, 9);
         $xnbp = 0;
         while ($xnbp < $nbp)
         {
@@ -888,13 +1014,6 @@ class Project extends CommonObject
                         if ($mode == 'write'  && $user->rights->projet->creer)     $userAccess++;
                         if ($mode == 'delete' && $user->rights->projet->supprimer) $userAccess++;
                     }
-                    // Permission are supported on users only. To have an external thirdparty contact to see a project, its user must allowed to contacts of projects.
-                    /*if ($source == 'external' && preg_match('/PROJECT/', $userRole[$nblinks]['code']) && $user->contact_id == $userRole[$nblinks]['id'])
-                    {
-                        if ($mode == 'read'   && $user->rights->projet->lire)      $userAccess++;
-                        if ($mode == 'write'  && $user->rights->projet->creer)     $userAccess++;
-                        if ($mode == 'delete' && $user->rights->projet->supprimer) $userAccess++;
-                    }*/
                     $nblinks++;
                 }
             }
@@ -914,7 +1033,7 @@ class Project extends CommonObject
      * Return array of projects a user has permission on, is affected to, or all projects
      *
      * @param 	User	$user			User object
-     * @param 	int		$mode			0=All project I have permission on, 1=Projects affected to me only, 2=Will return list of all projects with no test on contacts
+     * @param 	int		$mode			0=All project I have permission on (assigned to me and public), 1=Projects assigned to me only, 2=Will return list of all projects with no test on contacts
      * @param 	int		$list			0=Return array,1=Return string list
      * @param	int		$socid			0=No filter on third party, id of third party
      * @return 	array or string			Array of projects id, or string with projects id separated with ","
@@ -929,32 +1048,42 @@ class Project extends CommonObject
         if ($mode == 0 || $mode == 1)
         {
             $sql.= ", " . MAIN_DB_PREFIX . "element_contact as ec";
-            $sql.= ", " . MAIN_DB_PREFIX . "c_type_contact as ctc";
         }
         $sql.= " WHERE p.entity IN (".getEntity('project',1).")";
         // Internal users must see project he is contact to even if project linked to a third party he can't see.
         //if ($socid || ! $user->rights->societe->client->voir)	$sql.= " AND (p.fk_soc IS NULL OR p.fk_soc = 0 OR p.fk_soc = ".$socid.")";
         if ($socid > 0) $sql.= " AND (p.fk_soc IS NULL OR p.fk_soc = 0 OR p.fk_soc = " . $socid . ")";
 
+        // Get id of types of contacts for projects (This list never contains a lot of elements)
+        $listofprojectcontacttype=array();
+        $sql2 = "SELECT ctc.rowid, ctc.code FROM ".MAIN_DB_PREFIX."c_type_contact as ctc";
+        $sql2.= " WHERE ctc.element = '" . $this->element . "'";
+        $sql2.= " AND ctc.source = 'internal'";
+        $resql = $this->db->query($sql2);
+        if ($resql)
+        {
+            while($obj = $this->db->fetch_object($resql))
+            {
+                $listofprojectcontacttype[$obj->rowid]=$obj->code;
+            }
+        }
+        else dol_print_error($this->db);
+        if (count($listofprojectcontacttype) == 0) $listofprojectcontacttype[0]='0';    // To avoid syntax error if not found
+        
         if ($mode == 0)
         {
             $sql.= " AND ec.element_id = p.rowid";
             $sql.= " AND ( p.public = 1";
-            //$sql.= " OR p.fk_user_creat = ".$user->id;
-            $sql.= " OR ( ctc.rowid = ec.fk_c_type_contact";
-            $sql.= " AND ctc.element = '" . $this->element . "'";
-            $sql.= " AND ( (ctc.source = 'internal' AND ec.fk_socpeople = ".$user->id.")";
-            //$sql.= " OR (ctc.source = 'external' AND ec.fk_socpeople = ".($user->contact_id?$user->contact_id:0).")"; // Permission are supported on users only. To have an external thirdparty contact to see a project, its user must allowed to contacts of projects.
+            $sql.= " OR ( ec.fk_c_type_contact IN (".join(',', array_keys($listofprojectcontacttype)).")";
+            $sql.= " AND ec.fk_socpeople = ".$user->id.")";
             $sql.= " )";
-            $sql.= " ))";
         }
         if ($mode == 1)
         {
             $sql.= " AND ec.element_id = p.rowid";
-            $sql.= " AND ctc.rowid = ec.fk_c_type_contact";
-            $sql.= " AND ctc.element = '" . $this->element . "'";
-            $sql.= " AND ( (ctc.source = 'internal' AND ec.fk_socpeople = ".$user->id.")";
-            //$sql.= " OR (ctc.source = 'external' AND ec.fk_socpeople = ".($user->contact_id?$user->contact_id:0).")"; // Permission are supported on users only. To have an external thirdparty contact to see a project, its user must allowed to contacts of projects.
+            $sql.= " AND (";
+            $sql.= "  ( ec.fk_c_type_contact IN (".join(',', array_keys($listofprojectcontacttype)).")";
+            $sql.= " AND ec.fk_socpeople = ".$user->id.")";
             $sql.= " )";
         }
         if ($mode == 2)
@@ -1002,16 +1131,17 @@ class Project extends CommonObject
 	  *	@param	bool	$clone_project_file		clone file of project
 	  *	@param	bool	$clone_task_file		clone file of task (if task are copied)
       *	@param	bool	$clone_note		clone note of project
-      *	@param	bool	$notrigger		no trigger flag
+      * @param	bool	$move_date		move task date on clone
+      *	@param	integer	$notrigger		no trigger flag
 	  * @return	int						New id of clone
 	  */
-	function createFromClone($fromid,$clone_contact=false,$clone_task=true,$clone_project_file=false,$clone_task_file=false,$clone_note=true,$notrigger=0)
+	function createFromClone($fromid,$clone_contact=false,$clone_task=true,$clone_project_file=false,$clone_task_file=false,$clone_note=true,$move_date=true,$notrigger=0)
 	{
 		global $user,$langs,$conf;
 
 		$error=0;
 
-		dol_syslog("createFromClone clone_contact=".$clone_contact." clone_task=".$clone_task." clone_project_file=".$clone_project_file." clone_note=".$clone_note);
+		dol_syslog("createFromClone clone_contact=".$clone_contact." clone_task=".$clone_task." clone_project_file=".$clone_project_file." clone_note=".$clone_note." move_date=".$move_date,LOG_DEBUG);
 
 		$now = dol_mktime(0,0,0,idate('m',dol_now()),idate('d',dol_now()),idate('Y',dol_now()));
 
@@ -1023,17 +1153,20 @@ class Project extends CommonObject
 
 		// Load source object
 		$clone_project->fetch($fromid);
+		$clone_project->fetch_optionals();
 		$clone_project->fetch_thirdparty();
 
 		$orign_dt_start=$clone_project->date_start;
 		$orign_project_ref=$clone_project->ref;
 
 		$clone_project->id=0;
-        $clone_project->date_start = $now;
-        if (!(empty($clone_project->date_end)))
-        {
-        	$clone_project->date_end = $clone_project->date_end + ($now - $orign_dt_start);
-        }
+		if ($move_date) {
+	        $clone_project->date_start = $now;
+	        if (!(empty($clone_project->date_end)))
+	        {
+	        	$clone_project->date_end = $clone_project->date_end + ($now - $orign_dt_start);
+	        }
+		}
 
         $clone_project->datec = $now;
 
@@ -1046,14 +1179,21 @@ class Project extends CommonObject
 		//Generate next ref
 		$defaultref='';
     	$obj = empty($conf->global->PROJECT_ADDON)?'mod_project_simple':$conf->global->PROJECT_ADDON;
-    	if (! empty($conf->global->PROJECT_ADDON) && is_readable(DOL_DOCUMENT_ROOT ."/core/modules/project/".$conf->global->PROJECT_ADDON.".php"))
+    	// Search template files
+    	$file=''; $classname=''; $filefound=0;
+    	$dirmodels=array_merge(array('/'),(array) $conf->modules_parts['models']);
+    	foreach($dirmodels as $reldir)
     	{
-
-        	require_once DOL_DOCUMENT_ROOT ."/core/modules/project/".$conf->global->PROJECT_ADDON.'.php';
-        	$modProject = new $obj;
-        	$defaultref = $modProject->getNextValue(is_object($clone_project->thirdparty)?$clone_project->thirdparty->id:0,$clone_project);
+    	    $file=dol_buildpath($reldir."core/modules/project/".$obj.'.php',0);
+    	    if (file_exists($file))
+    	    {
+    	        $filefound=1;
+    	        dol_include_once($reldir."core/modules/project/".$obj.'.php');
+            	$modProject = new $obj;
+            	$defaultref = $modProject->getNextValue(is_object($clone_project->thirdparty)?$clone_project->thirdparty:null, $clone_project);
+            	break;
+    	    }
     	}
-
     	if (is_numeric($defaultref) && $defaultref <= 0) $defaultref='';
 
 		$clone_project->ref=$defaultref;
@@ -1185,7 +1325,7 @@ class Project extends CommonObject
 
 			    foreach ($tasksarray as $tasktoclone)
 			    {
-					$result_clone = $taskstatic->createFromClone($tasktoclone->id,$clone_project_id,$tasktoclone->fk_parent,true,true,false,$clone_task_file,true,false);
+					$result_clone = $taskstatic->createFromClone($tasktoclone->id,$clone_project_id,$tasktoclone->fk_parent,$move_date,true,false,$clone_task_file,true,false);
 					if ($result_clone <= 0)
 				    {
 				    	$this->error.=$result_clone->error;
@@ -1378,8 +1518,8 @@ class Project extends CommonObject
 	/**
 	 *  Create an intervention document on disk using template defined into PROJECT_ADDON_PDF
 	 *
-	 *  @param	string		$modele			force le modele a utiliser ('' par defaut)
-	 *  @param	Translate	$outputlangs	objet lang a utiliser pour traduction
+	 *  @param	string		$modele			Force template to use ('' by default)
+	 *  @param	Translate	$outputlangs	Objet lang to use for translation
 	 *  @param  int			$hidedetails    Hide details of lines
 	 *  @param  int			$hidedesc       Hide description
 	 *  @param  int			$hideref        Hide ref
@@ -1409,5 +1549,241 @@ class Project extends CommonObject
 		return $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref);
 	}
 
+
+	/**
+	 * Load time spent into this->weekWorkLoad and this->weekWorkLoadPerTask for all day of a week of project
+	 *
+	 * @param 	int		$datestart		First day of week (use dol_get_first_day to find this date)
+	 * @param 	int		$taskid			Filter on a task id
+	 * @param 	int		$userid			Time spent by a particular user
+	 * @return 	int						<0 if OK, >0 if KO
+	 */
+	public function loadTimeSpent($datestart,$taskid=0,$userid=0)
+    {
+        $error=0;
+
+        if (empty($datestart)) dol_print_error('','Error datestart parameter is empty');
+
+        $sql = "SELECT ptt.rowid as taskid, ptt.task_duration, ptt.task_date, ptt.fk_task";
+        $sql.= " FROM ".MAIN_DB_PREFIX."projet_task_time AS ptt, ".MAIN_DB_PREFIX."projet_task as pt";
+        $sql.= " WHERE ptt.fk_task = pt.rowid";
+        $sql.= " AND pt.fk_projet = ".$this->id;
+        $sql.= " AND (ptt.task_date >= '".$this->db->idate($datestart)."' ";
+        $sql.= " AND ptt.task_date <= '".$this->db->idate($datestart + (7 * 24 * 3600) - 1)."')";
+        if ($task_id) $sql.= " AND ptt.fk_task=".$taskid;
+        if (is_numeric($userid)) $sql.= " AND ptt.fk_user=".$userid;
+
+        //print $sql;
+        $resql=$this->db->query($sql);
+        if ($resql)
+        {
+
+                $num = $this->db->num_rows($resql);
+                $i = 0;
+                // Loop on each record found, so each couple (project id, task id)
+                 while ($i < $num)
+                {
+                        $obj=$this->db->fetch_object($resql);
+                        $day=$this->db->jdate($obj->task_date);
+                        $this->weekWorkLoad[$day] +=  $obj->task_duration;
+                        $this->weekWorkLoadPerTask[$day][$obj->fk_task] += $obj->task_duration;
+                        $i++;
+                }
+                $this->db->free($resql);
+                return 1;
+         }
+        else
+        {
+                $this->error="Error ".$this->db->lasterror();
+                dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
+                return -1;
+        }
+    }
+
+
+    /**
+     * Load indicators for dashboard (this->nbtodo and this->nbtodolate)
+     *
+     * @param	User	$user   Objet user
+     * @return WorkboardResponse|int <0 if KO, WorkboardResponse if OK
+     */
+    function load_board($user)
+    {
+        global $conf, $langs;
+    
+        $mine=0; $socid=$user->societe_id;
+        
+        $projectsListId = $this->getProjectsAuthorizedForUser($user,$mine?$mine:($user->rights->projet->all->lire?2:0),1,$socid);
+        
+        $sql = "SELECT p.rowid, p.fk_statut as status, p.fk_opp_status, p.datee as datee";
+        $sql.= " FROM (".MAIN_DB_PREFIX."projet as p";
+        $sql.= ")";
+        $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s on p.fk_soc = s.rowid";
+        if (! $user->rights->societe->client->voir && ! $socid) $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON sc.fk_soc = s.rowid";
+        $sql.= " WHERE p.fk_statut = 1";
+        $sql.= " AND p.entity IN (".getEntity('project').')';
+        if ($mine || ! $user->rights->projet->all->lire) $sql.= " AND p.rowid IN (".$projectsListId.")";
+        // No need to check company, as filtering of projects must be done by getProjectsAuthorizedForUser
+        //if ($socid || ! $user->rights->societe->client->voir)	$sql.= "  AND (p.fk_soc IS NULL OR p.fk_soc = 0 OR p.fk_soc = ".$socid.")";
+        if ($socid) $sql.= "  AND (p.fk_soc IS NULL OR p.fk_soc = 0 OR p.fk_soc = ".$socid.")";
+        if (! $user->rights->societe->client->voir && ! $socid) $sql.= " AND ((s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id.") OR (s.rowid IS NULL))";
+        
+        $resql=$this->db->query($sql);
+        if ($resql)
+        {
+            $project_static = new Project($this->db);
+    
+            $response = new WorkboardResponse();
+            $response->warning_delay = $conf->projet->warning_delay/60/60/24;
+            $response->label = $langs->trans("OpenedProjects");
+            if ($user->rights->projet->all->lire) $response->url = DOL_URL_ROOT.'/projet/list.php?search_status=1&mainmenu=project';
+            else $response->url = DOL_URL_ROOT.'/projet/list.php?mode=mine&search_status=1&mainmenu=project';
+            $response->img = img_object($langs->trans("Projects"),"project");
+    
+            // This assignment in condition is not a bug. It allows walking the results.
+            while ($obj=$this->db->fetch_object($resql))
+            {
+                $response->nbtodo++;
+    
+                $project_static->statut = $obj->status;
+                $project_static->opp_status = $obj->opp_status;
+                $project_static->datee = $this->db->jdate($obj->datee);
+    
+                if ($project_static->hasDelay()) {
+                    $response->nbtodolate++;
+                }
+            }
+    
+            return $response;
+        }
+        else
+        {
+            $this->error=$this->db->error();
+            return -1;
+        }
+    }
+    
+    
+	/**
+	 * Function used to replace a thirdparty id with another one.
+	 *
+	 * @param DoliDB $db Database handler
+	 * @param int $origin_id Old thirdparty id
+	 * @param int $dest_id New thirdparty id
+	 * @return bool
+	 */
+	public static function replaceThirdparty(DoliDB $db, $origin_id, $dest_id)
+	{
+		$tables = array(
+			'projet'
+		);
+
+		return CommonObject::commonReplaceThirdparty($db, $origin_id, $dest_id, $tables);
+	}
+	
+	
+	/**
+	 *      Charge indicateurs this->nb pour le tableau de bord
+	 *
+	 *      @return     int         <0 if KO, >0 if OK
+	 */
+	function load_state_board()
+	{
+	    global $conf;
+	
+	    $this->nb=array();
+	
+	    $sql = "SELECT count(u.rowid) as nb";
+	    $sql.= " FROM ".MAIN_DB_PREFIX."projet as u";
+	    $sql.= " WHERE";
+	    //$sql.= " WHERE u.fk_statut > 0";
+	    //$sql.= " AND employee != 0";
+	    $sql.= " u.entity IN (".getEntity('projet', 1).")";
+	
+	    $resql=$this->db->query($sql);
+	    if ($resql)
+	    {
+	        while ($obj=$this->db->fetch_object($resql))
+	        {
+	            $this->nb["projects"]=$obj->nb;
+	        }
+	        $this->db->free($resql);
+	        return 1;
+	    }
+	    else
+	    {
+	        dol_print_error($this->db);
+	        $this->error=$this->db->error();
+	        return -1;
+	    }
+	}
+	
+	
+	/**
+	 * Is the project delayed?
+	 *
+	 * @return bool
+	 */
+	public function hasDelay()
+	{
+	    global $conf;
+	
+        if (! ($this->statut == 1)) return false;
+        if (! $this->datee && ! $this->date_end) return false;
+
+        $now = dol_now();
+
+        return ($this->datee ? $this->datee : $this->date_end) < ($now - $conf->projet->warning_delay);
+	}	
+
+	
+	/**
+	 *	Charge les informations d'ordre info dans l'objet commande
+	 *
+	 *	@param  int		$id       Id of order
+	 *	@return	void
+	 */
+	function info($id)
+	{
+	    $sql = 'SELECT c.rowid, datec as datec, tms as datem,';
+	    $sql.= ' date_close as datecloture,';
+	    $sql.= ' fk_user_creat as fk_user_author, fk_user_close as fk_use_cloture';
+	    $sql.= ' FROM '.MAIN_DB_PREFIX.'projet as c';
+	    $sql.= ' WHERE c.rowid = '.$id;
+	    $result=$this->db->query($sql);
+	    if ($result)
+	    {
+	        if ($this->db->num_rows($result))
+	        {
+	            $obj = $this->db->fetch_object($result);
+	            $this->id = $obj->rowid;
+	            if ($obj->fk_user_author)
+	            {
+	                $cuser = new User($this->db);
+	                $cuser->fetch($obj->fk_user_author);
+	                $this->user_creation   = $cuser;
+	            }
+	
+	            if ($obj->fk_user_cloture)
+	            {
+	                $cluser = new User($this->db);
+	                $cluser->fetch($obj->fk_user_cloture);
+	                $this->user_cloture   = $cluser;
+	            }
+	
+	            $this->date_creation     = $this->db->jdate($obj->datec);
+	            $this->date_modification = $this->db->jdate($obj->datem);
+	            $this->date_cloture      = $this->db->jdate($obj->datecloture);
+	        }
+	
+	        $this->db->free($result);
+	
+	    }
+	    else
+	    {
+	        dol_print_error($this->db);
+	    }
+	}
+	
 }
 

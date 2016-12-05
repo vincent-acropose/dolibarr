@@ -73,7 +73,7 @@ $modulepart='tax';
  * Actions
  */
 
-include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_pre_headers.tpl.php';
+include_once DOL_DOCUMENT_ROOT . '/core/actions_linkedfiles.inc.php';
 
 
 /*
@@ -88,8 +88,8 @@ llxHeader("",$langs->trans("SocialContribution"),$help_url);
 if ($object->id)
 {
 	$alreadypayed=$object->getSommePaiement();
-	
-    $head=tax_prepare_head($object, $user);
+
+    $head=tax_prepare_head($object);
 
     dol_fiche_head($head, 'documents',  $langs->trans("SocialContribution"), 0, 'bill');
 

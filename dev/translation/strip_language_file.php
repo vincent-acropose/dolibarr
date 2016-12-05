@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 /* Copyright (C) 2014 by FromDual GmbH, licensed under GPL v2
  * Copyright (C) 2014 Laurent Destailleur  <eldy@users.sourceforge.net>
@@ -314,7 +314,7 @@ foreach($filesToProcess as $fileToProcess)
 				continue;
 			}
 
-			// String exists in both files and does not match
+			// String exists in both files and value into alternative language differs from main language but also from english files
 			if (
 				(! empty($aSecondary[$key]) && $aSecondary[$key] != $aPrimary[$key]
 			    && ! empty($aEnglish[$key]) && $aSecondary[$key] != $aEnglish[$key])

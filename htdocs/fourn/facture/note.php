@@ -67,7 +67,7 @@ if ($action == 'setlabel' && $user->rights->fournisseur->facture->creer)
 
 $form = new Form($db);
 
-llxHeader();
+llxHeader('',$langs->trans('SupplierInvoice'));
 
 if ($object->id > 0)
 {
@@ -83,7 +83,7 @@ if ($object->id > 0)
 	$linkback = '<a href="'.DOL_URL_ROOT.'/fourn/facture/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
 	// Ref
-	print '<tr><td width="20%" class="nowrap">'.$langs->trans("Ref").'</td><td colspan="3">';
+	print '<tr><td class="titlefield nowrap">'.$langs->trans("Ref").'</td><td colspan="3">';
 	print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref);
 	print '</td>';
 	print "</tr>\n";
@@ -139,11 +139,34 @@ if ($object->id > 0)
 	print $form->editfieldval("Label",'label',$object->label,$object,0);
 	print '</td></tr>';
 
+	// Status
+	$alreadypaid=$object->getSommePaiement();
+	print '<tr><td>'.$langs->trans('Status').'</td><td colspan="3">'.$object->getLibStatut(4,$alreadypaid).'</td></tr>';
+
+	// Amount
+	print '<tr><td>'.$langs->trans('AmountHT').'</td><td colspan="3">'.price($object->total_ht,1,$langs,0,-1,-1,$conf->currency).'</td></tr>';
+	print '<tr><td>'.$langs->trans('AmountVAT').'</td><td colspan="3">'.price($object->total_tva,1,$langs,0,-1,-1,$conf->currency).'</td></tr>';
+
+	// Amount Local Taxes
+	//TODO: Place into a function to control showing by country or study better option
+	if ($societe->localtax1_assuj=="1") //Localtax1
+	{
+		print '<tr><td>'.$langs->transcountry("AmountLT1",$societe->country_code).'</td>';
+		print '<td colspan="3">'.price($object->total_localtax1,1,$langs,0,-1,-1,$conf->currency).'</td>';
+		print '</tr>';
+	}
+	if ($societe->localtax2_assuj=="1") //Localtax2
+	{
+		print '<tr><td>'.$langs->transcountry("AmountLT2",$societe->country_code).'</td>';
+		print '<td colspan="3">'.price($object->total_localtax2,1,$langs,0,-1,-1,$conf->currency).'</td>';
+		print '</tr>';
+	}
+	print '<tr><td>'.$langs->trans('AmountTTC').'</td><td colspan="3">'.price($object->total_ttc,1,$langs,0,-1,-1,$conf->currency).'</td></tr>';
+
 	print "</table>";
 
 	print '<br>';
 
-	$colwidth=20;
 	include DOL_DOCUMENT_ROOT.'/core/tpl/notes.tpl.php';
 
 	dol_fiche_end();
