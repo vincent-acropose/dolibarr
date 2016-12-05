@@ -2033,21 +2033,21 @@ if ($action == 'create')
 	include DOL_DOCUMENT_ROOT . '/core/tpl/extrafields_view.tpl.php';
 
 	// Amount HT
-	print '<tr><td height="10" width="25%">' . $langs->trans('AmountHT') . '</td>';
-	print '<td class="nowrap" colspan="2">' . price($object->total_ht, '', $langs, 0, - 1, - 1, $conf->currency) . '</td>';
+	//print '<tr><td height="10" width="25%">' . $langs->trans('AmountHT') . '</td>';
+	//print '<td class="nowrap" colspan="2">' . price($object->total_ht, '', $langs, 0, - 1, - 1, $conf->currency) . '</td>';
 
 	// Margin Infos
-	if (! empty($conf->margin->enabled)) {
+	/*if (! empty($conf->margin->enabled)) {
 		print '<td valign="top" width="50%" rowspan="4">';
 		$object->displayMarginInfos();
 		print '</td>';
 	}
-	print '</tr>';
+	print '</tr>';*/
 
 	// Amount VAT
-	print '<tr><td height="10">' . $langs->trans('AmountVAT') . '</td>';
-	print '<td class="nowrap" colspan="2">' . price($object->total_tva, '', $langs, 0, - 1, - 1, $conf->currency) . '</td>';
-	print '</tr>';
+	//print '<tr><td height="10">' . $langs->trans('AmountVAT') . '</td>';
+	//print '<td class="nowrap" colspan="2">' . price($object->total_tva, '', $langs, 0, - 1, - 1, $conf->currency) . '</td>';
+	//print '</tr>';
 
 	// Amount Local Taxes
 	if ($mysoc->localtax1_assuj == "1" || $object->total_localtax1 != 0) 	// Localtax1
@@ -2064,9 +2064,9 @@ if ($action == 'create')
 	}
 
 	// Amount TTC
-	print '<tr><td height="10">' . $langs->trans('AmountTTC') . '</td>';
-	print '<td class="nowrap" colspan="2">' . price($object->total_ttc, '', $langs, 0, - 1, - 1, $conf->currency) . '</td>';
-	print '</tr>';
+	//print '<tr><td height="10">' . $langs->trans('AmountTTC') . '</td>';
+	//print '<td class="nowrap" colspan="2">' . price($object->total_ttc, '', $langs, 0, - 1, - 1, $conf->currency) . '</td>';
+	//print '</tr>';
 
 	// Statut
 	print '<tr><td height="10">' . $langs->trans('Status') . '</td><td align="left" colspan="2">' . $object->getLibStatut(4) . '</td></tr>';
