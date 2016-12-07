@@ -234,13 +234,15 @@ class Export
 		//construction du filtrage si le parametrage existe
 		if (is_array($array_filterValue) && !empty($array_filterValue))
 		{
-			$sqlWhere='';
+			$sqlWhere=array();
 			// pour ne pas a gerer le nombre de condition
 			foreach ($array_filterValue as $key => $value)
 			{
-				if ($value != '') $sqlWhere.=" and ".$this->build_filterQuery($this->array_export_TypeFields[$indice][$key], $key, $array_filterValue[$key]);
+				if ($value != '') $sqlWhere[]=$this->build_filterQuery($this->array_export_TypeFields[$indice][$key], $key, $array_filterValue[$key]);
 			}
-			$sql.=$sqlWhere;
+			if (count($sqlWhere)>0) {
+				$sql.=' WHERE '.implode(' AND ',$sqlWhere);
+			}
 		}
 		$sql.=$this->array_export_sql_order[$indice];
 
