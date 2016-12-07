@@ -93,7 +93,7 @@ class MouvementStock extends CommonObject
 		if ($product->type != 1 || ! empty($conf->global->STOCK_SUPPORTS_SERVICES)) $movestock=1;
 		
 		// 2016/12/07 MKO : spécifique Acropose, on ne rentre pas en stock les article "Non gérés en stock"
-		if($product->array_options['options_gere_en_stock'] != 1) $movestock = 0;
+		if($product->array_options['options_gere_en_stock'] != 2) $movestock = 0;
 
 		if ($movestock && $entrepot_id > 0)	// Change stock for current product, change for subproduct is done after
 		{
