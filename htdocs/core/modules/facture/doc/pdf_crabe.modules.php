@@ -883,9 +883,10 @@ class pdf_crabe extends ModelePDFFactures
 		if ($object->type != 2)
 		{
 			// Check a payment mode is defined
-			if (empty($object->mode_reglement_code)
+			/*if (empty($object->mode_reglement_code)
 			&& empty($conf->global->FACTURE_CHQ_NUMBER)
-			&& empty($conf->global->FACTURE_RIB_NUMBER))
+			&& empty($conf->global->FACTURE_RIB_NUMBER))*/
+			if (empty($object->mode_reglement_code))
 			{
 				$this->error = $outputlangs->transnoentities("ErrorNoPaiementModeConfigured");
 			}
@@ -924,8 +925,8 @@ class pdf_crabe extends ModelePDFFactures
 			}
 
 			// Show payment mode CHQ
-			if (empty($object->mode_reglement_code) || $object->mode_reglement_code == 'CHQ')
-			{
+			//if (empty($object->mode_reglement_code) || $object->mode_reglement_code == 'CHQ')
+			//{
 				// Si mode reglement non force ou si force a CHQ
 				if (! empty($conf->global->FACTURE_CHQ_NUMBER))
 				{
@@ -965,11 +966,11 @@ class pdf_crabe extends ModelePDFFactures
 			            }
 					}
 				}
-			}
+			//}
 
 			// If payment mode not forced or forced to VIR, show payment with BAN
-			if (empty($object->mode_reglement_code) || $object->mode_reglement_code == 'VIR')
-			{
+			//if (empty($object->mode_reglement_code) || $object->mode_reglement_code == 'VIR')
+			//{
 				if (! empty($object->fk_account) || ! empty($object->fk_bank) || ! empty($conf->global->FACTURE_RIB_NUMBER))
 				{
 					$bankid=(empty($object->fk_account)?$conf->global->FACTURE_RIB_NUMBER:$object->fk_account);
@@ -984,7 +985,7 @@ class pdf_crabe extends ModelePDFFactures
 
 					$posy+=2;
 				}
-			}
+			//}
 		}
 
 		return $posy;
