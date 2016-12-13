@@ -572,7 +572,8 @@ if ($id > 0 || $ref)
         if (! empty($conf->commande->enabled))
         {
             if ($found) print '<br>'; else $found=1;
-            print $langs->trans("ProductQtyInCustomersOrdersRunning").': '.$object->stats_commande['qty'];
+		$qty_a_livrer = $object->stats_commande['qty'];
+            print $langs->trans("ProductQtyInCustomersOrdersRunning").': '.$qty_a_livrer;
             $result=$object->load_stats_commande(0,'0');
             if ($result < 0) dol_print_error($db,$object->error);
             print ' ('.$langs->trans("ProductQtyInDraft").': '.$object->stats_commande['qty'].')';
@@ -583,7 +584,9 @@ if ($id > 0 || $ref)
         {
             if ($found) print '<br>'; else $found=1;
             $result=$object->load_stats_sending(0,'2');
-            print $langs->trans("ProductQtyInShipmentAlreadySent").': '.$object->stats_expedition['qty'];
+            print $langs->trans("ProductQtyInShipmentAlreadySent").': ';
+		if(isset($qty_a_livrer)) print ($qty_a_livrer - $object->stats_expedition['qty']);
+		else print $object->stats_expedition;
         }
 
         // Number of supplier order running
