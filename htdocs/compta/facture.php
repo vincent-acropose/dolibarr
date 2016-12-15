@@ -66,7 +66,6 @@ if (!empty($conf->incoterm->enabled)) $langs->load('incoterm');
 if (! empty($conf->margin->enabled))
 	$langs->load('margins');
 
-$sall = trim(GETPOST('sall'));
 $projectid = (GETPOST('projectid') ? GETPOST('projectid', 'int') : 0);
 
 $id = (GETPOST('id', 'int') ? GETPOST('id', 'int') : GETPOST('facid', 'int')); // For backward compatibility
@@ -1613,6 +1612,19 @@ if (empty($reshook))
 
 		// Update line
 		if (! $error) {
+			if (empty($user->rights->margins->creer))
+			{
+				foreach ($object->lines as &$line)
+				{
+					if ($line->id == GETPOST('lineid'))
+					{
+						$fournprice = $line->fk_fournprice;
+						$buyingprice = $line->pa_ht;
+						break;
+					}
+				}
+			}
+			
 			$result = $object->updateline(GETPOST('lineid'), $description, $pu_ht, $qty, GETPOST('remise_percent'),
 				$date_start, $date_end, $vat_rate, $localtax1_rate, $localtax2_rate, 'HT', $info_bits, $type,
 				GETPOST('fk_parent_line'), 0, $fournprice, $buyingprice, $label, $special_code, $array_options, GETPOST('progress'),

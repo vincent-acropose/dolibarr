@@ -7,7 +7,7 @@
  * Copyright (C) 2004      Christophe Combelles <ccomb@free.fr>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2008      Raphael Bertrand (Resultic)       <raphael.bertrand@resultic.fr>
- * Copyright (C) 2010-2014 Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2010-2016 Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
  * Copyright (C) 2013      Alexandre Spangaro   <aspangaro.dolibarr@gmail.com>
  * Copyright (C) 2014      Cédric GROSS         <c.gross@kreiz-it.fr>
@@ -290,8 +290,15 @@ function GETPOST($paramname,$check='',$method=0,$filter=NULL,$options=NULL)
  */
 function dol_getprefix()
 {
+    global $conf;
+    
 	if (isset($_SERVER["SERVER_NAME"]) && isset($_SERVER["DOCUMENT_ROOT"]))
 	{
+	    if (! empty($conf->global->MAIL_PREFIX_FOR_EMAIL_ID))
+	    {
+	        if ($conf->global->MAIL_PREFIX_FOR_EMAIL_ID == 'SERVER_NAME') return $_SERVER["SERVER_NAME"];
+	        return $conf->global->MAIL_PREFIX_FOR_EMAIL_ID;
+	    }
 		return dol_hash($_SERVER["SERVER_NAME"].$_SERVER["DOCUMENT_ROOT"].DOL_DOCUMENT_ROOT.DOL_URL_ROOT);
 		// Use this for a "clear" cookie name
 		//return dol_sanitizeFileName($_SERVER["SERVER_NAME"].$_SERVER["DOCUMENT_ROOT"].DOL_DOCUMENT_ROOT.DOL_URL_ROOT);
@@ -3336,7 +3343,7 @@ function get_localtax($vatrate, $local, $thirdparty_buyer="", $thirdparty_seller
 	$vatratecleaned = $vatrate;
 	if (preg_match('/^(.*)\s*\((.*)\)$/', $vatrate, $reg))      // If vat is "xx (yy)"
 	{
-        $vatratecleaned = $reg[1];
+        $vatratecleaned = trim($reg[1]);
 	    $vatratecode = $reg[2];
 	}
 	
@@ -3350,7 +3357,7 @@ function get_localtax($vatrate, $local, $thirdparty_buyer="", $thirdparty_seller
 	{
 		if ($local == 1)
 		{
-			if (! $mysoc->localtax1_assuj) return 0;
+			if (! $mysoc->localtax1_assuj || (string) $vatratecleaned == "0") return 0;
 			if ($thirdparty_seller->id == $mysoc->id)
 			{
 				if (! $thirdparty_buyer->localtax1_assuj) return 0;
@@ -3363,7 +3370,7 @@ function get_localtax($vatrate, $local, $thirdparty_buyer="", $thirdparty_seller
 
 		if ($local == 2)
 		{
-			if (! $mysoc->localtax2_assuj) return 0;
+			if (! $mysoc->localtax2_assuj || (string) $vatratecleaned == "0") return 0;
 			if ($thirdparty_seller->id == $mysoc->id)
 			{
 				if (! $thirdparty_buyer->localtax2_assuj) return 0;
@@ -5195,7 +5202,7 @@ function printCommonFooter($zone='private')
 		print 'window.console && console.log("';
 		if (! empty($conf->global->MEMCACHED_SERVER)) print 'MEMCACHED_SERVER='.$conf->global->MEMCACHED_SERVER.' - ';
 		print 'MAIN_OPTIMIZE_SPEED='.(isset($conf->global->MAIN_OPTIMIZE_SPEED)?$conf->global->MAIN_OPTIMIZE_SPEED:'off');
-		if ($micro_start_time)
+		if (! empty($micro_start_time))   // Works only if MAIN_SHOW_TUNING_INFO is defined at $_SERVER level. Not in global variable.
 		{
 			$micro_end_time = microtime(true);
 			print ' - Build time: '.ceil(1000*($micro_end_time-$micro_start_time)).' ms';
