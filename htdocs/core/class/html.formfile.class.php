@@ -674,7 +674,7 @@ class FormFile
      *	@param	string	$filedir		Directory to scan
      *	@return	string              	Output string with HTML link of documents (might be empty string)
      */
-    function getDocumentsLink($modulepart, $modulesubdir, $filedir)
+    function getDocumentsLink($modulepart, $modulesubdir, $filedir, $entity = 0)
     {
     	if (! function_exists('dol_dir_list')) include_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
@@ -702,8 +702,10 @@ class FormFile
     				$relativepath = $file["name"];
     			}
 
+			$docurl = DOL_URL_ROOT . '/document.php?modulepart='.$modulepart.'&amp;file='.urlencode($relativepath);
+			if(!empty($entity)) $docurl.='&amp;entity='.$entity;
     			// Show file name with link to download
-    			$out.= '<a data-ajax="false" href="'.DOL_URL_ROOT . '/document.php?modulepart='.$modulepart.'&amp;file='.urlencode($relativepath).'"';
+    			$out.= '<a data-ajax="false" href="'.$docurl.'"';
     			$mime=dol_mimetype($relativepath,'',0);
     			if (preg_match('/text/',$mime)) $out.= ' target="_blank"';
     			$out.= '>';
