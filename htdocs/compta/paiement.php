@@ -472,7 +472,7 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
         {
             $sql .= ' AND type = 2';		// If paying back a credit note, we show all credit notes
         }
-        $sql.='ORDER BY f.datef DESC';
+        $sql.=' ORDER BY f.datef DESC';
 
         dol_syslog('compta/paiement.php:: list invoice sql='.$sql,LOG_DEBUG);
         $resql = $db->query($sql);
