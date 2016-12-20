@@ -878,7 +878,7 @@ function show_addresses($conf,$langs,$db,$object,$backtopage='')
  *      @param  int			$noprint	       Return string but does not output it
  *      @return	mixed						   Return html part or void if noprint is 1
  */
-function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
+function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0, $print_desc=0)
 {
     global $bc,$user,$conf;
 
@@ -898,8 +898,10 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $out.="\n";
         $out.='<table width="100%" class="noborder">';
         $out.='<tr class="liste_titre">';
-		if($conf->global->AGENDA_USE_EVENT_TYPE) $out.='<td colspan="3">';
-		else $out.='<td colspan="2">';
+		$colspan = 2 + $print_desc;
+		if($conf->global->AGENDA_USE_EVENT_TYPE) $out.='<td colspan="'.($colspan + 1).'">';
+		else $out.='<td colspan="'.$colspan.'">';
+		
         if (get_class($object) == 'Societe') $out.='<a href="'.DOL_URL_ROOT.'/comm/action/listactions.php?socid='.$object->id.'&amp;status=todo">';
         $out.=$langs->trans("ActionsToDoShort");
         if (get_class($object) == 'Societe') $out.='</a>';
@@ -993,6 +995,12 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
                     // Title of event
                     //$out.='<td colspan="2">'.dol_trunc($obj->label,40).'</td>';
                     $out.='<td>'.$actionstatic->getNomUrl(1,120).'</td>';
+			
+					if(!empty($print_desc)) {
+						$out.= '<td>';
+						$out.=  $actionstatic->note;
+						$out.= '</td>';
+					}
 					
 					if($conf->global->AGENDA_USE_EVENT_TYPE) {
 						$out.= '<td>';
@@ -1059,7 +1067,7 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
  *      @return	mixed					Return html part or void if noprint is 1
  * TODO change function to be able to list event linked to an object.
  */
-function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
+function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0, $print_desc=0)
 {
     global $bc,$user,$conf;
 
@@ -1200,8 +1208,9 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $out.="\n";
         $out.='<table class="noborder" width="100%">';
         $out.='<tr class="liste_titre">';
-		if($conf->global->AGENDA_USE_EVENT_TYPE) $out.='<td colspan="3">';
-		else $out.='<td colspan="2">';
+		$colspan = 2 + $print_desc;
+		if($conf->global->AGENDA_USE_EVENT_TYPE) $out.='<td colspan="'.($colspan + 1).'">';
+		else $out.='<td colspan="'.$colspan.'">';
         if (get_class($object) == 'Societe') $out.='<a href="'.DOL_URL_ROOT.'/comm/action/listactions.php?socid='.$object->id.'&amp;status=done">';
         $out.=$langs->trans("ActionsDoneShort");
         if (get_class($object) == 'Societe') $out.='</a>';
@@ -1259,6 +1268,12 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
                 $out.=dol_trunc($libelle,120);
             }
             $out.='</td>';
+			
+			if(!empty($print_desc)) {
+				$out.= '<td>';
+				$out.=  $actionstatic->note;
+				$out.= '</td>';
+			}
 			
 			if($conf->global->AGENDA_USE_EVENT_TYPE) {
 				$out.='<td>';

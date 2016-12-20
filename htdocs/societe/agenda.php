@@ -162,7 +162,7 @@ if ($socid)
     show_actions_todo($conf,$langs,$db,$object,null,0,1);
 
     // List of done actions
-    show_actions_done($conf,$langs,$db,$object);
+    show_actions_done($conf,$langs,$db,$object, '', 0, 1);
 }
 
 
