@@ -58,7 +58,9 @@ $d_eatby=dol_mktime(12, 0, 0, $_POST['eatbymonth'], $_POST['eatbyday'], $_POST['
 $d_sellby=dol_mktime(12, 0, 0, $_POST['sellbymonth'], $_POST['sellbyday'], $_POST['sellbyyear']);
 $pdluoid=GETPOST('pdluoid','int');
 $batchnumber=GETPOST('batch_number','san_alpha');
-$batchnumber=trim($batchnumber);
+if (!empty($batchnumber)) {
+	$batchnumber=trim($batchnumber);
+}
 
 // Security check
 if ($user->societe_id) $socid=$user->societe_id;
