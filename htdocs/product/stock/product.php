@@ -57,6 +57,8 @@ $fieldid = isset($_GET["ref"])?'ref':'rowid';
 $d_eatby=dol_mktime(12, 0, 0, $_POST['eatbymonth'], $_POST['eatbyday'], $_POST['eatbyyear']);
 $d_sellby=dol_mktime(12, 0, 0, $_POST['sellbymonth'], $_POST['sellbyday'], $_POST['sellbyyear']);
 $pdluoid=GETPOST('pdluoid','int');
+$batchnumber=GETPOST('batch_number','san_alpha');
+$batchnumber=trim($batchnumber);
 
 // Security check
 if ($user->societe_id) $socid=$user->societe_id;
@@ -115,7 +117,7 @@ if ($action == "correct_stock" && ! $cancel)
 		$product = new Product($db);
 		$result=$product->fetch($id);
 
-		if ($product->hasbatch() && (! GETPOST("sellby")) && (! GETPOST("eatby")) && (! GETPOST("batch_number"))) {
+		if ($product->hasbatch() && (! GETPOST("sellby")) && (! GETPOST("eatby")) && (! $batchnumber)) {
 			setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("atleast1batchfield")), 'errors');
 			$error++;
 			$action='correction';
@@ -142,7 +144,7 @@ if ($action == "correct_stock" && ! $cancel)
 					$priceunit,
 					$d_eatby,
 					$d_sellby,
-					GETPOST('batch_number'),
+					$batchnumber,
 					GETPOST('inventorycode')
 				);		// We do not change value of stock for a correction
 			}
@@ -243,7 +245,7 @@ if ($action == "transfert_stock" && ! $cancel)
 				else
 				{
 					$srcwarehouseid=GETPOST('id_entrepot_source','int');
-					$batch=GETPOST('batch_number');
+					$batch=$batchnumber;
 					$eatby=$d_eatby;
 					$sellby=$d_sellby;
 				}
@@ -334,14 +336,14 @@ if ($action == 'updateline' && GETPOST('save') == $langs->trans('Save'))
     {
         if ($pdluo->id)
         {
-            if ((! GETPOST("sellby")) && (! GETPOST("eatby")) && (! GETPOST("batch_number"))) {
+            if ((! GETPOST("sellby")) && (! GETPOST("eatby")) && (! $batchnumber)) {
                 setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("atleast1batchfield")), 'errors');
             }
             else
             {
                 $d_eatby=dol_mktime(12, 0, 0, $_POST['eatbymonth'], $_POST['eatbyday'], $_POST['eatbyyear']);
                 $d_sellby=dol_mktime(12, 0, 0, $_POST['sellbymonth'], $_POST['sellbyday'], $_POST['sellbyyear']);
-                $pdluo->batch=GETPOST("batch_number",'san_alpha');
+                $pdluo->batch=$batchnumber;
                 $pdluo->eatby=$d_eatby;
                 $pdluo->sellby=$d_sellby;
                 $result=$pdluo->update($user);
