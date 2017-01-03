@@ -110,6 +110,7 @@ $fieldstosearchall = array(
 	'p.label'=>"ProductLabel",
 	'p.description'=>"Description",
     "p.note"=>"Note",
+    "ef.code_mercury"=>"Code Mercury",
 );
 // multilang
 if (! empty($conf->global->MAIN_MULTILANGS))
@@ -148,18 +149,18 @@ $arrayfields=array(
 	'p.datec'=>array('label'=>$langs->trans("DateCreation"), 'checked'=>0, 'position'=>500),
     'p.tms'=>array('label'=>$langs->trans("DateModificationShort"), 'checked'=>0, 'position'=>500),
     'p.tosell'=>array('label'=>$langs->trans("Status").' ('.$langs->trans("Sell").')', 'checked'=>1, 'position'=>1000),
-    'p.tobuy'=>array('label'=>$langs->trans("Status").' ('.$langs->trans("Purchases").')', 'checked'=>1, 'position'=>1000)
+    'p.tobuy'=>array('label'=>$langs->trans("Status").' ('.$langs->trans("Purchases").')', 'checked'=>1, 'position'=>1000),
 );
 // Extra fields
 if (is_array($extrafields->attribute_label) && count($extrafields->attribute_label))
 {
-   foreach($extrafields->attribute_label as $key => $val) 
+   foreach($extrafields->attribute_label as $key => $val)
    {
        $arrayfields["ef.".$key]=array('label'=>$extrafields->attribute_label[$key], 'checked'=>$extrafields->attribute_list[$key], 'position'=>$extrafields->attribute_pos[$key]);
    }
 }
 
-		    
+
 /*
  * Actions
  */
@@ -261,7 +262,7 @@ else
 	    $typ=$extrafields->attribute_type[$tmpkey];
 	    $mode=0;
 	    if (in_array($typ, array('int','double'))) $mode=1;    // Search on a numeric
-	    if ($val && ( ($crit != '' && ! in_array($typ, array('select'))) || ! empty($crit))) 
+	    if ($val && ( ($crit != '' && ! in_array($typ, array('select'))) || ! empty($crit)))
 	    {
 	        $sql .= natural_search('ef.'.$tmpkey, $crit, $mode);
 	    }
@@ -345,8 +346,8 @@ else
 	        $crit=$val;
 	        $tmpkey=preg_replace('/search_options_/','',$key);
 	        if ($val != '') $param.='&search_options_'.$tmpkey.'='.urlencode($val);
-	    } 	
-		
+	    }
+
     	print_barre_liste($texte, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, '', $num, $nbtotalofrecords,'title_products.png');
 
     	if (! empty($catid))
@@ -392,7 +393,7 @@ else
                 foreach($fieldstosearchall as $key => $val) $fieldstosearchall[$key]=$langs->trans($val);
                 print $langs->trans("FilterOnInto", $sall) . join(', ',$fieldstosearchall);
             }
-            
+
     		// Filter on categories
     	 	$moreforfilter='';
     		if (! empty($conf->categorie->enabled))
@@ -414,7 +415,7 @@ else
 
 			$varpage=empty($contextpage)?$_SERVER["PHP_SELF"]:$contextpage;
             $selectedfields=$form->multiSelectArrayWithCheckbox('selectedfields', $arrayfields, $varpage);	// This also change content of $arrayfields
-    		
+
             print '<table class="liste '.($moreforfilter?"listwithfilterbefore":"").'">';
     		print '<tr class="liste_titre">';
     		if (! empty($arrayfields['p.ref']['checked']))  print_liste_field_titre($arrayfields['p.ref']['label'], $_SERVER["PHP_SELF"],"p.ref","",$param,"",$sortfield,$sortorder);
@@ -431,9 +432,9 @@ else
     		if (! empty($arrayfields['p.accountancy_code_buy']['checked']))  print_liste_field_titre($arrayfields['p.accountancy_code_buy']['label'], $_SERVER["PHP_SELF"],"p.accountancy_code_buy","",$param,'',$sortfield,$sortorder);
     		if (is_array($extrafields->attribute_label) && count($extrafields->attribute_label))
 			{
-			   foreach($extrafields->attribute_label as $key => $val) 
+			   foreach($extrafields->attribute_label as $key => $val)
 			   {
-		           if (! empty($arrayfields["ef.".$key]['checked'])) 
+		           if (! empty($arrayfields["ef.".$key]['checked']))
 		           {
 						$align=$extrafields->getAlignFlag($key);
 						print_liste_field_titre($extralabels[$key],$_SERVER["PHP_SELF"],"ef.".$key,"",$param,($align?'align="'.$align.'"':''),$sortfield,$sortorder);
@@ -516,7 +517,7 @@ else
     		// Extra fields
 			if (is_array($extrafields->attribute_label) && count($extrafields->attribute_label))
 			{
-			   foreach($extrafields->attribute_label as $key => $val) 
+			   foreach($extrafields->attribute_label as $key => $val)
 			   {
 					if (! empty($arrayfields["ef.".$key]['checked'])) print '<td class="liste_titre"></td>';
 			   }
@@ -613,7 +614,7 @@ else
 			    {
 			    	print '<td>'.dol_trunc($objp->label,40).'</td>';
 			    }
-			    
+
     			// Barcode
 			    if (! empty($arrayfields['p.barcode']['checked']))
 			    {
@@ -679,7 +680,7 @@ else
     					$product_static->load_stock();
     				}
     			}
-    			
+
     			// Desired stock
 		        if (! empty($arrayfields['p.desiredstock']['checked']))
         		{
@@ -696,7 +697,7 @@ else
                     print '<td align="center">';
     				print yn($objp->tobatch);
     				print '</td>';
-        		}        		
+        		}
 				// Stock
 		        if (! empty($arrayfields['p.stock']['checked']))
         		{
@@ -715,9 +716,9 @@ else
 		        // Extra fields
 				if (is_array($extrafields->attribute_label) && count($extrafields->attribute_label))
 				{
-				   foreach($extrafields->attribute_label as $key => $val) 
+				   foreach($extrafields->attribute_label as $key => $val)
 				   {
-						if (! empty($arrayfields["ef.".$key]['checked'])) 
+						if (! empty($arrayfields["ef.".$key]['checked']))
 						{
 							print '<td';
 							$align=$extrafields->getAlignFlag($key);
@@ -746,8 +747,8 @@ else
 		            print '<td align="center">';
 		            print dol_print_date($objp->date_update, 'dayhour');
 		            print '</td>';
-		        }    			
-    			
+		        }
+
                 // Status (to sell)
 		        if (! empty($arrayfields['p.tosell']['checked']))
         		{
@@ -770,7 +771,7 @@ else
 	                }
 	                print '</td>';
         		}
-        		// Action	
+        		// Action
                 print '<td>&nbsp;</td>';
 
                 print "</tr>\n";
