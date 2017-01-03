@@ -254,7 +254,7 @@ class pdf_crabe extends ModelePDFFactures
 
 				// Set nblignes with the new facture lines content after hook
 				$nblignes = count($object->lines);
-				
+
 				// Create pdf instance
 				$pdf=pdf_getInstance($this->format);
                 $default_font_size = pdf_getPDFFontSize($outputlangs);	// Must be after pdf_getInstance
@@ -541,13 +541,16 @@ class pdf_crabe extends ModelePDFFactures
 					$pdf->SetXY($this->postotalht, $curY);
 					$pdf->MultiCell($this->page_largeur-$this->marge_droite-$this->postotalht, 3, $total_excl_tax, 0, 'R', 0);
 
+
+					$sign=1;
+					if (isset($object->type) && $object->type == 2 && ! empty($conf->global->INVOICE_POSITIVE_CREDIT_NOTE)) $sign=-1;
 					// Collecte des totaux par valeur de tva dans $this->tva["taux"]=total_tva
 					$prev_progress = $object->lines[$i]->get_prev_progress();
 					if ($prev_progress > 0) // Compute progress from previous situation
 					{
-						$tvaligne = $object->lines[$i]->total_tva * ($object->lines[$i]->situation_percent - $prev_progress) / $object->lines[$i]->situation_percent;
+						$tvaligne = $sign * $object->lines[$i]->total_tva * ($object->lines[$i]->situation_percent - $prev_progress) / $object->lines[$i]->situation_percent;
 					} else {
-						$tvaligne = $object->lines[$i]->total_tva;
+						$tvaligne = $sign * $object->lines[$i]->total_tva;
 					}
 					$localtax1ligne=$object->lines[$i]->total_localtax1;
 					$localtax2ligne=$object->lines[$i]->total_localtax2;
@@ -902,8 +905,8 @@ class pdf_crabe extends ModelePDFFactures
 				$this->error = $outputlangs->transnoentities("ErrorNoPaiementModeConfigured");
 			}
 			// Avoid having any valid PDF with setup that is not complete
-			elseif (($object->mode_reglement_code == 'CHQ' && empty($conf->global->FACTURE_CHQ_NUMBER))
-				|| ($object->mode_reglement_code == 'VIR' && empty($conf->global->FACTURE_RIB_NUMBER)))
+			elseif (($object->mode_reglement_code == 'CHQ' && empty($conf->global->FACTURE_CHQ_NUMBER) && empty($object->fk_account) && empty($object->fk_bank))
+				|| ($object->mode_reglement_code == 'VIR' && empty($conf->global->FACTURE_RIB_NUMBER) && empty($object->fk_account) && empty($object->fk_bank)))
 			{
 				$outputlangs->load("errors");
 
@@ -1128,7 +1131,7 @@ class pdf_crabe extends ModelePDFFactures
 				// VAT
 				foreach($this->tva as $tvakey => $tvaval)
 				{
-					if ($tvakey > 0)    // On affiche pas taux 0
+					if ($tvakey != 0)    // On affiche pas taux 0
 					{
 						$this->atleastoneratenotnull++;
 
@@ -1503,7 +1506,7 @@ class pdf_crabe extends ModelePDFFactures
 			$posy+=4;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("RefCustomer")." : " . $outputlangs->convToOutputCharset($object->ref_client), '', 'R');
+			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("RefCustomer")." : " . $outputlangs->convToOutputCharset(dol_trunc($object->ref_client,36)), '', 'R');
 		}
 
 		$objectidnext=$object->getIdReplacingInvoice('validated');

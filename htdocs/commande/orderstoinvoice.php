@@ -70,6 +70,11 @@ $date_end = dol_mktime(23,59,59,$_REQUEST["date_endmonth"],$_REQUEST["date_endda
 $date_starty = dol_mktime(0,0,0,$_REQUEST["date_start_delymonth"],$_REQUEST["date_start_delyday"],$_REQUEST["date_start_delyyear"]);	// Date for local PHP server
 $date_endy = dol_mktime(23,59,59,$_REQUEST["date_end_delymonth"],$_REQUEST["date_end_delyday"],$_REQUEST["date_end_delyyear"]);
 
+$extrafields = new ExtraFields($db);
+
+// fetch optionals attributes and labels
+$extralabels=$extrafields->fetch_name_optionals_label('facture');
+
 if ($action == 'create')
 {
 	if (is_array($selected) == false)
@@ -173,6 +178,9 @@ if (($action == 'create' || $action == 'add') && !$error)
 				$object->amount				= $_POST['amount'];
 				$object->remise_absolue		= $_POST['remise_absolue'];
 				$object->remise_percent		= $_POST['remise_percent'];
+
+				$ret = $extrafields->setOptionalsFromPost($extralabels,$object);
+				if ($ret < 0) $error++;
 
 				if ($_POST['origin'] && $_POST['originid'])
 				{
@@ -300,7 +308,8 @@ if (($action == 'create' || $action == 'add') && !$error)
 												$lines[$i]->rowid,
 												$fk_parent_line,
 												$lines[$i]->fk_fournprice,
-												$lines[$i]->pa_ht
+												$lines[$i]->pa_ht,
+												$lines[$i]->label
 										);
 										if ($result > 0)
 										{
@@ -396,9 +405,9 @@ if ($action == 'create' && !$error)
 	print '<input type="hidden" name="origin" value="'.GETPOST('origin').'">';
 	print '<input type="hidden" name="originid" value="'.GETPOST('originid').'">';
 	print '<input type="hidden" name="autocloseorders" value="'.GETPOST('autocloseorders').'">';
-	
+
 	dol_fiche_head();
-	
+
 	print '<table class="border" width="100%">';
 
 	// Ref
@@ -463,6 +472,12 @@ if ($action == 'create' && !$error)
 	$parameters=array('objectsrc' => $objectsrc, 'idsrc' => $listoforders, 'colspan' => ' colspan="3"');
 	$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
 
+	if (empty($reshook) && ! empty($extrafields->attribute_label))
+	{
+		$object=new Facture($db);
+		print $object->showOptionals($extrafields,'edit');
+	}
+
 	// Modele PDF
 	print '<tr><td>'.$langs->trans('Model').'</td>';
 	print '<td>';
@@ -501,15 +516,15 @@ if ($action == 'create' && !$error)
 	}
 
 	dol_fiche_end();
-	
+
 	// Button "Create Draft"
 	print '<div class="center"><input type="submit" class="button" name="bouton" value="'.$langs->trans('CreateDraft').'" /></div>';
 	print "</form>\n";
 
 	print '</td></tr>';
 	print "</table>\n";
-	
-	
+
+
 }
 
 // Mode liste
