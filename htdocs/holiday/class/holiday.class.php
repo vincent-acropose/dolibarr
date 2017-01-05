@@ -1222,20 +1222,20 @@ class Holiday extends CommonObject
             // List for Dolibarr users
             if ($type)
             {
-                $sql = "SELECT u.rowid, u.lastname, u.firstname";
+                $sql = "SELECT DISTINCT u.rowid, u.lastname, u.firstname";
                 $sql.= " FROM ".MAIN_DB_PREFIX."user as u";
 
-                if (! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode))
+               /* if (! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode))
                 {
                 	$sql.= ", ".MAIN_DB_PREFIX."usergroup_user as ug";
                 	$sql.= " WHERE (ug.fk_user = u.rowid";
                 	$sql.= " AND ug.entity = ".$conf->entity.")";
                 	$sql.= " OR u.admin = 1";
                 }
-                else
+                else*/
                 	$sql.= " WHERE u.entity IN (0,".$conf->entity.")";
 
-                $sql.= " AND u.statut > 0";
+                $sql.= " AND u.statut > 0 AND u.employee=1";
 
                 dol_syslog(get_class($this)."::fetchUsers", LOG_DEBUG);
                 $resql=$this->db->query($sql);
