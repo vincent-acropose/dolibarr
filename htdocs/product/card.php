@@ -164,7 +164,7 @@ if (empty($reshook))
 			exit;
 		}
 	}
-	
+
     // Barcode type
     if ($action ==	'setfk_barcode_type' && $createbarcode)
     {
@@ -236,7 +236,7 @@ if (empty($reshook))
             $action = "create";
             $error++;
         }
-        
+
         if (! $error)
         {
 	        $units = GETPOST('units', 'int');
@@ -303,7 +303,7 @@ if (empty($reshook))
             $object->volume_units       	 = GETPOST('volume_units');
             $object->finished           	 = GETPOST('finished');
 	        $object->fk_unit                 = GETPOST('units');
-			
+
 			$accountancy_code_sell 			 = GETPOST('accountancy_code_sell');
 			$accountancy_code_buy 			 = GETPOST('accountancy_code_buy');
 
@@ -423,7 +423,7 @@ if (empty($reshook))
 
 				$accountancy_code_sell 			 = GETPOST('accountancy_code_sell');
 				$accountancy_code_buy 			 = GETPOST('accountancy_code_buy');
-				
+
 				if ($accountancy_code_sell <= 0) { $object->accountancy_code_sell = ''; } else { $object->accountancy_code_sell = $accountancy_code_sell; }
 				if ($accountancy_code_buy <= 0) { $object->accountancy_code_buy = ''; } else { $object->accountancy_code_buy = $accountancy_code_buy; }
 
@@ -660,7 +660,7 @@ if (empty($reshook))
                     $pu_ttc = price2num($pu_ht * (1 + ($tva_tx / 100)), 'MU');
                 }
             }
-            
+
             if (GETPOST('propalid') > 0) {
                 // Define cost price for margin calculation
                 $buyprice=0;
@@ -673,7 +673,7 @@ if (empty($reshook))
                 {
                     $buyprice = $result;
                 }
-                
+
                 $result = $propal->addline(
                     $desc,
                     $pu_ht,
@@ -716,7 +716,7 @@ if (empty($reshook))
                 {
                     $buyprice = $result;
                 }
-                
+
                 $result = $commande->addline(
                     $desc,
                     $pu_ht,
@@ -759,7 +759,7 @@ if (empty($reshook))
                 {
                     $buyprice = $result;
                 }
-                
+
                 $result = $facture->addline(
                     $desc,
                     $pu_ht,
@@ -1112,7 +1112,7 @@ else
 
             // VAT
             print '<tr><td width="20%">'.$langs->trans("VATRate").'</td><td>';
-            print $form->load_tva("tva_tx",-1,$mysoc,'');
+            print $form->load_tva("tva_tx",20,$mysoc,'');
             print '</td></tr>';
 
             print '</table>';
@@ -1121,7 +1121,7 @@ else
         }
 
         print '<table class="border" width="100%">';
-		
+
 		if (! empty($conf->accounting->enabled))
 		{
             // Accountancy_code_sell
@@ -1135,8 +1135,8 @@ else
             print '<td>';
 			print $formaccountancy->select_account($object->accountancy_code_buy, 'accountancy_code_buy', 1, '', 0, 1);
             print '</td></tr>';
-		}			
-		else // For external software 
+		}
+		else // For external software
 		{
             // Accountancy_code_sell
             print '<tr><td width="20%">'.$langs->trans("ProductAccountancySellCode").'</td>';
@@ -1380,7 +1380,7 @@ else
             }
 
 			// Tags-Categories
-            if ($conf->categorie->enabled) 
+            if ($conf->categorie->enabled)
 			{
 				print '<tr><td class="tdtop">'.$langs->trans("Categories").'</td><td colspan="3">';
 				$cate_arbo = $form->select_all_categories(Categorie::TYPE_PRODUCT, '', 'parent', 64, 0, 1);
@@ -1420,8 +1420,8 @@ else
                 print '<td>';
 				print $formaccountancy->select_account($object->accountancy_code_buy, 'accountancy_code_buy', 1, '', 1, 1);
                 print '</td></tr>';
-			}			
-			else // For external software 
+			}
+			else // For external software
 			{
                 // Accountancy_code_sell
                 print '<tr><td width="20%">'.$langs->trans("ProductAccountancySellCode").'</td>';
@@ -1457,16 +1457,16 @@ else
             dol_fiche_head($head, 'card', $titre, 0, $picto);
 
             $linkback = '<a href="'.DOL_URL_ROOT.'/product/list.php">'.$langs->trans("BackToList").'</a>';
-            
+
             dol_banner_tab($object, 'ref', $linkback, ($user->societe_id?0:1), 'ref');
-            
-            
+
+
             print '<div class="fichecenter">';
             print '<div class="fichehalfleft">';
-            
+
             print '<div class="underbanner clearboth"></div>';
             print '<table class="border tableforfield" width="100%">';
-            
+
             // Type
             if (! empty($conf->produit->enabled) && ! empty($conf->service->enabled))
             {
@@ -1566,7 +1566,7 @@ else
             }
             print '</td></tr>';
             */
-            
+
             // Batch number management (to batch)
             if (! empty($conf->productbatch->enabled)) {
                 print '<tr><td>'.$langs->trans("ManageLotSerial").'</td><td colspan="2">';
@@ -1589,10 +1589,10 @@ else
             print '</table>';
             print '</div>';
             print '<div class="fichehalfright"><div class="ficheaddleft">';
-       
+
             print '<div class="underbanner clearboth"></div>';
             print '<table class="border tableforfield" width="100%">';
-            
+
             // Nature
             if($object->type!= Product::TYPE_SERVICE)
             {
@@ -1714,10 +1714,10 @@ else
 
             print "</table>\n";
     		print '</div>';
-    		
+
             print '</div></div>';
             print '<div style="clear:both"></div>';
-        
+
             dol_fiche_end();
         }
 
@@ -1781,7 +1781,7 @@ if (empty($reshook))
 {
 	if ($action == '' || $action == 'view')
 	{
-	    if (($object->type == Product::TYPE_PRODUCT && $user->rights->produit->creer ) || 
+	    if (($object->type == Product::TYPE_PRODUCT && $user->rights->produit->creer ) ||
 	       ($object->type == Product::TYPE_SERVICE && $user->rights->service->creer))
 	    {
 	        if (! isset($object->no_button_edit) || $object->no_button_edit <> 1) print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=edit&amp;id='.$object->id.'">'.$langs->trans("Modify").'</a></div>';
@@ -1926,7 +1926,7 @@ if ($object->id && ($action == '' || $action == 'view') && $object->status)
     	print '<input type="hidden" name="action" value="addin">';
 
 	    print load_fiche_titre($langs->trans("AddToDraft"),'','');
-		
+
 		dol_fiche_head('');
 
     	$html .= '<tr><td class="nowrap">'.$langs->trans("Quantity").' ';
@@ -1938,7 +1938,7 @@ if ($object->id && ($action == '' || $action == 'view') && $object->status)
     	print '<table width="100%" class="border">';
         print $html;
         print '</table>';
-		
+
         print '<div class="center">';
         print '<input type="submit" class="button" value="'.$langs->trans("Add").'">';
         print '</div>';
@@ -1965,7 +1965,7 @@ if ($action == '' || $action == 'view')
     $delallowed=$user->rights->produit->supprimer;
 
     $var=true;
-    
+
     $somethingshown=$formfile->show_documents($modulepart,$object->ref,$filedir,$urlsource,$genallowed,$delallowed,'',0,0,0,28,0,'',0,'',$object->default_lang);
 
     print '</div><div class="fichehalfright"><div class="ficheaddleft">';
