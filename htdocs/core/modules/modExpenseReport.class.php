@@ -52,6 +52,7 @@ class modExpenseReport extends DolibarrModules
 		// Family can be 'crm','financial','hr','projects','products','ecm','technic','other'
 		// It is used to group modules in module setup page
 		$this->family = "hr";
+		$this->module_position = 40;
 		// Module label (no space allowed), used if translation string 'ModuleXXXName' not found (where XXX is value of numeric property 'numero' of module)
 		$this->name = preg_replace('/^mod/i','',get_class($this));
 		// Module description, used if translation string 'ModuleXXXDesc' not found (where XXX is value of numeric property 'numero' of module)
@@ -74,9 +75,6 @@ class modExpenseReport extends DolibarrModules
 		// Example: this->dirs = array("/mymodule/temp");
 		$this->dirs = array();
 		$r=0;
-
-		// Relative path to module style sheet if exists. Example: '/mymodule/css/mycss.css'.
-		//$this->style_sheet = '/mymodule/mymodule.css.php';
 
 		// Config pages. Put here list of php page names stored in admmin directory used to setup module.
 		$this->config_page_url = array('expensereport.php');
@@ -221,7 +219,7 @@ class modExpenseReport extends DolibarrModules
 		$this->menu = array();			// List of menus to add
 		$r=0;
 
-		// Example to declare a Left Menu entry: fk_mainmenu=home,fk_leftmenu=modulesadmintools
+		// Example to declare a Left Menu entry: fk_mainmenu=home,fk_leftmenu=admintools
 		$this->menu[$r]=array(	'fk_menu'=>'fk_mainmenu=hrm',		// Use r=value where r is index key used for the parent menu entry (higher parent must be a top menu entry)
 									'type'=>'left',			// This is a Left menu entry
 									'titre'=>'TripsAndExpenses',
@@ -340,7 +338,7 @@ class modExpenseReport extends DolibarrModules
 
 		$sql = array(
 				"DELETE FROM ".MAIN_DB_PREFIX."document_model WHERE nom = 'standard' AND entity = ".$conf->entity,
-				"INSERT INTO ".MAIN_DB_PREFIX."document_model (nom, type, entity) VALUES('standard','deplacement',".$conf->entity.")"
+				"INSERT INTO ".MAIN_DB_PREFIX."document_model (nom, type, entity) VALUES('standard','expensereport',".$conf->entity.")"
 		);
 
 		return $this->_init($sql,$options);

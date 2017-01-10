@@ -46,6 +46,8 @@ class modProductBatch extends DolibarrModules
 		$this->numero = 39000;
 
 		$this->family = "products";
+		$this->module_position = 45;
+		
 		$this->name = preg_replace('/^mod/i','',get_class($this));
 		$this->description = "Batch number, eat-by and sell-by date management module";
 
@@ -67,7 +69,7 @@ class modProductBatch extends DolibarrModules
 		$this->config_page_url = array();
 
 		// Dependencies
-		$this->depends = array("modProduct","modStock","modExpedition","modSupplier");		// List of modules id that must be enabled if this module is enabled. modExpedition is required to manage batch exit (by manual stock decrease on shipment), modSupplier to manage batch entry (after supplier order).
+		$this->depends = array("modProduct","modStock","modExpedition","modFournisseur");		// List of modules id that must be enabled if this module is enabled. modExpedition is required to manage batch exit (by manual stock decrease on shipment), modSupplier to manage batch entry (after supplier order).
 		$this->requiredby = array();	// List of modules id to disable if this one is disabled
 		$this->phpmin = array(5,0);					// Minimum version of PHP required by module
 		$this->need_dolibarr_version = array(3,0);	// Minimum version of Dolibarr required by module
@@ -116,8 +118,9 @@ class modProductBatch extends DolibarrModules
 
 		$sql = array();
 
-		if(! empty($conf->cashdesk->enabled)) {
-    		if (!$conf->global->CASHDESK_NO_DECREASE_STOCK) {
+		if (! empty($conf->cashdesk->enabled)) {
+    		if (empty($conf->global->CASHDESK_NO_DECREASE_STOCK)) {
+    		    include_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
     		    $res = dolibarr_set_const($db,"CASHDESK_NO_DECREASE_STOCK",1,'chaine',0,'',$conf->entity);
     		}
 		}

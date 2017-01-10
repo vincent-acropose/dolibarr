@@ -72,7 +72,7 @@ if ($id > 0 || ! empty($ref))
 
     if (! empty($conf->product->enabled)) $upload_dir = $conf->product->multidir_output[$object->entity].'/'.get_exdir(0, 0, 0, 0, $object, 'product').dol_sanitizeFileName($object->ref);
     elseif (! empty($conf->service->enabled)) $upload_dir = $conf->service->multidir_output[$object->entity].'/'.get_exdir(0, 0, 0, 0, $object, 'product').dol_sanitizeFileName($object->ref);
-
+    
 	if (! empty($conf->global->PRODUCT_USE_OLD_PATH_FOR_PHOTO))    // For backward compatiblity, we scan also old dirs
 	{
 	    if (! empty($conf->product->enabled)) $upload_dirold = $conf->product->multidir_output[$object->entity].'/'.substr(substr("000".$object->id, -2),1,1).'/'.substr(substr("000".$object->id, -2),0,1).'/'.$object->id."/photos";
@@ -105,13 +105,13 @@ if (empty($reshook))
 			$filetomerge->file_name=$filename;
 			$result=$filetomerge->delete_by_file($user);
 			if ($result<0) {
-				setEventMessage($filetomerge->error,'errors');
+				setEventMessages($filetomerge->error, $filetomerge->errors, 'errors');
 			}
 		}
 	}
 
-	// Action sending file
-	include_once DOL_DOCUMENT_ROOT.'/core/tpl/document_actions_pre_headers.tpl.php';
+	// Action submit/delete file/link
+	include_once DOL_DOCUMENT_ROOT.'/core/actions_linkedfiles.inc.php';
 
 }
 
@@ -137,7 +137,7 @@ if ($action=='filemerge')
 			$result=$filetomerge->delete_by_product($user, $object->id);
 		}
 		if ($result<0) {
-			setEventMessage($filetomerge->error,'errors');
+			setEventMessages($filetomerge->error, $filetomerge->errors, 'errors');
 		}
 
 		// for each file checked add it to the product
@@ -152,7 +152,7 @@ if ($action=='filemerge')
 
 				$result=$filetomerge->create($user);
 				if ($result<0) {
-					setEventMessage($filetomerge->error,'errors');
+					setEventMessages($filetomerge->error, $filetomerge->errors, 'errors');
 				}
 			}
 		}
@@ -166,7 +166,21 @@ if ($action=='filemerge')
 
 $form = new Form($db);
 
-llxHeader("","",$langs->trans("CardProduct".$object->type));
+$title = $langs->trans('ProductServiceCard');
+$helpurl = '';
+$shortlabel = dol_trunc($object->label,16);
+if (GETPOST("type") == '0' || ($object->type == Product::TYPE_PRODUCT))
+{
+	$title = $langs->trans('Product')." ". $shortlabel ." - ".$langs->trans('Documents');
+	$helpurl='EN:Module_Products|FR:Module_Produits|ES:M&oacute;dulo_Productos';
+}
+if (GETPOST("type") == '1' || ($object->type == Product::TYPE_SERVICE))
+{
+	$title = $langs->trans('Service')." ". $shortlabel ." - ".$langs->trans('Documents');
+	$helpurl='EN:Module_Services_En|FR:Module_Services|ES:M&oacute;dulo_Servicios';
+}
+
+llxHeader('', $title, $helpurl);
 
 
 if ($object->id)
@@ -195,40 +209,29 @@ if ($object->id)
 	}
 
 
-    print '<table class="border" width="100%">';
+    $linkback = '<a href="'.DOL_URL_ROOT.'/product/list.php">'.$langs->trans("BackToList").'</a>';
+    
+	dol_banner_tab($object, 'ref', $linkback, ($user->societe_id?0:1), 'ref');
+    
+    print '<div class="fichecenter">';
+    
+    print '<div class="underbanner clearboth"></div>';
+    print '<table class="border tableforfield" width="100%">';
 
-    // Ref
-    print '<tr>';
-    print '<td width="30%">'.$langs->trans("Ref").'</td><td colspan="3">';
-	print $form->showrefnav($object,'ref','',1,'ref');
-    print '</td>';
-    print '</tr>';
-
-    // Label
-    print '<tr><td>'.$langs->trans("Label").'</td><td colspan="3">'.$object->label.'</td></tr>';
-
-	// Status (to sell)
-	print '<tr><td>'.$langs->trans("Status").' ('.$langs->trans("Sell").')</td><td>';
-	print $object->getLibStatut(2,0);
-	print '</td></tr>';
-
-	// Status (to buy)
-	print '<tr><td>'.$langs->trans("Status").' ('.$langs->trans("Buy").')</td><td>';
-	print $object->getLibStatut(2,1);
-	print '</td></tr>';
-
-    print '<tr><td>'.$langs->trans("NbOfAttachedFiles").'</td><td colspan="3">'.count($filearray).'</td></tr>';
+    print '<tr><td class="titlefield">'.$langs->trans("NbOfAttachedFiles").'</td><td colspan="3">'.count($filearray).'</td></tr>';
     print '<tr><td>'.$langs->trans("TotalSizeOfAttachedFiles").'</td><td colspan="3">'.$totalsize.' '.$langs->trans("bytes").'</td></tr>';
     print '</table>';
 
     print '</div>';
+    print '<div style="clear:both"></div>';
+    
+    dol_fiche_end();
 
-    $modulepart = 'produit';
     $permission = (($object->type == Product::TYPE_PRODUCT && $user->rights->produit->creer) || ($object->type == Product::TYPE_SERVICE && $user->rights->service->creer));
     $param = '&id=' . $object->id;
     include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_post_headers.tpl.php';
 
-    // Merge propal PDF docuemnt PDF files
+    // Merge propal PDF document PDF files
     if (!empty($conf->global->PRODUIT_PDF_MERGE_PROPAL))
     {
     	$filetomerge = new Propalmergepdfproduct($db);
@@ -276,43 +279,11 @@ if ($object->id)
 
     			print  '<tr class="liste_titre"><td>';
 
-    			$delauft_lang = (empty($lang_id)) ? $langs->getDefaultLang() : $lang_id;
+    			$delauft_lang = empty($lang_id) ? $langs->getDefaultLang() : $lang_id;
 
     			$langs_available = $langs->get_available_languages(DOL_DOCUMENT_ROOT, 12);
 
-    			print  '<select class="flat" id="lang_id" name="lang_id">';
-
-    			asort($langs_available);
-
-    			$uncompletelanguages = array (
-    					'da_DA',
-    					'fi_FI',
-    					'hu_HU',
-    					'is_IS',
-    					'pl_PL',
-    					'ro_RO',
-    					'ru_RU',
-    					'sv_SV',
-    					'tr_TR',
-    					'zh_CN'
-    			);
-    			foreach ( $langs_available as $key => $value )
-    			{
-    				if ($showwarning && in_array($key, $uncompletelanguages))
-    				{
-    					// $value.=' - '.$langs->trans("TranslationUncomplete",$key);
-    				}
-    				if ($filter && is_array($filter)) {
-    					if (! array_key_exists($key, $filter)) {
-    						print  '<option value="' . $key . '">' . $value . '</option>';
-    					}
-    				} else if ($delauft_lang == $key) {
-    					print  '<option value="' . $key . '" selected>' . $value . '</option>';
-    				} else {
-    					print  '<option value="' . $key . '">' . $value . '</option>';
-    				}
-    			}
-    			print  '</select>';
+			    print Form::selectarray('lang_id', $langs_available, $delauft_lang, 0, 0, 0, '', 0, 0, 0, 'ASC');
 
     			if ($conf->global->MAIN_MULTILANGS) {
     				print  '<input type="submit" class="button" name="refresh" value="' . $langs->trans('Refresh') . '">';
@@ -335,19 +306,23 @@ if ($object->id)
     				$checked = '';
     				$filename = $filetoadd['name'];
 
-    				if ($conf->global->MAIN_MULTILANGS) {
-    					if (array_key_exists($filetoadd['name'] . '_' . $delauft_lang, $filetomerge->lines)) {
+    				if ($conf->global->MAIN_MULTILANGS) 
+    				{
+    					if (array_key_exists($filetoadd['name'] . '_' . $delauft_lang, $filetomerge->lines)) 
+    					{
     						$filename = $filetoadd['name'] . ' - ' . $langs->trans('Language_' . $delauft_lang);
     						$checked = ' checked ';
     					}
-    				} else {
-    					if (array_key_exists($filetoadd['name'], $filetomerge->lines)) {
+    				}
+    				else 
+    				{
+    					if (array_key_exists($filetoadd['name'], $filetomerge->lines)) 
+    					{
     						$checked = ' checked ';
     					}
     				}
 
     				print  '<tr class="' . $style . '"><td>';
-
     				print  '<input type="checkbox" ' . $checked . ' name="filetoadd[]" id="filetoadd" value="' . $filetoadd['name'] . '">' . $filename . '</input>';
     				print  '</td></tr>';
     			}

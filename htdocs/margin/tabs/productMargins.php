@@ -65,12 +65,25 @@ $invoicestatic=new Facture($db);
 
 $form = new Form($db);
 
-
 if ($id > 0 || ! empty($ref))
 {
-	$result = $object->fetch($id, $ref);
+    $result = $object->fetch($id, $ref);
+    
+    $title = $langs->trans('ProductServiceCard');
+	$helpurl = '';
+	$shortlabel = dol_trunc($object->label,16);
+	if (GETPOST("type") == '0' || ($object->type == Product::TYPE_PRODUCT))
+	{
+		$title = $langs->trans('Product')." ". $shortlabel ." - ".$langs->trans('Card');
+		$helpurl='EN:Module_Products|FR:Module_Produits|ES:M&oacute;dulo_Productos';
+	}
+	if (GETPOST("type") == '1' || ($object->type == Product::TYPE_SERVICE))
+	{
+		$title = $langs->trans('Service')." ". $shortlabel ." - ".$langs->trans('Card');
+		$helpurl='EN:Module_Services_En|FR:Module_Services|ES:M&oacute;dulo_Servicios';
+	}
 
-	llxHeader("","",$langs->trans("CardProduct".$object->type));
+	llxHeader('', $title, $helpurl);
 
 	/*
 	 *  En mode visu
@@ -82,31 +95,18 @@ if ($id > 0 || ! empty($ref))
 		$picto=($object->type== Product::TYPE_SERVICE?'service':'product');
 		dol_fiche_head($head, 'margin', $titre, 0, $picto);
 
-		print '<table class="border" width="100%">';
-
-		// Reference
-		print '<tr>';
-		print '<td width="30%">'.$langs->trans("Ref").'</td><td colspan="3">';
-		print $form->showrefnav($object,'ref','',1,'ref');
-		print '</td>';
-		print '</tr>';
-
-		// Libelle
-		print '<tr><td>'.$langs->trans("Label").'</td><td colspan="3">'.$object->label.'</td>';
-		print '</tr>';
-
-		// Status (to sell)
-		print '<tr><td>'.$langs->trans("Status").' ('.$langs->trans("Sell").')</td><td colspan="3">';
-		print $object->getLibStatut(2,0);
-		print '</td></tr>';
-
-		// Status (to buy)
-		print '<tr><td>'.$langs->trans("Status").' ('.$langs->trans("Buy").')</td><td colspan="3">';
-		print $object->getLibStatut(2,1);
-		print '</td></tr>';
+		$linkback = '<a href="'.DOL_URL_ROOT.'/product/list.php">'.$langs->trans("BackToList").'</a>';
+		
+        dol_banner_tab($object, 'ref', $linkback, ($user->societe_id?0:1), 'ref');
+        
+        
+        print '<div class="fichecenter">';
+        
+        print '<div class="underbanner clearboth"></div>';
+        print '<table class="border tableforfield" width="100%">';
 
 		// Total Margin
-		print '<tr><td>'.$langs->trans("TotalMargin").'</td><td colspan="3">';
+		print '<tr><td class="titlefield">'.$langs->trans("TotalMargin").'</td><td colspan="3">';
 		print '<span id="totalMargin"></span>'; // set by jquery (see below)
 		print '</td></tr>';
 
@@ -125,7 +125,11 @@ if ($id > 0 || ! empty($ref))
 		}
 
 		print "</table>";
-		print '</div>';
+		
+        print '</div>';
+        print '<div style="clear:both"></div>';
+		
+		dol_fiche_end();
 
 
         if ($user->rights->facture->lire) {
@@ -231,7 +235,7 @@ if ($id > 0 || ! empty($ref))
                     $markRate = ($cumul_vente != 0)?-1*(100 * $totalMargin / $cumul_vente):'';
                 }
                 else
-              {
+                {
                     $marginRate = ($cumul_achat != 0)?(100 * $totalMargin / $cumul_achat):'';
                     $markRate = ($cumul_vente != 0)?(100 * $totalMargin / $cumul_vente):'';
                 }

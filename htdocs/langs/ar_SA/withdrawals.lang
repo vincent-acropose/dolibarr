@@ -1,26 +1,18 @@
 # Dolibarr language file - Source file is en_US - withdrawals
-StandingOrdersArea=أوامر دائمة المنطقة
 CustomersStandingOrdersArea=أوامر دائمة منطقة العملاء
 StandingOrders=أوامر دائمة
 StandingOrder=أوامر دائمة
 NewStandingOrder=دائمة جديدة من أجل
 StandingOrderToProcess=لعملية
-StandingOrderProcessed=معالجة
-Withdrawals=انسحابات
-Withdrawal=انسحاب
 WithdrawalsReceipts=إيصالات السحب
 WithdrawalReceipt=انسحاب ورود
-WithdrawalReceiptShort=ورود
-LastWithdrawalReceipts=ق الماضي سحب إيصالات ٪
-WithdrawedBills=Withdrawed الفواتير
+LastWithdrawalReceipts=Latest %s withdrawal receipts
 WithdrawalsLines=خطوط السحب
-RequestStandingOrderToTreat=Request for standing orders to process
-RequestStandingOrderTreated=Request for standing orders processed
-NotPossibleForThisStatusOfWithdrawReceiptORLine=Not yet possible. Withdraw status must be set to 'credited' before declaring reject on specific lines.
-CustomersStandingOrders=الزبون أوامر دائمة
-CustomerStandingOrder=يقف النظام العميل
-NbOfInvoiceToWithdraw=Nb. of invoice with withdraw request
-NbOfInvoiceToWithdrawWithInfo=Nb. of invoice with withdraw request for customers having defined bank account information
+RequestStandingOrderToTreat=طلب لأوامر إلى معالجة دائمة
+RequestStandingOrderTreated=طلب الأوامر الدائمة معالجة
+NotPossibleForThisStatusOfWithdrawReceiptORLine=لم يكن ممكنا حتى الآن. سحب يجب أن يتم تعيين الحالة إلى "الفضل" قبل أن يعلن رفض على خطوط محددة.
+NbOfInvoiceToWithdraw=ملحوظة. من فاتورة مع سحب الطلب
+NbOfInvoiceToWithdrawWithInfo=ملحوظة. من فاتورة مع سحب الطلب للعملاء الحصول على معلومات الحساب المصرفي المحدد
 InvoiceWaitingWithdraw=فاتورة انتظار الانسحاب
 AmountToWithdraw=سحب المبلغ
 WithdrawsRefused=ورفض سحب
@@ -29,10 +21,9 @@ ResponsibleUser=مسؤولة المستخدم
 WithdrawalsSetup=الإعداد للانسحاب
 WithdrawStatistics=تسحب 'إحصاءات
 WithdrawRejectStatistics=وترفض الانسحاب 'إحصاءات
-LastWithdrawalReceipt=ق الماضي سحب إيصالات ٪
+LastWithdrawalReceipt=Latest %s withdrawal receipts
 MakeWithdrawRequest=تقديم طلب سحب
 ThirdPartyBankCode=طرف ثالث بنك مدونة
-ThirdPartyDeskCode=طرف ثالث مكتب مدونة
 NoInvoiceCouldBeWithdrawed=أي فاتورة withdrawed بالنجاح. تأكد من أن الفاتورة على الشركات الحظر ساري المفعول.
 ClassCredited=تصنيف حساب
 ClassCreditedConfirm=هل أنت متأكد من أن يصنف هذا الانسحاب كما تلقي على حساب حسابك المصرفي؟
@@ -47,9 +38,7 @@ RefusedData=تاريخ الرفض
 RefusedReason=أسباب الرفض
 RefusedInvoicing=رفض الفواتير
 NoInvoiceRefused=لا تهمة الرفض
-InvoiceRefused=Invoice refused (Charge the rejection to customer)
-Status=حالة
-StatusUnknown=غير معروف
+InvoiceRefused=رفضت فاتورة (اشحن الرفض للعملاء)
 StatusWaiting=انتظار
 StatusTrans=أحال
 StatusCredited=الفضل
@@ -68,27 +57,25 @@ CreateGuichet=مكتب فقط
 CreateBanque=البنك الوحيد
 OrderWaiting=الانتظار لتلقي العلاج
 NotifyTransmision=انسحاب البث
-NotifyEmision=انسحاب الانبعاثات
 NotifyCredit=انسحاب الائتمان
 NumeroNationalEmetter=رقم المرسل وطنية
-PleaseSelectCustomerBankBANToWithdraw=حدد معلومات عن حساب مصرفي العملاء لسحب
 WithBankUsingRIB=عن الحسابات المصرفية باستخدام RIB
 WithBankUsingBANBIC=عن الحسابات المصرفية باستخدام IBAN / BIC / SWIFT
 BankToReceiveWithdraw=حساب مصرفي لتلقي تنسحب
 CreditDate=الائتمان على
-WithdrawalFileNotCapable=Unable to generate withdrawal receipt file for your country %s (Your country is not supported)
+WithdrawalFileNotCapable=غير قادر على توليد ملف استلام الانسحاب لبلدكم٪ الصورة (لا يتم اعتماد البلد)
 ShowWithdraw=وتظهر سحب
 IfInvoiceNeedOnWithdrawPaymentWontBeClosed=ومع ذلك، إذا فاتورة واحدة على الأقل دفع انسحاب لا تتم معالجتها حتى الآن، فإنه لن يكون كما سيولي للسماح لإدارة الانسحاب قبل.
-DoStandingOrdersBeforePayments=This tab allows you to request a standing order. Once done, go into menu Bank->Withdrawal to manage the standing order. When standing order is closed, payment on invoice will be automatically recorded, and invoice closed if remainder to pay is null.
-WithdrawalFile=Withdrawal file
-SetToStatusSent=Set to status "File Sent"
-ThisWillAlsoAddPaymentOnInvoice=This will also apply payments to invoices and will classify them as "Paid"
-StatisticsByLineStatus=Statistics by status of lines
-RUM=RUM
-RUMWillBeGenerated=RUM number will be generated once bank account information are saved
-WithdrawMode=Withdraw mode (FRST or RECUR)
-WithdrawRequestAmount=Withdraw request amount:
-WithdrawRequestErrorNilAmount=Unable to create withdraw request for nil amount.
+DoStandingOrdersBeforePayments=هذا التبويب يسمح لك لطلب أمر مستديم. وبمجرد القيام به، انتقل إلى القائمة Bank-> سحب لإدارة النظام واقفا. عندما أمر يقف مغلق، سيتم تسجيلها تلقائيا الدفع على الفاتورة، وأغلقت الفاتورة إذا تبقى لدفع فارغة.
+WithdrawalFile=ملف الانسحاب
+SetToStatusSent=تعيين إلى حالة "المرسلة ملف"
+ThisWillAlsoAddPaymentOnInvoice=وهذا أيضا ينطبق على الفواتير والمدفوعات وتصنيفها على أنها "تدفع"
+StatisticsByLineStatus=إحصاءات عن طريق وضع خطوط
+RUM=رم
+RUMWillBeGenerated=سيتم إنشاء عدد رم مرة واحدة يتم حفظ معلومات الحساب المصرفي
+WithdrawMode=وضع (FRST أو تتكرر) سحب
+WithdrawRequestAmount=سحب طلب كمية:
+WithdrawRequestErrorNilAmount=غير قادر على إنشاء سحب طلب مبلغ لا شيء.
 
 ### Notifications
 InfoCreditSubject=دفع %s النظام الدائمة من قبل البنك
@@ -96,7 +83,6 @@ InfoCreditMessage=تم دفع %s النظام وقوفه الى جانب الب�
 InfoTransSubject=انتقال %s ترتيب دائمة للبنك
 InfoTransMessage=وقد transmited في %s أجل الوقوف على البنك من قبل %s %s. <br><br>
 InfoTransData=المبلغ: %s <br> Metode: %s <br> تاريخ: %s
-InfoFoot=هذه رسالة تلقائية ترسل من قبل Dolibarr
 InfoRejectSubject=ورفض النظام واقفا
-InfoRejectMessage=Hello,<br><br>the standing order of invoice %s related to the company %s, with an amount of %s has been refused by the bank.<br><br>--<br>%s
+InfoRejectMessage=أهلا، <br><br> وقد رفض النظام مكانة فاتورة%s المتعلقة بالشركة٪ الصورة، مع مبلغ٪ الصورة من قبل البنك. <br><br> - <br> ٪ الصورة
 ModeWarning=لم يتم تعيين خيار الوضع الحقيقي، ونحن بعد توقف هذه المحاكاة

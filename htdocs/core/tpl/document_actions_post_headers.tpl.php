@@ -48,11 +48,7 @@ $savingdocmask='';
 if (empty($conf->global->MAIN_DISABLE_SUGGEST_REF_AS_PREFIX))
 {
 	//var_dump($modulepart);
-<<<<<<< HEAD
-	if (in_array($modulepart,array('facture_fournisseur','commande_fournisseur','facture','commande','propal','askpricesupplier','ficheinter','contract','project','project_task','expensereport')))
-=======
-	if (in_array($modulepart,array('facture_fournisseur','commande_fournisseur','facture','commande','propal','askpricesupplier','ficheinter','contract','project','project_task')))
->>>>>>> NEW : Intégration du module "Demande de prix fournisseur". PS dsl pour le commit de bourrin
+	if (in_array($modulepart,array('facture_fournisseur','commande_fournisseur','facture','commande','propal','supplier_proposal','ficheinter','contract','project','project_task','expensereport')))
 	{
 		$savingdocmask=dol_sanitizeFileName($object->ref).'-__file__';
 	}
@@ -69,7 +65,7 @@ $formfile->form_attach_new_file(
     0,
     0,
     $permission,
-    50,
+    $conf->browser->layout == 'phone' ? 40 : 60,
     $object,
 	'',
 	1,

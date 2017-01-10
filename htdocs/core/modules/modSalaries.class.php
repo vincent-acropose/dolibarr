@@ -69,11 +69,11 @@ class modSalaries extends DolibarrModules
 		// Config pages
 		$this->config_page_url = array('salaries.php');
 
-		// Dependances
+		// Dependencies
 		$this->depends = array();
 		$this->requiredby = array();
 		$this->conflictwith = array();
-		$this->langfiles = array("salaries");
+		$this->langfiles = array("salaries","bills");
 
 		// Constants
 		$this->const = array();

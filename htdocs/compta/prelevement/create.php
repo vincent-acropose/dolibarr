@@ -65,11 +65,13 @@ if ($action == 'create')
     $result=$bprev->create($conf->global->PRELEVEMENT_CODE_BANQUE, $conf->global->PRELEVEMENT_CODE_GUICHET);
     if ($result < 0)
     {
-        $mesg='<div class="error">'.$bprev->error.'</div>';
+    	setEventMessages($bprev->error, $bprev->errors, 'errors');
     }
     if ($result == 0)
     {
-        $mesg='<div class="error">'.$langs->trans("NoInvoiceCouldBeWithdrawed").'</div>';
+    	$mesg='';
+        $mesg=$langs->trans("NoInvoiceCouldBeWithdrawed");
+        setEventMessages($mesg, null, 'errors');
         foreach($bprev->invoice_in_error as $key => $val)
         {
         	$mesg.=$val."<br>\n";
@@ -106,7 +108,7 @@ $h++;
 dol_fiche_head($head, $hselected, $langs->trans("StandingOrders"), 0, 'payment');
 */
 
-print_fiche_titre($langs->trans("NewStandingOrder"));
+print load_fiche_titre($langs->trans("NewStandingOrder"));
 
 dol_fiche_head();
 
@@ -183,7 +185,7 @@ if ($resql)
     $num = $db->num_rows($resql);
     $i = 0;
 
-    print_fiche_titre($langs->trans("InvoiceWaitingWithdraw").($num > 0?' ('.$num.')':''),'','');
+    print load_fiche_titre($langs->trans("InvoiceWaitingWithdraw").($num > 0?' ('.$num.')':''),'','');
 
     print '<table class="noborder" width="100%">';
     print '<tr class="liste_titre">';
@@ -233,7 +235,7 @@ if ($resql)
             $i++;
         }
     }
-    else print '<tr '.$bc[0].'><td colspan="5">'.$langs->trans("None").'</td></tr>';
+    else print '<tr '.$bc[0].'><td colspan="5" class="opacitymedium">'.$langs->trans("None").'</td></tr>';
     print "</table>";
     print "<br>\n";
 }
@@ -248,7 +250,7 @@ else
  */
 $limit=5;
 
-print_fiche_titre($langs->trans("LastWithdrawalReceipts",$limit),'','');
+print load_fiche_titre($langs->trans("LastWithdrawalReceipts",$limit),'','');
 
 $sql = "SELECT p.rowid, p.ref, p.amount, p.statut";
 $sql.= ", p.datec";
@@ -299,7 +301,5 @@ else
     dol_print_error($db);
 }
 
-
-$db->close();
-
 llxFooter();
+$db->close();

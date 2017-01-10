@@ -76,11 +76,12 @@ $extrafields = new ExtraFields($db);
 // fetch optionals attributes and labels
 $extralabels=$extrafields->fetch_name_optionals_label('facture_fourn');
 
-if ($action == 'create') {
-	if (is_array($selected) == false) {
-		$mesgs = array (
-				'<div class="error">' . $langs->trans('Error_OrderNotChecked') . '</div>'
-		);
+if ($action == 'create') 
+{
+	if (! is_array($selected)) 
+	{
+		$error++;
+		setEventMessages($langs->trans('Error_OrderNotChecked'), null, 'errors');
 	} else {
 		$origin = GETPOST('origin');
 		$originid = GETPOST('originid');
@@ -92,11 +93,12 @@ include_once DOL_DOCUMENT_ROOT . '/core/class/hookmanager.class.php';
 $hookmanager = new HookManager($db);
 $hookmanager->initHooks(array('orderstoinvoicesupplier'));
 
+
 /*
  * Actions
  */
 
-if (($action == 'create' || $action == 'add') && empty($mesgs)) {
+if (($action == 'create' || $action == 'add') && ! $error) {
 
 	require_once DOL_DOCUMENT_ROOT . '/core/lib/fourn.lib.php';
 	if (! empty($conf->projet->enabled))
@@ -244,9 +246,32 @@ if (($action == 'create' || $action == 'add') && empty($mesgs)) {
 
 		// End of object creation, we show it
 		if ($id > 0 && ! $error) {
-			$db->commit();
-			header('Location: ' . DOL_URL_ROOT . '/fourn/facture/card.php?facid=' . $id);
-			exit();
+			
+			foreach($orders_id as $fk_supplier_order) {
+				$supplier_order = new CommandeFournisseur($db);
+				if ($supplier_order->fetch($fk_supplier_order)>0 && $supplier_order->statut == 5) 
+				{
+					if ($supplier_order->classifyBilled($user) < 0)
+					{
+						$db->rollback();
+						$action = 'create';
+						$_GET["origin"] = $_POST["origin"];
+						$_GET["originid"] = $_POST["originid"];
+						$mesgs[] = '<div class="error">' . $object->error . '</div>';
+						
+						$error++;
+						break;
+					}
+					
+				}
+			}
+			
+			if(!$error) {
+				$db->commit();
+				header('Location: ' . DOL_URL_ROOT . '/fourn/facture/card.php?facid=' . $id);
+				exit();
+			}
+			
 		} else {
 			$db->rollback();
 			$action = 'create';
@@ -270,7 +295,7 @@ $companystatic = new Societe($db);
 if ($action == 'create' && !$error) {
 
 	llxHeader();
-	print_fiche_titre($langs->trans('NewBill'));
+	print load_fiche_titre($langs->trans('NewBill'));
 
 	$soc = new Societe($db);
 	if ($socid)
@@ -420,9 +445,11 @@ if (($action != 'create' && $action != 'add') && !$error) {
 
 	// Show orders with status validated, shipping started and delivered (well any order we can bill)
 	$sql .= " AND c.fk_statut IN (5)";
+	$sql .= " AND c.billed = 0";
 
 	// Find order that are not already invoiced
-	$sql .= " AND c.rowid NOT IN (SELECT fk_source FROM " . MAIN_DB_PREFIX . "element_element WHERE targettype='invoice_supplier')";
+	//No need due to the billed status
+	//$sql .= " AND c.rowid NOT IN (SELECT fk_source FROM " . MAIN_DB_PREFIX . "element_element WHERE targettype='invoice_supplier')";
 
 	if ($socid)
 		$sql .= ' AND s.rowid = ' . $socid;
@@ -456,7 +483,7 @@ if (($action != 'create' && $action != 'add') && !$error) {
 		$title = $langs->trans('ListOfSupplierOrders');
 		$title .= ' - ' . $langs->trans('StatusOrderReceivedAllShort');
 		$num = $db->num_rows($resql);
-		print_fiche_titre($title);
+		print load_fiche_titre($title);
 		$i = 0;
 		$period = $html->select_date($date_start, 'date_start', 0, 0, 1, '', 1, 0, 1) . ' - ' . $html->select_date($date_end, 'date_end', 0, 0, 1, '', 1, 0, 1);
 		$periodely = $html->select_date($date_starty, 'date_start_dely', 0, 0, 1, '', 1, 0, 1) . ' - ' . $html->select_date($date_endy, 'date_end_dely', 0, 0, 1, '', 1, 0, 1);
@@ -489,7 +516,8 @@ if (($action != 'create' && $action != 'add') && !$error) {
 		// print '<td class="liste_titre">';
 		print '<td class="liste_titre" align="left">';
 		print '<input class="flat" type="text" size="10" name="sref_client" value="' . $sref_client . '">';
-
+        print '</td>';
+        
 		// DATE ORDER
 		print '<td class="liste_titre" align="center">';
 		print $period;
@@ -501,8 +529,9 @@ if (($action != 'create' && $action != 'add') && !$error) {
 		print '</td>';
 
 		// SEARCH BUTTON
-		print '</td><td align="right" class="liste_titre">';
+		print '<td align="right" class="liste_titre">';
 		print '<input type="image" class="liste_titre" name="button_search" src="' . img_picto($langs->trans("Search"), 'search.png', '', '', 1) . '"  value="' . dol_escape_htmltag($langs->trans("Search")) . '" title="' . dol_escape_htmltag($langs->trans("Search")) . '">';
+		print '</td>';
 
 		// ALL/NONE
 		print '<td class="liste_titre" align="center">';

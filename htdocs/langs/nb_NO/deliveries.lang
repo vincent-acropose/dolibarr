@@ -1,13 +1,11 @@
 # Dolibarr language file - Source file is en_US - deliveries
 Delivery=Levering
-Deliveries=Leveringer
+DeliveryRef=Leveranse ref.
 DeliveryCard=Leveringskort
 DeliveryOrder=Leveringsordre
-DeliveryOrders=Leveringsordre
 DeliveryDate=Leveringsdato
-DeliveryDateShort=Lev. dato
 CreateDeliveryOrder=Opprett leveringsordre
-QtyDelivered=Ant. levert
+DeliveryStateSaved=Leveringsstatus lagret
 SetDeliveryDate=Angi leveringsdato
 ValidateDeliveryReceipt=Godkjenn leveringskvittering
 ValidateDeliveryReceiptConfirm=Er du sikker på at du vil validere denne leveringskvitteringen?
@@ -16,6 +14,9 @@ DeleteDeliveryReceiptConfirm=Er du sikker på at du vil slette leveringskvitteri
 DeliveryMethod=Leveringsmåte
 TrackingNumber=Trackingnummer
 DeliveryNotValidated=Levering ikke validert
+StatusDeliveryCanceled=Kansellert
+StatusDeliveryDraft=Kladd
+StatusDeliveryValidated=Mottatt
 # merou PDF model
 NameAndSignature=Navn og signatur :
 ToAndDate=Til___________________________________ den ____/_____/__________
@@ -26,3 +27,4 @@ Recipient=Mottaker
 ErrorStockIsNotEnough=Ikke nok på lager
 Shippable=Kan sendes
 NonShippable=Kan ikke sendes
+ShowReceiving=Vis leveringskvittering

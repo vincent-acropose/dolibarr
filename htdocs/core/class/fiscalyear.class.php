@@ -34,12 +34,12 @@ class Fiscalyear extends CommonObject
 	public $fk_element = '';
 	protected $ismultientitymanaged = 1;	// 0=No test on entity, 1=Test with field entity, 2=Test with link by societe
 
-	var $id;
 	var $rowid;
 
 	var $label;
 	var $date_start;
 	var $date_end;
+	var $datec;
 	var $statut;		// 0=open, 1=closed
 	var $entity;
 

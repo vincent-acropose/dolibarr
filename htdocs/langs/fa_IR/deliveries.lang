@@ -1,13 +1,11 @@
 # Dolibarr language file - Source file is en_US - deliveries
 Delivery=تحویل
-Deliveries=تحویل
+DeliveryRef=Ref Delivery
 DeliveryCard=کارت تحویل
 DeliveryOrder=منظور تحویل
-DeliveryOrders=تحویل سفارشات
 DeliveryDate=تاریخ تحویل
-DeliveryDateShort=تحویل سیستمهای. تاریخ
 CreateDeliveryOrder=تولید منظور تحویل
-QtyDelivered=تعداد تحویل
+DeliveryStateSaved=Delivery state saved
 SetDeliveryDate=تنظیم تاریخ حمل و نقل
 ValidateDeliveryReceipt=اعتبارسنجی رسید تحویل
 ValidateDeliveryReceiptConfirm=آیا مطمئن هستید که می خواهید به اعتبار این رسید تحویل؟
@@ -16,6 +14,9 @@ DeleteDeliveryReceiptConfirm=آیا مطمئن هستید که می خواهید
 DeliveryMethod=روش تحویل
 TrackingNumber=تعداد پیگیری
 DeliveryNotValidated=تحویل اعتبار نیست
+StatusDeliveryCanceled=Canceled
+StatusDeliveryDraft=Draft
+StatusDeliveryValidated=Received
 # merou PDF model
 NameAndSignature=نام و امضا:
 ToAndDate=To___________________________________ در ____ / ____ / __________
@@ -26,3 +27,4 @@ Recipient=دریافت کننده
 ErrorStockIsNotEnough=این سهام به اندازه کافی وجود ندارد
 Shippable=حمل و نقلی
 NonShippable=حمل و نقلی نیست
+ShowReceiving=Show delivery receipt

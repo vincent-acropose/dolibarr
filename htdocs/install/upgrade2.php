@@ -63,6 +63,7 @@ $setuplang=GETPOST("selectlang",'',3)?GETPOST("selectlang",'',3):'auto';
 $langs->setDefaultLang($setuplang);
 $versionfrom=GETPOST("versionfrom",'',3)?GETPOST("versionfrom",'',3):(empty($argv[1])?'':$argv[1]);
 $versionto=GETPOST("versionto",'',3)?GETPOST("versionto",'',3):(empty($argv[2])?'':$argv[2]);
+$enablemodules=GETPOST("enablemodules",'',3)?GETPOST("enablemodules",'',3):(empty($argv[3])?'':$argv[3]);
 
 $langs->load('admin');
 $langs->load('install');
@@ -84,9 +85,9 @@ if (! is_object($conf)) dolibarr_install_syslog("upgrade2: conf file not initial
  * View
  */
 
-if (! $versionfrom && ! $versionto)
+if ((! $versionfrom || preg_match('/version/', $versionfrom)) && (! $versionto || preg_match('/version/', $versionto)))
 {
-	print 'Error: Parameter versionfrom or versionto missing.'."\n";
+	print 'Error: Parameter versionfrom or versionto missing or having a bad format.'."\n";
 	print 'Upgrade must be ran from cmmand line with parameters or called from page install/index.php (like a first install) instead of page install/upgrade.php'."\n";
 	// Test if batch mode
 	$sapi_type = php_sapi_name();
@@ -395,7 +396,42 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
         	// Reload menus (this must be always and only into last targeted version)
         	migrate_reload_menu($db,$langs,$conf,$versionto);
         }
+        
+        // Scripts for last version
+        $afterversionarray=explode('.','3.9.9');
+        $beforeversionarray=explode('.','4.0.9');
+        if (versioncompare($versiontoarray,$afterversionarray) >= 0 && versioncompare($versiontoarray,$beforeversionarray) <= 0)
+        {
+            migrate_directories($db,$langs,$conf,'/fckeditor','/medias');
+            
+        	// Reload modules (this must be always and only into last targeted version)
+        	$listofmodule=array(
+        	    'MAIN_MODULE_BARCODE'=>'newboxdefonly',
+        	    'MAIN_MODULE_CRON'=>'newboxdefonly',
+        	    'MAIN_MODULE_FACTURE'=>'newboxdefonly',
+        	    'MAIN_MODULE_PRINTING'=>'newboxdefonly',
+        	);
+        	migrate_reload_modules($db,$langs,$conf,$listofmodule);
+        
+        	// Reload menus (this must be always and only into last targeted version)
+        	migrate_reload_menu($db,$langs,$conf,$versionto);
+        }
 
+        
+        // Can force activation of some module during migration with third paramater = MAIN_MODULE_XXX,MAIN_MODULE_YYY,...
+        if ($enablemodules)
+        {
+            // Reload modules (this must be always and only into last targeted version)
+            $listofmodules=array();
+            $tmplistofmodules=explode(',', $enablemodules);
+            foreach($tmplistofmodules as $value)
+            {
+                $listofmodules[$value]='newboxdefonly';
+            }
+            migrate_reload_modules($db,$langs,$conf,$listofmodules,1);
+        }
+        
+        
         print '<tr><td colspan="4"><br>'.$langs->trans("MigrationFinished").'</td></tr>';
 
         // On commit dans tous les cas.
@@ -423,7 +459,7 @@ if ($error && isset($argv[1])) $ret=1;
 dol_syslog("Exit ".$ret);
 
 dolibarr_install_syslog("--- upgrade2: end");
-pFooter($error,$setuplang);
+pFooter($error?2:0,$setuplang);
 
 if ($db->connected) $db->close();
 
@@ -1292,7 +1328,10 @@ function migrate_paiementfourn_facturefourn($db,$langs,$conf)
 function migrate_price_facture($db,$langs,$conf)
 {
     $err=0;
-
+    
+    $tmpmysoc=new Societe($db);
+    $tmpmysoc->setMysoc($conf);
+    
     $db->begin();
 
     print '<tr><td colspan="4">';
@@ -1333,7 +1372,7 @@ function migrate_price_facture($db,$langs,$conf)
                 $facligne= new FactureLigne($db);
                 $facligne->fetch($rowid);
 
-                $result=calcul_price_total($qty,$pu,$remise_percent,$vatrate, 0, 0,$remise_percent_global,'HT',$info_bits,0);
+                $result=calcul_price_total($qty,$pu,$remise_percent,$vatrate, 0, 0,$remise_percent_global,'HT',$info_bits,$facligne->product_type,$tmpmysoc);
                 $total_ht  = $result[0];
                 $total_tva = $result[1];
                 $total_ttc = $result[2];
@@ -1407,6 +1446,9 @@ function migrate_price_facture($db,$langs,$conf)
  */
 function migrate_price_propal($db,$langs,$conf)
 {
+   	$tmpmysoc=new Societe($db);
+	$tmpmysoc->setMysoc($conf);
+    
     $db->begin();
 
     print '<tr><td colspan="4">';
@@ -1445,7 +1487,7 @@ function migrate_price_propal($db,$langs,$conf)
                 $propalligne= new PropaleLigne($db);
                 $propalligne->fetch($rowid);
 
-                $result=calcul_price_total($qty,$pu,$remise_percent,$vatrate,0,0,$remise_percent_global,'HT',$info_bits,0);
+                $result=calcul_price_total($qty,$pu,$remise_percent,$vatrate,0,0,$remise_percent_global,'HT',$info_bits,$propalligne->product_type,$tmpmysoc);
                 $total_ht  = $result[0];
                 $total_tva = $result[1];
                 $total_ttc = $result[2];
@@ -1552,9 +1594,9 @@ function migrate_price_contrat($db,$langs,$conf)
                 // On met a jour les 3 nouveaux champs
                 $contratligne= new ContratLigne($db);
                 //$contratligne->fetch($rowid); Non requis car le update_total ne met a jour que chp redefinis
-                $contratligne->id=$rowid;
+                $contratligne->fetch($rowid);
 
-                $result=calcul_price_total($qty,$pu,$remise_percent,$vatrate,0,0,0,'HT',$info_bits,0,$tmpmysoc);
+                $result=calcul_price_total($qty,$pu,$remise_percent,$vatrate,0,0,0,'HT',$info_bits,$contratligne->product_type,$tmpmysoc);
                 $total_ht  = $result[0];
                 $total_tva = $result[1];
                 $total_ttc = $result[2];
@@ -1603,6 +1645,9 @@ function migrate_price_commande($db,$langs,$conf)
 {
     $db->begin();
 
+    $tmpmysoc=new Societe($db);
+    $tmpmysoc->setMysoc($conf);
+    
     print '<tr><td colspan="4">';
 
     print '<br>';
@@ -1639,7 +1684,7 @@ function migrate_price_commande($db,$langs,$conf)
                 $commandeligne= new OrderLine($db);
                 $commandeligne->fetch($rowid);
 
-                $result=calcul_price_total($qty,$pu,$remise_percent,$vatrate,0,0,$remise_percent_global,'HT',$info_bits,0);
+                $result=calcul_price_total($qty,$pu,$remise_percent,$vatrate,0,0,$remise_percent_global,'HT',$info_bits,$commandeligne->product_type,$tmpmysoc);
                 $total_ht  = $result[0];
                 $total_tva = $result[1];
                 $total_ttc = $result[2];
@@ -1716,7 +1761,10 @@ function migrate_price_commande($db,$langs,$conf)
 function migrate_price_commande_fournisseur($db,$langs,$conf)
 {
     $db->begin();
-
+    
+    $tmpmysoc=new Societe($db);
+    $tmpmysoc->setMysoc($conf);
+    
     print '<tr><td colspan="4">';
 
     print '<br>';
@@ -1753,7 +1801,7 @@ function migrate_price_commande_fournisseur($db,$langs,$conf)
                 $commandeligne= new CommandeFournisseurLigne($db);
                 $commandeligne->fetch($rowid);
 
-                $result=calcul_price_total($qty,$pu,$remise_percent,$vatrate,0,0,$remise_percent_global,'HT',$info_bits,0);
+                $result=calcul_price_total($qty,$pu,$remise_percent,$vatrate,0,0,$remise_percent_global,'HT',$info_bits,$commandeligne->product_type,$tmpsoc);
                 $total_ht  = $result[0];
                 $total_tva = $result[1];
                 $total_ttc = $result[2];
@@ -3744,11 +3792,12 @@ function migrate_delete_old_dir($db,$langs,$conf)
  * @param	Translate	$langs			Object langs
  * @param	Conf		$conf			Object conf
  * @param	array		$listofmodule	List of modules
+ * @param   int         $force          1=Reload module even if not already loaded
  * @return	void
  */
-function migrate_reload_modules($db,$langs,$conf,$listofmodule=array())
+function migrate_reload_modules($db,$langs,$conf,$listofmodule=array(),$force=0)
 {
-    dolibarr_install_syslog("upgrade2::migrate_reload_modules");
+    dolibarr_install_syslog("upgrade2::migrate_reload_modules force=".$force);
 
     // If no info is provided, we reload all modules with mode newboxdefonly.
     if (count($listofmodule) == 0)
@@ -3773,7 +3822,7 @@ function migrate_reload_modules($db,$langs,$conf,$listofmodule=array())
 
     foreach($listofmodule as $moduletoreload => $reloadmode)
     {
-    	if (empty($moduletoreload) || empty($conf->global->$moduletoreload)) continue;
+    	if (empty($moduletoreload) || (empty($conf->global->$moduletoreload) && ! $force)) continue; // Discard reload if module not enabled
 
     	$mod=null;
     	
@@ -3787,7 +3836,17 @@ function migrate_reload_modules($db,$langs,$conf,$listofmodule=array())
 	            $mod->init($reloadmode);
 	        }
 	    }
-        if ($moduletoreload == 'MAIN_MODULE_BARCODE')
+        if ($moduletoreload == 'MAIN_MODULE_API')
+	    {
+	        dolibarr_install_syslog("upgrade2::migrate_reload_modules Reactivate Rest API module");
+	        $res=@include_once DOL_DOCUMENT_ROOT.'/core/modules/modApi.class.php';
+	        if ($res) {
+	            $mod=new modApi($db);
+	            //$mod->remove('noboxes');
+	            $mod->init($reloadmode);
+	        }
+	    }
+	    if ($moduletoreload == 'MAIN_MODULE_BARCODE')
     	{
 	        dolibarr_install_syslog("upgrade2::migrate_reload_modules Reactivate Barcode module");
 	        $res=@include_once DOL_DOCUMENT_ROOT.'/core/modules/modBarcode.class.php';
@@ -3942,7 +4001,7 @@ function migrate_reload_modules($db,$langs,$conf,$listofmodule=array())
 		{	    
     		print '<tr><td colspan="4">';
         	print '<b>'.$langs->trans('Upgrade').'</b>: ';
-        	print $langs->trans('MigrationReloadModule')." ".$mod->getName();
+        	print $langs->trans('MigrationReloadModule').' '.$mod->getName();  // We keep getName outside of trans because getName is already encoded/translated
         	print "<!-- (".$reloadmode.") -->";
         	print "<br>\n";
         	print '</td></tr>';
@@ -3987,14 +4046,14 @@ function migrate_reload_menu($db,$langs,$conf,$versionto)
         $listofmenuhandler['auguria']=1;   // We set here only dynamic menu handlers
     }
 
-    // Migration required when target version is between 
+    // Migration required when target version is between
     $afterversionarray=explode('.','3.7.9');
-    $beforeversionarray=explode('.','3.8.9');
+    $beforeversionarray=explode('.','4.0.9');
     if (versioncompare($versiontoarray,$afterversionarray) >= 0 && versioncompare($versiontoarray,$beforeversionarray) <= 0)
     {
         $listofmenuhandler['auguria']=1;   // We set here only dynamic menu handlers
     }
-
+    
     foreach ($listofmenuhandler as $key => $val)
     {
         print '<tr><td colspan="4">';

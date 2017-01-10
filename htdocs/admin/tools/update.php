@@ -23,6 +23,7 @@
  */
 
 require '../../main.inc.php';
+include_once DOL_DOCUMENT_ROOT . '/core/lib/admin.lib.php';
 include_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
 include_once DOL_DOCUMENT_ROOT . '/core/lib/geturl.lib.php';
 
@@ -34,13 +35,13 @@ $action=GETPOST('action','alpha');
 if (! $user->admin) accessforbidden();
 
 if (GETPOST('msg','alpha')) {
-	setEventMessage(GETPOST('msg','alpha'), 'errors');
+	setEventMessages(GETPOST('msg','alpha'), null, 'errors');
 }
 
 
 $urldolibarr='http://www.dolibarr.org/downloads/';
-$urldolibarrmodules='http://www.dolistore.com/';
-$urldolibarrthemes='http://www.dolistore.com/';
+$urldolibarrmodules='https://www.dolistore.com/';
+$urldolibarrthemes='https://www.dolistore.com/';
 $dolibarrroot=preg_replace('/([\\/]+)$/i','',DOL_DOCUMENT_ROOT);
 $dolibarrroot=preg_replace('/([^\\/]+)$/i','',$dolibarrroot);
 $dolibarrdataroot=preg_replace('/([\\/]+)$/i','',DOL_DATA_ROOT);
@@ -63,7 +64,7 @@ if ($action=='install')
 	if (! $original_file)
 	{
 		$langs->load("Error");
-		setEventMessage($langs->trans("ErrorFileRequired"), 'warnings');
+		setEventMessages($langs->trans("ErrorFileRequired"), null, 'warnings');
 		$error++;
 	}
 	else
@@ -71,7 +72,7 @@ if ($action=='install')
 		if (! preg_match('/\.zip/i',$original_file))
 		{
 			$langs->load("errors");
-			setEventMessage($langs->trans("ErrorFileMustBeADolibarrPackage",$original_file), 'errors');
+			setEventMessages($langs->trans("ErrorFileMustBeADolibarrPackage",$original_file), null, 'errors');
 			$error++;
 		}
 	}
@@ -99,7 +100,7 @@ if ($action=='install')
 			if (! empty($result['error']))
 			{
 				$langs->load("errors");
-				setEventMessage($langs->trans($result['error'],$original_file), 'errors');
+				setEventMessages($langs->trans($result['error'],$original_file), null, 'errors');
 				$error++;
 			}
 			else
@@ -116,7 +117,7 @@ if ($action=='install')
 					//var_dump($modulenamedir);
 					if (! dol_is_dir($modulenamedir))
 					{
-						setEventMessage($langs->trans("ErrorModuleFileSeemsToHaveAWrongFormat"), 'errors');
+						setEventMessages($langs->trans("ErrorModuleFileSeemsToHaveAWrongFormat"), null, 'errors');
 						$error++;
 					}
 				}
@@ -128,7 +129,7 @@ if ($action=='install')
 					$result=dolCopyDir($modulenamedir, $dirins.'/'.$modulename, '0444', 1);
 					if ($result <= 0)
 					{
-						setEventMessage($langs->trans("ErrorFailedToCopy"), 'errors');
+						setEventMessages($langs->trans("ErrorFailedToCopy"), null, 'errors');
 						$error++;
 					}
 				}
@@ -142,7 +143,7 @@ if ($action=='install')
 
 	if (! $error)
 	{
-		setEventMessage($langs->trans("SetupIsReadyForUse"));
+		setEventMessages($langs->trans("SetupIsReadyForUse"), null, 'mesgs');
 	}
 }
 
@@ -163,46 +164,43 @@ $dirins_ok=(dol_is_dir($dirins));
 $wikihelp='EN:Installation_-_Upgrade|FR:Installation_-_Mise_à_jour|ES:Instalación_-_Actualización';
 llxHeader('',$langs->trans("Upgrade"),$wikihelp);
 
-print_fiche_titre($langs->trans("Upgrade"),'','title_setup');
+print load_fiche_titre($langs->trans("Upgrade"),'','title_setup');
 
 print $langs->trans("CurrentVersion").' : <b>'.DOL_VERSION.'</b><br>';
 
-$result = getURLContent('http://sourceforge.net/projects/dolibarr/rss');
-//var_dump($result['content']);
-$sfurl = simplexml_load_string($result['content']);
-if ($sfurl)
+if (function_exists('curl_init'))
 {
-    $title=$sfurl->channel[0]->item[0]->title;
-
-	function word_limiter($text, $limit = 30, $chars = '0123456789.')
-	{
-	    if (strlen( $text ) > $limit)
-	    {
-	        $words = str_word_count($text, 2, $chars);
-	        $words = array_reverse($words, TRUE);
-	        foreach($words as $length => $word) {
-	            if ($length + strlen( $word ) >= $limit)
-	            {
-	                array_shift($words);
-	            } else {
-	                break;
-	            }
-	        }
-	        $words = array_reverse($words);
-	        $text = implode(" ", $words) . '';
-	    }
-	    return $text;
-	}
-
-	$str = $title;
-	print $langs->trans("LastStableVersion").' : <b>'. word_limiter( $str ).'</b><br>';
+    $result = getURLContent('http://sourceforge.net/projects/dolibarr/rss');
+    //var_dump($result['content']);
+    $sfurl = simplexml_load_string($result['content']);
+    if ($sfurl)
+    {
+        $i=0;
+        $version='0.0';
+        while (! empty($sfurl->channel[0]->item[$i]->title) && $i < 10000)
+        {
+            $title=$sfurl->channel[0]->item[$i]->title;
+            if (preg_match('/([0-9]+\.([0-9\.]+))/', $title, $reg))
+            {
+                $newversion=$reg[1];
+                $newversionarray=explode('.',$newversion);
+                $versionarray=explode('.',$version);
+                //var_dump($newversionarray);var_dump($versionarray);
+                if (versioncompare($newversionarray, $versionarray) > 0) $version=$newversion;
+            }
+            $i++;
+        }
+        
+        // Show version
+    	print $langs->trans("LastStableVersion").' : <b>'. (($version != '0.0')?$version:$langs->trans("Unknown")) .'</b><br>';
+    }
+    else
+    {
+        print $langs->trans("LastStableVersion").' : <b>' .$langs->trans("UpdateServerOffline").'</b><br>';
+    }
 }
-else
-{
-    print $langs->trans("LastStableVersion").' : <b>' .$langs->trans("UpdateServerOffline").'</b><br>';
-}
+
 print '<br>';
-
 
 // Upgrade
 print $langs->trans("Upgrade").'<br>';

@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 /*
  * Copyright (C) 2004		Rodolphe Quiedeville	<rodolphe@quiedeville.org>
@@ -61,6 +61,11 @@ $error=0;
 @set_time_limit(0);
 print "***** ".$script_file." (".$version.") pid=".dol_getmypid()." *****\n";
 
+if ($conf->global->MAILING_LIMIT_SENDBYCLI == '-1')
+{
+    
+}
+
 $user = new User($db);
 // for signature, we use user send as parameter
 if (! empty($login)) $user->fetch('',$login);
@@ -69,7 +74,7 @@ if (! empty($login)) $user->fetch('',$login);
 $sql = "SELECT m.rowid, m.titre, m.sujet, m.body,";
 $sql.= " m.email_from, m.email_replyto, m.email_errorsto";
 $sql.= " FROM ".MAIN_DB_PREFIX."mailing as m";
-$sql.= " WHERE m.statut = 1";
+$sql.= " WHERE m.statut IN (1,2)";
 if ($id != 'all')
 {
 	$sql.= " AND m.rowid= ".$id;
@@ -108,7 +113,11 @@ if ($resql)
 			$sql2 = "SELECT mc.rowid, mc.lastname as lastname, mc.firstname as firstname, mc.email, mc.other, mc.source_url, mc.source_id, mc.source_type, mc.tag";
 			$sql2.= " FROM ".MAIN_DB_PREFIX."mailing_cibles as mc";
 			$sql2.= " WHERE mc.statut < 1 AND mc.fk_mailing = ".$id;
-
+		    if ($conf->global->MAILING_LIMIT_SENDBYCLI > 0)
+		    {
+		        $sql2.= " LIMIT ".$conf->global->MAILING_LIMIT_SENDBYCLI;
+		    }
+				
 			$resql2=$db->query($sql2);
 			if ($resql2)
 			{

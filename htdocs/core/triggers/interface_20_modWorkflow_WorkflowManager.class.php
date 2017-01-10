@@ -32,7 +32,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/triggers/dolibarrtriggers.class.php';
 
 class InterfaceWorkflowManager extends DolibarrTriggers
 {
-	public $picto = 'paypal@paypal';
+	public $picto = 'technic';
 	public $family = 'core';
 	public $description = "Triggers of this module allows to manage workflows";
 	public $version = self::VERSION_DOLIBARR;
@@ -101,7 +101,7 @@ class InterfaceWorkflowManager extends DolibarrTriggers
 				{
 					foreach($object->linkedObjects['propal'] as $element)
 					{
-						$ret=$element->classifyBilled();
+						$ret=$element->classifyBilled($user);
 					}
 				}
         		return $ret;
@@ -120,7 +120,7 @@ class InterfaceWorkflowManager extends DolibarrTriggers
         		{
         			foreach($object->linkedObjects['commande'] as $element)
         			{
-        				$ret=$element->classifyBilled();
+        				$ret=$element->classifyBilled($user);
         			}
         		}
         		return $ret;
@@ -139,7 +139,7 @@ class InterfaceWorkflowManager extends DolibarrTriggers
         		{
         			foreach($object->linkedObjects['commande'] as $element)
         			{
-        				$ret=$element->classifyBilled();
+        				$ret=$element->classifyBilled($user);
         			}
         		}
         		return $ret;

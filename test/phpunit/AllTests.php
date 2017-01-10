@@ -36,12 +36,17 @@ print 'DOL_MAIN_URL_ROOT='.DOL_MAIN_URL_ROOT."\n";  // constant will be used by 
 if ($langs->defaultlang != 'en_US')
 {
     print "Error: Default language for company to run tests must be set to en_US or auto. Current is ".$langs->defaultlang."\n";
-    exit;
+    exit(1);
 }
-if (! empty($conf->adherents->enabled))
+if (empty($conf->adherent->enabled))
 {
-	print "Error: Module member must be enabled to have significatn results.\n";
-	exit;
+	print "Error: Module member must be enabled to have significant results.\n";
+	exit(1);
+}
+if (! empty($conf->ldap->enabled))
+{
+    print "Error: LDAP module should not be enabled.\n";
+    exit(1);
 }
 if (! empty($conf->google->enabled))
 {
@@ -179,6 +184,9 @@ class AllTests
         require_once dirname(__FILE__).'/CategorieTest.php';
         $suite->addTestSuite('CategorieTest');
 
+        require_once dirname(__FILE__).'/RestAPIUserTest.php';
+        $suite->addTestSuite('RestAPIUserTest');
+ 
         require_once dirname(__FILE__).'/WebservicesProductsTest.php';
         $suite->addTestSuite('WebservicesProductsTest');
         require_once dirname(__FILE__).'/WebservicesInvoicesTest.php';

@@ -64,7 +64,7 @@ $now = dol_now();
 
 llxHeader();
 
-print_fiche_titre($langs->trans("ContractsArea"),'','title_commercial.png');
+print load_fiche_titre($langs->trans("ContractsArea"),'','title_commercial.png');
 
 
 //print '<table border="0" width="100%" class="notopnoleftnoright">';
@@ -79,12 +79,10 @@ if (! empty($conf->contrat->enabled))
 	print '<form method="post" action="'.DOL_URL_ROOT.'/contrat/list.php">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 	print '<table class="noborder nohover" width="100%">';
-	print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("SearchAContract").'</td></tr>';
+	print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("Search").'</td></tr>';
 	print '<tr '.$bc[$var].'>';
-	print '<td class="nowrap">'.$langs->trans("Ref").':</td><td><input type="text" class="flat" name="search_contract" size="18"></td>';
-	print '<td rowspan="2"><input type="submit" value="'.$langs->trans("Search").'" class="button"></td></tr>';
-	print '<tr '.$bc[$var].'><td class="nowrap">'.$langs->trans("Other").':</td><td><input type="text" class="flat" name="sall" size="18"></td>';
-	print '</tr>';
+	print '<td class="nowrap">'.$langs->trans("Contract").':</td><td><input type="text" class="flat" name="sall" size="18"></td>';
+	print '<td><input type="submit" value="'.$langs->trans("Search").'" class="button"></td></tr>';
 	print "</table></form>\n";
 	print "<br>";
 }
@@ -192,7 +190,7 @@ foreach($listofstatus as $status)
         print '<td align="right"><a href="services.php?mode='.$status.($bool?'&filter=expired':'').'">'.($nb[$status.$bool]?$nb[$status.$bool]:0).' '.$staticcontratligne->LibStatut($status,3,($bool?1:0)).'</a></td>';
         print "</tr>\n";
     }
-    if ($status==4 && $bool==false) $bool=true;
+    if ($status==4 && ! $bool) $bool=true;
     else $bool=false;
 }
 if (! empty($conf->use_javascript_ajax))
@@ -212,7 +210,7 @@ foreach($listofstatus as $status)
     	print '<tr '.$bc[$var].'>';
     	print '<td>'.$staticcontratligne->LibStatut($status,0,($bool?1:0)).'</td>';
     	print '<td align="right"><a href="services.php?mode='.$status.($bool?'&filter=expired':'').'">'.($nb[$status.$bool]?$nb[$status.$bool]:0).' '.$staticcontratligne->LibStatut($status,3,($bool?1:0)).'</a></td>';
-    	if ($status==4 && $bool==false) $bool=true;
+    	if ($status==4 && ! $bool) $bool=true;
     	else $bool=false;
         print "</tr>\n";
     }
@@ -275,7 +273,7 @@ if (! empty($conf->contrat->enabled) && $user->rights->contrat->lire)
 		}
 		else
 		{
-			print '<tr colspan="3" '.$bc[$var].'><td>'.$langs->trans("NoContracts").'</td></tr>';
+			print '<tr '.$bc[$var].' class><td colspan="3" class="opacitymedium">'.$langs->trans("NoContracts").'</td></tr>';
 		}
 		print "</table><br>";
 		$db->free($resql);
