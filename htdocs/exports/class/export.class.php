@@ -16,21 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
 /**
  *	\file       htdocs/exports/class/export.class.php
  *	\ingroup    export
  *	\brief      File of class to manage exports
  */
-
-
 /**
  *	Class to manage exports
  */
 class Export
 {
 	var $db;
-
 	var $array_export_code=array();             // Tableau de "idmodule_numlot"
 	var $array_export_module=array();           // Tableau de "nom de modules"
 	var $array_export_label=array();            // Tableau de "libelle de lots"
@@ -43,17 +39,13 @@ class Export
 	var $array_export_entities=array();         // Tableau des listes de champ+alias a exporter
 	var $array_export_dependencies=array();     // array of list of entities that must take care of the DISTINCT if a field is added into export
 	var $array_export_special=array();          // Tableau des operations speciales sur champ
-
 	// To store export modules
 	var $hexa;
 	var $hexafilter;
 	var $hexafiltervalue;
 	var $datatoexport;
 	var $model_name;
-
 	var $sqlusedforexport;
-
-
 	/**
 	 *    Constructor
 	 *
@@ -63,8 +55,6 @@ class Export
 	{
 		$this->db=$db;
 	}
-
-
 	/**
 	 *    Load an exportable dataset
 	 *
@@ -75,17 +65,12 @@ class Export
 	function load_arrays($user,$filter='')
 	{
 		global $langs,$conf,$mysoc;
-
 		dol_syslog(get_class($this)."::load_arrays user=".$user->id." filter=".$filter);
-
         $var=true;
         $i=0;
-
         // Define list of modules directories into modulesdir
         require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
-
         $modulesdir = dolGetModulesDirs();
-
 		foreach($modulesdir as $dir)
 		{
 			// Search available exports
@@ -98,13 +83,11 @@ class Export
 					if (is_readable($dir.$file) && preg_match("/^(mod.*)\.class\.php$/i",$file,$reg))
 					{
 						$modulename=$reg[1];
-
 						// Defined if module is enabled
 						$enabled=true;
 						$part=strtolower(preg_replace('/^mod/i','',$modulename));
 						if ($part == 'propale') $part='propal';
 						if (empty($conf->$part->enabled)) $enabled=false;
-
 						if ($enabled)
 						{
 							// Chargement de la classe
@@ -112,17 +95,14 @@ class Export
 							$classname = $modulename;
 							require_once $file;
 							$module = new $classname($this->db);
-
 							if (isset($module->export_code) && is_array($module->export_code))
 							{
 							    foreach($module->export_code as $r => $value)
 								{
                                     //print $i.'-'.$filter.'-'.$modulename.'-'.join(',',$module->export_code).'<br>';
 								    if ($filter && ($filter != $module->export_code[$r])) continue;
-
                                     // Test if condition to show are ok
                                     if (! empty($module->export_enabled[$r]) && ! verifCond($module->export_enabled[$r])) continue;
-
                                     // Test if permissions are ok
 									$bool=true;
 									foreach($module->export_permission[$r] as $val)
@@ -131,17 +111,16 @@ class Export
     									//print_r("$perm[0]-$perm[1]-$perm[2]<br>");
     									if (! empty($perm[2]))
     									{
-    										$bool=$user->rights->{$perm[0]}->{$perm[1]}->{$perm[2]};
+    										$bool=$user->rights->$perm[0]->$perm[1]->$perm[2];
     									}
     									else
     									{
-    										$bool=$user->rights->{$perm[0]}->{$perm[1]};
+    										$bool=$user->rights->$perm[0]->$perm[1];
     									}
     									if ($perm[0]=='user' && $user->admin) $bool=true;
     									if (! $bool) break;
 									}
 									//print $bool." $perm[0]"."<br>";
-
 									// Permissions ok
 									//	          if ($bool)
 									//	          {
@@ -154,7 +133,6 @@ class Export
 											$langs->load($key);
 										}
 									}
-
 									// Module
 									$this->array_export_module[$i]=$module;
 									// Permission
@@ -175,13 +153,11 @@ class Export
 									$this->array_export_dependencies[$i]=(! empty($module->export_dependencies_array[$r])?$module->export_dependencies_array[$r]:'');
 									// Tableau des operations speciales sur champ
 									$this->array_export_special[$i]=(! empty($module->export_special_array[$r])?$module->export_special_array[$r]:'');
-
 									// Requete sql du dataset
 									$this->array_export_sql_start[$i]=$module->export_sql_start[$r];
 									$this->array_export_sql_end[$i]=$module->export_sql_end[$r];
 									$this->array_export_sql_order[$i]=$module->export_sql_order[$r];
 									//$this->array_export_sql[$i]=$module->export_sql[$r];
-
 									dol_syslog(get_class($this)."::load_arrays loaded for module ".$modulename." with index ".$i.", dataset=".$module->export_code[$r].", nb of fields=".(! empty($module->export_fields_code[$r])?count($module->export_fields_code[$r]):''));
 									$i++;
 									//	          }
@@ -193,11 +169,8 @@ class Export
                 closedir($handle);
 			}
 		}
-
 		return 1;
 	}
-
-
 	/**
 	 *      Build the sql export request.
 	 *      Arrays this->array_export_xxx are already loaded for required datatoexport
@@ -212,43 +185,30 @@ class Export
 		// Build the sql request
 		$sql=$this->array_export_sql_start[$indice];
 		$i=0;
-
 		//print_r($array_selected);
 		foreach ($this->array_export_fields[$indice] as $key => $value)
 		{
 			if (! array_key_exists($key, $array_selected)) continue;		// Field not selected
-
 			if ($i > 0) $sql.=', ';
 			else $i++;
-
-			if (strpos($key, ' as ')===false) {
-				$newfield=$key.' as '.str_replace(array('.', '-'),'_',$key);
-			} else {
-				$newfield=$key;
-			}
-
+			$newfield=$key.' as '.str_replace(array('.', '-'),'_',$key);;
 			$sql.=$newfield;
 		}
 		$sql.=$this->array_export_sql_end[$indice];
-
 		//construction du filtrage si le parametrage existe
 		if (is_array($array_filterValue) && !empty($array_filterValue))
 		{
-			$sqlWhere=array();
+			$sqlWhere='';
 			// pour ne pas a gerer le nombre de condition
 			foreach ($array_filterValue as $key => $value)
 			{
-				if ($value != '') $sqlWhere[]=$this->build_filterQuery($this->array_export_TypeFields[$indice][$key], $key, $array_filterValue[$key]);
+				if ($value != '') $sqlWhere.=" and ".$this->build_filterQuery($this->array_export_TypeFields[$indice][$key], $key, $array_filterValue[$key]);
 			}
-			if (count($sqlWhere)>0) {
-				$sql.=' WHERE '.implode(' AND ',$sqlWhere);
-			}
+			$sql.=$sqlWhere;
 		}
 		$sql.=$this->array_export_sql_order[$indice];
-
 		return $sql;
 	}
-
 	/**
 	 *      Build the conditionnal string from filter the query
 	 *
@@ -305,13 +265,7 @@ class Export
 				}
 				break;
 			case 'Boolean':
-				$ValueField = (is_numeric($ValueField) ? $ValueField : ($ValueField =='yes' ? 1: 0) );
-				if($ValueField == 1){
-					$szFilterQuery=" ".$NameField."=".$ValueField;
-				}
-				else{
-					$szFilterQuery=" (".$NameField."=".$ValueField." OR ".$NameField." IS NULL) " ;
-				}
+				$szFilterQuery=" ".$NameField."=".(is_numeric($ValueField) ? $ValueField : ($ValueField =='yes' ? 1: 0) );
 				break;
 			case 'Status':
 			case 'List':
@@ -321,10 +275,8 @@ class Export
 					$szFilterQuery=" ".$NameField."='".$ValueField."'";
 				break;
 		}
-
 		return $szFilterQuery;
 	}
-
 	/**
 	 *	conditionDate
 	 *
@@ -341,7 +293,6 @@ class Export
 		else  $Condition=" date_format(".$Field.",'%Y%m%d') ".$Sens." ".$Value;
 		return $Condition;
 	}
-
 	/**
 	 *      Build an input field used to filter the query
 	 *
@@ -354,7 +305,6 @@ class Export
 	{
 		$szFilterField='';
 		$InfoFieldList = explode(":", $TypeField);
-
 		// build the input field on depend of the type of file
 		switch ($InfoFieldList[0])
 		{
@@ -369,11 +319,9 @@ class Export
 				$szFilterField.='<option ';
 				if ($ValueField=='') $szFilterField.=' selected ';
 				$szFilterField.=' value="">&nbsp;</option>';
-
 				$szFilterField.='<option ';
 				if ($ValueField=='yes') $szFilterField.=' selected ';
 				$szFilterField.=' value="yes">'.yn(1).'</option>';
-
 				$szFilterField.='<option ';
 				if ($ValueField=='no') $szFilterField.=' selected ';
 				$szFilterField.=' value="no">'.yn(0).'</option>';
@@ -390,14 +338,12 @@ class Export
 					$keyList='rowid';
 				$sql = 'SELECT '.$keyList.' as rowid, '.$InfoFieldList[2];
 				$sql.= ' FROM '.MAIN_DB_PREFIX .$InfoFieldList[1];
-
 				$resql = $this->db->query($sql);
 				if ($resql)
 				{
 					$szFilterField='<select class="flat" name="'.$NameField.'">';
 					$szFilterField.='<option value="0">&nbsp;</option>';
 					$num = $this->db->num_rows($resql);
-
 					$i = 0;
 					if ($num)
 					{
@@ -410,7 +356,6 @@ class Export
 								$i++;
 								continue;
 							}
-
 							$labeltoshow=dol_trunc($obj->$InfoFieldList[2],18);
 							if (!empty($ValueField) && $ValueField == $obj->rowid)
 							{
@@ -424,15 +369,12 @@ class Export
 						}
 					}
 					$szFilterField.="</select>";
-
 					$this->db->free();
 				}
 				break;
 		}
-
 		return $szFilterField;
 	}
-
 	/**
 	 *      Build an input field used to filter the query
 	 *
@@ -470,7 +412,6 @@ class Export
 		}
 		return $szMsg;
 	}
-
 	/**
 	 *      Build export file.
 	 *      File is built into directory $conf->export->dir_temp.'/'.$user->id
@@ -487,29 +428,23 @@ class Export
 	function build_file($user, $model, $datatoexport, $array_selected, $array_filterValue, $sqlquery = '')
  	{
 		global $conf,$langs;
-
 		$indice=0;
 		asort($array_selected);
-
 		dol_syslog("Export::build_file ".$model.", ".$datatoexport.", ".implode(",", $array_selected));
-
 		// Check parameters or context properties
 		if (! is_array($this->array_export_fields[$indice]))
 		{
 			$this->error="ErrorBadParameter";
 			return -1;
 		}
-
 		// Creation de la classe d'export du model ExportXXX
 		$dir = DOL_DOCUMENT_ROOT . "/core/modules/export/";
 		$file = "export_".$model.".modules.php";
 		$classname = "Export".$model;
 		require_once $dir.$file;
 		$objmodel = new $classname($this->db);
-
 		if (! empty($sqlquery)) $sql = $sqlquery;
         else $sql=$this->build_sql($indice, $array_selected, $array_filterValue);
-
 		// Run the sql
 		$this->sqlusedforexport=$sql;
 		dol_syslog("Export::build_file sql=".$sql);
@@ -520,27 +455,20 @@ class Export
 			$filename="export_".$datatoexport;
 			$filename.='.'.$objmodel->getDriverExtension();
 			$dirname=$conf->export->dir_temp.'/'.$user->id;
-
 			$outputlangs=dol_clone($langs);	// We clone to have an object we can modify (for example to change output charset by csv handler) without changing original value
-
 			// Open file
 			dol_mkdir($dirname);
 			$result=$objmodel->open_file($dirname."/".$filename, $outputlangs);
-
 			if ($result >= 0)
 			{
 				// Genere en-tete
 				$objmodel->write_header($outputlangs);
-
 				// Genere ligne de titre
 				$objmodel->write_title($this->array_export_fields[$indice],$array_selected,$outputlangs);
-
 				$var=true;
-
 				while ($objp = $this->db->fetch_object($resql))
 				{
 					$var=!$var;
-
 					// Process special operations
 					if (! empty($this->array_export_special[$indice]))
 					{
@@ -566,13 +494,10 @@ class Export
 					// end of special operation processing
 					$objmodel->write_record($array_selected,$objp,$outputlangs,$this->array_export_TypeFields[$indice]);
 				}
-
 				// Genere en-tete
 				$objmodel->write_footer($outputlangs);
-
 				// Close file
 				$objmodel->close_file();
-
         		return 1;
 			}
 			else
@@ -589,7 +514,6 @@ class Export
 			return -1;
 		}
 	}
-
 	/**
 	 *  Save an export model in database
 	 *
@@ -599,16 +523,12 @@ class Export
 	function create($user)
 	{
 		global $conf;
-
 		dol_syslog("Export.class.php::create");
-
 		$this->db->begin();
-
 		$filter='';
 		if (! empty($this->hexafilter) && ! empty($this->hexafiltervalue)) {
 			$filter = json_encode(array('field' => $this->hexafilter, 'value' => $this->hexafiltervalue));
 		}
-
 		$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'export_model (';
 		$sql.= 'label,';
 		$sql.= 'type,';
@@ -620,7 +540,6 @@ class Export
 		$sql.= "'".$this->hexa."',";
 		$sql.= (! empty($filter)?"'".$filter."'":"null");
 		$sql.= ")";
-
 		dol_syslog("Export::create sql=".$sql, LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
@@ -637,7 +556,6 @@ class Export
 			return -1;
 		}
 	}
-
 	/**
 	 *  Load an export profil from database
 	 *
@@ -649,7 +567,6 @@ class Export
 		$sql = 'SELECT em.rowid, em.field, em.label, em.type, em.filter';
 		$sql.= ' FROM '.MAIN_DB_PREFIX.'export_model as em';
 		$sql.= ' WHERE em.rowid = '.$id;
-
 		dol_syslog("Export::fetch sql=".$sql, LOG_DEBUG);
 		$result = $this->db->query($sql);
 		if ($result)
@@ -661,11 +578,9 @@ class Export
 				$this->hexa				= $obj->field;
 				$this->model_name		= $obj->label;
 				$this->datatoexport		= $obj->type;
-
 				$filter					= json_decode($obj->filter, true);
 				$this->hexafilter		= (isset($filter['field'])?$filter['field']:'');
 				$this->hexafiltervalue	= (isset($filter['value'])?$filter['value']:'');
-
 				return 1;
 			}
 			else
@@ -680,8 +595,6 @@ class Export
 			return -3;
 		}
 	}
-
-
 	/**
 	 *	Delete object in database
 	 *
@@ -693,23 +606,18 @@ class Export
 	{
 		global $conf, $langs;
 		$error=0;
-
 		$sql = "DELETE FROM ".MAIN_DB_PREFIX."export_model";
 		$sql.= " WHERE rowid=".$this->id;
-
 		$this->db->begin();
-
 		dol_syslog(get_class($this)."::delete sql=".$sql);
 		$resql = $this->db->query($sql);
 		if (! $resql) { $error++; $this->errors[]="Error ".$this->db->lasterror(); }
-
 		if (! $error)
 		{
 			if (! $notrigger)
 			{
 				// Uncomment this and change MYOBJECT to your own tag if you
 				// want this action call a trigger.
-
 				//// Call triggers
 				//include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
 				//$interface=new Interfaces($this->db);
@@ -718,7 +626,6 @@ class Export
 				//// End call triggers
 			}
 		}
-
 		// Commit or rollback
 		if ($error)
 		{
@@ -736,7 +643,6 @@ class Export
 			return 1;
 		}
 	}
-
 	/**
 	 *	Output list all export models
 	 *  TODO Move this into a class htmlxxx.class.php
@@ -746,11 +652,9 @@ class Export
 	function list_export_model()
 	{
 		global $conf, $langs;
-
 		$sql = "SELECT em.rowid, em.field, em.label, em.type, em.filter";
 		$sql.= " FROM ".MAIN_DB_PREFIX."export_model";
 		$sql.= " ORDER BY rowid";
-
 		$result = $this->db->query($sql);
 		if ($result)
 		{
@@ -766,7 +670,6 @@ class Export
 				print img_object($this->array_export_module[$keyModel]->getName(),$this->array_export_icon[$keyModel]).' ';
 				print $this->array_export_module[$keyModel]->getName().' - ';
 				// recuperation du nom de l'export
-
 				$string=$langs->trans($this->array_export_label[$keyModel]);
 				print ($string!=$this->array_export_label[$keyModel]?$string:$this->array_export_label[$keyModel]);
 				print '</td>';
@@ -783,7 +686,6 @@ class Export
 				print img_delete();
 				print '</a>';
 				print "</tr>";
-
 				$i++;
 			}
 		}
@@ -791,7 +693,5 @@ class Export
 			dol_print_error($this->db);
 		}
 	}
-
 }
-
 ?>
