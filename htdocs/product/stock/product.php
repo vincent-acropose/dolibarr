@@ -97,7 +97,7 @@ if (! empty($canvas))
 }
 
 // Initialize technical object to manage hooks of page. Note that conf->hooks_modules contains array of hook context
-$hookmanager->initHooks(array('stockproductcard','globalcard'));
+$hookmanager->initHooks(array('stockproductcard','globalcard','productstock'));
 
 
 /*
@@ -691,6 +691,12 @@ if ($id > 0 || $ref)
         print $form->textwithpicto($langs->trans("VirtualStock"), $langs->trans("VirtualStockDesc"));
         print '</td>';
         print "<td>";
+
+	$parameters=array();
+	$reshook=$hookmanager->executeHooks('addMoreLine',$parameters,$product,$action);    // Note that $action and $object may have been modified by some hooks
+	if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+
+
         //print (empty($stocktheo)?0:$stocktheo);
         print $form->textwithpicto((empty($stocktheo)?0:$stocktheo), $helpondiff);
         if ($object->seuil_stock_alerte != '' && ($object->stock_theorique < $object->seuil_stock_alerte)) print ' '.img_warning($langs->trans("StockLowerThanLimit", $object->seuil_stock_alerte));
