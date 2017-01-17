@@ -57,7 +57,7 @@ $fieldid = isset($_GET["ref"])?'ref':'rowid';
 if ($user->societe_id) $socid=$user->societe_id;
 $result=restrictedArea($user,'produit&stock',$id,'product&product','','',$fieldid);
 
-
+$hookmanager->initHooks(array('productstock'));
 /*
  *	Actions
  */
@@ -425,6 +425,10 @@ if ($id > 0 || $ref)
         print '</td>';
         print '</tr>';
 
+		$parameters=array();
+		$reshook=$hookmanager->executeHooks('addMoreLine',$parameters,$product,$action);    // Note that $action and $object may have been modified by some hooks
+		if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+
         print '<tr><td>';
         print $langs->trans("StockDiffPhysicTeoric");
         print '</td>';
@@ -545,11 +549,7 @@ if ($id > 0 || $ref)
 		print '<td colspan="2">';
 		print '<input type="text" name="label" size="40" value="'.GETPOST("label").'">';
 		print '</td>';
-
-		$pmp = GETPOST("unitprice");
-		if(empty($pmp)) $pmp = $product->pmp;
-
-		print '<td width="20%">'.$langs->trans("UnitPurchaseValue").'</td><td width="20%"><input class="flat" name="price" id="unitprice" size="10" value="'.price($pmp).'"></td>';
+		print '<td width="20%">'.$langs->trans("UnitPurchaseValue").'</td><td width="20%"><input class="flat" name="price" id="unitprice" size="10" value="'.GETPOST("unitprice").'"></td>';
 		print '</tr>';
 
 		//eat-by date
