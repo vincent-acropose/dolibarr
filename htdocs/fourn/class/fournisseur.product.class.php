@@ -450,7 +450,7 @@ class ProductFournisseur extends Product
      *  @param	int		$qty		Minimum quantity
      *  @return int					<0 if KO, 0=Not found of no product id provided, >0 if OK
      */
-    function find_min_price_product_fournisseur($prodid, $qty=0)
+    function find_min_price_product_fournisseur($prodid, $qty=0, $socid=0)
     {
         global $conf;
 
@@ -481,6 +481,7 @@ class ProductFournisseur extends Product
         $sql.= " AND pfp.fk_product = ".$prodid;
         $sql.= " AND pfp.fk_soc = s.rowid";
         if ($qty > 0) $sql.= " AND pfp.quantity <= ".$qty;
+		if ($socid > 0) $sql.= ' AND pfp.fk_soc = '.$socid;
         $sql.= " ORDER BY pfp.unitprice";
         $sql.= $this->db->plimit(1);
 

@@ -1500,7 +1500,7 @@ class AskPriceSupplier extends CommonObject
 
 		$allRefIsChecked = $this->checkRefProduct();
 
-		if (!$allRefIsChecked)
+		if (!$allRefIsChecked && $statut < 3)
 		{
 			$this->error=$langs->trans('AskpricesupplierErrorRefCheck');
 			return 0;

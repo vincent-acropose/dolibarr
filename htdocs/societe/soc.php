@@ -1666,12 +1666,20 @@ else
         print '</td>';
         print '</tr>';
         */
-
+		
+		// Gestion couleur indice de confiance
+		$balise_color_deb = '<FONT color=';
+		$balise_color_fin = '</FONT>';
+		
+		if($object->array_options['options_indice_confiance'] === 'orange') $balise_color_deb.= '"orange">';
+		elseif($object->array_options['options_indice_confiance'] === 'rouge') $balise_color_deb.= '"red">';
+		else $balise_color_deb = $balise_color_fin = '';
+			
         // Name
         print '<tr><td width="25%">'.$langs->trans('ThirdPartyName').'</td>';
-        print '<td colspan="3">';
+        print '<td colspan="3">'.$balise_color_deb;
         print $form->showrefnav($object, 'socid', '', ($user->societe_id?0:1), 'rowid', 'nom');
-        print '</td>';
+        print $balise_color_fin.'</td>';
         print '</tr>';
 
         // Logo+barcode
