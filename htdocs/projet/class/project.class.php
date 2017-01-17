@@ -417,7 +417,7 @@ class Project extends CommonObject
 
         $sql = "SELECT rowid, title";
         $sql.= " FROM " . MAIN_DB_PREFIX . "projet";
-        $sql.= " WHERE entity = " . $conf->entity;
+        $sql.= " WHERE entity IN (".getEntity('project', 1).")";
         if (! empty($socid)) $sql.= " AND fk_soc = " . $socid;
 
         $resql = $this->db->query($sql);
