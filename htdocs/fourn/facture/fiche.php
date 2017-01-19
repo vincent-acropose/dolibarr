@@ -510,6 +510,11 @@ elseif ($action == 'update_line' && $user->rights->fournisseur->facture->creer)
             $pu=$_POST['puttc'];
             $price_base_type='TTC';
         }
+		
+		if(empty($pu)) {
+            $pu=0;
+            $price_base_type='HT';
+		}
 
         if (GETPOST('idprod'))
         {
