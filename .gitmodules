@@ -1,0 +1,75 @@
+[submodule "htdocs/custom/abricot"]
+	path = htdocs/custom/abricot
+	url = git@github.com:ATM-Consulting/dolibarr_module_abricot.git
+[submodule "htdocs/custom/attachementsaslink"]
+	path = htdocs/custom/attachementsaslink
+	url = git@github.com:ATM-Consulting/dolibarr_module_attachementsaslink.git
+[submodule "htdocs/custom/breadcrumb"]
+	path = htdocs/custom/breadcrumb
+	url = git@github.com:ATM-Consulting/dolibarr_module_breadcrumb.git
+[submodule "htdocs/custom/contactdefault"]
+	path = htdocs/custom/contactdefault
+	url = git@github.com:ATM-Consulting/dolibarr_module_contactdefault.git
+[submodule "htdocs/custom/doc2project"]
+	path = htdocs/custom/doc2project
+	url = git@github.com:ATM-Consulting/dolibarr_module_doc2project.git
+[submodule "htdocs/custom/docpreview"]
+	path = htdocs/custom/docpreview
+	url = git@github.com:ATM-Consulting/dolibarr_module_docpreview.git
+[submodule "htdocs/custom/fullcalendar"]
+	path = htdocs/custom/fullcalendar
+	url = git@github.com:ATM-Consulting/dolibarr_module_fullcalendar.git
+[submodule "htdocs/custom/googlecontactsync"]
+	path = htdocs/custom/googlecontactsync
+	url = git@github.com:ATM-Consulting/dolibarr_module_googlecontactsync.git
+[submodule "htdocs/custom/lostintranslation"]
+	path = htdocs/custom/lostintranslation
+	url = git@github.com:ATM-Consulting/dolibarr_module_lostintranslation.git
+[submodule "htdocs/custom/odtdocs"]
+	path = htdocs/custom/odtdocs
+	url = git@github.com:ATM-Consulting/dolibarr_module_odtdoc.git
+[submodule "htdocs/custom/postit"]
+	path = htdocs/custom/postit
+	url = git@github.com:ATM-Consulting/dolibarr_module_postit.git
+[submodule "htdocs/custom/propalehistory"]
+	path = htdocs/custom/propalehistory
+	url = git@github.com:ATM-Consulting/dolibarr_module_propalehistory.git
+[submodule "htdocs/custom/query"]
+	path = htdocs/custom/query
+	url = git@github.com:ATM-Consulting/dolibarr_module_query.git
+[submodule "htdocs/custom/recouvrement"]
+	path = htdocs/custom/recouvrement
+	url = git@github.com:ATM-Consulting/dolibarr_module_recouvrement.git
+[submodule "htdocs/custom/recurrence"]
+	path = htdocs/custom/recurrence
+	url = git@github.com:ATM-Consulting/dolibarr_module_recurence.git
+[submodule "htdocs/custom/related"]
+	path = htdocs/custom/related
+	url = git@github.com:ATM-Consulting/dolibarr_module_related.git
+[submodule "htdocs/custom/rememberme"]
+	path = htdocs/custom/rememberme
+	url = git@github.com:ATM-Consulting/dolibarr_module_rememberme.git
+[submodule "htdocs/custom/scrollto"]
+	path = htdocs/custom/scrollto
+	url = git@github.com:ATM-Consulting/dolibarr_module_scrollto.git
+[submodule "htdocs/custom/scrumboard"]
+	path = htdocs/custom/scrumboard
+	url = git@github.com:ATM-Consulting/dolibarr_module_scrumboard.git
+[submodule "htdocs/custom/searcheverywhere"]
+	path = htdocs/custom/searcheverywhere
+	url = git@github.com:ATM-Consulting/dolibarr_module_searcheverywhere.git
+[submodule "htdocs/custom/serverobserver"]
+	path = htdocs/custom/serverobserver
+	url = git@github.com:ATM-Consulting/dolibarr_module_serverobserver.git
+[submodule "htdocs/custom/split"]
+	path = htdocs/custom/split
+	url = git@github.com:ATM-Consulting/dolibarr_module_split.git
+[submodule "htdocs/custom/subtotal"]
+	path = htdocs/custom/subtotal
+	url = git@github.com:ATM-Consulting/dolibarr_module_subtotal.git
+[submodule "htdocs/custom/syncmailagenda"]
+	path = htdocs/custom/syncmailagenda
+	url = git@github.com:ATM-Consulting/dolibarr_module_syncmailagenda.git
+[submodule "htdocs/custom/upbuttons"]
+	path = htdocs/custom/upbuttons
+	url = git@github.com:ATM-Consulting/dolibarr_module_upbuttons.git
