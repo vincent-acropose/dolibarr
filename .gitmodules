@@ -73,3 +73,63 @@
 [submodule "htdocs/custom/upbuttons"]
 	path = htdocs/custom/upbuttons
 	url = git@github.com:ATM-Consulting/dolibarr_module_upbuttons.git
+[submodule "htdocs/custom/advtargetemailing"]
+	path = htdocs/custom/advtargetemailing
+	url = git@atmsrv1:store-advtargetemailing.git
+[submodule "htdocs/custom/agefodd"]
+	path = htdocs/custom/agefodd
+	url = git@atmsrv1:store-agefodd.git
+[submodule "htdocs/custom/allscreens"]
+	path = htdocs/custom/allscreens
+	url = git@atmsrv1:store-allscreens.git
+[submodule "htdocs/custom/atmtheme"]
+	path = htdocs/custom/atmtheme
+	url = git@atmsrv1:atm-theme.git
+[submodule "htdocs/custom/bankimport"]
+	path = htdocs/custom/bankimport
+	url = git@atmsrv1:doli-bankimport.git
+[submodule "htdocs/custom/cliatm"]
+	path = htdocs/custom/cliatm
+	url = git@atmsrv1:doli-cli-atm.git
+[submodule "htdocs/custom/concatpdf"]
+	path = htdocs/custom/concatpdf
+	url = git@atmsrv1:store-concatpdf.git
+[submodule "htdocs/custom/contratabonnement"]
+	path = htdocs/custom/contratabonnement
+	url = git@atmsrv1:store-contratabonnement.git
+[submodule "htdocs/custom/exportcompta"]
+	path = htdocs/custom/exportcompta
+	url = git@atmsrv1:doli-export-compta.git
+[submodule "htdocs/custom/google"]
+	path = htdocs/custom/google
+	url = git@atmsrv1:store-google.git
+[submodule "htdocs/custom/gpec"]
+	path = htdocs/custom/gpec
+	url = git@atmsrv1:doli-gpec.git
+[submodule "htdocs/custom/mailchimp"]
+	path = htdocs/custom/mailchimp
+	url = git@atmsrv1:store-mailchimp.git
+[submodule "htdocs/custom/mantis"]
+	path = htdocs/custom/mantis
+	url = git@atmsrv1:doli-mantis-connector.git
+[submodule "htdocs/custom/multicompany"]
+	path = htdocs/custom/multicompany
+	url = git@atmsrv1:multicompany.git
+[submodule "htdocs/custom/multismtp"]
+	path = htdocs/custom/multismtp
+	url = git@atmsrv1:store-multismtp.git
+[submodule "htdocs/custom/ndfp"]
+	path = htdocs/custom/ndfp
+	url = git@atmsrv1:doli-ndfp-rh.git
+[submodule "htdocs/custom/sepa"]
+	path = htdocs/custom/sepa
+	url = git@atmsrv1:doli-sepa.git
+[submodule "htdocs/custom/sig"]
+	path = htdocs/custom/sig
+	url = git@atmsrv1:doli-sig.git
+[submodule "htdocs/custom/zenfusionmaps"]
+	path = htdocs/custom/zenfusionmaps
+	url = git@atmsrv1:store-zenfusionmaps.git
+[submodule "htdocs/custom/zenfusionoauth"]
+	path = htdocs/custom/zenfusionoauth
+	url = git@atmsrv1:store-zenfusionoauth.git
