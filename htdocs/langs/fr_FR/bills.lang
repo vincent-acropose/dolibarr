@@ -477,4 +477,5 @@ updatePriceNextInvoiceErrorUpdateline=Erreur: mise à jour du prix sur la ligne 
 ToCreateARecurringInvoice=Pour créer une facture périodique à ce contrat, créez d'abord une facture brouillon puis convertissez la en facture modèle et définissez la fréquence de génération des futures factures.
 ToCreateARecurringInvoiceGene=Pour générer de futures factures régulièrement et manuellement, cliquer sur le menu <strong>%s - %s - %s</strong>.
 ToCreateARecurringInvoiceGeneAuto=Si vous devez utiliser de telles factures, demandez à votre administrateur d'activer le module <strong>%s</strong>. Notez que les deux méthodes de générations de factures (manuelles et automatiques) peuvent être utilisées simultanément sans risque de création de doublon.
-
+WithdrawRequest=Demande de prélèvement
+BadPaymentMethod=Mauvais mode de paiement
