@@ -225,6 +225,8 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 		$pdf->SetFont('','', $default_font_size);
         $pdf->SetXY(114,15);
 		$pdf->MultiCell(40, 2, $outputlangs->transnoentities("Signature"), 0, 'L');
+        $pdf->SetXY(114,42);
+		$pdf->MultiCell(60, 2, $outputlangs->transnoentities("Laurie Mathon, comptable"), 0, 'L');
 
         $pdf->Rect(9, 14, 192, 35);
         $pdf->line(9, 19, 112, 19);
