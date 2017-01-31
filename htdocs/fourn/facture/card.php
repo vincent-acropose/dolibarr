@@ -238,6 +238,11 @@ elseif ($action == 'setdatef' && $user->rights->fournisseur->facture->creer)
 {
     $object->fetch($id);
     $object->date=dol_mktime(12,0,0,$_POST['datefmonth'],$_POST['datefday'],$_POST['datefyear']);
+    $date_echence_calc=$object->calculate_date_lim_reglement();
+    if (!empty($object->date_echeance) &&  $object->date_echeance < $date_echence_calc)
+    {
+    	$object->date_echeance = $date_echence_calc;
+    }
     if ($object->date_echeance && $object->date_echeance < $object->date) $object->date_echeance=$object->date;
     $result=$object->update($user);
     if ($result < 0) dol_print_error($db,$object->error);
@@ -1225,7 +1230,10 @@ if ($action == 'create')
             $objectsrc = new $classname($db);
             $objectsrc->fetch(GETPOST('originid'));
             $objectsrc->fetch_thirdparty();
-
+			
+			$parameters=array();
+			$reshook=$hookmanager->executeHooks('fetchOriginFourn',$parameters,$objectsrc,$action); // Note that $action and $object may have been modified by some hooks
+			
             $projectid			= (!empty($objectsrc->fk_project)?$objectsrc->fk_project:'');
             //$ref_client			= (!empty($objectsrc->ref_client)?$object->ref_client:'');
 

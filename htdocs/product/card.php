@@ -385,8 +385,8 @@ if (empty($reshook))
             if ($object->id > 0)
             {
                 $object->ref = GETPOST('clone_ref');
-                $object->status = 0;
-                $object->status_buy = 0;
+                //$object->status = 0;
+                //$object->status_buy = 0;
                 $object->id = null;
                 $object->barcode = -1;
 
