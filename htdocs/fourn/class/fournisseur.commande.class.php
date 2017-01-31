@@ -244,7 +244,8 @@ class CommandeFournisseur extends CommonOrder
             $this->fetch_optionals($this->id,$extralabels);
 
             if ($this->statut == 0) $this->brouillon = 1;
-
+				
+				$this->lines=array();
 
             $sql = "SELECT l.rowid, l.ref as ref_supplier, l.fk_product, l.product_type, l.label, l.description,";
             $sql.= " l.qty,";
@@ -950,6 +951,8 @@ class CommandeFournisseur extends CommonOrder
             {
                 $result = 1;
                 $this->log($user, 3, $date, $comment);
+				$this->date_commande = $date;
+				$this->methode_commande = $methode;
             }
             else
             {
