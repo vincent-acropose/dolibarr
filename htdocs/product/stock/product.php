@@ -536,6 +536,10 @@ if ($id > 0 || $ref)
         print $form->editfieldval("DesiredStock",'desiredstock',$object->desiredstock,$object,$user->rights->produit->creer);
         print '</td></tr>';
 
+		dol_include_once('/hevea/class/hevea_tools.class.php');
+		$hevea_tools = new HeveaTools($db);
+		$TInfosStockProduct = $hevea_tools->getInfosStockProduct($user, $id);
+		
 		// Specificx CSS for hevea
 		$td_hevea = '<td style="font-size:20px;font-weight:bold;">';
         // Real stock
@@ -550,14 +554,14 @@ if ($id > 0 || $ref)
         print '<tr>'.$td_hevea;
         print $form->textwithtooltip($langs->trans("PhysicalStock"), $text_stock_options, 2, 1, img_picto('', 'info'), '', 2);
         print '</td>';
-		print $td_hevea.$object->stock_reel;
+		print $td_hevea.$TInfosStockProduct['reel']/*$object->stock_reel*/;
 		if ($object->seuil_stock_alerte != '' && ($object->stock_reel < $object->seuil_stock_alerte)) print ' '.img_warning($langs->trans("StockLowerThanLimit"));
 		print '</td>';
 		print '</tr>';
 
         // Calculating a theorical value
         print '<tr>'.$td_hevea.$langs->trans("VirtualStock").'</td>';
-        print $td_hevea.(empty($object->stock_theorique)?0:$object->stock_theorique);
+        print $td_hevea.($TInfosStockProduct['reel'] - $TInfosStockProduct['toship'])/*(empty($object->stock_theorique)?0:$object->stock_theorique)*/;
         if ($object->seuil_stock_alerte != '' && ($object->stock_theorique < $object->seuil_stock_alerte)) print ' '.img_warning($langs->trans("StockLowerThanLimit"));
         print '</td>';
         print '</tr>';
