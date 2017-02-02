@@ -757,6 +757,7 @@ if ($resql)
     print_liste_field_titre($langs->trans('Taxes'),$_SERVER['PHP_SELF'],'f.tva','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('AmountTTC'),$_SERVER['PHP_SELF'],'f.total_ttc','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Received'),$_SERVER['PHP_SELF'],'am','',$param,'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Rest"),$_SERVER["PHP_SELF"],"","",$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('Status'),$_SERVER['PHP_SELF'],'fk_statut,paye,am','',$param,'align="right"',$sortfield,$sortorder);
     print_liste_field_titre('',$_SERVER["PHP_SELF"],"",'','','',$sortfield,$sortorder,'maxwidthsearch ');
     print "</tr>\n";
@@ -788,6 +789,7 @@ if ($resql)
     print '<td class="liste_titre"></td>';
     print '<td class="liste_titre" align="right"><input class="flat" type="text" size="6" name="search_montant_ttc" value="'.$search_montant_ttc.'"></td>';
     print '<td class="liste_titre"></td>';
+	print '<td class="liste_titre">&nbsp;</td>';
     print '<td class="liste_titre" align="right">';
 	$liststatus=array('0'=>$langs->trans("BillShortStatusDraft"), '1'=>$langs->trans("BillShortStatusNotPaid"), '2'=>$langs->trans("BillShortStatusPaid"), '3'=>$langs->trans("BillShortStatusCanceled"));
 	print $form->selectarray('search_status', $liststatus, $search_status, 1);
@@ -885,6 +887,8 @@ if ($resql)
             print '<td align="right">'.price($objp->total_ttc,0,$langs).'</td>';
 
             print '<td align="right">'.(! empty($paiement)?price($paiement,0,$langs):'&nbsp;').'</td>';
+
+			print '<td align="right">'.(((! empty($objp->total_ttc) || ! empty($objp->am) || ! empty($cn) || ! empty($dep)) && ($objp->total_ttc - $objp->am - $cn - $dep)) ? price($objp->total_ttc - $objp->am - $cn - $dep):'&nbsp;').'</td>';
 
             // Status
             print '<td align="right" class="nowrap">';
