@@ -226,8 +226,9 @@ if ($result >= 0)
 					}
 				}		
 				else {
-					$fuser->SetInGroup($group->id, $group->entity);
-					echo $fuser->login.' entity : '.$group->entity.' added'."\n";
+					// On ne s'occupe plus des groupes non utilisés dans LeaseBoard
+					//$fuser->SetInGroup($group->id, $group->entity);
+					//echo $fuser->login.' entity : '.$group->entity.' added'."\n";
 				}		
 							
 				
@@ -246,6 +247,7 @@ if ($result >= 0)
 					$sql = "DELETE FROM ".MAIN_DB_PREFIX."usergroup_user";
 					$sql.= " WHERE fk_user  = ".$g_fk_user;
 					$sql.= " AND fk_usergroup = ".$group->id;
+					$sql.= " AND fk_user NOT IN (1, 1035)"; // On ne touche pas aux admins
 					$db->query($sql);
 					echo $g_fk_user.' removed'."\n";
 				}
