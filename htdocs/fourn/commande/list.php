@@ -34,6 +34,9 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formorder.class.php';
 require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 
+// Proposition PR1610-1819
+$conf->global->PROJECT_SHOW_REF_INTO_LISTS=1;
+
 $langs->load("orders");
 $langs->load("sendings");
 
@@ -41,6 +44,7 @@ $langs->load("sendings");
 $search_ref=GETPOST('search_ref');
 $search_refsupp=GETPOST('search_refsupp');
 $search_company=GETPOST('search_company');
+$search_project=GETPOST('search_project');
 $search_user=GETPOST('search_user');
 $search_ht=GETPOST('search_ht');
 $search_ttc=GETPOST('search_ttc');
@@ -65,6 +69,7 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
     $search_ref='';
     $search_refsupp='';
     $search_company='';
+	$search_project='';
 	$search_user='';
 	$search_ht='';
 	$search_ttc='';
@@ -132,6 +137,10 @@ if ($search_company)
 {
 	$sql .= natural_search('s.nom', $search_company);
 }
+if ($search_project)
+{
+	$sql .= natural_search('p.ref', $search_project);
+}
 if ($search_user)
 {
 	$sql.= " AND u.login LIKE '%".$db->escape($search_user)."%'";
@@ -186,6 +195,7 @@ if ($resql)
 	$param="";
 	if ($search_ref)			$param.="&search_ref=".$search_ref;
 	if ($search_company)		$param.="&search_company=".$search_company;
+	if ($search_project)		$param.="&search_project=".$search_project;
 	if ($search_user)			$param.="&search_user=".$search_user;
 	if ($search_ttc)			$param.="&search_ttc=".$search_ttc;
 	if ($search_refsupp) 		$param.="&search_refsupp=".$search_refsupp;
@@ -198,8 +208,8 @@ if ($resql)
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"cf.ref","",$param,'',$sortfield,$sortorder);
 	if (empty($conf->global->SUPPLIER_ORDER_HIDE_REF_SUPPLIER)) print_liste_field_titre($langs->trans("RefSupplier"),$_SERVER["PHP_SELF"],"cf.ref_supplier","",$param,'',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("ThirdParty"),$_SERVER["PHP_SELF"],"s.nom","",$param,'',$sortfield,$sortorder);
 	if (! empty($conf->global->PROJECT_SHOW_REF_INTO_LISTS)) print_liste_field_titre($langs->trans("Project"),$_SERVER["PHP_SELF"],"p.ref","",$param,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("ThirdParty"),$_SERVER["PHP_SELF"],"s.nom","",$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Author"),$_SERVER["PHP_SELF"],"u.login","",$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AmountHT"),$_SERVER["PHP_SELF"],"cf.total_ht","",$param,'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AmountTTC"),$_SERVER["PHP_SELF"],"cf.total_ttc","",$param,'align="right"',$sortfield,$sortorder);
@@ -213,12 +223,11 @@ if ($resql)
 
 	print '<td class="liste_titre"><input size="8" type="text" class="flat" name="search_ref" value="'.$search_ref.'"></td>';
 	if (empty($conf->global->SUPPLIER_ORDER_HIDE_REF_SUPPLIER)) print '<td class="liste_titre"><input type="text" class="flat" size="8" name="search_refsupp" value="'.$search_refsupp.'"></td>';
-	print '<td class="liste_titre"><input type="text" class="flat" size="8" name="search_company" value="'.$search_company.'"></td>';
 	if (! empty($conf->global->PROJECT_SHOW_REF_INTO_LISTS))
 	{
-		print '<td class="liste_titre">';
-		print '</td>';
+		print '<td class="liste_titre"><input type="text" class="flat" size="8" name="search_project" value="'.$search_project.'"></td>';
 	}
+	print '<td class="liste_titre"><input type="text" class="flat" size="8" name="search_company" value="'.$search_company.'"></td>';
 	print '<td class="liste_titre"><input type="text" size="6" class="flat" name="search_user" value="'.$search_user.'"></td>';
 	print '<td class="liste_titre" align="right"><input type="text" size="6" class="flat" name="search_ht" value="'.$search_ht.'"></td>';
 	print '<td class="liste_titre" align="right"><input type="text" size="6" class="flat" name="search_ttc" value="'.$search_ttc.'"></td>';
@@ -259,14 +268,7 @@ if ($resql)
 		print '</td>'."\n";
 
 		// Ref Supplier
-			if (empty($conf->global->SUPPLIER_ORDER_HIDE_REF_SUPPLIER)) print '<td>'.$obj->ref_supplier.'</td>'."\n";
-
-		// Thirdparty
-		print '<td>';
-		$thirdpartytmp->id = $obj->socid;
-		$thirdpartytmp->name = $obj->name;
-		print $thirdpartytmp->getNomUrl(1,'supplier');
-		print '</td>'."\n";
+		if (empty($conf->global->SUPPLIER_ORDER_HIDE_REF_SUPPLIER)) print '<td>'.$obj->ref_supplier.'</td>'."\n";
 
 		// Project
 		if (! empty($conf->global->PROJECT_SHOW_REF_INTO_LISTS))
@@ -277,6 +279,13 @@ if ($resql)
 			if ($obj->project_id > 0) print $projectstatic->getNomUrl(1);
 			print '</td>';
 		}
+
+		// Thirdparty
+		print '<td>';
+		$thirdpartytmp->id = $obj->socid;
+		$thirdpartytmp->name = $obj->name;
+		print $thirdpartytmp->getNomUrl(1,'supplier');
+		print '</td>'."\n";
 
         // Author
         $userstatic->id = $obj->fk_user_author;
