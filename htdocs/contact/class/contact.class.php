@@ -732,7 +732,7 @@ class Contact extends CommonObject
 		if (! $error)
 		{
 			// Remove category
-			$sql = "DELETE FROM ".MAIN_DB_PREFIX."categorie_contact WHERE fk_socpeople = ".$rowid;
+			$sql = "DELETE FROM ".MAIN_DB_PREFIX."categorie_contact WHERE fk_socpeople = ".$this->id;
 			dol_syslog(get_class($this)."::delete sql=".$sql);
 			$resql=$this->db->query($sql);
 			if (! $resql)
