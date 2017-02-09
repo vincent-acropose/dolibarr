@@ -1071,7 +1071,7 @@ if (empty($reshook))
 										}
 
 										if ($totalamount != 0) {
-											$amountdeposit[] = ($totalamount * $valuedeposit) / 100;
+											$amountdeposit[$lines[$i]->tva] = ($totalamount * $valuedeposit) / 100;
 										}
 									} else {
 										setEventMessages($srcobject->error, $srcobject->errors, 'errors');
