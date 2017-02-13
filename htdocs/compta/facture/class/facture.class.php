@@ -2644,11 +2644,8 @@ class Facture extends CommonInvoice
 	/**
 	 * Check if the percent edited is lower of next invoice line
 	 *
-<<<<<<< HEAD
-=======
 	 * @param	int		$idline				id of line to check
 	 * @param	float	$situation_percent	progress percentage need to be test
->>>>>>> upstream/4.0
 	 * @return false if KO, true if OK
 	 */
 	function checkProgressLine($idline, $situation_percent)

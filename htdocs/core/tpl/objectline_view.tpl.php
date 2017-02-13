@@ -127,14 +127,8 @@ if (empty($usemargins)) $usemargins=0;
 	}
 	?>
 	</td>
-<<<<<<< HEAD
-
-	<?php if ($object->element == 'askpricesupplier') { ?>
-		<td align="right"><?php echo $line->ref_fourn; ?></td>
-=======
 	<?php if ($object->element == 'supplier_proposal') { ?>
 		<td class="linecolrefsupplier" align="right"><?php echo $line->ref_fourn; ?></td>
->>>>>>> upstream/4.0
 	<?php } ?>
 	<td align="right" class="linecolvat nowrap"><?php $coldisplay++; ?><?php echo vatrate($line->tva_tx,'%',$line->info_bits); ?></td>
 
