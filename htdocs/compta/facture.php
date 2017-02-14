@@ -1051,6 +1051,10 @@ if (empty($reshook))
 
 									if ($totalamount != 0) {
 										$amountdeposit = ($totalamount * $valuedeposit) / 100;
+										// round amont
+										if(!empty($conf->global->MAIN_DEPOSIT_ROUND_AMOUNT)) {
+											$amountdeposit = round($amountdeposit, -$conf->global->MAIN_DEPOSIT_ROUND_AMOUNT);
+										}
 									}
 								} else {
 									setEventMessages($srcobject->error, $srcobject->errors, 'errors');
