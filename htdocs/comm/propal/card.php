@@ -2072,7 +2072,7 @@ if ($action == 'create')
         require_once DOL_DOCUMENT_ROOT . '/core/lib/pdf.lib.php';
     }
     foreach($object->lines as $i => $line) {
-        $total_line_remise+= pdf_getLineTotalDiscountAmount($object, $i, $outputlangs, 2);
+        $total_line_remise+= pdf_getLineTotalDiscountAmount($object, $i, $langs, 2);
     }
     if (! empty($conf->global->MAIN_SHOW_AMOUNT_BEFORE_DISCOUNT)) {
     	print '<tr><td height="10">' . $langs->trans('AmountHTBeforeDiscount') . '</td>';
