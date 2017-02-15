@@ -1362,11 +1362,11 @@ class Expedition extends CommonObject
 				$line->subprice			= $obj->subprice;
 				$line->remise_percent	= $obj->remise_percent;
 
-				$this->total_ht+= $tabprice[0];
-				$this->total_tva+= $tabprice[1];
-				$this->total_ttc+= $tabprice[2];
-				$this->total_localtax1+= $tabprice[9];
-				$this->total_localtax2+= $tabprice[10];
+				$this->total_ht+= $obj->total_ht;
+				$this->total_tva+= $obj->total_tva;
+				$this->total_ttc+= $obj->total_ttc;
+				$this->total_localtax1+= $obj->total_localtax1;
+				$this->total_localtax2+= $obj->total_localtax2;
 
                 $line->detail_batch = array();
 
@@ -1396,11 +1396,11 @@ class Expedition extends CommonObject
 				}
 				else
 				{
-				    $line->total_ht			+= $tabprice[0];
-				    $line->total_localtax1 	+= $tabprice[9];
-				    $line->total_localtax2 	+= $tabprice[10];
-				    $line->total_ttc	 	+= $tabprice[2];
-				    $line->total_tva	 	+= $tabprice[1];
+				    $line->total_ht			+= $obj->total_ht;
+				    $line->total_localtax1 	+= $obj->total_localtax1;
+				    $line->total_localtax2 	+= $obj->total_localtax1;
+				    $line->total_ttc	 	+= $obj->total_ttc;
+				    $line->total_tva	 	+= $obj->total_tva;
 				}
 
 				$i++;
