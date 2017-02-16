@@ -121,9 +121,6 @@
 [submodule "htdocs/custom/ndfp"]
 	path = htdocs/custom/ndfp
 	url = git@atmsrv1:doli-ndfp-rh.git
-[submodule "htdocs/custom/sepa"]
-	path = htdocs/custom/sepa
-	url = git@atmsrv1:doli-sepa.git
 [submodule "htdocs/custom/sig"]
 	path = htdocs/custom/sig
 	url = git@atmsrv1:doli-sig.git
