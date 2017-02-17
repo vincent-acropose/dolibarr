@@ -694,19 +694,19 @@ function pdf_bank(&$pdf,$outputlangs,$curx,$cury,$account,$onlynumber=0,$default
 
 				if ($val == 'BankCode') {
 					// Bank code
-					$tmplength = 16;
+					$tmplength = 18;
 					$content = $account->code_banque;
 				} elseif ($val == 'DeskCode') {
 					// Desk
-					$tmplength = 16;
+					$tmplength = 18;
 					$content = $account->code_guichet;
 				} elseif ($val == 'BankAccountNumber') {
 					// Number
-					$tmplength = 22;
+					$tmplength = 24;
 					$content = $account->number;
 				} elseif ($val == 'BankAccountNumberKey') {
 					// Key
-					$tmplength = 10;
+					$tmplength = 13;
 					$content = $account->cle_rib;
 				} else {
 					dol_print_error($this->db, 'Unexpected value for getFieldsToShow: '.$val);
@@ -793,7 +793,6 @@ function pdf_bank(&$pdf,$outputlangs,$curx,$cury,$account,$onlynumber=0,$default
 		$pdf->SetFont('','B',$default_font_size - 3);
 		$pdf->SetXY($curx, $cury);
 		$pdf->MultiCell(100, 3, $outputlangs->transnoentities($bickey).': ' . $outputlangs->convToOutputCharset($account->bic), 0, 'L', 0);
-		$cury+=5; // Hauteur de la cell + 2 de marges pour passer à la rubrique "Adresse pour courrier"
 	}
 
 	return $pdf->getY();

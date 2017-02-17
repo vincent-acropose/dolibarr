@@ -244,7 +244,7 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 		$pdf->SetFont('','', $default_font_size);
         $pdf->SetXY(10,32);
         $pdf->MultiCell(19,2,$outputlangs->transnoentities("Account"),0,'L');
-        pdf_bank($pdf,$outputlangs,32,32,$this->account,1);
+        $this->pdf_bank($pdf,$outputlangs,32,32,$this->account,1);
 
 
 		$pdf->SetFont('','', $default_font_size);
@@ -481,5 +481,177 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
         }
 	}
 
+
+	/**
+	 *  Show bank informations for PDF generation
+	 *
+	 *  @param	PDF			$pdf            		Object PDF
+	 *  @param  Translate	$outputlangs     		Object lang
+	 *  @param  int			$curx            		X
+	 *  @param  int			$cury            		Y
+	 *  @param  Account		$account         		Bank account object
+	 *  @param  int			$onlynumber      		Output only number (bank+desk+key+number according to country, but without name of bank and domiciliation)
+	 *  @param	int			$default_font_size		Default font size
+	 *  @return	float                               The Y PDF position
+	 */
+	function pdf_bank(&$pdf,$outputlangs,$curx,$cury,$account,$onlynumber=0,$default_font_size=10)
+	{
+		global $mysoc, $conf;
+	
+		require_once DOL_DOCUMENT_ROOT.'/core/class/html.formbank.class.php';
+		
+		$diffsizetitle=(empty($conf->global->PDF_DIFFSIZE_TITLE)?3:$conf->global->PDF_DIFFSIZE_TITLE);
+		$diffsizecontent=(empty($conf->global->PDF_DIFFSIZE_CONTENT)?4:$conf->global->PDF_DIFFSIZE_CONTENT);
+		$pdf->SetXY($curx, $cury);
+	
+		if (empty($onlynumber))
+		{
+			$pdf->SetFont('','B',$default_font_size - $diffsizetitle);
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities('PaymentByTransferOnThisBankAccount').':', 0, 'L', 0);
+			$cury+=4;
+		}
+	
+		$outputlangs->load("banks");
+	
+		// Use correct name of bank id according to country
+		$bickey="BICNumber";
+		if ($account->getCountryCode() == 'IN') $bickey="SWIFT";
+	
+		// Get format of bank account according to its country
+		$usedetailedbban=$account->useDetailedBBAN();
+	
+		//$onlynumber=0; $usedetailedbban=1; // For tests
+		if ($usedetailedbban)
+		{
+			$savcurx=$curx;
+	
+			if (empty($onlynumber))
+			{
+				$pdf->SetFont('','',$default_font_size - $diffsizecontent);
+				$pdf->SetXY($curx, $cury);
+				$pdf->MultiCell(100, 3, $outputlangs->transnoentities("Bank").': ' . $outputlangs->convToOutputCharset($account->bank), 0, 'L', 0);
+				$cury+=3;
+			}
+	
+			if (empty($conf->global->PDF_BANK_HIDE_NUMBER_SHOW_ONLY_BICIBAN))    // Note that some countries still need bank number, BIC/IBAN not enought for them
+			{
+			    // Note:
+			    // bank = code_banque (FR), sort code (GB, IR. Example: 12-34-56)
+			    // desk = code guichet (FR), used only when $usedetailedbban = 1
+			    // number = account number
+			    // key = check control key used only when $usedetailedbban = 1
+	    		if (empty($onlynumber)) $pdf->line($curx+1, $cury+1, $curx+1, $cury+6);
+	    
+	
+				foreach ($account->getFieldsToShow() as $val)
+				{
+					$pdf->SetXY($curx, $cury+4);
+					$pdf->SetFont('','',$default_font_size - 3);
+	
+					if ($val == 'BankCode') {
+						// Bank code
+						$tmplength = 16;
+						$content = $account->code_banque;
+					} elseif ($val == 'DeskCode') {
+						// Desk
+						$tmplength = 16;
+						$content = $account->code_guichet;
+					} elseif ($val == 'BankAccountNumber') {
+						// Number
+						$tmplength = 22;
+						$content = $account->number;
+					} elseif ($val == 'BankAccountNumberKey') {
+						// Key
+						$tmplength = 10;
+						$content = $account->cle_rib;
+					} else {
+						dol_print_error($this->db, 'Unexpected value for getFieldsToShow: '.$val);
+						break;
+					}
+	
+					$pdf->MultiCell($tmplength, 3, $outputlangs->convToOutputCharset($content), 0, 'C', 0);
+					$pdf->SetXY($curx, $cury + 1);
+					$curx += $tmplength;
+					$pdf->SetFont('', 'B', $default_font_size - 4);
+					$pdf->MultiCell($tmplength, 3, $outputlangs->transnoentities($val), 0, 'C', 0);
+					if (empty($onlynumber)) {
+						$pdf->line($curx, $cury + 1, $curx, $cury + 7);
+					}
+	    		}
+	    
+	    		$curx=$savcurx;
+	    		$cury+=8;
+			}
+		}
+		else
+		{
+			$pdf->SetFont('','B',$default_font_size - $diffsizecontent);
+			$pdf->SetXY($curx, $cury);
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("Bank").': ' . $outputlangs->convToOutputCharset($account->bank), 0, 'L', 0);
+			$cury+=3;
+	
+			$pdf->SetFont('','B',$default_font_size - $diffsizecontent);
+			$pdf->SetXY($curx, $cury);
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("BankAccountNumber").': ' . $outputlangs->convToOutputCharset($account->number), 0, 'L', 0);
+			$cury+=3;
+	
+			if ($diffsizecontent <= 2) $cury+=1;
+		}
+	
+		$pdf->SetFont('','',$default_font_size - $diffsizecontent);
+	
+		if (empty($onlynumber) && ! empty($account->domiciliation))
+		{
+			$pdf->SetXY($curx, $cury);
+			$val=$outputlangs->transnoentities("Residence").': ' . $outputlangs->convToOutputCharset($account->domiciliation);
+			$pdf->MultiCell(100, 3, $val, 0, 'L', 0);
+			//$nboflines=dol_nboflines_bis($val,120);
+			//$cury+=($nboflines*3)+2;
+			$tmpy=$pdf->getStringHeight(100, $val);
+			$cury+=$tmpy;
+		}
+	
+		if (! empty($account->proprio))
+		{
+			$pdf->SetXY($curx, $cury);
+			$val=$outputlangs->transnoentities("BankAccountOwner").': ' . $outputlangs->convToOutputCharset($account->proprio);
+			$pdf->MultiCell(100, 3, $val, 0, 'L', 0);
+			$tmpy=$pdf->getStringHeight(100, $val);
+			$cury+=$tmpy;
+		}
+	
+		else if (! $usedetailedbban) $cury+=1;
+	
+		// Use correct name of bank id according to country
+		$ibankey = FormBank::getIBANLabel($account);
+	
+		if (! empty($account->iban))
+		{
+			//Remove whitespaces to ensure we are dealing with the format we expect
+			$ibanDisplay_temp = str_replace(' ', '', $outputlangs->convToOutputCharset($account->iban));
+			$ibanDisplay = "";
+	
+			$nbIbanDisplay_temp = dol_strlen($ibanDisplay_temp);
+			for ($i = 0; $i < $nbIbanDisplay_temp; $i++)
+			{
+				$ibanDisplay .= $ibanDisplay_temp[$i];
+				if($i%4 == 3 && $i > 0)	$ibanDisplay .= " ";
+			}
+	
+			$pdf->SetFont('','B',$default_font_size - 3);
+			$pdf->SetXY($curx, $cury);
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities($ibankey).': ' . $ibanDisplay, 0, 'L', 0);
+			$cury+=3;
+		}
+	
+		if (! empty($account->bic))
+		{
+			$pdf->SetFont('','B',$default_font_size - 3);
+			$pdf->SetXY($curx, $cury);
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities($bickey).': ' . $outputlangs->convToOutputCharset($account->bic), 0, 'L', 0);
+		}
+
+		return $pdf->getY();
+	}
 }
 
