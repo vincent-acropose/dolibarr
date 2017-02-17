@@ -41,3 +41,4 @@ SupplierReputation=Réputation du fournisseur
 DoNotOrderThisProductToThisSupplier=Ne pas commander
 NotTheGoodQualitySupplier=Mauvaise qualité
 ReputationForThisProduct=Réputation
+SuppliersPaymentModel=Model liste des factures réglées par ce paiement
