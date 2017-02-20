@@ -192,7 +192,7 @@ if (! empty($conf->commande->enabled))
 		{
 			$i = 0;
 			$var = true;
-			while ($i < $num)
+			while ($i < $num && $i < $conf->liste_limit)
 			{
 				$var=!$var;
 				$obj = $db->fetch_object($resql);
@@ -259,7 +259,7 @@ if ($resql)
 	{
 		$i = 0;
 		$var = true;
-		while ($i < $num)
+		while ($i < $num  && $i < $conf->liste_limit)
 		{
 			$var=!$var;
 			$obj = $db->fetch_object($resql);
@@ -340,7 +340,7 @@ if (! empty($conf->commande->enabled))
 		{
 			$i = 0;
 			$var = true;
-			while ($i < $num)
+			while ($i < $num  && $i < $conf->liste_limit)
 			{
 				$var=!$var;
 				$obj = $db->fetch_object($resql);
