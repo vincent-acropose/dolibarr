@@ -1,0 +1,59 @@
+Module104020Name = Import bancaire
+Module104020Desc = Permet d'importer des fichiers bancaire CSV pour rapprochement automatique
+
+ATMAbout = Ce module a été développé par <a href="http://www.atm-consulting.fr" target="_blank">ATM Consulting</a><br>Vous pouvez retrouver la documentation sur notre <a href="http://wiki.atm-consulting.fr/index.php/Accueil" target="_blank">wiki</a><br><br>Pour toute question technique ou retour, contactez-nous sur <a href="mailto:support@atm-consulting.fr">support@atm-consulting.fr</a><br><br>Pour toute question commerciale, contactez-nous sur <a href="mailto:contact@atm-consulting.fr">contact@atm-consulting.fr</a> ou au +33 9 77 19 50 70<br><br>Retrouvez nos autres modules sur <a href="http://www.dolistore.com/search.php?orderby=position&orderway=desc&search_query=atm&submit_search=Rechercher" target="_blank">Dolistore</a>
+
+BankImportSetupPage = Configuration du module d'import bancaire
+BankImportAboutPage = A propos du module d'import bancaire
+
+# ADMIN
+BankImportSeparator = Séparateur des données du fichier
+BankImportMapping = Mapping du fichier CSV
+BankImportDateFormat = Format de date du fichier CSV
+BankImportSeparatorHelp = Caractère utilisé pour séparer les colonnes de votre fichier CSV (habituellement ";" ou ",". Un seul caractère).
+BankImportMappingHelp = Correspondance des colonnes de votre fichier CSV. Attention, la correspondance doit forcément contenir les codes "date", "label", "debit" et "credit".<br>Si votre fichier ne contient qu'une seule colonne pour le montant de la transaction, utiliser "amount" et éventuellement, si vous avez une colonne sens, "direction=Mot clé pour débit" (par example "direction=DÉBIT" ou "direction=-") au lieu de "debit" et "credit".<br>Si votre fichier contient d'autres colonnes, nommez-les "null" dans la correspondance.
+BankImportDateFormatHelp = Format de date utilisé dans votre fichier CSV (%%d correspond au jour sur deux caractères, %%m au mois sur deux caractère et %%Y l'année sur 4 caractères). Par exemple la date 25/07/2013 correspond au format %%d/%%m/%%Y.
+UseMacCompatibility=
+bankImportUseHistory=Activer l'historisation des imports avec le contenu du fichier (<b>Attention : une ligne d'en-tête doit être présent dans votre fichier</b>)
+bankImportAllowInvoiceFromSeveralThird=Autoriser le règlement / rapprochement sur des factures appartenant à différents tiers
+bankImportAllowDraftInvoice=Autoriser le rapprochement sur des factures au statut brouillon (validation de la facture et création du règlement)
+bankImportUncheckAllLines=Décocher toutes les lignes lors de l'affichage des transactions provenant du fichier
+bankImportAutoCreateDiscount=Convertir automatiquement les acomptes en reduction future si totalement réglés
+bankImportMatchBanklinesByAmountAndLabel=Chercher les lignes d'écritures bancaires par montant ET par libellé
+bankImportAllowFreelines=Autoriser la création d'écritures bancaires libres (non liées à un règlement)
+
+# MENU
+LeftMenuBankImport = Import bancaire
+
+# PAGE
+TitleBankImport = Import bancaire
+BankImportFile = Fichier à importer
+BankCompareTransactions = Comparer les écritures
+BankImport = Procéder aux rapprochements automatiques et aux créations d'écritures
+FileTransactions = Transaction bancaires provenant du fichier
+DolibarrTransactions = Transaction bancaires existantes dans Dolibarr
+RelatedItem = Élément associé
+PlannedAction = Action prévue
+DoAction = Valider
+StatementCreatedAndDataImported = Relevé %s créé avec %s écritures rapprochées, dont %s créées
+FileHasHeader = Le fichier contient une ligne d'en-tête
+bankImport_selectCompanyPls=Sélectionnez une société
+bankImport_selectPaymentTypePls=Sélectionnez paiement
+bankImportNoReccordFound=Aucune information trouvée
+
+bankImportFieldBankAccountRequired=Compte bancaire obligatoire
+bankImportFieldNumReleveRequired=Numéro de relevé obligatoire
+bankImportFieldBankImportFileRequired=Fichier obligatoire
+bankImportFieldCompanyRequired=Société obligatoire
+bankImportFieldPaymentRequired=Type de règlement obligatoire
+bankImportCretaFreeLine=Ecriture bancaire libre
+
+# DATA
+BankTransactionWillBeCreatedAndReconciled = L'écriture sera créée et rapprochée sur le relevé %s
+WillBeReconciledWithStatement = L'écriture sera rapprochée sur le relevé %s
+AlreadyReconciledWithStatement = L'écriture est déjà rapprochée sur le relevé %s
+LineDoesNotMatchWithMapping = La ligne du fichier ne correspond pas à la correspondance déclarée
+
+BankImport_FatalError_PaymentType_NotPossible=Erreur : le type de paiement [%s] n'est pas possible
+
+SupplierInvoices=Factures fournisseur

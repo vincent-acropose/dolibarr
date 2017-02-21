@@ -1,0 +1,46 @@
+# Dolibarr language file - fr_FR - ZenFusion Drive
+CHARSET=UTF-8
+# Module
+Module105004Name=ZenFusion Drive
+Module105004Desc=Synchronisation avec Google Drive™
+# Admin
+Config=Configuration
+Support=Assistance
+About=À propos
+# Config
+## Messages
+Saved=Enregistré
+UnexpectedError=Erreur inattendue
+# About
+Version=Version
+Publisher=Éditeur
+License=Licence
+Credits=Crédits
+Development=Développement
+ProjectManager=chef de projet
+SoftwareEngineer=ingénieur développement
+Ressources=Ressources
+MissingMod=Module manquant: ZenFusion OAuth
+MissingCURL=php-curl n'est pas installé
+InvalidTokenError=Token invalide
+ObjectUploadSuccess=Export réussi
+ObjectUploadFailure=Export échoué
+DatabaseSave=Sauvegarde de la base de données
+uploadToDrive=Exporter vers Drive
+AddUser=Ajouter utilisateur
+DriveUsers=Utilisateurs Drive
+DriveUsersManagement=Gestion utilisateurs Drive
+SaveDB=Sauvegarder la base de données
+NoDriveUsersSelected=Aucun utilisateur sélectionné
+SaveDBError=Une erreur s'est produite au cours de la sauvegarde
+SaveDBSuccess=Sauvegarde de la base de données effectuée
+TaskFrequency=Fréquence de la tâche
+SaveCronTask=Tâche Cron
+Permission7456812=Utiliser ZenFusion Drive
+ImportFromGoogleDrive=Importer depuis Google Drive
+LinkFromGoogleDrive=Lier depuis Google Drive
+ChooseFile=Choisissez un fichier
+ChooseFileFolder=Choisissez un fichier ou un dossier
+SelectTargetFolder=Choisissez le dossier de destination
+SaveToGoogleDrive=Enregistrer dans Google Drive
+UnsupportedFormat=Format non pris en charge

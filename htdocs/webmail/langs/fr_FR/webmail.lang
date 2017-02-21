@@ -1,0 +1,80 @@
+# Dolibarr language file - fr_FR - webmail
+CHARSET=UTF-8
+
+Module400017Name=Webmail
+Module400017Desc=Module client email
+Permission40001701=Répondre emails
+Permission40001702=Supprimer emails
+Permission40001703=Configurer utilisateurs emails
+Permission40001704=Lire emails
+
+WebmailSetup=Configuration du module Webmail
+WebMailsDesc=Cette page vous permet de configurer l'accès au serveur d'email
+WEBMAIL_POP3_SERVER=Serveur Pop3
+WEBMAIL_POP3_PORT=Port Pop3
+WEBMAIL_SMTP_SERVER=Serveur SMTP
+WEBMAIL_SMTP_PORT=Port SMTP
+WEBMAIL_EMAIL_TLS=Utilisez le cryptage TLS (SSL)
+WEBMAIL_EMAIL_FILTER=Cacher la sélection des e-mails à des utilisateurs sans droits
+MailConfig=email configuration
+UsersViews=Peut voir les emails de
+NoUsersAffected=Sans utilisateur disposant de l'affichage des e-mails de cet utilisateur
+WebMail=EMail
+Inbox=Inbox
+GetMessages=Télécharger les messages
+OutBox=Envoyés
+NewMessage=Nouvel email
+MailSender=Expéditeur
+MailReceiver=Destinataire
+MailTopic=Sujet
+MailDate=Date
+MailStatus=État
+ListOfMails=Inbox
+NewsMails=Vous avez %s nouveaux emails
+Attachments=Pièces jointes
+MessageCard=E-Mail
+Message=Message
+Reply=Répondre
+Forward=Renvoyer
+Archive=Archiver
+BackToInbox=Retour à l'inbox
+BackToOutBox=Retour à envoyés
+DeleteMail=Supprimer email
+SetasSpam=Classer 'Non désiré'
+SetasNoSpam=Classer 'Désiré'
+SendMail=Envoyer email
+MailFileName=Archive
+MailFileSize=Taille
+MailFileType=Type
+
+
+ConfirmDeleteMail=Etes vous sûr que vous voulez supprimer cet email?
+
+MailStatus1=Non lu
+MailStatus0=Lu
+MailStatus2=Répondu
+MailStatus3=Non désiré
+MailStatus4=Envoyé
+
+NoNewsMails=Pas de nouvel email
+DeleteSelected=Supprimer la sélection
+MailsDeleted=%s emails supprimés
+CreateContact=Créer un contact
+DeleteMailServer=Laisser les messages sur le serveur
+SafeDays=Durant
+
+The=Le
+write=écrit
+
+PutDest=Entrez destinataire
+PutSubject=Entrez sujet
+ViewArchiveds=Voir archivées
+Archiveds=Archivées
+
+#About
+AboutInfo=Ce module a été développé et distribué par 2byte.es Solutions informatiques, <a href="http://www.2byte.es">www.2byte.es</a> (Preferred Partner de Dolibarr)<br><br><b>Ce module n'est pas compatible avec le module multicompany</b>, pour plus d'informations <b><a href="mailto:info@2byte.es?subject='2WebMail multicompany'">Nous contacter</a></b>
+MoreModules=D'autres modules développés par 2byte.es sont disponibles sur sa boutique officielle
+MoreModulesLink=<a target="_blank" href="http://2byte.gotdns.com/tpv2byte/">Cliquez pour accéder à la boutique</a>
+
+#Multicompany
+NoMulticompany=Webmail n'est pas compatible avec multicompany

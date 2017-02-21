@@ -1,0 +1,19 @@
+3.7.+1.0.0
+	First release
+3.7.+1.0.1
+	Add compulsory feature
+3.7.+1.0.2
+	Add change fields size feature
+3.7.+1.0.3
+	Add Masked input format feature
+	fix : error on create myfield : new field bad formated 
+	English Language Field OK
+	fix : error on update myfield : new field bad formated (same...)
+	fix : group access right
+	fix : hide error on input fields key-in
+	fix : cancel on create myfield are wrong
+3.7.+1.0.4
+	fix : better context management
+	Add : new const MYFIELDS_CONTEXT_VIEW to display context on debug mode
+3.7.+1.0.5
+	fix : context bad formating query

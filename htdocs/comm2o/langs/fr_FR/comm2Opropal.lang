@@ -1,0 +1,13 @@
+# Dolibarr language file - Source file is en_US - propal
+CommercialProposalMaa=Devis d'Appareils Auditifs
+RemboursementdelaMutuel=Remboursement de la Mutuelle
+YourRestePaye=Votre quote-part restante TTC
+PaymentInfoMutuel=Remboursement associé au code de nomenclature %s par la Mutuelle %s. Remboursement sous réserve d'acceptation de votre dossier.
+GarantisOptionExtends=Les appareils auditifs sont garantis 2 ans. Une extension à 5 ans est possible moyennant un forfait de 258 €.
+NumIbanKey=Numéro de compte IBAN
+NumIbanName=Nom associé
+InfoCautionPart1=Nous demandons une caution équivalente au prix net à savoir %s. 
+InfoCautionPart2=Il ne s’agit ni d’un acompte ni d’une facturation mais d’une caution qui vous sera restituée dans son intégralité en cas d’essai négatif à l’exception de 90 € si vous ne deviez pas être en ordre de mutuelle.
+PaymentMontant=La somme à verser sur le compte : %s.
+Communication=Communication
+InfoCautionRappel=CAUTION POUR %s de %s

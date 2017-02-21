@@ -1,0 +1,114 @@
+
+
+/* Page listing message */
+
+table.listingEmail {
+    border-collapse: collapse !important; 
+}
+table.listingEmail tr.unseen {
+    font-weight:bold;
+}
+table.listingEmail tr.seen, tr.seen a {
+    font-weight:normal;
+}
+table.listingEmail tbody tr:hover td {
+    background-color: #FFFAF0; color: #000;
+}
+table.listingEmail td{
+    padding: 0px 5px;
+}
+table.listingEmail > tbody > tr{
+    border-bottom: 1px solid #DDD !important;
+}
+table.listingEmail .linkSubject {
+    display:block;
+    height: 35px;
+    line-height: 35px;
+}
+table.listingEmail .linkSubject:hover {
+    text-decoration: none;
+}
+table.listingEmail .hiddenInfo:hover {   
+    cursor: help;
+    display: block;
+    height: 35px;
+    line-height: 35px;
+    position: relative;
+}
+table.listingEmail .hiddenInfo span{
+    display: none;
+    background-color: white;
+    left: 0;
+    position: absolute;
+    text-align: inherit;
+    width: 98%;
+    overflow: hidden;
+    padding: 2px;
+    margin-top: 8px;
+    border-radius: 5px;
+    line-height: 16px;
+}
+table.listingEmail .hiddenInfo:hover span{
+    display: block;
+}
+
+
+/* Tree listing */
+.mailFolder {
+    border-bottom: 1px solid #DDD ;
+    background-color: white;
+}
+.mailFolder:last-child {
+    border-bottom: none;
+}
+.mailFolder:hover {
+    background-color: #FFFAF0; 
+}
+.mailFolder:hover a{
+    color: #000;
+}
+.mailFolder a{
+    display: block;
+    font-weight: normal;
+    padding: 0 15px;
+    line-height: 35px;
+    height: 35px;
+}
+.mailFolder a:hover{
+    text-decoration: none;
+
+}
+
+
+/* Page message */
+
+table.messageHeader td{
+    padding: 3px 5px;
+}
+.iframeBody {
+    width:99%; 
+    height: 450px;
+    border: 1px solid #555;
+    background-color: white;
+} 
+.infoMessage {
+    text-align: right;
+    opacity: 0.4;
+    filter: alpha(opacity=40); /* For IE8 and earlier */
+}
+div.titre sup.label {
+    background-color: rgb(50, 50, 130);
+    border-radius: 7px;
+    color: white;
+    margin: 0 2px;
+    padding: 1px 6px;
+}
+
+/* compose */
+.text-right {
+    text-align: right;
+}
+.fullInputs {
+    width:100%;
+    box-sizing: border-box;
+}

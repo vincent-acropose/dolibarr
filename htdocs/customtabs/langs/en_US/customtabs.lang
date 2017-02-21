@@ -1,0 +1,45 @@
+# Dolibarr language file - fr_FR - CustomTabs
+CHARSET=UTF-8
+NewCustomtabs=New personalized tab
+CustomTabsList=List of personalized tabs
+TabsCard=Tab card
+TabsFields=Tab input field
+TabsTemplate=Tab template
+CalcFields=Tab calculated fields
+TabsButton=Tab button
+ModeCustomTabs=Tab type
+CustomTabsSettingRight=Tab access user rights
+NewTabs=New tab
+UserGroupTabsRight=Access user rights
+ImportCustomTabs=Importa tab
+ImportExportTabs=Parameter Importation / Exportation
+ActiveStatut=Active tab
+DeleteTabs=Delete tab
+NoGEDInListMode=no EDM on display list mode
+RestrictedCustomTabs=acess denied
+EnabledRead=reading access
+DisabledRead=Blocked access
+EnabledWrite=modify Access
+DisabledWrite=modify blocked
+EnabledAdd=Add access
+DisabledAdd=Add blocked
+EnabledDelete=Delete access
+DisabledDelete=BDelete blocked
+AddLine=New record
+TabsFieldsView=Tab fields display
+NoParentDefined=no parent
+SettingIsOnToolsMenu=Set-up can be accessed from Dolibarr Tools menu
+AccessOnToolsMenu=Dolibarr native "Tools" menu has to be active
+CustomtabsSetup=CustomTabs set-up
+###
+TableName=Table name
+Element=Related item
+FichierGED=EDM on tab
+DefineHereCustomTabsAttributes=Define here input fields on tab
+DefineHereCustomTabsTemplate=Define here the tab template
+DefineHereCustomTabsButton=Define here the SQL request
+SomeHelpfullinfoAboutTemplate=Define here the display of the card/list using HTML format.e.g. field in tab : <b>"test"</b> enter :<br>    - <b>"#LABEL-test#"</b> toe ner the field title<br>- <b>"#FIELD-test#"</b> to place the text zone
+## ADMIN INFOS
+PatasMonkeyPresent= Ce module est la création des patas-monkey
+MoreModulesLink=All our modules are available on Dolistore
+PatasTools=Patas-M Tools

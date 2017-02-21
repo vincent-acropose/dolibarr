@@ -1,0 +1,22 @@
+WARRANTY FOR CUSTOMFIELDS V3 FOR DOLIBARR
+Revision date: 2012-10-06
+
+
+    Article 1 - RECIPIENT OF THE WARRANTY
+
+This warranty is offered with any purchase of the CustomFields V3 module to the buyer.
+
+
+    Article 2 - SERVICES
+
+This warranty offers the following services:
+   1. Free updates in the same branch of the module (V3) whenever available.
+   2. Bugfix or refund: in case the module does not work because of internal bugs that can be clearly attributable to the module's own behaviour, and on a version of Dolibarr that is publicly available at the date of the purchase, the Recipient gets the right to:
+        * either be supplied with bugfixes patchs at no cost
+        * either, in case a bugfix is not possible, to a full refund up to the amount of the purchase.
+   3. Two hours (2h) of phone or mail assistance to help in the functional implementation of the module in your system, in the sole goal of getting the module to work on your system. This does not include customization of the module, configuring it to your needs or adding functionnalities.
+
+   
+    Article 3 - TERMINATION
+
+This warranty is voided if the License Agreement is terminated or if any clause of the License Agreement or this warranty is violated.

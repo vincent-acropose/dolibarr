@@ -1,0 +1,19 @@
+--------------------------------------------------------------
+English Dolibarr OscimMods Mod ChangeLog
+--------------------------------------------------------------
+
+TODO 
+-----------
+- Add extract numero telephone by other origin for normalize format
+
+
+
+v 0.1.1
+---------
+- Add Php Class for use Database.js + listing in page 
+
+v 0.1
+-----------
+- Centralise ressoucre used by other modules developped by Oscim
+- Add PHP Markdown 
+- Add Base Datatables extends jquery plugins 

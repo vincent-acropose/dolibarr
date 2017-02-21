@@ -1,0 +1,5 @@
+ 
+
+
+
+	RewriteRule .*index.php /comm2o/action/index.php?%{QUERY_STRING}$1  [L]  

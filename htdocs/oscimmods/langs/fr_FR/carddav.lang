@@ -1,0 +1,89 @@
+# Copyright (C) 2013 Oscim <support@oscim.fr>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+CHARSET=UTF-8
+
+# Module label 'ModuleXXXName'
+# (where XXX is value of numeric property 'numero' of module)
+Module98365Name = CardDav
+# Module description 'ModuleXXXDesc'
+# (where XXX is value of numeric property 'numero' of module)
+Module98365Desc = Connecteur CardDav
+Module98365Name=CardDav 
+
+#
+## Config 
+
+	### Menu
+		TabCardDavConf=Carnet d'addresse 
+		
+	### Config 
+		carddavPutOnServer= Synchro
+		carddavPutOnServerDetail=Active la synchronisation des modification vers le serveur 
+		
+		carddavPutserverOff=Non
+		carddavPutserverOn=Actif
+		
+		carddavCreateOnServer=Créer
+		carddavCreateOnServerDetail=Créer les fiches sur le serveur carddav
+		
+		carddavCreateserverOn=Actif
+		carddavCreateserverOff=Non
+		
+		carddavDeleteOnServer=Supprimer
+		carddavDeleteOnServerDetail=Suppression des fiches sur le serveur carddav
+		
+		carddavDeleteserverOn=Actif
+		carddavDeleteserverOff=Non
+		
+		carddavFicheInDol=Fiche
+		carddavFicheInDolDetail=Créer une fiche dans dolibarr lors de la synchronisation 
+		
+		carddavFicheInDolSoc=Sociéte
+		carddavFicheInDolContact=Contact
+#
+## Tab 
+	CardDavType=Type 
+	CardDavUrl=Serveur
+	CardDavLastUpdated=Mise à jour du 
+	
+	CardDavSycnhroFiche=Fiche
+	CardDavSycnhroId=Id Serveur
+	CardDavSycnhroEtag=Identifiant
+	CardDavSycnhroLastModified=Mise à jour
+	CardDavSycnhroName=Nom
+	CardDavSycnhroEmail=Email
+	CardDavSycnhroTel=Tel
+	CardDavSycnhroTelMob=Mobile
+#
+## FICHE Tab 
+	TabCardDav=Carnet d'addresse 
+		
+	#
+	## FICHE Tab Societe
+
+	#
+	## FICHE Tab Contact
+		
+		CardDavAdrressBookEntry=Carnet d'addresse 
+		CardDavSycnhroSynchroActiv=Synchro
+		CardDavSycnhroLastUpdate=dernière mise à jour 
+
+#
+## Index
+	MessageDashboard= Récapitulatif
+	
+	CardDavFrequency=Frequence
+	CardDavCountRows=Nombre de ligne

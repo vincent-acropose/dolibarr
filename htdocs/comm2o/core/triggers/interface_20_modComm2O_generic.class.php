@@ -1,0 +1,348 @@
+<?php
+/* Copyright (C) 2005-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2009      Regis Houssin        <regis.houssin@capnetworks.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/**
+ *  \file       htdocs/core/triggers/interface_20_all_Logevents.class.php
+ *  \ingroup    core
+ *  \brief      Trigger file for
+ */
+
+
+/**
+ *  Class of triggers for security events
+ */
+class InterfaceGeneric
+{
+    var $db;
+    var $error;
+
+    var $date;
+    var $duree;
+    var $texte;
+    var $desc;
+
+    /**
+     *   Constructor
+     *
+     *   @param		DoliDB		$db      Database handler
+     */
+    function __construct($db)
+    {
+        $this->db = $db;
+
+        $this->name = preg_replace('/^Interface/i','',get_class($this));
+        $this->family = "module";
+        $this->description = "Triggers of this module allows to add security event records inside Dolibarr.";
+        $this->version = 'dolibarr';                        // 'experimental' or 'dolibarr' or version
+        $this->picto = 'technic';
+    }
+
+    /**
+     *   Return name of trigger file
+     *
+     *   @return     string      Name of trigger file
+     */
+    function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     *   Return description of trigger file
+     *
+     *   @return     string      Description of trigger file
+     */
+    function getDesc()
+    {
+        return $this->description;
+    }
+
+    /**
+     *   Return version of trigger file
+     *
+     *   @return     string      Version of trigger file
+     */
+    function getVersion()
+    {
+        global $langs;
+        $langs->load("admin");
+
+        if ($this->version == 'experimental') return $langs->trans("Experimental");
+        elseif ($this->version == 'dolibarr') return DOL_VERSION;
+        elseif ($this->version) return $this->version;
+        else return $langs->trans("Unknown");
+    }
+
+    /**
+     *      Function called when a Dolibarrr business event is done.
+     *      All functions "run_trigger" are triggered if file is inside directory htdocs/core/triggers
+     *
+     *      @param	string		$action		Event action code
+     *      @param  Object		$object     Object
+     *      @param  User		$user       Object user
+     *      @param  Translate	$langs      Object langs
+     *      @param  conf		$conf       Object conf
+     *      @param  string		$entity     Value for instance of data (Always 1 except if module MultiCompany is installed)
+     *      @return int         			<0 if KO, 0 if no triggered ran, >0 if OK
+     */
+    function run_trigger($action,$object,$user,$langs,$conf,$entity=1)
+    {
+
+
+    	$key='MAIN_LOGEVENTS_'.$action;
+// trigger_error($action); 
+// return -1; 
+    	if (empty($conf->entity)) $conf->entity = $entity;  // forcing of the entity if it's not defined (ex: in login form)
+
+        $this->date=dol_now();
+        $this->duree=0;
+
+
+		if ($action == 'PROPAL_CLOSE_SIGNED'){
+		
+		
+				dol_syslog("Trigger '".$this->name."' for action '$action' launched by ".__FILE__.". id=".$object->id);
+            
+				require_once DOL_DOCUMENT_ROOT . '/compta/facture/class/facture.class.php';
+				require_once DOL_DOCUMENT_ROOT . '/compta/paiement/class/paiement.class.php';
+				require_once DOL_DOCUMENT_ROOT . '/core/modules/facture/modules_facture.php';
+				require_once DOL_DOCUMENT_ROOT . '/core/class/discount.class.php';
+				require_once DOL_DOCUMENT_ROOT . '/core/lib/invoice.lib.php';
+				require_once DOL_DOCUMENT_ROOT . '/core/lib/functions2.lib.php';
+				require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
+				require_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
+				if (! empty($conf->projet->enabled)) {
+					require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
+				}
+				require_once(DOL_DOCUMENT_ROOT.'/comm2o/class/cg_nomenclatures.class.php'); 
+
+					$nomenclature = new Cg_Nomenclatures($this->db); 
+					$nomenclature->fetch($object->array_options['options_ref_mutuel_nomeclature']); 
+
+            $priceline= (($object->total_ttc - $nomenclature->intervoa)/ $object->array_options['options_nbr_caution']); 
+            
+         /**
+						Boucle de creation de facture 
+         */
+					
+					$max = $object->array_options['options_nbr_caution'];
+					if( $max <= 0 )
+						$max = 1; 
+					elseif($max> 20)
+						$max = 20;
+           
+            for($is=0, $max = $object->array_options['options_nbr_caution']; $is<=$max; $is++) {
+
+				$objectFacture  =new Facture($this->db);
+				$dateinvoice = dol_mktime(12, 0, 0, date('m'), date('d'), date('Y') );
+				
+
+				// Si facture standard
+				$objectFacture->socid				= $object->socid ; //GETPOST('socid','int');
+				$objectFacture->type				=  (( $is==$max ) ? 0 : 3 ); // 0 Standard, 3 caution
+				$objectFacture->number				= '';$_POST['facnumber'];
+				$objectFacture->date				= $dateinvoice;
+				$objectFacture->note_public			= trim($object->note_public);
+				$objectFacture->note_private		= trim($object->note_private);
+				$objectFacture->ref_client			= $object->ref_client;
+				$objectFacture->ref_int				= $_POST['ref_int'];
+				$objectFacture->modelpdf			= $conf->global->FACTURE_ADDON_PDF;
+				$objectFacture->fk_project			= $object->fk_project;
+				$objectFacture->cond_reglement_id	= ($_POST['type'] == 3?1:$_POST['cond_reglement_id']);
+				$objectFacture->mode_reglement_id	= $object->mode_reglement_id;
+				//TODO montant HT remise mutuel calculé sur le HT ou TTC 
+
+				if( $is==$max ) 
+					$objectFacture->amount				=$object->total_ht;
+				else 
+					$objectFacture->amount				= ($priceline/ (($tva_tx * 0.01)+1));// $object->total_ht;
+					
+				$objectFacture->remise_absolue		= $object->remise_absolue;
+				$objectFacture->remise_percent		= $object->remise_percent;
+ 				$objectFacture->origin = $object->element ;
+				$objectFacture->origin_id = $object->id;           
+            
+				$id = $objectFacture->create($user);
+
+				if ($id > 0)
+				{
+				
+				  if($objectFacture->type ==3){
+						
+						$idprod=2483;
+						$price_ht = '';
+						$tva_tx = '';
+						$qty = 1;
+						$remise_percent = 0;
+						$special_code = 0;
+
+						$prod = new Product($this->db);
+						$prod->fetch($idprod);
+
+						$label =  $prod->label;
+
+						global $mysoc; 
+						// Update if prices fields are defined
+						$tva_tx = get_default_tva($mysoc, $object->client, $prod->id);
+						$tva_npr = get_default_npr($mysoc, $object->client, $prod->id);
+							
+							
+						$pu_ht = ($priceline/ (($tva_tx * 0.01)+1));// $prod->price;
+						$pu_ttc = $priceline;
+						$price_min = $priceline;
+						$price_base_type = $prod->price_base_type;
+						// var_dump($mysoc); 
+						// var_dump($tva_tx,$priceline, $pu_ht ); 
+						// return 1;
+						// exit; 
+						// Local Taxes
+						$localtax1_tx = get_localtax($tva_tx, 1, $object->client);
+						$localtax2_tx = get_localtax($tva_tx, 2, $object->client);
+
+						$info_bits = 0;
+						if ($tva_npr)
+						$info_bits |= 0x01;
+
+
+						// Insert line
+						$result = $objectFacture->addline($desc, $pu_ht, $qty, $tva_tx, $localtax1_tx, $localtax2_tx, $idprod, $remise_percent, '', '', 0, $info_bits, '', $price_base_type, $pu_ttc, $type, - 1, $special_code, '', 0, GETPOST('fk_parent_line'), $fournprice, $buyingprice, $label, $array_option);
+				  }
+				  else{
+							$lines = $object->lines;
+							$fk_parent_line=0;
+							$num=count($lines);
+							for ($i=0;$i<$num;$i++)
+							{
+								$label=(! empty($lines[$i]->label)?$lines[$i]->label:'');
+								$desc=(! empty($lines[$i]->desc)?$lines[$i]->desc:$lines[$i]->libelle);
+
+								if ($lines [$i]->subprice < 0)
+								{
+									// Negative line, we create a discount line
+									$discount = new DiscountAbsolute($this->db);
+									$discount->fk_soc = $objectFacture->socid;
+									$discount->amount_ht = abs($lines [$i]->total_ht);
+									$discount->amount_tva = abs($lines [$i]->total_tva);
+									$discount->amount_ttc = abs($lines [$i]->total_ttc);
+									$discount->tva_tx = $lines [$i]->tva_tx;
+									$discount->fk_user = $user->id;
+									$discount->description = $desc;
+									$discountid = $discount->create($user);
+									if ($discountid > 0) {
+										$result = $objectFacture->insert_discount($discountid); // This include link_to_invoice
+									} else {
+										$mesgs [] = $discount->error;
+										$error ++;
+										break;
+									}
+								} else {
+									// Positive line
+									$product_type = ($lines [$i]->product_type ? $lines [$i]->product_type : 0);
+
+									// Date start
+									$date_start = false;
+									if ($lines [$i]->date_debut_prevue)
+										$date_start = $lines [$i]->date_debut_prevue;
+									if ($lines [$i]->date_debut_reel)
+										$date_start = $lines [$i]->date_debut_reel;
+									if ($lines [$i]->date_start)
+										$date_start = $lines [$i]->date_start;
+
+										// Date end
+									$date_end = false;
+									if ($lines [$i]->date_fin_prevue)
+										$date_end = $lines [$i]->date_fin_prevue;
+									if ($lines [$i]->date_fin_reel)
+										$date_end = $lines [$i]->date_fin_reel;
+									if ($lines [$i]->date_end)
+										$date_end = $lines [$i]->date_end;
+
+										// Reset fk_parent_line for no child products and special product
+									if (($lines [$i]->product_type != 9 && empty($lines [$i]->fk_parent_line)) || $lines [$i]->product_type == 9) {
+										$fk_parent_line = 0;
+									}
+
+									// Extrafields
+									if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED) && method_exists($lines [$i], 'fetch_optionals')) {
+										$lines [$i]->fetch_optionals($lines [$i]->rowid);
+										$array_option = $lines [$i]->array_options;
+									}
+
+									$result = $objectFacture->addline($desc, $lines [$i]->subprice, $lines [$i]->qty, $lines [$i]->tva_tx, $lines [$i]->localtax1_tx, $lines [$i]->localtax2_tx, $lines [$i]->fk_product, $lines [$i]->remise_percent, $date_start, $date_end, 0, $lines [$i]->info_bits, $lines [$i]->fk_remise_except, 'HT', 0, $product_type, $lines [$i]->rang, $lines [$i]->special_code, $objectFacture->origin, $lines [$i]->rowid, $fk_parent_line, $lines [$i]->fk_fournprice, $lines [$i]->pa_ht, $label, $array_option);
+
+									if ($result > 0) {
+										$lineid = $result;
+									} else {
+										$lineid = 0;
+										$error ++;
+										break;
+									}
+
+									// Defined the new fk_parent_line
+									if ($result > 0 && $lines [$i]->product_type == 9) {
+										$fk_parent_line = $result;
+									}
+								}
+							}
+
+				  }
+				  // Hooks
+// 				  $parameters = array('objFrom' => $object);
+// 				  $reshook = $hookmanager->executeHooks('createFrom', $parameters, $objectFacture, $action); // Note that $action and $objectFacture may have been
+																								  // modified by hook
+// 				  if ($reshook < 0)
+// 					  $error ++;
+				
+				
+				}
+				
+				// End of object creation, we show it
+				if ($id > 0 && ! $error)
+				{
+					$this->db->commit();
+					
+// 					$objectFacture->fetch(); 
+
+					if ( $objectFacture->type ==3 ) {
+						// force avalidation 
+						$objectFacture->validate($user, '', 0);
+					}
+// 					header('Location: ' . $_SERVER["PHP_SELF"] . '?facid=' . $id);
+// 					exit();
+				}
+				else
+				{
+					$this->db->rollback();
+// 					$action = 'create';
+// 					$_GET ["origin"] = $_POST["origin"];
+// 					$_GET ["originid"] = $_POST["originid"];
+					$mesgs [] = '<div class="error">' . $object->error . '</div>';
+				}
+				
+            }
+            
+            
+//             var_dump($mesgs); 
+//             exit; 
+            
+        }
+
+		return 0;
+    }
+
+}

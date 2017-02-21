@@ -1,0 +1,42 @@
+--------------------------------------------------------------
+English Dolibarr DolMessage Mod FAQ
+--------------------------------------------------------------
+
+General Configuration  
+-----------
+
+See page [general configuration](/dolmessage/admin/config.php)
+
+
+
+User Configuration 
+-----------
+See page [user configuration](/user/)
+
+Group Configuration 
+-----------
+See page [group configuration](/group/)
+
+Vous avez la possiblité de configurer plusieurs boites email pour un groupe. Une fois cette tache efefctué, l'ensemble des utlisateurs de dolibarr appartenant a ce groupe ont ainsi acces à la lecture de cette boite de reception. 
+Il est ainsi possible de confiurer des boites email generic "support@, commercial@" et permettre à tous les utilisateur de ce groupe d'en gerer le suivi. 
+
+
+Liaison des mails avec un tiers doliabrr 
+-----------
+Ce module fournis la possiblité de liéer les mails à des tiers dolibarr. Vous pouvez ainsi liéer un meme mail avec plusieurs tiers dolibarr, et ce quelques soit la boite mail utilisé. 
+
+Une fois cette liaison avec un tiers construite, le mail est copié dans le dossier document de dolibarr dans le dossier du tiers. Cette operation vous garantis ainsi la conservation de vos email, quelques soit la boite de messagerie utilisé aujourd'hui ou dans l'avenir. 
+D'auter part, cette liaison construit un objet dolmessage, celui ci contient ainsi toutes les pieces jointes, et peut ainsi etre partagé avec tous les utilisateur doliabrr. 
+
+
+
+Liaison avec l'agenda
+-----------
+Ce module assure la liaison des evements mails dans l'agenda de dolibarr.  Toutefois, il ne copie pas le corps du mail dans l'agenda mais assure une liaison de l'objet dolmessage à la fiche d'evenement de l'agenda. 
+Pour assurer un comportement coherant, veiller à désactiver les ajout automatique sur evenement de doliabrr 
+ - PROPAL_SENTBYMAIL
+ - ORDER_SENTBYMAIL
+ - ORDER_SUPPLIER_SENTBYMAIL
+ - .. 
+ 
+

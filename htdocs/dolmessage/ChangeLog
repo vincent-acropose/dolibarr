@@ -1,0 +1,21 @@
+--------------------------------------------------------------
+English Dolibarr DolMessage ChangeLog
+--------------------------------------------------------------
+
+TODO
+-----------
+- Add FAQ in module 
+
+
+v 0.2
+----------
+- Check in Dolibarr 3.5.3
+- Change tree module , fix path 
+- Add Check imap function in php
+- Adjust table and fix support class
+
+
+v 0.1
+-----------
+- Implements OscimMods depends 
+- Add Changelog section and default page in configuration section 

@@ -1,0 +1,14 @@
+VATCalculatorSetupTitle=Configuration of VAT calculator module
+VATCalculator=Module VAT Calculator
+VATCalculatorCustomerQuotation=Customer quotations
+VATCalculatorCustomerQuotationDesc=Show Tax Incl/Excl fields when editing a customer quotation
+VATCalculatorCustomerOrder=Customer orders
+VATCalculatorCustomerOrderDesc=Show Tax Incl/Excl fields when editing a customer order
+VATCalculatorCustomerInvoice=Customer invoice
+VATCalculatorCustomerInvoiceDesc=Show Tax Incl/Excl fields when editing a customer invoice
+VATCalculatorContract=Contracts
+VATCalculatorContractDesc=Show Tax Incl/Excl fields when editing a contracts
+VATCalculatorSupplierOrder=Supplier orders
+VATCalculatorSupplierOrderDesc=Show Tax Incl/Excl fields when editing a supplier order
+VATCalculatorSupplierInvoice=Supplier invoices
+VATCalculatorSupplierInvoiceDesc=Show Tax Incl/Excl fields when editing a supplier invoice

@@ -1,0 +1,50 @@
+--------------------------------------------------------------
+English 2Webmail ChangeLog
+--------------------------------------------------------------
+***** ChangeLog for 3.6.3 compared to 3.6.2 *****
+Fix: Bug when search and mails selected
+Fix: Bug when send email from objects cards
+Fix: Bug when send attached files
+Fix: Bug showing some mails on third and contact tab
+
+***** ChangeLog for 3.6.2 compared to 3.6.1 *****
+Fix: Bug when creating contacts with empty email
+
+***** ChangeLog for 3.6.1 compared to 3.6. *****
+Fix: Bug in style check
+Fix: Bug showing contacts in some cases
+Fix: Bug when download files
+Fix: Bug in third tab pagination
+Fix: Users not appear in search
+
+***** ChangeLog for 3.6 compared to 3.5.x *****
+New: Use selector list for adding CC receivers
+New: Add option for filter selector list receiver by commercial
+New: Subject is mandatory
+New: Show archiveds messages into inbox
+
+***** ChangeLog for 3.5.6 compared to 3.5.5 *****
+Fix: Users not appear in search
+
+***** ChangeLog for 3.5.5 compared to 3.5.4 *****
+Fix: Include main
+
+***** ChangeLog for 3.5.4 compared to 3.5.3 *****
+New: Compatibility with multicompany module
+
+***** ChangeLog for 3.5.3 compared to 3.5.2 *****
+Fix: Separate code for files downloads
+Fix: Works with no alternate directory 
+
+***** ChangeLog for 3.5.2 compared to 3.5.1 *****
+Fix: Exaust debug for attachements
+
+***** ChangeLog for 3.5.1 compared to 3.5 *****
+Fix: User signature
+Fix: Delete message must delete also eml file
+Fix: Bad MAIN_EMAIL_USECCC use
+Fix: Bad config of mail server
+Fix: Issues with attachements
+
+***** ChangeLog for 3.5 *****
+New: First version of module

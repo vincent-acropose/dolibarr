@@ -1,0 +1,12 @@
+3.5.+1.0.1
+	fix : bug on ventilation on customer bills
+3.5.+1.0.2
+	fix : bad link on taglink
+3.5.+1.0.3
+	add : add adherent list on contact thirdparties tabs
+3.6.+1.1.0
+	add : new commun top menu with other patas-tools
+3.6.+1.1.1
+	add : list of linked societe on societecontact tabs
+3.6.+1.1.2
+	add : paiement on multiple linked societe 

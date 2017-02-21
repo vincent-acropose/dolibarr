@@ -1,0 +1,34 @@
+# Dolibarr language file - fr_FR - customfields user defined labels
+# Vous pouvez ici définir les libellés de vos propres champs personnalisés et leurs valeurs (après les avoir créés dans l'interface admin)
+# IMPORTANT: pour supporter les accents, n'oubliez pas d'enregistrer ce fichier en encodage UTF-8 sans BOM (sans marqueur utf) !
+CHARSET= UTF-8
+
+# Format:
+# cf_fieldname=label
+
+cf_ref_client=Ma réf client
+simpletextfield=Mon champ texte
+
+cf_nissclient=Numéro NISS du client
+cf_datenaissance=Date de naissance du client
+cf_numidmutuelle=Numéro d'identification Mutuelle
+cf_numinamiorl=Numéro INAMI ORL
+
+cf_soc_nom=Nom du client
+cf_audioprojet_firstname_lastname=Audioprothésiste
+cf_magasins_ville=Laboratoire Maison de l'Appareil
+cf_claturemut_idclassement_numnomenclatures=Nomenclature
+cf_dateetapeprojet=Date de MAJ Étape
+cf_etapeprojet_numetape_descriptionetape=Étape de vente
+cf_claturemut_description=Description de la Nomenclature
+cf_choixmutuelleprojet_nom=Nom de la Mutuelle du client
+cf_numeroclientmutuelle=Numéro d'adhérent à la Mutuelle
+cf_dateprescriptionorlprojet=Date de la prescription ORL
+cf_choixorl1projet_nom=Médecin ORL #1
+cf_choixorl2projet_nom=Médecin ORL #2
+cf_dateaccordmedmut=Date d'accord Médecin Mutuelle
+cf_originelarge_libelleoriginelarge=Origine Large
+cf_originefine_libelleoriginefine=Origine fine
+
+cf_nbrecanaux=Nombre de canaux
+cf_typeaca=Type d'appareil auditif

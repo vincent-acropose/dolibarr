@@ -1,0 +1,14 @@
+VATCalculatorSetupTitle=Configuration du module Calculateur de TVA
+VATCalculator=Module Calculateur de TVA
+VATCalculatorCustomerQuotation=Devis client
+VATCalculatorCustomerQuotationDesc=Afficher le champs TTC lors de l'édition de devis client
+VATCalculatorCustomerOrder=Commandes client
+VATCalculatorCustomerOrderDesc=Afficher le champs TTC lors de l'édition de commandes client
+VATCalculatorCustomerInvoice=Factures client
+VATCalculatorCustomerInvoiceDesc=Afficher le champs TTC lors de l'édition de factures client
+VATCalculatorContract=Contrats
+VATCalculatorContractDesc=Afficher le champs TTC lors de l'édition de contrats
+VATCalculatorSupplierOrder=Commandes fournisseur
+VATCalculatorSupplierOrderDesc=Afficher le champs TTC lors de l'édition de commandes fournisseur
+VATCalculatorSupplierInvoice=Factures fournisseur
+VATCalculatorSupplierInvoiceDesc=Afficher le champs TTC lors de l'édition de factures fournisseur

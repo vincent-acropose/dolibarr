@@ -1,0 +1,6 @@
+ 
+#   RewriteEngine on
+#   RewriteBase /
+
+
+	RewriteRule ^.*fiche.php$ /user2O/group/fiche.php?%{QUERY_STRING}$1  [L]  

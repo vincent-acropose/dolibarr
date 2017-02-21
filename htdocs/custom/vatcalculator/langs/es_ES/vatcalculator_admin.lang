@@ -1,0 +1,14 @@
+VATCalculatorSetupTitle=Configuración del módulo IVA Calculador
+VATCalculator=Módulo IVA Calculador
+VATCalculatorCustomerQuotation=Presupuesto cliente
+VATCalculatorCustomerQuotationDesc=Mostrar el campo IVA incluido al edición de presupuesto de cliente
+VATCalculatorCustomerOrder=Pedidios cliente
+VATCalculatorCustomerOrderDesc=Mostrar el campo IVA incluido al edición de pedidos de cliente
+VATCalculatorCustomerInvoice=Facturas client
+VATCalculatorCustomerInvoiceDesc=Mostrar el campo IVA incluido al edición de facturas de cliente
+VATCalculatorContract=Contratos
+VATCalculatorContractDesc=Mostrar el campo IVA incluido al edición de contratos
+VATCalculatorSupplierOrder=Pedidios proveedor
+VATCalculatorSupplierOrderDesc=Mostrar el campo IVA incluido al edición de pedidos de proveedor
+VATCalculatorSupplierInvoice=Facturas proveedor
+VATCalculatorSupplierInvoiceDesc=Mostrar el campo IVA incluido al edición de facturas de proveedor

@@ -1,0 +1,96 @@
+# Dolibarr language file - fr_FR - standard labels
+CHARSET= UTF-8
+
+#### ADMIN CONFIG INTERFACE ####
+
+#### USER CONFIG INTERFACE ####
+DolMessageUserMailBoxNumber=Numéro de boite Mail
+DolMessageUserMailBoxName=Nom de la boite Mail
+IMAP Login=IMAP - Identifiant
+IMAP Password=IMAP - Mot de passe
+IMAP Server=IMAP - URL du serveur
+IMAP Port=IMAP - Port
+IMAP SSL=IMAP - Activer SSL
+IMAP SSL NOVALIDATE CERT=IMAP - Accepter tous les certificats SSL
+
+
+#
+## Dolmessage page 
+#
+	#
+	## Menu
+	#
+	MessageDashboard=Message liés aux clients
+
+
+	#
+	## Action 
+	#
+	DolMessageDeleteLocal=Suppression locale
+	DolMessageDeleteOnline=Supprimer dans ma boite email
+	DeleteDolMessage= Suppression d'un message 
+	ConfirmDeleteDolMessagetLocal=Vous souhaitez supprimer ce message copié dans dolibarr? 
+	ConfirmDeleteDolMessaget=Vous souhaitez supprimer ce message sur votre boite mail ? 
+	
+
+#
+## Info page 
+#
+	MessageSubjectTxt=Sujet
+	MessageFromTxt=De
+	MessageFromTo=Pour
+	MessageDateTxt=Date expéditeur
+	ViewFullScreen=Voir en plein écran
+	PieceJointes=Pièces jointes
+	Refer=Réf.
+	State=État
+	ViewFullScreen=Voir en plein écran
+
+	
+#
+## Tabs 
+#
+dolmessage=Message
+
+#
+## Calendar Link 
+#
+MessageReceived=Mail:config1
+
+
+#### VIEX ####
+DolimaillObject=Objet
+DolimaillFrom=Expediteur
+DolimaillDate=Date expéditeur
+DolimaillTaille=Taille
+DolimaillFlagged=(F)
+DolimaillLinked=Lier à
+DolimailMailbox=Boite de réception
+DolimailDetail=Détail du message
+MailboxConfig=Configuration WebMail
+Compose=Nouveau message
+INBOX=Boite de réception
+Sent=Envoyés
+Trash=Corbeille
+Junk=Spams
+Draft=Brouillons
+EmptySubject= --- --- ---
+
+
+#
+## Compose mail 
+#
+DolimaillSender=Expéditeur :
+NoEmailInSetup=Pas de configuration SMTP trouvée dans Accueil > Configurations > Emails
+DolimaillCopyRecipiant=Copie à :
+DolimaillCopyHydden=Copie cachée à :
+DolimaillSignature=Signature :
+DolimaillRecipiant=Pour :
+DolimaillTemplate=Choisir un modèle :
+DolimaillRecipiant=Pour :
+DolimaillSubject=Sujet :
+DolimaillSendEmail=Envoyer votre message
+MailSuccessfulySent=Message envoyé
+ResultKo=Votre message n'est pas parti
+
+

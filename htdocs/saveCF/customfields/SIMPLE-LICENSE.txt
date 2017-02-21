@@ -1,0 +1,40 @@
+                  PROPRIETARY-WITH-SOURCES PUBLIC LICENSE - SIMPLE LICENSE
+                                Version 1.0, 14 September 2012
+
+ Copyright (C) 2012 Stephen Larroque <lrq3000@gmail.com>
+ 
+
+    INTENTS
+
+This license is intended simplify the understanding of the complete license, but is NOT intended to replace the full license.
+
+The Software is still covered by the full license and this text cannot be used to grant any right.
+
+
+    RIGHTS
+
+By accepting this Agreement, the Licensee is hereby granted the rights to use and modify the software, namely:
+      
+   1. access and read the Source Code at your convenience.
+   
+   2. modify the Software and its Source Code to fit your needs
+   
+   3. implementing (using) the Software on your own system
+   
+   4. implementing (using) the Software on your Customers' systems (as long as the relationship can be proved to be supplier-customer, eg: with an invoice)
+
+But you must:
+
+   1. keep the notices of copyright and agreement inside the Source Code intact,
+   
+   2. keep a copy of the Agreement along in the same location as the Software.
+
+However, you are not granted to:
+
+   1. copy and distribute a copy of the software or its source code to another entity (via any medium, Internet included).
+   
+   2. copy and distribute any derived work or any modified version of this software.
+   
+   3. sell, rent or lease the software or its sourcecode (but selling the service of implementing the software is granted).
+
+Any other right that is not expressly allowed here is not to be granted implicitly.

@@ -1,0 +1,2 @@
+ALTER TABLE  `llx_mylist` ADD  `rowid` INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
+ALTER TABLE  `llx_mylist` ADD  `description` TEXT NULL DEFAULT NULL AFTER  `rowid`;

@@ -1,0 +1,16 @@
+# Dolibarr language file - fr_FR - ZenFusion Maps
+CHARSET=UTF-8
+# Module
+Module105005Name=ZenFusion Maps
+Module105005Desc=Lien vers Google Maps sur les adresses
+# Admin
+About=À propos
+# About
+Version=Version
+Publisher=Éditeur
+License=Licence
+Credits=Crédits
+Development=Développement
+ProjectManager=chef de projet
+SoftwareEngineer=ingénieur développement
+Ressources=Ressources

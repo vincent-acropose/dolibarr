@@ -1,0 +1,1 @@
+ALTER TABLE llx_webmail_users ADD CONSTRAINT `fk_webmail_users_fk_user` FOREIGN KEY (`fk_user`) REFERENCES `llx_user` (`rowid`);
