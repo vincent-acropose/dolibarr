@@ -40,6 +40,9 @@ require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 
 if (!$user->rights->fournisseur->facture->lire) accessforbidden();
 
+// Proposition PR1610-1819
+$conf->global->PROJECT_SHOW_REF_INTO_LISTS=1;
+
 $langs->load("companies");
 $langs->load("bills");
 
@@ -69,6 +72,7 @@ if (! $sortorder) $sortorder="DESC";
 if (! $sortfield) $sortfield="fac.datef,fac.rowid";
 
 $search_ref = GETPOST("search_ref","int");
+$search_project=GETPOST('search_project');
 $search_ref_supplier = GETPOST("search_ref_supplier","alpha");
 $search_label = GETPOST("search_label","alpha");
 $search_company = GETPOST("search_company","alpha");
@@ -92,6 +96,7 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter"))		// Both
 	$search_amount_no_tax="";
 	$search_amount_all_tax="";
 	$search_status="";
+	$search_project='';
 	$year="";
 	$month="";
 	$day="";
@@ -196,7 +201,10 @@ if ($search_company)
 {
     $sql .= natural_search('s.nom', $search_company);
 }
-
+if ($search_project)
+{
+	$sql .= natural_search('p.ref', $search_project);
+}
 if ($search_amount_no_tax != '')
 {
 	$sql .= natural_search('fac.total_ht', $search_amount_no_tax, 1);
@@ -257,6 +265,7 @@ if ($resql)
 	if ($search_amount_no_tax)	$param.='&search_amount_no_tax='.urlencode($search_amount_no_tax);
 	if ($search_amount_all_tax)	$param.='&search_amount_all_tax='.urlencode($search_amount_all_tax);
 	if ($search_status >= 0)  	$param.="&search_status=".$search_status;
+	if ($search_project)		$param.="&search_project=".$search_project;
 
 	print_barre_liste($langs->trans("BillsSuppliers").($socid?" $soc->name.":""),$page,$_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',$num,$nbtotalofrecords);
 	print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'">';
@@ -264,11 +273,11 @@ if ($resql)
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"fac.ref,fac.rowid","",$param,"",$sortfield,$sortorder);
 	if (empty($conf->global->SUPPLIER_INVOICE_HIDE_REF_SUPPLIER)) print_liste_field_titre($langs->trans("RefSupplier"),$_SERVER["PHP_SELF"],"ref_supplier","",$param,"",$sortfield,$sortorder);
+	if (! empty($conf->global->PROJECT_SHOW_REF_INTO_LISTS)) print_liste_field_titre($langs->trans("Project"),$_SERVER["PHP_SELF"],"p.ref","",$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Date"),$_SERVER["PHP_SELF"],"fac.datef,fac.rowid","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateDue"),$_SERVER["PHP_SELF"],"fac.date_lim_reglement","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Label"),$_SERVER["PHP_SELF"],"fac.libelle","",$param,"",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("ThirdParty"),$_SERVER["PHP_SELF"],"s.nom","",$param,"",$sortfield,$sortorder);
-	if (! empty($conf->global->PROJECT_SHOW_REF_INTO_LISTS)) print_liste_field_titre($langs->trans("Project"),$_SERVER["PHP_SELF"],"p.ref","",$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AmountHT"),$_SERVER["PHP_SELF"],"fac.total_ht","",$param,'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AmountTTC"),$_SERVER["PHP_SELF"],"fac.total_ttc","",$param,'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"fk_statut,paye","",$param,'align="right"',$sortfield,$sortorder);
@@ -287,6 +296,10 @@ if ($resql)
 		print '<input class="flat" size="6" type="text" name="search_ref_supplier" value="'.$search_ref_supplier.'">';
 		print '</td>';
 	}
+	if (! empty($conf->global->PROJECT_SHOW_REF_INTO_LISTS))
+	{
+		print '<td class="liste_titre"><input type="text" class="flat" size="8" name="search_project" value="'.$search_project.'"></td>';
+	}
 	print '<td class="liste_titre" colspan="1" align="center">';
 	if (! empty($conf->global->MAIN_LIST_FILTER_ON_DAY)) print '<input class="flat" type="text" size="1" maxlength="2" name="day" value="'.$day.'">';
 	print '<input class="flat" type="text" size="1" maxlength="2" name="month" value="'.$month.'">';
@@ -303,11 +316,6 @@ if ($resql)
 	print '<td class="liste_titre" align="left">';
 	print '<input class="flat" type="text" size="8" name="search_company" value="'.$search_company.'">';
 	print '</td>';
-	if (! empty($conf->global->PROJECT_SHOW_REF_INTO_LISTS))
-	{
-		print '<td class="liste_titre">';
-		print '</td>';
-	}
 	print '<td class="liste_titre" align="right">';
 	print '<input class="flat" type="text" size="6" name="search_amount_no_tax" value="'.$search_amount_no_tax.'">';
 	print '</td><td class="liste_titre" align="right">';
@@ -348,6 +356,14 @@ if ($resql)
 
 		// Ref supplier
 		if (empty($conf->global->SUPPLIER_INVOICE_HIDE_REF_SUPPLIER)) print '<td class="nowrap">'.$obj->ref_supplier."</td>";
+		if (! empty($conf->global->PROJECT_SHOW_REF_INTO_LISTS))
+		{
+			$projectstatic->id=$obj->project_id;
+			$projectstatic->ref=$obj->project_ref;
+			print '<td>';
+			if ($obj->project_id > 0) print $projectstatic->getNomUrl(1);
+			print '</td>';
+		}
 
 		print '<td align="center" class="nowrap">'.dol_print_date($db->jdate($obj->datef),'day').'</td>';
 		print '<td align="center" class="nowrap">'.dol_print_date($db->jdate($obj->date_echeance),'day');
@@ -359,14 +375,6 @@ if ($resql)
 		$supplierstatic->name=$obj->name;
 		print $supplierstatic->getNomUrl(1,'',12);
 		print '</td>';
-		if (! empty($conf->global->PROJECT_SHOW_REF_INTO_LISTS))
-		{
-			$projectstatic->id=$obj->project_id;
-			$projectstatic->ref=$obj->project_ref;
-			print '<td>';
-			if ($obj->project_id > 0) print $projectstatic->getNomUrl(1);
-			print '</td>';
-		}
 		print '<td align="right">'.price($obj->total_ht).'</td>';
 		print '<td align="right">'.price($obj->total_ttc).'</td>';
 		$total+=$obj->total_ht;
