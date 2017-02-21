@@ -889,9 +889,10 @@ class pdf_crabe extends ModelePDFFactures
 		$pdf->MultiCell(100, 3, "",0,'L',0);
 		$pdf->MultiCell(100, 3, "SIRET : 40539661500016 - APE : 9499Z",0,'L',0,1,$pdf->GetX()+40);
 		$pdf->MultiCell(100, 3, "N° d'identification TVA : FR 74 405 396 615",0,'L',0,1,$pdf->GetX()+40);
-		$pdf->MultiCell(100, 3, "DOM.BANCAIRE : CL BDI LYON ST ETN COLOC 02220",0,'L',0,1,$pdf->GetX()+40);
-		$pdf->MultiCell(100, 3, "CPTE N° 30002/02620/0000060115N/79",0,'L',0,1,$pdf->GetX()+40);
-		$pdf->MultiCell(100, 3, "IBAN N° FR23 3000 2026 2000 0006 0115 N79",0,'L',0,1,$pdf->GetX()+40);
+//		$pdf->MultiCell(100, 3, "DOM.BANCAIRE : CL BDI LYON ST ETN COLOC 02220",0,'L',0,1,$pdf->GetX()+40);
+//		$pdf->MultiCell(100, 3, "CPTE N° 30002/02620/0000060115N/79",0,'L',0,1,$pdf->GetX()+40);
+		$pdf->MultiCell(100, 3, "IBAN N° FR45 3000 2042 0000 0070 6223 N26",0,'L',0,1,$pdf->GetX()+40);
+		$pdf->MultiCell(100, 3, "BIC N° CRLYFRPP",0,'L',0,1,$pdf->GetX()+40);
 		
 		$posy=$pdf->GetY()+1;
 		
@@ -1235,7 +1236,7 @@ class pdf_crabe extends ModelePDFFactures
 				$index++;
 				$pdf->SetXY($col1x, $tab2_top + $tab2_hl * $index);
 				$pdf->SetTextColor(0,0,60);
-				$pdf->SetFillColor(224,224,224);
+				$pdf->SetFillColor(255,255,255);
 				$pdf->MultiCell($col2x-$col1x, $tab2_hl, $outputlangs->transnoentities("TotalTTC"), $useborder, 'L', 1);
 
 				$pdf->SetXY($col2x, $tab2_top + $tab2_hl * $index);

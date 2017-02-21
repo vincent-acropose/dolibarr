@@ -962,13 +962,12 @@ class Ldap
 		//print_r($info);
 
 		for ($i = 0; $i < $info["count"]; $i++)
-		{
+		{//var_dump($info);exit;
 			$recordid=$this->convToOutputCharset($info[$i][$useridentifier][0],$this->ldapcharset);
 			if ($recordid)
 			{
 				//print "Found record with key $useridentifier=".$recordid."<br>\n";
 				$fulllist[$recordid][$useridentifier]=$recordid;
-
 				// Add to the array for each attribute in my list
 				$num = count($attributeArray);
 				for ($j = 0; $j < $num; $j++)
@@ -995,6 +994,8 @@ class Ldap
 						}
 					}
 				}
+				$fulllist[$recordid]['memberOfFull'] = $info[$i]['memberof'];
+
 			}
 		}
 
