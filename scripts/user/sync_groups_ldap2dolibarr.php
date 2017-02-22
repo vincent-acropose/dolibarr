@@ -229,6 +229,9 @@ if ($result >= 0)
 					// On ne s'occupe plus des groupes non utilisés dans LeaseBoard
 					//$fuser->SetInGroup($group->id, $group->entity);
 					//echo $fuser->login.' entity : '.$group->entity.' added'."\n";
+					// 07.02.2017 : annulation, effets de bords lors de la connexion..... grrrrrrr
+					$fuser->SetInGroup($group->id, $group->entity);
+					echo $fuser->login.' entity : '.$group->entity.' added'."\n";
 				}		
 							
 				
