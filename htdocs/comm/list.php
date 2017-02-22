@@ -87,6 +87,8 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
     $search_compta='';
     $search_status='';
 }
+// If the internal user must only see his customers, force searching by him
+if (!$user->rights->societe->client->voir && !$socid) $search_sale = $user->id;
 
 if ($search_status=='') $search_status=1; // always display activ customer first
 
