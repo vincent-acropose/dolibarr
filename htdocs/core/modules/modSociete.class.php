@@ -274,6 +274,7 @@ class modSociete extends DolibarrModules
 		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'c_stcomm as st ON s.fk_stcomm = st.id';
 		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'societe_commerciaux as sc ON sc.fk_soc = s.rowid LEFT JOIN '.MAIN_DB_PREFIX.'user as u ON sc.fk_user = u.rowid';
 		$this->export_sql_end[$r] .=' WHERE s.entity IN ('.getEntity('societe', 1).')';
+		if(!$user->rights->societe->client->voir) $this->export_sql_end[$r] .=' AND sc.fk_user = '.$user->id;
 
 		// Export list of contacts and attributes
 		$r++;
@@ -292,6 +293,8 @@ class modSociete extends DolibarrModules
         }
         $keyforselect='socpeople'; $keyforelement='contact'; $keyforaliasextra='extra';
         include DOL_DOCUMENT_ROOT.'/core/extrafieldsinexport.inc.php';
+        $keyforselect='societe'; $keyforelement='company'; $keyforaliasextra='extrasoc';
+        include DOL_DOCUMENT_ROOT.'/core/extrafieldsinexport.inc.php';
         $this->export_sql_start[$r]='SELECT DISTINCT ';
 		$this->export_sql_end[$r]  =' FROM '.MAIN_DB_PREFIX.'socpeople as c';
 		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'societe as s ON c.fk_soc = s.rowid';
@@ -299,6 +302,7 @@ class modSociete extends DolibarrModules
 		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'c_country as co ON c.fk_pays = co.rowid';
 		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'socpeople_extrafields as extra ON extra.fk_object = c.rowid';
 		$this->export_sql_end[$r] .=' WHERE c.entity IN ('.getEntity("societe", 1).')';
+		if(!$user->rights->societe->client->voir) $this->export_sql_end[$r] .=' AND sc.fk_user = '.$user->id;
 
 
 		// Imports
