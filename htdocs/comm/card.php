@@ -726,9 +726,11 @@ if ($id > 0)
 		$contratstatic=new Contrat($db);
 
 		$sql = "SELECT s.nom, s.rowid, c.rowid as id, c.ref as ref, c.statut, c.datec as dc, c.date_contrat as dcon, c.ref_supplier as refsup";
-		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."contrat as c";
-		$sql.= " WHERE c.fk_soc = s.rowid ";
-		$sql.= " AND s.rowid = ".$object->id;
+		$sql .= ",cext.type_contract";
+		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s INNER JOIN ".MAIN_DB_PREFIX."contrat as c ON c.fk_soc = s.rowid ";
+		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."contrat_extrafields as cext ON cext.fk_object=c.rowid";
+		$sql.= " WHERE ";
+		$sql.= " s.rowid = ".$object->id;
 		$sql.= " AND c.entity = ".$conf->entity;
 		$sql.= " ORDER BY c.datec DESC";
 
@@ -742,7 +744,7 @@ if ($id > 0)
 		        print '<table class="noborder" width="100%">';
 
 			    print '<tr class="liste_titre">';
-				print '<td colspan="6"><table width="100%" class="nobordernopadding"><tr><td>'.$langs->trans("LastContracts",($num<=$MAXLIST?"":$MAXLIST)).'</td>';
+				print '<td colspan="7"><table width="100%" class="nobordernopadding"><tr><td>'.$langs->trans("LastContracts",($num<=$MAXLIST?"":$MAXLIST)).'</td>';
 				print '<td align="right"><a href="'.DOL_URL_ROOT.'/contrat/services.php?socid='.$object->id.'">'.$langs->trans("AllContracts").' <span class="badge">'.$num.'</span></a></td></tr></table></td>';
 				print '</tr>';
 			}
@@ -760,6 +762,7 @@ if ($id > 0)
 				print $contrat->getNomUrl(1,12);
 				print "</td>\n";
 				print '<td class="nowrap">'.dol_trunc($objp->refsup,12)."</td>\n";
+				print '<td class="nowrap">'.$objp->type_contract."</td>\n";
 				print '<td align="right" width="80px">'.dol_print_date($db->jdate($objp->dc),'day')."</td>\n";
 				print '<td align="right" width="80px">'.dol_print_date($db->jdate($objp->dcon),'day')."</td>\n";
 				print '<td width="20">&nbsp;</td>';
