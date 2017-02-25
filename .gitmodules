@@ -130,3 +130,6 @@
 [submodule "htdocs/custom/zenfusionoauth"]
 	path = htdocs/custom/zenfusionoauth
 	url = git@atmsrv1:store-zenfusionoauth.git
+[submodule "htdocs/custom/discount4lines"]
+	path = htdocs/custom/discount4lines
+	url = https://git.aternatik.net/dolibarr/discount4lines.git
