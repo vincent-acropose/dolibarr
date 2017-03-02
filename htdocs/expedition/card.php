@@ -426,12 +426,14 @@ if (empty($reshook))
 	|| $action == 'settrueWidth'
 	|| $action == 'settrueHeight'
 	|| $action == 'settrueDepth'
-	|| $action == 'setshipping_method_id')
+	|| $action == 'setshipping_method_id'
+	|| $action == 'setref_customer')
 	{
 	    $error=0;
 
 	    if ($action == 'settrackingnumber')		$object->tracking_number = trim(GETPOST('trackingnumber','alpha'));
 	    if ($action == 'settrackingurl')		$object->tracking_url = trim(GETPOST('trackingurl','int'));
+		if ($action == 'setref_customer')		$object->ref_customer = trim(GETPOST('ref_customer'));
 	    if ($action == 'settrueWeight')	{
 	    	$object->trueWeight = trim(GETPOST('trueWeight','int'));
 			$object->weight_units = GETPOST('weight_units','int');
@@ -1141,10 +1143,21 @@ else if ($id || $ref)
 		}
 
 		// Ref customer
-		print '<tr><td>'.$langs->trans("RefCustomer").'</td>';
-		print '<td colspan="3">'.$object->ref_customer."</a></td>\n";
-		print '</tr>';
-
+		print '<tr><td>'.$form->editfieldkey("RefCustomer",'ref_customer',$object->ref_customer,$object,$user->rights->expedition->creer).'</td><td colspan="3">';
+		if ($action == 'editref_customer')
+		{
+			print '<form name="setref_customer" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'" method="post">';
+			print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+			print '<input type="hidden" name="action" value="setref_customer">';
+			print '<input id="ref_customer" name="ref_customer" value="'.$object->ref_customer.'" type="text">';
+			print '<input type="submit" class="button" value="'.$langs->trans('Modify').'">';
+			print '</form>';
+		}
+		else
+		{
+			print $object->ref_customer;
+		}
+		
 		// Date creation
 		print '<tr><td>'.$langs->trans("DateCreation").'</td>';
 		print '<td colspan="3">'.dol_print_date($object->date_creation,"day")."</td>\n";
