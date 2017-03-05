@@ -36,6 +36,7 @@ $langs->load("agenda");
 $langs->load("commercial");
 
 $action=GETPOST('action','alpha');
+$massaction=GETPOST('massaction','alpha');
 $resourceid=GETPOST("resourceid","int");
 $year=GETPOST("year",'int');
 $month=GETPOST("month",'int');
@@ -92,6 +93,8 @@ if (! $sortfield)
 	//if ($status == 'done') $sortfield="a.datep2";
 }
 
+$toselect = GETPOST('toselect', 'array');
+
 // Security check
 $socid = GETPOST("socid",'int');
 if ($user->societe_id) $socid=$user->societe_id;
@@ -111,6 +114,7 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
 {
     $datestart='';
     $dateend='';
+    $toselect = '';
 }
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
@@ -133,6 +137,15 @@ if (GETPOST("viewcal") || GETPOST("viewweek") || GETPOST("viewday"))
 	exit;
 }
 
+
+$objectclass='Contrat';
+$objectlabel='Contracts';
+$permtoread = $user->rights->actions->lire;
+$permtodelete = $user->rights->actions->supprimer;
+$uploaddir = $conf->agenda->dir_output;
+include DOL_DOCUMENT_ROOT.'/core/actions_agenda.inc.php';
+
+if (! GETPOST('confirmmassaction') && $massaction != 'reprogram' && $massaction != 'confirm_reprogram') { $massaction=''; }
 
 
 /*
@@ -234,6 +247,8 @@ if ($resql)
 	$societestatic=new Societe($db);
 
 	$num = $db->num_rows($resql);
+	
+	$arrayofselected=is_array($toselect)?$toselect:array();
 
 	/*$title=$langs->trans("DoneAndToDoActions");
 	if ($status == 'done') $title=$langs->trans("DoneActions");
@@ -281,7 +296,15 @@ if ($resql)
 	{
     	$s = $hookmanager->resPrint;
     }
-
+    
+    // List of mass actions available
+    $arrayofmassactions =  array(
+    		'reprogram'=>$langs->trans("ReprogramActions"),
+    		//'builddoc'=>$langs->trans("PDFMerge"),
+    );
+    //if ($user->rights->propale->supprimer) $arrayofmassactions['delete']=$langs->trans("Delete");
+    if ($massaction == 'reprogram') $arrayofmassactions=array();
+    $massactionbutton=$form->selectMassAction('', $arrayofmassactions);
 
 	print '<form method="POST" id="searchFormList" action="'.$_SERVER["PHP_SELF"].'">'."\n";
     if ($optioncss != '') print '<input type="hidden" name="optioncss" value="'.$optioncss.'">';
@@ -304,8 +327,17 @@ if ($resql)
     if ($usergroup) $nav.='<input type="hidden" name="usergroup" value="'.$usergroup.'">';
     print $nav;
     
-    print_barre_liste($s, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $link, $num, -1 * $nbtotalofrecords, '', 0, $nav, '', $limit);
-
+    
+    print_barre_liste($s, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, $num, -1 * $nbtotalofrecords, '', 0, $nav, '', $limit);
+    
+    if ($massaction == 'reprogram')
+    {
+    	print '<input type="hidden" name="massaction" value="confirm_reprogram">';
+    	
+    	print '<label for="reprogramup">'.$langs->trans('PostponeActionsByDaysNumber').' </label><input type="string" name="reprogramup" id="reprogramup" size="10" value="'.GETPOST('reprogramup').'" class="flat" />';
+    	print '<input type="submit" name="reprogram_submit" value="'.$langs->trans('ReprogramActions').'" />';
+    }
+    
     $i = 0;
 	print '<table class="liste" width="100%">';
 	print '<tr class="liste_titre">';
@@ -368,7 +400,7 @@ if ($resql)
 		$var=!$var;
 
 		print "<tr ".$bc[$var].">";
-
+		
 		// Action (type)
 		print '<td>';
 		$actionstatic->id=$obj->id;
@@ -441,7 +473,15 @@ if ($resql)
 		// Status/Percent
 		print '<td align="center" class="nowrap">'.$actionstatic->LibStatut($obj->percent,6).'</td>';
 
-		print '<td></td>';
+		// Action column
+		print '<td class="nowrap" align="center">';
+		if ($massactionbutton || $massaction)   // If we are in select mode (massactionbutton defined) or if we have already selected and sent an action ($massaction) defined
+		{
+			$selected=0;
+			if (in_array($obj->id, $arrayofselected)) $selected=1;
+			print '<input id="cb'.$obj->id.'" class="flat checkforselect" type="checkbox" name="toselect[]" value="'.$obj->id.'"'.($selected?' checked="checked"':'').'>';
+		}
+		print '</td>';
 		
 		print "</tr>\n";
 		$i++;

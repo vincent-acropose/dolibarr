@@ -93,3 +93,7 @@ EveryMonth=Every month
 DayOfMonth=Day of month
 DayOfWeek=Day of week
 DateStartPlusOne=Date start + 1 hour
+ReprogramActions = Reprogram actions
+PostponeActionsByDaysNumber=Postpone event by number days
+ReprogramActions=Reprogram actions
+RecordsPostponed = Records postponed : %s
