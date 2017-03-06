@@ -49,7 +49,11 @@ $sall = GETPOST('sall', 'alpha');
 $type = GETPOST('type','int');
 $tobuy = GETPOST('tobuy', 'int');
 $salert = GETPOST('salert', 'alpha');
+$draftorder = GETPOST('draftorder');
 $mode = GETPOST('mode','alpha');
+if($draftorder == 'on'){
+	$draftchecked= 'checked';
+}
 
 $fourn_id = GETPOST('fourn_id','int');
 $texte = '';
@@ -82,6 +86,7 @@ if (isset($_POST['button_removefilter']) || isset($_POST['valid']))
     $snom = '';
     $sal = '';
     $salert = '';
+	$draftorder='';
 }
 
 // Create orders
@@ -403,10 +408,11 @@ if ($usevirtualstock == 0)
 }
 print '<br>'."\n";
 
-if ($sref || $snom || $sall || $salert || GETPOST('search', 'alpha')) {
+if ($sref || $snom || $sall || $salert || $draftorder || GETPOST('search', 'alpha')) {
 	$filters = '&sref=' . $sref . '&snom=' . $snom;
 	$filters .= '&sall=' . $sall;
 	$filters .= '&salert=' . $salert;
+	$filters .= '&draftorder='.$draftorder;
 	$filters .= '&mode=' . $mode;
 	print_barre_liste(
 		$texte,
@@ -422,7 +428,8 @@ if ($sref || $snom || $sall || $salert || GETPOST('search', 'alpha')) {
 	$filters = '&sref=' . $sref . '&snom=' . $snom;
 	$filters .= '&fourn_id=' . $fourn_id;
 	$filters .= (isset($type)?'&type=' . $type:'');
-	$filters .=  '&=' . $salert;
+	$filters .=  '&salert=' . $salert;
+	$filters .= '&draftorder='.$draftorder;
 	$filters .= '&mode=' . $mode;
 	print_barre_liste(
 		$texte,
@@ -439,7 +446,7 @@ if ($sref || $snom || $sall || $salert || GETPOST('search', 'alpha')) {
 print '<table class="liste" width="100%">';
 
 $param = (isset($type)? '&type=' . $type : '');
-$param .= '&fourn_id=' . $fourn_id . '&snom='. $snom . '&salert=' . $salert;
+$param .= '&fourn_id=' . $fourn_id . '&snom='. $snom . '&salert=' . $salert . '&draftorder='.$draftorder;
 $param .= '&sref=' . $sref;
 $param .= '&mode=' . $mode;
 
@@ -471,7 +478,7 @@ if (!empty($conf->service->enabled) && $type == 1) print '<td class="liste_titre
 print '<td class="liste_titre">&nbsp;</td>'.
 	'<td class="liste_titre" align="right">&nbsp;</td>'.
 	'<td class="liste_titre" align="right">' . $langs->trans('AlertOnly') . '&nbsp;<input type="checkbox" id="salert" name="salert" ' . (!empty($alertchecked)?$alertchecked:'') . '></td>'.
-	'<td class="liste_titre" align="right">&nbsp;</td>'.
+	'<td class="liste_titre" align="right">' . $langs->trans('Draft') . '&nbsp;<input type="checkbox" id="draftorder" name="draftorder" ' . (!empty($draftchecked)?$draftchecked:'') . '></td>'.
 	'<td class="liste_titre">&nbsp;</td>'.
 	'<td class="liste_titre" align="right">'.
 	'<input class="liste_titre" name="button_search" type="image" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">'.
@@ -485,7 +492,6 @@ $var = True;
 while ($i < ($limit ? min($num, $limit) : $num))
 {
 	$objp = $db->fetch_object($resql);
-
 	if (! empty($conf->global->STOCK_SUPPORTS_SERVICES) || $objp->fk_product_type == 0)
 	{
 		$prod->fetch($objp->rowid);
@@ -520,7 +526,12 @@ while ($i < ($limit ? min($num, $limit) : $num))
 		}
 
 		// Force call prod->load_stats_xxx to choose status to count (otherwise it is loaded by load_stock function)
-		$result=$prod->load_stats_commande_fournisseur(0,'1,2,3,4');
+		if(isset($draftchecked)){
+			$result=$prod->load_stats_commande_fournisseur(0,'0,1,2,3,4');	
+		} else {
+			$result=$prod->load_stats_commande_fournisseur(0,'1,2,3,4');
+		}
+		
 		$result=$prod->load_stats_reception(0,'4');
 
 		//print $prod->stats_commande_fournisseur['qty'].'<br>'."\n";
@@ -605,11 +616,12 @@ print '</table>';
 
 if ($num > $conf->liste_limit)
 {
-	if ($sref || $snom || $sall || $salert || GETPOST('search', 'alpha'))
+	if ($sref || $snom || $sall || $salert || $draftorder || GETPOST('search', 'alpha'))
 	{
 		$filters = '&sref=' . $sref . '&snom=' . $snom;
 		$filters .= '&sall=' . $sall;
 		$filters .= '&salert=' . $salert;
+		$filters .= '&draftorder=' . $draftorder;
 		$filters .= '&mode=' . $mode;
 		print_barre_liste('', $page, 'replenish.php', $filters, $sortfield, $sortorder, '', $num, 0, '');
 	}
@@ -619,6 +631,7 @@ if ($num > $conf->liste_limit)
 		$filters .= '&fourn_id=' . $fourn_id;
 		$filters .= (isset($type)? '&type=' . $type : '');
 		$filters .= '&salert=' . $salert;
+		$filters .= '&draftorder=' . $draftorder;
 		$filters .= '&mode=' . $mode;
 		print_barre_liste('', $page, 'replenish.php', $filters, $sortfield, $sortorder, '', $num, 0, '');
 	}
