@@ -133,3 +133,6 @@
 [submodule "htdocs/custom/discount4lines"]
 	path = htdocs/custom/discount4lines
 	url = https://git.aternatik.net/dolibarr/discount4lines.git
+[submodule "htdocs/rh"]
+	path = htdocs/rh
+	url = https://github.com/ATM-Consulting/dolibarr_module_rh.git
