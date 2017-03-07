@@ -1192,7 +1192,6 @@ class Contact extends CommonObject
 			return 1;
 		}
 	}
-	
 
 	/**
 	 * Sets object to supplied categories.
