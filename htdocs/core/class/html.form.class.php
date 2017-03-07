@@ -2117,6 +2117,7 @@ class Form
      */
     function select_produits_fournisseurs_list($socid,$selected='',$htmlname='productid',$filtertype='',$filtre='',$filterkey='',$statut=-1,$outputmode=0,$limit=100,$alsoproductwithnosupplierprice=0)
     {
+    	
         global $langs,$conf,$db;
 
         $out='';
@@ -2124,7 +2125,7 @@ class Form
 
         $langs->load('stocks');
 
-        $sql = "SELECT p.rowid, p.label, p.ref, p.price, p.duration, p.fk_product_type,";
+        $sql = "SELECT p.rowid, p.label, p.ref, p.price, p.duration, p.fk_product_type, p.stock, ";
         $sql.= " pfp.ref_fourn, pfp.rowid as idprodfournprice, pfp.price as fprice, pfp.quantity, pfp.remise_percent, pfp.remise, pfp.unitprice,";
         $sql.= " pfp.fk_supplier_price_expression, pfp.fk_product, pfp.tva_tx, pfp.fk_soc, s.nom as name,";
         $sql.= " pfp.supplier_reputation";
@@ -2211,7 +2212,7 @@ class Form
                 $outval.=' - ';
                 $opt.=dol_trunc($label, 72).' - ';
                 $outval.=dol_trunc($label, 72).' - ';
-
+				
                 if (! empty($objp->idprodfournprice))
                 {
                     $outqty=$objp->quantity;
@@ -2290,6 +2291,10 @@ class Form
                         $outval.=$langs->transnoentities("NoPriceDefinedForThisSupplier");
                     }
                 }
+				//ADD ATM : information concernant le stock réel du produit
+				$opt .= " - ".(($objp->stock) ? $objp->stock : 0)." unité(s) en stock";
+				$outval .= " - ".(($objp->stock) ? $objp->stock : 0)." unité(s) en stock";
+
                 $opt .= "</option>\n";
 
 
