@@ -1140,6 +1140,15 @@ if (empty($reshook))
 
 									$label=(! empty($lines[$i]->label)?$lines[$i]->label:'');
 									$desc=(! empty($lines[$i]->desc)?$lines[$i]->desc:$lines[$i]->libelle);
+
+									// KDis : ajout des numéros de série dans la desc facture
+									if($srcobject->element == 'shipping' && !empty($lines[$i]->detail_batch)) {
+										if(!empty($desc)) $desc .= "\n";
+										foreach($lines[$i]->detail_batch as $linebatch) {
+											$desc.= "N° de série : ".$linebatch->batch."\n";
+										}
+									}
+
 									if ($object->situation_counter == 1) $lines[$i]->situation_percent =  0;
 
 									if ($lines[$i]->subprice < 0)
