@@ -1112,7 +1112,7 @@ else
 
             // VAT
             print '<tr><td width="20%">'.$langs->trans("VATRate").'</td><td>';
-            print $form->load_tva("tva_tx",-1,$mysoc,'');
+            print $form->load_tva("tva_tx",20,$mysoc,'');
             print '</td></tr>';
 
             print '</table>';
