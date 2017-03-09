@@ -62,10 +62,10 @@ include DOL_DOCUMENT_ROOT.'/core/actions_dellink.inc.php';		// Must be include, 
 
 //include DOL_DOCUMENT_ROOT.'/core/actions_lineupdown.inc.php';	// Must be include, not include_once
 
-$subscription->fetch($rowid);
+$object->fetch($rowid);
  
 $parameters=array('rowid'=>$rowid);
-$reshook=$hookmanager->executeHooks('doActions',$parameters,$subscription,$action);    // Note that $action and $object may have been modified by some hooks
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 
 if ($user->rights->adherent->cotisation->creer && $_REQUEST["action"] == 'update' && ! $_POST["cancel"])
 {
@@ -270,7 +270,7 @@ if ($user->rights->adherent->cotisation->creer && $action == 'edit')
 	dol_fiche_end();
 	
 	$parameters = array();
-	$reshook = $hookmanager->executeHooks('formObjectOptions', $parameters, $subscription, $action); // Note that $action and $object may have been modified by
+	$reshook = $hookmanager->executeHooks('formObjectOptions', $parameters, $object, $action); // Note that $action and $object may have been modified by
 
 
     print '<div class="center">';
@@ -382,7 +382,7 @@ if ($rowid && $action != 'edit')
 	}
 // Other attributes
 	$parameters = array();
-	$reshook = $hookmanager->executeHooks('formObjectOptions', $parameters, $subscription, $action); // Note that $action and $object may have been modified by
+	$reshook = $hookmanager->executeHooks('formObjectOptions', $parameters, $object, $action); // Note that $action and $object may have been modified by
 
 
     print "</table>\n";
@@ -397,7 +397,7 @@ if ($rowid && $action != 'edit')
     print '<div class="tabsAction">';
 
 	$parameters = array();
-	$reshook = $hookmanager->executeHooks('addMoreActionsButtons', $parameters, $subscription, $action); // Note that $action and $object may have been
+	$reshook = $hookmanager->executeHooks('addMoreActionsButtons', $parameters, $object, $action); // Note that $action and $object may have been
     if ($user->rights->adherent->cotisation->creer)
 	{
 		if (! $bankline->rappro)

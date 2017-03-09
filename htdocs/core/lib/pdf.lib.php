@@ -400,6 +400,7 @@ function pdf_build_address($outputlangs,$sourcecompany,$targetcompany='',$target
 		$reshook = $hookmanager->executeHooks('pdf_build_address',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 		$stringaddress.=$hookmanager->resPrint;
 	}
+	
 	if (empty($reshook))
 	{
     	if ($mode == 'source')
