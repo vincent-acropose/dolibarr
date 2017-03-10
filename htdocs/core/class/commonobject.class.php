@@ -3251,6 +3251,9 @@ abstract class CommonObject
 		// TODO We should not use global var for this !
 		global $inputalsopricewithtax, $usemargins, $disableedit, $disablemove, $disableremove;
 
+		$langs->load('stocks');
+		$langs->load('clisms@clisms');
+
 		// Define usemargins
 		$usemargins=0;
 		if (! empty($conf->margin->enabled) && ! empty($this->element) && in_array($this->element,array('facture','propal','commande'))) $usemargins=1;
@@ -3265,6 +3268,13 @@ abstract class CommonObject
 		if ($this->element == 'supplier_proposal')
 		{
 			print '<td class="linerefsupplier" align="right"><span id="title_fourn_ref">'.$langs->trans("SupplierProposalRefFourn").'</span></td>';
+		}
+
+		if (! empty($conf->clisms->enabled) && ($this->element == 'commande' || $this->element == 'propal'))
+		{
+			print '<td class="linestocktheorique" align="right"><span id="title_stock_theorique">'.$langs->trans("VirtualStock").'</span></td>';
+			print '<td class="linestockphysique" align="right"><span id="title_stock_physique">'.$langs->trans("PhysicalStock").'</span></td>';
+			print '<td class="lineemplacement" align="right"><span id="title_emplacement">'.$langs->trans("SMSEmplacement").'</span></td>';
 		}
 
 		// VAT

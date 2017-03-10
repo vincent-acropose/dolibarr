@@ -1365,7 +1365,14 @@ class Propal extends CommonObject
                         $objp                   = $this->db->fetch_object($result);
 
                         $line                   = new PropaleLigne($this->db);
-
+                        
+                        $product 				= new Product($this->db);
+                        $product->fetch($objp->fk_product);
+                        $product->load_virtual_stock();
+                        
+                        //echo '<pre>';
+                        //var_dump($product); die;
+                        //echo '</pre>';
                         $line->rowid			= $objp->rowid; //Deprecated
                         $line->id				= $objp->rowid;
                         $line->fk_propal		= $objp->fk_propal;
@@ -1417,8 +1424,15 @@ class Propal extends CommonObject
 						$line->multicurrency_total_tva 	= $objp->multicurrency_total_tva;
 						$line->multicurrency_total_ttc 	= $objp->multicurrency_total_ttc;
 
-                        $line->fetch_optionals($line->id,$extralabelsline);
+						// Stock
+						$line->virtual_stock			= $product->stock_reel;
+						$line->physical_stock			= $product->stock_theorique;
+						
+						// Emplacement
+						$line->emplacement				= $product->array_options['options_emplacement'];
 
+                        $line->fetch_optionals($line->id,$extralabelsline);
+						//var_dump($line);die;
                         $this->lines[$i]        = $line;
                         //dol_syslog("1 ".$line->fk_product);
                         //print "xx $i ".$this->lines[$i]->fk_product;
@@ -2880,6 +2894,10 @@ class Propal extends CommonObject
             while ($i < $num)
             {
                 $obj = $this->db->fetch_object($resql);
+                
+                $product = new Product($this->db);
+                $product->fetch($obj->fk_product);
+                $product->load_virtual_stock();
 
                 $this->lines[$i]					= new PropaleLigne($this->db);
                 $this->lines[$i]->id				= $obj->rowid; // for backward compatibility
@@ -2923,6 +2941,13 @@ class Propal extends CommonObject
 				$this->lines[$i]->multicurrency_total_ht 	= $obj->multicurrency_total_ht;
 				$this->lines[$i]->multicurrency_total_tva 	= $obj->multicurrency_total_tva;
 				$this->lines[$i]->multicurrency_total_ttc 	= $obj->multicurrency_total_ttc;
+
+				// Stock
+				$this->lines[$i]->virtual_stock				= $product->stock_theorique;
+				$this->lines[$i]->physical_stock			= $product->stock_reel;
+
+				// Emplacement
+				$this->lines[$i]->emplacement				= $product->array_options['options_emplacement'];
 
                 $i++;
             }
@@ -3100,6 +3125,13 @@ class PropaleLigne  extends CommonObjectLine
 	var $multicurrency_total_ht;
 	var $multicurrency_total_tva;
 	var $multicurrency_total_ttc;
+
+	// Stocks
+	var $virtual_stock;
+	var $physical_stock;
+
+	// Emplacement
+	var $emplacement;
 	
     /**
      * 	Class line Contructor
@@ -3136,6 +3168,12 @@ class PropaleLigne  extends CommonObjectLine
 		{
 			$objp = $this->db->fetch_object($result);
 
+			$product = new Product($this->db);
+			$product->fetch($objp->fk_product);
+			$product->load_virtual_stock();
+
+			var_dump($product); exit;
+			
 			$this->id               = $objp->rowid;
 			$this->rowid			= $objp->rowid;     // deprecated
 			$this->fk_propal		= $objp->fk_propal;
@@ -3184,6 +3222,14 @@ class PropaleLigne  extends CommonObjectLine
 			$this->multicurrency_total_ht 	= $objp->multicurrency_total_ht;
 			$this->multicurrency_total_tva 	= $objp->multicurrency_total_tva;
 			$this->multicurrency_total_ttc 	= $objp->multicurrency_total_ttc;
+
+			// Stock
+			$this->virtual_stock			= $product->stock_reel;
+			$this->physical_stock			= $product->stock_theorique;
+
+			// Emplacement
+			$this->emplacement				= $product->array_options['emplacement'];
+			
 	
 			$this->db->free($result);
 

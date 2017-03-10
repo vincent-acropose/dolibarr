@@ -1746,6 +1746,10 @@ class Commande extends CommonOrder
             while ($i < $num)
             {
                 $objp = $this->db->fetch_object($result);
+                
+                $product = new Product($this->db);
+                $product->fetch($objp->fk_product);
+                $product->load_virtual_stock();
 
                 $line = new OrderLine($this->db);
 
@@ -1804,7 +1808,14 @@ class Commande extends CommonOrder
 				$line->multicurrency_total_ht 	= $objp->multicurrency_total_ht;
 				$line->multicurrency_total_tva 	= $objp->multicurrency_total_tva;
 				$line->multicurrency_total_ttc 	= $objp->multicurrency_total_ttc;
-			
+
+				// Stocks
+				$line->virtual_stock			= $product->stock_theorique;
+				$line->physical_stock			= $product->stock_reel;
+
+				// Emplacement
+				$line->emplacement				= $product->array_options['options_emplacement'];
+
                 $this->lines[$i] = $line;
 
                 $i++;
