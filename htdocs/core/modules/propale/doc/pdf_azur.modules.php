@@ -660,9 +660,6 @@ class pdf_azur extends ModelePDFPropales
 				    $posy=$this->_signature_area($pdf, $object, $posy, $outputlangs);
 				}
 
-				// Affiche zone "Bon pour accord"
-				$posy=$this->_signature_area($pdf, $object, $posy, $outputlangs);
-
 				// Pied de page
 				$this->_pagefoot($pdf,$object,$outputlangs);
 				if (method_exists($pdf,'AliasNbPages')) $pdf->AliasNbPages();
