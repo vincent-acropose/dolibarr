@@ -95,5 +95,7 @@ DayOfWeek=Day of week
 DateStartPlusOne=Date start + 1 hour
 ReprogramActions = Reprogram actions
 PostponeActionsByDaysNumber=Postpone event by number days
+PostponeActionsByEnteringDate=Postpone event by entering date
+PostponedNumberCanBeChooseOnlyWithoutDate=Number of days must be used without date.
 ReprogramActions=Reprogram actions
 RecordsPostponed = Records postponed : %s

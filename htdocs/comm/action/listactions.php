@@ -334,8 +334,15 @@ if ($resql)
     {
     	print '<input type="hidden" name="massaction" value="confirm_reprogram">';
     	
-    	print '<label for="reprogramup">'.$langs->trans('PostponeActionsByDaysNumber').' </label><input type="string" name="reprogramup" id="reprogramup" size="10" value="'.GETPOST('reprogramup').'" class="flat" />';
-    	print '<input type="submit" name="reprogram_submit" value="'.$langs->trans('ReprogramActions').'" />';
+    	print '<div><label for="reprogramup">'.$langs->trans('PostponeActionsByDaysNumber').' </label><input type="string" name="reprogramup" id="reprogramup" size="3" value="'.GETPOST('reprogramup').'" class="flat" /></div>';
+    	print '<strong>'.$langs->trans('Or').'</strong><br />';
+    	
+    	print '<div><label for="reprogramdate">'.$langs->trans('PostponeActionsByEnteringDate').' </label>';
+    	print $form->select_date($datereprogram, 'reprogramdate', 0, 0, 1, '',1, 1);
+    	print '</div>';
+    	print '<div>';
+    	print '<input class="button" type="submit" name="reprogram_submit" value="'.$langs->trans('ReprogramActions').'" />';
+    	print '<br /><br /></div>';
     }
     
     $i = 0;
