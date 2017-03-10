@@ -1674,7 +1674,7 @@ class Form
         $outarray=array();
 
         $sql = "SELECT ";
-        $sql.= " p.rowid, p.label, p.ref, p.description, p.barcode, p.fk_product_type, p.price, p.price_ttc, p.price_base_type, p.tva_tx, p.duration, p.stock, p.fk_price_expression";
+        $sql.= " p.rowid, p.label, p.ref, p.description, p.barcode, p.fk_product_type, p.price, p.price_ttc, p.price_base_type, p.tva_tx, p.duration, p.stock, p.fk_price_expression, p.note";
 
         //Price by customer
         if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES) && !empty($socid)) {
@@ -1736,7 +1736,7 @@ class Form
             foreach ($scrit as $crit)
             {
             	if ($i > 0) $sql.=" AND ";
-                $sql.="(p.ref LIKE '".$db->escape($prefix.$crit)."%' OR p.label LIKE '".$db->escape($prefix.$crit)."%'";
+                $sql.="(p.ref LIKE '".$db->escape($prefix.$crit)."%' OR p.label LIKE '".$db->escape($prefix.$crit)."%' OR p.note LIKE '".$db->escape($prefix.$crit)."%'";
                 if (! empty($conf->global->MAIN_MULTILANGS)) $sql.=" OR pl.label LIKE '".$db->escape($prefix.$crit)."%'";
                 $sql.=")";
                 $i++;
@@ -1881,6 +1881,7 @@ class Form
         $outlabel=$objp->label;
         $outdesc=$objp->description;
         $outbarcode=$objp->barcode;
+        $outnote=$objp->note;
         
         $outtype=$objp->fk_product_type;
         $outdurationvalue=$outtype == Product::TYPE_SERVICE?substr($objp->duration,0,dol_strlen($objp->duration)-1):'';
@@ -1904,6 +1905,7 @@ class Form
         $outval.=$objRef;
         if ($outbarcode) $outval.=' ('.$outbarcode.')';
         $outval.=' - '.dol_trunc($label,$maxlengtharticle).' - ';
+
         
         $found=0;
 
@@ -2034,6 +2036,10 @@ class Form
             $opt.= ' - '.$langs->trans("Stock").':'.$objp->stock;
             $outval.=' - '.$langs->transnoentities("Stock").':'.$objp->stock;
         }
+        
+
+        $opt.= ' - Note : '.dol_trunc($outnote, 50);
+        $outval.= ' - Note : '.dol_trunc($outnote, 50);
 
         if ($outdurationvalue && $outdurationunit)
         {
@@ -2124,7 +2130,7 @@ class Form
 
         $langs->load('stocks');
 
-        $sql = "SELECT p.rowid, p.label, p.ref, p.price, p.duration, p.fk_product_type,";
+        $sql = "SELECT p.rowid, p.label, p.ref, p.price, p.duration, p.fk_product_type, p.note,";
         $sql.= " pfp.ref_fourn, pfp.rowid as idprodfournprice, pfp.price as fprice, pfp.quantity, pfp.remise_percent, pfp.remise, pfp.unitprice,";
         $sql.= " pfp.fk_supplier_price_expression, pfp.fk_product, pfp.tva_tx, pfp.fk_soc, s.nom as name,";
         $sql.= " pfp.supplier_reputation";
@@ -2148,7 +2154,7 @@ class Form
         	foreach ($scrit as $crit)
         	{
         		if ($i > 0) $sql.=" AND ";
-        		$sql.="(pfp.ref_fourn LIKE '".$this->db->escape($prefix.$crit)."%' OR p.ref LIKE '".$this->db->escape($prefix.$crit)."%' OR p.label LIKE '".$this->db->escape($prefix.$crit)."%')";
+        		$sql.="(pfp.ref_fourn LIKE '".$this->db->escape($prefix.$crit)."%' OR p.ref LIKE '".$this->db->escape($prefix.$crit)."%' OR p.label LIKE '".$this->db->escape($prefix.$crit)."%' OR p.note LIKE '".$this->db->escape($prefix.$crit)."%')";
         		$i++;
         	}
         	if (count($scrit) > 1) $sql.=")";
@@ -2290,6 +2296,10 @@ class Form
                         $outval.=$langs->transnoentities("NoPriceDefinedForThisSupplier");
                     }
                 }
+                
+                $opt .= ' - Note : '.dol_trunc($objp->note, 50);
+                $outval .= ' - Note : '.dol_trunc($objp->note, 50);
+                
                 $opt .= "</option>\n";
 
 
