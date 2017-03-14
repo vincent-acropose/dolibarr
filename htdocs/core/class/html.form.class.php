@@ -2038,8 +2038,10 @@ class Form
         }
         
 
-        $opt.= ' - Note : '.dol_trunc($outnote, 50);
-        $outval.= ' - Note : '.dol_trunc($outnote, 50);
+        if(strlen($outnote) > 0) {
+	        $opt.= ' - Note : '.dol_trunc($outnote, 50);
+	        $outval.= ' - Note : '.dol_trunc($outnote, 50);
+        }
 
         if ($outdurationvalue && $outdurationunit)
         {
@@ -2297,8 +2299,10 @@ class Form
                     }
                 }
                 
-                $opt .= ' - Note : '.dol_trunc($objp->note, 50);
-                $outval .= ' - Note : '.dol_trunc($objp->note, 50);
+                if(strlen($objp->note) > 0) {
+	                $opt .= ' - Note : '.dol_trunc($objp->note, 50);
+	                $outval .= ' - Note : '.dol_trunc($objp->note, 50);
+                }
                 
                 $opt .= "</option>\n";
 
