@@ -339,6 +339,7 @@ if ($resql)
 	print_liste_field_titre($form->textwithpicto($langs->trans("ProfId3Short"),$textprofid[3],1,0),$_SERVER["PHP_SELF"],"s.ape","",$params,'class="nowrap"',$sortfield,$sortorder);
 	print_liste_field_titre($form->textwithpicto($langs->trans("ProfId4Short"),$textprofid[4],1,0),$_SERVER["PHP_SELF"],"s.idprof4","",$params,'class="nowrap"',$sortfield,$sortorder);
 	print '<td></td>';
+	print_liste_field_titre($langs->trans("Simulation"),'','',"",$params,'class="nowrap"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"s.status","",$params,'align="right"',$sortfield,$sortorder);
 	print "</tr>\n";
 
@@ -387,6 +388,7 @@ if ($resql)
 	print '<option value="4"'.($search_type=='4'?' selected="selected"':'').'>'.$langs->trans('Supplier').'</option>';
 	print '<option value="0"'.($search_type=='0'?' selected="selected"':'').'>'.$langs->trans('Others').'</option>';
 	print '</select></td>';
+	print '<td>&nbsp;</td>';
 	// Status
 	print '<td class="liste_titre" align="right">';
 	print '<input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
@@ -444,6 +446,11 @@ if ($resql)
 		}
 		print $s;
 		print '</td>';
+		
+		print '<td>';
+		print '<a href="'.dol_buildpath('/financement/simulation.php',2).'?action=new&fk_soc='.$obj->rowid.'">Simu</a>';
+		print '</td>';
+		
         print '<td align="right">'.$companystatic->getLibStatut(3).'</td>';
 
 		print '</tr>'."\n";
