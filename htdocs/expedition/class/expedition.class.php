@@ -1351,6 +1351,12 @@ class Expedition extends CommonObject
 				$detail_entrepot->entrepot_id = $obj->fk_entrepot;
 				$detail_entrepot->qty_shipped = $obj->qty_shipped;
 				$line->details_entrepot[]     = $detail_entrepot;
+				
+				if(! empty($obj->fk_product)) {
+					$product = new Product($this->db);
+					$product->fetch($obj->fk_product);
+					$product->fetch_optionals();
+				}
 
                 $line->line_id          = $obj->line_id;
                 $line->rowid            = $obj->line_id;    // TODO deprecated
@@ -1379,6 +1385,9 @@ class Expedition extends CommonObject
 
 				$line->pa_ht 			= $obj->pa_ht;
 		    	
+				// Emplacement
+				$line->product_emplacement = $product->array_options['options_emplacement'];
+				
 				// For invoicing
 				$tabprice = calcul_price_total($obj->qty_shipped, $obj->subprice, $obj->remise_percent, $obj->tva_tx, $obj->localtax1_tx, $obj->localtax2_tx, 0, 'HT', $obj->info_bits, $obj->fk_product_type, $mysoc);	// We force type to 0
 				$line->desc	         	= $obj->description;		// We need ->desc because some code into CommonObject use desc (property defined for other elements)
