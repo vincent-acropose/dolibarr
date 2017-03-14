@@ -1366,13 +1366,12 @@ class Propal extends CommonObject
 
                         $line                   = new PropaleLigne($this->db);
                         
-                        $product 				= new Product($this->db);
-                        $product->fetch($objp->fk_product);
-                        $product->load_virtual_stock();
+                        if(! empty($objp->fk_product)) {
+	                        $product 				= new Product($this->db);
+	                        $product->fetch($objp->fk_product);
+	                        $product->load_virtual_stock();
+                        }
                         
-                        //echo '<pre>';
-                        //var_dump($product); die;
-                        //echo '</pre>';
                         $line->rowid			= $objp->rowid; //Deprecated
                         $line->id				= $objp->rowid;
                         $line->fk_propal		= $objp->fk_propal;
@@ -2895,9 +2894,11 @@ class Propal extends CommonObject
             {
                 $obj = $this->db->fetch_object($resql);
                 
-                $product = new Product($this->db);
-                $product->fetch($obj->fk_product);
-                $product->load_virtual_stock();
+                if(! empty($obj->fk_product)) {
+	                $product = new Product($this->db);
+	                $product->fetch($obj->fk_product);
+	                $product->load_virtual_stock();
+                }
 
                 $this->lines[$i]					= new PropaleLigne($this->db);
                 $this->lines[$i]->id				= $obj->rowid; // for backward compatibility
@@ -3168,9 +3169,11 @@ class PropaleLigne  extends CommonObjectLine
 		{
 			$objp = $this->db->fetch_object($result);
 
-			$product = new Product($this->db);
-			$product->fetch($objp->fk_product);
-			$product->load_virtual_stock();
+			if(! empty($objp->fk_product)) {
+				$product = new Product($this->db);
+				$product->fetch($objp->fk_product);
+				$product->load_virtual_stock();
+			}
 
 			var_dump($product); exit;
 			
