@@ -473,9 +473,13 @@ if (! defined('NOLOGIN'))
         $entitytotest	= (GETPOST('entity','int') ? GETPOST('entity','int') : (!empty($conf->entity) ? $conf->entity : 1));
 		
 		$ent_id = get_entity_user(GETPOST('username'));
-		if(!empty($ent_id)) {
+		if(!empty($ent_id) && $ent_id!=$conf->entity) {
 			$conf->entity = $ent_id;
 			$entitytotest = $ent_id;
+			$_SESSION['dol_entity'] = $ent_id;
+			$conf->setValues($db);			
+//			header('location:'.DOL_URL_ROOT);
+//			exit;
 		}
 		
         // Validation of login/pass/entity
