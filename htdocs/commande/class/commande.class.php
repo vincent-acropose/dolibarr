@@ -1747,9 +1747,11 @@ class Commande extends CommonOrder
             {
                 $objp = $this->db->fetch_object($result);
                 
-                $product = new Product($this->db);
-                $product->fetch($objp->fk_product);
-                $product->load_virtual_stock();
+                if(! empty($objp->fk_product)) {
+	                $product = new Product($this->db);
+	                $product->fetch($objp->fk_product);
+	                $product->load_virtual_stock();
+                }
 
                 $line = new OrderLine($this->db);
 
