@@ -4090,6 +4090,7 @@ abstract class CommonObject
 				else
 				{
 					$csstyle='';
+					$class=(!empty($extrafields->attribute_hidden[$key]) ? 'class="hideobject" ' : '');
 					if (is_array($params) && count($params)>0) {
 						if (array_key_exists('style',$params)) {
 							$csstyle=$params['style'];
@@ -4097,12 +4098,12 @@ abstract class CommonObject
 					}
 					if ( !empty($conf->global->MAIN_EXTRAFIELDS_USE_TWO_COLUMS) && ($e % 2) == 0)
 					{
-						$out .= '<tr '.$csstyle.'>';
+						$out .= '<tr '.$class.$csstyle.' class="'.$this->element.'_extras_'.$key.'">';
 						$colspan='0';
 					}
 					else
 					{
-						$out .= '<tr '.$csstyle.'>';
+						$out .= '<tr '.$class.$csstyle.' class="'.$this->element.'_extras_'.$key.'">';
 					}
 					// Convert date into timestamp format
 					if (in_array($extrafields->attribute_type[$key],array('date','datetime')))
@@ -4114,7 +4115,8 @@ abstract class CommonObject
 						$label = '<span'.($mode != 'view' ? ' class="fieldrequired"':'').'>'.$label.'</span>';
 
 					$out .= '<td>'.$langs->trans($label).'</td>';
-					$out .='<td'.($colspan?' colspan="'.$colspan.'"':'').'>';
+					$html_id = !empty($this->id) ? $this->element.'_extras_'.$key.'_'.$this->id : '';
+					$out .='<td id="'.$html_id.'" class="'.$this->element.'_extras_'.$key.'" '.($colspan?' colspan="'.$colspan.'"':'').'>';
 
 					switch($mode) {
 					case "view":
