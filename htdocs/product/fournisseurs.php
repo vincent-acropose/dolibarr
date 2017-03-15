@@ -144,7 +144,7 @@ if (empty($reshook))
 		$price_expression = GETPOST('eid', 'int') ? GETPOST('eid', 'int') : ''; // Discard expression if not in expression mode
 		$delivery_time_days = GETPOST('delivery_time_days', 'int') ? GETPOST('delivery_time_days', 'int') : '';
 		$supplier_reputation = GETPOST('supplier_reputation');
-		$fourn_desc = GETPOST('fourn_desc');
+		$fourn_desc = htmlspecialchars(GETPOST('fourn_desc'));
 
 		if ($tva_tx == '')
 		{
@@ -421,7 +421,7 @@ if ($id > 0 || $ref)
 					$langs->load('clisms@clisms');
 
 					print '<tr><td>'.$langs->trans('SMSSupplierDescription').'</td>';
-					print '<td><input class="flat" name="fourn_desc" size="40" value="'.($rowid ? htmlspecialchars($object->fourn_desc) : '').'" /></td></tr>';
+					print '<td><input class="flat" name="fourn_desc" size="40" value="'.($rowid ? $object->fourn_desc : '').'" /></td></tr>';
 				}
 
 				// Availability
