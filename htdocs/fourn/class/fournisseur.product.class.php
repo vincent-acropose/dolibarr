@@ -184,7 +184,7 @@ class ProductFournisseur extends Product
 	 * 	  @param    string      $supplier_reputation Reputation with this product to the defined supplier (empty, FAVORITE, DONOTORDER)
      *    @return	int								<0 if KO, >=0 if OK
      */
-    function update_buyprice($qty, $buyprice, $user, $price_base_type, $fourn, $availability, $ref_fourn, $tva_tx, $charges=0, $remise_percent=0, $remise=0, $newnpr=0, $delivery_time_days=0, $supplier_reputation='')
+    function update_buyprice($qty, $buyprice, $user, $price_base_type, $fourn, $availability, $ref_fourn, $tva_tx, $charges=0, $remise_percent=0, $remise=0, $newnpr=0, $delivery_time_days=0, $supplier_reputation='', $fourn_desc = '')
     {
         global $conf, $langs;
         //global $mysoc;
@@ -196,6 +196,7 @@ class ProductFournisseur extends Product
         if (empty($availability)) $availability=0;
         if (empty($remise_percent)) $remise_percent=0;
 	    if (empty($supplier_reputation) || $supplier_reputation == -1) $supplier_reputation='';
+	    if (empty($fourn_desc) || $fourn_desc == -1) $fourn_desc='';
         if ($delivery_time_days != '' && ! is_numeric($delivery_time_days)) $delivery_time_days = '';
         if ($price_base_type == 'TTC')
 		{
@@ -231,7 +232,12 @@ class ProductFournisseur extends Product
 			$sql.= " info_bits = ".$newnpr.",";
 			$sql.= " charges = ".$charges.",";
 			$sql.= " delivery_time_days = ".($delivery_time_days != '' ? $delivery_time_days : 'null').",";
-			$sql.= " supplier_reputation = ".(empty($supplier_reputation) ? 'NULL' : "'".$this->db->escape($supplier_reputation)."'");			
+			$sql.= " supplier_reputation = ".(empty($supplier_reputation) ? 'NULL' : "'".$this->db->escape($supplier_reputation)."'");
+			
+			if(! empty($conf->clisms->enabled)) {
+				$sql.= ", description_fournisseur = ".(empty($fourn_desc) ? 'NULL' : "'".$this->db->escape($fourn_desc)."'");
+			}
+			
 			$sql.= " WHERE rowid = ".$this->product_fourn_price_id;
 			// TODO Add price_base_type and price_ttc
 
@@ -362,6 +368,7 @@ class ProductFournisseur extends Product
         $sql = "SELECT pfp.rowid, pfp.price, pfp.quantity, pfp.unitprice, pfp.remise_percent, pfp.remise, pfp.tva_tx, pfp.fk_availability,";
         $sql.= " pfp.fk_soc, pfp.ref_fourn, pfp.fk_product, pfp.charges, pfp.unitcharges, pfp.fk_supplier_price_expression, pfp.delivery_time_days,"; // , pfp.recuperableonly as fourn_tva_npr";  FIXME this field not exist in llx_product_fournisseur_price
         $sql.=" pfp.supplier_reputation";
+        if(! empty($conf->clisms->enabled)) $sql .= ", pfp.description_fournisseur";
         $sql.= " FROM ".MAIN_DB_PREFIX."product_fournisseur_price as pfp";
         $sql.= " WHERE pfp.rowid = ".$rowid;
 
@@ -393,6 +400,11 @@ class ProductFournisseur extends Product
                 $this->fk_supplier_price_expression      = $obj->fk_supplier_price_expression;
   		        $this->supplier_reputation      = $obj->supplier_reputation;
 
+  		        if(! empty($conf->clisms->enabled))
+  		        {
+  		        	$this->fourn_desc			= $obj->description_fournisseur;
+  		        }
+  		        
                 if (empty($ignore_expression) && !empty($this->fk_supplier_price_expression)) 
                 {
                     $priceparser = new PriceParser($this->db);
@@ -441,6 +453,7 @@ class ProductFournisseur extends Product
         $sql = "SELECT s.nom as supplier_name, s.rowid as fourn_id,";
         $sql.= " pfp.rowid as product_fourn_pri_id, pfp.ref_fourn, pfp.fk_product as product_fourn_id, pfp.fk_supplier_price_expression,";
         $sql.= " pfp.price, pfp.quantity, pfp.unitprice, pfp.remise_percent, pfp.remise, pfp.tva_tx, pfp.fk_availability, pfp.charges, pfp.unitcharges, pfp.info_bits, pfp.delivery_time_days, pfp.supplier_reputation";
+        if(! empty($conf->clisms->enabled)) $sql.= ", pfp.description_fournisseur";
         $sql.= " FROM ".MAIN_DB_PREFIX."product_fournisseur_price as pfp";
         $sql.= ", ".MAIN_DB_PREFIX."societe as s";
         $sql.= " WHERE pfp.entity IN (".getEntity('productprice', 1).")";
@@ -481,6 +494,11 @@ class ProductFournisseur extends Product
                 $prodfourn->fourn_tva_npr					= $record["info_bits"];
                 $prodfourn->fk_supplier_price_expression    = $record["fk_supplier_price_expression"];
 		$prodfourn->supplier_reputation    = $record["supplier_reputation"];
+
+				if(! empty($conf->clisms->enabled))
+				{
+					$prodfourn->fourn_desc			= $record['description_fournisseur'];
+				}
 
                 if (!empty($conf->dynamicprices->enabled) && !empty($prodfourn->fk_supplier_price_expression)) {
                     $priceparser = new PriceParser($this->db);

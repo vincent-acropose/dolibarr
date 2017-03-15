@@ -144,6 +144,7 @@ if (empty($reshook))
 		$price_expression = GETPOST('eid', 'int') ? GETPOST('eid', 'int') : ''; // Discard expression if not in expression mode
 		$delivery_time_days = GETPOST('delivery_time_days', 'int') ? GETPOST('delivery_time_days', 'int') : '';
 		$supplier_reputation = GETPOST('supplier_reputation');
+		$fourn_desc = GETPOST('fourn_desc');
 
 		if ($tva_tx == '')
 		{
@@ -219,7 +220,7 @@ if (empty($reshook))
 				if (isset($_POST['ref_fourn_price_id']))
 					$object->fetch_product_fournisseur_price($_POST['ref_fourn_price_id']);
 
-				$ret=$object->update_buyprice($quantity, $_POST["price"], $user, $_POST["price_base_type"], $supplier, $_POST["oselDispo"], $ref_fourn, $tva_tx, $_POST["charges"], $remise_percent, 0, $npr, $delivery_time_days, $supplier_reputation);
+				$ret=$object->update_buyprice($quantity, $_POST["price"], $user, $_POST["price_base_type"], $supplier, $_POST["oselDispo"], $ref_fourn, $tva_tx, $_POST["charges"], $remise_percent, 0, $npr, $delivery_time_days, $supplier_reputation, $fourn_desc);
 				if ($ret < 0)
 				{
 
@@ -415,6 +416,14 @@ if ($id > 0 || $ref)
 				print '</td>';
 				print '</tr>';
 
+				// Supplier description
+				if(! empty($conf->clisms->enabled)){
+					$langs->load('clisms@clisms');
+
+					print '<tr><td>'.$langs->trans('SMSSupplierDescription').'</td>';
+					print '<td><input class="flat" name="fourn_desc" size="40" value="'.($rowid ? htmlspecialchars($object->fourn_desc) : '').'" /></td></tr>';
+				}
+
 				// Availability
 				if (! empty($conf->global->FOURN_PRODUCT_AVAILABILITY))
 				{
@@ -595,6 +604,11 @@ if ($id > 0 || $ref)
 				print '<tr class="liste_titre">';
 				print_liste_field_titre($langs->trans("Suppliers"),$_SERVER["PHP_SELF"],"s.nom","",$param,"",$sortfield,$sortorder);
 				print_liste_field_titre($langs->trans("SupplierRef"));
+				if( !empty($conf->clisms->enabled))
+				{
+					$langs->load('clisms@clisms');
+					print_liste_field_titre($langs->trans("SMSSupplierDescription"));
+				}
 				if (!empty($conf->global->FOURN_PRODUCT_AVAILABILITY)) print_liste_field_titre($langs->trans("Availability"),$_SERVER["PHP_SELF"],"pfp.fk_availability","",$param,"",$sortfield,$sortorder);
 				print_liste_field_titre($langs->trans("QtyMin"),$_SERVER["PHP_SELF"],"pfp.quantity","",$param,'align="right"',$sortfield,$sortorder);
 				print_liste_field_titre($langs->trans("VATRate"),$_SERVER["PHP_SELF"],'','',$param,'align="right"',$sortfield,$sortorder);
@@ -630,6 +644,11 @@ if ($id > 0 || $ref)
 						
 						// Supplier
 						print '<td align="left">'.$productfourn->fourn_ref.'</td>';
+						
+						if(! empty($conf->clisms->enabled))
+						{
+							print '<td align="left">'.$productfourn->fourn_desc.'</td>';
+						}
 
 						// Availability
 						if(!empty($conf->global->FOURN_PRODUCT_AVAILABILITY))
