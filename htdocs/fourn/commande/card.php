@@ -358,7 +358,7 @@ if (empty($reshook))
 	    	if ($idprod > 0)
 	    	{
 	    		$res=$productsupplier->fetch($idprod);
-	    		$productsupplier->fetch_product_fournisseur_price($idprod);
+	    		$productsupplier->fetch_product_fournisseur_price(GETPOST('idprodfournprice'));
 
 	    		$label = $productsupplier->label;
 
