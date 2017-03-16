@@ -872,6 +872,13 @@ if (empty($reshook))
 	{
 	    // Build document
 
+		$nblines = count($object->lines);
+		for($i = 0; $i < $nblines; $i++)
+		{
+			$object->lines[$i]->fetch_optionals();
+
+		}
+
 	    // Save last template used to generate document
 	    if (GETPOST('model')) $object->setDocModel($user, GETPOST('model','alpha'));
 
