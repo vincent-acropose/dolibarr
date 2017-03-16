@@ -144,7 +144,7 @@ if (empty($reshook))
 		$price_expression = GETPOST('eid', 'int') ? GETPOST('eid', 'int') : ''; // Discard expression if not in expression mode
 		$delivery_time_days = GETPOST('delivery_time_days', 'int') ? GETPOST('delivery_time_days', 'int') : '';
 		$supplier_reputation = GETPOST('supplier_reputation');
-		$fourn_desc = htmlspecialchars(GETPOST('fourn_desc'));
+		$fourn_desc = GETPOST('fourn_desc');
 
 		if ($tva_tx == '')
 		{
@@ -420,8 +420,12 @@ if ($id > 0 || $ref)
 				if(! empty($conf->clisms->enabled)){
 					$langs->load('clisms@clisms');
 
-					print '<tr><td>'.$langs->trans('SMSSupplierDescription').'</td>';
-					print '<td><input class="flat" name="fourn_desc" size="40" value="'.($rowid ? $object->fourn_desc : '').'" /></td></tr>';
+					require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
+
+					print '<tr><td>'.$langs->trans('SMSSupplierDescription').'</td><td>';
+					$doleditor=new DolEditor('fourn_desc',(!empty($object->fourn_desc)?$object->fourn_desc:''),'',180,'dolibarr_notes','In',false,true,$conf->fckeditor->enabled,5,70);
+					$doleditor->Create();
+					print '</td></tr>';
 				}
 
 				// Availability

@@ -358,6 +358,7 @@ if (empty($reshook))
 	    	if ($idprod > 0)
 	    	{
 	    		$res=$productsupplier->fetch($idprod);
+	    		$productsupplier->fetch_product_fournisseur_price($idprod);
 
 	    		$label = $productsupplier->label;
 
@@ -371,6 +372,8 @@ if (empty($reshook))
 				if (empty($tva_tx)) $tva_npr=0;
 	    		$localtax1_tx= get_localtax($tva_tx, 1, $mysoc, $object->thirdparty, $tva_npr);
 	    		$localtax2_tx= get_localtax($tva_tx, 2, $mysoc, $object->thirdparty, $tva_npr);
+
+	    		if(! empty($conf->clisms->enabled)) $array_options['options_desc_fourn'] = $productsupplier->fourn_desc;
 
 	    		$result=$object->addline(
 	    			$desc,
