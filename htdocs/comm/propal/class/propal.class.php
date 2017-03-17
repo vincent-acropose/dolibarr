@@ -1431,7 +1431,7 @@ class Propal extends CommonObject
 						$line->emplacement				= $product->array_options['options_emplacement'];
 
                         $line->fetch_optionals($line->id,$extralabelsline);
-						//var_dump($line);die;
+
                         $this->lines[$i]        = $line;
                         //dol_syslog("1 ".$line->fk_product);
                         //print "xx $i ".$this->lines[$i]->fk_product;
@@ -3174,8 +3174,6 @@ class PropaleLigne  extends CommonObjectLine
 				$product->fetch($objp->fk_product);
 				$product->load_virtual_stock();
 			}
-
-			var_dump($product); exit;
 			
 			$this->id               = $objp->rowid;
 			$this->rowid			= $objp->rowid;     // deprecated
