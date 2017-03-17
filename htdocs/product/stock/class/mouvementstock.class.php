@@ -678,6 +678,7 @@ class MouvementStock extends CommonObject
 		if (empty($origin) || ! is_object($origin)) return '';
 		
 		if ($origin->fetch($fk_origin) > 0) {
+			$this->origin = $origin;
 			return $origin->getNomUrl(1);
 		}
 
