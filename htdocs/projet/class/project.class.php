@@ -3,7 +3,7 @@
  * Copyright (C) 2005-2016 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2013	   Florian Henry        <florian.henry@open-concept.pro>
- * Copyright (C) 2014-2015 Marcos García        <marcosgdf@gmail.com>
+ * Copyright (C) 2014-2017 Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -486,6 +486,10 @@ class Project extends CommonObject
 		elseif ($type == 'project_task_time')	// Case we want to duplicate line foreach user
 		{
 			$sql = "SELECT DISTINCT pt.rowid, ptt.fk_user FROM " . MAIN_DB_PREFIX . "projet_task as pt, " . MAIN_DB_PREFIX . "projet_task_time as ptt WHERE pt.rowid = ptt.fk_task AND pt.fk_projet=" . $this->id;
+		}
+		elseif ($type == 'stock_mouvement')
+		{
+			$sql = 'SELECT ms.rowid, ms.fk_user_author as fk_user FROM ' . MAIN_DB_PREFIX . 'stock_mouvement as ms WHERE ms.origintype = "project" AND ms.fk_origin = ' . $this->id . ' AND ms.type_mouvement = 1';
 		}
         else
 		{
@@ -1689,17 +1693,21 @@ class Project extends CommonObject
 	 */
 	function load_state_board()
 	{
-	    global $conf;
+	    global $user;
 	
 	    $this->nb=array();
-	
-	    $sql = "SELECT count(u.rowid) as nb";
-	    $sql.= " FROM ".MAIN_DB_PREFIX."projet as u";
-	    $sql.= " WHERE";
-	    //$sql.= " WHERE u.fk_statut > 0";
-	    //$sql.= " AND employee != 0";
-	    $sql.= " u.entity IN (".getEntity('projet', 1).")";
-	
+
+		$sql = "SELECT DISTINCT
+  count(p.rowid) as nb
+FROM ".MAIN_DB_PREFIX."projet AS p LEFT JOIN ".MAIN_DB_PREFIX."societe AS s ON p.fk_soc = s.rowid
+  LEFT JOIN ".MAIN_DB_PREFIX."c_lead_status AS cls ON p.fk_opp_status = cls.rowid
+WHERE p.entity IN (".getEntity('projet', 1).")";
+
+		if (! $user->rights->projet->all->lire) {
+			$projectsListId = $this->getProjectsAuthorizedForUser($user,0,1);
+			$sql .= "AND p.rowid IN (".$projectsListId.")";
+		}
+
 	    $resql=$this->db->query($sql);
 	    if ($resql)
 	    {

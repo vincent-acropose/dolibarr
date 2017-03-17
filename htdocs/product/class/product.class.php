@@ -925,10 +925,26 @@ class Product extends CommonObject
                 // End call triggers
 			}
 
+			// Delete from product_batch on product delete	
+			if (! $error)
+			{
+				$sql = "DELETE FROM ".MAIN_DB_PREFIX.'product_batch';
+				$sql.= " WHERE fk_product_stock IN (";
+				$sql.= "SELECT rowid FROM ".MAIN_DB_PREFIX.'product_stock';
+				$sql.= " WHERE fk_product = ".$id.")";
+				dol_syslog(get_class($this).'::delete', LOG_DEBUG);
+				$result = $this->db->query($sql);
+				if (! $result)
+				{
+					$error++;
+					$this->errors[] = $this->db->lasterror();
+				}
+			}
+			
    			// Delete all child tables
 			if (! $error)
 			{
-				$elements = array('product_fournisseur_price','product_price','product_lang','categorie_product','product_stock','product_customer_price','product_lot');
+				$elements = array('product_fournisseur_price','product_price','product_lang','categorie_product','product_stock','product_customer_price','product_lot'); // product_batch is done before
     			foreach($elements as $table)
     			{
     				if (! $error)
@@ -1318,10 +1334,11 @@ class Product extends CommonObject
 	 *  @param     	int		$prodfournprice     Id du tarif = rowid table product_fournisseur_price
 	 *  @param     	double	$qty                Quantity asked or -1 to get first entry found
 	 *	@param		int		$product_id			Filter on a particular product id
-	 * 	@param		string	$fourn_ref			Filter on a supplier ref. 'none' to exclude ref in search.
+	 * 	@param		string	$fourn_ref			Filter on a supplier price ref. 'none' to exclude ref in search.
+	 *  @param      int     $fk_soc             If of supplier
 	 *  @return    	int 						<-1 if KO, -1 if qty not enough, 0 if OK but nothing found, id_product if OK and found. May also initialize some properties like (->ref_supplier, buyprice, fourn_pu, vatrate_supplier...)
 	 */
-	function get_buyprice($prodfournprice, $qty, $product_id=0, $fourn_ref='')
+	function get_buyprice($prodfournprice, $qty, $product_id=0, $fourn_ref='', $fk_soc=0)
 	{
 		global $conf;
 		$result = 0;
@@ -1367,12 +1384,13 @@ class Product extends CommonObject
 			}
 			else // If not found
 			{
-				// We do a second search by doing a select again but searching with qty and id product
+				// We do a second search by doing a select again but searching with less reliable criteria: couple qty/id product, and if set fourn_ref or fk_soc.
 				$sql = "SELECT pfp.rowid, pfp.price as price, pfp.quantity as quantity, pfp.fk_soc,";
 				$sql.= " pfp.fk_product, pfp.ref_fourn as ref_supplier, pfp.tva_tx, pfp.fk_supplier_price_expression";
 				$sql.= " FROM ".MAIN_DB_PREFIX."product_fournisseur_price as pfp";
 				$sql.= " WHERE pfp.fk_product = ".$product_id;
 				if ($fourn_ref != 'none') $sql.= " AND pfp.ref_fourn = '".$fourn_ref."'";
+				if ($fk_soc > 0) $sql.= " AND pfp.fk_soc = ".$fk_soc;
 				if ($qty > 0) $sql.= " AND pfp.quantity <= ".$qty;
 				$sql.= " ORDER BY pfp.quantity DESC";
 				$sql.= " LIMIT 1";
@@ -3312,20 +3330,42 @@ class Product extends CommonObject
 	 * 	@param		string	$label			Label of stock movement
 	 * 	@param		double	$price			Unit price HT of product, used to calculate average weighted price (PMP in french). If 0, average weighted price is not changed.
 	 *  @param		string	$inventorycode	Inventory code
+	 *	@param		string	$origin_element	Origin element type
+	 *	@param		int		$origin_id		Origin id of element
 	 * 	@return     int     				<0 if KO, >0 if OK
 	 */
-	function correct_stock($user, $id_entrepot, $nbpiece, $movement, $label='', $price=0, $inventorycode='')
+	function correct_stock($user, $id_entrepot, $nbpiece, $movement, $label='', $price=0, $inventorycode='', $origin_element='', $origin_id=0)
 	{
 		if ($id_entrepot)
 		{
 			$this->db->begin();
 
+			if ($movement == 1)
+			{
+				// If remove stock then it save the actual PMP as price (the new calculation of PMP is triggered only on $movement = 0 || 3
+				$price = $this->pmp;
+			}
+			
 			require_once DOL_DOCUMENT_ROOT .'/product/stock/class/mouvementstock.class.php';
 
 			$op[0] = "+".trim($nbpiece);
 			$op[1] = "-".trim($nbpiece);
 
 			$movementstock=new MouvementStock($this->db);
+			
+			if (!empty($origin_element) && $origin_id > 0)
+			{
+				$origin='';
+				if ($origin_element == 'project') $origin = new Project($db);
+				
+				if (!empty($origin))
+				{
+					$movementstock->origin = $origin;
+					$movementstock->origin->id = $origin_id;
+				}
+				
+			}
+			
 			$result=$movementstock->_create($user,$this->id,$id_entrepot,$op[$movement],$movement,$price,$label,$inventorycode);
 
 			if ($result >= 0)
@@ -3357,9 +3397,11 @@ class Product extends CommonObject
 	 * 	@param		date	$dluo			sell-by date
 	 * 	@param		string	$lot			Lot number
 	 *  @param		string	$inventorycode	Inventory code
+	 *	@param		string	$origin_element	Origin element type
+	 *	@param		int		$origin_id		Origin id of element
 	 * 	@return     int     				<0 if KO, >0 if OK
 	 */
-	function correct_stock_batch($user, $id_entrepot, $nbpiece, $movement, $label='', $price=0, $dlc='', $dluo='',$lot='', $inventorycode='')
+	function correct_stock_batch($user, $id_entrepot, $nbpiece, $movement, $label='', $price=0, $dlc='', $dluo='',$lot='', $inventorycode='', $origin_element='', $origin_id=0)
 	{
 		if ($id_entrepot)
 		{
@@ -3371,6 +3413,20 @@ class Product extends CommonObject
 			$op[1] = "-".trim($nbpiece);
 
 			$movementstock=new MouvementStock($this->db);
+			
+			if (!empty($origin_element) && $origin_id > 0)
+			{
+				$origin='';
+				if ($origin_element == 'project') $origin = new Project($db);
+				
+				if (!empty($origin))
+				{
+					$movementstock->origin = $origin;
+					$movementstock->origin->id = $origin_id;
+				}
+				
+			}
+			
 			$result=$movementstock->_create($user,$this->id,$id_entrepot,$op[$movement],$movement,$price,$label,$inventorycode,'',$dlc,$dluo,$lot);
 
 			if ($result >= 0)

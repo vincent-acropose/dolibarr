@@ -812,14 +812,14 @@ if (empty($reshook))
 	                        $line->fk_parent_line = $fk_parent_line;
 
 	                        $line->subprice =-$line->subprice; // invert price for object
-	                        $line->pa_ht = -$line->pa_ht;
+	                        $line->pa_ht = $line->pa_ht;       // we choosed to have buy/cost price always positive, so no revert of sign here
 	                        $line->total_ht=-$line->total_ht;
 	                        $line->total_tva=-$line->total_tva;
 	                        $line->total_ttc=-$line->total_ttc;
 	                        $line->total_localtax1=-$line->total_localtax1;
 	                        $line->total_localtax2=-$line->total_localtax2;
 
-	                        $result = $line->insert();
+	                        $result = $line->insert(0, 1);     // When creating credit note with same lines than source, we must ignore error if discount alreayd linked
 
 	                        $object->lines[] = $line; // insert new line in current object
 
@@ -1027,42 +1027,68 @@ if (empty($reshook))
 						{
 							$typeamount = GETPOST('typedeposit', 'alpha');
 							$valuedeposit = GETPOST('valuedeposit', 'int');
-
-							if ($typeamount == 'amount')
+							
+							$amountdeposit = array();
+							if (!empty($conf->global->MAIN_DEPOSIT_MULTI_TVA))
 							{
-								$amountdeposit = $valuedeposit;
+								if ($typeamount == 'amount') $amount = $valuedeposit;
+								else $amount = $srcobject->total_ttc * ($valuedeposit / 100);
+								
+								$TTotalByTva = array();
+								foreach ($srcobject->lines as &$line)
+								{
+									$TTotalByTva[$line->tva_tx] += $line->total_ttc ;
+								}
+								
+								$amount_to_diff = 0;
+								foreach ($TTotalByTva as $tva => &$total)
+								{
+									$coef = $total / $srcobject->total_ttc; // Calc coef
+									$am = $amount * $coef;
+									$amount_ttc_diff += $am;
+									$amountdeposit[$tva] += $am / (1 + $tva / 100); // Convert into HT for the addline
+								}
 							}
 							else
 							{
-								$amountdeposit = 0;
-
-								if ($result > 0)
+								if ($typeamount == 'amount')
 								{
-									$totalamount = 0;
-									$lines = $srcobject->lines;
-									$numlines=count($lines);
-									for ($i=0; $i<$numlines; $i++)
-									{
-										$qualified=1;
-										if (empty($lines[$i]->qty)) $qualified=0;	// We discard qty=0, it is an option
-										if (! empty($lines[$i]->special_code)) $qualified=0;	// We discard special_code (frais port, ecotaxe, option, ...)
-										if ($qualified) $totalamount += $lines[$i]->total_ht;
-									}
-
-									if ($totalamount != 0) {
-										$amountdeposit = ($totalamount * $valuedeposit) / 100;
-									}
-								} else {
-									setEventMessages($srcobject->error, $srcobject->errors, 'errors');
-									$error ++;
+									$amountdeposit[] = $valuedeposit;
 								}
+								else
+								{
+									if ($result > 0)
+									{
+										$totalamount = 0;
+										$lines = $srcobject->lines;
+										$numlines=count($lines);
+										for ($i=0; $i<$numlines; $i++)
+										{
+											$qualified=1;
+											if (empty($lines[$i]->qty)) $qualified=0;	// We discard qty=0, it is an option
+											if (! empty($lines[$i]->special_code)) $qualified=0;	// We discard special_code (frais port, ecotaxe, option, ...)
+											if ($qualified) $totalamount += $lines[$i]->total_ht; // Fixme : is it not for the customer ? Shouldn't we take total_ttc ?
+										}
+
+										if ($totalamount != 0) {
+											$amountdeposit[$lines[$i]->tva] = ($totalamount * $valuedeposit) / 100;
+										}
+									} else {
+										setEventMessages($srcobject->error, $srcobject->errors, 'errors');
+										$error ++;
+									}
+								}
+								
+								$amount_ttc_diff = $amountdeposit[0];
 							}
 
-							$result = $object->addline(
+							foreach ($amountdeposit as $tva => $amount)
+							{
+								$result = $object->addline(
 									$langs->trans('Deposit'),
-									$amountdeposit,		 	// subprice
+									$amount,		 	// subprice
 									1, 						// quantity
-									$lines[$i]->tva_tx, 0, // localtax1_tx
+									$tva, 0, // localtax1_tx
 									0, 						// localtax2_tx
 									0, 						// fk_product
 									0, 						// remise_percent
@@ -1081,7 +1107,18 @@ if (empty($reshook))
 									0,
 									0,
 									$langs->trans('Deposit')
-								);
+								);	
+							}
+						
+							$diff = $object->total_ttc - $amount_ttc_diff;
+							
+							if ($diff != 0)
+							{
+								$object->fetch_lines();
+								$subprice_diff = $object->lines[0]->subprice - $diff / (1 + $object->lines[0]->tva_tx);
+								$object->updateline($object->lines[0]->id, $object->lines[0]->desc, $subprice_diff, $object->lines[0]->qty, $object->lines[0]->remise_percent, $object->lines[0]->date_start, $object->lines[0]->date_end, $object->lines[0]->tva_tx, 0, 0, 'HT', $object->lines[0]->info_bits, $object->lines[0]->product_type, 0, 0, 0, $object->lines[0]->pa_ht, $object->lines[0]->label, 0, array(), 100);
+							}
+
 						}
 						else
 						{

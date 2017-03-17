@@ -6,7 +6,7 @@
  * Copyright (C) 2013	   Florian Henry		<florian.henry@open-concept.pro>
  * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
  * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
- * Copyright (C) 2015	   juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2015-2007 Juanjo Menent		<jmenent@2byte.es>
  * Copyright (C) 2015 	   Abbes Bahfir 	<bafbes@gmail.com>
  * Copyright (C) 2015-2016 Ferran Marcet		<fmarcet@2byte.es>
  *
@@ -46,6 +46,7 @@ if (!$user->rights->fournisseur->facture->lire) accessforbidden();
 $langs->load("bills");
 $langs->load("companies");
 $langs->load('products');
+$langs->load('projects');
 
 $socid = GETPOST('socid','int');
 
@@ -247,9 +248,9 @@ llxHeader('',$langs->trans("SuppliersInvoices"),'EN:Suppliers_Invoices|FR:Factur
 
 $sql = "SELECT";
 if ($sall || $search_product_category > 0) $sql = 'SELECT DISTINCT';
-$sql.= " f.rowid as facid, f.ref, f.ref_supplier, f.datef, f.date_lim_reglement as datelimite,";
+$sql.= " f.rowid as facid, f.ref, f.ref_supplier, f.datef, f.date_lim_reglement as datelimite, f.fk_mode_reglement,";
 $sql.= " f.total_ht, f.total_ttc, f.total_tva as total_vat, f.paye as paye, f.fk_statut as fk_statut, f.libelle as label,";
-$sql.= ' s.rowid as socid, s.nom as name, s.town, s.zip, s.fk_pays, s.client, s.code_client, ';
+$sql.= " s.rowid as socid, s.nom as name, s.town, s.zip, s.fk_pays, s.client, s.code_client,";
 $sql.= " typent.code as typent_code,";
 $sql.= " state.code_departement as state_code, state.nom as state_name,";
 $sql.= " p.rowid as project_id, p.ref as project_ref";
@@ -434,6 +435,7 @@ if ($resql)
 	print '<input type="hidden" name="sortfield" value="'.$sortfield.'">';
 	print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
 	print '<input type="hidden" name="viewstatut" value="'.$viewstatut.'">';
+	print '<input type="hidden" name="socid" value="'.$socid.'">';
 
 	print_barre_liste($langs->trans("BillsSuppliers").($socid?" $soc->name.":""),$page,$_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',$num,$nbtotalofrecords,'title_accountancy',0,'','',$limit);
 	
@@ -788,7 +790,7 @@ if ($resql)
                 $thirdparty->name=$obj->name;
                 $thirdparty->client=$obj->client;
                 $thirdparty->code_client=$obj->code_client;
-                print $thirdparty->getNomUrl(1,'customer');
+                print $thirdparty->getNomUrl(1,'supplier');
                 print '</td>';
                 if (! $i) $totalarray['nbfield']++;
     		}

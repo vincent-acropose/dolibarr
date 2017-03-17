@@ -324,10 +324,10 @@ class CommandeFournisseur extends CommonOrder
                     $line->product_label       = $objp->product_label;
                     $line->product_desc        = $objp->product_desc;
 
-                    $line->ref                 = $objp->product_ref;
-                    $line->product_ref         = $objp->product_ref;
-                    $line->ref_fourn           = $objp->ref_supplier;
-                    $line->ref_supplier        = $objp->ref_supplier;
+                    $line->ref                 = $objp->product_ref;    // Ref of product
+                    $line->product_ref         = $objp->product_ref;    // Ref of product
+                    $line->ref_fourn           = $objp->ref_supplier;   // The supplier ref of price when product was added. May have change since
+                    $line->ref_supplier        = $objp->ref_supplier;   // The supplier ref of price when product was added. May have change since
 
                     $line->date_start          = $this->db->jdate($objp->date_start);
                     $line->date_end            = $this->db->jdate($objp->date_end);
@@ -1139,7 +1139,7 @@ class CommandeFournisseur extends CommonOrder
 	                    $this->lines[$i]->localtax2_tx,
 	                    $this->lines[$i]->fk_product,
 	                    0,
-	                    $this->lines[$i]->ref_fourn,
+	                    $this->lines[$i]->ref_fourn,   // $this->lines[$i]->ref_fourn comes from field ref into table of lines. Value may ba a ref that does not exists anymore, so we first try with value of product
 	                    $this->lines[$i]->remise_percent,
 	                    'HT',
 	                    0,
@@ -1295,7 +1295,7 @@ class CommandeFournisseur extends CommonOrder
      *  @param      float	$txlocaltax2        	Localtax2 tax
      *	@param      int		$fk_product      		Id product
      *  @param      int		$fk_prod_fourn_price	Id supplier price
-     *  @param      string	$fourn_ref				Supplier reference
+     *  @param      string	$fourn_ref				Supplier reference price
      *	@param      float	$remise_percent  		Remise
      *	@param      string	$price_base_type		HT or TTC
      *	@param		float	$pu_ttc					Unit price TTC
@@ -1341,7 +1341,8 @@ class CommandeFournisseur extends CommonOrder
             $pu=$pu_ttc;
         }
         $desc=trim($desc);
-
+        $ref=''; // Ref of supplier price when we add line
+        
         // Check parameters
         if ($qty < 1 && ! $fk_product)
         {
@@ -1363,15 +1364,28 @@ class CommandeFournisseur extends CommonOrder
                     $prod = new Product($this->db, $fk_product);
                     if ($prod->fetch($fk_product) > 0)
                     {
-                        $result=$prod->get_buyprice($fk_prod_fourn_price, $qty, $fk_product, $fourn_ref);   // Search on couple $fk_prod_fourn_price/$qty first, then on triplet $qty/$fk_product/$fourn_ref
+                        $product_type = $prod->type;
+                        $label = $prod->libelle;
+                        
+                        // We use 'none' instead of $fourn_ref, because fourn_ref may not exists anymore. So we will take the first supplier price ok.
+                        // If we want a dedicated supplier price, we must provide $fk_prod_fourn_price.
+                        $result=$prod->get_buyprice($fk_prod_fourn_price, $qty, $fk_product, 'none', $this->fk_soc);   // Search on couple $fk_prod_fourn_price/$qty first, then on triplet $qty/$fk_product/$fourn_ref/$this->fk_soc
                         if ($result > 0)
                         {
-                            $label = $prod->libelle;
-                            $pu    = $prod->fourn_pu;
-                            $ref   = $prod->ref_fourn;
-                            $product_type = $prod->type;
+                            $pu    = $prod->fourn_pu;       // Unit price supplier price set by get_buyprice
+                            $ref   = $prod->ref_fourn;      // Ref supplier price set by get_buyprice
                         }
-                        if ($result == 0 || $result == -1)
+                        if ($result == 0)                   // If result == 0, we failed to found the supplier reference price
+                        {
+                            $langs->load("errors");
+                            $this->error = "Ref " . $prod->ref . " " . $langs->trans("ErrorQtyTooLowForThisSupplier");
+                            $this->db->rollback();
+                            dol_syslog(get_class($this)."::addline we did not found supplier price, so we can't guess unit price");
+                            //$pu    = $prod->fourn_pu;     // We do not overwrite unit price   
+                            //$ref   = $prod->ref_fourn;    // We do not overwrite ref supplier price
+                            return -1;
+                        }
+                        if ($result == -1)
                         {
                             $langs->load("errors");
                             $this->error = "Ref " . $prod->ref . " " . $langs->trans("ErrorQtyTooLowForThisSupplier");
@@ -1424,7 +1438,7 @@ class CommandeFournisseur extends CommonOrder
 
             $subprice = price2num($pu,'MU');
 
-            // TODO We should use here $this->line=new CommandeFournisseurLigne($this->db); and $this->line->insert(); to work loke other object (proposal, order, invoice)
+            // TODO We should use here $this->line=new CommandeFournisseurLigne($this->db); and $this->line->insert(); to work like other object (proposal, order, invoice)
             $sql = "INSERT INTO ".MAIN_DB_PREFIX."commande_fournisseurdet";
             $sql.= " (fk_commande, label, description, date_start, date_end,";
             $sql.= " fk_product, product_type,";
@@ -1443,7 +1457,7 @@ class CommandeFournisseur extends CommonOrder
            	$sql.= ", '".$localtax1_type."',";
 			$sql.= " '".$localtax2_type."'";
 
-            $sql.= ", ".$remise_percent.",'".price2num($subprice,'MU')."','".$ref."',";
+            $sql.= ", ".$remise_percent.",'".price2num($subprice,'MU')."','".$this->db->escape($ref)."',";
             $sql.= "'".price2num($total_ht)."',";
             $sql.= "'".price2num($total_tva)."',";
             $sql.= "'".price2num($total_localtax1)."',";
@@ -2708,15 +2722,7 @@ class CommandeFournisseurLigne extends CommonOrderLine
     // From llx_product_fournisseur_price
 
 	/**
-	 * Supplier ref
-	 * @var string
-	 * @deprecated Use ref_supplier
-	 * @see ref_supplier
-	 */
-	public $ref_fourn;
-
-	/**
-	 * Supplier reference
+	 * Supplier reference of price when we added the line. May have been changed after line was added.
 	 * @var string
 	 */
 	public $ref_supplier;
@@ -2746,7 +2752,8 @@ class CommandeFournisseurLigne extends CommonOrderLine
         $sql.= ' cd.info_bits, cd.total_ht, cd.total_tva, cd.total_ttc,';
         $sql.= ' cd.total_localtax1, cd.total_localtax2,';
         $sql.= ' p.ref as product_ref, p.label as product_libelle, p.description as product_desc,';
-        $sql.= ' cd.date_start, cd.date_end, cd.fk_unit';
+        $sql.= ' cd.date_start, cd.date_end, cd.fk_unit,';
+		$sql.= ' cd.multicurrency_subprice, cd.multicurrency_total_ht, cd.multicurrency_total_tva, cd.multicurrency_total_ttc';
         $sql.= ' FROM '.MAIN_DB_PREFIX.'commande_fournisseurdet as cd';
         $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as p ON cd.fk_product = p.rowid';
         $sql.= ' WHERE cd.rowid = '.$rowid;
@@ -2754,33 +2761,38 @@ class CommandeFournisseurLigne extends CommonOrderLine
         if ($result)
         {
             $objp = $this->db->fetch_object($result);
-            $this->rowid            = $objp->rowid;
-            $this->fk_commande      = $objp->fk_commande;
-            $this->desc             = $objp->description;
-            $this->qty              = $objp->qty;
-            $this->subprice         = $objp->subprice;
-            $this->tva_tx           = $objp->tva_tx;
-            $this->localtax1_tx		= $objp->localtax1_tx;
-            $this->localtax2_tx		= $objp->localtax2_tx;
-            $this->remise           = $objp->remise;
-            $this->remise_percent   = $objp->remise_percent;
-            $this->fk_product       = $objp->fk_product;
-            $this->info_bits        = $objp->info_bits;
-            $this->total_ht         = $objp->total_ht;
-            $this->total_tva        = $objp->total_tva;
-            $this->total_localtax1	= $objp->total_localtax1;
-            $this->total_localtax2	= $objp->total_localtax2;
-            $this->total_ttc        = $objp->total_ttc;
-            $this->product_type     = $objp->product_type;
+            $this->rowid            		= $objp->rowid;
+            $this->fk_commande      		= $objp->fk_commande;
+            $this->desc             		= $objp->description;
+            $this->qty              		= $objp->qty;
+            $this->subprice         		= $objp->subprice;
+            $this->tva_tx           		= $objp->tva_tx;
+            $this->localtax1_tx				= $objp->localtax1_tx;
+            $this->localtax2_tx				= $objp->localtax2_tx;
+            $this->remise           		= $objp->remise;
+            $this->remise_percent   		= $objp->remise_percent;
+            $this->fk_product       		= $objp->fk_product;
+            $this->info_bits        		= $objp->info_bits;
+            $this->total_ht         		= $objp->total_ht;
+            $this->total_tva        		= $objp->total_tva;
+            $this->total_localtax1			= $objp->total_localtax1;
+            $this->total_localtax2			= $objp->total_localtax2;
+            $this->total_ttc        		= $objp->total_ttc;
+            $this->product_type     		= $objp->product_type;
 
-            $this->ref	            = $objp->product_ref;
-            $this->product_libelle  = $objp->product_libelle;
-            $this->product_desc     = $objp->product_desc;
+            $this->ref	            		= $objp->product_ref;
+            $this->product_libelle  		= $objp->product_libelle;
+            $this->product_desc     		= $objp->product_desc;
 
-            $this->date_start       = $this->db->jdate($objp->date_start);
-            $this->date_end         = $this->db->jdate($objp->date_end);
-	        $this->fk_unit          = $objp->fk_unit;
-
+            $this->date_start       		= $this->db->jdate($objp->date_start);
+            $this->date_end         		= $this->db->jdate($objp->date_end);
+	        $this->fk_unit          		= $objp->fk_unit;
+			
+			$this->multicurrency_subprice	= $objp->multicurrency_subprice;
+			$this->multicurrency_total_ht	= $objp->multicurrency_total_ht;
+			$this->multicurrency_total_tva	= $objp->multicurrency_total_tva;
+			$this->multicurrency_total_ttc	= $objp->multicurrency_total_ttc;
+			
             $this->db->free($result);
             return 1;
         }
