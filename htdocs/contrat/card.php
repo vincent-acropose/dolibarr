@@ -673,6 +673,8 @@ if (empty($reshook))
 	        if ($result > 0)
 	        {
 	            $db->commit();
+	            header("Location: ".$_SERVER['PHP_SELF']."?id=".$object->id);
+	            exit;
 	        }
 	        else
 	        {
@@ -767,6 +769,12 @@ if (empty($reshook))
 				$result = $object->insertExtraFields();
 				if ($result < 0) {
 					$error ++;
+				} else {
+					$result = $object->call_trigger('CONTRACT_UDATE', $user);
+					if ($result < 0) {
+						$error ++;
+						
+					}
 				}
 			} else if ($reshook < 0)
 				$error ++;
@@ -864,8 +872,17 @@ if (empty($reshook))
 	            setEventMessages($object->error, $object->errors, 'errors');
 	            $action = 'editdate_contrat';
 	        } else {
-	            header("Location: " . $_SERVER['PHP_SELF'] . "?id=" . $object->id);
-	            exit;
+	        	
+	        	$result = $object->call_trigger('CONTRACT_UDATE', $user);
+	        	if ($result < 0) {
+	        		$error ++;
+	        		$this->db->rollback();
+	        		setEventMessages($object->error, $object->errors, 'errors');
+	        		$action = 'editdate_contrat';
+	        	} else {
+	            	header("Location: " . $_SERVER['PHP_SELF'] . "?id=" . $object->id);
+	            	exit;
+	        	}
 	        }
 	    }
 	    else {
@@ -2013,7 +2030,6 @@ else
         $urlsource = $_SERVER["PHP_SELF"] . "?id=" . $object->id;
         $genallowed = $user->rights->contrat->creer;
         $delallowed = $user->rights->contrat->supprimer;
-
         $var = true;
 
         $somethingshown = $formfile->show_documents('contract', $filename, $filedir, $urlsource, $genallowed, $delallowed, $object->modelpdf, 1, 0, 0, 28, 0, '', 0, '', $soc->default_lang);
