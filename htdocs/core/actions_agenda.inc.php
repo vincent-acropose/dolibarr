@@ -34,13 +34,14 @@ if (! $error && count($toselect) > $maxformassaction)
 }
 
 // Check either number or date
-if( ! empty($reprogramdatemonth.$reprogramdateday.$reprogramdateyear) && ! empty($reprogramup)) {
+$reprogramstsr = $reprogramdatemonth.$reprogramdateday.$reprogramdateyear;
+if( ! empty($reprogramstsr) && ! empty($reprogramup)) {
 	setEventMessages('PostponedNumberCanBeChooseOnlyWithoutDate', '', 'errors');
 	$massaction = 'reprogram';
 	$error++;
 }
 
-if(! empty($reprogramdatemonth.$reprogramdateday.$reprogramdateyear)) {
+if(! empty($reprogramstsr)) {
 	$datereprogram=dol_mktime(0, 0, 0, $reprogramdatemonth, $reprogramdateday, $reprogramdateyear);
 }
 
