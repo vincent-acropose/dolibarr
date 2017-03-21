@@ -2050,6 +2050,22 @@ if ($action == 'create')
 	$cols = 5;
 	include DOL_DOCUMENT_ROOT . '/core/tpl/extrafields_view.tpl.php';
 
+    // Amount HT before discount
+    if(!function_exists('pdf_getLineTotalDiscountAmount')) {
+        require_once DOL_DOCUMENT_ROOT . '/core/lib/pdf.lib.php';
+    }
+    foreach($object->lines as $i => $line) {
+        $total_line_remise+= pdf_getLineTotalDiscountAmount($object, $i, $langs, 2);
+    }
+    if (! empty($conf->global->MAIN_SHOW_AMOUNT_BEFORE_DISCOUNT)) {
+    	print '<tr><td height="10">' . $langs->trans('AmountHTBeforeDiscount') . '</td>';
+    	print '<td class="nowrap" colspan="2">' . price($object->total_ht + $total_line_remise, '', $langs, 0, - 1, - 1, $conf->currency) . '</td>';
+    }
+    if (! empty($conf->global->MAIN_SHOW_AMOUNT_DISCOUNT)) {
+        print '<tr><td height="10">' . $langs->trans('AmountDiscount') . '</td>';
+    	print '<td class="nowrap" colspan="2">' . price($total_line_remise, '', $langs, 0, - 1, - 1, $conf->currency) . '</td>';
+    }
+    
 	// Amount HT
 	print '<tr><td height="10">' . $langs->trans('AmountHT') . '</td>';
 	print '<td class="nowrap" colspan="2">' . price($object->total_ht, '', $langs, 0, - 1, - 1, $conf->currency) . '</td>';
@@ -2067,21 +2083,6 @@ if ($action == 'create')
 	}
 	print '</tr>';
 
-    // Amount HT before discount
-    if(!function_exists('pdf_getLineTotalDiscountAmount')) {
-        require_once DOL_DOCUMENT_ROOT . '/core/lib/pdf.lib.php';
-    }
-    foreach($object->lines as $i => $line) {
-        $total_line_remise+= pdf_getLineTotalDiscountAmount($object, $i, $langs, 2);
-    }
-    if (! empty($conf->global->MAIN_SHOW_AMOUNT_BEFORE_DISCOUNT)) {
-    	print '<tr><td height="10">' . $langs->trans('AmountHTBeforeDiscount') . '</td>';
-    	print '<td class="nowrap" colspan="2">' . price($object->total_ht + $total_line_remise, '', $langs, 0, - 1, - 1, $conf->currency) . '</td>';
-    }
-    if (! empty($conf->global->MAIN_SHOW_AMOUNT_DISCOUNT)) {
-        print '<tr><td height="10">' . $langs->trans('AmountDiscount') . '</td>';
-    	print '<td class="nowrap" colspan="2">' . price($total_line_remise, '', $langs, 0, - 1, - 1, $conf->currency) . '</td>';
-    }
 
 	// Amount VAT
 	print '<tr><td height="10">' . $langs->trans('AmountVAT') . '</td>';
