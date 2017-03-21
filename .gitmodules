@@ -136,3 +136,6 @@
 [submodule "htdocs/rh"]
 	path = htdocs/rh
 	url = https://github.com/ATM-Consulting/dolibarr_module_rh.git
+[submodule "htdocs/custom/propalautosend"]
+	path = htdocs/custom/propalautosend
+	url = git@github.com:ATM-Consulting/dolibarr_module_propalautosend.git
