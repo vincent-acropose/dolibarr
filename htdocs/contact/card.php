@@ -505,14 +505,22 @@ else
 							});
 
 							$("#copyaddressfromsoc").click(function() {
+								$(\'input[name="options_addresse_2"]\').val("'.dol_escape_js($objsoc->array_options['options_addresse_2']).'");
+								$(\'input[name="options_addresse_3"]\').val("'.dol_escape_js($objsoc->array_options['options_addresse_3']).'");
+
 								$(\'textarea[name="address"]\').val("'.dol_escape_js($objsoc->address).'");
 								$(\'input[name="zipcode"]\').val("'.dol_escape_js($objsoc->zip).'");
 								$(\'input[name="town"]\').val("'.dol_escape_js($objsoc->town).'");
 								console.log("Set state_id to '.dol_escape_js($objsoc->state_id).'");
 								$(\'select[name="state_id"]\').val("'.dol_escape_js($objsoc->state_id).'").trigger("change");
+
+								$(\'input[name="options_addresse_2"]\').val("'.dol_escape_js($objsoc->array_options['options_addresse_2']).'");
 								/* set country at end because it will trigger page refresh */
 								console.log("Set country id to '.dol_escape_js($objsoc->country_id).'");
 								$(\'select[name="country_id"]\').val("'.dol_escape_js($objsoc->country_id).'").trigger("change");   /* trigger required to update select2 components */
+
+            			});
+
                             });
 						})'."\n";
 				print '</script>'."\n";
@@ -748,6 +756,9 @@ else
 							});
 
 							$("#copyaddressfromsoc").click(function() {
+								$(\'input[name="options_addresse_2"]\').val("'.dol_escape_js($objsoc->array_options['options_addresse_2']).'");
+                                                                $(\'input[name="options_addresse_3"]\').val("'.dol_escape_js($objsoc->array_options['options_addresse_3']).'");
+
 								$(\'textarea[name="address"]\').val("'.dol_escape_js($objsoc->address).'");
 								$(\'input[name="zipcode"]\').val("'.dol_escape_js($objsoc->zip).'");
 								$(\'input[name="town"]\').val("'.dol_escape_js($objsoc->town).'");
