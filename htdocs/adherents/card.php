@@ -1408,7 +1408,14 @@ else
 
 		$linkback = '<a href="'.DOL_URL_ROOT.'/adherents/list.php">'.$langs->trans("BackToList").'</a>';
 		
-		dol_banner_tab($object, 'rowid', $linkback);
+/*		$company=new Societe($db);
+		$result=$company->fetch($object->fk_soc);
+		$morehtmlref = $company->getNomUrl(1);
+		var_dump($object);
+*/
+		$morehtmlref=$object->societe;
+
+		dol_banner_tab($object, 'rowid', $linkback,1,'rowid','ref',$morehtmlref);
         
         print '<div class="fichecenter">';
         print '<div class="fichehalfleft">';
