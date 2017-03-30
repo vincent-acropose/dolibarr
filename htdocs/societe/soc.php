@@ -1458,7 +1458,11 @@ else
                     else
 	                    print '<td><span class="fieldrequired"><label for="'.$key.'">'.$idprof.'</label></td><td>';
 
-	                print $formcompany->get_input_id_prof($i,$key,$object->$key,$object->country_code);
+					if($user->rights->financement->admin->write) {
+	                	print $formcompany->get_input_id_prof($i,$key,$object->$key,$object->country_code);
+					} else {
+						print $object->$key;
+					}
                     print '</td>';
                     if (($j % 2) == 1) print '</tr>';
                     $j++;
