@@ -502,6 +502,8 @@ if ($id > 0)
 
 	$now=dol_now();
 
+	$MAXLIST=empty($conf->global->MAIN_SIZE_SHORTLIST_LIMIT) ? 4 : $conf->global->MAIN_SIZE_SHORTLIST_LIMIT ;
+//var_dump($MAXLIST);
 	/*
 	 * Last proposals
 	 */
@@ -872,7 +874,7 @@ if ($id > 0)
 				print '</tr></table></td>';
 				print '</tr>';
 			}
-
+//var_dump($MAXLIST);
 			while ($i < $num && $i < $MAXLIST)
 			{
 				$objp = $db->fetch_object($resql);
