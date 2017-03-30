@@ -250,7 +250,7 @@ if (empty($reshook))
 			// Vérification de la cohérence SIREN / SIRET
 			$siren = $object->idprof1;
 			$siret = $object->idprof2;
-			if(!empty($siren) && !empty($siret)) {
+			if(!empty($siret)) {
 				if(strpos($siret, $siren) !== 0) {
 					$langs->load("errors");
 					$error++; $errors[] = "Erreur SIREN / SIRET";
