@@ -519,10 +519,10 @@ else
 								console.log("Set country id to '.dol_escape_js($objsoc->country_id).'");
 								$(\'select[name="country_id"]\').val("'.dol_escape_js($objsoc->country_id).'").trigger("change");   /* trigger required to update select2 components */
 
-            			});
+            						});
 
-                            });
-						})'."\n";
+                            	});
+				'."\n";
 				print '</script>'."\n";
             }
 
