@@ -398,19 +398,20 @@ if ($result)
 
 	if ($total>0)
 			{
+				$totalmarge = round($totalmarge,2);
 				if($num<$limit){
 					$var=!$var;
 					print '<tr class="liste_total"><td align="left">'.$langs->trans("TotalHT").'</td>';
-					print '<td colspan="5" align="right">'.price($total).'</td>';
-					print '<td align="right">'.price($totalmarge).'</td><td colspan=3></td>';
+					print '<td colspan="5" align="right">'.price($total).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
+					print '<td align="right">'.price($totalmarge).' '.$langs->getCurrencySymbol($conf->currency).'</td><td colspan=3></td>';
 					print '</tr>';
 				}
 				else
 				{
 					$var=!$var;
 					print '<tr class="liste_total"><td align="left">'.$langs->trans("TotalHTforthispage").'</td>';
-					print '<td colspan="5" align="right">'.price($total).'</td>';
-					print '<td align="right">'.price($totalmarge).'</td><td colspan=3></td>';
+					print '<td colspan="5" align="right">'.price($total).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
+					print '<td align="right">'.price($totalmarge).' '.$langs->getCurrencySymbol($conf->currency).'</td><td colspan=3></td>';
 					print '</tr>';
 				}
 
