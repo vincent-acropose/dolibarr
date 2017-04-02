@@ -10,13 +10,13 @@ Build-Depends: debhelper (>= 9), po-debconf
  
 Package: dolibarr
 Architecture: all
-Depends: libapache2-mod-php5 | libapache2-mod-php5filter | php5-cgi | php5-fpm | php5,
-    php5-cli, 
+Depends: libapache2-mod-php | libapache2-mod-phpfilter | php-cgi | php-fpm | php,
+    php-cli, 
 # Required PHP extensions
-    php5-mysql | php5-mysqli, php5-curl, php5-gd, php5-ldap,
+    php-mysql | php-mysqli, php-curl, php-gd, php-ldap,
 # Required PHP libraries
-    php-pear, php-mail-mime, 
-#    php-tcpdf, libfpdi-php,
+    php-pear, php-mail-mime, php-xml, php-mbstring,
+#    php-tcpdf,
 #    libfpdf-tpl-php, php-fpdf,
 #    libphp-adodb,
 #    libnusoap-php,
@@ -26,11 +26,11 @@ Depends: libapache2-mod-php5 | libapache2-mod-php5filter | php5-cgi | php5-fpm |
 # Misc dependencies
 #    fonts-dejavu-core | ttf-dejavu-core,
     xdg-utils,
-    mysql-server,
-    mysql-client,
+    mariadb-client | virtual-mysql-client,
     ${misc:Depends},
     ${perl:Depends}
-Recommends: apache2 | lighttpd | httpd
+Recommends: apache2 | lighttpd | httpd,
+    mariadb-server | virtual-mysql-server
 Suggests: www-browser, php5-geoip
 Description: Web based software to manage a company or foundation
  Dolibarr ERP & CRM is an easy to use open source/free software package for 

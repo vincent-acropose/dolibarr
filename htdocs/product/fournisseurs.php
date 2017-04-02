@@ -77,8 +77,6 @@ if ($id > 0 || $ref)
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
 
-$reputations=array('-1'=>'', 'FAVORITE'=>$langs->trans('Favorite'),'NOTTHGOOD'=>$langs->trans('NotTheGoodQualitySupplier'), 'DONOTORDER'=>$langs->trans('DoNotOrderThisProductToThisSupplier'));
-
 if (! $sortfield) $sortfield="s.nom";
 if (! $sortorder) $sortorder="ASC";
 
@@ -527,7 +525,7 @@ if ($id > 0 || $ref)
 
 				// Reputation
 				print '<tr><td>'.$langs->trans("SupplierReputation").'</td><td>';
-				echo $form->selectarray('supplier_reputation', $reputations, $supplier_reputation?$supplier_reputation:$object->supplier_reputation);
+				echo $form->selectarray('supplier_reputation', $object->reputations, $supplier_reputation?$supplier_reputation:$object->supplier_reputation);
 				print '</td></tr>';
 
 				// Option to define a transport cost on supplier price
@@ -593,7 +591,8 @@ if ($id > 0 || $ref)
 			if ($user->rights->fournisseur->lire)
 			{
 				// Suppliers list title
-				print '<table class="noborder" width="100%">';
+			    print '<div class="div-table-responsive">';
+			    print '<table class="noborder" width="100%">';
 				if ($object->isProduct()) $nblignefour=4;
 				else $nblignefour=4;
 
@@ -678,9 +677,9 @@ if ($id > 0 || $ref)
 
 						// Reputation
 						print '<td align="center">';
-						if (!empty($productfourn->supplier_reputation) && !empty($reputations[$productfourn->supplier_reputation])) {
-							print $reputations[$productfourn->supplier_reputation];
-						}
+						if (!empty($productfourn->supplier_reputation) && !empty($object->reputations[$productfourn->supplier_reputation])) {
+							print $object->reputations[$productfourn->supplier_reputation];	
+						}  
 						print'</td>';
 
 						// Charges ????
@@ -705,6 +704,7 @@ if ($id > 0 || $ref)
 						if ($user->rights->produit->creer || $user->rights->service->creer)
 						{
 							print '<a href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;socid='.$productfourn->fourn_id.'&amp;action=add_price&amp;rowid='.$productfourn->product_fourn_price_id.'">'.img_edit()."</a>";
+							print ' &nbsp; ';
 							print '<a href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;socid='.$productfourn->fourn_id.'&amp;action=ask_remove_pf&amp;rowid='.$productfourn->product_fourn_price_id.'">'.img_picto($langs->trans("Remove"),'disable.png').'</a>';
 						}
 
@@ -725,6 +725,7 @@ if ($id > 0 || $ref)
 				}
 
 				print '</table>';
+				print '</div>';
 			}
 		}
 	}

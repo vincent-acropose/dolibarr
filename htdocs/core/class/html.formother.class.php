@@ -409,7 +409,7 @@ class FormOther
             $sql_usr.= " WHERE u2.entity IN (0,".$conf->entity.")";
             $sql_usr.= " AND u2.rowid = sc.fk_user AND sc.fk_soc=".$user->societe_id;
         }
-        $sql_usr.= " ORDER BY lastname ASC";
+	$sql_usr.= " ORDER BY u.statut DESC, lastname ASC";
         //print $sql_usr;exit;
 
         $resql_usr = $this->db->query($sql_usr);
@@ -604,10 +604,22 @@ class FormOther
     	$textcolor='FFF';
     	if ($color)
     	{
-        	$hex=$color;
-        	$r = hexdec($hex[0].$hex[1]);
-        	$g = hexdec($hex[2].$hex[3]);
-        	$b = hexdec($hex[4].$hex[5]);
+    	    $tmp=explode(',', $color);
+    	    if (count($tmp) > 1)   // This is a comma RGB ('255','255','255')
+    	    {
+    	        $r = $tmp[0];
+    	        $g = $tmp[1];
+    	        $b = $tmp[2];
+    	    }
+    	    else
+    	    {
+    	        $hexr=$color[0].$color[1];
+    	        $hexg=$color[2].$color[3];
+    	        $hexb=$color[4].$color[5];
+            	$r = hexdec($hexr);
+            	$g = hexdec($hexg);
+            	$b = hexdec($hexb);
+    	    }
         	$bright = (max($r, $g, $b) + min($r, $g, $b)) / 510.0;    // HSL algorithm
             if ($bright > 0.6) $textcolor='000';     	   
     	}
@@ -948,14 +960,11 @@ class FormOther
             print '<form method="post" action="'.$page.'">';
             print '<input type="hidden" name="action" value="setaddress">';
             print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-            print '<table class="nobordernopadding" cellpadding="0" cellspacing="0">';
-            print '<tr><td>';
             $form->select_address($selected, $socid, $htmlname, 1);
-            print '</td>';
-            print '<td align="left"><input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+            print '<input type="submit" class="button valignmiddle" value="'.$langs->trans("Modify").'">';
             $langs->load("companies");
             print ' &nbsp; <a href='.DOL_URL_ROOT.'/comm/address.php?socid='.$socid.'&action=create&origin='.$origin.'&originid='.$originid.'>'.$langs->trans("AddAddress").'</a>';
-            print '</td></tr></table></form>';
+            print '</form>';
         }
         else
         {
@@ -1025,7 +1034,7 @@ class FormOther
         	//var_dump($boxidactivatedforuser);
 
         	// Class Form must have been already loaded
-			$selectboxlist.='<form name="addbox" method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+			$selectboxlist.='<form id="addbox" name="addbox" method="POST" action="'.$_SERVER["PHP_SELF"].'">';
 			$selectboxlist.='<input type="hidden" name="addbox" value="addbox">';
 			$selectboxlist.='<input type="hidden" name="userid" value="'.$user->id.'">';
 			$selectboxlist.='<input type="hidden" name="areacode" value="'.$areacode.'">';
@@ -1033,6 +1042,7 @@ class FormOther
 			$selectboxlist.=Form::selectarray('boxcombo', $arrayboxtoactivatelabel, '', $langs->trans("ChooseBoxToAdd").'...', 0, 0, '', 0, 0, 0, 'ASC', 'maxwidth150onsmartphone', 0, ' disabled hidden selected');
             if (empty($conf->use_javascript_ajax)) $selectboxlist.=' <input type="submit" class="button" value="'.$langs->trans("AddBox").'">';
             $selectboxlist.='</form>';
+            //$selectboxlist.=ajax_combobox("boxcombo");
         }
 
         // Javascript code for dynamic actions
