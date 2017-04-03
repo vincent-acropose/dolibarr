@@ -105,6 +105,14 @@ if ($disablenofollow) echo '</a>';
 <!-- Login -->
 <tr>
 <td class="nowrap center valignmiddle">
+<?php if (! empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER)) { ?><label for="username" class="hidden"><?php echo $langs->trans("CompanyCode"); ?></label><?php } ?>
+<span class="span-icon-company">
+<input type="text" id="company_code" placeholder="<?php echo $langs->trans("CompanyCode"); ?>" name="company_code" class="flat input-icon-user" size="20" value="<?php echo !empty($_COOKIE['dol_company_code']) ? $_COOKIE['dol_company_code'] : ''; ?>" tabindex="1" autofocus="autofocus" />
+</span>
+</td>
+</tr>
+<tr>
+<td class="nowrap center valignmiddle">
 <?php if (! empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER)) { ?><label for="username" class="hidden"><?php echo $langs->trans("Login"); ?></label><?php } ?>
 <span class="span-icon-user">
 <input type="text" id="username" placeholder="<?php echo $langs->trans("Login"); ?>" name="username" class="flat input-icon-user" size="20" value="<?php echo dol_escape_htmltag($login); ?>" tabindex="1" autofocus="autofocus" />

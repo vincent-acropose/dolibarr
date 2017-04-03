@@ -169,6 +169,17 @@ if (! empty($_SERVER['DOCUMENT_ROOT']) && substr($_SERVER['DOCUMENT_ROOT'], -6) 
 	set_include_path($_SERVER['DOCUMENT_ROOT'] . '/htdocs');
 }
 
+
+if(isset($_POST['company_code'])) {
+	$company_code = $_POST['company_code'];
+	$_COOKIE['dol_company_code'] = $company_code;
+	
+	setcookie('dol_company_code',$company_code,0,'/');
+}
+
+
+
+
 // Include the conf.php and functions.lib.php
 require_once 'filefunc.inc.php';
 
@@ -208,6 +219,7 @@ if (ini_get('register_globals'))    // To solve bug in using $_SESSION
 
 // Init the 5 global objects
 // This include will make the new and set properties for: $conf, $db, $langs, $user, $mysoc objects
+
 require_once 'master.inc.php';
 
 // Activate end of page function
@@ -438,11 +450,11 @@ if (! defined('NOLOGIN'))
 		        // Note: exit is done later
             }
         }
-
+        
         $usertotest		= (! empty($_COOKIE['login_dolibarr']) ? $_COOKIE['login_dolibarr'] : GETPOST("username","alpha",2));
         $passwordtotest	= GETPOST('password','',2);
         $entitytotest	= (GETPOST('entity','int') ? GETPOST('entity','int') : (!empty($conf->entity) ? $conf->entity : 1));
-
+        
         // Validation of login/pass/entity
         // If ok, the variable login will be returned
         // If error, we will put error message in session under the name dol_loginmesg
@@ -513,7 +525,7 @@ if (! defined('NOLOGIN'))
 		        // Note: exit is done in next chapter
             }
         }
-
+       // var_dump($usertotest,$login);
         // End test login / passwords
         if (! $login || (in_array('ldap',$authmode) && empty($passwordtotest)))	// With LDAP we refused empty password because some LDAP are "opened" for anonymous access so connexion is a success.
         {

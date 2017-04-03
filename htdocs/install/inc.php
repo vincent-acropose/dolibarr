@@ -67,6 +67,8 @@ if (isset($_SERVER["DOCUMENT_URI"]) && $_SERVER["DOCUMENT_URI"])
 
 $includeconferror='';
 
+$company_code = & $_SESSION['company_code'];
+if(isset($_POST['company_code'])) $company_code = $_POST['company_code'];
 
 // Define vars
 $conffiletoshowshort = "conf.php";
