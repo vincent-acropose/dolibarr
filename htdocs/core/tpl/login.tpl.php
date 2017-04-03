@@ -107,7 +107,7 @@ if ($disablenofollow) echo '</a>';
 <td class="nowrap center valignmiddle">
 <?php if (! empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER)) { ?><label for="username" class="hidden"><?php echo $langs->trans("CompanyCode"); ?></label><?php } ?>
 <span class="span-icon-company">
-<input type="text" id="company_code" placeholder="<?php echo $langs->trans("CompanyCode"); ?>" name="company_code" class="flat input-icon-user" size="20" value="<?php echo !empty($_COOKIE['dol_company_code']) ? $_COOKIE['dol_company_code'] : ''; ?>" tabindex="1" autofocus="autofocus" />
+<input type="text" id="company_code" placeholder="<?php echo $langs->trans("CompanyCode"); ?>" name="company_code" class="flat input-icon-company" size="20" value="<?php echo !empty($_COOKIE['dol_company_code']) ? $_COOKIE['dol_company_code'] : ''; ?>" tabindex="1" autofocus="autofocus" />
 </span>
 </td>
 </tr>

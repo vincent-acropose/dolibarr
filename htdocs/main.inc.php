@@ -169,7 +169,7 @@ if (! empty($_SERVER['DOCUMENT_ROOT']) && substr($_SERVER['DOCUMENT_ROOT'], -6) 
 	set_include_path($_SERVER['DOCUMENT_ROOT'] . '/htdocs');
 }
 
-
+$company_code='';
 if(isset($_POST['company_code'])) {
 	$company_code = $_POST['company_code'];
 	$_COOKIE['dol_company_code'] = $company_code;

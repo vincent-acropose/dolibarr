@@ -1461,14 +1461,14 @@ form#login {
 	border-right:solid 1px rgba(180,180,180,.4);
 	border-bottom:solid 1px rgba(180,180,180,.4);*/
 }
-.login_table input#username, .login_table input#password, .login_table input#securitycode {
+.login_table input#company_code,.login_table input#username, .login_table input#password, .login_table input#securitycode {
 	border: none;
 	border-bottom: solid 1px rgba(180,180,180,.4);
 	padding: 5px;
 	margin-left: 18px;
 	margin-top: 5px;
 }
-.login_table input#username:focus, .login_table input#password:focus, .login_table input#securitycode:focus {
+.login_table input#username:focus,.login_table input#company_code:focus, .login_table input#password:focus, .login_table input#securitycode:focus {
 	outline: none !important;
 	/* box-shadow: none;
 	-webkit-box-shadow: 0 0 0 50px #FFF inset;
@@ -1590,12 +1590,16 @@ img.loginphoto {
 	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/object_user.png',1); ?>);
 	background-repeat: no-repeat;
 }
+.span-icon-company {
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/object_company.png',1); ?>);
+	background-repeat: no-repeat;
+}
 .span-icon-password {
 	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/lock.png',1); ?>);
 	background-repeat: no-repeat;
 }
 /*
-.span-icon-user input, .span-icon-password input {
+.span-icon-user input,.span-icon-company input, .span-icon-password input {
 	/* margin-left: 18px; */
 	margin-left: 0px;
 }*/

@@ -1663,3 +1663,4 @@ ResourceSetup=Configuration du module Ressource
 UseSearchToSelectResource=Utilisez un champ avec auto-complétion pour choisir les ressources (plutôt qu'une liste déroulante).
 DisabledResourceLinkUser=Supprimer le lien entre la ressource et l'utilisateur
 DisabledResourceLinkContact=Désactiver le lient entre la ressource et le contact/adresse
+PerUserPerMonth=Par utilisateur activé et par mois

@@ -30,6 +30,7 @@
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/functions2.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/conf/price.php';
 
 $langs->load("errors");
 $langs->load("admin");
@@ -451,7 +452,8 @@ if ($mode != 'marketplace')
             $familytext=empty($familyinfo[$familykey]['label'])?$familykey:$familyinfo[$familykey]['label'];
             print $familytext;
             print "</td>\n";
-    		print '<td colspan="2" align="right">'.$langs->trans("SetupShort").'</td>'."\n";
+            print '<td nowrap="nowrap" align="left">'.$langs->trans("price").img_info($langs->trans('PerUserPerMonth')).'</td>'."\n";
+            print '<td colspan="2" align="right">'.$langs->trans("SetupShort").'</td>'."\n";
             print "</tr>\n";
             $atleastoneforfamily=0;
             //print "<tr><td>yy".$oldfamily."-".$familykey."-".$atleastoneforfamily."<br></td><tr>";
@@ -671,6 +673,17 @@ if ($mode != 'marketplace')
 
         print "</td>\n";
 
+        echo '<td align="right">';
+        
+        if(isset($TPriceModule[(int)$objMod->numero])) {
+        	list($price) = $TPriceModule[(int)$objMod->numero];
+        	
+        	echo price($price).'&euro;' ;
+        	
+        }
+        
+        echo '</td>';
+        
         // Activate/Disable and Setup (2 columns)
         if (! empty($conf->global->$const_name))	// If module is activated
         {
