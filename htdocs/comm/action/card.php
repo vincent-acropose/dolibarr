@@ -127,13 +127,20 @@ $listSocieteAssignedUpdated = false;
 // Remove user to assigned list
 if (GETPOST('removedassignedsociete') || GETPOST('removedassignedsociete') == '0')
 {
-	$idtoremove=GETPOST('removedassignedsociete');
+
+	$idstoremove = explode('_', GETPOST('removedassignedsociete'));
+	$idSociete = $idstoremove[0];
+	$idContact = $idstoremove[1];
+
 	if (! empty($_SESSION['assignedtosociete'])) $tmpassignedsocieteids=json_decode($_SESSION['assignedtosociete'],1);
 	else $tmpassignedsocieteids=array();
-	foreach ($tmpassignedsocieteids as $key => $val)
-	{
-		if ($val['id'] == $idtoremove || $val['id'] == -1) unset($tmpassignedsocieteids[$key]);
+
+	if(in_array($idContact, $tmpassignedsocieteids[$idSociete]['contacts'])) {
+		$tmpassignedsocieteids[$idSociete]['contacts'] = array_diff($tmpassignedsocieteids[$idSociete]['contacts'], array($idContact));
 	}
+
+	if(empty($tmpassignedsocieteids[$idSociete]['contacts'])) unset($tmpassignedsocieteids[$idSociete]);
+
 	$_SESSION['assignedtosociete']=json_encode($tmpassignedsocieteids);
 	$donotclearsession=1;
 	if ($action == 'add') $action = 'create';
@@ -167,14 +174,24 @@ if (GETPOST('addassignedtouser') || GETPOST('updateassignedtouser'))
 if (GETPOST('editassignedtosociete') || GETPOST('updateassignedtosociete'))
 {
 	// Add a new user
-	if (GETPOST('assignedtosociete') > 0)
+	if (GETPOST('assignedtosociete'))
 	{
 		$assignedtosociete=array();
 		if (! empty($_SESSION['assignedtosociete']))
 		{
 			$assignedtosociete=json_decode($_SESSION['assignedtosociete'], true);
 		}
-		$assignedtosociete[GETPOST('assignedtosociete')]=array('id'=>GETPOST('assignedtosociete'), 'contactid'=>GETPOST('contactid'));
+
+		if(empty($assignedtosociete[GETPOST('assignedtosociete')]))
+		{
+			$assignedtosociete[GETPOST('assignedtosociete')] = array('id' => GETPOST('assignedtosociete'), 'contacts' => array());
+		}
+		
+		if(! in_array(GETPOST('contactid'), $assignedtosociete[GETPOST('assignedtosociete')]['contacts']))
+		{
+			$assignedtosociete[GETPOST('assignedtosociete')]['contacts'][] = GETPOST('contactid');
+		}
+
 		$_SESSION['assignedtosociete']=json_encode($assignedtosociete);
 	}
 	$donotclearsession=1;
@@ -321,7 +338,11 @@ if ($action == 'add')
 				if ($value['id'] > 0) $object->socid=$value['id'];
 			}
 
-			$object->societeassigned[$value['id']]=array('id'=>$value['id'], 'contactid'=>$value['contactid']);
+			$object->societeassigned[$value['id']] = array('id' => $value['id'], 'contacts' => array());
+			
+			foreach($value['contacts'] as $contact) {
+				$object->societeassigned[$value['id']]['contacts'][] = $contact;
+			}
 
 			$i++;
 		}
@@ -338,7 +359,7 @@ if ($action == 'add')
 
 	if (GETPOST('socid','int') > 0 || $object->socid > 0)
 	{
-		$object->socid=GETPOST('socid','int');
+		$object->socid = ! empty(GETPOST('socid','int')) ? GETPOST('socid', 'int') : $object->socid;
 		$object->fetch_thirdparty();
 
 		$object->societe = $object->thirdparty;	// For backward compatibility
@@ -520,8 +541,17 @@ if ($action == 'update')
 		foreach($listofsocieteid as $key => $val)
 		{
 			if ($i == 0) $object->socid = $val['id'];
-			$object->societeassigned[$val['id']]=array('id'=>$val['id'], 'contactid'=>$val['contactid']);
+			
+			$object->societeassigned[$val['id']] = array('id' => $val['id'], 'contacts' => array());
+			foreach($val['contacts'] as $contact) {
+				$object->societeassigned[$val['id']]['contacts'][] = $contact;
+			}
 			$i++;
+		}
+
+		if($i == 0) {
+			$object->socid = 0;
+			$object->societe->id = 0;
 		}
 
 		$object->transparency = $transparency;		// We set transparency on event (even if we can also store it on each user, standard says this property is for event)
@@ -825,7 +855,7 @@ if ($action == 'create')
 	if (empty($donotclearsession))
 	{
 		$assignedtosociete=GETPOST("assignedtosociete")?GETPOST("assignedtosociete"):(! empty($object->socid) && $object->socid > 0 ? $object->socid : null);
-		if ($assignedtosociete) $listofsocieteid[$assignedtosociete]=array('id'=>$assignedtosociete,'mandatory'=>0,'transparency'=>0,'contactid'=>GETPOST());	// Owner first
+		if ($assignedtosociete) $listofsocieteid[$assignedtosociete]=array('id'=>$assignedtosociete,'mandatory'=>0,'transparency'=>0,'contacts'=>GETPOST());	// Owner first
 		$_SESSION['assignedtosociete']=json_encode($listofsocieteid);
 	}
 	else
@@ -1384,7 +1414,7 @@ if ($id > 0)
 		// Third party - Contact
 		if ($conf->societe->enabled)
 		{
-			
+
 			// Societe, contact
 			print '<tr><td width="30%" class="nowrap">'.$langs->trans("ActionOnCompany").'</td><td>';
 			$listofsocieteid=array();

@@ -1537,19 +1537,22 @@ class Form
 		{
 			if ($value['id'] == $ownerid) continue;
 			$societestatic->fetch($value['id']);
+			if($i > 0) $out.= '<br />';
 			$out.=$societestatic->getNomUrl(1);
 			if ($i == 0) {
 				 $ownerid = $value['id']; 
 				 $out.=' ('.$langs->trans("Societe").' Active)'; 
 			}
-			if(!empty($value['contactid'])) {
-				$contactstatic->fetch($value['contactid']);
-				$out.=' '.$contactstatic->getNomUrl(1);
+			foreach($value['contacts'] as $contact) {
+				//if(!empty($value['contactid'])) {
+					$contactstatic->fetch($contact);
+					$out.='<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$contactstatic->getNomUrl(1);
+				//}
+					if ($action != 'view') $out.=' <input type="image" style="border: 0px;" src="'.img_picto($langs->trans("Remove"), 'delete', '', 0, 1).'" value="'.$societestatic->id.'_'.$contactstatic->id.'" class="removedassignedsociete" id="removedassignedsociete_'.$societestatic->id.'_'.$contactstatic->id.'" name="removedassignedsociete_'.$societestatic->id.'_'.$contactstatic->id.'">';
+				//$out.=' '.($value['mandatory']?$langs->trans("Mandatory"):$langs->trans("Optional"));
+				//$out.=' '.($value['transparency']?$langs->trans("Busy"):$langs->trans("NotBusy"));
+				//$out.='<br>';
 			}
-			if ($action != 'view') $out.=' <input type="image" style="border: 0px;" src="'.img_picto($langs->trans("Remove"), 'delete', '', 0, 1).'" value="'.$societestatic->id.'" class="removedassignedsociete" id="removedassignedsociete_'.$societestatic->id.'" name="removedassignedsociete_'.$societestatic->id.'">';
-			//$out.=' '.($value['mandatory']?$langs->trans("Mandatory"):$langs->trans("Optional"));
-			//$out.=' '.($value['transparency']?$langs->trans("Busy"):$langs->trans("NotBusy"));
-			$out.='<br>';
 			$i++;
 		}
 		
