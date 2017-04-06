@@ -63,7 +63,7 @@ if (! GETPOST($htmlname) && ! GETPOST($idprod)) return;
 $searchkey=(GETPOST($idprod)?GETPOST($idprod):(GETPOST($htmlname)?GETPOST($htmlname):''));
 
 $form = new FormProjets($db);
-$arrayresult=$form->select_projects_list($socid, '', $htmlname, 0, 0, 1, 0, 0, 0, 1, $searchkey);
+$arrayresult=$form->select_projects_list(-1, '', $htmlname, 0, 0, 1, 0, 0, 0, 1, $searchkey);
 
 $db->close();
 
