@@ -166,6 +166,13 @@ if ($object->id > 0)
 
     print load_fiche_titre($langs->trans("ActionsOnMember"),$out,'');
 
+	if(!empty($object->fk_soc))
+	{
+		$socid = $object->fk_soc;
+		$object = new Societe($db);
+		$object->fetch($socid); 
+	}
+
     // List of todo actions
     show_actions_todo($conf,$langs,$db,$object);
 
