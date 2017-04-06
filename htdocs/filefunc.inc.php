@@ -51,10 +51,9 @@ if (! defined('LOG_DEBUG'))
 	}
 }
 
+if(empty($company_code)) $company_code = empty($_COOKIE['dol_company_code']) ? '' : $_COOKIE['dol_company_code'];
 // End of common declaration part
 if (defined('DOL_INC_FOR_VERSION_ERROR')) return;
-
-if(empty($company_code)) $company_code = empty($_COOKIE['dol_company_code']) ? '' : $_COOKIE['dol_company_code'];
 
 // Define vars
 $conffiletoshowshort = "conf.php";
