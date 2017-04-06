@@ -348,21 +348,23 @@ class ActionComm extends CommonObject
 			{
 				foreach($this->societeassigned as $key => $val)
 				{
-			        if (! is_array($val))	// For backward compatibility when val=id
-			        {
-			        	$val=array('id'=>$val);
-			        }
-
-					$sql ="INSERT INTO ".MAIN_DB_PREFIX."actioncomm_resources(fk_actioncomm, element_type, fk_element, mandatory, transparency, answer_status)";
-					$sql.=" VALUES(".$this->id.", 'societe', ".$val['id'].", 0, 0, ".(empty($val['contactid'])?'NULL':$val['contactid']).")";
-
-					$resql = $this->db->query($sql);
-					if (! $resql)
+					if (! is_array($val))	// For backward compatibility when val=id
 					{
-						$error++;
-		           		$this->errors[]=$this->db->lasterror();
+						$val=array('id'=>$val);
 					}
-					//var_dump($sql);exit;
+					
+					foreach($val['contacts'] as $idContact)
+					{
+						$sql = "INSERT INTO ".MAIN_DB_PREFIX."actioncomm_resources_socpeople (fk_actioncomm, fk_soc, fk_socpeople)";
+						$sql.= " VALUES (".$this->id.", ".$val['id'].", ".$idContact.")";
+						
+						$resql = $this->db->query($sql);
+						if (! $resql)
+						{
+							$error++;
+							$this->errors[]=$this->db->lasterror();
+						}
+					}
 				}
 			}
 
@@ -647,23 +649,37 @@ class ActionComm extends CommonObject
      */
     function fetch_societeassigned()
     {
-        $sql ="SELECT fk_actioncomm, element_type, fk_element, answer_status";
-		$sql.=" FROM ".MAIN_DB_PREFIX."actioncomm_resources";
-		$sql.=" WHERE element_type = 'societe' AND fk_actioncomm = ".$this->id;
+		$sql ="SELECT fk_soc, fk_socpeople";
+		$sql.=" FROM ".MAIN_DB_PREFIX."actioncomm_resources_socpeople";
+		$sql.=" WHERE fk_actioncomm = ".$this->id." AND fk_soc > 0";
 		$resql2=$this->db->query($sql);
+
+		if($resql2->num_rows == 0) // Si rien n'est trouvé, on retente avec l'ancien système
+		{
+			$sql ="SELECT fk_element AS fk_soc, answer_status AS fk_socpeople";
+			$sql.=" FROM ".MAIN_DB_PREFIX."actioncomm_resources";
+			$sql.=" WHERE element_type = 'societe' AND fk_actioncomm = ".$this->id." AND fk_element > 0";
+			$resql2=$this->db->query($sql);
+		}
+
 		if ($resql2)
 		{
 			$this->societeassigned=array();
 
             while ($obj = $this->db->fetch_object($resql2))
             {
-            	if ($obj->fk_element > 0) $this->societeassigned[$obj->fk_element]=array('id'=>$obj->fk_element, 'contactid'=>$obj->answer_status);
-            	if (empty($this->societeassignedid)) {
-            		$this->socid=$obj->fk_element;	// If not defined (should not happened, we fix this)
-            		$this->contactid=$obj->answer_status;	// If not defined (should not happened, we fix this)
-            		$this->societeassignedid = $this->socid;
+            	if(empty($this->societeassigned[$obj->fk_soc]))
+					$this->societeassigned[$obj->fk_soc] = array('id' => $obj->fk_soc, 'contacts' => array());
+
+				$this->societeassigned[$obj->fk_soc]['contacts'][] = $obj->fk_socpeople;
+
+				if (empty($this->societeassignedid))
+				{
+					$this->socid=$obj->fk_soc;	// If not defined (should not happened, we fix this)
+					$this->contactid=$obj->fk_socpeople;	// If not defined (should not happened, we fix this)
+					$this->societeassignedid = $this->socid;
 				}
-            }
+			}
 
         	return 1;
 		}
@@ -840,7 +856,10 @@ class ActionComm extends CommonObject
             // Now insert assignedusers
 			if (! $error)
 			{
-				$sql ="DELETE FROM ".MAIN_DB_PREFIX."actioncomm_resources where fk_actioncomm = ".$this->id." AND (element_type = 'user' OR element_type = 'societe')";
+				$sql = "DELETE FROM ".MAIN_DB_PREFIX."actioncomm_resources_socpeople WHERE fk_actioncomm = ".$this->id;
+				$resql = $this->db->query($sql);
+
+				$sql = "DELETE FROM ".MAIN_DB_PREFIX."actioncomm_resources where fk_actioncomm = ".$this->id." AND (element_type = 'user' OR element_type = 'societe')";
 				$resql = $this->db->query($sql);
 
 				foreach($this->userassigned as $key => $val)
@@ -864,19 +883,22 @@ class ActionComm extends CommonObject
 	            // Now insert assignedsociete
 				foreach($this->societeassigned as $key => $val)
 				{
-			        if (! is_array($val))	// For backward compatibility when val=id
-			        {
-			        	$val=array('id'=>$val);
-			        }
-
-					$sql ="INSERT INTO ".MAIN_DB_PREFIX."actioncomm_resources(fk_actioncomm, element_type, fk_element, mandatory, transparency, answer_status)";
-					$sql.=" VALUES(".$this->id.", 'societe', ".$val['id'].", 0, 0, ".(empty($val['contactid'])?'NULL':$val['contactid']).")";
-
-					$resql = $this->db->query($sql);
-					if (! $resql)
+					if (! is_array($val))	// For backward compatibility when val=id
 					{
-						$error++;
-		           		$this->errors[]=$this->db->lasterror();
+						$val=array('id'=>$val);
+					}
+			        
+					foreach($val['contacts'] as $idContact)
+					{
+						$sql = "INSERT INTO ".MAIN_DB_PREFIX."actioncomm_resources_socpeople (fk_actioncomm, fk_soc, fk_socpeople)";
+						$sql.= " VALUES (".$this->id.", ".$val['id'].", ".$idContact.")";
+
+						$resql = $this->db->query($sql);
+						if (! $resql)
+						{
+							$error++;
+							$this->errors[]=$this->db->lasterror();
+						}
 					}
 				}
 			}

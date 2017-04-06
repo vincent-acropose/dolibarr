@@ -183,7 +183,7 @@ if ($type) $param.="&type=".$type;
 if ($usergroup) $param.="&usergroup=".$usergroup;
 
 $sql = "SELECT";
-if ($usergroup > 0) $sql.=" DISTINCT";
+if ($usergroup > 0 || $socid > 0) $sql.=" DISTINCT";
 $sql.= " s.nom as societe, s.rowid as socid, s.client,";
 $sql.= " a.id, a.label, a.datep as dp, a.datep2 as dp2,";
 $sql.= ' a.fk_user_author,a.fk_user_action,';
@@ -191,6 +191,9 @@ $sql.= " a.fk_contact, a.note, a.percent as percent,";
 $sql.= " c.code as type_code, c.libelle as type_label,";
 $sql.= " sp.lastname, sp.firstname";
 $sql.= " FROM ".MAIN_DB_PREFIX."c_actioncomm as c, ".MAIN_DB_PREFIX."actioncomm as a";
+if($socid > 0) {
+	$sql.=" LEFT JOIN ".MAIN_DB_PREFIX."actioncomm_resources_socpeople as ars on (ars.fk_actioncomm = a.id)";
+}
 if (! $user->rights->societe->client->voir && ! $socid) $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON a.fk_soc = sc.fk_soc";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON a.fk_soc = s.rowid";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople as sp ON a.fk_contact = sp.rowid";
@@ -202,7 +205,7 @@ $sql.= ' AND a.entity IN ('.getEntity('agenda', 1).')';
 if ($actioncode) $sql.=" AND c.code='".$db->escape($actioncode)."'";
 if ($pid) $sql.=" AND a.fk_project=".$db->escape($pid);
 if (! $user->rights->societe->client->voir && ! $socid) $sql.= " AND (a.fk_soc IS NULL OR sc.fk_user = " .$user->id . ")";
-if ($socid > 0) $sql.= " AND s.rowid = ".$socid;
+if ($socid > 0) $sql.= " AND ars.fk_soc = ".$socid;
 // We must filter on assignement table
 if ($filtert > 0 || $usergroup > 0) $sql.= " AND ar.fk_actioncomm = a.id AND ar.element_type='user'";
 if ($type) $sql.= " AND c.id = ".$type;
