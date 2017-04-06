@@ -426,7 +426,7 @@ print_fiche_titre($s, $link.' &nbsp; &nbsp; '.$nav, '');
 $eventarray=array();
 
 $sql = 'SELECT ';
-if ($usergroup > 0) $sql.=" DISTINCT";
+if ($usergroup > 0 || $socid > 0) $sql.=" DISTINCT";
 $sql.= ' a.id, a.label,';
 $sql.= ' a.datep,';
 $sql.= ' a.datep2,';
