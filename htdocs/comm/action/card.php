@@ -357,9 +357,9 @@ if ($action == 'add')
 
 	if (isset($_POST["contactid"])) $object->contact = $contact;
 
-	if (GETPOST('socid','int') > 0 || $object->socid > 0)
+	if ($socid > 0 || $object->socid > 0)
 	{
-		$object->socid = ! empty(GETPOST('socid','int')) ? GETPOST('socid', 'int') : $object->socid;
+		$object->socid = ! empty($socid) ? $socid : $object->socid;
 		$object->fetch_thirdparty();
 
 		$object->societe = $object->thirdparty;	// For backward compatibility
