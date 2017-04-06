@@ -1414,7 +1414,7 @@ if ($id > 0)
 		// Third party - Contact
 		if ($conf->societe->enabled)
 		{
-
+			
 			// Societe, contact
 			print '<tr><td width="30%" class="nowrap">'.$langs->trans("ActionOnCompany").'</td><td>';
 			$listofsocieteid=array();

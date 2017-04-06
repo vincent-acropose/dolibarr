@@ -664,22 +664,22 @@ class ActionComm extends CommonObject
 
 		if ($resql2)
 		{
-			$this->societeassigned = array();
+			$this->societeassigned=array();
 
             while ($obj = $this->db->fetch_object($resql2))
             {
             	if(empty($this->societeassigned[$obj->fk_soc]))
-            			$this->societeassigned[$obj->fk_soc] = array('id' => $obj->fk_soc, 'contacts' => array());
+					$this->societeassigned[$obj->fk_soc] = array('id' => $obj->fk_soc, 'contacts' => array());
 
-            	$this->societeassigned[$obj->fk_soc]['contacts'][] = $obj->fk_socpeople;
+				$this->societeassigned[$obj->fk_soc]['contacts'][] = $obj->fk_socpeople;
 
-            	if (empty($this->societeassignedid))
-            	{
-            		$this->socid=$obj->fk_soc;	// If not defined (should not happened, we fix this)
-            		$this->contactid=$obj->fk_socpeople;	// If not defined (should not happened, we fix this)
-            		$this->societeassignedid = $this->socid;
+				if (empty($this->societeassignedid))
+				{
+					$this->socid=$obj->fk_soc;	// If not defined (should not happened, we fix this)
+					$this->contactid=$obj->fk_socpeople;	// If not defined (should not happened, we fix this)
+					$this->societeassignedid = $this->socid;
 				}
-            }
+			}
 
         	return 1;
 		}
@@ -883,23 +883,23 @@ class ActionComm extends CommonObject
 	            // Now insert assignedsociete
 				foreach($this->societeassigned as $key => $val)
 				{
-			        if (! is_array($val))	// For backward compatibility when val=id
-			        {
-			        	$val=array('id'=>$val);
-			        }
+					if (! is_array($val))	// For backward compatibility when val=id
+					{
+						$val=array('id'=>$val);
+					}
 			        
-			        foreach($val['contacts'] as $idContact)
-			        {
-			        	$sql = "INSERT INTO ".MAIN_DB_PREFIX."actioncomm_resources_socpeople (fk_actioncomm, fk_soc, fk_socpeople)";
-			        	$sql.= " VALUES (".$this->id.", ".$val['id'].", ".$idContact.")";
+					foreach($val['contacts'] as $idContact)
+					{
+						$sql = "INSERT INTO ".MAIN_DB_PREFIX."actioncomm_resources_socpeople (fk_actioncomm, fk_soc, fk_socpeople)";
+						$sql.= " VALUES (".$this->id.", ".$val['id'].", ".$idContact.")";
 
-			        	$resql = $this->db->query($sql);
-			        	if (! $resql)
-			        	{
-			        		$error++;
-			        		$this->errors[]=$this->db->lasterror();
-			        	}
-			        }
+						$resql = $this->db->query($sql);
+						if (! $resql)
+						{
+							$error++;
+							$this->errors[]=$this->db->lasterror();
+						}
+					}
 				}
 			}
 
