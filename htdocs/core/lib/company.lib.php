@@ -934,7 +934,9 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $out.='</td>';
         $out.='</tr>';
 
-        $sql = "SELECT a.id, a.label,";
+        $sql = "SELECT";
+        if (get_class($object) == 'Societe') $sql.= " DISTINCT";
+        $sql.= " a.id, a.label,";
         $sql.= " a.datep as dp,";
         $sql.= " a.datep2 as dp2,";
         $sql.= " a.percent,";
@@ -942,11 +944,12 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $sql.= " a.fk_element, a.elementtype,";
         $sql.= " c.code as acode, c.libelle,";
         $sql.= " u.login, u.rowid";
-        if (get_class($object) == 'Societe')  $sql.= ", sp.lastname, sp.firstname";
+        //if (get_class($object) == 'Societe')  $sql.= ", sp.lastname, sp.firstname";
         if (get_class($object) == 'Adherent') $sql.= ", m.lastname, m.firstname";
         $sql.= " FROM ".MAIN_DB_PREFIX."user as u, ".MAIN_DB_PREFIX."actioncomm as a";
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_actioncomm as c ON a.fk_action = c.id";
-        if (get_class($object) == 'Societe')  $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople as sp ON a.fk_contact = sp.rowid";
+        if (get_class($object) == 'Societe')  $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."actioncomm_resources_socpeople as ars ON ars.fk_actioncomm = a.id";
+        //if (get_class($object) == 'Societe')  $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople as sp ON a.fk_contact = sp.rowid";
         if (get_class($object) == 'Adherent') $sql.= ", ".MAIN_DB_PREFIX."adherent as m";
         $sql.= " WHERE u.rowid = a.fk_user_author";
         $sql.= " AND a.entity IN (".getEntity('agenda', 1).")";
@@ -955,7 +958,7 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
         	$sql.= " AND a.fk_element = m.rowid AND a.elementtype = 'member'";
         	if (! empty($object->id)) $sql.= " AND a.fk_element = ".$object->id;
         }
-        if (get_class($object) == 'Societe' && $object->id) $sql.= " AND a.fk_soc = ".$object->id;
+        if (get_class($object) == 'Societe' && $object->id) $sql.= " AND ars.fk_soc = ".$object->id;
         if (! empty($objcon->id)) $sql.= " AND a.fk_contact = ".$objcon->id;
         $sql.= " AND ((a.percent >= 0 AND a.percent < 100) OR (a.percent = -1 AND a.datep > '".$db->idate($now)."'))";
         $sql.= " ORDER BY a.datep DESC, a.id DESC";
