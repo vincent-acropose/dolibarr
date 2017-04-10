@@ -166,18 +166,26 @@ if ($object->id > 0)
 
     print load_fiche_titre($langs->trans("ActionsOnMember"),$out,'');
 
+
 	if(!empty($object->fk_soc))
 	{
-		$socid = $object->fk_soc;
-		$object = new Societe($db);
-		$object->fetch($socid); 
+		$societe = new Societe($db);
+		$societe->fetch($object->fk_soc);
+
+		// List of todo actions
+		show_actions_todo($conf,$langs,$db,$societe);
+		
+		// List of done actions
+		show_actions_done($conf,$langs,$db,$societe);
 	}
-
-    // List of todo actions
-    show_actions_todo($conf,$langs,$db,$object);
-
-    // List of done actions
-    show_actions_done($conf,$langs,$db,$object);
+	else
+	{
+	    // List of todo actions
+	    show_actions_todo($conf,$langs,$db,$object);
+	
+	    // List of done actions
+	    show_actions_done($conf,$langs,$db,$object);
+	}
 }
 
 
