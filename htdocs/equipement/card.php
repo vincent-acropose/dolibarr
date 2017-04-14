@@ -659,7 +659,7 @@ if ($action == 'create') {
 
 			// le client est saisissable aussi � la cr�ation pour g�rer le pb des acc�s limit�
 			print '<tr><td >' . $langs->trans("Client") . '</td><td>';
-			print $form->select_company($object->fk_soc_client, 'fk_soc_client', '', 1);
+			print $form->select_company($object->fk_soc_client, 'fk_soc_client', 's.client IN (1)', 1);
 			print '</td></tr>' . "\n";
 
 			// Date open
@@ -935,7 +935,7 @@ if ($action == 'create') {
 		print '<form name="editclient" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="post">';
 		print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
 		print '<input type="hidden" name="action" value="setclient">';
-		print $form->select_company($object->fk_soc_client, 'fk_soc_client', '', 1);
+		print $form->select_company($object->fk_soc_client, 'fk_soc_client', 's.client IN (1)', 1);
 		print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
 		print '</form>';
 	} else {
