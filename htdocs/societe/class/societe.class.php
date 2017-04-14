@@ -1952,7 +1952,9 @@ class Societe extends CommonObject
         
         // Spé Solebio pour question pratique
 		$this->fetch_optionals();
-		if(!empty($this->array_options['options_producteur_logo']))$name.=' <FONT color="green">(Logo)</FONT>';
+		if(!empty($this->array_options['options_producteur_logo'])
+			&& $name !== $langs->trans('Customer')
+			&& $name !== $langs->trans('Supplier'))$name.=' <FONT color="green">(Logo)</FONT>';
 		
         if ($withpicto) $result.=($linkstart.img_object(($notooltip?'':$label), 'company', ($notooltip?'':'class="classfortooltip"'), 0, 0, $notooltip?0:1).$linkend);
         if ($withpicto && $withpicto != 2) $result.=' ';
