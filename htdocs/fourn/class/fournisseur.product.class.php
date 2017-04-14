@@ -70,7 +70,8 @@ class ProductFournisseur extends Product
     var $fourn_unitcharges;       // old version used a buggy system to calculate margin of a charge field on supplier price. Now margin is on pmp, best supplier price or cost price.
 
     var $fk_supplier_price_expression;
-
+    var $supplier_reputation;     // reputation of supplier
+    var $reputations=array();     // list of available supplier reputations 
 
     /**
 	 *	Constructor
@@ -79,7 +80,11 @@ class ProductFournisseur extends Product
      */
     function __construct($db)
     {
+        global $langs;
+        
         $this->db = $db;
+        $langs->load("suppliers");
+        $this->reputations= array('-1'=>'', 'FAVORITE'=>$langs->trans('Favorite'),'NOTTHGOOD'=>$langs->trans('NotTheGoodQualitySupplier'), 'DONOTORDER'=>$langs->trans('DoNotOrderThisProductToThisSupplier'));
     }
 
 
@@ -521,9 +526,10 @@ class ProductFournisseur extends Product
      *
      *  @param	int		$prodid	    Product id
      *  @param	int		$qty		Minimum quantity
+     *  @param	int		$socid		get min price for specific supplier
      *  @return int					<0 if KO, 0=Not found of no product id provided, >0 if OK
      */
-    function find_min_price_product_fournisseur($prodid, $qty=0)
+    function find_min_price_product_fournisseur($prodid, $qty=0, $socid=0)
     {
         global $conf;
 
@@ -556,6 +562,7 @@ class ProductFournisseur extends Product
         $sql.= " AND pfp.fk_soc = s.rowid";
         $sql.= " AND s.status = 1"; // only enabled society
         if ($qty > 0) $sql.= " AND pfp.quantity <= ".$qty;
+	if ($socid > 0) $sql.= ' AND pfp.fk_soc = '.$socid;
 
         dol_syslog(get_class($this)."::find_min_price_product_fournisseur", LOG_DEBUG);
 
