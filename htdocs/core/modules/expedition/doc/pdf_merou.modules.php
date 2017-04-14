@@ -276,7 +276,7 @@ class pdf_merou extends ModelePdfExpedition
 					$pdf->MultiCell(30, 3, $object->lines[$i]->qty_shipped, 0, 'C', 0);
 
 					// Add line
-					if (! empty($conf->global->MAIN_PDF_DASH_BETWEEN_LINES) && $i < ($nblignes - 1))
+					if ($conf->global->MAIN_PDF_DASH_BETWEEN_LINES && $i < ($nblignes - 1))
 					{
 						$pdf->setPage($pageposafter);
 						$pdf->SetLineStyle(array('dash'=>'1,1','color'=>array(210,210,210)));
@@ -652,9 +652,11 @@ class pdf_merou extends ModelePdfExpedition
 		$pdf->SetXY($blDestX,$Yoff);
 		$pdf->MultiCell($blW,3, $carac_client_name, 0, 'L');
 
+		$posy = $pdf->getY();
+
 		// Show recipient information
-		$pdf->SetFont('','', $default_font_size - 3);
-		$pdf->SetXY($blDestX,$Yoff+(dol_nboflines_bis($carac_client_name,50)*4));
-		$pdf->MultiCell($blW,2, $carac_client, 0, 'L');
+		$pdf->SetFont('','', $default_font_size - 1);
+		$pdf->SetXY($posx+2,$posy);
+		$pdf->MultiCell($widthrecbox, 4, $carac_client, 0, 'L');
 	}
 }

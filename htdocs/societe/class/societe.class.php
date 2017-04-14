@@ -672,7 +672,7 @@ class Societe extends CommonObject
         $this->localtax2_value=trim($this->localtax2_value);
 
         $this->capital=price2num(trim($this->capital),'MT');
-        if (empty($this->capital)) $this->capital = 0;
+        if (empty($this->capital) || ! is_numeric($this->capital)) $this->capital = 0;
 
         $this->effectif_id=trim($this->effectif_id);
         $this->forme_juridique_code=trim($this->forme_juridique_code);
@@ -2414,7 +2414,7 @@ class Societe extends CommonObject
         }
 
          //Verify duplicate entries
-        $sql  = "SELECT COUNT(*) as idprof FROM ".MAIN_DB_PREFIX."societe WHERE ".$field." = '".$value."'";
+        $sql  = "SELECT COUNT(*) as idprof FROM ".MAIN_DB_PREFIX."societe WHERE ".$field." = '".$value."' AND entity IN (".getEntity('societe',1).")";
         if($socid) $sql .= " AND rowid <> ".$socid;
         $resql = $this->db->query($sql);
         if ($resql)
@@ -3163,6 +3163,7 @@ class Societe extends CommonObject
 		$sql .= " AND fk_statut <> 0";	// Not a draft
 		//$sql .= " AND (fk_statut <> 3 OR close_code <> 'abandon')";		// Not abandonned for undefined reason
 		$sql .= " AND fk_statut <> 3";		// Not abandonned
+		$sql .= " AND fk_statut <> 2";		// Not clasified as paid
 
 		dol_syslog("get_OutstandingBill", LOG_DEBUG);
 		$resql=$this->db->query($sql);

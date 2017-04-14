@@ -8,6 +8,7 @@
  * Copyright (C) 2013		Christophe Battarel		<christophe.battarel@altairis.fr>
  * Copyright (C) 2013		Florian Henry			<florian.henry@open-concept.pro>
  * Copyright (C) 2014-2015	Marcos García			<marcosgdf@gmail.com>
+ * Copyright (C) 2015		Ferran Marcet			<fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1019,6 +1020,13 @@ class Contrat extends CommonObject
 
 		if (! $error)
 		{
+			// Delete linked object
+			$res = $this->deleteObjectLinked();
+			if ($res < 0) $error++;
+		}
+
+		if (! $error)
+		{
 			// Delete contratdet_log
 			/*
 			$sql = "DELETE cdl";
@@ -1284,7 +1292,7 @@ class Contrat extends CommonObject
 
 			$localtaxes_type=getLocalTaxesFromRate($txtva, 0, $this->societe, $mysoc);
 
-			$tabprice=calcul_price_total($qty, $pu, $remise_percent, $txtva, $txlocaltax1, $txlocaltax2, 0, $price_base_type, $info_bits, 1,'', $localtaxes_type);
+			$tabprice=calcul_price_total($qty, $pu, $remise_percent, $txtva, $txlocaltax1, $txlocaltax2, 0, $price_base_type, $info_bits, 1,$mysoc, $localtaxes_type);
 			$total_ht  = $tabprice[0];
 			$total_tva = $tabprice[1];
 			$total_ttc = $tabprice[2];
@@ -1420,7 +1428,7 @@ class Contrat extends CommonObject
 
 		$localtaxes_type=getLocalTaxesFromRate($tvatx, 0, $this->societe, $mysoc);
 
-		$tabprice=calcul_price_total($qty, $pu, $remise_percent, $tvatx, $localtax1tx, $localtax2tx, 0, $price_base_type, $info_bits, 1, '', $localtaxes_type);
+		$tabprice=calcul_price_total($qty, $pu, $remise_percent, $tvatx, $localtax1tx, $localtax2tx, 0, $price_base_type, $info_bits, 1, $mysoc, $localtaxes_type);
 		$total_ht  = $tabprice[0];
 		$total_tva = $tabprice[1];
 		$total_ttc = $tabprice[2];
@@ -2333,7 +2341,7 @@ class ContratLigne extends CommonObject
 	 */
 	function update($user, $notrigger=0)
 	{
-		global $conf, $langs;
+		global $conf, $langs, $mysoc;
 
 		$error=0;
 
@@ -2370,7 +2378,9 @@ class ContratLigne extends CommonObject
 		// qty, pu, remise_percent et txtva
 		// TRES IMPORTANT: C'est au moment de l'insertion ligne qu'on doit stocker
 		// la part ht, tva et ttc, et ce au niveau de la ligne qui a son propre taux tva.
-		$tabprice=calcul_price_total($this->qty, $this->price_ht, $this->remise_percent, $this->tva_tx, $this->localtax1_tx, $this->localtax2_tx, 0, 'HT', 0, 1);
+		$localtaxes_type = getLocalTaxesFromRate($this->txtva, 0, $this->societe, $mysoc);
+
+		$tabprice=calcul_price_total($this->qty, $this->price_ht, $this->remise_percent, $this->tva_tx, $this->localtax1_tx, $this->localtax2_tx, 0, 'HT', 0, 1, $mysoc, $localtaxes_type);
 		$this->total_ht  = $tabprice[0];
 		$this->total_tva = $tabprice[1];
 		$this->total_ttc = $tabprice[2];

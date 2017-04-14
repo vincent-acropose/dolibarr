@@ -9,6 +9,7 @@
  * Copyright (C) 2012-2015 Marcos García        <marcosgdf@gmail.com>
  * Copyright (C) 2012      Christophe Battarel	<christophe.battarel@ltairis.fr>
  * Copyright (C) 2011-2014 Alexandre Spangaro	<alexandre.spangaro@gmail.com>
+ * Copyright (C) 2015      Ferran Marcet        <fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -154,7 +155,7 @@ $tabsql[21]= "SELECT c.rowid as rowid, code, label, active FROM ".MAIN_DB_PREFIX
 $tabsql[22]= "SELECT rowid   as rowid, code, label, active FROM ".MAIN_DB_PREFIX."c_input_reason";
 $tabsql[23]= "SELECT t.rowid, t.taux, c.label as country, c.code as country_code, t.fk_pays as country_id, t.note, t.active, t.accountancy_code_sell, t.accountancy_code_buy FROM ".MAIN_DB_PREFIX."c_revenuestamp as t, ".MAIN_DB_PREFIX."c_country as c WHERE t.fk_pays=c.rowid";
 $tabsql[24]= "SELECT rowid   as rowid, code, label, active FROM ".MAIN_DB_PREFIX."c_type_resource";
-$tabsql[25]= "SELECT rowid   as rowid, label, type_template, private, position, topic, content, active FROM ".MAIN_DB_PREFIX."c_email_templates";
+$tabsql[25]= "SELECT rowid   as rowid, label, type_template, private, position, topic, content, active FROM ".MAIN_DB_PREFIX."c_email_templates WHERE entity IN (".getEntity('email_template',1).")";
 
 // Criteria to sort dictionaries
 $tabsqlsort=array();
@@ -266,7 +267,7 @@ $tabfieldinsert[21]= "code,label";
 $tabfieldinsert[22]= "code,label";
 $tabfieldinsert[23]= "fk_pays,taux,accountancy_code_sell,accountancy_code_buy,note";
 $tabfieldinsert[24]= "code,label";
-$tabfieldinsert[25]= "label,type_template,private,position,topic,content";
+$tabfieldinsert[25]= "label,type_template,private,position,topic,content,entity";
 
 // Nom du rowid si le champ n'est pas de type autoincrement
 // Example: "" if id field is "rowid" and has autoincrement on
@@ -551,7 +552,7 @@ if (GETPOST('actionadd') || GETPOST('actionmodify'))
         $i=0;
         foreach ($listfieldinsert as $f => $value)
         {
-            if ($value == 'price' || preg_match('/^amount/i',$value)) {
+            if ($value == 'price' || preg_match('/^amount/i',$value) || preg_match('/^localtax/i',$value) || $value == 'taux') {
             	$_POST[$listfieldvalue[$i]] = price2num($_POST[$listfieldvalue[$i]],'MU');
             }
             else if ($value == 'entity') {
@@ -599,7 +600,7 @@ if (GETPOST('actionadd') || GETPOST('actionmodify'))
         $i = 0;
         foreach ($listfieldmodify as $field)
         {
-            if ($field == 'price' || preg_match('/^amount/i',$field)) {
+            if ($field == 'price' || preg_match('/^amount/i',$field) || preg_match('/^localtax/i',$field) || $field == 'taux') {
             	$_POST[$listfieldvalue[$i]] = price2num($_POST[$listfieldvalue[$i]],'MU');
             }
             else if ($field == 'entity') {
@@ -913,7 +914,7 @@ if ($id)
         print "</tr>";
 
         $colspan=count($fieldlist)+2;
-        if ($id == 4) $colspan++;;
+        if ($id == 4) $colspan++;
 
         if (! empty($alabelisused))  // Si un des champs est un libelle
         {
@@ -1181,17 +1182,20 @@ if ($id)
 							  $align="center";
 							}
 							else if ($fieldlist[$field]=='localtax1') {
+                                $valuetoshow = price($valuetoshow, 0, $langs, 0, 0);
 							  if ($obj->localtax1 == 0)
 							    $valuetoshow = '';
 							  $align="right";
 							}
 							else if ($fieldlist[$field]=='localtax2') {
+                                $valuetoshow = price($valuetoshow, 0, $langs, 0, 0);
 							  if ($obj->localtax2 == 0)
 							    $valuetoshow = '';
 							  $align="right";
 							}
 							else if (in_array($fieldlist[$field],array('taux','localtax1','localtax2')))
 							{
+                                $valuetoshow = price($valuetoshow, 0, $langs, 0, 0);
 								$align="right";
 							}
 							else if (in_array($fieldlist[$field],array('recuperableonly')))

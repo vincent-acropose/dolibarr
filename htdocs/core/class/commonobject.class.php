@@ -1838,7 +1838,7 @@ abstract class CommonObject
      *	@return	void
      *  @see	add_object_linked, updateObjectLinked, deleteObjectLinked
      */
-	function fetchObjectLinked($sourceid='',$sourcetype='',$targetid='',$targettype='',$clause='OR')
+	function fetchObjectLinked($sourceid=null,$sourcetype='',$targetid=null,$targettype='',$clause='OR')
     {
         global $conf;
 
@@ -1866,11 +1866,11 @@ abstract class CommonObject
         $sourcetype = (! empty($sourcetype) ? $sourcetype : $this->element);
         $targettype = (! empty($targettype) ? $targettype : $this->element);
 
-        if (empty($sourceid) && empty($targetid))
+        /*if (empty($sourceid) && empty($targetid))
         {
         	dol_syslog('Bad usage of function. No source nor target id defined (nor as parameter nor as object id)', LOG_ERROR);
         	return -1;
-        }
+        }*/
 
         // Links beetween objects are stored in this table
         $sql = 'SELECT fk_source, sourcetype, fk_target, targettype';
@@ -2548,7 +2548,7 @@ abstract class CommonObject
 	 */
 	function printObjectLines($action, $seller, $buyer, $selected=0, $dateSelector=0)
 	{
-		global $conf,$langs,$user,$object,$hookmanager;
+		global $conf,$langs,$user,$object,$hookmanager,$inputalsopricewithtax;
 
 		print '<tr class="liste_titre nodrag nodrop">';
 
@@ -3388,6 +3388,11 @@ abstract class CommonObject
     {
     	if (empty($rowid)) $rowid=$this->id;
 
+        //To avoid SQL errors. Probably not the better solution though
+        if (!$this->table_element) {
+            return 0;
+        }
+
         if (! is_array($optionsArray))
         {
             // optionsArray not already loaded, so we load it
@@ -3572,16 +3577,16 @@ abstract class CommonObject
         else return 0;
     }
 
-   /**
-     * Function to show lines of extrafields with output datas
-     *
-     * @param	object	$extrafields	Extrafield Object
-     * @param	string	$mode			Show output (view) or input (edit) for extrafield
-	 * @param	array	$params			Optionnal parameters
-	 * @param	string	$keyprefix		Prefix string to add into name and id of field (can be used to avoid duplicate names)
-     *
-     * @return string
-     */
+	/**
+	 * Function to show lines of extrafields with output datas
+	 *
+	 * @param Extrafields   $extrafields    Extrafield Object
+	 * @param string        $mode           Show output (view) or input (edit) for extrafield
+	 * @param array         $params         Optional parameters
+	 * @param string        $keyprefix      Prefix string to add into name and id of field (can be used to avoid duplicate names)
+	 *
+	 * @return string
+	 */
     function showOptionals($extrafields, $mode='view', $params=0, $keyprefix='')
     {
 		global $_POST, $conf;
@@ -3609,7 +3614,16 @@ abstract class CommonObject
 						$value=$this->array_options["options_".$key];
 						break;
 					case "edit":
-						$value=(isset($_POST["options_".$key])?$_POST["options_".$key]:$this->array_options["options_".$key]);
+						if (isset($_POST["options_" . $key])) {
+							if (is_array($_POST["options_" . $key])) {
+								// $_POST["options"] is an array but following code expects a comma separated string
+								$value = implode(",", $_POST["options_" . $key]);
+							} else {
+								$value = $_POST["options_" . $key];
+							}
+						} else {
+							$value = $this->array_options["options_" . $key];
+						}
 						break;
 				}
 				if ($extrafields->attribute_type[$key] == 'separate')

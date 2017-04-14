@@ -8,6 +8,7 @@
  * Copyright (C) 2014		Cedric GROSS			<c.gross@kreiz-it.fr>
  * Copyright (C) 2014       Marcos García           <marcosgdf@gmail.com>
  * Copyright (C) 2014       Francis Appels          <francis.appels@yahoo.com>
+ * Copyright (C) 2016		Ferran Marcet			<fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +35,7 @@ if (! empty($conf->propal->enabled)) require_once DOL_DOCUMENT_ROOT.'/comm/propa
 if (! empty($conf->commande->enabled)) require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
 if (! empty($conf->productbatch->enabled)) require_once DOL_DOCUMENT_ROOT.'/expedition/class/expeditionbatch.class.php';
 
-
+ 
 /**
  *	Class to manage shipments
  */
@@ -545,16 +546,17 @@ class Expedition extends CommonObject
 
 		// Class of company linked to order
 		$result=$soc->set_as_client();
-
+		
+		$numref = $this->ref;
 		// Define new ref
 		if (! $error && (preg_match('/^[\(]?PROV/i', $this->ref)))
 		{
 			$numref = $this->getNextNumRef($soc);
 		}
-		else
+		/*else
 		{
 			$numref = "EXP".$this->id;
-		}
+		}*/
         $this->newref = $numref;
 
 		$now=dol_now();
@@ -763,13 +765,19 @@ class Expedition extends CommonObject
 				return -1;
 			}
 
-			if ($conf->global->STOCK_MUST_BE_ENOUGH_FOR_SHIPMENT)	// FIXME Check is done for stock of product, it must be done for stock of product into warehouse if $entrepot_id defined
+			if ($conf->global->STOCK_MUST_BE_ENOUGH_FOR_SHIPMENT)
 			{
 				$product=new Product($this->db);
 				$result=$product->fetch($fk_product);
+				if ($entrepot_id > 0) {
+					$product->load_stock();
+					$product_stock = $product->stock_warehouse[$entrepot_id]->real;
+				}
+				else
+					$product_stock = $product->stock_reel;
 				$product_type=$product->type;
 
-				if ($product_type == 0 && $product->stock_reel < $qty)
+				if ($product_type == 0 && $product_stock < $qty)
 				{
 					$this->error=$langs->trans('ErrorStockIsNotEnough');
 					$this->db->rollback();
@@ -980,7 +988,7 @@ class Expedition extends CommonObject
 					$mouvS->origin = &$this;
 					// We decrement stock of product (and sub-products)
 					// We use warehouse selected for each line
-					$result=$mouvS->reception($user, $obj->fk_product, $obj->fk_entrepot, $obj->qty, $obj->subprice, $langs->trans("ShipmentDeletedInDolibarr",$this->ref));
+					$result=$mouvS->reception($user, $obj->fk_product, $obj->fk_entrepot, $obj->qty, 0, $langs->trans("ShipmentDeletedInDolibarr",$this->ref));
 					if ($result < 0)
 					{
 						$error++;
@@ -1140,6 +1148,8 @@ class Expedition extends CommonObject
 				$line->details_entrepot[]     = $detail_entrepot;
 
                 $line->line_id          = $obj->line_id;
+                $line->rowid            = $obj->line_id;    // TODO deprecated
+                $line->id               = $obj->line_id;
 				$line->fk_origin_line 	= $obj->fk_origin_line;
 				$line->origin_line_id 	= $obj->fk_origin_line;	    // TODO deprecated
 				$line->fk_product     	= $obj->fk_product;

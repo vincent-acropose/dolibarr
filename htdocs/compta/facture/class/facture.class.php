@@ -12,6 +12,7 @@
  * Copyright (C) 2012-2014 Marcos García         <marcosgdf@gmail.com>
  * Copyright (C) 2013      Cedric Gross          <c.gross@kreiz-it.fr>
  * Copyright (C) 2013      Florian Henry		  	<florian.henry@open-concept.pro>
+ * Copyright (C) 2016      Ferran Marcet        <fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1765,7 +1766,7 @@ class Facture extends CommonInvoice
 							$mouvP = new MouvementStock($this->db);
 							$mouvP->origin = &$this;
 							// We decrease stock for product
-							if ($this->type == self::TYPE_CREDIT_NOTE) $result=$mouvP->reception($user, $this->lines[$i]->fk_product, $idwarehouse, $this->lines[$i]->qty, $this->lines[$i]->subprice, $langs->trans("InvoiceValidatedInDolibarr",$num));
+							if ($this->type == self::TYPE_CREDIT_NOTE) $result=$mouvP->reception($user, $this->lines[$i]->fk_product, $idwarehouse, $this->lines[$i]->qty, 0, $langs->trans("InvoiceValidatedInDolibarr",$num));
 							else $result=$mouvP->livraison($user, $this->lines[$i]->fk_product, $idwarehouse, $this->lines[$i]->qty, $this->lines[$i]->subprice, $langs->trans("InvoiceValidatedInDolibarr",$num));
 							if ($result < 0) {
 								$error++;
@@ -2189,15 +2190,38 @@ class Facture extends CommonInvoice
 			$pu_tva = $tabprice[4];
 			$pu_ttc = $tabprice[5];
 
-			// Update line into database
-			$this->line=new FactureLigne($this->db);
+			// Old properties: $price, $remise (deprecated)
+			$price = $pu;
+			$remise = 0;
+			if ($remise_percent > 0)
+			{
+				$remise = round(($pu * $remise_percent / 100),2);
+				$price = ($pu - $remise);
+			}
+			$price    = price2num($price);
 
+			//Fetch current line from the database and then clone the object and set it in $oldline property
+			$line = new FactureLigne($this->db);
+			$line->fetch($rowid);
+
+			if (!empty($line->fk_product))
+			{
+				$product=new Product($this->db);
+				$result=$product->fetch($line->fk_product);
+				$product_type=$product->type;
+
+				if (! empty($conf->global->STOCK_MUST_BE_ENOUGH_FOR_INVOICE) && $product_type == 0 && $product->stock_reel < $qty) {
+					$this->error=$langs->trans('ErrorStockIsNotEnough');
+					$this->db->rollback();
+					return -3;
+				}
+			}
+
+			$staticline = clone $line;
+
+			$line->oldline = $staticline;
+			$this->line = $line;
             $this->line->context = $this->context;
-
-            // Stock previous line records
-			$staticline=new FactureLigne($this->db);
-			$staticline->fetch($rowid);
-			$this->line->oldline = $staticline;
 
 			// Reorder if fk_parent_line change
 			if (! empty($fk_parent_line) && ! empty($staticline->fk_parent_line) && $fk_parent_line != $staticline->fk_parent_line)
@@ -2566,15 +2590,16 @@ class Facture extends CommonInvoice
 			$numref = "";
 			$numref = $obj->getNextValue($soc,$this,$mode);
 
-			if ($numref != "")
-			{
-				return $numref;
-			}
-			else
-			{
+			/**
+			 * $numref can be empty in case we ask for the last value because if there is no invoice created with the
+			 * set up mask.
+			 */
+			if ($mode != 'last' && !$numref) {
 				dol_print_error($db,"Facture::getNextNumRef ".$obj->error);
 				return "";
 			}
+
+			return $numref;
 		}
 		else
 		{
@@ -3500,10 +3525,12 @@ class FactureLigne extends CommonInvoiceLine
 			$this->product_desc			= $objp->product_desc;
 
 			$this->db->free($result);
+
+			return 1;
 		}
 		else
 		{
-			dol_print_error($this->db);
+			return -1;
 		}
 	}
 

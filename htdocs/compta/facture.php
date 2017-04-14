@@ -1750,6 +1750,8 @@ if ($action == 'create')
 		$res = $soc->fetch($socid);
 
 	// Load objectsrc
+	$remise_absolue = 0;
+
 	if (! empty($origin) && ! empty($originid))
 	{
 		// Parse element/subelement (ex: project_task)
@@ -1761,6 +1763,20 @@ if ($action == 'create')
 
 		if ($element == 'project') {
 			$projectid = $originid;
+			
+			if (!$cond_reglement_id) {
+				$cond_reglement_id = $soc->cond_reglement_id;
+			}
+			if (!$mode_reglement_id) {
+				$mode_reglement_id = $soc->mode_reglement_id;
+			}
+			if (!$remise_percent) {
+				$remise_percent = $soc->remise_percent;
+			}
+			if (!$dateinvoice) {
+				// Do not set 0 here (0 for a date is 1970)
+				$dateinvoice = (empty($dateinvoice)?(empty($conf->global->MAIN_AUTOFILL_DATE)?-1:''):$dateinvoice);
+			}			
 		} else {
 			// For compatibility
 			if ($element == 'order' || $element == 'commande') {
@@ -1805,7 +1821,6 @@ if ($action == 'create')
 			$objectsrc->fetch_optionals($originid);
 			$object->array_options = $objectsrc->array_options;
 		}
-		$dateinvoice = empty($conf->global->MAIN_AUTOFILL_DATE) ? -1 : '';	// Dot not set 0 here (0 for a date is 1970)
 	}
 	else
 	{
@@ -1816,6 +1831,7 @@ if ($action == 'create')
 		$remise_absolue 	= 0;
 		$dateinvoice		= (empty($dateinvoice)?(empty($conf->global->MAIN_AUTOFILL_DATE)?-1:''):$dateinvoice);		// Do not set 0 here (0 for a date is 1970)
 	}
+
 	$absolute_discount = $soc->getAvailableDiscounts();
 
 	if (! empty($conf->use_javascript_ajax))
@@ -1862,7 +1878,7 @@ if ($action == 'create')
 	else
 	{
 		print '<td colspan="2">';
-		print $form->select_company('', 'socid', 's.client = 1 OR s.client = 3', 1);
+		print $form->select_company('', 'socid', '(s.client = 1 OR s.client = 3) AND status=1', 1);
 		print '</td>';
 	}
 	print '</tr>' . "\n";
@@ -2128,6 +2144,10 @@ if ($action == 'create')
 	print '</td></tr>';
 
     // Bank Account
+	if (isset($_POST['fk_account'])) {
+		$fk_account = $_POST['fk_account'];
+	}
+
     print '<tr><td>' . $langs->trans('BankAccount') . '</td><td colspan="2">';
     $form->select_comptes($fk_account, 'fk_account', 0, '', 1);
     print '</td></tr>';
@@ -3645,7 +3665,7 @@ if ($action == 'create')
 		$formmail->substit['__FACREF__'] = $object->ref;
 		$formmail->substit['__SIGNATURE__'] = $user->signature;
 		$formmail->substit['__REFCLIENT__'] = $object->ref_client;
-		$formmail->substit['__THIRPARTY_NAME__'] = $object->thirdparty->name;
+		$formmail->substit['__THIRDPARTY_NAME__'] = $object->thirdparty->name;
 		$formmail->substit['__PROJECT_REF__'] = (is_object($object->projet)?$object->projet->ref:'');
 		$formmail->substit['__PERSONALIZED__'] = '';
 		$formmail->substit['__CONTACTCIVNAME__'] = '';

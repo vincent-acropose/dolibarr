@@ -2,7 +2,7 @@
 /* Copyright (C) 2004-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005      Eric	Seigne          <eric.seigne@ryxeo.com>
- * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2016 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2015 Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2011      Philippe Grand       <philippe.grand@atoo-net.com>
  * Copyright (C) 2012      Marcos García        <marcosgdf@gmail.com>
@@ -621,6 +621,14 @@ if ($action == 'confirm_commande' && $confirm	== 'yes' &&	$user->rights->fournis
     if ($result > 0)
     {
         if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
+        	$outputlangs = $langs;
+        	$newlang = '';
+        	if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id')) $newlang = GETPOST('lang_id','alpha');
+        	if ($conf->global->MAIN_MULTILANGS && empty($newlang))	$newlang = $object->thirdparty->default_lang;
+        	if (! empty($newlang)) {
+        		$outputlangs = new Translate("", $conf);
+        		$outputlangs->setDefaultLang($newlang);
+        	}
 	        $object->generateDocument($object->modelpdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
         }
         header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
@@ -2195,7 +2203,7 @@ elseif (! empty($object->id))
 		// Tableau des substitutions
 		$formmail->substit['__ORDERREF__']=$object->ref;
 		$formmail->substit['__ORDERSUPPLIERREF__']=$object->ref_supplier;
-		$formmail->substit['__THIRPARTY_NAME__'] = $object->thirdparty->name;
+		$formmail->substit['__THIRDPARTY_NAME__'] = $object->thirdparty->name;
 		$formmail->substit['__PROJECT_REF__'] = (is_object($object->projet)?$object->projet->ref:'');
 		$formmail->substit['__SIGNATURE__']=$user->signature;
 		$formmail->substit['__PERSONALIZED__']='';

@@ -333,18 +333,12 @@ if (! empty($usemargins) && $user->rights->margins->creer)
 	jQuery(document).ready(function() {
 		<?php
 		if (! empty($conf->global->DISPLAY_MARGIN_RATES)) { ?>
-			$('#addline').click(function (e) {
-				return checkFreeLine(e, "np_marginRate");
-			});
 			$("input[name='np_marginRate']:first").blur(function(e) {
 				return checkFreeLine(e, "np_marginRate");
 			});
 		<?php
 		}
 		if (! empty($conf->global->DISPLAY_MARK_RATES)) { ?>
-			$('#addline').click(function (e) {
-				return checkFreeLine(e, "np_markRate");
-			});
 			$("input[name='np_markRate']:first").blur(function(e) {
 				return checkFreeLine(e, "np_markRate");
 			});
@@ -464,7 +458,7 @@ jQuery(document).ready(function() {
 		<?php if (! empty($usemargins) && $user->rights->margins->creer) { ?>
 
 		/* Code for margin */
-  		$("#fournprice_predef options").remove();
+  		$("#fournprice_predef").find("option").remove();
 		$("#fournprice_predef").hide();
 		$("#buying_price").val("").show();
   		$.post('<?php echo DOL_URL_ROOT; ?>/fourn/ajax/getSupplierPrices.php', { 'idprod': $(this).val() }, function(data) {

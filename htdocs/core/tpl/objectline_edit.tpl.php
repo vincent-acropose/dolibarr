@@ -255,9 +255,6 @@ if (! empty($conf->margin->enabled))
 		if (! empty($conf->global->DISPLAY_MARGIN_RATES))
 		{
 		?>
-			$('#savelinebutton').click(function (e) {
-				return checkEditLine(e, "np_marginRate");
-			});
 			$("input[name='np_marginRate']:first").blur(function(e) {
 				return checkEditLine(e, "np_marginRate");
 			});
@@ -266,9 +263,6 @@ if (! empty($conf->margin->enabled))
 		if (! empty($conf->global->DISPLAY_MARK_RATES))
 		{
 		?>
-			$('#savelinebutton').click(function (e) {
-				return checkEditLine(e, "np_markRate");
-			});
 			$("input[name='np_markRate']:first").blur(function(e) {
 				return checkEditLine(e, "np_markRate");
 			});
@@ -286,18 +280,19 @@ if (! empty($conf->margin->enabled))
 		var remise = $("input[name='remise_percent']:first");
 
 		var rate = $("input[name='"+npRate+"']:first");
-		if (rate.val() == '') return true;
+		if (rate.val() == '' || (typeof rate.val()) == 'undefined' ) return true;
+		var ratejs = price2numjs(rate.val());
 
-		if (! $.isNumeric(rate.val().replace(',','.')))
+		if (! $.isNumeric(ratejs))
 		{
-			alert('<?php echo $langs->trans("rateMustBeNumeric"); ?>');
+			alert('<?php echo $langs->transnoentitiesnoconv("rateMustBeNumeric"); ?>');
 			e.stopPropagation();
 			setTimeout(function () { rate.focus() }, 50);
 			return false;
 		}
-		if (npRate == "markRate" && rate.val() >= 100)
+		if (npRate == "np_markRate" && ratejs > 100)
 		{
-			alert('<?php echo $langs->trans("markRateShouldBeLesserThan100"); ?>');
+			alert('<?php echo $langs->transnoentitiesnoconv("markRateShouldBeLesserThan100"); ?>');
 			e.stopPropagation();
 			setTimeout(function () { rate.focus() }, 50);
 			return false;
@@ -305,19 +300,23 @@ if (! empty($conf->margin->enabled))
 
 		var price = 0;
 		remisejs=price2numjs(remise.val());
-
 		if (remisejs != 100)
 		{
 			bpjs=price2numjs(buying_price.val());
 			ratejs=price2numjs(rate.val());
-
-			if (npRate == "marginRate")
+			/* console.log(npRate+" - "+bpjs+" - "+ratejs); */
+			if (npRate == "np_marginRate")
 				price = ((bpjs * (1 + ratejs / 100)) / (1 - remisejs / 100));
-			else if (npRate == "markRate")
-				price = ((bpjs / (1 - ratejs / 100)) / (1 - remisejs / 100));
+			else if (npRate == "np_markRate")
+			{
+				if (ratejs != 100)	// If markRate is 100, it means buying price is 0, so it is not possible to retreive price from it and markRate. We keep it unchange
+				{
+					price = ((bpjs / (1 - (ratejs / 100))) / (1 - remisejs / 100));
+				}
+				else price=$("input[name='price_ht']:first").val();
+			}
 		}
 		$("input[name='price_ht']:first").val(price);	// TODO Must use a function like php price to have here a formated value
-
 		return true;
 	}
 

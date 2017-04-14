@@ -762,8 +762,10 @@ class ExtraFields
 					{
 						$sqlwhere.= ' WHERE '.$InfoFieldList[4];
 					}
-				}else {
-					$sqlwhere.= ' WHERE 1';
+				}
+				else 
+				{
+					$sqlwhere.= ' WHERE 1=1';
 				}
 				if (in_array($InfoFieldList[0],array('tablewithentity'))) $sqlwhere.= ' AND entity = '.$conf->entity;	// Some tables may have field, some other not. For the moment we disable it.
 				$sql.=$sqlwhere;
@@ -1155,7 +1157,7 @@ class ExtraFields
 				else if (in_array($key_type,array('checkbox')))
 				{
 					$value_arr=GETPOST("options_".$key.$keyprefix);
-					$value_key=implode($value_arr,',');
+					$value_key=implode(',', $value_arr);
 				}
 				else if (in_array($key_type,array('price','double')))
 				{
