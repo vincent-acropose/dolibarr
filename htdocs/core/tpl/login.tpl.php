@@ -234,7 +234,7 @@ if (isset($conf->file->main_authentication) && preg_match('/openid/',$conf->file
 <?php if (! empty($_SESSION['dol_loginmesg']))
 {
 ?>
-	<div class="center" style="max-width: 500px; margin-left: 10px; margin-right: 10px;"><div class="error">
+	<div class="center" style="background-color:#666;max-width: 500px; margin-left: 10px; margin-right: 10px;"><div class="error">
 	<?php echo $_SESSION['dol_loginmesg']; ?>
 	</div></div>
 <?php
@@ -244,7 +244,7 @@ if (isset($conf->file->main_authentication) && preg_match('/openid/',$conf->file
 <?php if ($main_home)
 {
 ?>
-	<div class="center login_main_home" style="max-width: 80%">
+	<div class="center login_main_home" style="max-width: 80%; background-color:#666;padding:20px;border-radius:10px;">
 	<?php echo $main_home; ?>
 	</div><br>
 <?php
