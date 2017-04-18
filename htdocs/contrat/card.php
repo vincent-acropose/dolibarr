@@ -872,7 +872,7 @@ if (empty($reshook))
 	            setEventMessages($object->error, $object->errors, 'errors');
 	            $action = 'editdate_contrat';
 	        } else {
-	        	
+	        	$object->fetch($object->id);
 	        	$result = $object->call_trigger('CONTRACT_UDATE', $user);
 	        	if ($result < 0) {
 	        		$error ++;
