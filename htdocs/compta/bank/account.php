@@ -623,7 +623,7 @@ if ($id > 0 || ! empty($ref))
 	// Si le partage des compte bancaire est activé dans multicompany, on ne limite pas la recherche des comptes à l'entité dans laquelle on se trouve (Ticket 1573)
 	if(!$conf->global->MULTICOMPANY_BANK_ACCOUNT_SHARING_ENABLED) $sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
 	
-	$sql.= $sql_rech.' GROUP BY b.rowid ';
+	$sql.= $sql_rech.' GROUP BY b.rowid, b.dateo, b.datev, b.amount, b.label, b.rappro, b.num_releve, b.num_chq, b.fk_type, b.fk_bordereau, ba.rowid, ba.ref, ba.label, fac.fk_user_author, fac_fourn.fk_user_author ';
 	$sql.= $db->order("b.datev, b.datec", "ASC");  // We add date of creation to have correct order when everything is done the same day
 	$sql.= $db->plimit($limitsql, 0);
 
