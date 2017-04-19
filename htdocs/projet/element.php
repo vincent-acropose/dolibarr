@@ -834,6 +834,8 @@ foreach ($listofreferent as $key => $value)
 
 				// Date or TimeSpent
 				$date=''; $total_time_by_line = null;
+				if ($tablename == 'ndfp_det') $date = $element->date; // ATM : ndfp+
+				
 				if ($tablename == 'expensereport_det') $date = $element->date;      // No draft status on lines
 				elseif (! empty($element->status) || ! empty($element->statut) || ! empty($element->fk_status))
 				{

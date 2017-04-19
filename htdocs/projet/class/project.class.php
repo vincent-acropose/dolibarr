@@ -504,6 +504,10 @@ class Project extends CommonObject
 		{
 			$sql = "SELECT DISTINCT pt.rowid, ptt.fk_user FROM " . MAIN_DB_PREFIX . "projet_task as pt, " . MAIN_DB_PREFIX . "projet_task_time as ptt WHERE pt.rowid = ptt.fk_task AND pt.fk_projet=" . $this->id;
 		}
+		elseif ($type == 'ndfp_det')
+		{
+			$sql = "SELECT ed.rowid FROM " . MAIN_DB_PREFIX . "ndfp as e, " . MAIN_DB_PREFIX . "ndfp_det as ed WHERE e.rowid = ed.fk_ndfp AND e.fk_project=" . $this->id;
+		}
         else
 		{
             $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . $tablename." WHERE fk_projet=" . $this->id;
