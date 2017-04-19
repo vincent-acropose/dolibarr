@@ -136,3 +136,6 @@
 [submodule "htdocs/custom/propalautosend"]
 	path = htdocs/custom/propalautosend
 	url = git@github.com:ATM-Consulting/dolibarr_module_propalautosend.git
+[submodule "htdocs/custom/advtargetemailing"]
+	path = htdocs/custom/advtargetemailing
+	url = git@atmsrv1:store-advtargetemailing.git
