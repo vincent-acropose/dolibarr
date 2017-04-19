@@ -73,9 +73,6 @@
 [submodule "htdocs/custom/upbuttons"]
 	path = htdocs/custom/upbuttons
 	url = git@github.com:ATM-Consulting/dolibarr_module_upbuttons.git
-[submodule "htdocs/custom/advtargetemailing"]
-	path = htdocs/custom/advtargetemailing
-	url = git@atmsrv1:store-advtargetemailing.git
 [submodule "htdocs/custom/agefodd"]
 	path = htdocs/custom/agefodd
 	url = git@atmsrv1:store-agefodd.git
