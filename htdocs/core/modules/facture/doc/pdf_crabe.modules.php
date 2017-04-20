@@ -1429,7 +1429,8 @@ class pdf_crabe extends ModelePDFFactures
 		$posy+=1;
 
 		// Show list of linked objects
-		$posy = pdf_writeLinkedObjects($pdf, $object, $outputlangs, $posx, $posy, 100, 3, 'R', $default_font_size);
+		// TK5892 on enlève l'affichage des lignes objets liés : l. 7, 8, 9 & 10
+		//$posy = pdf_writeLinkedObjects($pdf, $object, $outputlangs, $posx, $posy, 100, 3, 'R', $default_font_size);
 
 		if ($showaddress)
 		{
