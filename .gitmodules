@@ -139,3 +139,6 @@
 [submodule "htdocs/custom/advtargetemailing"]
 	path = htdocs/custom/advtargetemailing
 	url = git@atmsrv1:store-advtargetemailing.git
+[submodule "htdocs/custom/quicksupplierprice"]
+	path = htdocs/custom/quicksupplierprice
+	url = git@github.com:ATM-Consulting/dolibarr_module_quicksupplierprice.git
