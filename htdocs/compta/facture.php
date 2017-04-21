@@ -736,7 +736,7 @@ if (empty($reshook))
 				$object->ref_int			= $_POST['ref_int'];
 				$object->modelpdf			= $_POST['model'];
 				$object->fk_project			= $_POST['projectid'];
-				$object->cond_reglement_id	= 0;
+				$object->cond_reglement_id	= $_POST['cond_reglement_id'];
 				$object->mode_reglement_id	= $_POST['mode_reglement_id'];
 	            $object->fk_account         = GETPOST('fk_account', 'int');
 				$object->remise_absolue		= $_POST['remise_absolue'];
@@ -3309,16 +3309,16 @@ else if ($id > 0 || ! empty($ref))
 		print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editconditions&amp;facid=' . $object->id . '">' . img_edit($langs->trans('SetConditions'), 1) . '</a></td>';
 	print '</tr></table>';
 	print '</td><td colspan="3">';
-	if ($object->type != Facture::TYPE_CREDIT_NOTE)
-	{
+	//if ($object->type != Facture::TYPE_CREDIT_NOTE)
+	//{
 		if ($action == 'editconditions') {
 			$form->form_conditions_reglement($_SERVER['PHP_SELF'] . '?facid=' . $object->id, $object->cond_reglement_id, 'cond_reglement_id');
 		} else {
 			$form->form_conditions_reglement($_SERVER['PHP_SELF'] . '?facid=' . $object->id, $object->cond_reglement_id, 'none');
 		}
-	} else {
-		print '&nbsp;';
-	}
+	//} else {
+	//	print '&nbsp;';
+	//}
 	print '</td></tr>';
 
 	// Date payment term
