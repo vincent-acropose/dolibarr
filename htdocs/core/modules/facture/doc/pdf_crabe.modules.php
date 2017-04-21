@@ -882,7 +882,7 @@ class pdf_crabe extends ModelePDFFactures
 			}
 			// Avoid having any valid PDF with setup that is not complete
 			elseif (($object->mode_reglement_code == 'CHQ' && empty($conf->global->FACTURE_CHQ_NUMBER) && empty($object->fk_account) && empty($object->fk_bank))
-				|| ($object->mode_reglement_code == 'VIR' && empty($conf->global->FACTURE_RIB_NUMBER) && empty($object->fk_account) && empty($object->fk_bank)))
+				|| ($object->mode_reglement_code == 'CVT' && empty($conf->global->FACTURE_RIB_NUMBER) && empty($object->fk_account) && empty($object->fk_bank)))
 			{
 				$outputlangs->load("errors");
 
@@ -899,7 +899,7 @@ class pdf_crabe extends ModelePDFFactures
 			// Show payment mode
 			if ($object->mode_reglement_code
 			&& $object->mode_reglement_code != 'CHQ'
-			&& $object->mode_reglement_code != 'VIR')
+			&& $object->mode_reglement_code != 'CVT')
 			{
 				$pdf->SetFont('','B', $default_font_size - 2);
 				$pdf->SetXY($this->marge_gauche, $posy);
@@ -958,8 +958,8 @@ class pdf_crabe extends ModelePDFFactures
 				}
 			}
 
-			// If payment mode not forced or forced to VIR, show payment with BAN
-			if (empty($object->mode_reglement_code) || $object->mode_reglement_code == 'VIR')
+			// If payment mode not forced or forced to CVT, show payment with BAN
+			if (empty($object->mode_reglement_code) || $object->mode_reglement_code == 'CVT')
 			{
 				if (! empty($object->fk_account) || ! empty($object->fk_bank) || ! empty($conf->global->FACTURE_RIB_NUMBER))
 				{
