@@ -262,3 +262,7 @@ ALTER TABLE llx_product_price ALTER COLUMN date_price SET DEFAULT NULL;
 ALTER TABLE llx_product_price ADD COLUMN default_vat_code	varchar(10) after tva_tx;
 ALTER TABLE llx_product_fournisseur_price ADD COLUMN default_vat_code	varchar(10) after tva_tx;
 
+
+-- Backport 6.0
+ALTER TABLE llx_paiementfourn ADD COLUMN model_pdf varchar(255);
+
