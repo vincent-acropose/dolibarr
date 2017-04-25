@@ -937,7 +937,7 @@ class Form
             }
 
             // Construct $out and $outarray
-            $out.= '<select id="'.$htmlname.'" class="flat'.($morecss?' '.$morecss:'').'" name="'.$htmlname.'"'.$nodatarole.' style="width:280px;">'."\n";
+            $out.= '<select id="'.$htmlname.'" class="flat'.($morecss?' '.$morecss:'').'" name="'.$htmlname.'"'.$nodatarole.' >'."\n";
 
             $textifempty=' ';
             // Do not use textempty = ' ' or '&nbsp;' here, or search on key will search on ' key'.
