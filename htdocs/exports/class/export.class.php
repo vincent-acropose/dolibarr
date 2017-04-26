@@ -111,11 +111,11 @@ class Export
     									//print_r("$perm[0]-$perm[1]-$perm[2]<br>");
     									if (! empty($perm[2]))
     									{
-    										$bool=$user->rights->$perm[0]->$perm[1]->$perm[2];
+    										$bool=$user->rights->{$perm[0]}->{$perm[1]}->{$perm[2]};
     									}
     									else
     									{
-    										$bool=$user->rights->$perm[0]->$perm[1];
+    										$bool=$user->rights->{$perm[0]}->{$perm[1]};
     									}
     									if ($perm[0]=='user' && $user->admin) $bool=true;
     									if (! $bool) break;
@@ -191,20 +191,28 @@ class Export
 			if (! array_key_exists($key, $array_selected)) continue;		// Field not selected
 			if ($i > 0) $sql.=', ';
 			else $i++;
-			$newfield=$key.' as '.str_replace(array('.', '-'),'_',$key);;
+
+			if (strpos($key, ' as ')===false) {
+				$newfield=$key.' as '.str_replace(array('.', '-'),'_',$key);
+			} else {
+				$newfield=$key;
+			}
+
 			$sql.=$newfield;
 		}
 		$sql.=$this->array_export_sql_end[$indice];
 		//construction du filtrage si le parametrage existe
 		if (is_array($array_filterValue) && !empty($array_filterValue))
 		{
-			$sqlWhere='';
+			$sqlWhere=array();
 			// pour ne pas a gerer le nombre de condition
 			foreach ($array_filterValue as $key => $value)
 			{
-				if ($value != '') $sqlWhere.=" and ".$this->build_filterQuery($this->array_export_TypeFields[$indice][$key], $key, $array_filterValue[$key]);
+				if ($value != '') $sqlWhere[]=$this->build_filterQuery($this->array_export_TypeFields[$indice][$key], $key, $array_filterValue[$key]);
 			}
-			$sql.=$sqlWhere;
+			if (count($sqlWhere)>0) {
+				$sql.=' WHERE '.implode(' AND ',$sqlWhere);
+			}
 		}
 		$sql.=$this->array_export_sql_order[$indice];
 		return $sql;
@@ -265,7 +273,13 @@ class Export
 				}
 				break;
 			case 'Boolean':
-				$szFilterQuery=" ".$NameField."=".(is_numeric($ValueField) ? $ValueField : ($ValueField =='yes' ? 1: 0) );
+				$ValueField = (is_numeric($ValueField) ? $ValueField : ($ValueField =='yes' ? 1: 0) );
+				if($ValueField == 1){
+					$szFilterQuery=" ".$NameField."=".$ValueField;
+				}
+				else{
+					$szFilterQuery=" (".$NameField."=".$ValueField." OR ".$NameField." IS NULL) " ;
+				}
 				break;
 			case 'Status':
 			case 'List':
