@@ -1354,7 +1354,7 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 		print '<tr>';
 		print '<td class="fieldrequired">' . $langs->trans('ThirdParty') . '</td>';
 		print '<td>';
-		print $form->select_company('', 'socid', 's.client in (1,2,3) AND s.rowid NOT IN (SELECT fk_soc FROM ' . MAIN_DB_PREFIX . 'product_customer_price WHERE fk_product='.$object->id.')', 'SelectThirdParty', 0, 0, array(), 0, 'minwidth300');
+		print $form->select_company('', 'socid', 's.client in (1,3) AND s.rowid NOT IN (SELECT fk_soc FROM ' . MAIN_DB_PREFIX . 'product_customer_price WHERE fk_product='.$object->id.')', 'SelectThirdParty', 1, 0, array(), 0, 'minwidth300');
 		print '</td>';
 		print '</tr>';
 
