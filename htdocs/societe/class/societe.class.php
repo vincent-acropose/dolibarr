@@ -730,6 +730,8 @@ class Societe extends CommonObject
         //Web services
         $this->webservices_url = $this->webservices_url?clean_url($this->webservices_url,0):'';
         $this->webservices_key = trim($this->webservices_key);
+        
+        if(empty($this->entity)) $this->entity = $conf->entity;
 
         $this->db->begin();
 
