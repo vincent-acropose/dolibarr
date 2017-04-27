@@ -1332,10 +1332,14 @@ else
 	        dol_include_once('/abricot/includes/class/class.form.core.php');
 	        print '<tr><td width="25%">'.$langs->trans('Partenaire').'</td>';
 	        print '<td colspan="3">';
-			$formcore=new TFormCore();
-			$entity = GETPOST('entity','int');
-			if(empty($entity)) $entity = $object->entity;
-			print $formcore->combo('', 'entity', TFinancementTools::build_array_entities(), $entity);
+			if($user->rights->financement->admin->write) {
+				$formcore=new TFormCore();
+				$entity = GETPOST('entity','int');
+				if(empty($entity)) $entity = $object->entity;
+				print $formcore->combo('', 'entity', TFinancementTools::build_array_entities(), $entity);
+			} else {
+				print TFinancementTools::get_entity_translation($object->entity);
+			}
 	        print '</td>';
 	        print '</tr>';
 
