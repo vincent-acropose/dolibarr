@@ -387,6 +387,51 @@ if (! $error && $massaction == "builddoc" && $permtoread && ! GETPOST('button_se
         $outputlangs->setDefaultLang($newlang);
     }
 
+ if(!empty($conf->global->USE_PDFTK_FOR_PDF_CONCAT)) {
+    	// Create output dir if not exists
+	dol_mkdir($diroutputmassaction);
+
+	// Defined name of merged file
+	$filename=strtolower(dol_sanitizeFileName($langs->transnoentities($objectlabel)));
+	$filename=preg_replace('/\s/','_',$filename);
+
+	// Save merged file
+	if ($filter=='paye:0')
+	{
+	if ($option=='late') $filename.='_'.strtolower(dol_sanitizeFileName($langs->transnoentities("Unpaid"))).'_'.strtolower(dol_sanitizeFileName($langs->transnoentities("Late")));
+	else $filename.='_'.strtolower(dol_sanitizeFileName($langs->transnoentities("Unpaid")));
+	}
+	if ($year) $filename.='_'.$year;
+	if ($month) $filename.='_'.$month;
+
+    	if (count($files)>0)
+    	{
+    	
+    		$now=dol_now();
+    		$file=$diroutputmassaction.'/'.$filename.'_'.dol_print_date($now,'dayhourlog').'.pdf';
+    		
+    		$input_files = '';
+    		foreach($files as $f) {
+    			$input_files.=' '.escapeshellarg($f);
+    		}
+    		
+    		$cmd = 'pdftk '.$input_files.' cat output '.escapeshellarg($file);
+    		exec($cmd);
+    		
+    		if (! empty($conf->global->MAIN_UMASK))
+    			@chmod($file, octdec($conf->global->MAIN_UMASK));
+    			
+    			$langs->load("exports");
+    			setEventMessages($langs->trans('FileSuccessfullyBuilt',$filename.'_'.dol_print_date($now,'dayhourlog')), null, 'mesgs');
+    	}
+    	else
+    	{
+    		setEventMessages($langs->trans('NoPDFAvailableForDocGenAmongChecked'), null, 'errors');
+    	}
+    	
+    }
+else {
+
     // Create empty PDF
     $pdf=pdf_getInstance();
     if (class_exists('TCPDF'))
@@ -439,6 +484,8 @@ if (! $error && $massaction == "builddoc" && $permtoread && ! GETPOST('button_se
     {
         setEventMessages($langs->trans('NoPDFAvailableForDocGenAmongChecked'), null, 'errors');
     }
+
+}
 }
 
 // Remove a file from massaction area
