@@ -211,7 +211,7 @@ class Export
 				if ($value != '') $sqlWhere[]=$this->build_filterQuery($this->array_export_TypeFields[$indice][$key], $key, $array_filterValue[$key]);
 			}
 			if (count($sqlWhere)>0) {
-				$sql.=' WHERE '.implode(' AND ',$sqlWhere);
+				$sql.= implode(' AND ',$sqlWhere);
 			}
 		}
 		$sql.=$this->array_export_sql_order[$indice];
