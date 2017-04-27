@@ -813,6 +813,8 @@ class Societe extends CommonObject
 
             $sql .= ",webservices_url = ".(! empty($this->webservices_url)?"'".$this->db->escape($this->webservices_url)."'":"null");
             $sql .= ",webservices_key = ".(! empty($this->webservices_key)?"'".$this->db->escape($this->webservices_key)."'":"null");
+			
+			$sql .= ",entity = " .$this->entity;
 
             if ($customer)
             {

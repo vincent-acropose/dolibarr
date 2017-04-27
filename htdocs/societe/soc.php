@@ -192,6 +192,8 @@ if (empty($reshook))
         // Webservices url/key
         $object->webservices_url       = GETPOST('webservices_url', 'custom', 0, FILTER_SANITIZE_URL);
         $object->webservices_key       = GETPOST('webservices_key', 'san_alpha');
+		
+		$object->entity                = GETPOST('entity', 'int');
 
         // Fill array 'array_options' with data from add form
         $ret = $extrafields->setOptionalsFromPost($extralabels,$object);
@@ -1324,6 +1326,18 @@ else
                 }
                 print '</td>';
             }
+            
+            // Entity
+	        dol_include_once('/financement/lib/financement.lib.php');
+	        dol_include_once('/abricot/includes/class/class.form.core.php');
+	        print '<tr><td width="25%">'.$langs->trans('Partenaire').'</td>';
+	        print '<td colspan="3">';
+			$formcore=new TFormCore();
+			$entity = GETPOST('entity','int');
+			if(empty($entity)) $entity = $object->entity;
+			print $formcore->combo('', 'entity', TFinancementTools::build_array_entities(), $entity);
+	        print '</td>';
+	        print '</tr>';
 
             // Prospect/Customer
             print '<tr><td width="25%"><span class="fieldrequired"><label for="customerprospect">'.$langs->trans('ProspectCustomer').'</label></span></td>';
@@ -1681,11 +1695,20 @@ else
         print '</td>';
         print '</tr>';
         */
+        
 
         // Name
         print '<tr><td width="25%">'.$langs->trans('ThirdPartyName').'</td>';
         print '<td colspan="3">';
         print $form->showrefnav($object, 'socid', '', ($user->societe_id?0:1), 'rowid', 'nom');
+        print '</td>';
+        print '</tr>';
+		
+        // Entity
+        dol_include_once('/financement/lib/financement.lib.php');
+        print '<tr><td width="25%">'.$langs->trans('Partenaire').'</td>';
+        print '<td colspan="3">';
+		print TFinancementTools::get_entity_translation($object->entity);
         print '</td>';
         print '</tr>';
 
