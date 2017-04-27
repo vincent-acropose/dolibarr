@@ -1991,7 +1991,7 @@ if ($action == 'create')
 		print '</td></tr>' . "\n";
 	}
 
-	if ($socid > 0)
+	/*if ($socid > 0)
 	{
 		// Replacement
 		print '<tr height="18"><td valign="middle">';
@@ -2033,7 +2033,7 @@ if ($action == 'create')
 		$desc = $form->textwithpicto($text, $langs->transnoentities("InvoiceReplacementDesc"), 1);
 		print $desc;
 		print '</td></tr>' . "\n";
-	}
+	}*/
 
 	if (empty($origin))
 	{
