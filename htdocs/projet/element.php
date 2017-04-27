@@ -628,7 +628,9 @@ foreach ($listofreferent as $key => $value)
 		{
 			$addform.='<div class="inline-block valignmiddle">';
 			if ($testnew) $addform.='<a class="buttonxxx" href="'.$urlnew.'">'.($buttonnew?$langs->trans($buttonnew):$langs->trans("Create")).'</a>';
-			else $addform.='<a class="buttonxxx buttonRefused" disabled="disabled" href="#">'.($buttonnew?$langs->trans($buttonnew):$langs->trans("Create")).'</a>';
+			elseif (empty($conf->global->MAIN_BUTTON_HIDE_UNAUTHORIZED)) {
+				$addform.='<a class="buttonxxx buttonRefused" disabled="disabled" href="#">'.($buttonnew?$langs->trans($buttonnew):$langs->trans("Create")).'</a>';
+			}
             $addform.='<div>';
 		}
 
@@ -983,7 +985,7 @@ foreach ($listofreferent as $key => $value)
 			print '<td align="right">';
 			if (empty($value['disableamount'])) 
 			{
-			    if (! empty($conf->salaries->enabled)) print ''.$langs->trans("TotalHT").' : '.price($total_ht);
+			    if ($tablename != 'projet_task' || ! empty($conf->salaries->enabled)) print ''.$langs->trans("TotalHT").' : '.price($total_ht);
 			}
 			print '</td>';
 			//if (empty($value['disableamount']) && ! in_array($tablename, array('projet_task'))) print '<td align="right" width="100">'.$langs->trans("TotalTTC").' : '.price($total_ttc).'</td>';
@@ -991,8 +993,7 @@ foreach ($listofreferent as $key => $value)
 			print '<td align="right">';
 			if (empty($value['disableamount'])) 
 			{
-			    
-			    if (! empty($conf->salaries->enabled)) print $langs->trans("TotalTTC").' : '.price($total_ttc);
+			    if ($tablename != 'projet_task' || ! empty($conf->salaries->enabled)) print $langs->trans("TotalTTC").' : '.price($total_ttc);
 			}
 			print '</td>';
 			print '<td>&nbsp;</td>';

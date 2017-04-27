@@ -452,14 +452,6 @@ if (empty($reshook))
 		}
 	}
 
-	// Close proposal
-	else if ($action == 'close' && $user->rights->supplier_proposal->cloturer && ! GETPOST('cancel')) {
-		// prevent browser refresh from reopening proposal several times
-		if ($object->statut == 2) {
-			$object->setStatut(4);
-		}
-	}
-
 	// Set accepted/refused
 	else if ($action == 'setstatut' && $user->rights->supplier_proposal->cloturer && ! GETPOST('cancel')) {
 		if (! GETPOST('statut')) {
@@ -1779,12 +1771,6 @@ if ($action == 'create')
 					print '>' . $langs->trans('SetAcceptedRefused') . '</a></div>';
 				}
 
-				// Close
-				if ($object->statut == 2 && $user->rights->supplier_proposal->cloturer) {
-				    print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&amp;action=close' . (empty($conf->global->MAIN_JUMP_TAG) ? '' : '#close') . '"';
-				    print '>' . $langs->trans('Close') . '</a></div>';
-				}
-
 				// Clone
 				if ($user->rights->supplier_proposal->creer) {
 					print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '&amp;socid=' . $object->socid . '&amp;action=clone&amp;object=' . $object->element . '">' . $langs->trans("ToClone") . '</a></div>';
@@ -1907,7 +1893,7 @@ if ($action == 'create')
 		$formmail->withtocc = $liste;
 		$formmail->withtoccc = (! empty($conf->global->MAIN_EMAIL_USECCC) ? $conf->global->MAIN_EMAIL_USECCC : false);
 
-		$formmail->withtopic = $outputlangs->trans('SendAskRef', '__ASKREF__');
+		$formmail->withtopic = $outputlangs->trans('SendAskRef', '__SUPPLIERPROPREF__');
 
 		$formmail->withfile = 2;
 		$formmail->withbody = 1;
