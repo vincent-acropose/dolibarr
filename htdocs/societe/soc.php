@@ -1487,6 +1487,7 @@ else
 	                	print $formcompany->get_input_id_prof($i,$key,$object->$key,$object->country_code);
 					} else {
 						print $object->$key;
+						print '<input type="hidden" name="'.$key.'" value="'.$object->$key.'">';
 					}
                     print '</td>';
                     if (($j % 2) == 1) print '</tr>';
