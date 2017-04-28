@@ -28,9 +28,9 @@
 
 // Just to define version DOL_VERSION
 if (! defined('DOL_INC_FOR_VERSION_ERROR')) define('DOL_INC_FOR_VERSION_ERROR','1');
+
+
 require_once '../filefunc.inc.php';
-
-
 
 // Define DOL_DOCUMENT_ROOT and ADODB_PATH used for install/upgrade process
 if (! defined('DOL_DOCUMENT_ROOT'))	    define('DOL_DOCUMENT_ROOT', '..');
@@ -67,7 +67,6 @@ if (isset($_SERVER["DOCUMENT_URI"]) && $_SERVER["DOCUMENT_URI"])
 
 $includeconferror='';
 
-
 // Define vars
 $conffiletoshowshort = "conf.php";
 // Define localization of conf file
@@ -76,7 +75,10 @@ $conffiletoshow = "htdocs/conf/conf.php";
 // For debian/redhat like systems
 //$conffile = "/etc/dolibarr/conf.php";
 //$conffiletoshow = "/etc/dolibarr/conf.php";
-
+if(is_file(__DIR__.'/../conf/'.$company_code.'/conf.php') && is_readable(__DIR__.'/../conf/'.$company_code.'/conf.php')) {
+	$conffile = "../conf/".$company_code."/conf.php";
+	$conffiletoshow = "htdocs/conf/".$company_code."/conf.php";
+}
 
 // Load conf file if it is already defined
 if (! defined('DONOTLOADCONF') && file_exists($conffile) && filesize($conffile) > 8) // Test on filesize is to ensure that conf file is more that an empty template with just <?php in first line

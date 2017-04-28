@@ -51,9 +51,9 @@ if (! defined('LOG_DEBUG'))
 	}
 }
 
+if(empty($company_code)) $company_code = empty($_COOKIE['dol_company_code']) ? '' : $_COOKIE['dol_company_code'];
 // End of common declaration part
 if (defined('DOL_INC_FOR_VERSION_ERROR')) return;
-
 
 // Define vars
 $conffiletoshowshort = "conf.php";
@@ -64,6 +64,11 @@ $conffiletoshow = "htdocs/conf/conf.php";
 // For debian/redhat like systems
 //$conffile = "/etc/dolibarr/conf.php";
 //$conffiletoshow = "/etc/dolibarr/conf.php";
+
+if(is_file(__DIR__.'/conf/'.$company_code.'/conf.php') && is_readable(__DIR__.'/conf/'.$company_code.'/conf.php')) {
+	$conffile = "conf/".$company_code."/conf.php";
+	$conffiletoshow = "htdocs/conf/".$company_code."/conf.php";
+}
 
 
 // Include configuration
