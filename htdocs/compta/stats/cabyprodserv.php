@@ -179,7 +179,7 @@ $catotal=0;
 if ($modecompta == 'CREANCES-DETTES') 
 {
     $sql = "SELECT DISTINCT p.rowid as rowid, p.ref as ref, p.label as label,";
-    $sql.= " sum(l.total_ht) as amount, sum(l.total_ttc) as amount_ttc, sum(l.qty) as totalqty, l.qty as qty, l.tarif_poids as poids, l.poids as unit";
+    $sql.= " sum(l.total_ht) as amount, sum(l.total_ttc) as amount_ttc, sum(l.qty) as totalqty, l.qty as qty, SUM(l.tarif_poids) as poids, l.poids as unit";
     $sql.= " FROM ".MAIN_DB_PREFIX."facture as f, ".MAIN_DB_PREFIX."facturedet as l, ".MAIN_DB_PREFIX."product as p";
 	if ($selected_cat === -2)	// Without any category 
 	{
@@ -227,7 +227,7 @@ if ($modecompta == 'CREANCES-DETTES')
 			$amount_ht[$obj->rowid] = $obj->amount;
 			$amount[$obj->rowid] = $obj->amount_ttc;
 			$qty[$obj->rowid] = $obj->totalqty;
-			$poids[$obj->rowid]['qty'] =  $obj->totalqty * $obj->poids;
+			$poids[$obj->rowid]['qty'] = 	$obj->poids;
 			$poids[$obj->rowid]['unite'] = $obj->unit;
 			$name[$obj->rowid] = $obj->ref . '&nbsp;-&nbsp;' . $obj->label;
 			$catotal_ht+=$obj->amount;
@@ -386,7 +386,7 @@ if ($modecompta == 'CREANCES-DETTES')
 			$amount_ht[$obj->rowid] = $obj->amount;
 			$amount[$obj->rowid] = $obj->amount_ttc;
 			$qty[$obj->rowid] = $obj->totalqty;
-			$poids[$obj->rowid]['qty'] = $obj->totalqty * $obj->poids;
+			$poids[$obj->rowid]['qty'] = $obj->poids;
 			$poids[$obj->rowid]['unite'] = $obj->unit;
 			$name[$obj->rowid] = $obj->ref . '&nbsp;-&nbsp;' . $obj->label;
 			$catotal_ht+=$obj->amount;
