@@ -553,6 +553,47 @@ if (empty($reshook))
             $outputlangs = new Translate("",$conf);
             $outputlangs->setDefaultLang($newlang);
         }
+//var_dump($conf->global->USE_PDFTK_FOR_PDF_CONCAT);
+ if(!empty($conf->global->USE_PDFTK_FOR_PDF_CONCAT)) {
+    	dol_mkdir($diroutputmassaction);
+    	
+    	// Save merged file
+ $filename=strtolower(dol_sanitizeFileName($langs->transnoentities("Invoices")));
+        
+    	if ($filter=='paye:0')
+    	{
+    		if ($option=='late') $filename.='_'.strtolower(dol_sanitizeFileName($langs->transnoentities("Unpaid"))).'_'.strtolower(dol_sanitizeFileName($langs->transnoentities("Late")));
+    		else $filename.='_'.strtolower(dol_sanitizeFileName($langs->transnoentities("Unpaid")));
+    	}
+    	if ($year) $filename.='_'.$year;
+    	if ($month) $filename.='_'.$month;
+    	if (count($files)>0)
+    	{
+    	
+    		$now=dol_now();
+    		$file=$diroutputmassaction.'/'.$filename.'_'.dol_print_date($now,'dayhourlog').'.pdf';
+    		
+    		$input_files = '';
+    		foreach($files as $f) {
+    			$input_files.=' '.escapeshellarg($f);
+    		}
+    		
+    		$cmd = 'pdftk '.$input_files.' cat output '.escapeshellarg($file);
+    		exec($cmd);
+    		
+    		if (! empty($conf->global->MAIN_UMASK))
+    			@chmod($file, octdec($conf->global->MAIN_UMASK));
+    			
+    			$langs->load("exports");
+    			setEventMessages($langs->trans('FileSuccessfullyBuilt',$filename.'_'.dol_print_date($now,'dayhourlog')), null, 'mesgs');
+    	}
+    	else
+    	{
+    		setEventMessages($langs->trans('NoPDFAvailableForDocGenAmongChecked'), null, 'errors');
+    	}
+    	
+    }
+    else {
 
         // Create empty PDF
         $pdf=pdf_getInstance();
@@ -607,7 +648,7 @@ if (empty($reshook))
             setEventMessages($langs->trans('NoPDFAvailableForDocGenAmongChecked'), null, 'errors');
         }
 	}
-	
+	}
 	// Remove file
 	if ($action == 'remove_file')
 	{
