@@ -119,14 +119,14 @@ class MouvementStock extends CommonObject
 		if (! empty($conf->productbatch->enabled) && $product->hasbatch() && ! $skip_batch)
 		{
 			//if (empty($batch) && empty($eatby) && empty($sellby))
-			if (empty($batch))
+			/*if (empty($batch))
 			{
 				$this->errors[]=$langs->trans("ErrorTryToMakeMoveOnProductRequiringBatchData", $product->name);
 				dol_syslog("Try to make a movement of a product with status_batch on without any batch data");
 
 				$this->db->rollback();
 				return -2;
-			}
+			}*/
 
 			// If a serial number is provided, we check that sellby and eatby match already existing serial
 			$sql = "SELECT pb.rowid, pb.batch, pb.eatby, pb.sellby FROM ".MAIN_DB_PREFIX."product_batch as pb, ".MAIN_DB_PREFIX."product_stock as ps";

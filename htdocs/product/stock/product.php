@@ -119,11 +119,11 @@ if ($action == "correct_stock" && ! $cancel)
 		$product = new Product($db);
 		$result=$product->fetch($id);
 
-		if ($product->hasbatch() && (! GETPOST("sellby")) && (! GETPOST("eatby")) && (! $batchnumber)) {
+		/*if ($product->hasbatch() && (! GETPOST("sellby")) && (! GETPOST("eatby")) && (! $batchnumber)) {
 			setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("atleast1batchfield")), 'errors');
 			$error++;
 			$action='correction';
-		}
+		}*/
 	}
 
 	if (! $error)
@@ -135,6 +135,7 @@ if ($action == "correct_stock" && ! $cancel)
 				$product = new Product($db);
 				$result=$product->fetch($id);
 			}
+			
 			if ($product->hasbatch())
 			{
 				$result=$product->correct_stock_batch(
