@@ -302,15 +302,23 @@ function GETPOST($paramname,$check='',$method=0,$filter=NULL,$options=NULL)
 	            break;
 	        case 'aZ09':
 	            $out=trim($out);
-	            if (preg_match('/[^a-z0-9]+/i',$out)) $out='';
+	            if (preg_match('/[^a-z0-9_]+/i',$out)) $out='';
 	            break;
 	        case 'array':
 	            if (! is_array($out) || empty($out)) $out=array();
 	            break;
 			case 'nohtml':
-				$out=dol_string_nohtmltag($out);
+			    $out=dol_string_nohtmltag($out);
 				break;
-	        case 'custom':
+			case 'alphanohtml':	// Recommended for search params
+	            $out=trim($out);
+	            // '"' is dangerous because param in url can close the href= or src= and add javascript functions.
+	            // '../' is dangerous because it allows dir transversals
+	            if (preg_match('/"/',$out)) $out='';
+	            else if (preg_match('/\.\.\//',$out)) $out='';
+			    $out=dol_string_nohtmltag($out);
+				break;
+			case 'custom':
 	            if (empty($filter)) return 'BadFourthParameterForGETPOST';
 	            $out=filter_var($out, $filter, $options);
 	            break;
@@ -802,6 +810,8 @@ function dol_get_fiche_head($links=array(), $active='', $title='', $notab=0, $pi
 {
 	global $conf, $langs, $hookmanager;
 
+	if ($notab == -1) $notab = 0;  // For better compatiblity with modules for 6.0
+	
 	$out="\n".'<div class="tabs" data-role="controlgroup" data-type="horizontal">'."\n";
 
 	// Show title
