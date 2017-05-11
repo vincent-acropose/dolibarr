@@ -750,6 +750,7 @@ if (empty($reshook))
 		// Credit note invoice
 		if ($_POST['type'] == Facture::TYPE_CREDIT_NOTE)
 		{
+			
 			$sourceinvoice = GETPOST('fac_avoir');
 			if (! ($sourceinvoice > 0) && empty($conf->global->INVOICE_CREDIT_NOTE_STANDALONE))
 			{
@@ -2344,7 +2345,7 @@ if ($action == 'create')
 		    if (empty($conf->global->INVOICE_DISABLE_CREDIT_NOTE)) 
     		{
     			print '<div class="tagtr listofinvoicetype"><div class="tagtd listofinvoicetype">';
-    			$tmp='<input type="radio" id="radio_creditnote" name="type" value="2"' . (GETPOST('type') == 2 ? ' checked' : '');
+				$tmp='<input type="radio" id="radio_creditnote" name="type" value="2"' . (GETPOST('type') == 2 ? ' checked' : '');
     			if (! $optionsav) $tmp.=' disabled';
     			$tmp.= '> ';
     			// Show credit note options only if we checked credit note
@@ -2389,7 +2390,8 @@ if ($action == 'create')
 		else
 		{
 			print '<div class="tagtr listofinvoicetype"><div class="tagtd listofinvoicetype">';
-			$tmp='<input type="radio" name="type" id="radio_creditnote" value="0" disabled> ';
+			if (empty($conf->global->INVOICE_CREDIT_NOTE_STANDALONE)) $tmp='<input type="radio" name="type" id="radio_creditnote" value="0" disabled> ';
+			else $tmp='<input type="radio" name="type" id="radio_creditnote" value="2"> ';
 			$text = $tmp.$langs->trans("InvoiceAvoir") . ' ';
 			$text.= '('.$langs->trans("YouMustCreateInvoiceFromThird").') ';
 			$desc = $form->textwithpicto($text, $langs->transnoentities("InvoiceAvoirDesc"), 1, 'help', '', 0, 3);
