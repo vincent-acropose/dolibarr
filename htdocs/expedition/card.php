@@ -701,7 +701,7 @@ if ($action == 'create')
             print '<td colspan="3">';
             //print dol_print_date($object->date_livraison,"day");	// date_livraison come from order and will be stored into date_delivery planed.
             $date_delivery = ($date_delivery?$date_delivery:$object->date_livraison); // $date_delivery comes from GETPOST
-            print $form->select_date($date_delivery?$date_delivery:dol_now(),'date_delivery',1,1,1);
+            print $form->select_date(dol_now(),'date_delivery',1,1,1);
             print "</td>\n";
             print '</tr>';
 
