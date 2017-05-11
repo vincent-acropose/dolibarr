@@ -1053,7 +1053,7 @@ if (empty($reshook))
 							{
 								if ($typeamount == 'amount')
 								{
-									$amountdeposit[] = $valuedeposit;
+									$amountdeposit[0] = $valuedeposit;
 								}
 								else
 								{
@@ -1067,11 +1067,14 @@ if (empty($reshook))
 											$qualified=1;
 											if (empty($lines[$i]->qty)) $qualified=0;	// We discard qty=0, it is an option
 											if (! empty($lines[$i]->special_code)) $qualified=0;	// We discard special_code (frais port, ecotaxe, option, ...)
-											if ($qualified) $totalamount += $lines[$i]->total_ht; // Fixme : is it not for the customer ? Shouldn't we take total_ttc ?
+											if ($qualified) $totalamount += $lines[$i]->total_ttc;
 										}
 
 										if ($totalamount != 0) {
-											$amountdeposit[$lines[$i]->tva] = ($totalamount * $valuedeposit) / 100;
+											$i = $i > 0 ? $i-1 : 0;
+											$tva_tx = $lines[$i]->tva_tx;
+											if (! empty($lines[$i]->vat_src_code) && ! preg_match('/\(/', $tva_tx)) $tva_tx .= ' ('.$lines[$i]->vat_src_code.')';
+											$amountdeposit[$tva_tx] = ($totalamount * $valuedeposit) / 100;
 										}
 									} else {
 										setEventMessages($srcobject->error, $srcobject->errors, 'errors');
@@ -1086,7 +1089,7 @@ if (empty($reshook))
 							{
 								$result = $object->addline(
 									$langs->trans('Deposit'),
-									$amount,		 	// subprice
+									0,		 	// subprice
 									1, 						// quantity
 									$tva, 0, // localtax1_tx
 									0, 						// localtax2_tx
@@ -1096,8 +1099,8 @@ if (empty($reshook))
 									0, 						// date_end
 									0, $lines[$i]->info_bits, // info_bits
 									0, 						// info_bits
-									'HT',
-									0,
+									'TTC',
+									$amount,
 									0, 						// product_type
 									1,
 									$lines[$i]->special_code,
@@ -1112,7 +1115,7 @@ if (empty($reshook))
 						
 							$diff = $object->total_ttc - $amount_ttc_diff;
 							
-							if ($diff != 0)
+							if (!empty($conf->global->MAIN_DEPOSIT_MULTI_TVA) && $diff != 0)
 							{
 								$object->fetch_lines();
 								$subprice_diff = $object->lines[0]->subprice - $diff / (1 + $object->lines[0]->tva_tx);
