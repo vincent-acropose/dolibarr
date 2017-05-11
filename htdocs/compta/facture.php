@@ -750,14 +750,12 @@ if (empty($reshook))
 		// Credit note invoice
 		if ($_POST['type'] == Facture::TYPE_CREDIT_NOTE)
 		{
-			if (empty($conf->global->INVOICE_CREDIT_NOTE_STANDALONE))
+			
+			$sourceinvoice = GETPOST('fac_avoir');
+			if (! ($sourceinvoice > 0) && empty($conf->global->INVOICE_CREDIT_NOTE_STANDALONE))
 			{
-				$sourceinvoice = GETPOST('fac_avoir');
-				if (! ($sourceinvoice > 0) && empty($conf->global->INVOICE_CREDIT_NOTE_STANDALONE))
-				{
-					$error ++;
-					setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("CorrectInvoice")), null, 'errors');
-				}	
+				$error ++;
+				setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("CorrectInvoice")), null, 'errors');
 			}
 
 			$dateinvoice = dol_mktime(12, 0, 0, $_POST['remonth'], $_POST['reday'], $_POST['reyear']);
