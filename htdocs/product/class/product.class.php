@@ -877,10 +877,26 @@ class Product extends CommonObject
                 // End call triggers
 			}
 
-   			// Delete all child tables
+			// Delete from product_batch on product delete	
 			if (! $error)
 			{
-			    $elements = array('product_fournisseur_price','product_price','product_lang','categorie_product','product_stock','product_customer_price');
+				$sql = "DELETE FROM ".MAIN_DB_PREFIX.'product_batch';
+				$sql.= " WHERE fk_product_stock IN (";
+				$sql.= "SELECT rowid FROM ".MAIN_DB_PREFIX.'product_stock';
+				$sql.= " WHERE fk_product = ".$id.")";
+				dol_syslog(get_class($this).'::delete', LOG_DEBUG);
+				$result = $this->db->query($sql);
+				if (! $result)
+				{
+					$error++;
+					$this->errors[] = $this->db->lasterror();
+				}
+			}
+			
+			// Delete all child tables
+			if (! $error)
+			{
+			    $elements = array('product_fournisseur_price','product_price','product_lang','categorie_product','product_stock','product_customer_price');  // product_batch done before
     			foreach($elements as $table)
     			{
     				if (! $error)
@@ -2502,12 +2518,34 @@ class Product extends CommonObject
 
 		$now=dol_now();
 
-		
+		if ($ref_fourn)
+		{
+    		$sql = "SELECT rowid, fk_product";
+    		$sql.= " FROM ".MAIN_DB_PREFIX."product_fournisseur_price";
+    		$sql.= " WHERE fk_soc = ".$id_fourn;
+    		$sql.= " AND ref_fourn = '".$this->db->escape($ref_fourn)."'";
+    		$sql.= " AND fk_product != ".$this->id;
+    		$sql.= " AND entity = ".$conf->entity;
+
+    		dol_syslog(get_class($this)."::add_fournisseur", LOG_DEBUG);
+    		$resql=$this->db->query($sql);
+    		if ($resql)
+    		{
+    			$obj = $this->db->fetch_object($resql);
+                if ($obj)
+                {
+        			// If the supplier ref already exists but for another product (duplicate ref is accepted for different quantity only or different companies)
+                    $this->product_id_already_linked = $obj->fk_product;
+    				return -3;
+    			}
+                $this->db->free($resql);
+    		}
+		}
 
 		$sql = "SELECT rowid";
 		$sql.= " FROM ".MAIN_DB_PREFIX."product_fournisseur_price";
 		$sql.= " WHERE fk_soc = ".$id_fourn;
-		if ($ref_fourn) $sql.= " AND ref_fourn = '".$ref_fourn."'";
+		if ($ref_fourn) $sql.= " AND ref_fourn = '".$this->db->escape($ref_fourn)."'";
 		else $sql.= " AND (ref_fourn = '' OR ref_fourn IS NULL)";
 		$sql.= " AND quantity = '".$quantity."'";
 		$sql.= " AND fk_product = ".$this->id;
@@ -2536,7 +2574,7 @@ class Product extends CommonObject
 				$sql.= ", ".$conf->entity;
 				$sql.= ", ".$this->id;
 				$sql.= ", ".$id_fourn;
-				$sql.= ", '".$ref_fourn."'";
+				$sql.= ", '".$this->db->escape($ref_fourn)."'";
 				$sql.= ", ".$quantity;
 				$sql.= ", ".$user->id;
 				$sql.= ", 0";
