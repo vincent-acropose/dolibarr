@@ -1050,11 +1050,14 @@ if (empty($reshook))
 								}
 							}
 
+							$tva_tx = $lines[$i]->tva_tx;
+							if (! empty($lines[$i]->vat_src_code) && ! preg_match('/\(/', $tva_tx)) $tva_tx .= ' ('.$lines[$i]->vat_src_code.')';
+								
 							$result = $object->addline(
 									$langs->trans('Deposit'),
 									$amountdeposit,		 	// subprice
 									1, 						// quantity
-									$lines[$i]->tva_tx,     // vat rate
+									$tva_tx,                // vat rate
 							        0,                      // localtax1_tx
 									0, 						// localtax2_tx
 									(empty($conf->global->INVOICE_PRODUCTID_DEPOSIT)?0:$conf->global->INVOICE_PRODUCTID_DEPOSIT), 	// fk_product
@@ -1150,11 +1153,15 @@ if (empty($reshook))
 											$array_options = $lines[$i]->array_options;
 										}
 
-										// View third's localtaxes for now
-										$localtax1_tx = get_localtax($lines[$i]->tva_tx, 1, $object->thirdparty);
-										$localtax2_tx = get_localtax($lines[$i]->tva_tx, 2, $object->thirdparty);
+										$tva_tx = $lines[$i]->tva_tx;
+										if (! empty($lines[$i]->vat_src_code) && ! preg_match('/\(/', $tva_tx)) $tva_tx .= ' ('.$lines[$i]->vat_src_code.')';
+										
+										// View third's localtaxes for NOW and do not use value from origin.
+										// TODO Is this really what we want ? Yes if source if template invoice but what if proposal or order ?
+										$localtax1_tx = get_localtax($tva_tx, 1, $object->thirdparty);
+										$localtax2_tx = get_localtax($tva_tx, 2, $object->thirdparty);
 
-										$result = $object->addline($desc, $lines[$i]->subprice, $lines[$i]->qty, $lines[$i]->tva_tx, $localtax1_tx, $localtax2_tx, $lines[$i]->fk_product, $lines[$i]->remise_percent, $date_start, $date_end, 0, $lines[$i]->info_bits, $lines[$i]->fk_remise_except, 'HT', 0, $product_type, $lines[$i]->rang, $lines[$i]->special_code, $object->origin, $lines[$i]->rowid, $fk_parent_line, $lines[$i]->fk_fournprice, $lines[$i]->pa_ht, $label, $array_options, $lines[$i]->situation_percent, $lines[$i]->fk_prev_id, $lines[$i]->fk_unit);
+										$result = $object->addline($desc, $lines[$i]->subprice, $lines[$i]->qty, $tva_tx, $localtax1_tx, $localtax2_tx, $lines[$i]->fk_product, $lines[$i]->remise_percent, $date_start, $date_end, 0, $lines[$i]->info_bits, $lines[$i]->fk_remise_except, 'HT', 0, $product_type, $lines[$i]->rang, $lines[$i]->special_code, $object->origin, $lines[$i]->rowid, $fk_parent_line, $lines[$i]->fk_fournprice, $lines[$i]->pa_ht, $label, $array_options, $lines[$i]->situation_percent, $lines[$i]->fk_prev_id, $lines[$i]->fk_unit);
 
 										if ($result > 0) {
 											$lineid = $result;
@@ -3793,23 +3800,20 @@ else if ($id > 0 || ! empty($ref))
 	// Lines
 	$result = $object->getLinesArray();
 
-	if (! empty($conf->use_javascript_ajax) && $object->statut == 0) {
-		include DOL_DOCUMENT_ROOT . '/core/tpl/ajaxrow.tpl.php';
-	}
-
-    print '<div class="div-table-responsive">';
-	print '<table id="tablelines" class="noborder noshadow" width="100%">';
-
 	// Show global modifiers
 	if (! empty($conf->global->INVOICE_USE_SITUATION))
 	{
 		if ($object->situation_cycle_ref && $object->statut == 0) {
-			print '<tr class="liste_titre nodrag nodrop">';
+			print '<div class="div-table-responsive">';
+			
 			print '<form name="updatealllines" id="updatealllines" action="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '"#updatealllines" method="POST">';
 			print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '" />';
 			print '<input type="hidden" name="action" value="updatealllines" />';
 			print '<input type="hidden" name="id" value="' . $object->id . '" />';
-
+			
+			print '<table id="tablelines" class="noborder noshadow" width="100%">';
+			print '<tr class="liste_titre nodrag nodrop">';
+			
 			if (!empty($conf->global->MAIN_VIEW_LINE_NUMBER)) {
 				print '<td align="center" width="5">&nbsp;</td>';
 			}
@@ -3832,7 +3836,7 @@ else if ($id > 0 || ! empty($ref))
 			print '<td width="10">&nbsp;</td>';
 			print '<td width="10">&nbsp;</td>';
 			print "</tr>\n";
-
+			
 			if (!empty($conf->global->MAIN_VIEW_LINE_NUMBER)) {
 				print '<td align="center" width="5">&nbsp;</td>';
 			}
@@ -3845,16 +3849,32 @@ else if ($id > 0 || ! empty($ref))
 			print '<td align="right" class="nowrap"><input type="text" size="1" value="" name="all_progress">%</td>';
 			print '<td colspan="4" align="right"><input class="button" type="submit" name="all_percent" value="Modifier" /></td>';
 			print '</tr>';
+			
+			print '</table>';
+			
 			print '</form>';
+			
+			print '</div>';
+			
 		}
+		
 	}
-
+	
+	
+	
 	print '	<form name="addproduct" id="addproduct" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . (($action != 'editline') ? '#add' : '#line_' . GETPOST('lineid')) . '" method="POST">
 	<input type="hidden" name="token" value="' . $_SESSION ['newtoken'] . '">
 	<input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateligne') . '">
 	<input type="hidden" name="mode" value="">
 	<input type="hidden" name="id" value="' . $object->id . '">
 	';
+
+	if (! empty($conf->use_javascript_ajax) && $object->statut == 0) {
+		include DOL_DOCUMENT_ROOT . '/core/tpl/ajaxrow.tpl.php';
+	}
+
+    print '<div class="div-table-responsive">';
+	print '<table id="tablelines" class="noborder noshadow" width="100%">';
 
 	// Show object lines
 	if (! empty($object->lines))
