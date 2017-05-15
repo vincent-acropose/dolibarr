@@ -2204,6 +2204,9 @@ if ($action == 'create' && $user->rights->commande->creer)
 
 		dol_fiche_end();
 
+		//Select mail models is same action as presend
+		if (GETPOST('modelselected')) $action = 'presend';
+
 		/*
 		 * Boutons actions
 		*/
