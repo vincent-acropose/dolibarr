@@ -141,7 +141,7 @@ if ($_REQUEST["account"] || $_REQUEST["ref"])
 	$sql.= " FROM ".MAIN_DB_PREFIX."facture as f";
 	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON f.fk_soc = s.rowid";
 	$sql.= " WHERE f.entity = ".$conf->entity;
-	$sql.= " AND f.paye = 0 AND f.fk_statut = 1";	// Not paid
+	$sql.= " AND f.paye = 0 AND f.fk_statut IN (1,0)";	// Not paid
     $sql.= " AND (f.fk_account IN (0, ".$object->id.") OR f.fk_account IS NULL)"; // Id bank account of invoice
     $sql.= " ORDER BY dlr ASC";
 
@@ -151,7 +151,7 @@ if ($_REQUEST["account"] || $_REQUEST["ref"])
 	$sql2.= " FROM ".MAIN_DB_PREFIX."facture_fourn as ff";
 	$sql2.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON ff.fk_soc = s.rowid";
 	$sql2.= " WHERE ff.entity = ".$conf->entity;
-	$sql2.= " AND ff.paye = 0 AND fk_statut = 1";	// Not paid
+	$sql2.= " AND ff.paye = 0 AND fk_statut IN (1,0)";	// Not paid
     $sql2.= " AND (ff.fk_account IN (0, ".$object->id.") OR ff.fk_account IS NULL)"; // Id bank account of supplier invoice
     $sql2.= " ORDER BY dlr ASC";
 

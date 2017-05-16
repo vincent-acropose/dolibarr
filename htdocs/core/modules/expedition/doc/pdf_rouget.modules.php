@@ -884,22 +884,15 @@ class pdf_rouget extends ModelePdfExpedition
 			$pdf->SetTextColor(0,0,60);
 			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("CustomerCode")." : " . $outputlangs->transnoentities($object->thirdparty->code_client), '', 'R');
 		}
+
+
 		$pdf->SetFont('','', $default_font_size + 3);
 		$Yoff=25;
 
 		// Add list of linked orders
 		$origin 	= $object->origin;
 		$origin_id 	= $object->origin_id;
-		if(!empty($object->commande->fk_project)){
-			$outputlangs->load('projects');
-			$pdf->SetFont('','', $default_font_size - 2);
-			$proj = new Project($this->db);
-			$proj->fetch($object->commande->fk_project);
-			$Yoff = $Yoff+2;
-			$pdf->SetXY($this->page_largeur - $this->marge_droite - $w,$Yoff);
-			$pdf->MultiCell($w, 2, $outputlangs->transnoentities("RefProject") ." : ".$outputlangs->transnoentities($proj->ref), 0, 'R');
-			
-		}
+
 	    // TODO move to external function
 		if (! empty($conf->$origin->enabled))     // commonly $origin='commande'
 		{
@@ -989,6 +982,7 @@ class pdf_rouget extends ModelePdfExpedition
 			$carac_client_name= pdfBuildThirdpartyName($thirdparty, $outputlangs);
 
 			$carac_client=pdf_build_address($outputlangs,$this->emetteur,$object->thirdparty,(!empty($object->contact)?$object->contact:null),$usecontact,'targetwithdetails',$object);
+
 			// Show recipient
 			$widthrecbox=!empty($conf->global->MAIN_PDF_USE_ISO_LOCATION) ? 92 : 100;
 			if ($this->page_largeur < 210) $widthrecbox=84;	// To work with US executive format

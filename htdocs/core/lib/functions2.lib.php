@@ -784,7 +784,9 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
 			$start = "{extra_";
 			$end = "\}";
 			$extra= get_string_between($mask, "extra_", "}");
-			$mask =  preg_replace('#('.($start).')(.*?)('.($end).')#si', $user->array_options['options_'.$extra], $mask);	
+			if(!empty($user->array_options['options_'.$extra])){
+				$mask =  preg_replace('#('.($start).')(.*?)('.($end).')#si', $user->array_options['options_'.$extra], $mask);	
+			}
 	} 
 
     $maskwithonlyymcode=$mask;
