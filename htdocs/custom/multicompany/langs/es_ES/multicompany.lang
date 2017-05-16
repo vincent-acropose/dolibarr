@@ -1,0 +1,63 @@
+# Dolibarr language file - en_US - multicompany
+CHARSET=UTF-8
+Module5000Name=Multi Compañía
+Module5000Desc=Administración de multi compañía en una instalación individual
+
+MasterEntity=Entidad maestra
+MasterEntityDesc=Entidad maestra, no puede ser eliminada
+SwitchToAnotherEntity=Cambiar de entidad
+SelectAnEntity=Seleccionar una entidad
+AllEntities=Todas las entidades
+
+# Admin parameters tab
+AddAll=Todo
+RemoveAll=Vaciar
+ItemsCount=Seleccionados
+EntitiesManagement=Gestión de entidades
+ListOfEntities=Listado de entidades
+AddEntity=Añadir entidad
+EditEntity=Editar entidad
+EntityName=nombre de la entidad
+DefaultLanguageShort=Idioma por defecto
+CommonParameters=Parámetros comunes de acciones
+ReferringEntity=Entidad de referencia para los valores de configuración
+ThirdpartySharing=Intercambiar terceros y contactos
+ThirdpartySharingDescription=Selección de entidades que intercambian sus terceros/contactos con esta entidad.
+ProductSharing=Intercambiar productos/servicios
+ProductSharingDescription=Selección de entidades que intercambian sus productos/servicios con esta entidad.
+ProductPriceSharing=Compartir precio de productos/servicios
+ProductPriceSharingDescription=Entidades que comparten precios de productos/servicios con esta entidad
+CategorySharing=Intercambiar categorías
+CategorySharingDescription=Selección de entidades que intercambian sus categorías con esta entidad.
+AgendaSharing=Intercambiar agendas
+AgendaSharingDescription=Selección de entidades que intercambian su agenda con esta entidad.
+BankSharing=Intercambiar cuentas bancarias
+BankSharingDescription=Selección de entidades que intercambian sus cuentas bancarias con esta entidad
+InvoiceNumberSharing=Intercambiar facturas
+InvoiceNumberSharingDescription=Entidades que comparten sus facturas con esta entidad.
+DeleteAnEntity=Eliminar una entidad
+ConfirmDeleteEntity=¿Está seguro de querer eliminar esta entidad?
+ConfirmedEntityDeleted=La entidad ha sido eliminada.
+MulticompanyMoreModules=Otros módulos del mismo autor están disponibles en DoliStore
+
+# Admin options tab
+Options=Opciones
+GroupModeTransversal=Activar la gestión cruzada de grupos de usuarios
+HideLoginCombobox=Ocultar la selección de la entidad en la página de inicio
+EnableCookieLogin=Guardar el nombre de usuario y el número de la entidad en una cookie
+EnableGlobalSharings=Activar las funciones de intercambio entre entidades
+ShareProductsAndServices=Activar el intercambio de productos/servicios
+ShareProductsAndServicesPrices=Activar el intercambio de precios de productos/servicios
+ShareThirdpartiesAndContacts=Activar el intercambio de terceros y contactos
+ShareCategories=Activar el intercambio de categorías
+ShareAgenda=Activar el intercambio de la agenda
+ShareStock=Activar el intercambio de stocks
+ShareBank=Activar el intercambio de cuentas bancarias
+ShareInvoicesNumber=Habilitar intercambio del número de facturas
+GlobalSharings=Características de intercambio
+GlobalSharingsInfo=Una vez se activen las opciones de intercambio, tendrá que configurar cada entidad para permitir los intercambios entre entidades.
+
+# Errors
+ErrorEntityLabelAlreadyExist=La etiqueta de esta entidad ya existe.
+ErrorEntityIsNotValid=Esta entidad no es valida.
+ErrorNotDeleteMasterEntity=No se puede eliminar la entidad maestra.
