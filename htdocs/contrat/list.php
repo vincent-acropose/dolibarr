@@ -122,6 +122,8 @@ if ($sall) {
     $sql .= natural_search(array('s.nom', 'cd.label', 'cd.description'), $sall);
 }
 $sql.= " GROUP BY c.rowid, c.ref, c.datec, c.date_contrat, c.statut, c.ref_supplier, s.nom, s.rowid";
+// FIX TK 5882
+if($sortfield== 'c.rowid') $sortfield = "c.ref";
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($conf->liste_limit + 1, $offset);
 
