@@ -131,11 +131,11 @@ class Export
     									//print_r("$perm[0]-$perm[1]-$perm[2]<br>");
     									if (! empty($perm[2]))
     									{
-    										$bool=$user->rights->$perm[0]->$perm[1]->$perm[2];
+    										$bool=$user->rights->{$perm[0]}->{$perm[1]}->{$perm[2]};
     									}
     									else
     									{
-    										$bool=$user->rights->$perm[0]->$perm[1];
+    										$bool=$user->rights->{$perm[0]}->{$perm[1]};
     									}
     									if ($perm[0]=='user' && $user->admin) $bool=true;
     									if (! $bool) break;
@@ -396,14 +396,14 @@ class Export
 						while ($i < $num)
 						{
 							$obj = $this->db->fetch_object($resql);
-							if ($obj->$InfoFieldList[2] == '-')
+							if ($obj->{$InfoFieldList[2]} == '-')
 							{
 								// Discard entry '-'
 								$i++;
 								continue;
 							}
 
-							$labeltoshow=dol_trunc($obj->$InfoFieldList[2],18);
+							$labeltoshow=dol_trunc($obj->{$InfoFieldList[2]},18);
 							if (!empty($ValueField) && $ValueField == $obj->rowid)
 							{
 								$szFilterField.='<option value="'.$obj->rowid.'" selected="selected">'.$labeltoshow.'</option>';

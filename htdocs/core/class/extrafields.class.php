@@ -725,8 +725,8 @@ class ExtraFields
 						while ($i < $num)
 						{
 							$obj = $this->db->fetch_object($resql);
-							$labeltoshow=dol_trunc($obj->$InfoFieldList[1],18);
-													if ($value==$obj->rowid)
+							$labeltoshow=dol_trunc($obj->{$InfoFieldList[1]},50);
+							if ($value==$obj->rowid)
 							{
 								$out.='<option value="'.$obj->rowid.'" selected="selected">'.$labeltoshow.'</option>';
 							}
@@ -863,7 +863,7 @@ class ExtraFields
 				if ($resql)
 				{
 					$obj = $this->db->fetch_object($resql);
-					$value=$obj->$InfoFieldList[1];
+					$value=$obj->{$InfoFieldList[1]};
 				}
 			}
 		}
