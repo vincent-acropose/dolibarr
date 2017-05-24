@@ -2525,8 +2525,11 @@ abstract class CommonObject
         if ($objecttype == 'fichinter') {
         	$classpath = 'fichinter/class'; $module='ficheinter'; $subelement='fichinter';
         }
+        if ($objecttype == 'contact') {
+        	$classpath = 'contact/class'; $module='societe'; $subelement='contact';
+        }
 
-        //print "objecttype=".$objecttype." module=".$module." subelement=".$subelement;
+        // print "objecttype=".$objecttype." module=".$module." subelement=".$subelement.'<BR>';
 
         $classfile = strtolower($subelement); $classname = ucfirst($subelement);
         if ($objecttype == 'invoice_supplier') {
@@ -2542,6 +2545,7 @@ abstract class CommonObject
             $module='fournisseur';
         }
 
+        
         if (! empty($conf->$module->enabled))
         {
             $res=dol_include_once('/'.$classpath.'/'.$classfile.'.class.php');
