@@ -251,7 +251,6 @@ $dirmod = array();
 $i = 0;	// is a sequencer of modules found
 $j = 0;	// j is module number. Automatically affected if module number not defined.
 $modNameLoaded=array();
-
 foreach ($modulesdir as $dir)
 {
 	// Load modules attributes in arrays (name, numero, orders) from dir directory
@@ -414,7 +413,7 @@ $head[$h][0] = DOL_URL_ROOT."/admin/modules.php?mode=common";
 $head[$h][1] = $langs->trans("AvailableModules");
 $head[$h][2] = 'common';
 $h++;
-
+/*
 $head[$h][0] = DOL_URL_ROOT."/admin/modules.php?mode=marketplace";
 $head[$h][1] = $langs->trans("ModulesMarketPlaces");
 $head[$h][2] = 'marketplace';
@@ -424,7 +423,7 @@ $head[$h][0] = DOL_URL_ROOT."/admin/modules.php?mode=deploy";
 $head[$h][1] = $langs->trans("AddExtensionThemeModuleOrOther");
 $head[$h][2] = 'deploy';
 $h++;
-
+*/
 
 print "<br>\n";
 
