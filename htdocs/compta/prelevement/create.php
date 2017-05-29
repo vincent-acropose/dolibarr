@@ -94,14 +94,20 @@ if( $action=== 'createDemandesPrelevement') {
 		var_dump($db);
 		exit;
 	}
-	
+	$reslt = false;
 	// Pour chaque facture on récupère le numéro de mandat du client concerné par la facture
 	while($res = $db->fetch_object($resql)) {
 		$fact = new Facture($db);
 		if ($fact->fetch($res->rowid)) {
 			
-			$fact->demande_prelevement($user, $fact->total_ttc);
-			
+			if( $fact->demande_prelevement($user) > 0) {
+				$reslt = true;
+				
+			}
+			else {
+				$err.=' '.$fact->ref.' : '. $fact->error;
+				
+			}
 			
 		}
 	}
