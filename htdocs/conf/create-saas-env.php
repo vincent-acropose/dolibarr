@@ -1,5 +1,7 @@
 <?php
 
+chdir(__DIR__);
+
 require '../master.inc.php';
 
 $res = $db->query("SELECT saas_env,fk_object FROM ".MAIN_DB_PREFIX."societe_extrafields WHERE saas_env IS NOT NULL AND saas_status='todo'");
@@ -20,8 +22,6 @@ if($obj = $db->fetch_object($res)) {
 		
 		$societe->array_options['options_saas_status'] = 'inprogress';
 		$societe->update($societe->id, $user);
-		
-		chdir(__DIR__);
 		
 		mkdir($code_env,0777);
 		$dir_document = strtr($dolibarr_main_document_root,array('/htdocs'=>'/'.$code_env));
