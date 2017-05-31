@@ -137,7 +137,7 @@ if (empty($reshook))
     if (GETPOST('cancel')) $action='';
 
     // Set note
-    include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not include_once
+    include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	    // Must be include, not include_once
 
     include DOL_DOCUMENT_ROOT.'/core/actions_dellink.inc.php';		// Must be include, not include_once
 
@@ -612,7 +612,7 @@ if (empty($reshook))
     	else
     	{
     		// Insert line
-    		$result = $object->addline($desc, $pu_ht, $qty, $tva_tx, $idprod, $remise_percent, $price_base_type, $info_bits, '', $pu_ttc, $type, - 1, $special_code, $label, $fk_unit);
+    		$result = $object->addline($desc, $pu_ht, $qty, $tva_tx,$localtax1_tx, $localtax2_tx, $idprod, $remise_percent, $price_base_type, $info_bits, '', $pu_ttc, $type, - 1, $special_code, $label, $fk_unit);
 
     		if ($result > 0)
     		{
@@ -784,7 +784,9 @@ if (empty($reshook))
     			$description,
     			$pu_ht,
     			$qty,
-                    	$vat_rate,
+			    $vat_rate,
+			    $localtax1_rate,
+			    $localtax1_rate,
     			GETPOST('productid'),
     			GETPOST('remise_percent'),
     			'HT',
@@ -889,7 +891,6 @@ if ($action == 'create')
 
 	$object = new Facture($db);   // Source invoice
 	$product_static = new Product($db);
-	$formproject = new FormProjets($db);
 
 	if ($object->fetch($id, $ref) > 0)
 	{
@@ -994,7 +995,7 @@ if ($action == 'create')
 		// Bank account
 		if ($object->fk_account > 0)
 		{
-			print "<tr><td>".$langs->trans('BankAccount')."</td><td>";
+			print "<tr><td>".$langs->trans('RIB')."</td><td>";
 			$form->formSelectAccount($_SERVER['PHP_SELF'].'?id='.$object->id, $object->fk_account, 'none');
 			print "</td></tr>";
 		}
@@ -1181,8 +1182,22 @@ else
 
 		print '<tr><td>'.$langs->trans("AmountVAT").'</td><td colspan="3">'.price($object->total_tva,'',$langs,1,-1,-1,$conf->currency).'</td>';
 		print '</tr>';
+
+		// Amount Local Taxes
+		if (($mysoc->localtax1_assuj == "1" && $mysoc->useLocalTax(1)) || $object->total_localtax1 != 0) 	// Localtax1
+		{
+			print '<tr><td>' . $langs->transcountry("AmountLT1", $mysoc->country_code) . '</td>';
+			print '<td class="nowrap">' . price($object->total_localtax1, 1, '', 1, - 1, - 1, $conf->currency) . '</td></tr>';
+		}
+		if (($mysoc->localtax2_assuj == "1" && $mysoc->useLocalTax(2)) || $object->total_localtax2 != 0) 	// Localtax2
+		{
+			print '<tr><td>' . $langs->transcountry("AmountLT2", $mysoc->country_code) . '</td>';
+			print '<td class=nowrap">' . price($object->total_localtax2, 1, '', 1, - 1, - 1, $conf->currency) . '</td></tr>';
+		}
+
 		print '<tr><td>'.$langs->trans("AmountTTC").'</td><td colspan="3">'.price($object->total_ttc,'',$langs,1,-1,-1,$conf->currency).'</td>';
 		print '</tr>';
+
 
 		// Payment term
 		print '<tr><td>';
@@ -1268,9 +1283,11 @@ else
 		print '</tr>';
 
 		// Bank Account
+		$langs->load('banks');
+
 		print '<tr><td class="nowrap">';
 		print '<table width="100%" class="nobordernopadding"><tr><td class="nowrap">';
-		print $langs->trans('BankAccount');
+		print $langs->trans('RIB');
 		print '<td>';
 		if (($action != 'editbankaccount') && $user->rights->commande->creer && ! empty($object->brouillon))
 		    print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=editbankaccount&amp;id='.$object->id.'">'.img_edit($langs->trans('SetBankAccount'),1).'</a></td>';
@@ -1540,8 +1557,14 @@ else
 		$sql = "SELECT s.nom as name, s.rowid as socid, f.rowid as facid, f.titre, f.total, f.tva as total_vat, f.total_ttc, f.frequency,";
 		$sql.= " f.date_last_gen, f.date_when";
 		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s,".MAIN_DB_PREFIX."facture_rec as f";
+		if (! $user->rights->societe->client->voir && ! $socid) {
+			$sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
+		}
 		$sql.= " WHERE f.fk_soc = s.rowid";
 		$sql.= " AND f.entity = ".$conf->entity;
+		if (! $user->rights->societe->client->voir && ! $socid) {
+			$sql .= " AND s.rowid = sc.fk_soc AND sc.fk_user = ".$user->id;
+		}
 		if ($search_ref) $sql .= natural_search('f.titre', $search_ref);
 		if ($search_societe) $sql .= natural_search('s.nom', $search_societe);
 		if ($search_frequency) $sql .= natural_search('f.frequency', $search_frequency);
