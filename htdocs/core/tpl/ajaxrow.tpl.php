@@ -40,7 +40,7 @@ $(document).ready(function(){
     $(".tdlineupdown").css("background-repeat","no-repeat");
     $(".tdlineupdown").css("background-position","center center");
 
-	var TExtrafields = new Array;
+    console.log("Prepare tableDnd for #<?php echo $tagidfortablednd; ?>");
     $("#<?php echo $tagidfortablednd; ?>").tableDnD({
 		onDrop: function(table, row) {
 			var reloadpage = "<?php echo $forcereloadpage; ?>";
