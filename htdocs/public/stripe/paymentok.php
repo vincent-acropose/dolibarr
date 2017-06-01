@@ -117,7 +117,7 @@ if ($ispaymentok)
     if ($result < 0) { $error++; $errors=$interface->errors; }
     // Fin appel triggers
 
-    
+    //TODO register payment into invoice
     print $langs->trans("YourPaymentHasBeenRecorded")."<br>\n";
     print $langs->trans("ThisIsTransactionId",$TRANSACTIONID)."<br><br>\n";
     if (! empty($conf->global->STRIPE_MESSAGE_OK)) print $conf->global->STRIPE_MESSAGE_OK;

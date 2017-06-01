@@ -87,10 +87,34 @@ if ($disablenofollow) echo '</a>';
 ?>
 </div>
 
+<style type="text/css">
+::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+  color: pink;
+  opacity:1;
+}
+::-moz-placeholder { /* Firefox 19+ */
+  color: pink;
+  opacity:1;
+}
+:-ms-input-placeholder { /* IE 10+ */
+  color: pink;
+  opacity:1;
+}
+:-moz-placeholder { /* Firefox 18- */
+  color: pink;
+  opacity:1;
+}
+</style>
+<?php if(!empty($_COOKIE['dol_company_code'])) { ?>
+<div class="login_table" style="background:rgba(200,255,200,0.8); float:right;padding:20px;">
+<?php echo $langs->trans('OrCreateAnAccountText') ?>
+<p><a href="create-account.php" class="button"><?php echo $langs->trans('OrCreateAnAccount') ?></a></p>
+</div>
+<?php 
+}
 
-
-<div class="login_table">
-
+?>
+<div class="login_table" style="background:rgba(255,255,255,0.5);">
 <div id="login_line1">
 
 <div id="login_left">
