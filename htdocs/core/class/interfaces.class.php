@@ -156,7 +156,6 @@ class Interfaces
 
 				if (method_exists($objMod, 'runTrigger'))	// New method to implement
 				{
-					print_r($user,true);
 	                dol_syslog(get_class($this)."::run_triggers action=".$action." Launch runTrigger for file '".$files[$key]."'", LOG_INFO);
 	                $result=$objMod->runTrigger($action,$object,$user,$langs,$conf);
 				}
