@@ -240,6 +240,13 @@ if (in_array('bank',$filter) && in_array('nopayment',$filter))
 
 // Define SQL and SQL request to select invoices
 // Use $filter, $dateafterdate, datebeforedate, $paymentdateafter, $paymentdatebefore
+$regenerate=1;
+//echo date('Y-m-d',$dateafterdate)." ".date('Y-m-d',$datebeforedate);exit;
+if($datebeforedate && $dateafterdate){
+       $db->query("UPDATE `llx_facture` SET `model_pdf` = 'FondBlanc' WHERE `datef` BETWEEN '".date('Y-m-d',$dateafterdate)."' AND '".date('Y-
+       echo "UPDATE `llx_facture` SET `model_pdf` = 'FondBlanc' WHERE `datef` BETWEEN '".date('Y-m-d',$dateafterdate)."' AND '".date('Y-m-d',$
+}
+
 $result=rebuild_merge_pdf($db, $langs, $conf, $diroutputpdf, $newlangid, $filter, $dateafterdate, $datebeforedate, $paymentdateafter, $paymentdatebefore, 1, $regenerate, $option, $paymentonbankid, $thirdpartiesid, $fileprefix);
 
 
