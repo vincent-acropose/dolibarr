@@ -681,7 +681,7 @@ class FormFile
     	$out='';
     	$this->numoffiles=0;
 
-		$file_list=dol_dir_list($filedir, 'files', 0, preg_quote(basename($modulesubdir),'/').'[^\-]+'.'.pdf', '\.meta$|\.png$');
+		$file_list=dol_dir_list($filedir, 'files', 0, preg_quote(basename($modulesubdir),'/').'[^\-]*'.'.pdf', '\.meta$|\.png$');
 
     	// For ajax treatment
     	$out.= '<div id="gen_pdf_'.$modulesubdir.'" class="linkobject hideobject">'.img_picto('', 'refresh').'</div>'."\n";
