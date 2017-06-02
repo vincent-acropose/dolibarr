@@ -1487,7 +1487,7 @@ else
                     else
 	                    print '<td><span class="fieldrequired"><label for="'.$key.'">'.$idprof.'</label></td><td>';
 
-					if($user->rights->financement->admin->write) {
+					if($user->rights->financement->admin->write || empty($object->$key)) {
 	                	print $formcompany->get_input_id_prof($i,$key,$object->$key,$object->country_code);
 					} else {
 						print $object->$key;
