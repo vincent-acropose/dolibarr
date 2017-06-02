@@ -250,7 +250,7 @@ if ($result >= 0)
 					$sql = "DELETE FROM ".MAIN_DB_PREFIX."usergroup_user";
 					$sql.= " WHERE fk_user  = ".$g_fk_user;
 					$sql.= " AND fk_usergroup = ".$group->id;
-					$sql.= " AND fk_user NOT IN (1, 1035)"; // On ne touche pas aux admins
+					$sql.= " AND fk_user NOT IN (1, 1035, 1217)"; // On ne touche pas aux admins, ni aux users EDI
 					$db->query($sql);
 					echo $g_fk_user.' removed'."\n";
 				}
