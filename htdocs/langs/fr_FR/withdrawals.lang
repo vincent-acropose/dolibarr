@@ -103,3 +103,5 @@ InfoTransData=Montant : %s<br>Méthode : %s<br>Date : %s
 InfoRejectSubject=Ordre de prélèvement rejeté
 InfoRejectMessage=Bonjour, <br><br> l'ordre de prélèvement de la facture %s liée à la société %s, avec un montant de %s a été refusé par la banque.<br><br>--<br>%s
 ModeWarning=Option mode réel non établi, nous allons arrêter après cette simulation
+
+createAllDemandesPrelevement=Créer les demandes de prélèvements

@@ -81,6 +81,54 @@ if ($action == 'create')
 }
 
 
+if( $action=== 'createDemandesPrelevement') {
+	
+	// On récupère toutes les factures validées dont la société concernée a un mandat
+	$sql = "SELECT DISTINCT f.rowid";
+	$sql.= " FROM ".MAIN_DB_PREFIX."facture as f";
+	$sql.= " WHERE f.fk_statut = 1";
+	$sql.= " AND f.fk_mode_reglement = 3"; // Seulement les factures réglées par prélèvement
+	$resql = $db->query($sql);
+	
+	if($resql===false) {
+		var_dump($db);
+		exit;
+	}
+	$reslt = false;
+	// Pour chaque facture on récupère le numéro de mandat du client concerné par la facture
+	while($res = $db->fetch_object($resql)) {
+		$fact = new Facture($db);
+		if ($fact->fetch($res->rowid)) {
+			
+			if( $fact->demande_prelevement($user) > 0) {
+				$reslt = true;
+				
+			}
+			else {
+				$err.=' '.$fact->ref.' : '. $fact->error;
+				
+			}
+			
+		}
+	}
+	
+	if($reslt) {
+		setEventMessage($reslt." ".$langs->trans("demandesPrelevementOK"), "mesgs");
+	}
+	
+	// Si aucune demande n'est faite et qu'il n'y a pas d'erreur sur un RIB client,
+	// c'est quil n'y a Aucune facture sans demande de prélèvement existante trouvée
+	if ($err == "" && !$reslt) {
+		setEventMessage($langs->trans("aucuneDemandePrelevement"), "warnings");
+	}
+	
+	if($err != "") {
+		setEventMessage($err, "errors");
+	}
+	
+}
+
+
 /*
  * View
  */
@@ -140,6 +188,8 @@ print '</div>';
 if ($mesg) print $mesg;
 
 print "<div class=\"tabsAction\">\n";
+
+print '<a class="butAction" href="create.php?action=createDemandesPrelevement">'.$langs->trans('createAllDemandesPrelevement').'</a>';
 
 if ($nb)
 {
