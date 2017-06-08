@@ -252,7 +252,10 @@ class CommandeFournisseur extends CommonOrder
 
             if ($this->statut == 0) $this->brouillon = 1;
 
-			$this->fetchObjectLinked();
+	    if(!defined('DONT_FETCH_ON_CHILD')) {
+		define('DONT_FETCH_ON_CHILD', true);
+		$this->fetchObjectLinked();
+	    }
 
             $this->lines=array();
 
