@@ -171,7 +171,22 @@ if (! $error && $massaction == 'confirm_presend')
                     if (empty($sendto)) 	// For the case, no recipient were set (multi thirdparties send)
                     {
                         $object->fetch_thirdparty();
-                        $sendto = $object->thirdparty->email;
+                        
+                        // Get invoice contact email if exists
+                        $tmpobject = $object;
+                        $tab = $tmpobject->liste_contact(-1,'external');
+                        foreach ($tab as $invoiceContact) {
+                        	if ($invoiceContact['code'] == 'BILLING') {
+                        		$sendto = $invoiceContact['email'];
+                        		break;
+                        	}
+                        }
+                        unset($tmpobject);
+                        
+                        // No contact found
+                        if (empty($sendto)) {
+	                        $sendto = $object->thirdparty->email;
+                        }
                     }
 
                     if (empty($sendto))
