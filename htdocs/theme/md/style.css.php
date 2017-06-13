@@ -756,10 +756,10 @@ div.fiche>form>div.div-table-responsive {
     	width: 20px;
         object-fit: contain;
     }
-    
+
 	div.statusref {
     	padding-right: 10px;
-   	}    
+   	}
 }
 .linkobject { cursor: pointer; }
 <?php if (GETPOST("optioncss") == 'print') { ?>
@@ -832,7 +832,7 @@ td.showDragHandle {
 	position: fixed;
 	top: 50px;
 <?php } ?>
-	z-index: 200;
+	z-index: 90;
 	-webkit-transform: translateZ(0);
 	-moz-transform: translateZ(0);
 	-ms-transform: translateZ(0);
@@ -889,7 +889,7 @@ div.login_block {
 
 	position: auto;
 	top: auto;
-	z-index: 200;
+	z-index: 90;
 }
 div.login_block {
 	/* position: initial !important;*/
@@ -899,7 +899,7 @@ div.login_block {
 	padding-left: 0 ! important;
 }
 #id-left {
-	z-index: 201;
+	z-index: 91;
 	background: #FFF;
 	border-right: 1px solid rgba(0,0,0,0.3);
 <?php if ((GETPOST('testmenuhider') || ! empty($conf->global->MAIN_TESTMENUHIDER)) && empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER)) { ?>
@@ -1009,6 +1009,9 @@ table.noborder tr.liste_titre td {
 #pictotitle {
 	margin-<?php echo $right; ?>: 8px;
 	margin-bottom: 4px;
+}
+.pictoobjectwidth {
+	width: 14px;
 }
 .pictosubstatus {
     padding-left: 2px;
@@ -2854,16 +2857,16 @@ div .tdtop {
     text-align: center;
     border-radius: 2px;
     min-height: 38px;
-    
+
 	white-space: nowrap;
 	overflow: hidden;
     text-overflow: ellipsis;
-    width: 115px;    
+    width: 115px;
 }
 @media only screen and (max-width: 767px)
 {
     .boxstats {
-        width: 100px;    
+        width: 100px;
     }
 }
 .boxstats:hover {
@@ -4116,7 +4119,7 @@ span.noborderoncategories {
 /* ============================================================================== */
 
 ul.ulselectedfields {
-    z-index: 100;			/* To have the select box appears on first plan even when near buttons are decorated by jmobile */
+    z-index: 90;			/* To have the select box appears on first plan even when near buttons are decorated by jmobile */
 }
 dl.dropdown {
     margin:0px;

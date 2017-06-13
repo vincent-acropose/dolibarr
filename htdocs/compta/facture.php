@@ -2384,7 +2384,8 @@ if ($action == 'create')
 		else
 		{
 			print '<div class="tagtr listofinvoicetype"><div class="tagtd listofinvoicetype">';
-			$tmp='<input type="radio" name="type" id="radio_creditnote" value="0" disabled> ';
+			if (empty($conf->global->INVOICE_CREDIT_NOTE_STANDALONE)) $tmp='<input type="radio" name="type" id="radio_creditnote" value="0" disabled> ';
+			else $tmp='<input type="radio" name="type" id="radio_creditnote" value="2" > ';
 			$text = $tmp.$langs->trans("InvoiceAvoir") . ' ';
 			$text.= '('.$langs->trans("YouMustCreateInvoiceFromThird").') ';
 			$desc = $form->textwithpicto($text, $langs->transnoentities("InvoiceAvoirDesc"), 1, 'help', '', 0, 3);
@@ -3806,12 +3807,12 @@ else if ($id > 0 || ! empty($ref))
 		if ($object->situation_cycle_ref && $object->statut == 0) {
 			print '<div class="div-table-responsive">';
 			
-			print '<form name="updatealllines" id="updatealllines" action="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '"#updatealllines" method="POST">';
+			print '<form name="updatealllines" id="updatealllines" action="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '#updatealllines" method="POST">';
 			print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '" />';
 			print '<input type="hidden" name="action" value="updatealllines" />';
 			print '<input type="hidden" name="id" value="' . $object->id . '" />';
 			
-			print '<table id="tablelines" class="noborder noshadow" width="100%">';
+			print '<table id="tablelines_all_progress" class="noborder noshadow" width="100%">';
 			print '<tr class="liste_titre nodrag nodrop">';
 			
 			if (!empty($conf->global->MAIN_VIEW_LINE_NUMBER)) {
@@ -3936,6 +3937,9 @@ else if ($id > 0 || ! empty($ref))
 					}
 				}
 			}
+
+			$discount = new DiscountAbsolute($db);
+			$result = $discount->fetch(0, $object->id);
 
 			// Reopen a standard paid invoice
 			if ((($object->type == Facture::TYPE_STANDARD || $object->type == Facture::TYPE_REPLACEMENT)
