@@ -78,19 +78,25 @@ $(document).ready(function(){
 		onDragClass: "dragClass",
 		dragHandle: "tdlineupdown",
 		onDragStart: function(table, row) {
+			console.log('onDragStart');
 			TExtrafields = [];
-			var current_element = $(row).parent();
-			while (next_element = $(current_element).next())
+
+			$tr = $(row).closest('tr[id]');
+
+			end_extra_row = false;
+			while (!end_extra_row)
 			{
-				if (next_element.is('tr'))
-				{
-					var id = $(next_element).attr('id');
-					if (typeof id != 'undefined' && id.indexOf('row-') !== -1) break;
-					else if ($(next_element).hasClass('liste_titre')) break;
-					else TExtrafields.push(next_element);
+				$tr = $tr.next('tr');
+
+				if($tr.length>0 && typeof $tr.attr('id') == 'undefined') {
+					$tr.remove();
+					TExtrafields.push($tr);
+					
+				}
+				else {
+					end_extra_row=true;
 				}
 				
-				current_element = next_element;
 			}
 		}
 	});
