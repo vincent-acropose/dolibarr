@@ -120,7 +120,7 @@
 	url = git@atmsrv1:doli-ndfp-rh.git
 [submodule "htdocs/custom/sig"]
 	path = htdocs/custom/sig
-	url = git@atmsrv1:doli-sig.git
+	url = git@github.com:ATM-Consulting/dolibarr_module_sig.git
 [submodule "htdocs/custom/zenfusionmaps"]
 	path = htdocs/custom/zenfusionmaps
 	url = git@atmsrv1:store-zenfusionmaps.git
