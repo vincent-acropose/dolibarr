@@ -92,8 +92,8 @@ if ($action == 'add_prod' && ($user->rights->produit->creer || $user->rights->se
 				$action = 're-edit';
 				if ($object->error == "isFatherOfThis") {
 					setEventMessages($langs->trans("ErrorAssociationIsFatherOfThis"), null, 'errors');
-				} 
-				else 
+				}
+				else
 				{
 					setEventMessages($object->error, $object->errors, 'errors');
 				}
@@ -210,15 +210,18 @@ if ($id > 0 || ! empty($ref))
 	if ($user->rights->produit->lire || $user->rights->service->lire)
 	{
         $linkback = '<a href="'.DOL_URL_ROOT.'/product/list.php">'.$langs->trans("BackToList").'</a>';
-	    
-        dol_banner_tab($object, 'ref', $linkback, ($user->societe_id?0:1), 'ref', '', '', '', 0, '', '', 1);
-		
+
+        $shownav = 1;
+        if ($user->societe_id && ! in_array('product', explode(',',$conf->global->MAIN_MODULES_FOR_EXTERNAL))) $shownav=0;
+
+        dol_banner_tab($object, 'ref', $linkback, $shownav, 'ref', '', '', '', 0, '', '', 1);
+
         if ($object->type!=Product::TYPE_SERVICE || empty($conf->global->PRODUIT_MULTIPRICES))
         {
-    	    print '<div class="underbanner clearboth"></div>';	
+    	    print '<div class="underbanner clearboth"></div>';
             print '<table class="border tableforfield" width="100%">';
         }
-        
+
 		// Nature
 		if ($object->type!=Product::TYPE_SERVICE)
 		{
@@ -262,11 +265,11 @@ if ($id > 0 || ! empty($ref))
 		dol_fiche_end();
 
         print '<br>';
-        
+
 		$prodsfather = $object->getFather(); 		// Parent Products
 		$object->get_sousproduits_arbo();			// Load $object->sousprods
-		$prods_arbo=$object->get_arbo_each_prod();		
-		
+		$prods_arbo=$object->get_arbo_each_prod();
+
 		$nbofsubsubproducts=count($prods_arbo);		// This include sub sub product into nb
 		$prodschild = $object->getChildsArbo($id,1);
 		$nbofsubproducts=count($prodschild);		// This include only first level of childs
@@ -375,7 +378,7 @@ if ($id > 0 || ! empty($ref))
 
 					    $totalline=price2num($value['nb'] * ($product_fourn->fourn_unitprice * (1 - $product_fourn->fourn_remise_percent/100) + $product_fourn->fourn_unitcharges - $product_fourn->fourn_remise), 'MT');
 						$total+=$totalline;
-						
+
 						print '<td align="right">';
 						print ($notdefined?'':($value['nb']> 1 ? $value['nb'].'x' : '').price($product_fourn->fourn_unitprice,'','',0,0,-1,$conf->currency));
 						print '</td>';
@@ -391,7 +394,7 @@ if ($id > 0 || ! empty($ref))
 						print '<td align="right" colspan="2">';
 						print ($notdefined?'':($value['nb']> 1 ? $value['nb'].'x' : '').price($pricesell,'','',0,0,-1,$conf->currency));
 						print '</td>';
-						
+
 						// Stock
 						if (! empty($conf->stock->enabled)) print '<td align="right">'.$value['stock'].'</td>';	// Real stock
 
@@ -430,7 +433,7 @@ if ($id > 0 || ! empty($ref))
 						// Best selling price
 						print '<td>&nbsp;</td>';
 						print '<td>&nbsp;</td>';
-						
+
 						if (! empty($conf->stock->enabled)) print '<td></td>';	// Real stock
 						print '<td align="center">'.$value['nb'].'</td>';
 						print '<td>&nbsp;</td>';
@@ -462,7 +465,7 @@ if ($id > 0 || ! empty($ref))
 				if ($atleastonenotdefined) print $langs->trans("Unknown").' ('.$langs->trans("SomeSubProductHaveNoPrices").')';
 				print ($atleastonenotdefined?'':price($totalsell,'','',0,0,-1,$conf->currency));
 				print '</td>';
-				
+
 				// Stock
 				if (! empty($conf->stock->enabled)) print '<td class="liste_total" align="right">&nbsp;</td>';
 

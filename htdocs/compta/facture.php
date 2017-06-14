@@ -1060,7 +1060,7 @@ if (empty($reshook))
 									$langs->trans('Deposit'),
 									$amountdeposit,		 	// subprice
 									1, 						// quantity
-									$lines[$i]->tva_tx,     // vat rate
+									$tvatx,                // vat rate
 							        0,                      // localtax1_tx
 									0, 						// localtax2_tx
 									(empty($conf->global->INVOICE_PRODUCTID_DEPOSIT)?0:$conf->global->INVOICE_PRODUCTID_DEPOSIT), 	// fk_product
@@ -1156,11 +1156,15 @@ if (empty($reshook))
 											$array_options = $lines[$i]->array_options;
 										}
 
-										// View third's localtaxes for now
-										$localtax1_tx = get_localtax($lines[$i]->tva_tx, 1, $object->thirdparty);
-										$localtax2_tx = get_localtax($lines[$i]->tva_tx, 2, $object->thirdparty);
+										$tva_tx = $lines[$i]->tva_tx;
+										if (! empty($lines[$i]->vat_src_code) && ! preg_match('/\(/', $tva_tx)) $tva_tx .= ' ('.$lines[$i]->vat_src_code.')';
+										
+										// View third's localtaxes for NOW and do not use value from origin.
+										// TODO Is this really what we want ? Yes if source if template invoice but what if proposal or order ?
+										$localtax1_tx = get_localtax($tva_tx, 1, $object->thirdparty);
+										$localtax2_tx = get_localtax($tva_tx, 2, $object->thirdparty);
 
-										$result = $object->addline($desc, $lines[$i]->subprice, $lines[$i]->qty, $lines[$i]->tva_tx, $localtax1_tx, $localtax2_tx, $lines[$i]->fk_product, $lines[$i]->remise_percent, $date_start, $date_end, 0, $lines[$i]->info_bits, $lines[$i]->fk_remise_except, 'HT', 0, $product_type, $lines[$i]->rang, $lines[$i]->special_code, $object->origin, $lines[$i]->rowid, $fk_parent_line, $lines[$i]->fk_fournprice, $lines[$i]->pa_ht, $label, $array_options, $lines[$i]->situation_percent, $lines[$i]->fk_prev_id, $lines[$i]->fk_unit);
+										$result = $object->addline($desc, $lines[$i]->subprice, $lines[$i]->qty, $tva_tx, $localtax1_tx, $localtax2_tx, $lines[$i]->fk_product, $lines[$i]->remise_percent, $date_start, $date_end, 0, $lines[$i]->info_bits, $lines[$i]->fk_remise_except, 'HT', 0, $product_type, $lines[$i]->rang, $lines[$i]->special_code, $object->origin, $lines[$i]->rowid, $fk_parent_line, $lines[$i]->fk_fournprice, $lines[$i]->pa_ht, $label, $array_options, $lines[$i]->situation_percent, $lines[$i]->fk_prev_id, $lines[$i]->fk_unit);
 
 										if ($result > 0) {
 											$lineid = $result;
@@ -1289,7 +1293,6 @@ if (empty($reshook))
 
 				$object->situation_counter = $object->situation_counter + 1;
 				$id = $object->createFromCurrent($user);
-
 				if ($id <= 0) $mesg = $object->error;
 			}
 		}
@@ -2028,7 +2031,7 @@ if ($action == 'create')
 	if (!empty($soc->id)) $absolute_discount = $soc->getAvailableDiscounts();
 	$note_public = $object->getDefaultCreateValueFor('note_public', (is_object($objectsrc)?$objectsrc->note_public:null));
 	$note_private = $object->getDefaultCreateValueFor('note_private', ((! empty($origin) && ! empty($originid) && is_object($objectsrc))?$objectsrc->note_private:null));
-
+	
 	if (! empty($conf->use_javascript_ajax))
 	{
 		require_once DOL_DOCUMENT_ROOT . '/core/lib/ajax.lib.php';
@@ -2232,8 +2235,7 @@ if ($action == 'create')
 	if ((empty($origin)) || ((($origin == 'propal') || ($origin == 'commande')) && (! empty($originid))))
 	{
 		// Deposit
-
-		if (empty($conf->global->INVOICE_DISABLE_DEPOSIT))
+		if (empty($conf->global->INVOICE_DISABLE_DEPOSIT)) 
    		{
     	    print '<div class="tagtr listofinvoicetype"><div class="tagtd listofinvoicetype">';
     		$tmp='<input type="radio" id="radio_deposit" name="type" value="3"' . (GETPOST('type') == 3 ? ' checked' : '') . '> ';
@@ -2244,7 +2246,7 @@ if ($action == 'create')
     			});
     		});
     		</script>';
-
+    
     		$desc = $form->textwithpicto($tmp.$langs->trans("InvoiceDeposit"), $langs->transnoentities("InvoiceDepositDesc"), 1, 'help', '', 0, 3);
     		print '<table class="nobordernopadding"><tr><td>';
     		print $desc;
@@ -2258,7 +2260,7 @@ if ($action == 'create')
     			print '<td class="nowrap" style="padding-left: 5px">' . $langs->trans('Value') . ':<input type="text" id="valuedeposit" name="valuedeposit" size="3" value="' . GETPOST('valuedeposit', 'int') . '"/>';
     		}
     		print '</td></tr></table>';
-
+    
     		print '</div></div>';
    		}
 	}
@@ -2290,7 +2292,7 @@ if ($action == 'create')
 		}
 
 		// Replacement
-		if (empty($conf->global->INVOICE_DISABLE_REPLACEMENT))
+		if (empty($conf->global->INVOICE_DISABLE_REPLACEMENT)) 
 		{
     		print '<!-- replacement line -->';
     		print '<div class="tagtr listofinvoicetype"><div class="tagtd listofinvoicetype">';
@@ -2337,7 +2339,7 @@ if ($action == 'create')
 		if ($socid > 0)
 		{
     		// Credit note
-		    if (empty($conf->global->INVOICE_DISABLE_CREDIT_NOTE))
+		    if (empty($conf->global->INVOICE_DISABLE_CREDIT_NOTE)) 
     		{
     			print '<div class="tagtr listofinvoicetype"><div class="tagtd listofinvoicetype">';
     			$tmp='<input type="radio" id="radio_creditnote" name="type" value="2"' . (GETPOST('type') == 2 ? ' checked' : '');
@@ -2373,19 +2375,20 @@ if ($action == 'create')
     			$text .= '</select>';
     			$desc = $form->textwithpicto($text, $langs->transnoentities("InvoiceAvoirDesc"), 1, 'help', '', 0, 3);
     			print $desc;
-
+    
     			print '<div id="credit_note_options" class="clearboth">';
     	        print '&nbsp;&nbsp;&nbsp; <input data-role="none" type="checkbox" name="invoiceAvoirWithLines" id="invoiceAvoirWithLines" value="1" onclick="if($(this).is(\':checked\') ) { $(\'#radio_creditnote\').prop(\'checked\', true); $(\'#invoiceAvoirWithPaymentRestAmount\').removeAttr(\'checked\');   }" '.(GETPOST('invoiceAvoirWithLines','int')>0 ? 'checked':'').' /> <label for="invoiceAvoirWithLines">'.$langs->trans('invoiceAvoirWithLines')."</label>";
     	        print '<br>&nbsp;&nbsp;&nbsp; <input data-role="none" type="checkbox" name="invoiceAvoirWithPaymentRestAmount" id="invoiceAvoirWithPaymentRestAmount" value="1" onclick="if($(this).is(\':checked\') ) { $(\'#radio_creditnote\').prop(\'checked\', true);  $(\'#invoiceAvoirWithLines\').removeAttr(\'checked\');   }" '.(GETPOST('invoiceAvoirWithPaymentRestAmount','int')>0 ? 'checked':'').' /> <label for="invoiceAvoirWithPaymentRestAmount">'.$langs->trans('invoiceAvoirWithPaymentRestAmount')."</label>";
     			print '</div>';
-
+    
     			print '</div></div>';
     		}
 		}
 		else
 		{
 			print '<div class="tagtr listofinvoicetype"><div class="tagtd listofinvoicetype">';
-			$tmp='<input type="radio" name="type" id="radio_creditnote" value="0" disabled> ';
+			if (empty($conf->global->INVOICE_CREDIT_NOTE_STANDALONE)) $tmp='<input type="radio" name="type" id="radio_creditnote" value="0" disabled> ';
+			else $tmp='<input type="radio" name="type" id="radio_creditnote" value="2" > ';
 			$text = $tmp.$langs->trans("InvoiceAvoir") . ' ';
 			$text.= '('.$langs->trans("YouMustCreateInvoiceFromThird").') ';
 			$desc = $form->textwithpicto($text, $langs->transnoentities("InvoiceAvoirDesc"), 1, 'help', '', 0, 3);
@@ -3100,7 +3103,7 @@ else if ($id > 0 || ! empty($ref))
 	if ($absolute_creditnote > 0)
 	{
 		// If validated, we show link "add credit note to payment"
-		if ($object->statut != 1 || $object->type == Facture::TYPE_CREDIT_NOTE) {
+		if ($object->statut != 1 || $object->type == Facture::TYPE_CREDIT_NOTE || $object->type == Facture::TYPE_DEPOSIT) {
 			if ($object->statut == 0 && $object->type != Facture::TYPE_DEPOSIT) {
 				$text = $langs->trans("CompanyHasCreditNote", price($absolute_creditnote), $langs->transnoentities("Currency" . $conf->currency));
 				print $form->textwithpicto($text, $langs->trans("CreditNoteDepositUse"));
@@ -3327,7 +3330,7 @@ else if ($id > 0 || ! empty($ref))
 			print $object->situation_counter;
 
 			print '</td>';
-			print '<td align="right" class="nowrap">';
+			print '<td align="left" class="nowrap">';
 
 			$prevsits_total_amount = 0;
 			foreach ($prevsits as $situation) {
@@ -3335,9 +3338,10 @@ else if ($id > 0 || ! empty($ref))
 			}
 			$prevsits_total_amount += $object->total_ht;
 
-			print price($prevsits_total_amount);
-			print '</td>';
-			print '<td>' . $langs->trans('Currency' . $conf->currency) . '</td></tr>';
+			print price($prevsits_total_amount, 0, $langs, 1, -1, -1, (!empty($object->multicurrency_code) ? $object->multicurrency_code : $conf->currency) );
+			
+			print '</td></tr>';
+			
 
 			// Previous situation(s) deduction(s)
 			for ($i = 0; $i < $cprevsits; $i++) {
@@ -3348,10 +3352,10 @@ else if ($id > 0 || ! empty($ref))
 				print $prevsits[$i]->situation_counter;
 				print '</a></td>';
 
-				print '<td align="right" class="nowrap">';
-				print '- ' . price($prevsits[$i]->total_ht);
-				print '</td>';
-				print '<td>' . $langs->trans('Currency' . $conf->currency) . '</td></tr>';
+				print '<td align="left" class="nowrap">';
+				print '- ' . price($prevsits[$i]->total_ht, 0, $langs, 1, -1, -1, (!empty($object->multicurrency_code) ? $object->multicurrency_code : $conf->currency) );
+				print '</td></tr>';
+				
 			}
 		}
 	}
@@ -3801,30 +3805,20 @@ else if ($id > 0 || ! empty($ref))
 	// Lines
 	$result = $object->getLinesArray();
 
-	print '	<form name="addproduct" id="addproduct" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . (($action != 'editline') ? '#add' : '#line_' . GETPOST('lineid')) . '" method="POST">
-	<input type="hidden" name="token" value="' . $_SESSION ['newtoken'] . '">
-	<input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateligne') . '">
-	<input type="hidden" name="mode" value="">
-	<input type="hidden" name="id" value="' . $object->id . '">
-	';
-
-	if (! empty($conf->use_javascript_ajax) && $object->statut == 0) {
-		include DOL_DOCUMENT_ROOT . '/core/tpl/ajaxrow.tpl.php';
-	}
-
-    print '<div class="div-table-responsive">';
-	print '<table id="tablelines" class="noborder noshadow" width="100%">';
-
 	// Show global modifiers
 	if (! empty($conf->global->INVOICE_USE_SITUATION))
 	{
 		if ($object->situation_cycle_ref && $object->statut == 0) {
-			print '<tr class="liste_titre nodrag nodrop">';
-			print '<form name="updatealllines" id="updatealllines" action="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '"#updatealllines" method="POST">';
+			print '<div class="div-table-responsive">';
+			
+			print '<form name="updatealllines" id="updatealllines" action="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '#updatealllines" method="POST">';
 			print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '" />';
 			print '<input type="hidden" name="action" value="updatealllines" />';
 			print '<input type="hidden" name="id" value="' . $object->id . '" />';
-
+			
+			print '<table id="tablelines_all_progress" class="noborder noshadow" width="100%">';
+			print '<tr class="liste_titre nodrag nodrop">';
+			
 			if (!empty($conf->global->MAIN_VIEW_LINE_NUMBER)) {
 				print '<td align="center" width="5">&nbsp;</td>';
 			}
@@ -3847,7 +3841,7 @@ else if ($id > 0 || ! empty($ref))
 			print '<td width="10">&nbsp;</td>';
 			print '<td width="10">&nbsp;</td>';
 			print "</tr>\n";
-
+			
 			if (!empty($conf->global->MAIN_VIEW_LINE_NUMBER)) {
 				print '<td align="center" width="5">&nbsp;</td>';
 			}
@@ -3860,9 +3854,32 @@ else if ($id > 0 || ! empty($ref))
 			print '<td align="right" class="nowrap"><input type="text" size="1" value="" name="all_progress">%</td>';
 			print '<td colspan="4" align="right"><input class="button" type="submit" name="all_percent" value="Modifier" /></td>';
 			print '</tr>';
+			
+			print '</table>';
+			
 			print '</form>';
+			
+			print '</div>';
+			
 		}
+		
 	}
+	
+	
+	
+	print '	<form name="addproduct" id="addproduct" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . (($action != 'editline') ? '#add' : '#line_' . GETPOST('lineid')) . '" method="POST">
+	<input type="hidden" name="token" value="' . $_SESSION ['newtoken'] . '">
+	<input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateligne') . '">
+	<input type="hidden" name="mode" value="">
+	<input type="hidden" name="id" value="' . $object->id . '">
+	';
+
+	if (! empty($conf->use_javascript_ajax) && $object->statut == 0) {
+		include DOL_DOCUMENT_ROOT . '/core/tpl/ajaxrow.tpl.php';
+	}
+
+    print '<div class="div-table-responsive">';
+	print '<table id="tablelines" class="noborder noshadow" width="100%">';
 
 	// Show object lines
 	if (! empty($object->lines))
@@ -3924,6 +3941,9 @@ else if ($id > 0 || ! empty($ref))
 					}
 				}
 			}
+
+			$discount = new DiscountAbsolute($db);
+			$result = $discount->fetch(0, $object->id);
 
 			// Reopen a standard paid invoice
 			if ((($object->type == Facture::TYPE_STANDARD || $object->type == Facture::TYPE_REPLACEMENT)
