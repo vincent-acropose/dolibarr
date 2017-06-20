@@ -18,6 +18,8 @@
 -- To delete orphelins:                        VMYSQL4.1 DELETE FROM llx_usergroup_user WHERE fk_usergroup NOT IN (SELECT rowid from llx_usergroup);
 -- To delete orphelins:                        VPGSQL8.2 DELETE FROM llx_usergroup_user WHERE fk_user NOT IN (SELECT rowid from llx_user);
 
+SET SQL_MODE='';
+ALTER TABLE llx_projet_task_time CHANGE task_datehour task_datehour datetime NULL;
 
 UPDATE llx_facture_fourn set ref=rowid where ref IS NULL;
 ALTER TABLE llx_facture_fourn MODIFY COLUMN ref varchar(255) NOT NULL;
