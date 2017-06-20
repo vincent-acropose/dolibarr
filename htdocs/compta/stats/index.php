@@ -56,13 +56,27 @@ if (! empty($conf->accounting->enabled)) $result=restrictedArea($user,'accountin
 llxHeader();
 $form=new Form($db);
 
+$date_start=dol_mktime(0,0,0,$_REQUEST["date_startmonth"],$_REQUEST["date_startday"],$_REQUEST["date_startyear"]);
+$date_end=dol_mktime(23,59,59,$_REQUEST["date_endmonth"],$_REQUEST["date_endday"],$_REQUEST["date_endyear"]);
+if(empty($date_start)) {
+	
+	$date_start = strtotime($year_start.'-01-01');
+	$date_end = strtotime($year_end.'-12-31');
+}
+
+$year_start = date('Y', $date_start);
+$year_end= date('Y', $date_end);
+
 // Affiche en-tete du rapport
 if ($modecompta=="CREANCES-DETTES")
 {
 	$nom=$langs->trans("SalesTurnover");
 	$calcmode=$langs->trans("CalcModeDebt");
 	$calcmode.='<br>('.$langs->trans("SeeReportInInputOutputMode",'<a href="'.$_SERVER["PHP_SELF"].'?year_start='.$year_start.'&modecompta=RECETTES-DEPENSES">','</a>').')';
-	$period="$year_start - $year_end";
+	
+	$period=$form->select_date($date_start,'date_start',0,0,0,'',1,0,1).' - '.$form->select_date($date_end,'date_end',0,0,0,'',1,0,1);
+	
+	//$period="$year_start - $year_end";
 	$periodlink=($year_start?"<a href='".$_SERVER["PHP_SELF"]."?year_start=".($year_start-1)."&modecompta=".$modecompta."'>".img_previous()."</a> <a href='".$_SERVER["PHP_SELF"]."?year_start=".($year_start+1)."&modecompta=".$modecompta."'>".img_next()."</a>":"");
 	$description=$langs->trans("RulesCADue");
 	if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS)) $description.= $langs->trans("DepositsAreNotIncluded");
@@ -74,7 +88,10 @@ else {
 	$nom=$langs->trans("SalesTurnover");
 	$calcmode=$langs->trans("CalcModeEngagement");
 	$calcmode.='<br>('.$langs->trans("SeeReportInDueDebtMode",'<a href="'.$_SERVER["PHP_SELF"].'?year_start='.$year_start.'&modecompta=CREANCES-DETTES">','</a>').')';
-	$period="$year_start - $year_end";
+	
+	$period=$form->select_date($date_start,'date_start',0,0,0,'',1,0,1).' - '.$form->select_date($date_end,'date_end',0,0,0,'',1,0,1);
+	
+	//$period="$year_start - $year_end";
 	$periodlink=($year_start?"<a href='".$_SERVER["PHP_SELF"]."?year_start=".($year_start-1)."&modecompta=".$modecompta."'>".img_previous()."</a> <a href='".$_SERVER["PHP_SELF"]."?year_start=".($year_start+1)."&modecompta=".$modecompta."'>".img_next()."</a>":"");
 	$description=$langs->trans("RulesCAIn");
 	$description.= $langs->trans("DepositsAreIncluded");
@@ -114,6 +131,14 @@ else
 }
 $sql.= " AND f.entity = ".$conf->entity;
 if ($socid) $sql.= " AND f.fk_soc = ".$socid;
+
+if ($modecompta == 'CREANCES-DETTES')
+{
+	$sql.=" AND f.datef BETWEEN '".date('Y-m-d', $date_start)."' AND  '".date('Y-m-d', $date_end)."' ";
+}
+else {
+	$sql.=" AND p.datep BETWEEN '".date('Y-m-d', $date_start)."' AND  '".date('Y-m-d', $date_end)."' ";
+}
 $sql.= " GROUP BY dm";
 $sql.= " ORDER BY dm";
 
@@ -152,6 +177,7 @@ if ($modecompta != 'CREANCES-DETTES')
 	$sql.= " AND p.fk_bank = b.rowid";
 	$sql.= " AND b.fk_account = ba.rowid";
 	$sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
+	$sql.=" AND p.datep BETWEEN '".date('Y-m-d', $date_start)."' AND  '".date('Y-m-d', $date_end)."' ";
 	$sql.= " GROUP BY dm";
 	$sql.= " ORDER BY dm";
 
