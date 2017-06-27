@@ -36,7 +36,7 @@ $langs->load("exports");
 $langs->load("users");
 $langs->load("companies");
 $langs->load("projects");
-
+ini_set('max_execution_time', 300);
 // Everybody should be able to go on this page
 //if (! $user->admin)
 //  accessforbidden();
