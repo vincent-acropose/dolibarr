@@ -142,3 +142,6 @@
 [submodule "htdocs/custom/quicksupplierprice"]
 	path = htdocs/custom/quicksupplierprice
 	url = git@github.com:ATM-Consulting/dolibarr_module_quicksupplierprice.git
+[submodule "htdocs/custom/sendinblue"]
+	path = htdocs/custom/sendinblue
+	url = git@github.com:ATM-Consulting/dolibarr_module_sendinblue.git
