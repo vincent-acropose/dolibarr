@@ -309,7 +309,10 @@ if ($id > 0 || $ref)
 
 			$linkback = '<a href="'.DOL_URL_ROOT.'/product/list.php">'.$langs->trans("BackToList").'</a>';
 
-            dol_banner_tab($object, 'ref', $linkback, ($user->societe_id?0:1), 'ref');
+            $shownav = 1;
+            if ($user->societe_id && ! in_array('product', explode(',',$conf->global->MAIN_MODULES_FOR_EXTERNAL))) $shownav=0;
+
+			dol_banner_tab($object, 'ref', $linkback, $shownav, 'ref');
 
             print '<div class="fichecenter">';
 
@@ -594,7 +597,7 @@ if ($id > 0 || $ref)
 				$product_fourn_list = $product_fourn->list_product_fournisseur_price($object->id, $sortfield, $sortorder);
 				$nbtotalofrecords = count($product_fourn_list);
 			    print_barre_liste($langs->trans('SupplierPrices'), $page, $_SERVEUR ['PHP_SELF'], $option, $sortfield, $sortorder, '', count($product_fourn_list), $nbtotalofrecords, 'title_accountancy.png');
-			     
+
 				// Suppliers list title
 			    print '<div class="div-table-responsive">';
 			    print '<table class="noborder" width="100%">';
@@ -680,8 +683,8 @@ if ($id > 0 || $ref)
 						// Reputation
 						print '<td align="center">';
 						if (!empty($productfourn->supplier_reputation) && !empty($object->reputations[$productfourn->supplier_reputation])) {
-							print $object->reputations[$productfourn->supplier_reputation];	
-						}  
+							print $object->reputations[$productfourn->supplier_reputation];
+						}
 						print'</td>';
 
 						// Charges ????

@@ -396,7 +396,7 @@ class Product extends CommonObject
 			$sql = "SELECT count(*) as nb";
 			$sql.= " FROM ".MAIN_DB_PREFIX."product";
 			$sql.= " WHERE entity IN (".getEntity('product', 1).")";
-			$sql.= " AND ref = '" .$this->ref."'";
+			$sql.= " AND ref = '" .$this->db->escape($this->ref)."'";
 
 			$result = $this->db->query($sql);
 			if ($result)
@@ -924,8 +924,8 @@ class Product extends CommonObject
                 if ($result < 0) { $error++; }
                 // End call triggers
 			}
-			
-			// Delete from product_batch on product delete	
+
+			// Delete from product_batch on product delete
 			if (! $error)
 			{
 				$sql = "DELETE FROM ".MAIN_DB_PREFIX.'product_batch';
@@ -1038,7 +1038,7 @@ class Product extends CommonObject
 	function setMultiLangs($user)
 	{
 		global $conf, $langs;
-		
+
 		$langs_available = $langs->get_available_languages(DOL_DOCUMENT_ROOT, 0, 2);
 		$current_lang = $langs->getDefaultLang();
 
@@ -1285,7 +1285,7 @@ class Product extends CommonObject
 		if (empty($this->price_by_qty)) $this->price_by_qty=0;
 
 		// Add new price
-		$sql = "INSERT INTO ".MAIN_DB_PREFIX."product_price(price_level,date_price,fk_product,fk_user_author,price,price_ttc,price_base_type,tosell, tva_tx, default_vat_code, recuperableonly,";
+		$sql = "INSERT INTO ".MAIN_DB_PREFIX."product_price(price_level,date_price, fk_product, fk_user_author, price, price_ttc, price_base_type,tosell, tva_tx, default_vat_code, recuperableonly,";
 		$sql.= " localtax1_tx, localtax2_tx, localtax1_type, localtax2_type, price_min,price_min_ttc,price_by_qty,entity,fk_price_expression) ";
 		$sql.= " VALUES(".($level?$level:1).", '".$this->db->idate($now)."',".$this->id.",".$user->id.",".$this->price.",".$this->price_ttc.",'".$this->price_base_type."',".$this->status.",".$this->tva_tx.", ".($this->default_vat_code?("'".$this->default_vat_code."'"):"null").",".$this->tva_npr.",";
 		$sql.= " ".$this->localtax1_tx.", ".$this->localtax2_tx.", '".$this->localtax1_type."', '".$this->localtax2_type."', ".$this->price_min.",".$this->price_min_ttc.",".$this->price_by_qty.",".$conf->entity.",".($this->fk_price_expression > 0?$this->fk_price_expression:'null');
@@ -1702,7 +1702,7 @@ class Product extends CommonObject
 				$this->url						= $obj->url;
 				$this->note_private				= $obj->note_private;
 				$this->note						= $obj->note_private;  // deprecated
-				
+
 				$this->type						= $obj->fk_product_type;
 				$this->status					= $obj->tosell;
 				$this->status_buy				= $obj->tobuy;
@@ -1721,6 +1721,7 @@ class Product extends CommonObject
 				$this->tva_tx					= $obj->tva_tx;
 				//! French VAT NPR
 				$this->tva_npr					= $obj->tva_npr;
+				$this->recuperableonly			= $obj->tva_npr;       // For backward compatibility
 				//! Local taxes
 				$this->localtax1_tx				= $obj->localtax1_tx;
 				$this->localtax2_tx				= $obj->localtax2_tx;
@@ -1773,7 +1774,7 @@ class Product extends CommonObject
 
 				// multilangs
 				if (! empty($conf->global->MAIN_MULTILANGS)) $this->getMultiLangs();
-				
+
 				// Load multiprices array
 				if (! empty($conf->global->PRODUIT_MULTIPRICES))
 				{
@@ -2006,29 +2007,29 @@ class Product extends CommonObject
 			$this->stats_commande['rows']=$obj->nb_rows;
 			$this->stats_commande['qty']=$obj->qty?$obj->qty:0;
 
-			// if it's a virtual product, maybe it is in order by extension		
+			// if it's a virtual product, maybe it is in order by extension
 			if (! empty($conf->global->ORDER_ADD_ORDERS_WITH_PARENT_PROD_IF_INCDEC))
-			{	
+			{
 				$TFather = $this->getFather();
 				if (is_array($TFather) && !empty($TFather)) {
 					foreach($TFather as &$fatherData) {
 						$pFather = new Product($this->db);
-						$pFather->id = $fatherData['id'];  
+						$pFather->id = $fatherData['id'];
 						$qtyCoef = $fatherData['qty'];
-	
+
 						if ($fatherData['incdec']) {
 							$pFather->load_stats_commande($socid, $filtrestatut);
-							
+
 							$this->stats_commande['customers']+=$pFather->stats_commande['customers'];
 							$this->stats_commande['nb']+=$pFather->stats_commande['nb'];
 							$this->stats_commande['rows']+=$pFather->stats_commande['rows'];
 							$this->stats_commande['qty']+=$pFather->stats_commande['qty'] * $qtyCoef;
-							
+
 						}
 					}
 				}
 			}
-						
+
 			return 1;
 		}
 		else
@@ -3194,7 +3195,7 @@ class Product extends CommonObject
 		$result='';
         $newref=$this->ref;
         if ($maxlength) $newref=dol_trunc($newref,$maxlength,'middle');
-        
+
         if ($this->type == Product::TYPE_PRODUCT) $label = '<u>' . $langs->trans("ShowProduct") . '</u>';
         if ($this->type == Product::TYPE_SERVICE) $label = '<u>' . $langs->trans("ShowService") . '</u>';
         if (! empty($this->ref))
@@ -3217,13 +3218,13 @@ class Product extends CommonObject
         {
             //
         }
-        if (! empty($this->entity)) 
+        if (! empty($this->entity))
         {
             $tmpphoto = $this->show_photos($conf->product->multidir_output[$this->entity],1,1,0,0,0,80);
-            if ($this->nbphoto > 0) $label .= '<br>' . $tmpphoto; 
+            if ($this->nbphoto > 0) $label .= '<br>' . $tmpphoto;
         }
 
-        
+
 		$linkclose='';
 		if (empty($notooltip))
 		{
@@ -3235,7 +3236,7 @@ class Product extends CommonObject
 
 		    $linkclose.= ' title="'.dol_escape_htmltag($label, 1, 1).'"';
 		    $linkclose.=' class="classfortooltip"';
-		    
+
 		    if (! is_object($hookmanager))
 	        {
 	            include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
@@ -3260,7 +3261,7 @@ class Product extends CommonObject
         $linkstart = '<a href="'.$url.'"';
         $linkstart.=$linkclose.'>';
         $linkend='</a>';
-        
+
 		if ($withpicto) {
 			if ($this->type == Product::TYPE_PRODUCT) $result.=($linkstart.img_object(($notooltip?'':$label), 'product', ($notooltip?'':'class="classfortooltip"'), 0, 0, $notooltip?0:1).$linkend.' ');
 			if ($this->type == Product::TYPE_SERVICE) $result.=($linkstart.img_object(($notooltip?'':$label), 'service',  ($notooltip?'':'class="classfortooltip"'), 0, 0, $notooltip?0:1).$linkend.' ');
@@ -3473,14 +3474,14 @@ class Product extends CommonObject
 
 	/**
 	 *    Load information about stock of a product into stock_reel, stock_warehouse[] (including stock_warehouse[idwarehouse]->detail_batch for batch products)
-	 *    This function need a lot of load. If you use it on list, use a cache to execute it one for each product id. 
+	 *    This function need a lot of load. If you use it on list, use a cache to execute it one for each product id.
 	 *    If ENTREPOT_EXTRA_STATUS set, filtering on warehouse status possible.
 	 *
-	 *    @param      string   $option 		'' = Load all stock info, also from closed and internal warehouses, 
-	 *										'nobatch' = Do not load batch information, 
+	 *    @param      string   $option 		'' = Load all stock info, also from closed and internal warehouses,
+	 *										'nobatch' = Do not load batch information,
 	 *										'novirtual' = Do not load virtual stock,
 	 *										'warehouseopen' = Load stock from open warehouses,
-	 *										'warehouseclosed' = Load stock from closed warehouses, 
+	 *										'warehouseclosed' = Load stock from closed warehouses,
 	 *										'warehouseinternal' = Load stock from warehouses for internal correct/transfer only
 	 *    @return     int                  < 0 if KO, > 0 if OK
 	 *    @see		  load_virtual_stock, getBatchInfo
@@ -3488,26 +3489,26 @@ class Product extends CommonObject
 	function load_stock($option='')
 	{
 		global $conf;
-		
+
 		$this->stock_reel = 0;
 		$this->stock_warehouse = array();
 		$this->stock_theorique = 0;
 
 		$warehouseStatus = array();
 
-		if (preg_match('/warehouseclosed/', $option)) 
+		if (preg_match('/warehouseclosed/', $option))
 		{
 			$warehouseStatus[] = Entrepot::STATUS_CLOSED;
 		}
-		if (preg_match('/warehouseopen/', $option)) 
+		if (preg_match('/warehouseopen/', $option))
 		{
 			$warehouseStatus[] = Entrepot::STATUS_OPEN_ALL;
 		}
-		if (preg_match('/warehouseinternal/', $option)) 
+		if (preg_match('/warehouseinternal/', $option))
 		{
 			$warehouseStatus[] = Entrepot::STATUS_OPEN_INTERNAL;
 		}
-		
+
 		$sql = "SELECT ps.rowid, ps.reel, ps.fk_entrepot";
 		$sql.= " FROM ".MAIN_DB_PREFIX."product_stock as ps";
 		$sql.= ", ".MAIN_DB_PREFIX."entrepot as w";
@@ -3805,9 +3806,9 @@ class Product extends CommonObject
     						else if ($nbbyrow < 0) $return .= '<div class="inline-block">';
 
     						$return.= "\n";
-    						
+
     						$relativefile=preg_replace('/^\//', '', $pdir.$photo);
-    						if (empty($nolink)) 
+    						if (empty($nolink))
     						{
     						    $urladvanced=getAdvancedPreviewUrl('product', $relativefile);
     						    if ($urladvanced) $return.='<a href="'.$urladvanced.'">';
@@ -4018,7 +4019,7 @@ class Product extends CommonObject
 	 */
 	function load_state_board()
 	{
-		global $conf, $user;
+		global $conf, $user, $hookmanager;
 
 		$this->nb=array();
 
@@ -4026,6 +4027,13 @@ class Product extends CommonObject
 		$sql.= " FROM ".MAIN_DB_PREFIX."product as p";
 		$sql.= ' WHERE p.entity IN ('.getEntity($this->element, 1).')';
 		$sql.= " AND p.fk_product_type <> 1";
+		// Add where from hooks
+		if (is_object($hookmanager))
+		{
+		    $parameters=array();
+		    $reshook=$hookmanager->executeHooks('printFieldListWhere',$parameters);    // Note that $action and $object may have been modified by hook
+		    $sql.=$hookmanager->resPrint;
+		}
 
 		$resql=$this->db->query($sql);
 		if ($resql)
