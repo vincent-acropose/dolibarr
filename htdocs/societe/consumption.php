@@ -365,7 +365,7 @@ if ($sql_select)
     print '<td class="liste_titre" align="left">';
     print '<input class="flat" type="text" name="sref" size="8" value="'.$sref.'">';
     print '</td>';
-    print '<td class="liste_titre nowrap">'; // date
+    print '<td class="liste_titre nowrap center">'; // date
     print $formother->select_month($month?$month:-1,'month',1);
     $formother->select_year($year?$year:-1,'year',1, 20, 1);
     print '</td>';
@@ -457,7 +457,7 @@ if ($sql_select)
 
 				$outputlangs = $langs;
 				$newlang='';
-				if (empty($newlang) && GETPOST('lang_id')) $newlang=GETPOST('lang_id');
+				if (empty($newlang) && GETPOST('lang_id','aZ09')) $newlang=GETPOST('lang_id','aZ09');
 				if (empty($newlang)) $newlang=$object->default_lang;
 				if (! empty($newlang))
 				{

@@ -654,7 +654,9 @@ else
     		        if (! empty($arrayfields["ef.".$key]['checked']))
     		        {
     		            $align=$extrafields->getAlignFlag($key);
-    		            print_liste_field_titre($langs->trans($extralabels[$key]),$_SERVER["PHP_SELF"],"ef.".$key,"",$param,($align?'align="'.$align.'"':''),$sortfield,$sortorder);
+            			$sortonfield = "ef.".$key;
+            			if (! empty($extrafields->attribute_computed[$key])) $sortonfield='';
+            			print_liste_field_titre($langs->trans($extralabels[$key]),$_SERVER["PHP_SELF"],$sortonfield,"",$param,($align?'align="'.$align.'"':''),$sortfield,$sortorder);
     		        }
     		    }
     		}
@@ -705,9 +707,9 @@ else
                 $product_static->status     = $obj->tosell;
 				$product_static->entity = $obj->entity;
 
-				if (! empty($conf->stock->enabled) && $user->rights->stock->lire && $search_type != 1)	// To optimize call of load_stock
+				if ((! empty($conf->stock->enabled) && $user->rights->stock->lire && $search_type != 1) || ! empty($conf->global->STOCK_DISABLE_OPTIM_LOAD))	// To optimize call of load_stock
 				{
-				    if ($obj->fk_product_type != 1)    // Not a service
+				    if ($obj->fk_product_type != 1 || ! empty($conf->global->STOCK_SUPPORTS_SERVICES))    // Not a service
 				    {
 				        $product_static->load_stock('nobatch');             // Load stock_reel + stock_warehouse. This also call load_virtual_stock()
 				    }

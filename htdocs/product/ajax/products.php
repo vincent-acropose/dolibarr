@@ -57,7 +57,7 @@ $warehouseStatus = GETPOST('warehousestatus', 'alpha');
  * View
  */
 
-// print '<!-- Ajax page called with url '.$_SERVER["PHP_SELF"].'?'.$_SERVER["QUERY_STRING"].' -->'."\n";
+// print '<!-- Ajax page called with url '.dol_escape_htmltag($_SERVER["PHP_SELF"]).'?'.dol_escape_htmltag($_SERVER["QUERY_STRING"]).' -->'."\n";
 
 dol_syslog(join(',', $_GET));
 // print_r($_GET);
@@ -182,8 +182,10 @@ else
 	$idprod = (! empty($match[0]) ? $match[0] : '');
 
 	if (GETPOST($htmlname,'alpha') == '' && (! $idprod || ! GETPOST($idprod,'alpha')))
+	{
 		print json_encode(array());
 	    return;
+	}
 
 	// When used from jQuery, the search term is added as GET param "term".
 	$searchkey = (($idprod && GETPOST($idprod,'alpha')) ? GETPOST($idprod,'alpha') :  (GETPOST($htmlname, 'alpha') ? GETPOST($htmlname, 'alpha') : ''));

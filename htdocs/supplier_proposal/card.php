@@ -173,7 +173,7 @@ if (empty($reshook))
 			$outputlangs = $langs;
 			if (! empty($conf->global->MAIN_MULTILANGS)) {
 				$outputlangs = new Translate("", $conf);
-				$newlang = (GETPOST('lang_id') ? GETPOST('lang_id') : $object->thirdparty->default_lang);
+				$newlang = (GETPOST('lang_id','aZ09') ? GETPOST('lang_id','aZ09') : $object->thirdparty->default_lang);
 				$outputlangs->setDefaultLang($newlang);
 			}
 			$ret = $object->fetch($id); // Reload to get new records
@@ -200,7 +200,7 @@ if (empty($reshook))
 				{
 					$outputlangs = $langs;
 					$newlang = '';
-					if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id')) $newlang = GETPOST('lang_id','alpha');
+					if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id','aZ09')) $newlang = GETPOST('lang_id','aZ09');
 					if ($conf->global->MAIN_MULTILANGS && empty($newlang))	$newlang = $object->thirdparty->default_lang;
 					if (! empty($newlang)) {
 						$outputlangs = new Translate("", $conf);
@@ -401,7 +401,7 @@ if (empty($reshook))
 				    	{
 				    		$outputlangs = $langs;
 				    		$newlang = '';
-				    		if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id')) $newlang = GETPOST('lang_id','alpha');
+				    		if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id','aZ09')) $newlang = GETPOST('lang_id','aZ09');
 				    		if ($conf->global->MAIN_MULTILANGS && empty($newlang))	$newlang = $object->thirdparty->default_lang;
 				    		if (! empty($newlang)) {
 				    			$outputlangs = new Translate("", $conf);
@@ -485,7 +485,7 @@ if (empty($reshook))
 			$outputlangs = $langs;
 			if (! empty($conf->global->MAIN_MULTILANGS)) {
 				$outputlangs = new Translate("", $conf);
-				$newlang = (GETPOST('lang_id') ? GETPOST('lang_id') : $object->thirdparty->default_lang);
+				$newlang = (GETPOST('lang_id','aZ09') ? GETPOST('lang_id','aZ09') : $object->thirdparty->default_lang);
 				$outputlangs->setDefaultLang($newlang);
 			}
 			$ret = $object->fetch($id); // Reload to get new records
@@ -693,7 +693,7 @@ if (empty($reshook))
 					{
 						$outputlangs = $langs;
 						$newlang = '';
-			    		if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id')) $newlang = GETPOST('lang_id','alpha');
+			    		if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id','aZ09')) $newlang = GETPOST('lang_id','aZ09');
 	    				if ($conf->global->MAIN_MULTILANGS && empty($newlang))	$newlang = $object->thirdparty->default_lang;
 	    				if (! empty($newlang)) {
 							$outputlangs = new Translate("", $conf);
@@ -803,11 +803,6 @@ if (empty($reshook))
 				$price_min = $product->multiprices_min [$object->thirdparty->price_level];
 
 			$label = ((GETPOST('update_label') && GETPOST('product_label')) ? GETPOST('product_label') : '');
-
-			if ($price_min && (price2num($pu_ht) * (1 - price2num(GETPOST('remise_percent')) / 100) < price2num($price_min))) {
-				setEventMessages($langs->trans("CantBeLessThanMinPrice", price(price2num($price_min, 'MU'), 0, $langs, 0, 0, - 1, $conf->currency)), null, 'errors');
-				$error ++;
-			}
 		} else {
 			$type = GETPOST('type');
 			$label = (GETPOST('product_label') ? GETPOST('product_label') : '');
@@ -833,7 +828,7 @@ if (empty($reshook))
 					$outputlangs = $langs;
 					if (! empty($conf->global->MAIN_MULTILANGS)) {
 						$outputlangs = new Translate("", $conf);
-						$newlang = (GETPOST('lang_id') ? GETPOST('lang_id') : $object->thirdparty->default_lang);
+						$newlang = (GETPOST('lang_id','aZ09') ? GETPOST('lang_id','aZ09') : $object->thirdparty->default_lang);
 						$outputlangs->setDefaultLang($newlang);
 					}
 					$ret = $object->fetch($id); // Reload to get new records
@@ -889,7 +884,7 @@ if (empty($reshook))
 		$outputlangs = $langs;
 		if (! empty($conf->global->MAIN_MULTILANGS)) {
 			$outputlangs = new Translate("", $conf);
-			$newlang = (GETPOST('lang_id') ? GETPOST('lang_id') : $object->thirdparty->default_lang);
+			$newlang = (GETPOST('lang_id','aZ09') ? GETPOST('lang_id','aZ09') : $object->thirdparty->default_lang);
 			$outputlangs->setDefaultLang($newlang);
 		}
 		$ret = $object->fetch($id); // Reload to get new records
@@ -1063,7 +1058,7 @@ if ($action == 'create')
 		print '</td>';
 	} else {
 		print '<td colspan="2">';
-		print $form->select_company('', 'socid', 's.fournisseur = 1', 'SelectThirdParty');
+		print $form->select_company('', 'socid', 's.fournisseur = 1', 'SelectThirdParty', 0, 0, null, 0, 'minwidth300');
 		print '</td>';
 	}
 	print '</tr>' . "\n";
@@ -1377,7 +1372,7 @@ if ($action == 'create')
 	                $morehtmlref.='<form method="post" action="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'">';
 	                $morehtmlref.='<input type="hidden" name="action" value="classin">';
 	                $morehtmlref.='<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	                $morehtmlref.=$formproject->select_projects($object->socid, $object->fk_project, 'projectid', $maxlength, 0, 1, 0, 1, 0, 0, '', 1);
+	                $morehtmlref.=$formproject->select_projects((empty($conf->global->PROJECT_CAN_ALWAYS_LINK_TO_ALL_SUPPLIERS)?$object->socid:-1), $object->fk_project, 'projectid', $maxlength, 0, 1, 0, 1, 0, 0, '', 1);
 	                $morehtmlref.='<input type="submit" class="button valignmiddle" value="'.$langs->trans("Modify").'">';
 	                $morehtmlref.='</form>';
 	            } else {
