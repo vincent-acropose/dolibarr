@@ -319,15 +319,15 @@ else
 	// Add where from extra fields
 	foreach ($search_array_options as $key => $val)
 	{
-		$crit=$val;
-		$tmpkey=preg_replace('/search_options_/','',$key);
-		$typ=$extrafields->attribute_type[$tmpkey];
-		$mode=0;
-		if (in_array($typ, array('int','double'))) $mode=1;    // Search on a numeric
-		if ($val && ( ($crit != '' && ! in_array($typ, array('select'))) || ! empty($crit)))
-		{
-			$sql .= natural_search('ef.'.$tmpkey, $crit, $mode);
-		}
+	    $crit=$val;
+	    $tmpkey=preg_replace('/search_options_/','',$key);
+	    $typ=$extrafields->attribute_type[$tmpkey];
+	    $mode=0;
+	    if (in_array($typ, array('int','double'))) $mode=1;    // Search on a numeric
+	    if ($val && ( ($crit != '' && ! in_array($typ, array('select'))) || ! empty($crit)))
+	    {
+	        $sql .= natural_search('ef.'.$tmpkey, $crit, $mode);
+	    }
 	}
 	// Add where from hooks
 	$parameters=array();
@@ -756,7 +756,7 @@ else
     			// Label
 			    if (! empty($arrayfields['p.label']['checked']))
 			    {
-			    	print '<td>'.dol_trunc($obj->label,60).'</td>';
+			    	print '<td>'.dol_trunc($obj->label,40).'</td>';
 		            if (! $i) $totalarray['nbfield']++;
 			    }
 
