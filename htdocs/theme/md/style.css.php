@@ -54,7 +54,7 @@ else header('Cache-Control: no-cache');
 // On the fly GZIP compression for all pages (if browser support it). Must set the bit 3 of constant to 1.
 if (isset($conf->global->MAIN_OPTIMIZE_SPEED) && ($conf->global->MAIN_OPTIMIZE_SPEED & 0x04)) { ob_start("ob_gzhandler"); }
 
-if (GETPOST('lang')) $langs->setDefaultLang(GETPOST('lang'));	// If language was forced on URL
+if (GETPOST('lang')) $langs->setDefaultLang(GETPOST('lang', 'aZ09'));	// If language was forced on URL
 if (GETPOST('theme')) $conf->theme=GETPOST('theme');  // If theme was forced on URL
 $langs->load("main",0,1);
 $right=($langs->trans("DIRECTION")=='rtl'?'left':'right');
@@ -158,26 +158,30 @@ if (empty($colortopbordertitle1)) $colortopbordertitle1=$colorbackhmenu1;
 
 
 // Set text color to black or white
+$colorbackhmenu1=join(',',colorStringToArray($colorbackhmenu1));    // Normalize value to 'x,y,z'
 $tmppart=explode(',',$colorbackhmenu1);
-$tmpval=(! empty($tmppart[0]) ? $tmppart[0] : '')+(! empty($tmppart[1]) ? $tmppart[1] : '')+(! empty($tmppart[2]) ? $tmppart[2] : '');
+$tmpval=(! empty($tmppart[0]) ? $tmppart[0] : 0)+(! empty($tmppart[1]) ? $tmppart[1] : 0)+(! empty($tmppart[2]) ? $tmppart[2] : 0);
 if ($tmpval <= 460) $colortextbackhmenu='FFFFFF';
 else $colortextbackhmenu='000000';
 
+$colorbackvmenu1=join(',',colorStringToArray($colorbackvmenu1));    // Normalize value to 'x,y,z'
 $tmppart=explode(',',$colorbackvmenu1);
-$tmpval=(! empty($tmppart[0]) ? $tmppart[0] : '')+(! empty($tmppart[1]) ? $tmppart[1] : '')+(! empty($tmppart[2]) ? $tmppart[2] : '');
+$tmpval=(! empty($tmppart[0]) ? $tmppart[0] : 0)+(! empty($tmppart[1]) ? $tmppart[1] : 0)+(! empty($tmppart[2]) ? $tmppart[2] : 0);
 if ($tmpval <= 460) { $colortextbackvmenu='FFFFFF'; }
 else { $colortextbackvmenu='000000'; }
 
+$colorbacktitle1=join(',',colorStringToArray($colorbacktitle1));    // Normalize value to 'x,y,z'
 $tmppart=explode(',',$colorbacktitle1);
 if ($colortexttitle == '')
 {
-	$tmpval=(! empty($tmppart[0]) ? $tmppart[0] : '')+(! empty($tmppart[1]) ? $tmppart[1] : '')+(! empty($tmppart[2]) ? $tmppart[2] : '');
+	$tmpval=(! empty($tmppart[0]) ? $tmppart[0] : 0)+(! empty($tmppart[1]) ? $tmppart[1] : 0)+(! empty($tmppart[2]) ? $tmppart[2] : 0);
 	if ($tmpval <= 460) { $colortexttitle='FFFFFF'; $colorshadowtitle='888888'; }
 	else { $colortexttitle='101010'; $colorshadowtitle='FFFFFF'; }
 }
 
+$colorbacktabcard1=join(',',colorStringToArray($colorbacktabcard1));    // Normalize value to 'x,y,z'
 $tmppart=explode(',',$colorbacktabcard1);
-$tmpval=(! empty($tmppart[0]) ? $tmppart[0] : '')+(! empty($tmppart[1]) ? $tmppart[1] : '')+(! empty($tmppart[2]) ? $tmppart[2] : '');
+$tmpval=(! empty($tmppart[0]) ? $tmppart[0] : 0)+(! empty($tmppart[1]) ? $tmppart[1] : 0)+(! empty($tmppart[2]) ? $tmppart[2] : 0);
 if ($tmpval <= 460) { $colortextbacktab='FFFFFF'; }
 else { $colortextbacktab='111111'; }
 
@@ -752,10 +756,10 @@ div.fiche>form>div.div-table-responsive {
     	width: 20px;
         object-fit: contain;
     }
-    
+
 	div.statusref {
     	padding-right: 10px;
-   	}    
+   	}
 }
 .linkobject { cursor: pointer; }
 <?php if (GETPOST("optioncss") == 'print') { ?>
@@ -828,7 +832,7 @@ td.showDragHandle {
 	position: fixed;
 	top: 50px;
 <?php } ?>
-	z-index: 200;
+	z-index: 90;
 	-webkit-transform: translateZ(0);
 	-moz-transform: translateZ(0);
 	-ms-transform: translateZ(0);
@@ -885,7 +889,7 @@ div.login_block {
 
 	position: auto;
 	top: auto;
-	z-index: 200;
+	z-index: 90;
 }
 div.login_block {
 	/* position: initial !important;*/
@@ -895,7 +899,7 @@ div.login_block {
 	padding-left: 0 ! important;
 }
 #id-left {
-	z-index: 201;
+	z-index: 91;
 	background: #FFF;
 	border-right: 1px solid rgba(0,0,0,0.3);
 <?php if ((GETPOST('testmenuhider') || ! empty($conf->global->MAIN_TESTMENUHIDER)) && empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER)) { ?>
@@ -1005,6 +1009,9 @@ table.noborder tr.liste_titre td {
 #pictotitle {
 	margin-<?php echo $right; ?>: 8px;
 	margin-bottom: 4px;
+}
+.pictoobjectwidth {
+	width: 14px;
 }
 .pictosubstatus {
     padding-left: 2px;
@@ -2850,16 +2857,16 @@ div .tdtop {
     text-align: center;
     border-radius: 2px;
     min-height: 38px;
-    
+
 	white-space: nowrap;
 	overflow: hidden;
     text-overflow: ellipsis;
-    width: 115px;    
+    width: 115px;
 }
 @media only screen and (max-width: 767px)
 {
     .boxstats {
-        width: 100px;    
+        width: 100px;
     }
 }
 .boxstats:hover {
@@ -4112,7 +4119,7 @@ span.noborderoncategories {
 /* ============================================================================== */
 
 ul.ulselectedfields {
-    z-index: 100;			/* To have the select box appears on first plan even when near buttons are decorated by jmobile */
+    z-index: 90;			/* To have the select box appears on first plan even when near buttons are decorated by jmobile */
 }
 dl.dropdown {
     margin:0px;

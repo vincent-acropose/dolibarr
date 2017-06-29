@@ -73,7 +73,12 @@ $ref=GETPOST('ref','alpha');
 // Security check
 $socid='';
 if ($user->societe_id) $socid=$user->societe_id;
-$result=restrictedArea($user, $origin, $origin_id);
+
+if ($origin == 'expedition') $result=restrictedArea($user, $origin, $id);
+else {
+	$result=restrictedArea($user, 'expedition');
+	if (empty($user->rights->{$origin}->lire) && empty($user->rights->{$origin}->read)) accessforbidden();
+}
 
 $action		= GETPOST('action','alpha');
 $confirm	= GETPOST('confirm','alpha');
@@ -1246,8 +1251,11 @@ if ($action == 'create')
 						print '<td align="left">';
 						if ($line->product_type == 0 || ! empty($conf->global->STOCK_SUPPORTS_SERVICES))
 						{
-    						if ($warehouseObject) 
+							$warehouse_selected_id = GETPOST('entrepot_id','int');							
+    						if ($warehouse_selected_id > 0) 
     						{
+    							$warehouseObject=new Entrepot($db);
+    							$warehouseObject->fetch($warehouse_selected_id);
     							print img_warning().' '.$langs->trans("NoProductToShipFoundIntoStock", $warehouseObject->libelle);
     						}
     						else
