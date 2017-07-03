@@ -240,7 +240,8 @@ $listofreferent=array(
 	'class'=>'Fichinter',
 	'table'=>'fichinter',
 	'datefieldname'=>'date_valid',
-	'disableamount'=>1,
+	'disableamount'=>0,
+	'margin'=>'minus',
 	'test'=>$conf->ficheinter->enabled && $user->rights->ficheinter->lire),
 'trip'=>array(
 	'name'=>"TripsAndExpenses",
@@ -388,6 +389,7 @@ foreach ($listofreferent as $key => $value)
 				if ($tablename != 'expensereport_det') $element->fetch_thirdparty();
 
 				if ($tablename == 'don') $total_ht_by_line=$element->amount;
+				else if($tablename == 'fichinter') $total_ht_by_line=$element->getAmount();
 				elseif ($tablename == 'projet_task')
 				{
 					if ($idofelementuser)
@@ -406,6 +408,7 @@ foreach ($listofreferent as $key => $value)
 				$total_ht = $total_ht + $total_ht_by_line;
 
 				if ($tablename == 'don') $total_ttc_by_line=$element->amount;
+				else if($tablename == 'fichinter') $total_ttc_by_line=$element->getAmount();
 				elseif ($tablename == 'projet_task')
 				{
 					$defaultvat = get_default_tva($mysoc, $mysoc);
@@ -710,7 +713,9 @@ foreach ($listofreferent as $key => $value)
 				$warning='';
 				if (empty($value['disableamount']))
 				{
+					
 					if ($tablename == 'don') $total_ht_by_line=$element->amount;
+					else if($tablename == 'fichinter') $total_ht_by_line=$element->getAmount();
 					elseif ($tablename == 'projet_task')
 					{
 						$tmp = $element->getSumOfAmount($elementuser, $dates, $datee);	// $element is a task. $elementuser may be empty
@@ -738,6 +743,7 @@ foreach ($listofreferent as $key => $value)
 				if (empty($value['disableamount']))
 				{
 					if ($tablename == 'don') $total_ttc_by_line=$element->amount;
+					else if($tablename == 'fichinter') $total_ttc_by_line=$element->getAmount();
 					elseif ($tablename == 'projet_task')
 					{
 						$defaultvat = get_default_tva($mysoc, $mysoc);
