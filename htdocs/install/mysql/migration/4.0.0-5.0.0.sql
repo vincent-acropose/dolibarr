@@ -270,3 +270,7 @@ ALTER TABLE llx_product_fournisseur_price ADD COLUMN default_vat_code	varchar(10
 
 
 ALTER TABLE llx_events MODIFY COLUMN ip varchar(250);
+
+
+ALTER TABLE llx_c_email_templates ADD COLUMN nodoc tinyint DEFAULT 0  NOT NULL after position;
+

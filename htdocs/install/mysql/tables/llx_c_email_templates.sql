@@ -30,6 +30,7 @@ create table llx_c_email_templates
   tms             timestamp,
   label           varchar(255),					  -- Label of predefined email
   position        smallint,					      -- Position
+  nodoc           tinyint DEFAULT 0  NOT NULL,	  -- Link document or not
   active          tinyint DEFAULT 1  NOT NULL,
   topic			  text,                           -- Predefined topic
   content         text                            -- Predefined text
