@@ -358,6 +358,11 @@ if ($usevirtualstock)
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($limit + 1, $offset);
 
+$helpurl = 'EN:Module_Stocks_En|FR:Module_Stock|';
+$helpurl .= 'ES:M&oacute;dulo_Stocks';
+
+llxHeader('', $title, $helpurl, '');flush();
+
 //print $sql;
 $resql = $db->query($sql);
 if (empty($resql))
@@ -370,10 +375,6 @@ if (empty($resql))
 $num = $db->num_rows($resql);
 $i = 0;
 
-$helpurl = 'EN:Module_Stocks_En|FR:Module_Stock|';
-$helpurl .= 'ES:M&oacute;dulo_Stocks';
-
-llxHeader('', $title, $helpurl, '');
 
 $head = array();
 $head[0][0] = DOL_URL_ROOT.'/product/stock/replenish.php';
@@ -525,6 +526,8 @@ $prod = new Product($db);
 $var = True;
 while ($i < ($limit ? min($num, $limit) : $num))
 {
+
+	flush();
 	$objp = $db->fetch_object($resql);
 	if (! empty($conf->global->STOCK_SUPPORTS_SERVICES) || $objp->fk_product_type == 0)
 	{
