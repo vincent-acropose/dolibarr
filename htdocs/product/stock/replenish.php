@@ -28,7 +28,6 @@ require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.commande.class.php';
-require_once DOL_DOCUMENT_ROOT.'/product/class/html.formproduct.class.php';
 require_once './lib/replenishment.lib.php';
 
 $langs->load("products");
@@ -54,7 +53,6 @@ $draftorder = GETPOST('draftorder');
 $mode = GETPOST('mode','alpha');
 $fk_supplier = GETPOST('fk_supplier','int');
 $fourn_id = GETPOST('fourn_id','int');
-$fk_entrepot = GETPOST('fk_entrepot','int');
 $texte = '';
 
 $sortfield = GETPOST('sortfield','alpha');
@@ -236,7 +234,6 @@ if ($action == 'order' && isset($_POST['valid']))
  */
 
 $form = new Form($db);
-$formproduct = new FormProduct($db);
 
 $virtualdiffersfromphysical=0;
 if (! empty($conf->global->STOCK_CALCULATE_ON_SHIPMENT) || ! empty($conf->global->STOCK_CALCULATE_ON_SUPPLIER_DISPATCH_ORDER))
@@ -265,9 +262,7 @@ $sql.= ' ON p.rowid = s.fk_product';
 if($fk_supplier > 0) {
 	$sql.= ' INNER JOIN '.MAIN_DB_PREFIX.'product_fournisseur_price pfp ON (pfp.fk_product = p.rowid AND pfp.fk_soc = '.$fk_supplier.')';
 }
-if(!empty($conf->global->STOCK_ALLOW_ADD_LIMIT_STOCK_BY_WAREHOUSE) && $fk_entrepot > 0) {
-	$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product_warehouse_properties AS pse ON (p.rowid = pse.fk_product AND pse.fk_entrepot = '.$fk_entrepot.')';
-}
+
 $sql.= ' WHERE p.entity IN (' . getEntity("product", 1) . ')';
 if ($sall) {
     $sql .= ' AND (p.ref LIKE "%'.$db->escape($sall).'%" ';
@@ -427,9 +422,6 @@ print '<input type="hidden" name="salert" value="'.$salert.'">';
 print '<input type="hidden" name="draftorder" value="'.$draftorder.'">';
 print '<input type="hidden" name="mode" value="'.$mode.'">';
 print '<div class="inline-block valignmiddle" style="padding-right: 20px;">';
-print $langs->trans('Warehouse').' '.$formproduct->selectWarehouses($fk_entrepot, 'fk_entrepot', '', 1);
-print '</div>';
-print '<div class="inline-block valignmiddle" style="padding-right: 20px;">';
 print $langs->trans('Supplier').' '.$form->select_company($fk_supplier, 'fk_supplier', 'fournisseur=1', 1);
 print '</div>';
 print '<div class="inline-block valignmiddle">';
@@ -444,7 +436,6 @@ if ($sref || $snom || $sall || $salert || $draftorder || GETPOST('search', 'alph
 	$filters .= '&draftorder='.$draftorder;
 	$filters .= '&mode=' . $mode;
 	$filters .= '&fk_supplier=' . $fk_supplier;
-	$filters .= '&fk_entrepot=' . $fk_entrepot;
 	
 	print_barre_liste(
 		$texte,
@@ -464,7 +455,7 @@ if ($sref || $snom || $sall || $salert || $draftorder || GETPOST('search', 'alph
 	$filters .= '&draftorder='.$draftorder;
 	$filters .= '&mode=' . $mode;
 	$filters .= '&fk_supplier=' . $fk_supplier;
-	$filters .= '&fk_entrepot=' . $fk_entrepot;
+
 	print_barre_liste(
 		$texte,
 		$page,
@@ -484,7 +475,6 @@ $param .= '&fourn_id=' . $fourn_id . '&snom='. $snom . '&salert=' . $salert . '&
 $param .= '&sref=' . $sref;
 $param .= '&mode=' . $mode;
 $param .= '&fk_supplier=' . $fk_supplier;
-$param .= '&fk_entrepot=' . $fk_entrepot;
 
 $stocklabel = $langs->trans('Stock');
 if ($usevirtualstock == 1) $stocklabel = $langs->trans('VirtualStock');
@@ -671,7 +661,6 @@ if ($num > $conf->liste_limit)
 		$filters .= '&draftorder=' . $draftorder;
 		$filters .= '&mode=' . $mode;
 		$filters .= '&fk_supplier=' . $fk_supplier;
-		$filters .= '&fk_entrepot=' . $fk_entrepot;
 		print_barre_liste('', $page, 'replenish.php', $filters, $sortfield, $sortorder, '', $num, 0, '');
 	}
 	else
@@ -683,7 +672,6 @@ if ($num > $conf->liste_limit)
 		$filters .= '&draftorder=' . $draftorder;
 		$filters .= '&mode=' . $mode;
 		$filters .= '&fk_supplier=' . $fk_supplier;
-		$filters .= '&fk_entrepot=' . $fk_entrepot;
 		print_barre_liste('', $page, 'replenish.php', $filters, $sortfield, $sortorder, '', $num, 0, '');
 	}
 }
