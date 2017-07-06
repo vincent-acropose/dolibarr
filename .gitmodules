@@ -145,3 +145,6 @@
 [submodule "htdocs/custom/sendinblue"]
 	path = htdocs/custom/sendinblue
 	url = git@github.com:ATM-Consulting/dolibarr_module_sendinblue.git
+[submodule "htdocs/custom/dolistorextract"]
+	path = htdocs/custom/dolistorextract
+	url = git@github.com:ATM-Consulting/dolibarr_module_dolistorextract.git
