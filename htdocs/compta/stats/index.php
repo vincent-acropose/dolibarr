@@ -75,7 +75,7 @@ if ($modecompta=="CREANCES-DETTES")
 	$calcmode.='<br>('.$langs->trans("SeeReportInInputOutputMode",'<a href="'.$_SERVER["PHP_SELF"].'?year_start='.$year_start.'&modecompta=RECETTES-DEPENSES">','</a>').')';
 	
 	$period=$form->select_date($date_start,'date_start',0,0,0,'',1,0,1).' - '.$form->select_date($date_end,'date_end',0,0,0,'',1,0,1);
-	
+
 	//$period="$year_start - $year_end";
 	$periodlink=($year_start?"<a href='".$_SERVER["PHP_SELF"]."?year_start=".($year_start-1)."&modecompta=".$modecompta."'>".img_previous()."</a> <a href='".$_SERVER["PHP_SELF"]."?year_start=".($year_start+1)."&modecompta=".$modecompta."'>".img_next()."</a>":"");
 	$description=$langs->trans("RulesCADue");
@@ -98,6 +98,19 @@ else {
 	$builddate=time();
 	//$exportlink=$langs->trans("NotYetAvailable");
 }
+
+$TMonthInput=array();
+for($i=1; $i<=12; $i++) {
+	if(!empty($_POST['MonthToShow'])) {
+		$checked = in_array($i, $_POST['MonthToShow']);
+	}
+	else {
+		$checked = true;
+	}
+	$TMonthInput[]='<input name="MonthToShow[]" value="'.$i.'" type="checkbox" '.($checked ? 'checked="checked"' : '').' /> '. $langs->trans( date('F', strtotime(date('Y-'.$i.'-01') ) ) );
+}
+$period.='<div>'.implode(' - ', $TMonthInput).'</div>';
+
 $moreparam=array();
 if (! empty($modecompta)) $moreparam['modecompta']=$modecompta;
 report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportlink,$moreparam,$calcmode);
@@ -248,6 +261,11 @@ for ($mois = 1+$nb_mois_decalage ; $mois <= 12+$nb_mois_decalage ; $mois++)
 {
 	$mois_modulo = $mois;// ajout
 	if($mois>12){$mois_modulo = $mois-12;} // ajout
+
+	if(!empty($_POST['MonthToShow']) && !in_array($mois_modulo, $_POST['MonthToShow'])) {
+		continue; // on saute les mois non cochés
+        }
+
 	$var=!$var;
 	print "<tr ".$bc[$var].">";
 
