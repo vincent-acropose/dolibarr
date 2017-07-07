@@ -211,7 +211,7 @@ if ($status == '-1') { $sql.= " AND a.percent = -1"; }	// Not applicable
 if ($status == '50') { $sql.= " AND (a.percent > 0 AND a.percent < 100)"; }	// Running already started
 if ($status == 'done' || $status == '100') { $sql.= " AND (a.percent = 100 OR (a.percent = -1 AND a.datep2 <= '".$db->idate($now)."'))"; }
 if ($status == 'todo') { $sql.= " AND ((a.percent >= 0 AND a.percent < 100) OR (a.percent = -1 AND a.datep2 > '".$db->idate($now)."'))"; }
-if ($status == 'late') { $sql.= " AND ((a.percent >= 0 AND a.percent < 100) OR (a.percent = -1 AND a.datep2 < '".$db->idate($now)."'))"; }
+if ($status == 'late') { $sql.= " AND ((a.percent >= 0 AND a.percent < 100 AND a.datep < '".$db->idate($now)."'))"; }
 // We must filter on assignement table
 if ($filtert > 0 || $usergroup > 0)
 {
