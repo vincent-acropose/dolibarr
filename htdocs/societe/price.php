@@ -42,7 +42,8 @@ $langs->load("companies");
 $langs->load("bills");
 
 $action = GETPOST('action', 'alpha');
-$search_prod = GETPOST('search_prod');
+$search_prod = GETPOST('search_prod','alpha');
+$cancel = GETPOST('cancel','alpha');
 
 // Security check
 $socid = GETPOST('socid', 'int')?GETPOST('socid', 'int'):GETPOST('id', 'int');
@@ -72,7 +73,7 @@ if (empty($reshook))
         $search_prod = '';
     }
 
-    if ($action == 'add_customer_price_confirm' && ! $_POST ["cancel"] && ($user->rights->produit->creer || $user->rights->service->creer)) {
+    if ($action == 'add_customer_price_confirm' && ! $cancel && ($user->rights->produit->creer || $user->rights->service->creer)) {
 
     	$update_child_soc = GETPOST('updatechildprice');
 
@@ -82,8 +83,44 @@ if (empty($reshook))
     	$prodcustprice->price = price2num(GETPOST("price"), 'MU');
     	$prodcustprice->price_min = price2num(GETPOST("price_min"), 'MU');
     	$prodcustprice->price_base_type = GETPOST("price_base_type", 'alpha');
-    	$prodcustprice->tva_tx = str_replace('*', '', GETPOST("tva_tx"));
-    	$prodcustprice->recuperableonly = (preg_match('/\*/', GETPOST("tva_tx")) ? 1 : 0);
+
+    	$tva_tx_txt = GETPOST('tva_tx', 'alpha');           // tva_tx can be '8.5'  or  '8.5*'  or  '8.5 (XXX)' or '8.5* (XXX)'
+
+    	// We must define tva_tx, npr and local taxes
+    	$vatratecode = '';
+    	$tva_tx = preg_replace('/[^0-9\.].*$/', '', $tva_tx_txt);     // keep remove all after the numbers and dot
+    	$npr = preg_match('/\*/', $tva_tx_txt) ? 1 : 0;
+    	$localtax1 = 0; $localtax2 = 0; $localtax1_type = '0'; $localtax2_type = '0';
+    	// If value contains the unique code of vat line (new recommanded method), we use it to find npr and local taxes
+    	if (preg_match('/\((.*)\)/', $tva_tx_txt, $reg))
+    	{
+    	    // We look into database using code (we can't use get_localtax() because it depends on buyer that is not known). Same in update price.
+    	    $vatratecode=$reg[1];
+    	    // Get record from code
+    	    $sql = "SELECT t.rowid, t.code, t.recuperableonly, t.localtax1, t.localtax2, t.localtax1_type, t.localtax2_type";
+    	    $sql.= " FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_country as c";
+    	    $sql.= " WHERE t.fk_pays = c.rowid AND c.code = '".$mysoc->country_code."'";
+    	    $sql.= " AND t.taux = ".((float) $tva_tx)." AND t.active = 1";
+    	    $sql.= " AND t.code ='".$vatratecode."'";
+    	    $resql=$db->query($sql);
+    	    if ($resql)
+    	    {
+    	        $obj = $db->fetch_object($resql);
+    	        $npr = $obj->recuperableonly;
+    	        $localtax1 = $obj->localtax1;
+    	        $localtax2 = $obj->localtax2;
+    	        $localtax1_type = $obj->localtax1_type;
+    	        $localtax2_type = $obj->localtax2_type;
+    	    }
+    	}
+
+    	$prodcustprice->default_vat_code = $vatratecode;
+    	$prodcustprice->tva_tx = $tva_tx;
+    	$prodcustprice->recuperableonly = $npr;
+    	$prodcustprice->localtax1_tx = $localtax1;
+    	$prodcustprice->localtax2_tx = $localtax2;
+    	$prodcustprice->localtax1_type = $localtax1_type;
+    	$prodcustprice->localtax2_type = $localtax2_type;
 
     	$result = $prodcustprice->create($user, 0, $update_child_soc);
 
@@ -239,7 +276,7 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES)) {
 
 		// VAT
 		print '<tr><td>' . $langs->trans("VATRate") . '</td><td>';
-		print $form->load_tva("tva_tx", $object->tva_tx, $mysoc, '', $object->id, $object->tva_npr);
+		print $form->load_tva("tva_tx", $object->tva_tx, $mysoc, '', $object->id, $object->tva_npr, '', false, 1);
 		print '</td></tr>';
 
 		// Price base
@@ -374,6 +411,8 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES)) {
 		print '<br></form>';
 	} elseif ($action == 'showlog_customer_price') {
 
+	    print '<!-- showlog_customer_price -->'."\n";
+
 		$filter = array (
 			't.fk_product' => GETPOST('prodid', 'int'),'t.fk_soc' => $socid
 		);
@@ -483,7 +522,9 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES)) {
 
         $option = '&search_prod=' . $search_prod . '&id=' . $object->id;
 
-        print_barre_liste($langs->trans('PriceForEachProduct'), $page, $_SERVEUR['PHP_SELF'], $option, $sortfield, $sortorder, '', count($prodcustprice->lines), $nbtotalofrecords, '');
+	    print '<!-- view specific price for each product -->'."\n";
+
+	    print_barre_liste($langs->trans('PriceForEachProduct'), $page, $_SERVEUR['PHP_SELF'], $option, $sortfield, $sortorder, '', count($prodcustprice->lines), $nbtotalofrecords, '');
 
         print '<form action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="POST">';
         print '<input type="hidden" name="id" value="' . $object->id . '">';
@@ -506,8 +547,8 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES)) {
         if (count($prodcustprice->lines) > 0 || $search_prod)
         {
             print '<tr class="liste_titre">';
-			print '<td><input type="text" class="flat" name="search_prod" value="' . $search_prod . '" size="20"></td>';
-            print '<td colspan="8">&nbsp;</td>';
+			print '<td class="liste_titre"><input type="text" class="flat" name="search_prod" value="' . $search_prod . '" size="20"></td>';
+            print '<td class="liste_titre" colspan="8">&nbsp;</td>';
             // Print the search button
             print '<td class="liste_titre" align="right">';
             $searchpitco=$form->showFilterAndCheckAddButtons(0);
@@ -531,7 +572,7 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES)) {
                 print "<td>" . dol_print_date($line->datec, "dayhour") . "</td>";
 
                 print '<td align="center">' . $langs->trans($line->price_base_type) . "</td>";
-                print '<td align="right">' . vatrate($line->tva_tx, true, $line->recuperableonly) . "</td>";
+                print '<td align="right">' . vatrate($line->tva_tx.($line->default_vat_code?' ('.$line->default_vat_code.')':''), true, $line->recuperableonly) . "</td>";
                 print '<td align="right">' . price($line->price) . "</td>";
                 print '<td align="right">' . price($line->price_ttc) . "</td>";
                 print '<td align="right">' . price($line->price_min) . '</td>';
