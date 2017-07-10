@@ -66,6 +66,9 @@ $mesg=(GETPOST("msg") ? GETPOST("msg") : GETPOST("mesg"));
 $year=GETPOST("year");
 $month=GETPOST("month");
 
+$dtrelance_month=GETPOST("dtrelance_month");
+$dtrelance_year=GETPOST("dtrelance_year");
+
 // Nombre de ligne pour choix de produit/service predefinis
 $NBLINES=4;
 
@@ -98,6 +101,9 @@ if (GETPOST("button_removefilter") || GETPOST("button_removefilter_x"))	// Both 
     $month='';
 	$viewstatut='';
 	$object_statut='';
+
+	$dtrelance_month='';
+	$dtrelance_year='';
 }
 
 if($object_statut != '')
@@ -151,9 +157,11 @@ $sql = 'SELECT';
 if ($sall || $search_product_category > 0) $sql = 'SELECT DISTINCT';
 $sql.= ' s.rowid, s.nom as name, s.town, s.client, s.code_client,';
 $sql.= ' p.rowid as propalid, p.note_private, p.total_ht, p.ref, p.ref_client, p.fk_statut, p.fk_user_author, p.datep as dp, p.fin_validite as dfv,';
+$sql.= ' extra.dt_relance,';
 if (! $user->rights->societe->client->voir && ! $socid) $sql .= " sc.fk_soc, sc.fk_user,";
 $sql.= ' u.login';
 $sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s, '.MAIN_DB_PREFIX.'propal as p';
+$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'propal_extrafields as extra ON extra.fk_object=p.rowid';
 if ($sall || $search_product_category > 0) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as pd ON p.rowid=pd.fk_propal';
 if ($search_product_category > 0) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as cp ON cp.fk_product=pd.fk_product';
 $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'user as u ON p.fk_user_author = u.rowid';
@@ -212,6 +220,24 @@ else if ($year > 0)
 {
 	$sql.= " AND p.datep BETWEEN '".$db->idate(dol_get_first_day($year,1,false))."' AND '".$db->idate(dol_get_last_day($year,12,false))."'";
 }
+
+
+if ($dtrelance_month > 0)
+{
+	if ($dtrelance_year > 0 && empty($day)) {
+		$sql .= " AND extra.dt_relance BETWEEN '" . $db->idate(dol_get_first_day($dtrelance_year, $dtrelance_month, false)) . "' AND '" . $db->idate(dol_get_last_day($dtrelance_year, $dtrelance_month, false)) . "'";
+	} else if ($year > 0 && ! empty($day)) {
+		$sql .= " AND extra.dt_relance BETWEEN '" . $db->idate(dol_mktime(0, 0, 0, $dtrelance_month, $day, $dtrelance_year)) . "' AND '" . $db->idate(dol_mktime(23, 59, 59, $dtrelance_month, $day, $dtrelance_year)) . "'";
+	} else {
+		$sql .= " AND date_format(extra.dt_relance, '%m') = '" . $dtrelance_month . "'";
+	}
+}
+else if ($dtrelance_year > 0)
+{
+	$sql.= " AND extra.dt_relance BETWEEN '".$db->idate(dol_get_first_day($dtrelance_year,1,false))."' AND '".$db->idate(dol_get_last_day($dtrelance_year,12,false))."'";
+}
+
+
 if ($search_sale > 0) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$search_sale;
 if ($search_user > 0)
 {
@@ -255,6 +281,8 @@ if ($result)
 	if ($search_montant_ht)  $param.='&search_montant_ht='.$search_montant_ht;
 	if ($search_author)  	 $param.='&search_author='.$search_author;
 	if ($search_town)		 $param.='&search_town='.$search_town;
+	if ($dtrelance_month)    $param.='&dtrelance_month='.$dtrelance_month;
+	if ($dtrelance_year)     $param.='&dtrelance_year='.$dtrelance_year;
 
 	print_barre_liste($langs->trans('ListOfProposals').' '.($socid?'- '.$soc->name:''), $page, $_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',$num,$nbtotalofrecords,'title_commercial.png');
 
@@ -296,7 +324,7 @@ if ($result)
 	if (! empty($moreforfilter))
 	{
 	    print '<tr class="liste_titre">';
-	    print '<td class="liste_titre" colspan="10">';
+	    print '<td class="liste_titre" colspan="11">';
 	    print $moreforfilter;
 	    print '</td></tr>';
 	}
@@ -307,6 +335,7 @@ if ($result)
 	print_liste_field_titre($langs->trans('Company'),$_SERVER["PHP_SELF"],'s.nom','',$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('Town'),$_SERVER["PHP_SELF"],'s.town','',$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('Date'),$_SERVER["PHP_SELF"],'p.datep','',$param, 'align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans('Date de relance'),$_SERVER["PHP_SELF"],'extra.dt_relance','',$param, 'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('DateEndPropalShort'),$_SERVER["PHP_SELF"],'dfv','',$param, 'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('AmountHT'),$_SERVER["PHP_SELF"],'p.total_ht','',$param, 'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('Author'),$_SERVER["PHP_SELF"],'u.login','',$param,'align="center"',$sortfield,$sortorder);
@@ -325,6 +354,7 @@ if ($result)
 	print '<input class="flat" type="text" size="12" name="search_societe" value="'.$search_societe.'">';
 	print '</td>';
 	print '<td class="liste_titre"><input class="flat" type="text" size="10" name="search_town" value="'.$search_town.'"></td>';
+
 	// Date
 	print '<td class="liste_titre" colspan="1" align="center">';
 	//print $langs->trans('Month').': ';
@@ -333,6 +363,16 @@ if ($result)
 	$syear = $year;
 	$formother->select_year($syear,'year',1, 20, 5);
 	print '</td>';
+
+	print '<td class="liste_titre" colspan="1" align="center">';
+	//print $langs->trans('Month').': ';
+	print '<input class="flat" type="text" size="1" maxlength="2" name="dtrelance_month" value="'.$dtrelance_month.'">';
+	//print '&nbsp;'.$langs->trans('Year').': ';
+	$syear = $year;
+	$formother->select_year($dtrelance_year,'dtrelance_year',1, 20, 5);
+	print '</td>';
+
+
 	print '<td class="liste_titre" colspan="1">&nbsp;</td>';
 	// Amount
 	print '<td class="liste_titre" align="right">';
@@ -417,6 +457,14 @@ if ($result)
 		// Date proposal
 		print '<td align="center">';
 		print dol_print_date($db->jdate($objp->dp), 'day');
+		print "</td>\n";
+
+		// Date relance extrafileds
+		print '<td align="center">';
+		print dol_print_date($db->jdate($objp->dt_relance), 'day');
+		if ($objp->fk_statut == 1 && $db->jdate($objp->dt_relance) < $now && !empty($objp->dt_relance)) {
+			print img_warning($langs->trans("Late"));
+		}
 		print "</td>\n";
 
 		// Date end validity
