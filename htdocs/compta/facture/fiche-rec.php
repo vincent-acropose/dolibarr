@@ -741,6 +741,19 @@ if (empty($reshook))
             $extrafieldsline = new ExtraFields($db);
             $extralabelsline = $extrafieldsline->fetch_name_optionals_label($object->table_element_line);
             $array_options = $extrafieldsline->getOptionalsFromPost($extralabelsline);
+            
+            
+            $objectline = new FactureLigneRec($db);
+            if ($objectline->fetch(GETPOST('lineid')))
+            {
+            	$objectline->array_options=$array_options;
+            	$result=$objectline->insertExtraFields();
+            	if ($result < 0)
+            	{
+            		setEventMessages($langs->trans('Error').$result, null, 'errors');
+            	}
+            }
+            
             // Unset extrafield
             if (is_array($extralabelsline))
     	    {
