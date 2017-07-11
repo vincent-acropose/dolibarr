@@ -40,6 +40,7 @@ if (! empty($conf->projet->enabled)) {
 require_once DOL_DOCUMENT_ROOT . '/core/class/html.formprojet.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/doleditor.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/invoice.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
 
 $langs->load('bills');
 $langs->load('compta');
@@ -98,7 +99,7 @@ $hookmanager->initHooks(array('invoicereccard','globalcard'));
 $extrafields = new ExtraFields($db);
 
 // fetch optionals attributes and labels
-$extralabels = $extrafields->fetch_name_optionals_label('facture');
+$extralabels = $extrafields->fetch_name_optionals_label('facture_rec');
 $search_array_options=$extrafields->getOptionalsFromPost($extralabels,'','search_');
 
 $permissionnote = $user->rights->facture->creer; // Used by the include of actions_setnotes.inc.php
@@ -374,6 +375,28 @@ if (empty($reshook))
     		$db->rollback();
     		setEventMessages($line->error, $line->errors, 'errors');
     	}
+    }
+    else if ($action == 'update_extras')
+    {
+    	// Fill array 'array_options' with data from update form
+    	$extralabels = $extrafields->fetch_name_optionals_label($object->table_element);
+    	$ret = $extrafields->setOptionalsFromPost($extralabels, $object, GETPOST('attribute'));
+    	if ($ret < 0)
+    		$error ++;
+    		
+    		if (! $error) {
+    			
+    			$result = $object->insertExtraFields();
+    			if ($result < 0) {
+    				$error ++;
+    			}
+    		} else if ($reshook < 0)
+    			$error ++;
+    			
+    			if ($error) {
+    				$action = 'edit_extras';
+    				setEventMessages($object->error, $object->errors, 'errors');
+    			}
     }
 
     // Add a new line
@@ -1306,6 +1329,11 @@ else
 		print "</td>";
 		print '</tr>';
 
+		
+		// Other attributes
+		$cols = 2;
+		include DOL_DOCUMENT_ROOT . '/core/tpl/extrafields_view.tpl.php';
+		
     	print '</table>';
 
     	print '</div>';
