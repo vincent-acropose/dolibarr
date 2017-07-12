@@ -2072,7 +2072,7 @@ function pdf_getLineTotalDiscountAmount($object, $i, $outputlangs, $hidedetails=
 		}
 		else
 		{
-			if (empty($hidedetails) || $hidedetails > 1) return $sign * ( ($object->lines[$i]->subprice * $object->lines[$i]->qty) - $object->lines[$i]->total_ht );
+			if (empty($hidedetails) || $hidedetails > 1 && empty($object->lines[$i]->array_options['options_subtotal_nc'])) return $sign * ( ($object->lines[$i]->subprice * $object->lines[$i]->qty) - $object->lines[$i]->total_ht );
 		}
 	}
 	return '';
