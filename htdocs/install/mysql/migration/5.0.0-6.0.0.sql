@@ -70,6 +70,10 @@ ALTER TABLE llx_extrafields ADD COLUMN fielddefault varchar(255);
 ALTER TABLE llx_c_typent MODIFY COLUMN libelle varchar(64); 
 
 
+ALTER TABLE llx_holiday ADD COLUMN ref	varchar(30) NULL;
+ALTER TABLE llx_holiday ADD COLUMN ref_ext	varchar(255);
+
+
 create table llx_notify_def_object
 (
   id				integer AUTO_INCREMENT PRIMARY KEY,
@@ -242,6 +246,7 @@ ALTER TABLE llx_accounting_bookkeeping ADD COLUMN date_lettering datetime AFTER 
 ALTER TABLE llx_accounting_bookkeeping ADD COLUMN journal_label varchar(255) AFTER code_journal;
 ALTER TABLE llx_accounting_bookkeeping ADD COLUMN date_validated datetime AFTER validated;
 
+DROP TABLE llx_accounting_bookkeeping_tmp;
 CREATE TABLE llx_accounting_bookkeeping_tmp 
 (
   rowid                 integer NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -254,14 +259,14 @@ CREATE TABLE llx_accounting_bookkeeping_tmp
   thirdparty_code       varchar(32),				-- Third party code (customer or supplier) when record is saved (may help debug) 
   subledger_account     varchar(32),				-- FEC:CompAuxNum	| account number of subledger account
   subledger_label       varchar(255),				-- FEC:CompAuxLib	| label of subledger account
-  numero_compte         varchar(32) NOT NULL,		-- FEC:CompteNum	| account number
+  numero_compte         varchar(32),				-- FEC:CompteNum	| account number
   label_compte          varchar(255) NOT NULL,		-- FEC:CompteLib	| label of account
   label_operation       varchar(255),				-- FEC:EcritureLib	| label of the operation
-  debit                 numeric(24,8) NOT NULL,		-- FEC:Debit
-  credit                numeric(24,8) NOT NULL,		-- FEC:Credit
-  montant               numeric(24,8) NOT NULL,		-- FEC:Montant (Not necessary)
+  debit                 double(24,8) NOT NULL,		-- FEC:Debit
+  credit                double(24,8) NOT NULL,		-- FEC:Credit
+  montant               double(24,8) NOT NULL,		-- FEC:Montant (Not necessary)
   sens                  varchar(1) DEFAULT NULL,	-- FEC:Sens (Not necessary)
-  multicurrency_amount  numeric(24,8),				-- FEC:Montantdevise
+  multicurrency_amount  double(24,8),				-- FEC:Montantdevise
   multicurrency_code    varchar(255),				-- FEC:Idevise
   lettering_code        varchar(255),				-- FEC:EcritureLet
   date_lettering        datetime,					-- FEC:DateLet
@@ -281,6 +286,13 @@ ALTER TABLE llx_accounting_bookkeeping_tmp ADD INDEX idx_accounting_bookkeeping_
 ALTER TABLE llx_accounting_bookkeeping_tmp ADD INDEX idx_accounting_bookkeeping_fk_docdet (fk_docdet);
 ALTER TABLE llx_accounting_bookkeeping_tmp ADD INDEX idx_accounting_bookkeeping_numero_compte (numero_compte);
 ALTER TABLE llx_accounting_bookkeeping_tmp ADD INDEX idx_accounting_bookkeeping_code_journal (code_journal);
+
+
+ALTER TABLE llx_accounting_bookkeeping MODIFY COLUMN debit double(24,8);
+ALTER TABLE llx_accounting_bookkeeping MODIFY COLUMN credit double(24,8);
+ALTER TABLE llx_accounting_bookkeeping MODIFY COLUMN montant double(24,8);
+ALTER TABLE llx_accounting_bookkeeping MODIFY COLUMN multicurrency_amount double(24,8);
+
 
 ALTER TABLE llx_paiementfourn ADD COLUMN model_pdf varchar(255);
 
@@ -346,7 +358,7 @@ ALTER TABLE llx_product_fournisseur_price_log ADD COLUMN multicurrency_tx	     d
 ALTER TABLE llx_product_fournisseur_price_log ADD COLUMN multicurrency_price	 double(24,8) DEFAULT NULL;
 ALTER TABLE llx_product_fournisseur_price_log ADD COLUMN multicurrency_price_ttc double(24,8) DEFAULT NULL;
 
-UPDATE TABLE llx_contrat set ref = rowid where ref is null or ref = '';
+UPDATE llx_contrat set ref = rowid where ref is null or ref = '';
 
 create table llx_payment_various
 (
@@ -482,6 +494,31 @@ ALTER TABLE llx_usergroup_rights DROP FOREIGN KEY fk_usergroup_rights_fk_usergro
 ALTER TABLE llx_usergroup_rights DROP INDEX fk_usergroup;
 ALTER TABLE llx_usergroup_rights ADD UNIQUE INDEX uk_usergroup_rights (entity, fk_usergroup, fk_id);
 ALTER TABLE llx_usergroup_rights ADD CONSTRAINT fk_usergroup_rights_fk_usergroup FOREIGN KEY (fk_usergroup) REFERENCES llx_usergroup (rowid);
+
+-- For new module website
+
+CREATE TABLE llx_website_page
+(
+	rowid         integer AUTO_INCREMENT NOT NULL PRIMARY KEY,
+	fk_website    integer NOT NULL,
+	pageurl       varchar(16) NOT NULL,
+	title         varchar(255),						
+	description   varchar(255),						
+	keywords      varchar(255),
+	content		  mediumtext,		-- text is not enough in size
+    status        integer,
+    fk_user_create integer,
+    fk_user_modif  integer,
+    date_creation  datetime,
+	tms            timestamp
+) ENGINE=innodb;
+
+ALTER TABLE llx_website_page ADD UNIQUE INDEX uk_website_page_url (fk_website,pageurl);
+
+ALTER TABLE llx_website_page ADD CONSTRAINT fk_website_page_website FOREIGN KEY (fk_website) REFERENCES llx_website (rowid);
+
+
+-- For new module blockedlog
 
 CREATE TABLE llx_blockedlog 
 ( 

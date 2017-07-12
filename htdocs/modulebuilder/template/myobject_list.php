@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2007-2016 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2007-2017 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) ---Put here your own copyright and developer email---
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,17 +23,20 @@
  *					Put here some comments
  */
 
-//if (! defined('NOREQUIREUSER'))  define('NOREQUIREUSER','1');
-//if (! defined('NOREQUIREDB'))    define('NOREQUIREDB','1');
-//if (! defined('NOREQUIRESOC'))   define('NOREQUIRESOC','1');
-//if (! defined('NOREQUIRETRAN'))  define('NOREQUIRETRAN','1');
-//if (! defined('NOCSRFCHECK'))    define('NOCSRFCHECK','1');			// Do not check anti CSRF attack test
-//if (! defined('NOSTYLECHECK'))   define('NOSTYLECHECK','1');			// Do not check style html tag into posted data
-//if (! defined('NOTOKENRENEWAL')) define('NOTOKENRENEWAL','1');		// Do not check anti POST attack test
-//if (! defined('NOREQUIREMENU'))  define('NOREQUIREMENU','1');			// If there is no need to load and show top and left menu
-//if (! defined('NOREQUIREHTML'))  define('NOREQUIREHTML','1');			// If we don't need to load the html.form.class.php
-//if (! defined('NOREQUIREAJAX'))  define('NOREQUIREAJAX','1');         // Do not load ajax.lib.php library
-//if (! defined("NOLOGIN"))        define("NOLOGIN",'1');				// If this page is public (can be called outside logged session)
+//if (! defined('NOREQUIREUSER'))          define('NOREQUIREUSER','1');
+//if (! defined('NOREQUIREDB'))            define('NOREQUIREDB','1');
+//if (! defined('NOREQUIRESOC'))           define('NOREQUIRESOC','1');
+//if (! defined('NOREQUIRETRAN'))          define('NOREQUIRETRAN','1');
+//if (! defined('NOSCANGETFORINJECTION'))  define('NOSCANGETFORINJECTION','1');			// Do not check anti CSRF attack test
+//if (! defined('NOSCANPOSTFORINJECTION')) define('NOSCANPOSTFORINJECTION','1');			// Do not check anti CSRF attack test
+//if (! defined('NOCSRFCHECK'))            define('NOCSRFCHECK','1');			// Do not check anti CSRF attack test
+//if (! defined('NOSTYLECHECK'))           define('NOSTYLECHECK','1');			// Do not check style html tag into posted data
+//if (! defined('NOTOKENRENEWAL'))         define('NOTOKENRENEWAL','1');		// Do not check anti POST attack test
+//if (! defined('NOREQUIREMENU'))          define('NOREQUIREMENU','1');			// If there is no need to load and show top and left menu
+//if (! defined('NOREQUIREHTML'))          define('NOREQUIREHTML','1');			// If we don't need to load the html.form.class.php
+//if (! defined('NOREQUIREAJAX'))          define('NOREQUIREAJAX','1');         // Do not load ajax.lib.php library
+//if (! defined("NOLOGIN"))                define("NOLOGIN",'1');				// If this page is public (can be called outside logged session)
+
 
 // Load Dolibarr environment
 $res=0;
@@ -65,13 +68,7 @@ $toselect   = GETPOST('toselect', 'array');
 
 $id			= GETPOST('id','int');
 $backtopage = GETPOST('backtopage');
-$myparam	= GETPOST('myparam','alpha');
-
-$search_all=trim(GETPOST("sall"));
-$search_field1=GETPOST("search_field1");
-$search_field2=GETPOST("search_field2");
-$search_myfield=GETPOST('search_myfield');
-$optioncss = GETPOST('optioncss','alpha');
+$optioncss  = GETPOST('optioncss','alpha');
 
 // Load variable for pagination
 $limit = GETPOST('limit','int')?GETPOST('limit','int'):$conf->liste_limit;
@@ -82,6 +79,7 @@ if (empty($page) || $page == -1) { $page = 0; }     // If $page is not defined, 
 $offset = $limit * $page;
 $pageprev = $page - 1;
 $pagenext = $page + 1;
+
 if (! $sortfield) $sortfield="t.rowid"; // Set here default search field
 if (! $sortorder) $sortorder="ASC";
 
@@ -92,6 +90,19 @@ if ($user->societe_id > 0)
     $socid = $user->societe_id;
 	//accessforbidden();
 }
+
+// Initialize array of search criterias
+$object=new MyModule($db);
+$search_all=trim(GETPOST("search_all"));
+$search=array();
+foreach($object->fields as $key)
+{
+    if (GETPOST('search_'.$key,'alpha')) $search[$key]=GETPOST('search_'.$key,'alpha');
+}
+/*$search_field1=GETPOST("search_field1");
+$search_field2=GETPOST("search_field2");
+$search_myfield=GETPOST('search_myfield');
+*/
 
 // Initialize technical object to manage context to save list fields
 $contextpage=GETPOST('contextpage','aZ')?GETPOST('contextpage','aZ'):'myobjectlist';
@@ -129,8 +140,6 @@ if (is_array($extrafields->attribute_label) && count($extrafields->attribute_lab
     }
 }
 
-
-$object=new Skeleton_Class($db);
 
 
 
