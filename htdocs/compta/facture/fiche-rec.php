@@ -742,7 +742,6 @@ if (empty($reshook))
             $extralabelsline = $extrafieldsline->fetch_name_optionals_label($object->table_element_line);
             $array_options = $extrafieldsline->getOptionalsFromPost($extralabelsline);
             
-            
             $objectline = new FactureLigneRec($db);
             if ($objectline->fetch(GETPOST('lineid')))
             {

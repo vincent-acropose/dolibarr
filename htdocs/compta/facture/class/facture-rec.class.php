@@ -444,6 +444,15 @@ class FactureRec extends CommonInvoice
 				$line->price            = $objp->price;
 				$line->remise           = $objp->remise;
 
+				
+				// Retreive all extrafield for thirdparty
+				// fetch optionals attributes and labels
+				require_once(DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php');
+				$extrafieldsline=new ExtraFields($line->db);
+				$extrafieldsline=$extrafieldsline->fetch_name_optionals_label($line->table_element,true);
+				$extralabelsline = $line->fetch_optionals($line->id,$extrafieldsline);
+				
+				
 				$this->lines[$i] = $line;
 
 				$i++;
