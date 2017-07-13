@@ -541,6 +541,11 @@ foreach ($listofreferent as $key => $value)
 		print '<td style="width: 24px"></td>';
 		// Ref
 		print '<td style="width: 200px">'.$langs->trans("Ref").'</td>';
+		// Ref Client
+		if (property_exists($element, 'ref_client')) print '<td width="100px">'.$langs->trans('RefCustomer').'</td>';
+		// Ref Supplier
+		if (property_exists($element, 'ref_supplier')) print '<td width="130px">'.$langs->trans('RefSupplier').'</td>';
+		
 		// Date
 		print '<td width="100" align="center">';
 		if (! in_array($tablename, array('projet_task'))) print $langs->trans("Date");
@@ -669,6 +674,9 @@ foreach ($listofreferent as $key => $value)
 				}
 
 				print "</td>\n";
+
+				if (property_exists($element, 'ref_client')) print '<td>'.$element->ref_client.'</td>';
+				if (property_exists($element, 'ref_supplier')) print '<td>'.$element->ref_supplier.'</td>';
 
 				// Date
 				if ($tablename == 'commande_fournisseur' || $tablename == 'supplier_order') $date=$element->date_commande;
