@@ -377,6 +377,8 @@ class FormMail
             }
             else
             {
+		// TK 6171 : e-mail par défaut dans TO pour tous les envois
+	        $this->withto = 'admarcoop@archer.fr';
                 if (! empty($this->withtofree))
                 {
                     $out.= '<input size="'.(is_array($this->withto)?"30":"60").'" id="sendto" name="sendto" value="'.(! is_array($this->withto) && ! is_numeric($this->withto)? (isset($_REQUEST["sendto"])?$_REQUEST["sendto"]:$this->withto) :"").'" />';
