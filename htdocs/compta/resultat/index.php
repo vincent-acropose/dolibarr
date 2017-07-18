@@ -2,7 +2,7 @@
 /* Copyright (C) 2003      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2014	   Ferran Marcet        <fmarcet@2byte.es>
+ * Copyright (C) 2014-2016 Ferran Marcet        <fmarcet@2byte.es>
  * Copyright (C) 2014	   Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2014	   Florian Henry        <florian.henry@open-concept.pro>
  *
@@ -88,7 +88,16 @@ else {
 	$builddate=time();
 	//$exportlink=$langs->trans("NotYetAvailable");
 }
+
+$hselected='report';
+
 report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportlink,array('modecompta'=>$modecompta),$calcmode);
+
+if (! empty($conf->accounting->enabled))
+{
+    print info_admin($langs->trans("WarningReportNotReliable"), 0, 0, 1);
+}
+
 
 
 /*
@@ -103,8 +112,8 @@ if ($modecompta == 'CREANCES-DETTES')
 	$sql.= ", ".MAIN_DB_PREFIX."facture as f";
 	$sql.= " WHERE f.fk_soc = s.rowid";
 	$sql.= " AND f.fk_statut IN (1,2)";
-	if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS)) $sql.= " AND f.type IN (0,1,2)";
-	else $sql.= " AND f.type IN (0,1,2,3)";
+	if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS)) $sql.= " AND f.type IN (0,1,2,5)";
+	else $sql.= " AND f.type IN (0,1,2,3,5)";
 }
 else
 {
@@ -155,7 +164,7 @@ if ($modecompta != 'CREANCES-DETTES')
 	$sql.= " WHERE pf.rowid IS NULL";
 	$sql.= " AND p.fk_bank = b.rowid";
 	$sql.= " AND b.fk_account = ba.rowid";
-	$sql.= " AND ba.entity = ".$conf->entity;
+	$sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
 	$sql.= " GROUP BY dm";
 	$sql.= " ORDER BY dm";
 
@@ -246,8 +255,8 @@ if ($modecompta == 'CREANCES-DETTES')
 	$sql = "SELECT sum(f.tva) as amount, date_format(f.datef,'%Y-%m') as dm";
 	$sql.= " FROM ".MAIN_DB_PREFIX."facture as f";
 	$sql.= " WHERE f.fk_statut IN (1,2)";
-	if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS)) $sql.= " AND f.type IN (0,1,2)";
-	else $sql.= " AND f.type IN (0,1,2,3)";
+	if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS)) $sql.= " AND f.type IN (0,1,2,5)";
+	else $sql.= " AND f.type IN (0,1,2,3,5)";
 	$sql.= " AND f.entity = ".$conf->entity;
 	$sql.= " GROUP BY dm";
 
@@ -469,11 +478,13 @@ $object = array(&$encaiss, &$encaiss_ttc, &$decaiss, &$decaiss_ttc);
 $parameters["mode"] = $modecompta;
 // Initialize technical object to manage hooks of expenses. Note that conf->hooks_modules contains array array
 $hookmanager->initHooks(array('externalbalance'));
-$reshook=$hookmanager->executeHooks('addStatisticLine',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+$reshook=$hookmanager->executeHooks('addReportInfo',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+
 
 /*
  * Salaries
  */
+
 if (! empty($conf->salaries->enabled))
 {
     if ($modecompta == 'CREANCES-DETTES') {
@@ -518,6 +529,58 @@ if (! empty($conf->salaries->enabled))
     }
 }
 
+if (! empty($conf->expensereport->enabled))
+{
+	$langs->load('trips');
+	if ($modecompta == 'CREANCES-DETTES') {
+		$sql = "SELECT date_format(date_valid,'%Y-%m') as dm, sum(p.total_ht) as amount_ht,sum(p.total_ttc) as amount_ttc";
+		$sql.= " FROM ".MAIN_DB_PREFIX."expensereport as p";
+		$sql.= " INNER JOIN ".MAIN_DB_PREFIX."user as u ON u.rowid=p.fk_user_author";
+		$sql.= " WHERE p.entity = ".getEntity('expensereport',1);
+		$sql.= " AND p.fk_statut>=5";
+
+		$column='p.date_valid';
+
+	} else {
+		$sql = "SELECT date_format(pe.datep,'%Y-%m') as dm, sum(p.total_ht) as amount_ht,sum(p.total_ttc) as amount_ttc";
+		$sql.= " FROM ".MAIN_DB_PREFIX."expensereport as p";
+		$sql.= " INNER JOIN ".MAIN_DB_PREFIX."user as u ON u.rowid=p.fk_user_author";
+		$sql.= " INNER JOIN ".MAIN_DB_PREFIX."payment_expensereport as pe ON pe.fk_expensereport = p.rowid";
+		$sql.= " INNER JOIN ".MAIN_DB_PREFIX."c_paiement as c ON pe.fk_typepayment = c.id";
+		$sql.= " WHERE p.entity = ".getEntity('expensereport',1);
+		$sql.= " AND p.fk_statut>=5";
+
+		$column='pe.datep';
+	}
+
+	$sql.= " GROUP BY dm";
+
+	dol_syslog("get expense report outcome");
+	$result=$db->query($sql);
+	$subtotal_ht = 0;
+	$subtotal_ttc = 0;
+	if ($result)
+	{
+		$num = $db->num_rows($result);
+		if ($num)
+		{
+			while ($obj = $db->fetch_object($result))
+			{
+				if (! isset($decaiss[$obj->dm])) $decaiss[$obj->dm]=0;
+				$decaiss[$obj->dm] += $obj->amount_ht;
+				
+				if (! isset($decaiss_ttc[$obj->dm])) $decaiss_ttc[$obj->dm]=0;
+				$decaiss_ttc[$obj->dm] += $obj->amount_ttc;
+
+			}
+		}
+	}
+	else
+	{
+		dol_print_error($db);
+	}
+}
+
 /*
  * Donation get dunning paiement
  */
@@ -525,15 +588,23 @@ if (! empty($conf->don->enabled))
 {
     $subtotal_ht = 0;
     $subtotal_ttc = 0;
-    $sql = "SELECT p.societe as nom, p.firstname, p.lastname, date_format(p.datedon,'%Y-%m') as dm, sum(p.amount) as amount";
-    $sql.= " FROM ".MAIN_DB_PREFIX."don as p";
-    $sql.= " WHERE p.entity = ".$conf->entity;
-	if ($modecompta == 'CREANCES-DETTES')
-	   $sql.= " AND fk_statut in (1,2)";
-	else
-	   $sql.= " AND fk_statut=2";
-    $sql.= " GROUP BY p.societe, p.firstname, p.lastname, dm";
     
+    if ($modecompta == 'CREANCES-DETTES') {
+        $sql = "SELECT p.societe as nom, p.firstname, p.lastname, date_format(p.datedon,'%Y-%m') as dm, sum(p.amount) as amount";
+        $sql.= " FROM ".MAIN_DB_PREFIX."don as p";
+        $sql.= " WHERE p.entity = ".$conf->entity;
+        $sql.= " AND fk_statut in (1,2)";
+    }
+    else {
+        $sql = "SELECT p.societe as nom, p.firstname, p.lastname, date_format(p.datedon,'%Y-%m') as dm, sum(p.amount) as amount";
+        $sql.= " FROM ".MAIN_DB_PREFIX."don as p";
+		$sql.= " INNER JOIN ".MAIN_DB_PREFIX."payment_donation as pe ON pe.fk_donation = p.rowid";
+		$sql.= " INNER JOIN ".MAIN_DB_PREFIX."c_paiement as c ON pe.fk_typepayment = c.id";
+		$sql.= " WHERE p.entity = ".getEntity('donation',1);
+   	    $sql.= " AND fk_statut >= 2";
+    }
+    $sql.= " GROUP BY p.societe, p.firstname, p.lastname, dm";
+
     dol_syslog("get donation payments");
     $result=$db->query($sql);
     if ($result)
@@ -570,12 +641,14 @@ if (! empty($conf->don->enabled))
 $totentrees=array();
 $totsorties=array();
 
-print '<table class="noborder" width="100%">';
+print '<div class="div-table-responsive">';
+print '<table class="tagtable liste">'."\n";
+
 print '<tr class="liste_titre"><td class="liste_titre">&nbsp;</td>';
 
 for ($annee = $year_start ; $annee <= $year_end ; $annee++)
 {
-	print '<td align="center" colspan="2" class="borderrightlight">';
+	print '<td align="center" colspan="2" class="liste_titre borderrightlight">';
 	print '<a href="clientfourn.php?year='.$annee.'">';
 	print $annee;
 	if ($conf->global->SOCIETE_FISCAL_MONTH_START > 1) print '-'.($annee+1);
@@ -585,8 +658,8 @@ print '</tr>';
 print '<tr class="liste_titre"><td class="liste_titre">'.$langs->trans("Month").'</td>';
 for ($annee = $year_start ; $annee <= $year_end ; $annee++)
 {
-	print '<td align="center">'.$langs->trans("Outcome").'</td>';
-	print '<td align="center" class="borderrightlight">'.$langs->trans("Income").'</td>';
+	print '<td class="liste_titre" align="center">'.$langs->trans("Outcome").'</td>';
+	print '<td class="liste_titre" align="center" class="borderrightlight">'.$langs->trans("Income").'</td>';
 }
 print '</tr>';
 
@@ -607,7 +680,7 @@ for ($mois = 1+$nb_mois_decalage ; $mois <= 12+$nb_mois_decalage ; $mois++)
 		if($mois>12) {$annee_decalage=$annee+1;}
 		$case = strftime("%Y-%m",dol_mktime(12,0,0,$mois_modulo,1,$annee_decalage));
 
-		print '<td align="right">&nbsp;';
+		print '<td class="liste_titre" align="right">&nbsp;';
 		if (isset($decaiss_ttc[$case]) && $decaiss_ttc[$case] != 0)
 		{
 			print '<a href="clientfourn.php?year='.$annee_decalage.'&month='.$mois_modulo.($modecompta?'&modecompta='.$modecompta:'').'">'.price(price2num($decaiss_ttc[$case],'MT')).'</a>';
@@ -616,7 +689,7 @@ for ($mois = 1+$nb_mois_decalage ; $mois <= 12+$nb_mois_decalage ; $mois++)
 		}
 		print "</td>";
 
-		print '<td align="right" class="borderrightlight">&nbsp;';
+		print '<td align="right" class="liste_titre borderrightlight">&nbsp;';
 		//if (isset($encaiss_ttc[$case]) && $encaiss_ttc[$case] != 0)
 		if (isset($encaiss_ttc[$case]))
 		{
@@ -633,7 +706,7 @@ for ($mois = 1+$nb_mois_decalage ; $mois <= 12+$nb_mois_decalage ; $mois++)
 // Total
 $var=!$var;
 $nbcols=0;
-print '<tr class="liste_total"><td>'.$langs->trans("TotalTTC").'</td>';
+print '<tr class="liste_total impair"><td>'.$langs->trans("TotalTTC").'</td>';
 for ($annee = $year_start ; $annee <= $year_end ; $annee++)
 {
 	$nbcols+=2;
@@ -643,7 +716,7 @@ for ($annee = $year_start ; $annee <= $year_end ; $annee++)
 print "</tr>\n";
 
 // Empty line
-print '<tr><td>&nbsp;</td>';
+print '<tr class="impair"><td>&nbsp;</td>';
 print '<td colspan="'.$nbcols.'">&nbsp;</td>';
 print "</tr>\n";
 
@@ -664,7 +737,7 @@ for ($annee = $year_start ; $annee <= $year_end ; $annee++)
 print "</tr>\n";
 
 print "</table>";
-
+print '</div>';
 
 llxFooter();
 $db->close();

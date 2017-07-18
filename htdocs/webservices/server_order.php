@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2006-2010	Laurent Destailleur	<eldy@users.sourceforge.net>
+/* Copyright (C) 2006-2016	Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2012		JF FERRY			<jfefe@aternatik.fr>
  * Copyright (C) 2012		Regis Houssin		<regis.houssin@capnetworks.com>
 *
@@ -22,9 +22,7 @@
  *       \brief      File that is entry point to call Dolibarr WebServices
  */
 
-
-// This is to make Dolibarr working with Plesk
-set_include_path($_SERVER['DOCUMENT_ROOT'].'/htdocs');
+if (! defined("NOCSRFCHECK"))    define("NOCSRFCHECK",'1');
 
 require_once '../master.inc.php';
 require_once NUSOAP_PATH.'/nusoap.php';        // Include SOAP
@@ -687,7 +685,7 @@ function createOrder($authentication,$order)
 		$newobject->date_lim_reglement=dol_stringtotime($order['date_due'],'dayrfc');
 		$newobject->note_private=$order['note_private'];
 		$newobject->note_public=$order['note_public'];
-		$newobject->statut=0;	// We start with status draft
+		$newobject->statut=Commande::STATUS_DRAFT;	// We start with status draft
 		$newobject->billed=$order['billed'];
 		$newobject->fk_project=$order['project_id'];
 		$newobject->fk_delivery_address=$order['fk_delivery_address'];
@@ -917,7 +915,17 @@ function updateOrder($authentication,$order)
 			if (isset($order['status']))
 			{
 				if ($order['status'] == -1) $result=$object->cancel($fuser);
-				if ($order['status'] == 1)  $result=$object->valid($fuser);
+				if ($order['status'] == 1)
+				{
+					$result=$object->valid($fuser);
+					if ($result	>= 0)
+					{
+						// Define output language
+						$outputlangs = $langs;
+						$order->generateDocument($order->modelpdf, $outputlangs);
+					
+					}
+				}
 				if ($order['status'] == 0)  $result=$object->set_reopen($fuser);
 				if ($order['status'] == 3)  $result=$object->cloture($fuser);
 			}
@@ -925,7 +933,7 @@ function updateOrder($authentication,$order)
 			if (isset($order['billed']))
 			{
 				if ($order['billed'])   $result=$object->classifyBilled($fuser);
-				if (! $order['billed']) $result=$object->classifyBilled($fuser);
+				if (! $order['billed']) $result=$object->classifyUnBilled($fuser);
 			}
 
 			//Retreive all extrafield for object
@@ -951,7 +959,9 @@ function updateOrder($authentication,$order)
 			$db->commit();
 			$objectresp=array(
 					'result'=>array('result_code'=>'OK', 'result_label'=>''),
-					'id'=>$object->id
+					'id'=>$object->id,
+					'ref'=>$object->ref,
+					'ref_ext'=>$object->ref_ext
 			);
 		}
 		elseif ($objectfound)

@@ -34,12 +34,12 @@ include_once DOL_DOCUMENT_ROOT.'/core/modules/mailings/modules_mailings.php';
 class mailing_contacts1 extends MailingTargets
 {
 	var $name='ContactCompanies';                     // Identifiant du module mailing
-	// This label is used if no translation is found for key MailingModuleDescXXX where XXX=name is found
-	var $desc='Contacts des tiers (prospects, clients, fournisseurs...)';
+	// This label is used if no translation is found for key XXX neither MailingModuleDescXXX where XXX=name is found
+	var $desc='Contacts of thirdparties (prospects, customers, suppliers...)';
 	var $require_module=array("societe");               // Module mailing actif si modules require_module actifs
 	var $require_admin=0;                               // Module mailing actif pour user admin ou non
 	var $picto='contact';
-
+	
 	var $db;
 
 
@@ -60,7 +60,7 @@ class mailing_contacts1 extends MailingTargets
 	 *	array of SQL request that returns two field:
 	 *	One called "label", One called "nb".
 	 *
-	 *	@return		array		Array with SQL requests
+	 *	@return		string[]		Array with SQL requests
 	 */
 	function getSqlArrayForStats()
 	{
@@ -86,7 +86,7 @@ class mailing_contacts1 extends MailingTargets
 	 *	For example if this selector is used to extract 500 different
 	 *	emails from a text file, this function must return 500.
 	 *
-	 *  @param	string	$sql		Requete sql de comptage
+	 *  @param		string	$sql		Requete sql de comptage
 	 *	@return		int
 	 */
 	function getNbOfRecipients($sql='')

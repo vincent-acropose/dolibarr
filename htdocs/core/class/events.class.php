@@ -31,7 +31,6 @@
 
 /**
  *	Events class
- *	Initialy built by build_class_from_table on 2008-02-28 17:25
  */
 class Events // extends CommonObject
 {
@@ -40,6 +39,8 @@ class Events // extends CommonObject
 
 	var $id;
 	var $db;
+
+	var $error;
 
 	var $tms;
 	var $type;
@@ -57,6 +58,8 @@ class Events // extends CommonObject
 		array('id'=>'USER_NEW_PASSWORD',      'test'=>1),
 		array('id'=>'USER_ENABLEDISABLE',     'test'=>1),
 		array('id'=>'USER_DELETE',            'test'=>1),
+	/*    array('id'=>'USER_SETINGROUP',        'test'=>1), deprecated. Replace with USER_MODIFY
+	    array('id'=>'USER_REMOVEFROMGROUP',   'test'=>1), deprecated. Replace with USER_MODIFY */
 		array('id'=>'GROUP_CREATE',           'test'=>1),
 		array('id'=>'GROUP_MODIFY',           'test'=>1),
 		array('id'=>'GROUP_DELETE',           'test'=>1),
@@ -111,7 +114,7 @@ class Events // extends CommonObject
 		$this->description=trim($this->description);
 
 		// Check parameters
-		if (empty($this->description)) { $this->error='ErrorBadValueForParameter'; return -1; }
+		if (empty($this->description)) { $this->error='ErrorBadValueForParameterCreateEventDesc'; return -1; }
 
 		// Insert request
 		$sql = "INSERT INTO ".MAIN_DB_PREFIX."events(";

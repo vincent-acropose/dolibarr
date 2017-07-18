@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2011	   Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2011-2015 Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -88,6 +88,7 @@ function getServerTimeZoneInt($refgmtdate='now')
         if ($refgmtdate == 'now') $newrefgmtdate=$yearref.'-'.$monthref.'-'.$dayref;
         elseif ($refgmtdate == 'summer') $newrefgmtdate=$yearref.'-08-01';
         else $newrefgmtdate=$yearref.'-01-01';
+        $newrefgmtdate.='T00:00:00+00:00';
         $localtz = new DateTimeZone(getServerTimeZoneString());
         $localdt = new DateTime($newrefgmtdate, $localtz);
         $tmp=-1*$localtz->getOffset($localdt);
@@ -95,31 +96,8 @@ function getServerTimeZoneInt($refgmtdate='now')
     }
     else
     {
+    	$tmp=0;
     	dol_print_error('','PHP version must be 5.3+');
-    	/*
-        // Method 2 (does not include daylight, not supported by adodb)
-        if ($refgmtdate == 'now')
-        {
-            if (ini_get("date.timezone")=='UTC') return 0;
-            // We don't know server timezone string, so we don't know location, so we can't guess daylight. We assume we use same than client but this may be a bug.
-            $gmtnow=dol_now('gmt'); $yearref=dol_print_date($gmtnow,'%Y'); $monthref=dol_print_date($gmtnow,'%m'); $dayref=dol_print_date($gmtnow,'%d');
-            if (dol_stringtotime($_SESSION['dol_dst_first']) <= $gmtnow && $gmtnow < dol_stringtotime($_SESSION['dol_dst_second'])) $daylight=1;
-            else $daylight=0;
-            $tmp=dol_mktime(0,0,0,$monthref,$dayref,$yearref,false,0)-dol_mktime(0,0,0,$monthref,$dayref,$yearref,true,0)-($daylight*3600);
-            return 'unknown';    // For true result
-        }
-        elseif ($refgmtdate == 'summer')
-        {
-            if (ini_get("date.timezone")=='UTC') return 0;
-            // We don't know server timezone string, so we don't know location, so we can't guess daylight. We assume we use same than client but this may be a bug.
-            $gmtnow=dol_now('gmt'); $yearref=dol_print_date($gmtnow,'%Y'); $monthref='08'; $dayref='01';
-            if (dol_stringtotime($_SESSION['dol_dst_first']) <= dol_stringtotime($yearref.'-'.$monthref.'-'.$dayref) && dol_stringtotime($yearref.'-'.$monthref.'-'.$dayref) < dol_stringtotime($_SESSION['dol_dst_second'])) $daylight=1;
-            else $daylight=0;
-            $tmp=dol_mktime(0,0,0,$monthref,$dayref,$yearref,false,0)-dol_mktime(0,0,0,$monthref,$dayref,$yearref,true,0)-($daylight*3600);
-            return 'unknown';    // For true result
-        }
-        else $tmp=dol_mktime(0,0,0,1,1,1970);
-        */
     }
     $tz=round(($tmp<0?1:-1)*abs($tmp/3600));
     return $tz;
@@ -134,17 +112,29 @@ function getServerTimeZoneInt($refgmtdate='now')
  *  @param      int			$duration_unit      Unit of added delay (d, m, y, w, h)
  *  @return     int      			        	New timestamp
  */
-function dol_time_plus_duree($time,$duration_value,$duration_unit)
+function dol_time_plus_duree($time, $duration_value, $duration_unit)
 {
 	if ($duration_value == 0)  return $time;
 	if ($duration_unit == 'h') return $time + (3600*$duration_value);
 	if ($duration_unit == 'w') return $time + (3600*24*7*$duration_value);
-	if ($duration_value > 0) $deltastring="+".abs($duration_value);
-	if ($duration_value < 0) $deltastring="-".abs($duration_value);
-	if ($duration_unit == 'd') { $deltastring.=" day"; }
-	if ($duration_unit == 'm') { $deltastring.=" month"; }
-	if ($duration_unit == 'y') { $deltastring.=" year"; }
-	return strtotime($deltastring,$time);
+	
+	$deltastring='P';
+	
+	if ($duration_value > 0){ $deltastring.=abs($duration_value); $sub= false; }
+	if ($duration_value < 0){ $deltastring.=abs($duration_value); $sub= true; }
+	if ($duration_unit == 'd') { $deltastring.="D"; }
+	if ($duration_unit == 'm') { $deltastring.="M"; }
+	if ($duration_unit == 'y') { $deltastring.="Y"; }
+	
+	$date = new DateTime();
+	$date->setTimezone(new DateTimeZone('UTC'));
+	$date->setTimestamp($time);
+	$interval = new DateInterval($deltastring);
+	
+	if($sub) $date->sub($interval);
+	else $date->add( $interval );
+	
+	return $date->getTimestamp();
 }
 
 
@@ -181,11 +171,11 @@ function convertSecondToTime($iSecond, $format='all', $lengthOfDay=86400, $lengt
 
 	if ($format == 'all' || $format == 'allwithouthour' || $format == 'allhour' || $format == 'allhourmin')
 	{
-		if ($iSecond === 0) return '0';	// This is to avoid having 0 return a 12:00 AM for en_US
+		if ((int) $iSecond === 0) return '0';	// This is to avoid having 0 return a 12:00 AM for en_US
 
         $sTime='';
         $sDay=0;
-        $sWeek='';
+        $sWeek=0;
 
 		if ($iSecond >= $lengthOfDay)
 		{
@@ -228,7 +218,7 @@ function convertSecondToTime($iSecond, $format='all', $lengthOfDay=86400, $lengt
 		}
 		if ($format == 'allhourmin')
 		{
-			return sprintf("%02d",($sWeek*$lengthOfWeek*24 + $sDay*24 + (int) floor($iSecond/3600))).':'.sprintf("%02d",((int) floor(($iSecond % 3600)/60)));
+		    return sprintf("%02d",($sWeek*$lengthOfWeek*24 + $sDay*24 + (int) floor($iSecond/3600))).':'.sprintf("%02d",((int) floor(($iSecond % 3600)/60)));
 		}
 		if ($format == 'allhour')
 		{
@@ -278,8 +268,8 @@ function convertSecondToTime($iSecond, $format='all', $lengthOfDay=86400, $lengt
  *	                 			YYYYMMDDHHMMSS
  *								YYYYMMDDTHHMMSSZ
  *								YYYY-MM-DDTHH:MM:SSZ (RFC3339)
- *		                		DD/MM/YY or DD/MM/YYYY (this format should not be used anymore)
- *		                		DD/MM/YY HH:MM:SS or DD/MM/YYYY HH:MM:SS (this format should not be used anymore)
+ *		                		DD/MM/YY or DD/MM/YYYY (deprecated)
+ *		                		DD/MM/YY HH:MM:SS or DD/MM/YYYY HH:MM:SS (deprecated)
  *  @param	int		$gm         1 =Input date is GM date,
  *                              0 =Input date is local date using PHP server timezone
  *  @return	int					Date as a timestamp
@@ -292,7 +282,7 @@ function dol_stringtotime($string, $gm=1)
     // Convert date with format DD/MM/YYY HH:MM:SS. This part of code should not be used.
     if (preg_match('/^([0-9]+)\/([0-9]+)\/([0-9]+)\s?([0-9]+)?:?([0-9]+)?:?([0-9]+)?/i',$string,$reg))
     {
-        dol_syslog("dol_stringtotime call to function with deprecated parameter", LOG_WARNING);
+        dol_syslog("dol_stringtotime call to function with deprecated parameter format", LOG_WARNING);
         // Date est au format 'DD/MM/YY' ou 'DD/MM/YY HH:MM:SS'
         // Date est au format 'DD/MM/YYYY' ou 'DD/MM/YYYY HH:MM:SS'
         $sday = $reg[1];
@@ -562,9 +552,11 @@ function dol_get_first_day_week($day,$month,$year,$gm=false)
  *	@param	    int			$timestampStart     Timestamp de debut
  *	@param	    int			$timestampEnd       Timestamp de fin
  *  @param      string		$countrycode        Country code
+ *	@param      int			$lastday            Last day is included, 0: no, 1:yes
  *	@return   	int								Nombre de jours feries
+ *  @see num_between_day, num_open_day
  */
-function num_public_holiday($timestampStart, $timestampEnd, $countrycode='FR')
+function num_public_holiday($timestampStart, $timestampEnd, $countrycode='FR', $lastday=0)
 {
 	$nbFerie = 0;
 
@@ -572,7 +564,8 @@ function num_public_holiday($timestampStart, $timestampEnd, $countrycode='FR')
 	if ((($timestampEnd - $timestampStart) % 86400) != 0) return 'ErrorDates must use same hours and must be GMT dates';
 
 	$i=0;
-	while ($timestampStart < $timestampEnd && ($i < 50000))		// Loop end when equals (Test on i is a security loop to avoid infinite loop)
+	while (( ($lastday == 0 && $timestampStart < $timestampEnd) || ($lastday && $timestampStart <= $timestampEnd) )
+	    && ($i < 50000))		// Loop end when equals (Test on i is a security loop to avoid infinite loop)
 	{
 		$ferie=false;
 		$countryfound=0;
@@ -740,8 +733,9 @@ function num_public_holiday($timestampStart, $timestampEnd, $countrycode='FR')
  *
  *	@param	   int			$timestampStart     Timestamp start UTC
  *	@param	   int			$timestampEnd       Timestamp end UTC
- *	@param     int			$lastday            Last day is included, 0: non, 1:oui
+ *	@param     int			$lastday            Last day is included, 0: no, 1:yes
  *	@return    int								Number of days
+ *  @see also num_public_holiday, num_open_day
  */
 function num_between_day($timestampStart, $timestampEnd, $lastday=0)
 {
@@ -771,6 +765,7 @@ function num_between_day($timestampStart, $timestampEnd, $lastday=0)
  *  @param		int			$halfday			Tag to define half day when holiday start and end
  *  @param      string		$country_code       Country code (company country code if not defined)
  *	@return    	int								Number of days or hours
+ *  @see also num_between_day, num_public_holiday
  */
 function num_open_day($timestampStart, $timestampEnd, $inhour=0, $lastday=0, $halfday=0, $country_code='')
 {
@@ -788,7 +783,7 @@ function num_open_day($timestampStart, $timestampEnd, $inhour=0, $lastday=0, $ha
 	if ($timestampStart < $timestampEnd)
 	{
 		$numdays = num_between_day($timestampStart, $timestampEnd, $lastday);
-		$numholidays = num_public_holiday($timestampStart, $timestampEnd, $country_code);
+		$numholidays = num_public_holiday($timestampStart, $timestampEnd, $country_code, $lastday);
 		$nbOpenDay = $numdays - $numholidays;
 		$nbOpenDay.= " " . $langs->trans("Days");
 		if ($inhour == 1 && $nbOpenDay <= 3) $nbOpenDay = $nbOpenDay*24 . $langs->trans("HourShort");
@@ -813,11 +808,12 @@ function num_open_day($timestampStart, $timestampEnd, $inhour=0, $lastday=0, $ha
  *  This replace old function monthArrayOrSelected.
  *
  *	@param	Translate	$outputlangs	Object langs
+ *  @param	int			$short			1=Return short label
  *	@return array						Month string or array if selected < 0
  */
-function monthArray($outputlangs)
+function monthArray($outputlangs,$short=0)
 {
-    $montharray = array (
+	$montharray = array (
 	    1  => $outputlangs->trans("January"),
 	    2  => $outputlangs->trans("February"),
 	    3  => $outputlangs->trans("March"),
@@ -832,6 +828,24 @@ function monthArray($outputlangs)
 	    12 => $outputlangs->trans("December")
     );
 
-    return $montharray;
+	if (! empty($short))
+	{
+		$montharray = array (
+		    1  => $outputlangs->trans("JanuaryMin"),
+		    2  => $outputlangs->trans("FebruaryMin"),
+		    3  => $outputlangs->trans("MarchMin"),
+		    4  => $outputlangs->trans("AprilMin"),
+		    5  => $outputlangs->trans("MayMin"),
+		    6  => $outputlangs->trans("JuneMin"),
+		    7  => $outputlangs->trans("JulyMin"),
+		    8  => $outputlangs->trans("AugustMin"),
+		    9  => $outputlangs->trans("SeptemberMin"),
+		    10 => $outputlangs->trans("OctoberMin"),
+		    11 => $outputlangs->trans("NovemberMin"),
+		    12 => $outputlangs->trans("DecemberMin")
+			);
+	}
+
+	return $montharray;
 }
 

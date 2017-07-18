@@ -35,7 +35,7 @@ if (! defined('NOREQUIREHTML'))  define('NOREQUIREHTML',1);
 
 require_once '../main.inc.php';
 
-if (GETPOST('lang')) $langs->setDefaultLang(GETPOST('lang'));	// If language was forced on URL by the main.inc.php
+if (GETPOST('lang', 'aZ09')) $langs->setDefaultLang(GETPOST('lang', 'aZ09'));	// If language was forced on URL by the main.inc.php
 $langs->load("main");
 $right=($langs->trans("DIRECTION")=='rtl'?'left':'right');
 $left=($langs->trans("DIRECTION")=='rtl'?'right':'left');
@@ -85,7 +85,7 @@ if (! class_exists('MenuManager'))
 }
 $menumanager = new MenuManager($db, empty($user->societe_id)?0:1);
 $menumanager->loadMenu('all','all');
-
+//var_dump($menumanager->tabMenu);exit;
 $menumanager->showmenu('jmobile');
 
 print '</body>';

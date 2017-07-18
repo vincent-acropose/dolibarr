@@ -50,7 +50,7 @@ class Interfaces
      *   This function call all qualified triggers.
      *
      *   @param		string		$action     Trigger event code
-     *   @param     object		$object     Objet concern
+     *   @param     object		$object     Objet concerned. Some context information may also be provided into array property object->context.
      *   @param     User		$user       Objet user
      *   @param     Lang		$langs      Objet lang
      *   @param     Conf		$conf       Objet conf
@@ -66,18 +66,24 @@ class Interfaces
         	$this->errors[]=$this->error;
             return -1;
         }
-        if (! is_object($user) || ! is_object($langs))	// Warning
+        if (! is_object($langs))	// Warning
         {
             dol_syslog(get_class($this).'::run_triggers was called with wrong parameters action='.$action.' object='.is_object($object).' user='.is_object($user).' langs='.is_object($langs).' conf='.is_object($conf), LOG_WARNING);
         }
-
+        if (! is_object($user))	    // Warning
+        {
+            dol_syslog(get_class($this).'::run_triggers was called with wrong parameters action='.$action.' object='.is_object($object).' user='.is_object($user).' langs='.is_object($langs).' conf='.is_object($conf), LOG_WARNING);
+            global $db;
+            $user = new User($db);
+        }
+        
         $nbfile = $nbtotal = $nbok = $nbko = 0;
 
         $files = array();
         $modules = array();
         $orders = array();
 		$i=0;
-
+		
 		$dirtriggers=array_merge(array('/core/triggers'),$conf->modules_parts['triggers']);
         foreach($dirtriggers as $reldir)
         {
@@ -100,20 +106,7 @@ class Interfaces
 						$part3=$reg[3];
 
                         $nbfile++;
-
-                        $modName = "Interface".ucfirst($reg[3]);
-                        //print "file=$file"; print "modName=$modName"; exit;
-                        if (in_array($modName,$modules))
-                        {
-                            $langs->load("errors");
-                            dol_syslog(get_class($this)."::run_triggers action=".$action." ".$langs->trans("ErrorDuplicateTrigger",$modName,"/htdocs/core/triggers/"), LOG_ERR);
-                            continue;
-                        }
-                        else
-                        {
-                            include_once $newdir.'/'.$file;
-                        }
-
+                        
                         // Check if trigger file is disabled by name
                         if (preg_match('/NORUN$/i',$file)) continue;
                         // Check if trigger file is for a particular module
@@ -131,8 +124,28 @@ class Interfaces
                             continue;
                         }
 
+                        $modName = "Interface".ucfirst($reg[3]);
+                        //print "file=$file - modName=$modName\n";
+                        if (in_array($modName,$modules))    // $modules = list of modName already loaded
+                        {
+                            $langs->load("errors");
+                            dol_syslog(get_class($this)."::run_triggers action=".$action." ".$langs->trans("ErrorDuplicateTrigger", $newdir."/".$file, $fullpathfiles[$modName]), LOG_WARNING);
+                            continue;
+                        }
+                        
+                        try {
+                            //print 'Todo for '.$modName." : ".$newdir.'/'.$file."\n";
+                            include_once $newdir.'/'.$file;
+                            //print 'Done for '.$modName."\n";
+                        }
+                        catch(Exception $e)
+                        {
+                            dol_syslog('ko for '.$modName." ".$e->getMessage()."\n", LOG_ERR);
+                        }
+                        
                         $modules[$i] = $modName;
                         $files[$i] = $file;
+                        $fullpathfiles[$modName] = $newdir.'/'.$file;
                         $orders[$i] = $part1.'_'.$part2.'_'.$part3;   // Set sort criteria value
 
                         $i++;
@@ -142,7 +155,7 @@ class Interfaces
         }
 
         asort($orders);
-
+        
         // Loop on each trigger
         foreach ($orders as $key => $value)
         {
@@ -184,10 +197,12 @@ class Interfaces
                 if ($result < 0)
                 {
                     // Action KO
+                    //dol_syslog("Error in trigger ".$action." - Nb of error string returned = ".count($objMod->errors), LOG_ERR);
                     $nbtotal++;
                     $nbko++;
                     if (! empty($objMod->errors)) $this->errors=array_merge($this->errors,$objMod->errors);
                     else if (! empty($objMod->error))  $this->errors[]=$objMod->error;
+                    //dol_syslog("Error in trigger ".$action." - Nb of error string returned = ".count($this->errors), LOG_ERR);
                 }
             }
             else
@@ -198,7 +213,7 @@ class Interfaces
 
         if ($nbko)
         {
-            dol_syslog(get_class($this)."::run_triggers action=".$action." Files found: ".$nbfile.", Files launched: ".$nbtotal.", Done: ".$nbok.", Failed: ".$nbko, LOG_ERR);
+            dol_syslog(get_class($this)."::run_triggers action=".$action." Files found: ".$nbfile.", Files launched: ".$nbtotal.", Done: ".$nbok.", Failed: ".$nbko." - Nb of error string returned in this->errors = ".count($this->errors), LOG_ERR);
             return -$nbko;
         }
         else

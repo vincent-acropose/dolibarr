@@ -89,7 +89,7 @@ class Facturation
      */
     public function ajoutArticle()
     {
-        global $conf,$db;
+        global $conf,$db,$mysoc;
 
         $thirdpartyid = $_SESSION['CASHDESK_ID_THIRDPARTY'];
 
@@ -99,31 +99,32 @@ class Facturation
         $product = new Product($db);
         $product->fetch($this->id);
 
-        $sql = "SELECT taux";
-        $sql.= " FROM ".MAIN_DB_PREFIX."c_tva";
-        $sql.= " WHERE rowid = ".$this->tva();
 
-        dol_syslog("ajoutArticle", LOG_DEBUG);
-        $resql = $db->query($sql);
+        $vatrowid = $this->tva();
 
-        if ($resql)
+        $tmp = getTaxesFromId($vatrowid);
+        $txtva = $tmp['rate'].(empty($tmp['code'])?'':' ('.$tmp['code'].')');
+        $vat_npr = $tmp['npr'];
+
+        $localtaxarray = getLocalTaxesFromRate($vatrowid, 0, $societe, $mysoc, 1);
+
+        // Clean vat code
+        $vat_src_code='';
+        if (preg_match('/\((.*)\)/', $txtva, $reg))
         {
-            $obj = $db->fetch_object($resql);
-            $vat_rate=$obj->taux;
-            //var_dump($vat_rate);exit;
-        }
-        else
-       {
-            dol_print_error($db);
+            $vat_src_code = $reg[1];
+            $txtva = preg_replace('/\s*\(.*\)/', '', $txtva);    // Remove code into vatrate.
         }
 
         // Define part of HT, VAT, TTC
-        $resultarray=calcul_price_total($this->qte,$this->prix(),$this->remisePercent(),$vat_rate,0,0,0,'HT',0,$product->type,0);
+        $resultarray=calcul_price_total($this->qte, $this->prix(), $this->remisePercent(), $txtva, -1, -1, 0, 'HT', $use_npr, $product->type, $mysoc, $localtaxarray);
 
         // Calcul du total ht sans remise
         $total_ht = $resultarray[0];
         $total_vat = $resultarray[1];
         $total_ttc = $resultarray[2];
+        $total_localtax1 = $resultarray[9];
+        $total_localtax2 = $resultarray[10];
 
         // Calcul du montant de la remise
         if ($this->remisePercent())
@@ -155,11 +156,14 @@ class Facturation
 
         $newcartarray[$i]['fk_article']=$this->id;
         $newcartarray[$i]['qte']=$this->qte();
-        $newcartarray[$i]['fk_tva']=$this->tva();
+        $newcartarray[$i]['fk_tva']=$this->tva();   // Vat rowid
         $newcartarray[$i]['remise_percent']=$remise_percent;
         $newcartarray[$i]['remise']=price2num($montant_remise_ht);
         $newcartarray[$i]['total_ht']=price2num($total_ht,'MT');
         $newcartarray[$i]['total_ttc']=price2num($total_ttc,'MT');
+        $newcartarray[$i]['total_vat']=price2num($total_vat, 'MT');
+        $newcartarray[$i]['total_localtax1']=price2num($total_localtax1, 'MT');
+        $newcartarray[$i]['total_localtax2']=price2num($total_localtax2, 'MT');
         $_SESSION['poscart']=$newcartarray;
 
         $this->raz();
@@ -213,11 +217,17 @@ class Facturation
             // Total HT
             $remise = $tab[$i]['remise'];
             $total_ht += ($tab[$i]['total_ht']);
+            $total_vat += ($tab[$i]['total_vat']);
             $total_ttc += ($tab[$i]['total_ttc']);
+            $total_localtax1 += ($tab[$i]['total_localtax1']);
+            $total_localtax2 += ($tab[$i]['total_localtax2']);
         }
 
         $this->prix_total_ttc = $total_ttc;
         $this->prix_total_ht = $total_ht;
+        $this->prix_total_vat = $total_vat;
+        $this->prix_total_localtax1 = $total_localtax1;
+        $this->prix_total_localtax2 = $total_localtax2;
 
         $this->montant_tva = $total_ttc - $total_ht;
         //print $this->prix_total_ttc.'eeee'; exit;
@@ -442,9 +452,8 @@ class Facturation
      * @param	int		$aTva		Vat
      * @return	int					Vat
      */
-    public function tva ( $aTva=null )
+    public function tva($aTva=null)
     {
-
         if ( !$aTva ) {
 
             return $this->tva;
@@ -467,9 +476,8 @@ class Facturation
      * @param string	$aNumFacture		Invoice ref
      * @return	string						Invoice ref
      */
-    public function numInvoice( $aNumFacture=null )
+    public function numInvoice($aNumFacture=null)
     {
-
         if ( !$aNumFacture ) {
 
             return $this->num_facture;

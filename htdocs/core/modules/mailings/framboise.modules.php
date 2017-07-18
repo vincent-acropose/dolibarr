@@ -23,12 +23,10 @@ include_once DOL_DOCUMENT_ROOT.'/core/modules/mailings/modules_mailings.php';
  */
 class mailing_framboise extends MailingTargets
 {
-	// CHANGE THIS: Put here a name not already used
 	var $name='MembersCategories';
-	// CHANGE THIS: Put here a description of your selector module.
-	// This label is used if no translation found for key MailingModuleDescXXX where XXX=name is found
+	// This label is used if no translation is found for key XXX neither MailingModuleDescXXX where XXX=name is found
 	var $desc="Foundation members with emails (by categories)";
-	// CHANGE THIS: Set to 1 if selector is available for admin users only
+	// Set to 1 if selector is available for admin users only
 	var $require_admin=0;
 
 	var $require_module=array("adherent","categorie");
@@ -150,8 +148,8 @@ class mailing_framboise extends MailingTargets
 	 *	For example if this selector is used to extract 500 different
 	 *	emails from a text file, this function must return 500.
 	 *
-	 *  @param	string	$sql		Requete sql de comptage
-	 *	@return		int			Nb of recipients
+	 *  @param		string	$sql		Requete sql de comptage
+	 *	@return		int					Nb of recipients
 	 */
 	function getNbOfRecipients($sql='')
 	{
@@ -198,7 +196,7 @@ class mailing_framboise extends MailingTargets
 			$num = $this->db->num_rows($resql);
 
 			$s.='<option value="0">&nbsp;</option>';
-			if (! $num) $s.='<option value="0" disabled="disabled">'.$langs->trans("NoCategoriesDefined").'</option>';
+			if (! $num) $s.='<option value="0" disabled>'.$langs->trans("NoCategoriesDefined").'</option>';
 
 			$i = 0;
 			while ($i < $num)

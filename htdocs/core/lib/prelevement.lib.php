@@ -44,11 +44,6 @@ function prelevement_prepare_head(BonPrelevement $object)
 	$head[$h][2] = 'prelevement';
 	$h++;
 
-	$head[$h][0] = DOL_URL_ROOT.'/compta/prelevement/lignes.php?id='.$object->id;
-	$head[$h][1] = $langs->trans("Lines");
-	$head[$h][2] = 'lines';
-	$h++;
-
 	$head[$h][0] = DOL_URL_ROOT.'/compta/prelevement/factures.php?id='.$object->id;
 	$head[$h][1] = $langs->trans("Bills");
 	$head[$h][2] = 'invoices';
@@ -83,9 +78,9 @@ function prelevement_prepare_head(BonPrelevement $object)
 function prelevement_check_config()
 {
 	global $conf;
-    if(empty($conf->global->PRELEVEMENT_USER)) return -1;
 	if(empty($conf->global->PRELEVEMENT_ID_BANKACCOUNT)) return -1;
-	if(empty($conf->global->PRELEVEMENT_NUMERO_NATIONAL_EMETTEUR)) return -1;
+	if(empty($conf->global->PRELEVEMENT_ICS)) return -1;
+    if(empty($conf->global->PRELEVEMENT_USER)) return -1;
 	return 0;
 }
 

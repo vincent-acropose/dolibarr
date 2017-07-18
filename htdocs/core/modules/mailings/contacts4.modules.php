@@ -32,8 +32,8 @@ include_once DOL_DOCUMENT_ROOT.'/core/modules/mailings/modules_mailings.php';
 class mailing_contacts4 extends MailingTargets
 {
 	var $name='ContactsByCategory';
-    // This label is used if no translation is found for key MailingModuleDescXXX where XXX=name is found
-    var $desc='Add contacts by category';
+	// This label is used if no translation is found for key XXX neither MailingModuleDescXXX where XXX=name is found
+	var $desc='Add contacts by category';
     var $require_admin=0;
 
     var $require_module=array();
@@ -146,7 +146,7 @@ class mailing_contacts4 extends MailingTargets
             $statssql[$i].= " AND sp.email != ''";    // Note that null != '' is false
             $statssql[$i].= " AND sp.entity IN (".getEntity('societe', 1).")";
             $statssql[$i].= " AND cs.fk_categorie = c.rowid";
-            $statssql[$i].= " AND cs.fk_societe = sp.fk_soc";
+            $statssql[$i].= " AND cs.fk_soc = sp.fk_soc";
             $statssql[$i].= " GROUP BY c.label";
             $statssql[$i].= " ORDER BY nb DESC";
             $statssql[$i].= " LIMIT $i,1";
@@ -159,7 +159,7 @@ class mailing_contacts4 extends MailingTargets
     /**
      *		Return here number of distinct emails returned by your selector.
      *
-     *		@param	string	$sql		Requete sql de comptage
+     *		@param		string	$sql		Requete sql de comptage
      *		@return		int		Number of recipients
      */
     function getNbOfRecipients($sql='')
@@ -185,7 +185,7 @@ class mailing_contacts4 extends MailingTargets
         $sql.= " AND sp.entity IN (".getEntity('societe', 1).")";
         $sql.= " AND sp.email != ''"; // Note that null != '' is false
         $sql.= " AND cs.fk_categorie = c.rowid";
-        $sql.= " AND cs.fk_societe = sp.fk_soc";
+        $sql.= " AND cs.fk_soc = sp.fk_soc";
         */
     	// La requete doit retourner un champ "nb" pour etre comprise
     	// par parent::getNbOfRecipients
@@ -222,16 +222,21 @@ class mailing_contacts4 extends MailingTargets
 	        $s='';
 	        $s.='<select name="filter" class="flat">';
 	        $s.='<option value="all"></option>';
-	        if ($resql)
+
+	        $num = $this->db->num_rows($resql);
+	        if ($num)
 	        {
-	            $num = $this->db->num_rows($resql);
-	            $i = 0;
-	            while ($i < $num)
-	            {
-	                $obj = $this->db->fetch_object($resql);
-	                $s.='<option value="'.$obj->label.'">'.$obj->label.' ('.$obj->nb.')</option>';
-	                $i++;
-	            }
+    	        $i = 0;
+                while ($i < $num)
+                {
+                    $obj = $this->db->fetch_object($resql);
+                    $s.='<option value="'.$obj->label.'">'.$obj->label.' ('.$obj->nb.')</option>';
+                    $i++;
+                }
+	        }
+	        else
+	        {
+                $s.='<option value="-1" disabled="disabled">'.$langs->trans("NoContactWithCategoryFound").'</option>';
 	        }
 	        $s.='</select>';
 	        return $s;

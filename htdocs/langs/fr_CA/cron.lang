@@ -1,3 +1,7 @@
 # Dolibarr language file - Source file is en_US - cron
-CronExplainHowToRunUnix=On Unix environment you should use the following crontab entry to run the command line each 5 minutes
-CronExplainHowToRunWin=On Microsoft(tm) Windows environement you can use Scheduled task tools to run the command line each 5 minutes
+Permission23101 =Voir les travaux planifiés
+Permission23102 =Créer/Modifier des travaux planifiées
+Permission23103 =Effacer travail planifié
+Permission23104 =Exécuté Travail planifié
+CronNone=Aucune
+CronFrom=De

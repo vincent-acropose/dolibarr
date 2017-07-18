@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2006-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2006-2016 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2012      JF FERRY             <jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,8 +21,7 @@
  *       \brief      File that is entry point to call Dolibarr WebServices
  */
 
-// This is to make Dolibarr working with Plesk
-set_include_path($_SERVER['DOCUMENT_ROOT'].'/htdocs');
+if (! defined("NOCSRFCHECK"))    define("NOCSRFCHECK",'1');
 
 require_once("../master.inc.php");
 require_once(NUSOAP_PATH.'/nusoap.php');		// Include SOAP
@@ -124,7 +123,7 @@ $server->wsdl->addComplexType(
  				)
  		)
  );
- 
+
  /*
   * An image
  */
@@ -217,7 +216,7 @@ function getCategory($authentication,$id)
 			if ($result > 0)
 			{
 					$dir = (!empty($conf->categorie->dir_output)?$conf->categorie->dir_output:$conf->service->dir_output);
-					$pdir = get_exdir($categorie->id,2) . $categorie->id ."/photos/";
+					$pdir = get_exdir($categorie->id,2,0,0,$categorie,'category') . $categorie->id ."/photos/";
 					$dir = $dir . '/'. $pdir;
 
 					$cat = array(
@@ -238,7 +237,7 @@ function getCategory($authentication,$id)
 					 	foreach($cats as $fille)
 						{
 							$dir = (!empty($conf->categorie->dir_output)?$conf->categorie->dir_output:$conf->service->dir_output);
-							$pdir = get_exdir($fille->id,2) . $fille->id ."/photos/";
+							$pdir = get_exdir($fille->id,2,0,0,$categorie,'category') . $fille->id ."/photos/";
 							$dir = $dir . '/'. $pdir;
 							$cat['filles'][] = array(
 								'id'=>$fille->id,

@@ -1,2 +1,15 @@
 # Dolibarr language file - Source file is en_US - bills
-ClosePaidInvoicesAutomatically=Classify "Paid" all standard, situation or replacement invoices entirely paid.
+ConfirmDeletePayment=Are you sure you want to delete this payment ?
+BillStatusPaid=Pagado
+BillStatusStarted=Empezado
+BillShortStatusPaid=Pagado
+BillShortStatusValidated=Validado
+BillShortStatusStarted=Empezado
+BillShortStatusClosedUnpaid=Cerrado
+BillFrom=De
+ReasonDiscount=Razón
+PaymentTypeCB=Tarjeta de crédito
+PaymentTypeShortCB=Tarjeta de crédito
+PaymentTypeCHQ=Verificar
+PaymentTypeShortCHQ=Verificar
+BankDetails=Cuentas bancarias

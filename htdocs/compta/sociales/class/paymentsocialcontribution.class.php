@@ -23,28 +23,30 @@
  */
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/sociales/class/chargesociales.class.php';
 
 
-/**     \class      PaymentSocialContribution
- *		\brief      Class to manage payments of social contributions
+/**
+ *	Class to manage payments of social contributions
  */
 class PaymentSocialContribution extends CommonObject
 {
 	public $element='paiementcharge';			//!< Id that identify managed objects
 	public $table_element='paiementcharge';	//!< Name of table without prefix where object is stored
 
-	var $id;
-	var $ref;
-
 	var $fk_charge;
 	var $datec='';
 	var $tms='';
 	var $datep='';
+	/**
+	 * @deprecated
+	 * @see amount
+	 */
+	var $total;
     var $amount;            // Total amount of payment
     var $amounts=array();   // Array of amounts
 	var $fk_typepaiement;
 	var $num_paiement;
-	var $note;
 	var $fk_bank;
 	var $fk_user_creat;
 	var $fk_user_modif;
@@ -63,10 +65,11 @@ class PaymentSocialContribution extends CommonObject
 	 *  Create payment of social contribution into database.
      *  Use this->amounts to have list of lines for the payment
      *
-	 *  @param      User		$user   User making payment
-	 *  @return     int     			<0 if KO, id of payment if OK
+	 *  @param      User	$user   				User making payment
+	 *	@param		int		$closepaidcontrib   	1=Also close payed contributions to paid, 0=Do nothing more
+	 *  @return     int     						<0 if KO, id of payment if OK
 	 */
-	function create($user)
+	function create($user, $closepaidcontrib=0)
 	{
 		global $conf, $langs;
 
@@ -74,10 +77,12 @@ class PaymentSocialContribution extends CommonObject
 
         $now=dol_now();
 
-        // Validate parametres
+		dol_syslog(get_class($this)."::create", LOG_DEBUG);
+        
+		// Validate parametres
 		if (! $this->datepaye)
 		{
-			$this->error='ErrorBadValueForParameter';
+			$this->error='ErrorBadValueForParameterCreatePaymentSocialContrib';
 			return -1;
 		}
 
@@ -116,11 +121,40 @@ class PaymentSocialContribution extends CommonObject
 			$sql.= " ".$this->paiementtype.", '".$this->db->escape($this->num_paiement)."', '".$this->db->escape($this->note)."', ".$user->id.",";
 			$sql.= " 0)";
 
-			dol_syslog(get_class($this)."::create", LOG_DEBUG);
 			$resql=$this->db->query($sql);
 			if ($resql)
 			{
 				$this->id = $this->db->last_insert_id(MAIN_DB_PREFIX."paiementcharge");
+				
+				// Insere tableau des montants / factures
+				foreach ($this->amounts as $key => $amount)
+				{
+					$contribid = $key;
+					if (is_numeric($amount) && $amount <> 0)
+					{
+						$amount = price2num($amount);
+
+						// If we want to closed payed invoices
+						if ($closepaidcontrib)
+						{
+							
+							$contrib=new ChargeSociales($this->db);
+							$contrib->fetch($contribid);
+							$paiement = $contrib->getSommePaiement();
+							//$creditnotes=$contrib->getSumCreditNotesUsed();
+							$creditnotes=0;
+							//$deposits=$contrib->getSumDepositsUsed();
+							$deposits=0;
+							$alreadypayed=price2num($paiement + $creditnotes + $deposits,'MT');
+							$remaintopay=price2num($contrib->amount - $paiement - $creditnotes - $deposits,'MT');
+							if ($remaintopay == 0)
+							{
+								$result=$contrib->set_paid($user, '', '');
+							}
+							else dol_syslog("Remain to pay for conrib ".$contribid." not null. We do nothing.");
+						}
+					}
+				}
 			}
 			else
 			{
@@ -579,9 +613,9 @@ class PaymentSocialContribution extends CommonObject
 	}
 
 	/**
-	 *  Renvoie nom clicable (avec eventuellement le picto)
+	 *  Return clicable name (with picto eventually)
 	 *
-	 *	@param	int		$withpicto		0=Pas de picto, 1=Inclut le picto dans le lien, 2=Picto seul
+	 *	@param	int		$withpicto		0=No picto, 1=Include picto into link, 2=Only picto
 	 * 	@param	int		$maxlen			Longueur max libelle
 	 *	@return	string					Chaine avec URL
 	 */
@@ -592,15 +626,16 @@ class PaymentSocialContribution extends CommonObject
 		$result='';
 
 		if (empty($this->ref)) $this->ref=$this->lib;
+        $label = $langs->trans("ShowPayment").': '.$this->ref;
 
 		if (!empty($this->id))
 		{
-			$lien = '<a href="'.DOL_URL_ROOT.'/compta/payment_sc/card.php?id='.$this->id.'">';
-			$lienfin='</a>';
+			$link = '<a href="'.DOL_URL_ROOT.'/compta/payment_sc/card.php?id='.$this->id.'" title="'.dol_escape_htmltag($label, 1).'" class="classfortooltip">';
+			$linkend='</a>';
 
-			if ($withpicto) $result.=($lien.img_object($langs->trans("ShowPayment").': '.$this->ref,'payment').$lienfin.' ');
+            if ($withpicto) $result.=($link.img_object($label, 'payment', 'class="classfortooltip"').$linkend.' ');
 			if ($withpicto && $withpicto != 2) $result.=' ';
-			if ($withpicto != 2) $result.=$lien.($maxlen?dol_trunc($this->ref,$maxlen):$this->ref).$lienfin;
+			if ($withpicto != 2) $result.=$link.($maxlen?dol_trunc($this->ref,$maxlen):$this->ref).$linkend;
 		}
 
 		return $result;

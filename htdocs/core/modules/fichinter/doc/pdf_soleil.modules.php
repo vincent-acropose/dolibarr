@@ -5,6 +5,7 @@
  * Copyright (C) 2008		Raphael Bertrand (Resultic)	<raphael.bertrand@resultic.fr>
  * Copyright (C) 2011		Fabrice CHERRIER
  * Copyright (C) 2013		Cédric Salvador				<csalvador@gpcsolutions.fr>
+ * Copyright (C) 2015       Marcos García               <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -133,7 +134,7 @@ class pdf_soleil extends ModelePDFFicheinter
 				$dir = $conf->ficheinter->dir_output . "/" . $objectref;
 				$file = $dir . "/" . $objectref . ".pdf";
 			}
-						
+
 			if (! file_exists($dir))
 			{
 				if (dol_mkdir($dir) < 0)
@@ -241,7 +242,7 @@ class pdf_soleil extends ModelePDFFicheinter
 
 				$pdf->SetXY($this->marge_gauche, $tab_top + 5);
 				$text=$object->description;
-				if ($object->duree > 0)
+				if ($object->duration > 0)
 				{
 				    $totaltime=convertSecondToTime($object->duration,'all',$conf->global->MAIN_DURATION_OF_WORKDAY);
 				    $text.=($text?' - ':'').$langs->trans("Total").": ".$totaltime;
@@ -274,7 +275,7 @@ class pdf_soleil extends ModelePDFFicheinter
 
 						// Description of product line
 						$curX = $this->posxdesc-1;
-						
+
 						// Description of product line
 						$txt=$outputlangs->transnoentities("Date")." : ".dol_print_date($objectligne->datei,'dayhour',false,$outputlangs,true);
 						if ($objectligne->duration > 0)
@@ -387,7 +388,7 @@ class pdf_soleil extends ModelePDFFicheinter
 				$parameters=array('file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs);
 				global $action;
 				$reshook=$hookmanager->executeHooks('afterPDFCreation',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
-				
+
 				if (! empty($conf->global->MAIN_UMASK))
 				@chmod($file, octdec($conf->global->MAIN_UMASK));
 
@@ -404,8 +405,6 @@ class pdf_soleil extends ModelePDFFicheinter
 			$this->error=$langs->trans("ErrorConstantNotDefined","FICHEINTER_OUTPUTDIR");
 			return 0;
 		}
-		$this->error=$langs->trans("ErrorUnknown");
-		return 0;   // Erreur par defaut
 	}
 
 	/**
@@ -436,9 +435,9 @@ class pdf_soleil extends ModelePDFFicheinter
 		$pdf->MultiCell(0, 3, '');		// Set interline to 3
 		$pdf->SetXY($this->marge_gauche, $tab_top + 8);
 		$text=$object->description;
-		if ($object->duree > 0)
+		if ($object->duration > 0)
 		{
-			$totaltime=convertSecondToTime($object->duree,'all',$conf->global->MAIN_DURATION_OF_WORKDAY);
+			$totaltime=convertSecondToTime($object->duration,'all',$conf->global->MAIN_DURATION_OF_WORKDAY);
 			$text.=($text?' - ':'').$langs->trans("Total").": ".$totaltime;
 		}
 		$desc=dol_htmlentitiesbr($text,1);
@@ -551,12 +550,12 @@ class pdf_soleil extends ModelePDFFicheinter
 		$pdf->SetTextColor(0,0,60);
 		$pdf->MultiCell(100, 3, $outputlangs->transnoentities("Date")." : " . dol_print_date($object->datec,"day",false,$outputlangs,true), '', 'R');
 
-		if ($object->client->code_client)
+		if ($object->thirdparty->code_client)
 		{
 			$posy+=4;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("CustomerCode")." : " . $outputlangs->transnoentities($object->client->code_client), '', 'R');
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("CustomerCode")." : " . $outputlangs->transnoentities($object->thirdparty->code_client), '', 'R');
 		}
 
 		if ($showaddress)
@@ -571,7 +570,7 @@ class pdf_soleil extends ModelePDFFicheinter
 				$carac_emetteur .= ($carac_emetteur ? "\n" : '' ).$outputlangs->transnoentities("Name").": ".$outputlangs->convToOutputCharset($object->user->getFullName($outputlangs))."\n";
 			}
 
-			$carac_emetteur .= pdf_build_address($outputlangs, $this->emetteur, $object->client);
+			$carac_emetteur .= pdf_build_address($outputlangs, $this->emetteur, $object->thirdparty);
 
 			// Show sender
 			$posy=42;
@@ -609,20 +608,17 @@ class pdf_soleil extends ModelePDFFicheinter
 				$result=$object->fetch_contact($arrayidcontact[0]);
 			}
 
-			// Recipient name
-			if (! empty($usecontact))
-			{
-				// On peut utiliser le nom de la societe du contact
-				if (! empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) $socname = $object->contact->socname;
-				else $socname = $object->client->name;
-				$carac_client_name=$outputlangs->convToOutputCharset($socname);
-			}
-			else
-			{
-				$carac_client_name=$outputlangs->convToOutputCharset($object->client->name);
+			//Recipient name
+			// On peut utiliser le nom de la societe du contact
+			if ($usecontact && !empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) {
+				$thirdparty = $object->contact;
+			} else {
+				$thirdparty = $object->thirdparty;
 			}
 
-			$carac_client=pdf_build_address($outputlangs, $this->emetteur, $object->client, (isset($object->contact)?$object->contact:''), $usecontact, 'target');
+			$carac_client_name=pdfBuildThirdpartyName($thirdparty, $outputlangs);
+
+			$carac_client=pdf_build_address($outputlangs, $this->emetteur, $object->thirdparty, (isset($object->contact)?$object->contact:''), $usecontact, 'target',$object);
 
 			// Show recipient
 			$widthrecbox=100;
@@ -659,11 +655,12 @@ class pdf_soleil extends ModelePDFFicheinter
 	 * 		@param	Object		$object				Object to show
 	 *      @param	Translate	$outputlangs		Object lang for output
 	 *      @param	int			$hidefreetext		1=Hide free text
-	 *      @return	void
+	 *      @return	integer
 	 */
 	function _pagefoot(&$pdf,$object,$outputlangs,$hidefreetext=0)
 	{
-		$showdetails=0;
+		global $conf;
+		$showdetails=$conf->global->MAIN_GENERATE_DOCUMENTS_SHOW_FOOT_DETAILS;
 		return pdf_pagefoot($pdf,$outputlangs,'FICHINTER_FREE_TEXT',$this->emetteur,$this->marge_basse,$this->marge_gauche,$this->page_hauteur,$object,$showdetails,$hidefreetext);
 	}
 

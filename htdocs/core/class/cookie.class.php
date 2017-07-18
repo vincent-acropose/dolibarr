@@ -43,9 +43,10 @@ class DolCookie
 	var $cookie;
 
 	/**
-	 *  Constructor
+	 * Constructor
 	 *
-	 *  @param      string		$key      Personnal key
+	 * @param string $key Personnal key
+	 * @deprecated
 	 */
 	function __construct($key = '')
 	{
@@ -102,7 +103,7 @@ class DolCookie
 	 *
 	 * @param  	string		$cookie  	Cookie name
 	 * @param  	string		$value   	Cookie value
-	 * @param	string		$expire		Expiration
+	 * @param	integer		$expire		Expiration
 	 * @param	string		$path		Path of cookie
 	 * @param	string		$domain		Domain name
 	 * @param	int			$secure		0 or 1

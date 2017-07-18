@@ -106,6 +106,7 @@ function checkLoginPassEntity($usertotest,$passwordtotest,$entitytotest,$authmod
     				sleep(1);
     				$langs->load('main');
     				$langs->load('other');
+    				$langs->load('errors');
     				$_SESSION["dol_loginmesg"]=$langs->trans("ErrorFailedToLoadLoginFileForMode",$mode);
     			}
     		}
@@ -143,13 +144,11 @@ function dol_loginfunction($langs,$conf,$mysoc)
 
 	$dol_url_root = DOL_URL_ROOT;
 
-	$php_self = $_SERVER['PHP_SELF'];
-	$php_self.= $_SERVER["QUERY_STRING"]?'?'.$_SERVER["QUERY_STRING"]:'';
-	if (! preg_match('/mainmenu=/',$php_self)) $php_self.=(preg_match('/\?/',$php_self)?'&':'?').'mainmenu=home';
-
 	// Title
-	$title='Dolibarr '.DOL_VERSION;
+	$appli=constant('DOL_APPLICATION_TITLE');
+	$title=$appli.' '.DOL_VERSION;
 	if (! empty($conf->global->MAIN_APPLICATION_TITLE)) $title=$conf->global->MAIN_APPLICATION_TITLE;
+	$titletruedolibarrversion=DOL_VERSION;	// $title used by login template after the @ to inform of true Dolibarr version
 
 	// Note: $conf->css looks like '/theme/eldy/style.css.php'
 	$conf->css = "/theme/".(GETPOST('theme')?GETPOST('theme','alpha'):$conf->theme)."/style.css.php";
@@ -212,7 +211,7 @@ function dol_loginfunction($langs,$conf,$mysoc)
 	// Execute hook getLoginPageOptions
 	// Should be an array with differents options in $hookmanager->resArray
 	$parameters=array('entity' => GETPOST('entity','int'));
-	$hookmanager->executeHooks('getLoginPageOptions',$parameters);    // Note that $action and $object may have been modified by some hooks
+	$reshook = $hookmanager->executeHooks('getLoginPageOptions',$parameters);    // Note that $action and $object may have been modified by some hooks. resArray is filled by hook.
 
 	// Login
 	$login = (! empty($hookmanager->resArray['username']) ? $hookmanager->resArray['username'] : (GETPOST("username","alpha") ? GETPOST("username","alpha") : $demologin));
@@ -238,7 +237,6 @@ function dol_loginfunction($langs,$conf,$mysoc)
 	elseif (is_readable(DOL_DOCUMENT_ROOT.'/theme/dolibarr_logo.png'))
 	{
 		$urllogo=DOL_URL_ROOT.'/theme/dolibarr_logo.png';
-
 	}
 
 	// Security graphical code
@@ -291,7 +289,7 @@ function dol_loginfunction($langs,$conf,$mysoc)
 	$jquerytheme = 'smoothness';
 	if (! empty($conf->global->MAIN_USE_JQUERY_THEME)) $jquerytheme = $conf->global->MAIN_USE_JQUERY_THEME;
 
-	// Set dol_hide_topmenu, dol_hide_leftmenu, dol_optimize_smallscreen, dol_nomousehover
+	// Set dol_hide_topmenu, dol_hide_leftmenu, dol_optimize_smallscreen, dol_no_mouse_hover
 	$dol_hide_topmenu=GETPOST('dol_hide_topmenu','int');
 	$dol_hide_leftmenu=GETPOST('dol_hide_leftmenu','int');
 	$dol_optimize_smallscreen=GETPOST('dol_optimize_smallscreen','int');
@@ -417,7 +415,10 @@ function encodedecode_dbpassconf($level=0)
 		if ($fp = @fopen($file,'w'))
 		{
 			fputs($fp, $config);
+			fflush($fp);
 			fclose($fp);
+			clearstatcache();
+
 			// It's config file, so we set read permission for creator only.
 			// Should set permission to web user and groups for users used by batch
 			//@chmod($file, octdec('0600'));
@@ -440,7 +441,7 @@ function encodedecode_dbpassconf($level=0)
 /**
  * Return a generated password using default module
  *
- * @param		boolean		$generic		true=Create generic password (use default crypt function), false=Use the configured password generation module
+ * @param		boolean		$generic		true=Create generic password (use md5, sha1 depending on setup), false=Use the configured password generation module
  * @return		string						New value for password
  */
 function getRandomPassword($generic=false)

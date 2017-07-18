@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2013 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2013-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,9 +31,10 @@ class box_graph_product_distribution extends ModeleBoxes
 	var $boxcode="productdistribution";
 	var $boximg="object_product";
 	var $boxlabel="BoxProductDistribution";
-	var $depends = array("product|service");
+	var $depends = array("product|service","facture|propal|commande");
 
 	var $db;
+	var $param;
 
 	var $info_box_head = array();
 	var $info_box_contents = array();
@@ -47,9 +48,15 @@ class box_graph_product_distribution extends ModeleBoxes
 	 */
 	function __construct($db,$param)
 	{
-		global $conf;
+		global $user, $conf;
 
 		$this->db=$db;
+
+		$this->hidden = ! (
+		    (! empty($conf->facture->enabled) && ! empty($user->rights->facture->lire))
+		 || (! empty($conf->commande->enabled) && ! empty($user->rights->commande->lire))
+		 || (! empty($conf->propal->enabled) && ! empty($user->rights->propale->lire))
+		);
 	}
 
 	/**
@@ -69,18 +76,6 @@ class box_graph_product_distribution extends ModeleBoxes
 		include_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 		include_once DOL_DOCUMENT_ROOT.'/comm/propal/class/propal.class.php';
 		include_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
-
-		$text = $langs->trans("BoxProductDistribution",$max);
-		$this->info_box_head = array(
-				'text' => $text,
-				'limit'=> dol_strlen($text),
-				'graph'=> 1,
-				'sublink'=>'',
-				'subtext'=>$langs->trans("Filter"),
-				'subpicto'=>'filter.png',
-				'subclass'=>'linkobject',
-				'target'=>'none'	// Set '' to get target="_blank"
-		);
 
 		$param_year='DOLUSERCOOKIE_box_'.$this->boxcode.'_year';
 		$param_showinvoicenb='DOLUSERCOOKIE_box_'.$this->boxcode.'_showinvoicenb';
@@ -104,11 +99,25 @@ class box_graph_product_distribution extends ModeleBoxes
 		}
 		if (empty($showinvoicenb) && empty($showpropalnb) && empty($showordernb)) { $showpropalnb=1; $showinvoicenb=1; $showordernb=1; }
 		if (empty($conf->facture->enabled) || empty($user->rights->facture->lire)) $showinvoicenb=0;
-		if (empty($conf->propal->enabled) || empty($user->rights->propal->lire)) $showpropalnb=0;
+		if (empty($conf->propal->enabled) || empty($user->rights->propale->lire)) $showpropalnb=0;
 		if (empty($conf->commande->enabled) || empty($user->rights->commande->lire)) $showordernb=0;
 
 		$nowarray=dol_getdate(dol_now(),true);
 		if (empty($year)) $year=$nowarray['year'];
+
+
+		$text = $langs->trans("BoxProductDistribution",$max).' - '.$langs->trans("Year").': '.$year;
+		$this->info_box_head = array(
+				'text' => $text,
+				'limit'=> dol_strlen($text),
+				'graph'=> 1,
+				'sublink'=>'',
+				'subtext'=>$langs->trans("Filter"),
+				'subpicto'=>'filter.png',
+				'subclass'=>'linkobject boxfilter',
+				'target'=>'none'	// Set '' to get target="_blank"
+		);
+
 
 		$nbofgraph=0;
 		if ($showinvoicenb) $nbofgraph++;
@@ -178,13 +187,14 @@ class box_graph_product_distribution extends ModeleBoxes
 					//$px1->mode='depth';
 					$px1->SetType(array('pie'));
 					$px1->SetTitle($langs->trans("BoxProductDistributionFor",$paramtitle,$langs->transnoentitiesnoconv("Invoices")));
+					$px1->combine = 0.05;
 
 					$px1->draw($filenamenb,$fileurlnb);
 				}
 			}
 		}
 
-		if (! empty($conf->propal->enabled) && ! empty($user->rights->propal->lire))
+		if (! empty($conf->propal->enabled) && ! empty($user->rights->propale->lire))
 		{
 			// Build graphic number of object. $data = array(array('Lib',val1,val2,val3),...)
 			if ($showpropalnb)
@@ -236,6 +246,7 @@ class box_graph_product_distribution extends ModeleBoxes
 					//$px2->mode='depth';
 					$px2->SetType(array('pie'));
 					$px2->SetTitle($langs->trans("BoxProductDistributionFor",$paramtitle,$langs->transnoentitiesnoconv("Proposals")));
+					$px2->combine = 0.05;
 
 					$px2->draw($filenamenb,$fileurlnb);
 				}
@@ -244,6 +255,8 @@ class box_graph_product_distribution extends ModeleBoxes
 
 		if (! empty($conf->commande->enabled) && ! empty($user->rights->commande->lire))
 		{
+			$langs->load("orders");
+
 			// Build graphic number of object. $data = array(array('Lib',val1,val2,val3),...)
 			if ($showordernb)
 			{
@@ -295,6 +308,8 @@ class box_graph_product_distribution extends ModeleBoxes
 					//$px3->mode='depth';
 					$px3->SetType(array('pie'));
 					$px3->SetTitle($langs->trans("BoxProductDistributionFor",$paramtitle,$langs->transnoentitiesnoconv("Orders")));
+					$px3->combine = 0.05;
+
 					$px3->draw($filenamenb,$fileurlnb);
 				}
 			}
@@ -322,17 +337,17 @@ class box_graph_product_distribution extends ModeleBoxes
 			$stringtoshow.='<input type="hidden" name="DOL_AUTOSET_COOKIE" value="DOLUSERCOOKIE_box_'.$this->boxcode.':year,showinvoicenb,showpropalnb,showordernb">';
 			if (! empty($conf->facture->enabled) || ! empty($user->rights->facture->lire))
 			{
-				$stringtoshow.='<input type="checkbox" name="'.$param_showinvoicenb.'"'.($showinvoicenb?' checked="true"':'').'> '.$langs->trans("ForCustomersInvoices");
+				$stringtoshow.='<input type="checkbox" name="'.$param_showinvoicenb.'"'.($showinvoicenb?' checked':'').'> '.$langs->trans("ForCustomersInvoices");
 				$stringtoshow.=' &nbsp; ';
 			}
-			if (! empty($conf->propal->enabled) || ! empty($user->rights->propal->lire))
+			if (! empty($conf->propal->enabled) || ! empty($user->rights->propale->lire))
 			{
-				$stringtoshow.='<input type="checkbox" name="'.$param_showpropalnb.'"'.($showpropalnb?' checked="true"':'').'> '.$langs->trans("ForProposals");
+				$stringtoshow.='<input type="checkbox" name="'.$param_showpropalnb.'"'.($showpropalnb?' checked':'').'> '.$langs->trans("ForProposals");
 				$stringtoshow.='&nbsp;';
 			}
 			if (! empty($conf->commande->enabled) || ! empty($user->rights->commande->lire))
 			{
-				$stringtoshow.='<input type="checkbox" name="'.$param_showordernb.'"'.($showordernb?' checked="true"':'').'> '.$langs->trans("ForCustomersOrders");
+				$stringtoshow.='<input type="checkbox" name="'.$param_showordernb.'"'.($showordernb?' checked':'').'> '.$langs->trans("ForCustomersOrders");
 			}
 			$stringtoshow.='<br>';
 			$stringtoshow.=$langs->trans("Year").' <input class="flat" size="4" type="text" name="'.$param_year.'" value="'.$year.'">';
@@ -383,11 +398,12 @@ class box_graph_product_distribution extends ModeleBoxes
 	 *
 	 *	@param	array	$head       Array with properties of box title
 	 *	@param  array	$contents   Array with properties of box lines
-	 *	@return	void
+	 *  @param	int		$nooutput	No print, only return string
+	 *	@return	string
 	 */
-	function showBox($head = null, $contents = null)
-	{
-		parent::showBox($this->info_box_head, $this->info_box_contents);
+    function showBox($head = null, $contents = null, $nooutput=0)
+    {
+		return parent::showBox($this->info_box_head, $this->info_box_contents, $nooutput);
 	}
 
 }

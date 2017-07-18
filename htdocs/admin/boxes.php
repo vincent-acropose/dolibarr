@@ -2,6 +2,7 @@
 /* Copyright (C) 2003-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2015       Jean-François Ferry		<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,11 +48,11 @@ $boxes = array();
 
 if ($action == 'addconst')
 {
-    dolibarr_set_const($db, "MAIN_BOXES_MAXLINES",$_POST["MAIN_BOXES_MAXLINES"],'',0,'',$conf->entity);
+    dolibarr_set_const($db, "MAIN_BOXES_MAXLINES", $_POST["MAIN_BOXES_MAXLINES"],'',0,'',$conf->entity);
+    dolibarr_set_const($db, "MAIN_ACTIVATE_FILECACHE", $_POST["MAIN_ACTIVATE_FILECACHE"],'chaine',0,'',$conf->entity);
 }
 
-if ($action == 'add')
-{
+if ($action == 'add') {
     $error=0;
     $db->begin();
     if (isset($_POST['boxid']) && is_array($_POST['boxid']))
@@ -85,7 +86,7 @@ if ($action == 'add')
                     }
                     else
                     {
-                        setEventMessage($db->lasterror(), 'errors');
+                        setEventMessages($db->lasterror(), null, 'errors');
                         $error++;
                     }
                 }
@@ -121,7 +122,7 @@ if ($action == 'add')
                         $resql = $db->query($sql);
                         if (! $resql)
                         {
-                            setEventMessage($db->lasterror(), 'errors');
+                            setEventMessages($db->lasterror(), null, 'errors');
                             $error++;
                         }
                     }
@@ -219,7 +220,7 @@ $form=new Form($db);
 
 llxHeader('',$langs->trans("Boxes"));
 
-print_fiche_titre($langs->trans("Boxes"),'','setup');
+print load_fiche_titre($langs->trans("Boxes"),'','title_setup');
 
 print $langs->trans("BoxesDesc")." ".$langs->trans("OnlyActiveElementsAreShown")."<br>\n";
 
@@ -323,12 +324,15 @@ $boxtoadd=InfoBox::listBoxes($db,'available',-1,null,$actives);
 
 print "<br>\n";
 print "\n\n".'<!-- Boxes Available -->'."\n";
-print_titre($langs->trans("BoxesAvailable"));
+print load_fiche_titre($langs->trans("BoxesAvailable"));
 
 print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">'."\n";
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">'."\n";
 print '<input type="hidden" name="action" value="add">'."\n";
-print '<table class="noborder" width="100%">'."\n";
+
+print '<div class="div-table-responsive-no-min">';
+print '<table class="tagtable liste centpercent">'."\n";
+
 print '<tr class="liste_titre">';
 print '<td width="300">'.$langs->trans("Box").'</td>';
 print '<td>'.$langs->trans("Note").'/'.$langs->trans("Parameters").'</td>';
@@ -368,15 +372,16 @@ foreach($boxtoadd as $box)
     print '<td class="center">';
     print $form->selectarray("boxid[".$box->box_id."][pos]", $pos_name, 0, 1, 0, 0, '', 1)."\n";
     print '<input type="hidden" name="boxid['.$box->box_id.'][value]" value="'.$box->box_id.'">'."\n";
-    //print '<input type="checkbox" class="flat" name="boxid['.$box->box_id.'][active]">'."\n";
     print '</td>';
 
     print '</tr>'."\n";
 }
 
 print '</table>'."\n";
+print '</div>';
+
 print '<div class="right">';
-print '<input type="submit" class="button"'.(count($boxtoadd)?'':' disabled="disabled"').' value="'.$langs->trans("Activate").'">';
+print '<input type="submit" class="button"'.(count($boxtoadd)?'':' disabled').' value="'.$langs->trans("Activate").'">';
 print '</div>'."\n";
 print '</form>';
 print "\n".'<!-- End Boxes Available -->'."\n";
@@ -386,9 +391,11 @@ print "\n".'<!-- End Boxes Available -->'."\n";
 $boxactivated=InfoBox::listBoxes($db,'activated',-1,null);
 //var_dump($boxactivated);
 print "<br>\n\n";
-print_titre($langs->trans("BoxesActivated"));
+print load_fiche_titre($langs->trans("BoxesActivated"));
 
-print '<table class="noborder" width="100%">';
+print '<div class="div-table-responsive-no-min">';
+print '<table class="tagtable liste">'."\n";
+
 print '<tr class="liste_titre">';
 print '<td width="300">'.$langs->trans("Box").'</td>';
 print '<td>'.$langs->trans("Note").'/'.$langs->trans("Parameters").'</td>';
@@ -441,13 +448,15 @@ foreach($boxactivated as $key => $box)
 	print '</tr>'."\n";
 }
 
-print '</table><br>';
+print '</table>';
+print '</div>';
+print '<br>';
 
 
 // Other parameters
 
 print "\n\n".'<!-- Other Const -->'."\n";
-print_titre($langs->trans("Other"));
+print load_fiche_titre($langs->trans("Other"));
 print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<input type="hidden" name="action" value="addconst">';
@@ -457,8 +466,8 @@ $var=false;
 print '<tr class="liste_titre">';
 print '<td class="liste_titre">'.$langs->trans("Parameter").'</td>';
 print '<td class="liste_titre">'.$langs->trans("Value").'</td>';
-print '<td class="liste_titre"></td>';
 print '</tr>';
+
 print '<tr '.$bc[$var].'>';
 print '<td>';
 print $langs->trans("MaxNbOfLinesForBoxes");
@@ -466,12 +475,21 @@ print '</td>'."\n";
 print '<td>';
 print '<input type="text" class="flat" size="6" name="MAIN_BOXES_MAXLINES" value="'.$conf->global->MAIN_BOXES_MAXLINES.'">';
 print '</td>';
-print '<td align="right">';
-print '<input type="submit" class="button" value="'.$langs->trans("Save").'" name="Button">';
-print '</td>'."\n";
 print '</tr>';
 
+// Activate FileCache - Developement
+if ($conf->global->MAIN_FEATURES_LEVEL == 2 || ! empty($conf->global->MAIN_ACTIVATE_FILECACHE)) {
+    $var=!$var;
+    print '<tr '.$bc[$var].'><td width="35%">'.$langs->trans("EnableFileCache").'</td><td>';
+    print $form->selectyesno('MAIN_ACTIVATE_FILECACHE',$conf->global->MAIN_ACTIVATE_FILECACHE,1);
+    print '</td>';
+    print '</tr>';
+}
+
 print '</table>';
+
+print '<div class="center"><input type="submit" class="button" value="'.$langs->trans("Save").'" name="Button"></div>';
+
 print '</form>';
 print "\n".'<!-- End Other Const -->'."\n";
 

@@ -1,7 +1,7 @@
 <?php
 /* 
  * Copyright (C) 2013-2014 Olivier Geffroy      <jeff@jeffinfo.com>
- * Copyright (C) 2013-2014 Alexandre Spangaro   <alexandre.spangaro@gmail.com> 
+ * Copyright (C) 2013-2014 Alexandre Spangaro   <aspangaro.dolibarr@gmail.com> 
  * Copyright (C) 2014	   Florian Henry		<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,17 +19,16 @@
  */
 
 /**
- * \file			htdocs/accountancy/admin/importaccounts.php
- * \ingroup			Accounting Expert
- * \brief			Page import accounting account
+ * \file 		htdocs/accountancy/admin/importaccounts.php
+ * \ingroup		Advanced accountancy
+ * \brief 		Page import accounting account
  */
-
 require '../../main.inc.php';
-	
+
 // Class
-require_once DOL_DOCUMENT_ROOT.'/core/lib/accounting.lib.php';
-require_once DOL_DOCUMENT_ROOT.'/accountancy/class/accountingaccount.class.php';
-require_once DOL_DOCUMENT_ROOT.'/accountancy/class/html.formventilation.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/accounting.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/accountancy/class/accountingaccount.class.php';
+require_once DOL_DOCUMENT_ROOT . '/accountancy/class/html.formventilation.class.php';
 
 // langs
 $langs->load("compta");
@@ -38,8 +37,24 @@ $langs->load("main");
 $langs->load("accountancy");
 
 // Security check
-if (!$user->admin)
-    accessforbidden();
+if (! $user->admin)
+	accessforbidden();
+
+$limit = GETPOST("limit")?GETPOST("limit","int"):(empty($conf->global->ACCOUNTING_LIMIT_LIST_VENTILATION)?$conf->liste_limit:$conf->global->ACCOUNTING_LIMIT_LIST_VENTILATION);
+$sortfield = GETPOST("sortfield",'alpha');
+$sortorder = GETPOST("sortorder",'alpha');
+$page = GETPOST("page",'int');
+if ($page == -1) { $page = 0; }
+$offset = $limit * $page;
+$pageprev = $page - 1;
+$pagenext = $page + 1;
+
+
+
+
+/*
+ * View
+ */
 
 llxHeader('', $langs->trans("ImportAccount"));
 
@@ -76,14 +91,14 @@ if ($_POST["action"] == 'import') {
 				
 				$result = $accounting->create($user);
 				if ($result > 0) {
-					setEventMessage($langs->trans("AccountingAccountAdd"), 'mesgs');
+					setEventMessages($langs->trans("AccountingAccountAdd"), null, 'mesgs');
 				} else {
-					setEventMessage($accounting->error, 'errors');
+					setEventMessages($accounting->error, $accounting->errors, 'errors');
 				}
 				$cpt ++;
 			}
 		} else {
-			setEventMessage($langs->trans('AccountPlanNotFoundCheckSetting'), 'errors');
+			setEventMessages($langs->trans('AccountPlanNotFoundCheckSetting'), null, 'errors');
 		}
 	} else {
 		print '<div><font color="red">' . $langs->trans("AnyLineImport") . '</font></div>';
@@ -91,15 +106,7 @@ if ($_POST["action"] == 'import') {
 	print '<div><font color="red">' . $langs->trans("EndProcessing") . '</font></div>';
 }
 
-/*
-* list accounting account from product 
-*
-*/
-$page = GETPOST("page");
-if ($page < 0)
-	$page = 0;
-$limit = $conf->global->ACCOUNTING_LIMIT_LIST_VENTILATION;
-$offset = $limit * $page;
+// list accounting account from product 
 
 $sql = "(SELECT p.rowid as product_id, p.accountancy_code_sell as accounting ";
 $sql .= " FROM  " . MAIN_DB_PREFIX . "product as p ";
@@ -120,8 +127,11 @@ if ($result) {
 	$i = 0;
 	print_barre_liste($langs->trans("ImportAccount"), $page, $_SERVER["PHP_SELF"], "", $sortfield, $sortorder, '', $num_lines);
 	
+	print '<form action="' . $_SERVER["PHP_SELF"] . '" method="POST">' . "\n";
+	print '<input type="hidden" name="action" value="import">';
+	
 	print '<table class="noborder" width="100%">';
-	print '<tr class="liste_titre"><td>' . $langs->trans("accountingaccount") . '</td>';
+	print '<tr class="liste_titre"><td>' . $langs->trans("AccountAccouting") . '</td>';
 	print '<td>' . $langs->trans("label") . '</td>';
 	print '<td>' . $langs->trans("Accountparent") . '</td>';
 	print '<td>' . $langs->trans("Pcgtype") . '</td>';
@@ -132,14 +142,11 @@ if ($result) {
 	$form = new Form($db);
 	$htmlacc = new FormVentilation($db);
 	
-	print '<form action="' . $_SERVER["PHP_SELF"] . '" method="POST">' . "\n";
-	print '<input type="hidden" name="action" value="import">';
-	
 	$var = true;
 	while ( $i < min($num_lines, $limit) ) {
 		$objp = $db->fetch_object($result);
 		$var = ! $var;
-		print "<tr $bc[$var]>";
+		print '<tr'. $bc[$var].'>';
 		
 		print '<td align="left">';
 		print $objp->accounting;
@@ -164,7 +171,7 @@ if ($result) {
 		
 		// Colonne choix ligne a ventiler
 		
-		$checked = ('label' == 'O') ? ' checked=checked' : '';
+		$checked = ('label' == 'O') ? ' checked' : '';
 		
 		print '<td align="center">';
 		print '<input type="checkbox" name="mesCasesCochees[]" ' . $checked . ' value="' . $objp->accounting . '"/>';

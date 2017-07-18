@@ -47,16 +47,18 @@ class FormAdmin
 	/**
 	 *    	Return html select list with available languages (key='en_US', value='United States' for example)
 	 *
-	 *    	@param      string		$selected       Langue pre-selectionnee
-	 *    	@param      string		$htmlname       Nom de la zone select
-	 *    	@param      int			$showauto       Affiche choix auto
+	 *    	@param      string		$selected       Language pre-selected
+	 *    	@param      string		$htmlname       Name of HTML select
+	 *    	@param      int			$showauto       Show 'auto' choice
 	 * 		@param		array		$filter			Array of keys to exclude in list
-	 * 		@param		int			$showempty		Add empty value
+	 * 		@param		string		$showempty		1=Add empty value or string to show
 	 *      @param      int			$showwarning    Show a warning if language is not complete
 	 *      @param		int			$disabled		Disable edit of select
+	 *      @param		string		$morecss		Add more css styles
+	 *      @param      int         $showcode       Add language code into label
 	 *      @return		string						Return HTML select string with list of languages
 	 */
-	function select_language($selected='',$htmlname='lang_id',$showauto=0,$filter=0,$showempty=0,$showwarning=0,$disabled=0)
+	function select_language($selected='', $htmlname='lang_id', $showauto=0, $filter=null, $showempty='', $showwarning=0, $disabled=0, $morecss='', $showcode=0)
 	{
 		global $langs;
 
@@ -64,17 +66,20 @@ class FormAdmin
 
 		$out='';
 
-		$out.= '<select class="flat" id="'.$htmlname.'" name="'.$htmlname.'"'.($disabled?' disabled="disabled"':'').'>';
+		$out.= '<select class="flat'.($morecss?' '.$morecss:'').'" id="'.$htmlname.'" name="'.$htmlname.'"'.($disabled?' disabled':'').'>';
 		if ($showempty)
 		{
 			$out.= '<option value=""';
-			if ($selected == '') $out.= ' selected="selected"';
-			$out.= '>&nbsp;</option>';
+			if ($selected == '') $out.= ' selected';
+			$out.= '>';
+			if ($showempty != '1') $out.=$showempty;
+			else $out.='&nbsp;';
+			$out.='</option>';
 		}
 		if ($showauto)
 		{
 			$out.= '<option value="auto"';
-			if ($selected == 'auto') $out.= ' selected="selected"';
+			if ($selected == 'auto') $out.= ' selected';
 			$out.= '>'.$langs->trans("AutoDetectLang").'</option>';
 		}
 
@@ -83,6 +88,9 @@ class FormAdmin
 		$uncompletelanguages=array('da_DA','fi_FI','hu_HU','is_IS','pl_PL','ro_RO','ru_RU','sv_SV','tr_TR','zh_CN');
 		foreach ($langs_available as $key => $value)
 		{
+		    $valuetoshow=$value;
+		    if ($showcode) $valuetoshow=$key.' - '.$value;
+		    
 		    if ($showwarning && in_array($key,$uncompletelanguages))
 		    {
 		        //$value.=' - '.$langs->trans("TranslationUncomplete",$key);
@@ -91,19 +99,23 @@ class FormAdmin
 			{
 				if ( ! array_key_exists($key, $filter))
 				{
-					$out.= '<option value="'.$key.'">'.$value.'</option>';
+					$out.= '<option value="'.$key.'">'.$valuetoshow.'</option>';
 				}
 			}
 			else if ($selected == $key)
 			{
-				$out.= '<option value="'.$key.'" selected="selected">'.$value.'</option>';
+				$out.= '<option value="'.$key.'" selected>'.$valuetoshow.'</option>';
 			}
 			else
 			{
-				$out.= '<option value="'.$key.'">'.$value.'</option>';
+				$out.= '<option value="'.$key.'">'.$valuetoshow.'</option>';
 			}
 		}
 		$out.= '</select>';
+
+		// Make select dynamic
+        include_once DOL_DOCUMENT_ROOT . '/core/lib/ajax.lib.php';
+        $out.= ajax_combobox($htmlname);
 
 		return $out;
 	}
@@ -115,7 +127,7 @@ class FormAdmin
      *    @param    string		$htmlname        Name of html select
      *    @param    array		$dirmenuarray    Array of directories to scan
      *    @param    string		$moreattrib      More attributes on html select tag
-     *    @return	void
+     *    @return	integer|null
      */
     function select_menu($selected, $htmlname, $dirmenuarray, $moreattrib='')
     {
@@ -157,7 +169,7 @@ class FormAdmin
 
     	                        if ($file == $selected)
     	                        {
-    	        					$menuarray[$prefix.'_'.$file]='<option value="'.$file.'" selected="selected">'.$filelib.'</option>';
+    	        					$menuarray[$prefix.'_'.$file]='<option value="'.$file.'" selected>'.$filelib.'</option>';
     	                        }
     	                        else
     	                        {
@@ -184,7 +196,7 @@ class FormAdmin
 			if ($newprefix != $oldprefix)	// Add separators
 			{
 				// Affiche titre
-				print '<option value="-1" disabled="disabled">';
+				print '<option value="-1" disabled>';
 				if ($newprefix=='0') print '-- '.$langs->trans("VersionRecommanded").' --';
                 if ($newprefix=='1') print '-- '.$langs->trans("VersionExperimental").' --';
 				if ($newprefix=='2') print '-- '.$langs->trans("VersionDevelopment").' --';
@@ -257,7 +269,7 @@ class FormAdmin
 			print '<option value="'.$key.'"';
             if ($key == $selected)
 			{
-				print '	selected="selected"';
+				print '	selected';
 			}
 			print '>';
 			if ($key == 'all') print $langs->trans("AllMenus");
@@ -312,7 +324,7 @@ class FormAdmin
 		foreach ($arraytz as $lib => $gmt)
 		{
 			print '<option value="'.$lib.'"';
-			if ($selected == $lib || $selected == $gmt) print ' selected="selected"';
+			if ($selected == $lib || $selected == $gmt) print ' selected';
 			print '>'.$gmt.'</option>'."\n";
 		}
 		print '</select>';
@@ -366,14 +378,14 @@ class FormAdmin
 		if ($showempty)
 		{
 			$out.= '<option value=""';
-			if ($selected == '') $out.= ' selected="selected"';
+			if ($selected == '') $out.= ' selected';
 			$out.= '>&nbsp;</option>';
 		}
 		foreach ($paperformat as $key => $value)
 		{
             if ($selected == $key)
 			{
-				$out.= '<option value="'.$key.'" selected="selected">'.$value.'</option>';
+				$out.= '<option value="'.$key.'" selected>'.$value.'</option>';
 			}
 			else
 			{

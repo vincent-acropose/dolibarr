@@ -41,7 +41,7 @@ require_once DOL_DOCUMENT_ROOT.'/paypal/lib/paypalfunctions.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 
 // Security check
-if (empty($conf->paypal->enabled)) accessforbidden('',1,1,1);
+if (empty($conf->paypal->enabled)) accessforbidden('',0,0,1);
 
 $langs->load("main");
 $langs->load("other");
@@ -100,7 +100,7 @@ if (empty($PAYPALFULLTAG)) $PAYPALFULLTAG=GETPOST('fulltag');
  * View
  */
 
-dol_syslog("Callback url when a PayPal payment was done. query_string=".(empty($_SERVER["QUERY_STRING"])?'':$_SERVER["QUERY_STRING"])." script_uri=".(empty($_SERVER["SCRIPT_URI"])?'':$_SERVER["SCRIPT_URI"]), LOG_DEBUG, 0, '_paypal');
+dol_syslog("Callback url when a PayPal payment was done. query_string=".(dol_escape_htmltag($_SERVER["QUERY_STRING"])?dol_escape_htmltag($_SERVER["QUERY_STRING"]):'')." script_uri=".(dol_escape_htmltag($_SERVER["SCRIPT_URI"])?dol_escape_htmltag($_SERVER["SCRIPT_URI"]):''), LOG_DEBUG, 0, '_paypal');
 
 $tracepost = "";
 foreach($_POST as $k => $v) $tracepost .= "{$k} - {$v}\n";
@@ -110,6 +110,7 @@ dol_syslog("POST=".$tracepost, LOG_DEBUG, 0, '_paypal');
 llxHeaderPaypal($langs->trans("PaymentForm"));
 
 
+// Show message
 print '<span id="dolpaymentspan"></span>'."\n";
 print '<div id="dolpaymentdiv" align="center">'."\n";
 
@@ -216,18 +217,18 @@ if ($PAYPALTOKEN)
 			}
         }
         else
-        {
+		{
             //Display a user friendly Error on the page using any of the following error information returned by PayPal
             $ErrorCode = urldecode($resArray["L_ERRORCODE0"]);
             $ErrorShortMsg = urldecode($resArray["L_SHORTMESSAGE0"]);
             $ErrorLongMsg = urldecode($resArray["L_LONGMESSAGE0"]);
             $ErrorSeverityCode = urldecode($resArray["L_SEVERITYCODE0"]);
 
-            echo "DoExpressCheckoutPayment API call failed.<br>\n";
-            echo "Detailed Error Message: " . $ErrorLongMsg."<br>\n";
-            echo "Short Error Message: " . $ErrorShortMsg."<br>\n";
-            echo "Error Code: " . $ErrorCode."<br>\n";
-            echo "Error Severity Code: " . $ErrorSeverityCode."<br>\n";
+            echo $langs->trans('DoExpressCheckoutPaymentAPICallFailed') . "<br>\n";
+            echo $langs->trans('DetailedErrorMessage') . ": " . $ErrorLongMsg."<br>\n";
+            echo $langs->trans('ShortErrorMessage') . ": " . $ErrorShortMsg."<br>\n";
+            echo $langs->trans('ErrorCode') . ": " . $ErrorCode."<br>\n";
+            echo $langs->trans('ErrorSeverityCode') . ": " . $ErrorSeverityCode."<br>\n";
 
             if ($mysoc->email) echo "\nPlease, send a screenshot of this page to ".$mysoc->email."<br>\n";
 

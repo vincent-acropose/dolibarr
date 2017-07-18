@@ -47,9 +47,11 @@ class box_graph_orders_permonth extends ModeleBoxes
 	 */
 	function __construct($db,$param)
 	{
-		global $conf;
+		global $user;
 
 		$this->db=$db;
+
+		$this->hidden = ! ($user->rights->commande->lire);
 	}
 
 	/**
@@ -77,7 +79,7 @@ class box_graph_orders_permonth extends ModeleBoxes
 				'sublink'=>'',
 				'subtext'=>$langs->trans("Filter"),
 				'subpicto'=>'filter.png',
-				'subclass'=>'linkobject',
+				'subclass'=>'linkobject boxfilter',
 				'target'=>'none'	// Set '' to get target="_blank"
 		);
 
@@ -89,7 +91,9 @@ class box_graph_orders_permonth extends ModeleBoxes
 
 		if ($user->rights->commande->lire)
 		{
-			$param_year='DOLUSERCOOKIE_box_'.$this->boxcode.'_year';
+		    $langs->load("orders");
+
+		    $param_year='DOLUSERCOOKIE_box_'.$this->boxcode.'_year';
 			$param_shownb='DOLUSERCOOKIE_box_'.$this->boxcode.'_shownb';
 			$param_showtot='DOLUSERCOOKIE_box_'.$this->boxcode.'_showtot';
 
@@ -215,9 +219,9 @@ class box_graph_orders_permonth extends ModeleBoxes
 				$stringtoshow.='<form class="flat formboxfilter" method="POST" action="'.$_SERVER["PHP_SELF"].'">';
 				$stringtoshow.='<input type="hidden" name="action" value="'.$refreshaction.'">';
 				$stringtoshow.='<input type="hidden" name="DOL_AUTOSET_COOKIE" value="DOLUSERCOOKIE_box_'.$this->boxcode.':year,shownb,showtot">';
-				$stringtoshow.='<input type="checkbox" name="'.$param_shownb.'"'.($shownb?' checked="true"':'').'> '.$langs->trans("NumberOfOrdersByMonth");
+				$stringtoshow.='<input type="checkbox" name="'.$param_shownb.'"'.($shownb?' checked':'').'> '.$langs->trans("NumberOfOrdersByMonth");
 				$stringtoshow.=' &nbsp; ';
-				$stringtoshow.='<input type="checkbox" name="'.$param_showtot.'"'.($showtot?' checked="true"':'').'> '.$langs->trans("AmountOfOrdersByMonthHT");
+				$stringtoshow.='<input type="checkbox" name="'.$param_showtot.'"'.($showtot?' checked':'').'> '.$langs->trans("AmountOfOrdersByMonthHT");
 				$stringtoshow.='<br>';
 				$stringtoshow.=$langs->trans("Year").' <input class="flat" size="4" type="text" name="'.$param_year.'" value="'.$endyear.'">';
 				$stringtoshow.='<input type="image" alt="'.$langs->trans("Refresh").'" src="'.img_picto($langs->trans("Refresh"),'refresh.png','','',1).'">';
@@ -261,11 +265,12 @@ class box_graph_orders_permonth extends ModeleBoxes
 	 *
 	 *	@param	array	$head       Array with properties of box title
 	 *	@param  array	$contents   Array with properties of box lines
-	 *	@return	void
+	 *  @param	int		$nooutput	No print, only return string
+	 *	@return	string
 	 */
-	function showBox($head = null, $contents = null)
-	{
-		parent::showBox($this->info_box_head, $this->info_box_contents);
+    function showBox($head = null, $contents = null, $nooutput=0)
+    {
+		return parent::showBox($this->info_box_head, $this->info_box_contents, $nooutput);
 	}
 
 }

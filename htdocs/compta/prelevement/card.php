@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2005-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2010-2012 Juanjo Menent 		<jmenent@2byte.es>
+ * Copyright (C) 2010-2016 Juanjo Menent 		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 
 require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/lib/prelevement.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/ligneprelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/bonprelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
@@ -44,11 +45,25 @@ if ($user->societe_id > 0) accessforbidden();
 // Get supervariables
 $action = GETPOST('action','alpha');
 $id = GETPOST('id','int');
+$socid = GETPOST('socid','int');
+
+
+$limit = GETPOST("limit")?GETPOST("limit","int"):$conf->liste_limit;
+$sortfield = GETPOST("sortfield",'alpha');
+$sortorder = GETPOST("sortorder",'alpha');
+$page = GETPOST("page",'int');
+if ($page == -1) { $page = 0; }
+$offset = $limit * $page;
+$pageprev = $page - 1;
+$pagenext = $page + 1;
+if (! $sortfield) $sortfield='pl.fk_soc';
+if (! $sortorder) $sortorder='DESC';
 
 
 /*
  * Actions
  */
+
 if ( $action == 'confirm_delete' )
 {
 	$bon = new BonPrelevement($db,"");
@@ -67,10 +82,12 @@ if ( $action == 'confirm_credite' && GETPOST('confirm','alpha') == 'yes')
 	$bon = new BonPrelevement($db,"");
 	$bon->fetch($id);
 
-	$bon->set_credite();
-
-	header("Location: card.php?id=".$id);
-	exit;
+	$res=$bon->set_credite();
+	if ($res >= 0)
+	{
+    	header("Location: card.php?id=".$id);
+	   exit;
+	}
 }
 
 if ($action == 'infotrans' && $user->rights->prelevement->bons->send)
@@ -145,7 +162,7 @@ if ($id > 0)
 
 	if (GETPOST('error','alpha')!='')
 	{
-		print '<div class="error">'.$bon->ReadError(GETPOST('error','alpha')).'</div>';
+		print '<div class="error">'.$bon->getErrorString(GETPOST('error','alpha')).'</div>';
 	}
 
 	/*if ($action == 'credite')
@@ -156,12 +173,12 @@ if ($id > 0)
 
 	print '<table class="border" width="100%">';
 
-	print '<tr><td width="20%">'.$langs->trans("Ref").'</td><td>'.$bon->getNomUrl(1).'</td></tr>';
-	print '<tr><td width="20%">'.$langs->trans("Date").'</td><td>'.dol_print_date($bon->datec,'day').'</td></tr>';
-	print '<tr><td width="20%">'.$langs->trans("Amount").'</td><td>'.price($bon->amount).'</td></tr>';
+	print '<tr><td class="titlefield">'.$langs->trans("Ref").'</td><td>'.$bon->getNomUrl(1).'</td></tr>';
+	print '<tr><td>'.$langs->trans("Date").'</td><td>'.dol_print_date($bon->datec,'day').'</td></tr>';
+	print '<tr><td>'.$langs->trans("Amount").'</td><td>'.price($bon->amount).'</td></tr>';
 
 	// Status
-	print '<tr><td width="20%">'.$langs->trans('Status').'</td>';
+	print '<tr><td>'.$langs->trans('Status').'</td>';
 	print '<td>'.$bon->getLibStatut(1).'</td>';
 	print '</tr>';
 
@@ -170,16 +187,16 @@ if ($id > 0)
 		$muser = new User($db);
 		$muser->fetch($bon->user_trans);
 
-		print '<tr><td width="20%">'.$langs->trans("TransData").'</td><td>';
+		print '<tr><td>'.$langs->trans("TransData").'</td><td>';
 		print dol_print_date($bon->date_trans,'day');
 		print ' '.$langs->trans("By").' '.$muser->getFullName($langs).'</td></tr>';
-		print '<tr><td width="20%">'.$langs->trans("TransMetod").'</td><td>';
+		print '<tr><td>'.$langs->trans("TransMetod").'</td><td>';
 		print $bon->methodes_trans[$bon->method_trans];
 		print '</td></tr>';
 	}
 	if($bon->date_credit <> 0)
 	{
-		print '<tr><td width="20%">'.$langs->trans('CreditDate').'</td><td>';
+		print '<tr><td>'.$langs->trans('CreditDate').'</td><td>';
 		print dol_print_date($bon->date_credit,'day');
 		print '</td></tr>';
 	}
@@ -188,14 +205,13 @@ if ($id > 0)
 
 	print '<br>';
 
-	print '<table class="border" width="100%"><tr><td width="20%">';
+	print '<table class="border" width="100%"><tr><td class="titlefield">';
 	print $langs->trans("WithdrawalFile").'</td><td>';
 	$relativepath = 'receipts/'.$bon->ref.'.xml';
 	print '<a data-ajax="false" href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
 	print '</td></tr></table>';
 
 	dol_fiche_end();
-
 
 
 
@@ -207,10 +223,10 @@ if ($id > 0)
 		print '<table class="border" width="100%">';
 		print '<tr class="liste_titre">';
 		print '<td colspan="3">'.$langs->trans("NotifyTransmision").'</td></tr>';
-		print '<tr><td width="20%">'.$langs->trans("TransData").'</td><td>';
+		print '<tr '.$bc[false].'><td width="20%">'.$langs->trans("TransData").'</td><td>';
 		print $form->select_date('','','','','',"userfile",1,1);
 		print '</td></tr>';
-		print '<tr><td width="20%">'.$langs->trans("TransMetod").'</td><td>';
+		print '<tr '.$bc[false].'><td width="20%">'.$langs->trans("TransMetod").'</td><td>';
 		print $form->selectarray("methode",$bon->methodes_trans);
 		print '</td></tr>';
 /*			print '<tr><td width="20%">'.$langs->trans("File").'</td><td>';
@@ -218,7 +234,7 @@ if ($id > 0)
 		print '<input class="flat" type="file" name="userfile"><br>';
 		print '</td></tr>';*/
 		print '</table><br>';
-		print '<center><input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans("SetToStatusSent")).'">';
+		print '<div class="center"><input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans("SetToStatusSent")).'"></div>';
 		print '</form>';
 	}
 
@@ -230,12 +246,12 @@ if ($id > 0)
 		print '<table class="border" width="100%">';
 		print '<tr class="liste_titre">';
 		print '<td colspan="3">'.$langs->trans("NotifyCredit").'</td></tr>';
-		print '<tr><td width="20%">'.$langs->trans('CreditDate').'</td><td>';
+		print '<tr '.$bc[false].'><td>'.$langs->trans('CreditDate').'</td><td>';
 		print $form->select_date('','','','','',"infocredit",1,1);
 		print '</td></tr>';
 		print '</table>';
 		print '<br>'.$langs->trans("ThisWillAlsoAddPaymentOnInvoice");
-		print '<center><input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans("ClassCredited")).'">';
+		print '<div class="center"><input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans("ClassCredited")).'"></div>';
 		print '</form>';
 	}
 
@@ -259,6 +275,110 @@ if ($id > 0)
 
 		print "</div>";
 	}
+
+
+	$ligne=new LignePrelevement($db,$user);
+
+	/*
+	 * Lines into withdraw request
+	 */
+	$sql = "SELECT pl.rowid, pl.statut, pl.amount,";
+	$sql.= " s.rowid as socid, s.nom as name";
+	$sql.= " FROM ".MAIN_DB_PREFIX."prelevement_lignes as pl";
+	$sql.= ", ".MAIN_DB_PREFIX."prelevement_bons as pb";
+	$sql.= ", ".MAIN_DB_PREFIX."societe as s";
+	$sql.= " WHERE pl.fk_prelevement_bons = ".$id;
+	$sql.= " AND pl.fk_prelevement_bons = pb.rowid";
+	$sql.= " AND pb.entity = ".$conf->entity;
+	$sql.= " AND pl.fk_soc = s.rowid";
+	if ($socid)	$sql.= " AND s.rowid = ".$socid;
+	$sql.= $db->order($sortfield, $sortorder);
+	$sql.= $db->plimit($conf->liste_limit+1, $offset);
+
+	$result = $db->query($sql);
+
+	if ($result)
+	{
+		$num = $db->num_rows($result);
+		$i = 0;
+
+		$urladd = "&amp;id=".$id;
+
+		print_barre_liste("", $page, $_SERVER["PHP_SELF"], $urladd, $sortfield, $sortorder, '', $num);
+		print"\n<!-- debut table -->\n";
+		print '<table class="noborder" width="100%" cellspacing="0" cellpadding="4">';
+		print '<tr class="liste_titre">';
+		print_liste_field_titre($langs->trans("Lines"),$_SERVER["PHP_SELF"],"pl.rowid",'',$urladd);
+		print_liste_field_titre($langs->trans("ThirdParty"),$_SERVER["PHP_SELF"],"s.nom",'',$urladd);
+		print_liste_field_titre($langs->trans("Amount"),$_SERVER["PHP_SELF"],"pl.amount","",$urladd,'align="right"');
+		print_liste_field_titre('');
+		print "</tr>\n";
+
+		$var=false;
+
+		$total = 0;
+
+		while ($i < min($num,$conf->liste_limit))
+		{
+			$obj = $db->fetch_object($result);
+
+			print "<tr ".$bc[$var].">";
+
+			// Status of line
+			print "<td>";
+			print $ligne->LibStatut($obj->statut,2);
+			print "&nbsp;";
+			print '<a href="'.DOL_URL_ROOT.'/compta/prelevement/ligne.php?id='.$obj->rowid.'">';
+			print sprintf("%06s",$obj->rowid);
+			print '</a></td>';
+
+			$thirdparty=new Societe($db);
+			$thirdparty->fetch($obj->socid);
+			print '<td>';
+			print $thirdparty->getNomUrl(1);
+			print "</td>\n";
+
+			print '<td align="right">'.price($obj->amount)."</td>\n";
+
+			print '<td>';
+
+			if ($obj->statut == 3)
+			{
+		  		print '<b>'.$langs->trans("StatusRefused").'</b>';
+			}
+			else
+			{
+		  		print "&nbsp;";
+			}
+
+			print '</td></tr>';
+
+			$total += $obj->amount;
+			$var=!$var;
+			$i++;
+		}
+
+		if ($num > 0)
+		{
+			print '<tr class="liste_total">';
+			print '<td>'.$langs->trans("Total").'</td>';
+			print '<td>&nbsp;</td>';
+			print '<td align="right">'.price($total)."</td>\n";
+			print '<td>&nbsp;</td>';
+			print "</tr>\n";
+		}
+
+		print "</table>";
+		$db->free($result);
+	}
+	else
+	{
+		dol_print_error($db);
+	}
+
+
+
+
 }
 
 

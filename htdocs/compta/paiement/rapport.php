@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2003-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2015      Jean-François Ferry	<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +43,7 @@ if ($user->societe_id > 0)
 $dir = $conf->facture->dir_output.'/payments';
 if (! $user->rights->societe->client->voir || $socid) $dir.='/private/'.$user->id;	// If user has no permission to see all, output dir is specific to user
 
-$year = $_GET["year"];
+$year = GETPOST('year', 'int');
 if (! $year) { $year=date("Y"); }
 
 
@@ -87,7 +88,7 @@ $formother=new FormOther($db);
 llxHeader();
 
 $titre=($year?$langs->trans("PaymentsReportsForYear",$year):$langs->trans("PaymentsReports"));
-print_fiche_titre($titre);
+print load_fiche_titre($titre,'','title_accountancy.png');
 
 // Formulaire de generation
 print '<form method="post" action="rapport.php?year='.$year.'">';

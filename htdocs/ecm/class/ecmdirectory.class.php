@@ -239,14 +239,15 @@ class EcmDirectory // extends CommonObject
 	/**
 	 *	Update cache of nb of documents into database
 	 *
-	 * 	@param	string	$sign		'+' or '-'
+	 * 	@param	string	$value		'+' or '-' or new number
 	 *  @return int		         	<0 if KO, >0 if OK
 	 */
-	function changeNbOfFiles($sign)
+	function changeNbOfFiles($value)
 	{
 		// Update request
 		$sql = "UPDATE ".MAIN_DB_PREFIX."ecm_directories SET";
-		$sql.= " cachenbofdoc = cachenbofdoc ".$sign." 1";
+		if (preg_match('/[0-9]+/', $value)) $sql.= " cachenbofdoc = ".(int) $value;
+		else $sql.= " cachenbofdoc = cachenbofdoc ".$value." 1";
 		$sql.= " WHERE rowid = ".$this->id;
 
 		dol_syslog(get_class($this)."::changeNbOfFiles", LOG_DEBUG);
@@ -255,6 +256,12 @@ class EcmDirectory // extends CommonObject
 		{
 			$this->error="Error ".$this->db->lasterror();
 			return -1;
+		}
+		else
+		{
+		    if (preg_match('/[0-9]+/', $value)) $this->cachenbofdoc = (int) $value;
+		    else if ($value == '+') $this->cachenbofdoc++;
+		    else if ($value == '-') $this->cachenbofdoc--;
 		}
 
 		return 1;
@@ -400,7 +407,7 @@ class EcmDirectory // extends CommonObject
 	/**
 	 *  Return directory name you can click (and picto)
 	 *
-	 *  @param	int		$withpicto		0=Pas de picto, 1=Inclut le picto dans le lien, 2=Picto seul
+	 *  @param	int		$withpicto		0=Pas de picto, 1=Include picto into link, 2=Only picto
 	 *  @param	string	$option			Sur quoi pointe le lien
 	 *  @param	int		$max			Max length
 	 *  @param	string	$more			Add more param on a link
@@ -411,23 +418,24 @@ class EcmDirectory // extends CommonObject
 		global $langs;
 
 		$result='';
+        //$newref=str_replace('_',' ',$this->ref);
+        $newref=$this->ref;
+        $newlabel=$langs->trans("ShowECMSection").': '.$newref;
+        $linkclose='"'.($more?' '.$more:'').' title="'.dol_escape_htmltag($newlabel, 1).'" class="classfortooltip">';
 
-		$lien = '<a href="'.DOL_URL_ROOT.'/ecm/docmine.php?section='.$this->id.'"'.($more?' '.$more:'').'>';
-		if ($option == 'index') $lien = '<a href="'.DOL_URL_ROOT.'/ecm/index.php?section='.$this->id.'&amp;sectionexpand=true"'.($more?' '.$more:'').'>';
-		if ($option == 'indexexpanded') $lien = '<a href="'.DOL_URL_ROOT.'/ecm/index.php?section='.$this->id.'&amp;sectionexpand=false"'.($more?' '.$more:'').'>';
-		if ($option == 'indexnotexpanded') $lien = '<a href="'.DOL_URL_ROOT.'/ecm/index.php?section='.$this->id.'&amp;sectionexpand=true"'.($more?' '.$more:'').'>';
-		$lienfin='</a>';
+        $link = '<a href="'.DOL_URL_ROOT.'/ecm/docmine.php?section='.$this->id.$linkclose;
+        if ($option == 'index') $link = '<a href="'.DOL_URL_ROOT.'/ecm/index.php?section='.$this->id.'&amp;sectionexpand=true'.$linkclose;
+        if ($option == 'indexexpanded') $link = '<a href="'.DOL_URL_ROOT.'/ecm/index.php?section='.$this->id.'&amp;sectionexpand=false'.$linkclose;
+        if ($option == 'indexnotexpanded') $link = '<a href="'.DOL_URL_ROOT.'/ecm/index.php?section='.$this->id.'&amp;sectionexpand=true'.$linkclose;
+        $linkend='</a>';
 
 		//$picto=DOL_URL_ROOT.'/theme/common/treemenu/folder.gif';
 		$picto='dir';
 
-		//$newref=str_replace('_',' ',$this->ref);
-		$newref=$this->ref;
-		$newlabel=$langs->trans("ShowECMSection").': '.$newref;
 
-		if ($withpicto) $result.=($lien.img_object($newlabel,$picto).$lienfin);
+        if ($withpicto) $result.=($link.img_object($newlabel, $picto, 'class="classfortooltip"').$linkend);
 		if ($withpicto && $withpicto != 2) $result.=' ';
-		if ($withpicto != 2) $result.=$lien.($max?dol_trunc($newref,$max,'middle'):$newref).$lienfin;
+		if ($withpicto != 2) $result.=$link.($max?dol_trunc($newref,$max,'middle'):$newref).$linkend;
 		return $result;
 	}
 

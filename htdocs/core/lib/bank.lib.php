@@ -1,7 +1,8 @@
 <?php
-
-/* Copyright (C) 2006-2007	Laurent Destailleur	<eldy@users.sourceforge.net>
+/* Copyright (C) 2006-2016	Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2012		Regis Houssin		<regis.houssin@capnetworks.com>
+ * Copyright (C) 2015		Alexandre Spangaro	<aspangaro.dolibarr@gmail.com>
+ * Copyright (C) 2016		Juanjo Menent   	<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +21,8 @@
 
 /**
  * \file       htdocs/core/lib/bank.lib.php
+ * \ingroup    bank
  * \brief      Ensemble de fonctions de base pour le module banque
- * \ingroup    banque
  */
 
 /**
@@ -32,24 +33,17 @@
  */
 function bank_prepare_head(Account $object)
 {
-    global $langs, $conf, $user;
+    global $db, $langs, $conf, $user;
     $h = 0;
     $head = array();
 
     $head[$h][0] = DOL_URL_ROOT . '/compta/bank/card.php?id=' . $object->id;
-    $head[$h][1] = $langs->trans("AccountCard");
+    $head[$h][1] = $langs->trans("Card");
     $head[$h][2] = 'bankname';
     $h++;
 
-    if ($object->type == 0 || $object->type == 1) {
-        $head[$h][0] = DOL_URL_ROOT . '/compta/bank/bankid_fr.php?id=' . $object->id;
-        $head[$h][1] = $langs->trans("RIB");
-        $head[$h][2] = 'bankid';
-        $h++;
-    }
-
-    $head[$h][0] = DOL_URL_ROOT . "/compta/bank/account.php?id=" . $object->id;
-    $head[$h][1] = $langs->trans("Transactions");
+    $head[$h][0] = DOL_URL_ROOT . "/compta/bank/bankentries.php?id=" . $object->id;
+    $head[$h][1] = $langs->trans("BankTransactions");
     $head[$h][2] = 'journal';
     $h++;
 
@@ -71,13 +65,25 @@ function bank_prepare_head(Account $object)
     $head[$h][2] = 'graph';
     $h++;
 
-    if ($object->courant != 2)
+    if ($object->courant != Account::TYPE_CASH)
     {
     	$head[$h][0] = DOL_URL_ROOT."/compta/bank/releve.php?account=".$object->id;
 	    $head[$h][1] = $langs->trans("AccountStatements");
 	    $head[$h][2] = 'statement';
 	    $h++;
 	}
+
+    // Attached files
+    require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+    require_once DOL_DOCUMENT_ROOT.'/core/class/link.class.php';
+    $upload_dir = $conf->bank->dir_output . "/" . dol_sanitizeFileName($object->ref);
+    $nbFiles = count(dol_dir_list($upload_dir,'files',0,'','(\.meta|_preview\.png)$'));
+    $nbLinks=Link::count($db, $object->element, $object->id);
+    $head[$h][0] = DOL_URL_ROOT . "/compta/bank/document.php?account=" . $object->id;
+    $head[$h][1] = $langs->trans("Documents");
+    if (($nbFiles+$nbLinks) > 0) $head[$h][1].= ' <span class="badge">'.($nbFiles+$nbLinks).'</span>';
+    $head[$h][2] = 'document';
+    $h++;
 
 	// Show more tabs from modules
     // Entries must be declared in modules descriptor with line
@@ -89,12 +95,84 @@ function bank_prepare_head(Account $object)
 
     return $head;
 }
+/**
+ * Prepare array with list of tabs
+ *
+ * @param   Object	$object		Object related to tabs
+ * @return  array				Array of tabs to shoc
+ */
+function bank_admin_prepare_head($object)
+{
+	global $langs, $conf, $user;
+	$h = 0;
+	$head = array();
+
+	$head[$h][0] = DOL_URL_ROOT . '/admin/bank.php';
+	$head[$h][1] = $langs->trans("Miscellaneous");
+	$head[$h][2] = 'general';
+	$h++;
+
+    $head[$h][0] = DOL_URL_ROOT . '/admin/chequereceipts.php';
+    $head[$h][1] = $langs->trans("CheckReceiptShort");
+    $head[$h][2] = 'checkreceipts';
+    $h++;
+
+
+	// Show more tabs from modules
+	// Entries must be declared in modules descriptor with line
+	// $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
+	// $this->tabs = array('entity:-tabname);   												to remove a tab
+	complete_head_from_modules($conf, $langs, $object, $head, $h, 'bank_admin');
+
+	$head[$h][0] = DOL_URL_ROOT.'/admin/bank_extrafields.php';
+	$head[$h][1] = $langs->trans("ExtraFields");
+	$head[$h][2] = 'attributes';
+	$h++;
+
+	complete_head_from_modules($conf, $langs, $object, $head, $h, 'bank_admin', 'remove');
+
+	return $head;
+}
+
+/**
+ *      Check SWIFT informations for a bank account
+ *
+ *      @param  Account     $account    A bank account
+ *      @return boolean                 True if informations are valid, false otherwise
+ */
+function checkSwiftForAccount($account)
+{
+    $swift = $account->bic;
+    if (preg_match("/^([a-zA-Z]){4}([a-zA-Z]){2}([0-9a-zA-Z]){2}([0-9a-zA-Z]{3})?$/", $swift)) {
+        return true;
+    } else {
+        return false;
+    }
+
+}
+
+/**
+ *      Check IBAN number informations for a bank account.
+ *
+ *      @param  Account     $account    A bank account
+ *      @return boolean                 True if informations are valid, false otherwise
+ */
+function checkIbanForAccount($account)
+{
+    require_once DOL_DOCUMENT_ROOT.'/includes/php-iban/oophp-iban.php';
+
+    $iban = new IBAN($account->iban);
+    $check = $iban->Verify();
+
+    if ($check) return true;
+    else return false;
+}
 
 /**
  * 		Check account number informations for a bank account
  *
  * 		@param	Account		$account    A bank account
- * 		@return int           			True if informations are valid, false otherwise
+ * 		@return boolean           		True if informations are valid, false otherwise
  */
 function checkBanForAccount($account)
 {
@@ -119,9 +197,10 @@ function checkBanForAccount($account)
         $rib = strtr($rib, "abcdefghijklmnopqrstuvwxyz", "12345678912345678923456789");
         // Separation du rib en 3 groupes de 7 + 1 groupe de 2.
         // Multiplication de chaque groupe par les coef du tableau
+    
         for ($i = 0, $s = 0; $i < 3; $i++) {
             $code = substr($rib, 7 * $i, 7);
-            $s += (0 + $code) * $coef[$i];
+            $s += (0 + (int) $code) * $coef[$i];
         }
         // Soustraction du modulo 97 de $s a 97 pour obtenir la cle
         $cle_rib = 97 - ($s % 97);
@@ -163,6 +242,8 @@ function checkBanForAccount($account)
     return true;
 }
 
+
+
 /**
  * 	Returns the key for Spanish Banks Accounts
  *
@@ -170,7 +251,8 @@ function checkBanForAccount($account)
  *  @param	string	$InumCta	InumCta
  *  @return	string				Key
  */
-function checkES($IentOfi, $InumCta) {
+function checkES($IentOfi, $InumCta)
+{
     if (empty($IentOfi) || empty($InumCta) || strlen($IentOfi) != 8 || strlen($InumCta) != 10) {
         $keycontrol = "";
         return $keycontrol;

@@ -27,7 +27,7 @@ include_once DOL_DOCUMENT_ROOT .'/core/modules/DolibarrModules.class.php';
 
 
 /**
- *	Classe de description et activation du module Workflow
+ *	Class to describe and enable module Workflow
  */
 class modWorkflow extends DolibarrModules
 {
@@ -94,7 +94,7 @@ class modWorkflow extends DolibarrModules
         $this->rights[$r][0] = 6001; // id de la permission
         $this->rights[$r][1] = "Lire les workflow"; // libelle de la permission
         $this->rights[$r][2] = 'r'; // type de la permission (deprecie a ce jour)
-        $this->rights[$r][3] = 1; // La permission est-elle une permission par defaut
+        $this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
         $this->rights[$r][4] = 'read';
         */
 
@@ -148,20 +148,4 @@ class modWorkflow extends DolibarrModules
 
         return $this->_init($sql,$options);
     }
-
-    /**
-	 *		Function called when module is disabled.
-	 *      Remove from database constants, boxes and permissions from Dolibarr database.
-	 *		Data directories are not deleted
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-     */
-    function remove($options='')
-    {
-		$sql = array();
-
-		return $this->_remove($sql,$options);
-    }
-
 }

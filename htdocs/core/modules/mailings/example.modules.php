@@ -32,7 +32,9 @@ class mailing_example extends MailingTargets
     var $desc='Put here a description';
 	// CHANGE THIS: Set to 1 if selector is available for admin users only
     var $require_admin=0;
-
+    // CHANGE THIS: Add a tooltip language key to add a tooltip help icon after the email target selector 
+    var $tooltip='MyTooltipLangKey';
+    
     var $require_module=array();
     var $picto='';
     var $db;
@@ -69,7 +71,7 @@ class mailing_example extends MailingTargets
 		// ...
 	    // $target[n]=array('email'=>'email_n','name'=>'name_n','firstname'=>'firstname_n', 'other'=>'other_n');
 
-		// Example: $target[0]=array('email'=>'myemail@mydomain.com', 'name'=>'Doe', 'firstname'=>'John', 'other'=>'Other information');
+		// Example: $target[0]=array('email'=>'myemail@example.com', 'name'=>'Doe', 'firstname'=>'John', 'other'=>'Other information');
 
 		// ----- Your code end here -----
 
@@ -100,8 +102,8 @@ class mailing_example extends MailingTargets
      *	For example if this selector is used to extract 500 different
      *	emails from a text file, this function must return 500.
      *
-     *  @param	string	$sql		Requete sql de comptage
-     *	@return		int
+     *  @param		string		$sql		Requete sql de comptage
+     *	@return		int|string				Number of recipient or '?'
      */
     function getNbOfRecipients($sql='')
     {

@@ -37,7 +37,7 @@ require_once DOL_DOCUMENT_ROOT.'/paybox/lib/paybox.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 
 // Security check
-if (empty($conf->paybox->enabled)) accessforbidden('',1,1,1);
+if (empty($conf->paybox->enabled)) accessforbidden('',0,0,1);
 
 $langs->load("main");
 $langs->load("other");
@@ -62,7 +62,7 @@ $langs->load("paypal");
  * View
  */
 
-dol_syslog("Callback url when a PayBox payment was canceled. query_string=".(empty($_SERVER["QUERY_STRING"])?'':$_SERVER["QUERY_STRING"])." script_uri=".(empty($_SERVER["SCRIPT_URI"])?'':$_SERVER["SCRIPT_URI"]), LOG_DEBUG, 0, '_paybox');
+dol_syslog("Callback url when a PayBox payment was canceled. query_string=".(dol_escape_htmltag($_SERVER["QUERY_STRING"])?dol_escape_htmltag($_SERVER["QUERY_STRING"]):'')." script_uri=".(dol_escape_htmltag($_SERVER["SCRIPT_URI"])?dol_escape_htmltag($_SERVER["SCRIPT_URI"]):''), LOG_DEBUG, 0, '_paybox');
 
 $tracepost = "";
 foreach($_POST as $k => $v) $tracepost .= "{$k} - {$v}\n";

@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2002-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2002-2003 Jean-Louis Bergamo   <jlb@j1b.org>
- * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2005-2015 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2012      Juanjo Menent        <jmenent@2byte.es>
@@ -64,46 +64,54 @@ if ($user->id == $id && (empty($conf->global->MAIN_USE_ADVANCED_PERMS) || $user-
 	$canreaduser=1;
 }
 
-$result = restrictedArea($user, 'user', $id, '&user', $feature2);
+$result = restrictedArea($user, 'user', $id, 'user&user', $feature2);
 if ($user->id <> $id && ! $canreaduser) accessforbidden();
+
+$object = new User($db);
+$object->fetch($id);
+$object->getrights();
+
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('usercard','globalcard'));
 
 
 /**
  * Actions
  */
 
-if ($action == 'addrights' && $caneditperms)
-{
-    $edituser = new User($db);
-	$edituser->fetch($id);
-    //$edituser->addrights($rights, $module, '', $entity); // TODO unused for the moment
-    $edituser->addrights($rights, $module);
+$parameters=array('id'=>$socid);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 
-	// Si on a touche a ses propres droits, on recharge
-	if ($id == $user->id)
-	{
-		$user->clearrights();
-		$user->getrights();
-		$menumanager->loadMenu();
+if (empty($reshook)) {
+	if ($action == 'addrights' && $caneditperms) {
+		$edituser = new User($db);
+		$edituser->fetch($id);
+		//$edituser->addrights($rights, $module, '', $entity); // TODO unused for the moment
+		$edituser->addrights($rights, $module);
+
+		// Si on a touche a ses propres droits, on recharge
+		if ($id == $user->id) {
+			$user->clearrights();
+			$user->getrights();
+			$menumanager->loadMenu();
+		}
+	}
+
+	if ($action == 'delrights' && $caneditperms) {
+		$edituser = new User($db);
+		$edituser->fetch($id);
+		//$edituser->delrights($rights, $module, '', $entity); // TODO unused for the moment
+		$edituser->delrights($rights, $module);
+
+		// Si on a touche a ses propres droits, on recharge
+		if ($id == $user->id) {
+			$user->clearrights();
+			$user->getrights();
+			$menumanager->loadMenu();
+		}
 	}
 }
-
-if ($action == 'delrights' && $caneditperms)
-{
-    $edituser = new User($db);
-	$edituser->fetch($id);
-    //$edituser->delrights($rights, $module, '', $entity); // TODO unused for the moment
-    $edituser->delrights($rights, $module);
-
-	// Si on a touche a ses propres droits, on recharge
-	if ($id == $user->id)
-	{
-		$user->clearrights();
-		$user->getrights();
-		$menumanager->loadMenu();
-	}
-}
-
 
 
 /**
@@ -113,10 +121,6 @@ if ($action == 'delrights' && $caneditperms)
 llxHeader('',$langs->trans("Permissions"));
 
 $form=new Form($db);
-
-$object = new User($db);
-$object->fetch($id);
-$object->getrights();
 
 $head = user_prepare_head($object);
 
@@ -133,18 +137,18 @@ $modulesdir = dolGetModulesDirs();
 foreach($modulesdir as $dir)
 {
 	$handle=@opendir(dol_osencode($dir));
-    if (is_resource($handle))
-    {
-    	while (($file = readdir($handle))!==false)
-    	{
-    	    if (is_readable($dir.$file) && substr($file, 0, 3) == 'mod'  && substr($file, dol_strlen($file) - 10) == '.class.php')
-    	    {
-    	        $modName = substr($file, 0, dol_strlen($file) - 10);
+	if (is_resource($handle))
+	{
+		while (($file = readdir($handle))!==false)
+		{
+			if (is_readable($dir.$file) && substr($file, 0, 3) == 'mod'  && substr($file, dol_strlen($file) - 10) == '.class.php')
+			{
+				$modName = substr($file, 0, dol_strlen($file) - 10);
 
-    	        if ($modName)
-    	        {
-    	            include_once $dir.$file;
-    	            $objMod = new $modName($db);
+				if ($modName)
+				{
+					include_once $dir.$file;
+					$objMod = new $modName($db);
 
     	            // Load all lang files of module
     	            if (isset($objMod->langfiles) && is_array($objMod->langfiles))
@@ -195,19 +199,19 @@ dol_syslog("get user perms", LOG_DEBUG);
 $result=$db->query($sql);
 if ($result)
 {
-    $num = $db->num_rows($result);
-    $i = 0;
-    while ($i < $num)
-    {
-        $obj = $db->fetch_object($result);
-        array_push($permsuser,$obj->id);
-        $i++;
-    }
-    $db->free($result);
+	$num = $db->num_rows($result);
+	$i = 0;
+	while ($i < $num)
+	{
+		$obj = $db->fetch_object($result);
+		array_push($permsuser,$obj->id);
+		$i++;
+	}
+	$db->free($result);
 }
 else
 {
-    dol_print_error($db);
+	dol_print_error($db);
 }
 
 // Lecture des droits groupes
@@ -231,21 +235,21 @@ dol_syslog("get user perms", LOG_DEBUG);
 $result=$db->query($sql);
 if ($result)
 {
-    $num = $db->num_rows($result);
-    $i = 0;
-    while ($i < $num)
-    {
-        $obj = $db->fetch_object($result);
-        if (! isset($permsgroupbyentity[$obj->entity]))
-        	$permsgroupbyentity[$obj->entity] = array();
-        array_push($permsgroupbyentity[$obj->entity], $obj->id);
-        $i++;
-    }
-    $db->free($result);
+	$num = $db->num_rows($result);
+	$i = 0;
+	while ($i < $num)
+	{
+		$obj = $db->fetch_object($result);
+		if (! isset($permsgroupbyentity[$obj->entity]))
+			$permsgroupbyentity[$obj->entity] = array();
+		array_push($permsgroupbyentity[$obj->entity], $obj->id);
+		$i++;
+	}
+	$db->free($result);
 }
 else
 {
-    dol_print_error($db);
+	dol_print_error($db);
 }
 
 
@@ -253,30 +257,20 @@ else
  * Ecran ajout/suppression permission
  */
 
-print '<table class="border" width="100%">';
+$linkback = '';
 
-// Ref
-print '<tr><td width="25%" valign="top">'.$langs->trans("Ref").'</td>';
-print '<td>';
-print $form->showrefnav($object,'id','',$user->rights->user->user->lire || $user->admin);
-print '</td>';
-print '</tr>'."\n";
+if ($user->rights->user->user->lire || $user->admin) {
+	$linkback = '<a href="'.DOL_URL_ROOT.'/user/index.php">'.$langs->trans("BackToList").'</a>';
+}
 
-// Lastname
-print '<tr><td width="25%" valign="top">'.$langs->trans("Lastname").'</td>';
-print '<td>'.$object->lastname.'</td>';
-print '</tr>'."\n";
+dol_banner_tab($object,'id',$linkback,$user->rights->user->user->lire || $user->admin);
 
-// Firstname
-print '<tr><td width="25%" valign="top">'.$langs->trans("Firstname").'</td>';
-print '<td>'.$object->firstname.'</td>';
-print '</tr>'."\n";
 
-print '</table><br>';
+//print '<div class="underbanner clearboth"></div>';
 
-if ($user->admin) print info_admin($langs->trans("WarningOnlyPermissionOfActivatedModules"), 0, 1).'<br>';
+if ($user->admin) print info_admin($langs->trans("WarningOnlyPermissionOfActivatedModules"));
 // Show warning about external users
-if (empty($user->societe_id)) print info_admin(showModulesExludedForExternal($modules)).'<br><br>'."\n";
+if (empty($user->societe_id)) print info_admin(showModulesExludedForExternal($modules))."\n";
 
 // For multicompany transversal mode
 // TODO Place a hook here
@@ -310,51 +304,51 @@ $sql.= " ORDER BY r.module, r.id";
 $result=$db->query($sql);
 if ($result)
 {
-    $num = $db->num_rows($result);
-    $i = 0;
-    $var = True;
-    $oldmod='';
+	$num = $db->num_rows($result);
+	$i = 0;
+	$var = True;
+	$oldmod='';
 
-    while ($i < $num)
-    {
-        $obj = $db->fetch_object($result);
+	while ($i < $num)
+	{
+		$obj = $db->fetch_object($result);
 
-        // Si la ligne correspond a un module qui n'existe plus (absent de includes/module), on l'ignore
-        if (empty($modules[$obj->module]))
-        {
-            $i++;
-            continue;
-        }
+		// Si la ligne correspond a un module qui n'existe plus (absent de includes/module), on l'ignore
+		if (empty($modules[$obj->module]))
+		{
+			$i++;
+			continue;
+		}
 
-        if (isset($obj->module) && ($oldmod <> $obj->module))
-        {
-        	$oldmod = $obj->module;
-        	$var = !$var;
+		if (isset($obj->module) && ($oldmod <> $obj->module))
+		{
+			$oldmod = $obj->module;
+			$var = !$var;
 
-        	// Rupture detectee, on recupere objMod
-        	$objMod=$modules[$obj->module];
-        	$picto=($objMod->picto?$objMod->picto:'generic');
+			// Rupture detectee, on recupere objMod
+			$objMod=$modules[$obj->module];
+			$picto=($objMod->picto?$objMod->picto:'generic');
 
         	if ($caneditperms && (empty($objMod->rights_admin_allowed) || empty($object->admin)))
         	{
         		// On affiche ligne pour modifier droits
         		print '<tr '. $bc[$var].'>';
-        		print '<td class="nowrap">'.img_object('',$picto).' '.$objMod->getName();
-        		print '<a name="'.$objMod->getName().'">&nbsp;</a></td>';
+        		print '<td class="maxwidthonsmartphone tdoverflowonsmartphone">'.img_object('',$picto,'class="pictoobjectwidth"').' '.$objMod->getName();
+        		print '<a name="'.$objMod->getName().'"></a></td>';
         		print '<td align="center" class="nowrap">';
-        		print '<a title="'.dol_escape_htmltag($langs->trans("All")).'" alt="'.dol_escape_htmltag($langs->trans("All")).'" href="perms.php?id='.$object->id.'&amp;action=addrights&amp;entity='.$entity.'&amp;module='.$obj->module.'#'.$objMod->getName().'">'.$langs->trans("All")."</a>";
+        		print '<a class="reposition" title="'.dol_escape_htmltag($langs->trans("All")).'" alt="'.dol_escape_htmltag($langs->trans("All")).'" href="perms.php?id='.$object->id.'&amp;action=addrights&amp;entity='.$entity.'&amp;module='.$obj->module.'">'.$langs->trans("All")."</a>";
         		print '/';
-        		print '<a title="'.dol_escape_htmltag($langs->trans("None")).'" alt="'.dol_escape_htmltag($langs->trans("None")).'" href="perms.php?id='.$object->id.'&amp;action=delrights&amp;entity='.$entity.'&amp;module='.$obj->module.'#'.$objMod->getName().'">'.$langs->trans("None")."</a>";
+        		print '<a class="reposition" title="'.dol_escape_htmltag($langs->trans("None")).'" alt="'.dol_escape_htmltag($langs->trans("None")).'" href="perms.php?id='.$object->id.'&amp;action=delrights&amp;entity='.$entity.'&amp;module='.$obj->module.'">'.$langs->trans("None")."</a>";
         		print '</td>';
         		print '<td colspan="2">&nbsp;</td>';
         		print '</tr>'."\n";
         	}
         }
 
-        print '<tr '. $bc[$var].'>';
+		print '<tr '. $bc[$var].'>';
 
-        // Picto and label of permission
-        print '<td>'.img_object('',$picto).' '.$objMod->getName().'</td>';
+		// Picto and label of permission
+		print '<td class="maxwidthonsmartphone tdoverflowonsmartphone">'.img_object('',$picto,'class="pictoobjectwidth"').' '.$objMod->getName().'</td>';
 
         // Permission and tick
         if (! empty($object->admin) && ! empty($objMod->rights_admin_allowed))    // Permission own because admin
@@ -371,7 +365,7 @@ if ($result)
         {
         	if ($caneditperms)
         	{
-        		print '<td align="center"><a href="perms.php?id='.$object->id.'&amp;action=delrights&amp;rights='.$obj->id.'#'.$objMod->getName().'">'.img_edit_remove($langs->trans("Remove")).'</a></td>';
+        		print '<td align="center"><a class="reposition" href="perms.php?id='.$object->id.'&amp;action=delrights&amp;rights='.$obj->id.'">'.img_edit_remove($langs->trans("Remove")).'</a></td>';
         	}
         	print '<td align="center" class="nowrap">';
         	print img_picto($langs->trans("Active"),'tick');
@@ -397,7 +391,7 @@ if ($result)
 	        	// Do not own permission
 	        	if ($caneditperms)
 	        	{
-	        		print '<td align="center"><a href="perms.php?id='.$object->id.'&amp;action=addrights&amp;entity='.$entity.'&amp;rights='.$obj->id.'#'.$objMod->getName().'">'.img_edit_add($langs->trans("Add")).'</a></td>';
+	        		print '<td align="center"><a class="reposition" href="perms.php?id='.$object->id.'&amp;action=addrights&amp;entity='.$entity.'&amp;rights='.$obj->id.'">'.img_edit_add($langs->trans("Add")).'</a></td>';
 	        	}
 	        	print '<td>&nbsp</td>';
 	        }
@@ -407,21 +401,22 @@ if ($result)
         	// Do not own permission
         	if ($caneditperms)
         	{
-        		print '<td align="center"><a href="perms.php?id='.$object->id.'&amp;action=addrights&amp;entity='.$entity.'&amp;rights='.$obj->id.'#'.$objMod->getName().'">'.img_edit_add($langs->trans("Add")).'</a></td>';
+        		print '<td align="center"><a class="reposition" href="perms.php?id='.$object->id.'&amp;action=addrights&amp;entity='.$entity.'&amp;rights='.$obj->id.'">'.img_edit_add($langs->trans("Add")).'</a></td>';
         	}
         	print '<td>&nbsp</td>';
         }
 
-        $perm_libelle=($conf->global->MAIN_USE_ADVANCED_PERMS && ($langs->trans("PermissionAdvanced".$obj->id)!=("PermissionAdvanced".$obj->id))?$langs->trans("PermissionAdvanced".$obj->id):(($langs->trans("Permission".$obj->id)!=("Permission".$obj->id))?$langs->trans("Permission".$obj->id):$obj->libelle));
-        print '<td>'.$perm_libelle. '</td>';
+		$permlabel=($conf->global->MAIN_USE_ADVANCED_PERMS && ($langs->trans("PermissionAdvanced".$obj->id)!=("PermissionAdvanced".$obj->id))?$langs->trans("PermissionAdvanced".$obj->id):(($langs->trans("Permission".$obj->id)!=("Permission".$obj->id))?$langs->trans("Permission".$obj->id):$langs->trans($obj->libelle)));
+		print '<td class="maxwidthonsmartphone">'.$permlabel.'</td>';
 
-        print '</tr>'."\n";
+		print '</tr>'."\n";
 
-        $i++;
-    }
+		$i++;
+	}
 }
 else dol_print_error($db);
 print '</table>';
+
 
 // For multicompany transversal mode
 // TODO Place a hook here

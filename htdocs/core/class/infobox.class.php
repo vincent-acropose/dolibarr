@@ -30,7 +30,7 @@ class InfoBox
 	/**
 	 * Name of positions 0=Home, 1=...
 	 *
-	 * @return	array		Array with list of zones
+	 * @return	string[]		Array with list of zones
 	 */
 	static function getListOfPagesForBoxes()
 	{
@@ -45,9 +45,10 @@ class InfoBox
      *  @param	string		$zone			Name or area (-1 for all, 0 for Homepage, 1 for xxx, ...)
      *  @param  User|null   $user	  		Object user to filter
      *  @param	array		$excludelist	Array of box id (box.box_id = boxes_def.rowid) to exclude
+     *  @param  int         $includehidden  Include also hidden boxes
      *  @return array       	        	Array of boxes
      */
-    static function listBoxes($db, $mode, $zone, $user=null, $excludelist=array())
+    static function listBoxes($db, $mode, $zone, $user=null, $excludelist=array(), $includehidden=1)
     {
         global $conf;
 
@@ -145,7 +146,7 @@ class InfoBox
     	                        	if (! empty($conf->$tmpmodule->enabled)) $tmpenabled=1;
                             		//print $boxname.'-'.$module.'-module enabled='.(empty($conf->$tmpmodule->enabled)?0:1).'<br>';
                             	}
-                            	if (empty($tmpenabled))	// We found at least one module required that disabled
+                            	if (empty($tmpenabled))	// We found at least one module required that is disabled
         	                    {
         	                    	$enabled=0;
         	                    	break;
@@ -155,7 +156,7 @@ class InfoBox
                         //print '=>'.$boxname.'-enabled='.$enabled.'<br>';
 
                         //print 'xx module='.$module.' enabled='.$enabled;
-                        if ($enabled) $boxes[]=$box;
+                        if ($enabled && ($includehidden || empty($box->hidden))) $boxes[]=$box;
                         else unset($box);
                     }
                     else

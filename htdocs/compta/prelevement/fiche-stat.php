@@ -57,12 +57,12 @@ if ($prev_id)
 
 		print '<table class="border" width="100%">';
 
-		print '<tr><td width="20%">'.$langs->trans("Ref").'</td><td>'.$bon->getNomUrl(1).'</td></tr>';
-		print '<tr><td width="20%">'.$langs->trans("Date").'</td><td>'.dol_print_date($bon->datec,'day').'</td></tr>';
-		print '<tr><td width="20%">'.$langs->trans("Amount").'</td><td>'.price($bon->amount).'</td></tr>';
+		print '<tr><td class="titlefield">'.$langs->trans("Ref").'</td><td>'.$bon->getNomUrl(1).'</td></tr>';
+		print '<tr><td>'.$langs->trans("Date").'</td><td>'.dol_print_date($bon->datec,'day').'</td></tr>';
+		print '<tr><td>'.$langs->trans("Amount").'</td><td>'.price($bon->amount).'</td></tr>';
 
 		// Status
-		print '<tr><td width="20%">'.$langs->trans('Status').'</td>';
+		print '<tr><td>'.$langs->trans('Status').'</td>';
 		print '<td>'.$bon->getLibStatut(1).'</td>';
 		print '</tr>';
 
@@ -71,16 +71,16 @@ if ($prev_id)
 			$muser = new User($db);
 			$muser->fetch($bon->user_trans);
 
-			print '<tr><td width="20%">'.$langs->trans("TransData").'</td><td>';
+			print '<tr><td>'.$langs->trans("TransData").'</td><td>';
 			print dol_print_date($bon->date_trans,'day');
 			print ' '.$langs->trans("By").' '.$muser->getFullName($langs).'</td></tr>';
-			print '<tr><td width="20%">'.$langs->trans("TransMetod").'</td><td>';
+			print '<tr><td>'.$langs->trans("TransMetod").'</td><td>';
 			print $bon->methodes_trans[$bon->method_trans];
 			print '</td></tr>';
 		}
 		if($bon->date_credit <> 0)
 		{
-			print '<tr><td width="20%">'.$langs->trans('CreditDate').'</td><td>';
+			print '<tr><td>'.$langs->trans('CreditDate').'</td><td>';
 			print dol_print_date($bon->date_credit,'day');
 			print '</td></tr>';
 		}
@@ -89,9 +89,9 @@ if ($prev_id)
 
 		print '<br>';
 
-		print '<table class="border" width="100%"><tr><td width="20%">';
+		print '<table class="border" width="100%"><tr><td class="titlefield">';
 		print $langs->trans("WithdrawalFile").'</td><td>';
-		$relativepath = 'receipts/'.$bon->ref;
+		$relativepath = 'receipts/'.$bon->ref.'.xml';
 		print '<a data-ajax="false" href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
 		print '</td></tr></table>';
 
@@ -120,7 +120,7 @@ if ($prev_id)
 		$num = $db->num_rows($resql);
 		$i = 0;
 
-		print_fiche_titre($langs->trans("StatisticsByLineStatus"),'','');
+		print load_fiche_titre($langs->trans("StatisticsByLineStatus"),'','');
 		
 		print"\n<!-- debut table -->\n";
 		print '<table class="noborder" width="100%" cellspacing="0" cellpadding="4">';
@@ -141,7 +141,7 @@ if ($prev_id)
 			print price($row[0]);
 
 			print '</td><td align="right">';
-			print round($row[0]/$bon->amount*100,2)." %";
+			if ($bon->amount) print round($row[0]/$bon->amount*100,2)." %";
 			print '</td>';
 
 			print "</tr>\n";
@@ -159,6 +159,5 @@ if ($prev_id)
 	}
 }
 
-$db->close();
-
 llxFooter();
+$db->close();

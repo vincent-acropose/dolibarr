@@ -32,8 +32,8 @@ include_once DOL_DOCUMENT_ROOT.'/core/modules/mailings/modules_mailings.php';
 class mailing_contacts3 extends MailingTargets
 {
 	var $name='ContactsByCompanyCategory';
-    // This label is used if no translation is found for key MailingModuleDescXXX where XXX=name is found
-    var $desc='Add contacts by company category';
+	// This label is used if no translation is found for key XXX neither MailingModuleDescXXX where XXX=name is found
+	var $desc='Add contacts by company category';
     var $require_admin=0;
 
     var $require_module=array();
@@ -89,7 +89,7 @@ class mailing_contacts3 extends MailingTargets
     	$sql.= " AND sp.entity IN (".getEntity('societe', 1).")";
     	$sql.= " AND sp.email NOT IN (SELECT email FROM ".MAIN_DB_PREFIX."mailing_cibles WHERE fk_mailing=".$mailing_id.")";
     	if ($filtersarray[0] <> 'all') $sql.= " AND cs.fk_categorie = c.rowid";
-    	if ($filtersarray[0] <> 'all') $sql.= " AND cs.fk_societe = sp.fk_soc";
+    	if ($filtersarray[0] <> 'all') $sql.= " AND cs.fk_soc = sp.fk_soc";
     	if ($filtersarray[0] <> 'all') $sql.= " AND c.label = '".$this->db->escape($filtersarray[0])."'";
     	$sql.= " ORDER BY sp.lastname, sp.firstname";
 
@@ -145,7 +145,7 @@ class mailing_contacts3 extends MailingTargets
             $statssql[$i].= " AND sp.email != ''";    // Note that null != '' is false
             $statssql[$i].= " AND sp.entity IN (".getEntity('societe', 1).")";
             $statssql[$i].= " AND cs.fk_categorie = c.rowid";
-            $statssql[$i].= " AND cs.fk_societe = sp.fk_soc";
+            $statssql[$i].= " AND cs.fk_soc = sp.fk_soc";
             $statssql[$i].= " GROUP BY c.label";
             $statssql[$i].= " ORDER BY nb DESC";
             $statssql[$i].= " LIMIT $i,1";
@@ -158,7 +158,7 @@ class mailing_contacts3 extends MailingTargets
     /**
      *		Return here number of distinct emails returned by your selector.
      *
-     *		@param	string	$sql		Requete sql de comptage
+     *		@param		string	$sql		Requete sql de comptage
      *		@return		int		Number of recipients
      */
     function getNbOfRecipients($sql='')
@@ -185,7 +185,7 @@ class mailing_contacts3 extends MailingTargets
         $sql.= " AND sp.entity IN (".getEntity('societe', 1).")";
         $sql.= " AND sp.email != ''"; // Note that null != '' is false
         $sql.= " AND cs.fk_categorie = c.rowid";
-        $sql.= " AND cs.fk_societe = sp.fk_soc";
+        $sql.= " AND cs.fk_soc = sp.fk_soc";
         */
     	// La requete doit retourner un champ "nb" pour etre comprise
     	// par parent::getNbOfRecipients
@@ -213,7 +213,7 @@ class mailing_contacts3 extends MailingTargets
         $sql.= " AND sp.statut = 1";
         $sql.= " AND sp.entity IN (".getEntity('societe', 1).")";
         $sql.= " AND cs.fk_categorie = c.rowid";
-        $sql.= " AND cs.fk_societe = sp.fk_soc";
+        $sql.= " AND cs.fk_soc = sp.fk_soc";
         $sql.= " GROUP BY c.label";
         $sql.= " ORDER BY c.label";
 
@@ -225,14 +225,22 @@ class mailing_contacts3 extends MailingTargets
         if ($resql)
         {
             $num = $this->db->num_rows($resql);
-            $i = 0;
-            while ($i < $num)
+            if ($num)
             {
-                $obj = $this->db->fetch_object($resql);
-                $s.='<option value="'.$obj->label.'">'.$obj->label.' ('.$obj->nb.')</option>';
-                $i++;
+                $i = 0;
+                while ($i < $num)
+                {
+                    $obj = $this->db->fetch_object($resql);
+                    $s.='<option value="'.$obj->label.'">'.$obj->label.' ('.$obj->nb.')</option>';
+                    $i++;
+                }
+            }
+            else
+            {
+                $s.='<option value="-1" disabled="disabled">'.$langs->trans("NoContactLinkedToThirdpartieWithCategoryFound").'</option>';
             }
         }
+        else dol_print_error($this->db);
         $s.='</select>';
 
         return $s;

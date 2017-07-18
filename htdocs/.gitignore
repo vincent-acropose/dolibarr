@@ -1,7 +1,12 @@
+/allscreens*
 /ancot*
 /bootstrap*
+/dolimed*
+/ecommerce*
 /extensions*
+/forceproject*
 /google*
+/lead
 /multicompany*
 /ndf*
 /numberingpack*
@@ -14,3 +19,8 @@
 /lead
 /dolimed*
 /allscreens*
+/ecommerce/
+/cabinetmed*
+/webmail*
+/conf/conf.php
+/subtotal/

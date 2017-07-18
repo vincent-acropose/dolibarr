@@ -1,8 +1,10 @@
 <?php
 /* Copyright (C) 2003-2005	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
- * Copyright (C) 2004-2010	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2004		Eric Seigne				<eric.seigne@ryxeo.com>
- * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2004-2010	Laurent Destailleur	<eldy@users.sourceforge.net>
+ * Copyright (C) 2004		Eric Seigne		<eric.seigne@ryxeo.com>
+ * Copyright (C) 2005-2012	Regis Houssin		<regis.houssin@capnetworks.com>
+ * Copyright (C) 2015       	Marcos García           <marcosgdf@gmail.com>
+ * Copyright (C) 2016       	Charlie Benke           <charlie@patas-monkey.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +35,8 @@ abstract class CommonDocGenerator
 {
 	var $error='';
 	protected $db;
-	
-	
+
+
 	/**
 	 *	Constructor
 	 *
@@ -57,6 +59,8 @@ abstract class CommonDocGenerator
     {
         global $conf;
 
+        $logotouse=$conf->user->dir_output.'/'.get_exdir($user->id, 2, 0, 1, $user, 'user').'/'.$user->photo;
+
         return array(
             'myuser_lastname'=>$user->lastname,
             'myuser_firstname'=>$user->firstname,
@@ -73,7 +77,8 @@ abstract class CommonDocGenerator
         	'myuser_fax'=>$user->office_fax,
             'myuser_mobile'=>$user->user_mobile,
             'myuser_email'=>$user->email,
-        	'myuser_logo'=>$user->photo,
+        	'myuser_logo'=>$logotouse,
+        	'myuser_job'=>$user->job,
             'myuser_web'=>''	// url not exist in $user object
         );
     }
@@ -130,9 +135,9 @@ abstract class CommonDocGenerator
             'mycompany_idprof5'=>$mysoc->idprof5,
             'mycompany_idprof6'=>$mysoc->idprof6,
         	'mycompany_vatnumber'=>$mysoc->tva_intra,
-        	// Only private not exists for "mysoc"
+			'mycompany_object'=>$mysoc->object,
             'mycompany_note_private'=>$mysoc->note_private,
-
+            //'mycompany_note_public'=>$mysoc->note_public,        // Only private not exists for "mysoc" but both for thirdparties
         );
     }
 
@@ -159,6 +164,7 @@ abstract class CommonDocGenerator
 
         $array_thirdparty = array(
             'company_name'=>$object->name,
+	        'company_name_alias' => $object->name_alias,
             'company_email'=>$object->email,
             'company_phone'=>$object->phone,
             'company_fax'=>$object->fax,
@@ -205,7 +211,7 @@ abstract class CommonDocGenerator
         		{
         			$object->array_options['options_'.$key] = price($object->array_options['options_'.$key],0,$outputlangs,0,0,-1,$conf->currency);
         		}
-        		else if($extrafields->attribute_type[$key] == 'select')
+        		else if($extrafields->attribute_type[$key] == 'select' || $extrafields->attribute_type[$key] == 'checkbox')
         		{
         			$object->array_options['options_'.$key] = $extrafields->attribute_param[$key]['options'][$object->array_options['options_'.$key]];
         		}
@@ -218,7 +224,7 @@ abstract class CommonDocGenerator
 	/**
 	 * Define array with couple subtitution key => subtitution value
 	 *
-	 * @param	Object 		$object        	contact
+	 * @param	Contact 		$object        	contact
 	 * @param	Translate 	$outputlangs   	object for output
 	 * @param   array_key	$array_key	    Name of the key for return array
 	 * @return	array of substitution key->code
@@ -276,7 +282,7 @@ abstract class CommonDocGenerator
 			{
 				$object->array_options['options_' . $key] = price($object->array_options ['options_' . $key], 0, $outputlangs, 0, 0, - 1, $conf->currency);
 			}
-			elseif($extrafields->attribute_type[$key] == 'select')
+			elseif($extrafields->attribute_type[$key] == 'select' || $extrafields->attribute_type[$key] == 'checkbox')
 			{
 				$object->array_options['options_' . $key] = $extrafields->attribute_param[$key]['options'][$object->array_options['options_' . $key]];
 			}
@@ -298,11 +304,13 @@ abstract class CommonDocGenerator
 
     	$now=dol_now('gmt');	// gmt
     	$array_other = array(
-   			'current_date'=>dol_print_date($now,'day','tzuser'),
-   			'current_datehour'=>dol_print_date($now,'dayhour','tzuser'),
+    	    // Date in default language
+    	    'current_date'=>dol_print_date($now,'day','tzuser'),
+    	    'current_datehour'=>dol_print_date($now,'dayhour','tzuser'),
    			'current_server_date'=>dol_print_date($now,'day','tzserver'),
    			'current_server_datehour'=>dol_print_date($now,'dayhour','tzserver'),
-   			'current_date_locale'=>dol_print_date($now,'day','tzuser',$outputlangs),
+    	    // Date in requested output language
+    	    'current_date_locale'=>dol_print_date($now,'day','tzuser',$outputlangs),
    			'current_datehour_locale'=>dol_print_date($now,'dayhour','tzuser',$outputlangs),
    			'current_server_date_locale'=>dol_print_date($now,'day','tzserver',$outputlangs),
    			'current_server_datehour_locale'=>dol_print_date($now,'dayhour','tzserver',$outputlangs),
@@ -318,14 +326,14 @@ abstract class CommonDocGenerator
 	 *
 	 * @param   Object			$object             Main object to use as data source
 	 * @param   Translate		$outputlangs        Lang object to use for output
-     * @param   array_key		$array_key	        Name of the key for return array
+     * @param   string		    $array_key	        Name of the key for return array
 	 * @return	array								Array of substitution
 	 */
 	function get_substitutionarray_object($object,$outputlangs,$array_key='object')
 	{
 		global $conf;
 
-		$sumpayed=''; $alreadypayed='';
+		$sumpayed=$sumdeposit=$sumcreditnote='';
 		if ($object->element == 'facture')
 		{
 			$invoice_source=new Facture($this->db);
@@ -334,7 +342,8 @@ abstract class CommonDocGenerator
 				$invoice_source->fetch($object->fk_facture_source);
 			}
 			$sumpayed = $object->getSommePaiement();
-			$alreadypayed=price($sumpayed,0,$outputlangs);
+			$sumdeposit = $object->getSumDepositsUsed();
+			$sumcreditnote = $object->getSumCreditNotesUsed();
 		}
 
 		$resarray=array(
@@ -344,6 +353,7 @@ abstract class CommonDocGenerator
 		$array_key.'_ref_customer'=>$object->ref_client,
 		$array_key.'_ref_supplier'=>(! empty($object->ref_fournisseur)?$object->ref_fournisseur:''),
 		$array_key.'_source_invoice_ref'=>$invoice_source->ref,
+		// Dates
         $array_key.'_hour'=>dol_print_date($object->date,'hour'),
 		$array_key.'_date'=>dol_print_date($object->date,'day'),
 		$array_key.'_date_rfc'=>dol_print_date($object->date,'dayrfc'),
@@ -354,19 +364,20 @@ abstract class CommonDocGenerator
 		$array_key.'_date_validation'=>(! empty($object->date_validation)?dol_print_date($object->date_validation,'dayhour'):''),
 		$array_key.'_date_delivery_planed'=>(! empty($object->date_livraison)?dol_print_date($object->date_livraison,'day'):''),
 		$array_key.'_date_close'=>(! empty($object->date_cloture)?dol_print_date($object->date_cloture,'dayhour'):''),
+
 		$array_key.'_payment_mode_code'=>$object->mode_reglement_code,
 		$array_key.'_payment_mode'=>($outputlangs->transnoentitiesnoconv('PaymentType'.$object->mode_reglement_code)!='PaymentType'.$object->mode_reglement_code?$outputlangs->transnoentitiesnoconv('PaymentType'.$object->mode_reglement_code):$object->mode_reglement),
 		$array_key.'_payment_term_code'=>$object->cond_reglement_code,
 		$array_key.'_payment_term'=>($outputlangs->transnoentitiesnoconv('PaymentCondition'.$object->cond_reglement_code)!='PaymentCondition'.$object->cond_reglement_code?$outputlangs->transnoentitiesnoconv('PaymentCondition'.$object->cond_reglement_code):$object->cond_reglement),
 
 		$array_key.'_total_ht_locale'=>price($object->total_ht, 0, $outputlangs),
-		$array_key.'_total_vat_locale'=>price($object->total_tva, 0, $outputlangs),
+		$array_key.'_total_vat_locale'=>(! empty($object->total_vat)?price($object->total_vat, 0, $outputlangs):price($object->total_tva, 0, $outputlangs)),
 		$array_key.'_total_localtax1_locale'=>price($object->total_localtax1, 0, $outputlangs),
 		$array_key.'_total_localtax2_locale'=>price($object->total_localtax2, 0, $outputlangs),
 		$array_key.'_total_ttc_locale'=>price($object->total_ttc, 0, $outputlangs),
 		$array_key.'_total_discount_ht_locale' => price($object->getTotalDiscount(), 0, $outputlangs),
 		$array_key.'_total_ht'=>price2num($object->total_ht),
-		$array_key.'_total_vat'=>price2num($object->total_tva),
+		$array_key.'_total_vat'=>(! empty($object->total_vat)?price2num($object->total_vat):price2num($object->total_tva)),
 		$array_key.'_total_localtax1'=>price2num($object->total_localtax1),
 		$array_key.'_total_localtax2'=>price2num($object->total_localtax2),
 		$array_key.'_total_ttc'=>price2num($object->total_ttc),
@@ -375,21 +386,36 @@ abstract class CommonDocGenerator
 		$array_key.'_note_private'=>$object->note,
 		$array_key.'_note_public'=>$object->note_public,
 		$array_key.'_note'=>$object->note_public,			// For backward compatibility
+
 		// Payments
-		$array_key.'_already_payed_locale'=>price($alreadypayed, 0, $outputlangs),
-		$array_key.'_remain_to_pay_locale'=>price($object->total_ttc - $sumpayed, 0, $outputlangs),
-		$array_key.'_already_payed'=>$alreadypayed,
-		$array_key.'_remain_to_pay'=>price2num($object->total_ttc - $sumpayed)
+		$array_key.'_already_payed_locale'=>price($sumpayed, 0, $outputlangs),
+		$array_key.'_already_payed'=>price2num($sumpayed),
+		$array_key.'_already_deposit_locale'=>price($sumdeposit, 0, $outputlangs),
+		$array_key.'_already_deposit'=>price2num($sumdeposit),
+		$array_key.'_already_creditnote_locale'=>price($sumcreditnote, 0, $outputlangs),
+		$array_key.'_already_creditnote'=>price2num($sumcreditnote),
+
+		$array_key.'_already_payed_all_locale'=>price(price2num($sumpayed + $sumdeposit + $sumcreditnote, 'MT'), 0, $outputlangs),
+		$array_key.'_already_payed_all'=> price2num(($sumpayed + $sumdeposit + $sumcreditnote), 'MT'),
+
+		// Remain to pay with all know infrmation (except open direct debit requests)
+		$array_key.'_remain_to_pay_locale'=>price(price2num($object->total_ttc - $sumpayed - $sumdeposit - $sumcreditnote, 'MT'), 0, $outputlangs),
+		$array_key.'_remain_to_pay'=>price2num($object->total_ttc - $sumpayed - $sumdeposit - $sumcreditnote, 'MT')
 		);
 
 		// Add vat by rates
 		foreach ($object->lines as $line)
 		{
+		    // $line->tva_tx format depends on database field accuraty, no reliable. This is kept for backward comaptibility
 			if (empty($resarray[$array_key.'_total_vat_'.$line->tva_tx])) $resarray[$array_key.'_total_vat_'.$line->tva_tx]=0;
 			$resarray[$array_key.'_total_vat_'.$line->tva_tx]+=$line->total_tva;
 			$resarray[$array_key.'_total_vat_locale_'.$line->tva_tx]=price($resarray[$array_key.'_total_vat_'.$line->tva_tx]);
+		    // $vatformated is vat without not expected chars (so 20, or 8.5 or 5.99 for example)
+			$vatformated=vatrate($line->tva_tx);
+			if (empty($resarray[$array_key.'_total_vat_'.$vatformated])) $resarray[$array_key.'_total_vat_'.$vatformated]=0;
+			$resarray[$array_key.'_total_vat_'.$vatformated]+=$line->total_tva;
+			$resarray[$array_key.'_total_vat_locale_'.$vatformated]=price($resarray[$array_key.'_total_vat_'.$vatformated]);
 		}
-
 		// Retrieve extrafields
 		if (is_array($object->array_options) && count($object->array_options))
 		{
@@ -416,10 +442,11 @@ abstract class CommonDocGenerator
 	{
 		global $conf;
 
-		return array(
+		$resarray= array(
 			'line_fulldesc'=>doc_getlinedesc($line,$outputlangs),
 			'line_product_ref'=>$line->product_ref,
 			'line_product_label'=>$line->product_label,
+			'line_product_type'=>$line->product_type,
 			'line_desc'=>$line->desc,
 			'line_vatrate'=>vatrate($line->tva_tx,true,$line->info_bits),
 			'line_up'=>price2num($line->subprice),
@@ -432,17 +459,32 @@ abstract class CommonDocGenerator
 			'line_price_ht_locale'=>price($line->total_ht, 0, $outputlangs),
 			'line_price_ttc_locale'=>price($line->total_ttc, 0, $outputlangs),
 			'line_price_vat_locale'=>price($line->total_tva, 0, $outputlangs),
-			'line_date_start'=>$line->date_start,
-			'line_date_start_rfc'=>dol_print_date($line->date_start,'rfc'),
-			'line_date_end'=>$line->date_end,
-			'line_date_end_rfc'=>dol_print_date($line->date_end,'rfc')
+		    // Dates
+			'line_date_start'=>dol_print_date($line->date_start, 'day', 'tzuser'),
+			'line_date_start_locale'=>dol_print_date($line->date_start, 'day', 'tzuser', $outputlangs),
+		    'line_date_start_rfc'=>dol_print_date($line->date_start, 'dayrfc', 'tzuser'),
+		    'line_date_end'=>dol_print_date($line->date_end, 'day', 'tzuser'),
+		    'line_date_end_locale'=>dol_print_date($line->date_end, 'day', 'tzuser', $outputlangs),
+		    'line_date_end_rfc'=>dol_print_date($line->date_end, 'dayrfc', 'tzuser'),
 		);
+
+		// Retrieve extrafields
+		$extrafieldkey=$line->element;
+		$array_key="line";
+		require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+		$extrafields = new ExtraFields($this->db);
+		$extralabels = $extrafields->fetch_name_optionals_label($extrafieldkey,true);
+		$line->fetch_optionals($line->rowid,$extralabels);
+
+		$resarray = $this->fill_substitutionarray_with_extrafields($line,$resarray,$extrafields,$array_key=$array_key,$outputlangs);
+
+		return $resarray;
 	}
 
     /**
      * Define array with couple substitution key => substitution value
      *
-     * @param   Object			$object             Main object to use as data source
+     * @param   Expedition			$object             Main object to use as data source
      * @param   Translate		$outputlangs        Lang object to use for output
      * @param   array_key		$array_key	        Name of the key for return array
      * @return	array								Array of substitution
@@ -538,7 +580,7 @@ abstract class CommonDocGenerator
      *	@param  Object			$object				Object with extrafields (must have $object->array_options filled)
      *	@param  array			$array_to_fill      Substitution array
      *  @param  Extrafields		$extrafields        Extrafields object
-     *  @param  string			$array_key	        Name of the key for return array
+     *  @param  string			$array_key	        Prefix for name of the keys into returned array
      *  @param  Translate		$outputlangs        Lang object to use for output
      *	@return	array								Substitution array
      */
@@ -554,17 +596,36 @@ abstract class CommonDocGenerator
 				//Add value to store price with currency
 				$array_to_fill=array_merge($array_to_fill,array($array_key.'_options_'.$key.'_currency' => $object->array_options['options_'.$key.'_currency']));
 			}
-			else if($extrafields->attribute_type[$key] == 'select')
+			else if($extrafields->attribute_type[$key] == 'select' || $extrafields->attribute_type[$key] == 'checkbox')
 			{
 				$object->array_options['options_'.$key] = $extrafields->attribute_param[$key]['options'][$object->array_options['options_'.$key]];
 			}
 			else if($extrafields->attribute_type[$key] == 'date')
 			{
-				$object->array_options['options_'.$key] = (strlen($object->array_options['options_'.$key])>0?dol_print_date($object->array_options['options_'.$key],'day'):'');
+				if (strlen($object->array_options['options_'.$key])>0)
+				{
+					$date = $object->array_options['options_'.$key];
+					$object->array_options['options_'.$key] = dol_print_date($date,'day');                                       // using company output language
+					$object->array_options['options_'.$key.'_locale'] = dol_print_date($date,'day','tzserver',$outputlangs);     // using output language format
+					$object->array_options['options_'.$key.'_rfc'] = dol_print_date($date,'dayrfc');                             // international format
+				}
+				else
+				{
+					$object->array_options['options_'.$key] = '';
+					$object->array_options['options_'.$key.'_locale'] = '';
+					$object->array_options['options_'.$key.'_rfc'] = '';
+				}
+				$array_to_fill=array_merge($array_to_fill,array($array_key.'_options_'.$key.'_locale' => $object->array_options['options_'.$key.'_locale']));
+				$array_to_fill=array_merge($array_to_fill,array($array_key.'_options_'.$key.'_rfc' => $object->array_options['options_'.$key.'_rfc']));
 			}
 			else if($extrafields->attribute_type[$key] == 'datetime')
 			{
-				$object->array_options['options_'.$key] = ($object->array_options['options_'.$key]!="0000-00-00 00:00:00"?dol_print_date($object->array_options['options_'.$key],'dayhour'):'');
+				$datetime = $object->array_options['options_'.$key];
+				$object->array_options['options_'.$key] = ($datetime!="0000-00-00 00:00:00"?dol_print_date($object->array_options['options_'.$key],'dayhour'):'');                            // using company output language
+				$object->array_options['options_'.$key.'_locale'] = ($datetime!="0000-00-00 00:00:00"?dol_print_date($object->array_options['options_'.$key],'dayhour','tzserver',$outputlangs):'');    // using output language format
+				$object->array_options['options_'.$key.'_rfc'] = ($datetime!="0000-00-00 00:00:00"?dol_print_date($object->array_options['options_'.$key],'dayhourrfc'):'');                             // international format
+				$array_to_fill=array_merge($array_to_fill,array($array_key.'_options_'.$key.'_locale' => $object->array_options['options_'.$key.'_locale']));
+				$array_to_fill=array_merge($array_to_fill,array($array_key.'_options_'.$key.'_rfc' => $object->array_options['options_'.$key.'_rfc']));
 			}
 			$array_to_fill=array_merge($array_to_fill,array($array_key.'_options_'.$key => $object->array_options['options_'.$key]));
 		}

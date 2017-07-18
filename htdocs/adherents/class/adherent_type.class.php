@@ -2,6 +2,7 @@
 /* Copyright (C) 2002      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2009      Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2016      Charlie Benke        <charlie@patas-monkey.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,23 +33,29 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
  */
 class AdherentType extends CommonObject
 {
-    public $table_element = 'adherent_type';
-    public $element = 'adherent_type';
-
-    var $id;
-
-    /**
-     * @var int
-     * @deprecated Use rowid
-     */
-    public $ref;
-
-    var $libelle;
-    var $statut;
-    var $cotisation;  // Soumis a la cotisation
-    var $vote;		  // droit de vote
-    var $note; 		  // commentaire
-    var $mail_valid;  //mail envoye lors de la validation
+	public $table_element = 'adherent_type';
+	public $element = 'adherent_type';
+	public $picto = 'group';
+	
+	/** @var string Label */
+	public $label;
+	/**
+	 * @var bool
+	 * @deprecated Use subscription
+	 * @see subscription
+	 */
+	public $cotisation;
+	/**
+	 * @var int Subsription required (0 or 1)
+	 * @since 5.0
+	 */
+	public $subscription;
+	/** @var string Public note */
+	public $note;
+	/** @var bool Can vote*/
+	public $vote;
+	/** @var bool Email sent during validation */
+	public $mail_valid;
 
 
     /**
@@ -73,7 +80,7 @@ class AdherentType extends CommonObject
     {
         global $conf;
 
-        $this->statut=trim($this->statut);
+        $this->statut=(int) $this->statut;
 
         $sql = "INSERT INTO ".MAIN_DB_PREFIX."adherent_type (";
         $sql.= "libelle";
@@ -116,11 +123,11 @@ class AdherentType extends CommonObject
         $sql.= "SET ";
         $sql.= "statut = ".$this->statut.",";
         $sql.= "libelle = '".$this->db->escape($this->libelle) ."',";
-        $sql.= "cotisation = '".$this->cotisation."',";
+        $sql.= "subscription = '".$this->subscription."',";
         $sql.= "note = '".$this->db->escape($this->note)."',";
         $sql.= "vote = '".$this->vote."',";
         $sql.= "mail_valid = '".$this->db->escape($this->mail_valid)."'";
-        $sql .= " WHERE rowid = $this->id";
+        $sql .= " WHERE rowid =".$this->id;
 
         $result = $this->db->query($sql);
         if ($result)
@@ -174,7 +181,7 @@ class AdherentType extends CommonObject
                 return 1;
             }
             else
-			{
+            {
                 return 0;
             }
         }
@@ -193,7 +200,7 @@ class AdherentType extends CommonObject
      */
     function fetch($rowid)
     {
-        $sql = "SELECT d.rowid, d.libelle, d.statut, d.cotisation, d.mail_valid, d.note, d.vote";
+        $sql = "SELECT d.rowid, d.libelle as label, d.statut, d.subscription, d.mail_valid, d.note, d.vote";
         $sql .= " FROM ".MAIN_DB_PREFIX."adherent_type as d";
         $sql .= " WHERE d.rowid = ".$rowid;
 
@@ -208,9 +215,10 @@ class AdherentType extends CommonObject
 
                 $this->id             = $obj->rowid;
                 $this->ref            = $obj->rowid;
-                $this->libelle        = $obj->libelle;
+                $this->label          = $obj->label;
+                $this->libelle        = $obj->label;	// For backward compatibility
                 $this->statut         = $obj->statut;
-                $this->cotisation     = $obj->cotisation;
+                $this->subscription   = $obj->subscription;
                 $this->mail_valid     = $obj->mail_valid;
                 $this->note           = $obj->note;
                 $this->vote           = $obj->vote;
@@ -233,7 +241,7 @@ class AdherentType extends CommonObject
     {
         global $conf,$langs;
 
-        $projets = array();
+        $adherenttypes = array();
 
         $sql = "SELECT rowid, libelle";
         $sql.= " FROM ".MAIN_DB_PREFIX."adherent_type";
@@ -251,7 +259,7 @@ class AdherentType extends CommonObject
                 {
                     $obj = $this->db->fetch_object($resql);
 
-                    $projets[$obj->rowid] = $langs->trans($obj->libelle);
+                    $adherenttypes[$obj->rowid] = $langs->trans($obj->libelle);
                     $i++;
                 }
             }
@@ -260,15 +268,14 @@ class AdherentType extends CommonObject
         {
             print $this->db->error();
         }
-
-        return $projets;
+        return $adherenttypes;
     }
 
 
     /**
-     *    	Renvoie nom clicable (avec eventuellement le picto)
+     *    	Return clicable name (with picto eventually)
      *
-     *		@param		int		$withpicto		0=Pas de picto, 1=Inclut le picto dans le lien, 2=Picto seul
+     *		@param		int		$withpicto		0=No picto, 1=Include picto into link, 2=Only picto
      *		@param		int		$maxlen			length max libelle
      *		@return		string					String with URL
      */
@@ -277,20 +284,30 @@ class AdherentType extends CommonObject
         global $langs;
 
         $result='';
-
-        $lien = '<a href="'.DOL_URL_ROOT.'/adherents/type.php?rowid='.$this->id.'">';
-        $lienfin='</a>';
-
-        $picto='group';
         $label=$langs->trans("ShowTypeCard",$this->libelle);
 
-        if ($withpicto) $result.=($lien.img_object($label,$picto).$lienfin);
+        $link = '<a href="'.DOL_URL_ROOT.'/adherents/type.php?rowid='.$this->id.'" title="'.dol_escape_htmltag($label, 1).'" class="classfortooltip">';
+        $linkend='</a>';
+
+        $picto='group';
+
+        if ($withpicto) $result.=($link.img_object($label, $picto, 'class="classfortooltip"').$linkend);
         if ($withpicto && $withpicto != 2) $result.=' ';
-        $result.=$lien.($maxlen?dol_trunc($this->libelle,$maxlen):$this->libelle).$lienfin;
+        $result.=$link.($maxlen?dol_trunc($this->libelle,$maxlen):$this->libelle).$linkend;
         return $result;
     }
 
 
+    /**
+     *     getLibStatut
+     *
+     *     @return string     Return status of a type of member
+     */
+    function getLibStatut()
+    {
+    	return '';
+    }
+    
     /**
      *     getMailOnValid
      *
@@ -318,7 +335,7 @@ class AdherentType extends CommonObject
     function getMailOnSubscription()
     {
         global $conf;
-
+	// mail_subscription not  defined so never used
         if (! empty($this->mail_subscription) && trim(dol_htmlentitiesbr_decode($this->mail_subscription)))  // Property not yet defined
         {
             return $this->mail_subscription;
@@ -337,7 +354,7 @@ class AdherentType extends CommonObject
     function getMailOnResiliate()
     {
         global $conf;
-
+	// NOTE mail_resiliate not defined so never used
         if (! empty($this->mail_resiliate) && trim(dol_htmlentitiesbr_decode($this->mail_resiliate)))  // Property not yet defined
         {
             return $this->mail_resiliate;

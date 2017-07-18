@@ -1,5 +1,6 @@
 <?php
-/* Copyright (C) 2012 Regis Houssin  <regis.houssin@capnetworks.com>
+/* Copyright (C) 2012 Regis Houssin       <regis.houssin@capnetworks.com>
+ * Copyright (C) 2016 Laurent Destailleur <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,20 +41,20 @@ $showempty	= GETPOST('showempty','int');
 
 top_httphead();
 
-//print '<!-- Ajax page called with url '.$_SERVER["PHP_SELF"].'?'.$_SERVER["QUERY_STRING"].' -->'."\n";
+//print '<!-- Ajax page called with url '.dol_escape_htmltag($_SERVER["PHP_SELF"]).'?'.dol_escape_htmltag($_SERVER["QUERY_STRING"]).' -->'."\n";
 
 // Load original field value
 if (! empty($id) && ! empty($action) && ! empty($htmlname))
 {
 	$form = new Form($db);
-	
+
 	$return=array();
 	if (empty($showempty)) $showempty=0;
-	
-	$return['value']	= $form->selectcontacts($id,'','contactid',$showempty,'','',0,'',true);
+
+	$return['value']	= $form->selectcontacts($id,'',$htmlname,$showempty,'','',0,'',true);
 	$return['num']		= $form->num;
 	$return['error']	= $form->error;
-	
+
 	echo json_encode($return);
 }
 

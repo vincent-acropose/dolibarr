@@ -2,7 +2,7 @@
 /* Copyright (C) 2007-2011	Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2008-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  * Copyright (C) 2008-2011	Juanjo Menent		<jmenent@2byte.es>
- * Copyright (C) 2014      Teddy Andreotti    	<125155@supinfo.com>
+ * Copyright (C) 2014       Teddy Andreotti    	<125155@supinfo.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -151,9 +151,6 @@ if ($action == 'buildnewpassword' && $username)
 /**
  * View
  */
-
-$php_self = $_SERVER['PHP_SELF'];
-$php_self.= $_SERVER["QUERY_STRING"]?'?'.$_SERVER["QUERY_STRING"]:'';
 
 $dol_url_root = DOL_URL_ROOT;
 

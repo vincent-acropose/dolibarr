@@ -41,7 +41,7 @@ require_once DOL_DOCUMENT_ROOT.'/paypal/lib/paypalfunctions.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 
 // Security check
-if (empty($conf->paypal->enabled)) accessforbidden('',1,1,1);
+if (empty($conf->paypal->enabled)) accessforbidden('',0,0,1);
 
 $langs->load("main");
 $langs->load("other");
@@ -50,6 +50,13 @@ $langs->load("bills");
 $langs->load("companies");
 $langs->load("paybox");
 $langs->load("paypal");
+
+$PAYPALTOKEN=GETPOST('TOKEN');
+if (empty($PAYPALTOKEN)) $PAYPALTOKEN=GETPOST('token');
+$PAYPALPAYERID=GETPOST('PAYERID');
+if (empty($PAYPALPAYERID)) $PAYPALPAYERID=GETPOST('PayerID');
+$PAYPALFULLTAG=GETPOST('FULLTAG');
+if (empty($PAYPALFULLTAG)) $PAYPALFULLTAG=GETPOST('fulltag');
 
 
 /*
@@ -63,7 +70,7 @@ $langs->load("paypal");
  * View
  */
 
-dol_syslog("Callback url when a PayPal payment was canceled. query_string=".(empty($_SERVER["QUERY_STRING"])?'':$_SERVER["QUERY_STRING"])." script_uri=".(empty($_SERVER["SCRIPT_URI"])?'':$_SERVER["SCRIPT_URI"]), LOG_DEBUG, 0, '_paypal');
+dol_syslog("Callback url when a PayPal payment was canceled. query_string=".(dol_escape_htmltag($_SERVER["QUERY_STRING"])?dol_escape_htmltag($_SERVER["QUERY_STRING"]):'')." script_uri=".(dol_escape_htmltag($_SERVER["SCRIPT_URI"])?dol_escape_htmltag($_SERVER["SCRIPT_URI"]):''), LOG_DEBUG, 0, '_paypal');
 
 $tracepost = "";
 foreach($_POST as $k => $v) $tracepost .= "{$k} - {$v}\n";
@@ -73,6 +80,18 @@ dol_syslog("POST=".$tracepost, LOG_DEBUG, 0, '_paypal');
 // Send an email
 if (! empty($conf->global->PAYPAL_PAYONLINE_SENDEMAIL))
 {
+    // Get on url call
+    $token              = $PAYPALTOKEN;
+    $fulltag            = $PAYPALFULLTAG;
+    $payerID            = $PAYPALPAYERID;
+    // Set by newpayment.php
+    $paymentType        = $_SESSION['PaymentType'];
+    $currencyCodeType   = $_SESSION['currencyCodeType'];
+    $FinalPaymentAmt    = $_SESSION["Payment_Amount"];
+    // From env
+    $ipaddress          = $_SESSION['ipaddress'];
+
+
 	$sendto=$conf->global->PAYPAL_PAYONLINE_SENDEMAIL;
 	$from=$conf->global->MAILING_EMAIL_FROM;
 
@@ -101,11 +120,6 @@ llxHeaderPaypal($langs->trans("PaymentForm"));
 print '<span id="dolpaymentspan"></span>'."\n";
 print '<div id="dolpaymentdiv" align="center">'."\n";
 print $langs->trans("YourPaymentHasNotBeenRecorded")."<br><br>";
-
-$PAYPALTOKEN=GETPOST('TOKEN');
-if (empty($PAYPALTOKEN)) $PAYPALTOKEN=GETPOST('token');
-$PAYPALFULLTAG=GETPOST('FULLTAG');
-if (empty($PAYPALFULLTAG)) $PAYPALFULLTAG=GETPOST('fulltag');
 
 if (! empty($conf->global->PAYPAL_MESSAGE_KO)) print $conf->global->PAYPAL_MESSAGE_KO;
 print "\n</div>\n";

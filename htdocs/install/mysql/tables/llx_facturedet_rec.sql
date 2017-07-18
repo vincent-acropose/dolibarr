@@ -3,6 +3,7 @@
 -- Copyright (C) 2009-2014  Laurent Destailleur		<eldy@users.sourceforge.net>
 -- Copyright (C) 2010		Juanjo Menent			<jmenent@2byte.es>
 -- Copyright (C) 2010-2012	Regis Houssin			<regis.houssin@capnetworks.com>
+-- Copyright (C) 2012      Cédric Salvador      <csalvador@gpcsolutions.fr>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -28,6 +29,7 @@ create table llx_facturedet_rec
   product_type		integer DEFAULT 0,
   label				varchar(255) DEFAULT NULL,
   description		text,
+  vat_src_code					varchar(10)  DEFAULT '',			-- Vat code used as source of vat fields. Not strict foreign key here.
   tva_tx			double(6,3),	             	-- taux tva
   localtax1_tx      double(6,3) DEFAULT 0,    		-- localtax1 rate
   localtax1_type	varchar(10) NULL, 				-- localtax1 type
@@ -46,5 +48,14 @@ create table llx_facturedet_rec
   info_bits			integer DEFAULT 0,				-- TVA NPR ou non
   special_code		integer UNSIGNED DEFAULT 0,	-- code pour les lignes speciales
   rang				integer DEFAULT 0,				-- ordre d'affichage
-  fk_contract_line  integer NULL					-- id of contract line when predefined invoice comes from contract lines 
+  fk_contract_line  integer NULL,					-- id of contract line when template invoice comes from contract lines
+  fk_unit           integer    DEFAULT NULL,
+  import_key		varchar(14),
+    
+  fk_multicurrency          integer,
+  multicurrency_code        varchar(255),
+  multicurrency_subprice    double(24,8) DEFAULT 0,
+  multicurrency_total_ht    double(24,8) DEFAULT 0,
+  multicurrency_total_tva   double(24,8) DEFAULT 0,
+  multicurrency_total_ttc   double(24,8) DEFAULT 0
 )ENGINE=innodb;

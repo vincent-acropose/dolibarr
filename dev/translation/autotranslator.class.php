@@ -40,8 +40,18 @@ class autoTranslator
 	const DIR_SEPARATOR = '/';
 
 
-	function __construct($_destlang,$_refLang,$_langDir,$_limittofile,$_apikey)
-	{
+    /**
+     * Constructor
+     *
+     * @param   string $_destlang       Destination lang
+     * @param   string $_refLang        Ref lang
+     * @param   string $_langDir        Dir lang
+     * @param   string $_limittofile    Limit to file
+     * @param   string $_apikey         Api key
+     * @return void
+     */
+    function __construct($_destlang,$_refLang,$_langDir,$_limittofile,$_apikey)
+    {
 
 		// Set enviorment variables
 		$this->_destlang = $_destlang;
@@ -290,7 +300,7 @@ class autoTranslator
 		//setting language pair
 		$lang_pair = $src_lang.'|'.$dest_lang;
 
-		$src_text_to_translate=preg_replace('/%s/','SSSSS',join('',$src_texts));
+		$src_text_to_translate=preg_replace('/%s/','SSSSS',implode('',$src_texts));
 		$src_text_to_translate=preg_replace('/'.preg_quote('\n\n').'/',' NNNNN ',$src_text_to_translate);
 
 		// Define GET URL v1

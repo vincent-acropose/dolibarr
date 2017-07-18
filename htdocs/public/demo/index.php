@@ -1,7 +1,8 @@
 <?php
-/* Copyright (C) 2001-2002 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2006-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2010      Regis Houssin        <regis.houssin@capnetworks.com>
+/* Copyright (C) 2001-2002  Rodolphe Quiedeville    <rodolphe@quiedeville.org>
+ * Copyright (C) 2006-2013  Laurent Destailleur     <eldy@users.sourceforge.net>
+ * Copyright (C) 2010       Regis Houssin           <regis.houssin@capnetworks.com>
+ * Copyright (C) 2015       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +29,7 @@ define("NOLOGIN",1);	// This means this output page does not require to be logge
 define("NOCSRFCHECK",1);	// We accept to go on this page from external web site.
 
 require '../../main.inc.php';
+require_once '../../core/lib/functions2.lib.php';
 
 $langs->load("main");
 $langs->load("install");
@@ -61,36 +63,36 @@ if (empty($reshook))
 {
 	$demoprofiles=array(
 		array('default'=>'1', 'key'=>'profdemoservonly','label'=>'DemoCompanyServiceOnly',
-		'disablemodules'=>'adherent,barcode,cashdesk,categorie,don,expedition,externalsite,mailmanspip,margin,prelevement,product,stock',
+		'disablemodules'=>'adherent,barcode,cashdesk,don,expedition,externalsite,incoterm,mailmanspip,margin,prelevement,product,productbatch,stock',
 		'icon'=>DOL_URL_ROOT.'/public/demo/dolibarr_screenshot8.png'),
 		array('default'=>'-1','key'=>'profdemoshopwithdesk','label'=>'DemoCompanyShopWithCashDesk',
-		'disablemodules'=>'adherent,categorie,don,externalsite,ficheinter,mailmanspip,prelevement,product,stock',
+		'disablemodules'=>'adherent,don,externalsite,ficheinter,incoterm,mailmanspip,prelevement,product,productbatch,stock',
 		'icon'=>DOL_URL_ROOT.'/public/demo/dolibarr_screenshot2.png'),
 		array('default'=>'0', 'key'=>'profdemoprodstock','label'=>'DemoCompanyProductAndStocks',
-		'disablemodules'=>'adherent,contrat,categorie,don,externalsite,ficheinter,mailmanspip,prelevement,service',
+		'disablemodules'=>'adherent,contrat,don,externalsite,ficheinter,mailmanspip,prelevement,service',
 		'icon'=>DOL_URL_ROOT.'/public/demo/dolibarr_screenshot2.png'),
 		array('default'=>'0', 'key'=>'profdemoall','label'=>'DemoCompanyAll',
 		'disablemodules'=>'adherent,don,externalsite,mailmanspip',
 		'icon'=>DOL_URL_ROOT.'/public/demo/dolibarr_screenshot9.png'),
 		array('default'=>'-1', 'key'=>'profdemofun','label'=>'DemoFundation',
-		'disablemodules'=>'banque,barcode,cashdesk,commande,commercial,compta,comptabilite,contrat,expedition,externalsite,facture,ficheinter,fournisseur,mailmanspip,margin,prelevement,product,projet,propal,propale,service,societe,stock,tax',
+		'disablemodules'=>'banque,barcode,cashdesk,commande,commercial,compta,comptabilite,contrat,expedition,externalsite,ficheinter,incoterm,mailmanspip,margin,prelevement,product,productbatch,projet,propal,propale,service,societe,stock,tax',
 		'icon'=>DOL_URL_ROOT.'/public/demo/dolibarr_screenshot6.png'),
 		array('default'=>'0', 'key'=>'profdemofun2','label'=>'DemoFundation2',
-		'disablemodules'=>'barcode,cashdesk,commande,commercial,compta,comptabilite,contrat,expedition,externalsite,facture,ficheinter,fournisseur,mailmanspip,margin,prelevement,product,projet,propal,propale,service,societe,stock,tax',
+		'disablemodules'=>'barcode,cashdesk,commande,commercial,compta,comptabilite,contrat,expedition,externalsite,ficheinter,incoterm,mailmanspip,margin,prelevement,product,productbatch,projet,propal,propale,service,societe,stock,tax',
 		'icon'=>DOL_URL_ROOT.'/public/demo/dolibarr_screenshot6.png')
 	);
 
 	// Visible
-	$alwayscheckedmodules=array('barcode','bookmark','externalrss','fckeditor','geoipmaxmind','gravatar','memcached','syslog','user','webservices');  // Technical module we always want
-	$alwaysuncheckedmodules=array('paybox','paypal','google','scanner','workflow');  // Module we never want
+	$alwayscheckedmodules=array('barcode','bookmark','categorie','externalrss','fckeditor','geoipmaxmind','gravatar','memcached','syslog','user','webservices');  // Technical module we always want
+	$alwaysuncheckedmodules=array('dynamicprices','loan','multicurrency','paybox','paypal','google','printing','scanner','workflow');  // Module we never want
 	// Not visible
-	$alwayshiddencheckedmodules=array('accounting','barcode','bookmark','clicktodial','comptabilite','document','domain','externalrss','externalsite','fckeditor','geoipmaxmind','gravatar','label','ldap',
-									'mailmanspip','notification','syslog','user','webservices',
+	$alwayshiddencheckedmodules=array('accounting','api','barcode','bookmark','clicktodial','comptabilite','cron','document','domain','externalrss','externalsite','fckeditor','geoipmaxmind','gravatar','label','ldap',
+									'mailmanspip','notification','oauth','syslog','user','webservices',
 	                                // Extended modules
 	                                'memcached','numberwords','zipautofillfr');
-	$alwayshiddenuncheckedmodules=array('ftp',
+	$alwayshiddenuncheckedmodules=array('ftp','hrm','webservicesclient','websites',
 	                                // Extended modules
-	                                'awstats','bittorrent','bootstrap','cabinetmed','cmcic','concatpdf','customfield','dolicloud','filemanager','lightbox','mantis','monitoring','moretemplates','multicompany','nltechno','numberingpack','openstreetmap',
+	                                'awstats','bittorrent','bootstrap','cabinetmed','cmcic','concatpdf','customfield','deplacement','dolicloud','filemanager','lightbox','mantis','monitoring','moretemplates','multicompany','nltechno','numberingpack','openstreetmap',
 	                                'ovh','phenix','phpsysinfo','pibarcode','postnuke','selectbank','skincoloreditor','submiteverywhere','survey','thomsonphonebook','topten','tvacerfa','voyage','webcalendar','webmail');
 }
 
@@ -99,28 +101,7 @@ $dirlist=$conf->file->dol_document_root;
 
 
 // Search modules dirs
-$modulesdir = array();
-foreach ($conf->file->dol_document_root as $type => $dirroot)
-{
-    $modulesdir[$dirroot . '/core/modules/'] = $dirroot . '/core/modules/';
-
-    $handle=@opendir($dirroot);
-    if (is_resource($handle))
-    {
-        while (($file = readdir($handle))!==false)
-        {
-            if (is_dir($dirroot.'/'.$file) && substr($file, 0, 1) <> '.' && substr($file, 0, 3) <> 'CVS' && $file != 'includes')
-            {
-                if (is_dir($dirroot . '/' . $file . '/core/modules/'))
-                {
-                    $modulesdir[$dirroot . '/' . $file . '/core/modules/'] = $dirroot . '/' . $file . '/core/modules/';
-                }
-            }
-        }
-        closedir($handle);
-    }
-}
-//var_dump($modulesdir);
+$modulesdir = dolGetModulesDirs();
 
 
 $filename = array();
@@ -247,8 +228,8 @@ if (GETPOST("action") == 'gotodemo')
  */
 
 $head='';
-$head.='<meta name="keywords" content="dolibarr,demo,online,demonstration,example,test,web,erp,crm,demos,online">'."\n";
-$head.='<meta name="description" content="Dolibarr simple ERP/CRM demo. You can test here several profiles of Dolibarr ERP/CRM demos.">'."\n";
+$head.='<meta name="keywords" content="demo,online,demonstration,example,test,erp,crm,demos,web">'."\n";
+$head.='<meta name="description" content="Dolibarr ERP and CRM demo. You can test here several profiles for Dolibarr ERP and CRM demonstration.">'."\n";
 $head.='<style type="text/css">'."\n";
 $head.='.body { font: 12px arial,verdana,helvetica !important; }'."\n";
 $head.='.CTable {
@@ -263,12 +244,38 @@ border: 1px solid #bbb;
 border-radius: 8px;
 -moz-border-radius: 8px;
 
--moz-box-shadow: 4px 4px 4px #EEE;
--webkit-box-shadow: 4px 4px 4px #EEE;
-box-shadow: 4px 4px 4px #EEE;
-
 background: -webkit-linear-gradient(bottom, rgb(255,255,255) 85%, rgb(255,255,255) 100%);
 
+}
+.csscolumns {
+    margin-top: 6px;
+    -webkit-column-count: 4; /* Chrome, Safari, Opera */
+    -moz-column-count: 4; /* Firefox */
+    column-count: 4;
+}
+@media only screen and (max-width: 840px)
+{
+	.csscolumns {
+		-webkit-column-count: 3; /* Chrome, Safari, Opera */
+	    -moz-column-count: 3; /* Firefox */
+	    column-count: 3;
+	}
+}
+@media only screen and (max-width: 640px)
+{
+	.csscolumns {
+		-webkit-column-count: 2; /* Chrome, Safari, Opera */
+	    -moz-column-count: 2; /* Firefox */
+	    column-count: 2;
+	}
+}
+@media only screen and (max-width: 420px)
+{
+	.csscolumns {
+		-webkit-column-count: 1; /* Chrome, Safari, Opera */
+	    -moz-column-count: 1; /* Firefox */
+	    column-count: 1;
+	}
 }
 </style>
 
@@ -305,10 +312,10 @@ print "\n";
 print '<table style="font-size:14px;" class="centpercent" summary="Main table for Dolibarr demos">';
 
 print '<tr><td>';
-print '<center><img src="'.DOL_URL_ROOT.'/theme/dolibarr_logo.png" alt="Dolibarr logo"></center><br>';
+print '<div class="center"><a alt="Official portal of your ERP CRM application" targe="_blank" href="https://www.dolibarr.org"><img class="demologo" src="'.DOL_URL_ROOT.'/theme/dolibarr_logo.png" alt="Dolibarr logo"></a></div><br>';
 print '<br>';
 
-print $langs->trans("DemoDesc").'<br>';
+print '<div style="text-align: justify;">'.$langs->trans("DemoDesc").'</div><br>';
 print '<br>';
 print '<font color="#555577"><b>'.$langs->trans("ChooseYourDemoProfil").'</b></font>';
 
@@ -347,10 +354,10 @@ foreach ($demoprofiles as $profilearray)
         print '<input type="hidden" name="dol_no_mouse_hover" value="'.$conf->dol_no_mouse_hover.'">'."\n";
         print '<input type="hidden" name="dol_use_jmobile" value="'.$conf->dol_use_jmobile.'">'."\n";
 
-        print '<table summary="Dolibarr online demonstration for profile '.$profilearray['label'].'" style="font-size:14px;" width="100%" class="CTable CTableRow'.($i%2==0?'1':'0').'">'."\n";
+        print '<table summary="Dolibarr online demonstration for profile '.$profilearray['label'].'" style="font-size:14px;" class="centpercent CTable CTableRow'.($i%2==0?'1':'0').'">'."\n";
 		// Title
         print '<tr>';
-		print '<td width="50" id="a1'.$profilearray['key'].'" class="'.(empty($profilearray['url'])?'modulelineshow cursorpointer':'nomodulelines').'"><a href="'.$urlwithmod.'" class="'.(empty($profilearray['url'])?'modulelineshow':'nomodulelines').'"><img src="'.$profilearray['icon'].'" width="48" border="0" alt="Demo '.$profilearray['label'].'"></a></td>';
+		print '<td width="130" id="a1'.$profilearray['key'].'" class="'.(empty($profilearray['url'])?'modulelineshow cursorpointer':'nomodulelines').'"><a href="'.$urlwithmod.'" class="'.(empty($profilearray['url'])?'modulelineshow':'nomodulelines').'"><img class="demothumb" src="'.$profilearray['icon'].'" alt="Demo '.$profilearray['label'].'"></a></td>';
 		print '<td id="a2'.$profilearray['key'].'" class="'.(empty($profilearray['url'])?'modulelineshow cursorpointer':'nomodulelines').'"><a href="'.$urlwithmod.'" class="'.(empty($profilearray['url'])?'modulelineshow':'nomodulelines').'">'.$langs->trans($profilearray['label']).'</a></td>';
 		print '</tr>'."\n";
         // Modules
@@ -359,12 +366,16 @@ foreach ($demoprofiles as $profilearray)
     		print '<tr id="tr1'.$profilearray['key'].'" class="moduleline">';
     		print '<td colspan="2">';
     		print $langs->trans("ThisIsListOfModules").'<br>';
-    		print '<table width="100%">';
+    		print '<div class="csscolumns">';
+    		//print '<table width="100%">';
     		$listofdisabledmodules=explode(',',$profilearray['disablemodules']);
     		$j=0;
     		$nbcolsmod=empty($conf->dol_optimize_smallscreen)?4:3;
-    		foreach($modules as $val) // Loop on qualified (enabled) modules
+    		//var_dump($modules);
+    		foreach($orders as $index => $key) // Loop on qualified (enabled) modules
     		{
+    			//print $index.' '.$key;
+    			$val = $modules[$index];
     		    $modulekeyname=strtolower($val->name);
 
     		    $modulequalified=1;
@@ -381,22 +392,23 @@ foreach ($demoprofiles as $profilearray)
                 else
                 {
                     $modulo=($j % $nbcolsmod);
-        		    if ($modulo == 0) print '<tr>';
-                    print '<td><input type="checkbox" class="checkbox" name="'.$modulekeyname.'" value="1"';
-                    if (in_array($modulekeyname,$alwaysuncheckedmodules)) print ' disabled="disabled"';
-                    if (! in_array($modulekeyname,$alwaysuncheckedmodules)  && (! in_array($modulekeyname,$listofdisabledmodules) || in_array($modulekeyname,$alwayscheckedmodules))) print ' checked="checked"';
-                    print '> '.$val->getName().' &nbsp;';
+        		    //if ($modulo == 0) print '<tr>';
+                    //print '<td>';
                     print '<!-- id='.$val->numero.' -->';
-                    print '</td>';
-                    if ($modulo == ($nbcolsmod - 1)) print '</tr>';
+                    print '<input type="checkbox" class="checkbox" name="'.$modulekeyname.'" value="1"';
+                    if (in_array($modulekeyname,$alwaysuncheckedmodules)) print ' disabled';
+                    if (! in_array($modulekeyname,$alwaysuncheckedmodules)  && (! in_array($modulekeyname,$listofdisabledmodules) || in_array($modulekeyname,$alwayscheckedmodules))) print ' checked';
+                    print '> '.$val->getName().'<br>';
+                    //print '</td>';
+                    //if ($modulo == ($nbcolsmod - 1)) print '</tr>';
                     $j++;
                 }
     		}
-    		print '</table>';
-    		print '</td>';
+    		//print '</table>';
+    		print '</div></td>';
     		print '</tr>'."\n";
 
-		    print '<tr id="tr2'.$profilearray['key'].'" class="moduleline"><td colspan="'.$nbcolsmod.'" align="center"><input type="submit" value=" &nbsp; &nbsp; '.$langs->trans("Start").' &nbsp; &nbsp; " class="button"></td></tr>';
+		    print '<tr id="tr2'.$profilearray['key'].'" class="moduleline"><td colspan="2" align="center"><input type="submit" value=" &nbsp; &nbsp; '.$langs->trans("Start").' &nbsp; &nbsp; " class="button"></td></tr>';
         }
 		print '</table>';
 		print '</form>'."\n";
@@ -441,7 +453,7 @@ if (! empty($conf->google->enabled) && ! empty($conf->global->MAIN_GOOGLE_AD_CLI
 	}
 	else
 	{
-		print '<!-- google js addvert tag disabled with jmobile -->'."\n";
+		print '<!-- google js advert tag disabled with jmobile -->'."\n";
 	}
 }
 
@@ -465,7 +477,7 @@ function llxHeaderVierge($title, $head = "")
 
     top_htmlhead($head,$title);
 
-    print '<body style="margin: 20px;">'."\n";
+    print '<body class="demobody demobackground"><div style="padding: 20px;" class="demobackgrounddiv">'."\n";
 }
 
 /**
@@ -478,7 +490,7 @@ function llxFooterVierge()
     printCommonFooter('public');
 
     print "\n";
-    print "</body>\n";
+    print "</div></body>\n";
     print "</html>\n";
 }
 

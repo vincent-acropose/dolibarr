@@ -36,10 +36,13 @@ class InterfaceNotification extends DolibarrTriggers
 	public $picto = 'email';
 
     var $listofmanagedevents=array(
-    	'BILL_VALIDATE',
+        'BILL_VALIDATE',
+        'BILL_PAYED',
     	'ORDER_VALIDATE',
     	'PROPAL_VALIDATE',
         'FICHINTER_VALIDATE',
+        'FICHINTER_ADD_CONTACT',
+    	'ORDER_SUPPLIER_VALIDATE',
     	'ORDER_SUPPLIER_APPROVE',
     	'ORDER_SUPPLIER_REFUSE',
         'SHIPPING_VALIDATE'
@@ -60,11 +63,13 @@ class InterfaceNotification extends DolibarrTriggers
 	{
 		if (empty($conf->notification->enabled)) return 0;     // Module not active, we do nothing
 
+		require_once DOL_DOCUMENT_ROOT .'/core/class/notify.class.php';
+		$notify = new Notify($this->db);
+		
+		if (! in_array($action, $notify->arrayofnotifsupported)) return 0;
+
 		dol_syslog("Trigger '".$this->name."' for action '$action' launched by ".__FILE__.". id=".$object->id);
 
-		require_once DOL_DOCUMENT_ROOT .'/core/class/notify.class.php';
-
-		$notify = new Notify($this->db);
 		$notify->send($action, $object);
 
 		return 1;
@@ -84,8 +89,8 @@ class InterfaceNotification extends DolibarrTriggers
 
         $sql = "SELECT rowid, code, label, description, elementtype";
         $sql.= " FROM ".MAIN_DB_PREFIX."c_action_trigger";
-        $sql.= $this->db->order("elementtype, code");
-        dol_syslog("Get list of notifications", LOG_DEBUG);
+        $sql.= $this->db->order("rang, elementtype, code");
+        dol_syslog("getListOfManagedEvents Get list of notifications", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -103,13 +108,14 @@ class InterfaceNotification extends DolibarrTriggers
                 {
                     //print 'xx'.$obj->code;
                     $element=$obj->elementtype;
+
+                    // Exclude events if related module is disabled
                     if ($element == 'order_supplier' && empty($conf->fournisseur->enabled)) $qualified=0;
                     elseif ($element == 'invoice_supplier' && empty($conf->fournisseur->enabled)) $qualified=0;
                     elseif ($element == 'withdraw' && empty($conf->prelevement->enabled)) $qualified=0;
                     elseif ($element == 'shipping' && empty($conf->expedition->enabled)) $qualified=0;
                     elseif ($element == 'member' && empty($conf->adherent->enabled)) $qualified=0;
-                    elseif (! in_array($element,array('order_supplier','invoice_supplier','withdraw','shipping','member'))
-                                 && empty($conf->$element->enabled)) $qualified=0;
+                    elseif (! in_array($element,array('order_supplier','invoice_supplier','withdraw','shipping','member')) && empty($conf->$element->enabled)) $qualified=0;
                 }
 
                 if ($qualified)

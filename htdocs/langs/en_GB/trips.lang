@@ -1,14 +1,10 @@
 # Dolibarr language file - Source file is en_US - trips
-Trip=Expense report
-Trips=Expense reports
-TripsAndExpenses=Expenses reports
-TripsAndExpensesStatistics=Expense reports statistics
-TripCard=Expense report card
-AddTrip=Create expense report
-ListOfTrips=List of expense report
-NewTrip=New expense report
-DeleteTrip=Delete expense report
-ConfirmDeleteTrip=Are you sure you want to delete this expense report ?
-ListTripsAndExpenses=List of expense reports
-ExpensesArea=Expense reports area
-SearchATripAndExpense=Search an expense report
+TripsAndExpensesStatistics=Expense report statistics
+CompanyVisited=Company visited
+FeesKilometersOrAmout=Amount or Miles
+ExpenseReportWaitingForApprovalMessage=A new expense report has been submitted and is waiting for approval.\n - User: %s\n - Period: %s\nClick here to validate: %s
+TripNDF=Information expense report
+TF_METRO=Tube
+ErrorDoubleDeclaration=You have submitted another expense report in a similar date range.
+BrouillonnerTrip=Move expense report status back to "Draft"
+ConfirmBrouillonnerTrip=Are you sure you want to move this expense report status back to "Draft"?

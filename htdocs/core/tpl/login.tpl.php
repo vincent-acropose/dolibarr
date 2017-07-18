@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2009-2010 Regis Houssin <regis.houssin@capnetworks.com>
+/* Copyright (C) 2009-2015 Regis Houssin <regis.houssin@capnetworks.com>
  * Copyright (C) 2011-2013 Laurent Destailleur <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,6 +16,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Need global variable $title to be defined by caller (like dol_loginfunction)
+
+
 header('Cache-Control: Public, must-revalidate');
 header("Content-type: text/html; charset=".$conf->file->character_set_client);
 
@@ -28,10 +31,21 @@ if (GETPOST('dol_use_jmobile')) $conf->dol_use_jmobile=1;
 // If we force to use jmobile, then we reenable javascript
 if (! empty($conf->dol_use_jmobile)) $conf->use_javascript_ajax=1;
 
-$arrayofjs=array('/core/js/dst.js'.(empty($conf->dol_use_jmobile)?'':'?version='.urlencode(DOL_VERSION)));					// Javascript code on logon page only to detect user tz, dst_observed, dst_first, dst_second
-$titleofloginpage=$langs->trans('Login').' @ '.$title;	// title is defined by dol_loginfunction in security2.lib.php. We must keep the @, some tools use it to know it is login page.
+$php_self = dol_escape_htmltag($_SERVER['PHP_SELF']);
+$php_self.= dol_escape_htmltag($_SERVER["QUERY_STRING"])?'?'.dol_escape_htmltag($_SERVER["QUERY_STRING"]):'';
+if (! preg_match('/mainmenu=/',$php_self)) $php_self.=(preg_match('/\?/',$php_self)?'&':'?').'mainmenu=home';
 
-print top_htmlhead('',$titleofloginpage,0,0,$arrayofjs);
+// Javascript code on logon page only to detect user tz, dst_observed, dst_first, dst_second
+$arrayofjs=array(
+	'/includes/jstz/jstz.min.js'.(empty($conf->dol_use_jmobile)?'':'?version='.urlencode(DOL_VERSION)),
+	'/core/js/dst.js'.(empty($conf->dol_use_jmobile)?'':'?version='.urlencode(DOL_VERSION))
+);
+$titleofloginpage=$langs->trans('Login').' @ '.$titletruedolibarrversion;	// $titletruedolibarrversion is defined by dol_loginfunction in security2.lib.php. We must keep the @, some tools use it to know it is login page and find true dolibarr version.
+
+$disablenofollow=1;
+if (! preg_match('/'.constant('DOL_APPLICATION_TITLE').'/', $title)) $disablenofollow=0;
+
+print top_htmlhead('', $titleofloginpage, 0, 0, $arrayofjs, array(), 0, $disablenofollow);
 ?>
 <!-- BEGIN PHP TEMPLATE LOGIN.TPL.PHP -->
 
@@ -46,7 +60,7 @@ $(document).ready(function () {
 </script>
 <?php } ?>
 
-<center>
+<div class="center">
 <div class="login_vertical_align">
 
 <form id="login" name="login" method="post" action="<?php echo $php_self; ?>">
@@ -66,8 +80,14 @@ $(document).ready(function () {
 <input type="hidden" name="dol_no_mouse_hover" id="dol_no_mouse_hover" value="<?php echo $dol_no_mouse_hover; ?>" />
 <input type="hidden" name="dol_use_jmobile" id="dol_use_jmobile" value="<?php echo $dol_use_jmobile; ?>" />
 
-<table class="login_table_title center" summary="<?php echo dol_escape_htmltag($title); ?>">
-<tr class="vmenu"><td align="center"><?php echo dol_escape_htmltag($title); ?></td></tr>
+<table class="login_table_title center" title="<?php echo dol_escape_htmltag($title); ?>">
+<tr class="vmenu"><td class="center">
+<?php
+if ($disablenofollow) echo '<a class="login_table_title" href="https://www.dolibarr.org" target="_blank">';
+echo dol_escape_htmltag($title);
+if ($disablenofollow) echo '</a>';
+?>
+</td></tr>
 </table>
 <br>
 
@@ -77,21 +97,30 @@ $(document).ready(function () {
 
 <div id="login_left">
 
-<table class="left" summary="Login pass">
+<img alt="" src="<?php echo $urllogo; ?>" id="img_logo" />
+
+</div>
+
+
+
+<div id="login_right">
+
+<table class="left centpercent" title="<?php echo $langs->trans("EnterLoginDetail"); ?>">
 <!-- Login -->
 <tr>
-<td valign="middle" class="loginfield"><strong><label for="username"><?php echo $langs->trans('Login'); ?></label></strong></td>
-<td valign="middle" class="nowrap">
+<td class="nowrap center valignmiddle">
+<?php if (! empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER)) { ?><label for="username" class="hidden"><?php echo $langs->trans("Login"); ?></label><?php } ?>
 <span class="span-icon-user">
-<input type="text" id="username" name="username" class="flat input-icon-user" size="15" maxlength="40" value="<?php echo dol_escape_htmltag($login); ?>" tabindex="1" autofocus="autofocus" />
+<input type="text" id="username" placeholder="<?php echo $langs->trans("Login"); ?>" name="username" class="flat input-icon-user" size="20" value="<?php echo dol_escape_htmltag($login); ?>" tabindex="1" autofocus="autofocus" />
 </span>
 </td>
 </tr>
 <!-- Password -->
-<tr><td valign="middle" class="loginfield nowrap"><strong><label for="password"><?php echo $langs->trans('Password'); ?></label></strong></td>
-<td valign="middle" class="nowrap">
+<tr>
+<td class="nowrap center valignmiddle">
+<?php if (! empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER)) { ?><label for="password" class="hidden"><?php echo $langs->trans("Password"); ?></label><?php } ?>
 <span class="span-icon-password">
-<input id="password" name="password" class="flat input-icon-password" type="password" size="15" maxlength="30" value="<?php echo dol_escape_htmltag($password); ?>" tabindex="2" autocomplete="off" />
+<input id="password" placeholder="<?php echo $langs->trans("Password"); ?>" name="password" class="flat input-icon-password" type="password" size="20" value="<?php echo dol_escape_htmltag($password); ?>" tabindex="2" autocomplete="<?php echo empty($conf->global->MAIN_LOGIN_ENABLE_PASSWORD_AUTOCOMPLETE)?'off':'on'; ?>" />
 </span>
 </td></tr>
 <?php
@@ -107,20 +136,24 @@ if (! empty($hookmanager->resArray['options'])) {
 ?>
 <?php
 	if ($captcha) {
-		// TODO: provide accessible captha variants
+		// Add a variable param to force not using cache (jmobile)
+		$php_self = preg_replace('/[&\?]time=(\d+)/','',$php_self);	// Remove param time
+		if (preg_match('/\?/',$php_self)) $php_self.='&time='.dol_print_date(dol_now(),'dayhourlog');
+		else $php_self.='?time='.dol_print_date(dol_now(),'dayhourlog');
+		// TODO: provide accessible captcha variants
 ?>
 	<!-- Captcha -->
-	<tr><td valign="middle" class="loginfield nowrap"><label for="securitycode"><b><?php echo $langs->trans('SecurityCode'); ?></b></label></td>
-	<td valign="top" class="nowrap none" align="left">
+	<tr>
+	<td class="nowrap none center">
 
-	<table class="login_table_securitycode" style="width: 100px;"><tr>
+	<table class="login_table_securitycode centpercent"><tr>
 	<td>
 	<span class="span-icon-security">
-	<input id="securitycode" class="flat input-icon-security" type="text" size="6" maxlength="5" name="code" tabindex="4" />
+	<input id="securitycode" placeholder="<?php echo $langs->trans("SecurityCode"); ?>" class="flat input-icon-security" type="text" size="12" maxlength="5" name="code" tabindex="3" />
 	</span>
 	</td>
 	<td><img src="<?php echo DOL_URL_ROOT ?>/core/antispamimage.php" border="0" width="80" height="32" id="img_securitycode" /></td>
-	<td><a href="<?php echo $php_self; ?>"><?php echo $captcha_refresh; ?></a></td>
+	<td><a href="<?php echo $php_self; ?>" tabindex="4" data-role="button"><?php echo $captcha_refresh; ?></a></td>
 	</tr></table>
 
 	</td></tr>
@@ -129,11 +162,10 @@ if (! empty($hookmanager->resArray['options'])) {
 
 </div> <!-- end div left -->
 
-<div id="login_right">
 
-<img alt="Logo" title="" src="<?php echo $urllogo; ?>" id="img_logo" />
 
-</div>
+
+
 </div>
 
 <div id="login_line2" style="clear: both">
@@ -151,7 +183,7 @@ if ($forgetpasslink || $helpcenterlink)
 	if ($dol_use_jmobile)    $moreparam.=(strpos($moreparam,'?')===false?'?':'&').'dol_use_jmobile='.$dol_use_jmobile;
 
 	echo '<br>';
-	echo '<div align="center" style="margin-top: 4px;">';
+	echo '<div class="center" style="margin-top: 8px;">';
 	if ($forgetpasslink) {
 		echo '<a class="alogin" href="'.DOL_URL_ROOT.'/user/passwordforgotten.php'.$moreparam.'">(';
 		echo $langs->trans('PasswordForgotten');
@@ -178,7 +210,7 @@ if (isset($conf->file->main_authentication) && preg_match('/openid/',$conf->file
 
 	//if (! empty($conf->global->MAIN_OPENIDURL_PERUSER)) $url=
 	echo '<br>';
-	echo '<div align="center" style="margin-top: 4px;">';
+	echo '<div class="center" style="margin-top: 4px;">';
 
 	$url=$conf->global->MAIN_AUTHENTICATION_OPENID_URL;
 	if (! empty($url)) print '<a class="alogin" href="'.$url.'">'.$langs->trans("LoginUsingOpenID").'</a>';
@@ -206,7 +238,7 @@ if (isset($conf->file->main_authentication) && preg_match('/openid/',$conf->file
 <?php if (! empty($_SESSION['dol_loginmesg']))
 {
 ?>
-	<div class="center login_main_message" style="max-width: 500px; margin-left: 10px; margin-right: 10px;"><div class="error">
+	<div class="center login_main_message"><div class="error">
 	<?php echo $_SESSION['dol_loginmesg']; ?>
 	</div></div>
 <?php
@@ -230,6 +262,18 @@ if (isset($conf->file->main_authentication) && preg_match('/openid/',$conf->file
 <!-- Common footer is not used for login page, this is same than footer but inside login tpl -->
 
 <?php if (! empty($conf->global->MAIN_HTML_FOOTER)) print $conf->global->MAIN_HTML_FOOTER; ?>
+
+<?php
+if (! empty($hookmanager->resArray['options'])) {
+	foreach ($hookmanager->resArray['options'] as $format => $option)
+	{
+		if ($format == 'js') {
+			echo "\n".'<!-- Javascript by hook -->';
+			echo $option."\n";
+		}
+	}
+}
+?>
 
 <?php
 // Google Analytics (need Google module)
@@ -260,7 +304,7 @@ if (! empty($conf->google->enabled) && ! empty($conf->global->MAIN_GOOGLE_AD_CLI
 	if (empty($conf->dol_use_jmobile))
 	{
 ?>
-	<div align="center"><br>
+	<div class="center"><br>
 		<script type="text/javascript"><!--
 			google_ad_client = "<?php echo $conf->global->MAIN_GOOGLE_AD_CLIENT ?>";
 			google_ad_slot = "<?php echo $conf->global->MAIN_GOOGLE_AD_SLOT ?>";
@@ -279,7 +323,7 @@ if (! empty($conf->google->enabled) && ! empty($conf->global->MAIN_GOOGLE_AD_CLI
 
 
 </div>
-</center>	<!-- end of center -->
+</div>	<!-- end of center -->
 
 
 </body>

@@ -3,6 +3,8 @@
 -- Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
 -- Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
 -- Copyright (C) 2010      Juanjo Menent        <jmenent@2byte.es>
+-- Copyright (C) 2012      Cédric Salvador      <csalvador@gpcsolutions.fr>
+-- Copyright (C) 2014      Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
 -- 
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -35,8 +37,9 @@ create table llx_facture
   increment				varchar(10),
   fk_soc				integer            NOT NULL,
   datec					datetime,								-- date de creation de la facture
-  datef					date,									-- date de la facture
-  date_valid			date,									-- date de validation
+  datef					date,									-- date invoice
+  date_pointoftax		date DEFAULT NULL,									-- date point of tax (for GB)
+  date_valid			date,									-- date validation
   tms					timestamp,								-- date creation/modification
   paye					smallint DEFAULT 0 NOT NULL,
   amount				double(24,8)     DEFAULT 0 NOT NULL,
@@ -57,7 +60,7 @@ create table llx_facture
   fk_statut				smallint DEFAULT 0 NOT NULL,
 
   fk_user_author		integer,								-- user making creation
-  fk_user_modif         integer,                               -- user making last change
+  fk_user_modif         integer,                                -- user making last change
   fk_user_valid			integer,								-- user validating
 
   fk_facture_source		integer,								-- facture origine si facture avoir
@@ -73,7 +76,21 @@ create table llx_facture
   note_private			text,
   note_public			text,
   model_pdf				varchar(255),
-  import_key			varchar(14),
-  extraparams			varchar(255)							-- for stock other parameters with json format
 
+  fk_incoterms          integer,								-- for incoterms
+  location_incoterms    varchar(255),							-- for incoterms
+
+  situation_cycle_ref smallint,  -- situation cycle reference
+  situation_counter   smallint,  -- situation counter
+  situation_final     smallint,  -- is the situation final ?
+
+  import_key			varchar(14),
+  extraparams			varchar(255),							-- for other parameters with json format
+  
+  fk_multicurrency		integer,
+  multicurrency_code			varchar(255),
+  multicurrency_tx			double(24,8) DEFAULT 1,
+  multicurrency_total_ht		double(24,8) DEFAULT 0,
+  multicurrency_total_tva	double(24,8) DEFAULT 0,
+  multicurrency_total_ttc	double(24,8) DEFAULT 0
 )ENGINE=innodb;

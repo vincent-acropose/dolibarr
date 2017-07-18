@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2002-2003 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2011-2014 Alexandre Spangaro   <alexandre.spangaro@gmail.com>
+ * Copyright (C) 2011-2015 Alexandre Spangaro   <aspangaro.dolibarr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,9 +35,6 @@ class Tva extends CommonObject
 	//public $element='tva';			//!< Id that identify managed objects
 	//public $table_element='tva';	//!< Name of table without prefix where object is stored
 
-    var $id;
-    var $ref;
-
 	var $tms;
 	var $datep;
 	var $datev;
@@ -45,7 +42,6 @@ class Tva extends CommonObject
 	var $type_payment;
 	var $num_payment;
 	var $label;
-	var $note;
 	var $fk_bank;
 	var $fk_user_creat;
 	var $fk_user_modif;
@@ -89,7 +85,9 @@ class Tva extends CommonObject
 		// Check parameters
 		// Put here code to add control on parameters values
 
-        // Insert request
+		$this->db->begin();
+
+		// Insert request
 		$sql = "INSERT INTO ".MAIN_DB_PREFIX."tva(";
 		$sql.= "tms,";
 		$sql.= "datep,";
@@ -126,13 +124,22 @@ class Tva extends CommonObject
             if ($result < 0) $error++;
             // End call triggers
 
-            //FIXME: Add rollback if trigger fail
-            return $this->id;
+            if (! $error)
+            {
+            	$this->db->commit();
+            	return $this->id;
+            }
+            else
+			{
+				$this->db->rollback();
+				return -1;
+            }
         }
         else
-        {
-            $this->error="Error ".$this->db->lasterror();
-            return -1;
+		{
+			$this->error="Error ".$this->db->lasterror();
+			$this->db->rollback();
+			return -1;
         }
     }
 
@@ -160,18 +167,20 @@ class Tva extends CommonObject
 		// Check parameters
 		// Put here code to add control on parameters values
 
-        // Update request
+		$this->db->begin();
+
+		// Update request
         $sql = "UPDATE ".MAIN_DB_PREFIX."tva SET";
 
 		$sql.= " tms=".$this->db->idate($this->tms).",";
 		$sql.= " datep=".$this->db->idate($this->datep).",";
 		$sql.= " datev=".$this->db->idate($this->datev).",";
-		$sql.= " amount='".$this->amount."',";
+		$sql.= " amount=".price2num($this->amount).",";
 		$sql.= " label='".$this->db->escape($this->label)."',";
 		$sql.= " note='".$this->db->escape($this->note)."',";
-		$sql.= " fk_bank='".$this->fk_bank."',";
-		$sql.= " fk_user_creat='".$this->fk_user_creat."',";
-		$sql.= " fk_user_modif='".$this->fk_user_modif."'";
+		$sql.= " fk_bank=".$this->fk_bank.",";
+		$sql.= " fk_user_creat=".$this->fk_user_creat.",";
+		$sql.= " fk_user_modif=".$this->fk_user_modif."";
 
 
         $sql.= " WHERE rowid=".$this->id;
@@ -181,20 +190,27 @@ class Tva extends CommonObject
         if (! $resql)
         {
             $this->error="Error ".$this->db->lasterror();
-            return -1;
+            $error++;
         }
 
-		if (! $notrigger)
+		if (! $error && ! $notrigger)
 		{
             // Call trigger
             $result=$this->call_trigger('TVA_MODIFY',$user);
             if ($result < 0) $error++;
             // End call triggers
-
-            //FIXME: Add rollback if trigger fail
     	}
 
-        return 1;
+        if (! $error)
+    	{
+    		$this->db->commit();
+    		return 1;
+    	}
+    	else
+    	{
+    		$this->db->rollback();
+    		return -1;
+    	}
     }
 
 
@@ -488,7 +504,7 @@ class Tva extends CommonObject
 			$this->error=$langs->trans("ErrorFieldRequired",$langs->transnoentities("Label"));
 			return -3;
 		}
-        if ($this->amount < 0 || $this->amount == '')
+        if ($this->amount == '')
         {
             $this->error=$langs->trans("ErrorFieldRequired",$langs->transnoentities("Amount"));
             return -4;
@@ -533,7 +549,7 @@ class Tva extends CommonObject
         $result = $this->db->query($sql);
         if ($result)
         {
-            $this->id = $this->db->last_insert_id(MAIN_DB_PREFIX."tva");    // TODO should be called paiementtva
+            $this->id = $this->db->last_insert_id(MAIN_DB_PREFIX."tva");    // TODO should be called 'payment_vat'
 
             // Call trigger
             //XXX: Should be done just befor commit no ?
@@ -557,8 +573,12 @@ class Tva extends CommonObject
 					$result=$acc->fetch($this->accountid);
 					if ($result <= 0) dol_print_error($this->db);
 
-                    $bank_line_id = $acc->addline($this->datep, $this->type_payment, $this->label, -abs($this->amount), '', '', $user);
-
+					if ($this->amount > 0) {
+						$bank_line_id = $acc->addline($this->datep, $this->type_payment, $this->label, -abs($this->amount), '', '', $user);
+					} else {
+						$bank_line_id = $acc->addline($this->datep, $this->type_payment, $this->label, abs($this->amount), '', '', $user);
+					}
+						
                     // Update fk_bank into llx_tva. So we know vat line used to generate bank transaction
                     if ($bank_line_id > 0)
 					{
@@ -638,17 +658,65 @@ class Tva extends CommonObject
 		global $langs;
 
 		$result='';
+        $label=$langs->trans("ShowVatPayment").': '.$this->ref;
 
-		$lien = '<a href="'.DOL_URL_ROOT.'/compta/tva/card.php?id='.$this->id.'">';
-		$lienfin='</a>';
+        $link = '<a href="'.DOL_URL_ROOT.'/compta/tva/card.php?id='.$this->id.'" title="'.dol_escape_htmltag($label, 1).'" class="classfortooltip">';
+		$linkend='</a>';
 
 		$picto='payment';
-		$label=$langs->trans("ShowVatPayment").': '.$this->ref;
 
-		if ($withpicto) $result.=($lien.img_object($label,$picto).$lienfin);
+        if ($withpicto) $result.=($link.img_object($label, $picto, 'class="classfortooltip"').$linkend);
 		if ($withpicto && $withpicto != 2) $result.=' ';
-		if ($withpicto != 2) $result.=$lien.$this->ref.$lienfin;
+		if ($withpicto != 2) $result.=$link.$this->ref.$linkend;
 		return $result;
 	}
+
+	/**
+	 *	Informations of vat payment object
+	 *
+	 *	@param	int		$id     Id of vat payment
+	 *	@return	int				<0 if KO, >0 if OK
+	 */
+    function info($id)
+    {
+        $sql = "SELECT t.rowid, t.tms as datec, t.fk_user_creat";
+        $sql.= " FROM ".MAIN_DB_PREFIX."tva as t";
+        $sql.= " WHERE t.rowid = ".$id;
+
+        dol_syslog(get_class($this)."::info", LOG_DEBUG);
+        $result=$this->db->query($sql);
+        if ($result)
+        {
+            if ($this->db->num_rows($result))
+            {
+                $obj = $this->db->fetch_object($result);
+
+                $this->id = $obj->rowid;
+
+                if ($obj->fk_user_creat) {
+                    $cuser = new User($this->db);
+                    $cuser->fetch($obj->fk_user_creat);
+                    $this->user_creation = $cuser;
+                }
+
+                if ($obj->fk_user_modif) {
+                    $muser = new User($this->db);
+                    $muser->fetch($obj->fk_user_modif);
+                    $this->user_modification = $muser;
+                }
+
+                $this->date_creation     = $this->db->jdate($obj->datec);
+                $this->date_modification = $this->db->jdate($obj->datec);
+                $this->import_key        = $obj->import_key;
+            }
+
+            $this->db->free($result);
+
+        }
+        else
+        {
+            dol_print_error($this->db);
+        }
+    }
 
 }

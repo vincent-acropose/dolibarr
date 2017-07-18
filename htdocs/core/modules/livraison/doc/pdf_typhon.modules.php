@@ -4,6 +4,7 @@
  * Copyright (C) 2007      Franky Van Liedekerke <franky.van.liedekerke@telenet.be>
  * Copyright (C) 2008      Chiptronik
  * Copyright (C) 2011-2012 Philippe Grand        <philippe.grand@atoo-net.com>
+ * Copyright (C) 2015      Marcos García         <marcosgdf@gmail.com>
 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -269,10 +270,33 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 				$tab_height = 130;
 				$tab_height_newpage = 150;
 
+				// Incoterm
+				$height_incoterms = 0;
+				if ($conf->incoterm->enabled)
+				{
+					$desc_incoterms = $object->getIncotermsForPDF();
+					if ($desc_incoterms)
+					{
+						$tab_top = 88;
+
+						$pdf->SetFont('','', $default_font_size - 1);
+						$pdf->writeHTMLCell(190, 3, $this->posxdesc-1, $tab_top-1, dol_htmlentitiesbr($desc_incoterms), 0, 1);
+						$nexY = $pdf->GetY();
+						$height_incoterms=$nexY-$tab_top;
+	
+						// Rect prend une longueur en 3eme param
+						$pdf->SetDrawColor(192,192,192);
+						$pdf->Rect($this->marge_gauche, $tab_top-1, $this->page_largeur-$this->marge_gauche-$this->marge_droite, $height_incoterms+1);
+	
+						$tab_top = $nexY+6;
+						$height_incoterms += 4;
+					}
+				}
+
 				// Affiche notes
 				if (! empty($object->note_public))
 				{
-					$tab_top = 88;
+					$tab_top = 88 + $height_incoterms;
 
 					$pdf->SetFont('','', $default_font_size - 1);
 					$pdf->writeHTMLCell(190, 3, $this->posxdesc-1, $tab_top, dol_htmlentitiesbr($object->note_public), 0, 1);
@@ -291,9 +315,9 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 					$height_note=0;
 				}
 
-				$iniY = $tab_top + 7;
-				$curY = $tab_top + 7;
-				$nexY = $tab_top + 7;
+				$iniY = $tab_top + 11;
+				$curY = $tab_top + 11;
+				$nexY = $tab_top + 11;
 
 				// Loop on each lines
 				for ($i = 0 ; $i < $nblines ; $i++)
@@ -398,7 +422,7 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 					if (! empty($conf->global->MAIN_PDF_DASH_BETWEEN_LINES) && $i < ($nblines - 1))
 					{
 						$pdf->setPage($pageposafter);
-						$pdf->SetLineStyle(array('dash'=>'1,1','color'=>array(210,210,210)));
+						$pdf->SetLineStyle(array('dash'=>'1,1','color'=>array(80,80,80)));
 						//$pdf->SetDrawColor(190,190,200);
 						$pdf->line($this->marge_gauche, $nexY+1, $this->page_largeur - $this->marge_droite, $nexY+1);
 						$pdf->SetLineStyle(array('dash'=>0));
@@ -613,7 +637,7 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 
 		if (empty($hidetop))
 		{
-			$pdf->line($this->marge_gauche, $tab_top+6, $this->page_largeur-$this->marge_droite, $tab_top+6);
+			$pdf->line($this->marge_gauche, $tab_top+10, $this->page_largeur-$this->marge_droite, $tab_top+10);
 		}
 
 		$pdf->SetDrawColor(128,128,128);
@@ -718,12 +742,12 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 			$pdf->SetTextColor(0,0,60);
 		}
 
-		if ($object->client->code_client)
+		if ($object->thirdparty->code_client)
 		{
 			$posy+=5;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("CustomerCode")." : " . $outputlangs->transnoentities($object->client->code_client), '', 'R');
+			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("CustomerCode")." : " . $outputlangs->transnoentities($object->thirdparty->code_client), '', 'R');
 		}
 
 		$pdf->SetTextColor(0,0,60);
@@ -820,20 +844,17 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 				$result=$object->fetch_contact($arrayidcontact[0]);
 			}
 
-			// Recipient name
-			if (! empty($usecontact))
-			{
-				// On peut utiliser le nom de la societe du contact
-				if (! empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) $socname = $object->contact->socname;
-				else $socname = $object->client->name;
-				$carac_client_name=$outputlangs->convToOutputCharset($socname);
-			}
-			else
-			{
-				$carac_client_name=$outputlangs->convToOutputCharset($object->client->name);
+			//Recipient name
+			// On peut utiliser le nom de la societe du contact
+			if ($usecontact && !empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) {
+				$thirdparty = $object->contact;
+			} else {
+				$thirdparty = $object->thirdparty;
 			}
 
-			$carac_client=pdf_build_address($outputlangs,$this->emetteur,$object->client,($usecontact?$object->contact:''),$usecontact,'target');
+			$carac_client_name= pdfBuildThirdpartyName($thirdparty, $outputlangs);
+
+			$carac_client=pdf_build_address($outputlangs,$this->emetteur,$object->thirdparty,($usecontact?$object->contact:''),$usecontact,'target',$object);
 
 			// Show recipient
 			$widthrecbox=100;
@@ -876,7 +897,8 @@ class pdf_typhon extends ModelePDFDeliveryOrder
 	 */
 	function _pagefoot(&$pdf,$object,$outputlangs,$hidefreetext=0)
 	{
-		$showdetails=0;
+		global $conf;
+		$showdetails=$conf->global->MAIN_GENERATE_DOCUMENTS_SHOW_FOOT_DETAILS;
 		return pdf_pagefoot($pdf,$outputlangs,'DELIVERY_FREE_TEXT',$this->emetteur,$this->marge_basse,$this->marge_gauche,$this->page_hauteur,$object,$showdetails,$hidefreetext);
 	}
 
