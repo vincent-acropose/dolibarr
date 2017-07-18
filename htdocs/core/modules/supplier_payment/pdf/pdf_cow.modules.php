@@ -278,6 +278,10 @@ class pdf_cow extends ModelePDFSuppliersPayments
 				// Loop on each lines
 				for ($i = 0 ; $i < $nblignes ; $i++)
 				{
+					$supplier_invoice = new FactureFournisseur($this->db);
+					$res = $supplier_invoice->fetch($object->lines[$i]->facid);
+					if ($res < 0) dol_print_error($this->db);
+					
 					$curY = $nexY;
 					$pdf->SetFont('','', $default_font_size - 1);   // Into loop to work with multipage
 					$pdf->SetTextColor(0,0,0);
@@ -344,22 +348,30 @@ class pdf_cow extends ModelePDFSuppliersPayments
 					// ref facture fourn
 					$pdf->SetXY($this->posxreffacture, $curY);
 					$pdf->MultiCell($this->posxreffacture-$this->posxup-0.8, 3, $object->lines[$i]->ref, 0, 'L', 0);
-					
+
 					// type
 					$pdf->SetXY($this->posxtype, $curY);
 					$pdf->MultiCell($this->posxtype-$this->posxup-0.8, 3, $object->lines[$i]->type, 0, 'L', 0);
 
+					// TODO show total TTC invoice
 					// Total ht
 					$pdf->SetXY($this->posxtotalht, $curY);
-					$pdf->MultiCell($this->posxtotalht-$this->posxup-0.8, 3, price($object->lines[$i]->total_ht), 0, 'R', 0);
+//					$pdf->MultiCell($this->posxtotalht-$this->posxup-0.8, 3, price($object->lines[$i]->total_ht), 0, 'R', 0);
+					$pdf->MultiCell($this->posxtotalht-$this->posxup-0.8, 3, price($supplier_invoice->total_ttc), 0, 'R', 0);
 					
+					$alreadypaid=$supplier_invoice->getSommePaiement();
+
+					// TODO show the amount to pay
 					// Total tva
 					$pdf->SetXY($this->posxtva, $curY);
-					$pdf->MultiCell($this->posxtva-$this->posxup-0.8, 3, price($object->lines[$i]->total_tva), 0, 'R', 0);
-					
+//					$pdf->MultiCell($this->posxtva-$this->posxup-0.8, 3, price($object->lines[$i]->total_tva), 0, 'R', 0);
+					$pdf->MultiCell($this->posxtva-$this->posxup-0.8, 3, price($supplier_invoice->total_ttc - $alreadypaid), 0, 'R', 0);
+							
+					// TODO show the amount of payment for this line (invoice)
 					// Total TTC line
                     $pdf->SetXY($this->posxtotalttc, $curY);
-                    $pdf->MultiCell($this->page_largeur-$this->marge_droite-$this->posxtotalttc, 3, price($object->lines[$i]->total_ttc), 0, 'R', 0);
+//                    $pdf->MultiCell($this->page_largeur-$this->marge_droite-$this->posxtotalttc, 3, price($object->lines[$i]->total_ttc), 0, 'R', 0);
+                    $pdf->MultiCell($this->page_largeur-$this->marge_droite-$this->posxtotalttc, 3, price($object->lines[$i]->amount), 0, 'R', 0);
 					
 
 					// Add line
