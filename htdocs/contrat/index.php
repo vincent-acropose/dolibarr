@@ -2,6 +2,7 @@
 /* Copyright (C) 2001-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2015      Jean-François Ferry	<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,26 +64,25 @@ $now = dol_now();
 
 llxHeader();
 
-print_fiche_titre($langs->trans("ContractsArea"));
+print load_fiche_titre($langs->trans("ContractsArea"),'','title_commercial.png');
 
 
-print '<table class="notopnoleftnoright" width="100%">';
+//print '<table border="0" width="100%" class="notopnoleftnoright">';
+//print '<tr><td valign="top" width="30%" class="notopnoleft">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
 
-print '<tr><td width="30%" valign="top" class="notopnoleft">';
 
 // Search contract
 if (! empty($conf->contrat->enabled))
 {
 	$var=false;
-	print '<form method="post" action="'.DOL_URL_ROOT.'/contrat/liste.php">';
+	print '<form method="post" action="'.DOL_URL_ROOT.'/contrat/list.php">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 	print '<table class="noborder nohover" width="100%">';
-	print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("SearchAContract").'</td></tr>';
+	print '<tr class="liste_titre"><td colspan="3">'.$langs->trans("Search").'</td></tr>';
 	print '<tr '.$bc[$var].'>';
-	print '<td nowrap>'.$langs->trans("Ref").':</td><td><input type="text" class="flat" name="search_contract" size="18"></td>';
-	print '<td rowspan="2"><input type="submit" value="'.$langs->trans("Search").'" class="button"></td></tr>';
-	print '<tr '.$bc[$var].'><td nowrap>'.$langs->trans("Other").':</td><td><input type="text" class="flat" name="sall" size="18"></td>';
-	print '</tr>';
+	print '<td class="nowrap">'.$langs->trans("Contract").':</td><td><input type="text" class="flat" name="sall" size="18"></td>';
+	print '<td><input type="submit" value="'.$langs->trans("Search").'" class="button"></td></tr>';
 	print "</table></form>\n";
 	print "<br>";
 }
@@ -175,7 +175,7 @@ else
 }
 
 
-print '<table class="noborder" width="100%">';
+print '<table class="noborder nohover" width="100%">';
 print '<tr class="liste_titre"><td colspan="2">'.$langs->trans("Statistics").' - '.$langs->trans("Services").'</td></tr>'."\n";
 $var=true;
 $listofstatus=array(0,4,4,5); $bool=false;
@@ -190,12 +190,12 @@ foreach($listofstatus as $status)
         print '<td align="right"><a href="services.php?mode='.$status.($bool?'&filter=expired':'').'">'.($nb[$status.$bool]?$nb[$status.$bool]:0).' '.$staticcontratligne->LibStatut($status,3,($bool?1:0)).'</a></td>';
         print "</tr>\n";
     }
-    if ($status==4 && $bool==false) $bool=true;
+    if ($status==4 && ! $bool) $bool=true;
     else $bool=false;
 }
 if (! empty($conf->use_javascript_ajax))
 {
-    print '<tr><td align="center" colspan="2">';
+    print '<tr class="impair"><td align="center" colspan="2">';
     $data=array('series'=>$dataseries);
     dol_print_graph('stats',300,180,$data,1,'pie',1);
     print '</td></tr>';
@@ -210,7 +210,7 @@ foreach($listofstatus as $status)
     	print '<tr '.$bc[$var].'>';
     	print '<td>'.$staticcontratligne->LibStatut($status,0,($bool?1:0)).'</td>';
     	print '<td align="right"><a href="services.php?mode='.$status.($bool?'&filter=expired':'').'">'.($nb[$status.$bool]?$nb[$status.$bool]:0).' '.$staticcontratligne->LibStatut($status,3,($bool?1:0)).'</a></td>';
-    	if ($status==4 && $bool==false) $bool=true;
+    	if ($status==4 && ! $bool) $bool=true;
     	else $bool=false;
         print "</tr>\n";
     }
@@ -226,7 +226,7 @@ print "</table><br>";
 if (! empty($conf->contrat->enabled) && $user->rights->contrat->lire)
 {
 	$sql  = "SELECT c.rowid as ref, c.rowid,";
-	$sql.= " s.nom, s.rowid as socid";
+	$sql.= " s.nom as name, s.rowid as socid";
 	$sql .= " FROM ".MAIN_DB_PREFIX."contrat as c, ".MAIN_DB_PREFIX."societe as s";
 	if (!$user->rights->societe->client->voir && !$socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 	$sql.= " WHERE s.rowid = c.fk_soc";
@@ -244,7 +244,7 @@ if (! empty($conf->contrat->enabled) && $user->rights->contrat->lire)
 
 		print '<table class="noborder" width="100%">';
 		print '<tr class="liste_titre">';
-		print '<td colspan="3">'.$langs->trans("DraftContracts").($num?' ('.$num.')':'').'</td></tr>';
+		print '<td colspan="3">'.$langs->trans("DraftContracts").($num?' <span class="badge">'.$num.'</span>':'').'</td></tr>';
 		if ($num)
 		{
 			$companystatic=new Societe($db);
@@ -254,14 +254,14 @@ if (! empty($conf->contrat->enabled) && $user->rights->contrat->lire)
 			while ($i < $num && $i < 20)
 			{
 				$obj = $db->fetch_object($resql);
-				print '<tr '.$bc[$var].'><td nowrap>';
+				print '<tr '.$bc[$var].'><td class="nowrap">';
 				$staticcontrat->ref=$obj->ref;
 				$staticcontrat->id=$obj->rowid;
 				print $staticcontrat->getNomUrl(1,'');
 				print '</td>';
 				print '<td>';
 				$companystatic->id=$obj->socid;
-				$companystatic->nom=$obj->nom;
+				$companystatic->name=$obj->name;
 				$companystatic->client=1;
 				print $companystatic->getNomUrl(1,'',16);
 				print '</td>';
@@ -273,7 +273,7 @@ if (! empty($conf->contrat->enabled) && $user->rights->contrat->lire)
 		}
 		else
 		{
-			print '<tr colspan="3" '.$bc[$var].'><td>'.$langs->trans("NoContracts").'</td></tr>';
+			print '<tr '.$bc[$var].' class><td colspan="3" class="opacitymedium">'.$langs->trans("NoContracts").'</td></tr>';
 		}
 		print "</table><br>";
 		$db->free($resql);
@@ -284,7 +284,9 @@ if (! empty($conf->contrat->enabled) && $user->rights->contrat->lire)
 	}
 }
 
-print '</td><td width="70%" valign="top" class="notopnoleftnoright">';
+
+//print '</td><td valign="top" width="70%" class="notopnoleftnoright">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
 
 
 // Last modified contracts
@@ -295,7 +297,7 @@ $sql.= ' sum('.$db->ifsql("cd.statut=4 AND (cd.date_fin_validite IS NULL OR cd.d
 $sql.= ' sum('.$db->ifsql("cd.statut=4 AND (cd.date_fin_validite IS NOT NULL AND cd.date_fin_validite < '".$db->idate($now)."')",1,0).') as nb_expired,';
 $sql.= ' sum('.$db->ifsql("cd.statut=4 AND (cd.date_fin_validite IS NOT NULL AND cd.date_fin_validite < '".$db->idate($now - $conf->contrat->services->expires->warning_delay)."')",1,0).') as nb_late,';
 $sql.= ' sum('.$db->ifsql("cd.statut=5",1,0).') as nb_closed,';
-$sql.= " c.rowid as cid, c.ref, c.datec, c.tms, c.statut, s.nom, s.rowid as socid";
+$sql.= " c.rowid as cid, c.ref, c.datec, c.tms, c.statut, s.nom as name, s.rowid as socid";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s,";
 if (!$user->rights->societe->client->voir && !$socid) $sql.= " ".MAIN_DB_PREFIX."societe_commerciaux as sc,";
 $sql.= " ".MAIN_DB_PREFIX."contrat as c";
@@ -309,7 +311,7 @@ $sql.= " GROUP BY c.rowid, c.ref, c.datec, c.tms, c.statut, s.nom, s.rowid";
 $sql.= " ORDER BY c.tms DESC";
 $sql.= " LIMIT ".$max;
 
-dol_syslog("contrat/index.php sql=".$sql, LOG_DEBUG);
+dol_syslog("contrat/index.php", LOG_DEBUG);
 $result=$db->query($sql);
 if ($result)
 {
@@ -331,7 +333,7 @@ if ($result)
 		$var=!$var;
 
 		print '<tr '.$bc[$var].'>';
-		print '<td width="100" nowrap="nowrap">';
+		print '<td width="110" class="nowrap">';
 		$staticcontrat->ref=($obj->ref?$obj->ref:$obj->cid);
 		$staticcontrat->id=$obj->cid;
 		print $staticcontrat->getNomUrl(1,16);
@@ -339,10 +341,10 @@ if ($result)
 		print '</td>';
 		print '<td>';
 		$staticcompany->id=$obj->socid;
-		$staticcompany->nom=$obj->nom;
+		$staticcompany->name=$obj->name;
 		print $staticcompany->getNomUrl(1,'',20);
 		print '</td>';
-		print '<td align="center">'.dol_print_date($obj->tms,'dayhour').'</td>';
+		print '<td align="center">'.dol_print_date($db->jdate($obj->tms),'dayhour').'</td>';
 		//print '<td align="left">'.$staticcontrat->LibStatut($obj->statut,2).'</td>';
 		print '<td align="right" width="32">'.($obj->nb_initial>0 ? $obj->nb_initial.$staticcontratligne->LibStatut(0,3):'').'</td>';
 		print '<td align="right" width="32">'.($obj->nb_running>0 ? $obj->nb_running.$staticcontratligne->LibStatut(4,3,0):'').'</td>';
@@ -366,8 +368,8 @@ print '<br>';
 // Last modified services
 $sql = "SELECT c.ref, c.fk_soc, ";
 $sql.= " cd.rowid as cid, cd.statut, cd.label, cd.fk_product, cd.description as note, cd.fk_contrat, cd.date_fin_validite,";
-$sql.= " s.nom,";
-$sql.= " p.rowid as pid, p.ref as pref, p.label as plabel, p.fk_product_type as ptype";
+$sql.= " s.nom as name,";
+$sql.= " p.rowid as pid, p.ref as pref, p.label as plabel, p.fk_product_type as ptype, p.entity as pentity";
 $sql.= " FROM (".MAIN_DB_PREFIX."contrat as c";
 $sql.= ", ".MAIN_DB_PREFIX."societe as s";
 if (!$user->rights->societe->client->voir && !$socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
@@ -397,7 +399,7 @@ if ($resql)
 		$obj = $db->fetch_object($resql);
 		$var=!$var;
 		print '<tr '.$bc[$var].'>';
-		print '<td width="100" nowrap="nowrap">';
+		print '<td width="110" class="nowrap">';
 		$staticcontrat->ref=($obj->ref?$obj->ref:$obj->fk_contrat);
 		$staticcontrat->id=$obj->fk_contrat;
 		print $staticcontrat->getNomUrl(1,16);
@@ -409,21 +411,22 @@ if ($resql)
     		$productstatic->id=$obj->fk_product;
             $productstatic->type=$obj->ptype;
             $productstatic->ref=$obj->pref;
+			$productstatic->entity=$obj->pentity;
             print $productstatic->getNomUrl(1,'',20);
 		}
 		else
 		{
-		    print '<a href="'.DOL_URL_ROOT.'/contrat/fiche.php?id='.$obj->fk_contrat.'">'.img_object($langs->trans("ShowService"),"service");
+		    print '<a href="'.DOL_URL_ROOT.'/contrat/card.php?id='.$obj->fk_contrat.'">'.img_object($langs->trans("ShowService"),"service");
             if ($obj->label) print ' '.dol_trunc($obj->label,20).'</a>';
             else print '</a> '.dol_trunc($obj->note,20);
 		}
 		print '</td>';
 		print '<td>';
 		$staticcompany->id=$obj->fk_soc;
-		$staticcompany->nom=$obj->nom;
+		$staticcompany->name=$obj->name;
 		print $staticcompany->getNomUrl(1,'',20);
 		print '</td>';
-		print '<td nowrap="nowrap" align="right"><a href="'.DOL_URL_ROOT.'/contrat/fiche.php?id='.$obj->fk_contrat.'&ligne='.$obj->cid.'">';
+		print '<td class="nowrap" align="right"><a href="'.DOL_URL_ROOT.'/contrat/card.php?id='.$obj->fk_contrat.'&ligne='.$obj->cid.'">';
 		$dateend=$db->jdate($obj->date_fin_validite);
 		print $staticcontratligne->LibStatut($obj->statut, 3, ($dateend && $dateend < $now)?1:0);
 		print '</a></td>';
@@ -444,8 +447,8 @@ print '<br>';
 
 // Not activated services
 $sql = "SELECT c.ref, c.fk_soc, cd.rowid as cid, cd.statut, cd.label, cd.fk_product, cd.description as note, cd.fk_contrat,";
-$sql.= " s.nom,";
-$sql.= " p.rowid as pid, p.ref as pref, p.label as plabel, p.fk_product_type as ptype";
+$sql.= " s.nom as name,";
+$sql.= " p.rowid as pid, p.ref as pref, p.label as plabel, p.fk_product_type as ptype, p.entity as pentity";
 $sql.= " FROM (".MAIN_DB_PREFIX."contrat as c";
 $sql.= ", ".MAIN_DB_PREFIX."societe as s";
 if (!$user->rights->societe->client->voir && !$socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
@@ -468,7 +471,7 @@ if ($resql)
 
 	print '<table class="noborder" width="100%">';
 
-	print '<tr class="liste_titre"><td colspan="4">'.$langs->trans("NotActivatedServices").' <a href="'.DOL_URL_ROOT.'/contrat/services.php?mode=0">('.$num.')</a></td>';
+	print '<tr class="liste_titre"><td colspan="4">'.$langs->trans("NotActivatedServices").' <a href="'.DOL_URL_ROOT.'/contrat/services.php?mode=0"><span class="badge">'.$num.'</span></a></td>';
 	print "</tr>\n";
 
 	$var=True;
@@ -478,29 +481,30 @@ if ($resql)
 		$var=!$var;
 		print '<tr '.$bc[$var].'>';
 
-		print '<td width="100" nowrap="nowrap">';
+		print '<td width="110" class="nowrap">';
 		$staticcontrat->ref=($obj->ref?$obj->ref:$obj->fk_contrat);
 		$staticcontrat->id=$obj->fk_contrat;
 		print $staticcontrat->getNomUrl(1,16);
 		print '</td>';
-		print '<td nowrap="nowrap">';
+		print '<td class="nowrap">';
 		if ($obj->fk_product > 0)
 		{
     		$productstatic->id=$obj->fk_product;
             $productstatic->type=$obj->ptype;
             $productstatic->ref=$obj->pref;
+			$productstatic->entity=$obj->pentity;
             print $productstatic->getNomUrl(1,'',20);
 		}
 		else
 		{
-		    print '<a href="'.DOL_URL_ROOT.'/contrat/fiche.php?id='.$obj->fk_contrat.'">'.img_object($langs->trans("ShowService"),"service");
+		    print '<a href="'.DOL_URL_ROOT.'/contrat/card.php?id='.$obj->fk_contrat.'">'.img_object($langs->trans("ShowService"),"service");
             if ($obj->label) print ' '.dol_trunc($obj->label,20).'</a>';
             else print '</a> '.dol_trunc($obj->note,20);
 		}
         print '</td>';
 		print '<td>';
 		$staticcompany->id=$obj->fk_soc;
-		$staticcompany->nom=$obj->nom;
+		$staticcompany->name=$obj->name;
 		print $staticcompany->getNomUrl(1,'',20);
 		print '</td>';
 		print '<td width="16" align="right"><a href="ligne.php?id='.$obj->fk_contrat.'&ligne='.$obj->cid.'">';
@@ -523,8 +527,8 @@ print '<br>';
 
 // Expired services
 $sql = "SELECT c.ref, c.fk_soc, cd.rowid as cid, cd.statut, cd.label, cd.fk_product, cd.description as note, cd.fk_contrat,";
-$sql.= " s.nom,";
-$sql.= " p.rowid as pid, p.ref as pref, p.label as plabel, p.fk_product_type as ptype";
+$sql.= " s.nom as name,";
+$sql.= " p.rowid as pid, p.ref as pref, p.label as plabel, p.fk_product_type as ptype, p.entity as pentity";
 $sql.= " FROM (".MAIN_DB_PREFIX."contrat as c";
 $sql.= ", ".MAIN_DB_PREFIX."societe as s";
 if (!$user->rights->societe->client->voir && !$socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
@@ -548,7 +552,7 @@ if ($resql)
 
 	print '<table class="noborder" width="100%">';
 
-	print '<tr class="liste_titre"><td colspan="4">'.$langs->trans("ListOfExpiredServices").' <a href="'.DOL_URL_ROOT.'/contrat/services.php?mode=4&filter=expired">('.$num.')</a></td>';
+	print '<tr class="liste_titre"><td colspan="4">'.$langs->trans("ListOfExpiredServices").' <a href="'.DOL_URL_ROOT.'/contrat/services.php?mode=4&amp;filter=expired"><span class="badge">'.$num.'</span></a></td>';
 	print "</tr>\n";
 
 	$var=True;
@@ -558,29 +562,30 @@ if ($resql)
 		$var=!$var;
 		print '<tr '.$bc[$var].'>';
 
-		print '<td width="100" nowrap="nowrap">';
+		print '<td width="110" class="nowrap">';
 		$staticcontrat->ref=($obj->ref?$obj->ref:$obj->fk_contrat);
 		$staticcontrat->id=$obj->fk_contrat;
 		print $staticcontrat->getNomUrl(1,16);
 		print '</td>';
-		print '<td nowrap="nowrap">';
+		print '<td class="nowrap">';
 		if ($obj->fk_product > 0)
 		{
     		$productstatic->id=$obj->fk_product;
             $productstatic->type=$obj->ptype;
             $productstatic->ref=$obj->pref;
+			$productstatic->entity=$obj->pentity;
             print $productstatic->getNomUrl(1,'',20);
 		}
 		else
 		{
-		    print '<a href="'.DOL_URL_ROOT.'/contrat/fiche.php?id='.$obj->fk_contrat.'">'.img_object($langs->trans("ShowService"),"service");
+		    print '<a href="'.DOL_URL_ROOT.'/contrat/card.php?id='.$obj->fk_contrat.'">'.img_object($langs->trans("ShowService"),"service");
             if ($obj->label) print ' '.dol_trunc($obj->label,20).'</a>';
             else print '</a> '.dol_trunc($obj->note,20);
 		}
 		print '</td>';
 		print '<td>';
 		$staticcompany->id=$obj->fk_soc;
-		$staticcompany->nom=$obj->nom;
+		$staticcompany->name=$obj->name;
 		print $staticcompany->getNomUrl(1,'',20);
 		print '</td>';
 		print '<td width="16" align="right"><a href="ligne.php?id='.$obj->fk_contrat.'&ligne='.$obj->cid.'">';
@@ -599,12 +604,11 @@ else
 	dol_print_error($db);
 }
 
-print '</td></tr></table>';
 
-print '<br>';
+//print '</td></tr></table>';
+print '</div></div></div>';
 
 
 llxFooter();
 
 $db->close();
-?>

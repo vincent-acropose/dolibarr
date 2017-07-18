@@ -1,5 +1,7 @@
 <?php
-/* Copyright (C) 2006-2009 Laurent Destailleur   <eldy@users.sourceforge.net>
+/* Copyright (C) 2013-2014 Olivier Geffroy       <jeff@jeffinfo.com>
+ * Copyright (C) 2013-2014 Alexandre Spangaro    <aspangaro.dolibarr@gmail.com>
+ * Copyright (C) 2013-2014 Florian Henry		<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,20 +18,18 @@
  */
 
 /**
- *	\file       htdocs/accountancy/class/accountancysystem.class.php
- * 	\ingroup    accounting
- * 	\brief      File of class to manage accountancy systems
+ * \file		htdocs/accountancy/class/accountancysystem.class.php
+ * \ingroup		Advanced accountancy
+ * \brief		File of class to manage accountancy systems
  */
 
-
-/**	\class 		AccountancySystem
- *	\brief 		Classe to manage accountancy systems
+/**
+ * Class to manage accountancy systems
  */
 class AccountancySystem
 {
 	var $db;
 	var $error;
-
 	var $rowid;
 	var $fk_pcg_version;
 	var $pcg_type;
@@ -37,59 +37,97 @@ class AccountancySystem
 	var $label;
 	var $account_number;
 	var $account_parent;
-
-
+	
 	/**
-	 *	Constructor
+	 * Constructor
 	 *
-	 *  @param		DoliDB		$db      Database handler
+	 * @param DoliDB $db handler
 	 */
-	function __construct($db)
-	{
+	function __construct($db) {
 		$this->db = $db;
 	}
-
-
+	
+	
 	/**
-	 *  Insert accountancy system name into database
+	 * Load record in memory
 	 *
-	 *  @param  	User	$user 	User making insert
-	 *  @return		int				<0 if KO, Id of line if OK
+	 * @param 	int 	$rowid 				   Id
+	 * @param 	string 	$ref             	   ref
+	 * @return 	int                            <0 if KO, Id of record if OK and found
 	 */
-	function create($user)
+	function fetch($rowid = 0, $ref = '') 
 	{
-		$now=dol_now();
-
-		$sql = "INSERT INTO ".MAIN_DB_PREFIX."accounting_system";
-		$sql.= " (date_creation, fk_user_author, numero,intitule)";
-		$sql.= " VALUES (".$this->db->idate($now).",".$user->id.",'".$this->numero."','".$this->intitule."')";
-
+	    global $conf;
+	
+	    if ($rowid > 0 || $ref) 
+	    {
+	        $sql  = "SELECT a.pcg_version, a.label, a.active";
+	        $sql .= " FROM " . MAIN_DB_PREFIX . "accounting_system as a";
+	        $sql .= " WHERE";
+	        if ($rowid) {
+	            $sql .= " a.rowid = '" . $rowid . "'";
+	        } elseif ($ref) {
+	            $sql .= " a.pcg_version = '" . $ref . "'";
+	        }
+	
+	        dol_syslog(get_class($this) . "::fetch sql=" . $sql, LOG_DEBUG);
+	        $result = $this->db->query($sql);
+	        if ($result) {
+	            $obj = $this->db->fetch_object($result);
+	
+	            if ($obj) {
+	                $this->id = $obj->rowid;
+	                $this->rowid = $obj->rowid;
+	                $this->pcg_version = $obj->pcg_version;
+	                $this->ref = $obj->pcg_version;
+	                $this->label = $obj->label;
+	                $this->active = $obj->active;
+	                	
+	                return $this->id;
+	            } else {
+	                return 0;
+	            }
+	        } else {
+	            $this->error = "Error " . $this->db->lasterror();
+	            $this->errors[] = "Error " . $this->db->lasterror();
+	        }
+	    }
+	    return - 1;
+	}
+	
+	
+	/**
+	 * Insert accountancy system name into database
+	 *
+	 * @param User $user making insert
+	 * @return int if KO, Id of line if OK
+	 */
+	function create($user) {
+		$now = dol_now();
+		
+		$sql = "INSERT INTO " . MAIN_DB_PREFIX . "accounting_system";
+		$sql .= " (date_creation, fk_user_author, numero, label)";
+		$sql .= " VALUES (" . $this->db->idate($now) . "," . $user->id . ",'" . $this->numero . "','" . $this->label . "')";
+		
+		dol_syslog(get_class($this) . "::create sql=" . $sql, LOG_DEBUG);
 		$resql = $this->db->query($sql);
-		if ($resql)
-		{
-			$id = $this->db->last_insert_id(MAIN_DB_PREFIX."accounting_system");
-
-			if ($id > 0)
-			{
-				$this->id = $id;
-				$result = $this->id;
-			}
-			else
-			{
-				$result = -2;
-				$this->error="AccountancySystem::Create Erreur $result";
+		if ($resql) {
+			$id = $this->db->last_insert_id(MAIN_DB_PREFIX . "accounting_system");
+			
+			if ($id > 0) {
+				$this->rowid = $id;
+				$result = $this->rowid;
+			} else {
+				$result = - 2;
+				$this->error = "AccountancySystem::Create Erreur $result";
 				dol_syslog($this->error, LOG_ERR);
 			}
-		}
-		else
-		{
-			$result = -1;
-			$this->error="AccountancySystem::Create Erreur $result";
+		} else {
+			$result = - 1;
+			$this->error = "AccountancySystem::Create Erreur $result";
 			dol_syslog($this->error, LOG_ERR);
 		}
-
+		
 		return $result;
 	}
-
 }
-?>

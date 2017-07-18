@@ -2,6 +2,7 @@
 /* Copyright (C) 2001-2002	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2016       Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +25,7 @@
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 
 $langs->load("admin");
 
@@ -42,15 +44,32 @@ $title='InfoPHP';
 
 if (isset($title))
 {
-	print_fiche_titre($langs->trans($title), '', 'setup');
+	print load_fiche_titre($langs->trans($title), '', 'title_setup');
 }
+
+
+
+print '<table class="noborder" width="100%">';
+print '<tr class="liste_titre"><td>'.$langs->trans("Parameter").'</td><td>'.$langs->trans("Value").'</td></tr>';
+print "\n";
+
+$var=false;
+
+// Recupere la version de PHP
+$phpversion=version_php();
+print "<tr ".$bc[$var].'><td  width="220px">'.$langs->trans("Version")."</td><td>".$phpversion."</td></tr>\n";
+
+print '</table>';
+print '<br>';
+
+
 
 // Get php_info array
 $phparray=phpinfo_array();
 foreach($phparray as $key => $value)
 {
-	//print_titre($key);
-	print '<table class="noborder">';
+    print '<div class="div-table-responsive-no-min">';
+    print '<table class="noborder">';
 	print '<tr class="liste_titre">';
 	//print '<td width="220px">'.$langs->trans("Parameter").'</td>';
 	print '<td width="220px">'.$key.'</td>';
@@ -68,7 +87,12 @@ foreach($phparray as $key => $value)
 			print '<td>'.$keyparam.'</td>';
 			$valtoshow=$keyvalue;
 			if ($keyparam == 'X-ChromePhp-Data') $valtoshow=dol_trunc($keyvalue,80);
-			print '<td colspan="2">'.$valtoshow.'</td>';
+			print '<td colspan="2">';
+			if ($keyparam == 'Path') $valtoshow=implode('; ',explode(';',trim($valtoshow)));
+			if ($keyparam == 'PATH') $valtoshow=implode('; ',explode(';',trim($valtoshow)));
+			if ($keyparam == '_SERVER["PATH"]') $valtoshow=implode('; ',explode(';',trim($valtoshow)));
+			print $valtoshow;
+			print '</td>';
 			print '</tr>';
 		}
 		else
@@ -81,8 +105,8 @@ foreach($phparray as $key => $value)
 			{
 				print '<td>';
 				$valtoshow=$keyvalue2;
-				if ($keyparam == 'disable_functions') $valtoshow=join(', ',explode(',',trim($valtoshow)));
-				//print $keyparam2.' = ';
+				if ($keyparam == 'disable_functions') $valtoshow=implode(', ',explode(',',trim($valtoshow)));
+				//print $keyparam;
 				print $valtoshow;
 				$i++;
 				print '</td>';
@@ -90,11 +114,12 @@ foreach($phparray as $key => $value)
 			print '</tr>';
 		}
 	}
-	print '</table><br>';
+	print '</table>';
+	print '</div>';
+	print '<br>';
 }
 
 
 llxFooter();
 
 $db->close();
-?>

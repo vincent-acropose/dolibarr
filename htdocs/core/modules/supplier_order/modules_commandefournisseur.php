@@ -4,7 +4,8 @@
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
- * Copyright (C) 2011      Philippe Grand       <philippe.grand@atoo-net.com>
+ * Copyright (C) 2011-2016 Philippe Grand       <philippe.grand@atoo-net.com>
+ * Copyright (C) 2014      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,11 +25,11 @@
 /**
  *		\file       htdocs/core/modules/supplier_order/modules_commandefournisseur.php
  *      \ingroup    commande fournisseur
- *      \brief      File that contain parent class for supplier orders models
+ *      \brief      File that contains parent class for supplier orders models
  *                  and parent class for supplier orders numbering models
  */
 require_once DOL_DOCUMENT_ROOT.'/core/class/commondocgenerator.class.php';
-require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';	// requis car utilise par les classes qui heritent
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';	// required for use by classes that inherit
 
 
 /**
@@ -40,11 +41,11 @@ abstract class ModelePDFSuppliersOrders extends CommonDocGenerator
 
 
 	/**
-	 *  Return list of active generation modules
+	 *  Return list of active generation models
 	 *
      *  @param	DoliDB	$db     			Database handler
-     *  @param  string	$maxfilenamelength  Max length of value to show
-     *  @return	array						List of numbers
+     *  @param  integer	$maxfilenamelength  Max length of value to show
+     *  @return	array						List of templates
 	 */
 	static function liste_modeles($db,$maxfilenamelength=0)
 	{
@@ -64,24 +65,24 @@ abstract class ModelePDFSuppliersOrders extends CommonDocGenerator
 
 
 /**
- *	Classe mere des modeles de numerotation des references de commandes fournisseurs
+ *	Parent Class of numbering models of suppliers orders references
  */
 abstract class ModeleNumRefSuppliersOrders
 {
 	var $error='';
 
-	/**  Return if a module can be used or not
+	/**  Return if a model can be used or not
 	 *
-	 *   @return	boolean     true if module can be used
+	 *   @return	boolean     true if model can be used
 	 */
 	function isEnabled()
 	{
 		return true;
 	}
 
-	/**  Renvoie la description par defaut du modele de numerotation
+	/**  Returns default description of numbering model
 	 *
-	 *   @return    string      Texte descripif
+	 *   @return    string      Description Text
 	 */
 	function info()
 	{
@@ -90,7 +91,7 @@ abstract class ModeleNumRefSuppliersOrders
 		return $langs->trans("NoDescription");
 	}
 
-	/**   Renvoie un exemple de numerotation
+	/**   Returns a numbering example
 	 *
 	 *    @return   string      Example
 	 */
@@ -101,16 +102,16 @@ abstract class ModeleNumRefSuppliersOrders
 		return $langs->trans("NoExample");
 	}
 
-	/**  Test si les numeros deja en vigueur dans la base ne provoquent pas de conflits qui empecheraient cette numerotation de fonctionner.
+	/**  Tests if existing numbers make problems with numbering
 	 *
-	 *   @return	boolean     false si conflit, true si ok
+	 *   @return	boolean     false if conflict, true if ok
 	 */
 	function canBeActivated()
 	{
 		return true;
 	}
 
-	/**  Renvoie prochaine valeur attribuee
+	/**  Returns next value assigned
 	 *
 	 *   @return     string      Valeur
 	 */
@@ -120,9 +121,9 @@ abstract class ModeleNumRefSuppliersOrders
 		return $langs->trans("NotAvailable");
 	}
 
-	/**   Renvoie version du module numerotation
+	/**   Returns version of the numbering model
 	 *
-	 *    @return     string      Valeur
+	 *    @return     string      Value
 	 */
 	function getVersion()
 	{
@@ -132,129 +133,30 @@ abstract class ModeleNumRefSuppliersOrders
 		if ($this->version == 'development') return $langs->trans("VersionDevelopment");
 		if ($this->version == 'experimental') return $langs->trans("VersionExperimental");
 		if ($this->version == 'dolibarr') return DOL_VERSION;
+		if ($this->version) return $this->version;
 		return $langs->trans("NotAvailable");
 	}
 }
 
 
 /**
- *  Create a document onto disk according to template module.
+ *  Create a document onto disk according to template model.
  *
  *  @param	    DoliDB		$db  			Database handler
- *  @param	    Object		$object			Object supplier order
+ *  @param	    CommandeFournisseur		$object			Object supplier order
  *  @param	    string		$modele			Force template to use ('' to not force)
- *  @param		Translate	$outputlangs	Object lang a utiliser pour traduction
+ *  @param		Translate	$outputlangs	Object lang to use for traduction
  *  @param      int			$hidedetails    Hide details of lines
  *  @param      int			$hidedesc       Hide description
  *  @param      int			$hideref        Hide ref
- *  @param		HookManager	$hookmanager	Hook manager instance
  *  @return     int          				0 if KO, 1 if OK
+ * @deprecated Use the new function generateDocument of CommandeFournisseur class
+ * @see CommandeFournisseur::generateDocument()
  */
-function supplier_order_pdf_create($db, $object, $modele, $outputlangs, $hidedetails=0, $hidedesc=0, $hideref=0, $hookmanager=false)
+function supplier_order_pdf_create(DoliDB $db, CommandeFournisseur $object, $modele, $outputlangs, $hidedetails=0, $hidedesc=0, $hideref=0)
 {
-	global $conf, $user, $langs;
-	$langs->load("suppliers");
+	dol_syslog(__METHOD__ . " is deprecated", LOG_WARNING);
 
-	$error=0;
-
-	// Increase limit for PDF build
-	$err=error_reporting();
-	error_reporting(0);
-	@set_time_limit(120);
-	error_reporting($err);
-
-	$srctemplatepath='';
-
-	// Positionne le modele sur le nom du modele a utiliser
-	if (! dol_strlen($modele))
-	{
-		if (! empty($conf->global->COMMANDE_SUPPLIER_ADDON_PDF))
-		{
-			$modele = $conf->global->COMMANDE_SUPPLIER_ADDON_PDF;
-		}
-		else
-		{
-			$modele = 'muscadet';
-		}
-	}
-
-	// If selected modele is a filename template (then $modele="modelname:filename")
-	$tmp=explode(':',$modele,2);
-	if (! empty($tmp[1]))
-	{
-		$modele=$tmp[0];
-		$srctemplatepath=$tmp[1];
-	}
-
-	// Search template files
-	$file=''; $classname=''; $filefound=0;
-	$dirmodels=array('/');
-	if (is_array($conf->modules_parts['models'])) $dirmodels=array_merge($dirmodels,$conf->modules_parts['models']);
-	foreach($dirmodels as $reldir)
-	{
-		foreach(array('doc','pdf') as $prefix)
-		{
-			$file = $prefix."_".$modele.".modules.php";
-
-			// On verifie l'emplacement du modele
-			$file=dol_buildpath($reldir."core/modules/supplier_order/pdf/".$file,0);
-			if (file_exists($file))
-			{
-				$filefound=1;
-				$classname=$prefix.'_'.$modele;
-				break;
-			}
-		}
-		if ($filefound) break;
-	}
-
-	// Charge le modele
-	if ($filefound)
-	{
-		require_once $file;
-
-		$obj = new $classname($db,$object);
-
-		// We save charset_output to restore it because write_file can change it if needed for
-		// output format that does not support UTF8.
-		$sav_charset_output=$outputlangs->charset_output;
-		if ($obj->write_file($object, $outputlangs, $srctemplatepath, $hidedetails, $hidedesc, $hideref, $hookmanager) > 0)
-		{
-			$outputlangs->charset_output=$sav_charset_output;
-
-			// we delete preview files
-        	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-			dol_delete_preview($object);
-
-			// Appel des triggers
-			include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-			$interface=new Interfaces($db);
-			$result=$interface->run_triggers('ORDER_SUPPLIER_BUILDDOC',$object,$user,$langs,$conf);
-			if ($result < 0) { $error++; $this->errors=$interface->errors; }
-			// Fin appel triggers
-
-			return 1;
-		}
-		else
-		{
-			$outputlangs->charset_output=$sav_charset_output;
-			dol_syslog("Erreur dans supplier_order_pdf_create");
-			dol_print_error($db,$obj->error);
-			return 0;
-		}
-	}
-	else
-	{
-		if (! $conf->global->COMMANDE_SUPPLIER_ADDON_PDF)
-		{
-			print $langs->trans("Error")." ".$langs->trans("Error_COMMANDE_SUPPLIER_ADDON_PDF_NotDefined");
-		}
-		else
-		{
-			print $langs->trans("Error")." ".$langs->trans("ErrorFileDoesNotExists",$file);
-		}
-		return 0;
-	}
+	return $object->generateDocument($modele, $outputlangs, $hidedetails, $hidedesc, $hideref);
 }
 
-?>

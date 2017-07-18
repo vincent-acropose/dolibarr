@@ -7,6 +7,8 @@ require_once DOL_DOCUMENT_ROOT.'/core/modules/syslog/logHandler.php';
  */
 class mod_syslog_syslog extends LogHandler implements LogHandlerInterface
 {
+	var $code = 'syslog';
+
 	/**
 	 * 	Return name of logger
 	 *
@@ -42,15 +44,12 @@ class mod_syslog_syslog extends LogHandler implements LogHandlerInterface
 	/**
 	 * Is the module active ?
 	 *
-	 * @return boolean
+	 * @return int
 	 */
 	public function isActive()
 	{
 		// This function does not exists on some ISP (Ex: Free in France)
-		if (!function_exists('openlog'))
-		{
-			return 0;
-		}
+		if (!function_exists('openlog')) return 0;
 
 		return 1;
 	}
@@ -76,7 +75,7 @@ class mod_syslog_syslog extends LogHandler implements LogHandlerInterface
 	/**
 	 * 	Return if configuration is valid
 	 *
-	 * 	@return	boolean		True if configuration ok
+	 * 	@return	array		Array of errors. Empty array if ok.
 	 */
 	public function checkConfiguration()
 	{
@@ -108,6 +107,10 @@ class mod_syslog_syslog extends LogHandler implements LogHandlerInterface
 	 */
 	public function export($content)
 	{
+		global $conf;
+
+		if (! empty($conf->global->MAIN_SYSLOG_DISABLE_SYSLOG)) return;	// Global option to disable output of this handler
+
 		if (defined("SYSLOG_FACILITY") && constant("SYSLOG_FACILITY"))
 		{
 			if (constant(constant('SYSLOG_FACILITY')))

@@ -1,34 +1,26 @@
-﻿/*
- * Language code: tr_TR
- * Manually generated
- * Generation date 2012-07-07 10:30:00
- */
-
-// START - Lines generated manually (2012-07-07 10:30:00).
-// Reference language: en_US -> TR - contracts
-
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - contracts
 ContractsArea=Sözleşmeler alanı
 ListOfContracts=Sözleşme Listesi
-LastContracts=Değiştirilen son %s sözleşme
 AllContracts=Bütün sözleşmeler
 ContractCard=Sözleşme kartı
-ContractStatus=Sözleşme durumu
 ContractStatusNotRunning=Yürürlükte değil
-ContractStatusRunning=Yürülükte
 ContractStatusDraft=Taslak
 ContractStatusValidated=Doğrulanmış
 ContractStatusClosed=Kapalı
 ServiceStatusInitial=Yürürlükte değil
 ServiceStatusRunning=Yürürlükte
-ServiceStatusNotLate=Yürürlükte değil, süresi dolmuş
+ServiceStatusNotLate=Yürürlükte, süresi dolmamış
 ServiceStatusNotLateShort=Süresi dolmamış
 ServiceStatusLate=Yürülükte, süresi dolmuş
 ServiceStatusLateShort=Süresi dolmuş
 ServiceStatusClosed=Kapalı
-ServicesLegend=Hizmetler göstergesi
+ShowContractOfService=Hizmet sözleşmesini göster
 Contracts=Sözleşmeler
+ContractsSubscriptions=Sözleşmeler/Üyelikler
+ContractsAndLine=Sözleşmeler ve satırları
 Contract=Sözleşme
+ContractLine=Sözleşme satırı
+Closing=Kapatma
 NoContracts=Sözleşme yok
 MenuServices=Hizmetler
 MenuInactiveServices=Etkin olmayan hizmetler
@@ -36,67 +28,65 @@ MenuRunningServices=Yürürlükte olan hizmetler
 MenuExpiredServices=Süresi dolmuş hizmetler
 MenuClosedServices=Kapalı hizmetler
 NewContract=Yeni sözleşme
-AddContract=Sözleşme ekle
-SearchAContract=Bir sözleşme ara
+NewContractSubscription=Yeni sözleşme/üyelik
+AddContract=Sözleşme oluştur
 DeleteAContract=Bir sözleşme sil
 CloseAContract=Bir sözleşme kapat
-ConfirmDeleteAContract=Bu sözleşme ve bütün hizmetlerinin silmek istediğinizden emin misiniz?
-ConfirmValidateContract=Bunu sözleşmeyi doğrulamak istediğinizden emin misiniz?
-ConfirmCloseContract=Bu tüm hizmetleri kapatacaktır (etkin ya da değil). Bu sözleşmeyi kapatmak istediğinizden emin misiniz?
-ConfirmCloseService=<b>%s</b> Tarihli bu hizmeti kapatmak istediğiniz emin?
+ConfirmDeleteAContract=Are you sure you want to delete this contract and all its services?
+ConfirmValidateContract=Are you sure you want to validate this contract under name <b>%s</b>?
+ConfirmCloseContract=This will close all services (active or not). Are you sure you want to close this contract?
+ConfirmCloseService=Are you sure you want to close this service with date <b>%s</b>?
 ValidateAContract=Bir sözleşme doğrula
 ActivateService=Hizmet etkinleştir
-ConfirmActivateService=<b>%s</b> Tarihli bu hizmeti etkinleştirmek istediğiniz eminmisiniz?
+ConfirmActivateService=Are you sure you want to activate this service with date <b>%s</b>?
+RefContract=Sözleşme referansı
 DateContract=Sözleşme tarihi
 DateServiceActivate=Hizmet etkinleştirme tarihi
-DateServiceUnactivate=Hizmet devre dışı bırakma tarihi
-DateServiceStart=Hizmet başlagıç tarihi
-DateServiceEnd=Hizmet bitiş tarih
-ShowContract=Sözleşme göster
+ShowContract=Sözleşmeye bakın
 ListOfServices=Hizmet listesi
 ListOfInactiveServices=Etkin olmayan hizmetler listesi
 ListOfExpiredServices=Süresi dolmuş etkin hizmetler listesi
 ListOfClosedServices=Kapalı hizmetler listesi
-ListOfRunningContractsLines=Yürülükte olan hizmet satırları
-ListOfRunningServices=Yürülükteki hizmetler listesi
+ListOfRunningServices=Yürürlükteki hizmetler listesi
 NotActivatedServices=Etkin olmayan hizmetler (doğrulanmış sözleşmeler arasından)
-BoardNotActivatedServices=Doğrulanmış sözleşmeler arasındaki etkinleştirilecek hizmetler
+BoardNotActivatedServices=Doğrulanmış sözleşmelerden etkinleştirilecek hizmetler
 LastContracts=Son %s sözleşme
-LastActivatedServices=Etkinleştirilen son %s hizmet
 LastModifiedServices=Değiştirilen son %s hizmet
-EditServiceLine=Hizmet satırı düzenle
-ContractStartDate=Başlangıç tarihi
+ContractStartDate=Başlama tarihi
 ContractEndDate=Bitiş tarihi
-DateStartPlanned=Planlanan başlangıç tarihi
-DateStartPlannedShort=Planlanan başlangıç tarihi
+DateStartPlanned=Planlanan başlama tarihi
+DateStartPlannedShort=Planlanan başlama tarihi
 DateEndPlanned=Planlanan bitiş tarihi
 DateEndPlannedShort=Planlanan bitiş tarihi
-DateStartReal=Gerçek başlangıç tarihi
-DateStartRealShort=Gerçek başlangıç tarihi
+DateStartReal=Gerçek başlama tarihi
+DateStartRealShort=Gerçek başlama tarihi
 DateEndReal=Gerçek bitiş tarihi
 DateEndRealShort=Gerçek bitiş tarihi
-NbOfServices=Hizmet sayısı
 CloseService=Hizmet kapat
-ServicesNomberShort=%s hizmet
-RunningServices=Yürürlükteki hizmetler
 BoardRunningServices=Süresi dolmuş yürürlükteki hizmetler
-ServiceStatus=Hizmetin Durumu
+ServiceStatus=Hizmet durumu
 DraftContracts=Taslak sözleşmeler
 CloseRefusedBecauseOneServiceActive=En az bir açık hizmeti olduğundan dolayı sözleşme kapatılamıyor
-CloseAllContracts=Bütün sözleşme satırlarını kapat
-DeleteContractLine=Bir sözleşme satırı sil
-ConfirmDeleteContractLine=Bu sözleşme satırını silmek istediğinizden emin misiniz?
+CloseAllContracts=Bütün sözleşme kalemlerini kapat
+DeleteContractLine=Bir sözleşme kalemi sil
+ConfirmDeleteContractLine=Are you sure you want to delete this contract line?
 MoveToAnotherContract=Hizmeti başka bir sözleşmeye taşıyın.
-ConfirmMoveToAnotherContract=Yeni hedefi seçtim ve bu hizmeti bu sözleşmeye taşımayı onaylıyorum.
-ConfirmMoveToAnotherContractQuestion=Bu hizmeti taşımak istediğiniz varolan sözleşmeyi seçin (aynı üçüncü partinin)?
+ConfirmMoveToAnotherContract=Yeni hedefi seçtim ve bu hizmetin bu sözleşmeye taşınmasını onaylıyorum.
+ConfirmMoveToAnotherContractQuestion=Choose in which existing contract (of same third party), you want to move this service to?
 PaymentRenewContractId=Sözleşme satırını yenile (sayı %s)
-ExpiredSince=Süre doluş tarihi
-RelatedContracts=İlgili sözleşmeler
+ExpiredSince=Süre bitiş tarihi
 NoExpiredServices=Süresi dolmamış etkin hizmetler
-##### Kişi türleri #####
-TypeContact_contrat_internal_SALESREPSIGN=Sözleşme imzalalayacak satış temsilcisi
+ListOfServicesToExpireWithDuration=%s günde süresi dolacak Hizmetler Listesi
+ListOfServicesToExpireWithDurationNeg=%s günden fazla zamanda süresi dolacak Hizmetler Listesi
+ListOfServicesToExpire=Süresi dolacak Hizmetler Listesi
+NoteListOfYourExpiredServices=Bu listede yalnızca satış temsilcisi olarak atandığınız üçüncü partilere ait hizmet sözleşmeleri bulunur.
+StandardContractsTemplate=Standart sözleşme kalıbı
+ContactNameAndSignature=%s için, ad ve imza
+OnlyLinesWithTypeServiceAreUsed=Yalnızca "Hizmet" türündeki satırlar klonlanacaktır.
+
+##### Types de contacts #####
+TypeContact_contrat_internal_SALESREPSIGN=Sözleşmeyi imzalalayacak satış temsilcisi
 TypeContact_contrat_internal_SALESREPFOLL=Sözleşmeyi izleyecek satış temsilcisi
 TypeContact_contrat_external_BILLING=Müşteri fatura ilgilisi
 TypeContact_contrat_external_CUSTOMER=Müşteri izleme ilgilisi
-TypeContact_contrat_external_SALESREPSIGN=Sözleşme imzalayacak müşteri ilgilisi
-Error_CONTRACT_ADDON_NotDefined=CONTRACT_ADDON değişmezi tanımlanmamış
+TypeContact_contrat_external_SALESREPSIGN=Sözleşmeyi imzalayacak müşteri ilgilisi

@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2004      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2006-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2006-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +27,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/modules/societe/modules_societe.class.php'
 
 
 /**
- *	\class 		mod_codeclient_leopard
- *	\brief 		Classe permettant la gestion leopard des codes tiers
+ *	Class to manage numbering of thirdparties code
  */
 class mod_codeclient_leopard extends ModeleThirdPartyCode
 {
@@ -40,6 +39,7 @@ class mod_codeclient_leopard extends ModeleThirdPartyCode
 	 */
 
 	var $nom='Leopard';					// Nom du modele
+	var $name='Leopard';				// Nom du modele
 	var $code_modifiable;				// Code modifiable
 	var $code_modifiable_invalide;		// Code modifiable si il est invalide
 	var $code_modifiable_null;			// Code modifiables si il est null
@@ -63,11 +63,12 @@ class mod_codeclient_leopard extends ModeleThirdPartyCode
 
 	/**		Return description of module
 	 *
-	 * 		@param	string	$langs		Object langs
+	 * 		@param	Translate	$langs	Object langs
 	 * 		@return string      		Description of module
 	 */
 	function info($langs)
 	{
+		$langs->load("companies");
 		return $langs->trans("LeopardNumRefModelDesc");
 	}
 
@@ -90,7 +91,7 @@ class mod_codeclient_leopard extends ModeleThirdPartyCode
 	 * 	Check validity of code according to its rules
 	 *
 	 *	@param	DoliDB		$db		Database handler
-	 *	@param	string		&$code	Code to check/correct
+	 *	@param	string		$code	Code to check/correct
 	 *	@param	Societe		$soc	Object third party
 	 *  @param  int		  	$type   0 = customer/prospect , 1 = supplier
 	 *  @return int					0 if OK
@@ -104,7 +105,7 @@ class mod_codeclient_leopard extends ModeleThirdPartyCode
 		global $conf;
 
 		$result=0;
-		$code = strtoupper(trim($code));
+		$code = trim($code);
 
 		if (empty($code) && $this->code_null && empty($conf->global->MAIN_COMPANY_CODE_ALWAYS_REQUIRED))
 		{
@@ -115,9 +116,8 @@ class mod_codeclient_leopard extends ModeleThirdPartyCode
 			$result=-2;
 		}
 
-		dol_syslog("mod_codeclient_leopard::verif type=".$type." result=".$result);
+		dol_syslog(get_class($this)."::verif type=".$type." result=".$result);
 		return $result;
 	}
 }
 
-?>

@@ -2,6 +2,8 @@
 /* Copyright (C) 2003-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (c) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2012      Marcos García        <marcosgdf@gmail.com>
+ * Copyright (C) 2013      Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2015      Jean-François Ferry	<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,15 +29,17 @@ require '../../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/dolgraph.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facturestats.class.php';
 
-$WIDTH=500;
-$HEIGHT=200;
+$WIDTH=DolGraph::getDefaultGraphSizeForStats('width');
+$HEIGHT=DolGraph::getDefaultGraphSizeForStats('height');
 
 $mode=GETPOST("mode")?GETPOST("mode"):'customer';
 if ($mode == 'customer' && ! $user->rights->facture->lire) accessforbidden();
 if ($mode == 'supplier' && ! $user->rights->fournisseur->facture->lire) accessforbidden();
 
-$userid=GETPOST('userid','int'); if ($userid < 0) $userid=0;
-$socid=GETPOST('socid','int'); if ($socid < 0) $socid=0;
+$object_status=GETPOST('object_status');
+
+$userid=GETPOST('userid','int');
+$socid=GETPOST('socid','int');
 // Security check
 if ($user->societe_id > 0)
 {
@@ -54,7 +58,9 @@ $endyear=$year;
  * View
  */
 
-$langs->load("bills");
+$langs->load('bills');
+$langs->load('companies');
+$langs->load('other');
 
 $form=new Form($db);
 
@@ -71,12 +77,19 @@ if ($mode == 'supplier')
 	$dir=$conf->fournisseur->dir_output.'/facture/temp';
 }
 
-print_fiche_titre($title, $mesg);
+print load_fiche_titre($title, $mesg, 'title_accountancy.png');
 
 dol_mkdir($dir);
 
 $stats = new FactureStats($db, $socid, $mode, ($userid>0?$userid:0));
-
+if ($mode == 'customer')
+{
+    if ($object_status != '' && $object_status >= -1) $stats->where .= ' AND f.fk_statut IN ('.$object_status.')';
+}
+if ($mode == 'supplier')
+{
+    if ($object_status != '' && $object_status >= 0) $stats->where .= ' AND f.fk_statut IN ('.$object_status.')';
+}
 
 // Build graphic number of object
 // $data = array(array('Lib',val1,val2,val3),...)
@@ -210,33 +223,55 @@ $h++;
 if ($mode == 'customer') $type='invoice_stats';
 if ($mode == 'supplier') $type='supplier_invoice_stats';
 
-complete_head_from_modules($conf,$langs,$object,$head,$h,$type);
+complete_head_from_modules($conf,$langs,null,$head,$h,$type);
 
 dol_fiche_head($head,'byyear',$langs->trans("Statistics"));
 
-print '<table class="notopnoleftnopadd" width="100%"><tr>';
-print '<td align="center" valign="top">';
+$tmp_companies = $form->select_thirdparty_list($socid,'socid',$filter,1, 0, 0, array(), '', 1);
+//Array passed as an argument to Form::selectarray to build a proper select input
+$companies = array();
+
+foreach ($tmp_companies as $value) {
+	$companies[$value['value']] = $value['label'];
+}
+
+print '<div class="fichecenter"><div class="fichethirdleft">';
+
 
 //if (empty($socid))
 //{
 	// Show filter box
 	print '<form name="stats" method="POST" action="'.$_SERVER["PHP_SELF"].'">';
 	print '<input type="hidden" name="mode" value="'.$mode.'">';
-	print '<table class="border" width="100%">';
-	print '<tr><td class="liste_titre" colspan="2">'.$langs->trans("Filter").'</td></tr>';
+	print '<table class="noborder" width="100%">';
+	print '<tr class="liste_titre"><td class="liste_titre" colspan="2">'.$langs->trans("Filter").'</td></tr>';
 	// Company
 	print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
 	if ($mode == 'customer') $filter='s.client in (1,2,3)';
 	if ($mode == 'supplier') $filter='s.fournisseur = 1';
-	print $form->select_company($socid,'socid',$filter,1);
+	print $form->selectarray('socid', $companies, $socid, 1, 0, 0, 'style="width: 95%"', 0, 0, 0, '', '', 1);
 	print '</td></tr>';
 	// User
-	print '<tr><td>'.$langs->trans("User").'/'.$langs->trans("SalesRepresentative").'</td><td>';
-	print $form->select_users($userid,'userid',1);
+	print '<tr><td>'.$langs->trans("CreatedBy").'</td><td>';
+	print $form->select_dolusers($userid, 'userid', 1, '', 0, '', '', 0, 0, 0, '', 0, '', 'maxwidth300');
+	print '</td></tr>';
+	// Status
+	print '<tr><td align="left">'.$langs->trans("Status").'</td><td align="left">';
+	if ($mode == 'customer')
+	{
+	    $liststatus=array('0'=>$langs->trans("BillStatusDraft"), '1'=>$langs->trans("BillStatusNotPaid"), '2'=>$langs->trans("BillStatusPaid"), '3'=>$langs->trans("BillStatusCanceled"));
+	    print $form->selectarray('object_status', $liststatus, $object_status, 1);
+	}
+	if ($mode == 'supplier')
+	{
+	    $liststatus=array('0'=>$langs->trans("BillStatusDraft"),'1'=>$langs->trans("BillStatusNotPaid"), '2'=>$langs->trans("BillStatusPaid"));
+	    print $form->selectarray('object_status', $liststatus, $object_status, 1);
+	}
 	print '</td></tr>';
 	// Year
 	print '<tr><td>'.$langs->trans("Year").'</td><td>';
 	if (! in_array($year,$arrayyears)) $arrayyears[$year]=$year;
+	if (! in_array($nowyear,$arrayyears)) $arrayyears[$nowyear]=$nowyear;
 	arsort($arrayyears);
 	print $form->selectarray('year',$arrayyears,$year,0);
 	print '</td></tr>';
@@ -246,33 +281,45 @@ print '<td align="center" valign="top">';
 	print '<br><br>';
 //}
 
-print '<table class="border" width="100%">';
-print '<tr height="24">';
+print '<table class="noborder" width="100%">';
+print '<tr class="liste_titre" height="24">';
 print '<td align="center">'.$langs->trans("Year").'</td>';
-print '<td align="center">'.$langs->trans("NumberOfBills").'</td>';
-print '<td align="center">'.$langs->trans("AmountTotal").'</td>';
-print '<td align="center">'.$langs->trans("AmountAverage").'</td>';
+print '<td align="right">'.$langs->trans("NumberOfBills").'</td>';
+print '<td align="right">%</td>';
+print '<td align="right">'.$langs->trans("AmountTotal").'</td>';
+print '<td align="right">%</td>';
+print '<td align="right">'.$langs->trans("AmountAverage").'</td>';
+print '<td align="right">%</td>';
 print '</tr>';
 
 $oldyear=0;
+$var=true;
 foreach ($data as $val)
 {
 	$year = $val['year'];
 	while ($year && $oldyear > $year+1)
 	{	// If we have empty year
 		$oldyear--;
-		print '<tr height="24">';
-		print '<td align="center"><a href="'.$_SERVER["PHP_SELF"].'?year='.$oldyear.'&amp;mode='.$mode.'">'.$oldyear.'</a></td>';
+		$var=!$var;
+		print '<tr '.$bc[$var].' height="24">';
+		print '<td align="center"><a href="'.$_SERVER["PHP_SELF"].'?year='.$oldyear.'&amp;mode='.$mode.($socid>0?'&socid='.$socid:'').($userid>0?'&userid='.$userid:'').'">'.$oldyear.'</a></td>';
 		print '<td align="right">0</td>';
+		print '<td align="right"></td>';
 		print '<td align="right">0</td>';
+		print '<td align="right"></td>';
 		print '<td align="right">0</td>';
+		print '<td align="right"></td>';
 		print '</tr>';
 	}
-	print '<tr height="24">';
-	print '<td align="center"><a href="'.$_SERVER["PHP_SELF"].'?year='.$year.'&amp;mode='.$mode.'">'.$year.'</a></td>';
+	$var=!$var;
+	print '<tr '.$bc[$var].' height="24">';
+	print '<td align="center"><a href="'.$_SERVER["PHP_SELF"].'?year='.$year.'&amp;mode='.$mode.($socid>0?'&socid='.$socid:'').($userid>0?'&userid='.$userid:'').'">'.$year.'</a></td>';
 	print '<td align="right">'.$val['nb'].'</td>';
+	print '<td align="right" style="'.(($val['nb_diff'] >= 0) ? 'color: green;':'color: red;').'">'.round($val['nb_diff']).'</td>';
 	print '<td align="right">'.price(price2num($val['total'],'MT'),1).'</td>';
+	print '<td align="right" style="'.(($val['total_diff'] >= 0) ? 'color: green;':'color: red;').'">'.round($val['total_diff']).'</td>';
 	print '<td align="right">'.price(price2num($val['avg'],'MT'),1).'</td>';
+	print '<td align="right" style="'.(($val['avg_diff'] >= 0) ? 'color: green;':'color: red;').'">'.round($val['avg_diff']).'</td>';
 	print '</tr>';
 	$oldyear=$year;
 }
@@ -280,8 +327,8 @@ foreach ($data as $val)
 print '</table>';
 
 
-print '</td>';
-print '<td align="center" valign="top">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
+
 
 // Show graphs
 print '<table class="border" width="100%"><tr valign="top"><td align="center">';
@@ -295,7 +342,10 @@ else {
 }
 print '</td></tr></table>';
 
-print '</td></tr></table>';
+
+print '</div></div></div>';
+print '<div style="clear:both"></div>';
+
 
 dol_fiche_end();
 
@@ -303,4 +353,3 @@ dol_fiche_end();
 llxFooter();
 
 $db->close();
-?>

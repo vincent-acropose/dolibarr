@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2010 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2013 Cédric Salvador      <csalvador@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,14 +42,15 @@ $mine 		= (GETPOST('mode','alpha') == 'mine' ? 1 : 0);
 
 // Security check
 $socid=0;
-if ($user->societe_id > 0) $socid=$user->societe_id;
-$result=restrictedArea($user,'projet',$id,'');
+//if ($user->societe_id > 0) $socid = $user->societe_id;    // For external user, no check is done on company because readability is managed by public status of project and assignement.
+$result=restrictedArea($user,'projet',$id,'projet&project');
 
 $object = new Project($db);
-$object->fetch($id,$ref);
-if ($object->id > 0)
-{
-	$object->fetch_thirdparty();
+
+include DOL_DOCUMENT_ROOT.'/core/actions_fetchobject.inc.php';  // Must be include, not include_once
+
+if ($id > 0 || ! empty($ref)) {
+    $upload_dir = $conf->projet->dir_output . "/" . dol_sanitizeFileName($object->ref);
 }
 
 // Get parameters
@@ -68,40 +70,24 @@ if (! $sortfield) $sortfield="name";
  * Actions
  */
 
-// Envoi fichier
-if (GETPOST('sendit') && ! empty($conf->global->MAIN_UPLOAD_DOC))
-{
-	$upload_dir = $conf->projet->dir_output . "/" . dol_sanitizeFileName($object->ref);
-	dol_add_file_process($upload_dir,0,1,'userfile');
-}
-
-// Delete
-if ($action == 'confirm_delete' && $confirm == 'yes' && $user->rights->projet->supprimer)
-{
-    $langs->load("other");
-	$upload_dir = $conf->projet->dir_output . "/" . dol_sanitizeFileName($object->ref);
-	$file = $upload_dir . '/' . GETPOST('urlfile');	// Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
-	$ret=dol_delete_file($file,0,0,0,$object);
-	if ($ret) setEventMessage($langs->trans("FileWasRemoved", GETPOST('urlfile')));
-	else setEventMessage($langs->trans("ErrorFailToDeleteFile", GETPOST('urlfile')), 'errors');
-    header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
-    exit;
-}
+include_once DOL_DOCUMENT_ROOT . '/core/actions_linkedfiles.inc.php';
 
 
 /*
  * View
  */
 
-llxHeader('',$langs->trans('Project'),'EN:Customers_Orders|FR:Commandes_Clients|ES:Pedidos de clientes');
+$title=$langs->trans("Project").' - '.$langs->trans("Document").' - '.$object->ref.' '.$object->name;
+if (! empty($conf->global->MAIN_HTML_TITLE) && preg_match('/projectnameonly/',$conf->global->MAIN_HTML_TITLE) && $object->name) $title=$object->ref.' '.$object->name.' - '.$langs->trans("Document");
+$help_url="EN:Module_Projects|FR:Module_Projets|ES:M&oacute;dulo_Proyectos";
+
+llxHeader('',$title,$help_url);
 
 $form = new Form($db);
 
 if ($object->id > 0)
 {
 	$upload_dir = $conf->projet->dir_output.'/'.dol_sanitizeFileName($object->ref);
-
-	if ($object->societe->id > 0)  $result=$object->societe->fetch($object->societe->id);
 
     // To verify role of users
     //$userAccess = $object->restrictedProjectArea($user,'read');
@@ -113,67 +99,58 @@ if ($object->id > 0)
 	dol_fiche_head($head, 'document', $langs->trans("Project"), 0, ($object->public?'projectpub':'project'));
 
 	// Files list constructor
-	$filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+	$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
 	$totalsize=0;
 	foreach($filearray as $key => $file)
 	{
 		$totalsize+=$file['size'];
 	}
 
-	if ($action == 'delete')
+	
+	// Project card
+	
+	$linkback = '<a href="'.DOL_URL_ROOT.'/projet/list.php">'.$langs->trans("BackToList").'</a>';
+	
+	$morehtmlref='<div class="refidno">';
+	// Title
+	$morehtmlref.=$object->title;
+	// Thirdparty
+	if ($object->thirdparty->id > 0)
 	{
-		$ret=$form->form_confirm($_SERVER["PHP_SELF"]."?id=".$object->id."&urlfile=".urlencode(GETPOST("urlfile")),$langs->trans("DeleteAFile"),$langs->trans("ConfirmDeleteAFile"),"confirm_delete",'','',1);
-		if ($ret == 'html') print '<br>';
+	    $morehtmlref.='<br>'.$langs->trans('ThirdParty') . ' : ' . $object->thirdparty->getNomUrl(1, 'project');
 	}
+	$morehtmlref.='</div>';
+	
+	// Define a complementary filter for search of next/prev ref.
+	if (! $user->rights->projet->all->lire)
+	{
+	    $objectsListId = $object->getProjectsAuthorizedForUser($user,0,0);
+	    $object->next_prev_filter=" rowid in (".(count($objectsListId)?join(',',array_keys($objectsListId)):'0').")";
+	}
+	
+	dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref);
+	
+	
+	print '<div class="fichecenter">';
+	print '<div class="underbanner clearboth"></div>';	
 
 	print '<table class="border" width="100%">';
 
-	$linkback = '<a href="'.DOL_URL_ROOT.'/projet/liste.php">'.$langs->trans("BackToList").'</a>';
-
-	// Ref
-	print '<tr><td width="30%">'.$langs->trans("Ref").'</td><td>';
-	// Define a complementary filter for search of next/prev ref.
-    if (! $user->rights->projet->all->lire)
-    {
-        $projectsListId = $object->getProjectsAuthorizedForUser($user,$mine,0);
-        $object->next_prev_filter=" rowid in (".(count($projectsListId)?join(',',array_keys($projectsListId)):'0').")";
-    }
-	print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref');
-	print '</td></tr>';
-
-	// Label
-	print '<tr><td>'.$langs->trans("Label").'</td><td>'.$object->title.'</td></tr>';
-
-	// Company
-	print '<tr><td>'.$langs->trans("Company").'</td><td>';
-	if (! empty($object->societe->id)) print $object->societe->getNomUrl(1);
-	else print '&nbsp;';
-	print '</td></tr>';
-
-	// Visibility
-	print '<tr><td>'.$langs->trans("Visibility").'</td><td>';
-	if ($object->public) print $langs->trans('SharedProject');
-	else print $langs->trans('PrivateProject');
-	print '</td></tr>';
-
-	// Statut
-	print '<tr><td>'.$langs->trans("Status").'</td><td>'.$object->getLibStatut(4).'</td></tr>';
-
 	// Files infos
-	print '<tr><td>'.$langs->trans("NbOfAttachedFiles").'</td><td colspan="3">'.count($filearray).'</td></tr>';
-	print '<tr><td>'.$langs->trans("TotalSizeOfAttachedFiles").'</td><td colspan="3">'.$totalsize.' '.$langs->trans("bytes").'</td></tr>';
+	print '<tr><td class="titlefield">'.$langs->trans("NbOfAttachedFiles").'</td><td>'.count($filearray).'</td></tr>';
+	print '<tr><td>'.$langs->trans("TotalSizeOfAttachedFiles").'</td><td>'.$totalsize.' '.$langs->trans("bytes").'</td></tr>';
 
 	print "</table>\n";
-	print "</div>\n";
+	
+	print '</div>';
 
-	// Affiche formulaire upload
-	$formfile=new FormFile($db);
-	$formfile->form_attach_new_file(DOL_URL_ROOT.'/projet/document.php?id='.$object->id,'',0,0,($userWrite>0),50,$object);
+	
+	dol_fiche_end();
 
-
-	// List of document
-	$param='&id='.$object->id;
-	$formfile->list_of_documents($filearray,$object,'projet',$param,0,'',($userWrite>0));
+	$modulepart = 'project';
+	$permission = ($userWrite > 0);
+	$permtoedit = ($userWrite > 0);
+	include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_post_headers.tpl.php';
 
 }
 else
@@ -184,4 +161,3 @@ else
 llxFooter();
 
 $db->close();
-?>

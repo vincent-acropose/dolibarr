@@ -35,21 +35,27 @@ if (! $user->admin)
  * View
  */
 
-$title=$langs->trans("SystemToolsArea");
-if (GETPOST('leftmenu') == 'modulesadmintools') $title=$langs->trans("ModulesSystemTools");
-
-llxHeader(array(),$title);
-
 $form = new Form($db);
 
-print_fiche_titre($title,'','setup');
+$title=$langs->trans("SystemToolsArea");
+if (GETPOST('leftmenu',"aZ09") == 'admintools') $title=$langs->trans("ModulesSystemTools");
+
+llxHeader('', $title);
+
+print load_fiche_titre($title,'','title_setup');
 
 print $langs->trans("SystemToolsAreaDesc").'<br>';
 print "<br>";
 
 print info_admin($langs->trans("SystemAreaForAdminOnly")).'<br>';
 
+print '<br><br>';
+
+
+// Show logo
+//print '<div class="center"><div class="logo_setup"></div></div>';
+print '<center><div class="logo_setup"></div></center>';				// For a reason I don't know, the div class="center does not works, we must keep the <center>
+
 
 llxFooter();
 $db->close();
-?>

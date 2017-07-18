@@ -1,21 +1,23 @@
 <?php
 /* Copyright (C) 2010-2012 	Laurent Destailleur <eldy@users.sourceforge.net>
  * Copyright (C) 2012		Juanjo Menent		<jmenent@2byte.es>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * or see http://www.gnu.org/
- */
+ * Copyright (C) 2014		Marcos García		<marcosgdf@gmail.com>
+ * Copyright (C) 2016		Charlie Benke		<charlie@patas-monkey.com>
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program. If not, see <http://www.gnu.org/licenses/>.
+* or see http://www.gnu.org/
+*/
 
 /**
  *	\file       htdocs/core/modules/commande/doc/doc_generic_order_odt.modules.php
@@ -74,7 +76,7 @@ class doc_generic_order_odt extends ModelePDFCommandes
 		$this->option_modereg = 0;                 // Affiche mode reglement
 		$this->option_condreg = 0;                 // Affiche conditions reglement
 		$this->option_codeproduitservice = 0;      // Affiche code produit-service
-		$this->option_multilang = 0;               // Dispo en plusieurs langues
+		$this->option_multilang = 1;               // Dispo en plusieurs langues
 		$this->option_escompte = 0;                // Affiche si il y a eu escompte
 		$this->option_credit_note = 0;             // Support credit notes
 		$this->option_freetext = 1;				   // Support add of a personalised text
@@ -82,78 +84,14 @@ class doc_generic_order_odt extends ModelePDFCommandes
 
 		// Recupere emetteur
 		$this->emetteur=$mysoc;
-		if (! $this->emetteur->pays_code) $this->emetteur->pays_code=substr($langs->defaultlang,-2);    // Par defaut, si n'etait pas defini
+		if (! $this->emetteur->country_code) $this->emetteur->country_code=substr($langs->defaultlang,-2);    // By default if not defined
 	}
 
-
-    /**
-     * Define array with couple substitution key => substitution value
-     *
-     * @param   Object			$object             Main object to use as data source
-     * @param   Translate		$outputlangs        Lang object to use for output
-     * @return	array								Array of substitution
-     */
-    function get_substitutionarray_object($object,$outputlangs)
-    {
-        global $conf;
-
-        return array(
-            'object_id'=>$object->id,
-            'object_ref'=>$object->ref,
-            'object_ref_ext'=>$object->ref_ext,
-        	'object_ref_customer'=>$object->ref_client,
-        	'object_date'=>dol_print_date($object->date,'day'),
-        	'object_date_delivery'=>dol_print_date($object->date_livraison,'dayhour'),
-        	'object_date_creation'=>dol_print_date($object->date_creation,'day'),
-            'object_date_modification'=>dol_print_date($object->date_modification,'day'),
-            'object_date_validation'=>dol_print_date($object->date_validation,'dayhour'),
-        	'object_date_close'=>dol_print_date($object->date_cloture,'dayhour'),
-            'object_payment_mode_code'=>$object->mode_reglement_code,
-           	'object_payment_mode'=>($outputlangs->transnoentitiesnoconv('PaymentType'.$object->mode_reglement_code)!='PaymentType'.$object->mode_reglement_code?$outputlangs->transnoentitiesnoconv('PaymentType'.$object->mode_reglement_code):$object->mode_reglement),
-           	'object_payment_term_code'=>$object->cond_reglement_code,
-           	'object_payment_term'=>($outputlangs->transnoentitiesnoconv('PaymentCondition'.$object->cond_reglement_code)!='PaymentCondition'.$object->cond_reglement_code?$outputlangs->transnoentitiesnoconv('PaymentCondition'.$object->cond_reglement_code):$object->cond_reglement),
-        	'object_total_ht'=>price($object->total_ht,0,$outputlangs),
-            'object_total_vat'=>price($object->total_tva,0,$outputlangs),
-            'object_total_ttc'=>price($object->total_ttc,0,$outputlangs),
-            'object_total_discount_ht' => price($object->getTotalDiscount(), 0, $outputlangs),
-            'object_vatrate'=>vatrate($object->tva),
-            'object_note_private'=>$object->note,
-            'object_note'=>$object->note_public,
-        );
-    }
-
-    /**
-     *	Define array with couple substitution key => substitution value
-     *
-     *	@param  array			$line				Array of lines
-     *	@param  Translate		$outputlangs        Lang object to use for output
-     *  @return	array								Return a substitution array
-     */
-    function get_substitutionarray_lines($line,$outputlangs)
-    {
-        global $conf;
-
-        return array(
-            'line_fulldesc'=>doc_getlinedesc($line,$outputlangs),
-            'line_product_ref'=>$line->product_ref,
-            'line_product_label'=>$line->product_label,
-        	'line_desc'=>$line->desc,
-            'line_vatrate'=>vatrate($line->tva_tx,true,$line->info_bits),
-            'line_up'=>price($line->subprice, 0, $outputlangs),
-            'line_qty'=>$line->qty,
-            'line_discount_percent'=>($line->remise_percent?$line->remise_percent.'%':''),
-            'line_price_ht'=>price($line->total_ht, 0, $outputlangs),
-            'line_price_ttc'=>price($line->total_ttc, 0, $outputlangs),
-            'line_price_vat'=>price($line->total_tva, 0, $outputlangs),
-            'line_date_start'=>$line->date_start,
-            'line_date_end'=>$line->date_end
-        );
-    }
 
 	/**
 	 *	Return description of a module
 	 *
-     *	@param	Translate	$langs      Lang object to use for output
+	 *	@param	Translate	$langs      Lang object to use for output
 	 *	@return string       			Description
 	 */
 	function info($langs)
@@ -181,47 +119,57 @@ class doc_generic_order_odt extends ModelePDFCommandes
 		{
 			$tmpdir=trim($tmpdir);
 			$tmpdir=preg_replace('/DOL_DATA_ROOT/',DOL_DATA_ROOT,$tmpdir);
-			if (! $tmpdir) { unset($listofdir[$key]); continue; }
+			if (! $tmpdir) {
+				unset($listofdir[$key]); continue;
+			}
 			if (! is_dir($tmpdir)) $texttitle.=img_warning($langs->trans("ErrorDirNotFound",$tmpdir),0);
 			else
 			{
-				$tmpfiles=dol_dir_list($tmpdir,'files',0,'\.odt');
+				$tmpfiles=dol_dir_list($tmpdir,'files',0,'\.(ods|odt)');
 				if (count($tmpfiles)) $listoffiles=array_merge($listoffiles,$tmpfiles);
 			}
 		}
 		$texthelp=$langs->trans("ListOfDirectoriesForModelGenODT");
 		// Add list of substitution keys
 		$texthelp.='<br>'.$langs->trans("FollowingSubstitutionKeysCanBeUsed").'<br>';
- 		$texthelp.=$langs->transnoentitiesnoconv("FullListOnOnlineDocumentation");    // This contains an url, we don't modify it
+		$texthelp.=$langs->transnoentitiesnoconv("FullListOnOnlineDocumentation");    // This contains an url, we don't modify it
 
 		$texte.= $form->textwithpicto($texttitle,$texthelp,1,'help','',1);
-		$texte.= '<table><tr><td>';
+		$texte.= '<div><div style="display: inline-block; min-width: 100px; vertical-align: middle;">';
 		$texte.= '<textarea class="flat" cols="60" name="value1">';
 		$texte.=$conf->global->COMMANDE_ADDON_PDF_ODT_PATH;
 		$texte.= '</textarea>';
-        $texte.= '</td>';
-		$texte.= '<td align="center">&nbsp; ';
-        $texte.= '<input type="submit" class="button" value="'.$langs->trans("Modify").'" name="Button">';
-        $texte.= '</td>';
-		$texte.= '</tr>';
-        $texte.= '</table>';
+		$texte.= '</div><div style="display: inline-block; vertical-align: middle;">';
+		$texte.= '<input type="submit" class="button" value="'.$langs->trans("Modify").'" name="Button">';
+		$texte.= '<br></div></div>';
 
 		// Scan directories
-		if (count($listofdir)) $texte.=$langs->trans("NumberOfModelFilesFound").': <b>'.count($listoffiles).'</b>';
+		$nbofiles=count($listoffiles);
+		if (! empty($conf->global->COMMANDE_ADDON_PDF_ODT_PATH))
+		{
+			$texte.=$langs->trans("NumberOfModelFilesFound").': <b>';
+			//$texte.=$nbofiles?'<a id="a_'.get_class($this).'" href="#">':'';
+			$texte.=count($listoffiles);
+			//$texte.=$nbofiles?'</a>':'';
+			$texte.='</b>';
+		}
 
+		if ($nbofiles)
+		{
+   			$texte.='<div id="div_'.get_class($this).'" class="hidden">';
+   			foreach($listoffiles as $file)
+   			{
+                $texte.=$file['name'].'<br>';
+   			}
+   			$texte.='<div id="div_'.get_class($this).'">';
+		}
+		
 		$texte.= '</td>';
 
-
-		$texte.= '<td valign="top" rowspan="2">';
+		$texte.= '<td valign="top" rowspan="2" class="hideonsmartphone">';
 		$texte.= $langs->trans("ExampleOfDirectoriesForModelGen");
 		$texte.= '</td>';
 		$texte.= '</tr>';
-
-		/*$texte.= '<tr>';
-		$texte.= '<td align="center">';
-		$texte.= '<input type="submit" class="button" value="'.$langs->trans("Modify").'" name="Button">';
-		$texte.= '</td>';
-		$texte.= '</tr>';*/
 
 		$texte.= '</table>';
 		$texte.= '</form>';
@@ -232,20 +180,32 @@ class doc_generic_order_odt extends ModelePDFCommandes
 	/**
 	 *	Function to build a document on disk using the generic odt module.
 	 *
-	 *	@param	Commande	$object					Object source to build document
-	 *	@param	Translate	$outputlangs			Lang output object
-	 * 	@param	string		$srctemplatepath	    Full path of source filename for generator using a template file
-	 *	@return	int         						1 if OK, <=0 if KO
+	 *	@param		Commande	$object				Object source to build document
+	 *	@param		Translate	$outputlangs		Lang output object
+	 * 	@param		string		$srctemplatepath	Full path of source filename for generator using a template file
+	 *  @param		int			$hidedetails		Do not show line details
+	 *  @param		int			$hidedesc			Do not show desc
+	 *  @param		int			$hideref			Do not show ref
+	 *	@return		int         					1 if OK, <=0 if KO
 	 */
-	function write_file($object,$outputlangs,$srctemplatepath)
+	function write_file($object,$outputlangs,$srctemplatepath,$hidedetails=0,$hidedesc=0,$hideref=0)
 	{
-		global $user,$langs,$conf,$mysoc;
+		global $user,$langs,$conf,$mysoc,$hookmanager;
 
 		if (empty($srctemplatepath))
 		{
 			dol_syslog("doc_generic_odt::write_file parameter srctemplatepath empty", LOG_WARNING);
 			return -1;
 		}
+
+		// Add odtgeneration hook
+		if (! is_object($hookmanager))
+		{
+			include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
+			$hookmanager=new HookManager($this->db);
+		}
+		$hookmanager->initHooks(array('odtgeneration'));
+		global $action;
 
 		if (! is_object($outputlangs)) $outputlangs=$langs;
 		$sav_charset_output=$outputlangs->charset_output;
@@ -289,12 +249,24 @@ class doc_generic_order_odt extends ModelePDFCommandes
 			{
 				//print "srctemplatepath=".$srctemplatepath;	// Src filename
 				$newfile=basename($srctemplatepath);
-				$newfiletmp=preg_replace('/\.odt/i','',$newfile);
+				$newfiletmp=preg_replace('/\.od(t|s)/i','',$newfile);
 				$newfiletmp=preg_replace('/template_/i','',$newfiletmp);
 				$newfiletmp=preg_replace('/modele_/i','',$newfiletmp);
-			    $newfiletmp=$objectref.'_'.$newfiletmp;
+				$newfiletmp=$objectref.'_'.$newfiletmp;
 				//$file=$dir.'/'.$newfiletmp.'.'.dol_print_date(dol_now(),'%Y%m%d%H%M%S').'.odt';
-				$file=$dir.'/'.$newfiletmp.'.odt';
+				// Get extension (ods or odt)
+				$newfileformat=substr($newfile, strrpos($newfile, '.')+1);
+				if ( ! empty($conf->global->MAIN_DOC_USE_TIMING))
+				{
+				    $format=$conf->global->MAIN_DOC_USE_TIMING;
+				    if ($format == '1') $format='%Y%m%d%H%M%S';
+					$filename=$newfiletmp.'-'.dol_print_date(dol_now(),$format).'.'.$newfileformat;
+				}
+				else
+				{
+					$filename=$newfiletmp.'.'.$newfileformat;
+				}
+				$file=$dir.'/'.$filename;
 				//print "newdir=".$dir;
 				//print "newfile=".$newfile;
 				//print "file=".$file;
@@ -303,61 +275,71 @@ class doc_generic_order_odt extends ModelePDFCommandes
 				dol_mkdir($conf->commande->dir_temp);
 
 
-                // If BILLING contact defined on invoice, we use it
-                $usecontact=false;
-                $arrayidcontact=$object->getIdContact('external','BILLING');
-                if (count($arrayidcontact) > 0)
-                {
-                    $usecontact=true;
-                    $result=$object->fetch_contact($arrayidcontact[0]);
-                }
+				// If BILLING contact defined on invoice, we use it
+				$usecontact=false;
+				$arrayidcontact=$object->getIdContact('external','BILLING');
+				if (count($arrayidcontact) > 0)
+				{
+					$usecontact=true;
+					$result=$object->fetch_contact($arrayidcontact[0]);
+				}
 
-                // Recipient name
-                if (! empty($usecontact))
-                {
-                    // On peut utiliser le nom de la societe du contact
-                    if (! empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) $socobject = $object->contact;
-                    else $socobject = $object->client;
-                }
-                else
-                {
-                    $socobject=$object->client;
-                }
+				// Recipient name
+				if (! empty($usecontact))
+				{
+					// On peut utiliser le nom de la societe du contact
+					if (! empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) $socobject = $object->contact;
+					else $socobject = $object->thirdparty;
+				}
+				else
+				{
+					$socobject=$object->thirdparty;
+				}
 
-                // Make substitution
-                $substitutionarray=array(
-                    '__FROM_NAME__' => $this->emetteur->nom,
-                    '__FROM_EMAIL__' => $this->emetteur->email,
-                    '__TOTAL_TTC__' => $object->total_ttc,
-                    '__TOTAL_HT__' => $object->total_ht,
-                    '__TOTAL_VAT__' => $object->total_vat
-                );
-                complete_substitutions_array($substitutionarray, $langs, $object);
+				// Make substitution
+				$substitutionarray=array(
+				'__FROM_NAME__' => $this->emetteur->name,
+				'__FROM_EMAIL__' => $this->emetteur->email,
+				'__TOTAL_TTC__' => $object->total_ttc,
+				'__TOTAL_HT__' => $object->total_ht,
+				'__TOTAL_VAT__' => $object->total_vat
+				);
+				complete_substitutions_array($substitutionarray, $langs, $object);
+				// Call the ODTSubstitution hook
+				$parameters=array('file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs,'substitutionarray'=>&$substitutionarray);
+				$reshook=$hookmanager->executeHooks('ODTSubstitution',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
 
 				// Line of free text
 				$newfreetext='';
-				$paramfreetext='COMMANDE_FREE_TEXT';
-			    if (! empty($conf->global->$paramfreetext))
-			    {
-			        $newfreetext=make_substitutions($conf->global->$paramfreetext,$substitutionarray);
-			    }
+				$paramfreetext='ORDER_FREE_TEXT';
+				if (! empty($conf->global->$paramfreetext))
+				{
+					$newfreetext=make_substitutions($conf->global->$paramfreetext,$substitutionarray);
+				}
 
-                // Open and load template
+				// Open and load template
 				require_once ODTPHP_PATH.'odf.php';
-				$odfHandler = new odf(
-				    $srctemplatepath,
-				    array(
+				try {
+					$odfHandler = new odf(
+						$srctemplatepath,
+						array(
 						'PATH_TO_TMP'	  => $conf->commande->dir_temp,
 						'ZIP_PROXY'		  => 'PclZipProxy',	// PhpZipProxy or PclZipProxy. Got "bad compression method" error when using PhpZipProxy.
 						'DELIMITER_LEFT'  => '{',
 						'DELIMITER_RIGHT' => '}'
-					)
-				);
+						)
+					);
+				}
+				catch(Exception $e)
+				{
+					$this->error=$e->getMessage();
+					return -1;
+				}
 				// After construction $odfHandler->contentXml contains content and
 				// [!-- BEGIN row.lines --]*[!-- END row.lines --] has been replaced by
 				// [!-- BEGIN lines --]*[!-- END lines --]
-                //print html_entity_decode($odfHandler->__toString());
-                //print exit;
+				//print html_entity_decode($odfHandler->__toString());
+				//print exit;
 
 
 				// Make substitutions into odt of freetext
@@ -368,125 +350,112 @@ class doc_generic_order_odt extends ModelePDFCommandes
 				{
 				}
 
-                // Make substitutions into odt of user info
-				$tmparray=$this->get_substitutionarray_user($user,$outputlangs);
-                //var_dump($tmparray); exit;
-                foreach($tmparray as $key=>$value)
-                {
-                    try {
-                        if (preg_match('/logo$/',$key)) // Image
-                        {
-                            //var_dump($value);exit;
-                            if (file_exists($value)) $odfHandler->setImage($key, $value);
-                            else $odfHandler->setVars($key, 'ErrorFileNotFound', true, 'UTF-8');
-                        }
-                        else    // Text
-                        {
-                            $odfHandler->setVars($key, $value, true, 'UTF-8');
-                        }
-                    }
-                    catch(OdfException $e)
-                    {
-                    }
-                }
-                // Make substitutions into odt of mysoc
-                $tmparray=$this->get_substitutionarray_mysoc($mysoc,$outputlangs);
-				//var_dump($tmparray); exit;
-				foreach($tmparray as $key=>$value)
-				{
-					try {
-						if (preg_match('/logo$/',$key))	// Image
-						{
-							//var_dump($value);exit;
-							if (file_exists($value)) $odfHandler->setImage($key, $value);
-							else $odfHandler->setVars($key, 'ErrorFileNotFound', true, 'UTF-8');
-						}
-						else	// Text
-						{
-							$odfHandler->setVars($key, $value, true, 'UTF-8');
-						}
-					}
-					catch(OdfException $e)
-					{
-					}
-				}
-                // Make substitutions into odt of thirdparty
-				$tmparray=$this->get_substitutionarray_thirdparty($socobject,$outputlangs);
-				foreach($tmparray as $key=>$value)
-				{
-					try {
-						if (preg_match('/logo$/',$key))	// Image
-						{
-							if (file_exists($value)) $odfHandler->setImage($key, $value);
-							else $odfHandler->setVars($key, 'ErrorFileNotFound', true, 'UTF-8');
-						}
-						else	// Text
-						{
-							$odfHandler->setVars($key, $value, true, 'UTF-8');
-						}
-					}
-					catch(OdfException $e)
-					{
-					}
-				}
-				// Replace tags of object + external modules
-			    $tmparray=$this->get_substitutionarray_object($object,$outputlangs);
-			    complete_substitutions_array($tmparray, $outputlangs, $object);
-                foreach($tmparray as $key=>$value)
-                {
-                    try {
-                        if (preg_match('/logo$/',$key)) // Image
-                        {
-                            if (file_exists($value)) $odfHandler->setImage($key, $value);
-                            else $odfHandler->setVars($key, 'ErrorFileNotFound', true, 'UTF-8');
-                        }
-                        else    // Text
-                        {
-                            $odfHandler->setVars($key, $value, true, 'UTF-8');
-                        }
-                    }
-                    catch(OdfException $e)
-                    {
-                    }
-                }
-				// Replace tags of lines
-                try
-                {
-                    $listlines = $odfHandler->setSegment('lines');
-                    foreach ($object->lines as $line)
-                    {
-                        $tmparray=$this->get_substitutionarray_lines($line,$outputlangs);
-                        complete_substitutions_array($tmparray, $outputlangs, $object, $line, "completesubstitutionarray_lines");
-                        foreach($tmparray as $key => $val)
-                        {
-                             try
-                             {
-                                $listlines->setVars($key, $val, true, 'UTF-8');
-                             }
-                             catch(OdfException $e)
-                             {
-                             }
-                             catch(SegmentException $e)
-                             {
-                             }
-                        }
-                        $listlines->merge();
-                    }
-                    $odfHandler->mergeSegment($listlines);
-                }
-                catch(OdfException $e)
-                {
-                    $this->error=$e->getMessage();
-                    dol_syslog($this->error, LOG_WARNING);
-                    return -1;
-                }
+				// Make substitutions into odt
+				$array_user=$this->get_substitutionarray_user($user,$outputlangs);
+				$array_soc=$this->get_substitutionarray_mysoc($mysoc,$outputlangs);
+				$array_thirdparty=$this->get_substitutionarray_thirdparty($socobject,$outputlangs);
+				$array_objet=$this->get_substitutionarray_object($object,$outputlangs);
+				$array_other=$this->get_substitutionarray_other($outputlangs);
 
-                // Write new file
-				//$result=$odfHandler->exportAsAttachedFile('toto');
-				$odfHandler->saveToDisk($file);
+				$tmparray = array_merge($array_user,$array_soc,$array_thirdparty,$array_objet,$array_other);
+				complete_substitutions_array($tmparray, $outputlangs, $object);
+				// Call the ODTSubstitution hook
+				
+				$parameters=array('odfHandler'=>&$odfHandler,'file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs,'substitutionarray'=>&$tmparray);
+				$reshook=$hookmanager->executeHooks('ODTSubstitution',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
+
+				foreach($tmparray as $key=>$value)
+				{
+					try {
+						if (preg_match('/logo$/',$key)) // Image
+						{
+							if (file_exists($value)) $odfHandler->setImage($key, $value);
+							else $odfHandler->setVars($key, 'ErrorFileNotFound', true, 'UTF-8');
+						}
+						else    // Text
+						{
+							$odfHandler->setVars($key, $value, true, 'UTF-8');
+						}
+					}
+					catch(OdfException $e)
+					{
+					}
+				}
+				// Replace tags of lines
+				try
+				{
+					$listlines = $odfHandler->setSegment('lines');
+					foreach ($object->lines as $line)
+					{
+						$tmparray=$this->get_substitutionarray_lines($line,$outputlangs);
+						complete_substitutions_array($tmparray, $outputlangs, $object, $line, "completesubstitutionarray_lines");
+						// Call the ODTSubstitutionLine hook
+						$parameters=array('odfHandler'=>&$odfHandler,'file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs,'substitutionarray'=>&$tmparray,'line'=>$line);
+						$reshook=$hookmanager->executeHooks('ODTSubstitutionLine',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
+						foreach($tmparray as $key => $val)
+						{
+							try
+							{
+								$listlines->setVars($key, $val, true, 'UTF-8');
+							}
+							catch(OdfException $e)
+							{
+							}
+							catch(SegmentException $e)
+							{
+							}
+						}
+						$listlines->merge();
+					}
+					$odfHandler->mergeSegment($listlines);
+				}
+				catch(OdfException $e)
+				{
+					$this->error=$e->getMessage();
+					dol_syslog($this->error, LOG_WARNING);
+					return -1;
+				}
+
+				// Replace labels translated
+				$tmparray=$outputlangs->get_translations_for_substitutions();
+				foreach($tmparray as $key=>$value)
+				{
+					try {
+						$odfHandler->setVars($key, $value, true, 'UTF-8');
+					}
+					catch(OdfException $e)
+					{
+					}
+				}
+
+				// Call the beforeODTSave hook
+
+				$parameters=array('odfHandler'=>&$odfHandler,'file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs,'substitutionarray'=>&$tmparray);
+				$reshook=$hookmanager->executeHooks('beforeODTSave',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
+
+				// Write new file
+				if (!empty($conf->global->MAIN_ODT_AS_PDF)) {
+					try {
+						$odfHandler->exportAsAttachedPDF($file);
+					}catch (Exception $e){
+						$this->error=$e->getMessage();
+						return -1;
+					}
+				}
+				else {
+					try {
+					$odfHandler->saveToDisk($file);
+					}catch (Exception $e){
+						$this->error=$e->getMessage();
+						return -1;
+					}
+				}
+
+				$parameters=array('odfHandler'=>&$odfHandler,'file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs,'substitutionarray'=>&$tmparray);
+				$reshook=$hookmanager->executeHooks('afterODTCreation',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
 
 				if (! empty($conf->global->MAIN_UMASK))
-				@chmod($file, octdec($conf->global->MAIN_UMASK));
+					@chmod($file, octdec($conf->global->MAIN_UMASK));
 
 				$odfHandler=null;	// Destroy object
 
@@ -504,4 +473,3 @@ class doc_generic_order_odt extends ModelePDFCommandes
 
 }
 
-?>

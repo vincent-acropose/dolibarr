@@ -848,6 +848,8 @@ ALTER TABLE llx_product_price_by_qty ADD CONSTRAINT fk_product_price_by_qty_fk_p
 
 ALTER TABLE llx_product_price_by_qty ADD remise_percent DOUBLE NOT NULL DEFAULT '0' AFTER price_ttc;
 ALTER TABLE llx_product_price_by_qty ADD remise DOUBLE NOT NULL DEFAULT '0' AFTER remise_percent;
+ALTER TABLE llx_product_price_by_qty ADD unitprice DOUBLE (24,8) NOT NULL DEFAULT '0' AFTER qty_min;
+ALTER TABLE llx_product_price_by_qty CHANGE qty_min quantity DOUBLE NULL DEFAULT NULL;
 
 -- Change index name to be compliant with SQL standard, index name must be unique in database schema
 ALTER TABLE llx_c_actioncomm DROP INDEX code;
@@ -872,7 +874,7 @@ INSERT INTO llx_c_actioncomm (id, code, type, libelle, module, position) values 
 UPDATE llx_c_actioncomm SET libelle = 'Other (manually inserted events)' WHERE code = 'AC_OTH';
 UPDATE llx_c_actioncomm SET active = 0 WHERE code in ('AC_PROP', 'AC_COM', 'AC_FAC', 'AC_SHIP', 'AC_SUP_ORD', 'AC_SUP_INV');
 
--- Update dictionnary of table llx_c_paper_format
+-- Update dictionary of table llx_c_paper_format
 DELETE FROM llx_c_paper_format;
 
 -- Europe

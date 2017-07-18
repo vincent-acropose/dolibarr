@@ -43,8 +43,8 @@ class ModeleExports extends CommonDocGenerator    // This class can't be abstrac
 	 *  Load into memory list of available export format
 	 *
      *  @param	DoliDB	$db     			Database handler
-     *  @param  string	$maxfilenamelength  Max length of value to show
-     *  @return	array						List of templates
+     *  @param  integer	$maxfilenamelength  Max length of value to show
+     *  @return	array						List of templates (same content than array this->driverlabel)
 	 */
 	function liste_modeles($db,$maxfilenamelength=0)
 	{
@@ -64,23 +64,25 @@ class ModeleExports extends CommonDocGenerator    // This class can't be abstrac
     			{
     				$moduleid=$reg[1];
 
-    				// Chargement de la classe
-    				$file = $dir."/export_".$moduleid.".modules.php";
+    				// Loading Class
+    				$file = $dir."export_".$moduleid.".modules.php";
     				$classname = "Export".ucfirst($moduleid);
 
     				require_once $file;
-    				$module = new $classname($db);
-
-    				// Picto
-    				$this->picto[$module->id]=$module->picto;
-    				// Driver properties
-    				$this->driverlabel[$module->id]=$module->getDriverLabel();
-    				$this->driverdesc[$module->id]=$module->getDriverDesc();
-    				$this->driverversion[$module->id]=$module->getDriverVersion();
-    				// If use an external lib
-    				$this->liblabel[$module->id]=$module->getLibLabel();
-    				$this->libversion[$module->id]=$module->getLibVersion();
-
+    				if (class_exists($classname))
+    				{
+        				$module = new $classname($db);
+    
+        				// Picto
+        				$this->picto[$module->id]=$module->picto;
+        				// Driver properties
+        				$this->driverlabel[$module->id]=$module->getDriverLabel().(empty($module->disabled)?'':' __(Disabled)__');	// '__(Disabled)__' is a key
+        				$this->driverdesc[$module->id]=$module->getDriverDesc();
+        				$this->driverversion[$module->id]=$module->getDriverVersion();
+        				// If use an external lib
+        				$this->liblabel[$module->id]=$module->getLibLabel();
+        				$this->libversion[$module->id]=$module->getLibVersion();
+    				}
     				$i++;
     			}
     		}
@@ -162,4 +164,3 @@ class ModeleExports extends CommonDocGenerator    // This class can't be abstrac
 }
 
 
-?>

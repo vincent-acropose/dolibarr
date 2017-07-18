@@ -1,57 +1,38 @@
-/*
- * Language code: hu_HU
- * Automatic generated via autotranslator.php tool
- * Generation date 2012-02-29 16:13:31
- */
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 16:13:31).
-// Reference language: en_US -> hu_HU
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - propal
 Proposals=Üzleti ajánlatok
 Proposal=Üzleti ajánlat
 ProposalShort=Javaslat
 ProposalsDraft=Készítsen üzleti ajánlatot
-ProposalDraft=Tervezet kereskedelmi javaslat
 ProposalsOpened=Megnyitotta a kereskedelmi javaslatok
 Prop=Üzleti ajánlatok
 CommercialProposal=Üzleti ajánlat
-CommercialProposals=Üzleti ajánlatok
 ProposalCard=Javaslat kártya
 NewProp=Új kereskedelmi javaslat
-NewProposal=Új kereskedelmi javaslat
 NewPropal=Új javaslat
 Prospect=Kilátás
-ProspectList=Prospect lista
 DeleteProp=Üzleti ajánlat törlése
 ValidateProp=Érvényesítése kereskedelmi javaslat
-AddProp=Add javaslat
-ConfirmDeleteProp=Biztosan törölni kívánja ezt a kereskedelmi javaslat?
-ConfirmValidateProp=Biztosan meg akarja érvényesíteni a kereskedelmi javaslat?
-LastPropals=Utolsó %s javaslatok
-LastClosedProposals=Utolsó lezárt pályázatok %s
-LastModifiedProposals=Utolsó %s módosított javaslatokat
+AddProp=Create proposal
+ConfirmDeleteProp=Are you sure you want to delete this commercial proposal?
+ConfirmValidateProp=Are you sure you want to validate this commercial proposal under name <b>%s</b>?
+LastPropals=Latest %s proposals
+LastModifiedProposals=Latest %s modified proposals
 AllPropals=Minden javaslat
-LastProposals=Utolsó javaslatok
 SearchAProposal=Keressen egy javaslatot
+NoProposal=No proposal
 ProposalsStatistics=Üzleti ajánlat statisztikái
 NumberOfProposalsByMonth=Havi száma
 AmountOfProposalsByMonthHT=Összeg havonta (adózott)
 NbOfProposals=Száma a kereskedelmi javaslatok
 ShowPropal=Mutasd javaslat
 PropalsDraft=Piszkozatok
-PropalsOpened=Megnyitotta
-PropalsNotBilled=Zárt nem számlázzák
-PropalStatusDraft=Tervezet (igények érvényesítése)
-PropalStatusValidated=Jóváhagyott (javaslat nyitott)
-PropalStatusOpened=Jóváhagyott (javaslat nyitott)
-PropalStatusClosed=Zárva
+PropalsOpened=Megnyitva
+PropalStatusDraft=Tervezet (kell érvényesíteni)
+PropalStatusValidated=Validated (proposal is opened)
 PropalStatusSigned=Aláírt (szükséges számlázási)
 PropalStatusNotSigned=Nem írta alá (zárt)
 PropalStatusBilled=Kiszámlázott
 PropalStatusDraftShort=Tervezet
-PropalStatusValidatedShort=Hitelesítette
-PropalStatusOpenedShort=Megnyitotta
 PropalStatusClosedShort=Zárva
 PropalStatusSignedShort=Aláírt
 PropalStatusNotSignedShort=Nem írták alá
@@ -60,45 +41,42 @@ PropalsToClose=Kereskedelmi javaslatokat, hogy lezárja
 PropalsToBill=Aláírták a kereskedelmi javaslatok törvényjavaslatot
 ListOfProposals=Üzleti ajánlatok listája
 ActionsOnPropal=Események javaslatára
-NoOpenedPropals=Nem nyitott a kereskedelmi javaslatok
-NoOtherOpenedPropals=Nincs más nyitott üzleti ajánlatot
 RefProposal=Üzleti ajánlat ref
 SendPropalByMail=Küldés e-mailben kereskedelmi javaslat
-FileNotUploaded=A feltöltött fájl nem
-FileUploaded=A fájl sikeresen feltöltött
-AssociatedDocuments=Dokumentumok kapcsolódó javaslatot:
-ErrorCantOpenDir=Nem lehet megnyitni a könyvtárat
 DatePropal=Születési javaslat
 DateEndPropal=Érvényesség vége dátuma
-DateEndPropalShort=Dátum végén
 ValidityDuration=Érvényesség időtartama
-CloseAs=Zárja le a status
-ClassifyBilled=Osztályozza számlázott
-BuildBill=Build számla
+CloseAs=Set status to
+SetAcceptedRefused=Set accepted/refused
 ErrorPropalNotFound=Propal %s nem található
-Estimate=Becslés:
-EstimateShort=Becsüljük
-OtherPropals=Egyéb javaslatok
+AddToDraftProposals=Add to draft proposal
+NoDraftProposals=No draft proposals
 CopyPropalFrom=Hozzon létre a kereskedelmi javaslat másolásával meglévő javaslat
 CreateEmptyPropal=Hozzon létre üres üzleti ajánlatot vierge vagy listából termékek / szolgáltatások
 DefaultProposalDurationValidity=Alapértelmezett érvényesség időtartamát kereskedelmi javaslat (napokban)
 UseCustomerContactAsPropalRecipientIfExist=Használja ügyfélkapcsolati címet, ha meghatározott harmadik személy helyett a javaslat címét címzett címét
 ClonePropal=Klón kereskedelmi javaslat
-ConfirmClonePropal=Biztos vagy benne, hogy klónozza a kereskedelmi <b>%s</b> javaslat?
-ConfirmReOpenProp=Biztosan meg szeretne nyitni vissza a kereskedelmi <b>%s</b> javaslat?
+ConfirmClonePropal=Are you sure you want to clone the commercial proposal <b>%s</b>?
+ConfirmReOpenProp=Are you sure you want to open back the commercial proposal <b>%s</b>?
 ProposalsAndProposalsLines=Üzleti ajánlat és vonalak
 ProposalLine=Javaslat vonal
 AvailabilityPeriod=Elérhetőség késleltetés
 SetAvailability=Állítsa be a rendelkezésre álló késedelem
 AfterOrder=rendezés után
+##### Availability #####
 AvailabilityTypeAV_NOW=Azonnali
 AvailabilityTypeAV_1W=1 hét
 AvailabilityTypeAV_2W=2 hét
 AvailabilityTypeAV_3W=3 hét
 AvailabilityTypeAV_1M=1 hónap
+##### Types de contacts #####
 TypeContact_propal_internal_SALESREPFOLL=Képviselő-up a következő javaslatot
 TypeContact_propal_external_BILLING=Ügyfél számla Kapcsolat
 TypeContact_propal_external_CUSTOMER=Ügyfélkapcsolati nyomon követése javaslat
+# Document models
 DocModelAzurDescription=A javaslat teljes modell (logo. ..)
-DocModelJauneDescription=Jaune javaslat modell
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 16:24:18).
+DefaultModelPropalCreate=Default model creation
+DefaultModelPropalToBill=Default template when closing a business proposal (to be invoiced)
+DefaultModelPropalClosed=Default template when closing a business proposal (unbilled)
+ProposalCustomerSignature=Written acceptance, company stamp, date and signature
+ProposalsStatisticsSuppliers=Supplier proposals statistics

@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2007-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2009      Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013 	   Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,25 +88,25 @@ if ($action == 'send' && ! $_POST['cancel'])
 
 	if (! empty($formsms->error))
 	{
-	    $message='<div class="error">'.$formsms->error.'</div>';
+		setEventMessages($formsms->error, $formsms->errors, 'errors');
 	    $action='test';
 	    $error++;
 	}
     if (empty($body))
     {
-        $message='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentities("Message")).'</div>';
+        setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentities("Message")), null, 'errors');
         $action='test';
         $error++;
     }
 	if (empty($smsfrom) || ! str_replace('+','',$smsfrom))
 	{
-		$message='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentities("SmsFrom")).'</div>';
+		setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentities("SmsFrom")), null, 'errors');
         $action='test';
 		$error++;
 	}
 	if (empty($sendto) || ! str_replace('+','',$sendto))
 	{
-		$message='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentities("SmsTo")).'</div>';
+		setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentities("SmsTo")), null, 'errors');
         $action='test';
 		$error++;
 	}
@@ -122,11 +123,13 @@ if ($action == 'send' && ! $_POST['cancel'])
 
 		if ($result)
 		{
-			$message='<div class="ok">'.$langs->trans("SmsSuccessfulySent",$smsfrom,$sendto).'</div>';
+			setEventMessages($langs->trans("SmsSuccessfulySent",$smsfrom,$sendto), null, 'mesgs');
+			setEventMessages($smsfile->error, $smsfile->errors, 'mesgs');
 		}
 		else
 		{
-			$message='<div class="error">'.$langs->trans("ResultKo").'<br>'.$smsfile->error.' '.$result.'</div>';
+			setEventMessages($langs->trans("ResultKo"), null, 'errors');
+			setEventMessages($smsfile->error, $smsfile->errors, 'errors');
 		}
 
 		$action='';
@@ -146,15 +149,13 @@ if (preg_match('/^mac/i',PHP_OS)) $linuxlike=0;
 $wikihelp='EN:Setup Sms|FR:Paramétrage Sms|ES:Configuración Sms';
 llxHeader('',$langs->trans("Setup"),$wikihelp);
 
-print_fiche_titre($langs->trans("SmsSetup"),'','setup');
+print load_fiche_titre($langs->trans("SmsSetup"),'','title_setup');
 
 print $langs->trans("SmsDesc")."<br>\n";
 print "<br>\n";
 
-dol_htmloutput_mesg($message);
-
 // List of sending methods
-$listofmethods=(is_array($conf->sms_engine_modules)?$conf->sms_engine_modules:array());
+$listofmethods=(is_array($conf->modules_parts['sms'])?$conf->modules_parts['sms']:array());
 asort($listofmethods);
 
 if ($action == 'edit')
@@ -204,11 +205,11 @@ if ($action == 'edit')
 	*/
 	print '</table>';
 
-	print '<br><center>';
-	print '<input class="button" type="submit" name="save" value="'.$langs->trans("Save").'"'.(!count($listofmethods)?' disabled="disbaled"':'').'>';
-	print ' &nbsp; &nbsp; ';
+	print '<br><div class="center">';
+	print '<input class="button" type="submit" name="save" value="'.$langs->trans("Save").'"'.(!count($listofmethods)?' disabled':'').'>';
+	print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
 	print '<input class="button" type="submit" name="cancel" value="'.$langs->trans("Cancel").'">';
-	print '</center>';
+	print '</div>';
 
 	print '</form>';
 	print '<br>';
@@ -217,7 +218,7 @@ else
 {
 	$var=true;
 
-	if (! count($listofmethods)) print '<div class="warning">'.$langs->trans("NoSmsEngine",'<a href="http://www.dolistore.com/search.php?orderby=position&orderway=desc&search_query=smsmanager">DoliStore</a>').'</div>';
+	if (! count($listofmethods)) print '<div class="warning">'.$langs->trans("NoSmsEngine",'<a target="_blank" href="http://www.dolistore.com/search.php?orderby=position&orderway=desc&search_query=smsmanager">DoliStore</a>').'</div>';
 
 	print '<table class="noborder" width="100%">';
 	print '<tr class="liste_titre"><td>'.$langs->trans("Parameter").'</td><td>'.$langs->trans("Value").'</td></tr>';
@@ -290,7 +291,7 @@ else
 	if ($_GET["action"] == 'testconnect')
 	{
 		print '<br>';
-		print_titre($langs->trans("DoTestServerAvailability"));
+		print load_fiche_titre($langs->trans("DoTestServerAvailability"));
 
 		// If we use SSL/TLS
 		if (! empty($conf->global->MAIN_MAIL_EMAIL_TLS) && function_exists('openssl_open')) $server='ssl://'.$server;
@@ -312,7 +313,7 @@ else
 	if ($action == 'test')
 	{
 		print '<br>';
-		print_titre($langs->trans("DoTestSend"));
+		print load_fiche_titre($langs->trans("DoTestSend"));
 
 		// Cree l'objet formulaire mail
 		include_once DOL_DOCUMENT_ROOT.'/core/class/html.formsms.class.php';
@@ -348,4 +349,3 @@ else
 llxFooter();
 
 $db->close();
-?>

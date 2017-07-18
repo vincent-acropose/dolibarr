@@ -77,7 +77,7 @@ dol_fiche_head($head, 'card', $langs->trans("ThirdParty"),0,'company');
 <?php } ?>
 
 <tr>
-	<td valign="top"><?php echo $langs->trans('Address'); ?></td>
+	<td class="tdtop"><?php echo $langs->trans('Address'); ?></td>
 	<td colspan="3"><?php echo $this->control->tpl['address']; ?></td>
 </tr>
 
@@ -90,7 +90,7 @@ dol_fiche_head($head, 'card', $langs->trans("ThirdParty"),0,'company');
 
 <tr>
 	<td><?php echo $langs->trans("Country"); ?></td>
-	<td colspan="3" nowrap="nowrap"><?php echo $this->control->tpl['country']; ?></td>
+	<td colspan="3" class="nowrap"><?php echo $this->control->tpl['country']; ?></td>
 </tr>
 
 <tr>
@@ -107,7 +107,7 @@ dol_fiche_head($head, 'card', $langs->trans("ThirdParty"),0,'company');
 
 <tr>
 	<td><?php echo $langs->trans('EMail'); ?></td>
-	<td><?php echo $this->control->tpl['email'];; ?></td>
+	<td><?php echo $this->control->tpl['email']; ?></td>
 	<td><?php echo $langs->trans('Web'); ?></td>
 	<td><?php echo $this->control->tpl['url']; ?></td>
 </tr>
@@ -136,7 +136,7 @@ for ($i=1; $i<=4; $i++) {
 <tr>
 	<td><?php echo $langs->trans('VATIsUsed'); ?></td>
 	<td><?php echo $this->control->tpl['tva_assuj']; ?></td>
-	<td nowrap="nowrap"><?php echo $langs->trans('VATIntra'); ?></td>
+	<td class="nowrap"><?php echo $langs->trans('VATIntra'); ?></td>
 	<td><?php echo $this->control->tpl['tva_intra']; ?></td>
 </tr>
 
@@ -195,11 +195,7 @@ for ($i=1; $i<=4; $i++) {
 		<tr>
 			<td><?php echo $langs->trans('ParentCompany'); ?></td>
 			<td align="right">
-			<?php if ($user->rights->societe->creer) { ?>
-			<a href="<?php echo DOL_URL_ROOT.'/societe/lien.php?socid='.$this->control->tpl['id']; ?>"><?php echo $this->control->tpl['image_edit']; ?></a>
-			<?php } else { ?>
 			&nbsp;
-			<?php } ?>
 			</td>
 		</tr>
 	</table>
@@ -264,7 +260,7 @@ $urlsource=$_SERVER["PHP_SELF"]."?socid=".$socid;
 $genallowed=$user->rights->societe->creer;
 $delallowed=$user->rights->societe->supprimer;
 
-$somethingshown=$formfile->show_documents('company',$socid,$filedir,$urlsource,$genallowed,$delallowed,'',0,0,0,28,0,'',0,'',$objcanvas->control->object->default_lang);
+print $formfile->showdocuments('company',$socid,$filedir,$urlsource,$genallowed,$delallowed,'',0,0,0,28,0,'',0,'',$objcanvas->control->object->default_lang);
 ?>
 
 </td>

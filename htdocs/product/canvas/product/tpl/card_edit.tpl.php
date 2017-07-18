@@ -23,7 +23,7 @@ $statutarray=array('1' => $langs->trans("OnSell"), '0' => $langs->trans("NotOnSe
 <!-- BEGIN PHP TEMPLATE -->
 
 <?php
-print_fiche_titre($langs->trans("Product"));
+print load_fiche_titre($langs->trans("Product"));
 
 dol_htmloutput_errors($object->error,$object->errors);
 ?>
@@ -33,6 +33,9 @@ dol_htmloutput_errors($object->error,$object->errors);
 <input type="hidden" name="action" value="update">
 <input type="hidden" name="id" value="<?php echo $object->id; ?>">
 <input type="hidden" name="canvas" value="<?php echo $object->canvas; ?>">
+<?php if (empty($conf->stock->enabled)) { ?>
+<input name="seuil_stock_alerte" type="hidden" value="0">
+<?php } ?>
 
 
 <table class="border allwidth">
@@ -61,8 +64,6 @@ dol_htmloutput_errors($object->error,$object->errors);
 <tr><td><?php echo $langs->trans("StockLimit"); ?></td><td>
 <input name="seuil_stock_alerte" size="4" value="<?php echo $object->seuil_stock_alerte; ?>">
 </td></tr>
-<?php } else { ?>
-<input name="seuil_stock_alerte" type="hidden" value="0">
 <?php } ?>
 
 <tr><td><?php echo $langs->trans("Nature"); ?></td><td>
@@ -89,7 +90,7 @@ dol_htmloutput_errors($object->error,$object->errors);
 <?php echo $object->volume_units; ?>
 </td></tr>
 
-<tr><td valign="top"><?php echo $langs->trans("NoteNotVisibleOnBill"); ?></td><td>
+<tr><td class="tdtop"><?php echo $langs->trans("NoteNotVisibleOnBill"); ?></td><td>
 <?php echo $object->textarea_note; ?>
 </td></tr>
 </table>

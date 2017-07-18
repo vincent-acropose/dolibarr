@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2008-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2008-2016 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -88,23 +88,23 @@ if (GETPOST("sendit") && ! empty($conf->global->MAIN_UPLOAD_DOC))
    			$langs->load("errors");
 			if ($resupload < 0)	// Unknown error
 			{
-				setEventMessage($langs->trans("ErrorFileNotUploaded"), 'errors');
+				setEventMessages($langs->trans("ErrorFileNotUploaded"), null, 'errors');
 			}
 			else if (preg_match('/ErrorFileIsInfectedWithAVirus/',$resupload))	// Files infected by a virus
 			{
-				setEventMessage($langs->trans("ErrorFileIsInfectedWithAVirus"), 'errors');
+				setEventMessages($langs->trans("ErrorFileIsInfectedWithAVirus"), null, 'errors');
 			}
 			else	// Known error
 			{
-				setEventMessage($langs->trans($resupload), 'errors');
+				setEventMessages($langs->trans($resupload), null, 'errors');
 			}
 	    }
 	}
 	else
 	{
-	    // Echec transfert (fichier depassant la limite ?)
+	    // Failed transfer (exceeding the limit file?)
 		$langs->load("errors");
-		setEventMessage($langs->trans("ErrorFailToCreateDir",$upload_dir), 'errors');
+		setEventMessages($langs->trans("ErrorFailToCreateDir",$upload_dir), null, 'errors');
 	}
 }
 
@@ -114,8 +114,8 @@ if ($action == 'confirm_deletefile' && $confirm == 'yes')
     $langs->load("other");
     $file = $upload_dir . "/" . GETPOST('urlfile');	// Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
     $ret=dol_delete_file($file);
-    if ($ret) setEventMessage($langs->trans("FileWasRemoved", GETPOST('urlfile')));
-    else setEventMessage($langs->trans("ErrorFailToDeleteFile", GETPOST('urlfile')), 'errors');
+    if ($ret) setEventMessages($langs->trans("FileWasRemoved", GETPOST('urlfile')), null, 'mesgs');
+    else setEventMessages($langs->trans("ErrorFailToDeleteFile", GETPOST('urlfile')), null, 'errors');
 
     $result=$ecmdir->changeNbOfFiles('-');
 }
@@ -132,7 +132,8 @@ if ($action == 'confirm_deletedir' && $confirm == 'yes')
 	}
 	else
 	{
-		setEventMessage($langs->trans($ecmdir->error,$ecmdir->label), 'errors');
+		$langs->load('errors');
+		setEventMessages($langs->trans($ecmdir->error,$ecmdir->label), null, 'errors');
 	}
 }
 
@@ -163,7 +164,7 @@ if ($action == 'update' && ! GETPOST('cancel'))
 			if (! $result)
 			{
 				$langs->load('errors');
-				setEventMessage($langs->trans('ErrorFailToRenameDir',$olddir,$newdir), 'errors');
+				setEventMessages($langs->trans('ErrorFailToRenameDir',$olddir,$newdir), null, 'errors');
 				$error++;
 			}
 		}
@@ -183,7 +184,7 @@ if ($action == 'update' && ! GETPOST('cancel'))
 	else
 	{
 		$db->rollback();
-		setEventMessage($ecmdir->error, 'errors');
+		setEventMessages($ecmdir->error, $ecmdir->errors, 'errors');
 	}
 }
 
@@ -200,8 +201,8 @@ llxHeader();
 $form=new Form($db);
 
 
-// Construit liste des fichiers
-$filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+// Built the file List
+$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
 $totalsize=0;
 foreach($filearray as $key => $file)
 {
@@ -221,7 +222,7 @@ if ($action == 'edit')
 }
 
 print '<table class="border" width="100%">';
-print '<tr><td width="30%">'.$langs->trans("Ref").'</td><td>';
+print '<tr><td class="titlefield">'.$langs->trans("Ref").'</td><td>';
 $s='';
 $tmpecmdir=new EcmDirectory($db);	// Need to create a new one
 $tmpecmdir->fetch($ecmdir->id);
@@ -232,7 +233,7 @@ while ($tmpecmdir && $result > 0)
 	$tmpecmdir->ref=$tmpecmdir->label;
 	if ($i == 0 && $action == 'edit')
 	{
-		$s='<input type="text" name="label" size="40" maxlength="32" value="'.$tmpecmdir->label.'">';
+		$s='<input type="text" name="label" class="minwidth300" maxlength="32" value="'.$tmpecmdir->label.'">';
 	}
 	else $s=$tmpecmdir->getNomUrl(1).$s;
 	if ($tmpecmdir->fk_parent)
@@ -250,7 +251,7 @@ while ($tmpecmdir && $result > 0)
 print img_picto('','object_dir').' <a href="'.DOL_URL_ROOT.'/ecm/index.php">'.$langs->trans("ECMRoot").'</a> -> ';
 print $s;
 print '</td></tr>';
-print '<tr><td valign="top">'.$langs->trans("Description").'</td><td>';
+print '<tr><td class="tdtop">'.$langs->trans("Description").'</td><td>';
 if ($action == 'edit')
 {
 	print '<textarea class="flat" name="description" cols="80">';
@@ -271,7 +272,13 @@ print '<tr><td>'.$langs->trans("ECMDirectoryForFiles").'</td><td>';
 print '/ecm/'.$relativepath;
 print '</td></tr>';
 print '<tr><td>'.$langs->trans("ECMNbOfDocs").'</td><td>';
-print count($filearray);
+$nbofiles=count($filearray);
+print $nbofiles;
+// Test if nb is same than in cache
+if ($nbofiles != $ecmdir->cachenbofdoc)
+{
+    $ecmdir->changeNbOfFiles((string) $nbofiles);
+}
 print '</td></tr>';
 print '<tr><td>'.$langs->trans("TotalSizeOfAttachedFiles").'</td><td>';
 print dol_print_size($totalsize);
@@ -333,22 +340,22 @@ if ($action != 'edit' && $action != 'delete')
 // Confirm remove file
 if ($action == 'delete')
 {
-	$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?section='.$_REQUEST["section"].'&amp;urlfile='.urlencode($_GET["urlfile"]), $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile');
-	if ($ret == 'html') print '<br>';
+	print $form->formconfirm($_SERVER["PHP_SELF"].'?section='.$_REQUEST["section"].'&amp;urlfile='.urlencode($_GET["urlfile"]), $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile');
+	
 }
 
 // Confirm remove file
 if ($action == 'delete_dir')
 {
 	$relativepathwithoutslash=preg_replace('/[\/]$/','',$relativepath);
-    $ret=$form->form_confirm($_SERVER["PHP_SELF"].'?section='.$_REQUEST["section"], $langs->trans('DeleteSection'), $langs->trans('ConfirmDeleteSection',$relativepathwithoutslash), 'confirm_deletedir', '', 1, 1);
-	if ($ret == 'html') print '<br>';
+    print $form->formconfirm($_SERVER["PHP_SELF"].'?section='.$_REQUEST["section"], $langs->trans('DeleteSection'), $langs->trans('ConfirmDeleteSection',$relativepathwithoutslash), 'confirm_deletedir', '', 1, 1);
+	
 }
 
 $formfile=new FormFile($db);
 
 /*
-// Affiche formulaire upload
+// Display upload form
 if ($user->rights->ecm->upload)
 {
 	$formfile->form_attach_new_file(DOL_URL_ROOT.'/ecm/docmine.php','',0,$section);
@@ -363,7 +370,5 @@ if ($user->rights->ecm->read)
 */
 
 // End of page
-$db->close();
-
 llxFooter();
-?>
+$db->close();

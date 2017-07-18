@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2002      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2005 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,14 +25,10 @@ require_once DOL_DOCUMENT_ROOT .'/core/class/commonobject.class.php';
 
 
 /**
- *       \class      Service
- *       \brief      Classe permettant la gestion des services predefinis
+ *	Class to manage predefined services
  */
 class Service extends CommonObject
 {
-	var $db;
-
-	var $id;
 	var $libelle;
 	var $price;
 	var $tms;
@@ -60,7 +56,7 @@ class Service extends CommonObject
 	 */
 	function load_state_board()
 	{
-		global $conf, $user;
+		global $conf, $user, $hookmanager;
 
 		$this->nb=array();
 
@@ -68,6 +64,13 @@ class Service extends CommonObject
 		$sql.= " FROM ".MAIN_DB_PREFIX."product as p";
 		$sql.= ' WHERE p.entity IN ('.getEntity('product', 1).')';
 		$sql.= " AND p.fk_product_type = 1";
+		// Add where from hooks
+		if (is_object($hookmanager))
+		{
+		    $parameters=array();
+		    $reshook=$hookmanager->executeHooks('printFieldListWhere',$parameters);    // Note that $action and $object may have been modified by hook
+		    $sql.=$hookmanager->resPrint;
+		}
 
 		$resql=$this->db->query($sql);
 		if ($resql)
@@ -76,6 +79,7 @@ class Service extends CommonObject
 			{
 				$this->nb["services"]=$obj->nb;
 			}
+            $this->db->free($resql);
 			return 1;
 		}
 		else
@@ -87,4 +91,3 @@ class Service extends CommonObject
 	}
 
 }
-?>

@@ -26,12 +26,12 @@ include_once DOL_DOCUMENT_ROOT.'/core/modules/mailings/modules_mailings.php';
 
 
 /**
- *	\class      mailing_pomme
- *	\brief      Class to offer a selector of emailing targets with Rule 'Peche'.
+ *	Class to offer a selector of emailing targets with Rule 'Peche'.
  */
 class mailing_pomme extends MailingTargets
 {
 	var $name='DolibarrUsers';                      // Identifiant du module mailing
+	// This label is used if no translation is found for key XXX neither MailingModuleDescXXX where XXX=name is found
 	var $desc='Dolibarr users with emails';  		// Libelle utilise si aucune traduction pour MailingModuleDescXXX ou XXX=name trouv�e
 	var $require_module=array();                    // Module mailing actif si modules require_module actifs
 	var $require_admin=1;                           // Module mailing actif pour user admin ou non
@@ -57,7 +57,7 @@ class mailing_pomme extends MailingTargets
 	 *	array of SQL request that returns two field:
 	 *	One called "label", One called "nb".
 	 *
-	 *	@return		array		Array with SQL requests
+	 *	@return		string[]		Array with SQL requests
 	 */
 	function getSqlArrayForStats()
 	{
@@ -82,7 +82,7 @@ class mailing_pomme extends MailingTargets
      *	For example if this selector is used to extract 500 different
      *	emails from a text file, this function must return 500.
      *
-     *	@param	string	$sql		Requete sql de comptage
+     *	@param	string	$sql		SQL request to use to count
      *	@return	int					Number of recipients
      */
 	function getNbOfRecipients($sql='')
@@ -112,11 +112,21 @@ class mailing_pomme extends MailingTargets
 		$langs->load("users");
 
 		$s='';
+		$s.=$langs->trans("Status").': ';
 		$s.='<select name="filter" class="flat">';
-		$s.='<option value="-1"></option>';
+		$s.='<option value="-1">&nbsp;</option>';
 		$s.='<option value="1">'.$langs->trans("Enabled").'</option>';
 		$s.='<option value="0">'.$langs->trans("Disabled").'</option>';
 		$s.='</select>';
+		
+		$s.=' ';
+		$s.=$langs->trans("Employee").': ';
+		$s.='<select name="filteremployee" class="flat">';
+		$s.='<option value="-1">&nbsp;</option>';
+		$s.='<option value="1">'.$langs->trans("Yes").'</option>';
+		$s.='<option value="0">'.$langs->trans("No").'</option>';
+		$s.='</select>';
+		
 		return $s;
 	}
 
@@ -129,7 +139,7 @@ class mailing_pomme extends MailingTargets
 	 */
 	function url($id)
 	{
-		return '<a href="'.DOL_URL_ROOT.'/user/fiche.php?id='.$id.'">'.img_object('',"user").'</a>';
+		return '<a href="'.DOL_URL_ROOT.'/user/card.php?id='.$id.'">'.img_object('',"user").'</a>';
 	}
 
 
@@ -142,21 +152,27 @@ class mailing_pomme extends MailingTargets
 	 */
 	function add_to_target($mailing_id,$filtersarray=array())
 	{
-		global $conf, $langs;
+		// Deprecation warning
+	    if ($filtersarray) {
+		    dol_syslog(__METHOD__ . ": filtersarray parameter is deprecated", LOG_WARNING);
+	    }
+	    
+	    global $conf, $langs;
+		$langs->load("companies");
 
 		$cibles = array();
 
-		// La requete doit retourner: id, email, fk_contact, name, firstname
+		// La requete doit retourner: id, email, fk_contact, lastname, firstname
 		$sql = "SELECT u.rowid as id, u.email as email, null as fk_contact,";
-		$sql.= " u.name as name, u.firstname as firstname, u.login, u.office_phone";
+		$sql.= " u.lastname, u.firstname as firstname, u.civility as civility_id, u.login, u.office_phone";
 		$sql.= " FROM ".MAIN_DB_PREFIX."user as u";
-		$sql.= " WHERE u.email != ''"; // u.email IS NOT NULL est implicite dans ce test
+		$sql.= " WHERE u.email <> ''"; // u.email IS NOT NULL est implicite dans ce test
 		$sql.= " AND u.entity IN (0,".$conf->entity.")";
-		foreach($filtersarray as $key)
-		{
-			if ($key == '1') $sql.= " AND u.statut=1";
-			if ($key == '0') $sql.= " AND u.statut=0";
-		}
+		$sql.= " AND u.email NOT IN (SELECT email FROM ".MAIN_DB_PREFIX."mailing_cibles WHERE fk_mailing=".$mailing_id.")";
+		if (isset($_POST["filter"]) && $_POST["filter"] == '1') $sql.= " AND u.statut=1"; 
+		if (isset($_POST["filter"]) && $_POST["filter"] == '0') $sql.= " AND u.statut=0"; 
+		if (isset($_POST["filteremployee"]) && $_POST["filteremployee"] == '1') $sql.= " AND u.employee=1"; 
+		if (isset($_POST["filteremployee"]) && $_POST["filteremployee"] == '0') $sql.= " AND u.employee=0"; 
 		$sql.= " ORDER BY u.email";
 
 		// Stocke destinataires dans cibles
@@ -178,11 +194,11 @@ class mailing_pomme extends MailingTargets
 					$cibles[$j] = array(
                     			'email' => $obj->email,
                     			'fk_contact' => $obj->fk_contact,
-                    			'name' => $obj->name,
+                    			'lastname' => $obj->lastname,
                     			'firstname' => $obj->firstname,
                     			'other' =>
 					            ($langs->transnoentities("Login").'='.$obj->login).';'.
-//                                ($langs->transnoentities("UserTitle").'='.$obj->civilite).';'.
+                                ($langs->transnoentities("UserTitle").'='.$obj->civility_id).';'.
 					            ($langs->transnoentities("PhonePro").'='.$obj->office_phone),
                                 'source_url' => $this->url($obj->id),
                                 'source_id' => $obj->id,
@@ -207,4 +223,3 @@ class mailing_pomme extends MailingTargets
 
 }
 
-?>

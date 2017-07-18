@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
  * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013      Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +31,7 @@ if (! defined('NOCSRFCHECK'))    define('NOCSRFCHECK','1');
 
 require '../main.inc.php';
 
-$country=GETPOST('pays', 'alpha');
+$country=GETPOST('country', 'alpha');
 
 
 /*
@@ -44,39 +45,34 @@ $country=GETPOST('pays', 'alpha');
 //top_htmlhead("", "", 1);  // Replaced with top_httphead. An ajax page does not need html header.
 top_httphead();
 
-print '<!-- Ajax page called with url '.$_SERVER["PHP_SELF"].'?'.$_SERVER["QUERY_STRING"].' -->'."\n";
-
-//print '<body id="mainbody">';
+print '<!-- Ajax page called with url '.dol_escape_htmltag($_SERVER["PHP_SELF"]).'?'.dol_escape_htmltag($_SERVER["QUERY_STRING"]).' -->'."\n";
 
 dol_syslog(join(',',$_POST));
 
-// Generation liste des pays
+// Generate list of countries
 if (! empty($country))
 {
 	global $langs;
 	$langs->load("dict");
 
-	$sql = "SELECT rowid, code, libelle, active";
-	$sql.= " FROM ".MAIN_DB_PREFIX."c_pays";
-	$sql.= " WHERE active = 1 AND libelle LIKE '%" . $db->escape(utf8_decode($country)) . "%'";
-	$sql.= " ORDER BY libelle ASC";
+	$sql = "SELECT rowid, code, label, active";
+	$sql.= " FROM ".MAIN_DB_PREFIX."c_country";
+	$sql.= " WHERE active = 1 AND label LIKE '%" . $db->escape(utf8_decode($country)) . "%'";
+	$sql.= " ORDER BY label ASC";
 
 	$resql=$db->query($sql);
 	if ($resql)
 	{
 		print '<ul>';
-		while($pays = $db->fetch_object($resql))
+		while($country = $db->fetch_object($resql))
 		{
 			print '<li>';
 			// Si traduction existe, on l'utilise, sinon on prend le libellé par défaut
-			print ($pays->code && $langs->trans("Country".$pays->code)!="Country".$pays->code?$langs->trans("Country".$pays->code):($pays->libelle!='-'?$pays->libelle:'&nbsp;'));
-			print '<span class="informal" style="display:none">'.$pays->rowid.'-idcache</span>';
+			print ($country->code && $langs->trans("Country".$country->code)!="Country".$country->code?$langs->trans("Country".$country->code):($country->label!='-'?$country->label:'&nbsp;'));
+			print '<span class="informal" style="display:none">'.$country->rowid.'-idcache</span>';
 			print '</li>';
 		}
 		print '</ul>';
 	}
 }
 
-//print "</body>";
-//print "</html>";
-?>

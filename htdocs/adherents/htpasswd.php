@@ -39,8 +39,8 @@ llxHeader();
 
 $now=dol_now();
 
-if ($sortorder == "") {  $sortorder="ASC"; }
-if ($sortfield == "") {  $sortfield="d.login"; }
+if (empty($sortorder)) {  $sortorder="ASC"; }
+if (empty($sortfield)) {  $sortfield="d.login"; }
 if (! isset($statut))
 {
   $statut = 1 ;
@@ -48,7 +48,7 @@ if (! isset($statut))
 
 if (! isset($cotis))
 {
-  // par defaut les adherents doivent etre a jour de cotisation
+  // by default, members must be up to date of subscription
   $cotis=1;
 }
 
@@ -90,4 +90,3 @@ else
 llxFooter();
 
 $db->close();
-?>

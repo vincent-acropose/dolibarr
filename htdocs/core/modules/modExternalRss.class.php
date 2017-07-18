@@ -28,7 +28,7 @@ include_once DOL_DOCUMENT_ROOT .'/core/modules/DolibarrModules.class.php';
 
 
 /**
- *	Classe de description et activation du module externalrss
+ *	Class to describe and enable module externalrss
  */
 class modExternalRss extends DolibarrModules
 {
@@ -60,13 +60,13 @@ class modExternalRss extends DolibarrModules
 		// Config pages
 		$this->config_page_url = array("external_rss.php");
 
-		// Dependances
+		// Dependencies
 		$this->depends = array();
 		$this->requiredby = array();
 		$this->phpmin = array(4,2,0);
 		$this->phpmax = array();
 
-		// Constantes
+		// Constants
 		$this->const = array();
 
 		// Boxes
@@ -105,9 +105,9 @@ class modExternalRss extends DolibarrModules
 				if (preg_match('/EXTERNAL_RSS_TITLE_([0-9]+)/i',$obj->name,$reg))
 				{
 					// Definie la boite si on a trouvee une ancienne configuration
-					$this->boxes[$reg[1]][0] = "(ExternalRSSInformations)";
-					$this->boxes[$reg[1]][1] = "box_external_rss.php";
-					$this->boxes[$reg[1]][2] = $reg[1]." (".$obj->value.")";
+					//$this->boxes[$reg[1]][0] = "(ExternalRSSInformations)";
+					$this->boxes[$reg[1]]['file'] = "box_external_rss.php";
+					$this->boxes[$reg[1]]['note'] = $reg[1]." (".$obj->value.")";
 				}
 			}
 			$this->db->free($result);
@@ -131,10 +131,9 @@ class modExternalRss extends DolibarrModules
 		$sql = array();
 
 		// Delete old declarations of RSS box
-		$this->boxes[0][1] = "box_external_rss.php";
+		$this->boxes[0]['file'] = "box_external_rss.php";
 
 		return $this->_remove($sql,$options);
     }
 
 }
-?>

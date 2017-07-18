@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2009-2010 Regis Houssin <regis.houssin@capnetworks.com>
- * Copyright (C) 2011-2012 Laurent Destailleur <eldy@users.sourceforge.net>
+ * Copyright (C) 2011-2013 Laurent Destailleur <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,76 +14,75 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 header('Cache-Control: Public, must-revalidate');
 header("Content-type: text/html; charset=".$conf->file->character_set_client);
 
+if (GETPOST('dol_hide_topmenu')) $conf->dol_use_jmobile=1;
+if (GETPOST('dol_hide_leftmenu')) $conf->dol_hide_leftmenu=1;
+if (GETPOST('dol_optimize_smallscreen')) $conf->dol_optimize_smallscreen=1;
+if (GETPOST('dol_no_mouse_hover')) $conf->dol_no_mouse_hover=1;
+if (GETPOST('dol_use_jmobile')) $conf->dol_use_jmobile=1;
+
+// If we force to use jmobile, then we reenable javascript
+if (! empty($conf->dol_use_jmobile)) $conf->use_javascript_ajax=1;
+
+$php_self = dol_escape_htmltag($_SERVER['PHP_SELF']);
+$php_self.= dol_escape_htmltag($_SERVER["QUERY_STRING"])?'?'.dol_escape_htmltag($_SERVER["QUERY_STRING"]):'';
+
+print top_htmlhead('',$langs->trans('SendNewPassword'));
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<!-- BEGIN PHP TEMPLATE -->
-<html>
+<!-- BEGIN PHP TEMPLATE PASSWORDFORGOTTEN.TPL.PHP -->
 
-<?php
-print '<head>
-<meta name="robots" content="noindex,nofollow" />
-<meta name="author" content="Dolibarr Development Team">
-<link rel="shortcut icon" type="image/x-icon" href="'.$favicon.'"/>
-<title>'.$langs->trans('Login').' '.$title.'</title>'."\n";
-print '<!-- Includes for JQuery (Ajax library) -->'."\n";
-if (constant('JS_JQUERY_UI')) print '<link rel="stylesheet" type="text/css" href="'.JS_JQUERY_UI.'css/'.$jquerytheme.'/jquery-ui.min.css" />'."\n";  // JQuery
-else print '<link rel="stylesheet" type="text/css" href="'.DOL_URL_ROOT.'/includes/jquery/css/'.$jquerytheme.'/jquery-ui-latest.custom.css" />'."\n";    // JQuery
-// CSS forced by modules (relative url starting with /)
-if (isset($conf->modules_parts['css']))
-{
-	$arraycss=(array) $conf->modules_parts['css'];
-	foreach($arraycss as $modcss => $filescss)
-	{
-		$filescss=(array) $filescss;	// To be sure filecss is an array
-		foreach($filescss as $cssfile)
-		{
-			// cssfile is a relative path
-			print '<link rel="stylesheet" type="text/css" title="default" href="'.dol_buildpath($cssfile,1);
-			// We add params only if page is not static, because some web server setup does not return content type text/css if url has parameters, so browser cache is not used.
-			if (!preg_match('/\.css$/i',$cssfile)) print $themeparam;
-			print '"><!-- Added by module '.$modcss. '-->'."\n";
-		}
-	}
-}
-// JQuery. Must be before other includes
-$ext='.js';
-print '<!-- Includes JS for JQuery -->'."\n";
-if (constant('JS_JQUERY')) print '<script type="text/javascript" src="'.JS_JQUERY.'jquery.min.js"></script>'."\n";
-else print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/js/jquery-latest.min'.$ext.'"></script>'."\n";
-print '<link rel="stylesheet" type="text/css" href="'.dol_escape_htmltag($conf_css).'" />'."\n";
-if (! empty($conf->global->MAIN_HTML_HEADER)) print $conf->global->MAIN_HTML_HEADER;
-print '<!-- HTTP_USER_AGENT = '.$_SERVER['HTTP_USER_AGENT'].' -->
-</head>';
+<body class="bodylogin">
 
-?>
+<?php if (empty($conf->dol_use_jmobile)) { ?>
+<script type="text/javascript">
+$(document).ready(function () {
+	// Set focus on correct field
+	<?php if ($focus_element) { ?>$('#<?php echo $focus_element; ?>').focus(); <?php } ?>		// Warning to use this only on visible element
+});
+</script>
+<?php } ?>
 
-<body class="body">
 
-<form id="login" name="login" method="post" action="<?php echo $php_self; ?>">
+<div align="center">
+<div class="login_vertical_align">
+
+
+<form id="login" name="login" method="POST" action="<?php echo $php_self; ?>">
 <input type="hidden" name="token" value="<?php echo $_SESSION['newtoken']; ?>">
 <input type="hidden" name="action" value="buildnewpassword">
 
-<table class="login_table_title" summary="<?php echo $title; ?>" cellpadding="0" cellspacing="0" border="0" align="center">
+<table class="login_table_title center" summary="<?php echo dol_escape_htmltag($title); ?>">
 <tr class="vmenu"><td align="center"><?php echo $title; ?></td></tr>
 </table>
 <br>
 
-<table class="login_table" summary="Login area" cellpadding="2" align="center">
+<div class="login_table">
 
-<tr><td colspan="2" valign="middle">
-<table class="none" summary="Login pass" cellpadding="2" align="center">
+<div id="login_line1">
+
+
+<div id="login_left">
+
+<img alt="Logo" title="" src="<?php echo $urllogo; ?>" id="img_logo" />
+
+</div>
+
+
+<div id="login_right">
+
+<table summary="Login pass" class="centpercent">
 
 <!-- Login -->
 <tr>
-<td valign="bottom"> &nbsp; <b><?php echo $langs->trans('Login'); ?></b> &nbsp; </td>
-<td valign="bottom" nowrap="nowrap">
-<input type="text" <?php echo $disabled; ?> id="username" name="username" class="flat" size="15" maxlength="25" value="<?php echo $login; ?>" tabindex="1" /></td>
+<td valign="bottom" class="nowrap center">
+<span class="span-icon-user">
+<input type="text" placeholder="<?php echo $langs->trans("Login"); ?>" <?php echo $disabled; ?> id="username" name="username" class="flat input-icon-user" size="20" value="<?php echo dol_escape_htmltag($username); ?>" tabindex="1" />
+</span>
+</td>
 </tr>
 
 <?php
@@ -98,46 +97,64 @@ if (! empty($hookmanager->resArray['options'])) {
 }
 ?>
 
-<?php if ($captcha) { ?>
-	<tr><td valign="middle" nowrap="nowrap"> &nbsp; <b><?php echo $langs->trans('SecurityCode'); ?></b></td>
-	<td valign="middle" nowrap="nowrap" align="left" class="none">
+<?php if ($captcha) {
+		// Add a variable param to force not using cache (jmobile)
+		$php_self = preg_replace('/[&\?]time=(\d+)/','',$php_self);	// Remove param time
+		if (preg_match('/\?/',$php_self)) $php_self.='&time='.dol_print_date(dol_now(),'dayhourlog');
+		else $php_self.='?time='.dol_print_date(dol_now(),'dayhourlog');
+	?>
+	<!-- Captcha -->
+	<tr>
+	<td class="tdtop nowrap none center">
 
-	<table class="login_table_securitycode" style="width: 100px;"><tr>
-	<td><input id="securitycode" class="flat" type="text" size="6" maxlength="5" name="code" tabindex="3"></td>
-	<td><img src="<?php echo $dol_url_root.'/core/antispamimage.php'; ?>" border="0" width="80" height="32" id="img_securitycode"></td>
-	<td><a href="<?php echo $php_self; ?>"><?php echo $captcha_refresh; ?></a></td>
+	<table class="login_table_securitycode centpercent"><tr>
+	<td>
+	<span class="span-icon-security">
+	<input id="securitycode" placeholder="<?php echo $langs->trans("SecurityCode"); ?>" class="flat input-icon-security" type="text" size="12" maxlength="5" name="code" tabindex="3" />
+	</span>
+	</td>
+	<td><img src="<?php echo DOL_URL_ROOT ?>/core/antispamimage.php" border="0" width="80" height="32" id="img_securitycode" /></td>
+	<td><a href="<?php echo $php_self; ?>" tabindex="4" data-role="button"><?php echo $captcha_refresh; ?></a></td>
 	</tr></table>
 
 	</td></tr>
 <?php } ?>
 
 </table>
-</td>
 
-<td align="center" valign="top">
-<img alt="Logo" title="" src="<?php echo $urllogo; ?>" id="img_logo" />
-</td>
+</div> <!-- end div left -->
 
-</tr>
+
+
+
+</div>
+
+<div id="login_line2" style="clear: both">
 
 <!-- Button Send password -->
-<tr><td colspan="3" style="text-align:center;"><br>
-<input id="password" type="submit" <?php echo $disabled; ?> class="button" name="password" value="<?php echo $langs->trans('SendNewPassword'); ?>" tabindex="4" />
-</td></tr>
+<br><input type="submit" <?php echo $disabled; ?> class="button" name="password" value="<?php echo $langs->trans('SendNewPassword'); ?>" tabindex="4" />
 
-<tr><td colspan="3" align="center">
-<a style="color: #888888; font-size: 10px" href="<?php echo $dol_url_root; ?>/">
-	<?php echo '('.$langs->trans('BackToLoginPage').')'; ?>
-</a>
-</td></tr>
+<br>
+<div align="center" style="margin-top: 8px;">
+	<?php
+	$moreparam='';
+	if (! empty($conf->dol_hide_topmenu))   $moreparam.=(strpos($moreparam,'?')===false?'?':'&').'dol_hide_topmenu='.$conf->dol_hide_topmenu;
+	if (! empty($conf->dol_hide_leftmenu))  $moreparam.=(strpos($moreparam,'?')===false?'?':'&').'dol_hide_leftmenu='.$conf->dol_hide_leftmenu;
+	if (! empty($conf->dol_no_mouse_hover)) $moreparam.=(strpos($moreparam,'?')===false?'?':'&').'dol_no_mouse_hover='.$conf->dol_no_mouse_hover;
+	if (! empty($conf->dol_use_jmobile))    $moreparam.=(strpos($moreparam,'?')===false?'?':'&').'dol_use_jmobile='.$conf->dol_use_jmobile;
 
-</table>
+	print '<a class="alogin" href="'.$dol_url_root.'/index.php'.$moreparam.'">('.$langs->trans('BackToLoginPage').')</a>';
+	?>
+</div>
+
+</div>
+
+</div>
 
 </form>
 
-<center>
-<table width="90%"><tr><td align="center">
 
+<div class="center login_main_home" style="max-width: 80%">
 <?php if ($mode == 'dolibarr' || ! $disabled) { ?>
 	<font style="font-size: 12px;">
 	<?php echo $langs->trans('SendNewPasswordDesc'); ?>
@@ -147,24 +164,22 @@ if (! empty($hookmanager->resArray['options'])) {
 	<?php echo $langs->trans('AuthenticationDoesNotAllowSendNewPassword', $mode); ?>
 	</div>
 <?php } ?>
+</div>
 
-</td></tr>
-</table>
 
 <br>
 
 <?php if ($message) { ?>
-	<table width="90%"><tr><td align="center" style="font-size: 12px;">
-	<?php echo $message; ?>
-	</td></tr></table><br>
+	<div class="center login_main_message">
+	<?php echo dol_htmloutput_mesg($message,'','',1); ?>
+	</div>
 <?php } ?>
 
-</center>
 
-<br>
-<br>
+</div>
+</div>	<!-- end of center -->
+
 
 </body>
 </html>
-
 <!-- END PHP TEMPLATE -->

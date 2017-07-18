@@ -1,8 +1,10 @@
 <?php
-/* Copyright (C) 2001-2003,2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2011      Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012      Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2010           Juanjo Menent        <jmenent@2byte.es>
+/* Copyright (C) 2001-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
+ * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2010      Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2013      Florian Henry	  	<florian.henry@open-concept.pro>
+ * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,39 +34,35 @@ $action = GETPOST('action');
 $langs->load("companies");
 
 // Security check
-$socid = GETPOST('socid','int');
-if ($user->societe_id) $socid=$user->societe_id;
-$result = restrictedArea($user, 'societe', $socid, '&societe');
+$id = GETPOST('id')?GETPOST('id','int'):GETPOST('socid','int');
+if ($user->societe_id) $id=$user->societe_id;
+$result = restrictedArea($user, 'societe', $id, '&societe');
 
 $object = new Societe($db);
-if ($socid > 0) $object->fetch($socid);
+if ($id > 0) $object->fetch($id);
+
+$permissionnote=$user->rights->societe->creer;	// Used by the include of actions_setnotes.inc.php
+
 
 /*
  * Actions
  */
 
-if ($action == 'add' && ! GETPOST('cancel'))
-{
-    $result=$object->update_note($_POST["note"]);
-    if ($result < 0)
-    {
-         $errors[]=$object->errors;
-    }
-}
+include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not includ_once
 
 
 /*
  *	View
  */
 
-if ($conf->global->MAIN_DIRECTEDITMODE && $user->rights->societe->creer) $action='edit';
-
 $form = new Form($db);
 
+$title=$langs->trans("ThirdParty").' - '.$langs->trans("Notes");
+if (! empty($conf->global->MAIN_HTML_TITLE) && preg_match('/thirdpartynameonly/',$conf->global->MAIN_HTML_TITLE) && $object->name) $title=$object->name.' - '.$langs->trans("Notes");
 $help_url='EN:Module_Third_Parties|FR:Module_Tiers|ES:Empresas';
-llxHeader('',$langs->trans("ThirdParty").' - '.$langs->trans("Notes"),$help_url);
+llxHeader('',$title,$help_url);
 
-if ($socid > 0)
+if ($id > 0)
 {
     /*
      * Affichage onglets
@@ -73,28 +71,29 @@ if ($socid > 0)
 
     $head = societe_prepare_head($object);
 
-
     dol_fiche_head($head, 'note', $langs->trans("ThirdParty"),0,'company');
 
+    $linkback = '<a href="'.DOL_URL_ROOT.'/societe/list.php">'.$langs->trans("BackToList").'</a>';
+    
+    dol_banner_tab($object, 'socid', $linkback, ($user->societe_id?0:1), 'rowid', 'nom');
 
-    print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-    print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-
-    print '<table class="border" width="100%">';
-
-    print '<tr><td width="20%">'.$langs->trans('ThirdPartyName').'</td>';
-    print '<td colspan="3">';
-    print $form->showrefnav($object,'socid','',($user->societe_id?0:1),'rowid','nom');
-    print '</td></tr>';
+    $cssclass='titlefield';
+    //if ($action == 'editnote_public') $cssclass='titlefieldcreate';
+    //if ($action == 'editnote_private') $cssclass='titlefieldcreate';
+    
+    print '<div class="fichecenter">';
+    
+    print '<div class="underbanner clearboth"></div>';
+    print '<table class="border centpercent">';
 
     if (! empty($conf->global->SOCIETE_USEPREFIX))  // Old not used prefix field
     {
-        print '<tr><td>'.$langs->trans('Prefix').'</td><td colspan="3">'.$object->prefix_comm.'</td></tr>';
+        print '<tr><td class="'.$cssclass.'">'.$langs->trans('Prefix').'</td><td colspan="3">'.$object->prefix_comm.'</td></tr>';
     }
 
     if ($object->client)
     {
-        print '<tr><td>';
+        print '<tr><td class="'.$cssclass.'">';
         print $langs->trans('CustomerCode').'</td><td colspan="3">';
         print $object->code_client;
         if ($object->check_codeclient() <> 0) print ' <font class="error">('.$langs->trans("WrongCustomerCode").')</font>';
@@ -103,68 +102,25 @@ if ($socid > 0)
 
     if ($object->fournisseur)
     {
-        print '<tr><td>';
+        print '<tr><td class="'.$cssclass.'">';
         print $langs->trans('SupplierCode').'</td><td colspan="3">';
         print $object->code_fournisseur;
         if ($object->check_codefournisseur() <> 0) print ' <font class="error">('.$langs->trans("WrongSupplierCode").')</font>';
         print '</td></tr>';
     }
 
-    print '<tr><td valign="top">'.$langs->trans("Note").'</td>';
-    print '<td valign="top">';
-    if ($action == 'edit' && $user->rights->societe->creer)
-    {
-        print '<input type="hidden" name="action" value="add" />';
-        print '<input type="hidden" name="socid" value="'.$object->id.'" />';
-
-        // Editeur wysiwyg
-        require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
-        $doleditor=new DolEditor('note',$object->note,'',360,'dolibarr_notes','In',true,false,$conf->global->FCKEDITOR_ENABLE_SOCIETE,20,70);
-        $doleditor->Create();
-    }
-    else
-    {
-        print dol_textishtml($object->note)?$object->note:dol_nl2br($object->note,1,true);
-    }
-    print "</td></tr>";
-
     print "</table>";
 
-    if ($action == 'edit')
-    {
-        print '<center><br>';
-        print '<input type="submit" class="button" name="save" value="'.$langs->trans("Save").'">';
-        print ' &nbsp; ';
-        print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'">';
-        print '</center>';
-    }
+    print '</div>';
+    
+    //print '<br>';
 
-    print '</form>';
+    //print '<div class="underbanner clearboth"></div>';
+    include DOL_DOCUMENT_ROOT.'/core/tpl/notes.tpl.php';
 
     dol_fiche_end();
 }
 
-dol_htmloutput_errors('',$errors);
-
-
-/*
- * Buttons
- */
-
-if ($action != 'edit')
-{
-    print '<div class="tabsAction">';
-
-    if ($user->rights->societe->creer)
-    {
-        print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?socid='.$object->id.'&amp;action=edit">'.$langs->trans("Modify").'</a>';
-    }
-
-    print '</div>';
-}
-
 llxFooter();
-
 $db->close();
 
-?>

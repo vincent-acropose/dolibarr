@@ -2,6 +2,7 @@
 -- Copyright (C) 2002-2003	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
 -- Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
 -- Copyright (C) 2010		Juanjo Menent			<jmenent@2byte.es>
+-- Copyright (C) 2012      Cédric Salvador      <csalvador@gpcsolutions.fr>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -27,11 +28,12 @@ create table llx_propaldet
   label								varchar(255) DEFAULT NULL,
   description						text,
   fk_remise_except					integer      NULL,               -- Lien vers table des remises fixes
-  tva_tx							double(6,3)  DEFAULT 0, 	     -- taux tva
+  vat_src_code						varchar(10)  DEFAULT '',		 -- Vat code used as source of vat fields. Not strict foreign key here.
+  tva_tx							double(6,3)  DEFAULT 0, 	     -- Vat rate
   localtax1_tx               		double(6,3)  DEFAULT 0,    		 -- localtax1 rate
-  localtax1_type			 		varchar(1)	  	 NULL, 			 -- localtax1 type
+  localtax1_type			 		varchar(10)	  	 NULL, 			 -- localtax1 type
   localtax2_tx               		double(6,3)  DEFAULT 0,    		 -- localtax2 rate
-  localtax2_type			 		varchar(1)	  	 NULL, 			 -- localtax2 type
+  localtax2_type			 		varchar(10)	  	 NULL, 			 -- localtax2 type
   qty								real,                            -- quantity
   remise_percent					real         DEFAULT 0,          -- pourcentage de remise
   remise							real         DEFAULT 0,          -- montant de la remise (obsolete)
@@ -47,12 +49,19 @@ create table llx_propaldet
   date_end							datetime   DEFAULT NULL,         -- date fin si service
   info_bits							integer      DEFAULT 0,          -- TVA NPR ou non
   
-  buy_price_ht						double(24,8) DEFAULT 0,          -- prix d'achat HT
-  fk_product_fournisseur_price		integer      DEFAULT NULL,       -- reference prix fournisseur
+  buy_price_ht						double(24,8) DEFAULT 0,          -- buying price
+  fk_product_fournisseur_price		integer      DEFAULT NULL,       -- reference of supplier price when line was added (may be used to update buy_price_ht current price when future invoice will be created)
   
   special_code						integer      DEFAULT 0,          -- code pour les lignes speciales
-  rang								integer      DEFAULT 0           -- ordre affichage sur la propal
+  rang								integer      DEFAULT 0,           -- ordre affichage sur la propal
+  fk_unit           integer      DEFAULT NULL,           -- lien vers table des unités
   
+  fk_multicurrency			integer,
+  multicurrency_code			varchar(255),
+  multicurrency_subprice		double(24,8) DEFAULT 0,
+  multicurrency_total_ht		double(24,8) DEFAULT 0,
+  multicurrency_total_tva	double(24,8) DEFAULT 0,
+  multicurrency_total_ttc	double(24,8) DEFAULT 0
 )ENGINE=innodb;
 
 -- 

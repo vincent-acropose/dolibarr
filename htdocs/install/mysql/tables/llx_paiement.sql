@@ -18,25 +18,22 @@
 --
 -- ===================================================================
 
-
--- Satut, 0 ou 1, 1 n'est plus supprimable
--- fk_export_compta 0 pas exporte
-
 create table llx_paiement
 (
   rowid            integer AUTO_INCREMENT PRIMARY KEY,
+  ref              varchar(30) NOT NULL, -- payment reference number
   entity           integer   DEFAULT 1 NOT NULL,		-- Multi company id
   datec            datetime,							-- date de creation
   tms              timestamp,
   datep            datetime,							-- payment date
-  amount           double(24,8) DEFAULT 0,
+  amount           double(24,8) DEFAULT 0,				-- amount paid in Dolibarr currency
+  multicurrency_amount double(24,8) DEFAULT 0,			-- amount paid in invoice currency	
   fk_paiement      integer NOT NULL,
   num_paiement     varchar(50),
   note             text,
   fk_bank          integer NOT NULL DEFAULT 0,
   fk_user_creat    integer,								-- utilisateur qui a cree l'info
   fk_user_modif    integer,								-- utilisateur qui a modifie l'info
-  statut           smallint DEFAULT 0 NOT NULL,
-  fk_export_compta integer DEFAULT 0 NOT NULL
-
+  statut           smallint DEFAULT 0 NOT NULL,		-- Satut, 0 ou 1, 1 n'est plus supprimable
+  fk_export_compta integer DEFAULT 0 NOT NULL			-- fk_export_compta 0 pas exporte
 )ENGINE=innodb;

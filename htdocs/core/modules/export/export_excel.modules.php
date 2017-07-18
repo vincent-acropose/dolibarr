@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2006-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2006-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2012      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -28,8 +28,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 
 
 /**
- *	\class      ExportExcel
- *	\brief      Class to build export files with Excel format
+ *	Class to build export files with Excel format
  */
 class ExportExcel extends ModeleExports
 {
@@ -65,9 +64,27 @@ class ExportExcel extends ModeleExports
         $this->picto='mime/xls';					// Picto
 		$this->version='1.30';             // Driver version
 
-		// If driver use an external library, put its name here
-		$this->label_lib='PhpExcel';
-		$this->version_lib='1.7.2';
+		$this->disabled = (in_array(constant('PHPEXCEL_PATH'),array('disabled','disabled/'))?1:0);	// A condition to disable module (used for native debian packages)
+		
+		if (empty($this->disabled))
+		{
+    		// If driver use an external library, put its name here
+    		if (! empty($conf->global->MAIN_USE_PHP_WRITEEXCEL))
+    		{
+    			require_once PHP_WRITEEXCEL_PATH.'class.writeexcel_workbookbig.inc.php';
+                require_once PHP_WRITEEXCEL_PATH.'class.writeexcel_worksheet.inc.php';
+                require_once PHP_WRITEEXCEL_PATH.'functions.writeexcel_utility.inc.php';
+    			$this->label_lib='PhpWriteExcel';
+                $this->version_lib='unknown';
+    		}
+    		else
+    		{
+                require_once PHPEXCEL_PATH.'PHPExcel.php';
+                require_once PHPEXCEL_PATH.'PHPExcel/Style/Alignment.php';
+    			$this->label_lib='PhpExcel';
+                $this->version_lib='1.8.0';		// No way to get info from library
+    		}
+		}
 
 		$this->row=0;
 	}
@@ -75,7 +92,7 @@ class ExportExcel extends ModeleExports
 	/**
 	 * getDriverId
 	 *
-	 * @return int
+	 * @return string
 	 */
 	function getDriverId()
 	{
@@ -159,7 +176,7 @@ class ExportExcel extends ModeleExports
 		    $outputlangs->charset_output='ISO-8859-1';	// Because Excel 5 format is ISO
 		}
 
-		dol_syslog("ExportExcel::open_file file=".$file);
+		dol_syslog(get_class($this)."::open_file file=".$file);
         $this->file=$file;
 
 		$ret=1;
@@ -179,6 +196,25 @@ class ExportExcel extends ModeleExports
 		{
             require_once PHPEXCEL_PATH.'PHPExcel.php';
             require_once PHPEXCEL_PATH.'PHPExcel/Style/Alignment.php';
+
+		    if ($this->id == 'excel2007')
+		    {
+	            if (! class_exists('ZipArchive'))	// For Excel2007, PHPExcel need ZipArchive
+	            {
+	            	$langs->load("errors");
+	            	$this->error=$langs->trans('ErrorPHPNeedModule','zip');
+	            	return -1;
+	            }
+		    }
+
+		    if (!empty($conf->global->MAIN_USE_FILECACHE_EXPORT_EXCEL_DIR)) {
+			    $cacheMethod = PHPExcel_CachedObjectStorageFactory::cache_to_discISAM;
+			    $cacheSettings = array (
+			    		'dir' => $conf->global->MAIN_USE_FILECACHE_EXPORT_EXCEL_DIR
+			    );
+			    PHPExcel_Settings::setCacheStorageMethod($cacheMethod, $cacheSettings);
+		    }
+
             $this->workbook = new PHPExcel();
             $this->workbook->getProperties()->setCreator($user->getFullName($outputlangs).' - Dolibarr '.DOL_VERSION);
             //$this->workbook->getProperties()->setLastModifiedBy('Dolibarr '.DOL_VERSION);
@@ -188,7 +224,7 @@ class ExportExcel extends ModeleExports
 
             $this->workbook->setActiveSheetIndex(0);
             $this->workbook->getActiveSheet()->setTitle($outputlangs->trans("Sheet"));
-            $this->workbook->getActiveSheet()->getDefaultRowDimension()->setRowHeight(15);
+            $this->workbook->getActiveSheet()->getDefaultRowDimension()->setRowHeight(16);
 		}
 		return $ret;
 	}
@@ -213,10 +249,13 @@ class ExportExcel extends ModeleExports
      *  @param      array		$array_export_fields_label   	Array with list of label of fields
      *  @param      array		$array_selected_sorted       	Array with list of field to export
      *  @param      Translate	$outputlangs    				Object lang to translate values
+     *  @param		array		$array_types					Array with types of fields
 	 * 	@return		int											<0 if KO, >0 if OK
 	 */
-	function write_title($array_export_fields_label,$array_selected_sorted,$outputlangs)
+	function write_title($array_export_fields_label,$array_selected_sorted,$outputlangs,$array_types)
 	{
+		global $conf;
+
 		// Create a format for the column headings
 		if (! empty($conf->global->MAIN_USE_PHP_WRITEEXCEL))
 		{
@@ -232,7 +271,7 @@ class ExportExcel extends ModeleExports
 		else
 		{
             $this->workbook->getActiveSheet()->getStyle('1')->getFont()->setBold(true);
-		    $this->workbook->getActiveSheet()->getStyle('1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+		    $this->workbook->getActiveSheet()->getStyle('1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_LEFT);
 		}
 
 		$this->col=0;
@@ -248,6 +287,10 @@ class ExportExcel extends ModeleExports
     		else
     		{
                 $this->workbook->getActiveSheet()->SetCellValueByColumnAndRow($this->col, $this->row+1, $outputlangs->transnoentities($alias));
+    		    if (! empty($array_types[$code]) && in_array($array_types[$code],array('Date','Numeric','TextAuto')))		// Set autowidth for some types
+                {
+                	$this->workbook->getActiveSheet()->getColumnDimension($this->column2Letter($this->col + 1))->setAutoSize(true);
+                }
     		}
 			$this->col++;
 		}
@@ -261,10 +304,13 @@ class ExportExcel extends ModeleExports
      *  @param      array		$array_selected_sorted      Array with list of field to export
      *  @param      resource	$objp                       A record from a fetch with all fields from select
      *  @param      Translate	$outputlangs                Object lang to translate values
+     *  @param		array		$array_types				Array with types of fields
 	 * 	@return		int										<0 if KO, >0 if OK
 	 */
-	function write_record($array_selected_sorted,$objp,$outputlangs)
+	function write_record($array_selected_sorted,$objp,$outputlangs,$array_types)
 	{
+		global $conf;
+
 		// Create a format for the column headings
 		if (! empty($conf->global->MAIN_USE_PHP_WRITEEXCEL))
 		{
@@ -276,12 +322,21 @@ class ExportExcel extends ModeleExports
 
 		foreach($array_selected_sorted as $code => $value)
 		{
-			$alias=str_replace(array('.','-'),'_',$code);
+			if (strpos($code,' as ') == 0) $alias=str_replace(array('.','-','(',')'),'_',$code);
+			else $alias=substr($code, strpos($code, ' as ') + 4);
             if (empty($alias)) dol_print_error('','Bad value for field with code='.$code.'. Try to redefine export.');
             $newvalue=$objp->$alias;
 
 			$newvalue=$this->excel_clean($newvalue);
-
+			$typefield=isset($array_types[$code])?$array_types[$code]:'';
+			
+			if (preg_match('/^Select:/i', $typefield, $reg) && $typefield = substr($typefield, 7))
+			{
+				$array = unserialize($typefield);
+				$array = $array['options'];
+				$newvalue = $array[$newvalue];
+			}
+			
 			// Traduction newvalue
 			if (preg_match('/^\((.*)\)$/i',$newvalue,$reg))
 			{
@@ -339,8 +394,19 @@ class ExportExcel extends ModeleExports
 			        $this->worksheet->write($this->row, $this->col, $newvalue);
     		    }
     		    else
-    		    {
-        		    $this->workbook->getActiveSheet()->SetCellValueByColumnAndRow($this->col, $this->row+1, $newvalue);
+				{
+    		    	if ($typefield == 'Text' || $typefield == 'TextAuto')
+    		    	{
+    		    		//$this->workbook->getActiveSheet()->getCellByColumnAndRow($this->col, $this->row+1)->setValueExplicit($newvalue, PHPExcel_Cell_DataType::TYPE_STRING);
+						$this->workbook->getActiveSheet()->SetCellValueByColumnAndRow($this->col, $this->row+1, (string) $newvalue);
+    		    		$coord=$this->workbook->getActiveSheet()->getCellByColumnAndRow($this->col, $this->row+1)->getCoordinate();
+    		    		$this->workbook->getActiveSheet()->getStyle($coord)->getNumberFormat()->setFormatCode('@');
+    		    		$this->workbook->getActiveSheet()->getStyle($coord)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_LEFT);
+    		    	}
+    		    	else
+    		    	{
+    		    		$this->workbook->getActiveSheet()->SetCellValueByColumnAndRow($this->col, $this->row+1, $newvalue);
+    		    	}
     		    }
 			}
 			$this->col++;
@@ -369,6 +435,8 @@ class ExportExcel extends ModeleExports
      */
 	function close_file()
 	{
+		global $conf;
+
 		if (! empty($conf->global->MAIN_USE_PHP_WRITEEXCEL))
     	{
 	        $this->workbook->close();
@@ -381,7 +449,7 @@ class ExportExcel extends ModeleExports
             $this->workbook->disconnectWorksheets();
             unset($this->workbook);
     	}
-		return 0;
+		return 1;
 	}
 
 
@@ -398,6 +466,28 @@ class ExportExcel extends ModeleExports
 
     	return $newvalue;
     }
+
+
+    /**
+     * Convert a column to letter (1->A, 0->B, 27->AA, ...)
+     *
+     * @param 	int		$c		Column position
+     * @return 	string			Letter
+     */
+    function column2Letter($c)
+    {
+
+    	$c = intval($c);
+    	if ($c <= 0) return '';
+
+    	while ($c != 0)
+    	{
+    		$p = ($c - 1) % 26;
+    		$c = intval(($c - $p) / 26);
+    		$letter = chr(65 + $p) . $letter;
+    	}
+
+    	return $letter;
+    }
 }
 
-?>

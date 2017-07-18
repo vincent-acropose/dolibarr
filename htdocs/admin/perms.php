@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2003      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2013 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2011      Herve Prot           <herve.prot@symeos.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -44,7 +44,7 @@ if (!$user->admin) accessforbidden();
 if ($action == 'add')
 {
     $sql = "UPDATE ".MAIN_DB_PREFIX."rights_def SET bydefault=1";
-    $sql.= " WHERE id = ".$_GET["pid"];
+    $sql.= " WHERE id = ".GETPOST("pid",'int');
     $sql.= " AND entity = ".$conf->entity;
     $db->query($sql);
 }
@@ -52,7 +52,7 @@ if ($action == 'add')
 if ($action == 'remove')
 {
     $sql = "UPDATE ".MAIN_DB_PREFIX."rights_def SET bydefault=0";
-    $sql.= " WHERE id = ".$_GET["pid"];
+    $sql.= " WHERE id = ".GETPOST('pid','int');
     $sql.= " AND entity = ".$conf->entity;
     $db->query($sql);
 }
@@ -62,25 +62,13 @@ if ($action == 'remove')
  * View
  */
 
-llxHeader('',$langs->trans("DefaultRights"));
+$wikihelp='EN:Setup_Security|FR:Paramétrage_Sécurité|ES:Configuración_Seguridad';
+llxHeader('',$langs->trans("DefaultRights"), $wikihelp);
 
-print_fiche_titre($langs->trans("SecuritySetup"),'','setup');
+print load_fiche_titre($langs->trans("SecuritySetup"),'','title_setup');
 
 print $langs->trans("DefaultRightsDesc");
-print " ".$langs->trans("OnlyActiveElementsAreShown")."<br>\n";
-
-// Show warning about external users
-print showModulesExludedForExternal($modules).'<br>'."\n";
-print "<br>\n";
-
-
-$head=security_prepare_head();
-
-dol_fiche_head($head, 'default', $langs->trans("Security"));
-
-
-print '<table class="noborder" width="100%">';
-
+print " ".$langs->trans("OnlyActiveElementsAreShown")."<br><br>\n";
 
 $db->begin();
 
@@ -90,44 +78,54 @@ $modulesdir = dolGetModulesDirs();
 
 foreach ($modulesdir as $dir)
 {
-    // Load modules attributes in arrays (name, numero, orders) from dir directory
-    //print $dir."\n<br>";
-    $handle=@opendir(dol_osencode($dir));
-    if (is_resource($handle))
-    {
-        while (($file = readdir($handle))!==false)
-        {
-            if (is_readable($dir.$file) && substr($file, 0, 3) == 'mod' && substr($file, dol_strlen($file) - 10) == '.class.php')
-            {
-                $modName = substr($file, 0, dol_strlen($file) - 10);
+	// Load modules attributes in arrays (name, numero, orders) from dir directory
+	//print $dir."\n<br>";
+	$handle=@opendir(dol_osencode($dir));
+	if (is_resource($handle))
+	{
+		while (($file = readdir($handle))!==false)
+		{
+			if (is_readable($dir.$file) && substr($file, 0, 3) == 'mod' && substr($file, dol_strlen($file) - 10) == '.class.php')
+			{
+				$modName = substr($file, 0, dol_strlen($file) - 10);
+				if ($modName)
+				{
+					include_once $dir.$file;
+					$objMod = new $modName($db);
 
-                if ($modName)
-                {
-                	include_once $dir.$file;
-    	            $objMod = new $modName($db);
-
-    	            // Load all lang files of module
-    	            if (isset($objMod->langfiles) && is_array($objMod->langfiles))
-    	            {
-    	            	foreach($objMod->langfiles as $domain)
-    	            	{
-    	            		$langs->load($domain);
-    	            	}
-    	            }
-    	            // Load all permissions
-    	            if ($objMod->rights_class)
-    	            {
-    	                $ret=$objMod->insert_permissions(0);
-    	                $modules[$objMod->rights_class]=$objMod;
-    	                //print "modules[".$objMod->rights_class."]=$objMod;";
-    	            }
-                }
-            }
-        }
-    }
+					// Load all lang files of module
+					if (isset($objMod->langfiles) && is_array($objMod->langfiles))
+					{
+						foreach($objMod->langfiles as $domain)
+						{
+							$langs->load($domain);
+						}
+					}
+					// Load all permissions
+					if ($objMod->rights_class)
+					{
+						$ret=$objMod->insert_permissions(0);
+						$modules[$objMod->rights_class]=$objMod;
+						//print "modules[".$objMod->rights_class."]=$objMod;";
+					}
+				}
+			}
+		}
+	}
 }
 
 $db->commit();
+
+$head=security_prepare_head();
+
+dol_fiche_head($head, 'default', $langs->trans("Security"));
+
+
+// Show warning about external users
+print info_admin(showModulesExludedForExternal($modules)).'<br>'."\n";
+
+print '<div class="div-table-responsive-no-min">';
+print '<table class="noborder" width="100%">';
 
 // Affiche lignes des permissions
 $sql = "SELECT r.id, r.libelle, r.module, r.perms, r.subperms, r.bydefault";
@@ -191,7 +189,7 @@ if ($result)
         $var=!$var;
         print '<tr '. $bc[$var].'>';
 
-        print '<td>'.img_object('',$picto).' '.$objMod->getName();
+        print '<td>'.img_object('',$picto,'class="pictoobjectwidth"').' '.$objMod->getName();
         print '<a name="'.$objMod->getName().'">&nbsp;</a>';
 
         $perm_libelle=($conf->global->MAIN_USE_ADVANCED_PERMS && ($langs->trans("PermissionAdvanced".$obj->id)!=("PermissionAdvanced".$obj->id))?$langs->trans("PermissionAdvanced".$obj->id):(($langs->trans("Permission".$obj->id)!=("Permission".$obj->id))?$langs->trans("Permission".$obj->id):$obj->libelle));
@@ -202,13 +200,13 @@ if ($result)
         {
             print img_picto($langs->trans("Active"),'tick');
             print '</td><td>';
-            print '<a href="perms.php?pid='.$obj->id.'&amp;action=remove#'.$objMod->getName().'">'.img_edit_remove().'</a>';
+            print '<a class="reposition" href="perms.php?pid='.$obj->id.'&amp;action=remove">'.img_edit_remove().'</a>';
         }
         else
         {
             print '&nbsp;';
             print '</td><td>';
-            print '<a href="perms.php?pid='.$obj->id.'&amp;action=add#'.$objMod->getName().'">'.img_edit_add().'</a>';
+            print '<a class="reposition" href="perms.php?pid='.$obj->id.'&amp;action=add">'.img_edit_add().'</a>';
         }
 
         print '</td></tr>';
@@ -217,11 +215,9 @@ if ($result)
 }
 
 print '</table>';
-
 print '</div>';
 
-
-$db->close();
+dol_fiche_end();
 
 llxFooter();
-?>
+$db->close();

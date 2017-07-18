@@ -27,14 +27,14 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/functions.lib.php';
 
 
 /**
- *	    \class      MailingTargets
- *		\brief      Parent class of emailing target selectors modules
+ *		Parent class of emailing target selectors modules
  */
 class MailingTargets    // This can't be abstract as it is used for some method
 {
     var $db;
     var $error;
-
+    var $tooltip='';
+    
 
     /**
 	 *	Constructor
@@ -49,21 +49,28 @@ class MailingTargets    // This can't be abstract as it is used for some method
     /**
      * Return description of email selector
      *
-     * @return     string      Retourne la traduction de la cle MailingModuleDescXXX ou XXX nom du module, ou $this->desc si non trouve
+     * @return     string      Return translation of module label. Try translation of $this->name then translation of 'MailingModuleDesc'.$this->name, or $this->desc if not found
      */
     function getDesc()
     {
-        global $langs;
+        global $langs, $form;
+        
         $langs->load("mails");
         $transstring="MailingModuleDesc".$this->name;
-        if ($langs->trans($transstring) != $transstring) return $langs->trans($transstring);
-        else return $this->desc;
+        $s='';
+
+        if ($langs->trans($this->name) != $this->name) $s=$langs->trans($this->name);
+        elseif ($langs->trans($transstring) != $transstring) $s=$langs->trans($transstring);
+        else $s=$this->desc;
+
+        if ($this->tooltip && is_object($form)) $s .= ' '.$form->textwithpicto('', $langs->trans($this->tooltip), 1, 1);
+        return $s;
     }
 
     /**
 	 *	Return number of records for email selector
      *
-     *  @return     string      Example
+     *  @return     integer      Example
      */
     function getNbOfRecords()
     {
@@ -73,8 +80,8 @@ class MailingTargets    // This can't be abstract as it is used for some method
     /**
      * Retourne nombre de destinataires
      *
-     * @param      string	$sql        Requete sql de comptage
-     * @return     int       			Nb de destinataires si ok, < 0 si erreur
+     * @param      string	$sql        Sql request to count
+     * @return     int       			Nb of recipient, or <0 if error
      */
     function getNbOfRecipients($sql)
     {
@@ -86,7 +93,7 @@ class MailingTargets    // This can't be abstract as it is used for some method
         }
         else
         {
-        	$this->error=$this->db->error();
+        	$this->error=$this->db->lasterror();
             return -1;
         }
     }
@@ -150,30 +157,27 @@ class MailingTargets    // This can't be abstract as it is used for some method
         // Insert emailing targest from array into database
         $j = 0;
         $num = count($cibles);
-        for ($i = 0 ; $i < $num ; $i++)
+        foreach ($cibles as $targetarray)
         {
-        	if (! empty($cibles[$i]['email'])) // avoid empty email address
+        	if (! empty($targetarray['email'])) // avoid empty email address
         	{
         		$sql = "INSERT INTO ".MAIN_DB_PREFIX."mailing_cibles";
-        		$sql .= " (fk_mailing,";
-        		$sql .= " fk_contact,";
-        		$sql .= " nom, prenom, email, other, source_url, source_id,";
-        		if (! empty($conf->global->MAILING_EMAIL_UNSUBSCRIBE)) {
-        			$sql .= " tag,";
-        		}
+        		$sql.= " (fk_mailing,";
+        		$sql.= " fk_contact,";
+        		$sql.= " lastname, firstname, email, other, source_url, source_id,";
+       			$sql.= " tag,";
         		$sql.= " source_type)";
-        		$sql .= " VALUES (".$mailing_id.",";
-        		$sql .= (empty($cibles[$i]['fk_contact']) ? '0' : "'".$cibles[$i]['fk_contact']."'") .",";
-        		$sql .= "'".$this->db->escape($cibles[$i]['name'])."',";
-        		$sql .= "'".$this->db->escape($cibles[$i]['firstname'])."',";
-        		$sql .= "'".$this->db->escape($cibles[$i]['email'])."',";
-        		$sql .= "'".$this->db->escape($cibles[$i]['other'])."',";
-        		$sql .= "'".$this->db->escape($cibles[$i]['source_url'])."',";
-        		$sql .= "".(empty($cibles[$i]['source_id']) ? 'null' : "'".$this->db->escape($cibles[$i]['source_id'])."'").",";
-        		if (! empty($conf->global->MAILING_EMAIL_UNSUBSCRIBE)) {
-        			$sql .= "'".$this->db->escape(md5($cibles[$i]['email'].';'.$cibles[$i]['name'].';'.$mailing_id.';'.$conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY))."',";
-        		}
-        		$sql .= "'".$this->db->escape($cibles[$i]['source_type'])."')";
+        		$sql.= " VALUES (".$mailing_id.",";
+        		$sql.= (empty($targetarray['fk_contact']) ? '0' : "'".$targetarray['fk_contact']."'") .",";
+        		$sql.= "'".$this->db->escape($targetarray['lastname'])."',";
+        		$sql.= "'".$this->db->escape($targetarray['firstname'])."',";
+        		$sql.= "'".$this->db->escape($targetarray['email'])."',";
+        		$sql.= "'".$this->db->escape($targetarray['other'])."',";
+        		$sql.= "'".$this->db->escape($targetarray['source_url'])."',";
+        		$sql.= (empty($targetarray['source_id']) ? 'null' : "'".$this->db->escape($targetarray['source_id'])."'").",";
+       			$sql .= "'".$this->db->escape(dol_hash($targetarray['email'].';'.$targetarray['lastname'].';'.$mailing_id.';'.$conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY))."',";
+        		$sql .= "'".$this->db->escape($targetarray['source_type'])."')";
+        		dol_syslog(get_class($this)."::".__METHOD__,LOG_DEBUG);
         		$result=$this->db->query($sql);
         		if ($result)
         		{
@@ -193,27 +197,25 @@ class MailingTargets    // This can't be abstract as it is used for some method
         	}
         }
 
-        dol_syslog(get_class($this)."::add_to_target: sql ".$sql,LOG_DEBUG);
-        dol_syslog(get_class($this)."::add_to_target: mailing ".$j." targets added");
+        dol_syslog(get_class($this)."::".__METHOD__.": mailing ".$j." targets added");
 
         //Update the status to show thirdparty mail that don't want to be contacted anymore'
         $sql = "UPDATE ".MAIN_DB_PREFIX."mailing_cibles";
         $sql .= " SET statut=3";
         $sql .= " WHERE fk_mailing=".$mailing_id." AND email in (SELECT email FROM ".MAIN_DB_PREFIX."societe where fk_stcomm=-1)";
         $sql .= " AND source_type='thirdparty'";
+        dol_syslog(get_class($this)."::".__METHOD__.": mailing update status to display thirdparty mail that do not want to be contacted");
         $result=$this->db->query($sql);
 
-        dol_syslog(get_class($this)."::add_to_target: mailing update status to display thirdparty mail that do not want to be contacted sql:".$sql);
+
 
         //Update the status to show contact mail that don't want to be contacted anymore'
         $sql = "UPDATE ".MAIN_DB_PREFIX."mailing_cibles";
         $sql .= " SET statut=3";
-        $sql .= " WHERE fk_mailing=".$mailing_id." AND email in (SELECT sc.email FROM ".MAIN_DB_PREFIX."socpeople AS sc ";
-        $sql .= " INNER JOIN ".MAIN_DB_PREFIX."societe s ON s.fk_stcomm=-1 AND s.rowid=sc.fk_soc)";
-        $sql .= " AND source_type='contact'";
+        $sql .= " WHERE fk_mailing=".$mailing_id." AND source_type='contact' AND (email in (SELECT sc.email FROM ".MAIN_DB_PREFIX."socpeople AS sc ";
+        $sql .= " INNER JOIN ".MAIN_DB_PREFIX."societe s ON s.rowid=sc.fk_soc WHERE s.fk_stcomm=-1 OR no_email=1))";
+        dol_syslog(get_class($this)."::".__METHOD__.": mailing update status to display contact mail that do not want to be contacted",LOG_DEBUG);
         $result=$this->db->query($sql);
-
-        dol_syslog(get_class($this)."::add_to_target: mailing update status to display contact mail that do not want to be contacted sql:".$sql);
 
 
         $this->update_nb($mailing_id);
@@ -243,4 +245,3 @@ class MailingTargets    // This can't be abstract as it is used for some method
 
 }
 
-?>

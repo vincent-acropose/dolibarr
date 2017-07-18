@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 /* Copyright (C) 2009 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
@@ -177,4 +177,3 @@ else $error++;
 
 print "You must rename files by removing the 'out.' prefix in their name.\n";
 return $error;
-?>

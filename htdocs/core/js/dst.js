@@ -1,5 +1,6 @@
-// Copyright (C) 2011-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
+// Copyright (C) 2011-2014	Laurent Destailleur	<eldy@users.sourceforge.net>
 // Copyright (C) 2011-2012	Regis Houssin		<regis.houssin@capnetworks.com>
+// Copyright (C) 2015       Marcos García       <marcosgdf@gmail.com>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,11 +19,15 @@
 
 //
 // \file       htdocs/core/js/dst.js
-// \brief      File that include javascript functions for detect user tz, dst_observed, dst_first, dst_second
+// \brief      File that include javascript functions for detect user tz, tz_string, dst_observed, dst_first, dst_second,
+//             screenwidth and screenheight
 //
 
 $(document).ready(function () {
-	// Detect and save TZ and DST
+
+    var timezone = jstz.determine();
+
+    // Detect and save TZ and DST
 	var rightNow = new Date();
 	var jan1 = new Date(rightNow.getFullYear(), 0, 1, 0, 0, 0, 0);
 	var temp = jan1.toGMTString();
@@ -39,22 +44,18 @@ $(document).ready(function () {
 	    dst = "1"; // daylight savings time is observed
 	}
 	var now=new Date();
-	var tz=now.toTimeString().match(/\(.*\)/);
 	//alert('date=' + now + ' string=' + now.toTimeString());
 	var dst_first=DisplayDstSwitchDates('first');
 	var dst_second=DisplayDstSwitchDates('second');
 	//alert(dst);
-	$('#tz').val(std_time_offset);   				  // returns TZ
-	// tz is null with IE
-	if (tz != null) {
-		$('#tz_string').val(tz[0].replace('(','').replace(')',''));		// returns TZ string
-	}
-	$('#dst_observed').val(dst);   				  // returns if DST is observed on summer
-	$('#dst_first').val(dst_first);   				  // returns DST first switch in year
-	$('#dst_second').val(dst_second);   			  // returns DST second switch in year
+	$('#tz').val(std_time_offset);   				  					// returns TZ
+    $('#tz_string').val(timezone.name());		// returns TZ string
+	$('#dst_observed').val(dst);   				  						// returns if DST is observed on summer
+	$('#dst_first').val(dst_first);   									// returns DST first switch in year
+	$('#dst_second').val(dst_second);   								// returns DST second switch in year
 	// Detect and save screen resolution
-	$('#screenwidth').val($(window).width());   // returns width of browser viewport
-	$('#screenheight').val($(window).height());   // returns width of browser viewport
+	$('#screenwidth').val($(window).width());   	// returns width of browser viewport
+	$('#screenheight').val($(window).height());   	// returns width of browser viewport
 });
 
 function DisplayDstSwitchDates(firstsecond)

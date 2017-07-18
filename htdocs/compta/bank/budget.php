@@ -1,7 +1,8 @@
 <?php
 /* Copyright (C) 2001-2003 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copytight (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2015      Jean-François Ferry	<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +24,10 @@
  *		\brief      Page de budget
  */
 
-require 'pre.inc.php';
+require('../../main.inc.php');
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
+$langs->load("banks");
 $langs->load("categories");
 
 // Security check
@@ -41,7 +44,7 @@ $companystatic=new Societe($db);
 llxHeader();
 
 // List movements bu category for bank transactions
-print_fiche_titre($langs->trans("BankTransactionByCategories"));
+print load_fiche_titre($langs->trans("BankTransactionByCategories"), '', 'title_bank.png');
 
 print '<table class="noborder" width="100%">';
 print "<tr class=\"liste_titre\">";
@@ -73,7 +76,7 @@ if ($result)
 		$objp = $db->fetch_object($result);
 		$var=!$var;
 		print "<tr ".$bc[$var].">";
-		print "<td><a href=\"".DOL_URL_ROOT."/compta/bank/search.php?bid=$objp->rowid\">$objp->label</a></td>";
+		print "<td><a href=\"".DOL_URL_ROOT."/compta/bank/bankentries.php?bid=$objp->rowid\">$objp->label</a></td>";
 		print '<td align="right">'.$objp->nombre.'</td>';
 		print '<td align="right">'.price(abs($objp->somme))."</td>";
 		print '<td align="right">'.price(abs(price2num($objp->somme / $objp->nombre,'MT')))."</td>";
@@ -94,7 +97,5 @@ else
 }
 print "</table>";
 
-$db->close();
-
 llxFooter();
-?>
+$db->close();

@@ -27,6 +27,7 @@ if (! defined('NOREQUIREHTML'))  define('NOREQUIREHTML','1');
 if (! defined('NOREQUIREAJAX'))  define('NOREQUIREAJAX','1');
 if (! defined('NOREQUIRESOC'))   define('NOREQUIRESOC','1');
 if (! defined('NOREQUIRETRAN'))  define('NOREQUIRETRAN','1');
+if (! defined('NOREQUIREHOOK'))  define('NOREQUIREHOOK','1');
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/infobox.class.php';
@@ -49,7 +50,7 @@ $userid=GETPOST('userid','int');
 //top_htmlhead("", "", 1);  // Replaced with top_httphead. An ajax page does not need html header.
 top_httphead();
 
-print '<!-- Ajax page called with url '.$_SERVER["PHP_SELF"].'?'.$_SERVER["QUERY_STRING"].' -->'."\n";
+print '<!-- Ajax page called with url '.dol_escape_htmltag($_SERVER["PHP_SELF"]).'?'.dol_escape_htmltag($_SERVER["QUERY_STRING"]).' -->'."\n";
 
 // Add a box
 if ($boxid > 0 && $zone !='' && $userid > 0)
@@ -68,8 +69,6 @@ if ($boxorder && $zone != '' &&  $userid > 0)
 	// boxorder value is the target order: "A:idboxA1,idboxA2,A-B:idboxB1,idboxB2,B"
 	dol_syslog("AjaxBox boxorder=".$boxorder." zone=".$zone." userid=".$userid, LOG_DEBUG);
 
-	//$infobox=new InfoBox($db);
 	$result=InfoBox::saveboxorder($db,$zone,$boxorder,$userid);
 }
 
-?>

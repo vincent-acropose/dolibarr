@@ -26,7 +26,6 @@
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formadmin.class.php';
-require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 
 $action=GETPOST('action');
 
@@ -49,8 +48,6 @@ foreach($dirmenus as $dirmenu)
 }
 
 $error=0;
-$errmsgs=array();
-
 
 // Cette page peut etre longue. On augmente le delai autorise.
 // Ne fonctionne que si on est pas en safe_mode.
@@ -77,33 +74,37 @@ if ($action == 'update' && empty($_POST["cancel"]))
 
 	// Define list of menu handlers to initialize
 	$listofmenuhandler=array();
-	$listofmenuhandler[preg_replace('/((_back|_front)office)?\.php/i','',$_POST["MAIN_MENU_STANDARD"])]=1;
-	$listofmenuhandler[preg_replace('/((_back|_front)office)?\.php/i','',$_POST["MAIN_MENUFRONT_STANDARD"])]=1;
-	if (isset($_POST["MAIN_MENU_SMARTPHONE"]))      $listofmenuhandler[preg_replace('/((_back|_front)office)?\.php/i','',$_POST["MAIN_MENU_SMARTPHONE"])]=1;
-	if (isset($_POST["MAIN_MENUFRONT_SMARTPHONE"])) $listofmenuhandler[preg_replace('/((_back|_front)office)?\.php/i','',$_POST["MAIN_MENUFRONT_SMARTPHONE"])]=1;
+	$listofmenuhandler[preg_replace('/(_backoffice|_frontoffice|_menu)?\.php/i','',$_POST["MAIN_MENU_STANDARD"])]=1;
+	$listofmenuhandler[preg_replace('/(_backoffice|_frontoffice|_menu)?\.php/i','',$_POST["MAIN_MENUFRONT_STANDARD"])]=1;
+	if (isset($_POST["MAIN_MENU_SMARTPHONE"]))      $listofmenuhandler[preg_replace('/(_backoffice|_frontoffice|_menu)?\.php/i','',$_POST["MAIN_MENU_SMARTPHONE"])]=1;
+	if (isset($_POST["MAIN_MENUFRONT_SMARTPHONE"])) $listofmenuhandler[preg_replace('/(_backoffice|_frontoffice|_menu)?\.php/i','',$_POST["MAIN_MENUFRONT_SMARTPHONE"])]=1;
 
 	// Initialize menu handlers
 	foreach ($listofmenuhandler as $key => $val)
 	{
 		// Load sql init_menu_handler.sql file
-        $dir = "/core/menus/";
-	    $file='init_menu_'.$key.'.sql';
-	    $fullpath=dol_buildpath($dir.$file);
-
-		if (file_exists($fullpath))
+		$dirmenus=array_merge(array("/core/menus/"),(array) $conf->modules_parts['menus']);
+		foreach($dirmenus as $dirmenu)
 		{
-			$db->begin();
+			$file='init_menu_'.$key.'.sql';
+		    $fullpath=dol_buildpath($dirmenu.$file);
+		    //print 'action='.$action.' Search menu into fullpath='.$fullpath.'<br>';exit;
 
-			$result=run_sql($fullpath,1,'',1,$key,'none');
-			if ($result > 0)
+			if (file_exists($fullpath))
 			{
-				$db->commit();
-			}
-			else
-			{
-				$error++;
-				$errmsgs[]='Failed to initialize menu '.$key.'.';
-				$db->rollback();
+				$db->begin();
+
+				$result=run_sql($fullpath,1,'',1,$key,'none');
+				if ($result > 0)
+				{
+					$db->commit();
+				}
+				else
+				{
+					$error++;
+					setEventMessages($langs->trans("FailedToInitializeMenu").' '.$key, null, 'errors');
+					$db->rollback();
+				}
 			}
 		}
 	}
@@ -129,7 +130,7 @@ $formadmin=new FormAdmin($db);
 $wikihelp='EN:First_setup|FR:Premiers_paramétrages|ES:Primeras_configuraciones';
 llxHeader('',$langs->trans("Setup"),$wikihelp);
 
-print_fiche_titre($langs->trans("Menus"),'','setup');
+print load_fiche_titre($langs->trans("Menus"),'','title_setup');
 
 
 $h = 0;
@@ -145,10 +146,14 @@ $head[$h][2] = 'editor';
 $h++;
 
 $head[$h][0] = DOL_URL_ROOT."/admin/menus/other.php";
-$head[$h][1] = $langs->trans("Miscellanous");
+$head[$h][1] = $langs->trans("Miscellaneous");
 $head[$h][2] = 'misc';
 $h++;
 
+
+print '<form method="post" action="'.$_SERVER["PHP_SELF"].'">';
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+print '<input type="hidden" name="action" value="update">';
 
 dol_fiche_head($head, 'handler', $langs->trans("Menus"));
 
@@ -158,10 +163,6 @@ print "<br>\n";
 
 if ($action == 'edit')
 {
-	print '<form method="post" action="'.$_SERVER["PHP_SELF"].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="update">';
-
 	clearstatcache();
 
 	// Gestionnaires de menu
@@ -181,10 +182,10 @@ if ($action == 'edit')
 	$var=!$var;
 	print '<tr '.$bc[$var].'><td>'.$langs->trans("DefaultMenuManager").'</td>';
 	print '<td>';
-	print $formadmin->select_menu(empty($conf->global->MAIN_MENU_STANDARD_FORCED)?$conf->global->MAIN_MENU_STANDARD:$conf->global->MAIN_MENU_STANDARD_FORCED, 'MAIN_MENU_STANDARD', $dirstandard, empty($conf->global->MAIN_MENU_STANDARD_FORCED)?'':' disabled="disabled"');
+	$formadmin->select_menu(empty($conf->global->MAIN_MENU_STANDARD_FORCED)?$conf->global->MAIN_MENU_STANDARD:$conf->global->MAIN_MENU_STANDARD_FORCED, 'MAIN_MENU_STANDARD', $dirstandard, empty($conf->global->MAIN_MENU_STANDARD_FORCED)?'':' disabled');
 	print '</td>';
 	print '<td>';
-	print $formadmin->select_menu(empty($conf->global->MAIN_MENUFRONT_STANDARD_FORCED)?$conf->global->MAIN_MENUFRONT_STANDARD:$conf->global->MAIN_MENUFRONT_STANDARD_FORCED, 'MAIN_MENUFRONT_STANDARD', $dirstandard, empty($conf->global->MAIN_MENUFRONT_STANDARD_FORCED)?'':' disabled="disabled"');
+	$formadmin->select_menu(empty($conf->global->MAIN_MENUFRONT_STANDARD_FORCED)?$conf->global->MAIN_MENUFRONT_STANDARD:$conf->global->MAIN_MENUFRONT_STANDARD_FORCED, 'MAIN_MENUFRONT_STANDARD', $dirstandard, empty($conf->global->MAIN_MENUFRONT_STANDARD_FORCED)?'':' disabled');
 	print '</td>';
 	print '</tr>';
 
@@ -192,22 +193,14 @@ if ($action == 'edit')
 	$var=!$var;
 	print '<tr '.$bc[$var].'><td>'.$langs->trans("DefaultMenuSmartphoneManager").'</td>';
 	print '<td>';
-	print $formadmin->select_menu(empty($conf->global->MAIN_MENU_SMARTPHONE_FORCED)?$conf->global->MAIN_MENU_SMARTPHONE:$conf->global->MAIN_MENU_SMARTPHONE_FORCED, 'MAIN_MENU_SMARTPHONE', array_merge($dirstandard,$dirsmartphone), empty($conf->global->MAIN_MENU_SMARTPHONE_FORCED)?'':' disabled="disabled"');
+	$formadmin->select_menu(empty($conf->global->MAIN_MENU_SMARTPHONE_FORCED)?$conf->global->MAIN_MENU_SMARTPHONE:$conf->global->MAIN_MENU_SMARTPHONE_FORCED, 'MAIN_MENU_SMARTPHONE', array_merge($dirstandard,$dirsmartphone), empty($conf->global->MAIN_MENU_SMARTPHONE_FORCED)?'':' disabled');
 	print '</td>';
 	print '<td>';
-	print $formadmin->select_menu(empty($conf->global->MAIN_MENUFRONT_SMARTPHONE_FORCED)?$conf->global->MAIN_MENUFRONT_SMARTPHONE:$conf->global->MAIN_MENUFRONT_SMARTPHONE_FORCED, 'MAIN_MENUFRONT_SMARTPHONE', array_merge($dirstandard,$dirsmartphone), empty($conf->global->MAIN_MENUFRONT_SMARTPHONE_FORCED)?'':' disabled="disabled"');
+	$formadmin->select_menu(empty($conf->global->MAIN_MENUFRONT_SMARTPHONE_FORCED)?$conf->global->MAIN_MENUFRONT_SMARTPHONE:$conf->global->MAIN_MENUFRONT_SMARTPHONE_FORCED, 'MAIN_MENUFRONT_SMARTPHONE', array_merge($dirstandard,$dirsmartphone), empty($conf->global->MAIN_MENUFRONT_SMARTPHONE_FORCED)?'':' disabled');
 	print '</td>';
 	print '</tr>';
 
 	print '</table>';
-
-	print '<br><center>';
-	print '<input class="button" type="submit" name="save" value="'.$langs->trans("Save").'">';
-	print ' &nbsp; &nbsp; ';
-	print '<input class="button" type="submit" name="cancel" value="'.$langs->trans("Cancel").'">';
-	print '</center>';
-
-	print '</form>';
 }
 else
 {
@@ -262,10 +255,20 @@ else
 	print '</table>';
 }
 
-print '</div>';
+dol_fiche_end();
 
 
-dol_htmloutput_errors('',$errmsgs);
+if ($action == 'edit')
+{
+	print '<div class="center">';
+	print '<input class="button" type="submit" name="save" value="'.$langs->trans("Save").'">';
+	print ' &nbsp; &nbsp; &nbsp; ';
+	print '<input class="button" type="submit" name="cancel" value="'.$langs->trans("Cancel").'">';
+	print '</div>';
+}
+
+print '</form>';
+
 
 
 if ($action != 'edit')
@@ -279,4 +282,3 @@ if ($action != 'edit')
 llxFooter();
 
 $db->close();
-?>

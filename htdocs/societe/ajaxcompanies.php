@@ -44,7 +44,7 @@ require '../main.inc.php';
 //top_htmlhead("", "", 1);  // Replaced with top_httphead. An ajax page does not need html header.
 top_httphead();
 
-//print '<!-- Ajax page called with url '.$_SERVER["PHP_SELF"].'?'.$_SERVER["QUERY_STRING"].' -->'."\n";
+//print '<!-- Ajax page called with url '.dol_escape_htmltag($_SERVER["PHP_SELF"]).'?'.dol_escape_htmltag($_SERVER["QUERY_STRING"]).' -->'."\n";
 
 dol_syslog(join(',',$_GET));
 
@@ -66,7 +66,7 @@ if (GETPOST('newcompany') || GETPOST('socid','int') || GETPOST('id_fourn'))
 	{
         $sql.=" AND (";
         // Add criteria on name/code
-        if (! empty($conf->global->SOCIETE_DONOTSEARCH_ANYWHERE))   // Can use index
+        if (! empty($conf->global->COMPANY_DONOTSEARCH_ANYWHERE))   // Can use index
         {
             $sql.="nom LIKE '" . $db->escape($socid) . "%'";
             $sql.=" OR code_client LIKE '" . $db->escape($socid) . "%'";
@@ -81,10 +81,10 @@ if (GETPOST('newcompany') || GETPOST('socid','int') || GETPOST('id_fourn'))
 		if (! empty($conf->global->SOCIETE_ALLOW_SEARCH_ON_ROWID)) $sql.=" OR rowid = '" . $db->escape($socid) . "'";
 		$sql.=")";
 	}
-	if (! empty($_GET["filter"])) $sql.= " AND ".$_GET["filter"]; // Add other filters
+	if (GETPOST("filter")) $sql.= " AND ".GETPOST("filter","alpha"); // Add other filters
 	$sql.= " ORDER BY nom ASC";
 
-	//dol_syslog("ajaxcompanies sql=".$sql);
+	//dol_syslog("ajaxcompanies", LOG_DEBUG);
 	$resql=$db->query($sql);
 	if ($resql)
 	{
@@ -110,5 +110,3 @@ else
 {
     echo json_encode(array('nom'=>'ErrorBadParameter','label'=>'ErrorBadParameter','key'=>'ErrorBadParameter','value'=>'ErrorBadParameter'));
 }
-
-?>

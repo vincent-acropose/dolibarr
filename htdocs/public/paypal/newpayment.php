@@ -29,12 +29,11 @@
 define("NOLOGIN",1);		// This means this output page does not require to be logged.
 define("NOCSRFCHECK",1);	// We accept to go on this page from external web site.
 
-// For MultiCompany module
+// For MultiCompany module.
+// Do not use GETPOST here, function is not defined and define must be done before including main.inc.php
+// TODO This should be useless. Because entity must be retreive from object ref and not from url.
 $entity=(! empty($_GET['entity']) ? (int) $_GET['entity'] : (! empty($_POST['entity']) ? (int) $_POST['entity'] : 1));
-if (is_int($entity))
-{
-	define("DOLENTITY", $entity);
-}
+if (is_numeric($entity)) define("DOLENTITY", $entity);
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/paypal/lib/paypal.lib.php';
@@ -44,7 +43,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 
 // Security check
-if (empty($conf->paypal->enabled)) accessforbidden('',1,1,1);
+if (empty($conf->paypal->enabled)) accessforbidden('',0,0,1);
 
 $langs->load("main");
 $langs->load("other");
@@ -269,8 +268,8 @@ if (! empty($conf->global->$paramcreditor)) $creditor=$conf->global->$paramcredi
 else if (! empty($conf->global->PAYPAL_CREDITOR)) $creditor=$conf->global->PAYPAL_CREDITOR;
 
 print '<span id="dolpaymentspan"></span>'."\n";
-print '<center>'."\n";
-print '<form id="dolpaymentform" name="paymentform" action="'.$_SERVER["PHP_SELF"].'" method="POST">'."\n";
+print '<div class="center">'."\n";
+print '<form id="dolpaymentform" class="center" name="paymentform" action="'.$_SERVER["PHP_SELF"].'" method="POST">'."\n";
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">'."\n";
 print '<input type="hidden" name="action" value="dopayment">'."\n";
 print '<input type="hidden" name="tag" value="'.GETPOST("tag",'alpha').'">'."\n";
@@ -286,7 +285,7 @@ print '<!-- urlok = '.$urlok.' -->'."\n";
 print '<!-- urlko = '.$urlko.' -->'."\n";
 print "\n";
 
-print '<table id="dolpaymenttable" summary="Payment form">'."\n";
+print '<table id="dolpaymenttable" summary="Payment form" class="center">'."\n";
 
 // Show logo (search order: logo defined by PAYBOX_LOGO_suffix, then PAYBOX_LOGO, then small company logo, large company logo, theme logo, common logo)
 $width=0;
@@ -476,7 +475,7 @@ if (GETPOST("source") == 'order' && $valid)
     $shipToCountryCode=$order->thirdparty->country_code;
     $shipToZip=$order->thirdparty->zip;
     $shipToStreet2='';
-    $phoneNum=$order->thirdparty->tel;
+    $phoneNum=$order->thirdparty->phone;
     if ($shipToName && $shipToStreet && $shipToCity && $shipToCountryCode && $shipToZip)
     {
         print '<input type="hidden" name="shipToName" value="'.$shipToName.'">'."\n";
@@ -583,7 +582,7 @@ if (GETPOST("source") == 'invoice' && $valid)
     $shipToCountryCode=$invoice->thirdparty->country_code;
     $shipToZip=$invoice->thirdparty->zip;
     $shipToStreet2='';
-    $phoneNum=$invoice->thirdparty->tel;
+    $phoneNum=$invoice->thirdparty->phone;
     if ($shipToName && $shipToStreet && $shipToCity && $shipToCountryCode && $shipToZip)
     {
         print '<input type="hidden" name="shipToName" value="'.$shipToName.'">'."\n";
@@ -696,7 +695,7 @@ if (GETPOST("source") == 'contractline' && $valid)
 	$text='<b>'.$langs->trans("PaymentRenewContractId",$contract->ref,$contractline->ref).'</b>';
 	if ($contractline->fk_product)
 	{
-		$text.='<br>'.$product->ref.($product->libelle?' - '.$product->libelle:'');
+		$text.='<br>'.$product->ref.($product->label?' - '.$product->label:'');
 	}
 	if ($contractline->description) $text.='<br>'.dol_htmlentitiesbr($contractline->description);
 	//if ($contractline->date_fin_validite) {
@@ -721,7 +720,7 @@ if (GETPOST("source") == 'contractline' && $valid)
 	$duration='';
 	if ($contractline->fk_product)
 	{
-		if ($product->isservice() && $product->duration_value > 0)
+		if ($product->isService() && $product->duration_value > 0)
 		{
 			$label=$langs->trans("Duration");
 
@@ -775,10 +774,10 @@ if (GETPOST("source") == 'contractline' && $valid)
     $shipToStreet=$contract->thirdparty->address;
     $shipToCity=$contract->thirdparty->town;
     $shipToState=$contract->thirdparty->state_code;
-    $shipToCountryCode=$contract->thirdparty->pays_code;
+    $shipToCountryCode=$contract->thirdparty->country_code;
     $shipToZip=$contract->thirdparty->zip;
     $shipToStreet2='';
-    $phoneNum=$contract->thirdparty->tel;
+    $phoneNum=$contract->thirdparty->phone;
     if ($shipToName && $shipToStreet && $shipToCity && $shipToCountryCode && $shipToZip)
     {
         print '<input type="hidden" name="shipToName" value="'.$shipToName.'">'."\n";
@@ -805,7 +804,7 @@ if (GETPOST("source") == 'membersubscription' && $valid)
 	$langs->load("members");
 
 	require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
-	require_once DOL_DOCUMENT_ROOT.'/adherents/class/cotisation.class.php';
+	require_once DOL_DOCUMENT_ROOT.'/adherents/class/subscription.class.php';
 
 	$member=new Adherent($db);
 	$result=$member->fetch('',$ref);
@@ -816,7 +815,7 @@ if (GETPOST("source") == 'membersubscription' && $valid)
 	}
 	else
 	{
-		$subscription=new Cotisation($db);
+		$subscription=new Subscription($db);
 	}
 
 	$amount=$subscription->total_ttc;
@@ -871,7 +870,12 @@ if (GETPOST("source") == 'membersubscription' && $valid)
 	// Amount
 	$var=!$var;
 	print '<tr class="CTableRow'.($var?'1':'2').'"><td class="CTableRow'.($var?'1':'2').'">'.$langs->trans("Amount");
-	if (empty($amount)) print ' ('.$langs->trans("ToComplete").')';
+	if (empty($amount))
+	{
+		print ' ('.$langs->trans("ToComplete");
+		if (! empty($conf->global->MEMBER_EXT_URL_SUBSCRIPTION_INFO)) print ' - <a href="'.$conf->global->MEMBER_EXT_URL_SUBSCRIPTION_INFO.'" rel="external" target="_blank">'.$langs->trans("SeeHere").'</a>';
+		print ')';
+	}
 	print '</td><td class="CTableRow'.($var?'1':'2').'">';
 	if (empty($amount) || ! is_numeric($amount))
 	{
@@ -908,7 +912,7 @@ if (GETPOST("source") == 'membersubscription' && $valid)
     $shipToCountryCode=$member->country_code;
     $shipToZip=$member->zip;
     $shipToStreet2='';
-    $phoneNum=$member->tel;
+    $phoneNum=$member->phone;
     if ($shipToName && $shipToStreet && $shipToCity && $shipToCountryCode && $shipToZip)
     {
         print '<input type="hidden" name="shipToName" value="'.$shipToName.'">'."\n";
@@ -960,7 +964,7 @@ print '</td></tr>'."\n";
 
 print '</table>'."\n";
 print '</form>'."\n";
-print '</center>'."\n";
+print '</div>'."\n";
 print '<br>';
 
 
@@ -969,4 +973,3 @@ html_print_paypal_footer($mysoc,$langs);
 llxFooterPaypal();
 
 $db->close();
-?>

@@ -1,107 +1,82 @@
-﻿/*
- * Language code: tr_TR
- * Manually generated
- * Generation date 2012-07-05 10:49:00
- */
-
-// START - Lines generated manually (2012-07-05 10:49:00).
-// Reference language: en_US – propal
-
-CHARSET=UTF-8
-Proposals=Ticari teklifler
-Proposal=Ticari teklif
+# Dolibarr language file - Source file is en_US - propal
+Proposals=Teklifler
+Proposal=Teklif
 ProposalShort=Teklif
-ProposalsDraft=Taslak ticari teklifler
-ProposalDraft=Taslak ticari teklif
-ProposalsOpened=Açık ticari teklifler
-Prop=Ticari teklifler
-CommercialProposal=Ticari teklif
-CommercialProposals=Ticari teklifler
+ProposalsDraft=Taslak teklifler
+ProposalsOpened=Açık teklifler
+Prop=Teklifler
+CommercialProposal=Teklif
 ProposalCard=Teklif kartı
-NewProp=Yeni ticari teklif
-NewProposal=Yeni ticari teklif
+NewProp=Yeni teklif
 NewPropal=Yeni teklif
 Prospect=Aday
-ProspectList=Aday listesi
-DeleteProp=Ticari teklif sil
-ValidateProp=Ticari teklif doğrula
-AddProp=Teklif ekle
-ConfirmDeleteProp=Bu ticari teklifi silmek istediğinizden emin misiniz?
-ConfirmValidateProp=Bu ticari teklifi doğrulamak istediğinizden emin misiniz?
+DeleteProp=Teklif sil
+ValidateProp=Teklif doğrula
+AddProp=Teklif oluştur
+ConfirmDeleteProp=Are you sure you want to delete this commercial proposal?
+ConfirmValidateProp=Are you sure you want to validate this commercial proposal under name <b>%s</b>?
 LastPropals=Son %s teklif
-LastClosedProposals=Son %s kapalı teklif
-LastModifiedProposals=Son %s değiştirilen teklif 
+LastModifiedProposals=Değiştirilen son %s teklif
 AllPropals=Tüm teklifler
-LastProposals=Son teklifler
-SearchAProposal=Bir teklif ara
-ProposalsStatistics=Ticari teklif istatistikleri
+SearchAProposal=Teklif ara
+NoProposal=Teklif yok
+ProposalsStatistics=Teklif istatistikleri
 NumberOfProposalsByMonth=Aylara göre sayısı
 AmountOfProposalsByMonthHT=Aylık tutar (vergi hariç)
-NbOfProposals=Ticari teklif sayısı
+NbOfProposals=Teklif sayısı
 ShowPropal=Teklif göster
 PropalsDraft=Taslaklar
 PropalsOpened=Açık
-PropalsNotBilled=Kapalı faturalandırılmamış
-PropalStatusDraft=Taslak (doğrulama gerektiriyor)
-PropalStatusValidated=Onaylı (teklif açık)
-PropalStatusOpened=Onaylı (teklif açık)
-PropalStatusClosed=Kapalı
-PropalStatusSigned=İmzalanmış(faturalandırılması gerekiyor)
+PropalStatusDraft=Taslak (doğrulanması gerekir)
+PropalStatusValidated=Validated (proposal is opened)
+PropalStatusSigned=İmzalı(faturalanacak)
 PropalStatusNotSigned=İmzalanmamış (kapalı)
 PropalStatusBilled=Faturalanmış
 PropalStatusDraftShort=Taslak
-PropalStatusValidatedShort=Doğrulanmış
-PropalStatusOpenedShort=Açık
 PropalStatusClosedShort=Kapalı
 PropalStatusSignedShort=İmzalı
 PropalStatusNotSignedShort=İmzalanmamış
-PropalStatusBilledShort=Faturalandırılmış
-PropalsToClose=Kapatılacak ticari teklifler
-PropalsToBill=Faturalandırılacak imzalı ticari teklifler
-ListOfProposals=Ticari teklif listesi
-ActionsOnPropal=Tekliler için yapılan eylemler
-NoOpenedPropals=Açık ticari teklif yok
-NoOtherOpenedPropals=Başka hiçbir açık ticari teklif yok
-RefProposal=Ticari teklif ilgisi
-SendPropalByMail=Ticari teklifi postayla gönder
-FileNotUploaded=Dosya yüklenemedi
-FileUploaded=Dosya başarıyla yüklendi
-AssociatedDocuments=Bu teklif ile ilişkili belgeler:
-ErrorCantOpenDir=Dizin açılamıyor
+PropalStatusBilledShort=Faturalanmış
+PropalsToClose=Kapatılacak teklifler
+PropalsToBill=Faturalanacak imzalı teklifler
+ListOfProposals=Teklif listesi
+ActionsOnPropal=Tekliler için yapılan etkinlikler
+RefProposal=Teklif ref
+SendPropalByMail=Teklifi postayla gönder
 DatePropal=Teklif tarihi
 DateEndPropal=Son geçerlilik tarihi
-DateEndPropalShort=Son tarih
 ValidityDuration=Geçerlilik süresi
-CloseAs=Kapalı durumda
-ClassifyBilled=Faturalandırılmış olarak sınıflandır
-BuildBill=Fatura oluştur
-ErrorPropalNotFound=%s Teklifi bulunamadı
-Estimate=Tahmin:
-EstimateShort=Tahmin
-OtherPropals=Diğer teklifler
-CopyPropalFrom=Varolan teklifi kopyalayarak ticari teklif oluşturma
-CreateEmptyPropal=Boş ticari teklif oluştur veya ürünler/hizmetler listesinden oluştur
-DefaultProposalDurationValidity=Varsayılan ticari teklif geçerlilik süresi (gün olarak)
+CloseAs=Durumu buna ayarlayın
+SetAcceptedRefused=Kabul edildi/reddedildi ayarla
+ErrorPropalNotFound=%s teklifi bulunamadı
+AddToDraftProposals=Taslak teklife ekle
+NoDraftProposals=Taslak teklif yok
+CopyPropalFrom=Varolan teklifi kopyalayarak teklif oluştur
+CreateEmptyPropal=Boş teklif oluştur veya ürünler/hizmetler listesinden oluştur
+DefaultProposalDurationValidity=Varsayılan teklif geçerlilik süresi (gün olarak)
 UseCustomerContactAsPropalRecipientIfExist=Teklif alıcısı olarak üçüncü parti yerine, eğer tanımlanmışsa, kişi adresini kullan
-ClonePropal=Ticari teklif kopyala
-ConfirmClonePropal=Bu ticari teklifi <b>%s</b> kopyalamak istediğinizden emin misiniz?
-ConfirmReOpenProp=Bu ticari teklifi <b>%s</b> yeniden açmak istediğinizden emin misiniz?
-ProposalsAndProposalsLines=Ticari teklif ve satırları
+ClonePropal=Teklif kopyala
+ConfirmClonePropal=Are you sure you want to clone the commercial proposal <b>%s</b>?
+ConfirmReOpenProp=Are you sure you want to open back the commercial proposal <b>%s</b>?
+ProposalsAndProposalsLines=Teklif ve satırları
 ProposalLine=Teklif satırı
-AvailabilityPeriod=Kabul edilebilir gecikme
-SetAvailability=Kabul edilebilir gecikmeyi ayarla
-AfterOrder=Siparişten sonra
-##### Uygunluk #####
-AvailabilityTypeAV_NOW=Acil
+AvailabilityPeriod=Teslim süresi
+SetAvailability=Teslim süresi ayarla
+AfterOrder=siparişten sonra
+##### Availability #####
+AvailabilityTypeAV_NOW=İvedi
 AvailabilityTypeAV_1W=1 hafta
 AvailabilityTypeAV_2W=2 hafta
 AvailabilityTypeAV_3W=3 hafta
 AvailabilityTypeAV_1M=1 ay
-##### Kişi türleri #####
+##### Types de contacts #####
 TypeContact_propal_internal_SALESREPFOLL=Teklif izleme temsilcisi
 TypeContact_propal_external_BILLING=Müşteri faturası ilgilisi
 TypeContact_propal_external_CUSTOMER=Müşteri teklif izleme ilgilisi
 # Document models
-DocModelAzurDescription=Tam bir teklif modeli (logo. ..)
-DocModelJauneDescription=Jaune modeli teklif
-
+DocModelAzurDescription=Eksiksiz bir teklif modeli (logo. ..)
+DefaultModelPropalCreate=Varsayılan model oluşturma
+DefaultModelPropalToBill=Bir teklifi kapatma sırasında varsayılan şablon (faturalanacak)
+DefaultModelPropalClosed=Bir teklifi kapatma sırasında varsayılan şablon (faturalanmamış)
+ProposalCustomerSignature=Yazılı kabul, firma kaşesi, tarih ve imza
+ProposalsStatisticsSuppliers=Tedarikçi teklif istatistikleri

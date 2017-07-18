@@ -28,8 +28,8 @@
 <?php echo $this->control->tpl['ajax_selecttype']; ?>
 <br>
 <?php echo $langs->trans("ThirdPartyType") ?>: &nbsp;
-<input type="radio" id="radiocompany" class="flat" name="private" value="0" checked="checked">
-<?php echo $langs->trans("Company/Fundation"); ?> &nbsp; &nbsp;
+<input type="radio" id="radiocompany" class="flat" name="private" value="0" checked>
+<?php echo $langs->trans("CompanyFoundation"); ?> &nbsp; &nbsp;
 <input type="radio" id="radioprivate" class="flat" name="private" value="1"> <?php echo $langs->trans("Individual"); ?> (<?php echo $langs->trans("ToCreateContactWithSameName") ?>)
 <br>
 <br>
@@ -104,8 +104,8 @@
 <?php } ?>
 
 <tr>
-	<td valign="top"><?php echo $langs->trans('Address'); ?></td>
-	<td colspan="3"><textarea name="adresse" cols="40" rows="3"><?php echo $this->control->tpl['address']; ?></textarea></td>
+	<td class="tdtop"><?php echo $langs->trans('Address'); ?></td>
+	<td colspan="3"><textarea name="adress" cols="40" rows="3"><?php echo $this->control->tpl['address']; ?></textarea></td>
 </tr>
 
 <tr>
@@ -127,7 +127,7 @@
 
 <tr>
 	<td><?php echo $langs->trans('Phone'); ?></td>
-	<td><input type="text" name="tel" value="<?php echo $this->control->tpl['tel']; ?>"></td>
+	<td><input type="text" name="phone" value="<?php echo $this->control->tpl['phone']; ?>"></td>
 	<td><?php echo $langs->trans('Fax'); ?></td>
 	<td><input type="text" name="fax" value="<?php echo $this->control->tpl['fax']; ?>"></td>
 </tr>
@@ -182,8 +182,8 @@ for ($i=1; $i<=4; $i++) {
 <tr>
 	<td><?php echo $langs->trans('VATIsUsed'); ?></td>
 	<td><?php echo $this->control->tpl['yn_assujtva']; ?></td>
-	<td nowrap="nowrap"><?php echo $langs->trans('VATIntra'); ?></td>
-	<td nowrap="nowrap"><?php echo $this->control->tpl['tva_intra']; ?></td>
+	<td class="nowrap"><?php echo $langs->trans('VATIntra'); ?></td>
+	<td class="nowrap"><?php echo $this->control->tpl['tva_intra']; ?></td>
 </tr>
 
 <?php if(!empty($this->control->tpl['localtax'])) echo $this->control->tpl['localtax']; ?>

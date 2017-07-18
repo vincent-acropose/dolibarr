@@ -34,11 +34,11 @@ if (empty($conf->global->EXTERNALSITE_URL))
 	llxFooter();
 }
 
-$mainmenu=GETPOST('mainmenu', 'alpha');
-$leftmenu=GETPOST('leftmenu', 'alpha');
+$mainmenu=GETPOST('mainmenu', "aZ09");
+$leftmenu=GETPOST('leftmenu', "aZ09");
 $idmenu=GETPOST('idmenu', 'int');
 $theme=GETPOST('theme', 'alpha');
-$codelang=GETPOST('lang', 'alpha');
+$codelang=GETPOST('lang', 'aZ09');
 
 print "
 <html>
@@ -46,7 +46,7 @@ print "
 <title>Dolibarr frame for external web site</title>
 </head>
 
-<frameset rows=\"".$heightforframes.",*\" border=0 framespacing=0 frameborder=0>
+<frameset ".(empty($conf->global->MAIN_MENU_INVERT)?"rows":"cols")."=\"".$heightforframes.",*\" border=0 framespacing=0 frameborder=0>
     <frame name=\"barre\" src=\"frametop.php?mainmenu=".$mainmenu."&leftmenu=".$leftmenu."&idmenu=".$idmenu.($theme?'&theme='.$theme:'').($codelang?'&lang='.$codelang:'')."&nobackground=1\" noresize scrolling=\"NO\" noborder>
     <frame name=\"main\" src=\"".$conf->global->EXTERNALSITE_URL."\">
     <noframes>
@@ -58,10 +58,10 @@ print "
 
 <noframes>
 <body>
-	<br><center>
+	<br><div class=\"center\">
 	Sorry, your browser is too old or not correctly configured to view this area.<br>
 	Your browser must support frames.<br>
-	</center>
+	</div>
 </body>
 </noframes>
 
@@ -69,4 +69,3 @@ print "
 ";
 
 
-?>

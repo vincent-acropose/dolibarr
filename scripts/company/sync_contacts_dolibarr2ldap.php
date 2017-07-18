@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 /*
  * Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
@@ -31,27 +31,40 @@ $path=dirname(__FILE__).'/';
 // Test if batch mode
 if (substr($sapi_type, 0, 3) == 'cgi') {
     echo "Error: You are using PHP for CGI. To execute ".$script_file." from command line, you must use PHP for CLI mode.\n";
-    exit;
+	exit(-1);
 }
 
-if (! isset($argv[1]) || ! $argv[1]) {
-    print "Usage: $script_file now\n";
-    exit;
-}
-$now=$argv[1];
-
-// Recupere env dolibarr
-$version='1.25';
 
 require_once($path."../../htdocs/master.inc.php");
 require_once(DOL_DOCUMENT_ROOT."/contact/class/contact.class.php");
 require_once(DOL_DOCUMENT_ROOT."/user/class/user.class.php");
 require_once(DOL_DOCUMENT_ROOT."/core/class/ldap.class.php");
 
+// Global variables
+$version=DOL_VERSION;
 $error=0;
+$confirmed=0;
 
 
-print "***** $script_file ($version) *****\n";
+/*
+ * Main
+ */
+
+@set_time_limit(0);
+print "***** ".$script_file." (".$version.") pid=".dol_getmypid()." *****\n";
+dol_syslog($script_file." launched with arg ".join(',',$argv));
+
+if (! isset($argv[1]) || ! $argv[1]) {
+    print "Usage: $script_file now [-y]\n";
+	exit(-1);
+}
+
+foreach($argv as $key => $val)
+{
+	if (preg_match('/-y$/',$val,$reg)) $confirmed=1;
+}
+
+$now=$argv[1];
 
 print "Mails sending disabled (useless in batch mode)\n";
 $conf->global->MAIN_DISABLE_ALL_MAILS=1;	// On bloque les mails
@@ -71,18 +84,22 @@ print "login=".$conf->global->LDAP_ADMIN_DN."\n";
 print "pass=".preg_replace('/./i','*',$conf->global->LDAP_ADMIN_PASS)."\n";
 print "DN target=".$conf->global->LDAP_CONTACT_DN."\n";
 print "\n";
-print "Press a key to confirm...\n";
-$input = trim(fgets(STDIN));
-print "Warning, this operation may result in data loss if it failed.\n";
-print "Be sure to have a backup of your LDAP database (With OpenLDAP: slapcat > save.ldif).\n";
-print "Hit Enter to continue or CTRL+C to stop...\n";
-$input = trim(fgets(STDIN));
+
+if (! $confirmed)
+{
+	print "Press a key to confirm...\n";
+	$input = trim(fgets(STDIN));
+	print "Warning, this operation may result in data loss if it failed.\n";
+	print "Be sure to have a backup of your LDAP database (With OpenLDAP: slapcat > save.ldif).\n";
+	print "Hit Enter to continue or CTRL+C to stop...\n";
+	$input = trim(fgets(STDIN));
+}
 
 /*
 if (! $conf->global->LDAP_CONTACT_ACTIVE)
 {
 	print $langs->trans("LDAPSynchronizationNotSetupInDolibarr");
-	exit 1;
+	exit(-1);
 }
 */
 
@@ -142,5 +159,4 @@ else
 	dol_print_error($db);
 }
 
-return $error;
-?>
+exit($error);

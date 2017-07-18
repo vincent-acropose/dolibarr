@@ -24,12 +24,14 @@
  *		\brief      Withdraw reject
  */
 
-require '../bank/pre.inc.php';
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/lib/prelevement.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/bonprelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/rejetprelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
+$langs->load("banks");
 $langs->load("categories");
 $langs->load('withdrawals');
 $langs->load('bills');
@@ -44,7 +46,7 @@ $page = GETPOST('page','int');
 /*
  * View
  */
-llxHeader('',$langs->trans("WithdrawalReceipt"));
+llxHeader('',$langs->trans("WithdrawalsReceipts"));
 
 if ($prev_id)
 {
@@ -53,50 +55,50 @@ if ($prev_id)
   	if ($bon->fetch($prev_id) == 0)
     {
     	$head = prelevement_prepare_head($bon);
-      	dol_fiche_head($head, 'rejects', $langs->trans("WithdrawalReceipt"), '', 'payment');
+		dol_fiche_head($head, 'rejects', $langs->trans("WithdrawalsReceipts"), '', 'payment');
 
       	print '<table class="border" width="100%">';
 
-		print '<tr><td width="20%">'.$langs->trans("Ref").'</td><td>'.$bon->getNomUrl(1).'</td></tr>';
-		print '<tr><td width="20%">'.$langs->trans("Date").'</td><td>'.dol_print_date($bon->datec,'day').'</td></tr>';
-		print '<tr><td width="20%">'.$langs->trans("Amount").'</td><td>'.price($bon->amount).'</td></tr>';
-	
+		print '<tr><td class="titlefield">'.$langs->trans("Ref").'</td><td>'.$bon->getNomUrl(1).'</td></tr>';
+		print '<tr><td>'.$langs->trans("Date").'</td><td>'.dol_print_date($bon->datec,'day').'</td></tr>';
+		print '<tr><td>'.$langs->trans("Amount").'</td><td>'.price($bon->amount).'</td></tr>';
+
 		// Status
-		print '<tr><td width="20%">'.$langs->trans('Status').'</td>';
+		print '<tr><td>'.$langs->trans('Status').'</td>';
 		print '<td>'.$bon->getLibStatut(1).'</td>';
 		print '</tr>';
-	
+
 		if($bon->date_trans <> 0)
 		{
 			$muser = new User($db);
 			$muser->fetch($bon->user_trans);
-	
-			print '<tr><td width="20%">'.$langs->trans("TransData").'</td><td>';
+
+			print '<tr><td>'.$langs->trans("TransData").'</td><td>';
 			print dol_print_date($bon->date_trans,'day');
 			print ' '.$langs->trans("By").' '.$muser->getFullName($langs).'</td></tr>';
-			print '<tr><td width="20%">'.$langs->trans("TransMetod").'</td><td>';
+			print '<tr><td>'.$langs->trans("TransMetod").'</td><td>';
 			print $bon->methodes_trans[$bon->method_trans];
 			print '</td></tr>';
 		}
 		if($bon->date_credit <> 0)
 		{
-			print '<tr><td width="20%">'.$langs->trans('CreditDate').'</td><td>';
+			print '<tr><td>'.$langs->trans('CreditDate').'</td><td>';
 			print dol_print_date($bon->date_credit,'day');
 			print '</td></tr>';
 		}
-	
+
 		print '</table>';
-	
+
 		print '<br>';
-	
-		print '<table class="border" width="100%"><tr><td width="20%">';
+
+		print '<table class="border" width="100%"><tr><td class="titlefield">';
 		print $langs->trans("WithdrawalFile").'</td><td>';
-		$relativepath = 'receipts/'.$bon->ref;
-		print '<a href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
+		$relativepath = 'receipts/'.$bon->ref.'.xml';
+		print '<a data-ajax="false" href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
 		print '</td></tr></table>';
-	
+
 		dol_fiche_end();
-      	
+
     }
   	else
     {
@@ -110,7 +112,7 @@ $rej = new RejetPrelevement($db, $user);
  * Liste des factures
  */
 $sql = "SELECT pl.rowid, pl.amount, pl.statut";
-$sql.= " , s.rowid as socid, s.nom";
+$sql.= " , s.rowid as socid, s.nom as name";
 $sql.= " , pr.motif, pr.afacturer, pr.fk_facture";
 $sql.= " FROM ".MAIN_DB_PREFIX."prelevement_bons as p";
 $sql.= " , ".MAIN_DB_PREFIX."prelevement_lignes as pl";
@@ -128,8 +130,7 @@ $sql.= " ORDER BY pl.amount DESC";
 $resql = $db->query($sql);
 if ($resql)
 {
- 	 $num = $db->num_rows($resql);
-  	$i = 0;
+ 	$num = $db->num_rows($resql);
 
   	print"\n<!-- debut table -->\n";
   	print '<table class="noborder" width="100%" cellspacing="0" cellpadding="4">';
@@ -140,35 +141,47 @@ if ($resql)
   	$var=True;
 	$total = 0;
 
-	while ($i < $num)
-    {
-		$obj = $db->fetch_object($resql);
-
-		print "<tr ".$bc[$var]."><td>";
-
-		print '<a href="'.DOL_URL_ROOT.'/compta/prelevement/ligne.php?id='.$obj->rowid.'">';
-		print img_picto('', 'statut'.$obj->statut).' ';
-		print substr('000000'.$obj->rowid, -6);
-		print '</a></td>';
-		print '<td><a href="'.DOL_URL_ROOT.'/comm/fiche.php?socid='.$obj->socid.'">'.stripslashes($obj->nom)."</a></td>\n";
-
-		print '<td align="right">'.price($obj->amount)."</td>\n";
-		print '<td>'.$rej->motifs[$obj->motif].'</td>';
-
-		print '<td align="center">'.yn($obj->afacturer).'</td>';
-		print '<td align="center">'.$obj->fk_facture.'</td>';
-		print "</tr>\n";
-
-		$total += $obj->amount;
-		$var=!$var;
-		$i++;
+	if ($num > 0)
+	{
+      	$i = 0;
+	    while ($i < $num)
+        {
+    		$obj = $db->fetch_object($resql);
+    
+    		print "<tr ".$bc[$var]."><td>";
+    
+    		print '<a href="'.DOL_URL_ROOT.'/compta/prelevement/ligne.php?id='.$obj->rowid.'">';
+    		print img_picto('', 'statut'.$obj->statut).' ';
+    		print substr('000000'.$obj->rowid, -6);
+    		print '</a></td>';
+    		print '<td><a href="'.DOL_URL_ROOT.'/comm/card.php?socid='.$obj->socid.'">'.$obj->name."</a></td>\n";
+    
+    		print '<td align="right">'.price($obj->amount)."</td>\n";
+    		print '<td>'.$rej->motifs[$obj->motif].'</td>';
+    
+    		print '<td align="center">'.yn($obj->afacturer).'</td>';
+    		print '<td align="center">'.$obj->fk_facture.'</td>';
+    		print "</tr>\n";
+    
+    		$total += $obj->amount;
+    		$var=!$var;
+    		$i++;
+    	}
 	}
-
-	print '<tr class="liste_total"><td>&nbsp;</td>';
-	print '<td class="liste_total">'.$langs->trans("Total").'</td>';
-	print '<td align="right">'.price($total)."</td>\n";
-	print '<td colspan="3">&nbsp;</td>';
-	print "</tr>\n</table>\n";
+	else
+	{
+	   print '<tr><td colspan="5" class="opacitymedium">'.$langs->trans("None").'</td></tr>';    
+	}
+	
+  	if ($num > 0)
+    {
+    	print '<tr class="liste_total"><td>&nbsp;</td>';
+    	print '<td class="liste_total">'.$langs->trans("Total").'</td>';
+    	print '<td align="right">'.price($total)."</td>\n";
+    	print '<td colspan="3">&nbsp;</td>';
+    	print "</tr>\n";
+    }
+    print "</table>\n";
 	$db->free($resql);
 }
 else
@@ -176,7 +189,5 @@ else
 	dol_print_error($db);
 }
 
-$db->close();
-
 llxFooter();
-?>
+$db->close();

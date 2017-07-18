@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2008-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2008-2012	Regis Houssin		<regis.houssin@capnetworks.com>
+ * Copyright (C) 2015-2016	Alexandre Spangaro	<aspangaro.dolibarr@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,10 +18,9 @@
  */
 
 /**
- *	\file      	htdocs/ecm/docdir.php
- *	\ingroup   	ecm
- *	\brief     	Main page for ECM section area
- *	\author		Laurent Destailleur
+ *	\file		htdocs/ecm/docdir.php
+ *	\ingroup	ecm
+ *	\brief		Main page for ECM section area
  */
 
 require '../main.inc.php';
@@ -100,7 +100,7 @@ if ($action == 'add' && $user->rights->ecm->setup)
 
 	if (! $ecmdir->label)
 	{
-		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("Label")), 'errors');
+		setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentities("Label")), null, 'errors');
 		$action = 'create';
 		$ok=false;
 	}
@@ -117,17 +117,17 @@ if ($action == 'add' && $user->rights->ecm->setup)
 		else
 		{
 			$langs->load("errors");
-			setEventMessage($langs->trans($ecmdir->error), 'errors');
+			setEventMessages($langs->trans($ecmdir->error), $ecmdir->errors, 'errors');
 			$action = 'create';
 		}
 	}
 }
 
-// Suppression fichier
+// Deleting file
 else if ($action == 'confirm_deletesection' && $confirm == 'yes')
 {
 	$result=$ecmdir->delete($user);
-	setEventMessage($langs->trans("ECMSectionWasRemoved", $ecmdir->label));
+	setEventMessages($langs->trans("ECMSectionWasRemoved", $ecmdir->label), null, 'mesgs');
 }
 
 
@@ -152,33 +152,35 @@ if ($action == 'create')
 	print '<input type="hidden" name="action" value="add">';
 
 	$title=$langs->trans("ECMNewSection");
-	print_fiche_titre($title);
+	print load_fiche_titre($title);
+	
+	dol_fiche_head();
 
 	print '<table class="border" width="100%">';
 
 	// Label
-	print '<tr><td class="fieldrequired">'.$langs->trans("Label").'</td><td><input name="label" size="40" maxlength="32" value="'.$ecmdir->label.'"></td></tr>'."\n";
+	print '<tr><td class="titlefieldcreate fieldrequired">'.$langs->trans("Label").'</td><td><input name="label" size="40" maxlength="32" value="'.$ecmdir->label.'"></td></tr>'."\n";
 
 	print '<tr><td>'.$langs->trans("AddIn").'</td><td>';
 	print $formecm->select_all_sections(! empty($_GET["catParent"])?$_GET["catParent"]:$ecmdir->fk_parent,'catParent');
 	print '</td></tr>'."\n";
 
 	// Description
-	print '<tr><td valign="top">'.$langs->trans("Description").'</td><td>';
+	print '<tr><td class="tdtop">'.$langs->trans("Description").'</td><td>';
 	print '<textarea name="desc" rows="4" cols="90">';
 	print $ecmdir->description;
 	print '</textarea>';
 	print '</td></tr>'."\n";
 
-	print '</td></tr>'."\n";
+	print '</table>';
 
-	print '</table><br>';
+	dol_fiche_end();
 
-	print '<center>';
+	print '<div class="center">';
 	print '<input type="submit" class="button" name="create" value="'.$langs->trans("Create").'">';
-	print ' &nbsp; &nbsp; ';
+	print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
 	print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'">';
-	print '</center>';
+	print '</div>';
 	print '</form>';
 }
 
@@ -188,7 +190,7 @@ if (empty($action) || $action == 'delete_section')
 	//***********************
 	// List
 	//***********************
-	print_fiche_titre($langs->trans("ECMSectionOfDocuments"));
+	print load_fiche_titre($langs->trans("ECMSectionOfDocuments"));
 	print '<br>';
 
 /*
@@ -203,8 +205,8 @@ if (empty($action) || $action == 'delete_section')
 	// Confirmation de la suppression d'une ligne categorie
 	if ($action == 'delete_section')
 	{
-		$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?section='.$section, $langs->trans('DeleteSection'), $langs->trans('ConfirmDeleteSection',$ecmdir->label), 'confirm_deletesection');
-		if ($ret == 'html') print '<br>';
+		print $form->formconfirm($_SERVER["PHP_SELF"].'?section='.$section, $langs->trans('DeleteSection'), $langs->trans('ConfirmDeleteSection',$ecmdir->label), 'confirm_deletesection');
+		
 	}
 
 	// Construit fiche  rubrique
@@ -227,4 +229,3 @@ if (empty($action) || $action == 'delete_section')
 // End of page
 llxFooter();
 $db->close();
-?>

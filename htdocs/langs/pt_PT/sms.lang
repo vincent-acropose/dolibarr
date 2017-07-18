@@ -1,13 +1,4 @@
-/*
- * Language code: pt_PT
- * Automatic generated via autotranslator.php tool
- * Generation date 2012-02-29 15:45:52
- */
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 15:45:52).
-// Reference language: en_US -> pt_PT
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - sms
 Sms=Sms
 SmsSetup=Sms configuração
 SmsDesc=Esta página permite que você defina opções globais de SMS ou características
@@ -47,16 +38,14 @@ SmsStatusNotSent=Não enviou
 SmsSuccessfulySent=Sms enviada corretamente (de %s a %s)
 ErrorSmsRecipientIsEmpty=Número de destino está vazio
 WarningNoSmsAdded=Novo número de telefone para adicionar à lista de alvos
-ConfirmValidSms=Você confirma a validação desta campanha?
-ConfirmResetMailing=Atenção, se você fizer um reset de Sms campanha <b>%s,</b> você vai permitir um envio em massa de uma segunda vez. É realmente o que você quer fazer?
-ConfirmDeleteMailing=Você confirma a remoção da Campanha?
-NbOfRecipients=Número de alvos
+ConfirmValidSms=Do you confirm validation of this campain?
 NbOfUniqueSms=Nb DOF únicos números de telefone
 NbOfSms=Nbre de números phon
 ThisIsATestMessage=Esta é uma mensagem de teste
 SendSms=Enviar SMS
 SmsInfoCharRemain=N º de caracteres restantes
-SmsInfoNumero=(Formato internacional exemplo: +33899701761)
+SmsInfoNumero= (Formato internacional exemplo: +33899701761)
 DelayBeforeSending=Atraso antes de enviar (minutos)
+SmsNoPossibleSenderFound=No sender available. Check setup of your SMS provider.
 SmsNoPossibleRecipientFound=Nenhum alvo disponível. Verifique a configuração do seu provedor de SMS.
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 15:46:51).
+

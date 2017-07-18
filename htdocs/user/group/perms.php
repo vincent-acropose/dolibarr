@@ -191,15 +191,15 @@ if ($id)
     print '<table class="border" width="100%">';
 
     // Ref
-    print '<tr><td width="25%" valign="top">'.$langs->trans("Ref").'</td>';
+    print '<tr><td width="25%">'.$langs->trans("Ref").'</td>';
     print '<td colspan="2">';
     print $form->showrefnav($fgroup,'id','',$user->rights->user->user->lire || $user->admin);
     print '</td>';
     print '</tr>';
 
     // Nom
-    print '<tr><td width="25%" valign="top">'.$langs->trans("Name").'</td>';
-    print '<td colspan="2">'.$fgroup->nom.'';
+    print '<tr><td width="25%">'.$langs->trans("Name").'</td>';
+    print '<td colspan="2">'.$fgroup->name.'';
     if (! $fgroup->entity)
     {
         print img_picto($langs->trans("GlobalGroup"),'redstar');
@@ -207,7 +207,7 @@ if ($id)
     print "</td></tr>\n";
 
     // Note
-    print '<tr><td width="25%" valign="top">'.$langs->trans("Note").'</td>';
+    print '<tr><td width="25%" class="tdtop">'.$langs->trans("Note").'</td>';
     print '<td class="valeur">'.dol_htmlentitiesbr($fgroup->note).'</td>';
     print "</tr>\n";
 
@@ -277,9 +277,9 @@ if ($id)
                 if ($caneditperms)
                 {
                     print '<tr '. $bc[$var].'>';
-                    print '<td nowrap="nowrap">'.img_object('',$picto).' '.$objMod->getName();
+                    print '<td class="nowrap">'.img_object('',$picto).' '.$objMod->getName();
                     print '<a name="'.$objMod->getName().'">&nbsp;</a></td>';
-                    print '<td align="center" nowrap="nowrap">';
+                    print '<td align="center" class="nowrap">';
                     print '<a title='.$langs->trans("All").' alt='.$langs->trans("All").' href="perms.php?id='.$fgroup->id.'&amp;action=addrights&amp;module='.$obj->module.'#'.$objMod->getName().'">'.$langs->trans("All")."</a>";
                     print '/';
                     print '<a title='.$langs->trans("None").' alt='.$langs->trans("None").' href="perms.php?id='.$fgroup->id.'&amp;action=delrights&amp;module='.$obj->module.'#'.$objMod->getName().'">'.$langs->trans("None")."</a>";
@@ -292,14 +292,14 @@ if ($id)
             print '<tr '. $bc[$var].'>';
 
             // Module
-            print '<td nowrap="nowrap">'.img_object('',$picto).' '.$objMod->getName().'</td>';
+            print '<td class="nowrap">'.img_object('',$picto).' '.$objMod->getName().'</td>';
 
             if (in_array($obj->id, $permsgroup))
             {
                 // Own permission by group
                 if ($caneditperms)
                 {
-                    print '<td align="center"><a href="perms.php?id='.$fgroup->id.'&amp;action=delrights&amp;rights='.$obj->id.'#'.$objMod->getName().'">'.img_edit_remove($langs->trans("Remove")).'</a></td>';
+                    print '<td align="center"><a class="reposition" href="perms.php?id='.$fgroup->id.'&amp;action=delrights&amp;rights='.$obj->id.'">'.img_edit_remove($langs->trans("Remove")).'</a></td>';
                 }
                 print '<td align="center">';
                 print img_picto($langs->trans("Active"),'tick');
@@ -310,12 +310,12 @@ if ($id)
                 // Do not own permission
                 if ($caneditperms)
                 {
-                    print '<td align="center"><a href="perms.php?id='.$fgroup->id.'&amp;action=addrights&amp;rights='.$obj->id.'#'.$objMod->getName().'">'.img_edit_add($langs->trans("Add")).'</a></td>';
+                    print '<td align="center"><a class="reposition" href="perms.php?id='.$fgroup->id.'&amp;action=addrights&amp;rights='.$obj->id.'">'.img_edit_add($langs->trans("Add")).'</a></td>';
                 }
                 print '<td>&nbsp</td>';
             }
 
-            $perm_libelle=($conf->global->MAIN_USE_ADVANCED_PERMS && ($langs->trans("PermissionAdvanced".$obj->id)!=("PermissionAdvanced".$obj->id))?$langs->trans("PermissionAdvanced".$obj->id):(($langs->trans("Permission".$obj->id)!=("Permission".$obj->id))?$langs->trans("Permission".$obj->id):$obj->libelle));
+            $perm_libelle=($conf->global->MAIN_USE_ADVANCED_PERMS && ($langs->trans("PermissionAdvanced".$obj->id)!=("PermissionAdvanced".$obj->id))?$langs->trans("PermissionAdvanced".$obj->id):(($langs->trans("Permission".$obj->id)!=("Permission".$obj->id))?$langs->trans("Permission".$obj->id):$langs->trans($obj->libelle)));
             print '<td>'.$perm_libelle. '</td>';
 
             print '</tr>';
@@ -326,7 +326,5 @@ if ($id)
     print '</table>';
 }
 
-$db->close();
-
 llxFooter();
-?>
+$db->close();

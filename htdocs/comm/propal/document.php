@@ -1,8 +1,9 @@
 <?php
 /* Copyright (C) 2003-2004 Rodolphe Quiedeville  <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2009 Laurent Destailleur   <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2017 Laurent Destailleur   <eldy@users.sourceforge.net>
  * Copyright (C) 2005      Marc Barilley / Ocebo <marc@ocebo.com>
  * Copyright (C) 2005-2012 Regis Houssin         <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013      Cédric Salvador       <csalvador@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +21,8 @@
 
 /**
  *       \file       htdocs/comm/propal/document.php
- *       \ingroup    propale
- *       \brief      Page de gestion des documents attaches a une proposition commerciale
+ *       \ingroup    propal
+ *       \brief      Management page of documents attached to a business proposal
  */
 
 require '../../main.inc.php';
@@ -33,6 +34,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 
 $langs->load('compta');
 $langs->load('other');
+$langs->load('companies');
 
 $action		= GETPOST('action','alpha');
 $confirm	= GETPOST('confirm','alpha');
@@ -61,40 +63,17 @@ if (! $sortfield) $sortfield="name";
 
 $object = new Propal($db);
 $object->fetch($id,$ref);
-if ($object->id > 0)
-{
-	$object->fetch_thirdparty();
-}
+
 
 /*
  * Actions
  */
 
-// Envoi fichier
-if (GETPOST('sendit') && ! empty($conf->global->MAIN_UPLOAD_DOC))
+if ($object->id > 0)
 {
-	if ($object->id > 0)
-    {
-    	$upload_dir = $conf->propal->dir_output . "/" . dol_sanitizeFileName($object->ref);
-    	dol_add_file_process($upload_dir,0,1,'userfile');
-    }
-}
-
-// Delete
-if ($action == 'confirm_deletefile' && $confirm == 'yes')
-{
-	if ($object->id > 0)
-    {
-        $langs->load("other");
-
-        $upload_dir = $conf->propal->dir_output . "/" . dol_sanitizeFileName($object->ref);
-    	$file = $upload_dir . '/' . GETPOST('urlfile');	// Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
-    	$ret=dol_delete_file($file,0,0,0,$object);
-    	if ($ret) setEventMessage($langs->trans("FileWasRemoved", GETPOST('urlfile')));
-    	else setEventMessage($langs->trans("ErrorFailToDeleteFile", GETPOST('urlfile')), 'errors');
-    	header('Location: '.$_SERVER["PHP_SELF"].'?id='.$id);
-    	exit;
-    }
+    $object->fetch_thirdparty();
+    $upload_dir = $conf->propal->dir_output.'/'.dol_sanitizeFileName($object->ref);
+    include_once DOL_DOCUMENT_ROOT . '/core/actions_linkedfiles.inc.php';
 }
 
 
@@ -114,7 +93,7 @@ if ($object->id > 0)
 	dol_fiche_head($head, 'document', $langs->trans('Proposal'), 0, 'propal');
 
 	// Construit liste des fichiers
-	$filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+	$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
 	$totalsize=0;
 	foreach($filearray as $key => $file)
 	{
@@ -122,59 +101,81 @@ if ($object->id > 0)
 	}
 
 
-	print '<table class="border"width="100%">';
+	// Proposal card
 
-	$linkback='<a href="'.DOL_URL_ROOT.'/comm/propal/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
+	$linkback = '<a href="' . DOL_URL_ROOT . '/comm/propal/list.php' . (! empty($socid) ? '?socid=' . $socid : '') . '">' . $langs->trans("BackToList") . '</a>';
 
-	// Ref
-	print '<tr><td width="25%">'.$langs->trans('Ref').'</td><td colspan="3">';
-	print $form->showrefnav($object,'ref',$linkback,1,'ref','ref','');
-	print '</td></tr>';
 
-	// Ref client
-	print '<tr><td>';
-	print '<table class="nobordernopadding" width="100%"><tr><td nowrap>';
-	print $langs->trans('RefCustomer').'</td><td align="left">';
-	print '</td>';
-	print '</tr></table>';
-	print '</td><td colspan="3">';
-	print $object->ref_client;
-	print '</td>';
-	print '</tr>';
+	$morehtmlref='<div class="refidno">';
+	// Ref customer
+	$morehtmlref.=$form->editfieldkey("RefCustomer", 'ref_client', $object->ref_client, $object, 0, 'string', '', 0, 1);
+	$morehtmlref.=$form->editfieldval("RefCustomer", 'ref_client', $object->ref_client, $object, 0, 'string', '', null, null, '', 1);
+	// Thirdparty
+	$morehtmlref.='<br>'.$langs->trans('ThirdParty') . ' : ' . $object->thirdparty->getNomUrl(1);
+	// Project
+	if (! empty($conf->projet->enabled))
+	{
+	    $langs->load("projects");
+	    $morehtmlref.='<br>'.$langs->trans('Project') . ' ';
+	    if ($user->rights->propal->creer)
+	    {
+	        if ($action != 'classify')
+	            //$morehtmlref.='<a href="' . $_SERVER['PHP_SELF'] . '?action=classify&amp;id=' . $object->id . '">' . img_edit($langs->transnoentitiesnoconv('SetProject')) . '</a>';
+	            $morehtmlref.=' : ';
+	            if ($action == 'classify') {
+	                //$morehtmlref.=$form->form_project($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->socid, $object->fk_project, 'projectid', 0, 0, 1, 1);
+	                $morehtmlref.='<form method="post" action="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'">';
+	                $morehtmlref.='<input type="hidden" name="action" value="classin">';
+	                $morehtmlref.='<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	                $morehtmlref.=$formproject->select_projects($object->socid, $object->fk_project, 'projectid', $maxlength, 0, 1, 0, 1, 0, 0, '', 1);
+	                $morehtmlref.='<input type="submit" class="button valignmiddle" value="'.$langs->trans("Modify").'">';
+	                $morehtmlref.='</form>';
+	            } else {
+	                $morehtmlref.=$form->form_project($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->socid, $object->fk_project, 'none', 0, 0, 0, 1);
+	            }
+	    } else {
+	        if (! empty($object->fk_project)) {
+	            $proj = new Project($db);
+	            $proj->fetch($object->fk_project);
+	            $morehtmlref.='<a href="'.DOL_URL_ROOT.'/projet/card.php?id=' . $object->fk_project . '" title="' . $langs->trans('ShowProject') . '">';
+	            $morehtmlref.=$proj->ref;
+	            $morehtmlref.='</a>';
+	        } else {
+	            $morehtmlref.='';
+	        }
+	    }
+	}
+	$morehtmlref.='</div>';
 
-	// Customer
-	print "<tr><td>".$langs->trans("Company")."</td>";
-	print '<td colspan="3">'.$object->thirdparty->getNomUrl(1).'</td></tr>';
+	dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref);
 
-	print '<tr><td>'.$langs->trans("NbOfAttachedFiles").'</td><td colspan="3">'.count($filearray).'</td></tr>';
-	print '<tr><td>'.$langs->trans("TotalSizeOfAttachedFiles").'</td><td colspan="3">'.$totalsize.' '.$langs->trans("bytes").'</td></tr>';
 
-	print '</table>';
+	print '<div class="fichecenter">';
+	print '<div class="underbanner clearboth"></div>';
+
+	print '<table class="border" width="100%">';
+
+	// Files infos
+	print '<tr><td class="titlefield">'.$langs->trans("NbOfAttachedFiles").'</td><td>'.count($filearray).'</td></tr>';
+	print '<tr><td>'.$langs->trans("TotalSizeOfAttachedFiles").'</td><td>'.$totalsize.' '.$langs->trans("bytes").'</td></tr>';
+
+	print "</table>\n";
 
 	print '</div>';
 
-	/*
-	 * Confirmation suppression fichier
-	 */
-	if ($action == 'delete')
-	{
-		$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&urlfile='.urlencode(GETPOST("urlfile")), $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile', '', 0, 1);
-		if ($ret == 'html') print '<br>';
-	}
 
-	// Affiche formulaire upload
-	$formfile=new FormFile($db);
-	$formfile->form_attach_new_file($_SERVER['PHP_SELF'].'?id='.$object->id,'',0,0,$user->rights->propal->creer,50,$object);
+	dol_fiche_end();
 
-
-	// List of document
-	$formfile->list_of_documents($filearray,$object,'propal');
+	$modulepart = 'propal';
+	$permission = $user->rights->propal->creer;
+	$permtoedit = $user->rights->propal->creer;
+	$param = '&id=' . $object->id;
+	include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_post_headers.tpl.php';
 }
 else
 {
-	print $langs->trans("UnkownError");
+	print $langs->trans("ErrorUnknown");
 }
 
 llxFooter();
 $db->close();
-?>

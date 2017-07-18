@@ -76,20 +76,20 @@ dol_fiche_head($head, 'card', $langs->trans("ThirdParty"),0,'company');
 <?php } ?>
 
 <tr>
-	<td valign="top"><?php echo $langs->trans('Address'); ?></td>
+	<td class="tdtop"><?php echo $langs->trans('Address'); ?></td>
 	<td colspan="3"><?php echo $this->control->tpl['address']; ?></td>
 </tr>
 
 <tr>
 	<td width="25%"><?php echo $langs->trans('Zip'); ?></td>
-	<td width="25%"><?php echo $this->control->tpl['cp']; ?></td>
+	<td width="25%"><?php echo $this->control->tpl['zip']; ?></td>
 	<td width="25%"><?php echo $langs->trans('Town'); ?></td>
-	<td width="25%"><?php echo $this->control->tpl['ville']; ?></td>
+	<td width="25%"><?php echo $this->control->tpl['town']; ?></td>
 </tr>
 
 <tr>
 	<td><?php echo $langs->trans("Country"); ?></td>
-	<td colspan="3" nowrap="nowrap"><?php echo $this->control->tpl['country']; ?></td>
+	<td colspan="3" class="nowrap"><?php echo $this->control->tpl['country']; ?></td>
 </tr>
 
 <tr>
@@ -106,7 +106,7 @@ dol_fiche_head($head, 'card', $langs->trans("ThirdParty"),0,'company');
 
 <tr>
 	<td><?php echo $langs->trans('EMail'); ?></td>
-	<td><?php echo $this->control->tpl['email'];; ?></td>
+	<td><?php echo $this->control->tpl['email']; ?></td>
 	<td><?php echo $langs->trans('Web'); ?></td>
 	<td><?php echo $this->control->tpl['url']; ?></td>
 </tr>
@@ -204,7 +204,7 @@ $urlsource=$_SERVER["PHP_SELF"]."?socid=".$socid;
 $genallowed=$user->rights->societe->creer;
 $delallowed=$user->rights->societe->supprimer;
 
-$somethingshown=$formfile->show_documents('company',$socid,$filedir,$urlsource,$genallowed,$delallowed,'',0,0,0,28,0,'',0,'',$objcanvas->control->object->default_lang);
+print $formfile->showdocuments('company',$socid,$filedir,$urlsource,$genallowed,$delallowed,'',0,0,0,28,0,'',0,'',$objcanvas->control->object->default_lang);
 ?>
 
 </td>

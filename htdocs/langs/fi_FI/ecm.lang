@@ -1,25 +1,5 @@
-/*
- * Language code: fi_FI
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-01-19 22:07:11
- */
-
-
-// Date 2009-01-19 22:07:11
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
-MenuECM=Asiakirjat
-DocsMine=Omat asiakirjat
-DocsGenerated=Muodostettu asiakirjat
-DocsElements=Elements asiakirjat
-DocsThirdParties=Asiakirjat kolmansien osapuolten
-DocsContracts=Asiakirjat sopimukset
-DocsProposals=Asiakirjat ehdotuksia
-DocsOrders=Asiakirjat tilaukset
-DocsInvoices=Asiakirjat laskut
+# Dolibarr language file - Source file is en_US - ecm
 ECMNbOfDocs=Nb asiakirjojen hakemisto
-ECMNbOfDocsSmall=Nb of Doc.
 ECMSection=Directory
 ECMSectionManual=Manuaalinen hakemistoon
 ECMSectionAuto=Automaattinen hakemistoon
@@ -29,36 +9,36 @@ ECMSections=Hakemistot
 ECMRoot=Juuri
 ECMNewSection=Uusi hakemisto
 ECMAddSection=Lisää käsikirja hakemistoon
-ECMNewSection=Uusi käsikirja hakemistoon
-ECMNewDocument=Uusi asiakirja
 ECMCreationDate=Luontipäivämäärä
 ECMNbOfFilesInDir=Määrä tiedostoja hakemistossa
 ECMNbOfSubDir=Useita osa-hakemistoja
-ECMNbOfFilesInSubDir=Nunber on iles osa-hakemistoja
+ECMNbOfFilesInSubDir=Number of files in sub-directories
 ECMCreationUser=Creator
-ECMArea=ECM-alue
-ECMAreaDesc=The ECM (Electronic Content Management) alue voit tallentaa, jakaa ja etsiä nopeasti kaikenlaisia asiakirjoja Dolibarr.
+ECMArea=EDM area
+ECMAreaDesc=The EDM (Electronic Document Management) area allows you to save, share and search quickly all kind of documents in Dolibarr.
 ECMAreaDesc2=* Automaattinen hakemistoja täyttyvät automaattisesti kun lisäät dokumentteja kortin osa. <br> * Manuaalinen hakemistojen avulla voidaan tallentaa asiakirjoja, joita ei ole sidottu tiettyyn osa.
 ECMSectionWasRemoved=<b>Hakemiston %s</b> on poistettu.
-ECMDocumentsSection=Asiakirja luettelopalvelujen
 ECMSearchByKeywords=Etsi avainsanoja
 ECMSearchByEntity=Etsi objekti
 ECMSectionOfDocuments=Hakemistot asiakirjoja
-ECMTypeManual=Manuaalinen
 ECMTypeAuto=Automaattinen
+ECMDocsBySocialContributions=Documents linked to social or fiscal taxes
 ECMDocsByThirdParties=Asiakirjat liittyy kolmansien osapuolten
 ECMDocsByProposals=Asiakirjat liittyvät ehdotukset
 ECMDocsByOrders=Asiakirjat liittyvät asiakkaiden tilauksia
 ECMDocsByContracts=Asiakirjat liittyvät sopimukset
 ECMDocsByInvoices=Liittyvien asiakirjojen asiakkaille laskuja
 ECMDocsByProducts=Asiakirjat liittyvät tuotteet
+ECMDocsByProjects=Documents linked to projects
+ECMDocsByUsers=Documents linked to users
+ECMDocsByInterventions=Documents linked to interventions
+ECMDocsByExpenseReports=Documents linked to expense reports
 ECMNoDirectoryYet=Ei hakemiston luonut
 ShowECMSection=Näytä hakemisto
 DeleteSection=Poista hakemistosta
-ConfirmDeleteSection=Voitteko vahvistaa, haluatko poistaa <b>hakemistosta %s?</b>
+ConfirmDeleteSection=Can you confirm you want to delete the directory <b>%s</b>?
 ECMDirectoryForFiles=Suhteellinen hakemiston tiedostoja
 CannotRemoveDirectoryContainsFiles=Poistetut ole mahdollista, koska se sisältää joitakin tiedostoja
 ECMFileManager=Tiedostonhallinta
 ECMSelectASection=Valitse hakemiston vasemmassa puu ...
-// Date 2009-01-19 22:07:11
-// STOP - Lines generated via parser
+DirNotSynchronizedSyncFirst=This directory seems to be created or modified outside ECM module. You must click on "Refresh" button first to synchronize disk and database to get content of this directory.

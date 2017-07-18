@@ -1,65 +1,44 @@
-/*
- * Language code: fi_FI
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-01-19 22:07:11
- */
-
-
-// Date 2009-01-19 22:07:11
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - suppliers
 Suppliers=Tavarantoimittajat
-Supplier=Toimittaja
-AddSupplier=Lisää toimittaja
-SupplierRemoved=Toimittaja poistettu
-SuppliersInvoice=Tavarantoimittajat lasku
-NewSupplier=Uuden toimittajan
+SuppliersInvoice=Tavarantoimittajan lasku
+ShowSupplierInvoice=Show Supplier Invoice
+NewSupplier=Uudsi toimittaja
 History=Historia
-ListOfSuppliers=Luettelo toimittajat
+ListOfSuppliers=Luettelo toimittajista
 ShowSupplier=Näytä toimittaja
-OrderDate=Tilaa päivämäärä
-BuyingPrice=Osto
-AddSupplierPrice=Lisää toimittaja hinta
-ChangeSupplierPrice=Vaihtaa toimittajaa hinta
-ErrorQtyTooLowForThisSupplier=Määrä liian alhaisia tämän toimittajan tai ei hinta määritellään tämän tuotteen tämän toimittajan
-ErrorSupplierCountryIsNotDefined=Maa tämä toimittaja ei ole määritelty. Korjata ensin.
-ProductHasAlreadyReferenceInThisSupplier=Tämä tuote on jo viittaus tässä toimittaja
+OrderDate=Tilauspäivä
+BuyingPriceMin=Best buying price
+BuyingPriceMinShort=Best buying price
+TotalBuyingPriceMinShort=Total of subproducts buying prices
+TotalSellingPriceMinShort=Total of subproducts selling prices
+SomeSubProductHaveNoPrices=Some sub-products have no price defined
+AddSupplierPrice=Add buying price
+ChangeSupplierPrice=Change buying price
+ReferenceSupplierIsAlreadyAssociatedWithAProduct=Tämä viittaus toimittaja on jo liitetty viite: %s
 NoRecordedSuppliers=N: o toimittajat kirjataan
 SupplierPayment=Toimittaja maksu
 SuppliersArea=Tavarantoimittajat alueella
 RefSupplierShort=Ref. toimittaja
+Availability=Saatavuus
 ExportDataset_fournisseur_1=Toimittajan laskujen luettelo ja laskut "linjat
 ExportDataset_fournisseur_2=Toimittajan laskut ja maksut
+ExportDataset_fournisseur_3=Supplier orders and order lines
 ApproveThisOrder=Hyväksy tämä tilaus
-ConfirmApproveThisOrder=Oletko varma, että haluat hyväksyä tämän tilauksen?
-DenyingThisOrder=Kiellä tätä järjestystä
-ConfirmDenyingThisOrder=Oletko varma, että haluat kieltää tämän tilauksen?
-ConfirmCancelThisOrder=Oletko varma, että haluat peruuttaa tämän tilauksen?
-AddCustomerOrder=Luo asiakas jotta
-AddCustomerInvoice=Luo asiakkaalle laskun
+ConfirmApproveThisOrder=Are you sure you want to approve order <b>%s</b>?
+DenyingThisOrder=Deny this order
+ConfirmDenyingThisOrder=Are you sure you want to deny this order <b>%s</b>?
+ConfirmCancelThisOrder=Are you sure you want to cancel this order <b>%s</b>?
 AddSupplierOrder=Luo toimittaja jotta
 AddSupplierInvoice=Luo toimittajan laskun
 ListOfSupplierProductForSupplier=Luettelo tuotteista ja hinnoista <b>toimittaja %s</b>
-// Date 2009-01-19 22:07:11
-// STOP - Lines generated via parser
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-13 20:45:19).
-// Reference language: en_US
-NoneOrBatchFileNeverRan=Ei mitään tai <b>erän %s</b> ei juoksi hiljattain
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 20:45:19).
-
-
-// START - Lines generated via autotranslator.php tool (2010-07-17 11:26:22).
-// Reference language: en_US
-ReferenceSupplierIsAlreadyAssociatedWithAProduct=Tämä viittaus toimittaja on jo liitetty viite: %s
-// STOP - Lines generated via autotranslator.php tool (2010-07-17 11:27:11).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 16:10:23).
-// Reference language: en_US -> fi_FI
-BuyingPriceMin=Minimi ostohinnan
-BuyingPriceMinShort=Min ostohinnan
-Availability=Saatavuus
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 16:11:10).
+SentToSuppliers=Sent to suppliers
+ListOfSupplierOrders=List of supplier orders
+MenuOrdersSupplierToBill=Supplier orders to invoice
+NbDaysToDelivery=Delivery delay in days
+DescNbDaysToDelivery=The biggest deliver delay of the products from this order
+SupplierReputation=Supplier reputation
+DoNotOrderThisProductToThisSupplier=Do not order
+NotTheGoodQualitySupplier=Wrong quality
+ReputationForThisProduct=Reputation
+BuyerName=Buyer name
+AllProductServicePrices=All product / service prices

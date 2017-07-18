@@ -30,9 +30,18 @@ create table llx_projet
   title            varchar(255) NOT NULL,
   description      text,
   fk_user_creat    integer NOT NULL,			-- createur du projet
+  fk_user_modif    integer,
   public           integer,						-- project is public or not
-  fk_statut        smallint DEFAULT 0 NOT NULL,
+  fk_statut        integer DEFAULT 0 NOT NULL,	-- open or close
+  fk_opp_status    integer DEFAULT NULL,	        -- if project is used to manage opportunities
+  opp_percent	   double(5,2),
+  date_close       datetime DEFAULT NULL,    
+  fk_user_close    integer DEFAULT NULL,
   note_private     text,
   note_public      text,
-  model_pdf        varchar(255)
+  --budget_days      real,                      -- budget in days is sum of field planned_workload of tasks
+  opp_amount       double(24,8),
+  budget_amount    double(24,8),				
+  model_pdf        varchar(255),
+  import_key	   varchar(14)					-- Import key
 )ENGINE=innodb;

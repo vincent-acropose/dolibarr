@@ -3,6 +3,8 @@
 -- Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
 -- Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
 -- Copyright (C) 2010      Juanjo Menent        <jmenent@2byte.es>
+-- Copyright (C) 2012      Cédric Salvador      <csalvador@gpcsolutions.fr>
+-- Copyright (C) 2014      Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
 -- 
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -28,15 +30,16 @@ create table llx_facture
   entity				integer  DEFAULT 1 NOT NULL,			-- multi company id
 
   ref_ext				varchar(255),							-- reference into an external system (not used by dolibarr)
-  ref_int				varchar(255),							-- reference into an internal system (used by dolibarr)
+  ref_int				varchar(255),							-- reference into an internal system (used by dolibarr to store extern id like paypal info)
   ref_client			varchar(255),							-- reference for customer
 
   type					smallint DEFAULT 0 NOT NULL,			-- type of invoice
   increment				varchar(10),
   fk_soc				integer            NOT NULL,
   datec					datetime,								-- date de creation de la facture
-  datef					date,									-- date de la facture
-  date_valid			date,									-- date de validation
+  datef					date,									-- date invoice
+  date_pointoftax		date DEFAULT NULL,									-- date point of tax (for GB)
+  date_valid			date,									-- date validation
   tms					timestamp,								-- date creation/modification
   paye					smallint DEFAULT 0 NOT NULL,
   amount				double(24,8)     DEFAULT 0 NOT NULL,
@@ -47,30 +50,47 @@ create table llx_facture
   close_code			varchar(16),							-- Code motif cloture sans paiement complet
   close_note			varchar(128),							-- Commentaire cloture sans paiement complet
 
-  tva					double(24,8)     DEFAULT 0,				-- montant tva apres remise totale
-  localtax1				double(24,8)     DEFAULT 0,				-- amount localtax1
-  localtax2				double(24,8)     DEFAULT 0,				-- amount localtax2	
-  total					double(24,8)     DEFAULT 0,				-- montant total ht apres remise totale
-  total_ttc				double(24,8)     DEFAULT 0,				-- montant total ttc apres remise totale
+  tva					double(24,8)     DEFAULT 0,				-- amount total tva apres remise totale
+  localtax1				double(24,8)     DEFAULT 0,				-- amount total localtax1
+  localtax2				double(24,8)     DEFAULT 0,				-- amount total localtax2	
+  revenuestamp          double(24,8)     DEFAULT 0,				-- amount total revenuestamp
+  total					double(24,8)     DEFAULT 0,				-- amount total ht apres remise totale
+  total_ttc				double(24,8)     DEFAULT 0,				-- amount total ttc apres remise totale
 
   fk_statut				smallint DEFAULT 0 NOT NULL,
 
-  fk_user_author		integer,								-- createur de la facture
-  fk_user_valid			integer,								-- valideur de la facture
+  fk_user_author		integer,								-- user making creation
+  fk_user_modif         integer,                                -- user making last change
+  fk_user_valid			integer,								-- user validating
 
   fk_facture_source		integer,								-- facture origine si facture avoir
   fk_projet				integer DEFAULT NULL,					-- projet auquel est associee la facture
 
   fk_account			integer,								-- bank account
-  fk_currency			varchar(2),								-- currency code
+  fk_currency			varchar(3),								-- currency code
+  
   fk_cond_reglement		integer  DEFAULT 1 NOT NULL,			-- condition de reglement (30 jours, fin de mois ...)
   fk_mode_reglement		integer,								-- mode de reglement (Virement, Prelevement)
   date_lim_reglement	date,									-- date limite de reglement
 
-  note					text,
+  note_private			text,
   note_public			text,
   model_pdf				varchar(255),
-  import_key			varchar(14),
-  extraparams			varchar(255)							-- for stock other parameters with json format
 
+  fk_incoterms          integer,								-- for incoterms
+  location_incoterms    varchar(255),							-- for incoterms
+
+  situation_cycle_ref smallint,  -- situation cycle reference
+  situation_counter   smallint,  -- situation counter
+  situation_final     smallint,  -- is the situation final ?
+
+  import_key			varchar(14),
+  extraparams			varchar(255),							-- for other parameters with json format
+  
+  fk_multicurrency		integer,
+  multicurrency_code			varchar(255),
+  multicurrency_tx			double(24,8) DEFAULT 1,
+  multicurrency_total_ht		double(24,8) DEFAULT 0,
+  multicurrency_total_tva	double(24,8) DEFAULT 0,
+  multicurrency_total_ttc	double(24,8) DEFAULT 0
 )ENGINE=innodb;

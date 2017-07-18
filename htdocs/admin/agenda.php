@@ -1,7 +1,8 @@
 <?php
-/* Copyright (C) 2008-2010	Laurent Destailleur <eldy@users.sourceforge.net>
+/* Copyright (C) 2008-2015	Laurent Destailleur <eldy@users.sourceforge.net>
  * Copyright (C) 2011		Regis Houssin		<regis.houssin@capnetworks.com>
  * Copyright (C) 2011-2012  Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2015		Jean-François Ferry <jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,11 +37,11 @@ $langs->load("other");
 $action = GETPOST('action','alpha');
 $cancel = GETPOST('cancel','alpha');
 
+
 // Get list of triggers available
 $sql = "SELECT a.rowid, a.code, a.label, a.elementtype";
 $sql.= " FROM ".MAIN_DB_PREFIX."c_action_trigger as a";
 $sql.= " ORDER BY a.rang ASC";
-
 $resql=$db->query($sql);
 if ($resql)
 {
@@ -65,8 +66,9 @@ else
 
 
 /*
-*	Actions
-*/
+ *	Actions
+ */
+
 if ($action == "save" && empty($cancel))
 {
     $i=0;
@@ -84,13 +86,13 @@ if ($action == "save" && empty($cancel))
 
  	if (! $error)
     {
-    	$db->commit();
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+        setEventMessages($langs->trans("SetupSaved"), null, 'mesgs');
+        $db->commit();
     }
     else
     {
-    	$db->rollback();
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+        setEventMessages($langs->trans("Error"),null, 'errors');
+        $db->rollback();
     }
 }
 
@@ -125,26 +127,28 @@ if (preg_match('/del_(.*)/',$action,$reg))
 
 
 /**
- * Affichage du formulaire de saisie
+ * View
  */
 
 llxHeader();
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans("AgendaSetup"),$linkback,'setup');
+print load_fiche_titre($langs->trans("AgendaSetup"),$linkback,'title_setup');
 print "<br>\n";
-
-print $langs->trans("AgendaAutoActionDesc")."<br>\n";
-print "<br>\n";
-
-$head=agenda_prepare_head();
-
-dol_fiche_head($head, 'autoactions', $langs->trans("Agenda"));
 
 
 print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<input type="hidden" name="action" value="save">';
+
+
+$head=agenda_prepare_head();
+
+dol_fiche_head($head, 'autoactions', $langs->trans("Agenda"), 0, 'action');
+
+print $langs->trans("AgendaAutoActionDesc")."<br>\n";
+print $langs->trans("OnlyActiveElementsAreShown").'<br>';
+print "<br>\n";
 
 $var=true;
 print '<table class="noborder" width="100%">';
@@ -152,6 +156,7 @@ print '<tr class="liste_titre">';
 print '<td colspan="2">'.$langs->trans("ActionsEvents").'</td>';
 print '<td><a href="'.$_SERVER["PHP_SELF"].'?action=selectall">'.$langs->trans("All").'</a>/<a href="'.$_SERVER["PHP_SELF"].'?action=selectnone">'.$langs->trans("None").'</a>';
 print '</tr>'."\n";
+// Show each trigger (list is in c_action_trigger)
 if (! empty($triggers))
 {
 	foreach ($triggers as $trigger)
@@ -160,9 +165,14 @@ if (! empty($triggers))
 		if ($module == 'order_supplier' || $module == 'invoice_supplier') $module = 'fournisseur';
 		if ($module == 'shipping') $module = 'expedition_bon';
 		if ($module == 'member') $module = 'adherent';
+		if ($module == 'project') $module = 'projet';
 		//print 'module='.$module.'<br>';
-		if ($conf->$module->enabled)
+		if (! empty($conf->$module->enabled))
 		{
+			// Discard special case: If option FICHINTER_CLASSIFY_BILLED is not set, we discard both trigger FICHINTER_CLASSIFY_BILLED and FICHINTER_CLASSIFY_UNBILLED
+			if ($trigger['code'] == 'FICHINTER_CLASSIFY_BILLED' && empty($conf->global->FICHINTER_CLASSIFY_BILLED)) continue;
+			if ($trigger['code'] == 'FICHINTER_CLASSIFY_UNBILLED' && empty($conf->global->FICHINTER_CLASSIFY_BILLED)) continue;
+
 			$var=!$var;
 			print '<tr '.$bc[$var].'>';
 			print '<td>'.$trigger['code'].'</td>';
@@ -170,68 +180,24 @@ if (! empty($triggers))
 			print '<td align="right" width="40">';
 			$key='MAIN_AGENDA_ACTIONAUTO_'.$trigger['code'];
 			$value=$conf->global->$key;
-			print '<input '.$bc[$var].' type="checkbox" name="'.$key.'" value="1"'.((($action=='selectall'||$value) && $action!="selectnone")?' checked="checked"':'').'>';
+			print '<input '.$bc[$var].' type="checkbox" name="'.$key.'" value="1"'.((($action=='selectall'||$value) && $action!="selectnone")?' checked':'').'>';
 			print '</td></tr>'."\n";
 		}
 	}
 }
 print '</table>';
 
-print '<br><center>';
+dol_fiche_end();
+
+print '<div class="center">';
 print '<input type="submit" name="save" class="button" value="'.$langs->trans("Save").'">';
-print ' &nbsp; &nbsp; ';
-print '<input type="submit" name="cancel" class="button" value="'.$langs->trans("Cancel").'">';
-print "</center>";
+print "</div>";
 
 print "</form>\n";
-
-print '</div>';
-
-/*
- * Other options
-*/
-
-print_titre($langs->trans("OtherOptions"));
-
-$var=true;
-
-print '<table class="noborder allwidth">'."\n";
-print '<tr class="liste_titre">'."\n";
-print '<td>'.$langs->trans("Parameters").'</td>'."\n";
-print '<td align="center" width="20">&nbsp;</td>'."\n";
-print '<td align="center" width="100">'.$langs->trans("Value").'</td>'."\n";
-print '</tr>'."\n";
-
-// Manual or automatic
-$var=!$var;
-print '<tr '.$bc[$var].'>'."\n";
-print '<td>'.$langs->trans("AGENDA_USE_EVENT_TYPE").'</td>'."\n";
-print '<td align="center" width="20">&nbsp;</td>'."\n";
-
-print '<td align="center" width="100">'."\n";
-if ($conf->use_javascript_ajax)
-{
-	print ajax_constantonoff('AGENDA_USE_EVENT_TYPE');
-}
-else
-{
-	if($conf->global->AGENDA_USE_EVENT_TYPE == 0)
-	{
-		print '<a href="'.$_SERVER['PHP_SELF'].'?action=set_AGENDA_USE_EVENT_TYPE">'.img_picto($langs->trans("Disabled"),'off').'</a>';
-	}
-	else if($conf->global->BUSINESS_VISIBLE_TO_ALL_BY_DEFAULT == 1)
-	{
-		print '<a href="'.$_SERVER['PHP_SELF'].'?action=del_AGENDA_USE_EVENT_TYPE">'.img_picto($langs->trans("Enabled"),'on').'</a>';
-	}
-}
-print '</td></tr>'."\n";
 
 
 print "<br>";
 
-dol_htmloutput_mesg($mesg);
+llxFooter();
 
 $db->close();
-
-llxFooter();
-?>

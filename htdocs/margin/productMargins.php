@@ -1,5 +1,6 @@
 <?php
 /* Copyright (C) 2012-2013	Christophe Battarel	<christophe.battarel@altairis.fr>
+ * Copyright (C) 2014		Ferran Marcet		<fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,9 +72,10 @@ $pagenext = $page + 1;
 $startdate=$enddate='';
 
 if (!empty($_POST['startdatemonth']))
-  $startdate  = date('Y-m-d', dol_mktime(12, 0, 0, $_POST['startdatemonth'], $_POST['startdateday'], $_POST['startdateyear']));
+  $startdate  = dol_mktime(0, 0, 0, $_POST['startdatemonth'], $_POST['startdateday'], $_POST['startdateyear']);
 if (!empty($_POST['enddatemonth']))
-  $enddate  = date('Y-m-d', dol_mktime(12, 0, 0, $_POST['enddatemonth'], $_POST['enddateday'], $_POST['enddateyear']));
+  $enddate  = dol_mktime(23, 59, 59, $_POST['enddatemonth'], $_POST['enddateday'], $_POST['enddateyear']);
+
 
 /*
  * View
@@ -87,126 +89,143 @@ $form = new Form($db);
 llxHeader('',$langs->trans("Margins").' - '.$langs->trans("Products"));
 
 $text=$langs->trans("Margins");
-
-print_fiche_titre($text);
+//print load_fiche_titre($text);
 
 // Show tabs
 $head=marges_prepare_head($user);
 $titre=$langs->trans("Margins");
 $picto='margin';
-dol_fiche_head($head, 'productMargins', $titre, 0, $picto);
 
 print '<form method="post" name="sel" action="'.$_SERVER['PHP_SELF'].'">';
+
+dol_fiche_head($head, 'productMargins', $titre, 0, $picto);
+
 print '<table class="border" width="100%">';
 
 if ($id > 0) {
 
-  print '<tr><td width="20%">'.$langs->trans('ChooseProduct/Service').'</td>';
-  print '<td colspan="4">';
-  print $form->select_produits($id,'id','',20,0,1,2,'',1);
+  print '<tr><td class="titlefield">'.$langs->trans('ChooseProduct/Service').'</td>';
+  print '<td class="maxwidthonsmartpone" colspan="4">';
+  print $form->select_produits($id,'id','',20,0,1,2,'',1, array(), 0, 'All');
   print '</td></tr>';
-
-  print '<tr><td width="20%">'.$langs->trans('AllProducts').'</td>';
-  print '<td colspan="4"><input type="checkbox" id="all" /></td></tr>';
 
   if (! $sortorder) $sortorder="DESC";
   if (! $sortfield) $sortfield="f.datef";
 }
 else {
-	print '<tr><td width="20%">'.$langs->trans('ChooseProduct/Service').'</td>';
-	print '<td colspan="4">';
-	print $form->select_produits('','id','',20,0,1,2,'',1);
+	print '<tr><td class="titlefield">'.$langs->trans('ChooseProduct/Service').'</td>';
+	print '<td class="maxwidthonsmartphone" colspan="4">';
+	print $form->select_produits('','id','',20,0,1,2,'',1, array(), 0, 'All');
 	print '</td></tr>';
 
 }
 
 // Start date
-print '<td>'.$langs->trans('StartDate').'</td>';
-print '<td width="20%">';
+print '<tr>';
+print '<td class="titlefield">'.$langs->trans('DateStart').' ('.$langs->trans("DateValidation").')</td>';
+print '<td>';
 $form->select_date($startdate,'startdate','','',1,"sel",1,1);
 print '</td>';
-print '<td width="20%">'.$langs->trans('EndDate').'</td>';
-print '<td width="20%">';
+print '<td>'.$langs->trans('DateEnd').' ('.$langs->trans("DateValidation").')</td>';
+print '<td>';
 $form->select_date($enddate,'enddate','','',1,"sel",1,1);
 print '</td>';
 print '<td style="text-align: center;">';
-print '<input type="submit" class="button" value="'.$langs->trans('Launch').'" />';
+print '<input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans('Refresh')).'" />';
 print '</td></tr>';
 
+print "</table>";
+
+print '<br>';
+
+print '<table class="border" width="100%">';
+
 // Total Margin
-print '<tr style="font-weight: bold"><td>'.$langs->trans("TotalMargin").'</td><td colspan="4">';
+print '<tr><td class="titlefield">'.$langs->trans("TotalMargin").'</td><td colspan="4">';
 print '<span id="totalMargin"></span>'; // set by jquery (see below)
 print '</td></tr>';
 
 // Margin Rate
 if (! empty($conf->global->DISPLAY_MARGIN_RATES)) {
-	print '<tr style="font-weight: bold"><td>'.$langs->trans("MarginRate").'</td><td colspan="4">';
+	print '<tr><td>'.$langs->trans("MarginRate").'</td><td colspan="4">';
 	print '<span id="marginRate"></span>'; // set by jquery (see below)
 	print '</td></tr>';
 }
 
 // Mark Rate
 if (! empty($conf->global->DISPLAY_MARK_RATES)) {
-	print '<tr style="font-weight: bold"><td>'.$langs->trans("MarkRate").'</td><td colspan="4">';
+	print '<tr><td>'.$langs->trans("MarkRate").'</td><td colspan="4">';
 	print '<span id="markRate"></span>'; // set by jquery (see below)
 	print '</td></tr>';
 }
 
 print "</table>";
+
+dol_fiche_end();
+
 print '</form>';
 
-$sql = "SELECT DISTINCT d.fk_product, p.label, p.rowid, p.fk_product_type, p.ref,";
-$sql.= " f.facnumber, f.total as total_ht,";
-$sql.= " sum(d.total_ht) as selling_price,";
-$sql.= $db->ifsql('f.type =2','sum(d.buy_price_ht * d.qty *-1)','sum(d.buy_price_ht * d.qty)')." as buying_price, ";
-$sql.= $db->ifsql('f.type =2','sum(d.total_ht + (d.buy_price_ht * d.qty))','sum(d.total_ht - (d.buy_price_ht * d.qty))')." as marge," ;
-$sql.= " f.datef, f.paye, f.fk_statut as statut, f.rowid as facid";
+$sql = "SELECT p.label, p.rowid, p.fk_product_type, p.ref, p.entity as pentity,";
+if ($id > 0) $sql.= " d.fk_product,";
+if ($id > 0) $sql.= " f.rowid as facid, f.facnumber, f.total as total_ht, f.datef, f.paye, f.fk_statut as statut,";
+$sql.= " SUM(d.total_ht) as selling_price,";
+// Note: qty and buy_price_ht is always positive (if not your database may be corrupted, you can update this)
+$sql.= " SUM(".$db->ifsql('d.total_ht < 0','d.qty * d.buy_price_ht * -1','d.qty * d.buy_price_ht').") as buying_price,";
+$sql.= " SUM(".$db->ifsql('d.total_ht < 0','-1 * (abs(d.total_ht) - (d.buy_price_ht * d.qty))','d.total_ht - (d.buy_price_ht * d.qty)').") as marge";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
-$sql.= ", ".MAIN_DB_PREFIX."product as p";
 $sql.= ", ".MAIN_DB_PREFIX."facture as f";
 $sql.= ", ".MAIN_DB_PREFIX."facturedet as d";
-$sql.= " WHERE f.entity = ".$conf->entity;
-$sql.= " AND f.fk_soc = s.rowid";
-$sql.= " AND d.fk_product = p.rowid";
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product as p ON p.rowid = d.fk_product";
+$sql.= " WHERE f.fk_soc = s.rowid";
+$sql.= ' AND f.entity IN ('.getEntity('facture', 1).')';
 $sql.= " AND f.fk_statut > 0";
 $sql.= " AND d.fk_facture = f.rowid";
 if ($id > 0)
 	$sql.= " AND d.fk_product =".$id;
 if (!empty($startdate))
-  $sql.= " AND f.datef >= '".$startdate."'";
+  $sql.= " AND f.datef >= '".$db->idate($startdate)."'";
 if (!empty($enddate))
-  $sql.= " AND f.datef <= '".$enddate."'";
+  $sql.= " AND f.datef <= '".$db->idate($enddate)."'";
 $sql .= " AND d.buy_price_ht IS NOT NULL";
 if (isset($conf->global->ForceBuyingPriceIfNull) && $conf->global->ForceBuyingPriceIfNull == 1)
 	$sql .= " AND d.buy_price_ht <> 0";
-if ($id > 0)
-  $sql.= " GROUP BY f.rowid";
-else
-  $sql.= " GROUP BY d.fk_product, p.label, p.rowid, p.fk_product_type, p.ref, f.facnumber, f.total, f.datef, f.paye, f.fk_statut, f.rowid";
-$sql.= " ORDER BY $sortfield $sortorder ";
+if ($id > 0) $sql.= " GROUP BY p.label, p.rowid, p.fk_product_type, p.ref, p.entity, d.fk_product, f.rowid, f.facnumber, f.total, f.datef, f.paye, f.fk_statut";
+else $sql.= " GROUP BY p.label, p.rowid, p.fk_product_type, p.ref, p.entity";
+$sql.=$db->order($sortfield,$sortorder);
 // TODO: calculate total to display then restore pagination
 //$sql.= $db->plimit($conf->liste_limit +1, $offset);
-dol_syslog('margin::productMargins.php sql='.$sql,LOG_DEBUG);
+
+dol_syslog('margin::productMargins.php', LOG_DEBUG);
 $result = $db->query($sql);
 if ($result)
 {
 	$num = $db->num_rows($result);
 
 	print '<br>';
-	print_barre_liste($langs->trans("MarginDetails"),$page,$_SERVER["PHP_SELF"],"&amp;id=".$id,$sortfield,$sortorder,'',0,0,'');
+	print_barre_liste($langs->trans("MarginDetails"),$page,$_SERVER["PHP_SELF"],"&amp;id=".$id,$sortfield,$sortorder,'',$num,$num,'');
 
+	if ($conf->global->MARGIN_TYPE == "1")
+	    $labelcostprice=$langs->trans('BuyingPrice');
+	else   // value is 'costprice' or 'pmp'
+	    $labelcostprice=$langs->trans('CostPrice');
+	    
+	$moreforfilter='';
+	
 	$i = 0;
-	print "<table class=\"noborder\" width=\"100%\">";
+    print '<div class="div-table-responsive">';
+    print '<table class="tagtable liste'.($moreforfilter?" listwithfilterbefore":"").'">'."\n";
 
 	print '<tr class="liste_titre">';
 	if ($id > 0) {
-  	print_liste_field_titre($langs->trans("Invoice"),$_SERVER["PHP_SELF"],"f.facnumber","","&amp;id=".$id,'',$sortfield,$sortorder);
-  	print_liste_field_titre($langs->trans("DateInvoice"),$_SERVER["PHP_SELF"],"f.datef","","",'align="center"',$sortfield,$sortorder);
-  }
-  else
-  	print_liste_field_titre($langs->trans("ProductService"),$_SERVER["PHP_SELF"],"p.ref","","&amp;id=".$id,'align="center"',$sortfield,$sortorder);
+  		print_liste_field_titre($langs->trans("Invoice"),$_SERVER["PHP_SELF"],"f.facnumber","","&amp;id=".$id,'',$sortfield,$sortorder);
+  		print_liste_field_titre($langs->trans("DateInvoice"),$_SERVER["PHP_SELF"],"f.datef","","&amp;id=".$id,'align="center"',$sortfield,$sortorder);
+  	}
+  	else
+  	{
+  		print_liste_field_titre($langs->trans("ProductService"),$_SERVER["PHP_SELF"],"p.ref","","&amp;id=".$id,'',$sortfield,$sortorder);
+  	}
 	print_liste_field_titre($langs->trans("SellingPrice"),$_SERVER["PHP_SELF"],"selling_price","","&amp;id=".$id,'align="right"',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("BuyingPrice"),$_SERVER["PHP_SELF"],"buying_price","","&amp;id=".$id,'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre($labelcostprice,$_SERVER["PHP_SELF"],"buying_price","","&amp;id=".$id,'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Margin"),$_SERVER["PHP_SELF"],"marge","","&amp;id=".$id,'align="right"',$sortfield,$sortorder);
 	if (! empty($conf->global->DISPLAY_MARGIN_RATES))
 		print_liste_field_titre($langs->trans("MarginRate"),$_SERVER["PHP_SELF"],"","","&amp;id=".$id,'align="right"',$sortfield,$sortorder);
@@ -216,18 +235,29 @@ if ($result)
 
 	$cumul_achat = 0;
 	$cumul_vente = 0;
-	$cumul_qty = 0;
 	$rounding = min($conf->global->MAIN_MAX_DECIMALS_UNIT,$conf->global->MAIN_MAX_DECIMALS_TOT);
 
 	if ($num > 0)
 	{
 		$var=True;
+
 		while ($i < $num /*&& $i < $conf->liste_limit*/)
 		{
 			$objp = $db->fetch_object($result);
+			$pa = $objp->buying_price;
+			$pv = $objp->selling_price;
+			$marge = $objp->marge;
 
-			$marginRate = ($objp->buying_price != 0)?(100 * round($objp->marge / $objp->buying_price, 5)):'' ;
-			$markRate = ($objp->selling_price != 0)?(100 * round($objp->marge / $objp->selling_price, 5)):'' ;
+			if ($marge < 0)
+			{
+				$marginRate = ($pa != 0)?-1*(100 * $marge / $pa):'' ;
+				$markRate = ($pv != 0)?-1*(100 * $marge / $pv):'' ;
+			}
+			else
+			{
+				$marginRate = ($pa != 0)?(100 * $marge / $pa):'' ;
+				$markRate = ($pv != 0)?(100 * $marge / $pv):'' ;
+			}
 
 			$var=!$var;
 
@@ -242,49 +272,64 @@ if ($result)
 				print dol_print_date($db->jdate($objp->datef),'day')."</td>";
 			}
 			else {
-				$product_static->type=$objp->fk_product_type;
-				$product_static->id=$objp->fk_product;
-				$product_static->ref=$objp->ref;
-				$product_static->libelle=$objp->label;
-				$text=$product_static->getNomUrl(1);
-				$text.= ' - '.$objp->label;
-				print "<td>".$product_static->getNomUrl(1)."</td>\n";
+				print '<td>';
+				if ($objp->rowid > 0)
+				{
+    				$product_static->type=$objp->fk_product_type;
+    				$product_static->id=$objp->rowid;
+    				$product_static->ref=$objp->ref;
+    				$product_static->label=$objp->label;
+    				$product_static->entity=$objp->pentity;
+    				$text=$product_static->getNomUrl(1);
+    				print $text.= ' - '.$objp->label;
+				}
+				else
+				{
+				    print $langs->trans("NotPredefinedProducts");
+				}
+				print "</td>\n";
+				//print "<td>".$product_static->getNomUrl(1)."</td>\n";
 			}
-			print "<td align=\"right\">".price($objp->selling_price)."</td>\n";
-			print "<td align=\"right\">".price($objp->buying_price)."</td>\n";
-			print "<td align=\"right\">".price($objp->marge)."</td>\n";
+			print "<td align=\"right\">".price($pv, null, null, null, null, $rounding)."</td>\n";
+			print "<td align=\"right\">".price($pa, null, null, null, null, $rounding)."</td>\n";
+			print "<td align=\"right\">".price($marge, null, null, null, null, $rounding)."</td>\n";
 			if (! empty($conf->global->DISPLAY_MARGIN_RATES))
-				print "<td align=\"right\">".(($marginRate === '')?'n/a':price($marginRate)."%")."</td>\n";
+				print "<td align=\"right\">".(($marginRate === '')?'n/a':price($marginRate, null, null, null, null, $rounding)."%")."</td>\n";
 			if (! empty($conf->global->DISPLAY_MARK_RATES))
-				print "<td align=\"right\">".(($markRate === '')?'n/a':price($markRate)."%")."</td>\n";
+				print "<td align=\"right\">".(($markRate === '')?'n/a':price($markRate, null, null, null, null, $rounding)."%")."</td>\n";
 			print "</tr>\n";
+
 			$i++;
-			$cumul_achat += round($objp->buying_price, $rounding);
-			$cumul_vente += round($objp->selling_price, $rounding);
+			$cumul_achat += $objp->buying_price;
+			$cumul_vente += $objp->selling_price;
 		}
+
 	}
 
 	// affichage totaux marges
 	$var=!$var;
 	$totalMargin = $cumul_vente - $cumul_achat;
-	$marginRate = ($cumul_achat != 0)?(100 * round($totalMargin / $cumul_achat, 5)):'' ;
-	$markRate = ($cumul_vente != 0)?(100 * round($totalMargin / $cumul_vente, 5)):'' ;
-	print '<tr '.$bc[$var].' style="border-top: 1px solid #ccc; font-weight: bold">';
+
+	$marginRate = ($cumul_achat != 0)?(100 * $totalMargin / $cumul_achat):'';
+	$markRate = ($cumul_vente != 0)?(100 * $totalMargin / $cumul_vente):'';
+
+	print '<tr class="liste_total">';
 	if ($id > 0)
 		print '<td colspan=2>';
 	else
 		print '<td>';
 	print $langs->trans('TotalMargin')."</td>";
-	print "<td align=\"right\">".price($cumul_vente)."</td>\n";
-	print "<td align=\"right\">".price($cumul_achat)."</td>\n";
-	print "<td align=\"right\">".price($totalMargin)."</td>\n";
+	print "<td align=\"right\">".price($cumul_vente, null, null, null, null, $rounding)."</td>\n";
+	print "<td align=\"right\">".price($cumul_achat, null, null, null, null, $rounding)."</td>\n";
+	print "<td align=\"right\">".price($totalMargin, null, null, null, null, $rounding)."</td>\n";
 	if (! empty($conf->global->DISPLAY_MARGIN_RATES))
-		print "<td align=\"right\">".(($marginRate === '')?'n/a':price($marginRate)."%")."</td>\n";
+		print "<td align=\"right\">".(($marginRate === '')?'n/a':price($marginRate, null, null, null, null, $rounding)."%")."</td>\n";
 	if (! empty($conf->global->DISPLAY_MARK_RATES))
-		print "<td align=\"right\">".(($markRate === '')?'n/a':price($markRate)."%")."</td>\n";
+		print "<td align=\"right\">".(($markRate === '')?'n/a':price($markRate, null, null, null, null, $rounding)."%")."</td>\n";
 	print "</tr>\n";
 
 	print "</table>";
+	print '</div>';
 }
 else
 {
@@ -293,23 +338,21 @@ else
 $db->free($result);
 
 
-llxFooter();
-$db->close();
-?>
+print '
 <script type="text/javascript">
 $(document).ready(function() {
-
-  $("#all").change(function() {
-    $("#id").val('').change();
-  });
 
   $("#id").change(function() {
      $("div.fiche form").submit();
   });
 
-  $("#totalMargin").html("<?php echo price($totalMargin); ?>");
-  $("#marginRate").html("<?php echo (($marginRate === '')?'n/a':price($marginRate)."%"); ?>");
-  $("#markRate").html("<?php echo (($markRate === '')?'n/a':price($markRate)."%"); ?>");
+  $("#totalMargin").html("'.price($totalMargin, null, null, null, null, $rounding).'");
+  $("#marginRate").html("'.(($marginRate === '')?'n/a':price($marginRate, null, null, null, null, $rounding)."%").'");
+  $("#markRate").html("'.(($markRate === '')?'n/a':price($markRate, null, null, null, null, $rounding)."%").'");
 
 });
 </script>
+';
+
+llxFooter();
+$db->close();

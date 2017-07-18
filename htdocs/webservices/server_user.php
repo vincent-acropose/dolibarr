@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2006-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2006-2016 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,9 @@
 /**
  *       \file       htdocs/webservices/server_user.php
  *       \brief      File that is entry point to call Dolibarr WebServices
- *       \version    $Id: server_user.php,v 1.7 2010/12/19 11:49:37 eldy Exp $
  */
 
-// This is to make Dolibarr working with Plesk
-set_include_path($_SERVER['DOCUMENT_ROOT'].'/htdocs');
+if (! defined("NOCSRFCHECK"))    define("NOCSRFCHECK",'1');
 
 require_once '../master.inc.php';
 require_once NUSOAP_PATH.'/nusoap.php';		// Include SOAP
@@ -30,6 +28,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/ws.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/user/class/user.class.php';
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/security2.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 
 
 dol_syslog("Call User webservices interfaces");
@@ -110,7 +109,7 @@ $server->wsdl->addComplexType(
         'datec' => array('name'=>'datec','type'=>'xsd:dateTime'),
         'datem' => array('name'=>'datem','type'=>'xsd:dateTime'),
         'fk_thirdparty' => array('name'=>'fk_thirdparty','type'=>'xsd:string'),
-        'fk_socpeople' => array('name'=>'fk_socpeople','type'=>'xsd:string'),
+        'fk_contact' => array('name'=>'fk_contact','type'=>'xsd:string'),
         'fk_member' => array('name'=>'fk_member','type'=>'xsd:string'),
         'datelastlogin' => array('name'=>'datelastlogin','type'=>'xsd:dateTime'),
         'datepreviouslogin' => array('name'=>'datepreviouslogin','type'=>'xsd:dateTime'),
@@ -131,7 +130,7 @@ $server->wsdl->addComplexType(
 	'all',
 	'',
 	array(
-	'nom' => array('name'=>'nom','type'=>'xsd:string'),
+	'name' => array('name'=>'name','type'=>'xsd:string'),
 	'id' => array('name'=>'id','type'=>'xsd:string'),
 	'datec' => array('name'=>'datec','type'=>'xsd:string'),
 	'nb' => array('name'=>'nb','type'=>'xsd:string')
@@ -151,41 +150,78 @@ $server->wsdl->addComplexType(
 	'tns:group'
 );
 
+$thirdpartywithuser_fields = array(
+	// For thirdparty and contact
+	'name' => array('name'=>'name','type'=>'xsd:string'),
+	'firstname' => array('name'=>'firstname','type'=>'xsd:string'),
+	'name_thirdparty' => array('name'=>'name_thirdparty','type'=>'xsd:string'),
+	'ref_ext' => array('name'=>'ref_ext','type'=>'xsd:string'),
+	'client' => array('name'=>'client','type'=>'xsd:string'),
+	'fournisseur' => array('name'=>'fournisseur','type'=>'xsd:string'),
+	'address' => array('name'=>'address','type'=>'xsd:string'),
+	'zip' => array('name'=>'zip','type'=>'xsd:string'),
+	'town' => array('name'=>'town','type'=>'xsd:string'),
+	'country_id' => array('name'=>'country_id','type'=>'xsd:string'),
+	'country_code' => array('name'=>'country_code','type'=>'xsd:string'),
+	'phone' => array('name'=>'phone','type'=>'xsd:string'),
+	'phone_mobile' => array('name'=>'phone_mobile','type'=>'xsd:string'),
+	'fax' => array('name'=>'fax','type'=>'xsd:string'),
+	'email' => array('name'=>'email','type'=>'xsd:string'),
+	'url' => array('name'=>'url','type'=>'xsd:string'),
+	'profid1' => array('name'=>'profid1','type'=>'xsd:string'),
+	'profid2' => array('name'=>'profid2','type'=>'xsd:string'),
+	'profid3' => array('name'=>'profid3','type'=>'xsd:string'),
+	'profid4' => array('name'=>'profid4','type'=>'xsd:string'),
+	'profid5' => array('name'=>'profid5','type'=>'xsd:string'),
+	'profid6' => array('name'=>'profid6','type'=>'xsd:string'),
+	'capital' => array('name'=>'capital','type'=>'xsd:string'),
+	'tva_assuj' => array('name'=>'tva_assuj','type'=>'xsd:string'),
+	'tva_intra' => array('name'=>'tva_intra','type'=>'xsd:string'),
+	// 	For user
+	'login' => array('name'=>'login','type'=>'xsd:string'),
+	'password' => array('name'=>'password','type'=>'xsd:string'),
+	'group_id' => array('name'=>'group_id','type'=>'xsd:string')
+);
+
+//Retreive all extrafield for contact
+// fetch optionals attributes and labels
+$extrafields=new ExtraFields($db);
+$extralabels=$extrafields->fetch_name_optionals_label('socpeople',true);
+if (count($extrafields)>0) {
+	$extrafield_array = array();
+}
+foreach($extrafields->attribute_label as $key=>$label)
+{
+	$type =$extrafields->attribute_type[$key];
+	if ($type=='date' || $type=='datetime') {$type='xsd:dateTime';}
+	else {$type='xsd:string';}
+
+	$extrafield_array['contact_options_'.$key]=array('name'=>'contact_options_'.$key,'type'=>$type);
+}
+
+$thirdpartywithuser_fields=array_merge($thirdpartywithuser_fields,$extrafield_array);
+
+
 $server->wsdl->addComplexType(
 	'thirdpartywithuser',
 	'complexType',
 	'struct',
 	'all',
 	'',
+	$thirdpartywithuser_fields
+);
+
+// Define WSDL user short object
+$server->wsdl->addComplexType(
+	'shortuser',
+	'complexType',
+	'struct',
+	'all',
+	'',
 	array(
-		// For thirdparty and contact 
-		'name' => array('name'=>'name','type'=>'xsd:string'),
-		'firstname' => array('name'=>'firstname','type'=>'xsd:string'),
-		'name_thirdparty' => array('name'=>'name_thirdparty','type'=>'xsd:string'),
-		'ref_ext' => array('name'=>'ref_ext','type'=>'xsd:string'),
-		'client' => array('name'=>'client','type'=>'xsd:string'),
-		'fournisseur' => array('name'=>'fournisseur','type'=>'xsd:string'),
-		'address' => array('name'=>'address','type'=>'xsd:string'),
-		'zip' => array('name'=>'zip','type'=>'xsd:string'),
-		'town' => array('name'=>'town','type'=>'xsd:string'),
-		'country_id' => array('name'=>'country_id','type'=>'xsd:string'),
-		'country_code' => array('name'=>'country_code','type'=>'xsd:string'),
-		'phone' => array('name'=>'phone','type'=>'xsd:string'),
-		'fax' => array('name'=>'fax','type'=>'xsd:string'),
-		'email' => array('name'=>'email','type'=>'xsd:string'),
-		'url' => array('name'=>'url','type'=>'xsd:string'),
-		'profid1' => array('name'=>'profid1','type'=>'xsd:string'),
-		'profid2' => array('name'=>'profid2','type'=>'xsd:string'),
-		'profid3' => array('name'=>'profid3','type'=>'xsd:string'),
-		'profid4' => array('name'=>'profid4','type'=>'xsd:string'),
-		'profid5' => array('name'=>'profid5','type'=>'xsd:string'),
-		'profid6' => array('name'=>'profid6','type'=>'xsd:string'),
-		'capital' => array('name'=>'capital','type'=>'xsd:string'),
-		'tva_assuj' => array('name'=>'tva_assuj','type'=>'xsd:string'),
-		'tva_intra' => array('name'=>'tva_intra','type'=>'xsd:string'),
-		// 	For user
-		'login' => array('name'=>'login','type'=>'xsd:string'),
-		'password' => array('name'=>'password','type'=>'xsd:string')
+	'login' => array('name'=>'login','type'=>'xsd:string'),
+	'password' => array('name'=>'password','type'=>'xsd:string'),
+	'entity' => array('name'=>'entity','type'=>'xsd:string'),
 	)
 );
 
@@ -227,16 +263,29 @@ $server->register(
 );
 
 $server->register(
-	'CreateUserFromThirdparty',
+	'createUserFromThirdparty',
 	// Entry values
 	array('authentication'=>'tns:authentication','thirdpartywithuser'=>'tns:thirdpartywithuser'),
 	// Exit values
 	array('result'=>'tns:result','id'=>'xsd:string'),
 	$ns,
-	$ns.'#CreateUserFromThirdparty',
+	$ns.'#createUserFromThirdparty',
 	$styledoc,
 	$styleuse,
 	'WS to create an external user with thirdparty and contact'
+);
+
+$server->register(
+	'setUserPassword',
+	// Entry values
+	array('authentication'=>'tns:authentication','shortuser'=>'tns:shortuser'),
+	// Exit values
+	array('result'=>'tns:result','id'=>'xsd:string'),
+	$ns,
+	$ns.'#setUserPassword',
+	$styledoc,
+	$styleuse,
+	'WS to change password of an user'
 );
 
 
@@ -248,7 +297,7 @@ $server->register(
  * @param	array		$authentication		Array of authentication information
  * @param	int			$id					Id of object
  * @param	string		$ref				Ref of object
- * @param	ref_ext		$ref_ext			Ref external of object
+ * @param	string		$ref_ext			Ref external of object
  * @return	mixed
  */
 function getUser($authentication,$id,$ref='',$ref_ext='')
@@ -288,36 +337,32 @@ function getUser($authentication,$id,$ref='',$ref_ext='')
                 $objectresp = array(
 			    	'result'=>array('result_code'=>'OK', 'result_label'=>''),
 			        'user'=>array(
-'id' => $user->id,
-'lastname' => $user->lastname,
-'firstname' => $user->firstname,
-'note' => $user->note,
-'email' => $user->email,
-'signature' => $user->signature,
-'office_phone' => $user->office_phone,
-'office_fax' => $user->office_fax,
-'user_mobile' => $user->user_mobile,
-'admin' => $user->admin,
-'login' => $user->login,
-'entity' => $user->entity,
-'pass_indatabase' => $user->pass_indatabase,
-'pass_indatabase_crypted' => $user->pass_indatabase_crypted,
-'datec' => dol_print_date($user->datec,'dayhourrfc'),
-'datem' => dol_print_date($user->datem,'dayhourrfc'),
-'fk_thirdparty' => $user->societe_id,
-'fk_socpeople' => $user->contact_id,
-'fk_member' => $user->fk_member,
-'webcal_login' => $user->webcal_login,
-'phenix_login' => $user->phenix_login,
-'phenix_pass' => $user->phenix_pass,
-'phenix_pass_crypted' => $user->phenix_pass_crypted,
-'datelastlogin' => dol_print_date($user->datelastlogin,'dayhourrfc'),
-'datepreviouslogin' => dol_print_date($user->datepreviouslogin,'dayhourrfc'),
-'statut' => $user->statut,
-'photo' => $user->photo,
-'lang' => $user->lang,
-//'rights' => $user->rights,
-'canvas' => $user->canvas
+						'id' => $user->id,
+						'lastname' => $user->lastname,
+						'firstname' => $user->firstname,
+						'note' => $user->note,
+						'email' => $user->email,
+						'signature' => $user->signature,
+						'office_phone' => $user->office_phone,
+						'office_fax' => $user->office_fax,
+						'user_mobile' => $user->user_mobile,
+						'admin' => $user->admin,
+						'login' => $user->login,
+						'entity' => $user->entity,
+						'pass_indatabase' => $user->pass_indatabase,
+						'pass_indatabase_crypted' => $user->pass_indatabase_crypted,
+						'datec' => dol_print_date($user->datec,'dayhourrfc'),
+						'datem' => dol_print_date($user->datem,'dayhourrfc'),
+						'fk_thirdparty' => $user->societe_id,
+						'fk_contact' => $user->contact_id,
+						'fk_member' => $user->fk_member,
+						'datelastlogin' => dol_print_date($user->datelastlogin,'dayhourrfc'),
+						'datepreviouslogin' => dol_print_date($user->datepreviouslogin,'dayhourrfc'),
+						'statut' => $user->statut,
+						'photo' => $user->photo,
+						'lang' => $user->lang,
+						//'rights' => $user->rights,
+						'canvas' => $user->canvas
                     )
                 );
             }
@@ -368,7 +413,7 @@ function getListOfGroups($authentication)
 
 	if (! $error)
 	{
-		$sql = "SELECT g.rowid, g.nom, g.entity, g.datec, COUNT(DISTINCT ugu.fk_user) as nb";
+		$sql = "SELECT g.rowid, g.nom as name, g.entity, g.datec, COUNT(DISTINCT ugu.fk_user) as nb";
 		$sql.= " FROM ".MAIN_DB_PREFIX."usergroup as g";
 		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."usergroup_user as ugu ON ugu.fk_usergroup = g.rowid";
 		if (! empty($conf->multicompany->enabled) && $conf->entity == 1 && ($conf->multicompany->transverse_mode || ($user->admin && ! $user->entity)))
@@ -389,7 +434,7 @@ function getListOfGroups($authentication)
 			while ($i < $num)
 			{
 				$obj=$db->fetch_object($resql);
-				$arraygroups[]=array('id'=>$obj->rowid,'nom'=>$obj->nom,'datec'=>$obj->datec,'nb'=>$obj->nb);
+				$arraygroups[]=array('id'=>$obj->rowid,'name'=>$obj->name,'datec'=>$obj->datec,'nb'=>$obj->nb);
 				$i++;
 			}
 		}
@@ -427,11 +472,11 @@ function getListOfGroups($authentication)
  * @param	array		$thirdpartywithuser Datas
  * @return	mixed
  */
-function CreateUserFromThirdparty($authentication,$thirdpartywithuser)
+function createUserFromThirdparty($authentication,$thirdpartywithuser)
 {
 	global $db,$conf,$langs;
 
-	dol_syslog("Function: CreateUserFromThirdparty login=".$authentication['login']." id=".$id." ref=".$ref." ref_ext=".$ref_ext);
+	dol_syslog("Function: createUserFromThirdparty login=".$authentication['login']." id=".$id." ref=".$ref." ref_ext=".$ref_ext);
 
 	if ($authentication['entity']) $conf->entity=$authentication['entity'];
 
@@ -468,7 +513,7 @@ function CreateUserFromThirdparty($authentication,$thirdpartywithuser)
 			$resql = $db->query($sql);
 			if ($resql)
 			{
-				// If a company or socpeopel is found with the same email we return an error
+				// If a company or contact is found with the same email we return an error
 				$row = $db->fetch_object($resql);
 				if ($row)
 				{
@@ -477,6 +522,7 @@ function CreateUserFromThirdparty($authentication,$thirdpartywithuser)
 				}
 				else
 				{
+					$db->begin();
 					/*
 					 * Company creation
 					 */
@@ -487,6 +533,25 @@ function CreateUserFromThirdparty($authentication,$thirdpartywithuser)
 					$thirdparty->town=$thirdpartywithuser['town'];
 					$thirdparty->country_id=$thirdpartywithuser['country_id'];
 					$thirdparty->country_code=$thirdpartywithuser['country_code'];
+
+					// find the country id by code
+					$langs->load("dict");
+
+					$sql = "SELECT rowid";
+					$sql.= " FROM ".MAIN_DB_PREFIX."c_country";
+					$sql.= " WHERE active = 1";
+					$sql.= " AND code='".$thirdparty->country_code."'";
+
+					$resql=$db->query($sql);
+					if ($resql)
+					{
+						$num = $db->num_rows($resql);
+						if ($num)
+						{
+							$obj = $db->fetch_object($resql);
+							$thirdparty->country_id      = $obj->rowid;
+						}
+					}
 					$thirdparty->phone=$thirdpartywithuser['phone'];
 					$thirdparty->fax=$thirdpartywithuser['fax'];
 					$thirdparty->email=$thirdpartywithuser['email'];
@@ -498,16 +563,16 @@ function CreateUserFromThirdparty($authentication,$thirdpartywithuser)
 					$thirdparty->idprof4=$thirdpartywithuser['prof4'];
 					$thirdparty->idprof5=$thirdpartywithuser['prof5'];
 					$thirdparty->idprof6=$thirdpartywithuser['prof6'];
-					
+
 					$thirdparty->client=$thirdpartywithuser['client'];
 					$thirdparty->fournisseur=$thirdpartywithuser['fournisseur'];
 
 					$socid_return=$thirdparty->create($fuser);
-				
+
 					if ($socid_return > 0)
 					{
 						$thirdparty->fetch($socid_return);
-					
+
 						/*
 						 * Contact creation
 						*
@@ -516,17 +581,31 @@ function CreateUserFromThirdparty($authentication,$thirdpartywithuser)
 						$contact->socid = $thirdparty->id;
 						$contact->lastname = $thirdpartywithuser['name'];
 						$contact->firstname = $thirdpartywithuser['firstname'];
-						$contact->civilite_id = $thirdparty->civilite_id;
+						$contact->civility_id = $thirdparty->civility_id;
 						$contact->address = $thirdparty->address;
 						$contact->zip = $thirdparty->zip;
 						$contact->town = $thirdparty->town;
 						$contact->email = $thirdparty->email;
-						$contact->phone_pro = $thirdparty->tel;
-						$contact->phone_mobile = $thirdparty->phone_mobile;
+						$contact->phone_pro = $thirdparty->phone;
+						$contact->phone_mobile = $thirdpartywithuser['phone_mobile'];
 						$contact->fax = $thirdparty->fax;
+						$contact->statut = 1;
+						$contact->country_id = $thirdparty->country_id;
+						$contact->country_code = $thirdparty->country_code;
+
+						//Retreive all extrafield for thirdsparty
+						// fetch optionals attributes and labels
+						$extrafields=new ExtraFields($db);
+						$extralabels=$extrafields->fetch_name_optionals_label('socpeople',true);
+						foreach($extrafields->attribute_label as $key=>$label)
+						{
+							$key='contact_options_'.$key;
+							$key=substr($key,8);   // Remove 'contact_' prefix
+							$contact->array_options[$key]=$thirdpartywithuser[$key];
+						}
 
 						$contact_id =  $contact->create($fuser);
-						
+
 						if ($contact_id > 0)
 						{
 							/*
@@ -534,33 +613,29 @@ function CreateUserFromThirdparty($authentication,$thirdpartywithuser)
 							*
 							*/
 							$edituser = new User($db);
-							$db->begin();
-	
+
 							$id = $edituser->create_from_contact($contact,$thirdpartywithuser["login"]);
 							if ($id > 0)
 							{
-								$edituser->setPassword($user,trim($thirdpartywithuser['password']));
+								$edituser->setPassword($fuser,trim($thirdpartywithuser['password']));
+
+								if($thirdpartywithuser['group_id'] > 0 )
+									$edituser->SetInGroup($thirdpartywithuser['group_id'],$conf->entity);
 							}
 							else
 							{
 								$error++;
-								$errorcode='NOT_CREATE'; $errorlabel='Object not create : no contact found or create';
-							}
-						
-	
-							if (! $error && $id > 0)
-							{
-								$db->commit();
-							}
-							else
-							{
-								$db->rollback();
-								$error++;
-								$errorcode='NOT_CREATE'; $errorlabel='Contact not create';
+								$errorcode='NOT_CREATE'; $errorlabel='Object not create : '.$edituser->error;
 							}
 						}
-	
+						else
+						{
+							$error++;
+							$errorcode='NOT_CREATE'; $errorlabel='Object not create : '.$contact->error;
+						}
+
 						if(!$error) {
+							$db->commit();
 							$objectresp=array('result'=>array('result_code'=>'OK', 'result_label'=>'SUCCESS'),'id'=>$socid_return);
 							$error=0;
 						}
@@ -588,6 +663,7 @@ function CreateUserFromThirdparty($authentication,$thirdpartywithuser)
 
 	if ($error)
 	{
+		$db->rollback();
 		$objectresp = array(
 		'result'=>array('result_code' => $errorcode, 'result_label' => $errorlabel)
 		);
@@ -596,7 +672,84 @@ function CreateUserFromThirdparty($authentication,$thirdpartywithuser)
 	return $objectresp;
 }
 
-// Return the results.
-$server->service($HTTP_RAW_POST_DATA);
 
-?>
+/**
+ * Set password of an user
+ *
+ * @param	array		$authentication		Array of authentication information
+ * @param	array		$shortuser			Array of login/password info
+ * @return	mixed
+ */
+function setUserPassword($authentication,$shortuser) {
+
+	global $db,$conf,$langs;
+
+	dol_syslog("Function: setUserPassword login=".$authentication['login']." id=".$id." ref=".$ref." ref_ext=".$ref_ext);
+
+	if ($authentication['entity']) $conf->entity=$authentication['entity'];
+
+	$objectresp=array();
+	$errorcode='';$errorlabel='';
+	$error=0;
+
+	$fuser=check_authentication($authentication,$error,$errorcode,$errorlabel);
+
+	if ($fuser->societe_id) $socid=$fuser->societe_id;
+
+	if (! $error && ! $shortuser)
+	{
+		$error++;
+		$errorcode='BAD_PARAMETERS'; $errorlabel="Parameter shortuser must be provided.";
+	}
+
+	if (! $error)
+	{
+		$fuser->getrights();
+
+		if ($fuser->rights->user->user->password || $fuser->rights->user->self->password)
+		{
+			$userstat=new User($db);
+			$res = $userstat->fetch('',$shortuser['login']);
+			if($res)
+			{
+				$res = $userstat->setPassword($userstat,$shortuser['password']);
+				if($res)
+				{
+					$objectresp = array(
+						'result'=>array('result_code' => 'OK', 'result_label' => ''),
+						'groups'=>$arraygroups
+					);
+				}
+				else
+				{
+					$error++;
+					$errorcode='NOT_MODIFIED'; $errorlabel='Error when changing password';
+				}
+			}
+			else
+			{
+				$error++;
+				$errorcode='NOT_FOUND'; $errorlabel='User not found';
+			}
+
+		}
+		else
+		{
+			$error++;
+			$errorcode='PERMISSION_DENIED'; $errorlabel='User does not have permission for this request';
+		}
+	}
+
+
+	if ($error)
+	{
+		$objectresp = array(
+			'result'=>array('result_code' => $errorcode, 'result_label' => $errorlabel)
+		);
+	}
+
+	return $objectresp;
+}
+
+// Return the results.
+$server->service(file_get_contents("php://input"));

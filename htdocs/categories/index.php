@@ -1,9 +1,10 @@
 <?php
-/* Copyright (C) 2005      Matthieu Valleton    <mv@seeschloss.org>
- * Copyright (C) 2005      Eric Seigne          <eric.seigne@ryxeo.com>
- * Copyright (C) 2006-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2007      Patrick Raguin       <patrick.raguin@gmail.com>
- * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+/* Copyright (C) 2005       Matthieu Valleton   <mv@seeschloss.org>
+ * Copyright (C) 2005       Eric Seigne         <eric.seigne@ryxeo.com>
+ * Copyright (C) 2006-2016  Laurent Destailleur <eldy@users.sourceforge.net>
+ * Copyright (C) 2007       Patrick Raguin      <patrick.raguin@gmail.com>
+ * Copyright (C) 2005-2012  Regis Houssin       <regis.houssin@capnetworks.com>
+ * Copyright (C) 2015       Raphaël Doursenaud  <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,13 +29,14 @@
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/treeview.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 
 $langs->load("categories");
 
 if (! $user->rights->categorie->lire) accessforbidden();
 
 $id=GETPOST('id','int');
-$type=(GETPOST('type') ? GETPOST('type') : 0);
+$type=(GETPOST('type') ? GETPOST('type') : Categorie::TYPE_PRODUCT);
 $catname=GETPOST('catname','alpha');
 $section=(GETPOST('section')?GETPOST('section'):0);
 
@@ -46,19 +48,26 @@ $section=(GETPOST('section')?GETPOST('section'):0);
 $categstatic = new Categorie($db);
 $form = new Form($db);
 
-if ($type == 0) $title=$langs->trans("ProductsCategoriesArea");
-elseif ($type == 1) $title=$langs->trans("SuppliersCategoriesArea");
-elseif ($type == 2) $title=$langs->trans("CustomersCategoriesArea");
-elseif ($type == 3) $title=$langs->trans("MembersCategoriesArea");
-else $title=$langs->trans("CategoriesArea");
+if ($type == Categorie::TYPE_PRODUCT)       $title=$langs->trans("ProductsCategoriesArea");
+elseif ($type == Categorie::TYPE_SUPPLIER)  $title=$langs->trans("SuppliersCategoriesArea");
+elseif ($type == Categorie::TYPE_CUSTOMER)  $title=$langs->trans("CustomersCategoriesArea");
+elseif ($type == Categorie::TYPE_MEMBER)    $title=$langs->trans("MembersCategoriesArea");
+elseif ($type == Categorie::TYPE_CONTACT)   $title=$langs->trans("ContactsCategoriesArea");
+elseif ($type == Categorie::TYPE_ACCOUNT)   $title=$langs->trans("AccountsCategoriesArea");
+elseif ($type == Categorie::TYPE_PROJECT)   $title=$langs->trans("ProjectsCategoriesArea");
+else                                        $title=$langs->trans("CategoriesArea");
 
-llxHeader("","",$title);
+$arrayofjs=array('/includes/jquery/plugins/jquerytreeview/jquery.treeview.js', '/includes/jquery/plugins/jquerytreeview/lib/jquery.cookie.js');
+$arrayofcss=array('/includes/jquery/plugins/jquerytreeview/jquery.treeview.css');
 
-print_fiche_titre($title);
+llxHeader('',$title,'','',0,0,$arrayofjs,$arrayofcss);
 
-print '<table border="0" width="100%" class="notopnoleftnoright">';
 
-print '<tr><td valign="top" width="30%" class="notopnoleft">';
+print load_fiche_titre($title);
+
+//print '<table border="0" width="100%" class="notopnoleftnoright">';
+//print '<tr><td valign="top" width="30%" class="notopnoleft">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
 
 
 /*
@@ -72,7 +81,7 @@ print '<tr class="liste_titre">';
 print '<td colspan="3">'.$langs->trans("Search").'</td>';
 print '</tr>';
 print '<tr '.$bc[0].'><td>';
-print $langs->trans("Name").':</td><td><input class="flat" type="text" size="20" name="catname" value="' . $catname . '"/></td><td><input type="submit" class="button" value="'.$langs->trans("Search").'"></td></tr>';
+print $langs->trans("Name").':</td><td><input class="flat inputsearch" type="text" name="catname" value="' . $catname . '"/></td><td><input type="submit" class="button" value="'.$langs->trans("Search").'"></td></tr>';
 /*
 // faire une rech dans une sous categorie uniquement
 print '<tr '.$bc[0].'><td>';
@@ -85,7 +94,9 @@ print '<td><input type="submit" class="button" value="'.$langs->trans ("Search")
 
 print '</table></form>';
 
-print '</td><td valign="top" width="70%">';
+
+//print '</td><td valign="top" width="70%">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
 
 
 /*
@@ -108,18 +119,25 @@ if ($catname || $id > 0)
 		$categstatic->ref=$cat->label;
 		$categstatic->label=$cat->label;
 		$categstatic->type=$cat->type;
+		$categstatic->color=$cat->color;
+		print '<span class="noborderoncategories" '.($categstatic->color?' style="background: #'.$categstatic->color.';"':' style="background: #aaa"').'>';
 		print $categstatic->getNomUrl(1,'');
+		print '</span>';
 		print "</td>\n";
-		print "\t\t<td>".$cat->description."</td>\n";
+		print "\t\t<td>";
+		print $cat->description;
+		print "</td>\n";
 		print "\t</tr>\n";
 	}
 	print "</table>";
 }
+else print '&nbsp;';
 
 
-print '</td></tr></table>';
+//print '</td></tr></table>';
+print '</div></div></div>';
 
-print '<br>';
+print '<div class="fichecenter"><br>';
 
 
 // Charge tableau des categories
@@ -128,187 +146,61 @@ $cate_arbo = $categstatic->get_full_arbo($type);
 // Define fulltree array
 $fulltree=$cate_arbo;
 
-print '<table class="liste" width="100%">';
-print '<tr class="liste_titre"><td>'.$langs->trans("Categories").'</td><td colspan="3">'.$langs->trans("Description").'</td></tr>';
-
-
-// ----- This section will show a tree from a fulltree array -----
-// $section must also be defined
-// ---------------------------------------------------------------
-
-
-// Root title line
-print '<tr><td>';
-print '<table class="nobordernopadding"><tr class="nobordernopadding">';
-print '<td align="left" width="24">';
-print img_picto_common('','treemenu/base.gif');
-print '</td><td align="left">'.$langs->trans("AllCats");
-print '</td>';
-print '</tr></table></td>';
-print '<td align="right">&nbsp;</td>';
-print '<td align="right">&nbsp;</td>';
-//print '<td align="right">&nbsp;</td>';
-print '</tr>';
-
-
-
-// Define fullpathselected ( _x_y_z ) of $section parameter
-$fullpathselected='';
-if (! empty($section))
-{
-	foreach($fulltree as $key => $val)
-	{
-		//print $val['id']."-".$section."<br>";
-		if ($val['id'] == $section)
-		{
-			$fullpathselected=$val['fullpath'];
-			break;
-		}
-	}
-}
-//print "fullpathselected=".$fullpathselected."<br>";
-
-// Update expandedsectionarray in session
-$expandedsectionarray=array();
-if (isset($_SESSION['dol_catexpandedsectionarray'.$type])) $expandedsectionarray=explode(',',$_SESSION['dol_catexpandedsectionarray'.$type]);
-
-if (! empty($section) && $_GET['sectionexpand'] == 'true')
-{
-	// We add all sections that are parent of opened section
-	$pathtosection=explode('_',$fullpathselected);
-	foreach($pathtosection as $idcursor)
-	{
-		if ($idcursor && ! in_array($idcursor,$expandedsectionarray))	// Not already in array
-		{
-			$expandedsectionarray[]=$idcursor;
-		}
-	}
-	$_SESSION['dol_catexpandedsectionarray'.$type]=join(',',$expandedsectionarray);
-}
-if (! empty($section) && $_GET['sectionexpand'] == 'false')
-{
-	// We removed all expanded sections that are child of the closed section
-	$oldexpandedsectionarray=$expandedsectionarray;
-	$expandedsectionarray=array();
-	foreach($oldexpandedsectionarray as $sectioncursor)
-	{
-		// is_in_subtree(fulltree,sectionparent,sectionchild)
-		if ($sectioncursor && ! is_in_subtree($fulltree,$section,$sectioncursor)) $expandedsectionarray[]=$sectioncursor;
-	}
-	$_SESSION['dol_catexpandedsectionarray'.$type]=join(',',$expandedsectionarray);
-}
-//print $_SESSION['dol_catexpandedsectionarray'.$type].'<br>';
-
-$nbofentries=0;
-$oldvallevel=0;
-$var=true;
+// Define data (format for treeview)
+$data=array();
+$data[] = array('rowid'=>0,'fk_menu'=>-1,'title'=>"racine",'mainmenu'=>'','leftmenu'=>'','fk_mainmenu'=>'','fk_leftmenu'=>'');
 foreach($fulltree as $key => $val)
 {
-	//$fullpathparent=preg_replace('/_[^_]+$/i','',$val['fullpath']);
+	$categstatic->id=$val['id'];
+	$categstatic->ref=$val['label'];
+	$categstatic->color=$val['color'];
+	$categstatic->type=$type;
+	$li=$categstatic->getNomUrl(1,'',60);
+	$desc=dol_htmlcleanlastbr($val['description']);
 
-	// Define showline
-	$showline=0;
-
-	//var_dump($expandedsectionarray);
-
-	// If directory is son of expanded directory, we show line
-	if (isset($val['fk_parent']) && in_array($val['fk_parent'],$expandedsectionarray)) $showline=4;
-	// If directory is parent of selected directory or is selected directory, we show line
-	elseif (preg_match('/'.$val['fullpath'].'_/i',$fullpathselected.'_')) $showline=2;
-	// If we are level one we show line
-	elseif ($val['level'] < 2) $showline=1;
-	//print 'xxx '.$val['level'].' - '.$fullpathselected.' - '.$val['fullpath'].' - '.$val['fk_parent'].' showline='.$showline.'<br>'."\n";
-
-	if ($showline)
-	{
-        $var=!$var;
-
-	    if (in_array($val['id'],$expandedsectionarray)) $option='indexexpanded';
-		else $option='indexnotexpanded';
-		//print $option;
-
-        print "<tr ".$bc[$var].">";
-
-		// Show tree graph pictos
-		print '<td align="left">';
-		print '<table class="nobordernopadding"><tr class="nobordernopadding"><td>';
-		$resarray=tree_showpad($fulltree,$key);
-		$a=$resarray[0];
-		$nbofsubdir=$resarray[1];
-		$nboffilesinsubdir=$resarray[2];
-		print '</td>';
-
-		// Show picto
-		print '<td valign="top">';
-		//print $val['fullpath']."(".$showline.")";
-		$n='2';
-		if (! in_array($val['id'],$expandedsectionarray)) $n='3';
-		if (! in_array($val['id'],$expandedsectionarray)) $ref=img_picto('',DOL_URL_ROOT.'/theme/common/treemenu/plustop'.$n.'.gif','',1);
-		else $ref=img_picto('',DOL_URL_ROOT.'/theme/common/treemenu/minustop'.$n.'.gif','',1);
-		if ($option == 'indexexpanded') $lien = '<a href="'.$_SERVER["PHP_SELF"].'?section='.$val['id'].'&amp;type='.$type.'&amp;sectionexpand=false">';
-    	if ($option == 'indexnotexpanded') $lien = '<a href="'.$_SERVER["PHP_SELF"].'?section='.$val['id'].'&amp;type='.$type.'&amp;sectionexpand=true">';
-    	$newref=str_replace('_',' ',$ref);
-    	$lienfin='</a>';
-    	print $lien.$newref.$lienfin;
-		if (! in_array($val['id'],$expandedsectionarray)) print img_picto('','object_category');
-		else print img_picto('','object_category-expanded');
-		print '</td>';
-		// Show link
-		print '<td valign="middle">';
-		//if ($section == $val['id']) print ' <u>';
-		// We don't want a link ... why ?
-		$categstatic->id=$val['id'];
-		$categstatic->ref=$val['label'];
-		$categstatic->type=$type;
-		print ' &nbsp;'.$categstatic->getNomUrl(0,'',60);
-
-		//print ' &nbsp;'.dol_trunc($val['label'],28);
-		//if ($section == $val['id']) print '</u>';
-		print '</td>';
-		print '</tr></table>';
-		print "</td>\n";
-
-		// Description
-		print '<td>';
-		print dol_trunc($val['description'],48);
-		print '</td>';
-
-		// Link to category card
-		print '<td align="right"><a href="'.DOL_URL_ROOT.'/categories/viewcat.php?id='.$val['id'].'&type='.$type.'">'.img_view().'</a></td>';
-
-		// Add link
-		//print '<td align="right"><a href="'.DOL_URL_ROOT.'/ecm/docdir.php?action=create&amp;catParent='.$val['id'].'">'.img_edit_add().'</a></td>';
-		//print '<td align="right">&nbsp;</td>';
-
-		print "</tr>\n";
-	}
-
-	$oldvallevel=$val['level'];
-	$nbofentries++;
+	$data[] = array(
+	'rowid'=>$val['rowid'],
+	'fk_menu'=>$val['fk_parent'],
+	'entry'=>'<table class="nobordernopadding centpercent"><tr><td><span class="noborderoncategories" '.($categstatic->color?' style="background: #'.$categstatic->color.';"':' style="background: #aaa"').'>'.$li.'</span></td>'.
+	'<td width="50%">'.dolGetFirstLineOfText($desc).'</td>'.
+	'<td align="right" width="20px;"><a href="'.DOL_URL_ROOT.'/categories/viewcat.php?id='.$val['id'].'&type='.$type.'">'.img_view().'</a></td>'.
+	'</tr></table>'
+	);
 }
 
 
-// If nothing to show
-if ($nbofentries == 0)
+print '<table class="liste nohover" width="100%">';
+print '<tr class="liste_titre"><td>'.$langs->trans("Categories").'</td><td></td><td align="right">';
+if (! empty($conf->use_javascript_ajax))
 {
-	print '<tr>';
-	print '<td class="left"><table class="nobordernopadding"><tr class="nobordernopadding"><td>'.img_picto_common('','treemenu/branchbottom.gif').'</td>';
-	print '<td>'.img_picto('',DOL_URL_ROOT.'/theme/common/treemenu/minustop3.gif','',1).'</td>';
+	print '<div id="iddivjstreecontrol"><a class="notasortlink" href="#">'.img_picto('','object_category').' '.$langs->trans("UndoExpandAll").'</a> | <a class="notasortlink" href="#">'.img_picto('','object_category-expanded').' '.$langs->trans("ExpandAll").'</a></div>';
+}
+print '</td></tr>';
+
+$nbofentries=(count($data) - 1);
+
+if ($nbofentries > 0)
+{
+	print '<tr '.$bc[0].'><td colspan="3">';
+	tree_recur($data,$data[0],0);
+	print '</td></tr>';
+}
+else
+{
+	print '<tr '.$bc[0].'>';
+	print '<td colspan="3"><table class="nobordernopadding"><tr class="nobordernopadding"><td>'.img_picto_common('','treemenu/branchbottom.gif').'</td>';
 	print '<td valign="middle">';
 	print $langs->trans("NoCategoryYet");
 	print '</td>';
 	print '<td>&nbsp;</td>';
 	print '</table></td>';
-	print '<td colspan="4">&nbsp;</td>';
 	print '</tr>';
 }
 
-// ----- End of section -----
-// --------------------------
-
 print "</table>";
 
+print '</div>';
 
 llxFooter();
+
 $db->close();
-?>

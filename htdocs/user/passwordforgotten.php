@@ -2,6 +2,7 @@
 /* Copyright (C) 2007-2011	Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2008-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  * Copyright (C) 2008-2011	Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2014       Teddy Andreotti    	<125155@supinfo.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +28,8 @@ define("NOLOGIN",1);	// This means this output page does not require to be logge
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/usergroups.lib.php';
-if (! empty($conf->ldap->enabled))
-	require_once DOL_DOCUMENT_ROOT.'/core/class/ldap.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
+if (! empty($conf->ldap->enabled)) require_once DOL_DOCUMENT_ROOT.'/core/class/ldap.class.php';
 
 $langs->load("errors");
 $langs->load("users");
@@ -48,16 +49,18 @@ $mode=$dolibarr_main_authentication;
 if (! $mode) $mode='http';
 
 $username 		= GETPOST('username');
-$passwordmd5	= GETPOST('passwordmd5');
+$passwordhash	= GETPOST('passwordhash');
 $conf->entity 	= (GETPOST('entity') ? GETPOST('entity') : 1);
 
 // Instantiate hooks of thirdparty module only if not already define
-if (! is_object($hookmanager))
-{
-	include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
-	$hookmanager=new HookManager($db);
-}
 $hookmanager->initHooks(array('passwordforgottenpage'));
+
+
+if (GETPOST('dol_hide_leftmenu') || ! empty($_SESSION['dol_hide_leftmenu']))               $conf->dol_hide_leftmenu=1;
+if (GETPOST('dol_hide_topmenu') || ! empty($_SESSION['dol_hide_topmenu']))                 $conf->dol_hide_topmenu=1;
+if (GETPOST('dol_optimize_smallscreen') || ! empty($_SESSION['dol_optimize_smallscreen'])) $conf->dol_optimize_smallscreen=1;
+if (GETPOST('dol_no_mouse_hover') || ! empty($_SESSION['dol_no_mouse_hover']))             $conf->dol_no_mouse_hover=1;
+if (GETPOST('dol_use_jmobile') || ! empty($_SESSION['dol_use_jmobile']))                   $conf->dol_use_jmobile=1;
 
 
 /**
@@ -65,7 +68,7 @@ $hookmanager->initHooks(array('passwordforgottenpage'));
  */
 
 // Validate new password
-if ($action == 'validatenewpassword' && $username && $passwordmd5)
+if ($action == 'validatenewpassword' && $username && $passwordhash)
 {
     $edituser = new User($db);
     $result=$edituser->fetch('',$_GET["username"]);
@@ -75,7 +78,7 @@ if ($action == 'validatenewpassword' && $username && $passwordmd5)
     }
     else
     {
-        if (dol_hash($edituser->pass_temp) == $passwordmd5)
+        if (dol_hash($edituser->pass_temp) == $passwordhash)
         {
             $newpassword=$edituser->setPassword($user,$edituser->pass_temp,0);
             dol_syslog("passwordforgotten.php new password for user->id=".$edituser->id." validated in database");
@@ -128,7 +131,8 @@ if ($action == 'buildnewpassword' && $username)
                     // Success
                     if ($edituser->send_password($user,$newpassword,1) > 0)
                     {
-                        $message = '<div class="ok">'.$langs->trans("PasswordChangeRequestSent",$edituser->login,$edituser->email).'</div>';
+
+                        $message = '<div class="ok">'.$langs->trans("PasswordChangeRequestSent",$edituser->login,dolObfuscateEmail($edituser->email)).'</div>';
                         //$message.=$newpassword;
                         $username='';
                     }
@@ -148,9 +152,6 @@ if ($action == 'buildnewpassword' && $username)
  * View
  */
 
-$php_self = $_SERVER['PHP_SELF'];
-$php_self.= $_SERVER["QUERY_STRING"]?'?'.$_SERVER["QUERY_STRING"]:'';
-
 $dol_url_root = DOL_URL_ROOT;
 
 // Title
@@ -158,24 +159,31 @@ $title='Dolibarr '.DOL_VERSION;
 if (! empty($conf->global->MAIN_APPLICATION_TITLE)) $title=$conf->global->MAIN_APPLICATION_TITLE;
 
 // Select templates
-if (preg_match('/^smartphone/',$conf->smart_menu) && ! empty($conf->browser->phone))
+if (file_exists(DOL_DOCUMENT_ROOT."/theme/".$conf->theme."/tpl/passwordforgotten.tpl.php"))
 {
-    $template_dir = DOL_DOCUMENT_ROOT.'/theme/phones/smartphone/tpl/';
+    $template_dir = DOL_DOCUMENT_ROOT."/theme/".$conf->theme."/tpl/";
 }
 else
 {
-    if (file_exists(DOL_DOCUMENT_ROOT."/theme/".$conf->theme."/tpl/passwordforgotten.tpl.php"))
-    {
-        $template_dir = DOL_DOCUMENT_ROOT."/theme/".$conf->theme."/tpl/";
-    }
-    else
-    {
-        $template_dir = DOL_DOCUMENT_ROOT."/core/tpl/";
-    }
+    $template_dir = DOL_DOCUMENT_ROOT."/core/tpl/";
 }
 
-$conf->css  = "/theme/".$conf->theme."/style.css.php?lang=".$langs->defaultlang;
-$conf_css = DOL_URL_ROOT.$conf->css;
+// Note: $conf->css looks like '/theme/eldy/style.css.php'
+$conf->css = "/theme/".(GETPOST('theme')?GETPOST('theme','alpha'):$conf->theme)."/style.css.php";
+//$themepath=dol_buildpath((empty($conf->global->MAIN_FORCETHEMEDIR)?'':$conf->global->MAIN_FORCETHEMEDIR).$conf->css,1);
+$themepath=dol_buildpath($conf->css,1);
+if (! empty($conf->modules_parts['theme']))	// This slow down
+{
+	foreach($conf->modules_parts['theme'] as $reldir)
+	{
+		if (file_exists(dol_buildpath($reldir.$conf->css, 0)))
+		{
+			$themepath=dol_buildpath($reldir.$conf->css, 1);
+			break;
+		}
+	}
+}
+$conf_css = $themepath."?lang=".$langs->defaultlang;
 
 $jquerytheme = 'smoothness';
 if (! empty($conf->global->MAIN_USE_JQUERY_THEME)) $jquerytheme = $conf->global->MAIN_USE_JQUERY_THEME;
@@ -233,4 +241,3 @@ $hookmanager->executeHooks('getPasswordForgottenPageOptions',$parameters);    //
 
 include $template_dir.'passwordforgotten.tpl.php';	// To use native PHP
 
-?>

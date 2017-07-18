@@ -41,7 +41,7 @@ class ModelePDFLabels
 	 *  Return list of active generation modules
 	 *
      *  @param	DoliDB	$db     			Database handler
-     *  @param  string	$maxfilenamelength  Max length of value to show
+     *  @param  integer	$maxfilenamelength  Max length of value to show
      *  @return	array						List of templates
 	 */
 	function liste_modeles($db,$maxfilenamelength=0)
@@ -60,28 +60,30 @@ class ModelePDFLabels
 
 
 /**
- *  Create a document onto disk accordign to template module
+ *  Create a document onto disk according to template module.
  *
  *	@param  DoliDB		$db					Database handler
- *	@param  array		$arrayofmembers		Array of members
+ *	@param  array		$arrayofrecords		Array of records
  *	@param	string		$modele				Force le modele a utiliser ('' to not force)
  *	@param	Translate	$outputlangs		Objet lang a utiliser pour traduction
  *	@param	string		$outputdir			Output directory
+ *  @param  string      $template           pdf generenate document class to use default 'standardlabel'
+ *  @param  string      $filename           Short file name of PDF output file
  *	@return int        						<0 if KO, >0 if OK
  */
-function members_label_pdf_create($db, $arrayofmembers, $modele, $outputlangs, $outputdir='')
+function doc_label_pdf_create($db, $arrayofrecords, $modele, $outputlangs, $outputdir='', $template='standardlabel', $filename='tmp_address_sheet.pdf')
 {
 	global $conf,$langs;
 	$langs->load("members");
 
 	$error=0;
-	
+
 	// Increase limit for PDF build
 	$err=error_reporting();
 	error_reporting(0);
 	@set_time_limit(120);
 	error_reporting($err);
-	
+
 	$code='';
 	$srctemplatepath='';
 
@@ -98,16 +100,17 @@ function members_label_pdf_create($db, $arrayofmembers, $modele, $outputlangs, $
 		}
 	}
 	else $code=$modele;
-	$modele='standardlabel';
-	
+
 	// If selected modele is a filename template (then $modele="modelname:filename")
-	$tmp=explode(':',$modele,2);
+	$tmp=explode(':',$template,2);
 	if (! empty($tmp[1]))
 	{
-		$modele=$tmp[0];
+		$template=$tmp[0];
 		$srctemplatepath=$tmp[1];
 	}
 	else $srctemplatepath=$code;
+
+	dol_syslog("modele=".$modele." outputdir=".$outputdir." template=".$template." code=".$code." srctemplatepath=".$srctemplatepath." filename=".$filename, LOG_DEBUG);
 	
 	// Search template files
 	$file=''; $classname=''; $filefound=0;
@@ -117,31 +120,31 @@ function members_label_pdf_create($db, $arrayofmembers, $modele, $outputlangs, $
 	{
 		foreach(array('doc','pdf') as $prefix)
 		{
-			$file = $prefix."_".$modele.".class.php";
-	
+			$file = $prefix."_".$template.".class.php";
+
 			// On verifie l'emplacement du modele
 			$file=dol_buildpath($reldir."core/modules/printsheet/doc/".$file,0);
 			if (file_exists($file))
 			{
 				$filefound=1;
-				$classname=$prefix.'_'.$modele;
+				$classname=$prefix.'_'.$template;
 				break;
 			}
 		}
 		if ($filefound) break;
 	}
-	
+
 	// Charge le modele
 	if ($filefound)
 	{
 		require_once $file;
 
 		$obj = new $classname($db);
-	
+
 		// We save charset_output to restore it because write_file can change it if needed for
 		// output format that does not support UTF8.
 		$sav_charset_output=$outputlangs->charset_output;
-		if ($obj->write_file($arrayofmembers, $outputlangs, $srctemplatepath, $outputdir) > 0)
+		if ($obj->write_file($arrayofrecords, $outputlangs, $srctemplatepath, $outputdir, $filename) > 0)
 		{
 			$outputlangs->charset_output=$sav_charset_output;
 			return 1;
@@ -149,7 +152,7 @@ function members_label_pdf_create($db, $arrayofmembers, $modele, $outputlangs, $
 		else
 		{
 			$outputlangs->charset_output=$sav_charset_output;
-			dol_print_error($db,"members_label_pdf_create Error: ".$obj->error);
+			dol_print_error($db,"doc_label_pdf_create Error: ".$obj->error);
 			return -1;
 		}
 	}
@@ -162,4 +165,3 @@ function members_label_pdf_create($db, $arrayofmembers, $modele, $outputlangs, $
 
 }
 
-?>

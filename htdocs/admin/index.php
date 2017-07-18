@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2001-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2015      Jean-François Ferry	<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +19,7 @@
 
 /**
  *   	\file       htdocs/admin/index.php
- *		\brief      Page d'accueil de l'espace administration/configuration
+ *		\brief      Home page of setup area
  */
 
 require '../main.inc.php';
@@ -28,7 +29,8 @@ $langs->load("companies");
 
 if (!$user->admin) accessforbidden();
 
-$mesg='';
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('homesetup'));
 
 
 /*
@@ -41,22 +43,40 @@ llxHeader('',$langs->trans("Setup"),$wikihelp);
 $form = new Form($db);
 
 
-print_fiche_titre($langs->trans("SetupArea"),'','setup');
+print load_fiche_titre($langs->trans("SetupArea"),'','title_setup.png');
 
-if ($mesg) print $mesg.'<br>';
+
+if (! empty($conf->global->MAIN_MOTD_SETUPPAGE))
+{
+    $conf->global->MAIN_MOTD_SETUPPAGE=preg_replace('/<br(\s[\sa-zA-Z_="]*)?\/?>/i','<br>',$conf->global->MAIN_MOTD_SETUPPAGE);
+    if (! empty($conf->global->MAIN_MOTD_SETUPPAGE))
+    {
+    	$i=0;
+    	while (preg_match('/__\(([a-zA-Z|@]+)\)__/i',$conf->global->MAIN_MOTD_SETUPPAGE,$reg) && $i < 100)
+    	{
+    		$tmp=explode('|',$reg[1]);
+    		if (! empty($tmp[1])) $langs->load($tmp[1]);
+    		$conf->global->MAIN_MOTD_SETUPPAGE=preg_replace('/__\('.preg_quote($reg[1]).'\)__/i',$langs->trans($tmp[0]),$conf->global->MAIN_MOTD_SETUPPAGE);
+    		$i++;
+    	}
+
+    	print "\n<!-- Start of welcome text for setup page -->\n";
+        print '<table width="100%" class="notopnoleftnoright"><tr><td>';
+        print dol_htmlentitiesbr($conf->global->MAIN_MOTD_SETUPPAGE);
+        print '</td></tr></table><br>';
+        print "\n<!-- End of welcome text for setup page -->\n";
+    }
+}
 
 print $langs->trans("SetupDescription1").' ';
 print $langs->trans("AreaForAdminOnly").' ';
-
-
-//print "<br>";
-//print "<br>";
 print $langs->trans("SetupDescription2")."<br><br>";
 
 print '<br>';
-//print '<hr style="color: #DDDDDD;">';
-if (empty($conf->global->MAIN_INFO_SOCIETE_NOM) || empty($conf->global->MAIN_INFO_SOCIETE_PAYS)) $setupcompanynotcomplete=1;
-print img_picto('','puce').' '.$langs->trans("SetupDescription3",DOL_URL_ROOT.'/admin/company.php?mainmenu=home');
+
+// Show info setup company
+if (empty($conf->global->MAIN_INFO_SOCIETE_NOM) || empty($conf->global->MAIN_INFO_SOCIETE_COUNTRY)) $setupcompanynotcomplete=1;
+print img_picto('','puce').' '.$langs->trans("SetupDescription3",DOL_URL_ROOT.'/admin/company.php?mainmenu=home'.(empty($setupcompanynotcomplete)?'':'&action=edit'));
 if (! empty($setupcompanynotcomplete))
 {
 	$langs->load("errors");
@@ -66,9 +86,10 @@ if (! empty($setupcompanynotcomplete))
 print '<br>';
 print '<br>';
 print '<br>';
-//print '<hr style="color: #DDDDDD;">';
+
+// Show info setup module
 print img_picto('','puce').' '.$langs->trans("SetupDescription4",DOL_URL_ROOT.'/admin/modules.php?mainmenu=home');
-if (count($conf->modules) <= (empty($conf->global->MAIN_MINNB_MODULE)?1:$conf->global->MAIN_MINNB_MODULE))	// If only user module enabled
+if (count($conf->modules) <= (empty($conf->global->MAIN_MIN_NB_ENABLED_MODULE_FOR_WARNING)?1:$conf->global->MAIN_MIN_NB_ENABLED_MODULE_FOR_WARNING))	// If only user module enabled
 {
 	$langs->load("errors");
 	$warnpicto=img_warning($langs->trans("WarningMandatorySetupNotComplete"));
@@ -77,24 +98,23 @@ if (count($conf->modules) <= (empty($conf->global->MAIN_MINNB_MODULE)?1:$conf->g
 print '<br>';
 print '<br>';
 print '<br>';
-//print '<hr style="color: #DDDDDD;">';
-print $langs->trans("SetupDescription5")."<br>";
-//print '<hr style="color: #DDDDDD;">';
-print "<br>";
+print '<br>';
 
-/*
-print '<table width="100%">';
-print '<tr '.$bc[false].'><td '.$bc[false].'>'.img_picto('','puce').' '.$langs->trans("SetupDescription3")."</td></tr>";
-print '<tr '.$bc[true].'><td '.$bc[true].'>'.img_picto('','puce').' '.$langs->trans("SetupDescription4")."</td></tr>";
-print '<tr '.$bc[false].'><td '.$bc[false].'>'.img_picto('','puce').' '.$langs->trans("SetupDescription5")."</td></tr>";
-print '</table>';
-*/
+// Add hook to add information
+$parameters=array();
+$reshook=$hookmanager->executeHooks('addHomeSetup',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+print $hookmanager->resPrint;
+if (empty($reshook))
+{
+	// Show into other
+	print $langs->trans("SetupDescription5")."<br>";
+	print "<br>";
 
-//print '<br>';
-//print info_admin($langs->trans("OnceSetupFinishedCreateUsers")).'<br>';
+	// Show logo
+	print '<div class="center"><div class="logo_setup"></div></div>';
+}
 
 
 llxFooter();
 
 $db->close();
-?>

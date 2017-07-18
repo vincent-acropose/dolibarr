@@ -24,24 +24,13 @@
  *	\brief      File that define environment for support pages
  */
 
-// Just to define version DOL_VERSION
-if (! defined('DOL_INC_FOR_VERSION_ERROR')) define('DOL_INC_FOR_VERSION_ERROR','1');
-require_once '../filefunc.inc.php';
-
-// Define DOL_DOCUMENT_ROOT and ADODB_PATH used for install/upgrade process
+// Define DOL_DOCUMENT_ROOT
 if (! defined('DOL_DOCUMENT_ROOT'))	    define('DOL_DOCUMENT_ROOT', '..');
-if (! defined('ADODB_PATH'))
-{
-    $foundpath=DOL_DOCUMENT_ROOT .'/includes/adodbtime/';
-    if (! is_dir($foundpath)) $foundpath='/usr/share/php/adodb/';
-    define('ADODB_PATH', $foundpath);
-}
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/translate.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-require_once ADODB_PATH.'adodb-time.inc.php';
 
 // Avoid warnings with strict mode E_STRICT
 $conf = new stdClass(); // instantiate $conf explicitely
@@ -73,13 +62,21 @@ $conffiletoshow = "htdocs/conf/conf.php";
 //$conffiletoshow = "/etc/dolibarr/conf.php";
 
 
-if (! defined('DONOTLOADCONF') && file_exists($conffile))
+// Load conf file if it is already defined
+if (! defined('DONOTLOADCONF') && file_exists($conffile) && filesize($conffile) > 8) // Test on filesize is to ensure that conf file is more that an empty template with just <?php in first line
 {
 	$result=include_once $conffile;	// Load conf file
 	if ($result)
 	{
 
 		if (empty($dolibarr_main_db_type)) $dolibarr_main_db_type='mysql';	// For backward compatibility
+
+		//Mysql driver support has been removed in favor of mysqli
+		if ($dolibarr_main_db_type == 'mysql') {
+			$dolibarr_main_db_type = 'mysqli';
+		}
+
+		if (empty($dolibarr_main_db_port) && ($dolibarr_main_db_type=='mysqli')) $dolibarr_main_db_port='3306'; // For backward compatibility
 
 		// Clean parameters
 		$dolibarr_main_data_root        =isset($dolibarr_main_data_root)?trim($dolibarr_main_data_root):'';
@@ -130,10 +127,6 @@ define('MAIN_DB_PREFIX',(isset($dolibarr_main_db_prefix)?$dolibarr_main_db_prefi
 
 define('DOL_CLASS_PATH', 'class/');                             // Filsystem path to class dir
 define('DOL_DATA_ROOT',(isset($dolibarr_main_data_root)?$dolibarr_main_data_root:''));
-if (! empty($dolibarr_main_document_root_alt))
-{
-    define('DOL_DOCUMENT_ROOT_ALT', $dolibarr_main_document_root_alt);	// Filesystem paths to alternate core php (alternate htdocs)
-}
 define('DOL_MAIN_URL_ROOT', (isset($dolibarr_main_url_root)?$dolibarr_main_url_root:''));           // URL relative root
 $uri=preg_replace('/^http(s?):\/\//i','',constant('DOL_MAIN_URL_ROOT'));  // $uri contains url without http*
 $suburi = strstr($uri, '/');       // $suburi contains url without domain
@@ -156,7 +149,7 @@ if (empty($conf->db->user)) $conf->db->user='';
 
 // Defini objet langs
 $langs = new Translate('..',$conf);
-if (GETPOST('lang')) $langs->setDefaultLang(GETPOST('lang'));
+if (GETPOST('lang', 'aZ09')) $langs->setDefaultLang(GETPOST('lang', 'aZ09'));
 else $langs->setDefaultLang('auto');
 
 $bc[false]=' class="bg1"';
@@ -191,7 +184,7 @@ function conf($dolibarr_main_document_root)
 	$conf->db->user = trim($dolibarr_main_db_user);
 	$conf->db->pass = trim($dolibarr_main_db_pass);
 
-	if (empty($conf->db->dolibarr_main_db_collation)) $conf->db->dolibarr_main_db_collation='utf8_general_ci';
+	if (empty($conf->db->dolibarr_main_db_collation)) $conf->db->dolibarr_main_db_collation='utf8_unicode_ci';
 
 	return 1;
 }
@@ -216,7 +209,7 @@ function pHeader($soutitre,$next,$action='none')
 	header("Content-type: text/html; charset=".$conf->file->character_set_client);
 
 	print '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">'."\n";
-	print '<html>'."\n";
+	print '<html manifest="'.DOL_URL_ROOT.'/cache.manifest">'."\n";
 	print '<head>'."\n";
 	print '<meta http-equiv="content-type" content="text/html; charset='.$conf->file->character_set_client.'">'."\n";
 	print '<meta name="robots" content="index,follow">'."\n";
@@ -240,7 +233,7 @@ function pHeader($soutitre,$next,$action='none')
 /**
  * Print HTML footer
  *
- * @param	string	$nonext			No button "Next step"
+ * @param	integer	$nonext			No button "Next step"
  * @param   string	$setuplang		Language code
  * @return	void
  */
@@ -254,4 +247,3 @@ function pFooter($nonext=0,$setuplang='')
 	print '</html>'."\n";
 }
 
-?>

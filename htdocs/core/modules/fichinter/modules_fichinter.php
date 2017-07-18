@@ -41,7 +41,7 @@ abstract class ModelePDFFicheinter extends CommonDocGenerator
 	 *	Return list of active generation modules
 	 *
      *  @param	DoliDB	$db     			Database handler
-     *  @param  string	$maxfilenamelength  Max length of value to show
+     *  @param  integer	$maxfilenamelength  Max length of value to show
      *  @return	array						List of templates
 	 */
 	static function liste_modeles($db,$maxfilenamelength=0)
@@ -136,6 +136,7 @@ abstract class ModeleNumRefFicheinter
 		if ($this->version == 'development') return $langs->trans("VersionDevelopment");
 		if ($this->version == 'experimental') return $langs->trans("VersionExperimental");
 		if ($this->version == 'dolibarr') return DOL_VERSION;
+		if ($this->version) return $this->version;
 		return $langs->trans("NotAvailable");
 	}
 }
@@ -151,10 +152,9 @@ abstract class ModeleNumRefFicheinter
  *  @param  int			$hidedetails    Hide details of lines
  *  @param  int			$hidedesc       Hide description
  *  @param  int			$hideref        Hide ref
- *  @param  HookManager	$hookmanager	Hook manager instance
  *  @return int         				0 if KO, 1 if OK
  */
-function fichinter_create($db, $object, $modele, $outputlangs, $hidedetails=0, $hidedesc=0, $hideref=0, $hookmanager=false)
+function fichinter_create($db, $object, $modele, $outputlangs, $hidedetails=0, $hidedesc=0, $hideref=0)
 {
 	global $conf,$langs,$user;
 	$langs->load("ficheinter");
@@ -216,20 +216,13 @@ function fichinter_create($db, $object, $modele, $outputlangs, $hidedetails=0, $
 		// We save charset_output to restore it because write_file can change it if needed for
 		// output format that does not support UTF8.
 		$sav_charset_output=$outputlangs->charset_output;
-		if ($obj->write_file($object, $outputlangs, $srctemplatepath, $hidedetails, $hidedesc, $hideref, $hookmanager) > 0)
+		if ($obj->write_file($object, $outputlangs, $srctemplatepath, $hidedetails, $hidedesc, $hideref) > 0)
 		{
 			$outputlangs->charset_output=$sav_charset_output;
 
 			// We delete old preview
 			require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 			dol_delete_preview($object);
-
-			// Appel des triggers
-			include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-			$interface=new Interfaces($db);
-			$result=$interface->run_triggers('FICHINTER_BUILDDOC',$object,$user,$langs,$conf);
-			if ($result < 0) { $error++; $this->errors=$interface->errors; }
-			// Fin appel triggers
 
 			return 1;
 		}
@@ -247,4 +240,3 @@ function fichinter_create($db, $object, $modele, $outputlangs, $hidedetails=0, $
 	}
 }
 
-?>

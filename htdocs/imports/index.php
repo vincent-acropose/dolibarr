@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2005-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2005-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,15 +41,14 @@ $form=new Form($db);
 
 llxHeader('',$langs->trans("ImportArea"),'EN:Module_Imports_En|FR:Module_Imports|ES:M&oacute;dulo_Importaciones');
 
-print_fiche_titre($langs->trans("ImportArea"));
+print load_fiche_titre($langs->trans("ImportArea"));
 
 print $langs->trans("FormatedImportDesc1").'<br>';
 print $langs->trans("FormatedImportDesc2").'<br>';
 print '<br>';
 
-print '<table class="notopnoleftnoright" width="100%">';
 
-print '<tr><td valign="top" width="70%" class="notopnoleft">';
+print '<div class="fichecenter"><div class="fichehalfleft">';
 
 
 // List of import set
@@ -86,7 +85,7 @@ else
 print '</table>';
 print '<br>';
 
-print '<center>';
+print '<div class="center">';
 if (count($import->array_import_code))
 {
 	//if ($user->rights->import->run)
@@ -98,10 +97,11 @@ if (count($import->array_import_code))
 	//	print '<a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->trans("NotEnoughPermissions")).'">'.$langs->trans("NewImport").'</a>';
 	//}
 }
-print '</center>';
+print '</div>';
+print '<br>';
 
 
-print '</td><td valign="top" width="30%" class="notopnoleftnoright">';
+print '</div><div class="fichehalfright"><div class="ficheaddleft">';
 
 
 // List of available import format
@@ -125,19 +125,16 @@ foreach($liste as $key)
 	$text=$model->getDriverDescForKey($key);
 	print '<td>'.$form->textwithpicto($model->getDriverLabelForKey($key),$text).'</td>';
 	print '<td>'.$model->getLibLabelForKey($key).'</td>';
-	print '<td nowrap="nowrap" align="right">'.$model->getLibVersionForKey($key).'</td>';
+	print '<td class="nowrap" align="right">'.$model->getLibVersionForKey($key).'</td>';
 	print '</tr>';
 }
 
 print '</table>';
 
 
-print '</td></tr>';
-print '</table>';
-
-$db->close();
+print '</div></div></div>';
 
 
 llxFooter();
 
-?>
+$db->close();

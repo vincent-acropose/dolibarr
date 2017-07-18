@@ -39,10 +39,10 @@ function llxHeaderVierge() { print '<html><title>Export agenda cal</title><body>
 function llxFooterVierge() { print '</body></html>'; }
 
 require '../../main.inc.php';
-require_once DOL_DOCUMENT_ROOT .'/compta/dons/class/class/don.class.php';
+require_once DOL_DOCUMENT_ROOT .'/don/class/don.class.php';
 
 // Security check
-if (empty($conf->don->enabled)) accessforbidden('',1,1,1);
+if (empty($conf->don->enabled)) accessforbidden('',0,0,1);
 
 
 $langs->load("donations");
@@ -54,7 +54,7 @@ $langs->load("donations");
 
 llxHeaderVierge();
 
-$sql = "SELECT d.datedon as datedon, d.nom, d.prenom, d.amount, d.public, d.societe";
+$sql = "SELECT d.datedon as datedon, d.lastname, d.firstname, d.amount, d.public, d.societe";
 $sql.= " FROM ".MAIN_DB_PREFIX."don as d";
 $sql.= " WHERE d.fk_statut in (2, 3) ORDER BY d.datedon DESC";
 
@@ -81,10 +81,10 @@ if ($resql)
 			$objp = $db->fetch_object($resql);
 
 			$var=!$var;
-			print "<TR $bc[$var]>";
+			print "<tr ".$bc[$var].">";
 			if ($objp->public)
 			{
-				print "<td>".$objp->prenom." ".$objp->nom." ".$objp->societe."</td>\n";
+				print "<td>".dolGetFirstLastname($objp->firstname, $objp->lastname)." ".$objp->societe."</td>\n";
 			}
 			else
 			{
@@ -111,4 +111,3 @@ else
 $db->close();
 
 llxFooterVierge();
-?>

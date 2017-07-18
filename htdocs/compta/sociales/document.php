@@ -1,10 +1,11 @@
 <?php
 /* Copyright (C) 2003-2007 Rodolphe Quiedeville  <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2010 Laurent Destailleur   <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2014 Laurent Destailleur   <eldy@users.sourceforge.net>
  * Copyright (C) 2005      Marc Barilley / Ocebo <marc@ocebo.com>
  * Copyright (C) 2005-2009 Regis Houssin         <regis.houssin@capnetworks.com>
  * Copyright (C) 2005      Simon TOSSER          <simon@kornog-computing.com>
  * Copyright (C) 2011      Juanjo Menent         <jmenent@2byte.es>
+ * Copyright (C) 2013      Cédric Salvador       <csalvador@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +41,7 @@ $langs->load("bills");
 
 $id = GETPOST('id','int');
 $action = GETPOST("action");
+$confirm = GETPOST('confirm', 'alpha');
 
 // Security check
 if ($user->societe_id) $socid=$user->societe_id;
@@ -61,7 +63,7 @@ if (! $sortfield) $sortfield="name";
 
 
 $object = new ChargeSociales($db);
-$object->fetch($id);
+if ($id > 0) $object->fetch($id);
 
 $upload_dir = $conf->tax->dir_output.'/'.dol_sanitizeFileName($object->ref);
 $modulepart='tax';
@@ -71,19 +73,15 @@ $modulepart='tax';
  * Actions
  */
 
-if (GETPOST("sendit") && ! empty($conf->global->MAIN_UPLOAD_DOC))
-{
-	dol_add_file_process($upload_dir,0,1,'userfile');
-}
+include_once DOL_DOCUMENT_ROOT . '/core/actions_linkedfiles.inc.php';
 
-if ($action == 'delete')
+if ($action == 'setlib' && $user->rights->tax->charges->creer)
 {
-	$file = $upload_dir . '/' . GETPOST("urlfile");	// Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
-	$ret=dol_delete_file($file,0,0,0,$object);
-	if ($ret) setEventMessage($langs->trans("FileWasRemoved", GETPOST('urlfile')));
-	else setEventMessage($langs->trans("ErrorFailToDeleteFile", GETPOST('urlfile')), 'errors');
+    $object->fetch($id);
+    $result = $object->setValueFrom('libelle', GETPOST('lib'), '', '', 'text', '', $user, 'TAX_MODIFY');
+    if ($result < 0)
+        setEventMessages($object->error, $object->errors, 'errors');
 }
-
 
 /*
  * View
@@ -91,18 +89,35 @@ if ($action == 'delete')
 
 $form = new Form($db);
 
+$title = $langs->trans("SocialContribution") . ' - ' . $langs->trans("Documents");
 $help_url='EN:Module_Taxes_and_social_contributions|FR:Module Taxes et dividendes|ES:M&oacute;dulo Impuestos y cargas sociales (IVA, impuestos)';
-llxHeader("",$langs->trans("SocialContribution"),$help_url);
+llxHeader("",$title,$help_url);
 
 if ($object->id)
 {
-    $head=tax_prepare_head($object, $user);
+	$alreadypayed=$object->getSommePaiement();
+
+    $head=tax_prepare_head($object);
 
     dol_fiche_head($head, 'documents',  $langs->trans("SocialContribution"), 0, 'bill');
 
+	$morehtmlref='<div class="refidno">';
+	// Label of social contribution
+	$morehtmlref.=$form->editfieldkey("Label", 'lib', $object->lib, $object, $user->rights->tax->charges->creer, 'string', '', 0, 1);
+	$morehtmlref.=$form->editfieldval("Label", 'lib', $object->lib, $object, $user->rights->tax->charges->creer, 'string', '', null, null, '', 1);
+	$morehtmlref.='</div>';
+
+	$linkback = '<a href="' . DOL_URL_ROOT . '/compta/sociales/index.php">' . $langs->trans("BackToList") . '</a>';
+
+	$object->totalpaye = $totalpaye;   // To give a chance to dol_banner_tab to use already paid amount to show correct status
+
+	dol_banner_tab($object, 'id', $linkback, 1, 'rowid', 'ref', $morehtmlref, '', 0, '', $morehtmlright);
+
+	print '<div class="fichecenter">';
+	print '<div class="underbanner clearboth"></div>';
 
     // Construit liste des fichiers
-    $filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+    $filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
     $totalsize=0;
     foreach($filearray as $key => $file)
     {
@@ -112,81 +127,27 @@ if ($object->id)
 
     print '<table class="border" width="100%">';
 
-    // Ref
-	print '<tr><td width="25%">'.$langs->trans("Ref").'</td><td>';
-	print $form->showrefnav($object,'id');
-	print "</td></tr>";
-
-    // Label
-    if ($action == 'edit')
-    {
-        print '<tr><td>'.$langs->trans("Label").'</td><td>';
-        print '<input type="text" name="label" size="40" value="'.$object->lib.'">';
-        print '</td></tr>';
-    }
-    else
-    {
-        print '<tr><td>'.$langs->trans("Label").'</td><td>'.$object->lib.'</td></tr>';
-    }
-
-    // Type
-    print "<tr><td>".$langs->trans("Type")."</td><td>".$object->type_libelle."</td></tr>";
-
-    // Period end date
-    print "<tr><td>".$langs->trans("PeriodEndDate")."</td>";
-    print "<td>";
-    if ($action == 'edit')
-    {
-        print $form->select_date($object->periode, 'period', 0, 0, 0, 'charge', 1);
-    }
-    else
-    {
-        print dol_print_date($object->periode,"day");
-    }
-    print "</td>";
-    print "</tr>";
-
-    // Due date
-    if ($action == 'edit')
-    {
-        print '<tr><td>'.$langs->trans("DateDue")."</td><td>";
-        print $form->select_date($object->date_ech, 'ech', 0, 0, 0, 'charge', 1);
-        print "</td></tr>";
-    }
-    else {
-        print "<tr><td>".$langs->trans("DateDue")."</td><td>".dol_print_date($object->date_ech,'day')."</td></tr>";
-    }
-
-    // Amount
-    print '<tr><td>'.$langs->trans("AmountTTC").'</td><td>'.price($object->amount).'</td></tr>';
-
-    // Status
-    print '<tr><td>'.$langs->trans("Status").'</td><td>'.$object->getLibStatut(4).'</td></tr>';
-
-    print '<tr><td>'.$langs->trans("NbOfAttachedFiles").'</td><td colspan="3">'.count($filearray).'</td></tr>';
+    print '<tr><td class="titlefield">'.$langs->trans("NbOfAttachedFiles").'</td><td colspan="3">'.count($filearray).'</td></tr>';
     print '<tr><td>'.$langs->trans("TotalSizeOfAttachedFiles").'</td><td colspan="3">'.$totalsize.' '.$langs->trans("bytes").'</td></tr>';
     print '</table>';
 
     print '</div>';
+    
+    print '<div class="clearboth"></div>';
+    
+    dol_fiche_end();
 
-
-    // Affiche formulaire upload
-   	$formfile=new FormFile($db);
-   	$formfile->form_attach_new_file(DOL_URL_ROOT.'/compta/sociales/document.php?id='.$object->id,'',0,0,$user->rights->tax->charges->creer,50,$object);
-
-
-   	// List of document
-   	//$param='&id='.$object->id;
-   	$formfile->list_of_documents($filearray,$object,'tax',$param);
-
+    $modulepart = 'tax';
+    $permission = $user->rights->tax->charges->creer;
+    $param = '&id=' . $object->id;
+    include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_post_headers.tpl.php';
 }
 else
 {
-    print $langs->trans("UnkownError");
+    print $langs->trans("ErrorUnknown");
 }
 
 
 llxFooter();
 
 $db->close();
-?>

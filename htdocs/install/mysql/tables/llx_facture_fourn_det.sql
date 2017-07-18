@@ -22,6 +22,7 @@ create table llx_facture_fourn_det
 (
   rowid             integer AUTO_INCREMENT PRIMARY KEY,
   fk_facture_fourn  integer NOT NULL,
+  fk_parent_line    integer NULL,
   fk_product        integer NULL,
   ref               varchar(50),   -- supplier product ref
   label             varchar(255),  -- product label
@@ -30,11 +31,12 @@ create table llx_facture_fourn_det
   pu_ttc            double(24,8), -- unit price with tax
   qty               real,         -- quantity of product/service
   remise_percent	real       DEFAULT 0,				-- % de la remise ligne (exemple 20%)
+  vat_src_code		varchar(10)  DEFAULT '',			-- Vat code used as source of vat fields. Not strict foreign key here.
   tva_tx            double(6,3),  -- TVA taux product/service
   localtax1_tx      double(6,3)  DEFAULT 0,    -- localtax1 rate
-  localtax1_type	varchar(1)	  NULL, 		-- localtax1 type
+  localtax1_type	varchar(10)	  NULL, 		-- localtax1 type
   localtax2_tx      double(6,3)  DEFAULT 0,    -- localtax2 rate
-  localtax2_type	varchar(1)	  NULL, 		-- localtax2 type
+  localtax2_type	varchar(10)	  NULL, 		-- localtax2 type
   total_ht          double(24,8), -- Total line price of product excluding tax
   tva               double(24,8), -- Total TVA of line
   total_localtax1   double(24,8) DEFAULT 0,	-- Total LocalTax1 for total quantity of line
@@ -43,5 +45,17 @@ create table llx_facture_fourn_det
   product_type	    integer      DEFAULT 0,
   date_start        datetime   DEFAULT NULL,       -- date debut si service
   date_end          datetime   DEFAULT NULL,       -- date fin si service
-  import_key        varchar(14)
+  info_bits						integer    DEFAULT 0,				-- TVA NPR ou non
+  fk_code_ventilation integer DEFAULT 0 NOT NULL,
+  special_code				 integer      DEFAULT 0,      -- code pour les lignes speciales
+  rang						 integer      DEFAULT 0,
+  import_key        varchar(14),
+  fk_unit         integer    DEFAULT NULL,
+  
+  fk_multicurrency		integer,
+  multicurrency_code			varchar(255),
+  multicurrency_subprice		double(24,8) DEFAULT 0,
+  multicurrency_total_ht		double(24,8) DEFAULT 0,
+  multicurrency_total_tva	double(24,8) DEFAULT 0,
+  multicurrency_total_ttc	double(24,8) DEFAULT 0
 )ENGINE=innodb;

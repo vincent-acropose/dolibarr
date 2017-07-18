@@ -18,21 +18,23 @@
  */
 
 $langs->load("main");
+$langs->load("bills");
 
 ?>
 
-<h3 class="titre1"><?php echo $langs->trans("SellFinished"); ?></h3>
+<div class="blocksellfinished">
 
 <div class="cadre_facturation">
+<h3 class="titre1"><?php echo $langs->trans("SellFinished"); ?></h3><br>
 
 <script type="text/javascript">
 
 	function popupTicket()
 	{
 		largeur = 600;
-		hauteur = 500
+		hauteur = 500;
 		opt = 'width='+largeur+', height='+hauteur+', left='+(screen.width - largeur)/2+', top='+(screen.height-hauteur)/2+'';
-		window.open('validation_ticket.php?facid=<?php echo $_GET['facid']; ?>', '<?php echo $langs->trans('PrintTicket') ?>', opt);
+		window.open('validation_ticket.php?facid=<?php echo GETPOST('facid','int'); ?>', '<?php echo $langs->trans('PrintTicket') ?>', opt);
 	}
 
 	popupTicket();
@@ -44,3 +46,6 @@ $langs->load("main");
 <p><a class="lien1" href="#" onclick="Javascript: popupTicket(); return(false);"><?php echo $langs->trans("PrintTicket"); ?></a></p>
 
 </div>
+</div>
+<br>
+

@@ -1,17 +1,6 @@
-/*
- * Language code: pt_PT
- * Automatic generated via autotranslator.php tool
- * Generation date 2012-02-29 15:45:52
- */
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 15:45:52).
-// Reference language: en_US -> pt_PT
-CHARSET=UTF-8
+# Language file - Source file is en_US - cashdesk
 CashDeskMenu=Ponto de venda
 CashDesk=Ponto de venda
-CashDesks=Pontos de venda
-CashDeskBank=Conta bancária
 CashDeskBankCash=Conta bancária (dinheiro)
 CashDeskBankCB=Conta bancária (cartão)
 CashDeskBankCheque=Conta bancária (cheque)
@@ -23,15 +12,12 @@ CashDeskOn=em
 CashDeskThirdParty=Terceiro
 ShoppingCart=Carrinho de compras
 NewSell=​​Nova Venda
-BackOffice=Back office
 AddThisArticle=Adicionar este artigo
 RestartSelling=Voltar para vendas
-SellFinished=Terminar venda
+SellFinished=Sale complete
 PrintTicket=Imprimir Recibo
-NoResults=Sem resultados
 NoProductFound=Nenhum artigo encontrado
 ProductFound=produto encontrado
-ProductsFound=produtos encontrados
 NoArticle=Nenhum artigo
 Identification=Identificação
 Article=Artigo
@@ -39,12 +25,10 @@ Difference=Diferença
 TotalTicket=Total do Recibo
 NoVAT=Sem IVA para esta venda
 Change=Troco
-CalTip=Clique para ver o calendário
-SelectDate=Clique para ver o calendário
-
-CashDeskSetupStock=Você pede para diminuir ações na criação de factura, mas armazém para isso é não foi definida <br> Alterar a configuração do módulo de estoque, ou escolher um armazém
 BankToPay=Conta corrente
 ShowCompany=Mostrar empresa
 ShowStock=Mostrar armazém
 DeleteArticle=Clique para remover este artigo
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 15:48:09).
+FilterRefOrLabelOrBC=Procurar (Ref/Etiqueta)
+UserNeedPermissionToEditStockToUsePos=You ask to decrease stock on invoice creation, so user that use POS need to have permission to edit stock.
+DolibarrReceiptPrinter=Dolibarr Receipt Printer

@@ -21,15 +21,17 @@
 /**
  *		\file       htdocs/compta/prelevement/stats.php
  *      \ingroup    prelevement
- *      \brief      Page de stats des prelevements
+ *      \brief      Page with statistics on withdrawals
  */
 
-require '../bank/pre.inc.php';
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/ligneprelevement.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
+$langs->load("banks");
+$langs->load("categories");
 $langs->load("withdrawals");
 $langs->load("companies");
-$langs->load("categories");
 
 // Security check
 $socid = GETPOST('socid','int');
@@ -43,7 +45,7 @@ $result = restrictedArea($user, 'prelevement','','','bons');
 
 llxHeader('',$langs->trans("WithdrawStatistics"));
 
-print_fiche_titre($langs->trans("Statistics"));
+print load_fiche_titre($langs->trans("Statistics"));
 
 // Define total and nbtotal
 $sql = "SELECT sum(pl.amount), count(pl.amount)";
@@ -71,7 +73,7 @@ if ($resql)
  */
 
 print '<br>';
-print_titre($langs->trans("WithdrawStatistics"));
+print load_fiche_titre($langs->trans("WithdrawStatistics"), '', '');
 
 $ligne=new LignePrelevement($db,$user);
 
@@ -94,13 +96,13 @@ if ($resql)
 	print '<td width="30%">'.$langs->trans("Status").'</td><td align="center">'.$langs->trans("Number").'</td><td align="right">%</td>';
 	print '<td align="right">'.$langs->trans("Amount").'</td><td align="right">%</td></tr>';
 
-	$var=True;
+	$var=false;
 
 	while ($i < $num)
 	{
 		$row = $db->fetch_row($resql);
 
-		print "<tr $bc[$var]><td>";
+		print "<tr ".$bc[$var]."><td>";
 
 		print $ligne->LibStatut($row[2],1);
 		//print $st[$row[2]];
@@ -136,12 +138,11 @@ else
 
 
 /*
- *
- * Stats sur les rejets
- *
+ * Stats on errors
  */
+
 print '<br>';
-print_titre($langs->trans("WithdrawRejectStatistics"));
+print load_fiche_titre($langs->trans("WithdrawRejectStatistics"), '', '');
 
 
 // Define total and nbtotal
@@ -200,7 +201,7 @@ if ($resql)
 	{
 		$row = $db->fetch_row($resql);
 
-		print "<tr $bc[$var]><td>";
+		print "<tr ".$bc[$var]."><td>";
 		print $Rejet->motifs[$row[2]];
 
 		print '</td><td align="center">'.$row[1];
@@ -237,4 +238,3 @@ llxFooter();
 
 $db->close();
 
-?>

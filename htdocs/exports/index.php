@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2005-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2005-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,16 +44,15 @@ $form=new Form($db);
 
 llxHeader('',$langs->trans("ExportsArea"),'EN:Module_Exports_En|FR:Module_Exports|ES:M&oacute;dulo_Exportaciones');
 
-print_fiche_titre($langs->trans("ExportsArea"));
+print load_fiche_titre($langs->trans("ExportsArea"));
 
 print $langs->trans("FormatedExportDesc1").'<br>';
 print $langs->trans("FormatedExportDesc2").' ';
 print $langs->trans("FormatedExportDesc3").'<br>';
 print '<br>';
 
-print '<table class="notopnoleftnoright" width="100%">';
 
-print '<tr><td valign="top" width="70%" class="notopnoleft">';
+print '<div class="fichecenter"><div class="fichehalfleft">';
 
 
 // List export set
@@ -91,7 +90,7 @@ else
 print '</table>';
 print '<br>';
 
-print '<center>';
+print '<div class="center">';
 if (count($export->array_export_code))
 {
 	if ($user->rights->export->creer)
@@ -103,15 +102,15 @@ if (count($export->array_export_code))
 		print '<a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->transnoentitiesnoconv("NotEnoughPermissions")).'">'.$langs->trans("NewExport").'</a>';
 	}
 	/*
-	 print '<center><form action="'.DOL_URL_ROOT.'/exports/export.php?leftmenu=export"><input type="submit" class="button" value="'.$langs->trans("NewExport").'"';
-	print ($user->rights->export->creer?'':' disabled="disabled"');
-	print '></form></center>';
+	 print '<form action="'.DOL_URL_ROOT.'/exports/export.php?leftmenu=export"><input type="submit" class="button" value="'.$langs->trans("NewExport").'"';
+	print ($user->rights->export->creer?'':' disabled');
+	print '><div class="center"></div></form>';
 	*/
 }
-print '</center>';
+print '</div>';
+print '<br>';
 
-
-print '</td><td valign="top" width="30%" class="notopnoleftnoright">';
+print '</div><div class="fichehalfright"><div class="ficheaddleft">';
 
 
 // List of available export format
@@ -124,30 +123,34 @@ print '<td align="right">'.$langs->trans("LibraryVersion").'</td>';
 print '</tr>';
 
 include_once DOL_DOCUMENT_ROOT.'/core/modules/export/modules_export.php';
-$model=new ModeleExports();
+$model=new ModeleExports($db);
 $liste=$model->liste_modeles($db);    // This is not a static method for exports because method load non static properties
 
 $var=true;
 foreach($liste as $key => $val)
 {
+    if (preg_match('/__\(Disabled\)__/',$liste[$key]))
+    {
+    	$liste[$key]=preg_replace('/__\(Disabled\)__/','('.$langs->transnoentitiesnoconv("Disabled").')',$liste[$key]);
+    }
+
 	$var=!$var;
 	print '<tr '.$bc[$var].'>';
 	print '<td width="16">'.img_picto_common($model->getDriverLabelForKey($key),$model->getPictoForKey($key)).'</td>';
 	$text=$model->getDriverDescForKey($key);
-	print '<td>'.$form->textwithpicto($model->getDriverLabelForKey($key),$text).'</td>';
+	$label=$liste[$key];
+	print '<td>'.$form->textwithpicto($label,$text).'</td>';
 	print '<td>'.$model->getLibLabelForKey($key).'</td>';
-	print '<td nowrap="nowrap" align="right">'.$model->getLibVersionForKey($key).'</td>';
+	print '<td class="nowrap" align="right">'.$model->getLibVersionForKey($key).'</td>';
 	print '</tr>';
 }
 
 print '</table>';
 
 
-print '</td></tr>';
-print '</table>';
+print '</div></div></div>';
 
 
 llxFooter();
 
 $db->close();
-?>

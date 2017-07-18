@@ -1,111 +1,145 @@
-/*
- * Lince Translation File
- * Filename: 
- * Language code: pl_PL
- * Automatic generated via autotranslator tool
- * Generation date 2009-01-19 00:44:06
- */
-
-
-// Date 2009-01-19 00:44:06
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
-WarehouseCard=Magazyn karty
+# Dolibarr language file - Source file is en_US - stocks
+WarehouseCard=Karta magazynu
 Warehouse=Magazyn
-NewWarehouse=Nowy magazyn / Stock obszarze
+Warehouses=Magazyny
+ParentWarehouse=Magazyn nadrzędny
+NewWarehouse=Nowy magazyn / obszar magazynowania
+WarehouseEdit=Modyfikacja magazynu
 MenuNewWarehouse=Nowy magazyn
-WarehouseOpened=Magazyn otwarty
-WarehouseClosed=Magazyn zamknięte
-WarehouseSource=Źródło magazynu
-WarehouseTarget=Docelowe magazynie
+WarehouseSource=Magazyn źródłowy
+WarehouseSourceNotDefined=Nie zdefiniowano magazynu,
+AddOne=Dodaj jedną
+WarehouseTarget=Docelowy magazynie
 ValidateSending=Usuń wysyłanie
 CancelSending=Anuluj wysyłanie
 DeleteSending=Usuń wysyłanie
-Stock=Zasób
-Stocks=Zapasy
-Movement=Ruch
+Stock=Stan
+Stocks=Stany
+StocksByLotSerial=Zapasy wg. lotu/nr seryjnego
+LotSerial=Lots/Serials
+LotSerialList=List of lot/serials
 Movements=Ruchy
-ErrorWarehouseRefRequired=Magazyn referencyjnego Wymagana jest nazwa
-ErrorWarehouseLabelRequired=Magazyn etykiecie jest wymagane
-CorrectStock=Poprawny stanie
+ErrorWarehouseRefRequired=Nazwa referencyjna magazynu wymagana
 ListOfWarehouses=Lista magazynów
 ListOfStockMovements=Wykaz stanu magazynowego
-StocksArea=Zapasy obszarze
-Location=Lieu
+StockMovementForId=Movement ID %d
+ListMouvementStockProject=List of stock movements associated to project
+StocksArea=Powierzchnia magazynów
+Location=Lokacja
 LocationSummary=Nazwa skrócona lokalizacji
+NumberOfDifferentProducts=Wiele różnych środków
 NumberOfProducts=Łączna liczba produktów
-LastMovement=Ostatni ruch
-LastMovements=Ostatnie ruchy
+LastMovement=Latest movement
+LastMovements=Latest movements
 Units=Jednostki
 Unit=Jednostka
-StockCorrection=Poprawny stanie
-StockMovement=Przeniesienie
-StockMovements=Stock transfery
+StockCorrection=Korekta zapasu
+StockTransfer=Transfer stock
+MassStockTransferShort=Masowe przesuniecie zapasu
+StockMovement=Przeniesienie zapasu
+StockMovements=Przesunięcia zapasu
+LabelMovement=Etykieta Ruch
 NumberOfUnit=Liczba jednostek
-TotalStock=Razem w akcji
-StockTooLow=Zasób zbyt niska
+UnitPurchaseValue=Jednostkowa cena nabycia
+StockTooLow=Zbyt niski zapas
+StockLowerThanLimit=Zapas mniejszy niż alarm o zbyt niskim zapasie
 EnhancedValue=Wartość
 PMPValue=Wartość
+PMPValueShort=WAP
 EnhancedValueOfWarehouses=Magazyny wartości
-UserWarehouseAutoCreate=Tworzenie stanie automatycznie podczas tworzenia użytkownika
+UserWarehouseAutoCreate=Twórz automatycznie magazyn gdy stworzysz użytkownika
+AllowAddLimitStockByWarehouse=Allow to add limit and desired stock per couple (product, warehouse) instead of per product
+IndependantSubProductStock=Produkt akcji i subproduct akcji są niezależne
 QtyDispatched=Ilość wysyłanych
+QtyDispatchedShort=Ilość wysyłanych
+QtyToDispatchShort=Ilość wysyłką
 OrderDispatch=Postanowienie wysyłkowe
-RuleForStockManagementDecrease=Artykuł na zarządzanie zapasami spadek
-RuleForStockManagementIncrease=Artykuł na zarządzanie zapasami wzrost
-DeStockOnBill=Spadek realnych zasobów faktur / not kredytowych
-DeStockOnValidateOrder=Spadek realnych zasobów zamówień notatek
-DeStockOnShipment=Spadek realnych zasobów wysyłką (zaleciły)
-ReStockOnBill=Wzrost realnego zasobów faktur / not kredytowych
-ReStockOnValidateOrder=Wzrost realnego zasobów zamówień notatek
-StockDiffPhysicTeoric=Powód różnica stanie fizycznym i teoretycznego
-StockLimitShort=Limit
-StockLimit=Stock limit wpisów
-PhysicalStock=Fizyczne zapasy
-RealStock=Real Stock
-TheoreticalStock=Therocial stanie
-VirtualStock=Wirtualne stanie
-MininumStock=Minimum stock
-StockUp=Stanie się
-MininumStockShort=Stock min
-StockUpShort=Stanie się
+RuleForStockManagementDecrease=Zasady dla automatycznego zarządzania zmniejszeniem zapasu (ręczne zmniejszenie jest zawsze możliwe, nawet gdy automatyczne reguły są aktywne)
+RuleForStockManagementIncrease=Zasady dla automatycznego zarządzania zwiększaniem zapasu (ręczne zwiększenie jest zawsze możliwe, nawet gdy automatyczne reguły są aktywne)
+DeStockOnBill=Zmniejsz realne zapasy magazynu po potwierdzeniu faktur / not kredytowych
+DeStockOnValidateOrder=Zmniejsz realne zapasy magazynu po potwierdzeniu zamówień klientów
+DeStockOnShipment=Zmniejsz realne zapasy magazynu po potwierdzeniu wysyłki
+DeStockOnShipmentOnClosing=Decrease real stocks on shipping classification closed
+ReStockOnBill=Zwiększ realne zapasy magazynu po potwierdzeniu faktur / not kredytowych
+ReStockOnValidateOrder=Zwiększ realne zapasy magazynu po potwierdzeniu zamówień dostawców
+ReStockOnDispatchOrder=Zwiększ realne zapasy w magazynach przy manualnym wysłaniu po odebraniu zamówienia przez dostawcę
+OrderStatusNotReadyToDispatch=Zamówienie nie jest jeszcze lub nie więcej status, który umożliwia wysyłanie produktów w magazynach czas.
+StockDiffPhysicTeoric=Wyjaśnienie różnicy między fizycznym i wirtualnym stanem
+NoPredefinedProductToDispatch=Nie gotowych produktów dla tego obiektu. Więc nie w czas wysyłki jest wymagane.
+DispatchVerb=Wysyłka
+StockLimitShort=Limit zapasu przy którym wystąpi alarm
+StockLimit=Limit zapasu przy którym wystąpi alarm
+PhysicalStock=Fizyczne stany
+RealStock=Realny magazyn
+VirtualStock=Wirtualny zapas
 IdWarehouse=Identyfikator magazynu
 DescWareHouse=Opis składu
 LieuWareHouse=Lokalizacja hurtowni
 WarehousesAndProducts=Magazyny i produktów
-// Date 2009-01-19 00:44:06
-// STOP - Lines generated via parser
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-13 21:07:31).
-// Reference language: en_US
-PMPValueShort=WAP
+WarehousesAndProductsBatchDetail=Magazyny i produkty (z detalami na lot / serial)
 AverageUnitPricePMPShort=Średnia cena wejścia
 AverageUnitPricePMP=Średnia cena wejścia
-EstimatedStockValueShort=Szacunkowa wartość zapasów
-EstimatedStockValue=Szacunkowa wartość zapasów
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 21:07:31).
-
-
-// START - Lines generated via autotranslator.php tool (2010-09-04 01:33:40).
-// Reference language: en_US -> pl_PL
-WarehouseEdit=Modyfikacja składu
-ReStockOnDispatchOrder=Wzrost rzeczywisty stan zapasów w magazynach ręcznego wysyłki, po otrzymaniu zamówienia dostawca
-OrderStatusNotReadyToDispatch=Zamówienie nie jest jeszcze lub nie więcej status, który umożliwia wysyłanie produktów w magazynach czas.
-NoPredefinedProductToDispatch=Nie gotowych produktów dla tego obiektu. Więc nie w czas wysyłki jest wymagane.
-DispatchVerb=Wysyłka
-DeleteAWarehouse=Usuń magazyn
-ConfirmDeleteWarehouse=Czy na pewno chcesz usunąć <b>%s</b> magazynie?
-PersonalStock=Osobowych %s czas
-ThisWarehouseIsPersonalStock=Tym składzie przedstawia osobiste zasobów %s %s
-// STOP - Lines generated via autotranslator.php tool (2010-09-04 01:35:51).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 17:18:29).
-// Reference language: en_US -> pl_PL
 SellPriceMin=Cena sprzedaży jednostki
 EstimatedStockValueSellShort=Wartość sprzedaży
 EstimatedStockValueSell=Wartość sprzedaży
+EstimatedStockValueShort=Szacunkowa wartość zapasów
+EstimatedStockValue=Szacunkowa wartość magazynu
+DeleteAWarehouse=Usuń magazyn
+ConfirmDeleteWarehouse=Are you sure you want to delete the warehouse <b>%s</b>?
+PersonalStock=Osobowych %s czas
+ThisWarehouseIsPersonalStock=Tym składzie przedstawia osobiste zasobów %s %s
 SelectWarehouseForStockDecrease=Wybierz magazyn użyć do zmniejszenia czas
 SelectWarehouseForStockIncrease=Wybierz magazyn użyć do zwiększenia czas
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 17:18:54).
+NoStockAction=Brak akcji stock
+DesiredStock=Pożądany zapas
+DesiredStockDesc=This stock amount will be the value used to fill the stock by replenishment feature.
+StockToBuy=Na zamówienie
+Replenishment=Uzupełnianie
+ReplenishmentOrders=Zamówień towarów
+VirtualDiffersFromPhysical=According to increase/decrease stock options, physical stock and virtual stock (physical + current orders) may differ
+UseVirtualStockByDefault=Użyj wirtualnej akcji domyślnie, zamiast fizycznego magazynie, do uzupełniania funkcji
+UseVirtualStock=Użyj wirtualnej akcji
+UsePhysicalStock=Użyj fizycznej akcji
+CurentSelectionMode=Current selection mode
+CurentlyUsingVirtualStock=Wirtualny Zdjęcie
+CurentlyUsingPhysicalStock=Zdjęcie fizyczny
+RuleForStockReplenishment=Reguła dla uzupełnienia zapasów
+SelectProductWithNotNullQty=Wybierz co najmniej jeden produkt z st not null i dostawcy
+AlertOnly= Tylko alarmy
+WarehouseForStockDecrease=<b>Magazyn% s</b> zostaną wykorzystane do zmniejszenia magazynie
+WarehouseForStockIncrease=<b>Magazyn% s</b> zostaną wykorzystane do zwiększenia magazynie
+ForThisWarehouse=W tym magazynie
+ReplenishmentStatusDesc=This is a list of all products with a stock lower than desired stock (or lower than alert value if checkbox "alert only" is checked), and suggest you to create supplier orders to fill the difference.
+ReplenishmentOrdersDesc=This is a list of all open supplier orders including predefined products. Only open orders with predefined products, so orders that may affect stocks, are visible here.
+Replenishments=Uzupełnianie
+NbOfProductBeforePeriod=Ilość produktów w magazynie% s przed wybrany okres (<% s)
+NbOfProductAfterPeriod=Ilość produktów w magazynie% s po wybraniu okres (>% s)
+MassMovement=Masowe przesunięcie
+SelectProductInAndOutWareHouse=Wybierz produkt, ilość, magazyn źródłowy i docelowy magazyn, a następnie kliknij przycisk "% s". Po wykonaniu tych wszystkich wymaganych ruchów, kliknij na "% s".
+RecordMovement=Rekord transfert
+ReceivingForSameOrder=Wpływy do tego celu
+StockMovementRecorded=Zbiory zapisane ruchy
+RuleForStockAvailability=Zasady dotyczące dostępności zapasu
+StockMustBeEnoughForInvoice=Stock level must be enough to add product/service to invoice (check is done on current real stock when adding a line into invoice whatever is rule for automatic stock change)
+StockMustBeEnoughForOrder=Stock level must be enough to add product/service to order (check is done on current real stock when adding a line into order whatever is rule for automatic stock change)
+StockMustBeEnoughForShipment= Stock level must be enough to add product/service to shipment (check is done on current real stock when adding a line into shipment whatever is rule for automatic stock change)
+MovementLabel=Etykieta ruchu
+InventoryCode=Kod inwentaryzacji
+IsInPackage=Zawarte w pakiecie
+WarehouseAllowNegativeTransfer=Zapas nie może być ujemny
+qtyToTranferIsNotEnough=You don't have enough stock from your source warehouse
+ShowWarehouse=Pokaż magazyn
+MovementCorrectStock=Korekta zapasu dla artykułu %s
+MovementTransferStock=Transferuj zapas artykułu %s do innego magazynu
+InventoryCodeShort=Kod Fv/ Przesunięcia
+NoPendingReceptionOnSupplierOrder=No pending reception due to open supplier order
+ThisSerialAlreadyExistWithDifferentDate=Ten lot/numer seryjny (<strong>%s</strong>) już istnieje ale z inna data do wykorzystania lub sprzedania (znaleziono  <strong>%s</strong> a wszedłeś w <strong>%s</strong>)
+OpenAll=Open for all actions
+OpenInternal=Open only for internal actions
+UseDispatchStatus=Use a dispatch status (approve/refuse) for product lines on supplier order reception
+OptionMULTIPRICESIsOn=Option "several prices per segment" is on. It means a product has several selling price so value for sell can't be calculated
+ProductStockWarehouseCreated=Stock limit for alert and desired optimal stock correctly created
+ProductStockWarehouseUpdated=Stock limit for alert and desired optimal stock correctly updated
+ProductStockWarehouseDeleted=Stock limit for alert and desired optimal stock correctly deleted
+AddNewProductStockWarehouse=Set new limit for alert and desired optimal stock
+AddStockLocationLine=Decrease quantity then click to add another warehouse for this product

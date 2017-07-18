@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 /*-----------------------------------------------------
  *
@@ -149,4 +149,3 @@ function php_quote($val)
     return $res_val;
 }
 
-?>

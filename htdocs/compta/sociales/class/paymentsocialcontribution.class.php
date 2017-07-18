@@ -23,28 +23,30 @@
  */
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/sociales/class/chargesociales.class.php';
 
 
-/**     \class      PaymentSocialContribution
- *		\brief      Class to manage payments of social contributions
+/**
+ *	Class to manage payments of social contributions
  */
 class PaymentSocialContribution extends CommonObject
 {
 	public $element='paiementcharge';			//!< Id that identify managed objects
 	public $table_element='paiementcharge';	//!< Name of table without prefix where object is stored
 
-	var $id;
-	var $ref;
-
 	var $fk_charge;
 	var $datec='';
 	var $tms='';
 	var $datep='';
+	/**
+	 * @deprecated
+	 * @see amount
+	 */
+	var $total;
     var $amount;            // Total amount of payment
     var $amounts=array();   // Array of amounts
 	var $fk_typepaiement;
 	var $num_paiement;
-	var $note;
 	var $fk_bank;
 	var $fk_user_creat;
 	var $fk_user_modif;
@@ -63,10 +65,11 @@ class PaymentSocialContribution extends CommonObject
 	 *  Create payment of social contribution into database.
      *  Use this->amounts to have list of lines for the payment
      *
-	 *  @param      User		$user   User making payment
-	 *  @return     int     			<0 if KO, id of payment if OK
+	 *  @param      User	$user   				User making payment
+	 *	@param		int		$closepaidcontrib   	1=Also close payed contributions to paid, 0=Do nothing more
+	 *  @return     int     						<0 if KO, id of payment if OK
 	 */
-	function create($user)
+	function create($user, $closepaidcontrib=0)
 	{
 		global $conf, $langs;
 
@@ -74,10 +77,12 @@ class PaymentSocialContribution extends CommonObject
 
         $now=dol_now();
 
-        // Validate parametres
+		dol_syslog(get_class($this)."::create", LOG_DEBUG);
+        
+		// Validate parametres
 		if (! $this->datepaye)
 		{
-			$this->error='ErrorBadValueForParameter';
+			$this->error='ErrorBadValueForParameterCreatePaymentSocialContrib';
 			return -1;
 		}
 
@@ -116,11 +121,40 @@ class PaymentSocialContribution extends CommonObject
 			$sql.= " ".$this->paiementtype.", '".$this->db->escape($this->num_paiement)."', '".$this->db->escape($this->note)."', ".$user->id.",";
 			$sql.= " 0)";
 
-			dol_syslog(get_class($this)."::create sql=".$sql);
 			$resql=$this->db->query($sql);
 			if ($resql)
 			{
 				$this->id = $this->db->last_insert_id(MAIN_DB_PREFIX."paiementcharge");
+				
+				// Insere tableau des montants / factures
+				foreach ($this->amounts as $key => $amount)
+				{
+					$contribid = $key;
+					if (is_numeric($amount) && $amount <> 0)
+					{
+						$amount = price2num($amount);
+
+						// If we want to closed payed invoices
+						if ($closepaidcontrib)
+						{
+							
+							$contrib=new ChargeSociales($this->db);
+							$contrib->fetch($contribid);
+							$paiement = $contrib->getSommePaiement();
+							//$creditnotes=$contrib->getSumCreditNotesUsed();
+							$creditnotes=0;
+							//$deposits=$contrib->getSumDepositsUsed();
+							$deposits=0;
+							$alreadypayed=price2num($paiement + $creditnotes + $deposits,'MT');
+							$remaintopay=price2num($contrib->amount - $paiement - $creditnotes - $deposits,'MT');
+							if ($remaintopay == 0)
+							{
+								$result=$contrib->set_paid($user, '', '');
+							}
+							else dol_syslog("Remain to pay for conrib ".$contribid." not null. We do nothing.");
+						}
+					}
+				}
 			}
 			else
 			{
@@ -139,7 +173,6 @@ class PaymentSocialContribution extends CommonObject
 		else
 		{
 			$this->error=$this->db->error();
-			dol_syslog(get_class($this)."::create ".$this->error, LOG_ERR);
 			$this->db->rollback();
 			return -1;
 		}
@@ -173,7 +206,7 @@ class PaymentSocialContribution extends CommonObject
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'bank as b ON t.fk_bank = b.rowid';
 		$sql.= " WHERE t.rowid = ".$id." AND t.fk_typepaiement = pt.id";
 
-		dol_syslog(get_class($this)."::fetch sql=".$sql, LOG_DEBUG);
+		dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
 		$resql=$this->db->query($sql);
 		if ($resql)
 		{
@@ -209,7 +242,6 @@ class PaymentSocialContribution extends CommonObject
 		else
 		{
 			$this->error="Error ".$this->db->lasterror();
-			dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
 			return -1;
 		}
 	}
@@ -222,7 +254,7 @@ class PaymentSocialContribution extends CommonObject
 	 *  @param  int		$notrigger	    0=launch triggers after, 1=disable triggers
 	 *  @return int         			<0 if KO, >0 if OK
 	 */
-	function update($user=0, $notrigger=0)
+	function update($user=null, $notrigger=0)
 	{
 		global $conf, $langs;
 		$error=0;
@@ -263,7 +295,7 @@ class PaymentSocialContribution extends CommonObject
 
 		$this->db->begin();
 
-		dol_syslog(get_class($this)."::update sql=".$sql, LOG_DEBUG);
+		dol_syslog(get_class($this)."::update", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if (! $resql) { $error++; $this->errors[]="Error ".$this->db->lasterror(); }
 
@@ -314,16 +346,19 @@ class PaymentSocialContribution extends CommonObject
 		global $conf, $langs;
 		$error=0;
 
+		dol_syslog(get_class($this)."::delete");
+
 		$this->db->begin();
 
-	    if (! $error)
+	    if ($this->bank_line > 0)
         {
-            $sql = "DELETE FROM ".MAIN_DB_PREFIX."bank_url";
-            $sql.= " WHERE type='payment_sc' AND url_id=".$this->id;
-
-            dol_syslog(get_class($this)."::delete sql=".$sql);
-            $resql = $this->db->query($sql);
-            if (! $resql) { $error++; $this->errors[]="Error ".$this->db->lasterror(); }
+        	$accline = new AccountLine($this->db);
+			$accline->fetch($this->bank_line);
+			$result = $accline->delete();
+			if($result < 0) {
+				$this->errors[] = $accline->error;
+				$error++;
+			}
         }
 
 		if (! $error)
@@ -331,7 +366,7 @@ class PaymentSocialContribution extends CommonObject
 			$sql = "DELETE FROM ".MAIN_DB_PREFIX."paiementcharge";
 			$sql.= " WHERE rowid=".$this->id;
 
-			dol_syslog(get_class($this)."::delete sql=".$sql);
+			dol_syslog(get_class($this)."::delete", LOG_DEBUG);
 			$resql = $this->db->query($sql);
 			if (! $resql) { $error++; $this->errors[]="Error ".$this->db->lasterror(); }
 		}
@@ -386,6 +421,8 @@ class PaymentSocialContribution extends CommonObject
 
 		$object=new PaymentSocialContribution($this->db);
 
+		$object->context['createfromclone'] = 'createfromclone';
+
 		$this->db->begin();
 
 		// Load source object
@@ -412,6 +449,8 @@ class PaymentSocialContribution extends CommonObject
 
 
 		}
+
+		unset($this->context['createfromclone']);
 
 		// End
 		if (! $error)
@@ -508,7 +547,7 @@ class PaymentSocialContribution extends CommonObject
 
                 // Add link 'payment', 'payment_supplier', 'payment_sc' in bank_url between payment and bank transaction
                 $url='';
-                if ($mode == 'payment_sc') $url=DOL_URL_ROOT.'/compta/payment_sc/fiche.php?id=';
+                if ($mode == 'payment_sc') $url=DOL_URL_ROOT.'/compta/payment_sc/card.php?id=';
                 if ($url)
                 {
                     $result=$acc->add_url_line($bank_line_id, $this->id, $url, '(paiement)', $mode);
@@ -560,7 +599,7 @@ class PaymentSocialContribution extends CommonObject
 	{
 		$sql = "UPDATE ".MAIN_DB_PREFIX."paiementcharge SET fk_bank = ".$id_bank." WHERE rowid = ".$this->id;
 
-		dol_syslog(get_class($this)."::update_fk_bank sql=".$sql);
+		dol_syslog(get_class($this)."::update_fk_bank", LOG_DEBUG);
 		$result = $this->db->query($sql);
 		if ($result)
 		{
@@ -569,15 +608,14 @@ class PaymentSocialContribution extends CommonObject
 		else
 		{
 			$this->error=$this->db->error();
-			dol_syslog(get_class($this)."::update_fk_bank ".$this->error, LOG_ERR);
 			return 0;
 		}
 	}
 
 	/**
-	 *  Renvoie nom clicable (avec eventuellement le picto)
+	 *  Return clicable name (with picto eventually)
 	 *
-	 *	@param	int		$withpicto		0=Pas de picto, 1=Inclut le picto dans le lien, 2=Picto seul
+	 *	@param	int		$withpicto		0=No picto, 1=Include picto into link, 2=Only picto
 	 * 	@param	int		$maxlen			Longueur max libelle
 	 *	@return	string					Chaine avec URL
 	 */
@@ -588,15 +626,16 @@ class PaymentSocialContribution extends CommonObject
 		$result='';
 
 		if (empty($this->ref)) $this->ref=$this->lib;
+        $label = $langs->trans("ShowPayment").': '.$this->ref;
 
 		if (!empty($this->id))
 		{
-			$lien = '<a href="'.DOL_URL_ROOT.'/compta/payment_sc/fiche.php?id='.$this->id.'">';
-			$lienfin='</a>';
+			$link = '<a href="'.DOL_URL_ROOT.'/compta/payment_sc/card.php?id='.$this->id.'" title="'.dol_escape_htmltag($label, 1).'" class="classfortooltip">';
+			$linkend='</a>';
 
-			if ($withpicto) $result.=($lien.img_object($langs->trans("ShowPayment").': '.$this->ref,'payment').$lienfin.' ');
+            if ($withpicto) $result.=($link.img_object($label, 'payment', 'class="classfortooltip"').$linkend.' ');
 			if ($withpicto && $withpicto != 2) $result.=' ';
-			if ($withpicto != 2) $result.=$lien.($maxlen?dol_trunc($this->ref,$maxlen):$this->ref).$lienfin;
+			if ($withpicto != 2) $result.=$link.($maxlen?dol_trunc($this->ref,$maxlen):$this->ref).$linkend;
 		}
 
 		return $result;
@@ -604,4 +643,3 @@ class PaymentSocialContribution extends CommonObject
 }
 
 
-?>

@@ -1,55 +1,33 @@
-/*
- * Language code: ro_RO
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-01-19 21:32:52
- */
-
-
-// Date 2009-01-19 21:32:52
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
-Donation=Donation
-Donationss=Donatii
+# Dolibarr language file - Source file is en_US - donations
+Donation=Donaţie
+Donations=Donaţii
+DonationRef=Ref. Donaţie
 Donor=Donator
-Donors=Donatori
-AddDonation=Adăugaţi o donatie
-NewDonation=New donatie
-DonationPromise=Cadouri promisiune
-PromisesNotValid=Nu este validat promisiuni
-PromisesValid=Validat promisiuni
-DonationsPaid=Donatii platite
-DonationsReceived=Donatii primite
-PublicDonation=Public donatie
-DonationsNumber=Numărul de donatie
-DonationsArea=Donatii zona
-DonationStatusPromiseNotValidated=Proiect de promisiune
-DonationStatusPromiseValidated=Validat promisiune
-DonationStatusPaid=Donatii primite
-DonationStatusPromiseNotValidatedShort=Proiect
-DonationStatusPromiseValidatedShort=Validat
-DonationStatusPaidShort=Primit
-ValidPromise=Validate promisiune
-BuildDonationReceipt=Construieste-primirea
-DonationsModels=Documente modele de donare încasări
-// Date 2009-01-19 21:32:52
-// STOP - Lines generated via parser
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-13 21:12:07).
-// Reference language: en_US
-Donations=Donatii
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 21:12:07).
-
-
-// START - Lines generated via autotranslator.php tool (2010-07-17 11:36:47).
-// Reference language: en_US
-ValidPromess=Validare promisiune
-// STOP - Lines generated via autotranslator.php tool (2010-07-17 11:37:18).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 17:23:15).
-// Reference language: en_US -> ro_RO
-LastModifiedDonations=%s Ultima modificare donaţii
-SearchADonation=Căutaţi o donaţie
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 17:26:34).
+AddDonation=Crează o donaţie
+NewDonation=Donaţie nouă
+DeleteADonation=Şterge o donaţie
+ConfirmDeleteADonation=Sunteți sigur că doriți să ștergeți această donație?
+ShowDonation=Afişează donaţia
+PublicDonation=Donaţie Publică
+DonationsArea=Donaţii
+DonationStatusPromiseNotValidated=Promisiune schiţă
+DonationStatusPromiseValidated=Promisiune validată
+DonationStatusPaid=Donatie plătită
+DonationStatusPromiseNotValidatedShort=Schiţă
+DonationStatusPromiseValidatedShort=Validată
+DonationStatusPaidShort=Plătită
+DonationTitle=Chitanţă donaţie
+DonationDatePayment=Data Plata 
+ValidPromess=Validează promisiune
+DonationReceipt=Chitanţă donaţie
+DonationsModels=Modele Documente de încasare donaţie
+LastModifiedDonations=Ultimele %s donaţii modificate 
+DonationRecipient=Beneficiar donaţie
+IConfirmDonationReception=Beneficiarul declară primirea, ca donaţie , a următoarei sume
+MinimumAmount=Valoarea minimă este %s
+FreeTextOnDonations=Text liber afişat în subsol
+FrenchOptions=Opțiuni pentru Franța
+DONATION_ART200=Afiseaza articolului 200 din CGI dacă sunteți îngrijorat
+DONATION_ART238=Afiseaza articolului 238 din CGI dacă sunteți îngrijorat
+DONATION_ART885=Afiseaza articol 885 din CGI dacă sunteți îngrijorat
+DonationPayment=Plată donaţie

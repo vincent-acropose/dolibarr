@@ -1,13 +1,4 @@
-/*
- * Language code: fi_FI
- * Automatic generated via autotranslator.php tool
- * Generation date 2012-02-29 16:10:23
- */
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 16:10:23).
-// Reference language: en_US -> fi_FI
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - sms
 Sms=Sms
 SmsSetup=Sms asetukset
 SmsDesc=Tällä sivulla voit määrittää global vaihtoehtoja SMS ominaisuudet
@@ -47,16 +38,14 @@ SmsStatusNotSent=Ei lähetetty
 SmsSuccessfulySent=Sms oikein lähetetään (vuodesta %s ja %s)
 ErrorSmsRecipientIsEmpty=Määrä tavoite on tyhjä
 WarningNoSmsAdded=Ei uusia puhelinnumero lisätä kohde luetteloon
-ConfirmValidSms=Haluatko vahvistaa validointi tästä campain?
-ConfirmResetMailing=Varoitus, jos teet reinit SMS campain <b>%s,</b> annatte tehdä massan lähettämällä sen toistamiseen. Onko se todella mitä olet kalpea tehdä?
-ConfirmDeleteMailing=Haluatko vahvistaa poistamalla campain?
-NbOfRecipients=Määrä tavoitteita
+ConfirmValidSms=Do you confirm validation of this campain?
 NbOfUniqueSms=Nb DOF ainutlaatuinen puhelinnumeroita
 NbOfSms=Nbre of phon numeroiden
 ThisIsATestMessage=Tämä on testi viesti
 SendSms=Lähetä tekstiviesti
 SmsInfoCharRemain=Nb jäljellä olevien merkkien
-SmsInfoNumero=(Muoto kansainvälinen eli +33899701761)
+SmsInfoNumero= (Muoto kansainvälinen eli +33899701761)
 DelayBeforeSending=Viive ennen lähettämistä (min)
+SmsNoPossibleSenderFound=No sender available. Check setup of your SMS provider.
 SmsNoPossibleRecipientFound=Ei tavoite käytettävissä. Tarkista asetukset oman SMS tarjoaja.
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 16:11:22).
+

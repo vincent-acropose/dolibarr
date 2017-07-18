@@ -1,16 +1,5 @@
-/*
- * Language code: is_IS
- * Automatic generated via autotranslator.php tool
- * Generation date 2011-10-10 02:45:33
- */
-
-
-// START - Lines generated via autotranslator.php tool (2011-10-10 02:45:33).
-// Reference language: en_US -> is_IS
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - marque pages
 AddThisPageToBookmarks=Bæta síðunni við bókamerki
-// STOP - Lines generated via autotranslator.php tool (2011-10-10 12:03:51).
-
 Bookmark=Bookmark
 Bookmarks=Bókamerki
 NewBookmark=Nýtt bókamerki
@@ -25,6 +14,5 @@ BehaviourOnClick=Hegðun þegar slóðin er smellt
 CreateBookmark=Búa til bókamerki
 SetHereATitleForLink=Setja inn titil fyrir bókamerkið
 UseAnExternalHttpLinkOrRelativeDolibarrLink=Notaðu utanáliggjandi http URL eða ættingja Dolibarr URL
-ChooseIfANewWindowMustBeOpenedOnClickOnBookmark=Veldu hvort á síðu opnar tengil á að birtast á núverandi eða nýr gluggi
+ChooseIfANewWindowMustBeOpenedOnClickOnBookmark=Choose if linked page must open in new window or not
 BookmarksManagement=Bókamerki stjórnun
-ListOfBookmarks=Listi yfir bókamerki

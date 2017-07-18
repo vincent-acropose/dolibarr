@@ -1,5 +1,6 @@
 <?php
-/* Copyright (C) 2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2011-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2013      Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,12 +44,12 @@ if (GETPOST("action") == 'set_proxy')
 {
     if (GETPOST("MAIN_USE_CONNECT_TIMEOUT") && ! is_numeric(GETPOST("MAIN_USE_CONNECT_TIMEOUT")))
     {
-        $mesg='<div class="error">'.$langs->trans("ErrorValueMustBeInteger").'</div>';
+        setEventMessages($langs->trans("ErrorValueMustBeInteger"), null, 'errors');
         $error++;
     }
     if (GETPOST("MAIN_USE_RESPONSE_TIMEOUT") && ! is_numeric(GETPOST("MAIN_USE_RESPONSE_TIMEOUT")))
     {
-        $mesg='<div class="error">'.$langs->trans("ErrorValueMustBeInteger").'</div>';
+        setEventMessages($langs->trans("ErrorValueMustBeInteger"), null, 'errors');
         $error++;
     }
 
@@ -67,7 +68,7 @@ if (GETPOST("action") == 'set_proxy')
 
     if (! $error)
     {
-        $mesg='<div class="ok">'.$langs->trans("RecordModifiedSuccessfully").'</div>';
+        setEventMessages($langs->trans("RecordModifiedSuccessfully"), null, 'mesgs');
     }
 }
 
@@ -78,12 +79,20 @@ if (GETPOST("action") == 'set_proxy')
 
 $form = new Form($db);
 
-llxHeader('',$langs->trans("Proxy"));
+$wikihelp='EN:Setup_Security|FR:Paramétrage_Sécurité|ES:Configuración_Seguridad';
+llxHeader('',$langs->trans("Proxy"), $wikihelp);
 
-print_fiche_titre($langs->trans("SecuritySetup"),'','setup');
+print load_fiche_titre($langs->trans("SecuritySetup"),'','title_setup');
 
 print $langs->trans("ProxyDesc")."<br>\n";
 print "<br>\n";
+
+
+
+print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+print '<input type="hidden" name="action" value="set_proxy">';
+
 
 $head=security_prepare_head();
 
@@ -117,10 +126,6 @@ if ($conf->use_javascript_ajax)
 // Timeout
 $var=true;
 
-print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
-print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-print '<input type="hidden" name="action" value="set_proxy">';
-
 print '<table width="100%" class="noborder">';
 
 print '<tr class="liste_titre">';
@@ -131,9 +136,8 @@ print "</tr>\n";
 $var=!$var;
 print '<tr '.$bc[$var].'>';
 print '<td>'.$langs->trans("ConnectionTimeout").'</td><td align="right">';
-//print $form->textwithpicto('',$langs->trans("SessionExplanation",ini_get("session.gc_probability"),ini_get("session.gc_divisor")));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_USE_CONNECT_TIMEOUT" type="text" size="4" value="'.(isset($_POST["MAIN_USE_CONNECT_TIMEOUT"])?GETPOST("MAIN_USE_CONNECT_TIMEOUT"):$conf->global->MAIN_USE_CONNECT_TIMEOUT).'">';
 print ' '.strtolower($langs->trans("Seconds"));
 print '</td>';
@@ -142,9 +146,8 @@ print '</tr>';
 $var=!$var;
 print '<tr '.$bc[$var].'>';
 print '<td>'.$langs->trans("ResponseTimeout").'</td><td align="right">';
-//print $form->textwithpicto('',$langs->trans("SessionExplanation",ini_get("session.gc_probability"),ini_get("session.gc_divisor")));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_USE_RESPONSE_TIMEOUT" type="text" size="4" value="'.$conf->global->MAIN_USE_RESPONSE_TIMEOUT.'">';
 print ' '.strtolower($langs->trans("Seconds"));
 print '</td>';
@@ -153,9 +156,8 @@ print '</tr>';
 $var=!$var;
 print '<tr '.$bc[$var].'>';
 print '<td>'.$langs->trans("MAIN_PROXY_USE").'</td><td align="right">';
-//print $form->textwithpicto('',$langs->trans("SessionExplanation",ini_get("session.gc_probability"),ini_get("session.gc_divisor")));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print $form->selectyesno('MAIN_PROXY_USE',$conf->global->MAIN_PROXY_USE,1);
 print '</td>';
 print '</tr>';
@@ -163,9 +165,8 @@ print '</tr>';
 $var=!$var;
 print '<tr '.$bcdd[$var].'>';
 print '<td>'.$langs->trans("MAIN_PROXY_HOST").'</td><td align="right">';
-//print $form->textwithpicto('',$langs->trans("SessionExplanation",ini_get("session.gc_probability"),ini_get("session.gc_divisor")));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_PROXY_HOST" type="text" size="16" value="'.$conf->global->MAIN_PROXY_HOST.'">';
 print '</td>';
 print '</tr>';
@@ -173,9 +174,8 @@ print '</tr>';
 $var=!$var;
 print '<tr '.$bcdd[$var].'>';
 print '<td>'.$langs->trans("MAIN_PROXY_PORT").'</td><td align="right">';
-//print $form->textwithpicto('',$langs->trans("SessionExplanation",ini_get("session.gc_probability"),ini_get("session.gc_divisor")));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_PROXY_PORT" type="text" size="4" value="'.$conf->global->MAIN_PROXY_PORT.'">';
 print '</td>';
 print '</tr>';
@@ -183,9 +183,8 @@ print '</tr>';
 $var=!$var;
 print '<tr '.$bcdd[$var].'>';
 print '<td>'.$langs->trans("MAIN_PROXY_USER").'</td><td align="right">';
-//print $form->textwithpicto('',$langs->trans("SessionExplanation",ini_get("session.gc_probability"),ini_get("session.gc_divisor")));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_PROXY_USER" type="text" size="16" value="'.$conf->global->MAIN_PROXY_USER.'">';
 print '</td>';
 print '</tr>';
@@ -193,9 +192,8 @@ print '</tr>';
 $var=!$var;
 print '<tr '.$bcdd[$var].'>';
 print '<td>'.$langs->trans("MAIN_PROXY_PASS").'</td><td align="right">';
-//print $form->textwithpicto('',$langs->trans("SessionExplanation",ini_get("session.gc_probability"),ini_get("session.gc_divisor")));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_PROXY_PASS" type="text" size="16" value="'.$conf->global->MAIN_PROXY_PASS.'">';
 print '</td>';
 print '</tr>';
@@ -204,17 +202,11 @@ print '</table>';
 
 dol_fiche_end();
 
-print '<center>';
+print '<div class="center">';
 print '<input type="submit" class="button" name="button" value="'.$langs->trans("Modify").'">';
-print '</center>';
+print '</div>';
 
-print '</form><br>';
-
-
-dol_htmloutput_mesg($mesg);
-
-
-$db->close();
+print '</form>';
 
 llxFooter();
-?>
+$db->close();

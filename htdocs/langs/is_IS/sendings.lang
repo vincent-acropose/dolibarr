@@ -1,82 +1,71 @@
-/*
- * Language code: is_IS
- * Automatic generated via autotranslator.php tool
- * Generation date 2010-06-30 00:15:29
- */
-
-
-// START - Lines generated via autotranslator.php tool (2010-06-30 00:15:29).
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - sendings
 RefSending=Tilv. sendingunni
 Sending=Sendingunni
 Sendings=Sendingar
-Receivings=Receivings
+AllSendings=All Shipments
+Shipment=Sendingunni
+Shipments=Sendingar
+ShowSending=Show Shipments
+Receivings=Delivery Receipts
 SendingsArea=Sendingar area
 ListOfSendings=Listi yfir sendings
 SendingMethod=Shipping aðferð
-SendingReceipt=Shipping kvittun
-LastSendings=Last %s  sendingar
-SearchASending=Leita að sendingunni
+LastSendings=Latest %s shipments
 StatisticsOfSendings=Tölfræði fyrir sendingar
 NbOfSendings=Fjöldi sendinga
-SendingCard=Shipping kort
+NumberOfShipmentsByMonth=Number of shipments by month
+SendingCard=Shipment card
 NewSending=New sendingunni
-CreateASending=Búa til sendingu
-CreateSending=Búa til sendinga
-QtyOrdered=Magn röð
+CreateShipment=Búa til sendinga
 QtyShipped=Magn flutt
+QtyPreparedOrShipped=Qty prepared or shipped
 QtyToShip=Magn til skip
 QtyReceived=Magn móttekin
-KeepToShip=Halda til skip
+QtyInOtherShipments=Qty in other shipments
+KeepToShip=Remain to ship
 OtherSendingsForSameOrder=Aðrar sendingar fyrir þessari röð
-DateSending=Date senda til
-DateSendingShort=Date senda til
-SendingsForSameOrder=Sendingum fyrir í þessari röð
-SendingsAndReceivingForSameOrder=Sendingar og receivings fyrir þessari röð
+SendingsAndReceivingForSameOrder=Shipments and receipts for this order
 SendingsToValidate=Sendi til að sannreyna
 StatusSendingCanceled=Hætt við
 StatusSendingDraft=Víxill
 StatusSendingValidated=Staðfestar (vörur til skip eða þegar flutt)
-StatusSendingCanceledShort=Hætt við
+StatusSendingProcessed=Afgreitt
 StatusSendingDraftShort=Víxill
 StatusSendingValidatedShort=Staðfestar
-SendingSheet=Senda athugasemd
-Carriers=Flutningsaðili
-Carrier=Flutningsaðili
-CarriersArea=Flutningsaðili area
-NewCarrier=Nýr flytjandi
-ConfirmDeleteSending=Ertu viss um að þú viljir eyða þessari sendingu?
-ConfirmValidateSending=Ertu viss um að þú viljir að sannprófa þessari sendingu?
-ConfirmCancelSending=Ertu viss um að þú viljir hætta við þessari sendingu?
-GenericTransport=Generic samgöngur
-Enlevement=Fengið við viðskiptavini
+StatusSendingProcessedShort=Afgreitt
+SendingSheet=Shipment sheet
+ConfirmDeleteSending=Are you sure you want to delete this shipment?
+ConfirmValidateSending=Are you sure you want to validate this shipment with reference <b>%s</b>?
+ConfirmCancelSending=Are you sure you want to cancel this shipment?
 DocumentModelSimple=Einföld skjal líkan
 DocumentModelMerou=Merou A5 líkan
 WarningNoQtyLeftToSend=Aðvörun, að engar vörur sem bíður sendar.
-StatsOnShipmentsOnlyValidated=Tölfræði fram á sendingar aðeins staðfestar
-DateDeliveryPlanned=Flugvél fæðingardag
+StatsOnShipmentsOnlyValidated=Statistics conducted on shipments only validated. Date used is date of validation of shipment (planed delivery date is not always known).
+DateDeliveryPlanned=Planned date of delivery
+RefDeliveryReceipt=Ref delivery receipt
+StatusReceipt=Status delivery receipt
 DateReceived=Date sending berast
-SendingMethodCATCH=Afli eftir viðskiptavina
-SendingMethodTRANS=Transporter
-SendingMethodCOLSUI=Colissimo
-DocumentModelSirocco=Einföld skjal líkan fyrir kvittunum sending
-DocumentModelTyphon=Meira heill skjal líkan fyrir kvittunum sending (logo. ..)
-// STOP - Lines generated via autotranslator.php tool (2010-06-30 00:15:29).
-
-
-// START - Lines generated via autotranslator.php tool (2010-07-17 11:29:16).
-// Reference language: en_US
-Shipments=Sendingar
-// STOP - Lines generated via autotranslator.php tool (2010-07-17 11:29:22).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 16:26:19).
-// Reference language: en_US -> is_IS
 SendShippingByEMail=Senda sendingu með tölvupósti
-SendShippingRef=Senda sendingunni %s
+SendShippingRef=Submission of shipment %s
 ActionsOnShipping=Viðburðir á sendingunni
 LinkToTrackYourPackage=Tengill til að fylgjast með pakka
 ShipmentCreationIsDoneFromOrder=Í augnablikinu er sköpun af a nýr sendingunni gert úr þeirri röð kortinu.
+ShipmentLine=Shipment line
+ProductQtyInCustomersOrdersRunning=Product quantity into opened customers orders
+ProductQtyInSuppliersOrdersRunning=Product quantity into opened suppliers orders
+ProductQtyInShipmentAlreadySent=Product quantity from opened customer order already sent
+ProductQtyInSuppliersShipmentAlreadyRecevied=Product quantity from opened supplier order already received
+NoProductToShipFoundIntoStock=No product to ship found into warehouse <b>%s</b>. Correct stock or go back to choose another warehouse.
+WeightVolShort=Weight/Vol.
+ValidateOrderFirstBeforeShipment=You must first validate the order before being able to make shipments.
+
+# Sending methods
+# ModelDocument
+DocumentModelTyphon=Meira heill skjal líkan fyrir kvittunum sending (logo. ..)
 Error_EXPEDITION_ADDON_NUMBER_NotDefined=Constant EXPEDITION_ADDON_NUMBER skilgreind ekki
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 16:29:02).
+SumOfProductVolumes=Sum of product volumes
+SumOfProductWeights=Sum of product weights
+
+# warehouse details
+DetailWarehouseNumber= Warehouse details
+DetailWarehouseFormat= W:%s (Qty : %d)

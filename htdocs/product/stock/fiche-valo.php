@@ -71,17 +71,17 @@ if ($_GET["id"])
 	print '<tr><td>'.$langs->trans("LocationSummary").'</td><td colspan="3">'.$entrepot->lieu.'</td></tr>';
 
 	// Description
-	print '<tr><td valign="top">'.$langs->trans("Description").'</td><td colspan="3">'.nl2br($entrepot->description).'</td></tr>';
+	print '<tr><td class="tdtop">'.$langs->trans("Description").'</td><td colspan="3">'.nl2br($entrepot->description).'</td></tr>';
 
 	print '<tr><td>'.$langs->trans('Address').'</td><td colspan="3">';
 	print $entrepot->address;
 	print '</td></tr>';
 
-	print '<tr><td width="25%">'.$langs->trans('Zip').'</td><td width="25%">'.$entrepot->cp.'</td>';
-	print '<td width="25%">'.$langs->trans('Town').'</td><td width="25%">'.$entrepot->ville.'</td></tr>';
+	print '<tr><td width="25%">'.$langs->trans('Zip').'</td><td width="25%">'.$entrepot->zip.'</td>';
+	print '<td width="25%">'.$langs->trans('Town').'</td><td width="25%">'.$entrepot->town.'</td></tr>';
 
 	print '<tr><td>'.$langs->trans('Country').'</td><td colspan="3">';
-	print $entrepot->pays;
+	print $entrepot->country;
 	print '</td></tr>';
 
 	// Statut
@@ -90,12 +90,12 @@ if ($_GET["id"])
 	$calcproducts=$entrepot->nb_products();
 
 	// Nb of products
-	print '<tr><td valign="top">'.$langs->trans("NumberOfProducts").'</td><td colspan="3">';
+	print '<tr><td class="tdtop">'.$langs->trans("NumberOfProducts").'</td><td colspan="3">';
 	print empty($calcproducts['nb'])?'0':$calcproducts['nb'];
 	print "</td></tr>";
 
 	// Value
-	print '<tr><td valign="top">'.$langs->trans("EstimatedStockValueShort").'</td><td colspan="3">';
+	print '<tr><td class="tdtop">'.$langs->trans("EstimatedStockValueShort").'</td><td colspan="3">';
 	print empty($calcproducts['value'])?'0':$calcproducts['value'];
 	print "</td></tr>";
 
@@ -141,7 +141,5 @@ if ($_GET["id"])
 	print "</div>";
 }
 
-$db->close();
-
 llxFooter();
-?>
+$db->close();

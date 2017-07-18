@@ -1,47 +1,64 @@
-/*
- * Language code: et_EE
- * Automatic generated via autotranslator.php tool
- * Generation date 2012-02-29 22:15:30
- */
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 22:15:30).
-// Reference language: en_US -> et_EE
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - interventions
 Intervention=Sekkumine
-Interventions=Sekkumine
-InterventionCard=Sekkumine kaart
-NewIntervention=Uus meede
-AddIntervention=Lisa sekkumine
-ListOfInterventions=List sekkumiste
-EditIntervention=Muuda sekkumine
-ActionsOnFicheInter=Meetmete sekkumise
-LastInterventions=Last %s sekkumiste
+Interventions=Sekkumised
+InterventionCard=Sekkumise kaart
+NewIntervention=Uus sekkumine
+AddIntervention=Create intervention
+ListOfInterventions=Sekkumiste nimekiri
+ActionsOnFicheInter=Sekkumise tegevused
+LastInterventions=Latest %s interventions
 AllInterventions=Kõik sekkumised
-CreateDraftIntervention=Loo eelnõu
-CustomerDoesNotHavePrefix=Kliendil ei ole prefix
-InterventionContact=Sekkumine kontakt
+CreateDraftIntervention=Loo mustand
+InterventionContact=Sekkumise kontakt
 DeleteIntervention=Kustuta sekkumine
-ValidateIntervention=Kinnitada sekkumine
-ModifyIntervention=Muuda sekkumine
-DeleteInterventionLine=Kustuta sekkumine rida
-ConfirmDeleteIntervention=Oled sa kindel, et soovite kustutada selle sekkumine?
-ConfirmValidateIntervention=Oled sa kindel, et soovid, et kinnitada see sekkumine?
-ConfirmModifyIntervention=Oled sa kindel, et tahad muuta see sekkumine?
-ConfirmDeleteInterventionLine=Oled sa kindel, et soovite kustutada selle sekkumise piiri?
-NameAndSignatureOfInternalContact=Nimi ja allkiri astunud:
-NameAndSignatureOfExternalContact=Nimi ja allkiri klient:
-DocumentModelStandard=Tüüpvormi mudel sekkumiste
-ClassifyBilled=Liigitada &quot;Arvelduse&quot;
-StatusInterInvoiced=Arve
-RelatedInterventions=Seotud sekkumiste
-ShowIntervention=Näita sekkumine
-TypeContact_fichinter_internal_INTERREPFOLL=Esindaja järelmeetmeid sekkumine
-TypeContact_fichinter_internal_INTERVENING=Astunud
-TypeContact_fichinter_external_BILLING=Arved kliendi kontaktandmed
-TypeContact_fichinter_external_CUSTOMER=Järelmeetmeid kliendikontakti
-ArcticNumRefModelDesc1=Generic number mudel
-ArcticNumRefModelError=Suutnud aktiveerida
-PacificNumRefModelDesc1=Tagasi numero koos formaadis %syymm-nnnn kus YY aastat, KK kuud ja nnnn on jada, millel ei ole katki ja ei ole tagasi 0
-PacificNumRefModelError=Sekkumine kaart alustades $ syymm juba olemas ja ei sobi see mudel jada. Eemaldada või ümber nimetada aktiveerimiseks mooduli.
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 22:16:50).
+ValidateIntervention=Kinnita sekkumine
+ModifyIntervention=Muuda sekkumist
+DeleteInterventionLine=Kustuta sekkumise rida
+CloneIntervention=Clone intervention
+ConfirmDeleteIntervention=Are you sure you want to delete this intervention?
+ConfirmValidateIntervention=Are you sure you want to validate this intervention under name <b>%s</b>?
+ConfirmModifyIntervention=Are you sure you want to modify this intervention?
+ConfirmDeleteInterventionLine=Are you sure you want to delete this intervention line?
+ConfirmCloneIntervention=Are you sure you want to clone this intervention?
+NameAndSignatureOfInternalContact=Sekkuja nimi ja allkiri:
+NameAndSignatureOfExternalContact=Kliendi nimi ja allkiri:
+DocumentModelStandard=Sekkumiste tüüpvormi mudel
+InterventionCardsAndInterventionLines=Sekkumised ja sekkumiste read
+InterventionClassifyBilled=Liigita "Arve esitatud"
+InterventionClassifyUnBilled=Classify "Unbilled"
+InterventionClassifyDone=Classify "Done"
+StatusInterInvoiced=Arve esitatud
+ShowIntervention=Näita sekkumist
+SendInterventionRef=Submission of intervention %s
+SendInterventionByMail=Send intervention by Email
+InterventionCreatedInDolibarr=Intervention %s created
+InterventionValidatedInDolibarr=Sekkumine %s on kinnitatud
+InterventionModifiedInDolibarr=Intervention %s modified
+InterventionClassifiedBilledInDolibarr=Intervention %s set as billed
+InterventionClassifiedUnbilledInDolibarr=Intervention %s set as unbilled
+InterventionSentByEMail=Sekkumine %s on saadetud e-postiga
+InterventionDeletedInDolibarr=Intervention %s deleted
+InterventionsArea=Interventions area
+DraftFichinter=Draft interventions
+LastModifiedInterventions=Latest %s modified interventions
+FichinterToProcess=Interventions to process
+##### Types de contacts #####
+TypeContact_fichinter_external_CUSTOMER=Kliendi kontakt järelkajaks
+# Modele numérotation
+PrintProductsOnFichinter=Print also lines of type "product" (not only services) on intervention card
+PrintProductsOnFichinterDetails=interventions generated from orders
+UseServicesDurationOnFichinter=Use services duration for interventions generated from orders
+InterventionStatistics=Statistics of interventions
+NbOfinterventions=Nb of intervention cards
+NumberOfInterventionsByMonth=Nb of intervention cards by month (date of validation)
+##### Exports #####
+InterId=Intervention id
+InterRef=Intervention ref.
+InterDateCreation=Date creation intervention
+InterDuration=Duration intervention
+InterStatus=Status intervention
+InterNote=Note intervention
+InterLineId=Line id intervention
+InterLineDate=Line date intervention
+InterLineDuration=Line duration intervention
+InterLineDesc=Line description intervention

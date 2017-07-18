@@ -95,22 +95,22 @@ function OnUploadCompleted( errorNumber, data )
 
 	switch ( errorNumber )
 	{
-		case 0 :
+		case 0:
 			window.parent.frames['frmResourcesList'].Refresh();
-			break ;
-		case 1 :	// Custom error.
+			break;
+		case 1:	// Custom error.
 			alert( data );
-			break ;
-		case 201 :
+			break;
+		case 201:
 			window.parent.frames['frmResourcesList'].Refresh();
 			alert( 'A file with the same name is already available. The uploaded file has been renamed to "' + data + '"' );
-			break ;
-		case 202 :
+			break;
+		case 202:
 			alert( 'Invalid file' );
-			break ;
-		default :
+			break;
+		default:
 			alert( 'Error on file upload. Error number: ' + errorNumber );
-			break ;
+			break;
 	}
 }
 
@@ -124,12 +124,12 @@ window.onload = function()
 		<form id="frmUpload" action="" target="frmUploadWorker" method="post" enctype="multipart/form-data" onsubmit="return OnSubmit();">
 			<table class="fullHeight" cellspacing="0" cellpadding="0" width="100%" border="0">
 				<tr>
-					<td nowrap="nowrap">
+					<td class="nowrap">
 						<span id="eUploadMessage">Upload a new file in this folder</span><br>
 						<table cellspacing="0" cellpadding="0" width="100%" border="0">
 							<tr>
 								<td width="100%"><input id="NewFile" name="NewFile" style="WIDTH: 100%" type="file"></td>
-								<td nowrap="nowrap">&nbsp;<input id="btnUpload" type="submit" value="Upload"></td>
+								<td class="nowrap">&nbsp;<input id="btnUpload" type="submit" value="Upload"></td>
 							</tr>
 						</table>
 					</td>

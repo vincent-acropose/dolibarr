@@ -1,5 +1,6 @@
 <?php
 /* Copyright (C) 2012	Christophe Battarel	<christophe.battarel@altairis.fr>
+ * Copyright (C) 2015   Marcos García       <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +18,7 @@
 
 /**     \defgroup   margin     Module margin
  *      \brief      Module to manage margins
- *      \file       htdocs/includes/modules/modMargin.class.php
+ *      \file       htdocs/core/modules/modMargin.class.php
  *      \ingroup    margin
  *      \brief      Description and activation file for module Margin
  */
@@ -42,11 +43,12 @@ class modMargin extends DolibarrModules
 		// Use here a free id (See in Home -> System information -> Dolibarr for list of used modules id).
 		$this->numero = 59000;
 		// Key text used to identify module (for permissions, menus, etc...)
-		$this->rights_class = 'margin';
+		$this->rights_class = 'margins';
 
 		// Family can be 'crm','financial','hr','projects','products','ecm','technic','other'
 		// It is used to group modules in module setup page
 		$this->family = "financial";
+		$this->module_position = 550;
 		// Module label (no space allowed), used if translation string 'ModuleXXXName' not found (where XXX is value of numeric property 'numero' of module)
 		$this->name = preg_replace('/^mod/i','',get_class($this));
 		// Module description, used if translation string 'ModuleXXXDesc' not found (where XXX is value of numeric property 'numero' of module)
@@ -75,12 +77,16 @@ class modMargin extends DolibarrModules
 		$this->langfiles = array("margins");
 
 		// Constants
-		$this->const = array();			// List of particular constants to add when module is enabled
+		// List of particular constants to add when module is enabled (key, 'chaine', value, desc, visible, 'current' or 'allentities', deleteonunactive)
+		// Example: $this->const=array(0=>array('MYMODULE_MYNEWCONST1','chaine','myvalue','This is a constant to add',1),
+		//                             1=>array('MYMODULE_MYNEWCONST2','chaine','myvalue','This is another constant to add',0, 'current', 1)
+		// );
+		$this->const = array(0=>array('MARGIN_TYPE','chaine','costprice','Rule for margin calculation by default',0,'current',0));			// List of particular constants to add when module is enabled
 
 		// New pages on tabs
 		$this->tabs = array(
-				'product:+margin:Margins:margins:$conf->margin->enabled:/margin/tabs/productMargins.php?id=__ID__',
-				'thirdparty:+margin:Margins:margins:$conf->margin->enabled && empty($user->societe_id):/margin/tabs/thirdpartyMargins.php?socid=__ID__'
+				'product:+margin:Margins:margins:$user->rights->margins->liretous:/margin/tabs/productMargins.php?id=__ID__',
+				'thirdparty:+margin:Margins:margins:empty($user->societe_id) && $user->rights->margins->liretous && ($object->client > 0):/margin/tabs/thirdpartyMargins.php?socid=__ID__'
 		);
 
 
@@ -102,60 +108,41 @@ class modMargin extends DolibarrModules
     			'type'=>'left',			// This is a Top menu entry
     			'titre'=>'Margins',
     			'mainmenu'=>'accountancy',
-    			'leftmenu'=>'margins',		// Use 1 if you also want to add left menu entries using this descriptor. Use 0 if left menu entries are defined in a file pre.inc.php (old school).
+    			'leftmenu'=>'margins',
     			'url'=>'/margin/index.php',
     			'langs'=>'margins',	// Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
     			'position'=>100,
     			'enabled'=>'$conf->margin->enabled',			// Define condition to show or hide menu entry. Use '$conf->monmodule->enabled' if entry must be visible if module is enabled.
-    			'perms'=>'1',			// Use 'perms'=>'$user->rights->monmodule->level1->level2' if you want your menu with a permission rules
+    			'perms'=>'$user->rights->margins->liretous',	// Use 'perms'=>'$user->rights->monmodule->level1->level2' if you want your menu with a permission rules
     			'target'=>'',
     			'user'=>2);				// 0=Menu for internal users, 1=external users, 2=both
 		$r++;
-	}
 
-	/**
-     *	Function called when module is enabled.
-     *	The init function add constants, boxes, permissions and menus (defined in constructor) into Dolibarr database.
-     *	It also creates data directories.
-     *
-     *	@return     int             1 if OK, 0 if KO
-     */
-	function init()
-  	{
-    	$sql = array();
+		// Permissions
+		$this->rights = array();
+		$r=0;
 
-		$result=$this->load_tables();
+		$r++;
+		$this->rights[$r][0] = 59001; // id de la permission
+		$this->rights[$r][1] = 'Visualiser les marges'; // libelle de la permission
+		$this->rights[$r][2] = 'r'; // type de la permission (deprecie a ce jour)
+		$this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
+		$this->rights[$r][4] = 'liretous';
 
-    	return $this->_init($sql);
-  	}
+		$r++;
+		$this->rights[$r][0] = 59002; // id de la permission
+		$this->rights[$r][1] = 'Définir les marges'; // libelle de la permission
+		$this->rights[$r][2] = 'w'; // type de la permission (deprecie a ce jour)
+		$this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
+		$this->rights[$r][4] = 'creer';
 
-	/**
-	 *	Function called when module is disabled.
-	 *	Remove from database constants, boxes and permissions from Dolibarr database.
-	 *	Data directories are not deleted.
-	 *
-	 *	@return     int             1 if OK, 0 if KO
- 	 */
-	function remove()
-	{
-    	$sql = array();
-
-    	return $this->_remove($sql);
-  	}
-
-
-	/**
-	 * 	Create tables and keys required by module
-	 * 	Files mymodule.sql and mymodule.key.sql with create table and create keys
-	 * 	commands must be stored in directory /mymodule/sql/
-	 * 	This function is called by this->init.
-	 *
-	 * 	@return		int		<=0 if KO, >0 if OK
-	 */
-  	function load_tables()
-	{
-		//return $this->_load_tables();
+		$r++;
+		$this->rights[$r][0] = 59003; // id de la permission
+		$this->rights[$r][1] = 'Read every user margin'; // libelle de la permission
+		$this->rights[$r][2] = 'r'; // type de la permission (deprecie a ce jour)
+		$this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
+		$this->rights[$r][4] = 'read';
+		$this->rights[$r][5] = 'all';
 	}
 }
 
-?>

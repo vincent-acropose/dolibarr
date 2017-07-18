@@ -20,7 +20,7 @@
 /**
  *  \file       htdocs/compta/deplacement/stats/index.php
  *  \ingroup    deplacement
- *  \brief      Page des stats deplacement et notes de frais
+ *  \brief      Page for statistics of module trips and expenses
  */
 
 require '../../../main.inc.php';
@@ -28,9 +28,10 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/dolgraph.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/deplacement/class/deplacementstats.class.php';
 
 $langs->load("trips");
+$langs->load("companies");
 
-$WIDTH=500;
-$HEIGHT=200;
+$WIDTH=DolGraph::getDefaultGraphSizeForStats('width');
+$HEIGHT=DolGraph::getDefaultGraphSizeForStats('height');
 
 $userid=GETPOST('userid','int'); if ($userid < 0) $userid=0;
 $socid=GETPOST('socid','int'); if ($socid < 0) $socid=0;
@@ -44,6 +45,18 @@ if ($user->societe_id > 0)
 }
 if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user, 'deplacement', $id,'');
+
+// Other security check
+$childids = $user->getAllChildIds();
+$childids[]=$user->id;
+if ($userid > 0)
+{
+	if (empty($user->rights->deplacement->readall) && empty($user->rights->deplacement->lire_tous) && ! in_array($userid, $childids))
+	{
+		accessforbidden();
+		exit;
+	}
+}
 
 $nowyear=strftime("%Y", dol_now());
 $year = GETPOST('year')>0?GETPOST('year'):$nowyear;
@@ -60,16 +73,24 @@ $mode=GETPOST("mode")?GETPOST("mode"):'customer';
 
 $form=new Form($db);
 
+
 llxHeader();
 
 $title=$langs->trans("TripsAndExpensesStatistics");
 $dir=$conf->deplacement->dir_temp;
 
-print_fiche_titre($title, $mesg);
+print load_fiche_titre($title, $mesg);
 
 dol_mkdir($dir);
 
-$stats = new DeplacementStats($db, $socid, $userid);
+$useridtofilter=$userid;	// Filter from parameters
+if (empty($useridtofilter))
+{
+	$useridtofilter=$childids;
+	if (! empty($user->rights->deplacement->readall) || ! empty($user->rights->deplacement->lire_tous)) $useridtofilter=0;
+}
+
+$stats = new DeplacementStats($db, $socid, $useridtofilter);
 
 
 // Build graphic number of object
@@ -200,26 +221,29 @@ $head[$h][1] = $langs->trans("ByMonthYear");
 $head[$h][2] = 'byyear';
 $h++;
 
-complete_head_from_modules($conf,$langs,$object,$head,$h,'trip_stats');
+complete_head_from_modules($conf,$langs,null,$head,$h,'trip_stats');
 
 dol_fiche_head($head,'byyear',$langs->trans("Statistics"));
 
-print '<table class="notopnoleftnopadd" width="100%"><tr>';
-print '<td align="center" valign="top">';
+
+print '<div class="fichecenter"><div class="fichethirdleft">';
+
 
 // Show filter box
 print '<form name="stats" method="POST" action="'.$_SERVER["PHP_SELF"].'">';
 print '<input type="hidden" name="mode" value="'.$mode.'">';
 print '<table class="border" width="100%">';
-print '<tr><td class="liste_titre" colspan="2">'.$langs->trans("Filter").'</td></tr>';
+print '<tr class="liste_titre"><td class="liste_titre" colspan="2">'.$langs->trans("Filter").'</td></tr>';
 // Company
 print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
 $filter='';
-print $form->select_company($socid,'socid',$filter,1,1);
+print $form->select_company($socid,'socid',$filter,1,1,0,array(),0,'','style="width: 95%"');
 print '</td></tr>';
 // User
-print '<tr><td>'.$langs->trans("User").'/'.$langs->trans("SalesRepresentative").'</td><td>';
-print $form->select_users($userid,'userid',1);
+print '<tr><td>'.$langs->trans("User").'</td><td>';
+$include='';
+if (empty($user->rights->deplacement->readall) && empty($user->rights->deplacement->lire_tous)) $include='hierarchy';
+print $form->select_dolusers($userid, 'userid', 1, '', 0, $include, '', 0, 0, 0, '', 0, '', 'maxwidth300');
 print '</td></tr>';
 // Year
 print '<tr><td>'.$langs->trans("Year").'</td><td>';
@@ -266,8 +290,8 @@ foreach ($data as $val)
 print '</table>';
 
 
-print '</td>';
-print '<td align="center" valign="top">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
+
 
 // Show graphs
 print '<table class="border" width="100%"><tr valign="top"><td align="center">';
@@ -281,7 +305,10 @@ else {
 }
 print '</td></tr></table>';
 
-print '</td></tr></table>';
+
+print '</div></div></div>';
+print '<div style="clear:both"></div>';
+
 
 dol_fiche_end();
 
@@ -289,4 +316,3 @@ dol_fiche_end();
 llxFooter();
 
 $db->close();
-?>

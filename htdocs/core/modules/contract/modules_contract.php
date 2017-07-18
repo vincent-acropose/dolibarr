@@ -5,6 +5,8 @@
  * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
  * Copyright (C) 2011      Juanjo Menent	    <jmenent@2byte.es>
+ * Copyright (C) 2013      Philippe Grand	    <philippe.grand@atoo-net.com>
+ * Copyright (C) 2014      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,8 +26,41 @@
 /**
  *  \file       htdocs/core/modules/contract/modules_contract.php
  *  \ingroup    contract
- *  \brief      File of class to manage contract numbering
+ *  \brief      File with parent class for generating contracts to PDF and File of class to manage contract numbering
  */
+
+ require_once DOL_DOCUMENT_ROOT.'/core/class/commondocgenerator.class.php';
+
+
+/**
+ *	Parent class to manage intervention document templates
+ */
+abstract class ModelePDFContract extends CommonDocGenerator
+{
+	var $error='';
+
+
+	/**
+	 *	Return list of active generation modules
+	 *
+     *  @param	DoliDB	$db     			Database handler
+     *  @param  integer	$maxfilenamelength  Max length of value to show
+     *  @return	array						List of templates
+	 */
+	static function liste_modeles($db,$maxfilenamelength=0)
+	{
+		global $conf;
+
+		$type='contract';
+		$liste=array();
+
+		include_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
+		$liste=getListOfModels($db,$type,$maxfilenamelength);
+
+		return $liste;
+	}
+}
+
 
 /**
  * Parent class for all contract numbering modules
@@ -71,7 +106,7 @@ class ModelNumRefContracts
 	/**
 	 *	Test if existing numbers make problems with numbering
 	 *
-	 *	@return		boolean		false if conflit, true if ok
+	 *	@return		boolean		false if conflict, true if ok
 	 */
 	function canBeActivated()
 	{
@@ -104,7 +139,28 @@ class ModelNumRefContracts
 		if ($this->version == 'development') return $langs->trans("VersionDevelopment");
 		if ($this->version == 'experimental') return $langs->trans("VersionExperimental");
 		if ($this->version == 'dolibarr') return DOL_VERSION;
+		if ($this->version) return $this->version;
 		return $langs->trans("NotAvailable");
 	}
 }
-?>
+
+/**
+ *  Create a contract document on disk using template defined into CONTRACT_ADDON_PDF
+ *
+ *  @param	DoliDB		$db  			objet base de donnee
+ *  @param	Contrat		$object			Object contract
+ *  @param	string		$modele			force le modele a utiliser ('' par defaut)
+ *  @param	Translate	$outputlangs	objet lang a utiliser pour traduction
+ *  @param  int			$hidedetails    Hide details of lines
+ *  @param  int			$hidedesc       Hide description
+ *  @param  int			$hideref        Hide ref
+ *  @return int         				0 if KO, 1 if OK
+ * @deprecated Use the new function generateDocument of Contrat class
+ * @see Contrat::generateDocument()
+ */
+function contract_pdf_create(DoliDB $db, Contrat $object, $modele, $outputlangs, $hidedetails=0, $hidedesc=0, $hideref=0)
+{
+	dol_syslog(__METHOD__ . " is deprecated", LOG_WARNING);
+
+	return $object->generateDocument($modele, $outputlangs, $hidedetails, $hidedesc, $hideref);
+}

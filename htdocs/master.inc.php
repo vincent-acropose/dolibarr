@@ -9,6 +9,7 @@
  * Copyright (C) 2006 	   Andre Cianfarani     <andre.cianfarani@acdeveloppement.net>
  * Copyright (C) 2010      Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2011      Philippe Grand       <philippe.grand@atoo-net.com>
+ * Copyright (C) 2014		Teddy Andreotti			<125155@supinfo.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +33,7 @@
  */
 
 require_once 'filefunc.inc.php';	// May have been already require by main.inc.php. But may not by scripts.
+
 
 
 /*
@@ -59,22 +61,45 @@ if (defined('TEST_DB_FORCE_TYPE')) $conf->db->type=constant('TEST_DB_FORCE_TYPE'
 // Set properties specific to conf file
 $conf->file->main_limit_users			= $dolibarr_main_limit_users;
 $conf->file->mailing_limit_sendbyweb	= $dolibarr_mailing_limit_sendbyweb;
+$conf->file->mailing_limit_sendbycli	= $dolibarr_mailing_limit_sendbycli;
 $conf->file->main_authentication		= empty($dolibarr_main_authentication)?'':$dolibarr_main_authentication;	// Identification mode
 $conf->file->main_force_https			= empty($dolibarr_main_force_https)?'':$dolibarr_main_force_https;			// Force https
 $conf->file->strict_mode 				= empty($dolibarr_strict_mode)?'':$dolibarr_strict_mode;					// Force php strict mode (for debug)
 $conf->file->cookie_cryptkey			= empty($dolibarr_main_cookie_cryptkey)?'':$dolibarr_main_cookie_cryptkey;	// Cookie cryptkey
-$conf->file->dol_document_root			= array('main' => DOL_DOCUMENT_ROOT);										// Define array of document root directories
+$conf->file->dol_document_root			= array('main' => (string) DOL_DOCUMENT_ROOT);								// Define array of document root directories ('/home/htdocs')
+$conf->file->dol_url_root				= array('main' => (string) DOL_URL_ROOT);									// Define array of url root path ('' or '/dolibarr')
 if (! empty($dolibarr_main_document_root_alt))
 {
 	// dolibarr_main_document_root_alt can contains several directories
 	$values=preg_split('/[;,]/',$dolibarr_main_document_root_alt);
+	$i=0;
+	foreach($values as $value) $conf->file->dol_document_root['alt'.($i++)]=(string) $value;
+	$values=preg_split('/[;,]/',$dolibarr_main_url_root_alt);
+	$i=0;
 	foreach($values as $value)
 	{
-		$conf->file->dol_document_root['alt']=$value;
+		if (preg_match('/^http(s)?:/',$value))
+		{
+			// TODO: Make this a warning rather than an error since the correct value can be derived in most cases
+			$correct_value = str_replace($dolibarr_main_url_root, '', $value);
+			print '<b>Error:</b><br>'."\n";
+			print 'Wrong <b>$dolibarr_main_url_root_alt</b> value in <b>conf.php</b> file.<br>'."\n";
+			print 'We now use a relative path to $dolibarr_main_url_root to build alternate URLs.<br>'."\n";
+			print 'Value found: '.$value.'<br>'."\n";
+			print 'Should be replaced by: '.$correct_value.'<br>'."\n";
+			print "Or something like following examples:<br>\n";
+			print "\"/extensions\"<br>\n";
+			print "\"/extensions1,/extensions2,...\"<br>\n";
+			print "\"/../extensions\"<br>\n";
+			print "\"/custom\"<br>\n";
+			exit;
+		}
+		$conf->file->dol_url_root['alt'.($i++)]=(string) $value;
 	}
 }
 
 // Set properties specific to multicompany
+// TODO Multicompany Remove this. Useless. Var should be read when required.
 $conf->multicompany->transverse_mode = empty($multicompany_transverse_mode)?'':$multicompany_transverse_mode;		// Force Multi-Company transverse mode
 $conf->multicompany->force_entity = empty($multicompany_force_entity)?'':(int) $multicompany_force_entity;			// Force entity in login page
 
@@ -137,18 +162,21 @@ if (! defined('NOREQUIREDB'))
 	{
 		$conf->entity = GETPOST("entity",'int');
 	}
-	else if (defined('DOLENTITY') && is_int(DOLENTITY))				// For public page with MultiCompany module
+	else if (defined('DOLENTITY') && is_numeric(DOLENTITY))			// For public page with MultiCompany module
 	{
 		$conf->entity = DOLENTITY;
 	}
-	else if (!empty($_COOKIE['DOLENTITY']))							// For other application with MultiCompany module
+	else if (!empty($_COOKIE['DOLENTITY']))						// For other application with MultiCompany module (TODO: We should remove this. entity to use should never be stored into client side)
 	{
 		$conf->entity = $_COOKIE['DOLENTITY'];
 	}
-	else if (! empty($conf->multicompany->force_entity) && is_int($conf->multicompany->force_entity)) // To force entity in login page
+	else if (! empty($conf->multicompany->force_entity) && is_numeric($conf->multicompany->force_entity)) // To force entity in login page
 	{
 		$conf->entity = $conf->multicompany->force_entity;
 	}
+
+	// Sanitize entity
+	if (! is_numeric($conf->entity)) $conf->entity=1;
 
 	//print "Will work with data into entity instance number '".$conf->entity."'";
 
@@ -160,6 +188,18 @@ if (! defined('NOREQUIREDB'))
 if (! empty($conf->file->mailing_limit_sendbyweb))
 {
 	$conf->global->MAILING_LIMIT_SENDBYWEB = $conf->file->mailing_limit_sendbyweb;
+}
+if (empty($conf->global->MAILING_LIMIT_SENDBYWEB))
+{
+    $conf->global->MAILING_LIMIT_SENDBYWEB = 25;
+}
+if (! empty($conf->file->mailing_limit_sendbycli))
+{
+    $conf->global->MAILING_LIMIT_SENDBYCLI = $conf->file->mailing_limit_sendbycli;
+}
+if (empty($conf->global->MAILING_LIMIT_SENDBYCLI))
+{
+    $conf->global->MAILING_LIMIT_SENDBYCLI = 0;
 }
 
 // If software has been locked. Only login $conf->global->MAIN_ONLY_LOGIN_ALLOWED is allowed.
@@ -190,33 +230,35 @@ if (! empty($conf->global->MAIN_ONLY_LOGIN_ALLOWED))
 	}
 }
 
-/*
- * Create object $mysoc (A thirdparty object that contains properties of companies managed by Dolibarr.
- */
+// Create object $mysoc (A thirdparty object that contains properties of companies managed by Dolibarr.
 if (! defined('NOREQUIREDB') && ! defined('NOREQUIRESOC'))
 {
 	require_once DOL_DOCUMENT_ROOT .'/societe/class/societe.class.php';
 
 	$mysoc=new Societe($db);
-	$mysoc->getMysoc($conf);
+	$mysoc->setMysoc($conf);
 
 	// For some countries, we need to invert our address with customer address
 	if ($mysoc->country_code == 'DE' && ! isset($conf->global->MAIN_INVERT_SENDER_RECIPIENT)) $conf->global->MAIN_INVERT_SENDER_RECIPIENT=1;
 }
 
 
-// Set default language (must be after the setValues of $conf)
+// Set default language (must be after the setValues setting global $conf->global->MAIN_LANG_DEFAULT. Page main.inc.php will overwrite langs->defaultlang with user value later)
 if (! defined('NOREQUIRETRAN'))
 {
-	$langs->setDefaultLang((! empty($conf->global->MAIN_LANG_DEFAULT)?$conf->global->MAIN_LANG_DEFAULT:''));
+    $langcode=(GETPOST('lang', 'aZ09')?GETPOST('lang', 'aZ09', 1):(empty($conf->global->MAIN_LANG_DEFAULT)?'auto':$conf->global->MAIN_LANG_DEFAULT));
+	$langs->setDefaultLang($langcode);
 }
+
+
+// Create the global $hookmanager object
+include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
+$hookmanager=new HookManager($db);
+
 
 if (! defined('MAIN_LABEL_MENTION_NPR') ) define('MAIN_LABEL_MENTION_NPR','NPR');
 
-// We force feature to help debug
-//$conf->global->MAIN_JS_ON_PAYMENT=0;
 
 // We force FPDF
 if (! empty($dolibarr_pdf_force_fpdf)) $conf->global->MAIN_USE_FPDF=$dolibarr_pdf_force_fpdf;
 
-?>

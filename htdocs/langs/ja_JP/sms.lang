@@ -1,13 +1,4 @@
-/*
- * Language code: ja_JP
- * Automatic generated via autotranslator.php tool
- * Generation date 2012-02-29 16:41:06
- */
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 16:41:06).
-// Reference language: en_US -> ja_JP
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - sms
 Sms=SMS
 SmsSetup=SMSセットアップ
 SmsDesc=このページでは、SMS機能のグローバルオプションを定義することができます
@@ -47,16 +38,14 @@ SmsStatusNotSent=送信されません
 SmsSuccessfulySent=正しく送信されたSMS（%sへ%sから）
 ErrorSmsRecipientIsEmpty=ターゲットの数が空である
 WarningNoSmsAdded=ターゲットリストに追加する新しい電話番号なし
-ConfirmValidSms=このキャンペーンしの検証を確認できますか？
-ConfirmResetMailing=あなたは、SMSキャンペーンし<b>%s</b>のreinitを行う場合は、警告、あなたはそれを二度目に送信質量を行うことができます。それはあなたがそうするためにWAN実際に何ですか？
-ConfirmDeleteMailing=あなたはキャンペーンしの除去を確認していますか？
-NbOfRecipients=ターゲットの数
+ConfirmValidSms=Do you confirm validation of this campain?
 NbOfUniqueSms=Nbの自由度のユニークな電話番号
 NbOfSms=ホン番号のNbre
 ThisIsATestMessage=これはテストメッセージです。
 SendSms=SMSを送信
 SmsInfoCharRemain=残りの文字のNb
-SmsInfoNumero=（フォーマット国際例：33899701761）
+SmsInfoNumero= （フォーマット国際例：33899701761）
 DelayBeforeSending=送信する前に、遅延時間（分）
+SmsNoPossibleSenderFound=No sender available. Check setup of your SMS provider.
 SmsNoPossibleRecipientFound=利用可能なターゲットはありません。 SMSプロバイダの設定を確認してください。
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 16:50:29).
+

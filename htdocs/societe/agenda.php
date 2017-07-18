@@ -2,9 +2,10 @@
 /* Copyright (C) 2001-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2005      Brice Davoleau       <brice.davoleau@gmail.com>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2006-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2006-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2007      Patrick Raguin  		<patrick.raguin@gmail.com>
  * Copyright (C) 2010      Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,20 +30,65 @@
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 
 $langs->load("companies");
+
+if (GETPOST('actioncode','array'))
+{
+    $actioncode=GETPOST('actioncode','array',3);
+    if (! count($actioncode)) $actioncode='0';
+}
+else
+{
+    $actioncode=GETPOST("actioncode","alpha",3)?GETPOST("actioncode","alpha",3):(GETPOST("actioncode")=='0'?'0':(empty($conf->global->AGENDA_DEFAULT_FILTER_TYPE_FOR_OBJECT)?'':$conf->global->AGENDA_DEFAULT_FILTER_TYPE_FOR_OBJECT));
+}
+$search_agenda_label=GETPOST('search_agenda_label');
 
 // Security check
 $socid = GETPOST('socid','int');
 if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user, 'societe', $socid, '&societe');
 
+$limit = GETPOST("limit")?GETPOST("limit","int"):$conf->liste_limit;
+$sortfield = GETPOST("sortfield",'alpha');
+$sortorder = GETPOST("sortorder",'alpha');
+$page = GETPOST("page",'int');
+if ($page == -1) { $page = 0; }
+$offset = $limit * $page;
+$pageprev = $page - 1;
+$pagenext = $page + 1;
+if (! $sortfield) $sortfield='a.datep, a.id';
+if (! $sortorder) $sortorder='DESC';
+
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('agendathirdparty'));
+
 
 /*
  *	Actions
  */
 
+$parameters=array('id'=>$socid);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 
+if (empty($reshook))
+{
+    // Cancel
+    if (GETPOST("cancel") && ! empty($backtopage))
+    {
+        header("Location: ".$backtopage);
+        exit;
+    }
+
+    // Purge search criteria
+    if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter.x") || GETPOST("button_removefilter")) // All test are required to be compatible with all browsers
+    {
+        $actioncode='';
+        $search_agenda_label='';
+    }
+}
 
 
 
@@ -54,10 +100,7 @@ $contactstatic = new Contact($db);
 
 $form = new Form($db);
 
-/*
- * Fiche categorie de client et/ou fournisseur
- */
-if ($socid)
+if ($socid > 0)
 {
 	require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 	require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
@@ -65,110 +108,94 @@ if ($socid)
 	$langs->load("companies");
 
 
-	$soc = new Societe($db);
-	$result = $soc->fetch($socid);
-	llxHeader("",$langs->trans("Agenda"),'');
+	$object = new Societe($db);
+	$result = $object->fetch($socid);
+
+	$title=$langs->trans("Agenda");
+	if (! empty($conf->global->MAIN_HTML_TITLE) && preg_match('/thirdpartynameonly/',$conf->global->MAIN_HTML_TITLE) && $object->name) $title=$object->name." - ".$title;
+	llxHeader('',$title);
 
 	if (! empty($conf->notification->enabled)) $langs->load("mails");
-	$head = societe_prepare_head($soc);
+	$head = societe_prepare_head($object);
 
 	dol_fiche_head($head, 'agenda', $langs->trans("ThirdParty"),0,'company');
 
-	print '<table class="border" width="100%">';
-
-	print '<tr><td width="25%">'.$langs->trans("ThirdPartyName").'</td><td colspan="3">';
-	print $form->showrefnav($soc,'socid','',($user->societe_id?0:1),'rowid','nom');
-	print '</td></tr>';
-
-    if (! empty($conf->global->SOCIETE_USEPREFIX))  // Old not used prefix field
-    {
-        print '<tr><td>'.$langs->trans('Prefix').'</td><td colspan="3">'.$soc->prefix_comm.'</td></tr>';
-    }
-
-	if ($soc->client)
-	{
-		print '<tr><td>';
-		print $langs->trans('CustomerCode').'</td><td colspan="3">';
-		print $soc->code_client;
-		if ($soc->check_codeclient() <> 0) print ' <font class="error">('.$langs->trans("WrongCustomerCode").')</font>';
-		print '</td></tr>';
-	}
-
-	if ($soc->fournisseur)
-	{
-		print '<tr><td>';
-		print $langs->trans('SupplierCode').'</td><td colspan="3">';
-		print $soc->code_fournisseur;
-		if ($soc->check_codefournisseur() <> 0) print ' <font class="error">('.$langs->trans("WrongSupplierCode").')</font>';
-		print '</td></tr>';
-	}
-
-	if (! empty($conf->barcode->enabled))
-	{
-		print '<tr><td>'.$langs->trans('Gencod').'</td><td colspan="3">'.$soc->barcode.'</td></tr>';
-	}
-
-	print "<tr><td valign=\"top\">".$langs->trans('Address')."</td><td colspan=\"3\">";
-	dol_print_address($soc->address, 'gmap', 'thirdparty', $soc->id);
-	print "</td></tr>";
-
-	// Zip / Town
-	print '<tr><td width="25%">'.$langs->trans('Zip').'</td><td width="25%">'.$soc->cp."</td>";
-	print '<td width="25%">'.$langs->trans('Town').'</td><td width="25%">'.$soc->ville."</td></tr>";
-
-	// Country
-	if ($soc->pays) {
-		print '<tr><td>'.$langs->trans('Country').'</td><td colspan="3">';
-		$img=picto_from_langcode($soc->country_code);
-		print ($img?$img.' ':'');
-		print $soc->pays;
-		print '</td></tr>';
-	}
-
-	print '<tr><td>'.$langs->trans('Phone').'</td><td>'.dol_print_phone($soc->tel,$soc->country_code,0,$soc->id,'AC_TEL').'</td>';
-	print '<td>'.$langs->trans('Fax').'</td><td>'.dol_print_phone($soc->fax,$soc->country_code,0,$soc->id,'AC_FAX').'</td></tr>';
-
-	// EMail
-	print '<tr><td>'.$langs->trans('EMail').'</td><td>';
-	print dol_print_email($soc->email,0,$soc->id,'AC_EMAIL');
-	print '</td>';
-
-	// Web
-	print '<td>'.$langs->trans('Web').'</td><td>';
-	print dol_print_url($soc->url);
-	print '</td></tr>';
-
-	print '</table>';
-
+    $linkback = '<a href="'.DOL_URL_ROOT.'/societe/list.php">'.$langs->trans("BackToList").'</a>';
+	
+    dol_banner_tab($object, 'socid', $linkback, ($user->societe_id?0:1), 'rowid', 'nom');
+        
+    print '<div class="fichecenter">';
+    
+    print '<div class="underbanner clearboth"></div>';
+    
+    $object->info($socid);
+	print dol_print_object_info($object, 1);
+	
 	print '</div>';
 
+	dol_fiche_end();
 
-    /*
-     * Barre d'action
-     */
 
-    print '<div class="tabsAction">';
+	
+	// Actions buttons
+	
+    $objthirdparty=$object;
+    $objcon=new stdClass();
+	
+    $out='';
+    $permok=$user->rights->agenda->myactions->create;
+    if ((! empty($objthirdparty->id) || ! empty($objcon->id)) && $permok)
+    {
+        //$out.='<a href="'.DOL_URL_ROOT.'/comm/action/card.php?action=create';
+        if (get_class($objthirdparty) == 'Societe') $out.='&amp;socid='.$objthirdparty->id;
+        $out.=(! empty($objcon->id)?'&amp;contactid='.$objcon->id:'').'&amp;backtopage=1&amp;percentage=-1';
+    	//$out.=$langs->trans("AddAnAction").' ';
+    	//$out.=img_picto($langs->trans("AddAnAction"),'filenew');
+    	//$out.="</a>";
+	}
+
+	
+	print '<div class="tabsAction">';
 
     if (! empty($conf->agenda->enabled))
     {
-        print '<a class="butAction" href="'.DOL_URL_ROOT.'/comm/action/fiche.php?action=create&socid='.$socid.'">'.$langs->trans("AddAction").'</a>';
+    	if (! empty($user->rights->agenda->myactions->create) || ! empty($user->rights->agenda->allactions->create))
+    	{
+        	print '<a class="butAction" href="'.DOL_URL_ROOT.'/comm/action/card.php?action=create'.$out.'">'.$langs->trans("AddAction").'</a>';
+    	}
+    	else
+    	{
+        	print '<a class="butActionRefused" href="#">'.$langs->trans("AddAction").'</a>';
+    	}
     }
 
     print '</div>';
 
-    print '<br>';
+    if (! empty($conf->agenda->enabled) && (!empty($user->rights->agenda->myactions->read) || !empty($user->rights->agenda->allactions->read) ))
+    {
+        $param='&socid='.$socid;
+        if (! empty($contextpage) && $contextpage != $_SERVER["PHP_SELF"]) $param.='&contextpage='.$contextpage;
+        if ($limit > 0 && $limit != $conf->liste_limit) $param.='&limit='.$limit;
 
-    print load_fiche_titre($langs->trans("ActionsOnCompany"),'','');
+        
+		print load_fiche_titre($langs->trans("ActionsOnCompany"),'','');
+		
+        // List of todo actions
+        //show_actions_todo($conf,$langs,$db,$object,null,0,$actioncode);
 
-    // List of todo actions
-    show_actions_todo($conf,$langs,$db,$soc);
+        // List of done actions
+        //show_actions_done($conf,$langs,$db,$object,null,0,$actioncode);
+     
+        // List of all actions
+		$filters=array();
+        $filters['search_agenda_label']=$search_agenda_label;
 
-    // List of done actions
-    show_actions_done($conf,$langs,$db,$soc);
+        // TODO Replace this with smae code then into listactions.php
+        show_actions_done($conf,$langs,$db,$object,null,0,$actioncode, '', $filters, $sortfield, $sortorder);
+    }
 }
 
 
 llxFooter();
 
 $db->close();
-?>

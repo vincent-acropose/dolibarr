@@ -1,47 +1,33 @@
-/*
- * Language code: ar_AR
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-08-11 13:27:01
- */
-
-
-// Date 2009-08-11 13:27:01
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
-Donation=تبرع
-Donations=التبرعات
-Donor=الجهات المانحة
-Donors=الجهات المانحة
-AddDonation=إضافة تبرع
-NewDonation=منحة جديدة
-DonationPromise=هدية الوعد
-PromisesNotValid=وعود لم يصادق
-PromisesValid=صادق الوعود
-DonationsReceived=تلقى التبرعات
-PublicDonation=تبرع العامة
-DonationsNumber=تبرع عدد
-DonationsArea=التبرعات المنطقة
-DonationStatusPromiseNotValidated=مشروع وعد
-DonationStatusPromiseValidated=صادق الوعد
-DonationStatusPaid=تلقى تبرع
-DonationStatusPromiseNotValidatedShort=مسودة
-DonationStatusPromiseValidatedShort=صادق
-DonationStatusPaidShort=وردت
-ValidPromise=تحقق من وعود
-BuildDonationReceipt=بناء استلام
-DonationsModels=نماذج لوثائق ايصالات للتبرع
-// Date 2009-08-11 13:27:01
-// STOP - Lines generated via parser
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-19 21:04:44).
-// Reference language: en_US
-DonationsPaid=التبرعات المدفوعة
-// STOP - Lines generated via autotranslator.php tool (2009-08-19 21:04:44).
-
-
-// START - Lines generated via autotranslator.php tool (2010-07-17 11:13:51).
-// Reference language: en_US
-ValidPromess=التحقق من صحة الوعد
-// STOP - Lines generated via autotranslator.php tool (2010-07-17 11:14:23).
+# Dolibarr language file - Source file is en_US - donations
+Donation=اهداء
+Donations=کمک های مالی
+DonationRef=کد عکس کمک مالی.
+Donor=دهنده
+AddDonation=Create a donation
+NewDonation=کمک مالی جدید
+DeleteADonation=Delete a donation
+ConfirmDeleteADonation=Are you sure you want to delete this donation?
+ShowDonation=نمایش کمک مالی
+PublicDonation=کمک مالی عمومی
+DonationsArea=منطقه کمک مالی
+DonationStatusPromiseNotValidated=پیش نویس وعده
+DonationStatusPromiseValidated=وعده اعتبار
+DonationStatusPaid=کمک مالی دریافت کرد
+DonationStatusPromiseNotValidatedShort=پیش نویس
+DonationStatusPromiseValidatedShort=اعتبار
+DonationStatusPaidShort=رسیده
+DonationTitle=دریافت کمک مالی
+DonationDatePayment=تاریخ پرداخت
+ValidPromess=اعتبار قول
+DonationReceipt=دریافت کمک مالی
+DonationsModels=اسناد مدل برای رسید کمک مالی
+LastModifiedDonations=Latest %s modified donations
+DonationRecipient=دریافت کننده کمک مالی
+IConfirmDonationReception=گیرنده اعلام پذیرش، به عنوان یک کمک مالی، از مقدار زیر
+MinimumAmount=Minimum amount is  %s
+FreeTextOnDonations=Free text to show in footer
+FrenchOptions=Options for France
+DONATION_ART200=Show article 200 from CGI if you are concerned
+DONATION_ART238=Show article 238 from CGI if you are concerned
+DONATION_ART885=Show article 885 from CGI if you are concerned
+DonationPayment=Donation payment

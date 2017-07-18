@@ -51,7 +51,7 @@ class FormEcm
 	 *  @param  string	$select_name		Nom formulaire HTML
 	 *  @return	string						String with HTML select
 	 */
-	function select_all_sections($selected='',$select_name='')
+	function select_all_sections($selected=0,$select_name='')
 	{
 		global $langs;
 		$langs->load("ecm");
@@ -64,7 +64,7 @@ class FormEcm
 		$output = '<select class="flat" name="'.$select_name.'">';
 		if (is_array($cate_arbo))
 		{
-			if (! count($cate_arbo)) $output.= '<option value="-1" disabled="disabled">'.$langs->trans("NoCategoriesDefined").'</option>';
+			if (! count($cate_arbo)) $output.= '<option value="-1" disabled>'.$langs->trans("NoCategoriesDefined").'</option>';
 			else
 			{
 				$output.= '<option value="-1">&nbsp;</option>';
@@ -72,7 +72,7 @@ class FormEcm
 				{
 					if ($cate_arbo[$key]['id'] == $selected)
 					{
-						$add = 'selected="selected" ';
+						$add = 'selected ';
 					}
 					else
 					{
@@ -88,4 +88,3 @@ class FormEcm
 	}
 }
 
-?>

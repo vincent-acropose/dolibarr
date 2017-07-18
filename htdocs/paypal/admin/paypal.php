@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2004		Rodolphe Quiedeville	<rodolphe@quiedeville.org>
- * Copyright (C) 2005-2011	Laurent Destailleur		<eldy@users.sourceforge.org>
+ * Copyright (C) 2005-2013	Laurent Destailleur		<eldy@users.sourceforge.org>
  * Copyright (C) 2011-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2011-2012  Juanjo Menent			<jmenent@2byte.es>
  *
@@ -51,6 +51,8 @@ if ($action == 'setvalue' && $user->admin)
     if (! $result > 0) $error++;
     $result=dolibarr_set_const($db, "PAYPAL_API_SIGNATURE",GETPOST('PAYPAL_API_SIGNATURE','alpha'),'chaine',0,'',$conf->entity);
     if (! $result > 0) $error++;
+    $result=dolibarr_set_const($db, "PAYPAL_SSLVERSION",GETPOST('PAYPAL_SSLVERSION','alpha'),'chaine',0,'',$conf->entity);
+    if (! $result > 0) $error++;
     $result=dolibarr_set_const($db, "PAYPAL_CREDITOR",GETPOST('PAYPAL_CREDITOR','alpha'),'chaine',0,'',$conf->entity);
     if (! $result > 0) $error++;
     $result=dolibarr_set_const($db, "PAYPAL_API_INTEGRAL_OR_PAYPALONLY",GETPOST('PAYPAL_API_INTEGRAL_OR_PAYPALONLY','alpha'),'chaine',0,'',$conf->entity);
@@ -63,15 +65,17 @@ if ($action == 'setvalue' && $user->admin)
 	if (! $result > 0) $error++;
     $result=dolibarr_set_const($db, "PAYPAL_ADD_PAYMENT_URL",GETPOST('PAYPAL_ADD_PAYMENT_URL','alpha'),'chaine',0,'',$conf->entity);
     if (! $result > 0) $error++;
-    $result=dolibarr_set_const($db, "PAYPAL_MESSAGE_OK",GETPOST('PAYPAL_MESSAGE_OK','alpha'),'chaine',0,'',$conf->entity);
+    $result=dolibarr_set_const($db, "PAYPAL_MESSAGE_OK",GETPOST('PAYPAL_MESSAGE_OK'),'chaine',0,'',$conf->entity);
     if (! $result > 0) $error++;
-    $result=dolibarr_set_const($db, "PAYPAL_MESSAGE_KO",GETPOST('PAYPAL_MESSAGE_KO','alpha'),'chaine',0,'',$conf->entity);
+    $result=dolibarr_set_const($db, "PAYPAL_MESSAGE_KO",GETPOST('PAYPAL_MESSAGE_KO'),'chaine',0,'',$conf->entity);
 	if (! $result > 0) $error++;
-
+	$result=dolibarr_set_const($db, "PAYPAL_PAYONLINE_SENDEMAIL",GETPOST('PAYPAL_PAYONLINE_SENDEMAIL'),'chaine',0,'',$conf->entity);
+	if (! $result > 0) $error++;
+	
 	if (! $error)
   	{
   		$db->commit();
-  		setEventMessage($langs->trans("SetupSaved"));
+  		setEventMessages($langs->trans("SetupSaved"), null, 'mesgs');
   	}
   	else
   	{
@@ -91,12 +95,17 @@ llxHeader('',$langs->trans("PaypalSetup"));
 
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre(' - '.$langs->trans("ModuleSetup"),$linkback,'paypal_logo@paypal');
+print load_fiche_titre($langs->trans("ModuleSetup").' PayPal',$linkback);
 print '<br>';
 
 $head=paypaladmin_prepare_head();
 
-dol_fiche_head($head, 'paypalaccount', $langs->trans("ModuleSetup"));
+print '<form method="post" action="'.$_SERVER["PHP_SELF"].'">';
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+print '<input type="hidden" name="action" value="setvalue">';
+
+
+dol_fiche_head($head, 'paypalaccount', '');
 
 print $langs->trans("PaypalDesc")."<br>\n";
 
@@ -104,18 +113,15 @@ print $langs->trans("PaypalDesc")."<br>\n";
 if (! function_exists('curl_version'))
 {
 	$langs->load("errors");
-	setEventMessage($langs->trans("ErrorPhpCurlNotInstalled"), 'errors');
+	setEventMessages($langs->trans("ErrorPhpCurlNotInstalled"), null, 'errors');
 }
 
 
 print '<br>';
-print '<form method="post" action="'.$_SERVER["PHP_SELF"].'">';
-print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-print '<input type="hidden" name="action" value="setvalue">';
 
+print '<table class="noborder" width="100%">';
 
-print '<table class="nobordernopadding" width="100%">';
-
+// Account Parameters
 $var=true;
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("AccountParameter").'</td>';
@@ -148,6 +154,13 @@ print '<input size="64" type="text" name="PAYPAL_API_SIGNATURE" value="'.$conf->
 print '<br>'.$langs->trans("Example").': ASsqXEmw4KzmX-CPChWSVDNCNfd.A3YNR7uz-VncXXAERFDFDFDF';
 print '</td></tr>';
 
+$var=!$var;
+print '<tr '.$bc[$var].'><td class="fieldrequired">';
+print $langs->trans("PAYPAL_SSLVERSION").'</td><td>';
+print $form->selectarray("PAYPAL_SSLVERSION",array('1'=> $langs->trans('TLSv1'),'6'=> $langs->trans('TLSv1.2')),$conf->global->PAYPAL_SSLVERSION);
+print '</td></tr>';
+
+// Usage Parameters
 $var=true;
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("UsageParameter").'</td>';
@@ -190,15 +203,22 @@ print '</td></tr>';
 $var=!$var;
 print '<tr '.$bc[$var].'><td>';
 print $langs->trans("MessageOK").'</td><td>';
-$doleditor=new DolEditor('PAYPAL_MESSAGE_OK',$conf->global->PAYPAL_MESSAGE_OK,'',100,'dolibarr_details','In',false,true,true,ROWS_4,60);
+$doleditor=new DolEditor('PAYPAL_MESSAGE_OK',$conf->global->PAYPAL_MESSAGE_OK,'',100,'dolibarr_details','In',false,true,true,ROWS_4,'90%');
 $doleditor->Create();
 print '</td></tr>';
 
 $var=!$var;
 print '<tr '.$bc[$var].'><td>';
 print $langs->trans("MessageKO").'</td><td>';
-$doleditor=new DolEditor('PAYPAL_MESSAGE_KO',$conf->global->PAYPAL_MESSAGE_KO,'',100,'dolibarr_details','In',false,true,true,ROWS_4,60);
+$doleditor=new DolEditor('PAYPAL_MESSAGE_KO',$conf->global->PAYPAL_MESSAGE_KO,'',100,'dolibarr_details','In',false,true,true,ROWS_4,'90%');
 $doleditor->Create();
+print '</td></tr>';
+
+$var=!$var;
+print '<tr '.$bc[$var].'><td>';
+print $langs->trans("PAYPAL_PAYONLINE_SENDEMAIL").'</td><td>';
+print '<input size="32" type="email" name="PAYPAL_PAYONLINE_SENDEMAIL" value="'.$conf->global->PAYPAL_PAYONLINE_SENDEMAIL.'">';
+print ' &nbsp; '.$langs->trans("Example").': myemail@myserver.com';
 print '</td></tr>';
 
 $var=true;
@@ -221,13 +241,13 @@ print $langs->trans("SecurityTokenIsUnique").'</td><td>';
 print $form->selectyesno("PAYPAL_SECURITY_TOKEN_UNIQUE",(empty($conf->global->PAYPAL_SECURITY_TOKEN)?0:$conf->global->PAYPAL_SECURITY_TOKEN_UNIQUE),1);
 print '</td></tr>';
 
-print '<tr><td colspan="2" align="center"><br><input type="submit" class="button" value="'.$langs->trans("Modify").'"></td></tr>';
-
 print '</table>';
 
-print '</form>';
-
 dol_fiche_end();
+
+print '<div class="center"><input type="submit" class="button" value="'.$langs->trans("Modify").'"></div>';
+
+print '</form>';
 
 print '<br><br>';
 
@@ -241,9 +261,9 @@ $sandboxpaypalurl='developer.paypal.com';
 
 print '<div id="apidoc">';
 print 'Your API authentication information can be found with following steps. We recommend that you open a separate Web browser session when carrying out this procedure.<br>
-1. Log in to your PayPal Premier or Business account (on real paypal <a href="https://'.$realpaypalurl.'" target="_blank">'.$realpaypalurl.'</a> (or sandbox <a href="https://'.$sandboxpaypalurl.'" target="_blank">'.$sandboxpaypalurl.'</a>).<br>
-2. Click the Profile subtab located under the My Account heading.<br>
-3. Click the API Access link under the Account Information header.<br>
+1. Log in to your PayPal account (on real paypal <a href="https://'.$realpaypalurl.'" target="_blank">'.$realpaypalurl.'</a> (or sandbox <a href="https://'.$sandboxpaypalurl.'" target="_blank">'.$sandboxpaypalurl.'</a>).<br>
+2. Click the "Profile" or "Preferencies" subtab located under the My Account heading.<br>
+3. Click the link "API Access".<br>
 4. Click the View API Certificate link in the right column.<br>
 5. Click the Request API signature radio button on the Request API Credentials page.<br>
 6. Complete the Request API Credential Request form by clicking the agreement checkbox and clicking Submit.<br>
@@ -356,10 +376,10 @@ if (! empty($conf->use_javascript_ajax))
 {
 	print "\n".'<script type="text/javascript">';
 	print '$(document).ready(function () {
-            $("#apidoc").hide();
+            $("#apidoca").hide();
             $("#apidoca").click(function() {
-                $("#apidoca").hide();
                 $("#apidoc").show();
+            	$("#apidoca").hide();
             });
 
             $("#generate_token").click(function() {
@@ -377,4 +397,3 @@ if (! empty($conf->use_javascript_ajax))
 
 llxFooter();
 $db->close();
-?>

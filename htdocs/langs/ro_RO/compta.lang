@@ -1,184 +1,207 @@
-/*
- * Language code: ro_RO
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-01-19 21:32:52
- */
-
-
-// Date 2009-01-19 21:32:52
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
-Accountancy=Contabilitate
-AccountancyCard=Contabilitate carte
-Treasury=Trezoreria
+# Dolibarr language file - Source file is en_US - compta
 MenuFinancial=Financiar
-OptionMode=Opţiunea pentru contabilitate
-OptionModeVirtual=Opţiunea Credite-debite
+TaxModuleSetupToModifyRules=Du-te la <a href="%s"> Configurare modul Taxe</a> pentru a modifica regulile de calcul
+TaxModuleSetupToModifyRulesLT=Du-te la <a href="%s">Companie setup </a> pentru a modifica regulile de calcul
+OptionMode=Opţiunea pentru ţinerea contabilitate
+OptionModeTrue=Opţiunea Venituri -Cheltuieli
+OptionModeVirtual=Opţiunea Creanţe-Datorii
+OptionModeTrueDesc=În acest context, se calculează cifra de afaceri de peste de plăţi (data de plăţi). \\ nThe valabilitate a cifrelor este asigurată numai în cazul în care cartea-ţinerea este analizată prin intrare / ieşire de pe conturi, prin intermediul facturilor.
 OptionModeVirtualDesc=În acest context, cifra de afaceri se calculează pe facturi (data de validare). Când aceste facturi se datorează, indiferent dacă acestea au fost plătite sau nu, ele sunt enumerate în cifra de afaceri de ieşire.
 FeatureIsSupportedInInOutModeOnly=Caracteristicã disponibil doar în CREDITE-DEBTS Mod de contabilitate (a se vedea modul de configurare de contabilitate)
-Param=Setup
-AccountsGeneral=Conturi
+VATReportBuildWithOptionDefinedInModule=Sumele prezentate aici sunt calculate folosind regulile definite de modul de configurare fiscale.
+LTReportBuildWithOptionDefinedInModule=Sumele prezentate aici sunt calculate folosind regulile definite de modul de configurare Companie.
+Param=Setări
+RemainingAmountPayment=Suma rămasă de plată:
 Account=Cont
-Accounts=Conturi
-BillsForSuppliers=Notele de plata pentru furnizorii
+Accountparent=Rădăcina contului
+Accountsparent=Rădăcina conturilor
 Income=Venituri
-Outcome=Rezultat
+Outcome=Cheltuieli
 ReportInOut=Venituri / Rezultate
+ReportTurnover=Cifra de afaceri
 PaymentsNotLinkedToInvoice=Plăţile nu sunt legate de orice factură, astfel încât nu au legătură cu o terţă parte
 PaymentsNotLinkedToUser=Plăţile nu sunt legate de orice utilizator
 Profit=Profit
-Balance=Balanţa
+AccountingResult=Rezultatl contabil
+Balance=Sold
 Debit=Debit
-Credit=De credit
-Withdrawal=Retragerea
-Withdrawals=Retrageri
-AmountHTVATRealReceived=HT colectate
-AmountHTVATRealPaid=HT platite
-VATToPay=La plata TVA-ului
-VATReceived=TVA-ul a primit
-VATToCollect=TVA-ul pentru a colecta
-VATSummary=TVA Sumar
-VATPaid=Plata TVA-ului
+Credit=Credit
+Piece= Doc. contabilitate
+AmountHTVATRealReceived=TVA colectat
+AmountHTVATRealPaid=TVA platit
+VATToPay=TVA vânzări
+VATReceived=TVA recuperat
+VATToCollect=TVA colectat
+VATSummary=Sold TVA
+LT2SummaryES=Sold IRPF
+LT1SummaryES=RE Sold
+VATPaid=TVA plătit
+LT2PaidES=IRPF plătit
+LT1PaidES=RE Platit
+LT2CustomerES=IRPF de vânzări
+LT2SupplierES=IRPF achiziţii
+LT1CustomerES=RE vanzări
+LT1SupplierES=RE cumpărări
 VATCollected=TVA colectat
-ToPay=Pentru a plăti
-ToGet=Pentru a primi înapoi
-TaxAndDividendsArea=De impozitare, contribuţii sociale şi dividende zona
-SocialContribution=Social contribuţie
-SocialContributions=Contribuţii sociale
+ToPay=De plată
+SpecialExpensesArea=Plăţi speciale
+SocialContribution=Taxa sociala / fiscala
+SocialContributions=Taxe sociale sau fiscale
+SocialContributionsDeductibles=Taxe deductibile
+SocialContributionsNondeductibles=Taxe nedeductibile
+LabelContrib=Label contribution
+TypeContrib=Type contribution
+MenuSpecialExpenses=Cheltuieli speciale
 MenuTaxAndDividends=Impozite şi dividende
-MenuSocialContributions=Contribuţii sociale
-MenuNewSocialContribution=New contribuţie
-NewSocialContribution=New contribuţiilor sociale
-ContributionsToPay=Contribuţii la plata
-AccountancyTreasuryArea=Contabilitate / Trezoreria zona
-AccountancySetup=Contabilitate setup
-NewPayment=New plată
+MenuSocialContributions=Taxe sociale / fiscale
+MenuNewSocialContribution=Tax social/fiscal nou
+NewSocialContribution=Taxa sociala/fiscala noua
+ContributionsToPay=Taxe sociale / fiscale de plata
+AccountancyTreasuryArea=Contabilitate / Trezorerie
+NewPayment=Plată nouă
 Payments=Plăţi
-PaymentCustomerInvoice=Clientul facturii de plată
-PaymentSupplierInvoice=Furnizor facturii de plată
-PaymentSocialContribution=Social plata contribuţiei
-PaymentVat=TVA de plată
-ListPayment=Lista de plăţi
-ListOfPayments=Lista de plăţi
-ListOfCustomerPayments=Lista de clienţi de plăţi
-ListOfSupplierPayments=Lista de furnizor de plăţi
-DatePayment=Plata data
-NewVATPayment=New plata TVA
-VATPayment=TVA de plată
-VATPayments=TVA Plăţi
-TotalToPay=Total de a plăti
-TotalVATReceived=Total TVA primit
-CustomerAccountancyCode=Clientul contabile cod
-AlreadyPaid=Deja platite
-AccountNumberShort=Numărul de cont
+PaymentCustomerInvoice=Plată factură client
+PaymentSocialContribution=Plata taxe sociale sau fiscale
+PaymentVat=Plată TVA
+ListPayment=Listă plăţi
+ListOfCustomerPayments=Listă plăţi clienţi
+ListOfSupplierPayments=Listă plăţi  furnizori
+DateStartPeriod=Dată început perioadă
+DateEndPeriod=Dată sfârşit perioadă
+newLT1Payment=Plată taxă nouă 2
+newLT2Payment=Plată taxă nouă 3
+LT1Payment=Plata taxa  2
+LT1Payments=Plati taxa  2
+LT2Payment=Plata taxa 3
+LT2Payments=Plati taxa  3
+newLT1PaymentES=Plată nouă RE
+newLT2PaymentES=Plată nouă IRPF
+LT1PaymentES=RE Plată
+LT1PaymentsES=RE Plăţi
+LT2PaymentES=IRPF de plata
+LT2PaymentsES=Plăţi IRPF 
+VATPayment=Sales tax payment
+VATPayments=Sales tax payments
+VATRefund=Sales tax refund
+Refund=Rambursare
+SocialContributionsPayments=Plata taxe sociale sau fiscale
+ShowVatPayment=Arata plata TVA
+TotalToPay=Total de plată
+BalanceVisibilityDependsOnSortAndFilters=Balance is visible in this list only if table is sorted ascending on %s and filtered for 1 bank account
+CustomerAccountancyCode=Cont contabil Client
+SupplierAccountancyCode=Cont contabil furnizor
+CustomerAccountancyCodeShort=Cont contabil client
+SupplierAccountancyCodeShort=Cont contabil furnizor
 AccountNumber=Numărul de cont
-NewAccount=Cont nou
-SalesTurnover=Vanzari cifra de afaceri
-ByThirdParties=Bu terţi
-ByUserAuthorOfInvoice=Prin factura autor
-AccountancyExport=Contabilitate export
-ErrorWrongAccountancyCodeForCompany=Bad client contabile cod pentru %s
-SuppliersProductsSellSalesTurnover=A cifrei de afaceri generate de vânzările de furnizorii de produse.
-CheckReceipt=Verificaţi depozit
-CheckReceiptShort=Verificaţi depozit
-NewCheckReceipt=Noua reducere
+NewAccountingAccount=Cont nou
+SalesTurnover=Cifra de afaceri Vanzari
+SalesTurnoverMinimum=Cifra de afaceri  vânzări minimă
+ByExpenseIncome= După cheltuieli & venituri
+ByThirdParties=Pe terţi
+ByUserAuthorOfInvoice=După autorul facturii
+CheckReceipt=Borderou de cecuri remise
+CheckReceiptShort=Borderou cecuri
+LastCheckReceiptShort=Ultimele %s cecuri remise
+NewCheckReceipt=Discount nou
 NewCheckDeposit=New verifica depozit
 NewCheckDepositOn=New verifica depozit în contul: %s
-NoWaitingChecks=Nu controale de aşteptare pentru depozit.
-DateChequeReceived=Cec Recepţie data de intrare
-NbOfCheques=Nb de cecuri
-PaySocialContribution=Plătesc o contribuţie socială
-ConfirmPaySocialContribution=Sunteţi sigur că doriţi pentru a clasifica această contribuţie socială ca platite?
-DeleteSocialContribution=Ştergeţi o contribuţie socială
-ConfirmDeleteSocialContribution=Sunteţi sigur că doriţi să ştergeţi această contribuţie socială?
-ExportDataset_tax_1=Contribuţii sociale, cât şi plăţile
-AnnualSummaryDueDebtMode=Bilan des recettes et dpenses, rsum annuel, en <b>Mod %sCrances-Dettes %s</b> dit <b>comptabilit de angajament.</b>
-AnnualSummaryInputOutputMode=Bilan des recettes et dpenses, rsum annuel, en <b>Mod %sRecettes-Dpenses %s</b> dit <b>comptabilit de Caisse.</b>
+NoWaitingChecks=CEC-uri spre încasare
+DateChequeReceived=Data primire Cec
+NbOfCheques=Nr cecuri
+PaySocialContribution=Plăteate o taxă socială / fiscala
+ConfirmPaySocialContribution=Sunteţi sigur că doriţi să clasaţi această taxă ca plătită?
+DeleteSocialContribution=Sterge  o plata taxe sociale sau fiscale 
+ConfirmDeleteSocialContribution=Sunteţi sigur că doriţi să ştergeţi această plată taxa sociala/fiscala?
+ExportDataset_tax_1=Taxe sociale și fiscale și plăți 
+CalcModeVATDebt=Mod <b>%s TVA pe baza contabilității de angajament %s</b>.
+CalcModeVATEngagement=Mod <b>%s TVA pe baza venituri-cheltuieli%s.</b>
+CalcModeDebt=Mod <b>%sCreanțe-Datorii%s</b> zisă <b> contabilitatea de angajamente</b>
+CalcModeEngagement=Mod <b>%sVenituri- Cheltuieli%s</b> zisă <b> contabilitatea de casă</b>
+CalcModeLT1= Mode <b>%sRE pe facturi clienţi - facturi furnizori %s</b>
+CalcModeLT1Debt=Mode <b>%sRE pe facturi clienţi%s</b>
+CalcModeLT1Rec= Mode <b>%sRE pe facturi furnizori%s</b>
+CalcModeLT2= Mode <b>%sIRPF pe facturi clienţi - facturi furnizori%s</b>
+CalcModeLT2Debt=Mode <b>%sIRPF pe facturi clienţi%s</b>
+CalcModeLT2Rec= Mode <b>%sIRPF pe facturi furnizori%s</b>
+AnnualSummaryDueDebtMode=Balanța de venituri și cheltuieli, rezumat anual
+AnnualSummaryInputOutputMode=Balanța de venituri și cheltuieli, rezumat anual
 AnnualByCompaniesDueDebtMode=Bilan des recettes et dpenses, dtail par niveluri, en <b>Mod %sCrances-Dettes %s</b> dit <b>comptabilit de angajament.</b>
 AnnualByCompaniesInputOutputMode=Bilan des recettes et dpenses, dtail par niveluri, en <b>Mod %sRecettes-Dpenses %s</b> dit <b>comptabilit de Caisse.</b>
 SeeReportInInputOutputMode=Voir le <b>Rapport %sRecettes-Dpenses %s</b> dit <b>comptabilit de Caisse</b> turna un calcul sur les paiements effectivement raliss
 SeeReportInDueDebtMode=Voir le <b>Rapport %sCrances-Dettes %s</b> dit <b>comptabilit d'angajament</b> turna un calcul sur les factures mises
-RulesResultDue=- Sumele indicate sunt cu toate taxele incluse <br> - Ea include facturilor restante, a cheltuielilor şi a TVA-ului, indiferent dacă acestea sunt plătite sau nu. <br> - Se bazează pe data de validare de facturi si TVA-ul şi cu privire la data scadentă pentru cheltuieli.
-RulesResultInOut=- Sumele indicate sunt cu toate taxele incluse <br> - Ea include real plăţile efectuate de pe facturi, cheltuielilor şi a TVA-ului. <br> - Se bazează pe datele de plată a facturilor, cheltuielile anf TVA. <br>
-RulesCADue=- Ea include clientilor din cauza facturilor, indiferent dacă acestea sunt plătite sau nu. <br> - Se bazează pe data de validare a acestor facturi. <br>
+RulesAmountWithTaxIncluded=- Valoarea afişată este cu toate taxele incluse
+RulesResultDue=- Include facturi deschise, cheltuieli, TVA, donații, indiferent dacă sunt plătite sau nu. Include, de asemenea, salariile plătite <br> - Se ia  în  calcul data de validare a facturilor pentru TVA și data scadentă pentru cheltuieli. Pentru salarii definite cu modulul Salarii, este utilizată data plății.
+RulesResultInOut=- Include plățile efective pe facturi, cheltuieli,TVA și salarii. <br> - Se ia  în calcul data plăţii facturilor, cheltuielilor, TVA-ului  și salariilor .
+RulesCADue=-Include facturile scadente de la clienți indiferent dacă sunt încasate sau nu. <br>-Se ia în calcul data de validare a acestor facturi <br> 
 RulesCAIn=- Ea include toate plăţile efective a facturilor primite de la clienti. <br> - Se bazează pe data de plată a acestor facturi <br>
-PercentOfInvoice=%%/factura
-Dispatch=Dispecerizare
-Dispatched=Expediate
-ToDispatch=Pentru a expedierii
-// Date 2009-01-19 21:32:52
-// STOP - Lines generated via parser
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-13 21:12:07).
-// Reference language: en_US
-ReportTurnover=Cifra de afaceri
-NotUsedForGoods=Nu sunt utilizate pentru cumpărarea de bunuri
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 21:12:07).
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-19 20:22:33).
-// Reference language: en_US
-OptionModeTrue=Opţiunea de intrare-iesire
-OptionModeTrueDesc=În acest context, se calculează cifra de afaceri de peste de plăţi (data de plăţi). \ nThe valabilitate a cifrelor este asigurată numai în cazul în care cartea-ţinerea este analizată prin intrare / ieşire de pe conturi, prin intermediul facturilor.
-ShowVatPayment=Arata plata TVA
-SupplierAccountancyCode=Furnizor de contabilitate cod
-// STOP - Lines generated via autotranslator.php tool (2009-08-19 20:22:33).
-
-
-// START - Lines generated via autotranslator.php tool (2010-07-17 11:36:47).
-// Reference language: en_US
-TaxModuleSetupToModifyRules=Du-te la <a href="%s">modul de configurare</a> a modifica normele de calcul
-VATReportBuildWithOptionDefinedInModule=Sumele prezentate aici sunt calculate folosind regulile definite de modul de configurare fiscale.
-SocialContributionsPayments=Contribuţii sociale plăţi
-VATReportByCustomersInInputOutputMode=Raport de TVA clientului colectate şi plătite (TVA primire)
-VATReportByCustomersInDueDebtMode=Raport de TVA clientului colectate şi plătite (TVA)
-VATReportByQuartersInInputOutputMode=Raport de rata a TVA colectate şi plătite (TVA primire)
-VATReportByQuartersInDueDebtMode=Raport de rata a TVA colectate şi plătite (TVA)
-SeeVATReportInInputOutputMode=A se vedea raportul <b>%sVAT encasement%s</b> pentru un calcul standard
-SeeVATReportInDueDebtMode=A se vedea raportul <b>privind %sVAT flow%s</b> pentru un calcul, cu o opţiune de pe fluxul
-RulesVATIn=Pentru servicii, raportul include TVA lege efectiv primite sau eliberate pe baza de data plăţii. <br> - Pentru bunuri materiale, aceasta include facturi cu TVA, pe baza de la data validării a facturii.
-RulesVATDue=Pentru servicii, raportul include facturile TVA datorată, plătite sau nu, în funcţie de data de validarea acestor facturi. <br> - Pentru bunuri materiale, aceasta include facturi cu TVA, în funcţie de data de validare a facturii.
-OptionVatInfoModuleComptabilite=Notă: Pentru bunuri materiale, ar trebui să utilizeze la data livrării să fie mai echitabil.
-ThirdPartyMustBeEditAsCustomer=A treia parte trebuie să fie definit ca un client
-// STOP - Lines generated via autotranslator.php tool (2010-07-17 11:38:42).
-
-
-
-// START - Lines generated via autotranslator.php tool (2011-10-10 02:45:33).
-// Reference language: en_US -> ro_RO
-InvoiceStats=Statistici privind facturile
-SellsJournal=Jurnalul de vânzări
-PurchasesJournal=Cumparari Jurnalul
-DescSellsJournal=Jurnalul de vânzări
-DescPurchasesJournal=Cumparari Jurnalul
-InvoiceRef=Factură ref.
-CodeNotDef=Nu a fost definit
-AddRemind=Expedierea Suma disponibilă
-RemainToDivide=Ramaneti la expediere:
-WarningDepositsNotIncluded=Depozitele facturile nu sunt incluse in aceasta versiune cu acest modul de contabilitate.
-// STOP - Lines generated via autotranslator.php tool (2011-10-10 06:19:18).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 17:23:15).
-// Reference language: en_US -> ro_RO
-RemainingAmountPayment=Suma rămasă de plată:
-AmountToBeCharged=Suma totală pentru plata:
-LT2SummaryES=Balanţa IRPF
-LT2PaidES=IRPF plătit
-LT2CustomerES=IRPF de vânzări
-LT2SupplierES=IRPF achiziţii
-newLT2PaymentES=Nou IRPF plată
-LT2PaymentES=IRPF de plata
-LT2PaymentsES=IRPF Plăţi
-DepositsAreNotIncluded=- Facturile de depozit sunt nici nu sunt incluse
+DepositsAreNotIncluded=- Facturile de depozit nu sunt incluse
 DepositsAreIncluded=- Facturile de depozit sunt incluse
 LT2ReportByCustomersInInputOutputModeES=Raport de terţă parte IRPF
-RulesVATInServices=- Pentru servicii, raportul include reglementări de TVA efectiv primite sau emise pe baza de data plăţii. <br> - Pentru activele materiale, aceasta include TVA facturile pe baza de data facturii.
+LT1ReportByCustomersInInputOutputModeES=Raport pe terţ RE
+VATReport=Raport TVA
+VATReportByCustomersInInputOutputMode=Raport după TVA client colectat și plătit
+VATReportByCustomersInDueDebtMode=Raport după TVA client colectat și plătit
+VATReportByQuartersInInputOutputMode=Raport după rata TVA colectată și plătită
+LT1ReportByQuartersInInputOutputMode=Raport pe rată RE
+LT2ReportByQuartersInInputOutputMode=Raport pe rată IRPF
+VATReportByQuartersInDueDebtMode=Raport după rata TVA colectată și plătită
+LT1ReportByQuartersInDueDebtMode=Raport pe rată RE
+LT2ReportByQuartersInDueDebtMode=Raport pe rată IRPF
+SeeVATReportInInputOutputMode=A se vedea raportul <b>%sVAT encasement%s</b> pentru un calcul standard
+SeeVATReportInDueDebtMode=A se vedea raportul <b>privind %sVAT flow%s</b> pentru un calcul, cu o opţiune de pe fluxul
+RulesVATInServices=- Pentru servicii, raportul include regularizările de TVA efectiv primite sau emise pe baza datelor plăților.
 RulesVATInProducts=- Pentru activele materiale, aceasta include TVA facturile pe baza de data facturii.
 RulesVATDueServices=- Pentru servicii, raportul include facturi TVA-ului datorat, plătite sau nu, în funcţie de data facturii.
 RulesVATDueProducts=- Pentru activele materiale, aceasta include facturi cu TVA, pe baza data facturii.
-ProposalStats=Statistici privind propunerile
-OrderStats=Statistici privind ordinele de
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 17:23:25).
+OptionVatInfoModuleComptabilite=Notă: Pentru bunuri materiale, ar trebui să utilizeze la data livrării să fie mai echitabil.
+PercentOfInvoice=%%/factura
+NotUsedForGoods=Nu sunt utilizate pentru cumpărarea de bunuri
+ProposalStats=Statistici privind ofertele
+OrderStats=Statistici privind comenzile
+InvoiceStats=Statistici privind facturile
+Dispatch=Dispecerizare
+Dispatched=Expediate
+ToDispatch=De  expediat
+ThirdPartyMustBeEditAsCustomer=A treia parte trebuie să fie definit ca un client
+SellsJournal=Jurnalul de vânzări
+PurchasesJournal=Jurnalul de cumpărări
+DescSellsJournal=Jurnalul de vânzări
+DescPurchasesJournal=Jurnalul de cumpărări
+InvoiceRef=Factură ref.
+CodeNotDef=Nedefinit
+WarningDepositsNotIncluded=Facturile  în avans nu sunt incluse in aceasta versiune cu acest modul de contabilitate.
+DatePaymentTermCantBeLowerThanObjectDate=Termenul de plată nu poate fi mai mic decât data obiectului.
+Pcg_version=Chart of accounts models
+Pcg_type=Pcg tip
+Pcg_subtype=Pcg subtip
+InvoiceLinesToDispatch=Linii factură de expediat
+ByProductsAndServices=După produse şi servicii
+RefExt=Referinţă externă
+ToCreateAPredefinedInvoice= Pentru a crea o factură model/ template, se crează o factură standard, apoi, fără a fi validată, se apasă pe butonul  "%s". 
+LinkedOrder=Link către comandă
+Mode1=Metoda 1
+Mode2=Metoda 2
+CalculationRuleDesc=Pentru a calcula totalul TVA, există două metode: <br> Metoda 1 este rotunjirea TVA-ului pe fiecare linie, apoi însumarea lor. <br> Metoda 2 este însumarea tututor TVA rilor de pe fiecare linie, apoi rotunjirea rezultatului. <br> Rezultatul final poate fi diferit cu câțiva cenți. Modul implicit este <b>%s</b>.
+CalculationRuleDescSupplier=în funcție de furnizor, alege metoda potrivită pentru a aplica aceeași regulă de calcul și pentru a obține același rezultat ca furnizorul.
+TurnoverPerProductInCommitmentAccountingNotRelevant=Raportul cifra de afaceri pe produs, atunci când se utilizează modul <b>contabilitate de casă</b> nu este relevant. Acest raport este disponibil numai atunci când se utilizează modul  <b>contabilitate de angajament</b> (a se vedea configurarea modulului de contabilitate).
+CalculationMode=Mod calcul
+AccountancyJournal=Jurnal cod contabilitate
+ACCOUNTING_VAT_SOLD_ACCOUNT=Accounting account by default for collecting VAT - VAT on sales (used if not defined on VAT dictionary setup)
+ACCOUNTING_VAT_BUY_ACCOUNT=Accounting account by default for recovered VAT - VAT on purchases (used if not defined on VAT dictionary setup)
+ACCOUNTING_VAT_PAY_ACCOUNT=Accounting account by default for paying VAT
+ACCOUNTING_ACCOUNT_CUSTOMER=Accounting account by default for customer third parties (used if not defined on third party card)
+ACCOUNTING_ACCOUNT_SUPPLIER=Accounting account by default for supplier third parties (used if not defined on third party card)
+CloneTax=Cloneaza o taxa sociala / fiscala
+ConfirmCloneTax= Confirmare duplicare plată taxă. 
+CloneTaxForNextMonth=Clonaţi-o pentru luna următoare
+SimpleReport=Raport simplu
+AddExtraReport=Extra reports (add foreign and national customer report)
+OtherCountriesCustomersReport=Raport clienţi externi
+BasedOnTwoFirstLettersOfVATNumberBeingDifferentFromYourCompanyCountry=Pe baza primelor două litere ale codului de TVA ca fiind diferit de codul de țară al companiei dumneavoastră
+SameCountryCustomersWithVAT=Raport clienţi interni
+BasedOnTwoFirstLettersOfVATNumberBeingTheSameAsYourCompanyCountry=Pe baza primelor două litere ale codului de TVA ca fiind același cu codul de țară al companiei dumneavoastră
+LinkedFichinter= Link către intervenție
+ImportDataset_tax_contrib=Taxe sociale / fiscale
+ImportDataset_tax_vat=Vat payments
+ErrorBankAccountNotFound= Eroare: cont bancar nu a fost găsit
+FiscalPeriod=Accounting period

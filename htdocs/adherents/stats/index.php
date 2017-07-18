@@ -28,8 +28,8 @@ require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherentstats.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/dolgraph.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/member.lib.php';
 
-$WIDTH=500;
-$HEIGHT=200;
+$WIDTH=DolGraph::getDefaultGraphSizeForStats('width');
+$HEIGHT=DolGraph::getDefaultGraphSizeForStats('height');
 
 $userid=GETPOST('userid','int'); if ($userid < 0) $userid=0;
 $socid=GETPOST('socid','int'); if ($socid < 0) $socid=0;
@@ -46,6 +46,9 @@ $year = strftime("%Y", time());
 $startyear=$year-2;
 $endyear=$year;
 
+$langs->load("members");
+$langs->load("companies");
+
 
 /*
  * View
@@ -53,11 +56,9 @@ $endyear=$year;
 
 $form=new Form($db);
 
-$langs->load("propal");
-
 llxHeader();
 
-print_fiche_titre($langs->trans("SubscriptionsStatistics"), $mesg);
+print load_fiche_titre($langs->trans("SubscriptionsStatistics"), $mesg);
 
 $dir=$conf->adherent->dir_temp;
 
@@ -143,19 +144,18 @@ $head = member_stats_prepare_head($adh);
 dol_fiche_head($head, 'statssubscription', $langs->trans("Statistics"), 0, 'user');
 
 
-print '<table class="notopnoleftnopadd" width="100%"><tr>';
-print '<td align="center" valign="top">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
 
 // Show filter box
 /*print '<form name="stats" method="POST" action="'.$_SERVER["PHP_SELF"].'">';
 print '<table class="border" width="100%">';
-print '<tr><td class="liste_titre" colspan="2">'.$langs->trans("Filter").'</td></tr>';
+print '<tr class="liste_titre"><td class="liste_titre" colspan="2">'.$langs->trans("Filter").'</td></tr>';
 print '<tr><td>'.$langs->trans("Member").'</td><td>';
 $filter='s.client in (1,2,3)';
 print $form->select_company($id,'memberid',$filter,1);
 print '</td></tr>';
 print '<tr><td>'.$langs->trans("User").'</td><td>';
-print $form->select_users($userid,'userid',1);
+print $form->select_dolusers($userid, 'userid', 1, '', 0, '', '', 0, 0, 0, '', 0, '', 'maxwidth300');
 print '</td></tr>';
 print '<tr><td align="center" colspan="2"><input type="submit" name="submit" class="button" value="'.$langs->trans("Refresh").'"></td></tr>';
 print '</table>';
@@ -167,23 +167,24 @@ print '<br><br>';
 $data = $stats->getAllByYear();
 
 
-print '<table class="border" width="100%">';
-print '<tr height="24">';
+print '<table class="noborder">';
+print '<tr class="liste_titre" height="24">';
 print '<td align="center">'.$langs->trans("Year").'</td>';
-print '<td align="center">'.$langs->trans("NbOfSubscriptions").'</td>';
-print '<td align="center">'.$langs->trans("AmountTotal").'</td>';
-print '<td align="center">'.$langs->trans("AmountAverage").'</td>';
+print '<td align="right">'.$langs->trans("NbOfSubscriptions").'</td>';
+print '<td align="right">'.$langs->trans("AmountTotal").'</td>';
+print '<td align="right">'.$langs->trans("AmountAverage").'</td>';
 print '</tr>';
 
 $oldyear=0;
+$var=true;
 foreach ($data as $val)
 {
     $year = $val['year'];
-    print $avg;
     while ($oldyear > $year+1)
     {	// If we have empty year
         $oldyear--;
-        print '<tr height="24">';
+        $var=!$var;
+        print '<tr '.$bc[$var].' height="24">';
         print '<td align="center">';
         print '<a href="month.php?year='.$oldyear.'&amp;mode='.$mode.'">';
         print $oldyear;
@@ -194,7 +195,8 @@ foreach ($data as $val)
         print '<td align="right">0</td>';
         print '</tr>';
     }
-    print '<tr height="24">';
+    $var=!$var;
+    print '<tr '.$bc[$var].' height="24">';
     print '<td align="center">';
     //print '<a href="month.php?year='.$year.'">';
     print $year;
@@ -210,8 +212,8 @@ foreach ($data as $val)
 print '</table>';
 
 
-print '</td>';
-print '<td align="center" valign="top">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
+
 
 // Show graphs
 print '<table class="border" width="100%"><tr valign="top"><td align="center">';
@@ -223,7 +225,10 @@ else {
 }
 print '</td></tr></table>';
 
-print '</td></tr></table>';
+
+print '</div></div></div>';
+print '<div style="clear:both"></div>';
+
 
 dol_fiche_end();
 
@@ -231,4 +236,3 @@ dol_fiche_end();
 llxFooter();
 
 $db->close();
-?>

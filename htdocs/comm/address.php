@@ -70,7 +70,7 @@ if ($action == 'add' || $action == 'update')
     $object->phone		= $_POST["phone"];
     $object->fax		= $_POST["fax"];
     $object->note		= $_POST["note"];
-    
+
     // Add new address
     if ($action == 'add')
     {
@@ -95,7 +95,7 @@ if ($action == 'add' || $action == 'update')
             }
             elseif ($origin == 'shipment')
             {
-            	header("Location: ../expedition/fiche.php?id=".$originid);
+            	header("Location: ../expedition/card.php?id=".$originid);
             	exit;
             }
             else
@@ -106,15 +106,15 @@ if ($action == 'add' || $action == 'update')
         }
         else
         {
-            $mesg = $object->error;
+	        setEventMessages($object->error, $object->errors, 'errors');
             $action='create';
         }
     }
-    
+
     // Update address
     else if ($action == 'update')
     {
-        $result 	= $object->update($_POST["id"], $socid, $user);
+        $result 	= $object->update($id, $socid, $user);
 
         if ($result >= 0)
         {
@@ -135,7 +135,7 @@ if ($action == 'add' || $action == 'update')
             }
             elseif ($origin == 'shipment')
             {
-                header("Location: ../expedition/fiche.php?id=".$originid);
+                header("Location: ../expedition/card.php?id=".$originid);
                 exit;
             }
             else
@@ -147,8 +147,8 @@ if ($action == 'add' || $action == 'update')
         else
         {
             $reload = 0;
-            $mesg = $object->error;
-            $actino= "edit";
+	        setEventMessages($object->error, $object->errors, 'errors');
+            $action= "edit";
         }
     }
 
@@ -181,9 +181,6 @@ $form = new Form($db);
 $formcompany = new FormCompany($db);
 $countrynotdefined=$langs->trans("ErrorSetACountryFirst").' ('.$langs->trans("SeeAbove").')';
 
-dol_htmloutput_errors($mesg);
-
-
 if ($action == 'create')
 {
     if ($user->rights->societe->creer)
@@ -205,7 +202,7 @@ if ($action == 'create')
             $object->note		=	$_POST["note"];
         }
 
-        // On positionne pays_id, pays_code et libelle du pays choisi
+        // On positionne country_id, country_code and label of the chosen country
         $object->country_id = (GETPOST('country_id','int') ? GETPOST('country_id','int') : $mysoc->country_id);
         if ($object->country_id)
         {
@@ -213,8 +210,8 @@ if ($action == 'create')
             $object->country_code	= $tmparray['code'];
             $object->country		= $tmparray['label'];
         }
-        
-        print_fiche_titre($langs->trans("AddAddress"));
+
+        print load_fiche_titre($langs->trans("AddAddress"));
 
         print "<br>\n";
 
@@ -256,7 +253,7 @@ if ($action == 'create')
         print '<tr><td class="fieldrequired">'.$langs->trans('Label').'</td><td><input type="text" size="30" name="label" id="label" value="'.($object->label?$object->label:$langs->trans('RequiredField')).'"></td></tr>';
         print '<tr><td class="fieldrequired">'.$langs->trans('Name').'</td><td><input type="text" size="30" name="name" id="name" value="'.($object->name?$object->name:$langs->trans('RequiredField')).'"></td></tr>';
 
-        print '<tr><td valign="top">'.$langs->trans('Address').'</td><td colspan="3"><textarea name="address" cols="40" rows="3" wrap="soft">';
+        print '<tr><td class="tdtop">'.$langs->trans('Address').'</td><td colspan="3"><textarea name="address" class="quatrevingtpercent" rows="3" wrap="soft">';
         print $object->address;
         print '</textarea></td></tr>';
 
@@ -284,14 +281,14 @@ if ($action == 'create')
 
         print '</table>'."\n";
 
-        print '<br><center>';
+        print '<br><div class="center">';
         print '<input type="submit" class="button" value="'.$langs->trans('Add').'">';
         if (! empty($backtopage))
         {
-        	print ' &nbsp; &nbsp; ';
+        	print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
         	print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'">';
         }
-        print '</center>'."\n";
+        print '</div>'."\n";
 
         print '</form>'."\n";
 
@@ -307,9 +304,9 @@ elseif ($action == 'edit')
     $societe->fetch($socid);
     $head = societe_prepare_head($societe);
 
-    dol_fiche_head($head, 'card', $societe->nom);
+    dol_fiche_head($head, 'card', $societe->name);
 
-    print_titre($langs->trans("EditAddress"));
+    print load_fiche_titre($langs->trans("EditAddress"));
     print "<br>\n";
 
     if ($socid)
@@ -333,7 +330,7 @@ elseif ($action == 'edit')
             $object->fax		=	$_POST["fax"];
             $object->note		=	$_POST["note"];
 
-            // On positionne country_id, pays_code et libelle du pays choisi
+            // On positionne country_id, country_code and label of the chosen country
             if ($object->country_id)
             {
 	        	$tmparray=getCountry($object->country_id,'all');
@@ -356,7 +353,7 @@ elseif ($action == 'edit')
         print '<tr><td>'.$langs->trans('AddressLabel').'</td><td colspan="3"><input type="text" size="40" name="label" value="'.$object->label.'"></td></tr>';
         print '<tr><td>'.$langs->trans('Name').'</td><td colspan="3"><input type="text" size="40" name="name" value="'.$object->name.'"></td></tr>';
 
-        print '<tr><td valign="top">'.$langs->trans('Address').'</td><td colspan="3"><textarea name="address" cols="40" rows="3" wrap="soft">';
+        print '<tr><td class="tdtop">'.$langs->trans('Address').'</td><td colspan="3"><textarea name="address" class="quatrevingtpercent" rows="3" wrap="soft">';
         print $object->address;
         print '</textarea></td></tr>';
 
@@ -381,15 +378,15 @@ elseif ($action == 'edit')
         print '<tr><td>'.$langs->trans('Note').'</td><td colspan="3"><textarea name="note" cols="40" rows="6" wrap="soft">';
         print $object->note;
         print '</textarea></td></tr>';
-        
+
         print '</table><br>';
-        
-        print '<center>';
+
+        print '<div class="center">';
         print '<input type="submit" class="button" name="save" value="'.$langs->trans("Save").'">';
-        print ' &nbsp; ';
+        print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
         print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'">';
-        print '</center>';
-        
+        print '</div>';
+
         print '</form>';
     }
 }
@@ -410,15 +407,13 @@ else
     $societe->fetch($object->socid);
     $head = societe_prepare_head($societe);
 
-    dol_fiche_head($head, 'customer', $societe->nom);
+    dol_fiche_head($head, 'customer', $societe->name);
 
 
     // Confirmation delete
     if ($action == 'delete')
     {
-        $form = new Form($db);
-        $ret=$form->form_confirm($_SERVER['PHP_SELF']."?socid=".$object->socid."&amp;id=".$id,$langs->trans("DeleteAddress"),$langs->trans("ConfirmDeleteAddress"),"confirm_delete");
-        if ($ret == 'html') print '<br>';
+        print $form->formconfirm($_SERVER['PHP_SELF']."?socid=".$object->socid."&amp;id=".$id,$langs->trans("DeleteAddress"),$langs->trans("ConfirmDeleteAddress"),"confirm_delete");
     }
 
     $nblines = count($object->lines);
@@ -457,12 +452,12 @@ else
 
             if ($user->rights->societe->creer)
             {
-                print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?socid='.$object->socid.'&amp;id='.$object->lines[$i]->id.'&amp;action=edit">'.$langs->trans("Modify").'</a>';
+                print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER['PHP_SELF'].'?socid='.$object->socid.'&amp;id='.$object->lines[$i]->id.'&amp;action=edit">'.$langs->trans("Modify").'</a></div>';
             }
 
             if ($user->rights->societe->supprimer)
             {
-                print '<a class="butActionDelete" href="'.$_SERVER['PHP_SELF'].'?socid='.$object->socid.'&amp;id='.$object->lines[$i]->id.'&amp;action=delete">'.$langs->trans("Delete").'</a>';
+                print '<div class="inline-block divButAction"><a class="butActionDelete" href="'.$_SERVER['PHP_SELF'].'?socid='.$object->socid.'&amp;id='.$object->lines[$i]->id.'&amp;action=delete">'.$langs->trans("Delete").'</a></div>';
             }
 
 
@@ -487,7 +482,7 @@ else
 
         if ($user->rights->societe->creer)
         {
-            print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?socid='.$object->socid.'&amp;action=create">'.$langs->trans("Add").'</a>';
+            print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER['PHP_SELF'].'?socid='.$object->socid.'&amp;action=create">'.$langs->trans("Add").'</a></div>';
         }
         print '</div>';
     }
@@ -498,4 +493,3 @@ else
 // End of page
 llxFooter();
 $db->close();
-?>

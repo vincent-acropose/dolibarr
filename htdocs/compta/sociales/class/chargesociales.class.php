@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2002      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2007 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2016      Frédéric France      <frederic.france@free.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,17 +25,22 @@
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 
 
-/**     \class      ChargeSociales
- *		\brief      Classe permettant la gestion des paiements des charges
- *                  La tva collectee n'est calculee que sur les factures payees.
+/** 
+ *	Classe permettant la gestion des paiements des charges
+ *  La tva collectee n'est calculee que sur les factures payees.
  */
 class ChargeSociales extends CommonObject
 {
     public $element='chargesociales';
     public $table='chargesociales';
     public $table_element='chargesociales';
+    public $picto = 'bill';
+    
+    /**
+     * {@inheritdoc}
+     */
+    protected $table_ref_field = 'ref';
 
-    var $id;
     var $date_ech;
     var $lib;
     var $type;
@@ -45,6 +51,7 @@ class ChargeSociales extends CommonObject
     var $date_creation;
     var $date_modification;
     var $date_validation;
+    var $fk_account;
 
 
     /**
@@ -61,19 +68,24 @@ class ChargeSociales extends CommonObject
     /**
      *  Retrouve et charge une charge sociale
      *
-     *  @param	int     $id		1 si trouve, 0 sinon
-     *  @return	void
+     *  @param	int     $id		Id
+     *  @param	string  $ref	Ref
+     *  @return	int <0 KO >0 OK
      */
-    function fetch($id)
+    function fetch($id, $ref='')
     {
-        $sql = "SELECT cs.rowid, cs.date_ech,";
-        $sql.= " cs.libelle as lib, cs.fk_type, cs.amount, cs.paye, cs.periode,";
-        $sql.= " c.libelle";
-        $sql.= " FROM ".MAIN_DB_PREFIX."chargesociales as cs, ".MAIN_DB_PREFIX."c_chargesociales as c";
-        $sql.= " WHERE cs.fk_type = c.id";
-        $sql.= " AND cs.rowid = ".$id;
+        $sql = "SELECT cs.rowid, cs.date_ech";
+        $sql.= ", cs.libelle as lib, cs.fk_type, cs.amount, cs.paye, cs.periode, cs.import_key";
+        $sql.= ", cs.fk_account, cs.fk_mode_reglement";
+        $sql.= ", c.libelle";
+        $sql.= ', p.code as mode_reglement_code, p.libelle as mode_reglement_libelle';
+        $sql.= " FROM ".MAIN_DB_PREFIX."chargesociales as cs";
+        $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_chargesociales as c ON cs.fk_type = c.id";
+        $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_paiement as p ON cs.fk_mode_reglement = p.id';
+        if ($ref) $sql.= " WHERE cs.rowid = ".$ref;
+        else $sql.= " WHERE cs.rowid = ".$id;
 
-        dol_syslog(get_class($this)."::fetch sql=".$sql);
+        dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -87,9 +99,16 @@ class ChargeSociales extends CommonObject
                 $this->lib            = $obj->lib;
                 $this->type           = $obj->fk_type;
                 $this->type_libelle   = $obj->libelle;
+                $this->fk_account = $obj->fk_account;
+                $this->mode_reglement_id = $obj->fk_mode_reglement;
+                $this->mode_reglement_code = $obj->mode_reglement_code;
+                $this->mode_reglement = $obj->mode_reglement_libelle;
                 $this->amount         = $obj->amount;
                 $this->paye           = $obj->paye;
                 $this->periode        = $this->db->jdate($obj->periode);
+                $this->import_key     = $this->import_key;
+                
+                $this->db->free($resql);
 
                 return 1;
             }
@@ -97,15 +116,32 @@ class ChargeSociales extends CommonObject
             {
                 return 0;
             }
-            $this->db->free($resql);
         }
         else
         {
-            $this->error=$this->db->error();
+            $this->error=$this->db->lasterror();
             return -1;
         }
     }
 
+	/**
+	 * Check if a social contribution can be created into database
+	 *
+	 * @return	boolean		True or false
+	 */
+	function check()
+	{
+		$newamount=price2num($this->amount,'MT');
+
+        // Validation parametres
+        if (! $newamount > 0 || empty($this->date_ech) || empty($this->periode))
+        {
+            return false;
+        }
+
+
+		return true;
+	}
 
     /**
      *      Create a social contribution into database
@@ -117,26 +153,32 @@ class ChargeSociales extends CommonObject
     {
     	global $conf;
 
+        $now=dol_now();
+
         // Nettoyage parametres
         $newamount=price2num($this->amount,'MT');
 
-        // Validation parametres
-        if (! $newamount > 0 || empty($this->date_ech) || empty($this->periode))
-        {
-            $this->error="ErrorBadParameter";
-            return -2;
-        }
+		if (!$this->check())
+		{
+			 $this->error="ErrorBadParameter";
+			 return -2;
+		}
 
         $this->db->begin();
 
-        $sql = "INSERT INTO ".MAIN_DB_PREFIX."chargesociales (fk_type, libelle, date_ech, periode, amount, entity)";
-        $sql.= " VALUES (".$this->type.",'".$this->db->escape($this->lib)."',";
-        $sql.= " '".$this->db->idate($this->date_ech)."','".$this->db->idate($this->periode)."',";
-        $sql.= " '".price2num($newamount)."',";
-        $sql.= " ".$conf->entity;
+        $sql = "INSERT INTO ".MAIN_DB_PREFIX."chargesociales (fk_type, fk_account, fk_mode_reglement, libelle, date_ech, periode, amount, entity, fk_user_author, date_creation)";
+        $sql.= " VALUES (".$this->type;
+        $sql.= ", ".($this->fk_account>0?$this->fk_account:'NULL');
+        $sql.= ", ".($this->mode_reglement_id>0?"'".$this->mode_reglement_id."'":"NULL");
+        $sql.= ", '".$this->db->escape($this->lib)."'";
+        $sql.= ", '".$this->db->idate($this->date_ech)."','".$this->db->idate($this->periode)."'";
+        $sql.= ", '".price2num($newamount)."'";
+        $sql.= ", ".$conf->entity;
+        $sql.= ", ".$user->id;
+        $sql.= ", '".$this->db->idate($now)."'";
         $sql.= ")";
 
-        dol_syslog(get_class($this)."::create sql=".$sql);
+        dol_syslog(get_class($this)."::create", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -190,8 +232,8 @@ class ChargeSociales extends CommonObject
         // Delete payments
         if (! $error)
         {
-            $sql = "DELETE FROM ".MAIN_DB_PREFIX."paiementcharge where fk_charge='".$this->id."'";
-            dol_syslog(get_class($this)."::delete sql=".$sql);
+            $sql = "DELETE FROM ".MAIN_DB_PREFIX."paiementcharge WHERE fk_charge=".$this->id;
+            dol_syslog(get_class($this)."::delete", LOG_DEBUG);
             $resql=$this->db->query($sql);
             if (! $resql)
             {
@@ -202,8 +244,8 @@ class ChargeSociales extends CommonObject
 
         if (! $error)
         {
-            $sql = "DELETE FROM ".MAIN_DB_PREFIX."chargesociales where rowid='".$this->id."'";
-            dol_syslog(get_class($this)."::delete sql=".$sql);
+            $sql = "DELETE FROM ".MAIN_DB_PREFIX."chargesociales WHERE rowid=".$this->id;
+            dol_syslog(get_class($this)."::delete", LOG_DEBUG);
             $resql=$this->db->query($sql);
             if (! $resql)
             {
@@ -237,12 +279,14 @@ class ChargeSociales extends CommonObject
         $this->db->begin();
 
         $sql = "UPDATE ".MAIN_DB_PREFIX."chargesociales";
-        $sql.= " SET libelle='".$this->db->escape($this->lib)."',";
-        $sql.= " date_ech='".$this->db->idate($this->date_ech)."',";
-        $sql.= " periode='".$this->db->idate($this->periode)."'";
+        $sql.= " SET libelle='".$this->db->escape($this->lib)."'";
+        $sql.= ", date_ech='".$this->db->idate($this->date_ech)."'";
+        $sql.= ", periode='".$this->db->idate($this->periode)."'";
+        $sql.= ", amount='".price2num($this->amount,'MT')."'";
+        $sql.= ", fk_user_modif=".$user->id;
         $sql.= " WHERE rowid=".$this->id;
 
-        dol_syslog(get_class($this)."::update sql=".$sql);
+        dol_syslog(get_class($this)."::update", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -282,14 +326,13 @@ class ChargeSociales extends CommonObject
             if ($this->db->num_rows($result))
             {
                 $obj = $this->db->fetch_object($result);
+                $this->db->free($result);
                 return $obj->amount;
             }
             else
             {
                 return 0;
             }
-
-            $this->db->free($result);
 
         }
         else
@@ -314,29 +357,47 @@ class ChargeSociales extends CommonObject
         if ($return) return 1;
         else return -1;
     }
-
     /**
-     *    Retourne le libelle du statut d'une charge (impaye, payee)
+     *    Remove tag payed on social contribution
      *
-     *    @param	int		$mode       0=libelle long, 1=libelle court, 2=Picto + Libelle court, 3=Picto, 4=Picto + Libelle long
-     *    @return	string        		Label
+     *    @param	User	$user       Object user making change
+     *    @return	int					<0 if KO, >0 if OK
      */
-    function getLibStatut($mode=0)
+    function set_unpaid($user)
     {
-        return $this->LibStatut($this->paye,$mode);
+        $sql = "UPDATE ".MAIN_DB_PREFIX."chargesociales SET";
+        $sql.= " paye = 0";
+        $sql.= " WHERE rowid = ".$this->id;
+        $return = $this->db->query($sql);
+        if ($return) return 1;
+        else return -1;
+    }
+    
+    /**
+     *  Retourne le libelle du statut d'une charge (impaye, payee)
+     *
+     *  @param	int		$mode       	0=long label, 1=short label, 2=Picto + short label, 3=Picto, 4=Picto + long label, 5=short label + picto, 6=Long label + picto
+	 *  @param  double	$alreadypaid	0=No payment already done, >0=Some payments were already done (we recommand to put here amount payed if you have it, 1 otherwise)
+     *  @return	string        			Label
+     */
+    function getLibStatut($mode=0,$alreadypaid=-1)
+    {
+        return $this->LibStatut($this->paye,$mode,$alreadypaid);
     }
 
     /**
-     *    Renvoi le libelle d'un statut donne
+     *  Renvoi le libelle d'un statut donne
      *
-     *    @param	int		$statut        	Id statut
-     *    @param    int		$mode          	0=libelle long, 1=libelle court, 2=Picto + Libelle court, 3=Picto, 4=Picto + Libelle long, 5=Libelle court + Picto
-     *    @return   string        			Label
+     *  @param	int		$statut        	Id statut
+     *  @param  int		$mode          	0=long label, 1=short label, 2=Picto + short label, 3=Picto, 4=Picto + long label, 5=short label + picto, 6=Long label + picto
+	 *  @param  double	$alreadypaid	0=No payment already done, >0=Some payments were already done (we recommand to put here amount payed if you have it, 1 otherwise)
+     *  @return string        			Label
      */
-    function LibStatut($statut,$mode=0)
+    function LibStatut($statut,$mode=0,$alreadypaid=-1)
     {
         global $langs;
         $langs->load('customers');
+        $langs->load('bills');
 
         if ($mode == 0)
         {
@@ -350,33 +411,43 @@ class ChargeSociales extends CommonObject
         }
         if ($mode == 2)
         {
-            if ($statut ==  0) return img_picto($langs->trans("Unpaid"), 'statut1').' '.$langs->trans("Unpaid");
+            if ($statut ==  0 && $alreadypaid <= 0) return img_picto($langs->trans("Unpaid"), 'statut1').' '.$langs->trans("Unpaid");
+            if ($statut ==  0 && $alreadypaid > 0) return img_picto($langs->trans("BillStatusStarted"), 'statut3').' '.$langs->trans("BillStatusStarted");
             if ($statut ==  1) return img_picto($langs->trans("Paid"), 'statut6').' '.$langs->trans("Paid");
         }
         if ($mode == 3)
         {
-            if ($statut ==  0) return img_picto($langs->trans("Unpaid"), 'statut1');
+            if ($statut ==  0 && $alreadypaid <= 0) return img_picto($langs->trans("Unpaid"), 'statut1');
+            if ($statut ==  0 && $alreadypaid > 0) return img_picto($langs->trans("BillStatusStarted"), 'statut3');
             if ($statut ==  1) return img_picto($langs->trans("Paid"), 'statut6');
         }
         if ($mode == 4)
         {
-            if ($statut ==  0) return img_picto($langs->trans("Unpaid"), 'statut1').' '.$langs->trans("Unpaid");
+            if ($statut ==  0 && $alreadypaid <= 0) return img_picto($langs->trans("Unpaid"), 'statut1').' '.$langs->trans("Unpaid");
+            if ($statut ==  0 && $alreadypaid > 0) return img_picto($langs->trans("BillStatusStarted"), 'statut3').' '.$langs->trans("BillStatusStarted");
             if ($statut ==  1) return img_picto($langs->trans("Paid"), 'statut6').' '.$langs->trans("Paid");
         }
         if ($mode == 5)
         {
-            if ($statut ==  0) return $langs->trans("Unpaid").' '.img_picto($langs->trans("Unpaid"), 'statut1');
+            if ($statut ==  0 && $alreadypaid <= 0) return $langs->trans("Unpaid").' '.img_picto($langs->trans("Unpaid"), 'statut1');
+            if ($statut ==  0 && $alreadypaid > 0) return $langs->trans("BillStatusStarted").' '.img_picto($langs->trans("BillStatusStarted"), 'statut3');
             if ($statut ==  1) return $langs->trans("Paid").' '.img_picto($langs->trans("Paid"), 'statut6');
         }
-
+        if ($mode == 6)
+        {
+            if ($statut ==  0 && $alreadypaid <= 0) return $langs->trans("Unpaid").' '.img_picto($langs->trans("Unpaid"), 'statut1');
+            if ($statut ==  0 && $alreadypaid > 0) return $langs->trans("BillStatusStarted").' '.img_picto($langs->trans("BillStatusStarted"), 'statut3');
+            if ($statut ==  1) return $langs->trans("Paid").' '.img_picto($langs->trans("Paid"), 'statut6');
+        }
+        
         return "Error, mode/status not found";
     }
 
 
     /**
-     *  Renvoie nom clicable (avec eventuellement le picto)
+     *  Return clicable name (with picto eventually)
      *
-     *	@param	int		$withpicto		0=Pas de picto, 1=Inclut le picto dans le lien, 2=Picto seul
+     *	@param	int		$withpicto		0=No picto, 1=Include picto into link, 2=Only picto
      * 	@param	int		$maxlen			Longueur max libelle
      *	@return	string					Chaine avec URL
      */
@@ -387,13 +458,14 @@ class ChargeSociales extends CommonObject
         $result='';
 
         if (empty($this->ref)) $this->ref=$this->lib;
+        $label = $langs->trans("ShowSocialContribution").': '.$this->ref;
 
-        $lien = '<a href="'.DOL_URL_ROOT.'/compta/sociales/charges.php?id='.$this->id.'">';
-        $lienfin='</a>';
+        $link = '<a href="'.DOL_URL_ROOT.'/compta/sociales/card.php?id='.$this->id.'" title="'.dol_escape_htmltag($label, 1).'" class="classfortooltip">';
+        $linkend='</a>';
 
-        if ($withpicto) $result.=($lien.img_object($langs->trans("ShowSocialContribution").': '.$this->lib,'bill').$lienfin.' ');
+        if ($withpicto) $result.=($link.img_object($label, 'bill', 'class="classfortooltip"').$linkend.' ');
         if ($withpicto && $withpicto != 2) $result.=' ';
-        if ($withpicto != 2) $result.=$lien.($maxlen?dol_trunc($this->ref,$maxlen):$this->ref).$lienfin;
+        if ($withpicto != 2) $result.=$link.($maxlen?dol_trunc($this->ref,$maxlen):$this->ref).$linkend;
         return $result;
     }
 
@@ -411,7 +483,7 @@ class ChargeSociales extends CommonObject
         $sql.= ' FROM '.MAIN_DB_PREFIX.$table;
         $sql.= ' WHERE '.$field.' = '.$this->id;
 
-        dol_syslog(get_class($this)."::getSommePaiement sql=".$sql, LOG_DEBUG);
+        dol_syslog(get_class($this)."::getSommePaiement", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -437,11 +509,12 @@ class ChargeSociales extends CommonObject
      */
     function info($id)
     {
-        $sql = "SELECT e.rowid, e.tms as datem, e.date_creation as datec, e.date_valid as datev";
-        $sql.= " FROM ".MAIN_DB_PREFIX."chargesociales as e";
+        $sql = "SELECT e.rowid, e.tms as datem, e.date_creation as datec, e.date_valid as datev, e.import_key,";
+        $sql.= " e.fk_user_author, e.fk_user_modif, e.fk_user_valid";
+		$sql.= " FROM ".MAIN_DB_PREFIX."chargesociales as e";
         $sql.= " WHERE e.rowid = ".$id;
 
-        dol_syslog(get_class($this)."::info sql=".$sql);
+        dol_syslog(get_class($this)."::info", LOG_DEBUG);
         $result=$this->db->query($sql);
         if ($result)
         {
@@ -454,7 +527,13 @@ class ChargeSociales extends CommonObject
                 if ($obj->fk_user_author) {
                     $cuser = new User($this->db);
                     $cuser->fetch($obj->fk_user_author);
-                    $this->user_creation     = $cuser;
+                    $this->user_creation = $cuser;
+                }
+
+                if ($obj->fk_user_modif) {
+                    $muser = new User($this->db);
+                    $muser->fetch($obj->fk_user_modif);
+                    $this->user_modification = $muser;
                 }
 
                 if ($obj->fk_user_valid) {
@@ -466,7 +545,7 @@ class ChargeSociales extends CommonObject
                 $this->date_creation     = $this->db->jdate($obj->datec);
                 $this->date_modification = $this->db->jdate($obj->datem);
                 $this->date_validation   = $this->db->jdate($obj->datev);
-
+                $this->import_key        = $obj->import_key;
             }
 
             $this->db->free($result);
@@ -487,8 +566,6 @@ class ChargeSociales extends CommonObject
      */
     function initAsSpecimen()
     {
-        global $user,$langs,$conf;
-
         // Initialize parameters
         $this->id=0;
         $this->ref = 'SPECIMEN';
@@ -504,4 +581,3 @@ class ChargeSociales extends CommonObject
     }
 }
 
-?>

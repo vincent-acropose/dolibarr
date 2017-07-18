@@ -4,7 +4,7 @@
  * Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
  * Copyright (C) 2005      Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2006-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2011 	   Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2011-2013 Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,15 +60,15 @@ if ($action == 'setvalue' && $user->admin)
 	if (! dolibarr_set_const($db, 'LDAP_CONTACT_ACTIVE',GETPOST("activecontact"),'chaine',0,'',$conf->entity)) $error++;
 	if (! dolibarr_set_const($db, 'LDAP_MEMBER_ACTIVE',GETPOST("activemembers"),'chaine',0,'',$conf->entity)) $error++;
 
-	if (! $error)
-  	{
-  		$db->commit();
-  		$mesg='<div class="ok">'.$langs->trans("SetupSaved").'</div>';
-  	}
-  	else
-  	{
-  		$db->rollback();
-		dol_print_error($db);
+    if (! $error)
+    {
+    	$db->commit();
+    	setEventMessages($langs->trans("SetupSaved"), null, 'mesgs');
+    }
+    else
+    {
+    	$db->rollback();
+    	dol_print_error($db);
     }
 }
 
@@ -82,17 +82,16 @@ llxHeader('',$langs->trans("LDAPSetup"),'EN:Module_LDAP_En|FR:Module_LDAP|ES:M&o
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
 
-print_fiche_titre($langs->trans("LDAPSetup"),$linkback,'setup');
+print load_fiche_titre($langs->trans("LDAPSetup"),$linkback,'title_setup');
 
 $head = ldap_prepare_head();
 
 // Test si fonction LDAP actives
 if (! function_exists("ldap_connect"))
 {
-	$mesg.='<div class="error">'.$langs->trans("LDAPFunctionsNotAvailableOnPHP").'</div>';  ;
+	setEventMessages($langs->trans("LDAPFunctionsNotAvailableOnPHP"), null, 'errors');
 }
 
-dol_fiche_head($head, 'ldap', $langs->trans("LDAPSetup"));
 
 $var=true;
 $form=new Form($db);
@@ -100,6 +99,8 @@ $form=new Form($db);
 
 print '<form method="post" action="'.$_SERVER["PHP_SELF"].'?action=setvalue">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+
+dol_fiche_head($head, 'ldap', $langs->trans("LDAPSetup"));
 
 print '<table class="noborder" width="100%">';
 
@@ -135,7 +136,7 @@ if (! empty($conf->societe->enabled))
 	print '</td><td>'.$langs->trans("LDAPDnContactActiveExample").'</td></tr>';
 }
 
-// Synchro adherentt active
+// Synchro member active
 if (! empty($conf->adherent->enabled))
 {
 	$var=!$var;
@@ -143,6 +144,7 @@ if (! empty($conf->adherent->enabled))
 	$arraylist=array();
 	$arraylist['0']=$langs->trans("No");
 	$arraylist['1']=$langs->trans("DolibarrToLDAP");
+	$arraylist['ldap2dolibarr']=$langs->trans("LDAPToDolibarr").' ('.$langs->trans("SupportedForLDAPImportScriptOnly").')';
 	print $form->selectarray('activemembers',$arraylist,$conf->global->LDAP_MEMBER_ACTIVE);
 	print '</td><td>'.$langs->trans("LDAPDnMemberActiveExample").'</td></tr>';
 }
@@ -235,15 +237,15 @@ else
 {
 	print '<input size="25" type="text" name="pass" value="'.$conf->global->LDAP_ADMIN_PASS.'">';
 }
-print '</td><td>secret</td></tr>';
+print '</td><td>'.$langs->trans('Password').' (ex: secret)</td></tr>';
 
 print '</table>';
 
-print '<center><input type="submit" class="button" value="'.$langs->trans("Modify").'"></center>';
+dol_fiche_end();
+
+print '<div class="center"><input type="submit" class="button" value="'.$langs->trans("Modify").'"></div>';
 
 print '</form>';
-
-print '</div>';
 
 print '<br>';
 
@@ -263,7 +265,7 @@ if (function_exists("ldap_connect"))
 		$ldap = new Ldap();	// Les parametres sont passes et recuperes via $conf
 
 		$result = $ldap->connect_bind();
-		if ($result)
+		if ($result > 0)
 		{
 			// Test ldap connect and bind
 			print img_picto('','info').' ';
@@ -323,9 +325,5 @@ if (function_exists("ldap_connect"))
 	}
 }
 
-dol_htmloutput_mesg($mesg);
-
-$db->close();
-
 llxFooter();
-?>
+$db->close();

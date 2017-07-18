@@ -46,7 +46,7 @@ if ($action == 'convert')
 
 llxHeader();
 
-print_fiche_titre($langs->trans("Tables")." ".ucfirst($conf->db->type),'','setup');
+print load_fiche_titre($langs->trans("Tables")." ".ucfirst($conf->db->type),'','title_setup');
 
 
 // Define request to get table description
@@ -66,6 +66,11 @@ else if ($conf->db->type == 'mssql')
 	//$sqls[0] = "";
 	//$base=3;
 }
+else if ($conf->db->type == 'sqlite' || $conf->db->type == 'sqlite3')
+{
+	//$sql = "SELECT name, type FROM sqlite_master";
+	$base = 4;
+}
 
 
 if (! $base)
@@ -76,7 +81,8 @@ else
 {
 	if ($base == 1)
 	{
-		print '<table class="noborder">';
+        print '<div class="div-table-responsive-no-min">';
+	    print '<table class="noborder">';
 		print '<tr class="liste_titre">';
 		print '<td>'.$langs->trans("TableName").'</td>';
 		print '<td colspan="2">'.$langs->trans("Type").'</td>';
@@ -103,7 +109,7 @@ else
 			{
 				$obj = $db->fetch_object($resql);
 				$var=!$var;
-				print "<tr $bc[$var]>";
+				print "<tr ".$bc[$var].">";
 
 				print '<td><a href="dbtable.php?table='.$obj->Name.'">'.$obj->Name.'</a></td>';
 				print '<td>'.$obj->Engine.'</td>';
@@ -129,11 +135,13 @@ else
 			}
 		}
 		print '</table>';
+		print '</div>';
 	}
 
 	if ($base == 2)
 	{
-		print '<table class="noborder">';
+        print '<div class="div-table-responsive-no-min">';
+	    print '<table class="noborder">';
 		print '<tr class="liste_titre">';
 		print '<td>'.$langs->trans("TableName").'</td>';
 		print '<td>Nb of tuples</td>';
@@ -156,7 +164,7 @@ else
 			{
 				$row = $db->fetch_row($resql);
 				$var=!$var;
-				print "<tr $bc[$var]>";
+				print "<tr ".$bc[$var].">";
 				print '<td>'.$row[0].'</td>';
 				print '<td align="right">'.$row[1].'</td>';
 				print '<td align="right">'.$row[2].'</td>';
@@ -168,9 +176,46 @@ else
 			}
 		}
 		print '</table>';
+		print '</div>';
+	}
+
+	if ($base == 4)
+	{
+		// Sqlite by PDO or by Sqlite3
+        print '<div class="div-table-responsive-no-min">';
+	    print '<table class="noborder">';
+		print '<tr class="liste_titre">';
+		print '<td>'.$langs->trans("TableName").'</td>';
+		print '<td>'.$langs->trans("NbOfRecord").'</td>';
+		print "</tr>\n";
+
+		$sql = "SELECT name, type FROM sqlite_master where type='table' and name not like 'sqlite%' ORDER BY name";
+		$resql = $db->query($sql);
+
+		if ($resql)
+		{
+			$var=True;
+			while ($row = $db->fetch_row($resql)) {
+
+				$rescount = $db->query("SELECT COUNT(*) FROM " . $row[0]);
+				if ($rescount) {
+					$row_count = $db->fetch_row($rescount);
+					$count = $row_count[0];
+				} else {
+					$count = '?';
+				}
+
+				print "<tr ".$bc[$var].">";
+				print '<td>'.$row[0].'</td>';
+				print '<td>'.$count.'</td>';
+				print '</tr>';
+			}
+		}
+
+		print '</table>';
+		print '</div>';
 	}
 }
 
 llxFooter();
 $db->close();
-?>

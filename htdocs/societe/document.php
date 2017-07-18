@@ -3,6 +3,8 @@
  * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010      Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
+ * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,7 +66,7 @@ if ($id > 0 || ! empty($ref))
 	$result = $object->fetch($id, $ref);
 
 	$upload_dir = $conf->societe->multidir_output[$object->entity] . "/" . $object->id ;
-	$courrier_dir = $conf->societe->multidir_output[$object->entity] . "/courrier/" . get_exdir($object->id);
+	$courrier_dir = $conf->societe->multidir_output[$object->entity] . "/courrier/" . get_exdir($object->id,0,0,0,$object,'thirdparty');
 }
 
 
@@ -72,31 +74,7 @@ if ($id > 0 || ! empty($ref))
  * Actions
  */
 
-// TODO Use an include to mutualize this code for action sendit and confirm_deletefile
-
-// Post file
-if (GETPOST('sendit') && ! empty($conf->global->MAIN_UPLOAD_DOC))
-{
-	if ($object->id)
-	{
-		dol_add_file_process($upload_dir,0,1,'userfile');
-	}
-}
-
-// Delete file
-if ($action == 'confirm_deletefile' && $confirm == 'yes')
-{
-	if ($object->id)
-	{
-		$file = $upload_dir . "/" . GETPOST('urlfile');	// Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
-
-		$ret=dol_delete_file($file,0,0,0,$object);
-		if ($ret) setEventMessage($langs->trans("FileWasRemoved", GETPOST('urlfile')));
-		else setEventMessage($langs->trans("ErrorFailToDeleteFile", GETPOST('urlfile')), 'errors');
-    	header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
-    	exit;
-	}
-}
+include_once DOL_DOCUMENT_ROOT . '/core/actions_linkedfiles.inc.php';
 
 
 /*
@@ -105,13 +83,15 @@ if ($action == 'confirm_deletefile' && $confirm == 'yes')
 
 $form = new Form($db);
 
+$title=$langs->trans("ThirdParty").' - '.$langs->trans("Files");
+if (! empty($conf->global->MAIN_HTML_TITLE) && preg_match('/thirdpartynameonly/',$conf->global->MAIN_HTML_TITLE) && $object->name) $title=$object->name.' - '.$langs->trans("Files");
 $help_url='EN:Module_Third_Parties|FR:Module_Tiers|ES:Empresas';
-llxHeader('',$langs->trans("ThirdParty").' - '.$langs->trans("Files"),$help_url);
+llxHeader('',$title,$help_url);
 
 if ($object->id)
 {
 	/*
-	 * Affichage onglets
+	 * Show tabs
 	 */
 	if (! empty($conf->notification->enabled)) $langs->load("mails");
 	$head = societe_prepare_head($object);
@@ -122,31 +102,31 @@ if ($object->id)
 
 
 	// Construit liste des fichiers
-	$filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+	$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
 	$totalsize=0;
 	foreach($filearray as $key => $file)
 	{
 		$totalsize+=$file['size'];
 	}
 
-
-	print '<table class="border"width="100%">';
-
-	// Ref
-	print '<tr><td width="30%">'.$langs->trans("ThirdPartyName").'</td>';
-	print '<td colspan="3">';
-	print $form->showrefnav($object,'socid','',($user->societe_id?0:1),'rowid','nom');
-	print '</td></tr>';
+    $linkback = '<a href="'.DOL_URL_ROOT.'/societe/list.php">'.$langs->trans("BackToList").'</a>';
+	
+    dol_banner_tab($object, 'socid', $linkback, ($user->societe_id?0:1), 'rowid', 'nom');
+        
+    print '<div class="fichecenter">';
+    
+    print '<div class="underbanner clearboth"></div>';
+	print '<table class="border centpercent">';
 
 	// Prefix
 	if (! empty($conf->global->SOCIETE_USEPREFIX))  // Old not used prefix field
 	{
-		print '<tr><td>'.$langs->trans('Prefix').'</td><td colspan="3">'.$object->prefix_comm.'</td></tr>';
+		print '<tr><td class="titlefield">'.$langs->trans('Prefix').'</td><td colspan="3">'.$object->prefix_comm.'</td></tr>';
 	}
 
 	if ($object->client)
 	{
-		print '<tr><td>';
+		print '<tr><td class="titlefield">';
 		print $langs->trans('CustomerCode').'</td><td colspan="3">';
 		print $object->code_client;
 		if ($object->check_codeclient() <> 0) print ' <font class="error">('.$langs->trans("WrongCustomerCode").')</font>';
@@ -155,41 +135,30 @@ if ($object->id)
 
 	if ($object->fournisseur)
 	{
-		print '<tr><td>';
+		print '<tr><td class="titlefield">';
 		print $langs->trans('SupplierCode').'</td><td colspan="3">';
 		print $object->code_fournisseur;
 		if ($object->check_codefournisseur() <> 0) print ' <font class="error">('.$langs->trans("WrongSupplierCode").')</font>';
 		print '</td></tr>';
 	}
 
-	// Nbre fichiers
-	print '<tr><td>'.$langs->trans("NbOfAttachedFiles").'</td><td colspan="3">'.count($filearray).'</td></tr>';
+	// Number of files
+	print '<tr><td class="titlefield">'.$langs->trans("NbOfAttachedFiles").'</td><td colspan="3">'.count($filearray).'</td></tr>';
 
-	//Total taille
+	// Total size
 	print '<tr><td>'.$langs->trans("TotalSizeOfAttachedFiles").'</td><td colspan="3">'.$totalsize.' '.$langs->trans("bytes").'</td></tr>';
 
 	print '</table>';
 
 	print '</div>';
+	
+	dol_fiche_end();
 
-	/*
-	 * Confirmation suppression fichier
-	 */
-	if ($action == 'delete')
-	{
-		$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&urlfile='.urlencode(GETPOST("urlfile")), $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile', '', 0, 1);
-		if ($ret == 'html') print '<br>';
-	}
-
-	$formfile=new FormFile($db);
-
-	// Show upload form
-	$formfile->form_attach_new_file($_SERVER["PHP_SELF"].'?id='.$object->id,'',0,0,$user->rights->societe->creer,50,$object);
-
-	// List of document
-	$formfile->list_of_documents($filearray,$object,'societe');
-
-	print "<br><br>";
+	$modulepart = 'societe';
+	$permission = $user->rights->societe->creer;
+	$permtoedit = $user->rights->societe->creer;
+	$param = '&id=' . $object->id;
+	include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_post_headers.tpl.php';
 }
 else
 {
@@ -199,4 +168,3 @@ else
 
 llxFooter();
 $db->close();
-?>

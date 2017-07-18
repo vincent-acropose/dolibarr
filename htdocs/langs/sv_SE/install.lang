@@ -1,46 +1,38 @@
-/*
- * Language code: sv_SV
- * Automatic generated via autotranslator.php tool
- * Generation date 2010-08-28 13:09:36
- */
-
-
-// START - Lines generated via autotranslator.php tool (2010-08-28 13:09:36).
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - install
 InstallEasy=Följ bara instruktionerna steg för steg.
-MiscellanousChecks=Förutsättningarna läs
-DolibarrWelcome=Välkommen till Dolibarr
+MiscellaneousChecks=Förutsättningar kontrolleras
 ConfFileExists=Konfigurationsfilen <b>%s</b> finns.
-ConfFileDoesNotExists=Konfigurationsfilen <b>%s</b> finns inte!
 ConfFileDoesNotExistsAndCouldNotBeCreated=Konfigurationsfilen <b>%s</b> finns inte och kunde inte skapas!
 ConfFileCouldBeCreated=Konfigurationsfil <b>%s</b> skulle kunna skapas.
-ConfFileIsNotWritable=Konfigurationsfilen <b>%s</b> är inte skrivbar. Kontrollera behörigheter. För den första installationen, måste din webbserver beviljas för att kunna skriva i denna fil under konfigurationen (&quot;chmod 666&quot; till exempel på en UNIX-liknande OS).
+ConfFileIsNotWritable=Konfigurationsfilen <b>%s</b> är inte skrivbar. Kontrollera behörigheter. För den första installationen, måste din webbserver beviljas för att kunna skriva i denna fil under konfigurationen ("chmod 666" till exempel på en UNIX-liknande OS).
 ConfFileIsWritable=Konfigurationsfilen <b>%s</b> är skrivbar.
+ConfFileReload=Ladda all information från konfigurationsfilen.
 PHPSupportSessions=Detta stöder PHP sessioner.
 PHPSupportPOSTGETOk=Detta stöder PHP variabler POST och GET.
 PHPSupportPOSTGETKo=Det är möjligt din PHP-installation inte stöder variabler POST eller GET. Kontrollera din parameter <b>variables_order</b> i php.ini.
 PHPSupportGD=Denna PHP stöd GD grafiska funktioner.
+PHPSupportCurl=This PHP support Curl.
 PHPSupportUTF8=Denna PHP stöd UTF8 funktioner.
 PHPMemoryOK=Din PHP max session minne är inställt på <b>%s.</b> Detta bör vara nog.
 PHPMemoryTooLow=Din PHP max session minne är inställt på <b>%s</b> byte. Detta bör vara för låg. Ändra din <b>php.ini</b> för att ställa <b>memory_limit</b> parameter till minst <b>%s</b> byte.
 Recheck=Klicka här för en mer signifikant test
 ErrorPHPDoesNotSupportSessions=Din PHP-installation inte stöd sessioner. Denna funktion är skyldig att Dolibarr fungerar. Kolla din PHP-konfiguration.
 ErrorPHPDoesNotSupportGD=Din PHP installation saknar stöd för grafisk funktion GD. Inga diagram kommer att finnas tillgängliga.
+ErrorPHPDoesNotSupportCurl=Your PHP installation does not support Curl.
 ErrorPHPDoesNotSupportUTF8=Din PHP-installation inte stöd för UTF8 funktioner. Dolibarr kan inte fungera korrekt. Lösa det här innan du installerar Dolibarr.
 ErrorDirDoesNotExists=Nummer %s finns inte.
 ErrorGoBackAndCorrectParameters=Gå tillbaka och rätta till felaktiga parametrar.
 ErrorWrongValueForParameter=Du kan ha skrivit fel värde för parametern &quot;%s&quot;.
 ErrorFailedToCreateDatabase=Misslyckades med att skapa databasen %s.
 ErrorFailedToConnectToDatabase=Det gick inte att ansluta till databasen &quot;%s&quot;.
+ErrorDatabaseVersionTooLow=Databasens version (%s) för gammal. Version %s eller senare krävs.
 ErrorPHPVersionTooLow=PHP version gamla också. Version %s krävs.
 ErrorConnectedButDatabaseNotFound=Anslutning till servern framgångsrik, men databasen %s finns inte.
 ErrorDatabaseAlreadyExists=Databas &quot;%s&quot; finns redan.
 IfDatabaseNotExistsGoBackAndUncheckCreate=Om databasen inte finns, gå tillbaka och kontrollera alternativet &quot;Create database&quot;.
 IfDatabaseExistsGoBackAndCheckCreate=Om databasen redan finns, gå tillbaka och avmarkera &quot;Skapa databasen&quot; valen.
+WarningBrowserTooOld=För gammal version av webbläsare. Uppgradering av din webbläsare till en sen utgåva av Firefox, Chrome eller Opera är högeligen rekommenderad.
 PHPVersion=PHP Version
-YouCanContinue=Du kan fortsätta ...
-PleaseBePatient=Ha tålamod ...
 License=Använda licens
 ConfigurationFile=Konfigurationsfil
 WebPagesDirectory=Katalog där webbsidor lagras
@@ -49,7 +41,6 @@ URLRoot=URL Root
 ForceHttps=Tvinga säkra anslutningar (https)
 CheckToForceHttps=Markera detta alternativ för att tvinga säkra anslutningar (https). <br> Detta kräver att webbservern är konfigurerad med ett SSL-certifikat.
 DolibarrDatabase=Dolibarr Database
-DatabaseChoice=Databas val
 DatabaseType=Databas typ
 DriverType=Driver typ
 Server=Server
@@ -57,9 +48,8 @@ ServerAddressDescription=Namn eller IP-adress för databasserver, vanligtvis &qu
 ServerPortDescription=Databasservern hamn. Håll tom om okänd.
 DatabaseServer=Databasservern
 DatabaseName=Databas namn
-Login=Inloggning
+DatabasePrefix=Databas prefix tabellen
 AdminLogin=Logga in för Dolibarr databas ägaren.
-Password=Lösenord
 PasswordAgain=Skriv lösenordet en andra gång
 AdminPassword=Lösenord för Dolibarr databas ägaren.
 CreateDatabase=Skapa databas
@@ -67,15 +57,11 @@ CreateUser=Skapa ägare
 DatabaseSuperUserAccess=Databasserver - superanvändare tillgång
 CheckToCreateDatabase=Kryssrutan om databasen inte existerar och måste skapas. <br> I så fall måste du fylla i login / lösenord för superanvändare konto längst ner på denna sida.
 CheckToCreateUser=Kryssrutan om databas ägaren inte existerar och måste skapas. <br> I så fall måste du välja sin inloggning och lösenord och fylla i användarnamn / lösenord för superanvändaren konto längst ner på denna sida. Om denna ruta är markerad, ägare databas och lösenord måste finns.
-Experimental=(Experimentell)
 DatabaseRootLoginDescription=Logga in på användaren möjlighet att skapa nya databaser eller nya användare, värdelösa om din databas och databasen inloggning redan finns (som när du är värd ett webbhotell leverantör).
 KeepEmptyIfNoPassword=Lämna tomt om användaren har inget lösenord (undvik detta)
 SaveConfigurationFile=Spara värden
-ConfigurationSaving=Spara konfigurationsfilen
 ServerConnection=Serveranslutning
-DatabaseConnection=Databasanslutning
 DatabaseCreation=Databas skapas
-UserCreation=Skapande av användare
 CreateDatabaseObjects=Databasobjekt skapande
 ReferenceDataLoading=Referensdata lastning
 TablesAndPrimaryKeysCreation=Tabeller och primärnycklar skapande
@@ -91,21 +77,19 @@ SetupEnd=Slutet av installationen
 SystemIsInstalled=Denna installation är klar.
 SystemIsUpgraded=Dolibarr har uppgraderats med framgång.
 YouNeedToPersonalizeSetup=Du måste konfigurera Dolibarr till era behov (utseende, funktioner, ...). För att göra detta, följ länken nedan:
-AdminLoginCreatedSuccessfuly=Dolibarr administratören logik <b>&quot;%s&quot;</b> skapade successfuly.
+AdminLoginCreatedSuccessfuly=Dolibarr administrator login '<b>%s</b>' created successfully.
 GoToDolibarr=Gå till Dolibarr
 GoToSetupArea=Gå till Dolibarr (setup-området)
 MigrationNotFinished=Version av databasen är inte helt uppdaterad, så du måste köra uppgraderingen igen.
 GoToUpgradePage=Gå till uppgradering sida igen
-Examples=Exempel på
 WithNoSlashAtTheEnd=Utan ett snedstreck &quot;/&quot; i slutet
 DirectoryRecommendation=Det är rekommenderat att använda en katalog utanför din katalog av dina webbsidor.
 LoginAlreadyExists=Redan finns
 DolibarrAdminLogin=Dolibarr admin logik
 AdminLoginAlreadyExists=Dolibarr administratörskonto <b>&quot;%s&quot;</b> finns redan.
+FailedToCreateAdminLogin=Failed to create Dolibarr administrator account.
 WarningRemoveInstallDir=Varning, av säkerhetsskäl, när installera eller uppgradera är klar, bör du ta bort <b>installationskatalogen eller döp om den till install.lock för att undvika dess skadliga användning.</b>
-ThisPHPDoesNotSupportTypeBase=Denna PHP-system stöder inte alla gränssnitt för att få tillgång %s databas typ
 FunctionNotAvailableInThisPHP=Ej tillgängligt för denna PHP
-MigrateScript=Migration script
 ChoosedMigrateScript=Välj migration script
 DataMigration=Migrering av data
 DatabaseMigration=Struktur databas migration
@@ -117,33 +101,24 @@ Upgrade=Uppgradera
 UpgradeDesc=Använd detta läge om du har ersatt gamla Dolibarr filer med filer från en nyare version. Detta kommer att uppgradera din databas och data.
 Start=Start
 InstallNotAllowed=Setup tillåts inte av <b>conf.php</b> behörigheter
-NotAvailable=Inte tillgänglig
 YouMustCreateWithPermission=Du måste skapa filen %s och sätta skrivrättigheter på den för den webbserver under installationsprocessen.
 CorrectProblemAndReloadPage=Vänligen rätta till problemet och pressen F5 ladda om sidan.
 AlreadyDone=Redan har övergått
 DatabaseVersion=Databas version
 ServerVersion=Databasservern version
 YouMustCreateItAndAllowServerToWrite=Du måste skapa denna katalog och möjliggöra för webbservern att skriva in i den.
-CharsetChoice=Teckenuppsättning val
-CharacterSetClient=Teckenuppsättning som används för genererade HTML-sidor
-CharacterSetClientComment=Välj teckenuppsättning för visning på webben. <br/> Standard föreslagna teckenuppsättning är en av din databas.
 DBSortingCollation=Tecken sorteringsordning
-DBSortingCollationComment=Välj sida kod som definierar karaktärens sorteringsordningen används av databasen. Denna parameter kallas även &quot;sammanställning&quot; av vissa databaser. <br/> Denna parameter kan inte definieras om databasen redan finns.
-CharacterSetDatabase=Teckenuppsättningen för databasen
-CharacterSetDatabaseComment=Välj teckenuppsättning som söks för databas skapas. <br/> Denna parameter kan inte definieras om databasen redan finns.
 YouAskDatabaseCreationSoDolibarrNeedToConnect=Du ber att skapa databasen <b>%s,</b> men för detta Dolibarr behöver ansluta till servern <b>%s</b> med super user <b>%s</b> behörigheter.
 YouAskLoginCreationSoDolibarrNeedToConnect=Du ber att skapa login <b>%s</b> databas, men för detta Dolibarr behöver ansluta till servern <b>%s</b> med super user <b>%s</b> behörigheter.
 BecauseConnectionFailedParametersMayBeWrong=Som anslutning misslyckades, måste värd-eller super parametrar användaren vara fel.
 OrphelinsPaymentsDetectedByMethod=Orphans betalning påvisas med metoden %s
 RemoveItManuallyAndPressF5ToContinue=Ta bort den manuellt och trycka på F5 för att fortsätta.
-KeepDefaultValuesWamp=Du använder Dolibarr inställningsguiden från DoliWamp, värden så som här föreslås är redan optimerade. Ändra dem bara om du vet vad du gör.
-KeepDefaultValuesDeb=Du använder Dolibarr inställningsguiden från en Ubuntu eller Debian, så värden som här föreslås är redan optimerade. Endast lösenord i databasen ägaren för att skapa måste fyllas. Ändra andra parametrar om du vet vad du gör.
-KeepDefaultValuesMamp=Du använder Dolibarr inställningsguiden från DoliMamp, värden så som här föreslås är redan optimerade. Ändra dem bara om du vet vad du gör.
 FieldRenamed=Fält bytt namn
 IfLoginDoesNotExistsCheckCreateUser=Om inloggningen inte finns ännu, måste du kontrollera alternativet &quot;Skapa användare&quot;
 ErrorConnection=Server <b>&quot;%s&quot;,</b> databasens namn <b>&quot;%s&quot;</b> login <b>&quot;%s&quot;</b> eller databas lösenord kan vara felaktiga eller PHP klientversionen kan vara för gamla, medan databas version.
 InstallChoiceRecommanded=Rekommenderat val att installera version <b>%s</b> från din nuvarande version <b>%s</b>
 InstallChoiceSuggested=<b>Installera val föreslås av installationsprogrammet.</b>
+MigrateIsDoneStepByStep=De riktade versionen (%s) har en lucka på flera versioner, så installerar guiden kommer tillbaka att föreslå nästa migration när detta kommer att vara klar.
 CheckThatDatabasenameIsCorrect=Kontrollera att databasen namnet <b>&quot;%s&quot;</b> är korrekt.
 IfAlreadyExistsCheckOption=Om detta namn är korrekta och att databasen ännu inte finns, måste du kontrollera alternativet &quot;Create database&quot;.
 OpenBaseDir=PHP openbasedir parameter
@@ -153,13 +128,26 @@ NextStepMightLastALongTime=Aktuella steget kan ta flera minuter. Vänta tills n�
 MigrationCustomerOrderShipping=Migrera leverans för kundorder lagring
 MigrationShippingDelivery=Bli lagring av frakt
 MigrationShippingDelivery2=Bli lagring av sjöfarten 2
+MigrationFinished=Migration färdiga
+LastStepDesc=<strong>Sista steget:</strong> Definiera här login och lösenord som du planerar att använda för att ansluta till programmet. Tappa inte detta eftersom det är det konto för att administrera alla andra.
+ActivateModule=Aktivera modul %s
+ShowEditTechnicalParameters=Klicka här för att visa / redigera avancerade parametrar (expertläge)
+WarningUpgrade=Warning:\nDid your run a database backup first?\nThis is highly recommanded: for example, due to some bugs into databases systems (for example mysql version 5.5.40/41/42/43), some data or tables may be lost during this process, so it is highly recommanded to have a complete dump of your database before starting migration.\n\nClick OK to start migration process...
+ErrorDatabaseVersionForbiddenForMigration=Din databas är av version %s. Den har en kritisk bugg vilket gör dataförluster om du gör strukturförändringar på din databas, som det krävs av migrationsprocessen. För detta skäl, kommer migrationen inte tillåtas förrän du uppgraderat din databas till en nyare fast version (lista över kända buggade versioner:%s)
+KeepDefaultValuesWamp=Du använder Dolibarr inställningsguiden från DoliWamp, värden så som här föreslås är redan optimerade. Ändra dem bara om du vet vad du gör.
+KeepDefaultValuesDeb=Du använder Dolibarr inställningsguiden från en Ubuntu eller Debian, så värden som här föreslås är redan optimerade. Endast lösenord i databasen ägaren för att skapa måste fyllas. Ändra andra parametrar om du vet vad du gör.
+KeepDefaultValuesMamp=Du använder Dolibarr inställningsguiden från DoliMamp, värden så som här föreslås är redan optimerade. Ändra dem bara om du vet vad du gör.
+KeepDefaultValuesProxmox=Du använder Dolibarr inställningsguiden från en Proxmox virtuell apparat, så som föreslås här är redan optimerade. Ändra dem bara om du vet vad du gör.
+
+#########
+# upgrade
 MigrationFixData=Fix för denormalized data
 MigrationOrder=Migrering av data för kundens order
 MigrationSupplierOrder=Migrering av data för leverantörens order
 MigrationProposal=Migrering av data för kommersiella förslag
 MigrationInvoice=Migrering av data för kundens fakturor
 MigrationContract=Migrering av data för kontrakt
-MigrationSuccessfullUpdate=Bli framgångsrik
+MigrationSuccessfullUpdate=Upgrade successfull
 MigrationUpdateFailed=Misslyckades uppgraderingsprocessen
 MigrationRelationshipTables=Migrering av data för relation tabeller (%s)
 MigrationPaymentsUpdate=Betalning data korrigering
@@ -173,7 +161,7 @@ MigrationContractsLineCreation=Skapa kontrakt linje för %s kontrakt ref
 MigrationContractsNothingToUpdate=Inga fler saker att göra
 MigrationContractsFieldDontExist=Fält fk_facture inte existerar längre. Ingenting att göra.
 MigrationContractsEmptyDatesUpdate=Kontrakt tom datum korrigering
-MigrationContractsEmptyDatesUpdateSuccess=Kontrakt emtpy datum korrigering gjort successfuly
+MigrationContractsEmptyDatesUpdateSuccess=Contract emtpy date correction done successfully
 MigrationContractsEmptyDatesNothingToUpdate=Inga kontrakt tom datum för att korrigera
 MigrationContractsEmptyCreationDatesNothingToUpdate=Inget avtal datum för skapande att korrigera
 MigrationContractsInvalidDatesUpdate=Bad valuteringsdag kontrakt korrigering
@@ -181,13 +169,13 @@ MigrationContractsInvalidDateFix=Rätt kontrakt %s (Contract datum = %s, som bö
 MigrationContractsInvalidDatesNumber=%s kontrakt modifierade
 MigrationContractsInvalidDatesNothingToUpdate=Inget datum med dålig värde för att korrigera
 MigrationContractsIncoherentCreationDateUpdate=Dåligt värde kontraktet datum för skapande korrigering
-MigrationContractsIncoherentCreationDateUpdateSuccess=Dåligt värde kontraktet datum för skapande korrigering gjort framgångsrikt
+MigrationContractsIncoherentCreationDateUpdateSuccess=Bad value contract creation date correction done successfully
 MigrationContractsIncoherentCreationDateNothingToUpdate=Inget dåligt värde för kontrakt skapande datum för att korrigera
 MigrationReopeningContracts=Öppna kontraktet stängs av misstag
 MigrationReopenThisContract=Öppna kontrakt %s
 MigrationReopenedContractsNumber=%s kontrakt modifierade
 MigrationReopeningContractsNothingToUpdate=Ingen stängd kontrakt för att öppna
-MigrationBankTransfertsUpdate=Uppdatera kopplingar mellan bank transaktion och en banköverföring
+MigrationBankTransfertsUpdate=Update links between bank entry and a bank transfer
 MigrationBankTransfertsNothingToUpdate=Alla länkar är uppdaterade
 MigrationShipmentOrderMatching=Sendings kvitto uppdatering
 MigrationDeliveryOrderMatching=Leveranskvitto uppdatering
@@ -198,24 +186,13 @@ MigrationDeliveryAddress=Uppdatera leveransadress i transporter
 MigrationProjectTaskActors=Migrering av data för llx_projet_task_actors bord
 MigrationProjectUserResp=Data migrationsområdet fk_user_resp av llx_projet till llx_element_contact
 MigrationProjectTaskTime=Uppdatera tid i sekunder
-// STOP - Lines generated via autotranslator.php tool (2010-08-28 13:14:40).
-
-
-// START - Lines generated via autotranslator.php tool (2011-10-10 02:45:33).
-// Reference language: en_US -> sv_SE
-MigrateIsDoneStepByStep=De riktade versionen (%s) har en lucka på flera versioner, så installerar guiden kommer tillbaka att föreslå nästa migration när detta kommer att vara klar.
-MigrationFinished=Migration färdiga
-LastStepDesc=<strong>Sista steget:</strong> Definiera här login och lösenord som du planerar att använda för att ansluta till programmet. Tappa inte detta eftersom det är det konto för att administrera alla andra.
 MigrationActioncommElement=Uppdatera uppgifter om åtgärder
-// STOP - Lines generated via autotranslator.php tool (2011-10-10 10:33:48).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 17:32:03).
-// Reference language: en_US -> sv_SE
-ConfFileReload=Ladda all information från konfigurationsfilen.
-WarningPHPVersionTooLow=PHP version för gammal. Version %s eller flera förväntas. Denna version bör göra det möjligt installera, men stöds inte.
-DatabasePrefix=Databas prefix tabellen
-KeepDefaultValuesProxmox=Du använder Dolibarr inställningsguiden från en Proxmox virtuell apparat, så som föreslås här är redan optimerade. Ändra dem bara om du vet vad du gör.
-ActivateModule=Aktivera modul %s
 MigrationPaymentMode=Datamigrering betalning mode
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 17:32:18).
+MigrationCategorieAssociation=Migreringskategorier
+MigrationEvents=Överföring av händelser för att lägga till händelseägaren i uppdragslista
+MigrationRemiseEntity=Update entity field value of llx_societe_remise
+MigrationRemiseExceptEntity=Update entity field value of llx_societe_remise_except
+MigrationReloadModule=Reload module %s
+ShowNotAvailableOptions=Visa ej tillgängliga val
+HideNotAvailableOptions=Dölj ej tillgängliga val
+ErrorFoundDuringMigration=Error were reported during migration process so next step is not available. To ignore errors, you can <a href="%s">click here</a>, but application or some features may not work correctly until fixed.

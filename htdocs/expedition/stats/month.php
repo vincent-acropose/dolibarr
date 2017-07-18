@@ -34,12 +34,12 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/dolgraph.class.php';
 
 llxHeader();
 
-$WIDTH=500;
-$HEIGHT=200;
+$WIDTH=DolGraph::getDefaultGraphSizeForStats('width');
+$HEIGHT=DolGraph::getDefaultGraphSizeForStats('height');
 
 $mesg = '';
 
-print_fiche_titre($langs->trans("StatisticsOfSendings").' '.$_GET["year"], $mesg);
+print load_fiche_titre($langs->trans("StatisticsOfSendings").' '.$_GET["year"], $mesg);
 
 $stats = new ExpeditionStats($db);
 $data = $stats->getNbExpeditionByMonth($_GET["year"]);
@@ -74,4 +74,3 @@ print '</table>';
 llxFooter();
 
 $db->close();
-?>
