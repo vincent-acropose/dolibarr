@@ -50,9 +50,13 @@ $pagenext = $page + 1;
 $startdate=$enddate='';
 
 if (!empty($_POST['startdatemonth']))
-  $startdate  = dol_mktime(0, 0, 0, $_POST['startdatemonth'],  $_POST['startdateday'],  $_POST['startdateyear']);
+  $startdate  = dol_mktime(0, 0, 0, $_POST['startdatemonth'], $_POST['startdateday'], $_POST['startdateyear']);
+else
+  $startdate  = dol_mktime(0, 0,0, 7, 1, (date("m") >= 7 ) ? date("Y") : date("Y")-1);
 if (!empty($_POST['enddatemonth']))
-  $enddate  = dol_mktime(23, 59, 59, $_POST['enddatemonth'],  $_POST['enddateday'],  $_POST['enddateyear']);
+  $enddate  = dol_mktime(23, 59, 59, $_POST['enddatemonth'], $_POST['enddateday'], $_POST['enddateyear']);
+else
+  $enddate  = dol_mktime(23, 59, 59, 6, 30, (date("m") < 7 ) ? date("Y") : date("Y")+1);
 
 /*
  * View
