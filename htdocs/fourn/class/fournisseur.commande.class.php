@@ -1409,6 +1409,8 @@ class CommandeFournisseur extends CommonOrder
                         if ($result > 0)
                         {
                             $pu           = $prod->fourn_pu;       // Unit price supplier price set by get_buyprice
+                            $pu_ht_devise = $prod->fourn_pu;       // Unit price supplier price set by get_buyprice
+                            $pu = 0;
                             $ref_supplier = $prod->ref_supplier;   // Ref supplier price set by get_buyprice
                         }
                         if ($result == 0)                   // If result == 0, we failed to found the supplier reference price
