@@ -46,8 +46,12 @@ $action = GETPOST('action','alpha');
 $option = GETPOST('option');
 $mode=GETPOST('mode');
 $builddoc_generatebutton=GETPOST('builddoc_generatebutton');
+$day	= GETPOST('day','int');
 $month = GETPOST("month","int");
 $year = GETPOST("year","int");
+$day_lim	= GETPOST('day_lim','int');
+$month_lim	= GETPOST('month_lim','int');
+$year_lim	= GETPOST('year_lim','int');
 $filter = GETPOST("filtre");
 if (GETPOST('button_search') || GETPOST('button_search.x') || GETPOST('button_search_x'))
 {
@@ -70,7 +74,7 @@ $diroutputpdf=$conf->facture->dir_output . '/unpaid/temp';
 if (! $user->rights->societe->client->voir || $socid) $diroutputpdf.='/private/'.$user->id;	// If user has no permission to see all, output dir is specific to user
 
 $resultmasssend='';
-if (GETPOST('buttonsendremind')) 
+if (GETPOST('buttonsendremind'))
 {
 	$action='presend';
 	$mode='sendmassremind';
@@ -86,10 +90,14 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter"))		// Both
 	$search_company="";
 	$search_amount_no_tax="";
 	$search_amount_all_tax="";
+	$day="";
 	$year="";
 	$month="";
 	$filter="";
 	$option="";
+	$day_lim='';
+	$year_lim='';
+	$month_lim='';
 }
 
 
@@ -128,7 +136,7 @@ if ($action == 'presend' && GETPOST('sendmail'))
 		$nbignored = 0;
 
 		$arrayofinvoices=GETPOST('toSend','array');
-		
+
 		$thirdparty=new Societe($db);
 		$invoicetmp=new Facture($db);
 		$listofinvoicesid=array();
@@ -138,7 +146,7 @@ if ($action == 'presend' && GETPOST('sendmail'))
 		{
 			$invoicetmp=new Facture($db);	// must create new instance because instance is saved into $listofinvoicesref array for future use
 			$result=$invoicetmp->fetch($invoiceid);
-			if ($result > 0) 
+			if ($result > 0)
 			{
 				$listoinvoicesid[$invoiceid]=$invoiceid;
 				$thirdpartyid=$invoicetmp->fk_soc?$invoicetmp->fk_soc:$invoicetmp->socid;
@@ -147,16 +155,16 @@ if ($action == 'presend' && GETPOST('sendmail'))
 			}
 		}
 		//var_dump($listofinvoicesref);exit;
-		
+
 		foreach ($listofinvoicesthirdparties as $thirdpartyid)
 		{
 			$result = $thirdparty->fetch($thirdpartyid);
-			if ($result < 0) 
+			if ($result < 0)
 			{
 				dol_print_error($db);
 				exit;
 			}
-			
+
 			// Define recipient $sendto and $sendtocc
 			if (trim($_POST['sendto']))
 			{
@@ -194,9 +202,9 @@ if ($action == 'presend' && GETPOST('sendmail'))
 					$sendtocc = $thirdparty->contact_get_property((int) $_POST['receivercc'],'email');
 				}
 			}
-			
+
 			//var_dump($listofinvoicesref[$thirdpartyid]);
-			
+
 			$attachedfiles=array('paths'=>array(), 'names'=>array(), 'mimes'=>array());
 			$listofqualifiedinvoice=array();
 			$listofqualifiedref=array();
@@ -207,7 +215,7 @@ if ($action == 'presend' && GETPOST('sendmail'))
 				//$object = new Facture($db);
 				//$result = $object->fetch();
 				//var_dump($thirdpartyid.' - '.$invoiceid.' - '.$object->statut);
-				
+
 				if ($object->statut != Facture::STATUS_VALIDATED)
 				{
 					$nbignored++;
@@ -230,7 +238,7 @@ if ($action == 'presend' && GETPOST('sendmail'))
 						$sendto = $object->thirdparty->email;
 					}
 
-					if (empty($sendto)) 
+					if (empty($sendto))
 					{
 						$nbignored++;
 						continue;
@@ -240,8 +248,8 @@ if ($action == 'presend' && GETPOST('sendmail'))
 					{
 						// Create form object
 						$attachedfiles=array(
-								'paths'=>array_merge($attachedfiles['paths'],array($file)), 
-								'names'=>array_merge($attachedfiles['names'],array($filename)), 
+								'paths'=>array_merge($attachedfiles['paths'],array($file)),
+								'names'=>array_merge($attachedfiles['names'],array($filename)),
 								'mimes'=>array_merge($attachedfiles['mimes'],array($mime))
 						);
 					}
@@ -250,14 +258,14 @@ if ($action == 'presend' && GETPOST('sendmail'))
 					$listofqualifiedref[$invoiceid]=$invoice->ref;
 				}
 				else
-				{  
+				{
 					$nbignored++;
 					$langs->load("other");
 					$resultmasssend.='<div class="error">'.$langs->trans('ErrorCantReadFile',$file).'</div>';
 					dol_syslog('Failed to read file: '.$file, LOG_WARNING);
 					continue;
 				}
-				
+
 				//var_dump($listofqualifiedref);
 			}
 
@@ -270,7 +278,7 @@ if ($action == 'presend' && GETPOST('sendmail'))
 				$message = GETPOST('message');
 				$sendtocc = GETPOST('sentocc');
 				$sendtobcc = (empty($conf->global->MAIN_MAIL_AUTOCOPY_INVOICE_TO)?'':$conf->global->MAIN_MAIL_AUTOCOPY_INVOICE_TO);
-	
+
 				$substitutionarray=array(
 					'__ID__' => join(', ',array_keys($listofqualifiedinvoice)),
 					'__EMAIL__' => $thirdparty->email,
@@ -288,9 +296,9 @@ if ($action == 'presend' && GETPOST('sendmail'))
 				$filepath = $attachedfiles['paths'];
 				$filename = $attachedfiles['names'];
 				$mimetype = $attachedfiles['mimes'];
-				
+
 				//var_dump($filepath);
-				
+
 				// Send mail
 				require_once(DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php');
 				$mailfile = new CMailFile($subject,$sendto,$from,$message,$filepath,$mimetype,$filename,$sendtocc,$sendtobcc,$deliveryreceipt,-1);
@@ -318,7 +326,7 @@ if ($action == 'presend' && GETPOST('sendmail'))
 								$actionmsg = dol_concatdesc($actionmsg, $langs->transnoentities('TextUsedInTheMessageBody') . ":");
 								$actionmsg = dol_concatdesc($actionmsg, $message);
 							}
-							
+
 							// Initialisation donnees
 							$object->sendtoid		= 0;
 							$object->actiontypecode	= $actiontypecode;
@@ -326,14 +334,14 @@ if ($action == 'presend' && GETPOST('sendmail'))
 							$object->actionmsg2		= $actionmsg2; // Short text
 							$object->fk_element		= $invid;
 							$object->elementtype	= $invoice->element;
-	
+
 							// Appel des triggers
 							include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
 							$interface=new Interfaces($db);
 							$result=$interface->run_triggers('BILL_SENTBYMAIL',$object,$user,$langs,$conf);
 							if ($result < 0) { $error++; $this->errors=$interface->errors; }
 							// Fin appel triggers
-	
+
 							if (! $error)
 							{
 								$resultmasssend.=$langs->trans("MailSent").': '.$sendto."<br>\n";
@@ -590,14 +598,29 @@ if ($search_montant_ttc) $sql .= " AND f.total_ttc = '".$db->escape($search_mont
 if (GETPOST('sf_ref'))   $sql .= " AND f.facnumber LIKE '%".$db->escape(GETPOST('sf_ref'))."%'";
 if ($month > 0)
 {
-	if ($year > 0)
-	$sql.= " AND f.datef BETWEEN '".$db->idate(dol_get_first_day($year,$month,false))."' AND '".$db->idate(dol_get_last_day($year,$month,false))."'";
+	if ($year > 0 && empty($day))
+		$sql.= " AND f.datef BETWEEN '".$db->idate(dol_get_first_day($year,$month,false))."' AND '".$db->idate(dol_get_last_day($year,$month,false))."'";
+	else if ($year > 0 && ! empty($day))
+		$sql.= " AND f.datef BETWEEN '".$db->idate(dol_mktime(0, 0, 0, $month, $day, $year))."' AND '".$db->idate(dol_mktime(23, 59, 59, $month, $day, $year))."'";
 	else
-	$sql.= " AND date_format(f.datef, '%m') = '$month'";
+	$sql.= " AND date_format(f.datef, '%m') = '".$month."'";
 }
 else if ($year > 0)
 {
 	$sql.= " AND f.datef BETWEEN '".$db->idate(dol_get_first_day($year,1,false))."' AND '".$db->idate(dol_get_last_day($year,12,false))."'";
+}
+if ($month_lim > 0)
+{
+	if ($year_lim > 0 && empty($day_lim))
+		$sql.= " AND f.date_lim_reglement BETWEEN '".$db->idate(dol_get_first_day($year_lim,$month_lim,false))."' AND '".$db->idate(dol_get_last_day($year_lim,$month_lim,false))."'";
+		else if ($year_lim > 0 && ! empty($day_lim))
+			$sql.= " AND f.date_lim_reglement BETWEEN '".$db->idate(dol_mktime(0, 0, 0, $month_lim, $day_lim, $year_lim))."' AND '".$db->idate(dol_mktime(23, 59, 59, $month_lim, $day_lim, $year_lim))."'";
+			else
+				$sql.= " AND date_format(f.date_lim_reglement, '%m') = '".$month_lim."'";
+}
+else if ($year_lim > 0)
+{
+	$sql.= " AND f.date_lim_reglement BETWEEN '".$db->idate(dol_get_first_day($year_lim,1,false))."' AND '".$db->idate(dol_get_last_day($year_lim,12,false))."'";
 }
 if ($search_sale > 0) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$search_sale;
 if ($search_user > 0)
@@ -659,13 +682,13 @@ if ($resql)
 	//print_barre_liste($titre,$page,$_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',0);	// We don't want pagination on this page
 
 	$arrayofinvoices=GETPOST('toSend','array');
-	if ($action == 'presend' && count($arrayofinvoices) == 0 && ! GETPOST('cancel')) 
+	if ($action == 'presend' && count($arrayofinvoices) == 0 && ! GETPOST('cancel'))
 	{
 		setEventMessages($langs->trans("InvoiceNotChecked"), null, 'errors');
 		$action='list';
 		$mode='sendmassremind';
 	}
-	else 
+	else
 	{
 		$invoicetmp=new Facture($db);
 		$listofinvoicesid=array();
@@ -674,7 +697,7 @@ if ($resql)
 		foreach($arrayofinvoices as $invoiceid)
 		{
 			$result=$invoicetmp->fetch($invoiceid);
-			if ($result > 0) 
+			if ($result > 0)
 			{
 				$listofinvoicesid[$invoiceid]=$invoiceid;
 				$thirdpartyid=$invoicetmp->fk_soc?$invoicetmp->fk_soc:$invoicetmp->socid;
@@ -714,7 +737,7 @@ if ($resql)
 		{
 			include DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 			$formmail->frommail=dolAddEmailTrackId($formmail->frommail, 'inv'.$object->id);
-		}		
+		}
 		$formmail->withfrom=1;
 		$liste=$langs->trans("AllRecipientSelectedForRemind");
 		if (count($listofinvoicesthirdparties) == 1)
@@ -757,7 +780,7 @@ if ($resql)
 		$formmail->param['returnurl']=$_SERVER["PHP_SELF"].'?id='.$object->id;
 
 		print $formmail->get_form();
-        
+
         dol_fiche_end();
 	}
 
@@ -806,7 +829,7 @@ if ($resql)
     }
 
     print '<table class="tagtable liste'.($moreforfilter?" listwithfilterbefore":"").'">';
-    
+
     print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"f.facnumber","",$param,"",$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('RefCustomer'),$_SERVER["PHP_SELF"],'f.ref_client','',$param,'',$sortfield,$sortorder);
@@ -842,12 +865,16 @@ if ($resql)
     print '<input class="flat" size="6" type="text" name="search_refcustomer" value="'.$search_refcustomer.'">';
     print '</td>';
 	print '<td class="liste_titre" align="center">';
+	if (! empty($conf->global->MAIN_LIST_FILTER_ON_DAY)) print '<input class="flat" type="text" size="1" maxlength="2" name="day" value="'.$day.'">';
 	print '<input class="flat" type="text" size="1" maxlength="2" name="month" value="'.$month.'">';
 	$syear = $year;
 	$formother->select_year($syear?$syear:-1,'year',1, 20, 5);
 	print '</td>';
 	// Late
 	print '<td class="liste_titre" align="center">';
+	if (! empty($conf->global->MAIN_LIST_FILTER_ON_DAY)) print '<input class="flat" type="text" size="1" maxlength="2" name="day_lim" value="'.$day_lim.'">';
+	print '<input class="flat" type="text" size="1" maxlength="2" name="month_lim" value="'.$month_lim.'">';
+	$formother->select_year($year_lim?$year_lim:-1,'year_lim',1, 20, 5);
 	print '<input type="checkbox" name="option" value="late"'.($option == 'late'?' checked':'').'> '.$langs->trans("Late");
 	print '</td>';
 	print '<td class="liste_titre" align="left"><input class="flat" type="text" size="10" name="search_societe" value="'.dol_escape_htmltag($search_societe).'"></td>';
