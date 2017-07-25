@@ -122,6 +122,8 @@ ALTER TABLE llx_actioncomm ADD COLUMN extraparams			varchar(255);
 
 ALTER TABLE llx_bank_account ADD COLUMN extraparams		varchar(255);	
 
+ALTER TABLE llx_bank ADD COLUMN numero_compte varchar(32) NULL; 
+
 -- VMYSQL4.1 ALTER TABLE llx_bank_account MODIFY COLUMN state_id integer DEFAULT NULL;
 -- VPGSQL8.2 ALTER TABLE llx_bank_account MODIFY COLUMN state_id integer USING state_id::integer;
 
@@ -568,3 +570,6 @@ ALTER TABLE llx_blockedlog_authority ADD INDEX signature (signature);
 
 UPDATE llx_bank SET label= '(SupplierInvoicePayment)' WHERE label= 'Règlement fournisseur';
 UPDATE llx_bank SET label= '(CustomerInvoicePayment)' WHERE label= 'Règlement client';
+UPDATE llx_bank SET label= '(payment_salary)' WHERE label LIKE 'Règlement salaire';
+
+ALTER TABLE llx_mailing_cibles MODIFY COLUMN source_url varchar(255);
