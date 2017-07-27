@@ -12,4 +12,5 @@ allow from 51.254.123.25
 allow from 51.254.128.77
 allow from 92.222.94.249
 allow from 172.16.29.1
+allow from 109.69.193.29
 satisfy any

@@ -2180,6 +2180,7 @@ if ($action == 'create')
     }
     foreach($object->lines as $i => $line) {
         $total_line_remise+= pdf_getLineTotalDiscountAmount($object, $i, $langs, 2);
+	if($line->total_ht < 0) $total_line_remise+= -$line->total_ht;
     }
     if (! empty($conf->global->MAIN_SHOW_AMOUNT_BEFORE_DISCOUNT)) {
     	print '<tr><td height="10">' . $langs->trans('AmountHTBeforeDiscount') . '</td>';
