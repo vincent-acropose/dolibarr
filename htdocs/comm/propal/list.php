@@ -68,6 +68,7 @@ $month=GETPOST("month");
 
 $dtrelance_month=GETPOST("dtrelance_month");
 $dtrelance_year=GETPOST("dtrelance_year");
+$archiv=GETPOST("archiv");
 
 // Nombre de ligne pour choix de produit/service predefinis
 $NBLINES=4;
@@ -104,6 +105,8 @@ if (GETPOST("button_removefilter") || GETPOST("button_removefilter_x"))	// Both 
 
 	$dtrelance_month='';
 	$dtrelance_year='';
+
+	$archiv='';
 }
 
 if($object_statut != '')
@@ -158,6 +161,7 @@ if ($sall || $search_product_category > 0) $sql = 'SELECT DISTINCT';
 $sql.= ' s.rowid, s.nom as name, s.town, s.client, s.code_client,';
 $sql.= ' p.rowid as propalid, p.note_private, p.total_ht, p.ref, p.ref_client, p.fk_statut, p.fk_user_author, p.datep as dp, p.fin_validite as dfv,';
 $sql.= ' extra.dt_relance,';
+$sql.= ' extra.archiv,';
 if (! $user->rights->societe->client->voir && ! $socid) $sql .= " sc.fk_soc, sc.fk_user,";
 $sql.= ' u.login';
 $sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s, '.MAIN_DB_PREFIX.'propal as p';
@@ -237,6 +241,10 @@ else if ($dtrelance_year > 0)
 	$sql.= " AND extra.dt_relance BETWEEN '".$db->idate(dol_get_first_day($dtrelance_year,1,false))."' AND '".$db->idate(dol_get_last_day($dtrelance_year,12,false))."'";
 }
 
+if (!empty($archiv)) {
+	$sql.= " AND extra.archiv=1 ";
+}
+
 
 if ($search_sale > 0) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$search_sale;
 if ($search_user > 0)
@@ -283,6 +291,7 @@ if ($result)
 	if ($search_town)		 $param.='&search_town='.$search_town;
 	if ($dtrelance_month)    $param.='&dtrelance_month='.$dtrelance_month;
 	if ($dtrelance_year)     $param.='&dtrelance_year='.$dtrelance_year;
+	if ($archiv)     		 $param.='&archiv='.$archiv;
 
 	print_barre_liste($langs->trans('ListOfProposals').' '.($socid?'- '.$soc->name:''), $page, $_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',$num,$nbtotalofrecords,'title_commercial.png');
 
@@ -340,6 +349,7 @@ if ($result)
 	print_liste_field_titre($langs->trans('AmountHT'),$_SERVER["PHP_SELF"],'p.total_ht','',$param, 'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('Author'),$_SERVER["PHP_SELF"],'u.login','',$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('Status'),$_SERVER["PHP_SELF"],'p.fk_statut','',$param,'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans('Devis archivé'),$_SERVER["PHP_SELF"],'extra.archiv','',$param,'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre('',$_SERVER["PHP_SELF"],"",'','','',$sortfield,$sortorder,'maxwidthsearch ');
 	print "</tr>\n";
 
@@ -384,6 +394,9 @@ if ($result)
 	print '</td>';
 	print '<td class="liste_titre" align="right">';
 	$formpropal->selectProposalStatus($viewstatut,1);
+	print '</td>';
+	print '<td class="liste_titre" align="right">';
+	print '<input type="checkbox" name="archiv" id="archiv" value="1" '.(!empty($archiv)?' checked="checked" ':'').'>';
 	print '</td>';
 
 	print '<td class="liste_titre" align="right">';
@@ -488,6 +501,10 @@ if ($result)
 		print "</td>\n";
 
 		print '<td align="right">'.$objectstatic->LibStatut($objp->fk_statut,5)."</td>\n";
+
+		print '<td align="right">';
+		print '<input type="checkbox" readonly disabled '.(!empty($objp->archiv)?' checked="checked" ':'').'>';
+		print "</td>\n";
 
 		print '<td>&nbsp;</td>';
 
