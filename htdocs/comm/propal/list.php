@@ -333,7 +333,7 @@ if ($result)
 	if (! empty($moreforfilter))
 	{
 	    print '<tr class="liste_titre">';
-	    print '<td class="liste_titre" colspan="11">';
+	    print '<td class="liste_titre" colspan="12">';
 	    print $moreforfilter;
 	    print '</td></tr>';
 	}
