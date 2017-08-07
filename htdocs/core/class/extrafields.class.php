@@ -586,7 +586,7 @@ class ExtraFields
 
 			$sql_del = "DELETE FROM ".MAIN_DB_PREFIX."extrafields";
 			$sql_del.= " WHERE name = '".$attrname."'";
-			$sql_del.= " AND entity = ".($entity==''?$conf->entity:$entity);
+			$sql_del.= " AND entity = ".($entity===''?$conf->entity:$entity);
 			$sql_del.= " AND elementtype = '".$elementtype."'";
 
 			$resql1=$this->db->query($sql_del);
