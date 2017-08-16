@@ -176,6 +176,7 @@ if (empty($reshook))
     	$filter_opcloture="";
     	$mode='';
     	$filter='';
+    	$search_array_options=array();
     }
 }
 
@@ -223,7 +224,7 @@ if ($mode == "5") $sql.= " AND cd.statut = 5";
 if ($filter == "expired") $sql.= " AND cd.date_fin_validite < '".$db->idate($now)."'";
 if ($filter == "notexpired") $sql.= " AND cd.date_fin_validite >= '".$db->idate($now)."'";
 if ($search_name)     $sql.= " AND s.nom LIKE '%".$db->escape($search_name)."%'";
-if ($search_contract) $sql.= " AND c.rowid = '".$db->escape($search_contract)."'";
+if ($search_contract) $sql.= " AND c.ref LIKE '%".$db->escape($search_contract)."%' ";
 if ($search_service)  $sql.= " AND (p.ref LIKE '%".$db->escape($search_service)."%' OR p.description LIKE '%".$db->escape($search_service)."%' OR cd.description LIKE '%".$db->escape($search_service)."%')";
 if ($socid > 0)       $sql.= " AND s.rowid = ".$socid;
 $filter_dateouvertureprevue=dol_mktime(0,0,0,$opouvertureprevuemonth,$opouvertureprevueday,$opouvertureprevueyear);
@@ -234,6 +235,22 @@ if (! empty($filter_opouvertureprevue) && $filter_opouvertureprevue != -1 && $fi
 if (! empty($filter_op1) && $filter_op1 != -1 && $filter_date1 != '') $sql.= " AND cd.date_ouverture ".$filter_op1." '".$db->idate($filter_date1)."'";
 if (! empty($filter_op2) && $filter_op2 != -1 && $filter_date2 != '') $sql.= " AND cd.date_fin_validite ".$filter_op2." '".$db->idate($filter_date2)."'";
 if (! empty($filter_opcloture) && $filter_opcloture != -1 && $filter_datecloture != '') $sql.= " AND cd.date_cloture ".$filter_opcloture." '".$db->idate($filter_datecloture)."'";
+// Add where from extra fields
+foreach ($search_array_options as $key => $val)
+{
+	$crit=$val;
+	$tmpkey=preg_replace('/search_options_/','',$key);
+	$typ=$extrafields->attribute_type[$tmpkey];
+	$mode=0;
+	if (in_array($typ, array('int','double'))) $mode=1;    // Search on a numeric
+	
+	if ($val && ( ($crit != '' && in_array($typ, array('sellist'))) || ! empty($crit)))
+	{
+		$sql .= ' AND ef.'.$tmpkey.'='.$crit;
+	} else if ($val && ( ($crit != '' && ! in_array($typ, array('select'))) || ! empty($crit))) {		
+		$sql .= natural_search('ef.'.$tmpkey, $crit, $mode);
+	}
+}
 $sql .= $db->order($sortfield,$sortorder);
 
 $nbtotalofrecords = '';
@@ -374,7 +391,7 @@ if (is_array($extrafields->attribute_label) && count($extrafields->attribute_lab
             $align=$extrafields->getAlignFlag($key);
 			$sortonfield = "ef.".$key;
 			if (! empty($extrafields->attribute_computed[$key])) $sortonfield='';
-			print_liste_field_titre($langs->trans($extralabels[$key]),$_SERVER["PHP_SELF"],$sortonfield,"",$param,($align?'align="'.$align.'"':''),$sortfield,$sortorder);
+			print_liste_field_titre($extralabels[$key],$_SERVER["PHP_SELF"],$sortonfield,"",$param,($align?'align="'.$align.'"':''),$sortfield,$sortorder);
         }
     }
 }
@@ -454,25 +471,29 @@ if (! empty($arrayfields['cd.date_cloture']['checked']))
 // Extra fields
 if (is_array($extrafields->attribute_label) && count($extrafields->attribute_label))
 {
-    foreach($extrafields->attribute_label as $key => $val)
-    {
-        if (! empty($arrayfields["ef.".$key]['checked']))
-        {
-            $align=$extrafields->getAlignFlag($key);
-            $typeofextrafield=$extrafields->attribute_type[$key];
-            print '<td class="liste_titre'.($align?' '.$align:'').'">';
-            if (in_array($typeofextrafield, array('varchar', 'int', 'double', 'select')))
-            {
-                $crit=$val;
-                $tmpkey=preg_replace('/search_options_/','',$key);
-                $searchclass='';
-                if (in_array($typeofextrafield, array('varchar', 'select'))) $searchclass='searchstring';
-                if (in_array($typeofextrafield, array('int', 'double'))) $searchclass='searchnum';
-                print '<input class="flat'.($searchclass?' '.$searchclass:'').'" size="4" type="text" name="search_options_'.$tmpkey.'" value="'.dol_escape_htmltag($search_array_options['search_options_'.$tmpkey]).'">';
-            }
-            print '</td>';
-        }
-    }
+	foreach($extrafields->attribute_label as $key => $val)
+	{
+		if (! empty($arrayfields["ef.".$key]['checked'])) {
+			$align=$extrafields->getAlignFlag($key);
+			$typeofextrafield=$extrafields->attribute_type[$key];
+			print '<td class="liste_titre'.($align?' '.$align:'').'">';
+			if (in_array($typeofextrafield, array('varchar', 'int', 'double', 'select')) && empty($extrafields->attribute_computed[$key]))
+			{
+				$crit=$val;
+				$tmpkey=preg_replace('/search_options_/','',$key);
+				$searchclass='';
+				if (in_array($typeofextrafield, array('varchar', 'select'))) $searchclass='searchstring';
+				if (in_array($typeofextrafield, array('int', 'double'))) $searchclass='searchnum';
+				print '<input class="flat'.($searchclass?' '.$searchclass:'').'" size="4" type="text" name="search_options_'.$tmpkey.'" value="'.dol_escape_htmltag($search_array_options['search_options_'.$tmpkey]).'">';
+			}
+			else
+			{
+				// for the type as 'checkbox', 'chkbxlst', 'sellist' we should use code instead of id (example: I declare a 'chkbxlst' to have a link with dictionnairy, I have to extend it with the 'code' instead 'rowid')
+				echo $extrafields->showInputField($key, $search_array_options['search_options_'.$key], '', '', 'search_');
+			}
+			print '</td>';
+		}
+	}
 }
 // Fields from hook
 $parameters=array('arrayfields'=>$arrayfields);
