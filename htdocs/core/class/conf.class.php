@@ -124,7 +124,7 @@ class Conf
 	 */
 	function setValues($db)
 	{
-		global $conf;
+		global $conf,$multicompany_backward_compatibility;
 
 		dol_syslog(get_class($this)."::setValues");
 
@@ -132,7 +132,14 @@ class Conf
 		$sql = "SELECT ".$db->decrypt('name')." as name,";
 		$sql.= " ".$db->decrypt('value')." as value, entity";
 		$sql.= " FROM ".MAIN_DB_PREFIX."const";
-		$sql.= " WHERE entity IN (0,".$this->entity.")";
+		if (! empty($conf->global->MULTICOMPANY_BACKWARD_COMPATIBILITY))
+		{
+			$sql.= " WHERE entity IN (0,".(! empty($conf->multicompany->enabled) && ! empty($conf->global->MULTICOMPANY_TRANSVERSE_MODE)?"1,":"").$conf->entity.")";
+		}
+		else
+		{
+			$sql.= " WHERE entity IN (0,".$this->entity.")";
+		}
 		$sql.= " ORDER BY entity";	// This is to have entity 0 first, then entity 1 that overwrite.
 
 		$resql = $db->query($sql);
@@ -194,6 +201,14 @@ class Conf
 			}
 
 		    $db->free($resql);
+		    
+		    // Need to reload all conf
+		    if (! empty($conf->global->MULTICOMPANY_BACKWARD_COMPATIBILITY) && empty($multicompany_backward_compatibility))
+		    {
+		    	$multicompany_backward_compatibility=true;
+		    	$this->setValues($db);
+		    	return;
+		    }
 		}
 
         // Include other local consts.php files and fetch their values to the corresponding database constants.
