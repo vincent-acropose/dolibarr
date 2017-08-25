@@ -457,9 +457,7 @@ if (! defined('NOLOGIN'))
         $passwordtotest	= GETPOST('password','none',2);
         $entitytotest	= (GETPOST('entity','int') ? GETPOST('entity','int') : (!empty($conf->entity) ? $conf->entity : 1));
 
-        // Validation of login/pass/entity
-        // If ok, the variable login will be returned
-        // If error, we will put error message in session under the name dol_loginmesg
+        // Define if we received data to test the login.
         $goontestloop=false;
         if (isset($_SERVER["REMOTE_USER"]) && in_array('http',$authmode)) $goontestloop=true;
         if ($dolibarr_main_authentication == 'forceuser' && ! empty($dolibarr_auto_user)) $goontestloop=true;
@@ -473,6 +471,9 @@ if (! defined('NOLOGIN'))
         	$langs->setDefaultLang($langcode);
         }
 
+        // Validation of login/pass/entity
+        // If ok, the variable login will be returned
+        // If error, we will put error message in session under the name dol_loginmesg
         if ($test && $goontestloop)
         {
         	$login = checkLoginPassEntity($usertotest,$passwordtotest,$entitytotest,$authmode);
@@ -531,9 +532,10 @@ if (! defined('NOLOGIN'))
         // End test login / passwords
         if (! $login || (in_array('ldap',$authmode) && empty($passwordtotest)))	// With LDAP we refused empty password because some LDAP are "opened" for anonymous access so connexion is a success.
         {
-            // We show login page
+            // No data to test login, so we show the login page
 			dol_syslog("--- Access to ".$_SERVER["PHP_SELF"]." showing the login form and exit");
-        	dol_loginfunction($langs,$conf,(! empty($mysoc)?$mysoc:''));
+			if (defined('NOREDIRECTBYMAINTOLOGIN')) return 'ERROR_NOT_LOGGED';
+        	else dol_loginfunction($langs,$conf,(! empty($mysoc)?$mysoc:''));
             exit;
         }
 
@@ -1073,10 +1075,10 @@ function top_htmlhead($head, $title='', $disablejs=0, $disablehead=0, $arrayofjs
         print '<meta name="robots" content="noindex'.($disablenofollow?'':',nofollow').'">'."\n";      				// Do not index
         print '<meta name="viewport" content="width=device-width, initial-scale=1.0">';	// Scale for mobile device
         print '<meta name="author" content="Dolibarr Development Team">'."\n";
-        // Favicon. Note, even if we remove this meta, the browser and android webview try to find a favicon.ico
+        // Favicon
 		$favicon=dol_buildpath('/theme/'.$conf->theme.'/img/favicon.ico',1);
         if (! empty($conf->global->MAIN_FAVICON_URL)) $favicon=$conf->global->MAIN_FAVICON_URL;
-        print '<link rel="shortcut icon" type="image/x-icon" href="'.$favicon.'"/>'."\n";
+        if (empty($conf->dol_use_jmobile)) print '<link rel="shortcut icon" type="image/x-icon" href="'.$favicon.'"/>'."\n";	// Not required into an Android webview
         //if (empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER) && ! GETPOST('textbrowser','int')) print '<link rel="top" title="'.$langs->trans("Home").'" href="'.(DOL_URL_ROOT?DOL_URL_ROOT:'/').'">'."\n";
         if (empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER) && ! GETPOST('textbrowser','int')) print '<link rel="copyright" title="GNU General Public License" href="http://www.gnu.org/copyleft/gpl.html#SEC1">'."\n";
         if (empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER) && ! GETPOST('textbrowser','int')) print '<link rel="author" title="Dolibarr Development Team" href="https://www.dolibarr.org">'."\n";
@@ -1197,7 +1199,7 @@ function top_htmlhead($head, $title='', $disablejs=0, $disablehead=0, $arrayofjs
             print '<!-- Includes JS for JQuery -->'."\n";
             if (defined('JS_JQUERY') && constant('JS_JQUERY')) print '<script type="text/javascript" src="'.JS_JQUERY.'jquery.min.js'.($ext?'?'.$ext:'').'"></script>'."\n";
             else print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/js/jquery.min.js'.($ext?'?'.$ext:'').'"></script>'."\n";
-            if (! empty($conf->global->MAIN_FEATURES_LEVEL))
+            if (! empty($conf->global->MAIN_FEATURES_LEVEL) && ! defined('JS_JQUERY_MIGRATE_DISABLED'))
             {
                 if (defined('JS_JQUERY_MIGRATE') && constant('JS_JQUERY_MIGRATE')) print '<script type="text/javascript" src="'.JS_JQUERY_MIGRATE.'jquery-migrate.min.js'.($ext?'?'.$ext:'').'"></script>'."\n";
                 else print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/js/jquery-migrate.min.js'.($ext?'?'.$ext:'').'"></script>'."\n";
@@ -2000,7 +2002,7 @@ if (! function_exists("llxFooter"))
         }
 
         // Wrapper to manage dropdown
-        if ($conf->use_javascript_ajax)
+        if (! empty($conf->use_javascript_ajax) && ! defined('JS_JQUERY_DISABLE_DROPDOWN'))
         {
             print "\n<!-- JS CODE TO ENABLE dropdown -->\n";
             print '<script type="text/javascript">

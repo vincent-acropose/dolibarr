@@ -82,7 +82,7 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
         //$db->begin();	// This is to have all actions inside a transaction even if test launched without suite.
 
         if (! function_exists('mb_substr')) { print "\n".__METHOD__." function mb_substr must be enabled.\n"; die(); }
-        
+
         print __METHOD__."\n";
     }
 
@@ -122,10 +122,75 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
 
 
 
+    /**
+     * testDolGetFirstLineOfText
+     *
+     * @return void
+     */
+    public function testDolGetFirstLineOfText()
+    {
+    	// Nb of line is same than entry text
+
+    	$input="aaaa";
+    	$result=dolGetFirstLineOfText($input);
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals("aaaa", $result);
+
+    	$input="aaaa\nbbbbbbbbbbbb\n";
+    	$result=dolGetFirstLineOfText($input, 2);
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals("aaaa\nbbbbbbbbbbbb", $result);
+
+    	$input="aaaa<br>bbbbbbbbbbbb<br>";
+    	$result=dolGetFirstLineOfText($input, 2);
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals("aaaa<br>\nbbbbbbbbbbbb", $result);
+
+    	// Nb of line is lower
+
+    	$input="aaaa\nbbbbbbbbbbbb\ncccccc\n";
+    	$result=dolGetFirstLineOfText($input);
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals("aaaa...", $result);
+
+    	$input="aaaa<br>bbbbbbbbbbbb<br>cccccc<br>";
+    	$result=dolGetFirstLineOfText($input);
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals("aaaa...", $result);
+
+    	$input="aaaa\nbbbbbbbbbbbb\ncccccc\n";
+    	$result=dolGetFirstLineOfText($input, 2);
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals("aaaa\nbbbbbbbbbbbb...", $result);
+
+    	$input="aaaa<br>bbbbbbbbbbbb<br>cccccc<br>";
+    	$result=dolGetFirstLineOfText($input, 2);
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals("aaaa<br>\nbbbbbbbbbbbb...", $result);
+
+    	// Nb of line is higher
+
+    	$input="aaaa<br>bbbbbbbbbbbb<br>cccccc";
+    	$result=dolGetFirstLineOfText($input, 100);
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals("aaaa<br>\nbbbbbbbbbbbb<br>\ncccccc", $result, 'dolGetFirstLineOfText with nb 100 a');
+
+    	$input="aaaa<br>bbbbbbbbbbbb<br>cccccc<br>";
+    	$result=dolGetFirstLineOfText($input, 100);
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals("aaaa<br>\nbbbbbbbbbbbb<br>\ncccccc", $result, 'dolGetFirstLineOfText with nb 100 b');
+
+    	$input="aaaa<br>bbbbbbbbbbbb<br>cccccc<br>\n";
+    	$result=dolGetFirstLineOfText($input, 100);
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals("aaaa<br>\nbbbbbbbbbbbb<br>\ncccccc", $result, 'dolGetFirstLineOfText with nb 100 c');
+    }
+
+
 	/**
 	 * testDolBuildPath
 	 *
-	 * @return boolean
+	 * @return void
 	 */
 	public function testDolBuildPath()
 	{
@@ -206,6 +271,15 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
 
 	    //Internet Explorer 11
 	    $user_agent = 'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko';
+	    $tmp=getBrowserInfo($user_agent);
+	    $this->assertEquals('ie',$tmp['browsername']);
+	    $this->assertEquals('11.0',$tmp['browserversion']);
+	    $this->assertEmpty($tmp['phone']);
+	    $this->assertFalse($tmp['tablet']);
+	    $this->assertEquals('classic', $tmp['layout']);
+
+	    //Internet Explorer 11 bis
+	    $user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; NP06; rv:11.0) like Gecko';
 	    $tmp=getBrowserInfo($user_agent);
 	    $this->assertEquals('ie',$tmp['browsername']);
 	    $this->assertEquals('11.0',$tmp['browserversion']);
@@ -380,11 +454,11 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
         $text='<a href="/myurl" title="<u>Afficher projet</u>">ABC</a>';
         $after=dol_string_nohtmltag($text,1);
         $this->assertEquals("ABC",$after,"test6");
-        
+
         $text='<a href="/myurl" title="&lt;u&gt;Afficher projet&lt;/u&gt;">DEF</a>';
         $after=dol_string_nohtmltag($text,1);
         $this->assertEquals("DEF",$after,"test7");
-        
+
         return true;
     }
 

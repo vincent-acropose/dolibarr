@@ -110,8 +110,9 @@ if ($dirins && $action == 'initmodule' && $modulename)
         dol_delete_file($destdir.'/myobject_card.php');
         dol_delete_file($destdir.'/myobject_list.php');
         dol_delete_file($destdir.'/test/phpunit/MyObjectTest.php');
-        dol_delete_file($destdir.'/sql/llx_myobject.key.sql');
         dol_delete_file($destdir.'/sql/llx_myobject.sql');
+        dol_delete_file($destdir.'/sql/llx_myobject_extrafields.sql');
+        dol_delete_file($destdir.'/sql/llx_myobject.key.sql');
         dol_delete_file($destdir.'/scripts/myobject.php');
         dol_delete_file($destdir.'/img/object_myobject.png');
         dol_delete_file($destdir.'/class/myobject.class.php');
@@ -189,9 +190,10 @@ if ($dirins && $action == 'initobject' && $module && $objectname)
             'myobject_card.php'=>strtolower($objectname).'_card.php',
             'myobject_list.php'=>strtolower($objectname).'_list.php',
             'test/phpunit/MyObjectTest.php'=>'test/phpunit/'.$objectname.'Test.php',
-            'sql/llx_myobject.key.sql'=>'sql/llx_'.strtolower($objectname).'.key.sql',
             'sql/llx_myobject.sql'=>'sql/llx_'.strtolower($objectname).'.sql',
-            'scripts/myobject.php'=>'scripts/'.strtolower($objectname).'.php',
+            'sql/llx_myobject_extrafields.sql'=>'sql/llx_'.strtolower($objectname).'_extrafields.sql',
+        	'sql/llx_myobject.key.sql'=>'sql/llx_'.strtolower($objectname).'.key.sql',
+        	'scripts/myobject.php'=>'scripts/'.strtolower($objectname).'.php',
             'img/object_myobject.png'=>'img/object_'.strtolower($objectname).'.png',
             'class/myobject.class.php'=>'class/'.strtolower($objectname).'.class.php',
             'class/api_myobject.class.php'=>'class/api_'.strtolower($objectname).'.class.php',
@@ -217,6 +219,46 @@ if ($dirins && $action == 'initobject' && $module && $objectname)
             else
             {
                 // Copy is ok
+                if ($destfile == 'class/'.$objectname.'.txt')
+                {
+                	// Regenerate left menu entry in descriptor
+                	$stringtoadd='';
+					// TODO Loop on each .txt file in class dir.
+                	$stringtoadd.="
+\t\t\$this->menu[\$r++]=array(
+                				'fk_menu'=>'fk_mainmenu=mymodule',	    // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+								'type'=>'left',			                // This is a Left menu entry
+								'titre'=>'List MyObject',
+								'mainmenu'=>'mymodule',
+								'leftmenu'=>'mymodule_myobject',
+								'url'=>'/mymodule/myobject_list.php',
+								'langs'=>'mymodule@mymodule',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+								'position'=>1100+\$r,
+								'enabled'=>'\$conf->mymodule->enabled',  // Define condition to show or hide menu entry. Use '\$conf->mymodule->enabled' if entry must be visible if module is enabled. Use '\$leftmenu==\'system\'' to show if leftmenu system is selected.
+								'perms'=>'1',			                // Use 'perms'=>'\$user->rights->mymodule->level1->level2' if you want your menu with a permission rules
+								'target'=>'',
+								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
+\t\t\$this->menu[\$r++]=array(
+                				'fk_menu'=>'fk_mainmenu=mymodule,fk_leftmenu=mymodule_myobject',	    // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+								'type'=>'left',			                // This is a Left menu entry
+								'titre'=>'New MyObject',
+								'mainmenu'=>'mymodule',
+								'leftmenu'=>'mymodule_myobject',
+								'url'=>'/mymodule/myobject_card.php?action=create',
+								'langs'=>'mymodule@mymodule',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+								'position'=>1100+\$r,
+								'enabled'=>'\$conf->mymodule->enabled',  // Define condition to show or hide menu entry. Use '\$conf->mymodule->enabled' if entry must be visible if module is enabled. Use '\$leftmenu==\'system\'' to show if leftmenu system is selected.
+								'perms'=>'1',			                // Use 'perms'=>'\$user->rights->mymodule->level1->level2' if you want your menu with a permission rules
+								'target'=>'',
+								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
+               		";
+                	$moduledescriptorfile=$dirins.'/'.strtolower($module).'/core/modules/mod'.$module.'.class.php';
+                	// TODO Allow a replace with regex using dolReplaceRegexInFile
+                	dolReplaceInFile($moduledescriptorfile, array('END MODULEBUILDER LEFTMENU MYOBJECT */' => '*/'."\n".$stringtoadd."\n\t\t/* END MODULEBUILDER LEFTMENU MYOBJECT */"));
+
+					// Add module descriptor to list of files to replace "MyObject' string with real name of object.
+                	$filetogenerate[]='core/modules/mod'.$module.'.class.php';
+                }
             }
         }
     }
@@ -318,7 +360,7 @@ if ($dirins && $action == 'confirm_delete')
 
 if ($dirins && $action == 'confirm_deleteobject' && $objectname)
 {
-    if (preg_match('/\s/', $objectname))
+    if (preg_match('/[^a-z0-9]/i', $objectname))
     {
         $error++;
         setEventMessages($langs->trans("SpaceOrSpecialCharAreNotAllowed"), null, 'errors');
@@ -337,9 +379,10 @@ if ($dirins && $action == 'confirm_deleteobject' && $objectname)
             'myobject_card.php'=>strtolower($objectname).'_card.php',
             'myobject_list.php'=>strtolower($objectname).'_list.php',
             'test/phpunit/MyObjectTest.php'=>'test/phpunit/'.$objectname.'Test.php',
-            'sql/llx_myobject.key.sql'=>'sql/llx_'.strtolower($objectname).'.key.sql',
             'sql/llx_myobject.sql'=>'sql/llx_'.strtolower($objectname).'.sql',
-            'scripts/myobject.php'=>'scripts/'.strtolower($objectname).'.php',
+            'sql/llx_myobject_extrafields.sql'=>'sql/llx_'.strtolower($objectname).'_extrafields.sql',
+        	'sql/llx_myobject.key.sql'=>'sql/llx_'.strtolower($objectname).'.key.sql',
+        	'scripts/myobject.php'=>'scripts/'.strtolower($objectname).'.php',
             'img/object_myobject.png'=>'img/object_'.strtolower($objectname).'.png',
             'class/myobject.class.php'=>'class/'.strtolower($objectname).'.class.php',
             'class/api_myobject.class.php'=>'class/api_'.strtolower($objectname).'.class.php',
@@ -383,6 +426,7 @@ if ($dirins && $action == 'confirm_deleteproperty' && $propertykey)
 
         // File of sql
         $fileforsql = $dirins.'/'.$modulelowercase.'/sql/'.$objectlowercase.'.sql';
+        $fileforsqlextra = $dirins.'/'.$modulelowercase.'/sql/'.$objectlowercase.'_extrafields.sql';
         $fileforsqlkey = $dirins.'/'.$modulelowercase.'/sql/'.$objectlowercase.'.key.sql';
 
 
@@ -560,7 +604,11 @@ if ($action == 'savefile' && empty($cancel))
 // Enable module
 if ($action == 'set' && $user->admin)
 {
-	$param='module='.$module;
+	$param='';
+	if ($module) $param.='&module='.$module;
+	if ($tab)    $param.='&tab='.$tab;
+	if ($tabobj) $param.='&tabobj='.$tabobj;
+
 	$value = GETPOST('value','alpha');
 	$resarray = activateModule($value);
 	if (! empty($resarray['errors'])) setEventMessages('', $resarray['errors'], 'errors');
@@ -591,7 +639,11 @@ if ($action == 'set' && $user->admin)
 // Disable module
 if ($action == 'reset' && $user->admin)
 {
-	$param='module='.$module;
+	$param='';
+	if ($module) $param.='&module='.$module;
+	if ($tab)    $param.='&tab='.$tab;
+	if ($tabobj) $param.='&tabobj='.$tabobj;
+
 	$value = GETPOST('value','alpha');
 	$result=unActivateModule($value);
 	if ($result) setEventMessages($result, null, 'errors');
@@ -795,7 +847,11 @@ elseif (! empty($module))
         $modulelowercase=strtolower($module);
         $const_name = 'MAIN_MODULE_'.strtoupper($module);
 
-        $param='&tab='.$tab.'&module='.$module;
+        $param='';
+        if ($tab) $param.= '&tab='.$tab;
+        if ($module) $param.='&module='.$module;
+        if ($tabobj) $param.='&tabobj='.$tabobj;
+
         $urltomodulesetup='<a href="'.DOL_URL_ROOT.'/admin/modules.php?search_keyword='.urlencode($module).'">'.$langs->trans('Home').'-'.$langs->trans("Setup").'-'.$langs->trans("Modules").'</a>';
         $linktoenabledisable='';
         if (! empty($conf->global->$const_name))	// If module is already activated
@@ -1139,6 +1195,7 @@ elseif (! empty($module))
                         $pathtolist = strtolower($module).'/'.strtolower($tabobj).'_list.php';
                         $pathtocard = strtolower($module).'/'.strtolower($tabobj).'_card.php';
                         $pathtosql = strtolower($module).'/sql/llx_'.strtolower($tabobj).'.sql';
+                        $pathtosqlextra = strtolower($module).'/sql/llx_'.strtolower($tabobj).'_extrafields.sql';
                         $pathtosqlkey = strtolower($module).'/sql/llx_'.strtolower($tabobj).'.key.sql';
                         print '<div class="fichehalfleft">';
                         print '<span class="fa fa-file"></span> '.$langs->trans("ClassFile").' : <strong>'.$pathtoclass.'</strong>';
@@ -1149,6 +1206,9 @@ elseif (! empty($module))
                         print '<br>';
                         print '<span class="fa fa-file"></span> '.$langs->trans("SqlFile").' : <strong>'.$pathtosql.'</strong>';
                         print ' <a href="'.$_SERVER['PHP_SELF'].'?tab='.$tab.'&module='.$module.'&action=editfile&file='.urlencode($pathtosql).'">'.img_picto($langs->trans("Edit"), 'edit').'</a>';
+                        print '<br>';
+                        print '<span class="fa fa-file"></span> '.$langs->trans("SqlFileExtraFields").' : <strong>'.$pathtosqlextra.'</strong>';
+                        print ' <a href="'.$_SERVER['PHP_SELF'].'?tab='.$tab.'&module='.$module.'&action=editfile&file='.urlencode($pathtosqlextra).'">'.img_picto($langs->trans("Edit"), 'edit').'</a>';
                         print '<br>';
                         print '<span class="fa fa-file"></span> '.$langs->trans("SqlFileKey").' : <strong>'.$pathtosqlkey.'</strong>';
                         print ' <a href="'.$_SERVER['PHP_SELF'].'?tab='.$tab.'&module='.$module.'&action=editfile&file='.urlencode($pathtosqlkey).'">'.img_picto($langs->trans("Edit"), 'edit').'</a>';
@@ -1189,11 +1249,14 @@ elseif (! empty($module))
                         print $form->textwithpicto($langs->trans("Label"), $langs->trans("YouCanUseTranslationKey"));
                         print '</td>';
                         print '<td>'.$langs->trans("Type").'</td>';
-                        print '<td class="right">'.$langs->trans("Position").'</td>';
                         print '<td class="center">'.$langs->trans("NotNull").'</td>';
-                        print '<td class="center">'.$langs->trans("SearchAll").'</td>';
                         //print '<td>'.$langs->trans("DefaultValue").'</td>';
                         print '<td class="center">'.$langs->trans("DatabaseIndex").'</td>';
+                        print '<td class="right">'.$langs->trans("Position").'</td>';
+                        print '<td class="right">'.$langs->trans("Enabled").'</td>';
+                        print '<td class="right">'.$langs->trans("Visible").'</td>';
+                        print '<td class="right">'.$langs->trans("IsAMeasure").'</td>';
+                        print '<td class="center">'.$langs->trans("SearchAll").'</td>';
                         print '<td>'.$langs->trans("Comment").'</td>';
                         print '<td></td>';
                         print '</tr>';
@@ -1201,11 +1264,14 @@ elseif (! empty($module))
                         print '<td><input class="text" name="propname" value=""></td>';
                         print '<td><input class="text" name="proplabel" value=""></td>';
                         print '<td><input class="text" name="proptype" value=""></td>';
-                        print '<td class="right"><input class="text right" size="2" name="propposition" value=""></td>';
                         print '<td class="center"><input class="text" size="2" name="propnotnull" value=""></td>';
-                        print '<td class="center"><input class="text" size="2" name="propsearchall" value=""></td>';
                         //print '<td><input class="text" name="propdefault" value=""></td>';
                         print '<td class="center"><input class="text" size="2" name="propindex" value=""></td>';
+                        print '<td class="right"><input class="text right" size="2" name="propposition" value=""></td>';
+                        print '<td class="center"><input class="text" size="2" name="propenabled" value=""></td>';
+                        print '<td class="center"><input class="text" size="2" name="propvisible" value=""></td>';
+                        print '<td class="center"><input class="text" size="2" name="propisameasure" value=""></td>';
+                        print '<td class="center"><input class="text" size="2" name="propsearchall" value=""></td>';
                         print '<td><input class="text" name="propcomment" value=""></td>';
                         print '<td align="center">';
                         print '<input class="button" type="submit" name="add" value="'.$langs->trans("Add").'">';
@@ -1232,11 +1298,14 @@ elseif (! empty($module))
                             $propname=$propkey;
                             $proplabel=$propval['label'];
                             $proptype=$propval['type'];
-                            $propposition=$propval['position'];
                             $propnotnull=$propval['notnull'];
                             $propsearchall=$propval['searchall'];
                             //$propdefault=$propval['default'];
                             $propindex=$propval['index'];
+                            $propposition=$propval['position'];
+                            $propenabled=$propval['enabled'];
+                            $propvisible=$propval['visible'];
+                            $propisameasure=$propval['isameasure'];
                             $propcomment=$propval['comment'];
 
                             print '<tr class="oddeven">';
@@ -1250,20 +1319,29 @@ elseif (! empty($module))
                             print '<td>';
                             print $proptype;
                             print '</td>';
-                            print '<td align="right">';
-                            print $propposition;
-                            print '</td>';
                             print '<td class="center">';
                             print $propnotnull?'X':'';
-                            print '</td>';
-                            print '<td class="center">';
-                            print $propsearchall?'X':'';
                             print '</td>';
                             /*print '<td>';
                             print $propdefault;
                             print '</td>';*/
                             print '<td class="center">';
                             print $propindex?'X':'';
+                            print '</td>';
+                            print '<td align="right">';
+                            print $propposition;
+                            print '</td>';
+                            print '<td class="center">';
+                            print $propenabled?$propenabled:'';
+                            print '</td>';
+                            print '<td class="center">';
+                            print $propvisible?$propvisible:'';
+                            print '</td>';
+                            print '<td class="center">';
+                            print $propisameasure?$propisameasure:'';
+                            print '</td>';
+                            print '<td class="center">';
+                            print $propsearchall?'X':'';
                             print '</td>';
                             print '<td>';
                             print $propcomment;

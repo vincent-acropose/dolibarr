@@ -190,8 +190,9 @@ function getBrowserInfo($user_agent)
 	}
 
 	// OS
-	if (preg_match('/linux/i', $user_agent))	{ $os='linux'; }
+	if (preg_match('/linux/i', $user_agent))			{ $os='linux'; }
 	elseif (preg_match('/macintosh/i', $user_agent))	{ $os='macintosh'; }
+	elseif (preg_match('/windows/i', $user_agent))		{ $os='windows'; }
 
 	// Name
 	if (preg_match('/firefox(\/|\s)([\d\.]*)/i', $user_agent, $reg))      { $name='firefox';   $version=$reg[2]; }
@@ -201,7 +202,8 @@ function getBrowserInfo($user_agent)
 	elseif (preg_match('/epiphany/i', $user_agent))                       { $name='epiphany';  }
 	elseif (preg_match('/safari(\/|\s)([\d\.]*)/i', $user_agent, $reg))   { $name='safari';    $version=$reg[2]; }	// Safari is often present in string for mobile but its not.
 	elseif (preg_match('/opera(\/|\s)([\d\.]*)/i', $user_agent, $reg))    { $name='opera';     $version=$reg[2]; }
-	elseif (preg_match('/(MSIE\s([0-9]+\.[0-9]))|.*(Trident\/[0-9]+.[0-9];\srv:([0-9]+\.[0-9]+))/i', $user_agent, $reg))  { $name='ie'; $version=end($reg); }    // MS products at end
+	elseif (preg_match('/(MSIE\s([0-9]+\.[0-9]))|.*(Trident\/[0-9]+.[0-9];.*rv:([0-9]+\.[0-9]+))/i', $user_agent, $reg))  { $name='ie'; $version=end($reg); }    // MS products at end
+	elseif (preg_match('/(Windows NT\s([0-9]+\.[0-9])).*(Trident\/[0-9]+.[0-9];.*rv:([0-9]+\.[0-9]+))/i', $user_agent, $reg))  { $name='ie'; $version=end($reg); }    // MS products at end
 	elseif (preg_match('/l(i|y)n(x|ks)(\(|\/|\s)*([\d\.]+)/i', $user_agent, $reg)) { $name='lynxlinks'; $version=$reg[4]; }
 
 	if ($tablet) {
@@ -624,18 +626,26 @@ function dol_buildpath($path, $type=0)
 
 /**
  *	Create a clone of instance of object (new instance with same value for properties)
- *  Property that are reference are also new object (true clone)
+ *  With native = 0: Property that are reference are also new object (true clone). This means $this->db is not valid.
+ *  With native = 1: Use PHP clone. Property that are reference are same pointer. This means $this->db is still valid.
  *
  * 	@param	object	$object		Object to clone
+ *  @param	int		$native		Native method or true method
  *	@return object				Object clone
  *  @see https://php.net/manual/language.oop5.cloning.php
  */
-function dol_clone($object)
+function dol_clone($object, $native=0)
 {
 	//dol_syslog(__FUNCTION__ . " is deprecated", LOG_WARNING);
 
-	//$myclone = clone $object;                    // PHP clone is a shallow copy only, not a real clone, so properties of references will keep references (refer to the same target/variable
-	$myclone=unserialize(serialize($object));
+	if (empty($native))
+	{
+		$myclone=unserialize(serialize($object));
+	}
+	else
+	{
+		$myclone = clone $object;     // PHP clone is a shallow copy only, not a real clone, so properties of references will keep references (refer to the same target/variable)
+	}
 
 	return $myclone;
 }
@@ -1182,10 +1192,10 @@ function dol_banner_tab($object, $paramid, $morehtml='', $shownav=1, $fieldid='r
 				$nophoto='';
 				$morehtmlleft.='<div class="floatleft inline-block valignmiddle divphotoref"></div>';
 			}
-			elseif ($conf->browser->layout != 'phone') {    // Show no photo link
+			//elseif ($conf->browser->layout != 'phone') {    // Show no photo link
 				$nophoto='/public/theme/common/nophoto.png';
 				$morehtmlleft.='<div class="floatleft inline-block valignmiddle divphotoref"><img class="photo'.$modulepart.($cssclass?' '.$cssclass:'').'" alt="No photo" border="0"'.($width?' width="'.$width.'"':'').' src="'.DOL_URL_ROOT.$nophoto.'"></div>';
-			}
+			//}
         }
 	}
 	else
@@ -1262,7 +1272,7 @@ function dol_banner_tab($object, $paramid, $morehtml='', $shownav=1, $fieldid='r
                 }
             }
 
-            if (! $phototoshow && $conf->browser->layout != 'phone')      // Show No photo link (picto of pbject)
+            if (! $phototoshow)      // Show No photo link (picto of pbject)
             {
                 $morehtmlleft.='<div class="floatleft inline-block valignmiddle divphotoref">';
                 if ($object->element == 'action')
@@ -1278,7 +1288,9 @@ function dol_banner_tab($object, $paramid, $morehtml='', $shownav=1, $fieldid='r
                     if ($object->element == 'project' && ! $object->public) $picto = 'project'; // instead of projectpub
     				$nophoto=img_picto('', 'object_'.$picto, '', false, 1);
                 }
-                $morehtmlleft.='<!-- No photo to show --><div class="floatleft inline-block valignmiddle divphotoref"><div class="photoref"><img class="photo'.$modulepart.($cssclass?' '.$cssclass:'').'" alt="No photo" border="0"'.($width?' width="'.$width.'"':'').' src="'.$nophoto.'"></div></div>';
+                $morehtmlleft.='<!-- No photo to show -->';
+                $morehtmlleft.='<div class="floatleft inline-block valignmiddle divphotoref"><div class="photoref"><img class="photo'.$modulepart.($cssclass?' '.$cssclass:'').'" alt="No photo" border="0"'.($width?' width="'.$width.'"':'').' src="'.$nophoto.'"></div></div>';
+
                 $morehtmlleft.='</div>';
             }
         }
@@ -1333,7 +1345,7 @@ function dol_banner_tab($object, $paramid, $morehtml='', $shownav=1, $fieldid='r
 		if (! empty($object->label)) $morehtmlref.='<div class="refidno">'.$object->label.'</div>';
 	}
 
-	if ($object->element != 'product' && $object->element != 'bookmark')
+	if ($object->element != 'product' && $object->element != 'bookmark' && $object->element != 'ecm_directories')
 	{
     	$morehtmlref.='<div class="refidno">';
     	$morehtmlref.=$object->getBannerAddress('refaddress',$object);
@@ -2545,7 +2557,7 @@ function img_picto($titlealt, $picto, $moreatt = '', $pictoisfullpath = false, $
 	if ($pictoisfullpath)
 	{
 		// Clean parameters
-		if (! preg_match('/(\.png|\.gif)$/i',$picto)) $picto .= '.png';
+		if (! preg_match('/(\.png|\.gif|\.svg)$/i',$picto)) $picto .= '.png';
 		$fullpathpicto = $picto;
 	}
 	else
@@ -2567,7 +2579,7 @@ function img_picto($titlealt, $picto, $moreatt = '', $pictoisfullpath = false, $
 		}
 
 		// Clean parameters
-		if (! preg_match('/(\.png|\.gif)$/i',$picto)) $picto .= '.png';
+		if (! preg_match('/(\.png|\.gif|\.svg)$/i',$picto)) $picto .= '.png';
 		// If alt path are defined, define url where img file is, according to physical path
 		foreach ($conf->file->dol_document_root as $type => $dirroot)	// ex: array(["main"]=>"/home/maindir/htdocs", ["alt0"]=>"/home/moddir0/htdocs", ...)
 		{
@@ -4766,22 +4778,57 @@ function dol_string_nohtmltag($StringHtml,$removelinefeed=1,$pagecodeto='UTF-8')
  * Return first line of text. Cut will depends if content is HTML or not.
  *
  * @param 	string	$text		Input text
+ * @param	int		$nboflines  Nb of lines to get (default is 1 = first line only)
  * @return	string				Output text
  * @see dol_nboflines_bis, dol_string_nohtmltag, dol_escape_htmltag
  */
-function dolGetFirstLineOfText($text)
+function dolGetFirstLineOfText($text, $nboflines=1)
 {
-	if (dol_textishtml($text))
+	if ($nboflines == 1)
 	{
-		$firstline=preg_replace('/<br[^>]*>.*$/s','',$text);		// The s pattern modifier means the . can match newline characters
-		$firstline=preg_replace('/<div[^>]*>.*$/s','',$firstline);	// The s pattern modifier means the . can match newline characters
+		if (dol_textishtml($text))
+		{
+			$firstline=preg_replace('/<br[^>]*>.*$/s','',$text);		// The s pattern modifier means the . can match newline characters
+			$firstline=preg_replace('/<div[^>]*>.*$/s','',$firstline);	// The s pattern modifier means the . can match newline characters
 
+		}
+		else
+		{
+	    	$firstline=preg_replace('/[\n\r].*/','',$text);
+		}
+    	return $firstline.((strlen($firstline) != strlen($text))?'...':'');
 	}
 	else
 	{
-    	$firstline=preg_replace('/[\n\r].*/','',$text);
+		$ishtml=0;
+		if (dol_textishtml($text))
+		{
+			$text=preg_replace('/\n/','',$text);
+			$ishtml=1;
+			$repTable = array("\t" => " ", "\n" => " ", "\r" => " ", "\0" => " ", "\x0B" => " ");
+		}
+		else
+		{
+			$repTable = array("\t" => " ", "\n" => "<br>", "\r" => " ", "\0" => " ", "\x0B" => " ");
+		}
+
+		$text = strtr($text, $repTable);
+		if ($charset == 'UTF-8') { $pattern = '/(<br[^>]*>)/Uu'; }	// /U is to have UNGREEDY regex to limit to one html tag. /u is for UTF8 support
+		else $pattern = '/(<br[^>]*>)/U';							// /U is to have UNGREEDY regex to limit to one html tag.
+		$a = preg_split($pattern, $text, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+
+		$firstline='';
+		$i=0;
+		$nba = count($a);	// 2x nb of lines in $a because $a contains also a line for each new line separator
+		while (($i < $nba) && ($i < ($nboflines * 2)))
+		{
+			if ($i % 2 == 0) $firstline .= $a[$i];
+			elseif (($i < (($nboflines * 2) - 1)) && ($i < ($nba - 1))) $firstline .= ($ishtml?"<br>\n":"\n");
+			$i++;
+		}
+		unset($a);
+    	return $firstline.(($i < $nba)?'...':'');
 	}
-    return $firstline.((strlen($firstline) != strlen($text))?'...':'');
 }
 
 
@@ -4943,7 +4990,7 @@ function dol_nboflines($s,$maxchar=0)
 
 
 /**
- *	Return nb of lines of a formated text with \n and <br> (we can't have both \n and br)
+ *	Return nb of lines of a formated text with \n and <br> (WARNING: string must not have mixed \n and br separators)
  *
  *	@param	string	$text      		Text
  *	@param	int		$maxlinesize  	Largeur de ligne en caracteres (ou 0 si pas de limite - defaut)
@@ -4979,6 +5026,8 @@ function dol_nboflines_bis($text,$maxlinesize=0,$charset='UTF-8')
 			}
 		}
 	}
+
+	unset($a);
 	return $nblines;
 }
 
@@ -6128,7 +6177,7 @@ function dol_getmypid()
  *                                         or like "keyword1|keyword2" = We want record field like keyword1 OR field like keyword2
  *                             			If param $mode is 1, can contains an operator <, > or = like "<10" or ">=100.5 < 1000"
  *                             			If param $mode is 2, can contains a list of id separated by comma like "1,3,4"
- * @param	integer			$mode		0=value is list of keywords, 1=value is a numeric test (Example ">5.5 <10"), 2=value is a list of id separated with comma (Example '1,3,4')
+ * @param	integer			$mode		0=value is list of keyword strings, 1=value is a numeric test (Example ">5.5 <10"), 2=value is a list of id separated with comma (Example '1,3,4')
  * @param	integer			$nofirstand	1=Do not output the first 'AND'
  * @return 	string 			$res 		The statement to append to the SQL query
  */
@@ -6215,7 +6264,7 @@ function natural_search($fields, $value, $mode=0, $nofirstand=0)
 	            	$newres .= $db->escape($tmpcrit2);
 	            	$newres .= $tmpafter;
 	            	$newres .= "'";
-	            	if (empty($tmpcrit2))
+	            	if ($tmpcrit2 == '')
 	            	{
 	            	    $newres .= ' OR ' . $field . " IS NULL";
 	            	}

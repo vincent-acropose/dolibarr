@@ -38,11 +38,8 @@ require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php';
-if (! empty($conf->projet->enabled))
-{
-	require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
-	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
-}
+require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 
 $langs->load("companies");
@@ -589,6 +586,8 @@ if ($action == 'mupdate')
  * View
  */
 
+$formproject=new FormProjets($db);
+
 $help_url='EN:Module_Agenda_En|FR:Module_Agenda|ES:M&omodulodulo_Agenda';
 llxHeader('',$langs->trans("Agenda"),$help_url);
 
@@ -715,7 +714,7 @@ if ($action == 'create')
     // Location
     if (empty($conf->global->AGENDA_DISABLE_LOCATION))
     {
-		print '<tr><td>'.$langs->trans("Location").'</td><td colspan="3"><input type="text" name="location" size="50" value="'.(GETPOST('location')?GETPOST('location'):$object->location).'"></td></tr>';
+		print '<tr><td>'.$langs->trans("Location").'</td><td colspan="3"><input type="text" name="location" class="minwidth100" value="'.(GETPOST('location')?GETPOST('location'):$object->location).'"></td></tr>';
     }
 
 	// Assigned to
@@ -791,8 +790,6 @@ if ($action == 'create')
 	// Project
 	if (! empty($conf->projet->enabled))
 	{
-		$formproject=new FormProjets($db);
-
 		// Projet associe
 		$langs->load("projects");
 
@@ -974,7 +971,7 @@ if ($id > 0)
 		}
 
 		// Title
-		print '<tr><td'.(empty($conf->global->AGENDA_USE_EVENT_TYPE)?' class="fieldrequired"':'').'>'.$langs->trans("Title").'</td><td colspan="3"><input type="text" name="label" size="50" value="'.$object->label.'"></td></tr>';
+		print '<tr><td'.(empty($conf->global->AGENDA_USE_EVENT_TYPE)?' class="fieldrequired"':'').'>'.$langs->trans("Title").'</td><td colspan="3"><input type="text" name="label" class="minwidth100" value="'.$object->label.'"></td></tr>';
 
         // Full day event
         print '<tr><td>'.$langs->trans("EventOnFullDay").'</td><td colspan="3"><input type="checkbox" id="fullday" name="fullday" '.($object->fulldayevent?' checked':'').'></td></tr>';
@@ -1058,7 +1055,7 @@ if ($id > 0)
         // Location
 	    if (empty($conf->global->AGENDA_DISABLE_LOCATION))
 	    {
-			print '<tr><td>'.$langs->trans("Location").'</td><td colspan="3"><input type="text" name="location" size="50" value="'.$object->location.'"></td></tr>';
+			print '<tr><td>'.$langs->trans("Location").'</td><td colspan="3"><input type="text" name="location" class="minwidth100" value="'.$object->location.'"></td></tr>';
 	    }
 
 		// Assigned to
@@ -1139,8 +1136,6 @@ if ($id > 0)
 		// Project
 		if (! empty($conf->projet->enabled))
 		{
-			$formproject=new FormProjets($db);
-
 			$langs->load("projects");
 
 			print '<tr><td class="titlefieldcreate">'.$langs->trans("Project").'</td><td>';

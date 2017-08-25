@@ -311,7 +311,7 @@ else
     if ($fourn_id > 0) $sql.= " AND pfp.fk_soc = ".$fourn_id;
     if ($search_tobatch != '' && $search_tobatch >= 0)   $sql.= " AND p.tobatch = ".$db->escape($search_tobatch);
     if ($search_accountancy_code_sell)   $sql.= natural_search('p.accountancy_code_sell', $search_accountancy_code_sell);
-    if ($search_accountancy_code_sell)   $sql.= natural_search('p.accountancy_code_buy', $search_accountancy_code_buy);
+    if ($search_accountancy_code_buy)   $sql.= natural_search('p.accountancy_code_buy', $search_accountancy_code_buy);
     // Add where from extra fields
 
 	if (!empty($conf->variants->enabled) && $search_hidechildproducts && ($search_type === 0)) {
@@ -693,7 +693,7 @@ else
     		            $align=$extrafields->getAlignFlag($key);
             			$sortonfield = "ef.".$key;
             			if (! empty($extrafields->attribute_computed[$key])) $sortonfield='';
-            			print_liste_field_titre($langs->trans($extralabels[$key]),$_SERVER["PHP_SELF"],$sortonfield,"",$param,($align?'align="'.$align.'"':''),$sortfield,$sortorder);
+            			print_liste_field_titre($extralabels[$key],$_SERVER["PHP_SELF"],$sortonfield,"",$param,($align?'align="'.$align.'"':''),$sortfield,$sortorder);
     		        }
     		    }
     		}
