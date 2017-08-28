@@ -37,7 +37,7 @@ if (! $user->admin)
 
 $actionsave=GETPOST("save");
 
-// Sauvegardes parametres
+// Save parameters
 if (!empty($actionsave))
 {
 	$i=0;
@@ -49,12 +49,12 @@ if (!empty($actionsave))
 	if ($i >= 1)
 	{
 		$db->commit();
-		setEventMessage($langs->trans("SetupSaved"));
+		setEventMessages($langs->trans("SetupSaved"), null, 'mesgs');
 	}
 	else
 	{
 		$db->rollback();
-		setEventMessage($langs->trans("Error"), 'errors');
+		setEventMessages($langs->trans("Error"), null, 'errors');
 	}
 }
 
@@ -66,17 +66,18 @@ if (!empty($actionsave))
 llxHeader();
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans("CronSetup"),$linkback,'setup');
+print load_fiche_titre($langs->trans("CronSetup"),$linkback,'title_setup');
 
 // Configuration header
 $head = cronadmin_prepare_head();
 
-dol_fiche_head($head,'setup',$langs->trans("Module2300Name"),0,'cron');
+print '<form name="agendasetupform" action="'.$_SERVER["PHP_SELF"].'" method="post">';
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+
+dol_fiche_head($head, 'setup', $langs->trans("Module2300Name"), -1, 'cron');
 
 print "<br>\n";
 
-print '<form name="agendasetupform" action="'.$_SERVER["PHP_SELF"].'" method="post">';
-print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<table class="noborder" width="100%">';
 
 print '<tr class="liste_titre">';
@@ -87,59 +88,43 @@ print "</tr>";
 
 print '<tr class="impair">';
 print '<td class="fieldrequired">'.$langs->trans("KeyForCronAccess").'</td>';
-print '<td><input type="text" class="flat" id="CRON_KEY" name="CRON_KEY" value="'. (GETPOST('CRON_KEY')?GETPOST('CRON_KEY'):(! empty($conf->global->CRON_KEY)?$conf->global->CRON_KEY:'')) . '" size="40">';
-if (! empty($conf->use_javascript_ajax))
-	print '&nbsp;'.img_picto($langs->trans('Generate'), 'refresh', 'id="generate_token" class="linkobject"');
+$disabled='';
+if (! empty($conf->global->CRON_DISABLE_KEY_CHANGE)) $disabled=' disabled="disabled"';
+print '<td>';
+if (empty($conf->global->CRON_DISABLE_KEY_CHANGE))
+{
+    print '<input type="text" class="flat minwidth200"'.$disabled.' id="CRON_KEY" name="CRON_KEY" value="'. (GETPOST('CRON_KEY')?GETPOST('CRON_KEY'):(! empty($conf->global->CRON_KEY)?$conf->global->CRON_KEY:'')) . '">';
+    if (! empty($conf->use_javascript_ajax))
+    	print '&nbsp;'.img_picto($langs->trans('Generate'), 'refresh', 'id="generate_token" class="linkobject"');
+}
+else
+{
+    print (! empty($conf->global->CRON_KEY)?$conf->global->CRON_KEY:'');
+    print '<input type="hidden" id="CRON_KEY" name="CRON_KEY" value="'. (GETPOST('CRON_KEY')?GETPOST('CRON_KEY'):(! empty($conf->global->CRON_KEY)?$conf->global->CRON_KEY:'')) . '">';
+}
 print '</td>';
 print '<td>&nbsp;</td>';
 print '</tr>';
 
 print '</table>';
 
-print '<br><center>';
+dol_fiche_end();
+
+print '<div class="center">';
 print '<input type="submit" name="save" class="button" value="'.$langs->trans("Save").'">';
-print '</center>';
+print '</div>';
 
 print '</form>';
 
-dol_fiche_end();
 
 print '<br><br>';
 
+print $langs->trans("UseMenuModuleToolsToAddCronJobs").'<br>';
+if (! empty($conf->global->CRON_WARNING_DELAY_HOURS)) print info_admin($langs->trans("WarningCronDelayed", $conf->global->CRON_WARNING_DELAY_HOURS));
 
-// Define $urlwithroot
-$urlwithouturlroot=preg_replace('/'.preg_quote(DOL_URL_ROOT,'/').'$/i','',trim($dolibarr_main_url_root));
-$urlwithroot=$urlwithouturlroot.DOL_URL_ROOT;		// This is to use external domain name found into config file
-//$urlwithroot=DOL_MAIN_URL_ROOT;					// This is to use same domain name than current
+print '<br><br>';
 
-// Cron launch
-print '<u>'.$langs->trans("URLToLaunchCronJobs").':</u><br>';
-$url=$urlwithroot.'/public/cron/cron_run_jobs.php'.(empty($conf->global->CRON_KEY)?'':'?securitykey='.$conf->global->CRON_KEY.'&').'userlogin='.$user->login;
-print img_picto('','object_globe.png').' <a href="'.$url.'" target="_blank">'.$url."</a><br>\n";
-print ' '.$langs->trans("OrToLaunchASpecificJob").'<br>';
-$url=$urlwithroot.'/public/cron/cron_run_jobs.php'.(empty($conf->global->CRON_KEY)?'':'?securitykey='.$conf->global->CRON_KEY.'&').'userlogin='.$user->login.'&id=cronjobid';
-print img_picto('','object_globe.png').' <a href="'.$url.'" target="_blank">'.$url."</a><br>\n";
-print '<br>';
-
-
-$linuxlike=1;
-if (preg_match('/^win/i',PHP_OS)) $linuxlike=0;
-if (preg_match('/^mac/i',PHP_OS)) $linuxlike=0;
-
-print '<br>';
-print '<u>'.$langs->trans("FileToLaunchCronJobs").':</u><br>';
-
-$file='/scripts/cron/cron_run_jobs.php'.' '.(empty($conf->global->CRON_KEY)?'securitykey':''.$conf->global->CRON_KEY.'').' '.$user->login.' [cronjobid]';
-print '<textarea rows="'.ROWS_2.'" cols="120">..'.$file."</textarea><br>\n";
-print '<br>';
-print $langs->trans("Note").': ';
-if ($linuxlike) {
-	print $langs->trans("CronExplainHowToRunUnix");
-} else {
-	print $langs->trans("CronExplainHowToRunWin");
-}
-
-
+dol_print_cron_urls();
 
 
 print '<br>';

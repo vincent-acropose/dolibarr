@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2006-2011 	Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2006-2016 	Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2012	 	Florian Henry			<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -14,16 +14,16 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Path to WSDL is: http://localhost/dolibarr/webservices/server_actioncomm.php?wsdl
  */
 
 /**
  *       \file       htdocs/webservices/server_actioncomm.php
  *       \brief      File that is entry point to call Dolibarr WebServices
- *       \version    $Id: server_actioncomm.php,v 1.7 2010/12/19 11:49:37 eldy Exp $
  */
 
-// This is to make Dolibarr working with Plesk
-set_include_path($_SERVER['DOCUMENT_ROOT'].'/htdocs');
+if (! defined("NOCSRFCHECK"))    define("NOCSRFCHECK",'1');
 
 require_once("../master.inc.php");
 require_once(NUSOAP_PATH.'/nusoap.php');		// Include SOAP
@@ -101,8 +101,7 @@ $actioncomm_fields= array(
 	'percentage' => array('name'=>'percentage','type'=>'xsd:string'),
 	'author' => array('name'=>'author','type'=>'xsd:string'),
 	'usermod' => array('name'=>'usermod','type'=>'xsd:string'),
-	'usertodo' => array('name'=>'usertodo','type'=>'xsd:string'),
-	'userdone' => array('name'=>'userdone','type'=>'xsd:string'),
+	'userownerid' => array('name'=>'userownerid','type'=>'xsd:string'),
 	'priority' => array('name'=>'priority','type'=>'xsd:string'),
 	'fulldayevent' => array('name'=>'fulldayevent','type'=>'xsd:string'),
 	'location' => array('name'=>'location','type'=>'xsd:string'),
@@ -289,15 +288,14 @@ function getActionComm($authentication,$id)
 			        	'datem'=> dol_print_date($actioncomm->datem,'dayhourrfc'),
 			        	'note'=> $actioncomm->note,
 			        	'percentage'=> $actioncomm->percentage,
-			        	'author'=> $actioncomm->author->id,
-			        	'usermod'=> $actioncomm->usermod->id,
-			        	'usertodo'=> $actioncomm->usertodo->id,
-			        	'userdone'=> $actioncomm->userdone->id,
+			        	'author'=> $actioncomm->authorid,
+			        	'usermod'=> $actioncomm->usermodid,
+			        	'userownerid'=> $actioncomm->userownerid,
 			        	'priority'=> $actioncomm->priority,
 			        	'fulldayevent'=> $actioncomm->fulldayevent,
 			        	'location'=> $actioncomm->location,
-			        	'socid'=> $actioncomm->societe->id,
-			        	'contactid'=> $actioncomm->contact->id,
+			        	'socid'=> $actioncomm->socid,
+			        	'contactid'=> $actioncomm->contactid,
 			        	'projectid'=> $actioncomm->fk_project,
 			        	'fk_element'=> $actioncomm->fk_element,
 			        	'elementtype'=> $actioncomm->elementtype);
@@ -433,12 +431,11 @@ function createActionComm($authentication,$actioncomm)
 		$newobject->datep=$actioncomm['datep'];
 		$newobject->datef=$actioncomm['datef'];
 		$newobject->type_code=$actioncomm['type_code'];
-		$newobject->societe->id=$actioncomm['socid'];
+		$newobject->socid=$actioncomm['socid'];
 		$newobject->fk_project=$actioncomm['projectid'];
 		$newobject->note=$actioncomm['note'];
-		$newobject->contact->id=$actioncomm['contactid'];
-		$newobject->usertodo->id=$actioncomm['usertodo'];
-		$newobject->userdone->id=$actioncomm['userdone'];
+		$newobject->contactid=$actioncomm['contactid'];
+		$newobject->userownerid=$actioncomm['userownerid'];
 		$newobject->label=$actioncomm['label'];
 		$newobject->percentage=$actioncomm['percentage'];
 		$newobject->priority=$actioncomm['priority'];
@@ -459,7 +456,7 @@ function createActionComm($authentication,$actioncomm)
 
 		$db->begin();
 
-		$result=$newobject->add($fuser);
+		$result=$newobject->create($fuser);
 		if ($result <= 0)
 		{
 			$error++;
@@ -517,23 +514,22 @@ function updateActionComm($authentication,$actioncomm)
 	if (! $error)
 	{
 		$objectfound=false;
-		
+
 		$object=new ActionComm($db);
 		$result=$object->fetch($actioncomm['id']);
-		
+
 		if (!empty($object->id)) {
-		
+
 			$objectfound=true;
 
 			$object->datep=$actioncomm['datep'];
 			$object->datef=$actioncomm['datef'];
 			$object->type_code=$actioncomm['type_code'];
-			$object->societe->id=$actioncomm['socid'];
+			$object->socid=$actioncomm['socid'];
+			$object->contactid=$actioncomm['contactid'];
 			$object->fk_project=$actioncomm['projectid'];
 			$object->note=$actioncomm['note'];
-			$object->contact->id=$actioncomm['contactid'];
-			$object->usertodo->id=$actioncomm['usertodo'];
-			$object->userdone->id=$actioncomm['userdone'];
+			$object->userownerid=$actioncomm['userownerid'];
 			$object->label=$actioncomm['label'];
 			$object->percentage=$actioncomm['percentage'];
 			$object->priority=$actioncomm['priority'];
@@ -541,7 +537,7 @@ function updateActionComm($authentication,$actioncomm)
 			$object->location=$actioncomm['location'];
 			$object->fk_element=$actioncomm['fk_element'];
 			$object->elementtype=$actioncomm['elementtype'];
-	
+
 			//Retreive all extrafield for actioncomm
 			// fetch optionals attributes and labels
 			$extrafields=new ExtraFields($db);
@@ -551,7 +547,7 @@ function updateActionComm($authentication,$actioncomm)
 				$key='options_'.$key;
 				$object->array_options[$key]=$actioncomm[$key];
 			}
-	
+
 			$db->begin();
 
 			$result=$object->update($fuser);
@@ -590,4 +586,4 @@ function updateActionComm($authentication,$actioncomm)
 }
 
 // Return the results.
-$server->service($HTTP_RAW_POST_DATA);
+$server->service(file_get_contents("php://input"));

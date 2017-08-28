@@ -1,9 +1,8 @@
-# Dolibarr language file - es_ES - paybox
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - paybox
 PayBoxSetup=Configuración módulo PayBox
 PayBoxDesc=Este módulo ofrece una página  de pago a través del proveedor <a href="http://www.paybox.com" target="_blank">Paybox</a> para realizar cualquier pago o un pago en relación con un objeto Dolibarr (facturas, pedidos ...)
-PaymentForm=Formulario de pago
 FollowingUrlAreAvailableToMakePayments=Las siguientes URL están disponibles para permitir a un cliente efectuar un pago
+PaymentForm=Formulario de pago
 WelcomeOnPaymentPage=Bienvenido a nuestros servicios de pago en línea
 ThisScreenAllowsYouToPay=Esta pantalla le permite hacer su pago en línea destinado a %s.
 ThisIsInformationOnPayment=Aquí está la información sobre el pago a realizar
@@ -12,8 +11,8 @@ YourEMail=E-Mail de confirmación de pago
 Creditor=Beneficiario
 PaymentCode=Código de pago
 PayBoxDoPayment=Continuar el pago con tarjeta
+ToPay=Emitir pago
 YouWillBeRedirectedOnPayBox=Va a ser redirigido a la página segura de  Paybox para indicar su tarjeta de crédito
-PleaseBePatient=Espere unos segundos
 Continue=Continuar
 ToOfferALinkForOnlinePayment=URL de pago %s
 ToOfferALinkForOnlinePaymentOnOrder=URL que ofrece una interfaz de pago en línea %s basada en el importe de un pedido de cliente
@@ -36,3 +35,6 @@ MessageKO=Mensaje en la página de retorno de pago cancelado
 NewPayboxPaymentReceived=Nuevo pago Paybox recibido
 NewPayboxPaymentFailed=Nuevo intento de pago Paybox sin éxito
 PAYBOX_PAYONLINE_SENDEMAIL=E-Mail a avisar en caso de pago (con éxito o no)
+PAYBOX_PBX_SITE=Valor para PBX SITE
+PAYBOX_PBX_RANG=valor para PBX Rang
+PAYBOX_PBX_IDENTIFIANT=Valor para PBX ID

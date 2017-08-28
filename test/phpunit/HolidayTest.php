@@ -25,7 +25,7 @@
 
 global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
 require_once dirname(__FILE__).'/../../htdocs/holiday/class/holiday.class.php';
 $langs->load("dict");
@@ -83,6 +83,8 @@ class HolidayTest extends PHPUnit_Framework_TestCase
 
     	print __METHOD__."\n";
     }
+
+    // tear down after class
     public static function tearDownAfterClass()
     {
     	global $conf,$user,$langs,$db;
@@ -181,7 +183,7 @@ class HolidayTest extends PHPUnit_Framework_TestCase
 		$langs=$this->savlangs;
 		$db=$this->savdb;
 
-		$localobject->oldcopy=dol_clone($localobject);
+		$localobject->oldcopy = clone $localobject;
 
 		$localobject->note_private='New private note after update';
 		$localobject->note_public='New public note after update';
@@ -206,11 +208,11 @@ class HolidayTest extends PHPUnit_Framework_TestCase
 		
     	$result=$localobject->update_note($localobject->note_private,'_private');
     	print __METHOD__." id=".$localobject->id." result=".$result."\n";
-    	$this->assertLessThan($result, 0, 'Holiday::update_note error');
-		
-    	$result=$localobject->update_note_public($localobject->note_public);
-    	print __METHOD__." id=".$localobject->id." result=".$result."\n";
-    	$this->assertLessThan($result, 0, 'Holiday::update_note_public error');
+		$this->assertLessThan($result, 0, 'Holiday::update_note (private) error');
+
+		$result=$localobject->update_note($localobject->note_public, '_public');
+		print __METHOD__." id=".$localobject->id." result=".$result."\n";
+		$this->assertLessThan($result, 0, 'Holiday::update_note (public) error');
 		
 
 		$newobject=new Holiday($this->savdb);
@@ -290,4 +292,3 @@ class HolidayTest extends PHPUnit_Framework_TestCase
     }
 
 }
-?>

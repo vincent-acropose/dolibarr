@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2008-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2008-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2008-2017 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -106,6 +106,7 @@ function checkLoginPassEntity($usertotest,$passwordtotest,$entitytotest,$authmod
     				sleep(1);
     				$langs->load('main');
     				$langs->load('other');
+    				$langs->load('errors');
     				$_SESSION["dol_loginmesg"]=$langs->trans("ErrorFailedToLoadLoginFileForMode",$mode);
     			}
     		}
@@ -143,17 +144,15 @@ function dol_loginfunction($langs,$conf,$mysoc)
 
 	$dol_url_root = DOL_URL_ROOT;
 
-	$php_self = $_SERVER['PHP_SELF'];
-	$php_self.= $_SERVER["QUERY_STRING"]?'?'.$_SERVER["QUERY_STRING"]:'';
-	if (! preg_match('/mainmenu=/',$php_self)) $php_self.=(preg_match('/\?/',$php_self)?'&':'?').'mainmenu=home';
-
 	// Title
-	$title='Dolibarr '.DOL_VERSION;
+	$appli=constant('DOL_APPLICATION_TITLE');
+	$title=$appli.' '.constant('DOL_VERSION');
 	if (! empty($conf->global->MAIN_APPLICATION_TITLE)) $title=$conf->global->MAIN_APPLICATION_TITLE;
+	$titletruedolibarrversion=constant('DOL_VERSION');	// $title used by login template after the @ to inform of true Dolibarr version
 
 	// Note: $conf->css looks like '/theme/eldy/style.css.php'
-	$conf->css = "/theme/".(GETPOST('theme')?GETPOST('theme','alpha'):$conf->theme)."/style.css.php";
-	$themepath=dol_buildpath((empty($conf->global->MAIN_FORCETHEMEDIR)?'':$conf->global->MAIN_FORCETHEMEDIR).$conf->css,1);
+	$conf->css = "/theme/".(GETPOST('theme','alpha')?GETPOST('theme','alpha'):$conf->theme)."/style.css.php";
+	$themepath=dol_buildpath($conf->css,1);
 	if (! empty($conf->modules_parts['theme']))		// Using this feature slow down application
 	{
 		foreach($conf->modules_parts['theme'] as $reldir)
@@ -167,7 +166,7 @@ function dol_loginfunction($langs,$conf,$mysoc)
 	}
 	$conf_css = $themepath."?lang=".$langs->defaultlang;
 
-	// Select templates
+	// Select templates dir
 	if (! empty($conf->modules_parts['tpl']))	// Using this feature slow down application
 	{
 		$dirtpls=array_merge($conf->modules_parts['tpl'],array('/core/tpl/'));
@@ -193,12 +192,6 @@ function dol_loginfunction($langs,$conf,$mysoc)
 	if (! GETPOST("username")) $focus_element='username';
 	else $focus_element='password';
 
-	$login_background=DOL_URL_ROOT.'/theme/login_background.png';
-	if (file_exists(DOL_DOCUMENT_ROOT.'/theme/'.$conf->theme.'/img/login_background.png'))
-	{
-		$login_background=DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/login_background.png';
-	}
-
 	$demologin='';
 	$demopassword='';
 	if (! empty($dolibarr_main_demo))
@@ -208,10 +201,19 @@ function dol_loginfunction($langs,$conf,$mysoc)
 		$demopassword=$tab[1];
 	}
 
-	// Execute hook getLoginPageOptions
-	// Should be an array with differents options in $hookmanager->resArray
+	// Execute hook getLoginPageOptions (for table)
 	$parameters=array('entity' => GETPOST('entity','int'));
-	$hookmanager->executeHooks('getLoginPageOptions',$parameters);    // Note that $action and $object may have been modified by some hooks
+	$reshook = $hookmanager->executeHooks('getLoginPageOptions',$parameters);    // Note that $action and $object may have been modified by some hooks.
+	if (is_array($hookmanager->resArray) && ! empty($hookmanager->resArray)) {
+		$morelogincontent = $hookmanager->resArray; // (deprecated) For compatibility
+	} else {
+		$morelogincontent = $hookmanager->resPrint;
+	}
+
+	// Execute hook getLoginPageExtraOptions (eg for js)
+	$parameters=array('entity' => GETPOST('entity','int'));
+	$reshook = $hookmanager->executeHooks('getLoginPageExtraOptions',$parameters);    // Note that $action and $object may have been modified by some hooks.
+	$moreloginextracontent = $hookmanager->resPrint;
 
 	// Login
 	$login = (! empty($hookmanager->resArray['username']) ? $hookmanager->resArray['username'] : (GETPOST("username","alpha") ? GETPOST("username","alpha") : $demologin));
@@ -223,11 +225,11 @@ function dol_loginfunction($langs,$conf,$mysoc)
 
 	if (! empty($mysoc->logo_small) && is_readable($conf->mycompany->dir_output.'/logos/thumbs/'.$mysoc->logo_small))
 	{
-		$urllogo=DOL_URL_ROOT.'/viewimage.php?cache=1&amp;modulepart=companylogo&amp;file='.urlencode('thumbs/'.$mysoc->logo_small);
+		$urllogo=DOL_URL_ROOT.'/viewimage.php?cache=1&amp;modulepart=mycompany&amp;file='.urlencode('thumbs/'.$mysoc->logo_small);
 	}
 	elseif (! empty($mysoc->logo) && is_readable($conf->mycompany->dir_output.'/logos/'.$mysoc->logo))
 	{
-		$urllogo=DOL_URL_ROOT.'/viewimage.php?cache=1&amp;modulepart=companylogo&amp;file='.urlencode($mysoc->logo);
+		$urllogo=DOL_URL_ROOT.'/viewimage.php?cache=1&amp;modulepart=mycompany&amp;file='.urlencode($mysoc->logo);
 		$width=128;
 	}
 	elseif (is_readable(DOL_DOCUMENT_ROOT.'/theme/'.$conf->theme.'/img/dolibarr_logo.png'))
@@ -237,7 +239,6 @@ function dol_loginfunction($langs,$conf,$mysoc)
 	elseif (is_readable(DOL_DOCUMENT_ROOT.'/theme/dolibarr_logo.png'))
 	{
 		$urllogo=DOL_URL_ROOT.'/theme/dolibarr_logo.png';
-
 	}
 
 	// Security graphical code
@@ -269,14 +270,11 @@ function dol_loginfunction($langs,$conf,$mysoc)
 	$main_home='';
 	if (! empty($conf->global->MAIN_HOME))
 	{
-		$i=0;
-		while (preg_match('/__\(([a-zA-Z]+)\)__/i',$conf->global->MAIN_HOME,$reg) && $i < 100)
-		{
-			$conf->global->MAIN_HOME=preg_replace('/__\('.$reg[1].'\)__/i',$langs->trans($reg[1]),$conf->global->MAIN_HOME);
-			$i++;
-		}
+	    $substitutionarray=getCommonSubstitutionArray($langs);
+	    complete_substitutions_array($substitutionarray, $langs);
+	    $texttoshow = make_substitutions($conf->global->MAIN_HOME, $substitutionarray, $langs);
 
-		$main_home=dol_htmlcleanlastbr($conf->global->MAIN_HOME);
+		$main_home=dol_htmlcleanlastbr($texttoshow);
 	}
 
 	// Google AD
@@ -284,16 +282,17 @@ function dol_loginfunction($langs,$conf,$mysoc)
 
 	// Set jquery theme
 	$dol_loginmesg = (! empty($_SESSION["dol_loginmesg"])?$_SESSION["dol_loginmesg"]:'');
-	$favicon=DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/favicon.ico';
+	$favicon=dol_buildpath('/theme/'.$conf->theme.'/img/favicon.ico',1);
+	if (! empty($conf->global->MAIN_FAVICON_URL)) $favicon=$conf->global->MAIN_FAVICON_URL;
 	$jquerytheme = 'smoothness';
 	if (! empty($conf->global->MAIN_USE_JQUERY_THEME)) $jquerytheme = $conf->global->MAIN_USE_JQUERY_THEME;
 
-	// Set dol_hide_topmenu, dol_hide_leftmenu, dol_optimize_smallscreen, dol_nomousehover
-	$dol_hide_topmenu=GETPOST('dol_hide_topmenu');
-	$dol_hide_leftmenu=GETPOST('dol_hide_leftmenu');
-	$dol_optimize_smallscreen=GETPOST('dol_optimize_smallscreen');
-	$dol_no_mouse_hover=GETPOST('dol_no_mouse_hover');
-	$dol_use_jmobile=GETPOST('dol_use_jmobile');
+	// Set dol_hide_topmenu, dol_hide_leftmenu, dol_optimize_smallscreen, dol_no_mouse_hover
+	$dol_hide_topmenu=GETPOST('dol_hide_topmenu','int');
+	$dol_hide_leftmenu=GETPOST('dol_hide_leftmenu','int');
+	$dol_optimize_smallscreen=GETPOST('dol_optimize_smallscreen','int');
+	$dol_no_mouse_hover=GETPOST('dol_no_mouse_hover','int');
+	$dol_use_jmobile=GETPOST('dol_use_jmobile','int');
 
 	// Include login page template
 	include $template_dir.'login.tpl.php';
@@ -414,7 +413,10 @@ function encodedecode_dbpassconf($level=0)
 		if ($fp = @fopen($file,'w'))
 		{
 			fputs($fp, $config);
+			fflush($fp);
 			fclose($fp);
+			clearstatcache();
+
 			// It's config file, so we set read permission for creator only.
 			// Should set permission to web user and groups for users used by batch
 			//@chmod($file, octdec('0600'));
@@ -437,7 +439,7 @@ function encodedecode_dbpassconf($level=0)
 /**
  * Return a generated password using default module
  *
- * @param		boolean		$generic		true=Create generic password (a MD5 string), false=Use the configured password generation module
+ * @param		boolean		$generic		true=Create generic password (use md5, sha1 depending on setup), false=Use the configured password generation module
  * @return		string						New value for password
  */
 function getRandomPassword($generic=false)
@@ -460,4 +462,3 @@ function getRandomPassword($generic=false)
 	return $generated_password;
 }
 
-?>

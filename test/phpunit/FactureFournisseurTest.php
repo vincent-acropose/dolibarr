@@ -1,5 +1,6 @@
 <?php
 /* Copyright (C) 2010 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2017 Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +26,7 @@
 
 global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
 require_once dirname(__FILE__).'/../../htdocs/fourn/class/fournisseur.facture.class.php';
 
@@ -80,6 +81,8 @@ class FactureFournisseurTest extends PHPUnit_Framework_TestCase
 
     	print __METHOD__."\n";
     }
+
+    // tear down after class
     public static function tearDownAfterClass()
     {
     	global $conf,$user,$langs,$db;
@@ -257,31 +260,11 @@ class FactureFournisseurTest extends PHPUnit_Framework_TestCase
 
 		$localobject=new FactureFournisseur($this->savdb);
     	$result=$localobject->fetch($id);
-		$result=$localobject->delete($id);
+		$result=$localobject->delete($user);
 
 		print __METHOD__." id=".$id." result=".$result."\n";
     	$this->assertLessThan($result, 0);
     	return $result;
     }
 
-    /**
-     *
-     */
-    /*public function testVerifyNumRef()
-    {
-    	global $conf,$user,$langs,$db;
-		$conf=$this->savconf;
-		$user=$this->savuser;
-		$langs=$this->savlangs;
-		$db=$this->savdb;
-
-		$localobject=new Facture($this->savdb);
-    	$result=$localobject->ref='refthatdoesnotexists';
-		$result=$localobject->VerifyNumRef();
-
-		print __METHOD__." result=".$result."\n";
-    	$this->assertEquals($result, 0);
-    	return $result;
-    }*/
 }
-?>

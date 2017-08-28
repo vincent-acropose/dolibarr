@@ -29,6 +29,10 @@ require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/sendings.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
+if (! empty($conf->projet->enabled)) {
+    require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
+    require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
+}
 
 $langs->load("orders");
 $langs->load("sendings");
@@ -77,7 +81,7 @@ if ($action == 'addcontact' && $user->rights->expedition->creer)
 {
     if ($result > 0 && $id > 0)
     {
-  		$result = $objectsrc->add_contact($_POST["contactid"], $_POST["type"], $_POST["source"]);
+  		$result = $objectsrc->add_contact(GETPOST('userid') ? GETPOST('userid') : GETPOST('contactid'), $_POST["type"], $_POST["source"]);
     }
 
 	if ($result >= 0)
@@ -87,15 +91,15 @@ if ($action == 'addcontact' && $user->rights->expedition->creer)
 	}
 	else
 	{
-		if ($objectsrc->error == 'DB_ERROR_RECORD_ALREADY_EXISTS')
+		if ($objectsrc->error == 'DB_ERROR_RECORD_ALREADY_EXISTS') 
 		{
 			$langs->load("errors");
-			$mesg = '<div class="error">'.$langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType").'</div>';
+			$mesg = $langs->trans("ErrorThisContactIsAlreadyDefinedAsThisType");
+		} else {
+			$mesg = $objectsrc->error;
+			$mesgs = $objectsrc->errors;
 		}
-		else
-		{
-			$mesg = '<div class="error">'.$objectsrc->error.'</div>';
-		}
+		setEventMessages($mesg, $mesgs, 'errors');
 	}
 }
 
@@ -106,9 +110,9 @@ else if ($action == 'swapstatut' && $user->rights->expedition->creer)
 }
 
 // Efface un contact
-else if ($action == 'deleteline' && $user->rights->expedition->creer)
+else if ($action == 'deletecontact' && $user->rights->expedition->creer)
 {
-	$result = $objectsrc->delete_contact($_GET["lineid"]);
+	$result = $objectsrc->delete_contact(GETPOST("lineid"));
 
 	if ($result >= 0)
 	{
@@ -119,13 +123,13 @@ else if ($action == 'deleteline' && $user->rights->expedition->creer)
 		dol_print_error($db);
 	}
 }
-
+/*
 else if ($action == 'setaddress' && $user->rights->expedition->creer)
 {
 	$object->fetch($id);
 	$result=$object->setDeliveryAddress($_POST['fk_address']);
 	if ($result < 0) dol_print_error($db,$object->error);
-}
+}*/
 
 
 /*
@@ -146,276 +150,125 @@ $userstatic=new User($db);
 /* Mode vue et edition                                                         */
 /*                                                                             */
 /* *************************************************************************** */
-dol_htmloutput_mesg($mesg);
 
 if ($id > 0 || ! empty($ref))
 {
 	$langs->trans("OrderCard");
 
 	$head = shipping_prepare_head($object);
-	dol_fiche_head($head, 'contact', $langs->trans("Sending"), 0, 'sending');
+	dol_fiche_head($head, 'contact', $langs->trans("Shipment"), -1, 'sending');
 
 
-   /*
-	*   Facture synthese pour rappel
-	*/
-	print '<table class="border" width="100%">';
+	// Shipment card
+	$linkback = '<a href="'.DOL_URL_ROOT.'/expedition/list.php">'.$langs->trans("BackToList").'</a>';
+	
+	$morehtmlref='<div class="refidno">';
+	// Ref customer shipment
+	$morehtmlref.=$form->editfieldkey("RefCustomer", '', $object->ref_customer, $object, $user->rights->expedition->creer, 'string', '', 0, 1);
+	$morehtmlref.=$form->editfieldval("RefCustomer", '', $object->ref_customer, $object, $user->rights->expedition->creer, 'string', '', null, null, '', 1);
+	// Thirdparty
+    $morehtmlref.='<br>'.$langs->trans('ThirdParty') . ' : ' . $object->thirdparty->getNomUrl(1);
+    // Project
+    if (! empty($conf->projet->enabled)) {
+        $langs->load("projects");
+        $morehtmlref .= '<br>' . $langs->trans('Project') . ' ';
+        if (0) {    // Do not change on shipment
+            if ($action != 'classify') {
+                $morehtmlref .= '<a href="' . $_SERVER['PHP_SELF'] . '?action=classify&amp;id=' . $object->id . '">' . img_edit($langs->transnoentitiesnoconv('SetProject')) . '</a> : ';
+            }
+            if ($action == 'classify') {
+                // $morehtmlref.=$form->form_project($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->socid, $object->fk_project, 'projectid', 0, 0, 1, 1);
+                $morehtmlref .= '<form method="post" action="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '">';
+                $morehtmlref .= '<input type="hidden" name="action" value="classin">';
+                $morehtmlref .= '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
+                $morehtmlref .= $formproject->select_projects($object->socid, $object->fk_project, 'projectid', $maxlength, 0, 1, 0, 1, 0, 0, '', 1);
+                $morehtmlref .= '<input type="submit" class="button" value="' . $langs->trans("Modify") . '">';
+                $morehtmlref .= '</form>';
+            } else {
+                $morehtmlref .= $form->form_project($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->socid, $object->fk_project, 'none', 0, 0, 0, 1);
+            }
+        } else {
+            // We don't have project on shipment, so we will use the project or source object instead
+            // TODO Add project on shipment
+            $morehtmlref .= ' : ';
+            if (! empty($objectsrc->fk_project)) {
+                $proj = new Project($db);
+                $proj->fetch($objectsrc->fk_project);
+                $morehtmlref .= '<a href="' . DOL_URL_ROOT . '/projet/card.php?id=' . $objectsrc->fk_project . '" title="' . $langs->trans('ShowProject') . '">';
+                $morehtmlref .= $proj->ref;
+                $morehtmlref .= '</a>';
+            } else {
+                $morehtmlref .= '';
+            }
+        }
+    }
+	$morehtmlref.='</div>';
+	
+	
+	dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref);
+	
+	
+	print '<div class="fichecenter">';
+    //print '<div class="fichehalfleft">';
+	print '<div class="underbanner clearboth"></div>';
 
-	$linkback = '<a href="'.DOL_URL_ROOT.'/expedition/liste.php">'.$langs->trans("BackToList").'</a>';
+    print '<table class="border centpercent">';
 
-	// Ref
-	print '<tr><td width="18%">'.$langs->trans("Ref").'</td><td colspan="3">';
-	print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref');
-	print "</td></tr>";
-
-	// Customer
-	print '<tr><td width="20%">'.$langs->trans("Customer").'</td>';
-	print '<td colspan="3">'.$object->thirdparty->getNomUrl(1).'</td>';
-	print "</tr>";
-
-	// Linked documents
+    // Linked documents
 	if ($typeobject == 'commande' && $object->$typeobject->id && ! empty($conf->commande->enabled))
 	{
-		print '<tr><td>';
-		$objectsrc=new Commande($db);
-		$objectsrc->fetch($object->$typeobject->id);
-		print $langs->trans("RefOrder").'</td>';
-		print '<td colspan="3">';
-		print $objectsrc->getNomUrl(1,'commande');
-		print "</td>\n";
-		print '</tr>';
+	    print '<tr><td class="titlefield">';
+	    $objectsrc=new Commande($db);
+	    $objectsrc->fetch($object->$typeobject->id);
+	    print $langs->trans("RefOrder").'</td>';
+	    print '<td colspan="3">';
+	    print $objectsrc->getNomUrl(1,'commande');
+	    print "</td>\n";
+	    print '</tr>';
 	}
 	if ($typeobject == 'propal' && $object->$typeobject->id && ! empty($conf->propal->enabled))
 	{
-		print '<tr><td>';
-		$objectsrc=new Propal($db);
-		$objectsrc->fetch($object->$typeobject->id);
-		print $langs->trans("RefProposal").'</td>';
-		print '<td colspan="3">';
-		print $objectsrc->getNomUrl(1,'expedition');
-		print "</td>\n";
-		print '</tr>';
+	    print '<tr><td class="titlefield">';
+	    $objectsrc=new Propal($db);
+	    $objectsrc->fetch($object->$typeobject->id);
+	    print $langs->trans("RefProposal").'</td>';
+	    print '<td colspan="3">';
+	    print $objectsrc->getNomUrl(1,'expedition');
+	    print "</td>\n";
+	    print '</tr>';
 	}
-
-	// Ref expedition client
-	print '<tr><td>';
-    print '<table class="nobordernopadding" width="100%"><tr><td nowrap>';
-	print $langs->trans('RefCustomer').'</td><td align="left">';
-    print '</td>';
-    print '</tr></table>';
-    print '</td><td colspan="3">';
-	print $objectsrc->ref_client;
-	print '</td>';
-	print '</tr>';
-
-	// Delivery address
-	if (! empty($conf->global->SOCIETE_ADDRESSES_MANAGEMENT))
-	{
-		print '<tr><td>';
-		print '<table class="nobordernopadding" width="100%"><tr><td>';
-		print $langs->trans('DeliveryAddress');
-		print '</td>';
-
-		if ($action != 'editdelivery_address' && $object->brouillon) print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=editdelivery_address&amp;socid='.$object->socid.'&amp;id='.$object->id.'">'.img_edit($langs->transnoentitiesnoconv('SetDeliveryAddress'),1).'</a></td>';
-		print '</tr></table>';
-		print '</td><td colspan="3">';
-
-		if ($action == 'editdelivery_address')
-		{
-			$formother->form_address($_SERVER['PHP_SELF'].'?id='.$object->id,$object->fk_delivery_address,$object->socid,'fk_address','shipping',$object->id);
-		}
-		else
-		{
-			$formother->form_address($_SERVER['PHP_SELF'].'?id='.$object->id,$object->fk_delivery_address,$object->socid,'none','shipping',$object->id);
-		}
-		print '</td></tr>';
-	}
-
+	
 	print "</table>";
 
+	
+	//print '</div>';
+	//print '<div class="fichehalfright">';
+	//print '<div class="ficheaddleft">';
+	//print '<div class="underbanner clearboth"></div>';
+	
+	
+	//print '</div>';
+	//print '</div>';
 	print '</div>';
+		
+	print '<div class="clearboth"></div>';
+	
+	
+	dol_fiche_end();
 
 	// Lignes de contacts
-	echo '<br><table class="noborder" width="100%">';
+	echo '<br>';
 
-	/*
-	 * Ajouter une ligne de contact. Non affiche en mode modification de ligne
-	 */
-	if ($action != 'editline' && $user->rights->expedition->creer)
+	// Contacts lines (modules that overwrite templates must declare this into descriptor)
+	$dirtpls=array_merge($conf->modules_parts['tpl'],array('/core/tpl'));
+	foreach($dirtpls as $reldir)
 	{
-		print '<tr class="liste_titre">';
-		print '<td>'.$langs->trans("Source").'</td>';
-		print '<td>'.$langs->trans("Company").'</td>';
-		print '<td>'.$langs->trans("Contacts").'</td>';
-		print '<td>'.$langs->trans("ContactType").'</td>';
-		print '<td>&nbsp;</td>';
-		print '<td colspan="2">&nbsp;</td>';
-		print "</tr>\n";
-
-		$var = false;
-
-		print '<form action="'.$_SERVER['PHP_SELF'].'?id='.$id.'" method="post">';
-		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-		print '<input type="hidden" name="action" value="addcontact">';
-		print '<input type="hidden" name="source" value="internal">';
-		print '<input type="hidden" name="id" value="'.$id.'">';
-
-		// Ligne ajout pour contact interne
-		print '<tr '.$bc[$var].'>';
-
-		print '<td class="nowrap">';
-		print img_object('','user').' '.$langs->trans("Users");
-		print '</td>';
-
-		print '<td colspan="1">';
-		print $conf->global->MAIN_INFO_SOCIETE_NOM;
-		print '</td>';
-
-		print '<td colspan="1">';
-		$form->select_users($user->id,'contactid');
-		print '</td>';
-		print '<td>';
-		$formcompany->selectTypeContact($objectsrc, '', 'type','internal');
-		print '</td>';
-		print '<td align="right" colspan="3" ><input type="submit" class="button" value="'.$langs->trans("Add").'"></td>';
-		print '</tr>';
-
-		print '</form>';
-
-		print '<form action="'.$_SERVER['PHP_SELF'].'?id='.$id.'" method="post">';
-		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-		print '<input type="hidden" name="action" value="addcontact">';
-		print '<input type="hidden" name="source" value="external">';
-		print '<input type="hidden" name="id" value="'.$id.'">';
-
-		// Ligne ajout pour contact externe
-		$var=!$var;
-		print '<tr '.$bc[$var].'>';
-
-		print '<td class="nowrap">';
-		print img_object('','contact').' '.$langs->trans("ThirdPartyContacts");
-		print '</td>';
-
-		print '<td colspan="1">';
-		$selectedCompany = isset($_GET["newcompany"])?$_GET["newcompany"]:$object->client->id;
-		$selectedCompany = $formcompany->selectCompaniesForNewContact($objectsrc, 'id', $selectedCompany, 'newcompany', '', $object->id);
-		print '</td>';
-
-		print '<td colspan="1">';
-		$nbofcontacts=$form->select_contacts($selectedCompany, '', 'contactid');
-		if ($nbofcontacts == 0) print $langs->trans("NoContactDefined");
-		print '</td>';
-		print '<td>';
-
-		$formcompany->selectTypeContact($objectsrc, '', 'type','external');
-		print '</td>';
-		print '<td align="right" colspan="3" ><input type="submit" class="button" value="'.$langs->trans("Add").'"';
-		if (! $nbofcontacts) print ' disabled="disabled"';
-		print '></td>';
-		print '</tr>';
-
-		print "</form>";
-
-		print '<tr><td colspan="7">&nbsp;</td></tr>';
+	    $res=@include dol_buildpath($reldir.'/contacts.tpl.php');
+	    if ($res) break;
 	}
 
-	// List of linked contacts
-	print '<tr class="liste_titre">';
-	print '<td>'.$langs->trans("Source").'</td>';
-	print '<td>'.$langs->trans("Company").'</td>';
-	print '<td>'.$langs->trans("Contacts").'</td>';
-	print '<td>'.$langs->trans("ContactType").'</td>';
-	print '<td align="center">'.$langs->trans("Status").'</td>';
-	print '<td colspan="2">&nbsp;</td>';
-	print "</tr>\n";
-
-	$companystatic=new Societe($db);
-	$var = true;
-
-	foreach(array('internal','external') as $source)
-	{
-		$tab = $objectsrc->liste_contact(-1,$source);
-		$num=count($tab);
-
-		$i = 0;
-		while ($i < $num)
-		{
-			$var = !$var;
-
-			print '<tr '.$bc[$var].' valign="top">';
-
-			// Source
-			print '<td align="left">';
-			if ($tab[$i]['source']=='internal') print $langs->trans("User");
-			if ($tab[$i]['source']=='external') print $langs->trans("ThirdPartyContact");
-			print '</td>';
-
-			// Societe
-			print '<td align="left">';
-			if ($tab[$i]['socid'] > 0)
-			{
-				$companystatic->fetch($tab[$i]['socid']);
-				print $companystatic->getNomUrl(1);
-			}
-			if ($tab[$i]['socid'] < 0)
-			{
-				print $conf->global->MAIN_INFO_SOCIETE_NOM;
-			}
-			if (! $tab[$i]['socid'])
-			{
-				print '&nbsp;';
-			}
-			print '</td>';
-
-			// Contact
-			print '<td>';
-            if ($tab[$i]['source']=='internal')
-            {
-                $userstatic->id=$tab[$i]['id'];
-                $userstatic->lastname=$tab[$i]['lastname'];
-                $userstatic->firstname=$tab[$i]['firstname'];
-                print $userstatic->getNomUrl(1);
-            }
-            if ($tab[$i]['source']=='external')
-            {
-                $contactstatic->id=$tab[$i]['id'];
-                $contactstatic->lastname=$tab[$i]['lastname'];
-                $contactstatic->firstname=$tab[$i]['firstname'];
-                print $contactstatic->getNomUrl(1);
-            }
-			print '</td>';
-
-			// Type de contact
-			print '<td>'.$tab[$i]['libelle'].'</td>';
-
-			// Statut
-			print '<td align="center">';
-			// Activation desativation du contact
-			if ($object->statut >= 0)	print '<a href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;action=swapstatut&amp;ligne='.$tab[$i]['rowid'].'">';
-			print $contactstatic->LibStatut($tab[$i]['status'],3);
-			if ($object->statut >= 0)	print '</a>';
-			print '</td>';
-
-			// Icon update et delete
-			print '<td align="center" class="nowrap" colspan="2">';
-			if ($object->statut < 5 && $user->rights->expedition->creer)
-			{
-				print '&nbsp;';
-				print '<a href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;action=deleteline&amp;lineid='.$tab[$i]['rowid'].'">';
-				print img_delete();
-				print '</a>';
-			}
-			print '</td>';
-
-			print "</tr>\n";
-
-			$i ++;
-		}
-	}
-	print "</table>";
 }
 
 llxFooter();
 
 $db->close();
-?>

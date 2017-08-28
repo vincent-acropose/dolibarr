@@ -102,7 +102,7 @@ dol_htmloutput_errors($this->control->tpl['error'],$this->control->tpl['errors']
 </tr>
 
 <tr>
-	<td valign="top"><?php echo $langs->trans("Note"); ?></td>
+	<td class="tdtop"><?php echo $langs->trans("Note"); ?></td>
 	<td colspan="3"><?php echo $this->control->tpl['note']; ?></td>
 </tr>
 
@@ -115,7 +115,7 @@ dol_htmloutput_errors($this->control->tpl['error'],$this->control->tpl['errors']
 
 <?php echo $this->control->tpl['showend']; ?>
 
-<?php if (! $user->societe_id) { ?>
+<?php if (empty($user->societe_id)) { ?>
 <div class="tabsAction">
 
 <?php if ($user->rights->adherent->creer) { ?>

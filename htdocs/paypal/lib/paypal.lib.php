@@ -24,143 +24,6 @@
 
 
 /**
- * Show header
- *
- * @param 	string	$title		Title
- * @param 	string	$head		More header to add
- * @return	void
- */
-function llxHeaderPaypal($title, $head = "")
-{
-	global $user, $conf, $langs;
-
-	header("Content-type: text/html; charset=".$conf->file->character_set_client);
-
-	$appli='Dolibarr';
-	if (!empty($conf->global->MAIN_APPLICATION_TITLE)) $appli=$conf->global->MAIN_APPLICATION_TITLE;
-
-	print '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">';
-	//print '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" http://www.w3.org/TR/1999/REC-html401-19991224/strict.dtd>';
-	print "\n";
-	print "<html>\n";
-	print "<head>\n";
-	print '<meta name="robots" content="noindex,nofollow">'."\n";
-	print '<meta name="keywords" content="dolibarr,payment,online">'."\n";
-	print '<meta name="description" content="Welcome on '.$appli.' online payment form">'."\n";
-	print "<title>".$title."</title>\n";
-	if ($head) print $head."\n";
-	if (! empty($conf->global->PAYPAL_CSS_URL)) print '<link rel="stylesheet" type="text/css" href="'.$conf->global->PAYPAL_CSS_URL.'?lang='.$langs->defaultlang.'">'."\n";
-	else
-	{
-		print '<link rel="stylesheet" type="text/css" href="'.DOL_URL_ROOT.$conf->css.'?lang='.$langs->defaultlang.'">'."\n";
-		print '<style type="text/css">';
-		print '.CTableRow1      { margin: 1px; padding: 3px; font: 12px verdana,arial; background: #e6E6eE; color: #000000; -moz-border-radius-topleft:6px; -moz-border-radius-topright:6px; -moz-border-radius-bottomleft:6px; -moz-border-radius-bottomright:6px;}';
-		print '.CTableRow2      { margin: 1px; padding: 3px; font: 12px verdana,arial; background: #FFFFFF; color: #000000; -moz-border-radius-topleft:6px; -moz-border-radius-topright:6px; -moz-border-radius-bottomleft:6px; -moz-border-radius-bottomright:6px;}';
-		print '</style>';
-	}
-
-	if ($conf->use_javascript_ajax)
-	{
-		print '<!-- Includes for JQuery (Ajax library) -->'."\n";
-		print '<link rel="stylesheet" type="text/css" href="'.DOL_URL_ROOT.'/includes/jquery/plugins/jnotify/jquery.jnotify-alt.min.css" />'."\n";          // JNotify
-
-		// Output standard javascript links
-		$ext='.js';
-
-		// JQuery. Must be before other includes
-		print '<!-- Includes JS for JQuery -->'."\n";
-		print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/js/jquery-latest.min'.$ext.'"></script>'."\n";
-		// jQuery jnotify
-		if (empty($conf->global->MAIN_DISABLE_JQUERY_JNOTIFY))
-		{
-			print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/plugins/jnotify/jquery.jnotify.min'.$ext.'"></script>'."\n";
-			print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/core/js/jnotify'.$ext.'"></script>'."\n";
-		}
-	}
-	print "</head>\n";
-	print '<body style="margin: 20px;">'."\n";
-}
-
-/**
- * Show footer
- *
- * @return	void
- */
-function llxFooterPaypal()
-{
-	print "</body>\n";
-	print "</html>\n";
-}
-
-
-/**
- * Show footer of company in HTML pages
- *
- * @param   Societe		$fromcompany	Third party
- * @param   Translate	$langs			Output language
- * @return	void
- */
-function html_print_paypal_footer($fromcompany,$langs)
-{
-	global $conf;
-
-	// Juridical status
-	$line1="";
-	if ($fromcompany->forme_juridique_code)
-	{
-		$line1.=($line1?" - ":"").getFormeJuridiqueLabel($fromcompany->forme_juridique_code);
-	}
-	// Capital
-	if ($fromcompany->capital)
-	{
-		$line1.=($line1?" - ":"").$langs->transnoentities("CapitalOf",$fromcompany->capital)." ".$langs->transnoentities("Currency".$conf->currency);
-	}
-	// Prof Id 1
-	if ($fromcompany->idprof1 && ($fromcompany->country_code != 'FR' || ! $fromcompany->idprof2))
-	{
-		$field=$langs->transcountrynoentities("ProfId1",$fromcompany->country_code);
-		if (preg_match('/\((.*)\)/i',$field,$reg)) $field=$reg[1];
-		$line1.=($line1?" - ":"").$field.": ".$fromcompany->idprof1;
-	}
-	// Prof Id 2
-	if ($fromcompany->idprof2)
-	{
-		$field=$langs->transcountrynoentities("ProfId2",$fromcompany->country_code);
-		if (preg_match('/\((.*)\)/i',$field,$reg)) $field=$reg[1];
-		$line1.=($line1?" - ":"").$field.": ".$fromcompany->idprof2;
-	}
-
-	// Second line of company infos
-	$line2="";
-	// Prof Id 3
-	if ($fromcompany->idprof3)
-	{
-		$field=$langs->transcountrynoentities("ProfId3",$fromcompany->country_code);
-		if (preg_match('/\((.*)\)/i',$field,$reg)) $field=$reg[1];
-		$line2.=($line2?" - ":"").$field.": ".$fromcompany->idprof3;
-	}
-	// Prof Id 4
-	if ($fromcompany->idprof4)
-	{
-		$field=$langs->transcountrynoentities("ProfId4",$fromcompany->country_code);
-		if (preg_match('/\((.*)\)/i',$field,$reg)) $field=$reg[1];
-		$line2.=($line2?" - ":"").$field.": ".$fromcompany->idprof4;
-	}
-	// IntraCommunautary VAT
-	if ($fromcompany->tva_intra != '')
-	{
-		$line2.=($line2?" - ":"").$langs->transnoentities("VATIntraShort").": ".$fromcompany->tva_intra;
-	}
-
-	print '<br><br><hr>'."\n";
-	print '<center><font style="font-size: 10px;">'."\n";
-	print $fromcompany->nom.'<br>';
-	print $line1.'<br>';
-	print $line2;
-	print '</font></center>'."\n";
-}
-
-/**
  *  Define head array for tabs of paypal tools setup pages
  *
  *  @return			Array of head
@@ -173,7 +36,7 @@ function paypaladmin_prepare_head()
 	$head = array();
 
 	$head[$h][0] = DOL_URL_ROOT."/paypal/admin/paypal.php";
-	$head[$h][1] = $langs->trans("Account");
+	$head[$h][1] = $langs->trans("PayPal");
 	$head[$h][2] = 'paypalaccount';
 	$h++;
 
@@ -209,7 +72,8 @@ function showPaypalPaymentUrl($type,$ref)
     $out='<br><br>';
     $out.=img_picto('','object_globe.png').' '.$langs->trans("ToOfferALinkForOnlinePayment",$servicename).'<br>';
     $url=getPaypalPaymentUrl(0,$type,$ref);
-    $out.='<input type="text" id="paypalurl" value="'.$url.'" size="60"><br>';
+    $out.='<input type="text" id="paypalurl" class="quatrevingtpercent" value="'.$url.'">';
+    $out.=ajax_autoselect("paypalurl", 0);
     return $out;
 }
 
@@ -228,6 +92,8 @@ function getPaypalPaymentUrl($mode,$type,$ref='',$amount='9.99',$freetag='your_f
 {
 	global $conf;
 
+	$ref=str_replace(' ','',$ref);
+	
     if ($type == 'free')
     {
 	    $out=DOL_MAIN_URL_ROOT.'/public/paypal/newpayment.php?amount='.($mode?'<font color="#666666">':'').$amount.($mode?'</font>':'').'&tag='.($mode?'<font color="#666666">':'').$freetag.($mode?'</font>':'');
@@ -249,8 +115,8 @@ function getPaypalPaymentUrl($mode,$type,$ref='',$amount='9.99',$freetag='your_f
             else
             {
                 $out.='&securekey='.($mode?'<font color="#666666">':'');
-                if ($mode == 1) $out.="hash('".$conf->global->PAYPAL_SECURITY_TOKEN."' + 'order' + order_ref)";
-                if ($mode == 0) $out.= dol_hash($conf->global->PAYPAL_SECURITY_TOKEN . 'order' . $ref, 2);
+                if ($mode == 1) $out.="hash('".$conf->global->PAYPAL_SECURITY_TOKEN."' + '".$type."' + order_ref)";
+                if ($mode == 0) $out.= dol_hash($conf->global->PAYPAL_SECURITY_TOKEN . $type . $ref, 2);
                 $out.=($mode?'</font>':'');
             }
         }
@@ -267,8 +133,8 @@ function getPaypalPaymentUrl($mode,$type,$ref='',$amount='9.99',$freetag='your_f
             else
             {
                 $out.='&securekey='.($mode?'<font color="#666666">':'');
-                if ($mode == 1) $out.="hash('".$conf->global->PAYPAL_SECURITY_TOKEN."' + 'invoice' + invoice_ref)";
-                if ($mode == 0) $out.= dol_hash($conf->global->PAYPAL_SECURITY_TOKEN . 'invoice' . $ref, 2);
+                if ($mode == 1) $out.="hash('".$conf->global->PAYPAL_SECURITY_TOKEN."' + '".$type."' + invoice_ref)";
+                if ($mode == 0) $out.= dol_hash($conf->global->PAYPAL_SECURITY_TOKEN . $type . $ref, 2);
                 $out.=($mode?'</font>':'');
             }
         }
@@ -285,8 +151,8 @@ function getPaypalPaymentUrl($mode,$type,$ref='',$amount='9.99',$freetag='your_f
             else
             {
                 $out.='&securekey='.($mode?'<font color="#666666">':'');
-                if ($mode == 1) $out.="hash('".$conf->global->PAYPAL_SECURITY_TOKEN."' + 'contactline' + contractline_ref)";
-                if ($mode == 0) $out.= dol_hash($conf->global->PAYPAL_SECURITY_TOKEN . 'contractline' . $ref, 2);
+                if ($mode == 1) $out.="hash('".$conf->global->PAYPAL_SECURITY_TOKEN."' + '".$type."' + contractline_ref)";
+                if ($mode == 0) $out.= dol_hash($conf->global->PAYPAL_SECURITY_TOKEN . $type . $ref, 2);
                 $out.=($mode?'</font>':'');
             }
         }
@@ -303,16 +169,16 @@ function getPaypalPaymentUrl($mode,$type,$ref='',$amount='9.99',$freetag='your_f
             else
             {
                 $out.='&securekey='.($mode?'<font color="#666666">':'');
-                if ($mode == 1) $out.="hash('".$conf->global->PAYPAL_SECURITY_TOKEN."' + 'membersubscription' + member_ref)";
-                if ($mode == 0) $out.= dol_hash($conf->global->PAYPAL_SECURITY_TOKEN . 'membersubscription' . $ref, 2);
+                if ($mode == 1) $out.="hash('".$conf->global->PAYPAL_SECURITY_TOKEN."' + '".$type."' + member_ref)";
+                if ($mode == 0) $out.= dol_hash($conf->global->PAYPAL_SECURITY_TOKEN . $type . $ref, 2);
                 $out.=($mode?'</font>':'');
             }
         }
     }
-    
+
     // For multicompany
-    $out.="&entity=".$conf->entity;
-    
+    $out.="&entity=".$conf->entity; // Check the entity because He may be the same reference in several entities
+
     return $out;
 }
 
@@ -325,7 +191,7 @@ function getPaypalPaymentUrl($mode,$type,$ref='',$amount='9.99',$freetag='your_f
  * @param	string	$paymentType		Payment type
  * @param  	string	$returnURL			Url to use if payment is OK
  * @param   string	$cancelURL			Url to use if payment is KO
- * @param   string	$tag				Tag
+ * @param   string	$tag				Full tag
  * @return	void
  */
 function print_paypal_redirect($paymentAmount,$currencyCodeType,$paymentType,$returnURL,$cancelURL,$tag)
@@ -406,35 +272,54 @@ function print_paypal_redirect($paymentAmount,$currencyCodeType,$paymentType,$re
         $ErrorLongMsg = urldecode($resArray["L_LONGMESSAGE0"]);
         $ErrorSeverityCode = urldecode($resArray["L_SEVERITYCODE0"]);
 
-        echo "SetExpressCheckout API call failed. <br>\n";
-        echo "Detailed Error Message: " . $ErrorLongMsg." <br>\n";
-        echo "Short Error Message: " . $ErrorShortMsg." <br>\n";
-        echo "Error Code: " . $ErrorCode." <br>\n";
-        echo "Error Severity Code: " . $ErrorSeverityCode." <br>\n";
+        echo $langs->trans('SetExpressCheckoutAPICallFailed') . "<br>\n";
+        echo $langs->trans('DetailedErrorMessage') . ": " . $ErrorLongMsg."<br>\n";
+        echo $langs->trans('ShortErrorMessage') . ": " . $ErrorShortMsg."<br>\n";
+        echo $langs->trans('ErrorCode') . ": " . $ErrorCode."<br>\n";
+        echo $langs->trans('ErrorSeverityCode') . ": " . $ErrorSeverityCode."<br>\n";
     }
 
 }
 
-/*
- '-------------------------------------------------------------------------------------------------------------------------------------------
- ' Purpose:     Prepares the parameters for the SetExpressCheckout API Call.
- ' Inputs:
- '      paymentAmount:      Total value of the shopping cart
- '      currencyCodeType:   Currency code value the PayPal API
- '      paymentType:        paymentType has to be one of the following values: Sale or Order or Authorization
- '      returnURL:          the page where buyers return to after they are done with the payment review on PayPal
- '      cancelURL:          the page where buyers return to when they cancel the payment review on PayPal
- '      shipToName:     the Ship to name entered on the merchant's site
- '      shipToStreet:       the Ship to Street entered on the merchant's site
- '      shipToCity:         the Ship to City entered on the merchant's site
- '      shipToState:        the Ship to State entered on the merchant's site
- '      shipToCountryCode:  the Code for Ship to Country entered on the merchant's site
- '      shipToZip:          the Ship to ZipCode entered on the merchant's site
- '      shipToStreet2:      the Ship to Street2 entered on the merchant's site
- '      phoneNum:           the phoneNum  entered on the merchant's site
- '      email:              the buyer email
- '      desc:               Product description
- '--------------------------------------------------------------------------------------------------------------------------------------------
+/**
+ *-------------------------------------------------------------------------------------------------------------------------------------------
+ * Purpose:     Prepares the parameters for the SetExpressCheckout API Call.
+ * Inputs:
+ *      paymentAmount:      Total value of the shopping cart
+ *      currencyCodeType:   Currency code value the PayPal API
+ *      paymentType:        paymentType has to be one of the following values: Sale or Order or Authorization
+ *      returnURL:          the page where buyers return to after they are done with the payment review on PayPal
+ *      cancelURL:          the page where buyers return to when they cancel the payment review on PayPal
+ *      shipToName:     the Ship to name entered on the merchant's site
+ *      shipToStreet:       the Ship to Street entered on the merchant's site
+ *      shipToCity:         the Ship to City entered on the merchant's site
+ *      shipToState:        the Ship to State entered on the merchant's site
+ *      shipToCountryCode:  the Code for Ship to Country entered on the merchant's site
+ *      shipToZip:          the Ship to ZipCode entered on the merchant's site
+ *      shipToStreet2:      the Ship to Street2 entered on the merchant's site
+ *      phoneNum:           the phoneNum  entered on the merchant's site
+ *      email:              the buyer email
+ *      desc:               Product description
+ *
+ * @param 	double 			$paymentAmount		Payment amount
+ * @param 	string 			$currencyCodeType	Currency
+ * @param 	string 			$paymentType		Payment type
+ * @param 	string 			$returnURL			Return Url
+ * @param 	string 			$cancelURL			Cancel Url
+ * @param 	string 			$tag				Full tag
+ * @param 	string 			$solutionType		Type
+ * @param 	string 			$landingPage		Landing page
+ * @param	string			$shipToName			Ship to name
+ * @param	string			$shipToStreet		Ship to street
+ * @param	string			$shipToCity			Ship to city
+ * @param	string			$shipToState		Ship to state
+ * @param	string			$shipToCountryCode	Ship to country code
+ * @param	string			$shipToZip			Ship to zip
+ * @param	string			$shipToStreet2		Ship to street2
+ * @param	string			$phoneNum			Phone
+ * @param	string			$email				Email
+ * @param	string			$desc				Description
+ * @return	array								Array
  */
 function callSetExpressCheckout($paymentAmount, $currencyCodeType, $paymentType, $returnURL, $cancelURL, $tag, $solutionType, $landingPage, $shipToName, $shipToStreet, $shipToCity, $shipToState, $shipToCountryCode, $shipToZip, $shipToStreet2, $phoneNum, $email='', $desc='')
 {
@@ -473,6 +358,7 @@ function callSetExpressCheckout($paymentAmount, $currencyCodeType, $paymentType,
 	$_SESSION["Payment_Amount"] = $paymentAmount;
     $_SESSION["currencyCodeType"] = $currencyCodeType;
     $_SESSION["PaymentType"] = $paymentType;
+    $_SESSION['ipaddress'] = $_SERVER['REMOTE_ADDR '];  // Payer ip
 
     //'---------------------------------------------------------------------------------------------------------------
     //' Make the API call to PayPal
@@ -485,7 +371,6 @@ function callSetExpressCheckout($paymentAmount, $currencyCodeType, $paymentType,
     {
         $token = urldecode($resArray["TOKEN"]);
         $_SESSION['TOKEN']=$token;
-        $_SESSION['ipaddress']=$_SERVER['REMOTE_ADDR '];  // Payer ip
     }
 
     return $resArray;
@@ -544,7 +429,7 @@ function getDetails($token)
  *	@param	string	$payerID			Payer ID
  *	@param	string	$ipaddress			IP Address
  *	@param	string	$FinalPaymentAmt	Amount
- *	@param	string	$tag				Tag
+ *	@param	string	$tag				Full tag
  *	@return	void
  */
 function confirmPayment($token, $paymentType, $currencyCodeType, $payerID, $ipaddress, $FinalPaymentAmt, $tag)
@@ -683,11 +568,15 @@ function hash_call($methodName,$nvpStr)
      exit;*/
     curl_setopt($ch, CURLOPT_URL, $API_Endpoint);
     curl_setopt($ch, CURLOPT_VERBOSE, 1);
-    curl_setopt($ch, CURLOPT_SSLVERSION, 3); // Force SSLv3
+    // TLSv1 by default or change to TLSv1.2 in module configuration
+    curl_setopt($ch, CURLOPT_SSLVERSION, (empty($conf->global->PAYPAL_SSLVERSION)?1:$conf->global->PAYPAL_SSLVERSION));
 
     //turning off the server and peer verification(TrustManager Concept).
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
+
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, empty($conf->global->MAIN_USE_CONNECT_TIMEOUT)?5:$conf->global->MAIN_USE_CONNECT_TIMEOUT);
+    curl_setopt($ch, CURLOPT_TIMEOUT, empty($conf->global->MAIN_USE_RESPONSE_TIMEOUT)?30:$conf->global->MAIN_USE_RESPONSE_TIMEOUT);
 
     curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
     curl_setopt($ch, CURLOPT_POST, 1);
@@ -794,4 +683,3 @@ function getApiError()
 	return $errors;
 }
 
-?>

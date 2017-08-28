@@ -1,65 +1,46 @@
-/*
- * Language code: fi_FI
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-01-19 22:07:11
- */
-
-
-// Date 2009-01-19 22:07:11
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - suppliers
 Suppliers=Tavarantoimittajat
-Supplier=Toimittaja
-AddSupplier=Lisää toimittaja
-SupplierRemoved=Toimittaja poistettu
-SuppliersInvoice=Tavarantoimittajat lasku
-NewSupplier=Uuden toimittajan
+SuppliersInvoice=Tavarantoimittajan lasku
+ShowSupplierInvoice=Näytä tavarantoimittajan lasku
+NewSupplier=Uusi tavarantoimittaja
 History=Historia
-ListOfSuppliers=Luettelo toimittajat
-ShowSupplier=Näytä toimittaja
-OrderDate=Tilaa päivämäärä
-BuyingPrice=Osto
-AddSupplierPrice=Lisää toimittaja hinta
-ChangeSupplierPrice=Vaihtaa toimittajaa hinta
-ErrorQtyTooLowForThisSupplier=Määrä liian alhaisia tämän toimittajan tai ei hinta määritellään tämän tuotteen tämän toimittajan
-ErrorSupplierCountryIsNotDefined=Maa tämä toimittaja ei ole määritelty. Korjata ensin.
-ProductHasAlreadyReferenceInThisSupplier=Tämä tuote on jo viittaus tässä toimittaja
-NoRecordedSuppliers=N: o toimittajat kirjataan
-SupplierPayment=Toimittaja maksu
-SuppliersArea=Tavarantoimittajat alueella
-RefSupplierShort=Ref. toimittaja
-ExportDataset_fournisseur_1=Toimittajan laskujen luettelo ja laskut "linjat
-ExportDataset_fournisseur_2=Toimittajan laskut ja maksut
-ApproveThisOrder=Hyväksy tämä tilaus
-ConfirmApproveThisOrder=Oletko varma, että haluat hyväksyä tämän tilauksen?
-DenyingThisOrder=Kiellä tätä järjestystä
-ConfirmDenyingThisOrder=Oletko varma, että haluat kieltää tämän tilauksen?
-ConfirmCancelThisOrder=Oletko varma, että haluat peruuttaa tämän tilauksen?
-AddCustomerOrder=Luo asiakas jotta
-AddCustomerInvoice=Luo asiakkaalle laskun
-AddSupplierOrder=Luo toimittaja jotta
-AddSupplierInvoice=Luo toimittajan laskun
-ListOfSupplierProductForSupplier=Luettelo tuotteista ja hinnoista <b>toimittaja %s</b>
-// Date 2009-01-19 22:07:11
-// STOP - Lines generated via parser
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-13 20:45:19).
-// Reference language: en_US
-NoneOrBatchFileNeverRan=Ei mitään tai <b>erän %s</b> ei juoksi hiljattain
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 20:45:19).
-
-
-// START - Lines generated via autotranslator.php tool (2010-07-17 11:26:22).
-// Reference language: en_US
-ReferenceSupplierIsAlreadyAssociatedWithAProduct=Tämä viittaus toimittaja on jo liitetty viite: %s
-// STOP - Lines generated via autotranslator.php tool (2010-07-17 11:27:11).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 16:10:23).
-// Reference language: en_US -> fi_FI
-BuyingPriceMin=Minimi ostohinnan
-BuyingPriceMinShort=Min ostohinnan
+ListOfSuppliers=Tavarantoimittajien luettelo
+ShowSupplier=Näytä tavarantoimittaja
+OrderDate=Tilauspäivä
+BuyingPriceMin=Alhaisin ostohinta
+BuyingPriceMinShort=Alhaisin ostohinta
+TotalBuyingPriceMinShort=Alatuotteiden ostohinta yhteensä
+TotalSellingPriceMinShort=Alatuotteiden myyntihinta yhteensä
+SomeSubProductHaveNoPrices=Joidenkin alatuotteidin hintoja ei ole määritelty
+AddSupplierPrice=Lisää ostohinta
+ChangeSupplierPrice=Muuta ostohintaa
+SupplierPrices=Supplier prices
+ReferenceSupplierIsAlreadyAssociatedWithAProduct=Tämä tavarantoimittajan viite on jo liitetty viiteeseen: %s
+NoRecordedSuppliers=Tavarantoimittajia ei ole kirjattu
+SupplierPayment=Tavarantoimittajan maksu
+SuppliersArea=Tavarantoimittaja alue
+RefSupplierShort=Tavarantoimittajan viite
 Availability=Saatavuus
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 16:11:10).
+ExportDataset_fournisseur_1=Lista tavarantoimittajan laskuista ja laskuriveistä
+ExportDataset_fournisseur_2=Tavarantoimittajan laskut ja maksut
+ExportDataset_fournisseur_3=Tavarantoimittajan tilaukset ja tilausrivit
+ApproveThisOrder=Hyväksy tämä tilaus
+ConfirmApproveThisOrder=Haluatko varmasti hyväksyä tilauksen <b>%s</b>?
+DenyingThisOrder=Kiellä tämä tilaus
+ConfirmDenyingThisOrder=Haluatko varmasti kieltää tilauksen <b>%s</b>?
+ConfirmCancelThisOrder=Haluatko varmasti peruuttaa tilauksen <b>%s</b>?
+AddSupplierOrder=Luo tavarantoimittajan tilaus
+AddSupplierInvoice=Luo tavarantoimittajan lasku
+ListOfSupplierProductForSupplier=Luettelo tavarantoimittajan <b>%s</b> tuotteista ja hinnoista
+SentToSuppliers=Lähetetty tavarantoimittajille
+ListOfSupplierOrders=Luettelo tavarantoimittajan tilauksista
+MenuOrdersSupplierToBill=Tavarantoimittajan tilaukset laskulle
+NbDaysToDelivery=Toimitusviive päivinä
+DescNbDaysToDelivery=Suurin toimitusviive tällä tilauksella
+SupplierReputation=Tavarantoimittajan maine
+DoNotOrderThisProductToThisSupplier=Älä tilaa
+NotTheGoodQualitySupplier=Väärä laatu
+ReputationForThisProduct=Maine
+BuyerName=Ostajan nimi
+AllProductServicePrices=Kaikkien tuotteiden / palveluiden hinnat
+BuyingPriceNumShort=Supplier prices

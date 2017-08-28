@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2004-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2005-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2016 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2016 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,17 +24,25 @@
  *      \remarks    Call to wrapper is '<img src="'.DOL_URL_ROOT.'/viewimage.php?modulepart=diroffile&file=relativepathofofile&cache=0">'
  */
 
-//if (! defined('NOREQUIREUSER'))   define('NOREQUIREUSER','1');	// Not disabled cause need to load personalized language
-//if (! defined('NOREQUIREDB'))   define('NOREQUIREDB','1');		// Not disabled cause need to load personalized language
-if (! defined('NOREQUIRESOC'))    define('NOREQUIRESOC','1');
-if (! defined('NOREQUIRETRAN')) define('NOREQUIRETRAN','1');
-if (! defined('NOCSRFCHECK'))     define('NOCSRFCHECK','1');
-if (! defined('NOTOKENRENEWAL'))  define('NOTOKENRENEWAL','1');
-if (! defined('NOREQUIREMENU'))  define('NOREQUIREMENU','1');
-if (! defined('NOREQUIREHTML'))  define('NOREQUIREHTML','1');
-if (! defined('NOREQUIREAJAX'))  define('NOREQUIREAJAX','1');
-// Pour autre que companylogo, on charge environnement + info issus de logon comme le user
-if ((isset($_GET["modulepart"]) && $_GET["modulepart"] == 'companylogo') && ! defined("NOLOGIN")) define("NOLOGIN",'1');
+//if (! defined('NOREQUIREUSER'))	define('NOREQUIREUSER','1');	// Not disabled cause need to load personalized language
+//if (! defined('NOREQUIREDB'))		define('NOREQUIREDB','1');		// Not disabled cause need to load personalized language
+if (! defined('NOREQUIRESOC'))		define('NOREQUIRESOC','1');
+if (! defined('NOREQUIRETRAN'))		define('NOREQUIRETRAN','1');
+if (! defined('NOCSRFCHECK'))		define('NOCSRFCHECK','1');
+if (! defined('NOTOKENRENEWAL'))	define('NOTOKENRENEWAL','1');
+if (! defined('NOREQUIREMENU'))		define('NOREQUIREMENU','1');
+if (! defined('NOREQUIREHTML'))		define('NOREQUIREHTML','1');
+if (! defined('NOREQUIREAJAX'))		define('NOREQUIREAJAX','1');
+if (! defined('NOREQUIREHOOK'))		define('NOREQUIREHOOK','1');	// Disable "main.inc.php" hooks
+// Some value of modulepart can be used to get resources that are public so no login are required.
+if ((isset($_GET["modulepart"]) && ($_GET["modulepart"] == 'mycompany' || $_GET["modulepart"] == 'companylogo')) && ! defined("NOLOGIN")) define("NOLOGIN",'1');
+if ((isset($_GET["modulepart"]) && $_GET["modulepart"] == 'medias') && ! defined("NOLOGIN"))
+{
+	define("NOLOGIN",'1');
+	// For multicompany
+	$entity=(! empty($_GET['entity']) ? (int) $_GET['entity'] : (! empty($_POST['entity']) ? (int) $_POST['entity'] : 1));
+	if (is_numeric($entity)) define("DOLENTITY", $entity);
+}
 
 /**
  * Header empty
@@ -54,15 +62,14 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
 
 $action=GETPOST('action','alpha');
-$original_file=GETPOST("file");
+$original_file=GETPOST("file",'alpha');
 $modulepart=GETPOST('modulepart','alpha');
-$urlsource=GETPOST("urlsource");
-$entity=GETPOST('entity','int');
-if ($entity == '') $entity=1;    // For backward compatibility
+$urlsource=GETPOST("urlsource",'alpha');
+$entity=GETPOST('entity','int')?GETPOST('entity','int'):$conf->entity;
 
 // Security check
 if (empty($modulepart)) accessforbidden('Bad value for parameter modulepart');
-
+if ($modulepart == 'fckeditor') $modulepart='medias';   // For backward compatibility
 
 
 /*
@@ -77,7 +84,7 @@ if (empty($modulepart)) accessforbidden('Bad value for parameter modulepart');
  * View
  */
 
-if (GETPOST("cache"))
+if (GETPOST("cache",'alpha'))
 {
     // Important: Following code is to avoid page request by browser and PHP CPU at
     // each Dolibarr page access.
@@ -95,12 +102,15 @@ $type = 'application/octet-stream';
 if (! empty($_GET["type"])) $type=$_GET["type"];
 else $type=dol_mimetype($original_file);
 
-// Suppression de la chaine de caractere ../ dans $original_file
+// Security: Delete string ../ into $original_file
 $original_file = str_replace("../","/", $original_file);
+
+// Find the subdirectory name as the reference
+$refname=basename(dirname($original_file)."/");
 
 // Security check
 if (empty($modulepart)) accessforbidden('Bad value for parameter modulepart');
-$check_access = dol_check_secure_access_document($modulepart,$original_file,$entity);
+$check_access = dol_check_secure_access_document($modulepart,$original_file,$entity,$refname);
 $accessallowed              = $check_access['accessallowed'];
 $sqlprotectagainstexternals = $check_access['sqlprotectagainstexternals'];
 $original_file              = $check_access['original_file'];
@@ -127,9 +137,9 @@ if (preg_match('/\.\./',$original_file) || preg_match('/[<>|]/',$original_file))
 if ($modulepart == 'barcode')
 {
     $generator=GETPOST("generator","alpha");
-    $code=GETPOST("code");
+    $code=GETPOST("code",'alpha');
     $encoding=GETPOST("encoding","alpha");
-    $readable=GETPOST("readable")?GETPOST("readable","alpha"):"Y";
+    $readable=GETPOST("readable",'alpha')?GETPOST("readable","alpha"):"Y";
 
     if (empty($generator) || empty($encoding))
     {
@@ -137,7 +147,7 @@ if ($modulepart == 'barcode')
         exit;
     }
 
-    $dirbarcode=array_merge(array("/core/modules/barcode/"),$conf->modules_parts['barcode']);
+    $dirbarcode=array_merge(array("/core/modules/barcode/doc/"),$conf->modules_parts['barcode']);
 
     $result=0;
 
@@ -169,9 +179,9 @@ else					// Open and return file
     dol_syslog("viewimage.php return file $original_file content-type=$type");
 
     // This test is to avoid error images when image is not available (for example thumbs).
-    if (! dol_is_file($original_file))
+    if (! dol_is_file($original_file) && empty($_GET["noalt"]))
     {
-        $original_file=DOL_DOCUMENT_ROOT.'/theme/common/nophoto.jpg';
+        $original_file=DOL_DOCUMENT_ROOT.'/public/theme/common/nophoto.png';
         /*$error='Error: File '.$_GET["file"].' does not exists or filesystems permissions are not allowed';
         dol_print_error(0,$error);
         print $error;
@@ -181,13 +191,13 @@ else					// Open and return file
     // Les drois sont ok et fichier trouve
     if ($type)
     {
+        top_httphead($type);
         header('Content-Disposition: inline; filename="'.basename($original_file).'"');
-        header('Content-type: '.$type);
     }
     else
     {
+        top_httphead('image/png');
         header('Content-Disposition: inline; filename="'.basename($original_file).'"');
-        header('Content-type: image/png');
     }
 
     $original_file_osencoded=dol_osencode($original_file);
@@ -196,4 +206,3 @@ else					// Open and return file
 
 
 if (is_object($db)) $db->close();
-?>

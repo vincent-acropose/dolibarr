@@ -1,87 +1,117 @@
-# Dolibarr language file - pt_PT - agenda
-CHARSET=UTF-8
-Actions=Acções
-ActionsArea=Área de Acções
+# Dolibarr language file - Source file is en_US - agenda
+IdAgenda=ID do evento
+Actions=Eventos
 Agenda=Agenda
+TMenuAgenda=Agenda
 Agendas=Agendas
-Calendar=Calendário
-Calendars=Calendários
-AffectedTo=Afecta o
-DoneBy=Realizado por
+LocalAgenda=Calendário interno
+ActionsOwnedBy=Evento de
+ActionsOwnedByShort=Proprietário
+AffectedTo=Atribuído a
+Event=Evento
 Events=Eventos
+EventsNb=Número de eventos
 ListOfActions=Lista de Eventos
 Location=Localização
-SearchAnAction=Procurar uma Acção
-MenuToDoActions=
-MenuDoneActions=
-MenuToDoMyActions=
-MenuDoneMyActions=
-ListOfEvents=Lista de Eventos
-ActionsAskedBy=
-ActionsToDoBy=
-ActionsDoneBy=
-AllMyActions=Todas as minhas acções
-AllActions=Todas as Acções
-ViewList=Ver Lista
-ViewCal=Ver Calendário
-ViewWithPredefinedFilters=
-AutoActions=
-AgendaAutoActionDesc=
-AgendaSetupOtherDesc=
-ActionsEvents=
-PropalValidatedInDolibarr=Proposta Validada
-InvoiceValidatedInDolibarr=Factura Validada
-OrderValidatedInDolibarr=
-NewCompanyToDolibarr=Nova Empresa Adicionada
-DateActionPlannedStart=Planeada data de início
-DateActionPlannedEnd=Planeada data de fim
-DateActionDoneStart=Data Real de Início
-DateActionDoneEnd=Data Real de Fim
-DateActionStart=Data de Início
-DateActionEnd=Data Fim
-AgendaUrlOptions1=Também pode adicionar os seguintes parâmetros de filtro de saída:
-AgendaUrlOptions2=<b>login=%s</b>para restringir a produção para acções criadas por, ou afectadas a fazer pelo utilizador <b>%s</b>.
-AgendaUrlOptions3=<b>logina=%s</b> para restringir a produção para acções criadas pelo utilizador <b>%s</b>.
-AgendaUrlOptions4=<b>logint=%s</b> para restringir a produção para as acções para o utilizador afectado <b>%s</b>.
-AgendaUrlOptions5=<b>logind=%s</b> para restringir a produção para acções feitas pelo utilizador <b>%s</b>.
-AgendaShowBirthdayEvents=Mostrar Aniversários dos Contactos
-AgendaHideBirthdayEvents=Esconder Aniversários dos Contactos
-
-
-// START - Lines generated via autotranslator.php tool (2010-07-17 11:42:52).
-// Reference language: en_US
-InterventionValidatedInDolibarr=Intervenção %s validada
-InterventionValidatedInDolibarr=Intervenção %s validada
-MenuToDoActions=Wszystkich działań niekompletne
-InterventionValidatedInDolibarr=%s Intervenção validada
-// STOP - Lines generated via autotranslator.php tool (2010-07-17 11:42:53).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 15:45:52).
-// Reference language: en_US -> pt_PT
-LocalAgenda=Calendário local
-MyEvents=Meus eventos
-OtherEvents=Outros eventos
-EventOnFullDay=Evento no dia completo
-ViewDay=Modo de exibição Dia
-ViewWeek=Vista da semana
+ToUserOfGroup=Para qualquer utilizador no grupo
+EventOnFullDay=Evento para todo(s) o(s) dia(s)
+MenuToDoActions=Todos os eventos incompletos
+MenuDoneActions=Todos os eventos terminados
+MenuToDoMyActions=Os meus eventos incompletos
+MenuDoneMyActions=Os meus eventos terminados
+ListOfEvents=Lista de eventos (calendário interno)
+ActionsAskedBy=Eventos reportados por
+ActionsToDoBy=Eventos atribuídos a
+ActionsDoneBy=Eventos realizados por
+ActionAssignedTo=Evento atribuído a
+ViewCal=Vista mensal
+ViewDay=Vista diária
+ViewWeek=Vista semanal
+ViewPerUser=Vista por utilizador
+ViewPerType=Vista por tipo
+AutoActions= Preenchimento automático
+AgendaAutoActionDesc= Defina aqui os eventos para os quais deseja que o Dolibarr crie automaticamente um evento na agenda. Se não for seleccionada nenhuma opção, apenas as acções manuais serão incluídas na agenda. Seguimento automático de ações empresariais efetuadas em objetos (validação, mudanças de estado) não será guardado.
+AgendaSetupOtherDesc= Esta página fornece opções para permitir a exportação dos seus eventos do Dolibarr para um calendário externo (Thunderbird, calendário Google, ...)
 AgendaExtSitesDesc=Esta página permite declarar as fontes externas de calendários para ver os seus eventos na agenda do Dolibarr.
-InvoiceBackToDraftInDolibarr=Factura %s voltou ao estado de rascunho
-OrderApprovedInDolibarr=Encomenda %s aprovada
-OrderBackToDraftInDolibarr=Encomenda %s voltou ao estado de rascunho
-OrderCanceledInDolibarr=Encomenda %s cancelada
-ProposalSentByEMail=Proposta a cliente %s enviada por e-mail
-OrderSentByEMail=Encomenda de cliente %s enviada por email
-InvoiceSentByEMail=Factura de cliente %s enviada por e-mail
-SupplierOrderSentByEMail=Encomenda a fornecedor %s enviada por email
-SupplierInvoiceSentByEMail=Factura de fornecedor %s enviada por e-mail
-ShippingSentByEMail=Expedição %s enviada por email
-InterventionSentByEMail=Intervanção %s enviada por e-mail
+ActionsEvents=Eventos em que o Dolibarr criará uma acção em agenda automáticamente
+##### Agenda event labels #####
+NewCompanyToDolibarr=Terceiro %s, criado
+ContractValidatedInDolibarr=Contrato %s, validado
+PropalClosedSignedInDolibarr=Orçamento %s, assinado
+PropalClosedRefusedInDolibarr=Orçamento %s, recusado
+PropalValidatedInDolibarr=Orçamento %s, validado
+PropalClassifiedBilledInDolibarr=Orçamento %s, classificado como faturado
+InvoiceValidatedInDolibarr=Factura %s, validada
+InvoiceValidatedInDolibarrFromPos=Fatura %s, validada a partir do ponto de venda
+InvoiceBackToDraftInDolibarr=Fatura %s, voltou ao estado de rascunho
+InvoiceDeleteDolibarr=Fatura %s, apagada
+InvoicePaidInDolibarr=Fatura %s, paga
+InvoiceCanceledInDolibarr=Fatura %s, cancelada
+MemberValidatedInDolibarr=Membro %s, validado
+MemberModifiedInDolibarr=Membro %s modificado
+MemberResiliatedInDolibarr=Membro %s, terminado
+MemberDeletedInDolibarr=Membro %s, eliminado
+MemberSubscriptionAddedInDolibarr=Subscrição do membro %s, adicionada
+ShipmentValidatedInDolibarr=Expedição %s, validada
+ShipmentClassifyClosedInDolibarr=Expedição %s, classificada como faturada
+ShipmentUnClassifyCloseddInDolibarr=Expedição %s, classificada como re-aberta
+ShipmentDeletedInDolibarr=Expedição %s, eliminada
+OrderCreatedInDolibarr=Encomenda %s, criada
+OrderValidatedInDolibarr=Encomenda %s, validada
+OrderDeliveredInDolibarr=Encomenda %s, classificada como entregue
+OrderCanceledInDolibarr=Encomenda %s, cancelada
+OrderBilledInDolibarr=Encomenda %s, classificada como faturada
+OrderApprovedInDolibarr=Encomenda %s, aprovada
+OrderRefusedInDolibarr=Encomenda %s, recusada
+OrderBackToDraftInDolibarr=Encomenda %s, voltou ao estado de rascunho
+ProposalSentByEMail=Orçamento para cliente, %s, enviado por email
+OrderSentByEMail=Encomenda de cliente, %s, enviada por email
+InvoiceSentByEMail=Fatura de cliente, %s, enviada por email
+SupplierOrderSentByEMail=Encomenda a fornecedor, %s, enviada por email
+SupplierInvoiceSentByEMail=Fatura de fornecedor, %s, enviada por email
+ShippingSentByEMail=Expedição %s, enviada por email
+ShippingValidated= Expedição %s, validada
+InterventionSentByEMail=Intervenção %s, enviada por email
+ProposalDeleted=Orçamento eliminado
+OrderDeleted=Encomenda eliminada
+InvoiceDeleted=Fatura eliminada
+PRODUCT_CREATEInDolibarr=O produto %s foi criado
+PRODUCT_MODIFYInDolibarr=O produto %s foi modificado
+PRODUCT_DELETEInDolibarr=O produto %s foi eliminado
+##### End agenda events #####
+AgendaModelModule=Modelos de documento para o evento
+DateActionStart=Data de início
+DateActionEnd=Data de fim
+AgendaUrlOptions1=Também pode adicionar os seguintes parâmetros de filtro de saída:
+AgendaUrlOptions3=<b>logina=%s</b> para restringir a produção para as acções criadas pelo utilizador <b>%s</b>.
+AgendaUrlOptionsNotAdmin=<b>logina =!%s</b> para restringir a saída às ações que não pertencem ao utilizador <b>%s</b>.
+AgendaUrlOptions4=<b>logint =%s</b> para restringir a saída às ações atribuídas ao utilizador <b>%s</b> (proprietário e outros).
+AgendaUrlOptionsProject=<b>project=PROJECT_ID</b> para restringir a produção para as acções associadas ao projeto <b>PROJECT_ID</b>.
+AgendaShowBirthdayEvents=Mostrar aniversários dos contactos
+AgendaHideBirthdayEvents=Ocultar aniversários dos contactos
+Busy=Ocupado
+ExportDataset_event1=Lista de eventos da agenda
+DefaultWorkingDays=Intervalo pré-definido de dias de trabalho na semana (Exemplo: 1-5, 1-6)
+DefaultWorkingHours=Horas de trabalho pré-definidas no dia (Exemplo: 9-18)
+# External Sites ical
 ExportCal=Exportar calendário
 ExtSites=Importar calendários externos
-ExtSitesEnableThisTool=Mostrar calendários externos na agenda
+ExtSitesEnableThisTool=Mostrar calendários externos (definidos na configuração global) na agenda. Não afeta os calendários externos definidos pelos utilizadores.
 ExtSitesNbOfAgenda=Número de calendários
 AgendaExtNb=Calendário nb %s
-ExtSiteUrlAgenda=URL para aceder. Ficheiro iCal
+ExtSiteUrlAgenda=URL para aceder ao ficheiro .ical
 ExtSiteNoLabel=Sem Descrição
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 15:48:38).
+VisibleTimeRange=Intervalo de tempo visível
+VisibleDaysRange=Intervalo de dias visível
+AddEvent=Criar evento
+MyAvailability=A minha disponibilidade
+ActionType=Tipo de evento
+DateActionBegin=Data de início do evento
+CloneAction=Clonar evento
+ConfirmCloneEvent=Tem a certeza que quer clonar o evento <b>%s</b>?
+RepeatEvent=Repetir evento
+EveryWeek=Semanalmente
+EveryMonth=Mensalmente
+DayOfMonth=Dia do mês
+DayOfWeek=Dia da semana
+DateStartPlusOne=Data de início +1 hora

@@ -1,7 +1,9 @@
 <?php
 /* Copyright (C) 2010-2012	Laurent Destailleur	<ely@users.sourceforge.net>
- * Copyright (C) 2012		Regis Houssin		<regis.houssin@capnetworks.com>
-
+* Copyright (C) 2012		Regis Houssin		<regis.houssin@capnetworks.com>
+* Copyright (C) 2014		Marcos García		<marcosgdf@gmail.com>
+* Copyright (C) 2016		Charlie Benke		<charlie@patas-monkey.com>
+*
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation; either version 3 of the License, or
@@ -55,7 +57,7 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 		$langs->load("companies");
 
 		$this->db = $db;
-		$this->name = "ODT templates";
+		$this->name = "ODT/ODS templates";
 		$this->description = $langs->trans("DocumentModelOdt");
 		$this->scandir = 'FACTURE_ADDON_PDF_ODT_PATH';	// Name of constant that is used to save list of directories to scan
 
@@ -74,7 +76,7 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 		$this->option_modereg = 0;                 // Affiche mode reglement
 		$this->option_condreg = 0;                 // Affiche conditions reglement
 		$this->option_codeproduitservice = 0;      // Affiche code produit-service
-		$this->option_multilang = 0;               // Dispo en plusieurs langues
+		$this->option_multilang = 1;               // Dispo en plusieurs langues
 		$this->option_escompte = 0;                // Affiche si il y a eu escompte
 		$this->option_credit_note = 0;             // Support credit notes
 		$this->option_freetext = 1;				   // Support add of a personalised text
@@ -85,103 +87,6 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 		if (! $this->emetteur->country_code) $this->emetteur->country_code=substr($langs->defaultlang,-2);    // Par defaut, si n'etait pas defini
 	}
 
-
-	/**
-	 * Define array with couple substitution key => substitution value
-	 *
-	 * @param   Object			$object             Main object to use as data source
-	 * @param   Translate		$outputlangs        Lang object to use for output
-	 * @return	array								Array of substitution
-	 */
-	function get_substitutionarray_object($object,$outputlangs)
-	{
-		global $conf;
-
-		$invoice_source=new Facture($this->db);
-		if ($object->fk_facture_source > 0)
-		{
-			$invoice_source->fetch($object->fk_facture_source);
-		}
-		$sumpayed = $object->getSommePaiement();
-		$alreadypayed=price($sumpayed,0,$outputlangs);
-
-		$resarray=array(
-		'object_id'=>$object->id,
-		'object_ref'=>$object->ref,
-		'object_ref_ext'=>$object->ref_ext,
-		'object_ref_customer'=>$object->ref_client,
-		'object_ref_supplier'=>(! empty($object->ref_fournisseur)?$object->ref_fournisseur:''),
-		'object_source_invoice_ref'=>$invoice_source->ref,
-		'object_date'=>dol_print_date($object->date,'day'),
-		'object_date_limit'=>dol_print_date($object->date_lim_reglement,'day'),
-		'object_date_creation'=>dol_print_date($object->date_creation,'day'),
-		'object_date_modification'=>(! empty($object->date_modification)?dol_print_date($object->date_modification,'day'):''),
-		'object_date_validation'=>(! empty($object->date_validation)?dol_print_date($object->date_validation,'dayhour'):''),
-		'object_date_delivery_planed'=>(! empty($object->date_livraison)?dol_print_date($object->date_livraison,'day'):''),
-		'object_payment_mode_code'=>$object->mode_reglement_code,
-		'object_payment_mode'=>($outputlangs->transnoentitiesnoconv('PaymentType'.$object->mode_reglement_code)!='PaymentType'.$object->mode_reglement_code?$outputlangs->transnoentitiesnoconv('PaymentType'.$object->mode_reglement_code):$object->mode_reglement),
-		'object_payment_term_code'=>$object->cond_reglement_code,
-		'object_payment_term'=>($outputlangs->transnoentitiesnoconv('PaymentCondition'.$object->cond_reglement_code)!='PaymentCondition'.$object->cond_reglement_code?$outputlangs->transnoentitiesnoconv('PaymentCondition'.$object->cond_reglement_code):$object->cond_reglement),
-		'object_total_ht'=>price2num($object->total_ht),
-		'object_total_vat'=>price2num($object->total_tva),
-		'object_total_ttc'=>price2num($object->total_ttc),
-		'object_total_discount_ht' => price2num($object->getTotalDiscount(), 0, $outputlangs),
-		'object_vatrate'=>(isset($object->tva)?vatrate($object->tva):''),
-		'object_note_private'=>$object->note,
-		'object_note'=>$object->note_public,
-		// Payments
-		'object_already_payed'=>$alreadypayed,
-		'object_remain_to_pay'=>price2num($object->total_ttc - $sumpayed)
-		);
-
-		// Add vat by rates
-		foreach ($object->lines as $line)
-		{
-			if (empty($resarray['object_total_vat_'.$line->tva_tx])) $resarray['object_total_vat_'.$line->tva_tx]=0;
-			$resarray['object_total_vat_'.$line->tva_tx]+=$line->total_tva;
-		}
-
-		// Retrieve extrafields
-		if(is_array($object->array_options) && count($object->array_options))
-		{
-			if(!class_exists('Extrafields'))
-				require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
-			$extrafields = new ExtraFields($this->db);
-			$extralabels = $extrafields->fetch_name_optionals_label('facture',true);
-			$object->fetch_optionals($object->id,$extralabels);
-
-			$resarray = $this->fill_substitutionarray_with_extrafields($object,$resarray,$extrafields,$array_key='object',$outputlangs);
-		}
-		return $resarray;
-	}
-
-	/**
-	 * Define array with couple substitution key => substitution value
-	 *
-	 * @param   array		$line			Array of lines
-	 * @param   Translate	$outputlangs    Lang object to use for output
-	 * @return	array						Return substitution array
-	 */
-	function get_substitutionarray_lines($line,$outputlangs)
-	{
-		global $conf;
-
-		return array(
-		'line_fulldesc'=>doc_getlinedesc($line,$outputlangs),
-		'line_product_ref'=>$line->product_ref,
-		'line_product_label'=>$line->product_label,
-		'line_desc'=>$line->desc,
-		'line_vatrate'=>vatrate($line->tva_tx,true,$line->info_bits),
-		'line_up'=>price($line->subprice, 0, $outputlangs),
-		'line_qty'=>$line->qty,
-		'line_discount_percent'=>($line->remise_percent?$line->remise_percent.'%':''),
-		'line_price_ht'=>price2num($line->total_ht),
-		'line_price_ttc'=>price2num($line->total_ttc),
-		'line_price_vat'=>price2num($line->total_tva),
-		'line_date_start'=>dol_print_date($line->date_start, 'day', false, $outputlangs),
-		'line_date_end'=>dol_print_date($line->date_end, 'day', false, $outputlangs),
-		);
-	}
 
 	/**
 	 * Return description of a module
@@ -206,7 +111,7 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 		$texte.= '<table class="nobordernopadding" width="100%">';
 
 		// List of directories area
-		$texte.= '<tr><td>';
+		$texte.= '<tr><td valign="middle">';
 		$texttitle=$langs->trans("ListOfDirectories");
 		$listofdir=explode(',',preg_replace('/[\r\n]+/',',',trim($conf->global->FACTURE_ADDON_PDF_ODT_PATH)));
 		$listoffiles=array();
@@ -220,7 +125,7 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 			if (! is_dir($tmpdir)) $texttitle.=img_warning($langs->trans("ErrorDirNotFound",$tmpdir),0);
 			else
 			{
-				$tmpfiles=dol_dir_list($tmpdir,'files',0,'\.odt');
+				$tmpfiles=dol_dir_list($tmpdir,'files',0,'\.(ods|odt)');
 				if (count($tmpfiles)) $listoffiles=array_merge($listoffiles,$tmpfiles);
 			}
 		}
@@ -230,33 +135,40 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 		$texthelp.=$langs->transnoentitiesnoconv("FullListOnOnlineDocumentation");    // This contains an url, we don't modify it
 
 		$texte.= $form->textwithpicto($texttitle,$texthelp,1,'help','',1);
-		$texte.= '<table><tr><td>';
+		$texte.= '<div><div style="display: inline-block; min-width: 100px; vertical-align: middle;">';
 		$texte.= '<textarea class="flat" cols="60" name="value1">';
 		$texte.=$conf->global->FACTURE_ADDON_PDF_ODT_PATH;
 		$texte.= '</textarea>';
-		$texte.= '</td>';
-		$texte.= '<td align="center">&nbsp; ';
+		$texte.= '</div><div style="display: inline-block; vertical-align: middle;">';
 		$texte.= '<input type="submit" class="button" value="'.$langs->trans("Modify").'" name="Button">';
-		$texte.= '</td>';
-		$texte.= '</tr>';
-		$texte.= '</table>';
+		$texte.= '<br></div></div>';
 
 		// Scan directories
-		if (count($listofdir)) $texte.=$langs->trans("NumberOfModelFilesFound").': <b>'.count($listoffiles).'</b>';
+		$nbofiles=count($listoffiles);
+		if (! empty($conf->global->FACTURE_ADDON_PDF_ODT_PATH))
+		{
+			$texte.=$langs->trans("NumberOfModelFilesFound").': <b>';
+			//$texte.=$nbofiles?'<a id="a_'.get_class($this).'" href="#">':'';
+			$texte.=count($listoffiles);
+			//$texte.=$nbofiles?'</a>':'';
+			$texte.='</b>';
+		}
+		if ($nbofiles)
+		{
+   			$texte.='<div id="div_'.get_class($this).'" class="hidden">';
+   			foreach($listoffiles as $file)
+   			{
+                $texte.=$file['name'].'<br>';
+   			}
+   			$texte.='<div id="div_'.get_class($this).'">';
+		}
 
 		$texte.= '</td>';
 
-
-		$texte.= '<td valign="top" rowspan="2">';
+		$texte.= '<td valign="top" rowspan="2" class="hideonsmartphone">';
 		$texte.= $langs->trans("ExampleOfDirectoriesForModelGen");
 		$texte.= '</td>';
 		$texte.= '</tr>';
-
-		/*$texte.= '<tr>';
-		 $texte.= '<td align="center">';
-		$texte.= '<input type="submit" class="button" value="'.$langs->trans("Modify").'" name="Button">';
-		$texte.= '</td>';
-		$texte.= '</tr>';*/
 
 		$texte.= '</table>';
 		$texte.= '</form>';
@@ -339,14 +251,16 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 				$newfiletmp=preg_replace('/\.od(t|s)/i','',$newfile);
 				$newfiletmp=preg_replace('/template_/i','',$newfiletmp);
 				$newfiletmp=preg_replace('/modele_/i','',$newfiletmp);
-				
+
 				$newfiletmp=$objectref.'_'.$newfiletmp;
-				
+
 				// Get extension (ods or odt)
 				$newfileformat=substr($newfile, strrpos($newfile, '.')+1);
 				if ( ! empty($conf->global->MAIN_DOC_USE_TIMING))
 				{
-					$filename=$newfiletmp.'.'.dol_print_date(dol_now(),'%Y%m%d%H%M%S').'.'.$newfileformat;
+				    $format=$conf->global->MAIN_DOC_USE_TIMING;
+				    if ($format == '1') $format='%Y%m%d%H%M%S';
+					$filename=$newfiletmp.'-'.dol_print_date(dol_now(),$format).'.'.$newfileformat;
 				}
 				else
 				{
@@ -376,22 +290,26 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 				{
 					// On peut utiliser le nom de la societe du contact
 					if (! empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) $socobject = $object->contact;
-					else $socobject = $object->client;
+					else {
+			                        $socobject = $object->thirdparty;
+                        			// if we have a BILLING contact and we dont use it as recipient we store the contact object for later use
+                        			$contactobject = $object->contact;
+                    			}
 				}
 				else
 				{
-					$socobject=$object->client;
+					$socobject=$object->thirdparty;
 				}
 
 				// Fetch info for linked propal
-				$linked_propal = $object->fetchObjectLinked('','','','');
+				$object->fetchObjectLinked('','','','');
 				//print_r($object->linkedObjects['propal']); exit;
 
 				$propal_object = $object->linkedObjects['propal'][0];
 
 				// Make substitution
 				$substitutionarray=array(
-				'__FROM_NAME__' => $this->emetteur->nom,
+				'__FROM_NAME__' => $this->emetteur->name,
 				'__FROM_EMAIL__' => $this->emetteur->email,
 				'__TOTAL_TTC__' => $object->total_ttc,
 				'__TOTAL_HT__' => $object->total_ht,
@@ -404,7 +322,7 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 
 				// Line of free text
 				$newfreetext='';
-				$paramfreetext='FACTURE_FREE_TEXT';
+				$paramfreetext='INVOICE_FREE_TEXT';
 				if (! empty($conf->global->$paramfreetext))
 				{
 					$newfreetext=make_substitutions($conf->global->$paramfreetext,$substitutionarray);
@@ -412,15 +330,22 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 
 				// Open and load template
 				require_once ODTPHP_PATH.'odf.php';
-				$odfHandler = new odf(
-					$srctemplatepath,
-					array(
-					'PATH_TO_TMP'	  => $conf->facture->dir_temp,
-					'ZIP_PROXY'		  => 'PclZipProxy',	// PhpZipProxy or PclZipProxy. Got "bad compression method" error when using PhpZipProxy.
-					'DELIMITER_LEFT'  => '{',
-					'DELIMITER_RIGHT' => '}'
-					)
-				);
+				try {
+					$odfHandler = new odf(
+						$srctemplatepath,
+						array(
+						'PATH_TO_TMP'	  => $conf->facture->dir_temp,
+						'ZIP_PROXY'		  => 'PclZipProxy',	// PhpZipProxy or PclZipProxy. Got "bad compression method" error when using PhpZipProxy.
+						'DELIMITER_LEFT'  => '{',
+						'DELIMITER_RIGHT' => '}'
+						)
+					);
+				}
+				catch(Exception $e)
+				{
+					$this->error=$e->getMessage();
+					return -1;
+				}
 				// After construction $odfHandler->contentXml contains content and
 				// [!-- BEGIN row.lines --]*[!-- END row.lines --] has been replaced by
 				// [!-- BEGIN lines --]*[!-- END lines --]
@@ -436,18 +361,22 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 				{
 				}
 
-				// Make substitutions into odt of user info
+				// Make substitutions into odt
 				$array_user=$this->get_substitutionarray_user($user,$outputlangs);
 				$array_soc=$this->get_substitutionarray_mysoc($mysoc,$outputlangs);
 				$array_thirdparty=$this->get_substitutionarray_thirdparty($socobject,$outputlangs);
 				$array_objet=$this->get_substitutionarray_object($object,$outputlangs);
-				$array_propal=is_object($propal_object)?$this->get_substitutionarray_propal($propal_object,$outputlangs,'propal'):array();
-				$array_other=$this->get_substitutionarray_other($user,$outputlangs);
+				$array_propal=is_object($propal_object)?$this->get_substitutionarray_object($propal_object,$outputlangs,'propal'):array();
+				$array_other=$this->get_substitutionarray_other($outputlangs);
+		                // retrieve contact information for use in invoice as contact_xxx tags
+                		$array_thirdparty_contact = array();
+                		if ($usecontact)
+                    			$array_thirdparty_contact=$this->get_substitutionarray_contact($contactobject,$outputlangs,'contact');
 
-				$tmparray = array_merge($array_user,$array_soc,$array_thirdparty,$array_objet,$array_propal);
+				$tmparray = array_merge($array_user,$array_soc,$array_thirdparty,$array_objet,$array_propal,$array_other,$array_thirdparty_contact);
 				complete_substitutions_array($tmparray, $outputlangs, $object);
 				// Call the ODTSubstitution hook
-				$parameters=array('file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs,'substitutionarray'=>&$tmparray);
+				$parameters=array('odfHandler'=>&$odfHandler,'file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs,'substitutionarray'=>&$tmparray);
 				$reshook=$hookmanager->executeHooks('ODTSubstitution',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
 
 				//var_dump($tmparray); exit;
@@ -504,8 +433,20 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 					return -1;
 				}
 
+				// Replace labels translated
+				$tmparray=$outputlangs->get_translations_for_substitutions();
+				foreach($tmparray as $key=>$value)
+				{
+					try {
+						$odfHandler->setVars($key, $value, true, 'UTF-8');
+					}
+					catch(OdfException $e)
+					{
+					}
+				}
+
 				// Call the beforeODTSave hook
-				$parameters=array('odfHandler'=>&$odfHandler,'file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs);
+				$parameters=array('odfHandler'=>&$odfHandler,'file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs,'substitutionarray'=>&$tmparray);
 				$reshook=$hookmanager->executeHooks('beforeODTSave',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
 
 				// Write new file
@@ -524,7 +465,9 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 						$this->error=$e->getMessage();
 						return -1;
 					}
-				}	
+				}
+				$parameters=array('odfHandler'=>&$odfHandler,'file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs,'substitutionarray'=>&$tmparray);
+				$reshook=$hookmanager->executeHooks('afterODTCreation',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
 
 				if (! empty($conf->global->MAIN_UMASK))
 					@chmod($file, octdec($conf->global->MAIN_UMASK));
@@ -545,4 +488,3 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 
 }
 
-?>

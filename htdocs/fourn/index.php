@@ -48,7 +48,7 @@ $companystatic=new Societe($db);
 
 llxHeader("",$langs->trans("SuppliersArea"));
 
-print_fiche_titre($langs->trans("SuppliersArea"));
+print load_fiche_titre($langs->trans("SuppliersArea"));
 
 
 //print '<table border="0" width="100%" class="notopnoleftnoright">';
@@ -81,12 +81,12 @@ if ($resql)
 	while ($i < $num)
 	{
 		$row = $db->fetch_row($resql);
-		$var=!$var;
+		
 
-		print "<tr $bc[$var]>";
+		print '<tr class="oddeven">';
 		print '<td>'.$langs->trans($commande->statuts[$row[1]]).'</td>';
 		print '<td align="center">'.$row[0].'</td>';
-		print '<td align="center"><a href="'.DOL_URL_ROOT.'/fourn/commande/liste.php?statut='.$row[1].'">'.$commande->LibStatut($row[1],3).'</a></td>';
+		print '<td align="center"><a href="'.DOL_URL_ROOT.'/fourn/commande/list.php?statut='.$row[1].'">'.$commande->LibStatut($row[1],3).'</a></td>';
 
 		print "</tr>\n";
 		$i++;
@@ -106,8 +106,8 @@ if (! empty($conf->fournisseur->enabled))
 {
 	$langs->load("orders");
 
-	$sql = "SELECT cf.rowid, cf.ref, cf.total_ttc";
-	$sql.= ", s.nom, s.rowid as socid";
+	$sql = "SELECT cf.rowid, cf.ref, cf.total_ttc,";
+	$sql.= " s.nom as name, s.rowid as socid";
 	$sql.= " FROM ".MAIN_DB_PREFIX."commande_fournisseur as cf";
 	$sql.= ", ".MAIN_DB_PREFIX."societe as s";
 	if (!$user->rights->societe->client->voir && !$socid) $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON s.rowid = sc.fk_soc";
@@ -126,22 +126,22 @@ if (! empty($conf->fournisseur->enabled))
 		{
 			print '<table class="noborder" width="100%">';
 			print '<tr class="liste_titre">';
-			print '<td colspan="3">'.$langs->trans("DraftOrders").' ('.$num.')</td></tr>';
+			print '<td colspan="3">'.$langs->trans("DraftOrders").' <span class="badge">'.$num.'</span></td></tr>';
 
 			$i = 0;
 			$var = true;
 			while ($i < $num)
 			{
-				$var=!$var;
+				
 				$obj = $db->fetch_object($resql);
-				print '<tr '.$bc[$var].'><td  class="nowrap">';
+				print '<tr class="oddeven"><td  class="nowrap">';
 				$commandestatic->id=$obj->rowid;
 				$commandestatic->ref=$obj->ref;
 				print $commandestatic->getNomUrl(1,'',16);
 				print '</td>';
 				print '<td  class="nowrap">';
 				$companystatic->id=$obj->socid;
-				$companystatic->nom=$obj->nom;
+				$companystatic->name=$obj->name;
 				$companystatic->client=0;
 				print $companystatic->getNomUrl(1,'',16);
 				print '</td>';
@@ -151,7 +151,7 @@ if (! empty($conf->fournisseur->enabled))
 			}
 			if ($total>0)
 			{
-				$var=!$var;
+				
 				print '<tr class="liste_total"><td>'.$langs->trans("Total").'</td><td colspan="2" align="right">'.price($total)."</td></tr>";
 			}
 			print "</table>";
@@ -164,7 +164,7 @@ if (! empty($conf->fournisseur->enabled))
 if (! empty($conf->fournisseur->enabled) && $user->rights->fournisseur->facture->lire)
 {
 	$sql = "SELECT ff.ref_supplier, ff.rowid, ff.total_ttc, ff.type";
-	$sql.= ", s.nom, s.rowid as socid";
+	$sql.= ", s.nom as name, s.rowid as socid";
 	$sql.= " FROM ".MAIN_DB_PREFIX."facture_fourn as ff";
 	$sql.= ", ".MAIN_DB_PREFIX."societe as s";
 	if (!$user->rights->societe->client->voir && !$socid) $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON s.rowid = sc.fk_soc";
@@ -183,15 +183,15 @@ if (! empty($conf->fournisseur->enabled) && $user->rights->fournisseur->facture-
 		{
 			print '<table class="noborder" width="100%">';
 			print '<tr class="liste_titre">';
-			print '<td colspan="3">'.$langs->trans("DraftBills").' ('.$num.')</td></tr>';
+			print '<td colspan="3">'.$langs->trans("DraftBills").' <span class="badge">'.$num.'</span></td></tr>';
 			$i = 0;
 			$tot_ttc = 0;
 			$var = True;
 			while ($i < $num && $i < 20)
 			{
 				$obj = $db->fetch_object($resql);
-				$var=!$var;
-				print '<tr '.$bc[$var].'><td class="nowrap">';
+				
+				print '<tr class="oddeven"><td class="nowrap">';
 				$facturestatic->ref=$obj->ref;
 				$facturestatic->id=$obj->rowid;
 				$facturestatic->type=$obj->type;
@@ -199,7 +199,7 @@ if (! empty($conf->fournisseur->enabled) && $user->rights->fournisseur->facture-
 				print '</td>';
 				print '<td class="nowrap">';
 				$companystatic->id=$obj->socid;
-				$companystatic->nom=$obj->nom;
+				$companystatic->name=$obj->name;
 				$companystatic->client=0;
 				print $companystatic->getNomUrl(1,'',16);
 				print '</td>';
@@ -233,14 +233,14 @@ print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
  * List last modified supliers
  */
 $max=10;
-$sql = "SELECT s.rowid as socid, s.nom, s.town, s.datec, s.datea, s.tms, s.prefix_comm, s.code_fournisseur, s.code_compta_fournisseur";
+$sql = "SELECT s.rowid as socid, s.nom as name, s.town, s.datec, s.tms, s.prefix_comm, s.code_fournisseur, s.code_compta_fournisseur";
 $sql.= ", st.libelle as stcomm";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 $sql.= ", ".MAIN_DB_PREFIX."c_stcomm as st";
 if (!$user->rights->societe->client->voir && !$socid) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 $sql.= " WHERE s.fk_stcomm = st.id";
 $sql.= " AND s.fournisseur = 1";
-$sql.= " AND s.entity IN (".getEntity('societe', 1).")";
+$sql.= " AND s.entity IN (".getEntity('societe').")";
 if (!$user->rights->societe->client->voir && !$socid) $sql .= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
 if ($socid) $sql .= " AND s.rowid = ".$socid;
 $sql.= " ORDER BY s.tms DESC";
@@ -263,11 +263,11 @@ if ($resql)
 
 	while ($obj = $db->fetch_object($resql) )
 	{
-		$var=!$var;
+		
 
-		print "<tr $bc[$var]>";
-		print '<td><a href="fiche.php?socid='.$obj->socid.'">'.img_object($langs->trans("ShowSupplier"),"company").'</a>';
-		print "&nbsp;<a href=\"fiche.php?socid=".$obj->socid."\">".$obj->nom."</a></td>\n";
+		print '<tr class="oddeven">';
+		print '<td><a href="card.php?socid='.$obj->socid.'">'.img_object($langs->trans("ShowSupplier"),"company").'</a>';
+		print "&nbsp;<a href=\"card.php?socid=".$obj->socid."\">".$obj->name."</a></td>\n";
 		print '<td align="left">'.$obj->code_fournisseur.'&nbsp;</td>';
 		print '<td align="right">'.dol_print_date($db->jdate($obj->tms),'day').'</td>';
 		print "</tr>\n";
@@ -300,8 +300,8 @@ if (count($companystatic->SupplierCategories))
 
 	foreach ($companystatic->SupplierCategories as $rowid => $label)
 	{
-		$var=!$var;
-		print "<tr $bc[$var]>\n";
+		
+		print "<tr ".$bc[$var].">\n";
 		print '<td>';
 		$categstatic->id=$rowid;
 		$categstatic->ref=$label;
@@ -326,4 +326,3 @@ print '</div></div></div>';
 llxFooter();
 
 $db->close();
-?>

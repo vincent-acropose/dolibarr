@@ -17,14 +17,14 @@
 */
 
 /**
- *       \file       htdocs/core/class/html.formmail.class.php
+ *       \file       htdocs/core/class/html.formsms.class.php
  *       \ingroup    core
  *       \brief      Fichier de la classe permettant la generation du formulaire html d'envoi de mail unitaire
  */
 require_once DOL_DOCUMENT_ROOT .'/core/class/html.form.class.php';
 
 
-/**     
+/**
  *      Classe permettant la generation du formulaire d'envoi de Sms
  *      Usage: $formsms = new FormSms($db)
  *             $formsms->proprietes=1 ou chaine ou tableau de valeurs
@@ -83,20 +83,22 @@ class FormSms
     }
 
     /**
-     *	Show the form to input an sms
+     *	Show the form to input an sms.
      *
-     *	@param	string	$width	Width of form
+     *	@param	string	$morecss        Class on first column td
+     *  @param  int     $showform       Show form tags and submit button (recommanded is to use with value 0)
      *	@return	void
      */
-    function show_form($width='180px')
+    function show_form($morecss='titlefield', $showform=1)
     {
-        global $conf, $langs, $user;
+        global $conf, $langs, $user, $form;
+
+        if (! is_object($form)) $form=new Form($this->db);
 
         $langs->load("other");
         $langs->load("mails");
         $langs->load("sms");
 
-        $form=new Form($this->db);
         $soc=new Societe($this->db);
         if (!empty($this->withtosocid) && $this->withtosocid > 0)
         {
@@ -118,13 +120,14 @@ function limitChars(textarea, limit, infodiv)
 }
 </script>';
 
-        print "<form method=\"POST\" name=\"smsform\" enctype=\"multipart/form-data\" action=\"".$this->param["returnurl"]."\">\n";
+        if ($showform) print "<form method=\"POST\" name=\"smsform\" enctype=\"multipart/form-data\" action=\"".$this->param["returnurl"]."\">\n";
+        
         print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
         foreach ($this->param as $key=>$value)
         {
             print "<input type=\"hidden\" name=\"$key\" value=\"$value\">\n";
         }
-        print "<table class=\"border\" width=\"100%\">\n";
+        print "<table class=\"border centpercent\">\n";
 
         // Substitution array
         if ($this->withsubstit)
@@ -144,8 +147,9 @@ function limitChars(textarea, limit, infodiv)
         {
             if ($this->withfromreadonly)
             {
+                print '<tr><td class="'.$morecss.'">'.$langs->trans("SmsFrom");
                 print '<input type="hidden" name="fromsms" value="'.$this->fromsms.'">';
-                print "<tr><td width=\"".$width."\">".$langs->trans("SmsFrom")."</td><td>";
+                print "</td><td>";
                 if ($this->fromtype == 'user')
                 {
                     $langs->load("users");
@@ -171,7 +175,7 @@ function limitChars(textarea, limit, infodiv)
             }
             else
             {
-                print "<tr><td width=\"".$width."\">".$langs->trans("SmsFrom")."</td><td>";
+                print '<tr><td class="'.$morecss.'">'.$langs->trans("SmsFrom")."</td><td>";
                 //print '<input type="text" name="fromname" size="30" value="'.$this->fromsms.'">';
                 if ($conf->global->MAIN_SMS_SENDMODE == 'ovh')        // For backward compatibility        @deprecated
                 {
@@ -213,6 +217,7 @@ function limitChars(textarea, limit, infodiv)
                 else
                 {
                     dol_syslog("Warning: The SMS sending method has not been defined into MAIN_SMS_SENDMODE", LOG_WARNING);
+	                $resultsender=array();
                     $resultsender[0]->number=$this->fromsms;
                 }
 
@@ -227,7 +232,7 @@ function limitChars(textarea, limit, infodiv)
                 }
                 else
                 {
-                    print '<span class="error">'.$langs->trans("SmsNoPossibleRecipientFound");
+                    print '<span class="error">'.$langs->trans("SmsNoPossibleSenderFound");
                     if (is_object($sms) && ! empty($sms->error)) print ' '.$sms->error;
                     print '</span>';
                 }
@@ -236,7 +241,7 @@ function limitChars(textarea, limit, infodiv)
             }
         }
 
-        // To
+        // To (target)
         if ($this->withto || is_array($this->withto))
         {
             print '<tr><td width="180">';
@@ -250,7 +255,7 @@ function limitChars(textarea, limit, infodiv)
             }
             else
             {
-                print "<input size=\"16\" id=\"sendto\" name=\"sendto\" value=\"".(! is_array($this->withto) && $this->withto != '1'? (isset($_REQUEST["sendto"])?$_REQUEST["sendto"]:$this->withto):"+")."\">";
+                print "<input size=\"16\" id=\"sendto\" name=\"sendto\" value=\"".dol_escape_htmltag(! is_array($this->withto) && $this->withto != '1'? (isset($_REQUEST["sendto"])?GETPOST("sendto"):$this->withto):"+")."\">";
                 if (! empty($this->withtosocid) && $this->withtosocid > 0)
                 {
                     $liste=array();
@@ -275,7 +280,7 @@ function limitChars(textarea, limit, infodiv)
             {
                 $defaultmessage=$this->withbody;
             }
-            $defaultmessage=make_substitutions($defaultmessage,$this->substit,$langs);
+            $defaultmessage=make_substitutions($defaultmessage,$this->substit);
             if (isset($_POST["message"])) $defaultmessage=$_POST["message"];
             $defaultmessage=str_replace('\n',"\n",$defaultmessage);
 
@@ -285,11 +290,11 @@ function limitChars(textarea, limit, infodiv)
             if ($this->withbodyreadonly)
             {
                 print nl2br($defaultmessage);
-                print '<input type="hidden" name="message" value="'.$defaultmessage.'">';
+                print '<input type="hidden" name="message" value="'.dol_escape_htmltag($defaultmessage).'">';
             }
             else
             {
-                print '<textarea cols="40" name="message" id="message" rows="4" onkeyup="limitChars(this, 160, \'charlimitinfospan\')">'.$defaultmessage.'</textarea>';
+                print '<textarea class="quatrevingtpercent" name="message" id="message" rows="'.ROWS_4.'" onkeyup="limitChars(this, 160, \'charlimitinfospan\')">'.$defaultmessage.'</textarea>';
                 print '<div id="charlimitinfo">'.$langs->trans("SmsInfoCharRemain").': <span id="charlimitinfospan">'.(160-dol_strlen($defaultmessage)).'</span></div></td>';
             }
             print "</td></tr>\n";
@@ -302,36 +307,39 @@ function limitChars(textarea, limit, infodiv)
 
            <tr><td>'.$langs->trans("Priority").' :</td><td>
            <select name="priority" id="valid" class="flat">
-           <option value="0">0</option>
-           <option value="1">1</option>
-           <option value="2">2</option>
-           <option value="3" selected="selected">3</option>
+           <option value="0">high</option>
+           <option value="1">medium</option>
+           <option value="2" selected>low</option>
+           <option value="3">veryLow</option>
            </select></td></tr>
 
            <tr><td>'.$langs->trans("Type").' :</td><td>
            <select name="class" id="valid" class="flat">
            <option value="0">Flash</option>
-           <option value="1" selected="selected">Standard</option>
+           <option value="1" selected>Standard</option>
            <option value="2">SIM</option>
            <option value="3">ToolKit</option>
            </select></td></tr>';
 
         print "</table>\n";
 
-        print '<center>';
-        print "<input class=\"button\" type=\"submit\" name=\"sendmail\" value=\"".$langs->trans("SendSms")."\"";
-        print ">";
-        if ($this->withcancel)
+        
+        if ($showform) 
         {
-            print " &nbsp; &nbsp; ";
-            print "<input class=\"button\" type=\"submit\" name=\"cancel\" value=\"".$langs->trans("Cancel")."\">";
+            print '<div class="center">';
+            print '<input class="button" type="submit" name="sendmail" value="'.dol_escape_htmltag($langs->trans("SendSms")).'">';
+            if ($this->withcancel)
+            {
+                print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+                print '<input class="button" type="submit" name="cancel" value="'.dol_escape_htmltag($langs->trans("Cancel")).'">';
+            }
+            print '</div>';
+    
+            print "</form>\n";
         }
-        print "</center>\n";
-
-        print "</form>\n";
+        
         print "<!-- End form SMS -->\n";
     }
 
 }
 
-?>

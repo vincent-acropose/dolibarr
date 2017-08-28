@@ -1,20 +1,17 @@
-/*
- * Language code: bg_BG
- * Automatic generated via autotranslator.php tool
- * Generation date 2012-09-08 17:16:45
- */
-
-
-// START - Lines generated via autotranslator.php tool (2012-09-08 17:16:45).
-// Reference language: en_US -> bg_BG
-CHARSET=UTF-8
-WorkflowSetup=Workflow модул за настройка
-WorkflowDesc=Този модул е ​​desinged да променят поведението на автоматични действия да се прилага. По подразбиране, работният поток се отвори (да направите нещо, за което искате). Можете да позволи на автоматични действия, които да са интересни инча
-ThereIsNoWorkflowToModify=Не е работния процес, можете да модифицирате за модул сте активирали.
-descWORKFLOW_PROPAL_AUTOCREATE_ORDER=Създаване на заявка на клиента автоматично, след като е подписано търговско предложение
-descWORKFLOW_PROPAL_AUTOCREATE_INVOICE=Създаване на фактура на клиента автоматично, след като е подписано търговско предложение
-descWORKFLOW_CONTRACT_AUTOCREATE_INVOICE=Създаване на фактура на клиента автоматично след договор е потвърден
-descWORKFLOW_ORDER_AUTOCREATE_INVOICE=Създаване на фактура на клиента се затваря автоматично след поръчка на клиента
-descWORKFLOW_ORDER_CLASSIFY_BILLED_PROPAL=Класифицира свързан източник на предложение за Плоскоклюн при поръчка на клиента на платен
-descWORKFLOW_INVOICE_CLASSIFY_BILLED_ORDER=Класифицирайте свързани заявка на клиента източник на човка, когато клиент фактура е настроен на платен
-// STOP - Lines generated via autotranslator.php tool (2012-09-08 17:17:20).
+# Dolibarr language file - Source file is en_US - workflow
+WorkflowSetup=Настройки на модул Workflow
+WorkflowDesc=Този модул е проектиран да редактира поведението на автоматичните действия в приложението. По подразбиране, работния процес е отворен (можете да правите неща в реда, в който желаете). Можете да активирате автоматичните действия, които ви интересуват.
+ThereIsNoWorkflowToModify=Няма налични промени на работния процес с активираните модули.
+# Autocreate
+descWORKFLOW_PROPAL_AUTOCREATE_ORDER=Automatically create a customer order after a commercial proposal is signed (new order will have same amount than proposal)
+descWORKFLOW_PROPAL_AUTOCREATE_INVOICE=Automatically create a customer invoice after a commercial proposal is signed (new invoice will have same amount than proposal)
+descWORKFLOW_CONTRACT_AUTOCREATE_INVOICE=Автоматично създаване на клиентска фактура след като договора е валидиран
+descWORKFLOW_ORDER_AUTOCREATE_INVOICE=Automatically create a customer invoice after a customer order is closed (new invoice will have same amount than order)
+# Autoclassify
+descWORKFLOW_ORDER_CLASSIFY_BILLED_PROPAL=Classify linked source proposal(s) to billed when customer order is set to billed (and if amount of the order is same than total amount of signed linked proposals)
+descWORKFLOW_INVOICE_CLASSIFY_BILLED_PROPAL=Classify linked source proposal(s) to billed when customer invoice is validated (and if amount of the invoice is same than total amount of signed linked proposals)
+descWORKFLOW_INVOICE_AMOUNT_CLASSIFY_BILLED_ORDER=Classify linked source customer order(s) to billed when customer invoice is validated (and if amount of the invoice is same than total amount of linked orders)
+descWORKFLOW_INVOICE_CLASSIFY_BILLED_ORDER=Classify linked source customer order(s) to billed when customer invoice is set to paid (and if amount of the invoice is same than total amount of linked orders)
+descWORKFLOW_ORDER_CLASSIFY_SHIPPED_SHIPPING=Classify linked source order to shipped when a shipment is validated (and if quantity shipped by all shipments is the same as in the order to update)
+AutomaticCreation=Automatic creation
+AutomaticClassification=Automatic classification

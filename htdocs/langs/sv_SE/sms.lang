@@ -1,13 +1,4 @@
-/*
- * Language code: sv_SE
- * Automatic generated via autotranslator.php tool
- * Generation date 2012-02-29 17:32:03
- */
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 17:32:03).
-// Reference language: en_US -> sv_SE
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - sms
 Sms=Sms
 SmsSetup=Sms konfiguration
 SmsDesc=Den här sidan kan du definiera Globals optioner på SMS funktioner
@@ -47,16 +38,14 @@ SmsStatusNotSent=Skickades inte
 SmsSuccessfulySent=Sms skickade rätt (från %s till %s)
 ErrorSmsRecipientIsEmpty=Antal mål är tom
 WarningNoSmsAdded=Inget nytt telefonnummer att lägga till målet listan
-ConfirmValidSms=Har bekräfta att du validering av denna kampanjen?
-ConfirmResetMailing=Varning, om du gör en Ominitiera på Sms kampanjen <b>%s,</b> kommer du att göra en massa skicka det en andra gång. Är det verkligen vad du wan att göra?
-ConfirmDeleteMailing=Har bekräfta att du avlägsna kampanjen?
-NbOfRecipients=Antal mål
+ConfirmValidSms=Do you confirm validation of this campain?
 NbOfUniqueSms=Nb DOF unika telefonnummer
 NbOfSms=Nbre av telefo nummer
 ThisIsATestMessage=Detta är ett testmeddelande
 SendSms=Skicka SMS
 SmsInfoCharRemain=Nb av återstående tecken
-SmsInfoNumero=(Format internationella dvs 33899701761)
+SmsInfoNumero= (Format internationella dvs 33899701761)
 DelayBeforeSending=Fördröjning innan du skickar (minuter)
+SmsNoPossibleSenderFound=No sender available. Check setup of your SMS provider.
 SmsNoPossibleRecipientFound=Inget mål tillgänglig. Kontrollera inställningarna i din SMS-leverantör.
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 17:33:03).
+

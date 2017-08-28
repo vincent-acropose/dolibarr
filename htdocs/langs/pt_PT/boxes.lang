@@ -1,121 +1,86 @@
-# Dolibarr language file - pt_PT - boxes 
-CHARSET=UTF-8
-BoxLastRssInfos=Links de informação RSS
-BoxLastProducts=Últimos produtos/serviços
-BoxLastProductsInContract=Últimos produtos/serviços contratados
-BoxLastSupplierBills=Últimas facturas de Fornecedores
-BoxLastCustomerBills=Últimas facturas a clientes
-BoxOldestUnpaidCustomerBills=Facturas a clientes mais antiguas pendentes de pagamento
-BoxOldestUnpaidSupplierBills=Facturas de Fornecedores mais antiguas pendentes de pagamento
-BoxLastProposals=Últimos Orçamentos
-BoxLastProspects=Últimos clientes potenciais
-BoxLastCustomers=Últimos clientes
-BoxLastCustomerOrders=Últimos pedidos
-BoxLastSuppliers=Últimos Fornecedores
-BoxLastBooks=Últimos books
-BoxLastActions=Últimas acções
-BoxCurrentAccounts=Saldos contas correntes
-BoxSalesTurnover=Volume de negocio
-BoxTotalUnpaidCustomerBills=Total facturas a clientes pendentes de pagamento
-BoxTotalUnpaidSuppliersBills=Total facturas de Fornecedores pendentes de pagamento
-BoxTitleLastBooks=Os %s últimos Favoritos registados
-BoxTitleNbOfCustomers=Número de clientes
-BoxTitleLastRssInfos=As %s Ultimas Infos de %s
-BoxTitleLastProducts=Os %s Ultimos Produtos/Serviços Registados
-BoxTitleLastCustomerOrders=Os %s últimos pedidos de clientes modificados
-BoxTitleLastSuppliers=Os %s últimos Fornecedores modificados
-BoxTitleLastCustomers=Os %s últimos clientes modificados
-BoxTitleLastCustomersOrProspects=Os %s últimos clientes ou clientes potenciais registados
-BoxTitleLastPropals=Os %s últimos Orçamentos registados
-BoxTitleLastCustomerBills=As %s últimas facturas a clientes registadas
-BoxTitleLastSupplierBills=As %s últimas facturas de Fornecedores registadas
-BoxTitleLastProspects=Os %s últimos clientes potenciais modificados
-BoxTitleLastProductsInContract=Os %s últimos produtos/serviços contratados
-BoxTitleOldestUnpaidCustomerBills=As %s facturas mais antiguas a clientes Pendentes de cobrança
-BoxTitleOldestUnpaidSupplierBills=As %s facturas mais antiguas de Fornecedores Pendentes de pagamento
-BoxTitleCurrentAccounts=Saldos das contas correntes
-BoxTitleSalesTurnover=Volume de negocio realizado
-BoxTitleTotalUnpaidCustomerBills=Facturas pendentes de clientes
-BoxTitleTotalUnpaidSuppliersBills=Facturas pendentes de Fornecedores
-BoxMyLastBookmarks=Os meus ultimos Favoritos
-FailedToRefreshDataInfoNotUpToDate=Erro ao  refresh fluxo RSS. data do último refresh: %s
-LastRefreshDate=Data última actualização
-NoRecordedBookmarks=Não existem favoritos pessoais. Click aqui para adicionar.
+# Dolibarr language file - Source file is en_US - boxes
+BoxLoginInformation=Login information
+BoxLastRssInfos=Informação RSS
+BoxLastProducts=Os %s últimos produtos/serviços
+BoxProductsAlertStock=Alertas de stock para produtos
+BoxLastProductsInContract=Os %s últimos produtos/serviços contratados
+BoxLastSupplierBills=Últimas faturas do fornecedor
+BoxLastCustomerBills=Últimas faturas do cliente
+BoxOldestUnpaidCustomerBills=Oldest unpaid customer invoices
+BoxOldestUnpaidSupplierBills=Oldest unpaid supplier invoices
+BoxLastProposals=Últimos orçamentos para clientes
+BoxLastProspects=Latest modified prospects
+BoxLastCustomers=Latest modified customers
+BoxLastSuppliers=Latest modified suppliers
+BoxLastCustomerOrders=Latest customer orders
+BoxLastActions=Últimas ações
+BoxLastContracts=Últimos contratos
+BoxLastContacts=Latest contacts/addresses
+BoxLastMembers=Últimos membros
+BoxFicheInter=Últimas intervenções
+BoxCurrentAccounts=Saldo de abertura das contas
+BoxTitleLastRssInfos=Latest %s news from %s
+BoxTitleLastProducts=Latest %s modified products/services
+BoxTitleProductsAlertStock=Produtos no alerta de stock
+BoxTitleLastSuppliers=Latest %s recorded suppliers
+BoxTitleLastModifiedSuppliers=Latest %s modified suppliers
+BoxTitleLastModifiedCustomers=Latest %s modified customers
+BoxTitleLastCustomersOrProspects=Latest %s customers or prospects
+BoxTitleLastCustomerBills=Últimas %s faturas de clientes
+BoxTitleLastSupplierBills=Últimas %s faturas de fornecedores
+BoxTitleLastModifiedProspects=Latest %s modified prospects
+BoxTitleLastModifiedMembers=Latest %s members
+BoxTitleLastFicheInter=Latest %s modified interventions
+BoxTitleOldestUnpaidCustomerBills=Oldest %s unpaid customer invoices
+BoxTitleOldestUnpaidSupplierBills=Oldest %s unpaid supplier invoices
+BoxTitleCurrentAccounts=Open accounts balances
+BoxTitleLastModifiedContacts=Latest %s modified contacts/addresses
+BoxMyLastBookmarks=My latest %s bookmarks
+BoxOldestExpiredServices=Mais antigos ativos de serviços vencidos
+BoxLastExpiredServices=Latest %s oldest contacts with active expired services
+BoxTitleLastActionsToDo=Latest %s actions to do
+BoxTitleLastContracts=Latest %s modified contracts
+BoxTitleLastModifiedDonations=As %s últimos donativos modificados
+BoxTitleLastModifiedExpenses=Latest %s modified expense reports
+BoxGlobalActivity=Atividade global (faturas, orçamentos, encomendas)
+BoxGoodCustomers=Good customers
+BoxTitleGoodCustomers=%s Good customers
+FailedToRefreshDataInfoNotUpToDate=Failed to refresh RSS flux. Latest successfull refresh date: %s
+LastRefreshDate=Latest refresh date
+NoRecordedBookmarks=Não existem marcadores definidos.
+ClickToAdd=Clique aqui para adicionar.
 NoRecordedCustomers=Nenhum cliente registado
-BoxTitleLastActionsToDo=As %s últimas acções a realizar
-NoActionsToDo=Sem acções a realizar
-NoRecordedOrders=Sem pedidos de clientes registados
-NoRecordedProposals=Sem Orçamentos registados
-NoRecordedInvoices=Sem facturas a clientes registados
-NoUnpaidCustomerBills=Sem facturas a clientes Pendentes de pagamento
-NoRecordedSupplierInvoices=Sem facturas de Fornecedores
-NoUnpaidSupplierBills=Sem facturas de Fornecedores Pendentes de Pagamento
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-13 21:10:10).
-// Reference language: en_US
-NoRecordedProducts=Não gravados produtos / serviços
-NoRecordedProspects=Não gravadas perspectivas
-NoContractedProducts=Não contractados produtos / serviços 
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 21:10:10).
-
-
-// START - Lines generated via autotranslator.php tool (2010-07-17 12:08:18).
-// Reference language: en_US
-BoxLastContracts=Ultimos Contractos
-LastRefreshDate=Data última actualização
-BoxTitleLastContracts=Últimos contratos
-NoModifiedSupplierBills=Nenhuma factura de fornecedor registada
-NoRecordedProducts=Não gravados produtos / serviços
-NoRecordedProspects=Não gravadas perspectivas
+NoRecordedContacts=Nenhum contacto registado
+NoActionsToDo=Sem ações a realizar
+NoRecordedOrders=No recorded customer orders
+NoRecordedProposals=Sem orçamentos registados
+NoRecordedInvoices=No recorded customer invoices
+NoUnpaidCustomerBills=No unpaid customer invoices
+NoUnpaidSupplierBills=No unpaid supplier invoices
+NoModifiedSupplierBills=No recorded supplier invoices
+NoRecordedProducts=Nenhum produto/serviço registado
+NoRecordedProspects=Nenhuma prospecção registada
 NoContractedProducts=Não contractados produtos / serviços
 NoRecordedContracts=Sem contratos registrados
-BoxLastContracts=Ultimos Contractos
-BoxTitleLastContracts=Última contratos
-NoModifiedSupplierBills=Nenhuma factura de fornecedor registada
-NoRecordedContracts=Sem contratos registrados
-BoxOldestUnpaidCustomerBills=Facturas a clientes mais antiguas pendentes de pagamento
-BoxOldestUnpaidSupplierBills=Facturas de Fornecedores mais antiguas pendentes de pagamento
-BoxLastContracts=Ultimos Contractos
-BoxTotalUnpaidCustomerBills=Total facturas a clientes pendentes de pagamento
-BoxTotalUnpaidSuppliersBills=Total facturas de Fornecedores pendentes de pagamento
-BoxTitleOldestUnpaidCustomerBills=As %s facturas mais antiguas a clientes Pendentes de cobrança
-BoxTitleOldestUnpaidSupplierBills=As %s facturas mais antiguas de Fornecedores Pendentes de pagamento
-BoxTitleTotalUnpaidCustomerBills=Facturas pendentes de clientes
-BoxTitleTotalUnpaidSuppliersBills=Facturas pendentes de Fornecedores
-BoxTitleLastContracts=Últimos contratos
-NoModifiedSupplierBills=Nenhuma factura de fornecedor registada
-NoRecordedContracts=Sem contratos registrados
-BoxLastContracts=Ultimos Contractos
-BoxTitleLastProductsInContract=Os %s últimos produtos/serviços contratados
-BoxTitleLastContracts=Últimos contratos
-NoModifiedSupplierBills=Nenhuma factura de fornecedor registada
-NoRecordedContracts=Sem contratos registrados
-BoxLastContracts=Última contratos
-BoxTitleLastContracts=Últimos contratos %s
-NoModifiedSupplierBills=Nenhuma factura de fornecedor registada 
-NoRecordedContracts=Sem contratos registrados
-// STOP - Lines generated via autotranslator.php tool (2010-07-17 12:08:24).
-
-
-// START - Lines generated via autotranslator.php tool (2010-09-04 01:33:40).
-// Reference language: en_US -> pt_PT
-BoxTitleLastModifiedSuppliers=%s Modificada fornecedores
-BoxTitleLastModifiedCustomers=%s Modificada clientes
-BoxTitleLastModifiedProspects=%s Modificada perspectivas
-// STOP - Lines generated via autotranslator.php tool (2010-09-04 01:56:38).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 15:45:52).
-// Reference language: en_US -> pt_PT
-BoxLastContacts=Últimos contatos, endereços
-BoxLastMembers=Últimos membros
-BoxTitleLastModifiedMembers=%s últimos membros modificados
-BoxTitleLastModifiedContacts=%s Última modificação contatos, endereços
-BoxOldestExpiredServices=Mais antigos ativos de serviços vencidos
-BoxLastExpiredServices=%s últimos mais antigos contatos com serviços ativos expirados
-BoxTitleLastModifiedDonations=%s Última modificação doações
-BoxTitleLastModifiedExpenses=%s Última modificação despesas
-ClickToAdd=Clique aqui para adicionar.
-NoRecordedContacts=Não há contatos gravados
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 15:46:14).
+NoRecordedInterventions=No recorded interventions
+BoxLatestSupplierOrders=Latest supplier orders
+NoSupplierOrder=No recorded supplier order
+BoxCustomersInvoicesPerMonth=Faturas de clientes por mês
+BoxSuppliersInvoicesPerMonth=Facturas de fornecedores por mês
+BoxCustomersOrdersPerMonth=Encomendas de clientes por mês
+BoxSuppliersOrdersPerMonth=Encomendas a fornecedores por mês
+BoxProposalsPerMonth=Orçamentos por mês
+NoTooLowStockProducts=Nenhum produto abaixo do limite mínimo de stock
+BoxProductDistribution=Distribuição de Produtos/Serviços
+BoxProductDistributionFor=Distribuição de %s para %s
+BoxTitleLastModifiedSupplierBills=Latest %s modified supplier bills
+BoxTitleLatestModifiedSupplierOrders=Latest %s modified supplier orders
+BoxTitleLastModifiedCustomerBills=Latest %s modified customer bills
+BoxTitleLastModifiedCustomerOrders=Latest %s modified customer orders
+BoxTitleLastModifiedPropals=Latest %s modified propals
+ForCustomersInvoices=Facturas de Clientes
+ForCustomersOrders=Encomendas de clientes
+ForProposals=Orçamentos
+LastXMonthRolling=The latest %s month rolling
+ChooseBoxToAdd=Add widget to your dashboard
+BoxAdded=Widget was added in your dashboard

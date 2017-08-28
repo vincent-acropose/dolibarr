@@ -1,17 +1,17 @@
-/*
- * Language code: nl_NL
- * Automatic generated via autotranslator.php tool
- * Generation date 2011-10-10 01:37:25
- */
-
-// START - Lines generated via autotranslator.php tool (2011-10-10 01:37:25).
-// Reference language: en_US -> nl_NL
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - workflow
 WorkflowSetup=Workflow module setup
-WorkflowDesc=Deze module is desinged om het gedrag van automatische acties die passen in de applicatie. Is standaard workflow geopend (je ding in volgorde die u wilt). Je kan ingeschakeld automatische acties die u interessant inch
-ThereIsNoWorkflowToModify=Er is geen workflow die u kunt aanpassen aan je module hebt geactiveerd.
-descWORKFLOW_PROPAL_AUTOCREATE_ORDER=Automatisch een bestelling van de klant na een commerciële voorstel is ondertekend
-descWORKFLOW_PROPAL_AUTOCREATE_INVOICE=Automatisch een factuur klant na een commerciële voorstel is ondertekend
-descWORKFLOW_CONTRACT_AUTOCREATE_INVOICE=Automatisch een factuur nadat de klant een contract is gevalideerd
-descWORKFLOW_ORDER_AUTOCREATE_INVOICE=Automatisch een factuur klant na een bestelling van de klant wordt gesloten
-// STOP - Lines generated via autotranslator.php tool (2011-10-10 02:04:05).
+WorkflowDesc=Deze module is ontworpen om het gedrag van automatische acties aan te passen. Standaard is de workflow open (u kunt dingen doen in de volgorde die u wilt). U kunt automatische acties activeren indien u wenst.
+ThereIsNoWorkflowToModify=There is no workflow modifications available with the activated modules.
+# Autocreate
+descWORKFLOW_PROPAL_AUTOCREATE_ORDER=Automatically create a customer order after a commercial proposal is signed (new order will have same amount than proposal)
+descWORKFLOW_PROPAL_AUTOCREATE_INVOICE=Automatically create a customer invoice after a commercial proposal is signed (new invoice will have same amount than proposal)
+descWORKFLOW_CONTRACT_AUTOCREATE_INVOICE=Automatically create a customer invoice after a contract is validated
+descWORKFLOW_ORDER_AUTOCREATE_INVOICE=Automatically create a customer invoice after a customer order is closed (new invoice will have same amount than order)
+# Autoclassify
+descWORKFLOW_ORDER_CLASSIFY_BILLED_PROPAL=Classify linked source proposal(s) to billed when customer order is set to billed (and if amount of the order is same than total amount of signed linked proposals)
+descWORKFLOW_INVOICE_CLASSIFY_BILLED_PROPAL=Classify linked source proposal(s) to billed when customer invoice is validated (and if amount of the invoice is same than total amount of signed linked proposals)
+descWORKFLOW_INVOICE_AMOUNT_CLASSIFY_BILLED_ORDER=Classify linked source customer order(s) to billed when customer invoice is validated (and if amount of the invoice is same than total amount of linked orders)
+descWORKFLOW_INVOICE_CLASSIFY_BILLED_ORDER=Classify linked source customer order(s) to billed when customer invoice is set to paid (and if amount of the invoice is same than total amount of linked orders)
+descWORKFLOW_ORDER_CLASSIFY_SHIPPED_SHIPPING=Classify linked source order to shipped when a shipment is validated (and if quantity shipped by all shipments is the same as in the order to update)
+AutomaticCreation=Automatic creation
+AutomaticClassification=Automatic classification

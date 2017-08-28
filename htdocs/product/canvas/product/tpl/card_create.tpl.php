@@ -22,7 +22,7 @@ $statutarray=array('1' => $langs->trans("OnSell"), '0' => $langs->trans("NotOnSe
 
 <!-- BEGIN PHP TEMPLATE -->
 
-<?php print_fiche_titre($langs->trans("Product")); ?>
+<?php print load_fiche_titre($langs->trans("Product")); ?>
 
 <?php dol_htmloutput_errors((is_numeric($object->error)?'':$object->error),$object->errors); ?>
 
@@ -33,13 +33,16 @@ $statutarray=array('1' => $langs->trans("OnSell"), '0' => $langs->trans("NotOnSe
 <input type="hidden" name="action" value="add">
 <input type="hidden" name="type" value="0">
 <input type="hidden" name="canvas" value="<?php echo $canvas; ?>">
+<?php if (empty($conf->stock->enabled)) { ?>
+<input name="seuil_stock_alerte" type="hidden" value="0">
+<?php } ?>
 
 <table class="border allwidth">
 
 <tr>
 <td class="fieldrequired" width="20%"><?php echo $langs->trans("Ref"); ?></td>
 <td><input name="ref" size="40" maxlength="32" value="<?php echo $object->ref; ?>">
-<?php if ($_error == 1) echo $langs->trans("RefAlreadyExists"); ?>
+<?php if ($refalreadyexists == 1) echo $langs->trans("RefAlreadyExists"); ?>
 </td></tr>
 
 <tr>
@@ -61,8 +64,6 @@ $statutarray=array('1' => $langs->trans("OnSell"), '0' => $langs->trans("NotOnSe
 <tr><td><?php echo $langs->trans("StockLimit"); ?></td><td>
 <input name="seuil_stock_alerte" size="4" value="<?php echo $object->seuil_stock_alerte; ?>">
 </td></tr>
-<?php } else { ?>
-<input name="seuil_stock_alerte" type="hidden" value="0">
 <?php } ?>
 
 <tr><td><?php echo $langs->trans("Nature"); ?></td><td>
@@ -89,10 +90,7 @@ $statutarray=array('1' => $langs->trans("OnSell"), '0' => $langs->trans("NotOnSe
 <?php echo $object->volume_units; ?>
 </td></tr>
 
-<tr><td><?php echo $langs->trans("Hidden"); ?></td>
-<td><?php echo $object->hidden; ?></td></tr>
-
-<tr><td valign="top"><?php echo $langs->trans("NoteNotVisibleOnBill"); ?></td><td>
+<tr><td class="tdtop"><?php echo $langs->trans("NoteNotVisibleOnBill"); ?></td><td>
 <?php echo $object->textarea_note; ?>
 </td></tr>
 </table>

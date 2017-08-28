@@ -1,32 +1,33 @@
-﻿* Manually generated
- * Generation date 2012-07-17 19:54:26
-
-// START - Lines manually generated (2012-07-17 19:54:26).
- */
-// Reference language: en_US -> TR – donations
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - donations
 Donation=Bağış
 Donations=Bağışlar
+DonationRef=Bağış ref.
 Donor=Bağışçı
-Donors=Bağışçılar
-AddDonation=Bir bağış ekle
+AddDonation=Bir bağış oluştur
 NewDonation=Yeni bağış
-DonationPromise=Hibe sözü
-PromisesNotValid=Doğrulanmamış sözler
-PromisesValid=Doğrulanmış sözler
-DonationsPaid=Ödenen bağışlar
-DonationsReceived=Alınan bağışlar
+DeleteADonation=Bağış sil
+ConfirmDeleteADonation=Bu bağışı silmek istediğinizden emin misiniz?
+ShowDonation=Bağış göster
 PublicDonation=Kamu bağışı
-DonationsNumber=Bağış sayısı
 DonationsArea=Bağış alanı
-DonationStatusPromiseNotValidated=Söz taslağı
+DonationStatusPromiseNotValidated=Taslak söz
 DonationStatusPromiseValidated=Doğrulanmış söz
 DonationStatusPaid=Bağış alındı
 DonationStatusPromiseNotValidatedShort=Taslak
 DonationStatusPromiseValidatedShort=Doğrulanmış
 DonationStatusPaidShort=Alınan
+DonationTitle=Bağış makbuzu
+DonationDatePayment=Ödeme tarihi
 ValidPromess=Söz doğrula
-BuildDonationReceipt=Makbuz oluştur
+DonationReceipt=Bağış makbuzu
 DonationsModels=Bağış makbuzları belge modelleri
 LastModifiedDonations=Düzenlenen son %s bağış
-SearchADonation=Bağış ara
+DonationRecipient=Bağış alıcısı
+IConfirmDonationReception=Alıcı, bağış olarak aşağıdaki tutarı aldığını belirtir
+MinimumAmount=Enaz miktar %s
+FreeTextOnDonations=Sayfa altında gösterilecek serbest metin
+FrenchOptions=Fransa için seçenekler
+DONATION_ART200=Eğer ilgileniyorsanız CGI den 200 öğe göster
+DONATION_ART238=Eğer ilgileniyorsanız CGI den 238 öğe göster
+DONATION_ART885=Show article 885 from CGI if you are concerned
+DonationPayment=Bağış ödemesi

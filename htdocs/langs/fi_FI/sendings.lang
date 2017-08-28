@@ -1,89 +1,70 @@
-/*
- * Language code: fi_FI
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-01-19 22:07:11
- */
-
-
-// Date 2009-01-19 22:07:11
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
-RefSending=Ref. lähettäminen
-Sending=Lähettävä
-Sendings=Sendings
-Receivings=Receivings
-SendingsArea=Sendings alueella
-ListOfSendings=Luettelo sendings
-SendingMethod=Lähetysvalinnat menetelmä
-SendingReceipt=Lähettävä vastaanottanut
-LastSendings=Viimeisin %s sendings
-SearchASending=Haku lähettävä
-StatisticsOfSendings=Tilastot sendings
-NbOfSendings=Lukumäärä sendings
-SendingCard=Lähetysvalinnat-kortti
-NewSending=Uusi lähettäminen
-CreateASending=Luo lähettäminen
-CreateSending=Luo lähettäminen
-QtyOrdered=Kpl velvoitti
-QtyShipped=Kpl lähetysvuotta
-QtyToShip=Kpl alusten
-QtyReceived=Kpl saanut
-KeepToShip=Pidä alusten
-OtherSendingsForSameOrder=Muut sendings tässä tilauksessa
-DateSending=Päiväys lähettämistä, jotta
-DateSendingShort=Päiväys lähettämistä, jotta
-SendingsForSameOrder=Sendings tässä tilauksessa
-SendingsAndReceivingForSameOrder=Sendings ja receivings tässä tilauksessa
-SendingsToValidate=Lähetysvalinnat validoida
+# Dolibarr language file - Source file is en_US - sendings
+RefSending=Toimituksen viite
+Sending=Lähetys
+Sendings=Lähetykset
+AllSendings=All Shipments
+Shipment=Lähettävä
+Shipments=Toimitukset
+ShowSending=Show Shipments
+Receivings=Toimituskuittaukset
+SendingsArea=Lähetys alue
+ListOfSendings=Lista lähetyksistä
+SendingMethod=Toimitustapa
+LastSendings=Viimeisimmät %s toimitukset
+StatisticsOfSendings=Toimitusten tilastot
+NbOfSendings=Toimitusten lukumäärä
+NumberOfShipmentsByMonth=Number of shipments by month
+SendingCard=Toimituskortti
+NewSending=Uusi toimitus
+CreateShipment=Luo lähettäminen
+QtyShipped=Kpl lähetetty
+QtyPreparedOrShipped=Qty prepared or shipped
+QtyToShip=Kpl lähetettävänä
+QtyReceived=Kpl saapunut
+QtyInOtherShipments=Qty in other shipments
+KeepToShip=Lähettämättä
+OtherSendingsForSameOrder=Tämän tilauksen muut toimitukset
+SendingsAndReceivingForSameOrder=Tämän tilauksen toimitukset ja kuittaukset
+SendingsToValidate=Toimitu
+StatusSendingCanceled=Peruttu
 StatusSendingDraft=Vedos
 StatusSendingValidated=Validoidut (tuotteet alukselle tai jo lähettänyt)
+StatusSendingProcessed=Jalostettu
 StatusSendingDraftShort=Vedos
 StatusSendingValidatedShort=Validoidut
-SendingSheet=Lähetysvalinnat arkin
-Carriers=Varustamot
-Carrier=Carrier
-CarriersArea=Liikenteenharjoittajia alueella
-NewCarrier=Uusi operaattori
-ConfirmDeleteSending=Oletko varma, että haluat poistaa tämän lähettämistä?
-ConfirmValidateSending=Oletko varma, että haluat valdate tämän lähettämistä?
-ConfirmCancelSending=Oletko varma, että haluat peruuttaa tämän lähettämistä?
-GenericTransport=Generic liikenne
-Enlevement=Saanut asiakkaan
-DocumentModelSimple=Yksinkertaisen mallin
-WarningNoQtyLeftToSend=Varoitus, ei tuotteet odottavat lähettämistä.
-// Date 2009-01-19 22:07:11
-// STOP - Lines generated via parser
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-13 20:45:19).
-// Reference language: en_US
-StatsOnShipmentsOnlyValidated=Tilastot tehdään siirtoja ainoastaan validoitava
-SendingMethodCATCH=Saalis asiakas
-SendingMethodTRANS=Transporter
-SendingMethodCOLSUI=Colissimo
-DocumentModelSirocco=Yksinkertaisen mallin toimitusten kuitit
-DocumentModelTyphon=Täydellisempi mallin toimitusten kuitit (logo. ..)
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 20:45:19).
-
-
-// START - Lines generated via autotranslator.php tool (2010-07-17 11:26:22).
-// Reference language: en_US
-Shipments=Toimitukset
-StatusSendingCanceled=Peruttu
-StatusSendingCanceledShort=Peruttu
+StatusSendingProcessedShort=Jalostettu
+SendingSheet=Shipment sheet
+ConfirmDeleteSending=Are you sure you want to delete this shipment?
+ConfirmValidateSending=Are you sure you want to validate this shipment with reference <b>%s</b>?
+ConfirmCancelSending=Are you sure you want to cancel this shipment?
 DocumentModelMerou=Merou A5 malli
-DateDeliveryPlanned=Höylätty toimituspäivämäärä
+WarningNoQtyLeftToSend=Varoitus, ei tuotteet odottavat lähettämistä.
+StatsOnShipmentsOnlyValidated=Statistics conducted on shipments only validated. Date used is date of validation of shipment (planed delivery date is not always known).
+DateDeliveryPlanned=Suunniteltu toimituspäivä
+RefDeliveryReceipt=Ref delivery receipt
+StatusReceipt=Status delivery receipt
 DateReceived=Päivämäärä toimitus sai
-// STOP - Lines generated via autotranslator.php tool (2010-07-17 11:26:41).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 16:10:23).
-// Reference language: en_US -> fi_FI
 SendShippingByEMail=Lähetä lähetys sähköpostitse
-SendShippingRef=Lähetä lähetys %s
+SendShippingRef=Submission of shipment %s
 ActionsOnShipping=Tapahtumat lähetystä
 LinkToTrackYourPackage=Linkki seurata pakettisi
 ShipmentCreationIsDoneFromOrder=Tällä hetkellä uuden lähetys tehdään tilauksesta kortin.
+ShipmentLine=Shipment line
+ProductQtyInCustomersOrdersRunning=Product quantity into open customers orders
+ProductQtyInSuppliersOrdersRunning=Product quantity into open suppliers orders
+ProductQtyInShipmentAlreadySent=Product quantity from open customer order already sent
+ProductQtyInSuppliersShipmentAlreadyRecevied=Product quantity from open supplier order already received
+NoProductToShipFoundIntoStock=No product to ship found into warehouse <b>%s</b>. Correct stock or go back to choose another warehouse.
+WeightVolShort=Weight/Vol.
+ValidateOrderFirstBeforeShipment=You must first validate the order before being able to make shipments.
+
+# Sending methods
+# ModelDocument
+DocumentModelTyphon=Täydellisempi mallin toimitusten kuitit (logo. ..)
 Error_EXPEDITION_ADDON_NUMBER_NotDefined=Jatkuva EXPEDITION_ADDON_NUMBER ei määritelty
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 16:13:07).
+SumOfProductVolumes=Sum of product volumes
+SumOfProductWeights=Sum of product weights
+
+# warehouse details
+DetailWarehouseNumber= Warehouse details
+DetailWarehouseFormat= W:%s (Qty : %d)

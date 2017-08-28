@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2004-2011	Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012	Regis Houssin		<regis.houssin@capnetworks.com>
- * Copyright (C) 2012		Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2012-20113	Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 /**
@@ -26,12 +25,20 @@
 
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/doleditor.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 
 $langs->load("admin");
 $langs->load("fckeditor");
 
 $action = GETPOST('action','alpha');
+// Possible modes are:
+// dolibarr_details
+// dolibarr_notes
+// dolibarr_readonly
+// dolibarr_mailings
+// Full (not sure this one is used)
+$mode=GETPOST('mode')?GETPOST('mode','alpha'):'dolibarr_notes';
 
 if (!$user->admin) accessforbidden();
 
@@ -39,27 +46,27 @@ if (!$user->admin) accessforbidden();
 $modules = array(
 'SOCIETE' => 'FCKeditorForCompany',
 'PRODUCTDESC' => 'FCKeditorForProduct',
-'MAILING' => 'FCKeditorForMailing',
 'DETAILS' => 'FCKeditorForProductDetails',
 'USERSIGN' => 'FCKeditorForUserSignature',
+'MAILING' => 'FCKeditorForMailing',
 'MAIL' => 'FCKeditorForMail'
 );
 // Conditions pour que l'option soit proposee
 $conditions = array(
 'SOCIETE' => 1,
 'PRODUCTDESC' => (! empty($conf->product->enabled) || ! empty($conf->service->enabled)),
-'MAILING' => ! empty($conf->mailing->enabled),
-'DETAILS' => (! empty($conf->facture->enabled) || ! empty($conf->propal->enabled) || ! empty($conf->commande->enabled)),
+'DETAILS' => (! empty($conf->facture->enabled) || ! empty($conf->propal->enabled) || ! empty($conf->commande->enabled) || ! empty($conf->supplier_proposal->enabled) || ! empty($conf->fournisseur->enabled)),
 'USERSIGN' => 1,
+'MAILING' => ! empty($conf->mailing->enabled),
 'MAIL' => (! empty($conf->facture->enabled) || ! empty($conf->propal->enabled) || ! empty($conf->commande->enabled))
 );
 // Picto
 $picto = array(
 'SOCIETE' => 'generic',
 'PRODUCTDESC' => 'product',
-'MAILING' => 'email',
-'DETAILS' => 'generic',
+'DETAILS' => 'product',
 'USERSIGN' => 'user',
+'MAILING' => 'email',
 'MAIL' => 'email'
 );
 
@@ -92,12 +99,35 @@ foreach($modules as $const => $desc)
 
 if (GETPOST('save','alpha'))
 {
-    $res=dolibarr_set_const($db, "FCKEDITOR_TEST", GETPOST('formtestfield'),'chaine',0,'',$conf->entity);
+	$error = 0;
 
-    if ($res > 0) $mesg=$langs->trans("RecordModifiedSuccessfully");
+	$fckeditor_skin = GETPOST('fckeditor_skin', 'alpha');
+	if (! empty($fckeditor_skin)) {
+		if (! dolibarr_set_const($db, 'FCKEDITOR_SKIN', $fckeditor_skin, 'chaine', 0, '', $conf->entity)) {
+			$error ++;
+		}
+	} else {
+		$error ++;
+	}
+	
+	$fckeditor_test = GETPOST('formtestfield');
+    if (! empty($fckeditor_test)) {
+		if (! dolibarr_set_const($db, 'FCKEDITOR_TEST', $fckeditor_test, 'chaine', 0, '', $conf->entity)) {
+			$error ++;
+		}
+	} else {
+		$error ++;
+	}
+
+	if (! $error)
+    {
+        setEventMessages($langs->trans("SetupSaved"), null, 'mesgs');
+    }
+    else
+    {
+        setEventMessages($langs->trans("Error"), null, 'errors');
+    }
 }
-
-
 
 /*
  * View
@@ -106,14 +136,14 @@ if (GETPOST('save','alpha'))
 llxHeader();
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans("AdvancedEditor"),$linkback,'setup');
+print load_fiche_titre($langs->trans("AdvancedEditor"),$linkback,'title_setup');
 print '<br>';
 
 $var=true;
 
 if (empty($conf->use_javascript_ajax))
 {
-    dol_htmloutput_errors('',array($langs->trans("NotAvailable"),$langs->trans("JavascriptDisabled")),1);
+	setEventMessages(array($langs->trans("NotAvailable"), $langs->trans("JavascriptDisabled")), null, 'errors');
 }
 else
 {
@@ -129,8 +159,8 @@ else
         // Si condition non remplie, on ne propose pas l'option
         if (! $conditions[$const]) continue;
 
-        $var=!$var;
-        print "<tr ".$bc[$var].">";
+        
+        print '<tr class="oddeven">';
         print '<td width="16">'.img_object("",$picto[$const]).'</td>';
         print '<td>'.$langs->trans($desc).'</td>';
         print '<td align="center" width="100">';
@@ -151,16 +181,53 @@ else
 
     print '</table>'."\n";
 
-    dol_htmloutput_mesg($mesg);
+	print '<br>'."\n";
 
+	print '<form name="formtest" method="POST" action="'.$_SERVER["PHP_SELF"].'">'."\n";
+    
+	// Skins
+    show_skin(null,1);
     print '<br>'."\n";
-    print_fiche_titre($langs->trans("TestSubmitForm"),'','');
-    print '<form name="formtest" method="POST" action="'.$_SERVER["PHP_SELF"].'">'."\n";
+    
+    $listofmodes=array('dolibarr_mailings','dolibarr_notes','dolibarr_details','dolibarr_readonly','Full');
+    $linkstomode='';
+    foreach($listofmodes as $newmode)
+    {
+        if ($linkstomode) $linkstomode.=' - ';
+        $linkstomode.='<a href="'.$_SERVER["PHP_SELF"].'?mode='.$newmode.'">';
+        if ($mode == $newmode) $linkstomode.='<strong>';
+        $linkstomode.=$newmode;
+        if ($mode == $newmode) $linkstomode.='</strong>';
+        $linkstomode.='</a>';
+    }
+    $linkstomode.='';
+	print load_fiche_titre($langs->trans("TestSubmitForm"),$linkstomode,'');
+    print '<input type="hidden" name="mode" value="'.dol_escape_htmltag($mode).'">';
     $uselocalbrowser=true;
-    $editor=new DolEditor('formtestfield',isset($conf->global->FCKEDITOR_TEST)?$conf->global->FCKEDITOR_TEST:'Test','',200,'dolibarr_notes','In', true, $uselocalbrowser);
+    $readonly=($mode=='dolibarr_readonly'?1:0);
+    $editor=new DolEditor('formtestfield',isset($conf->global->FCKEDITOR_TEST)?$conf->global->FCKEDITOR_TEST:'Test','',200,$mode,'In', true, $uselocalbrowser, 1, 120, 8, $readonly);
     $editor->Create();
-    print '<center><br><input class="button" type="submit" name="save" value="'.$langs->trans("Save").'"></center>'."\n";
+    print '<br><div class="center"><input class="button" type="submit" name="save" value="'.$langs->trans("Save").'"></div>'."\n";
+    print '<div id="divforlog"></div>';
     print '</form>'."\n";
+
+    // Add env of ckeditor
+    // This is to show how CKEditor detect browser to understand why editor is disabled or not
+    if (1 == 2)		// Change this to enable output
+    {
+	    print '<br><script language="javascript">
+	    function jsdump(obj, id) {
+		    var out = \'\';
+		    for (var i in obj) {
+		        out += i + ": " + obj[i] + "<br>\n";
+		    }
+
+		    jQuery("#"+id).html(out);
+		}
+
+	    jsdump(CKEDITOR.env, "divforlog");
+	    </script>';
+    }
 
     /*
      print '<!-- Result -->';
@@ -173,4 +240,3 @@ else
 
 llxFooter();
 $db->close();
-?>

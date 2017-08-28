@@ -1,36 +1,33 @@
-/*
- * Language code: he_IL
- * Automatic generated via autotranslator.php tool
- * Generation date 2012-03-10 15:14:54
- */
-
-
-// START - Lines generated via autotranslator.php tool (2012-03-10 15:14:54).
-// Reference language: en_US -> he_IL
-CHARSET=UTF-8
-Donation=תרומה
+# Dolibarr language file - Source file is en_US - donations
+Donation=Donation
 Donations=תרומות
-Donor=תורם
-Donors=התורמים
-AddDonation=הוסף תרומה
-NewDonation=חדש תרומה
-DonationPromise=מתנה ההבטחה
-PromisesNotValid=לא תוקף הבטחות
-PromisesValid=תוקף הבטחות
-DonationsPaid=תרומות תשלום
-DonationsReceived=תרומות שהתקבלו
-PublicDonation=אישי תרומה
-DonationsNumber=תרומה מספר
-DonationsArea=תרומות בתחום
-DonationStatusPromiseNotValidated=טיוטה ההבטחה
-DonationStatusPromiseValidated=תוקף ההבטחה
-DonationStatusPaid=תרומה קיבל
-DonationStatusPromiseNotValidatedShort=טיוטה
-DonationStatusPromiseValidatedShort=תוקף
-DonationStatusPaidShort=קיבל
-ValidPromess=לאמת את ההבטחה
-BuildDonationReceipt=בנה קבלת
-DonationsModels=מסמכים מודלים לאישור תרומה
-LastModifiedDonations=%s האחרונות שונה תרומות
-SearchADonation=חפש תרומה
-// STOP - Lines generated via autotranslator.php tool (2012-03-10 15:32:25).
+DonationRef=Donation ref.
+Donor=Donor
+AddDonation=Create a donation
+NewDonation=New donation
+DeleteADonation=Delete a donation
+ConfirmDeleteADonation=Are you sure you want to delete this donation?
+ShowDonation=Show donation
+PublicDonation=Public donation
+DonationsArea=Donations area
+DonationStatusPromiseNotValidated=Draft promise
+DonationStatusPromiseValidated=Validated promise
+DonationStatusPaid=Donation received
+DonationStatusPromiseNotValidatedShort=Draft
+DonationStatusPromiseValidatedShort=Validated
+DonationStatusPaidShort=Received
+DonationTitle=Donation receipt
+DonationDatePayment=Payment date
+ValidPromess=Validate promise
+DonationReceipt=Donation receipt
+DonationsModels=Documents models for donation receipts
+LastModifiedDonations=Latest %s modified donations
+DonationRecipient=Donation recipient
+IConfirmDonationReception=The recipient declare reception, as a donation, of the following amount
+MinimumAmount=Minimum amount is  %s
+FreeTextOnDonations=Free text to show in footer
+FrenchOptions=Options for France
+DONATION_ART200=Show article 200 from CGI if you are concerned
+DONATION_ART238=Show article 238 from CGI if you are concerned
+DONATION_ART885=Show article 885 from CGI if you are concerned
+DonationPayment=Donation payment

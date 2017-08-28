@@ -25,7 +25,7 @@
 
 global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
 require_once dirname(__FILE__).'/../../htdocs/comm/propal/class/propal.class.php';
 
@@ -80,6 +80,8 @@ class PropalTest extends PHPUnit_Framework_TestCase
 
     	print __METHOD__."\n";
     }
+
+    // tear down after class
     public static function tearDownAfterClass()
     {
     	global $conf,$user,$langs,$db;
@@ -116,7 +118,7 @@ class PropalTest extends PHPUnit_Framework_TestCase
 
     /**
      * testPropalCreate
-     * 
+     *
      * @return	void
      */
     public function testPropalCreate()
@@ -138,10 +140,10 @@ class PropalTest extends PHPUnit_Framework_TestCase
 
     /**
      * testPropalFetch
-     * 
+     *
      * @param	int		$id		Id of object
      * @return	void
-     * 	
+     *
      * @depends	testPropalCreate
      * The depends says test is run only if previous is ok
      */
@@ -162,12 +164,36 @@ class PropalTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * testPropalAddLine
+     *
+     * @param	int		$localobject	Proposal
+     * @return	void
+     *
+     * @depends	testPropalFetch
+     * The depends says test is run only if previous is ok
+     */
+    public function testPropalAddLine($localobject)
+    {
+    	global $conf,$user,$langs,$db;
+    	$conf=$this->savconf;
+    	$user=$this->savuser;
+    	$langs=$this->savlangs;
+    	$db=$this->savdb;
+
+    	$result=$localobject->addline('Added line', 10, 2, 19.6);
+
+    	$this->assertLessThan($result, 0);
+    	print __METHOD__." id=".$localobject->id." result=".$result."\n";
+    	return $localobject;
+    }
+
+    /**
      * testPropalValid
-     * 
+     *
      * @param	Proposal	$localobject	Proposal
      * @return	Proposal
-     * 
-     * @depends	testPropalFetch
+     *
+     * @depends	testPropalAddLine
      * The depends says test is run only if previous is ok
      */
     public function testPropalValid($localobject)
@@ -187,10 +213,10 @@ class PropalTest extends PHPUnit_Framework_TestCase
 
    /**
      * testPropalOther
-     * 
+     *
      * @param	Proposal	$localobject	Proposal
      * @return	int
-     * 
+     *
      * @depends testPropalValid
      * The depends says test is run only if previous is ok
      */
@@ -216,10 +242,10 @@ class PropalTest extends PHPUnit_Framework_TestCase
 
     /**
      * testPropalDelete
-     * 
+     *
      * @param	int		$id		Id of proposal
      * @return	void
-     * 
+     *
      * @depends	testPropalOther
      * The depends says test is run only if previous is ok
      */
@@ -240,27 +266,4 @@ class PropalTest extends PHPUnit_Framework_TestCase
     	return $result;
     }
 
-    /**
-     *	testVerifyNumRef
-     *
-     *	@return	void
-     */
-    public function testVerifyNumRef()
-    {
-    	global $conf,$user,$langs,$db;
-		$conf=$this->savconf;
-		$user=$this->savuser;
-		$langs=$this->savlangs;
-		$db=$this->savdb;
-
-		$localobject=new Propal($this->savdb);
-    	$result=$localobject->ref='refthatdoesnotexists';
-		$result=$localobject->VerifyNumRef();
-
-		print __METHOD__." result=".$result."\n";
-    	$this->assertEquals($result, 0);
-    	return $result;
-    }
-
 }
-?>

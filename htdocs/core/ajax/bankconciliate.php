@@ -25,13 +25,13 @@ if (! defined('NOREQUIREMENU'))  define('NOREQUIREMENU','1');
 if (! defined('NOREQUIREHTML'))  define('NOREQUIREHTML','1');
 if (! defined('NOREQUIREAJAX'))  define('NOREQUIREAJAX','1');
 if (! defined('NOREQUIRESOC'))   define('NOREQUIRESOC','1');
-//if (! defined('NOREQUIRETRAN'))  define('NOREQUIRETRAN','1');    // Required to knwo date format for dol_print_date
+//if (! defined('NOREQUIRETRAN'))  define('NOREQUIRETRAN','1');    // Required to know date format for dol_print_date
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
-$action=GETPOST('action');
+$action=GETPOST('action','aZ09');
 
 
 /*
@@ -45,14 +45,14 @@ $action=GETPOST('action');
 //top_htmlhead("", "", 1);  // Replaced with top_httphead. An ajax page does not need html header.
 top_httphead();
 
-//print '<!-- Ajax page called with url '.$_SERVER["PHP_SELF"].'?'.$_SERVER["QUERY_STRING"].' -->'."\n";
+//print '<!-- Ajax page called with url '.dol_escape_htmltag($_SERVER["PHP_SELF"]).'?'.dol_escape_htmltag($_SERVER["QUERY_STRING"]).' -->'."\n";
 
 if (($user->rights->banque->modifier || $user->rights->banque->consolidate) && $action == 'dvnext')
 {
 	// Increase date
-	$al =new AccountLine($db);
-    $al->datev_next($_GET["rowid"]);
-    $al->fetch($_GET["rowid"]);
+	$al = new AccountLine($db);
+    $al->datev_next(GETPOST('rowid','int'));
+    $al->fetch(GETPOST('rowid','int'));
 
     print '<span>'.dol_print_date($db->jdate($al->datev),"day").'</span>';
 
@@ -63,12 +63,11 @@ if (($user->rights->banque->modifier || $user->rights->banque->consolidate) && $
 {
 	// Decrease date
 	$al =new AccountLine($db);
-    $al->datev_previous($_GET["rowid"]);
-    $al->fetch($_GET["rowid"]);
+    $al->datev_previous(GETPOST('rowid','int'));
+    $al->fetch(GETPOST('rowid','int'));
 
     print '<span>'.dol_print_date($db->jdate($al->datev),"day").'</span>';
 
     exit;
 }
 
-?>

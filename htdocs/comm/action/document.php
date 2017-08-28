@@ -1,9 +1,10 @@
 <?php
 /* Copyright (C) 2003-2004 Rodolphe Quiedeville  <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2012 Laurent Destailleur   <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2015 Laurent Destailleur   <eldy@users.sourceforge.net>
  * Copyright (C) 2005      Marc Barilley / Ocebo <marc@ocebo.com>
  * Copyright (C) 2005-2012 Regis Houssin         <regis.houssin@capnetworks.com>
  * Copyright (C) 2005      Simon TOSSER          <simon@kornog-computing.com>
+ * Copyright (C) 2013      Cédric Salvador       <csalvador@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,8 +41,9 @@ $langs->load("commercial");
 $langs->load("other");
 $langs->load("bills");
 
-$objectid = GETPOST('id','int');
-$action=GETPOST('action','alpha');
+$id = GETPOST('id', 'int');
+$action=GETPOST('action', 'alpha');
+$confirm = GETPOST('confirm', 'alpha');
 
 // Security check
 $socid = GETPOST('socid','int');
@@ -51,54 +53,35 @@ if ($user->societe_id > 0)
 	unset($_GET["action"]);
 	$action='';
 }
-$result = restrictedArea($user, 'agenda', $objectid, 'actioncomm&societe', 'myactions&allactions', 'fk_soc', 'id');
+$result = restrictedArea($user, 'agenda', $id, 'actioncomm&societe', 'myactions|allactions', 'fk_soc', 'id');
 
-$act = new ActionComm($db);
+$object = new ActionComm($db);
 
-if ($objectid > 0)
+if ($id > 0)
 {
-	$ret = $act->fetch($objectid);
-	if ($ret > 0) {
-		$company=new Societe($db);
-		$company->fetch($act->societe->id);
-		$act->societe=$company; // For backward compatibility
-		$act->thirdparty=$company;
-	}
+	$ret = $object->fetch($id);
+	$object->fetch_thirdparty();
 }
 
 // Get parameters
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
 $page = GETPOST("page",'int');
-if ($page == -1) { $page = 0; }
+if (empty($page) || $page == -1) { $page = 0; }     // If $page is not defined, or '' or -1
 $offset = $conf->liste_limit * $page;
 $pageprev = $page - 1;
 $pagenext = $page + 1;
 if (! $sortorder) $sortorder="ASC";
 if (! $sortfield) $sortfield="name";
 
+$upload_dir = $conf->agenda->dir_output.'/'.dol_sanitizeFileName($object->ref);
+$modulepart='contract';
+
 
 /*
- * Action envoie fichier
+ * Actions
  */
-if (GETPOST('sendit') && ! empty($conf->global->MAIN_UPLOAD_DOC))
-{
-	$upload_dir = $conf->agenda->dir_output.'/'.dol_sanitizeFileName($objectid);
-	dol_add_file_process($upload_dir,0,1,'userfile');
-}
-
-/*
- * Efface fichier
- */
-if ($action == 'delete')
-{
-	$upload_dir = $conf->agenda->dir_output.'/'.dol_sanitizeFileName($objectid);
-	$file = $upload_dir . '/' . $_GET['urlfile'];	// Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
-	$ret=dol_delete_file($file,0,0,0,$act);
-	if ($ret) setEventMessage($langs->trans("FileWasRemoved", GETPOST('urlfile')));
-	else setEventMessage($langs->trans("ErrorFailToDeleteFile", GETPOST('urlfile')), 'errors');
-	$action='';
-}
+include_once DOL_DOCUMENT_ROOT . '/core/actions_linkedfiles.inc.php';
 
 
 /*
@@ -111,150 +94,154 @@ $help_url='EN:Module_Agenda_En|FR:Module_Agenda|ES:M&omodulodulo_Agenda';
 llxHeader('',$langs->trans("Agenda"),$help_url);
 
 
-if ($act->id > 0)
+if ($object->id > 0)
 {
-	$upload_dir = $conf->agenda->dir_output.'/'.dol_sanitizeFileName($objectid);
+	$result1=$object->fetch($id);
+	$result2=$object->fetch_thirdparty();
+	$result3=$object->fetch_contact();
+	$result4=$object->fetch_userassigned();
+	$result5=$object->fetch_optionals($id,$extralabels);
+
+	if ($result1 < 0 || $result2 < 0 || $result3 < 0 || $result4 < 0 || $result5 < 0)
+	{
+		dol_print_error($db,$object->error);
+		exit;
+	}
+
+	if ($object->authorid > 0)		{ $tmpuser=new User($db); $res=$tmpuser->fetch($object->authorid); $object->author=$tmpuser; }
+	if ($object->usermodid > 0)		{ $tmpuser=new User($db); $res=$tmpuser->fetch($object->usermodid); $object->usermod=$tmpuser; }
 
 	$author=new User($db);
-	$author->fetch($act->author->id);
-	$act->author=$author;
+	$author->fetch($object->author->id);
+	$object->author=$author;
 
-	if ($act->contact->id) $act->fetch_contact($act->contact->id);
 
-	$head=actions_prepare_head($act);
-	dol_fiche_head($head, 'documents', $langs->trans("Action"),0,'action');
+	$head=actions_prepare_head($object);
+
+	$now=dol_now();
+	$delay_warning=$conf->global->MAIN_DELAY_ACTIONS_TODO*24*60*60;
+
+	dol_fiche_head($head, 'documents', $langs->trans("Action"), -1, 'action');
+
+	$linkback = img_picto($langs->trans("BackToList"),'object_list','class="hideonsmartphone pictoactionview"');
+	$linkback.= '<a href="'.DOL_URL_ROOT.'/comm/action/listactions.php">'.$langs->trans("BackToList").'</a>';
+
+	// Link to other agenda views
+	$out='';
+	$out.=img_picto($langs->trans("ViewPerUser"),'object_calendarperuser','class="hideonsmartphone pictoactionview"');
+	$out.='<a href="'.DOL_URL_ROOT.'/comm/action/peruser.php?action=show_peruser&year='.dol_print_date($object->datep,'%Y').'&month='.dol_print_date($object->datep,'%m').'&day='.dol_print_date($object->datep,'%d').'">'.$langs->trans("ViewPerUser").'</a>';
+	$out.='<br>';
+	$out.=img_picto($langs->trans("ViewCal"),'object_calendar','class="hideonsmartphone pictoactionview"');
+	$out.='<a href="'.DOL_URL_ROOT.'/comm/action/index.php?action=show_month&year='.dol_print_date($object->datep,'%Y').'&month='.dol_print_date($object->datep,'%m').'&day='.dol_print_date($object->datep,'%d').'">'.$langs->trans("ViewCal").'</a>';
+	$out.=img_picto($langs->trans("ViewWeek"),'object_calendarweek','class="hideonsmartphone pictoactionview"');
+	$out.='<a href="'.DOL_URL_ROOT.'/comm/action/index.php?action=show_day&year='.dol_print_date($object->datep,'%Y').'&month='.dol_print_date($object->datep,'%m').'&day='.dol_print_date($object->datep,'%d').'">'.$langs->trans("ViewWeek").'</a>';
+	$out.=img_picto($langs->trans("ViewDay"),'object_calendarday','class="hideonsmartphone pictoactionview"');
+	$out.='<a href="'.DOL_URL_ROOT.'/comm/action/index.php?action=show_day&year='.dol_print_date($object->datep,'%Y').'&month='.dol_print_date($object->datep,'%m').'&day='.dol_print_date($object->datep,'%d').'">'.$langs->trans("ViewDay").'</a>';
+
+	$linkback.=$out;
+
+	$morehtmlref='<div class="refidno">';
+	// Thirdparty
+	//$morehtmlref.='<br>'.$langs->trans('ThirdParty') . ' : ' . $object->thirdparty->getNomUrl(1);
+	// Project
+	if (! empty($conf->projet->enabled))
+	{
+	    $langs->load("projects");
+	    //$morehtmlref.='<br>'.$langs->trans('Project') . ' ';
+	    $morehtmlref.=$langs->trans('Project') . ': ';
+	    if (! empty($object->fk_project)) {
+	        $proj = new Project($db);
+	        $proj->fetch($object->fk_project);
+	        $morehtmlref.='<a href="'.DOL_URL_ROOT.'/projet/card.php?id=' . $object->fk_project . '" title="' . $langs->trans('ShowProject') . '">';
+	        $morehtmlref.=$proj->ref;
+	        $morehtmlref.='</a>';
+	        if ($proj->title) $morehtmlref.=' - '.$proj->title;
+	    } else {
+	        $morehtmlref.='';
+	    }
+	}
+	$morehtmlref.='</div>';
+
+	dol_banner_tab($object, 'id', $linkback, ($user->societe_id?0:1), 'id', 'ref', $morehtmlref);
+
+	print '<div class="fichecenter">';
+
+	print '<div class="underbanner clearboth"></div>';
 
 	// Affichage fiche action en mode visu
 	print '<table class="border" width="100%">';
 
-	$linkback = '<a href="'.DOL_URL_ROOT.'/comm/action/index.php">'.$langs->trans("BackToList").'</a>';
-
-	// Ref
-	print '<tr><td width="30%">'.$langs->trans("Ref").'</td><td colspan="3">';
-	print $form->showrefnav($act, 'id', $linkback, ($user->societe_id?0:1), 'id', 'ref', '');
-	print '</td></tr>';
-
 	// Type
 	if (! empty($conf->global->AGENDA_USE_EVENT_TYPE))
 	{
-		print '<tr><td>'.$langs->trans("Type").'</td><td colspan="3">'.$act->type.'</td></tr>';
+		print '<tr><td class="titlefield">'.$langs->trans("Type").'</td><td colspan="3">'.$object->type.'</td></tr>';
 	}
 
-	// Title
-	print '<tr><td>'.$langs->trans("Title").'</td><td colspan="3">'.$act->label.'</td></tr>';
-
 	// Full day event
-	print '<tr><td>'.$langs->trans("EventOnFullDay").'</td><td colspan="3">'.yn($act->fulldayevent).'</td></tr>';
+	print '<tr><td class="titlefield">'.$langs->trans("EventOnFullDay").'</td><td colspan="3">'.yn($object->fulldayevent, 3).'</td></tr>';
 
 	// Date start
-	print '<tr><td width="30%">'.$langs->trans("DateActionStart").'</td><td colspan="2">';
-	if (! $act->fulldayevent) print dol_print_date($act->datep,'dayhour');
-	else print dol_print_date($act->datep,'day');
-	if ($act->percentage == 0 && $act->datep && $act->datep < ($now - $delay_warning)) print img_warning($langs->trans("Late"));
-	print '</td>';
-	print '<td rowspan="4" align="center" valign="middle" width="180">'."\n";
-	print '<form name="listactionsfiltermonth" action="'.DOL_URL_ROOT.'/comm/action/index.php" method="POST">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="show_month">';
-	print '<input type="hidden" name="year" value="'.dol_print_date($act->datep,'%Y').'">';
-	print '<input type="hidden" name="month" value="'.dol_print_date($act->datep,'%m').'">';
-	print '<input type="hidden" name="day" value="'.dol_print_date($act->datep,'%d').'">';
-	//print '<input type="hidden" name="day" value="'.dol_print_date($act->datep,'%d').'">';
-	print img_picto($langs->trans("ViewCal"),'object_calendar').' <input type="submit" style="width: 120px" class="button" name="viewcal" value="'.$langs->trans("ViewCal").'">';
-	print '</form>'."\n";
-	print '<form name="listactionsfilterweek" action="'.DOL_URL_ROOT.'/comm/action/index.php" method="POST">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="show_week">';
-	print '<input type="hidden" name="year" value="'.dol_print_date($act->datep,'%Y').'">';
-	print '<input type="hidden" name="month" value="'.dol_print_date($act->datep,'%m').'">';
-	print '<input type="hidden" name="day" value="'.dol_print_date($act->datep,'%d').'">';
-	//print '<input type="hidden" name="day" value="'.dol_print_date($act->datep,'%d').'">';
-	print img_picto($langs->trans("ViewCal"),'object_calendarweek').' <input type="submit" style="width: 120px" class="button" name="viewweek" value="'.$langs->trans("ViewWeek").'">';
-	print '</form>'."\n";
-	print '<form name="listactionsfilterday" action="'.DOL_URL_ROOT.'/comm/action/index.php" method="POST">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="show_day">';
-	print '<input type="hidden" name="year" value="'.dol_print_date($act->datep,'%Y').'">';
-	print '<input type="hidden" name="month" value="'.dol_print_date($act->datep,'%m').'">';
-	print '<input type="hidden" name="day" value="'.dol_print_date($act->datep,'%d').'">';
-	//print '<input type="hidden" name="day" value="'.dol_print_date($act->datep,'%d').'">';
-	print img_picto($langs->trans("ViewCal"),'object_calendarday').' <input type="submit" style="width: 120px" class="button" name="viewday" value="'.$langs->trans("ViewDay").'">';
-	print '</form>'."\n";
+	print '<tr><td>'.$langs->trans("DateActionStart").'</td><td colspan="3">';
+	if (! $object->fulldayevent) print dol_print_date($object->datep,'dayhour');
+	else print dol_print_date($object->datep,'day');
+	if ($object->percentage == 0 && $object->datep && $object->datep < ($now - $delay_warning)) print img_warning($langs->trans("Late"));
 	print '</td>';
 	print '</tr>';
 
 	// Date end
-	print '<tr><td>'.$langs->trans("DateActionEnd").'</td><td colspan="2">';
-	if (! $act->fulldayevent) print dol_print_date($act->datef,'dayhour');
-	else print dol_print_date($act->datef,'day');
-	if ($act->percentage > 0 && $act->percentage < 100 && $act->datef && $act->datef < ($now- $delay_warning)) print img_warning($langs->trans("Late"));
-	print '</td></tr>';
-
-	// Status
-	print '<tr><td nowrap>'.$langs->trans("Status").' / '.$langs->trans("Percentage").'</td><td colspan="2">';
-	print $act->getLibStatut(4);
+	print '<tr><td>'.$langs->trans("DateActionEnd").'</td><td colspan="3">';
+	if (! $object->fulldayevent) print dol_print_date($object->datef,'dayhour');
+	else print dol_print_date($object->datef,'day');
+	if ($object->percentage > 0 && $object->percentage < 100 && $object->datef && $object->datef < ($now- $delay_warning)) print img_warning($langs->trans("Late"));
 	print '</td></tr>';
 
 	// Location
-	print '<tr><td>'.$langs->trans("Location").'</td><td colspan="2">'.$act->location.'</td></tr>';
-
-
-	print '</table><br><br><table class="border" width="100%">';
-
-
-	// Third party - Contact
-	print '<tr><td width="30%">'.$langs->trans("ActionOnCompany").'</td><td>'.($act->societe->id?$act->societe->getNomUrl(1):$langs->trans("None"));
-	if ($act->societe->id && $act->type_code == 'AC_TEL')
+	if (empty($conf->global->AGENDA_DISABLE_LOCATION))
 	{
-		if ($act->societe->fetch($act->societe->id))
-		{
-			print "<br>".dol_print_phone($act->societe->tel);
-		}
+		print '<tr><td>'.$langs->trans("Location").'</td><td colspan="3">'.$object->location.'</td></tr>';
 	}
-	print '</td>';
-	print '<td>'.$langs->trans("Contact").'</td>';
-	print '<td>';
-	if ($act->contact->id > 0)
+
+	// Assigned to
+	print '<tr><td class="nowrap">'.$langs->trans("ActionAffectedTo").'</td><td colspan="3">';
+	$listofuserid=array();
+	if (empty($donotclearsession))
 	{
-		print $act->contact->getNomUrl(1);
-		if ($act->contact->id && $act->type_code == 'AC_TEL')
+		if ($object->userownerid > 0) $listofuserid[$object->userownerid]=array('id'=>$object->userownerid,'transparency'=>$object->transparency);	// Owner first
+		if (! empty($object->userassigned))	// Now concat assigned users
 		{
-			if ($act->contact->fetch($act->contact->id))
+			// Restore array with key with same value than param 'id'
+			$tmplist1=$object->userassigned; $tmplist2=array();
+			foreach($tmplist1 as $key => $val)
 			{
-				print "<br>".dol_print_phone($act->contact->phone_pro);
+				if ($val['id'] && $val['id'] != $object->userownerid) $listofuserid[$val['id']]=$val;
 			}
 		}
+		$_SESSION['assignedtouser']=json_encode($listofuserid);
 	}
 	else
 	{
-		print $langs->trans("None");
-	}
-
-	print '</td></tr>';
-
-	// Project
-	if (! empty($conf->projet->enabled))
-	{
-		print '<tr><td valign="top">'.$langs->trans("Project").'</td><td colspan="3">';
-		if ($act->fk_project)
+		if (!empty($_SESSION['assignedtouser']))
 		{
-			$project=new Project($db);
-			$project->fetch($act->fk_project);
-			print $project->getNomUrl(1);
+			$listofuserid=json_decode($_SESSION['assignedtouser'], true);
 		}
-		print '</td></tr>';
 	}
+	print '<div class="assignedtouser">';
+	print $form->select_dolusers_forevent('view', 'assignedtouser', 1, '', 0, '', '', 0, 0, 0, '', 0, '', 'maxwidth300');
+	print '</div>';
+	if (in_array($user->id,array_keys($listofuserid)))
+	{
+		print '<div class="myavailability">';
+		print $langs->trans("MyAvailability").': '.(($object->userassigned[$user->id]['transparency'] > 0)?$langs->trans("Busy"):$langs->trans("Available"));	// We show nothing if event is assigned to nobody
+		print '</div>';
+	}
+	print '	</td></tr>';
 
-	// Priority
-	print '<tr><td nowrap>'.$langs->trans("Priority").'</td><td colspan="3">';
-	print ($act->priority?$act->priority:'');
-	print '</td></tr>';
+	print '</table>';
 
-
-	print '</table><br><br><table class="border" width="100%">';
+	print '<table class="border" width="100%">';
 
 	// Construit liste des fichiers
-	$filearray=dol_dir_list($upload_dir,"files",0,'','\.meta$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
+	$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview.*\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);
 	$totalsize=0;
 	foreach($filearray as $key => $file)
 	{
@@ -262,28 +249,27 @@ if ($act->id > 0)
 	}
 
 
-	print '<tr><td width="30%" nowrap>'.$langs->trans("NbOfAttachedFiles").'</td><td colspan="3">'.count($filearray).'</td></tr>';
+	print '<tr><td class="titlefield" class="nowrap">'.$langs->trans("NbOfAttachedFiles").'</td><td colspan="3">'.count($filearray).'</td></tr>';
 	print '<tr><td>'.$langs->trans("TotalSizeOfAttachedFiles").'</td><td colspan="3">'.$totalsize.' '.$langs->trans("bytes").'</td></tr>';
+
 	print '</table>';
 
-	print '</div>';
+    print '</div>';
+
+    dol_fiche_end();
 
 
-	// Affiche formulaire upload
-	$formfile=new FormFile($db);
-	$formfile->form_attach_new_file(DOL_URL_ROOT.'/comm/action/document.php?id='.$act->id,'',0,0,($user->rights->agenda->myactions->create||$user->rights->agenda->allactions->create),50,$act);
-
-
-	// List of document
-	$param='&id='.$act->id;
-	$formfile->list_of_documents($filearray,$act,'actions',$param,0,'',$user->rights->agenda->myactions->create);
+	$modulepart = 'actions';
+	$permission = $user->rights->agenda->myactions->create||$user->rights->agenda->allactions->create;
+	$param = '&id=' . $object->id;
+	include_once DOL_DOCUMENT_ROOT . '/core/tpl/document_actions_post_headers.tpl.php';
 }
 else
 {
-	print $langs->trans("UnkownError");
+	print $langs->trans("ErrorUnknown");
 }
 
-$db->close();
 
 llxFooter();
-?>
+
+$db->close();

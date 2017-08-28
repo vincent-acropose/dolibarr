@@ -40,7 +40,7 @@ if (! isset($mode) || $mode != 'noajax')    // For ajax call
     require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
     require_once DOL_DOCUMENT_ROOT.'/ecm/class/ecmdirectory.class.php';
 
-	$action=GETPOST("action");
+	$action=GETPOST('action','aZ09');
     $file=urldecode(GETPOST('file'));
     $section=GETPOST("section");
     $module=GETPOST("module");
@@ -49,7 +49,7 @@ if (! isset($mode) || $mode != 'noajax')    // For ajax call
     $sortfield = GETPOST("sortfield",'alpha');
     $sortorder = GETPOST("sortorder",'alpha');
     $page = GETPOST("page",'int');
-    if ($page == -1) { $page = 0; }
+    if (empty($page) || $page == -1) { $page = 0; }     // If $page is not defined, or '' or -1
     $offset = $conf->liste_limit * $page;
     $pageprev = $page - 1;
     $pagenext = $page + 1;
@@ -82,6 +82,7 @@ else    // For no ajax call
     $relativepath=$ecmdir->getRelativePath();
     $upload_dir = $conf->ecm->dir_output.'/'.$relativepath;
 }
+if (empty($url)) $url=DOL_URL_ROOT.'/ecm/index.php';
 
 // Load traductions files
 $langs->load("ecm");
@@ -137,11 +138,11 @@ if (! dol_is_dir($upload_dir))
     exit;*/
 }
 
-print '<!-- TYPE='.$type.' -->'."\n";
-print '<!-- Page called with mode='.(isset($mode)?$mode:'').' type='.$type.' module='.$module.' url='.$_SERVER["PHP_SELF"].'?'.$_SERVER["QUERY_STRING"].' -->'."\n";
+print '<!-- ajaxdirpreview type='.$type.' -->'."\n";
+//print '<!-- Page called with mode='.dol_escape_htmltag(isset($mode)?$mode:'').' type='.dol_escape_htmltag($type).' module='.dol_escape_htmltag($module).' url='.dol_escape_htmltag($url).' '.dol_escape_htmltag($_SERVER["PHP_SELF"]).'?'.dol_escape_htmltag($_SERVER["QUERY_STRING"]).' -->'."\n";
 
 $param=($sortfield?'&sortfield='.$sortfield:'').($sortorder?'&sortorder='.$sortorder:'');
-$url=DOL_URL_ROOT.'/ecm/index.php';
+
 
 // Dir scan
 if ($type == 'directory')
@@ -149,11 +150,11 @@ if ($type == 'directory')
     $formfile=new FormFile($db);
 
     $maxlengthname=40;
-    $excludefiles = array('^SPECIMEN\.pdf$','^\.','\.meta$','^temp$','^payments$','^CVS$','^thumbs$');
+    $excludefiles = array('^SPECIMEN\.pdf$','^\.','(\.meta|_preview.*\.png)$','^temp$','^payments$','^CVS$','^thumbs$');
     $sorting = (strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC);
 
     // Right area. If module is defined, we are in automatic ecm.
-    $automodules = array('company', 'invoice', 'invoice_supplier', 'propal', 'order', 'order_supplier', 'contract', 'product', 'tax', 'project');
+    $automodules = array('company', 'invoice', 'invoice_supplier', 'propal', 'order', 'order_supplier', 'contract', 'product', 'tax', 'project', 'fichinter', 'user', 'expensereport');
 
     // TODO change for multicompany sharing
     // Auto area for suppliers invoices
@@ -161,21 +162,13 @@ if ($type == 'directory')
     // Auto area for suppliers invoices
     else if ($module == 'invoice') $upload_dir = $conf->facture->dir_output;
     // Auto area for suppliers invoices
-    else if ($module == 'invoice_supplier')
-    {
-        $relativepath='facture';
-        $upload_dir = $conf->fournisseur->dir_output.'/'.$relativepath;
-    }
+    else if ($module == 'invoice_supplier') $upload_dir = $conf->fournisseur->facture->dir_output;
     // Auto area for customers orders
     else if ($module == 'propal') $upload_dir = $conf->propal->dir_output;
     // Auto area for customers orders
     else if ($module == 'order') $upload_dir = $conf->commande->dir_output;
     // Auto area for suppliers orders
-    else if ($module == 'order_supplier')
-    {
-        $relativepath='commande';
-        $upload_dir = $conf->fournisseur->dir_output.'/'.$relativepath;
-    }
+    else if ($module == 'order_supplier') $upload_dir = $conf->fournisseur->commande->dir_output;
     // Auto area for suppliers invoices
     else if ($module == 'contract') $upload_dir = $conf->contrat->dir_output;
     // Auto area for products
@@ -184,61 +177,84 @@ if ($type == 'directory')
     else if ($module == 'tax') $upload_dir = $conf->tax->dir_output;
     // Auto area for projects
     else if ($module == 'project') $upload_dir = $conf->projet->dir_output;
+    // Auto area for interventions
+    else if ($module == 'fichinter') $upload_dir = $conf->ficheinter->dir_output;
+    // Auto area for users
+    else if ($module == 'user') $upload_dir = $conf->user->dir_output;
+    // Auto area for expense report
+    else if ($module == 'expensereport') $upload_dir = $conf->expensereport->dir_output;
 
+    // Automatic list
     if (in_array($module, $automodules))
     {
         $param.='&module='.$module;
         $textifempty=($section?$langs->trans("NoFileFound"):($showonrightsize=='featurenotyetavailable'?$langs->trans("FeatureNotYetAvailable"):$langs->trans("NoFileFound")));
 
+        if ($module == 'company') $excludefiles[]='^contact$';   // The subdir 'contact' contains files of contacts with no id of thirdparty.
+
         $filearray=dol_dir_list($upload_dir,"files",1,'', $excludefiles, $sortfield, $sorting,1);
         $formfile->list_of_autoecmfiles($upload_dir,$filearray,$module,$param,1,'',$user->rights->ecm->upload,1,$textifempty,$maxlengthname,$url);
     }
-    //Manual area
+    // Manual list
     else
     {
         $relativepath=$ecmdir->getRelativePath();
         $upload_dir = $conf->ecm->dir_output.'/'.$relativepath;
 
         // If $section defined with value 0
-        if ($section === '0')
+		if ($section === '0' || empty($section))
         {
             $filearray=array();
-            $textifempty='<br><div align="center"><font class="warning">'.$langs->trans("DirNotSynchronizedSyncFirst").'</font></div><br>';
         }
-        else $filearray=dol_dir_list($upload_dir,"files",0,'',array('^\.','\.meta$','^temp$','^CVS$'),$sortfield, $sorting,1);
+        else $filearray=dol_dir_list($upload_dir,"files",0,'',array('^\.','(\.meta|_preview.*\.png)$','^temp$','^CVS$'),$sortfield, $sorting,1);
 
         if ($section)
         {
             $param.='&section='.$section;
             $textifempty = $langs->trans('NoFileFound');
         }
+        else if ($section === '0') $textifempty='<br><div align="center"><font class="warning">'.$langs->trans("DirNotSynchronizedSyncFirst").'</font></div><br>';
         else $textifempty=($showonrightsize=='featurenotyetavailable'?$langs->trans("FeatureNotYetAvailable"):$langs->trans("ECMSelectASection"));
-        
-        $formfile->list_of_documents($filearray,'','ecm',$param,1,$relativepath,$user->rights->ecm->upload,1,$textifempty,$maxlengthname,'',$url);
+
+		$formfile->list_of_documents($filearray,'','ecm',$param,1,$relativepath,$user->rights->ecm->upload,1,$textifempty,$maxlengthname,'',$url);
     }
 }
 
-if (! empty($conf->use_javascript_ajax) && empty($conf->global->MAIN_ECM_DISABLE_JS))
+
+if ($section)
 {
-    if ($section)
-    {
-    	$param.=($param?'?':'').(preg_replace('/^&/','',$param));
+	$useajax=1;
+	if (! empty($conf->dol_use_jmobile)) $useajax=0;
+	if (empty($conf->use_javascript_ajax)) $useajax=0;
+	if (! empty($conf->global->MAIN_ECM_DISABLE_JS)) $useajax=0;
 
-        require_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php';
-        $useglobalvars=1;
-        $form = new Form($db);
-        $formquestion=array('urlfile'=>array('type'=>'hidden','value'=>'','name'=>'urlfile'));
-        print $form->formconfirm($url,$langs->trans("DeleteFile"),$langs->trans("ConfirmDeleteFile"),'confirm_deletefile',$formquestion,"no",'deletefile');
+	$param.=($param?'?':'').(preg_replace('/^&/','',$param));
 
-        // Enable jquery handlers on new generated HTML objects
-        print '<script type="text/javascript">'."\n";
-        print 'jQuery(document).ready(function() {'."\n";
-        print 'jQuery(".deletefilelink").click(function(e) { jQuery("#urlfile").val(jQuery(this).attr("rel")); jQuery("#dialog-confirm-deletefile").dialog("open"); return false; });'."\n";
-        print '});'."\n";
-        print '</script>'."\n";
-    }
+	if ($useajax || $action == 'delete')
+	{
+		$urlfile='';
+		if ($action == 'delete') $urlfile=GETPOST('urlfile');
+
+		require_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php';
+		$useglobalvars=1;
+		$form = new Form($db);
+		$formquestion=array(
+			'urlfile'=>array('type'=>'hidden','value'=>$urlfile,'name'=>'urlfile'),
+			'section'=>array('type'=>'hidden','value'=>$section,'name'=>'section')
+		);
+		print $form->formconfirm($url,$langs->trans("DeleteFile"),$langs->trans("ConfirmDeleteFile"),'confirm_deletefile',$formquestion,"no",($useajax?'deletefile':0));
+	}
+
+	if ($useajax)
+	{
+		// Enable jquery handlers on new generated HTML objects
+		print '<script type="text/javascript">'."\n";
+		print 'jQuery(document).ready(function() {'."\n";
+		print 'jQuery(".deletefilelink").click(function(e) { jQuery("#urlfile").val(jQuery(this).attr("rel")); jQuery("#dialog-confirm-deletefile").dialog("open"); return false; });'."\n";
+		print '});'."\n";
+		print '</script>'."\n";
+	}
 }
 
 // Close db if mode is not noajax
 if ((! isset($mode) || $mode != 'noajax') && is_object($db)) $db->close();
-?>

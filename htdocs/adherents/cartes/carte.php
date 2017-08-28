@@ -60,19 +60,19 @@ if ((! empty($foruserid) || ! empty($foruserlogin) || ! empty($mode)) && ! $mesg
 {
     $arrayofmembers=array();
 
-    // requete en prenant que les adherents a jour de cotisation
+    // request taking into account member with up to date subscriptions
     $sql = "SELECT d.rowid, d.firstname, d.lastname, d.login, d.societe as company, d.datefin,";
     $sql.= " d.address, d.zip, d.town, d.country, d.birth, d.email, d.photo,";
     $sql.= " t.libelle as type,";
-    $sql.= " p.code as country_code, p.libelle as country";
+    $sql.= " c.code as country_code, c.label as country";
     $sql.= " FROM ".MAIN_DB_PREFIX."adherent_type as t, ".MAIN_DB_PREFIX."adherent as d";
-    $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_pays as p ON d.country = p.rowid";
+    $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_country as c ON d.country = c.rowid";
     $sql.= " WHERE d.fk_adherent_type = t.rowid AND d.statut = 1";
     if (is_numeric($foruserid)) $sql.=" AND d.rowid=".$foruserid;
     if ($foruserlogin) $sql.=" AND d.login='".$db->escape($foruserlogin)."'";
     $sql.= " ORDER BY d.rowid ASC";
 
-    dol_syslog("Search members sql=".$sql);
+    dol_syslog("Search members", LOG_DEBUG);
     $result = $db->query($sql);
     if ($result)
     {
@@ -89,26 +89,25 @@ if ((! empty($foruserid) || ! empty($foruserlogin) || ! empty($mode)) && ! $mesg
 
     		// List of values to scan for a replacement
             $substitutionarray = array (
-            '%ID%'=>$objp->rowid,
-            '%LOGIN%'=>$objp->login,
-            '%FIRSTNAME%'=>$objp->firstname,
-            '%LASTNAME%'=>$objp->lastname,
-            '%FULLNAME%'=>$adherentstatic->getFullName($langs),
-            '%COMPANY%'=>$objp->company,
-            '%ADDRESS%'=>$objp->address,
-            '%ZIP%'=>$objp->zip,
-            '%TOWN%'=>$objp->town,
-            '%COUNTRY%'=>$objp->country,
-            '%COUNTRY_CODE%'=>$objp->country_code,
-            '%EMAIL%'=>$objp->email,
-            '%BIRTH%'=>dol_print_date($objp->birth,'day'),
-            '%TYPE%'=>$objp->type,
-            '%YEAR%'=>$year,
-            '%MONTH%'=>$month,
-            '%DAY%'=>$day,
-            '%DOL_MAIN_URL_ROOT%'=>DOL_MAIN_URL_ROOT,
-            '%SERVER%'=>"http://".$_SERVER["SERVER_NAME"]."/",	
-            '%SOCIETE%'=>$objp->company
+                '%ID%'=>$objp->rowid,
+                '%LOGIN%'=>$objp->login,
+                '%FIRSTNAME%'=>$objp->firstname,
+                '%LASTNAME%'=>$objp->lastname,
+                '%FULLNAME%'=>$adherentstatic->getFullName($langs),
+                '%COMPANY%'=>$objp->company,
+                '%ADDRESS%'=>$objp->address,
+                '%ZIP%'=>$objp->zip,
+                '%TOWN%'=>$objp->town,
+                '%COUNTRY%'=>$objp->country,
+                '%COUNTRY_CODE%'=>$objp->country_code,
+                '%EMAIL%'=>$objp->email,
+                '%BIRTH%'=>dol_print_date($objp->birth,'day'),
+                '%TYPE%'=>$objp->type,
+                '%YEAR%'=>$year,
+                '%MONTH%'=>$month,
+                '%DAY%'=>$day,
+                '%DOL_MAIN_URL_ROOT%'=>DOL_MAIN_URL_ROOT,
+                '%SERVER%'=>"http://".$_SERVER["SERVER_NAME"]."/"
             );
             complete_substitutions_array($substitutionarray, $langs);
 
@@ -122,7 +121,10 @@ if ((! empty($foruserid) || ! empty($foruserlogin) || ! empty($mode)) && ! $mesg
 
                 if (is_numeric($foruserid) || $foruserlogin)
                 {
-                    for($j=0;$j<100;$j++)
+                    $nb = $_Avery_Labels[$model]['NX'] * $_Avery_Labels[$model]['NY'];
+                    if ($nb <= 0) $nb=1;  // Protection to avoid empty page
+                    
+                    for($j=0;$j<$nb;$j++)
                     {
                         $arrayofmembers[]=array(
                         	'textleft'=>$textleft,
@@ -191,7 +193,7 @@ if ((! empty($foruserid) || ! empty($foruserlogin) || ! empty($mode)) && ! $mesg
     		{
     			$mesg=$langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("DescADHERENT_ETIQUETTE_TYPE"));
     		}
-        	if (! $mesg) $result=members_label_pdf_create($db, $arrayofmembers, $modellabel, $outputlangs);
+        	if (! $mesg) $result=doc_label_pdf_create($db, $arrayofmembers, $modellabel, $outputlangs);
         }
 
     	if ($result <= 0)
@@ -204,7 +206,7 @@ if ((! empty($foruserid) || ! empty($foruserlogin) || ! empty($mode)) && ! $mesg
     	dol_print_error($db);
     }
 
-    if (! $mesg) 
+    if (! $mesg)
     {
     	$db->close();
     	exit;
@@ -220,7 +222,7 @@ $form=new Form($db);
 
 llxHeader('',$langs->trans("MembersCards"));
 
-print_fiche_titre($langs->trans("LinkToGeneratedPages"));
+print load_fiche_titre($langs->trans("LinkToGeneratedPages"));
 print '<br>';
 
 print $langs->trans("LinkToGeneratedPagesDesc").'<br>';
@@ -281,4 +283,3 @@ print '<br>';
 llxFooter();
 
 $db->close();
-?>

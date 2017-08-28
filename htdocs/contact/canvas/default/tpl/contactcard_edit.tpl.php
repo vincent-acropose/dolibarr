@@ -23,7 +23,7 @@ $contact = $GLOBALS['objcanvas']->control->object;
 <!-- BEGIN PHP TEMPLATE CONTACTCARD_EDIT.TPL.PHP DEFAULT -->
 
 <?php
-print_fiche_titre($this->control->tpl['title']);
+print load_fiche_titre($this->control->tpl['title']);
 
 dol_htmloutput_errors($this->control->tpl['error'],$this->control->tpl['errors']);
 
@@ -59,7 +59,7 @@ echo $this->control->tpl['ajax_selectcountry'];
 </tr>
 
 <tr>
-	<td><?php echo $langs->trans("Company"); ?></td>
+	<td><?php echo $langs->trans("ThirdParty"); ?></td>
 	<td colspan="3"><?php echo $this->control->tpl['company']; ?></td>
 </tr>
 
@@ -111,7 +111,7 @@ echo $this->control->tpl['ajax_selectcountry'];
 	<td><?php echo $langs->trans("Email"); ?></td>
 	<td><input name="email" type="text" size="50" maxlength="80" value="<?php echo $this->control->tpl['email']; ?>"></td>
 	<?php if ($this->control->tpl['nb_emailing']) { ?>
-	<td nowrap><?php echo $langs->trans("NbOfEMailingsReceived"); ?></td>
+	<td class="nowrap"><?php echo $langs->trans("NbOfEMailingsReceived"); ?></td>
 	<td><?php echo $this->control->tpl['nb_emailing']; ?></td>
 	<?php } else { ?>
 	<td colspan="2">&nbsp;</td>
@@ -129,7 +129,7 @@ echo $this->control->tpl['ajax_selectcountry'];
 </tr>
 
 <tr>
-	<td valign="top"><?php echo $langs->trans("Note"); ?></td>
+	<td class="tdtop"><?php echo $langs->trans("Note"); ?></td>
 	<td colspan="3" valign="top"><textarea name="note" cols="70" rows="<?php echo ROWS_3; ?>"><?php echo $this->control->tpl['note']; ?></textarea></td>
 </tr>
 

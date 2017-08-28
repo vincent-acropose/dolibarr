@@ -1,8 +1,8 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 /**
  * Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2006-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2006-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,25 +31,33 @@ $path=dirname(__FILE__).'/';
 // Test if batch mode
 if (substr($sapi_type, 0, 3) == 'cgi') {
     echo "Error: You are using PHP for CGI. To execute ".$script_file." from command line, you must use PHP for CLI mode.\n";
-    exit;
+	exit(-1);
 }
-
-// Main
-$version='1.14';
-@set_time_limit(0);
-$error=0;
-$forcecommit=0;
-
 
 require_once($path."../../htdocs/master.inc.php");
 require_once(DOL_DOCUMENT_ROOT."/core/lib/date.lib.php");
 require_once(DOL_DOCUMENT_ROOT."/core/class/ldap.class.php");
 require_once(DOL_DOCUMENT_ROOT."/adherents/class/adherent.class.php");
-require_once(DOL_DOCUMENT_ROOT."/adherents/class/cotisation.class.php");
-
+require_once(DOL_DOCUMENT_ROOT."/adherents/class/subscription.class.php");
 
 $langs->load("main");
 $langs->load("errors");
+
+
+// Global variables
+$version=DOL_VERSION;
+$error=0;
+$forcecommit=0;
+$confirmed=0;
+
+
+/*
+ * Main
+ */
+
+@set_time_limit(0);
+print "***** ".$script_file." (".$version.") pid=".dol_getmypid()." *****\n";
+dol_syslog($script_file." launched with arg ".join(',',$argv));
 
 // List of fields to get from LDAP
 $required_fields = array(
@@ -85,16 +93,18 @@ $required_fields = array(
 $required_fields=array_unique(array_values(array_filter($required_fields, "dolValidElement")));
 
 
-if ($argv[3]) $conf->global->LDAP_SERVER_HOST=$argv[2];
-
-print "***** $script_file ($version) *****\n";
-
 if (! isset($argv[2]) || ! is_numeric($argv[2])) {
-    print "Usage:  $script_file (nocommitiferror|commitiferror) id_member_type [ldapserverhost]\n";
-    exit;
+    print "Usage:  $script_file (nocommitiferror|commitiferror) id_member_type  [--server=ldapserverhost] [-y]\n";
+	exit(-1);
 }
+
 $typeid=$argv[2];
-if ($argv[1] == 'commitiferror') $forcecommit=1;
+foreach($argv as $key => $val)
+{
+	if ($val == 'commitiferror') $forcecommit=1;
+	if (preg_match('/--server=([^\s]+)$/',$val,$reg)) $conf->global->LDAP_SERVER_HOST=$reg[1];
+	if (preg_match('/-y$/',$val,$reg)) $confirmed=1;
+}
 
 print "Mails sending disabled (useless in batch mode)\n";
 $conf->global->MAIN_DISABLE_ALL_MAILS=1;	// On bloque les mails
@@ -105,7 +115,8 @@ print "port=".$conf->global->LDAP_SERVER_PORT."\n";
 print "login=".$conf->global->LDAP_ADMIN_DN."\n";
 print "pass=".preg_replace('/./i','*',$conf->global->LDAP_ADMIN_PASS)."\n";
 print "DN to extract=".$conf->global->LDAP_MEMBER_DN."\n";
-print 'Filter=('.$conf->global->LDAP_KEY_MEMBERS.'=*)'."\n";
+if (! empty($conf->global->LDAP_MEMBER_FILTER)) print 'Filter=('.$conf->global->LDAP_MEMBER_FILTER.')'."\n";	// Note: filter is defined into function getRecords
+else print 'Filter=('.$conf->global->LDAP_KEY_MEMBERS.'=*)'."\n";
 print "----- To Dolibarr database:\n";
 print "type=".$conf->db->type."\n";
 print "host=".$conf->db->host."\n";
@@ -121,26 +132,26 @@ print "\n";
 if (empty($conf->global->LDAP_MEMBER_DN))
 {
 	print $langs->trans("Error").': '.$langs->trans("LDAP setup for members not defined inside Dolibarr")."\n";
-	exit(1);
+	exit(-1);
 }
 if ($typeid <= 0)
 {
 	print $langs->trans("Error").': Parameter id_member_type is not a valid ref of an existing member type'."\n";
-	exit(2);
+	exit(-2);
 }
 
 
-print "Press a key to confirm...";
-$input = trim(fgets(STDIN));
-print "Hit Enter to continue or CTRL+C to stop...\n";
-$input = trim(fgets(STDIN));
+if (! $confirmed)
+{
+	print "Hit Enter to continue or CTRL+C to stop...\n";
+	$input = trim(fgets(STDIN));
+}
 
-
-// Charge tableau de correspondance des pays
+// Load table of correspondence of countries
 $hashlib2rowid=array();
 $countries=array();
-$sql = "SELECT rowid, code, libelle, active";
-$sql.= " FROM ".MAIN_DB_PREFIX."c_pays";
+$sql = "SELECT rowid, code, label, active";
+$sql.= " FROM ".MAIN_DB_PREFIX."c_country";
 $sql.= " WHERE active = 1";
 $sql.= " ORDER BY code ASC";
 $resql=$db->query($sql);
@@ -155,9 +166,9 @@ if ($resql)
 			$obj = $db->fetch_object($resql);
 			if ($obj)
 			{
-				//print 'Load cache for country '.strtolower($obj->libelle).' rowid='.$obj->rowid."\n";
-				$hashlib2rowid[strtolower($obj->libelle)]=$obj->rowid;
-				$countries[$obj->rowid]=array('rowid' => $obj->rowid, 'label' => $obj->libelle, 'code' => $obj->code);
+				//print 'Load cache for country '.strtolower($obj->label).' rowid='.$obj->rowid."\n";
+				$hashlib2rowid[strtolower($obj->label)]=$obj->rowid;
+				$countries[$obj->rowid]=array('rowid' => $obj->rowid, 'label' => $obj->label, 'code' => $obj->code);
 			}
 			$i++;
 		}
@@ -166,7 +177,7 @@ if ($resql)
 else
 {
 	dol_print_error($db);
-	exit;
+	exit(-1);
 }
 
 
@@ -181,7 +192,7 @@ if ($result >= 0)
 	// We disable synchro Dolibarr-LDAP
 	$conf->global->LDAP_MEMBER_ACTIVE=0;
 
-	$ldaprecords = $ldap->getRecords('*',$conf->global->LDAP_MEMBER_DN, $conf->global->LDAP_KEY_MEMBERS, $required_fields, 0);
+	$ldaprecords = $ldap->getRecords('*',$conf->global->LDAP_MEMBER_DN, $conf->global->LDAP_KEY_MEMBERS, $required_fields, 'member');	// Fiter on 'member' filter param
 	if (is_array($ldaprecords))
 	{
 		$db->begin();
@@ -280,7 +291,7 @@ if ($result >= 0)
 			{
 				// Cree premiere cotisation et met a jour datefin dans adherent
 				//print "xx".$datefirst."\n";
-				$crowid=$member->cotisation($datefirst, $pricefirst, 0);
+				$crowid=$member->subscription($datefirst, $pricefirst, 0);
 			}
 
 			// Insert last subscription
@@ -288,7 +299,7 @@ if ($result >= 0)
 			{
 				// Cree derniere cotisation et met a jour datefin dans adherent
 				//print "yy".dol_print_date($datelast)."\n";
-				$crowid=$member->cotisation($datelast, $pricelast, 0);
+				$crowid=$member->subscription($datelast, $pricelast, 0);
 			}
 
 		}
@@ -319,7 +330,7 @@ else
 }
 
 
-return $error;
+exit($error);
 
 
 /**
@@ -333,4 +344,3 @@ function dolValidElement($element)
 	return (trim($element) != '');
 }
 
-?>

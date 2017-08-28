@@ -45,7 +45,8 @@ class modCashDesk extends DolibarrModules
 		// Key text used to identify module (for permission, menus, etc...)
 		$this->rights_class = 'cashdesk';
 
-		$this->family = "products";
+		$this->family = "portal";
+		$this->module_position = 10;
 		// Module label (no space allowed), used if translation string 'ModuleXXXName' not found (where XXX is value of numeric property 'numero' of module)
 		$this->name = preg_replace('/^mod/i','',get_class($this));
 		$this->description = "CashDesk module";
@@ -64,13 +65,15 @@ class modCashDesk extends DolibarrModules
 		$this->config_page_url = array("cashdesk.php@cashdesk");
 
 		// Dependencies
-		$this->depends = array("modBanque","modFacture","modProduct");	// List of modules id that must be enabled if this module is enabled
-		$this->requiredby = array();			// List of modules id to disable if this one is disabled
+		$this->depends = array('always'=>"modBanque", 'always'=>"modFacture", 'always'=>"modProduct", 'FR'=>'modBlockedLog');	// List of modules id that must be enabled if this module is enabled
+		$this->requiredby = array();			    // List of modules id to disable if this one is disabled
 		$this->phpmin = array(4,1);					// Minimum version of PHP required by module
 		$this->need_dolibarr_version = array(2,4);	// Minimum version of Dolibarr required by module
 		$this->langfiles = array("cashdesk");
+		//$this->warnings_activation = array('FR'=>'WarningNoteModulePOSForFrenchLaw');                     // Warning to show when we activate module. array('always'='text') or array('FR'='text')
+		//$this->warnings_activation_ext = array('FR'=>'WarningInstallationMayBecomeNotCompliantWithLaw');  // Warning to show when we activate an external module. array('always'='text') or array('FR'='text')
 
-		// Constantes
+		// Constants
 		$this->const = array();
 
 		// Boxes
@@ -85,7 +88,7 @@ class modCashDesk extends DolibarrModules
 		$this->rights[$r][0] = 50101;
 		$this->rights[$r][1] = 'Use point of sale';
 		$this->rights[$r][2] = 'a';
-		$this->rights[$r][3] = 1;
+		$this->rights[$r][3] = 0;
 		$this->rights[$r][4] = 'use';
 
 		// Main menu entries
@@ -99,7 +102,7 @@ class modCashDesk extends DolibarrModules
 									'mainmenu'=>'cashdesk',
 									'url'=>'/cashdesk/index.php?user=__LOGIN__',
 									'langs'=>'cashdesk',	// Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-									'position'=>100,
+									'position'=>900,
                                     'enabled'=>'$conf->cashdesk->enabled',
 		                            'perms'=>'$user->rights->cashdesk->use',		// Use 'perms'=>'1' if you want your menu with no permission rules
 									'target'=>'pointofsale',
@@ -139,21 +142,4 @@ class modCashDesk extends DolibarrModules
 
     	return $this->_init($sql,$options);
   	}
-
-    /**
-     *  Function called when module is disabled.
-     *  Remove from database constants, boxes and permissions from Dolibarr database.
-     *  Data directories are not deleted.
-     *
-     *  @param	string	$options	Options
-     *  @return int             	1 if OK, 0 if KO
-     */
-  	function remove($options='')
-	{
-    	$sql = array();
-
-    	return $this->_remove($sql,$options);
-  	}
-
 }
-?>

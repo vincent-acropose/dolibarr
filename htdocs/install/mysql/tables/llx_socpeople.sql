@@ -26,7 +26,7 @@ create table llx_socpeople
   fk_soc			integer,									-- lien vers la societe
   entity			integer DEFAULT 1 NOT NULL,					-- multi company id
   ref_ext           varchar(128),                               -- reference into an external system (not used by dolibarr)
-  civilite			varchar(6),
+  civility			varchar(6),
   lastname			varchar(50),
   firstname			varchar(50),
   address			varchar(255),
@@ -42,6 +42,8 @@ create table llx_socpeople
   fax				varchar(30),
   email				varchar(255),
   jabberid			varchar(255),
+  skype				varchar(255),
+  photo				varchar(255),
   no_email			smallint NOT NULL DEFAULT 0,
   priv				smallint NOT NULL DEFAULT 0,
   fk_user_creat		integer DEFAULT 0,							-- user qui a creel'enregistrement
@@ -50,5 +52,6 @@ create table llx_socpeople
   note_public		text,
   default_lang		varchar(6),
   canvas			varchar(32),			-- type of canvas if used (null by default)
-  import_key		varchar(14)
+  import_key		varchar(14),
+  statut			tinyint DEFAULT 1 NOT NULL
 )ENGINE=innodb;

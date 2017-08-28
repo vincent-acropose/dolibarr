@@ -659,7 +659,7 @@ insert into llx_accountingaccount (rowid, fk_pcg_version, pcg_type, pcg_subtype,
 insert into llx_accountingaccount (rowid, fk_pcg_version, pcg_type, pcg_subtype, account_number, account_parent, label, active) VALUES (305,'PCG99-BASE','FINAN', 'XXXXXX',  '511', '51', 'Valeurs à l''encaissement', '1');
 insert into llx_accountingaccount (rowid, fk_pcg_version, pcg_type, pcg_subtype, account_number, account_parent, label, active) VALUES (306,'PCG99-BASE','FINAN', 'BANK',    '512', '51', 'Banques', '1');
 insert into llx_accountingaccount (rowid, fk_pcg_version, pcg_type, pcg_subtype, account_number, account_parent, label, active) VALUES (307,'PCG99-BASE','FINAN', 'XXXXXX',  '514', '51', 'Chèques postaux', '1');
-insert into llx_accountingaccount (rowid, fk_pcg_version, pcg_type, pcg_subtype, account_number, account_parent, label, active) VALUES (308,'PCG99-BASE','FINAN', 'XXXXXX',  '515', '51', '"Caisses" du Trésor et des établissements publics', '1');
+insert into llx_accountingaccount (rowid, fk_pcg_version, pcg_type, pcg_subtype, account_number, account_parent, label, active) VALUES (308,'PCG99-BASE','FINAN', 'XXXXXX',  '515', '51', 'Caisses du Trésor et des établissements publics', '1');
 insert into llx_accountingaccount (rowid, fk_pcg_version, pcg_type, pcg_subtype, account_number, account_parent, label, active) VALUES (309,'PCG99-BASE','FINAN', 'XXXXXX',  '516', '51', 'Sociétés de bourse', '1');
 insert into llx_accountingaccount (rowid, fk_pcg_version, pcg_type, pcg_subtype, account_number, account_parent, label, active) VALUES (310,'PCG99-BASE','FINAN', 'XXXXXX',  '517', '51', 'Autres organismes financiers', '1');
 insert into llx_accountingaccount (rowid, fk_pcg_version, pcg_type, pcg_subtype, account_number, account_parent, label, active) VALUES (311,'PCG99-BASE','FINAN', 'XXXXXX',  '518', '51', 'Intérêts courus', '1');
@@ -874,7 +874,7 @@ INSERT INTO llx_c_actioncomm (id, code, type, libelle, module, position) values 
 UPDATE llx_c_actioncomm SET libelle = 'Other (manually inserted events)' WHERE code = 'AC_OTH';
 UPDATE llx_c_actioncomm SET active = 0 WHERE code in ('AC_PROP', 'AC_COM', 'AC_FAC', 'AC_SHIP', 'AC_SUP_ORD', 'AC_SUP_INV');
 
--- Update dictionnary of table llx_c_paper_format
+-- Update dictionary of table llx_c_paper_format
 DELETE FROM llx_c_paper_format;
 
 -- Europe

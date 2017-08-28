@@ -39,10 +39,10 @@ if (!$user->admin)
 
 llxHeader();
 
-print_fiche_titre($langs->trans("SummaryConst"),'','setup');
+print load_fiche_titre($langs->trans("SummaryConst"),'','title_setup');
 
 
-print_titre($langs->trans("ConfigurationFile").' ('.$conffiletoshowshort.')');
+print load_fiche_titre($langs->trans("ConfigurationFile").' ('.$conffiletoshowshort.')');
 // Parameters in conf.php file (when a parameter start with ?, it is shown only if defined)
 $configfileparameters=array(
 							'dolibarr_main_url_root',
@@ -73,8 +73,10 @@ $configfileparameters=array(
 							'?dolibarr_main_auth_ldap_debug',
                             'separator',
                             '?dolibarr_lib_ADODB_PATH',
-                            '?dolibarr_lib_TCPDF_PATH',
-                            '?dolibarr_lib_FPDI_PATH',
+							'?dolibarr_lib_FPDF_PATH',
+	                        '?dolibarr_lib_TCPDF_PATH',
+							'?dolibarr_lib_FPDI_PATH',
+                            '?dolibarr_lib_TCPDI_PATH',
 							'?dolibarr_lib_NUSOAP_PATH',
                             '?dolibarr_lib_PHPEXCEL_PATH',
                             '?dolibarr_lib_GEOIP_PATH',
@@ -88,7 +90,8 @@ $configfileparameters=array(
                             '?dolibarr_font_DOL_DEFAULT_TTF_BOLD',
 							'separator',
 							'?dolibarr_mailing_limit_sendbyweb',
-							'?dolibarr_strict_mode'
+							'?dolibarr_mailing_limit_sendbycli',
+                            '?dolibarr_strict_mode'
 						);
 $configfilelib=array(
 //					'separator',
@@ -167,8 +170,7 @@ foreach($configfileparameters as $key)
             continue;
         }
 
-		$var=!$var;
-		print "<tr ".$bc[$var].">";
+		print '<tr class="oddeven">';
 		if ($newkey == 'separator')
 		{
 			print '<td colspan="3">&nbsp;</td>';
@@ -183,7 +185,6 @@ foreach($configfileparameters as $key)
 			print "<td>";
 			if ($newkey == 'dolibarr_main_db_pass') print preg_replace('/./i','*',${$newkey});
 			else if ($newkey == 'dolibarr_main_url_root' && preg_match('/__auto__/',${$newkey})) print ${$newkey}.' => '.constant('DOL_MAIN_URL_ROOT');
-			else if ($newkey == 'dolibarr_main_url_root_alt' && preg_match('/__auto__/',${$newkey})) print ${$newkey}.' => '.constant('DOL_MAIN_URL_ROOT_ALT');
 			else print ${$newkey};
 			if ($newkey == 'dolibarr_main_url_root' && $newkey != DOL_MAIN_URL_ROOT) print ' (currently overwritten by autodetected value: '.DOL_MAIN_URL_ROOT.')';
 			print "</td>";
@@ -199,7 +200,7 @@ print '<br>';
 
 
 // Parameters in database
-print_titre($langs->trans("Database"));
+print load_fiche_titre($langs->trans("Database"));
 print '<table class="noborder">';
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("Parameter").'</td>';
@@ -231,14 +232,12 @@ if ($resql)
 {
 	$num = $db->num_rows($resql);
 	$i = 0;
-	$var=True;
 
 	while ($i < $num)
     {
     	$obj = $db->fetch_object($resql);
-    	$var=!$var;
 
-    	print '<tr '.$bc[$var].'>';
+    	print '<tr class="oddeven">';
     	print '<td>'.$obj->name.'</td>'."\n";
     	print '<td>'.$obj->value.'</td>'."\n";
     	if (empty($conf->multicompany->enabled) || !$user->entity) print '<td>'.$obj->entity.'</td>'."\n";	// If superadmin or multicompany disabled
@@ -254,4 +253,3 @@ print '</table>';
 llxFooter();
 
 $db->close();
-?>

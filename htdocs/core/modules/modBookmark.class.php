@@ -28,7 +28,7 @@ include_once DOL_DOCUMENT_ROOT .'/core/modules/DolibarrModules.class.php';
 
 
 /**
- *	Classe de description et activation du module Bookmark
+ *	Class to describe and enable module Bookmark
  */
 class modBookmark extends DolibarrModules
 {
@@ -66,12 +66,11 @@ class modBookmark extends DolibarrModules
 		// Config pages
 		$this->config_page_url = array('bookmark.php@bookmarks');
 
-		// Constantes
+		// Constants
 		$this->const = array();
 
-		// Boites
-		$this->boxes = array();
-		$this->boxes[0][1] = "box_bookmarks.php";
+		// Boxes
+		$this->boxes = array(0=>array('file'=>'box_bookmarks.php','enabledbydefaulton'=>'Home'));
 
 		// Permissions
 		$this->rights = array();
@@ -82,54 +81,27 @@ class modBookmark extends DolibarrModules
 		$this->rights[$r][0] = 331; // id de la permission
 		$this->rights[$r][1] = 'Lire les bookmarks'; // libelle de la permission
 		$this->rights[$r][2] = 'r'; // type de la permission (deprecie a ce jour)
-		$this->rights[$r][3] = 1; // La permission est-elle une permission par defaut
+		$this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
 		$this->rights[$r][4] = 'lire';
 
 		$r++;
 		$this->rights[$r][0] = 332; // id de la permission
 		$this->rights[$r][1] = 'Creer/modifier les bookmarks'; // libelle de la permission
 		$this->rights[$r][2] = 'r'; // type de la permission (deprecie a ce jour)
-		$this->rights[$r][3] = 1; // La permission est-elle une permission par defaut
+		$this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
 		$this->rights[$r][4] = 'creer';
 
 		$r++;
 		$this->rights[$r][0] = 333; // id de la permission
 		$this->rights[$r][1] = 'Supprimer les bookmarks'; // libelle de la permission
 		$this->rights[$r][2] = 'r'; // type de la permission (d�pr�ci� � ce jour)
-		$this->rights[$r][3] = 1; // La permission est-elle une permission par d�faut
+		$this->rights[$r][3] = 0; // La permission est-elle une permission par d�faut
 		$this->rights[$r][4] = 'supprimer';
 
+		
+		// Menus
+		//-------
+		$this->menu = 1;        // This module add menu entries. They are coded into menu manager.
+		
 	}
-
-    /**
-     *      Function called when module is enabled.
-     *      The init function add constants, boxes, permissions and menus (defined in constructor) into Dolibarr database.
-     *      It also creates data directories.
-     *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-	 */
-	function init($options='')
-	{
-		$sql = array();
-
-		return $this->_init($sql,$options);
-	}
-
-    /**
-	 *		Function called when module is disabled.
-	 *      Remove from database constants, boxes and permissions from Dolibarr database.
-	 *		Data directories are not deleted
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-     */
-    function remove($options='')
-    {
-		$sql = array();
-
-		return $this->_remove($sql,$options);
-    }
-
 }
-?>

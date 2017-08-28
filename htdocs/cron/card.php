@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2012      Nicolas Villa aka Boyquotes http://informetic.fr
  * Copyright (C) 2013      Florian Henry <florian.henry@open-concpt.pro>
+ * Copyright (C) 2013-2016 Laurent Destailleur <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +18,7 @@
  */
 
 /**
- *  \file       cron/card.php
+ *  \file       htdocs/cron/card.php
  *  \ingroup    cron
  *  \brief      Cron Jobs Card
  */
@@ -41,57 +42,102 @@ $id=GETPOST('id','int');
 $action=GETPOST('action','alpha');
 $confirm=GETPOST('confirm','alpha');
 $cancel=GETPOST('cancel');
+$backtourl=GETPOST('backtourl','alpha');
+$securitykey = GETPOST('securitykey','alpha');
+
+
+/*
+ * Actions
+ */
 
 $object = new Cronjob($db);
-if (!empty($id)) {
+if (!empty($id))
+{
 	$result=$object->fetch($id);
-	if ($result < 0) {
-		setEventMessage($object->error,'errors');
+	if ($result < 0)
+	{
+		setEventMessages($object->error, $object->errors, 'errors');
 	}
 }
 
-if(!empty($cancel)) {
-	if (!empty($id)) {
+if (!empty($cancel))
+{
+    if (!empty($id) && empty($backtourl))
+	{
 		$action='';
-	}else {
-		Header("Location: ".dol_buildpath('/cron/cron/list.php',1).'?status=1');
 	}
-
+	else
+	{
+	    if ($backtourl)
+	    {
+	        header("Location: ".$backtourl);
+	        exit;
+	    }
+	    else
+	    {
+	        header("Location: ".DOL_URL_ROOT.'/cron/list.php?status=-2');
+		    exit;
+	    }
+	}
 }
 
 // Delete jobs
-if ($action == 'confirm_delete' && $confirm == "yes" && $user->rights->cron->delete){
-
-
+if ($action == 'confirm_delete' && $confirm == "yes" && $user->rights->cron->delete)
+{
 	$result = $object->delete($user);
 
-	if ($result < 0) {
-		setEventMessage($object->error,'errors');
+	if ($result < 0)
+	{
+		setEventMessages($object->error, $object->errors, 'errors');
 		$action='edit';
-	}else {
-		Header("Location: ".dol_buildpath('/cron/cron/list.php',1).'?status=1');
+	}
+	else
+	{
+		Header("Location: ".DOL_URL_ROOT.'/cron/list.php?status=-2');
+		exit;
 	}
 }
 
 // Execute jobs
-if ($action == 'confirm_execute' && $confirm == "yes" && $user->rights->cron->execute){
+if ($action == 'confirm_execute' && $confirm == "yes" && $user->rights->cron->execute)
+{
+    if (! empty($conf->global->CRON_KEY) && $conf->global->CRON_KEY != $securitykey)
+    {
+        setEventMessages('Security key '.$securitykey.' is wrong', null, 'errors');
+        $action='';
+    }
+    else
+    {
+        $now = dol_now();   // Date we start
 
-	$result=$object->run_jobs($user->login);
+    	$result=$object->run_jobs($user->login);
 
-	if ($result < 0) {
-		setEventMessage($object->error,'errors');
-		$action='';
-	}else {
-		if ($object->lastresult > 0) setEventMessage($langs->trans("JobFinished"),'warnings');
-		else setEventMessage($langs->trans("JobFinished"),'mesgs');
-		$action='';
-	}
-
+    	if ($result < 0)
+    	{
+    		setEventMessages($object->error, $object->errors, 'errors');
+    		$action='';
+    	}
+    	else
+    	{
+    		$res = $object->reprogram_jobs($user->login, $now);
+    		if ($res > 0)
+    		{
+    			if ($object->lastresult > 0) setEventMessages($langs->trans("JobFinished"), null, 'warnings');
+    			else setEventMessages($langs->trans("JobFinished"), null, 'mesgs');
+    			$action='';
+    		}
+    		else
+    		{
+    			setEventMessages($object->error, $object->errors, 'errors');
+    			$action='';
+    		}
+    	}
+    }
 }
 
 
-if ($action=='add') {
-
+if ($action=='add')
+{
 	$object->jobtype=GETPOST('jobtype','alpha');
 	$object->label=GETPOST('label','alpha');
 	$object->command=GETPOST('command','alpha');
@@ -105,25 +151,28 @@ if ($action=='add') {
 	$object->note=GETPOST('note');
 	$object->datestart=dol_mktime(GETPOST('datestarthour','int'), GETPOST('datestartmin','int'), 0, GETPOST('datestartmonth','int'), GETPOST('datestartday','int'), GETPOST('datestartyear','int'));
 	$object->dateend=dol_mktime(GETPOST('dateendhour','int'), GETPOST('dateendmin','int'), 0, GETPOST('dateendmonth','int'), GETPOST('dateendday','int'), GETPOST('dateendyear','int'));
+	$object->datenextrun=dol_mktime(GETPOST('datenextrunhour','int'), GETPOST('datenextrunmin','int'), 0, GETPOST('datenextrunmonth','int'), GETPOST('datenextrunday','int'), GETPOST('datenextrunyear','int'));
 	$object->unitfrequency=GETPOST('unitfrequency','int');
-	$object->frequency=$object->unitfrequency * GETPOST('nbfrequency','int');
+	$object->frequency=GETPOST('nbfrequency','int');
+	$object->maxrun=GETPOST('maxrun','int');
 
-	//Adding cron task
+	// Add cron task
 	$result = $object->create($user);
 
 	// test du Resultat de la requete
 	if ($result < 0) {
-		setEventMessage($object->error,'errors');
+		setEventMessages($object->error, $object->errors, 'errors');
 		$action='create';
 	}
 	else {
-		setEventMessage($langs->trans('CronSaveSucess'),'mesgs');
+		setEventMessages($langs->trans('CronSaveSucess'), null, 'mesgs');
 		$action='';
 	}
 }
 
 // Save parameters
-if ($action=='update') {
+if ($action=='update')
+{
 	$object->id=$id;
 	$object->jobtype=GETPOST('jobtype');
 	$object->label=GETPOST('label');
@@ -138,52 +187,57 @@ if ($action=='update') {
 	$object->note=GETPOST('note');
 	$object->datestart=dol_mktime(GETPOST('datestarthour','int'), GETPOST('datestartmin','int'), 0, GETPOST('datestartmonth','int'), GETPOST('datestartday','int'), GETPOST('datestartyear','int'));
 	$object->dateend=dol_mktime(GETPOST('dateendhour','int'), GETPOST('dateendmin','int'), 0, GETPOST('dateendmonth','int'), GETPOST('dateendday','int'), GETPOST('dateendyear','int'));
+	$object->datenextrun=dol_mktime(GETPOST('datenextrunhour','int'), GETPOST('datenextrunmin','int'), 0, GETPOST('datenextrunmonth','int'), GETPOST('datenextrunday','int'), GETPOST('datenextrunyear','int'));
 	$object->unitfrequency=GETPOST('unitfrequency','int');
-	$object->frequency=$object->unitfrequency * GETPOST('nbfrequency','int');
+	$object->frequency=GETPOST('nbfrequency','int');
+	$object->maxrun=GETPOST('maxrun','int');
 
-	//Adding cron task
+	// Add cron task
 	$result = $object->update($user);
 
 	// test du Resultat de la requete
 	if ($result < 0) {
-		setEventMessage($object->error,'errors');
+		setEventMessages($object->error, $object->errors, 'errors');
 		$action='edit';
 	}
 	else {
-		setEventMessage($langs->trans('CronSaveSucess'),'mesgs');
+		setEventMessages($langs->trans('CronSaveSucess'), null, 'mesgs');
 		$action='';
 	}
 }
 
-if ($action=='activate') {
+if ($action=='activate')
+{
 	$object->status=1;
 
-	//Adding cron task
+	// Add cron task
 	$result = $object->update($user);
 
 	// test du Resultat de la requete
 	if ($result < 0) {
-		setEventMessage($object->error,'errors');
+		setEventMessages($object->error, $object->errors, 'errors');
 		$action='edit';
 	}
 	else {
-		setEventMessage($langs->trans('CronSaveSucess'),'mesgs');
+		setEventMessages($langs->trans('CronSaveSucess'), null, 'mesgs');
 		$action='';
 	}
 }
 
-if ($action=='inactive') {
+if ($action=='inactive')
+{
 	$object->status=0;
-	//Adding cron task
+
+	// Add cron task
 	$result = $object->update($user);
 
 	// test du Resultat de la requete
 	if ($result < 0) {
-		setEventMessage($object->error,'errors');
+		setEventMessages($object->error, $object->errors, 'errors');
 		$action='edit';
 	}
 	else {
-		setEventMessage($langs->trans('CronSaveSucess'),'mesgs');
+		setEventMessages($langs->trans('CronSaveSucess'), null, 'mesgs');
 		$action='';
 	}
 }
@@ -194,16 +248,18 @@ if ($action=='inactive') {
  * View
  */
 
+$form = new Form($db);
+$formCron = new FormCron($db);
+
 llxHeader('',$langs->trans("CronAdd"));
 
 if ($action=='edit' || empty($action) || $action=='delete' || $action=='execute')
 {
 	$head=cron_prepare_head($object);
-	dol_fiche_head($head, 'card', $langs->trans("CronTask"), 0, 'bill');
 }
 elseif ($action=='create')
 {
-	print_fiche_titre($langs->trans("CronTask"),'','setup');
+	print load_fiche_titre($langs->trans("CronTask"),'','title_setup');
 }
 
 if ($conf->use_javascript_ajax)
@@ -229,19 +285,16 @@ if ($conf->use_javascript_ajax)
 	print '</script>'."\n";
 }
 
-$form = new Form($db);
-$formCron = new FormCron($db);
-
 if ($action == 'delete')
 {
-	$ret=$form->form_confirm($_SERVER['PHP_SELF']."?id=".$object->id,$langs->trans("CronDelete"),$langs->trans("CronConfirmDelete"),"confirm_delete",'','',1);
-	if ($ret == 'html') print '<br>';
+	print $form->formconfirm($_SERVER['PHP_SELF']."?id=".$object->id,$langs->trans("CronDelete"),$langs->trans("CronConfirmDelete"),"confirm_delete",'','',1);
+
 	$action='';
 }
 
 if ($action == 'execute'){
-	$ret=$form->form_confirm($_SERVER['PHP_SELF']."?id=".$object->id,$langs->trans("CronExecute"),$langs->trans("CronConfirmExecute"),"confirm_execute",'','',1);
-	if ($ret == 'html') print '<br>';
+	print $form->formconfirm($_SERVER['PHP_SELF']."?id=".$object->id.'&securitykey='.$securitykey,$langs->trans("CronExecute"),$langs->trans("CronConfirmExecute"),"confirm_execute",'','',1);
+
 	$action='';
 }
 
@@ -253,13 +306,14 @@ if ($action == 'execute'){
 
 if (empty($object->status) && $action != 'create')
 {
-	dol_htmloutput_mesg($langs->trans("CronTaskInactive"),'','warning',1);
+	setEventMessages($langs->trans("CronTaskInactive"), null, 'warnings');
 }
 
 if (($action=="create") || ($action=="edit"))
 {
 	print '<form name="cronform" action="'.$_SERVER["PHP_SELF"].'" method="post">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">'."\n";
+	print '<input type="hidden" name="backtourl" value="'.GETPOST('backtourl').'">'."\n";
 	if (!empty($object->id)) {
 		print '<input type="hidden" name="action" value="update">'."\n";
 		print '<input type="hidden" name="id" value="'.$object->id.'">'."\n";
@@ -267,112 +321,22 @@ if (($action=="create") || ($action=="edit"))
 		print '<input type="hidden" name="action" value="add">'."\n";
 	}
 
+	if ($action=="edit") dol_fiche_head($head, 'card', $langs->trans("CronTask"), 0, 'cron');
+	else dol_fiche_head('');
+
 	print '<table class="border" width="100%">';
 
-	print '<tr><td width="30%">';
+	print '<tr><td class="fieldrequired titlefieldcreate">';
 	print $langs->trans('CronLabel')."</td>";
-	print "<td><input type=\"text\" size=\"20\" name=\"label\" value=\"".$object->label."\" /> ";
+	print "<td><input type=\"text\" size=\"30\" name=\"label\" value=\"".$object->label."\" /> ";
 	print "</td>";
 	print "<td>";
 	print "</td>";
 	print "</tr>\n";
 
-	print "<tr><td>";
+	print '<tr><td class="fieldrequired">';
 	print $langs->trans('CronType')."</td><td>";
 	print $formCron->select_typejob('jobtype',$object->jobtype);
-	print "</td>";
-	print "<td>";
-	print "</td>";
-	print "</tr>\n";
-
-	print "<tr><td>";
-	print $langs->trans('CronHourStart')."</td><td>";
-	if(!empty($object->datestart)){
-		$form->select_date($object->datestart,'datestart',1,1,'',"cronform");
-	}
-	else{
-		$form->select_date(dol_now(),'datestart',1,1,'',"cronform");
-	}
-	print "</td>";
-	print "<td>";
-	print "</td>";
-	print "</tr>\n";
-
-	print "<tr><td>";
-	print $langs->trans('CronDtEnd')."</td><td>";
-	if(!empty($object->dateend)){
-		$form->select_date($object->dateend,'dateend',1,1,'',"cronform");
-	}
-	else{
-		$form->select_date('','dateend',1,1,1,"cronform");
-	}
-	print "</td>";
-	print "<td>";
-	print "</td>";
-	print "</tr>\n";
-
-	print "<tr><td>";
-	print $langs->trans('CronPriority')."</td>";
-	$priority=0;
-	if (!empty($object->priority)) {
-		$priority=$object->priority;
-	}
-	print "<td><input type=\"text\" size=\"2\" name=\"priority\" value=\"".$priority."\" /> ";
-	print "</td>";
-	print "<td>";
-	print "</td>";
-	print "</tr>\n";
-
-	print "<tr><td>";
-	print $langs->trans('CronEvery')."</td>";
-	print "<td><select name=\"nbfrequency\">";
-	for($i=1; $i<=60; $i++){
-		if(($object->frequency/$object->unitfrequency) == $i){
-			print "<option value='".$i."' selected='selected'>".$i."</option>";
-		}
-		else{
-			print "<option value='".$i."'>".$i."</option>";
-		}
-	}
-	$input = "<input type=\"radio\" name=\"unitfrequency\" value=\"60\" id=\"frequency_minute\" ";
-	if($object->unitfrequency=="60"){
-		$input .= ' checked="checked" />';
-	}
-	else{
-		$input .= ' />';
-	}
-	$input .= "<label for=\"frequency_minute\">".$langs->trans('Minutes')."</label>";
-	print $input;
-
-	$input = "<input type=\"radio\" name=\"unitfrequency\" value=\"3600\" id=\"frequency_heures\" ";
-	if($object->unitfrequency=="3600"){
-		$input .= ' checked="checked" />';
-	}
-	else{
-		$input .= ' />';
-	}
-	$input .= "<label for=\"frequency_heures\">".$langs->trans('Hours')."</label>";
-	print $input;
-
-	$input = "<input type=\"radio\" name=\"unitfrequency\" value=\"86400\" id=\"frequency_jours\" ";
-	if($object->unitfrequency=="86400"){
-		$input .= ' checked="checked" />';
-	}
-	else{
-		$input .= ' />';
-	}
-	$input .= "<label for=\"frequency_jours\">".$langs->trans('Days')."</label>";
-	print $input;
-
-	$input = "<input type=\"radio\" name=\"unitfrequency\" value=\"604800\" id=\"frequency_semaine\" ";
-	if($object->unitfrequency=="604800"){
-		$input .= ' checked="checked" />';
-	}
-	else{
-		$input .= ' />';
-	}
-	$input .= "<label for=\"frequency_semaine\">".$langs->trans('Weeks')."</label>";
-	print $input;
 	print "</td>";
 	print "<td>";
 	print "</td>";
@@ -389,7 +353,7 @@ if (($action=="create") || ($action=="edit"))
 
 	print '<tr class="blockmethod"><td>';
 	print $langs->trans('CronClassFile')."</td><td>";
-	print "<input type=\"text\" size=\"20\" name=\"classesname\" value=\"".$object->classesname."\" /> ";
+	print '<input type="text" class="minwidth300" name="classesname" value="'.$object->classesname.'" /> ';
 	print "</td>";
 	print "<td>";
 	print $form->textwithpicto('',$langs->trans("CronClassFileHelp"),1,'help');
@@ -407,7 +371,7 @@ if (($action=="create") || ($action=="edit"))
 
 	print '<tr class="blockmethod"><td>';
 	print $langs->trans('CronMethod')."</td><td>";
-	print "<input type=\"text\" size=\"20\" name=\"methodename\" value=\"".$object->methodename."\" /> ";
+	print '<input type="text" class="minwidth300" name="methodename" value="'.$object->methodename.'" /> ';
 	print "</td>";
 	print "<td>";
 	print $form->textwithpicto('',$langs->trans("CronMethodHelp"),1,'help');
@@ -416,7 +380,7 @@ if (($action=="create") || ($action=="edit"))
 
 	print '<tr class="blockmethod"><td>';
 	print $langs->trans('CronArgs')."</td><td>";
-	print "<input type=\"text\" size=\"20\" name=\"params\" value=\"".$object->params."\" /> ";
+	print "<input type=\"text\" class=\"quatrevingtpercent\" name=\"params\" value=\"".$object->params."\" /> ";
 	print "</td>";
 	print "<td>";
 	print $form->textwithpicto('',$langs->trans("CronArgsHelp"),1,'help');
@@ -434,79 +398,186 @@ if (($action=="create") || ($action=="edit"))
 
 	print '<tr><td>';
 	print $langs->trans('CronNote')."</td><td>";
-	$doleditor = new DolEditor('note', $object->note, '', 160, 'dolibarr_notes', 'In', true, false, 0, 4, 90);
+	$doleditor = new DolEditor('note', $object->note, '', 160, 'dolibarr_notes', 'In', true, false, 0, ROWS_4, '90%');
 	$doleditor->Create();
 	print "</td>";
 	print "<td>";
 	print "</td>";
 	print "</tr>\n";
 
+	print '<tr><td class="fieldrequired">';
+	print $langs->trans('CronEvery')."</td>";
+	print "<td>";
+	print '<select name="nbfrequency">';
+	for ($i=1; $i<=60; $i++)
+	{
+	    if ($object->frequency == $i)
+	    {
+	        print "<option value='".$i."' selected>".$i."</option>";
+	    }
+	    else
+	    {
+	        print "<option value='".$i."'>".$i."</option>";
+	    }
+	}
+	print "</select>";
+	$input = " <input type=\"radio\" name=\"unitfrequency\" value=\"60\" id=\"frequency_minute\" ";
+	if($object->unitfrequency=="60")
+	{
+	    $input .= ' checked />';
+	}
+	else{
+	    $input .= ' />';
+	}
+	$input .= "<label for=\"frequency_minute\">".$langs->trans('Minutes')."</label>";
+	print $input;
 
-	print '<tr><td colspan="2" align="center">';
-	print "<input type=\"submit\" name=\"save\" class=\"button\" value=\"".$langs->trans("Save")."\">";
-	print "<input type=\"submit\" name=\"cancel\" class=\"button\" value=\"".$langs->trans("Cancel")."\">";
+	$input = " <input type=\"radio\" name=\"unitfrequency\" value=\"3600\" id=\"frequency_heures\" ";
+	if($object->unitfrequency=="3600"){
+	    $input .= ' checked />';
+	}
+	else{
+	    $input .= ' />';
+	}
+	$input .= "<label for=\"frequency_heures\">".$langs->trans('Hours')."</label>";
+	print $input;
+
+	$input = " <input type=\"radio\" name=\"unitfrequency\" value=\"86400\" id=\"frequency_jours\" ";
+	if($object->unitfrequency=="86400"){
+	    $input .= ' checked />';
+	}
+	else{
+	    $input .= ' />';
+	}
+	$input .= "<label for=\"frequency_jours\">".$langs->trans('Days')."</label>";
+	print $input;
+
+	$input = " <input type=\"radio\" name=\"unitfrequency\" value=\"604800\" id=\"frequency_semaine\" ";
+	if($object->unitfrequency=="604800"){
+	    $input .= ' checked />';
+	}
+	else{
+	    $input .= ' />';
+	}
+	$input .= "<label for=\"frequency_semaine\">".$langs->trans('Weeks')."</label>";
+	print $input;
 	print "</td>";
 	print "<td>";
 	print "</td>";
 	print "</tr>\n";
 
+	print "<tr><td>";
+	print $langs->trans('CronDtStart')."</td><td>";
+	if(!empty($object->datestart))
+	{
+	    $form->select_date($object->datestart,'datestart',1,1,'',"cronform");
+	}
+	else
+	{
+	    $form->select_date('','datestart',1,1,'',"cronform");
+	}
+	print "</td>";
+	print "<td>";
+	print "</td>";
+	print "</tr>\n";
+
+	print "<tr><td>";
+	print $langs->trans('CronDtEnd')."</td><td>";
+	if(!empty($object->dateend)){
+	    $form->select_date($object->dateend,'dateend',1,1,'',"cronform");
+	}
+	else{
+	    $form->select_date(-1,'dateend',1,1,1,"cronform");
+	}
+	print "</td>";
+	print "<td>";
+	print "</td>";
+	print "</tr>\n";
+
+	print "<tr><td>";
+	print $langs->trans('CronPriority')."</td>";
+	$priority=0;
+	if (!empty($object->priority)) {
+	    $priority=$object->priority;
+	}
+	print "<td><input type=\"text\" size=\"2\" name=\"priority\" value=\"".$priority."\" /> ";
+	print "</td>";
+	print "<td>";
+	print "</td>";
+	print "</tr>\n";
+
+	print '<tr><td>';
+	$maxrun='';
+	if (!empty($object->maxrun)) {
+	    $maxrun=$object->maxrun;
+	}
+	print $langs->trans('CronMaxRun')."</td>";
+	print "<td><input type=\"text\" size=\"2\" name=\"maxrun\" value=\"".$maxrun."\" /> ";
+	print "</td>";
+	print "<td>";
+	print "</td>";
+	print "</tr>\n";
+
+	print '<tr><td>';
+	print $langs->trans('CronDtNextLaunch');
+	print ' ('.$langs->trans('CronFrom').')';
+	print "</td><td>";
+	if(!empty($object->datenextrun))
+	{
+	    $form->select_date($object->datenextrun,'datenextrun',1,1,'',"cronform");
+	}
+	else
+	{
+	    $form->select_date(-1,'datenextrun',1,1,'',"cronform");
+	}
+	print "</td>";
+    print "<td>";
+	print "</td>";
+	print "</tr>";
+
 	print '</table>';
+
+	dol_fiche_end();
+
+	print '<div align="center">';
+	print '<input type="submit" name="save" class="button" value="'.$langs->trans("Save").'">';
+	print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+	print '<input type="submit" name="cancel" class="button" value="'.$langs->trans("Cancel").'">';
+	print "</div>";
 
 	print "</form>\n";
 
-}else {
-
+}
+else
+{
 	/*
-	 * view Template
+	 * view card
 	 */
+    $now = dol_now();
+
+	dol_fiche_head($head, 'card', $langs->trans("CronTask"), -1, 'cron');
+
+	$linkback = '<a href="' . DOL_URL_ROOT . '/cron/list.php?status=-2">' . $langs->trans("BackToList") . '</a>';
+
+	$morehtmlref='<div class="refidno">';
+	$morehtmlref.='</div>';
+
+	dol_banner_tab($object, 'id', $linkback, 1, 'rowid', 'ref', $morehtmlref);
 
 	// box add_jobs_box
+	print '<div class="fichecenter">';
+	print '<div class="underbanner clearboth"></div>';
 	print '<table class="border" width="100%">';
 
-	print '<tr><td width="30%">';
-	print $langs->trans('CronId')."</td>";
-	print "<td>".$form->showrefnav($object, 'id', $linkback, 1, 'rowid', 'id');
-	print "</td></tr>\n";
-
-	print '<tr><td>';
+	print '<tr><td class="titlefield">';
 	print $langs->trans('CronLabel')."</td>";
-	print "<td>".$object->label;
+	print "<td>".$langs->trans($object->label);
 	print "</td></tr>";
 
 	print "<tr><td>";
 	print $langs->trans('CronType')."</td><td>";
 	print $formCron->select_typejob('jobtype',$object->jobtype,1);
 	print "</td></tr>";
-
-	print "<tr><td>";
-	print $langs->trans('CronHourStart')."</td><td>";
-	if(!empty($object->datestart)) {print dol_print_date($object->datestart,'dayhourtext');} else {print $langs->trans('CronNone');}
-	print "</td></tr>";
-
-	print "<tr><td>";
-	print $langs->trans('CronDtEnd')."</td><td>";
-	if(!empty($object->dateend)) {print dol_print_date($object->dateend,'dayhourtext');} else {print $langs->trans('CronNone');}
-	print "</td></tr>";
-
-	print "<tr><td>";
-	print $langs->trans('CronPriority')."</td>";
-	print "<td>".$object->priority;
-	print "</td></tr>";
-
-	print "<tr><td>";
-	print $langs->trans('CronNbRun')."</td>";
-	print "<td>".$object->nbrun;
-	print "</td></tr>";
-
-	print "<tr><td>";
-	print $langs->trans('CronEvery')."</td>";
-	print "<td>";
-	if($object->unitfrequency == "60") print $langs->trans('CronEach')." ".($object->frequency/$object->unitfrequency)." ".$langs->trans('Minutes');
-	if($object->unitfrequency == "3600") print $langs->trans('CronEach')." ".($object->frequency/$object->unitfrequency)." ".$langs->trans('Hours');
-	if($object->unitfrequency == "86400") print $langs->trans('CronEach')." ".($object->frequency/$object->unitfrequency)." ".$langs->trans('Days');
-	if($object->unitfrequency == "604800") print $langs->trans('CronEach')." ".($object->frequency/$object->unitfrequency)." ".$langs->trans('Weeks');
-	print "</td></tr>";
-
 
 	print '<tr class="blockmethod"><td>';
 	print $langs->trans('CronModule')."</td><td>";
@@ -540,22 +611,85 @@ if (($action=="create") || ($action=="edit"))
 
 	print '<tr><td>';
 	print $langs->trans('CronNote')."</td><td>";
-	print $object->note;
+	print $langs->trans($object->note);
+	print "</td></tr>";
+
+	print '</table>';
+    print '</div>';
+
+	print '<br>';
+
+
+	print '<div class="fichecenter">';
+	print '<div class="underbanner clearboth"></div>';
+	print '<table class="border" width="100%">';
+
+	print '<tr><td class="titlefield">';
+	print $langs->trans('CronEvery')."</td>";
+	print "<td>";
+	if($object->unitfrequency == "60") print $langs->trans('CronEach')." ".($object->frequency)." ".$langs->trans('Minutes');
+	if($object->unitfrequency == "3600") print $langs->trans('CronEach')." ".($object->frequency)." ".$langs->trans('Hours');
+	if($object->unitfrequency == "86400") print $langs->trans('CronEach')." ".($object->frequency)." ".$langs->trans('Days');
+	if($object->unitfrequency == "604800") print $langs->trans('CronEach')." ".($object->frequency)." ".$langs->trans('Weeks');
 	print "</td></tr>";
 
 	print '<tr><td>';
+	print $langs->trans('CronDtStart')."</td><td>";
+	if(!empty($object->datestart)) {print dol_print_date($object->datestart,'dayhoursec');}
+	print "</td></tr>";
+
+	print "<tr><td>";
+	print $langs->trans('CronDtEnd')."</td><td>";
+	if(!empty($object->dateend)) {print dol_print_date($object->dateend,'dayhoursec');}
+	print "</td></tr>";
+
+	print "<tr><td>";
+	print $langs->trans('CronPriority')."</td>";
+	print "<td>".$object->priority;
+	print "</td></tr>";
+
+	print "<tr><td>";
+	print $langs->trans('CronMaxRun')."</td>";
+	print "<td>";
+	print $object->maxrun>0?$object->maxrun:'';
+	print "</td></tr>";
+
+	print "<tr><td>";
+	print $langs->trans('CronNbRun')."</td>";
+	print "<td>".$object->nbrun;
+	print "</td></tr>";
+
+	// Date next run (from)
+	print '<tr><td>';
+	print $langs->trans('CronDtNextLaunch');
+	print ' ('.$langs->trans('CronFrom').')';
+	print "</td><td>";
+	//print '<strong>';
+	if (! $object->status) print $langs->trans("Disabled");
+	elseif (!empty($object->datenextrun)) { print img_picto('','object_calendarday').' '.dol_print_date($object->datenextrun,'dayhoursec');}
+	else {print $langs->trans('CronNone');}
+	//print '</strong>';
+	if ($object->maxnbrun && $object->nbrun >= $object->maxrun) print img_warning($langs->trans("Finished"));
+	if ($object->datenextrun && $object->datenextrun < $now) print img_warning($langs->trans("Late"));
+	print "</td></tr>";
+
+	print '</table>';
+	print '</div>';
+
+	print '<br>';
+
+	print '<div class="fichecenter">';
+	print '<div class="underbanner clearboth"></div>';
+	print '<table class="border" width="100%">';
+
+	print '<tr><td class="titlefield">';
 	print $langs->trans('CronDtLastLaunch')."</td><td>";
-	if(!empty($object->datelastrun)) {print dol_print_date($object->datelastrun,'dayhourtext');} else {print $langs->trans('CronNone');}
-	print "</td></tr>";
-
-	print '<tr><td>';
-	print $langs->trans('CronDtNextLaunch')."</td><td>";
-	if(!empty($object->datenextrun)) {print dol_print_date($object->datenextrun,'dayhourtext');} else {print $langs->trans('CronNone');}
+	if(!empty($object->datelastrun)) {print dol_print_date($object->datelastrun,'dayhoursec');} else {print $langs->trans('CronNone');}
 	print "</td></tr>";
 
 	print '<tr><td>';
 	print $langs->trans('CronDtLastResult')."</td><td>";
-	if(!empty($object->datelastresult)) {print dol_print_date($object->datelastresult,'dayhourtext');} else {print $langs->trans('CronNone');}
+	if(!empty($object->datelastresult)) {print dol_print_date($object->datelastresult,'dayhoursec');} else {print $langs->trans('CronNone');}
 	print "</td></tr>";
 
 	print '<tr><td>';
@@ -569,7 +703,7 @@ if (($action=="create") || ($action=="edit"))
 	print "</td></tr>";
 
 	print '</table>';
-
+    print '</div>';
 
 	dol_fiche_end();
 
@@ -580,33 +714,40 @@ if (($action=="create") || ($action=="edit"))
 	} else {
 		print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=edit&id='.$object->id.'">'.$langs->trans("Edit").'</a>';
 	}
-	if (! $user->rights->cron->delete) {
-		print '<a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->transnoentitiesnoconv("NotEnoughPermissions")).'">'.$langs->trans("Delete").'</a>';
-	} else {
-		print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=delete&id='.$object->id.'">'.$langs->trans("Delete").'</a>';
-	}
-	if (! $user->rights->cron->create) {
-		print '<a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->transnoentitiesnoconv("NotEnoughPermissions")).'">'.$langs->trans("CronStatusActiveBtn").'/'.$langs->trans("CronStatusInactiveBtn").'</a>';
-	} else {
-		if (empty($object->status)) {
-			print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=activate&id='.$object->id.'">'.$langs->trans("CronStatusActiveBtn").'</a>';
-		} else {
-			print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=inactive&id='.$object->id.'">'.$langs->trans("CronStatusInactiveBtn").'</a>';
-		}
-	}
+
 	if ((empty($user->rights->cron->execute)))
 	{
 		print '<a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->transnoentitiesnoconv("NotEnoughPermissions")).'">'.$langs->trans("CronExecute").'</a>';
 	}
 	else if (empty($object->status))
 	{
-		print '<a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->transnoentitiesnoconv("TaskDisabled")).'">'.$langs->trans("CronExecute").'</a>';
+		print '<a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->transnoentitiesnoconv("JobDisabled")).'">'.$langs->trans("CronExecute").'</a>';
 	}
 	else {
-		print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=execute&id='.$object->id.'">'.$langs->trans("CronExecute").'</a>';
+		print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=execute&id='.$object->id.(empty($conf->global->CRON_KEY)?'':'&securitykey='.$conf->global->CRON_KEY).'">'.$langs->trans("CronExecute").'</a>';
 	}
-	print '<br><br></div>';
+
+	if (! $user->rights->cron->create) {
+	    print '<a class="butActionRefused" href="#" title="'.dol_escape_htmltag($langs->transnoentitiesnoconv("NotEnoughPermissions")).'">'.$langs->trans("CronStatusActiveBtn").'/'.$langs->trans("CronStatusInactiveBtn").'</a>';
+	} else {
+	    if (empty($object->status)) {
+	        print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=activate&id='.$object->id.'">'.$langs->trans("CronStatusActiveBtn").'</a>';
+	    } else {
+	        print '<a class="butActionDelete" href="'.$_SERVER['PHP_SELF'].'?action=inactive&id='.$object->id.'">'.$langs->trans("CronStatusInactiveBtn").'</a>';
+	    }
+	}
+
+	if (! $user->rights->cron->delete) {
+		print '<a class="butActionDeleteRefused" href="#" title="'.dol_escape_htmltag($langs->transnoentitiesnoconv("NotEnoughPermissions")).'">'.$langs->trans("Delete").'</a>';
+	} else {
+		print '<a class="butActionDelete" href="'.$_SERVER['PHP_SELF'].'?action=delete&id='.$object->id.'">'.$langs->trans("Delete").'</a>';
+	}
+	print '</div>';
+
+	print '<br>';
 }
 
-$db->close();
+
 llxFooter();
+
+$db->close();

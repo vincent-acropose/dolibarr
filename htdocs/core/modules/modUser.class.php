@@ -28,7 +28,7 @@
 include_once DOL_DOCUMENT_ROOT .'/core/modules/DolibarrModules.class.php';
 
 /**
- *	Classe de description et activation du module User
+ *	Class to describe and enable module User
  */
 class modUser extends DolibarrModules
 {
@@ -45,11 +45,12 @@ class modUser extends DolibarrModules
 		$this->db = $db;
 		$this->numero = 0;
 
-		$this->family = "base";		// Family for module (or "base" if core module)
+		$this->family = "hr";		// Family for module (or "base" if core module)
+		$this->module_position = 10;
 		// Module label (no space allowed), used if translation string 'ModuleXXXName' not found (where XXX is value of numeric property 'numero' of module)
 		$this->name = preg_replace('/^mod/i','',get_class($this));
 		$this->description = "Gestion des utilisateurs (requis)";
-		$this->always_enabled = 1;	// Can't be disabled
+		$this->always_enabled = true;	// Can't be disabled
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr' or version
 		$this->version = 'dolibarr';
@@ -67,13 +68,15 @@ class modUser extends DolibarrModules
 		// Dependancies
 		$this->depends = array();
 		$this->requiredby = array();
-		$this->langfiles = array("main","users","companies");
+		$this->langfiles = array("main","users","companies","members",'salaries');
 
 		// Constants
 		$this->const = array();
 
 		// Boxes
-		$this->boxes = array();
+		$this->boxes = array(
+		    0=>array('file'=>'box_lastlogin.php','enabledbydefaulton'=>'Home'),
+		);
 
 		// Permissions
 		$this->rights = array();
@@ -133,7 +136,7 @@ class modUser extends DolibarrModules
 		$this->rights[$r][0] = 341;
 		$this->rights[$r][1] = 'Consulter ses propres permissions';
 		$this->rights[$r][2] = 'r';
-		$this->rights[$r][3] = 1;
+		$this->rights[$r][3] = 0;
 		$this->rights[$r][4] = 'self_advance';        // Visible if option MAIN_USE_ADVANCED_PERMS is on
 		$this->rights[$r][5] = 'readperms';
 
@@ -141,7 +144,7 @@ class modUser extends DolibarrModules
 		$this->rights[$r][0] = 342;
 		$this->rights[$r][1] = 'Creer/modifier ses propres infos utilisateur';
 		$this->rights[$r][2] = 'w';
-		$this->rights[$r][3] = 1;
+		$this->rights[$r][3] = 0;
 		$this->rights[$r][4] = 'self';
 		$this->rights[$r][5] = 'creer';
 
@@ -149,7 +152,7 @@ class modUser extends DolibarrModules
 		$this->rights[$r][0] = 343;
 		$this->rights[$r][1] = 'Modifier son propre mot de passe';
 		$this->rights[$r][2] = 'w';
-		$this->rights[$r][3] = 1;
+		$this->rights[$r][3] = 0;
 		$this->rights[$r][4] = 'self';
 		$this->rights[$r][5] = 'password';
 
@@ -157,7 +160,7 @@ class modUser extends DolibarrModules
 		$this->rights[$r][0] = 344;
 		$this->rights[$r][1] = 'Modifier ses propres permissions';
 		$this->rights[$r][2] = 'w';
-		$this->rights[$r][3] = 1;
+		$this->rights[$r][3] = 0;
 		$this->rights[$r][4] = 'self_advance';          // Visible if option MAIN_USE_ADVANCED_PERMS is on
 		$this->rights[$r][5] = 'writeperms';
 
@@ -201,6 +204,13 @@ class modUser extends DolibarrModules
 		$this->rights[$r][4] = 'user';
 		$this->rights[$r][5] = 'export';
 
+		
+        // Menus
+        //-------
+        
+        $this->menu = 1;        // This module add menu entries. They are coded into menu manager.
+		
+		
 		// Exports
 		//--------
 		$r=0;
@@ -209,10 +219,9 @@ class modUser extends DolibarrModules
 		$this->export_code[$r]=$this->rights_class.'_'.$r;
 		$this->export_label[$r]='Liste des utilisateurs Dolibarr et attributs';
 		$this->export_permission[$r]=array(array("user","user","export"));
-		$this->export_fields_array[$r]=array('u.rowid'=>"Id",'u.login'=>"Login",'u.lastname'=>"Lastname",'u.firstname'=>"Firstname",'u.office_phone'=>'Telephone','u.office_fax'=>'Fax','u.email'=>'EMail','u.datec'=>"DateCreation",'u.tms'=>"DateLastModification",'u.admin'=>"Admin",'u.statut'=>'Status','u.note'=>"Note",'u.datelastlogin'=>'LastConnexion','u.datepreviouslogin'=>'PreviousConnexion','u.fk_socpeople'=>"IdContact",'u.fk_societe'=>"IdCompany",'u.fk_member'=>"MemberId");
-		$this->export_TypeFields_array[$r]=array('u.login'=>"Text",'u.lastname'=>"Text",'u.firstname'=>"Text",'u.office_phone'=>'Text','u.office_fax'=>'Text','u.email'=>'Text','u.datec'=>"Date",'u.tms'=>"Date",'u.admin'=>"Boolean",'u.statut'=>'Status','u.note'=>"Text",'u.datelastlogin'=>'Date','u.datepreviouslogin'=>'Date','u.fk_societe'=>"List:societe:nom:rowid",'u.fk_member'=>"List:adherent:nom");
-
-		$this->export_entities_array[$r]=array('u.rowid'=>"user",'u.login'=>"user",'u.lastname'=>"user",'u.firstname'=>"user",'u.office_phone'=>'user','u.office_fax'=>'user','u.email'=>'user','u.datec'=>"user",'u.tms'=>"user",'u.admin'=>"user",'u.statut'=>'user','u.note'=>"user",'u.datelastlogin'=>'user','u.datepreviouslogin'=>'user','u.fk_socpeople'=>"contact",'u.fk_societe'=>"company",'u.fk_member'=>"member");
+		$this->export_fields_array[$r]=array('u.rowid'=>"Id",'u.login'=>"Login",'u.lastname'=>"Lastname",'u.firstname'=>"Firstname",'u.accountancy_code'=>"UserAccountancyCode",'u.office_phone'=>'Phone','u.office_fax'=>'Fax','u.email'=>'EMail','u.datec'=>"DateCreation",'u.tms'=>"DateLastModification",'u.admin'=>"Administrator",'u.statut'=>'Status','u.note'=>"Note",'u.datelastlogin'=>'LastConnexion','u.datepreviouslogin'=>'PreviousConnexion','u.fk_socpeople'=>"IdContact",'u.fk_soc'=>"IdCompany",'u.fk_member'=>"MemberId");
+		$this->export_TypeFields_array[$r]=array('u.login'=>"Text",'u.lastname'=>"Text",'u.firstname'=>"Text",'u.accountancy_code'=>'Text','u.office_phone'=>'Text','u.office_fax'=>'Text','u.email'=>'Text','u.datec'=>"Date",'u.tms'=>"Date",'u.admin'=>"Boolean",'u.statut'=>'Status','u.note'=>"Text",'u.datelastlogin'=>'Date','u.datepreviouslogin'=>'Date','u.fk_soc'=>"List:societe:nom:rowid",'u.fk_member'=>"List:adherent:firstname");
+		$this->export_entities_array[$r]=array('u.rowid'=>"user",'u.login'=>"user",'u.lastname'=>"user",'u.firstname'=>"user",'u.accountancy_code'=>'user','u.office_phone'=>'user','u.office_fax'=>'user','u.email'=>'user','u.datec'=>"user",'u.tms'=>"user",'u.admin'=>"user",'u.statut'=>'user','u.note'=>"user",'u.datelastlogin'=>'user','u.datepreviouslogin'=>'user','u.fk_socpeople'=>"contact",'u.fk_soc'=>"company",'u.fk_member'=>"member");
         if (empty($conf->adherent->enabled))
         {
             unset($this->export_fields_array[$r]['u.fk_member']);
@@ -220,7 +229,44 @@ class modUser extends DolibarrModules
         }
 		$this->export_sql_start[$r]='SELECT DISTINCT ';
 		$this->export_sql_end[$r]  =' FROM '.MAIN_DB_PREFIX.'user as u';
-		$this->export_sql_end[$r] .=' WHERE u.entity IN (0,'.$conf->entity.')';
+		$this->export_sql_end[$r] .=' WHERE u.entity IN ('.getEntity('user').')';
+		
+		// Imports
+		//--------
+		$r=0;
+
+		// Import list of users attributes
+		$r++;
+		$this->import_code[$r]=$this->rights_class.'_'.$r;
+		$this->import_label[$r]='ImportDataset_user_1';
+		$this->import_icon[$r]='user';
+		$this->import_entities_array[$r]=array();		// We define here only fields that use another icon that the one defined into import_icon
+		$this->import_tables_array[$r]=array('u'=>MAIN_DB_PREFIX.'user','extra'=>MAIN_DB_PREFIX.'user_extrafields');	// List of tables to insert into (insert done in same order)
+		$this->import_fields_array[$r]=array('u.lastname'=>"Name*",'u.firstname'=>"Firstname",'u.employee'=>"Employee*",'u.job'=>"Job",'u.gender'=>"Gender",'u.login'=>"Login*",'u.pass_crypted'=>"Password",'u.admin'=>"Administrator",'u.fk_soc'=>"Company*",'u.address'=>"Address",'u.zip'=>"Zip",'u.town'=>"Town",'u.fk_state'=>"StateId",'u.fk_country'=>"CountryCode",'u.office_phone'=>"Phone",'u.user_mobile'=>"Mobile",'u.office_fax'=>"Fax",'u.email'=>"Email",'u.note'=>"Note",'u.signature'=>'Signature','u.fk_user'=>'Supervisor','u.thm'=>'THM','u.tjm'=>'TJM','u.dateemployment'=>'DateEmployment','u.salary'=>'Salary','u.color'=>'Color','u.api_key'=>'ApiKey','u.datec'=>"DateCreation");
+		// Add extra fields
+		$sql="SELECT name, label, fieldrequired FROM ".MAIN_DB_PREFIX."extrafields WHERE elementtype = 'user' AND entity = ".$conf->entity;
+		$resql=$this->db->query($sql);
+		if ($resql)    // This can fail when class is used on old database (during migration for example)
+		{
+		    while ($obj=$this->db->fetch_object($resql))
+		    {
+		        $fieldname='extra.'.$obj->name;
+		        $fieldlabel=ucfirst($obj->label);
+		        $this->import_fields_array[$r][$fieldname]=$fieldlabel.($obj->fieldrequired?'*':'');
+		    }
+		}
+		// End add extra fields
+		$this->import_fieldshidden_array[$r]=array('u.fk_user_creat'=>'user->id','extra.fk_object'=>'lastrowid-'.MAIN_DB_PREFIX.'user');    // aliastable.field => ('user->id' or 'lastrowid-'.tableparent)
+		$this->import_convertvalue_array[$r]=array(
+			'u.fk_state'=>array('rule'=>'fetchidfromcodeid','classfile'=>'/core/class/cstate.class.php','class'=>'Cstate','method'=>'fetch','dict'=>'DictionaryState'),
+		    'u.fk_country'=>array('rule'=>'fetchidfromcodeid','classfile'=>'/core/class/ccountry.class.php','class'=>'Ccountry','method'=>'fetch','dict'=>'DictionaryCountry'),
+		    'u.salary'=>array('rule'=>'numeric')
+		);
+		//$this->import_convertvalue_array[$r]=array('s.fk_soc'=>array('rule'=>'lastrowid',table='t');
+		$this->import_regex_array[$r]=array('u.employee'=>'^[0|1]','u.datec'=>'^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]( [0-9][0-9]:[0-9][0-9]:[0-9][0-9])?$');
+		$this->import_examplevalues_array[$r]=array('u.lastname'=>"Doe",'u.firstname'=>'John','u.login'=>'jdoe','u.employee'=>'0 or 1','u.status'=>"0 (closed) or 1 (active)",'u.fk_soc'=>'0 (internal user) or company name (external user)','u.datec'=>dol_print_date(dol_now(),'%Y-%m-%d'),'u.address'=>"61 jump street",'u.zip'=>"123456",'u.town'=>"Big town",'u.fk_country'=>'US, FR, DE...','u.office_phone'=>"0101010101",'u.office_fax'=>"0101010102",'u.email'=>"test@mycompany.com",'u.salary'=>"10000",'u.note'=>"This is an example of note for record",'u.datec'=>"2015-01-01 or 2015-01-01 12:30:00");
+		$this->import_updatekeys_array[$r]=array('u.lastname'=>'Lastname','u.firstname'=>'Firstname','u.login'=>'Login');
+		
 	}
 
 
@@ -243,21 +289,4 @@ class modUser extends DolibarrModules
 
 		return $this->_init($sql,$options);
 	}
-
-    /**
-	 *		Function called when module is disabled.
-	 *      Remove from database constants, boxes and permissions from Dolibarr database.
-	 *		Data directories are not deleted
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-     */
-    function remove($options='')
-    {
-		$sql = array();
-
-		return $this->_remove($sql,$options);
-    }
-
 }
-?>

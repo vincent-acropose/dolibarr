@@ -3,6 +3,7 @@
  * Copyright (C) 2006-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2007-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2011      Juanjo Menent	    <jmenent@2byte.es>
+ * Copyright (C) 2013 	   Philippe Grand      	<philippe.grand@atoo-net.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,12 +30,12 @@ require_once DOL_DOCUMENT_ROOT.'/core/modules/societe/modules_societe.class.php'
 
 
 /**
- *       \class 		mod_codeclient_elephant
- *       \brief 		Class to manage third party code with elephant rule
+ *	Class to manage third party code with elephant rule
  */
 class mod_codeclient_elephant extends ModeleThirdPartyCode
 {
 	var $nom='Elephant';				// Nom du modele
+	var $name='Elephant';				// Nom du modele
 	var $code_modifiable;				// Code modifiable
 	var $code_modifiable_invalide;		// Code modifiable si il est invalide
 	var $code_modifiable_null;			// Code modifiables si il est null
@@ -63,7 +64,7 @@ class mod_codeclient_elephant extends ModeleThirdPartyCode
 
 	/**		Return description of module
 	 *
-	 * 		@param	string 		$langs		Object langs
+	 * 		@param	Translate	$langs		Object langs
 	 * 		@return string      			Description of module
 	 */
 	function info($langs)
@@ -73,7 +74,7 @@ class mod_codeclient_elephant extends ModeleThirdPartyCode
 
 		$langs->load("companies");
 
-		$disabled = ((! empty($mc->sharings['referent']) && $mc->sharings['referent'] != $conf->entity) ? ' disabled="disabled"' : '');
+		$disabled = ((! empty($mc->sharings['referent']) && $mc->sharings['referent'] != $conf->entity) ? ' disabled' : '');
 
 		$texte = $langs->trans('GenericNumRefModelDesc')."<br>\n";
 		$texte.= '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
@@ -131,6 +132,16 @@ class mod_codeclient_elephant extends ModeleThirdPartyCode
 				$langs->load("errors");
 				$examplecust=$langs->trans($examplecust);
 			}
+			if($examplecust=="ErrorCantUseRazIfNoYearInMask")
+			{
+				$langs->load("errors");
+				$examplecust=$langs->trans($examplecust);
+			}
+			if($examplecust=="ErrorCantUseRazInStartedYearIfNoYearMonthInMask")
+			{
+				$langs->load("errors");
+				$examplecust=$langs->trans($examplecust);
+			}
 		}
 		if ($type == 1 || $type == -1)
 		{
@@ -140,6 +151,16 @@ class mod_codeclient_elephant extends ModeleThirdPartyCode
 				$examplesup = $langs->trans('NotConfigured');
 			}
 			if($examplesup=="ErrorBadMask")
+			{
+				$langs->load("errors");
+				$examplesup=$langs->trans($examplesup);
+			}
+			if($examplesup=="ErrorCantUseRazIfNoYearInMask")
+			{
+				$langs->load("errors");
+				$examplesup=$langs->trans($examplesup);
+			}
+			if($examplesup=="ErrorCantUseRazInStartedYearIfNoYearMonthInMask")
 			{
 				$langs->load("errors");
 				$examplesup=$langs->trans($examplesup);
@@ -218,7 +239,7 @@ class mod_codeclient_elephant extends ModeleThirdPartyCode
 	 * 	Check validity of code according to its rules
 	 *
 	 *	@param	DoliDB		$db		Database handler
-	 *	@param	string		&$code	Code to check/correct
+	 *	@param	string		$code	Code to check/correct
 	 *	@param	Societe		$soc	Object third party
 	 *  @param  int		  	$type   0 = customer/prospect , 1 = supplier
 	 *  @return int					0 if OK
@@ -299,4 +320,3 @@ class mod_codeclient_elephant extends ModeleThirdPartyCode
 
 }
 
-?>

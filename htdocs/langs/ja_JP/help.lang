@@ -1,19 +1,9 @@
-/*
- * Language code: ja_JP
- * Automatic generated via autotranslator.php tool
- * Generation date 2012-02-29 16:41:06
- */
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 16:41:06).
-// Reference language: en_US -> ja_JP
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - help
 CommunitySupport=フォーラム/ Wikiのサポート
 EMailSupport=電子メールをサポート
 RemoteControlSupport=オンラインリアルタイム/リモートサポート
 OtherSupport=その他のサポート
 ToSeeListOfAvailableRessources=利用可能なリソースに連絡する/表示するには：
-ClickHere=ここをクリック
 HelpCenter=ヘルプセンター
 DolibarrHelpCenter=Dolibarrヘルプとサポートセンター
 ToGoBackToDolibarr=それ以外の場合は、クリック<a href="%s">Dolibarrを使用して、ここ</a>
@@ -32,5 +22,5 @@ ToGetHelpGoOnSparkAngels2=時には、あなたの検索を行い、現​​時
 BackToHelpCenter=それ以外の場合は、移動するには、ここをクリックして<a href="%s">センターのホームページを助けるために戻って</a> 。
 LinkToGoldMember=あなたは彼のウィジェット（ステータスおよび最大価格が自動的に更新されます）をクリックして言語（%s）にDolibarrによって事前に選択コーチのいずれかを呼び出すことができます。
 PossibleLanguages=サポートされる言語
-MakeADonation=Dolibarrプロジェクトを支援、寄付をする
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 17:03:00).
+SubscribeToFoundation=Dolibarrプロジェクトの支援、財団への加入
+SeeOfficalSupport=お使いの言語での公式Dolibarrサポート: <br><b><a href="%s" target="_blank">%s</a></b>

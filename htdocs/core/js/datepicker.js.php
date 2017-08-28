@@ -37,7 +37,7 @@ session_cache_limiter(FALSE);
 require_once '../../main.inc.php';
 
 // Define javascript type
-header('Content-type: text/javascript; charset=UTF-8');
+top_httphead('text/javascript; charset=UTF-8');
 // Important: Following code is to avoid page request by browser and PHP CPU at each Dolibarr page access.
 if (empty($dolibarr_nocache)) header('Cache-Control: max-age=3600, public, must-revalidate');
 else header('Cache-Control: no-cache');
@@ -149,4 +149,3 @@ jQuery(function($){
 
 <?php
 if (is_object($db)) $db->close();
-?>

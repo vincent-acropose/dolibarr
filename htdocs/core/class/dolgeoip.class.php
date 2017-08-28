@@ -40,7 +40,6 @@ class DolGeoIP
 	 *
 	 * @param 	string	$type		'country' or 'city'
 	 * @param	string	$datfile	Data file
-	 * @return 	GeoIP
 	 */
 	function __construct($type,$datfile)
 	{
@@ -59,24 +58,21 @@ class DolGeoIP
 		// Here, function exists (embedded into PHP or exists because we made include)
 		if (empty($type) || empty($datfile))
 		{
-			//dol_syslog("DolGeoIP::DolGeoIP parameter datafile not defined", LOG_ERR);
-			$this->errorlabel='DolGeoIP constructor was called with no datafile parameter';
-			//dol_print_error('','DolGeoIP constructor was called with no datafile parameter');
-			print $this->errorlabel;
+			$this->errorlabel='Constructor was called with no datafile parameter';
+			dol_syslog('DolGeoIP '.$this->errorlabel, LOG_ERR);
 			return 0;
 		}
-		if (! file_exists($datfile))
+		if (! file_exists($datfile) || ! is_readable($datfile))
 		{
-			//dol_syslog("DolGeoIP::DolGeoIP datafile ".$datfile." can not be read", LOG_ERR);
 			$this->error='ErrorGeoIPClassNotInitialized';
 			$this->errorlabel="Datafile ".$datfile." not found";
-			print $this->errorlabel;
+			dol_syslog('DolGeoIP '.$this->errorlabel, LOG_ERR);
 			return 0;
 		}
 
 		if (function_exists('geoip_open'))
 		{
-		    $this->gi = geoip_open($datfile,GEOIP_STANDARD);
+			$this->gi = geoip_open($datfile,GEOIP_STANDARD);
 		}
 		else
 		{
@@ -133,7 +129,7 @@ class DolGeoIP
 	function getVersion()
 	{
 	    if ($this->gi == 'NOGI') return geoip_database_info();
-		return '';
+		return 'Not available (not using PHP internal geo functions)';
 	}
 
 	/**
@@ -149,4 +145,3 @@ class DolGeoIP
 	    }
 	}
 }
-?>

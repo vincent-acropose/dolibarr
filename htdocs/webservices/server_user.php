@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2006-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2006-2016 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,9 @@
 /**
  *       \file       htdocs/webservices/server_user.php
  *       \brief      File that is entry point to call Dolibarr WebServices
- *       \version    $Id: server_user.php,v 1.7 2010/12/19 11:49:37 eldy Exp $
  */
 
-// This is to make Dolibarr working with Plesk
-set_include_path($_SERVER['DOCUMENT_ROOT'].'/htdocs');
+if (! defined("NOCSRFCHECK"))    define("NOCSRFCHECK",'1');
 
 require_once '../master.inc.php';
 require_once NUSOAP_PATH.'/nusoap.php';		// Include SOAP
@@ -181,7 +179,8 @@ $thirdpartywithuser_fields = array(
 	'tva_intra' => array('name'=>'tva_intra','type'=>'xsd:string'),
 	// 	For user
 	'login' => array('name'=>'login','type'=>'xsd:string'),
-	'password' => array('name'=>'password','type'=>'xsd:string')
+	'password' => array('name'=>'password','type'=>'xsd:string'),
+	'group_id' => array('name'=>'group_id','type'=>'xsd:string')
 );
 
 //Retreive all extrafield for contact
@@ -298,7 +297,7 @@ $server->register(
  * @param	array		$authentication		Array of authentication information
  * @param	int			$id					Id of object
  * @param	string		$ref				Ref of object
- * @param	ref_ext		$ref_ext			Ref external of object
+ * @param	string		$ref_ext			Ref external of object
  * @return	mixed
  */
 function getUser($authentication,$id,$ref='',$ref_ext='')
@@ -417,7 +416,7 @@ function getListOfGroups($authentication)
 		$sql = "SELECT g.rowid, g.nom as name, g.entity, g.datec, COUNT(DISTINCT ugu.fk_user) as nb";
 		$sql.= " FROM ".MAIN_DB_PREFIX."usergroup as g";
 		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."usergroup_user as ugu ON ugu.fk_usergroup = g.rowid";
-		if (! empty($conf->multicompany->enabled) && $conf->entity == 1 && ($conf->multicompany->transverse_mode || ($user->admin && ! $user->entity)))
+		if (! empty($conf->multicompany->enabled) && $conf->entity == 1 && ($conf->global->MULTICOMPANY_TRANSVERSE_MODE || ($user->admin && ! $user->entity)))
 		{
 			$sql.= " WHERE g.entity IS NOT NULL";
 		}
@@ -523,6 +522,7 @@ function createUserFromThirdparty($authentication,$thirdpartywithuser)
 				}
 				else
 				{
+					$db->begin();
 					/*
 					 * Company creation
 					 */
@@ -533,6 +533,25 @@ function createUserFromThirdparty($authentication,$thirdpartywithuser)
 					$thirdparty->town=$thirdpartywithuser['town'];
 					$thirdparty->country_id=$thirdpartywithuser['country_id'];
 					$thirdparty->country_code=$thirdpartywithuser['country_code'];
+
+					// find the country id by code
+					$langs->load("dict");
+
+					$sql = "SELECT rowid";
+					$sql.= " FROM ".MAIN_DB_PREFIX."c_country";
+					$sql.= " WHERE active = 1";
+					$sql.= " AND code='".$thirdparty->country_code."'";
+
+					$resql=$db->query($sql);
+					if ($resql)
+					{
+						$num = $db->num_rows($resql);
+						if ($num)
+						{
+							$obj = $db->fetch_object($resql);
+							$thirdparty->country_id      = $obj->rowid;
+						}
+					}
 					$thirdparty->phone=$thirdpartywithuser['phone'];
 					$thirdparty->fax=$thirdpartywithuser['fax'];
 					$thirdparty->email=$thirdpartywithuser['email'];
@@ -562,7 +581,7 @@ function createUserFromThirdparty($authentication,$thirdpartywithuser)
 						$contact->socid = $thirdparty->id;
 						$contact->lastname = $thirdpartywithuser['name'];
 						$contact->firstname = $thirdpartywithuser['firstname'];
-						$contact->civilite_id = $thirdparty->civilite_id;
+						$contact->civility_id = $thirdparty->civility_id;
 						$contact->address = $thirdparty->address;
 						$contact->zip = $thirdparty->zip;
 						$contact->town = $thirdparty->town;
@@ -570,6 +589,9 @@ function createUserFromThirdparty($authentication,$thirdpartywithuser)
 						$contact->phone_pro = $thirdparty->phone;
 						$contact->phone_mobile = $thirdpartywithuser['phone_mobile'];
 						$contact->fax = $thirdparty->fax;
+						$contact->statut = 1;
+						$contact->country_id = $thirdparty->country_id;
+						$contact->country_code = $thirdparty->country_code;
 
 						//Retreive all extrafield for thirdsparty
 						// fetch optionals attributes and labels
@@ -591,33 +613,29 @@ function createUserFromThirdparty($authentication,$thirdpartywithuser)
 							*
 							*/
 							$edituser = new User($db);
-							$db->begin();
 
 							$id = $edituser->create_from_contact($contact,$thirdpartywithuser["login"]);
 							if ($id > 0)
 							{
-								$edituser->setPassword($user,trim($thirdpartywithuser['password']));
+								$edituser->setPassword($fuser,trim($thirdpartywithuser['password']));
+
+								if($thirdpartywithuser['group_id'] > 0 )
+									$edituser->SetInGroup($thirdpartywithuser['group_id'],$conf->entity);
 							}
 							else
 							{
 								$error++;
-								$errorcode='NOT_CREATE'; $errorlabel='Object not create : no contact found or create';
+								$errorcode='NOT_CREATE'; $errorlabel='Object not create : '.$edituser->error;
 							}
-
-
-							if (! $error && $id > 0)
-							{
-								$db->commit();
-							}
-							else
-							{
-								$db->rollback();
-								$error++;
-								$errorcode='NOT_CREATE'; $errorlabel='Contact not create';
-							}
+						}
+						else
+						{
+							$error++;
+							$errorcode='NOT_CREATE'; $errorlabel='Object not create : '.$contact->error;
 						}
 
 						if(!$error) {
+							$db->commit();
 							$objectresp=array('result'=>array('result_code'=>'OK', 'result_label'=>'SUCCESS'),'id'=>$socid_return);
 							$error=0;
 						}
@@ -645,6 +663,7 @@ function createUserFromThirdparty($authentication,$thirdpartywithuser)
 
 	if ($error)
 	{
+		$db->rollback();
 		$objectresp = array(
 		'result'=>array('result_code' => $errorcode, 'result_label' => $errorlabel)
 		);
@@ -732,8 +751,5 @@ function setUserPassword($authentication,$shortuser) {
 	return $objectresp;
 }
 
-
 // Return the results.
-$server->service($HTTP_RAW_POST_DATA);
-
-?>
+$server->service(file_get_contents("php://input"));

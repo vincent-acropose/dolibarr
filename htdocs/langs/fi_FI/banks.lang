@@ -1,177 +1,157 @@
-/*
- * Language code: fi_FI
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-01-19 22:07:11
- */
-
-
-// Date 2009-01-19 22:07:11
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - banks
 Bank=Pankki
-Banks=Pankit
-MenuBankCash=Bank / Cash
-MenuSetupBank=Bank / Cash setup
+MenuBankCash=Pankki / Käteinen
 BankName=Pankin nimi
 FinancialAccount=Tili
-FinancialAccounts=Tilit
-BankAccount=Pankkiyhteys
+BankAccount=Pankkitili
 BankAccounts=Pankkitilit
-AccountRef=Rahoitustase ref
+ShowAccount=Näytä tili
+AccountRef=Rahoitustase viite
 AccountLabel=Rahoitustase etiketti
-CashAccount=Rahat tilille
-CashAccounts=Rahat ja pankkisaamiset
-MainAccount=Päätili
-CurrentAccount=Vaihtotase
-CurrentAccounts=Sekkitilit
-SavingAccount=Säästötili
-SavingAccounts=Säästötileihin
+CashAccount=Käteistili
+CashAccounts=Käteistilit
+CurrentAccounts=Nykyiset tilit
+SavingAccounts=Säästötilit
 ErrorBankLabelAlreadyExists=Rahoitustase etiketti on jo olemassa
 BankBalance=Saldo
-BalanceMinimalAllowed=Pienin sallittu tasapaino
-BalanceMinimalDesired=Pienin toivottu tasapaino
-InitialBankBalance=Alkuperäiset tasapaino
-EndBankBalance=Lopussa
+BankBalanceBefore=Saldo ennen
+BankBalanceAfter=Saldo jälkeen
+BalanceMinimalAllowed=Pienin sallittu saldo
+BalanceMinimalDesired=Pienin toivottu saldo
+InitialBankBalance=Alkuperäinen saldo
+EndBankBalance=Loppusaldo
 CurrentBalance=Nykyinen saldo
 FutureBalance=Tulevat tasapaino
-ShowAllTimeBalance=Näytä tasapaino alusta
-Reconciliation=Sovinto
-RIB=Bank Account Number
+ShowAllTimeBalance=Näytä saldo alusta asti
+AllTime=Alkaen
+Reconciliation=Yhteensovittaminen
+RIB=Pankkitilin numero
 IBAN=IBAN-numero
-BIC=BIC / SWIFT-numero
-StandingOrders=Pysyvän tilaukset
-StandingOrder=Kestotilaus
-Withdrawals=Nostot
-Withdrawal=Peruuttaminen
+BIC=BIC / SWIFT-koodi
+SwiftValid=BIC/SWIFT hyväksytty
+SwiftVNotalid=BIC/SWIFT virheellinen
+IbanValid=BAN hyväksytty
+IbanNotValid=BAN virheellinen
+StandingOrders=Suoraveloitus tilauset
+StandingOrder=Suoraveloitus tilaus
 AccountStatement=Tiliote
-AccountStatementShort=Lausunto
-AccountStatements=Tiliotteisiin
-LastAccountStatements=Viimeisin tiliotteisiin
-Rapprochement=Reconciliate
-IOMonthlyReporting=Kuukausittainen raportointi
-BankAccountDomiciliation=Huomioon osoite
-BankAccountOwner=Tilin omistajan nimi
-BankAccountOwnerAddress=Tilin omistajan osoite
+AccountStatementShort=Laskelma
+AccountStatements=Tiliotteet
+LastAccountStatements=Viimeisimmät tiliotteet
+IOMonthlyReporting=Kuukausiraportti
+BankAccountDomiciliation=Tilin osoite
+BankAccountCountry=Tilin maa
+BankAccountOwner=Tilinomistajan nimi
+BankAccountOwnerAddress=Tilinomistajan osoite
+RIBControlError=Eheydentarkistus arvojen epäonnistuu. Tämä tarkoittaa tiedoista tilinumero eivät ole täydellisiä tai väärin (tarkista maassa, numerot ja IBAN).
 CreateAccount=Luo tili
-StandingOrderToProcess=Käsitellä
-StandingOrderProcessed=Jalostettu
-NewAccount=Uusi tili
-NewBankAccount=Uusi pankkitili
-NewFinancialAccount=New rahoitustaseen
-MenuNewFinancialAccount=New rahoitustaseen
-NewCurrentAccount=Uusi vaihtotaseen
-NewSavingAccount=Uusi säästötili
-NewCashAccount=Uusi käteisellä huomioon
+NewBankAccount=Uusi tili
+NewFinancialAccount=New rahoitustili
+MenuNewFinancialAccount=Uusi rahoitustili
 EditFinancialAccount=Muokkaa tiliä
-AccountSetup=Rahoitustilit setup
-SearchBankMovement=Haku pankki liikkuvuus
-Debts=Velat
-LabelBankCashAccount=Pankki tai rahan etiketti
+LabelBankCashAccount=Pankki tai käteisen valuutta
 AccountType=Tilin tyyppi
 BankType0=Säästötili
-BankType1=Vaihtotase
-BankType2=Rahat tilille
-IfBankAccount=Jos pankkitili
-AccountsArea=Tilit alueella
-AccountCard=Account-kortti
+BankType1=Nykyinen tai luottokorttitili
+BankType2=Käteistili
+AccountsArea=Tilialue
+AccountCard=Tii-kortti
 DeleteAccount=Poista tili
-ConfirmDeleteAccount=Oletko varma, että haluat poistaa tämän huomioon?
+ConfirmDeleteAccount=Haluatko varmasti poistaa tämän tilin?
 Account=Tili
-ByCategories=Kategorioittain
-ByRubriques=Kategorioittain
-BankTransactionByCategories=Pankki liiketoimia luokat
-BankTransactionForCategory=Pankki liiketoimien <b>luokan %s</b>
-RemoveFromRubrique=Poista yhteys luokka
-RemoveFromRubriqueConfirm=Oletko varma, että haluat poistaa välinen kauppa-ja luokka?
-ListBankTransactions=Luettelo pankin liiketoimia
-IdTransaction=Transaction ID
-BankTransactions=Pankki liiketoimet
-SearchTransaction=Haku liiketoimi
-ListTransactions=Luettelo liiketoimista
-ListTransactionsByCategory=Luettelo liiketoimi / luokka
-TransactionsToConciliate=Liiketoimista hyvitellä
+BankTransactionByCategories=Pankkitapahtumat luokittain
+BankTransactionForCategory=Pankkitapahtumat luokassa <b>%s</b>
+RemoveFromRubrique=Poista linkki kategoriaan
+RemoveFromRubriqueConfirm=Haluatko varamsti poistaa linkin tapahtuman ja luokan väliltä?
+ListBankTransactions=Luettelo pankkitapahtumista
+IdTransaction=Tapahtumatunnus
+BankTransactions=Pankkitapahtumat
+BankTransaction=Pankkimerkintä
+ListTransactions=Luettelo tapahtumista
+ListTransactionsByCategory=Luettelo tapahtumista / luokka
+TransactionsToConciliate=Täsmäytettävät tapahtumat
 Conciliable=Conciliable
-Conciliate=Hyvitellä
-Conciliation=Sovittelu
-ConciliationForAccount=Hyvitellä tämän tilin
+Conciliate=Sovita
+Conciliation=Yhteensovita
+ReconciliationLate=Täsmäytys myöhässä
 IncludeClosedAccount=Sisällytä suljettu tilit
-OnlyOpenedAccount=Vain avannut tilejä
-AccountToCredit=Huomioon luoton
-AccountToDebit=Huomioon veloittaa
+OnlyOpenedAccount=Only open accounts
+AccountToCredit=Luottotili
+AccountToDebit=Käteistili
 DisableConciliation=Poista sovittelu ominaisuus tämän tilin
 ConciliationDisabled=Sovittelukomitea ominaisuus pois päältä
+LinkedToAConciliatedTransaction=Linkitetty täsmäytettyyn tapahtumaan
 StatusAccountOpened=Avoinna
 StatusAccountClosed=Suljettu
 AccountIdShort=Numero
-EditBankRecord=Muokkaa kirjaa
-LineRecord=Transaktiotulostus
-AddBankRecord=Lisää liiketoimi
-AddBankRecordLong=Lisää liiketoimi käsin
-ConciliatedBy=Conciliated jonka
-DateConciliating=Hyvitellä päivämäärä
-BankLineConciliated=Transaktiotulostus conciliated
-CustomerInvoicePayment=Asiakas maksu
-SupplierInvoicePayment=Toimittaja maksu
-SocialContributionPayment=Sosiaaliturvamaksujen maksamisesta
-FinancialAccountJournal=Rahoitustase journal
+LineRecord=Tapahtuma
+AddBankRecord=Lisää merkintä
+AddBankRecordLong=Lisää mernkintä manuaalisesti
+ConciliatedBy=Sovetteli
+DateConciliating=Sovittelupäivä
+BankLineConciliated=Merkintä täsmäytetty
+Reconciled=Täsmäytetty
+NotReconciled=Täsmäyttämätön
+CustomerInvoicePayment=Asiakasmaksu
+SupplierInvoicePayment=Toimittajan maksu
+SubscriptionPayment=Tilaus maksu
+WithdrawalPayment=Hyvitysmaksu
+SocialContributionPayment=Social/fiscal veron maksu
 BankTransfer=Pankkisiirto
-BankTransfers=Pankkisiirtojen
-TransferDesc=Siirtäminen tililtä toiselle yhden, Dolibarr kirjoittaa kaksi tietuetta (luottotililtä vuonna lähdetiliksi ja luottoa tavoite huomioon, että sama määrä. Sama merkki ja päivämäärä voidaan käyttää tästä tapahtumasta)
+BankTransfers=Pankkisiirrot
+MenuBankInternalTransfer=Sisäinen siirto
+TransferDesc=Siirto tililtä toiselle. Dolibarr luo molemmille tileille kirjaukset (debet lähdetilille ja kredit vastaanottavalle tilille) samalla summalla (ainoastaan etumerkki muuttuu). Päivämäärää ja nimikettä käytetään myös tässä tapahtumassa.
 TransferFrom=Mistä
-TransferTo=Jos haluat
-TransferFromToDone=A <b>siirtää %s %s %s%</b> s on kirjattu.
-CheckTransmitter=Lähettimen
-ValidateCheckReceipt=Validate tämän valintaruudun vastaanottamisesta?
-ConfirmValidateCheckReceipt=Oletko varma, että haluamme vahvistaa tämän valintaruudun vastaanottamiselle, joten muutos on mahdollista, kun tämä on tehty?
-DeleteCheckReceipt=Poista tämän valintaruudun vastaanottamisesta?
-ConfirmDeleteCheckReceipt=Oletko varma, että haluat poistaa tämän valintaruudun vastaanottamisesta?
-BankChecks=Pankki sekit
-BankChecksToReceipt=Sekit odottaa talletusten
-NumberOfCheques=Nb Sekkien
-DeleteTransaction=Poista liiketoimi
-ConfirmDeleteTransaction=Oletko varma, että haluat poistaa tämän liiketoimi?
-ThisWillAlsoDeleteBankRecord=Tämä poistaa myös syntyy pankin liiketoimia
-BankMovements=Liikkeet
-CashBudget=Cash talousarvio
-PlannedTransactions=Suunnitellut toimet
-ExportDataset_banque_1=Pankki ja tilitiedot julkilausuma
-TransactionOnTheOtherAccount=Liiketoimen muut huomioon
-PaymentNumberUpdateSucceeded=Maksu numero päivitetty onnistuneesti
-PaymentNumberUpdateFailed=Maksu numero ei voi päivittää
-PaymentDateUpdateSucceeded=Maksupäivä päivityksen onnistuneesti
-PaymentDateUpdateFailed=Maksupäivä ei voi päivittää
-BankTransactionLine=Pankkitoimiin
-AllAccounts=Kaikki pankin / tasetilit
-BackToAccount=Palaa huomioon
-ShowAllAccounts=Näytä kaikki tilit
-// Date 2009-01-19 22:07:11
-// STOP - Lines generated via parser
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-13 20:45:19).
-// Reference language: en_US
-TransactionWithOtherAccount=Tilisiirto
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 20:45:19).
-
-
-// START - Lines generated via autotranslator.php tool (2010-07-17 11:26:22).
-// Reference language: en_US
-BankAccountCountry=Tili maa
-// STOP - Lines generated via autotranslator.php tool (2010-07-17 11:26:41).
-
-
-// START - Lines generated via autotranslator.php tool (2011-10-10 02:45:33).
-// Reference language: en_US -> fi_FI
-RIBControlError=Eheydentarkistus arvojen epäonnistuu. Tämä tarkoittaa tiedoista tilinumero eivät ole täydellisiä tai väärin (tarkista maassa, numerot ja IBAN).
-WithdrawalPayment=Irtisanominen maksu
+TransferTo=mihin
+TransferFromToDone=A <b>siirtää %s %s %s%</b> s on tallennettu.
+CheckTransmitter=Lähettäjä
+ValidateCheckReceipt=Vahvista tämä sekkikuitti?
+ConfirmValidateCheckReceipt=Oletko varma, että haluat vahvistaa tämän? Muutokset eivät ole enää mahdollisia, vahvistamisen jälkeen?
+DeleteCheckReceipt=Poista tämä shekkikuitti?
+ConfirmDeleteCheckReceipt=Haluatko varmasti poistaa tämän sekkikuitin?
+BankChecks=Pankkisekit
+BankChecksToReceipt=Talletusta odottavat shekit
 ShowCheckReceipt=Näytä tarkistaa Talletus kuitti
+NumberOfCheques=Nb Sekkien
+DeleteTransaction=Poista merkintä
+ConfirmDeleteTransaction=Haluatko varmasti poistaa tämän merkinnän?
+ThisWillAlsoDeleteBankRecord=Tämä poistaa myös luodun pankkimerkinnän
+BankMovements=Siirrot
+PlannedTransactions=Suunnitellut merkinnät
 Graph=Grafiikka
-// STOP - Lines generated via autotranslator.php tool (2011-10-10 06:42:55).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 16:10:23).
-// Reference language: en_US -> fi_FI
-FutureTransaction=Tapahtuma on futur. Ei tapa lepyttää.
+ExportDataset_banque_1=Pankkimerkinnät ja tiliotteet
+ExportDataset_banque_2=Talletuslomake
+TransactionOnTheOtherAccount=Tapahtuma toisella tilillä
+PaymentNumberUpdateSucceeded=Maksun numero päivitettiin onnistuneesti
+PaymentNumberUpdateFailed=Maksu numero ei voi päivittää
+PaymentDateUpdateSucceeded=Maksun päivämäärä päivitettiin onnistuneesti
+PaymentDateUpdateFailed=Maksupäivä ei voi päivittää
+Transactions=Tapahtumat
+BankTransactionLine=Pankkimerkintä
+AllAccounts=Kaikki pankin/tilit
+BackToAccount=Takaisin tiliin
+ShowAllAccounts=Näytä kaikki tilit
+FutureTransaction=Tapahtuma on tulevaisuudessa. Ei soviteltavissa.
 SelectChequeTransactionAndGenerate=Valitse / suodattaa tarkastuksiin sisällyttää osaksi tarkastus talletuksen vastaanottamisesta ja klikkaa &quot;Luo&quot;.
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 16:10:33).
+InputReceiptNumber=Valitse tämän täsmäytyksen tiliote. Käytä lajiteltavaa numeroarvoa: YYYYMM tai YYYYMMDD
+EventualyAddCategory=Määritä luokka johon tiedot luokitellaan
+ToConciliate=Täsmäytä?
+ThenCheckLinesAndConciliate=Seuraavaksi valitse rivit tiliotteelta ja paina
+DefaultRIB=Oletun BAN
+AllRIB=Kaikki BAN
+LabelRIB=BAN tunnus
+NoBANRecord=Ei BAN tietuetta
+DeleteARib=Poista BAN tiedue
+ConfirmDeleteRib=Haluatko varmasti poistaa tämän BAN tiedon?
+RejectCheck=Shekki palautunut
+ConfirmRejectCheck=Haluatko varmasti merkitä tämän shekin hylätyksi?
+RejectCheckDate=Shekin palautumispäivä
+CheckRejected=Shekki palautunut
+CheckRejectedAndInvoicesReopened=Shekki palautunut ja lasku avautunut uudelleen
+BankAccountModelModule=Pankkitilien dokumenttimallit
+DocumentModelSepaMandate=SEPA valtuuden malli. Käyttökelpoinen vain EEC alueen valtioissa
+DocumentModelBan=BAN tiedon sisältävä tulostusmalli
+NewVariousPayment=New miscellaneous payments
+VariousPayment=Miscellaneous payments
+VariousPayments=Miscellaneous payments
+ShowVariousPayment=Show miscellaneous payments

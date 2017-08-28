@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2011		Juanjo Menent <jmenent@2byte.es>
+/* Copyright (C) 2011-2014		Juanjo Menent <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ $langs->load("compta");
 $socid = isset($_GET["socid"])?$_GET["socid"]:'';
 if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user, 'tax', '', '', 'charges');
+$ltt=GETPOST("localTaxType");
 
 /*
  * View
@@ -40,11 +41,11 @@ llxHeader();
 
 $localtax_static = new Localtax($db);
 
-print_fiche_titre($langs->transcountry("LT2Payments",$mysoc->country_code));
+print load_fiche_titre($langs->transcountry($ltt==2?"LT2Payments":"LT1Payments",$mysoc->country_code));
 
 $sql = "SELECT rowid, amount, label, f.datev as dm";
 $sql.= " FROM ".MAIN_DB_PREFIX."localtax as f ";
-$sql.= " WHERE f.entity = ".$conf->entity;
+$sql.= " WHERE f.entity = ".$conf->entity." AND localtaxtype=".$db->escape($ltt);
 $sql.= " ORDER BY dm DESC";
 
 $result = $db->query($sql);
@@ -56,17 +57,17 @@ if ($result)
 
     print '<table class="noborder" width="100%">';
     print '<tr class="liste_titre">';
-    print '<td nowrap align="left">'.$langs->trans("Ref").'</td>';
+    print '<td class="nowrap" align="left">'.$langs->trans("Ref").'</td>';
     print "<td>".$langs->trans("Label")."</td>";
-    print '<td nowrap align="left">'.$langs->trans("DatePayment").'</td>';
+    print '<td class="nowrap" align="left">'.$langs->trans("DatePayment").'</td>';
     print "<td align=\"right\">".$langs->trans("PayedByThisPayment")."</td>";
     print "</tr>\n";
     $var=1;
     while ($i < $num)
     {
         $obj = $db->fetch_object($result);
-        $var=!$var;
-        print "<tr $bc[$var]>";
+        
+        print '<tr class="oddeven">';
 
 		$localtax_static->id=$obj->rowid;
 		$localtax_static->ref=$obj->rowid;
@@ -91,7 +92,5 @@ else
     dol_print_error($db);
 }
 
-$db->close();
-
 llxFooter();
-?>
+$db->close();

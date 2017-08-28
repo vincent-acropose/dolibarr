@@ -1,6 +1,7 @@
 <?php
-/* Copyright (C) 2004-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2004-2005  Rodolphe Quiedeville    <rodolphe@quiedeville.org>
+ * Copyright (C) 2004-2010  Laurent Destailleur     <eldy@users.sourceforge.net>
+ * Copyright (C) 2016       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,10 +27,11 @@ include_once 'inc.php';
 include_once '../core/class/html.form.class.php';
 include_once '../core/class/html.formadmin.class.php';
 
+global $langs;
+
 $err = 0;
 
-// Si fichier conf existe deja et rempli, on est pas sur une premiere install,
-// on ne passe donc pas par la page de choix de langue
+// If the config file exists and is filled, we're not on first install so we skip the language selection page
 if (file_exists($conffile) && isset($dolibarr_main_url_root))
 {
     header("Location: check.php?testget=ok");
@@ -45,11 +47,11 @@ $langs->load("admin");
 
 $formadmin=new FormAdmin('');	// Note: $db does not exist yet but we don't need it, so we put ''.
 
-pHeader("", "check");   // Etape suivante = check
+pHeader("", "check");   // Next step = check
 
 
 // Ask installation language
-print '<br><br><center>';
+print '<br><br><div class="center">';
 print '<table>';
 
 print '<tr>';
@@ -58,11 +60,10 @@ print $formadmin->select_language('auto','selectlang',1,0,0,1);
 print '</td>';
 print '</tr>';
 
-print '</table></center>';
+print '</table></div>';
 
 print '<br><br>'.$langs->trans("SomeTranslationAreUncomplete");
 
-// Si pas d'erreur, on affiche le bouton pour passer a l'etape suivante
+// If there's no error, we display the next step button
 if ($err == 0) pFooter(0);
 
-?>

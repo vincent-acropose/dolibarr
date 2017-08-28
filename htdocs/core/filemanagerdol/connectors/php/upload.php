@@ -27,7 +27,14 @@ require 'util.php';
 require 'io.php';
 require 'commands.php';
 
-function SendError( $number, $text )
+/**
+ * SendError
+ *
+ * @param	integer	$number		Number
+ * @param	string	$text		Text
+ * @return 	void
+ */
+function SendError($number, $text)
 {
 	SendUploadResults($number, '', '', $text);
 }
@@ -35,7 +42,7 @@ function SendError( $number, $text )
 
 // Check if this uploader has been enabled.
 if ( !$Config['Enabled'] )
-	SendUploadResults('1', '', '', 'This file uploader is disabled. Please check the "editor/filemanager/connectors/php/config.php" file');
+	SendUploadResults('1', '', '', 'This file uploader is disabled. Please check the "filemanagerdol/connectors/php/config.php" file');
 
 $sCommand = 'QuickUpload' ;
 
@@ -53,7 +60,7 @@ if (! IsAllowedType($sType))
     SendUploadResults(1, '', '', 'Invalid type specified');
 
 
-// DOL_CHANGE
+// @CHANGE
 //FileUpload( $sType, $sCurrentFolder, $sCommand )
 
 // Get the CKEditor Callback
@@ -63,4 +70,3 @@ $CKEcallback = $_GET['CKEditorFuncNum'];
 FileUpload($sType, $sCurrentFolder, $sCommand, $CKEcallback);
 
 
-?>

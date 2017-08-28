@@ -1,39 +1,30 @@
-/*
- * Language code: is_IS
- * Automatic generated via autotranslator.php tool
- * Generation date 2010-06-30 00:15:29
- */
-
-
-// START - Lines generated via autotranslator.php tool (2010-06-30 00:15:29).
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - deliveries
 Delivery=Afhending
-Deliveries=Sendingar
-DeliveryCard=Afhending kort
+DeliveryRef=Ref Delivery
+DeliveryCard=Receipt card
 DeliveryOrder=Sending röð
-DeliveryOrders=Sending pantana
 DeliveryDate=Fæðingardag
-DeliveryDateShort=Skila. dagsetning
-CreateDeliveryOrder=Búa til afhendingar til
-QtyDelivered=Magn afhentir
+CreateDeliveryOrder=Generate delivery receipt
+DeliveryStateSaved=Delivery state saved
 SetDeliveryDate=Setja skipum dagsetningu
 ValidateDeliveryReceipt=Staðfesta sending berst
-ValidateDeliveryReceiptConfirm=Ertu viss um að þú viljir að sannprófa þetta sending berst?
+ValidateDeliveryReceiptConfirm=Are you sure you want to validate this delivery receipt?
+DeleteDeliveryReceipt=Eyða afhendingu kvittun
+DeleteDeliveryReceiptConfirm=Are you sure you want to delete delivery receipt <b>%s</b>?
 DeliveryMethod=Birtingarmáti
 TrackingNumber=Rekja spor númer
+DeliveryNotValidated=Afhending er ekki fullgilt
+StatusDeliveryCanceled=Hætt við
+StatusDeliveryDraft=Drög
+StatusDeliveryValidated=Móttekin
+# merou PDF model
 NameAndSignature=Nafn og Undirskrift:
 ToAndDate=To___________________________________ á ____ / _____ / __________
 GoodStatusDeclaration=Hafa fengið vöruna hér að ofan í góðu ásigkomulagi,
 Deliverer=Frelsari:
 Sender=Sendandi
 Recipient=Viðtakandi
-// STOP - Lines generated via autotranslator.php tool (2010-06-30 00:15:29).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 16:26:19).
-// Reference language: en_US -> is_IS
-DeleteDeliveryReceipt=Eyða afhendingu kvittun
-DeleteDeliveryReceiptConfirm=Ertu viss um að þú viljir eyða pósti móttöku <b>%s?</b>
-DeliveryNotValidated=Afhending er ekki fullgilt
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 16:28:06).
+ErrorStockIsNotEnough=There's not enough stock
+Shippable=Shippable
+NonShippable=Not Shippable
+ShowReceiving=Show delivery receipt

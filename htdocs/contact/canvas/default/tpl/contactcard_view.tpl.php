@@ -44,7 +44,7 @@ dol_htmloutput_errors($this->control->tpl['error'],$this->control->tpl['errors']
 </tr>
 
 <tr>
-	<td><?php echo $langs->trans("Company"); ?></td>
+	<td><?php echo $langs->trans("ThirdParty"); ?></td>
 	<td colspan="3"><?php echo $this->control->tpl['company']; ?></td>
 </tr>
 
@@ -96,7 +96,7 @@ dol_htmloutput_errors($this->control->tpl['error'],$this->control->tpl['errors']
 	<td><?php echo $langs->trans("EMail"); ?></td>
 	<td><?php echo $this->control->tpl['email']; ?></td>
 	<?php if ($this->control->tpl['nb_emailing']) { ?>
-	<td nowrap><?php echo $langs->trans("NbOfEMailingsReceived"); ?></td>
+	<td class="nowrap"><?php echo $langs->trans("NbOfEMailingsReceived"); ?></td>
 	<td><?php echo $this->control->tpl['nb_emailing']; ?></td>
 	<?php } else { ?>
 	<td colspan="2">&nbsp;</td>
@@ -114,7 +114,7 @@ dol_htmloutput_errors($this->control->tpl['error'],$this->control->tpl['errors']
 </tr>
 
 <tr>
-	<td valign="top"><?php echo $langs->trans("Note"); ?></td>
+	<td class="tdtop"><?php echo $langs->trans("Note"); ?></td>
 	<td colspan="3"><?php echo $this->control->tpl['note']; ?></td>
 </tr>
 
@@ -134,7 +134,7 @@ dol_htmloutput_errors($this->control->tpl['error'],$this->control->tpl['errors']
 
 <?php echo $this->control->tpl['showend']; ?>
 
-<?php if (! $user->societe_id) { ?>
+<?php if (empty($user->societe_id)) { ?>
 <div class="tabsAction">
 
 <?php if ($user->rights->societe->contact->creer) { ?>

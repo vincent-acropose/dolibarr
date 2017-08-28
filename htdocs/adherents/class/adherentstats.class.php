@@ -24,7 +24,7 @@
  */
 
 include_once DOL_DOCUMENT_ROOT . '/core/class/stats.class.php';
-include_once DOL_DOCUMENT_ROOT . '/adherents/class/cotisation.class.php';
+include_once DOL_DOCUMENT_ROOT . '/adherents/class/subscription.class.php';
 
 
 /**
@@ -48,7 +48,6 @@ class AdherentStats extends Stats
 	 *	@param 		DoliDB		$db			Database handler
 	 * 	@param 		int			$socid	   	Id third party
      * 	@param   	int			$userid    	Id user for filter
-	 * 	@return 	AdherentStats
 	 */
 	function __construct($db, $socid=0, $userid=0)
 	{
@@ -58,15 +57,15 @@ class AdherentStats extends Stats
         $this->socid = $socid;
         $this->userid = $userid;
 
-		$object=new Cotisation($this->db);
+		$object=new Subscription($this->db);
 
 		$this->from = MAIN_DB_PREFIX.$object->table_element." as p";
 		$this->from.= ", ".MAIN_DB_PREFIX."adherent as m";
 
-		$this->field='cotisation';
+		$this->field='subscription';
 
 		$this->where.= " m.statut != 0";
-		$this->where.= " AND p.fk_adherent = m.rowid AND m.entity = ".$conf->entity;
+		$this->where.= " AND p.fk_adherent = m.rowid AND m.entity IN (".getEntity('adherent').")";
 		//if (!$user->rights->societe->client->voir && !$user->societe_id) $this->where .= " AND p.fk_soc = sc.fk_soc AND sc.fk_user = " .$user->id;
 		if($this->memberid)
 		{
@@ -77,7 +76,7 @@ class AdherentStats extends Stats
 
 
 	/**
-	 * Renvoie le nombre de proposition par mois pour une annee donnee
+	 * Return the number of proposition by month for a given year
 	 *
      * @param   int		$year       Year
      * @return	array				Array of nb each month
@@ -98,7 +97,7 @@ class AdherentStats extends Stats
 	}
 
 	/**
-	 * Renvoie le nombre de cotisation par annee
+	 * Return the number of subscriptions by year
 	 *
      * @return	array				Array of nb each year
 	 */
@@ -117,7 +116,7 @@ class AdherentStats extends Stats
 	}
 
 	/**
-	 * Renvoie le nombre de cotisation par mois pour une annee donnee
+	 * Return the number of subscriptions by month for a given year 
 	 *
      * @param   int		$year       Year
      * @return	array				Array of amount each month
@@ -179,4 +178,3 @@ class AdherentStats extends Stats
 	}
 
 }
-?>

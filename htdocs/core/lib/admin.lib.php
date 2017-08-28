@@ -1,7 +1,8 @@
 <?php
-/* Copyright (C) 2008-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
- * Copyright (C) 2012		J. Fernando Lagrange	<fernando@demo-tic.org>
+/* Copyright (C) 2008-2011  Laurent Destailleur     <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2016  Regis Houssin           <regis.houssin@capnetworks.com>
+ * Copyright (C) 2012       J. Fernando Lagrange    <fernando@demo-tic.org>
+ * Copyright (C) 2015       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +24,7 @@
  *  \brief			Library of admin functions
  */
 
+require_once DOL_DOCUMENT_ROOT . '/core/lib/functions2.lib.php';
 
 /**
  *  Renvoi une version en chaine depuis une version en tableau
@@ -40,7 +42,12 @@ function versiontostring($versionarray)
 }
 
 /**
- *	Compare 2 versions (stored into 2 arrays)
+ *	Compare 2 versions (stored into 2 arrays).
+ *  To check if Dolibarr version is lower than (x,y,z), do "if versioncompare(versiondolibarrarray(), array(x.y.z)) <= 0"
+ *  For example: if (versioncompare(versiondolibarrarray(),array(4,0,-4)) >= 0) is true if version is 4.0 alpha or higher.
+ *  For example: if (versioncompare(versiondolibarrarray(),array(4,0,0)) >= 0) is true if version is 4.0 final or higher.
+ *  For example: if (versioncompare(versiondolibarrarray(),array(4,0,1)) >= 0) is true if version is 4.0.1 or higher.
+ *  Alternative way to compare: if ((float) DOL_VERSION >= 4.0) is true if version is 4.0 alpha or higher (works only to compare first and second level)
  *
  *	@param      array		$versionarray1      Array of version (vermajor,verminor,patch)
  *	@param      array		$versionarray2		Array of version (vermajor,verminor,patch)
@@ -59,18 +66,22 @@ function versioncompare($versionarray1,$versionarray2)
     {
         $operande1=isset($versionarray1[$level])?$versionarray1[$level]:0;
         $operande2=isset($versionarray2[$level])?$versionarray2[$level]:0;
-        if (preg_match('/alpha|dev/i',$operande1)) $operande1=-3;
-        if (preg_match('/alpha|dev/i',$operande2)) $operande2=-3;
-        if (preg_match('/beta/i',$operande1)) $operande1=-2;
-        if (preg_match('/beta/i',$operande2)) $operande2=-2;
-        if (preg_match('/rc/i',$operande1)) $operande1=-1;
-        if (preg_match('/rc/i',$operande2)) $operande2=-1;
+        if (preg_match('/alpha|dev/i',$operande1)) $operande1=-5;
+        if (preg_match('/alpha|dev/i',$operande2)) $operande2=-5;
+        if (preg_match('/beta$/i',$operande1)) $operande1=-4;
+        if (preg_match('/beta$/i',$operande2)) $operande2=-4;
+        if (preg_match('/beta([0-9])+/i',$operande1)) $operande1=-3;
+        if (preg_match('/beta([0-9])+/i',$operande2)) $operande2=-3;
+        if (preg_match('/rc$/i',$operande1)) $operande1=-2;
+        if (preg_match('/rc$/i',$operande2)) $operande2=-2;
+        if (preg_match('/rc([0-9])+/i',$operande1)) $operande1=-1;
+        if (preg_match('/rc([0-9])+/i',$operande2)) $operande2=-1;
         $level++;
         //print 'level '.$level.' '.$operande1.'-'.$operande2.'<br>';
         if ($operande1 < $operande2) { $ret = -$level; break; }
         if ($operande1 > $operande2) { $ret = $level; break; }
     }
-    //print join('.',$versionarray1).'('.count($versionarray1).') / '.join('.',$versionarray2).'('.count($versionarray2).') => '.$ret;
+    //print join('.',$versionarray1).'('.count($versionarray1).') / '.join('.',$versionarray2).'('.count($versionarray2).') => '.$ret.'<br>'."\n";
     return $ret;
 }
 
@@ -135,7 +146,7 @@ function run_sql($sqlfile,$silent=1,$entity='',$usesavepoint=1,$handler='',$oker
             $buf = fgets($fp, 4096);
 
             // Test if request must be ran only for particular database or version (if yes, we must remove the -- comment)
-            if (preg_match('/^--\sV(MYSQL|PGSQL|)([0-9\.]+)/i',$buf,$reg))
+            if (preg_match('/^--\sV(MYSQL|PGSQL)([^\s]*)/i',$buf,$reg))
             {
             	$qualified=1;
 
@@ -148,20 +159,29 @@ function run_sql($sqlfile,$silent=1,$entity='',$usesavepoint=1,$handler='',$oker
             	// restrict on version
             	if ($qualified)
             	{
-
-	                $versionrequest=explode('.',$reg[2]);
-	                //print var_dump($versionrequest);
-	                //print var_dump($versionarray);
-	                if (! count($versionrequest) || ! count($versionarray) || versioncompare($versionrequest,$versionarray) > 0)
-	                {
-	                	$qualified=0;
-	                }
+            		if (! empty($reg[2]))
+            		{
+            			if (is_numeric($reg[2]))	// This is a version
+            			{
+			                $versionrequest=explode('.',$reg[2]);
+			                //print var_dump($versionrequest);
+			                //print var_dump($versionarray);
+			                if (! count($versionrequest) || ! count($versionarray) || versioncompare($versionrequest,$versionarray) > 0)
+			                {
+			                	$qualified=0;
+			                }
+            			}
+            			else						// This is a test on a constant. For example when we have -- VMYSQLUTF8UNICODE, we test constant $conf->global->UTF8UNICODE
+            			{
+							if (empty($conf->db->dolibarr_main_db_collation) || ($reg[2] != strtoupper(preg_replace('/_/', '', $conf->db->dolibarr_main_db_collation)))) $qualified=0;
+            			}
+            		}
             	}
 
                 if ($qualified)
                 {
                     // Version qualified, delete SQL comments
-                    $buf=preg_replace('/^--\sV(MYSQL|PGSQL|)([0-9\.]+)/i','',$buf);
+                    $buf=preg_replace('/^--\sV(MYSQL|PGSQL)([^\s]*)/i','',$buf);
                     //print "Ligne $i qualifi?e par version: ".$buf.'<br>';
                 }
             }
@@ -215,7 +235,6 @@ function run_sql($sqlfile,$silent=1,$entity='',$usesavepoint=1,$handler='',$oker
                 }
                 else
                 {
-                    dol_syslog('Admin.lib::run_sql Failed to get max rowid for '.$table.' '.$db->lasterror().' sql='.$sqlgetrowid, LOG_ERR);
                     if (! $silent) print '<tr><td valign="top" colspan="2">';
                     if (! $silent) print '<div class="error">'.$langs->trans("Failed to get max rowid for ".$table)."</div></td>";
                     if (! $silent) print '</tr>';
@@ -226,7 +245,7 @@ function run_sql($sqlfile,$silent=1,$entity='',$usesavepoint=1,$handler='',$oker
             $from='__+MAX_'.$table.'__';
             $to='+'.$listofmaxrowid[$table];
             $newsql=str_replace($from,$to,$newsql);
-            dol_syslog('Admin.lib::run_sql New Request '.($i+1).' (replacing '.$from.' to '.$to.') sql='.$newsql, LOG_DEBUG);
+            dol_syslog('Admin.lib::run_sql New Request '.($i+1).' (replacing '.$from.' to '.$to.')', LOG_DEBUG);
 
             $arraysql[$i]=$newsql;
         }
@@ -250,8 +269,8 @@ function run_sql($sqlfile,$silent=1,$entity='',$usesavepoint=1,$handler='',$oker
             $newsql=preg_replace('/__ENTITY__/i',(!empty($entity)?$entity:$conf->entity),$sql);
 
             // Ajout trace sur requete (eventuellement a commenter si beaucoup de requetes)
-            if (! $silent) print '<tr><td valign="top">'.$langs->trans("Request").' '.($i+1)." sql='".dol_htmlentities($newsql,ENT_NOQUOTES)."'</td></tr>\n";
-            dol_syslog('Admin.lib::run_sql Request '.($i+1).' sql='.$newsql, LOG_DEBUG);
+            if (! $silent) print '<tr><td class="tdtop">'.$langs->trans("Request").' '.($i+1)." sql='".dol_htmlentities($newsql,ENT_NOQUOTES)."'</td></tr>\n";
+            dol_syslog('Admin.lib::run_sql Request '.($i+1), LOG_DEBUG);
 			$sqlmodified=0;
 
             // Replace for encrypt data
@@ -300,7 +319,7 @@ function run_sql($sqlfile,$silent=1,$entity='',$usesavepoint=1,$handler='',$oker
                 $sqlmodified++;
             }
 
-            if ($sqlmodified) dol_syslog('Admin.lib::run_sql New Request '.($i+1).' sql='.$newsql, LOG_DEBUG);
+            if ($sqlmodified) dol_syslog('Admin.lib::run_sql New Request '.($i+1), LOG_DEBUG);
 
             $result=$db->query($newsql,$usesavepoint);
             if ($result)
@@ -337,7 +356,8 @@ function run_sql($sqlfile,$silent=1,$entity='',$usesavepoint=1,$handler='',$oker
 					'DB_ERROR_NO_INDEX_TO_DROP',
 					'DB_ERROR_CANNOT_CREATE',    		// Qd contrainte deja existante
 					'DB_ERROR_CANT_DROP_PRIMARY_KEY',
-					'DB_ERROR_PRIMARY_KEY_ALREADY_EXISTS'
+					'DB_ERROR_PRIMARY_KEY_ALREADY_EXISTS',
+            		'DB_ERROR_22P02'
 				);
                 if ($okerror == 'none') $okerrors=array();
 
@@ -387,13 +407,19 @@ function dolibarr_del_const($db, $name, $entity=1)
 {
     global $conf;
 
+    if (empty($name))
+    {
+    	dol_print_error('','Error call dolibar_del_const with parameter name empty');
+    	return -1;
+    }
+
     $sql = "DELETE FROM ".MAIN_DB_PREFIX."const";
     $sql.= " WHERE (".$db->decrypt('name')." = '".$db->escape($name)."'";
     if (is_numeric($name)) $sql.= " OR rowid = '".$db->escape($name)."'";
     $sql.= ")";
     if ($entity >= 0) $sql.= " AND entity = ".$entity;
 
-    dol_syslog("admin.lib::dolibarr_del_const sql=".$sql);
+    dol_syslog("admin.lib::dolibarr_del_const", LOG_DEBUG);
     $resql=$db->query($sql);
     if ($resql)
     {
@@ -427,7 +453,7 @@ function dolibarr_get_const($db, $name, $entity=1)
     $sql.= " WHERE name = ".$db->encrypt($name,1);
     $sql.= " AND entity = ".$entity;
 
-    dol_syslog("admin.lib::dolibarr_get_const sql=".$sql);
+    dol_syslog("admin.lib::dolibarr_get_const", LOG_DEBUG);
     $resql=$db->query($sql);
     if ($resql)
     {
@@ -439,7 +465,7 @@ function dolibarr_get_const($db, $name, $entity=1)
 
 
 /**
- *	Insert a parameter (key,value) into database.
+ *	Insert a parameter (key,value) into database (delete old key then insert it again).
  *
  *	@param	    DoliDB		$db         Database handler
  *	@param	    string		$name		Name of constant
@@ -474,7 +500,7 @@ function dolibarr_set_const($db, $name, $value, $type='chaine', $visible=0, $not
     $sql.= " WHERE name = ".$db->encrypt($name,1);
     if ($entity >= 0) $sql.= " AND entity = ".$entity;
 
-    dol_syslog("admin.lib::dolibarr_set_const sql=".$sql, LOG_DEBUG);
+    dol_syslog("admin.lib::dolibarr_set_const", LOG_DEBUG);
     $resql=$db->query($sql);
 
     if (strcmp($value,''))	// true if different. Must work for $value='0' or $value=0
@@ -487,7 +513,7 @@ function dolibarr_set_const($db, $name, $value, $type='chaine', $visible=0, $not
 
         //print "sql".$value."-".pg_escape_string($value)."-".$sql;exit;
         //print "xx".$db->escape($value);
-        dol_syslog("admin.lib::dolibarr_set_const sql=".$sql, LOG_DEBUG);
+        dol_syslog("admin.lib::dolibarr_set_const", LOG_DEBUG);
         $resql=$db->query($sql);
     }
 
@@ -500,7 +526,6 @@ function dolibarr_set_const($db, $name, $value, $type='chaine', $visible=0, $not
     else
     {
         $error=$db->lasterror();
-        dol_syslog("admin.lib::dolibarr_set_const ".$error, LOG_ERR);
         $db->rollback();
         return -1;
     }
@@ -510,18 +535,13 @@ function dolibarr_set_const($db, $name, $value, $type='chaine', $visible=0, $not
 /**
  * Prepare array with list of tabs
  *
- * @return  array				Array of tabs to shoc
+ * @return  array				Array of tabs to show
  */
 function security_prepare_head()
 {
     global $langs, $conf, $user;
     $h = 0;
     $head = array();
-
-    $head[$h][0] = DOL_URL_ROOT."/admin/proxy.php";
-    $head[$h][1] = $langs->trans("ExternalAccess");
-    $head[$h][2] = 'proxy';
-    $h++;
 
     $head[$h][0] = DOL_URL_ROOT."/admin/security_other.php";
     $head[$h][1] = $langs->trans("Miscellaneous");
@@ -531,6 +551,16 @@ function security_prepare_head()
     $head[$h][0] = DOL_URL_ROOT."/admin/security.php";
     $head[$h][1] = $langs->trans("Passwords");
     $head[$h][2] = 'passwords';
+    $h++;
+
+    $head[$h][0] = DOL_URL_ROOT."/admin/security_file.php";
+    $head[$h][1] = $langs->trans("Files");
+    $head[$h][2] = 'file';
+    $h++;
+
+    $head[$h][0] = DOL_URL_ROOT."/admin/proxy.php";
+    $head[$h][1] = $langs->trans("ExternalAccess");
+    $head[$h][2] = 'proxy';
     $h++;
 
     $head[$h][0] = DOL_URL_ROOT."/admin/events.php";
@@ -548,6 +578,81 @@ function security_prepare_head()
 
 
 /**
+ * Prepare array with list of tabs
+ *
+ * @return  array				Array of tabs to show
+ */
+function translation_prepare_head()
+{
+    global $langs, $conf, $user;
+    $h = 0;
+    $head = array();
+
+    $head[$h][0] = DOL_URL_ROOT."/admin/translation.php?mode=overwrite";
+    $head[$h][1] = $langs->trans("TranslationOverwriteKey");
+    $head[$h][2] = 'overwrite';
+    $h++;
+
+    $head[$h][0] = DOL_URL_ROOT."/admin/translation.php?mode=searchkey";
+    $head[$h][1] = $langs->trans("TranslationKeySearch");
+    $head[$h][2] = 'searchkey';
+    $h++;
+
+    complete_head_from_modules($conf,$langs,null,$head,$h,'translation_admin');
+
+    complete_head_from_modules($conf,$langs,null,$head,$h,'translation_admin','remove');
+
+
+    return $head;
+}
+
+
+/**
+ * Prepare array with list of tabs
+ *
+ * @return  array				Array of tabs to show
+ */
+function defaultvalues_prepare_head()
+{
+    global $langs, $conf, $user;
+    $h = 0;
+    $head = array();
+
+    $head[$h][0] = DOL_URL_ROOT."/admin/defaultvalues.php?mode=createform";
+    $head[$h][1] = $langs->trans("DefaultCreateForm");
+    $head[$h][2] = 'createform';
+    $h++;
+
+    $head[$h][0] = DOL_URL_ROOT."/admin/defaultvalues.php?mode=filters";
+    $head[$h][1] = $langs->trans("DefaultSearchFilters");
+    $head[$h][2] = 'filters';
+    $h++;
+
+    $head[$h][0] = DOL_URL_ROOT."/admin/defaultvalues.php?mode=sortorder";
+    $head[$h][1] = $langs->trans("DefaultSortOrder");
+    $head[$h][2] = 'sortorder';
+    $h++;
+
+    $head[$h][0] = DOL_URL_ROOT."/admin/defaultvalues.php?mode=focus";
+    $head[$h][1] = $langs->trans("DefaultFocus");
+    $head[$h][2] = 'focus';
+    $h++;
+
+    /*$head[$h][0] = DOL_URL_ROOT."/admin/translation.php?mode=searchkey";
+    $head[$h][1] = $langs->trans("TranslationKeySearch");
+    $head[$h][2] = 'searchkey';
+    $h++;*/
+
+    complete_head_from_modules($conf,$langs,null,$head,$h,'defaultvalues_admin');
+
+    complete_head_from_modules($conf,$langs,null,$head,$h,'defaultvalues_admin','remove');
+
+
+    return $head;
+}
+
+
+/**
  * 	Return list of session
  *
  *	@return		array			Array list of sessions
@@ -557,7 +662,13 @@ function listOfSessions()
     global $conf;
 
     $arrayofSessions = array();
-    $sessPath = ini_get("session.save_path").'/';
+    // session.save_path can be returned empty so we set a default location and work from there
+    $sessPath = '/tmp';
+    $iniPath = ini_get("session.save_path");
+    if ($iniPath) {
+        $sessPath = $iniPath;
+    }
+    $sessPath .= '/'; // We need the trailing slash
     dol_syslog('admin.lib:listOfSessions sessPath='.$sessPath);
 
     $dh = @opendir(dol_osencode($sessPath));
@@ -571,9 +682,11 @@ function listOfSessions()
                 if(! @is_dir($fullpath) && is_readable($fullpath))
                 {
                     $sessValues = file_get_contents($fullpath);	// get raw session data
+                    // Example of possible value
+                    //$sessValues = 'newtoken|s:32:"1239f7a0c4b899200fe9ca5ea394f307";dol_loginmesg|s:0:"";newtoken|s:32:"1236457104f7ae0f328c2928973f3cb5";dol_loginmesg|s:0:"";token|s:32:"123615ad8d650c5cc4199b9a1a76783f";dol_login|s:5:"admin";dol_authmode|s:8:"dolibarr";dol_tz|s:1:"1";dol_tz_string|s:13:"Europe/Berlin";dol_dst|i:0;dol_dst_observed|s:1:"1";dol_dst_first|s:0:"";dol_dst_second|s:0:"";dol_screenwidth|s:4:"1920";dol_screenheight|s:3:"971";dol_company|s:12:"MyBigCompany";dol_entity|i:1;mainmenu|s:4:"home";leftmenuopened|s:10:"admintools";idmenu|s:0:"";leftmenu|s:10:"admintools";';
 
                     if (preg_match('/dol_login/i',$sessValues) && // limit to dolibarr session
-                    preg_match('/dol_entity\|s:([0-9]+):"('.$conf->entity.')"/i',$sessValues) && // limit to current entity
+                        (preg_match('/dol_entity\|i:'.$conf->entity.';/i',$sessValues) || preg_match('/dol_entity\|s:([0-9]+):"'.$conf->entity.'"/i',$sessValues)) && // limit to current entity
                     preg_match('/dol_company\|s:([0-9]+):"('.$conf->global->MAIN_INFO_SOCIETE_NOM.')"/i',$sessValues)) // limit to company name
                     {
                         $tmp=explode('_', $file);
@@ -648,43 +761,26 @@ function purgeSessions($mysessionid)
  *
  *  @param      string		$value      Name of module to activate
  *  @param      int			$withdeps   Activate/Disable also all dependencies
- *  @return     string      			Error message or '';
+ *  @return     array      			    array('nbmodules'=>nb modules activated with success, 'errors=>array of error messages, 'nbperms'=>Nb permission added);
  */
 function activateModule($value,$withdeps=1)
 {
-    global $db, $modules, $langs, $conf;
+    global $db, $modules, $langs, $conf, $mysoc;
 
-    // Check parameters
-    if (empty($value)) return 'ErrorBadParameter';
+	// Check parameters
+	if (empty($value)) {
+		$ret['errors'][] = 'ErrorBadParameter';
+		return $ret;
+	}
 
-    $ret='';
+    $ret=array('nbmodules'=>0, 'errors'=>array(), 'nbperms'=>0);
     $modName = $value;
     $modFile = $modName . ".class.php";
 
     // Loop on each directory to fill $modulesdir
-    $modulesdir = array();
-    foreach ($conf->file->dol_document_root as $type => $dirroot)
-    {
-        $modulesdir[] = $dirroot."/core/modules/";
+    $modulesdir = dolGetModulesDirs();
 
-            $handle=@opendir(dol_osencode($dirroot));
-            if (is_resource($handle))
-            {
-                while (($file = readdir($handle))!==false)
-                {
-                    if (is_dir($dirroot.'/'.$file) && substr($file, 0, 1) <> '.' && substr($file, 0, 3) <> 'CVS' && $file != 'includes')
-                    {
-                        if (is_dir($dirroot . '/' . $file . '/core/modules/'))
-                        {
-                            $modulesdir[] = $dirroot . '/' . $file . '/core/modules/';
-                        }
-                    }
-                }
-                closedir($handle);
-            }
-    }
-
-    // Loop on each directory
+    // Loop on each modulesdir directories
     $found=false;
     foreach ($modulesdir as $dir)
     {
@@ -700,62 +796,102 @@ function activateModule($value,$withdeps=1)
     // Test if PHP version ok
     $verphp=versionphparray();
     $vermin=isset($objMod->phpmin)?$objMod->phpmin:0;
-    if (is_array($vermin) && versioncompare($verphp,$vermin) < 0)
-    {
-        return $langs->trans("ErrorModuleRequirePHPVersion",versiontostring($vermin));
-    }
+	if (is_array($vermin) && versioncompare($verphp, $vermin) < 0) {
+		$ret['errors'][] = $langs->trans("ErrorModuleRequirePHPVersion", versiontostring($vermin));
+		return $ret;
+	}
 
     // Test if Dolibarr version ok
     $verdol=versiondolibarrarray();
     $vermin=isset($objMod->need_dolibarr_version)?$objMod->need_dolibarr_version:0;
-    //print 'eee'.versioncompare($verdol,$vermin).join(',',$verdol).' - '.join(',',$vermin);exit;
-    if (is_array($vermin) && versioncompare($verdol,$vermin) < 0)
-    {
-        return $langs->trans("ErrorModuleRequireDolibarrVersion",versiontostring($vermin));
+    //print 'eee '.versioncompare($verdol,$vermin).' - '.join(',',$verdol).' - '.join(',',$vermin);exit;
+	if (is_array($vermin) && versioncompare($verdol, $vermin) < 0) {
+		$ret['errors'][] = $langs->trans("ErrorModuleRequireDolibarrVersion", versiontostring($vermin));
+		return $ret;
+	}
+
+	// Test if javascript requirement ok
+	if (!empty($objMod->need_javascript_ajax) && empty($conf->use_javascript_ajax)) {
+		$ret['errors'][] = $langs->trans("ErrorModuleRequireJavascript");
+		return $ret;
+	}
+
+	$const_name = $objMod->const_name;
+	if(!empty($conf->global->$const_name)){
+        return $ret;
     }
 
-    // Test if javascript requirement ok
-    if (! empty($objMod->need_javascript_ajax) && empty($conf->use_javascript_ajax))
+    $result=$objMod->init();    // Enable module
+    if ($result <= 0)
     {
-        return $langs->trans("ErrorModuleRequireJavascript");
+        $ret['errors'][]=$objMod->error;
+    }
+    else
+    {
+        if ($withdeps)
+        {
+            if (isset($objMod->depends) && is_array($objMod->depends) && ! empty($objMod->depends))
+            {
+                // Activation of modules this module depends on
+                // this->depends may be array('modModule1', 'mmodModule2') or array('always'=>"modModule1", 'FR'=>'modModule2')
+                foreach ($objMod->depends as $key => $modulestring)
+                {
+                    if ((! is_numeric($key)) && $key != 'always' && $key != $mysoc->country_code)
+                    {
+                        dol_syslog("We are not concerned by dependency with key=".$key." because our country is ".$mysoc->country_code);
+                        continue;
+                    }
+                	$activate = false;
+                	foreach ($modulesdir as $dir)
+                	{
+                		if (file_exists($dir.$modulestring.".class.php"))
+                		{
+                			$resarray = activateModule($modulestring);
+    						if (empty($resarray['errors'])){
+    						    $activate = true;
+                            }else{
+    						    foreach ($resarray['errors'] as $errorMessage){
+                                    dol_syslog($errorMessage, LOG_ERR);
+                                }
+                            }
+    						break;
+                		}
+                	}
+
+    				if ($activate)
+    				{
+    				    $ret['nbmodules']+=$resarray['nbmodules'];
+    				    $ret['nbperms']+=$resarray['nbperms'];
+    				}
+    				else
+    				{
+    				    $ret['errors'][] = $langs->trans('activateModuleDependNotSatisfied', $objMod->name, $modulestring);
+    				}
+                }
+            }
+
+            if (isset($objMod->conflictwith) && is_array($objMod->conflictwith) && ! empty($objMod->conflictwith))
+            {
+                // Desactivation des modules qui entrent en conflit
+                $num = count($objMod->conflictwith);
+                for ($i = 0; $i < $num; $i++)
+                {
+                	foreach ($modulesdir as $dir)
+                	{
+                		if (file_exists($dir.$objMod->conflictwith[$i].".class.php"))
+                		{
+                			unActivateModule($objMod->conflictwith[$i],0);
+                		}
+                	}
+                }
+            }
+        }
     }
 
-    $result=$objMod->init();
-    if ($result <= 0) $ret=$objMod->error;
-
-    if (! $ret && $withdeps)
+    if (! count($ret['errors']))
     {
-        if (isset($objMod->depends) && is_array($objMod->depends) && ! empty($objMod->depends))
-        {
-            // Activation des modules dont le module depend
-            $num = count($objMod->depends);
-            for ($i = 0; $i < $num; $i++)
-            {
-            	foreach ($modulesdir as $dir)
-            	{
-            		if (file_exists($dir.$objMod->depends[$i].".class.php"))
-            		{
-            			activateModule($objMod->depends[$i]);
-            		}
-            	}
-            }
-        }
-
-        if (isset($objMod->conflictwith) && is_array($objMod->conflictwith) && ! empty($objMod->conflictwith))
-        {
-            // Desactivation des modules qui entrent en conflit
-            $num = count($objMod->conflictwith);
-            for ($i = 0; $i < $num; $i++)
-            {
-            	foreach ($modulesdir as $dir)
-            	{
-            		if (file_exists($dir.$objMod->conflictwith[$i].".class.php"))
-            		{
-            			unActivateModule($objMod->conflictwith[$i],0);
-            		}
-            	}
-            }
-        }
+        $ret['nbmodules']++;
+        $ret['nbperms']+=count($objMod->rights);
     }
 
     return $ret;
@@ -781,29 +917,9 @@ function unActivateModule($value, $requiredby=1)
     $modFile = $modName . ".class.php";
 
     // Loop on each directory to fill $modulesdir
-    $modulesdir = array();
-    foreach ($conf->file->dol_document_root as $type => $dirroot)
-    {
-        $modulesdir[] = $dirroot."/core/modules/";
+    $modulesdir = dolGetModulesDirs();
 
-            $handle=@opendir(dol_osencode($dirroot));
-            if (is_resource($handle))
-            {
-                while (($file = readdir($handle))!==false)
-                {
-                    if (is_dir($dirroot.'/'.$file) && substr($file, 0, 1) <> '.' && substr($file, 0, 3) <> 'CVS' && $file != 'includes')
-                    {
-                        if (is_dir($dirroot . '/' . $file . '/core/modules/'))
-                        {
-                            $modulesdir[] = $dirroot . '/' . $file . '/core/modules/';
-                        }
-                    }
-                }
-                closedir($handle);
-            }
-    }
-
-    // Loop on each directory
+    // Loop on each modulesdir directories
     $found=false;
     foreach ($modulesdir as $dir)
     {
@@ -818,24 +934,28 @@ function unActivateModule($value, $requiredby=1)
     {
         $objMod = new $modName($db);
         $result=$objMod->remove();
+        if ($result <= 0) $ret=$objMod->error;
     }
     else
     {
-        // TODO Cannot instantiate abstract class
-    	//$genericMod = new DolibarrModul($db);
-        //$genericMod->name=preg_replace('/^mod/i','',$modName);
-        //$genericMod->rights_class=strtolower(preg_replace('/^mod/i','',$modName));
-        //$genericMod->const_name='MAIN_MODULE_'.strtoupper(preg_replace('/^mod/i','',$modName));
+        //print $dir.$modFile;
+    	// TODO Replace this after DolibarrModules is moved as abstract class with a try catch to show module we try to disable has not been found or could not be loaded
+        include_once DOL_DOCUMENT_ROOT.'/core/modules/DolibarrModules.class.php';
+    	$genericMod = new DolibarrModules($db);
+        $genericMod->name=preg_replace('/^mod/i','',$modName);
+        $genericMod->rights_class=strtolower(preg_replace('/^mod/i','',$modName));
+        $genericMod->const_name='MAIN_MODULE_'.strtoupper(preg_replace('/^mod/i','',$modName));
         dol_syslog("modules::unActivateModule Failed to find module file, we use generic function with name " . $modName);
-        //$genericMod->_remove();
+        $genericMod->_remove(array());
     }
 
     // Desactivation des modules qui dependent de lui
-    if ($requiredby)
+    if (! $ret && $requiredby)
     {
         $countrb=count($objMod->requiredby);
         for ($i = 0; $i < $countrb; $i++)
         {
+            //var_dump($objMod->requiredby[$i]);
             unActivateModule($objMod->requiredby[$i]);
         }
     }
@@ -845,56 +965,30 @@ function unActivateModule($value, $requiredby=1)
 
 
 /**
- *  Add external modules to list of dictionnaries
+ *  Add external modules to list of dictionaries
  *
- * 	@param		array		&$taborder			Taborder
- * 	@param		array		&$tabname			Tabname
- * 	@param		array		&$tablib			Tablib
- * 	@param		array		&$tabsql			Tabsql
- * 	@param		array		&$tabsqlsort		Tabsqlsort
- * 	@param		array		&$tabfield			Tabfield
- * 	@param		array		&$tabfieldvalue		Tabfieldvalue
- * 	@param		array		&$tabfieldinsert	Tabfieldinsert
- * 	@param		array		&$tabrowid			Tabrowid
- * 	@param		array		&$tabcond			Tabcond
- * 	@param		array		&$tabhelp			Tabhelp
+ * 	@param		array		$taborder			Taborder
+ * 	@param		array		$tabname			Tabname
+ * 	@param		array		$tablib				Tablib
+ * 	@param		array		$tabsql				Tabsql
+ * 	@param		array		$tabsqlsort			Tabsqlsort
+ * 	@param		array		$tabfield			Tabfield
+ * 	@param		array		$tabfieldvalue		Tabfieldvalue
+ * 	@param		array		$tabfieldinsert		Tabfieldinsert
+ * 	@param		array		$tabrowid			Tabrowid
+ * 	@param		array		$tabcond			Tabcond
+ * 	@param		array		$tabhelp			Tabhelp
+ *  @param		array		$tabfieldcheck		Tabfieldcheck
  * 	@return		int			1
  */
-function complete_dictionnary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsql,&$tabsqlsort,&$tabfield,&$tabfieldvalue,&$tabfieldinsert,&$tabrowid,&$tabcond,&$tabhelp)
+function complete_dictionary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsql,&$tabsqlsort,&$tabfield,&$tabfieldvalue,&$tabfieldinsert,&$tabrowid,&$tabcond,&$tabhelp,&$tabfieldcheck)
 {
     global $db, $modules, $conf, $langs;
 
     // Search modules
-    $filename = array();
-    $modules = array();
-    $orders = array();
-    $categ = array();
-    $dirmod = array();
-    $modulesdir = array();
+	$modulesdir = dolGetModulesDirs();
     $i = 0; // is a sequencer of modules found
     $j = 0; // j is module number. Automatically affected if module number not defined.
-
-    foreach ($conf->file->dol_document_root as $type => $dirroot)
-    {
-        $modulesdir[$dirroot . '/core/modules/'] = $dirroot . '/core/modules/';
-
-        $handle=@opendir($dirroot);
-        if (is_resource($handle))
-        {
-            while (($file = readdir($handle))!==false)
-            {
-                if (is_dir($dirroot.'/'.$file) && substr($file, 0, 1) <> '.' && substr($file, 0, 3) <> 'CVS' && $file != 'includes')
-                {
-                    if (is_dir($dirroot . '/' . $file . '/core/modules/'))
-                    {
-                        $modulesdir[$dirroot . '/' . $file . '/core/modules/'] = $dirroot . '/' . $file . '/core/modules/';
-                    }
-                }
-            }
-            closedir($handle);
-        }
-    }
-    //var_dump($modulesdir);
 
     foreach ($modulesdir as $dir)
     {
@@ -931,51 +1025,45 @@ function complete_dictionnary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsq
                         $const_name = 'MAIN_MODULE_'.strtoupper(preg_replace('/^mod/i','',get_class($objMod)));
                         if ($objMod->version == 'development'  && $conf->global->MAIN_FEATURES_LEVEL < 2 && ! $conf->global->$const_name) $modulequalified=0;
                         if ($objMod->version == 'experimental' && $conf->global->MAIN_FEATURES_LEVEL < 1 && ! $conf->global->$const_name) $modulequalified=0;
+                        //If module is not activated disqualified
+                        if (empty($conf->global->$const_name)) $modulequalified=0;
 
                         if ($modulequalified)
                         {
 							// Load languages files of module
-                            if (isset($objMod->langfiles) && is_array($objMod->langfiles))
-                            {
-                             	foreach($objMod->langfiles as $langfile)
-                              	{
-                               		$langs->load($langfile);
-                               	}
-                           	}
-
-                            $modules[$i] = $objMod;
-                            $filename[$i]= $modName;
-                            $orders[$i]  = $objMod->family."_".$j;   // Tri par famille puis numero module
-                            //print "x".$modName." ".$orders[$i]."\n<br>";
-                            if (isset($categ[$objMod->special])) $categ[$objMod->special]++;                    // Array of all different modules categories
-                            else $categ[$objMod->special]=1;
-                            $dirmod[$i] = $dirroot;
+                        	if (isset($objMod->langfiles) && is_array($objMod->langfiles))
+                            	{
+                             		foreach($objMod->langfiles as $langfile)
+                              		{
+	                               		$langs->load($langfile);
+        	                       	}
+              			}
 
                             // Complete arrays
                             //&$tabname,&$tablib,&$tabsql,&$tabsqlsort,&$tabfield,&$tabfieldvalue,&$tabfieldinsert,&$tabrowid,&$tabcond
-                            //$objMod
-                            if (! empty($objMod->dictionnaries))
+                            if (empty($objMod->dictionaries) && ! empty($objMod->dictionnaries)) $objMod->dictionaries=$objMod->dictionnaries;		// For backward compatibility
+
+                            if (! empty($objMod->dictionaries))
                             {
-                                //var_dump($objMod->dictionnaries['tabname']);
-                                $taborder[] = 0;
-                                foreach($objMod->dictionnaries['tabname'] as $val)
+                                //var_dump($objMod->dictionaries['tabname']);
+                                $nbtabname=$nbtablib=$nbtabsql=$nbtabsqlsort=$nbtabfield=$nbtabfieldvalue=$nbtabfieldinsert=$nbtabrowid=$nbtabcond=$nbtabfieldcheck=$nbtabhelp=0;
+                                foreach($objMod->dictionaries['tabname'] as $val)        { $nbtabname++; $taborder[] = max($taborder)+1; $tabname[] = $val; }
+                                foreach($objMod->dictionaries['tablib'] as $val)         { $nbtablib++; $tablib[] = $val; }
+                                foreach($objMod->dictionaries['tabsql'] as $val)         { $nbtabsql++; $tabsql[] = $val; }
+                                foreach($objMod->dictionaries['tabsqlsort'] as $val)     { $nbtabsqlsort++; $tabsqlsort[] = $val; }
+                                foreach($objMod->dictionaries['tabfield'] as $val)       { $nbtabfield++; $tabfield[] = $val; }
+                                foreach($objMod->dictionaries['tabfieldvalue'] as $val)  { $nbtabfieldvalue++; $tabfieldvalue[] = $val; }
+                                foreach($objMod->dictionaries['tabfieldinsert'] as $val) { $nbtabfieldinsert++; $tabfieldinsert[] = $val; }
+                                foreach($objMod->dictionaries['tabrowid'] as $val)       { $nbtabrowid++; $tabrowid[] = $val; }
+                                foreach($objMod->dictionaries['tabcond'] as $val)        { $nbtabcond++; $tabcond[] = $val; }
+                                if (! empty($objMod->dictionaries['tabhelp']))       foreach($objMod->dictionaries['tabhelp'] as $val)       { $nbtabhelp++; $tabhelp[] = $val; }
+                                if (! empty($objMod->dictionaries['tabfieldcheck'])) foreach($objMod->dictionaries['tabfieldcheck'] as $val) { $nbtabfieldcheck++; $tabfieldcheck[] = $val; }
+
+                                if ($nbtabname != $nbtablib || $nbtablib != $nbtabsql || $nbtabsql != $nbtabsqlsort)
                                 {
-                                    $taborder[] = count($tabname)+1;
-                                    $tabname[] = $val;
+                                    print 'Error in descriptor of module '.$const_name.'. Array ->dictionaries has not same number of record for key "tabname", "tablib", "tabsql" and "tabsqlsort"';
+                                    //print "$const_name: $nbtabname=$nbtablib=$nbtabsql=$nbtabsqlsort=$nbtabfield=$nbtabfieldvalue=$nbtabfieldinsert=$nbtabrowid=$nbtabcond=$nbtabfieldcheck=$nbtabhelp\n";
                                 }
-                                foreach($objMod->dictionnaries['tablib'] as $val) $tablib[] = $val;
-                                foreach($objMod->dictionnaries['tabsql'] as $val) $tabsql[] = $val;
-                                foreach($objMod->dictionnaries['tabsqlsort'] as $val) $tabsqlsort[] = $val;
-                                foreach($objMod->dictionnaries['tabfield'] as $val) $tabfield[] = $val;
-                                foreach($objMod->dictionnaries['tabfieldvalue'] as $val) $tabfieldvalue[] = $val;
-                                foreach($objMod->dictionnaries['tabfieldinsert'] as $val) $tabfieldinsert[] = $val;
-                                foreach($objMod->dictionnaries['tabrowid'] as $val) $tabrowid[] = $val;
-                                foreach($objMod->dictionnaries['tabcond'] as $val) $tabcond[] = $val;
-                                if (! empty($objMod->dictionnaries['tabhelp'])) foreach($objMod->dictionnaries['tabhelp'] as $val) $tabhelp[] = $val;
-                                //foreach($objMod->dictionnaries['tabsqlsort'] as $val) $tablib[] = $val;
-                                //$tabname = array_merge ($tabname, $objMod->dictionnaries['tabname']);
-                                //var_dump($tabcond);
-                                //exit;
                             }
 
                             $j++;
@@ -996,26 +1084,130 @@ function complete_dictionnary_with_modules(&$taborder,&$tabname,&$tablib,&$tabsq
     return 1;
 }
 
+/**
+ *  Add external modules to list of contact element
+ *
+ * 	@param		array		$elementList			elementList
+ * 	@return		int			1
+ */
+function complete_elementList_with_modules(&$elementList)
+{
+    global $db, $modules, $conf, $langs;
+
+    // Search modules
+    $filename = array();
+    $modules = array();
+    $orders = array();
+    $categ = array();
+    $dirmod = array();
+
+    $i = 0; // is a sequencer of modules found
+    $j = 0; // j is module number. Automatically affected if module number not defined.
+
+    $modulesdir = dolGetModulesDirs();
+
+    foreach ($modulesdir as $dir)
+    {
+    	// Load modules attributes in arrays (name, numero, orders) from dir directory
+    	//print $dir."\n<br>";
+    	dol_syslog("Scan directory ".$dir." for modules");
+        $handle=@opendir(dol_osencode($dir));
+        if (is_resource($handle))
+        {
+            while (($file = readdir($handle))!==false)
+            {
+                //print "$i ".$file."\n<br>";
+                if (is_readable($dir.$file) && substr($file, 0, 3) == 'mod'  && substr($file, dol_strlen($file) - 10) == '.class.php')
+                {
+                    $modName = substr($file, 0, dol_strlen($file) - 10);
+
+                    if ($modName)
+                    {
+                        include_once $dir.$file;
+                        $objMod = new $modName($db);
+
+                        if ($objMod->numero > 0)
+                        {
+                            $j = $objMod->numero;
+                        }
+                        else
+                        {
+                            $j = 1000 + $i;
+                        }
+
+                        $modulequalified=1;
+
+                        // We discard modules according to features level (PS: if module is activated we always show it)
+                        $const_name = 'MAIN_MODULE_'.strtoupper(preg_replace('/^mod/i','',get_class($objMod)));
+                        if ($objMod->version == 'development'  && $conf->global->MAIN_FEATURES_LEVEL < 2 && ! $conf->global->$const_name) $modulequalified=0;
+                        if ($objMod->version == 'experimental' && $conf->global->MAIN_FEATURES_LEVEL < 1 && ! $conf->global->$const_name) $modulequalified=0;
+                        //If module is not activated disqualified
+                        if (empty($conf->global->$const_name)) $modulequalified=0;
+
+                        if ($modulequalified)
+                        {
+							// Load languages files of module
+                            if (isset($objMod->langfiles) && is_array($objMod->langfiles))
+                            {
+                             	foreach($objMod->langfiles as $langfile)
+                              	{
+                               		$langs->load($langfile);
+                               	}
+                           	}
+
+                            $modules[$i] = $objMod;
+                            $filename[$i]= $modName;
+                            $orders[$i]  = $objMod->family."_".$j;   // Tri par famille puis numero module
+                            //print "x".$modName." ".$orders[$i]."\n<br>";
+                            if (isset($categ[$objMod->special])) $categ[$objMod->special]++;                    // Array of all different modules categories
+                            else $categ[$objMod->special]=1;
+                            $dirmod[$i] = $dirroot;
+                            if (! empty($objMod->module_parts['contactelement']))
+                            {
+                            	$elementList[$objMod->name] = $langs->trans($objMod->name);
+                            }
+
+                            $j++;
+                            $i++;
+                        }
+                        else dol_syslog("Module ".get_class($objMod)." not qualified");
+                    }
+                }
+            }
+            closedir($handle);
+        }
+        else
+        {
+            dol_syslog("htdocs/admin/modules.php: Failed to open directory ".$dir.". See permission and open_basedir option.", LOG_WARNING);
+        }
+    }
+
+    return 1;
+}
 
 /**
  *	Show array with constants to edit
  *
  *	@param	array	$tableau		Array of constants
- *	@param	int		$strictw3c		Respect W3C (no form into table)
+ *	@param	int		$strictw3c		0=Include form into table (deprecated), 1=Form is outside table to respect W3C (no form into table), 2=No form nor button at all
+ *  @param  string  $helptext       Help
  *	@return	void
  */
-function form_constantes($tableau,$strictw3c=0)
+function form_constantes($tableau, $strictw3c=0, $helptext='')
 {
     global $db,$bc,$langs,$conf,$_Avery_Labels;
 
     $form = new Form($db);
 
-    if (! empty($strictw3c)) print "\n".'<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
-    	
+    if (! empty($strictw3c) && $strictw3c == 1) print "\n".'<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
+
     print '<table class="noborder" width="100%">';
     print '<tr class="liste_titre">';
     print '<td>'.$langs->trans("Description").'</td>';
-    print '<td>'.$langs->trans("Value").'*</td>';
+    print '<td>';
+    $text = $langs->trans("Value");
+    print $form->textwithpicto($text, $helptext, 1, 'help', '', 0, 2, 'idhelptext');
+    print '</td>';
     if (empty($strictw3c)) print '<td align="center" width="80">'.$langs->trans("Action").'</td>';
     print "</tr>\n";
     $var=true;
@@ -1035,11 +1227,11 @@ function form_constantes($tableau,$strictw3c=0)
         $sql.= " ORDER BY name ASC, entity DESC";
         $result = $db->query($sql);
 
-        dol_syslog("List params sql=".$sql);
+        dol_syslog("List params", LOG_DEBUG);
         if ($result)
         {
             $obj = $db->fetch_object($result);	// Take first result of select
-            $var=!$var;
+
 
             // For avoid warning in strict mode
             if (empty($obj)) {
@@ -1048,7 +1240,7 @@ function form_constantes($tableau,$strictw3c=0)
 
             if (empty($strictw3c)) print "\n".'<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
 
-            print "<tr ".$bc[$var].">";
+            print '<tr class="oddeven">';
 
             // Show constant
             print '<td>';
@@ -1063,18 +1255,29 @@ function form_constantes($tableau,$strictw3c=0)
             if ($const == 'ADHERENT_MAILMAN_URL')
             {
                 print '. '.$langs->trans("Example").': <a href="#" id="exampleclick1">'.img_down().'</a><br>';
-                //print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members?adminpw=%MAILMAN_ADMINPW%&subscribees=%EMAIL%&send_welcome_msg_to_this_batch=1';
+                //print 'http://lists.exampe.com/cgi-bin/mailman/admin/%LISTE%/members?adminpw=%MAILMAN_ADMINPW%&subscribees=%EMAIL%&send_welcome_msg_to_this_batch=1';
                 print '<div id="example1" class="hidden">';
-                print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members/add?subscribees_upload=%EMAIL%&amp;adminpw=%MAILMAN_ADMINPW%&amp;subscribe_or_invite=0&amp;send_welcome_msg_to_this_batch=0&amp;notification_to_list_owner=0';
+                print 'http://lists.example.com/cgi-bin/mailman/admin/%LISTE%/members/add?subscribees_upload=%EMAIL%&amp;adminpw=%MAILMAN_ADMINPW%&amp;subscribe_or_invite=0&amp;send_welcome_msg_to_this_batch=0&amp;notification_to_list_owner=0';
                 print '</div>';
             }
             if ($const == 'ADHERENT_MAILMAN_UNSUB_URL')
             {
                 print '. '.$langs->trans("Example").': <a href="#" id="exampleclick2">'.img_down().'</a><br>';
                 print '<div id="example2" class="hidden">';
-                print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members/remove?unsubscribees_upload=%EMAIL%&amp;adminpw=%MAILMAN_ADMINPW%&amp;send_unsub_ack_to_this_batch=0&amp;send_unsub_notifications_to_list_owner=0';
+                print 'http://lists.example.com/cgi-bin/mailman/admin/%LISTE%/members/remove?unsubscribees_upload=%EMAIL%&amp;adminpw=%MAILMAN_ADMINPW%&amp;send_unsub_ack_to_this_batch=0&amp;send_unsub_notifications_to_list_owner=0';
                 print '</div>';
-                //print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members/remove?adminpw=%MAILMAN_ADMINPW%&unsubscribees=%EMAIL%';
+                //print 'http://lists.example.com/cgi-bin/mailman/admin/%LISTE%/members/remove?adminpw=%MAILMAN_ADMINPW%&unsubscribees=%EMAIL%';
+            }
+            if ($const == 'ADHERENT_MAILMAN_LISTS')
+            {
+            	print '. '.$langs->trans("Example").': <a href="#" id="exampleclick3">'.img_down().'</a><br>';
+            	print '<div id="example3" class="hidden">';
+            	print 'mymailmanlist<br>';
+            	print 'mymailmanlist1,mymailmanlist2<br>';
+            	print 'TYPE:Type1:mymailmanlist1,TYPE:Type2:mymailmanlist2<br>';
+            	if ($conf->categorie->enabled) print 'CATEG:Categ1:mymailmanlist1,CATEG:Categ2:mymailmanlist2<br>';
+            	print '</div>';
+            	//print 'http://lists.example.com/cgi-bin/mailman/admin/%LISTE%/members/remove?adminpw=%MAILMAN_ADMINPW%&unsubscribees=%EMAIL%';
             }
 
             print "</td>\n";
@@ -1107,7 +1310,7 @@ function form_constantes($tableau,$strictw3c=0)
                 else if (in_array($const,array('ADHERENT_AUTOREGISTER_NOTIF_MAIL','ADHERENT_AUTOREGISTER_MAIL','ADHERENT_MAIL_VALID','ADHERENT_MAIL_COTIS','ADHERENT_MAIL_RESIL')))
                 {
                     require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
-                    $doleditor=new DolEditor('constvalue_'.$const.(empty($strictw3c)?'':'[]'),$obj->value,'',160,'dolibarr_notes','',false,false,$conf->fckeditor->enabled,5,60);
+                    $doleditor=new DolEditor('constvalue_'.$const.(empty($strictw3c)?'':'[]'),$obj->value,'',160,'dolibarr_notes','',false,false,$conf->fckeditor->enabled,ROWS_5,'90%');
                     $doleditor->Create();
                     print '<input type="hidden" name="consttype'.(empty($strictw3c)?'':'[]').'" value="texte">';
                 }
@@ -1129,14 +1332,14 @@ function form_constantes($tableau,$strictw3c=0)
             	print '<td align="center">';
             	print '<input type="submit" class="button" value="'.$langs->trans("Update").'" name="Button">';
 	            print "</td>";
-            }    
+            }
     	    print "</tr>\n";
             if (empty($strictw3c)) print "</form>\n";
         }
     }
     print '</table>';
 
-    if (! empty($strictw3c)) 
+    if (! empty($strictw3c) && $strictw3c == 1)
     {
     	print '<div align="center"><input type="submit" class="button" value="'.$langs->trans("Update").'" name="update"></div>';
     	print "</form>\n";
@@ -1166,6 +1369,7 @@ function showModulesExludedForExternal($modules)
 
 			//if (empty($conf->global->$moduleconst)) continue;
 			if (! in_array($modulename,$listofmodules)) continue;
+			//var_dump($modulename.'eee'.$langs->trans('Module'.$module->numero.'Name'));
 
 			if ($i > 0) $text.=', ';
 			else $text.=' ';
@@ -1173,7 +1377,7 @@ function showModulesExludedForExternal($modules)
 			$text .= $langs->trans('Module'.$module->numero.'Name');
 		}
 	}
-	return img_picto($langs->trans('InfoAdmin'), 'star').' '.$text;
+	return $text;
 }
 
 
@@ -1198,7 +1402,7 @@ function addDocumentModel($name, $type, $label='', $description='')
     $sql.= (! empty($description)?"'".$db->escape($description)."'":"null");
     $sql.= ")";
 
-    dol_syslog("admin.lib::addDocumentModel sql=".$sql);
+    dol_syslog("admin.lib::addDocumentModel", LOG_DEBUG);
 	$resql=$db->query($sql);
 	if ($resql)
 	{
@@ -1231,7 +1435,7 @@ function delDocumentModel($name, $type)
 	$sql.= " AND type = '".$type."'";
 	$sql.= " AND entity = ".$conf->entity;
 
-	dol_syslog("admin.lib::delDocumentModel sql=".$sql);
+	dol_syslog("admin.lib::delDocumentModel", LOG_DEBUG);
 	$resql=$db->query($sql);
 	if ($resql)
 	{
@@ -1275,4 +1479,3 @@ function phpinfo_array()
 	return $info_arr;
 }
 
-?>

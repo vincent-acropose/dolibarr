@@ -28,12 +28,12 @@
 /**
  * Prepare array with list of tabs
  *
- * @param   Object	$object		Object related to tabs
- * @return  array				Array of tabs to shoc
+ * @param   Commande	$object		Object related to tabs
+ * @return  array				Array of tabs to show
  */
-function commande_prepare_head($object)
+function commande_prepare_head(Commande $object)
 {
-	global $langs, $conf, $user;
+	global $db, $langs, $conf, $user;
 	if (! empty($conf->expedition->enabled)) $langs->load("sendings");
 	$langs->load("orders");
 
@@ -42,7 +42,7 @@ function commande_prepare_head($object)
 
 	if (! empty($conf->commande->enabled) && $user->rights->commande->lire)
 	{
-		$head[$h][0] = DOL_URL_ROOT.'/commande/fiche.php?id='.$object->id;
+		$head[$h][0] = DOL_URL_ROOT.'/commande/card.php?id='.$object->id;
 		$head[$h][1] = $langs->trans("OrderCard");
 		$head[$h][2] = 'order';
 		$h++;
@@ -52,7 +52,7 @@ function commande_prepare_head($object)
 	|| ($conf->livraison_bon->enabled && $user->rights->expedition->livraison->lire))
 	{
 		$head[$h][0] = DOL_URL_ROOT.'/expedition/shipment.php?id='.$object->id;
-		if ($conf->expedition_bon->enabled) $text=$langs->trans("Sendings");
+		if ($conf->expedition_bon->enabled) $text=$langs->trans("Shipments");
 		if ($conf->expedition_bon->enabled && $conf->livraison_bon->enabled) $text.='/';
 		if ($conf->livraison_bon->enabled)  $text.=$langs->trans("Receivings");
 		$head[$h][1] = $text;
@@ -60,18 +60,12 @@ function commande_prepare_head($object)
 		$h++;
 	}
 
-	if (! empty($conf->global->MAIN_USE_PREVIEW_TABS))
-	{
-		$head[$h][0] = DOL_URL_ROOT.'/commande/apercu.php?id='.$object->id;
-		$head[$h][1] = $langs->trans("Preview");
-		$head[$h][2] = 'preview';
-		$h++;
-	}
-
 	if (empty($conf->global->MAIN_DISABLE_CONTACTS_TAB))
 	{
-		$head[$h][0] = DOL_URL_ROOT.'/commande/contact.php?id='.$object->id;
+	    $nbContact = count($object->liste_contact(-1,'internal')) + count($object->liste_contact(-1,'external'));
+	    $head[$h][0] = DOL_URL_ROOT.'/commande/contact.php?id='.$object->id;
 		$head[$h][1] = $langs->trans('ContactsAddresses');
+		if ($nbContact > 0) $head[$h][1].= ' <span class="badge">'.$nbContact.'</span>';
 		$head[$h][2] = 'contact';
 		$h++;
 	}
@@ -82,22 +76,28 @@ function commande_prepare_head($object)
     // $this->tabs = array('entity:-tabname);   												to remove a tab
     complete_head_from_modules($conf,$langs,$object,$head,$h,'order');
 
-    $head[$h][0] = DOL_URL_ROOT.'/commande/document.php?id='.$object->id;
-	/*$filesdir = $conf->commande->dir_output . "/" . dol_sanitizeFileName($commande->ref);
-	include_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-	$listoffiles=dol_dir_list($filesdir,'files',1);
-	$head[$h][1] = (count($listoffiles)?$langs->trans('DocumentsNb',count($listoffiles)):$langs->trans('Documents'));*/
-	$head[$h][1] = $langs->trans('Documents');
-	$head[$h][2] = 'documents';
-	$h++;
-
 	if (empty($conf->global->MAIN_DISABLE_NOTES_TAB))
 	{
+		$nbNote = 0;
+        if(!empty($object->note_private)) $nbNote++;
+		if(!empty($object->note_public)) $nbNote++;
 		$head[$h][0] = DOL_URL_ROOT.'/commande/note.php?id='.$object->id;
 		$head[$h][1] = $langs->trans('Notes');
+		if ($nbNote > 0) $head[$h][1].= ' <span class="badge">'.$nbNote.'</span>';
 		$head[$h][2] = 'note';
 		$h++;
 	}
+
+	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+    require_once DOL_DOCUMENT_ROOT.'/core/class/link.class.php';
+	$upload_dir = $conf->commande->dir_output . "/" . dol_sanitizeFileName($object->ref);
+	$nbFiles = count(dol_dir_list($upload_dir,'files',0,'','(\.meta|_preview.*\.png)$'));
+    $nbLinks=Link::count($db, $object->element, $object->id);
+	$head[$h][0] = DOL_URL_ROOT.'/commande/document.php?id='.$object->id;
+	$head[$h][1] = $langs->trans('Documents');
+	if (($nbFiles+$nbLinks) > 0) $head[$h][1].= ' <span class="badge">'.($nbFiles+$nbLinks).'</span>';
+	$head[$h][2] = 'documents';
+	$h++;
 
 	$head[$h][0] = DOL_URL_ROOT.'/commande/info.php?id='.$object->id;
 	$head[$h][1] = $langs->trans("Info");
@@ -112,10 +112,9 @@ function commande_prepare_head($object)
 /**
  *  Return array head with list of tabs to view object informations.
  *
- *  @param	Object	$object		order
- *  @return	array   	        head array with tabs
+ *  @return	array   	    		    head array with tabs
  */
-function order_admin_prepare_head($object)
+function order_admin_prepare_head()
 {
 	global $langs, $conf, $user;
 
@@ -127,17 +126,21 @@ function order_admin_prepare_head($object)
 	$head[$h][2] = 'general';
 	$h++;
 
-	complete_head_from_modules($conf,$langs,$object,$head,$h,'order_admin');
+	complete_head_from_modules($conf,$langs,null,$head,$h,'order_admin');
 
 	$head[$h][0] = DOL_URL_ROOT.'/admin/order_extrafields.php';
 	$head[$h][1] = $langs->trans("ExtraFields");
 	$head[$h][2] = 'attributes';
 	$h++;
 
-	complete_head_from_modules($conf,$langs,$object,$head,$h,'order_admin','remove');
+	$head[$h][0] = DOL_URL_ROOT.'/admin/orderdet_extrafields.php';
+	$head[$h][1] = $langs->trans("ExtraFieldsLines");
+	$head[$h][2] = 'attributeslines';
+	$h++;
+
+	complete_head_from_modules($conf,$langs,null,$head,$h,'order_admin','remove');
 
 	return $head;
 }
 
 
-?>

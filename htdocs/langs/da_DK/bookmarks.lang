@@ -1,18 +1,9 @@
-/*
- * Language code: da_DA
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-08-13 20:39:59
- */
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-13 20:39:59).
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - marque pages
 AddThisPageToBookmarks=Tilføj denne side til bogmærker
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 20:39:59).
-
 Bookmark=Bookmark
 Bookmarks=Bogmærker
+ListOfBookmarks=Liste over bogmærker
+EditBookmarks=List/edit bookmarks
 NewBookmark=Nyt bogmærke
 ShowBookmark=Vis bogmærke
 OpenANewWindow=Åbn et nyt vindue
@@ -25,6 +16,5 @@ BehaviourOnClick=Adfærd på klikker på URL
 CreateBookmark=Opret bogmærke
 SetHereATitleForLink=Set her en titel til bogmærke
 UseAnExternalHttpLinkOrRelativeDolibarrLink=Brug en ekstern http URL eller en relativ Dolibarr URL
-ChooseIfANewWindowMustBeOpenedOnClickOnBookmark=Vælg om side åbnet ved linket skal stå på nuværende eller nyt vindue
+ChooseIfANewWindowMustBeOpenedOnClickOnBookmark=Choose if linked page must open in new window or not
 BookmarksManagement=Bogmærker forvaltning
-ListOfBookmarks=Liste over bogmærker

@@ -40,8 +40,18 @@ class autoTranslator
 	const DIR_SEPARATOR = '/';
 
 
-	function __construct($_destlang,$_refLang,$_langDir,$_limittofile,$_apikey)
-	{
+    /**
+     * Constructor
+     *
+     * @param   string $_destlang       Destination lang
+     * @param   string $_refLang        Ref lang
+     * @param   string $_langDir        Dir lang
+     * @param   string $_limittofile    Limit to file
+     * @param   string $_apikey         Api key
+     * @return void
+     */
+    function __construct($_destlang,$_refLang,$_langDir,$_limittofile,$_apikey)
+    {
 
 		// Set enviorment variables
 		$this->_destlang = $_destlang;
@@ -154,14 +164,14 @@ class autoTranslator
 		if (isset($this->_translatedFiles[$file]) && count($this->_translatedFiles[$file])>0)
 		{
 			$fp = fopen($destPath, 'a');
-			fwrite($fp, "\r\n");
-			fwrite($fp, "\r\n");
-			fwrite($fp, "// START - Lines generated via autotranslator.php tool (".$this->_time.").\r\n");
-			fwrite($fp, "// Reference language: ".$this->_refLang." -> ".$my_destlang."\r\n");
+			fwrite($fp, "\n");
+			fwrite($fp, "\n");
+			fwrite($fp, "// START - Lines generated via autotranslator.php tool (".$this->_time.").\n");
+			fwrite($fp, "// Reference language: ".$this->_refLang." -> ".$my_destlang."\n");
 			foreach( $this->_translatedFiles[$file] as $line) {
-				fwrite($fp, $line . "\r\n");
+				fwrite($fp, $line . "\n");
 			}
-			fwrite($fp, "// STOP - Lines generated via autotranslator.php tool (".$this->_time_end.").\r\n");
+			fwrite($fp, "// STOP - Lines generated via autotranslator.php tool (".$this->_time_end.").\n");
 			fclose($fp);
 		}
 		return;
@@ -177,11 +187,11 @@ class autoTranslator
 	private function createTranslationFile($path,$my_destlang)
 	{
 		$fp = fopen($path, 'w+');
-		fwrite($fp, "/*\r\n");
-		fwrite($fp, " * Language code: {$my_destlang}\r\n");
-		fwrite($fp, " * Automatic generated via autotranslator.php tool\r\n");
-		fwrite($fp, " * Generation date " . $this->_time. "\r\n");
-		fwrite($fp, " */\r\n");
+		fwrite($fp, "/*\n");
+		fwrite($fp, " * Language code: {$my_destlang}\n");
+		fwrite($fp, " * Automatic generated via autotranslator.php tool\n");
+		fwrite($fp, " * Generation date " . $this->_time. "\n");
+		fwrite($fp, " */\n");
 		fclose($fp);
 		return;
 	}
@@ -290,7 +300,7 @@ class autoTranslator
 		//setting language pair
 		$lang_pair = $src_lang.'|'.$dest_lang;
 
-		$src_text_to_translate=preg_replace('/%s/','SSSSS',join('',$src_texts));
+		$src_text_to_translate=preg_replace('/%s/','SSSSS',implode('',$src_texts));
 		$src_text_to_translate=preg_replace('/'.preg_quote('\n\n').'/',' NNNNN ',$src_text_to_translate);
 
 		// Define GET URL v1
@@ -338,4 +348,3 @@ class autoTranslator
 	}
 
 }
-?>

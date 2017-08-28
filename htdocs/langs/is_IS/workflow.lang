@@ -1,18 +1,17 @@
-/*
- * Language code: is_IS
- * Automatic generated via autotranslator.php tool
- * Generation date 2012-02-29 16:26:19
- */
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 16:26:19).
-// Reference language: en_US -> is_IS
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - workflow
 WorkflowSetup=Vinnuflæði mát skipulag
-WorkflowDesc=Þessi eining er desinged að breyta hegðun sjálfvirkar aðgerðir í forritinu. Við vanræksla, workflow er opnað (sem þú gerir hlutina til þess að þú vilt). Þú getur virkt sjálfvirkar aðgerðir sem þú ert áhugavert inn
-ThereIsNoWorkflowToModify=Það er ekki workflow hægt að breyta fyrir einingu sem þú hefur valið.
-descWORKFLOW_PROPAL_AUTOCREATE_ORDER=Búa til viðskiptavina röð sjálfkrafa eftir verslunar Tillagan er undirrituð
-descWORKFLOW_PROPAL_AUTOCREATE_INVOICE=Búa til viðskiptavina reikning sjálfkrafa eftir verslunar Tillagan er undirrituð
-descWORKFLOW_CONTRACT_AUTOCREATE_INVOICE=Búa til viðskiptavina reikning sjálfkrafa eftir að samningur er staðfest
-descWORKFLOW_ORDER_AUTOCREATE_INVOICE=Búa til viðskiptavina reikning sjálfkrafa eftir að viðskiptavinur þess er lokað
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 16:27:07).
+WorkflowDesc=This module is designed to modify the behaviour of automatic actions into application. By default, workflow is open (you can do things in the order you want). You can activate the automatic actions you are interested in.
+ThereIsNoWorkflowToModify=There is no workflow modifications available with the activated modules.
+# Autocreate
+descWORKFLOW_PROPAL_AUTOCREATE_ORDER=Automatically create a customer order after a commercial proposal is signed (new order will have same amount than proposal)
+descWORKFLOW_PROPAL_AUTOCREATE_INVOICE=Automatically create a customer invoice after a commercial proposal is signed (new invoice will have same amount than proposal)
+descWORKFLOW_CONTRACT_AUTOCREATE_INVOICE=Automatically create a customer invoice after a contract is validated
+descWORKFLOW_ORDER_AUTOCREATE_INVOICE=Automatically create a customer invoice after a customer order is closed (new invoice will have same amount than order)
+# Autoclassify
+descWORKFLOW_ORDER_CLASSIFY_BILLED_PROPAL=Classify linked source proposal(s) to billed when customer order is set to billed (and if amount of the order is same than total amount of signed linked proposals)
+descWORKFLOW_INVOICE_CLASSIFY_BILLED_PROPAL=Classify linked source proposal(s) to billed when customer invoice is validated (and if amount of the invoice is same than total amount of signed linked proposals)
+descWORKFLOW_INVOICE_AMOUNT_CLASSIFY_BILLED_ORDER=Classify linked source customer order(s) to billed when customer invoice is validated (and if amount of the invoice is same than total amount of linked orders)
+descWORKFLOW_INVOICE_CLASSIFY_BILLED_ORDER=Classify linked source customer order(s) to billed when customer invoice is set to paid (and if amount of the invoice is same than total amount of linked orders)
+descWORKFLOW_ORDER_CLASSIFY_SHIPPED_SHIPPING=Classify linked source order to shipped when a shipment is validated (and if quantity shipped by all shipments is the same as in the order to update)
+AutomaticCreation=Automatic creation
+AutomaticClassification=Automatic classification

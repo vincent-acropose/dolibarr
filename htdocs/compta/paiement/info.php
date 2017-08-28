@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2004      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2013		Marcos García		<marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,52 +26,55 @@
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/payments.lib.php';
 
 $langs->load("bills");
 $langs->load("companies");
+
+$id=GETPOST('id');
+$ref=GETPOST('ref', 'alpha');
+$action=GETPOST('action','alpha');
+$confirm=GETPOST('confirm','alpha');
+
+/*
+ * Actions
+ */
+
+// None
 
 
 /*
  * View
  */
 
-llxHeader();
+llxHeader('', $langs->trans("Payment"));
 
-$paiement = new Paiement($db);
-$paiement->fetch($_GET["id"], $user);
-$paiement->info($_GET["id"]);
+$object = new Paiement($db);
+$object->fetch($id, $ref);
+$object->info($object->id);
 
+$head = payment_prepare_head($object);
 
-$h=0;
-
-$head[$h][0] = DOL_URL_ROOT.'/compta/paiement/fiche.php?id='.$_GET["id"];
-$head[$h][1] = $langs->trans("Card");
-$h++;
-
-$head[$h][0] = DOL_URL_ROOT.'/compta/paiement/info.php?id='.$_GET["id"];
-$head[$h][1] = $langs->trans("Info");
-$hselected = $h;
-$h++;
+dol_fiche_head($head, 'info', $langs->trans("PaymentCustomerInvoice"), -1, 'payment');
 
 
-dol_fiche_head($head, $hselected, $langs->trans("PaymentCustomerInvoice"), 0, 'payment');
+$linkback = '<a href="' . DOL_URL_ROOT . '/compta/paiement/list.php">' . $langs->trans("BackToList") . '</a>';
 
-print '<table class="border" width="100%">';
+dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', '');
 
-// Ref
-print '<tr><td valign="top" width="140">'.$langs->trans('Ref').'</td><td colspan="3">'.$paiement->id.'</td></tr>';
 
-print '</table>';
+print '<div class="fichecenter">';
+print '<div class="underbanner clearboth"></div>';
 
 print '<br>';
 
 print '<table width="100%"><tr><td>';
-dol_print_object_info($paiement);
+dol_print_object_info($object);
 print '</td></tr></table>';
 
 print '</div>';
 
-$db->close();
+dol_fiche_end();
 
 llxFooter();
-?>
+$db->close();

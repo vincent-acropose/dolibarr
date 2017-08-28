@@ -26,30 +26,37 @@ create table llx_expedition
   ref                   varchar(30)        NOT NULL,
   entity                integer  DEFAULT 1 NOT NULL,	-- multi company id
   fk_soc                integer            NOT NULL,
+  fk_projet  		integer  DEFAULT NULL,
   
   ref_ext               varchar(30),					-- reference into an external system (not used by dolibarr)
-  ref_int				varchar(30),					-- reference into an internal system (used by dolibarr)
+  ref_int				varchar(30),					-- reference into an internal system (used by dolibarr to store extern id like paypal info)
   ref_customer          varchar(30),					-- customer number
   
   date_creation         datetime,						-- date de creation
-  fk_user_author        integer,						-- createur
+  fk_user_author        integer,						-- author of creation
+  fk_user_modif         integer,						-- author of last change
   date_valid            datetime,						-- date de validation
   fk_user_valid         integer,						-- valideur
-  date_expedition       datetime,						-- shipping date
-  date_delivery			datetime	DEFAULT NULL,		-- delivery date
+  date_delivery			datetime	DEFAULT NULL,		-- date planned of delivery
+  date_expedition       datetime,						-- not used (deprecated)
   fk_address  			integer		DEFAULT NULL, 		-- delivery address (deprecated)
   fk_shipping_method    integer,
   tracking_number       varchar(50),
-  fk_statut             smallint	DEFAULT 0,
+  fk_statut             smallint	DEFAULT 0,			-- 0 = draft, 1 = validated, 2 = billed or closed depending on WORKFLOW_BILL_ON_SHIPMENT option
+  billed                smallint    DEFAULT 0,
   
-  height                integer,						-- height
-  width                 integer,						-- with
+  height                float,							-- height
+  width                 float,							-- with
   size_units            integer,						-- unit of all sizes (height, width, depth)
-  size                  integer,						-- depth
+  size                  float,							-- depth
   weight_units          integer,						-- unit of weight
-  weight                integer,						-- weight
+  weight                float,							-- weight
   note_private          text,
   note_public           text,
-  model_pdf             varchar(255)
+  model_pdf             varchar(255),
+  fk_incoterms          integer,						-- for incoterms
+  location_incoterms    varchar(255),					-- for incoterms
   
+  import_key			varchar(14),
+  extraparams			varchar(255)							-- for other parameters with json format
 )ENGINE=innodb;

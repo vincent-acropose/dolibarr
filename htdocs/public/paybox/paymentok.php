@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2001-2002 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2006-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2006-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,18 +20,24 @@
  *     	\file       htdocs/public/paybox/paymentok.php
  *		\ingroup    paybox
  *		\brief      File to show page after a successful payment
- *		\author	    Laurent Destailleur
  */
 
 define("NOLOGIN",1);		// This means this output page does not require to be logged.
 define("NOCSRFCHECK",1);	// We accept to go on this page from external web site.
 
+// For MultiCompany module.
+// Do not use GETPOST here, function is not defined and define must be done before including main.inc.php
+// TODO This should be useless. Because entity must be retreive from object ref and not from url.
+$entity=(! empty($_GET['entity']) ? (int) $_GET['entity'] : (! empty($_POST['entity']) ? (int) $_POST['entity'] : 1));
+if (is_numeric($entity)) define("DOLENTITY", $entity);
+
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/paybox/lib/paybox.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/payments.lib.php';
 
 // Security check
-if (empty($conf->paybox->enabled)) accessforbidden('',1,1,1);
+if (empty($conf->paybox->enabled)) accessforbidden('',0,0,1);
 
 $langs->load("main");
 $langs->load("other");
@@ -40,6 +46,7 @@ $langs->load("bills");
 $langs->load("companies");
 $langs->load("paybox");
 $langs->load("paypal");
+$langs->load("stripe");
 
 /*$source=GETPOST('source');
 $ref=GETPOST('ref');
@@ -48,8 +55,13 @@ if (empty($PAYBOXTOKEN)) $PAYBOXTOKEN=GETPOST('token');
 $PAYBOXPAYERID=GETPOST('PAYERID');
 if (empty($PAYBOXPAYERID)) $PAYBOXPAYERID=GETPOST('PayerID');
 */
-$PAYBOXFULLTAG=GETPOST('FULLTAG');
-if (empty($PAYBOXFULLTAG)) $PAYBOXFULLTAG=GETPOST('fulltag');
+$FULLTAG=GETPOST('FULLTAG');
+if (empty($FULLTAG)) $FULLTAG=GETPOST('fulltag');
+
+
+$object = new stdClass();   // For triggers
+
+$paymentmethod='paybox';
 
 
 /*
@@ -64,13 +76,20 @@ if (empty($PAYBOXFULLTAG)) $PAYBOXFULLTAG=GETPOST('fulltag');
  * View
  */
 
-dol_syslog("Callback url when a PayBox payment was done. query_string=".(empty($_SERVER["QUERY_STRING"])?'':$_SERVER["QUERY_STRING"])." script_uri=".(empty($_SERVER["SCRIPT_URI"])?'':$_SERVER["SCRIPT_URI"]), LOG_DEBUG, 0, '_paybox');
+dol_syslog("Callback url when a PayBox payment was done. query_string=".(dol_escape_htmltag($_SERVER["QUERY_STRING"])?dol_escape_htmltag($_SERVER["QUERY_STRING"]):'')." script_uri=".(dol_escape_htmltag($_SERVER["SCRIPT_URI"])?dol_escape_htmltag($_SERVER["SCRIPT_URI"]):''), LOG_DEBUG, 0, '_paybox');
 
 $tracepost = "";
 foreach($_POST as $k => $v) $tracepost .= "{$k} - {$v}\n";
 dol_syslog("POST=".$tracepost, LOG_DEBUG, 0, '_paybox');
 
-llxHeaderPayBox($langs->trans("PaymentForm"));
+
+$head='';
+if (! empty($conf->global->PAYBOX_CSS_URL)) $head='<link rel="stylesheet" type="text/css" href="'.$conf->global->PAYBOX_CSS_URL.'?lang='.$langs->defaultlang.'">'."\n";
+
+$conf->dol_hide_topmenu=1;
+$conf->dol_hide_leftmenu=1;
+
+llxHeader($head, $langs->trans("PaymentForm"), '', '', 0, 0, '', '', '', 'onlinepaymentbody');
 
 
 // Show message
@@ -79,9 +98,9 @@ print '<div id="dolpaymentdiv" align="center">'."\n";
 
 // Get on url call
 /*
-$token              = $PAYBOXTOKEN;
+$onlinetoken              = $PAYBOXTOKEN;
 */
-$fulltag            = $PAYBOXFULLTAG;
+$fulltag            = $FULLTAG;
 /*$payerID            = $PAYBOXPAYERID;
 // Set by newpayment.php
 $paymentType        = $_SESSION['PaymentType'];
@@ -90,45 +109,92 @@ $FinalPaymentAmt    = $_SESSION["Payment_Amount"];
 // From env
 $ipaddress          = $_SESSION['ipaddress'];
 
-dol_syslog("Call newpaymentok with token=".$token." paymentType=".$paymentType." currencyCodeType=".$currencyCodeType." payerID=".$payerID." ipaddress=".$ipaddress." FinalPaymentAmt=".$FinalPaymentAmt." fulltag=".$fulltag);
+dol_syslog("Call newpaymentok with token=".$onlinetoken." paymentType=".$paymentType." currencyCodeType=".$currencyCodeType." payerID=".$payerID." ipaddress=".$ipaddress." FinalPaymentAmt=".$FinalPaymentAmt." fulltag=".$fulltag);
 */
 
-// Send an email
-if (! empty($conf->global->MEMBER_PAYONLINE_SENDEMAIL) && preg_match('/MEM=/',$fulltag))
-{
-	$sendto=$conf->global->MEMBER_PAYONLINE_SENDEMAIL;
-	$from=$conf->global->MAILING_EMAIL_FROM;
-	require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-	$mailfile = new CMailFile(
-		'New subscription payed',
-		$sendto,
-		$from,
-		'New subscription payed '.$fulltag
-		);
 
-	$result=$mailfile->sendfile();
-	if ($result)
+print $langs->trans("YourPaymentHasBeenRecorded")."<br><br>\n";
+
+if (! empty($conf->global->PAYBOX_MESSAGE_OK)) print $conf->global->PAYBOX_MESSAGE_OK;
+
+
+// Appel des triggers
+include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+$interface=new Interfaces($db);
+$result=$interface->run_triggers('PAYBOX_PAYMENT_OK',$object,$user,$langs,$conf);
+if ($result < 0) { $error++; $errors=$interface->errors; }
+// Fin appel triggers
+
+
+// Send an email
+if (! empty($conf->global->PAYBOX_PAYONLINE_SENDEMAIL))
+{
+	$sendto=$conf->global->PAYBOX_PAYONLINE_SENDEMAIL;
+	$from=$conf->global->MAILING_EMAIL_FROM;
+	// Define $urlwithroot
+	$urlwithouturlroot=preg_replace('/'.preg_quote(DOL_URL_ROOT,'/').'$/i','',trim($dolibarr_main_url_root));
+	$urlwithroot=$urlwithouturlroot.DOL_URL_ROOT;		// This is to use external domain name found into config file
+	//$urlwithroot=DOL_MAIN_URL_ROOT;					// This is to use same domain name than current
+
+	// Define link to login card
+	$appli=constant('DOL_APPLICATION_TITLE');
+	if (! empty($conf->global->MAIN_APPLICATION_TITLE))
 	{
-		dol_syslog("EMail sent to ".$sendto);
+	    $appli=$conf->global->MAIN_APPLICATION_TITLE;
+	    if (preg_match('/\d\.\d/', $appli))
+	    {
+	        if (! preg_match('/'.preg_quote(DOL_VERSION).'/', $appli)) $appli.=" (".DOL_VERSION.")";	// If new title contains a version that is different than core
+	    }
+	    else $appli.=" ".DOL_VERSION;
+	}
+	else $appli.=" ".DOL_VERSION;
+	
+	$urlback=$_SERVER["REQUEST_URI"];
+	$topic='['.$appli.'] '.$langs->transnoentitiesnoconv("NewOnlinePaymentReceived");
+	$tmptag=dolExplodeIntoArray($fulltag,'.','=');
+	$content="";
+	if (! empty($tmptag['MEM']))
+	{
+		$langs->load("members");
+		$url=$urlwithroot."/adherents/card_subscriptions.php?rowid=".$tmptag['MEM'];
+		$content.=$langs->trans("PaymentSubscription")."<br>\n";
+		$content.=$langs->trans("MemberId").': '.$tmptag['MEM']."<br>\n";
+		$content.=$langs->trans("Link").': <a href="'.$url.'">'.$url.'</a>'."<br>\n";
 	}
 	else
 	{
-		dol_syslog("Failed to send EMail to ".$sendto, LOG_ERR);
+		$content.=$langs->transnoentitiesnoconv("NewOnlinePaymentReceived")."<br>\n";
+	}
+	$content.="<br>\n";
+	$content.=$langs->transnoentitiesnoconv("TechnicalInformation").":<br>\n";
+    $content.=$langs->transnoentitiesnoconv("OnlinePaymentSystem").': '.$paymentmethod."<br>\n";
+	$content.=$langs->transnoentitiesnoconv("ReturnURLAfterPayment").': '.$urlback."<br>\n";
+	$content.="tag=".$fulltag."<br>\n";
+
+	$ishtml=dol_textishtml($content);	// May contain urls
+
+	require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
+	$mailfile = new CMailFile($topic, $sendto, $from, $content, array(), array(), array(), '', '', 0, $ishtml);
+
+	// Send an email
+	$result=$mailfile->sendfile();
+	if ($result)
+	{
+		dol_syslog("EMail sent to ".$sendto, LOG_DEBUG, 0, '_paybox');
+	}
+	else
+	{
+		dol_syslog("Failed to send EMail to ".$sendto, LOG_ERR, 0, '_paybox');
 	}
 }
 
 
-print $langs->trans("YourPaymentHasBeenRecorded")."<br>\n";
-
-if (! empty($conf->global->PAYBOX_MESSAGE_OK)) print $conf->global->PAYBOX_MESSAGE_OK;
 
 print "\n</div>\n";
 
+htmlPrintOnlinePaymentFooter($mysoc,$langs);
 
-html_print_paybox_footer($mysoc,$langs);
 
-
-llxFooterPayBox();
+llxFooter('', 'public');
 
 $db->close();
-?>

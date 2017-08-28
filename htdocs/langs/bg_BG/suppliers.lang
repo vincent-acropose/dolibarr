@@ -1,30 +1,20 @@
-/*
- * Language code: bg_BG
- * Automatic generated via autotranslator.php tool
- * Generation date 2012-09-08 17:14:31
- */
-
-
-// START - Lines generated via autotranslator.php tool (2012-09-08 17:14:31).
-// Reference language: fr_FR -> bg_BG
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - suppliers
 Suppliers=Доставчици
-Supplier=Снабдител
-AddSupplier=Добави доставчик
-SupplierRemoved=Изтрити доставчик
 SuppliersInvoice=Фактура
+ShowSupplierInvoice=Показване на фактура на доставчик
 NewSupplier=Нов доставчик
 History=Исторически
 ListOfSuppliers=Списък на доставчиците
 ShowSupplier=Вижте доставчик
 OrderDate=Дата на поръчката
-BuyingPrice=Изкупната цена
-BuyingPriceMin=Минимална покупната цена
-BuyingPriceMinShort=Покупка мин. Цена
-AddSupplierPrice=Добави награда доставчик
-ChangeSupplierPrice=Промяна доставчик цена
-ErrorSupplierCountryIsNotDefined=Не е определено на страната на доставчика. Корекция на щепсела.
-ProductHasAlreadyReferenceInThisSupplier=Този продукт има позоваване на този доставчик
+BuyingPriceMin=Best buying price
+BuyingPriceMinShort=Best buying price
+TotalBuyingPriceMinShort=Обща сума на цени за закупуване на под-продукти
+TotalSellingPriceMinShort=Total of subproducts selling prices
+SomeSubProductHaveNoPrices=Някои под-продукти нямата определена цена
+AddSupplierPrice=Add buying price
+ChangeSupplierPrice=Change buying price
+SupplierPrices=Доставни цени
 ReferenceSupplierIsAlreadyAssociatedWithAProduct=Този референтен доставчик вече е свързана с референтното: %s
 NoRecordedSuppliers=Не регистриран доставчик
 SupplierPayment=Доставчика на платежни услуги
@@ -33,21 +23,24 @@ RefSupplierShort=Не. снабдител
 Availability=Наличност
 ExportDataset_fournisseur_1=Фактури и фактура линии
 ExportDataset_fournisseur_2=Фактури и наредби
+ExportDataset_fournisseur_3=Поръчки към доставчици и линии на поръчки
 ApproveThisOrder=Одобряване на поръчката
-ConfirmApproveThisOrder=Сигурен ли сте, че искате да одобри <b>%s Поръчката?</b>
-DenyingThisOrder=Да откаже поръчката
-ConfirmDenyingThisOrder=Сигурен ли сте, че искате да откаже доставчик <b>%s</b> за?
-ConfirmCancelThisOrder=Сигурен ли сте, че искате да отмените доставчика на <b>%s</b> за?
-AddCustomerOrder=Създаване на заявка на клиента
-AddCustomerInvoice=Създаване на фактура / кредитно известие
+ConfirmApproveThisOrder=Are you sure you want to approve order <b>%s</b>?
+DenyingThisOrder=Отхвърляне на тази поръчка
+ConfirmDenyingThisOrder=Are you sure you want to deny this order <b>%s</b>?
+ConfirmCancelThisOrder=Are you sure you want to cancel this order <b>%s</b>?
 AddSupplierOrder=Създаване на поръчка за покупка
 AddSupplierInvoice=Създаване на фактура
 ListOfSupplierProductForSupplier=Списък на доставчици на стоки и цени <b>%s</b>
-NoneOrBatchFileNeverRan=Няма или не се изпълнява партида <b>%s</b> наскоро
-// STOP - Lines generated via autotranslator.php tool (2012-09-08 17:15:57).
-
-
-// START - Lines generated via autotranslator.php tool (2012-09-08 17:16:45).
-// Reference language: en_US -> bg_BG
-ErrorQtyTooLowForThisSupplier=Количество твърде ниска за този доставчик или няма цена, определена за този продукт на този доставчик
-// STOP - Lines generated via autotranslator.php tool (2012-09-08 17:42:05).
+SentToSuppliers=Изпратено към доставчици
+ListOfSupplierOrders=Списък на нарежданията за доставчика
+MenuOrdersSupplierToBill=Поръчки на доставчика за фактуриране
+NbDaysToDelivery=Закъснение на доставка в дни
+DescNbDaysToDelivery=Най-голямото закъснение на доставка за продукти от тази поръчка
+SupplierReputation=Supplier reputation
+DoNotOrderThisProductToThisSupplier=Do not order
+NotTheGoodQualitySupplier=Wrong quality
+ReputationForThisProduct=Reputation
+BuyerName=Buyer name
+AllProductServicePrices=All product / service prices
+BuyingPriceNumShort=Доставни цени

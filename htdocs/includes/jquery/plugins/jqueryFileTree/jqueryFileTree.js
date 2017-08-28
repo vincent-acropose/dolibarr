@@ -33,7 +33,7 @@
 if(jQuery) (function($){
 	
 	$.extend($.fn, {
-		fileTree: function(o, h) {
+		fileTree: function(o, h, hd) {	// CHANGE DOL_LDR add hd param
 			// Defaults
 			if( !o ) var o = {};
 			if( o.root == undefined ) o.root = '/';
@@ -60,7 +60,7 @@ if(jQuery) (function($){
 				}
 				
 				function bindTree(t) {
-					/* DOL_CHANGE Replace LI A by LI A.jqft */
+					/* @CHANGE Replace LI A by LI A.jqft */
 					$(t).find('LI A.jqft').bind(o.folderEvent, function() {
 						if( $(this).parent().hasClass('directory') ) {
 							if( $(this).parent().hasClass('collapsed') ) {
@@ -77,13 +77,15 @@ if(jQuery) (function($){
 								$(this).parent().find('UL').slideUp({ duration: o.collapseSpeed, easing: o.collapseEasing });
 								$(this).parent().removeClass('expanded').addClass('collapsed');
 							}
+							// CHANGE DOL_LDR use hd function provided in param
+							if (hd != null) hd($(this));
 						} else {
 							h($(this).attr('rel'));
 						}
 						return false;
 					});
 					// Prevent A from triggering the # on non-click events
-					/* DOL_CHANGE Replace LI A by LI A.jqft */
+					/* @CHANGE Replace LI A by LI A.jqft */
 					if( o.folderEvent.toLowerCase != 'click' ) $(t).find('LI A.jqft').bind('click', function() { return false; });
 				}
 				// Loading message

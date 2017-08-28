@@ -10,8 +10,8 @@
 //---------------------------------------------------------------------------
 // 06/09/09	1.0		Laurent Destailleur	   Creation
 //---------------------------------------------------------------------------
-#define PROG	"UsedPort"
-#define VERSION	"1.0"
+#define PROG	 "UsedPort"
+#define VERSION "1.0"
 
 // If GNU GCC CYGWIN: _WIN32 to defined manually,  __GNUC__ is defined,     _MSC_VER not defined
 // If GNU GCC MINGW:  _WIN32 automaticaly defined, __GNUC__ is defined,     _MSC_VER not defined
@@ -277,7 +277,7 @@ help=!(Port > 0);
 Usage:
 if (help) {
 	printf("----- %s V%s (c)Laurent Destailleur -----\n",PROG,VERSION);
-	printf("%s is a software that allows you to know if a TCP/IP port is used\n",PROG);
+	printf("%s is software that allows you to know if a TCP/IP port is used\n",PROG);
 	printf("%s sources can be compiled for WIN32 (VC++, GCC CYGWIN, MINGW) or for\n");
 	printf("Unix/Linux (GCC)\n",PROG);
 	printf("\n");

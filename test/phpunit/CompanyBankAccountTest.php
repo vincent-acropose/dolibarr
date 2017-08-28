@@ -25,7 +25,7 @@
 
 global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
 require_once dirname(__FILE__).'/../../htdocs/societe/class/companybankaccount.class.php';
 
@@ -80,6 +80,8 @@ class CompanyBankAccountTest extends PHPUnit_Framework_TestCase
 
     	print __METHOD__."\n";
     }
+
+    // tear down after class
     public static function tearDownAfterClass()
     {
     	global $conf,$user,$langs,$db;
@@ -131,16 +133,16 @@ class CompanyBankAccountTest extends PHPUnit_Framework_TestCase
     	$localobject->initAsSpecimen();
     	$result=$localobject->create($user);
 
+    	print __METHOD__." result=".$result." id=".$localobject->id."\n";
     	$this->assertLessThan($result, 0);
-    	print __METHOD__." result=".$result."\n";
-    	return $result;
+    	return $localobject->id;
     }
 
     /**
      * testCompanyBankAccountFetch
      *
      * @param	int		$id		Id of bank account
-     * @return	void
+     * @return	Object          Bank account object
      *
      * @depends	testCompanyBankAccountCreate
      * The depends says test is run only if previous is ok
@@ -155,10 +157,31 @@ class CompanyBankAccountTest extends PHPUnit_Framework_TestCase
 
 		$localobject=new CompanyBankAccount($this->savdb);
     	$result=$localobject->fetch($id);
-
-    	$this->assertLessThan($result, 0);
     	print __METHOD__." id=".$id." result=".$result."\n";
+    	$this->assertLessThan($result, 0);
     	return $localobject;
+    }
+
+    /**
+     * testCompanyBankAccountSetAsDefault
+     *
+     * @param   Object  $localobject    Bank account
+     * @return  int
+     *
+     * @depends testCompanyBankAccountFetch
+     */
+    public function testCompanyBankAccountSetAsDefault($localobject)
+    {
+        global $conf,$user,$langs,$db;
+        $conf=$this->savconf;
+        $user=$this->savuser;
+        $langs=$this->savlangs;
+        $db=$this->savdb;
+
+        $result=$localobject->setAsDefault($localobject->id);
+        print __METHOD__." id=".$localobject->id." result=".$result."\n";
+        $this->assertLessThan($result, 0);
+        return $localobject;
     }
 
     /**
@@ -212,4 +235,3 @@ class CompanyBankAccountTest extends PHPUnit_Framework_TestCase
     }
 
 }
-?>

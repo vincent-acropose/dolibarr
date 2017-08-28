@@ -3,6 +3,7 @@
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2014      Ferran Marcet        <fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +20,8 @@
  */
 
 /**
- *	    \file       htdocs/compta/tva/index.php
- *      \ingroup    tax
+ *		\file       htdocs/compta/tva/index.php
+ *		\ingroup    tax
  *		\brief      Index page of VAT reports
  */
 require '../../main.inc.php';
@@ -29,9 +30,12 @@ require_once DOL_DOCUMENT_ROOT.'/compta/tva/class/tva.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 
 $langs->load("other");
+$langs->load("compta");
+$langs->load("banks");
+$langs->load("bills");
 
-$year=$_GET["year"];
-if ($year == 0 )
+$year=GETPOST("year","int");
+if ($year == 0)
 {
     $year_current = strftime("%Y",time());
     $year_start = $year_current;
@@ -51,7 +55,14 @@ $modetax = $conf->global->TAX_MODE;
 if (isset($_GET["modetax"])) $modetax=$_GET["modetax"];
 
 
-
+/**
+ * print function
+ *
+ * @param 	DoliDB	$db		Database handler
+ * @param 	string	$sql	SQL Request
+ * @param 	string	$date	Date
+ * @return	void
+ */
 function pt ($db, $sql, $date)
 {
     global $conf, $bc,$langs;
@@ -72,8 +83,8 @@ function pt ($db, $sql, $date)
         while ($i < $num)
         {
             $obj = $db->fetch_object($result);
-            $var=!$var;
-            print '<tr '.$bc[$var].'>';
+
+            print '<tr class="oddeven">';
             print '<td class="nowrap">'.$obj->dm."</td>\n";
             $total = $total + $obj->mm;
 
@@ -82,13 +93,13 @@ function pt ($db, $sql, $date)
 
             $i++;
         }
-        print '<tr class="liste_total"><td align="right">'.$langs->trans("Total")." :</td><td nowrap=\"nowrap\" align=\"right\"><b>".price($total)."</b></td><td>&nbsp;</td></tr>";
+        print '<tr class="liste_total"><td align="right">'.$langs->trans("Total")." :</td><td class=\"nowrap\" align=\"right\"><b>".price($total)."</b></td><td>&nbsp;</td></tr>";
 
         print "</table>";
         $db->free($result);
     }
     else {
-        dolibar_print_error($db);
+        dol_print_error($db);
     }
 }
 
@@ -102,26 +113,19 @@ llxHeader();
 $tva = new Tva($db);
 
 
-$textprevyear="<a href=\"index.php?year=" . ($year_current-1) . "\">".img_previous()."</a>";
-$textnextyear=" <a href=\"index.php?year=" . ($year_current+1) . "\">".img_next()."</a>";
+$textprevyear="<a href=\"index.php?year=" . ($year_current-1) . "\">".img_previous($langs->trans("Previous"), 'class="valignbottom"')."</a>";
+$textnextyear=" <a href=\"index.php?year=" . ($year_current+1) . "\">".img_next($langs->trans("Next"), 'class="valignbottom"')."</a>";
 
-print_fiche_titre($langs->trans("VAT"),"$textprevyear ".$langs->trans("Year")." $year_start $textnextyear");
+print $conf->dol_optimize_smallscreen;
+print load_fiche_titre($langs->transcountry("VAT", $mysoc->country_code), $textprevyear." ".$langs->trans("Year")." ".$year_start." ".$textnextyear, 'title_accountancy.png');
 
 print $langs->trans("VATReportBuildWithOptionDefinedInModule").'<br>';
 print '('.$langs->trans("TaxModuleSetupToModifyRules",DOL_URL_ROOT.'/admin/taxes.php').')<br>';
 print '<br>';
 
-echo '<table width="100%" class="notopnoleftnoright">';
-echo '<tr><td class="notopnoleft" width="50%">';
-print_titre($langs->trans("VATSummary"));
-// The report mode is the one defined by defaut in tax module setup
-//print $modetax;
-//print '('.$langs->trans("SeeVATReportInInputOutputMode",'<a href="'.$_SERVER["PHP_SELF"].'?year='.$year_start.'&modetax=0">','</a>').')';
-echo '</td><td>';
-print_titre($langs->trans("VATPaid"));
-echo '</td></tr>';
+print '<div class="fichecenter"><div class="fichethirdleft">';
 
-echo '<tr><td class="notopnoleft" width="50%" valign="top">';
+print load_fiche_titre($langs->trans("VATSummary"), '', '');
 
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
@@ -144,6 +148,17 @@ for ($m = 1 ; $m < 13 ; $m++ )
     $coll_listsell = vat_by_date($db, $y, 0, 0, 0, $modetax, 'sell', $m);
     $coll_listbuy = vat_by_date($db, $y, 0, 0, 0, $modetax, 'buy', $m);
 
+    $action = "tva";
+    $object = array(&$coll_listsell, &$coll_listbuy);
+    $parameters["mode"] = $modetax;
+    $parameters["year"] = $y;
+    $parameters["month"] = $m;
+    $parameters["type"] = 'vat';
+
+    // Initialize technical object to manage hooks of expenses. Note that conf->hooks_modules contains array array
+    $hookmanager->initHooks(array('externalbalance'));
+    $reshook=$hookmanager->executeHooks('addVatLine',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+
     if (! is_array($coll_listbuy) && $coll_listbuy == -1)
     {
         $langs->load("errors");
@@ -156,9 +171,9 @@ for ($m = 1 ; $m < 13 ; $m++ )
         break;
     }
 
-    $var=!$var;
-    print "<tr $bc[$var]>";
-    print '<td nowrap><a href="quadri_detail.php?leftmenu=tax_vat&month='.$m.'&year='.$y.'">'.dol_print_date(dol_mktime(0,0,0,$m,1,$y),"%b %Y").'</a></td>';
+
+    print '<tr class="oddeven">';
+    print '<td class="nowrap"><a href="quadri_detail.php?leftmenu=tax_vat&month='.$m.'&year='.$y.'">'.dol_print_date(dol_mktime(0,0,0,$m,1,$y),"%b %Y").'</a></td>';
 
     $x_coll = 0;
     foreach($coll_listsell as $vatrate=>$val)
@@ -166,7 +181,7 @@ for ($m = 1 ; $m < 13 ; $m++ )
         $x_coll+=$val['vat'];
     }
     $subtotalcoll = $subtotalcoll + $x_coll;
-    print "<td nowrap align=\"right\">".price($x_coll)."</td>";
+    print "<td class=\"nowrap\" align=\"right\">".price($x_coll)."</td>";
 
     $x_paye = 0;
     foreach($coll_listbuy as $vatrate=>$val)
@@ -174,13 +189,13 @@ for ($m = 1 ; $m < 13 ; $m++ )
         $x_paye+=$val['vat'];
     }
     $subtotalpaye = $subtotalpaye + $x_paye;
-    print "<td nowrap align=\"right\">".price($x_paye)."</td>";
+    print "<td class=\"nowrap\" align=\"right\">".price($x_paye)."</td>";
 
     $diff = $x_coll - $x_paye;
     $total = $total + $diff;
     $subtotal = $subtotal + $diff;
 
-    print "<td nowrap align=\"right\">".price($diff)."</td>\n";
+    print "<td class=\"nowrap\" align=\"right\">".price($diff)."</td>\n";
     print "<td>&nbsp;</td>\n";
     print "</tr>\n";
 
@@ -196,44 +211,77 @@ for ($m = 1 ; $m < 13 ; $m++ )
         $subtotalcoll=0; $subtotalpaye=0; $subtotal=0;
     }
 }
-print '<tr class="liste_total"><td align="right" colspan="3">'.$langs->trans("TotalToPay").':</td><td nowrap align="right">'.price($total).'</td>';
+print '<tr class="liste_total"><td align="right" colspan="3">'.$langs->trans("TotalToPay").':</td><td class="nowrap" align="right">'.price($total).'</td>';
 print "<td>&nbsp;</td>\n";
 print '</tr>';
-
-/*}
- else
- {
- print '<tr><td colspan="5">'.$langs->trans("FeatureNotYetAvailable").'</td></tr>';
- print '<tr><td colspan="5">'.$langs->trans("FeatureIsSupportedInInOutModeOnly").'</td></tr>';
- }*/
 
 print '</table>';
 
 
-echo '</td>';
-print '<td class="notopnoleftnoright" valign="top" width="50%">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
+
+
+print load_fiche_titre($langs->trans("VATPaid"), '', '');
 
 /*
  * Payed
  */
 
-$sql = "SELECT SUM(amount) as mm, date_format(f.datev,'%Y-%m') as dm";
+$sql = "SELECT SUM(amount) as mm, date_format(f.datep,'%Y-%m') as dm";
 $sql.= " FROM ".MAIN_DB_PREFIX."tva as f";
 $sql.= " WHERE f.entity = ".$conf->entity;
-$sql.= " AND f.datev >= '".$db->idate(dol_get_first_day($y,1,false))."'";
-$sql.= " AND f.datev <= '".$db->idate(dol_get_last_day($y,12,false))."'";
-$sql.= " GROUP BY dm ASC";
+$sql.= " AND f.datep >= '".$db->idate(dol_get_first_day($y,1,false))."'";
+$sql.= " AND f.datep <= '".$db->idate(dol_get_last_day($y,12,false))."'";
+$sql.= " GROUP BY dm ORDER BY dm ASC";
 
 pt($db, $sql,$langs->trans("Year")." $y");
 
 
-print "</td></tr></table>";
-
-echo '</td></tr>';
-echo '</table>';
+print '<br>';
 
 
-$db->close();
+
+if (! empty($conf->global->MAIN_FEATURES_LEVEL))
+{
+    /*
+     * Recap
+     */
+
+    print load_fiche_titre($langs->trans("VATRecap"), '', ''); // need to add translation
+
+    $sql1 = "SELECT SUM(amount) as mm, date_format(f.datev,'%Y') as dm";
+    $sql1 .= " FROM " . MAIN_DB_PREFIX . "tva as f";
+    $sql1 .= " WHERE f.entity = " . $conf->entity;
+    $sql1 .= " AND f.datev >= '" . $db->idate(dol_get_first_day($y, 1, false)) . "'";
+    $sql1 .= " AND f.datev <= '" . $db->idate(dol_get_last_day($y, 12, false)) . "'";
+    $sql1 .= " GROUP BY dm ORDER BY dm ASC";
+
+    $result = $db->query($sql1);
+    if ($result) {
+        $obj = $db->fetch_object($result);
+        print '<table class="noborder" width="100%">';
+
+        print "<tr>";
+        print '<td align="right">' . $langs->trans("VATDue") . '</td>'; // need to add translation
+        print '<td class="nowrap" align="right">' . price(price2num($total, 'MT')) . '</td>';
+        print "</tr>\n";
+
+        print "<tr>";
+        print '<td align="right">' . $langs->trans("VATPaid") . '</td>';
+        print '<td class="nowrap" align="right">' . price(price2num($obj->mm, 'MT')) . "</td>\n";
+        print "</tr>\n";
+
+        $restopay = $total - $obj->mm;
+        print "<tr>";
+        print '<td align="right">' . $langs->trans("VATRestopay") . '</td>'; // need to add translation
+        print '<td class="nowrap" align="right">' . price(price2num($restopay, 'MT')) . '</td>';
+        print "</tr>\n";
+
+        print '</table>';
+    }
+}
+
+print '</div></div>';
 
 llxFooter();
-?>
+$db->close();

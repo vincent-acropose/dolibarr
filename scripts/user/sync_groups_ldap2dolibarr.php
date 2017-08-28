@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 /**
  * Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
@@ -32,18 +32,8 @@ $path=dirname(__FILE__).'/';
 // Test if batch mode
 if (substr($sapi_type, 0, 3) == 'cgi') {
     echo "Error: You are using PHP for CGI. To execute ".$script_file." from command line, you must use PHP for CLI mode.\n";
-    exit;
+	exit(-1);
 }
-
-
-
-
-// Main
-
-$version='1.14';
-@set_time_limit(0);
-$error=0;
-$forcecommit=0;
 
 require_once($path."../../htdocs/master.inc.php");
 require_once(DOL_DOCUMENT_ROOT."/core/lib/date.lib.php");
@@ -53,6 +43,22 @@ require_once(DOL_DOCUMENT_ROOT."/user/class/usergroup.class.php");
 
 $langs->load("main");
 $langs->load("errors");
+
+
+// Global variables
+$version=DOL_VERSION;
+$error=0;
+$forcecommit=0;
+$confirmed=0;
+
+
+/*
+ * Main
+ */
+
+@set_time_limit(0);
+print "***** ".$script_file." (".$version.") pid=".dol_getmypid()." *****\n";
+dol_syslog($script_file." launched with arg ".join(',',$argv));
 
 // List of fields to get from LDAP
 $required_fields = array(
@@ -65,18 +71,20 @@ $required_fields = array(
 // Remove from required_fields all entries not configured in LDAP (empty) and duplicated
 $required_fields=array_unique(array_values(array_filter($required_fields, "dolValidElement")));
 
-if ($argv[2]) $conf->global->LDAP_SERVER_HOST=$argv[2];
-
-print "***** $script_file ($version) *****\n";
 
 if (! isset($argv[1])) {
 	//print "Usage:  $script_file (nocommitiferror|commitiferror) [id_group]\n";
-	print "Usage:  $script_file (nocommitiferror|commitiferror) [ldapserverhost]\n";
-    exit;
+	print "Usage:  $script_file (nocommitiferror|commitiferror) [--server=ldapserverhost] [--excludeuser=user1,user2...] [-y]\n";
+	exit(-1);
 }
-$groupid=$argv[3];
-if ($argv[1] == 'commitiferror') $forcecommit=1;
 
+foreach($argv as $key => $val)
+{
+	if ($val == 'commitiferror') $forcecommit=1;
+	if (preg_match('/--server=([^\s]+)$/',$val,$reg)) $conf->global->LDAP_SERVER_HOST=$reg[1];
+	if (preg_match('/--excludeuser=([^\s]+)$/',$val,$reg)) $excludeuser=explode(',',$reg[1]);
+	if (preg_match('/-y$/',$val,$reg)) $confirmed=1;
+}
 
 print "Mails sending disabled (useless in batch mode)\n";
 $conf->global->MAIN_DISABLE_ALL_MAILS=1;	// On bloque les mails
@@ -98,16 +106,17 @@ print "----- Options:\n";
 print "commitiferror=".$forcecommit."\n";
 print "Mapped LDAP fields=".join(',',$required_fields)."\n";
 print "\n";
-print "Press a key to confirm...";
-$input = trim(fgets(STDIN));
-print "Hit Enter to continue or CTRL+C to stop...\n";
-$input = trim(fgets(STDIN));
 
+if (! $confirmed)
+{
+	print "Hit Enter to continue or CTRL+C to stop...\n";
+	$input = trim(fgets(STDIN));
+}
 
 if (empty($conf->global->LDAP_GROUP_DN))
 {
 	print $langs->trans("Error").': '.$langs->trans("LDAP setup for groups not defined inside Dolibarr");
-	exit(1);
+	exit(-1);
 }
 
 
@@ -131,19 +140,20 @@ if ($result >= 0)
 		{
 			$group = new UserGroup($db);
 			$group->fetch('', $ldapgroup[$conf->global->LDAP_KEY_GROUPS]);
-			$group->nom = $ldapgroup[$conf->global->LDAP_GROUP_FIELD_FULLNAME];
+			$group->name = $ldapgroup[$conf->global->LDAP_GROUP_FIELD_FULLNAME];
+			$group->nom = $group->name;		// For backward compatibility
 			$group->note = $ldapgroup[$conf->global->LDAP_GROUP_FIELD_DESCRIPTION];
 			$group->entity = $conf->entity;
 
 			//print_r($ldapgroup);
-			
+
 			if($group->id > 0) { // Group update
-				print $langs->transnoentities("GroupUpdate").' # '.$key.': name='.$group->nom;
+				print $langs->transnoentities("GroupUpdate").' # '.$key.': name='.$group->name;
 				$res=$group->update();
-				
+
 				if ($res > 0)
 				{
-					print ' --> Updated group id='.$group->id.' name='.$group->nom;
+					print ' --> Updated group id='.$group->id.' name='.$group->name;
 				}
 				else
 				{
@@ -152,12 +162,12 @@ if ($result >= 0)
 				}
 				print "\n";
 			} else { // Group creation
-				print $langs->transnoentities("GroupCreate").' # '.$key.': name='.$group->nom;
+				print $langs->transnoentities("GroupCreate").' # '.$key.': name='.$group->name;
 				$res=$group->create();
-				
+
 				if ($res > 0)
 				{
-					print ' --> Created group id='.$group->id.' name='.$group->nom;
+					print ' --> Created group id='.$group->id.' name='.$group->name;
 				}
 				else
 				{
@@ -168,7 +178,7 @@ if ($result >= 0)
 			}
 
 			//print_r($group);
-			
+
 			// Gestion des utilisateurs associés au groupe
 			// 1 - Association des utilisateurs du groupe LDAP au groupe Dolibarr
 			$userList = array();
@@ -179,29 +189,29 @@ if ($result >= 0)
 					$userFilter = explode(',', $userdn);
 					$userKey = $ldap->getAttributeValues('('.$userFilter[0].')', $conf->global->LDAP_KEY_USERS);
 					if(!is_array($userKey)) continue;
-					
+
 					$fuser = new User($db);
-					
+
 					if($conf->global->LDAP_KEY_USERS == $conf->global->LDAP_FIELD_SID) {
 						$fuser->fetch('','',$userKey[0]); // Chargement du user concerné par le SID
 					} else if($conf->global->LDAP_KEY_USERS == $conf->global->LDAP_FIELD_LOGIN) {
 						$fuser->fetch('',$userKey[0]); // Chargement du user concerné par le login
 					}
-					
+
 					$userList[$userdn] = $fuser;
 				} else {
 					$fuser = &$userList[$userdn];
 				}
-				
+
 				$userIdList[$userdn] = $fuser->id;
-				
+
 				// Ajout de l'utilisateur dans le groupe
 				if(!in_array($fuser->id, array_keys($group->members))) {
 					$fuser->SetInGroup($group->id, $group->entity);
 					echo $fuser->login.' added'."\n";
 				}
 			}
-			
+
 			// 2 - Suppression des utilisateurs du groupe Dolibarr qui ne sont plus dans le groupe LDAP
 			foreach ($group->members as $guser) {
 				if(!in_array($guser->id, $userIdList)) {
@@ -237,7 +247,7 @@ else
 }
 
 
-return $error;
+exit($error);
 
 
 /**
@@ -251,4 +261,3 @@ function dolValidElement($element)
 	return (trim($element) != '');
 }
 
-?>

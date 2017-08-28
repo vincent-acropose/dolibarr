@@ -1,6 +1,7 @@
-# Dolibarr language file - en_US - main
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - main
 DIRECTION=ltr
+FONTFORPDF=helvetica
+FONTSIZEFORPDF=10
 SeparatorDecimal=.
 SeparatorThousand=,
 FormatDateShort=%d/%m/%Y
@@ -9,17 +10,17 @@ FormatDateShortJava=dd/MM/yyyy
 FormatDateShortJavaInput=dd/MM/yyyy
 FormatDateShortJQuery=dd/mm/yy
 FormatDateShortJQueryInput=dd/mm/yy
+FormatHourShortJQuery=HH:MI
 FormatHourShort=%I:%M %p
+FormatHourShortDuration=%H:%M
 FormatDateTextShort=%b %d, %Y
 FormatDateText=%B %d, %Y
 FormatDateHourShort=%d/%m/%Y %I:%M %p
-FormatDateHourTextShort=%d %b %Y, %I:%M %p
-FormatDateHourText=%d %B %Y, %I:%M %p
-CommercialProposals=Quotations
-TotalVAT=Total VAT
-IncludedVAT=Included VAT
-HT=Net of tax
-TTC=Inc. VAT
-VAT=VAT
-VATRate=VAT Rate
-AmountVAT=Amount VAT
+FormatDateHourSecShort=%d/%m/%Y %I:%M:%S %p
+FormatDateHourTextShort=%b %d, %Y, %I:%M %p
+FormatDateHourText=%B %d, %Y, %I:%M %p
+CommercialProposalsShort=Quotations
+LinkToProposal=Link to quotation
+LinkToSupplierProposal=Link to supplier quotation
+SearchIntoCustomerProposals=Customer quotations
+SearchIntoSupplierProposals=Supplier quotations

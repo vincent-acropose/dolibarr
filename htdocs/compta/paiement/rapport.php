@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2003-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2015      Jean-François Ferry	<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,19 +31,19 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 // Security check
 if (! $user->rights->facture->lire) accessforbidden();
 
-$action=GETPOST('action');
-
-$dir = $conf->facture->dir_output.'/payments';
+$action=GETPOST('action','aZ09');
 
 $socid=0;
 if ($user->societe_id > 0)
 {
     $action = '';
     $socid = $user->societe_id;
-    $dir = $conf->facture->dir_output.'/payments/private/'.$user->id;
 }
 
-$year = $_GET["year"];
+$dir = $conf->facture->dir_output.'/payments';
+if (! $user->rights->societe->client->voir || $socid) $dir.='/private/'.$user->id;	// If user has no permission to see all, output dir is specific to user
+
+$year = GETPOST('year', 'int');
 if (! $year) { $year=date("Y"); }
 
 
@@ -55,10 +56,10 @@ if ($action == 'builddoc')
     $rap = new pdf_paiement($db);
 
     $outputlangs = $langs;
-    if (! empty($_REQUEST['lang_id']))
+    if (GETPOST('lang_id','aZ09'))
     {
         $outputlangs = new Translate("",$conf);
-        $outputlangs->setDefaultLang($_REQUEST['lang_id']);
+        $outputlangs->setDefaultLang(GETPOST('lang_id','aZ09'));
     }
 
     // We save charset_output to restore it because write_file can change it if needed for
@@ -87,7 +88,7 @@ $formother=new FormOther($db);
 llxHeader();
 
 $titre=($year?$langs->trans("PaymentsReportsForYear",$year):$langs->trans("PaymentsReports"));
-print_fiche_titre($titre);
+print load_fiche_titre($titre,'','title_accountancy.png');
 
 // Formulaire de generation
 print '<form method="post" action="rapport.php?year='.$year.'">';
@@ -127,7 +128,7 @@ if (is_dir($dir))
 asort($linkforyear);
 foreach($linkforyear as $cursoryear)
 {
-    print '<a href="rapport.php?year='.$cursoryear.'">'.$cursoryear.'</a> &nbsp;';
+    print '<a href="'.$_SERVER["PHP_SELF"].'?year='.$cursoryear.'">'.$cursoryear.'</a> &nbsp;';
 }
 
 if ($year)
@@ -144,17 +145,17 @@ if ($year)
         print '<td align="right">'.$langs->trans("Size").'</td>';
         print '<td align="right">'.$langs->trans("Date").'</td>';
         print '</tr>';
-        $var=true;
+
         if (is_resource($handle))
         {
             while (($file = readdir($handle))!==false)
             {
                 if (preg_match('/^payment/i',$file))
                 {
-                    $var=!$var;
+                    
                     $tfile = $dir . '/'.$year.'/'.$file;
                     $relativepath = $year.'/'.$file;
-                    print "<tr ".$bc[$var].">".'<td><a data-ajax="false" href="'.DOL_URL_ROOT . '/document.php?modulepart=facture_paiement&amp;file='.urlencode($relativepath).'">'.img_pdf().' '.$file.'</a></td>';
+                    print '<tr class="oddeven">'.'<td><a data-ajax="false" href="'.DOL_URL_ROOT . '/document.php?modulepart=facture_paiement&amp;file='.urlencode($relativepath).'">'.img_pdf().' '.$file.'</a></td>';
                     print '<td align="right">'.dol_print_size(dol_filesize($tfile)).'</td>';
                     print '<td align="right">'.dol_print_date(dol_filemtime($tfile),"dayhour").'</td></tr>';
                 }
@@ -168,4 +169,3 @@ if ($year)
 llxFooter();
 
 $db->close();
-?>

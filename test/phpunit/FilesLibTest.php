@@ -26,7 +26,7 @@
 
 global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
 require_once dirname(__FILE__).'/../../htdocs/core/lib/files.lib.php';
 
@@ -81,6 +81,8 @@ class FilesLibTest extends PHPUnit_Framework_TestCase
 
     	print __METHOD__."\n";
     }
+
+    // tear down after class
     public static function tearDownAfterClass()
     {
     	global $conf,$user,$langs,$db;
@@ -162,7 +164,7 @@ class FilesLibTest extends PHPUnit_Framework_TestCase
 		$file=dirname(__FILE__).'/Example_import_company_1.csv';
 		$result=dol_count_nb_of_line($file);
     	print __METHOD__." result=".$result."\n";
-		$this->assertEquals(2,$result);
+		$this->assertEquals(3,$result);
 
 		return $result;
     }
@@ -284,11 +286,27 @@ class FilesLibTest extends PHPUnit_Framework_TestCase
     	$db=$this->savdb;
 
     	$dirout=$conf->admin->dir_temp.'/test';
+    	$dirout2=$conf->admin->dir_temp.'/test2';
 
     	$count=0;
-    	$result=dol_delete_dir_recursive($dirout,$count,1);	// If it has no permission to delete, it will fails as if dir does not exists, so we can't test it
+    	$result=dol_delete_dir_recursive($dirout,$count);	// If it has no permission to delete, it will fails as if dir does not exists, so we can't test it
     	print __METHOD__." result=".$result."\n";
     	$this->assertGreaterThanOrEqual(0,$result);
+
+    	$count=0;
+    	$countdeleted=0;
+    	$result=dol_delete_dir_recursive($dirout,$count,1,0,$countdeleted);	// If it has no permission to delete, it will fails as if dir does not exists, so we can't test it
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertGreaterThanOrEqual(0,$result);
+    	$this->assertGreaterThanOrEqual(0,$countdeleted);
+
+    	dol_mkdir($dirout2);
+    	$count=0;
+    	$countdeleted=0;
+    	$result=dol_delete_dir_recursive($dirout2,$count,1,0,$countdeleted);	// If it has no permission to delete, it will fails as if dir does not exists, so we can't test it
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertGreaterThanOrEqual(1,$result);
+    	$this->assertGreaterThanOrEqual(1,$countdeleted);
     }
 
 
@@ -316,7 +334,7 @@ class FilesLibTest extends PHPUnit_Framework_TestCase
 
         $result=dol_copy($file, $conf->admin->dir_temp.'/file.csv',0,1);
         print __METHOD__." result=".$result."\n";
-        $this->assertGreaterThanOrEqual(1,$result, 'copy into a dir that exists');    // Should be 1
+        $this->assertGreaterThanOrEqual(1,$result, 'copy file ('.$file.') into a dir that exists ('.$conf->admin->dir_temp.'/file.csv'.')');    // Should be 1
 
         // Again to test with overwriting=0
         $result=dol_copy($file, $conf->admin->dir_temp.'/file.csv',0,0);
@@ -328,19 +346,30 @@ class FilesLibTest extends PHPUnit_Framework_TestCase
         print __METHOD__." result=".$result."\n";
         $this->assertGreaterThanOrEqual(1,$result,'copy destination already exists, overwrite');    // Should be 1
 
-        // Again to test with overwriting=1
+        // To test a move that should work
         $result=dol_move($conf->admin->dir_temp.'/file.csv',$conf->admin->dir_temp.'/file2.csv',0,1);
         print __METHOD__." result=".$result."\n";
-        $this->assertTrue($result,'copy destination does not exists');
+        $this->assertTrue($result,'move with default mask');
 
-        $result=dol_delete_file($conf->admin->dir_temp.'/file2.csv');
+        // To test a move that should work with forced mask
+        $result=dol_move($conf->admin->dir_temp.'/file2.csv',$conf->admin->dir_temp.'/file3.csv','0754',1); // file shoutld be rwxr-wr--
+        print __METHOD__." result=".$result."\n";
+        $this->assertTrue($result,'move with forced mask');
+
+        // To test a delete that should success
+        $result=dol_delete_file($conf->admin->dir_temp.'/file3.csv');
         print __METHOD__." result=".$result."\n";
         $this->assertTrue($result,'delete file');
 
-        // Again to test no error when deleteing a non existing file
-        $result=dol_delete_file($conf->admin->dir_temp.'/file2.csv');
+        // Again to test there is error when deleting a non existing file with option disableglob
+        $result=dol_delete_file($conf->admin->dir_temp.'/file3.csv',1,1);
         print __METHOD__." result=".$result."\n";
-        $this->assertTrue($result,'delete file that does not exists');
+        $this->assertFalse($result,'delete file that does not exists with disableglo must return ko');
+
+        // Again to test there is no error when deleting a non existing file without option disableglob
+        $result=dol_delete_file($conf->admin->dir_temp.'/file3csv',0,1);
+        print __METHOD__." result=".$result."\n";
+        $this->assertTrue($result,'delete file that does not exists without disabling glob must return ok');
 
         // Test copy with special char / delete with blob
         $result=dol_copy($file, $conf->admin->dir_temp.'/file with [x] and é.csv',0,1);
@@ -386,5 +415,92 @@ class FilesLibTest extends PHPUnit_Framework_TestCase
         print __METHOD__." result=".join(',',$result)."\n";
         $this->assertEquals(0,count($result));
     }
+
+    /**
+     * testDolDirList
+     *
+     * @return	string
+     *
+     * @depends	testDolCompressUnCompress
+     * The depends says test is run only if previous is ok
+     */
+    public function testDolDirList()
+    {
+        global $conf,$user,$langs,$db;
+
+        // Scan dir to guaruante we on't have library jquery twice (we accept exception of duplicte into ckeditor because all dir is removed for debian package, so there is no duplicate).
+        $founddirs=dol_dir_list(DOL_DOCUMENT_ROOT.'/includes/', 'files', 1, '^jquery\.js', array('ckeditor'));
+        print __METHOD__." count(founddirs)=".count($founddirs)."\n";
+        $this->assertEquals(1,count($founddirs));
+    }
+
+
+    /**
+     * testDolCheckSecureAccessDocument
+     *
+     * @return void
+     */
+    public function testDolCheckSecureAccessDocument()
+    {
+        global $conf,$user,$langs,$db;
+        $conf=$this->savconf;
+        $user=$this->savuser;
+        $langs=$this->savlangs;
+        $db=$this->savdb;
+
+
+        //$dummyuser=new User($db);
+        //$result=restrictedArea($dummyuser,'societe');
+
+        // We save user properties
+        $savpermlire = $user->rights->facture->lire;
+        $savpermcreer = $user->rights->facture->creer;
+
+
+		// Check access to SPECIMEN
+        $user->rights->facture->lire = 0;
+        $user->rights->facture->creer = 0;
+        $filename='SPECIMEN.pdf';             // Filename relative to module part
+        $result=dol_check_secure_access_document('facture', $filename, 0, '', '', 'read');
+        $this->assertEquals(1,$result['accessallowed']);
+
+
+        // Check read permission
+        $user->rights->facture->lire = 1;
+        $user->rights->facture->creer = 1;
+        $filename='FA010101/FA010101.pdf';    // Filename relative to module part
+        $result=dol_check_secure_access_document('facture', $filename, 0, '', '', 'read');
+        $this->assertEquals(1,$result['accessallowed']);
+
+        $user->rights->facture->lire = 0;
+        $user->rights->facture->creer = 0;
+        $filename='FA010101/FA010101.pdf';    // Filename relative to module part
+        $result=dol_check_secure_access_document('facture', $filename, 0, '', '', 'read');
+        $this->assertEquals(0,$result['accessallowed']);
+
+        // Check write permission
+        $user->rights->facture->lire = 0;
+        $user->rights->facture->creer = 0;
+        $filename='FA010101/FA010101.pdf';    // Filename relative to module part
+        $result=dol_check_secure_access_document('facture', $filename, 0, '', '', 'write');
+        $this->assertEquals(0,$result['accessallowed']);
+
+        $user->rights->facture->lire = 1;
+        $user->rights->facture->creer = 1;
+        $filename='FA010101/FA010101.pdf';    // Filename relative to module part
+        $result=dol_check_secure_access_document('facture', $filename, 0, '', '', 'write');
+        $this->assertEquals(1,$result['accessallowed']);
+
+        $user->rights->facture->lire = 1;
+        $user->rights->facture->creer = 0;
+        $filename='FA010101/FA010101.pdf';    // Filename relative to module part
+        $result=dol_check_secure_access_document('facture', $filename, 0, '', '', 'write');
+        $this->assertEquals(0,$result['accessallowed']);
+
+
+        // We restore user properties
+        $user->rights->facture->lire = $savpermlire;
+        $user->rights->facture->creer = $savpermcreer;
+    }
+
 }
-?>

@@ -24,9 +24,7 @@
 
 
 /**
- *      \class      PaymentTerm
- *      \brief      Class to manage payment terms records in dictionnary
- *		\remarks	Initialy built by build_class_from_table on 2010-09-06 00:33
+ *	Class to manage payment terms records in dictionary
  */
 class PaymentTerm // extends CommonObject
 {
@@ -35,6 +33,7 @@ class PaymentTerm // extends CommonObject
 	var $errors=array();				//!< To return several error codes (or messages)
 	//public  $element='c_payment_term';			//!< Id that identify managed objects
 	//public  $table_element='c_payment_term';	//!< Name of table without prefix where object is stored
+	var $context =array();
 
     var $id;
 
@@ -43,7 +42,7 @@ class PaymentTerm // extends CommonObject
 	var $active;
 	var $libelle;
 	var $libelle_facture;
-	var $fdm;
+	var $type_cdr;
 	var $nbjour;
 	var $decalage;
 
@@ -81,7 +80,7 @@ class PaymentTerm // extends CommonObject
 		if (isset($this->active)) $this->active=trim($this->active);
 		if (isset($this->libelle)) $this->libelle=trim($this->libelle);
 		if (isset($this->libelle_facture)) $this->libelle_facture=trim($this->libelle_facture);
-		if (isset($this->fdm)) $this->fdm=trim($this->fdm);
+		if (isset($this->type_cdr)) $this->type_cdr=trim($this->type_cdr);
 		if (isset($this->nbjour)) $this->nbjour=trim($this->nbjour);
 		if (isset($this->decalage)) $this->decalage=trim($this->decalage);
 
@@ -99,7 +98,7 @@ class PaymentTerm // extends CommonObject
 		$sql.= "active,";
 		$sql.= "libelle,";
 		$sql.= "libelle_facture,";
-		$sql.= "fdm,";
+		$sql.= "type_cdr,";
 		$sql.= "nbjour,";
 		$sql.= "decalage";
 
@@ -112,7 +111,7 @@ class PaymentTerm // extends CommonObject
 		$sql.= " ".(! isset($this->active)?'NULL':"'".$this->active."'").",";
 		$sql.= " ".(! isset($this->libelle)?'NULL':"'".$this->db->escape($this->libelle)."'").",";
 		$sql.= " ".(! isset($this->libelle_facture)?'NULL':"'".$this->db->escape($this->libelle_facture)."'").",";
-		$sql.= " ".(! isset($this->fdm)?'NULL':"'".$this->fdm."'").",";
+		$sql.= " ".(! isset($this->type_cdr)?'NULL':"'".$this->type_cdr."'").",";
 		$sql.= " ".(! isset($this->nbjour)?'NULL':"'".$this->nbjour."'").",";
 		$sql.= " ".(! isset($this->decalage)?'NULL':"'".$this->decalage."'")."";
 
@@ -121,7 +120,7 @@ class PaymentTerm // extends CommonObject
 
 		$this->db->begin();
 
-	   	dol_syslog(get_class($this)."::create sql=".$sql, LOG_DEBUG);
+	   	dol_syslog(get_class($this)."::create", LOG_DEBUG);
         $resql=$this->db->query($sql);
     	if (! $resql) { $error++; $this->errors[]="Error ".$this->db->lasterror(); }
 
@@ -179,7 +178,7 @@ class PaymentTerm // extends CommonObject
 		$sql.= " t.active,";
 		$sql.= " t.libelle,";
 		$sql.= " t.libelle_facture,";
-		$sql.= " t.fdm,";
+		$sql.= " t.type_cdr,";
 		$sql.= " t.nbjour,";
 		$sql.= " t.decalage";
 
@@ -187,7 +186,7 @@ class PaymentTerm // extends CommonObject
         $sql.= " FROM ".MAIN_DB_PREFIX."c_payment_term as t";
         $sql.= " WHERE t.rowid = ".$id;
 
-    	dol_syslog(get_class($this)."::fetch sql=".$sql, LOG_DEBUG);
+    	dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -202,7 +201,7 @@ class PaymentTerm // extends CommonObject
 				$this->active = $obj->active;
 				$this->libelle = $obj->libelle;
 				$this->libelle_facture = $obj->libelle_facture;
-				$this->fdm = $obj->fdm;
+				$this->type_cdr = $obj->type_cdr;
 				$this->nbjour = $obj->nbjour;
 				$this->decalage = $obj->decalage;
 
@@ -215,7 +214,6 @@ class PaymentTerm // extends CommonObject
         else
         {
       	    $this->error="Error ".$this->db->lasterror();
-            dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
             return -1;
         }
     }
@@ -237,7 +235,7 @@ class PaymentTerm // extends CommonObject
         $sql.= " FROM ".MAIN_DB_PREFIX."c_payment_term as t";
         $sql.= " WHERE t.code = 'RECEP'";
 
-    	dol_syslog(get_class($this)."::getDefaultId sql=".$sql, LOG_DEBUG);
+    	dol_syslog(get_class($this)."::getDefaultId", LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -252,7 +250,6 @@ class PaymentTerm // extends CommonObject
         else
         {
       	    $this->error="Error ".$this->db->lasterror();
-            dol_syslog(get_class($this)."::getDefaultId ".$this->error, LOG_ERR);
             return -1;
         }
     }
@@ -265,7 +262,7 @@ class PaymentTerm // extends CommonObject
      *      @param      int		$notrigger	    0=launch triggers after, 1=disable triggers
      *      @return     int       			  	<0 if KO, >0 if OK
      */
-    function update($user=0, $notrigger=0)
+    function update($user=null, $notrigger=0)
     {
     	global $conf, $langs;
 		$error=0;
@@ -277,7 +274,7 @@ class PaymentTerm // extends CommonObject
 		if (isset($this->active)) $this->active=trim($this->active);
 		if (isset($this->libelle)) $this->libelle=trim($this->libelle);
 		if (isset($this->libelle_facture)) $this->libelle_facture=trim($this->libelle_facture);
-		if (isset($this->fdm)) $this->fdm=trim($this->fdm);
+		if (isset($this->type_cdr)) $this->type_cdr=trim($this->type_cdr);
 		if (isset($this->nbjour)) $this->nbjour=trim($this->nbjour);
 		if (isset($this->decalage)) $this->decalage=trim($this->decalage);
 
@@ -294,7 +291,7 @@ class PaymentTerm // extends CommonObject
 		$sql.= " active=".(isset($this->active)?$this->active:"null").",";
 		$sql.= " libelle=".(isset($this->libelle)?"'".$this->db->escape($this->libelle)."'":"null").",";
 		$sql.= " libelle_facture=".(isset($this->libelle_facture)?"'".$this->db->escape($this->libelle_facture)."'":"null").",";
-		$sql.= " fdm=".(isset($this->fdm)?$this->fdm:"null").",";
+		$sql.= " type_cdr=".(isset($this->type_cdr)?$this->type_cdr:"null").",";
 		$sql.= " nbjour=".(isset($this->nbjour)?$this->nbjour:"null").",";
 		$sql.= " decalage=".(isset($this->decalage)?$this->decalage:"null")."";
 
@@ -303,7 +300,7 @@ class PaymentTerm // extends CommonObject
 
 		$this->db->begin();
 
-		dol_syslog(get_class($this)."::update sql=".$sql, LOG_DEBUG);
+		dol_syslog(get_class($this)."::update", LOG_DEBUG);
         $resql = $this->db->query($sql);
     	if (! $resql) { $error++; $this->errors[]="Error ".$this->db->lasterror(); }
 
@@ -359,7 +356,7 @@ class PaymentTerm // extends CommonObject
 
 		$this->db->begin();
 
-		dol_syslog(get_class($this)."::delete sql=".$sql);
+		dol_syslog(get_class($this)."::delete", LOG_DEBUG);
 		$resql = $this->db->query($sql);
     	if (! $resql) { $error++; $this->errors[]="Error ".$this->db->lasterror(); }
 
@@ -413,6 +410,8 @@ class PaymentTerm // extends CommonObject
 
 		$object=new PaymentTerm($this->db);
 
+		$object->context['createfromclone'] = 'createfromclone';
+
 		$this->db->begin();
 
 		// Load source object
@@ -439,6 +438,8 @@ class PaymentTerm // extends CommonObject
 
 
 		}
+
+		unset($this->context['createfromclone']);
 
 		// End
 		if (! $error)
@@ -470,10 +471,9 @@ class PaymentTerm // extends CommonObject
 		$this->active='';
 		$this->libelle='';
 		$this->libelle_facture='';
-		$this->fdm='';
+		$this->type_cdr='';
 		$this->nbjour='';
 		$this->decalage='';
 	}
 
 }
-?>

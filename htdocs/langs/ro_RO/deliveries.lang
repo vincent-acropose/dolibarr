@@ -1,41 +1,30 @@
-/*
- * Language code: ro_RO
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-01-19 21:32:52
- */
-
-
-// Date 2009-01-19 21:32:52
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - deliveries
 Delivery=Livrare
-Deliveries=Livrări
-DeliveryCard=Livrarea carte
-DeliveryOrder=De livrare pentru
-DeliveryOrders=Livrarea comenzilor
+DeliveryRef=Ref Livrare
+DeliveryCard=Chitanta card
+DeliveryOrder=Ordin de livrare 
 DeliveryDate=Data de livrare
-DeliveryDateShort=Deliv. dată
-CreateDeliveryOrder=Generarea de livrare pentru
-QtyDelivered=Cantitate livrată
+CreateDeliveryOrder=Generați chitanța de livrare
+DeliveryStateSaved=Stare livrare salvata
 SetDeliveryDate=Setaţi data de expediere
-ValidateDeliveryReceipt=Validate livrare la primirea
-ValidateDeliveryReceiptConfirm=Sunteţi sigur că doriţi pentru a valida acest livrare primire?
+ValidateDeliveryReceipt=Validare recepţie  livrare
+ValidateDeliveryReceiptConfirm=Sigur doriți să validați această chitanță de livrare?
+DeleteDeliveryReceipt=Ştergeţi recepţie livrare
+DeleteDeliveryReceiptConfirm=Sigur doriți să ștergeți chitanța de livrare <b> %s </b>?
 DeliveryMethod=Metoda de livrare
 TrackingNumber=Număr de urmărire
+DeliveryNotValidated=Livrare  nevalidată
+StatusDeliveryCanceled=Anulata
+StatusDeliveryDraft=Draft
+StatusDeliveryValidated=Primit
+# merou PDF model
 NameAndSignature=Nume şi Semnătura:
 ToAndDate=To___________________________________ pe ____ / _____ / __________
 GoodStatusDeclaration=Au primit bunurile în bună stare de mai sus,
 Deliverer=Eliberator:
 Sender=Expeditor
 Recipient=Recipient
-// Date 2009-01-19 21:32:52
-// STOP - Lines generated via parser
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 17:23:15).
-// Reference language: en_US -> ro_RO
-DeleteDeliveryReceipt=Ştergeţi confirmare de primire
-DeleteDeliveryReceiptConfirm=Sunteţi sigur că doriţi să ştergeţi <b>%s</b> de livrare de primire?
-DeliveryNotValidated=De livrare nu au fost validate
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 17:25:58).
+ErrorStockIsNotEnough=Nu există stoc suficient
+Shippable=Livrabil
+NonShippable=Nelivrabil
+ShowReceiving= Afișare notă de recepție

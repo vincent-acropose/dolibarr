@@ -25,24 +25,27 @@
 /**
  * Prepare array with list of tabs
  *
- * @param   Object	$object		Object related to tabs
- * @return  array				Array of tabs to shoc
+ * @param   Contrat	$object		Object related to tabs
+ * @return  array				Array of tabs to show
  */
-function contract_prepare_head($object)
+function contract_prepare_head(Contrat $object)
 {
-	global $langs, $conf;
+	global $db, $langs, $conf;
+	
 	$h = 0;
 	$head = array();
 
-	$head[$h][0] = DOL_URL_ROOT.'/contrat/fiche.php?id='.$object->id;
+	$head[$h][0] = DOL_URL_ROOT.'/contrat/card.php?id='.$object->id;
 	$head[$h][1] = $langs->trans("ContractCard");
 	$head[$h][2] = 'card';
 	$h++;
 
 	if (empty($conf->global->MAIN_DISABLE_CONTACTS_TAB))
 	{
-		$head[$h][0] = DOL_URL_ROOT.'/contrat/contact.php?id='.$object->id;
+	    $nbContact = count($object->liste_contact(-1,'internal')) + count($object->liste_contact(-1,'external'));
+	    $head[$h][0] = DOL_URL_ROOT.'/contrat/contact.php?id='.$object->id;
 		$head[$h][1] = $langs->trans("ContactsAddresses");
+		if ($nbContact > 0) $head[$h][1].= ' <span class="badge">'.$nbContact.'</span>';
 		$head[$h][2] = 'contact';
 		$h++;
 	}
@@ -55,14 +58,24 @@ function contract_prepare_head($object)
 
     if (empty($conf->global->MAIN_DISABLE_NOTES_TAB))
     {
+    	$nbNote = 0;
+        if(!empty($object->note_private)) $nbNote++;
+		if(!empty($object->note_public)) $nbNote++;
     	$head[$h][0] = DOL_URL_ROOT.'/contrat/note.php?id='.$object->id;
-    	$head[$h][1] = $langs->trans("Note");
+    	$head[$h][1] = $langs->trans("Notes");
+		if ($nbNote > 0) $head[$h][1].= ' <span class="badge">'.$nbNote.'</span>';
     	$head[$h][2] = 'note';
     	$h++;
     }
 
+	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+    require_once DOL_DOCUMENT_ROOT.'/core/class/link.class.php';
+	$upload_dir = $conf->contrat->dir_output . "/" . dol_sanitizeFileName($object->ref);
+	$nbFiles = count(dol_dir_list($upload_dir,'files',0,'','(\.meta|_preview.*\.png)$'));
+    $nbLinks=Link::count($db, $object->element, $object->id);
 	$head[$h][0] = DOL_URL_ROOT.'/contrat/document.php?id='.$object->id;
 	$head[$h][1] = $langs->trans("Documents");
+	if (($nbFiles+$nbLinks) > 0) $head[$h][1].= ' <span class="badge">'.($nbFiles+$nbLinks).'</span>';
 	$head[$h][2] = 'documents';
 	$h++;
 
@@ -76,4 +89,43 @@ function contract_prepare_head($object)
 	return $head;
 }
 
-?>
+/**
+ *  Return array head with list of tabs to view object informations.
+ *
+ *  @return	array   	        head array with tabs
+ */
+function contract_admin_prepare_head()
+{
+	global $langs, $conf, $user;
+
+	$h = 0;
+	$head = array();
+
+	$head[$h][0] = DOL_URL_ROOT."/admin/contract.php";
+	$head[$h][1] = $langs->trans("Contracts");
+	$head[$h][2] = 'contract';
+	$h++;
+
+	// Show more tabs from modules
+	// Entries must be declared in modules descriptor with line
+	// $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
+	// $this->tabs = array('entity:-tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to remove a tab
+	complete_head_from_modules($conf,$langs,null,$head,$h,'contract_admin');
+
+	$head[$h][0] = DOL_URL_ROOT.'/contrat/admin/contract_extrafields.php';
+	$head[$h][1] = $langs->trans("ExtraFields");
+    $head[$h][2] = 'attributes';
+    $h++;
+
+    $head[$h][0] = DOL_URL_ROOT.'/contrat/admin/contractdet_extrafields.php';
+    $head[$h][1] = $langs->trans("ExtraFieldsLines");
+    $head[$h][2] = 'attributeslines';
+    $h++;
+
+
+
+	complete_head_from_modules($conf,$langs,null,$head,$h,'contract_admin','remove');
+
+		return $head;
+}
+

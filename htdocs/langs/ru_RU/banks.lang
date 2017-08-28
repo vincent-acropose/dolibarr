@@ -1,34 +1,21 @@
-/*
- * Language code: ru_RU
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-01-19 21:30:52
- */
-
-
-// Date 2009-01-19 21:30:52
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - banks
 Bank=Банк
-Banks=Банки
-MenuBankCash=Банк / Наличный
-MenuSetupBank=Банк / Наличный установки
+MenuBankCash=Банк / Наличные
 BankName=Название банка
 FinancialAccount=Учетная запись
-FinancialAccounts=Счета
 BankAccount=Банковский счет
 BankAccounts=Банковские счета
+ShowAccount=Показать учётную запись
 AccountRef=Финансовые счета исх
 AccountLabel=Финансовые счета этикетки
 CashAccount=Денежные счета
 CashAccounts=Денежные счета
-MainAccount=Основное внимание
-CurrentAccount=Текущий счет
 CurrentAccounts=Текущие счета
-SavingAccount=Сберегательный счет
 SavingAccounts=Сберегательные счета
 ErrorBankLabelAlreadyExists=Финансовые счета ярлык уже существует
 BankBalance=Баланс
+BankBalanceBefore=Баланс до
+BankBalanceAfter=Баланс после
 BalanceMinimalAllowed=Минимальный остаток разрешается
 BalanceMinimalDesired=Минимальный требуемый баланс
 InitialBankBalance=Начальный баланс
@@ -36,133 +23,135 @@ EndBankBalance=Конец баланс
 CurrentBalance=Текущий баланс
 FutureBalance=Будущие баланс
 ShowAllTimeBalance=Показать баланса с начала
+AllTime=Сначала
 Reconciliation=Примирение
 RIB=Bank Account Number
 IBAN=IBAN номера
 BIC=BIC / SWIFT число
-StandingOrders=Постоянные заказы
-StandingOrder=Постоянная порядка
-Withdrawals=Снятие
-Withdrawal=Снятие
+SwiftValid=BIC/SWIFT valid
+SwiftVNotalid=BIC/SWIFT not valid
+IbanValid=BAN valid
+IbanNotValid=BAN not valid
+StandingOrders=Direct Debit orders
+StandingOrder=Direct debit order
 AccountStatement=Выписка со счета
 AccountStatementShort=Утверждение
 AccountStatements=Выписки со счета
 LastAccountStatements=Последнее счета
-Rapprochement=Reconciliate
 IOMonthlyReporting=Ежемесячная отчетность
 BankAccountDomiciliation=Счет адрес
+BankAccountCountry=Счет страны
 BankAccountOwner=Имя владельца счета
 BankAccountOwnerAddress=Адрес владельца счета
+RIBControlError=Проверка целостности значений не удается. Это означает, что информацию для этой учетной записи числа не являются полными или неправильный (проверьте стране, цифры и IBAN).
 CreateAccount=Создать аккаунт
-StandingOrderToProcess=Для обработки
-StandingOrderProcessed=Обработано
-NewAccount=Новый счет
-NewBankAccount=Новые банковские счета
+NewBankAccount=Новый счет
 NewFinancialAccount=Новые финансовые счета
 MenuNewFinancialAccount=Новые финансовые счета
-NewCurrentAccount=Новые счета текущих операций
-NewSavingAccount=Нью-сберегательного счета
-NewCashAccount=Новые счета наличных
 EditFinancialAccount=Изменить учетную запись
-AccountSetup=Финансовые счета настройки
-SearchBankMovement=Поиск банка движение
-Debts=Долги
 LabelBankCashAccount=Банк или наличными этикетки
 AccountType=Тип учетной записи
 BankType0=Сберегательный счет
 BankType1=Текущий счет
 BankType2=Денежные счета
-IfBankAccount=Если банковский счет
 AccountsArea=Счета области
 AccountCard=Счет карточки
 DeleteAccount=Удалить учетную запись
-ConfirmDeleteAccount=Вы уверены, что хотите удалить эту учетную запись?
+ConfirmDeleteAccount=Are you sure you want to delete this account?
 Account=Учетная запись
-ByCategories=По категориям
-ByRubriques=По категориям
-BankTransactionByCategories=Банковские операции по категориям
-BankTransactionForCategory=Банковские операции по <b>категории %s</b>
+BankTransactionByCategories=Bank entries by categories
+BankTransactionForCategory=Bank entries for category <b>%s</b>
 RemoveFromRubrique=Удалить ссылку в категорию
-RemoveFromRubriqueConfirm=Вы уверены, что хотите удалить связь между сделкой и категорий?
-ListBankTransactions=Перечень банковских операций
+RemoveFromRubriqueConfirm=Are you sure you want to remove link between the entry and the category?
+ListBankTransactions=List of bank entries
 IdTransaction=ID транзакции
-BankTransactions=Банковские операции
-SearchTransaction=Поиск транзакций
-ListTransactions=Список сделок
-ListTransactionsByCategory=Список транзакций / категория
-TransactionsToConciliate=Сделки по согласительной
+BankTransactions=Bank entries
+BankTransaction=Bank entry
+ListTransactions=List entries
+ListTransactionsByCategory=List entries/category
+TransactionsToConciliate=Entries to reconcile
 Conciliable=Conciliable
 Conciliate=Согласительной
 Conciliation=Согласительная
-ConciliationForAccount=Согласительную этот счет
+ReconciliationLate=Reconciliation late
 IncludeClosedAccount=Включите закрытые счета
-OnlyOpenedAccount=Только открыли счета
+OnlyOpenedAccount=Only open accounts
 AccountToCredit=Счета к кредитам
 AccountToDebit=Счет дебетовать
 DisableConciliation=Отключите функцию примирения для этой учетной записи
 ConciliationDisabled=Согласительный функция отключена
-StatusAccountOpened=Открыты
+LinkedToAConciliatedTransaction=Linked to a conciliated entry
+StatusAccountOpened=Открытые
 StatusAccountClosed=Закрытые
 AccountIdShort=Количество
-EditBankRecord=Изменить запись
 LineRecord=Транзакция
-AddBankRecord=Добавить сделку
-AddBankRecordLong=Добавить сделки вручную
+AddBankRecord=Add entry
+AddBankRecordLong=Add entry manually
 ConciliatedBy=Conciliated путем
 DateConciliating=Согласительную дата
-BankLineConciliated=Сделка conciliated
+BankLineConciliated=Entry reconciled
+Reconciled=Reconciled
+NotReconciled=Not reconciled
 CustomerInvoicePayment=Заказчиком оплаты
-SupplierInvoicePayment=Поставщик оплаты
-SocialContributionPayment=Социальный вклад оплаты
-FinancialAccountJournal=Финансовые счета журнале
+SupplierInvoicePayment=Оплаты поставщика
+SubscriptionPayment=Абонентская плата
+WithdrawalPayment=Снятие оплаты
+SocialContributionPayment=Social/fiscal tax payment
 BankTransfer=Банковский перевод
 BankTransfers=Банковские переводы
-TransferDesc=Перевод с одного счета на другой, Dolibarr запишет две записи (в дебет счета источник и целевой кредит в счете, на ту же сумму. В тот же ярлык и даты будут использоваться для этой сделке)
+MenuBankInternalTransfer=Internal transfer
+TransferDesc=Transfer from one account to another one, Dolibarr will write two record (a debit in source account and a credit in target account. The same amount (except sign), label and date will be used for this transaction)
 TransferFrom=От
 TransferTo=К
 TransferFromToDone=<b>Передача%</b> от <b>S в% х %s%</b> S был записан.
 CheckTransmitter=Передатчик
-ValidateCheckReceipt=Проверить эту проверку получения?
-ConfirmValidateCheckReceipt=Вы уверены, что хотите проверить эту проверку получении, никаких изменений станет возможным после того, как это сделать?
-DeleteCheckReceipt=Исключить данную проверку получения?
-ConfirmDeleteCheckReceipt=Вы уверены, что хотите удалить эту проверку получения?
+ValidateCheckReceipt=Validate this check receipt?
+ConfirmValidateCheckReceipt=Are you sure you want to validate this check receipt, no change will be possible once this is done?
+DeleteCheckReceipt=Delete this check receipt?
+ConfirmDeleteCheckReceipt=Are you sure you want to delete this check receipt?
 BankChecks=Банковские чеки
-BankChecksToReceipt=Чеки ждет депозит
+BankChecksToReceipt=Checks awaiting deposit
+ShowCheckReceipt=Показать проверить депозита получения
 NumberOfCheques=Nb чеков
-DeleteTransaction=Удалить сделка
-ConfirmDeleteTransaction=Вы уверены, что хотите удалить эту сделку?
-ThisWillAlsoDeleteBankRecord=Это позволит также исключить порожденных банковских транзакций
+DeleteTransaction=Delete entry
+ConfirmDeleteTransaction=Are you sure you want to delete this entry?
+ThisWillAlsoDeleteBankRecord=This will also delete generated bank entry
 BankMovements=Перевозкой
-CashBudget=Наличный бюджет
-PlannedTransactions=Планируемые операции
-ExportDataset_banque_1=Банковские операции и счета
+PlannedTransactions=Planned entries
+Graph=Графика
+ExportDataset_banque_1=Bank entries and account statement
+ExportDataset_banque_2=Бланк депозита
 TransactionOnTheOtherAccount=Сделка с другой учетной записи
-TransactionWithOtherAccount=Счет передачи
-PaymentNumberUpdateSucceeded=Оплата числа успешно обновлен
+PaymentNumberUpdateSucceeded=Payment number updated successfully
 PaymentNumberUpdateFailed=Оплата число не может быть обновлен
-PaymentDateUpdateSucceeded=Оплата дата обновления успешно
+PaymentDateUpdateSucceeded=Payment date updated successfully
 PaymentDateUpdateFailed=Дата платежа не может быть обновлен
-BankTransactionLine=Банковский перевод
+Transactions=Транзакции
+BankTransactionLine=Bank entry
 AllAccounts=Все банковские / счета наличных
 BackToAccount=Перейти к ответу
 ShowAllAccounts=Шоу для всех учетных записей
-// Date 2009-01-19 21:30:52
-// STOP - Lines generated via parser
-
-
-
-// START - Lines generated via autotranslator.php tool (2010-09-04 01:33:40).
-// Reference language: en_US -> ru_RU
-BankAccountCountry=Счет страны
-// STOP - Lines generated via autotranslator.php tool (2010-09-04 01:37:40).
-
-
-// START - Lines generated via autotranslator.php tool (2011-08-27 16:56:14).
-// Reference language: en_US -> ru_RU
-RIBControlError=Проверка целостности значений не удается. Это означает, что информацию для этой учетной записи числа не являются полными или неправильный (проверьте стране, цифры и IBAN).
-WithdrawalPayment=Снятие оплаты
-ShowCheckReceipt=Показать проверить депозита получения
-Graph=Графика
 FutureTransaction=Сделки в Futur. Ни в коем случае к согласительной процедуре.
 SelectChequeTransactionAndGenerate=Выбор / фильтр проверяет, включать в получении депозита проверки и нажмите кнопку &quot;Создать&quot;.
-// STOP - Lines generated via autotranslator.php tool (2011-08-27 16:58:01).
+InputReceiptNumber=Choose the bank statement related with the conciliation. Use a sortable numeric value: YYYYMM or YYYYMMDD
+EventualyAddCategory=Укажите категорию для классификации записей
+ToConciliate=To reconcile?
+ThenCheckLinesAndConciliate=Проверьте последние строки в выписке по счёту из банка и нажмите
+DefaultRIB=Номер счета BAN по умолчанию
+AllRIB=Все номера счетов BAN
+LabelRIB=Метка номера счета BAN
+NoBANRecord=Нет записи с номером счета BAN
+DeleteARib=Удалить запись в номером счета BAN
+ConfirmDeleteRib=Are you sure you want to delete this BAN record?
+RejectCheck=Check returned
+ConfirmRejectCheck=Are you sure you want to mark this check as rejected?
+RejectCheckDate=Date the check was returned
+CheckRejected=Check returned
+CheckRejectedAndInvoicesReopened=Check returned and invoices reopened
+BankAccountModelModule=Document templates for bank accounts
+DocumentModelSepaMandate=Template of SEPA mandate. Usefull for european countries in EEC only.
+DocumentModelBan=Template to print a page with BAN information.
+NewVariousPayment=New miscellaneous payments
+VariousPayment=Miscellaneous payments
+VariousPayments=Miscellaneous payments
+ShowVariousPayment=Show miscellaneous payments

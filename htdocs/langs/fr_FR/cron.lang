@@ -1,93 +1,79 @@
-# Dolibarr language file - fr_FR - cron
-CHARSET=UTF-8
-
-#
+# Dolibarr language file - Source file is en_US - cron
+# About page
+# Right
+Permission23101 = Voir les tâches planifiées
+Permission23102 = Créer/Modifier des tâches planifiées
+Permission23103 = Supprimer une tâche planifiée
+Permission23104 = Exécuter une tâche planifiée
 # Admin
-#
-CronSetup = Page de configuration du module - Gestion de tâches planifiées
-URLToLaunchCronJobs=URL pour lancer les tâches automatiques
-OrToLaunchASpecificJob=Ou pour lancer une tâche spécifique
-KeyForCronAccess=Clé de sécurité pour l'URL de lancement des tâches automatiques
-FileToLaunchCronJobs=Commande pour lancer les tâches automatiques
-CronExplainHowToRunUnix=Sur un environement Unix vous pouvez paramétrer CronTab pour executer cette commande toute les minutes.
-CronExplainHowToRunWin=Sur un environement Microsoft(tm) Windows vous pouvez utiliser le planificateur de tâches pour lancer cette commande toute les minutes.
-
-#
+CronSetup= Page de configuration du module - Gestion des travaux programmés
+URLToLaunchCronJobs=Ou pour vérifier ou lancer les travaux planifiés qualifiés
+OrToLaunchASpecificJob=Ou pour vérifier et lancer un travail programmé spécifique
+KeyForCronAccess=Clé de sécurité pour l'URL de lancement des travaux programmés
+FileToLaunchCronJobs=Commande pour lancer les travaux programmés actifs
+CronExplainHowToRunUnix=Sur un environnement Unix vous pouvez utiliser l'entrée suivante en crontab pour exécuter la ligne de commande toutes les 5 minutes
+CronExplainHowToRunWin=Sur un environement Microsoft(tm) Windows vous pouvez utiliser le planificateur de tache pour lancer cette commande toute les 5 minutes.
+CronMethodDoesNotExists=La classe %s ne contient aucune méthode %s
 # Menu
-#
-CronListActive= Liste des tâches planifiées active
-CronListInactive= Liste des tâches planifiées inactive
-
-
-#
+EnabledAndDisabled=Activés et désactivés
 # Page list
-#
-CronDateLastRun=Dernier lancement
-CronLastOutput=Dernière sortie
-CronLastResult=Dernier code retour
+CronLastOutput=Sortie du dernier lancement
+CronLastResult=Dernier code de retour
 CronCommand=Commande
-CronList= Liste des tâches planifiées
-CronDelete= Supprimer la tâche planifiée
-CronConfirmDelete= Êtes-vous sûr de vouloir supprimer cette tâche planifiée ?
-CronExecute=Exécuter cette tâche
-CronConfirmExecute= Êtes-vous sûr de vouloir exécuter cette tâche maintenant?
-CronInfo= Les jobs permettent d'exécuter des tâches à intervales réguliers
-CronWaitingJobs= Vos jobs en attente:
-CronTask= Tâche
+CronList=Travaux planifiés
+CronDelete=Effacer les travaux planifiés
+CronConfirmDelete=Êtes-vous sûr de vouloir supprimer ces travaux planifiées?
+CronExecute=Lancer la tache planifiée
+CronConfirmExecute=Etes-vous sûr que vous voulez exécuter ces travaux planifiées maintenant?
+CronInfo=Le module de taches planifiés permet de planifier des tâches à exécuter automatiquement. Les travaux planifiés peuvent aussi être lancés manuellement.
+CronTask=Travail planifié
 CronNone=Aucun(e)
-CronDtStart=Date début
-CronDtEnd=Date fin
-CronDtNextLaunch=Prochaine éxécution
-CronDtLastLaunch=Dernière éxécution
+CronDtStart=Pas avant
+CronDtEnd=Pas après
+CronDtNextLaunch=Prochaine exécution
+CronDtLastLaunch=Date de début dernière exécution
+CronDtLastResult=Date de fin dernière exécution
 CronFrequency=Fréquence
-CronClass=Classes
+CronClass=Classe
 CronMethod=Méthode
 CronModule=Module
-CronAction=Action
-CronStatus=Status
-CronStatusActive=Active
-CronStatusInactive=Inactive
-CronEach=Tou(te)s
-CronNoJobs= Aucun jobs actuellement
+CronNoJobs=Aucun travail enregistré
 CronPriority=Priorité
-CronLabel=Description
+CronLabel=Libellé
 CronNbRun=Nb. exec.
-CronDtLastResult=Date du derniétre resulat de la dernière éxécution
-
-#
+CronMaxRun=Nb max de lancement
+CronEach=Tous les
+JobFinished=Travail lancé et terminé
 #Page card
-#
-CronAdd= Ajoutez une tâche
-CronHourStart= Jour et Heure de début de la tâche
-CronEvery= Puis execution toutes les
-CronObject= Instance/Objet à créer
-CronArgs= Argument
-CronSaveSucess=Enregistrement effectué
-CronNote=Note
+CronAdd= Ajoutez des travaux
+CronEvery=Exécuter chaque tâche
+CronObject=Instance/objet à créer
+CronArgs=Paramètres
+CronSaveSucess=Mise à jour effectuée avec succès.
+CronNote=Commentaire
 CronFieldMandatory=Le champ %s est obligatoire
 CronErrEndDateStartDt=La date de fin ne peux être avant la date de début
 CronStatusActiveBtn=Activer
 CronStatusInactiveBtn=Désactiver
 CronTaskInactive=Cette tâche est désactivée
 CronId=Id
-CronClassFile=Classes (fichier)
-CronModuleHelp=Nom du repertoire du module dolibarr (fonctionne automatiquement avec les modules externe Dolibarr). <BR> Par exemple pour appeler la mèthode fetch de l'object Product de Dolibarr /htdocs/<u>product</u>/class/product.class.php, la valeur de module est <i>product</i>
-CronClassFileHelp=Le fichier qui contient l'objet . <BR> Par exemple pour appeler la mèthode fetch de l'object Product de Dolibarr /htdocs/product/class/<u>product.class.php</u>, la valeur de classe est <i>product.class.php</i>
-CronObjectHelp=Le nom de l'object a crée. <BR> Par exemple pour appeler la mèthode fetch de l'object Product de Dolibarr /htdocs/product/class/product.class.php, la valeur de objet est <i>Product</i>
-CronMethodHelp=La mèthode a lancer. <BR> Par exemple pour appeler la mèthode fetch de l'object Product de Dolibarr  /htdocs/product/class/product.class.php, la valeur de mèthode est <i>fecth</i>
-CronArgsHelp=Les arguments de la mèthode. <BR> For exemple to fetch method of Dolibarr Product object /htdocs/product/class/product.class.php, la valeur de paramétre pourrait être <i>0, RefProduit</i>
-CronCommandHelp=La commande système a éxecuter
-
-#
+CronClassFile=Nom de fichier intégrant la classe
+CronModuleHelp=Nom du dossier du module dans Dolibarr (fonctionne aussi avec les modules externes). <BR>Par exemple, pour appeler la méthode d'appel des produits Dolibarr /htdocs/<u>product</u>/class/product.class.php, la valeur du module est <i>product</i>.
+CronClassFileHelp=Le chemin relatif et le nom du fichier à charger (le chemin d'accès est relatif au répertoire racine du serveur Web). <BR> Par exemple, appeler la méthode de récupération de Dolibarr Product object htdocs / product / class / <u> product.class.php , la valeur du nom de fichier de classe est <i> product / class / product.class .php
+CronObjectHelp=Le nom de l'objet à charger. <BR> Par exemple, appeler la méthode de récupération de l'objet de produit Dolibarr /htdocs/product/class/product.class.php, la valeur pour le nom de fichier de classe est <i> Produit 
+CronMethodHelp=La méthode objet à lancer. <BR> Par exemple, appeler la méthode de récupération de Dolibarr Product object /htdocs/product/class/product.class.php, la valeur pour la méthode est <i> fecth
+CronArgsHelp=Les arguments de la méthode. <BR> Par exemple, appeler la méthode d'extraction de l'objet de produit Dolibarr /htdocs/product/class/product.class.php, la valeur pour les paramètres peut être <i> 0, ProductRef 
+CronCommandHelp=La commande système a exécuter.
+CronCreateJob=Créer un nouveau travail planifié
+CronFrom=A partir du
 # Info
-#
-CronInfoPage=Suivie
-
-#
 # Common
-#
-CronType=Type d'action a executer
-CronType_method=Méthode d'une classe d'un module Dolibarr
-CronType_command=Commande Shell
-CronMenu=Cron
-CronCannotLoadClass=impossible de charger la classe %s ou l'object %s
+CronType=Type de travail planifié
+CronType_method=Appelle d'une méthode d'une classe Dolibarr
+CronType_command=Commande terminal
+CronCannotLoadClass=Impossible de charger la classe %s ou l'objet %s
+UseMenuModuleToolsToAddCronJobs=Aller à la page "Accueil - Outils administration - Travaux planifiées" pour voir la listes des travaux programmées et les modifier.
+JobDisabled=Travail désactivé
+MakeLocalDatabaseDumpShort=Sauvegarde locale de base
+MakeLocalDatabaseDump=Créer une sauvegarde locale de la base
+WarningCronDelayed=Attention, à des fins de performance, quelle que soit la prochaine date d'exécution des travaux activés, vos travaux peuvent être retardés jusqu'à %s heures avant d'être exécutés.

@@ -1,115 +1,87 @@
-/*
- * Language code: ro_RO
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-01-19 21:32:52
- */
-
-
-// Date 2009-01-19 21:32:52
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
-Category=Categorie
-Categories=Categorii
-Rubrique=Categorie
-Rubriques=Categorii
-categories=categorii
-TheCategorie=În categoria
+# Dolibarr language file - Source file is en_US - categories
+Rubrique=Tag / Categorie
+Rubriques=Tag-uri / Categorii
+RubriquesTransactions=Etichete / Categorii de tranzacții
+categories=tag-uri / categorii
+NoCategoryYet=Niciun tag/categorie de acest tip creată
 In=În
-AddIn=Adăugaţi în
-modify=modifica
-Classify=Clasifica
-CategoriesArea=Categorii zona
-ProductsCategoriesArea=Produse / Servicii categorii zona
-SuppliersCategoriesArea=Furnizori categorii zona
-CustomersCategoriesArea=Clienţii categorii zona
-ThirdPartyCategoriesArea=Terţilor categorii zona
-MainCats=Principalele categorii de
+AddIn=Adăugă în
+modify=modifică
+Classify=Clasează
+CategoriesArea=Tag-uri / Categorii
+ProductsCategoriesArea=Taguri/ Categorii Produse / Servicii
+SuppliersCategoriesArea=Tag-uri/categorii Furnizori
+CustomersCategoriesArea=Tag-uri / categorii Clienții
+MembersCategoriesArea=Tag-uri  / categorii Membri
+ContactsCategoriesArea=Tag-uri / Categorii Contacte
+AccountsCategoriesArea=Tag-uri / Categorii Contabilitate
+ProjectsCategoriesArea=Zona etichetelor / categoriilor de proiecte
 SubCats=Subcategorii
-CatStatistics=Statistici
-CatList=Lista de catgories
-AllCats=Toate categoriile
-ViewCat=Vezi categoria
-NewCat=Adauga categorie
-NewCategory=Noua categorie
-ModifCat=Modificare categorie
-CatCreated=Categorie creat
-CreateCat=Creaţi categorie
-CreateThisCat=Creaţi această categorie
-ValidateFields=Validate domeniile
-NoSubCat=Nu subcategorie.
+CatList=Lista Tag-uri / Categorii
+NewCategory=Tag / categorie noua
+ModifCat=Modifica Tag / categoria
+CatCreated=Tag / categorie creată
+CreateCat=Creați tag / categorie
+CreateThisCat=Creați acest tag/ categorie
+NoSubCat=Nicio subcategorie.
 SubCatOf=Subcategorie
-FoundCats=Found categorii
-FoundCatsForName=Categorii găsit de nume:
-FoundSubCatsIn=Subcategorii găsit în categoria
-ErrSameCatSelected=Le-aţi selectat în aceeaşi categorie de mai multe ori
-ErrForgotCat=Ai uitat de a-şi alege categoria
-ErrForgotField=Ai uitat să îl informeze pe domenii
-ErrCatAlreadyExists=Acest nume este folosit deja
-AddProductToCat=Adauga acest produs la o categorie?
-ImpossibleAddCat=Imposibil de a adăuga la categoria
-ImpossibleAssociateCategory=Imposibil de a se asocia în categoria a
+FoundCats=Tag-uri  / categorii gasite
+ImpossibleAddCat=Imposibil de adăugat tag-ul/ categoria %s
 WasAddedSuccessfully=<b> %s</b> a fost adaugat cu succes.
-ObjectAlreadyLinkedToCategory=Elementul este deja legate de această categorie.
-CategorySuccessfullyCreated=Această categorie %s a fost adaugata cu succes.
-ProductIsInCategories=Produse / servicii pentru a deţine următoarele categorii
-SupplierIsInCategories=Terţă parte de a deţine următoarele categorii de furnizori
-CompanyIsInCustomersCategories=Acest terţ deţine la următoarele clienţi / perspectivele categorii
-CompanyIsInSuppliersCategories=Acest terţ deţine la următoarele categorii de furnizori
-ProductHasNoCategory=Acest produs / serviciu nu este în nici un categorii
-SupplierHasNoCategory=Acest furnizor nu este în nici un categorii
-CompanyHasNoCategory=Aceasta companie nu este în nici un categorii
-ClassifyInCategory=Clasifica în categoria
-NoneCategory=Niciunul
-CategoryExistsAtSameLevel=Această categorie nu există deja în acelaşi loc
-ReturnInProduct=Inapoi la produs / serviciu de carte
-ReturnInSupplier=Inapoi la furnizor carte
-ReturnInCompany=Inapoi la client / perspectiva carte
-ContentsVisibleByAll=Conţinutul vor fi vizibile de către toate
-ContentsVisibleByAllShort=Cuprins vizibil de către toate
-ContentsNotVisibleByAllShort=Cuprins nu sunt vizibile de către toate
-CategoriesTree=Categorii de copac
-DeleteCategory=Ştergere categorie
-ConfirmDeleteCategory=Sunteţi sigur că doriţi să ştergeţi această categorie?
-RemoveFromCategory=Eliminaţi link-ul cu Categorie
-RemoveFromCategoryConfirm=Sunteţi sigur că doriţi să ştergeţi legătura dintre tranzacţie şi de categorie?
-NoCategoriesDefined=Nu categorie definită
-SuppliersCategoryShort=Furnizori categorie
-CustomersCategoryShort=Clienţii categorie
-ProductsCategoryShort=Produse categorie
-SuppliersCategoriesShort=Furnizori categorii
-CustomersCategoriesShort=Clienţii categorii
-CustomersProspectsCategoriesShort=Custo. / Prosp. categorii
-ProductsCategoriesShort=Produse Categorii
+ObjectAlreadyLinkedToCategory=Elementul este deja asociat cu acest tag/ categorie.
+ProductIsInCategories=Produsul/ serviciul este asociat cu următoarele tag-uri/ categorii
+CompanyIsInCustomersCategories=Acest partener este asociat cu următoarele tag-uri/ categorii clienţi/ prospecţi
+CompanyIsInSuppliersCategories=Acest partener este asociat cu următoarele tag-uri/ categorii furnizori
+MemberIsInCategories=Acest menbru este asociat cu următoarele tag-uri/ categorii membri
+ContactIsInCategories=Acest contact este asociat cu următoarele tag-uri/ categorii contacte
+ProductHasNoCategory=Acest produs / serviciu nu este în niciun tag/ categorie
+CompanyHasNoCategory=Această terță parte nu se află în nicio etichetă / categorie
+MemberHasNoCategory=Acest membru nu este asociat cu tag-uri/ categorii
+ContactHasNoCategory=Acest contact nu este în niciun tag/ categorie
+ProjectHasNoCategory=Acest proiect nu se află în nicio etichetă / categorie
+ClassifyInCategory=Adauga la  tag / categorie
+NotCategorized=Fără tag / categorie
+CategoryExistsAtSameLevel=Această categorie  există deja cu această referinţă
+ContentsVisibleByAllShort=Conţinut vizibil de către toţi
+ContentsNotVisibleByAllShort=Conţinutul nu va fi vizibil pentru toţi
+DeleteCategory=Ştergere tag / categorie
+ConfirmDeleteCategory=Sigur doriți să ștergeți această etichetă / categorie?
+NoCategoriesDefined=Niciun tag / categorie definită
+SuppliersCategoryShort=Tag  / categorie Furnizori
+CustomersCategoryShort=Tag  / categorie Clienții
+ProductsCategoryShort= Tag / categorie Produse
+MembersCategoryShort=Tag  / categorie Membri
+SuppliersCategoriesShort=Tag-uri/categorii Furnizori
+CustomersCategoriesShort=Tag-uri / categorii Clienții
+ProspectsCategoriesShort=Tag-uri / categorii prospecte
+CustomersProspectsCategoriesShort=Categorii  Clienţi / Prospecte
+ProductsCategoriesShort=Tag-uri / categorii Produse 
+MembersCategoriesShort=Tag-uri  / categorii Membri
+ContactCategoriesShort=Tag-uri / Categorii Contacte
+AccountsCategoriesShort=Tag-uri / Categorii Contabilitate
+ProjectsCategoriesShort=Etichete / categorii de proiecte
 ThisCategoryHasNoProduct=Această categorie nu conţine nici un produs.
 ThisCategoryHasNoSupplier=Această categorie nu conţine nici un furnizor.
 ThisCategoryHasNoCustomer=Această categorie nu conţine nici un client.
-AssignedToCustomer=Angajat într-un client
-AssignedToTheCustomer=Atribuite de client
-InternalCategory=Inernal categorie
-CategoryContents=Categorie conţinutul
-CategId=Id-ul categoriei
-// Date 2009-01-19 21:32:52
-// STOP - Lines generated via parser
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-13 21:12:07).
-// Reference language: en_US
-NoCategoryYet=Nici o categorie de acest tip creat
-CatSupList=Lista de furnizor categorii
-CatCusList=Lista de client / categorii de perspectivă
-CatProdList=Lista de categorii de produse
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 21:12:07).
-
-
-// START - Lines generated via autotranslator.php tool (2010-07-17 11:36:47).
-// Reference language: en_US
-MembersCategoriesArea=Membrii categorii zona
-MemberIsInCategories=Acest membru detine la următoarele categorii de membri
-MemberHasNoCategory=Acest membru nu este în nicio categorie
-MembersCategoryShort=Membrii categorie
-MembersCategoriesShort=Membrii categorii
 ThisCategoryHasNoMember=Această categorie nu conţine nici un membru.
-CatMemberList=Lista membrilor categorii
-// STOP - Lines generated via autotranslator.php tool (2010-07-17 11:36:53).
-
+ThisCategoryHasNoContact=Această categorie nu conţine nici un contact
+ThisCategoryHasNoAccount=Această categorie nu conţine nici un cont
+ThisCategoryHasNoProject=Această categorie nu conține niciun proiect.
+CategId=Id Tag / Categorie
+CatSupList=Lista Tag-uri / Categorii furnizori
+CatCusList=Lista Categorii/ taguri  clienţi / prospecte
+CatProdList=Lista Tag-uri / categorii Produse 
+CatMemberList=Lista Tag-uri  / categorii Membri
+CatContactList=Lista Tag-uri / Categorii Contacte
+CatSupLinks=Legături dintre furnizori si taguri/categorii
+CatCusLinks=Legături dintre clienti/prospecti si  taguri/categorii
+CatProdLinks=Legături dintre  produse/servicii si ftaguri/categorii
+CatProJectLinks=Legături între proiecte și etichete / categorii
+DeleteFromCat=Elimina din tag-uri / categoriii
+ExtraFieldsCategories=Atribute complementare
+CategoriesSetup=Configurare Tag-uri / categorii
+CategorieRecursiv=Link automat către  tag /categoria părinte
+CategorieRecursivHelp=Dacă este activat, produsul va fi legat către categoria părinte atunci când este adăugat în subcategorie
+AddProductServiceIntoCategory=Add  următoarele produseservicii
+ShowCategory=Arată tag / categorie
+ByDefaultInList=Implicit în listă

@@ -23,7 +23,8 @@ include_once DOL_DOCUMENT_ROOT.'/core/modules/mailings/modules_mailings.php';
  */
 class mailing_thirdparties extends MailingTargets
 {
-	var $name='ContactsCategories';
+	var $name='ThirdPartiesByCategories';
+	// This label is used if no translation is found for key XXX neither MailingModuleDescXXX where XXX=name is found
 	var $desc="Third parties (by categories)";
 	var $require_admin=0;
 
@@ -64,7 +65,7 @@ class mailing_thirdparties extends MailingTargets
 		    $sql = "SELECT s.rowid as id, s.email as email, s.nom as name, null as fk_contact, null as firstname, null as label";
 		    $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 		    $sql.= " WHERE s.email <> ''";
-		    $sql.= " AND s.entity IN (".getEntity('societe', 1).")";
+		    $sql.= " AND s.entity IN (".getEntity('societe').")";
 		    $sql.= " AND s.email NOT IN (SELECT email FROM ".MAIN_DB_PREFIX."mailing_cibles WHERE fk_mailing=".$mailing_id.")";
 		}
 		else
@@ -72,18 +73,18 @@ class mailing_thirdparties extends MailingTargets
 		    $sql = "SELECT s.rowid as id, s.email as email, s.nom as name, null as fk_contact, null as firstname, c.label as label";
 		    $sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."categorie_societe as cs, ".MAIN_DB_PREFIX."categorie as c";
 		    $sql.= " WHERE s.email <> ''";
-		    $sql.= " AND s.entity IN (".getEntity('societe', 1).")";
+		    $sql.= " AND s.entity IN (".getEntity('societe').")";
 		    $sql.= " AND s.email NOT IN (SELECT email FROM ".MAIN_DB_PREFIX."mailing_cibles WHERE fk_mailing=".$mailing_id.")";
-		    $sql.= " AND cs.fk_societe = s.rowid";
+		    $sql.= " AND cs.fk_soc = s.rowid";
 		    $sql.= " AND c.rowid = cs.fk_categorie";
 		    $sql.= " AND c.rowid='".$this->db->escape($_POST['filter'])."'";
 		    $sql.= " UNION ";
 		    $sql.= "SELECT s.rowid as id, s.email as email, s.nom as name, null as fk_contact, null as firstname, c.label as label";
 		    $sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."categorie_fournisseur as cs, ".MAIN_DB_PREFIX."categorie as c";
 		    $sql.= " WHERE s.email <> ''";
-		    $sql.= " AND s.entity IN (".getEntity('societe', 1).")";
+		    $sql.= " AND s.entity IN (".getEntity('societe').")";
 		    $sql.= " AND s.email NOT IN (SELECT email FROM ".MAIN_DB_PREFIX."mailing_cibles WHERE fk_mailing=".$mailing_id.")";
-		    $sql.= " AND cs.fk_societe = s.rowid";
+		    $sql.= " AND cs.fk_soc = s.rowid";
 		    $sql.= " AND c.rowid = cs.fk_categorie";
 		    $sql.= " AND c.rowid='".$this->db->escape($_POST['filter'])."'";
 		}
@@ -108,8 +109,8 @@ class mailing_thirdparties extends MailingTargets
 					$cibles[$j] = array(
                     			'email' => $obj->email,
                     			'fk_contact' => $obj->fk_contact,
-                    			'lastname' => $obj->lastname,
-                    			'firstname' => $obj->firstname,
+                    			'lastname' => $obj->name,	// For a thirdparty, we must use name
+                    			'firstname' => '',			// For a thirdparty, lastname is ''
                     			'other' => ($obj->label?$langs->transnoentities("Category").'='.$obj->label:''),
                                 'source_url' => $this->url($obj->id),
                                 'source_id' => $obj->id,
@@ -157,7 +158,7 @@ class mailing_thirdparties extends MailingTargets
 	 *	emails from a text file, this function must return 500.
 	 *
 	 *  @param      string	$sql        Requete sql de comptage
-	 *	@return		int			Nb of recipients
+	 *	@return		int					Nb of recipients
 	 */
 	function getNbOfRecipients($sql='')
 	{
@@ -166,7 +167,7 @@ class mailing_thirdparties extends MailingTargets
 		$sql = "SELECT count(distinct(s.email)) as nb";
 		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 		$sql.= " WHERE s.email != ''";
-		$sql.= " AND s.entity IN (".getEntity('societe', 1).")";
+		$sql.= " AND s.entity IN (".getEntity('societe').")";
 
 		// La requete doit retourner un champ "nb" pour etre comprise
 		// par parent::getNbOfRecipients
@@ -240,13 +241,8 @@ class mailing_thirdparties extends MailingTargets
 	 */
 	function url($id)
 	{
-		//$companystatic=new Societe($this->db);
-		//$companystatic->id=$id;
-		//$companystatic->nom='';
-		//return $companystatic->getNomUrl(1);	// Url too long
-		return '<a href="'.DOL_URL_ROOT.'/societe/soc.php?socid='.$id.'">'.img_object('',"company").'</a>';
+		return '<a href="'.DOL_URL_ROOT.'/societe/card.php?socid='.$id.'">'.img_object('',"company").'</a>';
 	}
 
 }
 
-?>

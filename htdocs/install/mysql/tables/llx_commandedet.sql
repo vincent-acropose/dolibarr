@@ -3,6 +3,7 @@
 -- Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
 -- Copyright (C) 2006-2009	Laurent Destailleur		<eldy@users.sourceforge.net>
 -- Copyright (C) 2010		Juanjo Menent			<jmenent@2byte.es>
+-- Copyright (C) 2012      Cédric Salvador      <csalvador@gpcsolutions.fr>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -22,12 +23,13 @@
 create table llx_commandedet
 (
   rowid							integer AUTO_INCREMENT PRIMARY KEY,
-  fk_commande					integer	NOT NULL,
-  fk_parent_line				integer	NULL,
-  fk_product					integer	NULL,
+  fk_commande					integer NOT NULL,
+  fk_parent_line				integer NULL,
+  fk_product					integer	 NULL,
   label							varchar(255) DEFAULT NULL,
   description					text,
-  tva_tx						double(6,3),	                 -- vat rate
+  vat_src_code					varchar(10)  DEFAULT '',		 -- Vat code used as source of vat fields. Not strict foreign key here.
+  tva_tx						double(6,3),	                 -- Vat rate
   localtax1_tx               	double(6,3)  DEFAULT 0,    		 -- localtax1 rate
   localtax1_type			 	varchar(10)	  	 NULL, 			 -- localtax1 type
   localtax2_tx               	double(6,3)  DEFAULT 0,    		 -- localtax2 rate
@@ -37,7 +39,7 @@ create table llx_commandedet
   remise						real         DEFAULT 0,          -- montant de la remise
   fk_remise_except				integer      NULL,               -- Lien vers table des remises fixes
   price							real,                            -- prix final
-  subprice						double(24,8) DEFAULT 0,          -- prix unitaire
+  subprice						double(24,8) DEFAULT 0,          -- P.U. HT (exemple 100)
   total_ht						double(24,8) DEFAULT 0,          -- Total HT de la ligne toute quantite et incluant remise ligne et globale
   total_tva						double(24,8) DEFAULT 0,          -- Total TVA de la ligne toute quantite et incluant remise ligne et globale
   total_localtax1				double(24,8) DEFAULT 0,          -- Total LocalTax1 
@@ -47,11 +49,23 @@ create table llx_commandedet
   date_start					datetime     DEFAULT NULL,       -- date debut si service
   date_end						datetime     DEFAULT NULL,       -- date fin si service
   info_bits						integer      DEFAULT 0,          -- TVA NPR ou non
-  buy_price_ht					double(24,8) DEFAULT 0,          -- prix d'achat HT
-  fk_product_fournisseur_price	integer      DEFAULT NULL,       -- reference prix fournisseur
-  special_code					integer UNSIGNED DEFAULT 0,      -- code pour les lignes speciales
+
+  buy_price_ht					double(24,8) DEFAULT 0,          -- buying price
+  fk_product_fournisseur_price	integer      DEFAULT NULL,       -- reference of supplier price when line was added (may be used to update buy_price_ht current price when future invoice will be created)
+  
+  special_code					integer      DEFAULT 0,      -- code pour les lignes speciales
   rang							integer      DEFAULT 0,
-  import_key					varchar(14)
+  fk_unit            integer      DEFAULT NULL,           -- lien vers table des unités
+  import_key					varchar(14),
+  
+  fk_commandefourndet			integer DEFAULT NULL,       -- link to detail line of commande fourn (resplenish)
+  
+  fk_multicurrency		integer,
+  multicurrency_code			varchar(255),
+  multicurrency_subprice		double(24,8) DEFAULT 0,
+  multicurrency_total_ht		double(24,8) DEFAULT 0,
+  multicurrency_total_tva	double(24,8) DEFAULT 0,
+  multicurrency_total_ttc	double(24,8) DEFAULT 0
 )ENGINE=innodb;
 
 -- 

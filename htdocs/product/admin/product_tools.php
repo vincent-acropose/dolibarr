@@ -1,6 +1,6 @@
 <?php
-/* Copyright (C) 2012	Regis Houssin       <regis.houssin@capnetworks.com>
- * Copyright (C) 2013   Laurent Destailleur <eldy@users.sourceforge.net>
+/* Copyright (C) 2012	   Regis Houssin       <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013-2015 Laurent Destailleur <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,8 +42,6 @@ $oldvatrate=GETPOST('oldvatrate');
 $newvatrate=GETPOST('newvatrate');
 //$price_base_type=GETPOST('price_base_type');
 
-$objectstatic = new Product($db);
-$objectstatic2 = new ProductFournisseur($db);
 
 
 /*
@@ -57,7 +55,7 @@ if ($action == 'convert')
 	if ($oldvatrate == $newvatrate)
 	{
 		$langs->load("errors");
-		setEventMessage($langs->trans("ErrorNewValueCantMatchOldValue"),'errors');
+		setEventMessages($langs->trans("ErrorNewValueCantMatchOldValue"), null, 'errors');
 		$error++;
 	}
 
@@ -74,7 +72,7 @@ if ($action == 'convert')
 		{
 			$sql = 'SELECT rowid';
 			$sql.= ' FROM '.MAIN_DB_PREFIX.'product';
-			$sql.= ' WHERE entity IN ('.getEntity('product',1).')';
+			$sql.= ' WHERE entity IN ('.getEntity('product').')';
 			$sql.= " AND tva_tx = '".$db->escape($oldvatrate)."'";
 
 			$resql=$db->query($sql);
@@ -87,6 +85,7 @@ if ($action == 'convert')
 				{
 					$obj = $db->fetch_object($resql);
 
+					$objectstatic = new Product($db);          // Object init must be into loop to avoid to get value of previous step
 					$ret=$objectstatic->fetch($obj->rowid);
 					if ($ret > 0)
 					{
@@ -115,7 +114,7 @@ if ($action == 'convert')
 							$newlevel=$level;
 
 							//print "$objectstatic->id $newprice, $price_base_type, $newvat, $newminprice, $newlevel, $newnpr<br>\n";
-							$retm=$objectstatic->updatePrice($objectstatic->id, $newprice, $price_base_type, $user, $newvat, $newminprice, $newlevel, $newnpr);
+							$retm=$objectstatic->updatePrice($newprice, $price_base_type, $user, $newvat, $newminprice, $newlevel, $newnpr);
 							if ($retm < 0)
 							{
 								$error++;
@@ -144,13 +143,14 @@ if ($action == 'convert')
 						if (! empty($price_base_type) && ! $updatelevel1)
 						{
 							//print "$objectstatic->id $newprice, $price_base_type, $newvat, $newminprice, $newlevel, $newnpr<br>\n";
-							$ret=$objectstatic->updatePrice($objectstatic->id,$newprice, $price_base_type, $user, $newvat, $newminprice, $newlevel, $newnpr);
+							$ret=$objectstatic->updatePrice($newprice, $price_base_type, $user, $newvat, $newminprice, $newlevel, $newnpr);
 						}
 
 						if ($ret < 0 || $retm < 0) $error++;
 						else $nbrecordsmodified++;
 					}
-
+                    unset($objectstatic);
+                    
 					$i++;
 				}
 			}
@@ -162,7 +162,7 @@ if ($action == 'convert')
 		// Change supplier prices
 		$sql = 'SELECT pfp.rowid, pfp.fk_soc, pfp.price as price, pfp.quantity as qty, pfp.fk_availability, pfp.ref_fourn';
 		$sql.= ' FROM '.MAIN_DB_PREFIX.'product_fournisseur_price as pfp, '.MAIN_DB_PREFIX.'societe as s';
-		$sql.= ' WHERE pfp.fk_soc = s.rowid AND pfp.entity IN ('.getEntity('product',1).')';
+		$sql.= ' WHERE pfp.fk_soc = s.rowid AND pfp.entity IN ('.getEntity('product').')';
 		$sql.= " AND tva_tx = '".$db->escape($oldvatrate)."'";
 		$sql.= " AND s.fk_pays = '".$country_id."'";
 		//print $sql;
@@ -176,6 +176,7 @@ if ($action == 'convert')
 			{
 				$obj = $db->fetch_object($resql);
 
+                $objectstatic2 = new ProductFournisseur($db);          // Object init must be into loop to avoid to get value of previous step
 				$ret=$objectstatic2->fetch_product_fournisseur_price($obj->rowid);
 				if ($ret > 0)
 				{
@@ -207,6 +208,8 @@ if ($action == 'convert')
 					if ($ret < 0 || $retm < 0) $error++;
 					else $nbrecordsmodified++;
 				}
+				unset($objectstatic2);
+				
 				$i++;
 			}
 		}
@@ -225,12 +228,12 @@ if ($action == 'convert')
 		// Output result
 		if (! $error)
 		{
-			if ($nbrecordsmodified > 0) setEventMessage($langs->trans("RecordsModified",$nbrecordsmodified));
-			else setEventMessage($langs->trans("NoRecordFound"),'warnings');
+			if ($nbrecordsmodified > 0) setEventMessages($langs->trans("RecordsModified",$nbrecordsmodified), null, 'mesgs');
+			else setEventMessages($langs->trans("NoRecordFound"), null, 'warnings');
 		}
 		else
 		{
-			setEventMessage($langs->trans("Error"),'errors');
+			setEventMessages($langs->trans("Error"), null, 'errors');
 		}
 
 	}
@@ -242,11 +245,11 @@ if ($action == 'convert')
 
 $form=new Form($db);
 
-$title = $langs->trans('ModulesSystemTools');
+$title = $langs->trans('ProductVatMassChange');
 
 llxHeader('',$title);
 
-print_fiche_titre($title,'','setup');
+print load_fiche_titre($title,'','title_setup');
 
 print $langs->trans("ProductVatMassChangeDesc").'<br><br>';
 
@@ -271,37 +274,38 @@ else
 	print '<td align="right" width="60">'.$langs->trans("Value").'</td>'."\n";
 	print '</tr>'."\n";
 
-	$var=!$var;
-	print '<tr '.$bc[$var].'>'."\n";
+	
+	print '<tr class="oddeven">'."\n";
 	print '<td>'.$langs->trans("OldVATRates").'</td>'."\n";
 	print '<td width="60" align="right">'."\n";
-	print $form->load_tva('oldvatrate', $oldvatrate);
+	print $form->load_tva('oldvatrate', $oldvatrate, $mysoc);
 	print '</td>'."\n";
 	print '</tr>'."\n";
 
-	$var=!$var;
-	print '<tr '.$bc[$var].'>'."\n";
+	
+	print '<tr class="oddeven">'."\n";
 	print '<td>'.$langs->trans("NewVATRates").'</td>'."\n";
 	print '<td width="60" align="right">'."\n";
-	print $form->load_tva('newvatrate', $newvatrate);
+	print $form->load_tva('newvatrate', $newvatrate, $mysoc);
 	print '</td>'."\n";
 	print '</tr>'."\n";
 
 	/*
-	$var=!$var;
-	print '<tr '.$bc[$var].'>'."\n";
+	
+	print '<tr class="oddeven">'."\n";
 	print '<td>'.$langs->trans("PriceBaseTypeToChange").'</td>'."\n";
 	print '<td width="60" align="right">'."\n";
-	print $form->load_PriceBaseType($price_base_type);
+	print $form->selectPriceBaseType($price_base_type);
 	print '</td>'."\n";
 	print '</tr>'."\n";
 	*/
 
 	print '</table>';
-	print '</div>';
 
+	print '<br>';
+	
 	// Boutons actions
-	print '<div class="tabsAction">';
+	print '<div class="center">';
 	print '<input type="submit" id="convert_vatrate" name="convert_vatrate" value="'.$langs->trans("MassConvert").'" class="button" />';
 	print '</div>';
 
@@ -311,4 +315,3 @@ else
 llxFooter();
 
 $db->close();
-?>

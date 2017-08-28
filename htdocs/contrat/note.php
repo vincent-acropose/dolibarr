@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2004		Rodolphe Quiedeville	<rodolphe@quiedeville.org>
- * Copyright (C) 2004-2012	Laurent Destailleur		<eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2016	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -43,71 +43,128 @@ $result=restrictedArea($user,'contrat',$id);
 $object = new Contrat($db);
 $object->fetch($id,$ref);
 
+$permissionnote=$user->rights->contrat->creer;	// Used by the include of actions_setnotes.inc.php
 
-/******************************************************************************/
-/*                     Actions                                                */
-/******************************************************************************/
 
-if ($action == 'setnote_public' && $user->rights->contrat->creer)
-{
-	$result=$object->update_note(dol_html_entity_decode(dol_htmlcleanlastbr(GETPOST('note_public')), ENT_QUOTES),'_public');
-	if ($result < 0) dol_print_error($db,$object->error);
-}
+/*
+ * Actions
+ */
 
-else if ($action == 'setnote_private' && $user->rights->contrat->creer)
-{
-	$result=$object->update_note(dol_html_entity_decode(dol_htmlcleanlastbr(GETPOST('note_private')), ENT_QUOTES),'_private');
-	if ($result < 0) dol_print_error($db,$object->error);
-}
+include DOL_DOCUMENT_ROOT.'/core/actions_setnotes.inc.php';	// Must be include, not includ_once
 
 
 
-/******************************************************************************/
-/* Affichage fiche                                                            */
-/******************************************************************************/
+/*
+ * View
+ */
 
-llxHeader();
+llxHeader('',$langs->trans("Contract"),"");
 
 $form = new Form($db);
 
 if ($id > 0 || ! empty($ref))
 {
-	dol_htmloutput_mesg($mesg);
-
     $object->fetch_thirdparty();
 
     $head = contract_prepare_head($object);
 
     $hselected = 2;
 
-    dol_fiche_head($head, 'note', $langs->trans("Contract"), 0, 'contract');
+    dol_fiche_head($head, 'note', $langs->trans("Contract"), -1, 'contract');
 
+    // Contract card
+
+    $linkback = '<a href="'.DOL_URL_ROOT.'/contrat/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
+
+
+    $morehtmlref='';
+    //if (! empty($modCodeContract->code_auto)) {
+    $morehtmlref.=$object->ref;
+    /*} else {
+     $morehtmlref.=$form->editfieldkey("",'ref',$object->ref,0,'string','',0,3);
+    $morehtmlref.=$form->editfieldval("",'ref',$object->ref,0,'string','',0,2);
+    }*/
+
+    $morehtmlref.='<div class="refidno">';
+    // Ref customer
+    $morehtmlref.=$form->editfieldkey("RefCustomer", 'ref_customer', $object->ref_customer, $object, 0, 'string', '', 0, 1);
+    $morehtmlref.=$form->editfieldval("RefCustomer", 'ref_customer', $object->ref_customer, $object, 0, 'string', '', null, null, '', 1);
+    // Ref supplier
+    $morehtmlref.='<br>';
+    $morehtmlref.=$form->editfieldkey("RefSupplier", 'ref_supplier', $object->ref_supplier, $object, 0, 'string', '', 0, 1);
+    $morehtmlref.=$form->editfieldval("RefSupplier", 'ref_supplier', $object->ref_supplier, $object, 0, 'string', '', null, null, '', 1);
+    // Thirdparty
+    $morehtmlref.='<br>'.$langs->trans('ThirdParty') . ' : ' . $object->thirdparty->getNomUrl(1);
+    // Project
+    if (! empty($conf->projet->enabled))
+    {
+    	$langs->load("projects");
+    	$morehtmlref.='<br>'.$langs->trans('Project') . ' ';
+    	if ($user->rights->contrat->creer)
+    	{
+    		if ($action != 'classify')
+    			//$morehtmlref.='<a href="' . $_SERVER['PHP_SELF'] . '?action=classify&amp;id=' . $object->id . '">' . img_edit($langs->transnoentitiesnoconv('SetProject')) . '</a> : ';
+    			$morehtmlref.=' : ';
+    		if ($action == 'classify') {
+    			//$morehtmlref.=$form->form_project($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->socid, $object->fk_project, 'projectid', 0, 0, 1, 1);
+    			$morehtmlref.='<form method="post" action="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'">';
+    			$morehtmlref.='<input type="hidden" name="action" value="classin">';
+    			$morehtmlref.='<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+    			$morehtmlref.=$formproject->select_projects($object->thirdparty->id, $object->fk_project, 'projectid', $maxlength, 0, 1, 0, 1, 0, 0, '', 1);
+    			$morehtmlref.='<input type="submit" class="button valignmiddle" value="'.$langs->trans("Modify").'">';
+    			$morehtmlref.='</form>';
+    		} else {
+    			$morehtmlref.=$form->form_project($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->thirdparty->id, $object->fk_project, 'none', 0, 0, 0, 1);
+    		}
+    	} else {
+    		if (! empty($object->fk_project)) {
+    			$proj = new Project($db);
+    			$proj->fetch($object->fk_project);
+    			$morehtmlref.='<a href="'.DOL_URL_ROOT.'/projet/card.php?id=' . $object->fk_project . '" title="' . $langs->trans('ShowProject') . '">';
+    			$morehtmlref.=$proj->ref;
+    			$morehtmlref.='</a>';
+    		} else {
+    			$morehtmlref.='';
+    		}
+    	}
+    }
+    $morehtmlref.='</div>';
+
+
+    dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'none', $morehtmlref);
+
+
+    print '<div class="fichecenter">';
+    print '<div class="underbanner clearboth"></div>';
 
     print '<table class="border" width="100%">';
 
-    $linkback = '<a href="'.DOL_URL_ROOT.'/contrat/liste.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
+     
+    // Ligne info remises tiers
+    print '<tr><td class="titlefield">'.$langs->trans('Discount').'</td><td colspan="3">';
+    if ($object->thirdparty->remise_percent) print $langs->trans("CompanyHasRelativeDiscount",$object->thirdparty->remise_percent);
+    else print $langs->trans("CompanyHasNoRelativeDiscount");
+    $absolute_discount=$object->thirdparty->getAvailableDiscounts();
+    print '. ';
+    if ($absolute_discount) print $langs->trans("CompanyHasAbsoluteDiscount",price($absolute_discount),$langs->trans("Currency".$conf->currency));
+    else print $langs->trans("CompanyHasNoAbsoluteDiscount");
+    print '.';
+    print '</td></tr>';
 
-    // Reference
-	print '<tr><td width="25%">'.$langs->trans('Ref').'</td><td colspan="5">'.$form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref', '').'</td></tr>';
-
-    // Societe
-    print '<tr><td>'.$langs->trans("Customer").'</td>';
-    print '<td colspan="3">'.$object->thirdparty->getNomUrl(1).'</td></tr>';
-
-	// Ligne info remises tiers
-    print '<tr><td>'.$langs->trans('Discount').'</td><td>';
-	if ($object->thirdparty->remise_client) print $langs->trans("CompanyHasRelativeDiscount",$object->thirdparty->remise_client);
-	else print $langs->trans("CompanyHasNoRelativeDiscount");
-	$absolute_discount=$object->thirdparty->getAvailableDiscounts();
-	print '. ';
-	if ($absolute_discount) print $langs->trans("CompanyHasAbsoluteDiscount",$absolute_discount,$langs->trans("Currency".$conf->currency));
-	else print $langs->trans("CompanyHasNoAbsoluteDiscount");
-	print '.';
-	print '</td></tr>';
+    // Date
+    print '<tr>';
+    print '<td class="titlefield">';
+    print $form->editfieldkey("Date",'date_contrat',$object->date_contrat,$object,0);
+    print '</td><td>';
+    print $form->editfieldval("Date",'date_contrat',$object->date_contrat,$object,0,'datehourpicker');
+    print '</td>';
+    print '</tr>';
 
 	print "</table>";
-
-	print '<br>';
+	
+	print '</div>';
+	
+	//print '<br>';
 
 	include DOL_DOCUMENT_ROOT.'/core/tpl/notes.tpl.php';
 
@@ -118,4 +175,3 @@ if ($id > 0 || ! empty($ref))
 
 llxFooter();
 $db->close();
-?>

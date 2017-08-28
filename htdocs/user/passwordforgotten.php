@@ -2,6 +2,7 @@
 /* Copyright (C) 2007-2011	Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2008-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  * Copyright (C) 2008-2011	Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2014       Teddy Andreotti    	<125155@supinfo.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +28,8 @@ define("NOLOGIN",1);	// This means this output page does not require to be logge
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/usergroups.lib.php';
-if (! empty($conf->ldap->enabled))
-	require_once DOL_DOCUMENT_ROOT.'/core/class/ldap.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
+if (! empty($conf->ldap->enabled)) require_once DOL_DOCUMENT_ROOT.'/core/class/ldap.class.php';
 
 $langs->load("errors");
 $langs->load("users");
@@ -48,7 +49,7 @@ $mode=$dolibarr_main_authentication;
 if (! $mode) $mode='http';
 
 $username 		= GETPOST('username');
-$passwordmd5	= GETPOST('passwordmd5');
+$passwordhash	= GETPOST('passwordhash');
 $conf->entity 	= (GETPOST('entity') ? GETPOST('entity') : 1);
 
 // Instantiate hooks of thirdparty module only if not already define
@@ -67,7 +68,7 @@ if (GETPOST('dol_use_jmobile') || ! empty($_SESSION['dol_use_jmobile']))        
  */
 
 // Validate new password
-if ($action == 'validatenewpassword' && $username && $passwordmd5)
+if ($action == 'validatenewpassword' && $username && $passwordhash)
 {
     $edituser = new User($db);
     $result=$edituser->fetch('',$_GET["username"]);
@@ -77,7 +78,7 @@ if ($action == 'validatenewpassword' && $username && $passwordmd5)
     }
     else
     {
-        if (dol_hash($edituser->pass_temp) == $passwordmd5)
+        if (dol_hash($edituser->pass_temp) == $passwordhash)
         {
             $newpassword=$edituser->setPassword($user,$edituser->pass_temp,0);
             dol_syslog("passwordforgotten.php new password for user->id=".$edituser->id." validated in database");
@@ -130,7 +131,8 @@ if ($action == 'buildnewpassword' && $username)
                     // Success
                     if ($edituser->send_password($user,$newpassword,1) > 0)
                     {
-                        $message = '<div class="ok">'.$langs->trans("PasswordChangeRequestSent",$edituser->login,$edituser->email).'</div>';
+
+                        $message = '<div class="ok">'.$langs->trans("PasswordChangeRequestSent",$edituser->login,dolObfuscateEmail($edituser->email)).'</div>';
                         //$message.=$newpassword;
                         $username='';
                     }
@@ -150,9 +152,6 @@ if ($action == 'buildnewpassword' && $username)
  * View
  */
 
-$php_self = $_SERVER['PHP_SELF'];
-$php_self.= $_SERVER["QUERY_STRING"]?'?'.$_SERVER["QUERY_STRING"]:'';
-
 $dol_url_root = DOL_URL_ROOT;
 
 // Title
@@ -170,8 +169,8 @@ else
 }
 
 // Note: $conf->css looks like '/theme/eldy/style.css.php'
-$conf->css = "/theme/".(GETPOST('theme')?GETPOST('theme','alpha'):$conf->theme)."/style.css.php";
-$themepath=dol_buildpath((empty($conf->global->MAIN_FORCETHEMEDIR)?'':$conf->global->MAIN_FORCETHEMEDIR).$conf->css,1);
+$conf->css = "/theme/".(GETPOST('theme','alpha')?GETPOST('theme','alpha'):$conf->theme)."/style.css.php";
+$themepath=dol_buildpath($conf->css,1);
 if (! empty($conf->modules_parts['theme']))	// This slow down
 {
 	foreach($conf->modules_parts['theme'] as $reldir)
@@ -188,15 +187,6 @@ $conf_css = $themepath."?lang=".$langs->defaultlang;
 $jquerytheme = 'smoothness';
 if (! empty($conf->global->MAIN_USE_JQUERY_THEME)) $jquerytheme = $conf->global->MAIN_USE_JQUERY_THEME;
 
-if (file_exists(DOL_DOCUMENT_ROOT.'/theme/'.$conf->theme.'/img/login_background.png'))
-{
-    $login_background = DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/login_background.png';
-}
-else
-{
-    $login_background = DOL_URL_ROOT.'/theme/login_background.png';
-}
-
 if (! $username) $focus_element = 'username';
 else $focus_element = 'password';
 
@@ -211,11 +201,11 @@ $rowspan=2;
 $urllogo=DOL_URL_ROOT.'/theme/login_logo.png';
 if (! empty($mysoc->logo_small) && is_readable($conf->mycompany->dir_output.'/logos/thumbs/'.$mysoc->logo_small))
 {
-	$urllogo=DOL_URL_ROOT.'/viewimage.php?cache=1&amp;modulepart=companylogo&amp;file='.urlencode('thumbs/'.$mysoc->logo_small);
+	$urllogo=DOL_URL_ROOT.'/viewimage.php?cache=1&amp;modulepart=mycompany&amp;file='.urlencode('thumbs/'.$mysoc->logo_small);
 }
 elseif (! empty($mysoc->logo_small) && is_readable($conf->mycompany->dir_output.'/logos/'.$mysoc->logo))
 {
-	$urllogo=DOL_URL_ROOT.'/viewimage.php?cache=1&amp;modulepart=companylogo&amp;file='.urlencode($mysoc->logo);
+	$urllogo=DOL_URL_ROOT.'/viewimage.php?cache=1&amp;modulepart=mycompany&amp;file='.urlencode($mysoc->logo);
 	$width=128;
 }
 elseif (is_readable(DOL_DOCUMENT_ROOT.'/theme/'.$conf->theme.'/img/dolibarr_logo.png'))
@@ -234,11 +224,19 @@ if (function_exists("imagecreatefrompng") && ! $disabled)
 	$captcha_refresh = img_picto($langs->trans("Refresh"),'refresh','id="captcha_refresh_img"');
 }
 
-// Execute hook getPasswordForgottenPageOptions
-// Should be an array with differents options in $hookmanager->resArray
+// Execute hook getPasswordForgottenPageOptions (for table)
 $parameters=array('entity' => GETPOST('entity','int'));
 $hookmanager->executeHooks('getPasswordForgottenPageOptions',$parameters);    // Note that $action and $object may have been modified by some hooks
+if (is_array($hookmanager->resArray) && ! empty($hookmanager->resArray)) {
+	$morelogincontent = $hookmanager->resArray; // (deprecated) For compatibility
+} else {
+	$morelogincontent = $hookmanager->resPrint;
+}
+
+// Execute hook getPasswordForgottenPageExtraOptions (eg for js)
+$parameters=array('entity' => GETPOST('entity','int'));
+$reshook = $hookmanager->executeHooks('getPasswordForgottenPageExtraOptions',$parameters);    // Note that $action and $object may have been modified by some hooks.
+$moreloginextracontent = $hookmanager->resPrint;
 
 include $template_dir.'passwordforgotten.tpl.php';	// To use native PHP
 
-?>

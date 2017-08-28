@@ -1,48 +1,34 @@
-/*
- * Language code: et_EE
- * Automatic generated via autotranslator.php tool
- * Generation date 2012-02-29 22:15:30
- */
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 22:15:30).
-// Reference language: en_US -> et_EE
-CHARSET=UTF-8
-CashDeskMenu=Müügikohas
-CashDesk=Müügikohas
-CashDesks=Müügikohtade
-CashDeskBank=Pangakonto
+# Language file - Source file is en_US - cashdesk
+CashDeskMenu=Kassa
+CashDesk=Kassa
 CashDeskBankCash=Pangakonto (sularaha)
-CashDeskBankCB=Pangakonto (kaart)
-CashDeskBankCheque=Pangakonto (kontroll)
+CashDeskBankCB=Pangakonto (kaardimakse)
+CashDeskBankCheque=Pangakonto (tšekimakse)
 CashDeskWarehouse=Ladu
-CashdeskShowServices=Müük teenused
+CashdeskShowServices=Teenuste müük
 CashDeskProducts=Tooted
-CashDeskStock=Varu
+CashDeskStock=Laojääk
 CashDeskOn=kohta
-CashDeskThirdParty=Kolmas osapool
+CashDeskThirdParty=Kolmas isik
 ShoppingCart=Ostukorv
-NewSell=New müüa
-BackOffice=Tagasi kontor
+NewSell=Uus müük
 AddThisArticle=Lisa see artikkel
-RestartSelling=Mine tagasi müüa
-SellFinished=Müü valmis
-PrintTicket=Trüki pilet
-NoResults=Ei kohteita
-NoProductFound=Ei artikkel leitud
-ProductFound=Toote leitud
-ProductsFound=tooteid leitud
-NoArticle=Ei artikkel
+RestartSelling=Mine müümisel tagasi
+SellFinished=Sale complete
+PrintTicket=Trüki tšekk
+NoProductFound=Artiklit ei leitud
+ProductFound=toodet leitud
+NoArticle=Artiklid puuduvad
 Identification=Identifitseerimine
 Article=Artikkel
-Difference=Erinevus
-TotalTicket=Kokku pilet
-NoVAT=Ei käibemaksuga selle müügi
-Change=Liigne saanud
-CalTip=Vajuta, et näha kalender
-CashDeskSetupStock=Te küsite, et vähendada varude kohta arve loomist, kuid lattu seda ei määratletud <br> Muuda varu moodul setup, või valida ladu
-BankToPay=Charge Account
-ShowCompany=Näita ettevõte
+Difference=Vahe
+TotalTicket=Arve kokku
+NoVAT=Sellel müügil pole KM
+Change=Liigselt saadud
+BankToPay=Account for payment
+ShowCompany=Näita ettevõtet
 ShowStock=Näita ladu
-DeleteArticle=Vajuta, et eemaldada see artikkel
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 22:39:40).
+DeleteArticle=Klõpsa selle artikli eemaldamiseks
+FilterRefOrLabelOrBC=Otsi (viide/nimi)
+UserNeedPermissionToEditStockToUsePos=Hetkeseadistuste järgi vähendatakse laoseisu arve loomisel, seega peab kassa kasutajal olema õigus laoseisu muutmiseks.
+DolibarrReceiptPrinter=Dolibarr Receipt Printer

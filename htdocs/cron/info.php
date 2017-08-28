@@ -16,8 +16,8 @@
  */
 
 /**
- *  \file       	/cron/cron/info.php
- *  \brief      	Page fiche d'une operation
+ *  \file       	htdocs/cron/info.php
+ *  \brief      	Page of info of a cron job
  */
 
 require '../main.inc.php';
@@ -26,6 +26,8 @@ require_once DOL_DOCUMENT_ROOT."/cron/class/cronjob.class.php";
 require_once DOL_DOCUMENT_ROOT.'/core/lib/cron.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 
+$langs->load("admin");
+$langs->load("cron");
 
 // Security check
 if (!$user->rights->cron->read) accessforbidden();
@@ -46,13 +48,23 @@ $object->info($id);
 
 $head = cron_prepare_head($object);
 
-dol_fiche_head($head, 'info', $langs->trans("CronTask"), 0, 'bill');
+dol_fiche_head($head, 'info', $langs->trans("CronTask"), -1, 'cron');
+
+$linkback = '<a href="' . DOL_URL_ROOT . '/cron/list.php?status=-2">' . $langs->trans("BackToList") . '</a>';
+
+$morehtmlref='<div class="refidno">';
+$morehtmlref.='</div>';
+
+dol_banner_tab($object, 'id', $linkback, 1, 'rowid', 'ref', $morehtmlref);
+
+print '<div class="underbanner clearboth"></div>';
+
+print '<br>';
 
 print '<table width="100%"><tr><td>';
 dol_print_object_info($object);
 print '</td></tr></table>';
 print '</div>';
 
-
-$db->close();
 llxFooter();
+$db->close();

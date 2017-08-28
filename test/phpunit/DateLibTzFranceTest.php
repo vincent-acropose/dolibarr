@@ -25,7 +25,7 @@
 
 global $conf,$user,$langs,$db;
 //define('TEST_DB_FORCE_TYPE','mysql');	// This is to force using mysql driver
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
 require_once dirname(__FILE__).'/../../htdocs/master.inc.php';
 require_once dirname(__FILE__).'/../../htdocs/core/lib/date.lib.php';
 
@@ -85,6 +85,8 @@ class DateLibTzFranceTest extends PHPUnit_Framework_TestCase
 
     	print __METHOD__."\n";
     }
+
+    // tear down after class
     public static function tearDownAfterClass()
     {
     	global $conf,$user,$langs,$db;
@@ -193,10 +195,9 @@ class DateLibTzFranceTest extends PHPUnit_Framework_TestCase
     	// Check %a and %b format for en_US
     	$result=dol_print_date(0,'%a %b',false,$outputlangs);
     	print __METHOD__." result=".$result."\n";
-    	$this->assertEquals('Thu jan',$result);
+    	$this->assertEquals('Thu Jan',$result);
 
     	return $result;
     }
 
 }
-?>

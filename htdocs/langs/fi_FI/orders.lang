@@ -1,173 +1,155 @@
-/*
- * Language code: fi_FI
- * Automatic generated via autotranslator.php tool
- * Generation date 2009-01-19 22:07:11
- */
-
-
-// Date 2009-01-19 22:07:11
-// START - Lines generated via autotranslator.php tool.
-// Reference language: en_US
-CHARSET=UTF-8
-OrdersArea=Asiakkaiden tilausten alueella
-SuppliersOrdersArea=Toimittajien tilaukset alueella
-OrderCard=Tilaa kortti
-Order=Tilata
+# Dolibarr language file - Source file is en_US - orders
+OrdersArea=Asiakkaiden tilausalue
+SuppliersOrdersArea=Tavarantoimittajien tilausalue
+OrderCard=Tilauskortti
+OrderId=Tilausnumero
+Order=Tilaus
+PdfOrderTitle=Tilaus
 Orders=Tilaukset
-OrderFollow=Seuranta
-OrderDate=Tilaa päivämäärä
-NewOrder=Uusi järjestys
-ToOrder=Tee jotta
-MakeOrder=Tee jotta
-SupplierOrder=Toimittaja jotta
-SuppliersOrders=Toimittajien tilaukset
-SuppliersOrdersRunning=Nykyinen toimittajien tilaukset
-CustomerOrder=Asiakas jotta
-CustomersOrders=Asiakkaiden tilausten
-CustomersOrdersRunning=Nykyisten asiakkaiden tilausten
-CustomersOrdersAndOrdersLines=Asiakkaan tilaukset ja tilaukset "linjat
-OrdersToValid=Tilauksia voimassa
-OrdersToBill=Tilaukset laskuttaa
-OrdersInProcess=Tilaukset prosessi
-OrdersToProcess=Tilausten käsittely
+OrderLine=Tilaus linja
+OrderDate=Tilauspäivämäärä
+OrderDateShort=Tilauspäivä
+OrderToProcess=Jotta prosessi
+NewOrder=Uusi tilaus
+ToOrder=Tee tilaus
+MakeOrder=Tee tilaus
+SupplierOrder=Tavarantoimittajan tilaus
+SuppliersOrders=Tavarantoimittajien tilaukset
+SuppliersOrdersRunning=Nykyiset tavarantoimittajien tilaukset
+CustomerOrder=Asiakastilaus
+CustomersOrders=Asiakkaan tilaukset
+CustomersOrdersRunning=Viimeisin asiakkaan tilaus
+CustomersOrdersAndOrdersLines=Asiakkaan tilaukset ja tilauslinjat
+OrdersDeliveredToBill=Customer orders delivered to bill
+OrdersToBill=Toimitetut asiakastilaukset
+OrdersInProcess=Käsittelyssä olevat asiakastilaukset
+OrdersToProcess=Käsittelyä odottavat asiakastilaukset
+SuppliersOrdersToProcess=Käsittelyä odottavat tavarantoimittajan tilaukset
 StatusOrderCanceledShort=Peruutettu
 StatusOrderDraftShort=Vedos
-StatusOrderValidatedShort=Validoidut
-StatusOrderOnProcessShort=Prosessissa
-StatusOrderProcessedShort=Jalostettu
-StatusOrderToBillShort=Bill
-StatusOrderApprovedShort=Hyväksyttiin
-StatusOrderRefusedShort=Kieltäydytty
+StatusOrderValidatedShort=Hyväksytty
+StatusOrderSentShort=Käsittelyssä
+StatusOrderSent=Käsittelyssä olevat toimitukset
+StatusOrderOnProcessShort=Tilattu
+StatusOrderProcessedShort=Käsitelty
+StatusOrderDelivered=Toimitettu
+StatusOrderDeliveredShort=Toimitettu
+StatusOrderToBillShort=Toimitettu
+StatusOrderApprovedShort=Hyväksytty
+StatusOrderRefusedShort=Hylätty
+StatusOrderBilledShort=Laskutettu
 StatusOrderToProcessShort=Käsitellä
-StatusOrderReceivedPartiallyShort=Osittain saanut
-StatusOrderReceivedAllShort=Kaikki saivat
+StatusOrderReceivedPartiallyShort=Osittain saapunut
+StatusOrderReceivedAllShort=Vastaanotetut tuotteet
 StatusOrderCanceled=Peruutettu
-StatusOrderDraft=Luonnos (on vahvistettu)
-StatusOrderValidated=Validoidut
-StatusOrderOnProcess=Prosessissa
-StatusOrderProcessed=Jalostettu
-StatusOrderToBill=Bill
-StatusOrderApproved=Hyväksyttiin
-StatusOrderRefused=Kieltäydytty
-StatusOrderReceivedPartially=Osittain saanut
-StatusOrderReceivedAll=Kaikki saivat
-DraftOrWaitingApproved=Esitys tai hyväksytty ei vielä määrännyt
-DraftOrWaitingShipped=Esitys tai validoitua ole vielä lähetetty
-MenuOrdersToBill=Tilaukset laskuttaa
-SearchOrder=Haku jotta
-Sending=Lähettävä
-Sendings=Sendings
-ShipProduct=Laiva tuote
-Discount=Discount
-CreateOrder=Luo Tilaa
-RefuseOrder=Jätteiden jotta
-ApproveOrder=Hyväksy jotta
-ValidateOrder=Validate jotta
-DeleteOrder=Poista jotta
+StatusOrderDraft=Luonnos (vaatii vahvistuksen)
+StatusOrderValidated=Hyväksytty
+StatusOrderOnProcess=Tilattu - Odotaa vastaanottoa
+StatusOrderOnProcessWithValidation=Ordered - Standby reception or validation
+StatusOrderProcessed=Käsitelty
+StatusOrderToBill=Toimitettu
+StatusOrderApproved=Hyväksytty
+StatusOrderRefused=Hylätty
+StatusOrderBilled=Laskutetun
+StatusOrderReceivedPartially=Osittain saapunut
+StatusOrderReceivedAll=Kaikki tuotteet vastaanotettu
+ShippingExist=Lähetys on olemassa
+QtyOrdered=Tilattu Kpl
+ProductQtyInDraft=Product quantity into draft orders
+ProductQtyInDraftOrWaitingApproved=Product quantity into draft or approved orders, not yet ordered
+MenuOrdersToBill=Toimitetut tilaukset
+MenuOrdersToBill2=Laskutettavat tilaukset
+ShipProduct=Toimita tuote
+CreateOrder=Luo tilaus
+RefuseOrder=Kiellä tilaus
+ApproveOrder=Hyväksy tilaus
+Approve2Order=Approve order (second level)
+ValidateOrder=Hyväksy tilaus
+UnvalidateOrder=Käsittele tilaus uudestaan
+DeleteOrder=Poista tilaus
 CancelOrder=Peruuta tilaus
-AddOrder=Lisää jotta
-AddToMyOrders=Add to my tilaukset
-AddToOtherOrders=Lisää muut tilaukset
-ShowOrder=Näytä jotta
-NoOpenedOrders=N: o avataan tilaukset
-NoOtherOpenedOrders=Mikään muu avataan tilaukset
-OtherOrders=Muut tilaukset
-LastOrders=Viimeisin %s tilaukset
-LastModifiedOrders=Viimeisin %s muunnettu tilaukset
-LastClosedOrders=Viimeisin %s suljettu tilaukset
+OrderReopened= Order %s Reopened
+AddOrder=Luo tilaus
+AddToDraftOrders=Add to draft order
+ShowOrder=Näytä tilaus
+OrdersOpened=Orders to process
+NoDraftOrders=No draft orders
+NoOrder=No order
+NoSupplierOrder=No supplier order
+LastOrders=Viimeisimmät %s asiakastilaukset
+LastCustomerOrders=Viimeisimmät %s asiakastilaukset
+LastSupplierOrders=Latest %s supplier orders
+LastModifiedOrders=Viimeisimmät %s muokatut tilaukset
 AllOrders=Kaikki tilaukset
-NbOfOrders=Määrä tilauksia
-OrdersStatistics=Tilaukset tilastot
-OrdersStatisticsSuppliers=Toimittaja tilaukset tilastot
-NumberOfOrdersByMonth=Määrä tilauksia kuukausittain
-AmountOfOrdersByMonthHT=määrä tilauksia kuukausittain (ilman veroja)
-ListOfOrders=Luettelo tilaukset
-CloseOrder=Sulje jotta
-ConfirmCloseOrder=Oletko varma, että haluat sulkea tämän tilauksen? Kun tilaus on päättynyt, se voidaan laskuttaa.
-ConfirmCloseOrderIfSending=Oletko varma, että haluat sulkea tämän tilauksen? Sinun on lähellä tilauksen vasta, kun kaikki merenkulku on valmis.
-ConfirmDeleteOrder=Oletko varma, että haluat poistaa tämän tilauksen?
-ConfirmValidateOrder=Oletko varma, että haluamme vahvistaa tämän määräyksen nojalla <b>nimi %s?</b>
-ConfirmCancelOrder=Oletko varma, että haluat peruuttaa tämän tilauksen?
-ConfirmMakeOrder=Oletko varma, että haluat vahvistaa olet tehnyt tämän <b>tilauksen %s?</b>
+NbOfOrders=Tilausten määrä
+OrdersStatistics=Tilausten tilastot
+OrdersStatisticsSuppliers=Tavarantoimittaja tilausten tilastot
+NumberOfOrdersByMonth=Tilausmäärät kuukausittain
+AmountOfOrdersByMonthHT=Tilausten summa kuukaudessa (net of tax)
+ListOfOrders=Tilausluettelo
+CloseOrder=Sulje tilaus
+ConfirmCloseOrder=Haluatko varmasti asettaa tämän tilauksen toimitetuksi? Kun tilaus on asetettu toimitetuksi sen voi myös asettaa laskutetuksi
+ConfirmDeleteOrder=Haluatko varmasti poistaa tämän tilauksen?
+ConfirmValidateOrder=Haluatko varmasti vahvistaa tämän tilauksen nimelle <b>%s</b>?
+ConfirmUnvalidateOrder=Haluatko varmasti palauttaa tilauksen <b>%s</b> luonnostilaan?
+ConfirmCancelOrder=Haluatko varmasti perua tämän tilauksen?
+ConfirmMakeOrder=Haluatko varmasti vahvistaa tekemäsi tilauksen <b>%s</b>?
 GenerateBill=Luo lasku
-ClassifyBilled=Luokittele "Laskutetun"
-ComptaCard=Kirjanpito-kortti
-DraftOrders=Luonnos tilaukset
-RelatedOrders=Aiheeseen liittyvät tilaukset
-OnProcessOrders=Prosessissa tilaukset
-RefOrder=Ref. tilata
-RefCustomerOrder=Ref. asiakas jotta
-CustomerOrder=Asiakas jotta
-RefCustomerOrderShort=Ref. asiakasnumero. tilata
-SendOrderByMail=Lähetä tilata postitse
-ActionsOnOrder=Toimia, jotta
-NoArticleOfTypeProduct=N: o artikkeli tyypin "tuote" niin ei shippable artikkeli tässä tilauksessa
-OrderMode=Jotta menetelmä
-AuthorRequest=Pyydä tekijä
-UseCustomerContactAsOrderRecipientIfExist=Käytä asiakkaan yhteystiedot, jos se on määritetty sijaan kolmannen osapuolen osoite jotta vastaanottajan osoite
-RunningOrders=Toimitussuhteet prosessi
-UserWithApproveOrderGrant=Useres myönnetään "hyväksyä tilauksia" lupaa.
-Error_COMMANDE_SUPPLIER_ADDON_NotDefined=Constant COMMANDE_SUPPLIER_ADDON ole määritelty
-Error_COMMANDE_ADDON_NotDefined=Constant COMMANDE_ADDON ole määritelty
-Error_FailedToLoad_COMMANDE_SUPPLIER_ADDON_File=Failed to load module file ' %s'
-Error_FailedToLoad_COMMANDE_ADDON_File=Failed to load module file ' %s'
-OrderSource0=Kaupalliset ehdotus
-OrderSource1=Internet
-OrderSource2=Mail kampanja
-OrderSource3=Puhelin compain
-OrderSource4=Faksi kampanja
-OrderSource5=Kaupalliset
-OrderSource6=Varastoida
-QtyOrdered=Kpl velvoitti
-AddDeliveryCostLine=Lisää toimitus kustannukset linja ilmoitetaan paino, jotta
-PDFEinsteinDescription=Täydellinen jotta malli (logo. ..)
-// Date 2009-01-19 22:07:11
-// STOP - Lines generated via parser
-
-
-// START - Lines generated via autotranslator.php tool (2009-08-13 20:45:19).
-// Reference language: en_US
-OrderLine=Tilaa linja
-PaymentOrderRef=Maksutoimisto jotta %s
-CloneOrder=Klooni jotta
-ConfirmCloneOrder=Oletko varma, että haluat klooni tässä <b>järjestyksessä %s?</b>
-// STOP - Lines generated via autotranslator.php tool (2009-08-13 20:45:19).
-
-
-// START - Lines generated via autotranslator.php tool (2010-07-17 11:26:22).
-// Reference language: en_US
-OrderToProcess=Jotta prosessi
-TypeContact_commande_internal_SALESREPFOLL=Edustaja seurantaan asiakkaan tilauksen
-TypeContact_commande_internal_SHIPPING=Edustaja seurantaan merenkulku
-TypeContact_commande_external_BILLING=Asiakkaan lasku yhteystiedot
-TypeContact_commande_external_SHIPPING=Asiakas merenkulku yhteystiedot
+ClassifyShipped=Luokittele toimitetuksi
+DraftOrders=Tilausluonnokset
+DraftSuppliersOrders=Draft suppliers orders
+OnProcessOrders=Käsittelyssä olevat tilaukset
+RefOrder=Tilausviite
+RefCustomerOrder=Asiakkaan viite
+RefOrderSupplier=Ref. order for supplier
+RefOrderSupplierShort=Ref. order supplier
+SendOrderByMail=Lähetä tilaus postitse
+ActionsOnOrder=Tilauksen tapahtumat
+NoArticleOfTypeProduct=Artikkelin tyypi ei ole "tuote" joten sitä ei voida toimittaa tässä tilauksessa
+OrderMode=Tilaustapa
+AuthorRequest=Pyydä tekijältä
+UserWithApproveOrderGrant=Käyttäjille myönnetty oikeus "hyväksyä tilauksia"
+PaymentOrderRef=Tilauksen %s maksu
+CloneOrder=Luo vastaava tilaus
+ConfirmCloneOrder=Haluatko varmasti luoda vastaavan tilauksen <b>%s</b>?
+DispatchSupplierOrder=Tavarantoimittajan tilauksen %s vastaanotto
+FirstApprovalAlreadyDone=First approval already done
+SecondApprovalAlreadyDone=Second approval already done
+SupplierOrderReceivedInDolibarr=Supplier order %s received %s
+SupplierOrderSubmitedInDolibarr=Supplier order %s submited
+SupplierOrderClassifiedBilled=Supplier order %s set billed
+##### Types de contacts #####
+TypeContact_commande_internal_SALESREPFOLL=Edustaja seuraamaan asiakkaan tilausta
+TypeContact_commande_internal_SHIPPING=Edustaja seuraamaan toimitusta
+TypeContact_commande_external_BILLING=Yhteystiedot asiakkaan laskutukseen
+TypeContact_commande_external_SHIPPING=Yhteystiedot asiakkaan toimitukseen
 TypeContact_commande_external_CUSTOMER=Asiakas ottaa yhteyttä seurantaan, jotta
 TypeContact_order_supplier_internal_SALESREPFOLL=Edustaja seurantaan toimittaja järjestys
-TypeContact_order_supplier_internal_SHIPPING=Edustaja seurantaan merenkulku
-TypeContact_order_supplier_external_BILLING=Toimittajan lasku yhteystiedot
-TypeContact_order_supplier_external_SHIPPING=Toimittajan merenkulku yhteystiedot
+TypeContact_order_supplier_internal_SHIPPING=Edustaja toimitus seurantaan
+TypeContact_order_supplier_external_BILLING=Tavarantoimittajan lasku yhteystiedot
+TypeContact_order_supplier_external_SHIPPING=Tavarantoimittajan toimitus yhteystiedot
 TypeContact_order_supplier_external_CUSTOMER=Toimittajan yhteystiedot seurantaan, jotta
-PDFEdisonDescription=Yksinkertainen, jotta malli
-PDFQuevedoDescription=Täydellinen, jotta malli Espanjan RE ja IRPF
-// STOP - Lines generated via autotranslator.php tool (2010-07-17 11:26:25).
-
-
-// START - Lines generated via autotranslator.php tool (2010-09-04 01:33:40).
-// Reference language: en_US -> fi_FI
-DispatchSupplierOrder=Vastaanottaminen toimittaja järjestys %s
-// STOP - Lines generated via autotranslator.php tool (2010-09-04 01:34:02).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 16:10:23).
-// Reference language: en_US -> fi_FI
-SuppliersOrdersToProcess=Toimittajan tilauksia käsitellä
-StatusOrderSentShort=Meneillään
-ShippingExist=Lähetys olemassa
-UnvalidateOrder=Unvalidate järjestys
-ConfirmUnvalidateOrder=Oletko varma että haluat palauttaa järjestyksen <b>%s</b> Luonnos-tilaan?
+Error_COMMANDE_SUPPLIER_ADDON_NotDefined=Vakiota COMMANDE_SUPPLIER_ADDON ei ole määritelty
+Error_COMMANDE_ADDON_NotDefined=Vakiota COMMANDE_ADDON ei ole määritelty
+Error_OrderNotChecked=Yhtään tilausta ei ole valittuna laskulle
+# Order modes (how we receive order). Not the "why" are keys stored into dict.lang
 OrderByMail=Posti
-OrderByFax=Faksin
+OrderByFax=Faksi
 OrderByEMail=Sähköposti
 OrderByWWW=Online
 OrderByPhone=Puhelin
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 16:10:45).
+# Documents models
+PDFEinsteinDescription=Täydellinen tilausmalli (logo. ..)
+PDFEdisonDescription=Yksinkertainen tilausmalli
+PDFProformaDescription=A complete proforma invoice (logo…)
+CreateInvoiceForThisCustomer=Laskuta tilaukset
+NoOrdersToInvoice=Yhtään tilausta ei ole laskutettavaksi
+CloseProcessedOrdersAutomatically=Classify "Processed" all selected orders.
+OrderCreation=Order creation
+Ordered=Tilattu
+OrderCreated=Your orders have been created
+OrderFail=An error happened during your orders creation
+CreateOrders=Create orders
+ToBillSeveralOrderSelectCustomer=To create an invoice for several orders, click first onto customer, then choose "%s".
+CloseReceivedSupplierOrdersAutomatically=Close order to "%s" automatically if all products are received.
+SetShippingMode=Set shipping mode

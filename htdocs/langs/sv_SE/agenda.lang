@@ -1,88 +1,117 @@
-/*
- * Language code: sv_SV
- * Automatic generated via autotranslator.php tool
- * Generation date 2010-08-27 08:47:44
- */
-
-
-// START - Lines generated via autotranslator.php tool (2010-08-27 08:47:44).
-// Reference language: en_US
-CHARSET=UTF-8
+# Dolibarr language file - Source file is en_US - agenda
+IdAgenda=ID händelse
 Actions=Åtgärder
-ActionsArea=Åtgärder område (händelser och uppgifter)
 Agenda=Agenda
+TMenuAgenda=Agenda
 Agendas=Dagordningar
-Calendar=Kalender
-Calendars=Kalendrar
+LocalAgenda=Intern kalender
+ActionsOwnedBy=Händelse som ägs av
+ActionsOwnedByShort=Ägare
 AffectedTo=Påverkas i
-DoneBy=Utfärdat av
+Event=Händelse
 Events=Evenemang
+EventsNb=Antal händelser
 ListOfActions=Lista över evenemang
 Location=Läge
-SearchAnAction=Sök en handling / uppgift
+ToUserOfGroup=To any user in group
+EventOnFullDay=Händelse heldag
 MenuToDoActions=Alla ofullständiga handlingar
 MenuDoneActions=Alla avslutade åtgärder
 MenuToDoMyActions=Min ofullständiga handlingar
 MenuDoneMyActions=Min avslutas åtgärder
-ListOfEvents=Lista över Dolibarr händelser
+ListOfEvents=Förteckning över händelser (intern kalender)
 ActionsAskedBy=Åtgärder som registrerats av
 ActionsToDoBy=Åtgärder påverkas
 ActionsDoneBy=Åtgärder som utförs av
-AllMyActions=Alla mina handlingar och uppgifter
-AllActions=Alla åtgärder / uppgifter
-ViewList=Visa lista
+ActionAssignedTo=Händelse delad
 ViewCal=Visa kalender
-ViewWithPredefinedFilters=Visa med fördefinierade filter
-AutoActions=Automatisk fyllning av dagordning
-AgendaAutoActionDesc=Här definierar du händelser som du vill Dolibarr att automatiskt skapa en talan i dagordningen. Om ingenting är markerad (som standard), kommer endast manuella, skall ingå i dagordningen.
-AgendaSetupOtherDesc=Denna sida tillåter dig att ändra andra parametrar i dagordningen modul.
-ActionsEvents=Händelser som Dolibarr kommer att skapa en talan i agenda automatiskt
-PropalValidatedInDolibarr=Förslag %s validerade
-InvoiceValidatedInDolibarr=Faktura %s validerade
-OrderValidatedInDolibarr=Beställ %s validerade
-InterventionValidatedInDolibarr=Intervention %s validerade
-NewCompanyToDolibarr=Tredje part har skapats
-DateActionPlannedStart=Planerat startdatum
-DateActionPlannedEnd=Planerat slutdatum
-DateActionDoneStart=Real startdatum
-DateActionDoneEnd=Real slutdatum
-DateActionStart=Startdatum
-DateActionEnd=Slutdatum
-AgendaUrlOptions1=Du kan också lägga till följande parametrar för att filtrera utgång:
-AgendaUrlOptions2=<b>login = %s</b> att begränsa produktionen till åtgärder inrättade av, påverkas eller göras av användaren <b>%s.</b>
-AgendaUrlOptions3=<b>logina = %s</b> att begränsa produktionen till åtgärder som skapats av användaren <b>%s.</b>
-AgendaUrlOptions4=<b>logint = %s</b> att begränsa produktionen till handlande påverkade användarnas <b>%s.</b>
-AgendaUrlOptions5=<b>logind = %s</b> att begränsa produktionen till åtgärder som utförts av användaren <b>%s.</b>
-AgendaShowBirthdayEvents=Visa födelsedag kontakter
-AgendaHideBirthdayEvents=Dölj födelsedag kontakter
-// STOP - Lines generated via autotranslator.php tool (2010-08-27 08:50:28).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 17:32:03).
-// Reference language: en_US -> sv_SE
-LocalAgenda=Lokal kalender
-MyEvents=Mina aktiviteter
-OtherEvents=Övriga händelser
-EventOnFullDay=Händelse heldag
 ViewDay=Dagsvy
 ViewWeek=Veckovy
+ViewPerUser=Per user view
+ViewPerType=Per type view
+AutoActions= Automatisk fyllning av dagordning
+AgendaAutoActionDesc= Define here events for which you want Dolibarr to create automatically an event in agenda. If nothing is checked, only manual actions will be included in logged and visible into agenda. Automatic tracking of business actions done on objects (validation, status change) will not be saved.
+AgendaSetupOtherDesc= Denna sida tillåter dig att ändra andra parametrar i dagordningen modul.
 AgendaExtSitesDesc=Den här sidan gör det möjligt att deklarera externa kalendrar för att se sina evenemang i Dolibarr agenda.
+ActionsEvents=Händelser som Dolibarr kommer att skapa en talan i agenda automatiskt
+##### Agenda event labels #####
+NewCompanyToDolibarr=Third party %s created
+ContractValidatedInDolibarr=Kontrakt %s validerade
+PropalClosedSignedInDolibarr=Förslag %s undertecknade
+PropalClosedRefusedInDolibarr=Förslag %s vägrade
+PropalValidatedInDolibarr=Förslag %s validerade
+PropalClassifiedBilledInDolibarr=Förslag %s klassificerad faktureras
+InvoiceValidatedInDolibarr=Faktura %s validerade
+InvoiceValidatedInDolibarrFromPos=Faktura %s validerats från POS
 InvoiceBackToDraftInDolibarr=Faktura %s gå tillbaka till förslaget status
-OrderApprovedInDolibarr=Ordningens %s godkänd
-OrderBackToDraftInDolibarr=Beställ %s gå tillbaka till förslaget status
+InvoiceDeleteDolibarr=Faktura %s raderas
+InvoicePaidInDolibarr=Faktura %s ändrades till betald
+InvoiceCanceledInDolibarr=Faktura %s annulleras
+MemberValidatedInDolibarr=Medlem %s validerade
+MemberModifiedInDolibarr=Member %s modified
+MemberResiliatedInDolibarr=Member %s terminated
+MemberDeletedInDolibarr=Medlem %s raderad
+MemberSubscriptionAddedInDolibarr=Teckning av medlem %s tillades
+ShipmentValidatedInDolibarr=Leverans %s validerad
+ShipmentClassifyClosedInDolibarr=Shipment %s classified billed
+ShipmentUnClassifyCloseddInDolibarr=Shipment %s classified reopened
+ShipmentDeletedInDolibarr=Frakten %s raderad
+OrderCreatedInDolibarr=Order %s created
+OrderValidatedInDolibarr=Beställ %s validerade
+OrderDeliveredInDolibarr=Klassificerad order %s levererad 
 OrderCanceledInDolibarr=Beställ %s avbryts
+OrderBilledInDolibarr=Klassificerad order %s fakturerad
+OrderApprovedInDolibarr=Ordningens %s godkänd
+OrderRefusedInDolibarr=Order %s vägrade
+OrderBackToDraftInDolibarr=Beställ %s gå tillbaka till förslaget status
 ProposalSentByEMail=Kommersiella förslag %s via e-post
 OrderSentByEMail=Kundorderprojekt %s via e-post
 InvoiceSentByEMail=Kundfaktura %s via e-post
 SupplierOrderSentByEMail=Leverantör beställa %s via e-post
 SupplierInvoiceSentByEMail=Leverantörsfaktura %s via e-post
-ShippingSentByEMail=Frakt %s via e-post
-InterventionSentByEMail=Intervention %s via e-post
+ShippingSentByEMail=Leverans %s skickat per epost
+ShippingValidated= Leverans %s validerad
+InterventionSentByEMail=Ärende %s skickat per epost
+ProposalDeleted=Proposal deleted
+OrderDeleted=Order deleted
+InvoiceDeleted=Invoice deleted
+PRODUCT_CREATEInDolibarr=Product %s created
+PRODUCT_MODIFYInDolibarr=Product %s modified
+PRODUCT_DELETEInDolibarr=Product %s deleted
+##### End agenda events #####
+AgendaModelModule=Document templates for event
+DateActionStart=Startdatum
+DateActionEnd=Slutdatum
+AgendaUrlOptions1=Du kan också lägga till följande parametrar för att filtrera utgång:
+AgendaUrlOptions3=<b>Logina =%s</b> ​​att begränsa produktionen till åtgärder som ägs av en användare<b>%s.</b>
+AgendaUrlOptionsNotAdmin=<b>logina=!%s</b> to restrict output to actions not owned by user <b>%s</b>.
+AgendaUrlOptions4=<b>logint=%s</b> to restrict output to actions assigned to user <b>%s</b> (owner and others).
+AgendaUrlOptionsProject=<b>projekt = PROJECT_ID</b> att begränsa produktionen till åtgärder i samband med projektet <b>PROJECT_ID.</b>
+AgendaShowBirthdayEvents=Show birthdays of contacts
+AgendaHideBirthdayEvents=Hide birthdays of contacts
+Busy=Upptagen
+ExportDataset_event1=Lista över dagordningen händelser
+DefaultWorkingDays=Standard arbetsdagar varierar i veckan (exempel: 1-5, 1-6)
+DefaultWorkingHours=Standard arbetstiden i dag (exempel: 9-18)
+# External Sites ical
 ExportCal=Export kalender
 ExtSites=Importera externa kalendrar
-ExtSitesEnableThisTool=Visa externa kalendrar till dagordning
+ExtSitesEnableThisTool=Visa externa kalendrar (definierade i globala inställningar) i dagordningen. Påverkar inte externa kalendrar definierat av användare.
 ExtSitesNbOfAgenda=Antal kalendrar
 AgendaExtNb=Kalender nb %s
 ExtSiteUrlAgenda=URL att komma åt. Ical-fil
 ExtSiteNoLabel=Ingen beskrivning
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 17:34:36).
+VisibleTimeRange=Visible time range
+VisibleDaysRange=Visible days range
+AddEvent=Skapa event
+MyAvailability=Min tillgänglighet
+ActionType=Typ av händelse
+DateActionBegin=Startdatum för händelse
+CloneAction=Klona händelse
+ConfirmCloneEvent=Are you sure you want to clone the event <b>%s</b>?
+RepeatEvent=Repetera händelsen
+EveryWeek=Varje vecka
+EveryMonth=Varje månad
+DayOfMonth=Dag i månaden
+DayOfWeek=Dag i veckan
+DateStartPlusOne=Startdatum +1 timma
