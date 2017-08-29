@@ -207,6 +207,13 @@ class Conf
 		    {
 		    	$multicompany_backward_compatibility=true;
 		    	$this->setValues($db);
+		   
+		    	// REMOVE TAB DOUBLE
+		    	foreach ($this->modules_parts['tabs'] as $key => &$tabs)
+		    	{
+		    		$tabs=array_unique($tabs);
+		    	}
+		    		
 		    	return;
 		    }
 		}
