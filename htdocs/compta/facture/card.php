@@ -606,10 +606,10 @@ if (empty($reshook))
 		// Check if there is already a discount (protection to avoid duplicate creation when resubmit post)
 		$discountcheck=new DiscountAbsolute($db);
 		$result=$discountcheck->fetch(0,$object->id);
-
+		
 		$canconvert=0;
 		if ($object->type == Facture::TYPE_DEPOSIT && $object->paye == 1 && empty($discountcheck->id)) $canconvert=1;	// we can convert deposit into discount if deposit is payed completely and not already converted (see real condition into condition used to show button converttoreduc)
-		if (($object->type == Facture::TYPE_CREDIT_NOTE || $object->type == Facture::TYPE_STANDARD) && $object->paye == 0 && empty($discountcheck->id)) $canconvert=1;	// we can convert credit note into discount if credit note is not payed back and not already converted and amount of payment is 0 (see real condition into condition used to show button converttoreduc)
+		if (($object->type == Facture::TYPE_CREDIT_NOTE || $object->type == Facture::TYPE_STANDARD|| $object->type == Facture::TYPE_SITUATION) && $object->paye == 0 && empty($discountcheck->id)) $canconvert=1;	// we can convert credit note into discount if credit note is not payed back and not already converted and amount of payment is 0 (see real condition into condition used to show button converttoreduc)
 		if ($canconvert)
 		{
 			$db->begin();
@@ -1759,7 +1759,7 @@ if (empty($reshook))
 
 		$line = new FactureLigne($db);
 		$line->fetch(GETPOST('lineid'));
-		$percent = $line->get_prev_progress($object->id);
+		/*$percent = $line->get_prev_progress($object->id);
 
 		if (GETPOST('progress') < $percent)
 		{
@@ -1767,7 +1767,7 @@ if (empty($reshook))
 			setEventMessages($mesg, null, 'warnings');
 			$error++;
 			$result = -1;
-		}
+		}*/
 
 		// Check minimum price
 		$productid = GETPOST('productid', 'int');
@@ -1891,11 +1891,11 @@ if (empty($reshook))
 		{
 			foreach ($object->lines as $line)
 			{
-				$percent = $line->get_prev_progress($object->id);
+				/*$percent = $line->get_prev_progress($object->id);
 				if (GETPOST('all_progress') < $percent) {
 					$mesg = '<div class="warning">' . $langs->trans("CantBeLessThanMinPercent") . '</div>';
 					$result = -1;
-				} else
+				} else*/
 					$object->update_percent($line, $_POST['all_progress']);
 			}
 		}
@@ -2837,6 +2837,7 @@ else if ($id > 0 || ! empty($ref))
 		if($object->type == 0) $type_fac = 'ExcessReceived';
 		elseif($object->type == 2) $type_fac = 'CreditNote';
 		elseif($object->type == 3) $type_fac = 'Deposit';
+		elseif($object->type == 5) $type_fac = 'CreditNote';
 		$text = $langs->trans('ConfirmConvertToReduc', strtolower($langs->transnoentities($type_fac)));
 		$formconfirm = $form->formconfirm($_SERVER['PHP_SELF'] . '?facid=' . $object->id, $langs->trans('ConvertToReduc'), $text, 'confirm_converttoreduc', '', "yes", 2);
 	}
