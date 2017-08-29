@@ -2929,7 +2929,7 @@ else if ($id > 0 || ! empty($ref))
 								// => 1),
 								array('type' => 'other','name' => 'idwarehouse','label' => $label,'value' => $value));
 		}
-		if ($object->type != Facture::TYPE_CREDIT_NOTE && $object->total_ttc < 0) 		// Can happen only if $conf->global->FACTURE_ENABLE_NEGATIVE is on
+		if (!($object->type == Facture::TYPE_CREDIT_NOTE ||$object->type == Facture::TYPE_SITUATION )&& $object->total_ttc < 0) 		// Can happen only if $conf->global->FACTURE_ENABLE_NEGATIVE is on
 		{
 			$text .= '<br>' . img_warning() . ' ' . $langs->trans("ErrorInvoiceOfThisTypeMustBePositive");
 		}
