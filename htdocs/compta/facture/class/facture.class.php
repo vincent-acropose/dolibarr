@@ -392,7 +392,7 @@ class Facture extends CommonInvoice
 
 			// Update ref with new one
 			$this->ref='(PROV'.$this->id.')';
-			$sql = 'UPDATE '.MAIN_DB_PREFIX."facture SET facnumber='".$this->ref."' WHERE rowid=".$this->id;
+			$sql = 'UPDATE '.MAIN_DB_PREFIX."facture SET facnumber='".$this->db->escape($this->ref)."' WHERE rowid=".$this->id;
 
 			dol_syslog(get_class($this)."::create", LOG_DEBUG);
 			$resql=$this->db->query($sql);
@@ -2482,7 +2482,7 @@ class Facture extends CommonInvoice
 	 * 	@param 		string		$fk_unit 			Code of the unit to use. Null to use the default one
 	 *  @return    	int             				< 0 if KO, > 0 if OK
 	 */
-	function updateline($rowid, $desc, $pu, $qty, $remise_percent, $date_start, $date_end, $txtva, $txlocaltax1=0, $txlocaltax2=0, $price_base_type='HT', $info_bits=0, $type= self::TYPE_STANDARD, $fk_parent_line=0, $skip_update_total=0, $fk_fournprice=null, $pa_ht=0, $label='', $special_code=0, $array_options=0, $situation_percent=0, $fk_unit = null)
+	function updateline($rowid, $desc, $pu, $qty, $remise_percent, $date_start, $date_end, $txtva, $txlocaltax1=0, $txlocaltax2=0, $price_base_type='HT', $info_bits=0, $type= self::TYPE_STANDARD, $fk_parent_line=0, $skip_update_total=0, $fk_fournprice=null, $pa_ht=0, $label='', $special_code=0, $array_options=0, $situation_percent=100, $fk_unit = null)
 	{
 		global $conf,$user;
 		// Deprecation warning
@@ -4375,14 +4375,14 @@ class FactureLigne extends CommonInvoiceLine
         $sql.= ",tva_tx=".price2num($this->tva_tx)."";
         $sql.= ",localtax1_tx=".price2num($this->localtax1_tx)."";
         $sql.= ",localtax2_tx=".price2num($this->localtax2_tx)."";
-		$sql.= ",localtax1_type='".$this->localtax1_type."'";
-		$sql.= ",localtax2_type='".$this->localtax2_type."'";
+		$sql.= ",localtax1_type='".$this->db->escape($this->localtax1_type)."'";
+		$sql.= ",localtax2_type='".$this->db->escape($this->localtax2_type)."'";
         $sql.= ",qty=".price2num($this->qty)."";
         $sql.= ",date_start=".(! empty($this->date_start)?"'".$this->db->idate($this->date_start)."'":"null");
         $sql.= ",date_end=".(! empty($this->date_end)?"'".$this->db->idate($this->date_end)."'":"null");
         $sql.= ",product_type=".$this->product_type;
-        $sql.= ",info_bits='".$this->info_bits."'";
-        $sql.= ",special_code='".$this->special_code."'";
+        $sql.= ",info_bits='".$this->db->escape($this->info_bits)."'";
+        $sql.= ",special_code='".$this->db->escape($this->special_code)."'";
         if (empty($this->skip_update_total))
         {
         	$sql.= ",total_ht=".price2num($this->total_ht)."";

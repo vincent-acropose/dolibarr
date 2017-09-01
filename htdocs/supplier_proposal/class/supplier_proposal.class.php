@@ -2738,6 +2738,7 @@ class SupplierProposalLine  extends CommonObject
         if (empty($this->special_code)) $this->special_code=0;
         if (empty($this->fk_parent_line)) $this->fk_parent_line=0;
         if (empty($this->fk_fournprice)) $this->fk_fournprice=0;
+        if (empty($this->subprice)) $this->subprice=0;
 
         if (empty($this->pa_ht)) $this->pa_ht=0;
 
@@ -2781,7 +2782,7 @@ class SupplierProposalLine  extends CommonObject
         $sql.= " ".price2num($this->localtax2_tx).",";
 		$sql.= " '".$this->localtax1_type."',";
 		$sql.= " '".$this->localtax2_type."',";
-        $sql.= " ".($this->subprice?price2num($this->subprice):"null").",";
+        $sql.= " ".price2num($this->subprice).",";
         $sql.= " ".price2num($this->remise_percent).",";
         $sql.= " ".(isset($this->info_bits)?"'".$this->info_bits."'":"null").",";
         $sql.= " ".price2num($this->total_ht).",";
@@ -2920,6 +2921,7 @@ class SupplierProposalLine  extends CommonObject
         if (empty($this->special_code)) $this->special_code=0;
         if (empty($this->fk_parent_line)) $this->fk_parent_line=0;
         if (empty($this->fk_fournprice)) $this->fk_fournprice=0;
+        if (empty($this->subprice)) $this->subprice=0;
 
 		if (empty($this->pa_ht)) $this->pa_ht=0;
 
