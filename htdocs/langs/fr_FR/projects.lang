@@ -116,6 +116,7 @@ DoNotShowMyTasksOnly=Voir aussi les tâches qui ne me sont pas affectées
 ShowMyTasksOnly=Ne voir que les tâches qui me sont affectées
 TaskRessourceLinks=Ressources
 ProjectsDedicatedToThisThirdParty=Projets dédiés à ce tiers
+ProjectsWhereThirdPartyIsContact=Projets pour lesquels ce tiers a un contact lié
 NoTasks=Aucune tâche pour ce projet
 LinkedToAnotherCompany=Liés à autre société
 TaskIsNotAssignedToUser=Tâche non assignée à l'utilisateur. Utilisez le bouton '<strong>%s</strong>'  pour assigner la tâche maintenant.
