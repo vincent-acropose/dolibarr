@@ -146,6 +146,9 @@ if ($socid)
 
     // Projects list
     $result=show_projects($conf, $langs, $db, $object, $_SERVER["PHP_SELF"].'?socid='.$object->id, 1);
+    
+    $result=show_projects_linked($conf, $langs, $db, $object, $_SERVER["PHP_SELF"].'?socid='.$object->id, 1);
+    
 }
 
 
