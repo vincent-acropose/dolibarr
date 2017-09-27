@@ -1363,18 +1363,13 @@ function dol_banner_tab($object, $paramid, $morehtml='', $shownav=1, $fieldid='r
 
 	print '<div class="'.($onlybanner?'arearefnobottom ':'arearef ').'heightref valignmiddle" width="100%">';
 	
-	$balise_color_deb = $balise_color_fin = '';
-	if ($object->element == 'societe') {
+	if ($modulepart== 'societe') {
 		// Gestion couleur indice de confiance
-		$balise_color_deb = '<FONT color=';
-		$balise_color_fin = '</FONT>';
-		if($object->array_options['options_indice_confiance'] === 'orange') $balise_color_deb.= '"orange">';
-		elseif($object->array_options['options_indice_confiance'] === 'rouge') $balise_color_deb.= '"red">';
+		if($object->array_options['options_indice_confiance'] === 'orange') echo '<style type="text/css">div.refid { color:orange; }</style>';
+		elseif($object->array_options['options_indice_confiance'] === 'rouge') echo '<style type="text/css">div.refid { color:red; }</style>';
 	}
 	
-	echo $balise_color_deb;
 	print $form->showrefnav($object, $paramid, $morehtml, $shownav, $fieldid, $fieldref, $morehtmlref, $moreparam, $nodbprefix, $morehtmlleft, $morehtmlstatus, $morehtmlright);
-	echo $balise_color_fin;
 	print '</div>';
 	print '<div class="underrefbanner clearboth"></div>';
 }

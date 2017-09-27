@@ -1966,11 +1966,9 @@ class Societe extends CommonObject
         if ($withpicto && $withpicto != 2) $result.=' ';
 
         $nom_url = ($maxlen?dol_trunc($name,$maxlen):$name);
-        
         if((strpos($nom_url, 'Client') === false) && (strpos($nom_url, 'Fournisseur') === false) && (strpos($nom_url, 'Prospect') === false)) { // Uniquement pour les liens sur le nom de la société
         	
         	$this->fetch($this->id);
-        	
         	$balise_color_deb = '<FONT color=';
         	$balise_color_fin = '</FONT>';
         	
@@ -1981,7 +1979,7 @@ class Societe extends CommonObject
         	
         }
 		
-        if ($withpicto != 2) $result.=$linkstart.$nom_url.$linkend;
+        if ($withpicto != 2) $result.=$linkstart.$balise_color_deb.$nom_url.$balise_color_fin.$linkend;
         
         return $result;
     }
