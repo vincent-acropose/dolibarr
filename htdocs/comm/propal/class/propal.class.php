@@ -3347,7 +3347,7 @@ class Propal extends CommonObject
 
 	$this->fetch($this->id);
 		
-	$p = new Project($db);
+	$p = new Project($this->db);
 	$p->fetch($this->fk_project);
 	if($p->id > 0) $TContacts = $p->liste_contact(-1,'external');
 	$prescriptor='';

@@ -1131,14 +1131,14 @@ class ActionComm extends CommonObject
 		
 
 		if($this->socid > 0) {
-			$s = new Societe($db);
+			$s = new Societe($this->db);
 			$s->fetch($this->socid);
 			if(!empty($note_to_add)) $note_to_add.= '<br/>';
 			$note_to_add .= 'Tiers : '.$s->name;
 		} 
 		
 		if($this->fk_project > 0) {
-			$p = new Project($db);
+			$p = new Project($this->db);
 			$p->fetch($this->fk_project);
 			if(!empty($note_to_add)) $note_to_add.= '<br/>';
 			$note_to_add.= 'Projet : '.$p->ref;
