@@ -1167,6 +1167,7 @@ if (empty($reshook))
 	        else
 			{
 	            $db->commit();
+            	$object->add_contact($user->id, 140, 'internal');
 	            header("Location: ".$_SERVER['PHP_SELF']."?id=".$id);
 	            exit;
 	        }
