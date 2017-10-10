@@ -2673,6 +2673,13 @@ elseif (! empty($object->id))
 		$somethingshown=$formactions->showactions($object,'order_supplier',$socid);
 		*/
 
+        // Ajout du créateur en contact de la commadne
+        if ($user->rights->fournisseur->commande->creer){
+
+            $object->add_contact($user->id, 140, 'internal');
+
+        }
+
 		print '</div></div></div>';
 	}
 
