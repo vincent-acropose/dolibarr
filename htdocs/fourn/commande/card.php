@@ -2673,8 +2673,8 @@ elseif (! empty($object->id))
 		$somethingshown=$formactions->showactions($object,'order_supplier',$socid);
 		*/
 
-        // Ajout du créateur en contact de la commadne
-        if ($user->rights->fournisseur->commande->creer){
+        // Ajout du créateur en responsable suivi commande
+        if ($user->rights->fournisseur->commande->creer && empty($object->liste_contact(-1, 'internal'))){
 
             $object->add_contact($user->id, 140, 'internal');
 
